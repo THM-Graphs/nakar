@@ -10,8 +10,8 @@ import SwiftUI
 @main
 struct nakar_client_visionApp: App {
     var body: some Scene {
-        WindowGroup {
+        WindowGroup("Main Window") {
             ContentView()
-        }
+        }.windowStyle(.plain)
     }
 }

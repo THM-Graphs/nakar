@@ -9,13 +9,13 @@ import SwiftUI
 
 struct ContentView: View {
     var body: some View {
-        VStack {
-            Text("Hello, world!")
+        NavigationView {
+            ScenariosView()
+            Text("Select a scenario.")
         }
-        .padding()
     }
 }
 
-#Preview(windowStyle: .automatic) {
+#Preview() {
     ContentView()
 }
