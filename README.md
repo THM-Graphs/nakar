@@ -3,5 +3,5 @@
 
 ## Architektur:
 
-<img src="./docs/architecture.drawio.svg">
+<img src="docs/architecture.svg">
 
