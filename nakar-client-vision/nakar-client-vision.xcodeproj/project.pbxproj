@@ -6,6 +6,11 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		7E7018A92D09A1C80060264D /* OpenAPIRuntime in Frameworks */ = {isa = PBXBuildFile; productRef = 7E7018A82D09A1C80060264D /* OpenAPIRuntime */; };
+		7E7018AC2D09A1DA0060264D /* OpenAPIURLSession in Frameworks */ = {isa = PBXBuildFile; productRef = 7E7018AB2D09A1DA0060264D /* OpenAPIURLSession */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		7E70183F2D08844B0060264D /* nakar-client-vision.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "nakar-client-vision.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -14,17 +19,31 @@
 		7E7018502D08844C0060264D /* Exceptions for "nakar-client-vision" folder in "nakar-client-vision" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				"HTTP/openapi-generator-config.yaml",
+				HTTP/openapi.yaml,
 				Info.plist,
 			);
 			target = 7E70183E2D08844B0060264D /* nakar-client-vision */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
+/* Begin PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
+		7E7018B52D09A6C80060264D /* Exceptions for "nakar-client-vision" folder in "Compile Sources" phase from "nakar-client-vision" target */ = {
+			isa = PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet;
+			buildPhase = 7E70183B2D08844B0060264D /* Sources */;
+			membershipExceptions = (
+				"HTTP/openapi-generator-config.yaml",
+				HTTP/openapi.yaml,
+			);
+		};
+/* End PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		7E7018412D08844B0060264D /* nakar-client-vision */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
 				7E7018502D08844C0060264D /* Exceptions for "nakar-client-vision" folder in "nakar-client-vision" target */,
+				7E7018B52D09A6C80060264D /* Exceptions for "nakar-client-vision" folder in "Compile Sources" phase from "nakar-client-vision" target */,
 			);
 			path = "nakar-client-vision";
 			sourceTree = "<group>";
@@ -36,6 +55,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7E7018A92D09A1C80060264D /* OpenAPIRuntime in Frameworks */,
+				7E7018AC2D09A1DA0060264D /* OpenAPIURLSession in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -72,12 +93,15 @@
 			buildRules = (
 			);
 			dependencies = (
+				7E7018BB2D09A7680060264D /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				7E7018412D08844B0060264D /* nakar-client-vision */,
 			);
 			name = "nakar-client-vision";
 			packageProductDependencies = (
+				7E7018A82D09A1C80060264D /* OpenAPIRuntime */,
+				7E7018AB2D09A1DA0060264D /* OpenAPIURLSession */,
 			);
 			productName = "nakar-client-vision";
 			productReference = 7E70183F2D08844B0060264D /* nakar-client-vision.app */;
@@ -107,6 +131,11 @@
 			);
 			mainGroup = 7E7018362D08844B0060264D;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				7E7018A72D09A1C80060264D /* XCRemoteSwiftPackageReference "swift-openapi-runtime" */,
+				7E7018AA2D09A1DA0060264D /* XCRemoteSwiftPackageReference "swift-openapi-urlsession" */,
+				7E7018B72D09A72A0060264D /* XCRemoteSwiftPackageReference "swift-openapi-generator" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 7E7018402D08844B0060264D /* Products */;
 			projectDirPath = "";
@@ -136,6 +165,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		7E7018BB2D09A7680060264D /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			productRef = 7E7018BA2D09A7680060264D /* OpenAPIGenerator */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		7E7018522D08844C0060264D /* Debug */ = {
@@ -331,6 +367,51 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		7E7018A72D09A1C80060264D /* XCRemoteSwiftPackageReference "swift-openapi-runtime" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-openapi-runtime";
+			requirement = {
+				kind = upToNextMinorVersion;
+				minimumVersion = 1.7.0;
+			};
+		};
+		7E7018AA2D09A1DA0060264D /* XCRemoteSwiftPackageReference "swift-openapi-urlsession" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-openapi-urlsession";
+			requirement = {
+				kind = upToNextMinorVersion;
+				minimumVersion = 1.0.2;
+			};
+		};
+		7E7018B72D09A72A0060264D /* XCRemoteSwiftPackageReference "swift-openapi-generator" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-openapi-generator";
+			requirement = {
+				kind = upToNextMinorVersion;
+				minimumVersion = 1.5.1;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		7E7018A82D09A1C80060264D /* OpenAPIRuntime */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 7E7018A72D09A1C80060264D /* XCRemoteSwiftPackageReference "swift-openapi-runtime" */;
+			productName = OpenAPIRuntime;
+		};
+		7E7018AB2D09A1DA0060264D /* OpenAPIURLSession */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 7E7018AA2D09A1DA0060264D /* XCRemoteSwiftPackageReference "swift-openapi-urlsession" */;
+			productName = OpenAPIURLSession;
+		};
+		7E7018BA2D09A7680060264D /* OpenAPIGenerator */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 7E7018B72D09A72A0060264D /* XCRemoteSwiftPackageReference "swift-openapi-generator" */;
+			productName = "plugin:OpenAPIGenerator";
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 7E7018372D08844B0060264D /* Project object */;
 }

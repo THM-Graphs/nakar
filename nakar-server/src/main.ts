@@ -27,8 +27,14 @@ async function bootstrap() {
     )
     .setVersion('1.0')
     .build();
-  SwaggerModule.setup('api', app, () =>
-    SwaggerModule.createDocument(app, config),
+  SwaggerModule.setup(
+    'api',
+    app,
+    () => SwaggerModule.createDocument(app, config),
+    {
+      jsonDocumentUrl: 'api/json',
+      yamlDocumentUrl: 'api/yaml',
+    },
   );
 
   await app.listen(process.env.SERVER_PORT ?? 3000);
