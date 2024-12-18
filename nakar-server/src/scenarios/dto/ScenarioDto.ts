@@ -1,18 +1,18 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
 
 export class ScenarioDto {
   @ApiProperty()
-  @IsString()
+  @IsNumber()
   @IsNotEmpty()
-  slug: string;
+  id: number;
 
   @ApiProperty()
   @IsString()
   title: string;
 
-  constructor(slug: string, title: string) {
-    this.slug = slug;
+  constructor(id: number, title: string) {
+    this.id = id;
     this.title = title;
   }
 }

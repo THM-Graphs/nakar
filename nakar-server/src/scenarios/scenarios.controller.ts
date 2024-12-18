@@ -1,36 +1,31 @@
 import { Controller, Get, NotFoundException, Param } from '@nestjs/common';
 import { ApiResponse } from '@nestjs/swagger';
 import { GraphDto } from '../model/GraphDto';
-import { Scenario } from './Scenario';
-import { TestScenario1 } from './TestScenario1';
 import { ScenarioDto } from './dto/ScenarioDto';
 import { Neo4jService } from '../neo4j/neo4j.service';
+import { Scenario } from '../database/entities/Scenario';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 
 @Controller('scenarios')
 export class ScenariosController {
-  scenarios: Map<string, Scenario>;
-
-  constructor(private readonly neo4jService: Neo4jService) {
-    this.scenarios = new Map();
-    this.scenarios.set('test_scenario_1', new TestScenario1());
-  }
+  constructor(
+    private readonly neo4jService: Neo4jService,
+    @InjectRepository(Scenario)
+    private scenarioRepository: Repository<Scenario>,
+  ) {}
 
   @Get('/')
   @ApiResponse({ type: ScenarioDto, isArray: true })
   async getAllScenarios(): Promise<ScenarioDto[]> {
-    const result: ScenarioDto[] = [];
-
-    for (const [key, scenario] of this.scenarios.entries()) {
-      result.push(new ScenarioDto(key, scenario.title));
-    }
-
-    return result;
+    const scenarios = await this.scenarioRepository.find();
+    return scenarios.map((s) => this.mapScenario(s));
   }
 
   @Get('/:slug')
   @ApiResponse({ type: ScenarioDto })
   async getScenario(@Param('slug') slug: string): Promise<ScenarioDto> {
-    const result = this.scenarios.get(slug);
+    const result = this.scenarioRepository.
     if (result == null) {
       throw new NotFoundException();
     }
@@ -46,5 +41,10 @@ export class ScenariosController {
     }
     const result = await scenario.process(this.neo4jService);
     return result;
+  }
+
+  private mapScenario(scenario: Scenario): ScenarioDto {
+    const dto = new ScenarioDto(scenario.id, scenario.title);
+    return dto;
   }
 }

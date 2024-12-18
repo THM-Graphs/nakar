@@ -2,6 +2,9 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { EntityManager } from 'typeorm';
+import { Database } from './database/entities/Database';
+import { Scenario } from './database/entities/Scenario';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -37,8 +40,39 @@ async function bootstrap() {
     },
   );
 
+  const entityManager: EntityManager = app.get(EntityManager);
+  await generateDemoConfigs(entityManager);
+
   await app.listen(process.env.SERVER_PORT ?? 3000);
 
   console.log('http://localhost:3000/api');
 }
 bootstrap().catch(console.error);
+
+async function generateDemoConfigs(
+  entityManager: EntityManager,
+): Promise<void> {
+  const databaseManager = entityManager.getRepository(Database);
+  if (!(await databaseManager.exists({ where: { title: 'POSE Database' } }))) {
+    const database: Database = new Database();
+    database.title = 'POSE Database';
+    database.host = 'localhost';
+    database.port = 7687;
+    database.username = 'neo4j';
+    database.password = '12345678';
+    await databaseManager.save(database);
+  }
+
+  const scenarioManager = entityManager.getRepository(Scenario);
+  if (
+    !(await scenarioManager.exists({ where: { title: 'Test Scenario 1' } }))
+  ) {
+    const scenario = new Scenario();
+    scenario.title = 'Test Scenario 1';
+    scenario.query = `MATCH (p:Person) WHERE p.name = "Philip" AND p.surname = "Scott" MATCH (p)-[r]->(neighbor) RETURN p, r, neighbor`;
+    scenario.database = (await databaseManager.findOne({
+      where: { title: 'POSE Database' },
+    }))!;
+    await scenarioManager.save(scenario);
+  }
+}
