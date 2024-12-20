@@ -1,0 +1,20 @@
+nakar-server:
+  stage: build
+  tags: 
+      - nodejs
+  script:
+    - cd nakar-server
+    - npm ci
+    - npm run build
+    - npm run lint
+
+nakar-client-web:
+  stage: build
+  tags: 
+      - nodejs
+  script:
+    - cd nakar-client-web
+    - npm ci
+    - npm run gen
+    - npm run build
+    - npm run lint
