@@ -1,0 +1,37 @@
+{
+  "kind": "collectionType",
+  "collectionName": "databases",
+  "info": {
+    "singularName": "database",
+    "pluralName": "databases",
+    "displayName": "Database",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "title": {
+      "type": "string"
+    },
+    "host": {
+      "type": "string"
+    },
+    "port": {
+      "type": "integer"
+    },
+    "username": {
+      "type": "string"
+    },
+    "scenarios": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::scenario.scenario",
+      "mappedBy": "database"
+    },
+    "password": {
+      "type": "string"
+    }
+  }
+}

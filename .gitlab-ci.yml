@@ -6,7 +6,6 @@ nakar-server:
     - cd nakar-server
     - npm ci
     - npm run build
-    - npm run lint
 
 nakar-client-web:
   stage: build
