@@ -20,7 +20,7 @@ export class GraphController {
   @Get('/:scenarioId/initial')
   @ApiResponse({ type: GraphDto })
   async getGraph(
-    @Param('scenario-id', ParseIntPipe) scenarioId: number,
+    @Param('scenarioId', ParseIntPipe) scenarioId: number,
   ): Promise<GraphDto> {
     const scenario = await this.repositoryService.scenarioRepository.findOneBy({
       id: scenarioId,
