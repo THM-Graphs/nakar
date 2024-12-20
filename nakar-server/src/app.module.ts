@@ -1,21 +1,28 @@
 import { Module } from '@nestjs/common';
 import { Neo4jService } from './neo4j/neo4j.service';
-import { ScenariosController } from './scenarios/scenarios.controller';
+import { ScenarioController } from './scenario/scenario.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { Database } from './database/entities/Database';
-import { Scenario } from './database/entities/Scenario';
-import { DatabaseService } from './database/database.service';
+import { DatabaseDefinition } from './repository/entities/DatabaseDefinition';
+import { Scenario } from './repository/entities/Scenario';
+import { RepositoryService } from './repository/repository.service';
+import { Environment } from './environment/Environment';
+import { DatabaseDefinitionController } from './database-definition/database-definition.controller';
+import { GraphController } from './graph/graph.controller';
 
 @Module({
   imports: [
     TypeOrmModule.forRoot({
-      type: 'sqlite',
-      database: 'database.sqlite',
-      entities: [Database, Scenario],
+      type: Environment.DATABASE_TYPE as any,
+      database: Environment.DATABASE_DATABASE,
+      host: Environment.DATABASE_HOST,
+      port: Environment.DATABASE_PORT,
+      username: Environment.DATABASE_USERNAME,
+      password: Environment.DATABASE_PASSWORD,
+      entities: [DatabaseDefinition, Scenario],
       synchronize: true,
     }),
   ],
-  controllers: [ScenariosController],
-  providers: [Neo4jService, DatabaseService],
+  controllers: [ScenarioController, DatabaseDefinitionController, GraphController],
+  providers: [Neo4jService, RepositoryService],
 })
 export class AppModule {}

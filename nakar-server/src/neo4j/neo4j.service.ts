@@ -1,42 +1,49 @@
-import { Injectable, OnApplicationShutdown } from '@nestjs/common';
+import { Injectable, Logger, OnApplicationShutdown } from '@nestjs/common';
 import neo4j, {
   auth,
   Driver,
-  driver,
+  driver as createDriver,
   Node,
   QueryResult,
   RecordShape,
   Relationship,
   Session,
 } from 'neo4j-driver';
-import { GraphDto } from '../model/GraphDto';
-import { NodeDto } from '../model/NodeDto';
-import { EdgeDto } from '../model/EdgeDto';
-import { PropertyDto } from '../model/PropertyDto';
+import { GraphDto } from '../graph/dto/GraphDto';
+import { NodeDto } from '../graph/dto/NodeDto';
+import { EdgeDto } from '../graph/dto/EdgeDto';
+import { PropertyDto } from '../graph/dto/PropertyDto';
+import { DatabaseDefinition } from '../repository/entities/DatabaseDefinition';
 
 @Injectable()
-export class Neo4jService implements OnApplicationShutdown {
-  private driver: Driver;
+export class Neo4jService {
+  async executeQuery(
+    database: DatabaseDefinition,
+    query: string,
+  ): Promise<GraphDto> {
+    Logger.debug(`Will run query on ${database.title}`, { query });
 
-  constructor() {
-    this.driver = driver(
-      `neo4j://${process.env.NEO4J_HOST ?? 'localhost'}:${process.env.NEO4J_PORT ?? 7687}`,
-      auth.basic(
-        process.env.NEO4J_USER ?? 'neo4j',
-        process.env.NEO4J_PASSWORD ?? '12345678',
-      ),
+    const driver: Driver = createDriver(
+      `neo4j://${database.host}:${database.port}`,
+      auth.basic(database.username, database.password),
     );
-  }
-
-  async executeQuery(query: string): Promise<GraphDto> {
-    const session: Session = this.driver.session({
-      defaultAccessMode: neo4j.session.READ,
-    });
-    const result: QueryResult =
-      await session.run<RecordShape<string, string>>(query);
-    await session.close();
-    const dto: GraphDto = this.transform(result);
-    return dto;
+    try {
+      const session: Session = driver.session({
+        defaultAccessMode: neo4j.session.READ,
+      });
+      try {
+        const result: QueryResult =
+          await session.run<RecordShape<string, string>>(query);
+        const dto: GraphDto = this.transform(result);
+        return dto;
+      } catch (error) {
+        await session.close();
+        throw error;
+      }
+    } catch (error) {
+      await driver.close();
+      throw error;
+    }
   }
 
   public transform(queryResult: QueryResult): GraphDto {
@@ -91,10 +98,5 @@ export class Neo4jService implements OnApplicationShutdown {
 
     const graph = new GraphDto(nodes, edges);
     return graph;
-  }
-
-  public async onApplicationShutdown() {
-    console.log('Will close neo4j driver.');
-    await this.driver.close();
   }
 }
