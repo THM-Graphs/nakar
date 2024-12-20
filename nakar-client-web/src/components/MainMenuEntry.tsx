@@ -11,11 +11,7 @@ export function MainMenuEntry(props: {
 
   const selected = ((): boolean => {
     if (props.targetUrl === "/") {
-      if (location.pathname === "/") {
-        return true;
-      } else {
-        return false;
-      }
+      return location.pathname === "/";
     } else {
       return location.pathname.startsWith(props.targetUrl);
     }

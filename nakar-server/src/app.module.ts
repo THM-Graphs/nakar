@@ -22,7 +22,11 @@ import { GraphController } from './graph/graph.controller';
       synchronize: true,
     }),
   ],
-  controllers: [ScenarioController, DatabaseDefinitionController, GraphController],
+  controllers: [
+    ScenarioController,
+    DatabaseDefinitionController,
+    GraphController,
+  ],
   providers: [Neo4jService, RepositoryService],
 })
 export class AppModule {}

@@ -1,12 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import {
-  IsDate,
-  IsInt,
-  IsNotEmpty,
-  IsNumber,
-  IsOptional,
-  IsString,
-} from 'class-validator';
+import { IsDate, IsInt, IsNotEmpty, IsNumber, IsString } from 'class-validator';
 
 export class GetScenarioDto {
   @ApiProperty({ example: 57382 })

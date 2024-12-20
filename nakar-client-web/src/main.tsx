@@ -1,16 +1,13 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
+// @ts-expect-error Workaround
 import "bootstrap/dist/css/bootstrap.css";
+// @ts-expect-error Workaround
 import "bootstrap-icons/font/bootstrap-icons.css";
+// @ts-expect-error Workaround
 import "./index.css";
 import App from "./App.tsx";
-import {
-  BrowserRouter,
-  createBrowserRouter,
-  Route,
-  RouterProvider,
-  Routes,
-} from "react-router";
+import { createBrowserRouter, RouterProvider } from "react-router";
 import { Home } from "./pages/Home.tsx";
 import {
   DatabaseDefinitions,
