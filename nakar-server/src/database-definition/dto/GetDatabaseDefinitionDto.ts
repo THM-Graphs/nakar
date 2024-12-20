@@ -1,5 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import {
+  IsDate,
+  IsInt,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 
 export class GetDatabaseDefinitionDto {
   @ApiProperty({ example: 57382 })
@@ -23,17 +30,35 @@ export class GetDatabaseDefinitionDto {
   @IsString()
   username: string;
 
+  @ApiProperty({ example: '2024-12-20T15:46:28.000Z' })
+  @IsDate()
+  createDate: Date;
+
+  @ApiProperty({ example: '2024-12-20T15:46:28.000Z' })
+  @IsDate()
+  updateDate: Date;
+
+  @ApiProperty({ example: 1 })
+  @IsInt()
+  version: number;
+
   constructor(
     id: number,
     title: string,
     host: string,
     port: number,
     username: string,
+    createDate: Date,
+    updateDate: Date,
+    version: number,
   ) {
     this.id = id;
     this.title = title;
     this.host = host;
     this.port = port;
     this.username = username;
+    this.createDate = createDate;
+    this.updateDate = updateDate;
+    this.version = version;
   }
 }

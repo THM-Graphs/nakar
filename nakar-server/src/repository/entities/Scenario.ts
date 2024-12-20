@@ -1,4 +1,12 @@
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+  VersionColumn,
+} from 'typeorm';
 import { DatabaseDefinition } from './DatabaseDefinition';
 
 @Entity()
@@ -20,6 +28,15 @@ export class Scenario {
     },
   )
   databaseDefinition: DatabaseDefinition;
+
+  @CreateDateColumn()
+  createDate!: Date;
+
+  @UpdateDateColumn()
+  updateDate!: Date;
+
+  @VersionColumn()
+  version!: number;
 
   constructor(
     title: string,

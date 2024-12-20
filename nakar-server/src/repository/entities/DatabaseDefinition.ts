@@ -1,4 +1,12 @@
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  OneToMany,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+  VersionColumn,
+} from 'typeorm';
 import { Scenario } from './Scenario';
 
 @Entity()
@@ -23,6 +31,15 @@ export class DatabaseDefinition {
 
   @OneToMany(() => Scenario, (scenario) => scenario.databaseDefinition)
   scenarios!: Scenario[];
+
+  @CreateDateColumn()
+  createDate!: Date;
+
+  @UpdateDateColumn()
+  updateDate!: Date;
+
+  @VersionColumn()
+  version!: number;
 
   constructor(
     title: string,

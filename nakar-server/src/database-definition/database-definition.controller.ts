@@ -103,6 +103,9 @@ export class DatabaseDefinitionController {
       object.host,
       object.port,
       object.username,
+      object.createDate,
+      object.updateDate,
+      object.version,
     );
   }
 }

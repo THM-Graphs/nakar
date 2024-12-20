@@ -3,7 +3,7 @@ import { AppModule } from './app.module';
 import { Logger } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { Environment } from './environment/Environment';
-import { configureApp } from './bootstrap';
+import { configureApp, generateDemoData } from './bootstrap';
 
 async function bootstrap() {
   Logger.debug(Environment);
@@ -32,6 +32,11 @@ async function bootstrap() {
       yamlDocumentUrl: 'api/yaml',
     },
   );
+
+  if (Environment.DATABASE_DATABASE == ':memory:') {
+    Logger.warn('Will create demo data because in-memory database is used');
+    await generateDemoData(app);
+  }
 
   await app.listen(Environment.SERVER_PORT, Environment.SERVER_HOSTNAME);
 

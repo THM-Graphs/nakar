@@ -97,12 +97,15 @@ export class ScenarioController {
     await this.repositoryService.scenarioRepository.delete({ id: id });
   }
 
-  private mapToDto(scenario: Scenario): GetScenarioDto {
+  private mapToDto(object: Scenario): GetScenarioDto {
     return new GetScenarioDto(
-      scenario.id,
-      scenario.title,
-      scenario.query,
-      scenario.databaseDefinition.id,
+      object.id,
+      object.title,
+      object.query,
+      object.databaseDefinition.id,
+      object.createDate,
+      object.updateDate,
+      object.version,
     );
   }
 }
