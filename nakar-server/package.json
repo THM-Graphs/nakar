@@ -8,7 +8,8 @@
     "deploy": "strapi deploy",
     "develop": "strapi develop",
     "start": "strapi start",
-    "strapi": "strapi"
+    "strapi": "strapi",
+    "lint": "eslint ."
   },
   "dependencies": {
     "@strapi/plugin-documentation": "^5.6.0",
@@ -23,10 +24,16 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
+    "@eslint/js": "^9.17.0",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
-    "typescript": "^5"
+    "eslint": "^9.17.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-prettier": "^5.2.1",
+    "prettier": "3.4.2",
+    "typescript": "^5.3.3",
+    "typescript-eslint": "^8.18.1"
   },
   "engines": {
     "node": ">=18.0.0 <=22.x.x",
