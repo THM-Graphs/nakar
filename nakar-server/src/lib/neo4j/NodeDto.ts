@@ -6,6 +6,5 @@ export class NodeDto {
     public readonly displayTitle: string,
     public readonly type: string,
     public readonly properties: PropertyDto[],
-  ) {
-  }
+  ) {}
 }

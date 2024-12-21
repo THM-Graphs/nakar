@@ -11,24 +11,26 @@ export default () => ({
         contact: {
           name: 'TEAM',
           email: 'contact-email@something.io',
-          url: 'mywebsite.io'
+          url: 'mywebsite.io',
         },
         license: {
           name: 'Apache 2.0',
-          url: 'https://www.apache.org/licenses/LICENSE-2.0.html'
+          url: 'https://www.apache.org/licenses/LICENSE-2.0.html',
         },
       },
       'x-strapi-config': {
         // Leave empty to ignore plugins during generation
-        plugins: [ 'upload', 'users-permissions'],
+        plugins: ['upload', 'users-permissions'],
         path: '/documentation',
       },
-      servers: [{ url: 'http://localhost:1337/api', description: 'Development server' }],
+      servers: [
+        { url: 'http://localhost:1337/api', description: 'Development server' },
+      ],
       externalDocs: {
         description: 'Find out more',
-        url: 'https://docs.strapi.io/developer-docs/latest/getting-started/introduction.html'
+        url: 'https://docs.strapi.io/developer-docs/latest/getting-started/introduction.html',
       },
-      security: [ { bearerAuth: [] } ]
-    }
-  }
+      security: [{ bearerAuth: [] }],
+    },
+  },
 });

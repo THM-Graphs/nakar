@@ -4,7 +4,6 @@ import { EdgeDto } from './EdgeDto';
 export class GraphDto {
   constructor(
     public readonly nodes: NodeDto[],
-    public readonly edges: EdgeDto[])
-  {
-  }
+    public readonly edges: EdgeDto[],
+  ) {}
 }

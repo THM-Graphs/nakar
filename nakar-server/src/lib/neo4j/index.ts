@@ -8,13 +8,13 @@ import neo4j, {
   Relationship,
   Session,
 } from 'neo4j-driver';
-import {PropertyDto} from "./PropertyDto";
+import { PropertyDto } from './PropertyDto';
 import { GraphDto } from './GraphDto';
-import {NodeDto} from "./NodeDto";
-import {EdgeDto} from "./EdgeDto";
+import { NodeDto } from './NodeDto';
+import { EdgeDto } from './EdgeDto';
 
 export const executeQuery = async (
-  database: { host: string, port: number, username: string, password: string },
+  database: { host: string; port: number; username: string; password: string },
   query: string,
 ): Promise<GraphDto> => {
   const driver: Driver = createDriver(
@@ -38,7 +38,7 @@ export const executeQuery = async (
     await driver.close();
     throw error;
   }
-}
+};
 
 const transform = (queryResult: QueryResult): GraphDto => {
   const nodes: NodeDto[] = [];
@@ -92,4 +92,4 @@ const transform = (queryResult: QueryResult): GraphDto => {
 
   const graph = new GraphDto(nodes, edges);
   return graph;
-}
+};

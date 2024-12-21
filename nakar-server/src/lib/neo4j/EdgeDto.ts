@@ -7,6 +7,5 @@ export class EdgeDto {
     public readonly endNodeId: string,
     public readonly type: string,
     public readonly properties: PropertyDto[],
-  ) {
-  }
+  ) {}
 }

@@ -1,13 +1,13 @@
 /**
  * A set of functions called "actions" for `graph`
  */
-import z from "zod";
-import {executeQuery} from "../../../lib/neo4j";
+import z from 'zod';
+import { executeQuery } from '../../../lib/neo4j';
 
 export default {
   initial: async (ctx, next) => {
     const querySchema = z.object({
-      scenarioId: z.string()
+      scenarioId: z.string(),
     });
     const dbResultSchema = z.object({
       query: z.string(),
@@ -15,9 +15,9 @@ export default {
         host: z.string(),
         port: z.number().int(),
         username: z.string(),
-        password: z.string()
-      })
-    })
+        password: z.string(),
+      }),
+    });
 
     try {
       const query = querySchema.parse(ctx.query);
@@ -26,19 +26,12 @@ export default {
       const rawResult = await repository.findOne({
         documentId: query.scenarioId,
         status: 'published',
-        fields: [
-          "query",
-        ],
+        fields: ['query'],
         populate: {
           database: {
-            fields: [
-              "host",
-              "port",
-              "username",
-              "password",
-            ]
-          }
-        }
+            fields: ['host', 'port', 'username', 'password'],
+          },
+        },
       });
       if (rawResult == null) {
         return ctx.notFound('Scenario not found');
@@ -51,5 +44,5 @@ export default {
     } catch (err) {
       return ctx.internalServerError(err);
     }
-  }
+  },
 };
