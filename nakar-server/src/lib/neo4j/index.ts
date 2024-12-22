@@ -18,7 +18,7 @@ export const executeQuery = async (
   query: string,
 ): Promise<GraphDto> => {
   const driver: Driver = createDriver(
-    `neo4j://${database.host}:${database.port}`,
+    `neo4j://${database.host}:${database.port.toString()}`,
     auth.basic(database.username, database.password),
   );
   try {

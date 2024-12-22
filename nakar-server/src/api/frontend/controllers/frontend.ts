@@ -2,7 +2,11 @@ import z, { ZodError } from 'zod';
 import { executeQuery } from '../../../lib/neo4j';
 import type { Context } from 'koa';
 import { GetInitialGraphDto } from './dto/GetInitialGraphDto';
-import { GetScenariosDto } from './dto/GetScenariosDto';
+import {
+  GetDatabaseDto,
+  GetScenarioDto,
+  GetScenariosDto,
+} from './dto/GetScenariosDto';
 
 export default {
   initialGraph: async (ctx: Context): Promise<Context> => {
@@ -53,30 +57,36 @@ export default {
   scenarios: async (ctx: Context): Promise<Context> => {
     const dbResultSchema = z.array(
       z.object({
+        documentId: z.string(),
         title: z.string(),
-        query: z.string(),
-        database: z.object({
-          title: z.string(),
-          host: z.string(),
-          port: z.number().int(),
-        }),
-        cover: z.object({
-          url: z.string(),
-        }),
+        host: z.string(),
+        port: z.number().int(),
+        scenarios: z.array(
+          z.object({
+            documentId: z.string(),
+            title: z.string(),
+            query: z.string(),
+            cover: z.object({
+              url: z.string(),
+            }),
+          }),
+        ),
       }),
     );
 
     try {
-      const repository = strapi.documents('api::scenario.scenario');
+      const repository = strapi.documents('api::database.database');
       const rawResult = await repository.findMany({
         status: 'published',
-        fields: ['title', 'query'],
+        fields: ['title', 'host', 'port'],
         populate: {
-          database: {
-            fields: ['title', 'host', 'port'],
-          },
-          cover: {
-            fields: ['url'],
+          scenarios: {
+            fields: ['title', 'query'],
+            populate: {
+              cover: {
+                fields: ['url'],
+              },
+            },
           },
         },
       });
@@ -84,14 +94,24 @@ export default {
       const dbResult = dbResultSchema.parse(rawResult);
 
       ctx.response.body = new GetScenariosDto(
-        dbResult.map((db) => {
+        dbResult.map((db): GetDatabaseDto => {
           return {
+            id: db.documentId,
             title: db.title,
-            query: db.query,
-            databaseTitle: db.database.title,
-            databaseHost: db.database.host,
-            databasePort: db.database.port,
-            coverUrl: db.cover.url,
+            host: db.host,
+            port: db.port,
+            scenarios: db.scenarios.map((scenario): GetScenarioDto => {
+              return {
+                id: scenario.documentId,
+                title: scenario.title,
+                query: scenario.query,
+                coverUrl: strapi.config.get('server.url') + scenario.cover.url,
+                databaseId: db.documentId,
+                databaseTitle: db.title,
+                databaseHost: db.host,
+                databasePort: db.port,
+              };
+            }),
           };
         }),
       );
