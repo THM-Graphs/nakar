@@ -3,7 +3,11 @@ import tseslint from 'typescript-eslint';
 import eslintConfigPrettier from 'eslint-plugin-prettier/recommended';
 
 export default tseslint.config({
-  files: ['{src,config,database,types}/**/*.{ts,tsx}', 'eslint.config.mjs'],
+  files: [
+    '{src,config,database,types,test}/**/*.{ts,tsx}',
+    'eslint.config.mjs',
+    'babel.config.js',
+  ],
   ignores: ['{src/admin,types/generated}/**'],
   extends: [
     eslint.configs.recommended,
@@ -12,7 +16,7 @@ export default tseslint.config({
   ],
   languageOptions: {
     parserOptions: {
-      project: 'tsconfig.json',
+      project: ['tsconfig.json', 'test/tsconfig.json'],
     },
   },
   rules: {

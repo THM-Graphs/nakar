@@ -1,7 +1,10 @@
 import path from 'path';
+import { Env } from '@strapi/utils/dist/env-helper';
+import z from 'zod';
 
-export default ({ env }) => {
-  const client = env('DATABASE_CLIENT', 'sqlite');
+export default ({ env }: { env: Env }) => {
+  const clientSchema = z.enum(['mysql', 'postgres', 'sqlite']);
+  const client = clientSchema.parse(env('DATABASE_CLIENT', 'sqlite'));
 
   const connections = {
     mysql: {
@@ -60,7 +63,7 @@ export default ({ env }) => {
           __dirname,
           '..',
           '..',
-          env('DATABASE_FILENAME', '.tmp/data.db'),
+          env('DATABASE_FILENAME', '.tmp/data.db') ?? '.tmp/data.db',
         ),
       },
       useNullAsDefault: true,
