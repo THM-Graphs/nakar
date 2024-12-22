@@ -5,7 +5,7 @@ import "bootstrap-icons/font/bootstrap-icons.css";
 import "./index.css";
 import App from "./App.tsx";
 import { createBrowserRouter, RouterProvider } from "react-router";
-import { userTheme } from "./theme.ts";
+import { userTheme } from "./Theme.ts";
 
 userTheme.next(null);
 

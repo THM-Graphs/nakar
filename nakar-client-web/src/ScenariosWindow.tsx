@@ -12,7 +12,6 @@ import { useBearStore } from "./Zustand.ts";
 import { match } from "ts-pattern";
 import { getScenarios } from "./Backend.ts";
 import clsx from "clsx";
-import { min } from "rxjs";
 
 export function ScenariosWindow() {
   console.log("Render!");
@@ -87,7 +86,7 @@ export function ScenariosWindow() {
         ref={dragCard}
         style={{
           width: "400px",
-          height: minimized ? null : "500px",
+          height: minimized ? "" : "500px",
           boxSizing: "border-box",
         }}
       >
