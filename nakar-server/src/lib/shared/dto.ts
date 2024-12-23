@@ -69,26 +69,30 @@ export const GetInitialGraphDtoSchema = z.object({
 });
 export type GetInitialGraphDto = z.infer<typeof GetInitialGraphDtoSchema>;
 
+export const GetScenariosDtoDatabaseScenarioSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  query: z.string(),
+  databaseId: z.string(),
+  databaseTitle: z.string(),
+  databaseHost: z.string(),
+  databasePort: z.number(),
+  coverUrl: z.string().optional(),
+});
+export type GetScenariosDtoDatabaseScenario = z.infer<
+  typeof GetScenariosDtoDatabaseScenarioSchema
+>;
+export const GetScenariosDtoDatabaseSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  host: z.string(),
+  port: z.number(),
+  scenarios: z.array(GetScenariosDtoDatabaseScenarioSchema),
+});
+export type GetScenariosDtoDatabase = z.infer<
+  typeof GetScenariosDtoDatabaseSchema
+>;
 export const GetScenariosDtoSchema = z.object({
-  databases: z.array(
-    z.object({
-      id: z.string(),
-      title: z.string(),
-      host: z.string(),
-      port: z.number(),
-      scenarios: z.array(
-        z.object({
-          id: z.string(),
-          title: z.string(),
-          query: z.string(),
-          databaseId: z.string(),
-          databaseTitle: z.string(),
-          databaseHost: z.string(),
-          databasePort: z.number(),
-          coverUrl: z.string().optional(),
-        }),
-      ),
-    }),
-  ),
+  databases: z.array(GetScenariosDtoDatabaseSchema),
 });
 export type GetScenariosDto = z.infer<typeof GetScenariosDtoSchema>;

@@ -6,6 +6,8 @@ export const Window = forwardRef(
   (
     props: CardProps & {
       title: string;
+      onClose: () => void;
+      icon: string;
     },
     ref: ForwardedRef<HTMLElement>,
   ) => {
@@ -22,10 +24,11 @@ export const Window = forwardRef(
         }}
       >
         <Card.Header>
-          <Stack direction={"horizontal"}>
-            <Card.Title className={"me-auto"}>{props.title}</Card.Title>
+          <Stack direction={"horizontal"} className={"align-items-baseline"}>
+            <Card.Title className={"me-auto"}><i className={`bi bi-${props.icon} me-1`}></i> {props.title}</Card.Title>
             <Button
               variant={""}
+              className={"me-2"}
               onClick={() => {
                 setMinimized(!minimized);
               }}
@@ -34,6 +37,16 @@ export const Window = forwardRef(
                 className={clsx(
                   "bi",
                   minimized ? "bi-chevron-right" : "bi-chevron-down",
+                )}
+              ></i>
+            </Button>
+            <Button
+              variant={""}
+              onClick={props.onClose}
+            >
+              <i
+                className={clsx(
+                  "bi bi-x-lg",
                 )}
               ></i>
             </Button>
