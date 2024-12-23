@@ -15,6 +15,5 @@ nakar-client-web:
   script:
     - cd nakar-client-web
     - npm ci
-    - npm run gen
     - npm run build
     - npm run lint

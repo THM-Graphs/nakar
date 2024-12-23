@@ -18,5 +18,14 @@ export default {
         middlewares: [],
       },
     },
+    {
+      method: 'GET',
+      path: '/frontend/database-structure',
+      handler: 'frontend.databaseStructure',
+      config: {
+        policies: [],
+        middlewares: [],
+      },
+    },
   ],
 };

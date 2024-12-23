@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "target": "ES2019",
+    "noEmit": true,
+    "allowJs": true,
+    "strict": true
+  },
+  "include": [
+    "babel.config.js",
+    "eslint.config.mjs"
+  ]
+}

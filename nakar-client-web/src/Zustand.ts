@@ -1,5 +1,6 @@
-import { create } from "zustand/react";
-import { GetScenariosDto } from "./server-dto/GetScenariosDto.ts";
+import { create } from "zustand";
+import { GetScenariosDto } from "./shared/dto.ts";
+import { immer } from "zustand/middleware/immer";
 
 interface BearState {
   scenariosWindow: {
@@ -8,27 +9,45 @@ interface BearState {
           type: "loading";
         }
       | {
+          type: "error";
+          message: string;
+        }
+      | {
           type: "data";
           data: GetScenariosDto;
         };
-    setScenarios: (data: GetScenariosDto) => void;
   };
 }
 
-export const useBearStore = create<BearState>()((set) => ({
+interface BearActions {
   scenariosWindow: {
-    scenarios: {
-      type: "loading",
+    setScenarios: (data: GetScenariosDto) => void;
+    setError: (message: string) => void;
+    setLoading: () => void;
+  };
+}
+
+export const useBearStore = create<BearState & BearActions>()(
+  immer((set) => ({
+    scenariosWindow: {
+      scenarios: {
+        type: "loading",
+      },
+      setScenarios: (data: GetScenariosDto): void => {
+        set((state: BearState): void => {
+          state.scenariosWindow.scenarios = { type: "data", data: data };
+        });
+      },
+      setError: (message: string): void => {
+        set((state: BearState): void => {
+          state.scenariosWindow.scenarios = { type: "error", message: message };
+        });
+      },
+      setLoading: (): void => {
+        set((state: BearState): void => {
+          state.scenariosWindow.scenarios = { type: "loading" };
+        });
+      },
     },
-    setScenarios: (data) => {
-      set((state) => {
-        return {
-          scenariosWindow: {
-            ...state.scenariosWindow,
-            scenarios: { type: "data", data: data },
-          },
-        };
-      });
-    },
-  },
-}));
+  })),
+);

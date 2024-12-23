@@ -1,151 +1,158 @@
-import { createRef, useEffect, useState } from "react";
-import interact from "interactjs";
+import { createRef, ReactNode, useEffect } from "react";
 import {
   Button,
-  Card,
-  ListGroup,
   Spinner,
-  Stack,
   Image,
+  Alert,
+  Accordion,
+  Table,
 } from "react-bootstrap";
 import { useBearStore } from "./Zustand.ts";
 import { match } from "ts-pattern";
-import { getScenarios } from "./Backend.ts";
-import clsx from "clsx";
+import { reloadScenarios } from "./Actions.ts";
+import { registerDrag } from "./Draggable.ts";
+import { Window } from "./Window.tsx";
+import {
+  GetScenariosDto,
+  GetScenariosDtoDatabase,
+  GetScenariosDtoDatabaseScenario,
+} from "./shared/dto.ts";
 
 export function ScenariosWindow() {
-  console.log("Render!");
   const store = useBearStore((state) => state.scenariosWindow);
-  const [minimized, setMinimized] = useState(false);
-  const [windowPosition, setWindowPosition] = useState({ x: 20, y: 20 });
-  const dragCard = createRef<HTMLDivElement>();
-  const dragCardTitle = createRef<HTMLDivElement>();
 
-  const fetchScenarios = async (): Promise<void> => {
-    const data = await getScenarios();
-    store.setScenarios(data);
-  };
+  const dragCard = createRef<HTMLElement>();
 
-  const handleDragging = (
-    windowHeader: HTMLElement,
-    window: HTMLElement,
-    windowParent: HTMLElement,
-  ) => {
-    const applyPosition = () => {
-      window.style.top = `${windowPosition.y.toString()}px`;
-      window.style.left = `${windowPosition.x.toString()}px`;
-    };
-    const slider = interact(windowHeader);
-    slider.draggable({
-      inertia: true,
-      listeners: {
-        move(event: { dx: number; dy: number }) {
-          setWindowPosition({
-            x: Math.min(
-              Math.max(windowPosition.x + event.dx, 0),
-              windowParent.getBoundingClientRect().width -
-                window.getBoundingClientRect().width,
-            ),
-            y: Math.min(
-              Math.max(windowPosition.y + event.dy, 0),
-              windowParent.getBoundingClientRect().height -
-                window.getBoundingClientRect().height,
-            ),
-          });
-          applyPosition();
-        },
-      },
-    });
-    applyPosition();
-  };
+  useEffect(reloadScenarios, []);
 
   useEffect(() => {
-    fetchScenarios().catch(console.error);
-  }, []);
-
-  useEffect(() => {
-    if (
-      !dragCardTitle.current ||
-      !dragCard.current ||
-      !dragCard.current.parentElement
-    ) {
-      return;
-    }
-    handleDragging(
-      dragCardTitle.current,
-      dragCard.current,
-      dragCard.current.parentElement,
+    registerDrag(
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      dragCard.current!.children.item(0)! as HTMLElement,
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      dragCard.current!,
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      dragCard.current!.parentElement!,
     );
-  }, [dragCardTitle, dragCard]);
+  }, []);
 
   return (
     <>
-      <Card
-        id={"dragCard"}
+      <Window
+        title={"Scenarios"}
         className={"position-absolute"}
         ref={dragCard}
         style={{
-          width: "400px",
-          height: minimized ? "" : "500px",
-          boxSizing: "border-box",
+          width: "500px",
+          height: "600px",
         }}
       >
-        <Card.Header ref={dragCardTitle}>
-          <Stack direction={"horizontal"}>
-            <Card.Title className={"me-auto"}>Scenarios</Card.Title>
-            <Button
-              variant={""}
-              onClick={() => {
-                setMinimized(!minimized);
-              }}
-            >
-              <i
-                className={clsx(
-                  "bi",
-                  minimized ? "bi-chevron-right" : "bi-chevron-down",
-                )}
-              ></i>
-            </Button>
-          </Stack>
-        </Card.Header>
-        {!minimized && (
-          <Card.Body className={"d-flex flex-column"}>
-            {match(store.scenarios)
-              .with({ type: "loading" }, () => (
-                <Spinner className={"align-self-center"}></Spinner>
-              ))
-              .with({ type: "data" }, (scenarios) =>
-                scenarios.data.databases.map((database) => (
-                  <Stack key={database.id}>
-                    <h6>
-                      {database.title} ({database.host}:{database.port})
-                    </h6>
-                    <ListGroup>
-                      {database.scenarios.map((scenario) => (
-                        <ListGroup.Item key={scenario.id}>
-                          <Stack
-                            direction={"horizontal"}
-                            className={"align-items-center"}
-                          >
-                            <Image
-                              style={{ width: "30px", height: "30px" }}
-                              className={"me-1"}
-                              src={scenario.coverUrl}
-                              roundedCircle
-                            ></Image>
-                            <span className={"me-auto"}>{scenario.title}</span>
-                            <Button>Run</Button>
-                          </Stack>
-                        </ListGroup.Item>
-                      ))}
-                    </ListGroup>
-                  </Stack>
-                )),
-              )
-              .exhaustive()}
-          </Card.Body>
-        )}
-      </Card>
+        {match(store.scenarios)
+          .with({ type: "loading" }, (): ReactNode => <Loading></Loading>)
+          .with(
+            { type: "error" },
+            (error): ReactNode => <Error message={error.message}></Error>,
+          )
+          .with(
+            { type: "data" },
+            (data): ReactNode => <Data data={data.data}></Data>,
+          )
+          .exhaustive()}
+      </Window>
     </>
+  );
+}
+
+function Loading() {
+  return <Spinner className={"align-self-center"}></Spinner>;
+}
+
+function Error(props: { message: string }) {
+  return (
+    <Alert
+      ref={null}
+      variant={"danger"}
+      className={"d-flex align-items-center"}
+    >
+      <span className={"me-auto"}>{props.message}</span>
+      <Button onClick={reloadScenarios} variant={""}>
+        <i className={"bi bi-arrow-clockwise"}></i>
+      </Button>
+    </Alert>
+  );
+}
+
+function Data(props: { data: GetScenariosDto }) {
+  return (
+    <Accordion>
+      {props.data.databases.map(
+        (database): ReactNode => (
+          <ListSection database={database}></ListSection>
+        ),
+      )}
+    </Accordion>
+  );
+}
+
+function ListSection(props: { database: GetScenariosDtoDatabase }) {
+  const database = props.database;
+
+  return (
+    <Accordion.Item
+      key={database.id}
+      eventKey={database.id}
+      className={"border-0 border-bottom rounded-0"}
+    >
+      <Accordion.Header>
+        {database.title} ({database.host}:{database.port})
+      </Accordion.Header>
+      <Accordion.Body className={"p-0"}>
+        <Table striped className={"align-middle"}>
+          <tbody>
+            {database.scenarios.map(
+              (scenario): ReactNode => (
+                <ScenarioEntry scenario={scenario}></ScenarioEntry>
+              ),
+            )}
+          </tbody>
+        </Table>
+      </Accordion.Body>
+    </Accordion.Item>
+  );
+}
+
+function ScenarioEntry(props: { scenario: GetScenariosDtoDatabaseScenario }) {
+  const scenario = props.scenario;
+  return (
+    <tr>
+      <td>
+        {scenario.coverUrl ? (
+          <Image
+            style={{ width: "30px", height: "30px" }}
+            src={scenario.coverUrl}
+            roundedCircle
+          ></Image>
+        ) : (
+          <div
+            style={{
+              width: "30px",
+              height: "30px",
+              backgroundColor: "gray",
+            }}
+            className={
+              "d-flex justify-content-center align-items-center flex-shrink-0 rounded-circle"
+            }
+          >
+            <i className={"bi bi-easel-fill"}></i>
+          </div>
+        )}
+      </td>
+      <td>
+        <span className={"me-auto"}>{scenario.title}</span>
+      </td>
+      <td>
+        <Button>Run</Button>
+      </td>
+    </tr>
   );
 }
