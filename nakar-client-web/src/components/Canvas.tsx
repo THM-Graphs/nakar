@@ -1,8 +1,8 @@
 import { createRef, ReactNode, useEffect, useState } from "react";
-import { useBearStore } from "../lib/State.ts";
+import { actions, useBearStore } from "../lib/State.ts";
 import { logicalToNativePosition } from "../lib/Draggable.ts";
-import type { Interactable } from "@interactjs/core/Interactable";
 import interact from "interactjs";
+import { EdgeDto, NodeDto } from "../shared/dto.ts";
 
 export function Canvas(props: { children: ReactNode }) {
   const graph = useBearStore((state) => state.canvas.graph);
@@ -16,63 +16,30 @@ export function Canvas(props: { children: ReactNode }) {
   return (
     <div className={"flex-grow-1"} ref={canvasRef}>
       {canvasHandle &&
-        graph.edges.map((edge): ReactNode => {
-          const node1 = graph.nodes.find((n) => n.id === edge.nodeIdStart);
-          const node2 = graph.nodes.find((n) => n.id === edge.nodeIdEnd);
-          if (node1 == null || node2 == null) {
-            return null;
-          }
-          return (
-            <Edge
-              key={edge.id}
-              node1={{
-                x: node1.position.x,
-                y: node1.position.y,
-              }}
-              node2={{
-                x: node2.position.x,
-                y: node2.position.y,
-              }}
-              parent={canvasHandle}
-            ></Edge>
-          );
+        graph.edges.map((edge: EdgeDto): ReactNode => {
+          return <Edge key={edge.id} edge={edge} parent={canvasHandle}></Edge>;
         })}
+
       {canvasHandle &&
-        graph.nodes.map((node) => (
-          <Node
-            id={node.id}
-            key={node.id}
-            title={node.displayTitle}
-            position={node.position}
-            backgroundColor={node.backgroundColor}
-            displayTitleColor={node.displayTitleColor}
-            size={node.size}
-            parent={canvasHandle}
-          ></Node>
-        ))}
+        graph.nodes.map(
+          (node: NodeDto): ReactNode => (
+            <Node key={node.id} node={node} parent={canvasHandle}></Node>
+          ),
+        )}
 
       {props.children}
     </div>
   );
 }
 
-function Node(props: {
-  id: string;
-  title: string;
-  size: number;
-  backgroundColor: string;
-  displayTitleColor: string;
-  position: { x: number; y: number };
-  parent: HTMLDivElement;
-}) {
-  const moveNodePosition = useBearStore(
-    (state) => state.canvas.moveNodePosition,
-  );
+function Node(props: { node: NodeDto; parent: HTMLDivElement }) {
   const self = createRef<HTMLDivElement>();
   const [selfHandle, setSelfHandle] = useState<HTMLDivElement | null>(null);
-  const [slider, setSlider] = useState<Interactable | null>(null);
 
-  const nativePosition = logicalToNativePosition(props.position, props.parent);
+  const nativePosition = logicalToNativePosition(
+    props.node.position,
+    props.parent,
+  );
 
   useEffect(() => {
     setSelfHandle(self.current as HTMLDivElement);
@@ -82,27 +49,19 @@ function Node(props: {
     if (selfHandle == null) {
       return;
     }
-    setSlider(interact(selfHandle));
-  }, [selfHandle]);
-
-  useEffect(() => {
-    if (slider == null || selfHandle == null) {
-      return;
-    }
+    const slider = interact(selfHandle);
     slider.draggable({
       inertia: true,
       listeners: {
         move: (event: { dx: number; dy: number }) => {
-          moveNodePosition(
-            props.id,
-            { x: event.dx, y: event.dy },
-            selfHandle,
-            props.parent,
-          );
+          actions.canvas.moveNodePosition(props.node.id, {
+            x: event.dx,
+            y: event.dy,
+          });
         },
       },
     });
-  }, [slider]);
+  }, [selfHandle]);
 
   return (
     <div
@@ -111,36 +70,42 @@ function Node(props: {
         "position-absolute rounded-circle d-flex justify-content-center align-items-center text-center fw-semibold"
       }
       style={{
-        backgroundColor: props.backgroundColor,
-        width: `${props.size.toString()}px`,
-        height: `${props.size.toString()}px`,
-        top: `${(nativePosition.y - props.size / 2).toString()}px`,
-        left: `${(nativePosition.x - props.size / 2).toString()}px`,
+        zIndex: 500,
+        backgroundColor: props.node.backgroundColor,
+        width: `${props.node.size.toString()}px`,
+        height: `${props.node.size.toString()}px`,
+        top: `${(nativePosition.y - props.node.size / 2).toString()}px`,
+        left: `${(nativePosition.x - props.node.size / 2).toString()}px`,
       }}
     >
       <span
         style={{
           overflowWrap: "anywhere",
-          fontSize: `${(props.size / 5).toString()}px`,
-          color: props.displayTitleColor,
+          fontSize: `${(props.node.size / 5).toString()}px`,
+          color: props.node.displayTitleColor,
         }}
       >
-        {props.title}
+        {props.node.displayTitle}
       </span>
     </div>
   );
 }
 
-const Edge = (props: {
-  node1: { x: number; y: number };
-  node2: { x: number; y: number };
-  parent: HTMLDivElement;
-}) => {
-  const x1 = props.node1.x;
-  const y1 = props.node1.y;
+const Edge = (props: { edge: EdgeDto; parent: HTMLDivElement }) => {
+  const nodes = useBearStore((state) => state.canvas.graph.nodes);
 
-  const x2 = props.node2.x;
-  const y2 = props.node2.y;
+  const node1 = nodes.find((n) => n.id === props.edge.startNodeId);
+  const node2 = nodes.find((n) => n.id === props.edge.endNodeId);
+  if (node1 == null || node2 == null) {
+    return null;
+  }
+
+  const x1 = node1.position.x;
+  const y1 = node1.position.y;
+
+  const x2 = node2.position.x;
+  const y2 = node2.position.y;
+
   // Berechne die Länge der Linie
   const length = Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
 
@@ -159,6 +124,7 @@ const Edge = (props: {
   return (
     <div
       style={{
+        zIndex: 500,
         position: "absolute",
         top: `${nativePosition.y.toString()}px`,
         left: `${nativePosition.x.toString()}px`,

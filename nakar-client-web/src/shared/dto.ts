@@ -33,11 +33,19 @@ export const GraphPropertyDtoSchema = z.object({
 });
 export type GraphPropertyDto = z.infer<typeof GraphPropertyDtoSchema>;
 
+export const PositionDtoSchema = z.object({
+  x: z.number(),
+  y: z.number(),
+});
 export const NodeDtoSchema = z.object({
   id: z.string(),
   displayTitle: z.string(),
-  type: z.string(),
+  labels: z.array(z.string()),
   properties: z.array(GraphPropertyDtoSchema),
+  size: z.number(),
+  backgroundColor: z.string(),
+  displayTitleColor: z.string(),
+  position: PositionDtoSchema,
 });
 export type NodeDto = z.infer<typeof NodeDtoSchema>;
 

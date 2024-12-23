@@ -1,11 +1,21 @@
 import z, { ZodError } from 'zod';
-import { executeQuery, getStats } from '../../../lib/neo4j';
+import {
+  executeQuery,
+  getStats,
+  Neo4jEdge,
+  Neo4jNode,
+  Neo4JProperty,
+} from '../../../lib/Neo4j';
 import type { Context } from 'koa';
 import {
+  EdgeDto,
   GetDatabaseStructureDto,
   GetInitialGraphDto,
   GetScenariosDto,
+  NodeDto,
 } from '../../../lib/shared/dto';
+import { getRandomColor, invertColor } from '../../../lib/Color';
+import { layoutGraph } from '../../../lib/Physics';
 
 export default {
   initialGraph: async (ctx: Context): Promise<Context> => {
@@ -36,9 +46,42 @@ export default {
         rawResult.query,
       );
 
-      ctx.response.body = {
-        graph: graphResult,
+      const graph = {
+        graph: {
+          nodes: graphResult.nodes.map((node: Neo4jNode): NodeDto => {
+            const backgroundColor = getRandomColor();
+            return {
+              id: node.id,
+              displayTitle:
+                node.properties.find((p) => p.slug == 'name')?.value ??
+                (node.properties[0] as Neo4JProperty | null)?.value ??
+                node.labels.join(', '),
+              labels: node.labels,
+              properties: node.properties,
+              size: 100 * (1 - Math.random() * 0.5),
+              backgroundColor: backgroundColor,
+              displayTitleColor: invertColor(backgroundColor),
+              position: {
+                x: Math.round(Math.random() * 1280),
+                y: Math.round(Math.random() * 800),
+              },
+            };
+          }),
+          edges: graphResult.edges.map((edge: Neo4jEdge): EdgeDto => {
+            return {
+              id: edge.id,
+              startNodeId: edge.startNodeId,
+              endNodeId: edge.endNodeId,
+              type: edge.type,
+              properties: edge.properties,
+            };
+          }),
+        },
       } satisfies GetInitialGraphDto;
+
+      await layoutGraph(graph.graph);
+
+      ctx.response.body = graph;
       return ctx;
     } catch (err) {
       if (err instanceof ZodError) {

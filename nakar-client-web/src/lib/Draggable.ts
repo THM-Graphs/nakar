@@ -29,11 +29,16 @@ export const bindLogicalPositionIntoParent = (
 };
 
 export const logicalToNativePosition = (
-  virtualPos: { x: number; y: number },
+  virtualPos: Position,
   parentElement: HTMLDivElement,
-): { x: number; y: number } => {
+): Position => {
   return {
     x: virtualPos.x + parentElement.getBoundingClientRect().x,
     y: virtualPos.y + parentElement.getBoundingClientRect().y,
   };
 };
+
+export interface Position {
+  x: number;
+  y: number;
+}

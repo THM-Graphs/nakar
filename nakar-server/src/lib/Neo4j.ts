@@ -9,14 +9,6 @@ import neo4j, {
   Session,
   Integer,
 } from 'neo4j-driver';
-import {
-  EdgeDto,
-  GraphDto,
-  GraphPropertyDto,
-  NodeDto,
-  StatsDto,
-} from '../shared/dto';
-
 const executeQueryRaw = async (
   database?: {
     host?: string | null;
@@ -72,9 +64,9 @@ export const executeQuery = async (
     password?: string | null;
   } | null,
   query?: string | null,
-): Promise<GraphDto> => {
+): Promise<Neo4jGraph> => {
   const result = await executeQueryRaw(database, query);
-  const dto: GraphDto = transform(result);
+  const dto: Neo4jGraph = transform(result);
   return dto;
 };
 
@@ -85,7 +77,7 @@ export const getStats = async (
     username?: string | null;
     password?: string | null;
   } | null,
-): Promise<StatsDto> => {
+): Promise<Neo4jStats> => {
   const result = await executeQueryRaw(database, 'CALL apoc.meta.stats');
   const firstRecord = result.records[0];
 
@@ -99,7 +91,7 @@ export const getStats = async (
     relCount: (firstRecord.get('relCount') as Integer).toString(),
     labels: Object.entries(
       firstRecord.get('labels') as Record<string, Integer>,
-    ).map(([key, integer]) => {
+    ).map(([key, integer]): Neo4jStatsLabel => {
       return {
         label: key,
         count: integer.toString(),
@@ -107,7 +99,7 @@ export const getStats = async (
     }),
     relTypes: Object.entries(
       firstRecord.get('relTypes') as Record<string, Integer>,
-    ).map(([key, integer]) => {
+    ).map(([key, integer]): Neo4jStatsRelType => {
       return {
         relationship: key,
         count: integer.toString(),
@@ -115,7 +107,7 @@ export const getStats = async (
     }),
     relTypesCount: Object.entries(
       firstRecord.get('relTypesCount') as Record<string, Integer>,
-    ).map(([key, integer]) => {
+    ).map(([key, integer]): Neo4jStatsRelType => {
       return {
         relationship: key,
         count: integer.toString(),
@@ -124,9 +116,9 @@ export const getStats = async (
   };
 };
 
-const transform = (queryResult: QueryResult): GraphDto => {
-  const nodes: NodeDto[] = [];
-  const edges: EdgeDto[] = [];
+const transform = (queryResult: QueryResult): Neo4jGraph => {
+  const nodes: Neo4jNode[] = [];
+  const edges: Neo4jEdge[] = [];
 
   for (const record of queryResult.records) {
     for (const field of record) {
@@ -136,13 +128,9 @@ const transform = (queryResult: QueryResult): GraphDto => {
         }
 
         const id: string = field.elementId;
-        const fieldProperties = field.properties as Record<string, unknown>;
-        const displayTitle: string = JSON.stringify(
-          fieldProperties['name'] ?? Object.values(fieldProperties)[0] ?? field,
-        );
-        const type: string = field.labels.join(', ');
+        const labels: string[] = field.labels as string[];
 
-        const properties: GraphPropertyDto[] = [];
+        const properties: Neo4JProperty[] = [];
 
         for (const [slug, value] of Object.entries(
           field.properties as Record<string, unknown>,
@@ -150,7 +138,7 @@ const transform = (queryResult: QueryResult): GraphDto => {
           properties.push({ slug, value: JSON.stringify(value) });
         }
 
-        nodes.push({ id, displayTitle, type, properties });
+        nodes.push({ id, labels, properties });
       }
       if (field instanceof Relationship) {
         if (edges.find((n) => n.id === field.elementId)) {
@@ -162,7 +150,7 @@ const transform = (queryResult: QueryResult): GraphDto => {
         const endNodeId: string = field.endNodeElementId;
         const type: string = field.type as string;
 
-        const properties: GraphPropertyDto[] = [];
+        const properties: Neo4JProperty[] = [];
         for (const [slug, value] of Object.entries(
           field.properties as Record<string, unknown>,
         )) {
@@ -176,3 +164,48 @@ const transform = (queryResult: QueryResult): GraphDto => {
 
   return { nodes, edges };
 };
+
+export interface Neo4jGraph {
+  nodes: Array<Neo4jNode>;
+  edges: Array<Neo4jEdge>;
+}
+
+export interface Neo4jNode {
+  id: string;
+  labels: string[];
+  properties: Array<Neo4JProperty>;
+}
+
+export interface Neo4jEdge {
+  id: string;
+  startNodeId: string;
+  endNodeId: string;
+  type: string;
+  properties: Array<Neo4JProperty>;
+}
+
+export interface Neo4JProperty {
+  slug: string;
+  value: string;
+}
+
+export interface Neo4jStatsLabel {
+  label: string;
+  count: string;
+}
+
+export interface Neo4jStatsRelType {
+  relationship: string;
+  count: string;
+}
+
+export interface Neo4jStats {
+  labelCount: string;
+  relTypeCount: string;
+  propertyKeyCount: string;
+  nodeCount: string;
+  relCount: string;
+  labels: Neo4jStatsLabel[];
+  relTypes: Neo4jStatsRelType[];
+  relTypesCount: Neo4jStatsRelType[];
+}

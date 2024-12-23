@@ -8,7 +8,7 @@ import {
   Table,
   Stack,
 } from "react-bootstrap";
-import { useBearStore } from "../lib/State.ts";
+import { actions, useBearStore } from "../lib/State.ts";
 import { match } from "ts-pattern";
 import { Window } from "./Window.tsx";
 import {
@@ -25,12 +25,7 @@ import {
 
 export function ScenariosWindow() {
   const scenarios = useBearStore((state) => state.scenariosWindow.scenarios);
-  const reloadScenarios = useBearStore(
-    (state) => state.scenariosWindow.reloadScenarios,
-  );
-  const toggleWindow = useBearStore(
-    (state) => state.scenariosWindow.toggleWindow,
-  );
+
   const [position, setPosition] = useState({ x: 20, y: 20 });
 
   const windowRef = createRef<HTMLElement>();
@@ -50,7 +45,7 @@ export function ScenariosWindow() {
     setParentContainerHandle(windowRef.current.parentElement as HTMLDivElement);
   }, [windowRef]);
 
-  useEffect(reloadScenarios, []);
+  useEffect(actions.scenariosWindow.reloadScenarios, []);
 
   useEffect(() => {
     if (windowTitleHandle == null) {
@@ -113,11 +108,12 @@ export function ScenariosWindow() {
         title={"Scenarios"}
         className={"position-absolute"}
         ref={windowRef}
-        onClose={toggleWindow}
+        onClose={actions.scenariosWindow.toggleWindow}
         icon={"easel-fill"}
         style={{
           width: "500px",
           maxHeight: "600px",
+          zIndex: 600,
         }}
       >
         {match(scenarios)
@@ -145,10 +141,6 @@ function Loading() {
 }
 
 function Error(props: { message: string }) {
-  const reloadScenarios = useBearStore(
-    (state) => state.scenariosWindow.reloadScenarios,
-  );
-
   return (
     <Stack className={"p-3"}>
       <Alert
@@ -157,7 +149,7 @@ function Error(props: { message: string }) {
         className={"d-flex align-items-center"}
       >
         <span className={"me-auto"}>{props.message}</span>
-        <Button onClick={reloadScenarios} variant={""}>
+        <Button onClick={actions.scenariosWindow.reloadScenarios} variant={""}>
           <i className={"bi bi-arrow-clockwise"}></i>
         </Button>
       </Alert>
@@ -208,10 +200,6 @@ function ListSection(props: { database: GetScenariosDtoDatabase }) {
 }
 
 function ScenarioEntry(props: { scenario: GetScenariosDtoDatabaseScenario }) {
-  const loadInitialGraph = useBearStore(
-    (state) => state.canvas.loadInitialGraph,
-  );
-
   const scenario = props.scenario;
   return (
     <tr>
@@ -243,7 +231,7 @@ function ScenarioEntry(props: { scenario: GetScenariosDtoDatabaseScenario }) {
       <td>
         <Button
           onClick={() => {
-            loadInitialGraph(scenario.id);
+            actions.canvas.loadInitialGraph(scenario.id);
           }}
         >
           Run
