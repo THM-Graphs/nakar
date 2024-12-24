@@ -33,7 +33,7 @@ export default {
         fields: ['query'],
         populate: {
           database: {
-            fields: ['host', 'port', 'username', 'password'],
+            fields: ['url', 'username', 'password'],
           },
         },
       });
@@ -96,7 +96,7 @@ export default {
       const repository = strapi.documents('api::database.database');
       const dbResult = await repository.findMany({
         status: 'published',
-        fields: ['title', 'host', 'port'],
+        fields: ['title', 'url'],
         populate: {
           scenarios: {
             fields: ['title', 'query'],
@@ -113,8 +113,7 @@ export default {
         databases: dbResult.map((db) => ({
           id: db.documentId,
           title: db.title ?? '',
-          host: db.host ?? '',
-          port: db.port ?? 0,
+          url: db.url ?? '',
           scenarios:
             db.scenarios?.map((scenario) => ({
               id: scenario.documentId,
@@ -126,8 +125,7 @@ export default {
                 : undefined,
               databaseId: db.documentId,
               databaseTitle: db.title ?? '',
-              databaseHost: db.host ?? '',
-              databasePort: db.port ?? 0,
+              databaseUrl: db.url ?? '',
             })) ?? [],
         })),
       } satisfies GetScenariosDto;

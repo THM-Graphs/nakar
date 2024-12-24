@@ -11,18 +11,14 @@ import neo4j, {
 } from 'neo4j-driver';
 const executeQueryRaw = async (
   database?: {
-    host?: string | null;
-    port?: number | null;
+    url?: string | null;
     username?: string | null;
     password?: string | null;
   } | null,
   query?: string | null,
 ): Promise<QueryResult> => {
-  if (!database?.host) {
-    throw new Error('No database host configured.');
-  }
-  if (!database.port) {
-    throw new Error('No database port configured.');
+  if (!database?.url) {
+    throw new Error('No database url configured.');
   }
   if (!database.username) {
     throw new Error('No database username configured.');
@@ -35,7 +31,7 @@ const executeQueryRaw = async (
   }
 
   const driver: Driver = createDriver(
-    `neo4j://${database.host}:${database.port.toString()}`,
+    database.url,
     auth.basic(database.username, database.password),
   );
   try {
@@ -58,8 +54,7 @@ const executeQueryRaw = async (
 
 export const executeQuery = async (
   database?: {
-    host?: string | null;
-    port?: number | null;
+    url?: string | null;
     username?: string | null;
     password?: string | null;
   } | null,

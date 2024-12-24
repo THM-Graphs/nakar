@@ -83,8 +83,7 @@ export const GetScenariosDtoDatabaseScenarioSchema = z.object({
   query: z.string(),
   databaseId: z.string(),
   databaseTitle: z.string(),
-  databaseHost: z.string(),
-  databasePort: z.number(),
+  databaseUrl: z.string(),
   coverUrl: z.string().optional(),
 });
 export type GetScenariosDtoDatabaseScenario = z.infer<
@@ -93,8 +92,7 @@ export type GetScenariosDtoDatabaseScenario = z.infer<
 export const GetScenariosDtoDatabaseSchema = z.object({
   id: z.string(),
   title: z.string(),
-  host: z.string(),
-  port: z.number(),
+  url: z.string(),
   scenarios: z.array(GetScenariosDtoDatabaseScenarioSchema),
 });
 export type GetScenariosDtoDatabase = z.infer<

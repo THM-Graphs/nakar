@@ -179,7 +179,7 @@ function ListSection(props: { database: GetScenariosDtoDatabase }) {
       className={"border-0 border-bottom rounded-0"}
     >
       <Accordion.Header>
-        {database.title} ({database.host}:{database.port})
+        {database.title} ({database.url})
       </Accordion.Header>
       <Accordion.Body className={"p-0"}>
         <Table striped className={"align-middle"}>
