@@ -76,6 +76,7 @@ export default {
               properties: edge.properties,
             };
           }),
+          tableData: graphResult.tableData,
         },
       } satisfies GetInitialGraphDto;
 
