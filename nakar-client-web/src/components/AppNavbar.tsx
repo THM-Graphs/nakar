@@ -4,7 +4,11 @@ import { baseUrl } from "../lib/Backend.ts";
 import clsx from "clsx";
 
 export function AppNavbar() {
-  const opened = useBearStore((state) => state.scenariosWindow.opened);
+  const scenarioWindowOpen = useBearStore(
+    (state) => state.scenariosWindow.opened,
+  );
+  const tableDataOpened = useBearStore((state) => state.canvas.tableDataOpened);
+  const tableData = useBearStore((state) => state.canvas.graph.tableData);
 
   return (
     <Navbar
@@ -27,11 +31,25 @@ export function AppNavbar() {
         </Navbar.Brand>
         <Nav.Link
           onClick={actions.scenariosWindow.toggleWindow}
-          className={clsx("me-auto", opened && "text-muted")}
-          disabled={opened}
+          className={clsx("me-auto", scenarioWindowOpen && "fw-bold")}
         >
-          <i className={"bi bi-easel-fill me-1"}></i> Scenarios
+          <i className={"bi bi-easel-fill me-2"}></i>
+          <span>Scenarios</span>
         </Nav.Link>
+        {tableData.length > 0 && (
+          <Nav.Link
+            onClick={actions.canvas.toggleDataWindow}
+            className={clsx("me-5", tableDataOpened && "fw-bold")}
+          >
+            <i className={"bi bi-table me-2"}></i>
+            {tableData.length > 0 && (
+              <Badge className={"me-2"} bg="secondary">
+                {tableData.length}
+              </Badge>
+            )}
+            <span>Data</span>
+          </Nav.Link>
+        )}
         <Nav.Link href={baseUrl()} target={"_blank"}>
           <Badge bg="secondary">{baseUrl()}</Badge>
         </Nav.Link>

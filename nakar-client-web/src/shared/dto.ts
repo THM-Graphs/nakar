@@ -61,6 +61,7 @@ export type EdgeDto = z.infer<typeof EdgeDtoSchema>;
 export const GraphDtoSchema = z.object({
   nodes: z.array(NodeDtoSchema),
   edges: z.array(EdgeDtoSchema),
+  tableData: z.array(z.record(z.string(), z.string())),
 });
 export type GraphDto = z.infer<typeof GraphDtoSchema>;
 

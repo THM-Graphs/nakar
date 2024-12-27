@@ -3,12 +3,10 @@ import {
   GetInitialGraphDto,
   GetScenariosDto,
   GraphDto,
-  NodeDto,
 } from "../shared/dto.ts";
 import { immer } from "zustand/middleware/immer";
 import { getInitialGraph, getScenarios } from "./Backend.ts";
 import { handleError } from "./ErrorHandling.ts";
-import { Position } from "./Draggable.ts";
 
 interface BearState {
   scenariosWindow: {
@@ -28,6 +26,7 @@ interface BearState {
   };
   canvas: {
     graph: GraphDto;
+    tableDataOpened: boolean;
   };
 }
 
@@ -44,7 +43,9 @@ export const useBearStore = create<BearState>()(
         graph: {
           nodes: [],
           edges: [],
+          tableData: [],
         },
+        tableDataOpened: false,
       },
     }),
   ),
@@ -87,19 +88,9 @@ export const actions = {
         });
       })().catch(console.error);
     },
-    moveNodePosition: (nodeId: string, deltaPosition: Position) => {
+    toggleDataWindow: () => {
       useBearStore.setState((state: BearState): void => {
-        state.canvas.graph.nodes = state.canvas.graph.nodes.map(
-          (node: NodeDto): NodeDto => {
-            if (node.id === nodeId) {
-              node.position = {
-                x: node.position.x + deltaPosition.x,
-                y: node.position.y + deltaPosition.y,
-              };
-            }
-            return node;
-          },
-        );
+        state.canvas.tableDataOpened = !state.canvas.tableDataOpened;
       });
     },
   },

@@ -4,7 +4,7 @@ import * as d3 from "d3";
 import { EdgeDto, NodeDto } from "../shared/dto.ts";
 import { useTheme } from "../lib/Theme.ts";
 
-export function Canvas(props: { children: ReactNode }) {
+export function Canvas(props: { children?: ReactNode }) {
   const graph = useBearStore((state) => state.canvas.graph);
   const svgRef = createRef<SVGSVGElement>();
   const [theme] = useTheme();
