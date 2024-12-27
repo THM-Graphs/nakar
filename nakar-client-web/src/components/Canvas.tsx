@@ -121,8 +121,13 @@ const Edge = (props: { edge: EdgeDto; parent: HTMLDivElement }) => {
     props.parent,
   );
 
+  const labelAngle = angle > 90 || angle < -90 ? 180 : 0;
+
   return (
     <div
+      className={
+        "d-flex overflow-visible justify-content-center align-items-center"
+      }
       style={{
         zIndex: 500,
         position: "absolute",
@@ -134,6 +139,13 @@ const Edge = (props: { edge: EdgeDto; parent: HTMLDivElement }) => {
         transform: `rotate(${angle.toString()}deg)`,
         transformOrigin: "0 0",
       }}
-    />
+    >
+      <span
+        className={"bg-body-secondary rounded pe-2 ps-2"}
+        style={{ transform: `rotate(${labelAngle.toString()}deg)` }}
+      >
+        {props.edge.type}
+      </span>
+    </div>
   );
 };
