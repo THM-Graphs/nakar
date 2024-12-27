@@ -231,6 +231,14 @@ function ScenarioEntry(props: { scenario: GetScenariosDtoDatabaseScenario }) {
       <td>
         <Button
           onClick={() => {
+            navigator.clipboard.writeText(scenario.query).catch(console.error);
+          }}
+          className={"btn-secondary me-2"}
+        >
+          Copy Query
+        </Button>
+        <Button
+          onClick={() => {
             actions.canvas.loadInitialGraph(scenario.id);
           }}
         >
