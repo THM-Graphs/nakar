@@ -384,7 +384,6 @@ export interface ApiDatabaseDatabase extends Struct.CollectionTypeSchema {
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
-    host: Schema.Attribute.String;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
       'oneToMany',
@@ -392,7 +391,6 @@ export interface ApiDatabaseDatabase extends Struct.CollectionTypeSchema {
     > &
       Schema.Attribute.Private;
     password: Schema.Attribute.String;
-    port: Schema.Attribute.Integer;
     publishedAt: Schema.Attribute.DateTime;
     scenarios: Schema.Attribute.Relation<'oneToMany', 'api::scenario.scenario'>;
     title: Schema.Attribute.String;
