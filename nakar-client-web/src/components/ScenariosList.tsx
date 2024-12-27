@@ -133,6 +133,7 @@ function ScenarioEntry(props: { scenario: GetScenariosDtoDatabaseScenario }) {
           )}
           <span>{scenario.title}</span>
         </Card.Title>
+        <Card.Text>{scenario.description}</Card.Text>
         <Card.Text className={"font-monospace"}>{scenario.query}</Card.Text>
         <Button
           onClick={() => {

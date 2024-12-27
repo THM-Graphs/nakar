@@ -82,6 +82,7 @@ export const GetScenariosDtoDatabaseScenarioSchema = z.object({
   id: z.string(),
   title: z.string(),
   query: z.string(),
+  description: z.string(),
   databaseId: z.string(),
   databaseTitle: z.string(),
   databaseUrl: z.string(),

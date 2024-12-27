@@ -32,6 +32,9 @@
       "relation": "manyToOne",
       "target": "api::database.database",
       "inversedBy": "scenarios"
+    },
+    "description": {
+      "type": "text"
     }
   }
 }

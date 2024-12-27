@@ -28,11 +28,11 @@ export default function App() {
           className={"align-items-stretch flex-grow-1"}
           style={{ height: "100px" }}
         >
-          <SideToolbar visible={scenariosWindowOpened} width={600}>
+          <SideToolbar visible={scenariosWindowOpened} width={500}>
             <ScenariosList></ScenariosList>
           </SideToolbar>
           <Canvas></Canvas>
-          <SideToolbar visible={tableDataOpened} width={500}>
+          <SideToolbar visible={tableDataOpened} width={700}>
             <DataTable></DataTable>
           </SideToolbar>
         </Stack>

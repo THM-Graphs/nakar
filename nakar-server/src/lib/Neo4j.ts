@@ -122,7 +122,15 @@ const transform = (queryResult: QueryResult): Neo4jGraph => {
   ): Neo4JProperty[] => {
     return Object.entries(properties).map<Neo4JProperty>(
       ([slug, value]: [string, unknown]): Neo4JProperty => {
-        return { slug, value: JSON.stringify(value) };
+        if (value instanceof Integer) {
+          return { slug, value: value.toString() };
+        } else if (typeof value === 'number') {
+          return { slug, value: value.toString() };
+        } else if (typeof value === 'boolean') {
+          return { slug, value: value.toString() };
+        } else {
+          return { slug, value: JSON.stringify(value) };
+        }
       },
     );
   };
@@ -152,30 +160,38 @@ const transform = (queryResult: QueryResult): Neo4jGraph => {
       if (field instanceof Node) {
         const node: Neo4jNode = transformNode(field as Node);
         nodes.set(node.id, node);
-        tableEntry[key] = node.id;
+        tableEntry[key] = `[node, ${node.id}] ${node.labels.join(', ')}`;
       } else if (field instanceof Relationship) {
         const edge: Neo4jEdge = tranformRelationship(field as Relationship);
         edges.set(edge.id, edge);
-        tableEntry[key] = edge.id;
+        tableEntry[key] = `[edge, ${edge.id}] ${edge.type}`;
       } else if (field instanceof Path) {
+        const nodePath: Neo4jNode[] = [];
         for (const segment of field.segments) {
           const startNode: Neo4jNode = transformNode(segment.start as Node);
           nodes.set(startNode.id, startNode);
-          tableEntry[key] = startNode.id;
+          nodePath.push(startNode);
 
           const endNode: Neo4jNode = transformNode(segment.end as Node);
           nodes.set(endNode.id, endNode);
-          tableEntry[key] = endNode.id;
+          if (segment.end.elementId === field.end.elementId) {
+            nodePath.push(endNode);
+          }
 
           const edge = tranformRelationship(
             segment.relationship as Relationship,
           );
           edges.set(edge.id, edge);
-          tableEntry[key] = edge.id;
         }
+
+        const pathElementIds = nodePath.map((n) => n.id);
+
+        tableEntry[key] = `[path] ${pathElementIds.join(' -> ')}`;
       } else {
         if (field instanceof Integer) {
-          tableEntry[key] = JSON.stringify(field.toString());
+          tableEntry[key] = field.toString();
+        } else if (typeof field == 'number') {
+          tableEntry[key] = field.toString();
         } else {
           tableEntry[key] = JSON.stringify(field);
         }

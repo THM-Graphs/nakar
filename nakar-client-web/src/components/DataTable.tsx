@@ -10,7 +10,7 @@ export function DataTable() {
 
   return (
     <Stack className={"shadow border-start"}>
-      <Table>
+      <Table className={"table-responsive"}>
         <thead>
           <tr>
             {Object.keys(data[0]).map((key) => (
@@ -19,8 +19,8 @@ export function DataTable() {
           </tr>
         </thead>
         <tbody>
-          {data.map((row) => (
-            <tr key={JSON.stringify(row)}>
+          {data.map((row, index) => (
+            <tr key={index}>
               {Object.entries(row).map(([key, value]) => (
                 <td key={key}>{value}</td>
               ))}
