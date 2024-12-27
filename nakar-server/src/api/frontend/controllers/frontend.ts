@@ -15,7 +15,6 @@ import {
   NodeDto,
 } from '../../../lib/shared/dto';
 import { getRandomColor, invertColor } from '../../../lib/Color';
-import { layoutGraph } from '../../../lib/Physics';
 
 export default {
   initialGraph: async (ctx: Context): Promise<Context> => {
@@ -79,8 +78,6 @@ export default {
           tableData: graphResult.tableData,
         },
       } satisfies GetInitialGraphDto;
-
-      await layoutGraph(graph.graph);
 
       ctx.response.body = graph;
       return ctx;
