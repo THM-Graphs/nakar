@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "build:docker": "docker build -t nakar-client-web .",
+    "run:docker": "docker run -it --rm --name nakar-client-web -p 8080:80 nakar-client-web",
     "lint": "eslint .",
     "audit": "npm audit",
     "preview": "vite preview"
