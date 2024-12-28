@@ -20,9 +20,8 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
-    "noUncheckedSideEffectImports": true
+    "noUncheckedSideEffectImports": true,
+    "noImplicitAny": true
   },
-  "include": ["src", "openapi-ts.config.ts", "vite.config.ts",
-    "eslint.config.js"
-  ]
+  "include": ["src"]
 }

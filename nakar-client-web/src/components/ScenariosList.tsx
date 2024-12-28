@@ -20,7 +20,9 @@ import {
 export function ScenariosList() {
   const scenarios = useBearStore((state) => state.scenariosWindow.scenarios);
 
-  useEffect(actions.scenariosWindow.reloadScenarios, []);
+  useEffect(() => {
+    actions.scenariosWindow.reloadScenarios();
+  }, []);
 
   return (
     <Stack className={"shadow border-end"}>

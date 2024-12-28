@@ -10,6 +10,7 @@
     "start": "strapi start",
     "strapi": "strapi",
     "lint": "eslint .",
+    "audit": "npm audit",
     "test": "jest"
   },
   "dependencies": {

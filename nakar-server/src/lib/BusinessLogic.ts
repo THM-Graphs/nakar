@@ -1,4 +1,4 @@
-import { GetInitialGraphDto, NodeDto } from './shared/dto';
+import { GetInitialGraphDto } from './shared/dto';
 import { invertColor } from './Color';
 import { Neo4jNode, Neo4JProperty } from './Neo4j';
 

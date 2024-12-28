@@ -43,13 +43,23 @@ export function Canvas(props: { children?: ReactNode }) {
       };
     });
 
-    const edges: D3Link[] = graph.edges.map((edge: EdgeDto): D3Link => {
-      return {
-        ...edge,
-        source: nodes.find((n) => n.id == edge.startNodeId)!,
-        target: nodes.find((n) => n.id == edge.endNodeId)!,
-      };
-    });
+    const edges: D3Link[] = graph.edges.reduce(
+      (acc: D3Link[], edge: EdgeDto) => {
+        const sourceNode = nodes.find((n) => n.id === edge.startNodeId);
+        const targetNode = nodes.find((n) => n.id === edge.endNodeId);
+
+        if (sourceNode && targetNode) {
+          acc.push({
+            ...edge,
+            source: sourceNode,
+            target: targetNode,
+          });
+        }
+
+        return acc;
+      },
+      [],
+    );
 
     const simulation: d3.Simulation<D3Node, D3Link> = d3
       .forceSimulation(nodes)

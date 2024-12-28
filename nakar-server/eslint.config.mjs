@@ -8,7 +8,7 @@ export default tseslint.config({
     'eslint.config.mjs',
     'babel.config.js',
   ],
-  ignores: ['{src/admin,types/generated}/**'],
+  ignores: ['{src/admin,types/generated,dist}/**'],
   extends: [
     eslint.configs.recommended,
     tseslint.configs.strictTypeChecked,
