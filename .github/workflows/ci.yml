@@ -27,7 +27,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: ${{NODE_VERSION}}
+        node-version: ${{env.NODE_VERSION}}
     defaults:
       run:
         working-directory: nakar-server
@@ -46,7 +46,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: ${{NODE_VERSION}}
+        node-version: ${{env.NODE_VERSION}}
     defaults:
       run:
         working-directory: nakar-client-web
