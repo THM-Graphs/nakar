@@ -5,7 +5,6 @@ name: CI
 
 env:
   NODE_VERSION: "22.x"
-  OS_VERSION: "ubuntu-24.04"
 
 on:
   push:
@@ -15,7 +14,7 @@ on:
 
 jobs:
   build-nakar-db-pole:
-    runs-on: ${{ env.OS_VERSION }}
+    runs-on: ubuntu-24.04
     defaults:
       run:
         working-directory: nakar-db-pole
@@ -25,14 +24,13 @@ jobs:
     - run: npm run build
     
   build-nakar-server:
-    runs-on: ${{ env.OS_VERSION }}
+    runs-on: ubuntu-24.04
     defaults:
       run:
         working-directory: nakar-server
     steps:
     - uses: actions/checkout@v4
-    - name: Use Node.js ${{ env.NODE_VERSION }}
-      uses: actions/setup-node@v4
+    - uses: actions/setup-node@v4
       with:
         node-version: ${{ env.NODE_VERSION }}
     - run: npm ci
@@ -41,14 +39,13 @@ jobs:
     - run: npm run audit
     
   build-nakar-client-web:
-    runs-on: ${{ env.OS_VERSION }}
+    runs-on: ubuntu-24.04
     defaults:
       run:
         working-directory: nakar-client-web
     steps:
     - uses: actions/checkout@v4
-    - name: Use Node.js ${{ env.NODE_VERSION }}
-      uses: actions/setup-node@v4
+    - uses: actions/setup-node@v4
       with:
         node-version: ${{ env.NODE_VERSION }}
     - run: npm ci
