@@ -4,7 +4,7 @@
 name: CI
 
 env:
-  NODE_VERSION: 22.x
+  NODE_VERSION: "22.x"
 
 on:
   push:
@@ -27,7 +27,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: ${{env.NODE_VERSION}}
+        node-version: ${{ env.NODE_VERSION }}
     defaults:
       run:
         working-directory: nakar-server
@@ -46,7 +46,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: ${{env.NODE_VERSION}}
+        node-version: ${{ env.NODE_VERSION }}
     defaults:
       run:
         working-directory: nakar-client-web
