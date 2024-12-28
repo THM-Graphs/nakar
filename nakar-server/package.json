@@ -12,8 +12,8 @@
     "lint": "eslint .",
     "audit": "npm audit --audit-level none",
     "test": "jest",
-    "export": "strapi export --no-compress --no-encrypt -f database/export.bin.tar",
-    "import": "strapi import -f database/export.bin.tar"
+    "export": "strapi export --no-compress --no-encrypt -f export.bin.tar",
+    "import": "strapi import -f export.bin.tar"
   },
   "dependencies": {
     "@strapi/plugin-documentation": "^5.6.0",
