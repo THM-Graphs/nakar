@@ -25,18 +25,15 @@ jobs:
     
   build-nakar-server:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version: ${{ env.NODE_VERSION }}
     defaults:
       run:
         working-directory: nakar-server
     steps:
     - uses: actions/checkout@v4
-    - name: Use Node.js ${{ matrix.node-version }}
+    - name: Use Node.js ${{ env.NODE_VERSION }}
       uses: actions/setup-node@v4
       with:
-        node-version: ${{ matrix.node-version }}
+        node-version: ${{ env.NODE_VERSION }}
     - run: npm ci
     - run: npm run build
     - run: npm run lint
@@ -44,18 +41,15 @@ jobs:
     
   build-nakar-client-web:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version: ${{ env.NODE_VERSION }}
     defaults:
       run:
         working-directory: nakar-client-web
     steps:
     - uses: actions/checkout@v4
-    - name: Use Node.js ${{ matrix.node-version }}
+    - name: Use Node.js ${{ env.NODE_VERSION }}
       uses: actions/setup-node@v4
       with:
-        node-version: ${{ matrix.node-version }}
+        node-version: ${{ env.NODE_VERSION }}
     - run: npm ci
     - run: npm run build
     - run: npm run lint
