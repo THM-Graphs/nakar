@@ -5,6 +5,7 @@ name: CI
 
 env:
   NODE_VERSION: "22.x"
+  OS_VERSION: "ubuntu-24.04"
 
 on:
   push:
@@ -14,7 +15,7 @@ on:
 
 jobs:
   build-nakar-db-pole:
-    runs-on: ubuntu-latest
+    runs-on: ${{ env.OS_VERSION }}
     defaults:
       run:
         working-directory: nakar-db-pole
@@ -24,7 +25,7 @@ jobs:
     - run: npm run build
     
   build-nakar-server:
-    runs-on: ubuntu-latest
+    runs-on: ${{ env.OS_VERSION }}
     defaults:
       run:
         working-directory: nakar-server
@@ -40,7 +41,7 @@ jobs:
     - run: npm run audit
     
   build-nakar-client-web:
-    runs-on: ubuntu-latest
+    runs-on: ${{ env.OS_VERSION }}
     defaults:
       run:
         working-directory: nakar-client-web
