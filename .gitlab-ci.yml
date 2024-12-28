@@ -16,6 +16,7 @@ nakar-server:
     - npm ci
     - npm run build
     - npm run lint
+    - npm run audit
 
 nakar-client-web:
   stage: build
@@ -26,3 +27,4 @@ nakar-client-web:
     - npm ci
     - npm run build
     - npm run lint
+    - npm run audit
