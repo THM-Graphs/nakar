@@ -32,8 +32,7 @@ export function applyNodeSizes(graph: GetInitialGraphDto): void {
   }
 }
 
-export function applyNodeColors(graph: GetInitialGraphDto): void {
-  const labels: Record<string, string> = {};
+export function applyLabelColors(graph: GetInitialGraphDto): void {
   const htmlColors: string[] = [
     '#ff8189',
     '#ffff80',
@@ -47,16 +46,17 @@ export function applyNodeColors(graph: GetInitialGraphDto): void {
 
   for (const node of graph.graph.nodes) {
     for (const label of node.labels) {
-      if (!Object.keys(labels).includes(label)) {
-        labels[label] = htmlColors[htmlCounter];
+      let foundEntry = graph.graphMetaData.labels.find(
+        (l) => l.label === label,
+      );
+      if (!foundEntry) {
+        const color = htmlColors[htmlCounter];
         htmlCounter = (htmlCounter + 1) % htmlColors.length;
+        foundEntry = { label: label, color: color, count: 0 };
+        graph.graphMetaData.labels.push(foundEntry);
       }
+      foundEntry.count += 1;
     }
-  }
-
-  for (const node of graph.graph.nodes) {
-    node.backgroundColor = labels[node.labels[0]];
-    node.displayTitleColor = invertColor(labels[node.labels[0]]);
   }
 }
 

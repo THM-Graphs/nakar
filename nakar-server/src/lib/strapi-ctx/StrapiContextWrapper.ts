@@ -10,6 +10,7 @@ import createHttpError, {
   InternalServerError,
   NotFound,
 } from 'http-errors';
+import { Neo4jError } from 'neo4j-driver';
 
 export class StrapiContextWrapper {
   private readonly ctx: Context;
@@ -49,6 +50,12 @@ export class StrapiContextWrapper {
           )
           .with(P.instanceOf(Neo4jWrapperErrorNoLoginData), (error) =>
             StrapiContextWrapper.handleError(ctx, new NotFound(error.message)),
+          )
+          .with(P.instanceOf(Neo4jError), (error) =>
+            StrapiContextWrapper.handleError(
+              ctx,
+              new BadRequest(error.message),
+            ),
           )
           .with(P.instanceOf(HttpError), (error) =>
             StrapiContextWrapper.handleError(ctx, error),

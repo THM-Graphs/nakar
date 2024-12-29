@@ -43,8 +43,6 @@ export const NodeDtoSchema = z.object({
   labels: z.array(z.string()),
   properties: z.array(GraphPropertyDtoSchema),
   size: z.number(),
-  backgroundColor: z.string(),
-  displayTitleColor: z.string(),
   position: PositionDtoSchema,
 });
 export type NodeDto = z.infer<typeof NodeDtoSchema>;
@@ -61,7 +59,6 @@ export type EdgeDto = z.infer<typeof EdgeDtoSchema>;
 export const GraphDtoSchema = z.object({
   nodes: z.array(NodeDtoSchema),
   edges: z.array(EdgeDtoSchema),
-  tableData: z.array(z.record(z.string(), z.string())),
 });
 export type GraphDto = z.infer<typeof GraphDtoSchema>;
 
@@ -73,8 +70,21 @@ export type GetDatabaseStructureDto = z.infer<
   typeof GetDatabaseStructureDtoSchema
 >;
 
+export const GraphMetaDataSchema = z.object({
+  labels: z.array(
+    z.object({
+      label: z.string(),
+      color: z.string(),
+      count: z.number(),
+    }),
+  ),
+});
+export type GraphMetaData = z.infer<typeof GraphMetaDataSchema>;
+
 export const GetInitialGraphDtoSchema = z.object({
   graph: GraphDtoSchema,
+  graphMetaData: GraphMetaDataSchema,
+  tableData: z.array(z.record(z.string(), z.string())),
 });
 export type GetInitialGraphDto = z.infer<typeof GetInitialGraphDtoSchema>;
 

@@ -6,7 +6,7 @@ import {
   NodeDto,
 } from '../../../lib/shared/dto';
 import {
-  applyNodeColors,
+  applyLabelColors,
   applyNodeSizes,
   getNodeDisplayTitle,
 } from '../../../lib/BusinessLogic';
@@ -38,8 +38,6 @@ export default {
               labels: node.labels,
               properties: node.properties,
               size: 0,
-              backgroundColor: '',
-              displayTitleColor: '',
               position: {
                 x: 0,
                 y: 0,
@@ -55,12 +53,15 @@ export default {
               properties: edge.properties,
             };
           }),
-          tableData: graphResult.tableData,
+        },
+        tableData: graphResult.tableData,
+        graphMetaData: {
+          labels: [],
         },
       };
 
       applyNodeSizes(graph);
-      applyNodeColors(graph);
+      applyLabelColors(graph);
 
       return graph;
     },

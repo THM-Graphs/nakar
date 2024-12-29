@@ -1,11 +1,7 @@
 import { create } from "zustand";
-import {
-  GetInitialGraphDto,
-  GetScenariosDto,
-  GraphDto,
-} from "../shared/dto.ts";
+import { GetInitialGraphDto, GetScenariosDto } from "../shared/dto.ts";
 import { immer } from "zustand/middleware/immer";
-import { getInitialGraph, getScenarios } from "./Backend.ts";
+import { getInitialGraph, getScenarios, HTTPError } from "./Backend.ts";
 import { handleError } from "./ErrorHandling.ts";
 
 interface BearState {
@@ -25,7 +21,7 @@ interface BearState {
         };
   };
   canvas: {
-    graph: GraphDto;
+    graph: GetInitialGraphDto;
     tableDataOpened: boolean;
   };
 }
@@ -41,8 +37,13 @@ export const useBearStore = create<BearState>()(
       },
       canvas: {
         graph: {
-          nodes: [],
-          edges: [],
+          graph: {
+            nodes: [],
+            edges: [],
+          },
+          graphMetaData: {
+            labels: [],
+          },
           tableData: [],
         },
         tableDataOpened: false,
@@ -82,10 +83,15 @@ export const actions = {
   canvas: {
     loadInitialGraph: (scenarioId: string): void => {
       (async () => {
-        const result: GetInitialGraphDto = await getInitialGraph(scenarioId);
-        useBearStore.setState((state: BearState): void => {
-          state.canvas.graph = result.graph;
-        });
+        try {
+          const result: GetInitialGraphDto = await getInitialGraph(scenarioId);
+          useBearStore.setState((state: BearState): void => {
+            state.canvas.graph = result;
+          });
+        } catch (error) {
+          const httpError = error as HTTPError;
+          alert(`${httpError.name}\n\n${httpError.message}`);
+        }
       })().catch(console.error);
     },
     toggleDataWindow: () => {
