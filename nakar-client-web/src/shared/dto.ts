@@ -86,7 +86,7 @@ export const GetScenariosDtoDatabaseScenarioSchema = z.object({
   databaseId: z.string(),
   databaseTitle: z.string(),
   databaseUrl: z.string(),
-  coverUrl: z.string().optional(),
+  coverUrl: z.string().nullable(),
 });
 export type GetScenariosDtoDatabaseScenario = z.infer<
   typeof GetScenariosDtoDatabaseScenarioSchema
