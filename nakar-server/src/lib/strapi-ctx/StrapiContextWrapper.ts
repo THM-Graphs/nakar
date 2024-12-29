@@ -33,8 +33,7 @@ export class StrapiContextWrapper {
       const context = new StrapiContextWrapper(ctx);
       const db = new StrapiDbWrapper();
       try {
-        const body = await handler(context, db);
-        ctx.response.body = body;
+        ctx.response.body = await handler(context, db);
         ctx.status = 200;
         return ctx;
       } catch (error: unknown) {

@@ -2,7 +2,6 @@ import { DBScenario, DBScenarioSchema } from './types/DBScenario';
 import { StrapiDbWrapperErrorNotFound } from './errors/StrapiDbWrapperErrorNotFound';
 import { StrapiDbWrapperErrorCannotParse } from './errors/StrapiDbWrapperErrorCannotParse';
 import { DBDatabase, DBDatabaseSchema } from './types/DBDatabase';
-import { ZodError } from 'zod';
 
 export class StrapiDbWrapper {
   private readonly scenariosRepository = strapi.documents(
