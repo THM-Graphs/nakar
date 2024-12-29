@@ -1,6 +1,7 @@
 import { GetInitialGraphDto } from './shared/dto';
 import { invertColor } from './Color';
-import { Neo4jNode, Neo4JProperty } from './Neo4j';
+import { Neo4jNode } from './neo4j/types/Neo4jNode';
+import { Neo4JProperty } from './neo4j/types/Neo4JProperty';
 
 export function applyNodeSizes(graph: GetInitialGraphDto): void {
   const nodeConnections: Record<string, number> = {};

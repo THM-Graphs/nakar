@@ -1,11 +1,3 @@
-import z, { ZodError } from 'zod';
-import {
-  executeQuery,
-  getStats,
-  Neo4jEdge,
-  Neo4jNode,
-} from '../../../lib/Neo4j';
-import type { Context } from 'koa';
 import {
   EdgeDto,
   GetDatabaseStructureDto,
@@ -18,37 +10,26 @@ import {
   applyNodeSizes,
   getNodeDisplayTitle,
 } from '../../../lib/BusinessLogic';
+import { Neo4jWrapper } from '../../../lib/neo4j/Neo4jWrapper';
+import { Neo4jNode } from '../../../lib/neo4j/types/Neo4jNode';
+import { Neo4jEdge } from '../../../lib/neo4j/types/Neo4jEdge';
+import { StrapiDbWrapper } from '../../../lib/strapi-db/StrapiDbWrapper';
+import { StrapiContextWrapper } from '../../../lib/strapi-ctx/StrapiContextWrapper';
 
 export default {
-  initialGraph: async (ctx: Context): Promise<Context> => {
-    const querySchema = z.object({
-      scenarioId: z.string(),
-    });
+  initialGraph: StrapiContextWrapper.handleRequest(
+    async (
+      context: StrapiContextWrapper,
+      db: StrapiDbWrapper,
+    ): Promise<GetInitialGraphDto> => {
+      const scenarioId = context.getQueryParameter('scenarioId');
 
-    try {
-      const query = querySchema.parse(ctx.request.query);
+      const scenario = await db.getScenario(scenarioId);
 
-      const repository = strapi.documents('api::scenario.scenario');
-      const rawResult = await repository.findOne({
-        documentId: query.scenarioId,
-        status: 'published',
-        fields: ['query'],
-        populate: {
-          database: {
-            fields: ['url', 'username', 'password'],
-          },
-        },
-      });
-      if (rawResult == null) {
-        return ctx.notFound('Scenario not found');
-      }
+      const neo4jWrapper = new Neo4jWrapper(scenario.database);
+      const graphResult = await neo4jWrapper.executeQuery(scenario.query);
 
-      const graphResult = await executeQuery(
-        rawResult.database,
-        rawResult.query,
-      );
-
-      const graph = {
+      const graph: GetInitialGraphDto = {
         graph: {
           nodes: graphResult.nodes.map((node: Neo4jNode): NodeDto => {
             return {
@@ -76,99 +57,59 @@ export default {
           }),
           tableData: graphResult.tableData,
         },
-      } satisfies GetInitialGraphDto;
+      };
 
       applyNodeSizes(graph);
       applyNodeColors(graph);
 
-      ctx.response.body = graph;
-      return ctx;
-    } catch (err) {
-      if (err instanceof ZodError) {
-        return ctx.badRequest(err as object);
-      } else {
-        return ctx.internalServerError(err as object);
-      }
-    }
-  },
-  scenarios: async (ctx: Context): Promise<Context> => {
-    try {
-      const repository = strapi.documents('api::database.database');
-      const dbResult = await repository.findMany({
-        status: 'published',
-        fields: ['title', 'url'],
-        populate: {
-          scenarios: {
-            fields: ['title', 'query', 'description'],
-            populate: {
-              cover: {
-                fields: ['url'],
-              },
-            },
-          },
-        },
-      });
+      return graph;
+    },
+  ),
+  scenarios: StrapiContextWrapper.handleRequest(
+    async (
+      context: StrapiContextWrapper,
+      db: StrapiDbWrapper,
+    ): Promise<GetScenariosDto> => {
+      const databases = await db.getDatabases();
 
-      ctx.response.body = {
-        databases: dbResult.map((db) => ({
-          id: db.documentId,
-          title: db.title ?? '',
-          url: db.url ?? '',
-          scenarios:
-            db.scenarios?.map((scenario) => ({
-              id: scenario.documentId,
-              title: scenario.title ?? '',
-              description: scenario.description ?? '',
-              query: scenario.query ?? '',
-              coverUrl: scenario.cover
-                ? strapi.config.get('server.url', '') +
-                  (scenario.cover as { url: string }).url
-                : undefined,
-              databaseId: db.documentId,
-              databaseTitle: db.title ?? '',
-              databaseUrl: db.url ?? '',
-            })) ?? [],
+      return {
+        databases: databases.map((database) => ({
+          id: database.documentId,
+          title: database.title ?? '',
+          url: database.url ?? '',
+          scenarios: (database.scenarios ?? []).map((scenario) => ({
+            id: scenario.documentId,
+            title: scenario.title ?? '',
+            description: scenario.description ?? '',
+            query: scenario.query ?? '',
+            coverUrl:
+              scenario.cover?.url && scenario.cover.url !== ''
+                ? strapi.config.get<string>('server.url') + scenario.cover.url
+                : null,
+            databaseId: database.documentId,
+            databaseTitle: database.title ?? '',
+            databaseUrl: database.url ?? '',
+          })),
         })),
-      } satisfies GetScenariosDto;
-      return ctx;
-    } catch (err) {
-      if (err instanceof ZodError) {
-        return ctx.badRequest(err as object);
-      } else {
-        return ctx.internalServerError(err as object);
-      }
-    }
-  },
-  databaseStructure: async (ctx: Context): Promise<Context> => {
-    const querySchema = z.object({
-      databaseId: z.string(),
-    });
+      };
+    },
+  ),
+  databaseStructure: StrapiContextWrapper.handleRequest(
+    async (
+      context: StrapiContextWrapper,
+      db: StrapiDbWrapper,
+    ): Promise<GetDatabaseStructureDto> => {
+      const databaseId = context.getQueryParameter('databaseId');
 
-    try {
-      const query = querySchema.parse(ctx.request.query);
+      const database = await db.getDatabase(databaseId);
 
-      const repository = strapi.documents('api::database.database');
-      const rawResult = await repository.findOne({
-        documentId: query.databaseId,
-        status: 'published',
-      });
-      if (rawResult == null) {
-        return ctx.notFound('Database not found');
-      }
+      const neo4jWrapper = new Neo4jWrapper(database);
+      const stats = await neo4jWrapper.getStats();
 
-      const stats = await getStats(rawResult);
-
-      ctx.response.body = {
-        id: query.databaseId,
+      return {
+        id: databaseId,
         stats,
-      } satisfies GetDatabaseStructureDto;
-      return ctx;
-    } catch (err) {
-      if (err instanceof ZodError) {
-        return ctx.badRequest(err as object);
-      } else {
-        return ctx.internalServerError(err as object);
-      }
-    }
-  },
+      };
+    },
+  ),
 };

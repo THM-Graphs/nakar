@@ -7,16 +7,18 @@ import {
 } from '../src/lib/shared/dto';
 
 const server = request('http://localhost:1337');
-const scenarioId = 'w4b8ncvj86v4ctariple6y67';
+const scenarioId = 'so8ujqw4jwd21g3sqphb05vw';
 const databaseId = 'a21ce7877ulatqwuadb3jyff';
 
 describe('GET /api/frontend/initial-graph', () => {
   it('400 (no query parameter)', async () => {
     const response = await server.get('/api/frontend/initial-graph');
     expect(response.status).toStrictEqual(400);
-    expect(JSON.stringify(response.body)).toEqual(
-      expect.stringContaining('scenarioId'),
-    );
+    expect(response.body).toStrictEqual({
+      message: 'Query parameter scenarioId not provided.',
+      name: 'BadRequestError',
+      status: 400,
+    });
   });
 
   it('404 (scenario not found)', async () => {
@@ -24,9 +26,11 @@ describe('GET /api/frontend/initial-graph', () => {
       '/api/frontend/initial-graph?scenarioId=notfound',
     );
     expect(response.status).toStrictEqual(404);
-    expect(JSON.stringify(response.body)).toEqual(
-      expect.stringContaining('Scenario not found'),
-    );
+    expect(response.body).toStrictEqual({
+      status: 404,
+      message: 'Document with id notfound not found.',
+      name: 'NotFoundError',
+    });
   });
 
   it('200', async () => {
@@ -52,17 +56,21 @@ describe('GET /api/frontend/database-structure', () => {
       `/api/frontend/database-structure?databaseId=notfound`,
     );
     expect(response.status).toStrictEqual(404);
-    expect(JSON.stringify(response.body)).toEqual(
-      expect.stringContaining('Database not found'),
-    );
+    expect(response.body).toStrictEqual({
+      status: 404,
+      message: 'Document with id notfound not found.',
+      name: 'NotFoundError',
+    });
   });
 
   it('400 (no query parameter)', async () => {
     const response = await server.get(`/api/frontend/database-structure`);
     expect(response.status).toStrictEqual(400);
-    expect(JSON.stringify(response.body)).toEqual(
-      expect.stringContaining('databaseId'),
-    );
+    expect(response.body).toStrictEqual({
+      message: 'Query parameter databaseId not provided.',
+      name: 'BadRequestError',
+      status: 400,
+    });
   });
 
   it('200', async () => {
