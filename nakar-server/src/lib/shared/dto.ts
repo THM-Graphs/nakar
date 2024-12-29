@@ -33,14 +33,43 @@ export const GraphPropertyDtoSchema = z.object({
 });
 export type GraphPropertyDto = z.infer<typeof GraphPropertyDtoSchema>;
 
+export const ColorDtoSchema = z.discriminatedUnion('type', [
+  z.object({
+    type: z.literal('preset'),
+    index: z.union([
+      z.literal(0),
+      z.literal(1),
+      z.literal(2),
+      z.literal(3),
+      z.literal(4),
+      z.literal(5),
+    ]),
+  }),
+  z.object({
+    type: z.literal('custom'),
+    backgroundColor: z.string(),
+    textColor: z.string(),
+  }),
+]);
+export type ColorDto = z.infer<typeof ColorDtoSchema>;
+
 export const PositionDtoSchema = z.object({
   x: z.number(),
   y: z.number(),
 });
+export type Position = z.infer<typeof PositionDtoSchema>;
+
+export const GraphMetaDataLabelSchema = z.object({
+  label: z.string(),
+  color: ColorDtoSchema,
+  count: z.number(),
+});
+export type GraphMetaDataLabel = z.infer<typeof GraphMetaDataLabelSchema>;
+
 export const NodeDtoSchema = z.object({
   id: z.string(),
   displayTitle: z.string(),
-  labels: z.array(z.string()),
+  labels: z.array(GraphMetaDataLabelSchema),
   properties: z.array(GraphPropertyDtoSchema),
   size: z.number(),
   position: PositionDtoSchema,
@@ -71,13 +100,7 @@ export type GetDatabaseStructureDto = z.infer<
 >;
 
 export const GraphMetaDataSchema = z.object({
-  labels: z.array(
-    z.object({
-      label: z.string(),
-      color: z.string(),
-      count: z.number(),
-    }),
-  ),
+  labels: z.array(GraphMetaDataLabelSchema),
 });
 export type GraphMetaData = z.infer<typeof GraphMetaDataSchema>;
 

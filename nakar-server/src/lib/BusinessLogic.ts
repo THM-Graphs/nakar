@@ -1,5 +1,4 @@
-import { GetInitialGraphDto } from './shared/dto';
-import { invertColor } from './Color';
+import { ColorDto, GetInitialGraphDto, GraphMetaDataLabel } from './shared/dto';
 import { Neo4jNode } from './neo4j/types/Neo4jNode';
 import { Neo4JProperty } from './neo4j/types/Neo4JProperty';
 
@@ -32,30 +31,32 @@ export function applyNodeSizes(graph: GetInitialGraphDto): void {
   }
 }
 
-export function applyLabelColors(graph: GetInitialGraphDto): void {
-  const htmlColors: string[] = [
-    '#ff8189',
-    '#ffff80',
-    '#7dff98',
-    '#ffc280',
-    '#7fc7ff',
-    '#b580ff',
-  ];
-
-  let htmlCounter = 0;
+export function applyLabels(graph: GetInitialGraphDto): void {
+  let colorIndex: 0 | 1 | 2 | 3 | 4 | 5 = 0;
 
   for (const node of graph.graph.nodes) {
     for (const label of node.labels) {
-      let foundEntry = graph.graphMetaData.labels.find(
-        (l) => l.label === label,
+      const foundEntry = graph.graphMetaData.labels.find(
+        (l) => l.label === label.label,
       );
       if (!foundEntry) {
-        const color = htmlColors[htmlCounter];
-        htmlCounter = (htmlCounter + 1) % htmlColors.length;
-        foundEntry = { label: label, color: color, count: 0 };
-        graph.graphMetaData.labels.push(foundEntry);
+        const color: ColorDto = { type: 'preset', index: colorIndex };
+        const newEntry: GraphMetaDataLabel = {
+          label: label.label,
+          color: color,
+          count: 1,
+        };
+        graph.graphMetaData.labels.push(newEntry);
+
+        label.color = color;
+        label.count = 1;
+
+        colorIndex = ((colorIndex + 1) % 6) as 0 | 1 | 2 | 3 | 4 | 5;
+      } else {
+        foundEntry.count += 1;
+        label.count += 1;
+        label.color = foundEntry.color;
       }
-      foundEntry.count += 1;
     }
   }
 }

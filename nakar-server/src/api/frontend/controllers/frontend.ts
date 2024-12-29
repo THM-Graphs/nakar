@@ -3,10 +3,11 @@ import {
   GetDatabaseStructureDto,
   GetInitialGraphDto,
   GetScenariosDto,
+  GraphMetaDataLabel,
   NodeDto,
 } from '../../../lib/shared/dto';
 import {
-  applyLabelColors,
+  applyLabels,
   applyNodeSizes,
   getNodeDisplayTitle,
 } from '../../../lib/BusinessLogic';
@@ -35,7 +36,13 @@ export default {
             return {
               id: node.id,
               displayTitle: getNodeDisplayTitle(node),
-              labels: node.labels,
+              labels: node.labels.map((label): GraphMetaDataLabel => {
+                return {
+                  label: label,
+                  color: { type: 'preset', index: 0 },
+                  count: 0,
+                };
+              }),
               properties: node.properties,
               size: 0,
               position: {
@@ -61,7 +68,7 @@ export default {
       };
 
       applyNodeSizes(graph);
-      applyLabelColors(graph);
+      applyLabels(graph);
 
       return graph;
     },
