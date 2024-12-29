@@ -1,14 +1,16 @@
 import { createRef, ReactNode, useEffect } from "react";
-import { useBearStore } from "../lib/State.ts";
 import * as d3 from "d3";
 import { EdgeDto, NodeDto } from "../shared/dto.ts";
-import { useTheme } from "../lib/Theme.ts";
-import { Badge, Stack } from "react-bootstrap";
+import { Stack } from "react-bootstrap";
+import { useStore } from "../lib/state/useStore.ts";
+import { useTheme } from "../lib/theme/useTheme.ts";
+import { getBackgroundColor } from "../lib/color/getBackgroundColor.ts";
+import { getTextColor } from "../lib/color/getTextColor.ts";
 
 export function Canvas(props: { children?: ReactNode }) {
-  const graph = useBearStore((state) => state.canvas.graph);
+  const graph = useStore((state) => state.canvas.graph);
   const svgRef = createRef<SVGSVGElement>();
-  const [theme] = useTheme();
+  const theme = useTheme();
 
   useEffect(() => {
     if (svgRef.current == null) return;
@@ -129,30 +131,23 @@ export function Canvas(props: { children?: ReactNode }) {
             d.fy = event.y;
           },
         )
-        .on(
-          "end",
-          (event: d3.D3DragEvent<SVGGElement, D3Node, null>, _d: D3Node) => {
-            if (event.active == 0) simulation.alphaTarget(0);
-            // d.fx = undefined;
-            // d.fy = undefined;
-          },
-        ),
+        .on("end", (event: d3.D3DragEvent<SVGGElement, D3Node, null>) => {
+          if (event.active == 0) simulation.alphaTarget(0);
+          // d.fx = undefined;
+          // d.fy = undefined;
+        }),
     );
     node
       .append("circle")
       .attr("r", (d) => d.size)
-      .attr(
-        "fill",
-        (d) =>
-          graph.graphMetaData.labels.find((l) => l.label === d.labels[0]).color,
-      )
+      .attr("fill", (d) => getBackgroundColor(d.labels[0].color))
       .attr("stroke", () => (theme == "dark" ? "#fff" : "#000"))
       .attr("stroke-width", "3px");
 
     node
       .append("text")
       .text((d) => d.displayTitle)
-      .attr("fill", "black")
+      .attr("fill", (d) => getTextColor(d.labels[0].color))
       .attr("font-weight", "bolder")
       .attr("text-anchor", "middle");
 
@@ -184,7 +179,10 @@ export function Canvas(props: { children?: ReactNode }) {
         {graph.graphMetaData.labels.map((label) => (
           <span
             className={"badge"}
-            style={{ backgroundColor: label.color, color: "black" }}
+            style={{
+              backgroundColor: getBackgroundColor(label.color),
+              color: getTextColor(label.color),
+            }}
             key={label.label}
           >
             {label.label} ({label.count})

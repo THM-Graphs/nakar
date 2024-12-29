@@ -1,4 +1,4 @@
-export const handleError = (error: unknown): string => {
+export function handleError(error: unknown): string {
   if (error instanceof Error) {
     return error.message;
   } else if (typeof error == "string") {
@@ -6,4 +6,4 @@ export const handleError = (error: unknown): string => {
   } else {
     return JSON.stringify(error);
   }
-};
+}

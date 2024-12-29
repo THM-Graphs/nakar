@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment  */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 
 import js from "@eslint/js";
 import globals from "globals";
@@ -30,11 +29,7 @@ export default tseslint.config(
     },
 
     rules: {
-      ...reactHooks.configs.recommended.rules,
-      "react-refresh/only-export-components": [
-        "warn",
-        { allowConstantExport: true },
-      ],
+      "react-hooks/ exhaustive-deps": "off",
     },
   },
 );
