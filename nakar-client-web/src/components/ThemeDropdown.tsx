@@ -20,7 +20,7 @@ function getLabel(_theme: UserTheme): string {
     .exhaustive();
 }
 
-export function ThemeDropdown(props: { className: string }) {
+export function ThemeDropdown(props: { className?: string }) {
   const theme = useTheme();
 
   return (

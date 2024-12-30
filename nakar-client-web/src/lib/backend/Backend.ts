@@ -4,12 +4,13 @@ import {
   GetScenariosDto,
   GetScenariosDtoSchema,
 } from "../../shared/dto.ts";
+import { getEnv } from "../../env.ts";
 
 export class Backend {
   private readonly baseUrl: string;
 
-  constructor(baseUrl: string) {
-    this.baseUrl = baseUrl;
+  constructor() {
+    this.baseUrl = getEnv().backendUrl;
   }
 
   async getScenarios(): Promise<GetScenariosDto> {

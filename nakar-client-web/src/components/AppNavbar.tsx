@@ -41,11 +41,11 @@ export function AppNavbar() {
           <i className={"bi bi-easel-fill me-2"}></i>
           <span>Scenarios</span>
         </Nav.Link>
-        <ThemeDropdown className={"me-5"}></ThemeDropdown>
+        <ThemeDropdown></ThemeDropdown>
         {tableData.length > 0 && (
           <Nav.Link
             onClick={actionRunner(toggleDataWindow())}
-            className={clsx("me-5", tableDataOpened && "fw-bold")}
+            className={clsx("ms-5", tableDataOpened && "fw-bold")}
           >
             <i className={"bi bi-table me-2"}></i>
             {tableData.length > 0 && (
@@ -56,9 +56,16 @@ export function AppNavbar() {
             <span>Data</span>
           </Nav.Link>
         )}
-        <Nav.Link href={backend.getBaseUrl()} target={"_blank"}>
+        <Nav.Link
+          href={backend.getBaseUrl()}
+          className={"ms-5"}
+          target={"_blank"}
+        >
           <Badge bg="secondary">{backend.getBaseUrl()}</Badge>
         </Nav.Link>
+        <Badge bg="danger" className={"ms-2"}>
+          {import.meta.env.DEV && <span>{import.meta.env.MODE}</span>}
+        </Badge>
       </Container>
     </Navbar>
   );
