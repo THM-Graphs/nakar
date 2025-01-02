@@ -1,7 +1,8 @@
 stages:
   - ci
+  - deploy
 
-nakar-db-pole:
+ci_nakar-db-pole:
   stage: ci
   tags: 
       - nodejs
@@ -9,7 +10,7 @@ nakar-db-pole:
     - cd nakar-db-pole
     - npm ci
 
-nakar-server:
+ci_nakar-server:
   stage: ci
   tags: 
       - nodejs
@@ -20,7 +21,7 @@ nakar-server:
     - npm run lint
     - npm run audit
 
-nakar-client-web:
+ci_nakar-client-web:
   stage: ci
   tags: 
       - nodejs
@@ -30,3 +31,33 @@ nakar-client-web:
     - npm run build
     - npm run lint
     - npm run audit
+
+deploy_nakar-db-pole:
+  stage: deploy
+  only:
+    - prod
+  tags: 
+      - docker
+  script:
+    - cd nakar-db-pole
+    - npm run build
+
+deploy_nakar-server:
+  stage: deploy
+  only:
+    - prod
+  tags: 
+      - docker
+  script:
+    - cd nakar-server
+    - npm run build:docker
+
+deploy_nakar-client-web:
+  stage: deploy
+  only:
+    - prod
+  tags: 
+      - docker
+  script:
+    - cd nakar-client-web
+    - npm run build:docker
