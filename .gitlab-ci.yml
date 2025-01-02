@@ -5,7 +5,6 @@ nakar-db-pole:
   script:
     - cd nakar-db-pole
     - npm ci
-    - npm run build
 
 nakar-server:
   stage: build
@@ -15,7 +14,6 @@ nakar-server:
     - cd nakar-server
     - npm ci
     - npm run build
-    - npm run build:docker
     - npm run lint
     - npm run audit
 
@@ -27,6 +25,5 @@ nakar-client-web:
     - cd nakar-client-web
     - npm ci
     - npm run build
-    - npm run build:docker
     - npm run lint
     - npm run audit
