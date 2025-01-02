@@ -15,9 +15,9 @@ nakar-server:
     - cd nakar-server
     - npm ci
     - npm run build
-    - npm run build:docker
     - npm run lint
     - npm run audit
+    - npm run build:docker
 
 nakar-client-web:
   stage: build
@@ -27,6 +27,6 @@ nakar-client-web:
     - cd nakar-client-web
     - npm ci
     - npm run build
-    - npm run build:docker
     - npm run lint
     - npm run audit
+    - npm run build:docker
