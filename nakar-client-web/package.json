@@ -1,13 +1,13 @@
 {
   "name": "nakar-client-web",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "build:docker": "docker build -t nakar-client-web .",
-    "run:docker": "docker run -it --rm --name nakar-client-web -p 8080:80 -e BACKEND_URL=http://romantikerbriefe2.de:1337 nakar-client-web",
+    "build:docker": "docker build -t git-registry.thm.de/sspp77/nakar-client-web:$npm_package_version .",
+    "run:docker": "docker run -it --rm --name nakar-client-web -p 8080:80 -e BACKEND_URL=http://romantikerbriefe2.de:1337 git-registry.thm.de/sspp77/nakar-client-web:$npm_package_version",
     "lint": "eslint .",
     "audit": "npm audit",
     "preview": "vite preview"

@@ -1,15 +1,15 @@
 {
   "name": "nakar-server",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "description": "A Strapi application",
   "scripts": {
     "build": "strapi build",
-    "build:docker": "docker build -t nakar-server .",
+    "build:docker": "docker build -t git-registry.thm.de/sspp77/nakar-server:$npm_package_version .",
     "deploy": "strapi deploy",
     "develop": "strapi develop",
     "start": "strapi start",
-    "start:docker": "docker run -it --rm --name nakar-server -p 1337:1337 -e APP_KEYS=\"feskuf487w3bdrshj,duhirgd74dhuirh\" -e API_TOKEN_SALT=dgrkugdk74dhugr -e ADMIN_JWT_SECRET=seuzgfesuz3672tUZGZU -e TRANSFER_TOKEN_SALT=dgikrjkdr47444ukeuhrefuds -e JWT_SECRET=rgkdjhgrd4774 nakar-server",
+    "start:docker": "docker run -it --rm --name nakar-server -p 1337:1337 -e APP_KEYS=\"feskuf487w3bdrshj,duhirgd74dhuirh\" -e API_TOKEN_SALT=dgrkugdk74dhugr -e ADMIN_JWT_SECRET=seuzgfesuz3672tUZGZU -e TRANSFER_TOKEN_SALT=dgikrjkdr47444ukeuhrefuds -e JWT_SECRET=rgkdjhgrd4774 git-registry.thm.de/sspp77/nakar-server:$npm_package_version",
     "strapi": "strapi",
     "lint": "eslint .",
     "audit": "npm audit --audit-level none",
