@@ -40,7 +40,8 @@ deploy_nakar-db-pole:
       - docker
   script:
     - cd nakar-db-pole
-    - npm run build
+    - npm run build:docker
+    - npm run push:docker
 
 deploy_nakar-server:
   stage: deploy
@@ -51,6 +52,7 @@ deploy_nakar-server:
   script:
     - cd nakar-server
     - npm run build:docker
+    - npm run push:docker
 
 deploy_nakar-client-web:
   stage: deploy
@@ -61,3 +63,4 @@ deploy_nakar-client-web:
   script:
     - cd nakar-client-web
     - npm run build:docker
+    - npm run push:docker

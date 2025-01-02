@@ -6,6 +6,7 @@
   "scripts": {
     "build": "strapi build",
     "build:docker": "docker build -t git-registry.thm.de/sspp77/nakar-server:$npm_package_version .",
+    "push:docker": "docker push git-registry.thm.de/sspp77/nakar-server:$npm_package_version",
     "deploy": "strapi deploy",
     "develop": "strapi develop",
     "start": "strapi start",

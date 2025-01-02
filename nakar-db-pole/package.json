@@ -2,7 +2,8 @@
   "name": "nakar-db-pole",
   "version": "1.0.0",
   "scripts": {
-    "build": "docker build -t git-registry.thm.de/sspp77/nakar-db-pole:$npm_package_version --no-cache .",
-    "start": "docker run -it --rm --name nakar-db-pole -p 7474:7474 -p 7687:7687 -e NEO4J_AUTH=neo4j/12345678 git-registry.thm.de/sspp77/nakar-db-pole:$npm_package_version"
+    "build:docker": "docker build -t git-registry.thm.de/sspp77/nakar-db-pole:$npm_package_version --no-cache .",
+    "start": "docker run -it --rm --name nakar-db-pole -p 7474:7474 -p 7687:7687 -e NEO4J_AUTH=neo4j/12345678 git-registry.thm.de/sspp77/nakar-db-pole:$npm_package_version",
+    "push:docker": "docker push git-registry.thm.de/sspp77/nakar-db-pole:$npm_package_version"
   }
 }
