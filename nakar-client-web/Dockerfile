@@ -19,5 +19,6 @@ FROM nginx:1.27
 WORKDIR /usr/share/nginx/html
 
 COPY --from=builder /app/dist ./
+COPY ./docker/100-create-env-file.sh /docker-entrypoint.d
 
 EXPOSE 80

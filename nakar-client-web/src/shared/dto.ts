@@ -33,18 +33,45 @@ export const GraphPropertyDtoSchema = z.object({
 });
 export type GraphPropertyDto = z.infer<typeof GraphPropertyDtoSchema>;
 
+export const ColorDtoSchema = z.discriminatedUnion("type", [
+  z.object({
+    type: z.literal("preset"),
+    index: z.union([
+      z.literal(0),
+      z.literal(1),
+      z.literal(2),
+      z.literal(3),
+      z.literal(4),
+      z.literal(5),
+    ]),
+  }),
+  z.object({
+    type: z.literal("custom"),
+    backgroundColor: z.string(),
+    textColor: z.string(),
+  }),
+]);
+export type ColorDto = z.infer<typeof ColorDtoSchema>;
+
 export const PositionDtoSchema = z.object({
   x: z.number(),
   y: z.number(),
 });
+export type Position = z.infer<typeof PositionDtoSchema>;
+
+export const GraphMetaDataLabelSchema = z.object({
+  label: z.string(),
+  color: ColorDtoSchema,
+  count: z.number(),
+});
+export type GraphMetaDataLabel = z.infer<typeof GraphMetaDataLabelSchema>;
+
 export const NodeDtoSchema = z.object({
   id: z.string(),
   displayTitle: z.string(),
-  labels: z.array(z.string()),
+  labels: z.array(GraphMetaDataLabelSchema),
   properties: z.array(GraphPropertyDtoSchema),
   size: z.number(),
-  backgroundColor: z.string(),
-  displayTitleColor: z.string(),
   position: PositionDtoSchema,
 });
 export type NodeDto = z.infer<typeof NodeDtoSchema>;
@@ -61,7 +88,6 @@ export type EdgeDto = z.infer<typeof EdgeDtoSchema>;
 export const GraphDtoSchema = z.object({
   nodes: z.array(NodeDtoSchema),
   edges: z.array(EdgeDtoSchema),
-  tableData: z.array(z.record(z.string(), z.string())),
 });
 export type GraphDto = z.infer<typeof GraphDtoSchema>;
 
@@ -73,8 +99,15 @@ export type GetDatabaseStructureDto = z.infer<
   typeof GetDatabaseStructureDtoSchema
 >;
 
+export const GraphMetaDataSchema = z.object({
+  labels: z.array(GraphMetaDataLabelSchema),
+});
+export type GraphMetaData = z.infer<typeof GraphMetaDataSchema>;
+
 export const GetInitialGraphDtoSchema = z.object({
   graph: GraphDtoSchema,
+  graphMetaData: GraphMetaDataSchema,
+  tableData: z.array(z.record(z.string(), z.string())),
 });
 export type GetInitialGraphDto = z.infer<typeof GetInitialGraphDtoSchema>;
 
@@ -86,7 +119,7 @@ export const GetScenariosDtoDatabaseScenarioSchema = z.object({
   databaseId: z.string(),
   databaseTitle: z.string(),
   databaseUrl: z.string(),
-  coverUrl: z.string().optional(),
+  coverUrl: z.string().nullable(),
 });
 export type GetScenariosDtoDatabaseScenario = z.infer<
   typeof GetScenariosDtoDatabaseScenarioSchema

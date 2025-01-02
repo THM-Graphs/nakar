@@ -1,14 +1,19 @@
 import { Badge, Container, Image, Nav, Navbar } from "react-bootstrap";
-import { actions, useBearStore } from "../lib/State.ts";
-import { baseUrl } from "../lib/Backend.ts";
 import clsx from "clsx";
+import { ThemeDropdown } from "./ThemeDropdown.tsx";
+import { useStore } from "../lib/state/useStore.ts";
+import { useActionRunner } from "../lib/actions/useActionRunner.ts";
+import { toggleWindow } from "../lib/actions/toggleWindow.ts";
+import { toggleDataWindow } from "../lib/actions/toggleDataWindow.ts";
+import { useContext } from "react";
+import { BackendContext } from "../lib/backend/BackendContext.ts";
 
 export function AppNavbar() {
-  const scenarioWindowOpen = useBearStore(
-    (state) => state.scenariosWindow.opened,
-  );
-  const tableDataOpened = useBearStore((state) => state.canvas.tableDataOpened);
-  const tableData = useBearStore((state) => state.canvas.graph.tableData);
+  const scenarioWindowOpen = useStore((state) => state.scenariosWindow.opened);
+  const tableDataOpened = useStore((state) => state.canvas.tableDataOpened);
+  const tableData = useStore((state) => state.canvas.graph.tableData);
+  const actionRunner = useActionRunner();
+  const backend = useContext(BackendContext);
 
   return (
     <Navbar
@@ -30,16 +35,17 @@ export function AppNavbar() {
           NAKAR
         </Navbar.Brand>
         <Nav.Link
-          onClick={actions.scenariosWindow.toggleWindow}
+          onClick={actionRunner(toggleWindow())}
           className={clsx("me-auto", scenarioWindowOpen && "fw-bold")}
         >
           <i className={"bi bi-easel-fill me-2"}></i>
           <span>Scenarios</span>
         </Nav.Link>
+        <ThemeDropdown></ThemeDropdown>
         {tableData.length > 0 && (
           <Nav.Link
-            onClick={actions.canvas.toggleDataWindow}
-            className={clsx("me-5", tableDataOpened && "fw-bold")}
+            onClick={actionRunner(toggleDataWindow())}
+            className={clsx("ms-5", tableDataOpened && "fw-bold")}
           >
             <i className={"bi bi-table me-2"}></i>
             {tableData.length > 0 && (
@@ -50,9 +56,16 @@ export function AppNavbar() {
             <span>Data</span>
           </Nav.Link>
         )}
-        <Nav.Link href={baseUrl()} target={"_blank"}>
-          <Badge bg="secondary">{baseUrl()}</Badge>
+        <Nav.Link
+          href={backend.getBaseUrl()}
+          className={"ms-5"}
+          target={"_blank"}
+        >
+          <Badge bg="secondary">{backend.getBaseUrl()}</Badge>
         </Nav.Link>
+        <Badge bg="danger" className={"ms-2"}>
+          {import.meta.env.DEV && <span>{import.meta.env.MODE}</span>}
+        </Badge>
       </Container>
     </Navbar>
   );

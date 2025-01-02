@@ -1,23 +1,24 @@
 import { Stack } from "react-bootstrap";
 import { AppNavbar } from "./AppNavbar.tsx";
-import { useBearStore } from "../lib/State.ts";
 import { Canvas } from "./Canvas.tsx";
-import { useTheme } from "../lib/Theme.ts";
-import { useEffect } from "react";
 import { SideToolbar } from "./SideToolbar.tsx";
 import { DataTable } from "./DataTable.tsx";
 import { ScenariosList } from "./ScenariosList.tsx";
+import { useContext, useEffect } from "react";
+import { ThemeManagerContext } from "../lib/theme/ThemeManagerContext.ts";
+import { useStore } from "../lib/state/useStore.ts";
 
 export default function App() {
-  const scenariosWindowOpened = useBearStore(
+  const scenariosWindowOpened = useStore(
     (state) => state.scenariosWindow.opened,
   );
-  const tableDataOpened = useBearStore((state) => state.canvas.tableDataOpened);
-  const [, setTheme] = useTheme();
+  const tableDataOpened = useStore((state) => state.canvas.tableDataOpened);
+
+  const themeManager = useContext(ThemeManagerContext);
 
   useEffect(() => {
-    setTheme(null);
-  }, [setTheme]);
+    themeManager.bootstrapTheme();
+  }, [themeManager]);
 
   return (
     <>

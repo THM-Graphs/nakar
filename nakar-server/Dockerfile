@@ -22,6 +22,7 @@ FROM node:22
 WORKDIR /app
 ENV NODE_ENV=production
 COPY --from=builder /app/dist ./
+COPY public ./public
 COPY package.json package-lock.json ./
 RUN npm ci --production
 EXPOSE 1337

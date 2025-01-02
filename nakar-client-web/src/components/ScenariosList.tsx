@@ -1,4 +1,3 @@
-import { actions, useBearStore } from "../lib/State.ts";
 import { match } from "ts-pattern";
 import { ReactNode, useEffect } from "react";
 import {
@@ -16,13 +15,16 @@ import {
   GetScenariosDtoDatabase,
   GetScenariosDtoDatabaseScenario,
 } from "../shared/dto.ts";
+import { useStore } from "../lib/state/useStore.ts";
+import { useActionRunner } from "../lib/actions/useActionRunner.ts";
+import { reloadScenarios } from "../lib/actions/reloadScenarios.ts";
+import { loadInitialGraph } from "../lib/actions/loadInitialGraph.ts";
 
 export function ScenariosList() {
-  const scenarios = useBearStore((state) => state.scenariosWindow.scenarios);
+  const scenarios = useStore((state) => state.scenariosWindow.scenarios);
+  const actionRunner = useActionRunner();
 
-  useEffect(() => {
-    actions.scenariosWindow.reloadScenarios();
-  }, []);
+  useEffect(actionRunner(reloadScenarios()), []);
 
   return (
     <Stack className={"shadow border-end"}>
@@ -50,6 +52,8 @@ function Loading() {
 }
 
 function Error(props: { message: string }) {
+  const actionRunner = useActionRunner();
+
   return (
     <Stack className={"p-3"}>
       <Alert
@@ -58,7 +62,7 @@ function Error(props: { message: string }) {
         className={"d-flex align-items-center"}
       >
         <span className={"me-auto"}>{props.message}</span>
-        <Button onClick={actions.scenariosWindow.reloadScenarios} variant={""}>
+        <Button onClick={actionRunner(reloadScenarios())} variant={""}>
           <i className={"bi bi-arrow-clockwise"}></i>
         </Button>
       </Alert>
@@ -106,6 +110,8 @@ function ListSection(props: { database: GetScenariosDtoDatabase }) {
 }
 
 function ScenarioEntry(props: { scenario: GetScenariosDtoDatabaseScenario }) {
+  const actionRunner = useActionRunner();
+
   const scenario = props.scenario;
   return (
     <Card className={"m-2"}>
@@ -145,11 +151,7 @@ function ScenarioEntry(props: { scenario: GetScenariosDtoDatabaseScenario }) {
         >
           Copy Query
         </Button>
-        <Button
-          onClick={() => {
-            actions.canvas.loadInitialGraph(scenario.id);
-          }}
-        >
+        <Button onClick={actionRunner(loadInitialGraph(scenario.id))}>
           Run
         </Button>
       </Card.Body>

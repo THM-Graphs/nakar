@@ -1,8 +1,8 @@
 import { Stack, Table } from "react-bootstrap";
-import { useBearStore } from "../lib/State.ts";
+import { useStore } from "../lib/state/useStore.ts";
 
 export function DataTable() {
-  const data = useBearStore((state) => state.canvas.graph.tableData);
+  const data = useStore((state) => state.canvas.graph.tableData);
 
   if (data.length == 0) {
     return null;

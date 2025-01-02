@@ -5,16 +5,23 @@ import "bootstrap-icons/font/bootstrap-icons.css";
 import "./index.css";
 import App from "./components/App.tsx";
 import { createBrowserRouter, RouterProvider } from "react-router";
+import { bootstrapEnv } from "./lib/env/env.ts";
 
-const router = createBrowserRouter([
-  {
-    path: "/",
-    element: <App></App>,
-  },
-]);
+async function bootstrap() {
+  await bootstrapEnv();
 
-createRoot(document.getElementById("root") as HTMLElement).render(
-  <StrictMode>
-    <RouterProvider router={router} />
-  </StrictMode>,
-);
+  const router = createBrowserRouter([
+    {
+      path: "/",
+      element: <App></App>,
+    },
+  ]);
+
+  createRoot(document.getElementById("root") as HTMLElement).render(
+    <StrictMode>
+      <RouterProvider router={router} />
+    </StrictMode>,
+  );
+}
+
+bootstrap().catch(console.error);

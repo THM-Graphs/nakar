@@ -5,7 +5,6 @@ nakar-db-pole:
   script:
     - cd nakar-db-pole
     - npm ci
-    - npm run build
 
 nakar-server:
   stage: build

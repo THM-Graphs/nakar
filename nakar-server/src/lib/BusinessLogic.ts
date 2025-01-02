@@ -1,6 +1,6 @@
-import { GetInitialGraphDto } from './shared/dto';
-import { invertColor } from './Color';
-import { Neo4jNode, Neo4JProperty } from './Neo4j';
+import { ColorDto, GetInitialGraphDto, GraphMetaDataLabel } from './shared/dto';
+import { Neo4jNode } from './neo4j/types/Neo4jNode';
+import { Neo4JProperty } from './neo4j/types/Neo4JProperty';
 
 export function applyNodeSizes(graph: GetInitialGraphDto): void {
   const nodeConnections: Record<string, number> = {};
@@ -31,31 +31,33 @@ export function applyNodeSizes(graph: GetInitialGraphDto): void {
   }
 }
 
-export function applyNodeColors(graph: GetInitialGraphDto): void {
-  const labels: Record<string, string> = {};
-  const htmlColors: string[] = [
-    '#ff8189',
-    '#ffff80',
-    '#7dff98',
-    '#ffc280',
-    '#7fc7ff',
-    '#b580ff',
-  ];
-
-  let htmlCounter = 0;
+export function applyLabels(graph: GetInitialGraphDto): void {
+  let colorIndex: 0 | 1 | 2 | 3 | 4 | 5 = 0;
 
   for (const node of graph.graph.nodes) {
     for (const label of node.labels) {
-      if (!Object.keys(labels).includes(label)) {
-        labels[label] = htmlColors[htmlCounter];
-        htmlCounter = (htmlCounter + 1) % htmlColors.length;
+      const foundEntry = graph.graphMetaData.labels.find(
+        (l) => l.label === label.label,
+      );
+      if (!foundEntry) {
+        const color: ColorDto = { type: 'preset', index: colorIndex };
+        const newEntry: GraphMetaDataLabel = {
+          label: label.label,
+          color: color,
+          count: 1,
+        };
+        graph.graphMetaData.labels.push(newEntry);
+
+        label.color = color;
+        label.count = 1;
+
+        colorIndex = ((colorIndex + 1) % 6) as 0 | 1 | 2 | 3 | 4 | 5;
+      } else {
+        foundEntry.count += 1;
+        label.count += 1;
+        label.color = foundEntry.color;
       }
     }
-  }
-
-  for (const node of graph.graph.nodes) {
-    node.backgroundColor = labels[node.labels[0]];
-    node.displayTitleColor = invertColor(labels[node.labels[0]]);
   }
 }
 
