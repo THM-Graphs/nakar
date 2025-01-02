@@ -1,15 +1,16 @@
 nakar-db-pole:
   stage: build
   tags: 
-      - nodejs
+      - ip2_mni_thm_de
   script:
     - cd nakar-db-pole
     - npm ci
+    - npm run build
 
 nakar-server:
   stage: build
   tags: 
-      - nodejs
+      - ip2_mni_thm_de
   script:
     - cd nakar-server
     - npm ci
@@ -21,7 +22,7 @@ nakar-server:
 nakar-client-web:
   stage: build
   tags: 
-      - nodejs
+      - ip2_mni_thm_de
   script:
     - cd nakar-client-web
     - npm ci
