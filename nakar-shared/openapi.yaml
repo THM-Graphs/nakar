@@ -1,0 +1,159 @@
+openapi: 3.0.0
+info:
+  title: NAKAR
+  version: 1.0.0
+tags:
+  - name: Scenario
+  - name: ScenarioGroup
+  - name: Database
+  - name: Room
+paths:
+  /scenario:
+    get:
+      tags:
+        - Scenario
+      operationId: getScenarios
+      parameters:
+        - name: scenarioGroupId
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetScenarios'
+
+  /scenarioGroup:
+    get:
+      tags:
+        - ScenarioGroup
+      operationId: getScenarioGroups
+      parameters:
+        - name: databaseId
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetScenarioGroups'
+
+  /database:
+    get:
+      tags:
+        - Database
+      operationId: getDatabases
+      responses:
+        '200':
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetDatabases'
+
+  /room:
+    get:
+      tags:
+        - Room
+      operationId: getRooms
+      responses:
+        '200':
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetRooms'
+
+components:
+  schemas:
+    GetRoom:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+      required:
+        - id
+        - title
+    GetRooms:
+      type: object
+      properties:
+        rooms:
+          type: array
+          items:
+            $ref: "#/components/schemas/GetRoom"
+
+    GetDatabase:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        url:
+          type: string
+      required:
+        - id
+        - title
+        - url
+    GetDatabases:
+      type: object
+      properties:
+        databases:
+          type: array
+          items:
+            $ref: "#/components/schemas/GetDatabase"
+
+    GetScenarioGroup:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+      required:
+        - id
+        - title
+    GetScenarioGroups:
+      type: object
+      properties:
+        scenarioGroups:
+          type: array
+          items:
+            $ref: "#/components/schemas/GetScenarioGroup"
+
+    GetScenario:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        query:
+          type: string
+        description:
+          type: string
+        coverUrl:
+          type: string
+          format: uri
+      required:
+        - id
+        - title
+        - query
+        - description
+    GetScenarios:
+      type: object
+      properties:
+        scenarios:
+          type: array
+          items:
+            $ref: "#/components/schemas/GetScenario"
