@@ -20,5 +20,6 @@ WORKDIR /usr/share/nginx/html
 
 COPY --from=builder /app/dist ./
 COPY ./docker/100-create-env-file.sh /docker-entrypoint.d
+RUN chmod +x /docker-entrypoint.d/100-create-env-file.sh
 
 EXPOSE 80
