@@ -10,6 +10,7 @@ export function AppNavbar(props: {
   tableDataOpened?: boolean;
   toggleTableData?: () => void;
   roomTitle?: string;
+  showBackButton?: boolean;
 }) {
   return (
     <Navbar
@@ -19,6 +20,12 @@ export function AppNavbar(props: {
       }}
     >
       <Container fluid>
+        {props.showBackButton && (
+          <Nav.Link className={"me-3 fw-bold"} href={"/"}>
+            <i className={"bi bi-chevron-left me-2"}></i>
+            <span>Back to Roomlist</span>
+          </Nav.Link>
+        )}
         <Navbar.Brand className={"me-5"}>
           <Image
             alt=""

@@ -71,6 +71,7 @@ export function Room() {
             setTableDataOpened((isOpened) => !isOpened);
           }}
           roomTitle={loaderData.title}
+          showBackButton={true}
         ></AppNavbar>
         <Stack
           direction={"horizontal"}

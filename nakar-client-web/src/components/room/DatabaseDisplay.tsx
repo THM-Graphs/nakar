@@ -1,19 +1,80 @@
-import { GetDatabase, GetScenario } from "../../../src-gen";
+import {
+  GetDatabase,
+  GetScenario,
+  getScenarioGroups,
+  GetScenarioGroups,
+} from "../../../src-gen";
 import { ScenarioGroupList } from "./ScenarioGroupList.tsx";
+import { useEffect, useState } from "react";
+import clsx from "clsx";
+import { Loadable } from "../../lib/data/Loadable.ts";
+import { handleError } from "../../lib/error/handleError.ts";
+import { match } from "ts-pattern";
+import { ErrorDisplay } from "../shared/ErrorDisplay.tsx";
+import { Loading } from "../shared/Loading.tsx";
 
 export function DatabaseDisplay(props: {
   database: GetDatabase;
   onScenarioSelect: (scenario: GetScenario) => void;
 }) {
+  const [collapsed, setCollapsed] = useState(true);
+
+  const [scenarioGroups, setScenarioGroups] = useState<
+    Loadable<GetScenarioGroups>
+  >({
+    type: "loading",
+  });
+
+  useEffect(() => {
+    setScenarioGroups({ type: "loading" });
+    getScenarioGroups({ query: { databaseId: props.database.id } })
+      .then((result) => {
+        if (result.error != null) {
+          alert(handleError(result.error));
+        } else if (result.data != null) {
+          setScenarioGroups({ type: "data", data: result.data });
+        } else {
+          setScenarioGroups({ type: "error", message: "Unknown Error" });
+        }
+      })
+      .catch((error: unknown) => {
+        setScenarioGroups({ type: "error", message: handleError(error) });
+      });
+  }, [props.database]);
+
   return (
     <>
-      <li>
+      <li
+        style={{ listStyleType: "none", cursor: "pointer" }}
+        onClick={() => {
+          setCollapsed((old) => !old);
+        }}
+      >
+        <i
+          className={clsx(
+            "bi me-2",
+            collapsed ? "bi-chevron-right" : "bi-chevron-down",
+          )}
+        ></i>
         {props.database.title} ({props.database.url})
+        <Loading
+          className={"ms-1"}
+          size={"sm"}
+          hidden={scenarioGroups.type !== "loading"}
+        ></Loading>
       </li>
-      <ScenarioGroupList
-        onScenarioSelect={props.onScenarioSelect}
-        databaseId={props.database.id}
-      ></ScenarioGroupList>
+      {match(scenarioGroups)
+        .with({ type: "error" }, ({ message }) => (
+          <ErrorDisplay message={message}></ErrorDisplay>
+        ))
+        .with({ type: "data" }, ({ data }) => (
+          <ScenarioGroupList
+            collapsed={collapsed}
+            onScenarioSelect={props.onScenarioSelect}
+            scenarioGroups={data}
+          ></ScenarioGroupList>
+        ))
+        .otherwise(() => null)}
     </>
   );
 }
