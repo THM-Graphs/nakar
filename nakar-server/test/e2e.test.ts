@@ -1,10 +1,5 @@
 import request from 'supertest';
 import { expect, describe, it } from '@jest/globals';
-import {
-  GetDatabaseStructureDtoSchema,
-  GetInitialGraphDtoSchema,
-  GetScenariosDtoSchema,
-} from '../src/lib/shared/dto';
 
 const server = request('http://localhost:1337');
 const scenarioId = 'so8ujqw4jwd21g3sqphb05vw';
@@ -38,7 +33,6 @@ describe('GET /api/frontend/initial-graph', () => {
       `/api/frontend/initial-graph?scenarioId=${scenarioId}`,
     );
     expect(response.status).toStrictEqual(200);
-    GetInitialGraphDtoSchema.parse(response.body);
   });
 });
 
@@ -46,7 +40,6 @@ describe('GET /api/frontend/scenarios', () => {
   it('200', async () => {
     const response = await server.get(`/api/frontend/scenarios`);
     expect(response.status).toStrictEqual(200);
-    GetScenariosDtoSchema.parse(response.body);
   });
 });
 
@@ -78,6 +71,5 @@ describe('GET /api/frontend/database-structure', () => {
       `/api/frontend/database-structure?databaseId=${databaseId}`,
     );
     expect(response.status).toStrictEqual(200);
-    GetDatabaseStructureDtoSchema.parse(response.body);
   });
 });

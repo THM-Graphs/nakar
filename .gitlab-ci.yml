@@ -36,6 +36,7 @@ static_nakar-server:
   script:
     - cd nakar-server
     - npm ci
+    - npm run build:gen
     - npm run lint
     - npm run audit
 
@@ -46,6 +47,7 @@ static_nakar-client-web:
   script:
     - cd nakar-client-web
     - npm ci
+    - npm run build:gen
     - npm run lint
     - npm run audit
 
