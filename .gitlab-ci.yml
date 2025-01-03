@@ -42,7 +42,7 @@ ci_nakar-client-web:
 ci_nakar-db-pole:
   stage: ci_build
   tags:
-    - nodejs
+    - docker
   before_script:
     - cd nakar-db-pole
     - npm ci
