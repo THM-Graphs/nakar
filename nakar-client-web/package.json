@@ -4,9 +4,9 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "npm run build:gen && vite",
-    "build": "npm run build:gen && tsc -b && vite build",
-    "build:gen": "openapi-ts --input ../nakar-shared/openapi.yaml --output ./src-gen --client @hey-api/client-fetch",
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "build:gen": "openapi-ts --input ./openapi-gen.yaml --output ./src-gen --client @hey-api/client-fetch",
     "lint": "eslint .",
     "audit": "npm audit",
     "preview": "vite preview",

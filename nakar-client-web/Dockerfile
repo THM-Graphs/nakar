@@ -11,8 +11,9 @@ COPY tsconfig.app.json ./
 COPY tsconfig.json ./
 COPY tsconfig.node.json ./
 COPY vite.config.ts ./
+COPY openapi-gen.yaml ./
 
-RUN npm install && npm run build
+RUN npm install && npm run build:gen && npm run build
 
 FROM nginx:1.27
 

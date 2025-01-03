@@ -132,3 +132,4 @@ build
 .strapi-cloud.json
 /src/extensions/documentation
 /src-gen
+openapi-gen.yaml

@@ -14,8 +14,9 @@ COPY package.json ./
 COPY package-lock.json ./
 COPY tsconfig.configs.json ./
 COPY tsconfig.json ./
+COPY openapi-gen.yaml ./
 
-RUN npm install && npm run build
+RUN npm install && npm run build:gen && npm run build
 
 
 FROM node:22

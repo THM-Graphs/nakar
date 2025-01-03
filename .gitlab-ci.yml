@@ -1,58 +1,86 @@
 stages:
+  - code_gen
   - ci_build
   - static_analysis
   - build_push_docker
 
+code_gen:
+  stage: code_gen
+  tags:
+    - nodejs
+  before_script:
+    - cd nakar-shared
+  script:
+    - npm run build
+
 ci_nakar-server:
   stage: ci_build
+  needs:
+    - code_gen
   tags:
       - nodejs
-  script:
+  before_script:
     - cd nakar-server
     - npm ci
+  script:
+    - npm run build:gen
     - npm run build
 
 ci_nakar-client-web:
   stage: ci_build
+  needs:
+    - code_gen
   tags:
       - nodejs
-  script:
+  before_script:
     - cd nakar-client-web
     - npm ci
+  script:
+    - npm run build:gen
     - npm run build
 
-static_nakar-db-pole:
-  stage: static_analysis
+ci_nakar-db-pole:
+  stage: ci_build
   tags:
     - nodejs
-  script:
+  before_script:
     - cd nakar-db-pole
     - npm ci
+  script:
+    - npm run build
 
 static_nakar-server:
   stage: static_analysis
+  needs:
+    - ci_nakar-server
   tags:
     - nodejs
-  script:
+  before_script:
     - cd nakar-server
     - npm ci
     - npm run build:gen
+  script:
     - npm run lint
     - npm run audit
 
 static_nakar-client-web:
   stage: static_analysis
+  needs:
+    - ci_nakar-client-web
   tags:
     - nodejs
-  script:
+  before_script:
     - cd nakar-client-web
     - npm ci
     - npm run build:gen
+  script:
     - npm run lint
     - npm run audit
 
 deploy_nakar-db-pole:
   stage: build_push_docker
+  needs:
+    - ci_nakar-db-pole
   only:
     - prod
   tags:
@@ -64,21 +92,34 @@ deploy_nakar-db-pole:
 
 deploy_nakar-server:
   stage: build_push_docker
+  needs:
+    - static_nakar-server
   only:
     - prod
   tags:
       - docker
+  before_script:
+    - cd nakar-shared
+    - npm ci
+    - npm run build
+    - cd ../nakar-server
   script:
-    - cd nakar-server
     - docker build -t "git-registry.thm.de/sspp77/nakar/server:$(npm run --silent version)" .
     - docker push git-registry.thm.de/sspp77/nakar/server:$(npm run --silent version)
 
 deploy_nakar-client-web:
   stage: build_push_docker
+  needs:
+    - static_nakar-client-web
   only:
     - prod
   tags:
       - docker
+  before_script:
+    - cd nakar-shared
+    - npm ci
+    - npm run build
+    - cd ../client-web
   script:
     - cd nakar-client-web
     - docker build -t "git-registry.thm.de/sspp77/nakar/client-web:$(npm run --silent version)" .

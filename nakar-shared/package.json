@@ -1,4 +1,7 @@
 {
   "name": "nakar-shared",
-  "version": "0.0.0"
+  "version": "0.0.0",
+  "scripts": {
+    "build": "cp ./openapi.yaml ../nakar-server/openapi-gen.yaml && cp ./openapi.yaml ../nakar-client-web/openapi-gen.yaml"
+  }
 }
