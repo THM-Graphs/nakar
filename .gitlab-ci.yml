@@ -57,6 +57,8 @@ deploy_nakar-db-pole:
     - prod
   tags:
     - docker
+  before_script:
+    - cd nakar-db-pole
   script:
     - cd nakar-db-pole
     - docker build -t "git-registry.thm.de/sspp77/nakar/db-pole:$(npm run --silent version)" .
@@ -95,7 +97,6 @@ deploy_nakar-client-web:
     - cd ..
     - cd nakar-client-web
   script:
-    - cd nakar-client-web
     - docker build -t "git-registry.thm.de/sspp77/nakar/client-web:$(npm run --silent version)" .
     - docker push git-registry.thm.de/sspp77/nakar/client-web:$(npm run --silent version)
 
