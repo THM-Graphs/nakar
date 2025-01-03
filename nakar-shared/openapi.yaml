@@ -26,6 +26,24 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/GetScenarios'
+  /scenario/{id}/initial-graph:
+    get:
+      tags:
+        - Scenario
+      operationId: getInitialGraph
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetInitialGraph'
 
   /scenarioGroup:
     get:
@@ -74,6 +92,160 @@ paths:
 
 components:
   schemas:
+    PresetColor:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - preset
+        index:
+          type: integer
+          enum: [ 0, 1, 2, 3, 4, 5 ]
+      required:
+        - type
+        - index
+
+    CustomColor:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - custom
+        backgroundColor:
+          type: string
+        textColor:
+          type: string
+      required:
+        - type
+        - backgroundColor
+        - textColor
+
+    Color:
+      discriminator:
+        propertyName: type
+      oneOf:
+        - $ref: '#/components/schemas/PresetColor'
+        - $ref: '#/components/schemas/CustomColor'
+
+    GraphLabel:
+      type: object
+      properties:
+        label:
+          type: string
+        color:
+          $ref: '#/components/schemas/Color'
+        count:
+          type: integer
+      required:
+        - label
+        - color
+        - count
+
+    GraphProperty:
+      type: object
+      properties:
+        slug:
+          type: string
+        value:
+          type: string
+      required:
+        - slug
+        - value
+
+    Node:
+      type: object
+      properties:
+        id:
+          type: string
+        displayTitle:
+          type: string
+        labels:
+          type: array
+          items:
+            $ref: '#/components/schemas/GraphLabel'
+        properties:
+          type: array
+          items:
+            $ref: '#/components/schemas/GraphProperty'
+        size:
+          type: number
+        position:
+          type: object
+          properties:
+            x:
+              type: number
+            y:
+              type: number
+          required:
+            - x
+            - y
+      required:
+        - id
+        - displayTitle
+        - labels
+        - properties
+        - size
+        - position
+
+    Edge:
+      type: object
+      properties:
+        id:
+          type: string
+        startNodeId:
+          type: string
+        endNodeId:
+          type: string
+        type:
+          type: string
+        properties:
+          type: array
+          items:
+            $ref: '#/components/schemas/GraphProperty'
+      required:
+        - id
+        - startNodeId
+        - endNodeId
+        - type
+        - properties
+
+    GetInitialGraph:
+      type: object
+      properties:
+        graph:
+          type: object
+          properties:
+            nodes:
+              type: array
+              items:
+                $ref: '#/components/schemas/Node'
+            edges:
+              type: array
+              items:
+                $ref: '#/components/schemas/Edge'
+          required:
+            - nodes
+            - edges
+        graphMetaData:
+          type: object
+          properties:
+            labels:
+              type: array
+              items:
+                $ref: '#/components/schemas/GraphLabel'
+          required:
+            - labels
+        tableData:
+          type: array
+          items:
+            type: object
+      required:
+        - graph
+        - graphMetaData
+        - tableData
+
     GetRoom:
       type: object
       properties:
