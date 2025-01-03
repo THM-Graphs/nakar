@@ -1,6 +1,7 @@
 stages:
   - ci_build
   - build_push_docker
+  - cleanup
 
 ci_nakar-server:
   stage: ci_build
@@ -45,6 +46,8 @@ ci_nakar-db-pole:
     - npm ci
   script:
     - npm run build
+  after_script:
+    - npm run clean
 
 deploy_nakar-db-pole:
   stage: build_push_docker
@@ -53,7 +56,7 @@ deploy_nakar-db-pole:
   only:
     - prod
   tags:
-      - docker
+    - docker
   script:
     - cd nakar-db-pole
     - docker build -t "git-registry.thm.de/sspp77/nakar/db-pole:$(npm run --silent version)" .
@@ -71,7 +74,8 @@ deploy_nakar-server:
     - cd nakar-shared
     - npm ci
     - npm run build
-    - cd ../nakar-server
+    - cd ..
+    - cd nakar-server
   script:
     - docker build -t "git-registry.thm.de/sspp77/nakar/server:$(npm run --silent version)" .
     - docker push git-registry.thm.de/sspp77/nakar/server:$(npm run --silent version)
@@ -88,8 +92,22 @@ deploy_nakar-client-web:
     - cd nakar-shared
     - npm ci
     - npm run build
-    - cd ../client-web
+    - cd ..
+    - cd nakar-client-web
   script:
     - cd nakar-client-web
     - docker build -t "git-registry.thm.de/sspp77/nakar/client-web:$(npm run --silent version)" .
     - docker push git-registry.thm.de/sspp77/nakar/client-web:$(npm run --silent version)
+
+cleanup:
+  stage: cleanup
+  needs:
+    - deploy_nakar-client-web
+    - deploy_nakar-server
+    - deploy_nakar-db-pole
+  only:
+    - prod
+  tags:
+    - docker
+  script:
+    - docker system prune -f
