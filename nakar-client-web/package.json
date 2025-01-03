@@ -6,12 +6,10 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "build:docker": "docker build -t git-registry.thm.de/sspp77/nakar/client-web:$npm_package_version .",
-    "push:docker": "docker push git-registry.thm.de/sspp77/nakar/client-web:$npm_package_version",
-    "run:docker": "docker run -it --rm --name nakar-client-web -p 8080:80 -e BACKEND_URL=http://romantikerbriefe2.de:1337 git-registry.thm.de/sspp77/nakar/client-web:$npm_package_version",
     "lint": "eslint .",
     "audit": "npm audit",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "version": "echo $npm_package_version"
   },
   "dependencies": {
     "bootstrap": "^5.3.3",

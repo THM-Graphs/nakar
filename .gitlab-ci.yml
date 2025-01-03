@@ -1,66 +1,83 @@
 stages:
-  - ci
-  - deploy
-
-ci_nakar-db-pole:
-  stage: ci
-  tags: 
-      - nodejs
-  script:
-    - cd nakar-db-pole
-    - npm ci
+  - ci_build
+  - static_analysis
+  - build_push_docker
 
 ci_nakar-server:
-  stage: ci
-  tags: 
+  stage: ci_build
+  tags:
       - nodejs
   script:
     - cd nakar-server
     - npm ci
     - npm run build
-    - npm run lint
-    - npm run audit
 
 ci_nakar-client-web:
-  stage: ci
-  tags: 
+  stage: ci_build
+  tags:
       - nodejs
   script:
     - cd nakar-client-web
     - npm ci
     - npm run build
+
+static_nakar-db-pole:
+  stage: static_analysis
+  tags:
+    - nodejs
+  script:
+    - cd nakar-db-pole
+    - npm ci
+
+static_nakar-server:
+  stage: static_analysis
+  tags:
+    - nodejs
+  script:
+    - cd nakar-server
+    - npm ci
+    - npm run lint
+    - npm run audit
+
+static_nakar-client-web:
+  stage: static_analysis
+  tags:
+    - nodejs
+  script:
+    - cd nakar-client-web
+    - npm ci
     - npm run lint
     - npm run audit
 
 deploy_nakar-db-pole:
-  stage: deploy
+  stage: build_push_docker
   only:
     - prod
-  tags: 
+  tags:
       - docker
   script:
     - cd nakar-db-pole
-    - npm run build:docker
-    - npm run push:docker
+    - docker build -t "git-registry.thm.de/sspp77/nakar/db-pole:$(npm run --silent version)" .
+    - docker push git-registry.thm.de/sspp77/nakar/db-pole:$npm run --silent version)
 
 deploy_nakar-server:
-  stage: deploy
+  stage: build_push_docker
   only:
     - prod
-  tags: 
+  tags:
       - docker
   script:
     - cd nakar-server
-    - npm run build:docker
-    - npm run push:docker
+    - docker build -t "git-registry.thm.de/sspp77/nakar/server:$(npm run --silent version)" .
+    - docker push git-registry.thm.de/sspp77/nakar/server:$npm run --silent version)
 
 deploy_nakar-client-web:
-  stage: deploy
+  stage: build_push_docker
   only:
     - prod
-  tags: 
+  tags:
       - docker
   script:
     - cd nakar-client-web
-    - npm run build:docker
-    - npm run push:docker
+    - docker build -t "git-registry.thm.de/sspp77/nakar/client-web:$(npm run --silent version)" .
+    - docker push git-registry.thm.de/sspp77/nakar/client-web:$npm run --silent version)
