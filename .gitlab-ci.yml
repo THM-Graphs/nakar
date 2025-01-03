@@ -60,7 +60,6 @@ deploy_nakar-db-pole:
   before_script:
     - cd nakar-db-pole
   script:
-    - cd nakar-db-pole
     - docker build -t "git-registry.thm.de/sspp77/nakar/db-pole:$(npm run --silent version)" .
     - docker push git-registry.thm.de/sspp77/nakar/db-pole:$(npm run --silent version)
 
