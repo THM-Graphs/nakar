@@ -58,7 +58,7 @@ deploy_nakar-db-pole:
   script:
     - cd nakar-db-pole
     - docker build -t "git-registry.thm.de/sspp77/nakar/db-pole:$(npm run --silent version)" .
-    - docker push git-registry.thm.de/sspp77/nakar/db-pole:$npm run --silent version)
+    - docker push git-registry.thm.de/sspp77/nakar/db-pole:$(npm run --silent version)
 
 deploy_nakar-server:
   stage: build_push_docker
@@ -69,7 +69,7 @@ deploy_nakar-server:
   script:
     - cd nakar-server
     - docker build -t "git-registry.thm.de/sspp77/nakar/server:$(npm run --silent version)" .
-    - docker push git-registry.thm.de/sspp77/nakar/server:$npm run --silent version)
+    - docker push git-registry.thm.de/sspp77/nakar/server:$(npm run --silent version)
 
 deploy_nakar-client-web:
   stage: build_push_docker
@@ -80,4 +80,4 @@ deploy_nakar-client-web:
   script:
     - cd nakar-client-web
     - docker build -t "git-registry.thm.de/sspp77/nakar/client-web:$(npm run --silent version)" .
-    - docker push git-registry.thm.de/sspp77/nakar/client-web:$npm run --silent version)
+    - docker push git-registry.thm.de/sspp77/nakar/client-web:$(npm run --silent version)
