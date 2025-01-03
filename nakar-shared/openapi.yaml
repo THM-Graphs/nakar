@@ -89,6 +89,24 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/GetRooms'
+  /room/{id}:
+    get:
+      tags:
+        - Room
+      operationId: getRoom
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetRoom'
 
 components:
   schemas:
@@ -255,6 +273,8 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/GetRoom"
+      required:
+        - rooms
 
     GetDatabase:
       type: object
@@ -276,6 +296,8 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/GetDatabase"
+      required:
+        - databases
 
     GetScenarioGroup:
       type: object
@@ -294,6 +316,8 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/GetScenarioGroup"
+      required:
+        - scenarioGroups
 
     GetScenario:
       type: object
@@ -323,3 +347,5 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/GetScenario"
+      required:
+        - scenarios

@@ -119,6 +119,20 @@ export default {
       return dto;
     },
   ),
+  getRoom: StrapiContextWrapper.handleRequest(
+    async (
+      context: StrapiContextWrapper,
+      db: StrapiDbWrapper,
+    ): Promise<SchemaGetRoom> => {
+      const id = context.getPathParameter('id');
+      const dbResult: DBRoom = await db.getRoom(id);
+      const dto: SchemaGetRoom = {
+        id: dbResult.documentId,
+        title: dbResult.title ?? '',
+      };
+      return dto;
+    },
+  ),
   getScenarioGroups: StrapiContextWrapper.handleRequest(
     async (
       context: StrapiContextWrapper,

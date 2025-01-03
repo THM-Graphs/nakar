@@ -1,8 +1,8 @@
 import { Dropdown, NavDropdown } from "react-bootstrap";
 import { match } from "ts-pattern";
-import { useTheme } from "../lib/theme/useTheme.ts";
-import { UserTheme } from "../lib/theme/UserTheme.ts";
-import { useUserTheme } from "../lib/theme/useUserTheme.ts";
+import { useTheme } from "../../lib/theme/useTheme.ts";
+import { UserTheme } from "../../lib/theme/UserTheme.ts";
+import { useUserTheme } from "../../lib/theme/useUserTheme.ts";
 
 function getIcon(_theme: UserTheme): string {
   return match(_theme)

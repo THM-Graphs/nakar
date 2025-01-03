@@ -1,10 +1,8 @@
 import { Stack, Table } from "react-bootstrap";
-import { useStore } from "../lib/state/useStore.ts";
+import { GetInitialGraph } from "../../../src-gen";
 
-export function DataTable() {
-  const data = useStore((state) => state.canvas.graph.tableData);
-
-  if (data.length == 0) {
+export function DataTable(props: { graph: GetInitialGraph }) {
+  if (props.graph.tableData.length == 0) {
     return null;
   }
 
@@ -13,13 +11,13 @@ export function DataTable() {
       <Table className={"table-responsive"}>
         <thead>
           <tr>
-            {Object.keys(data[0]).map((key) => (
+            {Object.keys(props.graph.tableData[0]).map((key) => (
               <th key={key}>{key}</th>
             ))}
           </tr>
         </thead>
         <tbody>
-          {data.map((row, index) => (
+          {props.graph.tableData.map((row, index) => (
             <tr key={index}>
               {Object.entries(row).map(([key, value]) => (
                 <td key={key}>{value}</td>

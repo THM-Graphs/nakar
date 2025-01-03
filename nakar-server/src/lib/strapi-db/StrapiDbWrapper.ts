@@ -52,6 +52,23 @@ export class StrapiDbWrapper {
     return result;
   }
 
+  public async getRoom(roomId: string): Promise<DBRoom> {
+    const rawResult = await this.roomRepository.findOne({
+      status: 'published',
+      documentId: roomId,
+    });
+
+    if (rawResult == null) {
+      throw new StrapiDbWrapperErrorNotFound(roomId);
+    }
+
+    try {
+      return DBRoomSchema.parse(rawResult);
+    } catch (error: unknown) {
+      throw new StrapiDbWrapperErrorCannotParse(rawResult.documentId, error);
+    }
+  }
+
   public async getScenarioGroups(
     databaseId: string,
   ): Promise<DBScenarioGroup[]> {

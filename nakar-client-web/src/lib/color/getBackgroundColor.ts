@@ -1,9 +1,9 @@
-import { match } from "ts-pattern";
-import { ColorDto } from "../../shared/dto";
+import { match, P } from "ts-pattern";
+import { Color } from "../../../src-gen";
 
-export function getBackgroundColor(color: ColorDto): string {
+export function getBackgroundColor(color: Color): string {
   return match(color)
-    .with({ type: "preset" }, (color): string => {
+    .with({ index: P.number }, (color): string => {
       return match(color.index)
         .with(0, () => "#3B71CA")
         .with(1, () => "#14A44D")
@@ -13,6 +13,5 @@ export function getBackgroundColor(color: ColorDto): string {
         .with(5, () => "#332D2D")
         .exhaustive();
     })
-    .with({ type: "custom" }, (color): string => color.backgroundColor)
-    .exhaustive();
+    .otherwise((color): string => color.backgroundColor);
 }

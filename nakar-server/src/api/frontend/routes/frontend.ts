@@ -20,6 +20,15 @@ export default {
     },
     {
       method: 'GET',
+      path: '/frontend/room/:id',
+      handler: 'frontend.getRoom',
+      config: {
+        policies: [],
+        middlewares: [],
+      },
+    },
+    {
+      method: 'GET',
       path: '/frontend/scenario-group',
       handler: 'frontend.getScenarioGroups',
       config: {

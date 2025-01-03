@@ -1,9 +1,9 @@
-import { match } from "ts-pattern";
-import { ColorDto } from "../../shared/dto";
+import { match, P } from "ts-pattern";
+import { Color } from "../../../src-gen";
 
-export function getTextColor(color: ColorDto): string {
+export function getTextColor(color: Color): string {
   return match(color)
-    .with({ type: "preset" }, (color): string => {
+    .with({ index: P.number }, (color): string => {
       return match(color.index)
         .with(0, () => "#fff")
         .with(1, () => "#fff")
@@ -13,6 +13,5 @@ export function getTextColor(color: ColorDto): string {
         .with(5, () => "#fff")
         .exhaustive();
     })
-    .with({ type: "custom" }, (color): string => color.textColor)
-    .exhaustive();
+    .otherwise((color): string => color.textColor);
 }

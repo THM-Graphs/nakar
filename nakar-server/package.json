@@ -4,10 +4,10 @@
   "private": true,
   "description": "A Strapi application",
   "scripts": {
-    "build": "strapi build",
+    "build": "npm run build:gen && strapi build",
     "build:gen": "openapi-typescript ../nakar-shared/openapi.yaml -o ./src-gen/schema.d.ts --root-types",
     "deploy": "strapi deploy",
-    "develop": "strapi develop",
+    "develop": "npm run build:gen && strapi develop",
     "start": "strapi start",
     "strapi": "strapi",
     "lint": "eslint .",

@@ -1,14 +1,15 @@
 import { createRef, ReactNode, useEffect } from "react";
 import * as d3 from "d3";
-import { EdgeDto, NodeDto } from "../shared/dto.ts";
-import { Stack } from "react-bootstrap";
-import { useStore } from "../lib/state/useStore.ts";
-import { useTheme } from "../lib/theme/useTheme.ts";
-import { getBackgroundColor } from "../lib/color/getBackgroundColor.ts";
-import { getTextColor } from "../lib/color/getTextColor.ts";
+import { useTheme } from "../../lib/theme/useTheme.ts";
+import { getBackgroundColor } from "../../lib/color/getBackgroundColor.ts";
+import { getTextColor } from "../../lib/color/getTextColor.ts";
+import { Edge, GetInitialGraph, Node } from "../../../src-gen";
+import { Labels } from "./Labels.tsx";
 
-export function Canvas(props: { children?: ReactNode }) {
-  const graph = useStore((state) => state.canvas.graph);
+export function Canvas(props: {
+  children?: ReactNode;
+  graph: GetInitialGraph;
+}) {
   const svgRef = createRef<SVGSVGElement>();
   const theme = useTheme();
 
@@ -35,19 +36,21 @@ export function Canvas(props: { children?: ReactNode }) {
         }),
     );
 
-    type D3Node = NodeDto & { x: number; y: number; fx?: number; fy?: number };
-    type D3Link = EdgeDto & { source: D3Node; target: D3Node };
+    type D3Node = Node & { x: number; y: number; fx?: number; fy?: number };
+    type D3Link = Edge & { source: D3Node; target: D3Node };
 
-    const nodes: D3Node[] = graph.graph.nodes.map((node: NodeDto): D3Node => {
-      return {
-        ...node,
-        x: node.position.x,
-        y: node.position.y,
-      };
-    });
+    const nodes: D3Node[] = props.graph.graph.nodes.map(
+      (node: Node): D3Node => {
+        return {
+          ...node,
+          x: node.position.x,
+          y: node.position.y,
+        };
+      },
+    );
 
-    const edges: D3Link[] = graph.graph.edges.reduce(
-      (acc: D3Link[], edge: EdgeDto) => {
+    const edges: D3Link[] = props.graph.graph.edges.reduce(
+      (acc: D3Link[], edge: Edge) => {
         const sourceNode = nodes.find((n) => n.id === edge.startNodeId);
         const targetNode = nodes.find((n) => n.id === edge.endNodeId);
 
@@ -167,7 +170,7 @@ export function Canvas(props: { children?: ReactNode }) {
         (d: D3Node) => `translate(${d.x.toString()}, ${d.y.toString()})`,
       );
     });
-  }, [svgRef, graph, theme]);
+  }, [props.graph, theme]);
 
   return (
     <div className={"flex-grow-1 d-flex"}>
@@ -175,20 +178,7 @@ export function Canvas(props: { children?: ReactNode }) {
       <svg ref={svgRef} className={"flex-grow-1 flex-shrink-1"}>
         <g></g>
       </svg>
-      <Stack className={"position-absolute m-2 gap-2"} direction={"horizontal"}>
-        {graph.graphMetaData.labels.map((label) => (
-          <span
-            className={"badge"}
-            style={{
-              backgroundColor: getBackgroundColor(label.color),
-              color: getTextColor(label.color),
-            }}
-            key={label.label}
-          >
-            {label.label} ({label.count})
-          </span>
-        ))}
-      </Stack>
+      <Labels graph={props.graph}></Labels>
     </div>
   );
 }
