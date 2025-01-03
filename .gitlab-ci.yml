@@ -1,43 +1,40 @@
 stages:
-  - code_gen
   - ci_build
-  - static_analysis
   - build_push_docker
-
-code_gen:
-  stage: code_gen
-  tags:
-    - nodejs
-  before_script:
-    - cd nakar-shared
-  script:
-    - npm run build
 
 ci_nakar-server:
   stage: ci_build
-  needs:
-    - code_gen
   tags:
       - nodejs
   before_script:
+    - cd nakar-shared
+    - npm ci
+    - npm run build
+    - cd ..
     - cd nakar-server
     - npm ci
   script:
     - npm run build:gen
     - npm run build
+    - npm run lint
+    - npm run audit
 
 ci_nakar-client-web:
   stage: ci_build
-  needs:
-    - code_gen
   tags:
       - nodejs
   before_script:
+    - cd nakar-shared
+    - npm ci
+    - npm run build
+    - cd ..
     - cd nakar-client-web
     - npm ci
   script:
     - npm run build:gen
     - npm run build
+    - npm run lint
+    - npm run audit
 
 ci_nakar-db-pole:
   stage: ci_build
@@ -48,34 +45,6 @@ ci_nakar-db-pole:
     - npm ci
   script:
     - npm run build
-
-static_nakar-server:
-  stage: static_analysis
-  needs:
-    - ci_nakar-server
-  tags:
-    - nodejs
-  before_script:
-    - cd nakar-server
-    - npm ci
-    - npm run build:gen
-  script:
-    - npm run lint
-    - npm run audit
-
-static_nakar-client-web:
-  stage: static_analysis
-  needs:
-    - ci_nakar-client-web
-  tags:
-    - nodejs
-  before_script:
-    - cd nakar-client-web
-    - npm ci
-    - npm run build:gen
-  script:
-    - npm run lint
-    - npm run audit
 
 deploy_nakar-db-pole:
   stage: build_push_docker
@@ -93,7 +62,7 @@ deploy_nakar-db-pole:
 deploy_nakar-server:
   stage: build_push_docker
   needs:
-    - static_nakar-server
+    - ci_nakar-server
   only:
     - prod
   tags:
@@ -110,7 +79,7 @@ deploy_nakar-server:
 deploy_nakar-client-web:
   stage: build_push_docker
   needs:
-    - static_nakar-client-web
+    - ci_nakar-client-web
   only:
     - prod
   tags:
