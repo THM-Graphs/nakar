@@ -18,16 +18,19 @@
     "username": {
       "type": "string"
     },
-    "scenarios": {
-      "type": "relation",
-      "relation": "oneToMany",
-      "target": "api::scenario.scenario",
-      "mappedBy": "database"
-    },
     "password": {
       "type": "string"
     },
     "url": {
+      "type": "string"
+    },
+    "scenarioGroups": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::scenario-group.scenario-group",
+      "mappedBy": "database"
+    },
+    "browserUrl": {
       "type": "string"
     }
   }

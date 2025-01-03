@@ -1,45 +1,56 @@
+import { StrapiDbWrapper } from '../../../lib/strapi-db/StrapiDbWrapper';
+import { StrapiContextWrapper } from '../../../lib/strapi-ctx/StrapiContextWrapper';
 import {
-  EdgeDto,
-  GetDatabaseStructureDto,
-  GetInitialGraphDto,
-  GetScenariosDto,
-  GraphMetaDataLabel,
-  NodeDto,
-} from '../../../lib/shared/dto';
+  SchemaEdge,
+  SchemaGetDatabase,
+  SchemaGetDatabases,
+  SchemaGetInitialGraph,
+  SchemaGetRoom,
+  SchemaGetRooms,
+  SchemaGetScenario,
+  SchemaGetScenarioGroup,
+  SchemaGetScenarioGroups,
+  SchemaGetScenarios,
+  SchemaGraphLabel,
+  SchemaNode,
+} from '../../../../src-gen/schema';
+import { DBDatabase } from '../../../lib/strapi-db/types/DBDatabase';
+import { DBRoom } from '../../../lib/strapi-db/types/DBRoom';
+import { DBScenarioGroup } from '../../../lib/strapi-db/types/DBScenarioGroup';
+import { DBScenario } from '../../../lib/strapi-db/types/DBScenario';
+import { StrapiController } from '../../../lib/strapi-ctx/StrapiController';
+import { Neo4jWrapper } from '../../../lib/neo4j/Neo4jWrapper';
+import { Neo4jNode } from '../../../lib/neo4j/types/Neo4jNode';
 import {
   applyLabels,
   applyNodeSizes,
   getNodeDisplayTitle,
 } from '../../../lib/BusinessLogic';
-import { Neo4jWrapper } from '../../../lib/neo4j/Neo4jWrapper';
-import { Neo4jNode } from '../../../lib/neo4j/types/Neo4jNode';
 import { Neo4jEdge } from '../../../lib/neo4j/types/Neo4jEdge';
-import { StrapiDbWrapper } from '../../../lib/strapi-db/StrapiDbWrapper';
-import { StrapiContextWrapper } from '../../../lib/strapi-ctx/StrapiContextWrapper';
 
 export default {
-  initialGraph: StrapiContextWrapper.handleRequest(
+  getInitialGraph: StrapiContextWrapper.handleRequest(
     async (
       context: StrapiContextWrapper,
       db: StrapiDbWrapper,
-    ): Promise<GetInitialGraphDto> => {
-      const scenarioId = context.getQueryParameter('scenarioId');
+    ): Promise<SchemaGetInitialGraph> => {
+      const scenarioId = context.getPathParameter('id');
 
       const scenario = await db.getScenario(scenarioId);
 
-      const neo4jWrapper = new Neo4jWrapper(scenario.database);
+      const neo4jWrapper = new Neo4jWrapper(scenario.scenarioGroup?.database);
       const graphResult = await neo4jWrapper.executeQuery(scenario.query);
 
-      const graph: GetInitialGraphDto = {
+      const graph: SchemaGetInitialGraph = {
         graph: {
-          nodes: graphResult.nodes.map((node: Neo4jNode): NodeDto => {
+          nodes: graphResult.nodes.map((node: Neo4jNode): SchemaNode => {
             return {
               id: node.id,
               displayTitle: getNodeDisplayTitle(node),
-              labels: node.labels.map((label): GraphMetaDataLabel => {
+              labels: node.labels.map((label): SchemaGraphLabel => {
                 return {
                   label: label,
-                  color: { type: 'preset', index: 0 },
+                  color: { type: 'PresetColor', index: 0 },
                   count: 0,
                 };
               }),
@@ -51,7 +62,7 @@ export default {
               },
             };
           }),
-          edges: graphResult.edges.map((edge: Neo4jEdge): EdgeDto => {
+          edges: graphResult.edges.map((edge: Neo4jEdge): SchemaEdge => {
             return {
               id: edge.id,
               startNodeId: edge.startNodeId,
@@ -73,51 +84,83 @@ export default {
       return graph;
     },
   ),
-  scenarios: StrapiContextWrapper.handleRequest(
+  getDatabases: StrapiContextWrapper.handleRequest(
     async (
       context: StrapiContextWrapper,
       db: StrapiDbWrapper,
-    ): Promise<GetScenariosDto> => {
-      const databases = await db.getDatabases();
-
-      return {
-        databases: databases.map((database) => ({
-          id: database.documentId,
-          title: database.title ?? '',
-          url: database.url ?? '',
-          scenarios: (database.scenarios ?? []).map((scenario) => ({
-            id: scenario.documentId,
-            title: scenario.title ?? '',
-            description: scenario.description ?? '',
-            query: scenario.query ?? '',
-            coverUrl:
-              scenario.cover?.url && scenario.cover.url !== ''
-                ? strapi.config.get<string>('server.url') + scenario.cover.url
-                : null,
-            databaseId: database.documentId,
-            databaseTitle: database.title ?? '',
-            databaseUrl: database.url ?? '',
-          })),
-        })),
+    ): Promise<SchemaGetDatabases> => {
+      const databases: DBDatabase[] = await db.getDatabases();
+      const result: SchemaGetDatabases = {
+        databases: databases.map((database: DBDatabase): SchemaGetDatabase => {
+          return {
+            id: database.documentId,
+            title: database.title ?? '',
+            url: database.url ?? '',
+          };
+        }),
       };
+      return result;
     },
   ),
-  databaseStructure: StrapiContextWrapper.handleRequest(
+  getRooms: StrapiContextWrapper.handleRequest(
     async (
       context: StrapiContextWrapper,
       db: StrapiDbWrapper,
-    ): Promise<GetDatabaseStructureDto> => {
+    ): Promise<SchemaGetRooms> => {
+      const dbResult: DBRoom[] = await db.getRooms();
+      const dto: SchemaGetRooms = {
+        rooms: dbResult.map((database: DBRoom): SchemaGetRoom => {
+          return {
+            id: database.documentId,
+            title: database.title ?? '',
+          };
+        }),
+      };
+      return dto;
+    },
+  ),
+  getScenarioGroups: StrapiContextWrapper.handleRequest(
+    async (
+      context: StrapiContextWrapper,
+      db: StrapiDbWrapper,
+    ): Promise<SchemaGetScenarioGroups> => {
       const databaseId = context.getQueryParameter('databaseId');
 
-      const database = await db.getDatabase(databaseId);
-
-      const neo4jWrapper = new Neo4jWrapper(database);
-      const stats = await neo4jWrapper.getStats();
-
-      return {
-        id: databaseId,
-        stats,
+      const dbResult: DBScenarioGroup[] =
+        await db.getScenarioGroups(databaseId);
+      const dto: SchemaGetScenarioGroups = {
+        scenarioGroups: dbResult.map(
+          (dbScenarioGroup: DBScenarioGroup): SchemaGetScenarioGroup => {
+            return {
+              id: dbScenarioGroup.documentId,
+              title: dbScenarioGroup.title ?? '',
+            };
+          },
+        ),
       };
+      return dto;
     },
   ),
-};
+  getScenarios: StrapiContextWrapper.handleRequest(
+    async (
+      context: StrapiContextWrapper,
+      db: StrapiDbWrapper,
+    ): Promise<SchemaGetScenarios> => {
+      const scenarioGroupId = context.getQueryParameter('scenarioGroupId');
+
+      const dbResult: DBScenario[] = await db.getScenarios(scenarioGroupId);
+      const dto: SchemaGetScenarios = {
+        scenarios: dbResult.map((dbScenario: DBScenario): SchemaGetScenario => {
+          return {
+            id: dbScenario.documentId,
+            title: dbScenario.title ?? '',
+            query: dbScenario.query ?? '',
+            description: dbScenario.description ?? '',
+            coverUrl: dbScenario.cover?.url ?? null,
+          };
+        }),
+      };
+      return dto;
+    },
+  ),
+} satisfies StrapiController;

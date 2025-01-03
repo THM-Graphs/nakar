@@ -381,6 +381,7 @@ export interface ApiDatabaseDatabase extends Struct.CollectionTypeSchema {
     draftAndPublish: true;
   };
   attributes: {
+    browserUrl: Schema.Attribute.String;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -392,13 +393,73 @@ export interface ApiDatabaseDatabase extends Struct.CollectionTypeSchema {
       Schema.Attribute.Private;
     password: Schema.Attribute.String;
     publishedAt: Schema.Attribute.DateTime;
-    scenarios: Schema.Attribute.Relation<'oneToMany', 'api::scenario.scenario'>;
+    scenarioGroups: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::scenario-group.scenario-group'
+    >;
     title: Schema.Attribute.String;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     url: Schema.Attribute.String;
     username: Schema.Attribute.String;
+  };
+}
+
+export interface ApiRoomRoom extends Struct.CollectionTypeSchema {
+  collectionName: 'rooms';
+  info: {
+    displayName: 'Room';
+    pluralName: 'rooms';
+    singularName: 'room';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<'oneToMany', 'api::room.room'> &
+      Schema.Attribute.Private;
+    publishedAt: Schema.Attribute.DateTime;
+    title: Schema.Attribute.String;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiScenarioGroupScenarioGroup
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'scenario_groups';
+  info: {
+    description: '';
+    displayName: 'Scenario Group';
+    pluralName: 'scenario-groups';
+    singularName: 'scenario-group';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    database: Schema.Attribute.Relation<'manyToOne', 'api::database.database'>;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::scenario-group.scenario-group'
+    > &
+      Schema.Attribute.Private;
+    publishedAt: Schema.Attribute.DateTime;
+    scenarios: Schema.Attribute.Relation<'oneToMany', 'api::scenario.scenario'>;
+    title: Schema.Attribute.String;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
   };
 }
 
@@ -418,7 +479,6 @@ export interface ApiScenarioScenario extends Struct.CollectionTypeSchema {
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
-    database: Schema.Attribute.Relation<'manyToOne', 'api::database.database'>;
     description: Schema.Attribute.Text;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
@@ -428,6 +488,10 @@ export interface ApiScenarioScenario extends Struct.CollectionTypeSchema {
       Schema.Attribute.Private;
     publishedAt: Schema.Attribute.DateTime;
     query: Schema.Attribute.Text;
+    scenarioGroup: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::scenario-group.scenario-group'
+    >;
     title: Schema.Attribute.String;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
@@ -945,6 +1009,8 @@ declare module '@strapi/strapi' {
       'admin::transfer-token-permission': AdminTransferTokenPermission;
       'admin::user': AdminUser;
       'api::database.database': ApiDatabaseDatabase;
+      'api::room.room': ApiRoomRoom;
+      'api::scenario-group.scenario-group': ApiScenarioGroupScenarioGroup;
       'api::scenario.scenario': ApiScenarioScenario;
       'plugin::content-releases.release': PluginContentReleasesRelease;
       'plugin::content-releases.release-action': PluginContentReleasesReleaseAction;

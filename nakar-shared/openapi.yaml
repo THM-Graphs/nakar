@@ -45,7 +45,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/GetInitialGraph'
 
-  /scenarioGroup:
+  /scenario-group:
     get:
       tags:
         - ScenarioGroup
@@ -231,6 +231,8 @@ components:
           type: array
           items:
             type: object
+            additionalProperties:
+              type: string
       required:
         - graph
         - graphMetaData
@@ -307,11 +309,13 @@ components:
         coverUrl:
           type: string
           format: uri
+          nullable: true
       required:
         - id
         - title
         - query
         - description
+        - coverUrl
     GetScenarios:
       type: object
       properties:

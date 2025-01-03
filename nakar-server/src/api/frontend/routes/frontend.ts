@@ -2,8 +2,8 @@ export default {
   routes: [
     {
       method: 'GET',
-      path: '/frontend/initial-graph',
-      handler: 'frontend.initialGraph',
+      path: '/frontend/database',
+      handler: 'frontend.getDatabases',
       config: {
         policies: [],
         middlewares: [],
@@ -11,8 +11,8 @@ export default {
     },
     {
       method: 'GET',
-      path: '/frontend/scenarios',
-      handler: 'frontend.scenarios',
+      path: '/frontend/room',
+      handler: 'frontend.getRooms',
       config: {
         policies: [],
         middlewares: [],
@@ -20,8 +20,26 @@ export default {
     },
     {
       method: 'GET',
-      path: '/frontend/database-structure',
-      handler: 'frontend.databaseStructure',
+      path: '/frontend/scenario-group',
+      handler: 'frontend.getScenarioGroups',
+      config: {
+        policies: [],
+        middlewares: [],
+      },
+    },
+    {
+      method: 'GET',
+      path: '/frontend/scenario',
+      handler: 'frontend.getScenarios',
+      config: {
+        policies: [],
+        middlewares: [],
+      },
+    },
+    {
+      method: 'GET',
+      path: '/frontend/scenario/:id/initial-graph',
+      handler: 'frontend.getInitialGraph',
       config: {
         policies: [],
         middlewares: [],

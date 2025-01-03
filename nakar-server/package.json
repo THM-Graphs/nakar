@@ -5,6 +5,7 @@
   "description": "A Strapi application",
   "scripts": {
     "build": "strapi build",
+    "build:gen": "openapi-typescript ../nakar-shared/openapi.yaml -o ./src-gen/schema.d.ts --root-types",
     "deploy": "strapi deploy",
     "develop": "strapi develop",
     "start": "strapi start",
@@ -47,6 +48,7 @@
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-prettier": "^5.2.1",
     "jest": "^29.7.0",
+    "openapi-typescript": "^7.4.4",
     "prettier": "3.4.2",
     "supertest": "^7.0.0",
     "typescript": "^5.3.3",

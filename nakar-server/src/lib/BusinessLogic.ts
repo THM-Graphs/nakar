@@ -1,8 +1,12 @@
-import { ColorDto, GetInitialGraphDto, GraphMetaDataLabel } from './shared/dto';
 import { Neo4jNode } from './neo4j/types/Neo4jNode';
 import { Neo4JProperty } from './neo4j/types/Neo4JProperty';
+import {
+  SchemaColor,
+  SchemaGetInitialGraph,
+  SchemaGraphLabel,
+} from '../../src-gen/schema';
 
-export function applyNodeSizes(graph: GetInitialGraphDto): void {
+export function applyNodeSizes(graph: SchemaGetInitialGraph): void {
   const nodeConnections: Record<string, number> = {};
   for (const node of graph.graph.nodes) {
     const edges = graph.graph.edges.filter(
@@ -31,17 +35,17 @@ export function applyNodeSizes(graph: GetInitialGraphDto): void {
   }
 }
 
-export function applyLabels(graph: GetInitialGraphDto): void {
+export function applyLabels(graph: SchemaGetInitialGraph): void {
   let colorIndex: 0 | 1 | 2 | 3 | 4 | 5 = 0;
 
   for (const node of graph.graph.nodes) {
     for (const label of node.labels) {
       const foundEntry = graph.graphMetaData.labels.find(
-        (l) => l.label === label.label,
+        (l: SchemaGraphLabel) => l.label === label.label,
       );
       if (!foundEntry) {
-        const color: ColorDto = { type: 'preset', index: colorIndex };
-        const newEntry: GraphMetaDataLabel = {
+        const color: SchemaColor = { type: 'PresetColor', index: colorIndex };
+        const newEntry: SchemaGraphLabel = {
           label: label.label,
           color: color,
           count: 1,

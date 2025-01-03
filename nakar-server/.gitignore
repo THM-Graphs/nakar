@@ -131,3 +131,4 @@ build
 .strapi-updater.json
 .strapi-cloud.json
 /src/extensions/documentation
+/src-gen

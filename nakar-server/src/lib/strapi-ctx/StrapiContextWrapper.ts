@@ -27,6 +27,14 @@ export class StrapiContextWrapper {
     return value;
   }
 
+  getPathParameter(key: string): string {
+    const value = (this.ctx.params as Record<string, unknown>)[key];
+    if (typeof value !== 'string') {
+      throw new BadRequest(`Path parameter ${key} not provided.`);
+    }
+    return value;
+  }
+
   static handleRequest<T>(
     handler: (context: StrapiContextWrapper, db: StrapiDbWrapper) => Promise<T>,
   ) {

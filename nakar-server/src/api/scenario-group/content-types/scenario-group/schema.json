@@ -1,0 +1,31 @@
+{
+  "kind": "collectionType",
+  "collectionName": "scenario_groups",
+  "info": {
+    "singularName": "scenario-group",
+    "pluralName": "scenario-groups",
+    "displayName": "Scenario Group",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "title": {
+      "type": "string"
+    },
+    "database": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::database.database",
+      "inversedBy": "scenarioGroups"
+    },
+    "scenarios": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::scenario.scenario",
+      "mappedBy": "scenarioGroup"
+    }
+  }
+}

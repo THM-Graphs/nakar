@@ -27,14 +27,14 @@
         "images"
       ]
     },
-    "database": {
-      "type": "relation",
-      "relation": "manyToOne",
-      "target": "api::database.database",
-      "inversedBy": "scenarios"
-    },
     "description": {
       "type": "text"
+    },
+    "scenarioGroup": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::scenario-group.scenario-group",
+      "inversedBy": "scenarios"
     }
   }
 }
