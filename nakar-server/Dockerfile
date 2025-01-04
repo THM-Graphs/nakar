@@ -9,7 +9,7 @@ COPY test ./test
 COPY types ./types
 COPY babel.config.js ./
 COPY eslint.config.mjs ./
-COPY favicon.png ./
+COPY favicon.ico ./
 COPY package.json ./
 COPY package-lock.json ./
 COPY tsconfig.configs.json ./
