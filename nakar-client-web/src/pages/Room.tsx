@@ -43,6 +43,15 @@ export function Room() {
     }
   }, []);
 
+  useEffect(() => {
+    if (graph == null) {
+      return;
+    }
+    if (graph.graph.nodes.length == 0 && graph.tableData.length > 0) {
+      setTableDataOpened(true);
+    }
+  }, [graph]);
+
   return (
     <>
       <Stack style={{ height: "100%" }}>
