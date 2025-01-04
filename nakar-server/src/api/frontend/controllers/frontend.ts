@@ -96,6 +96,7 @@ export default {
             id: database.documentId,
             title: database.title ?? '',
             url: database.url ?? '',
+            browserUrl: database.browserUrl,
           };
         }),
       };

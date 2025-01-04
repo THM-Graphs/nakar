@@ -285,10 +285,14 @@ components:
           type: string
         url:
           type: string
+        browserUrl:
+          type: string
+          nullable: true
       required:
         - id
         - title
         - url
+        - browserUrl
     GetDatabases:
       type: object
       properties:

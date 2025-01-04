@@ -13,6 +13,8 @@ import { match } from "ts-pattern";
 import { ErrorDisplay } from "../shared/ErrorDisplay.tsx";
 import { Loading } from "../shared/Loading.tsx";
 import { resultOrThrow } from "../../lib/data/resultOrThrow.ts";
+import { NavLink } from "react-router";
+import { Stack } from "react-bootstrap";
 
 export function DatabaseDisplay(props: {
   database: GetDatabase;
@@ -40,24 +42,34 @@ export function DatabaseDisplay(props: {
 
   return (
     <>
-      <li
-        style={{ listStyleType: "none", cursor: "pointer" }}
-        onClick={() => {
-          setCollapsed((old) => !old);
-        }}
-      >
-        <i
-          className={clsx(
-            "bi me-2",
-            collapsed ? "bi-chevron-right" : "bi-chevron-down",
+      <li style={{ listStyleType: "none" }}>
+        <Stack direction={"horizontal"} gap={2}>
+          <Stack
+            direction={"horizontal"}
+            gap={2}
+            style={{ cursor: "pointer" }}
+            onClick={() => {
+              setCollapsed((old) => !old);
+            }}
+          >
+            <i
+              className={clsx(
+                "bi",
+                collapsed ? "bi-chevron-right" : "bi-chevron-down",
+              )}
+            ></i>
+            {props.database.title}
+          </Stack>
+          {props.database.browserUrl && (
+            <NavLink to={props.database.browserUrl} target={"_blank"}>
+              <i className={"bi bi-box-arrow-up-right"}></i>
+            </NavLink>
           )}
-        ></i>
-        {props.database.title} ({props.database.url})
-        <Loading
-          className={"ms-1"}
-          size={"sm"}
-          hidden={scenarioGroups.type !== "loading"}
-        ></Loading>
+          <Loading
+            size={"sm"}
+            hidden={scenarioGroups.type !== "loading"}
+          ></Loading>
+        </Stack>
       </li>
       {match(scenarioGroups)
         .with({ type: "error" }, ({ message }) => (
