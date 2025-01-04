@@ -4,7 +4,7 @@ import { SideToolbar } from "../components/room/SideToolbar.tsx";
 import { DatabaseList } from "../components/room/DatabaseList.tsx";
 import { Canvas } from "../components/room/Canvas.tsx";
 import { DataTable } from "../components/room/DataTable.tsx";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   getInitialGraph,
   GetInitialGraph,
@@ -74,22 +74,24 @@ export function Room() {
           style={{ height: "100px" }}
         >
           <SideToolbar visible={scenariosWindowOpened} width={500}>
-            <DatabaseList
-              onScenarioSelect={async (scenario) => {
-                try {
-                  setAnyScenarioIsLoading(true);
-                  await loadGraph(scenario.id);
-                } finally {
-                  setAnyScenarioIsLoading(false);
-                }
-              }}
-              anyScenarioIsLoading={anyScenarioIsLoading}
-            ></DatabaseList>
+            {() => (
+              <DatabaseList
+                onScenarioSelect={async (scenario) => {
+                  try {
+                    setAnyScenarioIsLoading(true);
+                    await loadGraph(scenario.id);
+                  } finally {
+                    setAnyScenarioIsLoading(false);
+                  }
+                }}
+                anyScenarioIsLoading={anyScenarioIsLoading}
+              ></DatabaseList>
+            )}
           </SideToolbar>
           {graph && <Canvas graph={graph}></Canvas>}
           {graph && (
             <SideToolbar visible={tableDataOpened} width={700}>
-              <DataTable graph={graph}></DataTable>
+              {() => <DataTable graph={graph}></DataTable>}
             </SideToolbar>
           )}
         </Stack>

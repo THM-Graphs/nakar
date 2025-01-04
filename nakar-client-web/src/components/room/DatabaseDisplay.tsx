@@ -63,7 +63,7 @@ export function DatabaseDisplay(props: {
           </Stack>
           {props.database.browserUrl && (
             <NavLink to={props.database.browserUrl} target={"_blank"}>
-              <i className={"bi bi-box-arrow-up-right"}></i>
+              <span>{props.database.browserUrl}</span>
             </NavLink>
           )}
           <Loading
