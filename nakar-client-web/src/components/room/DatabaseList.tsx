@@ -11,6 +11,7 @@ import { ErrorDisplay } from "../shared/ErrorDisplay.tsx";
 import { Loading } from "../shared/Loading.tsx";
 import { DatabaseDisplay } from "./DatabaseDisplay.tsx";
 import { Loadable } from "../../lib/data/Loadable.ts";
+import { resultOrThrow } from "../../lib/data/resultOrThrow.ts";
 
 export function DatabaseList(props: {
   onScenarioSelect: (scenario: GetScenario) => void;
@@ -23,16 +24,8 @@ export function DatabaseList(props: {
     setDatabases({ type: "loading" });
     getDatabases()
       .then((result) => {
-        if (result.error != null) {
-          alert(handleError(result.error));
-        } else if (result.data != null) {
-          setDatabases({ type: "data", data: result.data });
-        } else {
-          setDatabases({
-            type: "error",
-            message: "Unknown error",
-          });
-        }
+        const data = resultOrThrow(result);
+        setDatabases({ type: "data", data: data });
       })
       .catch((error: unknown) => {
         setDatabases({

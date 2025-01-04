@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { match, P } from "ts-pattern";
+import { match } from "ts-pattern";
 import { handleError } from "../../lib/error/handleError.ts";
 import { GetRoom, getRooms, GetRooms } from "../../../src-gen";
 import { RoomDisplay } from "./RoomDisplay.tsx";
@@ -16,16 +16,13 @@ export function RoomList() {
     setRooms({ type: "loading" });
     getRooms()
       .then((result) => {
-        match(result)
-          .with(
-            { data: P.nullish },
-            (result: { data: undefined; error: unknown }) => {
-              setRooms({ type: "error", message: handleError(result.error) });
-            },
-          )
-          .otherwise((result: { data: GetRooms; error: undefined }) => {
-            setRooms({ type: "data", data: result.data });
-          });
+        if (result.error != null) {
+          setRooms({ type: "error", message: handleError(result.error) });
+        } else if (result.data != null) {
+          setRooms({ type: "data", data: result.data });
+        } else {
+          setRooms({ type: "error", message: "Unknown error" });
+        }
       })
       .catch((error: unknown) => {
         setRooms({ type: "error", message: handleError(error) });

@@ -12,6 +12,7 @@ import { handleError } from "../../lib/error/handleError.ts";
 import { match } from "ts-pattern";
 import { ErrorDisplay } from "../shared/ErrorDisplay.tsx";
 import { Loading } from "../shared/Loading.tsx";
+import { resultOrThrow } from "../../lib/data/resultOrThrow.ts";
 
 export function DatabaseDisplay(props: {
   database: GetDatabase;
@@ -29,13 +30,8 @@ export function DatabaseDisplay(props: {
     setScenarioGroups({ type: "loading" });
     getScenarioGroups({ query: { databaseId: props.database.id } })
       .then((result) => {
-        if (result.error != null) {
-          alert(handleError(result.error));
-        } else if (result.data != null) {
-          setScenarioGroups({ type: "data", data: result.data });
-        } else {
-          setScenarioGroups({ type: "error", message: "Unknown Error" });
-        }
+        const data = resultOrThrow(result);
+        setScenarioGroups({ type: "data", data: data });
       })
       .catch((error: unknown) => {
         setScenarioGroups({ type: "error", message: handleError(error) });

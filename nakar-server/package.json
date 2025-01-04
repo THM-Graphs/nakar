@@ -14,7 +14,7 @@
     "audit": "npm audit --audit-level none",
     "test": "jest",
     "export": "strapi export --no-compress --no-encrypt -f export",
-    "import": "strapi import -f export",
+    "import": "strapi import -f export.tar",
     "version": "echo $npm_package_version"
   },
   "dependencies": {

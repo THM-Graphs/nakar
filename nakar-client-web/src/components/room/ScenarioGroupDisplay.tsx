@@ -10,6 +10,7 @@ import { Loadable } from "../../lib/data/Loadable.ts";
 import { handleError } from "../../lib/error/handleError.ts";
 import { Loading } from "../shared/Loading.tsx";
 import clsx from "clsx";
+import { resultOrThrow } from "../../lib/data/resultOrThrow";
 
 export function ScenarioGroupDisplay(props: {
   scenarioGroup: GetScenarioGroup;
@@ -25,13 +26,8 @@ export function ScenarioGroupDisplay(props: {
     setScenarios({ type: "loading" });
     getScenarios({ query: { scenarioGroupId: props.scenarioGroup.id } })
       .then((result) => {
-        if (result.error != null) {
-          alert(handleError(result.error));
-        } else if (result.data != null) {
-          setScenarios({ type: "data", data: result.data });
-        } else {
-          setScenarios({ type: "error", message: "Unknown Error" });
-        }
+        const data = resultOrThrow(result);
+        setScenarios({ type: "data", data: data });
       })
       .catch((error: unknown) => {
         setScenarios({ type: "error", message: handleError(error) });

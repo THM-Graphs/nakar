@@ -11,9 +11,9 @@ import {
   GetRoom,
   getRoom,
 } from "../../src-gen";
-import { match, P } from "ts-pattern";
 import { handleError } from "../lib/error/handleError.ts";
 import { LoaderFunctionArgs, useLoaderData } from "react-router";
+import { resultOrThrow } from "../lib/data/resultOrThrow.ts";
 
 export async function RoomLoader(args: LoaderFunctionArgs): Promise<GetRoom> {
   const roomId = args.params["id"];
@@ -23,16 +23,7 @@ export async function RoomLoader(args: LoaderFunctionArgs): Promise<GetRoom> {
   }
 
   const room = await getRoom({ path: { id: roomId } });
-  return match(room)
-    .with(
-      { data: P.nullish },
-      (result: { data: undefined; error: unknown }) => {
-        throw new Error(handleError(result.error));
-      },
-    )
-    .otherwise((result: { data: GetRoom; error: undefined }): GetRoom => {
-      return result.data;
-    });
+  return resultOrThrow(room);
 }
 
 export function Room() {
@@ -44,13 +35,8 @@ export function Room() {
   const loadGraph = useCallback((scenarioId: string) => {
     getInitialGraph({ path: { id: scenarioId } })
       .then((result) => {
-        if (result.error != null) {
-          alert(handleError(result.error));
-        } else if (result.data != null) {
-          setGraph(result.data);
-        } else {
-          throw new Error("Unknown error");
-        }
+        const data = resultOrThrow(result);
+        setGraph(data);
       })
       .catch((error: unknown) => {
         alert(handleError(error));
