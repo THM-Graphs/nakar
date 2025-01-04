@@ -15,6 +15,7 @@
     "test": "jest",
     "export": "strapi export --no-compress --no-encrypt -f export",
     "import": "strapi import -f export.tar",
+    "transfer": "strapi transfer --from http://ip2.mni.thm.de:1337/admin",
     "version": "echo $npm_package_version"
   },
   "dependencies": {
