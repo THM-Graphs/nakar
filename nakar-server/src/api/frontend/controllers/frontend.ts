@@ -4,6 +4,7 @@ import {
   SchemaEdge,
   SchemaGetDatabase,
   SchemaGetDatabases,
+  SchemaGetHealth,
   SchemaGetInitialGraph,
   SchemaGetRoom,
   SchemaGetRooms,
@@ -178,4 +179,10 @@ export default {
       return dto;
     },
   ),
+  getHealth: StrapiContextWrapper.handleRequest((): SchemaGetHealth => {
+    const packageVersion = process.env['npm_package_version'];
+    return {
+      version: packageVersion ?? 'unknown',
+    };
+  }),
 } satisfies StrapiController;

@@ -7,6 +7,7 @@ tags:
   - name: ScenarioGroup
   - name: Database
   - name: Room
+  - name: System
 paths:
   /scenario:
     get:
@@ -107,6 +108,19 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/GetRoom'
+
+  /system/health:
+    get:
+      tags:
+        - System
+      operationId: getHealth
+      responses:
+        '200':
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetHealth'
 
 components:
   schemas:
@@ -353,3 +367,11 @@ components:
             $ref: "#/components/schemas/GetScenario"
       required:
         - scenarios
+
+    GetHealth:
+      type: object
+      properties:
+        version:
+          type: string
+      required:
+        - version

@@ -1,7 +1,11 @@
-import { Badge, Container, Image, Nav, Navbar } from "react-bootstrap";
-import clsx from "clsx";
-import { ThemeDropdown } from "../room/ThemeDropdown.tsx";
-import { env } from "../../lib/env/env.ts";
+import { Image, Navbar, Stack } from "react-bootstrap";
+import { ThemeDropdown } from "./ThemeDropdown.tsx";
+import { ScenarioWindowButton } from "../room/ScenarioWindowButton.tsx";
+import { TableDataWindowButton } from "../room/TableDataWindowButton.tsx";
+import { BackendBadge } from "./BackendBadge.tsx";
+import { DevelopmentIndicatorBadge } from "./DevelopmentIndicatorBadge.tsx";
+import { VersionBadge } from "./VersionBadge.tsx";
+import { BackButton } from "./BackButton.tsx";
 
 export function AppNavbar(props: {
   scenarioWindowOpen?: boolean;
@@ -19,14 +23,18 @@ export function AppNavbar(props: {
         zIndex: 600,
       }}
     >
-      <Container fluid>
-        {props.showBackButton && (
-          <Nav.Link className={"me-3 fw-bold"} href={"/"}>
-            <i className={"bi bi-chevron-left me-2"}></i>
-            <span>Back to Roomlist</span>
-          </Nav.Link>
-        )}
-        <Navbar.Brand className={"me-5"}>
+      <Stack
+        direction={"horizontal"}
+        className={"ps-3 pe-3"}
+        gap={3}
+        style={{ width: "100%" }}
+      >
+        <BackButton
+          hidden={!props.showBackButton}
+          href={"/"}
+          title={"Back to Room List"}
+        ></BackButton>
+        <Navbar.Brand>
           <Image
             alt=""
             src="/logo.png"
@@ -37,47 +45,25 @@ export function AppNavbar(props: {
           />
           NAKAR
         </Navbar.Brand>
-        {props.scenarioWindowOpen != null && (
-          <Nav.Link
-            onClick={() => {
-              props.toggleScenarioWindow?.();
-            }}
-            className={clsx(props.scenarioWindowOpen && "fw-bold")}
-          >
-            <i className={"bi bi-easel-fill me-2"}></i>
-            <span>Scenarios</span>
-          </Nav.Link>
-        )}
-        <div className={"me-auto"}></div>
+        <ScenarioWindowButton
+          scenarioWindowOpen={props.scenarioWindowOpen}
+          toggleScenarioWindow={props.toggleScenarioWindow}
+        ></ScenarioWindowButton>
+        <div className={"flex-grow-1"}></div>
         {props.roomTitle && <span>{props.roomTitle}</span>}
-        <div className={"me-auto"}></div>
+        <div className={"flex-grow-1"}></div>
         <ThemeDropdown></ThemeDropdown>
-        {props.tableDataLength != null && props.tableDataLength > 0 && (
-          <Nav.Link
-            onClick={() => {
-              props.toggleTableData?.();
-            }}
-            className={clsx("ms-5", props.tableDataOpened && "fw-bold")}
-          >
-            <i className={"bi bi-table me-2"}></i>
-            {props.tableDataLength > 0 && (
-              <Badge className={"me-2"} bg="secondary">
-                {props.tableDataLength}
-              </Badge>
-            )}
-            <span>Data</span>
-          </Nav.Link>
-        )}
-        <Nav.Link href={env().BACKEND_URL} className={"ms-5"} target={"_blank"}>
-          <Badge bg="secondary">{env().BACKEND_URL}</Badge>
-        </Nav.Link>
-        <Badge bg="secondary" className={"ms-2"}>
-          <span>{env().VERSION}</span>
-        </Badge>
-        <Badge bg="danger" className={"ms-2"}>
-          {import.meta.env.DEV && <span>{import.meta.env.MODE}</span>}
-        </Badge>
-      </Container>
+        <TableDataWindowButton
+          toggleTableData={props.toggleTableData}
+          tableDataLength={props.tableDataLength}
+          tableDataOpened={props.tableDataOpened}
+        ></TableDataWindowButton>
+        <Stack direction={"horizontal"} gap={2}>
+          <BackendBadge></BackendBadge>
+          <VersionBadge></VersionBadge>
+          <DevelopmentIndicatorBadge></DevelopmentIndicatorBadge>
+        </Stack>
+      </Stack>
     </Navbar>
   );
 }

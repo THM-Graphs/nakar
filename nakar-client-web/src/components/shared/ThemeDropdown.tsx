@@ -1,4 +1,4 @@
-import { Dropdown, NavDropdown } from "react-bootstrap";
+import { Dropdown, DropdownButton } from "react-bootstrap";
 import { match } from "ts-pattern";
 import { useTheme } from "../../lib/theme/useTheme.ts";
 import { UserTheme } from "../../lib/theme/UserTheme.ts";
@@ -24,8 +24,10 @@ export function ThemeDropdown(props: { className?: string }) {
   const theme = useTheme();
 
   return (
-    <NavDropdown
+    <DropdownButton
       className={props.className}
+      variant={"secondary"}
+      size={"sm"}
       title={
         <span>
           <i className={`bi bi-${getIcon(theme)} me-1`}></i>
@@ -36,7 +38,7 @@ export function ThemeDropdown(props: { className?: string }) {
       <Dropdown.Divider />
       <ThemeDropdownEntry targetTheme={"light"}></ThemeDropdownEntry>
       <ThemeDropdownEntry targetTheme={"dark"}></ThemeDropdownEntry>
-    </NavDropdown>
+    </DropdownButton>
   );
 }
 

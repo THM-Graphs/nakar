@@ -54,5 +54,14 @@ export default {
         middlewares: [],
       },
     },
+    {
+      method: 'GET',
+      path: '/frontend/system/health',
+      handler: 'frontend.getHealth',
+      config: {
+        policies: [],
+        middlewares: [],
+      },
+    },
   ],
 };

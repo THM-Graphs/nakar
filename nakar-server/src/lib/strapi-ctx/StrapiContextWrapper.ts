@@ -36,7 +36,10 @@ export class StrapiContextWrapper {
   }
 
   static handleRequest<T>(
-    handler: (context: StrapiContextWrapper, db: StrapiDbWrapper) => Promise<T>,
+    handler: (
+      context: StrapiContextWrapper,
+      db: StrapiDbWrapper,
+    ) => Promise<T> | T,
   ) {
     return async (ctx: Context): Promise<Context> => {
       const context = new StrapiContextWrapper(ctx);
