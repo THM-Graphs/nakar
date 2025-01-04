@@ -1,8 +1,10 @@
 import { OverlayTrigger, Stack, Tooltip } from "react-bootstrap";
 import { useState } from "react";
+import { useClipboard } from "../../lib/clipboard/useClipboard.ts";
 
 export function QueryDisplay(props: { query: string }) {
   const [copied, setCopied] = useState(false);
+  const [isClipboardEnabled, setClipboard] = useClipboard();
 
   return (
     <Stack gap={3}>
@@ -10,7 +12,7 @@ export function QueryDisplay(props: { query: string }) {
         placement="bottom"
         delay={{ show: 0, hide: 0 }}
         overlay={
-          <Tooltip id="button-tooltip">
+          <Tooltip hidden={!isClipboardEnabled} id="button-tooltip">
             {copied ? "Copied!" : "Click to copy query"}
           </Tooltip>
         }
@@ -22,15 +24,20 @@ export function QueryDisplay(props: { query: string }) {
       >
         <div
           onClick={() => {
-            navigator.clipboard
-              .writeText(props.query)
+            if (!isClipboardEnabled) {
+              return;
+            }
+            setClipboard(props.query)
               .then(() => {
                 setCopied(true);
               })
-              .catch(alert);
+              .catch(console.error);
           }}
           className={"font-monospace small"}
-          style={{ whiteSpace: "pre-line", cursor: "pointer" }}
+          style={{
+            whiteSpace: "pre-line",
+            cursor: isClipboardEnabled ? "pointer" : undefined,
+          }}
         >
           {props.query}
         </div>
