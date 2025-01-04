@@ -1,21 +1,29 @@
 import { z } from "zod";
 import dotenv from "dotenv";
 
-const EnvSchema = z.object({
-  BACKEND_URL: z.string().nonempty(),
+const EnvFileSchema = z.object({
+  BACKEND_URL: z.string().optional(),
+  VERSION: z.string().optional(),
 });
-type Env = z.infer<typeof EnvSchema>;
+type Env = {
+  BACKEND_URL: string;
+  VERSION: string;
+};
 
 const defaultEnv: Env = {
   BACKEND_URL: "http://localhost:1337",
+  VERSION: "0.0.0",
 };
 
 async function loadEnv(): Promise<Env> {
   const result = await fetch("/.env");
   const text = await result.text();
   const value = dotenv.parse(text);
-  const env = EnvSchema.parse(value);
-  return env;
+  const envFile = EnvFileSchema.parse(value);
+  return {
+    BACKEND_URL: nullIfEmpty(envFile.BACKEND_URL) ?? defaultEnv.BACKEND_URL,
+    VERSION: nullIfEmpty(envFile.VERSION) ?? defaultEnv.VERSION,
+  };
 }
 
 async function loadEnvOrDefault(): Promise<Env> {
@@ -38,4 +46,15 @@ let currentEnv: Env = defaultEnv;
 
 export function env(): Env {
   return currentEnv;
+}
+
+function nullIfEmpty(input: string | null | undefined): string | null {
+  if (input == null) {
+    return null;
+  }
+  if (input.trim().length == 0) {
+    return null;
+  } else {
+    return input;
+  }
 }

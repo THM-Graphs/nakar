@@ -13,6 +13,7 @@ COPY tsconfig.node.json ./
 COPY vite.config.ts ./
 COPY openapi-gen.yaml ./
 
+RUN echo "VERSION=$(npm run version --silent)" > ./public/.env
 RUN npm install && npm run build:gen && npm run build
 
 FROM nginx:1.27

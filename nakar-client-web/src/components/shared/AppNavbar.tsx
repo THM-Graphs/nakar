@@ -71,6 +71,9 @@ export function AppNavbar(props: {
         <Nav.Link href={env().BACKEND_URL} className={"ms-5"} target={"_blank"}>
           <Badge bg="secondary">{env().BACKEND_URL}</Badge>
         </Nav.Link>
+        <Badge bg="secondary" className={"ms-2"}>
+          <span>{env().VERSION}</span>
+        </Badge>
         <Badge bg="danger" className={"ms-2"}>
           {import.meta.env.DEV && <span>{import.meta.env.MODE}</span>}
         </Badge>
