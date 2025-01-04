@@ -6,7 +6,7 @@ stages:
 ci_nakar-server:
   stage: ci_build
   tags:
-      - nodejs
+      - docker
   before_script:
     - cd nakar-shared
     - npm ci
@@ -24,7 +24,7 @@ ci_nakar-server:
 ci_nakar-client-web:
   stage: ci_build
   tags:
-      - nodejs
+      - docker
   before_script:
     - cd nakar-shared
     - npm ci
