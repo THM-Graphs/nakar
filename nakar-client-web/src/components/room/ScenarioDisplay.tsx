@@ -2,18 +2,21 @@ import { GetScenario } from "../../../src-gen";
 import { useState } from "react";
 import clsx from "clsx";
 import { ScenarioCard } from "./ScenarioCard.tsx";
-import { NavLink } from "react-router";
-import { Stack } from "react-bootstrap";
+import { Button, Stack } from "react-bootstrap";
+import { Loading } from "../shared/Loading.tsx";
 
 export function ScenarioDisplay(props: {
   scenario: GetScenario;
-  onScenarioSelected: (scenario: GetScenario) => void;
+  onScenarioSelected: (scenario: GetScenario) => Promise<void>;
   collapsed: boolean;
+  anyScenarioIsLoading: boolean;
 }) {
   const [collapsed, setCollapsed] = useState(true);
+  const [scenarioIsLoading, setScenarioIsLoading] = useState(false);
+
   return (
     <li hidden={props.collapsed}>
-      <Stack direction={"horizontal"}>
+      <Stack direction={"horizontal"} gap={0}>
         <Stack
           direction={"horizontal"}
           style={{ listStyleType: "none", cursor: "pointer" }}
@@ -29,20 +32,33 @@ export function ScenarioDisplay(props: {
           ></i>
           <span>{props.scenario.title}</span>
         </Stack>
-        <NavLink
-          className={"ms-2"}
-          to={"#"}
+        <Button
+          variant={"link"}
+          disabled={props.anyScenarioIsLoading}
+          size={"sm"}
           onClick={() => {
-            props.onScenarioSelected(props.scenario);
+            setScenarioIsLoading(true);
+            props
+              .onScenarioSelected(props.scenario)
+              .catch(console.error)
+              .then(() => {
+                setScenarioIsLoading(false);
+              })
+              .catch(console.error);
           }}
         >
-          <i className={"bi bi-play-circle-fill"}></i>
-        </NavLink>
+          {scenarioIsLoading ? (
+            <Loading size={"sm"}></Loading>
+          ) : (
+            <i className={"bi bi-play-circle-fill"}></i>
+          )}
+        </Button>
       </Stack>
       <ScenarioCard
         hidden={collapsed}
         onScenarioSelected={props.onScenarioSelected}
         scenario={props.scenario}
+        anyScenarioIsLoading={props.anyScenarioIsLoading}
       ></ScenarioCard>
     </li>
   );

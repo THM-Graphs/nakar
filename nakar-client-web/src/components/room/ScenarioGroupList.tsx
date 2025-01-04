@@ -7,8 +7,9 @@ import { ScenarioGroupDisplay } from "./ScenarioGroupDisplay.tsx";
 
 export function ScenarioGroupList(props: {
   scenarioGroups: GetScenarioGroups;
-  onScenarioSelect: (scenario: GetScenario) => void;
+  onScenarioSelect: (scenario: GetScenario) => Promise<void>;
   collapsed: boolean;
+  anyScenarioIsLoading: boolean;
 }) {
   return (
     <ul>
@@ -22,6 +23,7 @@ export function ScenarioGroupList(props: {
             onScenarioSelect={props.onScenarioSelect}
             key={scenarioGroup.id}
             scenarioGroup={scenarioGroup}
+            anyScenarioIsLoading={props.anyScenarioIsLoading}
           ></ScenarioGroupDisplay>
         ),
       )}

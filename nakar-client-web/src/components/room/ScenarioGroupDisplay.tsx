@@ -14,8 +14,9 @@ import { resultOrThrow } from "../../lib/data/resultOrThrow";
 
 export function ScenarioGroupDisplay(props: {
   scenarioGroup: GetScenarioGroup;
-  onScenarioSelect: (scenario: GetScenario) => void;
+  onScenarioSelect: (scenario: GetScenario) => Promise<void>;
   collapsed: boolean;
+  anyScenarioIsLoading: boolean;
 }) {
   const [collapsed, setCollapsed] = useState(true);
   const [scnenarios, setScenarios] = useState<Loadable<GetScenarios>>({
@@ -61,6 +62,7 @@ export function ScenarioGroupDisplay(props: {
           scenarios={scnenarios.data}
           collapsed={props.collapsed || collapsed}
           onScenarioSelected={props.onScenarioSelect}
+          anyScenarioIsLoading={props.anyScenarioIsLoading}
         ></ScenariosList>
       )}
     </>

@@ -3,8 +3,9 @@ import { ScenarioDisplay } from "./ScenarioDisplay.tsx";
 
 export function ScenariosList(props: {
   scenarios: GetScenarios;
-  onScenarioSelected: (scenario: GetScenario) => void;
+  onScenarioSelected: (scenario: GetScenario) => Promise<void>;
   collapsed: boolean;
+  anyScenarioIsLoading: boolean;
 }) {
   return (
     <ul style={{ listStyleType: "none" }}>
@@ -16,9 +17,8 @@ export function ScenariosList(props: {
           collapsed={props.collapsed}
           key={scenario.id}
           scenario={scenario}
-          onScenarioSelected={(s) => {
-            props.onScenarioSelected(s);
-          }}
+          onScenarioSelected={props.onScenarioSelected}
+          anyScenarioIsLoading={props.anyScenarioIsLoading}
         ></ScenarioDisplay>
       ))}
     </ul>

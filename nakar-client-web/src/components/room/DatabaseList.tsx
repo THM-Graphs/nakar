@@ -14,7 +14,8 @@ import { Loadable } from "../../lib/data/Loadable.ts";
 import { resultOrThrow } from "../../lib/data/resultOrThrow.ts";
 
 export function DatabaseList(props: {
-  onScenarioSelect: (scenario: GetScenario) => void;
+  onScenarioSelect: (scenario: GetScenario) => Promise<void>;
+  anyScenarioIsLoading: boolean;
 }) {
   const [databases, setDatabases] = useState<Loadable<GetDatabases>>({
     type: "loading",
@@ -47,6 +48,7 @@ export function DatabaseList(props: {
             onScenarioSelect={props.onScenarioSelect}
             key={database.id}
             database={database}
+            anyScenarioIsLoading={props.anyScenarioIsLoading}
           ></DatabaseDisplay>
         ))}
       </ul>

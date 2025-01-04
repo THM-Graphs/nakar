@@ -2,12 +2,17 @@ import { Button, Card, Stack } from "react-bootstrap";
 import { ScenarioIcon } from "./ScenarioIcon.tsx";
 import { QueryDisplay } from "./QueryDisplay.tsx";
 import { GetScenario } from "../../../src-gen";
+import { useState } from "react";
+import { Loading } from "../shared/Loading.tsx";
 
 export function ScenarioCard(props: {
   hidden?: boolean;
   scenario: GetScenario;
-  onScenarioSelected: (scenario: GetScenario) => void;
+  onScenarioSelected: (scenario: GetScenario) => Promise<void>;
+  anyScenarioIsLoading: boolean;
 }) {
+  const [scenarioIsLoading, setScenarioIsLoading] = useState(false);
+
   return (
     <Card className={"mb-2 me-2"} hidden={props.hidden}>
       <Card.Body>
@@ -21,11 +26,25 @@ export function ScenarioCard(props: {
           size={"sm"}
           className={"mb-2 mt-2"}
           onClick={() => {
-            props.onScenarioSelected(props.scenario);
+            setScenarioIsLoading(true);
+            props
+              .onScenarioSelected(props.scenario)
+              .catch(console.error)
+              .then(() => {
+                setScenarioIsLoading(false);
+              })
+              .catch(console.error);
           }}
+          disabled={props.anyScenarioIsLoading}
         >
-          <i className={"bi bi-play-circle me-1"}></i>
-          Run Scenario
+          <Stack direction={"horizontal"} gap={1}>
+            {scenarioIsLoading ? (
+              <Loading size={"sm"}></Loading>
+            ) : (
+              <i className={"bi bi-play-circle"}></i>
+            )}
+            <span>Run Scenario</span>
+          </Stack>
         </Button>
         <Card.Text>
           <span className={"small"} style={{ whiteSpace: "pre-line" }}>

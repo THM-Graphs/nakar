@@ -18,7 +18,8 @@ import { Stack } from "react-bootstrap";
 
 export function DatabaseDisplay(props: {
   database: GetDatabase;
-  onScenarioSelect: (scenario: GetScenario) => void;
+  onScenarioSelect: (scenario: GetScenario) => Promise<void>;
+  anyScenarioIsLoading: boolean;
 }) {
   const [collapsed, setCollapsed] = useState(true);
 
@@ -80,6 +81,7 @@ export function DatabaseDisplay(props: {
             collapsed={collapsed}
             onScenarioSelect={props.onScenarioSelect}
             scenarioGroups={data}
+            anyScenarioIsLoading={props.anyScenarioIsLoading}
           ></ScenarioGroupList>
         ))
         .otherwise(() => null)}

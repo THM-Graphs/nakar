@@ -31,16 +31,16 @@ export function Room() {
   const [graph, setGraph] = useState<GetInitialGraph | null>(null);
   const [scenariosWindowOpened, setScenariosWindowOpened] = useState(true);
   const [tableDataOpened, setTableDataOpened] = useState(false);
+  const [anyScenarioIsLoading, setAnyScenarioIsLoading] = useState(false);
 
-  const loadGraph = useCallback((scenarioId: string) => {
-    getInitialGraph({ path: { id: scenarioId } })
-      .then((result) => {
-        const data = resultOrThrow(result);
-        setGraph(data);
-      })
-      .catch((error: unknown) => {
-        alert(handleError(error));
-      });
+  const loadGraph = useCallback(async (scenarioId: string): Promise<void> => {
+    try {
+      const result = await getInitialGraph({ path: { id: scenarioId } });
+      const data = resultOrThrow(result);
+      setGraph(data);
+    } catch (error: unknown) {
+      alert(handleError(error));
+    }
   }, []);
 
   return (
@@ -66,9 +66,15 @@ export function Room() {
         >
           <SideToolbar visible={scenariosWindowOpened} width={500}>
             <DatabaseList
-              onScenarioSelect={(scenario) => {
-                loadGraph(scenario.id);
+              onScenarioSelect={async (scenario) => {
+                try {
+                  setAnyScenarioIsLoading(true);
+                  await loadGraph(scenario.id);
+                } finally {
+                  setAnyScenarioIsLoading(false);
+                }
               }}
+              anyScenarioIsLoading={anyScenarioIsLoading}
             ></DatabaseList>
           </SideToolbar>
           {graph && <Canvas graph={graph}></Canvas>}
