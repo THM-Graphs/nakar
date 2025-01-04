@@ -2,7 +2,7 @@ import { z } from "zod";
 import dotenv from "dotenv";
 
 const EnvSchema = z.object({
-  BACKEND_URL: z.string(),
+  BACKEND_URL: z.string().nonempty(),
 });
 type Env = z.infer<typeof EnvSchema>;
 
