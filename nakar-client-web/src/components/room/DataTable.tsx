@@ -7,7 +7,7 @@ export function DataTable(props: { graph: GetInitialGraph }) {
   }
 
   return (
-    <Stack className={"shadow border-start"}>
+    <Stack className={"shadow border-start overflow-auto"}>
       <Table className={"table-responsive"}>
         <thead>
           <tr>
