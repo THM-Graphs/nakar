@@ -17,6 +17,7 @@ ci_nakar-server:
   script:
     - npm run build:gen
     - npm run build
+    - docker build -t "nakar-server:dev" .
     - npm run lint
     - npm run audit
 
@@ -34,6 +35,7 @@ ci_nakar-client-web:
   script:
     - npm run build:gen
     - npm run build
+    - docker build -t "nakar-client-web:dev" .
     - npm run lint
     - npm run audit
 
@@ -102,11 +104,10 @@ deploy_nakar-client-web:
 cleanup:
   stage: cleanup
   needs:
+    - ci_nakar-db-pole
     - deploy_nakar-client-web
     - deploy_nakar-server
     - deploy_nakar-db-pole
-  only:
-    - prod
   tags:
     - docker
   script:
