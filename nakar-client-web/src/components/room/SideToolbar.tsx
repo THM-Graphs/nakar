@@ -8,7 +8,9 @@ export function SideToolbar(props: {
 }) {
   return (
     <Stack
-      className={"flex-shrink-0 flex-grow-0 overflow-x-hidden"}
+      className={
+        "flex-shrink-0 flex-grow-0 overflow-x-hidden overflow-y-scroll"
+      }
       style={{
         width: props.visible ? `${props.width.toString()}px` : "0px",
         transition: "width 0.2s ease-in-out",

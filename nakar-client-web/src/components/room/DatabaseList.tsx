@@ -41,7 +41,7 @@ export function DatabaseList(props: {
     ))
     .with({ type: "loading" }, () => <Loading></Loading>)
     .with({ type: "data" }, ({ data }) => (
-      <ul>
+      <ul className={"pe-2"}>
         {data.databases.map((database: GetDatabase) => (
           <DatabaseDisplay
             onScenarioSelect={props.onScenarioSelect}

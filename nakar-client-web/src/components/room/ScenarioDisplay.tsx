@@ -3,6 +3,7 @@ import { useState } from "react";
 import clsx from "clsx";
 import { ScenarioCard } from "./ScenarioCard.tsx";
 import { NavLink } from "react-router";
+import { Stack } from "react-bootstrap";
 
 export function ScenarioDisplay(props: {
   scenario: GetScenario;
@@ -12,29 +13,32 @@ export function ScenarioDisplay(props: {
   const [collapsed, setCollapsed] = useState(true);
   return (
     <li hidden={props.collapsed}>
-      <span
-        style={{ listStyleType: "none", cursor: "pointer" }}
-        onClick={() => {
-          setCollapsed((old) => !old);
-        }}
-      >
-        <i
-          className={clsx(
-            "bi me-2",
-            collapsed ? "bi-chevron-right" : "bi-chevron-down",
-          )}
-        ></i>
-        <span>{props.scenario.title}</span>
-      </span>
-      <NavLink
-        to={"#"}
-        className={"ms-2"}
-        onClick={() => {
-          props.onScenarioSelected(props.scenario);
-        }}
-      >
-        <i className={"bi bi-play-circle-fill"}></i>
-      </NavLink>
+      <Stack direction={"horizontal"}>
+        <Stack
+          direction={"horizontal"}
+          style={{ listStyleType: "none", cursor: "pointer" }}
+          onClick={() => {
+            setCollapsed((old) => !old);
+          }}
+        >
+          <i
+            className={clsx(
+              "bi me-2",
+              collapsed ? "bi-chevron-right" : "bi-chevron-down",
+            )}
+          ></i>
+          <span>{props.scenario.title}</span>
+        </Stack>
+        <NavLink
+          className={"ms-2"}
+          to={"#"}
+          onClick={() => {
+            props.onScenarioSelected(props.scenario);
+          }}
+        >
+          <i className={"bi bi-play-circle-fill"}></i>
+        </NavLink>
+      </Stack>
       <ScenarioCard
         hidden={collapsed}
         onScenarioSelected={props.onScenarioSelected}

@@ -9,7 +9,7 @@ export function ScenarioCard(props: {
   onScenarioSelected: (scenario: GetScenario) => void;
 }) {
   return (
-    <Card className={"mb-2 me-2"} {...props}>
+    <Card className={"mb-2 me-2"} hidden={props.hidden}>
       <Card.Body>
         <Card.Title>
           <Stack direction={"horizontal"} gap={2}>
