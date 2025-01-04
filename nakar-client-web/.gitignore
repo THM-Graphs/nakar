@@ -13,6 +13,7 @@ dist-ssr
 *.local
 src-gen
 openapi-gen.yaml
+.env
 
 # Editor directories and files
 .vscode/*
