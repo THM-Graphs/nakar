@@ -9,7 +9,6 @@ COPY test ./test
 COPY types ./types
 COPY babel.config.js ./
 COPY eslint.config.mjs ./
-COPY favicon.ico ./
 COPY package.json ./
 COPY package-lock.json ./
 COPY tsconfig.configs.json ./
@@ -25,6 +24,7 @@ ENV NODE_ENV=production
 COPY --from=builder /app/dist ./
 COPY public ./public
 COPY package.json package-lock.json ./
+COPY favicon.ico ./
 RUN npm ci --production
 EXPOSE 1337
 
