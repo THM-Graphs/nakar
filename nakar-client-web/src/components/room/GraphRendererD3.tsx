@@ -98,8 +98,8 @@ export function GraphRendererD3(props: { graph: GetInitialGraph }) {
     const midX = (x1 + x2) / 2;
     const midY = (y1 + y2) / 2;
 
-    const orthX = -(y2 - y1);
-    const orthY = x2 - x1;
+    const orthX = x1 > x2 ? -(y2 - y1) : y2 - y1;
+    const orthY = x1 > x2 ? x2 - x1 : -(x2 - x1);
     const orthLength = Math.sqrt(orthX * orthX + orthY * orthY);
     const dx = (orthX / orthLength) * distance;
     const dy = (orthY / orthLength) * distance;
