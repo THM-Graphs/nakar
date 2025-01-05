@@ -20,7 +20,7 @@ export function GraphRendererD3(props: { graph: GetInitialGraph }) {
 
     if (d.isLoop) {
       const loopSize = Math.min(90, 360 / d.source.degree) / 2;
-      const angle = (d.parallelIndex / d.parallelCount) * 360;
+      const angle = (d.parallelIndex / d.parallelCount) * 360 - 90;
       const length = d.source.size;
       const ps = vector(x1, y1, angle - loopSize, length);
       const pe = vector(x1, y1, angle + loopSize, length);
@@ -62,7 +62,7 @@ export function GraphRendererD3(props: { graph: GetInitialGraph }) {
     );
 
     if (d.isLoop || d.parallelCount > 0) {
-      return d3.line().curve(d3.curveCatmullRom)(points);
+      return d3.line().curve(d3.curveCardinal.tension(-3))(points);
     } else {
       return d3.line()(points);
     }
@@ -99,8 +99,8 @@ export function GraphRendererD3(props: { graph: GetInitialGraph }) {
     const midX = (x1 + x2) / 2;
     const midY = (y1 + y2) / 2;
 
-    const orthX = invertDirection ? y2 - y1 : -(y2 - y1);
-    const orthY = invertDirection ? -(x2 - x1) : x2 - x1;
+    const orthX = invertDirection ? -(y2 - y1) : y2 - y1;
+    const orthY = invertDirection ? x2 - x1 : -(x2 - x1);
     const orthLength = Math.sqrt(orthX * orthX + orthY * orthY);
     const dx = (orthX / orthLength) * distance;
     const dy = (orthY / orthLength) * distance;
@@ -130,7 +130,7 @@ export function GraphRendererD3(props: { graph: GetInitialGraph }) {
       y1,
       x2,
       y2,
-      d.isLoop ? -curvAmount * 4 : d.curvature * curvAmount,
+      d.isLoop ? curvAmount * 4 : d.curvature * curvAmount,
       d.isLoop ? false : x1 > x2,
     );
 
