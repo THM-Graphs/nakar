@@ -1,8 +1,8 @@
 import { Stack, Table } from "react-bootstrap";
 import { GetInitialGraph } from "../../../src-gen";
 
-export function DataTable(props: { graph: GetInitialGraph }) {
-  if (props.graph.tableData.length == 0) {
+export function DataTable(props: { graph: GetInitialGraph | null }) {
+  if (props.graph == null || props.graph.tableData.length == 0) {
     return null;
   }
 

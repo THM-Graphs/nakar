@@ -6,15 +6,27 @@ import { BackendBadge } from "./BackendBadge.tsx";
 import { DevelopmentIndicatorBadge } from "./DevelopmentIndicatorBadge.tsx";
 import { VersionBadge } from "./VersionBadge.tsx";
 import { BackButton } from "./BackButton.tsx";
+import { RendererDropdown } from "../room/RendererDropdown.tsx";
+import { GraphRendererEngine } from "../../lib/graph-renderer/GraphRendererEngine.ts";
 
 export function AppNavbar(props: {
-  scenarioWindowOpen?: boolean;
-  toggleScenarioWindow?: () => void;
-  tableDataLength?: number;
-  tableDataOpened?: boolean;
-  toggleTableData?: () => void;
-  roomTitle?: string;
+  scenarioWindow?: {
+    isOpen: boolean;
+    onToggle: () => void;
+  };
+  tableDataWindow?: {
+    rowCount: number;
+    isOpen: boolean;
+    onToggle: () => void;
+  };
+  room?: {
+    title: string;
+  };
   showBackButton?: boolean;
+  renderer?: {
+    current: GraphRendererEngine;
+    onChange: (newRenderer: GraphRendererEngine) => void;
+  };
 }) {
   return (
     <Navbar
@@ -45,19 +57,29 @@ export function AppNavbar(props: {
           />
           NAKAR
         </Navbar.Brand>
-        <ScenarioWindowButton
-          scenarioWindowOpen={props.scenarioWindowOpen}
-          toggleScenarioWindow={props.toggleScenarioWindow}
-        ></ScenarioWindowButton>
+        {props.scenarioWindow && (
+          <ScenarioWindowButton
+            isOpen={props.scenarioWindow.isOpen}
+            onToggle={props.scenarioWindow.onToggle}
+          ></ScenarioWindowButton>
+        )}
         <div className={"flex-grow-1"}></div>
-        {props.roomTitle && <span>{props.roomTitle}</span>}
+        {props.room && <span>{props.room.title}</span>}
         <div className={"flex-grow-1"}></div>
+        {props.renderer && (
+          <RendererDropdown
+            current={props.renderer.current}
+            onChange={props.renderer.onChange}
+          ></RendererDropdown>
+        )}
         <ThemeDropdown></ThemeDropdown>
-        <TableDataWindowButton
-          toggleTableData={props.toggleTableData}
-          tableDataLength={props.tableDataLength}
-          tableDataOpened={props.tableDataOpened}
-        ></TableDataWindowButton>
+        {props.tableDataWindow && (
+          <TableDataWindowButton
+            onToggle={props.tableDataWindow.onToggle}
+            rowCount={props.tableDataWindow.rowCount}
+            isOpen={props.tableDataWindow.isOpen}
+          ></TableDataWindowButton>
+        )}
         <Stack direction={"horizontal"} gap={2}>
           <BackendBadge></BackendBadge>
           <VersionBadge></VersionBadge>

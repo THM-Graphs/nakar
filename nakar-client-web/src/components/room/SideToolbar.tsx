@@ -2,11 +2,11 @@ import { Stack } from "react-bootstrap";
 import { ReactElement } from "react";
 
 export function SideToolbar(props: {
-  children: () => ReactElement;
-  visible: boolean;
+  children?: () => ReactElement;
+  hidden?: boolean;
   width: number;
 }) {
-  if (!props.visible) {
+  if (props.hidden) {
     return null;
   }
   return (
@@ -18,7 +18,7 @@ export function SideToolbar(props: {
         width: `${props.width.toString()}px`,
       }}
     >
-      {props.children()}
+      {props.children?.()}
     </Stack>
   );
 }

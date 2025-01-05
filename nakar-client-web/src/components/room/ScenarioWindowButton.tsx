@@ -1,18 +1,15 @@
 import { Button } from "react-bootstrap";
 
 export function ScenarioWindowButton(props: {
-  scenarioWindowOpen?: boolean;
-  toggleScenarioWindow?: () => void;
+  isOpen: boolean;
+  onToggle: () => void;
 }) {
-  if (props.scenarioWindowOpen == null) {
-    return null;
-  }
   return (
     <Button
       onClick={() => {
-        props.toggleScenarioWindow?.();
+        props.onToggle();
       }}
-      active={props.scenarioWindowOpen}
+      active={props.isOpen}
       variant={"secondary"}
       size={"sm"}
     >

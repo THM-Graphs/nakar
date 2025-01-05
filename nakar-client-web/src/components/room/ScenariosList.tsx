@@ -4,17 +4,17 @@ import { ScenarioDisplay } from "./ScenarioDisplay.tsx";
 export function ScenariosList(props: {
   scenarios: GetScenarios;
   onScenarioSelected: (scenario: GetScenario) => Promise<void>;
-  collapsed: boolean;
+  hidden: boolean;
   anyScenarioIsLoading: boolean;
 }) {
   return (
     <ul style={{ listStyleType: "none" }}>
       {props.scenarios.scenarios.length == 0 && (
-        <span hidden={props.collapsed}>(empty)</span>
+        <span hidden={props.hidden}>(empty)</span>
       )}
       {props.scenarios.scenarios.map((scenario: GetScenario) => (
         <ScenarioDisplay
-          collapsed={props.collapsed}
+          hidden={props.hidden}
           key={scenario.id}
           scenario={scenario}
           onScenarioSelected={props.onScenarioSelected}

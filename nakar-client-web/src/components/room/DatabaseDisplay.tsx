@@ -78,7 +78,7 @@ export function DatabaseDisplay(props: {
         ))
         .with({ type: "data" }, ({ data }) => (
           <ScenarioGroupList
-            collapsed={collapsed}
+            hidden={collapsed}
             onScenarioSelect={props.onScenarioSelect}
             scenarioGroups={data}
             anyScenarioIsLoading={props.anyScenarioIsLoading}

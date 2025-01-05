@@ -14,6 +14,7 @@ import {
 import { handleError } from "../lib/error/handleError.ts";
 import { LoaderFunctionArgs, useLoaderData } from "react-router";
 import { resultOrThrow } from "../lib/data/resultOrThrow.ts";
+import { GraphRendererEngine } from "../lib/graph-renderer/GraphRendererEngine.ts";
 
 export async function RoomLoader(args: LoaderFunctionArgs): Promise<GetRoom> {
   const roomId = args.params["id"];
@@ -32,6 +33,7 @@ export function Room() {
   const [scenariosWindowOpened, setScenariosWindowOpened] = useState(true);
   const [tableDataOpened, setTableDataOpened] = useState(false);
   const [anyScenarioIsLoading, setAnyScenarioIsLoading] = useState(false);
+  const [renderer, setRenderer] = useState<GraphRendererEngine>("d3");
 
   const loadGraph = useCallback(async (scenarioId: string): Promise<void> => {
     try {
@@ -56,24 +58,38 @@ export function Room() {
     <>
       <Stack style={{ height: "100%" }}>
         <AppNavbar
-          scenarioWindowOpen={scenariosWindowOpened}
-          tableDataOpened={tableDataOpened}
-          tableDataLength={graph?.tableData.length ?? 0}
-          toggleScenarioWindow={() => {
-            setScenariosWindowOpened((isOpened) => !isOpened);
+          scenarioWindow={{
+            isOpen: scenariosWindowOpened,
+            onToggle: () => {
+              setScenariosWindowOpened((isOpened) => !isOpened);
+            },
           }}
-          toggleTableData={() => {
-            setTableDataOpened((isOpened) => !isOpened);
+          tableDataWindow={
+            graph != null
+              ? {
+                  rowCount: graph.tableData.length,
+                  isOpen: tableDataOpened,
+                  onToggle: () => {
+                    setTableDataOpened((isOpened) => !isOpened);
+                  },
+                }
+              : undefined
+          }
+          room={{
+            title: loaderData.title,
           }}
-          roomTitle={loaderData.title}
           showBackButton={true}
+          renderer={{
+            current: renderer,
+            onChange: setRenderer,
+          }}
         ></AppNavbar>
         <Stack
           direction={"horizontal"}
           className={"align-items-stretch flex-grow-1"}
           style={{ height: "100px" }}
         >
-          <SideToolbar visible={scenariosWindowOpened} width={500}>
+          <SideToolbar hidden={!scenariosWindowOpened} width={500}>
             {() => (
               <DatabaseList
                 onScenarioSelect={async (scenario) => {
@@ -88,12 +104,10 @@ export function Room() {
               ></DatabaseList>
             )}
           </SideToolbar>
-          {graph && <Canvas graph={graph}></Canvas>}
-          {graph && (
-            <SideToolbar visible={tableDataOpened} width={700}>
-              {() => <DataTable graph={graph}></DataTable>}
-            </SideToolbar>
-          )}
+          <Canvas renderer={renderer} graph={graph}></Canvas>
+          <SideToolbar hidden={!tableDataOpened} width={700}>
+            {() => <DataTable graph={graph}></DataTable>}
+          </SideToolbar>
         </Stack>
       </Stack>
     </>

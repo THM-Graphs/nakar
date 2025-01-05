@@ -1,19 +1,16 @@
 import { Badge, Button, Stack } from "react-bootstrap";
 
 export function TableDataWindowButton(props: {
-  tableDataLength?: number;
-  toggleTableData?: () => void;
-  tableDataOpened?: boolean;
+  rowCount: number;
+  onToggle: () => void;
+  isOpen: boolean;
 }) {
-  if (props.tableDataLength == null || props.tableDataLength == 0) {
-    return null;
-  }
   return (
     <Button
       onClick={() => {
-        props.toggleTableData?.();
+        props.onToggle();
       }}
-      active={props.tableDataOpened}
+      active={props.isOpen}
       variant={"secondary"}
       size={"sm"}
     >
@@ -24,9 +21,7 @@ export function TableDataWindowButton(props: {
       >
         <i className={"bi bi-table"}></i>
         <span>Data</span>
-        {props.tableDataLength > 0 && (
-          <Badge bg="primary">{props.tableDataLength}</Badge>
-        )}
+        <Badge bg="primary">{props.rowCount}</Badge>
       </Stack>
     </Button>
   );

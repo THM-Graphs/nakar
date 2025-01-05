@@ -8,14 +8,14 @@ import { Loading } from "../shared/Loading.tsx";
 export function ScenarioDisplay(props: {
   scenario: GetScenario;
   onScenarioSelected: (scenario: GetScenario) => Promise<void>;
-  collapsed: boolean;
+  hidden?: boolean;
   anyScenarioIsLoading: boolean;
 }) {
   const [collapsed, setCollapsed] = useState(true);
   const [scenarioIsLoading, setScenarioIsLoading] = useState(false);
 
   return (
-    <li hidden={props.collapsed}>
+    <li hidden={props.hidden}>
       <Stack direction={"horizontal"} gap={0}>
         <Stack
           direction={"horizontal"}

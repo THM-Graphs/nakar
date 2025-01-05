@@ -15,7 +15,7 @@ import { resultOrThrow } from "../../lib/data/resultOrThrow";
 export function ScenarioGroupDisplay(props: {
   scenarioGroup: GetScenarioGroup;
   onScenarioSelect: (scenario: GetScenario) => Promise<void>;
-  collapsed: boolean;
+  hidden?: boolean;
   anyScenarioIsLoading: boolean;
 }) {
   const [collapsed, setCollapsed] = useState(true);
@@ -38,7 +38,7 @@ export function ScenarioGroupDisplay(props: {
   return (
     <>
       <li
-        hidden={props.collapsed}
+        hidden={props.hidden}
         style={{ listStyleType: "none", cursor: "pointer" }}
         onClick={() => {
           setCollapsed((old) => !old);
@@ -60,7 +60,7 @@ export function ScenarioGroupDisplay(props: {
       {scnenarios.type == "data" && (
         <ScenariosList
           scenarios={scnenarios.data}
-          collapsed={props.collapsed || collapsed}
+          hidden={props.hidden || collapsed}
           onScenarioSelected={props.onScenarioSelect}
           anyScenarioIsLoading={props.anyScenarioIsLoading}
         ></ScenariosList>
