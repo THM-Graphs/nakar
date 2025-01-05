@@ -94,12 +94,13 @@ export function GraphRendererD3(props: { graph: GetInitialGraph }) {
     x2: number,
     y2: number,
     distance: number,
+    invertDirection: boolean,
   ): { x: number; y: number } {
     const midX = (x1 + x2) / 2;
     const midY = (y1 + y2) / 2;
 
-    const orthX = x1 > x2 ? -(y2 - y1) : y2 - y1;
-    const orthY = x1 > x2 ? x2 - x1 : -(x2 - x1);
+    const orthX = invertDirection ? y2 - y1 : -(y2 - y1);
+    const orthY = invertDirection ? -(x2 - x1) : x2 - x1;
     const orthLength = Math.sqrt(orthX * orthX + orthY * orthY);
     const dx = (orthX / orthLength) * distance;
     const dy = (orthY / orthLength) * distance;
@@ -130,6 +131,7 @@ export function GraphRendererD3(props: { graph: GetInitialGraph }) {
       x2,
       y2,
       d.isLoop ? -curvAmount * 4 : d.curvature * curvAmount,
+      d.isLoop ? false : x1 > x2,
     );
 
     return {
