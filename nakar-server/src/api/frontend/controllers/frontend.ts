@@ -23,7 +23,9 @@ import { StrapiController } from '../../../lib/strapi-ctx/StrapiController';
 import { Neo4jWrapper } from '../../../lib/neo4j/Neo4jWrapper';
 import { Neo4jNode } from '../../../lib/neo4j/types/Neo4jNode';
 import {
+  applyEdgeParallelCounts,
   applyLabels,
+  applyNodeDegrees,
   applyNodeSizes,
   getNodeDisplayTitle,
 } from '../../../lib/BusinessLogic';
@@ -61,6 +63,9 @@ export default {
                 x: 0,
                 y: 0,
               },
+              degree: 0,
+              inDegree: 0,
+              outDegree: 0,
             };
           }),
           edges: graphResult.edges.map((edge: Neo4jEdge): SchemaEdge => {
@@ -70,6 +75,9 @@ export default {
               endNodeId: edge.endNodeId,
               type: edge.type,
               properties: edge.properties,
+              isLoop: edge.startNodeId == edge.endNodeId,
+              parallelCount: 0,
+              parallelIndex: 0,
             };
           }),
         },
@@ -81,6 +89,8 @@ export default {
 
       applyNodeSizes(graph);
       applyLabels(graph);
+      applyNodeDegrees(graph);
+      applyEdgeParallelCounts(graph);
 
       return graph;
     },

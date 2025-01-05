@@ -2,12 +2,142 @@ import { createRef, useEffect } from "react";
 import { useTheme } from "../../lib/theme/useTheme.ts";
 import * as d3 from "d3";
 import { Edge, GetInitialGraph, Node } from "../../../src-gen";
-import { getBackgroundColor } from "../../lib/color/getBackgroundColor.ts";
 import { getTextColor } from "../../lib/color/getTextColor.ts";
+import { getBackgroundColor } from "../../lib/color/getBackgroundColor.ts";
 
 export function GraphRendererD3(props: { graph: GetInitialGraph }) {
   const svgRef = createRef<SVGSVGElement>();
   const theme = useTheme();
+
+  type D3Node = Node & { x: number; y: number; fx?: number; fy?: number };
+  type D3Link = Edge & { source: D3Node; target: D3Node; curvature: number };
+
+  function closestPointsOnNodes(d: D3Link) {
+    const x1 = d.source.x;
+    const y1 = d.source.y;
+    const x2 = d.target.x;
+    const y2 = d.target.y;
+
+    if (d.isLoop) {
+      const loopSize = Math.min(90, 360 / d.source.degree) / 2;
+      const angle = (d.parallelIndex / d.parallelCount) * 360;
+      const length = d.source.size;
+      const ps = vector(x1, y1, angle - loopSize, length);
+      const pe = vector(x1, y1, angle + loopSize, length);
+
+      return {
+        x1: ps.x,
+        y1: ps.y,
+        x2: pe.x,
+        y2: pe.y,
+      };
+    }
+
+    const r1 = d.source.size;
+    const r2 = d.target.size;
+
+    // Vector from c1 to c2
+    const dx = x2 - x1;
+    const dy = y2 - y1;
+
+    // Distance between the centers
+    const distance = Math.sqrt(dx * dx + dy * dy);
+
+    // Normalize the vector to get the direction
+    const ux = dx / distance;
+    const uy = dy / distance;
+
+    return {
+      x1: x1 + r1 * ux,
+      y1: y1 + r1 * uy,
+      x2: x2 - r2 * ux,
+      y2: y2 - r2 * uy,
+    };
+  }
+
+  function curvedPath(d: D3Link) {
+    const control = curvePoints(d);
+    const points: [number, number][] = control.points.map(
+      (c): [number, number] => [c.x, c.y],
+    );
+
+    if (d.isLoop || d.parallelCount > 0) {
+      return d3.line().curve(d3.curveCatmullRom)(points);
+    } else {
+      return d3.line()(points);
+    }
+  }
+
+  function vector(
+    x1: number,
+    y1: number,
+    angle: number,
+    length: number,
+  ): { x: number; y: number } {
+    const angleInRadians = angle * (Math.PI / 180);
+    const rx = length * Math.cos(angleInRadians);
+    const ry = length * Math.sin(angleInRadians);
+    const p = {
+      x: x1 + rx,
+      y: y1 + ry,
+    };
+    return p;
+  }
+
+  function fixDegAngle(angle: number): number {
+    return angle > 90 || angle < -90 ? angle - 180 : angle;
+  }
+
+  function pushVectorOfCurve(
+    x1: number,
+    y1: number,
+    x2: number,
+    y2: number,
+    distance: number,
+  ): { x: number; y: number } {
+    const midX = (x1 + x2) / 2;
+    const midY = (y1 + y2) / 2;
+
+    const orthX = -(y2 - y1);
+    const orthY = x2 - x1;
+    const orthLength = Math.sqrt(orthX * orthX + orthY * orthY);
+    const dx = (orthX / orthLength) * distance;
+    const dy = (orthY / orthLength) * distance;
+
+    const controlX = midX + dx;
+    const controlY = midY + dy;
+
+    const p = {
+      x: controlX,
+      y: controlY,
+    };
+    return p;
+  }
+
+  function curvePoints(d: D3Link): {
+    center: { x: number; y: number };
+    angle: number;
+    points: { x: number; y: number }[];
+  } {
+    const { x1, y1, x2, y2 } = closestPointsOnNodes(d);
+    const angle = Math.atan2(y2 - y1, x2 - x1) * (180 / Math.PI);
+
+    const curvAmount = 25;
+
+    const p = pushVectorOfCurve(
+      x1,
+      y1,
+      x2,
+      y2,
+      d.isLoop ? -curvAmount * 4 : d.curvature * curvAmount,
+    );
+
+    return {
+      center: p,
+      points: [{ x: x1, y: y1 }, p, { x: x2, y: y2 }],
+      angle: fixDegAngle(angle),
+    };
+  }
 
   useEffect(() => {
     if (svgRef.current == null) return;
@@ -24,6 +154,20 @@ export function GraphRendererD3(props: { graph: GetInitialGraph }) {
     const zoomContainer: d3.Selection<SVGGElement, null, null, undefined> =
       svg.select("g");
 
+    zoomContainer
+      .append("defs")
+      .append("marker")
+      .attr("id", "arrow")
+      .attr("viewBox", "0 0 10 10")
+      .attr("refX", 10)
+      .attr("refY", 5)
+      .attr("markerWidth", 10)
+      .attr("markerHeight", 10)
+      .attr("orient", "auto")
+      .append("path")
+      .attr("d", "M 0 0 L 10 5 L 0 10 Z")
+      .attr("fill", () => (theme == "dark" ? "#fff" : "#000"));
+
     svg.call(
       d3
         .zoom<SVGSVGElement, null>()
@@ -31,9 +175,6 @@ export function GraphRendererD3(props: { graph: GetInitialGraph }) {
           zoomContainer.attr("transform", event.transform.toString());
         }),
     );
-
-    type D3Node = Node & { x: number; y: number; fx?: number; fy?: number };
-    type D3Link = Edge & { source: D3Node; target: D3Node };
 
     const nodes: D3Node[] = props.graph.graph.nodes.map(
       (node: Node): D3Node => {
@@ -55,6 +196,24 @@ export function GraphRendererD3(props: { graph: GetInitialGraph }) {
             ...edge,
             source: sourceNode,
             target: targetNode,
+            curvature: ((): number => {
+              if (edge.parallelCount % 2 == 0) {
+                if (edge.parallelIndex % 2 == 0) {
+                  return edge.parallelIndex + 1;
+                } else {
+                  return -edge.parallelIndex;
+                }
+              } else {
+                if (edge.parallelIndex == 0) {
+                  return 0;
+                }
+                if (edge.parallelIndex % 2 == 0) {
+                  return edge.parallelIndex;
+                } else {
+                  return -(edge.parallelIndex + 1);
+                }
+              }
+            })(),
           });
         }
 
@@ -80,16 +239,18 @@ export function GraphRendererD3(props: { graph: GetInitialGraph }) {
       .force("y", d3.forceY())
       .tick(500);
 
-    const link: d3.Selection<SVGLineElement, D3Link, SVGGElement, null> =
+    const link: d3.Selection<SVGPathElement, D3Link, SVGGElement, null> =
       zoomContainer
         .append("g")
         .attr("class", "links")
         .selectAll("line")
         .data(edges)
         .enter()
-        .append("line")
+        .append("path")
+        .attr("fill", "none")
         .attr("stroke", theme == "dark" ? "#ffffff" : "#000000")
-        .attr("stroke-width", 2);
+        .attr("stroke-width", 2)
+        .attr("marker-end", "url(#arrow)");
 
     const linkLabel: d3.Selection<SVGTextElement, D3Link, SVGGElement, null> =
       zoomContainer
@@ -100,9 +261,12 @@ export function GraphRendererD3(props: { graph: GetInitialGraph }) {
         .enter()
         .append("text")
         .text((d) => d.type)
-        .attr("font-weight", "bolder")
+        .attr("font-weight", "bold")
         .attr("text-anchor", "middle")
-        .attr("fill", theme == "dark" ? "#ffffff" : "#000000");
+        .attr("alignment-baseline", "middle")
+        .style("stroke-linejoin", "round")
+        .attr("fill", theme == "dark" ? "#ffffff" : "#000000")
+        .attr("stroke-width", 1);
 
     const node: d3.Selection<SVGGElement, D3Node, SVGElement, null> =
       zoomContainer
@@ -151,15 +315,12 @@ export function GraphRendererD3(props: { graph: GetInitialGraph }) {
       .attr("text-anchor", "middle");
 
     simulation.on("tick", () => {
-      link
-        .attr("x1", (d: D3Link) => d.source.x)
-        .attr("y1", (d: D3Link) => d.source.y)
-        .attr("x2", (d: D3Link) => d.target.x)
-        .attr("y2", (d: D3Link) => d.target.y);
+      link.attr("d", (d) => curvedPath(d));
 
-      linkLabel
-        .attr("x", (d: D3Link) => (d.source.x + d.target.x) / 2)
-        .attr("y", (d: D3Link) => (d.source.y + d.target.y) / 2);
+      linkLabel.attr("transform", (d: D3Link) => {
+        const c = curvePoints(d);
+        return `translate(${c.center.x.toString()},${c.center.y.toString()})rotate(${c.angle.toString()})`;
+      });
 
       node.attr(
         "transform",

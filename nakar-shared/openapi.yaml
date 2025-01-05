@@ -203,6 +203,12 @@ components:
           required:
             - x
             - y
+        inDegree:
+          type: integer
+        outDegree:
+          type: integer
+        degree:
+          type: integer
       required:
         - id
         - displayTitle
@@ -210,6 +216,9 @@ components:
         - properties
         - size
         - position
+        - inDegree
+        - outDegree
+        - degree
 
     Edge:
       type: object
@@ -222,6 +231,12 @@ components:
           type: string
         type:
           type: string
+        isLoop:
+          type: boolean
+        parallelCount:
+          type: integer
+        parallelIndex:
+          type: integer
         properties:
           type: array
           items:
@@ -232,6 +247,9 @@ components:
         - endNodeId
         - type
         - properties
+        - isLoop
+        - parallelCount
+        - parallelIndex
 
     GetInitialGraph:
       type: object

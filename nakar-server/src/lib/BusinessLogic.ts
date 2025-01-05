@@ -73,3 +73,38 @@ export function getNodeDisplayTitle(node: Neo4jNode): string {
     node.labels.join(', ')
   );
 }
+
+export function applyNodeDegrees(graph: SchemaGetInitialGraph): void {
+  for (const node of graph.graph.nodes) {
+    const outRels = graph.graph.edges.filter((e) => e.startNodeId == node.id);
+    const inRels = graph.graph.edges.filter((e) => e.endNodeId == node.id);
+    node.inDegree = inRels.length;
+    node.outDegree = outRels.length;
+    node.degree = node.inDegree + node.outDegree;
+  }
+}
+
+export function applyEdgeParallelCounts(graph: SchemaGetInitialGraph): void {
+  for (const edge of graph.graph.edges) {
+    if (edge.parallelCount > 0) {
+      continue;
+    }
+    const others = graph.graph.edges.filter((e) => {
+      if (e.startNodeId == edge.startNodeId && e.endNodeId == edge.endNodeId) {
+        return true;
+      } else if (
+        e.startNodeId == edge.endNodeId &&
+        e.endNodeId == edge.startNodeId
+      ) {
+        return true;
+      } else {
+        return false;
+      }
+    });
+
+    others.forEach((other, index) => {
+      other.parallelCount = others.length;
+      other.parallelIndex = index;
+    });
+  }
+}
