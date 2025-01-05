@@ -44,6 +44,19 @@ export default {
       const neo4jWrapper = new Neo4jWrapper(scenario.scenarioGroup?.database);
       const graphResult = await neo4jWrapper.executeQuery(scenario.query);
 
+      if (scenario.connectResultNodes == true) {
+        const nodesIds = graphResult.nodes.map((n) => n.id);
+        const additional = await neo4jWrapper.executeQuery(
+          'MATCH (a)-[r]->(b) WHERE elementId(a) IN $existingNodeIds AND elementId(b) IN $existingNodeIds RETURN r;',
+          { existingNodeIds: nodesIds },
+        );
+        for (const edge of additional.edges) {
+          if (graphResult.edges.find((e) => e.id == edge.id) == null) {
+            graphResult.edges.push(edge);
+          }
+        }
+      }
+
       const graph: SchemaGetInitialGraph = {
         graph: {
           nodes: graphResult.nodes.map((node: Neo4jNode): SchemaNode => {

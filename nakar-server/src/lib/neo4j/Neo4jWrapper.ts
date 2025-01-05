@@ -45,7 +45,10 @@ export class Neo4jWrapper {
     this.password = database.password;
   }
 
-  public async executeQueryRaw(query?: string | null): Promise<QueryResult> {
+  public async executeQueryRaw(
+    query?: string | null,
+    parameters?: Record<string, unknown>,
+  ): Promise<QueryResult> {
     if (!query) {
       throw new Error('No cypher query configured.');
     }
@@ -59,8 +62,9 @@ export class Neo4jWrapper {
         defaultAccessMode: neo4j.session.READ,
       });
       try {
-        const result: QueryResult =
-          await session.run<RecordShape<string, string>>(query);
+        const result: QueryResult = await session.run<
+          RecordShape<string, string>
+        >(query, parameters);
         return result;
       } catch (error) {
         await session.close();
@@ -72,8 +76,11 @@ export class Neo4jWrapper {
     }
   }
 
-  public async executeQuery(query?: string | null): Promise<Neo4jGraph> {
-    const result = await this.executeQueryRaw(query);
+  public async executeQuery(
+    query?: string | null,
+    parameters?: Record<string, unknown>,
+  ): Promise<Neo4jGraph> {
+    const result = await this.executeQueryRaw(query, parameters);
     const dto: Neo4jGraph = this.transform(result);
     return dto;
   }

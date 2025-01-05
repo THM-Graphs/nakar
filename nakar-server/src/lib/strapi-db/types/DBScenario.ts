@@ -13,6 +13,7 @@ export const DBScenarioSchema = z.object({
     })
     .nullable(),
   scenarioGroup: DBScenarioGroupSchema.nullable(),
+  connectResultNodes: z.boolean().nullable(),
 });
 
 export type DBScenario = z.infer<typeof DBScenarioSchema>;

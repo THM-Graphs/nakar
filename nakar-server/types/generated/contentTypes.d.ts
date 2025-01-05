@@ -475,6 +475,8 @@ export interface ApiScenarioScenario extends Struct.CollectionTypeSchema {
     draftAndPublish: true;
   };
   attributes: {
+    connectResultNodes: Schema.Attribute.Boolean &
+      Schema.Attribute.DefaultTo<true>;
     cover: Schema.Attribute.Media<'files' | 'images'>;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &

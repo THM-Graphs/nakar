@@ -35,6 +35,10 @@
       "relation": "manyToOne",
       "target": "api::scenario-group.scenario-group",
       "inversedBy": "scenarios"
+    },
+    "connectResultNodes": {
+      "type": "boolean",
+      "default": true
     }
   }
 }
