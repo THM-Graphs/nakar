@@ -83,7 +83,7 @@ export function GraphRendererD3(props: { graph: GetInitialGraph }) {
       .append("marker")
       .attr("id", "arrow")
       .attr("viewBox", "0 0 10 10")
-      .attr("refX", 5)
+      .attr("refX", 10)
       .attr("refY", 5)
       .attr("markerWidth", 8)
       .attr("markerHeight", 10)
