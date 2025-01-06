@@ -1,0 +1,14 @@
+ci_nakar-db-pole:
+  stage: ci_build
+  tags:
+    - docker
+  cache:
+    paths:
+      - nakar-db-pole/node_modules/
+  before_script:
+    - cd nakar-db-pole
+    - npm ci
+  script:
+    - npm run build
+  after_script:
+    - npm run clean

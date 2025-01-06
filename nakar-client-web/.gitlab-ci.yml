@@ -1,0 +1,39 @@
+ci_nakar-client-web:
+  stage: ci_build
+  tags:
+    - docker
+  cache:
+    paths:
+      - nakar-client-web/node_modules/
+  before_script:
+    - cd nakar-shared
+    - npm ci
+    - npm run build
+    - cd ..
+    - cd nakar-client-web
+    - npm ci
+  script:
+    - npm run build:gen
+    - npm run build
+    - docker build -t "nakar-client-web:dev" .
+    - npm run lint
+    - npm run audit
+
+deploy_nakar-client-web:
+  stage: build_push_docker
+  only:
+    - prod
+  cache:
+    paths:
+      - nakar-client-web/node_modules/
+  tags:
+    - docker
+  before_script:
+    - cd nakar-shared
+    - npm ci
+    - npm run build
+    - cd ..
+    - cd nakar-client-web
+  script:
+    - docker build -t "git-registry.thm.de/sspp77/nakar/client-web:$(npm run --silent version)" .
+    - docker push git-registry.thm.de/sspp77/nakar/client-web:$(npm run --silent version)
