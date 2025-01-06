@@ -29,5 +29,5 @@ deploy_server:
   tags:
     - docker
   script:
-    - docker build -f nakar-server/Dockerfile -t "git-registry.thm.de/sspp77/nakar/server:$(npm run --silent version)" .
+    - docker build -f nakar-server/Dockerfile -t "git-registry.thm.de/sspp77/nakar/server:$(cd nakar-server && npm run --silent version)" .
     - docker push git-registry.thm.de/sspp77/nakar/server:$(npm run --silent version)

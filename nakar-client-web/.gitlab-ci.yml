@@ -29,5 +29,5 @@ deploy_client_web:
   tags:
     - docker
   script:
-    - docker build -f nakar-client-web/Dockerfile -t "git-registry.thm.de/sspp77/nakar/client-web:$(npm run --silent version)" .
+    - docker build -f nakar-client-web/Dockerfile -t "git-registry.thm.de/sspp77/nakar/client-web:$(cd nakar-client-web && npm run --silent version)" .
     - docker push git-registry.thm.de/sspp77/nakar/client-web:$(npm run --silent version)
