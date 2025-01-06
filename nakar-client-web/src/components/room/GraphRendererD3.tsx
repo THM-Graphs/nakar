@@ -173,7 +173,7 @@ export function GraphRendererD3(props: { graph: GetInitialGraph }) {
           },
         )
         .on("end", (event: d3.D3DragEvent<SVGGElement, D3Node, null>) => {
-          if (event.active == 0) simulation.alphaTarget(0);
+          if (event.active == 0) simulation.alphaTarget(0).stop();
           // d.fx = undefined;
           // d.fy = undefined;
         }),
