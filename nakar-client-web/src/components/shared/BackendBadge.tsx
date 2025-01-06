@@ -1,6 +1,6 @@
 import { env } from "../../lib/env/env.ts";
 import { Badge, Nav, Stack } from "react-bootstrap";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Loadable } from "../../lib/data/Loadable.ts";
 import { getHealth } from "../../../src-gen";
 import { resultOrThrow } from "../../lib/data/resultOrThrow.ts";
@@ -10,7 +10,7 @@ import { match } from "ts-pattern";
 export function BackendBadge() {
   const [version, setVersion] = useState<Loadable<string>>({ type: "loading" });
 
-  useEffect(() => {
+  const reloadHealth = useCallback(() => {
     getHealth()
       .then((result) => {
         const data = resultOrThrow(result);
@@ -19,6 +19,10 @@ export function BackendBadge() {
       .catch((error: unknown) => {
         setVersion({ type: "error", message: handleError(error) });
       });
+  }, []);
+
+  useEffect(() => {
+    reloadHealth();
   }, []);
 
   return (

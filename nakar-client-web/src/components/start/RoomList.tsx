@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { match } from "ts-pattern";
 import { handleError } from "../../lib/error/handleError.ts";
 import { GetRoom, getRooms, GetRooms } from "../../../src-gen";
@@ -7,13 +7,14 @@ import { Loadable } from "../../lib/data/Loadable.ts";
 import { Loading } from "../shared/Loading.tsx";
 import { ErrorDisplay } from "../shared/ErrorDisplay.tsx";
 import { resultOrThrow } from "../../lib/data/resultOrThrow.ts";
+import { Stack } from "react-bootstrap";
 
 export function RoomList() {
   const [rooms, setRooms] = useState<Loadable<GetRooms>>({
     type: "loading",
   });
 
-  useEffect(() => {
+  const reloadRooms = useCallback(() => {
     setRooms({ type: "loading" });
     getRooms()
       .then((result) => {
@@ -25,11 +26,21 @@ export function RoomList() {
       });
   }, []);
 
+  useEffect(() => {
+    reloadRooms();
+  }, []);
+
   return match(rooms)
     .with({ type: "error" }, ({ message }) => (
-      <ErrorDisplay message={message}></ErrorDisplay>
+      <Stack className={"justify-content-center mt-5"} direction={"horizontal"}>
+        <ErrorDisplay message={message} onReload={reloadRooms}></ErrorDisplay>
+      </Stack>
     ))
-    .with({ type: "loading" }, () => <Loading></Loading>)
+    .with({ type: "loading" }, () => (
+      <Stack className={"justify-content-center mt-5"} direction={"horizontal"}>
+        <Loading></Loading>
+      </Stack>
+    ))
     .with({ type: "data" }, ({ data }) => (
       <ul>
         {data.rooms.map((room: GetRoom) => (
