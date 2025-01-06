@@ -26,17 +26,17 @@ export function BackendBadge() {
   }, []);
 
   return (
-    <Nav.Link href={env().BACKEND_URL} target={"_blank"}>
-      <Badge bg="secondary">
-        <Stack direction={"horizontal"} gap={1}>
-          <span>{env().BACKEND_URL}</span>
-          {match(version)
-            .with({ type: "loading" }, () => <span>(loading...)</span>)
-            .with({ type: "data" }, ({ data }) => <span>({data})</span>)
-            .with({ type: "error" }, ({ message }) => <span>({message})</span>)
-            .exhaustive()}
-        </Stack>
-      </Badge>
-    </Nav.Link>
+    <Badge bg="secondary">
+      <Stack direction={"horizontal"} gap={1}>
+        <Nav.Link href={env().BACKEND_URL} target={"_blank"}>
+          {env().BACKEND_URL}
+        </Nav.Link>
+        {match(version)
+          .with({ type: "loading" }, () => <span>(loading...)</span>)
+          .with({ type: "data" }, ({ data }) => <span>({data})</span>)
+          .with({ type: "error" }, ({ message }) => <span>({message})</span>)
+          .exhaustive()}
+      </Stack>
+    </Badge>
   );
 }
