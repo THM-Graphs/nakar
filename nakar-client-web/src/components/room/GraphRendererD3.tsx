@@ -1,4 +1,4 @@
-import { createRef, useEffect } from "react";
+import { createRef, useEffect, useState } from "react";
 import { useTheme } from "../../lib/theme/useTheme.ts";
 import * as d3 from "d3";
 import { Edge, GetInitialGraph, Node } from "../../../src-gen";
@@ -9,139 +9,61 @@ export function GraphRendererD3(props: { graph: GetInitialGraph }) {
   const svgRef = createRef<SVGSVGElement>();
   const theme = useTheme();
 
-  type D3Node = Node & { x: number; y: number; fx?: number; fy?: number };
-  type D3Link = Edge & { source: D3Node; target: D3Node; curvature: number };
-
-  function closestPointsOnNodes(d: D3Link) {
-    const x1 = d.source.x;
-    const y1 = d.source.y;
-    const x2 = d.target.x;
-    const y2 = d.target.y;
-
-    if (d.isLoop) {
-      const loopSize = Math.min(90, 360 / d.source.degree) / 2;
-      const angle = (d.parallelIndex / d.parallelCount) * 360 - 90;
-      const length = d.source.size;
-      const ps = vector(x1, y1, angle - loopSize, length);
-      const pe = vector(x1, y1, angle + loopSize, length);
-
-      return {
-        x1: ps.x,
-        y1: ps.y,
-        x2: pe.x,
-        y2: pe.y,
-      };
-    }
-
-    const r1 = d.source.size;
-    const r2 = d.target.size;
-
-    // Vector from c1 to c2
-    const dx = x2 - x1;
-    const dy = y2 - y1;
-
-    // Distance between the centers
-    const distance = Math.sqrt(dx * dx + dy * dy);
-
-    // Normalize the vector to get the direction
-    const ux = dx / distance;
-    const uy = dy / distance;
-
-    return {
-      x1: x1 + r1 * ux,
-      y1: y1 + r1 * uy,
-      x2: x2 - r2 * ux,
-      y2: y2 - r2 * uy,
-    };
-  }
-
-  function curvedPath(d: D3Link) {
-    const control = curvePoints(d);
-    const points: [number, number][] = control.points.map(
-      (c): [number, number] => [c.x, c.y],
-    );
-
-    if (d.isLoop || d.parallelCount > 0) {
-      return d3.line().curve(d3.curveCardinal.tension(-3))(points);
-    } else {
-      return d3.line()(points);
-    }
-  }
-
-  function vector(
-    x1: number,
-    y1: number,
-    angle: number,
-    length: number,
-  ): { x: number; y: number } {
-    const angleInRadians = angle * (Math.PI / 180);
-    const rx = length * Math.cos(angleInRadians);
-    const ry = length * Math.sin(angleInRadians);
-    const p = {
-      x: x1 + rx,
-      y: y1 + ry,
-    };
-    return p;
-  }
-
-  function fixDegAngle(angle: number): number {
-    return angle > 90 || angle < -90 ? angle - 180 : angle;
-  }
-
-  function pushVectorOfCurve(
-    x1: number,
-    y1: number,
-    x2: number,
-    y2: number,
-    distance: number,
-    invertDirection: boolean,
-  ): { x: number; y: number } {
-    const midX = (x1 + x2) / 2;
-    const midY = (y1 + y2) / 2;
-
-    const orthX = invertDirection ? -(y2 - y1) : y2 - y1;
-    const orthY = invertDirection ? x2 - x1 : -(x2 - x1);
-    const orthLength = Math.sqrt(orthX * orthX + orthY * orthY);
-    const dx = (orthX / orthLength) * distance;
-    const dy = (orthY / orthLength) * distance;
-
-    const controlX = midX + dx;
-    const controlY = midY + dy;
-
-    const p = {
-      x: controlX,
-      y: controlY,
-    };
-    return p;
-  }
-
-  function curvePoints(d: D3Link): {
-    center: { x: number; y: number };
-    angle: number;
-    points: { x: number; y: number }[];
-  } {
-    const { x1, y1, x2, y2 } = closestPointsOnNodes(d);
-    const angle = Math.atan2(y2 - y1, x2 - x1) * (180 / Math.PI);
-
-    const curvAmount = 25;
-
-    const p = pushVectorOfCurve(
-      x1,
-      y1,
-      x2,
-      y2,
-      d.isLoop ? curvAmount * 4 : d.curvature * curvAmount,
-      d.isLoop ? false : x1 > x2,
-    );
-
-    return {
-      center: p,
-      points: [{ x: x1, y: y1 }, p, { x: x2, y: y2 }],
-      angle: fixDegAngle(angle),
-    };
-  }
+  const [graphContent, setGraphContent] = useState<{
+    nodes: D3Node[];
+    links: D3Link[];
+  }>({ nodes: [], links: [] });
 
   useEffect(() => {
+    const nodes = props.graph.graph.nodes.map((node: Node): D3Node => {
+      return {
+        ...node,
+        x: node.position.x,
+        y: node.position.y,
+      };
+    });
+    const links = props.graph.graph.edges.reduce(
+      (acc: D3Link[], edge: Edge) => {
+        const sourceNode = nodes.find((n) => n.id === edge.startNodeId);
+        const targetNode = nodes.find((n) => n.id === edge.endNodeId);
+
+        if (sourceNode && targetNode) {
+          acc.push({
+            ...edge,
+            source: sourceNode,
+            target: targetNode,
+            curvature: ((): number => {
+              if (edge.parallelCount % 2 == 0) {
+                if (edge.parallelIndex % 2 == 0) {
+                  return edge.parallelIndex + 1;
+                } else {
+                  return -edge.parallelIndex;
+                }
+              } else {
+                if (edge.parallelIndex == 0) {
+                  return 0;
+                }
+                if (edge.parallelIndex % 2 == 0) {
+                  return edge.parallelIndex;
+                } else {
+                  return -(edge.parallelIndex + 1);
+                }
+              }
+            })(),
+          });
+        }
+        return acc;
+      },
+      [],
+    );
+
+    setGraphContent({ nodes: nodes, links: links });
+  }, [props.graph]);
+
+  useEffect(() => {
+    const nodes = graphContent.nodes;
+    const edges = graphContent.links;
+
     if (svgRef.current == null) return;
 
     const width = svgRef.current.getBoundingClientRect().width;
@@ -176,52 +98,6 @@ export function GraphRendererD3(props: { graph: GetInitialGraph }) {
         .on("zoom", (event: d3.D3ZoomEvent<SVGSVGElement, null>) => {
           zoomContainer.attr("transform", event.transform.toString());
         }),
-    );
-
-    const nodes: D3Node[] = props.graph.graph.nodes.map(
-      (node: Node): D3Node => {
-        return {
-          ...node,
-          x: node.position.x,
-          y: node.position.y,
-        };
-      },
-    );
-
-    const edges: D3Link[] = props.graph.graph.edges.reduce(
-      (acc: D3Link[], edge: Edge) => {
-        const sourceNode = nodes.find((n) => n.id === edge.startNodeId);
-        const targetNode = nodes.find((n) => n.id === edge.endNodeId);
-
-        if (sourceNode && targetNode) {
-          acc.push({
-            ...edge,
-            source: sourceNode,
-            target: targetNode,
-            curvature: ((): number => {
-              if (edge.parallelCount % 2 == 0) {
-                if (edge.parallelIndex % 2 == 0) {
-                  return edge.parallelIndex + 1;
-                } else {
-                  return -edge.parallelIndex;
-                }
-              } else {
-                if (edge.parallelIndex == 0) {
-                  return 0;
-                }
-                if (edge.parallelIndex % 2 == 0) {
-                  return edge.parallelIndex;
-                } else {
-                  return -(edge.parallelIndex + 1);
-                }
-              }
-            })(),
-          });
-        }
-
-        return acc;
-      },
-      [],
     );
 
     const simulation: d3.Simulation<D3Node, D3Link> = d3
@@ -329,7 +205,7 @@ export function GraphRendererD3(props: { graph: GetInitialGraph }) {
         (d: D3Node) => `translate(${d.x.toString()}, ${d.y.toString()})`,
       );
     });
-  }, [props.graph, theme]);
+  }, [graphContent, theme]);
 
   return (
     <svg
@@ -340,4 +216,136 @@ export function GraphRendererD3(props: { graph: GetInitialGraph }) {
       <g></g>
     </svg>
   );
+}
+
+type D3Node = Node & { x: number; y: number; fx?: number; fy?: number };
+type D3Link = Edge & { source: D3Node; target: D3Node; curvature: number };
+
+function closestPointsOnNodes(d: D3Link) {
+  const x1 = d.source.x;
+  const y1 = d.source.y;
+  const x2 = d.target.x;
+  const y2 = d.target.y;
+
+  if (d.isLoop) {
+    const loopSize = Math.min(90, 360 / d.source.degree) / 2;
+    const angle = (d.parallelIndex / d.parallelCount) * 360 - 90;
+    const length = d.source.size;
+    const ps = vector(x1, y1, angle - loopSize, length);
+    const pe = vector(x1, y1, angle + loopSize, length);
+
+    return {
+      x1: ps.x,
+      y1: ps.y,
+      x2: pe.x,
+      y2: pe.y,
+    };
+  }
+
+  const r1 = d.source.size;
+  const r2 = d.target.size;
+
+  // Vector from c1 to c2
+  const dx = x2 - x1;
+  const dy = y2 - y1;
+
+  // Distance between the centers
+  const distance = Math.sqrt(dx * dx + dy * dy);
+
+  // Normalize the vector to get the direction
+  const ux = dx / distance;
+  const uy = dy / distance;
+
+  return {
+    x1: x1 + r1 * ux,
+    y1: y1 + r1 * uy,
+    x2: x2 - r2 * ux,
+    y2: y2 - r2 * uy,
+  };
+}
+
+function curvedPath(d: D3Link) {
+  const control = curvePoints(d);
+  const points: [number, number][] = control.points.map(
+    (c): [number, number] => [c.x, c.y],
+  );
+
+  if (d.isLoop || d.parallelCount > 0) {
+    return d3.line().curve(d3.curveCardinal.tension(-3))(points);
+  } else {
+    return d3.line()(points);
+  }
+}
+
+function vector(
+  x1: number,
+  y1: number,
+  angle: number,
+  length: number,
+): { x: number; y: number } {
+  const angleInRadians = angle * (Math.PI / 180);
+  const rx = length * Math.cos(angleInRadians);
+  const ry = length * Math.sin(angleInRadians);
+  const p = {
+    x: x1 + rx,
+    y: y1 + ry,
+  };
+  return p;
+}
+
+function fixDegAngle(angle: number): number {
+  return angle > 90 || angle < -90 ? angle - 180 : angle;
+}
+
+function pushVectorOfCurve(
+  x1: number,
+  y1: number,
+  x2: number,
+  y2: number,
+  distance: number,
+  invertDirection: boolean,
+): { x: number; y: number } {
+  const midX = (x1 + x2) / 2;
+  const midY = (y1 + y2) / 2;
+
+  const orthX = invertDirection ? -(y2 - y1) : y2 - y1;
+  const orthY = invertDirection ? x2 - x1 : -(x2 - x1);
+  const orthLength = Math.sqrt(orthX * orthX + orthY * orthY);
+  const dx = (orthX / orthLength) * distance;
+  const dy = (orthY / orthLength) * distance;
+
+  const controlX = midX + dx;
+  const controlY = midY + dy;
+
+  const p = {
+    x: controlX,
+    y: controlY,
+  };
+  return p;
+}
+
+function curvePoints(d: D3Link): {
+  center: { x: number; y: number };
+  angle: number;
+  points: { x: number; y: number }[];
+} {
+  const { x1, y1, x2, y2 } = closestPointsOnNodes(d);
+  const angle = Math.atan2(y2 - y1, x2 - x1) * (180 / Math.PI);
+
+  const curvAmount = 25;
+
+  const p = pushVectorOfCurve(
+    x1,
+    y1,
+    x2,
+    y2,
+    d.isLoop ? curvAmount * 4 : d.curvature * curvAmount,
+    d.isLoop ? false : x1 > x2,
+  );
+
+  return {
+    center: p,
+    points: [{ x: x1, y: y1 }, p, { x: x2, y: y2 }],
+    angle: fixDegAngle(angle),
+  };
 }
