@@ -83,9 +83,9 @@ export function GraphRendererD3(props: { graph: GetInitialGraph }) {
       .append("marker")
       .attr("id", "arrow")
       .attr("viewBox", "0 0 10 10")
-      .attr("refX", 10)
+      .attr("refX", 5)
       .attr("refY", 5)
-      .attr("markerWidth", 10)
+      .attr("markerWidth", 8)
       .attr("markerHeight", 10)
       .attr("orient", "auto")
       .append("path")
@@ -240,28 +240,28 @@ function closestPointsOnNodes(d: D3Link) {
       x2: pe.x,
       y2: pe.y,
     };
+  } else {
+    const r1 = d.source.size;
+    const r2 = d.target.size;
+
+    // Vector from c1 to c2
+    const dx = x2 - x1;
+    const dy = y2 - y1;
+
+    // Distance between the centers
+    const distance = Math.sqrt(dx * dx + dy * dy);
+
+    // Normalize the vector to get the direction
+    const ux = dx / distance;
+    const uy = dy / distance;
+
+    return {
+      x1: x1 + r1 * ux,
+      y1: y1 + r1 * uy,
+      x2: x2 - r2 * ux,
+      y2: y2 - r2 * uy,
+    };
   }
-
-  const r1 = d.source.size;
-  const r2 = d.target.size;
-
-  // Vector from c1 to c2
-  const dx = x2 - x1;
-  const dy = y2 - y1;
-
-  // Distance between the centers
-  const distance = Math.sqrt(dx * dx + dy * dy);
-
-  // Normalize the vector to get the direction
-  const ux = dx / distance;
-  const uy = dy / distance;
-
-  return {
-    x1: x1 + r1 * ux,
-    y1: y1 + r1 * uy,
-    x2: x2 - r2 * ux,
-    y2: y2 - r2 * uy,
-  };
 }
 
 function curvedPath(d: D3Link) {
@@ -270,8 +270,10 @@ function curvedPath(d: D3Link) {
     (c): [number, number] => [c.x, c.y],
   );
 
-  if (d.isLoop || d.parallelCount > 0) {
+  if (d.isLoop) {
     return d3.line().curve(d3.curveCardinal.tension(-3))(points);
+  } else if (d.parallelCount > 0) {
+    return d3.line().curve(d3.curveCatmullRom)(points);
   } else {
     return d3.line()(points);
   }
