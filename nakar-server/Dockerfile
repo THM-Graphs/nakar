@@ -13,7 +13,7 @@ COPY nakar-server/package.json ./
 COPY nakar-server/package-lock.json ./
 COPY nakar-server/tsconfig.configs.json ./
 COPY nakar-server/tsconfig.json ./
-COPY nakar-server/openapi-gen.yaml ./
+COPY nakar-server/openapi.yaml ./
 
 RUN npm install && npm run build:gen && npm run build
 
