@@ -1,14 +1,18 @@
-ci_nakar-db-pole:
+ci_db_pole_docker:
   stage: ci_build
   tags:
     - docker
-  cache:
-    paths:
-      - nakar-db-pole/node_modules/
-  before_script:
-    - cd nakar-db-pole
-    - npm ci
   script:
-    - npm run build
+    - docker build -f nakar-db-pole/Dockerfile -t "nakar-db-pole:dev" .
   after_script:
-    - npm run clean
+    - docker rmi "nakar-db-pole:dev"
+
+deploy_db_pole:
+  stage: build_push_docker
+  only:
+    - prod
+  tags:
+    - docker
+  script:
+    - docker build -f nakar-db-pole/Dockerfile -t "git-registry.thm.de/sspp77/nakar/db-pole:$(npm run --silent version)" .
+    - docker push git-registry.thm.de/sspp77/nakar/db-pole:$(npm run --silent version)

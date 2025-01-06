@@ -1,39 +1,33 @@
-ci_nakar-server:
+ci_server:
   stage: ci_build
   tags:
-    - docker
+    - nodejs
   cache:
     paths:
-      - nakar-server/node_modules/
+      - nakar-server/node_modules
   before_script:
-    - cd nakar-shared
-    - npm ci
-    - npm run build
-    - cd ..
     - cd nakar-server
     - npm ci
   script:
-    - npm run build:gen
     - npm run build
-    - docker build -t "nakar-server:dev" .
     - npm run lint
     - npm run audit
 
-deploy_nakar-server:
+ci_server_docker:
+  stage: ci_build
+  tags:
+    - docker
+  script:
+    - docker build -f nakar-server/Dockerfile -t "nakar-server:dev" .
+  after_script:
+    - docker rmi "nakar-server:dev"
+
+deploy_server:
   stage: build_push_docker
   only:
     - prod
   tags:
     - docker
-  cache:
-    paths:
-      - nakar-server/node_modules/
-  before_script:
-    - cd nakar-shared
-    - npm ci
-    - npm run build
-    - cd ..
-    - cd nakar-server
   script:
-    - docker build -t "git-registry.thm.de/sspp77/nakar/server:$(npm run --silent version)" .
+    - docker build -f nakar-server/Dockerfile -t "git-registry.thm.de/sspp77/nakar/server:$(npm run --silent version)" .
     - docker push git-registry.thm.de/sspp77/nakar/server:$(npm run --silent version)
