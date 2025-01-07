@@ -6,11 +6,10 @@
   "scripts": {
     "build": "npm run build:gen && strapi build",
     "build:gen": "openapi-typescript ./openapi.yaml -o ./src-gen/schema.d.ts --root-types",
-    "deploy": "strapi deploy",
     "develop": "strapi develop",
     "start": "strapi start",
-    "strapi": "strapi",
     "lint": "eslint .",
+    "lint:fix": "eslint --fix .",
     "audit": "npm audit --audit-level none",
     "test": "jest",
     "export": "strapi export --no-compress --no-encrypt -f export",
