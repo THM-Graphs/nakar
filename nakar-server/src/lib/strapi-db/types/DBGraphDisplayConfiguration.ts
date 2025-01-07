@@ -1,18 +1,13 @@
 import z from 'zod';
-
-export const DBGraphDisplayConfigurationBooleanSchema = z.enum([
-  'inherit',
-  'true',
-  'false',
-]);
-
-export type DBGraphDisplayConfigurationBoolean = z.infer<
-  typeof DBGraphDisplayConfigurationBooleanSchema
->;
+import { DBGraphDisplayConfigurationBooleanSchema } from './DBGraphDisplayConfigurationBoolea';
+import { DBNodeDisplayConfigurationSchema } from './NodeDisplayConfiguration';
 
 export const DBGraphDisplayConfigurationSchema = z.object({
   connectResultNodes: DBGraphDisplayConfigurationBooleanSchema.nullable(),
   growNodesBasedOnDegree: DBGraphDisplayConfigurationBooleanSchema.nullable(),
+  nodeDisplayConfigurations: z
+    .array(DBNodeDisplayConfigurationSchema)
+    .nullable(),
 });
 
 export type DBGraphDisplayConfiguration = z.infer<

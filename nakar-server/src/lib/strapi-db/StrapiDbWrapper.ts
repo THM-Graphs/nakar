@@ -25,7 +25,11 @@ export class StrapiDbWrapper {
       status: 'published',
       sort: 'title:asc',
       populate: {
-        graphDisplayConfiguration: {},
+        graphDisplayConfiguration: {
+          populate: {
+            nodeDisplayConfigurations: {},
+          },
+        },
       },
     });
 
@@ -81,10 +85,18 @@ export class StrapiDbWrapper {
       populate: {
         database: {
           populate: {
-            graphDisplayConfiguration: {},
+            graphDisplayConfiguration: {
+              populate: {
+                nodeDisplayConfigurations: {},
+              },
+            },
           },
         },
-        graphDisplayConfiguration: {},
+        graphDisplayConfiguration: {
+          populate: {
+            nodeDisplayConfigurations: {},
+          },
+        },
       },
       filters: {
         database: {
@@ -115,13 +127,25 @@ export class StrapiDbWrapper {
           populate: {
             database: {
               populate: {
-                graphDisplayConfiguration: {},
+                graphDisplayConfiguration: {
+                  populate: {
+                    nodeDisplayConfigurations: {},
+                  },
+                },
               },
             },
-            graphDisplayConfiguration: {},
+            graphDisplayConfiguration: {
+              populate: {
+                nodeDisplayConfigurations: {},
+              },
+            },
           },
         },
-        graphDisplayConfiguration: {},
+        graphDisplayConfiguration: {
+          populate: {
+            nodeDisplayConfigurations: {},
+          },
+        },
       },
       filters: {
         scenarioGroup: {
@@ -152,13 +176,25 @@ export class StrapiDbWrapper {
           populate: {
             database: {
               populate: {
-                graphDisplayConfiguration: {},
+                graphDisplayConfiguration: {
+                  populate: {
+                    nodeDisplayConfigurations: {},
+                  },
+                },
               },
             },
-            graphDisplayConfiguration: {},
+            graphDisplayConfiguration: {
+              populate: {
+                nodeDisplayConfigurations: {},
+              },
+            },
           },
         },
-        graphDisplayConfiguration: {},
+        graphDisplayConfiguration: {
+          populate: {
+            nodeDisplayConfigurations: {},
+          },
+        },
       },
     });
 

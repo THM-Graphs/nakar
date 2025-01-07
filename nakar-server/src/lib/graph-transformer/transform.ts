@@ -11,10 +11,12 @@ import { Neo4jNode } from '../neo4j/types/Neo4jNode';
 import { Neo4JProperty } from '../neo4j/types/Neo4JProperty';
 import { Neo4jEdge } from '../neo4j/types/Neo4jEdge';
 import { GraphDisplayConfiguration } from './GraphDisplayConfiguration';
+import {NodeDisplayConfigurationData} from "./NodeDisplayConfigurationData";
+import Handlebars from 'handlebars';
 
 export function transform(
   neo4jGraph: Neo4jGraph,
-  displayConfig: GraphDisplayConfiguration,
+  graphDisplayConfig: GraphDisplayConfiguration,
 ): SchemaGetInitialGraph {
   const graph: SchemaGetInitialGraph = {
     graph: {
@@ -27,10 +29,15 @@ export function transform(
 
   applyLabels(graph);
   applyNodeDegrees(graph);
-  if (displayConfig.growNodesBasedOnDegree == true) {
-    applyNodeSizes(graph);
-  }
   applyEdgeParallelCounts(graph);
+
+  // Display Configs
+  applyNodeDisplayText(graph, graphDisplayConfig);
+  applyNodeRadius(graph, graphDisplayConfig);
+  if (graphDisplayConfig.growNodesBasedOnDegree == true) {
+    applyGrowNodeBasedOnDegree(graph);
+  }
+  applyNodeBackgroundColor(graph, graphDisplayConfig);
 
   return graph;
 }
@@ -167,7 +174,7 @@ function applyNodeDegrees(graph: SchemaGetInitialGraph): void {
   }
 }
 
-function applyNodeSizes(graph: SchemaGetInitialGraph): void {
+function applyGrowNodeBasedOnDegree(graph: SchemaGetInitialGraph): void {
   const degrees = graph.graph.nodes.map((n) => n.degree);
 
   const growFactor = 1;
@@ -232,4 +239,96 @@ function applyEdgeParallelCounts(graph: SchemaGetInitialGraph): void {
       }
     });
   }
+}
+
+function applyNodeDisplayText(graph: SchemaGetInitialGraph, graphDisplayConfiguration: GraphDisplayConfiguration) {
+  for (const node of graph.graph.nodes) {
+    for (const nodeConfig of graphDisplayConfiguration.nodeDisplayConfigurations) {
+      if (nodeConfig.targetLabel == null) {
+        continue;
+      }
+      if (node.labels.find(l => l.label == nodeConfig.targetLabel) == null) {
+        continue;
+      }
+      if (nodeConfig.displayText == null) {
+        continue;
+      }
+      const newValue = applyTemplate(nodeConfig.displayText, getNodeDisplayConfigurationData(node))
+      if (newValue.trim().length == 0) {
+        continue;
+      }
+      node.displayTitle = newValue;
+    }
+  }
+}
+
+function applyNodeRadius(graph: SchemaGetInitialGraph, graphDisplayConfiguration: GraphDisplayConfiguration): void {
+  for (const node of graph.graph.nodes) {
+    for (const nodeConfig of graphDisplayConfiguration.nodeDisplayConfigurations) {
+      if (nodeConfig.targetLabel == null) {
+        continue;
+      }
+      if (node.labels.find(l => l.label == nodeConfig.targetLabel) == null) {
+        continue;
+      }
+      if (nodeConfig.radius == null) {
+        continue;
+      }
+      const newValue = applyTemplate(nodeConfig.radius, getNodeDisplayConfigurationData(node))
+      if (newValue.trim().length == 0) {
+        continue;
+      }
+      const newRadius = parseFloat(newValue);
+      if (isNaN(newRadius)) {
+        console.warn(`Unable to parse node radius config: ${nodeConfig.radius} for label ${nodeConfig.targetLabel}`);
+        break;
+      }
+      node.radius = newRadius
+      break;
+    }
+  }
+}
+
+function applyNodeBackgroundColor(graph: SchemaGetInitialGraph, graphDisplayConfiguration: GraphDisplayConfiguration): void {
+  for (const nodeConfig of graphDisplayConfiguration.nodeDisplayConfigurations) {
+    if (nodeConfig.targetLabel == null) {
+      continue;
+    }
+    if (nodeConfig.backgroundColor == null) {
+      continue;
+    }
+    for (const node of graph.graph.nodes) {
+      if (node.labels.length == 0) {
+        continue;
+      }
+      if (node.labels[0].label == nodeConfig.targetLabel) {
+        const newBackgroundColor = applyTemplate(nodeConfig.backgroundColor, getNodeDisplayConfigurationData(node))
+        if (newBackgroundColor.trim().length == 0) {
+          continue;
+        }
+        node.labels[0].color = {type: "CustomColor", backgroundColor: nodeConfig.backgroundColor, textColor: "#000000"}
+      }
+    }
+  }
+}
+
+function getNodeDisplayConfigurationData(node: SchemaNode): NodeDisplayConfigurationData {
+  return {
+    id: node.id,
+    displayTitle: node.displayTitle,
+    radius: node.radius,
+    properties: node.properties.reduce<Record<string, string>>((record, property) => ({
+      ...record,
+      [property.slug]: property.value
+    }), {}),
+    degree: node.degree,
+    inDegree: node.inDegree,
+    outDegree: node.outDegree,
+    labels: node.labels.map(l => l.label)
+  }
+}
+
+function applyTemplate(template: string, data: NodeDisplayConfigurationData): string {
+  const c = Handlebars.compile(template);
+  return c(data);
 }

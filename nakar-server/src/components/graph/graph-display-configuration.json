@@ -25,6 +25,11 @@
         "false"
       ],
       "default": "inherit"
+    },
+    "nodeDisplayConfigurations": {
+      "type": "component",
+      "repeatable": true,
+      "component": "graph.node-display-configuration"
     }
   }
 }

@@ -1,10 +1,10 @@
 import { GraphDisplayConfiguration } from './GraphDisplayConfiguration';
 import { DBScenario } from '../strapi-db/types/DBScenario';
-import {
-  DBGraphDisplayConfiguration,
-  DBGraphDisplayConfigurationBoolean,
-} from '../strapi-db/types/DBGraphDisplayConfiguration';
+import { DBGraphDisplayConfiguration } from '../strapi-db/types/DBGraphDisplayConfiguration';
 import { match } from 'ts-pattern';
+import { DBGraphDisplayConfigurationBoolean } from '../strapi-db/types/DBGraphDisplayConfigurationBoolea';
+import {DBNodeDisplayConfiguration} from "../strapi-db/types/NodeDisplayConfiguration";
+import {NodeDisplayConfiguration} from "./NodeDisplayConfiguration";
 
 export function evaluateGraphDisplayConfiguration(
   scneario: DBScenario,
@@ -31,6 +31,14 @@ function transform(
   return {
     connectResultNodes: inheritToNull(dbConfig?.connectResultNodes),
     growNodesBasedOnDegree: inheritToNull(dbConfig?.growNodesBasedOnDegree),
+    nodeDisplayConfigurations: dbConfig?.nodeDisplayConfigurations?.map((c: DBNodeDisplayConfiguration): NodeDisplayConfiguration => {
+      return {
+        displayText: c.displayText,
+        radius: c.radius,
+        backgroundColor: c.backgroundColor,
+        targetLabel: c.targetLabel,
+      }
+    }) ?? []
   };
 }
 
@@ -42,6 +50,7 @@ function mergeAIntoB(
     connectResultNodes: a.connectResultNodes ?? b.connectResultNodes,
     growNodesBasedOnDegree:
       a.growNodesBasedOnDegree ?? b.growNodesBasedOnDegree,
+    nodeDisplayConfigurations: [...a.nodeDisplayConfigurations, ...b.nodeDisplayConfigurations]
   };
 }
 

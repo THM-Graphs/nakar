@@ -1,0 +1,24 @@
+{
+  "collectionName": "components_graph_node_display_configurations",
+  "info": {
+    "displayName": "Node Display Configuration",
+    "icon": "information",
+    "description": ""
+  },
+  "options": {},
+  "attributes": {
+    "targetLabel": {
+      "type": "string",
+      "required": false
+    },
+    "displayText": {
+      "type": "string"
+    },
+    "radius": {
+      "type": "string"
+    },
+    "backgroundColor": {
+      "type": "string"
+    }
+  }
+}
