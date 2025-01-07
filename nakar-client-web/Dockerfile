@@ -23,4 +23,6 @@ COPY nakar-client-web/docker/100-create-env-file.sh /docker-entrypoint.d
 COPY nakar-client-web/docker/default.conf /etc/nginx/conf.d/default.conf
 RUN chmod +x /docker-entrypoint.d/100-create-env-file.sh
 
+HEALTHCHECK CMD curl -f http://localhost/ || exit 1
+
 EXPOSE 80

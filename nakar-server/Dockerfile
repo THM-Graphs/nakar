@@ -21,12 +21,16 @@ RUN npm install && npm run build:gen && npm run build
 FROM node:22
 WORKDIR /app
 ENV NODE_ENV=production
+
 COPY --from=builder /app/dist ./
 COPY nakar-server/public ./public
 COPY nakar-server/package.json ./
 COPY nakar-server/package-lock.json ./
 COPY nakar-server/favicon.ico ./
 RUN npm ci --production
-EXPOSE 1337
+
+EXPOSE 80
+
+HEALTHCHECK CMD curl -f http://localhost/_health || exit 1
 
 CMD ["npm", "start"]
