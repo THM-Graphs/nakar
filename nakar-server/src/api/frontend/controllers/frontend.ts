@@ -37,7 +37,7 @@ export default {
 
       const displayConfig = evaluateGraphDisplayConfiguration(scenario);
 
-      if (displayConfig.connectResultNodes) {
+      if (displayConfig.connectResultNodes == true) {
         await neo4jWrapper.loadAndMergeConnectingRelationships(graphResult);
       }
 

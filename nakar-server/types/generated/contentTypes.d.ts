@@ -452,6 +452,10 @@ export interface ApiScenarioGroupScenarioGroup
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     database: Schema.Attribute.Relation<'manyToOne', 'api::database.database'>;
+    graphDisplayConfiguration: Schema.Attribute.Component<
+      'graph.graph-display-configuration',
+      false
+    >;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
       'oneToMany',
@@ -484,6 +488,10 @@ export interface ApiScenarioScenario extends Struct.CollectionTypeSchema {
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     description: Schema.Attribute.Text;
+    graphDisplayConfiguration: Schema.Attribute.Component<
+      'graph.graph-display-configuration',
+      false
+    >;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
       'oneToMany',

@@ -8,10 +8,14 @@ export interface GraphGraphDisplayConfiguration extends Struct.ComponentSchema {
     icon: 'brush';
   };
   attributes: {
-    connectResultNodes: Schema.Attribute.Boolean &
-      Schema.Attribute.DefaultTo<false>;
-    growNodesBasedOnDegree: Schema.Attribute.Boolean &
-      Schema.Attribute.DefaultTo<false>;
+    connectResultNodes: Schema.Attribute.Enumeration<
+      ['inherit', 'true', 'false']
+    > &
+      Schema.Attribute.DefaultTo<'inherit'>;
+    growNodesBasedOnDegree: Schema.Attribute.Enumeration<
+      ['inherit', 'true', 'false']
+    > &
+      Schema.Attribute.DefaultTo<'inherit'>;
   };
 }
 

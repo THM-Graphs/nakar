@@ -35,6 +35,11 @@
       "relation": "manyToOne",
       "target": "api::scenario-group.scenario-group",
       "inversedBy": "scenarios"
+    },
+    "graphDisplayConfiguration": {
+      "type": "component",
+      "repeatable": false,
+      "component": "graph.graph-display-configuration"
     }
   }
 }

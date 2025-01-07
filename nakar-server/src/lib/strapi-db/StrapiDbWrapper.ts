@@ -24,7 +24,9 @@ export class StrapiDbWrapper {
     const rawResults = await this.databaseRepository.findMany({
       status: 'published',
       sort: 'title:asc',
-      populate: ['graphDisplayConfiguration'],
+      populate: {
+        graphDisplayConfiguration: {},
+      },
     });
 
     const result: DBDatabase[] = rawResults.map((rawResult) => {
@@ -82,6 +84,7 @@ export class StrapiDbWrapper {
             graphDisplayConfiguration: {},
           },
         },
+        graphDisplayConfiguration: {},
       },
       filters: {
         database: {
@@ -115,8 +118,10 @@ export class StrapiDbWrapper {
                 graphDisplayConfiguration: {},
               },
             },
+            graphDisplayConfiguration: {},
           },
         },
+        graphDisplayConfiguration: {},
       },
       filters: {
         scenarioGroup: {
@@ -150,8 +155,10 @@ export class StrapiDbWrapper {
                 graphDisplayConfiguration: {},
               },
             },
+            graphDisplayConfiguration: {},
           },
         },
+        graphDisplayConfiguration: {},
       },
     });
 

@@ -8,12 +8,23 @@
   "options": {},
   "attributes": {
     "connectResultNodes": {
-      "type": "boolean",
-      "default": false
+      "type": "enumeration",
+      "enum": [
+        "inherit",
+        "true",
+        "false"
+      ],
+      "default": "inherit",
+      "required": false
     },
     "growNodesBasedOnDegree": {
-      "type": "boolean",
-      "default": false
+      "type": "enumeration",
+      "enum": [
+        "inherit",
+        "true",
+        "false"
+      ],
+      "default": "inherit"
     }
   }
 }

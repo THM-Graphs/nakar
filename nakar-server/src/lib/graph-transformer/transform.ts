@@ -27,7 +27,7 @@ export function transform(
 
   applyLabels(graph);
   applyNodeDegrees(graph);
-  if (displayConfig.growNodesBasedOnDegree) {
+  if (displayConfig.growNodesBasedOnDegree == true) {
     applyNodeSizes(graph);
   }
   applyEdgeParallelCounts(graph);

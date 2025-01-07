@@ -1,5 +1,6 @@
 import z from 'zod';
 import { DBScenarioGroupSchema } from './DBScenarioGroup';
+import { DBGraphDisplayConfigurationSchema } from './DBGraphDisplayConfiguration';
 
 export const DBScenarioSchema = z.object({
   documentId: z.string(),
@@ -13,6 +14,7 @@ export const DBScenarioSchema = z.object({
     })
     .nullable(),
   scenarioGroup: DBScenarioGroupSchema.nullable(),
+  graphDisplayConfiguration: DBGraphDisplayConfigurationSchema.nullable(),
 });
 
 export type DBScenario = z.infer<typeof DBScenarioSchema>;

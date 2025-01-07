@@ -1,4 +1,4 @@
 export type GraphDisplayConfiguration = {
-  connectResultNodes: boolean;
-  growNodesBasedOnDegree: boolean;
+  connectResultNodes: boolean | null;
+  growNodesBasedOnDegree: boolean | null;
 };

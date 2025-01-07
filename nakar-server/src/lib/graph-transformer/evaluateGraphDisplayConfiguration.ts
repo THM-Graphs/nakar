@@ -1,11 +1,10 @@
 import { GraphDisplayConfiguration } from './GraphDisplayConfiguration';
 import { DBScenario } from '../strapi-db/types/DBScenario';
-import { DBGraphDisplayConfiguration } from '../strapi-db/types/DBGraphDisplayConfiguration';
-
-const defaultConfig: GraphDisplayConfiguration = {
-  connectResultNodes: false,
-  growNodesBasedOnDegree: false,
-};
+import {
+  DBGraphDisplayConfiguration,
+  DBGraphDisplayConfigurationBoolean,
+} from '../strapi-db/types/DBGraphDisplayConfiguration';
+import { match } from 'ts-pattern';
 
 export function evaluateGraphDisplayConfiguration(
   scneario: DBScenario,
@@ -13,21 +12,48 @@ export function evaluateGraphDisplayConfiguration(
   const configFromDatabase = transform(
     scneario.scenarioGroup?.database?.graphDisplayConfiguration,
   );
+  const configFromScenarioGroup = transform(
+    scneario.scenarioGroup?.graphDisplayConfiguration,
+  );
+  const configFromScenario = transform(scneario.graphDisplayConfiguration);
 
-  return configFromDatabase ?? defaultConfig;
+  const resulting = mergeAIntoB(
+    configFromScenario,
+    mergeAIntoB(configFromScenarioGroup, configFromDatabase),
+  );
+
+  return resulting;
 }
 
 function transform(
   dbConfig: DBGraphDisplayConfiguration | undefined | null,
-): GraphDisplayConfiguration | null {
-  if (dbConfig == null) {
-    return null;
-  } else {
-    return {
-      connectResultNodes:
-        dbConfig.connectResultNodes ?? defaultConfig.connectResultNodes,
-      growNodesBasedOnDegree:
-        dbConfig.growNodesBasedOnDegree ?? defaultConfig.growNodesBasedOnDegree,
-    };
-  }
+): GraphDisplayConfiguration {
+  return {
+    connectResultNodes: inheritToNull(dbConfig?.connectResultNodes),
+    growNodesBasedOnDegree: inheritToNull(dbConfig?.growNodesBasedOnDegree),
+  };
+}
+
+function mergeAIntoB(
+  a: GraphDisplayConfiguration,
+  b: GraphDisplayConfiguration,
+): GraphDisplayConfiguration {
+  return {
+    connectResultNodes: a.connectResultNodes ?? b.connectResultNodes,
+    growNodesBasedOnDegree:
+      a.growNodesBasedOnDegree ?? b.growNodesBasedOnDegree,
+  };
+}
+
+function inheritToNull(
+  input: DBGraphDisplayConfigurationBoolean | null | undefined,
+): boolean | null {
+  return match(input)
+    .returnType<boolean | null>()
+    .with('inherit', () => null)
+    .with(null, () => null)
+    .with(undefined, () => null)
+    .with('true', () => true)
+    .with('false', () => false)
+    .exhaustive();
 }
