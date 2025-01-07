@@ -5,6 +5,9 @@ import { Edge, GetInitialGraph, Node } from "../../../src-gen";
 import { getTextColor } from "../../lib/color/getTextColor.ts";
 import { getBackgroundColor } from "../../lib/color/getBackgroundColor.ts";
 
+type D3Node = Node & { x: number; y: number; fx?: number; fy?: number };
+type D3Link = Edge & { source: D3Node; target: D3Node };
+
 export function GraphRendererD3(props: { graph: GetInitialGraph }) {
   const svgRef = createRef<SVGSVGElement>();
   const theme = useTheme();
@@ -32,24 +35,6 @@ export function GraphRendererD3(props: { graph: GetInitialGraph }) {
             ...edge,
             source: sourceNode,
             target: targetNode,
-            curvature: ((): number => {
-              if (edge.parallelCount % 2 == 0) {
-                if (edge.parallelIndex % 2 == 0) {
-                  return edge.parallelIndex + 1;
-                } else {
-                  return -edge.parallelIndex;
-                }
-              } else {
-                if (edge.parallelIndex == 0) {
-                  return 0;
-                }
-                if (edge.parallelIndex % 2 == 0) {
-                  return edge.parallelIndex;
-                } else {
-                  return -(edge.parallelIndex + 1);
-                }
-              }
-            })(),
           });
         }
         return acc;
@@ -218,9 +203,6 @@ export function GraphRendererD3(props: { graph: GetInitialGraph }) {
   );
 }
 
-type D3Node = Node & { x: number; y: number; fx?: number; fy?: number };
-type D3Link = Edge & { source: D3Node; target: D3Node; curvature: number };
-
 function closestPointsOnNodes(d: D3Link) {
   const x1 = d.source.x;
   const y1 = d.source.y;
@@ -305,13 +287,12 @@ function pushVectorOfCurve(
   x2: number,
   y2: number,
   distance: number,
-  invertDirection: boolean,
 ): { x: number; y: number } {
   const midX = (x1 + x2) / 2;
   const midY = (y1 + y2) / 2;
 
-  const orthX = invertDirection ? -(y2 - y1) : y2 - y1;
-  const orthY = invertDirection ? x2 - x1 : -(x2 - x1);
+  const orthX = y2 - y1;
+  const orthY = -(x2 - x1);
   const orthLength = Math.sqrt(orthX * orthX + orthY * orthY);
   const dx = (orthX / orthLength) * distance;
   const dy = (orthY / orthLength) * distance;
@@ -334,15 +315,14 @@ function curvePoints(d: D3Link): {
   const { x1, y1, x2, y2 } = closestPointsOnNodes(d);
   const angle = Math.atan2(y2 - y1, x2 - x1) * (180 / Math.PI);
 
-  const curvAmount = 25;
+  const curvAmount = 15;
 
   const p = pushVectorOfCurve(
     x1,
     y1,
     x2,
     y2,
-    d.isLoop ? curvAmount * 4 : d.curvature * curvAmount,
-    d.isLoop ? false : x1 > x2,
+    d.isLoop ? curvAmount * 4 : d.parallelIndex * curvAmount,
   );
 
   return {

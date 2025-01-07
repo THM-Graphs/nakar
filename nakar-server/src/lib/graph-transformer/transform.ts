@@ -146,7 +146,7 @@ function getNodeDisplayTitle(node: Neo4jNode): string {
   return (
     node.properties.get('name')?.value ??
     node.properties.get('label')?.value ??
-    (node.properties[0] as Neo4JProperty | null)?.value ??
+    ([...node.properties.values()][0] as Neo4JProperty | null)?.value ??
     [...node.labels.values()].join(', ')
   );
 }
@@ -203,7 +203,31 @@ function applyEdgeParallelCounts(graph: SchemaGetInitialGraph): void {
 
     others.forEach((other, index) => {
       other.parallelCount = others.length;
-      other.parallelIndex = index;
+
+      if (other.isLoop) {
+        other.parallelIndex = index;
+      } else {
+        if (other.parallelCount % 2 == 0) {
+          if (index % 2 == 0) {
+            other.parallelIndex = index + 1;
+          } else {
+            other.parallelIndex = -index;
+          }
+        } else {
+          if (index == 0) {
+            other.parallelIndex = 0;
+          }
+          if (index % 2 == 0) {
+            other.parallelIndex = index;
+          } else {
+            other.parallelIndex = -(index + 1);
+          }
+        }
+
+        if (other.startNodeId.localeCompare(other.endNodeId) > 0) {
+          other.parallelIndex = -other.parallelIndex;
+        }
+      }
     });
   }
 }
