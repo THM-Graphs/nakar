@@ -1,14 +1,11 @@
 import { StrapiDbWrapper } from '../../../lib/strapi-db/StrapiDbWrapper';
 import { StrapiContextWrapper } from '../../../lib/strapi-ctx/StrapiContextWrapper';
 import {
-  SchemaGetDatabase,
   SchemaGetDatabases,
   SchemaGetVersion,
   SchemaGetInitialGraph,
   SchemaGetRoom,
   SchemaGetRooms,
-  SchemaGetScenario,
-  SchemaGetScenarioGroup,
   SchemaGetScenarioGroups,
   SchemaGetScenarios,
 } from '../../../../src-gen/schema';
