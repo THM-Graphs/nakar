@@ -2,7 +2,7 @@ import { Neo4jEdge } from './Neo4jEdge';
 import { Neo4jNode } from './Neo4jNode';
 
 export interface Neo4jGraph {
-  nodes: Array<Neo4jNode>;
-  edges: Array<Neo4jEdge>;
-  tableData: Record<string, string>[];
+  nodes: Map<string, Neo4jNode>;
+  edges: Map<string, Neo4jEdge>;
+  tableData: Map<string, string>[];
 }

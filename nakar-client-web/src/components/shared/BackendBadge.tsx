@@ -2,7 +2,7 @@ import { env } from "../../lib/env/env.ts";
 import { Badge, Nav, Stack } from "react-bootstrap";
 import { useCallback, useEffect, useState } from "react";
 import { Loadable } from "../../lib/data/Loadable.ts";
-import { getHealth } from "../../../src-gen";
+import { getVersion } from "../../../src-gen";
 import { resultOrThrow } from "../../lib/data/resultOrThrow.ts";
 import { handleError } from "../../lib/error/handleError.ts";
 import { match } from "ts-pattern";
@@ -10,8 +10,8 @@ import { match } from "ts-pattern";
 export function BackendBadge() {
   const [version, setVersion] = useState<Loadable<string>>({ type: "loading" });
 
-  const reloadHealth = useCallback(() => {
-    getHealth()
+  const reloadVersion = useCallback(() => {
+    getVersion()
       .then((result) => {
         const data = resultOrThrow(result);
         setVersion({ type: "data", data: data.version });
@@ -22,7 +22,7 @@ export function BackendBadge() {
   }, []);
 
   useEffect(() => {
-    reloadHealth();
+    reloadVersion();
   }, []);
 
   return (

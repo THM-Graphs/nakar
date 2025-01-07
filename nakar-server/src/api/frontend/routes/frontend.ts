@@ -56,8 +56,8 @@ export default {
     },
     {
       method: 'GET',
-      path: '/frontend/system/health',
-      handler: 'frontend.getHealth',
+      path: '/frontend/system/version',
+      handler: 'frontend.getVersion',
       config: {
         policies: [],
         middlewares: [],
