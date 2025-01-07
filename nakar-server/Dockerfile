@@ -31,6 +31,11 @@ RUN npm ci --production
 
 EXPOSE 80
 
-HEALTHCHECK CMD curl -f http://localhost/_health || exit 1
+HEALTHCHECK \
+    --interval=10m \
+    --timeout=5s \
+    --start-period=120s \
+    --start-interval=5s \
+    CMD curl -f http://localhost/_health || exit 1
 
 CMD ["npm", "start"]
