@@ -23,6 +23,7 @@ import { transformDatabase } from '../../../lib/schema-transformers/transformDat
 import { transformRoom } from '../../../lib/schema-transformers/transformRoom';
 import { transformScenarioGroup } from '../../../lib/schema-transformers/transformScnenarioGroup';
 import { transformScenario } from '../../../lib/schema-transformers/transformScenario';
+import { evaluateGraphDisplayConfiguration } from '../../../lib/graph-transformer/evaluateGraphDisplayConfiguration';
 
 export default {
   getInitialGraph: StrapiContextWrapper.handleRequest(
@@ -37,11 +38,13 @@ export default {
       const neo4jWrapper = new Neo4jWrapper(scenario.scenarioGroup?.database);
       const graphResult = await neo4jWrapper.executeQuery(scenario.query);
 
-      if (scenario.connectResultNodes == true) {
+      const displayConfig = evaluateGraphDisplayConfiguration(scenario);
+
+      if (displayConfig.connectResultNodes) {
         await neo4jWrapper.loadAndMergeConnectingRelationships(graphResult);
       }
 
-      const graph = transform(graphResult);
+      const graph = transform(graphResult, displayConfig);
 
       return graph;
     },

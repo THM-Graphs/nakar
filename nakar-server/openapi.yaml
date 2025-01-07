@@ -191,7 +191,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/GraphProperty'
-        size:
+        radius:
           type: number
         position:
           type: object
@@ -214,7 +214,7 @@ components:
         - displayTitle
         - labels
         - properties
-        - size
+        - radius
         - position
         - inDegree
         - outDegree

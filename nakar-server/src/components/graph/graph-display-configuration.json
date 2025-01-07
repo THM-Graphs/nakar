@@ -1,0 +1,19 @@
+{
+  "collectionName": "components_graph_graph_display_configurations",
+  "info": {
+    "displayName": "Graph Display Configuration",
+    "icon": "brush",
+    "description": ""
+  },
+  "options": {},
+  "attributes": {
+    "connectResultNodes": {
+      "type": "boolean",
+      "default": false
+    },
+    "growNodesBasedOnDegree": {
+      "type": "boolean",
+      "default": false
+    }
+  }
+}

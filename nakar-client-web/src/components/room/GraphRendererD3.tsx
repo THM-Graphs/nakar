@@ -96,7 +96,7 @@ export function GraphRendererD3(props: { graph: GetInitialGraph }) {
       )
       .force(
         "charge",
-        d3.forceManyBody<D3Node>().strength((node) => node.size * -60),
+        d3.forceManyBody<D3Node>().strength((node) => node.radius * -60),
       )
       .force("x", d3.forceX())
       .force("y", d3.forceY())
@@ -165,7 +165,7 @@ export function GraphRendererD3(props: { graph: GetInitialGraph }) {
     );
     node
       .append("circle")
-      .attr("r", (d) => d.size)
+      .attr("r", (d) => d.radius)
       .attr("fill", (d) => getBackgroundColor(d.labels[0].color))
       .attr("stroke", () => (theme == "dark" ? "#fff" : "#000"))
       .attr("stroke-width", "3px");
@@ -212,7 +212,7 @@ function closestPointsOnNodes(d: D3Link) {
   if (d.isLoop) {
     const loopSize = Math.min(90, 360 / d.source.degree) / 2;
     const angle = (d.parallelIndex / d.parallelCount) * 360 - 90;
-    const length = d.source.size;
+    const length = d.source.radius;
     const ps = vector(x1, y1, angle - loopSize, length);
     const pe = vector(x1, y1, angle + loopSize, length);
 
@@ -223,8 +223,8 @@ function closestPointsOnNodes(d: D3Link) {
       y2: pe.y,
     };
   } else {
-    const r1 = d.source.size;
-    const r2 = d.target.size;
+    const r1 = d.source.radius;
+    const r2 = d.target.radius;
 
     // Vector from c1 to c2
     const dx = x2 - x1;

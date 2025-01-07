@@ -24,6 +24,7 @@ export class StrapiDbWrapper {
     const rawResults = await this.databaseRepository.findMany({
       status: 'published',
       sort: 'title:asc',
+      populate: ['graphDisplayConfiguration'],
     });
 
     const result: DBDatabase[] = rawResults.map((rawResult) => {
@@ -75,7 +76,13 @@ export class StrapiDbWrapper {
     const rawResults = await this.scenarioGroupRepository.findMany({
       status: 'published',
       sort: 'title:asc',
-      populate: ['database'],
+      populate: {
+        database: {
+          populate: {
+            graphDisplayConfiguration: {},
+          },
+        },
+      },
       filters: {
         database: {
           documentId: {
@@ -103,7 +110,11 @@ export class StrapiDbWrapper {
         cover: {},
         scenarioGroup: {
           populate: {
-            database: {},
+            database: {
+              populate: {
+                graphDisplayConfiguration: {},
+              },
+            },
           },
         },
       },
@@ -134,7 +145,11 @@ export class StrapiDbWrapper {
         cover: {},
         scenarioGroup: {
           populate: {
-            database: {},
+            database: {
+              populate: {
+                graphDisplayConfiguration: {},
+              },
+            },
           },
         },
       },

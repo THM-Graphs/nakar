@@ -32,6 +32,11 @@
     },
     "browserUrl": {
       "type": "string"
+    },
+    "graphDisplayConfiguration": {
+      "type": "component",
+      "repeatable": false,
+      "component": "graph.graph-display-configuration"
     }
   }
 }

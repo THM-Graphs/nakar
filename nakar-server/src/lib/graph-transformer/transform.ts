@@ -10,8 +10,12 @@ import { Neo4jGraph } from '../neo4j/types/Neo4jGraph';
 import { Neo4jNode } from '../neo4j/types/Neo4jNode';
 import { Neo4JProperty } from '../neo4j/types/Neo4JProperty';
 import { Neo4jEdge } from '../neo4j/types/Neo4jEdge';
+import { GraphDisplayConfiguration } from './GraphDisplayConfiguration';
 
-export function transform(neo4jGraph: Neo4jGraph): SchemaGetInitialGraph {
+export function transform(
+  neo4jGraph: Neo4jGraph,
+  displayConfig: GraphDisplayConfiguration,
+): SchemaGetInitialGraph {
   const graph: SchemaGetInitialGraph = {
     graph: {
       nodes: transformNodes(neo4jGraph.nodes),
@@ -23,7 +27,9 @@ export function transform(neo4jGraph: Neo4jGraph): SchemaGetInitialGraph {
 
   applyLabels(graph);
   applyNodeDegrees(graph);
-  applyNodeSizes(graph);
+  if (displayConfig.growNodesBasedOnDegree) {
+    applyNodeSizes(graph);
+  }
   applyEdgeParallelCounts(graph);
 
   return graph;
@@ -39,7 +45,7 @@ function transformNode(id: string, node: Neo4jNode): SchemaNode {
     displayTitle: getNodeDisplayTitle(node),
     labels: transformNodeLabels(node.labels),
     properties: transformProperties(node.properties),
-    size: 0,
+    radius: 60,
     position: {
       x: 0,
       y: 0,
@@ -164,22 +170,18 @@ function applyNodeDegrees(graph: SchemaGetInitialGraph): void {
 function applyNodeSizes(graph: SchemaGetInitialGraph): void {
   const degrees = graph.graph.nodes.map((n) => n.degree);
 
-  const minSize = 60;
-  const maxSize = 110;
-  const sizeDelta = maxSize - minSize;
+  const growFactor = 1;
   const minConnections = Math.min(...degrees);
   const maxConnections = Math.max(...degrees);
   const delta = maxConnections - minConnections;
 
   for (const node of graph.graph.nodes) {
     if (delta == 0) {
-      node.size = (minSize + maxSize) / 2;
       continue;
     }
 
     const percent = (node.degree - minConnections) / delta;
-    const size = minSize + sizeDelta * percent;
-    node.size = size;
+    node.radius = node.radius * (1 + growFactor * percent);
   }
 }
 

@@ -385,6 +385,10 @@ export interface ApiDatabaseDatabase extends Struct.CollectionTypeSchema {
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    graphDisplayConfiguration: Schema.Attribute.Component<
+      'graph.graph-display-configuration',
+      false
+    >;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
       'oneToMany',
@@ -475,8 +479,6 @@ export interface ApiScenarioScenario extends Struct.CollectionTypeSchema {
     draftAndPublish: true;
   };
   attributes: {
-    connectResultNodes: Schema.Attribute.Boolean &
-      Schema.Attribute.DefaultTo<true>;
     cover: Schema.Attribute.Media<'files' | 'images'>;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &

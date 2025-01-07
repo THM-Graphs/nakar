@@ -21,7 +21,7 @@ export function GraphRendererNVL(props: { graph: GetInitialGraph }) {
           },
         ],
         color: getBackgroundColor(n.labels[0].color),
-        size: n.size,
+        size: n.radius,
       };
     });
     const rels: Relationship[] = props.graph.graph.edges.map(
