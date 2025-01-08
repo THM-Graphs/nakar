@@ -3,8 +3,10 @@ import neo4j, {
   driver as createDriver,
   Driver,
   Integer,
+  isNode,
+  isPath,
+  isRelationship,
   Node,
-  Path,
   QueryResult,
   RecordShape,
   Relationship,
@@ -13,10 +15,11 @@ import neo4j, {
 import { Neo4jGraph } from './types/Neo4jGraph';
 import { Neo4jNode } from './types/Neo4jNode';
 import { Neo4jEdge } from './types/Neo4jEdge';
-import { Neo4JProperty } from './types/Neo4JProperty';
+import { Neo4jProperty } from './types/Neo4jProperty';
 import { Neo4jWrapperErrorNoLoginData } from './errors/Neo4jWrapperErrorNoLoginData';
 import { match, P } from 'ts-pattern';
 import { Neo4jPropertyValue } from './types/Neo4jPropertyValue';
+import { Neo4jTableEntry } from './types/Neo4jTableEntry';
 
 export class Neo4jWrapper {
   private url: string;
@@ -100,16 +103,16 @@ export class Neo4jWrapper {
   private transform(queryResult: QueryResult): Neo4jGraph {
     const nodes = new Map<string, Neo4jNode>();
     const edges = new Map<string, Neo4jEdge>();
-    const tableData: Map<string, string>[] = [];
+    const tableData: Neo4jTableEntry[] = [];
 
     for (const record of queryResult.records) {
-      const tableEntry = new Map<string, string>();
+      const tableEntry: Neo4jTableEntry = new Map<string, unknown>();
       for (const key of record.keys) {
         const field: unknown = record.get(key);
-        const results = this.transformField(field);
+        const results = this.collectGraphElements(field);
         results.nodes.forEach((v, k) => nodes.set(k, v));
         results.edges.forEach((v, k) => edges.set(k, v));
-        tableEntry.set(key.toString(), results.tableEntry);
+        tableEntry.set(key.toString(), field);
       }
       tableData.push(tableEntry);
     }
@@ -121,64 +124,54 @@ export class Neo4jWrapper {
     };
   }
 
-  private transformField(field: unknown): {
+  private collectGraphElements(field: unknown): {
     nodes: Map<string, Neo4jNode>;
     edges: Map<string, Neo4jEdge>;
-    tableEntry: string;
   } {
     const nodes = new Map<string, Neo4jNode>();
     const edges = new Map<string, Neo4jEdge>();
-    let tableEntry = 'null';
 
-    if (this.isNode(field)) {
+    if (isNode(field)) {
       const [nodeId, node] = this.transformNode(field);
       nodes.set(nodeId, node);
-      tableEntry = `[node, id=${nodeId}, labels=${[...node.labels.values()].join(',')}]`;
-    } else if (this.isRelationship(field)) {
+    } else if (isRelationship(field)) {
       const [edgeId, edge] = this.tranformRelationship(field);
       edges.set(edgeId, edge);
-      tableEntry = `[edge, id=${edgeId}, type=${edge.type}]`;
-    } else if (this.isPath(field)) {
-      const nodePath: [string, Neo4jNode][] = [];
+    } else if (isPath(field)) {
       for (const segment of field.segments) {
         const [startNodeId, startNode] = this.transformNode(segment.start);
         nodes.set(startNodeId, startNode);
-        nodePath.push([startNodeId, startNode]);
 
         const [endNodeId, endNode] = this.transformNode(segment.end);
         nodes.set(endNodeId, endNode);
-        if (segment.end.elementId === field.end.elementId) {
-          nodePath.push([endNodeId, endNode]);
-        }
 
         const [edgeId, edge] = this.tranformRelationship(segment.relationship);
         edges.set(edgeId, edge);
       }
-
-      const pathElementIds: string[] = nodePath.map(([nodeId]) => nodeId);
-
-      tableEntry = `[path elements=${pathElementIds.join(',')}]`;
     } else if (Array.isArray(field)) {
-      const results = field.map((subField) => this.transformField(subField));
+      const results = field.map((subField) =>
+        this.collectGraphElements(subField),
+      );
       results.forEach((r) => {
         r.nodes.forEach((v, k) => nodes.set(k, v));
       });
       results.forEach((r) => {
         r.edges.forEach((v, k) => edges.set(k, v));
       });
-      tableEntry = JSON.stringify(results.map((r) => r.tableEntry));
     } else {
       // TODO: Object
-      tableEntry = JSON.stringify(this.getJSONValueOfField(field));
+      console.error(
+        `Unable to collect nodes and edges from field: ${JSON.stringify(field)}`,
+      );
     }
 
-    return { nodes, edges, tableEntry };
+    return { nodes, edges };
   }
 
   private transformProperties(
-    properties: Record<string, Neo4jPropertyValue>,
-  ): Map<string, Neo4JProperty> {
-    return Object.entries(properties).reduce<Map<string, Neo4JProperty>>(
+    properties: Record<string, unknown>,
+  ): Map<string, Neo4jProperty> {
+    return Object.entries(properties).reduce<Map<string, Neo4jProperty>>(
       (map, [key, value]) => {
         map.set(key, { value: this.getJSONValueOfProperty(value) });
         return map;
@@ -221,18 +214,5 @@ export class Neo4jWrapper {
     const properties = this.transformProperties(relationship.properties);
 
     return [id, { startNodeId, endNodeId, type, properties }];
-  }
-
-  // TODO: Removre
-  private isNode(value: unknown): value is Node {
-    return value instanceof Node;
-  }
-
-  private isRelationship(value: unknown): value is Relationship {
-    return value instanceof Relationship;
-  }
-
-  private isPath(value: unknown): value is Path {
-    return value instanceof Path;
   }
 }

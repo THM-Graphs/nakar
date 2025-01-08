@@ -4,18 +4,17 @@ import {
   SchemaGetInitialGraph,
   SchemaGraphLabel,
   SchemaGraphProperty,
-  SchemaJsonValue,
   SchemaNode,
 } from '../../../src-gen/schema';
 import { Neo4jGraph } from '../neo4j/types/Neo4jGraph';
 import { Neo4jNode } from '../neo4j/types/Neo4jNode';
-import { Neo4JProperty } from '../neo4j/types/Neo4JProperty';
+import { Neo4jProperty } from '../neo4j/types/Neo4jProperty';
 import { Neo4jEdge } from '../neo4j/types/Neo4jEdge';
-import { GraphDisplayConfiguration } from './GraphDisplayConfiguration';
-import { NodeDisplayConfigurationData } from './NodeDisplayConfigurationData';
+import { GraphDisplayConfiguration } from './types/GraphDisplayConfiguration';
+import { NodeDisplayConfigurationData } from './types/NodeDisplayConfigurationData';
 import Handlebars from 'handlebars';
-import { ColorIndex, ColorIndexSchema } from './ColorIndex';
-import { Neo4jJson } from '../neo4j/types/Neo4jJson';
+import { ColorIndex, ColorIndexSchema } from './types/ColorIndex';
+import { match, P } from 'ts-pattern';
 
 export function transform(
   neo4jGraph: Neo4jGraph,
@@ -30,6 +29,7 @@ export function transform(
     graphMetaData: { labels: [] },
   };
 
+  applyAutoNodeDisplayTitle(graph);
   applyLabels(graph);
   applyNodeDegrees(graph);
   applyEdgeParallelCounts(graph);
@@ -52,7 +52,7 @@ function transformNodes(nodes: Map<string, Neo4jNode>): SchemaNode[] {
 function transformNode(id: string, node: Neo4jNode): SchemaNode {
   return {
     id: id,
-    displayTitle: getNodeDisplayTitle(node),
+    displayTitle: id,
     labels: transformNodeLabels(node.labels),
     properties: transformProperties(node.properties),
     radius: 60,
@@ -79,7 +79,7 @@ function transformNodeLabel(label: string): SchemaGraphLabel {
 }
 
 function transformProperties(
-  properties: Map<string, Neo4JProperty>,
+  properties: Map<string, Neo4jProperty>,
 ): SchemaGraphProperty[] {
   return [...properties.entries()].map(([key, value]) =>
     transformProperty(key, value),
@@ -88,7 +88,7 @@ function transformProperties(
 
 function transformProperty(
   slug: string,
-  property: Neo4JProperty,
+  property: Neo4jProperty,
 ): SchemaGraphProperty {
   return {
     slug: slug,
@@ -114,10 +114,10 @@ function transformEdge(id: string, edge: Neo4jEdge): SchemaEdge {
 }
 
 function transformTableData(
-  tableData: Map<string, Neo4jJson>[],
-): Record<string, SchemaJsonValue>[] {
-  return tableData.map((row: Map<string, string>): Record<string, string> => {
-    return [...row.entries()].reduce<Record<string, string>>(
+  tableData: Map<string, unknown>[],
+): Record<string, unknown>[] {
+  return tableData.map<Record<string, unknown>>((row) => {
+    return [...row.entries()].reduce<Record<string, unknown>>(
       (akku, [key, value]) => {
         akku[key] = value;
         return akku;
@@ -158,53 +158,22 @@ function applyLabels(graph: SchemaGetInitialGraph): void {
   }
 }
 
-function getNodeDisplayTitle(node: Neo4jNode): string {
-  if (node.properties.has('name')) {
-    return getJsonDisplayString(node.properties.get('name')?.value, false);
-  }
-  if (node.properties.has('label')) {
-    return getJsonDisplayString(node.properties.get('label')?.value, false);
-  }
-  if (node.properties.size > 0) {
-    return getJsonDisplayString([...node.properties.values()][0]?.value, false);
-  }
-  return [...node.labels.values()].join(', ');
-}
+function applyAutoNodeDisplayTitle(graph: SchemaGetInitialGraph): void {
+  for (const node of graph.graph.nodes) {
+    const nameProperty = node.properties.find((p) => p.slug === 'name');
+    if (nameProperty != null) {
+      node.displayTitle = getDisplayStringFromPropertyValue(nameProperty);
+      continue;
+    }
 
-function getJsonDisplayString(
-  json: Neo4jJson | undefined,
-  quotesOnSimpleStrings: boolean,
-): string {
-  if (json === null || json === undefined) {
-    return 'null';
-  }
+    const labelProperty = node.properties.find((p) => p.slug === 'label');
+    if (labelProperty != null) {
+      node.displayTitle = getDisplayStringFromPropertyValue(labelProperty);
+      continue;
+    }
 
-  if (typeof json === 'string') {
-    return quotesOnSimpleStrings ? JSON.stringify(json) : json;
+    node.displayTitle = node.labels.map((l) => l.label).join(', ');
   }
-
-  if (typeof json === 'number' || typeof json === 'boolean') {
-    return json.toString();
-  }
-
-  if (Array.isArray(json)) {
-    return JSON.stringify(json.map((e) => getJsonDisplayString(e, false)));
-  }
-
-  if (typeof json === 'object') {
-    return JSON.stringify(
-      Object.entries(json).reduce<Record<string, unknown>>(
-        (result, [key, value]) => {
-          result[key] = getJsonDisplayString(value, false);
-          return result;
-        },
-        {},
-      ),
-    );
-  }
-
-  console.error(`Cannot parse json value: ${JSON.stringify(json)}`);
-  return 'null';
 }
 
 function applyNodeDegrees(graph: SchemaGetInitialGraph): void {
@@ -389,12 +358,12 @@ function getNodeDisplayConfigurationData(
     id: node.id,
     displayTitle: node.displayTitle,
     radius: node.radius,
-    properties: node.properties.reduce<Record<string, SchemaJsonValue>>(
+    properties: node.properties.reduce<Record<string, string>>(
       (
-        record: Record<string, SchemaJsonValue>,
+        record: Record<string, string>,
         property: SchemaGraphProperty,
-      ): Record<string, SchemaJsonValue> => {
-        record[property.slug] = property.value;
+      ): Record<string, string> => {
+        record[property.slug] = getDisplayStringFromPropertyValue(property);
         return record;
       },
       {},
@@ -404,6 +373,17 @@ function getNodeDisplayConfigurationData(
     outDegree: node.outDegree,
     labels: node.labels.map((l) => l.label),
   };
+}
+
+function getDisplayStringFromPropertyValue(
+  property: SchemaGraphProperty | undefined | null,
+): string {
+  return match(property?.value)
+    .with(P.nullish, () => 'null')
+    .with(P.string, (p) => p)
+    .with(P.number, (n) => n.toString())
+    .with(P.boolean, (n) => n.toString())
+    .exhaustive();
 }
 
 function applyTemplate(

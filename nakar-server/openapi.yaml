@@ -285,8 +285,7 @@ components:
           type: array
           items:
             type: object
-            additionalProperties:
-              type: string
+            additionalProperties: { }
       required:
         - graph
         - graphMetaData

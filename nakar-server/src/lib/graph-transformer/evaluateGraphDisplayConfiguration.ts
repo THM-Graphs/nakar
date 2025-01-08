@@ -1,10 +1,10 @@
-import { GraphDisplayConfiguration } from './GraphDisplayConfiguration';
+import { GraphDisplayConfiguration } from './types/GraphDisplayConfiguration';
 import { DBScenario } from '../strapi-db/types/DBScenario';
 import { DBGraphDisplayConfiguration } from '../strapi-db/types/DBGraphDisplayConfiguration';
 import { match } from 'ts-pattern';
 import { DBGraphDisplayConfigurationBoolean } from '../strapi-db/types/DBGraphDisplayConfigurationBoolea';
 import { DBNodeDisplayConfiguration } from '../strapi-db/types/NodeDisplayConfiguration';
-import { NodeDisplayConfiguration } from './NodeDisplayConfiguration';
+import { NodeDisplayConfiguration } from './types/NodeDisplayConfiguration';
 
 export function evaluateGraphDisplayConfiguration(
   scneario: DBScenario,

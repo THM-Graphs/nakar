@@ -20,7 +20,7 @@ export function DataTable(props: { graph: GetInitialGraph | null }) {
           {props.graph.tableData.map((row, index) => (
             <tr key={index}>
               {Object.entries(row).map(([key, value]) => (
-                <td key={key}>{value}</td>
+                <td key={key}>{JSON.stringify(value)}</td>
               ))}
             </tr>
           ))}
