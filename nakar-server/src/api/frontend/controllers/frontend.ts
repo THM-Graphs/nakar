@@ -15,12 +15,12 @@ import { DBScenarioGroup } from '../../../lib/strapi-db/types/DBScenarioGroup';
 import { DBScenario } from '../../../lib/strapi-db/types/DBScenario';
 import { StrapiController } from '../../../lib/strapi-ctx/StrapiController';
 import { Neo4jWrapper } from '../../../lib/neo4j/Neo4jWrapper';
-import { transform } from '../../../lib/graph-transformer/transform';
 import { transformDatabase } from '../../../lib/schema-transformers/transformDatabase';
 import { transformRoom } from '../../../lib/schema-transformers/transformRoom';
 import { transformScenarioGroup } from '../../../lib/schema-transformers/transformScnenarioGroup';
 import { transformScenario } from '../../../lib/schema-transformers/transformScenario';
-import { evaluateGraphDisplayConfiguration } from '../../../lib/graph-transformer/evaluateGraphDisplayConfiguration';
+import { DisplayConfiguration } from '../../../lib/graph-display-configuration/DisplayConfiguration';
+import { GraphDtoFactory } from '../../../lib/graph-transformer/GraphDtoFactory';
 
 export default {
   getInitialGraph: StrapiContextWrapper.handleRequest(
@@ -35,13 +35,12 @@ export default {
       const neo4jWrapper = new Neo4jWrapper(scenario.scenarioGroup?.database);
       const graphResult = await neo4jWrapper.executeQuery(scenario.query);
 
-      const displayConfig = evaluateGraphDisplayConfiguration(scenario);
+      const factory = new GraphDtoFactory();
+      const graph: SchemaGetInitialGraph = factory.transform(graphResult);
 
-      if (displayConfig.connectResultNodes === true) {
-        await neo4jWrapper.loadAndMergeConnectingRelationships(graphResult);
-      }
-
-      const graph = transform(graphResult, displayConfig);
+      const displayConfig = new DisplayConfiguration();
+      displayConfig.loadAllAndMerge(scenario);
+      await displayConfig.applyToGraph(graph, neo4jWrapper);
 
       return graph;
     },
