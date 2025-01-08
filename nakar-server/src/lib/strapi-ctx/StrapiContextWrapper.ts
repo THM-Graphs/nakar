@@ -11,31 +11,16 @@ import createHttpError, {
   NotFound,
 } from 'http-errors';
 import { Neo4jError } from 'neo4j-driver';
+import z from 'zod';
 
 export class StrapiContextWrapper {
   private readonly ctx: Context;
 
-  constructor(ctx: Context) {
+  public constructor(ctx: Context) {
     this.ctx = ctx;
   }
 
-  getQueryParameter(key: string): string {
-    const value = this.ctx.request.query[key];
-    if (typeof value !== 'string') {
-      throw new BadRequest(`Query parameter ${key} not provided.`);
-    }
-    return value;
-  }
-
-  getPathParameter(key: string): string {
-    const value = (this.ctx.params as Record<string, unknown>)[key];
-    if (typeof value !== 'string') {
-      throw new BadRequest(`Path parameter ${key} not provided.`);
-    }
-    return value;
-  }
-
-  static handleRequest<T>(
+  public static handleRequest<T>(
     handler: (
       context: StrapiContextWrapper,
       db: StrapiDbWrapper,
@@ -48,8 +33,8 @@ export class StrapiContextWrapper {
         ctx.response.body = await handler(context, db);
         ctx.status = 200;
         return ctx;
-      } catch (error: unknown) {
-        return match(error)
+      } catch (unknownError: unknown) {
+        return match(unknownError)
           .with(P.instanceOf(StrapiDbWrapperErrorCannotParse), (error) =>
             StrapiContextWrapper.handleError(
               ctx,
@@ -100,5 +85,22 @@ export class StrapiContextWrapper {
       name: error.name,
     };
     return ctx;
+  }
+
+  public getQueryParameter(key: string): string {
+    const value = this.ctx.request.query[key];
+    if (typeof value !== 'string') {
+      throw new BadRequest(`Query parameter ${key} not provided.`);
+    }
+    return value;
+  }
+
+  public getPathParameter(key: string): string {
+    const params = z.record(z.unknown()).parse(this.ctx.params);
+    const value = params[key];
+    if (typeof value !== 'string') {
+      throw new BadRequest(`Path parameter ${key} not provided.`);
+    }
+    return value;
   }
 }

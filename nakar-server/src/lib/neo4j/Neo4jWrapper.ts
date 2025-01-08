@@ -11,20 +11,19 @@ import neo4j, {
   Session,
 } from 'neo4j-driver';
 import { Neo4jGraph } from './types/Neo4jGraph';
-import { Neo4jStats } from './types/Neo4jStats';
-import { Neo4jStatsLabel } from './types/Neo4jStatsLabel';
-import { Neo4jStatsRelType } from './types/Neo4jStatsRelType';
 import { Neo4jNode } from './types/Neo4jNode';
 import { Neo4jEdge } from './types/Neo4jEdge';
 import { Neo4JProperty } from './types/Neo4JProperty';
 import { Neo4jWrapperErrorNoLoginData } from './errors/Neo4jWrapperErrorNoLoginData';
+import { match, P } from 'ts-pattern';
+import { Neo4jPropertyValue } from './types/Neo4jPropertyValue';
 
 export class Neo4jWrapper {
   private url: string;
   private username: string;
   private password: string;
 
-  constructor(
+  public constructor(
     database?: {
       url?: string | null;
       username?: string | null;
@@ -49,7 +48,7 @@ export class Neo4jWrapper {
     query?: string | null,
     parameters?: Record<string, unknown>,
   ): Promise<QueryResult> {
-    if (!query) {
+    if (query == null) {
       throw new Error('No cypher query configured.');
     }
 
@@ -85,45 +84,6 @@ export class Neo4jWrapper {
     return dto;
   }
 
-  public async getStats(): Promise<Neo4jStats> {
-    const result = await this.executeQueryRaw('CALL apoc.meta.stats');
-    const firstRecord = result.records[0];
-
-    return {
-      labelCount: (firstRecord.get('labelCount') as Integer).toString(),
-      relTypeCount: (firstRecord.get('relTypeCount') as Integer).toString(),
-      propertyKeyCount: (
-        firstRecord.get('propertyKeyCount') as Integer
-      ).toString(),
-      nodeCount: (firstRecord.get('nodeCount') as Integer).toString(),
-      relCount: (firstRecord.get('relCount') as Integer).toString(),
-      labels: Object.entries(
-        firstRecord.get('labels') as Record<string, Integer>,
-      ).map(([key, integer]): Neo4jStatsLabel => {
-        return {
-          label: key,
-          count: integer.toString(),
-        };
-      }),
-      relTypes: Object.entries(
-        firstRecord.get('relTypes') as Record<string, Integer>,
-      ).map(([key, integer]): Neo4jStatsRelType => {
-        return {
-          relationship: key,
-          count: integer.toString(),
-        };
-      }),
-      relTypesCount: Object.entries(
-        firstRecord.get('relTypesCount') as Record<string, Integer>,
-      ).map(([key, integer]): Neo4jStatsRelType => {
-        return {
-          relationship: key,
-          count: integer.toString(),
-        };
-      }),
-    };
-  }
-
   public async loadAndMergeConnectingRelationships(
     graph: Neo4jGraph,
   ): Promise<void> {
@@ -138,18 +98,18 @@ export class Neo4jWrapper {
   }
 
   private transform(queryResult: QueryResult): Neo4jGraph {
-    const nodes: Map<string, Neo4jNode> = new Map();
-    const edges: Map<string, Neo4jEdge> = new Map();
+    const nodes = new Map<string, Neo4jNode>();
+    const edges = new Map<string, Neo4jEdge>();
     const tableData: Map<string, string>[] = [];
 
     for (const record of queryResult.records) {
-      const tableEntry: Map<string, string> = new Map();
-      for (const key of record.keys as string[]) {
+      const tableEntry = new Map<string, string>();
+      for (const key of record.keys) {
         const field: unknown = record.get(key);
-        const results = this.transformField(field, false);
+        const results = this.transformField(field);
         results.nodes.forEach((v, k) => nodes.set(k, v));
         results.edges.forEach((v, k) => edges.set(k, v));
-        tableEntry.set(key, results.tableEntry);
+        tableEntry.set(key.toString(), results.tableEntry);
       }
       tableData.push(tableEntry);
     }
@@ -161,44 +121,37 @@ export class Neo4jWrapper {
     };
   }
 
-  private transformField(
-    field: unknown,
-    raw: boolean,
-  ): {
+  private transformField(field: unknown): {
     nodes: Map<string, Neo4jNode>;
     edges: Map<string, Neo4jEdge>;
     tableEntry: string;
   } {
-    const nodes: Map<string, Neo4jNode> = new Map();
-    const edges: Map<string, Neo4jEdge> = new Map();
-    let tableEntry: string = '';
+    const nodes = new Map<string, Neo4jNode>();
+    const edges = new Map<string, Neo4jEdge>();
+    let tableEntry = 'null';
 
-    if (field instanceof Node) {
-      const [nodeId, node] = this.transformNode(field as Node);
+    if (this.isNode(field)) {
+      const [nodeId, node] = this.transformNode(field);
       nodes.set(nodeId, node);
       tableEntry = `[node, id=${nodeId}, labels=${[...node.labels.values()].join(',')}]`;
-    } else if (field instanceof Relationship) {
-      const [edgeId, edge] = this.tranformRelationship(field as Relationship);
+    } else if (this.isRelationship(field)) {
+      const [edgeId, edge] = this.tranformRelationship(field);
       edges.set(edgeId, edge);
       tableEntry = `[edge, id=${edgeId}, type=${edge.type}]`;
-    } else if (field instanceof Path) {
+    } else if (this.isPath(field)) {
       const nodePath: [string, Neo4jNode][] = [];
       for (const segment of field.segments) {
-        const [startNodeId, startNode] = this.transformNode(
-          segment.start as Node,
-        );
+        const [startNodeId, startNode] = this.transformNode(segment.start);
         nodes.set(startNodeId, startNode);
         nodePath.push([startNodeId, startNode]);
 
-        const [endNodeId, endNode] = this.transformNode(segment.end as Node);
+        const [endNodeId, endNode] = this.transformNode(segment.end);
         nodes.set(endNodeId, endNode);
         if (segment.end.elementId === field.end.elementId) {
           nodePath.push([endNodeId, endNode]);
         }
 
-        const [edgeId, edge] = this.tranformRelationship(
-          segment.relationship as Relationship,
-        );
+        const [edgeId, edge] = this.tranformRelationship(segment.relationship);
         edges.set(edgeId, edge);
       }
 
@@ -206,9 +159,7 @@ export class Neo4jWrapper {
 
       tableEntry = `[path elements=${pathElementIds.join(',')}]`;
     } else if (Array.isArray(field)) {
-      const results = field.map((subField) =>
-        this.transformField(subField, true),
-      );
+      const results = field.map((subField) => this.transformField(subField));
       results.forEach((r) => {
         r.nodes.forEach((v, k) => nodes.set(k, v));
       });
@@ -217,45 +168,44 @@ export class Neo4jWrapper {
       });
       tableEntry = JSON.stringify(results.map((r) => r.tableEntry));
     } else {
-      tableEntry = this.getDisplayStringOfField(field, raw);
+      // TODO: Object
+      tableEntry = JSON.stringify(this.getJSONValueOfField(field));
     }
 
     return { nodes, edges, tableEntry };
   }
 
   private transformProperties(
-    properties: Record<string, unknown>,
+    properties: Record<string, Neo4jPropertyValue>,
   ): Map<string, Neo4JProperty> {
     return Object.entries(properties).reduce<Map<string, Neo4JProperty>>(
       (map, [key, value]) => {
-        map.set(key, { value: this.getDisplayStringOfField(value, true) });
+        map.set(key, { value: this.getJSONValueOfProperty(value) });
         return map;
       },
       new Map(),
     );
   }
 
-  private getDisplayStringOfField(field: unknown, raw: boolean): string {
-    if (field instanceof Integer) {
-      return field.toString();
-    } else if (typeof field == 'number') {
-      return field.toString();
-    } else if (typeof field == 'string') {
-      return raw ? field : `"${field}"`;
-    } else if (Array.isArray(field)) {
-      return JSON.stringify(
-        field.map((e: unknown) => this.getDisplayStringOfField(e, true)),
-      );
-    } else if (field == null) {
-      return `null`;
-    } else {
-      return `WARNING: UNKNOWN RESULT TYPE: ${JSON.stringify(field)}`;
-    }
+  private getJSONValueOfProperty(field: unknown): Neo4jPropertyValue {
+    return match(field)
+      .returnType<Neo4jPropertyValue>()
+      .with(P.nullish, () => null)
+      .with(P.string, (s: string): string => s)
+      .with(P.instanceOf(Integer), (integer: Integer): string =>
+        integer.toString(),
+      )
+      .with(P.number, (n: number): number => n)
+      .with(P.boolean, (b: boolean): string => b.toString())
+      .otherwise((f: unknown) => {
+        console.error(`WARNING: UNKNOWN RESULT TYPE: ${JSON.stringify(f)}`);
+        return JSON.stringify(f);
+      });
   }
 
   private transformNode(node: Node): [string, Neo4jNode] {
     const id: string = node.elementId;
-    const labels: Set<string> = new Set(node.labels);
+    const labels = new Set<string>(node.labels);
     const properties = this.transformProperties(node.properties);
 
     return [id, { labels, properties }];
@@ -271,5 +221,18 @@ export class Neo4jWrapper {
     const properties = this.transformProperties(relationship.properties);
 
     return [id, { startNodeId, endNodeId, type, properties }];
+  }
+
+  // TODO: Removre
+  private isNode(value: unknown): value is Node {
+    return value instanceof Node;
+  }
+
+  private isRelationship(value: unknown): value is Relationship {
+    return value instanceof Relationship;
+  }
+
+  private isPath(value: unknown): value is Path {
+    return value instanceof Path;
   }
 }

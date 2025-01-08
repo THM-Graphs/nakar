@@ -1,4 +1,4 @@
-export const getRandomColor = () => {
+export const getRandomColor = (): string => {
   const letters = '0123456789ABCDEF';
   let color = '#';
   for (let i = 0; i < 6; i++) {
@@ -7,13 +7,13 @@ export const getRandomColor = () => {
   return color;
 };
 
-export const invertColor = (hex: string) => {
-  const padZero = (str: string, len?: number) => {
-    len = len || 2;
+export const invertColor = (hex: string): string => {
+  const padZero = (str: string, len?: number): string => {
+    len = len ?? 2;
     const zeros = new Array(len).join('0');
     return (zeros + str).slice(-len);
   };
-  if (hex.indexOf('#') === 0) {
+  if (hex.startsWith('#')) {
     hex = hex.slice(1);
   }
   // convert 3-digit hex to 6-digits.

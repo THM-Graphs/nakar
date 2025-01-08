@@ -1,6 +1,6 @@
 import { Env } from '@strapi/utils/dist/env-helper';
 
-export default ({ env }: { env: Env }) => ({
+export default ({ env }: { env: Env }): unknown => ({
   host: env('HOST', '0.0.0.0'),
   port: env.int('PORT', 80),
   url: env('URL', 'http://localhost:80'),

@@ -37,7 +37,7 @@ export default {
 
       const displayConfig = evaluateGraphDisplayConfiguration(scenario);
 
-      if (displayConfig.connectResultNodes == true) {
+      if (displayConfig.connectResultNodes === true) {
         await neo4jWrapper.loadAndMergeConnectingRelationships(graphResult);
       }
 
@@ -106,7 +106,7 @@ export default {
     },
   ),
   getVersion: StrapiContextWrapper.handleRequest((): SchemaGetVersion => {
-    const packageVersion = process.env['npm_package_version'];
+    const packageVersion = process.env.npm_package_version;
     return {
       version: packageVersion ?? 'unknown',
     };

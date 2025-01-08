@@ -2,7 +2,7 @@ import path from 'path';
 import { Env } from '@strapi/utils/dist/env-helper';
 import z from 'zod';
 
-export default ({ env }: { env: Env }) => {
+export default ({ env }: { env: Env }): unknown => {
   const clientSchema = z.enum(['mysql', 'postgres', 'sqlite']);
   const client = clientSchema.parse(env('DATABASE_CLIENT', 'sqlite'));
 
@@ -14,7 +14,7 @@ export default ({ env }: { env: Env }) => {
         database: env('DATABASE_NAME', 'strapi'),
         user: env('DATABASE_USERNAME', 'strapi'),
         password: env('DATABASE_PASSWORD', 'strapi'),
-        ssl: env.bool('DATABASE_SSL', false) && {
+        ssl: env.bool('DATABASE_SSL', false) === true && {
           key: env('DATABASE_SSL_KEY', undefined),
           cert: env('DATABASE_SSL_CERT', undefined),
           ca: env('DATABASE_SSL_CA', undefined),
@@ -39,7 +39,7 @@ export default ({ env }: { env: Env }) => {
         database: env('DATABASE_NAME', 'strapi'),
         user: env('DATABASE_USERNAME', 'strapi'),
         password: env('DATABASE_PASSWORD', 'strapi'),
-        ssl: env.bool('DATABASE_SSL', false) && {
+        ssl: env.bool('DATABASE_SSL', false) === true && {
           key: env('DATABASE_SSL_KEY', undefined),
           cert: env('DATABASE_SSL_CERT', undefined),
           ca: env('DATABASE_SSL_CA', undefined),

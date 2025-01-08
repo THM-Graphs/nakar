@@ -1,3 +1,5 @@
+import { Neo4jPropertyValue } from './Neo4jPropertyValue';
+
 export interface Neo4JProperty {
-  value: string;
+  value: Neo4jPropertyValue;
 }

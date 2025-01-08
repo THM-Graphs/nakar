@@ -11,6 +11,8 @@ export default tseslint.config({
   ignores: ['{src/admin,types/generated,dist}/**'],
   extends: [
     eslint.configs.recommended,
+    tseslint.configs.recommendedTypeChecked,
+    tseslint.configs.stylisticTypeChecked,
     tseslint.configs.strictTypeChecked,
     eslintConfigPrettier,
   ],
@@ -29,5 +31,14 @@ export default tseslint.config({
         singleQuote: true,
       },
     ],
+    '@typescript-eslint/no-unsafe-type-assertion': ['error'],
+    '@typescript-eslint/explicit-function-return-type': ['error'],
+    '@typescript-eslint/explicit-module-boundary-types': ['error'],
+    '@typescript-eslint/strict-boolean-expressions': ['error'],
+    '@typescript-eslint/no-empty-function': ['error'],
+    '@typescript-eslint/explicit-member-accessibility': ['error'],
+    '@typescript-eslint/member-ordering': ['error'],
+    '@typescript-eslint/no-shadow': ['error'],
+    eqeqeq: ['error', 'always', { null: 'ignore' }],
   },
 });

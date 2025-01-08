@@ -1,4 +1,4 @@
-export type NodeDisplayConfigurationData = {
+export interface NodeDisplayConfigurationData {
   id: string;
   displayTitle: string;
   labels: string[];
@@ -7,4 +7,4 @@ export type NodeDisplayConfigurationData = {
   inDegree: number;
   outDegree: number;
   degree: number;
-};
+}

@@ -1,4 +1,4 @@
-export default () => ({
+export default (): unknown => ({
   documentation: {
     enabled: true,
     config: {
