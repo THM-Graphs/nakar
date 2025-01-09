@@ -1,4 +1,3 @@
-import { Node } from 'neo4j-driver';
 import { SchemaEdge, SchemaGraphProperty } from '../../../../src-gen/schema';
 import { AugmentedRelationship } from '../../neo4j/types/AugmentedRelationship';
 

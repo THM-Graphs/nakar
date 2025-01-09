@@ -1,4 +1,3 @@
-import { Node } from 'neo4j-driver';
 import {
   SchemaGraphLabel,
   SchemaGraphProperty,

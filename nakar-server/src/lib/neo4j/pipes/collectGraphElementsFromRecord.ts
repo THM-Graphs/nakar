@@ -12,7 +12,10 @@ export function collectGraphElementsFromRecord(
   });
 
   const tableDataEntry = record.keys.reduce<Record<string, unknown>>(
-    (akku, next) => ({ ...akku, [next]: record.get(next) }),
+    (akku, next): Record<string, unknown> => ({
+      ...akku,
+      [next]: record.get(next) as unknown,
+    }),
     {},
   );
 
