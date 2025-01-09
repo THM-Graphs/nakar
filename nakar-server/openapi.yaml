@@ -124,12 +124,15 @@ paths:
 
 components:
   schemas:
+    PresetColorIndex:
+      type: integer
+      enum: [ 0, 1, 2, 3, 4, 5 ]
+
     PresetColor:
       type: object
       properties:
         index:
-          type: integer
-          enum: [ 0, 1, 2, 3, 4, 5 ]
+          $ref: '#/components/schemas/PresetColorIndex'
       required:
         - index
 
@@ -212,7 +215,7 @@ components:
           type: integer
         nameInQuery:
           type: string
-        displayConfigurationData: {}
+        displayConfigurationContext: {}
       required:
         - id
         - displayTitle
@@ -224,7 +227,7 @@ components:
         - outDegree
         - degree
         - nameInQuery
-        - displayConfigurationData
+        - displayConfigurationContext
 
     Edge:
       type: object
@@ -303,6 +306,7 @@ components:
           type: string
         title:
           type: string
+          nullable: true
       required:
         - id
         - title
@@ -323,8 +327,10 @@ components:
           type: string
         title:
           type: string
+          nullable: true
         url:
           type: string
+          nullable: true
         browserUrl:
           type: string
           nullable: true
@@ -350,6 +356,7 @@ components:
           type: string
         title:
           type: string
+          nullable: true
       required:
         - id
         - title
@@ -370,10 +377,13 @@ components:
           type: string
         title:
           type: string
+          nullable: true
         query:
           type: string
+          nullable: true
         description:
           type: string
+          nullable: true
         coverUrl:
           type: string
           format: uri

@@ -51,7 +51,9 @@ export function ScenarioCard(props: {
             {props.scenario.description}
           </span>
         </Card.Text>
-        <QueryDisplay query={props.scenario.query}></QueryDisplay>
+        {props.scenario.query && (
+          <QueryDisplay query={props.scenario.query}></QueryDisplay>
+        )}
       </Card.Body>
     </Card>
   );

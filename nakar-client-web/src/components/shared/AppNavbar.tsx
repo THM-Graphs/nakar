@@ -20,7 +20,7 @@ export function AppNavbar(props: {
     onToggle: () => void;
   };
   room?: {
-    title: string;
+    title: string | null;
   };
   showBackButton?: boolean;
   renderer?: {

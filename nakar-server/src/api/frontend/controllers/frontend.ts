@@ -1,5 +1,3 @@
-import { StrapiDbWrapper } from '../../../lib/strapi-db/StrapiDbWrapper';
-import { StrapiContextWrapper } from '../../../lib/strapi-ctx/StrapiContextWrapper';
 import {
   SchemaGetDatabases,
   SchemaGetVersion,
@@ -9,102 +7,108 @@ import {
   SchemaGetScenarioGroups,
   SchemaGetScenarios,
 } from '../../../../src-gen/schema';
-import { DBDatabase } from '../../../lib/strapi-db/types/DBDatabase';
-import { DBRoom } from '../../../lib/strapi-db/types/DBRoom';
-import { DBScenarioGroup } from '../../../lib/strapi-db/types/DBScenarioGroup';
-import { DBScenario } from '../../../lib/strapi-db/types/DBScenario';
-import { StrapiController } from '../../../lib/strapi-ctx/StrapiController';
-import { Neo4jWrapper } from '../../../lib/neo4j/Neo4jWrapper';
-import { transformDatabase } from '../../../lib/schema-transformers/transformDatabase';
-import { transformRoom } from '../../../lib/schema-transformers/transformRoom';
-import { transformScenarioGroup } from '../../../lib/schema-transformers/transformScnenarioGroup';
-import { transformScenario } from '../../../lib/schema-transformers/transformScenario';
-import { DisplayConfiguration } from '../../../lib/graph-display-configuration/DisplayConfiguration';
-import { GraphDtoFactory } from '../../../lib/graph-transformer/GraphDtoFactory';
+import { DBDatabase } from '../../../lib/documents/types/DBDatabase';
+import { DBRoom } from '../../../lib/documents/types/DBRoom';
+import { DBScenarioGroup } from '../../../lib/documents/types/DBScenarioGroup';
+import { DBScenario } from '../../../lib/documents/types/DBScenario';
+import { StrapiController } from '../../../lib/strapi-ctx/types/StrapiController';
+import { executeQuery } from '../../../lib/neo4j/pipes/executeQuery';
+import { createLoginCredentials } from '../../../lib/neo4j/pipes/createLoginCredentials';
+import { NotFound } from 'http-errors';
+import { createGraph } from '../../../lib/graph-transformer/pipes/createGraph';
+import { loadAndMergeGraphDisplaConfiguration } from '../../../lib/graph-display-configuration/pipes/loadAndMergeGraphDisplaConfiguration';
+import { applyToGraph } from '../../../lib/graph-display-configuration/pipes/applyToGraph';
+import { getScenario } from '../../../lib/documents/pipes/getScenario';
+import { getDatabases } from '../../../lib/documents/pipes/getDatabases';
+import { createDatabaseDto } from '../../../lib/documents/pipes/createDatabaseDto';
+import { createRoomDto } from '../../../lib/documents/pipes/createRoomDto';
+import { getRooms } from '../../../lib/documents/pipes/getRooms';
+import { getRoom } from '../../../lib/documents/pipes/getRoom';
+import { getScenarioGroups } from '../../../lib/documents/pipes/getScenarioGroups';
+import { createScenarioGroupDto } from '../../../lib/documents/pipes/createScenarioGroupDto';
+import { getScenarios } from '../../../lib/documents/pipes/getScenarios';
+import { createScenarioDto } from '../../../lib/documents/pipes/createScenarioDto';
+import { Context } from 'koa';
+import { handleRequest } from '../../../lib/strapi-ctx/pipes/handleRequest';
+import { getPathParameter } from '../../../lib/strapi-ctx/pipes/getPathParameter';
+import { getQueryParameter } from '../../../lib/strapi-ctx/pipes/getQueryParameter';
 
 export default {
-  getInitialGraph: StrapiContextWrapper.handleRequest(
-    async (
-      context: StrapiContextWrapper,
-      db: StrapiDbWrapper,
-    ): Promise<SchemaGetInitialGraph> => {
-      const scenarioId = context.getPathParameter('id');
+  getInitialGraph: handleRequest(
+    async (context: Context): Promise<SchemaGetInitialGraph> => {
+      const scenarioId = getPathParameter(context, 'id');
 
-      const scenario = await db.getScenario(scenarioId);
+      const scenario = await getScenario(scenarioId);
+      if (scenario == null) {
+        throw new NotFound('Scenario not found.');
+      }
+      if (scenario.query == null) {
+        throw new NotFound('The scenario has no query.');
+      }
+      if (scenario.scenarioGroup?.database == null) {
+        throw new NotFound(
+          'There is no database configuration on the scenario.',
+        );
+      }
 
-      const neo4jWrapper = new Neo4jWrapper(scenario.scenarioGroup?.database);
-      const graphResult = await neo4jWrapper.executeQuery(scenario.query);
+      const credentials = createLoginCredentials(
+        scenario.scenarioGroup.database,
+      );
+      const graphElements = await executeQuery(credentials, scenario.query);
+      const graph: SchemaGetInitialGraph = createGraph(graphElements);
 
-      const factory = new GraphDtoFactory();
-      const graph: SchemaGetInitialGraph = factory.transform(graphResult);
+      const displayConfiguration =
+        loadAndMergeGraphDisplaConfiguration(scenario);
+      const proccesedGraph = await applyToGraph(
+        graph,
+        displayConfiguration,
+        credentials,
+      );
 
-      const displayConfig = new DisplayConfiguration();
-      displayConfig.loadAllAndMerge(scenario);
-      await displayConfig.applyToGraph(graph, neo4jWrapper);
-
-      return graph;
+      return proccesedGraph;
     },
   ),
-  getDatabases: StrapiContextWrapper.handleRequest(
-    async (
-      context: StrapiContextWrapper,
-      db: StrapiDbWrapper,
-    ): Promise<SchemaGetDatabases> => {
-      const databases: DBDatabase[] = await db.getDatabases();
+  getDatabases: handleRequest(async (): Promise<SchemaGetDatabases> => {
+    const databases: DBDatabase[] = await getDatabases();
+    return {
+      databases: databases.map(createDatabaseDto),
+    };
+  }),
+  getRooms: handleRequest(async (): Promise<SchemaGetRooms> => {
+    const dbResult: DBRoom[] = await getRooms();
+    return {
+      rooms: dbResult.map(createRoomDto),
+    };
+  }),
+  getRoom: handleRequest(async (context: Context): Promise<SchemaGetRoom> => {
+    const id = getPathParameter(context, 'id');
+    const dbResult = await getRoom(id);
+    if (dbResult == null) {
+      throw new NotFound('Room not found.');
+    }
+    return createRoomDto(dbResult);
+  }),
+  getScenarioGroups: handleRequest(
+    async (context: Context): Promise<SchemaGetScenarioGroups> => {
+      const databaseId = getQueryParameter(context, 'databaseId');
+
+      const dbResult: DBScenarioGroup[] = await getScenarioGroups(databaseId);
       return {
-        databases: databases.map(transformDatabase),
+        scenarioGroups: dbResult.map(createScenarioGroupDto),
       };
     },
   ),
-  getRooms: StrapiContextWrapper.handleRequest(
-    async (
-      context: StrapiContextWrapper,
-      db: StrapiDbWrapper,
-    ): Promise<SchemaGetRooms> => {
-      const dbResult: DBRoom[] = await db.getRooms();
-      return {
-        rooms: dbResult.map(transformRoom),
-      };
-    },
-  ),
-  getRoom: StrapiContextWrapper.handleRequest(
-    async (
-      context: StrapiContextWrapper,
-      db: StrapiDbWrapper,
-    ): Promise<SchemaGetRoom> => {
-      const id = context.getPathParameter('id');
-      const dbResult: DBRoom = await db.getRoom(id);
-      return transformRoom(dbResult);
-    },
-  ),
-  getScenarioGroups: StrapiContextWrapper.handleRequest(
-    async (
-      context: StrapiContextWrapper,
-      db: StrapiDbWrapper,
-    ): Promise<SchemaGetScenarioGroups> => {
-      const databaseId = context.getQueryParameter('databaseId');
+  getScenarios: handleRequest(
+    async (context: Context): Promise<SchemaGetScenarios> => {
+      const scenarioGroupId = getQueryParameter(context, 'scenarioGroupId');
 
-      const dbResult: DBScenarioGroup[] =
-        await db.getScenarioGroups(databaseId);
+      const dbResult: DBScenario[] = await getScenarios(scenarioGroupId);
       return {
-        scenarioGroups: dbResult.map(transformScenarioGroup),
+        scenarios: dbResult.map(createScenarioDto),
       };
     },
   ),
-  getScenarios: StrapiContextWrapper.handleRequest(
-    async (
-      context: StrapiContextWrapper,
-      db: StrapiDbWrapper,
-    ): Promise<SchemaGetScenarios> => {
-      const scenarioGroupId = context.getQueryParameter('scenarioGroupId');
-
-      const dbResult: DBScenario[] = await db.getScenarios(scenarioGroupId);
-      return {
-        scenarios: dbResult.map(transformScenario),
-      };
-    },
-  ),
-  getVersion: StrapiContextWrapper.handleRequest((): SchemaGetVersion => {
+  getVersion: handleRequest((): SchemaGetVersion => {
     const packageVersion = process.env.npm_package_version;
     return {
       version: packageVersion ?? 'unknown',
