@@ -5,23 +5,36 @@ import { DBGraphDisplayConfigurationBoolean } from '../strapi-db/types/DBGraphDi
 import { match } from 'ts-pattern';
 
 export class GraphDisplayConfiguration {
-  public constructor(
-    public readonly connectResultNodes: boolean | null,
-    public readonly growNodesBasedOnDegree: boolean | null,
-    public readonly nodeDisplayConfigurations: NodeDisplayConfiguration[],
-  ) {}
+  public readonly connectResultNodes: boolean | null;
+  public readonly growNodesBasedOnDegree: boolean | null;
+  public readonly nodeDisplayConfigurations: NodeDisplayConfiguration[];
+
+  public constructor(data: {
+    connectResultNodes: boolean | null;
+    growNodesBasedOnDegree: boolean | null;
+    nodeDisplayConfigurations: NodeDisplayConfiguration[];
+  }) {
+    this.connectResultNodes = data.connectResultNodes;
+    this.growNodesBasedOnDegree = data.growNodesBasedOnDegree;
+    this.nodeDisplayConfigurations = data.nodeDisplayConfigurations;
+  }
 
   public static fromDb(
     dbConfig: DBGraphDisplayConfiguration | undefined | null,
   ): GraphDisplayConfiguration {
-    return new GraphDisplayConfiguration(
-      GraphDisplayConfiguration.inheritToNull(dbConfig?.connectResultNodes),
-      GraphDisplayConfiguration.inheritToNull(dbConfig?.growNodesBasedOnDegree),
-      dbConfig?.nodeDisplayConfigurations?.map(
-        (c: DBNodeDisplayConfiguration): NodeDisplayConfiguration =>
-          NodeDisplayConfiguration.fromDb(c),
-      ) ?? [],
-    );
+    return new GraphDisplayConfiguration({
+      connectResultNodes: GraphDisplayConfiguration.inheritToNull(
+        dbConfig?.connectResultNodes,
+      ),
+      growNodesBasedOnDegree: GraphDisplayConfiguration.inheritToNull(
+        dbConfig?.growNodesBasedOnDegree,
+      ),
+      nodeDisplayConfigurations:
+        dbConfig?.nodeDisplayConfigurations?.map(
+          (c: DBNodeDisplayConfiguration): NodeDisplayConfiguration =>
+            NodeDisplayConfiguration.fromDb(c),
+        ) ?? [],
+    });
   }
 
   private static inheritToNull(
@@ -40,10 +53,14 @@ export class GraphDisplayConfiguration {
   public byMergingIntoSelf(
     other: GraphDisplayConfiguration,
   ): GraphDisplayConfiguration {
-    return new GraphDisplayConfiguration(
-      other.connectResultNodes ?? this.connectResultNodes,
-      other.growNodesBasedOnDegree ?? this.growNodesBasedOnDegree,
-      [...other.nodeDisplayConfigurations, ...this.nodeDisplayConfigurations],
-    );
+    return new GraphDisplayConfiguration({
+      connectResultNodes: other.connectResultNodes ?? this.connectResultNodes,
+      growNodesBasedOnDegree:
+        other.growNodesBasedOnDegree ?? this.growNodesBasedOnDegree,
+      nodeDisplayConfigurations: [
+        ...other.nodeDisplayConfigurations,
+        ...this.nodeDisplayConfigurations,
+      ],
+    });
   }
 }

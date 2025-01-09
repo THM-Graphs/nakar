@@ -1,33 +1,49 @@
-import { SchemaGraphProperty, SchemaNode } from '../../../src-gen/schema';
-import { GraphDtoFactory } from '../graph-transformer/GraphDtoFactory';
+import { SchemaNode } from '../../../src-gen/schema';
 import Handlebars from 'handlebars';
 
 export class NodeDisplayConfigurationData {
-  public constructor(
-    private readonly data: {
-      id: string;
-      displayTitle: string;
-      labels: string[];
-      properties: Record<string, string>;
-      radius: number;
-      inDegree: number;
-      outDegree: number;
-      degree: number;
-    },
-  ) {}
+  public readonly id: string;
+  public readonly labels: Record<string, true>;
+  public readonly nameInQuery: Record<string, true>;
+  public readonly properties: Record<string, unknown>;
+  public readonly radius: number;
+  public readonly inDegree: number;
+  public readonly outDegree: number;
+  public readonly degree: number;
+
+  public constructor(data: {
+    id: string;
+    labels: Record<string, true>;
+    properties: Record<string, unknown>;
+    nameInQuery: Record<string, true>;
+    radius: number;
+    inDegree: number;
+    outDegree: number;
+    degree: number;
+  }) {
+    this.id = data.id;
+    this.labels = data.labels;
+    this.properties = data.properties;
+    this.nameInQuery = data.nameInQuery;
+    this.radius = data.radius;
+    this.inDegree = data.inDegree;
+    this.outDegree = data.outDegree;
+    this.degree = data.degree;
+  }
 
   public static fromNode(node: SchemaNode): NodeDisplayConfigurationData {
     return new NodeDisplayConfigurationData({
       id: node.id,
-      displayTitle: node.displayTitle,
-      labels: node.labels.map((l) => l.label),
-      properties: node.properties.reduce<Record<string, string>>(
-        (
-          record: Record<string, string>,
-          property: SchemaGraphProperty,
-        ): Record<string, string> => {
-          record[property.slug] =
-            GraphDtoFactory.getDisplayStringFromPropertyValue(property);
+      labels: node.labels.reduce<Record<string, true>>(
+        (akku, next) => ({ ...akku, [next.label]: true }),
+        {},
+      ),
+      nameInQuery: {
+        [node.nameInQuery]: true,
+      },
+      properties: node.properties.reduce<Record<string, unknown>>(
+        (record, property) => {
+          record[property.slug] = property.value;
           return record;
         },
         {},
@@ -41,6 +57,6 @@ export class NodeDisplayConfigurationData {
 
   public applyToTemplate(template: string): string {
     const c = Handlebars.compile(template);
-    return c(this.data);
+    return c(this); // TODO: dont send entire instance object
   }
 }

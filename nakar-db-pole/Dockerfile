@@ -6,6 +6,8 @@ ENV NEO4J_browser_post__connect__cmd="play https://guides.neo4j.com/sandbox/pole
 COPY nakar-db-pole/pole-50.dump /dump/neo4j.dump
 RUN neo4j-admin database load neo4j --from-path=/dump --overwrite-destination=true
 
+RUN echo "dbms.databases.default_to_read_only=true" >> conf/neo4j.conf
+
 HEALTHCHECK  \
     --interval=10m \
     --timeout=5s \

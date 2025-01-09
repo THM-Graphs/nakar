@@ -171,14 +171,11 @@ components:
         slug:
           type: string
         value:
-          oneOf:
-            - type: string
-            - type: number
-            - type: boolean
-            - type: "null"
+          $ref: '#/components/schemas/GraphPropertyValue'
       required:
         - slug
         - value
+    GraphPropertyValue: {}
 
     Node:
       type: object
@@ -213,6 +210,9 @@ components:
           type: integer
         degree:
           type: integer
+        nameInQuery:
+          type: string
+        displayConfigurationData: {}
       required:
         - id
         - displayTitle
@@ -223,6 +223,8 @@ components:
         - inDegree
         - outDegree
         - degree
+        - nameInQuery
+        - displayConfigurationData
 
     Edge:
       type: object
@@ -245,6 +247,8 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/GraphProperty'
+        nameInQuery:
+          type: string
       required:
         - id
         - startNodeId
@@ -254,6 +258,7 @@ components:
         - isLoop
         - parallelCount
         - parallelIndex
+        - nameInQuery
 
     GetInitialGraph:
       type: object
