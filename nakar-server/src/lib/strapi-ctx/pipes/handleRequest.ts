@@ -21,12 +21,15 @@ export function handleRequest<T>(
         .with(P.instanceOf(Error), (error) =>
           handleError(ctx, new InternalServerError(error.message)),
         )
-        .otherwise((error) =>
-          handleError(
+        .otherwise((error) => {
+          console.debug(
+            `Unknown error in route handle: ${JSON.stringify(error)}`,
+          );
+          return handleError(
             ctx,
             new InternalServerError(`Unknown error: ${JSON.stringify(error)}`),
-          ),
-        );
+          );
+        });
     }
   };
 }
