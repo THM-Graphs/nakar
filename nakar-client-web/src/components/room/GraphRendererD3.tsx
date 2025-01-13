@@ -100,7 +100,10 @@ export function GraphRendererD3(props: { graph: GetInitialGraph }) {
       )
       .force("x", d3.forceX())
       .force("y", d3.forceY())
-      .tick(500);
+      .alphaTarget(1)
+      .tick(1000)
+      .alphaTarget(0)
+      .alpha(0);
 
     const link: d3.Selection<SVGPathElement, D3Link, SVGGElement, null> =
       zoomContainer
