@@ -2,7 +2,8 @@
   "name": "nakar-db-pole",
   "version": "1.0.0",
   "scripts": {
-    "start": "docker run -it --rm --name nakar-db-pole -p 7474:7474 -p 7687:7687 -e NEO4J_AUTH=neo4j/12345678 nakar-db-pole:dev",
+    "build:dev": "cd .. && docker build -f nakar-db-pole/Dockerfile -t \"nakar-db-pole:dev\" .",
+    "start:dev": "docker run -it --rm --name nakar-db-pole -p 7474:7474 -p 7687:7687 -e NEO4J_AUTH=neo4j/12345678 nakar-db-pole:dev",
     "version": "echo $npm_package_version"
   }
 }
