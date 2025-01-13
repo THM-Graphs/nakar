@@ -1,5 +1,4 @@
 import {
-  SchemaColor,
   SchemaGetInitialGraph,
   SchemaGraphLabel,
   SchemaPresetColorIndex,
@@ -8,40 +7,41 @@ import { Transformer } from '../../types/Transformer';
 
 export function applyLabels(): Transformer {
   return (graph: SchemaGetInitialGraph): SchemaGetInitialGraph => {
-    let colorIndex: SchemaPresetColorIndex = 0;
+    const labels = new Map<string, SchemaGraphLabel>();
 
     for (const node of graph.graph.nodes) {
       for (const label of node.labels) {
-        const foundEntry = graph.graphMetaData.labels.find(
-          (l) => l.label === label.label,
-        );
+        const foundEntry = labels.get(label);
 
         if (!foundEntry) {
-          const color: SchemaColor = { type: 'PresetColor', index: colorIndex };
-          const newEntry: SchemaGraphLabel = {
-            label: label.label,
-            color: color,
+          labels.set(label, {
+            label: label,
+            color: {
+              type: 'PresetColor',
+              index: colorIndexFromCount(labels.size),
+            },
             count: 1,
-          };
-          graph.graphMetaData.labels.push(newEntry);
-
-          label.color = color;
-          label.count = 1;
-
-          colorIndex = increment(colorIndex);
+          });
         } else {
-          foundEntry.count += 1;
-          label.count += 1;
-          label.color = foundEntry.color;
+          labels.set(label, {
+            ...foundEntry,
+            count: foundEntry.count + 1,
+          });
         }
       }
     }
 
-    return graph;
+    return {
+      ...graph,
+      graphMetaData: {
+        ...graph.graphMetaData,
+        labels: [...labels.values()],
+      },
+    };
   };
 }
 
-function increment(index: SchemaPresetColorIndex): SchemaPresetColorIndex {
+function colorIndexFromCount(count: number): SchemaPresetColorIndex {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-  return ((index + 1) % 6) as SchemaPresetColorIndex;
+  return (count % 6) as SchemaPresetColorIndex;
 }

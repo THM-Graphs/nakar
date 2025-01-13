@@ -190,7 +190,7 @@ components:
         labels:
           type: array
           items:
-            $ref: '#/components/schemas/GraphLabel'
+            type: string
         properties:
           type: array
           items:
@@ -216,6 +216,12 @@ components:
         nameInQuery:
           type: string
         displayConfigurationContext: {}
+        backgroundColor:
+          type: string
+          nullable: true
+        titleColor:
+          type: string
+          nullable: true
       required:
         - id
         - displayTitle
@@ -228,6 +234,8 @@ components:
         - degree
         - nameInQuery
         - displayConfigurationContext
+        - backgroundColor
+        - titleColor
 
     Edge:
       type: object

@@ -1,8 +1,9 @@
 import { match, P } from "ts-pattern";
 import { Color } from "../../../src-gen";
 
-export function getTextColor(color: Color): string {
+export function getTextColor(color: Color | null): string {
   return match(color)
+    .with(P.nullish, () => "#fff")
     .with({ index: P.number }, (color): string => {
       return match(color.index)
         .with(0, () => "#fff")

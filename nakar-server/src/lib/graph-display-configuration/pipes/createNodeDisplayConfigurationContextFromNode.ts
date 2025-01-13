@@ -7,7 +7,7 @@ export function createNodeDisplayConfigurationContextFromNode(
   return {
     id: node.id,
     labels: node.labels.reduce<Record<string, true>>(
-      (akku, next) => ({ ...akku, [next.label]: true }),
+      (akku, next) => ({ ...akku, [next]: true }),
       {},
     ),
     nameInQuery: {

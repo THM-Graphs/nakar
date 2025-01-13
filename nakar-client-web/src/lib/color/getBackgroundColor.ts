@@ -1,8 +1,9 @@
 import { match, P } from "ts-pattern";
 import { Color } from "../../../src-gen";
 
-export function getBackgroundColor(color: Color): string {
+export function getBackgroundColor(color: Color | null): string {
   return match(color)
+    .with(P.nullish, () => "#3B71CA")
     .with({ index: P.number }, (color): string => {
       return match(color.index)
         .with(0, () => "#3B71CA")

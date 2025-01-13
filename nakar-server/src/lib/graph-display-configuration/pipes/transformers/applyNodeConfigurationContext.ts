@@ -4,11 +4,16 @@ import { createNodeDisplayConfigurationContextFromNode } from '../createNodeDisp
 
 export function applyNodeConfigurationContext(): Transformer {
   return (graph: SchemaGetInitialGraph): SchemaGetInitialGraph => {
-    for (const node of graph.graph.nodes) {
-      const data = createNodeDisplayConfigurationContextFromNode(node);
-      node.displayConfigurationContext = data;
-    }
-
-    return graph;
+    return {
+      ...graph,
+      graph: {
+        ...graph.graph,
+        nodes: graph.graph.nodes.map((node) => ({
+          ...node,
+          displayConfigurationContext:
+            createNodeDisplayConfigurationContextFromNode(node),
+        })),
+      },
+    };
   };
 }

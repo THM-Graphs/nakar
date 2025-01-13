@@ -1,4 +1,7 @@
-import { SchemaGetInitialGraph } from '../../../../../src-gen/schema';
+import {
+  SchemaGetInitialGraph,
+  SchemaNode,
+} from '../../../../../src-gen/schema';
 import { GraphDisplayConfiguration } from '../../types/GraphDisplayConfiguration';
 import { Transformer } from '../../types/Transformer';
 
@@ -11,7 +14,9 @@ export function applyGrowNodeBasedOnDegree(): Transformer {
       return graph;
     }
 
-    const degrees = graph.graph.nodes.map((n) => n.degree);
+    const degrees: number[] = graph.graph.nodes.map(
+      (n: SchemaNode): number => n.degree,
+    );
 
     const growFactor = 1;
     const minConnections = Math.min(...degrees);
@@ -22,11 +27,19 @@ export function applyGrowNodeBasedOnDegree(): Transformer {
       return graph;
     }
 
-    for (const node of graph.graph.nodes) {
-      const percent = (node.degree - minConnections) / delta;
-      node.radius = node.radius * (1 + growFactor * percent);
-    }
-
-    return graph;
+    return {
+      ...graph,
+      graph: {
+        ...graph.graph,
+        nodes: graph.graph.nodes.map(
+          (node: SchemaNode): SchemaNode => ({
+            ...node,
+            radius:
+              node.radius *
+              (1 + growFactor * ((node.degree - minConnections) / delta)),
+          }),
+        ),
+      },
+    };
   };
 }

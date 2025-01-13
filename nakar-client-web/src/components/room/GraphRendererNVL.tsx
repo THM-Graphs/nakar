@@ -20,7 +20,10 @@ export function GraphRendererNVL(props: { graph: GetInitialGraph }) {
             styles: ["bold"],
           },
         ],
-        color: getBackgroundColor(n.labels[0].color),
+        color: getBackgroundColor(
+          props.graph.graphMetaData.labels.find((l) => l.label === n.labels[0])
+            ?.color ?? null,
+        ),
         size: n.radius,
       };
     });

@@ -166,14 +166,28 @@ export function GraphRendererD3(props: { graph: GetInitialGraph }) {
     node
       .append("circle")
       .attr("r", (d) => d.radius)
-      .attr("fill", (d) => getBackgroundColor(d.labels[0].color))
+      .attr(
+        "fill",
+        (d) =>
+          d.backgroundColor ??
+          getBackgroundColor(
+            props.graph.graphMetaData.labels.find(
+              (l) => l.label === d.labels[0],
+            )?.color ?? null,
+          ),
+      )
       .attr("stroke", () => (theme == "dark" ? "#fff" : "#000"))
       .attr("stroke-width", "3px");
 
     node
       .append("text")
       .text((d) => d.displayTitle)
-      .attr("fill", (d) => getTextColor(d.labels[0].color))
+      .attr("fill", (d) =>
+        getTextColor(
+          props.graph.graphMetaData.labels.find((l) => l.label === d.labels[0])
+            ?.color ?? null,
+        ),
+      )
       .attr("font-weight", "bolder")
       .attr("text-anchor", "middle");
 

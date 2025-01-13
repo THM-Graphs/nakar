@@ -3,16 +3,26 @@ import { Transformer } from '../../types/Transformer';
 
 export function applyNodeDegrees(): Transformer {
   return (graph: SchemaGetInitialGraph): SchemaGetInitialGraph => {
-    for (const node of graph.graph.nodes) {
-      const outRels = graph.graph.edges.filter(
-        (e) => e.startNodeId === node.id,
-      );
-      const inRels = graph.graph.edges.filter((e) => e.endNodeId === node.id);
-      node.inDegree = inRels.length;
-      node.outDegree = outRels.length;
-      node.degree = node.inDegree + node.outDegree;
-    }
+    return {
+      ...graph,
+      graph: {
+        ...graph.graph,
+        nodes: graph.graph.nodes.map((node) => {
+          const outRels = graph.graph.edges.filter(
+            (e) => e.startNodeId === node.id,
+          );
+          const inRels = graph.graph.edges.filter(
+            (e) => e.endNodeId === node.id,
+          );
 
-    return graph;
+          return {
+            ...node,
+            inDegree: inRels.length,
+            outDegree: outRels.length,
+            degree: inRels.length + outRels.length,
+          };
+        }),
+      },
+    };
   };
 }
