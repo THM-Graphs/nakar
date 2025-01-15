@@ -271,24 +271,18 @@ components:
         - parallelIndex
         - nameInQuery
 
-    GetInitialGraph:
+    Graph:
       type: object
       properties:
-        graph:
-          type: object
-          properties:
-            nodes:
-              type: array
-              items:
-                $ref: '#/components/schemas/Node'
-            edges:
-              type: array
-              items:
-                $ref: '#/components/schemas/Edge'
-          required:
-            - nodes
-            - edges
-        graphMetaData:
+        nodes:
+          type: array
+          items:
+            $ref: '#/components/schemas/Node'
+        edges:
+          type: array
+          items:
+            $ref: '#/components/schemas/Edge'
+        metaData:
           type: object
           properties:
             labels:
@@ -297,6 +291,16 @@ components:
                 $ref: '#/components/schemas/GraphLabel'
           required:
             - labels
+      required:
+        - nodes
+        - edges
+        - metaData
+
+    GetInitialGraph:
+      type: object
+      properties:
+        graph:
+          $ref: '#/components/schemas/Graph'
         tableData:
           type: array
           items:
@@ -304,7 +308,6 @@ components:
             additionalProperties: { }
       required:
         - graph
-        - graphMetaData
         - tableData
 
     GetRoom:

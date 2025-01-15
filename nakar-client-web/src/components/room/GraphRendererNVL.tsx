@@ -21,7 +21,7 @@ export function GraphRendererNVL(props: { graph: GetInitialGraph }) {
           },
         ],
         color: getBackgroundColor(
-          props.graph.graphMetaData.labels.find((l) => l.label === n.labels[0])
+          props.graph.graph.metaData.labels.find((l) => l.label === n.labels[0])
             ?.color ?? null,
         ),
         size: n.radius,

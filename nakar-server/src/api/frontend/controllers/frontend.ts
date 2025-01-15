@@ -15,7 +15,7 @@ import { StrapiController } from '../../../lib/strapi-ctx/types/StrapiController
 import { executeQuery } from '../../../lib/neo4j/pipes/executeQuery';
 import { createLoginCredentials } from '../../../lib/neo4j/pipes/createLoginCredentials';
 import { NotFound } from 'http-errors';
-import { createGraph } from '../../../lib/graph-transformer/pipes/createGraph';
+import { createInitialGraph } from '../../../lib/graph-transformer/pipes/createInitialGraph';
 import { loadAndMergeGraphDisplaConfiguration } from '../../../lib/graph-display-configuration/pipes/loadAndMergeGraphDisplaConfiguration';
 import { applyToGraph } from '../../../lib/graph-display-configuration/pipes/applyToGraph';
 import { getScenario } from '../../../lib/documents/pipes/getScenario';
@@ -55,7 +55,7 @@ export default {
         scenario.scenarioGroup.database,
       );
       const graphElements = await executeQuery(credentials, scenario.query);
-      const graph: SchemaGetInitialGraph = createGraph(graphElements);
+      const graph: SchemaGetInitialGraph = createInitialGraph(graphElements);
 
       const displayConfiguration =
         loadAndMergeGraphDisplaConfiguration(scenario);

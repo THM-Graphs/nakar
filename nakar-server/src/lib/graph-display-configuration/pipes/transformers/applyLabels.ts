@@ -33,9 +33,12 @@ export function applyLabels(): Transformer {
 
     return {
       ...graph,
-      graphMetaData: {
-        ...graph.graphMetaData,
-        labels: [...labels.values()],
+      graph: {
+        ...graph.graph,
+        metaData: {
+          ...graph.graph.metaData,
+          labels: [...labels.values()],
+        },
       },
     };
   };

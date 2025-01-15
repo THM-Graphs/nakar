@@ -5,7 +5,7 @@ import { Stack } from "react-bootstrap";
 export function Labels(props: { graph: GetInitialGraph }) {
   return (
     <Stack className={"position-absolute m-2 gap-2"} direction={"horizontal"}>
-      {props.graph.graphMetaData.labels.map((label) => (
+      {props.graph.graph.metaData.labels.map((label) => (
         <Label label={label} key={label.label}></Label>
       ))}
     </Stack>
