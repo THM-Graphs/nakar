@@ -13,6 +13,7 @@ export function createRelationship(
     parallelCount: 1,
     parallelIndex: 0,
     compressedCount: 1,
+    width: 2,
     properties: Object.entries(relationship.properties).map(
       (entry): SchemaGraphProperty => ({
         slug: entry[0],

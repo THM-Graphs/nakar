@@ -4,6 +4,7 @@ import {
 } from '../../../../../src-gen/schema';
 import { GraphDisplayConfiguration } from '../../types/GraphDisplayConfiguration';
 import { Transformer } from '../../types/Transformer';
+import { scaleRange } from '../../../graph-transformer/pipes/scaleRange';
 
 export function applyGrowNodeBasedOnDegree(): Transformer {
   return (
@@ -34,9 +35,13 @@ export function applyGrowNodeBasedOnDegree(): Transformer {
         nodes: graph.graph.nodes.map(
           (node: SchemaNode): SchemaNode => ({
             ...node,
-            radius:
-              node.radius *
-              (1 + growFactor * ((node.degree - minConnections) / delta)),
+            radius: scaleRange(
+              minConnections,
+              maxConnections,
+              node.radius,
+              node.radius + node.radius * growFactor,
+              node.degree,
+            ),
           }),
         ),
       },

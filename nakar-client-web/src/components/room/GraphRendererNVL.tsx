@@ -37,7 +37,7 @@ export function GraphRendererNVL(props: { graph: GetInitialGraph }) {
           to: e.endNodeId,
           type: e.type,
           color: theme == "dark" ? "#ffffff" : "#000000",
-          width: e.compressedCount,
+          width: e.width,
           captions: [
             {
               value: e.type,

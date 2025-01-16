@@ -115,7 +115,7 @@ export function GraphRendererD3(props: { graph: GetInitialGraph }) {
         .append("path")
         .attr("fill", "none")
         .attr("stroke", theme == "dark" ? "#ffffff" : "#000000")
-        .attr("stroke-width", (d) => d.compressedCount)
+        .attr("stroke-width", (d) => d.width)
         .attr("marker-end", "url(#arrow)");
 
     const linkLabel: d3.Selection<SVGTextElement, D3Link, SVGGElement, null> =

@@ -4,6 +4,7 @@ import {
   SchemaGetInitialGraph,
 } from '../../../../../src-gen/schema';
 import { GraphDisplayConfiguration } from '../../types/GraphDisplayConfiguration';
+import { scaleRange } from '../../../graph-transformer/pipes/scaleRange';
 
 export function compressRelationships(): Transformer {
   return (
@@ -46,11 +47,29 @@ export function compressRelationships(): Transformer {
       }
     }
 
+    const compressedCounts = relationships.map((r) => r.compressedCount);
+    const minCount = Math.min(...compressedCounts);
+    const maxCount = Math.max(...compressedCounts);
+
+    const minWidth = 2;
+    const maxWidth = 10;
+
     return {
       ...graph,
       graph: {
         ...graph.graph,
-        edges: relationships,
+        edges: relationships.map((r) => {
+          return {
+            ...r,
+            width: scaleRange(
+              minCount,
+              maxCount,
+              minWidth,
+              maxWidth,
+              r.compressedCount,
+            ),
+          };
+        }),
       },
     };
   };
