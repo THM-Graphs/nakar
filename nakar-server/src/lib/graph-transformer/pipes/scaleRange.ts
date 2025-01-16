@@ -6,6 +6,10 @@ export function scaleRange(
   value: number,
 ): number {
   const fromDelta = fromTop - fromBottom;
+  if (fromDelta === 0) {
+    return toBottom;
+  }
+
   const percent = (value - fromBottom) / fromDelta;
 
   const toDelta = toTop - toBottom;
