@@ -17,3 +17,4 @@ deploy_db_pole:
     - IMAGE_VERSION=$(cd nakar-db-pole && npm run --silent version)
     - docker build -f nakar-db-pole/Dockerfile -t "git-registry.thm.de/sspp77/nakar/db-pole:$IMAGE_VERSION" .
     - docker push "git-registry.thm.de/sspp77/nakar/db-pole:$IMAGE_VERSION"
+    - docker rmi "git-registry.thm.de/sspp77/nakar/db-pole:$IMAGE_VERSION"

@@ -1,16 +1,8 @@
 stages:
   - ci_build
   - build_push_docker
-  - cleanup
 
 include:
   - 'nakar-db-pole/.gitlab-ci.yml'
   - 'nakar-server/.gitlab-ci.yml'
   - 'nakar-client-web/.gitlab-ci.yml'
-
-cleanup:
-  stage: cleanup
-  tags:
-    - docker
-  script:
-    - docker system prune -f
