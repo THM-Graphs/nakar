@@ -10,6 +10,7 @@ export function createGraphDisplayConfigurationFromDb(
   return {
     connectResultNodes: inheritToNull(dbConfig?.connectResultNodes),
     growNodesBasedOnDegree: inheritToNull(dbConfig?.growNodesBasedOnDegree),
+    compressRelationships: inheritToNull(dbConfig?.compressRelationships),
     nodeDisplayConfigurations:
       dbConfig?.nodeDisplayConfigurations?.map(
         (c): NodeDisplayConfiguration =>

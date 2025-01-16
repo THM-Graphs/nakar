@@ -254,6 +254,8 @@ components:
           type: integer
         parallelIndex:
           type: integer
+        compressedCount:
+          type: integer
         properties:
           type: array
           items:
@@ -269,6 +271,7 @@ components:
         - isLoop
         - parallelCount
         - parallelIndex
+        - compressedCount
         - nameInQuery
 
     Graph:

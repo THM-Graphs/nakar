@@ -11,6 +11,7 @@ import { applyNodeDisplayText } from './transformers/applyNodeDisplayText';
 import { applyNodeRadius } from './transformers/applyNodeRadius';
 import { applyNodeBackgroundColor } from './transformers/applyNodeBackgroundColor';
 import { applyGrowNodeBasedOnDegree } from './transformers/applyGrowNodeBasedOnDegree';
+import { compressRelationships } from './transformers/compressRelationships';
 
 export async function applyToGraph(
   graph: SchemaGetInitialGraph,
@@ -19,15 +20,14 @@ export async function applyToGraph(
 ): Promise<SchemaGetInitialGraph> {
   const transformers: Transformer[] = [
     applyConnectNodes(credentials),
+    compressRelationships(),
     applyLabels(),
     applyNodeDegrees(),
     applyEdgeParallelCounts(),
-
     applyNodeConfigurationContext(),
     applyNodeDisplayText(),
     applyNodeRadius(),
     applyNodeBackgroundColor(),
-
     applyGrowNodeBasedOnDegree(),
   ];
 

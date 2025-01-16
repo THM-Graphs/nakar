@@ -5,4 +5,5 @@ export type DBGraphDisplayConfiguration = Readonly<{
   connectResultNodes?: DBGraphDisplayConfigurationBoolean | null;
   growNodesBasedOnDegree?: DBGraphDisplayConfigurationBoolean | null;
   nodeDisplayConfigurations?: DBNodeDisplayConfiguration[] | null;
+  compressRelationships?: DBGraphDisplayConfigurationBoolean | null;
 }>;

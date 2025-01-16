@@ -4,4 +4,5 @@ export type GraphDisplayConfiguration = Readonly<{
   connectResultNodes: boolean | null;
   growNodesBasedOnDegree: boolean | null;
   nodeDisplayConfigurations: NodeDisplayConfiguration[];
+  compressRelationships: boolean | null;
 }>;

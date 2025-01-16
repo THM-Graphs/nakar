@@ -30,6 +30,15 @@
       "type": "component",
       "repeatable": true,
       "component": "graph.node-display-configuration"
+    },
+    "compressRelationships": {
+      "type": "enumeration",
+      "enum": [
+        "inherit",
+        "true",
+        "false"
+      ],
+      "default": "inherit"
     }
   }
 }

@@ -8,6 +8,10 @@ export interface GraphGraphDisplayConfiguration extends Struct.ComponentSchema {
     icon: 'brush';
   };
   attributes: {
+    compressRelationships: Schema.Attribute.Enumeration<
+      ['inherit', 'true', 'false']
+    > &
+      Schema.Attribute.DefaultTo<'inherit'>;
     connectResultNodes: Schema.Attribute.Enumeration<
       ['inherit', 'true', 'false']
     > &

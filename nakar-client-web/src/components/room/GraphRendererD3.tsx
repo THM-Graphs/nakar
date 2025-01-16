@@ -115,7 +115,7 @@ export function GraphRendererD3(props: { graph: GetInitialGraph }) {
         .append("path")
         .attr("fill", "none")
         .attr("stroke", theme == "dark" ? "#ffffff" : "#000000")
-        .attr("stroke-width", 2)
+        .attr("stroke-width", (d) => d.compressedCount)
         .attr("marker-end", "url(#arrow)");
 
     const linkLabel: d3.Selection<SVGTextElement, D3Link, SVGGElement, null> =
@@ -126,7 +126,9 @@ export function GraphRendererD3(props: { graph: GetInitialGraph }) {
         .data(edges)
         .enter()
         .append("text")
-        .text((d) => d.type)
+        .text((d) =>
+          d.compressedCount > 1 ? `${d.type} (${d.compressedCount})` : d.type,
+        )
         .attr("font-weight", "bold")
         .attr("text-anchor", "middle")
         .attr("alignment-baseline", "middle")
