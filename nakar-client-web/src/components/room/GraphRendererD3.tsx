@@ -127,7 +127,9 @@ export function GraphRendererD3(props: { graph: GetInitialGraph }) {
         .enter()
         .append("text")
         .text((d) =>
-          d.compressedCount > 1 ? `${d.type} (${d.compressedCount})` : d.type,
+          d.compressedCount > 1
+            ? `${d.type} (${d.compressedCount.toString()})`
+            : d.type,
         )
         .attr("font-weight", "bold")
         .attr("text-anchor", "middle")

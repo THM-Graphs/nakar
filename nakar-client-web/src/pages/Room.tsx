@@ -4,7 +4,7 @@ import { SideToolbar } from "../components/room/SideToolbar.tsx";
 import { DatabaseList } from "../components/room/DatabaseList.tsx";
 import { Canvas } from "../components/room/Canvas.tsx";
 import { DataTable } from "../components/room/DataTable.tsx";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import {
   getInitialGraph,
   GetInitialGraph,
