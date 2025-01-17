@@ -6,13 +6,17 @@ export function createNodeDisplayConfigurationContextFromNode(
 ): NodeDisplayConfigurationContext {
   return {
     id: node.id,
-    labels: node.labels.reduce<Record<string, true>>(
+    label: node.labels.reduce<Record<string, true>>(
       (akku, next) => ({ ...akku, [next]: true }),
       {},
     ),
-    nameInQuery: {
-      [node.nameInQuery]: true,
-    },
+    nameInQuery: node.namesInQuery.reduce<Record<string, true>>(
+      (obj, next) => ({
+        ...obj,
+        [next]: true,
+      }),
+      {},
+    ),
     properties: node.properties.reduce<Record<string, unknown>>(
       (record, property) => {
         record[property.slug] = property.value;

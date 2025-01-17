@@ -21,7 +21,7 @@ export function createNode(node: AugmentedNode): SchemaNode {
     inDegree: 0,
     outDegree: 0,
     degree: 0,
-    nameInQuery: node.key,
+    namesInQuery: [...node.keys.values()],
     displayConfigurationContext: {},
     backgroundColor: null,
     titleColor: null,

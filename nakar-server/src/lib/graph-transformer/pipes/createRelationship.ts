@@ -20,6 +20,6 @@ export function createRelationship(
         value: entry[1],
       }),
     ),
-    nameInQuery: relationship.key,
+    namesInQuery: [...relationship.keys.values()],
   };
 }

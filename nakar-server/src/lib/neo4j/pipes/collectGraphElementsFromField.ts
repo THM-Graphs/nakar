@@ -10,14 +10,14 @@ export function collectGraphElementsFromField(
 ): GraphElements {
   if (isNode(field)) {
     return {
-      nodes: [{ ...field, key }],
+      nodes: [{ ...field, keys: new Set(key) }],
       relationships: [],
       tableData: [],
     };
   } else if (isRelationship(field)) {
     return {
       nodes: [],
-      relationships: [{ ...field, key }],
+      relationships: [{ ...field, keys: new Set(key) }],
       tableData: [],
     };
   } else if (isPath(field)) {
@@ -25,18 +25,18 @@ export function collectGraphElementsFromField(
       ...field.segments.map((segment) => {
         return mergeGraphElements(
           {
-            nodes: [{ ...segment.start, key }],
+            nodes: [{ ...segment.start, keys: new Set(key) }],
             relationships: [],
             tableData: [],
           },
           {
-            nodes: [{ ...segment.end, key }],
+            nodes: [{ ...segment.end, keys: new Set(key) }],
             relationships: [],
             tableData: [],
           },
           {
             nodes: [],
-            relationships: [{ ...segment.relationship, key }],
+            relationships: [{ ...segment.relationship, keys: new Set(key) }],
             tableData: [],
           },
         );

@@ -10,8 +10,20 @@ export function mergeGraphElements(
   const tableData: Record<string, unknown>[] = [];
 
   for (const element of elements) {
-    element.nodes.forEach((n) => (nodes[n.elementId] = n));
-    element.relationships.forEach((r) => (relationships[r.elementId] = r));
+    element.nodes.forEach((n) => {
+      const oldNode = nodes[n.elementId] as AugmentedNode | null;
+      nodes[n.elementId] = {
+        ...n,
+        keys: new Set([...(oldNode?.keys.values() ?? []), ...n.keys.values()]),
+      };
+    });
+    element.relationships.forEach((r) => {
+      const oldRel = relationships[r.elementId] as AugmentedRelationship | null;
+      relationships[r.elementId] = {
+        ...r,
+        keys: new Set([...(oldRel?.keys.values() ?? []), ...r.keys.values()]),
+      };
+    });
     tableData.push(...element.tableData);
   }
 

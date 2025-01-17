@@ -213,8 +213,10 @@ components:
           type: integer
         degree:
           type: integer
-        nameInQuery:
-          type: string
+        namesInQuery:
+          type: array
+          items:
+            type: string
         displayConfigurationContext: {}
         backgroundColor:
           type: string
@@ -232,7 +234,7 @@ components:
         - inDegree
         - outDegree
         - degree
-        - nameInQuery
+        - namesInQuery
         - displayConfigurationContext
         - backgroundColor
         - titleColor
@@ -262,8 +264,10 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/GraphProperty'
-        nameInQuery:
-          type: string
+        namesInQuery:
+          type: array
+          items:
+            type: string
       required:
         - id
         - startNodeId
@@ -273,7 +277,7 @@ components:
         - isLoop
         - parallelCount
         - parallelIndex
-        - nameInQuery
+        - namesInQuery
         - compressedCount
         - width
 
