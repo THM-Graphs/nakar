@@ -188,20 +188,38 @@ export function GraphRendererD3(props: { graph: GetInitialGraph }) {
       .attr("stroke-width", "3px");
 
     node
-      .append("text")
-      .text((d) => d.displayTitle)
-      .attr(
-        "fill",
-        (d) =>
+      .append("foreignObject")
+      .attr("x", (d) => -d.radius)
+      .attr("y", (d) => -d.radius)
+      .attr("width", (d) => d.radius * 2)
+      .attr("height", (d) => d.radius * 2)
+      .append("xhtml:div")
+      .attr("xmlns", "http://www.w3.org/1999/xhtml")
+      .attr("style", (d) => {
+        const color =
           d.titleColor ??
           getTextColor(
             props.graph.graph.metaData.labels.find(
               (l) => l.label === d.labels[0],
             )?.color ?? null,
-          ),
-      )
-      .attr("font-weight", "bolder")
-      .attr("text-anchor", "middle");
+          );
+
+        return `
+        font-weight: bolder;
+        color: ${color};
+        display: flex; 
+        align-items: center; 
+        justify-content: center; 
+        width: ${d.radius * 2}px; 
+        height: ${d.radius * 2}px;
+        text-align: center;
+        font-size: ${d.radius / 5 + 5}px;
+        `;
+      })
+      .attr("width", (d) => d.radius * 2)
+      .attr("height", (d) => d.radius * 2)
+      .append("xhtml:span")
+      .text((d) => d.displayTitle);
 
     simulation.on("tick", () => {
       link.attr("d", (d) => curvedPath(d));
@@ -223,6 +241,7 @@ export function GraphRendererD3(props: { graph: GetInitialGraph }) {
       ref={svgRef}
       className={"flex-grow-1 flex-shrink-1"}
       style={{ flexBasis: "50%" }}
+      xmlns={"http://www.w3.org/1999/xhtml"}
     >
       <g></g>
     </svg>
