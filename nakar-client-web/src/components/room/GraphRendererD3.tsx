@@ -134,6 +134,7 @@ export function GraphRendererD3(props: { graph: GetInitialGraph }) {
         .attr("font-weight", "bold")
         .attr("text-anchor", "middle")
         .attr("alignment-baseline", "middle")
+        .attr("y", (d) => -(d.width / 2 + 8))
         .style("stroke-linejoin", "round")
         .attr("fill", theme == "dark" ? "#ffffff" : "#000000")
         .attr("stroke-width", 1);
@@ -336,7 +337,7 @@ function curvePoints(d: D3Link): {
   const { x1, y1, x2, y2 } = closestPointsOnNodes(d);
   const angle = Math.atan2(y2 - y1, x2 - x1) * (180 / Math.PI);
 
-  const curvAmount = 15;
+  const curvAmount = 13 + d.width;
 
   const p = pushVectorOfCurve(
     x1,
