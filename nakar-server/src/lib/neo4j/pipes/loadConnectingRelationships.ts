@@ -9,7 +9,7 @@ export async function loadConnectingRelationships(
   const nodesIds = [...nodeIds.values()];
   const additional = await executeQuery(
     credentials,
-    'MATCH (a)-[r]->(b) WHERE elementId(a) IN $existingNodeIds AND elementId(b) IN $existingNodeIds RETURN r;',
+    'MATCH (a)-[additionalRelationship]->(b) WHERE elementId(a) IN $existingNodeIds AND elementId(b) IN $existingNodeIds RETURN additionalRelationship;',
     { existingNodeIds: nodesIds },
   );
   return additional;
