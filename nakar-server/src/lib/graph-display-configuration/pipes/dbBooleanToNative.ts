@@ -1,7 +1,7 @@
 import { match, P } from 'ts-pattern';
 import { DBGraphDisplayConfigurationBoolean } from '../../documents/types/DBGraphDisplayConfigurationBoolean';
 
-export function inheritToNull(
+export function dbBooleanToNative(
   input: DBGraphDisplayConfigurationBoolean | null | undefined,
 ): boolean | null {
   return match(input)

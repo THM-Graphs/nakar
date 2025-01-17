@@ -39,6 +39,17 @@
         "false"
       ],
       "default": "inherit"
+    },
+    "scaleType": {
+      "type": "enumeration",
+      "enum": [
+        "inherit",
+        "linear",
+        "log2",
+        "logn",
+        "log10"
+      ],
+      "default": "inherit"
     }
   }
 }

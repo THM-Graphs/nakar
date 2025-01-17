@@ -14,12 +14,14 @@ export function mergeGraphDisplayConfigurations(
       ],
       compressRelationships:
         next.compressRelationships ?? akku.compressRelationships,
+      scaleType: next.scaleType ?? akku.scaleType,
     }),
     {
       connectResultNodes: null,
       growNodesBasedOnDegree: null,
       nodeDisplayConfigurations: [],
       compressRelationships: null,
+      scaleType: null,
     },
   );
 }

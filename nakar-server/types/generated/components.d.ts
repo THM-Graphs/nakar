@@ -24,6 +24,10 @@ export interface GraphGraphDisplayConfiguration extends Struct.ComponentSchema {
       'graph.node-display-configuration',
       true
     >;
+    scaleType: Schema.Attribute.Enumeration<
+      ['inherit', 'linear', 'log2', 'logn', 'log10']
+    > &
+      Schema.Attribute.DefaultTo<'inherit'>;
   };
 }
 

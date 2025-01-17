@@ -19,7 +19,7 @@ export function applyGrowNodeBasedOnDegree(): Transformer {
       (n: SchemaNode): number => n.degree,
     );
 
-    const growFactor = 1;
+    const growFactor = 2;
     const minConnections = Math.min(...degrees);
     const maxConnections = Math.max(...degrees);
     const delta = maxConnections - minConnections;
@@ -41,6 +41,7 @@ export function applyGrowNodeBasedOnDegree(): Transformer {
               node.radius,
               node.radius + node.radius * growFactor,
               node.degree,
+              config.scaleType,
             ),
           }),
         ),

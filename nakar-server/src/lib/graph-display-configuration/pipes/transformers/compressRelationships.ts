@@ -67,6 +67,7 @@ export function compressRelationships(): Transformer {
               minWidth,
               maxWidth,
               r.compressedCount,
+              config.scaleType,
             ),
           };
         }),
