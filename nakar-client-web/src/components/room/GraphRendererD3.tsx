@@ -92,7 +92,7 @@ export function GraphRendererD3(props: { graph: GetInitialGraph }) {
         d3
           .forceLink<D3Node, D3Link>(edges)
           .id((d) => d.id)
-          .distance(300),
+          .distance((d) => d.type.length * 20 + 100),
       )
       .force(
         "charge",
