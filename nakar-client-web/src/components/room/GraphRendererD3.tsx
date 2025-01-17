@@ -190,11 +190,15 @@ export function GraphRendererD3(props: { graph: GetInitialGraph }) {
     node
       .append("text")
       .text((d) => d.displayTitle)
-      .attr("fill", (d) =>
-        getTextColor(
-          props.graph.graph.metaData.labels.find((l) => l.label === d.labels[0])
-            ?.color ?? null,
-        ),
+      .attr(
+        "fill",
+        (d) =>
+          d.titleColor ??
+          getTextColor(
+            props.graph.graph.metaData.labels.find(
+              (l) => l.label === d.labels[0],
+            )?.color ?? null,
+          ),
       )
       .attr("font-weight", "bolder")
       .attr("text-anchor", "middle");
