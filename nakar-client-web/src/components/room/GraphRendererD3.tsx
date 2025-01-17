@@ -4,11 +4,16 @@ import * as d3 from "d3";
 import { Edge, GetInitialGraph, Node } from "../../../src-gen";
 import { getTextColor } from "../../lib/color/getTextColor.ts";
 import { getBackgroundColor } from "../../lib/color/getBackgroundColor.ts";
+import { adjustColor } from "../../lib/color/colorShade.ts";
 
 type D3Node = Node & { x: number; y: number; fx?: number; fy?: number };
 type D3Link = Edge & { source: D3Node; target: D3Node };
 
-export function GraphRendererD3(props: { graph: GetInitialGraph }) {
+export function GraphRendererD3(props: {
+  graph: GetInitialGraph;
+  onDisplayNodeData: (node: Node) => void;
+  onDisplayEdgeData: (edge: Edge) => void;
+}) {
   const svgRef = createRef<SVGSVGElement>();
   const theme = useTheme();
 
@@ -137,7 +142,22 @@ export function GraphRendererD3(props: { graph: GetInitialGraph }) {
         .attr("y", (d) => -(d.width / 2 + 8))
         .style("stroke-linejoin", "round")
         .attr("fill", theme == "dark" ? "#ffffff" : "#000000")
-        .attr("stroke-width", 1);
+        .attr("stroke-width", 1)
+        .attr("style", "cursor: pointer;");
+
+    linkLabel
+      .on("mouseover", (e: MouseEvent) => {
+        const el = d3.select(e.currentTarget as SVGTextElement);
+        el.attr("data-original-color", el.attr("fill"));
+        el.attr("fill", adjustColor(el.attr("fill"), -0.5));
+      })
+      .on("mouseout", (e: MouseEvent) => {
+        const el = d3.select(e.currentTarget as SVGTextElement);
+        el.attr("fill", el.attr("data-original-color"));
+      })
+      .on("click", (event: PointerEvent, edge: D3Link) => {
+        props.onDisplayEdgeData(edge);
+      });
 
     const node: d3.Selection<SVGGElement, D3Node, SVGElement, null> =
       zoomContainer
@@ -146,7 +166,8 @@ export function GraphRendererD3(props: { graph: GetInitialGraph }) {
         .selectAll("circle")
         .data(nodes)
         .enter()
-        .append("g");
+        .append("g")
+        .attr("style", "cursor: pointer;");
     node.call(
       d3
         .drag<SVGGElement, D3Node>()
@@ -171,6 +192,20 @@ export function GraphRendererD3(props: { graph: GetInitialGraph }) {
           // d.fy = undefined;
         }),
     );
+    node
+      .on("mouseover", (e: MouseEvent) => {
+        const el = d3.select(e.currentTarget as SVGGElement).select("circle");
+        el.attr("data-original-color", el.attr("fill"));
+        el.attr("fill", adjustColor(el.attr("fill"), -0.5));
+      })
+      .on("mouseout", (e: MouseEvent) => {
+        const el = d3.select(e.currentTarget as SVGGElement).select("circle");
+        el.attr("fill", el.attr("data-original-color"));
+      })
+      .on("click", (event: PointerEvent, node: D3Node) => {
+        props.onDisplayNodeData(node);
+      });
+
     node
       .append("circle")
       .attr("r", (d) => d.radius)
@@ -239,8 +274,8 @@ export function GraphRendererD3(props: { graph: GetInitialGraph }) {
   return (
     <svg
       ref={svgRef}
-      className={"flex-grow-1 flex-shrink-1"}
-      style={{ flexBasis: "50%" }}
+      className={"position-absolute"}
+      style={{ top: 0, left: 0, width: "100%", height: "100%" }}
       xmlns={"http://www.w3.org/1999/xhtml"}
     >
       <g></g>

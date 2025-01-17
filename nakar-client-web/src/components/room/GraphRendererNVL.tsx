@@ -55,8 +55,7 @@ export function GraphRendererNVL(props: { graph: GetInitialGraph }) {
 
   return (
     <InteractiveNvlWrapper
-      className={"flex-grow-1 flex-shrink-1"}
-      style={{ flexBasis: "50%" }}
+      className={"position-absolute"}
       nodes={nodes}
       rels={relationships}
       nvlOptions={{
