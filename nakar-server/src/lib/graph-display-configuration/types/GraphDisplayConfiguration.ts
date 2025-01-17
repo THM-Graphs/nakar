@@ -7,5 +7,6 @@ export type GraphDisplayConfiguration = Readonly<{
   growNodesBasedOnDegreeFactor: number | null;
   nodeDisplayConfigurations: NodeDisplayConfiguration[];
   compressRelationships: boolean | null;
+  compressRelationshipsWidthFactor: number | null;
   scaleType: ScaleType | null;
 }>;

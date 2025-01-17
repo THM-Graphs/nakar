@@ -12,6 +12,13 @@ export interface GraphGraphDisplayConfiguration extends Struct.ComponentSchema {
       ['inherit', 'true', 'false']
     > &
       Schema.Attribute.DefaultTo<'inherit'>;
+    compressRelationshipsWidthFactor: Schema.Attribute.Decimal &
+      Schema.Attribute.SetMinMax<
+        {
+          min: 1;
+        },
+        number
+      >;
     connectResultNodes: Schema.Attribute.Enumeration<
       ['inherit', 'true', 'false']
     > &

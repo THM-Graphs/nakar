@@ -16,6 +16,9 @@ export function mergeGraphDisplayConfigurations(
       ],
       compressRelationships:
         next.compressRelationships ?? akku.compressRelationships,
+      compressRelationshipsWidthFactor:
+        next.compressRelationshipsWidthFactor ??
+        akku.compressRelationshipsWidthFactor,
       scaleType: next.scaleType ?? akku.scaleType,
     }),
     {
@@ -24,6 +27,7 @@ export function mergeGraphDisplayConfigurations(
       growNodesBasedOnDegreeFactor: null,
       nodeDisplayConfigurations: [],
       compressRelationships: null,
+      compressRelationshipsWidthFactor: null,
       scaleType: null,
     },
   );

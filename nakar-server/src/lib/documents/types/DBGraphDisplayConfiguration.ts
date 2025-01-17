@@ -8,5 +8,6 @@ export type DBGraphDisplayConfiguration = Readonly<{
   growNodesBasedOnDegreeFactor?: number | null;
   nodeDisplayConfigurations?: DBNodeDisplayConfiguration[] | null;
   compressRelationships?: DBGraphDisplayConfigurationBoolean | null;
+  compressRelationshipsWidthFactor?: number | null;
   scaleType?: DBScaleType | null;
 }>;

@@ -52,7 +52,7 @@ export function compressRelationships(): Transformer {
     const maxCount = Math.max(...compressedCounts);
 
     const minWidth = 2;
-    const maxWidth = 20;
+    const maxWidth = minWidth * (config.compressRelationshipsWidthFactor ?? 10);
 
     return {
       ...graph,

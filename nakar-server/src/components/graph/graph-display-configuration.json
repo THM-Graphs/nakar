@@ -54,6 +54,10 @@
     "growNodesBasedOnDegreeFactor": {
       "type": "decimal",
       "min": 1
+    },
+    "compressRelationshipsWidthFactor": {
+      "type": "decimal",
+      "min": 1
     }
   }
 }
