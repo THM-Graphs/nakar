@@ -11,6 +11,8 @@ export function createGraphDisplayConfigurationFromDb(
   return {
     connectResultNodes: dbBooleanToNative(dbConfig?.connectResultNodes),
     growNodesBasedOnDegree: dbBooleanToNative(dbConfig?.growNodesBasedOnDegree),
+    growNodesBasedOnDegreeFactor:
+      dbConfig?.growNodesBasedOnDegreeFactor ?? null,
     compressRelationships: dbBooleanToNative(dbConfig?.compressRelationships),
     nodeDisplayConfigurations:
       dbConfig?.nodeDisplayConfigurations?.map(

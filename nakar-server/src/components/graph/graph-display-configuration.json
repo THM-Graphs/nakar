@@ -50,6 +50,10 @@
         "log10"
       ],
       "default": "inherit"
+    },
+    "growNodesBasedOnDegreeFactor": {
+      "type": "decimal",
+      "min": 1
     }
   }
 }

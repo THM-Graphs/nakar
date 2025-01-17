@@ -8,6 +8,8 @@ export function mergeGraphDisplayConfigurations(
       connectResultNodes: next.connectResultNodes ?? akku.connectResultNodes,
       growNodesBasedOnDegree:
         next.growNodesBasedOnDegree ?? akku.growNodesBasedOnDegree,
+      growNodesBasedOnDegreeFactor:
+        next.growNodesBasedOnDegreeFactor ?? akku.growNodesBasedOnDegreeFactor,
       nodeDisplayConfigurations: [
         ...next.nodeDisplayConfigurations,
         ...akku.nodeDisplayConfigurations,
@@ -19,6 +21,7 @@ export function mergeGraphDisplayConfigurations(
     {
       connectResultNodes: null,
       growNodesBasedOnDegree: null,
+      growNodesBasedOnDegreeFactor: null,
       nodeDisplayConfigurations: [],
       compressRelationships: null,
       scaleType: null,

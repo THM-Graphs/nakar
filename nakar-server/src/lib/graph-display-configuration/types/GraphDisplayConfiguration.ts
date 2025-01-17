@@ -4,6 +4,7 @@ import { ScaleType } from './ScaleType';
 export type GraphDisplayConfiguration = Readonly<{
   connectResultNodes: boolean | null;
   growNodesBasedOnDegree: boolean | null;
+  growNodesBasedOnDegreeFactor: number | null;
   nodeDisplayConfigurations: NodeDisplayConfiguration[];
   compressRelationships: boolean | null;
   scaleType: ScaleType | null;

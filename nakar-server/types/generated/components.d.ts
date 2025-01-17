@@ -20,6 +20,13 @@ export interface GraphGraphDisplayConfiguration extends Struct.ComponentSchema {
       ['inherit', 'true', 'false']
     > &
       Schema.Attribute.DefaultTo<'inherit'>;
+    growNodesBasedOnDegreeFactor: Schema.Attribute.Decimal &
+      Schema.Attribute.SetMinMax<
+        {
+          min: 1;
+        },
+        number
+      >;
     nodeDisplayConfigurations: Schema.Attribute.Component<
       'graph.node-display-configuration',
       true
