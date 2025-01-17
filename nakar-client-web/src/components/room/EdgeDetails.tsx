@@ -1,12 +1,5 @@
-import {
-  Card,
-  CloseButton,
-  ListGroup,
-  Modal,
-  Stack,
-  Table,
-} from "react-bootstrap";
-import { Edge, Node } from "../../../src-gen";
+import { Card, CloseButton, ListGroup, Stack, Table } from "react-bootstrap";
+import { Edge } from "../../../src-gen";
 import { CSSProperties } from "react";
 
 export function EdgeDetails(props: {
@@ -18,7 +11,7 @@ export function EdgeDetails(props: {
   return (
     <Card
       style={{ ...props.style, width: "400px" }}
-      className={props.className + " overflow-auto "}
+      className={props.className ?? "" + " overflow-auto "}
     >
       <Card.Body>
         <Stack

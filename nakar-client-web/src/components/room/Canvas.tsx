@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Edge, GetInitialGraph, Node } from "../../../src-gen";
 import { Labels } from "./Labels.tsx";
 import { GraphRendererD3 } from "./GraphRendererD3.tsx";

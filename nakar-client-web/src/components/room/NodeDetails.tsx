@@ -1,11 +1,4 @@
-import {
-  Card,
-  CloseButton,
-  ListGroup,
-  Modal,
-  Stack,
-  Table,
-} from "react-bootstrap";
+import { Card, CloseButton, ListGroup, Stack, Table } from "react-bootstrap";
 import { Node } from "../../../src-gen";
 import { CSSProperties } from "react";
 
@@ -18,7 +11,7 @@ export function NodeDetails(props: {
   return (
     <Card
       style={{ ...props.style, width: "400px" }}
-      className={props.className + " overflow-auto "}
+      className={props.className ?? "" + " overflow-auto "}
     >
       <Card.Body>
         <Stack

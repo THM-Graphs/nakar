@@ -247,10 +247,10 @@ export function GraphRendererD3(props: {
         display: flex; 
         align-items: center; 
         justify-content: center; 
-        width: ${d.radius * 2}px; 
-        height: ${d.radius * 2}px;
+        width: ${(d.radius * 2).toString()}px; 
+        height: ${(d.radius * 2).toString()}px;
         text-align: center;
-        font-size: ${d.radius / 5 + 5}px;
+        font-size: ${(d.radius / 5 + 5).toString()}px;
         `;
       })
       .attr("width", (d) => d.radius * 2)
