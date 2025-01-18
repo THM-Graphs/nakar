@@ -32,13 +32,16 @@ import { Context } from 'koa';
 import { handleRequest } from '../../../lib/strapi-ctx/pipes/handleRequest';
 import { getPathParameter } from '../../../lib/strapi-ctx/pipes/getPathParameter';
 import { getQueryParameter } from '../../../lib/strapi-ctx/pipes/getQueryParameter';
+import { profile, profileAsync } from '../../../lib/profile/pipes/profile';
 
 export default {
   getInitialGraph: handleRequest(
     async (context: Context): Promise<SchemaGetInitialGraph> => {
       const scenarioId = getPathParameter(context, 'id');
 
-      const scenario = await getScenario(scenarioId);
+      const scenario = await profileAsync('getScenario', () =>
+        getScenario(scenarioId),
+      );
       if (scenario == null) {
         throw new NotFound('Scenario not found.');
       }
@@ -54,15 +57,18 @@ export default {
       const credentials = createLoginCredentials(
         scenario.scenarioGroup.database,
       );
-      const graphElements = await executeQuery(credentials, scenario.query);
+      const query = scenario.query;
+      const graphElements = await profileAsync('executeQuery (initial)', () =>
+        executeQuery(credentials, query),
+      );
       const graph: SchemaGetInitialGraph = createInitialGraph(graphElements);
 
-      const displayConfiguration =
-        loadAndMergeGraphDisplaConfiguration(scenario);
-      const proccesedGraph = await applyToGraph(
-        graph,
-        displayConfiguration,
-        credentials,
+      const displayConfiguration = profile(
+        'loadAndMergeGraphDisplaConfiguration',
+        () => loadAndMergeGraphDisplaConfiguration(scenario),
+      );
+      const proccesedGraph = await profileAsync('applyToGraph', () =>
+        applyToGraph(graph, displayConfiguration, credentials),
       );
 
       return proccesedGraph;

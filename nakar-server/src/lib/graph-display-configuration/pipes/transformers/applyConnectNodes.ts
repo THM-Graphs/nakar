@@ -15,6 +15,11 @@ export function applyConnectNodes(credentials: LoginCredentials): Transformer {
     }
 
     const nodeIds = new Set<string>(graph.graph.nodes.map((n) => n.id));
+
+    if (nodeIds.size === 0) {
+      return graph;
+    }
+
     const result = await loadConnectingRelationships(credentials, nodeIds);
 
     const edges = result.relationships.map(createRelationship);

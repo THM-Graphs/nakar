@@ -12,35 +12,42 @@ import { applyNodeRadius } from './transformers/applyNodeRadius';
 import { applyNodeBackgroundColor } from './transformers/applyNodeBackgroundColor';
 import { applyGrowNodeBasedOnDegree } from './transformers/applyGrowNodeBasedOnDegree';
 import { compressRelationships } from './transformers/compressRelationships';
+import { profileAsync } from '../../profile/pipes/profile';
 
 export async function applyToGraph(
   graph: SchemaGetInitialGraph,
   displayConfiguration: GraphDisplayConfiguration,
   credentials: LoginCredentials,
 ): Promise<SchemaGetInitialGraph> {
-  const transformers: Transformer[] = [
-    applyConnectNodes(credentials),
-    compressRelationships(),
-    applyLabels(),
-    applyNodeDegrees(),
-    applyEdgeParallelCounts(),
-    applyNodeConfigurationContext(),
-    applyNodeDisplayText(),
-    applyNodeRadius(),
-    applyNodeBackgroundColor(),
-    applyGrowNodeBasedOnDegree(),
-  ];
+  const transformers: Record<string, Transformer> = {
+    applyConnectNodes: applyConnectNodes(credentials),
+    compressRelationships: compressRelationships(),
+    applyLabels: applyLabels(),
+    applyNodeDegrees: applyNodeDegrees(),
+    applyEdgeParallelCounts: applyEdgeParallelCounts(),
+    applyNodeConfigurationContext: applyNodeConfigurationContext(),
+    applyNodeDisplayText: applyNodeDisplayText(),
+    applyNodeRadius: applyNodeRadius(),
+    applyNodeBackgroundColor: applyNodeBackgroundColor(),
+    applyGrowNodeBasedOnDegree: applyGrowNodeBasedOnDegree(),
+  };
 
-  return await transformers.reduce<Promise<SchemaGetInitialGraph>>(
+  return await Object.entries(transformers).reduce<
+    Promise<SchemaGetInitialGraph>
+  >(
     (
       previousGraph: Promise<SchemaGetInitialGraph>,
-      transformer: Transformer,
+      [key, transformer],
     ): Promise<SchemaGetInitialGraph> =>
       previousGraph.then(
         (
           transformedGraph: SchemaGetInitialGraph,
         ): Promise<SchemaGetInitialGraph> | SchemaGetInitialGraph =>
-          transformer(transformedGraph, displayConfiguration),
+          profileAsync(
+            key,
+            async () =>
+              await transformer(transformedGraph, displayConfiguration),
+          ),
       ),
     Promise.resolve(graph),
   );
