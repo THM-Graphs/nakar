@@ -51,7 +51,7 @@ export function collectGraphElementsFromField(
         return collectGraphElementsFromFields(key, Object.values(o));
       })
       .otherwise(() => {
-        console.debug(
+        strapi.log.debug(
           `Unable to collect nodes and edges from field: ${JSON.stringify(field)}`,
         );
         return { nodes: [], relationships: [], tableData: [] };

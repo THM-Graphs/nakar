@@ -52,7 +52,7 @@ function getNodeRadius(
       }
       const newRadius = parseFloat(newValue);
       if (isNaN(newRadius)) {
-        console.warn(
+        strapi.log.warn(
           `Unable to parse node radius config: ${nodeConfig.radius} for label ${nodeConfig.targetLabel}`,
         );
         continue;

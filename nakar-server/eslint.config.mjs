@@ -40,5 +40,6 @@ export default tseslint.config({
     '@typescript-eslint/member-ordering': ['error'],
     '@typescript-eslint/no-shadow': ['error'],
     eqeqeq: ['error', 'always', { null: 'ignore' }],
+    'no-console': ['error'],
   },
 });

@@ -34,7 +34,7 @@ export function compressRelationships(): Transformer {
           const firstEdge = edges.find((e) => e.type === edgeType);
           if (firstEdge == null) {
             // Should not happen
-            console.error('Did not find edge for merging.');
+            strapi.log.error('Did not find edge for merging.');
             continue;
           }
           relationships.push({
