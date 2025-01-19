@@ -9,41 +9,26 @@ import {
   SchemaGetScenarioGroups,
   SchemaGetScenarios,
 } from '../../../../src-gen/schema';
-import { DBDatabase } from '../../../lib/documents/types/DBDatabase';
-import { DBRoom } from '../../../lib/documents/types/DBRoom';
-import { DBScenarioGroup } from '../../../lib/documents/types/DBScenarioGroup';
-import { DBScenario } from '../../../lib/documents/types/DBScenario';
-import { StrapiController } from '../../../lib/strapi-ctx/types/StrapiController';
-import { getScenario } from '../../../lib/documents/pipes/getScenario';
-import { getDatabases } from '../../../lib/documents/pipes/getDatabases';
-import { createDatabaseDto } from '../../../lib/documents/pipes/createDatabaseDto';
-import { createRoomDto } from '../../../lib/documents/pipes/createRoomDto';
-import { getRooms } from '../../../lib/documents/pipes/getRooms';
-import { getRoom } from '../../../lib/documents/pipes/getRoom';
-import { getScenarioGroups } from '../../../lib/documents/pipes/getScenarioGroups';
-import { createScenarioGroupDto } from '../../../lib/documents/pipes/createScenarioGroupDto';
-import { getScenarios } from '../../../lib/documents/pipes/getScenarios';
-import { createScenarioDto } from '../../../lib/documents/pipes/createScenarioDto';
-import { Context } from 'koa';
-import { handleRequest } from '../../../lib/strapi-ctx/pipes/handleRequest';
-import { getPathParameter } from '../../../lib/strapi-ctx/pipes/getPathParameter';
-import { getQueryParameter } from '../../../lib/strapi-ctx/pipes/getQueryParameter';
-import { profileAsync } from '../../../lib/profile/pipes/profile';
+import { DBDatabase } from '../../../lib/documents/DBDatabase';
+import { DBRoom } from '../../../lib/documents/DBRoom';
+import { DBScenarioGroup } from '../../../lib/documents/DBScenarioGroup';
+import { DBScenario } from '../../../lib/documents/DBScenario';
+import { StrapiController } from '../../../lib/strapi-ctx/StrapiController';
 import { Neo4jLoginCredentials } from '../../../lib/neo4j/Neo4jLoginCredentials';
 import { Neo4jDatabase } from '../../../lib/neo4j/Neo4jDatabase';
 import { MutableScenarioResult } from '../../../lib/graph-transformer/MutableScenarioResult';
 import { MergableGraphDisplayConfiguration } from '../../../lib/graph-display-configuration/MergableGraphDisplayConfiguration';
 import { GraphTransformer } from '../../../lib/graph-display-configuration/GraphTransformer';
 import { NotFound } from 'http-errors';
+import { StrapiContext } from '../../../lib/strapi-ctx/StrapiContext';
+import { Profiler } from '../../../lib/profile/Profiler';
 
 export default {
-  getInitialGraph: handleRequest(
-    async (context: Context): Promise<SchemaGetInitialGraph> => {
-      const scenarioId = getPathParameter(context, 'id');
+  getInitialGraph: StrapiContext.handleRequest(
+    async (context: StrapiContext): Promise<SchemaGetInitialGraph> => {
+      const scenarioId = context.getPathParameter('id');
 
-      const scenario = await profileAsync('getScenario', () =>
-        getScenario(scenarioId),
-      );
+      const scenario = await context.database.getScenario(scenarioId);
       if (scenario == null) {
         throw new NotFound('Scenario not found.');
       }
@@ -61,9 +46,12 @@ export default {
       );
       const neo4jDatabase = new Neo4jDatabase(credentials);
       const query = scenario.query;
-      const graphElements = await profileAsync('executeQuery (initial)', () =>
-        neo4jDatabase.executeQuery(query),
+
+      const initialQueryTask = Profiler.shared.profile(
+        `Initial Query (${scenario.title ?? 'no scenario title'})`,
       );
+      const graphElements = await neo4jDatabase.executeQuery(query);
+      initialQueryTask.finish();
 
       const scenarioResult = MutableScenarioResult.create(graphElements);
 
@@ -92,47 +80,55 @@ export default {
       return scenarioResult.toDto();
     },
   ),
-  getDatabases: handleRequest(async (): Promise<SchemaGetDatabases> => {
-    const databases: DBDatabase[] = await getDatabases();
-    return {
-      databases: databases.map(createDatabaseDto),
-    };
-  }),
-  getRooms: handleRequest(async (): Promise<SchemaGetRooms> => {
-    const dbResult: DBRoom[] = await getRooms();
-    return {
-      rooms: dbResult.map(createRoomDto),
-    };
-  }),
-  getRoom: handleRequest(async (context: Context): Promise<SchemaGetRoom> => {
-    const id = getPathParameter(context, 'id');
-    const dbResult = await getRoom(id);
-    if (dbResult == null) {
-      throw new NotFound('Room not found.');
-    }
-    return createRoomDto(dbResult);
-  }),
-  getScenarioGroups: handleRequest(
-    async (context: Context): Promise<SchemaGetScenarioGroups> => {
-      const databaseId = getQueryParameter(context, 'databaseId');
-
-      const dbResult: DBScenarioGroup[] = await getScenarioGroups(databaseId);
+  getDatabases: StrapiContext.handleRequest(
+    async (context: StrapiContext): Promise<SchemaGetDatabases> => {
+      const databases: DBDatabase[] = await context.database.getDatabases();
       return {
-        scenarioGroups: dbResult.map(createScenarioGroupDto),
+        databases: databases.map((database) => database.toDto()),
       };
     },
   ),
-  getScenarios: handleRequest(
-    async (context: Context): Promise<SchemaGetScenarios> => {
-      const scenarioGroupId = getQueryParameter(context, 'scenarioGroupId');
-
-      const dbResult: DBScenario[] = await getScenarios(scenarioGroupId);
+  getRooms: StrapiContext.handleRequest(
+    async (context: StrapiContext): Promise<SchemaGetRooms> => {
+      const dbResult: DBRoom[] = await context.database.getRooms();
       return {
-        scenarios: dbResult.map(createScenarioDto),
+        rooms: dbResult.map((room) => room.toDto()),
       };
     },
   ),
-  getVersion: handleRequest((): SchemaGetVersion => {
+  getRoom: StrapiContext.handleRequest(
+    async (context: StrapiContext): Promise<SchemaGetRoom> => {
+      const id = context.getPathParameter('id');
+      const dbResult = await context.database.getRoom(id);
+      if (dbResult == null) {
+        throw new NotFound('Room not found.');
+      }
+      return dbResult.toDto();
+    },
+  ),
+  getScenarioGroups: StrapiContext.handleRequest(
+    async (context: StrapiContext): Promise<SchemaGetScenarioGroups> => {
+      const databaseId = context.getQueryParameter('databaseId');
+
+      const dbResult: DBScenarioGroup[] =
+        await context.database.getScenarioGroups(databaseId);
+      return {
+        scenarioGroups: dbResult.map((scenarioGroup) => scenarioGroup.toDto()),
+      };
+    },
+  ),
+  getScenarios: StrapiContext.handleRequest(
+    async (context: StrapiContext): Promise<SchemaGetScenarios> => {
+      const scenarioGroupId = context.getQueryParameter('scenarioGroupId');
+
+      const dbResult: DBScenario[] =
+        await context.database.getScenarios(scenarioGroupId);
+      return {
+        scenarios: dbResult.map((scenario) => scenario.toDto()),
+      };
+    },
+  ),
+  getVersion: StrapiContext.handleRequest((): SchemaGetVersion => {
     const packageVersion = process.env.npm_package_version;
     return {
       version: packageVersion ?? 'unknown',

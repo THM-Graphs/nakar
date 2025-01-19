@@ -1,4 +1,4 @@
-import { ScaleType } from './ScaleType';
+import { ScaleType } from '../tools/ScaleType';
 import { FinalNodeDisplayConfiguration } from './FinalNodeDisplayConfiguration';
 
 export class FinalGraphDisplayConfiguration {

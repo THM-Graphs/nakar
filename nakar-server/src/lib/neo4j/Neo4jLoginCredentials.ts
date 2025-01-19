@@ -1,4 +1,4 @@
-import { DBDatabase } from '../documents/types/DBDatabase';
+import { DBDatabase } from '../documents/DBDatabase';
 
 export class Neo4jLoginCredentials {
   public readonly url: string;

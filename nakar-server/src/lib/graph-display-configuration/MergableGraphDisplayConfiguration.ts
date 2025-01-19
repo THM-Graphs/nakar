@@ -1,10 +1,7 @@
-import { ScaleType } from './ScaleType';
-import { DBGraphDisplayConfiguration } from '../documents/types/DBGraphDisplayConfiguration';
+import { ScaleType } from '../tools/ScaleType';
+import { DBGraphDisplayConfiguration } from '../documents/DBGraphDisplayConfiguration';
 import { MergableNodeDisplayConfiguration } from './MergableNodeDisplayConfiguration';
 import { FinalGraphDisplayConfiguration } from './FinalGraphDisplayConfiguration';
-import { DBGraphDisplayConfigurationBoolean } from '../documents/types/DBGraphDisplayConfigurationBoolean';
-import { match, P } from 'ts-pattern';
-import { DBScaleType } from '../documents/types/DBScaleType';
 
 export class MergableGraphDisplayConfiguration {
   public readonly connectResultNodes: boolean | null;
@@ -41,7 +38,7 @@ export class MergableGraphDisplayConfiguration {
     dbConfig: DBGraphDisplayConfiguration | undefined | null,
   ): MergableGraphDisplayConfiguration {
     const nodeDisplayConfigurations =
-      dbConfig?.nodeDisplayConfigurations?.reduce((akku, next) => {
+      dbConfig?.nodeDisplayConfigurations.reduce((akku, next) => {
         const targetLabel = next.targetLabel ?? '';
         const existingEntry = akku.get(targetLabel);
         const newEntry = MergableNodeDisplayConfiguration.createFromDb(next);
@@ -54,53 +51,18 @@ export class MergableGraphDisplayConfiguration {
       }, new Map<string, MergableNodeDisplayConfiguration>());
 
     return new MergableGraphDisplayConfiguration({
-      connectResultNodes: MergableGraphDisplayConfiguration.dbBooleanToNative(
-        dbConfig?.connectResultNodes,
-      ),
-      growNodesBasedOnDegree:
-        MergableGraphDisplayConfiguration.dbBooleanToNative(
-          dbConfig?.growNodesBasedOnDegree,
-        ),
+      connectResultNodes: dbConfig?.connectResultNodes.value ?? null,
+      growNodesBasedOnDegree: dbConfig?.growNodesBasedOnDegree.value ?? null,
       growNodesBasedOnDegreeFactor:
         dbConfig?.growNodesBasedOnDegreeFactor ?? null,
-      compressRelationships:
-        MergableGraphDisplayConfiguration.dbBooleanToNative(
-          dbConfig?.compressRelationships,
-        ),
+      compressRelationships: dbConfig?.compressRelationships.value ?? null,
       compressRelationshipsWidthFactor:
         dbConfig?.compressRelationshipsWidthFactor ?? null,
       nodeDisplayConfigurations:
         nodeDisplayConfigurations ??
         new Map<string, MergableNodeDisplayConfiguration>(),
-      scaleType: MergableGraphDisplayConfiguration.dbScaleTypeToNative(
-        dbConfig?.scaleType,
-      ),
+      scaleType: dbConfig?.scaleType.value ?? null,
     });
-  }
-
-  private static dbBooleanToNative(
-    input: DBGraphDisplayConfigurationBoolean | null | undefined,
-  ): boolean | null {
-    return match(input)
-      .returnType<boolean | null>()
-      .with(P.nullish, () => null)
-      .with('inherit', () => null)
-      .with('true', () => true)
-      .with('false', () => false)
-      .exhaustive();
-  }
-
-  private static dbScaleTypeToNative(
-    input: DBScaleType | null | undefined,
-  ): ScaleType | null {
-    return match(input)
-      .with(P.nullish, () => null)
-      .with('inherit', () => null)
-      .with('linear', () => ScaleType.linear)
-      .with('log10', () => ScaleType.log10)
-      .with('logn', () => ScaleType.logN)
-      .with('log2', () => ScaleType.log2)
-      .exhaustive();
   }
 
   public byMerging(

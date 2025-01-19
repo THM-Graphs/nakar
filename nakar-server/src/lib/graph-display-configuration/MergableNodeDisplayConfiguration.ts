@@ -1,4 +1,4 @@
-import { DBNodeDisplayConfiguration } from '../documents/types/DBNodeDisplayConfiguration';
+import { DBNodeDisplayConfiguration } from '../documents/DBNodeDisplayConfiguration';
 import { FinalNodeDisplayConfiguration } from './FinalNodeDisplayConfiguration';
 
 export class MergableNodeDisplayConfiguration {
@@ -20,28 +20,10 @@ export class MergableNodeDisplayConfiguration {
     nodeDisplayConfig: DBNodeDisplayConfiguration,
   ): MergableNodeDisplayConfiguration {
     return new MergableNodeDisplayConfiguration({
-      displayText: MergableNodeDisplayConfiguration.nullIfEmpty(
-        nodeDisplayConfig.displayText,
-      ),
-      radius: MergableNodeDisplayConfiguration.nullIfEmpty(
-        nodeDisplayConfig.radius,
-      ),
-      backgroundColor: MergableNodeDisplayConfiguration.nullIfEmpty(
-        nodeDisplayConfig.backgroundColor,
-      ),
+      displayText: nodeDisplayConfig.displayText,
+      radius: nodeDisplayConfig.radius,
+      backgroundColor: nodeDisplayConfig.backgroundColor,
     });
-  }
-
-  private static nullIfEmpty(input: string | null | undefined): string | null {
-    if (input == null) {
-      return null;
-    } else {
-      if (input.trim().length === 0) {
-        return null;
-      } else {
-        return input;
-      }
-    }
   }
 
   public byMerging(

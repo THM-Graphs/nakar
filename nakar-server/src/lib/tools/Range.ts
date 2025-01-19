@@ -1,4 +1,4 @@
-import { ScaleType } from '../graph-display-configuration/ScaleType';
+import { ScaleType } from './ScaleType';
 import { match } from 'ts-pattern';
 
 export class Range {

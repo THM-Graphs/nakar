@@ -1,11 +1,12 @@
 import { MutableScenarioResult } from '../graph-transformer/MutableScenarioResult';
 import { FinalGraphDisplayConfiguration } from './FinalGraphDisplayConfiguration';
 import { Neo4jDatabase } from '../neo4j/Neo4jDatabase';
+import { Profiler } from '../profile/Profiler';
 
 export abstract class TransformTask {
   public readonly title: string;
 
-  public constructor(title: string) {
+  protected constructor(title: string) {
     this.title = title;
   }
 
@@ -14,10 +15,9 @@ export abstract class TransformTask {
     config: FinalGraphDisplayConfiguration,
     database: Neo4jDatabase,
   ): Promise<void> {
-    const startDate = Date.now();
+    const task = Profiler.shared.profile(this.title);
     await this.run(input, config, database);
-    const elapsedMs = Date.now() - startDate;
-    strapi.log.debug(`[${this.title}]: ${elapsedMs.toString()}ms`);
+    task.finish();
   }
 
   protected abstract run(
