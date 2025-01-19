@@ -31,7 +31,7 @@ export class ApplyNodeBackgroundColor extends TransformTask {
         if (newValue.trim().length === 0) {
           continue;
         }
-        node.backgroundColor = newValue;
+        node.customBackgroundColor = newValue;
       }
     }
   }

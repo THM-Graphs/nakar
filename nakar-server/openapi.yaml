@@ -185,7 +185,7 @@ components:
       properties:
         id:
           type: string
-        displayTitle:
+        title:
           type: string
         labels:
           type: array
@@ -218,15 +218,15 @@ components:
           items:
             type: string
         displayConfigurationContext: {}
-        backgroundColor:
+        customBackgroundColor:
           type: string
           nullable: true
-        titleColor:
+        customTitleColor:
           type: string
           nullable: true
       required:
         - id
-        - displayTitle
+        - title
         - labels
         - properties
         - radius
@@ -236,8 +236,8 @@ components:
         - degree
         - namesInQuery
         - displayConfigurationContext
-        - backgroundColor
-        - titleColor
+        - customBackgroundColor
+        - customTitleColor
 
     Edge:
       type: object
@@ -277,9 +277,9 @@ components:
         - isLoop
         - parallelCount
         - parallelIndex
-        - namesInQuery
         - compressedCount
         - width
+        - namesInQuery
 
     Graph:
       type: object

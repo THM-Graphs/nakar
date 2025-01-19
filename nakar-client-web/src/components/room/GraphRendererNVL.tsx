@@ -16,14 +16,17 @@ export function GraphRendererNVL(props: { graph: GetInitialGraph }) {
         id: n.id,
         captions: [
           {
-            value: n.displayTitle,
+            value: n.title,
             styles: ["bold"],
           },
         ],
-        color: getBackgroundColor(
-          props.graph.graph.metaData.labels.find((l) => l.label === n.labels[0])
-            ?.color ?? null,
-        ),
+        color:
+          n.customBackgroundColor ??
+          getBackgroundColor(
+            props.graph.graph.metaData.labels.find(
+              (l) => l.label === n.labels[0],
+            )?.color ?? null,
+          ),
         size: n.radius,
       };
     });

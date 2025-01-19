@@ -19,7 +19,7 @@ export function NodeDetails(props: {
           className={"justify-content-between align-items-baseline"}
         >
           <Stack>
-            <Card.Title>{props.node.displayTitle}</Card.Title>
+            <Card.Title>{props.node.title}</Card.Title>
             <span className={"text-muted small"}>{props.node.id}</span>
           </Stack>
           <CloseButton onClick={props.onClose}></CloseButton>

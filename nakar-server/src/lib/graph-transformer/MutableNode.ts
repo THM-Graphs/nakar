@@ -12,9 +12,9 @@ export class MutableNode {
   public inDegree: number;
   public outDegree: number;
   public namesInQuery: Set<string>;
-  public backgroundColor: string | null;
-  public titleColor: string | null;
-  public customDisplayText: string | null;
+  public customBackgroundColor: string | null;
+  public customTitleColor: string | null;
+  public customTitle: string | null;
 
   public constructor(data: {
     labels: Set<string>;
@@ -24,8 +24,8 @@ export class MutableNode {
     inDegree: number;
     outDegree: number;
     namesInQuery: Set<string>;
-    backgroundColor: string | null;
-    titleColor: string | null;
+    customBackgroundColor: string | null;
+    customTitleColor: string | null;
   }) {
     this.labels = data.labels;
     this.properties = data.properties;
@@ -34,18 +34,18 @@ export class MutableNode {
     this.inDegree = data.inDegree;
     this.outDegree = data.outDegree;
     this.namesInQuery = data.namesInQuery;
-    this.backgroundColor = data.backgroundColor;
-    this.titleColor = data.titleColor;
-    this.customDisplayText = null;
+    this.customBackgroundColor = data.customBackgroundColor;
+    this.customTitleColor = data.customTitleColor;
+    this.customTitle = null;
   }
 
   public get degree(): number {
     return this.inDegree + this.outDegree;
   }
 
-  public get displayTitle(): string {
+  public get title(): string {
     return (
-      this.customDisplayText ??
+      this.customTitle ??
       this.properties.getStringValueOfProperty('name') ??
       this.properties.getStringValueOfProperty('label') ??
       this.properties.firstStringValue() ??
@@ -65,15 +65,15 @@ export class MutableNode {
       inDegree: 0,
       outDegree: 0,
       namesInQuery: node.keys,
-      backgroundColor: null,
-      titleColor: null,
+      customBackgroundColor: null,
+      customTitleColor: null,
     });
   }
 
   public toDto(id: string): SchemaNode {
     return {
       id: id,
-      displayTitle: this.displayTitle,
+      title: this.title,
       labels: this.labels.toArray(),
       properties: this.properties.toDto(),
       radius: this.radius,
@@ -86,8 +86,8 @@ export class MutableNode {
         id,
         this,
       ),
-      backgroundColor: this.backgroundColor,
-      titleColor: this.titleColor,
+      customBackgroundColor: this.customBackgroundColor,
+      customTitleColor: this.customTitleColor,
     };
   }
 }

@@ -214,7 +214,7 @@ export function GraphRendererD3(props: {
       .attr(
         "fill",
         (d) =>
-          d.backgroundColor ??
+          d.customBackgroundColor ??
           getBackgroundColor(
             props.graph.graph.metaData.labels.find(
               (l) => l.label === d.labels[0],
@@ -234,7 +234,7 @@ export function GraphRendererD3(props: {
       .attr("xmlns", "http://www.w3.org/1999/xhtml")
       .attr("style", (d) => {
         const color =
-          d.titleColor ??
+          d.customTitleColor ??
           getTextColor(
             props.graph.graph.metaData.labels.find(
               (l) => l.label === d.labels[0],
@@ -256,7 +256,7 @@ export function GraphRendererD3(props: {
       .attr("width", (d) => d.radius * 2)
       .attr("height", (d) => d.radius * 2)
       .append("xhtml:span")
-      .text((d) => d.displayTitle);
+      .text((d) => d.title);
 
     simulation.on("tick", () => {
       link.attr("d", (d) => curvedPath(d));

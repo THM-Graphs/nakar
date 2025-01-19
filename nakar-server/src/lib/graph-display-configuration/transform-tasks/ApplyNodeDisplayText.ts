@@ -30,7 +30,7 @@ export class ApplyNodeDisplayText extends TransformTask {
           continue;
         }
 
-        node.customDisplayText = newValue;
+        node.customTitle = newValue;
       }
     }
   }
