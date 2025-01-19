@@ -151,7 +151,10 @@ export function GraphRendererD3(props: {
       .on("mouseover", (e: MouseEvent) => {
         const el = d3.select(e.currentTarget as SVGTextElement);
         el.attr("data-original-color", el.attr("fill"));
-        el.attr("fill", adjustColor(el.attr("fill"), -0.5));
+        el.attr(
+          "fill",
+          adjustColor(el.attr("fill"), theme == "dark" ? -0.5 : 0.5),
+        );
       })
       .on("mouseout", (e: MouseEvent) => {
         const el = d3.select(e.currentTarget as SVGTextElement);
