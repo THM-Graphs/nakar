@@ -397,7 +397,7 @@ function curvePoints(d: D3Link): {
   const { x1, y1, x2, y2 } = closestPointsOnNodes(d);
   const angle = Math.atan2(y2 - y1, x2 - x1) * (180 / Math.PI);
 
-  const curvAmount = 13 + d.width;
+  const curvAmount = 15;
 
   const p = pushVectorOfCurve(
     x1,
