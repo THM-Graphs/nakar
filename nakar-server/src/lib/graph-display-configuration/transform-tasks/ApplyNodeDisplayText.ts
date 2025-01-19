@@ -18,14 +18,14 @@ export class ApplyNodeDisplayText extends TransformTask {
         if (nodeConfig == null) {
           continue;
         }
-        if (nodeConfig.displayText === null) {
+        if (nodeConfig.displayTextTemplate == null) {
           continue;
         }
 
         const newValue = NodeDisplayConfigurationContext.create(
           nodeId,
           node,
-        ).applyToTemplate(nodeConfig.displayText);
+        ).applyToTemplate(nodeConfig.displayTextTemplate);
         if (newValue.trim().length === 0) {
           continue;
         }

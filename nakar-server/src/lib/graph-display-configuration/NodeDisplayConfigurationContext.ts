@@ -1,8 +1,8 @@
 import { MutableNode } from '../graph-transformer/MutableNode';
-import Handlebars from 'handlebars';
+import { TemplateDelegate } from 'handlebars';
 
 export class NodeDisplayConfigurationContext {
-  public readonly nativeData: {
+  private readonly nativeData: {
     id: string;
     label: Record<string, true>;
     nameInQuery: Record<string, true>;
@@ -56,8 +56,7 @@ export class NodeDisplayConfigurationContext {
     );
   }
 
-  public applyToTemplate(template: string): string {
-    const c = Handlebars.compile(template);
-    return c(this.nativeData);
+  public applyToTemplate(template: TemplateDelegate): string {
+    return template(this.nativeData);
   }
 }

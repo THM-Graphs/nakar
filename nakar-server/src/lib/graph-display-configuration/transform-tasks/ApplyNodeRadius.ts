@@ -18,14 +18,14 @@ export class ApplyNodeRadius extends TransformTask {
         if (nodeConfig == null) {
           continue;
         }
-        if (nodeConfig.radius === null) {
+        if (nodeConfig.radiusTemplate == null) {
           continue;
         }
 
         const newValue = NodeDisplayConfigurationContext.create(
           nodeId,
           node,
-        ).applyToTemplate(nodeConfig.radius);
+        ).applyToTemplate(nodeConfig.radiusTemplate);
         if (newValue.trim().length === 0) {
           continue;
         }
@@ -33,7 +33,7 @@ export class ApplyNodeRadius extends TransformTask {
         const newRadius = parseFloat(newValue);
         if (isNaN(newRadius)) {
           strapi.log.warn(
-            `Unable to parse node radius config: ${nodeConfig.radius} for label ${label}`,
+            `Unable to parse node radius config: "${newRadius.toString()}" for label ${label}`,
           );
           continue;
         }

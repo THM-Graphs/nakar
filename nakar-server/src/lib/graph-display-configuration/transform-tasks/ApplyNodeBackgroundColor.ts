@@ -19,14 +19,14 @@ export class ApplyNodeBackgroundColor extends TransformTask {
           continue;
         }
 
-        if (nodeConfig.backgroundColor == null) {
+        if (nodeConfig.backgroundColorTemplate == null) {
           continue;
         }
 
         const newValue = NodeDisplayConfigurationContext.create(
           nodeId,
           node,
-        ).applyToTemplate(nodeConfig.backgroundColor);
+        ).applyToTemplate(nodeConfig.backgroundColorTemplate);
 
         if (newValue.trim().length === 0) {
           continue;

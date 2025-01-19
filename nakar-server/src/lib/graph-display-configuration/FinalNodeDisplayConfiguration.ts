@@ -1,7 +1,13 @@
+import { compile, TemplateDelegate } from 'handlebars';
+
 export class FinalNodeDisplayConfiguration {
   public readonly displayText: string | null;
   public readonly radius: string | null;
   public readonly backgroundColor: string | null;
+
+  public readonly displayTextTemplate: TemplateDelegate | null;
+  public readonly radiusTemplate: TemplateDelegate | null;
+  public readonly backgroundColorTemplate: TemplateDelegate | null;
 
   public constructor(data: {
     displayText: string | null;
@@ -11,5 +17,25 @@ export class FinalNodeDisplayConfiguration {
     this.displayText = data.displayText;
     this.radius = data.radius;
     this.backgroundColor = data.backgroundColor;
+
+    this.displayTextTemplate = FinalNodeDisplayConfiguration.createTemplate(
+      data.displayText,
+    );
+    this.radiusTemplate = FinalNodeDisplayConfiguration.createTemplate(
+      data.radius,
+    );
+    this.backgroundColorTemplate = FinalNodeDisplayConfiguration.createTemplate(
+      data.backgroundColor,
+    );
+  }
+
+  private static createTemplate(input: string | null): TemplateDelegate | null {
+    if (input == null) {
+      return null;
+    }
+    if (input.trim().length === 0) {
+      return null;
+    }
+    return compile(input);
   }
 }
