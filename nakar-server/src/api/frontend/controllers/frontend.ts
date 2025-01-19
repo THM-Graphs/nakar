@@ -1,3 +1,5 @@
+import '../../../lib/tools/Set';
+import '../../../lib/tools/Map';
 import {
   SchemaGetDatabases,
   SchemaGetVersion,
@@ -12,12 +14,6 @@ import { DBRoom } from '../../../lib/documents/types/DBRoom';
 import { DBScenarioGroup } from '../../../lib/documents/types/DBScenarioGroup';
 import { DBScenario } from '../../../lib/documents/types/DBScenario';
 import { StrapiController } from '../../../lib/strapi-ctx/types/StrapiController';
-import { executeQuery } from '../../../lib/neo4j/pipes/executeQuery';
-import { createLoginCredentials } from '../../../lib/neo4j/pipes/createLoginCredentials';
-import { NotFound } from 'http-errors';
-import { createInitialGraph } from '../../../lib/graph-transformer/pipes/createInitialGraph';
-import { loadAndMergeGraphDisplaConfiguration } from '../../../lib/graph-display-configuration/pipes/loadAndMergeGraphDisplaConfiguration';
-import { applyToGraph } from '../../../lib/graph-display-configuration/pipes/applyToGraph';
 import { getScenario } from '../../../lib/documents/pipes/getScenario';
 import { getDatabases } from '../../../lib/documents/pipes/getDatabases';
 import { createDatabaseDto } from '../../../lib/documents/pipes/createDatabaseDto';
@@ -32,7 +28,13 @@ import { Context } from 'koa';
 import { handleRequest } from '../../../lib/strapi-ctx/pipes/handleRequest';
 import { getPathParameter } from '../../../lib/strapi-ctx/pipes/getPathParameter';
 import { getQueryParameter } from '../../../lib/strapi-ctx/pipes/getQueryParameter';
-import { profile, profileAsync } from '../../../lib/profile/pipes/profile';
+import { profileAsync } from '../../../lib/profile/pipes/profile';
+import { Neo4jLoginCredentials } from '../../../lib/neo4j/Neo4jLoginCredentials';
+import { Neo4jDatabase } from '../../../lib/neo4j/Neo4jDatabase';
+import { MutableScenarioResult } from '../../../lib/graph-transformer/MutableScenarioResult';
+import { MergableGraphDisplayConfiguration } from '../../../lib/graph-display-configuration/MergableGraphDisplayConfiguration';
+import { GraphTransformer } from '../../../lib/graph-display-configuration/GraphTransformer';
+import { NotFound } from 'http-errors';
 
 export default {
   getInitialGraph: handleRequest(
@@ -54,24 +56,40 @@ export default {
         );
       }
 
-      const credentials = createLoginCredentials(
+      const credentials = Neo4jLoginCredentials.parse(
         scenario.scenarioGroup.database,
       );
+      const neo4jDatabase = new Neo4jDatabase(credentials);
       const query = scenario.query;
       const graphElements = await profileAsync('executeQuery (initial)', () =>
-        executeQuery(credentials, query),
-      );
-      const graph: SchemaGetInitialGraph = createInitialGraph(graphElements);
-
-      const displayConfiguration = profile(
-        'loadAndMergeGraphDisplaConfiguration',
-        () => loadAndMergeGraphDisplaConfiguration(scenario),
-      );
-      const proccesedGraph = await profileAsync('applyToGraph', () =>
-        applyToGraph(graph, displayConfiguration, credentials),
+        neo4jDatabase.executeQuery(query),
       );
 
-      return proccesedGraph;
+      const scenarioResult = MutableScenarioResult.create(graphElements);
+
+      const displayConfiguration =
+        MergableGraphDisplayConfiguration.createFromDb(
+          scenario.scenarioGroup.database.graphDisplayConfiguration,
+        )
+          .byMerging(
+            MergableGraphDisplayConfiguration.createFromDb(
+              scenario.scenarioGroup.graphDisplayConfiguration,
+            ),
+          )
+          .byMerging(
+            MergableGraphDisplayConfiguration.createFromDb(
+              scenario.graphDisplayConfiguration,
+            ),
+          )
+          .finalize();
+
+      const graphTransformer = new GraphTransformer(
+        displayConfiguration,
+        neo4jDatabase,
+      );
+      await graphTransformer.run(scenarioResult);
+
+      return scenarioResult.toDto();
     },
   ),
   getDatabases: handleRequest(async (): Promise<SchemaGetDatabases> => {

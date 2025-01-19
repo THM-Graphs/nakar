@@ -12,6 +12,7 @@ export function handleRequest<T>(
       ctx.status = 200;
       return ctx;
     } catch (unknownError: unknown) {
+      strapi.log.error(unknownError);
       return match(unknownError)
         .with(P.instanceOf(HttpError), (error) => handleError(ctx, error))
         .with(P.instanceOf(Error), (error) =>
