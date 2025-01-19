@@ -3,8 +3,8 @@ import { Neo4jGraphElements } from '../neo4j/Neo4jGraphElements';
 import { SchemaGetInitialGraph } from '../../../src-gen/schema';
 
 export class MutableScenarioResult {
-  public readonly graph: MutableGraph;
-  public readonly tableData: Map<string, unknown>[];
+  public graph: MutableGraph;
+  public tableData: Map<string, unknown>[];
 
   public constructor(data: {
     graph: MutableGraph;

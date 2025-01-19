@@ -2,8 +2,8 @@ import { MutableGraphColor } from './MutableGraphColor';
 import { SchemaCustomColor } from '../../../src-gen/schema';
 
 export class MutableGraphColorCustom extends MutableGraphColor {
-  public readonly backgroundColor: string;
-  public readonly textColor: string;
+  public backgroundColor: string;
+  public textColor: string;
 
   public constructor(data: { backgroundColor: string; textColor: string }) {
     super();
