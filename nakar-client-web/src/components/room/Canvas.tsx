@@ -12,10 +12,6 @@ export function Canvas(props: {
   graph: GetInitialGraph | null;
   renderer: GraphRendererEngine;
 }) {
-  if (props.graph == null) {
-    return null;
-  }
-
   const [detailsNode, setDetailsNode] = useState<Node | null>(null);
   const [detailsEdge, setDetailsEdge] = useState<Edge | null>(null);
 
@@ -23,6 +19,10 @@ export function Canvas(props: {
     setDetailsNode(null);
     setDetailsEdge(null);
   }, [props.graph]);
+
+  if (props.graph == null) {
+    return null;
+  }
 
   return (
     <Stack
