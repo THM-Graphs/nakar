@@ -32,4 +32,4 @@ deploy_server:
     - IMAGE_VERSION=$(cd nakar-server && npm run --silent version)
     - docker build -f nakar-server/Dockerfile -t "git-registry.thm.de/sspp77/nakar/server:$IMAGE_VERSION" .
     - docker push "git-registry.thm.de/sspp77/nakar/server:$IMAGE_VERSION"
-    - docker rmi "git-registry.thm.de/sspp77/nakar/server:$IMAGE_VERSION"
+    - docker rmi "git-registry.thm.de/sspp77/nakar/server:$IMAGE_VERSION" || true
