@@ -295,11 +295,11 @@ function closestPointsOnNodes(d: D3Link) {
   const y2 = d.target.y;
 
   if (d.isLoop) {
-    const loopSize = Math.min(90, 360 / d.source.degree) / 2;
+    const loopSizeRadius = Math.min(90, 360 / d.parallelCount / 2) / 2;
     const angle = (d.parallelIndex / d.parallelCount) * 360 - 90;
     const length = d.source.radius;
-    const ps = vector(x1, y1, angle - loopSize, length);
-    const pe = vector(x1, y1, angle + loopSize, length);
+    const ps = vector(x1, y1, angle - loopSizeRadius, length);
+    const pe = vector(x1, y1, angle + loopSizeRadius, length);
 
     return {
       x1: ps.x,
@@ -338,7 +338,7 @@ function curvedPath(d: D3Link) {
   );
 
   if (d.isLoop) {
-    return d3.line().curve(d3.curveCardinal.tension(-3))(points);
+    return d3.line().curve(d3.curveCardinal.tension(-5))(points);
   } else if (d.parallelCount > 0) {
     return d3.line().curve(d3.curveCatmullRom)(points);
   } else {
