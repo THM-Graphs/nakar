@@ -1,11 +1,11 @@
 import { TransformTask } from '../TransformTask';
-import { MutableScenarioResult } from '../../graph-transformer/MutableScenarioResult';
+import { MutableScenarioResult } from '../../MutableScenarioResult';
 import { FinalGraphDisplayConfiguration } from '../FinalGraphDisplayConfiguration';
 import { NodeDisplayConfigurationContext } from '../NodeDisplayConfigurationContext';
 
-export class ApplyNodeDisplayText extends TransformTask {
+export class ApplyNodeBackgroundColor extends TransformTask {
   public constructor() {
-    super('ApplyNodeDisplayText');
+    super('ApplyNodeBackgroundColor');
   }
 
   protected run(
@@ -18,19 +18,20 @@ export class ApplyNodeDisplayText extends TransformTask {
         if (nodeConfig == null) {
           continue;
         }
-        if (nodeConfig.displayTextTemplate == null) {
+
+        if (nodeConfig.backgroundColorTemplate == null) {
           continue;
         }
 
         const newValue = NodeDisplayConfigurationContext.create(
           nodeId,
           node,
-        ).applyToTemplate(nodeConfig.displayTextTemplate);
+        ).applyToTemplate(nodeConfig.backgroundColorTemplate);
+
         if (newValue.trim().length === 0) {
           continue;
         }
-
-        node.customTitle = newValue;
+        node.customBackgroundColor = newValue;
       }
     }
   }

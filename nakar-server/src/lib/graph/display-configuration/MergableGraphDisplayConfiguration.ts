@@ -1,5 +1,5 @@
-import { ScaleType } from '../tools/ScaleType';
-import { DBGraphDisplayConfiguration } from '../documents/DBGraphDisplayConfiguration';
+import { ScaleType } from '../../tools/ScaleType';
+import { DBGraphDisplayConfiguration } from '../../documents/DBGraphDisplayConfiguration';
 import { MergableNodeDisplayConfiguration } from './MergableNodeDisplayConfiguration';
 import { FinalGraphDisplayConfiguration } from './FinalGraphDisplayConfiguration';
 

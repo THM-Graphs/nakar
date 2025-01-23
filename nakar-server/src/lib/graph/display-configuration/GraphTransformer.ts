@@ -1,7 +1,7 @@
 import { TransformTask } from './TransformTask';
-import { MutableScenarioResult } from '../graph-transformer/MutableScenarioResult';
+import { MutableScenarioResult } from '../MutableScenarioResult';
 import { FinalGraphDisplayConfiguration } from './FinalGraphDisplayConfiguration';
-import { Neo4jDatabase } from '../neo4j/Neo4jDatabase';
+import { Neo4jDatabase } from '../../neo4j/Neo4jDatabase';
 import { ConnectNodes } from './transform-tasks/ConnectNodes';
 import { CompressRelationships } from './transform-tasks/CompressRelationships';
 import { ApplyLabels } from './transform-tasks/ApplyLabels';

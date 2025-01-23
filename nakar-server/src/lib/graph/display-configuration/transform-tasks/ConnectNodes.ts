@@ -1,8 +1,8 @@
 import { TransformTask } from '../TransformTask';
-import { MutableScenarioResult } from '../../graph-transformer/MutableScenarioResult';
+import { MutableScenarioResult } from '../../MutableScenarioResult';
 import { FinalGraphDisplayConfiguration } from '../FinalGraphDisplayConfiguration';
-import { Neo4jDatabase } from '../../neo4j/Neo4jDatabase';
-import { MutableEdge } from '../../graph-transformer/MutableEdge';
+import { Neo4jDatabase } from '../../../neo4j/Neo4jDatabase';
+import { MutableEdge } from '../../MutableEdge';
 
 export class ConnectNodes extends TransformTask {
   public constructor() {

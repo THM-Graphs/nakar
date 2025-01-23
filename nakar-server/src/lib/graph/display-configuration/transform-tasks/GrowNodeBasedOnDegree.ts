@@ -1,7 +1,7 @@
 import { TransformTask } from '../TransformTask';
-import { MutableScenarioResult } from '../../graph-transformer/MutableScenarioResult';
+import { MutableScenarioResult } from '../../MutableScenarioResult';
 import { FinalGraphDisplayConfiguration } from '../FinalGraphDisplayConfiguration';
-import { Range } from '../../tools/Range';
+import { Range } from '../../../tools/Range';
 
 export class GrowNodeBasedOnDegree extends TransformTask {
   public constructor() {

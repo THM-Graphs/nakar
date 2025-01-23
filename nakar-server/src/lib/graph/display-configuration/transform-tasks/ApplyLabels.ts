@@ -1,7 +1,7 @@
 import { TransformTask } from '../TransformTask';
-import { MutableScenarioResult } from '../../graph-transformer/MutableScenarioResult';
-import { MutableGraphColorPreset } from '../../graph-transformer/MutableGraphColorPreset';
-import { MutableGraphLabel } from '../../graph-transformer/MutableGraphLabel';
+import { MutableScenarioResult } from '../../MutableScenarioResult';
+import { MutableGraphColorPreset } from '../../MutableGraphColorPreset';
+import { MutableGraphLabel } from '../../MutableGraphLabel';
 
 export class ApplyLabels extends TransformTask {
   public constructor() {

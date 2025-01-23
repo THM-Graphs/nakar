@@ -1,4 +1,4 @@
-import { MutableNode } from '../graph-transformer/MutableNode';
+import { MutableNode } from '../MutableNode';
 import { TemplateDelegate } from 'handlebars';
 
 export class NodeDisplayConfigurationContext {

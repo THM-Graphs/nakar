@@ -1,5 +1,5 @@
 import { TransformTask } from '../TransformTask';
-import { MutableScenarioResult } from '../../graph-transformer/MutableScenarioResult';
+import { MutableScenarioResult } from '../../MutableScenarioResult';
 
 export class ApplyEdgeParallelCounts extends TransformTask {
   public constructor() {

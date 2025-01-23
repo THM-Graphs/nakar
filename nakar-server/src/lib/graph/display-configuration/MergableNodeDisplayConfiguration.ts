@@ -1,4 +1,4 @@
-import { DBNodeDisplayConfiguration } from '../documents/DBNodeDisplayConfiguration';
+import { DBNodeDisplayConfiguration } from '../../documents/DBNodeDisplayConfiguration';
 import { FinalNodeDisplayConfiguration } from './FinalNodeDisplayConfiguration';
 
 export class MergableNodeDisplayConfiguration {

@@ -1,8 +1,8 @@
 import { TransformTask } from '../TransformTask';
-import { MutableScenarioResult } from '../../graph-transformer/MutableScenarioResult';
+import { MutableScenarioResult } from '../../MutableScenarioResult';
 import { FinalGraphDisplayConfiguration } from '../FinalGraphDisplayConfiguration';
-import { MutableEdge } from '../../graph-transformer/MutableEdge';
-import { Range } from '../../tools/Range';
+import { MutableEdge } from '../../MutableEdge';
+import { Range } from '../../../tools/Range';
 
 export class CompressRelationships extends TransformTask {
   public constructor() {

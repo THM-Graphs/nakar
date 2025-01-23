@@ -2,7 +2,7 @@ import { MutablePosition } from './MutablePosition';
 import { Neo4jNode } from '../neo4j/Neo4jNode';
 import { MutablePropertyCollection } from './MutablePropertyCollection';
 import { SchemaNode } from '../../../src-gen/schema';
-import { NodeDisplayConfigurationContext } from '../graph-display-configuration/NodeDisplayConfigurationContext';
+import { NodeDisplayConfigurationContext } from './display-configuration/NodeDisplayConfigurationContext';
 
 export class MutableNode {
   public labels: Set<string>;

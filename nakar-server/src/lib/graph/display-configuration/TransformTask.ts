@@ -1,7 +1,7 @@
-import { MutableScenarioResult } from '../graph-transformer/MutableScenarioResult';
+import { MutableScenarioResult } from '../MutableScenarioResult';
 import { FinalGraphDisplayConfiguration } from './FinalGraphDisplayConfiguration';
-import { Neo4jDatabase } from '../neo4j/Neo4jDatabase';
-import { Profiler } from '../profile/Profiler';
+import { Neo4jDatabase } from '../../neo4j/Neo4jDatabase';
+import { Profiler } from '../../profile/Profiler';
 
 export abstract class TransformTask {
   public readonly title: string;
