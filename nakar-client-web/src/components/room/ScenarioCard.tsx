@@ -1,18 +1,15 @@
 import { Button, Card, Stack } from "react-bootstrap";
 import { ScenarioIcon } from "./ScenarioIcon.tsx";
 import { QueryDisplay } from "./QueryDisplay.tsx";
-import { GetScenario } from "../../../src-gen";
-import { useState } from "react";
+import { Scenario } from "../../../src-gen";
 import { Loading } from "../shared/Loading.tsx";
 
 export function ScenarioCard(props: {
   hidden?: boolean;
-  scenario: GetScenario;
-  onScenarioSelected: (scenario: GetScenario) => Promise<void>;
-  anyScenarioIsLoading: boolean;
+  scenario: Scenario;
+  onScenarioSelected: (scenario: Scenario) => void;
+  scenarioLoading: string | null;
 }) {
-  const [scenarioIsLoading, setScenarioIsLoading] = useState(false);
-
   return (
     <Card className={"mb-2 me-2"} hidden={props.hidden}>
       <Card.Body>
@@ -26,19 +23,12 @@ export function ScenarioCard(props: {
           size={"sm"}
           className={"mb-2 mt-2"}
           onClick={() => {
-            setScenarioIsLoading(true);
-            props
-              .onScenarioSelected(props.scenario)
-              .catch(console.error)
-              .then(() => {
-                setScenarioIsLoading(false);
-              })
-              .catch(console.error);
+            props.onScenarioSelected(props.scenario);
           }}
-          disabled={props.anyScenarioIsLoading}
+          disabled={props.scenarioLoading != null}
         >
           <Stack direction={"horizontal"} gap={1}>
-            {scenarioIsLoading ? (
+            {props.scenarioLoading === props.scenario.id ? (
               <Loading size={"sm"}></Loading>
             ) : (
               <i className={"bi bi-play-circle"}></i>

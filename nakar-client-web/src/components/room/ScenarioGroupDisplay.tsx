@@ -1,8 +1,8 @@
 import {
-  GetScenario,
-  GetScenarioGroup,
+  Scenario,
+  ScenarioGroup,
   getScenarios,
-  GetScenarios,
+  Scenarios,
 } from "../../../src-gen";
 import { ScenariosList } from "./ScenariosList.tsx";
 import { useEffect, useState } from "react";
@@ -13,13 +13,13 @@ import clsx from "clsx";
 import { resultOrThrow } from "../../lib/data/resultOrThrow";
 
 export function ScenarioGroupDisplay(props: {
-  scenarioGroup: GetScenarioGroup;
-  onScenarioSelect: (scenario: GetScenario) => Promise<void>;
+  scenarioGroup: ScenarioGroup;
+  onScenarioSelect: (scenario: Scenario) => void;
   hidden?: boolean;
-  anyScenarioIsLoading: boolean;
+  scenarioLoading: string | null;
 }) {
   const [collapsed, setCollapsed] = useState(true);
-  const [scnenarios, setScenarios] = useState<Loadable<GetScenarios>>({
+  const [scnenarios, setScenarios] = useState<Loadable<Scenarios>>({
     type: "loading",
   });
 
@@ -62,7 +62,7 @@ export function ScenarioGroupDisplay(props: {
           scenarios={scnenarios.data}
           hidden={props.hidden || collapsed}
           onScenarioSelected={props.onScenarioSelect}
-          anyScenarioIsLoading={props.anyScenarioIsLoading}
+          scenarioLoading={props.scenarioLoading}
         ></ScenariosList>
       )}
     </>

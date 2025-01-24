@@ -1,9 +1,4 @@
-import {
-  GetDatabase,
-  getDatabases,
-  GetDatabases,
-  GetScenario,
-} from "../../../src-gen";
+import { Database, getDatabases, Databases, Scenario } from "../../../src-gen";
 import { useEffect, useState } from "react";
 import { match } from "ts-pattern";
 import { handleError } from "../../lib/error/handleError.ts";
@@ -14,10 +9,10 @@ import { Loadable } from "../../lib/data/Loadable.ts";
 import { resultOrThrow } from "../../lib/data/resultOrThrow.ts";
 
 export function DatabaseList(props: {
-  onScenarioSelect: (scenario: GetScenario) => Promise<void>;
-  anyScenarioIsLoading: boolean;
+  onScenarioSelect: (scenario: Scenario) => void;
+  scenarioLoading: string | null;
 }) {
-  const [databases, setDatabases] = useState<Loadable<GetDatabases>>({
+  const [databases, setDatabases] = useState<Loadable<Databases>>({
     type: "loading",
   });
 
@@ -43,12 +38,12 @@ export function DatabaseList(props: {
     .with({ type: "loading" }, () => <Loading></Loading>)
     .with({ type: "data" }, ({ data }) => (
       <ul className={"pe-2"}>
-        {data.databases.map((database: GetDatabase) => (
+        {data.databases.map((database: Database) => (
           <DatabaseDisplay
             onScenarioSelect={props.onScenarioSelect}
             key={database.id}
             database={database}
-            anyScenarioIsLoading={props.anyScenarioIsLoading}
+            scenarioLoading={props.scenarioLoading}
           ></DatabaseDisplay>
         ))}
       </ul>

@@ -1,7 +1,7 @@
 import { TransformTask } from '../TransformTask';
-import { MutableScenarioResult } from '../../MutableScenarioResult';
 import { FinalGraphDisplayConfiguration } from '../FinalGraphDisplayConfiguration';
 import { Range } from '../../../tools/Range';
+import { MutableGraph } from '../../MutableGraph';
 
 export class GrowNodeBasedOnDegree extends TransformTask {
   public constructor() {
@@ -9,7 +9,7 @@ export class GrowNodeBasedOnDegree extends TransformTask {
   }
 
   protected run(
-    input: MutableScenarioResult,
+    input: MutableGraph,
     config: FinalGraphDisplayConfiguration,
   ): void {
     if (!config.growNodesBasedOnDegree) {
@@ -20,7 +20,7 @@ export class GrowNodeBasedOnDegree extends TransformTask {
       return;
     }
 
-    const degrees: number[] = input.graph.nodes
+    const degrees: number[] = input.nodes
       .toArray()
       .map(([, node]): number => node.degree);
 
@@ -33,7 +33,7 @@ export class GrowNodeBasedOnDegree extends TransformTask {
       ceiling: Math.max(...degrees),
     });
 
-    for (const node of input.graph.nodes.values()) {
+    for (const node of input.nodes.values()) {
       const toRange = new Range({
         floor: node.radius,
         ceiling: node.radius * config.growNodesBasedOnDegreeFactor,

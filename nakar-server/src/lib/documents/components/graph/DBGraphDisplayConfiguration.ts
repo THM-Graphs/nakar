@@ -1,6 +1,6 @@
-import { DBNullableBoolean } from './DBNullableBoolean';
+import { DBNullableBoolean } from '../../others/DBNullableBoolean';
 import { DBNodeDisplayConfiguration } from './DBNodeDisplayConfiguration';
-import { DBNullableScaleType } from './DBNullableScaleType';
+import { DBNullableScaleType } from '../../others/DBNullableScaleType';
 import type { Result } from '@strapi/types/dist/modules/documents/result';
 
 export class DBGraphDisplayConfiguration {

@@ -1,7 +1,7 @@
-import { MutableScenarioResult } from '../MutableScenarioResult';
 import { FinalGraphDisplayConfiguration } from './FinalGraphDisplayConfiguration';
 import { Neo4jDatabase } from '../../neo4j/Neo4jDatabase';
 import { Profiler } from '../../profile/Profiler';
+import { MutableGraph } from '../MutableGraph';
 
 export abstract class TransformTask {
   public readonly title: string;
@@ -11,7 +11,7 @@ export abstract class TransformTask {
   }
 
   public async runAndProfile(
-    input: MutableScenarioResult,
+    input: MutableGraph,
     config: FinalGraphDisplayConfiguration,
     database: Neo4jDatabase,
   ): Promise<void> {
@@ -21,7 +21,7 @@ export abstract class TransformTask {
   }
 
   protected abstract run(
-    input: MutableScenarioResult,
+    input: MutableGraph,
     config: FinalGraphDisplayConfiguration,
     database: Neo4jDatabase,
   ): Promise<void> | void;

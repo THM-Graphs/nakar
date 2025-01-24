@@ -1,10 +1,11 @@
 import { Relationship } from 'neo4j-driver';
+import { SSet } from '../tools/Set';
 
 export class Neo4jRelationship {
   public readonly relationship: Relationship;
-  public readonly keys: Set<string>;
+  public readonly keys: SSet<string>;
 
-  public constructor(data: { relationship: Relationship; keys: Set<string> }) {
+  public constructor(data: { relationship: Relationship; keys: SSet<string> }) {
     this.relationship = data.relationship;
     this.keys = data.keys;
   }
@@ -15,7 +16,7 @@ export class Neo4jRelationship {
   ): Neo4jRelationship {
     return new Neo4jRelationship({
       relationship: relationship,
-      keys: key == null ? new Set() : new Set([key]),
+      keys: key == null ? new SSet() : new SSet([key]),
     });
   }
 

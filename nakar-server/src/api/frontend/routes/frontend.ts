@@ -47,15 +47,6 @@ export default {
     },
     {
       method: 'GET',
-      path: '/frontend/scenario/:id/initial-graph',
-      handler: 'frontend.getInitialGraph',
-      config: {
-        policies: [],
-        middlewares: [],
-      },
-    },
-    {
-      method: 'GET',
       path: '/frontend/system/version',
       handler: 'frontend.getVersion',
       config: {

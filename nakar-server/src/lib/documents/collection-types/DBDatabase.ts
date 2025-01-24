@@ -1,5 +1,5 @@
-import { DBGraphDisplayConfiguration } from './DBGraphDisplayConfiguration';
-import { SchemaGetDatabase } from '../../../src-gen/schema';
+import { DBGraphDisplayConfiguration } from '../components/graph/DBGraphDisplayConfiguration';
+import { SchemaDatabase } from '../../../../src-gen/schema';
 import type { Result } from '@strapi/types/dist/modules/documents/result';
 
 export class DBDatabase {
@@ -48,7 +48,7 @@ export class DBDatabase {
     });
   }
 
-  public toDto(): SchemaGetDatabase {
+  public toDto(): SchemaDatabase {
     return {
       id: this.documentId,
       title: this.title,

@@ -1,13 +1,14 @@
 import { ScaleType } from '../../tools/ScaleType';
-import { DBGraphDisplayConfiguration } from '../../documents/DBGraphDisplayConfiguration';
+import { DBGraphDisplayConfiguration } from '../../documents/components/graph/DBGraphDisplayConfiguration';
 import { MergableNodeDisplayConfiguration } from './MergableNodeDisplayConfiguration';
 import { FinalGraphDisplayConfiguration } from './FinalGraphDisplayConfiguration';
+import { SMap } from '../../tools/Map';
 
 export class MergableGraphDisplayConfiguration {
   public readonly connectResultNodes: boolean | null;
   public readonly growNodesBasedOnDegree: boolean | null;
   public readonly growNodesBasedOnDegreeFactor: number | null;
-  public readonly nodeDisplayConfigurations: Map<
+  public readonly nodeDisplayConfigurations: SMap<
     string,
     MergableNodeDisplayConfiguration
   >;
@@ -19,7 +20,7 @@ export class MergableGraphDisplayConfiguration {
     connectResultNodes: boolean | null;
     growNodesBasedOnDegree: boolean | null;
     growNodesBasedOnDegreeFactor: number | null;
-    nodeDisplayConfigurations: Map<string, MergableNodeDisplayConfiguration>;
+    nodeDisplayConfigurations: SMap<string, MergableNodeDisplayConfiguration>;
     compressRelationships: boolean | null;
     compressRelationshipsWidthFactor: number | null;
     scaleType: ScaleType | null;
@@ -48,7 +49,7 @@ export class MergableGraphDisplayConfiguration {
         } else {
           return akku.bySetting(targetLabel, existingEntry.byMerging(newEntry));
         }
-      }, new Map<string, MergableNodeDisplayConfiguration>());
+      }, new SMap<string, MergableNodeDisplayConfiguration>());
 
     return new MergableGraphDisplayConfiguration({
       connectResultNodes: dbConfig?.connectResultNodes.value ?? null,
@@ -60,7 +61,7 @@ export class MergableGraphDisplayConfiguration {
         dbConfig?.compressRelationshipsWidthFactor ?? null,
       nodeDisplayConfigurations:
         nodeDisplayConfigurations ??
-        new Map<string, MergableNodeDisplayConfiguration>(),
+        new SMap<string, MergableNodeDisplayConfiguration>(),
       scaleType: dbConfig?.scaleType.value ?? null,
     });
   }
@@ -68,7 +69,7 @@ export class MergableGraphDisplayConfiguration {
   public byMerging(
     other: MergableGraphDisplayConfiguration,
   ): MergableGraphDisplayConfiguration {
-    const newNodeDisplayConfigurations = new Map<
+    const newNodeDisplayConfigurations = new SMap<
       string,
       MergableNodeDisplayConfiguration
     >();

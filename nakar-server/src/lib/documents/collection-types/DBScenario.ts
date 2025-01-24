@@ -1,8 +1,8 @@
 import { DBScenarioGroup } from './DBScenarioGroup';
-import { DBGraphDisplayConfiguration } from './DBGraphDisplayConfiguration';
-import { DBMedia } from './DBMedia';
+import { DBGraphDisplayConfiguration } from '../components/graph/DBGraphDisplayConfiguration';
+import { DBMedia } from '../others/DBMedia';
 import type { Result } from '@strapi/types/dist/modules/documents/result';
-import { SchemaGetScenario } from '../../../src-gen/schema';
+import { SchemaScenario } from '../../../../src-gen/schema';
 
 export class DBScenario {
   public readonly documentId: string;
@@ -54,7 +54,7 @@ export class DBScenario {
     });
   }
 
-  public toDto(): SchemaGetScenario {
+  public toDto(): SchemaScenario {
     return {
       id: this.documentId,
       title: this.title,

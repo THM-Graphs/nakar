@@ -1,8 +1,23 @@
 import { Neo4jRelationship } from '../neo4j/Neo4jRelationship';
 import { MutablePropertyCollection } from './MutablePropertyCollection';
 import { SchemaEdge } from '../../../src-gen/schema';
+import { z } from 'zod';
+import { SSet } from '../tools/Set';
 
 export class MutableEdge {
+  public static readonly defaultWidth = 2;
+  public static readonly schema = z.object({
+    startNodeId: z.string(),
+    endNodeId: z.string(),
+    type: z.string(),
+    parallelCount: z.number(),
+    parallelIndex: z.number(),
+    compressedCount: z.number(),
+    width: z.number(),
+    properties: MutablePropertyCollection.schema,
+    namesInQuery: z.array(z.string()),
+  });
+
   public startNodeId: string;
   public endNodeId: string;
   public type: string;
@@ -11,7 +26,7 @@ export class MutableEdge {
   public compressedCount: number;
   public width: number;
   public properties: MutablePropertyCollection;
-  public namesInQuery: Set<string>;
+  public namesInQuery: SSet<string>;
 
   public constructor(data: {
     startNodeId: string;
@@ -22,7 +37,7 @@ export class MutableEdge {
     compressedCount: number;
     width: number;
     properties: MutablePropertyCollection;
-    namesInQuery: Set<string>;
+    namesInQuery: SSet<string>;
   }) {
     this.startNodeId = data.startNodeId;
     this.endNodeId = data.endNodeId;
@@ -47,11 +62,26 @@ export class MutableEdge {
       parallelCount: 1,
       parallelIndex: 0,
       compressedCount: 1,
-      width: 2,
+      width: MutableEdge.defaultWidth,
       properties: MutablePropertyCollection.create(
         relationship.relationship.properties,
       ),
       namesInQuery: relationship.keys,
+    });
+  }
+
+  public static fromPlain(input: unknown): MutableEdge {
+    const data = MutableEdge.schema.parse(input);
+    return new MutableEdge({
+      startNodeId: data.startNodeId,
+      endNodeId: data.endNodeId,
+      type: data.type,
+      parallelCount: data.parallelCount,
+      parallelIndex: data.parallelIndex,
+      compressedCount: data.compressedCount,
+      width: data.width,
+      properties: MutablePropertyCollection.fromPlain(data.properties),
+      namesInQuery: new SSet(data.namesInQuery),
     });
   }
 
@@ -78,5 +108,19 @@ export class MutableEdge {
       (this.startNodeId === other.endNodeId &&
         this.endNodeId === other.startNodeId)
     );
+  }
+
+  public toPlain(): z.infer<typeof MutableEdge.schema> {
+    return {
+      startNodeId: this.startNodeId,
+      endNodeId: this.endNodeId,
+      type: this.type,
+      parallelCount: this.parallelCount,
+      parallelIndex: this.parallelIndex,
+      compressedCount: this.compressedCount,
+      width: this.width,
+      properties: this.properties.toPlain(),
+      namesInQuery: this.namesInQuery.toArray(),
+    };
   }
 }

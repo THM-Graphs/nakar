@@ -1,5 +1,4 @@
 import { TransformTask } from './TransformTask';
-import { MutableScenarioResult } from '../MutableScenarioResult';
 import { FinalGraphDisplayConfiguration } from './FinalGraphDisplayConfiguration';
 import { Neo4jDatabase } from '../../neo4j/Neo4jDatabase';
 import { ConnectNodes } from './transform-tasks/ConnectNodes';
@@ -11,17 +10,18 @@ import { ApplyNodeDisplayText } from './transform-tasks/ApplyNodeDisplayText';
 import { ApplyNodeRadius } from './transform-tasks/ApplyNodeRadius';
 import { ApplyNodeBackgroundColor } from './transform-tasks/ApplyNodeBackgroundColor';
 import { GrowNodeBasedOnDegree } from './transform-tasks/GrowNodeBasedOnDegree';
+import { MutableGraph } from '../MutableGraph';
 
 export class GraphTransformer {
-  private readonly tasks: TransformTask[];
-  private readonly config: FinalGraphDisplayConfiguration;
-  private readonly database: Neo4jDatabase;
+  private readonly _tasks: TransformTask[];
+  private readonly _config: FinalGraphDisplayConfiguration;
+  private readonly _database: Neo4jDatabase;
 
   public constructor(
     config: FinalGraphDisplayConfiguration,
     database: Neo4jDatabase,
   ) {
-    this.tasks = [
+    this._tasks = [
       new ConnectNodes(),
       new CompressRelationships(),
       new ApplyLabels(),
@@ -32,13 +32,13 @@ export class GraphTransformer {
       new ApplyNodeBackgroundColor(),
       new GrowNodeBasedOnDegree(),
     ];
-    this.config = config;
-    this.database = database;
+    this._config = config;
+    this._database = database;
   }
 
-  public async run(results: MutableScenarioResult): Promise<void> {
-    for (const task of this.tasks) {
-      await task.runAndProfile(results, this.config, this.database);
+  public async run(results: MutableGraph): Promise<void> {
+    for (const task of this._tasks) {
+      await task.runAndProfile(results, this._config, this._database);
     }
   }
 }

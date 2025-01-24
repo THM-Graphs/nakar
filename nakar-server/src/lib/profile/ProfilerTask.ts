@@ -3,12 +3,13 @@ import { Profiler } from './Profiler';
 export class ProfilerTask {
   public readonly title: string;
   public readonly startDate: Date;
-  private readonly profiler: Profiler;
+
+  private readonly _profiler: Profiler;
 
   public constructor(title: string, profiler: Profiler) {
     this.title = title;
     this.startDate = new Date();
-    this.profiler = profiler;
+    this._profiler = profiler;
   }
 
   public get elapsedTimeMs(): number {
@@ -16,6 +17,6 @@ export class ProfilerTask {
   }
 
   public finish(): void {
-    this.profiler.finishTask(this);
+    this._profiler.finishTask(this);
   }
 }

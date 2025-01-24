@@ -1,7 +1,7 @@
-import { GetRoom } from "../../../src-gen";
+import { Room } from "../../../src-gen";
 import { NavLink } from "react-router";
 
-export function RoomDisplay(props: { room: GetRoom }) {
+export function RoomDisplay(props: { room: Room }) {
   return (
     <>
       <li>

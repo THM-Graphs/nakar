@@ -1,11 +1,12 @@
 import { ScaleType } from '../../tools/ScaleType';
 import { FinalNodeDisplayConfiguration } from './FinalNodeDisplayConfiguration';
+import { SMap } from '../../tools/Map';
 
 export class FinalGraphDisplayConfiguration {
   public readonly connectResultNodes: boolean;
   public readonly growNodesBasedOnDegree: boolean;
   public readonly growNodesBasedOnDegreeFactor: number;
-  public readonly nodeDisplayConfigurations: Map<
+  public readonly nodeDisplayConfigurations: SMap<
     string,
     FinalNodeDisplayConfiguration
   >;
@@ -17,7 +18,7 @@ export class FinalGraphDisplayConfiguration {
     connectResultNodes: boolean;
     growNodesBasedOnDegree: boolean;
     growNodesBasedOnDegreeFactor: number;
-    nodeDisplayConfigurations: Map<string, FinalNodeDisplayConfiguration>;
+    nodeDisplayConfigurations: SMap<string, FinalNodeDisplayConfiguration>;
     compressRelationships: boolean;
     compressRelationshipsWidthFactor: number;
     scaleType: ScaleType;

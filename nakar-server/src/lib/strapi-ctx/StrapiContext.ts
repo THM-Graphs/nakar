@@ -6,10 +6,11 @@ import { DocumentsDatabase } from '../documents/DocumentsDatabase';
 
 export class StrapiContext {
   public readonly database: DocumentsDatabase;
-  private readonly ctx: Context;
+
+  private readonly _ctx: Context;
 
   public constructor(ctx: Context) {
-    this.ctx = ctx;
+    this._ctx = ctx;
     this.database = new DocumentsDatabase();
   }
 
@@ -25,13 +26,13 @@ export class StrapiContext {
         strapi.log.error(unknownError);
         match(unknownError)
           .with(P.instanceOf(HttpError), (error) => {
-            context.handleError(error);
+            context._handleError(error);
           })
           .with(P.instanceOf(Error), (error) => {
-            context.handleError(new InternalServerError(error.message));
+            context._handleError(new InternalServerError(error.message));
           })
           .otherwise((error) => {
-            context.handleError(
+            context._handleError(
               new InternalServerError(
                 `Unknown error: ${JSON.stringify(error)}`,
               ),
@@ -42,7 +43,7 @@ export class StrapiContext {
   }
 
   public getPathParameter(key: string): string {
-    const params = z.record(z.unknown()).parse(this.ctx.params);
+    const params = z.record(z.unknown()).parse(this._ctx.params);
     const value = params[key];
     if (typeof value !== 'string') {
       throw new BadRequest(`Path parameter ${key} not provided.`);
@@ -51,16 +52,16 @@ export class StrapiContext {
   }
 
   public getQueryParameter(key: string): string {
-    const value = this.ctx.request.query[key];
+    const value = this._ctx.request.query[key];
     if (typeof value !== 'string') {
       throw new BadRequest(`Query parameter ${key} not provided.`);
     }
     return value;
   }
 
-  private handleError(error: HttpError): void {
-    this.ctx.response.status = error.status;
-    this.ctx.response.body = {
+  private _handleError(error: HttpError): void {
+    this._ctx.response.status = error.status;
+    this._ctx.response.body = {
       status: error.status,
       message: error.message,
       name: error.name,

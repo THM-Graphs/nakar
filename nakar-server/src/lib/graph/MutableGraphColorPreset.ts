@@ -1,6 +1,7 @@
 import { MutableGraphColor } from './MutableGraphColor';
 import { SchemaPresetColor } from '../../../src-gen/schema';
 import { MutableGraphColorPresetIndex } from './MutableGraphColorPresetIndex';
+import z from 'zod';
 
 export class MutableGraphColorPreset extends MutableGraphColor {
   public index: MutableGraphColorPresetIndex;
@@ -21,6 +22,13 @@ export class MutableGraphColorPreset extends MutableGraphColor {
     return {
       index: this.index,
       type: 'PresetColor',
+    };
+  }
+
+  public toPlain(): z.infer<typeof MutableGraphColor.schema> {
+    return {
+      type: 'preset',
+      index: this.index,
     };
   }
 }

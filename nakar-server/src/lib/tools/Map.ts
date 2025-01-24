@@ -1,93 +1,74 @@
-interface Map<K, V> {
-  filter(callback: (value: V, key: K) => boolean): Map<K, V>;
-  map<U>(callback: (value: V, key: K) => U): Map<K, U>;
-  reduce<U>(callback: (akku: U, key: K, value: V) => U, start: U): U;
-  toRecord(): Record<string, V>;
-  toArray(): [K, V][];
-  copy(): Map<K, V>;
-  bySetting(key: K, value: V): Map<K, V>;
-  find(search: (entry: [K, V]) => boolean): [K, V] | null;
+// eslint-disable-next-line no-restricted-globals
+export class SMap<K extends string | number | symbol, V> extends Map<K, V> {
+  public static fromRecord<K extends string | number | symbol, V>(
+    record: Record<K, V>,
+  ): SMap<K, V> {
+    const map = new SMap<K, V>();
+    for (const key in record) {
+      map.set(key as K, record[key]);
+    }
+    return map;
+  }
+
+  public filter(callback: (value: V, key: K) => boolean): SMap<K, V> {
+    const filteredMap = new SMap<K, V>();
+    for (const [key, value] of this) {
+      if (callback(value, key)) {
+        filteredMap.set(key, value);
+      }
+    }
+    return filteredMap;
+  }
+
+  public map<U>(callback: (value: V, key: K) => U): SMap<K, U> {
+    const mappedMap = new SMap<K, U>();
+    for (const [key, value] of this.entries()) {
+      mappedMap.set(key, callback(value, key));
+    }
+    return mappedMap;
+  }
+
+  public reduce<U>(callback: (akku: U, key: K, value: V) => U, start: U): U {
+    let s = start;
+    for (const [key, value] of this.entries()) {
+      s = callback(s, key, value);
+    }
+    return s;
+  }
+
+  public toRecord(): Record<K, V> {
+    return this.reduce<Record<K, V>>(
+      (akku: Record<K, V>, key, value): Record<K, V> => {
+        return {
+          ...akku,
+          [key]: value,
+        };
+      },
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+      {} as Record<K, V>,
+    );
+  }
+
+  public toArray(): [K, V][] {
+    return Array.from(this.entries());
+  }
+
+  public copy(): SMap<K, V> {
+    return new SMap<K, V>(this);
+  }
+
+  public bySetting(key: K, value: V): SMap<K, V> {
+    const newMap = this.copy();
+    newMap.set(key, value);
+    return newMap;
+  }
+
+  public find(search: (entry: [K, V]) => boolean): [K, V] | null {
+    for (const entry of this.entries()) {
+      if (search(entry)) {
+        return entry;
+      }
+    }
+    return null;
+  }
 }
-
-Map.prototype.filter = function <K, V>(
-  this: Map<K, V>,
-  callback: (value: V, key: K) => boolean,
-): Map<K, V> {
-  const filteredMap = new Map<K, V>();
-  for (const [key, value] of this) {
-    if (callback(value, key)) {
-      filteredMap.set(key, value);
-    }
-  }
-  return filteredMap;
-};
-
-Map.prototype.map = function <K, V, U>(
-  this: Map<K, V>,
-  callback: (value: V, key: K) => U,
-): Map<K, U> {
-  const mappedMap = new Map<K, U>();
-  for (const [key, value] of this.entries()) {
-    mappedMap.set(key, callback(value, key));
-  }
-  return mappedMap;
-};
-
-Map.prototype.reduce = function <K, V, U>(
-  this: Map<K, V>,
-  callback: (akku: U, key: K, value: V) => U,
-  start: U,
-): U {
-  let s = start;
-  for (const [key, value] of this.entries()) {
-    s = callback(s, key, value);
-  }
-  return s;
-};
-
-Map.prototype.toRecord = function <K, V>(this: Map<K, V>): Record<string, V> {
-  return this.reduce<Record<string, V>>((akku, key, value) => {
-    return {
-      ...akku,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any,@typescript-eslint/no-unsafe-type-assertion
-      [key as any]: value,
-    };
-  }, {});
-};
-
-Map.prototype.copy = function <K, V>(this: Map<K, V>): Map<K, V> {
-  const newMap = new Map<K, V>();
-  for (const [k, v] of this.entries()) {
-    newMap.set(k, v);
-  }
-  return newMap;
-};
-
-Map.prototype.bySetting = function <K, V>(
-  this: Map<K, V>,
-  key: K,
-  value: V,
-): Map<K, V> {
-  const newMap = this.copy();
-  newMap.set(key, value);
-  return newMap;
-};
-
-Map.prototype.toArray = function <K, V>(this: Map<K, V>): [K, V][] {
-  return this.reduce<[K, V][]>(
-    (akku, key, value) => [...akku, [key, value]],
-    [],
-  );
-};
-
-Map.prototype.find = function <K, V>(
-  this: Map<K, V>,
-  search: (entry: [K, V]) => boolean,
-): [K, V] | null {
-  for (const entry of this.entries()) {
-    if (search(entry)) {
-      return entry;
-    }
-  }
-  return null;
-};

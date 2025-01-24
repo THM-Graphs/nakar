@@ -8,6 +8,8 @@ import { VersionBadge } from "./VersionBadge.tsx";
 import { BackButton } from "./BackButton.tsx";
 import { RendererDropdown } from "../room/RendererDropdown.tsx";
 import { GraphRendererEngine } from "../../lib/graph-renderer/GraphRendererEngine.ts";
+import { SocketStateDisplay } from "../room/SocketStateDisplay.tsx";
+import { SocketState } from "../../lib/ws/SocketState.ts";
 
 export function AppNavbar(props: {
   scenarioWindow?: {
@@ -21,6 +23,7 @@ export function AppNavbar(props: {
   };
   room?: {
     title: string | null;
+    socketState: SocketState;
   };
   showBackButton?: boolean;
   renderer?: {
@@ -65,6 +68,11 @@ export function AppNavbar(props: {
         )}
         <div className={"flex-grow-1"}></div>
         {props.room && <span>{props.room.title}</span>}
+        {props.room && (
+          <SocketStateDisplay
+            socketState={props.room.socketState}
+          ></SocketStateDisplay>
+        )}
         <div className={"flex-grow-1"}></div>
         {props.renderer && (
           <RendererDropdown

@@ -1,4 +1,4 @@
-import { ScaleType } from '../tools/ScaleType';
+import { ScaleType } from '../../tools/ScaleType';
 import { match, P } from 'ts-pattern';
 
 export class DBNullableScaleType {

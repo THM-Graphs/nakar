@@ -8,12 +8,13 @@ import neo4j, {
   Session,
 } from 'neo4j-driver';
 import { Neo4jGraphElements } from './Neo4jGraphElements';
+import { SSet } from '../tools/Set';
 
 export class Neo4jDatabase {
-  private readonly loginCredentials: Neo4jLoginCredentials;
+  private readonly _loginCredentials: Neo4jLoginCredentials;
 
   public constructor(loginCredentials: Neo4jLoginCredentials) {
-    this.loginCredentials = loginCredentials;
+    this._loginCredentials = loginCredentials;
   }
 
   public async executeQuery(
@@ -21,10 +22,10 @@ export class Neo4jDatabase {
     parameters?: Record<string, unknown>,
   ): Promise<Neo4jGraphElements> {
     const driver: Driver = createDriver(
-      this.loginCredentials.url,
+      this._loginCredentials.url,
       auth.basic(
-        this.loginCredentials.username,
-        this.loginCredentials.password,
+        this._loginCredentials.username,
+        this._loginCredentials.password,
       ),
     );
     try {
@@ -48,7 +49,7 @@ export class Neo4jDatabase {
   }
 
   public async loadConnectingRelationships(
-    nodeIds: Set<string>,
+    nodeIds: SSet<string>,
   ): Promise<Neo4jGraphElements> {
     const nodesIds = [...nodeIds.values()];
     const additional = await this.executeQuery(

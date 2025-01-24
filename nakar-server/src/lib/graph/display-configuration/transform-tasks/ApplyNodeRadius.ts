@@ -1,7 +1,7 @@
 import { TransformTask } from '../TransformTask';
-import { MutableScenarioResult } from '../../MutableScenarioResult';
 import { FinalGraphDisplayConfiguration } from '../FinalGraphDisplayConfiguration';
 import { NodeDisplayConfigurationContext } from '../NodeDisplayConfigurationContext';
+import { MutableGraph } from '../../MutableGraph';
 
 export class ApplyNodeRadius extends TransformTask {
   public constructor() {
@@ -9,10 +9,10 @@ export class ApplyNodeRadius extends TransformTask {
   }
 
   protected run(
-    input: MutableScenarioResult,
+    input: MutableGraph,
     config: FinalGraphDisplayConfiguration,
   ): void {
-    for (const [nodeId, node] of input.graph.nodes.entries()) {
+    for (const [nodeId, node] of input.nodes.entries()) {
       for (const label of node.labels) {
         const nodeConfig = config.nodeDisplayConfigurations.get(label);
         if (nodeConfig == null) {

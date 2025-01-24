@@ -1,0 +1,34 @@
+{
+  "collectionName": "components_room_graphs",
+  "info": {
+    "displayName": "Graph",
+    "description": ""
+  },
+  "options": {},
+  "attributes": {
+    "nodes": {
+      "displayName": "node",
+      "type": "component",
+      "repeatable": true,
+      "component": "room.node"
+    },
+    "edges": {
+      "displayName": "Edge",
+      "type": "component",
+      "repeatable": true,
+      "component": "room.edge"
+    },
+    "labels": {
+      "displayName": "label",
+      "type": "component",
+      "repeatable": true,
+      "component": "room.label"
+    },
+    "tableDataEntries": {
+      "displayName": "tableData",
+      "type": "component",
+      "repeatable": true,
+      "component": "room.table-data"
+    }
+  }
+}

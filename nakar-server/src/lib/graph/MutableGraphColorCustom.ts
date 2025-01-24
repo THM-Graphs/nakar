@@ -1,5 +1,6 @@
 import { MutableGraphColor } from './MutableGraphColor';
 import { SchemaCustomColor } from '../../../src-gen/schema';
+import z from 'zod';
 
 export class MutableGraphColorCustom extends MutableGraphColor {
   public backgroundColor: string;
@@ -16,6 +17,14 @@ export class MutableGraphColorCustom extends MutableGraphColor {
       backgroundColor: this.backgroundColor,
       textColor: this.textColor,
       type: 'CustomColor',
+    };
+  }
+
+  public toPlain(): z.infer<typeof MutableGraphColor.schema> {
+    return {
+      type: 'custom',
+      backgroundColor: this.backgroundColor,
+      textColor: this.textColor,
     };
   }
 }

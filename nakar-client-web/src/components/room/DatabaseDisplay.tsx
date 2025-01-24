@@ -1,8 +1,8 @@
 import {
-  GetDatabase,
-  GetScenario,
+  Database,
+  Scenario,
   getScenarioGroups,
-  GetScenarioGroups,
+  ScenarioGroups,
 } from "../../../src-gen";
 import { ScenarioGroupList } from "./ScenarioGroupList.tsx";
 import { useEffect, useState } from "react";
@@ -17,14 +17,14 @@ import { NavLink } from "react-router";
 import { Stack } from "react-bootstrap";
 
 export function DatabaseDisplay(props: {
-  database: GetDatabase;
-  onScenarioSelect: (scenario: GetScenario) => Promise<void>;
-  anyScenarioIsLoading: boolean;
+  database: Database;
+  onScenarioSelect: (scenario: Scenario) => void;
+  scenarioLoading: string | null;
 }) {
   const [collapsed, setCollapsed] = useState(true);
 
   const [scenarioGroups, setScenarioGroups] = useState<
-    Loadable<GetScenarioGroups>
+    Loadable<ScenarioGroups>
   >({
     type: "loading",
   });
@@ -81,7 +81,7 @@ export function DatabaseDisplay(props: {
             hidden={collapsed}
             onScenarioSelect={props.onScenarioSelect}
             scenarioGroups={data}
-            anyScenarioIsLoading={props.anyScenarioIsLoading}
+            scenarioLoading={props.scenarioLoading}
           ></ScenarioGroupList>
         ))
         .otherwise(() => null)}

@@ -1,4 +1,4 @@
-import { GetScenario } from "../../../src-gen";
+import { Scenario } from "../../../src-gen";
 import { useState } from "react";
 import clsx from "clsx";
 import { ScenarioCard } from "./ScenarioCard.tsx";
@@ -6,13 +6,12 @@ import { Button, Stack } from "react-bootstrap";
 import { Loading } from "../shared/Loading.tsx";
 
 export function ScenarioDisplay(props: {
-  scenario: GetScenario;
-  onScenarioSelected: (scenario: GetScenario) => Promise<void>;
+  scenario: Scenario;
+  onScenarioSelected: (scenario: Scenario) => void;
   hidden?: boolean;
-  anyScenarioIsLoading: boolean;
+  scenarioLoading: string | null;
 }) {
   const [collapsed, setCollapsed] = useState(true);
-  const [scenarioIsLoading, setScenarioIsLoading] = useState(false);
 
   return (
     <li hidden={props.hidden}>
@@ -34,20 +33,13 @@ export function ScenarioDisplay(props: {
         </Stack>
         <Button
           variant={"link"}
-          disabled={props.anyScenarioIsLoading}
+          disabled={props.scenarioLoading != null}
           size={"sm"}
           onClick={() => {
-            setScenarioIsLoading(true);
-            props
-              .onScenarioSelected(props.scenario)
-              .catch(console.error)
-              .then(() => {
-                setScenarioIsLoading(false);
-              })
-              .catch(console.error);
+            props.onScenarioSelected(props.scenario);
           }}
         >
-          {scenarioIsLoading ? (
+          {props.scenarioLoading === props.scenario.id ? (
             <Loading size={"sm"}></Loading>
           ) : (
             <i className={"bi bi-play-circle-fill"}></i>
@@ -58,7 +50,7 @@ export function ScenarioDisplay(props: {
         hidden={collapsed}
         onScenarioSelected={props.onScenarioSelected}
         scenario={props.scenario}
-        anyScenarioIsLoading={props.anyScenarioIsLoading}
+        scenarioLoading={props.scenarioLoading}
       ></ScenarioCard>
     </li>
   );

@@ -1,8 +1,9 @@
 import { Stack, Table } from "react-bootstrap";
-import { GetInitialGraph } from "../../../src-gen";
 
-export function DataTable(props: { graph: GetInitialGraph | null }) {
-  if (props.graph == null || props.graph.tableData.length == 0) {
+export function DataTable(props: {
+  tableData: Record<string, unknown>[] | null;
+}) {
+  if (props.tableData == null) {
     return null;
   }
 
@@ -11,13 +12,13 @@ export function DataTable(props: { graph: GetInitialGraph | null }) {
       <Table className={"table-responsive"}>
         <thead>
           <tr>
-            {Object.keys(props.graph.tableData[0]).map((key) => (
+            {Object.keys(props.tableData[0]).map((key) => (
               <th key={key}>{key}</th>
             ))}
           </tr>
         </thead>
         <tbody>
-          {props.graph.tableData.map((row, index) => (
+          {props.tableData.map((row, index) => (
             <tr key={index}>
               {Object.entries(row).map(([key, value]) => (
                 <td key={key}>{JSON.stringify(value)}</td>

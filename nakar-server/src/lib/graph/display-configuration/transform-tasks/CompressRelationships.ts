@@ -1,8 +1,10 @@
 import { TransformTask } from '../TransformTask';
-import { MutableScenarioResult } from '../../MutableScenarioResult';
 import { FinalGraphDisplayConfiguration } from '../FinalGraphDisplayConfiguration';
 import { MutableEdge } from '../../MutableEdge';
 import { Range } from '../../../tools/Range';
+import { MutableGraph } from '../../MutableGraph';
+import { SMap } from '../../../tools/Map';
+import { SSet } from '../../../tools/Set';
 
 export class CompressRelationships extends TransformTask {
   public constructor() {
@@ -10,24 +12,24 @@ export class CompressRelationships extends TransformTask {
   }
 
   protected run(
-    input: MutableScenarioResult,
+    input: MutableGraph,
     config: FinalGraphDisplayConfiguration,
   ): void {
     if (!config.compressRelationships) {
       return;
     }
 
-    const relationships = new Map<string, MutableEdge>();
+    const relationships = new SMap<string, MutableEdge>();
 
-    for (const [startNodeId] of input.graph.nodes.entries()) {
-      for (const [endNodeId] of input.graph.nodes.entries()) {
-        const edges = input.graph.edges.filter(
+    for (const [startNodeId] of input.nodes.entries()) {
+      for (const [endNodeId] of input.nodes.entries()) {
+        const edges = input.edges.filter(
           (e) => e.startNodeId === startNodeId && e.endNodeId === endNodeId,
         );
-        const edgeTypes = new Set<string>(edges.map((e) => e.type).values());
+        const edgeTypes = new SSet<string>(edges.map((e) => e.type).values());
 
         for (const edgeType of edgeTypes.values()) {
-          const count = input.graph.edges.filter(
+          const count = input.edges.filter(
             (e) =>
               e.startNodeId === startNodeId &&
               e.endNodeId === endNodeId &&
@@ -73,6 +75,6 @@ export class CompressRelationships extends TransformTask {
       );
     }
 
-    input.graph.edges = relationships;
+    input.edges = relationships;
   }
 }

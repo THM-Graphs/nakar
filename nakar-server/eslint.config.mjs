@@ -41,5 +41,39 @@ export default tseslint.config({
     '@typescript-eslint/no-shadow': ['error'],
     eqeqeq: ['error', 'always', { null: 'ignore' }],
     'no-console': ['error'],
+    '@typescript-eslint/naming-convention': [
+      'error',
+      { selector: 'variableLike', format: ['camelCase'] },
+      {
+        selector: 'memberLike',
+        modifiers: ['private'],
+        format: ['camelCase'],
+        leadingUnderscore: 'require',
+      },
+      {
+        selector: 'interface',
+        format: ['PascalCase'],
+        custom: {
+          regex: '^I[A-Z]',
+          match: false,
+        },
+      },
+      {
+        selector: 'function',
+        format: ['camelCase'],
+      },
+    ],
+    'no-restricted-globals': [
+      'error',
+      {
+        name: 'Map',
+        message: 'Use SMap.',
+      },
+      {
+        name: 'Set',
+        message: 'Use SSet.',
+      },
+    ],
+    '@typescript-eslint/no-extraneous-class': 'off',
   },
 });

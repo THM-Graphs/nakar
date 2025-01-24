@@ -3,15 +3,18 @@ import dotenv from "dotenv";
 
 const EnvFileSchema = z.object({
   BACKEND_URL: z.string().optional(),
+  BACKEND_SOCKET_URL: z.string().optional(),
   VERSION: z.string().optional(),
 });
 type Env = {
   BACKEND_URL: string;
+  BACKEND_SOCKET_URL: string;
   VERSION: string;
 };
 
 const defaultEnv: Env = {
   BACKEND_URL: "http://localhost:1337",
+  BACKEND_SOCKET_URL: "ws://localhost:1337",
   VERSION: "0.0.0",
 };
 
@@ -22,6 +25,8 @@ async function loadEnv(): Promise<Env> {
   const envFile = EnvFileSchema.parse(value);
   return {
     BACKEND_URL: nullIfEmpty(envFile.BACKEND_URL) ?? defaultEnv.BACKEND_URL,
+    BACKEND_SOCKET_URL:
+      nullIfEmpty(envFile.BACKEND_SOCKET_URL) ?? defaultEnv.BACKEND_SOCKET_URL,
     VERSION: nullIfEmpty(envFile.VERSION) ?? defaultEnv.VERSION,
   };
 }

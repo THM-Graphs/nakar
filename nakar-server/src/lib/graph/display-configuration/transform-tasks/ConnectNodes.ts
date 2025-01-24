@@ -1,8 +1,9 @@
 import { TransformTask } from '../TransformTask';
-import { MutableScenarioResult } from '../../MutableScenarioResult';
 import { FinalGraphDisplayConfiguration } from '../FinalGraphDisplayConfiguration';
 import { Neo4jDatabase } from '../../../neo4j/Neo4jDatabase';
 import { MutableEdge } from '../../MutableEdge';
+import { MutableGraph } from '../../MutableGraph';
+import { SSet } from '../../../tools/Set';
 
 export class ConnectNodes extends TransformTask {
   public constructor() {
@@ -10,7 +11,7 @@ export class ConnectNodes extends TransformTask {
   }
 
   protected async run(
-    input: MutableScenarioResult,
+    input: MutableGraph,
     config: FinalGraphDisplayConfiguration,
     database: Neo4jDatabase,
   ): Promise<void> {
@@ -18,7 +19,7 @@ export class ConnectNodes extends TransformTask {
       return;
     }
 
-    const nodeIds = new Set<string>(input.graph.nodes.keys());
+    const nodeIds = new SSet<string>(input.nodes.keys());
 
     if (nodeIds.size === 0) {
       return;
@@ -28,6 +29,6 @@ export class ConnectNodes extends TransformTask {
 
     const edges = result.relationships.map((r) => MutableEdge.create(r));
 
-    input.graph.addNonDuplicateEdges(edges);
+    input.addNonDuplicateEdges(edges);
   }
 }

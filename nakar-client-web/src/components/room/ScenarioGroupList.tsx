@@ -1,15 +1,11 @@
-import {
-  GetScenario,
-  GetScenarioGroup,
-  GetScenarioGroups,
-} from "../../../src-gen";
+import { Scenario, ScenarioGroup, ScenarioGroups } from "../../../src-gen";
 import { ScenarioGroupDisplay } from "./ScenarioGroupDisplay.tsx";
 
 export function ScenarioGroupList(props: {
-  scenarioGroups: GetScenarioGroups;
-  onScenarioSelect: (scenario: GetScenario) => Promise<void>;
+  scenarioGroups: ScenarioGroups;
+  onScenarioSelect: (scenario: Scenario) => void;
   hidden: boolean;
-  anyScenarioIsLoading: boolean;
+  scenarioLoading: string | null;
 }) {
   return (
     <ul>
@@ -17,13 +13,13 @@ export function ScenarioGroupList(props: {
         <span hidden={props.hidden}>(empty)</span>
       )}
       {props.scenarioGroups.scenarioGroups.map(
-        (scenarioGroup: GetScenarioGroup) => (
+        (scenarioGroup: ScenarioGroup) => (
           <ScenarioGroupDisplay
             hidden={props.hidden}
             onScenarioSelect={props.onScenarioSelect}
             key={scenarioGroup.id}
             scenarioGroup={scenarioGroup}
-            anyScenarioIsLoading={props.anyScenarioIsLoading}
+            scenarioLoading={props.scenarioLoading}
           ></ScenarioGroupDisplay>
         ),
       )}

@@ -4,19 +4,19 @@ import { SideToolbar } from "../components/room/SideToolbar.tsx";
 import { DatabaseList } from "../components/room/DatabaseList.tsx";
 import { Canvas } from "../components/room/Canvas.tsx";
 import { DataTable } from "../components/room/DataTable.tsx";
-import { useCallback, useState } from "react";
-import {
-  getInitialGraph,
-  GetInitialGraph,
-  GetRoom,
-  getRoom,
-} from "../../src-gen";
-import { handleError } from "../lib/error/handleError.ts";
+import { useContext, useEffect, useState } from "react";
+import { Room as RoomSchema, getRoom } from "../../src-gen";
 import { LoaderFunctionArgs, useLoaderData } from "react-router";
 import { resultOrThrow } from "../lib/data/resultOrThrow.ts";
 import { GraphRendererEngine } from "../lib/graph-renderer/GraphRendererEngine.ts";
 
-export async function RoomLoader(args: LoaderFunctionArgs): Promise<GetRoom> {
+import { useWebSocketsState } from "../lib/ws/useWebSocketsState.ts";
+import { WebSocketsManagerContext } from "../lib/ws/WebSocketsManagerContext.ts";
+import { ToastStack } from "../components/room/ToastStack.tsx";
+
+export async function RoomLoader(
+  args: LoaderFunctionArgs,
+): Promise<RoomSchema> {
   const roomId = args.params["id"];
 
   if (roomId == null) {
@@ -28,21 +28,42 @@ export async function RoomLoader(args: LoaderFunctionArgs): Promise<GetRoom> {
 }
 
 export function Room() {
-  const loaderData: GetRoom = useLoaderData();
-  const [graph, setGraph] = useState<GetInitialGraph | null>(null);
-  const [scenariosWindowOpened, setScenariosWindowOpened] = useState(true);
+  const loaderData: RoomSchema = useLoaderData();
+  const [tableData, setTableData] = useState<Record<string, unknown>[] | null>(
+    null,
+  );
+  const [scenariosWindowOpened, setScenariosWindowOpened] = useState(false);
   const [tableDataOpened, setTableDataOpened] = useState(false);
-  const [anyScenarioIsLoading, setAnyScenarioIsLoading] = useState(false);
+  const [scenarioLoading, setScenarioLoading] = useState<string | null>(null);
   const [renderer, setRenderer] = useState<GraphRendererEngine>("d3");
+  const socketState = useWebSocketsState();
+  const webSockets = useContext(WebSocketsManagerContext);
 
-  const loadGraph = useCallback(async (scenarioId: string): Promise<void> => {
-    try {
-      const result = await getInitialGraph({ path: { id: scenarioId } });
-      const data = resultOrThrow(result);
-      setGraph(data);
-    } catch (error: unknown) {
-      alert(handleError(error));
+  useEffect(() => {
+    if (socketState.type === "connected") {
+      webSockets.sendMessage({
+        type: "WSActionJoinRoom",
+        roomId: loaderData.id,
+      });
     }
+  }, [socketState]);
+
+  useEffect(() => {
+    const subscriptions = [
+      webSockets.onScenarioDataChanged$.subscribe((sd) => {
+        setTableData(sd.graph.tableData);
+        setScenarioLoading(null);
+      }),
+      webSockets.onError$.subscribe(() => {
+        setScenarioLoading(null);
+      }),
+    ];
+
+    return () => {
+      subscriptions.forEach((s) => {
+        s.unsubscribe();
+      });
+    };
   }, []);
 
   return (
@@ -56,9 +77,9 @@ export function Room() {
             },
           }}
           tableDataWindow={
-            graph != null
+            tableData != null
               ? {
-                  rowCount: graph.tableData.length,
+                  rowCount: tableData.length,
                   isOpen: tableDataOpened,
                   onToggle: () => {
                     setTableDataOpened((isOpened) => !isOpened);
@@ -68,6 +89,7 @@ export function Room() {
           }
           room={{
             title: loaderData.title,
+            socketState: socketState,
           }}
           showBackButton={true}
           renderer={{
@@ -75,6 +97,7 @@ export function Room() {
             onChange: setRenderer,
           }}
         ></AppNavbar>
+        <ToastStack></ToastStack>
         <Stack
           direction={"horizontal"}
           className={"align-items-stretch flex-grow-1"}
@@ -83,21 +106,20 @@ export function Room() {
           <SideToolbar hidden={!scenariosWindowOpened} width={500}>
             {() => (
               <DatabaseList
-                onScenarioSelect={async (scenario) => {
-                  try {
-                    setAnyScenarioIsLoading(true);
-                    await loadGraph(scenario.id);
-                  } finally {
-                    setAnyScenarioIsLoading(false);
-                  }
+                onScenarioSelect={(scenario) => {
+                  setScenarioLoading(scenario.id);
+                  webSockets.sendMessage({
+                    type: "WSActionRunScenario",
+                    scenarioId: scenario.id,
+                  });
                 }}
-                anyScenarioIsLoading={anyScenarioIsLoading}
+                scenarioLoading={scenarioLoading}
               ></DatabaseList>
             )}
           </SideToolbar>
-          <Canvas renderer={renderer} graph={graph}></Canvas>
+          <Canvas renderer={renderer}></Canvas>
           <SideToolbar hidden={!tableDataOpened} width={700}>
-            {() => <DataTable graph={graph}></DataTable>}
+            {() => <DataTable tableData={tableData}></DataTable>}
           </SideToolbar>
         </Stack>
       </Stack>

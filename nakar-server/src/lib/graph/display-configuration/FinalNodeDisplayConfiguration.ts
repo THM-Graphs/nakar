@@ -18,18 +18,19 @@ export class FinalNodeDisplayConfiguration {
     this.radius = data.radius;
     this.backgroundColor = data.backgroundColor;
 
-    this.displayTextTemplate = FinalNodeDisplayConfiguration.createTemplate(
+    this.displayTextTemplate = FinalNodeDisplayConfiguration._createTemplate(
       data.displayText,
     );
-    this.radiusTemplate = FinalNodeDisplayConfiguration.createTemplate(
+    this.radiusTemplate = FinalNodeDisplayConfiguration._createTemplate(
       data.radius,
     );
-    this.backgroundColorTemplate = FinalNodeDisplayConfiguration.createTemplate(
-      data.backgroundColor,
-    );
+    this.backgroundColorTemplate =
+      FinalNodeDisplayConfiguration._createTemplate(data.backgroundColor);
   }
 
-  private static createTemplate(input: string | null): TemplateDelegate | null {
+  private static _createTemplate(
+    input: string | null,
+  ): TemplateDelegate | null {
     if (input == null) {
       return null;
     }

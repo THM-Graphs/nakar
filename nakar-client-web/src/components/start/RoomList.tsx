@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { match } from "ts-pattern";
 import { handleError } from "../../lib/error/handleError.ts";
-import { GetRoom, getRooms, GetRooms } from "../../../src-gen";
+import { Room, getRooms, Rooms } from "../../../src-gen";
 import { RoomDisplay } from "./RoomDisplay.tsx";
 import { Loadable } from "../../lib/data/Loadable.ts";
 import { Loading } from "../shared/Loading.tsx";
@@ -10,7 +10,7 @@ import { resultOrThrow } from "../../lib/data/resultOrThrow.ts";
 import { Stack } from "react-bootstrap";
 
 export function RoomList() {
-  const [rooms, setRooms] = useState<Loadable<GetRooms>>({
+  const [rooms, setRooms] = useState<Loadable<Rooms>>({
     type: "loading",
   });
 
@@ -43,7 +43,7 @@ export function RoomList() {
     ))
     .with({ type: "data" }, ({ data }) => (
       <ul>
-        {data.rooms.map((room: GetRoom) => (
+        {data.rooms.map((room: Room) => (
           <RoomDisplay key={room.id} room={room}></RoomDisplay>
         ))}
       </ul>
