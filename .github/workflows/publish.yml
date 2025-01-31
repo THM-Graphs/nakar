@@ -6,6 +6,7 @@ on:
 
 jobs:
   publish-server:
+    permissions: write-all
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
@@ -18,7 +19,49 @@ jobs:
         run: echo "IMAGE_VERSION=$(cd nakar-server && npm run --silent version)" >> $GITHUB_ENV
       - name: Log in to GitHub Container Registry
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-      - name: Build and Push Docker image
+      - name: Build Docker image
         run: |
           docker build -f nakar-server/Dockerfile -t ghcr.io/thm-graphs/nakar/server:${{ env.IMAGE_VERSION }} .
+      - name: Push Docker image
+        run: |
           docker push ghcr.io/thm-graphs/nakar/server:${{ env.IMAGE_VERSION }}
+  publish-client-web:
+    permissions: write-all
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '22'
+      - name: Set IMAGE_VERSION
+        run: echo "IMAGE_VERSION=$(cd nakar-client-web && npm run --silent version)" >> $GITHUB_ENV
+      - name: Log in to GitHub Container Registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+      - name: Build Docker image
+        run: |
+          docker build -f nakar-client-web/Dockerfile -t ghcr.io/thm-graphs/nakar/client-web:${{ env.IMAGE_VERSION }} .
+      - name: Push Docker image
+        run: |
+          docker push ghcr.io/thm-graphs/nakar/client-web:${{ env.IMAGE_VERSION }}
+  publish-db-pole:
+    permissions: write-all
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '22'
+      - name: Set IMAGE_VERSION
+        run: echo "IMAGE_VERSION=$(cd nakar-db-pole && npm run --silent version)" >> $GITHUB_ENV
+      - name: Log in to GitHub Container Registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+      - name: Build Docker image
+        run: |
+          docker build -f nakar-db-pole/Dockerfile -t ghcr.io/thm-graphs/nakar/db-pole:${{ env.IMAGE_VERSION }} .
+      - name: Push Docker image
+        run: |
+          docker push ghcr.io/thm-graphs/nakar/db-pole:${{ env.IMAGE_VERSION }}
