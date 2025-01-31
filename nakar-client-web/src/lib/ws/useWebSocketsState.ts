@@ -1,9 +1,8 @@
 import { SocketState } from "./SocketState.ts";
-import { useContext, useEffect, useState } from "react";
-import { WebSocketsManagerContext } from "./WebSocketsManagerContext.ts";
+import { useEffect, useState } from "react";
+import { WebSocketsManager } from "./WebSocketsManager.ts";
 
-export function useWebSocketsState(): SocketState {
-  const manager = useContext(WebSocketsManagerContext);
+export function useWebSocketsState(manager: WebSocketsManager): SocketState {
   const [current, setCurrent] = useState<SocketState>(manager.socketState);
 
   useEffect(() => {

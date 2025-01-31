@@ -1,11 +1,10 @@
 import { Toast, ToastContainer } from "react-bootstrap";
-import { useContext, useEffect, useState } from "react";
-import { WebSocketsManagerContext } from "../../lib/ws/WebSocketsManagerContext.ts";
+import { useEffect, useState } from "react";
 import { v4 } from "uuid";
+import { WebSocketsManager } from "../../lib/ws/WebSocketsManager.ts";
 
-export function ToastStack() {
+export function ToastStack(props: { websocketsManager: WebSocketsManager }) {
   const [message, setMessages] = useState<ToastMessage[]>([]);
-  const websocketsManager = useContext(WebSocketsManagerContext);
 
   const pushMessage = (message: ToastMessage) => {
     setMessages((messages: ToastMessage[]): ToastMessage[] => [
@@ -23,7 +22,7 @@ export function ToastStack() {
 
   useEffect(() => {
     const subscriptions = [
-      websocketsManager.onScenarioDataChanged$.subscribe((event) => {
+      props.websocketsManager.onScenarioDataChanged$.subscribe((event) => {
         pushMessage({
           id: v4(),
           message: `Scenario loaded: ${event.scenarioTitle}`,
@@ -31,7 +30,7 @@ export function ToastStack() {
           title: "Graph",
         });
       }),
-      websocketsManager.onError$.subscribe((event) => {
+      props.websocketsManager.onError$.subscribe((event) => {
         pushMessage({
           id: v4(),
           message: event.message,
@@ -39,7 +38,7 @@ export function ToastStack() {
           title: "Error",
         });
       }),
-      websocketsManager.onUserJoined$.subscribe((event) => {
+      props.websocketsManager.onUserJoined$.subscribe((event) => {
         pushMessage({
           id: v4(),
           message: `User ${event.userName} joined the room.`,
@@ -47,7 +46,7 @@ export function ToastStack() {
           title: "User joined",
         });
       }),
-      websocketsManager.onUserLeft$.subscribe((event) => {
+      props.websocketsManager.onUserLeft$.subscribe((event) => {
         pushMessage({
           id: v4(),
           message: `User ${event.userName} left the room. (${event.message})`,

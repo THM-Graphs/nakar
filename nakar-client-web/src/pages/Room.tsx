@@ -4,15 +4,14 @@ import { SideToolbar } from "../components/room/SideToolbar.tsx";
 import { DatabaseList } from "../components/room/DatabaseList.tsx";
 import { Canvas } from "../components/room/Canvas.tsx";
 import { DataTable } from "../components/room/DataTable.tsx";
-import { useContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Room as RoomSchema, getRoom } from "../../src-gen";
 import { LoaderFunctionArgs, useLoaderData } from "react-router";
 import { resultOrThrow } from "../lib/data/resultOrThrow.ts";
 import { GraphRendererEngine } from "../lib/graph-renderer/GraphRendererEngine.ts";
-
 import { useWebSocketsState } from "../lib/ws/useWebSocketsState.ts";
-import { WebSocketsManagerContext } from "../lib/ws/WebSocketsManagerContext.ts";
 import { ToastStack } from "../components/room/ToastStack.tsx";
+import { WebSocketsManager } from "../lib/ws/WebSocketsManager.ts";
 
 export async function RoomLoader(
   args: LoaderFunctionArgs,
@@ -36,8 +35,8 @@ export function Room() {
   const [tableDataOpened, setTableDataOpened] = useState(false);
   const [scenarioLoading, setScenarioLoading] = useState<string | null>(null);
   const [renderer, setRenderer] = useState<GraphRendererEngine>("d3");
-  const socketState = useWebSocketsState();
-  const webSockets = useContext(WebSocketsManagerContext);
+  const [webSockets] = useState(new WebSocketsManager());
+  const socketState = useWebSocketsState(webSockets);
 
   useEffect(() => {
     if (socketState.type === "connected") {
@@ -97,7 +96,7 @@ export function Room() {
             onChange: setRenderer,
           }}
         ></AppNavbar>
-        <ToastStack></ToastStack>
+        <ToastStack websocketsManager={webSockets}></ToastStack>
         <Stack
           direction={"horizontal"}
           className={"align-items-stretch flex-grow-1"}
@@ -117,7 +116,7 @@ export function Room() {
               ></DatabaseList>
             )}
           </SideToolbar>
-          <Canvas renderer={renderer}></Canvas>
+          <Canvas renderer={renderer} webSocketsManager={webSockets}></Canvas>
           <SideToolbar hidden={!tableDataOpened} width={700}>
             {() => <DataTable tableData={tableData}></DataTable>}
           </SideToolbar>
