@@ -4,7 +4,7 @@ import {
   SchemaWsClientToServerMessage,
   SchemaWsServerToClientMessage,
 } from '../../../src-gen/schema';
-import { BehaviorSubject, distinct, Observable, Subject } from 'rxjs';
+import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { DisconnectReason } from 'socket.io';
 
 export class WSClient {
@@ -37,7 +37,7 @@ export class WSClient {
   }
 
   public get onRoomChanged$(): Observable<string | null> {
-    return this._room.asObservable().pipe(distinct());
+    return this._room.asObservable();
   }
 
   public get onMessage$(): Observable<SchemaWsClientToServerMessage> {

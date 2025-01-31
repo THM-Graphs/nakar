@@ -11,7 +11,7 @@ import {
   WSEventUserLeft,
   WSServerToClientMessage,
 } from "../../../src-gen";
-import { BehaviorSubject, distinct, Observable, Subject } from "rxjs";
+import { BehaviorSubject, Observable, Subject } from "rxjs";
 import { SocketState } from "./SocketState.ts";
 import { match } from "ts-pattern";
 
@@ -78,9 +78,7 @@ export class WebSocketsManager {
   }
 
   public get onSocketStateChanged$(): Observable<SocketState> {
-    return this._socketState
-      .asObservable()
-      .pipe(distinct((state) => state.type));
+    return this._socketState.asObservable();
   }
 
   public get onError$(): Observable<WSEventError> {
