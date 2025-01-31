@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - "*"
+
+jobs:
+  ci-server:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '22'
+      - name: Install dependencies and build
+        run: |
+          cd nakar-server
+          npm ci
+          npm run build
+          npm run lint
+          npm run audit
+      - name: Build Docker image
+        run: |
+          docker build -f nakar-server/Dockerfile -t "nakar-server:dev" .
+
+  ci-client-web:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '22'
+      - name: Install dependencies and build
+        run: |
+          cd nakar-client-web
+          npm ci
+          npm run build
+          npm run lint
+          npm run audit
+      - name: Build Docker image
+        run: |
+          docker build -f nakar-client-web/Dockerfile -t "nakar-client-web:dev" .
+
+  ci-nakar-db-pole:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+      - name: Build Docker image
+        run: |
+          docker build -f nakar-db-pole/Dockerfile -t "nakar-db-pole:dev" .
