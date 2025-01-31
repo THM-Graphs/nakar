@@ -1,0 +1,24 @@
+name: Publish
+
+on:
+  push:
+    branches: [ "prod" ]
+
+jobs:
+  publish-server:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '22'
+      - name: Set IMAGE_VERSION
+        run: echo "IMAGE_VERSION=$(cd nakar-server && npm run --silent version)" >> $GITHUB_ENV
+      - name: Log in to GitHub Container Registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+      - name: Build and Push Docker image
+        run: |
+          docker build -f nakar-server/Dockerfile -t ghcr.io/thm-graphs/nakar/server:${{ env.IMAGE_VERSION }} .
+          docker push ghcr.io/thm-graphs/nakar/server:${{ env.IMAGE_VERSION }}
