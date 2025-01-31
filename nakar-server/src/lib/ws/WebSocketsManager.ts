@@ -39,6 +39,8 @@ export class WebSocketsManager {
       cors: {
         origin: '*',
       },
+      path: '/frontend',
+      serveClient: false,
     });
     this._io.on('connection', (s) => {
       const wsClient = new WSClient(s, this._io);

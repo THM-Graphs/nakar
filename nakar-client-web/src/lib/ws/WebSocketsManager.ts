@@ -28,7 +28,7 @@ export class WebSocketsManager {
   private readonly onUserLeft: Subject<WSEventUserLeft>;
 
   public constructor() {
-    this.socket = io(env().BACKEND_SOCKET_URL, {});
+    this.socket = io(env().BACKEND_SOCKET_URL, { path: "/frontend" });
     this._socketState = new BehaviorSubject<SocketState>({
       type: "connecting",
     });
