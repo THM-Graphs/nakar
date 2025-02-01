@@ -1,4 +1,3 @@
-import { env } from "../../lib/env/env.ts";
 import { Badge, Nav, Stack } from "react-bootstrap";
 import { useCallback, useEffect, useState } from "react";
 import { Loadable } from "../../lib/data/Loadable.ts";
@@ -6,8 +5,9 @@ import { getVersion } from "../../../src-gen";
 import { resultOrThrow } from "../../lib/data/resultOrThrow.ts";
 import { handleError } from "../../lib/error/handleError.ts";
 import { match } from "ts-pattern";
+import { Env } from "../../lib/env/env.ts";
 
-export function BackendBadge() {
+export function BackendBadge(props: { env: Env }) {
   const [version, setVersion] = useState<Loadable<string>>({ type: "loading" });
 
   const reloadVersion = useCallback(() => {
@@ -28,8 +28,8 @@ export function BackendBadge() {
   return (
     <Badge bg="secondary">
       <Stack direction={"horizontal"} gap={1}>
-        <Nav.Link href={env().BACKEND_URL} target={"_blank"}>
-          {env().BACKEND_URL}
+        <Nav.Link href={props.env.BACKEND_URL} target={"_blank"}>
+          {props.env.BACKEND_URL}
         </Nav.Link>
         {match(version)
           .with({ type: "loading" }, () => <span>(loading...)</span>)

@@ -6,7 +6,6 @@ import { SchemaGraph } from '../../../src-gen/schema';
 import { z } from 'zod';
 import { JSONValue } from '../json/JSON';
 import { SMap } from '../tools/Map';
-import { ScenarioInfo } from './ScenarioInfo';
 import { DBScenario } from '../documents/collection-types/DBScenario';
 
 export class MutableGraph {
@@ -15,27 +14,23 @@ export class MutableGraph {
     edges: z.record(MutableEdge.schema),
     metaData: MutableGraphMetaData.schema,
     tableData: z.array(z.record(z.any())),
-    scenarioInfo: ScenarioInfo.schema,
   });
 
   public nodes: SMap<string, MutableNode>;
   public edges: SMap<string, MutableEdge>;
   public metaData: MutableGraphMetaData;
   public tableData: SMap<string, JSONValue>[];
-  public scenarioInfo: ScenarioInfo;
 
   public constructor(data: {
     nodes: SMap<string, MutableNode>;
     edges: SMap<string, MutableEdge>;
     metaData: MutableGraphMetaData;
     tableData: SMap<string, JSONValue>[];
-    scenarioInfo: ScenarioInfo;
   }) {
     this.nodes = data.nodes;
     this.edges = data.edges;
     this.metaData = data.metaData;
     this.tableData = data.tableData;
-    this.scenarioInfo = data.scenarioInfo;
   }
 
   public static create(
@@ -47,9 +42,8 @@ export class MutableGraph {
       edges: graphElements.relationships.map((relationship) =>
         MutableEdge.create(relationship),
       ),
-      metaData: MutableGraphMetaData.empty(),
+      metaData: MutableGraphMetaData.create(scenario),
       tableData: graphElements.tableData,
-      scenarioInfo: ScenarioInfo.create(scenario),
     });
   }
 
@@ -59,7 +53,6 @@ export class MutableGraph {
       edges: new SMap(),
       metaData: MutableGraphMetaData.empty(),
       tableData: [],
-      scenarioInfo: ScenarioInfo.empty(),
     });
   }
 
@@ -74,7 +67,6 @@ export class MutableGraph {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
         SMap.fromRecord(td).map((v: unknown) => v as JSONValue),
       ),
-      scenarioInfo: ScenarioInfo.fromPlain(data.scenarioInfo),
     });
   }
 
@@ -109,7 +101,6 @@ export class MutableGraph {
       edges: this.edges.map((e) => e.toPlain()).toRecord(),
       metaData: this.metaData.toPlain(),
       tableData: this.tableData.map((td) => td.toRecord()),
-      scenarioInfo: this.scenarioInfo.toPlain(),
     };
   }
 }

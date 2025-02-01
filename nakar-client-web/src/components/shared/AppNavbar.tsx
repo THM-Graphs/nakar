@@ -10,6 +10,7 @@ import { RendererDropdown } from "../room/RendererDropdown.tsx";
 import { GraphRendererEngine } from "../../lib/graph-renderer/GraphRendererEngine.ts";
 import { SocketStateDisplay } from "../room/SocketStateDisplay.tsx";
 import { SocketState } from "../../lib/ws/SocketState.ts";
+import { Env } from "../../lib/env/env.ts";
 
 export function AppNavbar(props: {
   scenarioWindow?: {
@@ -30,6 +31,7 @@ export function AppNavbar(props: {
     current: GraphRendererEngine;
     onChange: (newRenderer: GraphRendererEngine) => void;
   };
+  env: Env;
 }) {
   return (
     <Navbar
@@ -89,8 +91,8 @@ export function AppNavbar(props: {
           ></TableDataWindowButton>
         )}
         <Stack direction={"horizontal"} gap={2}>
-          <BackendBadge></BackendBadge>
-          <VersionBadge></VersionBadge>
+          <BackendBadge env={props.env}></BackendBadge>
+          <VersionBadge env={props.env}></VersionBadge>
           <DevelopmentIndicatorBadge></DevelopmentIndicatorBadge>
         </Stack>
       </Stack>

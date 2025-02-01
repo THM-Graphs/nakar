@@ -96,8 +96,10 @@ export class RoomSessionManager {
     room: string | null,
   ): Promise<void> {
     socket.broadcastToRoom({
-      type: 'WSEventUserJoined',
-      userName: socket.id,
+      type: 'WSEventNotification',
+      title: 'User joined',
+      message: `User ${socket.id} joined.`,
+      severity: 'message',
       date: new Date().toISOString(),
     });
 
@@ -107,8 +109,6 @@ export class RoomSessionManager {
         socket.send({
           graph: graph.toDto(),
           type: 'WSEventScenarioDataChanged',
-          date: new Date().toISOString(),
-          scenarioTitle: graph.scenarioInfo.title ?? '-',
         });
       }
     }
@@ -176,8 +176,14 @@ export class RoomSessionManager {
     socket.sendToRoom({
       graph: graph.toDto(),
       type: 'WSEventScenarioDataChanged',
+    });
+
+    socket.sendToRoom({
+      title: 'Scenario',
+      message: `Scenario "${scenario.title ?? ''}" started.`,
       date: new Date().toISOString(),
-      scenarioTitle: scenario.title ?? '-',
+      severity: 'message',
+      type: 'WSEventNotification',
     });
   }
 
@@ -273,10 +279,11 @@ export class RoomSessionManager {
     reason: DisconnectReason,
   ): Promise<void> {
     socket.broadcastToRoom({
-      type: 'WSEventUserLeft',
-      userName: socket.id,
+      type: 'WSEventNotification',
+      title: 'User left',
+      message: `User ${socket.id} left. Reason: ${reason}.`,
       date: new Date().toISOString(),
-      message: reason,
+      severity: 'message',
     });
     return Promise.resolve();
   }

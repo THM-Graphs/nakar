@@ -6,17 +6,16 @@ import { useEffect, useState } from "react";
 import { Graph } from "../../../src-gen";
 
 export function GraphRendererNVL() {
-  const [graph] = useState<Graph>({
-    nodes: [],
-    edges: [],
-    metaData: { labels: [] },
-    tableData: [],
-  });
+  const [graph] = useState<Graph | null>(null);
   const [theme] = useUserTheme();
   const [nodes, setNodes] = useState<Node[]>([]);
   const [relationships, setRelationships] = useState<Relationship[]>([]);
 
   useEffect(() => {
+    if (graph == null) {
+      return;
+    }
+
     const nodes: Node[] = graph.nodes.map((n): Node => {
       return {
         id: n.id,

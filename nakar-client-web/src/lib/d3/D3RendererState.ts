@@ -6,16 +6,11 @@ export class D3RendererState {
   public constructor(
     public readonly links: D3Link[],
     public readonly nodes: D3Node[],
-    public readonly originalGraph: Graph,
+    public readonly originalGraph: Graph | null,
   ) {}
 
   public static empty(): D3RendererState {
-    return new D3RendererState([], [], {
-      nodes: [],
-      edges: [],
-      metaData: { labels: [] },
-      tableData: [],
-    });
+    return new D3RendererState([], [], null);
   }
 
   public static fromWsData(graph: Graph): D3RendererState {

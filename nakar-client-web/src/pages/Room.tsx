@@ -12,6 +12,7 @@ import { GraphRendererEngine } from "../lib/graph-renderer/GraphRendererEngine.t
 import { useWebSocketsState } from "../lib/ws/useWebSocketsState.ts";
 import { ToastStack } from "../components/room/ToastStack.tsx";
 import { WebSocketsManager } from "../lib/ws/WebSocketsManager.ts";
+import { Env } from "../lib/env/env.ts";
 
 export async function RoomLoader(
   args: LoaderFunctionArgs,
@@ -26,7 +27,7 @@ export async function RoomLoader(
   return resultOrThrow(room);
 }
 
-export function Room() {
+export function Room(props: { webSockets: WebSocketsManager; env: Env }) {
   const loaderData: RoomSchema = useLoaderData();
   const [tableData, setTableData] = useState<Record<string, unknown>[] | null>(
     null,
@@ -35,12 +36,11 @@ export function Room() {
   const [tableDataOpened, setTableDataOpened] = useState(false);
   const [scenarioLoading, setScenarioLoading] = useState<string | null>(null);
   const [renderer, setRenderer] = useState<GraphRendererEngine>("d3");
-  const [webSockets] = useState(new WebSocketsManager());
-  const socketState = useWebSocketsState(webSockets);
+  const socketState = useWebSocketsState(props.webSockets);
 
   useEffect(() => {
     if (socketState.type === "connected") {
-      webSockets.sendMessage({
+      props.webSockets.sendMessage({
         type: "WSActionJoinRoom",
         roomId: loaderData.id,
       });
@@ -49,11 +49,11 @@ export function Room() {
 
   useEffect(() => {
     const subscriptions = [
-      webSockets.onScenarioDataChanged$.subscribe((sd) => {
+      props.webSockets.onScenarioDataChanged$.subscribe((sd) => {
         setTableData(sd.graph.tableData);
         setScenarioLoading(null);
       }),
-      webSockets.onError$.subscribe(() => {
+      props.webSockets.onNotification$.subscribe(() => {
         setScenarioLoading(null);
       }),
     ];
@@ -69,6 +69,7 @@ export function Room() {
     <>
       <Stack style={{ height: "100%" }}>
         <AppNavbar
+          env={props.env}
           scenarioWindow={{
             isOpen: scenariosWindowOpened,
             onToggle: () => {
@@ -96,7 +97,7 @@ export function Room() {
             onChange: setRenderer,
           }}
         ></AppNavbar>
-        <ToastStack websocketsManager={webSockets}></ToastStack>
+        <ToastStack websocketsManager={props.webSockets}></ToastStack>
         <Stack
           direction={"horizontal"}
           className={"align-items-stretch flex-grow-1"}
@@ -107,7 +108,7 @@ export function Room() {
               <DatabaseList
                 onScenarioSelect={(scenario) => {
                   setScenarioLoading(scenario.id);
-                  webSockets.sendMessage({
+                  props.webSockets.sendMessage({
                     type: "WSActionRunScenario",
                     scenarioId: scenario.id,
                   });
@@ -116,7 +117,10 @@ export function Room() {
               ></DatabaseList>
             )}
           </SideToolbar>
-          <Canvas renderer={renderer} webSocketsManager={webSockets}></Canvas>
+          <Canvas
+            renderer={renderer}
+            webSocketsManager={props.webSockets}
+          ></Canvas>
           <SideToolbar hidden={!tableDataOpened} width={700}>
             {() => <DataTable tableData={tableData}></DataTable>}
           </SideToolbar>

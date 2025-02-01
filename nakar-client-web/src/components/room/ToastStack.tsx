@@ -2,6 +2,7 @@ import { Toast, ToastContainer } from "react-bootstrap";
 import { useEffect, useState } from "react";
 import { v4 } from "uuid";
 import { WebSocketsManager } from "../../lib/ws/WebSocketsManager.ts";
+import { match } from "ts-pattern";
 
 export function ToastStack(props: { websocketsManager: WebSocketsManager }) {
   const [message, setMessages] = useState<ToastMessage[]>([]);
@@ -22,36 +23,13 @@ export function ToastStack(props: { websocketsManager: WebSocketsManager }) {
 
   useEffect(() => {
     const subscriptions = [
-      props.websocketsManager.onScenarioDataChanged$.subscribe((event) => {
+      props.websocketsManager.onNotification$.subscribe((notification) => {
         pushMessage({
           id: v4(),
-          message: `Scenario loaded: ${event.scenarioTitle}`,
-          date: new Date(event.date),
-          title: "Graph",
-        });
-      }),
-      props.websocketsManager.onError$.subscribe((event) => {
-        pushMessage({
-          id: v4(),
-          message: event.message,
-          date: new Date(event.date),
-          title: "Error",
-        });
-      }),
-      props.websocketsManager.onUserJoined$.subscribe((event) => {
-        pushMessage({
-          id: v4(),
-          message: `User ${event.userName} joined the room.`,
-          date: new Date(event.date),
-          title: "User joined",
-        });
-      }),
-      props.websocketsManager.onUserLeft$.subscribe((event) => {
-        pushMessage({
-          id: v4(),
-          message: `User ${event.userName} left the room. (${event.message})`,
-          date: new Date(event.date),
-          title: "User left",
+          message: notification.message,
+          date: new Date(notification.date),
+          title: notification.title,
+          severity: notification.severity,
         });
       }),
     ];
@@ -71,13 +49,13 @@ export function ToastStack(props: { websocketsManager: WebSocketsManager }) {
           onClose={() => {
             removeMessage(message.id);
           }}
+          bg={match(message.severity)
+            .with("error", () => "danger")
+            .with("warning", () => "warning")
+            .with("message", () => undefined)
+            .exhaustive()}
         >
           <Toast.Header>
-            <img
-              src="holder.js/20x20?text=%20"
-              className="rounded me-2"
-              alt=""
-            />
             <strong className="me-auto">{message.title}</strong>
             <small className="text-muted">
               {message.date.toLocaleString()}
@@ -95,4 +73,5 @@ type ToastMessage = {
   title: string;
   message: string;
   date: Date;
+  severity: "error" | "warning" | "message";
 };

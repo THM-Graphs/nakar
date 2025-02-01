@@ -53,7 +53,9 @@ export class WSClient {
       .with(P.instanceOf(Error), (e) => e.message)
       .otherwise((e) => JSON.stringify(e));
     this.send({
-      type: 'WSEventError',
+      type: 'WSEventNotification',
+      severity: 'error',
+      title: 'Error',
       message: errorMessage,
       date: new Date().toISOString(),
     });

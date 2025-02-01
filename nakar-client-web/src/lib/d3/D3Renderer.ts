@@ -114,9 +114,14 @@ export class D3Renderer {
 
   private renderSvgElements(
     svgElement: SVGSVGElement,
-    graph: D3RendererState,
+    d3RendererState: D3RendererState,
     theme: UserTheme,
   ): void {
+    const originalGraph = d3RendererState.originalGraph;
+    if (originalGraph == null) {
+      return;
+    }
+
     const width = svgElement.getBoundingClientRect().width;
     const height = svgElement.getBoundingClientRect().height;
 
@@ -152,11 +157,11 @@ export class D3Renderer {
     );
 
     const simulation: d3.Simulation<D3Node, D3Link> = d3
-      .forceSimulation(graph.nodes)
+      .forceSimulation(d3RendererState.nodes)
       .force(
         "link",
         d3
-          .forceLink<D3Node, D3Link>(graph.links)
+          .forceLink<D3Node, D3Link>(d3RendererState.links)
           .id((d) => d.id)
           .distance(
             (d) => d.source.radius + d.type.length * 10 * 2 + d.target.radius,
@@ -177,7 +182,7 @@ export class D3Renderer {
       .append("g")
       .attr("class", "links")
       .selectAll("line")
-      .data(graph.links)
+      .data(d3RendererState.links)
       .enter()
       .append("path")
       .attr("fill", "none")
@@ -189,7 +194,7 @@ export class D3Renderer {
       .append("g")
       .attr("class", "link-labels")
       .selectAll("text")
-      .data(graph.links)
+      .data(d3RendererState.links)
       .enter()
       .append("text")
       .text((d) =>
@@ -227,7 +232,7 @@ export class D3Renderer {
       .append("g")
       .attr("class", "nodes")
       .selectAll("circle")
-      .data(graph.nodes)
+      .data(d3RendererState.nodes)
       .enter()
       .append("g")
       .attr("style", "cursor: pointer;");
@@ -280,9 +285,8 @@ export class D3Renderer {
         (d) =>
           d.customBackgroundColor ??
           getBackgroundColor(
-            graph.originalGraph.metaData.labels.find(
-              (l) => l.label === d.labels[0],
-            )?.color ?? null,
+            originalGraph.metaData.labels.find((l) => l.label === d.labels[0])
+              ?.color ?? null,
           ),
       )
       .attr("stroke", () => (theme == "dark" ? "#fff" : "#000"))
@@ -300,9 +304,8 @@ export class D3Renderer {
         const color =
           d.customTitleColor ??
           getTextColor(
-            graph.originalGraph.metaData.labels.find(
-              (l) => l.label === d.labels[0],
-            )?.color ?? null,
+            originalGraph.metaData.labels.find((l) => l.label === d.labels[0])
+              ?.color ?? null,
           );
 
         return `

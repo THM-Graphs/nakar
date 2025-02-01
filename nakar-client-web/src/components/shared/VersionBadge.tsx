@@ -1,10 +1,10 @@
-import { env } from "../../lib/env/env.ts";
+import { Env } from "../../lib/env/env.ts";
 import { Badge } from "react-bootstrap";
 
-export function VersionBadge() {
+export function VersionBadge(props: { env: Env }) {
   return (
     <Badge bg="secondary">
-      <span>{env().VERSION}</span>
+      <span>{props.env.VERSION}</span>
     </Badge>
   );
 }

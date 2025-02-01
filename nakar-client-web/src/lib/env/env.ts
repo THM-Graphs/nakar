@@ -6,7 +6,7 @@ const EnvFileSchema = z.object({
   BACKEND_SOCKET_URL: z.string().optional(),
   VERSION: z.string().optional(),
 });
-type Env = {
+export type Env = {
   BACKEND_URL: string;
   BACKEND_SOCKET_URL: string;
   VERSION: string;
@@ -31,7 +31,7 @@ async function loadEnv(): Promise<Env> {
   };
 }
 
-async function loadEnvOrDefault(): Promise<Env> {
+export async function loadEnvOrDefault(): Promise<Env> {
   try {
     const env = await loadEnv();
     console.log(`Will use env: ${JSON.stringify(env)}`);
@@ -41,16 +41,6 @@ async function loadEnvOrDefault(): Promise<Env> {
     console.log(`Will use default env: ${JSON.stringify(defaultEnv)}`);
     return defaultEnv;
   }
-}
-
-export async function bootstrapEnv(): Promise<void> {
-  currentEnv = await loadEnvOrDefault();
-}
-
-let currentEnv: Env = defaultEnv;
-
-export function env(): Env {
-  return currentEnv;
 }
 
 function nullIfEmpty(input: string | null | undefined): string | null {

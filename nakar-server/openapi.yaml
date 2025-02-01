@@ -266,6 +266,18 @@ components:
         - width
         - namesInQuery
 
+    ScenarioInfo:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+          nullable: true
+      required:
+        - id
+        - title
+
     GraphMetaData:
       type: object
       properties:
@@ -273,8 +285,11 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/GraphLabel'
+        scenarioInfo:
+          $ref: '#/components/schemas/ScenarioInfo'
       required:
         - labels
+        - scenarioInfo
 
     Graph:
       type: object
@@ -422,10 +437,8 @@ components:
     WSServerToClientMessage:
       oneOf:
         - $ref: "#/components/schemas/WSEventScenarioDataChanged"
-        - $ref: "#/components/schemas/WSEventError"
+        - $ref: "#/components/schemas/WSEventNotification"
         - $ref: "#/components/schemas/WSEventNodesMoved"
-        - $ref: "#/components/schemas/WSEventUserJoined"
-        - $ref: "#/components/schemas/WSEventUserLeft"
 
     WSActionJoinRoom:
       type: object
@@ -481,16 +494,9 @@ components:
           enum: ["WSEventScenarioDataChanged"]
         graph:
           $ref: "#/components/schemas/Graph"
-        date:
-          type: string
-          format: date
-        scenarioTitle:
-          type: string
       required:
         - type
         - graph
-        - date
-        - scenarioTitle
     
     WSEventNodesMoved:
       type: object
@@ -518,53 +524,28 @@ components:
         - nodes
         - date
     
-    WSEventUserJoined:
+    WSEventNotification:
       type: object
       properties:
         type:
           type: string
-          enum: ["WSEventUserJoined"]
-        userName:
+          enum: ["WSEventNotification"]
+        title:
           type: string
-        date:
-          type: string
-          format: date
-      required:
-        - type
-        - userName
-        - date
-    
-    WSEventUserLeft:
-      type: object
-      properties:
-        type:
-          type: string
-          enum: ["WSEventUserLeft"]
-        userName:
-          type: string
-        date:
-          type: string
-          format: date
         message:
           type: string
-      required:
-        - type
-        - userName
-        - date
-        - message
-
-    WSEventError:
-      type: object
-      properties:
-        type:
+        severity:
           type: string
-          enum: ["WSEventError"]
-        message:
-          type: string
+          enum:
+            - error
+            - message
+            - warning
         date:
           type: string
           format: date
       required:
         - type
+        - title
         - message
+        - severity
         - date

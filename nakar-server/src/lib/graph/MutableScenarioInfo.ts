@@ -1,7 +1,8 @@
 import { DBScenario } from '../documents/collection-types/DBScenario';
 import z from 'zod';
+import { SchemaScenarioInfo } from '../../../src-gen/schema';
 
-export class ScenarioInfo {
+export class MutableScenarioInfo {
   public static schema = z.object({
     id: z.string(),
     title: z.string().nullable(),
@@ -15,30 +16,37 @@ export class ScenarioInfo {
     this.title = data.title;
   }
 
-  public static create(scenario: DBScenario): ScenarioInfo {
-    return new ScenarioInfo({
+  public static create(scenario: DBScenario): MutableScenarioInfo {
+    return new MutableScenarioInfo({
       id: scenario.documentId,
       title: scenario.title,
     });
   }
 
-  public static empty(): ScenarioInfo {
-    return new ScenarioInfo({
+  public static empty(): MutableScenarioInfo {
+    return new MutableScenarioInfo({
       id: '',
       title: null,
     });
   }
 
   public static fromPlain(
-    scenarioInfo: z.infer<typeof ScenarioInfo.schema>,
-  ): ScenarioInfo {
-    return new ScenarioInfo({
+    scenarioInfo: z.infer<typeof MutableScenarioInfo.schema>,
+  ): MutableScenarioInfo {
+    return new MutableScenarioInfo({
       id: scenarioInfo.id,
       title: scenarioInfo.title,
     });
   }
 
-  public toPlain(): z.infer<typeof ScenarioInfo.schema> {
+  public toPlain(): z.infer<typeof MutableScenarioInfo.schema> {
+    return {
+      id: this.id,
+      title: this.title,
+    };
+  }
+
+  public toDto(): SchemaScenarioInfo {
     return {
       id: this.id,
       title: this.title,
