@@ -100,6 +100,7 @@ export class Neo4jGraphElements {
         }),
       );
     } else {
+      // TODO: match everything
       return match(field)
         .with(P.array(), (a) => Neo4jGraphElements.fromFields(key, a))
         .with(P.map(), (o) =>
