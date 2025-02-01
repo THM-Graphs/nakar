@@ -58,6 +58,9 @@ export class PhysicsSimulation {
 
     // Calculate attractive forces
     for (const edge of this._edges) {
+      if (edge.original.isLoop) {
+        continue;
+      }
       const nodeA = edge.source;
       const nodeB = edge.target;
       const targetDistance =
