@@ -11,6 +11,7 @@ import { ApplyNodeRadius } from './transform-tasks/ApplyNodeRadius';
 import { ApplyNodeBackgroundColor } from './transform-tasks/ApplyNodeBackgroundColor';
 import { GrowNodeBasedOnDegree } from './transform-tasks/GrowNodeBasedOnDegree';
 import { MutableGraph } from '../MutableGraph';
+import { ForceSimulation } from './transform-tasks/ForceSimulation';
 
 export class GraphTransformer {
   private readonly _tasks: TransformTask[];
@@ -31,6 +32,7 @@ export class GraphTransformer {
       new ApplyNodeRadius(),
       new ApplyNodeBackgroundColor(),
       new GrowNodeBasedOnDegree(),
+      new ForceSimulation(),
     ];
     this._config = config;
     this._database = database;

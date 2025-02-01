@@ -77,7 +77,7 @@ export class MutableNode {
       labels: labels,
       properties: properties,
       radius: MutableNode.defaultRadius,
-      position: MutablePosition.random(),
+      position: MutablePosition.default(),
       inDegree: 0,
       outDegree: 0,
       namesInQuery: node.keys,

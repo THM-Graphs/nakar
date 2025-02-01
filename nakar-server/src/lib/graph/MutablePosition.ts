@@ -21,13 +21,6 @@ export class MutablePosition {
     });
   }
 
-  public static random(): MutablePosition {
-    return new MutablePosition({
-      x: Math.random() * 1280 - 1280 / 2,
-      y: Math.random() * 800 - 800 / 2,
-    });
-  }
-
   public static fromPlain(input: unknown): MutablePosition {
     const data = MutablePosition.schema.parse(input);
     return new MutablePosition({
