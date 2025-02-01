@@ -18,6 +18,9 @@ export class CompressRelationships extends TransformTask {
     if (!config.compressRelationships) {
       return;
     }
+    if (input.edges.size === 0) {
+      return;
+    }
 
     const relationships = new SMap<string, MutableEdge>();
 
