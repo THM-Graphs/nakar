@@ -57,5 +57,8 @@ export class PhysicalNode {
 
   public applyForce(force: Force): void {
     this._velocity.add(force.value);
+    if (this._velocity.magnitude > 500) {
+      this._velocity = this._velocity.normalized.multiplied(500);
+    }
   }
 }
