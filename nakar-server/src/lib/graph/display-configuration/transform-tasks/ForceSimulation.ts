@@ -1,6 +1,6 @@
 import { TransformTask } from '../TransformTask';
 import { MutableGraph } from '../../MutableGraph';
-import { PhysicsSimlulation } from '../../../physics/PhysicsSimluation';
+import { PhysicsSimulation } from '../../../physics/PhysicsSimulation';
 
 export class ForceSimulation extends TransformTask {
   public constructor() {
@@ -12,7 +12,7 @@ export class ForceSimulation extends TransformTask {
       return;
     }
 
-    const cimulation = new PhysicsSimlulation(input);
+    const cimulation = new PhysicsSimulation(input);
     cimulation.run(1000);
   }
 }

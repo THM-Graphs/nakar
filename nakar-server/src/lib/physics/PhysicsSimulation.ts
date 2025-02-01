@@ -3,7 +3,7 @@ import { Force } from './Force';
 import { PhysicalEdge } from './PhysicalEdge';
 import { PhysicalNode } from './PhysicalNode';
 
-export class PhysicsSimlulation {
+export class PhysicsSimulation {
   private _nodes: PhysicalNode[];
   private _edges: PhysicalEdge[];
 
@@ -41,8 +41,8 @@ export class PhysicsSimlulation {
   private _tick(): void {
     // Example iteration count
     // Calculate repulsive forces
-    this._nodes.forEach((nodeA) => {
-      this._nodes.forEach((nodeB) => {
+    for (const nodeA of this._nodes) {
+      for (const nodeB of this._nodes) {
         if (nodeA !== nodeB) {
           nodeA.applyForce(
             Force.twoBodyForce(
@@ -53,13 +53,13 @@ export class PhysicsSimlulation {
             ),
           );
         }
-      });
-    });
+      }
+    }
 
     // Calculate attractive forces
-    this._edges.forEach((edge: PhysicalEdge) => {
-      const nodeA: PhysicalNode = edge.source;
-      const nodeB: PhysicalNode = edge.target;
+    for (const edge of this._edges) {
+      const nodeA = edge.source;
+      const nodeB = edge.target;
       const targetDistance =
         nodeA.original.radius +
         edge.original.type.length * 20 +
@@ -72,16 +72,16 @@ export class PhysicsSimlulation {
       );
       nodeA.applyForce(force);
       nodeB.applyForce(force.inverted);
-    });
+    }
 
-    //   // Apply centering forces
-    this._nodes.forEach((node) => {
+    // Apply centering forces
+    for (const node of this._nodes) {
       node.applyForce(Force.centerForce(node.position, node.mass));
-    });
+    }
 
     // Update positions
-    this._nodes.forEach((node) => {
+    for (const node of this._nodes) {
       node.physicsTick();
-    });
+    }
   }
 }
