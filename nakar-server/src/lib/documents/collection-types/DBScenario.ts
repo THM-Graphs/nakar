@@ -60,7 +60,7 @@ export class DBScenario {
       title: this.title,
       query: this.query,
       description: this.description,
-      coverUrl: this.cover?.url ?? null,
+      coverUrl: this.cover?.getPublicUrl() ?? null,
     };
   }
 }

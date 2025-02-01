@@ -15,4 +15,15 @@ export class DBMedia {
       url: db.url ?? null,
     });
   }
+
+  public getPublicUrl(): string | null {
+    if (this.url == null) {
+      return null;
+    }
+    const host = strapi.config.get<string | null>('server.url', null);
+    if (host == null) {
+      return null;
+    }
+    return host + this.url;
+  }
 }
