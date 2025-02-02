@@ -304,6 +304,12 @@ export class RoomSessionManager {
       const rooms: DBRoom[] = await this._database.getRooms();
 
       for (const room of rooms) {
+        if (room.graph == null) {
+          strapi.log.debug(
+            `Room ${room.documentId} has no graph. Will not load into memory.`,
+          );
+          continue;
+        }
         const graph = MutableGraph.fromPlain(room.graph);
         this._rooms.setData(room.documentId, graph);
       }

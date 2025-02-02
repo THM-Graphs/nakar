@@ -1,7 +1,20 @@
-/* eslint-disable @typescript-eslint/consistent-type-definitions */
+import { z } from 'zod';
 
-// TODO: Replace with full wrapper
-export type JSONPrimitive = string | number | boolean | null;
-export type JSONObject = { [k: string]: JSONValue };
-export type JSONValue = JSONPrimitive | JSONObject | JSONArray;
-export type JSONArray = JSONValue[];
+export type JsonValue =
+  | boolean
+  | null
+  | number
+  | string
+  | { [key: string]: JsonValue }
+  | JsonValue[];
+
+export const jsonValueSchema: z.ZodType<JsonValue> = z.lazy(() =>
+  z.union([
+    z.boolean(),
+    z.null(),
+    z.number(),
+    z.string(),
+    z.array(jsonValueSchema),
+    z.record(jsonValueSchema),
+  ]),
+);

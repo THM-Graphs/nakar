@@ -1,26 +1,26 @@
 import { SchemaGraphProperty } from '../../../src-gen/schema';
 import { z } from 'zod';
-import { JSONValue } from '../json/JSON';
 import { SMap } from '../tools/Map';
+import { jsonValueSchema, JsonValue } from '../json/JSON';
 
 export class MutablePropertyCollection {
   public static readonly schema = z.object({
-    properties: z.record(z.any()),
+    properties: z.record(jsonValueSchema),
   });
 
-  public properties: SMap<string, JSONValue>;
+  public properties: SMap<string, JsonValue>;
 
-  public constructor(data: { properties: SMap<string, JSONValue> }) {
+  public constructor(data: { properties: SMap<string, JsonValue> }) {
     this.properties = data.properties;
   }
 
   public static create(
-    properties: Record<string, JSONValue>,
+    properties: Record<string, JsonValue>,
   ): MutablePropertyCollection {
     return new MutablePropertyCollection({
       properties: Object.entries(properties).reduce(
         (akku, [key, value]) => akku.bySetting(key, value),
-        new SMap<string, JSONValue>(),
+        new SMap<string, JsonValue>(),
       ),
     });
   }
@@ -28,18 +28,16 @@ export class MutablePropertyCollection {
   public static fromPlain(input: unknown): MutablePropertyCollection {
     const data = MutablePropertyCollection.schema.parse(input);
     return new MutablePropertyCollection({
-      // TODO: fully parse JSONValue
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-      properties: SMap.fromRecord(data.properties) as SMap<string, JSONValue>,
+      properties: SMap.fromRecord(data.properties),
     });
   }
 
   public getStringValueOfProperty(key: string): string | null {
-    const value = this.properties.get(key);
-    if (typeof value !== 'string') {
-      return null;
+    const v = this.properties.get(key);
+    if (typeof v === 'string') {
+      return v;
     }
-    return value;
+    return null;
   }
 
   public firstStringValue(): string | null {

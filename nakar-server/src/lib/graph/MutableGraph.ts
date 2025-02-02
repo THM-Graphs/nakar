@@ -4,28 +4,28 @@ import { MutableGraphMetaData } from './MutableGraphMetaData';
 import { Neo4jGraphElements } from '../neo4j/Neo4jGraphElements';
 import { SchemaGraph } from '../../../src-gen/schema';
 import { z } from 'zod';
-import { JSONValue } from '../json/JSON';
 import { SMap } from '../tools/Map';
 import { DBScenario } from '../documents/collection-types/DBScenario';
+import { JsonValue, jsonValueSchema } from '../json/JSON';
 
 export class MutableGraph {
   public static readonly schema = z.object({
     nodes: z.record(MutableNode.schema),
     edges: z.record(MutableEdge.schema),
     metaData: MutableGraphMetaData.schema,
-    tableData: z.array(z.record(z.any())),
+    tableData: z.array(z.record(jsonValueSchema)),
   });
 
   public nodes: SMap<string, MutableNode>;
   public edges: SMap<string, MutableEdge>;
   public metaData: MutableGraphMetaData;
-  public tableData: SMap<string, JSONValue>[];
+  public tableData: SMap<string, JsonValue>[];
 
   public constructor(data: {
     nodes: SMap<string, MutableNode>;
     edges: SMap<string, MutableEdge>;
     metaData: MutableGraphMetaData;
-    tableData: SMap<string, JSONValue>[];
+    tableData: SMap<string, JsonValue>[];
   }) {
     this.nodes = data.nodes;
     this.edges = data.edges;
@@ -62,11 +62,7 @@ export class MutableGraph {
       nodes: SMap.fromRecord(data.nodes).map((n) => MutableNode.fromPlain(n)),
       edges: SMap.fromRecord(data.edges).map((e) => MutableEdge.fromPlain(e)),
       metaData: MutableGraphMetaData.fromPlain(data.metaData),
-      tableData: data.tableData.map((td) =>
-        // TODO: Wrap json value
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-        SMap.fromRecord(td).map((v: unknown) => v as JSONValue),
-      ),
+      tableData: data.tableData.map((td) => SMap.fromRecord(td)),
     });
   }
 

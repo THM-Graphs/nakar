@@ -12,18 +12,18 @@ import {
 } from 'neo4j-driver';
 import { match, P } from 'ts-pattern';
 import { Record as Neo4jRecord } from 'neo4j-driver-core';
-import { JSONValue } from '../json/JSON';
+import { JsonValue } from '../json/JSON';
 import { SMap } from '../tools/Map';
 
 export class Neo4jGraphElements {
   public readonly nodes: SMap<string, Neo4jNode>;
   public readonly relationships: SMap<string, Neo4jRelationship>;
-  public readonly tableData: SMap<string, JSONValue>[];
+  public readonly tableData: SMap<string, JsonValue>[];
 
   public constructor(data: {
     nodes: SMap<string, Neo4jNode>;
     relationships: SMap<string, Neo4jRelationship>;
-    tableData: SMap<string, JSONValue>[];
+    tableData: SMap<string, JsonValue>[];
   }) {
     this.nodes = data.nodes;
     this.relationships = data.relationships;
@@ -75,7 +75,7 @@ export class Neo4jGraphElements {
   }
 
   public static fromTableData(
-    tableData: SMap<string, JSONValue>[],
+    tableData: SMap<string, JsonValue>[],
   ): Neo4jGraphElements {
     return new Neo4jGraphElements({
       nodes: new SMap(),
@@ -122,7 +122,7 @@ export class Neo4jGraphElements {
   }
 
   public static fromQueryResult(
-    queryResult: QueryResult<RecordShape<string, unknown>>,
+    queryResult: QueryResult<RecordShape<string, JsonValue>>,
   ): Neo4jGraphElements {
     return Neo4jGraphElements.mergeMultiple(
       ...queryResult.records.map((record) =>
@@ -132,21 +132,20 @@ export class Neo4jGraphElements {
   }
 
   public static fromRecord(
-    record: Neo4jRecord<RecordShape<string, unknown>>,
+    record: Neo4jRecord<RecordShape<string, JsonValue>>,
   ): Neo4jGraphElements {
     const results = record.keys.map((key) =>
       Neo4jGraphElements.fromField(key, record.get(key)),
     );
 
-    const tableDataEntry = record.keys.reduce<SMap<string, JSONValue>>(
+    const tableDataEntry = record.keys.reduce<SMap<string, JsonValue>>(
       (akku, next) => {
-        const value: unknown = record.get(next);
+        const value: JsonValue = record.get(next);
         if (isInt(value)) {
           return akku.bySetting(next, value.toString());
         } else {
           // todo: match everything
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-          return akku.bySetting(next, value as JSONValue);
+          return akku.bySetting(next, value);
         }
       },
       new SMap(),
@@ -161,7 +160,7 @@ export class Neo4jGraphElements {
   public byMergingWith(other: Neo4jGraphElements): Neo4jGraphElements {
     const nodes = new SMap<string, Neo4jNode>();
     const relationships = new SMap<string, Neo4jRelationship>();
-    const tableData: SMap<string, JSONValue>[] = [];
+    const tableData: SMap<string, JsonValue>[] = [];
 
     for (const [id, node] of this.nodes.entries()) {
       nodes.set(id, node);
