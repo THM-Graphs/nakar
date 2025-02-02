@@ -5,7 +5,7 @@ import { MutableGraph } from '../../MutableGraph';
 
 export class ApplyNodeRadius extends TransformTask {
   public constructor() {
-    super('ApplyNodeRadius');
+    super('Apply Node Radius');
   }
 
   protected run(

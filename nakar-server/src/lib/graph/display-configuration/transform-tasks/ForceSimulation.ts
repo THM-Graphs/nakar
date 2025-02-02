@@ -2,17 +2,17 @@ import { TransformTask } from '../TransformTask';
 import { MutableGraph } from '../../MutableGraph';
 import { PhysicsSimulation } from '../../../physics/PhysicsSimulation';
 
-export class ForceSimulation extends TransformTask {
+export class Layout extends TransformTask {
   public constructor() {
-    super('ForceSimulation');
+    super('Layout');
   }
 
-  protected run(input: MutableGraph): void {
+  protected async run(input: MutableGraph): Promise<void> {
     if (input.nodes.size === 0) {
       return;
     }
 
     const cimulation = new PhysicsSimulation(input);
-    cimulation.run(1000);
+    await cimulation.run(1_000);
   }
 }

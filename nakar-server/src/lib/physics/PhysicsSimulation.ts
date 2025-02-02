@@ -1,4 +1,5 @@
 import { MutableGraph } from '../graph/MutableGraph';
+import { wait } from '../tools/Wait';
 import { Force } from './Force';
 import { PhysicalEdge } from './PhysicalEdge';
 import { PhysicalNode } from './PhysicalNode';
@@ -27,9 +28,12 @@ export class PhysicsSimulation {
       }, []);
   }
 
-  public run(ticks = 300): void {
-    for (let i = 0; i < ticks; i += 1) {
-      this._tick();
+  public async run(ticks = 300): Promise<void> {
+    for (let i = 0; i < ticks / 10; i += 1) {
+      for (let j = 0; j < 10; j += 1) {
+        this._tick();
+      }
+      await wait();
     }
 
     for (const node of this._nodes) {

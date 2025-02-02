@@ -21,12 +21,12 @@ paths:
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: "OK"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Scenarios'
+                $ref: "#/components/schemas/Scenarios"
 
   /scenario-group:
     get:
@@ -40,12 +40,12 @@ paths:
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: "OK"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ScenarioGroups'
+                $ref: "#/components/schemas/ScenarioGroups"
 
   /database:
     get:
@@ -53,12 +53,12 @@ paths:
         - Database
       operationId: getDatabases
       responses:
-        '200':
+        "200":
           description: "OK"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Databases'
+                $ref: "#/components/schemas/Databases"
 
   /room:
     get:
@@ -66,12 +66,12 @@ paths:
         - Room
       operationId: getRooms
       responses:
-        '200':
+        "200":
           description: "OK"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Rooms'
+                $ref: "#/components/schemas/Rooms"
   /room/{id}:
     get:
       tags:
@@ -84,12 +84,12 @@ paths:
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: "OK"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Room'
+                $ref: "#/components/schemas/Room"
 
   /system/version:
     get:
@@ -97,24 +97,24 @@ paths:
         - System
       operationId: getVersion
       responses:
-        '200':
+        "200":
           description: "OK"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Version'
+                $ref: "#/components/schemas/Version"
 
 components:
   schemas:
     PresetColorIndex:
       type: integer
-      enum: [ 0, 1, 2, 3, 4, 5 ]
+      enum: [0, 1, 2, 3, 4, 5]
 
     PresetColor:
       type: object
       properties:
         index:
-          $ref: '#/components/schemas/PresetColorIndex'
+          $ref: "#/components/schemas/PresetColorIndex"
       required:
         - index
 
@@ -133,8 +133,8 @@ components:
       discriminator:
         propertyName: type
       oneOf:
-        - $ref: '#/components/schemas/PresetColor'
-        - $ref: '#/components/schemas/CustomColor'
+        - $ref: "#/components/schemas/PresetColor"
+        - $ref: "#/components/schemas/CustomColor"
 
     GraphLabel:
       type: object
@@ -142,7 +142,7 @@ components:
         label:
           type: string
         color:
-          $ref: '#/components/schemas/Color'
+          $ref: "#/components/schemas/Color"
         count:
           type: integer
       required:
@@ -156,7 +156,7 @@ components:
         slug:
           type: string
         value:
-          $ref: '#/components/schemas/GraphPropertyValue'
+          $ref: "#/components/schemas/GraphPropertyValue"
       required:
         - slug
         - value
@@ -176,11 +176,11 @@ components:
         properties:
           type: array
           items:
-            $ref: '#/components/schemas/GraphProperty'
+            $ref: "#/components/schemas/GraphProperty"
         radius:
           type: number
         position:
-          $ref: '#/components/schemas/Position'
+          $ref: "#/components/schemas/Position"
         inDegree:
           type: integer
         outDegree:
@@ -248,7 +248,7 @@ components:
         properties:
           type: array
           items:
-            $ref: '#/components/schemas/GraphProperty'
+            $ref: "#/components/schemas/GraphProperty"
         namesInQuery:
           type: array
           items:
@@ -284,9 +284,9 @@ components:
         labels:
           type: array
           items:
-            $ref: '#/components/schemas/GraphLabel'
+            $ref: "#/components/schemas/GraphLabel"
         scenarioInfo:
-          $ref: '#/components/schemas/ScenarioInfo'
+          $ref: "#/components/schemas/ScenarioInfo"
       required:
         - labels
         - scenarioInfo
@@ -297,18 +297,18 @@ components:
         nodes:
           type: array
           items:
-            $ref: '#/components/schemas/Node'
+            $ref: "#/components/schemas/Node"
         edges:
           type: array
           items:
-            $ref: '#/components/schemas/Edge'
+            $ref: "#/components/schemas/Edge"
         metaData:
-          $ref: '#/components/schemas/GraphMetaData'
+          $ref: "#/components/schemas/GraphMetaData"
         tableData:
           type: array
           items:
             type: object
-            additionalProperties: { }
+            additionalProperties: {}
       required:
         - nodes
         - edges
@@ -427,18 +427,19 @@ components:
           type: string
       required:
         - version
-    
+
     WSClientToServerMessage:
       oneOf:
         - $ref: "#/components/schemas/WSActionJoinRoom"
         - $ref: "#/components/schemas/WSActionRunScenario"
         - $ref: "#/components/schemas/WSActionMoveNodes"
-    
+
     WSServerToClientMessage:
       oneOf:
         - $ref: "#/components/schemas/WSEventScenarioDataChanged"
         - $ref: "#/components/schemas/WSEventNotification"
         - $ref: "#/components/schemas/WSEventNodesMoved"
+        - $ref: "#/components/schemas/WSEventGraphProgress"
 
     WSActionJoinRoom:
       type: object
@@ -463,7 +464,7 @@ components:
       required:
         - type
         - scenarioId
-    
+
     WSActionMoveNodes:
       type: object
       properties:
@@ -472,20 +473,20 @@ components:
           enum: ["WSActionMoveNodes"]
         nodes:
           type: array
-          items: 
+          items:
             type: object
-            properties: 
+            properties:
               id:
                 type: string
               position:
-                $ref: '#/components/schemas/Position'
-            required: 
+                $ref: "#/components/schemas/Position"
+            required:
               - id
               - position
       required:
         - type
         - nodes
-    
+
     WSEventScenarioDataChanged:
       type: object
       properties:
@@ -497,7 +498,7 @@ components:
       required:
         - type
         - graph
-    
+
     WSEventNodesMoved:
       type: object
       properties:
@@ -512,7 +513,7 @@ components:
               id:
                 type: string
               position:
-                $ref: '#/components/schemas/Position'
+                $ref: "#/components/schemas/Position"
             required:
               - id
               - position
@@ -523,7 +524,7 @@ components:
         - type
         - nodes
         - date
-    
+
     WSEventNotification:
       type: object
       properties:
@@ -549,3 +550,17 @@ components:
         - message
         - severity
         - date
+
+    WSEventGraphProgress:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: ["WSEventGraphProgress"]
+        progress:
+          type: number
+        message:
+          type: string
+      required:
+        - progress
+        - message

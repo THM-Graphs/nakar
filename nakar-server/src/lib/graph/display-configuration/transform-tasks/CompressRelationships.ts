@@ -8,7 +8,7 @@ import { SSet } from '../../../tools/Set';
 
 export class CompressRelationships extends TransformTask {
   public constructor() {
-    super('CompressRelationships');
+    super('Compress Relationships');
   }
 
   protected run(

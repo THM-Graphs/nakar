@@ -5,7 +5,7 @@ import { MutableGraph } from '../../MutableGraph';
 
 export class ApplyLabels extends TransformTask {
   public constructor() {
-    super('ApplyLabels');
+    super('Apply Labels');
   }
 
   protected run(input: MutableGraph): void {

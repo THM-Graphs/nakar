@@ -4,6 +4,7 @@ import { ClientToServerEvents } from "./ClientToServerEvents.ts";
 import { ServerToClientEvents } from "./ServerToClientEvents.ts";
 import {
   WSClientToServerMessage,
+  WSEventGraphProgress,
   WSEventNodesMoved,
   WSEventNotification,
   WSEventScenarioDataChanged,
@@ -22,6 +23,7 @@ export class WebSocketsManager {
   private readonly onNotification: Subject<WSEventNotification>;
   private readonly onNodesMoved: Subject<WSEventNodesMoved>;
   private readonly onScenarioDataChanged: Subject<WSEventScenarioDataChanged>;
+  private readonly onGraphProgress: Subject<WSEventGraphProgress>;
 
   public constructor(env: Env) {
     console.log("Did create instance of WebSocketsManager");
@@ -33,6 +35,7 @@ export class WebSocketsManager {
     this.onNotification = new Subject();
     this.onNodesMoved = new Subject();
     this.onScenarioDataChanged = new Subject();
+    this.onGraphProgress = new Subject();
 
     this.socket.on("connect", () => {
       this._socketState.next({ type: "connected" });
@@ -53,6 +56,9 @@ export class WebSocketsManager {
         })
         .with({ type: "WSEventScenarioDataChanged" }, (m) => {
           this.onScenarioDataChanged.next(m);
+        })
+        .with({ type: "WSEventGraphProgress" }, (m) => {
+          this.onGraphProgress.next(m);
         })
         .exhaustive();
     });
@@ -80,5 +86,9 @@ export class WebSocketsManager {
 
   public get onScenarioDataChanged$(): Observable<WSEventScenarioDataChanged> {
     return this.onScenarioDataChanged.asObservable();
+  }
+
+  public get onGraphProgress$(): Observable<WSEventGraphProgress> {
+    return this.onGraphProgress.asObservable();
   }
 }

@@ -7,7 +7,7 @@ import { SSet } from '../../../tools/Set';
 
 export class ConnectNodes extends TransformTask {
   public constructor() {
-    super('ConnectNodes');
+    super('Connect Nodes');
   }
 
   protected async run(

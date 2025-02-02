@@ -5,7 +5,7 @@ import { MutableGraph } from '../../MutableGraph';
 
 export class ApplyNodeBackgroundColor extends TransformTask {
   public constructor() {
-    super('ApplyNodeBackgroundColor');
+    super('Apply Node Background Color');
   }
 
   protected run(

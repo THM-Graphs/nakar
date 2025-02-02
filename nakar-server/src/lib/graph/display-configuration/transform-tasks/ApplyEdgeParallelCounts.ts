@@ -3,7 +3,7 @@ import { MutableGraph } from '../../MutableGraph';
 
 export class ApplyEdgeParallelCounts extends TransformTask {
   public constructor() {
-    super('ApplyEdgeParallelCounts');
+    super('Apply Edge Parallel Counts');
   }
 
   protected run(input: MutableGraph): void {

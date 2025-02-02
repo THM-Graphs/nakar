@@ -5,7 +5,7 @@ import { MutableGraph } from '../../MutableGraph';
 
 export class ApplyNodeDisplayText extends TransformTask {
   public constructor() {
-    super('ApplyNodeDisplayText');
+    super('Apply Node Displa yText');
   }
 
   protected run(

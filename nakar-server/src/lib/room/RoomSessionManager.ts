@@ -10,7 +10,6 @@ import { WebSocketsManager } from '../ws/WebSocketsManager';
 import { auditTime } from 'rxjs';
 import { MutableGraph } from '../graph/MutableGraph';
 import { MutablePosition } from '../graph/MutablePosition';
-import { SMap } from '../tools/Map';
 import {
   SchemaWsActionJoinRoom,
   SchemaWsActionMoveNodes,
@@ -18,16 +17,21 @@ import {
 } from '../../../src-gen/schema';
 import { WSClient } from '../ws/WSClient';
 import { DisconnectReason } from 'socket.io';
+import { RoomStateMachine } from './RoomStateMachine';
+import { match } from 'ts-pattern';
+import { DBRoom } from '../documents/collection-types/DBRoom';
 
 export class RoomSessionManager {
   private readonly _websocketsManager: WebSocketsManager;
-  private readonly _graphData: SMap<string, MutableGraph>;
+  private readonly _rooms: RoomStateMachine;
   private readonly _database: DocumentsDatabase;
 
   public constructor(database: DocumentsDatabase, strapi: Core.Strapi) {
     this._websocketsManager = new WebSocketsManager(strapi);
-    this._graphData = new SMap();
+    this._rooms = new RoomStateMachine();
     this._database = database;
+
+    this._loadGraphsFromDbRooms().catch(strapi.log.error);
 
     this._websocketsManager.onMoveNodes$
       .pipe(auditTime(1000 / 30))
@@ -40,7 +44,14 @@ export class RoomSessionManager {
     this._websocketsManager.onMoveNodes$
       .pipe(auditTime(2000))
       .subscribe(([socket]) => {
-        this._saveGraphInRoom(socket).catch((error: unknown) => {
+        const roomId = socket.room;
+        if (roomId == null) {
+          strapi.log.error(
+            `Socket ${socket.id} did send move node message but is in no room.`,
+          );
+          return;
+        }
+        this._saveGraphInRoom(roomId).catch((error: unknown) => {
           socket.sendError(error);
         });
       });
@@ -72,6 +83,30 @@ export class RoomSessionManager {
         });
       });
     });
+
+    this._rooms.onRoomUpdated$.subscribe(([roomId, state]) => {
+      match(state)
+        .with({ type: 'preparing' }, (preparing) => {
+          this._websocketsManager.sendToRoom(roomId, {
+            type: 'WSEventGraphProgress',
+            message: preparing.step,
+            progress: preparing.progress,
+          });
+        })
+        .with({ type: 'data' }, (data) => {
+          this._websocketsManager.sendToRoom(roomId, {
+            graph: data.graph.toDto(),
+            type: 'WSEventScenarioDataChanged',
+          });
+        })
+        .with({ type: 'empty' }, () => {
+          this._websocketsManager.sendToRoom(roomId, {
+            graph: MutableGraph.empty().toDto(),
+            type: 'WSEventScenarioDataChanged',
+          });
+        })
+        .exhaustive();
+    });
   }
 
   private async _handleJoinRoom(
@@ -91,7 +126,7 @@ export class RoomSessionManager {
     strapi.log.debug(`Socket ${socket.id} entered room ${roomId}`);
   }
 
-  private async _handleRoomChanged(
+  private _handleRoomChanged(
     socket: WSClient,
     room: string | null,
   ): Promise<void> {
@@ -104,20 +139,23 @@ export class RoomSessionManager {
     });
 
     if (room != null) {
-      const graph = await this._getGraphInRoom(room);
-      if (graph != null) {
+      const roomState = this._rooms.getState(room);
+      if (roomState.type === 'data') {
         socket.send({
-          graph: graph.toDto(),
+          graph: roomState.graph.toDto(),
           type: 'WSEventScenarioDataChanged',
         });
       }
     }
+
+    return Promise.resolve();
   }
 
   private async _handleRunScenario(
     socket: WSClient,
     message: SchemaWsActionRunScenario,
   ): Promise<void> {
+    const stepCount = 3 + GraphTransformer.taskCount;
     const roomId = socket.room;
     if (roomId == null) {
       strapi.log.error(
@@ -125,6 +163,8 @@ export class RoomSessionManager {
       );
       return;
     }
+    this._rooms.setPreparing(roomId, 0 / stepCount, 'Load Scenario');
+
     const scenario = await this._database.getScenario(message.scenarioId);
     if (scenario == null) {
       throw new NotFound('Scenario not found.');
@@ -136,6 +176,7 @@ export class RoomSessionManager {
       throw new NotFound('There is no database configuration on the scenario.');
     }
 
+    this._rooms.setPreparing(roomId, 1 / stepCount, 'Connect to database');
     const credentials = Neo4jLoginCredentials.parse(
       scenario.scenarioGroup.database,
     );
@@ -145,6 +186,8 @@ export class RoomSessionManager {
     const initialQueryTask = Profiler.shared.profile(
       `Initial Query (${scenario.title ?? 'no scenario title'})`,
     );
+
+    this._rooms.setPreparing(roomId, 2 / stepCount, 'Execute query');
     const graphElements = await neo4jDatabase.executeQuery(query);
     initialQueryTask.finish();
 
@@ -169,14 +212,25 @@ export class RoomSessionManager {
       displayConfiguration,
       neo4jDatabase,
     );
-    await graphTransformer.run(graph);
+    const updateSubscription = graphTransformer.onProgress$.subscribe(
+      (progress) => {
+        this._rooms.setPreparing(
+          roomId,
+          (progress.progress + 3) / stepCount,
+          progress.step,
+        );
+      },
+    );
+    try {
+      await graphTransformer.run(graph);
+      updateSubscription.unsubscribe();
+    } catch (error) {
+      updateSubscription.unsubscribe();
+      throw error;
+    }
 
-    this._graphData.set(roomId, graph);
-
-    socket.sendToRoom({
-      graph: graph.toDto(),
-      type: 'WSEventScenarioDataChanged',
-    });
+    this._rooms.setData(roomId, graph);
+    await this._saveGraphInRoom(roomId);
 
     socket.sendToRoom({
       title: 'Scenario',
@@ -187,7 +241,7 @@ export class RoomSessionManager {
     });
   }
 
-  private async _handleMoveNode(
+  private _handleMoveNode(
     socket: WSClient,
     message: SchemaWsActionMoveNodes,
   ): Promise<void> {
@@ -196,16 +250,18 @@ export class RoomSessionManager {
       strapi.log.error(
         `Socket ${socket.id} did send move node message but is in no room.`,
       );
-      return;
+      return Promise.resolve();
     }
 
-    const graph = await this._getGraphInRoom(roomId);
-    if (graph == null) {
+    const roomState = this._rooms.getState(roomId);
+    if (roomState.type !== 'data') {
       strapi.log.debug(
         `There is no graph in room ${roomId} to move it's nodes.`,
       );
-      return;
+      return Promise.resolve();
     }
+
+    const graph = roomState.graph;
 
     for (const [id, currentNode] of graph.nodes.entries()) {
       const newPositionNode = message.nodes.find((n) => n.id === id);
@@ -223,16 +279,16 @@ export class RoomSessionManager {
       nodes: message.nodes,
       date: new Date().toISOString(),
     });
+    return Promise.resolve();
   }
 
-  private async _saveGraphInRoom(socket: WSClient): Promise<void> {
-    const roomId = socket.room;
-    if (roomId == null) {
-      strapi.log.error(
-        `Socket ${socket.id} did send move node message but is in no room.`,
-      );
+  private async _saveGraphInRoom(roomId: string): Promise<void> {
+    const roomState = this._rooms.getState(roomId);
+    if (roomState.type !== 'data') {
+      strapi.log.debug(`There is no graph in room ${roomId} to save.`);
       return;
     }
+    const graph = roomState.graph;
 
     const room = await this._database.getRoom(roomId);
     if (room == null) {
@@ -240,37 +296,19 @@ export class RoomSessionManager {
       return;
     }
 
-    const graph = await this._getGraphInRoom(roomId);
-
-    if (graph == null) {
-      strapi.log.debug(`There is no graph in room ${roomId} to save.`);
-      return;
-    }
-
     await this._database.setRoomGraph(room, graph);
   }
 
-  private async _getGraphInRoom(roomId: string): Promise<MutableGraph | null> {
-    return (
-      this._graphData.get(roomId) ?? (await this._loadGraphFromDbRoom(roomId))
-    );
-  }
-
-  private async _loadGraphFromDbRoom(
-    roomId: string,
-  ): Promise<MutableGraph | null> {
+  private async _loadGraphsFromDbRooms(): Promise<void> {
     try {
-      const result = await this._database.getRoom(roomId);
-      if (result == null) {
-        return null;
+      const rooms: DBRoom[] = await this._database.getRooms();
+
+      for (const room of rooms) {
+        const graph = MutableGraph.fromPlain(room.graph);
+        this._rooms.setData(room.documentId, graph);
       }
-      const plain = result.graph;
-      const graph = MutableGraph.fromPlain(plain);
-      this._graphData.set(roomId, graph);
-      return graph;
     } catch (error) {
       strapi.log.error(error);
-      return null;
     }
   }
 

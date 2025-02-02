@@ -3,7 +3,7 @@ import { MutableGraph } from '../../MutableGraph';
 
 export class ApplyNodeDegrees extends TransformTask {
   public constructor() {
-    super('ApplyNodeDegrees');
+    super('Apply Node Degrees');
   }
 
   protected run(input: MutableGraph): void {

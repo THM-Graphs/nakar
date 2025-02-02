@@ -5,7 +5,11 @@ import { DatabaseList } from "../components/room/DatabaseList.tsx";
 import { Canvas } from "../components/room/Canvas.tsx";
 import { DataTable } from "../components/room/DataTable.tsx";
 import { useEffect, useState } from "react";
-import { Room as RoomSchema, getRoom } from "../../src-gen";
+import {
+  Room as RoomSchema,
+  WSEventGraphProgress,
+  getRoom,
+} from "../../src-gen";
 import { LoaderFunctionArgs, useLoaderData } from "react-router";
 import { resultOrThrow } from "../lib/data/resultOrThrow.ts";
 import { GraphRendererEngine } from "../lib/graph-renderer/GraphRendererEngine.ts";
@@ -36,6 +40,8 @@ export function Room(props: { webSockets: WebSocketsManager; env: Env }) {
   const [tableDataOpened, setTableDataOpened] = useState(false);
   const [scenarioLoading, setScenarioLoading] = useState<string | null>(null);
   const [renderer, setRenderer] = useState<GraphRendererEngine>("d3");
+  const [graphProgress, setGraphProgress] =
+    useState<WSEventGraphProgress | null>(null);
   const socketState = useWebSocketsState(props.webSockets);
 
   useEffect(() => {
@@ -52,9 +58,14 @@ export function Room(props: { webSockets: WebSocketsManager; env: Env }) {
       props.webSockets.onScenarioDataChanged$.subscribe((sd) => {
         setTableData(sd.graph.tableData);
         setScenarioLoading(null);
+        setGraphProgress(null);
       }),
       props.webSockets.onNotification$.subscribe(() => {
         setScenarioLoading(null);
+        setGraphProgress(null);
+      }),
+      props.webSockets.onGraphProgress$.subscribe((progress) => {
+        setGraphProgress(progress);
       }),
     ];
 
@@ -120,6 +131,7 @@ export function Room(props: { webSockets: WebSocketsManager; env: Env }) {
           <Canvas
             renderer={renderer}
             webSocketsManager={props.webSockets}
+            graphProgress={graphProgress}
           ></Canvas>
           <SideToolbar hidden={!tableDataOpened} width={700}>
             {() => <DataTable tableData={tableData}></DataTable>}

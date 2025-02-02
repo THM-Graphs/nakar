@@ -8,6 +8,7 @@ import {
   SchemaWsActionJoinRoom,
   SchemaWsActionMoveNodes,
   SchemaWsActionRunScenario,
+  SchemaWsServerToClientMessage,
 } from '../../../src-gen/schema';
 import { match } from 'ts-pattern';
 import { ServerToClientEvents } from './ServerToClientEvents';
@@ -92,5 +93,12 @@ export class WebSocketsManager {
 
   public get onMoveNodes$(): Observable<[WSClient, SchemaWsActionMoveNodes]> {
     return this._onMoveNodes.asObservable();
+  }
+
+  public sendToRoom(
+    roomId: string,
+    message: SchemaWsServerToClientMessage,
+  ): void {
+    this._io.to(roomId).emit('message', message);
   }
 }

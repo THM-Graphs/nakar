@@ -5,7 +5,7 @@ import { MutableGraph } from '../../MutableGraph';
 
 export class GrowNodeBasedOnDegree extends TransformTask {
   public constructor() {
-    super('GrowNodeBasedOnDegree');
+    super('Grow Node Based On Degree');
   }
 
   protected run(

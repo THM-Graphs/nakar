@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Edge, GraphLabel, Node } from "../../../src-gen";
+import { Edge, GraphLabel, Node, WSEventGraphProgress } from "../../../src-gen";
 import { Labels } from "./Labels.tsx";
 import { GraphRendererD3 } from "./GraphRendererD3.tsx";
 import { GraphRendererNVL } from "./GraphRendererNVL.tsx";
@@ -8,10 +8,12 @@ import { GraphRendererEngine } from "../../lib/graph-renderer/GraphRendererEngin
 import { NodeDetails } from "./NodeDetails.tsx";
 import { EdgeDetails } from "./EdgeDetails.tsx";
 import { WebSocketsManager } from "../../lib/ws/WebSocketsManager.ts";
+import { GraphProgressDisplay } from "./GraphProgressDisplay.tsx";
 
 export function Canvas(props: {
   renderer: GraphRendererEngine;
   webSocketsManager: WebSocketsManager;
+  graphProgress: WSEventGraphProgress | null;
 }) {
   const [detailsNode, setDetailsNode] = useState<Node | null>(null);
   const [detailsEdge, setDetailsEdge] = useState<Edge | null>(null);
@@ -51,6 +53,13 @@ export function Canvas(props: {
       <div className={"m-2"}>
         <Labels graphLabels={graphLabels}></Labels>
       </div>
+      {props.graphProgress && (
+        <div className={"position-absolute bottom-0 m-2"}>
+          <GraphProgressDisplay
+            graphProgress={props.graphProgress}
+          ></GraphProgressDisplay>
+        </div>
+      )}
       <div className={"flex-grow-1"}></div>
       <div className={"m-2"}>
         {detailsNode && (
