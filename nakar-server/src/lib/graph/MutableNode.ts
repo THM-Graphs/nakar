@@ -19,6 +19,7 @@ export class MutableNode {
     customBackgroundColor: z.string().nullable(),
     customTitleColor: z.string().nullable(),
     customTitle: z.string().nullable(),
+    locked: z.boolean(),
   });
 
   public labels: SSet<string>;
@@ -31,6 +32,12 @@ export class MutableNode {
   public customBackgroundColor: string | null;
   public customTitleColor: string | null;
   public customTitle: string | null;
+  public locked: boolean;
+
+  /* runtime only */
+  public velocityX: number;
+  public velocityY: number;
+  public grabs: SSet<string>;
 
   public constructor(data: {
     labels: SSet<string>;
@@ -42,6 +49,7 @@ export class MutableNode {
     namesInQuery: SSet<string>;
     customBackgroundColor: string | null;
     customTitleColor: string | null;
+    locked: boolean;
   }) {
     this.labels = data.labels;
     this.properties = data.properties;
@@ -53,6 +61,11 @@ export class MutableNode {
     this.customBackgroundColor = data.customBackgroundColor;
     this.customTitleColor = data.customTitleColor;
     this.customTitle = null;
+    this.locked = data.locked;
+
+    this.velocityX = 0;
+    this.velocityY = 0;
+    this.grabs = new SSet<string>();
   }
 
   public get degree(): number {
@@ -83,6 +96,7 @@ export class MutableNode {
       namesInQuery: node.keys,
       customBackgroundColor: null,
       customTitleColor: null,
+      locked: false,
     });
   }
 
@@ -98,6 +112,7 @@ export class MutableNode {
       namesInQuery: new SSet(data.namesInQuery),
       customBackgroundColor: data.customBackgroundColor,
       customTitleColor: data.customTitleColor,
+      locked: data.locked,
     });
   }
 
@@ -134,6 +149,7 @@ export class MutableNode {
       customBackgroundColor: this.customBackgroundColor,
       customTitleColor: this.customTitleColor,
       customTitle: this.customTitle,
+      locked: this.locked,
     };
   }
 }

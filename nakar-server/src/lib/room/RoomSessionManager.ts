@@ -19,7 +19,6 @@ import { DisconnectReason } from 'socket.io';
 import { RoomStateMachine } from './RoomStateMachine';
 import { match } from 'ts-pattern';
 import { DBRoom } from '../documents/collection-types/DBRoom';
-import { Vector } from '../physics/Vector';
 
 export class RoomSessionManager {
   private readonly _websocketsManager: WebSocketsManager;
@@ -50,8 +49,15 @@ export class RoomSessionManager {
         );
         return;
       }
-      state.physics.grab(nodeId, socket.id);
-      state.physics.lock(nodeId);
+
+      const node = state.graph.nodes.get(nodeId);
+      if (node == null) {
+        strapi.log.error(`Cannot find node to lock: ${nodeId}.`);
+        return;
+      }
+
+      node.grabs.add(socket.id);
+      node.locked = true;
       state.physics.start();
     });
 
@@ -78,8 +84,15 @@ export class RoomSessionManager {
         return;
       }
 
+      const nodeId = message.nodeId;
+      const node = state.graph.nodes.get(nodeId);
+      if (node == null) {
+        strapi.log.error(`Cannot find node to lock: ${nodeId}.`);
+        return;
+      }
+
       state.physics.stop();
-      state.physics.ungrab(message.nodeId, socket.id);
+      node.grabs.delete(socket.id);
     });
 
     this._websocketsManager.onMoveNodes$
@@ -149,22 +162,30 @@ export class RoomSessionManager {
         .exhaustive();
     });
 
-    this._rooms._onRoomPhysicsUpdates$.subscribe(([roomId, , physics]) => {
-      const movedNodesMessageData = physics.nodes.map((node, id) => ({
-        id: id,
-        position: { x: node.position.x, y: node.position.y },
-        grabs: node.grabs,
-      }));
+    this._rooms._onRoomPhysicsUpdates$.subscribe((roomId) => {
+      const roomState = this._rooms.getState(roomId);
+      if (roomState.type !== 'data') {
+        strapi.log.error(
+          'Did receive physics update from non existing room. Memory leak?',
+        );
+        return;
+      }
+      const graph = roomState.graph;
+
       for (const socket of this._websocketsManager.sockets) {
         if (socket.room !== roomId) {
           continue;
         }
-        const nodesToSend = movedNodesMessageData.filter(
-          (n) => !n.grabs.has(socket.id),
-        );
+        const nodesToSend = graph.nodes
+          .filter((n) => !n.grabs.has(socket.id))
+          .toArray()
+          .map(([id, node]) => ({
+            id: id,
+            position: { x: node.position.x, y: node.position.y },
+          }));
         socket.send({
           type: 'WSEventNodesMoved',
-          nodes: nodesToSend.toArray().map(([, n]) => n),
+          nodes: nodesToSend,
           date: new Date().toISOString(),
         });
       }
@@ -333,10 +354,7 @@ export class RoomSessionManager {
         );
         continue;
       }
-      roomState.physics.setNodePosition(
-        movedNode.id,
-        new Vector(movedNode.position.x, movedNode.position.y),
-      );
+
       foundNode.position.x = movedNode.position.x;
       foundNode.position.y = movedNode.position.y;
     }

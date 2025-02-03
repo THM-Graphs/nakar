@@ -7,9 +7,7 @@ import { PhysicsSimulation } from '../physics/PhysicsSimulation';
 export class RoomStateMachine {
   private _state: SMap<string, RoomState>;
   private _onRoomUpdated: Subject<[string, RoomState]>;
-  private _onRoomPhysicsUpdates: Subject<
-    [string, MutableGraph, PhysicsSimulation]
-  >;
+  private _onRoomPhysicsUpdates: Subject<string>;
 
   public constructor() {
     this._state = new SMap();
@@ -21,9 +19,7 @@ export class RoomStateMachine {
     return this._onRoomUpdated.asObservable();
   }
 
-  public get _onRoomPhysicsUpdates$(): Observable<
-    [string, MutableGraph, PhysicsSimulation]
-  > {
+  public get _onRoomPhysicsUpdates$(): Observable<string> {
     return this._onRoomPhysicsUpdates.asObservable();
   }
 
@@ -45,7 +41,7 @@ export class RoomStateMachine {
     const subscription = physics.onSlowTick
       .pipe(auditTime((1 / PhysicsSimulation.FPS) * 1000))
       .subscribe(() => {
-        this._onRoomPhysicsUpdates.next([roomId, graph, physics]);
+        this._onRoomPhysicsUpdates.next(roomId);
       });
 
     const newState: RoomState = {
