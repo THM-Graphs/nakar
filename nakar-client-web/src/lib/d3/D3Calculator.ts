@@ -121,7 +121,7 @@ export class D3Calculator {
       y1,
       x2,
       y2,
-      d.isLoop ? curvAmount * 4 : d.parallelIndex * curvAmount,
+      d.isLoop ? curvAmount + d.source.radius : d.parallelIndex * curvAmount,
     );
 
     return {
