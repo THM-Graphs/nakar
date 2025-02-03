@@ -38,7 +38,7 @@ export class SMap<K extends string | number | symbol, V> extends Map<K, V> {
 
   public toRecord(): Record<K, V> {
     return this.reduce<Record<K, V>>(
-      (akku: Record<K, V>, key, value): Record<K, V> => {
+      (akku: Record<K, V>, key: K, value: V): Record<K, V> => {
         return {
           ...akku,
           [key]: value,

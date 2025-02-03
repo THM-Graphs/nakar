@@ -49,8 +49,10 @@ export class DBGraphDisplayConfiguration {
       ),
       growNodesBasedOnDegreeFactor: db?.growNodesBasedOnDegreeFactor ?? null,
       nodeDisplayConfigurations:
-        db?.nodeDisplayConfigurations?.map((nodeDisplayConfiguration) =>
-          DBNodeDisplayConfiguration.parse(nodeDisplayConfiguration),
+        db?.nodeDisplayConfigurations?.map(
+          (
+            nodeDisplayConfiguration: Result<'graph.node-display-configuration'>,
+          ) => DBNodeDisplayConfiguration.parse(nodeDisplayConfiguration),
         ) ?? [],
       compressRelationships: DBNullableBoolean.parseOrDefault(
         db?.compressRelationships,

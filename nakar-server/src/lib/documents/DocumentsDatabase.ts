@@ -3,22 +3,12 @@ import { DBRoom } from './collection-types/DBRoom';
 import { DBScenario } from './collection-types/DBScenario';
 import { DBScenarioGroup } from './collection-types/DBScenarioGroup';
 import { MutableGraph } from '../graph/MutableGraph';
+import { Result } from '@strapi/types/dist/modules/documents';
 
 export class DocumentsDatabase {
-  private readonly _databaseService = strapi.documents(
-    'api::database.database',
-  );
-  private readonly _roomService = strapi.documents('api::room.room');
-  private readonly _scenarioService = strapi.documents(
-    'api::scenario.scenario',
-  );
-  private readonly _scenarioGroupService = strapi.documents(
-    'api::scenario-group.scenario-group',
-  );
-
   public async getDatabases(): Promise<DBDatabase[]> {
     return (
-      await this._databaseService.findMany({
+      await strapi.documents('api::database.database').findMany({
         status: 'published',
         sort: 'title:asc',
         populate: {
@@ -29,11 +19,13 @@ export class DocumentsDatabase {
           },
         },
       })
-    ).map((database) => DBDatabase.parse(database));
+    ).map((database: Result<'api::database.database'>) =>
+      DBDatabase.parse(database),
+    );
   }
 
   public async getRoom(roomId: string): Promise<DBRoom | null> {
-    const rawRoom = await this._roomService.findOne({
+    const rawRoom = await strapi.documents('api::room.room').findOne({
       status: 'published',
       documentId: roomId,
     });
@@ -45,15 +37,15 @@ export class DocumentsDatabase {
 
   public async getRooms(): Promise<DBRoom[]> {
     return (
-      await this._roomService.findMany({
+      await strapi.documents('api::room.room').findMany({
         status: 'published',
         sort: 'title:asc',
       })
-    ).map((room) => DBRoom.parse(room));
+    ).map((room: Result<'api::room.room'>) => DBRoom.parse(room));
   }
 
   public async getScenario(scenarioId: string): Promise<DBScenario | null> {
-    const result = await this._scenarioService.findOne({
+    const result = await strapi.documents('api::scenario.scenario').findOne({
       status: 'published',
       documentId: scenarioId,
       populate: {
@@ -91,7 +83,7 @@ export class DocumentsDatabase {
 
   public async getScenarios(scenarioGroupId: string): Promise<DBScenario[]> {
     return (
-      await this._scenarioService.findMany({
+      await strapi.documents('api::scenario.scenario').findMany({
         status: 'published',
         sort: 'title:asc',
         populate: {
@@ -128,14 +120,16 @@ export class DocumentsDatabase {
           },
         },
       })
-    ).map((scenario) => DBScenario.parse(scenario));
+    ).map((scenario: Result<'api::scenario.scenario'>) =>
+      DBScenario.parse(scenario),
+    );
   }
 
   public async getScenarioGroups(
     databaseId: string,
   ): Promise<DBScenarioGroup[]> {
     return (
-      await this._scenarioGroupService.findMany({
+      await strapi.documents('api::scenario-group.scenario-group').findMany({
         status: 'published',
         sort: 'title:asc',
         populate: {
@@ -162,12 +156,14 @@ export class DocumentsDatabase {
           },
         },
       })
-    ).map((scenarioGroup) => DBScenarioGroup.parse(scenarioGroup));
+    ).map((scenarioGroup: Result<'api::scenario-group.scenario-group'>) =>
+      DBScenarioGroup.parse(scenarioGroup),
+    );
   }
 
   public async setRoomGraph(room: DBRoom, graph: MutableGraph): Promise<void> {
     const graphJson = JSON.stringify(graph.toPlain());
-    await this._roomService.update({
+    await strapi.documents('api::room.room').update({
       documentId: room.documentId,
       data: {
         graphJson: graphJson,

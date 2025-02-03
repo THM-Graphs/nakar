@@ -39,6 +39,20 @@ export default tseslint.config({
     '@typescript-eslint/explicit-member-accessibility': ['error'],
     '@typescript-eslint/member-ordering': ['error'],
     '@typescript-eslint/no-shadow': ['error'],
+    '@typescript-eslint/typedef': [
+      'error',
+      {
+        arrayDestructuring: true,
+        arrowParameter: true,
+        memberVariableDeclaration: true,
+        objectDestructuring: true,
+        parameter: true,
+        propertyDeclaration: true,
+        variableDeclaration: false,
+        variableDeclarationIgnoreFunction: true,
+      },
+    ],
+    '@typescript-eslint/no-inferrable-types': 'off',
     eqeqeq: ['error', 'always', { null: 'ignore' }],
     'no-console': ['error'],
     '@typescript-eslint/naming-convention': [

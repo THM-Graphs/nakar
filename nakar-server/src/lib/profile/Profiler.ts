@@ -7,7 +7,7 @@ export class Profiler {
 
   private readonly _tasks: ProfilerTask[];
 
-  public constructor(timeoutMs = 60_000) {
+  public constructor(timeoutMs: number = 60_000) {
     this._tasks = [];
     this.timeoutMs = timeoutMs;
   }

@@ -25,13 +25,13 @@ export class StrapiContext {
       } catch (unknownError: unknown) {
         strapi.log.error(unknownError);
         match(unknownError)
-          .with(P.instanceOf(HttpError), (error) => {
+          .with(P.instanceOf(HttpError), (error: HttpError) => {
             context._handleError(error);
           })
-          .with(P.instanceOf(Error), (error) => {
+          .with(P.instanceOf(Error), (error: Error) => {
             context._handleError(new InternalServerError(error.message));
           })
-          .otherwise((error) => {
+          .otherwise((error: unknown) => {
             context._handleError(
               new InternalServerError(
                 `Unknown error: ${JSON.stringify(error)}`,
