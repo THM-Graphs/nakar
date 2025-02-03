@@ -14,8 +14,14 @@ export class Layout extends TransformTask {
     }
 
     const cimulation = new PhysicsSimulation(input);
+    const start = Date.now();
     cimulation.start();
+
     await wait(2000);
+
     cimulation.stop();
+    const end = Date.now();
+    const ticksPerSecs = cimulation.tickCount / ((end - start) / 1000);
+    strapi.log.debug(`Ticks per seconds: ${ticksPerSecs.toFixed(2)}`);
   }
 }

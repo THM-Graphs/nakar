@@ -4,21 +4,27 @@ import { wait } from '../tools/Wait';
 import { MutableNode } from '../graph/MutableNode';
 
 export class PhysicsSimulation {
-  public static readonly maximumVelocity = 1000;
-  public static readonly FPS = 60;
+  public static readonly maximumVelocity = 500;
+  public static readonly FPS = 30;
 
   private _graph: MutableGraph;
   private _running: boolean;
   private _onSlowTick: Subject<void>;
+  private _tickCount: number;
 
   public constructor(graph: MutableGraph) {
     this._graph = graph;
     this._running = false;
     this._onSlowTick = new Subject();
+    this._tickCount = 0;
   }
 
   public get onSlowTick(): Observable<void> {
     return this._onSlowTick.asObservable();
+  }
+
+  public get tickCount(): number {
+    return this._tickCount;
   }
 
   public start(): void {
@@ -90,6 +96,8 @@ export class PhysicsSimulation {
     for (const node of this._graph.nodes.values()) {
       this._applyVelocity(node);
     }
+
+    this._tickCount += 1;
   }
 
   private _positionEquals(nodeA: MutableNode, nodeB: MutableNode): boolean {
