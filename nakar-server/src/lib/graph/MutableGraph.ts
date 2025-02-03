@@ -6,26 +6,25 @@ import { SchemaGraph } from '../../../src-gen/schema';
 import { z } from 'zod';
 import { SMap } from '../tools/Map';
 import { DBScenario } from '../documents/collection-types/DBScenario';
-import { JsonValue, jsonValueSchema } from '../json/JSON';
 
 export class MutableGraph {
   public static readonly schema = z.object({
     nodes: z.record(MutableNode.schema),
     edges: z.record(MutableEdge.schema),
     metaData: MutableGraphMetaData.schema,
-    tableData: z.array(z.record(jsonValueSchema)),
+    tableData: z.array(z.record(z.unknown())),
   });
 
   public nodes: SMap<string, MutableNode>;
   public edges: SMap<string, MutableEdge>;
   public metaData: MutableGraphMetaData;
-  public tableData: SMap<string, JsonValue>[];
+  public tableData: SMap<string, unknown>[];
 
   public constructor(data: {
     nodes: SMap<string, MutableNode>;
     edges: SMap<string, MutableEdge>;
     metaData: MutableGraphMetaData;
-    tableData: SMap<string, JsonValue>[];
+    tableData: SMap<string, unknown>[];
   }) {
     this.nodes = data.nodes;
     this.edges = data.edges;

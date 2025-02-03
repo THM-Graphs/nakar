@@ -9,7 +9,6 @@ import neo4j, {
 } from 'neo4j-driver';
 import { Neo4jGraphElements } from './Neo4jGraphElements';
 import { SSet } from '../tools/Set';
-import { JsonValue } from '../json/JSON';
 
 export class Neo4jDatabase {
   private readonly _loginCredentials: Neo4jLoginCredentials;
@@ -20,7 +19,7 @@ export class Neo4jDatabase {
 
   public async executeQuery(
     query: string,
-    parameters?: Record<string, JsonValue>,
+    parameters?: Record<string, unknown>,
   ): Promise<Neo4jGraphElements> {
     const driver: Driver = createDriver(
       this._loginCredentials.url,
@@ -35,7 +34,7 @@ export class Neo4jDatabase {
       });
       try {
         const result: QueryResult = await session.run<
-          RecordShape<string, JsonValue>
+          RecordShape<string, unknown>
         >(query, parameters);
 
         return Neo4jGraphElements.fromQueryResult(result);

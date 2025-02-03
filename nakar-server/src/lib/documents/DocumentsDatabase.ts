@@ -166,11 +166,11 @@ export class DocumentsDatabase {
   }
 
   public async setRoomGraph(room: DBRoom, graph: MutableGraph): Promise<void> {
-    const jsonGraph = graph.toPlain();
+    const graphJson = JSON.stringify(graph.toPlain());
     await this._roomService.update({
       documentId: room.documentId,
       data: {
-        graph: jsonGraph,
+        graphJson: graphJson,
       },
       status: 'published',
     });
