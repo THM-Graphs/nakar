@@ -1,27 +1,26 @@
 import type { Result } from '@strapi/types/dist/modules/documents/result';
 import { SchemaRoom } from '../../../../src-gen/schema';
-import { JSONValue } from '@strapi/types/dist/utils/json';
 
 export class DBRoom {
   public readonly documentId: string;
   public readonly title: string | null;
-  public readonly graph: JSONValue | null;
+  public readonly graphJson: string | null;
 
   public constructor(data: {
     documentId: string;
     title: string | null;
-    graph: JSONValue | null;
+    graphJson: string | null;
   }) {
     this.documentId = data.documentId;
     this.title = data.title;
-    this.graph = data.graph;
+    this.graphJson = data.graphJson;
   }
 
   public static parse(db: Result<'api::room.room'>): DBRoom {
     return new DBRoom({
       documentId: db.documentId,
       title: db.title ?? null,
-      graph: db.graph ?? null,
+      graphJson: db.graphJson ?? null,
     });
   }
 

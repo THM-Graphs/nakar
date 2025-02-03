@@ -1,26 +1,25 @@
 import { SchemaGraphProperty } from '../../../src-gen/schema';
 import { z } from 'zod';
 import { SMap } from '../tools/Map';
-import { jsonValueSchema, JsonValue } from '../json/JSON';
 
 export class MutablePropertyCollection {
   public static readonly schema = z.object({
-    properties: z.record(jsonValueSchema),
+    properties: z.record(z.unknown()),
   });
 
-  public properties: SMap<string, JsonValue>;
+  public properties: SMap<string, unknown>;
 
-  public constructor(data: { properties: SMap<string, JsonValue> }) {
+  public constructor(data: { properties: SMap<string, unknown> }) {
     this.properties = data.properties;
   }
 
   public static create(
-    properties: Record<string, JsonValue>,
+    properties: Record<string, unknown>,
   ): MutablePropertyCollection {
     return new MutablePropertyCollection({
       properties: Object.entries(properties).reduce(
         (akku, [key, value]) => akku.bySetting(key, value),
-        new SMap<string, JsonValue>(),
+        new SMap<string, unknown>(),
       ),
     });
   }

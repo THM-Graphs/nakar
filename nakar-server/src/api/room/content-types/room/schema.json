@@ -15,8 +15,8 @@
     "title": {
       "type": "string"
     },
-    "graph": {
-      "type": "json"
+    "graphJson": {
+      "type": "text"
     }
   }
 }
