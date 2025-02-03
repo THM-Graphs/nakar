@@ -77,4 +77,8 @@ export class Vector {
       this.divide(magnitude);
     }
   }
+
+  public equals(other: Vector): boolean {
+    return this._x === other._x && this._y === other._y;
+  }
 }

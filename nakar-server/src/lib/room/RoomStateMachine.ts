@@ -2,6 +2,7 @@ import { Observable, Subject } from 'rxjs';
 import { MutableGraph } from '../graph/MutableGraph';
 import { SMap } from '../tools/Map';
 import { RoomState } from './RoomState';
+import { PhysicsSimulation } from '../physics/PhysicsSimulation';
 
 export class RoomStateMachine {
   private _state: SMap<string, RoomState>;
@@ -27,7 +28,11 @@ export class RoomStateMachine {
   }
 
   public setData(roomId: string, graph: MutableGraph): void {
-    const newState: RoomState = { type: 'data', graph: graph };
+    const newState: RoomState = {
+      type: 'data',
+      graph: graph,
+      physics: new PhysicsSimulation(graph),
+    };
     this._state.set(roomId, newState);
     this._onRoomUpdated.next([roomId, newState]);
   }

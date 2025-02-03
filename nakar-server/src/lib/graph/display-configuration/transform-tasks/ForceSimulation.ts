@@ -13,6 +13,6 @@ export class Layout extends TransformTask {
     }
 
     const cimulation = new PhysicsSimulation(input);
-    await cimulation.run(1_000);
+    await cimulation.run(2_000);
   }
 }

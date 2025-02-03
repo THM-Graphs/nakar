@@ -9,7 +9,6 @@ import { Core } from '@strapi/strapi';
 import { WebSocketsManager } from '../ws/WebSocketsManager';
 import { auditTime } from 'rxjs';
 import { MutableGraph } from '../graph/MutableGraph';
-import { MutablePosition } from '../graph/MutablePosition';
 import {
   SchemaWsActionJoinRoom,
   SchemaWsActionMoveNodes,
@@ -34,7 +33,7 @@ export class RoomSessionManager {
     this._loadGraphsFromDbRooms().catch(strapi.log.error);
 
     this._websocketsManager.onMoveNodes$
-      .pipe(auditTime(1000 / 30))
+      .pipe(auditTime((1 / 120) * 1000 /* 120fps */))
       .subscribe(([socket, message]) => {
         this._handleMoveNode(socket, message).catch((error: unknown) => {
           socket.sendError(error);
@@ -241,7 +240,7 @@ export class RoomSessionManager {
     });
   }
 
-  private _handleMoveNode(
+  private async _handleMoveNode(
     socket: WSClient,
     message: SchemaWsActionMoveNodes,
   ): Promise<void> {
@@ -263,20 +262,44 @@ export class RoomSessionManager {
 
     const graph = roomState.graph;
 
-    for (const [id, currentNode] of graph.nodes.entries()) {
-      const newPositionNode = message.nodes.find((n) => n.id === id);
-      if (newPositionNode == null) {
+    for (const movedNode of message.nodes) {
+      const foundNode = graph.nodes.get(movedNode.id);
+      if (foundNode == null) {
+        strapi.log.error(
+          `Client did send moved node, but the node cannot be found in the room. Room: ${roomId}, Node: ${movedNode.id}`,
+        );
         continue;
       }
-      currentNode.position = new MutablePosition({
-        x: newPositionNode.position.x,
-        y: newPositionNode.position.y,
-      });
+      roomState.physics.lock(movedNode.id);
+      foundNode.position.x = movedNode.position.x;
+      foundNode.position.y = movedNode.position.y;
     }
 
+    await roomState.physics.run(((1 / 120) * 1000) / 2 /* half of 120 fps */);
+
+    // for (const movedNode of message.nodes) {
+    //   roomState.physics.unlock(movedNode.id);
+    // }
+
+    const movedNodesIds = message.nodes.map((n) => n.id);
+    const movedNodesMessageData = graph.nodes.toArray().map(([id, node]) => ({
+      id: id,
+      position: { x: node.position.x, y: node.position.y },
+    }));
+
+    // Send all nodes to everyone else
     socket.broadcastToRoom({
       type: 'WSEventNodesMoved',
-      nodes: message.nodes,
+      nodes: movedNodesMessageData,
+      date: new Date().toISOString(),
+    });
+
+    // Send all nodes except the ones who has been dragged by the client
+    socket.send({
+      type: 'WSEventNodesMoved',
+      nodes: movedNodesMessageData.filter((m) => {
+        return !movedNodesIds.includes(m.id);
+      }),
       date: new Date().toISOString(),
     });
     return Promise.resolve();

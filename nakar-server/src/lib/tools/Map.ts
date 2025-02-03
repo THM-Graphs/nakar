@@ -20,10 +20,12 @@ export class SMap<K extends string | number | symbol, V> extends Map<K, V> {
     return filteredMap;
   }
 
-  public map<U>(callback: (value: V, key: K) => U): SMap<K, U> {
+  public map<U>(callback: (value: V, key: K, index: number) => U): SMap<K, U> {
     const mappedMap = new SMap<K, U>();
+    let index = 0;
     for (const [key, value] of this.entries()) {
-      mappedMap.set(key, callback(value, key));
+      mappedMap.set(key, callback(value, key, index));
+      index += 1;
     }
     return mappedMap;
   }

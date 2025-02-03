@@ -18,13 +18,15 @@ export function GraphRendererD3(props: {
       props.webSockets.onScenarioDataChanged$.subscribe((scenraioData) => {
         graphRenderer.loadGraphContent(scenraioData.graph);
       }),
-      graphRenderer.onNodesMoved(() => {
+      graphRenderer.onNodesMoved((n) => {
         props.webSockets.sendMessage({
           type: "WSActionMoveNodes",
-          nodes: graphRenderer.graphState.nodes.map((n) => ({
-            id: n.id,
-            position: { x: n.x, y: n.y },
-          })),
+          nodes: [
+            {
+              id: n.id,
+              position: { x: n.x, y: n.y },
+            },
+          ],
         });
       }),
       props.webSockets.onNodesMoved$.subscribe((onMove) => {

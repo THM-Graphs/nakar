@@ -6,7 +6,13 @@ import { adjustColor } from "../color/colorShade.ts";
 import { getBackgroundColor } from "../color/getBackgroundColor.ts";
 import { getTextColor } from "../color/getTextColor.ts";
 import { UserTheme } from "../theme/UserTheme.ts";
-import { BehaviorSubject, combineLatest, Subject, Subscription } from "rxjs";
+import {
+  auditTime,
+  BehaviorSubject,
+  combineLatest,
+  Subject,
+  Subscription,
+} from "rxjs";
 import { D3RendererState } from "./D3RendererState.ts";
 import { D3Calculator } from "./D3Calculator.ts";
 
@@ -17,7 +23,7 @@ export class D3Renderer {
 
   private $onDisplayLinkData: Subject<D3Link>;
   private $onDisplayNodeData: Subject<D3Node>;
-  private $onNodesMoved: Subject<void>;
+  private $onNodeMoved: Subject<D3Node>;
 
   private calculator: D3Calculator;
 
@@ -47,7 +53,7 @@ export class D3Renderer {
 
     this.$onDisplayLinkData = new Subject();
     this.$onDisplayNodeData = new Subject();
-    this.$onNodesMoved = new Subject();
+    this.$onNodeMoved = new Subject<D3Node>();
 
     this.calculator = new D3Calculator();
 
@@ -85,10 +91,13 @@ export class D3Renderer {
     });
   }
 
-  public onNodesMoved(cb: () => void): Subscription {
-    return this.$onNodesMoved.subscribe(() => {
-      cb();
-    });
+  public onNodesMoved(cb: (node: D3Node) => void): Subscription {
+    // TODO: as observable
+    return this.$onNodeMoved
+      .pipe(auditTime((1 / 120) * 1000 /* 120 fps, 8.3 ms */))
+      .subscribe((n) => {
+        cb(n);
+      });
   }
 
   public loadGraphContent(graph: Graph) {
@@ -156,28 +165,6 @@ export class D3Renderer {
         }),
     );
 
-    const simulation: d3.Simulation<D3Node, D3Link> = d3
-      .forceSimulation(d3RendererState.nodes)
-      .force(
-        "link",
-        d3
-          .forceLink<D3Node, D3Link>(d3RendererState.links)
-          .id((d) => d.id)
-          .distance(
-            (d) => d.source.radius + d.type.length * 10 * 2 + d.target.radius,
-          ),
-      )
-      .force(
-        "charge",
-        d3.forceManyBody<D3Node>().strength((node) => node.radius * -60),
-      )
-      .force("x", d3.forceX())
-      .force("y", d3.forceY())
-      // .alphaTarget(1)
-      // .tick(1000)
-      // .alphaTarget(0)
-      .alpha(0);
-
     this.linkSelection = zoomContainer
       .append("g")
       .attr("class", "links")
@@ -242,25 +229,20 @@ export class D3Renderer {
         .on(
           "start",
           (event: d3.D3DragEvent<SVGGElement, D3Node, null>, d: D3Node) => {
-            if (event.active == 0) simulation.alphaTarget(1).restart();
-            d.fx = d.x;
-            d.fy = d.y;
+            // TODO: Send lock node message
           },
         )
         .on(
           "drag",
           (event: d3.D3DragEvent<SVGGElement, D3Node, null>, d: D3Node) => {
-            d.fx = event.x;
-            d.fy = event.y;
             d.x = event.x;
             d.y = event.y;
-            this.$onNodesMoved.next();
+            this.applyNodePositionsToSVG();
+            this.$onNodeMoved.next(d);
           },
         )
         .on("end", (event: d3.D3DragEvent<SVGGElement, D3Node, null>) => {
-          if (event.active == 0) simulation.alphaTarget(0).stop();
-          // d.fx = undefined;
-          // d.fy = undefined;
+          // TODO: Send unlock node message
         }),
     );
     this.nodeSelection
@@ -325,10 +307,7 @@ export class D3Renderer {
       .append("xhtml:span")
       .text((d) => d.title);
 
-    simulation.on("tick", () => {
-      this.$onNodesMoved.next();
-      this.applyNodePositionsToSVG();
-    });
+    this.applyNodePositionsToSVG();
   }
 
   public applyNodePositionsToSVG(): void {
