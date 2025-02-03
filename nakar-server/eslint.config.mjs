@@ -38,6 +38,7 @@ export default tseslint.config({
     '@typescript-eslint/no-empty-function': ['error'],
     '@typescript-eslint/explicit-member-accessibility': ['error'],
     '@typescript-eslint/member-ordering': ['error'],
+    '@typescript-eslint/adjacent-overload-signatures': 'off',
     '@typescript-eslint/no-shadow': ['error'],
     '@typescript-eslint/typedef': [
       'error',

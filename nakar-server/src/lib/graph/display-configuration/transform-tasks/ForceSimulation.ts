@@ -1,6 +1,7 @@
 import { TransformTask } from '../TransformTask';
 import { MutableGraph } from '../../MutableGraph';
 import { PhysicsSimulation } from '../../../physics/PhysicsSimulation';
+import { wait } from '../../../tools/Wait';
 
 export class Layout extends TransformTask {
   public constructor() {
@@ -13,6 +14,14 @@ export class Layout extends TransformTask {
     }
 
     const cimulation = new PhysicsSimulation(input);
-    await cimulation.run(1_000);
+    const start = Date.now();
+    cimulation.start();
+
+    await wait(2000);
+
+    cimulation.stop();
+    const end = Date.now();
+    const ticksPerSecs = cimulation.tickCount / ((end - start) / 1000);
+    strapi.log.debug(`Ticks per seconds: ${ticksPerSecs.toFixed(2)}`);
   }
 }

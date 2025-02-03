@@ -18,22 +18,36 @@ export function GraphRendererD3(props: {
       props.webSockets.onScenarioDataChanged$.subscribe((scenraioData) => {
         graphRenderer.loadGraphContent(scenraioData.graph);
       }),
-      graphRenderer.onNodesMoved(() => {
+      graphRenderer.onLockNode.subscribe((n) => {
+        props.webSockets.sendMessage({
+          type: "WSActionLockNode",
+          nodeId: n.id,
+        });
+      }),
+      graphRenderer.onNodesMoved.subscribe((n) => {
         props.webSockets.sendMessage({
           type: "WSActionMoveNodes",
-          nodes: graphRenderer.graphState.nodes.map((n) => ({
-            id: n.id,
-            position: { x: n.x, y: n.y },
-          })),
+          nodes: [
+            {
+              id: n.id,
+              position: { x: n.x, y: n.y },
+            },
+          ],
+        });
+      }),
+      graphRenderer.onUnlockNode.subscribe((n) => {
+        props.webSockets.sendMessage({
+          type: "WSActionUnlockNode",
+          nodeId: n.id,
         });
       }),
       props.webSockets.onNodesMoved$.subscribe((onMove) => {
         graphRenderer.updateNodePositions(onMove);
       }),
-      graphRenderer.onDisplayNodeData((n) => {
+      graphRenderer.onDisplayNodeData.subscribe((n) => {
         props.onNodeClicked(n);
       }),
-      graphRenderer.onDisplayLinkData((l) => {
+      graphRenderer.onDisplayLinkData.subscribe((l) => {
         props.onEdgeClicked(l);
       }),
     ];

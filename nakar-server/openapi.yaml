@@ -432,7 +432,9 @@ components:
       oneOf:
         - $ref: "#/components/schemas/WSActionJoinRoom"
         - $ref: "#/components/schemas/WSActionRunScenario"
+        - $ref: "#/components/schemas/WSActionLockNode"
         - $ref: "#/components/schemas/WSActionMoveNodes"
+        - $ref: "#/components/schemas/WSActionUnlockNode"
 
     WSServerToClientMessage:
       oneOf:
@@ -486,6 +488,30 @@ components:
       required:
         - type
         - nodes
+
+    WSActionLockNode:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: ["WSActionLockNode"]
+        nodeId:
+          type: string
+      required:
+        - type
+        - nodeId
+
+    WSActionUnlockNode:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: ["WSActionUnlockNode"]
+        nodeId:
+          type: string
+      required:
+        - type
+        - nodeId
 
     WSEventScenarioDataChanged:
       type: object
