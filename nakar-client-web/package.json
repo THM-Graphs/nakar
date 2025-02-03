@@ -8,6 +8,7 @@
     "build": "npm run build:gen && tsc -b && vite build",
     "build:gen": "openapi-ts --input ../nakar-server/openapi.yaml --output ./src-gen --client @hey-api/client-fetch",
     "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
     "audit": "npm audit",
     "version": "echo $npm_package_version"
   },

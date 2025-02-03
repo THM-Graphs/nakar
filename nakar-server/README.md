@@ -1,63 +1,62 @@
-MATCH (p:Person) WHERE p.name = "Philip" AND p.surname = "Scott" MATCH (p)-[r]->(neighbor) RETURN p, r, neighbor
+# Nakar Server
 
-# 🚀 Getting started with Strapi
+## Contribution Guide
 
-Strapi comes with a full featured [Command Line Interface](https://docs.strapi.io/dev-docs/cli) (CLI) which lets you scaffold and manage your project in seconds.
+### Starting and setting up the server
 
-### `develop`
-
-Start your Strapi application with autoReload enabled. [Learn more](https://docs.strapi.io/dev-docs/cli#strapi-develop)
-
+#### 1: Install node packages:
+```shell
+npm i
 ```
+
+#### 2: Set environment variables:
+The example environment file will configure the server to run locally on localhost:1337.
+```shell
+cp ".env.example" ".env"
+```
+
+#### 3: Start the live server:
+
+With hot-reloading:
+```shell
 npm run develop
-# or
-yarn develop
 ```
-
-### `start`
-
-Start your Strapi application with autoReload disabled. [Learn more](https://docs.strapi.io/dev-docs/cli#strapi-start)
-
-```
+Without hot-reloading:
+```shell
 npm run start
-# or
-yarn start
 ```
 
-### `build`
+#### 4: Set up a local admin account
 
-Build your admin panel. [Learn more](https://docs.strapi.io/dev-docs/cli#strapi-build)
+Open http://localhost:1337 and create a local admin account.
 
-```
+Tip: Use the following login data for the admin account:
+
+| Email          | Password             |
+|----------------|----------------------|
+| admin@nakar.de | seuzgfesuz3672tUZGZU |
+
+#### 5: Enable the API endpoints to be accessible without authentication
+
+1. Go to http://localhost:1337/admin/settings/users-permissions/roles
+1. Open up "Public"
+1. Open up "Frontend"
+1. Check "Select all"
+1. Click "Save"
+
+#### 6: Import data
+
+1. Ask the maintainer for the "export.tar" file.
+1. Copy the file into the root of this package.
+1. Run `npm run import`.
+1. Check imported data here: http://localhost:1337/admin/content-manager
+
+### Before commit
+
+If you want to commit any changes, you should run the following commands beforehand:
+
+```shell
 npm run build
-# or
-yarn build
+npm run lint:fix
+npm run audit
 ```
-
-## ⚙️ Deployment
-
-Strapi gives you many possible deployment options for your project including [Strapi Cloud](https://cloud.strapi.io). Browse the [deployment section of the documentation](https://docs.strapi.io/dev-docs/deployment) to find the best solution for your use case.
-
-```
-yarn strapi deploy
-```
-
-## 📚 Learn more
-
-- [Resource center](https://strapi.io/resource-center) - Strapi resource center.
-- [Strapi documentation](https://docs.strapi.io) - Official Strapi documentation.
-- [Strapi tutorials](https://strapi.io/tutorials) - List of tutorials made by the core team and the community.
-- [Strapi blog](https://strapi.io/blog) - Official Strapi blog containing articles made by the Strapi team and the community.
-- [Changelog](https://strapi.io/changelog) - Find out about the Strapi product updates, new features and general improvements.
-
-Feel free to check out the [Strapi GitHub repository](https://github.com/strapi/strapi). Your feedback and contributions are welcome!
-
-## ✨ Community
-
-- [Discord](https://discord.strapi.io) - Come chat with the Strapi community including the core team.
-- [Forum](https://forum.strapi.io/) - Place to discuss, ask questions and find answers, show your Strapi project and get feedback or just talk with other Community members.
-- [Awesome Strapi](https://github.com/strapi/awesome-strapi) - A curated list of awesome things related to Strapi.
-
----
-
-<sub>🤫 Psst! [Strapi is hiring](https://strapi.io/careers).</sub>

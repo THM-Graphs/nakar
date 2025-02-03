@@ -7,7 +7,7 @@
     "build": "npm run build:gen && strapi build",
     "build:gen": "openapi-typescript ./openapi.yaml -o ./src-gen/schema.d.ts --root-types --immutable",
     "develop": "npm run build:gen && strapi develop",
-    "start": "strapi start",
+    "start": "npm run build && strapi start",
     "lint": "eslint src",
     "lint:fix": "eslint --fix .",
     "audit": "npm audit --audit-level high",
