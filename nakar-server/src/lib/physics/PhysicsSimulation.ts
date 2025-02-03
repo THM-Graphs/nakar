@@ -76,7 +76,29 @@ export class PhysicsSimulation {
     this._running = false;
   }
 
-  public lock(nodeId: string, userId: string): void {
+  public grab(nodeId: string, userId: string): void {
+    const node = this._nodes.get(nodeId);
+    if (node == null) {
+      strapi.log.error(
+        `Tried to grab node that does not exist. Node ID: ${nodeId}`,
+      );
+      return;
+    }
+    node.grab(userId);
+  }
+
+  public ungrab(nodeId: string, userId: string): void {
+    const node = this._nodes.get(nodeId);
+    if (node == null) {
+      strapi.log.error(
+        `Tried to ungrab node that does not exist. Node ID: ${nodeId}`,
+      );
+      return;
+    }
+    node.ungrab(userId);
+  }
+
+  public lock(nodeId: string): void {
     const node = this._nodes.get(nodeId);
     if (node == null) {
       strapi.log.error(
@@ -84,18 +106,7 @@ export class PhysicsSimulation {
       );
       return;
     }
-    node.lock(userId);
-  }
-
-  public unlock(nodeId: string, userId: string): void {
-    const node = this._nodes.get(nodeId);
-    if (node == null) {
-      strapi.log.error(
-        `Tried to unlock node that does not exist. Node ID: ${nodeId}`,
-      );
-      return;
-    }
-    node.unlock(userId);
+    node.lock();
   }
 
   public setNodePosition(nodeId: string, position: Vector): void {

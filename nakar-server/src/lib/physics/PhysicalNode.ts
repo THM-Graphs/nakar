@@ -10,15 +10,16 @@ export class PhysicalNode {
   private _position: Vector;
   private _velocity: Vector;
   private _original: MutableNode;
-  private _locks: SSet<string>;
+  private _grabs: SSet<string>;
+  private _locked: boolean;
 
   public constructor(id: string, node: MutableNode) {
     this._id = id;
+    this._position = new Vector(node.position.x, node.position.y);
     this._velocity = new Vector(0, 0);
     this._original = node;
-    this._locks = new SSet();
-
-    this._position = new Vector(node.position.x, node.position.y);
+    this._grabs = new SSet();
+    this._locked = false;
   }
 
   public get id(): string {
@@ -42,23 +43,23 @@ export class PhysicalNode {
   }
 
   public get locked(): boolean {
-    return this._locks.size > 0;
+    return this._grabs.size > 0 || this._locked;
   }
 
-  public get locks(): SSet<string> {
-    return this._locks;
+  public get grabs(): SSet<string> {
+    return this._grabs;
   }
 
   public set position(newValue: Vector) {
     this._position = newValue;
   }
 
-  public lock(userId: string): void {
-    this._locks.add(userId);
+  public grab(userId: string): void {
+    this._grabs.add(userId);
   }
 
-  public unlock(userId: string): void {
-    this._locks.delete(userId);
+  public ungrab(userId: string): void {
+    this._grabs.delete(userId);
   }
 
   public physicsTick(): void {
@@ -83,5 +84,13 @@ export class PhysicalNode {
 
   public jiggle(): void {
     this._position.add(new Vector(Math.random() - 0.5, Math.random() - 0.5));
+  }
+
+  public lock(): void {
+    this._locked = true;
+  }
+
+  public unlock(): void {
+    this._locked = false;
   }
 }

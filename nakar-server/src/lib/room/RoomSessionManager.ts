@@ -50,7 +50,8 @@ export class RoomSessionManager {
         );
         return;
       }
-      state.physics.lock(nodeId, socket.id);
+      state.physics.grab(nodeId, socket.id);
+      state.physics.lock(nodeId);
       state.physics.start();
     });
 
@@ -78,7 +79,7 @@ export class RoomSessionManager {
       }
 
       state.physics.stop();
-      state.physics.unlock(message.nodeId, socket.id);
+      state.physics.ungrab(message.nodeId, socket.id);
     });
 
     this._websocketsManager.onMoveNodes$
@@ -152,14 +153,14 @@ export class RoomSessionManager {
       const movedNodesMessageData = physics.nodes.map((node, id) => ({
         id: id,
         position: { x: node.position.x, y: node.position.y },
-        locks: node.locks,
+        grabs: node.grabs,
       }));
       for (const socket of this._websocketsManager.sockets) {
         if (socket.room !== roomId) {
           continue;
         }
         const nodesToSend = movedNodesMessageData.filter(
-          (n) => !n.locks.has(socket.id),
+          (n) => !n.grabs.has(socket.id),
         );
         socket.send({
           type: 'WSEventNodesMoved',
