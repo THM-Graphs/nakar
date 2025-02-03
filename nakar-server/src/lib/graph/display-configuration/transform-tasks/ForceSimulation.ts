@@ -1,6 +1,7 @@
 import { TransformTask } from '../TransformTask';
 import { MutableGraph } from '../../MutableGraph';
 import { PhysicsSimulation } from '../../../physics/PhysicsSimulation';
+import { wait } from '../../../tools/Wait';
 
 export class Layout extends TransformTask {
   public constructor() {
@@ -13,6 +14,8 @@ export class Layout extends TransformTask {
     }
 
     const cimulation = new PhysicsSimulation(input);
-    await cimulation.run(2_000);
+    cimulation.start();
+    await wait(2000);
+    cimulation.stop();
   }
 }

@@ -1,3 +1,4 @@
+import { Observable, Subject } from 'rxjs';
 import { MutableGraph } from '../graph/MutableGraph';
 import { SMap } from '../tools/Map';
 import { wait } from '../tools/Wait';
@@ -7,10 +8,16 @@ import { PhysicalNode } from './PhysicalNode';
 import { Vector } from './Vector';
 
 export class PhysicsSimulation {
+  public static readonly FPS = 60;
+
   private _nodes: SMap<string, PhysicalNode>;
   private _edges: SMap<string, PhysicalEdge>;
+  private _running: boolean;
+  private _onSlowTick: Subject<void>;
 
   public constructor(graph: MutableGraph) {
+    this._running = false;
+    this._onSlowTick = new Subject();
     this._nodes = graph.nodes.map((node, id): PhysicalNode => {
       return new PhysicalNode(id, node);
     });
@@ -29,7 +36,19 @@ export class PhysicsSimulation {
     }, new SMap<string, PhysicalEdge>());
   }
 
-  public async run(ms: number): Promise<void> {
+  public get onSlowTick(): Observable<void> {
+    return this._onSlowTick.asObservable();
+  }
+
+  public get nodes(): SMap<string, PhysicalNode> {
+    return this._nodes;
+  }
+
+  public start(): void {
+    if (this._running) {
+      return;
+    }
+
     // Load positions
     for (const node of this._nodes.values()) {
       node.position = new Vector(
@@ -38,20 +57,26 @@ export class PhysicsSimulation {
       );
     }
 
-    const start = Date.now();
-
-    let lastWait = Date.now();
-    const shouldWaitEveryMs = (1 / 120) * 1000; /* 120 fps */
-    while (Date.now() < start + ms) {
-      this._tick();
-      if (lastWait + shouldWaitEveryMs < Date.now()) {
-        await wait();
-        lastWait = Date.now();
+    this._running = true;
+    (async (): Promise<void> => {
+      let lastWait = Date.now();
+      const shouldWaitEveryMs = (1 / PhysicsSimulation.FPS) * 1000 * 0.5; // Half of frame
+      while (this._running) {
+        this._tick();
+        if (lastWait + shouldWaitEveryMs < Date.now()) {
+          this._onSlowTick.next();
+          await wait(0);
+          lastWait = Date.now();
+        }
       }
-    }
+    })().catch(strapi.log.error);
   }
 
-  public lock(nodeId: string): void {
+  public stop(): void {
+    this._running = false;
+  }
+
+  public lock(nodeId: string, userId: string): void {
     const node = this._nodes.get(nodeId);
     if (node == null) {
       strapi.log.error(
@@ -59,10 +84,10 @@ export class PhysicsSimulation {
       );
       return;
     }
-    node.lock();
+    node.lock(userId);
   }
 
-  public unlock(nodeId: string): void {
+  public unlock(nodeId: string, userId: string): void {
     const node = this._nodes.get(nodeId);
     if (node == null) {
       strapi.log.error(
@@ -70,7 +95,7 @@ export class PhysicsSimulation {
       );
       return;
     }
-    node.unlock();
+    node.unlock(userId);
   }
 
   public setNodePosition(nodeId: string, position: Vector): void {

@@ -1,19 +1,22 @@
 import { MutableNode } from '../graph/MutableNode';
+import { SSet } from '../tools/Set';
 import { Force } from './Force';
 import { Vector } from './Vector';
 
 export class PhysicalNode {
+  public static readonly maximumVelocity = 1000;
+
   private _id: string;
   private _position: Vector;
   private _velocity: Vector;
   private _original: MutableNode;
-  private _locked: boolean;
+  private _locks: SSet<string>;
 
   public constructor(id: string, node: MutableNode) {
     this._id = id;
     this._velocity = new Vector(0, 0);
     this._original = node;
-    this._locked = false;
+    this._locks = new SSet();
 
     this._position = new Vector(node.position.x, node.position.y);
   }
@@ -39,24 +42,28 @@ export class PhysicalNode {
   }
 
   public get locked(): boolean {
-    return this._locked;
+    return this._locks.size > 0;
+  }
+
+  public get locks(): SSet<string> {
+    return this._locks;
   }
 
   public set position(newValue: Vector) {
     this._position = newValue;
   }
 
-  public lock(): void {
-    this._locked = true;
+  public lock(userId: string): void {
+    this._locks.add(userId);
   }
 
-  public unlock(): void {
-    this._locked = false;
+  public unlock(userId: string): void {
+    this._locks.delete(userId);
   }
 
   public physicsTick(): void {
     this._position.add(this._velocity);
-    this._velocity.multiply(0.9);
+    this._velocity.multiply(0.8);
     this._original.position.x = this._position.x;
     this._original.position.y = this._position.y;
   }
@@ -67,8 +74,10 @@ export class PhysicalNode {
 
   public applyForce(force: Force): void {
     this._velocity.add(force.value);
-    if (this._velocity.magnitude > 500) {
-      this._velocity = this._velocity.normalized.multiplied(500);
+    if (this._velocity.magnitude > PhysicalNode.maximumVelocity) {
+      this._velocity = this._velocity.normalized.multiplied(
+        PhysicalNode.maximumVelocity,
+      );
     }
   }
 

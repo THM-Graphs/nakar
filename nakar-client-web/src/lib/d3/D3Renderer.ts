@@ -6,13 +6,7 @@ import { adjustColor } from "../color/colorShade.ts";
 import { getBackgroundColor } from "../color/getBackgroundColor.ts";
 import { getTextColor } from "../color/getTextColor.ts";
 import { UserTheme } from "../theme/UserTheme.ts";
-import {
-  auditTime,
-  BehaviorSubject,
-  combineLatest,
-  Subject,
-  Subscription,
-} from "rxjs";
+import { BehaviorSubject, combineLatest, Observable, Subject } from "rxjs";
 import { D3RendererState } from "./D3RendererState.ts";
 import { D3Calculator } from "./D3Calculator.ts";
 
@@ -23,7 +17,9 @@ export class D3Renderer {
 
   private $onDisplayLinkData: Subject<D3Link>;
   private $onDisplayNodeData: Subject<D3Node>;
+  private $onLockNode: Subject<D3Node>;
   private $onNodeMoved: Subject<D3Node>;
+  private $onUnlockNode: Subject<D3Node>;
 
   private calculator: D3Calculator;
 
@@ -53,7 +49,9 @@ export class D3Renderer {
 
     this.$onDisplayLinkData = new Subject();
     this.$onDisplayNodeData = new Subject();
+    this.$onLockNode = new Subject<D3Node>();
     this.$onNodeMoved = new Subject<D3Node>();
+    this.$onUnlockNode = new Subject<D3Node>();
 
     this.calculator = new D3Calculator();
 
@@ -79,25 +77,24 @@ export class D3Renderer {
     this.$svgElement.next(svgElement);
   }
 
-  public onDisplayLinkData(cb: (link: D3Link) => void): Subscription {
-    return this.$onDisplayLinkData.subscribe((link) => {
-      cb(link);
-    });
+  public get onDisplayLinkData(): Observable<D3Link> {
+    return this.$onDisplayLinkData.asObservable();
   }
 
-  public onDisplayNodeData(cb: (node: D3Node) => void): Subscription {
-    return this.$onDisplayNodeData.subscribe((node) => {
-      cb(node);
-    });
+  public get onDisplayNodeData(): Observable<D3Node> {
+    return this.$onDisplayNodeData.asObservable();
   }
 
-  public onNodesMoved(cb: (node: D3Node) => void): Subscription {
-    // TODO: as observable
-    return this.$onNodeMoved
-      .pipe(auditTime((1 / 120) * 1000 /* 120 fps, 8.3 ms */))
-      .subscribe((n) => {
-        cb(n);
-      });
+  public get onLockNode(): Observable<D3Node> {
+    return this.$onLockNode.asObservable();
+  }
+
+  public get onNodesMoved(): Observable<D3Node> {
+    return this.$onNodeMoved.asObservable();
+  }
+
+  public get onUnlockNode(): Observable<D3Node> {
+    return this.$onUnlockNode.asObservable();
   }
 
   public loadGraphContent(graph: Graph) {
@@ -229,7 +226,7 @@ export class D3Renderer {
         .on(
           "start",
           (event: d3.D3DragEvent<SVGGElement, D3Node, null>, d: D3Node) => {
-            // TODO: Send lock node message
+            this.$onLockNode.next(d);
           },
         )
         .on(
@@ -241,9 +238,12 @@ export class D3Renderer {
             this.$onNodeMoved.next(d);
           },
         )
-        .on("end", (event: d3.D3DragEvent<SVGGElement, D3Node, null>) => {
-          // TODO: Send unlock node message
-        }),
+        .on(
+          "end",
+          (event: d3.D3DragEvent<SVGGElement, D3Node, null>, d: D3Node) => {
+            this.$onUnlockNode.next(d);
+          },
+        ),
     );
     this.nodeSelection
       .on("mouseover", (e: MouseEvent) => {

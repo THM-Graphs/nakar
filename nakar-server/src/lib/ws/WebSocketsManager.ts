@@ -6,8 +6,10 @@ import {
 import { Core } from '@strapi/strapi';
 import {
   SchemaWsActionJoinRoom,
+  SchemaWsActionLockNode,
   SchemaWsActionMoveNodes,
   SchemaWsActionRunScenario,
+  SchemaWsActionUnlockNode,
   SchemaWsServerToClientMessage,
 } from '../../../src-gen/schema';
 import { match } from 'ts-pattern';
@@ -15,11 +17,13 @@ import { ServerToClientEvents } from './ServerToClientEvents';
 import { ClientToServerEvents } from './ClientToServerEvents';
 import { Observable, Subject } from 'rxjs';
 import { WSClient } from './WSClient';
+import { SSet } from '../tools/Set';
 
 export type Server = UntypedServer<ClientToServerEvents, ServerToClientEvents>;
 export type Socket = UntypedSocket<ClientToServerEvents, ServerToClientEvents>;
 
 export class WebSocketsManager {
+  private readonly _sockets: SSet<WSClient>;
   private readonly _onSocketConnect = new Subject<WSClient>();
   private readonly _onSocketDisconnect = new Subject<
     [WSClient, DisconnectReason]
@@ -30,12 +34,20 @@ export class WebSocketsManager {
   private readonly _onRunScenario = new Subject<
     [WSClient, SchemaWsActionRunScenario]
   >();
+  private readonly _onLockNode = new Subject<
+    [WSClient, SchemaWsActionLockNode]
+  >();
   private readonly _onMoveNodes = new Subject<
     [WSClient, SchemaWsActionMoveNodes]
   >();
+  private readonly _onUnlockNode = new Subject<
+    [WSClient, SchemaWsActionUnlockNode]
+  >();
+
   private readonly _io: Server;
 
   public constructor(strapi: Core.Strapi) {
+    this._sockets = new SSet();
     this._io = new UntypedServer(strapi.server.httpServer, {
       cors: {
         origin: '*',
@@ -45,6 +57,7 @@ export class WebSocketsManager {
     });
     this._io.on('connection', (s) => {
       const wsClient = new WSClient(s, this._io);
+      this._sockets.add(wsClient);
       strapi.log.debug(`New socket ${wsClient.id} connection.`);
       this._onSocketConnect.next(wsClient);
 
@@ -57,8 +70,14 @@ export class WebSocketsManager {
             .with({ type: 'WSActionRunScenario' }, (m): void => {
               this._onRunScenario.next([wsClient, m]);
             })
+            .with({ type: 'WSActionLockNode' }, (m): void => {
+              this._onLockNode.next([wsClient, m]);
+            })
             .with({ type: 'WSActionMoveNodes' }, (m): void => {
               this._onMoveNodes.next([wsClient, m]);
+            })
+            .with({ type: 'WSActionUnlockNode' }, (m): void => {
+              this._onUnlockNode.next([wsClient, m]);
             })
             .exhaustive();
         } catch (error: unknown) {
@@ -69,6 +88,7 @@ export class WebSocketsManager {
       wsClient.onDisconnect$.subscribe((reason: DisconnectReason) => {
         strapi.log.debug(`Socket ${wsClient.id} disconnected: ${reason}`);
         this._onSocketDisconnect.next([wsClient, reason]);
+        this._sockets.delete(wsClient);
       });
     });
   }
@@ -91,8 +111,20 @@ export class WebSocketsManager {
     return this._onRunScenario.asObservable();
   }
 
+  public get onLockNode$(): Observable<[WSClient, SchemaWsActionLockNode]> {
+    return this._onLockNode.asObservable();
+  }
+
   public get onMoveNodes$(): Observable<[WSClient, SchemaWsActionMoveNodes]> {
     return this._onMoveNodes.asObservable();
+  }
+
+  public get onUnlockNode$(): Observable<[WSClient, SchemaWsActionUnlockNode]> {
+    return this._onUnlockNode.asObservable();
+  }
+
+  public get sockets(): SSet<WSClient> {
+    return this._sockets;
   }
 
   public sendToRoom(

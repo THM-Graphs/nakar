@@ -3,6 +3,9 @@ import { useTheme } from "../../lib/theme/useTheme.ts";
 import { D3Renderer } from "../../lib/d3/D3Renderer.ts";
 import { Node, Edge } from "../../../src-gen";
 import { WebSocketsManager } from "../../lib/ws/WebSocketsManager.ts";
+import { auditTime } from "rxjs";
+
+export const FPS = 60;
 
 export function GraphRendererD3(props: {
   onNodeClicked: (node: Node) => void;
@@ -18,24 +21,38 @@ export function GraphRendererD3(props: {
       props.webSockets.onScenarioDataChanged$.subscribe((scenraioData) => {
         graphRenderer.loadGraphContent(scenraioData.graph);
       }),
-      graphRenderer.onNodesMoved((n) => {
+      graphRenderer.onLockNode.subscribe((n) => {
         props.webSockets.sendMessage({
-          type: "WSActionMoveNodes",
-          nodes: [
-            {
-              id: n.id,
-              position: { x: n.x, y: n.y },
-            },
-          ],
+          type: "WSActionLockNode",
+          nodeId: n.id,
+        });
+      }),
+      graphRenderer.onNodesMoved
+        .pipe(auditTime((1 / FPS) * 1000))
+        .subscribe((n) => {
+          props.webSockets.sendMessage({
+            type: "WSActionMoveNodes",
+            nodes: [
+              {
+                id: n.id,
+                position: { x: n.x, y: n.y },
+              },
+            ],
+          });
+        }),
+      graphRenderer.onUnlockNode.subscribe((n) => {
+        props.webSockets.sendMessage({
+          type: "WSActionUnlockNode",
+          nodeId: n.id,
         });
       }),
       props.webSockets.onNodesMoved$.subscribe((onMove) => {
         graphRenderer.updateNodePositions(onMove);
       }),
-      graphRenderer.onDisplayNodeData((n) => {
+      graphRenderer.onDisplayNodeData.subscribe((n) => {
         props.onNodeClicked(n);
       }),
-      graphRenderer.onDisplayLinkData((l) => {
+      graphRenderer.onDisplayLinkData.subscribe((l) => {
         props.onEdgeClicked(l);
       }),
     ];

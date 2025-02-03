@@ -19,6 +19,7 @@ import { DisconnectReason } from 'socket.io';
 import { RoomStateMachine } from './RoomStateMachine';
 import { match } from 'ts-pattern';
 import { DBRoom } from '../documents/collection-types/DBRoom';
+import { Vector } from '../physics/Vector';
 
 export class RoomSessionManager {
   private readonly _websocketsManager: WebSocketsManager;
@@ -32,13 +33,53 @@ export class RoomSessionManager {
 
     this._loadGraphsFromDbRooms().catch(strapi.log.error);
 
-    this._websocketsManager.onMoveNodes$
-      .pipe(auditTime((1 / 120) * 1000 /* 120fps */))
-      .subscribe(([socket, message]) => {
-        this._handleMoveNode(socket, message).catch((error: unknown) => {
-          socket.sendError(error);
-        });
+    this._websocketsManager.onLockNode$.subscribe(([socket, message]) => {
+      const roomId = socket.room;
+      if (roomId == null) {
+        strapi.log.error(
+          `Socket ${socket.id} did send lock node message but is in no room.`,
+        );
+        return;
+      }
+      const nodeId = message.nodeId;
+
+      const state = this._rooms.getState(roomId);
+      if (state.type !== 'data') {
+        strapi.log.error(
+          `Socket ${socket.id} did send lock node message but is in no graph.`,
+        );
+        return;
+      }
+      state.physics.lock(nodeId, socket.id);
+      state.physics.start();
+    });
+
+    this._websocketsManager.onMoveNodes$.subscribe(([socket, message]) => {
+      this._handleMoveNode(socket, message).catch((error: unknown) => {
+        socket.sendError(error);
       });
+    });
+
+    this._websocketsManager.onUnlockNode$.subscribe(([socket, message]) => {
+      const roomId = socket.room;
+      if (roomId == null) {
+        strapi.log.error(
+          `Socket ${socket.id} did send lock node message but is in no room.`,
+        );
+        return;
+      }
+
+      const state = this._rooms.getState(roomId);
+      if (state.type !== 'data') {
+        strapi.log.error(
+          `Socket ${socket.id} did send lock node message but is in no graph.`,
+        );
+        return;
+      }
+
+      state.physics.stop();
+      state.physics.unlock(message.nodeId, socket.id);
+    });
 
     this._websocketsManager.onMoveNodes$
       .pipe(auditTime(2000))
@@ -105,6 +146,27 @@ export class RoomSessionManager {
           });
         })
         .exhaustive();
+    });
+
+    this._rooms._onRoomPhysicsUpdates$.subscribe(([roomId, , physics]) => {
+      const movedNodesMessageData = physics.nodes.map((node, id) => ({
+        id: id,
+        position: { x: node.position.x, y: node.position.y },
+        locks: node.locks,
+      }));
+      for (const socket of this._websocketsManager.sockets) {
+        if (socket.room !== roomId) {
+          continue;
+        }
+        const nodesToSend = movedNodesMessageData.filter(
+          (n) => !n.locks.has(socket.id),
+        );
+        socket.send({
+          type: 'WSEventNodesMoved',
+          nodes: nodesToSend.toArray().map(([, n]) => n),
+          date: new Date().toISOString(),
+        });
+      }
     });
   }
 
@@ -270,38 +332,14 @@ export class RoomSessionManager {
         );
         continue;
       }
-      roomState.physics.lock(movedNode.id);
+      roomState.physics.setNodePosition(
+        movedNode.id,
+        new Vector(movedNode.position.x, movedNode.position.y),
+      );
       foundNode.position.x = movedNode.position.x;
       foundNode.position.y = movedNode.position.y;
     }
 
-    await roomState.physics.run(((1 / 120) * 1000) / 2 /* half of 120 fps */);
-
-    // for (const movedNode of message.nodes) {
-    //   roomState.physics.unlock(movedNode.id);
-    // }
-
-    const movedNodesIds = message.nodes.map((n) => n.id);
-    const movedNodesMessageData = graph.nodes.toArray().map(([id, node]) => ({
-      id: id,
-      position: { x: node.position.x, y: node.position.y },
-    }));
-
-    // Send all nodes to everyone else
-    socket.broadcastToRoom({
-      type: 'WSEventNodesMoved',
-      nodes: movedNodesMessageData,
-      date: new Date().toISOString(),
-    });
-
-    // Send all nodes except the ones who has been dragged by the client
-    socket.send({
-      type: 'WSEventNodesMoved',
-      nodes: movedNodesMessageData.filter((m) => {
-        return !movedNodesIds.includes(m.id);
-      }),
-      date: new Date().toISOString(),
-    });
     return Promise.resolve();
   }
 
