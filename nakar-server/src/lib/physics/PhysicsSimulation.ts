@@ -2,6 +2,8 @@ import { Observable, Subject } from 'rxjs';
 import { MutableGraph } from '../graph/MutableGraph';
 import { wait } from '../tools/Wait';
 import { MutableNode } from '../graph/MutableNode';
+import { SMap } from '../tools/Map';
+import { SSet } from '../tools/Set';
 
 export class PhysicsSimulation {
   public static readonly maximumVelocity: number = 500;
@@ -63,21 +65,42 @@ export class PhysicsSimulation {
     }
 
     // Calculate attractive forces
+    const nodeCombinationsHandled: SMap<string, SSet<string>> = new SMap<string, SSet<string>>();
     for (const edge of this._graph.edges.values()) {
       if (edge.isLoop) {
         continue;
       }
-      const nodeA: MutableNode | undefined = this._graph.nodes.get(edge.startNodeId);
+
+      const startNodeId: string = edge.startNodeId < edge.endNodeId ? edge.startNodeId : edge.endNodeId;
+      const endNodeId: string = edge.startNodeId < edge.endNodeId ? edge.endNodeId : edge.startNodeId;
+
+      const nodeA: MutableNode | undefined = this._graph.nodes.get(startNodeId);
       if (nodeA == null) {
         continue;
       }
 
-      const nodeB: MutableNode | undefined = this._graph.nodes.get(edge.endNodeId);
+      const nodeB: MutableNode | undefined = this._graph.nodes.get(endNodeId);
       if (nodeB == null) {
         continue;
       }
 
       if (nodeA.locked && nodeB.locked) {
+        continue;
+      }
+
+      let shouldSkip: boolean = false;
+      const foundEntry: SSet<string> | undefined = nodeCombinationsHandled.get(startNodeId);
+      if (foundEntry == null) {
+        nodeCombinationsHandled.set(startNodeId, new SSet([endNodeId]));
+      } else {
+        if (foundEntry.has(endNodeId)) {
+          shouldSkip = true;
+        } else {
+          foundEntry.add(endNodeId);
+        }
+      }
+
+      if (shouldSkip) {
         continue;
       }
 
@@ -165,7 +188,7 @@ export class PhysicsSimulation {
     const directionX: number = nodeA.position.x - nodeB.position.x;
     const directionY: number = nodeA.position.y - nodeB.position.y;
     const magnitude: number = this._magnitude(directionX, directionY);
-    const strength: number = (targetLength - magnitude) * 0.025;
+    const strength: number = (targetLength - magnitude) * 0.024;
 
     if (!nodeA.locked) {
       this._applyForce(nodeA, (directionX / magnitude) * strength, (directionY / magnitude) * strength);
