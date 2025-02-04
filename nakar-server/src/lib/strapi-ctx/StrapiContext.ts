@@ -14,11 +14,9 @@ export class StrapiContext {
     this.database = new DocumentsDatabase();
   }
 
-  public static handleRequest<T>(
-    handler: (context: StrapiContext) => Promise<T> | T,
-  ) {
+  public static handleRequest<T>(handler: (context: StrapiContext) => Promise<T> | T) {
     return async (ctx: Context): Promise<void> => {
-      const context = new StrapiContext(ctx);
+      const context: StrapiContext = new StrapiContext(ctx);
       try {
         ctx.response.body = await handler(context);
         ctx.status = 200;
@@ -32,19 +30,15 @@ export class StrapiContext {
             context._handleError(new InternalServerError(error.message));
           })
           .otherwise((error: unknown) => {
-            context._handleError(
-              new InternalServerError(
-                `Unknown error: ${JSON.stringify(error)}`,
-              ),
-            );
+            context._handleError(new InternalServerError(`Unknown error: ${JSON.stringify(error)}`));
           });
       }
     };
   }
 
   public getPathParameter(key: string): string {
-    const params = z.record(z.unknown()).parse(this._ctx.params);
-    const value = params[key];
+    const params: Record<string, unknown> = z.record(z.unknown()).parse(this._ctx.params);
+    const value: unknown = params[key];
     if (typeof value !== 'string') {
       throw new BadRequest(`Path parameter ${key} not provided.`);
     }
@@ -52,7 +46,7 @@ export class StrapiContext {
   }
 
   public getQueryParameter(key: string): string {
-    const value = this._ctx.request.query[key];
+    const value: unknown = this._ctx.request.query[key];
     if (typeof value !== 'string') {
       throw new BadRequest(`Query parameter ${key} not provided.`);
     }

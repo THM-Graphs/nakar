@@ -2,6 +2,7 @@ import { FinalGraphDisplayConfiguration } from './FinalGraphDisplayConfiguration
 import { Neo4jDatabase } from '../../neo4j/Neo4jDatabase';
 import { Profiler } from '../../profile/Profiler';
 import { MutableGraph } from '../MutableGraph';
+import { ProfilerTask } from '../../profile/ProfilerTask';
 
 export abstract class TransformTask {
   public readonly title: string;
@@ -15,7 +16,7 @@ export abstract class TransformTask {
     config: FinalGraphDisplayConfiguration,
     database: Neo4jDatabase,
   ): Promise<void> {
-    const task = Profiler.shared.profile(this.title);
+    const task: ProfilerTask = Profiler.shared.profile(this.title);
     await this.run(input, config, database);
     task.finish();
   }

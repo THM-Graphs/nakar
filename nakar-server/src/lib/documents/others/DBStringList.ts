@@ -10,8 +10,7 @@ export class DBStringList {
 
   public static parse(input: unknown): DBStringList {
     try {
-      const schema = z.array(z.string());
-      const parsedValue = schema.parse(input);
+      const parsedValue: string[] = z.array(z.string()).parse(input);
       return new DBStringList({ values: parsedValue });
     } catch {
       return new DBStringList({ values: [] });

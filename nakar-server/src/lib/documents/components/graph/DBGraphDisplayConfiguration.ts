@@ -26,39 +26,23 @@ export class DBGraphDisplayConfiguration {
     this.growNodesBasedOnDegreeFactor = data.growNodesBasedOnDegreeFactor;
     this.nodeDisplayConfigurations = data.nodeDisplayConfigurations;
     this.compressRelationships = data.compressRelationships;
-    this.compressRelationshipsWidthFactor =
-      data.compressRelationshipsWidthFactor;
+    this.compressRelationshipsWidthFactor = data.compressRelationshipsWidthFactor;
     this.scaleType = data.scaleType;
   }
 
   public static parseOrDefault(
-    db:
-      | Result<
-          'graph.graph-display-configuration',
-          { populate: ['nodeDisplayConfigurations'] }
-        >
-      | null
-      | undefined,
+    db: Result<'graph.graph-display-configuration', { populate: ['nodeDisplayConfigurations'] }> | null | undefined,
   ): DBGraphDisplayConfiguration {
     return new DBGraphDisplayConfiguration({
-      connectResultNodes: DBNullableBoolean.parseOrDefault(
-        db?.connectResultNodes,
-      ),
-      growNodesBasedOnDegree: DBNullableBoolean.parseOrDefault(
-        db?.growNodesBasedOnDegree,
-      ),
+      connectResultNodes: DBNullableBoolean.parseOrDefault(db?.connectResultNodes),
+      growNodesBasedOnDegree: DBNullableBoolean.parseOrDefault(db?.growNodesBasedOnDegree),
       growNodesBasedOnDegreeFactor: db?.growNodesBasedOnDegreeFactor ?? null,
       nodeDisplayConfigurations:
-        db?.nodeDisplayConfigurations?.map(
-          (
-            nodeDisplayConfiguration: Result<'graph.node-display-configuration'>,
-          ) => DBNodeDisplayConfiguration.parse(nodeDisplayConfiguration),
+        db?.nodeDisplayConfigurations?.map((nodeDisplayConfiguration: Result<'graph.node-display-configuration'>) =>
+          DBNodeDisplayConfiguration.parse(nodeDisplayConfiguration),
         ) ?? [],
-      compressRelationships: DBNullableBoolean.parseOrDefault(
-        db?.compressRelationships,
-      ),
-      compressRelationshipsWidthFactor:
-        db?.compressRelationshipsWidthFactor ?? null,
+      compressRelationships: DBNullableBoolean.parseOrDefault(db?.compressRelationships),
+      compressRelationshipsWidthFactor: db?.compressRelationshipsWidthFactor ?? null,
       scaleType: DBNullableScaleType.parseOrDefault(db?.scaleType),
     });
   }

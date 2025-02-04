@@ -29,12 +29,7 @@ export class DBDatabase {
     this.graphDisplayConfiguration = data.graphDisplayConfiguration;
   }
 
-  public static parse(
-    db: Result<
-      'api::database.database',
-      { populate: ['graphDisplayConfiguration'] }
-    >,
-  ): DBDatabase {
+  public static parse(db: Result<'api::database.database', { populate: ['graphDisplayConfiguration'] }>): DBDatabase {
     return new DBDatabase({
       documentId: db.documentId,
       title: db.title ?? null,
@@ -42,9 +37,7 @@ export class DBDatabase {
       username: db.username ?? null,
       password: db.password ?? null,
       browserUrl: db.browserUrl ?? null,
-      graphDisplayConfiguration: DBGraphDisplayConfiguration.parseOrDefault(
-        db.graphDisplayConfiguration,
-      ),
+      graphDisplayConfiguration: DBGraphDisplayConfiguration.parseOrDefault(db.graphDisplayConfiguration),
     });
   }
 

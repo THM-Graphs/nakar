@@ -1,5 +1,6 @@
 import { TransformTask } from '../TransformTask';
 import { MutableGraph } from '../../MutableGraph';
+import { MutableEdge } from '../../MutableEdge';
 
 export class ApplyNodeDegrees extends TransformTask {
   public constructor() {
@@ -8,12 +9,12 @@ export class ApplyNodeDegrees extends TransformTask {
 
   protected run(input: MutableGraph): void {
     for (const [nodeId, node] of input.nodes.entries()) {
-      const outRelsCount = input.edges
-        .filter((e) => e.startNodeId === nodeId)
-        .reduce((count, key, rel) => count + rel.compressedCount, 0);
-      const inRelsCount = input.edges
-        .filter((e) => e.endNodeId === nodeId)
-        .reduce((count, key, rel) => count + rel.compressedCount, 0);
+      const outRelsCount: number = input.edges
+        .filter((e: MutableEdge) => e.startNodeId === nodeId)
+        .reduce((count: number, key: string, rel: MutableEdge) => count + rel.compressedCount, 0);
+      const inRelsCount: number = input.edges
+        .filter((e: MutableEdge) => e.endNodeId === nodeId)
+        .reduce((count: number, key: string, rel: MutableEdge) => count + rel.compressedCount, 0);
 
       node.inDegree = inRelsCount;
       node.outDegree = outRelsCount;

@@ -1,5 +1,6 @@
 import { TransformTask } from '../TransformTask';
 import { MutableGraph } from '../../MutableGraph';
+import { MutableEdge } from '../../MutableEdge';
 
 export class ApplyEdgeParallelCounts extends TransformTask {
   public constructor() {
@@ -11,10 +12,10 @@ export class ApplyEdgeParallelCounts extends TransformTask {
       if (edge.parallelCount > 1) {
         continue;
       }
-      const parallelEdges = input.edges
+      const parallelEdges: [string, MutableEdge][] = input.edges
         .toArray()
-        .filter(([, other]): boolean => edge.isParallelTo(other));
-      const parallelCount = parallelEdges.length;
+        .filter(([, other]: [string, MutableEdge]): boolean => edge.isParallelTo(other));
+      const parallelCount: number = parallelEdges.length;
 
       for (const [index, [, parallelEdge]] of parallelEdges.entries()) {
         parallelEdge.parallelCount = parallelCount;
@@ -39,9 +40,7 @@ export class ApplyEdgeParallelCounts extends TransformTask {
             }
           }
 
-          if (
-            parallelEdge.startNodeId.localeCompare(parallelEdge.endNodeId) > 0
-          ) {
+          if (parallelEdge.startNodeId.localeCompare(parallelEdge.endNodeId) > 0) {
             parallelEdge.parallelIndex = -parallelEdge.parallelIndex;
           }
         }

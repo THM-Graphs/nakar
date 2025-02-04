@@ -7,10 +7,8 @@ export class DBNullableBoolean {
     this.value = value;
   }
 
-  public static parseOrDefault(
-    input: 'inherit' | 'true' | 'false' | null | undefined,
-  ): DBNullableBoolean {
-    const value = match(input)
+  public static parseOrDefault(input: 'inherit' | 'true' | 'false' | null | undefined): DBNullableBoolean {
+    const value: boolean | null = match(input)
       .returnType<boolean | null>()
       .with(P.nullish, () => null)
       .with('inherit', () => null)

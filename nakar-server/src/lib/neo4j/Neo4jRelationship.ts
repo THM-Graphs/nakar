@@ -10,10 +10,7 @@ export class Neo4jRelationship {
     this.keys = data.keys;
   }
 
-  public static fromRawRelationship(
-    relationship: Relationship,
-    key: string | null,
-  ): Neo4jRelationship {
+  public static fromRawRelationship(relationship: Relationship, key: string | null): Neo4jRelationship {
     return new Neo4jRelationship({
       relationship: relationship,
       keys: key == null ? new SSet() : new SSet([key]),
@@ -21,13 +18,9 @@ export class Neo4jRelationship {
   }
 
   public byMergingWith(other: Neo4jRelationship): Neo4jRelationship {
-    const keys = this.keys;
-    for (const key of other.keys) {
-      keys.add(key);
-    }
     return new Neo4jRelationship({
       relationship: other.relationship,
-      keys: keys,
+      keys: this.keys.byMerging(other.keys),
     });
   }
 }

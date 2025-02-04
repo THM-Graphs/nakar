@@ -4,8 +4,8 @@ import { wait } from '../tools/Wait';
 import { MutableNode } from '../graph/MutableNode';
 
 export class PhysicsSimulation {
-  public static readonly maximumVelocity = 500;
-  public static readonly FPS = 30;
+  public static readonly maximumVelocity: number = 500;
+  public static readonly FPS: number = 30;
 
   private _graph: MutableGraph;
   private _running: boolean;
@@ -34,8 +34,8 @@ export class PhysicsSimulation {
 
     this._running = true;
     (async (): Promise<void> => {
-      let lastWait = Date.now();
-      const shouldWaitEveryMs = (1 / PhysicsSimulation.FPS) * 1000 * 0.1; // Tenth of frame
+      let lastWait: number = Date.now();
+      const shouldWaitEveryMs: number = (1 / PhysicsSimulation.FPS) * 1000 * 0.1; // Tenth of frame
       while (this._running) {
         this._tick();
         if (lastWait + shouldWaitEveryMs < Date.now()) {
@@ -67,12 +67,12 @@ export class PhysicsSimulation {
       if (edge.isLoop) {
         continue;
       }
-      const nodeA = this._graph.nodes.get(edge.startNodeId);
+      const nodeA: MutableNode | undefined = this._graph.nodes.get(edge.startNodeId);
       if (nodeA == null) {
         continue;
       }
 
-      const nodeB = this._graph.nodes.get(edge.endNodeId);
+      const nodeB: MutableNode | undefined = this._graph.nodes.get(edge.endNodeId);
       if (nodeB == null) {
         continue;
       }
@@ -81,8 +81,7 @@ export class PhysicsSimulation {
         continue;
       }
 
-      const targetDistance =
-        nodeA.radius + edge.type.length * 20 + nodeB.radius;
+      const targetDistance: number = nodeA.radius + edge.type.length * 20 + nodeB.radius;
 
       this._linkForce(targetDistance, nodeA, nodeB);
     }
@@ -101,14 +100,11 @@ export class PhysicsSimulation {
   }
 
   private _positionEquals(nodeA: MutableNode, nodeB: MutableNode): boolean {
-    return (
-      nodeA.position.x === nodeB.position.x &&
-      nodeA.position.y === nodeB.position.y
-    );
+    return nodeA.position.x === nodeB.position.x && nodeA.position.y === nodeB.position.y;
   }
 
   private _jiggle(node: MutableNode): void {
-    const radians = Math.random() * Math.PI * 2;
+    const radians: number = Math.random() * Math.PI * 2;
     node.position.x += Math.cos(radians) * 10;
     node.position.y += Math.sin(radians) * 10;
   }
@@ -117,22 +113,18 @@ export class PhysicsSimulation {
     node.velocityX += forceX;
     node.velocityY += forceY;
 
-    const magnitude = this._magnitude(node.velocityX, node.velocityY);
+    const magnitude: number = this._magnitude(node.velocityX, node.velocityY);
     if (magnitude > PhysicsSimulation.maximumVelocity) {
-      node.velocityX =
-        (node.velocityX / magnitude) * PhysicsSimulation.maximumVelocity;
-      node.velocityY =
-        (node.velocityY / magnitude) * PhysicsSimulation.maximumVelocity;
+      node.velocityX = (node.velocityX / magnitude) * PhysicsSimulation.maximumVelocity;
+      node.velocityY = (node.velocityY / magnitude) * PhysicsSimulation.maximumVelocity;
     }
   }
 
   private _applyVelocity(node: MutableNode): void {
-    const magnitude = this._magnitude(node.velocityX, node.velocityY);
+    const magnitude: number = this._magnitude(node.velocityX, node.velocityY);
     if (magnitude > PhysicsSimulation.maximumVelocity) {
-      node.velocityX =
-        (node.velocityX / magnitude) * PhysicsSimulation.maximumVelocity;
-      node.velocityX =
-        (node.velocityY / magnitude) * PhysicsSimulation.maximumVelocity;
+      node.velocityX = (node.velocityX / magnitude) * PhysicsSimulation.maximumVelocity;
+      node.velocityX = (node.velocityY / magnitude) * PhysicsSimulation.maximumVelocity;
     }
     node.position.x += node.velocityX;
     node.position.y += node.velocityY;
@@ -157,66 +149,44 @@ export class PhysicsSimulation {
       this._jiggle(nodeA);
     }
 
-    const directionX = nodeA.position.x - nodeB.position.x;
-    const directionY = nodeA.position.y - nodeB.position.y;
-    const magnitude = this._magnitude(directionX, directionY);
-    const strength =
-      ((this._mass(nodeA) * this._mass(nodeB) * 4) / Math.pow(magnitude, 2)) *
-      0.00015;
+    const directionX: number = nodeA.position.x - nodeB.position.x;
+    const directionY: number = nodeA.position.y - nodeB.position.y;
+    const magnitude: number = this._magnitude(directionX, directionY);
+    const strength: number = ((this._mass(nodeA) * this._mass(nodeB) * 4) / Math.pow(magnitude, 2)) * 0.00015;
 
-    this._applyForce(
-      nodeA,
-      (directionX / magnitude) * strength,
-      (directionY / magnitude) * strength,
-    );
+    this._applyForce(nodeA, (directionX / magnitude) * strength, (directionY / magnitude) * strength);
   }
 
-  private _linkForce(
-    targetLength: number,
-    nodeA: MutableNode,
-    nodeB: MutableNode,
-  ): void {
+  private _linkForce(targetLength: number, nodeA: MutableNode, nodeB: MutableNode): void {
     if (this._positionEquals(nodeA, nodeB)) {
       this._jiggle(nodeA);
     }
 
-    const directionX = nodeA.position.x - nodeB.position.x;
-    const directionY = nodeA.position.y - nodeB.position.y;
-    const magnitude = this._magnitude(directionX, directionY);
-    const strength = (targetLength - magnitude) * 0.025;
+    const directionX: number = nodeA.position.x - nodeB.position.x;
+    const directionY: number = nodeA.position.y - nodeB.position.y;
+    const magnitude: number = this._magnitude(directionX, directionY);
+    const strength: number = (targetLength - magnitude) * 0.025;
 
     if (!nodeA.locked) {
-      this._applyForce(
-        nodeA,
-        (directionX / magnitude) * strength,
-        (directionY / magnitude) * strength,
-      );
+      this._applyForce(nodeA, (directionX / magnitude) * strength, (directionY / magnitude) * strength);
     }
     if (!nodeB.locked) {
-      this._applyForce(
-        nodeB,
-        (-directionX / magnitude) * strength,
-        (-directionY / magnitude) * strength,
-      );
+      this._applyForce(nodeB, (-directionX / magnitude) * strength, (-directionY / magnitude) * strength);
     }
   }
 
   private _centerForce(node: MutableNode): void {
-    const magnitude = this._magnitude(node.position.x, node.position.y);
+    const magnitude: number = this._magnitude(node.position.x, node.position.y);
     if (magnitude === 0) {
       return;
     }
 
-    const directionX = -node.position.x;
-    const directionY = -node.position.y;
-    const strength = magnitude * this._mass(node) * 0.00000013;
+    const directionX: number = -node.position.x;
+    const directionY: number = -node.position.y;
+    const strength: number = magnitude * this._mass(node) * 0.00000013;
 
     if (!node.locked) {
-      this._applyForce(
-        node,
-        (directionX / magnitude) * strength,
-        (directionY / magnitude) * strength,
-      );
+      this._applyForce(node, (directionX / magnitude) * strength, (directionY / magnitude) * strength);
     }
   }
 }

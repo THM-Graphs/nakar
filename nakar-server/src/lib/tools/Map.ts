@@ -1,9 +1,7 @@
 // eslint-disable-next-line no-restricted-globals
 export class SMap<K extends string | number | symbol, V> extends Map<K, V> {
-  public static fromRecord<K extends string | number | symbol, V>(
-    record: Record<K, V>,
-  ): SMap<K, V> {
-    const map = new SMap<K, V>();
+  public static fromRecord<K extends string | number | symbol, V>(record: Record<K, V>): SMap<K, V> {
+    const map: SMap<K, V> = new SMap<K, V>();
     for (const key in record) {
       map.set(key as K, record[key]);
     }
@@ -11,7 +9,7 @@ export class SMap<K extends string | number | symbol, V> extends Map<K, V> {
   }
 
   public filter(callback: (value: V, key: K) => boolean): SMap<K, V> {
-    const filteredMap = new SMap<K, V>();
+    const filteredMap: SMap<K, V> = new SMap<K, V>();
     for (const [key, value] of this) {
       if (callback(value, key)) {
         filteredMap.set(key, value);
@@ -21,8 +19,8 @@ export class SMap<K extends string | number | symbol, V> extends Map<K, V> {
   }
 
   public map<U>(callback: (value: V, key: K, index: number) => U): SMap<K, U> {
-    const mappedMap = new SMap<K, U>();
-    let index = 0;
+    const mappedMap: SMap<K, U> = new SMap<K, U>();
+    let index: number = 0;
     for (const [key, value] of this.entries()) {
       mappedMap.set(key, callback(value, key, index));
       index += 1;
@@ -31,7 +29,7 @@ export class SMap<K extends string | number | symbol, V> extends Map<K, V> {
   }
 
   public reduce<U>(callback: (akku: U, key: K, value: V) => U, start: U): U {
-    let s = start;
+    let s: U = start;
     for (const [key, value] of this.entries()) {
       s = callback(s, key, value);
     }
@@ -60,7 +58,7 @@ export class SMap<K extends string | number | symbol, V> extends Map<K, V> {
   }
 
   public bySetting(key: K, value: V): SMap<K, V> {
-    const newMap = this.copy();
+    const newMap: SMap<K, V> = this.copy();
     newMap.set(key, value);
     return newMap;
   }

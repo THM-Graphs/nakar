@@ -7,7 +7,8 @@ import { z } from 'zod';
 import { SSet } from '../tools/Set';
 
 export class MutableNode {
-  public static readonly defaultRadius = 60;
+  public static readonly defaultRadius: number = 60;
+  // eslint-disable-next-line @typescript-eslint/typedef
   public static readonly schema = z.object({
     labels: z.array(z.string()),
     properties: MutablePropertyCollection.schema,
@@ -83,8 +84,8 @@ export class MutableNode {
   }
 
   public static create(node: Neo4jNode): MutableNode {
-    const properties = MutablePropertyCollection.create(node.node.properties);
-    const labels = new SSet(node.node.labels);
+    const properties: MutablePropertyCollection = MutablePropertyCollection.create(node.node.properties);
+    const labels: SSet<string> = new SSet<string>(node.node.labels);
 
     return new MutableNode({
       labels: labels,
@@ -101,7 +102,7 @@ export class MutableNode {
   }
 
   public static fromPlain(input: unknown): MutableNode {
-    const data = MutableNode.schema.parse(input);
+    const data: z.infer<typeof this.schema> = MutableNode.schema.parse(input);
     return new MutableNode({
       labels: new SSet(data.labels),
       properties: MutablePropertyCollection.fromPlain(data.properties),
@@ -128,10 +129,7 @@ export class MutableNode {
       outDegree: this.outDegree,
       degree: this.degree,
       namesInQuery: this.namesInQuery.toArray(),
-      displayConfigurationContext: NodeDisplayConfigurationContext.create(
-        id,
-        this,
-      ),
+      displayConfigurationContext: NodeDisplayConfigurationContext.create(id, this),
       customBackgroundColor: this.customBackgroundColor,
       customTitleColor: this.customTitleColor,
     };

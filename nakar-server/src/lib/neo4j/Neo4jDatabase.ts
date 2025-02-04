@@ -1,12 +1,5 @@
 import { Neo4jLoginCredentials } from './Neo4jLoginCredentials';
-import neo4j, {
-  auth,
-  driver as createDriver,
-  Driver,
-  QueryResult,
-  RecordShape,
-  Session,
-} from 'neo4j-driver';
+import neo4j, { auth, driver as createDriver, Driver, QueryResult, RecordShape, Session } from 'neo4j-driver';
 import { Neo4jGraphElements } from './Neo4jGraphElements';
 import { SSet } from '../tools/Set';
 
@@ -17,25 +10,17 @@ export class Neo4jDatabase {
     this._loginCredentials = loginCredentials;
   }
 
-  public async executeQuery(
-    query: string,
-    parameters?: Record<string, unknown>,
-  ): Promise<Neo4jGraphElements> {
+  public async executeQuery(query: string, parameters?: Record<string, unknown>): Promise<Neo4jGraphElements> {
     const driver: Driver = createDriver(
       this._loginCredentials.url,
-      auth.basic(
-        this._loginCredentials.username,
-        this._loginCredentials.password,
-      ),
+      auth.basic(this._loginCredentials.username, this._loginCredentials.password),
     );
     try {
       const session: Session = driver.session({
         defaultAccessMode: neo4j.session.READ,
       });
       try {
-        const result: QueryResult = await session.run<
-          RecordShape<string, unknown>
-        >(query, parameters);
+        const result: QueryResult = await session.run<RecordShape<string, unknown>>(query, parameters);
 
         return Neo4jGraphElements.fromQueryResult(result);
       } catch (error) {
@@ -48,13 +33,13 @@ export class Neo4jDatabase {
     }
   }
 
-  public async loadConnectingRelationships(
-    nodeIds: SSet<string>,
-  ): Promise<Neo4jGraphElements> {
-    const nodesIds = [...nodeIds.values()];
-    const additional = await this.executeQuery(
+  public async loadConnectingRelationships(nodeIds: SSet<string>): Promise<Neo4jGraphElements> {
+    const nodesIds: string[] = [...nodeIds.values()];
+    const additional: Neo4jGraphElements = await this.executeQuery(
       'MATCH (a)-[additionalRelationship]->(b) WHERE elementId(a) IN $existingNodeIds AND elementId(b) IN $existingNodeIds RETURN additionalRelationship;',
-      { existingNodeIds: nodesIds },
+      {
+        existingNodeIds: nodesIds,
+      },
     );
     return additional;
   }

@@ -20,7 +20,7 @@ export class SSet<T> extends Set<T> {
   }
 
   public byMerging(other: SSet<T>): SSet<T> {
-    const result = this.copy();
+    const result: SSet<T> = this.copy();
     for (const value of other) {
       result.add(value);
     }
@@ -28,7 +28,7 @@ export class SSet<T> extends Set<T> {
   }
 
   public reduce<U>(callback: (akku: U, next: T) => U, start: U): U {
-    let accumulator = start;
+    let accumulator: U = start;
     for (const value of this) {
       accumulator = callback(accumulator, value);
     }
@@ -36,7 +36,7 @@ export class SSet<T> extends Set<T> {
   }
 
   public filter(callback: (element: T) => boolean): SSet<T> {
-    const result = new SSet<T>();
+    const result: SSet<T> = new SSet<T>();
     for (const value of this) {
       if (callback(value)) {
         result.add(value);

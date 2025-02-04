@@ -11,7 +11,7 @@ export class ApplyLabels extends TransformTask {
   protected run(input: MutableGraph): void {
     for (const node of input.nodes.values()) {
       for (const label of node.labels) {
-        const foundEntry = input.metaData.labels.get(label);
+        const foundEntry: MutableGraphLabel | undefined = input.metaData.labels.get(label);
 
         if (!foundEntry) {
           input.metaData.labels.set(

@@ -1,9 +1,6 @@
 import { Server, Socket } from './WebSocketsManager';
 import { match, P } from 'ts-pattern';
-import {
-  SchemaWsClientToServerMessage,
-  SchemaWsServerToClientMessage,
-} from '../../../src-gen/schema';
+import { SchemaWsClientToServerMessage, SchemaWsServerToClientMessage } from '../../../src-gen/schema';
 import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { DisconnectReason } from 'socket.io';
 
@@ -11,13 +8,17 @@ export class WSClient {
   private _socket: Socket;
   private _server: Server;
 
-  private readonly _room = new BehaviorSubject<string | null>(null);
-  private readonly _onMessage = new Subject<SchemaWsClientToServerMessage>();
-  private readonly _onDisconnect = new Subject<DisconnectReason>();
+  private readonly _room: BehaviorSubject<string | null>;
+  private readonly _onMessage: Subject<SchemaWsClientToServerMessage>;
+  private readonly _onDisconnect: Subject<DisconnectReason>;
 
   public constructor(socket: Socket, server: Server) {
     this._socket = socket;
     this._server = server;
+
+    this._room = new BehaviorSubject<string | null>(null);
+    this._onMessage = new Subject<SchemaWsClientToServerMessage>();
+    this._onDisconnect = new Subject<DisconnectReason>();
 
     socket
       .on('message', (message: SchemaWsClientToServerMessage) => {
@@ -50,8 +51,8 @@ export class WSClient {
 
   public sendError(error: unknown): void {
     const errorMessage: string = match(error)
-      .with(P.instanceOf(Error), (e) => e.message)
-      .otherwise((e) => JSON.stringify(e));
+      .with(P.instanceOf(Error), (e: Error) => e.message)
+      .otherwise((e: unknown) => JSON.stringify(e));
     this.send({
       type: 'WSEventNotification',
       severity: 'error',
@@ -66,15 +67,12 @@ export class WSClient {
   }
 
   public async join(roomId: string): Promise<void> {
-    const oldRoom = this.room;
-    if (oldRoom === roomId) {
+    if (this.room === roomId) {
       return;
     }
-    if (oldRoom != null) {
-      await this._socket.leave(oldRoom);
-      strapi.log.debug(
-        `Socket ${this.id} had to leave room ${oldRoom} to join ${roomId}`,
-      );
+    if (this.room != null) {
+      strapi.log.debug(`Socket ${this.id} will have to leave room ${this.room} to join ${roomId}`);
+      await this._socket.leave(this.room);
     }
 
     await this._socket.join(roomId);
@@ -82,18 +80,16 @@ export class WSClient {
   }
 
   public sendToRoom(message: SchemaWsServerToClientMessage): void {
-    const roomId = this.room;
-    if (roomId == null) {
+    if (this.room == null) {
       return;
     }
-    this._server.to(roomId).emit('message', message);
+    this._server.to(this.room).emit('message', message);
   }
 
   public broadcastToRoom(message: SchemaWsServerToClientMessage): void {
-    const roomId = this.room;
-    if (roomId == null) {
+    if (this.room == null) {
       return;
     }
-    this._socket.broadcast.to(roomId).emit('message', message);
+    this._socket.broadcast.to(this.room).emit('message', message);
   }
 }

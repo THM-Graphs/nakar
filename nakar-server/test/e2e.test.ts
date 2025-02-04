@@ -17,9 +17,7 @@ describe('GET /api/frontend/initial-graph', () => {
   });
 
   it('404 (scenario not found)', async () => {
-    const response = await server.get(
-      '/api/frontend/initial-graph?scenarioId=notfound',
-    );
+    const response = await server.get('/api/frontend/initial-graph?scenarioId=notfound');
     expect(response.status).toStrictEqual(404);
     expect(response.body).toStrictEqual({
       status: 404,
@@ -29,9 +27,7 @@ describe('GET /api/frontend/initial-graph', () => {
   });
 
   it('200', async () => {
-    const response = await server.get(
-      `/api/frontend/initial-graph?scenarioId=${scenarioId}`,
-    );
+    const response = await server.get(`/api/frontend/initial-graph?scenarioId=${scenarioId}`);
     expect(response.status).toStrictEqual(200);
   });
 });
@@ -45,9 +41,7 @@ describe('GET /api/frontend/scenarios', () => {
 
 describe('GET /api/frontend/database-structure', () => {
   it('404 (database not found)', async () => {
-    const response = await server.get(
-      `/api/frontend/database-structure?databaseId=notfound`,
-    );
+    const response = await server.get(`/api/frontend/database-structure?databaseId=notfound`);
     expect(response.status).toStrictEqual(404);
     expect(response.body).toStrictEqual({
       status: 404,
@@ -67,9 +61,7 @@ describe('GET /api/frontend/database-structure', () => {
   });
 
   it('200', async () => {
-    const response = await server.get(
-      `/api/frontend/database-structure?databaseId=${databaseId}`,
-    );
+    const response = await server.get(`/api/frontend/database-structure?databaseId=${databaseId}`);
     expect(response.status).toStrictEqual(200);
   });
 });

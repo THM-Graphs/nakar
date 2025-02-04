@@ -1,4 +1,4 @@
-import { auditTime, Observable, Subject } from 'rxjs';
+import { auditTime, Observable, Subject, Subscription } from 'rxjs';
 import { MutableGraph } from '../graph/MutableGraph';
 import { SMap } from '../tools/Map';
 import { RoomState } from './RoomState';
@@ -36,9 +36,9 @@ export class RoomStateMachine {
 
   public setData(roomId: string, graph: MutableGraph): void {
     this._cleanupOldState(roomId);
-    const physics = new PhysicsSimulation(graph);
+    const physics: PhysicsSimulation = new PhysicsSimulation(graph);
 
-    const subscription = physics.onSlowTick
+    const subscription: Subscription = physics.onSlowTick
       .pipe(auditTime((1 / PhysicsSimulation.FPS) * 1000))
       .subscribe(() => {
         this._onRoomPhysicsUpdates.next(roomId);
@@ -59,7 +59,7 @@ export class RoomStateMachine {
   }
 
   private _cleanupOldState(roomId: string): void {
-    const oldState = this._state.get(roomId);
+    const oldState: RoomState | undefined = this._state.get(roomId);
     if (oldState == null) {
       return;
     }

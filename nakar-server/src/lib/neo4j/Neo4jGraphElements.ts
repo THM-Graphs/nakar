@@ -1,17 +1,8 @@
 import { Neo4jNode } from './Neo4jNode';
 import { Neo4jRelationship } from './Neo4jRelationship';
-import {
-  isInt,
-  isNode,
-  isPath,
-  isRelationship,
-  Node,
-  QueryResult,
-  RecordShape,
-  Relationship,
-} from 'neo4j-driver';
+import { isInt, isNode, isPath, isRelationship, Node, QueryResult, RecordShape, Relationship } from 'neo4j-driver';
 import { match, P } from 'ts-pattern';
-import { Record as Neo4jRecord } from 'neo4j-driver-core';
+import { Record as Neo4jRecord, PathSegment } from 'neo4j-driver-core';
 import { SMap } from '../tools/Map';
 
 export class Neo4jGraphElements {
@@ -37,19 +28,14 @@ export class Neo4jGraphElements {
     });
   }
 
-  public static mergeMultiple(
-    ...graphElements: Neo4jGraphElements[]
-  ): Neo4jGraphElements {
+  public static mergeMultiple(...graphElements: Neo4jGraphElements[]): Neo4jGraphElements {
     return graphElements.reduce(
-      (akku, next) => akku.byMergingWith(next),
+      (akku: Neo4jGraphElements, next: Neo4jGraphElements) => akku.byMergingWith(next),
       Neo4jGraphElements.empty(),
     );
   }
 
-  public static fromRawNode(
-    node: Node,
-    key: string | null,
-  ): Neo4jGraphElements {
+  public static fromRawNode(node: Node, key: string | null): Neo4jGraphElements {
     return new Neo4jGraphElements({
       nodes: new SMap([[node.elementId, Neo4jNode.fromRawNode(node, key)]]),
       relationships: new SMap(),
@@ -57,25 +43,15 @@ export class Neo4jGraphElements {
     });
   }
 
-  public static fromRawRelationship(
-    relationship: Relationship,
-    key: string | null,
-  ): Neo4jGraphElements {
+  public static fromRawRelationship(relationship: Relationship, key: string | null): Neo4jGraphElements {
     return new Neo4jGraphElements({
-      relationships: new SMap([
-        [
-          relationship.elementId,
-          Neo4jRelationship.fromRawRelationship(relationship, key),
-        ],
-      ]),
+      relationships: new SMap([[relationship.elementId, Neo4jRelationship.fromRawRelationship(relationship, key)]]),
       nodes: new SMap(),
       tableData: [],
     });
   }
 
-  public static fromTableData(
-    tableData: SMap<string, unknown>[],
-  ): Neo4jGraphElements {
+  public static fromTableData(tableData: SMap<string, unknown>[]): Neo4jGraphElements {
     return new Neo4jGraphElements({
       nodes: new SMap(),
       relationships: new SMap(),
@@ -90,7 +66,7 @@ export class Neo4jGraphElements {
       return Neo4jGraphElements.fromRawRelationship(field, key);
     } else if (isPath(field)) {
       return Neo4jGraphElements.mergeMultiple(
-        ...field.segments.map((segment) => {
+        ...field.segments.map((segment: PathSegment) => {
           return Neo4jGraphElements.mergeMultiple(
             Neo4jGraphElements.fromRawNode(segment.start, null),
             Neo4jGraphElements.fromRawNode(segment.end, null),
@@ -101,14 +77,9 @@ export class Neo4jGraphElements {
     } else {
       // TODO: match everything
       return match(field)
-        .with(P.array(), (a) => Neo4jGraphElements.fromFields(key, a))
-        .with(P.map(), (o) =>
-          Neo4jGraphElements.fromFields(key, Object.values(o)),
-        )
+        .with(P.array(), (a: unknown[]) => Neo4jGraphElements.fromFields(key, a))
         .otherwise(() => {
-          strapi.log.debug(
-            `Unable to collect nodes and edges from field: ${JSON.stringify(field)}`,
-          );
+          strapi.log.debug(`Unable to collect nodes and edges from field: ${JSON.stringify(field)}`);
           return Neo4jGraphElements.empty();
         });
     }
@@ -116,30 +87,26 @@ export class Neo4jGraphElements {
 
   public static fromFields(key: string, fields: unknown[]): Neo4jGraphElements {
     return Neo4jGraphElements.mergeMultiple(
-      ...fields.map((subField) => Neo4jGraphElements.fromField(key, subField)),
+      ...fields.map((subField: unknown) => Neo4jGraphElements.fromField(key, subField)),
     );
   }
 
-  public static fromQueryResult(
-    queryResult: QueryResult<RecordShape<string, unknown>>,
-  ): Neo4jGraphElements {
+  public static fromQueryResult(queryResult: QueryResult<RecordShape<string, unknown>>): Neo4jGraphElements {
     return Neo4jGraphElements.mergeMultiple(
-      ...queryResult.records.map((record) =>
+      ...queryResult.records.map((record: Neo4jRecord<RecordShape<string, unknown>>) =>
         Neo4jGraphElements.fromRecord(record),
       ),
     );
   }
 
-  public static fromRecord(
-    record: Neo4jRecord<RecordShape<string, unknown>>,
-  ): Neo4jGraphElements {
-    const results = record.keys.map((key) =>
+  public static fromRecord(record: Neo4jRecord<RecordShape<string, unknown>>): Neo4jGraphElements {
+    const results: Neo4jGraphElements[] = record.keys.map((key: string) =>
       Neo4jGraphElements.fromField(key, record.get(key)),
     );
 
-    const tableDataEntry = record.keys.reduce<SMap<string, unknown>>(
-      (akku, next) => {
-        const value = record.get(next);
+    const tableDataEntry: SMap<string, unknown> = record.keys.reduce<SMap<string, unknown>>(
+      (akku: SMap<string, unknown>, next: string) => {
+        const value: unknown = record.get(next);
         if (isInt(value)) {
           return akku.bySetting(next, value.toString());
         } else {
@@ -150,15 +117,12 @@ export class Neo4jGraphElements {
       new SMap(),
     );
 
-    return Neo4jGraphElements.mergeMultiple(
-      ...results,
-      Neo4jGraphElements.fromTableData([tableDataEntry]),
-    );
+    return Neo4jGraphElements.mergeMultiple(...results, Neo4jGraphElements.fromTableData([tableDataEntry]));
   }
 
   public byMergingWith(other: Neo4jGraphElements): Neo4jGraphElements {
-    const nodes = new SMap<string, Neo4jNode>();
-    const relationships = new SMap<string, Neo4jRelationship>();
+    const nodes: SMap<string, Neo4jNode> = new SMap<string, Neo4jNode>();
+    const relationships: SMap<string, Neo4jRelationship> = new SMap<string, Neo4jRelationship>();
     const tableData: SMap<string, unknown>[] = [];
 
     for (const [id, node] of this.nodes.entries()) {
@@ -172,7 +136,7 @@ export class Neo4jGraphElements {
     }
 
     for (const [otherId, otherNode] of other.nodes.entries()) {
-      const existingNode = nodes.get(otherId);
+      const existingNode: Neo4jNode | undefined = nodes.get(otherId);
       if (existingNode == null) {
         nodes.set(otherId, otherNode);
       } else {
@@ -180,14 +144,11 @@ export class Neo4jGraphElements {
       }
     }
     for (const [otherId, otherRelationship] of other.relationships.entries()) {
-      const existingRelationship = relationships.get(otherId);
+      const existingRelationship: Neo4jRelationship | undefined = relationships.get(otherId);
       if (existingRelationship == null) {
         relationships.set(otherId, otherRelationship);
       } else {
-        relationships.set(
-          otherId,
-          existingRelationship.byMergingWith(otherRelationship),
-        );
+        relationships.set(otherId, existingRelationship.byMergingWith(otherRelationship));
       }
     }
     for (const tableDataEntry of other.tableData) {

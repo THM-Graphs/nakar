@@ -13,15 +13,15 @@ export class Layout extends TransformTask {
       return;
     }
 
-    const cimulation = new PhysicsSimulation(input);
-    const start = Date.now();
+    const cimulation: PhysicsSimulation = new PhysicsSimulation(input);
+    const start: number = Date.now();
     cimulation.start();
 
     await wait(2000);
 
     cimulation.stop();
-    const end = Date.now();
-    const ticksPerSecs = cimulation.tickCount / ((end - start) / 1000);
+    const end: number = Date.now();
+    const ticksPerSecs: number = cimulation.tickCount / ((end - start) / 1000);
     strapi.log.debug(`Ticks per seconds: ${ticksPerSecs.toFixed(2)}`);
   }
 }

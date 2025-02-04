@@ -20,7 +20,7 @@ export class DBMedia {
     if (this.url == null) {
       return null;
     }
-    const host = strapi.config.get<string | null>('server.url', null);
+    const host: string | null = strapi.config.get<string | null>('server.url', null);
     if (host == null) {
       return null;
     }

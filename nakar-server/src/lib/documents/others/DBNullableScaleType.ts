@@ -11,7 +11,7 @@ export class DBNullableScaleType {
   public static parseOrDefault(
     input: 'inherit' | 'linear' | 'log2' | 'logn' | 'log10' | null | undefined,
   ): DBNullableScaleType {
-    const value = match(input)
+    const value: ScaleType | null = match(input)
       .with(P.nullish, () => null)
       .with('inherit', () => null)
       .with('linear', () => ScaleType.linear)

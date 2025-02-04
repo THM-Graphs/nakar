@@ -6,11 +6,7 @@ export class DBRoom {
   public readonly title: string | null;
   public readonly graphJson: string | null;
 
-  public constructor(data: {
-    documentId: string;
-    title: string | null;
-    graphJson: string | null;
-  }) {
+  public constructor(data: { documentId: string; title: string | null; graphJson: string | null }) {
     this.documentId = data.documentId;
     this.title = data.title;
     this.graphJson = data.graphJson;

@@ -6,10 +6,7 @@ export class FinalGraphDisplayConfiguration {
   public readonly connectResultNodes: boolean;
   public readonly growNodesBasedOnDegree: boolean;
   public readonly growNodesBasedOnDegreeFactor: number;
-  public readonly nodeDisplayConfigurations: SMap<
-    string,
-    FinalNodeDisplayConfiguration
-  >;
+  public readonly nodeDisplayConfigurations: SMap<string, FinalNodeDisplayConfiguration>;
   public readonly compressRelationships: boolean;
   public readonly compressRelationshipsWidthFactor: number;
   public readonly scaleType: ScaleType;
@@ -28,8 +25,7 @@ export class FinalGraphDisplayConfiguration {
     this.growNodesBasedOnDegreeFactor = data.growNodesBasedOnDegreeFactor;
     this.nodeDisplayConfigurations = data.nodeDisplayConfigurations;
     this.compressRelationships = data.compressRelationships;
-    this.compressRelationshipsWidthFactor =
-      data.compressRelationshipsWidthFactor;
+    this.compressRelationshipsWidthFactor = data.compressRelationshipsWidthFactor;
     this.scaleType = data.scaleType;
   }
 }

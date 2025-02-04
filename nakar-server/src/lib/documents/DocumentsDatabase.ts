@@ -19,13 +19,11 @@ export class DocumentsDatabase {
           },
         },
       })
-    ).map((database: Result<'api::database.database'>) =>
-      DBDatabase.parse(database),
-    );
+    ).map((database: Result<'api::database.database'>) => DBDatabase.parse(database));
   }
 
   public async getRoom(roomId: string): Promise<DBRoom | null> {
-    const rawRoom = await strapi.documents('api::room.room').findOne({
+    const rawRoom: Result<'api::room.room'> | null = await strapi.documents('api::room.room').findOne({
       status: 'published',
       documentId: roomId,
     });
@@ -45,7 +43,12 @@ export class DocumentsDatabase {
   }
 
   public async getScenario(scenarioId: string): Promise<DBScenario | null> {
-    const result = await strapi.documents('api::scenario.scenario').findOne({
+    const result: Result<
+      'api::scenario.scenario',
+      {
+        populate: ['graphDisplayConfiguration', 'scenarioGroup'];
+      }
+    > | null = await strapi.documents('api::scenario.scenario').findOne({
       status: 'published',
       documentId: scenarioId,
       populate: {
@@ -120,14 +123,10 @@ export class DocumentsDatabase {
           },
         },
       })
-    ).map((scenario: Result<'api::scenario.scenario'>) =>
-      DBScenario.parse(scenario),
-    );
+    ).map((scenario: Result<'api::scenario.scenario'>) => DBScenario.parse(scenario));
   }
 
-  public async getScenarioGroups(
-    databaseId: string,
-  ): Promise<DBScenarioGroup[]> {
+  public async getScenarioGroups(databaseId: string): Promise<DBScenarioGroup[]> {
     return (
       await strapi.documents('api::scenario-group.scenario-group').findMany({
         status: 'published',
@@ -156,13 +155,11 @@ export class DocumentsDatabase {
           },
         },
       })
-    ).map((scenarioGroup: Result<'api::scenario-group.scenario-group'>) =>
-      DBScenarioGroup.parse(scenarioGroup),
-    );
+    ).map((scenarioGroup: Result<'api::scenario-group.scenario-group'>) => DBScenarioGroup.parse(scenarioGroup));
   }
 
   public async setRoomGraph(room: DBRoom, graph: MutableGraph): Promise<void> {
-    const graphJson = JSON.stringify(graph.toPlain());
+    const graphJson: string = JSON.stringify(graph.toPlain());
     await strapi.documents('api::room.room').update({
       documentId: room.documentId,
       data: {

@@ -3,11 +3,7 @@ import tseslint from 'typescript-eslint';
 import eslintConfigPrettier from 'eslint-plugin-prettier/recommended';
 
 export default tseslint.config({
-  files: [
-    '{src,config,database,types,test}/**/*.{ts,tsx}',
-    'eslint.config.mjs',
-    'babel.config.js',
-  ],
+  files: ['{src,config,database,types,test}/**/*.{ts,tsx}', 'eslint.config.mjs', 'babel.config.js'],
   ignores: ['{src/admin,types/generated,dist}/**'],
   extends: [
     eslint.configs.recommended,
@@ -29,6 +25,7 @@ export default tseslint.config({
         tabWidth: 2,
         semi: true,
         singleQuote: true,
+        printWidth: 120,
       },
     ],
     '@typescript-eslint/no-unsafe-type-assertion': ['error'],
@@ -49,7 +46,7 @@ export default tseslint.config({
         objectDestructuring: true,
         parameter: true,
         propertyDeclaration: true,
-        variableDeclaration: false,
+        variableDeclaration: true,
         variableDeclarationIgnoreFunction: true,
       },
     ],

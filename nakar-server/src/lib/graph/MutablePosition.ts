@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 export class MutablePosition {
+  // eslint-disable-next-line @typescript-eslint/typedef
   public static readonly schema = z.object({
     x: z.number(),
     y: z.number(),
@@ -22,7 +23,7 @@ export class MutablePosition {
   }
 
   public static fromPlain(input: unknown): MutablePosition {
-    const data = MutablePosition.schema.parse(input);
+    const data: z.infer<typeof this.schema> = MutablePosition.schema.parse(input);
     return new MutablePosition({
       x: data.x,
       y: data.y,

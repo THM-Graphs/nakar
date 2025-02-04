@@ -5,7 +5,9 @@ import { z } from 'zod';
 import { SSet } from '../tools/Set';
 
 export class MutableEdge {
-  public static readonly defaultWidth = 2;
+  public static readonly defaultWidth: number = 2;
+
+  // eslint-disable-next-line @typescript-eslint/typedef
   public static readonly schema = z.object({
     startNodeId: z.string(),
     endNodeId: z.string(),
@@ -63,15 +65,13 @@ export class MutableEdge {
       parallelIndex: 0,
       compressedCount: 1,
       width: MutableEdge.defaultWidth,
-      properties: MutablePropertyCollection.create(
-        relationship.relationship.properties,
-      ),
+      properties: MutablePropertyCollection.create(relationship.relationship.properties),
       namesInQuery: relationship.keys,
     });
   }
 
   public static fromPlain(input: unknown): MutableEdge {
-    const data = MutableEdge.schema.parse(input);
+    const data: z.infer<typeof MutableEdge.schema> = MutableEdge.schema.parse(input);
     return new MutableEdge({
       startNodeId: data.startNodeId,
       endNodeId: data.endNodeId,
@@ -103,10 +103,8 @@ export class MutableEdge {
 
   public isParallelTo(other: MutableEdge): boolean {
     return (
-      (this.startNodeId === other.startNodeId &&
-        this.endNodeId === other.endNodeId) ||
-      (this.startNodeId === other.endNodeId &&
-        this.endNodeId === other.startNodeId)
+      (this.startNodeId === other.startNodeId && this.endNodeId === other.endNodeId) ||
+      (this.startNodeId === other.endNodeId && this.endNodeId === other.startNodeId)
     );
   }
 
