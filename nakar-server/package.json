@@ -9,7 +9,7 @@
     "develop": "npm run build:gen && strapi develop",
     "start": "npm run build && strapi start",
     "lint": "eslint src",
-    "lint:fix": "eslint --fix .",
+    "lint:fix": "eslint --fix src",
     "audit": "npm audit --audit-level high",
     "test": "jest",
     "export": "strapi export --no-compress --no-encrypt -f export",
