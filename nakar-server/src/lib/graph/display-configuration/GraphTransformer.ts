@@ -33,7 +33,10 @@ export class GraphTransformer {
   private readonly _database: Neo4jDatabase;
   private readonly _onProgress: Subject<GraphTransformerProgress>;
 
-  public constructor(config: FinalGraphDisplayConfiguration, database: Neo4jDatabase) {
+  public constructor(
+    config: FinalGraphDisplayConfiguration,
+    database: Neo4jDatabase,
+  ) {
     this._onProgress = new Subject();
     this._config = config;
     this._database = database;
@@ -56,6 +59,11 @@ export class GraphTransformer {
   }
 
   private _sendProgressUpdate(task: TransformTask): void {
-    this._onProgress.next(new GraphTransformerProgress(GraphTransformer._tasks.indexOf(task), task.title));
+    this._onProgress.next(
+      new GraphTransformerProgress(
+        GraphTransformer._tasks.indexOf(task),
+        task.title,
+      ),
+    );
   }
 }

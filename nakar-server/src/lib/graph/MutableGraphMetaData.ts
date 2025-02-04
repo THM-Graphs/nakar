@@ -15,7 +15,10 @@ export class MutableGraphMetaData {
   public labels: SMap<string, MutableGraphLabel>;
   public scenarioInfo: MutableScenarioInfo;
 
-  public constructor(data: { labels: SMap<string, MutableGraphLabel>; scenarioInfo: MutableScenarioInfo }) {
+  public constructor(data: {
+    labels: SMap<string, MutableGraphLabel>;
+    scenarioInfo: MutableScenarioInfo;
+  }) {
     this.labels = data.labels;
     this.scenarioInfo = data.scenarioInfo;
   }
@@ -28,10 +31,12 @@ export class MutableGraphMetaData {
   }
 
   public static fromPlain(input: unknown): MutableGraphMetaData {
-    const data: z.infer<typeof this.schema> = MutableGraphMetaData.schema.parse(input);
+    const data: z.infer<typeof this.schema> =
+      MutableGraphMetaData.schema.parse(input);
     return new MutableGraphMetaData({
       labels: SMap.fromRecord(data.labels).map(
-        (l: z.infer<typeof MutableGraphLabel.schema>): MutableGraphLabel => MutableGraphLabel.fromPlain(l),
+        (l: z.infer<typeof MutableGraphLabel.schema>): MutableGraphLabel =>
+          MutableGraphLabel.fromPlain(l),
       ),
       scenarioInfo: MutableScenarioInfo.fromPlain(data.scenarioInfo),
     });
@@ -48,7 +53,10 @@ export class MutableGraphMetaData {
     return {
       labels: this.labels
         .toArray()
-        .map(([id, label]: [string, MutableGraphLabel]): SchemaGraphLabel => label.toDto(id)),
+        .map(
+          ([id, label]: [string, MutableGraphLabel]): SchemaGraphLabel =>
+            label.toDto(id),
+        ),
       scenarioInfo: this.scenarioInfo.toDto(),
     };
   }
@@ -56,7 +64,10 @@ export class MutableGraphMetaData {
   public toPlain(): z.infer<typeof MutableGraphMetaData.schema> {
     return {
       labels: this.labels
-        .map((v: MutableGraphLabel): z.infer<typeof MutableGraphLabel.schema> => v.toPlain())
+        .map(
+          (v: MutableGraphLabel): z.infer<typeof MutableGraphLabel.schema> =>
+            v.toPlain(),
+        )
         .toRecord(),
       scenarioInfo: this.scenarioInfo.toPlain(),
     };

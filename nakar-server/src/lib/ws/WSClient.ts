@@ -1,6 +1,9 @@
 import { Server, Socket } from './WebSocketsManager';
 import { match, P } from 'ts-pattern';
-import { SchemaWsClientToServerMessage, SchemaWsServerToClientMessage } from '../../../src-gen/schema';
+import {
+  SchemaWsClientToServerMessage,
+  SchemaWsServerToClientMessage,
+} from '../../../src-gen/schema';
 import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { DisconnectReason } from 'socket.io';
 
@@ -71,7 +74,9 @@ export class WSClient {
       return;
     }
     if (this.room != null) {
-      strapi.log.debug(`Socket ${this.id} will have to leave room ${this.room} to join ${roomId}`);
+      strapi.log.debug(
+        `Socket ${this.id} will have to leave room ${this.room} to join ${roomId}`,
+      );
       await this._socket.leave(this.room);
     }
 

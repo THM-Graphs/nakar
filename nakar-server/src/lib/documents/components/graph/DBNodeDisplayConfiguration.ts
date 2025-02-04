@@ -18,7 +18,9 @@ export class DBNodeDisplayConfiguration {
     this.backgroundColor = data.backgroundColor;
   }
 
-  public static parse(db: Result<'graph.node-display-configuration'>): DBNodeDisplayConfiguration {
+  public static parse(
+    db: Result<'graph.node-display-configuration'>,
+  ): DBNodeDisplayConfiguration {
     return new DBNodeDisplayConfiguration({
       targetLabel: db.targetLabel ?? null,
       displayText: db.displayText ?? null,

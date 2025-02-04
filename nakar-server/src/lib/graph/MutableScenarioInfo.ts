@@ -31,7 +31,9 @@ export class MutableScenarioInfo {
     });
   }
 
-  public static fromPlain(scenarioInfo: z.infer<typeof MutableScenarioInfo.schema>): MutableScenarioInfo {
+  public static fromPlain(
+    scenarioInfo: z.infer<typeof MutableScenarioInfo.schema>,
+  ): MutableScenarioInfo {
     return new MutableScenarioInfo({
       id: scenarioInfo.id,
       title: scenarioInfo.title,

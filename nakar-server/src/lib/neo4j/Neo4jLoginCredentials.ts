@@ -5,7 +5,11 @@ export class Neo4jLoginCredentials {
   public readonly username: string;
   public readonly password: string;
 
-  public constructor(data: { url: string; username: string; password: string }) {
+  public constructor(data: {
+    url: string;
+    username: string;
+    password: string;
+  }) {
     this.url = data.url;
     this.username = data.username;
     this.password = data.password;

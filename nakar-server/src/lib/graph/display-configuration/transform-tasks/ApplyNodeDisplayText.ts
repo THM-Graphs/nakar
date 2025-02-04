@@ -9,10 +9,14 @@ export class ApplyNodeDisplayText extends TransformTask {
     super('Apply Node Displa yText');
   }
 
-  protected run(input: MutableGraph, config: FinalGraphDisplayConfiguration): void {
+  protected run(
+    input: MutableGraph,
+    config: FinalGraphDisplayConfiguration,
+  ): void {
     for (const [nodeId, node] of input.nodes.entries()) {
       for (const label of node.labels) {
-        const nodeConfig: FinalNodeDisplayConfiguration | undefined = config.nodeDisplayConfigurations.get(label);
+        const nodeConfig: FinalNodeDisplayConfiguration | undefined =
+          config.nodeDisplayConfigurations.get(label);
         if (nodeConfig == null) {
           continue;
         }
@@ -20,9 +24,10 @@ export class ApplyNodeDisplayText extends TransformTask {
           continue;
         }
 
-        const newValue: string = NodeDisplayConfigurationContext.create(nodeId, node).applyToTemplate(
-          nodeConfig.displayTextTemplate,
-        );
+        const newValue: string = NodeDisplayConfigurationContext.create(
+          nodeId,
+          node,
+        ).applyToTemplate(nodeConfig.displayTextTemplate);
         if (newValue.trim().length === 0) {
           continue;
         }

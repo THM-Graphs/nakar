@@ -14,7 +14,9 @@ export class ApplyEdgeParallelCounts extends TransformTask {
       }
       const parallelEdges: [string, MutableEdge][] = input.edges
         .toArray()
-        .filter(([, other]: [string, MutableEdge]): boolean => edge.isParallelTo(other));
+        .filter(([, other]: [string, MutableEdge]): boolean =>
+          edge.isParallelTo(other),
+        );
       const parallelCount: number = parallelEdges.length;
 
       for (const [index, [, parallelEdge]] of parallelEdges.entries()) {
@@ -40,7 +42,9 @@ export class ApplyEdgeParallelCounts extends TransformTask {
             }
           }
 
-          if (parallelEdge.startNodeId.localeCompare(parallelEdge.endNodeId) > 0) {
+          if (
+            parallelEdge.startNodeId.localeCompare(parallelEdge.endNodeId) > 0
+          ) {
             parallelEdge.parallelIndex = -parallelEdge.parallelIndex;
           }
         }

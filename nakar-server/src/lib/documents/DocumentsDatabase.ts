@@ -19,14 +19,19 @@ export class DocumentsDatabase {
           },
         },
       })
-    ).map((database: Result<'api::database.database'>): DBDatabase => DBDatabase.parse(database));
+    ).map(
+      (database: Result<'api::database.database'>): DBDatabase =>
+        DBDatabase.parse(database),
+    );
   }
 
   public async getRoom(roomId: string): Promise<DBRoom | null> {
-    const rawRoom: Result<'api::room.room'> | null = await strapi.documents('api::room.room').findOne({
-      status: 'published',
-      documentId: roomId,
-    });
+    const rawRoom: Result<'api::room.room'> | null = await strapi
+      .documents('api::room.room')
+      .findOne({
+        status: 'published',
+        documentId: roomId,
+      });
     if (rawRoom == null) {
       return null;
     }
@@ -123,10 +128,15 @@ export class DocumentsDatabase {
           },
         },
       })
-    ).map((scenario: Result<'api::scenario.scenario'>): DBScenario => DBScenario.parse(scenario));
+    ).map(
+      (scenario: Result<'api::scenario.scenario'>): DBScenario =>
+        DBScenario.parse(scenario),
+    );
   }
 
-  public async getScenarioGroups(databaseId: string): Promise<DBScenarioGroup[]> {
+  public async getScenarioGroups(
+    databaseId: string,
+  ): Promise<DBScenarioGroup[]> {
     return (
       await strapi.documents('api::scenario-group.scenario-group').findMany({
         status: 'published',
@@ -156,8 +166,9 @@ export class DocumentsDatabase {
         },
       })
     ).map(
-      (scenarioGroup: Result<'api::scenario-group.scenario-group'>): DBScenarioGroup =>
-        DBScenarioGroup.parse(scenarioGroup),
+      (
+        scenarioGroup: Result<'api::scenario-group.scenario-group'>,
+      ): DBScenarioGroup => DBScenarioGroup.parse(scenarioGroup),
     );
   }
 

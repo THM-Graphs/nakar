@@ -9,17 +9,28 @@ export class FinalNodeDisplayConfiguration {
   public readonly radiusTemplate: TemplateDelegate | null;
   public readonly backgroundColorTemplate: TemplateDelegate | null;
 
-  public constructor(data: { displayText: string | null; radius: string | null; backgroundColor: string | null }) {
+  public constructor(data: {
+    displayText: string | null;
+    radius: string | null;
+    backgroundColor: string | null;
+  }) {
     this.displayText = data.displayText;
     this.radius = data.radius;
     this.backgroundColor = data.backgroundColor;
 
-    this.displayTextTemplate = FinalNodeDisplayConfiguration._createTemplate(data.displayText);
-    this.radiusTemplate = FinalNodeDisplayConfiguration._createTemplate(data.radius);
-    this.backgroundColorTemplate = FinalNodeDisplayConfiguration._createTemplate(data.backgroundColor);
+    this.displayTextTemplate = FinalNodeDisplayConfiguration._createTemplate(
+      data.displayText,
+    );
+    this.radiusTemplate = FinalNodeDisplayConfiguration._createTemplate(
+      data.radius,
+    );
+    this.backgroundColorTemplate =
+      FinalNodeDisplayConfiguration._createTemplate(data.backgroundColor);
   }
 
-  private static _createTemplate(input: string | null): TemplateDelegate | null {
+  private static _createTemplate(
+    input: string | null,
+  ): TemplateDelegate | null {
     if (input == null) {
       return null;
     }

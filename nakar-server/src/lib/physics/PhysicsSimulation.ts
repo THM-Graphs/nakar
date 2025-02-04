@@ -37,7 +37,8 @@ export class PhysicsSimulation {
     this._running = true;
     (async (): Promise<void> => {
       let lastWait: number = Date.now();
-      const shouldWaitEveryMs: number = (1 / PhysicsSimulation.FPS) * 1000 * 0.1; // Tenth of frame
+      const shouldWaitEveryMs: number =
+        (1 / PhysicsSimulation.FPS) * 1000 * 0.1; // Tenth of frame
       while (this._running) {
         this._tick();
         if (lastWait + shouldWaitEveryMs < Date.now()) {
@@ -65,14 +66,19 @@ export class PhysicsSimulation {
     }
 
     // Calculate attractive forces
-    const nodeCombinationsHandled: SMap<string, SSet<string>> = new SMap<string, SSet<string>>();
+    const nodeCombinationsHandled: SMap<string, SSet<string>> = new SMap<
+      string,
+      SSet<string>
+    >();
     for (const edge of this._graph.edges.values()) {
       if (edge.isLoop) {
         continue;
       }
 
-      const startNodeId: string = edge.startNodeId < edge.endNodeId ? edge.startNodeId : edge.endNodeId;
-      const endNodeId: string = edge.startNodeId < edge.endNodeId ? edge.endNodeId : edge.startNodeId;
+      const startNodeId: string =
+        edge.startNodeId < edge.endNodeId ? edge.startNodeId : edge.endNodeId;
+      const endNodeId: string =
+        edge.startNodeId < edge.endNodeId ? edge.endNodeId : edge.startNodeId;
 
       const nodeA: MutableNode | undefined = this._graph.nodes.get(startNodeId);
       if (nodeA == null) {
@@ -89,7 +95,8 @@ export class PhysicsSimulation {
       }
 
       let shouldSkip: boolean = false;
-      const foundEntry: SSet<string> | undefined = nodeCombinationsHandled.get(startNodeId);
+      const foundEntry: SSet<string> | undefined =
+        nodeCombinationsHandled.get(startNodeId);
       if (foundEntry == null) {
         nodeCombinationsHandled.set(startNodeId, new SSet([endNodeId]));
       } else {
@@ -104,7 +111,8 @@ export class PhysicsSimulation {
         continue;
       }
 
-      const targetDistance: number = nodeA.radius + edge.type.length * 20 + nodeB.radius;
+      const targetDistance: number =
+        nodeA.radius + edge.type.length * 20 + nodeB.radius;
 
       this._linkForce(targetDistance, nodeA, nodeB);
     }
@@ -123,7 +131,10 @@ export class PhysicsSimulation {
   }
 
   private _positionEquals(nodeA: MutableNode, nodeB: MutableNode): boolean {
-    return nodeA.position.x === nodeB.position.x && nodeA.position.y === nodeB.position.y;
+    return (
+      nodeA.position.x === nodeB.position.x &&
+      nodeA.position.y === nodeB.position.y
+    );
   }
 
   private _jiggle(node: MutableNode): void {
@@ -138,16 +149,20 @@ export class PhysicsSimulation {
 
     const magnitude: number = this._magnitude(node.velocityX, node.velocityY);
     if (magnitude > PhysicsSimulation.maximumVelocity) {
-      node.velocityX = (node.velocityX / magnitude) * PhysicsSimulation.maximumVelocity;
-      node.velocityY = (node.velocityY / magnitude) * PhysicsSimulation.maximumVelocity;
+      node.velocityX =
+        (node.velocityX / magnitude) * PhysicsSimulation.maximumVelocity;
+      node.velocityY =
+        (node.velocityY / magnitude) * PhysicsSimulation.maximumVelocity;
     }
   }
 
   private _applyVelocity(node: MutableNode): void {
     const magnitude: number = this._magnitude(node.velocityX, node.velocityY);
     if (magnitude > PhysicsSimulation.maximumVelocity) {
-      node.velocityX = (node.velocityX / magnitude) * PhysicsSimulation.maximumVelocity;
-      node.velocityX = (node.velocityY / magnitude) * PhysicsSimulation.maximumVelocity;
+      node.velocityX =
+        (node.velocityX / magnitude) * PhysicsSimulation.maximumVelocity;
+      node.velocityX =
+        (node.velocityY / magnitude) * PhysicsSimulation.maximumVelocity;
     }
     node.position.x += node.velocityX;
     node.position.y += node.velocityY;
@@ -175,12 +190,22 @@ export class PhysicsSimulation {
     const directionX: number = nodeA.position.x - nodeB.position.x;
     const directionY: number = nodeA.position.y - nodeB.position.y;
     const magnitude: number = this._magnitude(directionX, directionY);
-    const strength: number = ((this._mass(nodeA) * this._mass(nodeB) * 4) / Math.pow(magnitude, 2)) * 0.00015;
+    const strength: number =
+      ((this._mass(nodeA) * this._mass(nodeB) * 4) / Math.pow(magnitude, 2)) *
+      0.00015;
 
-    this._applyForce(nodeA, (directionX / magnitude) * strength, (directionY / magnitude) * strength);
+    this._applyForce(
+      nodeA,
+      (directionX / magnitude) * strength,
+      (directionY / magnitude) * strength,
+    );
   }
 
-  private _linkForce(targetLength: number, nodeA: MutableNode, nodeB: MutableNode): void {
+  private _linkForce(
+    targetLength: number,
+    nodeA: MutableNode,
+    nodeB: MutableNode,
+  ): void {
     if (this._positionEquals(nodeA, nodeB)) {
       this._jiggle(nodeA);
     }
@@ -191,10 +216,18 @@ export class PhysicsSimulation {
     const strength: number = (targetLength - magnitude) * 0.024;
 
     if (!nodeA.locked) {
-      this._applyForce(nodeA, (directionX / magnitude) * strength, (directionY / magnitude) * strength);
+      this._applyForce(
+        nodeA,
+        (directionX / magnitude) * strength,
+        (directionY / magnitude) * strength,
+      );
     }
     if (!nodeB.locked) {
-      this._applyForce(nodeB, (-directionX / magnitude) * strength, (-directionY / magnitude) * strength);
+      this._applyForce(
+        nodeB,
+        (-directionX / magnitude) * strength,
+        (-directionY / magnitude) * strength,
+      );
     }
   }
 
@@ -209,7 +242,11 @@ export class PhysicsSimulation {
     const strength: number = magnitude * this._mass(node) * 0.00000013;
 
     if (!node.locked) {
-      this._applyForce(node, (directionX / magnitude) * strength, (directionY / magnitude) * strength);
+      this._applyForce(
+        node,
+        (directionX / magnitude) * strength,
+        (directionY / magnitude) * strength,
+      );
     }
   }
 }

@@ -32,7 +32,10 @@ export class DBScenario {
   }
 
   public static parse(
-    db: Result<'api::scenario.scenario', { populate: ['graphDisplayConfiguration', 'scenarioGroup'] }> & {
+    db: Result<
+      'api::scenario.scenario',
+      { populate: ['graphDisplayConfiguration', 'scenarioGroup'] }
+    > & {
       cover?: Result<'plugin::upload.file'> | null;
     },
   ): DBScenario {
@@ -42,8 +45,12 @@ export class DBScenario {
       query: db.query ?? null,
       description: db.description ?? null,
       cover: db.cover != null ? DBMedia.parse(db.cover) : null,
-      scenarioGroup: db.scenarioGroup ? DBScenarioGroup.parse(db.scenarioGroup) : null,
-      graphDisplayConfiguration: DBGraphDisplayConfiguration.parseOrDefault(db.graphDisplayConfiguration),
+      scenarioGroup: db.scenarioGroup
+        ? DBScenarioGroup.parse(db.scenarioGroup)
+        : null,
+      graphDisplayConfiguration: DBGraphDisplayConfiguration.parseOrDefault(
+        db.graphDisplayConfiguration,
+      ),
     });
   }
 

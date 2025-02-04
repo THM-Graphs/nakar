@@ -34,11 +34,16 @@ export class NodeDisplayConfigurationContext {
     };
   }
 
-  public static create(nodeId: string, node: MutableNode): NodeDisplayConfigurationContext {
+  public static create(
+    nodeId: string,
+    node: MutableNode,
+  ): NodeDisplayConfigurationContext {
     return new NodeDisplayConfigurationContext({
       id: nodeId,
       label: NodeDisplayConfigurationContext._toTrueishMap(node.labels),
-      nameInQuery: NodeDisplayConfigurationContext._toTrueishMap(node.namesInQuery),
+      nameInQuery: NodeDisplayConfigurationContext._toTrueishMap(
+        node.namesInQuery,
+      ),
       properties: node.properties.properties,
       degree: node.degree,
       inDegree: node.inDegree,
@@ -48,7 +53,8 @@ export class NodeDisplayConfigurationContext {
 
   private static _toTrueishMap(input: SSet<string>): SMap<string, true> {
     return input.reduce<SMap<string, true>>(
-      (akku: SMap<string, true>, next: string): SMap<string, true> => akku.bySetting(next, true),
+      (akku: SMap<string, true>, next: string): SMap<string, true> =>
+        akku.bySetting(next, true),
       new SMap(),
     );
   }

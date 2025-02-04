@@ -10,7 +10,10 @@ export class CompressRelationships extends TransformTask {
     super('Compress Relationships');
   }
 
-  protected run(input: MutableGraph, config: FinalGraphDisplayConfiguration): void {
+  protected run(
+    input: MutableGraph,
+    config: FinalGraphDisplayConfiguration,
+  ): void {
     if (!config.compressRelationships) {
       return;
     }
@@ -18,29 +21,39 @@ export class CompressRelationships extends TransformTask {
       return;
     }
 
-    const relationships: SMap<string, MutableEdge> = new SMap<string, MutableEdge>();
+    const relationships: SMap<string, MutableEdge> = new SMap<
+      string,
+      MutableEdge
+    >();
 
     for (const [startNodeId] of input.nodes.entries()) {
       for (const [endNodeId] of input.nodes.entries()) {
         const edges: SMap<string, MutableEdge> = input.edges.filter(
-          (e: MutableEdge): boolean => e.startNodeId === startNodeId && e.endNodeId === endNodeId,
+          (e: MutableEdge): boolean =>
+            e.startNodeId === startNodeId && e.endNodeId === endNodeId,
         );
-        const edgeTypes: SMap<string, string> = edges.map((e: MutableEdge): string => e.type);
+        const edgeTypes: SMap<string, string> = edges.map(
+          (e: MutableEdge): string => e.type,
+        );
 
         for (const edgeType of edgeTypes.values()) {
           const count: number = input.edges.filter(
             (e: MutableEdge): boolean =>
-              e.startNodeId === startNodeId && e.endNodeId === endNodeId && e.type === edgeType,
+              e.startNodeId === startNodeId &&
+              e.endNodeId === endNodeId &&
+              e.type === edgeType,
           ).size;
           const firstEdgeEntry: [string, MutableEdge] | null = edges.find(
-            ([, edge]: [string, MutableEdge]): boolean => edge.type === edgeType,
+            ([, edge]: [string, MutableEdge]): boolean =>
+              edge.type === edgeType,
           );
           if (firstEdgeEntry == null) {
             // Should not happen
             strapi.log.error('Did not find edge for merging.');
             continue;
           }
-          const [firstEdgeId, firstEdge]: [string, MutableEdge] = firstEdgeEntry;
+          const [firstEdgeId, firstEdge]: [string, MutableEdge] =
+            firstEdgeEntry;
 
           firstEdge.parallelCount = 1;
           firstEdge.parallelIndex = 0;
@@ -51,7 +64,10 @@ export class CompressRelationships extends TransformTask {
     }
 
     const compressedCounts: number[] = relationships.reduce(
-      (akku: number[], key: string, edge: MutableEdge): number[] => [...akku, edge.compressedCount],
+      (akku: number[], key: string, edge: MutableEdge): number[] => [
+        ...akku,
+        edge.compressedCount,
+      ],
       [],
     );
 
@@ -66,7 +82,11 @@ export class CompressRelationships extends TransformTask {
     });
 
     for (const relationship of relationships.values()) {
-      relationship.width = fromRange.scaleValue(toRange, relationship.compressedCount, config.scaleType);
+      relationship.width = fromRange.scaleValue(
+        toRange,
+        relationship.compressedCount,
+        config.scaleType,
+      );
     }
 
     input.edges = relationships;

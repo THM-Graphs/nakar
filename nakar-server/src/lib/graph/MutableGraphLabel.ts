@@ -19,7 +19,8 @@ export class MutableGraphLabel {
   }
 
   public static fromPlain(input: unknown): MutableGraphLabel {
-    const data: z.infer<typeof this.schema> = MutableGraphLabel.schema.parse(input);
+    const data: z.infer<typeof this.schema> =
+      MutableGraphLabel.schema.parse(input);
     return new MutableGraphLabel({
       color: MutableGraphColorFactory.fromPlain(data.color),
       count: data.count,

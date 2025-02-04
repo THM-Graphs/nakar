@@ -25,7 +25,6 @@ export default tseslint.config({
         tabWidth: 2,
         semi: true,
         singleQuote: true,
-        printWidth: 120,
       },
     ],
     '@typescript-eslint/no-unsafe-type-assertion': ['error'],

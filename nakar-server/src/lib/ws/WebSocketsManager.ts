@@ -1,4 +1,8 @@
-import { DisconnectReason, Server as UntypedServer, Socket as UntypedSocket } from 'socket.io';
+import {
+  DisconnectReason,
+  Server as UntypedServer,
+  Socket as UntypedSocket,
+} from 'socket.io';
 import { Core } from '@strapi/strapi';
 import {
   SchemaWsActionJoinRoom,
@@ -24,7 +28,9 @@ export class WebSocketsManager {
   private readonly _onSocketConnect: Subject<WSClient>;
   private readonly _onSocketDisconnect: Subject<[WSClient, DisconnectReason]>;
   private readonly _onJoinRoom: Subject<[WSClient, SchemaWsActionJoinRoom]>;
-  private readonly _onRunScenario: Subject<[WSClient, SchemaWsActionRunScenario]>;
+  private readonly _onRunScenario: Subject<
+    [WSClient, SchemaWsActionRunScenario]
+  >;
   private readonly _onLockNode: Subject<[WSClient, SchemaWsActionLockNode]>;
   private readonly _onMoveNodes: Subject<[WSClient, SchemaWsActionMoveNodes]>;
   private readonly _onUnlockNode: Subject<[WSClient, SchemaWsActionUnlockNode]>;
@@ -54,29 +60,46 @@ export class WebSocketsManager {
       strapi.log.debug(`New socket ${wsClient.id} connection.`);
       this._onSocketConnect.next(wsClient);
 
-      wsClient.onMessage$.subscribe((message: SchemaWsClientToServerMessage): void => {
-        try {
-          match(message)
-            .with({ type: 'WSActionJoinRoom' }, (m: SchemaWsActionJoinRoom): void => {
-              this._onJoinRoom.next([wsClient, m]);
-            })
-            .with({ type: 'WSActionRunScenario' }, (m: SchemaWsActionRunScenario): void => {
-              this._onRunScenario.next([wsClient, m]);
-            })
-            .with({ type: 'WSActionLockNode' }, (m: SchemaWsActionLockNode): void => {
-              this._onLockNode.next([wsClient, m]);
-            })
-            .with({ type: 'WSActionMoveNodes' }, (m: SchemaWsActionMoveNodes): void => {
-              this._onMoveNodes.next([wsClient, m]);
-            })
-            .with({ type: 'WSActionUnlockNode' }, (m: SchemaWsActionUnlockNode): void => {
-              this._onUnlockNode.next([wsClient, m]);
-            })
-            .exhaustive();
-        } catch (error: unknown) {
-          wsClient.sendError(error);
-        }
-      });
+      wsClient.onMessage$.subscribe(
+        (message: SchemaWsClientToServerMessage): void => {
+          try {
+            match(message)
+              .with(
+                { type: 'WSActionJoinRoom' },
+                (m: SchemaWsActionJoinRoom): void => {
+                  this._onJoinRoom.next([wsClient, m]);
+                },
+              )
+              .with(
+                { type: 'WSActionRunScenario' },
+                (m: SchemaWsActionRunScenario): void => {
+                  this._onRunScenario.next([wsClient, m]);
+                },
+              )
+              .with(
+                { type: 'WSActionLockNode' },
+                (m: SchemaWsActionLockNode): void => {
+                  this._onLockNode.next([wsClient, m]);
+                },
+              )
+              .with(
+                { type: 'WSActionMoveNodes' },
+                (m: SchemaWsActionMoveNodes): void => {
+                  this._onMoveNodes.next([wsClient, m]);
+                },
+              )
+              .with(
+                { type: 'WSActionUnlockNode' },
+                (m: SchemaWsActionUnlockNode): void => {
+                  this._onUnlockNode.next([wsClient, m]);
+                },
+              )
+              .exhaustive();
+          } catch (error: unknown) {
+            wsClient.sendError(error);
+          }
+        },
+      );
 
       wsClient.onDisconnect$.subscribe((reason: DisconnectReason): void => {
         strapi.log.debug(`Socket ${wsClient.id} disconnected: ${reason}`);
@@ -98,7 +121,9 @@ export class WebSocketsManager {
     return this._onJoinRoom.asObservable();
   }
 
-  public get onRunScenario$(): Observable<[WSClient, SchemaWsActionRunScenario]> {
+  public get onRunScenario$(): Observable<
+    [WSClient, SchemaWsActionRunScenario]
+  > {
     return this._onRunScenario.asObservable();
   }
 
@@ -118,7 +143,10 @@ export class WebSocketsManager {
     return this._sockets;
   }
 
-  public sendToRoom(roomId: string, message: SchemaWsServerToClientMessage): void {
+  public sendToRoom(
+    roomId: string,
+    message: SchemaWsServerToClientMessage,
+  ): void {
     this._io.to(roomId).emit('message', message);
   }
 }

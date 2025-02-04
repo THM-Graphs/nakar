@@ -14,18 +14,23 @@ export class MutablePropertyCollection {
     this.properties = data.properties;
   }
 
-  public static create(properties: Record<string, unknown>): MutablePropertyCollection {
+  public static create(
+    properties: Record<string, unknown>,
+  ): MutablePropertyCollection {
     return new MutablePropertyCollection({
       properties: Object.entries(properties).reduce(
-        (akku: SMap<string, unknown>, [key, value]: [string, unknown]): SMap<string, unknown> =>
-          akku.bySetting(key, value),
+        (
+          akku: SMap<string, unknown>,
+          [key, value]: [string, unknown],
+        ): SMap<string, unknown> => akku.bySetting(key, value),
         new SMap<string, unknown>(),
       ),
     });
   }
 
   public static fromPlain(input: unknown): MutablePropertyCollection {
-    const data: z.infer<typeof this.schema> = MutablePropertyCollection.schema.parse(input);
+    const data: z.infer<typeof this.schema> =
+      MutablePropertyCollection.schema.parse(input);
     return new MutablePropertyCollection({
       properties: SMap.fromRecord(data.properties),
     });
@@ -49,9 +54,12 @@ export class MutablePropertyCollection {
   }
 
   public toDto(): SchemaGraphProperty[] {
-    return this.properties
-      .toArray()
-      .map(([key, value]: [string, unknown]): SchemaGraphProperty => ({ slug: key, value: value }));
+    return this.properties.toArray().map(
+      ([key, value]: [string, unknown]): SchemaGraphProperty => ({
+        slug: key,
+        value: value,
+      }),
+    );
   }
 
   public toPlain(): z.infer<typeof MutablePropertyCollection.schema> {

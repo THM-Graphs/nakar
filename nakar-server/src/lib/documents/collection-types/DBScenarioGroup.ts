@@ -22,13 +22,18 @@ export class DBScenarioGroup {
   }
 
   public static parse(
-    db: Result<'api::scenario-group.scenario-group', { populate: ['graphDisplayConfiguration', 'database'] }>,
+    db: Result<
+      'api::scenario-group.scenario-group',
+      { populate: ['graphDisplayConfiguration', 'database'] }
+    >,
   ): DBScenarioGroup {
     return new DBScenarioGroup({
       documentId: db.documentId,
       title: db.title ?? null,
       database: db.database ? DBDatabase.parse(db.database) : null,
-      graphDisplayConfiguration: DBGraphDisplayConfiguration.parseOrDefault(db.graphDisplayConfiguration),
+      graphDisplayConfiguration: DBGraphDisplayConfiguration.parseOrDefault(
+        db.graphDisplayConfiguration,
+      ),
     });
   }
 

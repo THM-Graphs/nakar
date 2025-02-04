@@ -9,7 +9,10 @@ export class GrowNodeBasedOnDegree extends TransformTask {
     super('Grow Node Based On Degree');
   }
 
-  protected run(input: MutableGraph, config: FinalGraphDisplayConfiguration): void {
+  protected run(
+    input: MutableGraph,
+    config: FinalGraphDisplayConfiguration,
+  ): void {
     if (!config.growNodesBasedOnDegree) {
       return;
     }
@@ -19,7 +22,10 @@ export class GrowNodeBasedOnDegree extends TransformTask {
     }
 
     const degrees: number[] = input.nodes.reduce(
-      (akku: number[], key: string, value: MutableNode): number[] => [...akku, value.degree],
+      (akku: number[], key: string, value: MutableNode): number[] => [
+        ...akku,
+        value.degree,
+      ],
       [],
     );
 
@@ -38,7 +44,11 @@ export class GrowNodeBasedOnDegree extends TransformTask {
         ceiling: node.radius * config.growNodesBasedOnDegreeFactor,
       });
 
-      node.radius = fromRange.scaleValue(toRange, node.degree, config.scaleType);
+      node.radius = fromRange.scaleValue(
+        toRange,
+        node.degree,
+        config.scaleType,
+      );
     }
   }
 }

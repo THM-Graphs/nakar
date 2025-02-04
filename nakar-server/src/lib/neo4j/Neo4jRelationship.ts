@@ -10,7 +10,10 @@ export class Neo4jRelationship {
     this.keys = data.keys;
   }
 
-  public static fromRawRelationship(relationship: Relationship, key: string | null): Neo4jRelationship {
+  public static fromRawRelationship(
+    relationship: Relationship,
+    key: string | null,
+  ): Neo4jRelationship {
     return new Neo4jRelationship({
       relationship: relationship,
       keys: key == null ? new SSet() : new SSet([key]),

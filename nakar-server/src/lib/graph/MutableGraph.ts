@@ -35,11 +35,17 @@ export class MutableGraph {
     this.tableData = data.tableData;
   }
 
-  public static create(graphElements: Neo4jGraphElements, scenario: DBScenario): MutableGraph {
+  public static create(
+    graphElements: Neo4jGraphElements,
+    scenario: DBScenario,
+  ): MutableGraph {
     return new MutableGraph({
-      nodes: graphElements.nodes.map((node: Neo4jNode): MutableNode => MutableNode.create(node)),
+      nodes: graphElements.nodes.map(
+        (node: Neo4jNode): MutableNode => MutableNode.create(node),
+      ),
       edges: graphElements.relationships.map(
-        (relationship: Neo4jRelationship): MutableEdge => MutableEdge.create(relationship),
+        (relationship: Neo4jRelationship): MutableEdge =>
+          MutableEdge.create(relationship),
       ),
       metaData: MutableGraphMetaData.create(scenario),
       tableData: graphElements.tableData,
@@ -56,25 +62,38 @@ export class MutableGraph {
   }
 
   public static fromPlain(input: unknown): MutableGraph {
-    const data: z.infer<typeof MutableGraph.schema> = MutableGraph.schema.parse(input);
+    const data: z.infer<typeof MutableGraph.schema> =
+      MutableGraph.schema.parse(input);
     return new MutableGraph({
       nodes: SMap.fromRecord(data.nodes).map(
-        (n: z.infer<typeof MutableNode.schema>): MutableNode => MutableNode.fromPlain(n),
+        (n: z.infer<typeof MutableNode.schema>): MutableNode =>
+          MutableNode.fromPlain(n),
       ),
       edges: SMap.fromRecord(data.edges).map(
-        (e: z.infer<typeof MutableEdge.schema>): MutableEdge => MutableEdge.fromPlain(e),
+        (e: z.infer<typeof MutableEdge.schema>): MutableEdge =>
+          MutableEdge.fromPlain(e),
       ),
       metaData: MutableGraphMetaData.fromPlain(data.metaData),
-      tableData: data.tableData.map((td: Record<string, unknown>): SMap<string, unknown> => SMap.fromRecord(td)),
+      tableData: data.tableData.map(
+        (td: Record<string, unknown>): SMap<string, unknown> =>
+          SMap.fromRecord(td),
+      ),
     });
   }
 
   public toDto(): SchemaGraph {
     return {
-      nodes: this.nodes.toArray().map(([id, node]: [string, MutableNode]): SchemaNode => node.toDto(id)),
-      edges: this.edges.toArray().map(([id, edge]: [string, MutableEdge]): SchemaEdge => edge.toDto(id)),
+      nodes: this.nodes
+        .toArray()
+        .map(([id, node]: [string, MutableNode]): SchemaNode => node.toDto(id)),
+      edges: this.edges
+        .toArray()
+        .map(([id, edge]: [string, MutableEdge]): SchemaEdge => edge.toDto(id)),
       metaData: this.metaData.toDto(),
-      tableData: this.tableData.map((entry: SMap<string, unknown>): Record<string, unknown> => entry.toRecord()),
+      tableData: this.tableData.map(
+        (entry: SMap<string, unknown>): Record<string, unknown> =>
+          entry.toRecord(),
+      ),
     };
   }
 
@@ -96,10 +115,20 @@ export class MutableGraph {
 
   public toPlain(): z.infer<typeof MutableGraph.schema> {
     return {
-      nodes: this.nodes.map((n: MutableNode): z.infer<typeof MutableNode.schema> => n.toPlain()).toRecord(),
-      edges: this.edges.map((e: MutableEdge): z.infer<typeof MutableEdge.schema> => e.toPlain()).toRecord(),
+      nodes: this.nodes
+        .map(
+          (n: MutableNode): z.infer<typeof MutableNode.schema> => n.toPlain(),
+        )
+        .toRecord(),
+      edges: this.edges
+        .map(
+          (e: MutableEdge): z.infer<typeof MutableEdge.schema> => e.toPlain(),
+        )
+        .toRecord(),
       metaData: this.metaData.toPlain(),
-      tableData: this.tableData.map((td: SMap<string, unknown>): Record<string, unknown> => td.toRecord()),
+      tableData: this.tableData.map(
+        (td: SMap<string, unknown>): Record<string, unknown> => td.toRecord(),
+      ),
     };
   }
 }

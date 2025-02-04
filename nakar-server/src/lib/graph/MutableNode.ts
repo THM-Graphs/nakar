@@ -84,7 +84,8 @@ export class MutableNode {
   }
 
   public static create(node: Neo4jNode): MutableNode {
-    const properties: MutablePropertyCollection = MutablePropertyCollection.create(node.node.properties);
+    const properties: MutablePropertyCollection =
+      MutablePropertyCollection.create(node.node.properties);
     const labels: SSet<string> = new SSet<string>(node.node.labels);
 
     return new MutableNode({
@@ -129,7 +130,10 @@ export class MutableNode {
       outDegree: this.outDegree,
       degree: this.degree,
       namesInQuery: this.namesInQuery.toArray(),
-      displayConfigurationContext: NodeDisplayConfigurationContext.create(id, this),
+      displayConfigurationContext: NodeDisplayConfigurationContext.create(
+        id,
+        this,
+      ),
       customBackgroundColor: this.customBackgroundColor,
       customTitleColor: this.customTitleColor,
     };
