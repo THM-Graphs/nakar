@@ -23,6 +23,7 @@ npm run develop
 ```
 Without hot-reloading:
 ```shell
+npm run build
 npm run start
 ```
 
