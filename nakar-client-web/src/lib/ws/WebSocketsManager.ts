@@ -4,10 +4,10 @@ import { ClientToServerEvents } from "./ClientToServerEvents.ts";
 import { ServerToClientEvents } from "./ServerToClientEvents.ts";
 import {
   WSClientToServerMessage,
-  WSEventGraphProgress,
   WSEventNodesMoved,
   WSEventNotification,
-  WSEventScenarioDataChanged,
+  WSEventScenarioLoaded,
+  WSEventScenarioProgress,
   WSServerToClientMessage,
 } from "../../../src-gen";
 import { BehaviorSubject, Observable, Subject } from "rxjs";
@@ -22,8 +22,8 @@ export class WebSocketsManager {
 
   private readonly onNotification: Subject<WSEventNotification>;
   private readonly onNodesMoved: Subject<WSEventNodesMoved>;
-  private readonly onScenarioDataChanged: Subject<WSEventScenarioDataChanged>;
-  private readonly onGraphProgress: Subject<WSEventGraphProgress>;
+  private readonly onScenarioLoaded: Subject<WSEventScenarioLoaded>;
+  private readonly onScenarioProgress: Subject<WSEventScenarioProgress>;
 
   public constructor(env: Env) {
     console.log("Did create instance of WebSocketsManager");
@@ -34,8 +34,8 @@ export class WebSocketsManager {
 
     this.onNotification = new Subject();
     this.onNodesMoved = new Subject();
-    this.onScenarioDataChanged = new Subject();
-    this.onGraphProgress = new Subject();
+    this.onScenarioLoaded = new Subject();
+    this.onScenarioProgress = new Subject();
 
     this.socket.on("connect", () => {
       this._socketState.next({ type: "connected" });
@@ -54,11 +54,11 @@ export class WebSocketsManager {
         .with({ type: "WSEventNodesMoved" }, (m) => {
           this.onNodesMoved.next(m);
         })
-        .with({ type: "WSEventScenarioDataChanged" }, (m) => {
-          this.onScenarioDataChanged.next(m);
+        .with({ type: "WSEventScenarioLoaded" }, (m) => {
+          this.onScenarioLoaded.next(m);
         })
-        .with({ type: "WSEventGraphProgress" }, (m) => {
-          this.onGraphProgress.next(m);
+        .with({ type: "WSEventScenarioProgress" }, (m) => {
+          this.onScenarioProgress.next(m);
         })
         .exhaustive();
     });
@@ -84,11 +84,11 @@ export class WebSocketsManager {
     return this.onNodesMoved.asObservable();
   }
 
-  public get onScenarioDataChanged$(): Observable<WSEventScenarioDataChanged> {
-    return this.onScenarioDataChanged.asObservable();
+  public get onScenarioLoaded$(): Observable<WSEventScenarioLoaded> {
+    return this.onScenarioLoaded.asObservable();
   }
 
-  public get onGraphProgress$(): Observable<WSEventGraphProgress> {
-    return this.onGraphProgress.asObservable();
+  public get onScenarioProgress$(): Observable<WSEventScenarioProgress> {
+    return this.onScenarioProgress.asObservable();
   }
 }

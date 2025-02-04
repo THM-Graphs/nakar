@@ -7,7 +7,7 @@ import { DataTable } from "../components/room/DataTable.tsx";
 import { useEffect, useState } from "react";
 import {
   Room as RoomSchema,
-  WSEventGraphProgress,
+  WSEventScenarioProgress,
   getRoom,
 } from "../../src-gen";
 import { LoaderFunctionArgs, useLoaderData } from "react-router";
@@ -40,8 +40,8 @@ export function Room(props: { webSockets: WebSocketsManager; env: Env }) {
   const [tableDataOpened, setTableDataOpened] = useState(false);
   const [scenarioLoading, setScenarioLoading] = useState<string | null>(null);
   const [renderer, setRenderer] = useState<GraphRendererEngine>("d3");
-  const [graphProgress, setGraphProgress] =
-    useState<WSEventGraphProgress | null>(null);
+  const [scenarioProgress, setScenarioProgress] =
+    useState<WSEventScenarioProgress | null>(null);
   const socketState = useWebSocketsState(props.webSockets);
 
   useEffect(() => {
@@ -55,17 +55,16 @@ export function Room(props: { webSockets: WebSocketsManager; env: Env }) {
 
   useEffect(() => {
     const subscriptions = [
-      props.webSockets.onScenarioDataChanged$.subscribe((sd) => {
+      props.webSockets.onScenarioLoaded$.subscribe((sd) => {
         setTableData(sd.graph.tableData);
-        setScenarioLoading(null);
-        setGraphProgress(null);
       }),
-      props.webSockets.onNotification$.subscribe(() => {
-        setScenarioLoading(null);
-        setGraphProgress(null);
-      }),
-      props.webSockets.onGraphProgress$.subscribe((progress) => {
-        setGraphProgress(progress);
+      props.webSockets.onScenarioProgress$.subscribe((progress) => {
+        if (progress.progress == null) {
+          setScenarioProgress(null);
+          setScenarioLoading(null);
+        } else {
+          setScenarioProgress(progress);
+        }
       }),
     ];
 
@@ -120,7 +119,7 @@ export function Room(props: { webSockets: WebSocketsManager; env: Env }) {
                 onScenarioSelect={(scenario) => {
                   setScenarioLoading(scenario.id);
                   props.webSockets.sendMessage({
-                    type: "WSActionRunScenario",
+                    type: "WSActionLoadScenario",
                     scenarioId: scenario.id,
                   });
                 }}
@@ -131,7 +130,7 @@ export function Room(props: { webSockets: WebSocketsManager; env: Env }) {
           <Canvas
             renderer={renderer}
             webSocketsManager={props.webSockets}
-            graphProgress={graphProgress}
+            scenarioProgress={scenarioProgress}
           ></Canvas>
           <SideToolbar hidden={!tableDataOpened} width={700}>
             {() => <DataTable tableData={tableData}></DataTable>}

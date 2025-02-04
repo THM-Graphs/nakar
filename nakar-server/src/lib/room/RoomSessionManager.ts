@@ -14,11 +14,12 @@ import { match } from 'ts-pattern';
 import { DBRoom } from '../documents/collection-types/DBRoom';
 import { WSClient } from '../ws/WSClient';
 import {
+  SchemaWsActionGrabNode,
   SchemaWsActionJoinRoom,
-  SchemaWsActionLockNode,
+  SchemaWsActionLoadScenario,
   SchemaWsActionMoveNodes,
-  SchemaWsActionRunScenario,
-  SchemaWsActionUnlockNode,
+  SchemaWsActionUngrabNode,
+  SchemaWsEventScenarioProgress,
 } from '../../../src-gen/schema';
 import { GraphTransformerProgress } from '../graph/display-configuration/GraphTransformerProgress';
 import { DisconnectReason } from 'socket.io';
@@ -41,8 +42,8 @@ export class RoomSessionManager {
 
     this._loadGraphFromDb().catch(strapi.log.error);
 
-    this._websocketsManager.onLockNode$.subscribe(
-      ([socket, message]: [WSClient, SchemaWsActionLockNode]): void => {
+    this._websocketsManager.onGrabNode$.subscribe(
+      ([socket, message]: [WSClient, SchemaWsActionGrabNode]): void => {
         const roomId: string | null = socket.room;
         if (roomId == null) {
           strapi.log.error(
@@ -109,8 +110,8 @@ export class RoomSessionManager {
       },
     );
 
-    this._websocketsManager.onUnlockNode$.subscribe(
-      ([socket, message]: [WSClient, SchemaWsActionUnlockNode]): void => {
+    this._websocketsManager.onUngrabNode$.subscribe(
+      ([socket, message]: [WSClient, SchemaWsActionUngrabNode]): void => {
         const roomId: string | null = socket.room;
         if (roomId == null) {
           strapi.log.error(
@@ -149,13 +150,11 @@ export class RoomSessionManager {
           );
           return;
         }
-        this._saveGraphToDb(roomId).catch((error: unknown): void => {
-          socket.sendError(error);
-        });
+        this._saveGraphToDb(roomId).catch(strapi.log.error);
       });
 
-    this._websocketsManager.onRunScenario$.subscribe(
-      ([socket, message]: [WSClient, SchemaWsActionRunScenario]): void => {
+    this._websocketsManager.onLoadScenario$.subscribe(
+      ([socket, message]: [WSClient, SchemaWsActionLoadScenario]): void => {
         (async (): Promise<void> => {
           try {
             const stepCount: number = 3 + GraphTransformer.taskCount;
@@ -254,8 +253,16 @@ export class RoomSessionManager {
               severity: 'message',
               type: 'WSEventNotification',
             });
-          } catch (error) {
-            socket.sendError(error);
+          } catch (error: unknown) {
+            socket.sendToRoom(
+              this._websocketsManager.createErrorNotification(error),
+            );
+          } finally {
+            socket.sendToRoom({
+              type: 'WSEventScenarioProgress',
+              message: null,
+              progress: null,
+            } satisfies SchemaWsEventScenarioProgress);
           }
         })().catch(strapi.log.error);
       },
@@ -307,7 +314,7 @@ export class RoomSessionManager {
             if (roomState.type === 'data') {
               socket.send({
                 graph: roomState.graph.toDto(),
-                type: 'WSEventScenarioDataChanged',
+                type: 'WSEventScenarioLoaded',
               });
             }
           }
@@ -322,7 +329,7 @@ export class RoomSessionManager {
             { type: 'preparing' },
             (preparing: RoomStatePreparing): void => {
               this._websocketsManager.sendToRoom(roomId, {
-                type: 'WSEventGraphProgress',
+                type: 'WSEventScenarioProgress',
                 message: preparing.step,
                 progress: preparing.progress,
               });
@@ -331,13 +338,13 @@ export class RoomSessionManager {
           .with({ type: 'data' }, (data: RoomStateData): void => {
             this._websocketsManager.sendToRoom(roomId, {
               graph: data.graph.toDto(),
-              type: 'WSEventScenarioDataChanged',
+              type: 'WSEventScenarioLoaded',
             });
           })
           .with({ type: 'empty' }, (): void => {
             this._websocketsManager.sendToRoom(roomId, {
               graph: MutableGraph.empty().toDto(),
-              type: 'WSEventScenarioDataChanged',
+              type: 'WSEventScenarioLoaded',
             });
           })
           .exhaustive();

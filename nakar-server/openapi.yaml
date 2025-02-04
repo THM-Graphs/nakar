@@ -213,6 +213,17 @@ components:
         - customBackgroundColor
         - customTitleColor
 
+    PhysicalNode:
+      type: object
+      properties:
+        id:
+          type: string
+        position:
+          $ref: "#/components/schemas/Position"
+      required:
+        - id
+        - position
+
     Position:
       type: object
       properties:
@@ -431,17 +442,17 @@ components:
     WSClientToServerMessage:
       oneOf:
         - $ref: "#/components/schemas/WSActionJoinRoom"
-        - $ref: "#/components/schemas/WSActionRunScenario"
-        - $ref: "#/components/schemas/WSActionLockNode"
+        - $ref: "#/components/schemas/WSActionLoadScenario"
+        - $ref: "#/components/schemas/WSActionGrabNode"
         - $ref: "#/components/schemas/WSActionMoveNodes"
-        - $ref: "#/components/schemas/WSActionUnlockNode"
+        - $ref: "#/components/schemas/WSActionUngrabNode"
 
     WSServerToClientMessage:
       oneOf:
-        - $ref: "#/components/schemas/WSEventScenarioDataChanged"
-        - $ref: "#/components/schemas/WSEventNotification"
         - $ref: "#/components/schemas/WSEventNodesMoved"
-        - $ref: "#/components/schemas/WSEventGraphProgress"
+        - $ref: "#/components/schemas/WSEventNotification"
+        - $ref: "#/components/schemas/WSEventScenarioLoaded"
+        - $ref: "#/components/schemas/WSEventScenarioProgress"
 
     WSActionJoinRoom:
       type: object
@@ -455,12 +466,12 @@ components:
         - type
         - roomId
 
-    WSActionRunScenario:
+    WSActionLoadScenario:
       type: object
       properties:
         type:
           type: string
-          enum: ["WSActionRunScenario"]
+          enum: ["WSActionLoadScenario"]
         scenarioId:
           type: string
       required:
@@ -476,49 +487,41 @@ components:
         nodes:
           type: array
           items:
-            type: object
-            properties:
-              id:
-                type: string
-              position:
-                $ref: "#/components/schemas/Position"
-            required:
-              - id
-              - position
+            $ref: "#/components/schemas/PhysicalNode"
       required:
         - type
         - nodes
 
-    WSActionLockNode:
+    WSActionGrabNode:
       type: object
       properties:
         type:
           type: string
-          enum: ["WSActionLockNode"]
+          enum: ["WSActionGrabNode"]
         nodeId:
           type: string
       required:
         - type
         - nodeId
 
-    WSActionUnlockNode:
+    WSActionUngrabNode:
       type: object
       properties:
         type:
           type: string
-          enum: ["WSActionUnlockNode"]
+          enum: ["WSActionUngrabNode"]
         nodeId:
           type: string
       required:
         - type
         - nodeId
 
-    WSEventScenarioDataChanged:
+    WSEventScenarioLoaded:
       type: object
       properties:
         type:
           type: string
-          enum: ["WSEventScenarioDataChanged"]
+          enum: ["WSEventScenarioLoaded"]
         graph:
           $ref: "#/components/schemas/Graph"
       required:
@@ -534,15 +537,7 @@ components:
         nodes:
           type: array
           items:
-            type: object
-            properties:
-              id:
-                type: string
-              position:
-                $ref: "#/components/schemas/Position"
-            required:
-              - id
-              - position
+            $ref: "#/components/schemas/PhysicalNode"
         date:
           type: string
           format: date
@@ -577,16 +572,18 @@ components:
         - severity
         - date
 
-    WSEventGraphProgress:
+    WSEventScenarioProgress:
       type: object
       properties:
         type:
           type: string
-          enum: ["WSEventGraphProgress"]
+          enum: ["WSEventScenarioProgress"]
         progress:
           type: number
+          nullable: true
         message:
           type: string
+          nullable: true
       required:
         - progress
         - message

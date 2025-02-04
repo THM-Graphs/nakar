@@ -1,5 +1,4 @@
 import { Server, Socket } from './WebSocketsManager';
-import { match, P } from 'ts-pattern';
 import {
   SchemaWsClientToServerMessage,
   SchemaWsServerToClientMessage,
@@ -50,19 +49,6 @@ export class WSClient {
 
   public get onDisconnect$(): Observable<DisconnectReason> {
     return this._onDisconnect.asObservable();
-  }
-
-  public sendError(error: unknown): void {
-    const errorMessage: string = match(error)
-      .with(P.instanceOf(Error), (e: Error): string => e.message)
-      .otherwise((e: unknown): string => JSON.stringify(e));
-    this.send({
-      type: 'WSEventNotification',
-      severity: 'error',
-      title: 'Error',
-      message: errorMessage,
-      date: new Date().toISOString(),
-    });
   }
 
   public send(message: SchemaWsServerToClientMessage): void {

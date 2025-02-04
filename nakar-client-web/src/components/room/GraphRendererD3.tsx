@@ -15,12 +15,12 @@ export function GraphRendererD3(props: {
 
   useEffect(() => {
     const supscriptions = [
-      props.webSockets.onScenarioDataChanged$.subscribe((scenraioData) => {
+      props.webSockets.onScenarioLoaded$.subscribe((scenraioData) => {
         graphRenderer.loadGraphContent(scenraioData.graph);
       }),
       graphRenderer.onLockNode.subscribe((n) => {
         props.webSockets.sendMessage({
-          type: "WSActionLockNode",
+          type: "WSActionGrabNode",
           nodeId: n.id,
         });
       }),
@@ -37,7 +37,7 @@ export function GraphRendererD3(props: {
       }),
       graphRenderer.onUnlockNode.subscribe((n) => {
         props.webSockets.sendMessage({
-          type: "WSActionUnlockNode",
+          type: "WSActionUngrabNode",
           nodeId: n.id,
         });
       }),

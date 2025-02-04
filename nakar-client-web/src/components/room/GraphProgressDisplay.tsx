@@ -1,9 +1,12 @@
 import { Card, CardBody, ProgressBar } from "react-bootstrap";
-import { WSEventGraphProgress } from "../../../src-gen";
+import { WSEventScenarioProgress } from "../../../src-gen";
 
 export function GraphProgressDisplay(props: {
-  graphProgress: WSEventGraphProgress;
+  graphProgress: WSEventScenarioProgress;
 }) {
+  if (props.graphProgress.progress == null) {
+    return null;
+  }
   return (
     <Card>
       <CardBody>
@@ -13,7 +16,7 @@ export function GraphProgressDisplay(props: {
           label={`${(props.graphProgress.progress * 100).toFixed(0)}%`}
           style={{ width: "300px" }}
         />
-        <div>{props.graphProgress.message}</div>
+        <div>{props.graphProgress.message ?? "..."}</div>
       </CardBody>
     </Card>
   );

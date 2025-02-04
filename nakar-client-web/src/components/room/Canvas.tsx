@@ -1,5 +1,10 @@
 import { useEffect, useState } from "react";
-import { Edge, GraphLabel, Node, WSEventGraphProgress } from "../../../src-gen";
+import {
+  Edge,
+  GraphLabel,
+  Node,
+  WSEventScenarioProgress,
+} from "../../../src-gen";
 import { Labels } from "./Labels.tsx";
 import { GraphRendererD3 } from "./GraphRendererD3.tsx";
 import { GraphRendererNVL } from "./GraphRendererNVL.tsx";
@@ -13,18 +18,16 @@ import { GraphProgressDisplay } from "./GraphProgressDisplay.tsx";
 export function Canvas(props: {
   renderer: GraphRendererEngine;
   webSocketsManager: WebSocketsManager;
-  graphProgress: WSEventGraphProgress | null;
+  scenarioProgress: WSEventScenarioProgress | null;
 }) {
   const [detailsNode, setDetailsNode] = useState<Node | null>(null);
   const [detailsEdge, setDetailsEdge] = useState<Edge | null>(null);
   const [graphLabels, setGraphLabels] = useState<GraphLabel[]>([]);
 
   useEffect(() => {
-    const s1 = props.webSocketsManager.onScenarioDataChanged$.subscribe(
-      (sd) => {
-        setGraphLabels(sd.graph.metaData.labels);
-      },
-    );
+    const s1 = props.webSocketsManager.onScenarioLoaded$.subscribe((sd) => {
+      setGraphLabels(sd.graph.metaData.labels);
+    });
 
     return () => {
       s1.unsubscribe();
@@ -53,10 +56,10 @@ export function Canvas(props: {
       <div className={"m-2"}>
         <Labels graphLabels={graphLabels}></Labels>
       </div>
-      {props.graphProgress && (
+      {props.scenarioProgress && (
         <div className={"position-absolute bottom-0 m-2"}>
           <GraphProgressDisplay
-            graphProgress={props.graphProgress}
+            graphProgress={props.scenarioProgress}
           ></GraphProgressDisplay>
         </div>
       )}
