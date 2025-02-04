@@ -12,12 +12,12 @@ export class DBNullableScaleType {
     input: 'inherit' | 'linear' | 'log2' | 'logn' | 'log10' | null | undefined,
   ): DBNullableScaleType {
     const value: ScaleType | null = match(input)
-      .with(P.nullish, () => null)
-      .with('inherit', () => null)
-      .with('linear', () => ScaleType.linear)
-      .with('log10', () => ScaleType.log10)
-      .with('logn', () => ScaleType.logN)
-      .with('log2', () => ScaleType.log2)
+      .with(P.nullish, (): null => null)
+      .with('inherit', (): null => null)
+      .with('linear', (): ScaleType => ScaleType.linear)
+      .with('log10', (): ScaleType => ScaleType.log10)
+      .with('logn', (): ScaleType => ScaleType.logN)
+      .with('log2', (): ScaleType => ScaleType.log2)
       .exhaustive();
     return new DBNullableScaleType(value);
   }

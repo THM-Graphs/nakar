@@ -48,13 +48,13 @@ export class WebSocketsManager {
       path: '/frontend',
       serveClient: false,
     });
-    this._io.on('connection', (s: Socket) => {
+    this._io.on('connection', (s: Socket): void => {
       const wsClient: WSClient = new WSClient(s, this._io);
       this._sockets.add(wsClient);
       strapi.log.debug(`New socket ${wsClient.id} connection.`);
       this._onSocketConnect.next(wsClient);
 
-      wsClient.onMessage$.subscribe((message: SchemaWsClientToServerMessage) => {
+      wsClient.onMessage$.subscribe((message: SchemaWsClientToServerMessage): void => {
         try {
           match(message)
             .with({ type: 'WSActionJoinRoom' }, (m: SchemaWsActionJoinRoom): void => {
@@ -78,7 +78,7 @@ export class WebSocketsManager {
         }
       });
 
-      wsClient.onDisconnect$.subscribe((reason: DisconnectReason) => {
+      wsClient.onDisconnect$.subscribe((reason: DisconnectReason): void => {
         strapi.log.debug(`Socket ${wsClient.id} disconnected: ${reason}`);
         this._onSocketDisconnect.next([wsClient, reason]);
         this._sockets.delete(wsClient);

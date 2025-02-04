@@ -19,7 +19,7 @@ export class DocumentsDatabase {
           },
         },
       })
-    ).map((database: Result<'api::database.database'>) => DBDatabase.parse(database));
+    ).map((database: Result<'api::database.database'>): DBDatabase => DBDatabase.parse(database));
   }
 
   public async getRoom(roomId: string): Promise<DBRoom | null> {
@@ -39,7 +39,7 @@ export class DocumentsDatabase {
         status: 'published',
         sort: 'title:asc',
       })
-    ).map((room: Result<'api::room.room'>) => DBRoom.parse(room));
+    ).map((room: Result<'api::room.room'>): DBRoom => DBRoom.parse(room));
   }
 
   public async getScenario(scenarioId: string): Promise<DBScenario | null> {
@@ -123,7 +123,7 @@ export class DocumentsDatabase {
           },
         },
       })
-    ).map((scenario: Result<'api::scenario.scenario'>) => DBScenario.parse(scenario));
+    ).map((scenario: Result<'api::scenario.scenario'>): DBScenario => DBScenario.parse(scenario));
   }
 
   public async getScenarioGroups(databaseId: string): Promise<DBScenarioGroup[]> {
@@ -155,7 +155,10 @@ export class DocumentsDatabase {
           },
         },
       })
-    ).map((scenarioGroup: Result<'api::scenario-group.scenario-group'>) => DBScenarioGroup.parse(scenarioGroup));
+    ).map(
+      (scenarioGroup: Result<'api::scenario-group.scenario-group'>): DBScenarioGroup =>
+        DBScenarioGroup.parse(scenarioGroup),
+    );
   }
 
   public async setRoomGraph(room: DBRoom, graph: MutableGraph): Promise<void> {

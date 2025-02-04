@@ -1,5 +1,5 @@
 import { MutableGraphLabel } from './MutableGraphLabel';
-import { SchemaGraphMetaData } from '../../../src-gen/schema';
+import { SchemaGraphLabel, SchemaGraphMetaData } from '../../../src-gen/schema';
 import { z } from 'zod';
 import { SMap } from '../tools/Map';
 import { MutableScenarioInfo } from './MutableScenarioInfo';
@@ -30,8 +30,8 @@ export class MutableGraphMetaData {
   public static fromPlain(input: unknown): MutableGraphMetaData {
     const data: z.infer<typeof this.schema> = MutableGraphMetaData.schema.parse(input);
     return new MutableGraphMetaData({
-      labels: SMap.fromRecord(data.labels).map((l: z.infer<typeof MutableGraphLabel.schema>) =>
-        MutableGraphLabel.fromPlain(l),
+      labels: SMap.fromRecord(data.labels).map(
+        (l: z.infer<typeof MutableGraphLabel.schema>): MutableGraphLabel => MutableGraphLabel.fromPlain(l),
       ),
       scenarioInfo: MutableScenarioInfo.fromPlain(data.scenarioInfo),
     });
@@ -46,14 +46,18 @@ export class MutableGraphMetaData {
 
   public toDto(): SchemaGraphMetaData {
     return {
-      labels: this.labels.toArray().map(([id, label]: [string, MutableGraphLabel]) => label.toDto(id)),
+      labels: this.labels
+        .toArray()
+        .map(([id, label]: [string, MutableGraphLabel]): SchemaGraphLabel => label.toDto(id)),
       scenarioInfo: this.scenarioInfo.toDto(),
     };
   }
 
   public toPlain(): z.infer<typeof MutableGraphMetaData.schema> {
     return {
-      labels: this.labels.map((v: MutableGraphLabel) => v.toPlain()).toRecord(),
+      labels: this.labels
+        .map((v: MutableGraphLabel): z.infer<typeof MutableGraphLabel.schema> => v.toPlain())
+        .toRecord(),
       scenarioInfo: this.scenarioInfo.toPlain(),
     };
   }

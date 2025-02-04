@@ -48,7 +48,7 @@ export class NodeDisplayConfigurationContext {
 
   private static _toTrueishMap(input: SSet<string>): SMap<string, true> {
     return input.reduce<SMap<string, true>>(
-      (akku: SMap<string, true>, next: string) => akku.bySetting(next, true),
+      (akku: SMap<string, true>, next: string): SMap<string, true> => akku.bySetting(next, true),
       new SMap(),
     );
   }

@@ -41,7 +41,7 @@ export class RoomSessionManager {
 
     this._loadGraphFromDb().catch(strapi.log.error);
 
-    this._websocketsManager.onLockNode$.subscribe(([socket, message]: [WSClient, SchemaWsActionLockNode]) => {
+    this._websocketsManager.onLockNode$.subscribe(([socket, message]: [WSClient, SchemaWsActionLockNode]): void => {
       const roomId: string | null = socket.room;
       if (roomId == null) {
         strapi.log.error(`Socket ${socket.id} did send lock node message but is in no room.`);
@@ -66,7 +66,7 @@ export class RoomSessionManager {
       state.physics.start();
     });
 
-    this._websocketsManager.onMoveNodes$.subscribe(([socket, message]: [WSClient, SchemaWsActionMoveNodes]) => {
+    this._websocketsManager.onMoveNodes$.subscribe(([socket, message]: [WSClient, SchemaWsActionMoveNodes]): void => {
       const roomId: string | null = socket.room;
       if (roomId == null) {
         strapi.log.error(`Socket ${socket.id} did send move node message but is in no room.`);
@@ -95,7 +95,7 @@ export class RoomSessionManager {
       }
     });
 
-    this._websocketsManager.onUnlockNode$.subscribe(([socket, message]: [WSClient, SchemaWsActionUnlockNode]) => {
+    this._websocketsManager.onUnlockNode$.subscribe(([socket, message]: [WSClient, SchemaWsActionUnlockNode]): void => {
       const roomId: string | null = socket.room;
       if (roomId == null) {
         strapi.log.error(`Socket ${socket.id} did send lock node message but is in no room.`);
@@ -121,92 +121,96 @@ export class RoomSessionManager {
 
     this._websocketsManager.onMoveNodes$
       .pipe(auditTime(2000))
-      .subscribe(([socket]: [WSClient, SchemaWsActionMoveNodes]) => {
+      .subscribe(([socket]: [WSClient, SchemaWsActionMoveNodes]): void => {
         const roomId: string | null = socket.room;
         if (roomId == null) {
           strapi.log.error(`Socket ${socket.id} did send move node message but is in no room.`);
           return;
         }
-        this._saveGraphToDb(roomId).catch((error: unknown) => {
+        this._saveGraphToDb(roomId).catch((error: unknown): void => {
           socket.sendError(error);
         });
       });
 
-    this._websocketsManager.onRunScenario$.subscribe(([socket, message]: [WSClient, SchemaWsActionRunScenario]) => {
-      (async (): Promise<void> => {
-        try {
-          const stepCount: number = 3 + GraphTransformer.taskCount;
-          const roomId: string | null = socket.room;
-          if (roomId == null) {
-            strapi.log.error(`Socket ${socket.id} is in no room but did run a scenario.`);
-            return;
-          }
-          this._rooms.setPreparing(roomId, 0 / stepCount, 'Load Scenario');
-
-          const scenario: DBScenario | null = await this._database.getScenario(message.scenarioId);
-          if (scenario == null) {
-            throw new NotFound('Scenario not found.');
-          }
-          if (scenario.query == null) {
-            throw new NotFound('The scenario has no query.');
-          }
-          if (scenario.scenarioGroup?.database == null) {
-            throw new NotFound('There is no database configuration on the scenario.');
-          }
-
-          this._rooms.setPreparing(roomId, 1 / stepCount, 'Connect to database');
-          const credentials: Neo4jLoginCredentials = Neo4jLoginCredentials.parse(scenario.scenarioGroup.database);
-          const neo4jDatabase: Neo4jDatabase = new Neo4jDatabase(credentials);
-          const query: string = scenario.query;
-
-          const initialQueryTask: ProfilerTask = Profiler.shared.profile(
-            `Initial Query (${scenario.title ?? 'no scenario title'})`,
-          );
-
-          this._rooms.setPreparing(roomId, 2 / stepCount, 'Execute query');
-          const graphElements: Neo4jGraphElements = await neo4jDatabase.executeQuery(query);
-          initialQueryTask.finish();
-
-          const graph: MutableGraph = MutableGraph.create(graphElements, scenario);
-
-          const displayConfiguration: FinalGraphDisplayConfiguration = MergableGraphDisplayConfiguration.createFromDb(
-            scenario.scenarioGroup.database.graphDisplayConfiguration,
-          )
-            .byMerging(MergableGraphDisplayConfiguration.createFromDb(scenario.scenarioGroup.graphDisplayConfiguration))
-            .byMerging(MergableGraphDisplayConfiguration.createFromDb(scenario.graphDisplayConfiguration))
-            .finalize();
-
-          const graphTransformer: GraphTransformer = new GraphTransformer(displayConfiguration, neo4jDatabase);
-          const updateSubscription: Subscription = graphTransformer.onProgress$.subscribe(
-            (progress: GraphTransformerProgress) => {
-              this._rooms.setPreparing(roomId, (progress.progress + 3) / stepCount, progress.step);
-            },
-          );
+    this._websocketsManager.onRunScenario$.subscribe(
+      ([socket, message]: [WSClient, SchemaWsActionRunScenario]): void => {
+        (async (): Promise<void> => {
           try {
-            await graphTransformer.run(graph);
-            updateSubscription.unsubscribe();
+            const stepCount: number = 3 + GraphTransformer.taskCount;
+            const roomId: string | null = socket.room;
+            if (roomId == null) {
+              strapi.log.error(`Socket ${socket.id} is in no room but did run a scenario.`);
+              return;
+            }
+            this._rooms.setPreparing(roomId, 0 / stepCount, 'Load Scenario');
+
+            const scenario: DBScenario | null = await this._database.getScenario(message.scenarioId);
+            if (scenario == null) {
+              throw new NotFound('Scenario not found.');
+            }
+            if (scenario.query == null) {
+              throw new NotFound('The scenario has no query.');
+            }
+            if (scenario.scenarioGroup?.database == null) {
+              throw new NotFound('There is no database configuration on the scenario.');
+            }
+
+            this._rooms.setPreparing(roomId, 1 / stepCount, 'Connect to database');
+            const credentials: Neo4jLoginCredentials = Neo4jLoginCredentials.parse(scenario.scenarioGroup.database);
+            const neo4jDatabase: Neo4jDatabase = new Neo4jDatabase(credentials);
+            const query: string = scenario.query;
+
+            const initialQueryTask: ProfilerTask = Profiler.shared.profile(
+              `Initial Query (${scenario.title ?? 'no scenario title'})`,
+            );
+
+            this._rooms.setPreparing(roomId, 2 / stepCount, 'Execute query');
+            const graphElements: Neo4jGraphElements = await neo4jDatabase.executeQuery(query);
+            initialQueryTask.finish();
+
+            const graph: MutableGraph = MutableGraph.create(graphElements, scenario);
+
+            const displayConfiguration: FinalGraphDisplayConfiguration = MergableGraphDisplayConfiguration.createFromDb(
+              scenario.scenarioGroup.database.graphDisplayConfiguration,
+            )
+              .byMerging(
+                MergableGraphDisplayConfiguration.createFromDb(scenario.scenarioGroup.graphDisplayConfiguration),
+              )
+              .byMerging(MergableGraphDisplayConfiguration.createFromDb(scenario.graphDisplayConfiguration))
+              .finalize();
+
+            const graphTransformer: GraphTransformer = new GraphTransformer(displayConfiguration, neo4jDatabase);
+            const updateSubscription: Subscription = graphTransformer.onProgress$.subscribe(
+              (progress: GraphTransformerProgress): void => {
+                this._rooms.setPreparing(roomId, (progress.progress + 3) / stepCount, progress.step);
+              },
+            );
+            try {
+              await graphTransformer.run(graph);
+              updateSubscription.unsubscribe();
+            } catch (error) {
+              updateSubscription.unsubscribe();
+              throw error;
+            }
+
+            this._rooms.setData(roomId, graph);
+            await this._saveGraphToDb(roomId);
+
+            socket.sendToRoom({
+              title: 'Scenario',
+              message: `Scenario "${scenario.title ?? ''}" started.`,
+              date: new Date().toISOString(),
+              severity: 'message',
+              type: 'WSEventNotification',
+            });
           } catch (error) {
-            updateSubscription.unsubscribe();
-            throw error;
+            socket.sendError(error);
           }
+        })().catch(strapi.log.error);
+      },
+    );
 
-          this._rooms.setData(roomId, graph);
-          await this._saveGraphToDb(roomId);
-
-          socket.sendToRoom({
-            title: 'Scenario',
-            message: `Scenario "${scenario.title ?? ''}" started.`,
-            date: new Date().toISOString(),
-            severity: 'message',
-            type: 'WSEventNotification',
-          });
-        } catch (error) {
-          socket.sendError(error);
-        }
-      })().catch(strapi.log.error);
-    });
-
-    this._websocketsManager.onJoinRoom$.subscribe(([socket, message]: [WSClient, SchemaWsActionJoinRoom]) => {
+    this._websocketsManager.onJoinRoom$.subscribe(([socket, message]: [WSClient, SchemaWsActionJoinRoom]): void => {
       (async (): Promise<void> => {
         const roomId: string = message.roomId;
 
@@ -222,7 +226,7 @@ export class RoomSessionManager {
       })().catch(strapi.log.error);
     });
 
-    this._websocketsManager.onSocketDisconnect$.subscribe(([socket, reason]: [WSClient, DisconnectReason]) => {
+    this._websocketsManager.onSocketDisconnect$.subscribe(([socket, reason]: [WSClient, DisconnectReason]): void => {
       socket.broadcastToRoom({
         type: 'WSEventNotification',
         title: 'User left',
@@ -232,8 +236,8 @@ export class RoomSessionManager {
       });
     });
 
-    this._websocketsManager.onSocketConnect$.subscribe((socket: WSClient) => {
-      socket.onRoomChanged$.subscribe((room: string | null) => {
+    this._websocketsManager.onSocketConnect$.subscribe((socket: WSClient): void => {
+      socket.onRoomChanged$.subscribe((room: string | null): void => {
         socket.broadcastToRoom({
           type: 'WSEventNotification',
           title: 'User joined',
@@ -254,22 +258,22 @@ export class RoomSessionManager {
       });
     });
 
-    this._rooms.onRoomUpdated$.subscribe(([roomId, state]: [string, RoomState]) => {
+    this._rooms.onRoomUpdated$.subscribe(([roomId, state]: [string, RoomState]): void => {
       match(state)
-        .with({ type: 'preparing' }, (preparing: RoomStatePreparing) => {
+        .with({ type: 'preparing' }, (preparing: RoomStatePreparing): void => {
           this._websocketsManager.sendToRoom(roomId, {
             type: 'WSEventGraphProgress',
             message: preparing.step,
             progress: preparing.progress,
           });
         })
-        .with({ type: 'data' }, (data: RoomStateData) => {
+        .with({ type: 'data' }, (data: RoomStateData): void => {
           this._websocketsManager.sendToRoom(roomId, {
             graph: data.graph.toDto(),
             type: 'WSEventScenarioDataChanged',
           });
         })
-        .with({ type: 'empty' }, () => {
+        .with({ type: 'empty' }, (): void => {
           this._websocketsManager.sendToRoom(roomId, {
             graph: MutableGraph.empty().toDto(),
             type: 'WSEventScenarioDataChanged',
@@ -278,7 +282,7 @@ export class RoomSessionManager {
         .exhaustive();
     });
 
-    this._rooms._onRoomPhysicsUpdates$.subscribe((roomId: string) => {
+    this._rooms._onRoomPhysicsUpdates$.subscribe((roomId: string): void => {
       const roomState: RoomState = this._rooms.getState(roomId);
       if (roomState.type !== 'data') {
         strapi.log.error('Did receive physics update from non existing room. Memory leak?');
@@ -290,19 +294,23 @@ export class RoomSessionManager {
         if (socket.room !== roomId) {
           continue;
         }
-        const nodesToSend: {
+
+        interface CompactNode {
           id: string;
           position: {
             x: number;
             y: number;
           };
-        }[] = graph.nodes
-          .filter((n: MutableNode) => !n.grabs.has(socket.id))
+        }
+        const nodesToSend: CompactNode[] = graph.nodes
+          .filter((n: MutableNode): boolean => !n.grabs.has(socket.id))
           .toArray()
-          .map(([id, node]: [string, MutableNode]) => ({
-            id: id,
-            position: { x: node.position.x, y: node.position.y },
-          }));
+          .map(
+            ([id, node]: [string, MutableNode]): CompactNode => ({
+              id: id,
+              position: { x: node.position.x, y: node.position.y },
+            }),
+          );
         socket.send({
           type: 'WSEventNodesMoved',
           nodes: nodesToSend,

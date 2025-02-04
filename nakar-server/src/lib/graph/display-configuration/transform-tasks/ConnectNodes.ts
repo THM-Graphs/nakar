@@ -30,7 +30,9 @@ export class ConnectNodes extends TransformTask {
 
     const result: Neo4jGraphElements = await database.loadConnectingRelationships(nodeIds);
 
-    const edges: SMap<string, MutableEdge> = result.relationships.map((r: Neo4jRelationship) => MutableEdge.create(r));
+    const edges: SMap<string, MutableEdge> = result.relationships.map(
+      (r: Neo4jRelationship): MutableEdge => MutableEdge.create(r),
+    );
 
     input.addNonDuplicateEdges(edges);
   }

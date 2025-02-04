@@ -40,7 +40,7 @@ export class RoomStateMachine {
 
     const subscription: Subscription = physics.onSlowTick
       .pipe(auditTime((1 / PhysicsSimulation.FPS) * 1000))
-      .subscribe(() => {
+      .subscribe((): void => {
         this._onRoomPhysicsUpdates.next(roomId);
       });
 

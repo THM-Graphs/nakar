@@ -23,16 +23,17 @@ export class CompressRelationships extends TransformTask {
     for (const [startNodeId] of input.nodes.entries()) {
       for (const [endNodeId] of input.nodes.entries()) {
         const edges: SMap<string, MutableEdge> = input.edges.filter(
-          (e: MutableEdge) => e.startNodeId === startNodeId && e.endNodeId === endNodeId,
+          (e: MutableEdge): boolean => e.startNodeId === startNodeId && e.endNodeId === endNodeId,
         );
-        const edgeTypes: SMap<string, string> = edges.map((e: MutableEdge) => e.type);
+        const edgeTypes: SMap<string, string> = edges.map((e: MutableEdge): string => e.type);
 
         for (const edgeType of edgeTypes.values()) {
           const count: number = input.edges.filter(
-            (e: MutableEdge) => e.startNodeId === startNodeId && e.endNodeId === endNodeId && e.type === edgeType,
+            (e: MutableEdge): boolean =>
+              e.startNodeId === startNodeId && e.endNodeId === endNodeId && e.type === edgeType,
           ).size;
           const firstEdgeEntry: [string, MutableEdge] | null = edges.find(
-            ([, edge]: [string, MutableEdge]) => edge.type === edgeType,
+            ([, edge]: [string, MutableEdge]): boolean => edge.type === edgeType,
           );
           if (firstEdgeEntry == null) {
             // Should not happen
@@ -50,7 +51,7 @@ export class CompressRelationships extends TransformTask {
     }
 
     const compressedCounts: number[] = relationships.reduce(
-      (akku: number[], key: string, edge: MutableEdge) => [...akku, edge.compressedCount],
+      (akku: number[], key: string, edge: MutableEdge): number[] => [...akku, edge.compressedCount],
       [],
     );
 

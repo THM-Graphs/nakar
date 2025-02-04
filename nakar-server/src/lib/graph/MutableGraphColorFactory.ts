@@ -11,7 +11,7 @@ export class MutableGraphColorFactory {
     return match(data)
       .with(
         { type: 'custom' },
-        (custom: z.infer<typeof MutableGraphColor.schemaCustom>) =>
+        (custom: z.infer<typeof MutableGraphColor.schemaCustom>): MutableGraphColorCustom =>
           new MutableGraphColorCustom({
             backgroundColor: custom.backgroundColor,
             textColor: custom.textColor,
@@ -19,7 +19,7 @@ export class MutableGraphColorFactory {
       )
       .with(
         { type: 'preset' },
-        (preset: z.infer<typeof MutableGraphColor.schemaPreset>) =>
+        (preset: z.infer<typeof MutableGraphColor.schemaPreset>): MutableGraphColorPreset =>
           new MutableGraphColorPreset({
             index: preset.index,
           }),

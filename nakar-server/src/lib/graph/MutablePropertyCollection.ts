@@ -17,7 +17,8 @@ export class MutablePropertyCollection {
   public static create(properties: Record<string, unknown>): MutablePropertyCollection {
     return new MutablePropertyCollection({
       properties: Object.entries(properties).reduce(
-        (akku: SMap<string, unknown>, [key, value]: [string, unknown]) => akku.bySetting(key, value),
+        (akku: SMap<string, unknown>, [key, value]: [string, unknown]): SMap<string, unknown> =>
+          akku.bySetting(key, value),
         new SMap<string, unknown>(),
       ),
     });

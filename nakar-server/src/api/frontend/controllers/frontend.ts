@@ -5,6 +5,9 @@ import {
   SchemaRooms,
   SchemaScenarioGroups,
   SchemaScenarios,
+  SchemaScenarioGroup,
+  SchemaScenario,
+  SchemaDatabase,
 } from '../../../../src-gen/schema';
 import { DBDatabase } from '../../../lib/documents/collection-types/DBDatabase';
 import { DBRoom } from '../../../lib/documents/collection-types/DBRoom';
@@ -18,13 +21,13 @@ export default {
   getDatabases: StrapiContext.handleRequest(async (context: StrapiContext): Promise<SchemaDatabases> => {
     const databases: DBDatabase[] = await context.database.getDatabases();
     return {
-      databases: databases.map((database: DBDatabase) => database.toDto()),
+      databases: databases.map((database: DBDatabase): SchemaDatabase => database.toDto()),
     };
   }),
   getRooms: StrapiContext.handleRequest(async (context: StrapiContext): Promise<SchemaRooms> => {
     const dbResult: DBRoom[] = await context.database.getRooms();
     return {
-      rooms: dbResult.map((room: DBRoom) => room.toDto()),
+      rooms: dbResult.map((room: DBRoom): SchemaRoom => room.toDto()),
     };
   }),
   getRoom: StrapiContext.handleRequest(async (context: StrapiContext): Promise<SchemaRoom> => {
@@ -40,7 +43,7 @@ export default {
 
     const dbResult: DBScenarioGroup[] = await context.database.getScenarioGroups(databaseId);
     return {
-      scenarioGroups: dbResult.map((scenarioGroup: DBScenarioGroup) => scenarioGroup.toDto()),
+      scenarioGroups: dbResult.map((scenarioGroup: DBScenarioGroup): SchemaScenarioGroup => scenarioGroup.toDto()),
     };
   }),
   getScenarios: StrapiContext.handleRequest(async (context: StrapiContext): Promise<SchemaScenarios> => {
@@ -48,7 +51,7 @@ export default {
 
     const dbResult: DBScenario[] = await context.database.getScenarios(scenarioGroupId);
     return {
-      scenarios: dbResult.map((scenario: DBScenario) => scenario.toDto()),
+      scenarios: dbResult.map((scenario: DBScenario): SchemaScenario => scenario.toDto()),
     };
   }),
   getVersion: StrapiContext.handleRequest((): SchemaVersion => {

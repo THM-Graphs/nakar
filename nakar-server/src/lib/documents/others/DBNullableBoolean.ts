@@ -9,11 +9,10 @@ export class DBNullableBoolean {
 
   public static parseOrDefault(input: 'inherit' | 'true' | 'false' | null | undefined): DBNullableBoolean {
     const value: boolean | null = match(input)
-      .returnType<boolean | null>()
-      .with(P.nullish, () => null)
-      .with('inherit', () => null)
-      .with('true', () => true)
-      .with('false', () => false)
+      .with(P.nullish, (): null => null)
+      .with('inherit', (): null => null)
+      .with('true', (): boolean => true)
+      .with('false', (): boolean => false)
       .exhaustive();
     return new DBNullableBoolean(value);
   }

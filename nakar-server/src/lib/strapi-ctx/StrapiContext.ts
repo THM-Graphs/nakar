@@ -14,7 +14,7 @@ export class StrapiContext {
     this.database = new DocumentsDatabase();
   }
 
-  public static handleRequest<T>(handler: (context: StrapiContext) => Promise<T> | T) {
+  public static handleRequest<T>(handler: (context: StrapiContext) => Promise<T> | T): (ctx: Context) => Promise<void> {
     return async (ctx: Context): Promise<void> => {
       const context: StrapiContext = new StrapiContext(ctx);
       try {
@@ -23,13 +23,13 @@ export class StrapiContext {
       } catch (unknownError: unknown) {
         strapi.log.error(unknownError);
         match(unknownError)
-          .with(P.instanceOf(HttpError), (error: HttpError) => {
+          .with(P.instanceOf(HttpError), (error: HttpError): void => {
             context._handleError(error);
           })
-          .with(P.instanceOf(Error), (error: Error) => {
+          .with(P.instanceOf(Error), (error: Error): void => {
             context._handleError(new InternalServerError(error.message));
           })
-          .otherwise((error: unknown) => {
+          .otherwise((error: unknown): void => {
             context._handleError(new InternalServerError(`Unknown error: ${JSON.stringify(error)}`));
           });
       }

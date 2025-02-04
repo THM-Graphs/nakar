@@ -21,10 +21,10 @@ export class WSClient {
     this._onDisconnect = new Subject<DisconnectReason>();
 
     socket
-      .on('message', (message: SchemaWsClientToServerMessage) => {
+      .on('message', (message: SchemaWsClientToServerMessage): void => {
         this._onMessage.next(message);
       })
-      .on('disconnecting', (reason: DisconnectReason) => {
+      .on('disconnecting', (reason: DisconnectReason): void => {
         this._onDisconnect.next(reason);
       });
   }
@@ -51,8 +51,8 @@ export class WSClient {
 
   public sendError(error: unknown): void {
     const errorMessage: string = match(error)
-      .with(P.instanceOf(Error), (e: Error) => e.message)
-      .otherwise((e: unknown) => JSON.stringify(e));
+      .with(P.instanceOf(Error), (e: Error): string => e.message)
+      .otherwise((e: unknown): string => JSON.stringify(e));
     this.send({
       type: 'WSEventNotification',
       severity: 'error',

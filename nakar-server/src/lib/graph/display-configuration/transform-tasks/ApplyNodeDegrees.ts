@@ -10,11 +10,11 @@ export class ApplyNodeDegrees extends TransformTask {
   protected run(input: MutableGraph): void {
     for (const [nodeId, node] of input.nodes.entries()) {
       const outRelsCount: number = input.edges
-        .filter((e: MutableEdge) => e.startNodeId === nodeId)
-        .reduce((count: number, key: string, rel: MutableEdge) => count + rel.compressedCount, 0);
+        .filter((e: MutableEdge): boolean => e.startNodeId === nodeId)
+        .reduce((count: number, key: string, rel: MutableEdge): number => count + rel.compressedCount, 0);
       const inRelsCount: number = input.edges
-        .filter((e: MutableEdge) => e.endNodeId === nodeId)
-        .reduce((count: number, key: string, rel: MutableEdge) => count + rel.compressedCount, 0);
+        .filter((e: MutableEdge): boolean => e.endNodeId === nodeId)
+        .reduce((count: number, key: string, rel: MutableEdge): number => count + rel.compressedCount, 0);
 
       node.inDegree = inRelsCount;
       node.outDegree = outRelsCount;

@@ -29,7 +29,16 @@ export default tseslint.config({
       },
     ],
     '@typescript-eslint/no-unsafe-type-assertion': ['error'],
-    '@typescript-eslint/explicit-function-return-type': ['error'],
+    '@typescript-eslint/explicit-function-return-type': [
+      'error',
+      {
+        allowExpressions: false,
+        allowTypedFunctionExpressions: false,
+        allowHigherOrderFunctions: false,
+        allowDirectConstAssertionInArrowFunctions: false,
+        allowConciseArrowFunctionExpressionsStartingWithVoid: false,
+      },
+    ],
     '@typescript-eslint/explicit-module-boundary-types': ['error'],
     '@typescript-eslint/strict-boolean-expressions': ['error'],
     '@typescript-eslint/no-empty-function': ['error'],

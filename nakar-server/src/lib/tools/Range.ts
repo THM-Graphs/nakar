@@ -26,10 +26,10 @@ export class Range {
         return 0;
       }
       return match(scaleType)
-        .with(ScaleType.linear, () => i)
-        .with(ScaleType.logN, () => Math.log(i))
-        .with(ScaleType.log2, () => Math.log2(i))
-        .with(ScaleType.log10, () => Math.log10(i))
+        .with(ScaleType.linear, (): number => i)
+        .with(ScaleType.logN, (): number => Math.log(i))
+        .with(ScaleType.log2, (): number => Math.log2(i))
+        .with(ScaleType.log10, (): number => Math.log10(i))
         .exhaustive();
     };
 

@@ -4,6 +4,7 @@ import { MergableNodeDisplayConfiguration } from './MergableNodeDisplayConfigura
 import { FinalGraphDisplayConfiguration } from './FinalGraphDisplayConfiguration';
 import { SMap } from '../../tools/Map';
 import { DBNodeDisplayConfiguration } from '../../documents/components/graph/DBNodeDisplayConfiguration';
+import { FinalNodeDisplayConfiguration } from './FinalNodeDisplayConfiguration';
 
 export class MergableGraphDisplayConfiguration {
   public readonly connectResultNodes: boolean | null;
@@ -37,7 +38,10 @@ export class MergableGraphDisplayConfiguration {
   ): MergableGraphDisplayConfiguration {
     const nodeDisplayConfigurations: SMap<string, MergableNodeDisplayConfiguration> | undefined =
       dbConfig?.nodeDisplayConfigurations.reduce(
-        (akku: SMap<string, MergableNodeDisplayConfiguration>, next: DBNodeDisplayConfiguration) => {
+        (
+          akku: SMap<string, MergableNodeDisplayConfiguration>,
+          next: DBNodeDisplayConfiguration,
+        ): SMap<string, MergableNodeDisplayConfiguration> => {
           const targetLabel: string = next.targetLabel ?? '';
           const existingEntry: MergableNodeDisplayConfiguration | undefined = akku.get(targetLabel);
           const newEntry: MergableNodeDisplayConfiguration = MergableNodeDisplayConfiguration.createFromDb(next);
@@ -96,7 +100,7 @@ export class MergableGraphDisplayConfiguration {
       growNodesBasedOnDegree: this.growNodesBasedOnDegree ?? false,
       growNodesBasedOnDegreeFactor: this.growNodesBasedOnDegreeFactor ?? 2,
       nodeDisplayConfigurations: this.nodeDisplayConfigurations.map(
-        (mergableNodeDisplayConfiguration: MergableNodeDisplayConfiguration) =>
+        (mergableNodeDisplayConfiguration: MergableNodeDisplayConfiguration): FinalNodeDisplayConfiguration =>
           mergableNodeDisplayConfiguration.finalize(),
       ),
       compressRelationships: this.compressRelationships ?? false,
