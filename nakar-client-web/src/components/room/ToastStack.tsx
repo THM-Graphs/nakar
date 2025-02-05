@@ -7,13 +7,17 @@ import { match } from "ts-pattern";
 export function ToastStack(props: { websocketsManager: WebSocketsManager }) {
   const [message, setMessages] = useState<ToastMessage[]>([]);
 
-  const pushMessage = (message: ToastMessage) => {
+  const pushMessage = (message: Omit<ToastMessage, "id">) => {
+    const id = v4();
     setMessages((messages: ToastMessage[]): ToastMessage[] => [
       ...messages,
-      message,
+      {
+        id: id,
+        ...message,
+      },
     ]);
     setTimeout(() => {
-      removeMessage(message.id);
+      removeMessage(id);
     }, 5000);
   };
 
@@ -25,7 +29,6 @@ export function ToastStack(props: { websocketsManager: WebSocketsManager }) {
     const subscriptions = [
       props.websocketsManager.onNotification$.subscribe((notification) => {
         pushMessage({
-          id: v4(),
           message: notification.message,
           date: new Date(notification.date),
           title: notification.title,
