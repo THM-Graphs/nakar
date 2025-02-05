@@ -23,6 +23,7 @@ import { Layout } from './pipeline-steps/ForceSimulation';
 import { GrowNodeBasedOnDegree } from './pipeline-steps/GrowNodeBasedOnDegree';
 import { Profiler } from '../profile/Profiler';
 import { ProfilerTask } from '../profile/ProfilerTask';
+import { wait } from '../tools/Wait';
 
 export class ScenarioPipeline {
   private _onStep: Subject<[string, number]>;
@@ -83,6 +84,7 @@ export class ScenarioPipeline {
 
   private async _runStep<T>(step: ScenarioPipelineStep<T>): Promise<T> {
     this._onStep.next([step.title, this._stepCounter / this._stepCount]);
+    await wait(0);
     this._stepCounter += 1;
     const profilerTask: ProfilerTask = Profiler.shared.profile(step.title);
     try {
