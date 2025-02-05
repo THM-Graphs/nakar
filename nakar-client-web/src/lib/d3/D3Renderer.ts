@@ -214,7 +214,11 @@ export class D3Renderer {
         padding: 0px 5px;
         `;
       })
-      .text((d) => d.type);
+      .text((d) =>
+        d.compressedCount > 1
+          ? `${d.type} (${d.compressedCount.toString()})`
+          : d.type,
+      );
 
     this.linkLabelSelection.on("click", (event: PointerEvent, edge: D3Link) => {
       this.$onDisplayLinkData.next(edge);
