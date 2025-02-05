@@ -52,7 +52,11 @@ export function Canvas(props: {
           }}
         ></GraphRendererD3>
       )}
-      {props.renderer === "nvl" && <GraphRendererNVL></GraphRendererNVL>}
+      {props.renderer === "nvl" && (
+        <GraphRendererNVL
+          webSockets={props.webSocketsManager}
+        ></GraphRendererNVL>
+      )}
       <div className={"m-2"}>
         <Labels graphLabels={graphLabels}></Labels>
       </div>
