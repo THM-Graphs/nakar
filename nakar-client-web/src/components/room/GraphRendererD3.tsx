@@ -14,6 +14,29 @@ export function GraphRendererD3(props: {
   const [graphRenderer] = useState(new D3Renderer(theme));
 
   useEffect(() => {
+    let animationActive: boolean = true;
+    let lastAnimationTimeStamp: DOMHighResTimeStamp | null = null;
+
+    const onAnimationTick = (timestamp: DOMHighResTimeStamp) => {
+      if (lastAnimationTimeStamp === null) {
+        lastAnimationTimeStamp = timestamp;
+      }
+      const deltaTime = timestamp - lastAnimationTimeStamp;
+      lastAnimationTimeStamp = timestamp;
+
+      graphRenderer.onAnimationTick(deltaTime);
+      if (animationActive) {
+        requestAnimationFrame(onAnimationTick);
+      }
+    };
+    requestAnimationFrame(onAnimationTick);
+
+    return () => {
+      animationActive = false;
+    };
+  }, []);
+
+  useEffect(() => {
     const supscriptions = [
       props.webSockets.onScenarioLoaded$.subscribe((scenraioData) => {
         graphRenderer.loadGraphContent(scenraioData.graph);

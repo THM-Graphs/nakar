@@ -19,6 +19,10 @@ export class D3RendererState {
         ...node,
         x: node.position.x,
         y: node.position.y,
+        vx: 0,
+        vy: 0,
+        tx: node.position.x,
+        ty: node.position.y,
       };
     });
     const links = graph.edges.reduce((acc: D3Link[], edge: Edge) => {

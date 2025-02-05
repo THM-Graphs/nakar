@@ -42,6 +42,8 @@ export class D3Renderer {
     null
   > | null;
 
+  private smoothedPositionDirty: boolean;
+
   public constructor(theme: UserTheme) {
     this.$graphState = new BehaviorSubject(D3RendererState.empty());
     this.$theme = new BehaviorSubject(theme);
@@ -64,9 +66,12 @@ export class D3Renderer {
         if (svgElement == null) {
           return;
         }
+        this.smoothedPositionDirty = true;
         this.renderSvgElements(svgElement, graph, theme);
       },
     );
+
+    this.smoothedPositionDirty = true;
   }
 
   public setTheme(userTheme: UserTheme): void {
@@ -111,11 +116,10 @@ export class D3Renderer {
       if (localNode == null) {
         continue;
       }
-      localNode.position = node.position;
-      localNode.x = node.position.x;
-      localNode.y = node.position.y;
+      localNode.tx = node.position.x;
+      localNode.ty = node.position.y;
     }
-    this.applyNodePositionsToSVG();
+    this.smoothedPositionDirty = true;
   }
 
   private renderSvgElements(
@@ -232,9 +236,13 @@ export class D3Renderer {
         .on(
           "drag",
           (event: d3.D3DragEvent<SVGGElement, D3Node, null>, d: D3Node) => {
+            d.tx = event.x;
+            d.ty = event.y;
             d.x = event.x;
             d.y = event.y;
-            this.applyNodePositionsToSVG();
+            d.vx = 0;
+            d.vy = 0;
+            this.smoothedPositionDirty = true;
             this.$onNodeMoved.next(d);
           },
         )
@@ -306,11 +314,43 @@ export class D3Renderer {
       .attr("height", (d) => d.radius * 2)
       .append("xhtml:span")
       .text((d) => d.title);
+  }
 
+  public onAnimationTick(deltaTime: number): void {
+    if (!this.smoothedPositionDirty) {
+      return;
+    }
+    this.smoothedPositionDirty = false;
+
+    const fps = 30;
+    const smoothTime = 1000 / fps;
+    const maxSpeed = 500;
+    for (const node of this.graphState.nodes) {
+      [node.x, node.vx] = this.smoothDamp(
+        node.x,
+        node.tx,
+        node.vx,
+        smoothTime,
+        maxSpeed,
+        deltaTime,
+      );
+      [node.y, node.vy] = this.smoothDamp(
+        node.y,
+        node.ty,
+        node.vy,
+        smoothTime,
+        maxSpeed,
+        deltaTime,
+      );
+
+      if (node.vx !== 0 || node.vy !== 0) {
+        this.smoothedPositionDirty = true;
+      }
+    }
     this.applyNodePositionsToSVG();
   }
 
-  public applyNodePositionsToSVG(): void {
+  private applyNodePositionsToSVG(): void {
     this.linkSelection?.attr("d", (d) => this.calculator.curvedPath(d));
     this.linkLabelSelection?.attr("transform", (d: D3Link) => {
       const c = this.calculator.curvePoints(d);
@@ -320,5 +360,45 @@ export class D3Renderer {
       "transform",
       (d: D3Node) => `translate(${d.x.toString()}, ${d.y.toString()})`,
     );
+  }
+
+  private smoothDamp(
+    current: number,
+    target: number,
+    currentVelocity: number,
+    smoothTime: number,
+    maxSpeed: number,
+    deltaTime: number,
+  ): [number, number] {
+    smoothTime = Math.max(0.0001, smoothTime);
+    const omega = 2 / smoothTime;
+
+    const x = omega * deltaTime;
+    const exp = 1 / (1 + x + 0.48 * x * x + 0.235 * x * x * x);
+
+    let change = current - target;
+    const originalTo = target;
+
+    // Clamp maximum speed
+    const maxChange = maxSpeed * smoothTime;
+    change = Math.max(-maxChange, Math.min(maxChange, change));
+    target = current - change;
+
+    const temp = (currentVelocity + omega * change) * deltaTime;
+    let newVelocity = (currentVelocity - omega * temp) * exp;
+
+    let output = target + (change + temp) * exp;
+
+    // Prevent overshooting
+    if (originalTo - current > 0.0 === output > originalTo) {
+      output = originalTo;
+      newVelocity = (output - originalTo) / deltaTime;
+    }
+
+    if (Math.abs(newVelocity) < 0.0001) {
+      newVelocity = 0;
+    }
+
+    return [output, newVelocity];
   }
 }
