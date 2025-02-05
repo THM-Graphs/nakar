@@ -1,13 +1,18 @@
-import { TransformTask } from '../TransformTask';
-import { MutableGraph } from '../../MutableGraph';
-import { MutableEdge } from '../../MutableEdge';
+import { MutableGraph } from '../../graph/MutableGraph';
+import { MutableEdge } from '../../graph/MutableEdge';
+import { ScenarioPipelineStep } from '../ScenarioPipelineStep';
 
-export class ApplyNodeDegrees extends TransformTask {
-  public constructor() {
+export class ApplyNodeDegrees extends ScenarioPipelineStep<void> {
+  private _graph: MutableGraph;
+
+  public constructor(graph: MutableGraph) {
     super('Apply Node Degrees');
+    this._graph = graph;
   }
 
-  protected run(input: MutableGraph): void {
+  public run(): void {
+    const input: MutableGraph = this._graph;
+
     for (const [nodeId, node] of input.nodes.entries()) {
       const outRelsCount: number = input.edges
         .filter((e: MutableEdge): boolean => e.startNodeId === nodeId)

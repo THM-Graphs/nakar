@@ -1,13 +1,18 @@
-import { TransformTask } from '../TransformTask';
-import { MutableGraph } from '../../MutableGraph';
-import { MutableEdge } from '../../MutableEdge';
+import { MutableGraph } from '../../graph/MutableGraph';
+import { MutableEdge } from '../../graph/MutableEdge';
+import { ScenarioPipelineStep } from '../ScenarioPipelineStep';
 
-export class ApplyEdgeParallelCounts extends TransformTask {
-  public constructor() {
+export class ApplyEdgeParallelCounts extends ScenarioPipelineStep<void> {
+  private _graph: MutableGraph;
+
+  public constructor(graph: MutableGraph) {
     super('Apply Edge Parallel Counts');
+    this._graph = graph;
   }
 
-  protected run(input: MutableGraph): void {
+  public run(): void {
+    const input: MutableGraph = this._graph;
+
     for (const [, edge] of input.edges.entries()) {
       if (edge.parallelCount > 1) {
         continue;

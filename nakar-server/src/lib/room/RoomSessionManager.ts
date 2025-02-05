@@ -1,9 +1,3 @@
-import { NotFound } from 'http-errors';
-import { Neo4jLoginCredentials } from '../neo4j/Neo4jLoginCredentials';
-import { Neo4jDatabase } from '../neo4j/Neo4jDatabase';
-import { Profiler } from '../profile/Profiler';
-import { MergableGraphDisplayConfiguration } from '../graph/display-configuration/MergableGraphDisplayConfiguration';
-import { GraphTransformer } from '../graph/display-configuration/GraphTransformer';
 import { DocumentsDatabase } from '../documents/DocumentsDatabase';
 import { Core } from '@strapi/strapi';
 import { WebSocketsManager } from '../ws/WebSocketsManager';
@@ -21,15 +15,12 @@ import {
   SchemaWsActionUngrabNode,
   SchemaWsEventScenarioProgress,
 } from '../../../src-gen/schema';
-import { GraphTransformerProgress } from '../graph/display-configuration/GraphTransformerProgress';
 import { DisconnectReason } from 'socket.io';
 import { RoomState } from './RoomState';
 import { MutableNode } from '../graph/MutableNode';
 import { DBScenario } from '../documents/collection-types/DBScenario';
-import { ProfilerTask } from '../profile/ProfilerTask';
-import { Neo4jGraphElements } from '../neo4j/Neo4jGraphElements';
-import { FinalGraphDisplayConfiguration } from '../graph/display-configuration/FinalGraphDisplayConfiguration';
 import { RoomStateData } from './RoomStateData';
+import { ScenarioPipeline } from '../scenario/ScenarioPipeline';
 
 export class RoomSessionManager {
   private readonly _websocketsManager: WebSocketsManager;
@@ -157,8 +148,20 @@ export class RoomSessionManager {
     this._websocketsManager.onLoadScenario$.subscribe(
       ([socket, message]: [WSClient, SchemaWsActionLoadScenario]): void => {
         (async (): Promise<void> => {
+          const scenarioPipeline: ScenarioPipeline = new ScenarioPipeline(
+            this._database,
+          );
+          const subscription: Subscription = scenarioPipeline.onStep$.subscribe(
+            ([step, progress]: [string, number]): void => {
+              socket.sendToRoom({
+                type: 'WSEventScenarioProgress',
+                message: step,
+                progress: progress,
+              } satisfies SchemaWsEventScenarioProgress);
+            },
+          );
+
           try {
-            const stepCount: number = 3 + GraphTransformer.taskCount;
             const roomId: string | null = socket.room;
             if (roomId == null) {
               strapi.log.error(
@@ -166,79 +169,8 @@ export class RoomSessionManager {
               );
               return;
             }
-            this._sendPreparing(roomId, 0 / stepCount, 'Load Scenario');
-
-            const scenario: DBScenario | null =
-              await this._database.getScenario(message.scenarioId);
-            if (scenario == null) {
-              throw new NotFound('Scenario not found.');
-            }
-            if (scenario.query == null) {
-              throw new NotFound('The scenario has no query.');
-            }
-            if (scenario.scenarioGroup?.database == null) {
-              throw new NotFound(
-                'There is no database configuration on the scenario.',
-              );
-            }
-
-            this._sendPreparing(roomId, 1 / stepCount, 'Connect to database');
-            const credentials: Neo4jLoginCredentials =
-              Neo4jLoginCredentials.parse(scenario.scenarioGroup.database);
-            const neo4jDatabase: Neo4jDatabase = new Neo4jDatabase(credentials);
-            const query: string = scenario.query;
-
-            const initialQueryTask: ProfilerTask = Profiler.shared.profile(
-              `Initial Query (${scenario.title ?? 'no scenario title'})`,
-            );
-
-            this._sendPreparing(roomId, 2 / stepCount, 'Execute query');
-            const graphElements: Neo4jGraphElements =
-              await neo4jDatabase.executeQuery(query);
-            initialQueryTask.finish();
-
-            const graph: MutableGraph = MutableGraph.create(
-              graphElements,
-              scenario,
-            );
-
-            const displayConfiguration: FinalGraphDisplayConfiguration =
-              MergableGraphDisplayConfiguration.createFromDb(
-                scenario.scenarioGroup.database.graphDisplayConfiguration,
-              )
-                .byMerging(
-                  MergableGraphDisplayConfiguration.createFromDb(
-                    scenario.scenarioGroup.graphDisplayConfiguration,
-                  ),
-                )
-                .byMerging(
-                  MergableGraphDisplayConfiguration.createFromDb(
-                    scenario.graphDisplayConfiguration,
-                  ),
-                )
-                .finalize();
-
-            const graphTransformer: GraphTransformer = new GraphTransformer(
-              displayConfiguration,
-              neo4jDatabase,
-            );
-            const updateSubscription: Subscription =
-              graphTransformer.onProgress$.subscribe(
-                (progress: GraphTransformerProgress): void => {
-                  this._sendPreparing(
-                    roomId,
-                    (progress.progress + 3) / stepCount,
-                    progress.step,
-                  );
-                },
-              );
-            try {
-              await graphTransformer.run(graph);
-              updateSubscription.unsubscribe();
-            } catch (error) {
-              updateSubscription.unsubscribe();
-              throw error;
-            }
+            const [graph, scenario]: [MutableGraph, DBScenario] =
+              await scenarioPipeline.run(roomId, message.scenarioId);
 
             this._rooms.setData(roomId, graph);
             await this._saveGraphToDb(roomId);
@@ -255,6 +187,7 @@ export class RoomSessionManager {
               this._websocketsManager.createErrorNotification(error),
             );
           } finally {
+            subscription.unsubscribe();
             socket.sendToRoom({
               type: 'WSEventScenarioProgress',
               message: null,

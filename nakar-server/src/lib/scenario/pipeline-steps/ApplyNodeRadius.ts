@@ -1,18 +1,26 @@
-import { TransformTask } from '../TransformTask';
-import { FinalGraphDisplayConfiguration } from '../FinalGraphDisplayConfiguration';
-import { NodeDisplayConfigurationContext } from '../NodeDisplayConfigurationContext';
-import { MutableGraph } from '../../MutableGraph';
-import { FinalNodeDisplayConfiguration } from '../FinalNodeDisplayConfiguration';
+import { FinalGraphDisplayConfiguration } from '../../graph/display-configuration/FinalGraphDisplayConfiguration';
+import { NodeDisplayConfigurationContext } from '../../graph/display-configuration/NodeDisplayConfigurationContext';
+import { MutableGraph } from '../../graph/MutableGraph';
+import { FinalNodeDisplayConfiguration } from '../../graph/display-configuration/FinalNodeDisplayConfiguration';
+import { ScenarioPipelineStep } from '../ScenarioPipelineStep';
 
-export class ApplyNodeRadius extends TransformTask {
-  public constructor() {
+export class ApplyNodeRadius extends ScenarioPipelineStep<void> {
+  private _graph: MutableGraph;
+  private _config: FinalGraphDisplayConfiguration;
+
+  public constructor(
+    graph: MutableGraph,
+    config: FinalGraphDisplayConfiguration,
+  ) {
     super('Apply Node Radius');
+    this._graph = graph;
+    this._config = config;
   }
 
-  protected run(
-    input: MutableGraph,
-    config: FinalGraphDisplayConfiguration,
-  ): void {
+  public run(): void {
+    const input: MutableGraph = this._graph;
+    const config: FinalGraphDisplayConfiguration = this._config;
+
     for (const [nodeId, node] of input.nodes.entries()) {
       for (const label of node.labels) {
         const nodeConfig: FinalNodeDisplayConfiguration | undefined =

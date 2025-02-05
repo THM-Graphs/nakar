@@ -1,19 +1,27 @@
-import { TransformTask } from '../TransformTask';
-import { FinalGraphDisplayConfiguration } from '../FinalGraphDisplayConfiguration';
-import { MutableEdge } from '../../MutableEdge';
-import { Range } from '../../../tools/Range';
-import { MutableGraph } from '../../MutableGraph';
-import { SMap } from '../../../tools/Map';
+import { FinalGraphDisplayConfiguration } from '../../graph/display-configuration/FinalGraphDisplayConfiguration';
+import { MutableEdge } from '../../graph/MutableEdge';
+import { Range } from '../../tools/Range';
+import { MutableGraph } from '../../graph/MutableGraph';
+import { SMap } from '../../tools/Map';
+import { ScenarioPipelineStep } from '../ScenarioPipelineStep';
 
-export class CompressRelationships extends TransformTask {
-  public constructor() {
+export class CompressRelationships extends ScenarioPipelineStep<void> {
+  private _graph: MutableGraph;
+  private _config: FinalGraphDisplayConfiguration;
+
+  public constructor(
+    graph: MutableGraph,
+    config: FinalGraphDisplayConfiguration,
+  ) {
     super('Compress Relationships');
+    this._graph = graph;
+    this._config = config;
   }
 
-  protected run(
-    input: MutableGraph,
-    config: FinalGraphDisplayConfiguration,
-  ): void {
+  public run(): void {
+    const input: MutableGraph = this._graph;
+    const config: FinalGraphDisplayConfiguration = this._config;
+
     if (!config.compressRelationships) {
       return;
     }
