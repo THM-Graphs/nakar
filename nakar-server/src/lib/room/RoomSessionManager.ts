@@ -23,12 +23,13 @@ import {
 } from '../../../src-gen/schema';
 import { GraphTransformerProgress } from '../graph/display-configuration/GraphTransformerProgress';
 import { DisconnectReason } from 'socket.io';
-import { RoomState, RoomStateData, RoomStatePreparing } from './RoomState';
+import { RoomState } from './RoomState';
 import { MutableNode } from '../graph/MutableNode';
 import { DBScenario } from '../documents/collection-types/DBScenario';
 import { ProfilerTask } from '../profile/ProfilerTask';
 import { Neo4jGraphElements } from '../neo4j/Neo4jGraphElements';
 import { FinalGraphDisplayConfiguration } from '../graph/display-configuration/FinalGraphDisplayConfiguration';
+import { RoomStateData } from './RoomStateData';
 
 export class RoomSessionManager {
   private readonly _websocketsManager: WebSocketsManager;
@@ -165,7 +166,7 @@ export class RoomSessionManager {
               );
               return;
             }
-            this._rooms.setPreparing(roomId, 0 / stepCount, 'Load Scenario');
+            this._sendPreparing(roomId, 0 / stepCount, 'Load Scenario');
 
             const scenario: DBScenario | null =
               await this._database.getScenario(message.scenarioId);
@@ -181,11 +182,7 @@ export class RoomSessionManager {
               );
             }
 
-            this._rooms.setPreparing(
-              roomId,
-              1 / stepCount,
-              'Connect to database',
-            );
+            this._sendPreparing(roomId, 1 / stepCount, 'Connect to database');
             const credentials: Neo4jLoginCredentials =
               Neo4jLoginCredentials.parse(scenario.scenarioGroup.database);
             const neo4jDatabase: Neo4jDatabase = new Neo4jDatabase(credentials);
@@ -195,7 +192,7 @@ export class RoomSessionManager {
               `Initial Query (${scenario.title ?? 'no scenario title'})`,
             );
 
-            this._rooms.setPreparing(roomId, 2 / stepCount, 'Execute query');
+            this._sendPreparing(roomId, 2 / stepCount, 'Execute query');
             const graphElements: Neo4jGraphElements =
               await neo4jDatabase.executeQuery(query);
             initialQueryTask.finish();
@@ -228,7 +225,7 @@ export class RoomSessionManager {
             const updateSubscription: Subscription =
               graphTransformer.onProgress$.subscribe(
                 (progress: GraphTransformerProgress): void => {
-                  this._rooms.setPreparing(
+                  this._sendPreparing(
                     roomId,
                     (progress.progress + 3) / stepCount,
                     progress.step,
@@ -325,16 +322,6 @@ export class RoomSessionManager {
     this._rooms.onRoomUpdated$.subscribe(
       ([roomId, state]: [string, RoomState]): void => {
         match(state)
-          .with(
-            { type: 'preparing' },
-            (preparing: RoomStatePreparing): void => {
-              this._websocketsManager.sendToRoom(roomId, {
-                type: 'WSEventScenarioProgress',
-                message: preparing.step,
-                progress: preparing.progress,
-              });
-            },
-          )
           .with({ type: 'data' }, (data: RoomStateData): void => {
             this._websocketsManager.sendToRoom(roomId, {
               graph: data.graph.toDto(),
@@ -427,5 +414,13 @@ export class RoomSessionManager {
     } catch (error) {
       strapi.log.error(error);
     }
+  }
+
+  private _sendPreparing(roomId: string, progress: number, step: string): void {
+    this._websocketsManager.sendToRoom(roomId, {
+      type: 'WSEventScenarioProgress',
+      message: step,
+      progress: progress,
+    });
   }
 }

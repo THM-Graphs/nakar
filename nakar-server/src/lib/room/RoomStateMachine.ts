@@ -23,17 +23,6 @@ export class RoomStateMachine {
     return this._onRoomPhysicsUpdates.asObservable();
   }
 
-  public setPreparing(roomId: string, progress: number, step: string): void {
-    this._cleanupOldState(roomId);
-    const newState: RoomState = {
-      type: 'preparing',
-      progress: progress,
-      step: step,
-    };
-    this._state.set(roomId, newState);
-    this._onRoomUpdated.next([roomId, newState]);
-  }
-
   public setData(roomId: string, graph: MutableGraph): void {
     this._cleanupOldState(roomId);
     const physics: PhysicsSimulation = new PhysicsSimulation(graph);
