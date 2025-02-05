@@ -3,7 +3,7 @@ import { Nav } from "react-bootstrap";
 export function BackButton(props: {
   hidden?: boolean;
   href: string;
-  title: string;
+  title?: string;
 }) {
   if (props.hidden) {
     return null;

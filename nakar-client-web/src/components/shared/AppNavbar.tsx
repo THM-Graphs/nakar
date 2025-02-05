@@ -1,24 +1,14 @@
 import { Image, Navbar, Stack } from "react-bootstrap";
-import { ThemeDropdown } from "./ThemeDropdown.tsx";
 import { ScenarioWindowButton } from "../room/ScenarioWindowButton.tsx";
-import { TableDataWindowButton } from "../room/TableDataWindowButton.tsx";
-import { BackendBadge } from "./BackendBadge.tsx";
-import { DevelopmentIndicatorBadge } from "./DevelopmentIndicatorBadge.tsx";
-import { VersionBadge } from "./VersionBadge.tsx";
 import { BackButton } from "./BackButton.tsx";
-import { RendererDropdown } from "../room/RendererDropdown.tsx";
 import { GraphRendererEngine } from "../../lib/graph-renderer/GraphRendererEngine.ts";
 import { SocketStateDisplay } from "../room/SocketStateDisplay.tsx";
 import { SocketState } from "../../lib/ws/SocketState.ts";
 import { Env } from "../../lib/env/env.ts";
+import { InfoDropdown } from "./InfoDropdown.tsx";
 
 export function AppNavbar(props: {
   scenarioWindow?: {
-    isOpen: boolean;
-    onToggle: () => void;
-  };
-  tableDataWindow?: {
-    rowCount: number;
     isOpen: boolean;
     onToggle: () => void;
   };
@@ -30,6 +20,11 @@ export function AppNavbar(props: {
   renderer?: {
     current: GraphRendererEngine;
     onChange: (newRenderer: GraphRendererEngine) => void;
+  };
+  tableDataWindow?: {
+    rowCount: number;
+    isOpen: boolean;
+    onToggle: () => void;
   };
   env: Env;
 }) {
@@ -49,7 +44,7 @@ export function AppNavbar(props: {
         <BackButton
           hidden={!props.showBackButton}
           href={"/"}
-          title={"Back to Room List"}
+          title={""}
         ></BackButton>
         <Navbar.Brand>
           <Image
@@ -76,25 +71,11 @@ export function AppNavbar(props: {
           ></SocketStateDisplay>
         )}
         <div className={"flex-grow-1"}></div>
-        {props.renderer && (
-          <RendererDropdown
-            current={props.renderer.current}
-            onChange={props.renderer.onChange}
-          ></RendererDropdown>
-        )}
-        <ThemeDropdown></ThemeDropdown>
-        {props.tableDataWindow && (
-          <TableDataWindowButton
-            onToggle={props.tableDataWindow.onToggle}
-            rowCount={props.tableDataWindow.rowCount}
-            isOpen={props.tableDataWindow.isOpen}
-          ></TableDataWindowButton>
-        )}
-        <Stack direction={"horizontal"} gap={2}>
-          <BackendBadge env={props.env}></BackendBadge>
-          <VersionBadge env={props.env}></VersionBadge>
-          <DevelopmentIndicatorBadge></DevelopmentIndicatorBadge>
-        </Stack>
+        <InfoDropdown
+          env={props.env}
+          renderer={props.renderer}
+          tableDataWindow={props.tableDataWindow}
+        ></InfoDropdown>
       </Stack>
     </Navbar>
   );
