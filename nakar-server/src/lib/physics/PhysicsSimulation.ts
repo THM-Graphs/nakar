@@ -35,22 +35,35 @@ export class PhysicsSimulation {
     }
 
     this._running = true;
-    (async (): Promise<void> => {
-      let lastWait: number = Date.now();
-      const shouldWaitEveryMs: number =
-        (1 / PhysicsSimulation.FPS) * 1000 * 0.1; // Tenth of frame
-      while (this._running) {
-        this._tick();
-        if (lastWait + shouldWaitEveryMs < Date.now()) {
-          this._onSlowTick.next();
-          await wait(0);
-          lastWait = Date.now();
-        }
-      }
-    })().catch(strapi.log.error);
+    this._runSync(Number.POSITIVE_INFINITY).catch(strapi.log.error);
   }
 
   public stop(): void {
+    this._running = false;
+  }
+
+  public async run(forTicks: number): Promise<void> {
+    if (this._running) {
+      return;
+    }
+
+    this._running = true;
+    await this._runSync(forTicks);
+  }
+
+  private async _runSync(forTicks: number): Promise<void> {
+    let lastWait: number = Date.now();
+    const shouldWaitEveryMs: number = (1 / PhysicsSimulation.FPS) * 1000 * 0.2; // Tenth of frame
+    let ticksElapsed: number = 0;
+    while (this._running && ticksElapsed < forTicks) {
+      this._tick();
+      ticksElapsed += 1;
+      if (lastWait + shouldWaitEveryMs < Date.now()) {
+        this._onSlowTick.next();
+        await wait(0);
+        lastWait = Date.now();
+      }
+    }
     this._running = false;
   }
 

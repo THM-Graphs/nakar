@@ -133,7 +133,7 @@ export class RoomSessionManager {
     );
 
     this._websocketsManager.onMoveNodes$
-      .pipe(auditTime(2000))
+      .pipe(auditTime(5000))
       .subscribe(([socket]: [WSClient, SchemaWsActionMoveNodes]): void => {
         const roomId: string | null = socket.room;
         if (roomId == null) {
@@ -347,13 +347,5 @@ export class RoomSessionManager {
     } catch (error) {
       strapi.log.error(error);
     }
-  }
-
-  private _sendPreparing(roomId: string, progress: number, step: string): void {
-    this._websocketsManager.sendToRoom(roomId, {
-      type: 'WSEventScenarioProgress',
-      message: step,
-      progress: progress,
-    });
   }
 }

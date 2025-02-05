@@ -19,7 +19,7 @@ import { ApplyNodeDisplayText } from './pipeline-steps/ApplyNodeDisplayText';
 import { ApplyNodeRadius } from './pipeline-steps/ApplyNodeRadius';
 import { CompressRelationships } from './pipeline-steps/CompressRelationships';
 import { ConnectNodes } from './pipeline-steps/ConnectNodes';
-import { Layout } from './pipeline-steps/ForceSimulation';
+import { Layout } from './pipeline-steps/Layout';
 import { GrowNodeBasedOnDegree } from './pipeline-steps/GrowNodeBasedOnDegree';
 import { Profiler } from '../profile/Profiler';
 import { ProfilerTask } from '../profile/ProfilerTask';

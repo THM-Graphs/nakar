@@ -4,6 +4,7 @@ import { Range } from '../../tools/Range';
 import { MutableGraph } from '../../graph/MutableGraph';
 import { SMap } from '../../tools/Map';
 import { ScenarioPipelineStep } from '../ScenarioPipelineStep';
+import { wait } from '../../tools/Wait';
 
 export class CompressRelationships extends ScenarioPipelineStep<void> {
   private _graph: MutableGraph;
@@ -18,7 +19,7 @@ export class CompressRelationships extends ScenarioPipelineStep<void> {
     this._config = config;
   }
 
-  public run(): void {
+  public async run(): Promise<void> {
     const input: MutableGraph = this._graph;
     const config: FinalGraphDisplayConfiguration = this._config;
 
@@ -35,6 +36,7 @@ export class CompressRelationships extends ScenarioPipelineStep<void> {
     >();
 
     for (const [startNodeId] of input.nodes.entries()) {
+      await wait(0);
       for (const [endNodeId] of input.nodes.entries()) {
         const edges: SMap<string, MutableEdge> = input.edges.filter(
           (e: MutableEdge): boolean =>
@@ -71,17 +73,20 @@ export class CompressRelationships extends ScenarioPipelineStep<void> {
       }
     }
 
-    const compressedCounts: number[] = relationships.reduce(
-      (akku: number[], key: string, edge: MutableEdge): number[] => [
-        ...akku,
-        edge.compressedCount,
-      ],
-      [],
-    );
+    let minimumCompressedCounts: number = 1;
+    let maximumCompressedCounts: number = 1;
+    for (const relationship of relationships.values()) {
+      if (relationship.compressedCount < minimumCompressedCounts) {
+        minimumCompressedCounts = relationship.compressedCount;
+      }
+      if (relationship.compressedCount > maximumCompressedCounts) {
+        maximumCompressedCounts = relationship.compressedCount;
+      }
+    }
 
     const fromRange: Range = new Range({
-      floor: Math.min(...compressedCounts),
-      ceiling: Math.max(...compressedCounts),
+      floor: minimumCompressedCounts,
+      ceiling: maximumCompressedCounts,
     });
 
     const toRange: Range = new Range({
