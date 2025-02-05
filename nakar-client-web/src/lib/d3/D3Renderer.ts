@@ -30,7 +30,7 @@ export class D3Renderer {
     null
   > | null;
   private linkLabelSelection: d3.Selection<
-    SVGTextElement,
+    SVGGElement,
     D3Link,
     SVGGElement,
     null
@@ -184,37 +184,41 @@ export class D3Renderer {
       .selectAll("text")
       .data(d3RendererState.links)
       .enter()
-      .append("text")
-      .text((d) =>
-        d.compressedCount > 1
-          ? `${d.type} (${d.compressedCount.toString()})`
-          : d.type,
-      )
-      .attr("font-weight", "bold")
-      .attr("text-anchor", "middle")
-      .attr("alignment-baseline", "middle")
-      .attr("y", (d) => -(d.width / 2 + 8))
-      .style("stroke-linejoin", "round")
-      .attr("fill", theme == "dark" ? "#ffffff" : "#000000")
-      .attr("stroke-width", 1)
-      .attr("style", "cursor: pointer;");
+      .append("g");
 
     this.linkLabelSelection
-      .on("mouseover", (e: MouseEvent) => {
-        const el = d3.select(e.currentTarget as SVGTextElement);
-        el.attr("data-original-color", el.attr("fill"));
-        el.attr(
-          "fill",
-          adjustColor(el.attr("fill"), theme == "dark" ? -0.5 : 0.5),
-        );
+      .append("foreignObject")
+      .attr("width", (d) => d.type.length * 20)
+      .attr("height", 40)
+      .attr("x", (d) => -(d.type.length * 20) / 2)
+      .attr("y", () => -10)
+      .append("xhtml:div")
+      .attr("xmlns", "http://www.w3.org/1999/xhtml")
+      .attr("style", () => {
+        return `
+        height: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        `;
       })
-      .on("mouseout", (e: MouseEvent) => {
-        const el = d3.select(e.currentTarget as SVGTextElement);
-        el.attr("fill", el.attr("data-original-color"));
+      .append("xhtml:span")
+      .attr("style", () => {
+        return `
+        font-weight: bold;
+        color: ${theme == "dark" ? "#000" : "#fff"};
+        font-size: 10px;
+        cursor: pointer;
+        background-color: ${theme == "dark" ? "#fff" : "#000"};
+        border-radius: 5px;
+        padding: 0px 5px;
+        `;
       })
-      .on("click", (event: PointerEvent, edge: D3Link) => {
-        this.$onDisplayLinkData.next(edge);
-      });
+      .text((d) => d.type);
+
+    this.linkLabelSelection.on("click", (event: PointerEvent, edge: D3Link) => {
+      this.$onDisplayLinkData.next(edge);
+    });
 
     this.nodeSelection = zoomContainer
       .append("g")
