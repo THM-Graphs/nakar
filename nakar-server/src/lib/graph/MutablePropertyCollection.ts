@@ -38,7 +38,7 @@ export class MutablePropertyCollection {
 
   public getStringValueOfProperty(key: string): string | null {
     const v: unknown = this.properties.get(key);
-    if (typeof v === 'string') {
+    if (typeof v === 'string' && v.trim().length > 0) {
       return v;
     }
     return null;
@@ -46,7 +46,7 @@ export class MutablePropertyCollection {
 
   public firstStringValue(): string | null {
     for (const value of this.properties.values()) {
-      if (typeof value === 'string') {
+      if (typeof value === 'string' && value.trim().length > 0) {
         return value;
       }
     }

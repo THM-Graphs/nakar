@@ -77,7 +77,10 @@ export class MutableNode {
     return (
       this.customTitle ??
       this.properties.getStringValueOfProperty('name') ??
+      this.properties.getStringValueOfProperty('title') ??
       this.properties.getStringValueOfProperty('label') ??
+      this.properties.getStringValueOfProperty('id') ??
+      this.properties.getStringValueOfProperty('slug') ??
       this.properties.firstStringValue() ??
       this.labels.toArray().join(', ')
     );
