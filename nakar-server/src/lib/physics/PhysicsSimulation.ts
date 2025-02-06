@@ -2,8 +2,8 @@ import { Observable, Subject } from 'rxjs';
 import { MutableGraph } from '../graph/MutableGraph';
 import { wait } from '../tools/Wait';
 import { MutableNode } from '../graph/MutableNode';
-import { SMap } from '../tools/Map';
-import { SSet } from '../tools/Set';
+import { MutableEdge } from '../graph/MutableEdge';
+import { CombinationCache } from './CombinationCache';
 
 export class PhysicsSimulation {
   public static readonly maximumVelocity: number = 500;
@@ -68,59 +68,39 @@ export class PhysicsSimulation {
   }
 
   private _tick(): void {
-    // Example iteration count
-    // Calculate repulsive forces
-    for (const nodeA of this._graph.nodes.values()) {
-      for (const nodeB of this._graph.nodes.values()) {
-        if (nodeA !== nodeB) {
-          this._twoBodyForce(nodeA, nodeB);
-        }
+    const nodes: MutableNode[] = Array.from(this._graph.nodes.values());
+    const edges: MutableEdge[] = Array.from(this._graph.edges.values());
+
+    for (let i: number = 0; i < nodes.length; i++) {
+      this._centerForce(nodes[i]);
+
+      for (let j: number = i + 1; j < nodes.length; j++) {
+        this._twoBodyForce(nodes[i], nodes[j]);
       }
     }
 
-    // Calculate attractive forces
-    const nodeCombinationsHandled: SMap<string, SSet<string>> = new SMap<
-      string,
-      SSet<string>
-    >();
-    for (const edge of this._graph.edges.values()) {
+    const handledNodeCombinations: CombinationCache = new CombinationCache();
+    for (const edge of edges) {
       if (edge.isLoop) {
         continue;
       }
+      if (
+        handledNodeCombinations.hasCombination(edge.startNodeId, edge.endNodeId)
+      ) {
+        continue;
+      }
 
-      const startNodeId: string =
-        edge.startNodeId < edge.endNodeId ? edge.startNodeId : edge.endNodeId;
-      const endNodeId: string =
-        edge.startNodeId < edge.endNodeId ? edge.endNodeId : edge.startNodeId;
-
-      const nodeA: MutableNode | undefined = this._graph.nodes.get(startNodeId);
+      const nodeA: MutableNode | undefined = this._graph.nodes.get(
+        edge.startNodeId,
+      );
       if (nodeA == null) {
         continue;
       }
 
-      const nodeB: MutableNode | undefined = this._graph.nodes.get(endNodeId);
+      const nodeB: MutableNode | undefined = this._graph.nodes.get(
+        edge.endNodeId,
+      );
       if (nodeB == null) {
-        continue;
-      }
-
-      if (nodeA.locked && nodeB.locked) {
-        continue;
-      }
-
-      let shouldSkip: boolean = false;
-      const foundEntry: SSet<string> | undefined =
-        nodeCombinationsHandled.get(startNodeId);
-      if (foundEntry == null) {
-        nodeCombinationsHandled.set(startNodeId, new SSet([endNodeId]));
-      } else {
-        if (foundEntry.has(endNodeId)) {
-          shouldSkip = true;
-        } else {
-          foundEntry.add(endNodeId);
-        }
-      }
-
-      if (shouldSkip) {
         continue;
       }
 
@@ -128,15 +108,11 @@ export class PhysicsSimulation {
         nodeA.radius + edge.type.length * 20 + nodeB.radius;
 
       this._linkForce(targetDistance, nodeA, nodeB);
-    }
-
-    // Apply centering forces
-    for (const node of this._graph.nodes.values()) {
-      this._centerForce(node);
+      handledNodeCombinations.addCombination(edge.startNodeId, edge.endNodeId);
     }
 
     // Update positions
-    for (const node of this._graph.nodes.values()) {
+    for (const node of nodes) {
       this._applyVelocity(node);
     }
 
@@ -193,9 +169,6 @@ export class PhysicsSimulation {
   }
 
   private _twoBodyForce(nodeA: MutableNode, nodeB: MutableNode): void {
-    if (nodeA.locked) {
-      return;
-    }
     if (this._positionEquals(nodeA, nodeB)) {
       this._jiggle(nodeA);
     }
@@ -207,11 +180,20 @@ export class PhysicsSimulation {
       ((this._mass(nodeA) * this._mass(nodeB) * 4) / Math.pow(magnitude, 2)) *
       0.00015;
 
-    this._applyForce(
-      nodeA,
-      (directionX / magnitude) * strength,
-      (directionY / magnitude) * strength,
-    );
+    if (!nodeA.locked) {
+      this._applyForce(
+        nodeA,
+        (directionX / magnitude) * strength,
+        (directionY / magnitude) * strength,
+      );
+    }
+    if (!nodeB.locked) {
+      this._applyForce(
+        nodeB,
+        (-directionX / magnitude) * strength,
+        (-directionY / magnitude) * strength,
+      );
+    }
   }
 
   private _linkForce(
