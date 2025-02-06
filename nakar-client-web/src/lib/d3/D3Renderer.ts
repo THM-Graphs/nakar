@@ -331,7 +331,7 @@ export class D3Renderer {
     this.smoothedPositionDirty = false;
 
     const fps = 30;
-    const smoothTime = 1000 / fps;
+    const smoothTime = (1000 / fps) * 1.5; // compensate slow ws
     const maxSpeed = 500;
     for (const node of this.graphState.nodes) {
       [node.x, node.vx] = this.smoothDamp(
