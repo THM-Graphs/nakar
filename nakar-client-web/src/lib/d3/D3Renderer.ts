@@ -191,7 +191,7 @@ export class D3Renderer {
       .attr("width", (d) => d.type.length * 20)
       .attr("height", 40)
       .attr("x", (d) => -(d.type.length * 20) / 2)
-      .attr("y", () => -10)
+      .attr("y", () => -11)
       .append("xhtml:div")
       .attr("xmlns", "http://www.w3.org/1999/xhtml")
       .attr("style", () => {
