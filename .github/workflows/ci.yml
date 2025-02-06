@@ -65,8 +65,8 @@ jobs:
       - name: Build for macOS
         run: |
           cd nakar-client-vision
-          xcodebuild -scheme "nakar-client-vision" -sdk macosx
+          xcodebuild -scheme "nakar-client-vision" -sdk macosx -skipPackagePluginValidation
       - name: Build for visionOS
         run: |
           cd nakar-client-vision
-          xcodebuild -scheme "nakar-client-vision" -sdk xros
+          xcodebuild -scheme "nakar-client-vision" -sdk xros -skipPackagePluginValidation
