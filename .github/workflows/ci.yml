@@ -54,3 +54,19 @@ jobs:
       - name: Build Docker image
         run: |
           docker build -f nakar-db-pole/Dockerfile -t "nakar-db-pole:dev" .
+
+  ci-client-vision:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+      - name: Set up Xcode
+        run: sudo xcode-select -s /Applications/Xcode_16.2.app
+      - name: Build for macOS
+        run: |
+          cd nakar-client-vision
+          xcodebuild -scheme "nakar-client-vision" -sdk macosx
+      - name: Build for visionOS
+        run: |
+          cd nakar-client-vision
+          xcodebuild -scheme "nakar-client-vision" -sdk xros
