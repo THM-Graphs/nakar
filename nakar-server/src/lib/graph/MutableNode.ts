@@ -7,7 +7,7 @@ import { z } from 'zod';
 import { SSet } from '../tools/Set';
 
 export class MutableNode {
-  public static readonly defaultRadius: number = 60;
+  public static readonly defaultRadius: number = 40;
   // eslint-disable-next-line @typescript-eslint/typedef
   public static readonly schema = z.object({
     labels: z.array(z.string()),
@@ -78,6 +78,7 @@ export class MutableNode {
       this.customTitle ??
       this.properties.getStringValueOfProperty('name') ??
       this.properties.getStringValueOfProperty('title') ??
+      this.properties.getStringValueOfProperty('type') ??
       this.properties.getStringValueOfProperty('label') ??
       this.properties.getStringValueOfProperty('id') ??
       this.properties.getStringValueOfProperty('slug') ??

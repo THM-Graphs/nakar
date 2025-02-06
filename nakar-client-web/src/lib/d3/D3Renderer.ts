@@ -151,8 +151,8 @@ export class D3Renderer {
       .attr("viewBox", "0 0 10 10")
       .attr("refX", 10)
       .attr("refY", 5)
-      .attr("markerWidth", 4)
-      .attr("markerHeight", 5)
+      .attr("markerWidth", 6)
+      .attr("markerHeight", 8)
       .attr("orient", "auto")
       .append("path")
       .attr("d", "M 0 0 L 10 5 L 0 10 Z")
@@ -315,7 +315,7 @@ export class D3Renderer {
         width: ${(d.radius * 2).toString()}px; 
         height: ${(d.radius * 2).toString()}px;
         text-align: center;
-        font-size: ${(d.radius / 5 + 5).toString()}px;
+        font-size: ${(d.radius / 5 + 3).toString()}px;
         `;
       })
       .attr("width", (d) => d.radius * 2)
