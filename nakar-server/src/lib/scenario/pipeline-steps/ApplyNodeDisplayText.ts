@@ -12,7 +12,7 @@ export class ApplyNodeDisplayText extends ScenarioPipelineStep<void> {
     graph: MutableGraph,
     config: FinalGraphDisplayConfiguration,
   ) {
-    super('Apply Node Displa yText');
+    super('Apply Node Display Text');
     this._graph = graph;
     this._config = config;
   }

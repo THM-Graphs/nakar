@@ -10,6 +10,11 @@ export class CompressRelationships extends ScenarioPipelineStep<void> {
   private _graph: MutableGraph;
   private _config: FinalGraphDisplayConfiguration;
 
+  private _handledRelsCache: SMap<
+    string,
+    SMap<string, SMap<string, [string, MutableEdge]>>
+  >;
+
   public constructor(
     graph: MutableGraph,
     config: FinalGraphDisplayConfiguration,
@@ -17,9 +22,12 @@ export class CompressRelationships extends ScenarioPipelineStep<void> {
     super('Compress Relationships');
     this._graph = graph;
     this._config = config;
+    this._handledRelsCache = new SMap();
   }
 
   public async run(): Promise<void> {
+    await wait(0);
+
     const input: MutableGraph = this._graph;
     const config: FinalGraphDisplayConfiguration = this._config;
 
@@ -30,46 +38,31 @@ export class CompressRelationships extends ScenarioPipelineStep<void> {
       return;
     }
 
+    this._handledRelsCache = new SMap();
     const relationships: SMap<string, MutableEdge> = new SMap<
       string,
       MutableEdge
     >();
-
-    for (const [startNodeId] of input.nodes.entries()) {
-      await wait(0);
-      for (const [endNodeId] of input.nodes.entries()) {
-        const edges: SMap<string, MutableEdge> = input.edges.filter(
-          (e: MutableEdge): boolean =>
-            e.startNodeId === startNodeId && e.endNodeId === endNodeId,
+    for (const [edgeId, edge] of input.edges) {
+      const compressedRelEntry: [string, MutableEdge] | null =
+        this._getFromHandledRelsCache(
+          edge.startNodeId,
+          edge.endNodeId,
+          edge.type,
         );
-        const edgeTypes: SMap<string, string> = edges.map(
-          (e: MutableEdge): string => e.type,
+      if (compressedRelEntry == null) {
+        edge.compressedCount = 1;
+        edge.parallelCount = 1;
+        edge.parallelIndex = 0;
+        this._addToHandledRelsCache(
+          edge.startNodeId,
+          edge.endNodeId,
+          edge.type,
+          [edgeId, edge],
         );
-
-        for (const edgeType of edgeTypes.values()) {
-          const count: number = input.edges.filter(
-            (e: MutableEdge): boolean =>
-              e.startNodeId === startNodeId &&
-              e.endNodeId === endNodeId &&
-              e.type === edgeType,
-          ).size;
-          const firstEdgeEntry: [string, MutableEdge] | null = edges.find(
-            ([, edge]: [string, MutableEdge]): boolean =>
-              edge.type === edgeType,
-          );
-          if (firstEdgeEntry == null) {
-            // Should not happen
-            strapi.log.error('Did not find edge for merging.');
-            continue;
-          }
-          const [firstEdgeId, firstEdge]: [string, MutableEdge] =
-            firstEdgeEntry;
-
-          firstEdge.parallelCount = 1;
-          firstEdge.parallelIndex = 0;
-          firstEdge.compressedCount = count;
-          relationships.set(firstEdgeId, firstEdge);
-        }
+        relationships.set(edgeId, edge);
+      } else {
+        compressedRelEntry[1].compressedCount += 1;
       }
     }
 
@@ -103,5 +96,38 @@ export class CompressRelationships extends ScenarioPipelineStep<void> {
     }
 
     input.edges = relationships;
+  }
+
+  private _addToHandledRelsCache(
+    nodeAId: string,
+    nodeBId: string,
+    relType: string,
+    rel: [string, MutableEdge],
+  ): void {
+    let subMap1: SMap<string, SMap<string, [string, MutableEdge]>> | undefined =
+      this._handledRelsCache.get(nodeAId);
+    if (!subMap1) {
+      subMap1 = new SMap<string, SMap<string, [string, MutableEdge]>>();
+      this._handledRelsCache.set(nodeAId, subMap1);
+    }
+
+    let subMap2: SMap<string, [string, MutableEdge]> | undefined =
+      subMap1.get(nodeBId);
+    if (!subMap2) {
+      subMap2 = new SMap<string, [string, MutableEdge]>();
+      subMap1.set(nodeBId, subMap2);
+    }
+
+    subMap2.set(relType, rel);
+  }
+
+  private _getFromHandledRelsCache(
+    nodeAId: string,
+    nodeBId: string,
+    relType: string,
+  ): [string, MutableEdge] | null {
+    return (
+      this._handledRelsCache.get(nodeAId)?.get(nodeBId)?.get(relType) ?? null
+    );
   }
 }
