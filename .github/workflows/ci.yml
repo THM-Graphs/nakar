@@ -65,8 +65,8 @@ jobs:
       - name: Build for macOS
         run: |
           cd nakar-client-vision
-          xcodebuild -scheme "nakar-client-vision" -sdk macosx -skipPackagePluginValidation
+          xcodebuild -scheme "nakar-client-vision" -sdk macosx -skipPackagePluginValidation CODE_SIGNING_ALLOWED="NO"
       - name: Build for visionOS
         run: |
           cd nakar-client-vision
-          xcodebuild -scheme "nakar-client-vision" -sdk xros -skipPackagePluginValidation
+          xcodebuild -scheme "nakar-client-vision" -sdk xros -skipPackagePluginValidation CODE_SIGNING_ALLOWED="NO"
