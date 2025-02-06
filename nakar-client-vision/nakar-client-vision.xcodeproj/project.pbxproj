@@ -7,43 +7,31 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		7E7018A92D09A1C80060264D /* OpenAPIRuntime in Frameworks */ = {isa = PBXBuildFile; productRef = 7E7018A82D09A1C80060264D /* OpenAPIRuntime */; };
-		7E7018AC2D09A1DA0060264D /* OpenAPIURLSession in Frameworks */ = {isa = PBXBuildFile; productRef = 7E7018AB2D09A1DA0060264D /* OpenAPIURLSession */; };
+		7E7870752D54CBE200738B34 /* OpenAPIRuntime in Frameworks */ = {isa = PBXBuildFile; productRef = 7E7870742D54CBE200738B34 /* OpenAPIRuntime */; };
+		7E7870782D54CC2F00738B34 /* OpenAPIURLSession in Frameworks */ = {isa = PBXBuildFile; productRef = 7E7870772D54CC2F00738B34 /* OpenAPIURLSession */; };
+		7E78707E2D54CCEB00738B34 /* openapi.yaml in Resources */ = {isa = PBXBuildFile; fileRef = 7E78707D2D54CCEB00738B34 /* openapi.yaml */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		7E70183F2D08844B0060264D /* nakar-client-vision.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "nakar-client-vision.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		7E78705B2D54C98D00738B34 /* nakar-client-vision.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "nakar-client-vision.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		7E78707D2D54CCEB00738B34 /* openapi.yaml */ = {isa = PBXFileReference; lastKnownFileType = text.yaml; name = openapi.yaml; path = "../nakar-server/openapi.yaml"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		7E7018502D08844C0060264D /* Exceptions for "nakar-client-vision" folder in "nakar-client-vision" target */ = {
+		7E78706C2D54C98E00738B34 /* Exceptions for "nakar-client-vision" folder in "nakar-client-vision" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				"HTTP/openapi-generator-config.yaml",
-				HTTP/openapi.yaml,
 				Info.plist,
 			);
-			target = 7E70183E2D08844B0060264D /* nakar-client-vision */;
+			target = 7E78705A2D54C98D00738B34 /* nakar-client-vision */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
-/* Begin PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
-		7E7018B52D09A6C80060264D /* Exceptions for "nakar-client-vision" folder in "Compile Sources" phase from "nakar-client-vision" target */ = {
-			isa = PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet;
-			buildPhase = 7E70183B2D08844B0060264D /* Sources */;
-			membershipExceptions = (
-				"HTTP/openapi-generator-config.yaml",
-				HTTP/openapi.yaml,
-			);
-		};
-/* End PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
-
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		7E7018412D08844B0060264D /* nakar-client-vision */ = {
+		7E78705D2D54C98D00738B34 /* nakar-client-vision */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				7E7018502D08844C0060264D /* Exceptions for "nakar-client-vision" folder in "nakar-client-vision" target */,
-				7E7018B52D09A6C80060264D /* Exceptions for "nakar-client-vision" folder in "Compile Sources" phase from "nakar-client-vision" target */,
+				7E78706C2D54C98E00738B34 /* Exceptions for "nakar-client-vision" folder in "nakar-client-vision" target */,
 			);
 			path = "nakar-client-vision";
 			sourceTree = "<group>";
@@ -51,30 +39,31 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		7E70183C2D08844B0060264D /* Frameworks */ = {
+		7E7870582D54C98D00738B34 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				7E7018A92D09A1C80060264D /* OpenAPIRuntime in Frameworks */,
-				7E7018AC2D09A1DA0060264D /* OpenAPIURLSession in Frameworks */,
+				7E7870782D54CC2F00738B34 /* OpenAPIURLSession in Frameworks */,
+				7E7870752D54CBE200738B34 /* OpenAPIRuntime in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		7E7018362D08844B0060264D = {
+		7E7870522D54C98D00738B34 = {
 			isa = PBXGroup;
 			children = (
-				7E7018412D08844B0060264D /* nakar-client-vision */,
-				7E7018402D08844B0060264D /* Products */,
+				7E78707D2D54CCEB00738B34 /* openapi.yaml */,
+				7E78705D2D54C98D00738B34 /* nakar-client-vision */,
+				7E78705C2D54C98D00738B34 /* Products */,
 			);
 			sourceTree = "<group>";
 		};
-		7E7018402D08844B0060264D /* Products */ = {
+		7E78705C2D54C98D00738B34 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				7E70183F2D08844B0060264D /* nakar-client-vision.app */,
+				7E78705B2D54C98D00738B34 /* nakar-client-vision.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -82,82 +71,83 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		7E70183E2D08844B0060264D /* nakar-client-vision */ = {
+		7E78705A2D54C98D00738B34 /* nakar-client-vision */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 7E7018512D08844C0060264D /* Build configuration list for PBXNativeTarget "nakar-client-vision" */;
+			buildConfigurationList = 7E78706D2D54C98E00738B34 /* Build configuration list for PBXNativeTarget "nakar-client-vision" */;
 			buildPhases = (
-				7E70183B2D08844B0060264D /* Sources */,
-				7E70183C2D08844B0060264D /* Frameworks */,
-				7E70183D2D08844B0060264D /* Resources */,
+				7E7870572D54C98D00738B34 /* Sources */,
+				7E7870582D54C98D00738B34 /* Frameworks */,
+				7E7870592D54C98D00738B34 /* Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
-				7E7018BB2D09A7680060264D /* PBXTargetDependency */,
+				7E78707A2D54CC4D00738B34 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
-				7E7018412D08844B0060264D /* nakar-client-vision */,
+				7E78705D2D54C98D00738B34 /* nakar-client-vision */,
 			);
 			name = "nakar-client-vision";
 			packageProductDependencies = (
-				7E7018A82D09A1C80060264D /* OpenAPIRuntime */,
-				7E7018AB2D09A1DA0060264D /* OpenAPIURLSession */,
+				7E7870742D54CBE200738B34 /* OpenAPIRuntime */,
+				7E7870772D54CC2F00738B34 /* OpenAPIURLSession */,
 			);
 			productName = "nakar-client-vision";
-			productReference = 7E70183F2D08844B0060264D /* nakar-client-vision.app */;
+			productReference = 7E78705B2D54C98D00738B34 /* nakar-client-vision.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
-		7E7018372D08844B0060264D /* Project object */ = {
+		7E7870532D54C98D00738B34 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 1610;
-				LastUpgradeCheck = 1610;
+				LastSwiftUpdateCheck = 1620;
+				LastUpgradeCheck = 1620;
 				TargetAttributes = {
-					7E70183E2D08844B0060264D = {
-						CreatedOnToolsVersion = 16.1;
+					7E78705A2D54C98D00738B34 = {
+						CreatedOnToolsVersion = 16.2;
 					};
 				};
 			};
-			buildConfigurationList = 7E70183A2D08844B0060264D /* Build configuration list for PBXProject "nakar-client-vision" */;
+			buildConfigurationList = 7E7870562D54C98D00738B34 /* Build configuration list for PBXProject "nakar-client-vision" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
 				Base,
 			);
-			mainGroup = 7E7018362D08844B0060264D;
+			mainGroup = 7E7870522D54C98D00738B34;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				7E7018A72D09A1C80060264D /* XCRemoteSwiftPackageReference "swift-openapi-runtime" */,
-				7E7018AA2D09A1DA0060264D /* XCRemoteSwiftPackageReference "swift-openapi-urlsession" */,
-				7E7018B72D09A72A0060264D /* XCRemoteSwiftPackageReference "swift-openapi-generator" */,
+				7E7870722D54CBC700738B34 /* XCRemoteSwiftPackageReference "swift-openapi-generator" */,
+				7E7870732D54CBE200738B34 /* XCRemoteSwiftPackageReference "swift-openapi-runtime" */,
+				7E7870762D54CC2F00738B34 /* XCRemoteSwiftPackageReference "swift-openapi-urlsession" */,
 			);
 			preferredProjectObjectVersion = 77;
-			productRefGroup = 7E7018402D08844B0060264D /* Products */;
+			productRefGroup = 7E78705C2D54C98D00738B34 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				7E70183E2D08844B0060264D /* nakar-client-vision */,
+				7E78705A2D54C98D00738B34 /* nakar-client-vision */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-		7E70183D2D08844B0060264D /* Resources */ = {
+		7E7870592D54C98D00738B34 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7E78707E2D54CCEB00738B34 /* openapi.yaml in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		7E70183B2D08844B0060264D /* Sources */ = {
+		7E7870572D54C98D00738B34 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -167,25 +157,26 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		7E7018BB2D09A7680060264D /* PBXTargetDependency */ = {
+		7E78707A2D54CC4D00738B34 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			productRef = 7E7018BA2D09A7680060264D /* OpenAPIGenerator */;
+			productRef = 7E7870792D54CC4D00738B34 /* OpenAPIGenerator */;
 		};
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
-		7E7018522D08844C0060264D /* Debug */ = {
+		7E78706E2D54C98E00738B34 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_ASSET_PATHS = "\"nakar-client-vision/Preview Content\"";
 				DEVELOPMENT_TEAM = USSZ6N5YB4;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "$(TARGET_NAME)/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = NAKAR;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -193,25 +184,28 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "de.samuelschepp.nakar-client-vision";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SUPPORTED_PLATFORMS = "xros xrsimulator";
+				REGISTER_APP_GROUPS = NO;
+				SUPPORTED_PLATFORMS = "macosx xros xrsimulator";
+				SUPPORTS_MACCATALYST = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 7;
 			};
 			name = Debug;
 		};
-		7E7018532D08844C0060264D /* Release */ = {
+		7E78706F2D54C98E00738B34 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_ASSET_PATHS = "\"nakar-client-vision/Preview Content\"";
 				DEVELOPMENT_TEAM = USSZ6N5YB4;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "$(TARGET_NAME)/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = NAKAR;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -219,14 +213,16 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "de.samuelschepp.nakar-client-vision";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SUPPORTED_PLATFORMS = "xros xrsimulator";
+				REGISTER_APP_GROUPS = NO;
+				SUPPORTED_PLATFORMS = "macosx xros xrsimulator";
+				SUPPORTS_MACCATALYST = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 7;
 			};
 			name = Release;
 		};
-		7E7018542D08844C0060264D /* Debug */ = {
+		7E7870702D54C98E00738B34 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -285,11 +281,11 @@
 				SDKROOT = xros;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
-				XROS_DEPLOYMENT_TARGET = 2.1;
+				XROS_DEPLOYMENT_TARGET = 2.2;
 			};
 			name = Debug;
 		};
-		7E7018552D08844C0060264D /* Release */ = {
+		7E7870712D54C98E00738B34 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -341,27 +337,27 @@
 				SDKROOT = xros;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				VALIDATE_PRODUCT = YES;
-				XROS_DEPLOYMENT_TARGET = 2.1;
+				XROS_DEPLOYMENT_TARGET = 2.2;
 			};
 			name = Release;
 		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		7E70183A2D08844B0060264D /* Build configuration list for PBXProject "nakar-client-vision" */ = {
+		7E7870562D54C98D00738B34 /* Build configuration list for PBXProject "nakar-client-vision" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				7E7018542D08844C0060264D /* Debug */,
-				7E7018552D08844C0060264D /* Release */,
+				7E7870702D54C98E00738B34 /* Debug */,
+				7E7870712D54C98E00738B34 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		7E7018512D08844C0060264D /* Build configuration list for PBXNativeTarget "nakar-client-vision" */ = {
+		7E78706D2D54C98E00738B34 /* Build configuration list for PBXNativeTarget "nakar-client-vision" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				7E7018522D08844C0060264D /* Debug */,
-				7E7018532D08844C0060264D /* Release */,
+				7E78706E2D54C98E00738B34 /* Debug */,
+				7E78706F2D54C98E00738B34 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
@@ -369,15 +365,23 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		7E7018A72D09A1C80060264D /* XCRemoteSwiftPackageReference "swift-openapi-runtime" */ = {
+		7E7870722D54CBC700738B34 /* XCRemoteSwiftPackageReference "swift-openapi-generator" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/apple/swift-openapi-runtime";
+			repositoryURL = "https://github.com/apple/swift-openapi-generator";
 			requirement = {
 				kind = upToNextMinorVersion;
 				minimumVersion = 1.7.0;
 			};
 		};
-		7E7018AA2D09A1DA0060264D /* XCRemoteSwiftPackageReference "swift-openapi-urlsession" */ = {
+		7E7870732D54CBE200738B34 /* XCRemoteSwiftPackageReference "swift-openapi-runtime" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-openapi-runtime";
+			requirement = {
+				kind = upToNextMinorVersion;
+				minimumVersion = 1.8.0;
+			};
+		};
+		7E7870762D54CC2F00738B34 /* XCRemoteSwiftPackageReference "swift-openapi-urlsession" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/apple/swift-openapi-urlsession";
 			requirement = {
@@ -385,33 +389,25 @@
 				minimumVersion = 1.0.2;
 			};
 		};
-		7E7018B72D09A72A0060264D /* XCRemoteSwiftPackageReference "swift-openapi-generator" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/apple/swift-openapi-generator";
-			requirement = {
-				kind = upToNextMinorVersion;
-				minimumVersion = 1.5.1;
-			};
-		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		7E7018A82D09A1C80060264D /* OpenAPIRuntime */ = {
+		7E7870742D54CBE200738B34 /* OpenAPIRuntime */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 7E7018A72D09A1C80060264D /* XCRemoteSwiftPackageReference "swift-openapi-runtime" */;
+			package = 7E7870732D54CBE200738B34 /* XCRemoteSwiftPackageReference "swift-openapi-runtime" */;
 			productName = OpenAPIRuntime;
 		};
-		7E7018AB2D09A1DA0060264D /* OpenAPIURLSession */ = {
+		7E7870772D54CC2F00738B34 /* OpenAPIURLSession */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 7E7018AA2D09A1DA0060264D /* XCRemoteSwiftPackageReference "swift-openapi-urlsession" */;
+			package = 7E7870762D54CC2F00738B34 /* XCRemoteSwiftPackageReference "swift-openapi-urlsession" */;
 			productName = OpenAPIURLSession;
 		};
-		7E7018BA2D09A7680060264D /* OpenAPIGenerator */ = {
+		7E7870792D54CC4D00738B34 /* OpenAPIGenerator */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 7E7018B72D09A72A0060264D /* XCRemoteSwiftPackageReference "swift-openapi-generator" */;
+			package = 7E7870722D54CBC700738B34 /* XCRemoteSwiftPackageReference "swift-openapi-generator" */;
 			productName = "plugin:OpenAPIGenerator";
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
-	rootObject = 7E7018372D08844B0060264D /* Project object */;
+	rootObject = 7E7870532D54C98D00738B34 /* Project object */;
 }
