@@ -18,6 +18,6 @@ export class Layout extends ScenarioPipelineStep<void> {
     }
 
     const simulation: PhysicsSimulation = new PhysicsSimulation(input);
-    await simulation.run(500);
+    await simulation.run(1000);
   }
 }
