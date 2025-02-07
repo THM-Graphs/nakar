@@ -16,7 +16,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "7E78705A2D54C98D00738B34"
-               BuildableName = "nakar-client-vision.app"
+               BuildableName = "NAKAR.app"
                BlueprintName = "nakar-client-vision"
                ReferencedContainer = "container:nakar-client-vision.xcodeproj">
             </BuildableReference>
@@ -45,7 +45,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "7E78705A2D54C98D00738B34"
-            BuildableName = "nakar-client-vision.app"
+            BuildableName = "NAKAR.app"
             BlueprintName = "nakar-client-vision"
             ReferencedContainer = "container:nakar-client-vision.xcodeproj">
          </BuildableReference>
@@ -62,7 +62,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "7E78705A2D54C98D00738B34"
-            BuildableName = "nakar-client-vision.app"
+            BuildableName = "NAKAR.app"
             BlueprintName = "nakar-client-vision"
             ReferencedContainer = "container:nakar-client-vision.xcodeproj">
          </BuildableReference>

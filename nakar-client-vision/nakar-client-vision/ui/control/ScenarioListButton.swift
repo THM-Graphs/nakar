@@ -9,9 +9,12 @@ import SwiftUI
 
 struct ScenarioListButton: View {
     let scenario: ViewModel.Scenario
+    @Environment(\.openWindow) var openWindow
 
     var body: some View {
-        Button(action: {}) {
+        Button(action: {
+            openWindow(id: "renderer")
+        }) {
             HStack {
                 VStack(alignment: .leading) {
                     Text(scenario.title)

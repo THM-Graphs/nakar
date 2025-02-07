@@ -7,13 +7,14 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		7E786B5D2D55466D003CC8EA /* SocketIO in Frameworks */ = {isa = PBXBuildFile; productRef = 7E786B5C2D55466D003CC8EA /* SocketIO */; };
 		7E7870752D54CBE200738B34 /* OpenAPIRuntime in Frameworks */ = {isa = PBXBuildFile; productRef = 7E7870742D54CBE200738B34 /* OpenAPIRuntime */; };
 		7E7870782D54CC2F00738B34 /* OpenAPIURLSession in Frameworks */ = {isa = PBXBuildFile; productRef = 7E7870772D54CC2F00738B34 /* OpenAPIURLSession */; };
 		7E78707E2D54CCEB00738B34 /* openapi.yaml in Resources */ = {isa = PBXBuildFile; fileRef = 7E78707D2D54CCEB00738B34 /* openapi.yaml */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		7E78705B2D54C98D00738B34 /* nakar-client-vision.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "nakar-client-vision.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		7E78705B2D54C98D00738B34 /* NAKAR.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = NAKAR.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		7E78707D2D54CCEB00738B34 /* openapi.yaml */ = {isa = PBXFileReference; lastKnownFileType = text.yaml; name = openapi.yaml; path = "../nakar-server/openapi.yaml"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -45,6 +46,7 @@
 			files = (
 				7E7870782D54CC2F00738B34 /* OpenAPIURLSession in Frameworks */,
 				7E7870752D54CBE200738B34 /* OpenAPIRuntime in Frameworks */,
+				7E786B5D2D55466D003CC8EA /* SocketIO in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -63,7 +65,7 @@
 		7E78705C2D54C98D00738B34 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				7E78705B2D54C98D00738B34 /* nakar-client-vision.app */,
+				7E78705B2D54C98D00738B34 /* NAKAR.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -91,9 +93,10 @@
 			packageProductDependencies = (
 				7E7870742D54CBE200738B34 /* OpenAPIRuntime */,
 				7E7870772D54CC2F00738B34 /* OpenAPIURLSession */,
+				7E786B5C2D55466D003CC8EA /* SocketIO */,
 			);
 			productName = "nakar-client-vision";
-			productReference = 7E78705B2D54C98D00738B34 /* nakar-client-vision.app */;
+			productReference = 7E78705B2D54C98D00738B34 /* NAKAR.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -124,6 +127,7 @@
 				7E7870722D54CBC700738B34 /* XCRemoteSwiftPackageReference "swift-openapi-generator" */,
 				7E7870732D54CBE200738B34 /* XCRemoteSwiftPackageReference "swift-openapi-runtime" */,
 				7E7870762D54CC2F00738B34 /* XCRemoteSwiftPackageReference "swift-openapi-urlsession" */,
+				7E786B5B2D55466D003CC8EA /* XCRemoteSwiftPackageReference "socket" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 7E78705C2D54C98D00738B34 /* Products */;
@@ -183,7 +187,7 @@
 				);
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "de.samuelschepp.nakar-client-vision";
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_NAME = NAKAR;
 				REGISTER_APP_GROUPS = NO;
 				SUPPORTED_PLATFORMS = "macosx xros xrsimulator";
 				SUPPORTS_MACCATALYST = NO;
@@ -212,7 +216,7 @@
 				);
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "de.samuelschepp.nakar-client-vision";
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_NAME = NAKAR;
 				REGISTER_APP_GROUPS = NO;
 				SUPPORTED_PLATFORMS = "macosx xros xrsimulator";
 				SUPPORTS_MACCATALYST = NO;
@@ -365,6 +369,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		7E786B5B2D55466D003CC8EA /* XCRemoteSwiftPackageReference "socket" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/socketio/socket.io-client-swift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 16.1.1;
+			};
+		};
 		7E7870722D54CBC700738B34 /* XCRemoteSwiftPackageReference "swift-openapi-generator" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/apple/swift-openapi-generator";
@@ -392,6 +404,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		7E786B5C2D55466D003CC8EA /* SocketIO */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 7E786B5B2D55466D003CC8EA /* XCRemoteSwiftPackageReference "socket" */;
+			productName = SocketIO;
+		};
 		7E7870742D54CBE200738B34 /* OpenAPIRuntime */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 7E7870732D54CBE200738B34 /* XCRemoteSwiftPackageReference "swift-openapi-runtime" */;

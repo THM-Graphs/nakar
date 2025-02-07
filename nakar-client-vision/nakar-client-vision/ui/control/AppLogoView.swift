@@ -14,14 +14,11 @@ struct AppLogoView: View {
                 .resizable()       // Makes the image resizable
                 .scaledToFit()     // Scales the image while maintaining aspect ratio
                 .frame(width: 100, height: 100) // Set desired frame
-                .clipShape(RoundedRectangle(cornerRadius: 50))
             Text("NAKAR").font(.headline)
         }
     }
 }
 
 #Preview() {
-    NavigationStack {
-        AppLogoView()
-    }
+    AppLogoView()
 }

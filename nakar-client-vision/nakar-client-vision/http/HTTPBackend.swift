@@ -30,33 +30,21 @@ class HTTPBackend {
 
     func getRooms() async throws -> [Components.Schemas.Room] {
         let result = try await client.getRooms()
-        switch result {
-        case .ok(let value): return try value.body.json.rooms
-        case .undocumented(let status, let data): throw await UndocumentedResponseError(status: status, payload: data)
-        }
+        return try result.ok.body.json.rooms
     }
 
     func getDatabases() async throws -> [Components.Schemas.Database] {
         let result = try await client.getDatabases()
-        switch result {
-        case .ok(let value): return try value.body.json.databases
-        case .undocumented(let status, let data): throw await UndocumentedResponseError(status: status, payload: data)
-        }
+        return try result.ok.body.json.databases
     }
 
     func getScenarioGroups(databaseId: String) async throws -> [Components.Schemas.ScenarioGroup] {
         let result = try await client.getScenarioGroups(Operations.GetScenarioGroups.Input(query: Operations.GetScenarioGroups.Input.Query(databaseId: databaseId)))
-        switch result {
-        case .ok(let value): return try value.body.json.scenarioGroups
-        case .undocumented(let status, let data): throw await UndocumentedResponseError(status: status, payload: data)
-        }
+        return try result.ok.body.json.scenarioGroups
     }
 
     func getScenarios(scenarioGroupId: String) async throws -> [Components.Schemas.Scenario] {
         let result = try await client.getScenarios(Operations.GetScenarios.Input(query: Operations.GetScenarios.Input.Query(scenarioGroupId: scenarioGroupId)))
-        switch result {
-        case .ok(let value): return try value.body.json.scenarios
-        case .undocumented(let status, let data): throw await UndocumentedResponseError(status: status, payload: data)
-        }
+        return try result.ok.body.json.scenarios
     }
 }

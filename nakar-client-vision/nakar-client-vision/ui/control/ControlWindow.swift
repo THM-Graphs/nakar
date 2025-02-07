@@ -9,16 +9,16 @@ import SwiftUI
 import RealityKit
 
 struct ControlWindow: View {
-    @EnvironmentObject var environment: Environment
+    @EnvironmentObject var environment: SharedEnvironment
     @State var state: Loadable<ViewModel.ControlWindowState> = .nothing
     @State var selectedDatabase: ViewModel.Database? = nil
-    @State var selectedRoom: ViewModel.Room? = nil
-    @State private var selectedRoomStack: [ViewModel.Room] = []
+    @State var selectedRoomStack: [ViewModel.Room] = []
+    @Environment(\.colorScheme) var colorScheme
 
     var body: some View {
         NavigationSplitView(sidebar: {
             NavigationStack(path: $selectedRoomStack) {
-                List(selection: $selectedRoom) {
+                List() {
                     HStack {
                         Spacer()
                         AppLogoView()
@@ -34,20 +34,12 @@ struct ControlWindow: View {
                             NavigationLink(value: room) {
                                 Text(room.title)
                             }
-
                         }
                     case .error(let error):
                         Text("Error: \(error)")
                     }
                 }
                 .navigationTitle("NAKAR")
-                .onChange(of: selectedRoom) {
-                    if let selectedRoom {
-                        selectedRoomStack.append(selectedRoom)
-                    } else {
-                        selectedRoomStack = []
-                    }
-                }
                 .navigationDestination(for: ViewModel.Room.self) { room in
                     switch state {
                     case .data(let data):
@@ -61,9 +53,15 @@ struct ControlWindow: View {
                     }
                 }
             }.onChange(of: selectedRoomStack) {
-                if selectedRoomStack.isEmpty {
+                if let room = selectedRoomStack.last {
+                    environment.roomManager?.leave()
+                    environment.roomManager = RoomManager(environment: environment, roomId: room.id, colorScheme: colorScheme)
+                } else {
                     selectedDatabase = nil
+                    environment.roomManager?.leave()
+                    environment.roomManager = nil
                 }
+
             }
         }, detail: {
             if let selectedDatabase {
@@ -98,5 +96,5 @@ struct ControlWindow: View {
 }
 
 #Preview() {
-    ControlWindow().environmentObject(Environment())
+    ControlWindow().environmentObject(SharedEnvironment())
 }
