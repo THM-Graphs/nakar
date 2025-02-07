@@ -24,7 +24,14 @@ export class WSClient {
 
     socket
       .on('message', (message: SchemaWsClientToServerMessage): void => {
-        this._onMessage.next(message);
+        try {
+          const parsedMessage: unknown =
+            typeof message === 'string' ? JSON.parse(message) : message;
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+          this._onMessage.next(parsedMessage as SchemaWsClientToServerMessage);
+        } catch (error) {
+          strapi.log.error(error);
+        }
       })
       .on('disconnecting', (reason: DisconnectReason): void => {
         this._onDisconnect.next(reason);

@@ -100,6 +100,9 @@ export class WebSocketsManager {
               .exhaustive();
           } catch (error: unknown) {
             wsClient.send(this.createErrorNotification(error));
+            strapi.log.error(
+              `Unhandled ws message: ${JSON.stringify(message)}`,
+            );
           }
         },
       );
