@@ -55,7 +55,7 @@ struct ControlWindow: View {
             }.onChange(of: selectedRoomStack) {
                 if let room = selectedRoomStack.last {
                     environment.roomManager?.leave()
-                    environment.roomManager = RoomManager(environment: environment, roomId: room.id, colorScheme: colorScheme)
+                    environment.roomManager = RoomManager(environmentHandler: environment.environmentHandler, roomId: room.id, colorScheme: colorScheme)
                 } else {
                     selectedDatabase = nil
                     environment.roomManager?.leave()

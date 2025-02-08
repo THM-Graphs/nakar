@@ -19,10 +19,11 @@ struct RendererWindow: View {
     }
 
     var body: some View {
-        if let roomManager = environment.roomManager {
-            ZStack (alignment: .topLeading) {
-                ZStack {
-                    ForEach(roomManager.graph?.nodes ?? [], id: \.id) { node in
+        NavigationStack {
+            if let roomManager = environment.roomManager {
+                ZStack (alignment: .topLeading) {
+                    ZStack {
+                        ForEach(roomManager.graph?.nodes ?? [], id: \.id) { node in
                             Circle()
                                 .fill(.blue)
                                 .overlay {
@@ -45,37 +46,35 @@ struct RendererWindow: View {
 
 
 
-                    }
-                    //                SpriteView(scene: roomManager.scene)
-                    //                    .edgesIgnoringSafeArea(.all)
-                    //                    .gesture(drag)
+                        }
+                        //                SpriteView(scene: roomManager.scene)
+                        //                    .edgesIgnoringSafeArea(.all)
+                        //                    .gesture(drag)
 
-                }
-                .position(
-                    CGPoint(
-                        x: 0,
-                        y: 0
+                    }
+                    .position(
+                        CGPoint(
+                            x: 0,
+                            y: 0
+                        )
                     )
-                )
-                .scaleEffect(0.2)
-                VStack {
-                    Text(roomManager.socketState)
-                }.padding(10)
+                    .scaleEffect(0.2)
+                }.navigationTitle(roomManager.socketIOManager.socketStatus)
+            } else {
+                Text("No room selected.")
             }
-        } else {
-            Text("Loading...")
         }
     }
 }
 
-#Preview {
+#Preview() {
     @Previewable @Environment(\.colorScheme) var colorScheme
 
     func environem() -> SharedEnvironment {
         let env = SharedEnvironment()
-        env.roomManager = RoomManager(environment: env, roomId: "clwlvyp1rjpwvkw2wig89drs", colorScheme: colorScheme)
+        env.roomManager = RoomManager(environmentHandler: env.environmentHandler, roomId: "clwlvyp1rjpwvkw2wig89drs", colorScheme: colorScheme)
         return env
     }
 
-    return RendererWindow().environmentObject(environem()).frame(width: 400, height: 300, alignment: .center)
+    return RendererWindow().environmentObject(environem())
 }

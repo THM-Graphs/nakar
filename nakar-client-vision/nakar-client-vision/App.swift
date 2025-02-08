@@ -13,7 +13,7 @@ struct nakar_client_visionApp: App {
     let env = SharedEnvironment()
     var body: some Scene {
         WindowGroup {
-            ControlWindow().environmentObject(env)
+            RoomSelectWindow().environmentObject(env)
         }
         WindowGroup("Room", id: "renderer") {
             RendererWindow().environmentObject(env)

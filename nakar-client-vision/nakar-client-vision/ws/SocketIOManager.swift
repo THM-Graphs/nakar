@@ -9,18 +9,17 @@ import SocketIO
 import Foundation
 import Combine
 
-class SocketIOManager {
-    let manager: SocketManager
-    let socket: SocketIOClient
-
+@Observable class SocketIOManager {
+    private let manager: SocketManager
+    private let socket: SocketIOClient
     private let onClientConnect: PassthroughSubject<Void, Never>
-    let onClientConnect$: any Publisher<Void, Never>
-
     private let onMessage: PassthroughSubject<Components.Schemas.WSServerToClientMessage, Never>
-    let onMessage$: any Publisher<Components.Schemas.WSServerToClientMessage, Never>
-
     private let onClientDisconnect: PassthroughSubject<String, Never>
+
+    let onClientConnect$: any Publisher<Void, Never>
+    let onMessage$: any Publisher<Components.Schemas.WSServerToClientMessage, Never>
     let onClientDisconnect$: any Publisher<String, Never>
+    var socketStatus: String
 
     init(environmentHandler: EnvironmentHandler) {
         self.manager = SocketManager(socketURL: environmentHandler.getWSUrl(), config: [.compress, .path("/frontend")])
@@ -32,6 +31,11 @@ class SocketIOManager {
         onMessage$ = onMessage
         self.onClientDisconnect = PassthroughSubject()
         onClientDisconnect$ = onClientDisconnect
+        self.socketStatus = self.socket.status.description
+
+        socket.on(clientEvent: .statusChange) { data, ack in
+            self.socketStatus = self.socket.status.description
+        }
 
         socket.on(clientEvent: .connect) { data, ack in
             self.onClientConnect.send()

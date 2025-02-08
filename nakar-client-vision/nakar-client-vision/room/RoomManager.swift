@@ -11,25 +11,21 @@ import SpriteKit
 
 @Observable class RoomManager {
     private var cancellables: Set<AnyCancellable>
-    private let socketIOManager: SocketIOManager
+    let socketIOManager: SocketIOManager
 
     var scene: ScenarioScene
     var graph: Components.Schemas.Graph?
     let roomId: String
 
-    var socketState: String
-
-    init(environment: SharedEnvironment, roomId: String, colorScheme: ColorScheme) {
-        self.socketIOManager = SocketIOManager(environmentHandler: environment.environmentHandler)
+    init(environmentHandler: EnvironmentHandler, roomId: String, colorScheme: ColorScheme) {
+        self.socketIOManager = SocketIOManager(environmentHandler: environmentHandler)
         self.cancellables = Set()
         self.roomId = roomId
         self.scene = ScenarioScene.setup(colorScheme: colorScheme)
         self.graph = nil
-        self.socketState = "Connecting..."
-        
+
         socketIOManager.onClientConnect$.sink {
             self.onClientConnect()
-            self.socketState = "Connected"
         }.store(in: &self.cancellables)
 
         socketIOManager.onMessage$.sink { message in
@@ -42,7 +38,6 @@ import SpriteKit
         }.store(in: &self.cancellables)
 
         socketIOManager.onClientDisconnect$.sink { reason in
-            self.socketState = "Disconnected: \(reason)"
         }.store(in: &self.cancellables)
 
         socketIOManager.connect()
