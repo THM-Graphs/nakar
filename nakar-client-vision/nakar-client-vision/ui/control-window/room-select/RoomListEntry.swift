@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct SingleRoomView: View {
+struct RoomListEntry: View {
     let room: ViewModel.Room
     let onEnter: (() -> Void)?
 
@@ -21,25 +21,16 @@ struct SingleRoomView: View {
             Button(action: {
                 onEnter?()
             }) {
-                Text ("Enter")
+                Label("Enter", systemImage: "eye")
             }
         }
         .padding(30)
         .background(.regularMaterial)
-        .clipShape(.rect(cornerRadii: .init(topLeading: 20, bottomLeading: 20, bottomTrailing: 20, topTrailing: 20)))
+        .clipShape(.rect(cornerRadius: 20))
         .navigationTitle("NAKAR")
     }
 }
 
-
-#if os(visionOS)
-#Preview(windowStyle: .automatic) {
-    SingleRoomView(room: ViewModel.Room.demoData()[0], onEnter: {})
+#Preview {
+    RoomListEntry(room: ViewModel.Room.demoData()[0], onEnter: nil)
 }
-#endif
-
-#if os(macOS)
-#Preview() {
-    SingleRoomView(room: ViewModel.Room.demoData()[0], onEnter: {})
-}
-#endif

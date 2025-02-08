@@ -12,36 +12,27 @@ import Combine
 @Observable class SocketIOManager {
     private let manager: SocketManager
     private let socket: SocketIOClient
-    private let onClientConnect: PassthroughSubject<Void, Never>
-    private let onMessage: PassthroughSubject<Components.Schemas.WSServerToClientMessage, Never>
-    private let onClientDisconnect: PassthroughSubject<String, Never>
+    private weak var delegate: SocketIOManagerDelegate?
 
-    let onClientConnect$: any Publisher<Void, Never>
-    let onMessage$: any Publisher<Components.Schemas.WSServerToClientMessage, Never>
-    let onClientDisconnect$: any Publisher<String, Never>
-    var socketStatus: String
+    var socketStatus: SocketIOStatus
 
-    init(environmentHandler: EnvironmentHandler) {
-        self.manager = SocketManager(socketURL: environmentHandler.getWSUrl(), config: [.compress, .path("/frontend")])
+    init() {
+        self.manager = SocketManager(socketURL: Self.url, config: [.compress, .path("/frontend")])
         self.socket = manager.defaultSocket
 
-        self.onClientConnect = PassthroughSubject()
-        onClientConnect$ = onClientConnect
-        self.onMessage = PassthroughSubject()
-        onMessage$ = onMessage
-        self.onClientDisconnect = PassthroughSubject()
-        onClientDisconnect$ = onClientDisconnect
-        self.socketStatus = self.socket.status.description
+        self.delegate = nil
+        self.socketStatus = self.socket.status
 
         socket.on(clientEvent: .statusChange) { data, ack in
-            self.socketStatus = self.socket.status.description
+            self.socketStatus = self.socket.status
         }
 
-        socket.on(clientEvent: .connect) { data, ack in
-            self.onClientConnect.send()
+        socket.on(clientEvent: .connect) { [weak self] data, ack in
+            self?.delegate?.onClientConnect()
         }
 
-        socket.on("message") { messages, ack in
+        socket.on("message") { [weak self] messages, ack in
+            guard let self else { return }
             do {
                 guard let message = messages.first else {
                     print("No messages")
@@ -49,14 +40,21 @@ import Combine
                 }
                 let data = try JSONSerialization.data(withJSONObject: message)
                 let typedMessage = try JSONDecoder().decode(Components.Schemas.WSServerToClientMessage.self, from: data)
-                self.onMessage.send(typedMessage)
+
+                switch typedMessage {
+                case .WSEventScenarioLoaded(let event): self.delegate?.onWSEventScenarioLoaded(event: event)
+                case .WSEventNodesMoved(let event): self.delegate?.onWSEventNodesMoved(event: event)
+                case .WSEventNotification(let event): self.delegate?.onWSEventNotification(event: event)
+                case .WSEventScenarioProgress(let event): self.delegate?.onWSEventScenarioProgress(event: event)
+                }
             } catch let error {
                 print(error)
             }
         }
 
-        socket.on(clientEvent: .disconnect) { data, ack in
-            self.onClientDisconnect.send(String(describing: data))
+        socket.on(clientEvent: .disconnect) { [weak self] data, ack in
+            guard let self else { return }
+            self.delegate?.onClientDisconnect(reason: String(describing: data))
         }
 
         socket.onAny {
@@ -64,7 +62,15 @@ import Combine
         }
     }
 
-    func connect() {
+    static var url: URL {
+        switch SharedEnvironment.Mode.current {
+        case .development: return URL(string: "http://localhost:1337")!
+        case .production: return URL(string: "http://nakar.mni.thm.de:1337")!
+        }
+    }
+
+    func connect(delegate: SocketIOManagerDelegate) {
+        self.delegate = delegate
         socket.connect()
     }
 

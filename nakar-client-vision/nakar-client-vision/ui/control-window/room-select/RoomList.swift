@@ -7,14 +7,14 @@
 
 import SwiftUI
 
-struct RoomsView: View {
+struct RoomList: View {
     let rooms: [ViewModel.Room]
     let onEnter: ((ViewModel.Room) -> Void)?
 
     var body: some View {
         VStack {
             ForEach(rooms) { room in
-                SingleRoomView(room: room, onEnter: {
+                RoomListEntry(room: room, onEnter: {
                     onEnter?(room)
                 })
             }
@@ -22,14 +22,6 @@ struct RoomsView: View {
     }
 }
 
-#if os(visionOS)
-#Preview(windowStyle: .automatic) {
-    RoomsView(rooms: ViewModel.Room.demoData(), onEnter: {_ in})
+#Preview {
+    RoomList(rooms: ViewModel.Room.demoData(), onEnter: nil)
 }
-#endif
-
-#if os(macOS)
-#Preview() {
-    RoomsView(rooms: ViewModel.Room.demoData(), onEnter: {_ in})
-}
-#endif
