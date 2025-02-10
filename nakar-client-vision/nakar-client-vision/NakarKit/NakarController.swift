@@ -11,12 +11,15 @@ import Foundation
 
 @MainActor
 @Observable
-class SharedEnvironment {
+class NakarController {
     private let httpBackend: HTTPBackend
 
-    var roomManagers: [String: RoomManager]
+    var roomManagers: [String: NakarRoom]
     var backendData: Loadable<ViewModel.BackendData> = .nothing
+
+    #if os(visionOS)
     var immersionStyle: ImmersionStyle = .mixed
+    #endif
 
     init() {
         self.httpBackend = HTTPBackend()
@@ -24,16 +27,23 @@ class SharedEnvironment {
         self.roomManagers = [:]
     }
 
-    enum Mode {
+    enum Mode: CustomStringConvertible {
         case production
         case development
 
         static var current: Mode {
-#if DEBUG
+            #if DEBUG
             return .development
-#else
+            #else
             return .production
-#endif
+            #endif
+        }
+
+        var description: String {
+            switch self {
+            case .production: return "Production"
+            case .development: return "Development"
+            }
         }
     }
 
@@ -41,7 +51,7 @@ class SharedEnvironment {
         if self.roomManagers.keys.contains(roomId) {
             return
         }
-        let roomManager = RoomManager(roomId: roomId)
+        let roomManager = NakarRoom(roomId: roomId)
         self.roomManagers[roomId] = roomManager
     }
 
@@ -51,6 +61,10 @@ class SharedEnvironment {
         }
         roomManager.leave()
         roomManagers.removeValue(forKey: roomId)
+    }
+
+    var environmentDebugString: String {
+        return "\(Mode.current.description) (\(releaseVersionNumber)-\(buildVersionNumber))"
     }
 
     var releaseVersionNumber: String {

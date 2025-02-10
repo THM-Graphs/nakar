@@ -5,7 +5,7 @@
 //  Created by Samuel Schepp on 08.02.25.
 //
 
-protocol SocketIOManagerDelegate: AnyObject {
+protocol WSBackendDelegate: AnyObject {
     func onClientConnect()
     func onClientDisconnect(reason: String)
     func onWSEventScenarioLoaded(event: Components.Schemas.WSEventScenarioLoaded)

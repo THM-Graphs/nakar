@@ -10,16 +10,18 @@ import Combine
 
 @main
 struct nakar_client_visionApp: App {
-    @State var env = SharedEnvironment()
+    @State var env = NakarController()
 
     var body: some Scene {
         WindowGroup {
             ControlWindow().environment(env)
         }
 
+        #if os(visionOS)
         // Display a fully immersive space.
         ImmersiveSpace(id: "renderer") {
             Renderer().environment(env)
         }.immersionStyle(selection: $env.immersionStyle, in: .full)
+        #endif
     }
 }

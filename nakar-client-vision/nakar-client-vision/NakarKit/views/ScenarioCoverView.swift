@@ -1,5 +1,5 @@
 //
-//  CoverView.swift
+//  ScenarioCoverView.swift
 //  nakar-client-vision
 //
 //  Created by Samuel Schepp on 08.02.25.
@@ -7,10 +7,19 @@
 
 import SwiftUI
 
-struct CoverView: View {
-    let url: URL?
+struct ScenarioCoverView: View {
+    let scenario: ViewModel.Scenario
+    let size: CGFloat
 
-    private let size: CGFloat = 50
+    var url: URL? {
+        guard let urlString = scenario.coverUrl else {
+            return nil
+        }
+        guard let url = URL(string: urlString) else {
+            return nil
+        }
+        return url
+    }
 
     var body: some View {
         AsyncImage(url: url, content: { image in
@@ -30,6 +39,5 @@ struct CoverView: View {
 }
 
 #Preview {
-    CoverView(url: nil)
-    CoverView(url: URL(string: "https://fastly.picsum.photos/id/904/200/200.jpg?hmac=QegM9tS4hRwLbLWCb2W91mYYovO_itG2JmSQiz0PnrM"))
+    ScenarioCoverView(scenario: ViewModel.Scenario.demoData()[0], size: 20)
 }

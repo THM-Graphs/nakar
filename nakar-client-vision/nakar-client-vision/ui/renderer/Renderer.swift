@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct Renderer: View {
-    @Environment(SharedEnvironment.self) var sharedEnvironment: SharedEnvironment
+    @Environment(NakarController.self) var sharedEnvironment: NakarController
 
     @State var scale = 0.01
 

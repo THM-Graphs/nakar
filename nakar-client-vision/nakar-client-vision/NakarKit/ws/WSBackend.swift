@@ -9,22 +9,22 @@ import SocketIO
 import Foundation
 import Combine
 
-@Observable class SocketIOManager {
+@Observable class WSBackend {
     private let manager: SocketManager
     private let socket: SocketIOClient
-    private weak var delegate: SocketIOManagerDelegate?
+    private weak var delegate: WSBackendDelegate?
 
-    var socketStatus: SocketIOStatus
+    var socketStatus: SocketStatus
 
     init() {
         self.manager = SocketManager(socketURL: Self.url, config: [.compress, .path("/frontend")])
         self.socket = manager.defaultSocket
 
         self.delegate = nil
-        self.socketStatus = self.socket.status
+        self.socketStatus = SocketStatus.from(native: self.socket.status)
 
         socket.on(clientEvent: .statusChange) { data, ack in
-            self.socketStatus = self.socket.status
+            self.socketStatus = SocketStatus.from(native: self.socket.status)
         }
 
         socket.on(clientEvent: .connect) { [weak self] data, ack in
@@ -63,13 +63,13 @@ import Combine
     }
 
     static var url: URL {
-        switch SharedEnvironment.Mode.current {
+        switch NakarController.Mode.current {
         case .development: return URL(string: "http://localhost:1337")!
         case .production: return URL(string: "http://nakar.mni.thm.de:1337")!
         }
     }
 
-    func connect(delegate: SocketIOManagerDelegate) {
+    func connect(delegate: WSBackendDelegate) {
         self.delegate = delegate
         socket.connect()
     }

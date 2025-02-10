@@ -13,7 +13,7 @@ struct ScenarioSelectView: View {
     let room: ViewModel.Room
     let databases: [ViewModel.Database]
 
-    @Environment(SharedEnvironment.self) var environment: SharedEnvironment
+    @Environment(NakarController.self) var environment: NakarController
     @Environment(\.colorScheme) var colorScheme
 
     @State var selectedDatabase: ViewModel.Database? = nil
@@ -39,5 +39,5 @@ struct ScenarioSelectView: View {
     ScenarioSelectView(
         room: ViewModel.Room.demoData()[0],
         databases: ViewModel.Database.demoData()
-    ).environment(SharedEnvironment())
+    ).environment(NakarController())
 }

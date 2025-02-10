@@ -10,9 +10,7 @@ import SwiftUI
 struct AppLogoView: View {
     var body: some View {
         VStack(alignment: .center) {
-            Image("Generic App Icon")
-                .resizable()
-                .scaledToFit()
+            AppIconView()
                 .frame(width: 100, height: 100)
             Text("NAKAR").font(.headline)
         }

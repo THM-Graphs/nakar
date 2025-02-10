@@ -20,7 +20,7 @@ class HTTPBackend {
     }
 
     static var url: URL {
-        switch SharedEnvironment.Mode.current {
+        switch NakarController.Mode.current {
         case .development: return try! Servers.Server1.url()
         case .production: return try! Servers.Server2.url()
         }

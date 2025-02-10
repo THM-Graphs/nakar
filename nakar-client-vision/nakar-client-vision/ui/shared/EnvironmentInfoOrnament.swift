@@ -7,11 +7,12 @@
 
 import SwiftUI
 
+#if os(visionOS)
 struct EnvironmentInfoOrnament: View {
-    @Environment(SharedEnvironment.self) var environment: SharedEnvironment
+    @Environment(NakarController.self) var environment: NakarController
 
     var mode: String {
-        switch SharedEnvironment.Mode.current {
+        switch NakarController.Mode.current {
         case .development: "Development"
         case .production: "Production"
         }
@@ -20,19 +21,18 @@ struct EnvironmentInfoOrnament: View {
     var body: some View {
         HStack {
             Group {
-                Text("\(mode) (\(environment.releaseVersionNumber)-\(environment.buildVersionNumber))")
+                Text(environment.environmentDebugString)
             }
             .padding([.leading, .trailing], 20)
             .frame(height: 44)
             .font(.footnote)
-            #if os(visionOS)
             .glassBackgroundEffect()
-            #endif
         }
     }
 }
 
 #Preview {
     EnvironmentInfoOrnament()
-        .environment(SharedEnvironment())
+        .environment(NakarController())
 }
+#endif

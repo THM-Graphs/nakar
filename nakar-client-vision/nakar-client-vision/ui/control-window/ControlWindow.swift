@@ -9,9 +9,12 @@ import SwiftUI
 
 struct ControlWindow: View {
     @State private var navigation = NavigationPath()
-    @Environment(SharedEnvironment.self) var sharedEnvironment: SharedEnvironment
+    @Environment(NakarController.self) var sharedEnvironment: NakarController
+
+    #if os(visionOS)
     @Environment(\.openImmersiveSpace) var openImmersiveSpace
     @Environment(\.dismissImmersiveSpace) var dismissImmersiveSpace
+    #endif
 
     var body: some View {
         NavigationStack(path: $navigation) {
@@ -26,30 +29,40 @@ struct ControlWindow: View {
                     ScenarioSelectView(room: room, databases: data.databases)
                         .onAppear {
                             sharedEnvironment.enterRoom(roomId: room.id)
+
+                            #if os(visionOS)
                             Task {
                                 let result = await openImmersiveSpace(id: "renderer")
                                 print(result)
                             }
+                            #endif
                         }
                         .onDisappear {
                             sharedEnvironment.leaveRoom(roomId: room.id)
+
+                            #if os(visionOS)
                             Task {
                                 await dismissImmersiveSpace()
                             }
+                            #endif
                         }
                 } else {
                     EmptyView()
                 }
             }
         }
+        #if os(macOS)
         .toolbar {
             ToolbarItemGroup {
                 Toolbar()
             }
         }
+        #endif
+        #if os(visionOS)
         .ornament(attachmentAnchor: .scene(.bottomFront)) {
             Toolbar()
         }
+        #endif
         .task {
             await sharedEnvironment.initialize()
         }
@@ -59,5 +72,5 @@ struct ControlWindow: View {
 
 #Preview() {
     ControlWindow()
-        .environment(SharedEnvironment())
+        .environment(NakarController())
 }

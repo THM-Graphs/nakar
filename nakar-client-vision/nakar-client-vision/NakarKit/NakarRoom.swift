@@ -10,15 +10,15 @@ import Combine
 import SpriteKit
 
 @Observable
-class RoomManager: SocketIOManagerDelegate {
-    let socketIOManager: SocketIOManager
+class NakarRoom: WSBackendDelegate {
+    let socketIOManager: WSBackend
 
     let roomId: String
 
     var physicalGraph: PhysicalGraph
 
     init(roomId: String) {
-        self.socketIOManager = SocketIOManager()
+        self.socketIOManager = WSBackend()
         self.roomId = roomId
         self.physicalGraph = PhysicalGraph()
 

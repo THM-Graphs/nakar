@@ -16,7 +16,7 @@ struct ScenarioListEntry: View {
             openWindow(id: "renderer")
         }) {
             HStack(spacing: 20) {
-                ScenarioCoverView(scenario: scenario)
+                ScenarioCoverView(scenario: scenario, size: 50)
                 VStack(alignment: .leading) {
                     Text(scenario.title)
                 }
