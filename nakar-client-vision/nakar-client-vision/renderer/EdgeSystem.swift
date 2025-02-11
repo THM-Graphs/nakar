@@ -25,19 +25,30 @@ class EdgeSystem: System {
                 print("Error: no global scale in node system")
                 return
             }
+            guard let lineEntity = entity.children.first(where: { $0.name == "line" }) else {
+                print("No Line entity")
+                return
+            }
 
             let physicalEdge = edgeComponent.physicalEdge
             let source = edgeComponent.source
             let target = edgeComponent.target
             
-            let start: SIMD3<Float> = [source.position.x, source.position.y, globalScale.defaultDepth]
-            let end: SIMD3<Float> = [target.position.x, target.position.y, globalScale.defaultDepth]
-            entity.position = (start + end) / 2
+            let start: SIMD2<Float> = [source.position.x, source.position.y]
+            let end: SIMD2<Float> = [target.position.x, target.position.y]
+            let length = distance(start, end)
+            lineEntity.scale = [length, 1, 1]
+            entity.position = SIMD3<Float>((start + end) / 2, globalScale.defaultDepth - 0.005)
 
             let direction = normalize(end - start)
-            let angle = acos(dot(SIMD3<Float>(0, 0, 1), direction))
-            let axis = cross(SIMD3<Float>(0, 0, 1), direction)
-            entity.orientation = simd_quatf(angle: angle, axis: axis)
+            let vectorToRight = SIMD2<Float>(1, 0)
+            var angle = -atan2(direction.x, direction.y)
+            angle += (2 * .pi) / 4
+            if angle > (2 * .pi) / 4 || angle < -(2 * .pi) / 4 {
+                angle += .pi
+            }
+
+            entity.orientation = simd_quatf(angle: angle, axis: SIMD3<Float>(0, 0, 1))
         }
     }
 }

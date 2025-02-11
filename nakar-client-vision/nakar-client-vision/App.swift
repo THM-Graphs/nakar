@@ -35,7 +35,7 @@ struct nakar_client_visionApp: App {
         ImmersiveSpace(id: "renderer", for: String.self) { roomId in
             VisionProImmersiveSpace(roomId: roomId)
                 .environment(env)
-        }.immersionStyle(selection: $env.immersionStyle, in: .full)
+        }.immersionStyle(selection: $env.immersionStyle, in: .mixed)
         #endif
     }
 }

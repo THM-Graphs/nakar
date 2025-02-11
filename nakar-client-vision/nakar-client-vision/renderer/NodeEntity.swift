@@ -22,7 +22,7 @@ extension Entity {
         entity.addChild(model)
 
         // Node
-        entity.components[NodeComponent.self] = NodeComponent(source: physicalNode, renderer: renderer)
+        entity.components.set(NodeComponent(source: physicalNode, renderer: renderer))
 
         // Hover
         model.components.set(InputTargetComponent())
@@ -41,7 +41,7 @@ extension Entity {
         textString.paragraphStyle = paragraphStyle
         var textComponent = TextComponent()
         textComponent.text = textString
-        let height = min(getAttributedStringHeight(textString, maxWidth: physicalNode.radius * 2), physicalNode.radius * 2)
+        let height = min(textString.height(withWidth: physicalNode.radius * 2), physicalNode.radius * 2)
         textComponent.size = CGSize(width: physicalNode.radius * 2, height: height)
         let textEntity = Entity()
         textEntity.components.set(textComponent)
@@ -51,14 +51,5 @@ extension Entity {
 
 
         return entity
-    }
-
-    fileprivate class func getAttributedStringHeight(_ attributedString: AttributedString, maxWidth: CGFloat) -> CGFloat {
-        let nsAttributedString = NSAttributedString(attributedString) // Umwandlung zu NSAttributedString
-        let framesetter = CTFramesetterCreateWithAttributedString(nsAttributedString)
-        let targetSize = CGSize(width: maxWidth, height: CGFloat.greatestFiniteMagnitude)
-        let boundingBox = CTFramesetterSuggestFrameSizeWithConstraints(framesetter, CFRangeMake(0, nsAttributedString.length), nil, targetSize, nil)
-
-        return ceil(boundingBox.height) // Aufrunden für pixelgenaue Darstellung
     }
 }

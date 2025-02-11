@@ -33,7 +33,7 @@ class RendererViewController {
         self.content = content
 
         let camera = PerspectiveCamera()
-        camera.position = [0, 0, 5]
+        camera.position = [0, 0, 2]
         content.add(camera)
 
         connectObservables()
