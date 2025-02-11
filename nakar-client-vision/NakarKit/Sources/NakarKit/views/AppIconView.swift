@@ -7,8 +7,12 @@
 
 import SwiftUI
 
-struct AppIconView: View {
-    var body: some View {
+public struct AppIconView: View {
+    public init() {
+        
+    }
+
+    public var body: some View {
         Image("Generic App Icon")
             .resizable()
             .scaledToFit()

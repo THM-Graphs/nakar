@@ -9,18 +9,22 @@ import SwiftUI
 import Combine
 import SpriteKit
 
-@Observable
-class NakarRoom: WSBackendDelegate {
-    let socketIOManager: WSBackend
+public class NakarRoom: WSBackendDelegate, ObservableObject {
+    private let socketIOManager: WSBackend
 
-    let roomId: String
+    public var graph: PhysicalGraph
+    public let onNewGraph: PassthroughSubject<PhysicalGraph, Never>
+    public let onNodesMoved: PassthroughSubject<[String: PhysicalNode], Never>
 
-    var physicalGraph: PhysicalGraph
+    public let roomId: String
 
-    init(roomId: String) {
+
+    public init(roomId: String) {
         self.socketIOManager = WSBackend()
+        graph = PhysicalGraph()
+        onNewGraph = PassthroughSubject()
+        onNodesMoved = PassthroughSubject()
         self.roomId = roomId
-        self.physicalGraph = PhysicalGraph()
 
         socketIOManager.connect(delegate: self)
     }
@@ -40,22 +44,37 @@ class NakarRoom: WSBackendDelegate {
     }
 
     func onWSEventScenarioLoaded(event: Components.Schemas.WSEventScenarioLoaded) {
-        self.physicalGraph.fill(with: event.graph)
+        graph = PhysicalGraph()
+        graph.fill(with: event.graph)
+        onNewGraph.send(graph)
     }
 
     func onWSEventNodesMoved(event: Components.Schemas.WSEventNodesMoved) {
-        
+        var updatedNodes: [String: PhysicalNode] = [:]
+        for node in event.nodes {
+            guard var existingNode = graph.nodes[node.id] else {
+                continue
+            }
+            existingNode.x = node.position.x
+            existingNode.y = node.position.y
+            updatedNodes[existingNode.id] = existingNode
+        }
+        onNodesMoved.send(updatedNodes)
     }
 
     func onWSEventNotification(event: Components.Schemas.WSEventNotification) {
-
+#warning("")
     }
 
     func onWSEventScenarioProgress(event: Components.Schemas.WSEventScenarioProgress) {
-
+#warning("")
     }
 
     func onClientDisconnect(reason: String) {
+#warning("")
+    }
 
+    public var socketStatus: SocketStatus {
+        self.socketIOManager.socketStatus
     }
 }

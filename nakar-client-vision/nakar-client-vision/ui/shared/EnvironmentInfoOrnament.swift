@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import NakarKit
 
 #if os(visionOS)
 struct EnvironmentInfoOrnament: View {

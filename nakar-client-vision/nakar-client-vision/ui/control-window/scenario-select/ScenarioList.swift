@@ -6,17 +6,18 @@
 //
 
 import SwiftUI
+import NakarKit
 
 struct ScenarioList: View {
-    let scenarioGroups: [ViewModel.ScenarioGroup]
+    let scenarioGroup: ViewModel.ScenarioGroup
 
     var body: some View {
-        ForEach(scenarioGroups) { scenarioGroup in
-            Section(scenarioGroup.title) {
-                ForEach(scenarioGroup.scenarios) { scenario in
-                    ScenarioListEntry(scenario: scenario)
-                }
-            }
+        ForEach(scenarioGroup.scenarios) { scenario in
+            ScenarioListEntry(scenario: scenario)
         }
     }
+}
+
+#Preview {
+    ScenarioList(scenarioGroup: ViewModel.ScenarioGroup.demoData()[0])
 }

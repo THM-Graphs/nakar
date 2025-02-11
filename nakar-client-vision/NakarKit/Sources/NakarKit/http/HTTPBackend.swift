@@ -9,6 +9,7 @@ import Foundation
 import OpenAPIRuntime
 import OpenAPIURLSession
 
+@MainActor
 class HTTPBackend {
     private let client: Client
 

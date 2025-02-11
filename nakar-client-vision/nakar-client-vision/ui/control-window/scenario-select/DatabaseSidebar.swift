@@ -6,14 +6,27 @@
 //
 
 import SwiftUI
+import NakarKit
 
 struct DatabaseSidebar: View {
     let databases: [ViewModel.Database]
-    let selectedDatabase: Binding<ViewModel.Database?>
+    let selectedScenario: Binding<ViewModel.Scenario?>
 
     var body: some View {
-        List (databases, selection: selectedDatabase) { database in
+        List (databases, selection: selectedScenario) { database in
             DatabaseListEntry(database: database)
-        }.listStyle(.sidebar)
+        }.listStyle(.sidebar).navigationSplitViewColumnWidth(min: 200, ideal: 200)
+    }
+}
+
+
+#Preview {
+    NavigationSplitView {
+        DatabaseSidebar(
+            databases: ViewModel.Database.demoData(),
+            selectedScenario: Binding<ViewModel.Scenario?>.constant(nil)
+        )
+    } detail: {
+        EmptyView()
     }
 }

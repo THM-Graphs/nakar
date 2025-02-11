@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import NakarKit
 
 struct AppLogoView: View {
     var body: some View {

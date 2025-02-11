@@ -7,6 +7,7 @@
 
 import SwiftUI
 import Combine
+import NakarKit
 
 @main
 struct nakar_client_visionApp: App {
@@ -14,7 +15,20 @@ struct nakar_client_visionApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ControlWindow().environment(env)
+            #if os(macOS)
+            MacControlWindow()
+                .environment(env)
+                .onAppear {
+                    env.initialize()
+                }
+            #endif
+            #if os(visionOS)
+            ControlWindow()
+                .environment(env)
+                .onAppear {
+                    env.initialize()
+                }
+            #endif
         }
 
         #if os(visionOS)

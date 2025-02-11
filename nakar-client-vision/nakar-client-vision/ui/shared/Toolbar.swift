@@ -7,15 +7,20 @@
 
 
 import SwiftUI
+import NakarKit
 
 struct Toolbar: View {
     @Environment(NakarController.self) var sharedEnvironment: NakarController
 
+    private var rooms: [NakarRoom] {
+        Array(sharedEnvironment.roomManagers.values)
+    }
+
 #if os (visionOS)
     var body: some View {
         HStack {
-            ForEach(Array(sharedEnvironment.roomManagers.values), id: \.roomId) { roomManager in
-                SocketStatusOrnament(roomManager: roomManager)
+            ForEach(rooms, id: \.roomId) { room in
+                SocketStatusOrnament(roomManager: room)
             }
             EnvironmentInfoOrnament()
         }
@@ -24,11 +29,11 @@ struct Toolbar: View {
 
 #if os (macOS)
     var body: some View {
-        ForEach(Array(sharedEnvironment.roomManagers.values), id: \.roomId) { roomManager in
+        ForEach(rooms, id: \.roomId) { room in
             Label(title: {
-                Text(roomManager.socketIOManager.socketStatus.description)
+                Text(room.socketStatus.description)
             }, icon: {
-                SocketStatusIconView(socketStatus: roomManager.socketIOManager.socketStatus)
+                SocketStatusIconView(socketStatus: room.socketStatus)
             })
         }
         Text(sharedEnvironment.environmentDebugString)

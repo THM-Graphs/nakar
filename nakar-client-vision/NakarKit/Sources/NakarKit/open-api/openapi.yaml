@@ -1,0 +1,594 @@
+openapi: 3.0.0
+info:
+  title: NAKAR
+  version: 1.0.0
+servers:
+  - url: http://localhost:1337/api/frontend
+    description: Development
+  - url: http://nakar.mni.thm.de:1337/api/frontend
+    description: Production
+tags:
+  - name: Scenario
+  - name: ScenarioGroup
+  - name: Database
+  - name: Room
+  - name: System
+paths:
+  /scenario:
+    get:
+      tags:
+        - Scenario
+      operationId: getScenarios
+      parameters:
+        - name: scenarioGroupId
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Scenarios"
+
+  /scenario-group:
+    get:
+      tags:
+        - ScenarioGroup
+      operationId: getScenarioGroups
+      parameters:
+        - name: databaseId
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScenarioGroups"
+
+  /database:
+    get:
+      tags:
+        - Database
+      operationId: getDatabases
+      responses:
+        "200":
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Databases"
+
+  /room:
+    get:
+      tags:
+        - Room
+      operationId: getRooms
+      responses:
+        "200":
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Rooms"
+  /room/{id}:
+    get:
+      tags:
+        - Room
+      operationId: getRoom
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Room"
+
+  /system/version:
+    get:
+      tags:
+        - System
+      operationId: getVersion
+      responses:
+        "200":
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Version"
+
+components:
+  schemas:
+    PresetColorIndex:
+      type: integer
+      enum: [0, 1, 2, 3, 4, 5]
+
+    PresetColor:
+      type: object
+      properties:
+        index:
+          $ref: "#/components/schemas/PresetColorIndex"
+      required:
+        - index
+
+    CustomColor:
+      type: object
+      properties:
+        backgroundColor:
+          type: string
+        textColor:
+          type: string
+      required:
+        - backgroundColor
+        - textColor
+
+    Color:
+      discriminator:
+        propertyName: type
+      oneOf:
+        - $ref: "#/components/schemas/PresetColor"
+        - $ref: "#/components/schemas/CustomColor"
+
+    GraphLabel:
+      type: object
+      properties:
+        label:
+          type: string
+        color:
+          $ref: "#/components/schemas/Color"
+        count:
+          type: integer
+      required:
+        - label
+        - color
+        - count
+
+    GraphProperty:
+      type: object
+      properties:
+        slug:
+          type: string
+        value:
+          $ref: "#/components/schemas/GraphPropertyValue"
+      required:
+        - slug
+        - value
+    GraphPropertyValue: {}
+
+    Node:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        labels:
+          type: array
+          items:
+            type: string
+        properties:
+          type: array
+          items:
+            $ref: "#/components/schemas/GraphProperty"
+        radius:
+          type: number
+        position:
+          $ref: "#/components/schemas/Position"
+        inDegree:
+          type: integer
+        outDegree:
+          type: integer
+        degree:
+          type: integer
+        namesInQuery:
+          type: array
+          items:
+            type: string
+        displayConfigurationContext: {}
+        customBackgroundColor:
+          type: string
+          nullable: true
+        customTitleColor:
+          type: string
+          nullable: true
+      required:
+        - id
+        - title
+        - labels
+        - properties
+        - radius
+        - position
+        - inDegree
+        - outDegree
+        - degree
+        - namesInQuery
+        - displayConfigurationContext
+        - customBackgroundColor
+        - customTitleColor
+
+    PhysicalNode:
+      type: object
+      properties:
+        id:
+          type: string
+        position:
+          $ref: "#/components/schemas/Position"
+      required:
+        - id
+        - position
+
+    Position:
+      type: object
+      properties:
+        x:
+          type: number
+        y:
+          type: number
+      required:
+        - x
+        - y
+
+    Edge:
+      type: object
+      properties:
+        id:
+          type: string
+        startNodeId:
+          type: string
+        endNodeId:
+          type: string
+        type:
+          type: string
+        isLoop:
+          type: boolean
+        parallelCount:
+          type: integer
+        parallelIndex:
+          type: integer
+        compressedCount:
+          type: integer
+        width:
+          type: number
+        properties:
+          type: array
+          items:
+            $ref: "#/components/schemas/GraphProperty"
+        namesInQuery:
+          type: array
+          items:
+            type: string
+      required:
+        - id
+        - startNodeId
+        - endNodeId
+        - type
+        - properties
+        - isLoop
+        - parallelCount
+        - parallelIndex
+        - compressedCount
+        - width
+        - namesInQuery
+
+    ScenarioInfo:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+          nullable: true
+      required:
+        - id
+        - title
+
+    GraphMetaData:
+      type: object
+      properties:
+        labels:
+          type: array
+          items:
+            $ref: "#/components/schemas/GraphLabel"
+        scenarioInfo:
+          $ref: "#/components/schemas/ScenarioInfo"
+      required:
+        - labels
+        - scenarioInfo
+
+    Graph:
+      type: object
+      properties:
+        nodes:
+          type: array
+          items:
+            $ref: "#/components/schemas/Node"
+        edges:
+          type: array
+          items:
+            $ref: "#/components/schemas/Edge"
+        metaData:
+          $ref: "#/components/schemas/GraphMetaData"
+        tableData:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+      required:
+        - nodes
+        - edges
+        - metaData
+        - tableData
+
+    Room:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+          nullable: true
+      required:
+        - id
+        - title
+    Rooms:
+      type: object
+      properties:
+        rooms:
+          type: array
+          items:
+            $ref: "#/components/schemas/Room"
+      required:
+        - rooms
+
+    Database:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+          nullable: true
+        url:
+          type: string
+          nullable: true
+        browserUrl:
+          type: string
+          nullable: true
+      required:
+        - id
+        - title
+        - url
+        - browserUrl
+    Databases:
+      type: object
+      properties:
+        databases:
+          type: array
+          items:
+            $ref: "#/components/schemas/Database"
+      required:
+        - databases
+
+    ScenarioGroup:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+          nullable: true
+      required:
+        - id
+        - title
+    ScenarioGroups:
+      type: object
+      properties:
+        scenarioGroups:
+          type: array
+          items:
+            $ref: "#/components/schemas/ScenarioGroup"
+      required:
+        - scenarioGroups
+
+    Scenario:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+          nullable: true
+        query:
+          type: string
+          nullable: true
+        description:
+          type: string
+          nullable: true
+        coverUrl:
+          type: string
+          format: uri
+          nullable: true
+      required:
+        - id
+        - title
+        - query
+        - description
+        - coverUrl
+    Scenarios:
+      type: object
+      properties:
+        scenarios:
+          type: array
+          items:
+            $ref: "#/components/schemas/Scenario"
+      required:
+        - scenarios
+
+    Version:
+      type: object
+      properties:
+        version:
+          type: string
+      required:
+        - version
+
+    WSClientToServerMessage:
+      oneOf:
+        - $ref: "#/components/schemas/WSActionJoinRoom"
+        - $ref: "#/components/schemas/WSActionLoadScenario"
+        - $ref: "#/components/schemas/WSActionGrabNode"
+        - $ref: "#/components/schemas/WSActionMoveNodes"
+        - $ref: "#/components/schemas/WSActionUngrabNode"
+
+    WSServerToClientMessage:
+      oneOf:
+        - $ref: "#/components/schemas/WSEventNodesMoved"
+        - $ref: "#/components/schemas/WSEventNotification"
+        - $ref: "#/components/schemas/WSEventScenarioLoaded"
+        - $ref: "#/components/schemas/WSEventScenarioProgress"
+
+    WSActionJoinRoom:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: ["WSActionJoinRoom"]
+        roomId:
+          type: string
+      required:
+        - type
+        - roomId
+
+    WSActionLoadScenario:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: ["WSActionLoadScenario"]
+        scenarioId:
+          type: string
+      required:
+        - type
+        - scenarioId
+
+    WSActionMoveNodes:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: ["WSActionMoveNodes"]
+        nodes:
+          type: array
+          items:
+            $ref: "#/components/schemas/PhysicalNode"
+      required:
+        - type
+        - nodes
+
+    WSActionGrabNode:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: ["WSActionGrabNode"]
+        nodeId:
+          type: string
+      required:
+        - type
+        - nodeId
+
+    WSActionUngrabNode:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: ["WSActionUngrabNode"]
+        nodeId:
+          type: string
+      required:
+        - type
+        - nodeId
+
+    WSEventScenarioLoaded:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: ["WSEventScenarioLoaded"]
+        graph:
+          $ref: "#/components/schemas/Graph"
+      required:
+        - type
+        - graph
+
+    WSEventNodesMoved:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: ["WSEventNodesMoved"]
+        nodes:
+          type: array
+          items:
+            $ref: "#/components/schemas/PhysicalNode"
+        date:
+          type: string
+          format: date
+      required:
+        - type
+        - nodes
+        - date
+
+    WSEventNotification:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: ["WSEventNotification"]
+        title:
+          type: string
+        message:
+          type: string
+        severity:
+          type: string
+          enum:
+            - error
+            - message
+            - warning
+        date:
+          type: string
+          format: date
+      required:
+        - type
+        - title
+        - message
+        - severity
+        - date
+
+    WSEventScenarioProgress:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: ["WSEventScenarioProgress"]
+        progress:
+          type: number
+          nullable: true
+        message:
+          type: string
+          nullable: true
+      required:
+        - progress
+        - message

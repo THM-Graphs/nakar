@@ -6,12 +6,14 @@
 //
 
 import SwiftUI
+import NakarKit
 
 struct RoomListEntry: View {
     let room: ViewModel.Room
     let onEnter: (() -> Void)?
 
     var body: some View {
+        #if os(visionOS)
         HStack(spacing: 20) {
             VStack(alignment: .leading) {
                 Text(room.id).foregroundStyle(.secondary)
@@ -28,6 +30,18 @@ struct RoomListEntry: View {
         .background(.regularMaterial)
         .clipShape(.rect(cornerRadius: 20))
         .navigationTitle("NAKAR")
+        #endif
+        #if os(macOS)
+            HStack(spacing: 20) {
+                VStack(alignment: .leading) {
+                    Text(room.id).foregroundStyle(.secondary)
+                    Text(room.title)
+                }
+                Spacer()
+                Label("Enter", systemImage: "eye")
+            }
+        
+        #endif
     }
 }
 

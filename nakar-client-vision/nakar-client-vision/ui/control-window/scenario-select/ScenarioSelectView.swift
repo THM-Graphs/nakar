@@ -7,7 +7,7 @@
 
 import SwiftUI
 import RealityKit
-import SocketIO
+import NakarKit
 
 struct ScenarioSelectView: View {
     let room: ViewModel.Room
@@ -16,21 +16,19 @@ struct ScenarioSelectView: View {
     @Environment(NakarController.self) var environment: NakarController
     @Environment(\.colorScheme) var colorScheme
 
-    @State var selectedDatabase: ViewModel.Database? = nil
+    @State var selectedScenario: ViewModel.Scenario? = nil
 
     var body: some View {
         NavigationSplitView(sidebar: {
-            DatabaseSidebar(databases: databases, selectedDatabase: $selectedDatabase)
-                .onAppear {
-                    selectedDatabase = databases.first
-                }
+            DatabaseSidebar(databases: databases, selectedScenario: $selectedScenario)
         }, detail: {
-            if let database = selectedDatabase {
-                DatabaseDetail(database: database)
+            if let selectedScenario = selectedScenario {
+                ScenarioDetail(room: room, scenario: selectedScenario)
             } else {
                 EmptyView()
             }
         })
+        .navigationSplitViewColumnWidth(min: 400, ideal: 400)
         .navigationTitle("\(room.title)")
     }
 }

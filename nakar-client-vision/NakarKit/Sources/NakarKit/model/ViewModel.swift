@@ -9,23 +9,23 @@ import Foundation
 import OpenAPIRuntime
 import OpenAPIURLSession
 
-struct ViewModel {
+public struct ViewModel {
     private init() {}
 
-    struct BackendData: Hashable {
-        var rooms: [Room]
-        var databases: [Database]
+    public struct BackendData: Hashable, Sendable {
+        public var rooms: [Room]
+        public var databases: [Database]
 
-        static func demoData() -> BackendData {
+        public static func demoData() -> BackendData {
             return BackendData(rooms: Room.demoData(), databases: Database.demoData())
         }
     }
 
-    struct Room: Hashable, Identifiable, Codable {
-        var id: String
-        var title: String
+    public struct Room: Hashable, Identifiable, Codable, Sendable {
+        public var id: String
+        public var title: String
 
-        static func demoData() -> [Room] {
+        public static func demoData() -> [Room] {
             return Array(1...10).map { Room(id: "\($0)", title: "Room \($0)") }
         }
 
@@ -34,14 +34,14 @@ struct ViewModel {
         }
     }
 
-    struct Database: Hashable, Identifiable {
-        var id: String
-        var title: String
-        var url: String
-        var browserUrl: String
-        var scenarioGroups: [ScenarioGroup]
+    public struct Database: Hashable, Identifiable, Sendable {
+        public var id: String
+        public var title: String
+        public var url: String?
+        public var browserUrl: String?
+        public var scenarioGroups: [ScenarioGroup]
 
-        static func demoData() -> [Database] {
+        public static func demoData() -> [Database] {
             return Array(1...10).map {
                 Database(
                     id: "\($0)",
@@ -57,19 +57,19 @@ struct ViewModel {
             return ViewModel.Database(
                 id: schema.id,
                 title: schema.title ?? "",
-                url: schema.url ?? "",
-                browserUrl: schema.browserUrl ?? "",
+                url: schema.url,
+                browserUrl: schema.browserUrl,
                 scenarioGroups: scenarioGroups
             )
         }
     }
 
-    struct ScenarioGroup: Hashable, Identifiable {
-        var id: String
-        var title: String
-        var scenarios: [Scenario]
+    public struct ScenarioGroup: Hashable, Identifiable, Sendable {
+        public var id: String
+        public var title: String
+        public var scenarios: [Scenario]
 
-        static func demoData() -> [ScenarioGroup] {
+        public static func demoData() -> [ScenarioGroup] {
             return Array(1...10).map { ScenarioGroup(id: "\($0)", title: "ScenarioGroup \($0)", scenarios: Scenario.demoData()) }
         }
 
@@ -78,17 +78,19 @@ struct ViewModel {
         }
     }
 
-    struct Scenario: Hashable, Identifiable {
-        var id: String
-        var title: String
-        var query: String
-        var coverUrl: String?
+    public struct Scenario: Hashable, Identifiable, Sendable, Codable {
+        public var id: String
+        public var title: String
+        public var description: String?
+        public var query: String?
+        public var coverUrl: URL?
 
-        static func demoData() -> [Scenario] {
+        public static func demoData() -> [Scenario] {
             return Array(1...10).map {
                 Scenario(
                     id: "\($0)",
                     title: "Scenario \($0)",
+                    description: "Descption...",
                     query: "MATCH (n)-[r]-(m) RETURN n, r, m",
                     coverUrl: nil
                 )
@@ -98,9 +100,10 @@ struct ViewModel {
         static func from(schema: Components.Schemas.Scenario) -> ViewModel.Scenario {
             return ViewModel.Scenario(
                 id: schema.id,
-                title: schema.title ?? "",
-                query: schema.query ?? "",
-                coverUrl: schema.coverUrl
+                title: schema.title ?? "Untitled",
+                description: schema.description,
+                query: schema.query,
+                coverUrl: schema.coverUrl.flatMap { URL(string: $0) }
             )
         }
     }

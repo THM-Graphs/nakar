@@ -7,10 +7,14 @@
 
 import SwiftUI
 
-struct SocketStatusIconView: View {
-    let socketStatus: SocketStatus
+public struct SocketStatusIconView: View {
+    private let socketStatus: SocketStatus
 
-    var body: some View {
+    public init(socketStatus: SocketStatus) {
+        self.socketStatus = socketStatus
+    }
+
+    public var body: some View {
         switch socketStatus {
         case .connected: Image(systemName: "wifi").foregroundStyle(.green)
         case .connecting: Image(systemName: "wifi.exclamationmark").foregroundStyle(.red)
@@ -23,4 +27,5 @@ struct SocketStatusIconView: View {
         SocketStatusIconView(socketStatus: .connected)
         SocketStatusIconView(socketStatus: .connecting)
     }
+    .padding(20)
 }

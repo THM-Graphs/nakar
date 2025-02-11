@@ -58,7 +58,7 @@ import Combine
         }
 
         socket.onAny {
-            print($0)
+            print($0.event)
         }
     }
 

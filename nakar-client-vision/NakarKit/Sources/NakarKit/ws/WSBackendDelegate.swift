@@ -5,6 +5,8 @@
 //  Created by Samuel Schepp on 08.02.25.
 //
 
+import OpenAPIRuntime
+
 protocol WSBackendDelegate: AnyObject {
     func onClientConnect()
     func onClientDisconnect(reason: String)

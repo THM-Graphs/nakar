@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import NakarKit
 
 struct ControlWindow: View {
     @State private var navigation = NavigationPath()
@@ -53,9 +54,7 @@ struct ControlWindow: View {
         }
         #if os(macOS)
         .toolbar {
-            ToolbarItemGroup {
-                Toolbar()
-            }
+            Toolbar()
         }
         #endif
         #if os(visionOS)
@@ -63,14 +62,18 @@ struct ControlWindow: View {
             Toolbar()
         }
         #endif
-        .task {
-            await sharedEnvironment.initialize()
-        }
     }
 
 }
 
 #Preview() {
+    let env: NakarController = ({
+        let controller = NakarController()
+        Task {
+            await controller.initialize()
+        }
+        return controller
+    })()
     ControlWindow()
-        .environment(NakarController())
+        .environment(env)
 }

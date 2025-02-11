@@ -7,7 +7,7 @@
 
 import SocketIO
 
-enum SocketStatus: CustomStringConvertible {
+public enum SocketStatus: CustomStringConvertible {
     case connecting
     case connected
 
@@ -20,7 +20,7 @@ enum SocketStatus: CustomStringConvertible {
         }
     }
 
-    var description: String {
+    public var description: String {
         switch self {
         case .connected: "Connected"
         case .connecting: "Connecting..."

@@ -6,13 +6,14 @@
 //
 
 import SwiftUI
+import NakarKit
 
 #if os(visionOS)
 struct SocketStatusOrnament: View {
     let roomManager: NakarRoom
 
     var socketStatus: SocketStatus {
-        roomManager.socketIOManager.socketStatus
+        roomManager.socketStatus
     }
 
     var body: some View {

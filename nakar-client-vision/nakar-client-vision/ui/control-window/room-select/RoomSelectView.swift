@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import NakarKit
 
 struct RoomSelectView: View {
     let state: Loadable<ViewModel.BackendData>
@@ -17,6 +18,16 @@ struct RoomSelectView: View {
             switch state {
             case .nothing: EmptyView()
             case .data(let data):
+                #if os(macOS)
+                VStack(spacing: 20) {
+                    AppLogoView()
+                    Text("Select a room to join:")
+                    RoomList(rooms: data.rooms, onEnter: onEnter)
+                        .padding([.leading, .trailing], 50)
+                }
+                .padding([.top, .bottom], 20)
+                #endif
+                #if os(visionOS)
                 ScrollView {
                     VStack(spacing: 20) {
                         AppLogoView()
@@ -26,6 +37,7 @@ struct RoomSelectView: View {
                     }
                     .padding([.top, .bottom], 20)
                 }
+                #endif
             case .loading:
                 ProgressView()
             case .error(let error):

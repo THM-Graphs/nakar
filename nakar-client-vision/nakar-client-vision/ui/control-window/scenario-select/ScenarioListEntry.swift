@@ -6,36 +6,60 @@
 //
 
 import SwiftUI
+import NakarKit
 
 struct ScenarioListEntry: View {
     let scenario: ViewModel.Scenario
     @Environment(\.openWindow) var openWindow
 
     var body: some View {
-        Button(action: {
-            openWindow(id: "renderer")
-        }) {
-            HStack(spacing: 20) {
-                ScenarioCoverView(scenario: scenario, size: 50)
-                VStack(alignment: .leading) {
+#if os(visionOS)
+        HStack(spacing: 20) {
+            ScenarioCoverView(scenario: scenario, size: 50)
+            VStack(alignment: .leading) {
+                Text(scenario.title)
+            }
+            Spacer()
+            HStack {
+                Image(systemName: "play.circle")
+                Text("Run")
+            }
+            .padding([.leading, .trailing], 20)
+            .padding([.top, .bottom], 10)
+            .background(.regularMaterial)
+            .clipShape(.capsule)
+        }
+#endif
+
+#if os(macOS)
+        NavigationLink(value: scenario) {
+            HStack {
+                Label {
                     Text(scenario.title)
+                } icon: {
+                    ScenarioCoverView(scenario: scenario, size: 16)
                 }
                 Spacer()
-                HStack {
-                    Image(systemName: "play.circle")
-                    Text("Run")
+                Button {
+                    ()
+                } label: {
+                    Label {
+                        Text("Run")
+                    } icon: {
+                        Image(systemName: "play")
+                    }
+
                 }
-                .padding([.leading, .trailing], 20)
-                .padding([.top, .bottom], 10)
-                .background(.regularMaterial)
-                .clipShape(.capsule)
-            }
+            }.padding(.leading, 20)
         }
+#endif
     }
 }
 
 #Preview() {
-    ForEach(ViewModel.Scenario.demoData()) {
-        ScenarioListEntry(scenario: $0)
+    List {
+        ForEach(ViewModel.Scenario.demoData()) {
+            ScenarioListEntry(scenario: $0)
+        }
     }
 }

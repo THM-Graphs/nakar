@@ -11,27 +11,27 @@ import Foundation
 
 @MainActor
 @Observable
-class NakarController {
+public class NakarController {
     private let httpBackend: HTTPBackend
 
-    var roomManagers: [String: NakarRoom]
-    var backendData: Loadable<ViewModel.BackendData> = .nothing
+    public var roomManagers: [String: NakarRoom]
+    public var backendData: Loadable<ViewModel.BackendData> = .nothing
 
     #if os(visionOS)
-    var immersionStyle: ImmersionStyle = .mixed
+    public var immersionStyle: ImmersionStyle = .mixed
     #endif
 
-    init() {
+    public init() {
         self.httpBackend = HTTPBackend()
 
         self.roomManagers = [:]
     }
 
-    enum Mode: CustomStringConvertible {
+    public enum Mode: CustomStringConvertible {
         case production
         case development
 
-        static var current: Mode {
+        public static var current: Mode {
             #if DEBUG
             return .development
             #else
@@ -39,7 +39,7 @@ class NakarController {
             #endif
         }
 
-        var description: String {
+        public var description: String {
             switch self {
             case .production: return "Production"
             case .development: return "Development"
@@ -47,7 +47,7 @@ class NakarController {
         }
     }
 
-    func enterRoom(roomId: String) {
+    public func enterRoom(roomId: String) {
         if self.roomManagers.keys.contains(roomId) {
             return
         }
@@ -55,7 +55,7 @@ class NakarController {
         self.roomManagers[roomId] = roomManager
     }
 
-    func leaveRoom(roomId: String) {
+    public func leaveRoom(roomId: String) {
         guard let roomManager = self.roomManagers[roomId] else {
             return
         }
@@ -63,23 +63,33 @@ class NakarController {
         roomManagers.removeValue(forKey: roomId)
     }
 
-    var environmentDebugString: String {
+    public var environmentDebugString: String {
         return "\(Mode.current.description) (\(releaseVersionNumber)-\(buildVersionNumber))"
     }
 
-    var releaseVersionNumber: String {
+    public var releaseVersionNumber: String {
         return Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.0.0"
     }
-    var buildVersionNumber: String {
+    public var buildVersionNumber: String {
         return Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "0"
     }
 
-    func initialize() async -> Void {
-        do {
-            self.backendData = .loading
-            self.backendData = .data(data: try await self.httpBackend.loadBackendData())
-        } catch let error {
-            self.backendData = .error(error: error)
+    public func initialize() -> Void {
+        Task {
+            do {
+                self.backendData = .loading
+                self.backendData = .data(data: try await self.httpBackend.loadBackendData())
+            } catch let error {
+                self.backendData = .error(error: error)
+            }
         }
+    }
+
+    public func run(_ scenario: ViewModel.Scenario, in room: ViewModel.Room) {
+        #warning("")
+    }
+
+    public func copyQueryClipboard(scenario: ViewModel.Scenario) {
+#warning("")
     }
 }

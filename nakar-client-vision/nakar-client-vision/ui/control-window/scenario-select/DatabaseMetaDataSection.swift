@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import NakarKit
 
 struct DatabaseMetaDataSection: View {
     let database: ViewModel.Database
@@ -14,6 +15,7 @@ struct DatabaseMetaDataSection: View {
 
     var body: some View {
         Section {
+#if os(visionOS)
             Button(action: {
                 guard let url = URL(string: database.browserUrl) else {
                     return
@@ -27,6 +29,19 @@ struct DatabaseMetaDataSection: View {
                     URLView(url: database.browserUrl)
                 }
             }
+#endif
+#if os(macOS)
+            HStack {
+                Text("Browser URL")
+                Spacer()
+                URLView(url: database.browserUrl)
+            }
+            HStack {
+                Text("Neo4j URL")
+                Spacer()
+                URLView(url: database.url)
+            }
+#endif
         }
     }
 }
