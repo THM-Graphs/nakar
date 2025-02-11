@@ -181,6 +181,9 @@ struct MacControlWindow: View {
             }
             .toolbar {
                 ToolbarItem {
+                    Text(nakarController.environmentDebugString)
+                }
+                ToolbarItem {
                     ForEach(Array(nakarController.roomManagers.values), id: \.roomId) { roomManager in
                         Label {
                             Text(roomManager.roomId)
@@ -188,9 +191,6 @@ struct MacControlWindow: View {
                             SocketStatusIconView(socketStatus: roomManager.socketStatus)
                         }
                     }
-                }
-                ToolbarItem {
-                    Text(nakarController.environmentDebugString)
                 }
             }
             .onAppear {

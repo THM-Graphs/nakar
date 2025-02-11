@@ -41,8 +41,7 @@ class RendererViewController {
         }
         nodeEntities.removeAll()
         for node in graph.nodes.values {
-            let sphere = ModelEntity(mesh: .generateSphere(radius: Float(node.radius)))
-            sphere.position = [Float(node.x), -Float(node.y), 0]
+            let sphere = createNode(node: node)
             nodeEntities[node.id] = sphere
             container.addChild(sphere)
         }
@@ -77,11 +76,13 @@ class RendererViewController {
     }
 
     func redoEdges() {
-        guard let container else {
+        guard
+            let container,
+            let graph = nakarRoom.graph else {
             return
         }
 
-        for edge in nakarRoom.graph.edges.values {
+        for edge in graph.edges.values {
             guard
                 let edgeEntity = edgeEntites[edge.id],
                 let startNodeEntity = nodeEntities[edge.startNodeId],
@@ -95,21 +96,15 @@ class RendererViewController {
         }
     }
 
-    func applyNodePosition(node: PhysicalNode, entity: Entity) {
-        entity.position = [Float(node.x), -Float(node.y), 0]
+    func createNode(node: PhysicalNode) -> Entity {
+        let material = UnlitMaterial(color: .blue)
+        let sphere = ModelEntity(mesh: .generateSphere(radius: Float(node.radius)), materials: [material])
+        sphere.position = [Float(node.position.x), -Float(node.position.y), 0]
+        return sphere
     }
 
-    func applyEdgeNodePosition(edge: Entity, startNodeEntity: Entity, endNodeEntity: Entity) {
-        let start: SIMD3<Float> = [startNodeEntity.position.x, startNodeEntity.position.y, 0]
-        let end: SIMD3<Float> = [endNodeEntity.position.x, endNodeEntity.position.y, 0]
-        let direction = normalize(end - start) // Get direction vector
-
-        edge.position = (start + end) / 2
-
-        // Rotate the entity to align it with the direction from start to end
-        let angle = acos(dot(SIMD3<Float>(0, 0, 1), direction))
-        let axis = cross(SIMD3<Float>(0, 0, 1), direction)
-        edge.orientation = simd_quatf(angle: angle, axis: axis)
+    func applyNodePosition(node: PhysicalNode, entity: Entity) {
+        entity.position = [Float(node.position.x), -Float(node.position.y), 0]
     }
 
     func createLine(startNodeEntity: Entity, endNodeEntity: Entity, width: Double) -> ModelEntity {
@@ -137,6 +132,19 @@ class RendererViewController {
         let lineMesh = MeshResource.generateBox(size: [Float(width), Float(width), length])
 
         return lineMesh
+    }
+
+    func applyEdgeNodePosition(edge: Entity, startNodeEntity: Entity, endNodeEntity: Entity) {
+        let start: SIMD3<Float> = [startNodeEntity.position.x, startNodeEntity.position.y, 0]
+        let end: SIMD3<Float> = [endNodeEntity.position.x, endNodeEntity.position.y, 0]
+        let direction = normalize(end - start) // Get direction vector
+
+        edge.position = (start + end) / 2
+
+        // Rotate the entity to align it with the direction from start to end
+        let angle = acos(dot(SIMD3<Float>(0, 0, 1), direction))
+        let axis = cross(SIMD3<Float>(0, 0, 1), direction)
+        edge.orientation = simd_quatf(angle: angle, axis: axis)
     }
 
 }

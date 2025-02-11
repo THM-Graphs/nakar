@@ -56,10 +56,6 @@ import Combine
             guard let self else { return }
             self.delegate?.onClientDisconnect(reason: String(describing: data))
         }
-
-        socket.onAny {
-            print($0.event)
-        }
     }
 
     static var url: URL {

@@ -12,7 +12,7 @@ import SpriteKit
 public class NakarRoom: WSBackendDelegate, ObservableObject {
     private let socketIOManager: WSBackend
 
-    public var graph: PhysicalGraph
+    public var graph: PhysicalGraph?
     public let onNewGraph: PassthroughSubject<PhysicalGraph, Never>
     public let onNodesMoved: PassthroughSubject<[String: PhysicalNode], Never>
 
@@ -21,7 +21,7 @@ public class NakarRoom: WSBackendDelegate, ObservableObject {
 
     public init(roomId: String) {
         self.socketIOManager = WSBackend()
-        graph = PhysicalGraph()
+        graph = nil
         onNewGraph = PassthroughSubject()
         onNodesMoved = PassthroughSubject()
         self.roomId = roomId
@@ -44,19 +44,22 @@ public class NakarRoom: WSBackendDelegate, ObservableObject {
     }
 
     func onWSEventScenarioLoaded(event: Components.Schemas.WSEventScenarioLoaded) {
-        graph = PhysicalGraph()
-        graph.fill(with: event.graph)
-        onNewGraph.send(graph)
+        let newGraph = PhysicalGraph(of: event.graph)
+        self.graph = newGraph
+        onNewGraph.send(newGraph)
     }
 
     func onWSEventNodesMoved(event: Components.Schemas.WSEventNodesMoved) {
+        guard let graph else {
+            print("cannot acces graph. its null")
+            return
+        }
         var updatedNodes: [String: PhysicalNode] = [:]
         for node in event.nodes {
             guard var existingNode = graph.nodes[node.id] else {
                 continue
             }
-            existingNode.x = node.position.x
-            existingNode.y = node.position.y
+            existingNode.position = .init(of: node.position)
             updatedNodes[existingNode.id] = existingNode
         }
         onNodesMoved.send(updatedNodes)
