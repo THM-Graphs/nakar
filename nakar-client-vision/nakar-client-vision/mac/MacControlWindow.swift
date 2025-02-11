@@ -37,6 +37,11 @@ struct MacControlWindow: View {
                             Text(room.title)
                                 .tag(room)
                         }
+                    }.onChange(of: selectedRoom) {
+                        nakarController.leaveRooms()
+                        if let selectedRoom {
+                            nakarController.enterRoom(roomId: selectedRoom.id)
+                        }
                     }
                     if let room = selectedRoom {
                         ForEach(backendData.databases) { database in
@@ -57,12 +62,6 @@ struct MacControlWindow: View {
                         } else {
                             Text("Connecting to room...")
                         }
-                    }
-                    .onAppear {
-                        nakarController.enterRoom(roomId: room.id)
-                    }
-                    .onDisappear {
-                        nakarController.leaveRoom(roomId: room.id)
                     }
                     .navigationTitle(room.title)
                 } else {
@@ -309,11 +308,10 @@ struct MacControlWindow: View {
             } label: {
                 HStack {
                     Image(systemName: collapsed ? "chevron.right" : "chevron.down")
-                        .frame(width: 20, height: 20)
+                        .frame(width: 10, height: 20)
                     children
                     Spacer()
                 }
-                .padding([.top, .bottom], 10)
             }
             .buttonStyle(.accessoryBar)
         }
@@ -322,24 +320,15 @@ struct MacControlWindow: View {
     struct RendererView: View {
         let roomManager: NakarRoom
 
-        private var rendererViewConroller: RendererViewController
-
-        init(roomManager: NakarRoom) {
-            self.roomManager = roomManager
-            self.rendererViewConroller = RendererViewController(nakarRoom: roomManager)
-        }
+        @State var rendererViewConroller: RendererViewController?
 
         var body: some View {
             RealityView { content in
-                rendererViewConroller.initialize(content: content)
+                self.rendererViewConroller = RendererViewController(content: content, nakarRoom: roomManager)
+            }.onDisappear {
+                rendererViewConroller?.close()
             }
             .edgesIgnoringSafeArea(.all)
-            .onReceive(roomManager.onNewGraph) { graph in
-                rendererViewConroller.receiveNewGraph(graph: graph)
-            }
-            .onReceive(roomManager.onNodesMoved) { nodes in
-                rendererViewConroller.receiveNodesMoved(nodes: nodes)
-            }
         }
     }
 }

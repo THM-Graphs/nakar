@@ -23,7 +23,7 @@ struct nakar_client_visionApp: App {
                 }
             #endif
             #if os(visionOS)
-            ControlWindow()
+            VisionProControlWindow()
                 .environment(env)
                 .onAppear {
                     env.initialize()
@@ -32,9 +32,9 @@ struct nakar_client_visionApp: App {
         }
 
         #if os(visionOS)
-        // Display a fully immersive space.
-        ImmersiveSpace(id: "renderer") {
-            Renderer().environment(env)
+        ImmersiveSpace(id: "renderer", for: String.self) { roomId in
+            VisionProImmersiveSpace(roomId: roomId)
+                .environment(env)
         }.immersionStyle(selection: $env.immersionStyle, in: .full)
         #endif
     }

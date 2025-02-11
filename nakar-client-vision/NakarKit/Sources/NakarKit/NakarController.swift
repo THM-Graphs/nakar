@@ -63,6 +63,12 @@ public class NakarController {
         roomManagers.removeValue(forKey: roomId)
     }
 
+    public func leaveRooms() {
+        roomManagers.keys.forEach {
+            self.leaveRoom(roomId: $0)
+        }
+    }
+
     public var environmentDebugString: String {
         return "\(Mode.current.description) (\(releaseVersionNumber)-\(buildVersionNumber))"
     }
