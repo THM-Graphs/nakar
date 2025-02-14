@@ -70,14 +70,14 @@ struct VisionProControlWindow: View {
                     Text("Select a Room")
                 }
             } detail: {
-                if let selectedRoom {
+                if let selectedRoom = selectedRoom, let roomManager = nakarController.roomManagers[selectedRoom.id]  {
                     if let selectedDatabase {
                         List {
                             ForEach(selectedDatabase.scenarioGroups) { scenarioGroup in
                                 Section(scenarioGroup.title) {
                                     ForEach(scenarioGroup.scenarios) { scenario in
                                         Button {
-                                            nakarController.run(scenario, in: selectedRoom)
+                                            roomManager.run(scenario)
                                         } label: {
                                             HStack {
                                                 AsyncImage(url: scenario.coverUrl) { (image: Image) in

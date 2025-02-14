@@ -15,7 +15,8 @@ extension Entity {
         let entity = Entity()
 
         // Model
-        let material = UnlitMaterial(color: renderer.backgroundColorOfNode(physicalNode: physicalNode).platformNative)
+        // let material = UnlitMaterial(color: renderer.backgroundColorOfNode(physicalNode: physicalNode).platformNative)
+        let material = SimpleMaterial(color: renderer.backgroundColorOfNode(physicalNode: physicalNode).platformNative, isMetallic: false)
         let radius = Float(physicalNode.radius) * renderer.globalScale.defaultScale
         let mesh = meshCache.generateCircle(radius: radius, thickness: renderer.globalScale.elementThickness)
         let model = ModelEntity(mesh: mesh, materials: [material])

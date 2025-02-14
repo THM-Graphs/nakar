@@ -67,8 +67,8 @@ class MeshCache {
                 }
                 var options = MeshResource.ShapeExtrusionOptions()
                 options.extrusionMethod = .linear(depth: thickness)
-                options.boundaryResolution = .uniformSegmentsPerSpan(segmentCount: 8)
-                options.chamferRadius = 0
+                options.boundaryResolution = .uniformSegmentsPerSpan(segmentCount: 32)
+                options.chamferRadius = width / 4.0
                 let mesh = try await MeshResource(extruding: graphic, extrusionOptions: options)
                 curves[hashKey] = mesh
                 return mesh

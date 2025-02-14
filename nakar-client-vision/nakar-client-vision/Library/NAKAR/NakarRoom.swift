@@ -46,7 +46,7 @@ public class NakarRoom: WSBackendDelegate, ObservableObject {
     func onWSEventScenarioLoaded(event: Components.Schemas.WSEventScenarioLoaded) {
         let newGraph = PhysicalGraph(of: event.graph)
         self.graph = newGraph
-        print("Did receive \(graph?.nodes.count) nodes.")
+        print("Did receive \(graph?.nodes.count) nods.")
         onNewGraph.send(newGraph)
     }
 
@@ -67,10 +67,12 @@ public class NakarRoom: WSBackendDelegate, ObservableObject {
     }
 
     func onWSEventNotification(event: Components.Schemas.WSEventNotification) {
+        print(event.message)
 #warning("")
     }
 
     func onWSEventScenarioProgress(event: Components.Schemas.WSEventScenarioProgress) {
+        print(event.message ?? "-")
 #warning("")
     }
 
@@ -80,5 +82,10 @@ public class NakarRoom: WSBackendDelegate, ObservableObject {
 
     public var socketStatus: SocketStatus {
         self.socketIOManager.socketStatus
+    }
+
+    public func run(_ scenario: ViewModel.Scenario) {
+        let message = Components.Schemas.WSClientToServerMessage.WSActionLoadScenario(Components.Schemas.WSActionLoadScenario(_type: .wsActionLoadScenario, scenarioId: scenario.id))
+        socketIOManager.send(message: message)
     }
 }

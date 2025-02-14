@@ -50,7 +50,7 @@ class EdgeSystem: System {
             }
             let angle = -atan2(direction.x, direction.y) + (0.5 * .pi)
 
-            edgeComponent.lineEntity.scale = [length, 1, 1]
+            edgeComponent.lineEntity.scale.x = length
 
             edgeComponent.textEntity.position = [
                 length / 2,

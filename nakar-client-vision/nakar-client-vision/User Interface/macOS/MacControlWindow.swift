@@ -281,7 +281,9 @@ struct MacControlWindow: View {
                 Text(scenario.title)
                 Spacer()
                 Button {
-                    nakarController.run(scenario, in: room)
+                    if let roomManager = nakarController.roomManagers[room.id] {
+                        roomManager.run(scenario)
+                    }
                 } label: {
                     Label {
                         Text("Run")

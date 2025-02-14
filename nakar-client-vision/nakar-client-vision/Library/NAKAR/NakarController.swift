@@ -91,10 +91,6 @@ public class NakarController {
         }
     }
 
-    public func run(_ scenario: ViewModel.Scenario, in room: ViewModel.Room) {
-        #warning("")
-    }
-
     public func copyQueryClipboard(scenario: ViewModel.Scenario) {
 #warning("")
     }

@@ -15,10 +15,14 @@ extension Entity {
         let entity = Entity()
         let start: SIMD3<Float> = [source.position.x, source.position.y, renderer.globalScale.defaultDepth]
         let end: SIMD3<Float> = [target.position.x, target.position.y, renderer.globalScale.defaultDepth]
-        let length = distance(start, end)
 
         // Line
-        let lineMaterial = UnlitMaterial(color: .white)
+        // let lineMaterial = UnlitMaterial(color: .white)
+        var lineMaterial = PhysicallyBasedMaterial()
+        lineMaterial.baseColor = .init(tint: .black)
+        lineMaterial.sheen = .init(tint: .black)
+        lineMaterial.emissiveColor = .init(color: .white)
+        lineMaterial.emissiveIntensity = 2
         let lineThickness = renderer.globalScale.elementThickness / 2
         let lineMesh = await meshCache.generateCurve(
             curvature: Float(physicalEdge.parallelIndex) * renderer.globalScale.curvature * renderer.globalScale.defaultScale,
@@ -26,8 +30,7 @@ extension Entity {
             length: 1,
             thickness: lineThickness
         )
-        let lineEntity = ModelEntity(mesh: lineMesh, materials: [lineMaterial])
-        lineEntity.name = "line"
+        let lineEntity = ModelEntity(mesh: lineMesh, materials: [lineMaterial, lineMaterial])
         renderer.jiggleZPosition(&lineEntity.position.z)
         entity.addChild(lineEntity)
 
@@ -50,7 +53,6 @@ extension Entity {
         let textEntity = Entity()
         textEntity.components.set(textComponent)
         textEntity.scale = SIMD3<Float>(SIMD2<Float>(repeating: 2.8), 1) // idk why
-        textEntity.name = "text"
         textEntity.position.z = lineEntity.position.z + lineThickness / 2
         renderer.jiggleZPosition(&textEntity.position.z)
         entity.addChild(textEntity)

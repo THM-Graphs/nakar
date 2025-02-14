@@ -93,6 +93,7 @@ class RendererViewController {
                     let nodeEntity = try Entity.createNodeEntity(physicalNode: node, renderer: self, meshCache: meshCache)
                     nodeEntities[node.id] = nodeEntity
                     content.add(nodeEntity)
+                    await Task.yield()
                 }
 
                 for edge in graph.edges.values {
@@ -172,9 +173,9 @@ class RendererViewController {
                 defaultDepth = -3
                 defaultScale = 0.001
                 personHeight = 1.7
-                elementThickness = 0.005
+                elementThickness = 0.01
             case .window:
-                defaultDepth = -1
+                defaultDepth = -5
                 defaultScale = 0.001
                 personHeight = 0
                 elementThickness = 0.0001
@@ -182,7 +183,7 @@ class RendererViewController {
                 defaultDepth = 0
                 defaultScale = 0.001
                 personHeight = 0
-                elementThickness = 0.005
+                elementThickness = 0.01
             }
         }
 
