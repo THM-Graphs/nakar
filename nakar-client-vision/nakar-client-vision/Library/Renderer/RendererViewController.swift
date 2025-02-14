@@ -7,7 +7,6 @@
 
 import RealityKit
 import SwiftUI
-import NakarKit
 import Combine
 
 @MainActor

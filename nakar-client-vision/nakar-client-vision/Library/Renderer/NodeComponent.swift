@@ -6,7 +6,6 @@
 //
 
 import RealityKit
-import NakarKit
 
 class NodeComponent: Component {
     var source: PhysicalNode

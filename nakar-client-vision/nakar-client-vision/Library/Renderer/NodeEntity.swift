@@ -6,7 +6,6 @@
 //
 
 import RealityKit
-import NakarKit
 import SwiftUI
 import Foundation
 

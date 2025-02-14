@@ -8,7 +8,6 @@
 #if os(visionOS)
 
 import SwiftUI
-import NakarKit
 import RealityKit
 
 struct VisionProImmersiveSpace: View {

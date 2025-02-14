@@ -6,7 +6,6 @@
 //
 
 import RealityKit
-import NakarKit
 
 class EdgeComponent: Component {
     var physicalEdge: PhysicalEdge

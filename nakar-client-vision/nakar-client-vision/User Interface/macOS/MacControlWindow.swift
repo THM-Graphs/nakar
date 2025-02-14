@@ -7,7 +7,6 @@
 
 #if os(macOS)
 
-import NakarKit
 import SwiftUI
 import RealityKit
 import CoreGraphics

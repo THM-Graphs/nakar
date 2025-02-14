@@ -7,7 +7,6 @@
 
 import SwiftUI
 import Combine
-import NakarKit
 
 @main
 struct nakar_client_visionApp: App {

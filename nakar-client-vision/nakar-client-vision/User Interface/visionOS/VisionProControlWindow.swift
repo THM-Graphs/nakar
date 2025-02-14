@@ -7,7 +7,6 @@
 
 #if os(visionOS)
 
-import NakarKit
 import SwiftUI
 import RealityKit
 

@@ -7,31 +7,25 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		7E22211A2D5F66DD00205E62 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7E2220E52D5F66DD00205E62 /* Assets.xcassets */; };
+		7E22211D2D5F66DD00205E62 /* openapi-generator-config.yaml in Resources */ = {isa = PBXBuildFile; fileRef = 7E2220FE2D5F66DD00205E62 /* openapi-generator-config.yaml */; };
+		7E2221442D5F67B800205E62 /* openapi.yaml in Resources */ = {isa = PBXBuildFile; fileRef = 7E2221432D5F67B800205E62 /* openapi.yaml */; };
 		7E34E8AF2D5E6E1600BBA3E8 /* OpenAPIRuntime in Frameworks */ = {isa = PBXBuildFile; productRef = 7E34E8AE2D5E6E1600BBA3E8 /* OpenAPIRuntime */; };
 		7E34E8B22D5E6E2700BBA3E8 /* OpenAPIURLSession in Frameworks */ = {isa = PBXBuildFile; productRef = 7E34E8B12D5E6E2700BBA3E8 /* OpenAPIURLSession */; };
 		7E34E8B82D5E6E9C00BBA3E8 /* SocketIO in Frameworks */ = {isa = PBXBuildFile; productRef = 7E34E8B72D5E6E9C00BBA3E8 /* SocketIO */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		7E2220E52D5F66DD00205E62 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		7E2220E62D5F66DD00205E62 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		7E2220FE2D5F66DD00205E62 /* openapi-generator-config.yaml */ = {isa = PBXFileReference; lastKnownFileType = text.yaml; path = "openapi-generator-config.yaml"; sourceTree = "<group>"; };
+		7E2221432D5F67B800205E62 /* openapi.yaml */ = {isa = PBXFileReference; lastKnownFileType = text.yaml; name = openapi.yaml; path = "../nakar-server/openapi.yaml"; sourceTree = SOURCE_ROOT; };
 		7E78705B2D54C98D00738B34 /* NAKAR.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = NAKAR.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
-
-/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		7E78706C2D54C98E00738B34 /* Exceptions for "nakar-client-vision" folder in "nakar-client-vision" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				Application/Info.plist,
-			);
-			target = 7E78705A2D54C98D00738B34 /* nakar-client-vision */;
-		};
-/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		7E78705D2D54C98D00738B34 /* nakar-client-vision */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				7E78706C2D54C98E00738B34 /* Exceptions for "nakar-client-vision" folder in "nakar-client-vision" target */,
-			);
 			path = "nakar-client-vision";
 			sourceTree = "<group>";
 		};
@@ -64,6 +58,10 @@
 				7E78705D2D54C98D00738B34 /* nakar-client-vision */,
 				7E34E8B62D5E6E9C00BBA3E8 /* Frameworks */,
 				7E78705C2D54C98D00738B34 /* Products */,
+				7E2221432D5F67B800205E62 /* openapi.yaml */,
+				7E2220FE2D5F66DD00205E62 /* openapi-generator-config.yaml */,
+				7E2220E62D5F66DD00205E62 /* Info.plist */,
+				7E2220E52D5F66DD00205E62 /* Assets.xcassets */,
 			);
 			sourceTree = "<group>";
 		};
@@ -96,7 +94,6 @@
 			);
 			name = "nakar-client-vision";
 			packageProductDependencies = (
-				7EB4A5032D5A6443006518B0 /* NakarKit */,
 				7E34E8AE2D5E6E1600BBA3E8 /* OpenAPIRuntime */,
 				7E34E8B12D5E6E2700BBA3E8 /* OpenAPIURLSession */,
 				7E34E8B72D5E6E9C00BBA3E8 /* SocketIO */,
@@ -150,6 +147,9 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7E22211A2D5F66DD00205E62 /* Assets.xcassets in Resources */,
+				7E22211D2D5F66DD00205E62 /* openapi-generator-config.yaml in Resources */,
+				7E2221442D5F67B800205E62 /* openapi.yaml in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -183,7 +183,7 @@
 				DEVELOPMENT_TEAM = USSZ6N5YB4;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "$(TARGET_NAME)/Application/Info.plist";
+				INFOPLIST_FILE = Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = NAKAR;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -212,7 +212,7 @@
 				DEVELOPMENT_TEAM = USSZ6N5YB4;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "$(TARGET_NAME)/Application/Info.plist";
+				INFOPLIST_FILE = Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = NAKAR;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -428,10 +428,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 7E34E8A92D5E6DD000BBA3E8 /* XCRemoteSwiftPackageReference "socket" */;
 			productName = SocketIO;
-		};
-		7EB4A5032D5A6443006518B0 /* NakarKit */ = {
-			isa = XCSwiftPackageProductDependency;
-			productName = NakarKit;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
