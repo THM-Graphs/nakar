@@ -7,18 +7,8 @@
 
 import SwiftUI
 
-struct NativeColor {
-    var r: CGFloat
-    var g: CGFloat
-    var b: CGFloat
-
-    init(red: CGFloat, green: CGFloat, blue: CGFloat) {
-        self.r = red
-        self.g = green
-        self.b = blue
-    }
-
-    init?(hex: String) {
+extension CGColor {
+    class func from(hex: String) -> CGColor? {
         var hexSanitized = hex.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
 
         if hexSanitized.hasPrefix("#") {
@@ -41,17 +31,18 @@ struct NativeColor {
         let green = CGFloat((rgbValue >> 8) & 0xFF) / 255.0
         let blue = CGFloat(rgbValue & 0xFF) / 255.0
 
-        self.init(red: red, green: green, blue: blue)
+        return Self.init(red: red, green: green, blue: blue, alpha: 1)
     }
 
-#if os(visionOS)
-    var native: UIColor {
-        UIColor(red: r, green: g, blue: b, alpha: 1)
+    #if os(visionOS)
+    var platformNative: UIColor {
+        return UIColor(cgColor: self)
     }
-#endif
-#if os(macOS)
-    var native: NSColor {
-        NSColor(red: r, green: g, blue: b, alpha: 1)
+    #endif
+
+    #if os(macOS)
+    var platformNative: NSColor {
+        return NSColor(cgColor: self) ?? NSColor.systemPink
     }
-#endif
+    #endif
 }

@@ -22,7 +22,7 @@ struct VisionProImmersiveSpace: View {
     var body: some View {
         if let roomId = roomId.wrappedValue, let roomManager = nakarController.roomManagers[roomId] {
             RealityView { content in
-                self.controller = RendererViewController(content: content, nakarRoom: roomManager)
+                self.controller = RendererViewController(content: content, nakarRoom: roomManager, scaleMode: .immersiveSpace)
             }.onDisappear {
                 controller?.close()
             }
@@ -36,12 +36,6 @@ struct VisionProImmersiveSpace: View {
             }
         }
 
-    }
-
-    func createSphere() -> ModelEntity {
-        let sphere = ModelEntity(mesh: .generateSphere(radius: 0.1), materials: [SimpleMaterial(color: .blue, isMetallic: false)])
-        sphere.position = [0, 0, -0.5]
-        return sphere
     }
 }
 

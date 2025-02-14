@@ -22,18 +22,20 @@ class RendererViewController {
     private var edgeEntites: [String: Entity] = [:]
     private var nakarRoom: NakarRoom
     private var cancellables: Set<AnyCancellable> = []
+    private var meshCache = MeshCache()
 
-    var globalScale = GlobalScale()
+    var globalScale: GlobalScale
     var fps: Float = 30
     var maxSpeed: Float = 500
 
 #if os(macOS)
-    init(content: RealityViewCameraContent, nakarRoom: NakarRoom) {
+    init(content: RealityViewCameraContent, nakarRoom: NakarRoom, scaleMode: GlobalScale.Mode) {
         self.nakarRoom = nakarRoom
         self.content = content
+        globalScale = GlobalScale(mode: scaleMode)
 
         let camera = PerspectiveCamera()
-        camera.position = [0, 0, 2]
+        camera.position = [0, 0, 0]
         content.add(camera)
 
         connectObservables()
@@ -41,9 +43,10 @@ class RendererViewController {
 #endif
 
 #if os(visionOS)
-    init(content: RealityViewContent, nakarRoom: NakarRoom) {
+    init(content: RealityViewContent, nakarRoom: NakarRoom, scaleMode: GlobalScale.Mode) {
         self.nakarRoom = nakarRoom
         self.content = content
+        globalScale = GlobalScale(mode: scaleMode)
 
         connectObservables()
     }
@@ -69,36 +72,47 @@ class RendererViewController {
 
     func receiveNewGraph(graph: PhysicalGraph) {
         Task {
+            let startDate = Date()
             do {
                 guard let content else {
                     return
                 }
 
-                nodeEntities.values.forEach {
-                    $0.removeFromParent()
+                for nodeEntity in nodeEntities.values {
+                    nodeEntity.removeFromParent()
                 }
+                for edgeEntity in edgeEntites.values {
+                    edgeEntity.removeFromParent()
+                }
+
                 nodeEntities.removeAll()
+                edgeEntites.removeAll()
+
+
                 for node in graph.nodes.values {
-                    let nodeEntity = try Entity.createNodeEntity(physicalNode: node, renderer: self)
+                    let nodeEntity = try Entity.createNodeEntity(physicalNode: node, renderer: self, meshCache: meshCache)
                     nodeEntities[node.id] = nodeEntity
                     content.add(nodeEntity)
                 }
 
-                edgeEntites.values.forEach {
-                    $0.removeFromParent()
-                }
-                edgeEntites.removeAll()
                 for edge in graph.edges.values {
+                    if edge.isLoop {
+#warning("Need impl")
+                        continue
+                    }
                     guard
                         let startNodeEntity = nodeEntities[edge.startNodeId],
                         let endNodeEntity = nodeEntities[edge.endNodeId]
                     else {
                         continue
                     }
-                    let egde = Entity.createEdgeEntity(physicalEdge: edge, source: startNodeEntity, target: endNodeEntity, renderer: self)
-                    content.add(egde)
+                    let egde = await Entity.createEdgeEntity(physicalEdge: edge, source: startNodeEntity, target: endNodeEntity, renderer: self, meshCache: meshCache)
                     edgeEntites[edge.id] = egde
+                    content.add(egde)
                 }
+                let endDate = Date()
+                let ms = endDate.timeIntervalSince(startDate) * 1000
+                print("Creating graph took \(ms) ms. Thats \(1000 / ms) fps.")
             } catch let error {
                 print(error)
             }
@@ -114,8 +128,8 @@ class RendererViewController {
         }
     }
 
-    func backgroundColorOfNode(physicalNode: PhysicalNode) -> NativeColor {
-        if let customBackgroundColor = physicalNode.customBackgroundColor, let color = NativeColor(hex: customBackgroundColor) {
+    func backgroundColorOfNode(physicalNode: PhysicalNode) -> CGColor {
+        if let customBackgroundColor = physicalNode.customBackgroundColor, let color = CGColor.from(hex: customBackgroundColor) {
             return color
         }
         guard let firstLabel = physicalNode.labels.first else {
@@ -126,32 +140,56 @@ class RendererViewController {
         }
         switch foundLabel.color {
         case .preset(let index): return backgroundColor(index: index)
-        case .custom(let bgColor, _): return NativeColor(hex: bgColor) ?? backgroundColor(index: 0)
+        case .custom(let bgColor, _): return CGColor.from(hex: bgColor) ?? backgroundColor(index: 0)
         }
     }
 
-    func backgroundColor(index: Int) -> NativeColor {
+    func backgroundColor(index: Int) -> CGColor {
         switch index {
-        case 1: return NativeColor(hex: "#14A44D")!
-        case 2: return NativeColor(hex: "#DC4C64")!
-        case 3: return NativeColor(hex: "#E4A11B")!
-        case 4: return NativeColor(hex: "#54B4D3")!
-        case 5: return NativeColor(hex: "#332D2D")!
-        default: return NativeColor(hex: "#3B71CA")! // 0
+        case 1: return CGColor.from(hex: "#14A44D")!
+        case 2: return CGColor.from(hex: "#DC4C64")!
+        case 3: return CGColor.from(hex: "#E4A11B")!
+        case 4: return CGColor.from(hex: "#54B4D3")!
+        case 5: return CGColor.from(hex: "#332D2D")!
+        default: return CGColor.from(hex: "#3B71CA")! // 0
         }
+    }
+
+    func jiggleZPosition(_ zPosition: inout Float) {
+        zPosition =  zPosition + Float.random(in: -(self.globalScale.elementThickness*0.01)...(self.globalScale.elementThickness*0.01))
     }
 
     struct GlobalScale {
-        let defaultDepth: Float = -2
-        let defaultScale: Float = 0.001
+        let defaultDepth: Float
+        let personHeight: Float
+        let defaultScale: Float
+        let elementThickness: Float
+        let curvature: Float = 15
 
-        var personHeight: Float {
-#if os(visionOS)
-            return 1.7
-#endif
-#if os(macOS)
-            return 0
-#endif
+        init(mode: Mode) {
+            switch mode {
+            case .immersiveSpace:
+                defaultDepth = -3
+                defaultScale = 0.001
+                personHeight = 1.7
+                elementThickness = 0.005
+            case .window:
+                defaultDepth = -1
+                defaultScale = 0.001
+                personHeight = 0
+                elementThickness = 0.0001
+            case .volumentricWindow:
+                defaultDepth = 0
+                defaultScale = 0.001
+                personHeight = 0
+                elementThickness = 0.005
+            }
+        }
+
+        enum Mode {
+            case window
+            case volumentricWindow
+            case immersiveSpace
         }
     }
 }

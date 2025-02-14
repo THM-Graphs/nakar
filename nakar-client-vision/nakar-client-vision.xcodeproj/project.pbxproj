@@ -7,19 +7,20 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		7EB4A5042D5A6443006518B0 /* NakarKit in Frameworks */ = {isa = PBXBuildFile; productRef = 7EB4A5032D5A6443006518B0 /* NakarKit */; };
+		7E34E8AF2D5E6E1600BBA3E8 /* OpenAPIRuntime in Frameworks */ = {isa = PBXBuildFile; productRef = 7E34E8AE2D5E6E1600BBA3E8 /* OpenAPIRuntime */; };
+		7E34E8B22D5E6E2700BBA3E8 /* OpenAPIURLSession in Frameworks */ = {isa = PBXBuildFile; productRef = 7E34E8B12D5E6E2700BBA3E8 /* OpenAPIURLSession */; };
+		7E34E8B82D5E6E9C00BBA3E8 /* SocketIO in Frameworks */ = {isa = PBXBuildFile; productRef = 7E34E8B72D5E6E9C00BBA3E8 /* SocketIO */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		7E78705B2D54C98D00738B34 /* NAKAR.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = NAKAR.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		7EB4A4CC2D5A5E7A006518B0 /* NakarKit */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = NakarKit; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
 		7E78706C2D54C98E00738B34 /* Exceptions for "nakar-client-vision" folder in "nakar-client-vision" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				Info.plist,
+				Application/Info.plist,
 			);
 			target = 7E78705A2D54C98D00738B34 /* nakar-client-vision */;
 		};
@@ -41,19 +42,27 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				7EB4A5042D5A6443006518B0 /* NakarKit in Frameworks */,
+				7E34E8B22D5E6E2700BBA3E8 /* OpenAPIURLSession in Frameworks */,
+				7E34E8AF2D5E6E1600BBA3E8 /* OpenAPIRuntime in Frameworks */,
+				7E34E8B82D5E6E9C00BBA3E8 /* SocketIO in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		7E34E8B62D5E6E9C00BBA3E8 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		7E7870522D54C98D00738B34 = {
 			isa = PBXGroup;
 			children = (
-				7EB4A4CC2D5A5E7A006518B0 /* NakarKit */,
 				7E78705D2D54C98D00738B34 /* nakar-client-vision */,
-				7EB4A5022D5A6443006518B0 /* Frameworks */,
+				7E34E8B62D5E6E9C00BBA3E8 /* Frameworks */,
 				7E78705C2D54C98D00738B34 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -64,13 +73,6 @@
 				7E78705B2D54C98D00738B34 /* NAKAR.app */,
 			);
 			name = Products;
-			sourceTree = "<group>";
-		};
-		7EB4A5022D5A6443006518B0 /* Frameworks */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -87,7 +89,7 @@
 			buildRules = (
 			);
 			dependencies = (
-				7E73CD5D2D5AC2FE007A45DA /* PBXTargetDependency */,
+				7E34E8B42D5E6E3900BBA3E8 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				7E78705D2D54C98D00738B34 /* nakar-client-vision */,
@@ -95,6 +97,9 @@
 			name = "nakar-client-vision";
 			packageProductDependencies = (
 				7EB4A5032D5A6443006518B0 /* NakarKit */,
+				7E34E8AE2D5E6E1600BBA3E8 /* OpenAPIRuntime */,
+				7E34E8B12D5E6E2700BBA3E8 /* OpenAPIURLSession */,
+				7E34E8B72D5E6E9C00BBA3E8 /* SocketIO */,
 			);
 			productName = "nakar-client-vision";
 			productReference = 7E78705B2D54C98D00738B34 /* NAKAR.app */;
@@ -125,6 +130,10 @@
 			mainGroup = 7E7870522D54C98D00738B34;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
+				7E34E8A92D5E6DD000BBA3E8 /* XCRemoteSwiftPackageReference "socket" */,
+				7E34E8AA2D5E6E0400BBA3E8 /* XCRemoteSwiftPackageReference "swift-openapi-generator" */,
+				7E34E8AD2D5E6E1600BBA3E8 /* XCRemoteSwiftPackageReference "swift-openapi-runtime" */,
+				7E34E8B02D5E6E2700BBA3E8 /* XCRemoteSwiftPackageReference "swift-openapi-urlsession" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 7E78705C2D54C98D00738B34 /* Products */;
@@ -157,9 +166,9 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		7E73CD5D2D5AC2FE007A45DA /* PBXTargetDependency */ = {
+		7E34E8B42D5E6E3900BBA3E8 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			productRef = 7E73CD5C2D5AC2FE007A45DA /* NakarKit */;
+			productRef = 7E34E8B32D5E6E3900BBA3E8 /* OpenAPIGenerator */;
 		};
 /* End PBXTargetDependency section */
 
@@ -174,7 +183,7 @@
 				DEVELOPMENT_TEAM = USSZ6N5YB4;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "$(TARGET_NAME)/Info.plist";
+				INFOPLIST_FILE = "$(TARGET_NAME)/Application/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = NAKAR;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -203,7 +212,7 @@
 				DEVELOPMENT_TEAM = USSZ6N5YB4;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "$(TARGET_NAME)/Info.plist";
+				INFOPLIST_FILE = "$(TARGET_NAME)/Application/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = NAKAR;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -364,10 +373,61 @@
 		};
 /* End XCConfigurationList section */
 
+/* Begin XCRemoteSwiftPackageReference section */
+		7E34E8A92D5E6DD000BBA3E8 /* XCRemoteSwiftPackageReference "socket" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/socketio/socket.io-client-swift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 16.1.1;
+			};
+		};
+		7E34E8AA2D5E6E0400BBA3E8 /* XCRemoteSwiftPackageReference "swift-openapi-generator" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-openapi-generator";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.7.0;
+			};
+		};
+		7E34E8AD2D5E6E1600BBA3E8 /* XCRemoteSwiftPackageReference "swift-openapi-runtime" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-openapi-runtime";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.8.0;
+			};
+		};
+		7E34E8B02D5E6E2700BBA3E8 /* XCRemoteSwiftPackageReference "swift-openapi-urlsession" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-openapi-urlsession";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.0.2;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
 /* Begin XCSwiftPackageProductDependency section */
-		7E73CD5C2D5AC2FE007A45DA /* NakarKit */ = {
+		7E34E8AE2D5E6E1600BBA3E8 /* OpenAPIRuntime */ = {
 			isa = XCSwiftPackageProductDependency;
-			productName = NakarKit;
+			package = 7E34E8AD2D5E6E1600BBA3E8 /* XCRemoteSwiftPackageReference "swift-openapi-runtime" */;
+			productName = OpenAPIRuntime;
+		};
+		7E34E8B12D5E6E2700BBA3E8 /* OpenAPIURLSession */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 7E34E8B02D5E6E2700BBA3E8 /* XCRemoteSwiftPackageReference "swift-openapi-urlsession" */;
+			productName = OpenAPIURLSession;
+		};
+		7E34E8B32D5E6E3900BBA3E8 /* OpenAPIGenerator */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 7E34E8AA2D5E6E0400BBA3E8 /* XCRemoteSwiftPackageReference "swift-openapi-generator" */;
+			productName = "plugin:OpenAPIGenerator";
+		};
+		7E34E8B72D5E6E9C00BBA3E8 /* SocketIO */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 7E34E8A92D5E6DD000BBA3E8 /* XCRemoteSwiftPackageReference "socket" */;
+			productName = SocketIO;
 		};
 		7EB4A5032D5A6443006518B0 /* NakarKit */ = {
 			isa = XCSwiftPackageProductDependency;

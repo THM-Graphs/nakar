@@ -11,14 +11,16 @@ import SwiftUI
 import Foundation
 
 extension Entity {
-    class func createNodeEntity(physicalNode: PhysicalNode, renderer: RendererViewController) throws -> Entity {
+    class func createNodeEntity(physicalNode: PhysicalNode, renderer: RendererViewController, meshCache: MeshCache) throws -> Entity {
         let entity = Entity()
 
         // Model
-        let material = UnlitMaterial(color: renderer.backgroundColorOfNode(physicalNode: physicalNode).native)
-        let mesh = MeshResource.generateCylinder(height: 0.0001, radius: Float(physicalNode.radius) * renderer.globalScale.defaultScale)
+        let material = UnlitMaterial(color: renderer.backgroundColorOfNode(physicalNode: physicalNode).platformNative)
+        let radius = Float(physicalNode.radius) * renderer.globalScale.defaultScale
+        let mesh = meshCache.generateCircle(radius: radius, thickness: renderer.globalScale.elementThickness)
         let model = ModelEntity(mesh: mesh, materials: [material])
         model.transform.rotation = simd_quatf.init(angle: .pi / 2, axis: SIMD3<Float>.init(x: 1, y: 0, z: 0))
+        renderer.jiggleZPosition(&model.position.z)
         entity.addChild(model)
 
         // Node
@@ -29,7 +31,7 @@ extension Entity {
         model.components.set(CollisionComponent(
             shapes: [ShapeResource.generateSphere(radius: Float(physicalNode.radius) * renderer.globalScale.defaultScale)]
         ))
-        model.components.set(HoverEffectComponent(.highlight(.init(color: .red, strength: 0.5))))
+        model.components.set(HoverEffectComponent(.highlight(.init(color: .white, strength: 1))))
 
         // Title Label
         var textString = AttributedString(physicalNode.title)
@@ -45,8 +47,8 @@ extension Entity {
         textComponent.size = CGSize(width: physicalNode.radius * 2, height: height)
         let textEntity = Entity()
         textEntity.components.set(textComponent)
-        textEntity.position.z = 0.0001
-        textEntity.scale = SIMD3<Float>(repeating: 2.8) // idk why
+        textEntity.scale = SIMD3<Float>(SIMD2<Float>(repeating: 2.8), 1) // idk why
+        textEntity.position.z = model.position.z + renderer.globalScale.elementThickness / 2
         entity.addChild(textEntity)
 
 

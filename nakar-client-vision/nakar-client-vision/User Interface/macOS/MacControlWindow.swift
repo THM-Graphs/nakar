@@ -10,6 +10,7 @@
 import NakarKit
 import SwiftUI
 import RealityKit
+import CoreGraphics
 
 struct MacControlWindow: View {
     @Environment(NakarController.self) var nakarController: NakarController
@@ -324,11 +325,14 @@ struct MacControlWindow: View {
 
         var body: some View {
             RealityView { content in
-                self.rendererViewConroller = RendererViewController(content: content, nakarRoom: roomManager)
-            }.onDisappear {
+                self.rendererViewConroller = RendererViewController(content: content, nakarRoom: roomManager, scaleMode: .window)
+            }
+            .background {
+                Color(cgColor: CGColor(gray: 0.2, alpha: 1 ))
+            }
+            .onDisappear {
                 rendererViewConroller?.close()
             }
-            .edgesIgnoringSafeArea(.all)
         }
     }
 }

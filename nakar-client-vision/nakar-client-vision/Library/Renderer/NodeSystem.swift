@@ -41,7 +41,7 @@ class NodeSystem: System {
                 ],
                 currentVelocity: &velocity,
                 smoothTime: smoothTime,
-                maxSpeed: renderer.maxSpeed * globalScale.defaultScale * 1000,
+                maxSpeed: renderer.maxSpeed,
                 deltaTime: Float(context.deltaTime)
             )
             nodeComponent.velocity = velocity

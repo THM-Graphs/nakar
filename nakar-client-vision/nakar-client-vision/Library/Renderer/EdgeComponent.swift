@@ -11,15 +11,26 @@ import NakarKit
 class EdgeComponent: Component {
     var physicalEdge: PhysicalEdge
 
-    var source: Entity
-    var target: Entity
-    
+    let source: Entity
+    let target: Entity
+    let lineEntity: Entity
+    let textEntity: Entity
+
     weak var renderer: RendererViewController?
 
-    init(physicalEdge: PhysicalEdge, source: Entity, target: Entity, renderer: RendererViewController?) {
+    init(
+        physicalEdge: PhysicalEdge,
+        source: Entity,
+        target: Entity,
+        lineEntity: Entity,
+        textEntity: Entity,
+        renderer: RendererViewController?
+    ) {
         self.physicalEdge = physicalEdge
         self.source = source
         self.target = target
+        self.lineEntity = lineEntity
+        self.textEntity = textEntity
         self.renderer = renderer
     }
 }

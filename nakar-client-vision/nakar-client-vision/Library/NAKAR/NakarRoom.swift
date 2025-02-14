@@ -46,6 +46,7 @@ public class NakarRoom: WSBackendDelegate, ObservableObject {
     func onWSEventScenarioLoaded(event: Components.Schemas.WSEventScenarioLoaded) {
         let newGraph = PhysicalGraph(of: event.graph)
         self.graph = newGraph
+        print("Did receive \(graph?.nodes.count) nodes.")
         onNewGraph.send(newGraph)
     }
 
