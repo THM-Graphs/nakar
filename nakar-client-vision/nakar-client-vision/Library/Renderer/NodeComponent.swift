@@ -8,12 +8,18 @@
 import RealityKit
 
 class NodeComponent: Component {
-    var source: PhysicalNode
-    weak var renderer: RendererViewController?
-    var velocity: SIMD3<Float> = .zero
+    var source: Components.Schemas.Node
+    let globalScale: RendererTools.GlobalScale
 
-    init(source: PhysicalNode, renderer: RendererViewController?) {
+    var velocity: SIMD3<Float> = .zero
+    var dragStartPosition: SIMD3<Float>? = nil
+
+    init(source: Components.Schemas.Node, globalScale: RendererTools.GlobalScale) {
         self.source = source
-        self.renderer = renderer
+        self.globalScale = globalScale
+    }
+
+    var dragging: Bool {
+        dragStartPosition != nil
     }
 }

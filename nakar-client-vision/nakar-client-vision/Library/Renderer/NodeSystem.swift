@@ -22,16 +22,16 @@ class NodeSystem: System {
                 print("Error: Cannot get node component")
                 return
             }
-            guard let renderer = nodeComponent.renderer else {
-                print("Error: no renderer")
-                return
+            if nodeComponent.dragging {
+                continue
             }
-            let globalScale = renderer.globalScale
+
+            let globalScale = nodeComponent.globalScale
 
             let physicalNode = nodeComponent.source
 
             var velocity = nodeComponent.velocity
-            let smoothTime: Float = (1 / renderer.fps) * 1.5; // compensate slow ws
+            let smoothTime: Float = (1 / globalScale.fps) * 1.5; // compensate slow ws
             let position = smoothDamp(
                 current: entity.position,
                 target: [
@@ -41,7 +41,7 @@ class NodeSystem: System {
                 ],
                 currentVelocity: &velocity,
                 smoothTime: smoothTime,
-                maxSpeed: renderer.maxSpeed,
+                maxSpeed: globalScale.maxSpeed,
                 deltaTime: Float(context.deltaTime)
             )
             nodeComponent.velocity = velocity

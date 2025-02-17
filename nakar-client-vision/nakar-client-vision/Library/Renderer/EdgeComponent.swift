@@ -8,28 +8,28 @@
 import RealityKit
 
 class EdgeComponent: Component {
-    var physicalEdge: PhysicalEdge
+    var physicalEdge: Components.Schemas.Edge
 
     let source: Entity
     let target: Entity
     let lineEntity: Entity
     let textEntity: Entity
 
-    weak var renderer: RendererViewController?
+    let globalScale: RendererTools.GlobalScale
 
     init(
-        physicalEdge: PhysicalEdge,
+        physicalEdge: Components.Schemas.Edge,
         source: Entity,
         target: Entity,
         lineEntity: Entity,
         textEntity: Entity,
-        renderer: RendererViewController?
+        globalScale: RendererTools.GlobalScale
     ) {
         self.physicalEdge = physicalEdge
         self.source = source
         self.target = target
         self.lineEntity = lineEntity
         self.textEntity = textEntity
-        self.renderer = renderer
+        self.globalScale = globalScale
     }
 }

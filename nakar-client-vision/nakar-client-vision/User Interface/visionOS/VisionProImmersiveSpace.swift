@@ -12,19 +12,12 @@ import RealityKit
 
 struct VisionProImmersiveSpace: View {
     @Environment(\.dismissImmersiveSpace) var dismissImmersiveSpace
-    @Environment(NakarController.self) var nakarController: NakarController
 
     let roomId: Binding<String?>
 
-    @State var controller: RendererViewController?
-
     var body: some View {
-        if let roomId = roomId.wrappedValue, let roomManager = nakarController.roomManagers[roomId] {
-            RealityView { content in
-                self.controller = RendererViewController(content: content, nakarRoom: roomManager, scaleMode: .immersiveSpace)
-            }.onDisappear {
-                controller?.close()
-            }
+        if let roomId = roomId.wrappedValue {
+            NakarRealityView(roomId: roomId, mode: .immersiveSpace)
         } else {
             Button {
                 Task {

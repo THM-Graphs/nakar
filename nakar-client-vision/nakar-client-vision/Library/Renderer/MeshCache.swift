@@ -8,6 +8,7 @@
 import RealityKit
 import SwiftUI
 
+@MainActor
 class MeshCache {
     private var circles: [Int: MeshResource]
     private var lines: [Int: MeshResource]

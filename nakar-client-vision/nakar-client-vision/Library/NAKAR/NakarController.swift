@@ -11,27 +11,27 @@ import Foundation
 
 @MainActor
 @Observable
-public class NakarController {
+class NakarController {
     private let httpBackend: HTTPBackend
 
-    public var roomManagers: [String: NakarRoom]
-    public var backendData: Loadable<ViewModel.BackendData> = .nothing
+    var roomManagers: [String: NakarRoom]
+    var backendData: Loadable<ViewModel.BackendData> = .nothing
 
     #if os(visionOS)
-    public var immersionStyle: ImmersionStyle = .mixed
+    var immersionStyle: ImmersionStyle = .mixed
     #endif
 
-    public init() {
+    init() {
         self.httpBackend = HTTPBackend()
 
         self.roomManagers = [:]
     }
 
-    public enum Mode: CustomStringConvertible {
+    enum Mode: CustomStringConvertible {
         case production
         case development
 
-        public static var current: Mode {
+        static var current: Mode {
             #if DEBUG
             return .development
             #else
@@ -39,7 +39,7 @@ public class NakarController {
             #endif
         }
 
-        public var description: String {
+        var description: String {
             switch self {
             case .production: return "Production"
             case .development: return "Development"
@@ -47,15 +47,16 @@ public class NakarController {
         }
     }
 
-    public func enterRoom(roomId: String) {
-        if self.roomManagers.keys.contains(roomId) {
-            return
+    func enterRoom(roomId: String) -> NakarRoom {
+        if let room = self.roomManagers[roomId] {
+            return room
         }
         let roomManager = NakarRoom(roomId: roomId)
         self.roomManagers[roomId] = roomManager
+        return roomManager
     }
 
-    public func leaveRoom(roomId: String) {
+    func leaveRoom(roomId: String) {
         guard let roomManager = self.roomManagers[roomId] else {
             return
         }
@@ -63,24 +64,24 @@ public class NakarController {
         roomManagers.removeValue(forKey: roomId)
     }
 
-    public func leaveRooms() {
+    func leaveRooms() {
         roomManagers.keys.forEach {
             self.leaveRoom(roomId: $0)
         }
     }
 
-    public var environmentDebugString: String {
+    var environmentDebugString: String {
         return "\(Mode.current.description) (\(releaseVersionNumber)-\(buildVersionNumber))"
     }
 
-    public var releaseVersionNumber: String {
+    var releaseVersionNumber: String {
         return Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.0.0"
     }
-    public var buildVersionNumber: String {
+    var buildVersionNumber: String {
         return Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "0"
     }
 
-    public func initialize() -> Void {
+    func initialize() -> Void {
         Task {
             do {
                 self.backendData = .loading
@@ -91,7 +92,7 @@ public class NakarController {
         }
     }
 
-    public func copyQueryClipboard(scenario: ViewModel.Scenario) {
+    func copyQueryClipboard(scenario: ViewModel.Scenario) {
 #warning("")
     }
 }

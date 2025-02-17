@@ -10,26 +10,26 @@ import SwiftUI
 import Foundation
 
 extension Entity {
-    class func createNodeEntity(physicalNode: PhysicalNode, renderer: RendererViewController, meshCache: MeshCache) throws -> Entity {
+    class func createNodeEntity(physicalNode: Components.Schemas.Node, meshCache: MeshCache, globalScale: RendererTools.GlobalScale, metaData: Components.Schemas.GraphMetaData) throws -> Entity {
         let entity = Entity()
 
         // Model
         // let material = UnlitMaterial(color: renderer.backgroundColorOfNode(physicalNode: physicalNode).platformNative)
-        let material = SimpleMaterial(color: renderer.backgroundColorOfNode(physicalNode: physicalNode).platformNative, isMetallic: false)
-        let radius = Float(physicalNode.radius) * renderer.globalScale.defaultScale
-        let mesh = meshCache.generateCircle(radius: radius, thickness: renderer.globalScale.elementThickness)
+        let material = SimpleMaterial(color: RendererTools.backgroundColorOfNode(physicalNode: physicalNode, metaData: metaData).platformNative, isMetallic: false)
+        let radius = Float(physicalNode.radius) * globalScale.defaultScale
+        let mesh = meshCache.generateCircle(radius: radius, thickness: globalScale.elementThickness)
         let model = ModelEntity(mesh: mesh, materials: [material])
         model.transform.rotation = simd_quatf.init(angle: .pi / 2, axis: SIMD3<Float>.init(x: 1, y: 0, z: 0))
-        renderer.jiggleZPosition(&model.position.z)
+        RendererTools.jiggleZPosition(&model.position.z, globalScale: globalScale)
         entity.addChild(model)
 
         // Node
-        entity.components.set(NodeComponent(source: physicalNode, renderer: renderer))
+        entity.components.set(NodeComponent(source: physicalNode, globalScale: globalScale))
 
         // Hover
         model.components.set(InputTargetComponent())
         model.components.set(CollisionComponent(
-            shapes: [ShapeResource.generateSphere(radius: Float(physicalNode.radius) * renderer.globalScale.defaultScale)]
+            shapes: [ShapeResource.generateSphere(radius: Float(physicalNode.radius) * globalScale.defaultScale)]
         ))
         model.components.set(HoverEffectComponent(.highlight(.init(color: .white, strength: 1))))
 
@@ -48,7 +48,7 @@ extension Entity {
         let textEntity = Entity()
         textEntity.components.set(textComponent)
         textEntity.scale = SIMD3<Float>(SIMD2<Float>(repeating: 2.8), 1) // idk why
-        textEntity.position.z = model.position.z + renderer.globalScale.elementThickness / 2
+        textEntity.position.z = model.position.z + globalScale.elementThickness / 2
         entity.addChild(textEntity)
 
 

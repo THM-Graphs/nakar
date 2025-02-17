@@ -9,19 +9,17 @@ import SwiftUI
 import Combine
 import SpriteKit
 
-public class NakarRoom: WSBackendDelegate, ObservableObject {
+@Observable
+class NakarRoom: WSBackendDelegate {
     private let socketIOManager: WSBackend
 
-    public var graph: PhysicalGraph?
-    public let onNewGraph: PassthroughSubject<PhysicalGraph, Never>
-    public let onNodesMoved: PassthroughSubject<[String: PhysicalNode], Never>
+    let onNewGraph: PassthroughSubject<Components.Schemas.Graph, Never>
+    let onNodesMoved: PassthroughSubject<[Components.Schemas.PhysicalNode], Never>
 
-    public let roomId: String
+    let roomId: String
 
-
-    public init(roomId: String) {
+    init(roomId: String) {
         self.socketIOManager = WSBackend()
-        graph = nil
         onNewGraph = PassthroughSubject()
         onNodesMoved = PassthroughSubject()
         self.roomId = roomId
@@ -44,26 +42,12 @@ public class NakarRoom: WSBackendDelegate, ObservableObject {
     }
 
     func onWSEventScenarioLoaded(event: Components.Schemas.WSEventScenarioLoaded) {
-        let newGraph = PhysicalGraph(of: event.graph)
-        self.graph = newGraph
-        print("Did receive \(graph?.nodes.count) nods.")
-        onNewGraph.send(newGraph)
+        print("Did receive \(event.graph.nodes.count) nods.")
+        onNewGraph.send(event.graph)
     }
 
     func onWSEventNodesMoved(event: Components.Schemas.WSEventNodesMoved) {
-        guard let graph else {
-            print("cannot acces graph. its null")
-            return
-        }
-        var updatedNodes: [String: PhysicalNode] = [:]
-        for node in event.nodes {
-            guard var existingNode = graph.nodes[node.id] else {
-                continue
-            }
-            existingNode.position = .init(of: node.position)
-            updatedNodes[existingNode.id] = existingNode
-        }
-        onNodesMoved.send(updatedNodes)
+        onNodesMoved.send(event.nodes)
     }
 
     func onWSEventNotification(event: Components.Schemas.WSEventNotification) {
@@ -80,12 +64,35 @@ public class NakarRoom: WSBackendDelegate, ObservableObject {
 #warning("")
     }
 
-    public var socketStatus: SocketStatus {
+    var socketStatus: SocketStatus {
         self.socketIOManager.socketStatus
     }
 
-    public func run(_ scenario: ViewModel.Scenario) {
+    func run(_ scenario: ViewModel.Scenario) {
         let message = Components.Schemas.WSClientToServerMessage.WSActionLoadScenario(Components.Schemas.WSActionLoadScenario(_type: .wsActionLoadScenario, scenarioId: scenario.id))
+        socketIOManager.send(message: message)
+    }
+
+    func sendGrabNode(nodeId: String) -> Void {
+        let message = Components.Schemas.WSClientToServerMessage.WSActionGrabNode(
+            Components.Schemas.WSActionGrabNode(_type: .wsActionGrabNode, nodeId: nodeId)
+        )
+        socketIOManager.send(message: message)
+    }
+
+    func sendUngrabNode(nodeId: String) -> Void {
+        let message = Components.Schemas.WSClientToServerMessage.WSActionUngrabNode(
+            Components.Schemas.WSActionUngrabNode(_type: .wsActionUngrabNode, nodeId: nodeId)
+        )
+        socketIOManager.send(message: message)
+    }
+
+    func sendNodeMoved(nodeId: String, positionX: Double, positionY: Double) -> Void {
+        let message = Components.Schemas.WSClientToServerMessage.WSActionMoveNodes(
+            Components.Schemas.WSActionMoveNodes(_type: .wsActionMoveNodes, nodes: [
+                .init(id: nodeId, position: .init(x: positionX, y: positionY))
+            ])
+        )
         socketIOManager.send(message: message)
     }
 }

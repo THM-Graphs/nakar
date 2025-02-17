@@ -37,9 +37,7 @@ struct VisionProControlWindow: View {
                 }.disabled(selectedRoom != nil)
                 .navigationTitle("Rooms")
                 .onChange(of: selectedRoom) {
-                    nakarController.leaveRooms()
                     if let selectedRoom {
-                        nakarController.enterRoom(roomId: selectedRoom.id)
                         Task {
                             let result = await openImmersiveSpace(id: "renderer", value: selectedRoom.id)
                             print(result)

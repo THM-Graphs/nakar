@@ -27,22 +27,19 @@ struct MacControlWindow: View {
             ProgressView()
         case .data(let backendData):
             NavigationSplitView {
-                List {
-                    Picker("", selection: $selectedRoom) {
-                        Text(selectedRoom == nil ? "Select room" : "No Room")
-                            .foregroundStyle(.secondary)
-                            .italic()
-                            .tag(ViewModel.Room?.none)
-                        ForEach(backendData.rooms) { room in
-                            Text(room.title)
-                                .tag(room)
+                if selectedRoom != nil {
+                    Button {
+                        selectedRoom = nil
+                    } label: {
+                        Label {
+                            Text("Leave Room")
+                        } icon: {
+                            Image(systemName: "door.left.hand.open")
                         }
-                    }.onChange(of: selectedRoom) {
-                        nakarController.leaveRooms()
-                        if let selectedRoom {
-                            nakarController.enterRoom(roomId: selectedRoom.id)
-                        }
+
                     }
+                }
+                List {
                     if let room = selectedRoom {
                         ForEach(backendData.databases) { database in
                             DatabaseListEntry(room: room, database: database, showScenarioInfo: { scenarioGroup, scenario in
@@ -57,16 +54,22 @@ struct MacControlWindow: View {
             } detail: {
                 if let room = selectedRoom {
                     VStack {
-                        if let roomManager = nakarController.roomManagers[room.id] {
-                            RendererView(roomManager: roomManager)
-                        } else {
-                            Text("Connecting to room...")
-                        }
+                        RendererView(roomId: room.id)
                     }
                     .navigationTitle(room.title)
                 } else {
-                    Text("Join a room")
-                        .navigationTitle("NAKAR")
+                    VStack {
+                        Text("Join a room")
+                            .navigationTitle("NAKAR")
+                        ForEach(backendData.rooms) { room in
+                            Button {
+                                selectedRoom = room
+                            } label: {
+                                Text(room.title)
+                            }
+                        }
+                    }
+
                 }
             }
             .inspector(isPresented: $showInspector) {
@@ -185,7 +188,7 @@ struct MacControlWindow: View {
                 ToolbarItem {
                     ForEach(Array(nakarController.roomManagers.values), id: \.roomId) { roomManager in
                         Label {
-                            Text(roomManager.roomId)
+                            Text(roomManager.socketStatus.description)
                         } icon: {
                             SocketStatusIconView(socketStatus: roomManager.socketStatus)
                         }
@@ -320,20 +323,12 @@ struct MacControlWindow: View {
     }
 
     struct RendererView: View {
-        let roomManager: NakarRoom
+        @Environment(NakarController.self) var nakarController: NakarController
 
-        @State var rendererViewConroller: RendererViewController?
+        let roomId: String
 
         var body: some View {
-            RealityView { content in
-                self.rendererViewConroller = RendererViewController(content: content, nakarRoom: roomManager, scaleMode: .window)
-            }
-            .background {
-                Color(cgColor: CGColor(gray: 0.2, alpha: 1 ))
-            }
-            .onDisappear {
-                rendererViewConroller?.close()
-            }
+            NakarRealityView(roomId: roomId, mode: .window)
         }
     }
 }

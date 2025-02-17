@@ -21,10 +21,7 @@ class EdgeSystem: System {
                 print("Error: Cannot get node component")
                 return
             }
-            guard let globalScale = edgeComponent.renderer?.globalScale else {
-                print("Error: no global scale in node system")
-                return
-            }
+            let globalScale = edgeComponent.globalScale
 
             let source = edgeComponent.source
             let sourceNode = edgeComponent.source.components[NodeComponent.self]!.source
@@ -44,7 +41,10 @@ class EdgeSystem: System {
                 edgeComponent.lineEntity.isEnabled = false
             } else {
                 // good distance between nodes
-                length = distance(start + direction * Float(sourceNode.radius) * Float(globalScale.defaultScale), end - direction * Float(targetNode.radius) * Float(globalScale.defaultScale))
+                length = distance(
+                    start + direction * Float(sourceNode.radius) * Float(globalScale.defaultScale),
+                    end - direction * Float(targetNode.radius) * Float(globalScale.defaultScale)
+                )
                 edgeComponent.textEntity.isEnabled = true
                 edgeComponent.lineEntity.isEnabled = true
             }
