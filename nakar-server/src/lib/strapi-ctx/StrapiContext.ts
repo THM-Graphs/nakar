@@ -3,6 +3,7 @@ import z from 'zod';
 import { BadRequest, InternalServerError, HttpError } from 'http-errors';
 import { match, P } from 'ts-pattern';
 import { DocumentsDatabase } from '../documents/DocumentsDatabase';
+import { NakarCore } from '../core/NakarCore';
 
 export class StrapiContext {
   public readonly database: DocumentsDatabase;
@@ -11,7 +12,9 @@ export class StrapiContext {
 
   public constructor(ctx: Context) {
     this._ctx = ctx;
-    this.database = new DocumentsDatabase();
+
+    const core: NakarCore = NakarCore.shared;
+    this.database = core.database;
   }
 
   public static handleRequest<T>(

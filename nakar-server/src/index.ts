@@ -1,9 +1,4 @@
-// import type { Core } from '@strapi/strapi';
-
-import { RoomSessionManager } from './lib/room/RoomSessionManager';
-import { DocumentsDatabase } from './lib/documents/DocumentsDatabase';
-import { Core } from '@strapi/strapi';
-import { WebSocketsManager } from './lib/ws/WebSocketsManager';
+import { NakarCore } from './lib/core/NakarCore';
 
 export default {
   /**
@@ -20,11 +15,11 @@ export default {
    * This gives you an opportunity to set up your data model,
    * run jobs, or perform some special logic.
    */
-  bootstrap({ strapi }: { strapi: Core.Strapi }): void {
-    const database: DocumentsDatabase = new DocumentsDatabase();
-    const roomSessionManager: RoomSessionManager = new RoomSessionManager(
-      database,
-    );
-    new WebSocketsManager(roomSessionManager, database, strapi);
+  async bootstrap(): Promise<void> {
+    await NakarCore.shared.bootstrap();
+  },
+
+  async destroy(): Promise<void> {
+    await NakarCore.shared.destroy();
   },
 };

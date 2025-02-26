@@ -26,8 +26,6 @@ export class RoomSessionManager {
     this._onRoomUpdated = new Subject();
     this._onRoomPhysicsUpdated = new Subject();
 
-    this._loadGraphFromDb().catch(strapi.log.error);
-
     this._rooms.onRoomUpdated$.subscribe(
       ([roomId, state]: [string, RoomState]): void => {
         match(state)
@@ -62,6 +60,14 @@ export class RoomSessionManager {
         graph: graph,
       });
     });
+  }
+
+  public async bootstrap(): Promise<void> {
+    try {
+      await this._loadGraphFromDb();
+    } catch (error) {
+      strapi.log.error(error);
+    }
   }
 
   public get onRoomUpdated$(): Observable<RoomSessionManagerEventRoomUpdated> {

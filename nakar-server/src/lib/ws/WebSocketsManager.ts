@@ -3,7 +3,6 @@ import {
   Server as UntypedServer,
   Socket as UntypedSocket,
 } from 'socket.io';
-import { Core } from '@strapi/strapi';
 import {
   SchemaWsActionGrabNode,
   SchemaWsActionJoinRoom,
@@ -12,7 +11,6 @@ import {
   SchemaWsActionUngrabNode,
   SchemaWsClientToServerMessage,
   SchemaWsEventNotification,
-  SchemaWsEventScenarioLoaded,
   SchemaWsEventScenarioProgress,
   SchemaWsServerToClientMessage,
 } from '../../../src-gen/schema';
@@ -38,25 +36,31 @@ export type Socket = UntypedSocket<ClientToServerEvents, ServerToClientEvents>;
 
 export class WebSocketsManager {
   private readonly _sockets: SSet<WSClient>;
-
-  private readonly _io: Server;
+  private _io: UntypedServer | null;
 
   public constructor(
     private _roomSessionManager: RoomSessionManager,
     private _database: DocumentsDatabase,
-    strapi: Core.Strapi,
   ) {
     this._sockets = new SSet();
+    this._io = null;
+  }
 
-    this._io = new UntypedServer(strapi.server.httpServer, {
+  public get sockets(): SSet<WSClient> {
+    return this._sockets;
+  }
+
+  public bootstrap(): void {
+    const io: UntypedServer = new UntypedServer(strapi.server.httpServer, {
       cors: {
         origin: '*',
       },
       path: '/frontend',
       serveClient: false,
     });
-    this._io.on('connection', (s: Socket): void => {
-      const wsClient: WSClient = new WSClient(s, this._io);
+    this._io = io;
+    io.on('connection', (s: Socket): void => {
+      const wsClient: WSClient = new WSClient(s, io);
       this._sockets.add(wsClient);
       strapi.log.debug(`New socket ${wsClient.id} connection.`);
 
@@ -137,27 +141,44 @@ export class WebSocketsManager {
       });
     });
 
-    _roomSessionManager.onRoomPhysicsUpdated$.subscribe(
+    this._roomSessionManager.onRoomPhysicsUpdated$.subscribe(
       (message: RoomSessionManagerEventRoomPhysicsUpdated): void => {
         this._handleRoomPhysicsUpdate(message);
       },
     );
 
-    _roomSessionManager.onRoomUpdated$.subscribe(
+    this._roomSessionManager.onRoomUpdated$.subscribe(
       (message: RoomSessionManagerEventRoomUpdated): void => {
         this._handleRoomUpdate(message);
       },
     );
   }
 
-  public get sockets(): SSet<WSClient> {
-    return this._sockets;
+  public async destroy(): Promise<void> {
+    if (this._io == null) {
+      return;
+    }
+    strapi.log.debug('Will close web sockets connections');
+
+    this._io.emit('message', {
+      type: 'WSEventNotification',
+      severity: 'error',
+      message: 'The Server did shut down.',
+      title: 'Server notification',
+      date: new Date().toISOString(),
+    } satisfies SchemaWsEventNotification);
+
+    await this._io.close();
   }
 
   public sendToRoom(
     roomId: string,
     message: SchemaWsServerToClientMessage,
   ): void {
+    if (this._io == null) {
+      strapi.log.warn('IO is not defined!');
+      return;
+    }
     this._io.to(roomId).emit('message', message);
   }
 
