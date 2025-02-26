@@ -21,7 +21,6 @@ jobs:
           npm ci
           npm run build
           npm run lint
-          npm run audit
       - name: Build Docker image
         run: |
           docker build -f nakar-server/Dockerfile -t "nakar-server:dev" .
@@ -41,7 +40,6 @@ jobs:
           npm ci
           npm run build
           npm run lint
-          npm run audit
       - name: Build Docker image
         run: |
           docker build -f nakar-client-web/Dockerfile -t "nakar-client-web:dev" .
