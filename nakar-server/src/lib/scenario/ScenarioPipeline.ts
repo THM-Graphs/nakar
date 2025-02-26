@@ -1,4 +1,3 @@
-import { Observable, Subject } from 'rxjs';
 import { MutableGraph } from '../graph/MutableGraph';
 import { DocumentsDatabase } from '../documents/DocumentsDatabase';
 import { DBScenario } from '../documents/collection-types/DBScenario';
@@ -26,24 +25,18 @@ import { ProfilerTask } from '../profile/ProfilerTask';
 import { wait } from '../tools/Wait';
 
 export class ScenarioPipeline {
-  private _onStep: Subject<[string, number]>;
   private _database: DocumentsDatabase;
   private readonly _stepCount: number = 14;
   private _stepCounter: number;
 
   public constructor(database: DocumentsDatabase) {
-    this._onStep = new Subject();
     this._database = database;
     this._stepCounter = 0;
   }
 
-  public get onStep$(): Observable<[string, number]> {
-    return this._onStep.asObservable();
-  }
-
   public async run(
-    roomId: string,
     scenarioId: string,
+    onProgress: (title: string, progress: number) => void,
   ): Promise<[MutableGraph, DBScenario]> {
     this._stepCounter = 0;
 
@@ -52,38 +45,61 @@ export class ScenarioPipeline {
       string,
       DBDatabase,
       DBScenarioGroup,
-    ] = await this._runStep(new LoadScenario(this._database, scenarioId));
+    ] = await this._runStep(
+      new LoadScenario(this._database, scenarioId),
+      onProgress,
+    );
     const neo4jDatabase: Neo4jDatabase = await this._runStep(
       new CreateDatabaseConnection(database),
+      onProgress,
     );
     const graph: MutableGraph = await this._runStep(
       new ExecuteInitialQuery(query, neo4jDatabase, scenario),
+      onProgress,
     );
     const displayConfiguration: FinalGraphDisplayConfiguration =
       await this._runStep(
         new CollectGraphDisplayConfiguration(database, scenario, scenarioGroup),
+        onProgress,
       );
 
     await this._runStep(
       new ConnectNodes(graph, displayConfiguration, neo4jDatabase),
+      onProgress,
     );
-    await this._runStep(new CompressRelationships(graph, displayConfiguration));
-    await this._runStep(new ApplyLabels(graph));
-    await this._runStep(new ApplyNodeDegrees(graph));
-    await this._runStep(new ApplyEdgeParallelCounts(graph));
-    await this._runStep(new ApplyNodeDisplayText(graph, displayConfiguration));
-    await this._runStep(new ApplyNodeRadius(graph, displayConfiguration));
+    await this._runStep(
+      new CompressRelationships(graph, displayConfiguration),
+      onProgress,
+    );
+    await this._runStep(new ApplyLabels(graph), onProgress);
+    await this._runStep(new ApplyNodeDegrees(graph), onProgress);
+    await this._runStep(new ApplyEdgeParallelCounts(graph), onProgress);
+    await this._runStep(
+      new ApplyNodeDisplayText(graph, displayConfiguration),
+      onProgress,
+    );
+    await this._runStep(
+      new ApplyNodeRadius(graph, displayConfiguration),
+      onProgress,
+    );
     await this._runStep(
       new ApplyNodeBackgroundColor(graph, displayConfiguration),
+      onProgress,
     );
-    await this._runStep(new GrowNodeBasedOnDegree(graph, displayConfiguration));
-    await this._runStep(new Layout(graph));
+    await this._runStep(
+      new GrowNodeBasedOnDegree(graph, displayConfiguration),
+      onProgress,
+    );
+    await this._runStep(new Layout(graph), onProgress);
 
     return [graph, scenario];
   }
 
-  private async _runStep<T>(step: ScenarioPipelineStep<T>): Promise<T> {
-    this._onStep.next([step.title, this._stepCounter / this._stepCount]);
+  private async _runStep<T>(
+    step: ScenarioPipelineStep<T>,
+    onProgress: (title: string, progress: number) => void,
+  ): Promise<T> {
+    onProgress(step.title, this._stepCounter / this._stepCount);
     await wait(0);
     this._stepCounter += 1;
     const profilerTask: ProfilerTask = Profiler.shared.profile(step.title);

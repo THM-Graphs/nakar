@@ -23,7 +23,7 @@ export class WSClient {
     this._onDisconnect = new Subject<DisconnectReason>();
 
     socket
-      .on('message', (message: SchemaWsClientToServerMessage): void => {
+      .on('message', (message: unknown): void => {
         try {
           const parsedMessage: unknown =
             typeof message === 'string' ? JSON.parse(message) : message;

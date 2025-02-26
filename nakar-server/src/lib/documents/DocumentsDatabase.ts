@@ -183,4 +183,11 @@ export class DocumentsDatabase {
     });
     strapi.log.debug(`Did save graph of room ${room.documentId} in db.`);
   }
+
+  public async roomExists(roomId: string): Promise<boolean> {
+    const room: Result<'api::room.room'> | null = await strapi
+      .documents('api::room.room')
+      .findOne({ documentId: roomId });
+    return room != null;
+  }
 }
