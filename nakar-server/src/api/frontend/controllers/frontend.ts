@@ -9,18 +9,19 @@ import {
   SchemaScenario,
   SchemaDatabase,
 } from '../../../../src-gen/schema';
-import { DBDatabase } from '../../../lib/documents/collection-types/DBDatabase';
-import { DBRoom } from '../../../lib/documents/collection-types/DBRoom';
-import { DBScenarioGroup } from '../../../lib/documents/collection-types/DBScenarioGroup';
-import { DBScenario } from '../../../lib/documents/collection-types/DBScenario';
-import { StrapiController } from '../../../lib/strapi-ctx/StrapiController';
+import { DBDatabase } from '../../../lib/services/database/collection-types/DBDatabase';
+import { DBRoom } from '../../../lib/services/database/collection-types/DBRoom';
+import { DBScenarioGroup } from '../../../lib/services/database/collection-types/DBScenarioGroup';
+import { DBScenario } from '../../../lib/services/database/collection-types/DBScenario';
+import { StrapiController } from '../../../lib/interfaces/http/StrapiController';
 import { NotFound } from 'http-errors';
-import { StrapiContext } from '../../../lib/strapi-ctx/StrapiContext';
+import { StrapiContext } from '../../../lib/interfaces/http/StrapiContext';
 
 export default {
   getDatabases: StrapiContext.handleRequest(
     async (context: StrapiContext): Promise<SchemaDatabases> => {
-      const databases: DBDatabase[] = await context.database.getDatabases();
+      const databases: DBDatabase[] =
+        await context.databaseService.getDatabases();
       return {
         databases: databases.map(
           (database: DBDatabase): SchemaDatabase => database.toDto(),
@@ -30,7 +31,7 @@ export default {
   ),
   getRooms: StrapiContext.handleRequest(
     async (context: StrapiContext): Promise<SchemaRooms> => {
-      const dbResult: DBRoom[] = await context.database.getRooms();
+      const dbResult: DBRoom[] = await context.databaseService.getRooms();
       return {
         rooms: dbResult.map((room: DBRoom): SchemaRoom => room.toDto()),
       };
@@ -39,7 +40,7 @@ export default {
   getRoom: StrapiContext.handleRequest(
     async (context: StrapiContext): Promise<SchemaRoom> => {
       const id: string = context.getPathParameter('id');
-      const dbResult: DBRoom | null = await context.database.getRoom(id);
+      const dbResult: DBRoom | null = await context.databaseService.getRoom(id);
       if (dbResult == null) {
         throw new NotFound('Room not found.');
       }
@@ -51,7 +52,7 @@ export default {
       const databaseId: string = context.getQueryParameter('databaseId');
 
       const dbResult: DBScenarioGroup[] =
-        await context.database.getScenarioGroups(databaseId);
+        await context.databaseService.getScenarioGroups(databaseId);
       return {
         scenarioGroups: dbResult.map(
           (scenarioGroup: DBScenarioGroup): SchemaScenarioGroup =>
@@ -66,7 +67,7 @@ export default {
         context.getQueryParameter('scenarioGroupId');
 
       const dbResult: DBScenario[] =
-        await context.database.getScenarios(scenarioGroupId);
+        await context.databaseService.getScenarios(scenarioGroupId);
       return {
         scenarios: dbResult.map(
           (scenario: DBScenario): SchemaScenario => scenario.toDto(),
