@@ -1,10 +1,12 @@
-import { DatabaseService } from './services/database/DatabaseService';
-import { RoomService } from './services/room/RoomService';
-import { SocketIOInterface } from './interfaces/socketIO/SocketIOInterface';
-import { LoggerService } from './services/logger/LoggerService';
-import { HTTPInterface } from './interfaces/http/HTTPInterface';
-import { ProfilerService } from './services/profiler/ProfilerService';
-import { ConfigService } from './services/config/ConfigService';
+import { DatabaseService } from '../services/database/DatabaseService';
+import { RoomService } from '../services/room/RoomService';
+import { SocketIOInterface } from '../interfaces/socketIO/SocketIOInterface';
+import { LoggerService } from '../services/logger/LoggerService';
+import { HTTPInterface } from '../interfaces/http/HTTPInterface';
+import { ProfilerService } from '../services/profiler/ProfilerService';
+import { ConfigService } from '../services/config/ConfigService';
+import { ApplicationService } from './ApplicationService';
+import { ClassHelper } from '../tools/ClassHelper';
 
 export class NakarApplication {
   public static shared: NakarApplication = new NakarApplication();
@@ -17,6 +19,8 @@ export class NakarApplication {
 
   public readonly httpInterface: HTTPInterface;
   public readonly socketIOInterface: SocketIOInterface;
+
+  private readonly _services: ApplicationService[];
 
   public constructor() {
     this.logger = new LoggerService();
@@ -41,20 +45,34 @@ export class NakarApplication {
       this.httpInterface,
       this.logger,
     );
+
+    this._services = [
+      this.logger,
+      this.config,
+      this.profiler,
+      this.databaseService,
+      this.roomService,
+      this.httpInterface,
+      this.socketIOInterface,
+    ];
   }
 
   public async bootstrap(): Promise<void> {
     this.logger.debug(this, 'Will bootstrap services...');
-    this.config.bootstrap();
-    await this.roomService.bootstrap();
-    await this.httpInterface.bootstrap();
-    this.socketIOInterface.bootstrap();
+    for (const service of this._services) {
+      this.logger.log(
+        this,
+        `Bootstrap Service ${ClassHelper.getName(service)}`,
+      );
+      await service.bootstrap();
+    }
   }
 
   public async destroy(): Promise<void> {
     this.logger.debug(this, 'Will destroy services...');
-    await this.socketIOInterface.destroy();
-    await this.httpInterface.destroy();
-    await this.roomService.destroy();
+    for (const service of this._services.toReversed()) {
+      this.logger.log(this, `Destroy Service ${ClassHelper.getName(service)}`);
+      await service.destroy();
+    }
   }
 }

@@ -1,9 +1,6 @@
 {
+  "extends": "@tsconfig/node22/tsconfig.json",
   "compilerOptions": {
-    "module": "CommonJS",
-    "moduleResolution": "Node",
-    "lib": ["ES2020"],
-    "target": "ES2019",
     "strict": true,
     "strictNullChecks": true,
     "skipLibCheck": true,

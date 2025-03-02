@@ -1,7 +1,8 @@
 import { ProfilerTask } from './ProfilerTask';
 import { LoggerService } from '../logger/LoggerService';
+import { ApplicationService } from '../../application/ApplicationService';
 
-export class ProfilerService {
+export class ProfilerService implements ApplicationService {
   public readonly timeoutMs: number;
 
   private readonly _tasks: ProfilerTask[];
@@ -12,6 +13,14 @@ export class ProfilerService {
   ) {
     this._tasks = [];
     this.timeoutMs = timeoutMs;
+  }
+
+  public bootstrap(): void | Promise<void> {
+    /* */
+  }
+
+  public destroy(): void | Promise<void> {
+    /* */
   }
 
   public profile(sender: unknown, title: string): ProfilerTask {

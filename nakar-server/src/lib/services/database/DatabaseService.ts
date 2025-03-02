@@ -5,9 +5,18 @@ import { DBScenarioGroup } from './collection-types/DBScenarioGroup';
 import { MutableGraph } from '../room/graph/MutableGraph';
 import { Result } from '@strapi/types/dist/modules/documents';
 import { LoggerService } from '../logger/LoggerService';
+import { ApplicationService } from '../../application/ApplicationService';
 
-export class DatabaseService {
+export class DatabaseService implements ApplicationService {
   public constructor(private readonly _logger: LoggerService) {}
+
+  public bootstrap(): void | Promise<void> {
+    /* */
+  }
+
+  public destroy(): void | Promise<void> {
+    /* */
+  }
 
   public async getDatabases(): Promise<DBDatabase[]> {
     return (

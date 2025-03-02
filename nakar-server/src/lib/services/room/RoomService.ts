@@ -16,8 +16,9 @@ import { DBScenario } from '../database/collection-types/DBScenario';
 import { LoggerService } from '../logger/LoggerService';
 import { ProfilerService } from '../profiler/ProfilerService';
 import { ProfilerTask } from '../profiler/ProfilerTask';
+import { ApplicationService } from '../../application/ApplicationService';
 
-export class RoomService {
+export class RoomService implements ApplicationService {
   private readonly _rooms: RoomStateMachine;
   private readonly _onRoomUpdated: Subject<RoomSessionManagerEventRoomUpdated>;
   private readonly _onRoomPhysicsUpdated: Subject<RoomSessionManagerEventRoomPhysicsUpdated>;
@@ -211,7 +212,7 @@ export class RoomService {
       );
     task.finish();
 
-    this._rooms.setData(params.roomId, graph);
+    await this._rooms.setData(params.roomId, graph);
     await this._saveGraphToDb(params.roomId);
 
     return scenario;
@@ -261,7 +262,7 @@ export class RoomService {
           this,
           `Did load ${graph.size.toString()} graph elements into room ${room.documentId} ('${room.title ?? ''}').`,
         );
-        this._rooms.setData(room.documentId, graph);
+        await this._rooms.setData(room.documentId, graph);
       }
     } catch (error) {
       this._logger.error(this, error);

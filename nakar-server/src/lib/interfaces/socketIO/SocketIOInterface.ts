@@ -33,11 +33,12 @@ import { DBScenario } from '../../services/database/collection-types/DBScenario'
 import { HTTPInterface } from '../http/HTTPInterface';
 import { LoggerService } from '../../services/logger/LoggerService';
 import http from 'http';
+import { ApplicationService } from '../../application/ApplicationService';
 
 export type Server = UntypedServer<ClientToServerEvents, ServerToClientEvents>;
 export type Socket = UntypedSocket<ClientToServerEvents, ServerToClientEvents>;
 
-export class SocketIOInterface {
+export class SocketIOInterface implements ApplicationService {
   private readonly _sockets: SSet<WSClient>;
   private _io: UntypedServer | null;
 
@@ -57,12 +58,6 @@ export class SocketIOInterface {
 
   public bootstrap(): void {
     const httpServer: http.Server = this._httpInterface.getServerInstance();
-    httpServer.once('listening', (): void => {
-      this._logger.log(
-        this,
-        `Did start socket.io server on ${JSON.stringify(httpServer.address())}. Path: ${this._io?.path() ?? 'null'}`,
-      );
-    });
 
     const io: UntypedServer = new UntypedServer(httpServer, {
       cors: {
@@ -72,6 +67,12 @@ export class SocketIOInterface {
       serveClient: false,
     });
     this._io = io;
+
+    this._logger.log(
+      this,
+      `Did register socket.io server on ${JSON.stringify(httpServer.address())}. Path: ${this._io.path()}`,
+    );
+
     io.on('connection', (s: Socket): void => {
       const wsClient: WSClient = new WSClient(s, io, this._logger);
       this._sockets.add(wsClient);
@@ -171,7 +172,7 @@ export class SocketIOInterface {
     );
   }
 
-  public async destroy(): Promise<void> {
+  public destroy(): void {
     if (this._io == null) {
       return;
     }
@@ -184,8 +185,6 @@ export class SocketIOInterface {
       title: 'Server notification',
       date: new Date().toISOString(),
     } satisfies SchemaWsEventNotification);
-
-    await this._io.close();
   }
 
   public sendToRoom(

@@ -1,4 +1,4 @@
-import { NakarApplication } from './lib/NakarApplication';
+import { NakarApplication } from './lib/application/NakarApplication';
 
 export default {
   /**

@@ -1,6 +1,6 @@
 import http from 'http';
 import express from 'express';
-import { Express, Request, Response } from 'express';
+import { Request, Response, Application } from 'express';
 import { ConfigService } from '../../services/config/ConfigService';
 import { LoggerService } from '../../services/logger/LoggerService';
 import {
@@ -18,9 +18,10 @@ import cors from 'cors';
 import { HTTPDelegate } from './HTTPDelegate';
 import { ProfilerService } from '../../services/profiler/ProfilerService';
 import { ProfilerTask } from '../../services/profiler/ProfilerTask';
+import { ApplicationService } from '../../application/ApplicationService';
 
-export class HTTPInterface {
-  private readonly _app: Express;
+export class HTTPInterface implements ApplicationService {
+  private readonly _app: Application;
   private readonly _port: number;
   private readonly _server: http.Server;
   private readonly _delegate: HTTPDelegate;
@@ -33,7 +34,7 @@ export class HTTPInterface {
   ) {
     this._app = express();
     this._port = _config.port + 1;
-    this._server = http.createServer(this._app);
+    this._server = http.createServer(this._app as http.RequestListener);
     this._delegate = new HTTPDelegate(
       this._config,
       this._logger,
@@ -45,15 +46,27 @@ export class HTTPInterface {
   }
 
   public async bootstrap(): Promise<void> {
+    this._server.on('close', (): void => {
+      this._logger.debug(this, 'Server will close.');
+    });
+    this._server.on('error', (error: Error): void => {
+      this._logger.debug(this, `Server error: ${error.message}`);
+    });
+    this._server.on('listening', (): void => {
+      this._logger.log(
+        this,
+        `Server started: ${JSON.stringify(this._server.address())}`,
+      );
+    });
+    this._server.on('upgrade', (message: http.IncomingMessage): void => {
+      this._logger.debug(this, `Server upgrade: ${message.url ?? '-'}`);
+    });
+
     await new Promise<void>((resolve: () => void): void => {
       this._server.listen(this._port, (): void => {
         resolve();
       });
     });
-    this._logger.log(
-      this,
-      `Custom server started: ${JSON.stringify(this._server.address())}`,
-    );
   }
 
   public async destroy(): Promise<void> {

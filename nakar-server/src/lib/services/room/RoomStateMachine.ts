@@ -4,6 +4,9 @@ import { SMap } from '../../tools/Map';
 import { RoomState } from './RoomState';
 import { PhysicsSimulation } from '../../tools/physics/PhysicsSimulation';
 import { LoggerService } from '../logger/LoggerService';
+import path from 'path';
+import { Worker } from 'node:worker_threads';
+import { RoomWorkerData } from './RoomWorkerData';
 
 export class RoomStateMachine {
   private _state: SMap<string, RoomState>;
@@ -24,8 +27,8 @@ export class RoomStateMachine {
     return this._onRoomPhysicsUpdates.asObservable();
   }
 
-  public setData(roomId: string, graph: MutableGraph): void {
-    this._cleanupOldState(roomId);
+  public async setData(roomId: string, graph: MutableGraph): Promise<void> {
+    await this._cleanupOldState(roomId);
     const physics: PhysicsSimulation = new PhysicsSimulation(
       graph,
       this._logger,
@@ -37,11 +40,34 @@ export class RoomStateMachine {
         this._onRoomPhysicsUpdates.next(roomId);
       });
 
+    const worker: Worker = new Worker(path.join(__dirname, 'RoomWorker.js'), {
+      workerData: {
+        roomId: roomId,
+        graph: graph.toPlain(),
+      } satisfies RoomWorkerData,
+    });
+    worker.on('error', (error: Error): void => {
+      this._logger.error(this, `Worker error: ${error.message}`);
+    });
+    worker.on('message', (message: unknown): void => {
+      this._logger.debug(this, `Worker message: ${JSON.stringify(message)}`);
+    });
+    worker.on('messageerror', (error: Error): void => {
+      this._logger.error(this, `Worker message: ${error.message}`);
+    });
+    worker.on('exit', (exitCode: number): void => {
+      this._logger.debug(this, `Worker exit code: ${exitCode.toString()}`);
+    });
+    worker.on('online', (): void => {
+      this._logger.debug(this, `Worker online`);
+    });
+
     const newState: RoomState = {
       type: 'data',
       graph: graph,
       physics: physics,
       onSlowTickSubscription: subscription,
+      worker: worker,
     };
     this._state.set(roomId, newState);
     this._onRoomUpdated.next([roomId, newState]);
@@ -51,7 +77,7 @@ export class RoomStateMachine {
     return this._state.get(roomId) ?? { type: 'empty' };
   }
 
-  private _cleanupOldState(roomId: string): void {
+  private async _cleanupOldState(roomId: string): Promise<void> {
     const oldState: RoomState | undefined = this._state.get(roomId);
     if (oldState == null) {
       return;
@@ -59,6 +85,7 @@ export class RoomStateMachine {
     if (oldState.type === 'data') {
       oldState.physics.stop();
       oldState.onSlowTickSubscription.unsubscribe();
+      await oldState.worker.terminate();
     }
   }
 }

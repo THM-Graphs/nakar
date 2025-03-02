@@ -3,7 +3,7 @@ import z from 'zod';
 import { InternalServerError, HttpError, BadRequest } from 'http-errors';
 import { match, P } from 'ts-pattern';
 import { DatabaseService } from '../../services/database/DatabaseService';
-import { NakarApplication } from '../../NakarApplication';
+import { NakarApplication } from '../../application/NakarApplication';
 import { LoggerService } from '../../services/logger/LoggerService';
 import { ConfigService } from '../../services/config/ConfigService';
 

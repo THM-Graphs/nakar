@@ -1,6 +1,7 @@
 import { LoggerService } from '../logger/LoggerService';
+import { ApplicationService } from '../../application/ApplicationService';
 
-export class ConfigService {
+export class ConfigService implements ApplicationService {
   public constructor(private readonly _logger: LoggerService) {}
 
   public get publicURL(): string | null {
@@ -12,25 +13,11 @@ export class ConfigService {
   }
 
   public bootstrap(): void {
-    this._logger.debug(
-      this,
-      `server: ${JSON.stringify(strapi.config.get('server'), null, 2)}`,
-    );
-    // this._logger.debug(
-    //   this,
-    //   `database: ${JSON.stringify(strapi.config.get('database'))}`,
-    // );
-    this._logger.debug(
-      this,
-      `admin: ${JSON.stringify(strapi.config.get('admin'), null, 2)}`,
-    );
-    this._logger.debug(
-      this,
-      `middlewares: ${JSON.stringify(strapi.config.get('middlewares'), null, 2)}`,
-    );
-    this._logger.debug(
-      this,
-      `api: ${JSON.stringify(strapi.config.get('api'), null, 2)}`,
-    );
+    this._logger.debug(this, `cwd: ${process.cwd()}`);
+    this._logger.debug(this, `__dirname: ${__dirname}`);
+  }
+
+  public destroy(): void | Promise<void> {
+    /* */
   }
 }
