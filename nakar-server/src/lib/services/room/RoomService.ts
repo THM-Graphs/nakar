@@ -83,6 +83,17 @@ export class RoomService {
     }
   }
 
+  public async destroy(): Promise<void> {
+    const rooms: DBRoom[] = await this._database.getRooms();
+    for (const room of rooms) {
+      this._logger.log(
+        this,
+        `Will save graph of room ${room.documentId} ('${room.title ?? ''}')`,
+      );
+      await this._saveGraphToDb(room.documentId);
+    }
+  }
+
   public grabNode(params: {
     roomId: string;
     nodeId: string;
@@ -157,6 +168,8 @@ export class RoomService {
 
     state.physics.stop();
     node.grabs.delete(params.userId);
+
+    this.saveRoom(params.roomId);
   }
 
   public saveRoom(roomId: string): void {

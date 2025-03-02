@@ -342,8 +342,6 @@ export class SocketIOInterface {
       roomId: roomId,
       userId: wsClient.id,
     });
-
-    this._roomService.saveRoom(roomId);
   }
 
   private _handleRoomPhysicsUpdate(

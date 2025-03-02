@@ -47,5 +47,6 @@ export class NakarApplication {
   public async destroy(): Promise<void> {
     this.logger.debug(this, 'Will destroy services...');
     await this.socketIOInterface.destroy();
+    await this.roomService.destroy();
   }
 }
