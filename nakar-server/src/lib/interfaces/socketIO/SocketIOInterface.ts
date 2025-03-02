@@ -30,6 +30,9 @@ import { RoomSessionManagerEventRoomUpdated } from '../../services/room/events/R
 import { RoomStateData } from '../../services/room/RoomStateData';
 import { MutableGraph } from '../../services/room/graph/MutableGraph';
 import { DBScenario } from '../../services/database/collection-types/DBScenario';
+import { HTTPInterface } from '../http/HTTPInterface';
+import { LoggerService } from '../../services/logger/LoggerService';
+import http from 'http';
 
 export type Server = UntypedServer<ClientToServerEvents, ServerToClientEvents>;
 export type Socket = UntypedSocket<ClientToServerEvents, ServerToClientEvents>;
@@ -41,6 +44,8 @@ export class SocketIOInterface {
   public constructor(
     private _roomService: RoomService,
     private _databaseService: DatabaseService,
+    private _httpInterface: HTTPInterface,
+    private _logger: LoggerService,
   ) {
     this._sockets = new SSet();
     this._io = null;
@@ -51,7 +56,15 @@ export class SocketIOInterface {
   }
 
   public bootstrap(): void {
-    const io: UntypedServer = new UntypedServer(strapi.server.httpServer, {
+    const httpServer: http.Server = this._httpInterface.getServerInstance();
+    httpServer.once('listening', (): void => {
+      this._logger.log(
+        this,
+        `Did start socket.io server on ${JSON.stringify(httpServer.address())}. Path: ${this._io?.path() ?? 'null'}`,
+      );
+    });
+
+    const io: UntypedServer = new UntypedServer(httpServer, {
       cors: {
         origin: '*',
       },
@@ -60,9 +73,9 @@ export class SocketIOInterface {
     });
     this._io = io;
     io.on('connection', (s: Socket): void => {
-      const wsClient: WSClient = new WSClient(s, io);
+      const wsClient: WSClient = new WSClient(s, io, this._logger);
       this._sockets.add(wsClient);
-      strapi.log.debug(`New socket ${wsClient.id} connection.`);
+      this._logger.debug(this, `New socket ${wsClient.id} connection.`);
 
       wsClient.onRoomChanged$.subscribe((room: string | null): void => {
         wsClient.broadcastToRoom({
@@ -121,7 +134,8 @@ export class SocketIOInterface {
               .exhaustive();
           } catch (error: unknown) {
             wsClient.send(this.createErrorNotification(error));
-            strapi.log.error(
+            this._logger.error(
+              this,
               `Unhandled ws message: ${JSON.stringify(clientToServerMessage)}`,
             );
           }
@@ -129,7 +143,10 @@ export class SocketIOInterface {
       );
 
       wsClient.onDisconnect$.subscribe((reason: DisconnectReason): void => {
-        strapi.log.debug(`Socket ${wsClient.id} disconnected: ${reason}`);
+        this._logger.debug(
+          this,
+          `Socket ${wsClient.id} disconnected: ${reason}`,
+        );
         wsClient.broadcastToRoom({
           type: 'WSEventNotification',
           title: 'User left',
@@ -158,7 +175,7 @@ export class SocketIOInterface {
     if (this._io == null) {
       return;
     }
-    strapi.log.debug('Will close web sockets connections');
+    this._logger.debug(this, 'Will close web sockets connections');
 
     this._io.emit('message', {
       type: 'WSEventNotification',
@@ -176,7 +193,7 @@ export class SocketIOInterface {
     message: SchemaWsServerToClientMessage,
   ): void {
     if (this._io == null) {
-      strapi.log.warn('IO is not defined!');
+      this._logger.warn(this, 'IO is not defined!');
       return;
     }
     this._io.to(roomId).emit('message', message);
@@ -205,13 +222,18 @@ export class SocketIOInterface {
       const room: DBRoom | null = await this._databaseService.getRoom(roomId);
 
       if (room == null) {
-        strapi.log.error(`Room ${roomId} not found. Socket tried to join.`);
+        this._logger.error(
+          this,
+          `Room ${roomId} not found. Socket tried to join.`,
+        );
         return;
       }
 
       await wsClient.join(roomId);
-      strapi.log.debug(`Socket ${wsClient.id} entered room ${roomId}`);
-    })().catch(strapi.log.error);
+      this._logger.debug(this, `Socket ${wsClient.id} entered room ${roomId}`);
+    })().catch((error: unknown): void => {
+      this._logger.error(this, error);
+    });
   }
 
   private _handleLoadScenario(
@@ -220,7 +242,8 @@ export class SocketIOInterface {
   ): void {
     const roomId: string | null = wsClient.room;
     if (roomId == null) {
-      strapi.log.error(
+      this._logger.error(
+        this,
         `Socket ${wsClient.id} is in no room but did run a scenario.`,
       );
       return;
@@ -270,7 +293,8 @@ export class SocketIOInterface {
   ): void {
     const roomId: string | null = wsClient.room;
     if (roomId == null) {
-      strapi.log.error(
+      this._logger.error(
+        this,
         `Socket ${wsClient.id} did send grab node message but is in no room.`,
       );
       return;
@@ -290,7 +314,8 @@ export class SocketIOInterface {
   ): void {
     const roomId: string | null = wsClient.room;
     if (roomId == null) {
-      strapi.log.error(
+      this._logger.error(
+        this,
         `Socket ${wsClient.id} did send move node message but is in no room.`,
       );
       return;
@@ -305,7 +330,8 @@ export class SocketIOInterface {
   ): void {
     const roomId: string | null = wsClient.room;
     if (roomId == null) {
-      strapi.log.error(
+      this._logger.error(
+        this,
         `Socket ${wsClient.id} did send ungrab node message but is in no room.`,
       );
       return;

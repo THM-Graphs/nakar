@@ -39,6 +39,10 @@ export class MutableGraph {
     this.tableData = data.tableData;
   }
 
+  public get size(): number {
+    return this.nodes.size + this.edges.size;
+  }
+
   public static create(
     graphElements: Neo4jGraphElements,
     scenario: DBScenario,

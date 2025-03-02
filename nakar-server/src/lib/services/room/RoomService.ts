@@ -13,16 +13,20 @@ import { RoomSessionManagerEventRoomUpdated } from './events/RoomSessionManagerE
 import { RoomSessionManagerEventRoomPhysicsUpdated } from './events/RoomSessionManagerEventRoomPhysicsUpdated';
 import { RoomSessionManagerPhysicalNode } from './events/RoomSessionManagerPhysicalNode';
 import { DBScenario } from '../database/collection-types/DBScenario';
+import { LoggerService } from '../logger/LoggerService';
+import { ProfilerService } from '../profiler/ProfilerService';
 
 export class RoomService {
   private readonly _rooms: RoomStateMachine;
-  private readonly _databaseService: DatabaseService;
   private readonly _onRoomUpdated: Subject<RoomSessionManagerEventRoomUpdated>;
   private readonly _onRoomPhysicsUpdated: Subject<RoomSessionManagerEventRoomPhysicsUpdated>;
 
-  public constructor(database: DatabaseService) {
-    this._rooms = new RoomStateMachine();
-    this._databaseService = database;
+  public constructor(
+    private readonly _database: DatabaseService,
+    private readonly _logger: LoggerService,
+    private readonly _profiler: ProfilerService,
+  ) {
+    this._rooms = new RoomStateMachine(_logger);
     this._onRoomUpdated = new Subject();
     this._onRoomPhysicsUpdated = new Subject();
 
@@ -48,7 +52,8 @@ export class RoomService {
     this._rooms._onRoomPhysicsUpdates$.subscribe((roomId: string): void => {
       const roomState: RoomState = this._rooms.getState(roomId);
       if (roomState.type !== 'data') {
-        strapi.log.error(
+        this._logger.error(
+          this,
           'Did receive physics update from non existing room. Memory leak?',
         );
         return;
@@ -74,7 +79,7 @@ export class RoomService {
     try {
       await this._loadGraphFromDb();
     } catch (error) {
-      strapi.log.error(error);
+      this._logger.error(this, error);
     }
   }
 
@@ -85,13 +90,13 @@ export class RoomService {
   }): void {
     const state: RoomState = this._rooms.getState(params.roomId);
     if (state.type !== 'data') {
-      strapi.log.error(`Did try to grab node but is in no graph.`);
+      this._logger.error(this, `Did try to grab node but is in no graph.`);
       return;
     }
 
     const node: MutableNode | undefined = state.graph.nodes.get(params.nodeId);
     if (node == null) {
-      strapi.log.error(`Cannot find node to grab: ${params.nodeId}.`);
+      this._logger.error(this, `Cannot find node to grab: ${params.nodeId}.`);
       return;
     }
 
@@ -106,7 +111,8 @@ export class RoomService {
   ): void {
     const roomState: RoomState = this._rooms.getState(roomId);
     if (roomState.type !== 'data') {
-      strapi.log.debug(
+      this._logger.debug(
+        this,
         `There is no graph in room ${roomId} to move it's nodes.`,
       );
       return;
@@ -117,7 +123,8 @@ export class RoomService {
     for (const movedNode of nodes) {
       const foundNode: MutableNode | undefined = graph.nodes.get(movedNode.id);
       if (foundNode == null) {
-        strapi.log.error(
+        this._logger.error(
+          this,
           `Client did send moved node, but the node cannot be found in the room. Room: ${roomId}, Node: ${movedNode.id}`,
         );
         continue;
@@ -135,7 +142,8 @@ export class RoomService {
   }): void {
     const state: RoomState = this._rooms.getState(params.roomId);
     if (state.type !== 'data') {
-      strapi.log.error(
+      this._logger.error(
+        this,
         `${params.userId} did send lock node message but is in no graph.`,
       );
       return;
@@ -143,7 +151,7 @@ export class RoomService {
 
     const node: MutableNode | undefined = state.graph.nodes.get(params.nodeId);
     if (node == null) {
-      strapi.log.error(`Cannot find node to lock: ${params.nodeId}.`);
+      this._logger.error(this, `Cannot find node to lock: ${params.nodeId}.`);
       return;
     }
 
@@ -152,7 +160,9 @@ export class RoomService {
   }
 
   public saveRoom(roomId: string): void {
-    this._saveGraphToDb(roomId).catch(strapi.log.error);
+    this._saveGraphToDb(roomId).catch((error: unknown): void => {
+      this._logger.error(this, error);
+    });
   }
 
   public async loadScenario(params: {
@@ -160,12 +170,14 @@ export class RoomService {
     scenarioId: string;
     onProgrsss: (progress: RoomSessionManagerEventScenarioProgress) => void;
   }): Promise<DBScenario> {
-    if (!(await this._databaseService.roomExists(params.roomId))) {
-      strapi.log.error(`Room ${params.roomId} does not exist!`);
+    if (!(await this._database.roomExists(params.roomId))) {
+      this._logger.error(this, `Room ${params.roomId} does not exist!`);
     }
 
     const scenarioPipeline: ScenarioPipeline = new ScenarioPipeline(
-      this._databaseService,
+      this._database,
+      this._logger,
+      this._profiler,
     );
 
     const [graph, scenario]: [MutableGraph, DBScenario] =
@@ -193,27 +205,32 @@ export class RoomService {
   private async _saveGraphToDb(roomId: string): Promise<void> {
     const roomState: RoomState = this._rooms.getState(roomId);
     if (roomState.type !== 'data') {
-      strapi.log.debug(`There is no graph in room ${roomId} to save.`);
+      this._logger.debug(this, `There is no graph in room ${roomId} to save.`);
       return;
     }
     const graph: MutableGraph = roomState.graph;
 
-    const room: DBRoom | null = await this._databaseService.getRoom(roomId);
+    const room: DBRoom | null = await this._database.getRoom(roomId);
     if (room == null) {
-      strapi.log.error(`Room ${roomId} not found for saving graph.`);
+      this._logger.error(this, `Room ${roomId} not found for saving graph.`);
       return;
     }
 
-    await this._databaseService.setRoomGraph(room, graph);
+    await this._database.setRoomGraph(room, graph);
   }
 
   private async _loadGraphFromDb(): Promise<void> {
     try {
-      const rooms: DBRoom[] = await this._databaseService.getRooms();
+      const rooms: DBRoom[] = await this._database.getRooms();
 
       for (const room of rooms) {
+        this._logger.log(
+          this,
+          `Will load graph of room ${room.documentId} ('${room.title ?? ''}') into memory.`,
+        );
         if (room.graphJson == null) {
-          strapi.log.debug(
+          this._logger.debug(
+            this,
             `Room ${room.documentId} has no graph. Will not load into memory.`,
           );
           continue;
@@ -221,10 +238,14 @@ export class RoomService {
         const graph: MutableGraph = MutableGraph.fromPlain(
           JSON.parse(room.graphJson),
         );
+        this._logger.debug(
+          this,
+          `Did load ${graph.size.toString()} graph elements into room ${room.documentId} ('${room.title ?? ''}').`,
+        );
         this._rooms.setData(room.documentId, graph);
       }
     } catch (error) {
-      strapi.log.error(error);
+      this._logger.error(this, error);
     }
   }
 }

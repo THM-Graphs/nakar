@@ -1,20 +1,25 @@
 import { Context } from 'koa';
 import z from 'zod';
-import { BadRequest, InternalServerError, HttpError } from 'http-errors';
+import { InternalServerError, HttpError, BadRequest } from 'http-errors';
 import { match, P } from 'ts-pattern';
 import { DatabaseService } from '../../services/database/DatabaseService';
 import { NakarApplication } from '../../NakarApplication';
+import { LoggerService } from '../../services/logger/LoggerService';
+import { ConfigService } from '../../services/config/ConfigService';
 
 export class StrapiContext {
   public readonly databaseService: DatabaseService;
+  public readonly logger: LoggerService;
+  public readonly config: ConfigService;
 
   private readonly _ctx: Context;
 
   public constructor(ctx: Context) {
     this._ctx = ctx;
 
-    const core: NakarApplication = NakarApplication.shared;
-    this.databaseService = core.databaseService;
+    this.databaseService = NakarApplication.shared.databaseService;
+    this.logger = NakarApplication.shared.logger;
+    this.config = NakarApplication.shared.config;
   }
 
   public static handleRequest<T>(
@@ -26,7 +31,7 @@ export class StrapiContext {
         ctx.response.body = await handler(context);
         ctx.status = 200;
       } catch (unknownError: unknown) {
-        strapi.log.error(unknownError);
+        context.logger.error(this, unknownError);
         match(unknownError)
           .with(P.instanceOf(HttpError), (error: HttpError): void => {
             context._handleError(error);

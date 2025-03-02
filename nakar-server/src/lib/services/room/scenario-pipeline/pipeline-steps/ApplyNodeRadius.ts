@@ -3,6 +3,7 @@ import { NodeDisplayConfigurationContext } from '../display-configuration/NodeDi
 import { MutableGraph } from '../../graph/MutableGraph';
 import { FinalNodeDisplayConfiguration } from '../display-configuration/FinalNodeDisplayConfiguration';
 import { ScenarioPipelineStep } from '../ScenarioPipelineStep';
+import { LoggerService } from '../../../logger/LoggerService';
 
 export class ApplyNodeRadius extends ScenarioPipelineStep<void> {
   private _graph: MutableGraph;
@@ -11,6 +12,7 @@ export class ApplyNodeRadius extends ScenarioPipelineStep<void> {
   public constructor(
     graph: MutableGraph,
     config: FinalGraphDisplayConfiguration,
+    private readonly _logger: LoggerService,
   ) {
     super('Apply Node Radius');
     this._graph = graph;
@@ -42,7 +44,8 @@ export class ApplyNodeRadius extends ScenarioPipelineStep<void> {
 
         const newRadius: number = parseFloat(newValue);
         if (isNaN(newRadius)) {
-          strapi.log.warn(
+          this._logger.warn(
+            this,
             `Unable to parse node radius config: "${newRadius.toString()}" for label ${label}`,
           );
           continue;

@@ -1,4 +1,5 @@
 import type { Result } from '@strapi/types/dist/modules/documents/result';
+import { ConfigService } from '../../config/ConfigService';
 
 export class DBMedia {
   public readonly documentId: string;
@@ -16,14 +17,11 @@ export class DBMedia {
     });
   }
 
-  public getPublicUrl(): string | null {
+  public getPublicUrl(configService: ConfigService): string | null {
     if (this.url == null) {
       return null;
     }
-    const host: string | null = strapi.config.get<string | null>(
-      'server.url',
-      null,
-    );
+    const host: string | null = configService.publicURL;
     if (host == null) {
       return null;
     }

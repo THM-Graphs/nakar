@@ -4,6 +4,7 @@ import { wait } from '../Wait';
 import { MutableNode } from '../../services/room/graph/MutableNode';
 import { MutableEdge } from '../../services/room/graph/MutableEdge';
 import { CombinationCache } from './CombinationCache';
+import { LoggerService } from '../../services/logger/LoggerService';
 
 export class PhysicsSimulation {
   public static readonly maximumVelocity: number = 500;
@@ -14,7 +15,10 @@ export class PhysicsSimulation {
   private _onSlowTick: Subject<void>;
   private _tickCount: number;
 
-  public constructor(graph: MutableGraph) {
+  public constructor(
+    graph: MutableGraph,
+    private readonly _logger: LoggerService,
+  ) {
     this._graph = graph;
     this._running = false;
     this._onSlowTick = new Subject();
@@ -35,7 +39,9 @@ export class PhysicsSimulation {
     }
 
     this._running = true;
-    this._runSync(Number.POSITIVE_INFINITY).catch(strapi.log.error);
+    this._runSync(Number.POSITIVE_INFINITY).catch((error: unknown): void => {
+      this._logger.error(this, error);
+    });
   }
 
   public stop(): void {

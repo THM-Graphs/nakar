@@ -70,7 +70,8 @@ export default {
         await context.databaseService.getScenarios(scenarioGroupId);
       return {
         scenarios: dbResult.map(
-          (scenario: DBScenario): SchemaScenario => scenario.toDto(),
+          (scenario: DBScenario): SchemaScenario =>
+            scenario.toDto(context.config),
         ),
       };
     },

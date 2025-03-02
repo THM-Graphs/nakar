@@ -20,17 +20,20 @@ import { CompressRelationships } from './pipeline-steps/CompressRelationships';
 import { ConnectNodes } from './pipeline-steps/ConnectNodes';
 import { Layout } from './pipeline-steps/Layout';
 import { GrowNodeBasedOnDegree } from './pipeline-steps/GrowNodeBasedOnDegree';
-import { Profiler } from '../../../tools/profile/Profiler';
-import { ProfilerTask } from '../../../tools/profile/ProfilerTask';
+import { ProfilerService } from '../../profiler/ProfilerService';
+import { ProfilerTask } from '../../profiler/ProfilerTask';
 import { wait } from '../../../tools/Wait';
+import { LoggerService } from '../../logger/LoggerService';
 
 export class ScenarioPipeline {
-  private _database: DatabaseService;
   private readonly _stepCount: number = 14;
   private _stepCounter: number;
 
-  public constructor(database: DatabaseService) {
-    this._database = database;
+  public constructor(
+    private readonly _database: DatabaseService,
+    private readonly _logger: LoggerService,
+    private readonly _profiler: ProfilerService,
+  ) {
     this._stepCounter = 0;
   }
 
@@ -50,7 +53,7 @@ export class ScenarioPipeline {
       onProgress,
     );
     const neo4jDatabase: Neo4jDatabase = await this._runStep(
-      new CreateDatabaseConnection(database),
+      new CreateDatabaseConnection(database, this._logger),
       onProgress,
     );
     const graph: MutableGraph = await this._runStep(
@@ -79,7 +82,7 @@ export class ScenarioPipeline {
       onProgress,
     );
     await this._runStep(
-      new ApplyNodeRadius(graph, displayConfiguration),
+      new ApplyNodeRadius(graph, displayConfiguration, this._logger),
       onProgress,
     );
     await this._runStep(
@@ -90,7 +93,7 @@ export class ScenarioPipeline {
       new GrowNodeBasedOnDegree(graph, displayConfiguration),
       onProgress,
     );
-    await this._runStep(new Layout(graph), onProgress);
+    await this._runStep(new Layout(graph, this._logger), onProgress);
 
     return [graph, scenario];
   }
@@ -102,7 +105,7 @@ export class ScenarioPipeline {
     onProgress(step.title, this._stepCounter / this._stepCount);
     await wait(0);
     this._stepCounter += 1;
-    const profilerTask: ProfilerTask = Profiler.shared.profile(step.title);
+    const profilerTask: ProfilerTask = this._profiler.profile(step.title);
     try {
       const result: T = await step.run();
       profilerTask.finish();

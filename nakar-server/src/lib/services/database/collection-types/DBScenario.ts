@@ -3,6 +3,7 @@ import { DBGraphDisplayConfiguration } from '../components/graph/DBGraphDisplayC
 import { DBMedia } from '../others/DBMedia';
 import type { Result } from '@strapi/types/dist/modules/documents/result';
 import { SchemaScenario } from '../../../../../src-gen/schema';
+import { ConfigService } from '../../config/ConfigService';
 
 export class DBScenario {
   public readonly documentId: string;
@@ -54,13 +55,13 @@ export class DBScenario {
     });
   }
 
-  public toDto(): SchemaScenario {
+  public toDto(configService: ConfigService): SchemaScenario {
     return {
       id: this.documentId,
       title: this.title,
       query: this.query,
       description: this.description,
-      coverUrl: this.cover?.getPublicUrl() ?? null,
+      coverUrl: this.cover?.getPublicUrl(configService) ?? null,
     };
   }
 }

@@ -1,13 +1,15 @@
 import { ProfilerTask } from './ProfilerTask';
+import { LoggerService } from '../logger/LoggerService';
 
-export class Profiler {
-  public static readonly shared: Profiler = new Profiler();
-
+export class ProfilerService {
   public readonly timeoutMs: number;
 
   private readonly _tasks: ProfilerTask[];
 
-  public constructor(timeoutMs: number = 60_000) {
+  public constructor(
+    private readonly _logger: LoggerService,
+    timeoutMs: number = 60_000,
+  ) {
     this._tasks = [];
     this.timeoutMs = timeoutMs;
   }
@@ -22,10 +24,11 @@ export class Profiler {
   public finishTask(task: ProfilerTask): void {
     this._checkTimeoutTasks();
     if (!this._tasks.includes(task)) {
-      strapi.log.error(`Profiler task ${task.title} not found.`);
+      this._logger.error(this, `Profiler task ${task.title} not found.`);
     }
-    strapi.log.debug(
-      `[PROFILER] ${task.title}: ${task.elapsedTimeMs.toString()}ms`,
+    this._logger.debug(
+      this,
+      `${task.title}: ${task.elapsedTimeMs.toString()}ms`,
     );
     this._removeTask(task);
   }
@@ -41,7 +44,8 @@ export class Profiler {
     for (let i: number = 0; i < this._tasks.length; i++) {
       const task: ProfilerTask = this._tasks[i];
       if (task.elapsedTimeMs > this.timeoutMs) {
-        strapi.log.warn(
+        this._logger.warn(
+          this,
           `Task ${task.title} did time out (after ${this.timeoutMs.toString()}ms).`,
         );
         this._tasks.splice(i, 1); // Remove the element

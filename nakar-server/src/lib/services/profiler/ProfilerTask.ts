@@ -1,12 +1,12 @@
-import { Profiler } from './Profiler';
+import { ProfilerService } from './ProfilerService';
 
 export class ProfilerTask {
   public readonly title: string;
   public readonly startDate: Date;
 
-  private readonly _profiler: Profiler;
+  private readonly _profiler: ProfilerService;
 
-  public constructor(title: string, profiler: Profiler) {
+  public constructor(title: string, profiler: ProfilerService) {
     this.title = title;
     this.startDate = new Date();
     this._profiler = profiler;

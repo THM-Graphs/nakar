@@ -1,11 +1,15 @@
 import { MutableGraph } from '../../graph/MutableGraph';
 import { PhysicsSimulation } from '../../../../tools/physics/PhysicsSimulation';
 import { ScenarioPipelineStep } from '../ScenarioPipelineStep';
+import { LoggerService } from '../../../logger/LoggerService';
 
 export class Layout extends ScenarioPipelineStep<void> {
   private _graph: MutableGraph;
 
-  public constructor(graph: MutableGraph) {
+  public constructor(
+    graph: MutableGraph,
+    private readonly _logger: LoggerService,
+  ) {
     super('Layout');
     this._graph = graph;
   }
@@ -17,7 +21,10 @@ export class Layout extends ScenarioPipelineStep<void> {
       return;
     }
 
-    const simulation: PhysicsSimulation = new PhysicsSimulation(input);
+    const simulation: PhysicsSimulation = new PhysicsSimulation(
+      input,
+      this._logger,
+    );
     await simulation.run(1000);
   }
 }

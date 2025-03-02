@@ -5,6 +5,7 @@ import {
 } from '../../../../src-gen/schema';
 import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { DisconnectReason } from 'socket.io';
+import { LoggerService } from '../../services/logger/LoggerService';
 
 export class WSClient {
   private _socket: Socket;
@@ -14,7 +15,11 @@ export class WSClient {
   private readonly _onMessage: Subject<SchemaWsClientToServerMessage>;
   private readonly _onDisconnect: Subject<DisconnectReason>;
 
-  public constructor(socket: Socket, server: Server) {
+  public constructor(
+    socket: Socket,
+    server: Server,
+    private _logger: LoggerService,
+  ) {
     this._socket = socket;
     this._server = server;
 
@@ -30,7 +35,7 @@ export class WSClient {
           // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
           this._onMessage.next(parsedMessage as SchemaWsClientToServerMessage);
         } catch (error) {
-          strapi.log.error(error);
+          this._logger.error(this, error);
         }
       })
       .on('disconnecting', (reason: DisconnectReason): void => {
@@ -67,7 +72,8 @@ export class WSClient {
       return;
     }
     if (this.room != null) {
-      strapi.log.debug(
+      this._logger.debug(
+        this,
         `Socket ${this.id} will have to leave room ${this.room} to join ${roomId}`,
       );
       await this._socket.leave(this.room);

@@ -9,11 +9,16 @@ import neo4j, {
 } from 'neo4j-driver';
 import { Neo4jGraphElements } from './Neo4jGraphElements';
 import { SSet } from '../Set';
+import { LoggerService } from '../../services/logger/LoggerService';
+import { Neo4jGraphElementsFactory } from './Neo4jGraphElementsFactory';
 
 export class Neo4jDatabase {
   private readonly _loginCredentials: Neo4jLoginCredentials;
 
-  public constructor(loginCredentials: Neo4jLoginCredentials) {
+  public constructor(
+    loginCredentials: Neo4jLoginCredentials,
+    private readonly _logger: LoggerService,
+  ) {
     this._loginCredentials = loginCredentials;
   }
 
@@ -37,7 +42,9 @@ export class Neo4jDatabase {
           RecordShape<string, unknown>
         >(query, parameters);
 
-        return Neo4jGraphElements.fromQueryResult(result);
+        const nei4jGraphElementsFactory: Neo4jGraphElementsFactory =
+          new Neo4jGraphElementsFactory(this._logger);
+        return nei4jGraphElementsFactory.fromQueryResult(result);
       } catch (error) {
         await session.close();
         throw error;

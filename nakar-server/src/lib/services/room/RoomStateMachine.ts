@@ -3,13 +3,14 @@ import { MutableGraph } from './graph/MutableGraph';
 import { SMap } from '../../tools/Map';
 import { RoomState } from './RoomState';
 import { PhysicsSimulation } from '../../tools/physics/PhysicsSimulation';
+import { LoggerService } from '../logger/LoggerService';
 
 export class RoomStateMachine {
   private _state: SMap<string, RoomState>;
   private _onRoomUpdated: Subject<[string, RoomState]>;
   private _onRoomPhysicsUpdates: Subject<string>;
 
-  public constructor() {
+  public constructor(private readonly _logger: LoggerService) {
     this._state = new SMap();
     this._onRoomUpdated = new Subject();
     this._onRoomPhysicsUpdates = new Subject();
@@ -25,7 +26,10 @@ export class RoomStateMachine {
 
   public setData(roomId: string, graph: MutableGraph): void {
     this._cleanupOldState(roomId);
-    const physics: PhysicsSimulation = new PhysicsSimulation(graph);
+    const physics: PhysicsSimulation = new PhysicsSimulation(
+      graph,
+      this._logger,
+    );
 
     const subscription: Subscription = physics.onSlowTick
       .pipe(auditTime((1 / PhysicsSimulation.FPS) * 1000))

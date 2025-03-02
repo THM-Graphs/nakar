@@ -4,8 +4,11 @@ import { DBScenario } from './collection-types/DBScenario';
 import { DBScenarioGroup } from './collection-types/DBScenarioGroup';
 import { MutableGraph } from '../room/graph/MutableGraph';
 import { Result } from '@strapi/types/dist/modules/documents';
+import { LoggerService } from '../logger/LoggerService';
 
 export class DatabaseService {
+  public constructor(private readonly _logger: LoggerService) {}
+
   public async getDatabases(): Promise<DBDatabase[]> {
     return (
       await strapi.documents('api::database.database').findMany({
@@ -181,7 +184,10 @@ export class DatabaseService {
       },
       status: 'published',
     });
-    strapi.log.debug(`Did save graph of room ${room.documentId} in db.`);
+    this._logger.debug(
+      this,
+      `Did save graph of room ${room.documentId} in db.`,
+    );
   }
 
   public async roomExists(roomId: string): Promise<boolean> {
