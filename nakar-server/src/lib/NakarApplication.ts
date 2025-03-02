@@ -20,7 +20,7 @@ export class NakarApplication {
 
   public constructor() {
     this.logger = new LoggerService();
-    this.config = new ConfigService();
+    this.config = new ConfigService(this.logger);
     this.profiler = new ProfilerService(this.logger);
     this.databaseService = new DatabaseService(this.logger);
     this.roomService = new RoomService(
@@ -29,7 +29,12 @@ export class NakarApplication {
       this.profiler,
     );
 
-    this.httpInterface = new HTTPInterface();
+    this.httpInterface = new HTTPInterface(
+      this.config,
+      this.logger,
+      this.databaseService,
+      this.profiler,
+    );
     this.socketIOInterface = new SocketIOInterface(
       this.roomService,
       this.databaseService,
@@ -40,13 +45,16 @@ export class NakarApplication {
 
   public async bootstrap(): Promise<void> {
     this.logger.debug(this, 'Will bootstrap services...');
+    this.config.bootstrap();
     await this.roomService.bootstrap();
+    await this.httpInterface.bootstrap();
     this.socketIOInterface.bootstrap();
   }
 
   public async destroy(): Promise<void> {
     this.logger.debug(this, 'Will destroy services...');
     await this.socketIOInterface.destroy();
+    await this.httpInterface.destroy();
     await this.roomService.destroy();
   }
 }

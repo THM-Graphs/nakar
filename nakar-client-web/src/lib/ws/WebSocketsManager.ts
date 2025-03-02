@@ -27,7 +27,7 @@ export class WebSocketsManager {
 
   public constructor(env: Env) {
     console.log("Did create instance of WebSocketsManager");
-    this.socket = io(env.BACKEND_SOCKET_URL, { path: "/frontend" });
+    this.socket = io(env.BACKEND_SOCKET_URL, { path: "/socket.io" });
     this._socketState = new BehaviorSubject<SocketState>({
       type: "connecting",
     });

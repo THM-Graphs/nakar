@@ -4,6 +4,7 @@ import { DBDatabase } from '../../../database/collection-types/DBDatabase';
 import { FinalGraphDisplayConfiguration } from '../display-configuration/FinalGraphDisplayConfiguration';
 import { MergableGraphDisplayConfiguration } from '../display-configuration/MergableGraphDisplayConfiguration';
 import { DBScenarioGroup } from '../../../database/collection-types/DBScenarioGroup';
+import { LoggerService } from '../../../logger/LoggerService';
 
 export class CollectGraphDisplayConfiguration extends ScenarioPipelineStep<FinalGraphDisplayConfiguration> {
   private _database: DBDatabase;
@@ -14,6 +15,7 @@ export class CollectGraphDisplayConfiguration extends ScenarioPipelineStep<Final
     database: DBDatabase,
     scenario: DBScenario,
     scenarioGroup: DBScenarioGroup,
+    private readonly _logger: LoggerService,
   ) {
     super('Collect Graph Display Configuration');
     this._database = database;
@@ -37,6 +39,10 @@ export class CollectGraphDisplayConfiguration extends ScenarioPipelineStep<Final
           ),
         )
         .finalize();
+    this._logger.debug(
+      this,
+      `Graph display config: ${JSON.stringify(displayConfiguration, null, 2)}`,
+    );
     return displayConfiguration;
   }
 }

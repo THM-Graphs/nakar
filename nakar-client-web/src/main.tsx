@@ -16,7 +16,7 @@ async function bootstrap() {
 
   const env = await loadEnvOrDefault();
   client.setConfig({
-    baseUrl: `${env.BACKEND_URL}/api/frontend`,
+    baseUrl: env.BACKEND_URL,
   });
 
   const webSockets = new WebSocketsManager(env);

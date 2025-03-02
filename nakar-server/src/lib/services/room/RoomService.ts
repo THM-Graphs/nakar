@@ -15,6 +15,7 @@ import { RoomSessionManagerPhysicalNode } from './events/RoomSessionManagerPhysi
 import { DBScenario } from '../database/collection-types/DBScenario';
 import { LoggerService } from '../logger/LoggerService';
 import { ProfilerService } from '../profiler/ProfilerService';
+import { ProfilerTask } from '../profiler/ProfilerTask';
 
 export class RoomService {
   private readonly _rooms: RoomStateMachine;
@@ -193,6 +194,10 @@ export class RoomService {
       this._profiler,
     );
 
+    const task: ProfilerTask = this._profiler.profile(
+      this,
+      'Scenario Pipeline',
+    );
     const [graph, scenario]: [MutableGraph, DBScenario] =
       await scenarioPipeline.run(
         params.scenarioId,
@@ -204,6 +209,7 @@ export class RoomService {
           });
         },
       );
+    task.finish();
 
     this._rooms.setData(params.roomId, graph);
     await this._saveGraphToDb(params.roomId);
@@ -237,7 +243,7 @@ export class RoomService {
       const rooms: DBRoom[] = await this._database.getRooms();
 
       for (const room of rooms) {
-        this._logger.log(
+        this._logger.debug(
           this,
           `Will load graph of room ${room.documentId} ('${room.title ?? ''}') into memory.`,
         );

@@ -14,9 +14,9 @@ export class ProfilerService {
     this.timeoutMs = timeoutMs;
   }
 
-  public profile(title: string): ProfilerTask {
+  public profile(sender: unknown, title: string): ProfilerTask {
     this._checkTimeoutTasks();
-    const task: ProfilerTask = new ProfilerTask(title, this);
+    const task: ProfilerTask = new ProfilerTask(sender, title, this);
     this._tasks.push(task);
     return task;
   }
@@ -27,7 +27,7 @@ export class ProfilerService {
       this._logger.error(this, `Profiler task ${task.title} not found.`);
     }
     this._logger.debug(
-      this,
+      task.sender,
       `${task.title}: ${task.elapsedTimeMs.toString()}ms`,
     );
     this._removeTask(task);
@@ -45,7 +45,7 @@ export class ProfilerService {
       const task: ProfilerTask = this._tasks[i];
       if (task.elapsedTimeMs > this.timeoutMs) {
         this._logger.warn(
-          this,
+          task.sender,
           `Task ${task.title} did time out (after ${this.timeoutMs.toString()}ms).`,
         );
         this._tasks.splice(i, 1); // Remove the element

@@ -42,6 +42,7 @@ export class ScenarioPipeline {
     onProgress: (title: string, progress: number) => void,
   ): Promise<[MutableGraph, DBScenario]> {
     this._stepCounter = 0;
+    this._logger.debug(this, '----------- Scenario Pipeline Start -----------');
 
     const [scenario, query, database, scenarioGroup]: [
       DBScenario,
@@ -57,12 +58,17 @@ export class ScenarioPipeline {
       onProgress,
     );
     const graph: MutableGraph = await this._runStep(
-      new ExecuteInitialQuery(query, neo4jDatabase, scenario),
+      new ExecuteInitialQuery(query, neo4jDatabase, scenario, this._logger),
       onProgress,
     );
     const displayConfiguration: FinalGraphDisplayConfiguration =
       await this._runStep(
-        new CollectGraphDisplayConfiguration(database, scenario, scenarioGroup),
+        new CollectGraphDisplayConfiguration(
+          database,
+          scenario,
+          scenarioGroup,
+          this._logger,
+        ),
         onProgress,
       );
 
@@ -74,7 +80,7 @@ export class ScenarioPipeline {
       new CompressRelationships(graph, displayConfiguration),
       onProgress,
     );
-    await this._runStep(new ApplyLabels(graph), onProgress);
+    await this._runStep(new ApplyLabels(graph, this._logger), onProgress);
     await this._runStep(new ApplyNodeDegrees(graph), onProgress);
     await this._runStep(new ApplyEdgeParallelCounts(graph), onProgress);
     await this._runStep(
@@ -95,6 +101,7 @@ export class ScenarioPipeline {
     );
     await this._runStep(new Layout(graph, this._logger), onProgress);
 
+    this._logger.debug(this, '----------- Scenario Pipeline End -----------');
     return [graph, scenario];
   }
 
@@ -105,7 +112,7 @@ export class ScenarioPipeline {
     onProgress(step.title, this._stepCounter / this._stepCount);
     await wait(0);
     this._stepCounter += 1;
-    const profilerTask: ProfilerTask = this._profiler.profile(step.title);
+    const profilerTask: ProfilerTask = this._profiler.profile(this, step.title);
     try {
       const result: T = await step.run();
       profilerTask.finish();

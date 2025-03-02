@@ -3,6 +3,7 @@ import { ScenarioPipelineStep } from '../ScenarioPipelineStep';
 import { MutableGraph } from '../../graph/MutableGraph';
 import { Neo4jDatabase } from '../../../../tools/neo4j/Neo4jDatabase';
 import { Neo4jGraphElements } from '../../../../tools/neo4j/Neo4jGraphElements';
+import { LoggerService } from '../../../logger/LoggerService';
 
 export class ExecuteInitialQuery extends ScenarioPipelineStep<MutableGraph> {
   private _query: string;
@@ -13,6 +14,7 @@ export class ExecuteInitialQuery extends ScenarioPipelineStep<MutableGraph> {
     query: string,
     database: Neo4jDatabase,
     scenario: DBScenario,
+    private readonly _logger: LoggerService,
   ) {
     super('Execute Initial Query');
     this._query = query;
@@ -27,6 +29,10 @@ export class ExecuteInitialQuery extends ScenarioPipelineStep<MutableGraph> {
     const graph: MutableGraph = MutableGraph.create(
       graphElements,
       this._scenario,
+    );
+    this._logger.debug(
+      this,
+      `Did load ${graph.size.toString()} graph elements.`,
     );
     return graph;
   }

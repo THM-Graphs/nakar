@@ -68,7 +68,7 @@ export class SocketIOInterface {
       cors: {
         origin: '*',
       },
-      path: '/frontend',
+      path: '/socket.io',
       serveClient: false,
     });
     this._io = io;

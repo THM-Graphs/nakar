@@ -11,6 +11,7 @@ import { Neo4jGraphElements } from './Neo4jGraphElements';
 import { SSet } from '../Set';
 import { LoggerService } from '../../services/logger/LoggerService';
 import { Neo4jGraphElementsFactory } from './Neo4jGraphElementsFactory';
+import { SessionConfig } from 'neo4j-driver-core/types/driver';
 
 export class Neo4jDatabase {
   private readonly _loginCredentials: Neo4jLoginCredentials;
@@ -33,11 +34,22 @@ export class Neo4jDatabase {
         this._loginCredentials.password,
       ),
     );
+    this._logger.debug(
+      this,
+      `Did create driver: ${JSON.stringify(await driver.getServerInfo())}`,
+    );
     try {
-      const session: Session = driver.session({
+      const sessionConfig: SessionConfig = {
         defaultAccessMode: neo4j.session.READ,
-      });
+      };
+      const session: Session = driver.session(sessionConfig);
+      this._logger.debug(
+        this,
+        `Did open session: ${JSON.stringify(sessionConfig)}`,
+      );
       try {
+        this._logger.debug(this, `Will run query: ${query}`);
+        this._logger.debug(this, `Query data: ${JSON.stringify(parameters)}`);
         const result: QueryResult = await session.run<
           RecordShape<string, unknown>
         >(query, parameters);
