@@ -53,7 +53,7 @@ export class RoomStateMachine {
       this._logger.debug(this, `Worker message: ${JSON.stringify(message)}`);
     });
     worker.on('messageerror', (error: Error): void => {
-      this._logger.error(this, `Worker message: ${error.message}`);
+      this._logger.error(this, `Worker messageerror: ${error.message}`);
     });
     worker.on('exit', (exitCode: number): void => {
       this._logger.debug(this, `Worker exit code: ${exitCode.toString()}`);
