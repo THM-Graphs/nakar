@@ -1,0 +1,65 @@
+:ID,name,wealth,nationality,gender,:LABEL
+5001,Bill Gates,114000000000,USA,male,05_Person
+5002,Jeff Bezos,177000000000,USA,male,05_Person
+5003,Elon Musk,230000000000,USA,male,05_Person
+5004,Mark Zuckerberg,97000000000,USA,male,05_Person
+5005,Warren Buffett,100000000000,USA,male,05_Person
+5006,Larry Page,97000000000,USA,male,05_Person
+5007,Sergey Brin,93000000000,USA,male,05_Person
+5008,Larry Ellison,120000000000,USA,male,05_Person
+5009,Mukesh Ambani,95000000000,India,male,05_Person
+5010,Bernard Arnault,224000000000,France,male,05_Person
+5011,Amancio Ortega,73000000000,Spain,male,05_Person
+5012,Francois Pinault,42000000000,France,male,05_Person
+5013,Michael Bloomberg,76000000000,USA,male,05_Person
+5014,Carlos Slim,74000000000,Mexico,male,05_Person
+5015,Richard Branson,4000000000,UK,male,05_Person
+5016,Jack Ma,24000000000,China,male,05_Person
+5017,Larry Fink,9800000000,USA,male,05_Person
+5018,Sundar Pichai,1700000000,USA,male,05_Person
+5019,Tim Cook,1400000000,USA,male,05_Person
+5020,Oprah Winfrey,2600000000,USA,female,05_Person
+5021,Richard Li,7000000000,Hong Kong,male,05_Person
+5022,Michael Dell,51000000000,USA,male,05_Person
+5023,Steve Jobs,1000000000,USA,male,05_Person
+5024,Howard Schultz,4700000000,USA,male,05_Person
+5025,Phil Knight,47000000000,USA,male,05_Person
+5026,Reed Hastings,4700000000,USA,male,05_Person
+5027,Tim Sweeney,7500000000,USA,male,05_Person
+5028,Darren Woods,1500000000,USA,male,05_Person
+5029,Jeffrey Pfeffer,3000000000,USA,male,05_Person
+5030,Indra Nooyi,2900000000,India,female,05_Person
+5031,Satya Nadella,2500000000,India,male,05_Person
+5032,Marillyn Hewson,3500000000,USA,female,05_Person
+5033,George Soros,8800000000,USA,male,05_Person
+5034,Ray Dalio,21000000000,USA,male,05_Person
+5035,John Malone,8700000000,USA,male,05_Person
+5036,Evan Spiegel,3500000000,USA,male,05_Person
+5037,Mark Cuban,5100000000,USA,male,05_Person
+5038,Barbara Corcoran,8000000000,USA,female,05_Person
+5039,Mary Barra,2300000000,USA,female,05_Person
+5040,Ralph Lauren,6800000000,USA,male,05_Person
+5041,Karl Albrecht Jr.,2100000000,Germany,male,05_Person
+5042,Al-Waleed Bin Talal,20000000000,Saudi Arabia,male,05_Person
+5043,Stefan Persson,29000000000,Sweden,male,05_Person
+5044,Li Ka-Shing,27000000000,Hong Kong,male,05_Person
+
+5045,Technology,,,,05_Sector
+5046,E-Commerce,,,,05_Sector
+5047,Finance,,,,05_Sector
+5048,Telecommunications,,,,05_Sector
+5049,Luxury Goods,,,,05_Sector
+5050,Fashion,,,,05_Sector
+5051,Multiple,,,,05_Sector
+5052,Media,,,,05_Sector
+5053,Food & Beverage,,,,05_Sector
+5054,Sportswear,,,,05_Sector
+5055,Video Games,,,,05_Sector
+5056,Energy,,,,05_Sector
+5057,Academia,,,,05_Sector
+5058,Defense,,,,05_Sector
+5059,Real Estate,,,,05_Sector
+5060,Automotive,,,,05_Sector
+5061,Retail,,,,05_Sector
+5062,Investments,,,,05_Sector
+

@@ -1,1 +1,1 @@
-MATCH p=(e:Example01)-[r*]-(n1) RETURN e, n1, r LIMIT 2000
+MATCH (n1)-[r:`01_LINKED_TO`]->(n2) RETURN n1, r, n2

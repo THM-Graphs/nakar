@@ -1,0 +1,1 @@
+MATCH (person:`05_Person`)-[r:`05_IN_SECTOR`]->(sector:`05_Sector`) RETURN person, r, sector

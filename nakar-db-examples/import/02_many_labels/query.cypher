@@ -1,1 +1,1 @@
-MATCH p=(:Example02)-[]-(n1)-[r*]-(n2) RETURN n1, r, n2 LIMIT 2000
+MATCH (company:`02_Company`)<-[r*]-(n) RETURN company, r, n

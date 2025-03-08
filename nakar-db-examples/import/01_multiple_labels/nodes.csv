@@ -1,8 +1,6 @@
 :ID,name,:LABEL
-10,,Example01
-
-101,David Klein,Person
-102,Erik Lang,Person;Entwickler
-103,Fiona Schwarz,Person;Entwickler;Tester
-104,Gina Vogel,Person;Entwickler;Tester;Designer
-105,Hans Meier,Person;Entwickler;Tester;Designer;Scrum-Master
+101,David Klein,01_Person
+102,Erik Lang,01_Person;01_Entwickler
+103,Fiona Schwarz,01_Person;01_Entwickler;01_Tester
+104,Gina Vogel,01_Person;01_Entwickler;01_Tester;01_Designer
+105,Hans Meier,01_Person;01_Entwickler;01_Tester;01_Designer;01_Scrum-Master

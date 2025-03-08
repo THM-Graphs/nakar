@@ -1,4 +1,2 @@
-MATCH (root:Example03)-[r*]-(n)
-WHERE root <> n
-RETURN DISTINCT r, n
-LIMIT 200
+MATCH (p1)-[r:`03_MESSAGES`]-(p2)
+RETURN p1, r, p2
