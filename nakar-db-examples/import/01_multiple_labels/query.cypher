@@ -1,0 +1,1 @@
+MATCH p=(e:Example01)-[r*]-(n1) RETURN e, n1, r LIMIT 2000

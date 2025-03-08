@@ -1,0 +1,4 @@
+MATCH (root:Example03)-[r*]-(n)
+WHERE root <> n
+RETURN DISTINCT r, n
+LIMIT 200
