@@ -25,6 +25,6 @@ export class Layout extends ScenarioPipelineStep<void> {
       input,
       this._logger,
     );
-    await simulation.run(1000);
+    await simulation.run(1500);
   }
 }
