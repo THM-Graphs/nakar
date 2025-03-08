@@ -1,65 +1,419 @@
-:ID,name,wealth,nationality,gender,:LABEL
-5001,Bill Gates,114000000000,USA,male,05_Person
-5002,Jeff Bezos,177000000000,USA,male,05_Person
-5003,Elon Musk,230000000000,USA,male,05_Person
-5004,Mark Zuckerberg,97000000000,USA,male,05_Person
-5005,Warren Buffett,100000000000,USA,male,05_Person
-5006,Larry Page,97000000000,USA,male,05_Person
-5007,Sergey Brin,93000000000,USA,male,05_Person
-5008,Larry Ellison,120000000000,USA,male,05_Person
-5009,Mukesh Ambani,95000000000,India,male,05_Person
-5010,Bernard Arnault,224000000000,France,male,05_Person
-5011,Amancio Ortega,73000000000,Spain,male,05_Person
-5012,Francois Pinault,42000000000,France,male,05_Person
-5013,Michael Bloomberg,76000000000,USA,male,05_Person
-5014,Carlos Slim,74000000000,Mexico,male,05_Person
-5015,Richard Branson,4000000000,UK,male,05_Person
-5016,Jack Ma,24000000000,China,male,05_Person
-5017,Larry Fink,9800000000,USA,male,05_Person
-5018,Sundar Pichai,1700000000,USA,male,05_Person
-5019,Tim Cook,1400000000,USA,male,05_Person
-5020,Oprah Winfrey,2600000000,USA,female,05_Person
-5021,Richard Li,7000000000,Hong Kong,male,05_Person
-5022,Michael Dell,51000000000,USA,male,05_Person
-5023,Steve Jobs,1000000000,USA,male,05_Person
-5024,Howard Schultz,4700000000,USA,male,05_Person
-5025,Phil Knight,47000000000,USA,male,05_Person
-5026,Reed Hastings,4700000000,USA,male,05_Person
-5027,Tim Sweeney,7500000000,USA,male,05_Person
-5028,Darren Woods,1500000000,USA,male,05_Person
-5029,Jeffrey Pfeffer,3000000000,USA,male,05_Person
-5030,Indra Nooyi,2900000000,India,female,05_Person
-5031,Satya Nadella,2500000000,India,male,05_Person
-5032,Marillyn Hewson,3500000000,USA,female,05_Person
-5033,George Soros,8800000000,USA,male,05_Person
-5034,Ray Dalio,21000000000,USA,male,05_Person
-5035,John Malone,8700000000,USA,male,05_Person
-5036,Evan Spiegel,3500000000,USA,male,05_Person
-5037,Mark Cuban,5100000000,USA,male,05_Person
-5038,Barbara Corcoran,8000000000,USA,female,05_Person
-5039,Mary Barra,2300000000,USA,female,05_Person
-5040,Ralph Lauren,6800000000,USA,male,05_Person
-5041,Karl Albrecht Jr.,2100000000,Germany,male,05_Person
-5042,Al-Waleed Bin Talal,20000000000,Saudi Arabia,male,05_Person
-5043,Stefan Persson,29000000000,Sweden,male,05_Person
-5044,Li Ka-Shing,27000000000,Hong Kong,male,05_Person
-
-5045,Technology,,,,05_Sector
-5046,E-Commerce,,,,05_Sector
-5047,Finance,,,,05_Sector
-5048,Telecommunications,,,,05_Sector
-5049,Luxury Goods,,,,05_Sector
-5050,Fashion,,,,05_Sector
-5051,Multiple,,,,05_Sector
-5052,Media,,,,05_Sector
-5053,Food & Beverage,,,,05_Sector
-5054,Sportswear,,,,05_Sector
-5055,Video Games,,,,05_Sector
-5056,Energy,,,,05_Sector
-5057,Academia,,,,05_Sector
-5058,Defense,,,,05_Sector
-5059,Real Estate,,,,05_Sector
-5060,Automotive,,,,05_Sector
-5061,Retail,,,,05_Sector
-5062,Investments,,,,05_Sector
-
+:ID,name,wealth,nationality,gender,sector,:LABEL
+5000,Bernard Arnault & family,176637.915,France,M,Fashion & Retail,05_Person
+5001,Elon Musk,146499.989,United States,M,Automotive,05_Person
+5002,Gautam Adani,121101.397,India,M,Diversified,05_Person
+5003,Jeff Bezos,108524.509,United States,M,Technology,05_Person
+5004,Warren Buffett,106348.208,United States,M,Finance & Investments,05_Person
+5005,Bill Gates,103477.224,United States,M,Technology,05_Person
+5006,Larry Ellison,101436.367,United States,M,Technology,05_Person
+5007,Mukesh Ambani,88606.218,India,M,Diversified,05_Person
+5008,Carlos Slim Helu & family,83566.194,Mexico,M,Telecom,05_Person
+5009,Steve Ballmer,78239.175,United States,M,Technology,05_Person
+5010,Larry Page,78152.475,United States,M,Technology,05_Person
+5011,Michael Bloomberg,76820.1,United States,M,Media & Entertainment,05_Person
+5012,Sergey Brin,74992.126,United States,M,Technology,05_Person
+5013,Francoise Bettencourt Meyers & family,71379.032,France,F,Fashion & Retail,05_Person
+5014,Zhong Shanshan,67655.559,China,M,Food & Beverage,05_Person
+5015,Amancio Ortega,64042.991,Spain,M,Fashion & Retail,05_Person
+5016,Jim Walton,61481.292,United States,M,Fashion & Retail,05_Person
+5017,Rob Walton,60200.015,United States,M,Fashion & Retail,05_Person
+5018,Alice Walton,59286.856,United States,F,Fashion & Retail,05_Person
+5019,Julia Koch & family,58199.488,United States,F,Diversified,05_Person
+5020,Charles Koch,58199.488,United States,M,Diversified,05_Person
+5021,David Thomson & family,52272.068,Canada,M,Media & Entertainment,05_Person
+5022,Michael Dell,51635.993,United States,M,Technology,05_Person
+5023,Zhang Yiming,49500.0,China,M,Media & Entertainment,05_Person
+5024,Phil Knight & family,44750.32,United States,M,Fashion & Retail,05_Person
+5025,Mark Zuckerberg,42990.175,United States,M,Media & Entertainment,05_Person
+5026,Rodolphe Saadé & family,41369.83,France,M,Logistics,05_Person
+5027,Jacqueline Mars,39010.142,United States,F,Food & Beverage,05_Person
+5028,John Mars,39010.142,United States,M,Food & Beverage,05_Person
+5029,Giovanni Ferrero,35035.024,Italy,M,Food & Beverage,05_Person
+5030,Ma Huateng,35009.814,China,M,Technology,05_Person
+5031,Beate Heister & Karl Albrecht Jr. & family,35008.471,Germany,,Fashion & Retail,05_Person
+5032,François Pinault & family,33741.142,France,M,Fashion & Retail,05_Person
+5033,Len Blavatnik,33687.715,United States,M,Diversified,05_Person
+5034,Dieter Schwarz,33577.471,Germany,M,Fashion & Retail,05_Person
+5035,Li Ka-shing,33573.903,Hong Kong,M,Diversified,05_Person
+5036,Robin Zeng,33155.185,Hong Kong,M,Automotive,05_Person
+5037,Alain Wertheimer,32840.126,France,M,Fashion & Retail,05_Person
+5038,Gerard Wertheimer,32840.126,France,M,Fashion & Retail,05_Person
+5039,Ken Griffin,31268.917,United States,M,Finance & Investments,05_Person
+5040,Miriam Adelson & family,30851.719,United States,F,Gambling & Casinos,05_Person
+5041,Tadashi Yanai & family,30823.223,Japan,M,Fashion & Retail,05_Person
+5042,Lee Shau Kee,30332.377,Hong Kong,M,Real Estate,05_Person
+5043,Jeff Yass,30000.0,United States,M,Finance & Investments,05_Person
+5044,Colin Zheng Huang,29612.172,China,M,Technology,05_Person
+5045,Klaus-Michael Kuehne,28923.768,Germany,M,Logistics,05_Person
+5046,Jim Simons,28080.0,United States,M,Finance & Investments,05_Person
+5047,Low Tuck Kwong,27834.477,Indonesia,M,Energy,05_Person
+5048,Gina Rinehart,27681.291,Australia,F,Metals & Mining,05_Person
+5049,Andrey Melnichenko,27500.233,Russia,M,Metals & Mining,05_Person
+5050,Harold Hamm & family,27045.8,United States,M,Energy,05_Person
+5051,Vladimir Potanin,26438.345,Russia,M,Metals & Mining,05_Person
+5052,Vladimir Lisin,25361.116,Russia,M,Metals & Mining,05_Person
+5053,MacKenzie Scott,25283.624,United States,F,Technology,05_Person
+5054,Stephen Schwarzman,24786.154,United States,M,Finance & Investments,05_Person
+5055,Susanne Klatten,24745.186,Germany,F,Automotive,05_Person
+5056,Leonid Mikhelson,24353.278,Russia,M,Energy,05_Person
+5057,He Xiangjian & family,23736.941,China,M,Manufacturing,05_Person
+5058,Shiv Nadar,23700.104,India,M,Technology,05_Person
+5059,Thomas Peterffy,23545.467,United States,M,Finance & Investments,05_Person
+5060,German Larrea Mota Velasco & family,23494.148,Mexico,M,Metals & Mining,05_Person
+5061,William Lei Ding,23263.96,China,M,Technology,05_Person
+5062,Wang Wei,23032.544,China,M,Service,05_Person
+5063,Guillaume Pousaz,23000.0,Switzerland,M,Finance & Investments,05_Person
+5064,Masayoshi Son,22890.021,Japan,M,Telecom,05_Person
+5065,Jack Ma,22740.412,China,M,Technology,05_Person
+5066,R. Budi Hartono,22337.925,Indonesia,M,Finance & Investments,05_Person
+5067,Iris Fontbona & family,21922.033,Chile,F,Metals & Mining,05_Person
+5068,Stefan Quandt,21864.657,Germany,M,Automotive,05_Person
+5069,Lukas Walton,21773.502,United States,M,Fashion & Retail,05_Person
+5070,Michael Hartono,21473.723,Indonesia,M,Manufacturing,05_Person
+5071,Leonard Lauder,21362.754,United States,M,Fashion & Retail,05_Person
+5072,Takemitsu Takizaki,21150.839,Japan,M,Manufacturing,05_Person
+5073,Vagit Alekperov,21032.096,Russia,M,Energy,05_Person
+5074,Cyrus Poonawalla,20868.965,India,M,Healthcare,05_Person
+5075,Gennady Timchenko,20751.191,Russia,M,Energy,05_Person
+5076,Abigail Johnson,20218.71,United States,F,Finance & Investments,05_Person
+5077,Wang Chuanfu,20050.978,China,M,Automotive,05_Person
+5078,Thomas Frist Jr & family,19830.301,United States,M,Healthcare,05_Person
+5079,Qin Yinglin,19409.754,China,M,Food & Beverage,05_Person
+5080,Ray Dalio,19084.0,United States,M,Finance & Investments,05_Person
+5081,Emmanuel Besnier,18699.876,France,M,Food & Beverage,05_Person
+5082,Li Shufu,18534.647,China,M,Automotive,05_Person
+5083,David Tepper,18475.0,United States,M,Finance & Investments,05_Person
+5084,Alexey Mordashov,18389.511,Russia,M,Metals & Mining,05_Person
+5085,John Menard Jr,18153.87,United States,M,Fashion & Retail,05_Person
+5086,Andrew Forrest,18054.797,Australia,M,Metals & Mining,05_Person
+5087,Radhakishan Damani,17820.904,India,M,Fashion & Retail,05_Person
+5088,Theo Albrecht Jr & family,17734.296,Germany,M,Fashion & Retail,05_Person
+5089,Carl Icahn,17619.006,United States,M,Finance & Investments,05_Person
+5090,Steve Cohen,17516.655,United States,M,Finance & Investments,05_Person
+5091,Peter Woo,17432.693,Hong Kong,M,Real Estate,05_Person
+5092,Donald Bren,17409.887,United States,M,Real Estate,05_Person
+5093,Changpeng Zhao,17395.685,Canada,M,Finance & Investments,05_Person
+5094,Daniel Gilbert,16848.728,United States,M,Finance & Investments,05_Person
+5095,Savitri Jindal & family,16833.352,India,F,Metals & Mining,05_Person
+5096,Pang Kang,16805.288,China,M,Food & Beverage,05_Person
+5097,Rupert Murdoch & family,16756.782,United States,M,Media & Entertainment,05_Person
+5098,Wang Wenyin,16718.526,China,M,Metals & Mining,05_Person
+5099,Li Xiting,16473.711,Singapore,M,Healthcare,05_Person
+5100,Renata Kellnerova & family,16319.226,Czechia,F,Finance & Investments,05_Person
+5101,Lakshmi Mittal,16154.176,India,M,Metals & Mining,05_Person
+5102,Eric Schmidt,16009.791,United States,M,Technology,05_Person
+5103,Jorge Paulo Lemann & family,16004.677,Brazil,M,Food & Beverage,05_Person
+5104,Robert Pera,15884.466,United States,M,Technology,05_Person
+5105,Dilip Shanghvi,15767.941,India,M,Healthcare,05_Person
+5106,Charlene de Carvalho-Heineken & family,15455.151,Netherlands,F,Food & Beverage,05_Person
+5107,Michael Platt,15200.0,United Kingdom,M,Finance & Investments,05_Person
+5108,Robert & Philip Ng,15141.12,Singapore,M,Real Estate,05_Person
+5109,Kumar Birla,15086.764,India,M,Diversified,05_Person
+5110,Pavel Durov,15074.0,United Arab Emirates,M,Technology,05_Person
+5111,Huang Shilin,15069.539,China,M,Automotive,05_Person
+5112,Stefan Persson,14923.369,Sweden,M,Fashion & Retail,05_Person
+5113,Sunil Mittal & family,14890.142,India,M,Telecom,05_Person
+5114,Xu Hang,14762.371,Hong Kong,M,Healthcare,05_Person
+5115,Hinduja brothers,14673.087,United Kingdom,M,Diversified,05_Person
+5116,Alisher Usmanov,14670.964,Russia,M,Metals & Mining,05_Person
+5117,Kwong Siu-hing,14591.634,Hong Kong,F,Real Estate,05_Person
+5118,Gianluigi & Rafaela Aponte,14523.091,Switzerland,,Logistics,05_Person
+5119,Wei Jianjun & family,14404.007,China,M,Automotive,05_Person
+5120,Jensen Huang,14283.786,United States,M,Technology,05_Person
+5121,Eyal Ofer,14197.576,Israel,M,Diversified,05_Person
+5122,Lu Xiangyang,14141.767,China,M,Automotive,05_Person
+5123,George Kaiser,14130.871,United States,M,Energy,05_Person
+5124,Andreas Struengmann & family,14031.902,Germany,M,Healthcare,05_Person
+5125,Thomas Struengmann & family,14031.902,Germany,M,Healthcare,05_Person
+5126,David Green & family,13949.356,United States,M,Fashion & Retail,05_Person
+5127,Jerry Jones,13945.74,United States,M,Sports,05_Person
+5128,Reinhold Wuerth & family,13876.49,Germany,M,Manufacturing,05_Person
+5129,Lui Che Woo,13870.639,Hong Kong,M,Gambling & Casinos,05_Person
+5130,Hank & Doug Meijer,13713.878,United States,M,Fashion & Retail,05_Person
+5131,Joseph Lau,13601.826,Hong Kong,M,Real Estate,05_Person
+5132,Uday Kotak,13591.954,India,M,Finance & Investments,05_Person
+5133,Chen Bang,13542.242,China,M,Healthcare,05_Person
+5134,James Ratcliffe,13497.445,United Kingdom,M,Manufacturing,05_Person
+5135,Mikhail Fridman,13422.707,Russia,M,Energy,05_Person
+5136,Jan Koum,13349.925,United States,M,Technology,05_Person
+5137,Viatcheslav Kantor,13038.474,Russia,M,Manufacturing,05_Person
+5138,Sarath Ratanavadi,12947.203,Thailand,M,Energy,05_Person
+5139,Stanley Kroenke,12874.0,United States,M,Sports,05_Person
+5140,Goh Cheng Liang,12664.692,Singapore,M,Manufacturing,05_Person
+5141,Aliko Dangote,12576.795,Nigeria,M,Manufacturing,05_Person
+5142,Dhanin Chearavanont,12550.743,Thailand,M,Diversified,05_Person
+5143,Diane Hendricks,12534.398,United States,F,Construction & Engineering,05_Person
+5144,Suleiman Kerimov & family,12425.35,Russia,M,Finance & Investments,05_Person
+5145,Charoen Sirivadhanabhakdi,12395.304,Thailand,M,Food & Beverage,05_Person
+5146,Richard Liu,12212.646,China,M,Technology,05_Person
+5147,Anders Holch Povlsen,12166.325,Denmark,M,Fashion & Retail,05_Person
+5148,Charles Schwab,11753.553,United States,M,Finance & Investments,05_Person
+5149,Ricardo Salinas Pliego & family,11651.871,Mexico,M,Fashion & Retail,05_Person
+5150,Jiang Rensheng & family,11646.182,China,M,Healthcare,05_Person
+5151,Stephen Ross,11622.35,United States,M,Real Estate,05_Person
+5152,Andrei Guriev & family,11529.26,Russia,M,Manufacturing,05_Person
+5153,John Fredriksen,11404.398,Cyprus,M,Logistics,05_Person
+5154,Mikhail Prokhorov,11335.992,Russia,M,Finance & Investments,05_Person
+5155,Michael Rubin,11313.1,United States,M,Fashion & Retail,05_Person
+5156,Liu Hanyuan,11282.463,China,M,Food & Beverage,05_Person
+5157,Israel Englander,11269.3,United States,M,Finance & Investments,05_Person
+5158,Laurene Powell Jobs & family,11263.241,United States,F,Technology,05_Person
+5159,Shahid Khan,11155.12,United States,M,Automotive,05_Person
+5160,Jeffery Hildebrand,11101.913,United States,M,Energy,05_Person
+5161,Wu Yajun,10955.031,China,F,Real Estate,05_Person
+5162,Robert Kuok,10898.53,Malaysia,M,Diversified,05_Person
+5163,Jim Pattison,10781.066,Canada,M,Diversified,05_Person
+5164,Marcel Herrmann Telles,10743.632,Brazil,M,Food & Beverage,05_Person
+5165,Robert Kraft,10621.5,United States,M,Sports,05_Person
+5166,Christy Walton,10592.976,United States,F,Fashion & Retail,05_Person
+5167,Philip Anschutz,10587.191,United States,M,Finance & Investments,05_Person
+5168,Gong Hongjia & family,10442.589,Hong Kong,M,Finance & Investments,05_Person
+5169,Viktor Rashnikov,10440.864,Russia,M,Manufacturing,05_Person
+5170,Yang Huiyan & family,10243.806,China,F,Real Estate,05_Person
+5171,Donald Newhouse,10230.98,United States,M,Media & Entertainment,05_Person
+5172,Quek Leng Chan,10070.459,Malaysia,M,Diversified,05_Person
+5173,Chris Xu,10000.0,China,M,Fashion & Retail,05_Person
+5174,Carl Cook,9993.413,United States,M,Healthcare,05_Person
+5175,Andrew Beal,9989.971,United States,M,Finance & Investments,05_Person
+5176,Dang Yanbao,9955.374,China,M,Metals & Mining,05_Person
+5177,Autry Stephens,9954.0,United States,M,Energy,05_Person
+5178,Tom & Judy Love,9926.268,United States,,Fashion & Retail,05_Person
+5179,Graeme Hart,9919.863,New Zealand,M,Finance & Investments,05_Person
+5180,Liu Yongxing,9917.852,China,M,Service,05_Person
+5181,Harry Triguboff,9782.383,Australia,M,Real Estate,05_Person
+5182,Victoria Mars,9769.58,United States,F,Food & Beverage,05_Person
+5183,Pamela Mars,9769.58,United States,F,Food & Beverage,05_Person
+5184,Marijke Mars,9769.58,United States,F,Food & Beverage,05_Person
+5185,Valerie Mars,9769.58,United States,F,Food & Beverage,05_Person
+5186,David Duffield,9646.714,United States,M,Technology,05_Person
+5187,Eric Smidt,9603.38,United States,M,Fashion & Retail,05_Person
+5188,Andreas von Bechtolsheim & family,9595.289,Germany,M,Technology,05_Person
+5189,Kirsten Rausing,9443.548,Sweden,F,Food & Beverage,05_Person
+5190,Finn Rausing,9443.548,Sweden,M,Food & Beverage,05_Person
+5191,Jorn Rausing,9443.548,Sweden,M,Food & Beverage,05_Person
+5192,Anthony Pratt,9430.776,Australia,M,Manufacturing,05_Person
+5193,Jin Baofang,9384.364,China,M,Energy,05_Person
+5194,John Malone,9328.814,United States,M,Media & Entertainment,05_Person
+5195,Luo Liguo & family,9265.421,China,M,Manufacturing,05_Person
+5196,Johann Rupert & family,9220.826,South Africa,M,Fashion & Retail,05_Person
+5197,Idan Ofer,9212.641,Israel,M,Diversified,05_Person
+5198,Lei Jun,9211.49,China,M,Technology,05_Person
+5199,Ivan Glasenberg,9111.823,Switzerland,M,Metals & Mining,05_Person
+5200,Azim Premji,9049.778,India,M,Technology,05_Person
+5201,Melker Schorling & family,9030.845,Sweden,M,Finance & Investments,05_Person
+5202,Liu Jincheng & family,9014.314,China,M,Technology,05_Person
+5203,Eric Wittouck,9000.0,Belgium,M,Finance & Investments,05_Person
+5204,Stefano Pessina,8991.992,Monaco,M,Fashion & Retail,05_Person
+5205,Kwon Hyuk-bin,8973.367,South Korea,M,Media & Entertainment,05_Person
+5206,Vincent Bolloré & family,8899.243,France,M,Finance & Investments,05_Person
+5207,Leon Black,8897.686,United States,M,Finance & Investments,05_Person
+5208,Anthony von Mandl,8893.757,Canada,M,Food & Beverage,05_Person
+5209,Bernard Marcus,8836.45,United States,M,Fashion & Retail,05_Person
+5210,German Khan,8832.905,Russia,M,Energy,05_Person
+5211,Carlos Alberto Sicupira & family,8825.224,Brazil,M,Food & Beverage,05_Person
+5212,Pei Zhenhua,8821.621,China,M,Energy,05_Person
+5213,Ravi Jaipuria,8800.254,India,M,Food & Beverage,05_Person
+5214,David Cheriton,8786.185,Canada,M,Technology,05_Person
+5215,Zhang Congyuan,8781.087,Taiwan,M,Fashion & Retail,05_Person
+5216,Ann Walton Kroenke,8744.758,United States,F,Fashion & Retail,05_Person
+5217,Alexander Otto,8695.376,Germany,M,Real Estate,05_Person
+5218,Roman Abramovich,8670.319,Russia,M,Diversified,05_Person
+5219,John Doerr,8650.645,United States,M,Technology,05_Person
+5220,Michael Otto,8644.661,Germany,M,Fashion & Retail,05_Person
+5221,Mike Cannon-Brookes,8624.008,Australia,M,Technology,05_Person
+5222,Friedhelm Loh,8610.698,Germany,M,Manufacturing,05_Person
+5223,Kushal Pal Singh,8546.057,India,M,Real Estate,05_Person
+5224,Ernesto Bertarelli,8543.337,Switzerland,M,Healthcare,05_Person
+5225,Nicky Oppenheimer & family,8540.123,South Africa,M,Metals & Mining,05_Person
+5226,Chase Coleman III,8529.0,United States,M,Finance & Investments,05_Person
+5227,Scott Farquhar,8492.148,Australia,M,Technology,05_Person
+5228,Li Zhenguo & family,8490.654,China,M,Manufacturing,05_Person
+5229,Patrick Ryan,8477.508,United States,M,Finance & Investments,05_Person
+5230,Pierre Omidyar,8455.026,United States,M,Technology,05_Person
+5231,Xavier Niel,8446.299,France,M,Telecom,05_Person
+5232,Wang Liping & family,8426.754,China,M,Manufacturing,05_Person
+5233,Wang Jianlin,8314.572,China,M,Real Estate,05_Person
+5234,Jay Y. Lee,8307.427,South Korea,M,Technology,05_Person
+5235,Bajaj brothers,8274.661,India,M,Diversified,05_Person
+5236,Nancy Walton Laurie,8213.231,United States,F,Fashion & Retail,05_Person
+5237,Francine von Finck & family,8171.362,Germany,F,Finance & Investments,05_Person
+5238,Nicolas Puech,8153.204,France,M,Fashion & Retail,05_Person
+5239,Dmitri Bukhman,8146.229,Israel,M,Media & Entertainment,05_Person
+5240,Igor Bukhman,8146.229,Israel,M,Media & Entertainment,05_Person
+5241,Patrick Collison,8100.0,Ireland,M,Technology,05_Person
+5242,John Collison,8100.0,Ireland,M,Technology,05_Person
+5243,Ding Shizhong & family,8068.849,China,M,Fashion & Retail,05_Person
+5244,Francis Choi,8021.394,Hong Kong,M,Real Estate,05_Person
+5245,Stewart & Lynda Resnick,8000.0,United States,,Food & Beverage,05_Person
+5246,Robert F. Smith,7977.95,United States,M,Finance & Investments,05_Person
+5247,Agnete Kirk Thinggaard,7951.602,Denmark,F,Manufacturing,05_Person
+5248,Kjeld Kirk Kristiansen,7951.602,Denmark,M,Manufacturing,05_Person
+5249,Thomas Kirk Kristiansen,7951.602,Denmark,M,Manufacturing,05_Person
+5250,Sofie Kirk Kristiansen,7951.602,Denmark,F,Manufacturing,05_Person
+5251,Christopher Hohn,7943.0,United Kingdom,M,Finance & Investments,05_Person
+5252,George Roberts,7940.151,United States,M,Finance & Investments,05_Person
+5253,Abdulsamad Rabiu,7922.682,Nigeria,M,Diversified,05_Person
+5254,Arthur Blank,7915.66,United States,M,Sports,05_Person
+5255,Zhang Yong,7905.651,Singapore,M,Food & Beverage,05_Person
+5256,David Shaw,7905.0,United States,M,Finance & Investments,05_Person
+5257,Wang Laichun,7894.906,China,F,Technology,05_Person
+5258,Michael Kim,7893.65,United States,M,Finance & Investments,05_Person
+5259,Ramzi Musallam,7893.0,United States,M,Finance & Investments,05_Person
+5260,Tilman Fertitta,7892.598,United States,M,Food & Beverage,05_Person
+5261,Georg Stumpf,7888.848,Austria,M,Diversified,05_Person
+5262,Carrie Perrodo & family,7877.74,France,F,Energy,05_Person
+5263,Joseph Tsai,7872.384,Canada,M,Technology,05_Person
+5264,Orlando Bravo,7863.0,United States,M,Finance & Investments,05_Person
+5265,Harry Stine,7854.979,United States,M,Food & Beverage,05_Person
+5266,John Morris,7796.623,United States,M,Fashion & Retail,05_Person
+5267,Ma Jianrong & family,7770.225,China,M,Fashion & Retail,05_Person
+5268,Zheng Shuliang & family,7731.144,China,F,Metals & Mining,05_Person
+5269,Steven Rales,7716.871,United States,M,Manufacturing,05_Person
+5270,Georg Schaeffler,7712.511,Germany,M,Automotive,05_Person
+5271,David Geffen,7702.2,United States,M,Media & Entertainment,05_Person
+5272,Ding Shijia,7698.032,China,M,Fashion & Retail,05_Person
+5273,James Dyson,7665.219,United Kingdom,M,Manufacturing,05_Person
+5274,Jim Kennedy,7660.682,United States,M,Media & Entertainment,05_Person
+5275,Blair Parry-Okeden,7660.682,United States,F,Media & Entertainment,05_Person
+5276,Tim Sweeney,7641.285,United States,M,Media & Entertainment,05_Person
+5277,Hasso Plattner & family,7590.442,Germany,M,Technology,05_Person
+5278,Sri Prakash Lohia,7590.302,Indonesia,M,Manufacturing,05_Person
+5279,Leonard Stern,7557.042,United States,M,Real Estate,05_Person
+5280,Zhong Huijuan,7545.718,China,F,Healthcare,05_Person
+5281,Paul Tudor Jones II,7535.0,United States,M,Finance & Investments,05_Person
+5282,Manuel Villar,7532.554,Philippines,M,Real Estate,05_Person
+5283,Karel Komarek,7520.903,Czechia,M,Gambling & Casinos,05_Person
+5284,Leonid Fedun,7514.254,Russia,M,Energy,05_Person
+5285,Li Shuirong,7502.472,China,M,Manufacturing,05_Person
+5286,Arthur Dantchik,7500.0,United States,M,Finance & Investments,05_Person
+5287,Charles Butt,7460.1,United States,M,Fashion & Retail,05_Person
+5288,Don Vultaggio & family,7449.448,United States,M,Food & Beverage,05_Person
+5289,Ian & Richard Livingstone,7441.838,United Kingdom,M,Real Estate,05_Person
+5290,Safra siblings,7441.566,Brazil,,Finance & Investments,05_Person
+5291,Qi Shi & family,7437.925,China,M,Technology,05_Person
+5292,Ashwin Dani & family,7429.775,India,M,Manufacturing,05_Person
+5293,Frederik Paulsen,7428.185,Sweden,M,Healthcare,05_Person
+5294,Bajaj siblings,7412.652,India,,Automotive,05_Person
+5295,Wee Cho Yaw,7405.734,Singapore,M,Finance & Investments,05_Person
+5296,Laurent Dassault,7351.223,France,M,Diversified,05_Person
+5297,Thierry Dassault,7351.223,France,M,Diversified,05_Person
+5298,Marie-Hélène Habert-Dassault,7348.039,France,F,Diversified,05_Person
+5299,Liu Yonghao & family,7326.585,China,M,Service,05_Person
+5300,Xu Shihui,7324.026,China,M,Food & Beverage,05_Person
+5301,Yuri Milner,7278.0,Israel,M,Finance & Investments,05_Person
+5302,Richard Kinder,7258.611,United States,M,Energy,05_Person
+5303,Wang Laisheng,7257.104,China,M,Technology,05_Person
+5304,Yao Liangsong,7251.086,China,M,Manufacturing,05_Person
+5305,Pauline MacMillan Keinath,7250.273,United States,F,Food & Beverage,05_Person
+5306,Vicky Safra,7239.509,Greece,F,Finance & Investments,05_Person
+5307,Henry Kravis,7236.894,United States,M,Finance & Investments,05_Person
+5308,Zong Qinghou,7227.295,China,M,Food & Beverage,05_Person
+5309,Don Hankey,7197.7,United States,M,Finance & Investments,05_Person
+5310,Tamara Gustavson,7192.474,United States,F,Service,05_Person
+5311,Takahisa Takahara,7175.585,Japan,M,Fashion & Retail,05_Person
+5312,Henry Samueli,7169.991,United States,M,Technology,05_Person
+5313,Jeff Greene,7161.19,United States,M,Real Estate,05_Person
+5314,Patrick Soon-Shiong,7134.91,United States,M,Healthcare,05_Person
+5315,Reinhold Schmieding,7122.346,United States,M,Healthcare,05_Person
+5316,Nik Storonsky,7100.0,United Kingdom,M,Finance & Investments,05_Person
+5317,Dan Cathy,7096.124,United States,M,Food & Beverage,05_Person
+5318,Bubba Cathy,7096.124,United States,M,Food & Beverage,05_Person
+5319,Trudy Cathy White,7096.124,United States,F,Food & Beverage,05_Person
+5320,Alejandro Bailleres Gual & siblings,7008.706,Mexico,,Diversified,05_Person
+5321,Rick Cohen & family,7007.92,United States,M,Technology,05_Person
+5322,Gopikishan Damani,6977.482,India,M,Fashion & Retail,05_Person
+5323,Jude Reyes,6952.0,United States,M,Food & Beverage,05_Person
+5324,J. Christopher Reyes,6952.0,United States,M,Food & Beverage,05_Person
+5325,Nassef Sawiris,6943.673,Egypt,M,Construction & Engineering,05_Person
+5326,Judy Faulkner,6926.866,United States,F,Technology,05_Person
+5327,James Goodnight,6921.819,United States,M,Technology,05_Person
+5328,Rocco Commisso,6914.317,United States,M,Telecom,05_Person
+5329,Zhang Hejun,6913.388,China,M,Manufacturing,05_Person
+5330,Ugur Sahin,6907.872,Germany,M,Healthcare,05_Person
+5331,Eduardo Saverin,6906.673,Brazil,M,Media & Entertainment,05_Person
+5332,Antonia Ax:son Johnson & family,6902.683,Sweden,F,Diversified,05_Person
+5333,Igor Olenicoff,6880.305,United States,M,Real Estate,05_Person
+5334,Edythe Broad & family,6852.125,United States,F,Diversified,05_Person
+5335,Philippe Laffont,6852.0,United States,M,Finance & Investments,05_Person
+5336,Frank Lowy,6835.048,Australia,M,Real Estate,05_Person
+5337,Alexei Kuzmichev,6828.24,Russia,M,Energy,05_Person
+5338,Liang Wengen,6823.915,China,M,Manufacturing,05_Person
+5339,Lucia Maggi & family,6820.638,Brazil,F,Diversified,05_Person
+5340,Ralph Lauren,6815.716,United States,M,Fashion & Retail,05_Person
+5341,Seo Jung-jin,6808.04,South Korea,M,Healthcare,05_Person
+5342,David Siegel,6802.0,United States,M,Finance & Investments,05_Person
+5343,John Overdeck,6802.0,United States,M,Finance & Investments,05_Person
+5344,Zhang Tao,6801.071,China,M,Fashion & Retail,05_Person
+5345,Cao Renxian,6755.526,China,M,Energy,05_Person
+5346,George Soros,6730.0,United States,M,Finance & Investments,05_Person
+5347,Melinda French Gates,6707.3,United States,F,Technology,05_Person
+5348,Terrence Pegula,6702.327,United States,M,Energy,05_Person
+5349,Lin Jianhua,6699.699,China,M,Manufacturing,05_Person
+5350,Brian Chesky,6680.96,United States,M,Technology,05_Person
+5351,Li Ping,6671.111,Hong Kong,M,Automotive,05_Person
+5352,Bruce Kovner,6644.0,United States,M,Finance & Investments,05_Person
+5353,Gordon Moore,6640.237,United States,M,Technology,05_Person
+5354,Alain Merieux & family,6617.266,France,M,Healthcare,05_Person
+5355,Dmitry Rybolovlev,6616.021,Russia,M,Manufacturing,05_Person
+5356,Gao Jifan & family,6604.222,China,M,Energy,05_Person
+5357,Giorgio Armani,6586.342,Italy,M,Fashion & Retail,05_Person
+5358,Andreas Halvorsen,6580.0,Norway,M,Finance & Investments,05_Person
+5359,Law Kar Po,6575.658,Hong Kong,M,Real Estate,05_Person
+5360,Robin Li,6571.062,China,M,Technology,05_Person
+5361,Benu Gopal Bangur,6561.618,India,M,Manufacturing,05_Person
+5362,Marie Besnier Beauvalot,6536.099,France,F,Food & Beverage,05_Person
+5363,Jean-Michel Besnier,6536.099,France,M,Food & Beverage,05_Person
+5364,John Grayken,6511.0,Ireland,M,Finance & Investments,05_Person
+5365,Iskander Makhmudov,6507.659,Russia,M,Metals & Mining,05_Person
+5366,Edward Johnson IV,6505.159,United States,M,Finance & Investments,05_Person
+5367,Stéphane Bancel,6497.072,France,M,Healthcare,05_Person
+5368,David Reuben,6494.211,United Kingdom,M,Real Estate,05_Person
+5369,Simon Reuben,6494.211,United Kingdom,M,Diversified,05_Person
+5370,David Bonderman,6493.38,United States,M,Finance & Investments,05_Person
+5371,Randa Duncan Williams,6492.034,United States,F,Energy,05_Person
+5372,Milane Frantz,6481.28,United States,F,Energy,05_Person
+5373,Dannine Avara,6481.28,United States,F,Energy,05_Person
+5374,Scott Duncan,6481.28,United States,M,Energy,05_Person
+5375,Cliff Obrecht,6480.0,Australia,M,Technology,05_Person
+5376,Melanie Perkins,6480.0,Australia,F,Technology,05_Person
+5377,Jack Dangermond,6469.666,United States,M,Technology,05_Person
+5378,Dennis Washington,6469.131,United States,M,Logistics,05_Person
+5379,Alexander Abramov,6452.703,Russia,M,Metals & Mining,05_Person
+5380,Silvio Berlusconi & family,6431.417,Italy,M,Diversified,05_Person
+5381,Enrique Razon Jr.,6405.973,Philippines,M,Logistics,05_Person
+5382,Ronda Stryker,6404.76,United States,F,Healthcare,05_Person
+5383,Stanley Druckenmiller,6400.0,United States,M,Finance & Investments,05_Person
+5384,Jian Jun,6387.384,China,F,Healthcare,05_Person
+5385,Wu Jianshu,6376.858,Hong Kong,M,Automotive,05_Person
+5386,Cai Kui,6374.081,China,M,Real Estate,05_Person
+5387,Stephen Bisciotti,6343.041,United States,M,Sports,05_Person
+5388,Niels Peter Louis-Hansen,6339.214,Denmark,M,Healthcare,05_Person
+5389,Luis Carlos Sarmiento,6334.642,Colombia,M,Finance & Investments,05_Person
+5390,Andrei Skoch & family,6303.139,Russia,M,Metals & Mining,05_Person
+5391,Axel Oberwelland & siblings,6294.392,Germany,M,Food & Beverage,05_Person
+5392,Sandra Ortega Mera,6287.795,Spain,F,Fashion & Retail,05_Person
+5393,John A. Sobrato & family,6254.47,United States,M,Real Estate,05_Person
+5394,Ken Langone,6248.599,United States,M,Finance & Investments,05_Person
+5395,Ken Fisher,6244.692,United States,M,Finance & Investments,05_Person
+5396,Maria Asuncion Aramburuzabala & family,6241.294,Mexico,F,Food & Beverage,05_Person
+5397,Michal Solowow,6224.107,Poland,M,Finance & Investments,05_Person
+5398,Jay Chaudhry,6219.83,United States,M,Technology,05_Person
+5399,Ted Lerner & family,6201.027,United States,M,Real Estate,05_Person
+5400,Fashion & Retail,,,,,05_Sector
+5401,Automotive,,,,,05_Sector
+5402,Diversified,,,,,05_Sector
+5403,Technology,,,,,05_Sector
+5404,Finance & Investments,,,,,05_Sector
+5405,Telecom,,,,,05_Sector
+5406,Media & Entertainment,,,,,05_Sector
+5407,Food & Beverage,,,,,05_Sector
+5408,Logistics,,,,,05_Sector
+5409,Gambling & Casinos,,,,,05_Sector
+5410,Real Estate,,,,,05_Sector
+5411,Energy,,,,,05_Sector
+5412,Metals & Mining,,,,,05_Sector
+5413,Manufacturing,,,,,05_Sector
+5414,Service,,,,,05_Sector
+5415,Healthcare,,,,,05_Sector
+5416,Sports,,,,,05_Sector
+5417,Construction & Engineering,,,,,05_Sector
