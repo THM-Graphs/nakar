@@ -17,6 +17,7 @@ import { LoggerService } from '../logger/LoggerService';
 import { ProfilerService } from '../profiler/ProfilerService';
 import { ProfilerTask } from '../profiler/ProfilerTask';
 import { ApplicationService } from '../../application/ApplicationService';
+import helpers from 'handlebars-helpers';
 
 export class RoomService implements ApplicationService {
   private readonly _rooms: RoomStateMachine;
@@ -78,6 +79,7 @@ export class RoomService implements ApplicationService {
   }
 
   public async bootstrap(): Promise<void> {
+    helpers();
     try {
       await this._loadGraphFromDb();
     } catch (error) {
