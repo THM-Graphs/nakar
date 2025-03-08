@@ -24,6 +24,7 @@ import { ProfilerService } from '../../profiler/ProfilerService';
 import { ProfilerTask } from '../../profiler/ProfilerTask';
 import { wait } from '../../../tools/Wait';
 import { LoggerService } from '../../logger/LoggerService';
+import { RemoveDanglingRelationships } from './pipeline-steps/RemoveDanglingRelationships';
 
 export class ScenarioPipeline {
   private readonly _stepCount: number = 14;
@@ -59,6 +60,10 @@ export class ScenarioPipeline {
     );
     const graph: MutableGraph = await this._runStep(
       new ExecuteInitialQuery(query, neo4jDatabase, scenario, this._logger),
+      onProgress,
+    );
+    await this._runStep(
+      new RemoveDanglingRelationships(graph, this._logger),
       onProgress,
     );
     const displayConfiguration: FinalGraphDisplayConfiguration =
