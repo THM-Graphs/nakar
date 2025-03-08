@@ -123,6 +123,14 @@ export function InfoDropdown(props: {
         <span className="me-2"></span>
         <i className="bi bi-box-arrow-up-right"></i>
       </Dropdown.Item>
+      <Dropdown.Item
+        href={props.env.BACKEND_URL + "/system/backup"}
+        target={"_blank"}
+      >
+        <span className="me-1">Download Backup (.tar.gz)</span>
+        <span className="me-2"></span>
+        <i className="bi bi-download"></i>
+      </Dropdown.Item>
     </DropdownButton>
   );
 }

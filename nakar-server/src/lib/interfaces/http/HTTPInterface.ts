@@ -19,6 +19,9 @@ import { HTTPDelegate } from './HTTPDelegate';
 import { ProfilerService } from '../../services/profiler/ProfilerService';
 import { ProfilerTask } from '../../services/profiler/ProfilerTask';
 import { ApplicationService } from '../../application/ApplicationService';
+import { BackupService } from '../../services/backup/BackupService';
+import { FileStream } from '../../tools/fs/FileStream';
+import fs from 'node:fs';
 
 export class HTTPInterface implements ApplicationService {
   private readonly _app: Application;
@@ -31,6 +34,7 @@ export class HTTPInterface implements ApplicationService {
     private readonly _logger: LoggerService,
     private readonly _database: DatabaseService,
     private readonly _profiler: ProfilerService,
+    private readonly _backup: BackupService,
   ) {
     this._app = express();
     this._port = _config.port + 1;
@@ -39,6 +43,7 @@ export class HTTPInterface implements ApplicationService {
       this._config,
       this._logger,
       this._database,
+      this._backup,
     );
 
     this._setupMiddleware();
@@ -133,6 +138,11 @@ export class HTTPInterface implements ApplicationService {
       '/system/version',
       this._handle((): SchemaVersion => this._delegate.getVersion()),
     );
+
+    this._app.get(
+      '/system/backup',
+      this._handle((): Promise<FileStream> => this._delegate.getBackup()),
+    );
   }
 
   private _handle<T>(
@@ -143,7 +153,16 @@ export class HTTPInterface implements ApplicationService {
       Promise.resolve(handler(req))
         .then((result: T): void => {
           res.status(200);
-          res.json(result);
+          if (result instanceof FileStream) {
+            res.setHeader('content-type', result.contentType);
+            res.setHeader(
+              'content-disposition',
+              `attachment; filename="${result.fileName}"`,
+            );
+            fs.createReadStream(result.filePath).pipe(res);
+          } else {
+            res.json(result);
+          }
           task.finish();
         })
         .catch((unknownError: unknown): void => {

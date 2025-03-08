@@ -6,6 +6,9 @@ import { MutableGraph } from '../room/graph/MutableGraph';
 import { Result } from '@strapi/types/dist/modules/documents';
 import { LoggerService } from '../logger/LoggerService';
 import { ApplicationService } from '../../application/ApplicationService';
+import { DBMedia } from './others/DBMedia';
+import fs, { ReadStream } from 'node:fs';
+import { FileStream } from '../../tools/fs/FileStream';
 
 export class DatabaseService implements ApplicationService {
   public constructor(private readonly _logger: LoggerService) {}
@@ -204,5 +207,28 @@ export class DatabaseService implements ApplicationService {
       .documents('api::room.room')
       .findOne({ documentId: roomId });
     return room != null;
+  }
+
+  public getFileStream(
+    targetFileNameWithoutExtension: string,
+    media: DBMedia,
+  ): FileStream | null {
+    if (media.hash == null) {
+      this._logger.warn(this, `Hash of media ${media.documentId} is null.`);
+      return null;
+    }
+    if (media.ext == null) {
+      this._logger.warn(
+        this,
+        `File extension of media ${media.documentId} is null.`,
+      );
+      return null;
+    }
+    const path: string = `${strapi.dirs.static.public}/uploads/${media.hash}${media.ext}`;
+    return new FileStream(
+      path,
+      '',
+      `${targetFileNameWithoutExtension}${media.ext}`,
+    );
   }
 }

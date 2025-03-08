@@ -19,12 +19,15 @@ import { DBRoom } from '../../services/database/collection-types/DBRoom';
 import { ConfigService } from '../../services/config/ConfigService';
 import z from 'zod';
 import { NotFound } from 'http-errors';
+import { BackupService } from '../../services/backup/BackupService';
+import { FileStream } from '../../tools/fs/FileStream';
 
 export class HTTPDelegate {
   public constructor(
     private readonly _config: ConfigService,
     private readonly _logger: LoggerService,
     private readonly _database: DatabaseService,
+    private readonly _backup: BackupService,
   ) {}
 
   public async getScenario(req: Request): Promise<SchemaScenarios> {
@@ -83,6 +86,11 @@ export class HTTPDelegate {
     return {
       version: packageVersion ?? 'unknown',
     };
+  }
+
+  public async getBackup(): Promise<FileStream> {
+    const stream: FileStream = await this._backup.createBackupFile();
+    return stream;
   }
 
   private _getQueryParameter(req: Request, name: string): string {

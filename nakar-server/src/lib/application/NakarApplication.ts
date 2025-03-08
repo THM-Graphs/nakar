@@ -7,11 +7,13 @@ import { ProfilerService } from '../services/profiler/ProfilerService';
 import { ConfigService } from '../services/config/ConfigService';
 import { ApplicationService } from './ApplicationService';
 import { ClassHelper } from '../tools/ClassHelper';
+import { BackupService } from '../services/backup/BackupService';
 
 export class NakarApplication {
   public static shared: NakarApplication = new NakarApplication();
 
   public readonly logger: LoggerService;
+  public readonly backup: BackupService;
   public readonly config: ConfigService;
   public readonly profiler: ProfilerService;
   public readonly databaseService: DatabaseService;
@@ -27,6 +29,7 @@ export class NakarApplication {
     this.config = new ConfigService(this.logger);
     this.profiler = new ProfilerService(this.logger);
     this.databaseService = new DatabaseService(this.logger);
+    this.backup = new BackupService(this.logger, this.databaseService);
     this.roomService = new RoomService(
       this.databaseService,
       this.logger,
@@ -38,6 +41,7 @@ export class NakarApplication {
       this.logger,
       this.databaseService,
       this.profiler,
+      this.backup,
     );
     this.socketIOInterface = new SocketIOInterface(
       this.roomService,
@@ -51,6 +55,7 @@ export class NakarApplication {
       this.config,
       this.profiler,
       this.databaseService,
+      this.backup,
       this.roomService,
       this.httpInterface,
       this.socketIOInterface,
@@ -66,6 +71,7 @@ export class NakarApplication {
       );
       await service.bootstrap();
     }
+    this.logger.debug(this, `Done bootstrapping services.`);
   }
 
   public async destroy(): Promise<void> {
@@ -74,5 +80,6 @@ export class NakarApplication {
       this.logger.log(this, `Destroy Service ${ClassHelper.getName(service)}`);
       await service.destroy();
     }
+    this.logger.debug(this, `Done destroying services.`);
   }
 }
