@@ -1,6 +1,6 @@
-<mxfile host="Electron" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/26.0.9 Chrome/128.0.6613.186 Electron/32.2.5 Safari/537.36" scale="1" border="0" version="26.0.9">
+<mxfile host="Electron" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/26.0.16 Chrome/132.0.6834.196 Electron/34.2.0 Safari/537.36" scale="1" border="0" version="26.0.16">
   <diagram name="Page-1" id="vQwCS0VuyH1_z9JokuWV">
-    <mxGraphModel dx="1228" dy="805" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" background="#ffffff" math="0" shadow="0">
+    <mxGraphModel dx="2074" dy="1196" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" background="#ffffff" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -64,7 +64,7 @@
         <mxCell id="h_gjy8d-nbvcVHeryfm6-16" value="nakar-db-pole" style="rounded=0;whiteSpace=wrap;html=1;labelBackgroundColor=none;" parent="1" vertex="1">
           <mxGeometry x="320" y="200" width="160" height="40" as="geometry" />
         </mxCell>
-        <mxCell id="h_gjy8d-nbvcVHeryfm6-17" value="nakar-db-ppmittelhessen" style="rounded=0;whiteSpace=wrap;html=1;labelBackgroundColor=none;" parent="1" vertex="1">
+        <mxCell id="h_gjy8d-nbvcVHeryfm6-17" value="nakar-db-examples" style="rounded=0;whiteSpace=wrap;html=1;labelBackgroundColor=none;" parent="1" vertex="1">
           <mxGeometry x="485" y="200" width="160" height="40" as="geometry" />
         </mxCell>
         <mxCell id="h_gjy8d-nbvcVHeryfm6-18" value="nakar-db-romantikerbriefe" style="rounded=0;whiteSpace=wrap;html=1;labelBackgroundColor=none;" parent="1" vertex="1">
@@ -115,7 +115,7 @@
         <mxCell id="h_gjy8d-nbvcVHeryfm6-28" value="Cypher" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;labelBackgroundColor=none;" parent="1" vertex="1">
           <mxGeometry x="400" y="240" width="105" height="40" as="geometry" />
         </mxCell>
-        <mxCell id="2" value="1) Implements scenarios.&lt;br&gt;2) Converts Neo4J query results into simple graph format for clients." style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;labelBackgroundColor=none;" parent="1" vertex="1">
+        <mxCell id="2" value="1) Implements scenarios.&lt;br&gt;2) Converts Neo4J query results into simple graph format for clients." style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;labelBackgroundColor=none;" parent="1" vertex="1">
           <mxGeometry x="820" y="310" width="190" height="40" as="geometry" />
         </mxCell>
         <mxCell id="3" value="" style="endArrow=none;html=1;rounded=0;endFill=0;dashed=1;labelBackgroundColor=none;fontColor=default;" parent="1" source="2" target="h_gjy8d-nbvcVHeryfm6-15" edge="1">
@@ -124,7 +124,7 @@
             <mxPoint x="820" y="360" as="targetPoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="4" value="Vision Pro App for interaction. Uses Apple&#39;s RealityKit." style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;labelBackgroundColor=none;" parent="1" vertex="1">
+        <mxCell id="4" value="Vision Pro App for interaction. Uses Apple&#39;s RealityKit." style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;labelBackgroundColor=none;" parent="1" vertex="1">
           <mxGeometry x="840" y="440" width="190" height="40" as="geometry" />
         </mxCell>
         <mxCell id="5" value="" style="endArrow=none;html=1;rounded=0;endFill=0;dashed=1;labelBackgroundColor=none;fontColor=default;" parent="1" source="4" target="h_gjy8d-nbvcVHeryfm6-9" edge="1">
@@ -133,7 +133,7 @@
             <mxPoint x="790" y="310" as="targetPoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="6" value="Web client for simple interaction and configuration." style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;labelBackgroundColor=none;" parent="1" vertex="1">
+        <mxCell id="6" value="Web client for simple interaction and configuration." style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;labelBackgroundColor=none;" parent="1" vertex="1">
           <mxGeometry x="250" y="590" width="190" height="40" as="geometry" />
         </mxCell>
         <mxCell id="7" value="" style="endArrow=none;html=1;rounded=0;endFill=0;dashed=1;labelBackgroundColor=none;fontColor=default;" parent="1" source="6" target="h_gjy8d-nbvcVHeryfm6-2" edge="1">
@@ -142,7 +142,7 @@
             <mxPoint x="790" y="479" as="targetPoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="9" value="Connect to any neo4j database." style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;labelBackgroundColor=none;" parent="1" vertex="1">
+        <mxCell id="9" value="Connect to any neo4j database." style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;labelBackgroundColor=none;" parent="1" vertex="1">
           <mxGeometry x="690" y="110" width="190" height="40" as="geometry" />
         </mxCell>
         <mxCell id="10" value="" style="endArrow=none;html=1;rounded=0;endFill=0;dashed=1;labelBackgroundColor=none;fontColor=default;" parent="1" source="h_gjy8d-nbvcVHeryfm6-18" target="9" edge="1">
@@ -151,7 +151,7 @@
             <mxPoint x="391" y="560" as="targetPoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="11" value="Scenarios are hardcoded cypher queries and transformations." style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;labelBackgroundColor=none;" parent="1" vertex="1">
+        <mxCell id="11" value="Scenarios are hardcoded cypher queries and transformations." style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;labelBackgroundColor=none;" parent="1" vertex="1">
           <mxGeometry x="80" y="250" width="190" height="40" as="geometry" />
         </mxCell>
         <mxCell id="12" value="" style="endArrow=none;html=1;rounded=0;endFill=0;dashed=1;labelBackgroundColor=none;fontColor=default;" parent="1" source="h_gjy8d-nbvcVHeryfm6-15" target="11" edge="1">
@@ -178,13 +178,13 @@
         <mxCell id="17" value="List" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;labelBackgroundColor=none;" parent="1" vertex="1">
           <mxGeometry x="330" y="410" width="70" height="120" as="geometry" />
         </mxCell>
-        <mxCell id="18" value="Item 1" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;labelBackgroundColor=none;" parent="17" vertex="1">
+        <mxCell id="18" value="Item 1" style="text;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;labelBackgroundColor=none;" parent="17" vertex="1">
           <mxGeometry y="30" width="70" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="19" value="Item 2" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;labelBackgroundColor=none;" parent="17" vertex="1">
+        <mxCell id="19" value="Item 2" style="text;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;labelBackgroundColor=none;" parent="17" vertex="1">
           <mxGeometry y="60" width="70" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="20" value="Item 3" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;labelBackgroundColor=none;" parent="17" vertex="1">
+        <mxCell id="20" value="Item 3" style="text;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;labelBackgroundColor=none;" parent="17" vertex="1">
           <mxGeometry y="90" width="70" height="30" as="geometry" />
         </mxCell>
       </root>
