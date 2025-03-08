@@ -37,6 +37,6 @@ export class FinalNodeDisplayConfiguration {
     if (input.trim().length === 0) {
       return null;
     }
-    return compile(input);
+    return compile(input, { noEscape: true, strict: true });
   }
 }
