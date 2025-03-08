@@ -12,7 +12,6 @@ import { DBDatabase } from '../database/collection-types/DBDatabase';
 import sanitize from 'sanitize-filename';
 import { DBScenarioGroup } from '../database/collection-types/DBScenarioGroup';
 import { DBScenario } from '../database/collection-types/DBScenario';
-import { ReadStream } from 'node:fs';
 
 export class BackupService implements ApplicationService {
   public constructor(

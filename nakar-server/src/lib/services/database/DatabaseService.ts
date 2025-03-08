@@ -7,7 +7,6 @@ import { Result } from '@strapi/types/dist/modules/documents';
 import { LoggerService } from '../logger/LoggerService';
 import { ApplicationService } from '../../application/ApplicationService';
 import { DBMedia } from './others/DBMedia';
-import fs, { ReadStream } from 'node:fs';
 import { FileStream } from '../../tools/fs/FileStream';
 
 export class DatabaseService implements ApplicationService {
