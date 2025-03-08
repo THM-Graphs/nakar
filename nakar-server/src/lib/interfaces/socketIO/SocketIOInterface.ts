@@ -272,7 +272,7 @@ export class SocketIOInterface implements ApplicationService {
         });
       })
       .catch((error: unknown): void => {
-        this.createErrorNotification(error);
+        wsClient.sendToRoom(this.createErrorNotification(error));
       })
       .then((): void => {
         wsClient.sendToRoom({
@@ -282,7 +282,7 @@ export class SocketIOInterface implements ApplicationService {
         } satisfies SchemaWsEventScenarioProgress);
       })
       .catch((error: unknown): void => {
-        this.createErrorNotification(error);
+        wsClient.sendToRoom(this.createErrorNotification(error));
       });
   }
 
