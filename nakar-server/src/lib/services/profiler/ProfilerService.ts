@@ -37,7 +37,7 @@ export class ProfilerService implements ApplicationService {
     }
     this._logger.debug(
       task.sender,
-      `${task.title}: ${task.elapsedTimeMs.toString()}ms`,
+      `${task.title}: ${task.elapsedTimeMs.toFixed(2)}ms`,
     );
     this._removeTask(task);
   }

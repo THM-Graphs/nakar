@@ -58,22 +58,25 @@ export class PhysicsSimulation {
   }
 
   public setGraph(graph: MutableGraph): void {
-    this.stop();
     this._graph = graph;
   }
 
+  public getGraph(): MutableGraph {
+    return this._graph;
+  }
+
   private async _runSync(forTicks: number): Promise<void> {
-    let lastWait: number = Date.now();
+    let lastWait: number = performance.now();
     const shouldWaitEveryMs: number = (1 / PhysicsSimulation.FPS) * 1000;
     let ticksElapsed: number = 0;
     while (this._running && ticksElapsed < forTicks) {
       this._tick();
       ticksElapsed += 1;
-      const delta: number = Date.now() - lastWait;
+      const delta: number = performance.now() - lastWait;
       if (delta > shouldWaitEveryMs) {
         this._onSlowTick.next();
         await wait(0);
-        lastWait = Date.now();
+        lastWait = performance.now();
       }
     }
     this._running = false;

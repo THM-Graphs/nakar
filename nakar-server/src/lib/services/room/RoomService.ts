@@ -74,10 +74,15 @@ export class RoomService implements ApplicationService {
     });
   }
 
-  public moveNodes(roomId: string, nodes: readonly RSPhysicalNode[]): void {
-    this._sendActionToWorker(roomId, {
+  public moveNodes(params: {
+    roomId: string;
+    nodes: readonly RSPhysicalNode[];
+    userId: string;
+  }): void {
+    this._sendActionToWorker(params.roomId, {
       type: 'WTActionMoveNodes',
-      nodes: nodes,
+      nodes: params.nodes,
+      userId: params.userId,
     });
   }
 
@@ -99,7 +104,7 @@ export class RoomService implements ApplicationService {
     if (graph == null) {
       this._logger.error(
         this,
-        `Canno save graph of room ${roomId}, because the graph does not exist.`,
+        `Cannot save graph of room ${roomId}, because the graph does not exist.`,
       );
       return;
     }
@@ -140,12 +145,12 @@ export class RoomService implements ApplicationService {
       );
     task.finish();
 
+    this._latestGraphs.set(params.roomId, graph);
     this._sendActionToWorker(params.roomId, {
       type: 'WTActionSetGraph',
       graph: graph.toPlain(),
     });
     await this._saveGraphToDb(params.roomId, graph);
-    this._latestGraphs.set(params.roomId, graph);
     this._onRoomUpdated.next({
       graph: graph,
       roomId: params.roomId,
@@ -180,16 +185,10 @@ export class RoomService implements ApplicationService {
           this,
           `Will load graph of room ${room.documentId} ('${room.title ?? ''}') into memory.`,
         );
-        if (room.graphJson == null) {
-          this._logger.debug(
-            this,
-            `Room ${room.documentId} has no graph. Will not load into memory.`,
-          );
-          continue;
-        }
-        const graph: MutableGraph = MutableGraph.fromPlain(
-          JSON.parse(room.graphJson),
-        );
+        const graph: MutableGraph =
+          room.graphJson == null
+            ? MutableGraph.empty()
+            : MutableGraph.fromPlainOrEmpty(JSON.parse(room.graphJson));
         this._logger.debug(
           this,
           `Did load ${graph.size.toString()} graph elements into room ${room.documentId} ('${room.title ?? ''}').`,
@@ -239,6 +238,13 @@ export class RoomService implements ApplicationService {
     roomId: string,
     event: WTEventPhysicsUpdate,
   ): void {
+    if (event.graph.id !== this._latestGraphs.get(roomId)?.id) {
+      this._logger.warn(
+        this,
+        'Discarding physics updated, because id does not match.',
+      );
+      return;
+    }
     const graph: MutableGraph = MutableGraph.fromPlain(event.graph);
     this._onRoomPhysicsUpdated.next({
       graph: graph,

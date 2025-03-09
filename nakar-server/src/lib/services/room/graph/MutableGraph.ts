@@ -12,27 +12,32 @@ import { SMap } from '../../../tools/Map';
 import { DBScenario } from '../../database/collection-types/DBScenario';
 import { Neo4jRelationship } from '../../../tools/neo4j/Neo4jRelationship';
 import { Neo4jNode } from '../../../tools/neo4j/Neo4jNode';
+import { v4 as uuidv4 } from 'uuid';
 
 export class MutableGraph {
   // eslint-disable-next-line @typescript-eslint/typedef
   public static readonly schema = z.object({
+    id: z.string(),
     nodes: z.record(MutableNode.schema),
     edges: z.record(MutableEdge.schema),
     metaData: MutableGraphMetaData.schema,
     tableData: z.array(z.record(z.unknown())),
   });
 
+  public readonly id: string;
   public nodes: SMap<string, MutableNode>;
   public edges: SMap<string, MutableEdge>;
   public metaData: MutableGraphMetaData;
   public tableData: SMap<string, unknown>[];
 
   public constructor(data: {
+    id: string;
     nodes: SMap<string, MutableNode>;
     edges: SMap<string, MutableEdge>;
     metaData: MutableGraphMetaData;
     tableData: SMap<string, unknown>[];
   }) {
+    this.id = data.id;
     this.nodes = data.nodes;
     this.edges = data.edges;
     this.metaData = data.metaData;
@@ -48,6 +53,7 @@ export class MutableGraph {
     scenario: DBScenario,
   ): MutableGraph {
     return new MutableGraph({
+      id: uuidv4(),
       nodes: graphElements.nodes.map(
         (node: Neo4jNode): MutableNode => MutableNode.create(node),
       ),
@@ -62,6 +68,7 @@ export class MutableGraph {
 
   public static empty(): MutableGraph {
     return new MutableGraph({
+      id: uuidv4(),
       nodes: new SMap(),
       edges: new SMap(),
       metaData: MutableGraphMetaData.empty(),
@@ -73,6 +80,7 @@ export class MutableGraph {
     const data: z.infer<typeof MutableGraph.schema> =
       MutableGraph.schema.parse(input);
     return new MutableGraph({
+      id: data.id,
       nodes: SMap.fromRecord(data.nodes).map(
         (n: z.infer<typeof MutableNode.schema>): MutableNode =>
           MutableNode.fromPlain(n),
@@ -87,6 +95,14 @@ export class MutableGraph {
           SMap.fromRecord(td),
       ),
     });
+  }
+
+  public static fromPlainOrEmpty(input: unknown): MutableGraph {
+    try {
+      return MutableGraph.fromPlain(input);
+    } catch {
+      return MutableGraph.empty();
+    }
   }
 
   public toDto(): SchemaGraph {
@@ -123,6 +139,7 @@ export class MutableGraph {
 
   public toPlain(): z.infer<typeof MutableGraph.schema> {
     return {
+      id: this.id,
       nodes: this.nodes
         .map(
           (n: MutableNode): z.infer<typeof MutableNode.schema> => n.toPlain(),

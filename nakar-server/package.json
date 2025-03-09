@@ -37,6 +37,7 @@
     "styled-components": "^6.0.0",
     "tar": "^7.4.3",
     "ts-pattern": "^5.6.0",
+    "uuid": "^11.1.0",
     "zod": "^3.24.1"
   },
   "devDependencies": {

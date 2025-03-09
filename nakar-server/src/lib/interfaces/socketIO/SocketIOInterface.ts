@@ -4,6 +4,7 @@ import {
   Socket as UntypedSocket,
 } from 'socket.io';
 import {
+  SchemaPhysicalNode,
   SchemaWsActionGrabNode,
   SchemaWsActionJoinRoom,
   SchemaWsActionLoadScenario,
@@ -314,7 +315,11 @@ export class SocketIOInterface implements ApplicationService {
       return;
     }
 
-    this._roomService.moveNodes(roomId, m.nodes);
+    this._roomService.moveNodes({
+      roomId: roomId,
+      nodes: m.nodes,
+      userId: wsClient.id,
+    });
   }
 
   private _handleUngrabNode(
@@ -343,22 +348,16 @@ export class SocketIOInterface implements ApplicationService {
         continue;
       }
 
-      interface CompactNode {
-        id: string;
-        position: {
-          x: number;
-          y: number;
-        };
-      }
-      const nodesToSend: CompactNode[] = message.graph.nodes
-        .filter((n: MutableNode): boolean => !n.grabs.has(socket.id))
-        .toArray()
-        .map(
-          ([id, node]: [string, MutableNode]): CompactNode => ({
+      const nodesToSend: SchemaPhysicalNode[] = [];
+      for (const [id, node] of message.graph.nodes.toArray()) {
+        if (!node.grabs.has(socket.id)) {
+          nodesToSend.push({
             id: id,
             position: { x: node.position.x, y: node.position.y },
-          }),
-        );
+          });
+        }
+      }
+
       socket.send({
         type: 'WSEventNodesMoved',
         nodes: nodesToSend,

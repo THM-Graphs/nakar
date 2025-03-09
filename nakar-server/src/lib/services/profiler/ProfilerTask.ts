@@ -3,7 +3,7 @@ import { ProfilerService } from './ProfilerService';
 export class ProfilerTask {
   public readonly sender: unknown;
   public readonly title: string;
-  public readonly startDate: Date;
+  public readonly startDate: number;
 
   private readonly _profiler: ProfilerService;
 
@@ -14,12 +14,12 @@ export class ProfilerTask {
   ) {
     this.sender = sender;
     this.title = title;
-    this.startDate = new Date();
+    this.startDate = performance.now();
     this._profiler = profiler;
   }
 
   public get elapsedTimeMs(): number {
-    return Date.now() - this.startDate.getTime();
+    return performance.now() - this.startDate;
   }
 
   public finish(): void {
