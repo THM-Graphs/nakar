@@ -1,6 +1,6 @@
 import { MutableGraph } from '../graph/MutableGraph';
 
-export interface RoomSessionManagerEventRoomUpdated {
+export interface RSEventRoomPhysicsUpdated {
   roomId: string;
   graph: MutableGraph;
 }

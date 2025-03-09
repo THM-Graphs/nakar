@@ -20,20 +20,18 @@ import { ClientToServerEvents } from './ClientToServerEvents';
 import { WSClient } from './WSClient';
 import { SSet } from '../../tools/Set';
 import { RoomService } from '../../services/room/RoomService';
-import { RoomState } from '../../services/room/RoomState';
 import { DatabaseService } from '../../services/database/DatabaseService';
 import { DBRoom } from '../../services/database/collection-types/DBRoom';
-import { RoomSessionManagerEventScenarioProgress } from '../../services/room/events/RoomSessionManagerEventScenarioProgress';
-import { RoomSessionManagerEventRoomPhysicsUpdated } from '../../services/room/events/RoomSessionManagerEventRoomPhysicsUpdated';
+import { RSEventScenarioProgress } from '../../services/room/events/RSEventScenarioProgress';
+import { RSEventRoomPhysicsUpdated } from '../../services/room/events/RSEventRoomPhysicsUpdated';
 import { MutableNode } from '../../services/room/graph/MutableNode';
-import { RoomSessionManagerEventRoomUpdated } from '../../services/room/events/RoomSessionManagerEventRoomUpdated';
-import { RoomStateData } from '../../services/room/RoomStateData';
-import { MutableGraph } from '../../services/room/graph/MutableGraph';
+import { RSEventRoomUpdated } from '../../services/room/events/RSEventRoomUpdated';
 import { DBScenario } from '../../services/database/collection-types/DBScenario';
 import { HTTPInterface } from '../http/HTTPInterface';
 import { LoggerService } from '../../services/logger/LoggerService';
 import http from 'http';
 import { ApplicationService } from '../../application/ApplicationService';
+import { MutableGraph } from '../../services/room/graph/MutableGraph';
 
 export type Server = UntypedServer<ClientToServerEvents, ServerToClientEvents>;
 export type Socket = UntypedSocket<ClientToServerEvents, ServerToClientEvents>;
@@ -78,7 +76,7 @@ export class SocketIOInterface implements ApplicationService {
       this._sockets.add(wsClient);
       this._logger.debug(this, `New socket ${wsClient.id} connection.`);
 
-      wsClient.onRoomChanged$.subscribe((room: string | null): void => {
+      wsClient.onRoomChanged$.subscribe((roomId: string | null): void => {
         wsClient.broadcastToRoom({
           type: 'WSEventNotification',
           title: 'User joined',
@@ -87,14 +85,12 @@ export class SocketIOInterface implements ApplicationService {
           date: new Date().toISOString(),
         });
 
-        if (room != null) {
-          const roomState: RoomState = this._roomService.getRoom(room);
-          if (roomState.type === 'data') {
-            wsClient.send({
-              graph: roomState.graph.toDto(),
-              type: 'WSEventScenarioLoaded',
-            });
-          }
+        if (roomId != null) {
+          const graph: MutableGraph | null = this._roomService.getGraph(roomId);
+          wsClient.send({
+            type: 'WSEventScenarioLoaded',
+            graph: (graph ?? MutableGraph.empty()).toDto(),
+          });
         }
       });
 
@@ -160,13 +156,13 @@ export class SocketIOInterface implements ApplicationService {
     });
 
     this._roomService.onRoomPhysicsUpdated$.subscribe(
-      (message: RoomSessionManagerEventRoomPhysicsUpdated): void => {
+      (message: RSEventRoomPhysicsUpdated): void => {
         this._handleRoomPhysicsUpdate(message);
       },
     );
 
     this._roomService.onRoomUpdated$.subscribe(
-      (message: RoomSessionManagerEventRoomUpdated): void => {
+      (message: RSEventRoomUpdated): void => {
         this._handleRoomUpdate(message);
       },
     );
@@ -252,9 +248,7 @@ export class SocketIOInterface implements ApplicationService {
       .loadScenario({
         roomId: roomId,
         scenarioId: m.scenarioId,
-        onProgrsss: (
-          progress: RoomSessionManagerEventScenarioProgress,
-        ): void => {
+        onProgrsss: (progress: RSEventScenarioProgress): void => {
           wsClient.sendToRoom({
             type: 'WSEventScenarioProgress',
             message: progress.message,
@@ -343,9 +337,7 @@ export class SocketIOInterface implements ApplicationService {
     });
   }
 
-  private _handleRoomPhysicsUpdate(
-    message: RoomSessionManagerEventRoomPhysicsUpdated,
-  ): void {
+  private _handleRoomPhysicsUpdate(message: RSEventRoomPhysicsUpdated): void {
     for (const socket of this.sockets) {
       if (socket.room !== message.roomId) {
         continue;
@@ -375,21 +367,10 @@ export class SocketIOInterface implements ApplicationService {
     }
   }
 
-  private _handleRoomUpdate(message: RoomSessionManagerEventRoomUpdated): void {
-    const state: RoomState = this._roomService.getRoom(message.roomId);
-    match(state)
-      .with({ type: 'data' }, (data: RoomStateData): void => {
-        this.sendToRoom(message.roomId, {
-          graph: data.graph.toDto(),
-          type: 'WSEventScenarioLoaded',
-        });
-      })
-      .with({ type: 'empty' }, (): void => {
-        this.sendToRoom(message.roomId, {
-          graph: MutableGraph.empty().toDto(),
-          type: 'WSEventScenarioLoaded',
-        });
-      })
-      .exhaustive();
+  private _handleRoomUpdate(message: RSEventRoomUpdated): void {
+    this.sendToRoom(message.roomId, {
+      graph: message.graph.toDto(),
+      type: 'WSEventScenarioLoaded',
+    });
   }
 }

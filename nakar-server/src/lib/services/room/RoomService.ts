@@ -1,100 +1,64 @@
 import { DatabaseService } from '../database/DatabaseService';
 import { Observable, Subject } from 'rxjs';
 import { MutableGraph } from './graph/MutableGraph';
-import { RoomStateMachine } from './RoomStateMachine';
-import { match } from 'ts-pattern';
 import { DBRoom } from '../database/collection-types/DBRoom';
-import { RoomState } from './RoomState';
-import { MutableNode } from './graph/MutableNode';
-import { RoomStateData } from './RoomStateData';
 import { ScenarioPipeline } from './scenario-pipeline/ScenarioPipeline';
-import { RoomSessionManagerEventScenarioProgress } from './events/RoomSessionManagerEventScenarioProgress';
-import { RoomSessionManagerEventRoomUpdated } from './events/RoomSessionManagerEventRoomUpdated';
-import { RoomSessionManagerEventRoomPhysicsUpdated } from './events/RoomSessionManagerEventRoomPhysicsUpdated';
-import { RoomSessionManagerPhysicalNode } from './events/RoomSessionManagerPhysicalNode';
+import { RSEventScenarioProgress } from './events/RSEventScenarioProgress';
+import { RSEventRoomUpdated } from './events/RSEventRoomUpdated';
+import { RSEventRoomPhysicsUpdated } from './events/RSEventRoomPhysicsUpdated';
+import { RSPhysicalNode } from './events/RSPhysicalNode';
 import { DBScenario } from '../database/collection-types/DBScenario';
 import { LoggerService } from '../logger/LoggerService';
 import { ProfilerService } from '../profiler/ProfilerService';
 import { ProfilerTask } from '../profiler/ProfilerTask';
 import { ApplicationService } from '../../application/ApplicationService';
-import helpers from 'handlebars-helpers';
+import installHandlebarHelpers from 'handlebars-helpers';
+import { Worker } from 'node:worker_threads';
+import { SMap } from '../../tools/Map';
+import { WTAction } from './worker-events/WTAction';
+import path from 'path';
+import { RoomWorkerData } from './RoomWorkerData';
+import { WTEvent } from './worker-events/WTEvent';
+import { match } from 'ts-pattern';
+import { WTEventPhysicsUpdate } from './worker-events/WTEventPhysicsUpdate';
 
 export class RoomService implements ApplicationService {
-  private readonly _rooms: RoomStateMachine;
-  private readonly _onRoomUpdated: Subject<RoomSessionManagerEventRoomUpdated>;
-  private readonly _onRoomPhysicsUpdated: Subject<RoomSessionManagerEventRoomPhysicsUpdated>;
+  private readonly _workers: SMap<string, Worker>;
+  private readonly _latestGraphs: SMap<string, MutableGraph>;
+  private readonly _onRoomUpdated: Subject<RSEventRoomUpdated>;
+  private readonly _onRoomPhysicsUpdated: Subject<RSEventRoomPhysicsUpdated>;
 
   public constructor(
     private readonly _database: DatabaseService,
     private readonly _logger: LoggerService,
     private readonly _profiler: ProfilerService,
   ) {
-    this._rooms = new RoomStateMachine(_logger);
+    this._workers = new SMap();
+    this._latestGraphs = new SMap();
     this._onRoomUpdated = new Subject();
     this._onRoomPhysicsUpdated = new Subject();
-
-    this._rooms.onRoomUpdated$.subscribe(
-      ([roomId, state]: [string, RoomState]): void => {
-        match(state)
-          .with({ type: 'data' }, (data: RoomStateData): void => {
-            this._onRoomUpdated.next({
-              roomId: roomId,
-              graph: data.graph,
-            });
-          })
-          .with({ type: 'empty' }, (): void => {
-            this._onRoomUpdated.next({
-              roomId: roomId,
-              graph: MutableGraph.empty(),
-            });
-          })
-          .exhaustive();
-      },
-    );
-
-    this._rooms._onRoomPhysicsUpdates$.subscribe((roomId: string): void => {
-      const roomState: RoomState = this._rooms.getState(roomId);
-      if (roomState.type !== 'data') {
-        this._logger.error(
-          this,
-          'Did receive physics update from non existing room. Memory leak?',
-        );
-        return;
-      }
-      const graph: MutableGraph = roomState.graph;
-
-      this._onRoomPhysicsUpdated.next({
-        roomId: roomId,
-        graph: graph,
-      });
-    });
   }
 
-  public get onRoomUpdated$(): Observable<RoomSessionManagerEventRoomUpdated> {
+  public get onRoomUpdated$(): Observable<RSEventRoomUpdated> {
     return this._onRoomUpdated.asObservable();
   }
 
-  public get onRoomPhysicsUpdated$(): Observable<RoomSessionManagerEventRoomPhysicsUpdated> {
+  public get onRoomPhysicsUpdated$(): Observable<RSEventRoomPhysicsUpdated> {
     return this._onRoomPhysicsUpdated.asObservable();
   }
 
   public async bootstrap(): Promise<void> {
-    helpers();
+    installHandlebarHelpers();
     try {
-      await this._loadGraphFromDb();
+      await this._loadGraphsFromDb();
     } catch (error) {
       this._logger.error(this, error);
     }
   }
 
   public async destroy(): Promise<void> {
-    const rooms: DBRoom[] = await this._database.getRooms();
-    for (const room of rooms) {
-      this._logger.log(
-        this,
-        `Will save graph of room ${room.documentId} ('${room.title ?? ''}')`,
-      );
-      await this._saveGraphToDb(room.documentId);
+    for (const graphEntry of this._latestGraphs.toArray()) {
+      await this._saveGraphToDb(graphEntry[0], graphEntry[1]);
     }
   }
 
@@ -103,51 +67,18 @@ export class RoomService implements ApplicationService {
     nodeId: string;
     userId: string;
   }): void {
-    const state: RoomState = this._rooms.getState(params.roomId);
-    if (state.type !== 'data') {
-      this._logger.error(this, `Did try to grab node but is in no graph.`);
-      return;
-    }
-
-    const node: MutableNode | undefined = state.graph.nodes.get(params.nodeId);
-    if (node == null) {
-      this._logger.error(this, `Cannot find node to grab: ${params.nodeId}.`);
-      return;
-    }
-
-    node.grabs.add(params.userId);
-    node.locked = true;
-    state.physics.start();
+    this._sendActionToWorker(params.roomId, {
+      type: 'WTActionGrabNode',
+      nodeId: params.nodeId,
+      userId: params.userId,
+    });
   }
 
-  public moveNodes(
-    roomId: string,
-    nodes: readonly RoomSessionManagerPhysicalNode[],
-  ): void {
-    const roomState: RoomState = this._rooms.getState(roomId);
-    if (roomState.type !== 'data') {
-      this._logger.debug(
-        this,
-        `There is no graph in room ${roomId} to move it's nodes.`,
-      );
-      return;
-    }
-
-    const graph: MutableGraph = roomState.graph;
-
-    for (const movedNode of nodes) {
-      const foundNode: MutableNode | undefined = graph.nodes.get(movedNode.id);
-      if (foundNode == null) {
-        this._logger.error(
-          this,
-          `Client did send moved node, but the node cannot be found in the room. Room: ${roomId}, Node: ${movedNode.id}`,
-        );
-        continue;
-      }
-
-      foundNode.position.x = movedNode.position.x;
-      foundNode.position.y = movedNode.position.y;
-    }
+  public moveNodes(roomId: string, nodes: readonly RSPhysicalNode[]): void {
+    this._sendActionToWorker(roomId, {
+      type: 'WTActionMoveNodes',
+      nodes: nodes,
+    });
   }
 
   public ungrabNode(params: {
@@ -155,29 +86,24 @@ export class RoomService implements ApplicationService {
     nodeId: string;
     userId: string;
   }): void {
-    const state: RoomState = this._rooms.getState(params.roomId);
-    if (state.type !== 'data') {
+    this._sendActionToWorker(params.roomId, {
+      type: 'WTActionUngrabNode',
+      nodeId: params.nodeId,
+      userId: params.userId,
+    });
+    this.saveGraphOfRoom(params.roomId);
+  }
+
+  public saveGraphOfRoom(roomId: string): void {
+    const graph: MutableGraph | undefined = this._latestGraphs.get(roomId);
+    if (graph == null) {
       this._logger.error(
         this,
-        `${params.userId} did send lock node message but is in no graph.`,
+        `Canno save graph of room ${roomId}, because the graph does not exist.`,
       );
       return;
     }
-
-    const node: MutableNode | undefined = state.graph.nodes.get(params.nodeId);
-    if (node == null) {
-      this._logger.error(this, `Cannot find node to lock: ${params.nodeId}.`);
-      return;
-    }
-
-    state.physics.stop();
-    node.grabs.delete(params.userId);
-
-    this.saveRoom(params.roomId);
-  }
-
-  public saveRoom(roomId: string): void {
-    this._saveGraphToDb(roomId).catch((error: unknown): void => {
+    this._saveGraphToDb(roomId, graph).catch((error: unknown): void => {
       this._logger.error(this, error);
     });
   }
@@ -185,7 +111,7 @@ export class RoomService implements ApplicationService {
   public async loadScenario(params: {
     roomId: string;
     scenarioId: string;
-    onProgrsss: (progress: RoomSessionManagerEventScenarioProgress) => void;
+    onProgrsss: (progress: RSEventScenarioProgress) => void;
   }): Promise<DBScenario> {
     if (!(await this._database.roomExists(params.roomId))) {
       this._logger.error(this, `Room ${params.roomId} does not exist!`);
@@ -214,24 +140,28 @@ export class RoomService implements ApplicationService {
       );
     task.finish();
 
-    await this._rooms.setData(params.roomId, graph);
-    await this._saveGraphToDb(params.roomId);
+    this._sendActionToWorker(params.roomId, {
+      type: 'WTActionSetGraph',
+      graph: graph.toPlain(),
+    });
+    await this._saveGraphToDb(params.roomId, graph);
+    this._latestGraphs.set(params.roomId, graph);
+    this._onRoomUpdated.next({
+      graph: graph,
+      roomId: params.roomId,
+    });
 
     return scenario;
   }
 
-  public getRoom(roomId: string): RoomState {
-    return this._rooms.getState(roomId);
+  public getGraph(roomId: string): MutableGraph | null {
+    return this._latestGraphs.get(roomId) ?? null;
   }
 
-  private async _saveGraphToDb(roomId: string): Promise<void> {
-    const roomState: RoomState = this._rooms.getState(roomId);
-    if (roomState.type !== 'data') {
-      this._logger.debug(this, `There is no graph in room ${roomId} to save.`);
-      return;
-    }
-    const graph: MutableGraph = roomState.graph;
-
+  private async _saveGraphToDb(
+    roomId: string,
+    graph: MutableGraph,
+  ): Promise<void> {
     const room: DBRoom | null = await this._database.getRoom(roomId);
     if (room == null) {
       this._logger.error(this, `Room ${roomId} not found for saving graph.`);
@@ -241,7 +171,7 @@ export class RoomService implements ApplicationService {
     await this._database.setRoomGraph(room, graph);
   }
 
-  private async _loadGraphFromDb(): Promise<void> {
+  private async _loadGraphsFromDb(): Promise<void> {
     try {
       const rooms: DBRoom[] = await this._database.getRooms();
 
@@ -264,10 +194,65 @@ export class RoomService implements ApplicationService {
           this,
           `Did load ${graph.size.toString()} graph elements into room ${room.documentId} ('${room.title ?? ''}').`,
         );
-        await this._rooms.setData(room.documentId, graph);
+
+        const workerData: RoomWorkerData = {
+          roomId: room.documentId,
+          graph: graph.toPlain(),
+        };
+        const worker: Worker = new Worker(
+          path.join(__dirname, 'RoomWorker.js'),
+          {
+            workerData: workerData,
+          },
+        );
+        worker.on('error', (error: Error): void => {
+          this._logger.error(this, `Worker error: ${error.message}`);
+        });
+        worker.on('message', (message: WTEvent): void => {
+          match(message)
+            .with(
+              { type: 'WTEventPhysicsUpdate' },
+              (event: WTEventPhysicsUpdate): void => {
+                this._handleWTEventPhysicsUpdate(room.documentId, event);
+              },
+            )
+            .exhaustive();
+        });
+        worker.on('messageerror', (error: Error): void => {
+          this._logger.error(this, `Worker messageerror: ${error.message}`);
+        });
+        worker.on('exit', (exitCode: number): void => {
+          this._logger.debug(this, `Worker exit code: ${exitCode.toString()}`);
+        });
+        worker.on('online', (): void => {
+          this._logger.debug(this, `Worker online`);
+        });
+        this._workers.set(room.documentId, worker);
+        this._latestGraphs.set(room.documentId, graph);
       }
     } catch (error) {
       this._logger.error(this, error);
     }
+  }
+
+  private _handleWTEventPhysicsUpdate(
+    roomId: string,
+    event: WTEventPhysicsUpdate,
+  ): void {
+    const graph: MutableGraph = MutableGraph.fromPlain(event.graph);
+    this._onRoomPhysicsUpdated.next({
+      graph: graph,
+      roomId: roomId,
+    });
+    this._latestGraphs.set(roomId, graph);
+  }
+
+  private _sendActionToWorker(roomId: string, action: WTAction): void {
+    const worker: Worker | undefined = this._workers.get(roomId);
+    if (worker == null) {
+      this._logger.error(this, `Room not found: ${roomId}`);
+      return;
+    }
+    worker.postMessage(action);
   }
 }
