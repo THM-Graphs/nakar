@@ -17,7 +17,7 @@ import Combine
     var socketStatus: SocketStatus
 
     init() {
-        self.manager = SocketManager(socketURL: Self.url, config: [.compress, .path("/frontend")])
+        self.manager = SocketManager(socketURL: Self.url, config: [.compress, .path("/socket.io")])
         self.socket = manager.defaultSocket
 
         self.delegate = nil
@@ -60,8 +60,8 @@ import Combine
 
     static var url: URL {
         switch NakarController.Mode.current {
-        case .development: return URL(string: "http://localhost:1337")!
-        case .production: return URL(string: "http://nakar.mni.thm.de:1337")!
+        case .development: return URL(string: "http://localhost:1338")!
+        case .production: return URL(string: "http://nakar.mni.thm.de:1338")!
         }
     }
 

@@ -77,18 +77,18 @@ struct NakarRealityView: View {
                     }
 
                     #if os(visionOS)
-                    let targetLocation = value.convert(value.gestureValue.translation3D, from: .local, to: .scene)
-                    let planePoint: SIMD3<Float> = [0, 0, globalScale.defaultDepth]
-                    let planeNormal: SIMD3<Float> = [0, 0, -1]
-                    let origin: SIMD3<Float> = value.inputDevicePose3D?.position
-                    let direction: SIMD3<Float> = value.inputDevicePose3D
-
-                    let point = RendererTools.raycastToCustomPlane(from: origin, direction: direction, planePoint: planePoint, planeNormal: planeNormal)
-
-                    print(targetLocation)
-                    entity.position.x = component.dragStartPosition!.x + Float(targetLocation.x)
-                    entity.position.y = component.dragStartPosition!.y + Float(targetLocation.y)
-                    entity.position.z = component.dragStartPosition!.z + Float(targetLocation.z)
+//                    let targetLocation = value.convert(value.gestureValue.translation3D, from: .local, to: .scene)
+//                    let planePoint: SIMD3<Float> = [0, 0, globalScale.defaultDepth]
+//                    let planeNormal: SIMD3<Float> = [0, 0, -1]
+//                    let origin = value.inputDevicePose3D?.position
+//                    let direction = value.inputDevicePose3D
+//
+//                    let point = RendererTools.raycastToCustomPlane(from: SIMD3<Float>(Float(origin.x), Float(origin.y), Float(origin.z)), direction: direction, planePoint: planePoint, planeNormal: planeNormal)
+//
+//                    print(targetLocation)
+//                    entity.position.x = component.dragStartPosition!.x + Float(targetLocation.x)
+//                    entity.position.y = component.dragStartPosition!.y + Float(targetLocation.y)
+//                    entity.position.z = component.dragStartPosition!.z + Float(targetLocation.z)
                     #endif
                     #if os(macOS)
                     let targetLocation = value.translation
