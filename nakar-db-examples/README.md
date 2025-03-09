@@ -1,8 +1,4 @@
-# Nakar Database (POLE)
-
-POLE: Person, Object, Location, Event
-
-Source: https://github.com/neo4j-graph-examples/pole
+# Examples Database
 
 ## Contribution Guide
 
