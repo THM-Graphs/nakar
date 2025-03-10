@@ -72,9 +72,9 @@ export class MutableEdge {
     });
   }
 
-  public static fromPlain(input: unknown): MutableEdge {
-    const data: z.infer<typeof MutableEdge.schema> =
-      MutableEdge.schema.parse(input);
+  public static fromPlain(
+    data: z.infer<typeof MutableEdge.schema>,
+  ): MutableEdge {
     return new MutableEdge({
       startNodeId: data.startNodeId,
       endNodeId: data.endNodeId,

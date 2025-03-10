@@ -75,18 +75,7 @@ export class HTTPInterface implements ApplicationService {
   }
 
   public async destroy(): Promise<void> {
-    this._logger.debug(this, `Will shutdown custom server.`);
-    await new Promise<void>(
-      (resolve: () => void, reject: (error: unknown) => void): void => {
-        this._server.close((error: Error | undefined): void => {
-          if (error == null) {
-            resolve();
-          } else {
-            reject(error);
-          }
-        });
-      },
-    );
+    /* */
   }
 
   public getServerInstance(): http.Server {

@@ -76,9 +76,9 @@ export class MutableGraph {
     });
   }
 
-  public static fromPlain(input: unknown): MutableGraph {
-    const data: z.infer<typeof MutableGraph.schema> =
-      MutableGraph.schema.parse(input);
+  public static fromPlain(
+    data: z.infer<typeof MutableGraph.schema>,
+  ): MutableGraph {
     return new MutableGraph({
       id: data.id,
       nodes: SMap.fromRecord(data.nodes).map(
@@ -97,9 +97,15 @@ export class MutableGraph {
     });
   }
 
-  public static fromPlainOrEmpty(input: unknown): MutableGraph {
+  public static fromUnknown(input: unknown): MutableGraph {
+    const data: z.infer<typeof MutableGraph.schema> =
+      MutableGraph.schema.parse(input);
+    return MutableGraph.fromPlain(data);
+  }
+
+  public static fromUnknownOrEmpty(input: unknown): MutableGraph {
     try {
-      return MutableGraph.fromPlain(input);
+      return MutableGraph.fromUnknown(input);
     } catch {
       return MutableGraph.empty();
     }

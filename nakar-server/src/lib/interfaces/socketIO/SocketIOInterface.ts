@@ -25,7 +25,6 @@ import { DatabaseService } from '../../services/database/DatabaseService';
 import { DBRoom } from '../../services/database/collection-types/DBRoom';
 import { RSEventScenarioProgress } from '../../services/room/events/RSEventScenarioProgress';
 import { RSEventRoomPhysicsUpdated } from '../../services/room/events/RSEventRoomPhysicsUpdated';
-import { MutableNode } from '../../services/room/graph/MutableNode';
 import { RSEventRoomUpdated } from '../../services/room/events/RSEventRoomUpdated';
 import { DBScenario } from '../../services/database/collection-types/DBScenario';
 import { HTTPInterface } from '../http/HTTPInterface';
@@ -33,6 +32,8 @@ import { LoggerService } from '../../services/logger/LoggerService';
 import http from 'http';
 import { ApplicationService } from '../../application/ApplicationService';
 import { MutableGraph } from '../../services/room/graph/MutableGraph';
+import z from 'zod';
+import { Subscription } from 'rxjs';
 
 export type Server = UntypedServer<ClientToServerEvents, ServerToClientEvents>;
 export type Socket = UntypedSocket<ClientToServerEvents, ServerToClientEvents>;
@@ -76,84 +77,98 @@ export class SocketIOInterface implements ApplicationService {
       const wsClient: WSClient = new WSClient(s, io, this._logger);
       this._sockets.add(wsClient);
       this._logger.debug(this, `New socket ${wsClient.id} connection.`);
+      const clientSubscriptions: Subscription[] = [];
 
-      wsClient.onRoomChanged$.subscribe((roomId: string | null): void => {
-        wsClient.broadcastToRoom({
-          type: 'WSEventNotification',
-          title: 'User joined',
-          message: `User ${wsClient.id} joined.`,
-          severity: 'message',
-          date: new Date().toISOString(),
-        });
-
-        if (roomId != null) {
-          const graph: MutableGraph | null = this._roomService.getGraph(roomId);
-          wsClient.send({
-            type: 'WSEventScenarioLoaded',
-            graph: (graph ?? MutableGraph.empty()).toDto(),
+      clientSubscriptions.push(
+        wsClient.onRoomChanged$.subscribe((roomId: string | null): void => {
+          wsClient.broadcastToRoom({
+            type: 'WSEventNotification',
+            title: 'User joined',
+            message: `User ${wsClient.id} joined.`,
+            severity: 'message',
+            date: new Date().toISOString(),
           });
-        }
-      });
 
-      wsClient.onMessage$.subscribe(
-        (clientToServerMessage: SchemaWsClientToServerMessage): void => {
-          try {
-            match(clientToServerMessage)
-              .with(
-                { type: 'WSActionJoinRoom' },
-                (m: SchemaWsActionJoinRoom): void => {
-                  this._handleJoinRoom(wsClient, m);
-                },
-              )
-              .with(
-                { type: 'WSActionLoadScenario' },
-                (m: SchemaWsActionLoadScenario): void => {
-                  this._handleLoadScenario(wsClient, m);
-                },
-              )
-              .with(
-                { type: 'WSActionGrabNode' },
-                (m: SchemaWsActionGrabNode): void => {
-                  this._handleGrabNode(wsClient, m);
-                },
-              )
-              .with(
-                { type: 'WSActionMoveNodes' },
-                (m: SchemaWsActionMoveNodes): void => {
-                  this._handleMoveNodes(wsClient, m);
-                },
-              )
-              .with(
-                { type: 'WSActionUngrabNode' },
-                (m: SchemaWsActionUngrabNode): void => {
-                  this._handleUngrabNode(wsClient, m);
-                },
-              )
-              .exhaustive();
-          } catch (error: unknown) {
-            wsClient.send(this.createErrorNotification(error));
-            this._logger.error(
-              this,
-              `Unhandled ws message: ${JSON.stringify(clientToServerMessage)}`,
-            );
+          if (roomId != null) {
+            const plainGraph: z.infer<typeof MutableGraph.schema> | null =
+              this._roomService.getGraph(roomId);
+            const graph: MutableGraph = plainGraph
+              ? MutableGraph.fromPlain(plainGraph)
+              : MutableGraph.empty();
+            wsClient.send({
+              type: 'WSEventScenarioLoaded',
+              graph: graph.toDto(),
+            });
           }
-        },
+        }),
       );
 
-      wsClient.onDisconnect$.subscribe((reason: DisconnectReason): void => {
-        this._logger.debug(
-          this,
-          `Socket ${wsClient.id} disconnected: ${reason}`,
-        );
-        wsClient.broadcastToRoom({
-          type: 'WSEventNotification',
-          title: 'User left',
-          message: `User ${wsClient.id} left. Reason: ${reason}.`,
-          date: new Date().toISOString(),
-          severity: 'message',
-        });
-        this._sockets.delete(wsClient);
-      });
+      clientSubscriptions.push(
+        wsClient.onMessage$.subscribe(
+          (clientToServerMessage: SchemaWsClientToServerMessage): void => {
+            try {
+              match(clientToServerMessage)
+                .with(
+                  { type: 'WSActionJoinRoom' },
+                  (m: SchemaWsActionJoinRoom): void => {
+                    this._handleJoinRoom(wsClient, m);
+                  },
+                )
+                .with(
+                  { type: 'WSActionLoadScenario' },
+                  (m: SchemaWsActionLoadScenario): void => {
+                    this._handleLoadScenario(wsClient, m);
+                  },
+                )
+                .with(
+                  { type: 'WSActionGrabNode' },
+                  (m: SchemaWsActionGrabNode): void => {
+                    this._handleGrabNode(wsClient, m);
+                  },
+                )
+                .with(
+                  { type: 'WSActionMoveNodes' },
+                  (m: SchemaWsActionMoveNodes): void => {
+                    this._handleMoveNodes(wsClient, m);
+                  },
+                )
+                .with(
+                  { type: 'WSActionUngrabNode' },
+                  (m: SchemaWsActionUngrabNode): void => {
+                    this._handleUngrabNode(wsClient, m);
+                  },
+                )
+                .exhaustive();
+            } catch (error: unknown) {
+              wsClient.send(this.createErrorNotification(error));
+              this._logger.error(
+                this,
+                `Unhandled ws message: ${JSON.stringify(clientToServerMessage)}`,
+              );
+            }
+          },
+        ),
+      );
+
+      clientSubscriptions.push(
+        wsClient.onDisconnect$.subscribe((reason: DisconnectReason): void => {
+          this._logger.debug(
+            this,
+            `Socket ${wsClient.id} disconnected: ${reason}`,
+          );
+          wsClient.broadcastToRoom({
+            type: 'WSEventNotification',
+            title: 'User left',
+            message: `User ${wsClient.id} left. Reason: ${reason}.`,
+            date: new Date().toISOString(),
+            severity: 'message',
+          });
+          this._sockets.delete(wsClient);
+          for (const sub of clientSubscriptions) {
+            sub.unsubscribe();
+          }
+        }),
+      );
     });
 
     this._roomService.onRoomPhysicsUpdated$.subscribe(
@@ -173,7 +188,6 @@ export class SocketIOInterface implements ApplicationService {
     if (this._io == null) {
       return;
     }
-    this._logger.debug(this, 'Will close web sockets connections');
 
     this._io.emit('message', {
       type: 'WSEventNotification',
@@ -349,8 +363,8 @@ export class SocketIOInterface implements ApplicationService {
       }
 
       const nodesToSend: SchemaPhysicalNode[] = [];
-      for (const [id, node] of message.graph.nodes.toArray()) {
-        if (!node.grabs.has(socket.id)) {
+      for (const [id, node] of Object.entries(message.graph.nodes)) {
+        if (!node.grabs.includes(socket.id)) {
           nodesToSend.push({
             id: id,
             position: { x: node.position.x, y: node.position.y },

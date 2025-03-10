@@ -22,9 +22,7 @@ export class MutablePosition {
     });
   }
 
-  public static fromPlain(input: unknown): MutablePosition {
-    const data: z.infer<typeof this.schema> =
-      MutablePosition.schema.parse(input);
+  public static fromPlain(data: z.infer<typeof this.schema>): MutablePosition {
     return new MutablePosition({
       x: data.x,
       y: data.y,

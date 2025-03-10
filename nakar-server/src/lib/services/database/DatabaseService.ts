@@ -8,6 +8,7 @@ import { LoggerService } from '../logger/LoggerService';
 import { ApplicationService } from '../../application/ApplicationService';
 import { DBMedia } from './others/DBMedia';
 import { FileStream } from '../../tools/fs/FileStream';
+import z from 'zod';
 
 export class DatabaseService implements ApplicationService {
   public constructor(private readonly _logger: LoggerService) {}
@@ -186,8 +187,11 @@ export class DatabaseService implements ApplicationService {
     );
   }
 
-  public async setRoomGraph(room: DBRoom, graph: MutableGraph): Promise<void> {
-    const graphJson: string = JSON.stringify(graph.toPlain());
+  public async setRoomGraph(
+    room: DBRoom,
+    graph: z.infer<typeof MutableGraph.schema>,
+  ): Promise<void> {
+    const graphJson: string = JSON.stringify(graph);
     await strapi.documents('api::room.room').update({
       documentId: room.documentId,
       data: {

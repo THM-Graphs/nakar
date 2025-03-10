@@ -2,6 +2,7 @@ import { MutableGraph } from '../../graph/MutableGraph';
 import { PhysicsSimulation } from '../../../../tools/physics/PhysicsSimulation';
 import { ScenarioPipelineStep } from '../ScenarioPipelineStep';
 import { LoggerService } from '../../../logger/LoggerService';
+import { ProfilerService } from '../../../profiler/ProfilerService';
 
 export class Layout extends ScenarioPipelineStep<void> {
   private _graph: MutableGraph;
@@ -9,6 +10,7 @@ export class Layout extends ScenarioPipelineStep<void> {
   public constructor(
     graph: MutableGraph,
     private readonly _logger: LoggerService,
+    private readonly _profiler: ProfilerService,
   ) {
     super('Layout');
     this._graph = graph;
@@ -24,6 +26,7 @@ export class Layout extends ScenarioPipelineStep<void> {
     const simulation: PhysicsSimulation = new PhysicsSimulation(
       input,
       this._logger,
+      this._profiler,
     );
     await simulation.run(1500);
   }

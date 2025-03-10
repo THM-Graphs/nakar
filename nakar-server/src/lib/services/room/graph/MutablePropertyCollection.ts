@@ -28,9 +28,9 @@ export class MutablePropertyCollection {
     });
   }
 
-  public static fromPlain(input: unknown): MutablePropertyCollection {
-    const data: z.infer<typeof this.schema> =
-      MutablePropertyCollection.schema.parse(input);
+  public static fromPlain(
+    data: z.infer<typeof this.schema>,
+  ): MutablePropertyCollection {
     return new MutablePropertyCollection({
       properties: SMap.fromRecord(data.properties),
     });

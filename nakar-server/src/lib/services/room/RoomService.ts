@@ -21,10 +21,14 @@ import { RoomWorkerData } from './RoomWorkerData';
 import { WTEvent } from './worker-events/WTEvent';
 import { match } from 'ts-pattern';
 import { WTEventPhysicsUpdate } from './worker-events/WTEventPhysicsUpdate';
+import z from 'zod';
 
 export class RoomService implements ApplicationService {
   private readonly _workers: SMap<string, Worker>;
-  private readonly _latestGraphs: SMap<string, MutableGraph>;
+  private readonly _latestGraphs: SMap<
+    string,
+    z.infer<typeof MutableGraph.schema>
+  >;
   private readonly _onRoomUpdated: Subject<RSEventRoomUpdated>;
   private readonly _onRoomPhysicsUpdated: Subject<RSEventRoomPhysicsUpdated>;
 
@@ -100,7 +104,8 @@ export class RoomService implements ApplicationService {
   }
 
   public saveGraphOfRoom(roomId: string): void {
-    const graph: MutableGraph | undefined = this._latestGraphs.get(roomId);
+    const graph: z.infer<typeof MutableGraph.schema> | undefined =
+      this._latestGraphs.get(roomId);
     if (graph == null) {
       this._logger.error(
         this,
@@ -145,12 +150,14 @@ export class RoomService implements ApplicationService {
       );
     task.finish();
 
-    this._latestGraphs.set(params.roomId, graph);
+    const plainGraph: z.infer<typeof MutableGraph.schema> = graph.toPlain();
+
+    this._latestGraphs.set(params.roomId, plainGraph);
     this._sendActionToWorker(params.roomId, {
       type: 'WTActionSetGraph',
-      graph: graph.toPlain(),
+      graph: plainGraph,
     });
-    await this._saveGraphToDb(params.roomId, graph);
+    await this._saveGraphToDb(params.roomId, plainGraph);
     this._onRoomUpdated.next({
       graph: graph,
       roomId: params.roomId,
@@ -159,13 +166,13 @@ export class RoomService implements ApplicationService {
     return scenario;
   }
 
-  public getGraph(roomId: string): MutableGraph | null {
+  public getGraph(roomId: string): z.infer<typeof MutableGraph.schema> | null {
     return this._latestGraphs.get(roomId) ?? null;
   }
 
   private async _saveGraphToDb(
     roomId: string,
-    graph: MutableGraph,
+    graph: z.infer<typeof MutableGraph.schema>,
   ): Promise<void> {
     const room: DBRoom | null = await this._database.getRoom(roomId);
     if (room == null) {
@@ -188,15 +195,17 @@ export class RoomService implements ApplicationService {
         const graph: MutableGraph =
           room.graphJson == null
             ? MutableGraph.empty()
-            : MutableGraph.fromPlainOrEmpty(JSON.parse(room.graphJson));
+            : MutableGraph.fromUnknownOrEmpty(JSON.parse(room.graphJson));
         this._logger.debug(
           this,
           `Did load ${graph.size.toString()} graph elements into room ${room.documentId} ('${room.title ?? ''}').`,
         );
 
+        const plainGraph: z.infer<typeof MutableGraph.schema> = graph.toPlain();
+
         const workerData: RoomWorkerData = {
           roomId: room.documentId,
-          graph: graph.toPlain(),
+          graph: plainGraph,
         };
         const worker: Worker = new Worker(
           path.join(__dirname, 'RoomWorker.js'),
@@ -227,7 +236,7 @@ export class RoomService implements ApplicationService {
           this._logger.debug(this, `Worker online`);
         });
         this._workers.set(room.documentId, worker);
-        this._latestGraphs.set(room.documentId, graph);
+        this._latestGraphs.set(room.documentId, plainGraph);
       }
     } catch (error) {
       this._logger.error(this, error);
@@ -245,12 +254,11 @@ export class RoomService implements ApplicationService {
       );
       return;
     }
-    const graph: MutableGraph = MutableGraph.fromPlain(event.graph);
     this._onRoomPhysicsUpdated.next({
-      graph: graph,
+      graph: event.graph,
       roomId: roomId,
     });
-    this._latestGraphs.set(roomId, graph);
+    this._latestGraphs.set(roomId, event.graph);
   }
 
   private _sendActionToWorker(roomId: string, action: WTAction): void {

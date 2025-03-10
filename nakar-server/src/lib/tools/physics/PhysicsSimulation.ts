@@ -5,6 +5,7 @@ import { MutableNode } from '../../services/room/graph/MutableNode';
 import { MutableEdge } from '../../services/room/graph/MutableEdge';
 import { CombinationCache } from './CombinationCache';
 import { LoggerService } from '../../services/logger/LoggerService';
+import { ProfilerService } from '../../services/profiler/ProfilerService';
 
 export class PhysicsSimulation {
   public static readonly maximumVelocity: number = 500;
@@ -18,6 +19,7 @@ export class PhysicsSimulation {
   public constructor(
     graph: MutableGraph,
     private readonly _logger: LoggerService,
+    private readonly _profiler: ProfilerService,
   ) {
     this._graph = graph;
     this._running = false;

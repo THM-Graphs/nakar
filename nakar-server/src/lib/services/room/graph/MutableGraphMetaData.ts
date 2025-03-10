@@ -33,9 +33,9 @@ export class MutableGraphMetaData {
     });
   }
 
-  public static fromPlain(input: unknown): MutableGraphMetaData {
-    const data: z.infer<typeof this.schema> =
-      MutableGraphMetaData.schema.parse(input);
+  public static fromPlain(
+    data: z.infer<typeof this.schema>,
+  ): MutableGraphMetaData {
     return new MutableGraphMetaData({
       labels: SMap.fromRecord(data.labels).map(
         (l: z.infer<typeof MutableGraphLabel.schema>): MutableGraphLabel =>

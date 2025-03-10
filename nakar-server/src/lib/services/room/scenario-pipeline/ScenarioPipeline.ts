@@ -104,7 +104,10 @@ export class ScenarioPipeline {
       new GrowNodeBasedOnDegree(graph, displayConfiguration),
       onProgress,
     );
-    await this._runStep(new Layout(graph, this._logger), onProgress);
+    await this._runStep(
+      new Layout(graph, this._logger, this._profiler),
+      onProgress,
+    );
 
     this._logger.debug(this, '----------- Scenario Pipeline End -----------');
     return [graph, scenario];

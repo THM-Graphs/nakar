@@ -5,10 +5,9 @@ import { MutableGraphColorPreset } from './MutableGraphColorPreset';
 import { z } from 'zod';
 
 export class MutableGraphColorFactory {
-  public static fromPlain(input: unknown): MutableGraphColor {
-    const data: z.infer<typeof MutableGraphColor.schema> =
-      MutableGraphColor.schema.parse(input);
-
+  public static fromPlain(
+    data: z.infer<typeof MutableGraphColor.schema>,
+  ): MutableGraphColor {
     return match(data)
       .with(
         { type: 'custom' },

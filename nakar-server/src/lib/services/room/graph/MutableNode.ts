@@ -109,8 +109,7 @@ export class MutableNode {
     });
   }
 
-  public static fromPlain(input: unknown): MutableNode {
-    const data: z.infer<typeof this.schema> = MutableNode.schema.parse(input);
+  public static fromPlain(data: z.infer<typeof this.schema>): MutableNode {
     return new MutableNode({
       labels: new SSet(data.labels),
       properties: MutablePropertyCollection.fromPlain(data.properties),

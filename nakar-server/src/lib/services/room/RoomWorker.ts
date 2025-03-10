@@ -13,9 +13,11 @@ import { WTActionMoveNodes } from './worker-events/WTActionMoveNodes';
 import { WTActionUngrabNode } from './worker-events/WTActionUngrabNode';
 import { WTActionSetGraph } from './worker-events/WTActionSetGraph';
 import { WTEvent } from './worker-events/WTEvent';
+import { ProfilerService } from '../profiler/ProfilerService';
 
 export class RoomWorker implements ApplicationService {
   private readonly _logger: LoggerService;
+  private readonly _profiler: ProfilerService;
 
   private readonly _services: ApplicationService[];
   private readonly _roomId: string;
@@ -24,10 +26,12 @@ export class RoomWorker implements ApplicationService {
 
   public constructor(data: RoomWorkerData) {
     this._logger = new LoggerService();
+    this._profiler = new ProfilerService(this._logger);
 
     this._physics = new PhysicsSimulation(
       MutableGraph.fromPlain(data.graph),
       this._logger,
+      this._profiler,
     );
     this._roomId = data.roomId;
 
