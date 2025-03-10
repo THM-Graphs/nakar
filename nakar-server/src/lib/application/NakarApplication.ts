@@ -72,6 +72,7 @@ export class NakarApplication {
       await service.bootstrap();
     }
     this.logger.debug(this, `Done bootstrapping services.`);
+    process.title = 'Nakar Server';
   }
 
   public async destroy(): Promise<void> {

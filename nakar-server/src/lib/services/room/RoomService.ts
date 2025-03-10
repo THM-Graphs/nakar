@@ -15,12 +15,12 @@ import { ApplicationService } from '../../application/ApplicationService';
 import installHandlebarHelpers from 'handlebars-helpers';
 import { Worker } from 'node:worker_threads';
 import { SMap } from '../../tools/Map';
-import { WTAction } from './worker-events/WTAction';
+import { WTAction } from '../room-instance/worker-events/WTAction';
 import path from 'path';
-import { RoomWorkerData } from './RoomWorkerData';
-import { WTEvent } from './worker-events/WTEvent';
+import { RoomWorkerData } from '../room-instance/RoomWorkerData';
+import { WTEvent } from '../room-instance/worker-events/WTEvent';
 import { match } from 'ts-pattern';
-import { WTEventPhysicsUpdate } from './worker-events/WTEventPhysicsUpdate';
+import { WTEventPhysicsUpdate } from '../room-instance/worker-events/WTEventPhysicsUpdate';
 import z from 'zod';
 
 export class RoomService implements ApplicationService {
@@ -61,6 +61,13 @@ export class RoomService implements ApplicationService {
   }
 
   public async destroy(): Promise<void> {
+    for (const worker of this._workers.values()) {
+      this._logger.log(
+        this,
+        `Stopping worker ${worker.threadId.toString()}...`,
+      );
+      await worker.terminate();
+    }
     for (const graphEntry of this._latestGraphs.toArray()) {
       await this._saveGraphToDb(graphEntry[0], graphEntry[1]);
     }

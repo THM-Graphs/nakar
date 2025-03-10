@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { MutableGraph } from './graph/MutableGraph';
+import { MutableGraph } from '../room/graph/MutableGraph';
 
 export interface RoomWorkerData {
   roomId: string;

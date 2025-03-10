@@ -1,41 +1,35 @@
-import { LoggerService } from '../logger/LoggerService';
 import { ApplicationService } from '../../application/ApplicationService';
-import { ClassHelper } from '../../tools/ClassHelper';
-import { RoomWorkerData } from './RoomWorkerData';
-import { MessagePort, parentPort, workerData } from 'node:worker_threads';
-import { MutableGraph } from './graph/MutableGraph';
-import { WTAction } from './worker-events/WTAction';
-import { match } from 'ts-pattern';
-import { WTActionGrabNode } from './worker-events/WTActionGrabNode';
-import { MutableNode } from './graph/MutableNode';
+import { LoggerService } from '../logger/LoggerService';
+import { ProfilerService } from '../profiler/ProfilerService';
+import { MessagePort, parentPort } from 'node:worker_threads';
 import { PhysicsSimulation } from '../../tools/physics/PhysicsSimulation';
+import { RoomWorkerData } from './RoomWorkerData';
+import { MutableGraph } from '../room/graph/MutableGraph';
+import { WTActionGrabNode } from './worker-events/WTActionGrabNode';
+import { MutableNode } from '../room/graph/MutableNode';
 import { WTActionMoveNodes } from './worker-events/WTActionMoveNodes';
 import { WTActionUngrabNode } from './worker-events/WTActionUngrabNode';
 import { WTActionSetGraph } from './worker-events/WTActionSetGraph';
+import { WTAction } from './worker-events/WTAction';
+import { match } from 'ts-pattern';
 import { WTEvent } from './worker-events/WTEvent';
-import { ProfilerService } from '../profiler/ProfilerService';
 
-export class RoomWorker implements ApplicationService {
-  private readonly _logger: LoggerService;
-  private readonly _profiler: ProfilerService;
-
-  private readonly _services: ApplicationService[];
+export class RoomInstanceService implements ApplicationService {
   private readonly _roomId: string;
   private readonly _parentPort: MessagePort;
   private _physics: PhysicsSimulation;
 
-  public constructor(data: RoomWorkerData) {
-    this._logger = new LoggerService();
-    this._profiler = new ProfilerService(this._logger);
-
+  public constructor(
+    data: RoomWorkerData,
+    private readonly _logger: LoggerService,
+    private readonly _profiler: ProfilerService,
+  ) {
     this._physics = new PhysicsSimulation(
       MutableGraph.fromPlain(data.graph),
       this._logger,
       this._profiler,
     );
     this._roomId = data.roomId;
-
-    this._services = [this._logger];
 
     if (parentPort == null) {
       throw new Error('No parent port.');
@@ -46,28 +40,14 @@ export class RoomWorker implements ApplicationService {
     this._registerPhysicsEvents();
   }
 
-  public async bootstrap(): Promise<void> {
-    this._logger.debug(this, 'Will bootstrap services...');
-    for (const service of this._services) {
-      this._logger.log(
-        this,
-        `Bootstrap Service ${ClassHelper.getName(service)}`,
-      );
-      await service.bootstrap();
-    }
-
+  public bootstrap(): void {
     this._logger.debug(
       this,
       `Did receive worker data: roomId: ${this._roomId},  ${this._physics.getGraph().size.toString()} graph elements.`,
     );
   }
 
-  public async destroy(): Promise<void> {
-    this._logger.debug(this, 'Will destroy services...');
-    for (const service of this._services.toReversed()) {
-      this._logger.log(this, `Destroy Service ${ClassHelper.getName(service)}`);
-      await service.destroy();
-    }
+  public destroy(): void {
     this._parentPort.close();
   }
 
@@ -194,7 +174,3 @@ export class RoomWorker implements ApplicationService {
     this._parentPort.postMessage(event);
   }
 }
-
-// eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-const roomWorker: RoomWorker = new RoomWorker(workerData as RoomWorkerData);
-void roomWorker.bootstrap();
