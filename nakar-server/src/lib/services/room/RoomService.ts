@@ -238,6 +238,7 @@ export class RoomService implements ApplicationService {
         });
         worker.on('exit', (exitCode: number): void => {
           this._logger.debug(this, `Worker exit code: ${exitCode.toString()}`);
+          worker.removeAllListeners();
         });
         worker.on('online', (): void => {
           this._logger.debug(this, `Worker online`);

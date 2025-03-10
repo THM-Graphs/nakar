@@ -39,6 +39,7 @@ export class WSClient {
         }
       })
       .on('disconnecting', (reason: DisconnectReason): void => {
+        socket.removeAllListeners();
         this._onDisconnect.next(reason);
       });
   }
