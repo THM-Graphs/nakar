@@ -240,7 +240,6 @@ export class SocketIOInterface implements ApplicationService {
       }
 
       await wsClient.join(roomId);
-      this._logger.debug(this, `Socket ${wsClient.id} entered room ${roomId}`);
     })().catch((error: unknown): void => {
       this._logger.error(this, error);
     });

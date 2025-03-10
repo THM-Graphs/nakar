@@ -70,6 +70,10 @@ export class WSClient {
 
   public async join(roomId: string): Promise<void> {
     if (this.room === roomId) {
+      this._logger.warn(
+        this,
+        `Client ${this.id} wants to join a room, that they are already in: ${roomId}`,
+      );
       return;
     }
     if (this.room != null) {
@@ -81,6 +85,7 @@ export class WSClient {
     }
 
     await this._socket.join(roomId);
+    this._logger.debug(this, `Socket ${this.id} entered room ${roomId}`);
     this._room.next(roomId);
   }
 
