@@ -22,7 +22,6 @@ import { WTEvent } from '../room-instance/worker-events/WTEvent';
 import { match } from 'ts-pattern';
 import { WTEventPhysicsUpdate } from '../room-instance/worker-events/WTEventPhysicsUpdate';
 import z from 'zod';
-import os from 'node:os';
 
 export class RoomService implements ApplicationService {
   private readonly _workers: SMap<string, Worker>;
@@ -216,15 +215,7 @@ export class RoomService implements ApplicationService {
           graph: plainGraph,
         };
         const worker: Worker = new Worker(
-          path.join(
-            process.cwd(),
-            'dist',
-            'src',
-            'lib',
-            'services',
-            'room',
-            'RoomWorker.js',
-          ),
+          path.join(__dirname, 'RoomWorker.js'),
           {
             workerData: workerData,
           },
