@@ -215,7 +215,7 @@ export class RoomService implements ApplicationService {
           graph: plainGraph,
         };
         const worker: Worker = new Worker(
-          path.join(__dirname, 'RoomWorker.js'),
+          path.join(__dirname, '..', 'room-instance', 'RoomWorker.js'),
           {
             workerData: workerData,
           },
