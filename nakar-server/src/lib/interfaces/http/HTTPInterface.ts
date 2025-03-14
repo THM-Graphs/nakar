@@ -55,7 +55,7 @@ export class HTTPInterface implements ApplicationService {
       this._logger.debug(this, 'Server will close.');
     });
     this._server.on('error', (error: Error): void => {
-      this._logger.debug(this, `Server error: ${error.message}`);
+      this._logger.error(this, `Server error: ${error.message}`);
     });
     this._server.on('listening', (): void => {
       this._logger.log(
@@ -67,11 +67,17 @@ export class HTTPInterface implements ApplicationService {
       this._logger.debug(this, `Server upgrade: ${message.url ?? '-'}`);
     });
 
-    await new Promise<void>((resolve: () => void): void => {
-      this._server.listen(this._port, (): void => {
-        resolve();
-      });
-    });
+    await new Promise<void>(
+      (resolve: () => void, reject: (error: Error) => void): void => {
+        this._server.once('error', (error: Error): void => {
+          reject(error);
+        });
+        this._server.once('listening', (): void => {
+          resolve();
+        });
+        this._server.listen(this._port);
+      },
+    );
   }
 
   public async destroy(): Promise<void> {
