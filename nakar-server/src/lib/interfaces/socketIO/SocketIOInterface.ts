@@ -97,7 +97,7 @@ export class SocketIOInterface implements ApplicationService {
               : MutableGraph.empty();
             wsClient.send({
               type: 'WSEventScenarioLoaded',
-              graph: graph.toDto(),
+              graph: graph.toDto(this._logger),
             });
           }
         }),
@@ -381,7 +381,7 @@ export class SocketIOInterface implements ApplicationService {
 
   private _handleRoomUpdate(message: RSEventRoomUpdated): void {
     this.sendToRoom(message.roomId, {
-      graph: message.graph.toDto(),
+      graph: message.graph.toDto(this._logger),
       type: 'WSEventScenarioLoaded',
     });
   }

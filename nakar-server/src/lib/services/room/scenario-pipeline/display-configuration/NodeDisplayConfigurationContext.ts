@@ -2,27 +2,35 @@ import { MutableNode } from '../../graph/MutableNode';
 import { TemplateDelegate } from 'handlebars';
 import { SMap } from '../../../../tools/Map';
 import { SSet } from '../../../../tools/Set';
+import { LoggerService } from '../../../logger/LoggerService';
+import z from 'zod';
 
 export class NodeDisplayConfigurationContext {
-  private readonly _nativeData: {
-    id: string;
-    label: Record<string, true>;
-    nameInQuery: Record<string, true>;
-    properties: Record<string, unknown>;
-    inDegree: number;
-    outDegree: number;
-    degree: number;
-  };
+  // eslint-disable-next-line @typescript-eslint/typedef
+  public schema = z.object({
+    id: z.string(),
+    label: z.record(z.literal(true)),
+    nameInQuery: z.record(z.literal(true)),
+    properties: z.record(z.unknown()),
+    inDegree: z.number(),
+    outDegree: z.number(),
+    degree: z.number(),
+  });
 
-  public constructor(data: {
-    id: string;
-    label: SMap<string, true>;
-    nameInQuery: SMap<string, true>;
-    properties: SMap<string, unknown>;
-    inDegree: number;
-    outDegree: number;
-    degree: number;
-  }) {
+  private readonly _nativeData: z.infer<typeof this.schema>;
+
+  public constructor(
+    data: {
+      id: string;
+      label: SMap<string, true>;
+      nameInQuery: SMap<string, true>;
+      properties: SMap<string, unknown>;
+      inDegree: number;
+      outDegree: number;
+      degree: number;
+    },
+    private readonly _logger: LoggerService,
+  ) {
     this._nativeData = {
       id: data.id,
       label: data.label.toRecord(),
@@ -37,18 +45,22 @@ export class NodeDisplayConfigurationContext {
   public static create(
     nodeId: string,
     node: MutableNode,
+    logger: LoggerService,
   ): NodeDisplayConfigurationContext {
-    return new NodeDisplayConfigurationContext({
-      id: nodeId,
-      label: NodeDisplayConfigurationContext._toTrueishMap(node.labels),
-      nameInQuery: NodeDisplayConfigurationContext._toTrueishMap(
-        node.namesInQuery,
-      ),
-      properties: node.properties.properties,
-      degree: node.degree,
-      inDegree: node.inDegree,
-      outDegree: node.outDegree,
-    });
+    return new NodeDisplayConfigurationContext(
+      {
+        id: nodeId,
+        label: NodeDisplayConfigurationContext._toTrueishMap(node.labels),
+        nameInQuery: NodeDisplayConfigurationContext._toTrueishMap(
+          node.namesInQuery,
+        ),
+        properties: node.properties.properties,
+        degree: node.degree,
+        inDegree: node.inDegree,
+        outDegree: node.outDegree,
+      },
+      logger,
+    );
   }
 
   private static _toTrueishMap(input: SSet<string>): SMap<string, true> {
@@ -60,6 +72,19 @@ export class NodeDisplayConfigurationContext {
   }
 
   public applyToTemplate(template: TemplateDelegate): string {
-    return template(this._nativeData);
+    try {
+      return template(this._nativeData);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        this._logger.error(this, `${error.name}: ${error.message}`);
+      } else {
+        this._logger.error(this, `Unknown template error`);
+      }
+      return '';
+    }
+  }
+
+  public toDto(): z.infer<typeof this.schema> {
+    return this._nativeData;
   }
 }

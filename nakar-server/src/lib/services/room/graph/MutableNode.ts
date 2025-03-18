@@ -5,6 +5,7 @@ import { SchemaNode } from '../../../../../src-gen/schema';
 import { NodeDisplayConfigurationContext } from '../scenario-pipeline/display-configuration/NodeDisplayConfigurationContext';
 import { z } from 'zod';
 import { SSet } from '../../../tools/Set';
+import { LoggerService } from '../../logger/LoggerService';
 
 export class MutableNode {
   public static readonly defaultRadius: number = 40;
@@ -125,7 +126,7 @@ export class MutableNode {
     });
   }
 
-  public toDto(id: string): SchemaNode {
+  public toDto(id: string, logger: LoggerService): SchemaNode {
     return {
       id: id,
       title: this.title,
@@ -140,7 +141,8 @@ export class MutableNode {
       displayConfigurationContext: NodeDisplayConfigurationContext.create(
         id,
         this,
-      ),
+        logger,
+      ).toDto(),
       customBackgroundColor: this.customBackgroundColor,
       customTitleColor: this.customTitleColor,
     };

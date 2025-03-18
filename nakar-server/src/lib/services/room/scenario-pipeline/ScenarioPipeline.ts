@@ -89,7 +89,7 @@ export class ScenarioPipeline {
     await this._runStep(new ApplyNodeDegrees(graph), onProgress);
     await this._runStep(new ApplyEdgeParallelCounts(graph), onProgress);
     await this._runStep(
-      new ApplyNodeDisplayText(graph, displayConfiguration),
+      new ApplyNodeDisplayText(graph, displayConfiguration, this._logger),
       onProgress,
     );
     await this._runStep(
@@ -97,7 +97,7 @@ export class ScenarioPipeline {
       onProgress,
     );
     await this._runStep(
-      new ApplyNodeBackgroundColor(graph, displayConfiguration),
+      new ApplyNodeBackgroundColor(graph, displayConfiguration, this._logger),
       onProgress,
     );
     await this._runStep(

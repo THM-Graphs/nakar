@@ -3,6 +3,7 @@ import { NodeDisplayConfigurationContext } from '../display-configuration/NodeDi
 import { MutableGraph } from '../../graph/MutableGraph';
 import { FinalNodeDisplayConfiguration } from '../display-configuration/FinalNodeDisplayConfiguration';
 import { ScenarioPipelineStep } from '../ScenarioPipelineStep';
+import { LoggerService } from '../../../logger/LoggerService';
 
 export class ApplyNodeDisplayText extends ScenarioPipelineStep<void> {
   private _graph: MutableGraph;
@@ -11,6 +12,7 @@ export class ApplyNodeDisplayText extends ScenarioPipelineStep<void> {
   public constructor(
     graph: MutableGraph,
     config: FinalGraphDisplayConfiguration,
+    private readonly _logger: LoggerService,
   ) {
     super('Apply Node Display Text');
     this._graph = graph;
@@ -35,6 +37,7 @@ export class ApplyNodeDisplayText extends ScenarioPipelineStep<void> {
         const newValue: string = NodeDisplayConfigurationContext.create(
           nodeId,
           node,
+          this._logger,
         ).applyToTemplate(nodeConfig.displayTextTemplate);
         if (newValue.trim().length === 0) {
           continue;

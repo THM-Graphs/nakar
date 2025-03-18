@@ -37,6 +37,7 @@ export class ApplyNodeRadius extends ScenarioPipelineStep<void> {
         const newValue: string = NodeDisplayConfigurationContext.create(
           nodeId,
           node,
+          this._logger,
         ).applyToTemplate(nodeConfig.radiusTemplate);
         if (newValue.trim().length === 0) {
           continue;

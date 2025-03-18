@@ -13,6 +13,7 @@ import { DBScenario } from '../../database/collection-types/DBScenario';
 import { Neo4jRelationship } from '../../../tools/neo4j/Neo4jRelationship';
 import { Neo4jNode } from '../../../tools/neo4j/Neo4jNode';
 import { v4 as uuidv4 } from 'uuid';
+import { LoggerService } from '../../logger/LoggerService';
 
 export class MutableGraph {
   // eslint-disable-next-line @typescript-eslint/typedef
@@ -111,11 +112,14 @@ export class MutableGraph {
     }
   }
 
-  public toDto(): SchemaGraph {
+  public toDto(logger: LoggerService): SchemaGraph {
     return {
       nodes: this.nodes
         .toArray()
-        .map(([id, node]: [string, MutableNode]): SchemaNode => node.toDto(id)),
+        .map(
+          ([id, node]: [string, MutableNode]): SchemaNode =>
+            node.toDto(id, logger),
+        ),
       edges: this.edges
         .toArray()
         .map(([id, edge]: [string, MutableEdge]): SchemaEdge => edge.toDto(id)),

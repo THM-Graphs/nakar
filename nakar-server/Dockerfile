@@ -16,7 +16,7 @@ COPY nakar-server/tsconfig.configs.json ./
 COPY nakar-server/tsconfig.json ./
 COPY nakar-server/openapi.yaml ./
 
-RUN npm run build:gen && npm run build
+RUN npm run build
 
 FROM node:22
 WORKDIR /app
