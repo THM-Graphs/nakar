@@ -52,6 +52,7 @@ export class MutableNode {
     namesInQuery: SSet<string>;
     customBackgroundColor: string | null;
     customTitleColor: string | null;
+    customTitle: string | null;
     locked: boolean;
     grabs: SSet<string>;
   }) {
@@ -64,7 +65,7 @@ export class MutableNode {
     this.namesInQuery = data.namesInQuery;
     this.customBackgroundColor = data.customBackgroundColor;
     this.customTitleColor = data.customTitleColor;
-    this.customTitle = null;
+    this.customTitle = data.customTitle;
     this.locked = data.locked;
     this.grabs = data.grabs;
 
@@ -105,6 +106,7 @@ export class MutableNode {
       namesInQuery: node.keys,
       customBackgroundColor: null,
       customTitleColor: null,
+      customTitle: null,
       locked: false,
       grabs: new SSet(),
     });
@@ -121,6 +123,7 @@ export class MutableNode {
       namesInQuery: new SSet(data.namesInQuery),
       customBackgroundColor: data.customBackgroundColor,
       customTitleColor: data.customTitleColor,
+      customTitle: data.customTitle,
       locked: data.locked,
       grabs: new SSet(data.grabs),
     });
