@@ -10,7 +10,9 @@ import Combine
 
 @main
 struct nakar_client_visionApp: App {
+    let nakarApplication: NakarApplication = NakarApplication()
     @State var env = NakarController()
+    @State var initialized: Bool = false
 
     var body: some Scene {
         WindowGroup {
@@ -22,11 +24,19 @@ struct nakar_client_visionApp: App {
                 }
             #endif
             #if os(visionOS)
-            VisionProControlWindow()
-                .environment(env)
-                .onAppear {
-                    env.initialize()
-                }
+            if initialized {
+                SelectRoomScreen()
+                    .environment(nakarApplication)
+                    .onDisappear {
+                        nakarApplication.destory()
+                    }
+            } else {
+                ProgressView()
+                    .task {
+                        await nakarApplication.bootstrap()
+                        initialized = true
+                    }
+            }
             #endif
         }
 
