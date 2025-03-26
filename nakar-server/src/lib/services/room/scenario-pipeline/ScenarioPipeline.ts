@@ -27,7 +27,7 @@ import { LoggerService } from '../../logger/LoggerService';
 import { RemoveDanglingRelationships } from './pipeline-steps/RemoveDanglingRelationships';
 
 export class ScenarioPipeline {
-  private readonly _stepCount: number = 14;
+  private readonly _stepCount: number = 15;
   private _stepCounter: number;
 
   public constructor(
@@ -117,6 +117,12 @@ export class ScenarioPipeline {
     step: ScenarioPipelineStep<T>,
     onProgress: (title: string, progress: number) => void,
   ): Promise<T> {
+    if (this._stepCounter >= this._stepCount) {
+      this._logger.warn(
+        this,
+        `Step Counter >= Step Count. Step Counter: ${this._stepCounter.toString()}. Step Count: ${this._stepCount.toString()}`,
+      );
+    }
     onProgress(step.title, this._stepCounter / this._stepCount);
     await wait(0);
     this._stepCounter += 1;
