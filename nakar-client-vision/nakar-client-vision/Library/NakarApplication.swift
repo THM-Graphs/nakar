@@ -7,12 +7,16 @@
 
 import SwiftUI
 
-@Observable class NakarApplication: Service {
+@MainActor
+@Observable
+class NakarApplication: Service {
     let loggerService: LoggerService
     let environmentService: EnvironmentService
     let httpService: HTTPService
     let wsService: WSService
-    let viewService: ViewService
+    var viewService: ViewService
+    let rendererService: RendererService
+    let messageService: NotificationService
 
     init() {
         self.loggerService = LoggerService()
@@ -20,6 +24,8 @@ import SwiftUI
         self.httpService = HTTPService(loggerService: loggerService, environmentService: environmentService)
         self.wsService = WSService(loggerService: loggerService, environmentService: environmentService)
         self.viewService = ViewService(httpService: httpService, wsService: wsService, loggerService: loggerService)
+        self.rendererService = RendererService(loggerService: loggerService)
+        self.messageService = NotificationService(wsService: wsService, logger: loggerService)
     }
 
     func bootstrap() async {
@@ -33,12 +39,12 @@ import SwiftUI
         self.loggerService.log(sender: self, message: "Did bootstrap all services")
     }
 
-    func destory() {
+    func destory() async {
         self.loggerService.log(sender: self, message: "Will destroy services...")
 
         for service in self.getAllServices().reversed() {
             self.loggerService.log(sender: self, message: "Will destroy \(String(describing: type(of: service)))")
-            service.destory()
+            await service.destory()
         }
 
         self.loggerService.log(sender: self, message: "Did destroy all services")
@@ -50,7 +56,9 @@ import SwiftUI
             self.environmentService,
             self.httpService,
             self.wsService,
-            self.viewService
+            self.viewService,
+            self.rendererService,
+            self.messageService
         ]
     }
 }

@@ -74,7 +74,7 @@ class WSService: Service, ObservableObject {
                     onWSEventScenarioProgress.send(event)
                 }
             } catch let error {
-                print(error)
+                self.loggerService.error(sender: self, message: error.localizedDescription)
             }
         }
 

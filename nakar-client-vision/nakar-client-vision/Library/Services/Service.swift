@@ -7,5 +7,5 @@
 
 protocol Service {
     func bootstrap() async
-    func destory()
+    func destory() async
 }

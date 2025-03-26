@@ -10,8 +10,7 @@ import Combine
 
 @main
 struct nakar_client_visionApp: App {
-    let nakarApplication: NakarApplication = NakarApplication()
-    @State var env = NakarController()
+    @State var nakarApplication: NakarApplication = NakarApplication()
     @State var initialized: Bool = false
 
     var body: some Scene {
@@ -28,7 +27,9 @@ struct nakar_client_visionApp: App {
                 SelectRoomScreen()
                     .environment(nakarApplication)
                     .onDisappear {
-                        nakarApplication.destory()
+                        Task {
+                            await nakarApplication.destory()
+                        }
                     }
             } else {
                 ProgressView()
@@ -41,10 +42,10 @@ struct nakar_client_visionApp: App {
         }
 
         #if os(visionOS)
-        ImmersiveSpace(id: "renderer", for: String.self) { roomId in
-            VisionProImmersiveSpace(roomId: roomId)
-                .environment(env)
-        }.immersionStyle(selection: $env.immersionStyle, in: .mixed)
+        ImmersiveSpace(id: "renderer", for: ViewModel.Room.self) { room in
+            NakarImmersiveSpace(room: room)
+                .environment(nakarApplication)
+        }.immersionStyle(selection: $nakarApplication.viewService.immersionStyle, in: MixedImmersionStyle.mixed)
         #endif
     }
 }
