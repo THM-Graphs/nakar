@@ -15,6 +15,7 @@ class NakarApplication: Service {
     let httpService: HTTPService
     let wsService: WSService
     var viewService: ViewService
+    let colorService: ColorService
     let rendererService: RendererService
     let messageService: NotificationService
 
@@ -24,7 +25,8 @@ class NakarApplication: Service {
         self.httpService = HTTPService(loggerService: loggerService, environmentService: environmentService)
         self.wsService = WSService(loggerService: loggerService, environmentService: environmentService)
         self.viewService = ViewService(httpService: httpService, wsService: wsService, loggerService: loggerService)
-        self.rendererService = RendererService(loggerService: loggerService)
+        self.colorService = ColorService(logger: loggerService)
+        self.rendererService = RendererService(loggerService: loggerService, colorService: colorService)
         self.messageService = NotificationService(wsService: wsService, logger: loggerService)
     }
 
@@ -57,6 +59,7 @@ class NakarApplication: Service {
             self.httpService,
             self.wsService,
             self.viewService,
+            self.colorService,
             self.rendererService,
             self.messageService
         ]

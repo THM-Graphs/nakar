@@ -47,7 +47,7 @@ struct ScenarioDetailView: View {
             }
         }
         .safeAreaPadding(.leading, 20)
-        .safeAreaPadding(.trailing, 20)
+        .safeAreaPadding(.trailing, 10)
         .safeAreaPadding(.bottom, 100)
         .toolbar {
             Button {

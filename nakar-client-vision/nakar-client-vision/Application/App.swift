@@ -47,5 +47,10 @@ struct nakar_client_visionApp: App {
                 .environment(nakarApplication)
         }.immersionStyle(selection: $nakarApplication.viewService.immersionStyle, in: MixedImmersionStyle.mixed)
         #endif
+
+        WindowGroup(id: "tabledata") {
+            TableDataScreen()
+                .environment(nakarApplication)
+        }
     }
 }

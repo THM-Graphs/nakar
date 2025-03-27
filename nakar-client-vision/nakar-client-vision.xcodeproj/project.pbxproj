@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		7E0731052D942B9000F41F19 /* Fakery in Frameworks */ = {isa = PBXBuildFile; productRef = 7E0731042D942B9000F41F19 /* Fakery */; };
 		7E0731212D943F3F00F41F19 /* Demo Data.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7E0731202D943F3F00F41F19 /* Demo Data.xcassets */; };
+		7E0733422D94B33600F41F19 /* Flow in Frameworks */ = {isa = PBXBuildFile; productRef = 7E0733412D94B33600F41F19 /* Flow */; };
 		7E22211A2D5F66DD00205E62 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7E2220E52D5F66DD00205E62 /* Assets.xcassets */; };
 		7E22211D2D5F66DD00205E62 /* openapi-generator-config.yaml in Resources */ = {isa = PBXBuildFile; fileRef = 7E2220FE2D5F66DD00205E62 /* openapi-generator-config.yaml */; };
 		7E2221442D5F67B800205E62 /* openapi.yaml in Resources */ = {isa = PBXBuildFile; fileRef = 7E2221432D5F67B800205E62 /* openapi.yaml */; };
@@ -40,6 +41,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				7E0731052D942B9000F41F19 /* Fakery in Frameworks */,
+				7E0733422D94B33600F41F19 /* Flow in Frameworks */,
 				7E34E8B22D5E6E2700BBA3E8 /* OpenAPIURLSession in Frameworks */,
 				7E34E8AF2D5E6E1600BBA3E8 /* OpenAPIRuntime in Frameworks */,
 				7E34E8B82D5E6E9C00BBA3E8 /* SocketIO in Frameworks */,
@@ -103,6 +105,7 @@
 				7E34E8B12D5E6E2700BBA3E8 /* OpenAPIURLSession */,
 				7E34E8B72D5E6E9C00BBA3E8 /* SocketIO */,
 				7E0731042D942B9000F41F19 /* Fakery */,
+				7E0733412D94B33600F41F19 /* Flow */,
 			);
 			productName = "nakar-client-vision";
 			productReference = 7E78705B2D54C98D00738B34 /* NAKAR.app */;
@@ -138,6 +141,7 @@
 				7E34E8AD2D5E6E1600BBA3E8 /* XCRemoteSwiftPackageReference "swift-openapi-runtime" */,
 				7E34E8B02D5E6E2700BBA3E8 /* XCRemoteSwiftPackageReference "swift-openapi-urlsession" */,
 				7E0731032D942B9000F41F19 /* XCRemoteSwiftPackageReference "Fakery" */,
+				7E0733402D94B33600F41F19 /* XCRemoteSwiftPackageReference "SwiftUI-Flow" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 7E78705C2D54C98D00738B34 /* Products */;
@@ -390,6 +394,14 @@
 				minimumVersion = 5.1.0;
 			};
 		};
+		7E0733402D94B33600F41F19 /* XCRemoteSwiftPackageReference "SwiftUI-Flow" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/tevelee/SwiftUI-Flow";
+			requirement = {
+				kind = upToNextMinorVersion;
+				minimumVersion = 3.0.2;
+			};
+		};
 		7E34E8A92D5E6DD000BBA3E8 /* XCRemoteSwiftPackageReference "socket" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/socketio/socket.io-client-swift";
@@ -429,6 +441,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 7E0731032D942B9000F41F19 /* XCRemoteSwiftPackageReference "Fakery" */;
 			productName = Fakery;
+		};
+		7E0733412D94B33600F41F19 /* Flow */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 7E0733402D94B33600F41F19 /* XCRemoteSwiftPackageReference "SwiftUI-Flow" */;
+			productName = Flow;
 		};
 		7E34E8AE2D5E6E1600BBA3E8 /* OpenAPIRuntime */ = {
 			isa = XCSwiftPackageProductDependency;

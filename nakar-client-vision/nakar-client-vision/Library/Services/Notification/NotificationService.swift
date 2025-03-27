@@ -22,15 +22,15 @@ class NotificationService: NSObject, Service, UNUserNotificationCenterDelegate {
 
     func bootstrap() async {
         wsService.onWSEventNotification.sink { event in
-            let content = UNMutableNotificationContent()
-            content.title = event.title
-            content.body = event.message
-            content.sound = .default
-
-            let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 0.1, repeats: false)
-            let request = UNNotificationRequest(identifier: "WSEventNotification", content: content, trigger: trigger)
-
-            UNUserNotificationCenter.current().add(request)
+//            let content = UNMutableNotificationContent()
+//            content.title = event.title
+//            content.body = event.message
+//            content.sound = .default
+//
+//            let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 0.1, repeats: false)
+//            let request = UNNotificationRequest(identifier: "WSEventNotification", content: content, trigger: trigger)
+//
+//            UNUserNotificationCenter.current().add(request)
         }.store(in: &cancellables)
 
         Task {

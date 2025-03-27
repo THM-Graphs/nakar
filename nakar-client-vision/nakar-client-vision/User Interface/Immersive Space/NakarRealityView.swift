@@ -13,7 +13,6 @@ struct NakarRealityView: View {
     @Environment(NakarApplication.self) var nakarApplication: NakarApplication
 
     @State private var cancellables: Set<AnyCancellable> = []
-    @State private var metaData: Components.Schemas.GraphMetaData? = nil
     @State private var content: RealityViewContent? = nil
 
     let edgeEnties = NSMapTable<NSString, Entity>(keyOptions: .strongMemory, valueOptions: .weakMemory)
@@ -110,20 +109,19 @@ struct NakarRealityView: View {
 
     func onWSEventScenarioLoaded(event: Components.Schemas.WSEventScenarioLoaded) {
         nakarApplication.loggerService.debug(sender: self, message: "Did receive \(event.graph.nodes.count) nodes and \(event.graph.edges.count) edges.")
-        guard let content = self.content else {
-            return
-        }
         Task {
-            let startDate = Date()
             do {
-                for entity in edgeEnties.objectEnumerator()! {
-                    (entity as! Entity).removeFromParent()
-                }
-                for entity in nodeEnties.objectEnumerator()! {
-                    (entity as! Entity).removeFromParent()
+                let startDate = Date()
+
+                guard let content = self.content else {
+                    return
                 }
 
-                self.metaData = event.graph.metaData
+                let rootEntity = Entity()
+
+                content.entities.first?.removeFromParent()
+
+                await Task.yield()
 
                 for node in event.graph.nodes {
                     let nodeEntity = try nakarApplication.rendererService.createNodeEntity(
@@ -132,7 +130,7 @@ struct NakarRealityView: View {
                         metaData: event.graph.metaData
                     )
                     nodeEnties.setObject(nodeEntity, forKey: node.id as NSString)
-                    content.add(nodeEntity)
+                    rootEntity.addChild(nodeEntity)
                 }
 
                 for edge in event.graph.edges {
@@ -153,8 +151,11 @@ struct NakarRealityView: View {
                         globalScale: globalScale
                     )
                     edgeEnties.setObject(egdeEntity, forKey: edge.id as NSString)
-                    content.add(egdeEntity)
+                    rootEntity.addChild(egdeEntity)
                 }
+
+                content.add(rootEntity)
+
                 let endDate = Date()
                 let ms = endDate.timeIntervalSince(startDate) * 1000
                 nakarApplication.loggerService.debug(sender: self, message: "Creating graph took \(ms) ms. Thats \(1000 / ms) fps.")

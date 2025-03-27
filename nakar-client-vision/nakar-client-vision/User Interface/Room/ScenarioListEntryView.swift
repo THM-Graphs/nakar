@@ -16,11 +16,13 @@ struct ScenarioListEntryView: View {
                 .glassBackgroundEffect()
             VStack(alignment: .leading) {
                 Text(scenario.title)
-                    .lineLimit(1)
-                Text(scenario.description ?? "-")
-                    .lineLimit(1)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .lineLimit(scenario.description == nil ? 2 : 1)
+                if let description = scenario.description {
+                    Text(description)
+                        .lineLimit(1)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
             }
         }
     }

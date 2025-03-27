@@ -18,6 +18,7 @@ class ViewService: Service {
     var currentRoom: ViewModel.Room?
     var immersionStyle: ImmersionStyle
     var scenarioProgress: ScenarioProgress?
+    var graph: Components.Schemas.Graph? = nil
 
     private var cancellables: Set<AnyCancellable>
 
@@ -52,6 +53,11 @@ class ViewService: Service {
             } else {
                 scenarioProgress = nil
             }
+        }.store(in: &cancellables)
+
+        wsService.onWSEventScenarioLoaded.sink { [weak self] event in
+            guard let self else { return }
+            graph = event.graph
         }.store(in: &cancellables)
     }
 

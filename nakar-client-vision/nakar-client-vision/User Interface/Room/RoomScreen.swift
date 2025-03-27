@@ -20,7 +20,8 @@ struct RoomScreen: View {
                 onRunScenario: { scenario in
                     nakarApplication.viewService.runScenario(scenario: scenario)
                 },
-                scenarioProgress: nakarApplication.viewService.scenarioProgress
+                scenarioProgress: nakarApplication.viewService.scenarioProgress,
+                graph: nakarApplication.viewService.graph
             )
         } else {
             Text("Empty room")

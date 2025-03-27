@@ -13,16 +13,17 @@ struct RoomView: View {
     @Binding var selectedScenario: ViewModel.Scenario?
     let onRunScenario: (ViewModel.Scenario) -> Void
     let scenarioProgress: ScenarioProgress?
+    let graph: Components.Schemas.Graph?
 
     var body: some View {
-        NavigationSplitView(sidebar: {
+        NavigationSplitView {
             List(selection: $selectedScenario) {
                 ForEach(databases) { (database: ViewModel.Database) in
                     DatabaseListEntryView(database: database)
                 }
             }
             .navigationTitle(room.title)
-        }, detail: {
+        } content: {
             if let scenario = selectedScenario {
                 ScenarioDetailView(
                     scenario: scenario,
@@ -31,8 +32,21 @@ struct RoomView: View {
                 )
             } else {
                 Text("Select a scenario.")
+                    .foregroundStyle(.secondary)
+                    .italic()
+                    .navigationTitle("Scenario")
             }
-        })
+        } detail: {
+            VStack {
+                if let graph {
+                    GraphMetaDataView(graph: graph)
+                } else {
+                    Text("Run a scenario.")
+                        .foregroundStyle(.secondary)
+                        .italic()
+                }
+            }.navigationTitle("Current Graph")
+        }
     }
 }
 
@@ -45,6 +59,7 @@ struct RoomView: View {
         room: demoFactory.room(),
         selectedScenario: $selectedScenario,
         onRunScenario: {_ in},
-        scenarioProgress: ScenarioProgress(progress: 0.5, description: "Loading...")
+        scenarioProgress: ScenarioProgress(progress: 0.5, description: "Loading..."),
+        graph: nil
     )
 }
