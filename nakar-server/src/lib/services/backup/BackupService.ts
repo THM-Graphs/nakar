@@ -4,30 +4,30 @@ import path from 'node:path';
 import os from 'node:os';
 import fs from 'node:fs/promises';
 import fsSync from 'node:fs';
-import { DateFormatter } from '../../tools/date/DateFormatter';
 import { create } from 'tar';
 import { FileStream } from '../../tools/fs/FileStream';
 import { DatabaseService } from '../database/DatabaseService';
-import { DBDatabase } from '../database/collection-types/DBDatabase';
+import { GetDatabaseDBDTO } from '../database/dto/GetDatabaseDBDTO';
 import sanitize from 'sanitize-filename';
-import { DBScenarioGroup } from '../database/collection-types/DBScenarioGroup';
-import { DBScenario } from '../database/collection-types/DBScenario';
+import { GetScenarioGroupDBDTO } from '../database/dto/GetScenarioGroupDBDTO';
+import { GetScenarioDBDTO } from '../database/dto/GetScenarioDBDTO';
+import { ToolsService } from '../tools/ToolsService';
 
 export class BackupService implements ApplicationService {
   public constructor(
     private readonly _logger: LoggerService,
     private readonly _database: DatabaseService,
+    private readonly _tools: ToolsService,
   ) {}
 
   public async createBackupFile(): Promise<FileStream> {
-    const dateFormatter: DateFormatter = new DateFormatter(new Date());
-    const folderName: string = `nakar_backup_${dateFormatter.fileNameDate()}`;
+    const folderName: string = `nakar_backup_${this._tools.createFileNameDate(new Date())}`;
     const basePath: string = path.join(this._temporaryDirectory(), folderName);
     this._logger.debug(this, `Base Path: ${basePath}`);
 
     await fs.mkdir(basePath, { recursive: true });
 
-    const databases: DBDatabase[] = await this._database.getDatabases();
+    const databases: GetDatabaseDBDTO[] = await this._database.getDatabases();
     for (const database of databases) {
       const databaseFileName: string = `database_${this._safeFileName(database.title ?? '')}_${this._safeFileName(database.documentId)}`;
       const databasePath: string = path.join(basePath, databaseFileName);
@@ -37,7 +37,7 @@ export class BackupService implements ApplicationService {
         JSON.stringify(database, null, 2),
       );
 
-      const scenarioGroups: DBScenarioGroup[] =
+      const scenarioGroups: GetScenarioGroupDBDTO[] =
         await this._database.getScenarioGroups(database.documentId);
       for (const scenarioGroup of scenarioGroups) {
         const scenarioGroupFileName: string = `scenarioGroup_${this._safeFileName(scenarioGroup.title ?? '')}_${this._safeFileName(scenarioGroup.documentId)}`;
@@ -51,7 +51,7 @@ export class BackupService implements ApplicationService {
           JSON.stringify(scenarioGroup, null, 2),
         );
 
-        const scenarios: DBScenario[] = await this._database.getScenarios(
+        const scenarios: GetScenarioDBDTO[] = await this._database.getScenarios(
           scenarioGroup.documentId,
         );
         for (const scenario of scenarios) {

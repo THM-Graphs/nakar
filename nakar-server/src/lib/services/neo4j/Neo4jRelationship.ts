@@ -1,5 +1,5 @@
 import { Relationship } from 'neo4j-driver';
-import { SSet } from '../Set';
+import { SSet } from '../../tools/Set';
 
 export class Neo4jRelationship {
   public readonly relationship: Relationship;

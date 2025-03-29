@@ -1,9 +1,9 @@
 import { ScaleType } from '../../../../tools/ScaleType';
-import { DBGraphDisplayConfiguration } from '../../../database/components/graph/DBGraphDisplayConfiguration';
+import { GetGraphDisplayConfigurationDBDTO } from '../../../database/dto/GetGraphDisplayConfigurationDBDTO';
 import { MergableNodeDisplayConfiguration } from './MergableNodeDisplayConfiguration';
 import { FinalGraphDisplayConfiguration } from './FinalGraphDisplayConfiguration';
 import { SMap } from '../../../../tools/Map';
-import { DBNodeDisplayConfiguration } from '../../../database/components/graph/DBNodeDisplayConfiguration';
+import { GetNodeDisplayConfigurationDBDTO } from '../../../database/dto/GetNodeDisplayConfigurationDBDTO';
 import { FinalNodeDisplayConfiguration } from './FinalNodeDisplayConfiguration';
 
 export class MergableGraphDisplayConfiguration {
@@ -38,14 +38,14 @@ export class MergableGraphDisplayConfiguration {
   }
 
   public static createFromDb(
-    dbConfig: DBGraphDisplayConfiguration | undefined | null,
+    dbConfig: GetGraphDisplayConfigurationDBDTO | undefined | null,
   ): MergableGraphDisplayConfiguration {
     const nodeDisplayConfigurations:
       | SMap<string, MergableNodeDisplayConfiguration>
       | undefined = dbConfig?.nodeDisplayConfigurations.reduce(
       (
         akku: SMap<string, MergableNodeDisplayConfiguration>,
-        next: DBNodeDisplayConfiguration,
+        next: GetNodeDisplayConfigurationDBDTO,
       ): SMap<string, MergableNodeDisplayConfiguration> => {
         const targetLabel: string = next.targetLabel ?? '';
         const existingEntry: MergableNodeDisplayConfiguration | undefined =

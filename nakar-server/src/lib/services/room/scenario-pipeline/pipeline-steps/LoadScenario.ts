@@ -1,12 +1,12 @@
 import { NotFound } from 'http-errors';
-import { DBScenario } from '../../../database/collection-types/DBScenario';
+import { GetScenarioDBDTO } from '../../../database/dto/GetScenarioDBDTO';
 import { DatabaseService } from '../../../database/DatabaseService';
 import { ScenarioPipelineStep } from '../ScenarioPipelineStep';
-import { DBDatabase } from '../../../database/collection-types/DBDatabase';
-import { DBScenarioGroup } from '../../../database/collection-types/DBScenarioGroup';
+import { GetDatabaseDBDTO } from '../../../database/dto/GetDatabaseDBDTO';
+import { GetScenarioGroupDBDTO } from '../../../database/dto/GetScenarioGroupDBDTO';
 
 export class LoadScenario extends ScenarioPipelineStep<
-  [DBScenario, string, DBDatabase, DBScenarioGroup]
+  [GetScenarioDBDTO, string, GetDatabaseDBDTO, GetScenarioGroupDBDTO]
 > {
   private _database: DatabaseService;
   private _scenarioId: string;
@@ -18,9 +18,9 @@ export class LoadScenario extends ScenarioPipelineStep<
   }
 
   public async run(): Promise<
-    [DBScenario, string, DBDatabase, DBScenarioGroup]
+    [GetScenarioDBDTO, string, GetDatabaseDBDTO, GetScenarioGroupDBDTO]
   > {
-    const scenario: DBScenario | null = await this._database.getScenario(
+    const scenario: GetScenarioDBDTO | null = await this._database.getScenario(
       this._scenarioId,
     );
     if (scenario == null) {

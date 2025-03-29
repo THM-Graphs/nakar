@@ -1,17 +1,22 @@
-import { DBDatabase } from './collection-types/DBDatabase';
-import { DBRoom } from './collection-types/DBRoom';
-import { DBScenario } from './collection-types/DBScenario';
-import { DBScenarioGroup } from './collection-types/DBScenarioGroup';
+import { GetDatabaseDBDTO } from './dto/GetDatabaseDBDTO';
+import { GetRoomDBDTO } from './dto/GetRoomDBDTO';
+import { GetScenarioDBDTO } from './dto/GetScenarioDBDTO';
+import { GetScenarioGroupDBDTO } from './dto/GetScenarioGroupDBDTO';
 import { MutableGraph } from '../room/graph/MutableGraph';
 import { Result } from '@strapi/types/dist/modules/documents';
 import { LoggerService } from '../logger/LoggerService';
 import { ApplicationService } from '../../application/ApplicationService';
-import { DBMedia } from './others/DBMedia';
+import { GetMediaDBDTO } from './others/GetMediaDBDTO';
 import { FileStream } from '../../tools/fs/FileStream';
 import z from 'zod';
+import { DatabaseDTOFactory } from './DatabaseDTOFactory';
 
 export class DatabaseService implements ApplicationService {
-  public constructor(private readonly _logger: LoggerService) {}
+  private readonly _databaseDtoFactory: DatabaseDTOFactory;
+
+  public constructor(private readonly _logger: LoggerService) {
+    this._databaseDtoFactory = new DatabaseDTOFactory();
+  }
 
   public bootstrap(): void | Promise<void> {
     /* */
@@ -21,7 +26,7 @@ export class DatabaseService implements ApplicationService {
     /* */
   }
 
-  public async getDatabases(): Promise<DBDatabase[]> {
+  public async getDatabases(): Promise<GetDatabaseDBDTO[]> {
     return (
       await strapi.documents('api::database.database').findMany({
         status: 'published',
@@ -35,12 +40,12 @@ export class DatabaseService implements ApplicationService {
         },
       })
     ).map(
-      (database: Result<'api::database.database'>): DBDatabase =>
-        DBDatabase.parse(database),
+      (database: Result<'api::database.database'>): GetDatabaseDBDTO =>
+        this._databaseDtoFactory.createGetDatabaseDTO(database),
     );
   }
 
-  public async getRoom(roomId: string): Promise<DBRoom | null> {
+  public async getRoom(roomId: string): Promise<GetRoomDBDTO | null> {
     const rawRoom: Result<'api::room.room'> | null = await strapi
       .documents('api::room.room')
       .findOne({
@@ -50,19 +55,24 @@ export class DatabaseService implements ApplicationService {
     if (rawRoom == null) {
       return null;
     }
-    return DBRoom.parse(rawRoom);
+    return this._databaseDtoFactory.createGetRoomDTO(rawRoom);
   }
 
-  public async getRooms(): Promise<DBRoom[]> {
+  public async getRooms(): Promise<GetRoomDBDTO[]> {
     return (
       await strapi.documents('api::room.room').findMany({
         status: 'published',
         sort: 'title:asc',
       })
-    ).map((room: Result<'api::room.room'>): DBRoom => DBRoom.parse(room));
+    ).map(
+      (room: Result<'api::room.room'>): GetRoomDBDTO =>
+        this._databaseDtoFactory.createGetRoomDTO(room),
+    );
   }
 
-  public async getScenario(scenarioId: string): Promise<DBScenario | null> {
+  public async getScenario(
+    scenarioId: string,
+  ): Promise<GetScenarioDBDTO | null> {
     const result: Result<
       'api::scenario.scenario',
       {
@@ -101,10 +111,12 @@ export class DatabaseService implements ApplicationService {
     if (result == null) {
       return null;
     }
-    return DBScenario.parse(result);
+    return this._databaseDtoFactory.createGetScenarioDTO(result);
   }
 
-  public async getScenarios(scenarioGroupId: string): Promise<DBScenario[]> {
+  public async getScenarios(
+    scenarioGroupId: string,
+  ): Promise<GetScenarioDBDTO[]> {
     return (
       await strapi.documents('api::scenario.scenario').findMany({
         status: 'published',
@@ -144,14 +156,14 @@ export class DatabaseService implements ApplicationService {
         },
       })
     ).map(
-      (scenario: Result<'api::scenario.scenario'>): DBScenario =>
-        DBScenario.parse(scenario),
+      (scenario: Result<'api::scenario.scenario'>): GetScenarioDBDTO =>
+        this._databaseDtoFactory.createGetScenarioDTO(scenario),
     );
   }
 
   public async getScenarioGroups(
     databaseId: string,
-  ): Promise<DBScenarioGroup[]> {
+  ): Promise<GetScenarioGroupDBDTO[]> {
     return (
       await strapi.documents('api::scenario-group.scenario-group').findMany({
         status: 'published',
@@ -183,26 +195,24 @@ export class DatabaseService implements ApplicationService {
     ).map(
       (
         scenarioGroup: Result<'api::scenario-group.scenario-group'>,
-      ): DBScenarioGroup => DBScenarioGroup.parse(scenarioGroup),
+      ): GetScenarioGroupDBDTO =>
+        this._databaseDtoFactory.createGetScenarioGroupDTO(scenarioGroup),
     );
   }
 
   public async setRoomGraph(
-    room: DBRoom,
+    roomId: string,
     graph: z.infer<typeof MutableGraph.schema>,
   ): Promise<void> {
     const graphJson: string = JSON.stringify(graph);
     await strapi.documents('api::room.room').update({
-      documentId: room.documentId,
+      documentId: roomId,
       data: {
         graphJson: graphJson,
       },
       status: 'published',
     });
-    this._logger.debug(
-      this,
-      `Did save graph of room ${room.documentId} in db.`,
-    );
+    this._logger.debug(this, `Did save graph of room ${roomId} in db.`);
   }
 
   public async roomExists(roomId: string): Promise<boolean> {
@@ -214,7 +224,7 @@ export class DatabaseService implements ApplicationService {
 
   public getFileStream(
     targetFileNameWithoutExtension: string,
-    media: DBMedia,
+    media: GetMediaDBDTO,
   ): FileStream | null {
     if (media.hash == null) {
       this._logger.warn(this, `Hash of media ${media.documentId} is null.`);

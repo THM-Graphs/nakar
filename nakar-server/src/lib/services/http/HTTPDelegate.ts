@@ -12,10 +12,10 @@ import {
   SchemaScenarioGroup,
   SchemaDatabase,
 } from '../../../../src-gen/schema';
-import { DBDatabase } from '../../services/database/collection-types/DBDatabase';
-import { DBScenario } from '../../services/database/collection-types/DBScenario';
-import { DBScenarioGroup } from '../../services/database/collection-types/DBScenarioGroup';
-import { DBRoom } from '../../services/database/collection-types/DBRoom';
+import { GetDatabaseDBDTO } from '../../services/database/dto/GetDatabaseDBDTO';
+import { GetScenarioDBDTO } from '../../services/database/dto/GetScenarioDBDTO';
+import { GetScenarioGroupDBDTO } from '../../services/database/dto/GetScenarioGroupDBDTO';
+import { GetRoomDBDTO } from '../../services/database/dto/GetRoomDBDTO';
 import { ConfigService } from '../../services/config/ConfigService';
 import z from 'zod';
 import { NotFound } from 'http-errors';
@@ -35,46 +35,47 @@ export class HTTPDelegate {
       req,
       'scenarioGroupId',
     );
-    const dbResult: DBScenario[] =
+    const dbResult: GetScenarioDBDTO[] =
       await this._database.getScenarios(scenarioGroupId);
     return {
       scenarios: dbResult.map(
-        (scenario: DBScenario): SchemaScenario => scenario.toDto(this._config),
+        (scenario: GetScenarioDBDTO): SchemaScenario =>
+          scenario.toDto(this._config),
       ),
     };
   }
 
   public async getScenarioGroup(req: Request): Promise<SchemaScenarioGroups> {
     const databaseId: string = this._getQueryParameter(req, 'databaseId');
-    const dbResult: DBScenarioGroup[] =
+    const dbResult: GetScenarioGroupDBDTO[] =
       await this._database.getScenarioGroups(databaseId);
     return {
       scenarioGroups: dbResult.map(
-        (scenarioGroup: DBScenarioGroup): SchemaScenarioGroup =>
+        (scenarioGroup: GetScenarioGroupDBDTO): SchemaScenarioGroup =>
           scenarioGroup.toDto(),
       ),
     };
   }
 
   public async getDatabase(): Promise<SchemaDatabases> {
-    const databases: DBDatabase[] = await this._database.getDatabases();
+    const databases: GetDatabaseDBDTO[] = await this._database.getDatabases();
     return {
       databases: databases.map(
-        (database: DBDatabase): SchemaDatabase => database.toDto(),
+        (database: GetDatabaseDBDTO): SchemaDatabase => database.toDto(),
       ),
     };
   }
 
   public async getRoom(): Promise<SchemaRooms> {
-    const dbResult: DBRoom[] = await this._database.getRooms();
+    const dbResult: GetRoomDBDTO[] = await this._database.getRooms();
     return {
-      rooms: dbResult.map((room: DBRoom): SchemaRoom => room.toDto()),
+      rooms: dbResult.map((room: GetRoomDBDTO): SchemaRoom => room.toDto()),
     };
   }
 
   public async getRoomById(req: Request): Promise<SchemaRoom> {
     const id: string = this._getPathParameter(req, 'id');
-    const dbResult: DBRoom | null = await this._database.getRoom(id);
+    const dbResult: GetRoomDBDTO | null = await this._database.getRoom(id);
     if (dbResult == null) {
       throw new NotFound('Room not found.');
     }

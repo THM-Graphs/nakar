@@ -1,15 +1,15 @@
 import { MutableGraph } from '../graph/MutableGraph';
 import { DatabaseService } from '../../database/DatabaseService';
-import { DBScenario } from '../../database/collection-types/DBScenario';
+import { GetScenarioDBDTO } from '../../database/dto/GetScenarioDBDTO';
 import { FinalGraphDisplayConfiguration } from './display-configuration/FinalGraphDisplayConfiguration';
-import { Neo4jDatabase } from '../../../tools/neo4j/Neo4jDatabase';
+import { Neo4jService } from '../../neo4j/Neo4jService';
 import { ScenarioPipelineStep } from './ScenarioPipelineStep';
 import { LoadScenario } from './pipeline-steps/LoadScenario';
-import { DBDatabase } from '../../database/collection-types/DBDatabase';
+import { GetDatabaseDBDTO } from '../../database/dto/GetDatabaseDBDTO';
 import { ExecuteInitialQuery } from './pipeline-steps/ExecuteInitialQuery';
 import { CollectGraphDisplayConfiguration } from './pipeline-steps/CollectDisplayConfiguration';
-import { DBScenarioGroup } from '../../database/collection-types/DBScenarioGroup';
-import { CreateDatabaseConnection } from './pipeline-steps/CreateDatabaseConnection';
+import { GetScenarioGroupDBDTO } from '../../database/dto/GetScenarioGroupDBDTO';
+import { ParseNeo4jLoginCredentials } from './pipeline-steps/ParseNeo4jLoginCredentials';
 import { ApplyEdgeParallelCounts } from './pipeline-steps/ApplyEdgeParallelCounts';
 import { ApplyLabels } from './pipeline-steps/ApplyLabels';
 import { ApplyNodeBackgroundColor } from './pipeline-steps/ApplyNodeBackgroundColor';
@@ -25,6 +25,7 @@ import { ProfilerTask } from '../../profiler/ProfilerTask';
 import { wait } from '../../../tools/Wait';
 import { LoggerService } from '../../logger/LoggerService';
 import { RemoveDanglingRelationships } from './pipeline-steps/RemoveDanglingRelationships';
+import { Neo4jLoginCredentials } from '../../neo4j/Neo4jLoginCredentials';
 
 export class ScenarioPipeline {
   private readonly _stepCount: number = 15;
@@ -34,6 +35,7 @@ export class ScenarioPipeline {
     private readonly _database: DatabaseService,
     private readonly _logger: LoggerService,
     private readonly _profiler: ProfilerService,
+    private readonly _neo4j: Neo4jService,
   ) {
     this._stepCounter = 0;
   }
@@ -41,25 +43,31 @@ export class ScenarioPipeline {
   public async run(
     scenarioId: string,
     onProgress: (title: string, progress: number) => void,
-  ): Promise<[MutableGraph, DBScenario]> {
+  ): Promise<[MutableGraph, GetScenarioDBDTO]> {
     this._stepCounter = 0;
     this._logger.debug(this, '----------- Scenario Pipeline Start -----------');
 
     const [scenario, query, database, scenarioGroup]: [
-      DBScenario,
+      GetScenarioDBDTO,
       string,
-      DBDatabase,
-      DBScenarioGroup,
+      GetDatabaseDBDTO,
+      GetScenarioGroupDBDTO,
     ] = await this._runStep(
       new LoadScenario(this._database, scenarioId),
       onProgress,
     );
-    const neo4jDatabase: Neo4jDatabase = await this._runStep(
-      new CreateDatabaseConnection(database, this._logger),
+    const credentials: Neo4jLoginCredentials = await this._runStep(
+      new ParseNeo4jLoginCredentials(database, this._logger),
       onProgress,
     );
     const graph: MutableGraph = await this._runStep(
-      new ExecuteInitialQuery(query, neo4jDatabase, scenario, this._logger),
+      new ExecuteInitialQuery(
+        query,
+        credentials,
+        scenario,
+        this._logger,
+        this._neo4j,
+      ),
       onProgress,
     );
     await this._runStep(
@@ -78,7 +86,7 @@ export class ScenarioPipeline {
       );
 
     await this._runStep(
-      new ConnectNodes(graph, displayConfiguration, neo4jDatabase),
+      new ConnectNodes(graph, displayConfiguration, credentials, this._neo4j),
       onProgress,
     );
     await this._runStep(

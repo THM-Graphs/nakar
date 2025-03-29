@@ -23,7 +23,7 @@ import { BackupService } from '../../services/backup/BackupService';
 import { FileStream } from '../../tools/fs/FileStream';
 import fs from 'node:fs';
 
-export class HTTPInterface implements ApplicationService {
+export class HTTPService implements ApplicationService {
   private readonly _app: Application;
   private readonly _port: number;
   private readonly _server: http.Server;

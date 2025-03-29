@@ -1,7 +1,7 @@
 import type { Result } from '@strapi/types/dist/modules/documents/result';
 import { ConfigService } from '../../config/ConfigService';
 
-export class DBMedia {
+export class GetMediaDBDTO {
   public readonly documentId: string;
   public readonly url: string | null;
   public readonly ext: string | null;
@@ -17,15 +17,6 @@ export class DBMedia {
     this.url = data.url;
     this.ext = data.ext;
     this.hash = data.hash;
-  }
-
-  public static parse(db: Result<'plugin::upload.file'>): DBMedia {
-    return new DBMedia({
-      documentId: db.documentId,
-      url: db.url ?? null,
-      ext: db.ext ?? null,
-      hash: db.hash ?? null,
-    });
   }
 
   public getPublicUrl(configService: ConfigService): string | null {

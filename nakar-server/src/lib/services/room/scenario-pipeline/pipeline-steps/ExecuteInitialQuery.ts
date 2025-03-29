@@ -1,29 +1,32 @@
-import { DBScenario } from '../../../database/collection-types/DBScenario';
+import { GetScenarioDBDTO } from '../../../database/dto/GetScenarioDBDTO';
 import { ScenarioPipelineStep } from '../ScenarioPipelineStep';
 import { MutableGraph } from '../../graph/MutableGraph';
-import { Neo4jDatabase } from '../../../../tools/neo4j/Neo4jDatabase';
-import { Neo4jGraphElements } from '../../../../tools/neo4j/Neo4jGraphElements';
+import { Neo4jService } from '../../../neo4j/Neo4jService';
+import { Neo4jGraphElements } from '../../../neo4j/Neo4jGraphElements';
 import { LoggerService } from '../../../logger/LoggerService';
+import { Neo4jLoginCredentials } from '../../../neo4j/Neo4jLoginCredentials';
 
 export class ExecuteInitialQuery extends ScenarioPipelineStep<MutableGraph> {
   private _query: string;
-  private _database: Neo4jDatabase;
-  private _scenario: DBScenario;
+  private _loginCredentials: Neo4jLoginCredentials;
+  private _scenario: GetScenarioDBDTO;
 
   public constructor(
     query: string,
-    database: Neo4jDatabase,
-    scenario: DBScenario,
+    loginCredentials: Neo4jLoginCredentials,
+    scenario: GetScenarioDBDTO,
     private readonly _logger: LoggerService,
+    private readonly _neo4j: Neo4jService,
   ) {
     super('Execute Initial Query');
     this._query = query;
-    this._database = database;
+    this._loginCredentials = loginCredentials;
     this._scenario = scenario;
   }
 
   public async run(): Promise<MutableGraph> {
-    const graphElements: Neo4jGraphElements = await this._database.executeQuery(
+    const graphElements: Neo4jGraphElements = await this._neo4j.executeQuery(
+      this._loginCredentials,
       this._query,
     );
     const graph: MutableGraph = MutableGraph.create(

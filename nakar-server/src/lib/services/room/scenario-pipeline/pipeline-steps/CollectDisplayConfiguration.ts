@@ -1,20 +1,20 @@
-import { DBScenario } from '../../../database/collection-types/DBScenario';
+import { GetScenarioDBDTO } from '../../../database/dto/GetScenarioDBDTO';
 import { ScenarioPipelineStep } from '../ScenarioPipelineStep';
-import { DBDatabase } from '../../../database/collection-types/DBDatabase';
+import { GetDatabaseDBDTO } from '../../../database/dto/GetDatabaseDBDTO';
 import { FinalGraphDisplayConfiguration } from '../display-configuration/FinalGraphDisplayConfiguration';
 import { MergableGraphDisplayConfiguration } from '../display-configuration/MergableGraphDisplayConfiguration';
-import { DBScenarioGroup } from '../../../database/collection-types/DBScenarioGroup';
+import { GetScenarioGroupDBDTO } from '../../../database/dto/GetScenarioGroupDBDTO';
 import { LoggerService } from '../../../logger/LoggerService';
 
 export class CollectGraphDisplayConfiguration extends ScenarioPipelineStep<FinalGraphDisplayConfiguration> {
-  private _database: DBDatabase;
-  private _scenarioGroup: DBScenarioGroup;
-  private _scenario: DBScenario;
+  private _database: GetDatabaseDBDTO;
+  private _scenarioGroup: GetScenarioGroupDBDTO;
+  private _scenario: GetScenarioDBDTO;
 
   public constructor(
-    database: DBDatabase,
-    scenario: DBScenario,
-    scenarioGroup: DBScenarioGroup,
+    database: GetDatabaseDBDTO,
+    scenario: GetScenarioDBDTO,
+    scenarioGroup: GetScenarioGroupDBDTO,
     private readonly _logger: LoggerService,
   ) {
     super('Collect Graph Display Configuration');

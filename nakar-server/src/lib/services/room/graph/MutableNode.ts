@@ -1,5 +1,5 @@
 import { MutablePosition } from './MutablePosition';
-import { Neo4jNode } from '../../../tools/neo4j/Neo4jNode';
+import { Neo4jNode } from '../../neo4j/Neo4jNode';
 import { MutablePropertyCollection } from './MutablePropertyCollection';
 import { SchemaNode } from '../../../../../src-gen/schema';
 import { NodeDisplayConfigurationContext } from '../scenario-pipeline/display-configuration/NodeDisplayConfigurationContext';

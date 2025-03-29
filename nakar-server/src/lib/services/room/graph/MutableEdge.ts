@@ -1,4 +1,4 @@
-import { Neo4jRelationship } from '../../../tools/neo4j/Neo4jRelationship';
+import { Neo4jRelationship } from '../../neo4j/Neo4jRelationship';
 import { MutablePropertyCollection } from './MutablePropertyCollection';
 import { SchemaEdge } from '../../../../../src-gen/schema';
 import { z } from 'zod';

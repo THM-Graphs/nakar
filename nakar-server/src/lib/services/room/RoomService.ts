@@ -1,13 +1,13 @@
 import { DatabaseService } from '../database/DatabaseService';
 import { Observable, Subject } from 'rxjs';
 import { MutableGraph } from './graph/MutableGraph';
-import { DBRoom } from '../database/collection-types/DBRoom';
+import { GetRoomDBDTO } from '../database/dto/GetRoomDBDTO';
 import { ScenarioPipeline } from './scenario-pipeline/ScenarioPipeline';
 import { RSEventScenarioProgress } from './events/RSEventScenarioProgress';
 import { RSEventRoomUpdated } from './events/RSEventRoomUpdated';
 import { RSEventRoomPhysicsUpdated } from './events/RSEventRoomPhysicsUpdated';
 import { RSPhysicalNode } from './events/RSPhysicalNode';
-import { DBScenario } from '../database/collection-types/DBScenario';
+import { GetScenarioDBDTO } from '../database/dto/GetScenarioDBDTO';
 import { LoggerService } from '../logger/LoggerService';
 import { ProfilerService } from '../profiler/ProfilerService';
 import { ProfilerTask } from '../profiler/ProfilerTask';
@@ -22,6 +22,7 @@ import { WTEvent } from '../room-instance/worker-events/WTEvent';
 import { match } from 'ts-pattern';
 import { WTEventPhysicsUpdate } from '../room-instance/worker-events/WTEventPhysicsUpdate';
 import z from 'zod';
+import { Neo4jService } from '../neo4j/Neo4jService';
 
 export class RoomService implements ApplicationService {
   private readonly _workers: SMap<string, Worker>;
@@ -36,6 +37,7 @@ export class RoomService implements ApplicationService {
     private readonly _database: DatabaseService,
     private readonly _logger: LoggerService,
     private readonly _profiler: ProfilerService,
+    private readonly _neo4j: Neo4jService,
   ) {
     this._workers = new SMap();
     this._latestGraphs = new SMap();
@@ -129,7 +131,7 @@ export class RoomService implements ApplicationService {
     roomId: string;
     scenarioId: string;
     onProgrsss: (progress: RSEventScenarioProgress) => void;
-  }): Promise<DBScenario> {
+  }): Promise<GetScenarioDBDTO> {
     if (!(await this._database.roomExists(params.roomId))) {
       this._logger.error(this, `Room ${params.roomId} does not exist!`);
     }
@@ -138,13 +140,14 @@ export class RoomService implements ApplicationService {
       this._database,
       this._logger,
       this._profiler,
+      this._neo4j,
     );
 
     const task: ProfilerTask = this._profiler.profile(
       this,
       'Scenario Pipeline',
     );
-    const [graph, scenario]: [MutableGraph, DBScenario] =
+    const [graph, scenario]: [MutableGraph, GetScenarioDBDTO] =
       await scenarioPipeline.run(
         params.scenarioId,
         (step: string, progress: number): void => {
@@ -181,18 +184,18 @@ export class RoomService implements ApplicationService {
     roomId: string,
     graph: z.infer<typeof MutableGraph.schema>,
   ): Promise<void> {
-    const room: DBRoom | null = await this._database.getRoom(roomId);
+    const room: GetRoomDBDTO | null = await this._database.getRoom(roomId);
     if (room == null) {
       this._logger.error(this, `Room ${roomId} not found for saving graph.`);
       return;
     }
 
-    await this._database.setRoomGraph(room, graph);
+    await this._database.setRoomGraph(room.documentId, graph);
   }
 
   private async _loadGraphsFromDb(): Promise<void> {
     try {
-      const rooms: DBRoom[] = await this._database.getRooms();
+      const rooms: GetRoomDBDTO[] = await this._database.getRooms();
 
       for (const room of rooms) {
         this._logger.debug(

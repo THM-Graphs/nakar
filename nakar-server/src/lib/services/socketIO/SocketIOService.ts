@@ -20,32 +20,32 @@ import { ServerToClientEvents } from './ServerToClientEvents';
 import { ClientToServerEvents } from './ClientToServerEvents';
 import { WSClient } from './WSClient';
 import { SSet } from '../../tools/Set';
-import { RoomService } from '../../services/room/RoomService';
-import { DatabaseService } from '../../services/database/DatabaseService';
-import { DBRoom } from '../../services/database/collection-types/DBRoom';
-import { RSEventScenarioProgress } from '../../services/room/events/RSEventScenarioProgress';
-import { RSEventRoomPhysicsUpdated } from '../../services/room/events/RSEventRoomPhysicsUpdated';
-import { RSEventRoomUpdated } from '../../services/room/events/RSEventRoomUpdated';
-import { DBScenario } from '../../services/database/collection-types/DBScenario';
-import { HTTPInterface } from '../http/HTTPInterface';
-import { LoggerService } from '../../services/logger/LoggerService';
+import { RoomService } from '../room/RoomService';
+import { DatabaseService } from '../database/DatabaseService';
+import { GetRoomDBDTO } from '../database/dto/GetRoomDBDTO';
+import { RSEventScenarioProgress } from '../room/events/RSEventScenarioProgress';
+import { RSEventRoomPhysicsUpdated } from '../room/events/RSEventRoomPhysicsUpdated';
+import { RSEventRoomUpdated } from '../room/events/RSEventRoomUpdated';
+import { GetScenarioDBDTO } from '../database/dto/GetScenarioDBDTO';
+import { LoggerService } from '../logger/LoggerService';
 import http from 'http';
 import { ApplicationService } from '../../application/ApplicationService';
-import { MutableGraph } from '../../services/room/graph/MutableGraph';
+import { MutableGraph } from '../room/graph/MutableGraph';
 import z from 'zod';
 import { Subscription } from 'rxjs';
+import { HTTPService } from '../http/HTTPService';
 
 export type Server = UntypedServer<ClientToServerEvents, ServerToClientEvents>;
 export type Socket = UntypedSocket<ClientToServerEvents, ServerToClientEvents>;
 
-export class SocketIOInterface implements ApplicationService {
+export class SocketIOService implements ApplicationService {
   private readonly _sockets: SSet<WSClient>;
   private _io: UntypedServer | null;
 
   public constructor(
     private _roomService: RoomService,
     private _databaseService: DatabaseService,
-    private _httpInterface: HTTPInterface,
+    private _httpService: HTTPService,
     private _logger: LoggerService,
   ) {
     this._sockets = new SSet();
@@ -57,7 +57,7 @@ export class SocketIOInterface implements ApplicationService {
   }
 
   public bootstrap(): void {
-    const httpServer: http.Server = this._httpInterface.getServerInstance();
+    const httpServer: http.Server = this._httpService.getServerInstance();
 
     const io: UntypedServer = new UntypedServer(httpServer, {
       cors: {
@@ -229,7 +229,8 @@ export class SocketIOInterface implements ApplicationService {
     (async (): Promise<void> => {
       const roomId: string = message.roomId;
 
-      const room: DBRoom | null = await this._databaseService.getRoom(roomId);
+      const room: GetRoomDBDTO | null =
+        await this._databaseService.getRoom(roomId);
 
       if (room == null) {
         this._logger.error(
@@ -270,7 +271,7 @@ export class SocketIOInterface implements ApplicationService {
           } satisfies SchemaWsEventScenarioProgress);
         },
       })
-      .then((scenario: DBScenario): void => {
+      .then((scenario: GetScenarioDBDTO): void => {
         wsClient.sendToRoom({
           title: 'Scenario',
           message: `Scenario "${scenario.title ?? ''}" started.`,

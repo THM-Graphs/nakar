@@ -1,4 +1,4 @@
-import { DBNodeDisplayConfiguration } from '../../../database/components/graph/DBNodeDisplayConfiguration';
+import { GetNodeDisplayConfigurationDBDTO } from '../../../database/dto/GetNodeDisplayConfigurationDBDTO';
 import { FinalNodeDisplayConfiguration } from './FinalNodeDisplayConfiguration';
 
 export class MergableNodeDisplayConfiguration {
@@ -17,7 +17,7 @@ export class MergableNodeDisplayConfiguration {
   }
 
   public static createFromDb(
-    nodeDisplayConfig: DBNodeDisplayConfiguration,
+    nodeDisplayConfig: GetNodeDisplayConfigurationDBDTO,
   ): MergableNodeDisplayConfiguration {
     return new MergableNodeDisplayConfiguration({
       displayText: nodeDisplayConfig.displayText,

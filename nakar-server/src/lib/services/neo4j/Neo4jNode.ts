@@ -1,5 +1,5 @@
 import { Node } from 'neo4j-driver';
-import { SSet } from '../Set';
+import { SSet } from '../../tools/Set';
 
 export class Neo4jNode {
   public readonly node: Node;

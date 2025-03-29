@@ -8,31 +8,31 @@ import neo4j, {
   Session,
 } from 'neo4j-driver';
 import { Neo4jGraphElements } from './Neo4jGraphElements';
-import { SSet } from '../Set';
-import { LoggerService } from '../../services/logger/LoggerService';
+import { SSet } from '../../tools/Set';
+import { LoggerService } from '../logger/LoggerService';
 import { Neo4jGraphElementsFactory } from './Neo4jGraphElementsFactory';
 import { SessionConfig } from 'neo4j-driver-core/types/driver';
+import { ApplicationService } from '../../application/ApplicationService';
 
-export class Neo4jDatabase {
-  private readonly _loginCredentials: Neo4jLoginCredentials;
+export class Neo4jService implements ApplicationService {
+  public constructor(private readonly _logger: LoggerService) {}
 
-  public constructor(
-    loginCredentials: Neo4jLoginCredentials,
-    private readonly _logger: LoggerService,
-  ) {
-    this._loginCredentials = loginCredentials;
+  public bootstrap(): void | Promise<void> {
+    /* */
+  }
+
+  public destroy(): void | Promise<void> {
+    /* */
   }
 
   public async executeQuery(
+    loginCredentials: Neo4jLoginCredentials,
     query: string,
     parameters?: Record<string, unknown>,
   ): Promise<Neo4jGraphElements> {
     const driver: Driver = createDriver(
-      this._loginCredentials.url,
-      auth.basic(
-        this._loginCredentials.username,
-        this._loginCredentials.password,
-      ),
+      loginCredentials.url,
+      auth.basic(loginCredentials.username, loginCredentials.password),
     );
     this._logger.debug(
       this,
@@ -68,10 +68,12 @@ export class Neo4jDatabase {
   }
 
   public async loadConnectingRelationships(
+    loginCredentials: Neo4jLoginCredentials,
     nodeIds: SSet<string>,
   ): Promise<Neo4jGraphElements> {
     const nodesIds: string[] = [...nodeIds.values()];
     const additional: Neo4jGraphElements = await this.executeQuery(
+      loginCredentials,
       'MATCH (a)-[additionalRelationship]->(b) WHERE elementId(a) IN $existingNodeIds AND elementId(b) IN $existingNodeIds RETURN additionalRelationship;',
       {
         existingNodeIds: nodesIds,

@@ -1,4 +1,4 @@
-import { DBDatabase } from '../../services/database/collection-types/DBDatabase';
+import { GetDatabaseDBDTO } from '../database/dto/GetDatabaseDBDTO';
 
 export class Neo4jLoginCredentials {
   public readonly url: string;
@@ -15,7 +15,7 @@ export class Neo4jLoginCredentials {
     this.password = data.password;
   }
 
-  public static parse(database: DBDatabase): Neo4jLoginCredentials {
+  public static parse(database: GetDatabaseDBDTO): Neo4jLoginCredentials {
     if (database.url == null) {
       throw new Error('db url not found');
     }

@@ -1,4 +1,4 @@
-import { DBScenario } from '../../database/collection-types/DBScenario';
+import { GetScenarioDBDTO } from '../../database/dto/GetScenarioDBDTO';
 import z from 'zod';
 import { SchemaScenarioInfo } from '../../../../../src-gen/schema';
 
@@ -17,7 +17,7 @@ export class MutableScenarioInfo {
     this.title = data.title;
   }
 
-  public static create(scenario: DBScenario): MutableScenarioInfo {
+  public static create(scenario: GetScenarioDBDTO): MutableScenarioInfo {
     return new MutableScenarioInfo({
       id: scenario.documentId,
       title: scenario.title,

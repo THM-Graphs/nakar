@@ -1,11 +1,11 @@
-import { Server, Socket } from './SocketIOInterface';
+import { Server, Socket } from './SocketIOService';
 import {
   SchemaWsClientToServerMessage,
   SchemaWsServerToClientMessage,
 } from '../../../../src-gen/schema';
 import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { DisconnectReason } from 'socket.io';
-import { LoggerService } from '../../services/logger/LoggerService';
+import { LoggerService } from '../logger/LoggerService';
 
 export class WSClient {
   private _socket: Socket;

@@ -1,7 +1,7 @@
 import { MutableNode } from './MutableNode';
 import { MutableEdge } from './MutableEdge';
 import { MutableGraphMetaData } from './MutableGraphMetaData';
-import { Neo4jGraphElements } from '../../../tools/neo4j/Neo4jGraphElements';
+import { Neo4jGraphElements } from '../../neo4j/Neo4jGraphElements';
 import {
   SchemaEdge,
   SchemaGraph,
@@ -9,9 +9,9 @@ import {
 } from '../../../../../src-gen/schema';
 import { z } from 'zod';
 import { SMap } from '../../../tools/Map';
-import { DBScenario } from '../../database/collection-types/DBScenario';
-import { Neo4jRelationship } from '../../../tools/neo4j/Neo4jRelationship';
-import { Neo4jNode } from '../../../tools/neo4j/Neo4jNode';
+import { GetScenarioDBDTO } from '../../database/dto/GetScenarioDBDTO';
+import { Neo4jRelationship } from '../../neo4j/Neo4jRelationship';
+import { Neo4jNode } from '../../neo4j/Neo4jNode';
 import { v4 as uuidv4 } from 'uuid';
 import { LoggerService } from '../../logger/LoggerService';
 
@@ -51,7 +51,7 @@ export class MutableGraph {
 
   public static create(
     graphElements: Neo4jGraphElements,
-    scenario: DBScenario,
+    scenario: GetScenarioDBDTO,
   ): MutableGraph {
     return new MutableGraph({
       id: uuidv4(),
