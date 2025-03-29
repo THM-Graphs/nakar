@@ -123,6 +123,11 @@ export class RoomInstanceService implements ApplicationService {
       this,
       `${action.userId} did ungrab node: ${action.nodeId}`,
     );
+
+    this._logger.debug(
+      this,
+      `Average tick duration: ${this._physics.averageTickDuration.toFixed(2)}`,
+    );
   }
 
   private _handleSetGraph(action: WTActionSetGraph): void {

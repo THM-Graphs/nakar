@@ -29,5 +29,10 @@ export class Layout extends ScenarioPipelineStep<void> {
       this._profiler,
     );
     await simulation.run(1500);
+
+    this._logger.debug(
+      this,
+      `Average tick duration: ${simulation.averageTickDuration.toFixed(2)}`,
+    );
   }
 }

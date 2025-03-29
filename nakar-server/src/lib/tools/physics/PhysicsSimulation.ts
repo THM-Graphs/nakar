@@ -15,6 +15,7 @@ export class PhysicsSimulation {
   private _running: boolean;
   private _onSlowTick: Subject<void>;
   private _tickCount: number;
+  private _tickDurationsCache: number[];
 
   public constructor(
     graph: MutableGraph,
@@ -25,6 +26,7 @@ export class PhysicsSimulation {
     this._running = false;
     this._onSlowTick = new Subject();
     this._tickCount = 0;
+    this._tickDurationsCache = [];
   }
 
   public get onSlowTick(): Observable<void> {
@@ -33,6 +35,16 @@ export class PhysicsSimulation {
 
   public get tickCount(): number {
     return this._tickCount;
+  }
+
+  public get averageTickDuration(): number {
+    const avg =
+      this._tickDurationsCache.reduce(
+        (a: number, b: number): number => a + b,
+        0,
+      ) / this._tickDurationsCache.length;
+    this._tickDurationsCache = [];
+    return avg;
   }
 
   public start(): void {
@@ -72,8 +84,11 @@ export class PhysicsSimulation {
     const shouldWaitEveryMs: number = (1 / PhysicsSimulation.FPS) * 1000;
     let ticksElapsed: number = 0;
     while (this._running && ticksElapsed < forTicks) {
+      const timeBeforeTick: number = performance.now();
       this._tick();
+      this._tickDurationsCache.push(performance.now() - timeBeforeTick);
       ticksElapsed += 1;
+
       const delta: number = performance.now() - lastWait;
       if (delta > shouldWaitEveryMs) {
         this._onSlowTick.next();
