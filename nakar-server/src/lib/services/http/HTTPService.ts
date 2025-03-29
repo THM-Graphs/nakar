@@ -1,8 +1,8 @@
 import http from 'http';
 import express from 'express';
 import { Request, Response, Application } from 'express';
-import { ConfigService } from '../../services/config/ConfigService';
-import { LoggerService } from '../../services/logger/LoggerService';
+import { ConfigService } from '../config/ConfigService';
+import { LoggerService } from '../logger/LoggerService';
 import {
   SchemaDatabases,
   SchemaRoom,
@@ -11,15 +11,15 @@ import {
   SchemaScenarios,
   SchemaVersion,
 } from '../../../../src-gen/schema';
-import { DatabaseService } from '../../services/database/DatabaseService';
+import { DatabaseService } from '../database/DatabaseService';
 import { match, P } from 'ts-pattern';
 import { HttpError, InternalServerError } from 'http-errors';
 import cors from 'cors';
 import { HTTPDelegate } from './HTTPDelegate';
-import { ProfilerService } from '../../services/profiler/ProfilerService';
-import { ProfilerTask } from '../../services/profiler/ProfilerTask';
+import { ProfilerService } from '../profiler/ProfilerService';
+import { ProfilerTask } from '../profiler/ProfilerTask';
 import { ApplicationService } from '../../application/ApplicationService';
-import { BackupService } from '../../services/backup/BackupService';
+import { BackupService } from '../backup/BackupService';
 import { FileStream } from '../../tools/fs/FileStream';
 import fs from 'node:fs';
 
@@ -80,7 +80,7 @@ export class HTTPService implements ApplicationService {
     );
   }
 
-  public async destroy(): Promise<void> {
+  public destroy(): void | Promise<void> {
     /* */
   }
 

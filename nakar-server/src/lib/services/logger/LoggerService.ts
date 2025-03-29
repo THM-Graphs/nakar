@@ -11,6 +11,14 @@ export class LoggerService implements ApplicationService {
     this._logger = createLogger(loggerConfig);
   }
 
+  public bootstrap(): void | Promise<void> {
+    /* */
+  }
+
+  public destroy(): void | Promise<void> {
+    /* */
+  }
+
   public log(sender: unknown, message: string): void {
     this._logger.info(this._getMessageLine(sender, message));
   }
@@ -30,14 +38,6 @@ export class LoggerService implements ApplicationService {
   }
   public warn(sender: unknown, message: string): void {
     this._logger.warn(this._getMessageLine(sender, message));
-  }
-
-  public bootstrap(): void | Promise<void> {
-    /* */
-  }
-
-  public destroy(): void | Promise<void> {
-    /* */
   }
 
   private _getClassName(obj: unknown): string {

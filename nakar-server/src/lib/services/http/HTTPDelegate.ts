@@ -83,7 +83,8 @@ export class HTTPDelegate {
   }
 
   public getVersion(): SchemaVersion {
-    const packageVersion: string | undefined = process.env.npm_package_version;
+    const packageVersion: string | undefined =
+      process.env['npm_package_version'];
     return {
       version: packageVersion ?? 'unknown',
     };

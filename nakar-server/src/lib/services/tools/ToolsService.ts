@@ -1,11 +1,11 @@
 import { ApplicationService } from '../../application/ApplicationService';
 
 export class ToolsService implements ApplicationService {
-  public async bootstrap(): Promise<void> {
+  public bootstrap(): void | Promise<void> {
     /* */
   }
 
-  public async destroy(): Promise<void> {
+  public destroy(): void | Promise<void> {
     /* */
   }
 

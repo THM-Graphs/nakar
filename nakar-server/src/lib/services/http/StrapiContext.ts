@@ -53,7 +53,7 @@ export class StrapiContext {
   public getPathParameter(key: string): string {
     const params: Record<string, unknown> = z
       .record(z.unknown())
-      .parse(this._ctx.params);
+      .parse(this._ctx['params']);
     const value: unknown = params[key];
     if (typeof value !== 'string') {
       throw new BadRequest(`Path parameter ${key} not provided.`);

@@ -4,12 +4,12 @@ import { SocketIOService } from '../services/socketIO/SocketIOService';
 import { LoggerService } from '../services/logger/LoggerService';
 import { ProfilerService } from '../services/profiler/ProfilerService';
 import { ConfigService } from '../services/config/ConfigService';
-import { ApplicationService } from './ApplicationService';
 import { ClassHelper } from '../tools/ClassHelper';
 import { BackupService } from '../services/backup/BackupService';
 import { HTTPService } from '../services/http/HTTPService';
 import { Neo4jService } from '../services/neo4j/Neo4jService';
 import { ToolsService } from '../services/tools/ToolsService';
+import { ApplicationService } from './ApplicationService';
 
 export class NakarApplication {
   public static shared: NakarApplication = new NakarApplication();
