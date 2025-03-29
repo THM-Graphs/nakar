@@ -30,6 +30,7 @@ import { Neo4jLoginCredentials } from '../../neo4j/Neo4jLoginCredentials';
 export class ScenarioPipeline {
   private readonly _stepCount: number = 15;
   private _stepCounter: number;
+  private _pipelineSummary: [string, number][];
 
   public constructor(
     private readonly _database: DatabaseService,
@@ -38,6 +39,7 @@ export class ScenarioPipeline {
     private readonly _neo4j: Neo4jService,
   ) {
     this._stepCounter = 0;
+    this._pipelineSummary = [];
   }
 
   public async run(
@@ -117,6 +119,8 @@ export class ScenarioPipeline {
       onProgress,
     );
 
+    graph.metaData.pipelineSummary = this._pipelineSummary;
+
     this._logger.debug(this, '----------- Scenario Pipeline End -----------');
     return [graph, scenario];
   }
@@ -138,9 +142,13 @@ export class ScenarioPipeline {
     try {
       const result: T = await step.run();
       profilerTask.finish();
+      this._pipelineSummary.push([step.title, profilerTask.elapsedTimeMs]);
       return result;
     } catch (error: unknown) {
       profilerTask.finish();
+      this._pipelineSummary.push([step.title, profilerTask.elapsedTimeMs]);
+      this._logger.error(this, `Pipeline crashed:`);
+      this._logger.error(this, error);
       throw error;
     }
   }

@@ -13,23 +13,28 @@ export class MutableGraphMetaData {
   public static readonly schema = z.object({
     labels: z.record(MutableGraphLabel.schema),
     scenarioInfo: MutableScenarioInfo.schema,
+    pipelineSummary: z.array(z.tuple([z.string(), z.number()])),
   });
 
   public labels: SMap<string, MutableGraphLabel>;
   public scenarioInfo: MutableScenarioInfo;
+  public pipelineSummary: [string, number][];
 
   public constructor(data: {
     labels: SMap<string, MutableGraphLabel>;
     scenarioInfo: MutableScenarioInfo;
+    pipelineSummary: [string, number][];
   }) {
     this.labels = data.labels;
     this.scenarioInfo = data.scenarioInfo;
+    this.pipelineSummary = data.pipelineSummary;
   }
 
   public static empty(): MutableGraphMetaData {
     return new MutableGraphMetaData({
       labels: new SMap(),
       scenarioInfo: MutableScenarioInfo.empty(),
+      pipelineSummary: [],
     });
   }
 
@@ -42,6 +47,7 @@ export class MutableGraphMetaData {
           MutableGraphLabel.fromPlain(l),
       ),
       scenarioInfo: MutableScenarioInfo.fromPlain(data.scenarioInfo),
+      pipelineSummary: data.pipelineSummary,
     });
   }
 
@@ -49,6 +55,7 @@ export class MutableGraphMetaData {
     return new MutableGraphMetaData({
       labels: new SMap(),
       scenarioInfo: MutableScenarioInfo.create(scenario),
+      pipelineSummary: [],
     });
   }
 
@@ -61,6 +68,14 @@ export class MutableGraphMetaData {
             label.toDto(id),
         ),
       scenarioInfo: this.scenarioInfo.toDto(),
+      pipelineSummary: this.pipelineSummary.map(
+        (entry: [string, number]): { step: string; durationMs: number } => {
+          return {
+            step: entry[0],
+            durationMs: entry[1],
+          };
+        },
+      ),
     };
   }
 
@@ -73,6 +88,7 @@ export class MutableGraphMetaData {
         )
         .toRecord(),
       scenarioInfo: this.scenarioInfo.toPlain(),
+      pipelineSummary: this.pipelineSummary,
     };
   }
 }

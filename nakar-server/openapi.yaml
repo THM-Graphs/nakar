@@ -303,9 +303,22 @@ components:
             $ref: "#/components/schemas/GraphLabel"
         scenarioInfo:
           $ref: "#/components/schemas/ScenarioInfo"
+        pipelineSummary:
+          type: array
+          items:
+            type: object
+            properties:
+              step:
+                type: string
+              durationMs:
+                type: number
+            required:
+              - step
+              - durationMs
       required:
         - labels
         - scenarioInfo
+        - pipelineSummary
 
     Graph:
       type: object
