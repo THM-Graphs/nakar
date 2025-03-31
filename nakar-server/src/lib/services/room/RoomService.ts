@@ -23,6 +23,7 @@ import { match } from 'ts-pattern';
 import { WTEventPhysicsUpdate } from '../room-instance/worker-events/WTEventPhysicsUpdate';
 import z from 'zod';
 import { Neo4jService } from '../neo4j/Neo4jService';
+import { ScenarioPipelineResult } from './scenario-pipeline/ScenarioPipelineResult';
 
 export class RoomService implements ApplicationService {
   private readonly _workers: SMap<string, Worker>;
@@ -147,20 +148,20 @@ export class RoomService implements ApplicationService {
       this,
       'Scenario Pipeline',
     );
-    const [graph, scenario]: [MutableGraph, GetScenarioDBDTO] =
-      await scenarioPipeline.run(
-        params.scenarioId,
-        (step: string, progress: number): void => {
-          params.onProgrsss({
-            roomId: params.roomId,
-            message: step,
-            progress: progress,
-          });
-        },
-      );
+    const result: ScenarioPipelineResult = await scenarioPipeline.run(
+      params.scenarioId,
+      (step: string, progress: number): void => {
+        params.onProgrsss({
+          roomId: params.roomId,
+          message: step,
+          progress: progress,
+        });
+      },
+    );
     task.finish();
 
-    const plainGraph: z.infer<typeof MutableGraph.schema> = graph.toPlain();
+    const plainGraph: z.infer<typeof MutableGraph.schema> =
+      result.graph.toPlain();
 
     this._latestGraphs.set(params.roomId, plainGraph);
     this._sendActionToWorker(params.roomId, {
@@ -169,11 +170,11 @@ export class RoomService implements ApplicationService {
     });
     await this._saveGraphToDb(params.roomId, plainGraph);
     this._onRoomUpdated.next({
-      graph: graph,
+      graph: result.graph,
       roomId: params.roomId,
     });
 
-    return scenario;
+    return result.scenario;
   }
 
   public getGraph(roomId: string): z.infer<typeof MutableGraph.schema> | null {

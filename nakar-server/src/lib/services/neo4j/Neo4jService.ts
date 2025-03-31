@@ -59,10 +59,12 @@ export class Neo4jService implements ApplicationService {
         return nei4jGraphElementsFactory.fromQueryResult(result);
       } catch (error) {
         await session.close();
+        this._logger.error(this, error);
         throw error;
       }
     } catch (error) {
       await driver.close();
+      this._logger.error(this, error);
       throw error;
     }
   }

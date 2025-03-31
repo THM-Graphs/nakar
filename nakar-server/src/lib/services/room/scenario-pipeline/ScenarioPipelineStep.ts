@@ -1,4 +1,6 @@
-export abstract class ScenarioPipelineStep<O> {
+import { ScenarioPipelineState } from './ScenarioPipelineState';
+
+export abstract class ScenarioPipelineStep {
   private _title: string;
 
   public constructor(title: string) {
@@ -9,5 +11,5 @@ export abstract class ScenarioPipelineStep<O> {
     return this._title;
   }
 
-  public abstract run(): Promise<O> | O;
+  public abstract run(state: ScenarioPipelineState): Promise<void> | void;
 }

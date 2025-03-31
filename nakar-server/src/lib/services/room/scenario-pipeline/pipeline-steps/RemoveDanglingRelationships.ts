@@ -1,35 +1,27 @@
 import { MutableGraph } from '../../graph/MutableGraph';
 import { ScenarioPipelineStep } from '../ScenarioPipelineStep';
-import { LoggerService } from '../../../logger/LoggerService';
 import { MutableEdge } from '../../graph/MutableEdge';
+import { ScenarioPipelineState } from '../ScenarioPipelineState';
 
-export class RemoveDanglingRelationships extends ScenarioPipelineStep<void> {
-  private _graph: MutableGraph;
-
-  public constructor(
-    graph: MutableGraph,
-    private readonly _logger: LoggerService,
-  ) {
+export class RemoveDanglingRelationships extends ScenarioPipelineStep {
+  public constructor() {
     super('Remove Dangling Relationships');
-    this._graph = graph;
   }
 
-  public run(): void {
-    this._graph.edges = this._graph.edges.filter(
-      (edge: MutableEdge): boolean => {
-        const isDangling: boolean =
-          !this._graph.nodes.has(edge.startNodeId) ||
-          !this._graph.nodes.has(edge.endNodeId);
+  public run(state: ScenarioPipelineState): void {
+    const graph: MutableGraph = state.graph;
+    graph.edges = graph.edges.filter((edge: MutableEdge): boolean => {
+      const isDangling: boolean =
+        !graph.nodes.has(edge.startNodeId) || !graph.nodes.has(edge.endNodeId);
 
-        if (isDangling) {
-          this._logger.debug(
-            this,
-            `Relationship ${edge.type} (${edge.startNodeId} -> ${edge.endNodeId}) is dangling and will be removed.`,
-          );
-        }
+      if (isDangling) {
+        state.logger.debug(
+          this,
+          `Relationship ${edge.type} (${edge.startNodeId} -> ${edge.endNodeId}) is dangling and will be removed.`,
+        );
+      }
 
-        return !isDangling;
-      },
-    );
+      return !isDangling;
+    });
   }
 }

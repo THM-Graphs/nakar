@@ -25,129 +25,81 @@ import { ProfilerTask } from '../../profiler/ProfilerTask';
 import { wait } from '../../../tools/Wait';
 import { LoggerService } from '../../logger/LoggerService';
 import { RemoveDanglingRelationships } from './pipeline-steps/RemoveDanglingRelationships';
-import { Neo4jLoginCredentials } from '../../neo4j/Neo4jLoginCredentials';
+import { ScenarioPipelineState } from './ScenarioPipelineState';
+import { ScenarioPipelineResult } from './ScenarioPipelineResult';
 
 export class ScenarioPipeline {
   private readonly _stepCount: number = 15;
-  private _stepCounter: number;
-  private _pipelineSummary: [string, number][];
 
   public constructor(
     private readonly _database: DatabaseService,
     private readonly _logger: LoggerService,
     private readonly _profiler: ProfilerService,
     private readonly _neo4j: Neo4jService,
-  ) {
-    this._stepCounter = 0;
-    this._pipelineSummary = [];
-  }
+  ) {}
 
   public async run(
     scenarioId: string,
     onProgress: (title: string, progress: number) => void,
-  ): Promise<[MutableGraph, GetScenarioDBDTO]> {
-    this._stepCounter = 0;
+  ): Promise<ScenarioPipelineResult> {
+    const state: ScenarioPipelineState = new ScenarioPipelineState(
+      scenarioId,
+      this._database,
+      this._neo4j,
+      this._logger,
+      this._profiler,
+    );
     this._logger.debug(this, '----------- Scenario Pipeline Start -----------');
 
-    const [scenario, query, database, scenarioGroup]: [
-      GetScenarioDBDTO,
-      string,
-      GetDatabaseDBDTO,
-      GetScenarioGroupDBDTO,
-    ] = await this._runStep(
-      new LoadScenario(this._database, scenarioId),
-      onProgress,
-    );
-    const credentials: Neo4jLoginCredentials = await this._runStep(
-      new ParseNeo4jLoginCredentials(database, this._logger),
-      onProgress,
-    );
-    const graph: MutableGraph = await this._runStep(
-      new ExecuteInitialQuery(
-        query,
-        credentials,
-        scenario,
-        this._logger,
-        this._neo4j,
-      ),
-      onProgress,
-    );
+    await this._runStep(state, new LoadScenario(), onProgress);
+    await this._runStep(state, new ParseNeo4jLoginCredentials(), onProgress);
+    await this._runStep(state, new ExecuteInitialQuery(), onProgress);
+    await this._runStep(state, new RemoveDanglingRelationships(), onProgress);
     await this._runStep(
-      new RemoveDanglingRelationships(graph, this._logger),
+      state,
+      new CollectGraphDisplayConfiguration(),
       onProgress,
     );
-    const displayConfiguration: FinalGraphDisplayConfiguration =
-      await this._runStep(
-        new CollectGraphDisplayConfiguration(
-          database,
-          scenario,
-          scenarioGroup,
-          this._logger,
-        ),
-        onProgress,
-      );
+    await this._runStep(state, new ConnectNodes(), onProgress);
+    await this._runStep(state, new CompressRelationships(), onProgress);
+    await this._runStep(state, new ApplyLabels(), onProgress);
+    await this._runStep(state, new ApplyNodeDegrees(), onProgress);
+    await this._runStep(state, new ApplyEdgeParallelCounts(), onProgress);
+    await this._runStep(state, new ApplyNodeDisplayText(), onProgress);
+    await this._runStep(state, new ApplyNodeRadius(), onProgress);
+    await this._runStep(state, new ApplyNodeBackgroundColor(), onProgress);
+    await this._runStep(state, new GrowNodeBasedOnDegree(), onProgress);
+    await this._runStep(state, new Layout(), onProgress);
 
-    await this._runStep(
-      new ConnectNodes(graph, displayConfiguration, credentials, this._neo4j),
-      onProgress,
-    );
-    await this._runStep(
-      new CompressRelationships(graph, displayConfiguration),
-      onProgress,
-    );
-    await this._runStep(new ApplyLabels(graph, this._logger), onProgress);
-    await this._runStep(new ApplyNodeDegrees(graph), onProgress);
-    await this._runStep(new ApplyEdgeParallelCounts(graph), onProgress);
-    await this._runStep(
-      new ApplyNodeDisplayText(graph, displayConfiguration, this._logger),
-      onProgress,
-    );
-    await this._runStep(
-      new ApplyNodeRadius(graph, displayConfiguration, this._logger),
-      onProgress,
-    );
-    await this._runStep(
-      new ApplyNodeBackgroundColor(graph, displayConfiguration, this._logger),
-      onProgress,
-    );
-    await this._runStep(
-      new GrowNodeBasedOnDegree(graph, displayConfiguration),
-      onProgress,
-    );
-    await this._runStep(
-      new Layout(graph, this._logger, this._profiler),
-      onProgress,
-    );
-
-    graph.metaData.pipelineSummary = this._pipelineSummary;
+    state.graph.metaData.pipelineSummary = state.pipelineSummary;
 
     this._logger.debug(this, '----------- Scenario Pipeline End -----------');
-    return [graph, scenario];
+    return new ScenarioPipelineResult(state);
   }
 
-  private async _runStep<T>(
-    step: ScenarioPipelineStep<T>,
+  private async _runStep(
+    state: ScenarioPipelineState,
+    step: ScenarioPipelineStep,
     onProgress: (title: string, progress: number) => void,
-  ): Promise<T> {
-    if (this._stepCounter >= this._stepCount) {
+  ): Promise<void> {
+    if (state.stepCounter >= this._stepCount) {
       this._logger.warn(
         this,
-        `Step Counter >= Step Count. Step Counter: ${this._stepCounter.toString()}. Step Count: ${this._stepCount.toString()}`,
+        `Step Counter >= Step Count. Step Counter: ${state.stepCounter.toString()}. Step Count: ${this._stepCount.toString()}`,
       );
     }
-    onProgress(step.title, this._stepCounter / this._stepCount);
+    onProgress(step.title, state.stepCounter / this._stepCount);
     await wait(0);
-    this._stepCounter += 1;
+    state.stepCounter += 1;
     const profilerTask: ProfilerTask = this._profiler.profile(this, step.title);
     try {
-      const result: T = await step.run();
+      await step.run(state);
       profilerTask.finish();
-      this._pipelineSummary.push([step.title, profilerTask.elapsedTimeMs]);
-      return result;
+      state.pipelineSummary.push([step.title, profilerTask.elapsedTimeMs]);
     } catch (error: unknown) {
       profilerTask.finish();
-      this._pipelineSummary.push([step.title, profilerTask.elapsedTimeMs]);
-      this._logger.error(this, `Pipeline crashed:`);
+      state.pipelineSummary.push([step.title, profilerTask.elapsedTimeMs]);
+      this._logger.error(this, `Pipeline crashed on ${step.title}:`);
       this._logger.error(this, error);
       throw error;
     }

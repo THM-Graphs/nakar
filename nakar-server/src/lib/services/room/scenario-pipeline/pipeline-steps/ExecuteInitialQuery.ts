@@ -1,45 +1,33 @@
-import { GetScenarioDBDTO } from '../../../database/dto/GetScenarioDBDTO';
 import { ScenarioPipelineStep } from '../ScenarioPipelineStep';
 import { MutableGraph } from '../../graph/MutableGraph';
-import { Neo4jService } from '../../../neo4j/Neo4jService';
 import { Neo4jGraphElements } from '../../../neo4j/Neo4jGraphElements';
-import { LoggerService } from '../../../logger/LoggerService';
-import { Neo4jLoginCredentials } from '../../../neo4j/Neo4jLoginCredentials';
+import { ScenarioPipelineState } from '../ScenarioPipelineState';
 import { MutableGraphFactory } from '../MutableGraphFactory';
 
-export class ExecuteInitialQuery extends ScenarioPipelineStep<MutableGraph> {
-  private _query: string;
-  private _loginCredentials: Neo4jLoginCredentials;
-  private _scenario: GetScenarioDBDTO;
-  private _graphFactory: MutableGraphFactory;
-
-  public constructor(
-    query: string,
-    loginCredentials: Neo4jLoginCredentials,
-    scenario: GetScenarioDBDTO,
-    private readonly _logger: LoggerService,
-    private readonly _neo4j: Neo4jService,
-  ) {
+export class ExecuteInitialQuery extends ScenarioPipelineStep {
+  public constructor() {
     super('Execute Initial Query');
-    this._query = query;
-    this._loginCredentials = loginCredentials;
-    this._scenario = scenario;
-    this._graphFactory = new MutableGraphFactory();
   }
 
-  public async run(): Promise<MutableGraph> {
-    const graphElements: Neo4jGraphElements = await this._neo4j.executeQuery(
-      this._loginCredentials,
-      this._query,
+  public async run(state: ScenarioPipelineState): Promise<void> {
+    const graphFactory: MutableGraphFactory = new MutableGraphFactory();
+
+    if (state.scenarioDBDTO.query == null) {
+      throw new Error('Unable to read query from pipeline state.');
+    }
+
+    const graphElements: Neo4jGraphElements = await state.neo4j.executeQuery(
+      state.credentials,
+      state.scenarioDBDTO.query,
     );
-    const graph: MutableGraph = this._graphFactory.createGraph(
+    const graph: MutableGraph = graphFactory.createGraph(
       graphElements,
-      this._scenario,
+      state.scenarioDBDTO,
     );
-    this._logger.debug(
+    state.logger.debug(
       this,
       `Did load ${graph.size.toString()} graph elements.`,
     );
-    return graph;
+    state.graph = graph;
   }
 }

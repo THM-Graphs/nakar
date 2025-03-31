@@ -4,24 +4,16 @@ import { MutableGraph } from '../../graph/MutableGraph';
 import { FinalNodeDisplayConfiguration } from '../display-configuration/FinalNodeDisplayConfiguration';
 import { ScenarioPipelineStep } from '../ScenarioPipelineStep';
 import { LoggerService } from '../../../logger/LoggerService';
+import { ScenarioPipelineState } from '../ScenarioPipelineState';
 
-export class ApplyNodeBackgroundColor extends ScenarioPipelineStep<void> {
-  private _graph: MutableGraph;
-  private _config: FinalGraphDisplayConfiguration;
-
-  public constructor(
-    graph: MutableGraph,
-    config: FinalGraphDisplayConfiguration,
-    private readonly _logger: LoggerService,
-  ) {
+export class ApplyNodeBackgroundColor extends ScenarioPipelineStep {
+  public constructor() {
     super('Apply Node Background Color');
-    this._graph = graph;
-    this._config = config;
   }
 
-  public run(): void {
-    const input: MutableGraph = this._graph;
-    const config: FinalGraphDisplayConfiguration = this._config;
+  public run(state: ScenarioPipelineState): void {
+    const input: MutableGraph = state.graph;
+    const config: FinalGraphDisplayConfiguration = state.displayConfiguration;
 
     for (const [nodeId, node] of input.nodes.entries()) {
       for (const label of node.labels) {
@@ -38,7 +30,7 @@ export class ApplyNodeBackgroundColor extends ScenarioPipelineStep<void> {
         const newValue: string = NodeDisplayConfigurationContext.create(
           nodeId,
           node,
-          this._logger,
+          state.logger,
         ).applyToTemplate(nodeConfig.backgroundColorTemplate);
 
         if (newValue.trim().length === 0) {

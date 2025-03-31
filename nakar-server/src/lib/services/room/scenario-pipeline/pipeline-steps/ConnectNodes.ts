@@ -1,5 +1,4 @@
 import { FinalGraphDisplayConfiguration } from '../display-configuration/FinalGraphDisplayConfiguration';
-import { Neo4jService } from '../../../neo4j/Neo4jService';
 import { MutableEdge } from '../../graph/MutableEdge';
 import { MutableGraph } from '../../graph/MutableGraph';
 import { SSet } from '../../../../tools/Set';
@@ -7,33 +6,20 @@ import { Neo4jRelationship } from '../../../neo4j/Neo4jRelationship';
 import { Neo4jGraphElements } from '../../../neo4j/Neo4jGraphElements';
 import { SMap } from '../../../../tools/Map';
 import { ScenarioPipelineStep } from '../ScenarioPipelineStep';
-import { Neo4jLoginCredentials } from '../../../neo4j/Neo4jLoginCredentials';
 import { MutableGraphFactory } from '../MutableGraphFactory';
+import { ScenarioPipelineState } from '../ScenarioPipelineState';
 
-export class ConnectNodes extends ScenarioPipelineStep<void> {
-  private _graph: MutableGraph;
-  private _config: FinalGraphDisplayConfiguration;
-  private _loginCredentials: Neo4jLoginCredentials;
-  private _neo4j: Neo4jService;
+export class ConnectNodes extends ScenarioPipelineStep {
   private _graphFactory: MutableGraphFactory;
 
-  public constructor(
-    graph: MutableGraph,
-    config: FinalGraphDisplayConfiguration,
-    loginCredentials: Neo4jLoginCredentials,
-    neo4j: Neo4jService,
-  ) {
+  public constructor() {
     super('Connect Nodes');
-    this._graph = graph;
-    this._config = config;
-    this._loginCredentials = loginCredentials;
-    this._neo4j = neo4j;
     this._graphFactory = new MutableGraphFactory();
   }
 
-  public async run(): Promise<void> {
-    const input: MutableGraph = this._graph;
-    const config: FinalGraphDisplayConfiguration = this._config;
+  public async run(state: ScenarioPipelineState): Promise<void> {
+    const input: MutableGraph = state.graph;
+    const config: FinalGraphDisplayConfiguration = state.displayConfiguration;
 
     if (!config.connectResultNodes) {
       return;
@@ -46,10 +32,7 @@ export class ConnectNodes extends ScenarioPipelineStep<void> {
     }
 
     const result: Neo4jGraphElements =
-      await this._neo4j.loadConnectingRelationships(
-        this._loginCredentials,
-        nodeIds,
-      );
+      await state.neo4j.loadConnectingRelationships(state.credentials, nodeIds);
 
     const edges: SMap<string, MutableEdge> = result.relationships.map(
       (r: Neo4jRelationship): MutableEdge =>

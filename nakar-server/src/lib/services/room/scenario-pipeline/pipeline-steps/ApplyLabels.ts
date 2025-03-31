@@ -2,21 +2,15 @@ import { MutableGraphColorPreset } from '../../graph/MutableGraphColorPreset';
 import { MutableGraphLabel } from '../../graph/MutableGraphLabel';
 import { MutableGraph } from '../../graph/MutableGraph';
 import { ScenarioPipelineStep } from '../ScenarioPipelineStep';
-import { LoggerService } from '../../../logger/LoggerService';
+import { ScenarioPipelineState } from '../ScenarioPipelineState';
 
-export class ApplyLabels extends ScenarioPipelineStep<void> {
-  private _graph: MutableGraph;
-
-  public constructor(
-    graph: MutableGraph,
-    private readonly _logger: LoggerService,
-  ) {
+export class ApplyLabels extends ScenarioPipelineStep {
+  public constructor() {
     super('Apply Labels');
-    this._graph = graph;
   }
 
-  public run(): void {
-    const input: MutableGraph = this._graph;
+  public run(state: ScenarioPipelineState): void {
+    const input: MutableGraph = state.graph;
     for (const node of input.nodes.values()) {
       for (const label of node.labels) {
         const foundEntry: MutableGraphLabel | undefined =
@@ -27,7 +21,7 @@ export class ApplyLabels extends ScenarioPipelineStep<void> {
             MutableGraphColorPreset.create({
               index: input.metaData.labels.size,
             });
-          this._logger.debug(
+          state.logger.debug(
             this,
             `Will create new label: ${label} with color: ${newColor.index.toString()}`,
           );

@@ -5,31 +5,22 @@ import { MutableGraph } from '../../graph/MutableGraph';
 import { SMap } from '../../../../tools/Map';
 import { ScenarioPipelineStep } from '../ScenarioPipelineStep';
 import { wait } from '../../../../tools/Wait';
+import { ScenarioPipelineState } from '../ScenarioPipelineState';
 
-export class CompressRelationships extends ScenarioPipelineStep<void> {
-  private _graph: MutableGraph;
-  private _config: FinalGraphDisplayConfiguration;
-
+export class CompressRelationships extends ScenarioPipelineStep {
   private _handledRelsCache: SMap<
     string,
     SMap<string, SMap<string, [string, MutableEdge]>>
   >;
 
-  public constructor(
-    graph: MutableGraph,
-    config: FinalGraphDisplayConfiguration,
-  ) {
+  public constructor() {
     super('Compress Relationships');
-    this._graph = graph;
-    this._config = config;
     this._handledRelsCache = new SMap();
   }
 
-  public async run(): Promise<void> {
-    await wait(0);
-
-    const input: MutableGraph = this._graph;
-    const config: FinalGraphDisplayConfiguration = this._config;
+  public async run(state: ScenarioPipelineState): Promise<void> {
+    const input: MutableGraph = state.graph;
+    const config: FinalGraphDisplayConfiguration = state.displayConfiguration;
 
     if (!config.compressRelationships) {
       return;

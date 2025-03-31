@@ -3,23 +3,16 @@ import { Range } from '../../../../tools/Range';
 import { MutableGraph } from '../../graph/MutableGraph';
 import { MutableNode } from '../../graph/MutableNode';
 import { ScenarioPipelineStep } from '../ScenarioPipelineStep';
+import { ScenarioPipelineState } from '../ScenarioPipelineState';
 
-export class GrowNodeBasedOnDegree extends ScenarioPipelineStep<void> {
-  private _graph: MutableGraph;
-  private _config: FinalGraphDisplayConfiguration;
-
-  public constructor(
-    graph: MutableGraph,
-    config: FinalGraphDisplayConfiguration,
-  ) {
+export class GrowNodeBasedOnDegree extends ScenarioPipelineStep {
+  public constructor() {
     super('Grow Node Based On Degree');
-    this._graph = graph;
-    this._config = config;
   }
 
-  public run(): void {
-    const input: MutableGraph = this._graph;
-    const config: FinalGraphDisplayConfiguration = this._config;
+  public run(state: ScenarioPipelineState): void {
+    const input: MutableGraph = state.graph;
+    const config: FinalGraphDisplayConfiguration = state.displayConfiguration;
 
     if (!config.growNodesBasedOnDegree) {
       return;

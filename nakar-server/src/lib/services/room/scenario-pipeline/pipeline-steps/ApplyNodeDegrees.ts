@@ -1,17 +1,15 @@
 import { MutableGraph } from '../../graph/MutableGraph';
 import { MutableEdge } from '../../graph/MutableEdge';
 import { ScenarioPipelineStep } from '../ScenarioPipelineStep';
+import { ScenarioPipelineState } from '../ScenarioPipelineState';
 
-export class ApplyNodeDegrees extends ScenarioPipelineStep<void> {
-  private _graph: MutableGraph;
-
-  public constructor(graph: MutableGraph) {
+export class ApplyNodeDegrees extends ScenarioPipelineStep {
+  public constructor() {
     super('Apply Node Degrees');
-    this._graph = graph;
   }
 
-  public run(): void {
-    const input: MutableGraph = this._graph;
+  public run(state: ScenarioPipelineState): void {
+    const input: MutableGraph = state.graph;
 
     for (const [nodeId, node] of input.nodes.entries()) {
       const outRelsCount: number = input.edges
