@@ -6,7 +6,7 @@ import { MutableGraph } from '../room/graph/MutableGraph';
 import { Result } from '@strapi/types/dist/modules/documents';
 import { LoggerService } from '../logger/LoggerService';
 import { ApplicationService } from '../../application/ApplicationService';
-import { GetMediaDBDTO } from './others/GetMediaDBDTO';
+import { GetMediaDBDTO } from './dto/GetMediaDBDTO';
 import { FileStream } from '../../tools/fs/FileStream';
 import z from 'zod';
 import { DatabaseDTOFactory } from './DatabaseDTOFactory';

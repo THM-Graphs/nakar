@@ -2,16 +2,12 @@ import type { Result } from '@strapi/types/dist/modules/documents/result';
 import { GetGraphDisplayConfigurationDBDTO } from './dto/GetGraphDisplayConfigurationDBDTO';
 import { GetDatabaseDBDTO } from './dto/GetDatabaseDBDTO';
 import { GetScenarioGroupDBDTO } from './dto/GetScenarioGroupDBDTO';
-import { GetMediaDBDTO } from './others/GetMediaDBDTO';
+import { GetMediaDBDTO } from './dto/GetMediaDBDTO';
 import { GetScenarioDBDTO } from './dto/GetScenarioDBDTO';
 import { GetRoomDBDTO } from './dto/GetRoomDBDTO';
-import { DBNullableBoolean } from './others/DBNullableBoolean';
 import { GetNodeDisplayConfigurationDBDTO } from './dto/GetNodeDisplayConfigurationDBDTO';
-import { DBNullableScaleType } from './others/DBNullableScaleType';
 import { match, P } from 'ts-pattern';
 import { ScaleType } from '../../tools/ScaleType';
-import z from 'zod';
-import { DBStringList } from './others/DBStringList';
 
 export class DatabaseDTOFactory {
   public createGetDatabaseDTO(
@@ -20,7 +16,7 @@ export class DatabaseDTOFactory {
       { populate: ['graphDisplayConfiguration'] }
     >,
   ): GetDatabaseDBDTO {
-    return new GetDatabaseDBDTO({
+    return {
       documentId: db.documentId,
       title: db.title ?? null,
       url: db.url ?? null,
@@ -31,7 +27,7 @@ export class DatabaseDTOFactory {
         this.createGetGraphDisplayConfigurationDTOOrNull(
           db.graphDisplayConfiguration,
         ),
-    });
+    };
   }
 
   public createGetScenarioGroupDTO(
@@ -40,7 +36,7 @@ export class DatabaseDTOFactory {
       { populate: ['graphDisplayConfiguration', 'database'] }
     >,
   ): GetScenarioGroupDBDTO {
-    return new GetScenarioGroupDBDTO({
+    return {
       documentId: db.documentId,
       title: db.title ?? null,
       database: db.database ? this.createGetDatabaseDTO(db.database) : null,
@@ -48,7 +44,7 @@ export class DatabaseDTOFactory {
         this.createGetGraphDisplayConfigurationDTOOrNull(
           db.graphDisplayConfiguration,
         ),
-    });
+    };
   }
 
   public createGetScenarioDTO(
@@ -59,7 +55,7 @@ export class DatabaseDTOFactory {
       cover?: Result<'plugin::upload.file'> | null;
     },
   ): GetScenarioDBDTO {
-    return new GetScenarioDBDTO({
+    return {
       documentId: db.documentId,
       title: db.title ?? null,
       query: db.query ?? null,
@@ -72,15 +68,15 @@ export class DatabaseDTOFactory {
         this.createGetGraphDisplayConfigurationDTOOrNull(
           db.graphDisplayConfiguration,
         ),
-    });
+    };
   }
 
   public createGetRoomDTO(db: Result<'api::room.room'>): GetRoomDBDTO {
-    return new GetRoomDBDTO({
+    return {
       documentId: db.documentId,
       title: db.title ?? null,
       graphJson: db.graphJson ?? null,
-    });
+    };
   }
 
   public createGetGraphDisplayConfigurationDTOOrNull(
@@ -92,7 +88,7 @@ export class DatabaseDTOFactory {
       | null
       | undefined,
   ): GetGraphDisplayConfigurationDBDTO {
-    return new GetGraphDisplayConfigurationDBDTO({
+    return {
       connectResultNodes: this.createNullableBoolean(db?.connectResultNodes),
       growNodesBasedOnDegree: this.createNullableBoolean(
         db?.growNodesBasedOnDegree,
@@ -111,35 +107,35 @@ export class DatabaseDTOFactory {
       compressRelationshipsWidthFactor:
         db?.compressRelationshipsWidthFactor ?? null,
       scaleType: this.createNullableScaleType(db?.scaleType),
-    });
+    };
   }
 
   public createGetNodeDisplayConfigurationDTO(
     db: Result<'graph.node-display-configuration'>,
   ): GetNodeDisplayConfigurationDBDTO {
-    return new GetNodeDisplayConfigurationDBDTO({
+    return {
       targetLabel: db.targetLabel ?? null,
       displayText: db.displayText ?? null,
       radius: db.radius ?? null,
       backgroundColor: db.backgroundColor ?? null,
-    });
+    };
   }
 
   public createNullableBoolean(
     input: 'inherit' | 'true' | 'false' | null | undefined,
-  ): DBNullableBoolean {
+  ): boolean | null {
     const value: boolean | null = match(input)
       .with(P.nullish, (): null => null)
       .with('inherit', (): null => null)
       .with('true', (): boolean => true)
       .with('false', (): boolean => false)
       .exhaustive();
-    return new DBNullableBoolean(value);
+    return value;
   }
 
   public createNullableScaleType(
     input: 'inherit' | 'linear' | 'log2' | 'logn' | 'log10' | null | undefined,
-  ): DBNullableScaleType {
+  ): ScaleType | null {
     const value: ScaleType | null = match(input)
       .with(P.nullish, (): null => null)
       .with('inherit', (): null => null)
@@ -148,24 +144,15 @@ export class DatabaseDTOFactory {
       .with('logn', (): ScaleType => ScaleType.logN)
       .with('log2', (): ScaleType => ScaleType.log2)
       .exhaustive();
-    return new DBNullableScaleType(value);
-  }
-
-  public createStringList(input: unknown): DBStringList {
-    try {
-      const parsedValue: string[] = z.array(z.string()).parse(input);
-      return new DBStringList({ values: parsedValue });
-    } catch {
-      return new DBStringList({ values: [] });
-    }
+    return value;
   }
 
   public createGetMediaDTO(db: Result<'plugin::upload.file'>): GetMediaDBDTO {
-    return new GetMediaDBDTO({
+    return {
       documentId: db.documentId,
       url: db.url ?? null,
       ext: db.ext ?? null,
       hash: db.hash ?? null,
-    });
+    };
   }
 }

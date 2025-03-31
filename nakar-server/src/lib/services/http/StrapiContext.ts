@@ -2,10 +2,10 @@ import { Context } from 'koa';
 import z from 'zod';
 import { InternalServerError, HttpError, BadRequest } from 'http-errors';
 import { match, P } from 'ts-pattern';
-import { DatabaseService } from '../../services/database/DatabaseService';
+import { DatabaseService } from '../database/DatabaseService';
 import { NakarApplication } from '../../application/NakarApplication';
-import { LoggerService } from '../../services/logger/LoggerService';
-import { ConfigService } from '../../services/config/ConfigService';
+import { LoggerService } from '../logger/LoggerService';
+import { ConfigService } from '../config/ConfigService';
 
 export class StrapiContext {
   public readonly databaseService: DatabaseService;

@@ -21,14 +21,19 @@ import z from 'zod';
 import { NotFound } from 'http-errors';
 import { BackupService } from '../../services/backup/BackupService';
 import { FileStream } from '../../tools/fs/FileStream';
+import { SchemaDTOFactory } from './SchemaDTOFactory';
 
 export class HTTPDelegate {
+  private readonly _schemaDTOFactory: SchemaDTOFactory;
+
   public constructor(
     private readonly _config: ConfigService,
     private readonly _logger: LoggerService,
     private readonly _database: DatabaseService,
     private readonly _backup: BackupService,
-  ) {}
+  ) {
+    this._schemaDTOFactory = new SchemaDTOFactory(_config);
+  }
 
   public async getScenario(req: Request): Promise<SchemaScenarios> {
     const scenarioGroupId: string = this._getQueryParameter(
@@ -40,7 +45,7 @@ export class HTTPDelegate {
     return {
       scenarios: dbResult.map(
         (scenario: GetScenarioDBDTO): SchemaScenario =>
-          scenario.toDto(this._config),
+          this._schemaDTOFactory.createSchemaScenario(scenario),
       ),
     };
   }
@@ -52,7 +57,7 @@ export class HTTPDelegate {
     return {
       scenarioGroups: dbResult.map(
         (scenarioGroup: GetScenarioGroupDBDTO): SchemaScenarioGroup =>
-          scenarioGroup.toDto(),
+          this._schemaDTOFactory.createSchemaScenarioGroup(scenarioGroup),
       ),
     };
   }
@@ -61,7 +66,8 @@ export class HTTPDelegate {
     const databases: GetDatabaseDBDTO[] = await this._database.getDatabases();
     return {
       databases: databases.map(
-        (database: GetDatabaseDBDTO): SchemaDatabase => database.toDto(),
+        (database: GetDatabaseDBDTO): SchemaDatabase =>
+          this._schemaDTOFactory.createSchemaDatabase(database),
       ),
     };
   }
@@ -69,7 +75,10 @@ export class HTTPDelegate {
   public async getRoom(): Promise<SchemaRooms> {
     const dbResult: GetRoomDBDTO[] = await this._database.getRooms();
     return {
-      rooms: dbResult.map((room: GetRoomDBDTO): SchemaRoom => room.toDto()),
+      rooms: dbResult.map(
+        (room: GetRoomDBDTO): SchemaRoom =>
+          this._schemaDTOFactory.createSchemaRoom(room),
+      ),
     };
   }
 
@@ -79,7 +88,7 @@ export class HTTPDelegate {
     if (dbResult == null) {
       throw new NotFound('Room not found.');
     }
-    return dbResult.toDto();
+    return this._schemaDTOFactory.createSchemaRoom(dbResult);
   }
 
   public getVersion(): SchemaVersion {

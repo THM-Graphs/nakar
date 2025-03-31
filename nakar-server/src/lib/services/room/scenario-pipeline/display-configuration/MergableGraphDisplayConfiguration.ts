@@ -63,17 +63,17 @@ export class MergableGraphDisplayConfiguration {
     );
 
     return new MergableGraphDisplayConfiguration({
-      connectResultNodes: dbConfig?.connectResultNodes.value ?? null,
-      growNodesBasedOnDegree: dbConfig?.growNodesBasedOnDegree.value ?? null,
+      connectResultNodes: dbConfig?.connectResultNodes ?? null,
+      growNodesBasedOnDegree: dbConfig?.growNodesBasedOnDegree ?? null,
       growNodesBasedOnDegreeFactor:
         dbConfig?.growNodesBasedOnDegreeFactor ?? null,
-      compressRelationships: dbConfig?.compressRelationships.value ?? null,
+      compressRelationships: dbConfig?.compressRelationships ?? null,
       compressRelationshipsWidthFactor:
         dbConfig?.compressRelationshipsWidthFactor ?? null,
       nodeDisplayConfigurations:
         nodeDisplayConfigurations ??
         new SMap<string, MergableNodeDisplayConfiguration>(),
-      scaleType: dbConfig?.scaleType.value ?? null,
+      scaleType: dbConfig?.scaleType ?? null,
     });
   }
 
