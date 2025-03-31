@@ -14,20 +14,6 @@ export class MutablePropertyCollection {
     this.properties = data.properties;
   }
 
-  public static create(
-    properties: Record<string, unknown>,
-  ): MutablePropertyCollection {
-    return new MutablePropertyCollection({
-      properties: Object.entries(properties).reduce(
-        (
-          akku: SMap<string, unknown>,
-          [key, value]: [string, unknown],
-        ): SMap<string, unknown> => akku.bySetting(key, value),
-        new SMap<string, unknown>(),
-      ),
-    });
-  }
-
   public static fromPlain(
     data: z.infer<typeof this.schema>,
   ): MutablePropertyCollection {

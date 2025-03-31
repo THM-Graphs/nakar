@@ -56,22 +56,6 @@ export class MutableEdge {
     return this.startNodeId === this.endNodeId;
   }
 
-  public static create(relationship: Neo4jRelationship): MutableEdge {
-    return new MutableEdge({
-      startNodeId: relationship.relationship.startNodeElementId,
-      endNodeId: relationship.relationship.endNodeElementId,
-      type: relationship.relationship.type,
-      parallelCount: 1,
-      parallelIndex: 0,
-      compressedCount: 1,
-      width: MutableEdge.defaultWidth,
-      properties: MutablePropertyCollection.create(
-        relationship.relationship.properties,
-      ),
-      namesInQuery: relationship.keys,
-    });
-  }
-
   public static fromPlain(
     data: z.infer<typeof MutableEdge.schema>,
   ): MutableEdge {

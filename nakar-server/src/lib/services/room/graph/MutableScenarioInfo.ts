@@ -17,13 +17,6 @@ export class MutableScenarioInfo {
     this.title = data.title;
   }
 
-  public static create(scenario: GetScenarioDBDTO): MutableScenarioInfo {
-    return new MutableScenarioInfo({
-      id: scenario.documentId,
-      title: scenario.title,
-    });
-  }
-
   public static empty(): MutableScenarioInfo {
     return new MutableScenarioInfo({
       id: '',

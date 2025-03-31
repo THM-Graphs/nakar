@@ -91,27 +91,6 @@ export class MutableNode {
     );
   }
 
-  public static create(node: Neo4jNode): MutableNode {
-    const properties: MutablePropertyCollection =
-      MutablePropertyCollection.create(node.node.properties);
-    const labels: SSet<string> = new SSet<string>(node.node.labels);
-
-    return new MutableNode({
-      labels: labels,
-      properties: properties,
-      radius: MutableNode.defaultRadius,
-      position: MutablePosition.default(),
-      inDegree: 0,
-      outDegree: 0,
-      namesInQuery: node.keys,
-      customBackgroundColor: null,
-      customTitleColor: null,
-      customTitle: null,
-      locked: false,
-      grabs: new SSet(),
-    });
-  }
-
   public static fromPlain(data: z.infer<typeof this.schema>): MutableNode {
     return new MutableNode({
       labels: new SSet(data.labels),

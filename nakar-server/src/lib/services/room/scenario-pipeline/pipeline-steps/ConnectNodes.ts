@@ -8,12 +8,14 @@ import { Neo4jGraphElements } from '../../../neo4j/Neo4jGraphElements';
 import { SMap } from '../../../../tools/Map';
 import { ScenarioPipelineStep } from '../ScenarioPipelineStep';
 import { Neo4jLoginCredentials } from '../../../neo4j/Neo4jLoginCredentials';
+import { MutableGraphFactory } from '../MutableGraphFactory';
 
 export class ConnectNodes extends ScenarioPipelineStep<void> {
   private _graph: MutableGraph;
   private _config: FinalGraphDisplayConfiguration;
   private _loginCredentials: Neo4jLoginCredentials;
   private _neo4j: Neo4jService;
+  private _graphFactory: MutableGraphFactory;
 
   public constructor(
     graph: MutableGraph,
@@ -26,6 +28,7 @@ export class ConnectNodes extends ScenarioPipelineStep<void> {
     this._config = config;
     this._loginCredentials = loginCredentials;
     this._neo4j = neo4j;
+    this._graphFactory = new MutableGraphFactory();
   }
 
   public async run(): Promise<void> {
@@ -49,7 +52,8 @@ export class ConnectNodes extends ScenarioPipelineStep<void> {
       );
 
     const edges: SMap<string, MutableEdge> = result.relationships.map(
-      (r: Neo4jRelationship): MutableEdge => MutableEdge.create(r),
+      (r: Neo4jRelationship): MutableEdge =>
+        this._graphFactory.createMutableEdge(r),
     );
 
     input.addNonDuplicateEdges(edges);

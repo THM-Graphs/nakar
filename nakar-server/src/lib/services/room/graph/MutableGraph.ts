@@ -49,24 +49,6 @@ export class MutableGraph {
     return this.nodes.size + this.edges.size;
   }
 
-  public static create(
-    graphElements: Neo4jGraphElements,
-    scenario: GetScenarioDBDTO,
-  ): MutableGraph {
-    return new MutableGraph({
-      id: uuidv4(),
-      nodes: graphElements.nodes.map(
-        (node: Neo4jNode): MutableNode => MutableNode.create(node),
-      ),
-      edges: graphElements.relationships.map(
-        (relationship: Neo4jRelationship): MutableEdge =>
-          MutableEdge.create(relationship),
-      ),
-      metaData: MutableGraphMetaData.create(scenario),
-      tableData: graphElements.tableData,
-    });
-  }
-
   public static empty(): MutableGraph {
     return new MutableGraph({
       id: uuidv4(),

@@ -5,11 +5,13 @@ import { Neo4jService } from '../../../neo4j/Neo4jService';
 import { Neo4jGraphElements } from '../../../neo4j/Neo4jGraphElements';
 import { LoggerService } from '../../../logger/LoggerService';
 import { Neo4jLoginCredentials } from '../../../neo4j/Neo4jLoginCredentials';
+import { MutableGraphFactory } from '../MutableGraphFactory';
 
 export class ExecuteInitialQuery extends ScenarioPipelineStep<MutableGraph> {
   private _query: string;
   private _loginCredentials: Neo4jLoginCredentials;
   private _scenario: GetScenarioDBDTO;
+  private _graphFactory: MutableGraphFactory;
 
   public constructor(
     query: string,
@@ -22,6 +24,7 @@ export class ExecuteInitialQuery extends ScenarioPipelineStep<MutableGraph> {
     this._query = query;
     this._loginCredentials = loginCredentials;
     this._scenario = scenario;
+    this._graphFactory = new MutableGraphFactory();
   }
 
   public async run(): Promise<MutableGraph> {
@@ -29,7 +32,7 @@ export class ExecuteInitialQuery extends ScenarioPipelineStep<MutableGraph> {
       this._loginCredentials,
       this._query,
     );
-    const graph: MutableGraph = MutableGraph.create(
+    const graph: MutableGraph = this._graphFactory.createGraph(
       graphElements,
       this._scenario,
     );

@@ -6,7 +6,6 @@ import {
 import { z } from 'zod';
 import { SMap } from '../../../tools/Map';
 import { MutableScenarioInfo } from './MutableScenarioInfo';
-import { GetScenarioDBDTO } from '../../database/dto/GetScenarioDBDTO';
 
 export class MutableGraphMetaData {
   // eslint-disable-next-line @typescript-eslint/typedef
@@ -48,14 +47,6 @@ export class MutableGraphMetaData {
       ),
       scenarioInfo: MutableScenarioInfo.fromPlain(data.scenarioInfo),
       pipelineSummary: data.pipelineSummary,
-    });
-  }
-
-  public static create(scenario: GetScenarioDBDTO): MutableGraphMetaData {
-    return new MutableGraphMetaData({
-      labels: new SMap(),
-      scenarioInfo: MutableScenarioInfo.create(scenario),
-      pipelineSummary: [],
     });
   }
 
