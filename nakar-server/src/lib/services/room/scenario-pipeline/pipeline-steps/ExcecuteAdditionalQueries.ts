@@ -17,6 +17,16 @@ export class ExcecuteAdditionalQueries extends ScenarioPipelineStep {
   public async run(state: ScenarioPipelineState): Promise<void> {
     const scenario: GetScenarioDBDTO = state.scenarioDBDTO;
     for (const additionalQuery of scenario.additionalQueries) {
+      if (
+        additionalQuery.mergeProperties.length !==
+        additionalQuery.originalProperties.length
+      ) {
+        state.logger.error(
+          this,
+          'Merge property length does not match original property length. This will always fail to match nodes.',
+        );
+      }
+
       const database: GetDatabaseDBDTO | null = additionalQuery.database;
       if (database == null) {
         state.logger.error(
@@ -70,6 +80,10 @@ export class ExcecuteAdditionalQueries extends ScenarioPipelineStep {
     additionalNode: [string, MutableNode],
     config: GetAdditionalQueryDBDTO,
   ): boolean {
+    if (config.mergeProperties.length !== config.originalProperties.length) {
+      return false;
+    }
+
     if (originalNode[0] === additionalNode[0]) {
       return false;
     }
@@ -81,22 +95,24 @@ export class ExcecuteAdditionalQueries extends ScenarioPipelineStep {
       return false;
     }
 
-    const originalValue: unknown = originalNode[1].properties.properties.get(
-      config.originalProperty,
-    );
-    if (originalValue == null) {
-      return false;
-    }
+    for (let i: number = 0; i < config.originalProperties.length; i += 1) {
+      const originalValue: unknown = originalNode[1].properties.properties.get(
+        config.originalProperties[i],
+      );
+      if (originalValue == null) {
+        return false;
+      }
 
-    const mergeValue: unknown = additionalNode[1].properties.properties.get(
-      config.mergeProperty,
-    );
-    if (mergeValue == null) {
-      return false;
-    }
+      const mergeValue: unknown = additionalNode[1].properties.properties.get(
+        config.mergeProperties[i],
+      );
+      if (mergeValue == null) {
+        return false;
+      }
 
-    if (originalValue !== mergeValue) {
-      return false;
+      if (originalValue !== mergeValue) {
+        return false;
+      }
     }
 
     return true;

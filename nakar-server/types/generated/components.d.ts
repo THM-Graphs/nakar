@@ -13,10 +13,10 @@ export interface GraphAdditionalQuery extends Struct.ComponentSchema {
       'api::database.database'
     >;
     mergeLabel: Schema.Attribute.String;
-    mergeProperty: Schema.Attribute.String;
+    mergeProperties: Schema.Attribute.String;
     mergeQuery: Schema.Attribute.Text;
     originalLabel: Schema.Attribute.String;
-    originalProperty: Schema.Attribute.String;
+    originalProperties: Schema.Attribute.String;
   };
 }
 

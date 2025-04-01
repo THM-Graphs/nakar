@@ -18,13 +18,13 @@
     "originalLabel": {
       "type": "string"
     },
-    "originalProperty": {
+    "originalProperties": {
       "type": "string"
     },
     "mergeLabel": {
       "type": "string"
     },
-    "mergeProperty": {
+    "mergeProperties": {
       "type": "string"
     }
   }

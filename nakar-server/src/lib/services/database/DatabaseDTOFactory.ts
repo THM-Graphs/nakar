@@ -93,9 +93,15 @@ export class DatabaseDTOFactory {
   ): GetAdditionalQueryDBDTO {
     return {
       originalLabel: additionalQuery.originalLabel ?? '',
-      originalProperty: additionalQuery.originalProperty ?? '',
+      originalProperties:
+        additionalQuery.originalProperties
+          ?.split(',')
+          .map((element: string): string => element.trim()) ?? [],
       mergeLabel: additionalQuery.mergeLabel ?? '',
-      mergeProperty: additionalQuery.mergeProperty ?? '',
+      mergeProperties:
+        additionalQuery.mergeProperties
+          ?.split(',')
+          .map((element: string): string => element.trim()) ?? [],
       mergeQuery: additionalQuery.mergeQuery ?? '',
       database: additionalQuery.mergeDatabase
         ? this.createGetDatabaseDTO(additionalQuery.mergeDatabase)
