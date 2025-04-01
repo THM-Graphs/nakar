@@ -1,4 +1,3 @@
-import { SchemaGraphProperty } from '../../../../../src-gen/schema';
 import { z } from 'zod';
 import { SMap } from '../../../tools/Map';
 
@@ -37,15 +36,6 @@ export class MutablePropertyCollection {
       }
     }
     return null;
-  }
-
-  public toDto(): SchemaGraphProperty[] {
-    return this.properties.toArray().map(
-      ([key, value]: [string, unknown]): SchemaGraphProperty => ({
-        slug: key,
-        value: value,
-      }),
-    );
   }
 
   public toPlain(): z.infer<typeof MutablePropertyCollection.schema> {

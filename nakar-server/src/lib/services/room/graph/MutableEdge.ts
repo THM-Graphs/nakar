@@ -1,7 +1,7 @@
 import { MutablePropertyCollection } from './MutablePropertyCollection';
-import { SchemaEdge } from '../../../../../src-gen/schema';
 import { z } from 'zod';
 import { SSet } from '../../../tools/Set';
+import { MutableSourceDefinition } from './MutableSourceDefinition';
 
 export class MutableEdge {
   public static readonly defaultWidth: number = 2;
@@ -18,7 +18,6 @@ export class MutableEdge {
     properties: MutablePropertyCollection.schema,
     namesInQuery: z.array(z.string()),
     source: z.string(),
-    additionalSources: z.array(z.string()),
   });
 
   public startNodeId: string;
@@ -30,8 +29,7 @@ export class MutableEdge {
   public width: number;
   public properties: MutablePropertyCollection;
   public namesInQuery: SSet<string>;
-  public source: string;
-  public additionalSources: SSet<string>;
+  public source: MutableSourceDefinition;
 
   public constructor(data: {
     startNodeId: string;
@@ -43,8 +41,7 @@ export class MutableEdge {
     width: number;
     properties: MutablePropertyCollection;
     namesInQuery: SSet<string>;
-    source: string;
-    additionalSources: SSet<string>;
+    source: MutableSourceDefinition;
   }) {
     this.startNodeId = data.startNodeId;
     this.endNodeId = data.endNodeId;
@@ -56,7 +53,6 @@ export class MutableEdge {
     this.properties = data.properties;
     this.namesInQuery = data.namesInQuery;
     this.source = data.source;
-    this.additionalSources = data.additionalSources;
   }
 
   public get isLoop(): boolean {
@@ -76,25 +72,8 @@ export class MutableEdge {
       width: data.width,
       properties: MutablePropertyCollection.fromPlain(data.properties),
       namesInQuery: new SSet(data.namesInQuery),
-      source: data.source,
-      additionalSources: new SSet(data.additionalSources),
+      source: MutableSourceDefinition.fromPlain(data.source),
     });
-  }
-
-  public toDto(id: string): SchemaEdge {
-    return {
-      id: id,
-      startNodeId: this.startNodeId,
-      endNodeId: this.endNodeId,
-      type: this.type,
-      isLoop: this.isLoop,
-      parallelCount: this.parallelCount,
-      parallelIndex: this.parallelIndex,
-      compressedCount: this.compressedCount,
-      width: this.width,
-      properties: this.properties.toDto(),
-      namesInQuery: this.namesInQuery.toArray(),
-    };
   }
 
   public isParallelTo(other: MutableEdge): boolean {
@@ -117,8 +96,7 @@ export class MutableEdge {
       width: this.width,
       properties: this.properties.toPlain(),
       namesInQuery: this.namesInQuery.toArray(),
-      source: this.source,
-      additionalSources: this.additionalSources.toArray(),
+      source: this.source.toPlain(),
     };
   }
 }

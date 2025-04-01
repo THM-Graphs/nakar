@@ -1,15 +1,9 @@
 import { MutableNode } from './MutableNode';
 import { MutableEdge } from './MutableEdge';
 import { MutableGraphMetaData } from './MutableGraphMetaData';
-import {
-  SchemaEdge,
-  SchemaGraph,
-  SchemaNode,
-} from '../../../../../src-gen/schema';
 import { z } from 'zod';
 import { SMap } from '../../../tools/Map';
 import { v4 as uuidv4 } from 'uuid';
-import { LoggerService } from '../../logger/LoggerService';
 
 export class MutableGraph {
   // eslint-disable-next-line @typescript-eslint/typedef
@@ -88,25 +82,6 @@ export class MutableGraph {
     } catch {
       return MutableGraph.empty();
     }
-  }
-
-  public toDto(logger: LoggerService): SchemaGraph {
-    return {
-      nodes: this.nodes
-        .toArray()
-        .map(
-          ([id, node]: [string, MutableNode]): SchemaNode =>
-            node.toDto(id, logger),
-        ),
-      edges: this.edges
-        .toArray()
-        .map(([id, edge]: [string, MutableEdge]): SchemaEdge => edge.toDto(id)),
-      metaData: this.metaData.toDto(),
-      tableData: this.tableData.map(
-        (entry: SMap<string, unknown>): Record<string, unknown> =>
-          entry.toRecord(),
-      ),
-    };
   }
 
   public byMergingWith(otherGraph: MutableGraph): MutableGraph {

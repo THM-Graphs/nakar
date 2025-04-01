@@ -12,6 +12,8 @@ import { SSet } from '../../../tools/Set';
 import { MutablePosition } from '../graph/MutablePosition';
 import { SMap } from '../../../tools/Map';
 import { MutableScenarioInfo } from '../graph/MutableScenarioInfo';
+import { MutableSourceDefinition } from '../graph/MutableSourceDefinition';
+import { Neo4jDatabaseInfo } from '../../neo4j/Neo4jDatabaseInfo';
 
 export class MutableGraphFactory {
   public createGraph(
@@ -46,7 +48,7 @@ export class MutableGraphFactory {
       customTitle: null,
       locked: false,
       grabs: new SSet(),
-      source: node.source,
+      source: this.createMutableSourceDefinition(node.source),
       additionalSources: new SSet(),
     });
   }
@@ -64,8 +66,7 @@ export class MutableGraphFactory {
         relationship.relationship.properties,
       ),
       namesInQuery: relationship.keys,
-      source: relationship.source,
-      additionalSources: new SSet(),
+      source: this.createMutableSourceDefinition(relationship.source),
     });
   }
 
@@ -99,6 +100,14 @@ export class MutableGraphFactory {
     return new MutableScenarioInfo({
       id: scenario.documentId,
       title: scenario.title,
+    });
+  }
+
+  public createMutableSourceDefinition(
+    neo4jDatabaseInfo: Neo4jDatabaseInfo,
+  ): MutableSourceDefinition {
+    return new MutableSourceDefinition({
+      databaseId: neo4jDatabaseInfo.databaseId,
     });
   }
 }

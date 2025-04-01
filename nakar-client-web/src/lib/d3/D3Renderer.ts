@@ -175,7 +175,7 @@ export class D3Renderer {
       .append("path")
       .attr("fill", "none")
       .attr("stroke", theme == "dark" ? "#ffffff" : "#000000")
-      .attr("stroke-width", (d) => d.width)
+      .attr("stroke-width", (d) => d.native.width)
       .attr("marker-end", "url(#arrow)");
 
     this.linkLabelSelection = zoomContainer
@@ -188,9 +188,9 @@ export class D3Renderer {
 
     this.linkLabelSelection
       .append("foreignObject")
-      .attr("width", (d) => d.type.length * 20)
+      .attr("width", (d) => d.native.type.length * 20)
       .attr("height", 40)
-      .attr("x", (d) => -(d.type.length * 20) / 2)
+      .attr("x", (d) => -(d.native.type.length * 20) / 2)
       .attr("y", () => -11)
       .append("xhtml:div")
       .attr("xmlns", "http://www.w3.org/1999/xhtml")
@@ -215,9 +215,9 @@ export class D3Renderer {
         `;
       })
       .text((d) =>
-        d.compressedCount > 1
-          ? `${d.type} (${d.compressedCount.toString()})`
-          : d.type,
+        d.native.compressedCount > 1
+          ? `${d.native.type} (${d.native.compressedCount.toString()})`
+          : d.native.type,
       );
 
     this.linkLabelSelection.on("click", (event: PointerEvent, edge: D3Link) => {

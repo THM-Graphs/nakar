@@ -2,7 +2,7 @@ import { ScenarioPipelineStep } from '../ScenarioPipelineStep';
 import { ScenarioPipelineState } from '../ScenarioPipelineState';
 import { GetScenarioDBDTO } from '../../../database/dto/GetScenarioDBDTO';
 import { GetDatabaseDBDTO } from '../../../database/dto/GetDatabaseDBDTO';
-import { Neo4jLoginCredentials } from '../../../neo4j/Neo4jLoginCredentials';
+import { Neo4jDatabaseInfo } from '../../../neo4j/Neo4jDatabaseInfo';
 import { Neo4jGraphElements } from '../../../neo4j/Neo4jGraphElements';
 import { MutableNode } from '../../graph/MutableNode';
 import { GetAdditionalQueryDBDTO } from '../../../database/dto/GetAdditionalQueryDBDTO';
@@ -31,12 +31,10 @@ export class ExcecuteAdditionalQueries extends ScenarioPipelineStep {
         `Will run additional query on ${database.title ?? '[no title]'}: ${additionalQuery.mergeQuery}`,
       );
 
-      const credentials: Neo4jLoginCredentials =
-        Neo4jLoginCredentials.parse(database);
+      const databaseInfo: Neo4jDatabaseInfo = Neo4jDatabaseInfo.parse(database);
       const result: Neo4jGraphElements = await state.neo4j.executeQuery(
-        credentials,
+        databaseInfo,
         additionalQuery.mergeQuery,
-        database.documentId,
       );
       const graphFactory: MutableGraphFactory = new MutableGraphFactory();
       const additionalGraph: MutableGraph = graphFactory.createGraph(

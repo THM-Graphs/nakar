@@ -150,10 +150,13 @@ components:
           $ref: "#/components/schemas/Color"
         count:
           type: integer
+        source:
+          type: string
       required:
         - label
         - color
         - count
+        - source
 
     GraphProperty:
       type: object
@@ -203,6 +206,12 @@ components:
         customTitleColor:
           type: string
           nullable: true
+        source:
+          type: string
+        additionalSources:
+          type: array
+          items:
+            type: string
       required:
         - id
         - title
@@ -217,6 +226,8 @@ components:
         - displayConfigurationContext
         - customBackgroundColor
         - customTitleColor
+        - source
+        - additionalSources
 
     PhysicalNode:
       type: object
@@ -269,6 +280,8 @@ components:
           type: array
           items:
             type: string
+        source:
+          type: string
       required:
         - id
         - startNodeId
@@ -281,6 +294,7 @@ components:
         - compressedCount
         - width
         - namesInQuery
+        - source
 
     ScenarioInfo:
       type: object

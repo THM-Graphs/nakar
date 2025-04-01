@@ -31,9 +31,10 @@ export class D3RendererState {
 
       if (sourceNode && targetNode) {
         acc.push({
-          ...edge,
+          id: edge.id,
           source: sourceNode,
           target: targetNode,
+          native: edge,
         });
       }
       return acc;

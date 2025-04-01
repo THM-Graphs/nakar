@@ -1,15 +1,16 @@
 import { Relationship } from 'neo4j-driver';
 import { SSet } from '../../tools/Set';
+import { Neo4jDatabaseInfo } from './Neo4jDatabaseInfo';
 
 export class Neo4jRelationship {
   public readonly relationship: Relationship;
   public readonly keys: SSet<string>;
-  public readonly source: string;
+  public readonly source: Neo4jDatabaseInfo;
 
   public constructor(data: {
     relationship: Relationship;
     keys: SSet<string>;
-    source: string;
+    source: Neo4jDatabaseInfo;
   }) {
     this.relationship = data.relationship;
     this.keys = data.keys;
@@ -19,7 +20,7 @@ export class Neo4jRelationship {
   public static fromRawRelationship(
     relationship: Relationship,
     key: string | null,
-    source: string,
+    source: Neo4jDatabaseInfo,
   ): Neo4jRelationship {
     return new Neo4jRelationship({
       relationship: relationship,

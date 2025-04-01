@@ -1,7 +1,7 @@
 import { MutableGraph } from '../graph/MutableGraph';
 import { GetScenarioDBDTO } from '../../database/dto/GetScenarioDBDTO';
 import { DatabaseService } from '../../database/DatabaseService';
-import { Neo4jLoginCredentials } from '../../neo4j/Neo4jLoginCredentials';
+import { Neo4jDatabaseInfo } from '../../neo4j/Neo4jDatabaseInfo';
 import { Neo4jService } from '../../neo4j/Neo4jService';
 import { LoggerService } from '../../logger/LoggerService';
 import { FinalGraphDisplayConfiguration } from './display-configuration/FinalGraphDisplayConfiguration';
@@ -20,7 +20,7 @@ export class ScenarioPipelineState {
   private _pipelineSummary: [string, number][];
   private _graph: MutableGraph | null;
   private _scenario: GetScenarioDBDTO | null;
-  private _credentials: Neo4jLoginCredentials | null;
+  private _databaseInfo: Neo4jDatabaseInfo | null;
   private _displayConfiguration: FinalGraphDisplayConfiguration | null;
 
   public constructor(
@@ -40,7 +40,7 @@ export class ScenarioPipelineState {
     this._pipelineSummary = [];
     this._graph = null;
     this._scenario = null;
-    this._credentials = null;
+    this._databaseInfo = null;
     this._displayConfiguration = null;
   }
 
@@ -82,13 +82,13 @@ export class ScenarioPipelineState {
     return this._scenario.scenarioGroup.database;
   }
 
-  public get credentials(): Neo4jLoginCredentials {
-    if (this._credentials == null) {
+  public get databaseInfo(): Neo4jDatabaseInfo {
+    if (this._databaseInfo == null) {
       throw new Error(
-        'Unable to read nei4j credentials from scenario pipeline.',
+        'Unable to read neo4j credentials from scenario pipeline.',
       );
     }
-    return this._credentials;
+    return this._databaseInfo;
   }
 
   public get displayConfiguration(): FinalGraphDisplayConfiguration {
@@ -116,8 +116,8 @@ export class ScenarioPipelineState {
     this._scenario = value;
   }
 
-  public set credentials(value: Neo4jLoginCredentials) {
-    this._credentials = value;
+  public set databaseInfo(value: Neo4jDatabaseInfo) {
+    this._databaseInfo = value;
   }
 
   public set displayConfiguration(value: FinalGraphDisplayConfiguration) {

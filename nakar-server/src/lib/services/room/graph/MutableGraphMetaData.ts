@@ -1,8 +1,4 @@
 import { MutableGraphLabel } from './MutableGraphLabel';
-import {
-  SchemaGraphLabel,
-  SchemaGraphMetaData,
-} from '../../../../../src-gen/schema';
 import { z } from 'zod';
 import { SMap } from '../../../tools/Map';
 import { MutableScenarioInfo } from './MutableScenarioInfo';
@@ -48,26 +44,6 @@ export class MutableGraphMetaData {
       scenarioInfo: MutableScenarioInfo.fromPlain(data.scenarioInfo),
       pipelineSummary: data.pipelineSummary,
     });
-  }
-
-  public toDto(): SchemaGraphMetaData {
-    return {
-      labels: this.labels
-        .toArray()
-        .map(
-          ([id, label]: [string, MutableGraphLabel]): SchemaGraphLabel =>
-            label.toDto(id),
-        ),
-      scenarioInfo: this.scenarioInfo.toDto(),
-      pipelineSummary: this.pipelineSummary.map(
-        (entry: [string, number]): { step: string; durationMs: number } => {
-          return {
-            step: entry[0],
-            durationMs: entry[1],
-          };
-        },
-      ),
-    };
   }
 
   public toPlain(): z.infer<typeof MutableGraphMetaData.schema> {

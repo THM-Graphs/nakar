@@ -1,5 +1,5 @@
 import { ScenarioPipelineStep } from '../ScenarioPipelineStep';
-import { Neo4jLoginCredentials } from '../../../neo4j/Neo4jLoginCredentials';
+import { Neo4jDatabaseInfo } from '../../../neo4j/Neo4jDatabaseInfo';
 import { ScenarioPipelineState } from '../ScenarioPipelineState';
 
 export class ParseNeo4jLoginCredentials extends ScenarioPipelineStep {
@@ -8,10 +8,10 @@ export class ParseNeo4jLoginCredentials extends ScenarioPipelineStep {
   }
 
   public run(state: ScenarioPipelineState): void {
-    const credentials: Neo4jLoginCredentials = Neo4jLoginCredentials.parse(
+    const credentials: Neo4jDatabaseInfo = Neo4jDatabaseInfo.parse(
       state.databaseDBDTO,
     );
 
-    state.credentials = credentials;
+    state.databaseInfo = credentials;
   }
 }

@@ -39,11 +39,4 @@ export class MutableScenarioInfo {
       title: this.title,
     };
   }
-
-  public toDto(): SchemaScenarioInfo {
-    return {
-      id: this.id,
-      title: this.title,
-    };
-  }
 }

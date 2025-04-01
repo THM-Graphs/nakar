@@ -71,7 +71,7 @@ export function GraphRendererD3(props: {
         props.onNodeClicked(n);
       }),
       graphRenderer.onDisplayLinkData.subscribe((l) => {
-        props.onEdgeClicked(l);
+        props.onEdgeClicked(l.native);
       }),
     ];
 

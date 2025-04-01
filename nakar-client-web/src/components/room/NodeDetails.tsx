@@ -31,6 +31,16 @@ export function NodeDetails(props: {
           {props.node.labels.join(", ")}
         </ListGroup.Item>
         <ListGroup.Item>
+          <h6>Source</h6>
+          {props.node.source}
+        </ListGroup.Item>
+        {props.node.additionalSources.length > 0 && (
+          <ListGroup.Item>
+            <h6>Additional Sources</h6>
+            {props.node.additionalSources.join(", ")}
+          </ListGroup.Item>
+        )}
+        <ListGroup.Item>
           <h6>Properties</h6>
           <Table>
             <thead>

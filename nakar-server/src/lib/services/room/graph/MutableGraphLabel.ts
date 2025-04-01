@@ -1,7 +1,7 @@
 import { MutableGraphColor } from './MutableGraphColor';
-import { SchemaGraphLabel } from '../../../../../src-gen/schema';
 import z from 'zod';
 import { MutableGraphColorFactory } from './MutableGraphColorFactory';
+import { MutableSourceDefinition } from './MutableSourceDefinition';
 
 export class MutableGraphLabel {
   // eslint-disable-next-line @typescript-eslint/typedef
@@ -13,12 +13,12 @@ export class MutableGraphLabel {
 
   public color: MutableGraphColor;
   public count: number;
-  public source: string;
+  public source: MutableSourceDefinition;
 
   public constructor(data: {
     color: MutableGraphColor;
     count: number;
-    source: string;
+    source: MutableSourceDefinition;
   }) {
     this.color = data.color;
     this.count = data.count;
@@ -31,16 +31,8 @@ export class MutableGraphLabel {
     return new MutableGraphLabel({
       color: MutableGraphColorFactory.fromPlain(data.color),
       count: data.count,
-      source: data.source,
+      source: MutableSourceDefinition.fromPlain(data.source),
     });
-  }
-
-  public toDto(id: string): SchemaGraphLabel {
-    return {
-      label: id,
-      count: this.count,
-      color: this.color.toDto(),
-    };
   }
 
   public byIncrementingCount(): MutableGraphLabel {
@@ -55,7 +47,7 @@ export class MutableGraphLabel {
     return {
       color: this.color.toPlain(),
       count: this.count,
-      source: this.source,
+      source: this.source.toPlain(),
     };
   }
 }

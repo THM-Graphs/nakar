@@ -45,6 +45,21 @@ export class DatabaseService implements ApplicationService {
     );
   }
 
+  public async getDatabase(
+    databaseId: string,
+  ): Promise<GetDatabaseDBDTO | null> {
+    const rawDatabase: Result<'api::database.database'> | null = await strapi
+      .documents('api::database.database')
+      .findOne({
+        status: 'published',
+        documentId: databaseId,
+      });
+    if (rawDatabase == null) {
+      return null;
+    }
+    return this._databaseDtoFactory.createGetDatabaseDTO(rawDatabase);
+  }
+
   public async getRoom(roomId: string): Promise<GetRoomDBDTO | null> {
     const rawRoom: Result<'api::room.room'> | null = await strapi
       .documents('api::room.room')

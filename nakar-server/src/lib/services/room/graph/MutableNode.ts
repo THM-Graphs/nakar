@@ -1,11 +1,8 @@
 import { MutablePosition } from './MutablePosition';
-import { Neo4jNode } from '../../neo4j/Neo4jNode';
 import { MutablePropertyCollection } from './MutablePropertyCollection';
-import { SchemaNode } from '../../../../../src-gen/schema';
-import { NodeDisplayConfigurationContext } from '../scenario-pipeline/display-configuration/NodeDisplayConfigurationContext';
 import { z } from 'zod';
 import { SSet } from '../../../tools/Set';
-import { LoggerService } from '../../logger/LoggerService';
+import { MutableSourceDefinition } from './MutableSourceDefinition';
 
 export class MutableNode {
   public static readonly defaultRadius: number = 40;
@@ -39,8 +36,8 @@ export class MutableNode {
   public customTitle: string | null;
   public locked: boolean;
   public grabs: SSet<string>;
-  public source: string;
-  public additionalSources: SSet<string>;
+  public source: MutableSourceDefinition;
+  public additionalSources: SSet<MutableSourceDefinition>;
 
   /* runtime only */
   public velocityX: number;
@@ -59,8 +56,8 @@ export class MutableNode {
     customTitle: string | null;
     locked: boolean;
     grabs: SSet<string>;
-    source: string;
-    additionalSources: SSet<string>;
+    source: MutableSourceDefinition;
+    additionalSources: SSet<MutableSourceDefinition>;
   }) {
     this.labels = data.labels;
     this.properties = data.properties;
@@ -113,31 +110,15 @@ export class MutableNode {
       customTitle: data.customTitle,
       locked: data.locked,
       grabs: new SSet(data.grabs),
-      source: data.source,
-      additionalSources: new SSet(data.additionalSources),
+      source: MutableSourceDefinition.fromPlain(data.source),
+      additionalSources: new SSet(
+        data.additionalSources.map(
+          (additionalSource: string): MutableSourceDefinition => {
+            return MutableSourceDefinition.fromPlain(additionalSource);
+          },
+        ),
+      ),
     });
-  }
-
-  public toDto(id: string, logger: LoggerService): SchemaNode {
-    return {
-      id: id,
-      title: this.title,
-      labels: this.labels.toArray(),
-      properties: this.properties.toDto(),
-      radius: this.radius,
-      position: this.position,
-      inDegree: this.inDegree,
-      outDegree: this.outDegree,
-      degree: this.degree,
-      namesInQuery: this.namesInQuery.toArray(),
-      displayConfigurationContext: NodeDisplayConfigurationContext.create(
-        id,
-        this,
-        logger,
-      ).toDto(),
-      customBackgroundColor: this.customBackgroundColor,
-      customTitleColor: this.customTitleColor,
-    };
   }
 
   public toPlain(): z.infer<typeof MutableNode.schema> {
@@ -154,8 +135,12 @@ export class MutableNode {
       customTitle: this.customTitle,
       locked: this.locked,
       grabs: this.grabs.toArray(),
-      source: this.source,
-      additionalSources: this.additionalSources.toArray(),
+      source: this.source.toPlain(),
+      additionalSources: this.additionalSources
+        .toArray()
+        .map((additionalSource: MutableSourceDefinition): string => {
+          return additionalSource.toPlain();
+        }),
     };
   }
 }

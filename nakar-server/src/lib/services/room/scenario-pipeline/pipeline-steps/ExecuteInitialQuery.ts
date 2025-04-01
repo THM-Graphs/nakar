@@ -17,9 +17,8 @@ export class ExecuteInitialQuery extends ScenarioPipelineStep {
     }
 
     const graphElements: Neo4jGraphElements = await state.neo4j.executeQuery(
-      state.credentials,
+      state.databaseInfo,
       state.scenarioDBDTO.query,
-      state.scenarioDBDTO.documentId,
     );
     const graph: MutableGraph = graphFactory.createGraph(
       graphElements,

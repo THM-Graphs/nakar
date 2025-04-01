@@ -84,7 +84,7 @@ export class NodeDisplayConfigurationContext {
     }
   }
 
-  public toDto(): z.infer<typeof this.schema> {
+  public toPlain(): z.infer<typeof this.schema> {
     return this._nativeData;
   }
 }

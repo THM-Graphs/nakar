@@ -1,4 +1,4 @@
-import { Neo4jLoginCredentials } from './Neo4jLoginCredentials';
+import { Neo4jDatabaseInfo } from './Neo4jDatabaseInfo';
 import neo4j, {
   auth,
   driver as createDriver,
@@ -26,14 +26,13 @@ export class Neo4jService implements ApplicationService {
   }
 
   public async executeQuery(
-    loginCredentials: Neo4jLoginCredentials,
+    databaseInfo: Neo4jDatabaseInfo,
     query: string,
-    sourceId: string,
     parameters?: Record<string, unknown>,
   ): Promise<Neo4jGraphElements> {
     const driver: Driver = createDriver(
-      loginCredentials.url,
-      auth.basic(loginCredentials.username, loginCredentials.password),
+      databaseInfo.url,
+      auth.basic(databaseInfo.username, databaseInfo.password),
     );
     this._logger.debug(
       this,
@@ -57,7 +56,7 @@ export class Neo4jService implements ApplicationService {
 
         const nei4jGraphElementsFactory: Neo4jGraphElementsFactory =
           new Neo4jGraphElementsFactory(this._logger);
-        return nei4jGraphElementsFactory.fromQueryResult(result, sourceId);
+        return nei4jGraphElementsFactory.fromQueryResult(result, databaseInfo);
       } catch (error) {
         await session.close();
         this._logger.error(this, error);
@@ -71,15 +70,13 @@ export class Neo4jService implements ApplicationService {
   }
 
   public async loadConnectingRelationships(
-    loginCredentials: Neo4jLoginCredentials,
+    databaseInfo: Neo4jDatabaseInfo,
     nodeIds: SSet<string>,
-    sourceId: string,
   ): Promise<Neo4jGraphElements> {
     const nodesIds: string[] = [...nodeIds.values()];
     const additional: Neo4jGraphElements = await this.executeQuery(
-      loginCredentials,
+      databaseInfo,
       'MATCH (a)-[additionalRelationship]->(b) WHERE elementId(a) IN $existingNodeIds AND elementId(b) IN $existingNodeIds RETURN additionalRelationship;',
-      sourceId,
       {
         existingNodeIds: nodesIds,
       },

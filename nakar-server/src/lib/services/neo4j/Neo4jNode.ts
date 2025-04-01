@@ -1,12 +1,17 @@
 import { Node } from 'neo4j-driver';
 import { SSet } from '../../tools/Set';
+import { Neo4jDatabaseInfo } from './Neo4jDatabaseInfo';
 
 export class Neo4jNode {
   public readonly node: Node;
   public readonly keys: SSet<string>;
-  public readonly source: string;
+  public readonly source: Neo4jDatabaseInfo;
 
-  public constructor(data: { node: Node; keys: SSet<string>; source: string }) {
+  public constructor(data: {
+    node: Node;
+    keys: SSet<string>;
+    source: Neo4jDatabaseInfo;
+  }) {
     this.node = data.node;
     this.keys = data.keys;
     this.source = data.source;
@@ -15,7 +20,7 @@ export class Neo4jNode {
   public static fromRawNode(
     node: Node,
     key: string | null,
-    source: string,
+    source: Neo4jDatabaseInfo,
   ): Neo4jNode {
     return new Neo4jNode({
       node: node,

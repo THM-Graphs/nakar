@@ -4,6 +4,7 @@ import {
   Socket as UntypedSocket,
 } from 'socket.io';
 import {
+  SchemaGraph,
   SchemaPhysicalNode,
   SchemaWsActionGrabNode,
   SchemaWsActionJoinRoom,
@@ -34,6 +35,7 @@ import { MutableGraph } from '../room/graph/MutableGraph';
 import z from 'zod';
 import { Subscription } from 'rxjs';
 import { HTTPService } from '../http/HTTPService';
+import { CachingSchemaDTOFactory } from '../http/CachingSchemaDTOFactory';
 
 export type Server = UntypedServer<ClientToServerEvents, ServerToClientEvents>;
 export type Socket = UntypedSocket<ClientToServerEvents, ServerToClientEvents>;
@@ -95,10 +97,19 @@ export class SocketIOService implements ApplicationService {
             const graph: MutableGraph = plainGraph
               ? MutableGraph.fromPlain(plainGraph)
               : MutableGraph.empty();
-            wsClient.send({
-              type: 'WSEventScenarioLoaded',
-              graph: graph.toDto(this._logger),
-            });
+            const cachedGraphFactory: CachingSchemaDTOFactory =
+              new CachingSchemaDTOFactory(this._databaseService, this._logger);
+            cachedGraphFactory
+              .createSchemaGraph(graph)
+              .then((schemaGraph: SchemaGraph) => {
+                wsClient.send({
+                  type: 'WSEventScenarioLoaded',
+                  graph: schemaGraph,
+                });
+              })
+              .catch((error: unknown): void => {
+                this._logger.error(this, error);
+              });
           }
         }),
       );
@@ -381,9 +392,18 @@ export class SocketIOService implements ApplicationService {
   }
 
   private _handleRoomUpdate(message: RSEventRoomUpdated): void {
-    this.sendToRoom(message.roomId, {
-      graph: message.graph.toDto(this._logger),
-      type: 'WSEventScenarioLoaded',
-    });
+    const cachedGraphFactory: CachingSchemaDTOFactory =
+      new CachingSchemaDTOFactory(this._databaseService, this._logger);
+    cachedGraphFactory
+      .createSchemaGraph(message.graph)
+      .then((graph: SchemaGraph): void => {
+        this.sendToRoom(message.roomId, {
+          graph: graph,
+          type: 'WSEventScenarioLoaded',
+        });
+      })
+      .catch((error: unknown): void => {
+        this._logger.error(this, error);
+      });
   }
 }

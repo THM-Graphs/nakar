@@ -27,6 +27,10 @@ export function EdgeDetails(props: {
       </Card.Body>
       <ListGroup className="list-group-flush">
         <ListGroup.Item>
+          <h6>Source</h6>
+          {props.edge.source}
+        </ListGroup.Item>
+        <ListGroup.Item>
           <h6>Properties</h6>
           <Table>
             <thead>

@@ -44,4 +44,12 @@ export class SSet<T> extends Set<T> {
     }
     return result;
   }
+
+  public async asyncMap<U>(cb: (element: T) => Promise<U>): Promise<SSet<U>> {
+    const n: SSet<U> = new SSet<U>();
+    for (const el of this) {
+      n.add(await cb(el));
+    }
+    return n;
+  }
 }

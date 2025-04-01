@@ -15,6 +15,7 @@ import { LoggerService } from '../logger/LoggerService';
 import { PathSegment, Record as Neo4jRecord } from 'neo4j-driver-core';
 import { match, P } from 'ts-pattern';
 import { Neo4jGraphElements } from './Neo4jGraphElements';
+import { Neo4jDatabaseInfo } from './Neo4jDatabaseInfo';
 
 export class Neo4jGraphElementsFactory {
   public constructor(private readonly _logger: LoggerService) {}
@@ -34,7 +35,7 @@ export class Neo4jGraphElementsFactory {
   public fromRawNode(
     node: Node,
     key: string | null,
-    source: string,
+    source: Neo4jDatabaseInfo,
   ): Neo4jGraphElements {
     return new Neo4jGraphElements({
       nodes: new SMap([
@@ -48,7 +49,7 @@ export class Neo4jGraphElementsFactory {
   public fromRawRelationship(
     relationship: Relationship,
     key: string | null,
-    source: string,
+    source: Neo4jDatabaseInfo,
   ): Neo4jGraphElements {
     return new Neo4jGraphElements({
       relationships: new SMap([
@@ -73,7 +74,7 @@ export class Neo4jGraphElementsFactory {
   public fromField(
     key: string,
     field: unknown,
-    source: string,
+    source: Neo4jDatabaseInfo,
   ): Neo4jGraphElements {
     if (isNode(field)) {
       return this.fromRawNode(field, key, source);
@@ -109,7 +110,7 @@ export class Neo4jGraphElementsFactory {
   public fromFields(
     key: string,
     fields: unknown[],
-    source: string,
+    source: Neo4jDatabaseInfo,
   ): Neo4jGraphElements {
     return this.mergeMultiple(
       ...fields.map(
@@ -121,7 +122,7 @@ export class Neo4jGraphElementsFactory {
 
   public fromQueryResult(
     queryResult: QueryResult<RecordShape<string, unknown>>,
-    source: string,
+    source: Neo4jDatabaseInfo,
   ): Neo4jGraphElements {
     return this.mergeMultiple(
       ...queryResult.records.map(
@@ -134,7 +135,7 @@ export class Neo4jGraphElementsFactory {
 
   public fromRecord(
     record: Neo4jRecord<RecordShape<string, unknown>>,
-    source: string,
+    source: Neo4jDatabaseInfo,
   ): Neo4jGraphElements {
     const results: Neo4jGraphElements[] = record.keys.map(
       (key: string): Neo4jGraphElements =>

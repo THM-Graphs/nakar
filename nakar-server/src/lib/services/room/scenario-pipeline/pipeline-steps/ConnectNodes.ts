@@ -30,9 +30,8 @@ export class ConnectNodes extends ScenarioPipelineStep {
 
     const result: Neo4jGraphElements =
       await state.neo4j.loadConnectingRelationships(
-        state.credentials,
+        state.databaseInfo,
         nodeIds,
-        state.databaseDBDTO.documentId,
       );
 
     const graphFactory: MutableGraphFactory = new MutableGraphFactory();

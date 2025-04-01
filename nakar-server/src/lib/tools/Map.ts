@@ -73,4 +73,24 @@ export class SMap<K extends string | number | symbol, V> extends Map<K, V> {
     }
     return null;
   }
+
+  public async asyncMap<T>(
+    mapper: (key: K, value: V) => Promise<T>,
+  ): Promise<SMap<K, T>> {
+    const n: SMap<K, T> = new SMap<K, T>();
+    for (const el of this) {
+      n.set(el[0], await mapper(el[0], el[1]));
+    }
+    return n;
+  }
+
+  public async asyncFlatMap<T>(
+    mapper: (key: K, value: V) => Promise<T>,
+  ): Promise<T[]> {
+    const n: T[] = [];
+    for (const el of this) {
+      n.push(await mapper(el[0], el[1]));
+    }
+    return n;
+  }
 }

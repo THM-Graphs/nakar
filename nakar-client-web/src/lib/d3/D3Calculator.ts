@@ -8,9 +8,10 @@ export class D3Calculator {
     const x2 = d.target.x;
     const y2 = d.target.y;
 
-    if (d.isLoop) {
-      const loopSizeRadius = Math.min(90, 360 / d.parallelCount / 2) / 2;
-      const angle = (d.parallelIndex / d.parallelCount) * 360 - 90;
+    if (d.native.isLoop) {
+      const loopSizeRadius = Math.min(90, 360 / d.native.parallelCount / 2) / 2;
+      const angle =
+        (d.native.parallelIndex / d.native.parallelCount) * 360 - 90;
       const length = d.source.radius;
       const ps = this.vector(x1, y1, angle - loopSizeRadius, length);
       const pe = this.vector(x1, y1, angle + loopSizeRadius, length);
@@ -51,9 +52,9 @@ export class D3Calculator {
       (c): [number, number] => [c.x, c.y],
     );
 
-    if (d.isLoop) {
+    if (d.native.isLoop) {
       return d3.line().curve(d3.curveCardinal.tension(-5))(points);
-    } else if (d.parallelCount > 0) {
+    } else if (d.native.parallelCount > 0) {
       return d3.line().curve(d3.curveCatmullRom)(points);
     } else {
       return d3.line()(points);
@@ -121,7 +122,9 @@ export class D3Calculator {
       y1,
       x2,
       y2,
-      d.isLoop ? curvAmount + d.source.radius : d.parallelIndex * curvAmount,
+      d.native.isLoop
+        ? curvAmount + d.source.radius
+        : d.native.parallelIndex * curvAmount,
     );
 
     return {
