@@ -21,7 +21,11 @@ import { ProfilerTask } from '../profiler/ProfilerTask';
 import { ApplicationService } from '../../application/ApplicationService';
 import { BackupService } from '../backup/BackupService';
 import { FileStream } from '../../tools/fs/FileStream';
+import fsAsync from 'node:fs/promises';
 import fs from 'node:fs';
+import fileupload from 'express-fileupload';
+import os from 'node:os';
+import path from 'path';
 
 export class HTTPService implements ApplicationService {
   private readonly _app: Application;
@@ -50,7 +54,13 @@ export class HTTPService implements ApplicationService {
     this._setupRoutes();
   }
 
+  private get _uploadTemporaryDirectoryPath(): string {
+    return path.join(os.tmpdir(), 'nakar-fileupload');
+  }
+
   public async bootstrap(): Promise<void> {
+    await this._tmpCleanup();
+
     this._server.on('close', (): void => {
       this._logger.debug(this, 'Server will close.');
     });
@@ -80,15 +90,34 @@ export class HTTPService implements ApplicationService {
     );
   }
 
-  public destroy(): void | Promise<void> {
-    /* */
+  public async destroy(): Promise<void> {
+    await this._tmpCleanup();
   }
 
   public getServerInstance(): http.Server {
     return this._server;
   }
 
+  private async _tmpCleanup(): Promise<void> {
+    try {
+      this._logger.debug(
+        this,
+        `Will remove fileupload path ${this._uploadTemporaryDirectoryPath}`,
+      );
+      await fsAsync.rm(this._uploadTemporaryDirectoryPath, { recursive: true });
+    } catch {
+      /* ok */
+    }
+  }
+
   private _setupMiddleware(): void {
+    this._app.use(
+      fileupload({
+        limits: { fileSize: 2 * Math.pow(1024, 3) }, // 2 GB
+        useTempFiles: true,
+        tempFileDir: path.join(os.tmpdir(), 'nakar', 'fileupload'),
+      }),
+    );
     this._app.use(express.json());
     this._app.use(cors());
   }
@@ -138,6 +167,13 @@ export class HTTPService implements ApplicationService {
       '/system/backup',
       this._handle((): Promise<FileStream> => this._delegate.getBackup()),
     );
+
+    this._app.post(
+      '/system/import',
+      this._handle(
+        (req: Request): Promise<void> => this._delegate.postImport(req),
+      ),
+    );
   }
 
   private _handle<T>(
@@ -184,10 +220,6 @@ export class HTTPService implements ApplicationService {
 
   private _handleError(res: Response, error: HttpError): void {
     res.status(error.status);
-    res.json({
-      status: error.status,
-      message: error.message,
-      name: error.name,
-    });
+    res.send(error.message);
   }
 }

@@ -18,10 +18,11 @@ import { GetScenarioGroupDBDTO } from '../../services/database/dto/GetScenarioGr
 import { GetRoomDBDTO } from '../../services/database/dto/GetRoomDBDTO';
 import { ConfigService } from '../../services/config/ConfigService';
 import z from 'zod';
-import { NotFound } from 'http-errors';
+import { BadRequest, NotFound } from 'http-errors';
 import { BackupService } from '../../services/backup/BackupService';
 import { FileStream } from '../../tools/fs/FileStream';
 import { SchemaDTOFactory } from './SchemaDTOFactory';
+import { FileArray, UploadedFile } from 'express-fileupload';
 
 export class HTTPDelegate {
   private readonly _schemaDTOFactory: SchemaDTOFactory;
@@ -102,6 +103,20 @@ export class HTTPDelegate {
   public async getBackup(): Promise<FileStream> {
     const stream: FileStream = await this._backup.createBackupFile();
     return stream;
+  }
+
+  public async postImport(req: Request): Promise<void> {
+    const files: FileArray | null | undefined = req.files;
+    if (files == null) {
+      throw new BadRequest('No files on request body.');
+    }
+    const file: UploadedFile | UploadedFile[] = files['file'];
+
+    if (Array.isArray(file)) {
+      throw new BadRequest('Only one file is allowed.');
+    }
+
+    await this._backup.importBackupFile(file.tempFilePath);
   }
 
   private _getQueryParameter(req: Request, name: string): string {

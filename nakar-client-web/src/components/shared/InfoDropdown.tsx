@@ -8,6 +8,7 @@ import { match } from "ts-pattern";
 import { Env } from "../../lib/env/env";
 import { ThemeDropdownEntry } from "./ThemeDropdownEntry";
 import { GraphRendererEngine } from "../../lib/graph-renderer/GraphRendererEngine";
+import { ImportBackupDropdownItem } from "./ImportBackupDropdownItem.tsx";
 
 export function InfoDropdown(props: {
   className?: string;
@@ -131,6 +132,7 @@ export function InfoDropdown(props: {
         <span className="me-2"></span>
         <i className="bi bi-download"></i>
       </Dropdown.Item>
+      <ImportBackupDropdownItem></ImportBackupDropdownItem>
     </DropdownButton>
   );
 }

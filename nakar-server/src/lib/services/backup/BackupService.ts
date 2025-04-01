@@ -3,8 +3,8 @@ import { ApplicationService } from '../../application/ApplicationService';
 import path from 'node:path';
 import os from 'node:os';
 import fs from 'node:fs/promises';
-import fsSync from 'node:fs';
-import { create } from 'tar';
+import fsSync, { Dirent } from 'node:fs';
+import { create, x } from 'tar';
 import { FileStream } from '../../tools/fs/FileStream';
 import { DatabaseService } from '../database/DatabaseService';
 import { GetDatabaseDBDTO } from '../database/dto/GetDatabaseDBDTO';
@@ -12,6 +12,7 @@ import sanitize from 'sanitize-filename';
 import { GetScenarioGroupDBDTO } from '../database/dto/GetScenarioGroupDBDTO';
 import { GetScenarioDBDTO } from '../database/dto/GetScenarioDBDTO';
 import { ToolsService } from '../tools/ToolsService';
+import { v4 } from 'uuid';
 
 export class BackupService implements ApplicationService {
   public constructor(
@@ -94,12 +95,115 @@ export class BackupService implements ApplicationService {
     return new FileStream(outputFilePath, 'application/tar+gzip', fileName);
   }
 
+  public async importBackupFile(inputPath: string): Promise<void> {
+    this._logger.debug(this, `Will import file from ${inputPath}`);
+    const basePath: string = path.join(this._temporaryDirectory(), v4());
+    const fileName: string = 'import.tar.gz';
+    const zipFilePath: string = path.join(basePath, fileName);
+    await fs.mkdir(basePath, { recursive: true });
+    await fs.rename(inputPath, zipFilePath);
+
+    await x({
+      file: zipFilePath,
+      gzip: true,
+      cwd: basePath,
+    });
+
+    for (const rootFolder of await this._getFoldersInDirectory(basePath)) {
+      this._logger.debug(this, `Will import root folder ${rootFolder}`);
+      for (const databaseFile of await this._getJsonFilesInDirectory(
+        path.join(basePath, rootFolder),
+      )) {
+        this._logger.debug(this, `Will import database file ${databaseFile}`);
+      }
+      for (const sceanrioGroupFolder of await this._getFoldersInDirectory(
+        path.join(basePath, rootFolder),
+      )) {
+        for (const scenarioGroupFile of await this._getJsonFilesInDirectory(
+          path.join(basePath, rootFolder, sceanrioGroupFolder),
+        )) {
+          this._logger.debug(
+            this,
+            `Will import scenario group file ${scenarioGroupFile}`,
+          );
+        }
+        for (const sceanriopFolder of await this._getFoldersInDirectory(
+          path.join(basePath, rootFolder, sceanrioGroupFolder),
+        )) {
+          for (const scenarioFile of await this._getJsonFilesInDirectory(
+            path.join(
+              basePath,
+              rootFolder,
+              sceanrioGroupFolder,
+              sceanriopFolder,
+            ),
+          )) {
+            this._logger.debug(
+              this,
+              `Will import scenario file ${scenarioFile}`,
+            );
+          }
+        }
+      }
+    }
+
+    this._logger.debug(this, `Import file: ${zipFilePath}`);
+  }
+
   public async bootstrap(): Promise<void> {
     await this._cleanup();
   }
 
   public async destroy(): Promise<void> {
     await this._cleanup();
+  }
+
+  private async _importDatabaseFile(filePath: string): Promise<void> {
+    const contents: string = await fs.readFile(filePath, { encoding: 'utf-8' });
+    const json: Partial<GetDatabaseDBDTO> = JSON.parse(
+      contents,
+    ) as Partial<GetDatabaseDBDTO>;
+    if (json.documentId == null) {
+      this._logger.error(
+        this,
+        `Unable to import database. ID not provided: ${JSON.stringify(json)}`,
+      );
+      return;
+    }
+    if (await this._database.databaseExists(json.documentId)) {
+      this._logger.warn(
+        this,
+        `Will skip import of database ${json.documentId} because it already exists.`,
+      );
+      return;
+    }
+    await this._database.saveDatabase();
+  }
+
+  private async _getFoldersInDirectory(
+    directoryPath: string,
+  ): Promise<string[]> {
+    const files: Dirent[] = await fs.readdir(directoryPath, {
+      withFileTypes: true,
+    });
+    const directories: string[] = files
+      .filter((file: Dirent): boolean => file.isDirectory())
+      .map((file: Dirent): string => file.name);
+    return directories;
+  }
+
+  private async _getJsonFilesInDirectory(
+    directoryPath: string,
+  ): Promise<string[]> {
+    const files: Dirent[] = await fs.readdir(directoryPath, {
+      withFileTypes: true,
+    });
+    const directories: string[] = files
+      .filter(
+        (file: Dirent): boolean => file.isFile() && file.name.endsWith('.json'),
+      )
+      .map((file: Dirent): string => file.name);
+    return directories;
   }
 
   private async _cleanup(): Promise<void> {

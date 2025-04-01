@@ -109,6 +109,35 @@ paths:
               schema:
                 $ref: "#/components/schemas/Version"
 
+  /system/backup:
+    get:
+      tags:
+        - System
+      operationId: getBackup
+      responses:
+        "200":
+          description: "OK"
+
+  /system/import:
+    post:
+      tags:
+        - System
+      operationId: postImport
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: The file to upload.
+      responses:
+        "200":
+          description: "OK"
+
 components:
   schemas:
     PresetColorIndex:

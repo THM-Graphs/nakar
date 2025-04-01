@@ -60,6 +60,25 @@ export class DatabaseService implements ApplicationService {
     return this._databaseDtoFactory.createGetDatabaseDTO(rawDatabase);
   }
 
+  public async saveDatabase(
+    database: SaveDatabaseDBDTO,
+  ): Promise<GetDatabaseDBDTO> {
+    const rawDatabase: Result<'api::database.database'> | null = await strapi
+      .documents('api::database.database')
+      .create({
+        data: {},
+      });
+
+    return this._databaseDtoFactory.createGetDatabaseDTO(rawDatabase);
+  }
+
+  public async databaseExists(databaseId: string): Promise<boolean> {
+    const database: Result<'api::database.database'> | null = await strapi
+      .documents('api::database.database')
+      .findOne({ documentId: databaseId });
+    return database != null;
+  }
+
   public async getRoom(roomId: string): Promise<GetRoomDBDTO | null> {
     const rawRoom: Result<'api::room.room'> | null = await strapi
       .documents('api::room.room')
