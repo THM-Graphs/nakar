@@ -1,6 +1,4 @@
-import { GetScenarioDBDTO } from '../../database/dto/GetScenarioDBDTO';
 import z from 'zod';
-import { SchemaScenarioInfo } from '../../../../../src-gen/schema';
 
 export class MutableScenarioInfo {
   // eslint-disable-next-line @typescript-eslint/typedef

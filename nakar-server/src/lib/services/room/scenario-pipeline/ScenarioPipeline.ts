@@ -1,14 +1,9 @@
-import { MutableGraph } from '../graph/MutableGraph';
 import { DatabaseService } from '../../database/DatabaseService';
-import { GetScenarioDBDTO } from '../../database/dto/GetScenarioDBDTO';
-import { FinalGraphDisplayConfiguration } from './display-configuration/FinalGraphDisplayConfiguration';
 import { Neo4jService } from '../../neo4j/Neo4jService';
 import { ScenarioPipelineStep } from './ScenarioPipelineStep';
 import { LoadScenario } from './pipeline-steps/LoadScenario';
-import { GetDatabaseDBDTO } from '../../database/dto/GetDatabaseDBDTO';
 import { ExecuteInitialQuery } from './pipeline-steps/ExecuteInitialQuery';
 import { CollectGraphDisplayConfiguration } from './pipeline-steps/CollectDisplayConfiguration';
-import { GetScenarioGroupDBDTO } from '../../database/dto/GetScenarioGroupDBDTO';
 import { ParseNeo4jLoginCredentials } from './pipeline-steps/ParseNeo4jLoginCredentials';
 import { ApplyEdgeParallelCounts } from './pipeline-steps/ApplyEdgeParallelCounts';
 import { ApplyLabels } from './pipeline-steps/ApplyLabels';

@@ -38,7 +38,7 @@ export class PhysicsSimulation {
   }
 
   public get averageTickDuration(): number {
-    const avg =
+    const avg: number =
       this._tickDurationsCache.reduce(
         (a: number, b: number): number => a + b,
         0,

@@ -4,7 +4,6 @@ import { Range } from '../../../../tools/Range';
 import { MutableGraph } from '../../graph/MutableGraph';
 import { SMap } from '../../../../tools/Map';
 import { ScenarioPipelineStep } from '../ScenarioPipelineStep';
-import { wait } from '../../../../tools/Wait';
 import { ScenarioPipelineState } from '../ScenarioPipelineState';
 
 export class CompressRelationships extends ScenarioPipelineStep {
@@ -18,7 +17,7 @@ export class CompressRelationships extends ScenarioPipelineStep {
     this._handledRelsCache = new SMap();
   }
 
-  public async run(state: ScenarioPipelineState): Promise<void> {
+  public run(state: ScenarioPipelineState): void {
     const input: MutableGraph = state.graph;
     const config: FinalGraphDisplayConfiguration = state.displayConfiguration;
 

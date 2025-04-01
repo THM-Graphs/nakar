@@ -3,7 +3,6 @@ import { NodeDisplayConfigurationContext } from '../display-configuration/NodeDi
 import { MutableGraph } from '../../graph/MutableGraph';
 import { FinalNodeDisplayConfiguration } from '../display-configuration/FinalNodeDisplayConfiguration';
 import { ScenarioPipelineStep } from '../ScenarioPipelineStep';
-import { LoggerService } from '../../../logger/LoggerService';
 import { ScenarioPipelineState } from '../ScenarioPipelineState';
 
 export class ApplyNodeBackgroundColor extends ScenarioPipelineStep {

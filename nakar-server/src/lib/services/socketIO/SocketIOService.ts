@@ -101,7 +101,7 @@ export class SocketIOService implements ApplicationService {
               new CachingSchemaDTOFactory(this._databaseService, this._logger);
             cachedGraphFactory
               .createSchemaGraph(graph)
-              .then((schemaGraph: SchemaGraph) => {
+              .then((schemaGraph: SchemaGraph): void => {
                 wsClient.send({
                   type: 'WSEventScenarioLoaded',
                   graph: schemaGraph,
