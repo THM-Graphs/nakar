@@ -1,7 +1,6 @@
 import { MutableNode } from './MutableNode';
 import { MutableEdge } from './MutableEdge';
 import { MutableGraphMetaData } from './MutableGraphMetaData';
-import { Neo4jGraphElements } from '../../neo4j/Neo4jGraphElements';
 import {
   SchemaEdge,
   SchemaGraph,
@@ -9,9 +8,6 @@ import {
 } from '../../../../../src-gen/schema';
 import { z } from 'zod';
 import { SMap } from '../../../tools/Map';
-import { GetScenarioDBDTO } from '../../database/dto/GetScenarioDBDTO';
-import { Neo4jRelationship } from '../../neo4j/Neo4jRelationship';
-import { Neo4jNode } from '../../neo4j/Neo4jNode';
 import { v4 as uuidv4 } from 'uuid';
 import { LoggerService } from '../../logger/LoggerService';
 
@@ -113,20 +109,26 @@ export class MutableGraph {
     };
   }
 
-  public addNonDuplicateEdges(newEdges: SMap<string, MutableEdge>): void {
-    for (const [newId, newEdge] of newEdges.entries()) {
-      if (!this.edges.has(newId)) {
-        this.edges.set(newId, newEdge);
-      }
-    }
-  }
+  public byMergingWith(otherGraph: MutableGraph): MutableGraph {
+    const graph: MutableGraph = new MutableGraph({
+      id: this.id,
+      nodes: this.nodes,
+      edges: this.edges,
+      metaData: this.metaData,
+      tableData: this.tableData,
+    });
 
-  public addNonDuplicateNodes(newNodes: SMap<string, MutableNode>): void {
-    for (const [newId, newNode] of newNodes.entries()) {
-      if (!this.nodes.has(newId)) {
-        this.nodes.set(newId, newNode);
+    for (const otherNode of otherGraph.nodes) {
+      if (!graph.nodes.has(otherNode[0])) {
+        graph.nodes.set(otherNode[0], otherNode[1]);
       }
     }
+    for (const otherEdge of otherGraph.edges) {
+      if (!graph.edges.has(otherEdge[0])) {
+        graph.edges.set(otherEdge[0], otherEdge[1]);
+      }
+    }
+    return graph;
   }
 
   public toPlain(): z.infer<typeof MutableGraph.schema> {

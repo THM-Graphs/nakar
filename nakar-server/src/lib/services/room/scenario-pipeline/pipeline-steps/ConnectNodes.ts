@@ -1,10 +1,7 @@
 import { FinalGraphDisplayConfiguration } from '../display-configuration/FinalGraphDisplayConfiguration';
-import { MutableEdge } from '../../graph/MutableEdge';
 import { MutableGraph } from '../../graph/MutableGraph';
 import { SSet } from '../../../../tools/Set';
-import { Neo4jRelationship } from '../../../neo4j/Neo4jRelationship';
 import { Neo4jGraphElements } from '../../../neo4j/Neo4jGraphElements';
-import { SMap } from '../../../../tools/Map';
 import { ScenarioPipelineStep } from '../ScenarioPipelineStep';
 import { MutableGraphFactory } from '../MutableGraphFactory';
 import { ScenarioPipelineState } from '../ScenarioPipelineState';
@@ -32,13 +29,18 @@ export class ConnectNodes extends ScenarioPipelineStep {
     }
 
     const result: Neo4jGraphElements =
-      await state.neo4j.loadConnectingRelationships(state.credentials, nodeIds);
+      await state.neo4j.loadConnectingRelationships(
+        state.credentials,
+        nodeIds,
+        state.databaseDBDTO.documentId,
+      );
 
-    const edges: SMap<string, MutableEdge> = result.relationships.map(
-      (r: Neo4jRelationship): MutableEdge =>
-        this._graphFactory.createMutableEdge(r),
+    const graphFactory: MutableGraphFactory = new MutableGraphFactory();
+    const otherGraph: MutableGraph = graphFactory.createGraph(
+      result,
+      state.scenarioDBDTO,
     );
 
-    input.addNonDuplicateEdges(edges);
+    state.graph = state.graph.byMergingWith(otherGraph);
   }
 }

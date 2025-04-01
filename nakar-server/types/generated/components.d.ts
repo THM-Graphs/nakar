@@ -1,5 +1,25 @@
 import type { Schema, Struct } from '@strapi/strapi';
 
+export interface GraphAdditionalQuery extends Struct.ComponentSchema {
+  collectionName: 'components_graph_additional_queries';
+  info: {
+    description: '';
+    displayName: 'Additional Query';
+    icon: 'code';
+  };
+  attributes: {
+    mergeDatabase: Schema.Attribute.Relation<
+      'oneToOne',
+      'api::database.database'
+    >;
+    mergeLabel: Schema.Attribute.String;
+    mergeProperty: Schema.Attribute.String;
+    mergeQuery: Schema.Attribute.Text;
+    originalLabel: Schema.Attribute.String;
+    originalProperty: Schema.Attribute.String;
+  };
+}
+
 export interface GraphGraphDisplayConfiguration extends Struct.ComponentSchema {
   collectionName: 'components_graph_graph_display_configurations';
   info: {
@@ -63,6 +83,7 @@ export interface GraphNodeDisplayConfiguration extends Struct.ComponentSchema {
 declare module '@strapi/strapi' {
   export module Public {
     export interface ComponentSchemas {
+      'graph.additional-query': GraphAdditionalQuery;
       'graph.graph-display-configuration': GraphGraphDisplayConfiguration;
       'graph.node-display-configuration': GraphNodeDisplayConfiguration;
     }

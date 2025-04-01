@@ -27,9 +27,10 @@ import { LoggerService } from '../../logger/LoggerService';
 import { RemoveDanglingRelationships } from './pipeline-steps/RemoveDanglingRelationships';
 import { ScenarioPipelineState } from './ScenarioPipelineState';
 import { ScenarioPipelineResult } from './ScenarioPipelineResult';
+import { ExcecuteAdditionalQueries } from './pipeline-steps/ExcecuteAdditionalQueries';
 
 export class ScenarioPipeline {
-  private readonly _stepCount: number = 15;
+  private readonly _stepCount: number = 16;
 
   public constructor(
     private readonly _database: DatabaseService,
@@ -54,6 +55,7 @@ export class ScenarioPipeline {
     await this._runStep(state, new LoadScenario(), onProgress);
     await this._runStep(state, new ParseNeo4jLoginCredentials(), onProgress);
     await this._runStep(state, new ExecuteInitialQuery(), onProgress);
+    await this._runStep(state, new ExcecuteAdditionalQueries(), onProgress);
     await this._runStep(state, new RemoveDanglingRelationships(), onProgress);
     await this._runStep(
       state,

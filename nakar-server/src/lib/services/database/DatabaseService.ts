@@ -106,6 +106,11 @@ export class DatabaseService implements ApplicationService {
             nodeDisplayConfigurations: {},
           },
         },
+        additionalQueries: {
+          populate: {
+            mergeDatabase: {},
+          },
+        },
       },
     });
     if (result == null) {

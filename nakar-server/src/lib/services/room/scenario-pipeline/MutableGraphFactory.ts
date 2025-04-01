@@ -46,6 +46,8 @@ export class MutableGraphFactory {
       customTitle: null,
       locked: false,
       grabs: new SSet(),
+      source: node.source,
+      additionalSources: new SSet(),
     });
   }
 
@@ -62,6 +64,8 @@ export class MutableGraphFactory {
         relationship.relationship.properties,
       ),
       namesInQuery: relationship.keys,
+      source: relationship.source,
+      additionalSources: new SSet(),
     });
   }
 

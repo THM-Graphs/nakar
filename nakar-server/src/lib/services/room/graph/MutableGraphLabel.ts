@@ -8,14 +8,21 @@ export class MutableGraphLabel {
   public static readonly schema = z.object({
     color: MutableGraphColor.schema,
     count: z.number(),
+    source: z.string(),
   });
 
   public color: MutableGraphColor;
   public count: number;
+  public source: string;
 
-  public constructor(data: { color: MutableGraphColor; count: number }) {
+  public constructor(data: {
+    color: MutableGraphColor;
+    count: number;
+    source: string;
+  }) {
     this.color = data.color;
     this.count = data.count;
+    this.source = data.source;
   }
 
   public static fromPlain(
@@ -24,6 +31,7 @@ export class MutableGraphLabel {
     return new MutableGraphLabel({
       color: MutableGraphColorFactory.fromPlain(data.color),
       count: data.count,
+      source: data.source,
     });
   }
 
@@ -39,6 +47,7 @@ export class MutableGraphLabel {
     return new MutableGraphLabel({
       color: this.color,
       count: this.count + 1,
+      source: this.source,
     });
   }
 
@@ -46,6 +55,7 @@ export class MutableGraphLabel {
     return {
       color: this.color.toPlain(),
       count: this.count,
+      source: this.source,
     };
   }
 }

@@ -1,0 +1,31 @@
+{
+  "collectionName": "components_graph_additional_queries",
+  "info": {
+    "displayName": "Additional Query",
+    "icon": "code",
+    "description": ""
+  },
+  "options": {},
+  "attributes": {
+    "mergeDatabase": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::database.database"
+    },
+    "mergeQuery": {
+      "type": "text"
+    },
+    "originalLabel": {
+      "type": "string"
+    },
+    "originalProperty": {
+      "type": "string"
+    },
+    "mergeLabel": {
+      "type": "string"
+    },
+    "mergeProperty": {
+      "type": "string"
+    }
+  }
+}

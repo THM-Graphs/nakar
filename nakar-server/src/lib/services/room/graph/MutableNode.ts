@@ -23,6 +23,8 @@ export class MutableNode {
     customTitle: z.string().nullable(),
     locked: z.boolean(),
     grabs: z.array(z.string()),
+    source: z.string(),
+    additionalSources: z.array(z.string()),
   });
 
   public labels: SSet<string>;
@@ -37,6 +39,8 @@ export class MutableNode {
   public customTitle: string | null;
   public locked: boolean;
   public grabs: SSet<string>;
+  public source: string;
+  public additionalSources: SSet<string>;
 
   /* runtime only */
   public velocityX: number;
@@ -55,6 +59,8 @@ export class MutableNode {
     customTitle: string | null;
     locked: boolean;
     grabs: SSet<string>;
+    source: string;
+    additionalSources: SSet<string>;
   }) {
     this.labels = data.labels;
     this.properties = data.properties;
@@ -68,6 +74,8 @@ export class MutableNode {
     this.customTitle = data.customTitle;
     this.locked = data.locked;
     this.grabs = data.grabs;
+    this.source = data.source;
+    this.additionalSources = data.additionalSources;
 
     this.velocityX = 0;
     this.velocityY = 0;
@@ -105,6 +113,8 @@ export class MutableNode {
       customTitle: data.customTitle,
       locked: data.locked,
       grabs: new SSet(data.grabs),
+      source: data.source,
+      additionalSources: new SSet(data.additionalSources),
     });
   }
 
@@ -144,6 +154,8 @@ export class MutableNode {
       customTitle: this.customTitle,
       locked: this.locked,
       grabs: this.grabs.toArray(),
+      source: this.source,
+      additionalSources: this.additionalSources.toArray(),
     };
   }
 }

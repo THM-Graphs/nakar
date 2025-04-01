@@ -28,6 +28,7 @@ export class Neo4jService implements ApplicationService {
   public async executeQuery(
     loginCredentials: Neo4jLoginCredentials,
     query: string,
+    sourceId: string,
     parameters?: Record<string, unknown>,
   ): Promise<Neo4jGraphElements> {
     const driver: Driver = createDriver(
@@ -56,7 +57,7 @@ export class Neo4jService implements ApplicationService {
 
         const nei4jGraphElementsFactory: Neo4jGraphElementsFactory =
           new Neo4jGraphElementsFactory(this._logger);
-        return nei4jGraphElementsFactory.fromQueryResult(result);
+        return nei4jGraphElementsFactory.fromQueryResult(result, sourceId);
       } catch (error) {
         await session.close();
         this._logger.error(this, error);
@@ -72,11 +73,13 @@ export class Neo4jService implements ApplicationService {
   public async loadConnectingRelationships(
     loginCredentials: Neo4jLoginCredentials,
     nodeIds: SSet<string>,
+    sourceId: string,
   ): Promise<Neo4jGraphElements> {
     const nodesIds: string[] = [...nodeIds.values()];
     const additional: Neo4jGraphElements = await this.executeQuery(
       loginCredentials,
       'MATCH (a)-[additionalRelationship]->(b) WHERE elementId(a) IN $existingNodeIds AND elementId(b) IN $existingNodeIds RETURN additionalRelationship;',
+      sourceId,
       {
         existingNodeIds: nodesIds,
       },

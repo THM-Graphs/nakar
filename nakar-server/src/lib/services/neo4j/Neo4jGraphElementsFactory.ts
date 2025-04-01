@@ -31,9 +31,15 @@ export class Neo4jGraphElementsFactory {
     );
   }
 
-  public fromRawNode(node: Node, key: string | null): Neo4jGraphElements {
+  public fromRawNode(
+    node: Node,
+    key: string | null,
+    source: string,
+  ): Neo4jGraphElements {
     return new Neo4jGraphElements({
-      nodes: new SMap([[node.elementId, Neo4jNode.fromRawNode(node, key)]]),
+      nodes: new SMap([
+        [node.elementId, Neo4jNode.fromRawNode(node, key, source)],
+      ]),
       relationships: new SMap(),
       tableData: [],
     });
@@ -42,12 +48,13 @@ export class Neo4jGraphElementsFactory {
   public fromRawRelationship(
     relationship: Relationship,
     key: string | null,
+    source: string,
   ): Neo4jGraphElements {
     return new Neo4jGraphElements({
       relationships: new SMap([
         [
           relationship.elementId,
-          Neo4jRelationship.fromRawRelationship(relationship, key),
+          Neo4jRelationship.fromRawRelationship(relationship, key, source),
         ],
       ]),
       nodes: new SMap(),
@@ -63,18 +70,22 @@ export class Neo4jGraphElementsFactory {
     });
   }
 
-  public fromField(key: string, field: unknown): Neo4jGraphElements {
+  public fromField(
+    key: string,
+    field: unknown,
+    source: string,
+  ): Neo4jGraphElements {
     if (isNode(field)) {
-      return this.fromRawNode(field, key);
+      return this.fromRawNode(field, key, source);
     } else if (isRelationship(field)) {
-      return this.fromRawRelationship(field, key);
+      return this.fromRawRelationship(field, key, source);
     } else if (isPath(field)) {
       return this.mergeMultiple(
         ...field.segments.map((segment: PathSegment): Neo4jGraphElements => {
           return this.mergeMultiple(
-            this.fromRawNode(segment.start, null),
-            this.fromRawNode(segment.end, null),
-            this.fromRawRelationship(segment.relationship, null),
+            this.fromRawNode(segment.start, null, source),
+            this.fromRawNode(segment.end, null, source),
+            this.fromRawRelationship(segment.relationship, null, source),
           );
         }),
       );
@@ -83,7 +94,7 @@ export class Neo4jGraphElementsFactory {
       return match(field)
         .with(
           P.array(),
-          (a: unknown[]): Neo4jGraphElements => this.fromFields(key, a),
+          (a: unknown[]): Neo4jGraphElements => this.fromFields(key, a, source),
         )
         .otherwise((): Neo4jGraphElements => {
           this._logger.debug(
@@ -95,32 +106,39 @@ export class Neo4jGraphElementsFactory {
     }
   }
 
-  public fromFields(key: string, fields: unknown[]): Neo4jGraphElements {
+  public fromFields(
+    key: string,
+    fields: unknown[],
+    source: string,
+  ): Neo4jGraphElements {
     return this.mergeMultiple(
       ...fields.map(
         (subField: unknown): Neo4jGraphElements =>
-          this.fromField(key, subField),
+          this.fromField(key, subField, source),
       ),
     );
   }
 
   public fromQueryResult(
     queryResult: QueryResult<RecordShape<string, unknown>>,
+    source: string,
   ): Neo4jGraphElements {
     return this.mergeMultiple(
       ...queryResult.records.map(
         (
           record: Neo4jRecord<RecordShape<string, unknown>>,
-        ): Neo4jGraphElements => this.fromRecord(record),
+        ): Neo4jGraphElements => this.fromRecord(record, source),
       ),
     );
   }
 
   public fromRecord(
     record: Neo4jRecord<RecordShape<string, unknown>>,
+    source: string,
   ): Neo4jGraphElements {
     const results: Neo4jGraphElements[] = record.keys.map(
-      (key: string): Neo4jGraphElements => this.fromField(key, record.get(key)),
+      (key: string): Neo4jGraphElements =>
+        this.fromField(key, record.get(key), source),
     );
 
     const tableDataEntry: SMap<string, unknown> = record.keys.reduce<

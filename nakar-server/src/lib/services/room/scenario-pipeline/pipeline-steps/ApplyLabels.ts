@@ -30,6 +30,7 @@ export class ApplyLabels extends ScenarioPipelineStep {
             new MutableGraphLabel({
               color: newColor,
               count: 1,
+              source: node.source,
             }),
           );
         } else {

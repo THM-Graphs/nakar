@@ -485,6 +485,10 @@ export interface ApiScenarioScenario extends Struct.CollectionTypeSchema {
     draftAndPublish: true;
   };
   attributes: {
+    additionalQueries: Schema.Attribute.Component<
+      'graph.additional-query',
+      true
+    >;
     cover: Schema.Attribute.Media<'files' | 'images'>;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &

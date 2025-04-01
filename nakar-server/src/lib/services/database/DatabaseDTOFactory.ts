@@ -8,6 +8,7 @@ import { GetRoomDBDTO } from './dto/GetRoomDBDTO';
 import { GetNodeDisplayConfigurationDBDTO } from './dto/GetNodeDisplayConfigurationDBDTO';
 import { match, P } from 'ts-pattern';
 import { ScaleType } from '../../tools/ScaleType';
+import { GetAdditionalQueryDBDTO } from './dto/GetAdditionalQueryDBDTO';
 
 export class DatabaseDTOFactory {
   public createGetDatabaseDTO(
@@ -50,7 +51,13 @@ export class DatabaseDTOFactory {
   public createGetScenarioDTO(
     db: Result<
       'api::scenario.scenario',
-      { populate: ['graphDisplayConfiguration', 'scenarioGroup'] }
+      {
+        populate: [
+          'graphDisplayConfiguration',
+          'scenarioGroup',
+          'additionalQueries',
+        ];
+      }
     > & {
       cover?: Result<'plugin::upload.file'> | null;
     },
@@ -68,6 +75,31 @@ export class DatabaseDTOFactory {
         this.createGetGraphDisplayConfigurationDTOOrNull(
           db.graphDisplayConfiguration,
         ),
+      additionalQueries:
+        db.additionalQueries?.map(
+          (
+            additionalQuery: Result<'graph.additional-query'>,
+          ): GetAdditionalQueryDBDTO =>
+            this.createGetAdditionalQueryDTO(additionalQuery),
+        ) ?? [],
+    };
+  }
+
+  public createGetAdditionalQueryDTO(
+    additionalQuery: Result<
+      'graph.additional-query',
+      { populate: 'mergeDatabase' }
+    >,
+  ): GetAdditionalQueryDBDTO {
+    return {
+      originalLabel: additionalQuery.originalLabel ?? '',
+      originalProperty: additionalQuery.originalProperty ?? '',
+      mergeLabel: additionalQuery.mergeLabel ?? '',
+      mergeProperty: additionalQuery.mergeProperty ?? '',
+      mergeQuery: additionalQuery.mergeQuery ?? '',
+      database: additionalQuery.mergeDatabase
+        ? this.createGetDatabaseDTO(additionalQuery.mergeDatabase)
+        : null,
     };
   }
 

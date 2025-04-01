@@ -40,6 +40,11 @@
       "type": "component",
       "repeatable": false,
       "component": "graph.graph-display-configuration"
+    },
+    "additionalQueries": {
+      "type": "component",
+      "repeatable": true,
+      "component": "graph.additional-query"
     }
   }
 }

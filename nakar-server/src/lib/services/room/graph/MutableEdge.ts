@@ -1,4 +1,3 @@
-import { Neo4jRelationship } from '../../neo4j/Neo4jRelationship';
 import { MutablePropertyCollection } from './MutablePropertyCollection';
 import { SchemaEdge } from '../../../../../src-gen/schema';
 import { z } from 'zod';
@@ -18,6 +17,8 @@ export class MutableEdge {
     width: z.number(),
     properties: MutablePropertyCollection.schema,
     namesInQuery: z.array(z.string()),
+    source: z.string(),
+    additionalSources: z.array(z.string()),
   });
 
   public startNodeId: string;
@@ -29,6 +30,8 @@ export class MutableEdge {
   public width: number;
   public properties: MutablePropertyCollection;
   public namesInQuery: SSet<string>;
+  public source: string;
+  public additionalSources: SSet<string>;
 
   public constructor(data: {
     startNodeId: string;
@@ -40,6 +43,8 @@ export class MutableEdge {
     width: number;
     properties: MutablePropertyCollection;
     namesInQuery: SSet<string>;
+    source: string;
+    additionalSources: SSet<string>;
   }) {
     this.startNodeId = data.startNodeId;
     this.endNodeId = data.endNodeId;
@@ -50,6 +55,8 @@ export class MutableEdge {
     this.width = data.width;
     this.properties = data.properties;
     this.namesInQuery = data.namesInQuery;
+    this.source = data.source;
+    this.additionalSources = data.additionalSources;
   }
 
   public get isLoop(): boolean {
@@ -69,6 +76,8 @@ export class MutableEdge {
       width: data.width,
       properties: MutablePropertyCollection.fromPlain(data.properties),
       namesInQuery: new SSet(data.namesInQuery),
+      source: data.source,
+      additionalSources: new SSet(data.additionalSources),
     });
   }
 
@@ -108,6 +117,8 @@ export class MutableEdge {
       width: this.width,
       properties: this.properties.toPlain(),
       namesInQuery: this.namesInQuery.toArray(),
+      source: this.source,
+      additionalSources: this.additionalSources.toArray(),
     };
   }
 }
