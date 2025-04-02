@@ -1,6 +1,6 @@
 import { GetDatabaseDBDTO } from './GetDatabaseDBDTO';
 
-export interface GetAdditionalQueryDBDTO {
+export interface AdditionalQueryDBDTO {
   readonly originalLabel: string;
   readonly originalProperties: string[];
   readonly mergeLabel: string;

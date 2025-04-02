@@ -1,17 +1,18 @@
 import type { Result } from '@strapi/types/dist/modules/documents/result';
-import { GetGraphDisplayConfigurationDBDTO } from './dto/GetGraphDisplayConfigurationDBDTO';
+import { GraphDisplayConfigurationDBDTO } from './dto/GraphDisplayConfigurationDBDTO';
 import { GetDatabaseDBDTO } from './dto/GetDatabaseDBDTO';
 import { GetScenarioGroupDBDTO } from './dto/GetScenarioGroupDBDTO';
 import { GetMediaDBDTO } from './dto/GetMediaDBDTO';
 import { GetScenarioDBDTO } from './dto/GetScenarioDBDTO';
 import { GetRoomDBDTO } from './dto/GetRoomDBDTO';
-import { GetNodeDisplayConfigurationDBDTO } from './dto/GetNodeDisplayConfigurationDBDTO';
+import { NodeDisplayConfigurationDBDTO } from './dto/NodeDisplayConfigurationDBDTO';
 import { match, P } from 'ts-pattern';
 import { ScaleType } from '../../tools/ScaleType';
-import { GetAdditionalQueryDBDTO } from './dto/GetAdditionalQueryDBDTO';
+import { AdditionalQueryDBDTO } from './dto/AdditionalQueryDBDTO';
+import z from 'zod';
 
 export class DatabaseDTOFactory {
-  public createGetDatabaseDTO(
+  public createGetDatabaseDTOFromStrapi(
     db: Result<
       'api::database.database',
       { populate: ['graphDisplayConfiguration'] }
@@ -25,13 +26,13 @@ export class DatabaseDTOFactory {
       password: db.password ?? null,
       browserUrl: db.browserUrl ?? null,
       graphDisplayConfiguration:
-        this.createGetGraphDisplayConfigurationDTOOrNull(
+        this._createGraphDisplayConfigurationDTOFromStrapi(
           db.graphDisplayConfiguration,
         ),
     };
   }
 
-  public createGetScenarioGroupDTO(
+  public createGetScenarioGroupDTOFromStrapi(
     db: Result<
       'api::scenario-group.scenario-group',
       { populate: ['graphDisplayConfiguration', 'database'] }
@@ -40,15 +41,17 @@ export class DatabaseDTOFactory {
     return {
       documentId: db.documentId,
       title: db.title ?? null,
-      database: db.database ? this.createGetDatabaseDTO(db.database) : null,
+      database: db.database
+        ? this.createGetDatabaseDTOFromStrapi(db.database)
+        : null,
       graphDisplayConfiguration:
-        this.createGetGraphDisplayConfigurationDTOOrNull(
+        this._createGraphDisplayConfigurationDTOFromStrapi(
           db.graphDisplayConfiguration,
         ),
     };
   }
 
-  public createGetScenarioDTO(
+  public createGetScenarioDTOFromStrapi(
     db: Result<
       'api::scenario.scenario',
       {
@@ -67,30 +70,31 @@ export class DatabaseDTOFactory {
       title: db.title ?? null,
       query: db.query ?? null,
       description: db.description ?? null,
-      cover: db.cover != null ? this.createGetMediaDTO(db.cover) : null,
+      cover:
+        db.cover != null ? this._createGetMediaDTOFromStrapi(db.cover) : null,
       scenarioGroup: db.scenarioGroup
-        ? this.createGetScenarioGroupDTO(db.scenarioGroup)
+        ? this.createGetScenarioGroupDTOFromStrapi(db.scenarioGroup)
         : null,
       graphDisplayConfiguration:
-        this.createGetGraphDisplayConfigurationDTOOrNull(
+        this._createGraphDisplayConfigurationDTOFromStrapi(
           db.graphDisplayConfiguration,
         ),
       additionalQueries:
         db.additionalQueries?.map(
           (
             additionalQuery: Result<'graph.additional-query'>,
-          ): GetAdditionalQueryDBDTO =>
-            this.createGetAdditionalQueryDTO(additionalQuery),
+          ): AdditionalQueryDBDTO =>
+            this.createAdditionalQueryDTOFromStrapi(additionalQuery),
         ) ?? [],
     };
   }
 
-  public createGetAdditionalQueryDTO(
+  public createAdditionalQueryDTOFromStrapi(
     additionalQuery: Result<
       'graph.additional-query',
       { populate: 'mergeDatabase' }
     >,
-  ): GetAdditionalQueryDBDTO {
+  ): AdditionalQueryDBDTO {
     return {
       originalLabel: additionalQuery.originalLabel ?? '',
       originalProperties:
@@ -104,12 +108,14 @@ export class DatabaseDTOFactory {
           .map((element: string): string => element.trim()) ?? [],
       mergeQuery: additionalQuery.mergeQuery ?? '',
       database: additionalQuery.mergeDatabase
-        ? this.createGetDatabaseDTO(additionalQuery.mergeDatabase)
+        ? this.createGetDatabaseDTOFromStrapi(additionalQuery.mergeDatabase)
         : null,
     };
   }
 
-  public createGetRoomDTO(db: Result<'api::room.room'>): GetRoomDBDTO {
+  public createGetRoomDTOFromStrapi(
+    db: Result<'api::room.room'>,
+  ): GetRoomDBDTO {
     return {
       documentId: db.documentId,
       title: db.title ?? null,
@@ -117,7 +123,35 @@ export class DatabaseDTOFactory {
     };
   }
 
-  public createGetGraphDisplayConfigurationDTOOrNull(
+  public createGetDatabaseDTOFromUnknown(input: unknown): GetDatabaseDBDTO {
+    // eslint-disable-next-line @typescript-eslint/typedef
+    const schema = z.object({
+      documentId: z.string(),
+      title: z.string().nullable(),
+      url: z.string().nullable(),
+      username: z.string().nullable(),
+      password: z.string().nullable(),
+      browserUrl: z.string().nullable(),
+      graphDisplayConfiguration: z.unknown(),
+    });
+
+    const parsed: z.infer<typeof schema> = schema.parse(input);
+
+    return {
+      documentId: parsed.documentId,
+      title: parsed.title,
+      url: parsed.url,
+      username: parsed.username,
+      password: parsed.password,
+      browserUrl: parsed.browserUrl,
+      graphDisplayConfiguration:
+        this._createGraphDisplayConfigurationDTOFromUnknown(
+          parsed.graphDisplayConfiguration,
+        ),
+    };
+  }
+
+  private _createGraphDisplayConfigurationDTOFromStrapi(
     db:
       | Result<
           'graph.graph-display-configuration',
@@ -125,10 +159,12 @@ export class DatabaseDTOFactory {
         >
       | null
       | undefined,
-  ): GetGraphDisplayConfigurationDBDTO {
+  ): GraphDisplayConfigurationDBDTO {
     return {
-      connectResultNodes: this.createNullableBoolean(db?.connectResultNodes),
-      growNodesBasedOnDegree: this.createNullableBoolean(
+      connectResultNodes: this._createNullableBooleanFromStrapi(
+        db?.connectResultNodes,
+      ),
+      growNodesBasedOnDegree: this._createNullableBooleanFromStrapi(
         db?.growNodesBasedOnDegree,
       ),
       growNodesBasedOnDegreeFactor: db?.growNodesBasedOnDegreeFactor ?? null,
@@ -136,21 +172,23 @@ export class DatabaseDTOFactory {
         db?.nodeDisplayConfigurations?.map(
           (
             nodeDisplayConfiguration: Result<'graph.node-display-configuration'>,
-          ): GetNodeDisplayConfigurationDBDTO =>
-            this.createGetNodeDisplayConfigurationDTO(nodeDisplayConfiguration),
+          ): NodeDisplayConfigurationDBDTO =>
+            this._createNodeDisplayConfigurationDTOFromStrapi(
+              nodeDisplayConfiguration,
+            ),
         ) ?? [],
-      compressRelationships: this.createNullableBoolean(
+      compressRelationships: this._createNullableBooleanFromStrapi(
         db?.compressRelationships,
       ),
       compressRelationshipsWidthFactor:
         db?.compressRelationshipsWidthFactor ?? null,
-      scaleType: this.createNullableScaleType(db?.scaleType),
+      scaleType: this._createNullableScaleTypeFromStrapi(db?.scaleType),
     };
   }
 
-  public createGetNodeDisplayConfigurationDTO(
+  private _createNodeDisplayConfigurationDTOFromStrapi(
     db: Result<'graph.node-display-configuration'>,
-  ): GetNodeDisplayConfigurationDBDTO {
+  ): NodeDisplayConfigurationDBDTO {
     return {
       targetLabel: db.targetLabel ?? null,
       displayText: db.displayText ?? null,
@@ -159,7 +197,7 @@ export class DatabaseDTOFactory {
     };
   }
 
-  public createNullableBoolean(
+  private _createNullableBooleanFromStrapi(
     input: 'inherit' | 'true' | 'false' | null | undefined,
   ): boolean | null {
     const value: boolean | null = match(input)
@@ -171,7 +209,7 @@ export class DatabaseDTOFactory {
     return value;
   }
 
-  public createNullableScaleType(
+  private _createNullableScaleTypeFromStrapi(
     input: 'inherit' | 'linear' | 'log2' | 'logn' | 'log10' | null | undefined,
   ): ScaleType | null {
     const value: ScaleType | null = match(input)
@@ -185,12 +223,82 @@ export class DatabaseDTOFactory {
     return value;
   }
 
-  public createGetMediaDTO(db: Result<'plugin::upload.file'>): GetMediaDBDTO {
+  private _createGetMediaDTOFromStrapi(
+    db: Result<'plugin::upload.file'>,
+  ): GetMediaDBDTO {
     return {
       documentId: db.documentId,
       url: db.url ?? null,
       ext: db.ext ?? null,
       hash: db.hash ?? null,
+    };
+  }
+
+  private _createGraphDisplayConfigurationDTOFromUnknown(
+    input: unknown,
+  ): GraphDisplayConfigurationDBDTO {
+    // eslint-disable-next-line @typescript-eslint/typedef
+    const schema = z.object({
+      connectResultNodes: z.boolean().nullable(),
+      growNodesBasedOnDegree: z.boolean().nullable(),
+      growNodesBasedOnDegreeFactor: z.number().nullable(),
+      nodeDisplayConfigurations: z.array(z.unknown()),
+      compressRelationships: z.boolean().nullable(),
+      compressRelationshipsWidthFactor: z.number().nullable(),
+      scaleType: z.unknown(),
+    });
+    const parsed: z.infer<typeof schema> = schema.parse(input);
+
+    return {
+      connectResultNodes: parsed.connectResultNodes,
+      growNodesBasedOnDegree: parsed.growNodesBasedOnDegree,
+      growNodesBasedOnDegreeFactor: parsed.growNodesBasedOnDegreeFactor,
+      nodeDisplayConfigurations: parsed.nodeDisplayConfigurations.map(
+        (nodeDisplayConfiguration: unknown): NodeDisplayConfigurationDBDTO =>
+          this._createNodeDisplayConfigurationDTOFromUnknown(
+            nodeDisplayConfiguration,
+          ),
+      ),
+      compressRelationships: parsed.compressRelationships,
+      compressRelationshipsWidthFactor: parsed.compressRelationshipsWidthFactor,
+      scaleType: this._createScaleTypeFromUnknown(parsed.scaleType),
+    };
+  }
+
+  private _createScaleTypeFromUnknown(input: unknown): ScaleType | null {
+    // eslint-disable-next-line @typescript-eslint/typedef
+    const schema = z.enum(['linear', 'log2', 'logN', 'log10']).nullable();
+
+    const parsed: z.infer<typeof schema> = schema.parse(input);
+
+    return match(parsed)
+      .returnType<ScaleType | null>()
+      .with(null, (): null => null)
+      .with('linear', (): ScaleType => ScaleType.linear)
+      .with('log2', (): ScaleType => ScaleType.log2)
+      .with('logN', (): ScaleType => ScaleType.logN)
+      .with('log10', (): ScaleType => ScaleType.log10)
+      .exhaustive();
+  }
+
+  private _createNodeDisplayConfigurationDTOFromUnknown(
+    input: unknown,
+  ): NodeDisplayConfigurationDBDTO {
+    // eslint-disable-next-line @typescript-eslint/typedef
+    const schema = z.object({
+      targetLabel: z.string().nullable(),
+      displayText: z.string().nullable(),
+      radius: z.string().nullable(),
+      backgroundColor: z.string().nullable(),
+    });
+
+    const parsed: z.infer<typeof schema> = schema.parse(input);
+
+    return {
+      targetLabel: parsed.targetLabel,
+      displayText: parsed.displayText,
+      radius: parsed.radius,
+      backgroundColor: parsed.backgroundColor,
     };
   }
 }

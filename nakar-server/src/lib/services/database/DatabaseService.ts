@@ -10,6 +10,9 @@ import { GetMediaDBDTO } from './dto/GetMediaDBDTO';
 import { FileStream } from '../../tools/fs/FileStream';
 import z from 'zod';
 import { DatabaseDTOFactory } from './DatabaseDTOFactory';
+import { SaveDatabaseDBDTO } from './dto/SaveDatabaseDBDTO';
+import { StrapiFactory } from './StrapiFactory';
+import { Input } from '@strapi/types/dist/modules/documents/params/data';
 
 export class DatabaseService implements ApplicationService {
   private readonly _databaseDtoFactory: DatabaseDTOFactory;
@@ -41,7 +44,7 @@ export class DatabaseService implements ApplicationService {
       })
     ).map(
       (database: Result<'api::database.database'>): GetDatabaseDBDTO =>
-        this._databaseDtoFactory.createGetDatabaseDTO(database),
+        this._databaseDtoFactory.createGetDatabaseDTOFromStrapi(database),
     );
   }
 
@@ -57,19 +60,23 @@ export class DatabaseService implements ApplicationService {
     if (rawDatabase == null) {
       return null;
     }
-    return this._databaseDtoFactory.createGetDatabaseDTO(rawDatabase);
+    return this._databaseDtoFactory.createGetDatabaseDTOFromStrapi(rawDatabase);
   }
 
   public async saveDatabase(
     database: SaveDatabaseDBDTO,
   ): Promise<GetDatabaseDBDTO> {
+    const strapiFactory: StrapiFactory = new StrapiFactory();
+    const nativeObject: Input<'api::database.database'> =
+      strapiFactory.createDatabaseInsertObject(database);
     const rawDatabase: Result<'api::database.database'> | null = await strapi
       .documents('api::database.database')
       .create({
-        data: {},
+        data: nativeObject,
+        status: 'published',
       });
 
-    return this._databaseDtoFactory.createGetDatabaseDTO(rawDatabase);
+    return this._databaseDtoFactory.createGetDatabaseDTOFromStrapi(rawDatabase);
   }
 
   public async databaseExists(databaseId: string): Promise<boolean> {
@@ -89,7 +96,7 @@ export class DatabaseService implements ApplicationService {
     if (rawRoom == null) {
       return null;
     }
-    return this._databaseDtoFactory.createGetRoomDTO(rawRoom);
+    return this._databaseDtoFactory.createGetRoomDTOFromStrapi(rawRoom);
   }
 
   public async getRooms(): Promise<GetRoomDBDTO[]> {
@@ -100,7 +107,7 @@ export class DatabaseService implements ApplicationService {
       })
     ).map(
       (room: Result<'api::room.room'>): GetRoomDBDTO =>
-        this._databaseDtoFactory.createGetRoomDTO(room),
+        this._databaseDtoFactory.createGetRoomDTOFromStrapi(room),
     );
   }
 
@@ -150,7 +157,7 @@ export class DatabaseService implements ApplicationService {
     if (result == null) {
       return null;
     }
-    return this._databaseDtoFactory.createGetScenarioDTO(result);
+    return this._databaseDtoFactory.createGetScenarioDTOFromStrapi(result);
   }
 
   public async getScenarios(
@@ -196,7 +203,7 @@ export class DatabaseService implements ApplicationService {
       })
     ).map(
       (scenario: Result<'api::scenario.scenario'>): GetScenarioDBDTO =>
-        this._databaseDtoFactory.createGetScenarioDTO(scenario),
+        this._databaseDtoFactory.createGetScenarioDTOFromStrapi(scenario),
     );
   }
 
@@ -235,7 +242,9 @@ export class DatabaseService implements ApplicationService {
       (
         scenarioGroup: Result<'api::scenario-group.scenario-group'>,
       ): GetScenarioGroupDBDTO =>
-        this._databaseDtoFactory.createGetScenarioGroupDTO(scenarioGroup),
+        this._databaseDtoFactory.createGetScenarioGroupDTOFromStrapi(
+          scenarioGroup,
+        ),
     );
   }
 

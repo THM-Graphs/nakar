@@ -13,6 +13,8 @@ import { GetScenarioGroupDBDTO } from '../database/dto/GetScenarioGroupDBDTO';
 import { GetScenarioDBDTO } from '../database/dto/GetScenarioDBDTO';
 import { ToolsService } from '../tools/ToolsService';
 import { v4 } from 'uuid';
+import { DatabaseDTOFactory } from '../database/DatabaseDTOFactory';
+import { InsertResult } from './InsertResult';
 
 export class BackupService implements ApplicationService {
   public constructor(
@@ -95,13 +97,16 @@ export class BackupService implements ApplicationService {
     return new FileStream(outputFilePath, 'application/tar+gzip', fileName);
   }
 
-  public async importBackupFile(inputPath: string): Promise<void> {
+  public async importBackupFile(inputPath: string): Promise<InsertResult> {
     this._logger.debug(this, `Will import file from ${inputPath}`);
+
     const basePath: string = path.join(this._temporaryDirectory(), v4());
     const fileName: string = 'import.tar.gz';
     const zipFilePath: string = path.join(basePath, fileName);
     await fs.mkdir(basePath, { recursive: true });
     await fs.rename(inputPath, zipFilePath);
+
+    this._logger.debug(this, `Import file: ${zipFilePath}`);
 
     await x({
       file: zipFilePath,
@@ -109,13 +114,20 @@ export class BackupService implements ApplicationService {
       cwd: basePath,
     });
 
+    const insertResult: InsertResult = new InsertResult();
+
     for (const rootFolder of await this._getFoldersInDirectory(basePath)) {
       this._logger.debug(this, `Will import root folder ${rootFolder}`);
+
       for (const databaseFile of await this._getJsonFilesInDirectory(
         path.join(basePath, rootFolder),
       )) {
-        this._logger.debug(this, `Will import database file ${databaseFile}`);
+        await this._importDatabaseFile(
+          path.join(basePath, rootFolder, databaseFile),
+          insertResult,
+        );
       }
+
       for (const sceanrioGroupFolder of await this._getFoldersInDirectory(
         path.join(basePath, rootFolder),
       )) {
@@ -147,7 +159,7 @@ export class BackupService implements ApplicationService {
       }
     }
 
-    this._logger.debug(this, `Import file: ${zipFilePath}`);
+    return insertResult;
   }
 
   public async bootstrap(): Promise<void> {
@@ -158,26 +170,35 @@ export class BackupService implements ApplicationService {
     await this._cleanup();
   }
 
-  private async _importDatabaseFile(filePath: string): Promise<void> {
-    const contents: string = await fs.readFile(filePath, { encoding: 'utf-8' });
-    const json: Partial<GetDatabaseDBDTO> = JSON.parse(
-      contents,
-    ) as Partial<GetDatabaseDBDTO>;
-    if (json.documentId == null) {
-      this._logger.error(
-        this,
-        `Unable to import database. ID not provided: ${JSON.stringify(json)}`,
+  private async _importDatabaseFile(
+    filePath: string,
+    insertResult: InsertResult,
+  ): Promise<void> {
+    try {
+      this._logger.debug(this, `Will import database file ${filePath}`);
+      const contents: string = await fs.readFile(filePath, {
+        encoding: 'utf-8',
+      });
+      const factory: DatabaseDTOFactory = new DatabaseDTOFactory();
+      const json: unknown = JSON.parse(contents);
+      const getDatabaseObject: GetDatabaseDBDTO =
+        factory.createGetDatabaseDTOFromUnknown(json);
+      if (await this._database.databaseExists(getDatabaseObject.documentId)) {
+        throw new Error(
+          `Database with id ${getDatabaseObject.documentId} already exists.`,
+        );
+      }
+      const insertedObject: GetDatabaseDBDTO =
+        await this._database.saveDatabase(getDatabaseObject);
+      insertResult.insertedDatabases.set(
+        getDatabaseObject.documentId,
+        insertedObject,
       );
-      return;
+    } catch (error: unknown) {
+      this._logger.error(this, 'Insert database failed. Will log error.');
+      this._logger.error(this, error);
+      insertResult.errors.push(error);
     }
-    if (await this._database.databaseExists(json.documentId)) {
-      this._logger.warn(
-        this,
-        `Will skip import of database ${json.documentId} because it already exists.`,
-      );
-      return;
-    }
-    await this._database.saveDatabase();
   }
 
   private async _getFoldersInDirectory(

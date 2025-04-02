@@ -1,7 +1,7 @@
 import { GetScenarioGroupDBDTO } from './GetScenarioGroupDBDTO';
-import { GetGraphDisplayConfigurationDBDTO } from './GetGraphDisplayConfigurationDBDTO';
+import { GraphDisplayConfigurationDBDTO } from './GraphDisplayConfigurationDBDTO';
 import { GetMediaDBDTO } from './GetMediaDBDTO';
-import { GetAdditionalQueryDBDTO } from './GetAdditionalQueryDBDTO';
+import { AdditionalQueryDBDTO } from './AdditionalQueryDBDTO';
 
 export interface GetScenarioDBDTO {
   readonly documentId: string;
@@ -10,6 +10,6 @@ export interface GetScenarioDBDTO {
   readonly description: string | null;
   readonly cover: GetMediaDBDTO | null;
   readonly scenarioGroup: GetScenarioGroupDBDTO | null;
-  readonly graphDisplayConfiguration: GetGraphDisplayConfigurationDBDTO;
-  readonly additionalQueries: GetAdditionalQueryDBDTO[];
+  readonly graphDisplayConfiguration: GraphDisplayConfigurationDBDTO;
+  readonly additionalQueries: AdditionalQueryDBDTO[];
 }

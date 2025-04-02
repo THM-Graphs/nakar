@@ -1,6 +1,6 @@
 import { Request } from 'express';
-import { LoggerService } from '../../services/logger/LoggerService';
-import { DatabaseService } from '../../services/database/DatabaseService';
+import { LoggerService } from '../logger/LoggerService';
+import { DatabaseService } from '../database/DatabaseService';
 import {
   SchemaDatabases,
   SchemaScenarioGroups,
@@ -12,17 +12,18 @@ import {
   SchemaScenarioGroup,
   SchemaDatabase,
 } from '../../../../src-gen/schema';
-import { GetDatabaseDBDTO } from '../../services/database/dto/GetDatabaseDBDTO';
-import { GetScenarioDBDTO } from '../../services/database/dto/GetScenarioDBDTO';
-import { GetScenarioGroupDBDTO } from '../../services/database/dto/GetScenarioGroupDBDTO';
-import { GetRoomDBDTO } from '../../services/database/dto/GetRoomDBDTO';
-import { ConfigService } from '../../services/config/ConfigService';
+import { GetDatabaseDBDTO } from '../database/dto/GetDatabaseDBDTO';
+import { GetScenarioDBDTO } from '../database/dto/GetScenarioDBDTO';
+import { GetScenarioGroupDBDTO } from '../database/dto/GetScenarioGroupDBDTO';
+import { GetRoomDBDTO } from '../database/dto/GetRoomDBDTO';
+import { ConfigService } from '../config/ConfigService';
 import z from 'zod';
 import { BadRequest, NotFound } from 'http-errors';
-import { BackupService } from '../../services/backup/BackupService';
+import { BackupService } from '../backup/BackupService';
 import { FileStream } from '../../tools/fs/FileStream';
 import { SchemaDTOFactory } from './SchemaDTOFactory';
 import { FileArray, UploadedFile } from 'express-fileupload';
+import { InsertResult } from '../backup/InsertResult';
 
 export class HTTPDelegate {
   private readonly _schemaDTOFactory: SchemaDTOFactory;
@@ -105,7 +106,7 @@ export class HTTPDelegate {
     return stream;
   }
 
-  public async postImport(req: Request): Promise<void> {
+  public async postImport(req: Request): Promise<unknown> {
     const files: FileArray | null | undefined = req.files;
     if (files == null) {
       throw new BadRequest('No files on request body.');
@@ -116,7 +117,25 @@ export class HTTPDelegate {
       throw new BadRequest('Only one file is allowed.');
     }
 
-    await this._backup.importBackupFile(file.tempFilePath);
+    const insertResult: InsertResult = await this._backup.importBackupFile(
+      file.tempFilePath,
+    );
+
+    if (insertResult.errors.length > 0) {
+      throw new BadRequest(
+        JSON.stringify(
+          insertResult.errors
+            .map((error: unknown): string => JSON.stringify(error))
+            .join('\n'),
+        ),
+      );
+    }
+
+    return {
+      insertedDatabases: insertResult.insertedDatabases.toArray(),
+      insertedScenarioGroups: insertResult.insertedScenarioGroups.toArray(),
+      insertedScenarios: insertResult.insertedScenarios.toArray(),
+    };
   }
 
   private _getQueryParameter(req: Request, name: string): string {

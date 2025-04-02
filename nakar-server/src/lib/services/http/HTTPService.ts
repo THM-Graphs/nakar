@@ -26,6 +26,7 @@ import fs from 'node:fs';
 import fileupload from 'express-fileupload';
 import os from 'node:os';
 import path from 'path';
+import { InsertResult } from '../backup/InsertResult';
 
 export class HTTPService implements ApplicationService {
   private readonly _app: Application;
@@ -171,7 +172,7 @@ export class HTTPService implements ApplicationService {
     this._app.post(
       '/system/import',
       this._handle(
-        (req: Request): Promise<void> => this._delegate.postImport(req),
+        (req: Request): Promise<unknown> => this._delegate.postImport(req),
       ),
     );
   }

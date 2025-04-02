@@ -1,11 +1,11 @@
-import { GetNodeDisplayConfigurationDBDTO } from './GetNodeDisplayConfigurationDBDTO';
+import { NodeDisplayConfigurationDBDTO } from './NodeDisplayConfigurationDBDTO';
 import { ScaleType } from '../../../tools/ScaleType';
 
-export interface GetGraphDisplayConfigurationDBDTO {
+export interface GraphDisplayConfigurationDBDTO {
   readonly connectResultNodes: boolean | null;
   readonly growNodesBasedOnDegree: boolean | null;
   readonly growNodesBasedOnDegreeFactor: number | null;
-  readonly nodeDisplayConfigurations: GetNodeDisplayConfigurationDBDTO[];
+  readonly nodeDisplayConfigurations: NodeDisplayConfigurationDBDTO[];
   readonly compressRelationships: boolean | null;
   readonly compressRelationshipsWidthFactor: number | null;
   readonly scaleType: ScaleType | null;

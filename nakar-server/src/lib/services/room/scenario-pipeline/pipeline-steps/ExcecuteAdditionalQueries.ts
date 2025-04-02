@@ -5,7 +5,7 @@ import { GetDatabaseDBDTO } from '../../../database/dto/GetDatabaseDBDTO';
 import { Neo4jDatabaseInfo } from '../../../neo4j/Neo4jDatabaseInfo';
 import { Neo4jGraphElements } from '../../../neo4j/Neo4jGraphElements';
 import { MutableNode } from '../../graph/MutableNode';
-import { GetAdditionalQueryDBDTO } from '../../../database/dto/GetAdditionalQueryDBDTO';
+import { AdditionalQueryDBDTO } from '../../../database/dto/AdditionalQueryDBDTO';
 import { MutableGraph } from '../../graph/MutableGraph';
 import { MutableGraphFactory } from '../MutableGraphFactory';
 
@@ -78,7 +78,7 @@ export class ExcecuteAdditionalQueries extends ScenarioPipelineStep {
   private _shouldMergeNodes(
     originalNode: [string, MutableNode],
     additionalNode: [string, MutableNode],
-    config: GetAdditionalQueryDBDTO,
+    config: AdditionalQueryDBDTO,
   ): boolean {
     if (config.mergeProperties.length !== config.originalProperties.length) {
       return false;
