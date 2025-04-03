@@ -128,31 +128,37 @@ export class BackupService implements ApplicationService {
         );
       }
 
-      for (const sceanrioGroupFolder of await this._getFoldersInDirectory(
+      for (const databaseFolder of await this._getFoldersInDirectory(
         path.join(basePath, rootFolder),
       )) {
         for (const scenarioGroupFile of await this._getJsonFilesInDirectory(
-          path.join(basePath, rootFolder, sceanrioGroupFolder),
+          path.join(basePath, rootFolder, databaseFolder),
         )) {
-          this._logger.debug(
-            this,
-            `Will import scenario group file ${scenarioGroupFile}`,
+          await this._importScenarioGroupFile(
+            path.join(basePath, rootFolder, databaseFolder, scenarioGroupFile),
+            insertResult,
           );
         }
-        for (const sceanriopFolder of await this._getFoldersInDirectory(
-          path.join(basePath, rootFolder, sceanrioGroupFolder),
+        for (const sceanrioGroupFolder of await this._getFoldersInDirectory(
+          path.join(basePath, rootFolder, databaseFolder),
         )) {
           for (const scenarioFile of await this._getJsonFilesInDirectory(
             path.join(
               basePath,
               rootFolder,
+              databaseFolder,
               sceanrioGroupFolder,
-              sceanriopFolder,
             ),
           )) {
-            this._logger.debug(
-              this,
-              `Will import scenario file ${scenarioFile}`,
+            await this._importScenarioFile(
+              path.join(
+                basePath,
+                rootFolder,
+                databaseFolder,
+                sceanrioGroupFolder,
+                scenarioFile,
+              ),
+              insertResult,
             );
           }
         }
@@ -183,11 +189,7 @@ export class BackupService implements ApplicationService {
       const json: unknown = JSON.parse(contents);
       const getDatabaseObject: GetDatabaseDBDTO =
         factory.createGetDatabaseDTOFromUnknown(json);
-      if (await this._database.databaseExists(getDatabaseObject.documentId)) {
-        throw new Error(
-          `Database with id ${getDatabaseObject.documentId} already exists.`,
-        );
-      }
+
       const insertedObject: GetDatabaseDBDTO =
         await this._database.saveDatabase(getDatabaseObject);
       insertResult.insertedDatabases.set(
@@ -201,16 +203,104 @@ export class BackupService implements ApplicationService {
     }
   }
 
+  private async _importScenarioGroupFile(
+    filePath: string,
+    insertResult: InsertResult,
+  ): Promise<void> {
+    try {
+      this._logger.debug(this, `Will import scenarioGroup file ${filePath}`);
+      const contents: string = await fs.readFile(filePath, {
+        encoding: 'utf-8',
+      });
+      const factory: DatabaseDTOFactory = new DatabaseDTOFactory();
+      const json: unknown = JSON.parse(contents);
+      const getScenarioGroupObject: GetScenarioGroupDBDTO =
+        factory.createGetScenarioGroupDTOFromUnknown(json);
+
+      const databaseId: string | null = getScenarioGroupObject.database
+        ? (insertResult.insertedDatabases.get(
+            getScenarioGroupObject.database.documentId,
+          )?.documentId ?? null)
+        : null;
+      const insertedObject: GetScenarioGroupDBDTO =
+        await this._database.saveScenarioGroup({
+          title: getScenarioGroupObject.title,
+          graphDisplayConfiguration:
+            getScenarioGroupObject.graphDisplayConfiguration,
+          database:
+            databaseId != null
+              ? {
+                  documentId: databaseId,
+                }
+              : null,
+        });
+      insertResult.insertedScenarioGroups.set(
+        getScenarioGroupObject.documentId,
+        insertedObject,
+      );
+    } catch (error: unknown) {
+      this._logger.error(this, 'Insert scenario group failed. Will log error.');
+      this._logger.error(this, error);
+      insertResult.errors.push(error);
+    }
+  }
+
+  private async _importScenarioFile(
+    filePath: string,
+    insertResult: InsertResult,
+  ): Promise<void> {
+    try {
+      this._logger.debug(this, `Will import scenario file ${filePath}`);
+      const contents: string = await fs.readFile(filePath, {
+        encoding: 'utf-8',
+      });
+      const factory: DatabaseDTOFactory = new DatabaseDTOFactory();
+      const json: unknown = JSON.parse(contents);
+      const getScenarioObject: GetScenarioDBDTO =
+        factory.createGetScenarioDTOFromUnknown(json);
+
+      const scenarioGroupId: string | null = getScenarioObject.scenarioGroup
+        ? (insertResult.insertedScenarioGroups.get(
+            getScenarioObject.scenarioGroup.documentId,
+          )?.documentId ?? null)
+        : null;
+      const insertedObject: GetScenarioDBDTO =
+        await this._database.saveScenario({
+          title: getScenarioObject.title,
+          query: getScenarioObject.query,
+          description: getScenarioObject.description,
+          cover: null, // TODO
+          scenarioGroup:
+            scenarioGroupId != null
+              ? {
+                  documentId: scenarioGroupId,
+                }
+              : null,
+          graphDisplayConfiguration:
+            getScenarioObject.graphDisplayConfiguration,
+          additionalQueries: getScenarioObject.additionalQueries,
+        });
+      insertResult.insertedScenarios.set(
+        getScenarioObject.documentId,
+        insertedObject,
+      );
+    } catch (error: unknown) {
+      this._logger.error(this, 'Insert scenario group failed. Will log error.');
+      this._logger.error(this, error);
+      insertResult.errors.push(error);
+    }
+  }
+
   private async _getFoldersInDirectory(
     directoryPath: string,
   ): Promise<string[]> {
     const files: Dirent[] = await fs.readdir(directoryPath, {
       withFileTypes: true,
     });
-    const directories: string[] = files
+    const directoryNames: string[] = files
       .filter((file: Dirent): boolean => file.isDirectory())
       .map((file: Dirent): string => file.name);
-    return directories;
+    return directoryNames;
   }
 
   private async _getJsonFilesInDirectory(
@@ -219,12 +309,12 @@ export class BackupService implements ApplicationService {
     const files: Dirent[] = await fs.readdir(directoryPath, {
       withFileTypes: true,
     });
-    const directories: string[] = files
+    const fileNames: string[] = files
       .filter(
         (file: Dirent): boolean => file.isFile() && file.name.endsWith('.json'),
       )
       .map((file: Dirent): string => file.name);
-    return directories;
+    return fileNames;
   }
 
   private async _cleanup(): Promise<void> {

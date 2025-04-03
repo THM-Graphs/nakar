@@ -6,5 +6,5 @@ export interface AdditionalQueryDBDTO {
   readonly mergeLabel: string;
   readonly mergeProperties: string[];
   readonly mergeQuery: string;
-  readonly database: GetDatabaseDBDTO | null;
+  readonly mergeDatabase: GetDatabaseDBDTO | null;
 }

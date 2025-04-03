@@ -13,6 +13,8 @@ import { DatabaseDTOFactory } from './DatabaseDTOFactory';
 import { SaveDatabaseDBDTO } from './dto/SaveDatabaseDBDTO';
 import { StrapiFactory } from './StrapiFactory';
 import { Input } from '@strapi/types/dist/modules/documents/params/data';
+import { SaveScenarioGroupDBDTO } from './dto/SaveScenarioGroupDBDTO';
+import { SaveScenarioDBDTO } from './dto/SaveScenarioDBDTO';
 
 export class DatabaseService implements ApplicationService {
   private readonly _databaseDtoFactory: DatabaseDTOFactory;
@@ -77,6 +79,39 @@ export class DatabaseService implements ApplicationService {
       });
 
     return this._databaseDtoFactory.createGetDatabaseDTOFromStrapi(rawDatabase);
+  }
+
+  public async saveScenarioGroup(
+    scenarioGroup: SaveScenarioGroupDBDTO,
+  ): Promise<GetScenarioGroupDBDTO> {
+    const strapiFactory: StrapiFactory = new StrapiFactory();
+    const nativeObject: Input<'api::scenario-group.scenario-group'> =
+      strapiFactory.createScenarioGroupInsertObject(scenarioGroup);
+    const rawScenarioGroup: Result<'api::scenario-group.scenario-group'> | null =
+      await strapi.documents('api::scenario-group.scenario-group').create({
+        data: nativeObject,
+        status: 'published',
+      });
+
+    return this._databaseDtoFactory.createGetScenarioGroupDTOFromStrapi(
+      rawScenarioGroup,
+    );
+  }
+
+  public async saveScenario(
+    scenario: SaveScenarioDBDTO,
+  ): Promise<GetScenarioDBDTO> {
+    const strapiFactory: StrapiFactory = new StrapiFactory();
+    const nativeObject: Input<'api::scenario.scenario'> =
+      strapiFactory.createScenarioInsertObject(scenario);
+    const rawScenario: Result<'api::scenario.scenario'> | null = await strapi
+      .documents('api::scenario.scenario')
+      .create({
+        data: nativeObject,
+        status: 'published',
+      });
+
+    return this._databaseDtoFactory.createGetScenarioDTOFromStrapi(rawScenario);
   }
 
   public async databaseExists(databaseId: string): Promise<boolean> {

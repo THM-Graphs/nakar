@@ -3,6 +3,9 @@ import { SaveDatabaseDBDTO } from './dto/SaveDatabaseDBDTO';
 import { GraphDisplayConfigurationDBDTO } from './dto/GraphDisplayConfigurationDBDTO';
 import { match } from 'ts-pattern';
 import { NodeDisplayConfigurationDBDTO } from './dto/NodeDisplayConfigurationDBDTO';
+import { SaveScenarioGroupDBDTO } from './dto/SaveScenarioGroupDBDTO';
+import { SaveScenarioDBDTO } from './dto/SaveScenarioDBDTO';
+import { AdditionalQueryDBDTO } from './dto/AdditionalQueryDBDTO';
 
 export class StrapiFactory {
   public createDatabaseInsertObject(
@@ -17,6 +20,71 @@ export class StrapiFactory {
       graphDisplayConfiguration: this._createGraphDisplayConfiguration(
         saveDto.graphDisplayConfiguration,
       ),
+    };
+  }
+
+  public createScenarioGroupInsertObject(
+    saveDto: SaveScenarioGroupDBDTO,
+  ): Input<'api::scenario-group.scenario-group'> {
+    return {
+      title: saveDto.title ?? undefined,
+      database: saveDto.database
+        ? {
+            documentId: saveDto.database.documentId,
+          }
+        : null,
+      graphDisplayConfiguration: this._createGraphDisplayConfiguration(
+        saveDto.graphDisplayConfiguration,
+      ),
+    };
+  }
+
+  public createScenarioInsertObject(
+    saveDto: SaveScenarioDBDTO,
+  ): Input<'api::scenario.scenario'> {
+    return {
+      title: saveDto.title ?? undefined,
+      query: saveDto.query ?? undefined,
+      description: saveDto.description ?? undefined,
+      cover:
+        saveDto.cover != null
+          ? {
+              documentId: saveDto.cover.documentId,
+            }
+          : null,
+      scenarioGroup: saveDto.scenarioGroup
+        ? {
+            documentId: saveDto.scenarioGroup.documentId,
+          }
+        : null,
+      graphDisplayConfiguration: this._createGraphDisplayConfiguration(
+        saveDto.graphDisplayConfiguration,
+      ),
+      additionalQueries: saveDto.additionalQueries.map(
+        (
+          additionalQuery: AdditionalQueryDBDTO,
+        ): Input<'graph.additional-query'> => {
+          return this._createAdditionalQuery(additionalQuery);
+        },
+      ),
+    };
+  }
+
+  private _createAdditionalQuery(
+    additionalQuery: AdditionalQueryDBDTO,
+  ): Input<'graph.additional-query'> {
+    return {
+      originalLabel: additionalQuery.originalLabel,
+      originalProperties: additionalQuery.originalProperties.join(', '),
+      mergeLabel: additionalQuery.mergeLabel,
+      mergeProperties: additionalQuery.mergeProperties.join(', '),
+      mergeQuery: additionalQuery.mergeQuery,
+      mergeDatabase:
+        additionalQuery.mergeDatabase != null
+          ? {
+              documentId: additionalQuery.mergeDatabase.documentId,
+            }
+          : undefined,
     };
   }
 

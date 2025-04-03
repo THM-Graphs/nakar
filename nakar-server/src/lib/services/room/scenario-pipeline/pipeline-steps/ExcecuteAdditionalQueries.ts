@@ -27,7 +27,7 @@ export class ExcecuteAdditionalQueries extends ScenarioPipelineStep {
         );
       }
 
-      const database: GetDatabaseDBDTO | null = additionalQuery.database;
+      const database: GetDatabaseDBDTO | null = additionalQuery.mergeDatabase;
       if (database == null) {
         state.logger.error(
           this,

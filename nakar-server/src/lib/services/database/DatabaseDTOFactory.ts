@@ -84,32 +84,8 @@ export class DatabaseDTOFactory {
           (
             additionalQuery: Result<'graph.additional-query'>,
           ): AdditionalQueryDBDTO =>
-            this.createAdditionalQueryDTOFromStrapi(additionalQuery),
+            this._createAdditionalQueryDTOFromStrapi(additionalQuery),
         ) ?? [],
-    };
-  }
-
-  public createAdditionalQueryDTOFromStrapi(
-    additionalQuery: Result<
-      'graph.additional-query',
-      { populate: 'mergeDatabase' }
-    >,
-  ): AdditionalQueryDBDTO {
-    return {
-      originalLabel: additionalQuery.originalLabel ?? '',
-      originalProperties:
-        additionalQuery.originalProperties
-          ?.split(',')
-          .map((element: string): string => element.trim()) ?? [],
-      mergeLabel: additionalQuery.mergeLabel ?? '',
-      mergeProperties:
-        additionalQuery.mergeProperties
-          ?.split(',')
-          .map((element: string): string => element.trim()) ?? [],
-      mergeQuery: additionalQuery.mergeQuery ?? '',
-      database: additionalQuery.mergeDatabase
-        ? this.createGetDatabaseDTOFromStrapi(additionalQuery.mergeDatabase)
-        : null,
     };
   }
 
@@ -148,6 +124,125 @@ export class DatabaseDTOFactory {
         this._createGraphDisplayConfigurationDTOFromUnknown(
           parsed.graphDisplayConfiguration,
         ),
+    };
+  }
+
+  public createGetScenarioGroupDTOFromUnknown(
+    input: unknown,
+  ): GetScenarioGroupDBDTO {
+    // eslint-disable-next-line @typescript-eslint/typedef
+    const schema = z.object({
+      documentId: z.string(),
+      title: z.string().nullable(),
+      database: z.unknown(),
+      graphDisplayConfiguration: z.unknown(),
+    });
+
+    const parsed: z.infer<typeof schema> = schema.parse(input);
+
+    return {
+      documentId: parsed.documentId,
+      title: parsed.title,
+      database:
+        parsed.database != null
+          ? this.createGetDatabaseDTOFromUnknown(parsed.database)
+          : null,
+      graphDisplayConfiguration:
+        this._createGraphDisplayConfigurationDTOFromUnknown(
+          parsed.graphDisplayConfiguration,
+        ),
+    };
+  }
+
+  public createGetScenarioDTOFromUnknown(input: unknown): GetScenarioDBDTO {
+    // eslint-disable-next-line @typescript-eslint/typedef
+    const schema = z.object({
+      documentId: z.string(),
+      title: z.string().nullable(),
+      query: z.string().nullable(),
+      cover: z.unknown(),
+      description: z.string().nullable(),
+      scenarioGroup: z.unknown(),
+      graphDisplayConfiguration: z.unknown(),
+      additionalQueries: z.array(z.unknown()),
+    });
+
+    const parsed: z.infer<typeof schema> = schema.parse(input);
+
+    return {
+      documentId: parsed.documentId,
+      title: parsed.title,
+      query: parsed.query,
+      description: parsed.description,
+      cover:
+        parsed.cover != null
+          ? this._createGetMediaDTOFromUnknown(parsed.cover)
+          : null,
+      scenarioGroup:
+        parsed.scenarioGroup != null
+          ? this.createGetScenarioGroupDTOFromUnknown(parsed.scenarioGroup)
+          : null,
+      graphDisplayConfiguration:
+        this._createGraphDisplayConfigurationDTOFromUnknown(
+          parsed.graphDisplayConfiguration,
+        ),
+      additionalQueries: parsed.additionalQueries.map(
+        (additionalQuery: unknown): AdditionalQueryDBDTO => {
+          return this._createAdditionalQueryDTOFromUnknown(additionalQuery);
+        },
+      ),
+    };
+  }
+
+  private _createAdditionalQueryDTOFromStrapi(
+    additionalQuery: Result<
+      'graph.additional-query',
+      { populate: 'mergeDatabase' }
+    >,
+  ): AdditionalQueryDBDTO {
+    return {
+      originalLabel: additionalQuery.originalLabel ?? '',
+      originalProperties:
+        additionalQuery.originalProperties
+          ?.split(',')
+          .map((element: string): string => element.trim()) ?? [],
+      mergeLabel: additionalQuery.mergeLabel ?? '',
+      mergeProperties:
+        additionalQuery.mergeProperties
+          ?.split(',')
+          .map((element: string): string => element.trim()) ?? [],
+      mergeQuery: additionalQuery.mergeQuery ?? '',
+      mergeDatabase: additionalQuery.mergeDatabase
+        ? this.createGetDatabaseDTOFromStrapi(additionalQuery.mergeDatabase)
+        : null,
+    };
+  }
+
+  private _createAdditionalQueryDTOFromUnknown(
+    input: unknown,
+  ): AdditionalQueryDBDTO {
+    // eslint-disable-next-line @typescript-eslint/typedef
+    const schema = z.object({
+      originalLabel: z.string(),
+      originalProperties: z.array(z.string()),
+      mergeLabel: z.string(),
+      mergeProperties: z.array(z.string()),
+      mergeQuery: z.string(),
+      mergeDatabase: z.unknown(),
+    });
+
+    const parsed: z.infer<typeof schema> = schema.parse(input);
+
+    return {
+      originalLabel: parsed.originalLabel,
+      originalProperties: parsed.originalProperties,
+      mergeLabel: parsed.mergeLabel,
+      mergeProperties: parsed.mergeProperties,
+      mergeQuery: parsed.mergeQuery,
+      mergeDatabase:
+        parsed.mergeDatabase != null
+          ? this.createGetDatabaseDTOFromUnknown(parsed.mergeDatabase)
+          : null,
     };
   }
 
@@ -231,6 +326,23 @@ export class DatabaseDTOFactory {
       url: db.url ?? null,
       ext: db.ext ?? null,
       hash: db.hash ?? null,
+    };
+  }
+
+  private _createGetMediaDTOFromUnknown(input: unknown): GetMediaDBDTO {
+    // eslint-disable-next-line @typescript-eslint/typedef
+    const schema = z.object({
+      documentId: z.string(),
+      url: z.string().nullable(),
+      ext: z.string().nullable(),
+      hash: z.string().nullable(),
+    });
+    const parsed: z.infer<typeof schema> = schema.parse(input);
+    return {
+      documentId: parsed.documentId,
+      url: parsed.url,
+      ext: parsed.ext,
+      hash: parsed.hash,
     };
   }
 
