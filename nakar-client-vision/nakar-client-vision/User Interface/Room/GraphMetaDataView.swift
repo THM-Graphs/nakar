@@ -113,20 +113,23 @@ struct GraphMetaDataView: View {
                         color: Components.Schemas.Color.presetColor(
                             Components.Schemas.PresetColor(index: ._0)
                         ),
-                        count: 4
+                        count: 4,
+                        source: "DB"
                     ),
                     Components.Schemas.GraphLabel(
                         label: "Person",
                         color: Components.Schemas.Color.presetColor(
                             Components.Schemas.PresetColor(index: ._1)
                         ),
-                        count: 6
+                        count: 6,
+                        source: "DB"
                     )
                 ],
                 scenarioInfo: Components.Schemas.ScenarioInfo(
                     id: "ID",
                     title: "Kaise Friedrich"
-                )
+                ),
+                pipelineSummary: Components.Schemas.GraphMetaData.PipelineSummaryPayload()
             ),
             tableData: Components.Schemas.Graph.TableDataPayload.init()
         )

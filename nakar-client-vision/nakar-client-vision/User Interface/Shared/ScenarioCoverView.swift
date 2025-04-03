@@ -25,7 +25,6 @@ public struct ScenarioCoverView: View {
     }
 
     public var body: some View {
-#if os(visionOS)
         AsyncImage(url: scenario.coverUrl, content: { image in
             image
                 .resizable()
@@ -39,20 +38,6 @@ public struct ScenarioCoverView: View {
         .frame(width: size, height: size)
         .background(.regularMaterial)
         .clipShape(.circle)
-#endif
-#if os(macOS)
-        AsyncImage(url: scenario.coverUrl, content: { image in
-            image
-                .resizable()
-                .clipShape(.circle)
-        }, placeholder: {
-            ZStack {
-                Image(systemName: "gearshape")
-                    .resizable()
-            }
-        })
-        .frame(width: size, height: size)
-#endif
     }
 }
 

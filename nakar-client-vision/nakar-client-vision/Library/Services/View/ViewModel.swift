@@ -10,9 +10,9 @@ import OpenAPIRuntime
 import OpenAPIURLSession
 import Fakery
 
-public struct ViewModel {
-    private static let faker: Faker = Faker(locale: "de_DE")
+@MainActor fileprivate let faker: Faker = Faker(locale: "de_DE")
 
+public struct ViewModel {
     private init() {
     }
 

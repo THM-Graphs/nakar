@@ -67,7 +67,6 @@ struct NakarRealityView: View {
                         nakarApplication.wsService.send(message: Components.Schemas.WSActionGrabNode(_type: .wsActionGrabNode, nodeId: component.source.id))
                     }
 
-                    #if os(visionOS)
 //                    let targetLocation = value.convert(value.gestureValue.translation3D, from: .local, to: .scene)
 //                    let planePoint: SIMD3<Float> = [0, 0, globalScale.defaultDepth]
 //                    let planeNormal: SIMD3<Float> = [0, 0, -1]
@@ -80,13 +79,6 @@ struct NakarRealityView: View {
 //                    entity.position.x = component.dragStartPosition!.x + Float(targetLocation.x)
 //                    entity.position.y = component.dragStartPosition!.y + Float(targetLocation.y)
 //                    entity.position.z = component.dragStartPosition!.z + Float(targetLocation.z)
-                    #endif
-                    #if os(macOS)
-                    let targetLocation = value.translation
-                    entity.position.x = component.dragStartPosition!.x + Float(Float(targetLocation.width) * globalScale.defaultScale)
-                    entity.position.y = component.dragStartPosition!.y - Float(Float(targetLocation.height) * globalScale.defaultScale)
-                    #endif
-
 
                     component.source.position.x = Double(entity.position.x / globalScale.defaultScale)
                     component.source.position.y = -Double((entity.position.y - globalScale.personHeight) / globalScale.defaultScale)

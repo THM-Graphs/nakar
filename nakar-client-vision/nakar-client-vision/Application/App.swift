@@ -15,14 +15,6 @@ struct nakar_client_visionApp: App {
 
     var body: some Scene {
         WindowGroup {
-            #if os(macOS)
-            MacControlWindow()
-                .environment(env)
-                .onAppear {
-                    env.initialize()
-                }
-            #endif
-            #if os(visionOS)
             if initialized {
                 SelectRoomScreen()
                     .environment(nakarApplication)
@@ -38,15 +30,12 @@ struct nakar_client_visionApp: App {
                         initialized = true
                     }
             }
-            #endif
         }
 
-        #if os(visionOS)
         ImmersiveSpace(id: "renderer", for: ViewModel.Room.self) { room in
             NakarImmersiveSpace(room: room)
                 .environment(nakarApplication)
         }.immersionStyle(selection: $nakarApplication.viewService.immersionStyle, in: MixedImmersionStyle.mixed)
-        #endif
 
         WindowGroup(id: "tabledata") {
             TableDataScreen()

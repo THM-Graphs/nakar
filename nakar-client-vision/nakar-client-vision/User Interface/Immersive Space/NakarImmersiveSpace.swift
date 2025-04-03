@@ -5,8 +5,6 @@
 //  Created by Samuel Schepp on 11.02.25.
 //
 
-#if os(visionOS)
-
 import SwiftUI
 import RealityKit
 
@@ -30,5 +28,3 @@ struct NakarImmersiveSpace: View {
 
     }
 }
-
-#endif
