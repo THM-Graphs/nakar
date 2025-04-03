@@ -26,7 +26,6 @@ import fs from 'node:fs';
 import fileupload from 'express-fileupload';
 import os from 'node:os';
 import path from 'path';
-import { InsertResult } from '../backup/InsertResult';
 
 export class HTTPService implements ApplicationService {
   private readonly _app: Application;
