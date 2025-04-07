@@ -48,15 +48,15 @@ export class ScenarioPipeline {
     this._logger.debug(this, '----------- Scenario Pipeline Start -----------');
 
     await this._runStep(state, new LoadScenario(), onProgress);
-    await this._runStep(state, new ParseNeo4jLoginCredentials(), onProgress);
-    await this._runStep(state, new ExecuteInitialQuery(), onProgress);
-    await this._runStep(state, new ExcecuteAdditionalQueries(), onProgress);
-    await this._runStep(state, new RemoveDanglingRelationships(), onProgress);
     await this._runStep(
       state,
       new CollectGraphDisplayConfiguration(),
       onProgress,
     );
+    await this._runStep(state, new ParseNeo4jLoginCredentials(), onProgress);
+    await this._runStep(state, new ExecuteInitialQuery(), onProgress);
+    await this._runStep(state, new ExcecuteAdditionalQueries(), onProgress);
+    await this._runStep(state, new RemoveDanglingRelationships(), onProgress);
     await this._runStep(state, new ConnectNodes(), onProgress);
     await this._runStep(state, new CompressRelationships(), onProgress);
     await this._runStep(state, new ApplyLabels(), onProgress);

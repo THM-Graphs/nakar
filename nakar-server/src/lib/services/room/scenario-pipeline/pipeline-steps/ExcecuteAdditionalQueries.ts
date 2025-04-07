@@ -8,6 +8,7 @@ import { MutableNode } from '../../graph/MutableNode';
 import { AdditionalQueryDBDTO } from '../../../database/dto/AdditionalQueryDBDTO';
 import { MutableGraph } from '../../graph/MutableGraph';
 import { MutableGraphFactory } from '../MutableGraphFactory';
+import { SSet } from '../../../../tools/Set';
 
 export class ExcecuteAdditionalQueries extends ScenarioPipelineStep {
   public constructor() {
@@ -42,10 +43,16 @@ export class ExcecuteAdditionalQueries extends ScenarioPipelineStep {
       );
 
       const databaseInfo: Neo4jDatabaseInfo = Neo4jDatabaseInfo.parse(database);
-      const result: Neo4jGraphElements = await state.neo4j.executeQuery(
+      let result: Neo4jGraphElements = await state.neo4j.executeQuery(
         databaseInfo,
         additionalQuery.mergeQuery,
       );
+      if (state.displayConfiguration.connectResultNodes) {
+        const nodeIds: SSet<string> = new SSet<string>(result.nodes.keys());
+        const connectResult: Neo4jGraphElements =
+          await state.neo4j.loadConnectingRelationships(databaseInfo, nodeIds);
+        result = result.byMergingWith(connectResult);
+      }
       const graphFactory: MutableGraphFactory = new MutableGraphFactory();
       const additionalGraph: MutableGraph = graphFactory.createGraph(
         result,
