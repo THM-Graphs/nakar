@@ -20,7 +20,8 @@ export class Layout extends ScenarioPipelineStep {
       state.logger,
       state.profiler,
     );
-    await simulation.run(1500);
+
+    await simulation.run({ maxTicks: 1500, maxMs: 3000 });
 
     state.logger.debug(
       this,

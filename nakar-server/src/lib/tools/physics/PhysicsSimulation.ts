@@ -6,6 +6,7 @@ import { MutableEdge } from '../../services/room/graph/MutableEdge';
 import { CombinationCache } from './CombinationCache';
 import { LoggerService } from '../../services/logger/LoggerService';
 import { ProfilerService } from '../../services/profiler/ProfilerService';
+import { PhysicsSimulationRunOptions } from './PhysicsSimulationRunOptions';
 
 export class PhysicsSimulation {
   public static readonly maximumVelocity: number = 500;
@@ -53,22 +54,24 @@ export class PhysicsSimulation {
     }
 
     this._running = true;
-    this._runSync(Number.POSITIVE_INFINITY).catch((error: unknown): void => {
-      this._logger.error(this, error);
-    });
+    this._runSync({ maxTicks: null, maxMs: null }).catch(
+      (error: unknown): void => {
+        this._logger.error(this, error);
+      },
+    );
   }
 
   public stop(): void {
     this._running = false;
   }
 
-  public async run(forTicks: number): Promise<void> {
+  public async run(options: PhysicsSimulationRunOptions): Promise<void> {
     if (this._running) {
       return;
     }
 
     this._running = true;
-    await this._runSync(forTicks);
+    await this._runSync(options);
   }
 
   public setGraph(graph: MutableGraph): void {
@@ -79,11 +82,16 @@ export class PhysicsSimulation {
     return this._graph;
   }
 
-  private async _runSync(forTicks: number): Promise<void> {
+  private async _runSync(options: PhysicsSimulationRunOptions): Promise<void> {
     let lastWait: number = performance.now();
     const shouldWaitEveryMs: number = (1 / PhysicsSimulation.FPS) * 1000;
     let ticksElapsed: number = 0;
-    while (this._running && ticksElapsed < forTicks) {
+    const msStart: number = performance.now();
+    while (
+      this._running &&
+      ticksElapsed < (options.maxTicks ?? Number.POSITIVE_INFINITY) &&
+      msStart + (options.maxMs ?? Number.POSITIVE_INFINITY) > performance.now()
+    ) {
       const timeBeforeTick: number = performance.now();
       this._tick();
       this._tickDurationsCache.push(performance.now() - timeBeforeTick);
