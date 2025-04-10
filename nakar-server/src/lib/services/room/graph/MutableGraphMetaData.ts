@@ -2,32 +2,29 @@ import { MutableGraphLabel } from './MutableGraphLabel';
 import { z } from 'zod';
 import { SMap } from '../../../tools/Map';
 import { MutableScenarioInfo } from './MutableScenarioInfo';
+import { MutableNode } from './MutableNode';
+import { MutableGraphColorPreset } from './MutableGraphColorPreset';
 
 export class MutableGraphMetaData {
   // eslint-disable-next-line @typescript-eslint/typedef
   public static readonly schema = z.object({
-    labels: z.record(MutableGraphLabel.schema),
     scenarioInfo: MutableScenarioInfo.schema,
     pipelineSummary: z.array(z.tuple([z.string(), z.number()])),
   });
 
-  public labels: SMap<string, MutableGraphLabel>;
   public scenarioInfo: MutableScenarioInfo;
   public pipelineSummary: [string, number][];
 
   public constructor(data: {
-    labels: SMap<string, MutableGraphLabel>;
     scenarioInfo: MutableScenarioInfo;
     pipelineSummary: [string, number][];
   }) {
-    this.labels = data.labels;
     this.scenarioInfo = data.scenarioInfo;
     this.pipelineSummary = data.pipelineSummary;
   }
 
   public static empty(): MutableGraphMetaData {
     return new MutableGraphMetaData({
-      labels: new SMap(),
       scenarioInfo: MutableScenarioInfo.empty(),
       pipelineSummary: [],
     });
@@ -37,10 +34,6 @@ export class MutableGraphMetaData {
     data: z.infer<typeof this.schema>,
   ): MutableGraphMetaData {
     return new MutableGraphMetaData({
-      labels: SMap.fromRecord(data.labels).map(
-        (l: z.infer<typeof MutableGraphLabel.schema>): MutableGraphLabel =>
-          MutableGraphLabel.fromPlain(l),
-      ),
       scenarioInfo: MutableScenarioInfo.fromPlain(data.scenarioInfo),
       pipelineSummary: data.pipelineSummary,
     });
@@ -48,14 +41,40 @@ export class MutableGraphMetaData {
 
   public toPlain(): z.infer<typeof MutableGraphMetaData.schema> {
     return {
-      labels: this.labels
-        .map(
-          (v: MutableGraphLabel): z.infer<typeof MutableGraphLabel.schema> =>
-            v.toPlain(),
-        )
-        .toRecord(),
       scenarioInfo: this.scenarioInfo.toPlain(),
       pipelineSummary: this.pipelineSummary,
     };
+  }
+
+  public getLabels(
+    nodes: SMap<string, MutableNode>,
+  ): SMap<string, MutableGraphLabel> {
+    const labels: SMap<string, MutableGraphLabel> = new SMap<
+      string,
+      MutableGraphLabel
+    >();
+    for (const node of nodes.values()) {
+      for (const label of node.labels) {
+        const foundEntry: MutableGraphLabel | undefined = labels.get(label);
+
+        if (!foundEntry) {
+          const newColor: MutableGraphColorPreset =
+            MutableGraphColorPreset.create({
+              index: labels.size,
+            });
+          labels.set(
+            label,
+            new MutableGraphLabel({
+              color: newColor,
+              count: 1,
+              source: node.source,
+            }),
+          );
+        } else {
+          labels.set(label, foundEntry.byIncrementingCount());
+        }
+      }
+    }
+    return labels;
   }
 }

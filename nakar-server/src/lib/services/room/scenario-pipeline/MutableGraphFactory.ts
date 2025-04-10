@@ -74,7 +74,6 @@ export class MutableGraphFactory {
     scenario: GetScenarioDBDTO,
   ): MutableGraphMetaData {
     return new MutableGraphMetaData({
-      labels: new SMap(),
       scenarioInfo: this.createMutableScenarioInfo(scenario),
       pipelineSummary: [],
     });

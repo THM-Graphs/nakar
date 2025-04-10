@@ -42,7 +42,10 @@ export class CachingSchemaDTOFactory {
         async (id: string, edge: MutableEdge): Promise<SchemaEdge> =>
           await this._createSchemaEdge(id, edge),
       ),
-      metaData: await this._createSchemaGraphMetaData(graph.metaData),
+      metaData: await this._createSchemaGraphMetaData(
+        graph.metaData,
+        graph.nodes,
+      ),
       tableData: graph.tableData.map(
         (entry: SMap<string, unknown>): Record<string, unknown> =>
           entry.toRecord(),
@@ -114,15 +117,18 @@ export class CachingSchemaDTOFactory {
 
   private async _createSchemaGraphMetaData(
     metaData: MutableGraphMetaData,
+    nodes: SMap<string, MutableNode>,
   ): Promise<SchemaGraphMetaData> {
     return {
-      labels: await metaData.labels.asyncFlatMap(
-        async (
-          id: string,
-          label: MutableGraphLabel,
-        ): Promise<SchemaGraphLabel> =>
-          await this._createSchemaGraphLabel(id, label),
-      ),
+      labels: await metaData
+        .getLabels(nodes)
+        .asyncFlatMap(
+          async (
+            id: string,
+            label: MutableGraphLabel,
+          ): Promise<SchemaGraphLabel> =>
+            await this._createSchemaGraphLabel(id, label),
+        ),
       scenarioInfo: this._createSchemaScenarioInfo(metaData.scenarioInfo),
       pipelineSummary: metaData.pipelineSummary.map(
         (entry: [string, number]): { step: string; durationMs: number } => {

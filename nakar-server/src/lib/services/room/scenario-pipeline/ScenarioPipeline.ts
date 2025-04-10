@@ -6,7 +6,6 @@ import { ExecuteInitialQuery } from './pipeline-steps/ExecuteInitialQuery';
 import { CollectGraphDisplayConfiguration } from './pipeline-steps/CollectDisplayConfiguration';
 import { ParseNeo4jLoginCredentials } from './pipeline-steps/ParseNeo4jLoginCredentials';
 import { ApplyEdgeParallelCounts } from './pipeline-steps/ApplyEdgeParallelCounts';
-import { ApplyLabels } from './pipeline-steps/ApplyLabels';
 import { ApplyNodeBackgroundColor } from './pipeline-steps/ApplyNodeBackgroundColor';
 import { ApplyNodeDegrees } from './pipeline-steps/ApplyNodeDegrees';
 import { ApplyNodeDisplayText } from './pipeline-steps/ApplyNodeDisplayText';
@@ -25,7 +24,7 @@ import { ScenarioPipelineResult } from './ScenarioPipelineResult';
 import { ExcecuteAdditionalQueries } from './pipeline-steps/ExcecuteAdditionalQueries';
 
 export class ScenarioPipeline {
-  private readonly _stepCount: number = 16;
+  private readonly _stepCount: number = 15;
 
   public constructor(
     private readonly _database: DatabaseService,
@@ -59,7 +58,6 @@ export class ScenarioPipeline {
     await this._runStep(state, new RemoveDanglingRelationships(), onProgress);
     await this._runStep(state, new ConnectNodes(), onProgress);
     await this._runStep(state, new CompressRelationships(), onProgress);
-    await this._runStep(state, new ApplyLabels(), onProgress);
     await this._runStep(state, new ApplyNodeDegrees(), onProgress);
     await this._runStep(state, new ApplyEdgeParallelCounts(), onProgress);
     await this._runStep(state, new ApplyNodeDisplayText(), onProgress);
