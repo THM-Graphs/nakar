@@ -18,13 +18,12 @@ import { ProfilerService } from '../../profiler/ProfilerService';
 import { ProfilerTask } from '../../profiler/ProfilerTask';
 import { wait } from '../../../tools/Wait';
 import { LoggerService } from '../../logger/LoggerService';
-import { RemoveDanglingRelationships } from './pipeline-steps/RemoveDanglingRelationships';
 import { ScenarioPipelineState } from './ScenarioPipelineState';
 import { ScenarioPipelineResult } from './ScenarioPipelineResult';
 import { ExcecuteAdditionalQueries } from './pipeline-steps/ExcecuteAdditionalQueries';
 
 export class ScenarioPipeline {
-  private readonly _stepCount: number = 15;
+  private readonly _stepCount: number = 14;
 
   public constructor(
     private readonly _database: DatabaseService,
@@ -55,7 +54,6 @@ export class ScenarioPipeline {
     await this._runStep(state, new ParseNeo4jLoginCredentials(), onProgress);
     await this._runStep(state, new ExecuteInitialQuery(), onProgress);
     await this._runStep(state, new ExcecuteAdditionalQueries(), onProgress);
-    await this._runStep(state, new RemoveDanglingRelationships(), onProgress);
     await this._runStep(state, new ConnectNodes(), onProgress);
     await this._runStep(state, new CompressRelationships(), onProgress);
     await this._runStep(state, new ApplyNodeDegrees(), onProgress);

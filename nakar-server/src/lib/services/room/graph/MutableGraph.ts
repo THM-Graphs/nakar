@@ -4,6 +4,7 @@ import { MutableGraphMetaData } from './MutableGraphMetaData';
 import { z } from 'zod';
 import { SMap } from '../../../tools/Map';
 import { v4 as uuidv4 } from 'uuid';
+import { LoggerService } from '../../logger/LoggerService';
 
 export class MutableGraph {
   // eslint-disable-next-line @typescript-eslint/typedef
@@ -33,6 +34,8 @@ export class MutableGraph {
     this.edges = data.edges;
     this.metaData = data.metaData;
     this.tableData = data.tableData;
+
+    this.removeDanglingEdges();
   }
 
   public get size(): number {
@@ -103,6 +106,9 @@ export class MutableGraph {
         graph.edges.set(otherEdge[0], otherEdge[1]);
       }
     }
+
+    this.removeDanglingEdges();
+
     return graph;
   }
 
@@ -124,5 +130,21 @@ export class MutableGraph {
         (td: SMap<string, unknown>): Record<string, unknown> => td.toRecord(),
       ),
     };
+  }
+
+  public removeDanglingEdges(logger?: LoggerService): void {
+    this.edges = this.edges.filter((edge: MutableEdge): boolean => {
+      const isDangling: boolean =
+        !this.nodes.has(edge.startNodeId) || !this.nodes.has(edge.endNodeId);
+
+      if (isDangling) {
+        logger?.debug(
+          this,
+          `Relationship ${edge.type} (${edge.startNodeId} -> ${edge.endNodeId}) is dangling and will be removed.`,
+        );
+      }
+
+      return !isDangling;
+    });
   }
 }
