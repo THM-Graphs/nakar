@@ -72,6 +72,12 @@ export function Canvas(props: {
         {detailsNode && (
           <NodeDetails
             node={detailsNode}
+            onExpandNode={() => {
+              props.webSocketsManager.sendMessage({
+                type: "WSActionExpandNodes",
+                nodes: [detailsNode.id],
+              });
+            }}
             onClose={() => {
               setDetailsNode(null);
             }}

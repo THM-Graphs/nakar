@@ -160,9 +160,10 @@ export class PhysicsSimulation {
   }
 
   private _positionEquals(nodeA: MutableNode, nodeB: MutableNode): boolean {
+    const threshold: number = 0.1;
     return (
-      nodeA.position.x === nodeB.position.x &&
-      nodeA.position.y === nodeB.position.y
+      Math.abs(nodeA.position.x - nodeB.position.x) < threshold &&
+      Math.abs(nodeA.position.y - nodeB.position.y) < threshold
     );
   }
 

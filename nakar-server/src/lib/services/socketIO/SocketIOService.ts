@@ -6,6 +6,7 @@ import {
 import {
   SchemaGraph,
   SchemaPhysicalNode,
+  SchemaWsActionExpandNodes,
   SchemaWsActionGrabNode,
   SchemaWsActionJoinRoom,
   SchemaWsActionLoadScenario,
@@ -32,7 +33,6 @@ import { LoggerService } from '../logger/LoggerService';
 import http from 'http';
 import { ApplicationService } from '../../application/ApplicationService';
 import { MutableGraph } from '../room/graph/MutableGraph';
-import z from 'zod';
 import { Subscription } from 'rxjs';
 import { HTTPService } from '../http/HTTPService';
 import { CachingSchemaDTOFactory } from '../http/CachingSchemaDTOFactory';
@@ -92,11 +92,8 @@ export class SocketIOService implements ApplicationService {
           });
 
           if (roomId != null) {
-            const plainGraph: z.infer<typeof MutableGraph.schema> | null =
-              this._roomService.getGraph(roomId);
-            const graph: MutableGraph = plainGraph
-              ? MutableGraph.fromPlain(plainGraph)
-              : MutableGraph.empty();
+            const graph: MutableGraph =
+              this._roomService.getGraph(roomId) ?? MutableGraph.empty();
             const cachedGraphFactory: CachingSchemaDTOFactory =
               new CachingSchemaDTOFactory(this._databaseService, this._logger);
             cachedGraphFactory
@@ -147,6 +144,12 @@ export class SocketIOService implements ApplicationService {
                   { type: 'WSActionUngrabNode' },
                   (m: SchemaWsActionUngrabNode): void => {
                     this._handleUngrabNode(wsClient, m);
+                  },
+                )
+                .with(
+                  { type: 'WSActionExpandNodes' },
+                  (m: SchemaWsActionExpandNodes): void => {
+                    this._handleExpandNodes(wsClient, m);
                   },
                 )
                 .exhaustive();
@@ -365,6 +368,26 @@ export class SocketIOService implements ApplicationService {
       roomId: roomId,
       userId: wsClient.id,
     });
+  }
+
+  private _handleExpandNodes(
+    wsClient: WSClient,
+    m: SchemaWsActionExpandNodes,
+  ): void {
+    const roomId: string | null = wsClient.room;
+    if (roomId == null) {
+      this._logger.error(
+        this,
+        `Socket ${wsClient.id} did send expand nodes message but is in no room.`,
+      );
+      return;
+    }
+
+    this._roomService
+      .expandNodes({ roomId: roomId, nodeIds: m.nodes })
+      .catch((error: unknown): void => {
+        wsClient.sendToRoom(this.createErrorNotification(error));
+      });
   }
 
   private _handleRoomPhysicsUpdate(message: RSEventRoomPhysicsUpdated): void {

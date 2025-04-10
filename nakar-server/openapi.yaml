@@ -507,6 +507,7 @@ components:
         - $ref: "#/components/schemas/WSActionGrabNode"
         - $ref: "#/components/schemas/WSActionMoveNodes"
         - $ref: "#/components/schemas/WSActionUngrabNode"
+        - $ref: "#/components/schemas/WSActionExpandNodes"
 
     WSServerToClientMessage:
       oneOf:
@@ -576,6 +577,20 @@ components:
       required:
         - type
         - nodeId
+
+    WSActionExpandNodes:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: ["WSActionExpandNodes"]
+        nodes:
+          type: array
+          items:
+            type: string
+      required:
+        - type
+        - nodes
 
     WSEventScenarioLoaded:
       type: object

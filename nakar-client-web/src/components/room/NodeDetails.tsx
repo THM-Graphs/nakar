@@ -1,10 +1,18 @@
-import { Card, CloseButton, ListGroup, Stack, Table } from "react-bootstrap";
+import {
+  Button,
+  Card,
+  CloseButton,
+  ListGroup,
+  Stack,
+  Table,
+} from "react-bootstrap";
 import { Node } from "../../../src-gen";
 import { CSSProperties } from "react";
 
 export function NodeDetails(props: {
   node: Node;
   onClose: () => void;
+  onExpandNode: () => void;
   className?: string;
   style?: CSSProperties;
 }) {
@@ -21,6 +29,9 @@ export function NodeDetails(props: {
           <Stack>
             <Card.Title>{props.node.title}</Card.Title>
             <span className={"text-muted small"}>{props.node.id}</span>
+            <Button size={"sm"} onClick={props.onExpandNode}>
+              Expand
+            </Button>
           </Stack>
           <CloseButton onClick={props.onClose}></CloseButton>
         </Stack>

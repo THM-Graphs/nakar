@@ -76,9 +76,24 @@ export class Neo4jService implements ApplicationService {
     const nodesIds: string[] = [...nodeIds.values()];
     const additional: Neo4jGraphElements = await this.executeQuery(
       databaseInfo,
-      'MATCH (a)-[additionalRelationship]->(b) WHERE elementId(a) IN $existingNodeIds AND elementId(b) IN $existingNodeIds RETURN additionalRelationship;',
+      'MATCH (a)-[additionalRelationship]->(b) WHERE elementId(a) IN $existingNodeIds AND elementId(b) IN $existingNodeIds RETURN a, additionalRelationship, b;',
       {
         existingNodeIds: nodesIds,
+      },
+    );
+    return additional;
+  }
+
+  public async expandNode(
+    databaseInfo: Neo4jDatabaseInfo,
+    nodeIds: SSet<string>,
+  ): Promise<Neo4jGraphElements> {
+    const nodesIds: string[] = [...nodeIds.values()];
+    const additional: Neo4jGraphElements = await this.executeQuery(
+      databaseInfo,
+      'MATCH (a)-[additionalRelationship]-(b) WHERE elementId(a) IN $nodesIds RETURN a, additionalRelationship, b;',
+      {
+        nodesIds: nodesIds,
       },
     );
     return additional;

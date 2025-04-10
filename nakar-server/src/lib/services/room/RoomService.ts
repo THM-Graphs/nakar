@@ -24,13 +24,17 @@ import { WTEventPhysicsUpdate } from '../room-instance/worker-events/WTEventPhys
 import z from 'zod';
 import { Neo4jService } from '../neo4j/Neo4jService';
 import { ScenarioPipelineResult } from './scenario-pipeline/ScenarioPipelineResult';
+import { MutableNode } from './graph/MutableNode';
+import { GetDatabaseDBDTO } from '../database/dto/GetDatabaseDBDTO';
+import { Neo4jDatabaseInfo } from '../neo4j/Neo4jDatabaseInfo';
+import { Neo4jGraphElements } from '../neo4j/Neo4jGraphElements';
+import { SSet } from '../../tools/Set';
+import { MutableGraphFactory } from './scenario-pipeline/MutableGraphFactory';
+import { PhysicsSimulation } from '../../tools/physics/PhysicsSimulation';
 
 export class RoomService implements ApplicationService {
   private readonly _workers: SMap<string, Worker>;
-  private readonly _latestGraphs: SMap<
-    string,
-    z.infer<typeof MutableGraph.schema>
-  >;
+  private readonly _latestGraphs: SMap<string, MutableGraph>;
   private readonly _onRoomUpdated: Subject<RSEventRoomUpdated>;
   private readonly _onRoomPhysicsUpdated: Subject<RSEventRoomPhysicsUpdated>;
 
@@ -72,7 +76,7 @@ export class RoomService implements ApplicationService {
       await worker.terminate();
     }
     for (const graphEntry of this._latestGraphs.toArray()) {
-      await this._saveGraphToDb(graphEntry[0], graphEntry[1]);
+      await this._saveGraphToDb(graphEntry[0], graphEntry[1].toPlain());
     }
   }
 
@@ -114,8 +118,7 @@ export class RoomService implements ApplicationService {
   }
 
   public saveGraphOfRoom(roomId: string): void {
-    const graph: z.infer<typeof MutableGraph.schema> | undefined =
-      this._latestGraphs.get(roomId);
+    const graph: MutableGraph | undefined = this._latestGraphs.get(roomId);
     if (graph == null) {
       this._logger.error(
         this,
@@ -123,9 +126,11 @@ export class RoomService implements ApplicationService {
       );
       return;
     }
-    this._saveGraphToDb(roomId, graph).catch((error: unknown): void => {
-      this._logger.error(this, error);
-    });
+    this._saveGraphToDb(roomId, graph.toPlain()).catch(
+      (error: unknown): void => {
+        this._logger.error(this, error);
+      },
+    );
   }
 
   public async loadScenario(params: {
@@ -163,7 +168,7 @@ export class RoomService implements ApplicationService {
     const plainGraph: z.infer<typeof MutableGraph.schema> =
       result.graph.toPlain();
 
-    this._latestGraphs.set(params.roomId, plainGraph);
+    this._latestGraphs.set(params.roomId, result.graph);
     this._sendActionToWorker(params.roomId, {
       type: 'WTActionSetGraph',
       graph: plainGraph,
@@ -177,8 +182,97 @@ export class RoomService implements ApplicationService {
     return result.scenario;
   }
 
-  public getGraph(roomId: string): z.infer<typeof MutableGraph.schema> | null {
+  public getGraph(roomId: string): MutableGraph | null {
     return this._latestGraphs.get(roomId) ?? null;
+  }
+
+  public async expandNodes(params: {
+    roomId: string;
+    nodeIds: readonly string[];
+  }): Promise<void> {
+    const databaseCache: SMap<string, GetDatabaseDBDTO> = new SMap<
+      string,
+      GetDatabaseDBDTO
+    >();
+    const mayGraph: MutableGraph | undefined = this._latestGraphs.get(
+      params.roomId,
+    );
+    if (mayGraph == null) {
+      throw new Error(
+        `Cannot find graph of room ${params.roomId} to run expand nodes.`,
+      );
+    }
+    let graph: MutableGraph = mayGraph;
+
+    const scenario: GetScenarioDBDTO | null = await this._database.getScenario(
+      graph.metaData.scenarioInfo.id,
+    );
+    if (scenario == null) {
+      throw new Error(
+        `Cannot find scenario of room ${params.roomId} to run expand nodes.`,
+      );
+    }
+
+    for (const nodeId of params.nodeIds) {
+      const node: MutableNode | undefined = graph.nodes.get(nodeId);
+      if (node == null) {
+        throw new Error(`Cannot find node ${nodeId} to expand.`);
+      }
+
+      const database: GetDatabaseDBDTO | null =
+        databaseCache.get(node.source.databaseId) ??
+        (await this._database.getDatabase(node.source.databaseId));
+      if (database == null) {
+        throw new Error(
+          `Cannot find database ${node.source.databaseId} to run expand node query on.`,
+        );
+      }
+      databaseCache.set(node.source.databaseId, database);
+
+      const neo4jDatabaseInfo: Neo4jDatabaseInfo =
+        Neo4jDatabaseInfo.parse(database);
+      const expandResult: Neo4jGraphElements = await this._neo4j.expandNode(
+        neo4jDatabaseInfo,
+        new SSet<string>([nodeId]),
+      );
+
+      const mutableGraphFactory: MutableGraphFactory =
+        new MutableGraphFactory();
+
+      const expandGraph: MutableGraph = mutableGraphFactory.createGraph(
+        expandResult,
+        scenario,
+      );
+      expandGraph.nodes.forEach((newNow: MutableNode): void => {
+        newNow.position.x = node.position.x;
+        newNow.position.y = node.position.y;
+      });
+
+      this._logger.debug(
+        this,
+        `Expand node result for ${nodeId}: ${expandGraph.nodes.size.toString()} nodes and ${expandGraph.edges.size.toString()} edges.`,
+      );
+
+      graph = graph.byMergingWith(expandGraph);
+    }
+
+    const physicsSimluation: PhysicsSimulation = new PhysicsSimulation(
+      graph,
+      this._logger,
+      this._profiler,
+    );
+    await physicsSimluation.run({ maxTicks: 1000, maxMs: 1000 });
+
+    this._latestGraphs.set(params.roomId, graph);
+    this._sendActionToWorker(params.roomId, {
+      type: 'WTActionSetGraph',
+      graph: graph.toPlain(),
+    });
+    await this._saveGraphToDb(params.roomId, graph.toPlain());
+    this._onRoomUpdated.next({
+      graph: graph,
+      roomId: params.roomId,
+    });
   }
 
   private async _saveGraphToDb(
@@ -212,11 +306,9 @@ export class RoomService implements ApplicationService {
           `Did load ${graph.size.toString()} graph elements into room ${room.documentId} ('${room.title ?? ''}').`,
         );
 
-        const plainGraph: z.infer<typeof MutableGraph.schema> = graph.toPlain();
-
         const workerData: RoomWorkerData = {
           roomId: room.documentId,
-          graph: plainGraph,
+          graph: graph.toPlain(),
         };
         const worker: Worker = new Worker(
           path.join(__dirname, '..', 'room-instance', 'RoomWorker.js'),
@@ -248,7 +340,7 @@ export class RoomService implements ApplicationService {
           this._logger.debug(this, `Worker online`);
         });
         this._workers.set(room.documentId, worker);
-        this._latestGraphs.set(room.documentId, plainGraph);
+        this._latestGraphs.set(room.documentId, graph);
       }
     } catch (error) {
       this._logger.error(this, error);
@@ -270,7 +362,7 @@ export class RoomService implements ApplicationService {
       graph: event.graph,
       roomId: roomId,
     });
-    this._latestGraphs.set(roomId, event.graph);
+    this._latestGraphs.set(roomId, MutableGraph.fromPlain(event.graph));
   }
 
   private _sendActionToWorker(roomId: string, action: WTAction): void {
