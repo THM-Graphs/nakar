@@ -18,8 +18,8 @@
     "version": "echo $npm_package_version"
   },
   "dependencies": {
-    "@strapi/plugin-users-permissions": "5.12.3",
-    "@strapi/strapi": "5.12.3",
+    "@strapi/plugin-users-permissions": "5.12.6",
+    "@strapi/strapi": "5.12.6",
     "better-sqlite3": "11.3.0",
     "cors": "^2.8.5",
     "express": "^4.21.2",

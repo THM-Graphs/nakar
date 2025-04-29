@@ -36,7 +36,7 @@ export function Room(props: { webSockets: WebSocketsManager; env: Env }) {
   const [tableData, setTableData] = useState<Record<string, unknown>[] | null>(
     null,
   );
-  const [scenariosWindowOpened, setScenariosWindowOpened] = useState(false);
+  const [scenariosWindowOpened, setScenariosWindowOpened] = useState(true);
   const [tableDataOpened, setTableDataOpened] = useState(false);
   const [scenarioLoading, setScenarioLoading] = useState<string | null>(null);
   const [renderer, setRenderer] = useState<GraphRendererEngine>("d3");
