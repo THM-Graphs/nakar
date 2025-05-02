@@ -14,6 +14,12 @@ RUN neo4j-admin database import full \
     --relationships=/import/04_names_in_query/relationships.csv  \
     --nodes=/import/05_properties/nodes.csv  \
     --relationships=/import/05_properties/relationships.csv  \
+    --nodes=/import/06_connect_result_nodes/nodes.csv  \
+    --relationships=/import/06_connect_result_nodes/relationships.csv  \
+    --nodes=/import/07_grow_degree/nodes.csv  \
+    --relationships=/import/07_grow_degree/relationships.csv  \
+    --nodes=/import/08_compress_relationships/nodes.csv  \
+    --relationships=/import/08_compress_relationships/relationships.csv  \
     --verbose
 
 ENV NEO4J_server_databases_read__only=true
