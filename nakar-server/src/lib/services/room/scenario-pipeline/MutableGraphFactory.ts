@@ -12,6 +12,8 @@ import { SSet } from '../../../tools/Set';
 import { MutablePosition } from '../graph/MutablePosition';
 import { SMap } from '../../../tools/Map';
 import { MutableScenarioInfo } from '../graph/MutableScenarioInfo';
+import { MutableNodeIndex } from '../graph/MutableNodeIndex';
+import { MutableEdgeIndex } from '../graph/MutableEdgeIndex';
 
 export class MutableGraphFactory {
   public createGraph(
@@ -20,18 +22,22 @@ export class MutableGraphFactory {
   ): MutableGraph {
     return new MutableGraph({
       id: uuidv4(),
-      nodes: graphElements.nodes
-        .toArray()
-        .map(
-          (entry: [string, Neo4jNode]): MutableNode =>
-            this.createMutableNode(entry[1]),
-        ),
-      edges: graphElements.relationships
-        .toArray()
-        .map(
-          (entry: [string, Neo4jRelationship]): MutableEdge =>
-            this.createMutableEdge(entry[1]),
-        ),
+      nodes: new MutableNodeIndex(
+        graphElements.nodes
+          .toArray()
+          .map(
+            (entry: [string, Neo4jNode]): MutableNode =>
+              this.createMutableNode(entry[1]),
+          ),
+      ),
+      edges: new MutableEdgeIndex(
+        graphElements.relationships
+          .toArray()
+          .map(
+            (entry: [string, Neo4jRelationship]): MutableEdge =>
+              this.createMutableEdge(entry[1]),
+          ),
+      ),
       metaData: this.createMutableGraphMetaData(scenario),
       tableData: graphElements.tableData,
     });

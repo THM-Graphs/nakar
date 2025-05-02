@@ -64,7 +64,7 @@ export class ExcecuteAdditionalQueries extends ScenarioPipelineStep {
         `Result: ${result.nodes.size.toString()} nodes, ${result.relationships.size.toString()} relationships.`,
       );
 
-      state.graph = state.graph.byMergingWith(additionalGraph);
+      state.graph = state.graph.byMergingWithNonOverriding(additionalGraph);
 
       for (const originalNode of state.graph.nodes.nodes) {
         for (const mergeNode of state.graph.nodes.nodes) {

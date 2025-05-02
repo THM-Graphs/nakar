@@ -26,14 +26,14 @@ export class MutableGraph {
 
   public constructor(data: {
     id: string;
-    nodes: MutableNode[];
-    edges: MutableEdge[];
+    nodes: MutableNodeIndex;
+    edges: MutableEdgeIndex;
     metaData: MutableGraphMetaData;
     tableData: SMap<string, unknown>[];
   }) {
     this.id = data.id;
-    this.nodes = new MutableNodeIndex(data.nodes);
-    this.edges = new MutableEdgeIndex(data.edges);
+    this.nodes = data.nodes;
+    this.edges = data.edges;
     this.metaData = data.metaData;
     this.tableData = data.tableData;
 
@@ -47,8 +47,8 @@ export class MutableGraph {
   public static empty(): MutableGraph {
     return new MutableGraph({
       id: uuidv4(),
-      nodes: [],
-      edges: [],
+      nodes: new MutableNodeIndex([]),
+      edges: new MutableEdgeIndex([]),
       metaData: MutableGraphMetaData.empty(),
       tableData: [],
     });
@@ -59,14 +59,17 @@ export class MutableGraph {
   ): MutableGraph {
     return new MutableGraph({
       id: data.id,
-      nodes: data.nodes.map(
-        (n: z.infer<typeof MutableNode.schema>): MutableNode =>
-          MutableNode.fromPlain(n),
+      nodes: new MutableNodeIndex(
+        data.nodes.map(
+          (n: z.infer<typeof MutableNode.schema>): MutableNode =>
+            MutableNode.fromPlain(n),
+        ),
       ),
-
-      edges: data.edges.map(
-        (e: z.infer<typeof MutableEdge.schema>): MutableEdge =>
-          MutableEdge.fromPlain(e),
+      edges: new MutableEdgeIndex(
+        data.edges.map(
+          (e: z.infer<typeof MutableEdge.schema>): MutableEdge =>
+            MutableEdge.fromPlain(e),
+        ),
       ),
       metaData: MutableGraphMetaData.fromPlain(data.metaData),
       tableData: data.tableData.map(
@@ -90,11 +93,11 @@ export class MutableGraph {
     }
   }
 
-  public byMergingWith(otherGraph: MutableGraph): MutableGraph {
+  public byMergingWithNonOverriding(otherGraph: MutableGraph): MutableGraph {
     const graph: MutableGraph = new MutableGraph({
       id: this.id,
-      nodes: [...this.nodes.nodes, ...otherGraph.nodes.nodes],
-      edges: [...this.edges.edges, ...otherGraph.edges.edges],
+      nodes: this.nodes.byMergingWithNonOverriding(otherGraph.nodes),
+      edges: this.edges.byMergingWithNonOverriding(otherGraph.edges),
       metaData: this.metaData,
       tableData: this.tableData,
     });

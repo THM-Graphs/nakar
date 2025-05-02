@@ -128,9 +128,13 @@ export function Room(props: { webSockets: WebSocketsManager; env: Env }) {
             )}
           </SideToolbar>
           <Canvas
+            onExpandNodes={() => {
+              setScenarioLoading("");
+            }}
             renderer={renderer}
             webSocketsManager={props.webSockets}
             scenarioProgress={scenarioProgress}
+            scenarioLoading={scenarioLoading != null}
           ></Canvas>
           <SideToolbar hidden={!tableDataOpened} width={700}>
             {() => <DataTable tableData={tableData}></DataTable>}

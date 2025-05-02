@@ -80,6 +80,10 @@ export class MutableEdgeIndex {
     return this._byId.get(id) ?? null;
   }
 
+  public has(id: string): boolean {
+    return this._byId.has(id);
+  }
+
   public getByStartNodeId(startNodeId: string): MutableEdge[] {
     return (
       this._byStartNodeId
@@ -109,5 +113,22 @@ export class MutableEdgeIndex {
         ?.toArray()
         .map((v: [string, MutableEdge]): MutableEdge => v[1]) ?? []
     );
+  }
+
+  public byMergingWithNonOverriding(
+    otherIndex: MutableEdgeIndex,
+  ): MutableEdgeIndex {
+    const newIndex: MutableEdgeIndex = new MutableEdgeIndex(
+      this.edges.toArray(),
+    );
+
+    for (const otherEdge of otherIndex.edges) {
+      if (newIndex.has(otherEdge.id)) {
+        continue;
+      }
+      newIndex.add(otherEdge);
+    }
+
+    return newIndex;
   }
 }

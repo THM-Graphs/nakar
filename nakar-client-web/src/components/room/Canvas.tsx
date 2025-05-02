@@ -19,6 +19,8 @@ export function Canvas(props: {
   renderer: GraphRendererEngine;
   webSocketsManager: WebSocketsManager;
   scenarioProgress: WSEventScenarioProgress | null;
+  scenarioLoading: boolean;
+  onExpandNodes: () => void;
 }) {
   const [detailsNode, setDetailsNode] = useState<Node | null>(null);
   const [detailsEdge, setDetailsEdge] = useState<Edge | null>(null);
@@ -77,10 +79,12 @@ export function Canvas(props: {
                 type: "WSActionExpandNodes",
                 nodes: [detailsNode.id],
               });
+              props.onExpandNodes();
             }}
             onClose={() => {
               setDetailsNode(null);
             }}
+            scenarioLoading={props.scenarioLoading}
           ></NodeDetails>
         )}
         {detailsEdge && (

@@ -3,6 +3,7 @@ import {
   Card,
   CloseButton,
   ListGroup,
+  Spinner,
   Stack,
   Table,
 } from "react-bootstrap";
@@ -13,6 +14,7 @@ export function NodeDetails(props: {
   node: Node;
   onClose: () => void;
   onExpandNode: () => void;
+  scenarioLoading: boolean;
   className?: string;
   style?: CSSProperties;
 }) {
@@ -29,7 +31,14 @@ export function NodeDetails(props: {
           <Stack>
             <Card.Title>{props.node.title}</Card.Title>
             <span className={"text-muted small"}>{props.node.id}</span>
-            <Button size={"sm"} onClick={props.onExpandNode}>
+            <Button
+              size={"sm"}
+              onClick={props.onExpandNode}
+              disabled={props.scenarioLoading}
+            >
+              {props.scenarioLoading && (
+                <Spinner size={"sm"} className={"me-2"}></Spinner>
+              )}
               Expand
             </Button>
           </Stack>

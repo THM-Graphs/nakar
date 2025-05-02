@@ -31,6 +31,7 @@ import { Neo4jGraphElements } from '../neo4j/Neo4jGraphElements';
 import { SSet } from '../../tools/Set';
 import { MutableGraphFactory } from './scenario-pipeline/MutableGraphFactory';
 import { PhysicsSimulation } from '../../tools/physics/PhysicsSimulation';
+import { RSExpandNodesResult } from './events/RSExpandNodesResult';
 
 export class RoomService implements ApplicationService {
   private readonly _workers: SMap<string, Worker>;
@@ -189,7 +190,7 @@ export class RoomService implements ApplicationService {
   public async expandNodes(params: {
     roomId: string;
     nodeIds: readonly string[];
-  }): Promise<void> {
+  }): Promise<RSExpandNodesResult> {
     const databaseCache: SMap<string, GetDatabaseDBDTO> = new SMap<
       string,
       GetDatabaseDBDTO
@@ -212,6 +213,11 @@ export class RoomService implements ApplicationService {
         `Cannot find scenario of room ${params.roomId} to run expand nodes.`,
       );
     }
+
+    const result: RSExpandNodesResult = {
+      newNodeCount: 0,
+      newEdgeCount: 0,
+    };
 
     for (const nodeId of params.nodeIds) {
       const node: MutableNode | null = graph.nodes.get(nodeId);
@@ -248,12 +254,24 @@ export class RoomService implements ApplicationService {
         newNow.position.y = node.position.y;
       });
 
+      for (const newNode of expandGraph.nodes.nodes) {
+        if (!graph.nodes.hasById(newNode.id)) {
+          result.newNodeCount += 1;
+        }
+      }
+
+      for (const newEdge of expandGraph.edges.edges) {
+        if (!graph.edges.has(newEdge.id)) {
+          result.newEdgeCount += 1;
+        }
+      }
+
       this._logger.debug(
         this,
         `Expand node result for ${nodeId}: ${expandGraph.nodes.size.toString()} nodes and ${expandGraph.edges.size.toString()} edges.`,
       );
 
-      graph = graph.byMergingWith(expandGraph);
+      graph = graph.byMergingWithNonOverriding(expandGraph);
     }
 
     const physicsSimluation: PhysicsSimulation = new PhysicsSimulation(
@@ -261,7 +279,7 @@ export class RoomService implements ApplicationService {
       this._logger,
       this._profiler,
     );
-    await physicsSimluation.run({ maxTicks: 1000, maxMs: 1000 });
+    // await physicsSimluation.run({ maxTicks: 1000, maxMs: 1000 });
 
     this._latestGraphs.set(params.roomId, graph);
     this._sendActionToWorker(params.roomId, {
@@ -273,6 +291,7 @@ export class RoomService implements ApplicationService {
       graph: graph,
       roomId: params.roomId,
     });
+    return result;
   }
 
   private async _saveGraphToDb(

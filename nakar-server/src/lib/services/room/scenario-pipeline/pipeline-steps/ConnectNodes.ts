@@ -40,6 +40,6 @@ export class ConnectNodes extends ScenarioPipelineStep {
       state.scenarioDBDTO,
     );
 
-    state.graph = state.graph.byMergingWith(otherGraph);
+    state.graph = state.graph.byMergingWithNonOverriding(otherGraph);
   }
 }

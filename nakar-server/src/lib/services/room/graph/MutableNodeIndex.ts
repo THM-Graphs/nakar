@@ -44,4 +44,21 @@ export class MutableNodeIndex {
   public get(id: string): MutableNode | null {
     return this._byId.get(id) ?? null;
   }
+
+  public byMergingWithNonOverriding(
+    otherIndex: MutableNodeIndex,
+  ): MutableNodeIndex {
+    const newIndex: MutableNodeIndex = new MutableNodeIndex(
+      this.nodes.toArray(),
+    );
+
+    for (const otherNode of otherIndex.nodes) {
+      if (newIndex.hasById(otherNode.id)) {
+        continue;
+      }
+      newIndex.add(otherNode);
+    }
+
+    return newIndex;
+  }
 }

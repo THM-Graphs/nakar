@@ -132,6 +132,7 @@ export class RoomInstanceService implements ApplicationService {
 
   private _handleSetGraph(action: WTActionSetGraph): void {
     this._physics.setGraph(MutableGraph.fromPlain(action.graph));
+    void this._physics.run({ maxMs: 2000, maxTicks: null });
   }
 
   private _registerParentPortMessages(): void {

@@ -36,6 +36,7 @@ import { MutableGraph } from '../room/graph/MutableGraph';
 import { Subscription } from 'rxjs';
 import { HTTPService } from '../http/HTTPService';
 import { CachingSchemaDTOFactory } from '../http/CachingSchemaDTOFactory';
+import { RSExpandNodesResult } from '../room/events/RSExpandNodesResult';
 
 export type Server = UntypedServer<ClientToServerEvents, ServerToClientEvents>;
 export type Socket = UntypedSocket<ClientToServerEvents, ServerToClientEvents>;
@@ -383,10 +384,32 @@ export class SocketIOService implements ApplicationService {
       return;
     }
 
+    wsClient.sendToRoom({
+      type: 'WSEventScenarioProgress',
+      message: 'Expanding node',
+      progress: 0.1,
+    } satisfies SchemaWsEventScenarioProgress);
+
     this._roomService
       .expandNodes({ roomId: roomId, nodeIds: m.nodes })
+      .then((result: RSExpandNodesResult): void => {
+        wsClient.sendToRoom({
+          type: 'WSEventNotification',
+          title: 'Nodes added.',
+          severity: 'message',
+          message: `Did add ${result.newNodeCount.toString()} nodes and ${result.newEdgeCount.toString()} edges.`,
+          date: new Date().toISOString(),
+        } satisfies SchemaWsEventNotification);
+      })
       .catch((error: unknown): void => {
         wsClient.sendToRoom(this.createErrorNotification(error));
+      })
+      .finally((): void => {
+        wsClient.sendToRoom({
+          type: 'WSEventScenarioProgress',
+          message: null,
+          progress: null,
+        } satisfies SchemaWsEventScenarioProgress);
       });
   }
 
