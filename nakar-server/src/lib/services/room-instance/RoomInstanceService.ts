@@ -73,6 +73,12 @@ export class RoomInstanceService implements ApplicationService {
       `${action.userId} did grab node: ${action.nodeId}`,
     );
     node.locked = true;
+
+    this._sendEvent({
+      type: 'WTEventPhysicsUpdate',
+      graph: this._physics.getGraph().toPlain(),
+    });
+
     this._physics.start();
   }
 
@@ -98,6 +104,11 @@ export class RoomInstanceService implements ApplicationService {
 
       foundNode.position.x = movedNode.position.x;
       foundNode.position.y = movedNode.position.y;
+
+      this._sendEvent({
+        type: 'WTEventPhysicsUpdate',
+        graph: this._physics.getGraph().toPlain(),
+      });
     }
   }
 
@@ -128,6 +139,11 @@ export class RoomInstanceService implements ApplicationService {
       this,
       `Average tick duration: ${this._physics.averageTickDuration.toFixed(2)}`,
     );
+
+    this._sendEvent({
+      type: 'WTEventPhysicsUpdate',
+      graph: this._physics.getGraph().toPlain(),
+    });
   }
 
   private _handleSetGraph(action: WTActionSetGraph): void {
