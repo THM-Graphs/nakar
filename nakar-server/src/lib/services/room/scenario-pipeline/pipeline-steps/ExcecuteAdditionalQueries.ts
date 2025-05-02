@@ -143,32 +143,31 @@ export class ExcecuteAdditionalQueries extends ScenarioPipelineStep {
   ): void {
     originalNode.additionalSources.add(additionalNode.source);
 
-    // TODO: Use new index to speed things up
-    for (const relationship of graph.edges.edges) {
-      if (relationship.startNodeId === additionalNode.id) {
-        graph.edges.remove(relationship);
-        relationship.startNodeId = originalNode.id;
-        graph.edges.add(relationship);
-        state.logger.debug(
-          this,
-          `Did change startNodeId of ${relationship.id} from ${additionalNode.id} to ${originalNode.id}`,
-        );
-      }
-      if (relationship.endNodeId === additionalNode.id) {
-        graph.edges.remove(relationship);
-        relationship.endNodeId = originalNode.id;
-        graph.edges.add(relationship);
-        state.logger.debug(
-          this,
-          `Did change endNodeId of ${relationship.id} from ${additionalNode.id} to ${originalNode.id}`,
-        );
-      }
+    for (const relationship of graph.edges.getByStartNodeId(
+      additionalNode.id,
+    )) {
+      graph.edges.remove(relationship);
+      relationship.startNodeId = originalNode.id;
+      graph.edges.add(relationship);
+      state.logger.debug(
+        this,
+        `Did change startNodeId of ${relationship.id} (${relationship.type}) from ${additionalNode.id} (${additionalNode.title}) to ${originalNode.id} (${originalNode.title})`,
+      );
+    }
+    for (const relationship of graph.edges.getByEndNodeId(additionalNode.id)) {
+      graph.edges.remove(relationship);
+      relationship.endNodeId = originalNode.id;
+      graph.edges.add(relationship);
+      state.logger.debug(
+        this,
+        `Did change endNodeId of ${relationship.id} (${relationship.type}) from ${additionalNode.id} (${additionalNode.title}) to ${originalNode.id} (${originalNode.title})`,
+      );
     }
 
     graph.nodes.remove(additionalNode);
     state.logger.debug(
       this,
-      `Did delete additional node after merge: ${additionalNode.id}`,
+      `Did delete additional node after merge: ${additionalNode.id} (${additionalNode.title})`,
     );
   }
 }

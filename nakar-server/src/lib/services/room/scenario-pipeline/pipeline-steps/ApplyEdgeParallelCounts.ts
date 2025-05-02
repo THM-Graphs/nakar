@@ -11,14 +11,14 @@ export class ApplyEdgeParallelCounts extends ScenarioPipelineStep {
   public run(state: ScenarioPipelineState): void {
     const input: MutableGraph = state.graph;
 
-    // TODO: Use new index
     for (const edge of input.edges.edges) {
       if (edge.parallelCount > 1) {
         continue;
       }
-      const parallelEdges: MutableEdge[] = input.edges.edges
-        .filter((other: MutableEdge): boolean => edge.isParallelTo(other))
-        .toArray();
+      const parallelEdges: MutableEdge[] = [
+        ...input.edges.getByStartAndEndNodeId(edge.startNodeId, edge.endNodeId),
+        ...input.edges.getByStartAndEndNodeId(edge.endNodeId, edge.startNodeId),
+      ];
       const parallelCount: number = parallelEdges.length;
 
       for (const [index, parallelEdge] of parallelEdges.entries()) {
