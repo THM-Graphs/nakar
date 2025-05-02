@@ -14,7 +14,7 @@ export function Label(props: { label: GraphLabel; multipleSources: boolean }) {
         color: getTextColor(props.label.color),
       }}
     >
-      {props.multipleSources && <span>[{props.label.source}]</span>}
+      {props.multipleSources && <span>[{props.label.sources.join(", ")}]</span>}
       <span>{props.label.label}</span>
       <span>({props.label.count})</span>
     </Stack>

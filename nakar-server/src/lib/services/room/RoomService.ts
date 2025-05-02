@@ -220,14 +220,14 @@ export class RoomService implements ApplicationService {
       }
 
       const database: GetDatabaseDBDTO | null =
-        databaseCache.get(node.source.databaseId) ??
-        (await this._database.getDatabase(node.source.databaseId));
+        databaseCache.get(node.source) ??
+        (await this._database.getDatabase(node.source));
       if (database == null) {
         throw new Error(
-          `Cannot find database ${node.source.databaseId} to run expand node query on.`,
+          `Cannot find database ${node.source} to run expand node query on.`,
         );
       }
-      databaseCache.set(node.source.databaseId, database);
+      databaseCache.set(node.source, database);
 
       const neo4jDatabaseInfo: Neo4jDatabaseInfo =
         Neo4jDatabaseInfo.parse(database);

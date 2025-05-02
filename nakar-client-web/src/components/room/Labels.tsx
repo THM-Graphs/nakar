@@ -17,14 +17,12 @@ export function Labels(props: { graphLabels: GraphLabel[] }) {
 }
 
 function multipleSources(graphLabels: GraphLabel[]): boolean {
-  if (graphLabels.length == 0) {
-    return false;
-  }
-  const compare: string = graphLabels[0].source;
-  for (let i = 1; i < graphLabels.length; i += 1) {
-    if (graphLabels[i].source !== compare) {
-      return true;
+  const allSources: Set<string> = new Set();
+  for (const graphlabel of graphLabels) {
+    for (const source of graphlabel.sources) {
+      allSources.add(source);
     }
   }
-  return false;
+
+  return allSources.size > 1;
 }

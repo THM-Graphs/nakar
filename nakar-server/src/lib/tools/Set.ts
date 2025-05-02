@@ -52,4 +52,21 @@ export class SSet<T> extends Set<T> {
     }
     return n;
   }
+
+  public byAdding(value: T): SSet<T> {
+    const result: SSet<T> = this.copy();
+    for (const oldValues of this) {
+      result.add(oldValues);
+    }
+    result.add(value);
+    return result;
+  }
+
+  public async asyncFlatMap<V>(mapper: (value: T) => Promise<V>): Promise<V[]> {
+    const n: V[] = [];
+    for (const el of this) {
+      n.push(await mapper(el));
+    }
+    return n;
+  }
 }

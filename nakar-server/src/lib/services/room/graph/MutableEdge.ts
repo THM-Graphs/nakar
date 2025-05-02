@@ -1,7 +1,6 @@
 import { MutablePropertyCollection } from './MutablePropertyCollection';
 import { z } from 'zod';
 import { SSet } from '../../../tools/Set';
-import { MutableSourceDefinition } from './MutableSourceDefinition';
 
 export class MutableEdge {
   public static readonly defaultWidth: number = 2;
@@ -29,7 +28,7 @@ export class MutableEdge {
   public width: number;
   public properties: MutablePropertyCollection;
   public namesInQuery: SSet<string>;
-  public source: MutableSourceDefinition;
+  public source: string;
 
   public constructor(data: {
     startNodeId: string;
@@ -41,7 +40,7 @@ export class MutableEdge {
     width: number;
     properties: MutablePropertyCollection;
     namesInQuery: SSet<string>;
-    source: MutableSourceDefinition;
+    source: string;
   }) {
     this.startNodeId = data.startNodeId;
     this.endNodeId = data.endNodeId;
@@ -72,7 +71,7 @@ export class MutableEdge {
       width: data.width,
       properties: MutablePropertyCollection.fromPlain(data.properties),
       namesInQuery: new SSet(data.namesInQuery),
-      source: MutableSourceDefinition.fromPlain(data.source),
+      source: data.source,
     });
   }
 
@@ -96,7 +95,7 @@ export class MutableEdge {
       width: this.width,
       properties: this.properties.toPlain(),
       namesInQuery: this.namesInQuery.toArray(),
-      source: this.source.toPlain(),
+      source: this.source,
     };
   }
 }

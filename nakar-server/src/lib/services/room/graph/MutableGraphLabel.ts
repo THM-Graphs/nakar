@@ -1,26 +1,26 @@
 import { MutableGraphColor } from './MutableGraphColor';
-import { MutableSourceDefinition } from './MutableSourceDefinition';
+import { SSet } from '../../../tools/Set';
 
 export class MutableGraphLabel {
   public color: MutableGraphColor;
   public count: number;
-  public source: MutableSourceDefinition;
+  public sources: SSet<string>;
 
   public constructor(data: {
     color: MutableGraphColor;
     count: number;
-    source: MutableSourceDefinition;
+    sources: SSet<string>;
   }) {
     this.color = data.color;
     this.count = data.count;
-    this.source = data.source;
+    this.sources = data.sources;
   }
 
-  public byIncrementingCount(): MutableGraphLabel {
+  public byIncrementingCount(source: string): MutableGraphLabel {
     return new MutableGraphLabel({
       color: this.color,
       count: this.count + 1,
-      source: this.source,
+      sources: this.sources.byAdding(source),
     });
   }
 }

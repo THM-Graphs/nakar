@@ -179,13 +179,15 @@ components:
           $ref: "#/components/schemas/Color"
         count:
           type: integer
-        source:
-          type: string
+        sources:
+          type: array
+          items:
+            type: string
       required:
         - label
         - color
         - count
-        - source
+        - sources
 
     GraphProperty:
       type: object

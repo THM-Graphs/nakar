@@ -19,7 +19,6 @@ import { MutableGraphLabel } from '../room/graph/MutableGraphLabel';
 import { MutableGraphMetaData } from '../room/graph/MutableGraphMetaData';
 import { MutablePropertyCollection } from '../room/graph/MutablePropertyCollection';
 import { MutableScenarioInfo } from '../room/graph/MutableScenarioInfo';
-import { MutableSourceDefinition } from '../room/graph/MutableSourceDefinition';
 
 export class CachingSchemaDTOFactory {
   private readonly _databaseCache: SMap<string, GetDatabaseDBDTO>;
@@ -75,17 +74,13 @@ export class CachingSchemaDTOFactory {
       ).toPlain(),
       customBackgroundColor: node.customBackgroundColor,
       customTitleColor: node.customTitleColor,
-      source:
-        (await this._getDatabase(node.source.databaseId))?.title ??
-        node.source.databaseId,
+      source: (await this._getDatabase(node.source))?.title ?? node.source,
       additionalSources: (
         await node.additionalSources.asyncMap(
-          async (
-            additionalSource: MutableSourceDefinition,
-          ): Promise<string> => {
+          async (additionalSource: string): Promise<string> => {
             return (
-              (await this._getDatabase(additionalSource.databaseId))?.title ??
-              additionalSource.databaseId
+              (await this._getDatabase(additionalSource))?.title ??
+              additionalSource
             );
           },
         )
@@ -109,9 +104,7 @@ export class CachingSchemaDTOFactory {
       width: edge.width,
       properties: this._createSchemaGraphProperties(edge.properties),
       namesInQuery: edge.namesInQuery.toArray(),
-      source:
-        (await this._getDatabase(edge.source.databaseId))?.title ??
-        edge.source.databaseId,
+      source: (await this._getDatabase(edge.source))?.title ?? edge.source,
     };
   }
 
@@ -160,9 +153,11 @@ export class CachingSchemaDTOFactory {
       label: id,
       count: label.count,
       color: label.color.toDto(),
-      source:
-        (await this._getDatabase(label.source.databaseId))?.title ??
-        label.source.databaseId,
+      sources: await label.sources.asyncFlatMap(
+        async (sourceId: string): Promise<string> => {
+          return (await this._getDatabase(sourceId))?.title ?? sourceId;
+        },
+      ),
     };
   }
 

@@ -4,6 +4,7 @@ import { SMap } from '../../../tools/Map';
 import { MutableScenarioInfo } from './MutableScenarioInfo';
 import { MutableNode } from './MutableNode';
 import { MutableGraphColorPreset } from './MutableGraphColorPreset';
+import { SSet } from '../../../tools/Set';
 
 export class MutableGraphMetaData {
   // eslint-disable-next-line @typescript-eslint/typedef
@@ -67,11 +68,11 @@ export class MutableGraphMetaData {
             new MutableGraphLabel({
               color: newColor,
               count: 1,
-              source: node.source,
+              sources: new SSet([node.source]),
             }),
           );
         } else {
-          labels.set(label, foundEntry.byIncrementingCount());
+          labels.set(label, foundEntry.byIncrementingCount(node.source));
         }
       }
     }
