@@ -397,10 +397,10 @@ export class SocketIOService implements ApplicationService {
       }
 
       const nodesToSend: SchemaPhysicalNode[] = [];
-      for (const [id, node] of Object.entries(message.graph.nodes)) {
+      for (const node of message.graph.nodes) {
         if (!node.grabs.includes(socket.id)) {
           nodesToSend.push({
-            id: id,
+            id: node.id,
             position: { x: node.position.x, y: node.position.y },
           });
         }

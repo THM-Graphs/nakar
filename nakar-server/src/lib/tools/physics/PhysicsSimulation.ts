@@ -108,8 +108,8 @@ export class PhysicsSimulation {
   }
 
   private _tick(): void {
-    const nodes: MutableNode[] = Array.from(this._graph.nodes.values());
-    const edges: MutableEdge[] = Array.from(this._graph.edges.values());
+    const nodes: MutableNode[] = this._graph.nodes.nodes.toArray();
+    const edges: MutableEdge[] = this._graph.edges.edges.toArray();
 
     for (let i: number = 0; i < nodes.length; i++) {
       this._centerForce(nodes[i]);
@@ -130,16 +130,12 @@ export class PhysicsSimulation {
         continue;
       }
 
-      const nodeA: MutableNode | undefined = this._graph.nodes.get(
-        edge.startNodeId,
-      );
+      const nodeA: MutableNode | null = this._graph.nodes.get(edge.startNodeId);
       if (nodeA == null) {
         continue;
       }
 
-      const nodeB: MutableNode | undefined = this._graph.nodes.get(
-        edge.endNodeId,
-      );
+      const nodeB: MutableNode | null = this._graph.nodes.get(edge.endNodeId);
       if (nodeB == null) {
         continue;
       }

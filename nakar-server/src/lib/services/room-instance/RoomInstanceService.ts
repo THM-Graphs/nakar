@@ -52,7 +52,7 @@ export class RoomInstanceService implements ApplicationService {
   }
 
   private _handleGrabNode(action: WTActionGrabNode): void {
-    const node: MutableNode | undefined = this._physics
+    const node: MutableNode | null = this._physics
       .getGraph()
       .nodes.get(action.nodeId);
     if (node == null) {
@@ -80,7 +80,7 @@ export class RoomInstanceService implements ApplicationService {
     const graph: MutableGraph = this._physics.getGraph();
 
     for (const movedNode of action.nodes) {
-      const foundNode: MutableNode | undefined = graph.nodes.get(movedNode.id);
+      const foundNode: MutableNode | null = graph.nodes.get(movedNode.id);
       if (foundNode == null) {
         this._logger.error(
           this,
@@ -102,7 +102,7 @@ export class RoomInstanceService implements ApplicationService {
   }
 
   private _handleUngrabNode(action: WTActionUngrabNode): void {
-    const node: MutableNode | undefined = this._physics
+    const node: MutableNode | null = this._physics
       .getGraph()
       .nodes.get(action.nodeId);
     if (node == null) {

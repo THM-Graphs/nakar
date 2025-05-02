@@ -66,14 +66,19 @@ export class ExcecuteAdditionalQueries extends ScenarioPipelineStep {
 
       state.graph = state.graph.byMergingWith(additionalGraph);
 
-      for (const originalNode of state.graph.nodes) {
-        for (const mergeNode of state.graph.nodes) {
+      for (const originalNode of state.graph.nodes.nodes) {
+        for (const mergeNode of state.graph.nodes.nodes) {
           if (
-            this._shouldMergeNodes(originalNode, mergeNode, additionalQuery)
+            this._shouldMergeNodes(
+              originalNode,
+              mergeNode,
+              additionalQuery,
+              additionalGraph,
+            )
           ) {
             state.logger.debug(
               this,
-              `Will merge nodes: ${originalNode[1].title}, ${mergeNode[1].title}`,
+              `Will merge nodes: ${originalNode.title}, ${mergeNode.title}`,
             );
             this._mergeNodes(state, state.graph, originalNode, mergeNode);
           }
@@ -83,34 +88,39 @@ export class ExcecuteAdditionalQueries extends ScenarioPipelineStep {
   }
 
   private _shouldMergeNodes(
-    originalNode: [string, MutableNode],
-    additionalNode: [string, MutableNode],
+    originalNode: MutableNode,
+    additionalNode: MutableNode,
     config: AdditionalQueryDBDTO,
+    additionalGraph: MutableGraph,
   ): boolean {
+    if (!additionalGraph.nodes.has(additionalNode)) {
+      return false;
+    }
+
     if (config.mergeProperties.length !== config.originalProperties.length) {
       return false;
     }
 
-    if (originalNode[0] === additionalNode[0]) {
+    if (originalNode.id === additionalNode.id) {
       return false;
     }
 
     if (
-      !originalNode[1].labels.has(config.originalLabel) ||
-      !additionalNode[1].labels.has(config.mergeLabel)
+      !originalNode.labels.has(config.originalLabel) ||
+      !additionalNode.labels.has(config.mergeLabel)
     ) {
       return false;
     }
 
     for (let i: number = 0; i < config.originalProperties.length; i += 1) {
-      const originalValue: unknown = originalNode[1].properties.properties.get(
+      const originalValue: unknown = originalNode.properties.properties.get(
         config.originalProperties[i],
       );
       if (originalValue == null) {
         return false;
       }
 
-      const mergeValue: unknown = additionalNode[1].properties.properties.get(
+      const mergeValue: unknown = additionalNode.properties.properties.get(
         config.mergeProperties[i],
       );
       if (mergeValue == null) {
@@ -128,32 +138,37 @@ export class ExcecuteAdditionalQueries extends ScenarioPipelineStep {
   private _mergeNodes(
     state: ScenarioPipelineState,
     graph: MutableGraph,
-    originalNode: [string, MutableNode],
-    additionalNode: [string, MutableNode],
+    originalNode: MutableNode,
+    additionalNode: MutableNode,
   ): void {
-    originalNode[1].additionalSources.add(additionalNode[1].source);
+    originalNode.additionalSources.add(additionalNode.source);
 
-    for (const relationship of graph.edges) {
-      if (relationship[1].startNodeId === additionalNode[0]) {
-        relationship[1].startNodeId = originalNode[0];
+    // TODO: Use new index to speed things up
+    for (const relationship of graph.edges.edges) {
+      if (relationship.startNodeId === additionalNode.id) {
+        graph.edges.remove(relationship);
+        relationship.startNodeId = originalNode.id;
+        graph.edges.add(relationship);
         state.logger.debug(
           this,
-          `Did change startNodeId of ${relationship[0]} from ${additionalNode[0]} to ${originalNode[0]}`,
+          `Did change startNodeId of ${relationship.id} from ${additionalNode.id} to ${originalNode.id}`,
         );
       }
-      if (relationship[1].endNodeId === additionalNode[0]) {
-        relationship[1].endNodeId = originalNode[0];
+      if (relationship.endNodeId === additionalNode.id) {
+        graph.edges.remove(relationship);
+        relationship.endNodeId = originalNode.id;
+        graph.edges.add(relationship);
         state.logger.debug(
           this,
-          `Did change endNodeId of ${relationship[0]} from ${additionalNode[0]} to ${originalNode[0]}`,
+          `Did change endNodeId of ${relationship.id} from ${additionalNode.id} to ${originalNode.id}`,
         );
       }
     }
 
-    graph.nodes.delete(additionalNode[0]);
+    graph.nodes.remove(additionalNode);
     state.logger.debug(
       this,
-      `Did delete additional node after merge: ${additionalNode[0]}`,
+      `Did delete additional node after merge: ${additionalNode.id}`,
     );
   }
 }

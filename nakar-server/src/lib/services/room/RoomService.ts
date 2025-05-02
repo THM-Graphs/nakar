@@ -214,7 +214,7 @@ export class RoomService implements ApplicationService {
     }
 
     for (const nodeId of params.nodeIds) {
-      const node: MutableNode | undefined = graph.nodes.get(nodeId);
+      const node: MutableNode | null = graph.nodes.get(nodeId);
       if (node == null) {
         throw new Error(`Cannot find node ${nodeId} to expand.`);
       }
@@ -243,7 +243,7 @@ export class RoomService implements ApplicationService {
         expandResult,
         scenario,
       );
-      expandGraph.nodes.forEach((newNow: MutableNode): void => {
+      expandGraph.nodes.nodes.forEach((newNow: MutableNode): void => {
         newNow.position.x = node.position.x;
         newNow.position.y = node.position.y;
       });
@@ -362,7 +362,8 @@ export class RoomService implements ApplicationService {
       graph: event.graph,
       roomId: roomId,
     });
-    this._latestGraphs.set(roomId, MutableGraph.fromPlain(event.graph));
+    const graph: MutableGraph = MutableGraph.fromPlain(event.graph);
+    this._latestGraphs.set(roomId, graph);
   }
 
   private _sendActionToWorker(roomId: string, action: WTAction): void {

@@ -69,4 +69,12 @@ export class SSet<T> extends Set<T> {
     }
     return n;
   }
+
+  public flatMap<V>(mapper: (value: T) => V): V[] {
+    const n: V[] = [];
+    for (const el of this) {
+      n.push(mapper(el));
+    }
+    return n;
+  }
 }

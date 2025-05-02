@@ -5,33 +5,35 @@ import { z } from 'zod';
 import { SMap } from '../../../tools/Map';
 import { v4 as uuidv4 } from 'uuid';
 import { LoggerService } from '../../logger/LoggerService';
+import { MutableNodeIndex } from './MutableNodeIndex';
+import { MutableEdgeIndex } from './MutableEdgeIndex';
 
 export class MutableGraph {
   // eslint-disable-next-line @typescript-eslint/typedef
   public static readonly schema = z.object({
     id: z.string(),
-    nodes: z.record(MutableNode.schema),
-    edges: z.record(MutableEdge.schema),
+    nodes: z.array(MutableNode.schema),
+    edges: z.array(MutableEdge.schema),
     metaData: MutableGraphMetaData.schema,
     tableData: z.array(z.record(z.unknown())),
   });
 
   public readonly id: string;
-  public nodes: SMap<string, MutableNode>;
-  public edges: SMap<string, MutableEdge>;
+  public nodes: MutableNodeIndex;
+  public edges: MutableEdgeIndex;
   public metaData: MutableGraphMetaData;
   public tableData: SMap<string, unknown>[];
 
   public constructor(data: {
     id: string;
-    nodes: SMap<string, MutableNode>;
-    edges: SMap<string, MutableEdge>;
+    nodes: MutableNode[];
+    edges: MutableEdge[];
     metaData: MutableGraphMetaData;
     tableData: SMap<string, unknown>[];
   }) {
     this.id = data.id;
-    this.nodes = data.nodes;
-    this.edges = data.edges;
+    this.nodes = new MutableNodeIndex(data.nodes);
+    this.edges = new MutableEdgeIndex(data.edges);
     this.metaData = data.metaData;
     this.tableData = data.tableData;
 
@@ -45,8 +47,8 @@ export class MutableGraph {
   public static empty(): MutableGraph {
     return new MutableGraph({
       id: uuidv4(),
-      nodes: new SMap(),
-      edges: new SMap(),
+      nodes: [],
+      edges: [],
       metaData: MutableGraphMetaData.empty(),
       tableData: [],
     });
@@ -57,11 +59,12 @@ export class MutableGraph {
   ): MutableGraph {
     return new MutableGraph({
       id: data.id,
-      nodes: SMap.fromRecord(data.nodes).map(
+      nodes: data.nodes.map(
         (n: z.infer<typeof MutableNode.schema>): MutableNode =>
           MutableNode.fromPlain(n),
       ),
-      edges: SMap.fromRecord(data.edges).map(
+
+      edges: data.edges.map(
         (e: z.infer<typeof MutableEdge.schema>): MutableEdge =>
           MutableEdge.fromPlain(e),
       ),
@@ -90,22 +93,11 @@ export class MutableGraph {
   public byMergingWith(otherGraph: MutableGraph): MutableGraph {
     const graph: MutableGraph = new MutableGraph({
       id: this.id,
-      nodes: this.nodes,
-      edges: this.edges,
+      nodes: [...this.nodes.nodes, ...otherGraph.nodes.nodes],
+      edges: [...this.edges.edges, ...otherGraph.edges.edges],
       metaData: this.metaData,
       tableData: this.tableData,
     });
-
-    for (const otherNode of otherGraph.nodes) {
-      if (!graph.nodes.has(otherNode[0])) {
-        graph.nodes.set(otherNode[0], otherNode[1]);
-      }
-    }
-    for (const otherEdge of otherGraph.edges) {
-      if (!graph.edges.has(otherEdge[0])) {
-        graph.edges.set(otherEdge[0], otherEdge[1]);
-      }
-    }
 
     this.removeDanglingEdges();
 
@@ -115,16 +107,12 @@ export class MutableGraph {
   public toPlain(): z.infer<typeof MutableGraph.schema> {
     return {
       id: this.id,
-      nodes: this.nodes
-        .map(
-          (n: MutableNode): z.infer<typeof MutableNode.schema> => n.toPlain(),
-        )
-        .toRecord(),
-      edges: this.edges
-        .map(
-          (e: MutableEdge): z.infer<typeof MutableEdge.schema> => e.toPlain(),
-        )
-        .toRecord(),
+      nodes: this.nodes.nodes.flatMap(
+        (n: MutableNode): z.infer<typeof MutableNode.schema> => n.toPlain(),
+      ),
+      edges: this.edges.edges.flatMap(
+        (e: MutableEdge): z.infer<typeof MutableEdge.schema> => e.toPlain(),
+      ),
       metaData: this.metaData.toPlain(),
       tableData: this.tableData.map(
         (td: SMap<string, unknown>): Record<string, unknown> => td.toRecord(),
@@ -133,18 +121,18 @@ export class MutableGraph {
   }
 
   public removeDanglingEdges(logger?: LoggerService): void {
-    this.edges = this.edges.filter((edge: MutableEdge): boolean => {
+    for (const edge of this.edges.edges) {
       const isDangling: boolean =
-        !this.nodes.has(edge.startNodeId) || !this.nodes.has(edge.endNodeId);
+        !this.nodes.hasById(edge.startNodeId) ||
+        !this.nodes.hasById(edge.endNodeId);
 
       if (isDangling) {
         logger?.debug(
           this,
           `Relationship ${edge.type} (${edge.startNodeId} -> ${edge.endNodeId}) is dangling and will be removed.`,
         );
+        this.edges.remove(edge);
       }
-
-      return !isDangling;
-    });
+    }
   }
 }

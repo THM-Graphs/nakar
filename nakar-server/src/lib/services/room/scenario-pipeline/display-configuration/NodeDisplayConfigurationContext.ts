@@ -43,13 +43,12 @@ export class NodeDisplayConfigurationContext {
   }
 
   public static create(
-    nodeId: string,
     node: MutableNode,
     logger: LoggerService,
   ): NodeDisplayConfigurationContext {
     return new NodeDisplayConfigurationContext(
       {
-        id: nodeId,
+        id: node.id,
         label: NodeDisplayConfigurationContext._toTrueishMap(node.labels),
         nameInQuery: NodeDisplayConfigurationContext._toTrueishMap(
           node.namesInQuery,

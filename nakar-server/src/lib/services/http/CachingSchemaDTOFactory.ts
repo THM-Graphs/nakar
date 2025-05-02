@@ -19,6 +19,7 @@ import { MutableGraphLabel } from '../room/graph/MutableGraphLabel';
 import { MutableGraphMetaData } from '../room/graph/MutableGraphMetaData';
 import { MutablePropertyCollection } from '../room/graph/MutablePropertyCollection';
 import { MutableScenarioInfo } from '../room/graph/MutableScenarioInfo';
+import { MutableNodeIndex } from '../room/graph/MutableNodeIndex';
 
 export class CachingSchemaDTOFactory {
   private readonly _databaseCache: SMap<string, GetDatabaseDBDTO>;
@@ -33,13 +34,13 @@ export class CachingSchemaDTOFactory {
 
   public async createSchemaGraph(graph: MutableGraph): Promise<SchemaGraph> {
     return {
-      nodes: await graph.nodes.asyncFlatMap(
-        async (id: string, node: MutableNode): Promise<SchemaNode> =>
-          await this._createSchemaNode(id, node),
+      nodes: await graph.nodes.nodes.asyncFlatMap(
+        async (node: MutableNode): Promise<SchemaNode> =>
+          await this._createSchemaNode(node),
       ),
-      edges: await graph.edges.asyncFlatMap(
-        async (id: string, edge: MutableEdge): Promise<SchemaEdge> =>
-          await this._createSchemaEdge(id, edge),
+      edges: await graph.edges.edges.asyncFlatMap(
+        async (edge: MutableEdge): Promise<SchemaEdge> =>
+          await this._createSchemaEdge(edge),
       ),
       metaData: await this._createSchemaGraphMetaData(
         graph.metaData,
@@ -52,12 +53,9 @@ export class CachingSchemaDTOFactory {
     };
   }
 
-  private async _createSchemaNode(
-    id: string,
-    node: MutableNode,
-  ): Promise<SchemaNode> {
+  private async _createSchemaNode(node: MutableNode): Promise<SchemaNode> {
     return {
-      id: id,
+      id: node.id,
       title: node.title,
       labels: node.labels.toArray(),
       properties: this._createSchemaGraphProperties(node.properties),
@@ -68,7 +66,6 @@ export class CachingSchemaDTOFactory {
       degree: node.degree,
       namesInQuery: node.namesInQuery.toArray(),
       displayConfigurationContext: NodeDisplayConfigurationContext.create(
-        id,
         node,
         this._logger,
       ).toPlain(),
@@ -88,12 +85,9 @@ export class CachingSchemaDTOFactory {
     };
   }
 
-  private async _createSchemaEdge(
-    id: string,
-    edge: MutableEdge,
-  ): Promise<SchemaEdge> {
+  private async _createSchemaEdge(edge: MutableEdge): Promise<SchemaEdge> {
     return {
-      id: id,
+      id: edge.id,
       startNodeId: edge.startNodeId,
       endNodeId: edge.endNodeId,
       type: edge.type,
@@ -110,7 +104,7 @@ export class CachingSchemaDTOFactory {
 
   private async _createSchemaGraphMetaData(
     metaData: MutableGraphMetaData,
-    nodes: SMap<string, MutableNode>,
+    nodes: MutableNodeIndex,
   ): Promise<SchemaGraphMetaData> {
     return {
       labels: await metaData

@@ -7,6 +7,7 @@ export class MutableNode {
   public static readonly defaultRadius: number = 40;
   // eslint-disable-next-line @typescript-eslint/typedef
   public static readonly schema = z.object({
+    id: z.string(),
     labels: z.array(z.string()),
     properties: MutablePropertyCollection.schema,
     radius: z.number(),
@@ -23,6 +24,7 @@ export class MutableNode {
     additionalSources: z.array(z.string()),
   });
 
+  public readonly id: string;
   public labels: SSet<string>;
   public properties: MutablePropertyCollection;
   public radius: number;
@@ -43,6 +45,7 @@ export class MutableNode {
   public velocityY: number;
 
   public constructor(data: {
+    id: string;
     labels: SSet<string>;
     properties: MutablePropertyCollection;
     radius: number;
@@ -58,6 +61,7 @@ export class MutableNode {
     source: string;
     additionalSources: SSet<string>;
   }) {
+    this.id = data.id;
     this.labels = data.labels;
     this.properties = data.properties;
     this.radius = data.radius;
@@ -97,6 +101,7 @@ export class MutableNode {
 
   public static fromPlain(data: z.infer<typeof this.schema>): MutableNode {
     return new MutableNode({
+      id: data.id,
       labels: new SSet(data.labels),
       properties: MutablePropertyCollection.fromPlain(data.properties),
       radius: data.radius,
@@ -116,6 +121,7 @@ export class MutableNode {
 
   public toPlain(): z.infer<typeof MutableNode.schema> {
     return {
+      id: this.id,
       labels: this.labels.toArray(),
       properties: this.properties.toPlain(),
       radius: this.radius,

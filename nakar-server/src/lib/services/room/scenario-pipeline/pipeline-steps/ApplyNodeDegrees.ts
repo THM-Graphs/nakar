@@ -11,18 +11,19 @@ export class ApplyNodeDegrees extends ScenarioPipelineStep {
   public run(state: ScenarioPipelineState): void {
     const input: MutableGraph = state.graph;
 
-    for (const [nodeId, node] of input.nodes.entries()) {
-      const outRelsCount: number = input.edges
-        .filter((e: MutableEdge): boolean => e.startNodeId === nodeId)
+    // TODO: Use index
+    for (const node of input.nodes.nodes) {
+      const outRelsCount: number = input.edges.edges
+        .filter((e: MutableEdge): boolean => e.startNodeId === node.id)
         .reduce(
-          (count: number, key: string, rel: MutableEdge): number =>
+          (count: number, rel: MutableEdge): number =>
             count + rel.compressedCount,
           0,
         );
-      const inRelsCount: number = input.edges
-        .filter((e: MutableEdge): boolean => e.endNodeId === nodeId)
+      const inRelsCount: number = input.edges.edges
+        .filter((e: MutableEdge): boolean => e.endNodeId === node.id)
         .reduce(
-          (count: number, key: string, rel: MutableEdge): number =>
+          (count: number, rel: MutableEdge): number =>
             count + rel.compressedCount,
           0,
         );

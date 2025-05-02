@@ -7,6 +7,7 @@ export class MutableEdge {
 
   // eslint-disable-next-line @typescript-eslint/typedef
   public static readonly schema = z.object({
+    id: z.string(),
     startNodeId: z.string(),
     endNodeId: z.string(),
     type: z.string(),
@@ -19,6 +20,7 @@ export class MutableEdge {
     source: z.string(),
   });
 
+  public readonly id: string;
   public startNodeId: string;
   public endNodeId: string;
   public type: string;
@@ -31,6 +33,7 @@ export class MutableEdge {
   public source: string;
 
   public constructor(data: {
+    id: string;
     startNodeId: string;
     endNodeId: string;
     type: string;
@@ -42,6 +45,7 @@ export class MutableEdge {
     namesInQuery: SSet<string>;
     source: string;
   }) {
+    this.id = data.id;
     this.startNodeId = data.startNodeId;
     this.endNodeId = data.endNodeId;
     this.type = data.type;
@@ -62,6 +66,7 @@ export class MutableEdge {
     data: z.infer<typeof MutableEdge.schema>,
   ): MutableEdge {
     return new MutableEdge({
+      id: data.id,
       startNodeId: data.startNodeId,
       endNodeId: data.endNodeId,
       type: data.type,
@@ -86,6 +91,7 @@ export class MutableEdge {
 
   public toPlain(): z.infer<typeof MutableEdge.schema> {
     return {
+      id: this.id,
       startNodeId: this.startNodeId,
       endNodeId: this.endNodeId,
       type: this.type,

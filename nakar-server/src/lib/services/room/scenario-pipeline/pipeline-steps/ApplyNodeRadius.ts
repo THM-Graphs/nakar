@@ -14,7 +14,7 @@ export class ApplyNodeRadius extends ScenarioPipelineStep {
     const input: MutableGraph = state.graph;
     const config: FinalGraphDisplayConfiguration = state.displayConfiguration;
 
-    for (const [nodeId, node] of input.nodes.entries()) {
+    for (const node of input.nodes.nodes) {
       for (const label of node.labels) {
         const nodeConfig: FinalNodeDisplayConfiguration | undefined =
           config.nodeDisplayConfigurations.get(label);
@@ -26,7 +26,6 @@ export class ApplyNodeRadius extends ScenarioPipelineStep {
         }
 
         const newValue: string = NodeDisplayConfigurationContext.create(
-          nodeId,
           node,
           state.logger,
         ).applyToTemplate(nodeConfig.radiusTemplate);

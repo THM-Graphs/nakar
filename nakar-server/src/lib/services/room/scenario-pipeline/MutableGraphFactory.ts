@@ -20,13 +20,18 @@ export class MutableGraphFactory {
   ): MutableGraph {
     return new MutableGraph({
       id: uuidv4(),
-      nodes: graphElements.nodes.map(
-        (node: Neo4jNode): MutableNode => this.createMutableNode(node),
-      ),
-      edges: graphElements.relationships.map(
-        (relationship: Neo4jRelationship): MutableEdge =>
-          this.createMutableEdge(relationship),
-      ),
+      nodes: graphElements.nodes
+        .toArray()
+        .map(
+          (entry: [string, Neo4jNode]): MutableNode =>
+            this.createMutableNode(entry[1]),
+        ),
+      edges: graphElements.relationships
+        .toArray()
+        .map(
+          (entry: [string, Neo4jRelationship]): MutableEdge =>
+            this.createMutableEdge(entry[1]),
+        ),
       metaData: this.createMutableGraphMetaData(scenario),
       tableData: graphElements.tableData,
     });
@@ -34,6 +39,7 @@ export class MutableGraphFactory {
 
   public createMutableNode(node: Neo4jNode): MutableNode {
     return new MutableNode({
+      id: node.node.elementId,
       labels: new SSet<string>(node.node.labels),
       properties: this.createMutablePropertyCollection(node.node.properties),
       radius: MutableNode.defaultRadius,
@@ -53,6 +59,7 @@ export class MutableGraphFactory {
 
   public createMutableEdge(relationship: Neo4jRelationship): MutableEdge {
     return new MutableEdge({
+      id: relationship.relationship.elementId,
       startNodeId: relationship.relationship.startNodeElementId,
       endNodeId: relationship.relationship.endNodeElementId,
       type: relationship.relationship.type,

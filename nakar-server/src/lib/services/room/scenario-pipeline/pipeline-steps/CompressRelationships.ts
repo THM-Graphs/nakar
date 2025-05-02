@@ -5,11 +5,12 @@ import { MutableGraph } from '../../graph/MutableGraph';
 import { SMap } from '../../../../tools/Map';
 import { ScenarioPipelineStep } from '../ScenarioPipelineStep';
 import { ScenarioPipelineState } from '../ScenarioPipelineState';
+import { MutableEdgeIndex } from '../../graph/MutableEdgeIndex';
 
 export class CompressRelationships extends ScenarioPipelineStep {
   private _handledRelsCache: SMap<
     string,
-    SMap<string, SMap<string, [string, MutableEdge]>>
+    SMap<string, SMap<string, MutableEdge>>
   >;
 
   public constructor() {
@@ -29,12 +30,9 @@ export class CompressRelationships extends ScenarioPipelineStep {
     }
 
     this._handledRelsCache = new SMap();
-    const relationships: SMap<string, MutableEdge> = new SMap<
-      string,
-      MutableEdge
-    >();
-    for (const [edgeId, edge] of input.edges) {
-      const compressedRelEntry: [string, MutableEdge] | null =
+    const relationships: MutableEdgeIndex = new MutableEdgeIndex([]);
+    for (const edge of input.edges.edges) {
+      const compressedRelEntry: MutableEdge | null =
         this._getFromHandledRelsCache(
           edge.startNodeId,
           edge.endNodeId,
@@ -48,17 +46,17 @@ export class CompressRelationships extends ScenarioPipelineStep {
           edge.startNodeId,
           edge.endNodeId,
           edge.type,
-          [edgeId, edge],
+          edge,
         );
-        relationships.set(edgeId, edge);
+        relationships.add(edge);
       } else {
-        compressedRelEntry[1].compressedCount += 1;
+        compressedRelEntry.compressedCount += 1;
       }
     }
 
     let minimumCompressedCounts: number = 1;
     let maximumCompressedCounts: number = 1;
-    for (const relationship of relationships.values()) {
+    for (const relationship of relationships.edges) {
       if (relationship.compressedCount < minimumCompressedCounts) {
         minimumCompressedCounts = relationship.compressedCount;
       }
@@ -77,7 +75,7 @@ export class CompressRelationships extends ScenarioPipelineStep {
       ceiling: 2 * config.compressRelationshipsWidthFactor,
     });
 
-    for (const relationship of relationships.values()) {
+    for (const relationship of relationships.edges) {
       relationship.width = fromRange.scaleValue(
         toRange,
         relationship.compressedCount,
@@ -92,19 +90,18 @@ export class CompressRelationships extends ScenarioPipelineStep {
     nodeAId: string,
     nodeBId: string,
     relType: string,
-    rel: [string, MutableEdge],
+    rel: MutableEdge,
   ): void {
-    let subMap1: SMap<string, SMap<string, [string, MutableEdge]>> | undefined =
+    let subMap1: SMap<string, SMap<string, MutableEdge>> | undefined =
       this._handledRelsCache.get(nodeAId);
     if (!subMap1) {
-      subMap1 = new SMap<string, SMap<string, [string, MutableEdge]>>();
+      subMap1 = new SMap<string, SMap<string, MutableEdge>>();
       this._handledRelsCache.set(nodeAId, subMap1);
     }
 
-    let subMap2: SMap<string, [string, MutableEdge]> | undefined =
-      subMap1.get(nodeBId);
+    let subMap2: SMap<string, MutableEdge> | undefined = subMap1.get(nodeBId);
     if (!subMap2) {
-      subMap2 = new SMap<string, [string, MutableEdge]>();
+      subMap2 = new SMap<string, MutableEdge>();
       subMap1.set(nodeBId, subMap2);
     }
 
@@ -115,7 +112,7 @@ export class CompressRelationships extends ScenarioPipelineStep {
     nodeAId: string,
     nodeBId: string,
     relType: string,
-  ): [string, MutableEdge] | null {
+  ): MutableEdge | null {
     return (
       this._handledRelsCache.get(nodeAId)?.get(nodeBId)?.get(relType) ?? null
     );

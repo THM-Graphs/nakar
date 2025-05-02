@@ -2,9 +2,9 @@ import { MutableGraphLabel } from './MutableGraphLabel';
 import { z } from 'zod';
 import { SMap } from '../../../tools/Map';
 import { MutableScenarioInfo } from './MutableScenarioInfo';
-import { MutableNode } from './MutableNode';
 import { MutableGraphColorPreset } from './MutableGraphColorPreset';
 import { SSet } from '../../../tools/Set';
+import { MutableNodeIndex } from './MutableNodeIndex';
 
 export class MutableGraphMetaData {
   // eslint-disable-next-line @typescript-eslint/typedef
@@ -47,14 +47,12 @@ export class MutableGraphMetaData {
     };
   }
 
-  public getLabels(
-    nodes: SMap<string, MutableNode>,
-  ): SMap<string, MutableGraphLabel> {
+  public getLabels(nodes: MutableNodeIndex): SMap<string, MutableGraphLabel> {
     const labels: SMap<string, MutableGraphLabel> = new SMap<
       string,
       MutableGraphLabel
     >();
-    for (const node of nodes.values()) {
+    for (const node of nodes.nodes) {
       for (const label of node.labels) {
         const foundEntry: MutableGraphLabel | undefined = labels.get(label);
 

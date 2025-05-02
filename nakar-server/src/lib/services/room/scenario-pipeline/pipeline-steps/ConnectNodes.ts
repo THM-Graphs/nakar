@@ -22,7 +22,7 @@ export class ConnectNodes extends ScenarioPipelineStep {
       return;
     }
 
-    const nodeIds: SSet<string> = new SSet<string>(input.nodes.keys());
+    const nodeIds: SSet<string> = new SSet<string>(input.nodes.keys);
 
     if (nodeIds.size === 0) {
       return;
