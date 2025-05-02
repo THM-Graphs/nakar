@@ -1,0 +1,3 @@
+MATCH p=(:`09_Actor`)-[:`09_ACTED_IN`]-(`09_Movie`)-[:`09_DIRECTED`]-(:`09_Regisseur`) RETURN p
+
+MATCH p1=(:`09_Actor`)-[:`09_WOM`]-(:`09_Award`), p2=(:`09_Actor`)-[:`09_NOMINATED_FOR`]-(:`09_Award`) RETURN p1, p2
