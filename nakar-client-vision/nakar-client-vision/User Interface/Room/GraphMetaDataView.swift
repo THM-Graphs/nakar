@@ -114,7 +114,7 @@ struct GraphMetaDataView: View {
                             Components.Schemas.PresetColor(index: ._0)
                         ),
                         count: 4,
-                        source: "DB"
+                        sources: ["DB"]
                     ),
                     Components.Schemas.GraphLabel(
                         label: "Person",
@@ -122,7 +122,7 @@ struct GraphMetaDataView: View {
                             Components.Schemas.PresetColor(index: ._1)
                         ),
                         count: 6,
-                        source: "DB"
+                        sources: ["DB"]
                     )
                 ],
                 scenarioInfo: Components.Schemas.ScenarioInfo(
