@@ -7,10 +7,9 @@ import { v4 as uuidv4 } from 'uuid';
 import { LoggerService } from '../../logger/LoggerService';
 import { MutableNodeIndex } from './MutableNodeIndex';
 import { MutableEdgeIndex } from './MutableEdgeIndex';
-import { Neo4jGraphElements } from '../../neo4j/Neo4jGraphElements';
 import { GetScenarioDBDTO } from '../../database/dto/GetScenarioDBDTO';
-import { Neo4jNode } from '../../neo4j/Neo4jNode';
 import { MutableScenarioInfo } from './MutableScenarioInfo';
+import { FinalGraphDisplayConfiguration } from '../scenario-pipeline/display-configuration/FinalGraphDisplayConfiguration';
 
 export class MutableGraph {
   // eslint-disable-next-line @typescript-eslint/typedef
@@ -20,6 +19,7 @@ export class MutableGraph {
     edges: z.array(MutableEdge.schema),
     metaData: MutableGraphMetaData.schema,
     tableData: z.array(z.record(z.unknown())),
+    displayConfiguration: FinalGraphDisplayConfiguration.schema,
   });
 
   public readonly id: string;
@@ -27,6 +27,7 @@ export class MutableGraph {
   public edges: MutableEdgeIndex;
   public metaData: MutableGraphMetaData;
   public tableData: SMap<string, unknown>[];
+  public displayConfiguration: FinalGraphDisplayConfiguration;
 
   public constructor(data: {
     id: string;
@@ -34,12 +35,14 @@ export class MutableGraph {
     edges: MutableEdgeIndex;
     metaData: MutableGraphMetaData;
     tableData: SMap<string, unknown>[];
+    displayConfiguration: FinalGraphDisplayConfiguration;
   }) {
     this.id = data.id;
     this.nodes = data.nodes;
     this.edges = data.edges;
     this.metaData = data.metaData;
     this.tableData = data.tableData;
+    this.displayConfiguration = data.displayConfiguration;
   }
 
   public get size(): number {
@@ -53,10 +56,14 @@ export class MutableGraph {
       edges: new MutableEdgeIndex([]),
       metaData: MutableGraphMetaData.empty(),
       tableData: [],
+      displayConfiguration: FinalGraphDisplayConfiguration.empty(),
     });
   }
 
-  public static fromInitialScenario(scenario: GetScenarioDBDTO): MutableGraph {
+  public static fromInitialScenario(
+    scenario: GetScenarioDBDTO,
+    displayConfig: FinalGraphDisplayConfiguration,
+  ): MutableGraph {
     const graph: MutableGraph = new MutableGraph({
       id: uuidv4(),
       nodes: new MutableNodeIndex([]),
@@ -69,6 +76,7 @@ export class MutableGraph {
         pipelineSummary: [],
       }),
       tableData: [],
+      displayConfiguration: displayConfig,
     });
 
     return graph;
@@ -95,6 +103,9 @@ export class MutableGraph {
       tableData: data.tableData.map(
         (td: Record<string, unknown>): SMap<string, unknown> =>
           SMap.fromRecord(td),
+      ),
+      displayConfiguration: FinalGraphDisplayConfiguration.fromPlain(
+        data.displayConfiguration,
       ),
     });
   }
@@ -126,12 +137,13 @@ export class MutableGraph {
       tableData: this.tableData.map(
         (td: SMap<string, unknown>): Record<string, unknown> => td.toRecord(),
       ),
+      displayConfiguration: this.displayConfiguration.toPlain(),
     };
   }
 
   public removeDanglingEdges(logger?: LoggerService): void {
     for (const edge of this.edges.edges) {
-      const isDangling: boolean = edge.isDangling(this.nodes);
+      const isDangling: boolean = edge.isDangling(this);
 
       if (isDangling) {
         logger?.debug(

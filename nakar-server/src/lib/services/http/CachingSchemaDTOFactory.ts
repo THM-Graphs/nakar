@@ -19,8 +19,6 @@ import { MutableGraphLabel } from '../room/graph/MutableGraphLabel';
 import { MutableGraphMetaData } from '../room/graph/MutableGraphMetaData';
 import { MutablePropertyCollection } from '../room/graph/MutablePropertyCollection';
 import { MutableScenarioInfo } from '../room/graph/MutableScenarioInfo';
-import { MutableNodeIndex } from '../room/graph/MutableNodeIndex';
-import { MutableEdgeIndex } from '../room/graph/MutableEdgeIndex';
 
 export class CachingSchemaDTOFactory {
   private readonly _databaseCache: SMap<string, GetDatabaseDBDTO>;
@@ -37,16 +35,13 @@ export class CachingSchemaDTOFactory {
     return {
       nodes: await graph.nodes.nodes.asyncFlatMap(
         async (node: MutableNode): Promise<SchemaNode> =>
-          await this._createSchemaNode(node, graph.edges),
+          await this._createSchemaNode(node, graph),
       ),
       edges: await graph.edges.edges.asyncFlatMap(
         async (edge: MutableEdge): Promise<SchemaEdge> =>
-          await this._createSchemaEdge(edge, graph.edges),
+          await this._createSchemaEdge(edge, graph),
       ),
-      metaData: await this._createSchemaGraphMetaData(
-        graph.metaData,
-        graph.nodes,
-      ),
+      metaData: await this._createSchemaGraphMetaData(graph.metaData, graph),
       tableData: graph.tableData.map(
         (entry: SMap<string, unknown>): Record<string, unknown> =>
           entry.toRecord(),
@@ -56,25 +51,25 @@ export class CachingSchemaDTOFactory {
 
   private async _createSchemaNode(
     node: MutableNode,
-    edgeIndex: MutableEdgeIndex,
+    graph: MutableGraph,
   ): Promise<SchemaNode> {
     return {
       id: node.id,
-      title: node.title,
+      title: node.title(graph, this._logger),
       labels: node.labels.toArray(),
       properties: this._createSchemaGraphProperties(node.properties),
       radius: node.radius,
       position: node.position,
-      inDegree: node.inDegree(edgeIndex),
-      outDegree: node.outDegree(edgeIndex),
-      degree: node.degree(edgeIndex),
+      inDegree: node.inDegree(graph),
+      outDegree: node.outDegree(graph),
+      degree: node.degree(graph),
       namesInQuery: node.namesInQuery.toArray(),
       displayConfigurationContext: NodeDisplayConfigurationContext.create(
         node,
+        graph,
         this._logger,
-        edgeIndex,
       ).toPlain(),
-      customBackgroundColor: node.customBackgroundColor,
+      customBackgroundColor: node.customBackgroundColor(graph, this._logger),
       customTitleColor: node.customTitleColor,
       source: (await this._getDatabase(node.source))?.title ?? node.source,
       additionalSources: (
@@ -92,7 +87,7 @@ export class CachingSchemaDTOFactory {
 
   private async _createSchemaEdge(
     edge: MutableEdge,
-    edgeIndex: MutableEdgeIndex,
+    graph: MutableGraph,
   ): Promise<SchemaEdge> {
     return {
       id: edge.id,
@@ -100,8 +95,8 @@ export class CachingSchemaDTOFactory {
       endNodeId: edge.endNodeId,
       type: edge.type,
       isLoop: edge.isLoop,
-      parallelCount: edge.parallelCount(edgeIndex),
-      parallelIndex: edge.parallelIndex(edgeIndex),
+      parallelCount: edge.parallelCount(graph),
+      parallelIndex: edge.parallelIndex(graph),
       compressedCount: edge.compressedCount,
       width: edge.width,
       properties: this._createSchemaGraphProperties(edge.properties),
@@ -112,11 +107,11 @@ export class CachingSchemaDTOFactory {
 
   private async _createSchemaGraphMetaData(
     metaData: MutableGraphMetaData,
-    nodes: MutableNodeIndex,
+    graph: MutableGraph,
   ): Promise<SchemaGraphMetaData> {
     return {
       labels: await metaData
-        .getLabels(nodes)
+        .getLabels(graph.nodes)
         .asyncFlatMap(
           async (
             id: string,

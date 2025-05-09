@@ -1,8 +1,7 @@
 import { MutablePropertyCollection } from './MutablePropertyCollection';
 import { z } from 'zod';
 import { SSet } from '../../../tools/Set';
-import { MutableEdgeIndex } from './MutableEdgeIndex';
-import { MutableNodeIndex } from './MutableNodeIndex';
+import { MutableGraph } from './MutableGraph';
 
 export class MutableEdge {
   public static readonly defaultWidth: number = 2;
@@ -95,7 +94,7 @@ export class MutableEdge {
     };
   }
 
-  public parallelEdges(edgeIndex: MutableEdgeIndex): MutableEdge[] {
+  public parallelEdges(graph: MutableGraph): MutableEdge[] {
     // Betrachtung: Beziehungen von Knoten mit geringerer ID zu Knoten mit höherer ID.
     const correctNodeSorting: boolean =
       this.startNodeId.localeCompare(this.endNodeId) < 0;
@@ -108,8 +107,8 @@ export class MutableEdge {
       : this.startNodeId;
 
     const parallelEdges: MutableEdge[] = [
-      ...edgeIndex.getByStartAndEndNodeId(startNodeId, endNodeId),
-      ...edgeIndex.getByStartAndEndNodeId(endNodeId, startNodeId),
+      ...graph.edges.getByStartAndEndNodeId(startNodeId, endNodeId),
+      ...graph.edges.getByStartAndEndNodeId(endNodeId, startNodeId),
     ].filter(
       (
         parallelEdge: MutableEdge,
@@ -125,18 +124,18 @@ export class MutableEdge {
     return parallelEdges;
   }
 
-  public parallelCount(edgeIndex: MutableEdgeIndex): number {
-    const parallelEdges: MutableEdge[] = this.parallelEdges(edgeIndex);
+  public parallelCount(graph: MutableGraph): number {
+    const parallelEdges: MutableEdge[] = this.parallelEdges(graph);
 
     const parallelCount: number = parallelEdges.length;
     return parallelCount;
   }
 
-  public parallelIndex(edgeIndex: MutableEdgeIndex): number {
-    const parallelEdges: MutableEdge[] = this.parallelEdges(edgeIndex);
+  public parallelIndex(graph: MutableGraph): number {
+    const parallelEdges: MutableEdge[] = this.parallelEdges(graph);
 
     const selfIndex: number = parallelEdges.indexOf(this);
-    const parallelCount: number = this.parallelCount(edgeIndex);
+    const parallelCount: number = this.parallelCount(graph);
 
     const directionModifier: number =
       this.startNodeId.localeCompare(this.endNodeId) < 0 ? 1 : -1;
@@ -160,10 +159,10 @@ export class MutableEdge {
     }
   }
 
-  public isDangling(nodeIndex: MutableNodeIndex): boolean {
+  public isDangling(graph: MutableGraph): boolean {
     const isDangling: boolean =
-      !nodeIndex.hasById(this.startNodeId) ||
-      !nodeIndex.hasById(this.endNodeId);
+      !graph.nodes.hasById(this.startNodeId) ||
+      !graph.nodes.hasById(this.endNodeId);
 
     return isDangling;
   }

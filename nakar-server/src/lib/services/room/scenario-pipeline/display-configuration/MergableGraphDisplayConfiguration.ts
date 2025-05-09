@@ -77,6 +77,18 @@ export class MergableGraphDisplayConfiguration {
     });
   }
 
+  public static empty(): MergableGraphDisplayConfiguration {
+    return new MergableGraphDisplayConfiguration({
+      connectResultNodes: null,
+      growNodesBasedOnDegree: null,
+      growNodesBasedOnDegreeFactor: null,
+      nodeDisplayConfigurations: new SMap(),
+      compressRelationships: null,
+      compressRelationshipsWidthFactor: null,
+      scaleType: null,
+    });
+  }
+
   public byMerging(
     other: MergableGraphDisplayConfiguration,
   ): MergableGraphDisplayConfiguration {

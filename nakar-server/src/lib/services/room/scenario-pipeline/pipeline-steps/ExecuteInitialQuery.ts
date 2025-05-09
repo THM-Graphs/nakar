@@ -20,6 +20,7 @@ export class ExecuteInitialQuery extends ScenarioPipelineStep {
 
     const graph: MutableGraph = MutableGraph.fromInitialScenario(
       state.scenarioDBDTO,
+      state.displayConfiguration,
     );
 
     graph.nodes.addNeo4jNodes(graphElements.nodes);

@@ -25,7 +25,7 @@ export class GrowNodeBasedOnDegree extends ScenarioPipelineStep {
     const degrees: number[] = input.nodes.nodes.reduce(
       (akku: number[], value: MutableNode): number[] => [
         ...akku,
-        value.degree(input.edges),
+        value.degree(input),
       ],
       [],
     );
@@ -47,7 +47,7 @@ export class GrowNodeBasedOnDegree extends ScenarioPipelineStep {
 
       node.radius = fromRange.scaleValue(
         toRange,
-        node.degree(input.edges),
+        node.degree(input),
         config.scaleType,
       );
     }
