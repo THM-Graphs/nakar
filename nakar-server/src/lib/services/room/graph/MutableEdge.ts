@@ -1,6 +1,7 @@
 import { MutablePropertyCollection } from './MutablePropertyCollection';
 import { z } from 'zod';
 import { SSet } from '../../../tools/Set';
+import { MutableEdgeIndex } from './MutableEdgeIndex';
 
 export class MutableEdge {
   public static readonly defaultWidth: number = 2;
@@ -11,8 +12,6 @@ export class MutableEdge {
     startNodeId: z.string(),
     endNodeId: z.string(),
     type: z.string(),
-    parallelCount: z.number(),
-    parallelIndex: z.number(),
     compressedCount: z.number(),
     width: z.number(),
     properties: MutablePropertyCollection.schema,
@@ -24,8 +23,6 @@ export class MutableEdge {
   public startNodeId: string;
   public endNodeId: string;
   public type: string;
-  public parallelCount: number;
-  public parallelIndex: number;
   public compressedCount: number;
   public width: number;
   public properties: MutablePropertyCollection;
@@ -37,8 +34,6 @@ export class MutableEdge {
     startNodeId: string;
     endNodeId: string;
     type: string;
-    parallelCount: number;
-    parallelIndex: number;
     compressedCount: number;
     width: number;
     properties: MutablePropertyCollection;
@@ -49,8 +44,6 @@ export class MutableEdge {
     this.startNodeId = data.startNodeId;
     this.endNodeId = data.endNodeId;
     this.type = data.type;
-    this.parallelCount = data.parallelCount;
-    this.parallelIndex = data.parallelIndex;
     this.compressedCount = data.compressedCount;
     this.width = data.width;
     this.properties = data.properties;
@@ -70,8 +63,6 @@ export class MutableEdge {
       startNodeId: data.startNodeId,
       endNodeId: data.endNodeId,
       type: data.type,
-      parallelCount: data.parallelCount,
-      parallelIndex: data.parallelIndex,
       compressedCount: data.compressedCount,
       width: data.width,
       properties: MutablePropertyCollection.fromPlain(data.properties),
@@ -95,13 +86,76 @@ export class MutableEdge {
       startNodeId: this.startNodeId,
       endNodeId: this.endNodeId,
       type: this.type,
-      parallelCount: this.parallelCount,
-      parallelIndex: this.parallelIndex,
       compressedCount: this.compressedCount,
       width: this.width,
       properties: this.properties.toPlain(),
       namesInQuery: this.namesInQuery.toArray(),
       source: this.source,
     };
+  }
+
+  public parallelEdges(edgeIndex: MutableEdgeIndex): MutableEdge[] {
+    // Betrachtung: Beziehungen von Knoten mit geringerer ID zu Knoten mit höherer ID.
+    const correctNodeSorting: boolean =
+      this.startNodeId.localeCompare(this.endNodeId) < 0;
+
+    const startNodeId: string = correctNodeSorting
+      ? this.startNodeId
+      : this.endNodeId;
+    const endNodeId: string = correctNodeSorting
+      ? this.endNodeId
+      : this.startNodeId;
+
+    const parallelEdges: MutableEdge[] = [
+      ...edgeIndex.getByStartAndEndNodeId(startNodeId, endNodeId),
+      ...edgeIndex.getByStartAndEndNodeId(endNodeId, startNodeId),
+    ].filter(
+      (
+        parallelEdge: MutableEdge,
+        index: number,
+        self: MutableEdge[],
+      ): boolean =>
+        index ===
+        self.findIndex(
+          (other: MutableEdge): boolean => other.id === parallelEdge.id,
+        ),
+    );
+
+    return parallelEdges;
+  }
+
+  public parallelCount(edgeIndex: MutableEdgeIndex): number {
+    const parallelEdges: MutableEdge[] = this.parallelEdges(edgeIndex);
+
+    const parallelCount: number = parallelEdges.length;
+    return parallelCount;
+  }
+
+  public parallelIndex(edgeIndex: MutableEdgeIndex): number {
+    const parallelEdges: MutableEdge[] = this.parallelEdges(edgeIndex);
+
+    const selfIndex: number = parallelEdges.indexOf(this);
+    const parallelCount: number = this.parallelCount(edgeIndex);
+
+    const directionModifier: number =
+      this.startNodeId.localeCompare(this.endNodeId) < 0 ? 1 : -1;
+
+    if (this.isLoop) {
+      return selfIndex;
+    } else {
+      if (parallelCount % 2 === 0) {
+        if (selfIndex % 2 === 0) {
+          return (selfIndex + 1) * directionModifier;
+        } else {
+          return -selfIndex * directionModifier;
+        }
+      } else {
+        if (selfIndex % 2 === 0) {
+          return selfIndex * directionModifier;
+        } else {
+          return -(selfIndex + 1) * directionModifier;
+        }
+      }
+    }
   }
 }

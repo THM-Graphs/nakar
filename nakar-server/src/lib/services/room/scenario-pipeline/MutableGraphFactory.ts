@@ -50,8 +50,6 @@ export class MutableGraphFactory {
       properties: this.createMutablePropertyCollection(node.node.properties),
       radius: MutableNode.defaultRadius,
       position: MutablePosition.default(),
-      inDegree: 0,
-      outDegree: 0,
       namesInQuery: node.keys,
       customBackgroundColor: null,
       customTitleColor: null,
@@ -69,8 +67,6 @@ export class MutableGraphFactory {
       startNodeId: relationship.relationship.startNodeElementId,
       endNodeId: relationship.relationship.endNodeElementId,
       type: relationship.relationship.type,
-      parallelCount: 1,
-      parallelIndex: 0,
       compressedCount: 1,
       width: MutableEdge.defaultWidth,
       properties: this.createMutablePropertyCollection(

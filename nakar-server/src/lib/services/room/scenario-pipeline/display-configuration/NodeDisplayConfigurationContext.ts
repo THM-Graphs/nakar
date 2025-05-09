@@ -4,6 +4,7 @@ import { SMap } from '../../../../tools/Map';
 import { SSet } from '../../../../tools/Set';
 import { LoggerService } from '../../../logger/LoggerService';
 import z from 'zod';
+import { MutableEdgeIndex } from '../../graph/MutableEdgeIndex';
 
 export class NodeDisplayConfigurationContext {
   // eslint-disable-next-line @typescript-eslint/typedef
@@ -45,6 +46,7 @@ export class NodeDisplayConfigurationContext {
   public static create(
     node: MutableNode,
     logger: LoggerService,
+    edgeIndex: MutableEdgeIndex,
   ): NodeDisplayConfigurationContext {
     return new NodeDisplayConfigurationContext(
       {
@@ -54,9 +56,9 @@ export class NodeDisplayConfigurationContext {
           node.namesInQuery,
         ),
         properties: node.properties.properties,
-        degree: node.degree,
-        inDegree: node.inDegree,
-        outDegree: node.outDegree,
+        degree: node.degree(edgeIndex),
+        inDegree: node.inDegree(edgeIndex),
+        outDegree: node.outDegree(edgeIndex),
       },
       logger,
     );

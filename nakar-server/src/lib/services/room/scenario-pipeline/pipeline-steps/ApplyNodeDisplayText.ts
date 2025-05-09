@@ -28,6 +28,7 @@ export class ApplyNodeDisplayText extends ScenarioPipelineStep {
         const newValue: string = NodeDisplayConfigurationContext.create(
           node,
           state.logger,
+          input.edges,
         ).applyToTemplate(nodeConfig.displayTextTemplate);
         if (newValue.trim().length === 0) {
           continue;

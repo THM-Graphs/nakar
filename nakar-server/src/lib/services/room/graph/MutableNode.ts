@@ -2,6 +2,8 @@ import { MutablePosition } from './MutablePosition';
 import { MutablePropertyCollection } from './MutablePropertyCollection';
 import { z } from 'zod';
 import { SSet } from '../../../tools/Set';
+import { MutableEdgeIndex } from './MutableEdgeIndex';
+import { MutableEdge } from './MutableEdge';
 
 export class MutableNode {
   public static readonly defaultRadius: number = 40;
@@ -12,8 +14,6 @@ export class MutableNode {
     properties: MutablePropertyCollection.schema,
     radius: z.number(),
     position: MutablePosition.schema,
-    inDegree: z.number(),
-    outDegree: z.number(),
     namesInQuery: z.array(z.string()),
     customBackgroundColor: z.string().nullable(),
     customTitleColor: z.string().nullable(),
@@ -29,8 +29,6 @@ export class MutableNode {
   public properties: MutablePropertyCollection;
   public radius: number;
   public position: MutablePosition;
-  public inDegree: number;
-  public outDegree: number;
   public namesInQuery: SSet<string>;
   public customBackgroundColor: string | null;
   public customTitleColor: string | null;
@@ -50,8 +48,6 @@ export class MutableNode {
     properties: MutablePropertyCollection;
     radius: number;
     position: MutablePosition;
-    inDegree: number;
-    outDegree: number;
     namesInQuery: SSet<string>;
     customBackgroundColor: string | null;
     customTitleColor: string | null;
@@ -66,8 +62,6 @@ export class MutableNode {
     this.properties = data.properties;
     this.radius = data.radius;
     this.position = data.position;
-    this.inDegree = data.inDegree;
-    this.outDegree = data.outDegree;
     this.namesInQuery = data.namesInQuery;
     this.customBackgroundColor = data.customBackgroundColor;
     this.customTitleColor = data.customTitleColor;
@@ -79,10 +73,6 @@ export class MutableNode {
 
     this.velocityX = 0;
     this.velocityY = 0;
-  }
-
-  public get degree(): number {
-    return this.inDegree + this.outDegree;
   }
 
   public get title(): string {
@@ -106,8 +96,6 @@ export class MutableNode {
       properties: MutablePropertyCollection.fromPlain(data.properties),
       radius: data.radius,
       position: MutablePosition.fromPlain(data.position),
-      inDegree: data.inDegree,
-      outDegree: data.outDegree,
       namesInQuery: new SSet(data.namesInQuery),
       customBackgroundColor: data.customBackgroundColor,
       customTitleColor: data.customTitleColor,
@@ -126,8 +114,6 @@ export class MutableNode {
       properties: this.properties.toPlain(),
       radius: this.radius,
       position: this.position,
-      inDegree: this.inDegree,
-      outDegree: this.outDegree,
       namesInQuery: this.namesInQuery.toArray(),
       customBackgroundColor: this.customBackgroundColor,
       customTitleColor: this.customTitleColor,
@@ -137,5 +123,33 @@ export class MutableNode {
       source: this.source,
       additionalSources: this.additionalSources.toArray(),
     };
+  }
+
+  public degree(edgeIndex: MutableEdgeIndex): number {
+    return this.inDegree(edgeIndex) + this.outDegree(edgeIndex);
+  }
+
+  public inDegree(edgeIndex: MutableEdgeIndex): number {
+    const inRelsCount: number = edgeIndex
+      .getByEndNodeId(this.id)
+      .reduce(
+        (count: number, rel: MutableEdge): number =>
+          count + rel.compressedCount,
+        0,
+      );
+
+    return inRelsCount;
+  }
+
+  public outDegree(edgeIndex: MutableEdgeIndex): number {
+    const outRelsCount: number = edgeIndex
+      .getByStartNodeId(this.id)
+      .reduce(
+        (count: number, rel: MutableEdge): number =>
+          count + rel.compressedCount,
+        0,
+      );
+
+    return outRelsCount;
   }
 }

@@ -5,9 +5,7 @@ import { LoadScenario } from './pipeline-steps/LoadScenario';
 import { ExecuteInitialQuery } from './pipeline-steps/ExecuteInitialQuery';
 import { CollectGraphDisplayConfiguration } from './pipeline-steps/CollectDisplayConfiguration';
 import { ParseNeo4jLoginCredentials } from './pipeline-steps/ParseNeo4jLoginCredentials';
-import { ApplyEdgeParallelCounts } from './pipeline-steps/ApplyEdgeParallelCounts';
 import { ApplyNodeBackgroundColor } from './pipeline-steps/ApplyNodeBackgroundColor';
-import { ApplyNodeDegrees } from './pipeline-steps/ApplyNodeDegrees';
 import { ApplyNodeDisplayText } from './pipeline-steps/ApplyNodeDisplayText';
 import { ApplyNodeRadius } from './pipeline-steps/ApplyNodeRadius';
 import { CompressRelationships } from './pipeline-steps/CompressRelationships';
@@ -23,7 +21,7 @@ import { ScenarioPipelineResult } from './ScenarioPipelineResult';
 import { ExcecuteAdditionalQueries } from './pipeline-steps/ExcecuteAdditionalQueries';
 
 export class ScenarioPipeline {
-  private readonly _stepCount: number = 14;
+  private readonly _stepCount: number = 13;
 
   public constructor(
     private readonly _database: DatabaseService,
@@ -56,8 +54,6 @@ export class ScenarioPipeline {
     await this._runStep(state, new ExcecuteAdditionalQueries(), onProgress);
     await this._runStep(state, new ConnectNodes(), onProgress);
     await this._runStep(state, new CompressRelationships(), onProgress);
-    await this._runStep(state, new ApplyNodeDegrees(), onProgress);
-    await this._runStep(state, new ApplyEdgeParallelCounts(), onProgress);
     await this._runStep(state, new ApplyNodeDisplayText(), onProgress);
     await this._runStep(state, new ApplyNodeRadius(), onProgress);
     await this._runStep(state, new ApplyNodeBackgroundColor(), onProgress);

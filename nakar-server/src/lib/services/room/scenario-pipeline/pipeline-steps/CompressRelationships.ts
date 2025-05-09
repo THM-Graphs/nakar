@@ -40,8 +40,6 @@ export class CompressRelationships extends ScenarioPipelineStep {
         );
       if (compressedRelEntry == null) {
         edge.compressedCount = 1;
-        edge.parallelCount = 1;
-        edge.parallelIndex = 0;
         this._addToHandledRelsCache(
           edge.startNodeId,
           edge.endNodeId,
