@@ -248,7 +248,7 @@ export class RoomService implements ApplicationService {
         graph.nodes.addNeo4jNode(newNode[1]);
 
         const insertedNode: MutableNode | null = graph.nodes.get(newNode[0]);
-        if (insertedNode != null) {
+        if (insertedNode != null && !insertedNode.locked) {
           insertedNode.position.x = node.position.x;
           insertedNode.position.y = node.position.y;
         }

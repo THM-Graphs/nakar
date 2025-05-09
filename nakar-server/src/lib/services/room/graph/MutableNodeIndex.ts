@@ -29,6 +29,9 @@ export class MutableNodeIndex {
   }
 
   public add(node: MutableNode): void {
+    if (this._byId.has(node.id)) {
+      return;
+    }
     this._byId.set(node.id, node);
   }
 

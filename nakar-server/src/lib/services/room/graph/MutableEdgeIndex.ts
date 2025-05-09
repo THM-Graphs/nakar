@@ -3,7 +3,6 @@ import { MutableEdge } from './MutableEdge';
 import { SSet } from '../../../tools/Set';
 import { Neo4jRelationship } from '../../neo4j/Neo4jRelationship';
 import { MutablePropertyCollection } from './MutablePropertyCollection';
-import { Neo4jNode } from '../../neo4j/Neo4jNode';
 
 export class MutableEdgeIndex {
   private _byId: SMap<string, MutableEdge>;
@@ -39,6 +38,10 @@ export class MutableEdgeIndex {
   }
 
   public add(edge: MutableEdge): void {
+    if (this._byId.has(edge.id)) {
+      return;
+    }
+
     this._byId.set(edge.id, edge);
 
     this._byStartNodeId.set(
