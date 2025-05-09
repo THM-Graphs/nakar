@@ -1,6 +1,9 @@
 import { SMap } from '../../../tools/Map';
 import { MutableNode } from './MutableNode';
 import { SSet } from '../../../tools/Set';
+import { Neo4jNode } from '../../neo4j/Neo4jNode';
+import { MutablePosition } from './MutablePosition';
+import { MutablePropertyCollection } from './MutablePropertyCollection';
 
 export class MutableNodeIndex {
   private _byId: SMap<string, MutableNode>;
@@ -27,6 +30,32 @@ export class MutableNodeIndex {
 
   public add(node: MutableNode): void {
     this._byId.set(node.id, node);
+  }
+
+  public addNeo4jNodes(nodes: SMap<string, Neo4jNode>): void {
+    for (const node of nodes) {
+      this.addNeo4jNode(node[1]);
+    }
+  }
+
+  public addNeo4jNode(node: Neo4jNode): void {
+    const mutableNode: MutableNode = new MutableNode({
+      id: node.node.elementId,
+      labels: new SSet<string>(node.node.labels),
+      properties: MutablePropertyCollection.fromRecord(node.node.properties),
+      radius: MutableNode.defaultRadius,
+      position: MutablePosition.default(),
+      namesInQuery: node.keys,
+      customBackgroundColor: null,
+      customTitleColor: null,
+      customTitle: null,
+      locked: false,
+      grabs: new SSet(),
+      source: node.source.databaseId,
+      additionalSources: new SSet(),
+    });
+
+    this.add(mutableNode);
   }
 
   public remove(node: MutableNode): void {

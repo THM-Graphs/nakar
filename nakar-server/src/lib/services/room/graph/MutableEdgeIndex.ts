@@ -1,6 +1,9 @@
 import { SMap } from '../../../tools/Map';
 import { MutableEdge } from './MutableEdge';
 import { SSet } from '../../../tools/Set';
+import { Neo4jRelationship } from '../../neo4j/Neo4jRelationship';
+import { MutablePropertyCollection } from './MutablePropertyCollection';
+import { Neo4jNode } from '../../neo4j/Neo4jNode';
 
 export class MutableEdgeIndex {
   private _byId: SMap<string, MutableEdge>;
@@ -64,6 +67,30 @@ export class MutableEdgeIndex {
         ).bySetting(edge.id, edge),
       ),
     );
+  }
+
+  public addNeo4jEdges(neo4jEdges: SMap<string, Neo4jRelationship>): void {
+    for (const relationship of neo4jEdges) {
+      this.addNeo4jEdge(relationship[1]);
+    }
+  }
+
+  public addNeo4jEdge(relationship: Neo4jRelationship): void {
+    const mutableEdge: MutableEdge = new MutableEdge({
+      id: relationship.relationship.elementId,
+      startNodeId: relationship.relationship.startNodeElementId,
+      endNodeId: relationship.relationship.endNodeElementId,
+      type: relationship.relationship.type,
+      compressedCount: 1,
+      width: MutableEdge.defaultWidth,
+      properties: MutablePropertyCollection.fromRecord(
+        relationship.relationship.properties,
+      ),
+      namesInQuery: relationship.keys,
+      source: relationship.source.databaseId,
+    });
+
+    this.add(mutableEdge);
   }
 
   public remove(edge: MutableEdge): void {

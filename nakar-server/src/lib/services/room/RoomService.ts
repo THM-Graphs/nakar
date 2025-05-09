@@ -29,7 +29,6 @@ import { GetDatabaseDBDTO } from '../database/dto/GetDatabaseDBDTO';
 import { Neo4jDatabaseInfo } from '../neo4j/Neo4jDatabaseInfo';
 import { Neo4jGraphElements } from '../neo4j/Neo4jGraphElements';
 import { SSet } from '../../tools/Set';
-import { MutableGraphFactory } from './scenario-pipeline/MutableGraphFactory';
 import { PhysicsSimulation } from '../../tools/physics/PhysicsSimulation';
 import { RSExpandNodesResult } from './events/RSExpandNodesResult';
 
@@ -203,7 +202,7 @@ export class RoomService implements ApplicationService {
         `Cannot find graph of room ${params.roomId} to run expand nodes.`,
       );
     }
-    let graph: MutableGraph = mayGraph;
+    const graph: MutableGraph = mayGraph;
 
     const scenario: GetScenarioDBDTO | null = await this._database.getScenario(
       graph.metaData.scenarioInfo.id,
@@ -242,44 +241,31 @@ export class RoomService implements ApplicationService {
         new SSet<string>([nodeId]),
       );
 
-      const mutableGraphFactory: MutableGraphFactory =
-        new MutableGraphFactory();
-
-      const expandGraph: MutableGraph = mutableGraphFactory.createGraph(
-        expandResult,
-        scenario,
-      );
-      expandGraph.nodes.nodes.forEach((newNow: MutableNode): void => {
-        newNow.position.x = node.position.x;
-        newNow.position.y = node.position.y;
-      });
-
-      for (const newNode of expandGraph.nodes.nodes) {
-        if (!graph.nodes.hasById(newNode.id)) {
+      for (const newNode of expandResult.nodes) {
+        if (!graph.nodes.hasById(newNode[0])) {
           result.newNodeCount += 1;
+        }
+        graph.nodes.addNeo4jNode(newNode[1]);
+
+        const insertedNode: MutableNode | null = graph.nodes.get(newNode[0]);
+        if (insertedNode != null) {
+          insertedNode.position.x = node.position.x;
+          insertedNode.position.y = node.position.y;
         }
       }
 
-      for (const newEdge of expandGraph.edges.edges) {
-        if (!graph.edges.has(newEdge.id)) {
+      for (const newEdge of expandResult.relationships) {
+        if (!graph.edges.has(newEdge[0])) {
           result.newEdgeCount += 1;
         }
+        graph.edges.addNeo4jEdge(newEdge[1]);
       }
 
       this._logger.debug(
         this,
-        `Expand node result for ${nodeId}: ${expandGraph.nodes.size.toString()} nodes and ${expandGraph.edges.size.toString()} edges.`,
+        `Expand node result for ${nodeId}: ${expandResult.nodes.size.toString()} nodes and ${expandResult.relationships.size.toString()} edges.`,
       );
-
-      graph = graph.byMergingWithNonOverriding(expandGraph);
     }
-
-    const physicsSimluation: PhysicsSimulation = new PhysicsSimulation(
-      graph,
-      this._logger,
-      this._profiler,
-    );
-    // await physicsSimluation.run({ maxTicks: 1000, maxMs: 1000 });
 
     this._latestGraphs.set(params.roomId, graph);
     this._sendActionToWorker(params.roomId, {

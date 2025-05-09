@@ -2,7 +2,6 @@ import { ScenarioPipelineStep } from '../ScenarioPipelineStep';
 import { MutableGraph } from '../../graph/MutableGraph';
 import { Neo4jGraphElements } from '../../../neo4j/Neo4jGraphElements';
 import { ScenarioPipelineState } from '../ScenarioPipelineState';
-import { MutableGraphFactory } from '../MutableGraphFactory';
 
 export class ExecuteInitialQuery extends ScenarioPipelineStep {
   public constructor() {
@@ -10,8 +9,6 @@ export class ExecuteInitialQuery extends ScenarioPipelineStep {
   }
 
   public async run(state: ScenarioPipelineState): Promise<void> {
-    const graphFactory: MutableGraphFactory = new MutableGraphFactory();
-
     if (state.scenarioDBDTO.query == null) {
       throw new Error('Unable to read query from pipeline state.');
     }
@@ -20,10 +17,15 @@ export class ExecuteInitialQuery extends ScenarioPipelineStep {
       state.databaseInfo,
       state.scenarioDBDTO.query,
     );
-    const graph: MutableGraph = graphFactory.createGraph(
-      graphElements,
+
+    const graph: MutableGraph = MutableGraph.fromInitialScenario(
       state.scenarioDBDTO,
     );
+
+    graph.nodes.addNeo4jNodes(graphElements.nodes);
+    graph.edges.addNeo4jEdges(graphElements.relationships);
+    graph.tableData = graphElements.tableData;
+
     state.logger.debug(
       this,
       `Did load ${graph.size.toString()} graph elements.`,

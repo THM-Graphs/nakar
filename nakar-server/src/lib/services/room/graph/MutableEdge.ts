@@ -2,6 +2,7 @@ import { MutablePropertyCollection } from './MutablePropertyCollection';
 import { z } from 'zod';
 import { SSet } from '../../../tools/Set';
 import { MutableEdgeIndex } from './MutableEdgeIndex';
+import { MutableNodeIndex } from './MutableNodeIndex';
 
 export class MutableEdge {
   public static readonly defaultWidth: number = 2;
@@ -157,5 +158,13 @@ export class MutableEdge {
         }
       }
     }
+  }
+
+  public isDangling(nodeIndex: MutableNodeIndex): boolean {
+    const isDangling: boolean =
+      !nodeIndex.hasById(this.startNodeId) ||
+      !nodeIndex.hasById(this.endNodeId);
+
+    return isDangling;
   }
 }

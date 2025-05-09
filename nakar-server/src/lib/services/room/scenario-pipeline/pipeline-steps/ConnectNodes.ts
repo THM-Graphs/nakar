@@ -3,15 +3,11 @@ import { MutableGraph } from '../../graph/MutableGraph';
 import { SSet } from '../../../../tools/Set';
 import { Neo4jGraphElements } from '../../../neo4j/Neo4jGraphElements';
 import { ScenarioPipelineStep } from '../ScenarioPipelineStep';
-import { MutableGraphFactory } from '../MutableGraphFactory';
 import { ScenarioPipelineState } from '../ScenarioPipelineState';
 
 export class ConnectNodes extends ScenarioPipelineStep {
-  private _graphFactory: MutableGraphFactory;
-
   public constructor() {
     super('Connect Nodes');
-    this._graphFactory = new MutableGraphFactory();
   }
 
   public async run(state: ScenarioPipelineState): Promise<void> {
@@ -34,12 +30,7 @@ export class ConnectNodes extends ScenarioPipelineStep {
         nodeIds,
       );
 
-    const graphFactory: MutableGraphFactory = new MutableGraphFactory();
-    const otherGraph: MutableGraph = graphFactory.createGraph(
-      result,
-      state.scenarioDBDTO,
-    );
-
-    state.graph = state.graph.byMergingWithNonOverriding(otherGraph);
+    state.graph.nodes.addNeo4jNodes(result.nodes);
+    state.graph.edges.addNeo4jEdges(result.relationships);
   }
 }

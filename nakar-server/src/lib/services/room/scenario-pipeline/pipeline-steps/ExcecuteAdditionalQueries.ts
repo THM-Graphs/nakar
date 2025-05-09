@@ -7,7 +7,6 @@ import { Neo4jGraphElements } from '../../../neo4j/Neo4jGraphElements';
 import { MutableNode } from '../../graph/MutableNode';
 import { AdditionalQueryDBDTO } from '../../../database/dto/AdditionalQueryDBDTO';
 import { MutableGraph } from '../../graph/MutableGraph';
-import { MutableGraphFactory } from '../MutableGraphFactory';
 import { SSet } from '../../../../tools/Set';
 
 export class ExcecuteAdditionalQueries extends ScenarioPipelineStep {
@@ -53,18 +52,14 @@ export class ExcecuteAdditionalQueries extends ScenarioPipelineStep {
           await state.neo4j.loadConnectingRelationships(databaseInfo, nodeIds);
         result = result.byMergingWith(connectResult);
       }
-      const graphFactory: MutableGraphFactory = new MutableGraphFactory();
-      const additionalGraph: MutableGraph = graphFactory.createGraph(
-        result,
-        scenario,
-      );
 
       state.logger.debug(
         this,
         `Result: ${result.nodes.size.toString()} nodes, ${result.relationships.size.toString()} relationships.`,
       );
 
-      state.graph = state.graph.byMergingWithNonOverriding(additionalGraph);
+      state.graph.nodes.addNeo4jNodes(result.nodes);
+      state.graph.edges.addNeo4jEdges(result.relationships);
 
       for (const originalNode of state.graph.nodes.nodes) {
         for (const mergeNode of state.graph.nodes.nodes) {
@@ -73,7 +68,7 @@ export class ExcecuteAdditionalQueries extends ScenarioPipelineStep {
               originalNode,
               mergeNode,
               additionalQuery,
-              additionalGraph,
+              result,
             )
           ) {
             state.logger.debug(
@@ -91,9 +86,9 @@ export class ExcecuteAdditionalQueries extends ScenarioPipelineStep {
     originalNode: MutableNode,
     additionalNode: MutableNode,
     config: AdditionalQueryDBDTO,
-    additionalGraph: MutableGraph,
+    additionalGraph: Neo4jGraphElements,
   ): boolean {
-    if (!additionalGraph.nodes.has(additionalNode)) {
+    if (!additionalGraph.nodes.has(additionalNode.id)) {
       return false;
     }
 

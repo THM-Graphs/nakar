@@ -7,6 +7,10 @@ import { v4 as uuidv4 } from 'uuid';
 import { LoggerService } from '../../logger/LoggerService';
 import { MutableNodeIndex } from './MutableNodeIndex';
 import { MutableEdgeIndex } from './MutableEdgeIndex';
+import { Neo4jGraphElements } from '../../neo4j/Neo4jGraphElements';
+import { GetScenarioDBDTO } from '../../database/dto/GetScenarioDBDTO';
+import { Neo4jNode } from '../../neo4j/Neo4jNode';
+import { MutableScenarioInfo } from './MutableScenarioInfo';
 
 export class MutableGraph {
   // eslint-disable-next-line @typescript-eslint/typedef
@@ -36,8 +40,6 @@ export class MutableGraph {
     this.edges = data.edges;
     this.metaData = data.metaData;
     this.tableData = data.tableData;
-
-    this.removeDanglingEdges();
   }
 
   public get size(): number {
@@ -52,6 +54,24 @@ export class MutableGraph {
       metaData: MutableGraphMetaData.empty(),
       tableData: [],
     });
+  }
+
+  public static fromInitialScenario(scenario: GetScenarioDBDTO): MutableGraph {
+    const graph: MutableGraph = new MutableGraph({
+      id: uuidv4(),
+      nodes: new MutableNodeIndex([]),
+      edges: new MutableEdgeIndex([]),
+      metaData: new MutableGraphMetaData({
+        scenarioInfo: new MutableScenarioInfo({
+          id: scenario.documentId,
+          title: scenario.title,
+        }),
+        pipelineSummary: [],
+      }),
+      tableData: [],
+    });
+
+    return graph;
   }
 
   public static fromPlain(
@@ -93,20 +113,6 @@ export class MutableGraph {
     }
   }
 
-  public byMergingWithNonOverriding(otherGraph: MutableGraph): MutableGraph {
-    const graph: MutableGraph = new MutableGraph({
-      id: this.id,
-      nodes: this.nodes.byMergingWithNonOverriding(otherGraph.nodes),
-      edges: this.edges.byMergingWithNonOverriding(otherGraph.edges),
-      metaData: this.metaData,
-      tableData: this.tableData,
-    });
-
-    this.removeDanglingEdges();
-
-    return graph;
-  }
-
   public toPlain(): z.infer<typeof MutableGraph.schema> {
     return {
       id: this.id,
@@ -125,9 +131,7 @@ export class MutableGraph {
 
   public removeDanglingEdges(logger?: LoggerService): void {
     for (const edge of this.edges.edges) {
-      const isDangling: boolean =
-        !this.nodes.hasById(edge.startNodeId) ||
-        !this.nodes.hasById(edge.endNodeId);
+      const isDangling: boolean = edge.isDangling(this.nodes);
 
       if (isDangling) {
         logger?.debug(

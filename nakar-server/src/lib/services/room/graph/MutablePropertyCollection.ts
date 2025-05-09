@@ -21,6 +21,14 @@ export class MutablePropertyCollection {
     });
   }
 
+  public static fromRecord(
+    data: Record<string, unknown>,
+  ): MutablePropertyCollection {
+    return new MutablePropertyCollection({
+      properties: SMap.fromRecord(data),
+    });
+  }
+
   public getStringValueOfProperty(key: string): string | null {
     const v: unknown = this.properties.get(key);
     if (typeof v === 'string' && v.trim().length > 0) {
