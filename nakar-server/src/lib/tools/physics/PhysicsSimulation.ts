@@ -10,6 +10,7 @@ import { PhysicsSimulationRunOptions } from './PhysicsSimulationRunOptions';
 
 export class PhysicsSimulation {
   public static readonly maximumVelocity: number = 500;
+  public static readonly maximumForce: number = 100;
   public static readonly FPS: number = 30;
 
   private _graph: MutableGraph;
@@ -174,11 +175,11 @@ export class PhysicsSimulation {
     node.velocityY += forceY;
 
     const magnitude: number = this._magnitude(node.velocityX, node.velocityY);
-    if (magnitude > PhysicsSimulation.maximumVelocity) {
+    if (magnitude > PhysicsSimulation.maximumForce) {
       node.velocityX =
-        (node.velocityX / magnitude) * PhysicsSimulation.maximumVelocity;
+        (node.velocityX / magnitude) * PhysicsSimulation.maximumForce;
       node.velocityY =
-        (node.velocityY / magnitude) * PhysicsSimulation.maximumVelocity;
+        (node.velocityY / magnitude) * PhysicsSimulation.maximumForce;
     }
   }
 
