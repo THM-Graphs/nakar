@@ -29,7 +29,6 @@ import { GetDatabaseDBDTO } from '../database/dto/GetDatabaseDBDTO';
 import { Neo4jDatabaseInfo } from '../neo4j/Neo4jDatabaseInfo';
 import { Neo4jGraphElements } from '../neo4j/Neo4jGraphElements';
 import { SSet } from '../../tools/Set';
-import { PhysicsSimulation } from '../../tools/physics/PhysicsSimulation';
 import { RSExpandNodesResult } from './events/RSExpandNodesResult';
 
 export class RoomService implements ApplicationService {

@@ -73,7 +73,7 @@ export class ExcecuteAdditionalQueries extends ScenarioPipelineStep {
           ) {
             state.logger.debug(
               this,
-              `Will merge nodes: ${originalNode.title}, ${mergeNode.title}`,
+              `Will merge nodes: ${originalNode.title(state.graph, state.logger)}, ${mergeNode.title(state.graph, state.logger)}`,
             );
             this._mergeNodes(state, state.graph, originalNode, mergeNode);
           }
@@ -146,7 +146,7 @@ export class ExcecuteAdditionalQueries extends ScenarioPipelineStep {
       graph.edges.add(relationship);
       state.logger.debug(
         this,
-        `Did change startNodeId of ${relationship.id} (${relationship.type}) from ${additionalNode.id} (${additionalNode.title}) to ${originalNode.id} (${originalNode.title})`,
+        `Did change startNodeId of ${relationship.id} (${relationship.type}) from ${additionalNode.id} (${additionalNode.title(graph, state.logger)}) to ${originalNode.id} (${originalNode.title(graph, state.logger)})`,
       );
     }
     for (const relationship of graph.edges.getByEndNodeId(additionalNode.id)) {
@@ -155,14 +155,14 @@ export class ExcecuteAdditionalQueries extends ScenarioPipelineStep {
       graph.edges.add(relationship);
       state.logger.debug(
         this,
-        `Did change endNodeId of ${relationship.id} (${relationship.type}) from ${additionalNode.id} (${additionalNode.title}) to ${originalNode.id} (${originalNode.title})`,
+        `Did change endNodeId of ${relationship.id} (${relationship.type}) from ${additionalNode.id} (${additionalNode.title(graph, state.logger)}) to ${originalNode.id} (${originalNode.title(graph, state.logger)})`,
       );
     }
 
     graph.nodes.remove(additionalNode);
     state.logger.debug(
       this,
-      `Did delete additional node after merge: ${additionalNode.id} (${additionalNode.title})`,
+      `Did delete additional node after merge: ${additionalNode.id} (${additionalNode.title(graph, state.logger)})`,
     );
   }
 }
