@@ -28,6 +28,7 @@ COPY nakar-server/favicon.ico nakar-server/package.json nakar-server/package-loc
 RUN npm ci --omit=dev
 
 EXPOSE 80
+EXPOSE 81
 
 HEALTHCHECK \
     --interval=10m \
