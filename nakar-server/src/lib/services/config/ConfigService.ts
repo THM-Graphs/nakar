@@ -12,6 +12,10 @@ export class ConfigService implements ApplicationService {
     return strapi.config.get('server.port', 80);
   }
 
+  public get host(): string {
+    return strapi.config.get('server.host', '0.0.0.0');
+  }
+
   public bootstrap(): void {
     this._logger.debug(this, `cwd: ${process.cwd()}`);
     this._logger.debug(this, `__dirname: ${__dirname}`);

@@ -29,7 +29,6 @@ import path from 'path';
 
 export class HTTPService implements ApplicationService {
   private readonly _app: Application;
-  private readonly _port: number;
   private readonly _server: http.Server;
   private readonly _delegate: HTTPDelegate;
 
@@ -41,7 +40,6 @@ export class HTTPService implements ApplicationService {
     private readonly _backup: BackupService,
   ) {
     this._app = express();
-    this._port = _config.port + 1;
     this._server = http.createServer(this._app as http.RequestListener);
     this._delegate = new HTTPDelegate(
       this._config,
@@ -85,7 +83,7 @@ export class HTTPService implements ApplicationService {
         this._server.once('listening', (): void => {
           resolve();
         });
-        this._server.listen(this._port);
+        this._server.listen(this._config.port + 1, this._config.host);
       },
     );
   }
