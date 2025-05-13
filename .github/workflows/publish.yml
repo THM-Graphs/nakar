@@ -21,7 +21,8 @@ jobs:
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
       - name: Build Docker image
         run: |
-          docker build -f nakar-server/Dockerfile -t ghcr.io/thm-graphs/nakar/server:${{ env.IMAGE_VERSION }} .
+          cd nakar-server
+          docker build -f Dockerfile -t ghcr.io/thm-graphs/nakar/server:${{ env.IMAGE_VERSION }} .
       - name: Push Docker image
         run: |
           docker push ghcr.io/thm-graphs/nakar/server:${{ env.IMAGE_VERSION }}
@@ -41,7 +42,8 @@ jobs:
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
       - name: Build Docker image
         run: |
-          docker build -f nakar-client-web/Dockerfile -t ghcr.io/thm-graphs/nakar/client-web:${{ env.IMAGE_VERSION }} .
+          cd nakar-client-web
+          docker build -f Dockerfile -t ghcr.io/thm-graphs/nakar/client-web:${{ env.IMAGE_VERSION }} .
       - name: Push Docker image
         run: |
           docker push ghcr.io/thm-graphs/nakar/client-web:${{ env.IMAGE_VERSION }}
@@ -61,7 +63,8 @@ jobs:
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
       - name: Build Docker image
         run: |
-          docker build -f nakar-db-pole/Dockerfile -t ghcr.io/thm-graphs/nakar/db-pole:${{ env.IMAGE_VERSION }} .
+          cd nakar-db-pole
+          docker build -f Dockerfile -t ghcr.io/thm-graphs/nakar/db-pole:${{ env.IMAGE_VERSION }} .
       - name: Push Docker image
         run: |
           docker push ghcr.io/thm-graphs/nakar/db-pole:${{ env.IMAGE_VERSION }}

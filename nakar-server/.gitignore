@@ -130,8 +130,6 @@ build
 .strapi-updater.json
 .strapi-cloud.json
 /src/extensions/documentation
-/src-gen
-openapi-gen.yaml
 
 ############################
 # IDE

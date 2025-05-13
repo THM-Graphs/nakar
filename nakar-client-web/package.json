@@ -5,8 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "npm run build:gen && tsc -b && vite build",
-    "build:gen": "openapi-ts --input ../nakar-server/openapi.yaml --output ./src-gen --client @hey-api/client-fetch",
+    "build": "tsc -b && vite build",
+    "build:docker": "docker build -f Dockerfile -t ghcr.io/thm-graphs/nakar/client-web:dev .",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "audit": "npm audit",

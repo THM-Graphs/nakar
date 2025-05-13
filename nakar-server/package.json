@@ -4,9 +4,9 @@
   "private": true,
   "description": "A Strapi application",
   "scripts": {
-    "build": "npm run build:gen && strapi build",
-    "build:gen": "openapi-typescript ./openapi.yaml -o ./src-gen/schema.d.ts --root-types --immutable",
-    "develop": "npm run build:gen && strapi develop",
+    "build": "strapi build",
+    "build:docker": "docker build -f Dockerfile -t ghcr.io/thm-graphs/nakar/server:dev .",
+    "develop": "strapi develop",
     "start": "strapi start",
     "lint": "eslint src",
     "lint:fix": "eslint --fix src",
