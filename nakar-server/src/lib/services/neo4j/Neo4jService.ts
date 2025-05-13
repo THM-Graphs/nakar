@@ -15,6 +15,8 @@ import { SessionConfig } from 'neo4j-driver-core/types/driver';
 import { ApplicationService } from '../../application/ApplicationService';
 
 export class Neo4jService implements ApplicationService {
+  private static readonly _maximalElements: number = 2_000;
+
   public constructor(private readonly _logger: LoggerService) {}
 
   public bootstrap(): void | Promise<void> {
@@ -53,6 +55,12 @@ export class Neo4jService implements ApplicationService {
         const result: QueryResult = await session.run<
           RecordShape<string, unknown>
         >(query, parameters);
+
+        if (result.records.length > Neo4jService._maximalElements) {
+          throw new Error(
+            `To many elements: ${result.records.length.toString()} (maximum: ${Neo4jService._maximalElements.toString()})`,
+          );
+        }
 
         const nei4jGraphElementsFactory: Neo4jGraphElementsFactory =
           new Neo4jGraphElementsFactory(this._logger);
