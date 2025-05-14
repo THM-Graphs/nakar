@@ -70,7 +70,7 @@ export class CachingSchemaDTOFactory {
         this._logger,
       ).toPlain(),
       customBackgroundColor: node.customBackgroundColor(graph, this._logger),
-      customTitleColor: node.customTitleColor,
+      customTitleColor: node.customTitleColor(graph, this._logger),
       source: (await this._getDatabase(node.source))?.title ?? node.source,
       additionalSources: (
         await node.additionalSources.asyncMap(

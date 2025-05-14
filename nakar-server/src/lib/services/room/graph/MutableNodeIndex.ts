@@ -49,7 +49,6 @@ export class MutableNodeIndex {
       radius: MutableNode.defaultRadius,
       position: MutablePosition.default(),
       namesInQuery: node.keys,
-      customTitleColor: null,
       locked: false,
       grabs: new SSet(),
       source: node.source.databaseId,

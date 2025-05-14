@@ -7,6 +7,7 @@ import { FinalNodeDisplayConfiguration } from '../scenario-pipeline/display-conf
 import { NodeDisplayConfigurationContext } from '../scenario-pipeline/display-configuration/NodeDisplayConfigurationContext';
 import { LoggerService } from '../../logger/LoggerService';
 import { MutableGraph } from './MutableGraph';
+import { Color } from '../../../tools/Color';
 
 export class MutableNode {
   public static readonly defaultRadius: number = 40;
@@ -18,7 +19,6 @@ export class MutableNode {
     radius: z.number(),
     position: MutablePosition.schema,
     namesInQuery: z.array(z.string()),
-    customTitleColor: z.string().nullable(),
     locked: z.boolean(),
     grabs: z.array(z.string()),
     source: z.string(),
@@ -31,7 +31,6 @@ export class MutableNode {
   public radius: number;
   public position: MutablePosition;
   public namesInQuery: SSet<string>;
-  public customTitleColor: string | null;
   public locked: boolean;
   public grabs: SSet<string>;
   public source: string;
@@ -48,7 +47,6 @@ export class MutableNode {
     radius: number;
     position: MutablePosition;
     namesInQuery: SSet<string>;
-    customTitleColor: string | null;
     locked: boolean;
     grabs: SSet<string>;
     source: string;
@@ -60,7 +58,6 @@ export class MutableNode {
     this.radius = data.radius;
     this.position = data.position;
     this.namesInQuery = data.namesInQuery;
-    this.customTitleColor = data.customTitleColor;
     this.locked = data.locked;
     this.grabs = data.grabs;
     this.source = data.source;
@@ -78,7 +75,6 @@ export class MutableNode {
       radius: data.radius,
       position: MutablePosition.fromPlain(data.position),
       namesInQuery: new SSet(data.namesInQuery),
-      customTitleColor: data.customTitleColor,
       locked: data.locked,
       grabs: new SSet(data.grabs),
       source: data.source,
@@ -94,7 +90,6 @@ export class MutableNode {
       radius: this.radius,
       position: this.position,
       namesInQuery: this.namesInQuery.toArray(),
-      customTitleColor: this.customTitleColor,
       locked: this.locked,
       grabs: this.grabs.toArray(),
       source: this.source,
@@ -177,9 +172,27 @@ export class MutableNode {
     return newValue;
   }
 
+  public customTitleColor(
+    graph: MutableGraph,
+    logger: LoggerService,
+  ): string | null {
+    const backgroundColor: string | null = this.customBackgroundColor(
+      graph,
+      logger,
+    );
+    if (backgroundColor == null) {
+      return null;
+    }
+    if (Color.isLightColor(backgroundColor)) {
+      return '#000000';
+    } else {
+      return '#ffffff';
+    }
+  }
+
   public title(graph: MutableGraph, logger: LoggerService): string {
     return (
-      this.customTitle(graph, logger) ??
+      this._customTitle(graph, logger) ??
       this.properties.getStringValueOfProperty('label') ??
       this.properties.getStringValueOfProperty('name') ??
       this.properties.getStringValueOfProperty('title') ??
@@ -191,7 +204,7 @@ export class MutableNode {
     );
   }
 
-  public customTitle(
+  private _customTitle(
     graph: MutableGraph,
     logger: LoggerService,
   ): string | null {
