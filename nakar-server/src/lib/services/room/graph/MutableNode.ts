@@ -180,10 +180,10 @@ export class MutableNode {
   public title(graph: MutableGraph, logger: LoggerService): string {
     return (
       this.customTitle(graph, logger) ??
+      this.properties.getStringValueOfProperty('label') ??
       this.properties.getStringValueOfProperty('name') ??
       this.properties.getStringValueOfProperty('title') ??
       this.properties.getStringValueOfProperty('type') ??
-      this.properties.getStringValueOfProperty('label') ??
       this.properties.getStringValueOfProperty('id') ??
       this.properties.getStringValueOfProperty('slug') ??
       this.properties.firstStringValue() ??
