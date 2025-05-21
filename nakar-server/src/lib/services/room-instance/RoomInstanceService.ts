@@ -104,11 +104,6 @@ export class RoomInstanceService implements ApplicationService {
 
       foundNode.position.x = movedNode.position.x;
       foundNode.position.y = movedNode.position.y;
-
-      this._sendEvent({
-        type: 'WTEventPhysicsUpdate',
-        graph: this._physics.getGraph().toPlain(),
-      });
     }
   }
 

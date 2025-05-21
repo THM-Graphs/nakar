@@ -6,9 +6,17 @@ import { adjustColor } from "../color/colorShade.ts";
 import { getBackgroundColor } from "../color/getBackgroundColor.ts";
 import { getTextColor } from "../color/getTextColor.ts";
 import { UserTheme } from "../theme/UserTheme.ts";
-import { BehaviorSubject, combineLatest, Observable, Subject } from "rxjs";
+import {
+  auditTime,
+  BehaviorSubject,
+  combineLatest,
+  Observable,
+  Subject,
+} from "rxjs";
 import { D3RendererState } from "./D3RendererState.ts";
 import { D3Calculator } from "./D3Calculator.ts";
+
+const fps = 30;
 
 export class D3Renderer {
   private $graphState: BehaviorSubject<D3RendererState>;
@@ -95,7 +103,8 @@ export class D3Renderer {
   }
 
   public get onNodesMoved(): Observable<D3Node> {
-    return this.$onNodeMoved.asObservable();
+    return this.$onNodeMoved.asObservable().pipe(auditTime(1000 / fps));
+    // return this.$onNodeMoved.asObservable();
   }
 
   public get onUnlockNode(): Observable<D3Node> {
@@ -330,7 +339,6 @@ export class D3Renderer {
     }
     this.smoothedPositionDirty = false;
 
-    const fps = 30;
     const smoothTime = (1000 / fps) * 1.5; // compensate slow ws
     const maxSpeed = 500;
     for (const node of this.graphState.nodes) {
