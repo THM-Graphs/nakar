@@ -7,11 +7,11 @@ import { getBackgroundColor } from "../color/getBackgroundColor.ts";
 import { getTextColor } from "../color/getTextColor.ts";
 import { UserTheme } from "../theme/UserTheme.ts";
 import {
-  auditTime,
   BehaviorSubject,
   combineLatest,
   Observable,
   Subject,
+  throttleTime,
 } from "rxjs";
 import { D3RendererState } from "./D3RendererState.ts";
 import { D3Calculator } from "./D3Calculator.ts";
@@ -103,7 +103,12 @@ export class D3Renderer {
   }
 
   public get onNodesMoved(): Observable<D3Node> {
-    return this.$onNodeMoved.asObservable().pipe(auditTime(1000 / fps));
+    /*
+    throttleTime gibt immer das erste Element aus dem Zeitfenster zurück.
+    Um sicherzustellen, dass die letzte Bewegung auch übertragen wird müssen
+    wir das im drag-end event machen.
+    */
+    return this.$onNodeMoved.asObservable().pipe(throttleTime(1000 / fps));
     // return this.$onNodeMoved.asObservable();
   }
 

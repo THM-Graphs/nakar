@@ -110,24 +110,27 @@ export class RoomInstanceService implements ApplicationService {
   private _handleUngrabNode(action: WTActionUngrabNode): void {
     const node: MutableNode | null = this._physics
       .getGraph()
-      .nodes.get(action.nodeId);
+      .nodes.get(action.node.id);
     if (node == null) {
-      this._logger.error(this, `Cannot find node to lock: ${action.nodeId}.`);
+      this._logger.error(this, `Cannot find node to lock: ${action.node.id}.`);
       return;
     }
     if (!node.grabs.has(action.userId)) {
       this._logger.warn(
         this,
-        `Cannot ungrab node: Node ${action.nodeId} has no grab by ${action.userId}`,
+        `Cannot ungrab node: Node ${action.node.id} has no grab by ${action.userId}`,
       );
       return;
     }
 
     this._physics.stop();
     node.grabs.delete(action.userId);
+    node.position.x = action.node.position.x;
+    node.position.y = action.node.position.y;
+
     this._logger.debug(
       this,
-      `${action.userId} did ungrab node: ${action.nodeId}`,
+      `${action.userId} did ungrab node: ${action.node.id}`,
     );
 
     this._logger.debug(

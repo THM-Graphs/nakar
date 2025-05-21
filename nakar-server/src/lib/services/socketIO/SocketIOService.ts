@@ -365,7 +365,7 @@ export class SocketIOService implements ApplicationService {
     }
 
     this._roomService.ungrabNode({
-      nodeId: m.nodeId,
+      node: m.node,
       roomId: roomId,
       userId: wsClient.id,
     });

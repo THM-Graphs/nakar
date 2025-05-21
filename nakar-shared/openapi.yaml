@@ -574,11 +574,11 @@ components:
         type:
           type: string
           enum: ["WSActionUngrabNode"]
-        nodeId:
-          type: string
+        node:
+          $ref: "#/components/schemas/PhysicalNode"
       required:
         - type
-        - nodeId
+        - node
 
     WSActionExpandNodes:
       type: object
