@@ -7,6 +7,7 @@ import { CombinationCache } from './CombinationCache';
 import { LoggerService } from '../../services/logger/LoggerService';
 import { ProfilerService } from '../../services/profiler/ProfilerService';
 import { PhysicsSimulationRunOptions } from './PhysicsSimulationRunOptions';
+import { SMap } from '../Map';
 
 export class PhysicsSimulation {
   public static readonly maximumVelocity: number = 500;
@@ -18,6 +19,7 @@ export class PhysicsSimulation {
   private _onSlowTick: Subject<void>;
   private _tickCount: number;
   private _tickDurationsCache: number[];
+  private _radiusCache: SMap<string, number>;
 
   public constructor(
     graph: MutableGraph,
@@ -29,6 +31,7 @@ export class PhysicsSimulation {
     this._onSlowTick = new Subject();
     this._tickCount = 0;
     this._tickDurationsCache = [];
+    this._radiusCache = new SMap();
   }
 
   public get onSlowTick(): Observable<void> {
@@ -77,6 +80,10 @@ export class PhysicsSimulation {
 
   public setGraph(graph: MutableGraph): void {
     this._graph = graph;
+    this._radiusCache = new SMap();
+    for (const node of graph.nodes.nodes) {
+      this._radiusCache.set(node.id, node.radius(graph, this._logger));
+    }
   }
 
   public getGraph(): MutableGraph {
@@ -142,7 +149,9 @@ export class PhysicsSimulation {
       }
 
       const targetDistance: number =
-        nodeA.radius + edge.type.length * 20 + nodeB.radius;
+        (this._radiusCache.get(nodeA.id) ?? MutableNode.defaultRadius) +
+        edge.type.length * 20 +
+        (this._radiusCache.get(nodeB.id) ?? MutableNode.defaultRadius);
 
       this._linkForce(targetDistance, nodeA, nodeB);
       handledNodeCombinations.addCombination(edge.startNodeId, edge.endNodeId);
@@ -203,7 +212,10 @@ export class PhysicsSimulation {
   }
 
   private _mass(node: MutableNode): number {
-    return Math.PI * Math.pow(node.radius, 2);
+    return (
+      Math.PI *
+      Math.pow(this._radiusCache.get(node.id) ?? MutableNode.defaultRadius, 2)
+    );
   }
 
   private _twoBodyForce(nodeA: MutableNode, nodeB: MutableNode): void {

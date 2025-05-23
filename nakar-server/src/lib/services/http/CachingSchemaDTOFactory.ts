@@ -58,7 +58,7 @@ export class CachingSchemaDTOFactory {
       title: node.title(graph, this._logger),
       labels: node.labels.toArray(),
       properties: this._createSchemaGraphProperties(node.properties),
-      radius: node.radius,
+      radius: node.radius(graph, this._logger),
       position: node.position,
       inDegree: node.inDegree(graph),
       outDegree: node.outDegree(graph),

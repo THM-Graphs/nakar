@@ -46,7 +46,6 @@ export class MutableNodeIndex {
       id: node.node.elementId,
       labels: new SSet<string>(node.node.labels),
       properties: MutablePropertyCollection.fromRecord(node.node.properties),
-      radius: MutableNode.defaultRadius,
       position: MutablePosition.default(),
       namesInQuery: node.keys,
       locked: false,

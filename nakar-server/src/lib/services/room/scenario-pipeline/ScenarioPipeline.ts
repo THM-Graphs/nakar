@@ -5,11 +5,9 @@ import { LoadScenario } from './pipeline-steps/LoadScenario';
 import { ExecuteInitialQuery } from './pipeline-steps/ExecuteInitialQuery';
 import { CollectGraphDisplayConfiguration } from './pipeline-steps/CollectDisplayConfiguration';
 import { ParseNeo4jLoginCredentials } from './pipeline-steps/ParseNeo4jLoginCredentials';
-import { ApplyNodeRadius } from './pipeline-steps/ApplyNodeRadius';
 import { CompressRelationships } from './pipeline-steps/CompressRelationships';
 import { ConnectNodes } from './pipeline-steps/ConnectNodes';
 import { Layout } from './pipeline-steps/Layout';
-import { GrowNodeBasedOnDegree } from './pipeline-steps/GrowNodeBasedOnDegree';
 import { ProfilerService } from '../../profiler/ProfilerService';
 import { ProfilerTask } from '../../profiler/ProfilerTask';
 import { wait } from '../../../tools/Wait';
@@ -19,7 +17,7 @@ import { ScenarioPipelineResult } from './ScenarioPipelineResult';
 import { ExcecuteAdditionalQueries } from './pipeline-steps/ExcecuteAdditionalQueries';
 
 export class ScenarioPipeline {
-  private readonly _stepCount: number = 10;
+  private readonly _stepCount: number = 8;
 
   public constructor(
     private readonly _database: DatabaseService,
@@ -52,8 +50,6 @@ export class ScenarioPipeline {
     await this._runStep(state, new ExcecuteAdditionalQueries(), onProgress);
     await this._runStep(state, new ConnectNodes(), onProgress);
     await this._runStep(state, new CompressRelationships(), onProgress);
-    await this._runStep(state, new ApplyNodeRadius(), onProgress);
-    await this._runStep(state, new GrowNodeBasedOnDegree(), onProgress);
     await this._runStep(state, new Layout(), onProgress);
 
     state.graph.metaData.pipelineSummary = state.pipelineSummary;

@@ -8,15 +8,17 @@ import { NodeDisplayConfigurationContext } from '../scenario-pipeline/display-co
 import { LoggerService } from '../../logger/LoggerService';
 import { MutableGraph } from './MutableGraph';
 import { Color } from '../../../tools/Color';
+import { FinalGraphDisplayConfiguration } from '../scenario-pipeline/display-configuration/FinalGraphDisplayConfiguration';
+import { Range } from '../../../tools/Range';
 
 export class MutableNode {
   public static readonly defaultRadius: number = 40;
+
   // eslint-disable-next-line @typescript-eslint/typedef
   public static readonly schema = z.object({
     id: z.string(),
     labels: z.array(z.string()),
     properties: MutablePropertyCollection.schema,
-    radius: z.number(),
     position: MutablePosition.schema,
     namesInQuery: z.array(z.string()),
     locked: z.boolean(),
@@ -28,7 +30,6 @@ export class MutableNode {
   public readonly id: string;
   public labels: SSet<string>;
   public properties: MutablePropertyCollection;
-  public radius: number;
   public position: MutablePosition;
   public namesInQuery: SSet<string>;
   public locked: boolean;
@@ -44,7 +45,6 @@ export class MutableNode {
     id: string;
     labels: SSet<string>;
     properties: MutablePropertyCollection;
-    radius: number;
     position: MutablePosition;
     namesInQuery: SSet<string>;
     locked: boolean;
@@ -55,7 +55,6 @@ export class MutableNode {
     this.id = data.id;
     this.labels = data.labels;
     this.properties = data.properties;
-    this.radius = data.radius;
     this.position = data.position;
     this.namesInQuery = data.namesInQuery;
     this.locked = data.locked;
@@ -72,7 +71,6 @@ export class MutableNode {
       id: data.id,
       labels: new SSet(data.labels),
       properties: MutablePropertyCollection.fromPlain(data.properties),
-      radius: data.radius,
       position: MutablePosition.fromPlain(data.position),
       namesInQuery: new SSet(data.namesInQuery),
       locked: data.locked,
@@ -87,7 +85,6 @@ export class MutableNode {
       id: this.id,
       labels: this.labels.toArray(),
       properties: this.properties.toPlain(),
-      radius: this.radius,
       position: this.position,
       namesInQuery: this.namesInQuery.toArray(),
       locked: this.locked,
@@ -204,6 +201,13 @@ export class MutableNode {
     );
   }
 
+  public radius(graph: MutableGraph, logger: LoggerService): number {
+    return (
+      (this._customRadius(graph, logger) ?? MutableNode.defaultRadius) *
+      this._customRadiusFactor(graph, logger)
+    );
+  }
+
   private _customTitle(
     graph: MutableGraph,
     logger: LoggerService,
@@ -227,5 +231,78 @@ export class MutableNode {
     }
 
     return newValue;
+  }
+
+  private _customRadius(
+    graph: MutableGraph,
+    logger: LoggerService,
+  ): number | null {
+    const nodeConfig: FinalNodeDisplayConfiguration | null =
+      this.displayConfiguration(graph);
+    if (nodeConfig == null) {
+      return null;
+    }
+    if (nodeConfig.radiusTemplate == null) {
+      return null;
+    }
+
+    const newValue: string = NodeDisplayConfigurationContext.create(
+      this,
+      graph,
+      logger,
+    ).applyToTemplate(nodeConfig.radiusTemplate);
+    if (newValue.trim().length === 0) {
+      return null;
+    }
+
+    const newRadius: number = parseFloat(newValue);
+    if (isNaN(newRadius)) {
+      logger.warn(
+        this,
+        `Unable to parse node radius config: "${newRadius.toString()}" for node ${this.id}`,
+      );
+      return null;
+    }
+
+    return newRadius;
+  }
+
+  private _customRadiusFactor(
+    graph: MutableGraph,
+    logger: LoggerService,
+  ): number {
+    const config: FinalGraphDisplayConfiguration = graph.displayConfiguration;
+
+    if (!config.growNodesBasedOnDegree) {
+      return 1;
+    }
+
+    if (config.growNodesBasedOnDegreeFactor < 1) {
+      return 1;
+    }
+
+    const degrees: number[] = graph.nodes.nodes.reduce(
+      (akku: number[], value: MutableNode): number[] => [
+        ...akku,
+        value.degree(graph),
+      ],
+      [],
+    );
+
+    if (degrees.length === 0) {
+      return 1;
+    }
+
+    const fromRange: Range = new Range({
+      floor: Math.min(...degrees),
+      ceiling: Math.max(...degrees),
+    });
+
+    const toRange: Range = new Range({
+      floor: 1,
+      ceiling: config.growNodesBasedOnDegreeFactor,
+    });
+
+    return fromRange.scaleValue(toRange, this.degree(graph), config.scaleType);
   }
 }
