@@ -15,7 +15,7 @@ import { SessionConfig } from 'neo4j-driver-core/types/driver';
 import { ApplicationService } from '../../application/ApplicationService';
 
 export class Neo4jService implements ApplicationService {
-  private static readonly _maximalElements: number = 2_000;
+  private static readonly _maximalElements: number = 500;
 
   public constructor(private readonly _logger: LoggerService) {}
 
