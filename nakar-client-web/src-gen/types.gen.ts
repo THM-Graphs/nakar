@@ -175,7 +175,7 @@ export type type5 = 'WSActionMoveNodes';
 
 export type WSActionUngrabNode = {
     type: 'WSActionUngrabNode';
-    nodeId: string;
+    node: PhysicalNode;
 };
 
 export type type6 = 'WSActionUngrabNode';

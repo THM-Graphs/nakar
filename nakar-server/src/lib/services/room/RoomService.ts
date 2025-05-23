@@ -105,12 +105,12 @@ export class RoomService implements ApplicationService {
 
   public ungrabNode(params: {
     roomId: string;
-    nodeId: string;
+    node: RSPhysicalNode;
     userId: string;
   }): void {
     this._sendActionToWorker(params.roomId, {
       type: 'WTActionUngrabNode',
-      nodeId: params.nodeId,
+      node: params.node,
       userId: params.userId,
     });
     this.saveGraphOfRoom(params.roomId);

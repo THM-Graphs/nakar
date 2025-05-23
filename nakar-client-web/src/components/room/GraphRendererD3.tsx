@@ -61,7 +61,10 @@ export function GraphRendererD3(props: {
       graphRenderer.onUnlockNode.subscribe((n) => {
         props.webSockets.sendMessage({
           type: "WSActionUngrabNode",
-          nodeId: n.id,
+          node: {
+            id: n.id,
+            position: { x: n.x, y: n.y },
+          },
         });
       }),
       props.webSockets.onNodesMoved$.subscribe((onMove) => {

@@ -288,7 +288,7 @@ export interface components {
         readonly WSActionUngrabNode: {
             /** @enum {string} */
             readonly type: "WSActionUngrabNode";
-            readonly nodeId: string;
+            readonly node: components["schemas"]["PhysicalNode"];
         };
         readonly WSActionExpandNodes: {
             /** @enum {string} */

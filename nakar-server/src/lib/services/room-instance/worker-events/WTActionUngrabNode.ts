@@ -1,5 +1,7 @@
+import { RSPhysicalNode } from '../../room/events/RSPhysicalNode';
+
 export interface WTActionUngrabNode {
   type: 'WTActionUngrabNode';
-  nodeId: string;
+  node: RSPhysicalNode;
   userId: string;
 }
