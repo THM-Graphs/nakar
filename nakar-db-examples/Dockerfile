@@ -31,6 +31,6 @@ HEALTHCHECK  \
     --timeout=5s \
     --start-period=120s \
     --start-interval=5s \
-    CMD wget --quiet --spider http://localhost:7475 || exit 1
+    CMD wget --quiet --spider http://localhost:7474 || exit 1
 
 CMD ["neo4j"]
