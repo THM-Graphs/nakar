@@ -2,7 +2,7 @@ FROM neo4j:5.25
 
 # ENV NEO4J_PLUGINS="[\"apoc\", \"graph-data-science\"]"
 
-COPY nakar-db-examples/import /import
+COPY import /import
 RUN neo4j-admin database import full \
     --nodes=/import/01_multiple_labels/nodes.csv  \
     --relationships=/import/01_multiple_labels/relationships.csv  \
