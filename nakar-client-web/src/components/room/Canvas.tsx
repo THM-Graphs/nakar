@@ -21,6 +21,7 @@ export function Canvas(props: {
   scenarioProgress: WSEventScenarioProgress | null;
   scenarioLoading: boolean;
   onExpandNodes: () => void;
+  onDeleteNodes: () => void;
 }) {
   const [detailsNode, setDetailsNode] = useState<Node | null>(null);
   const [detailsEdge, setDetailsEdge] = useState<Edge | null>(null);
@@ -80,6 +81,14 @@ export function Canvas(props: {
                 nodes: [detailsNode.id],
               });
               props.onExpandNodes();
+            }}
+            onDeleteNode={() => {
+              props.webSocketsManager.sendMessage({
+                type: "WSActionDeleteNodes",
+                nodes: [detailsNode.id],
+              });
+              props.onDeleteNodes();
+              setDetailsNode(null);
             }}
             onClose={() => {
               setDetailsNode(null);

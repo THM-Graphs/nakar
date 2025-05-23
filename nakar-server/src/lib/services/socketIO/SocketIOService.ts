@@ -6,6 +6,7 @@ import {
 import {
   SchemaGraph,
   SchemaPhysicalNode,
+  SchemaWsActionDeleteNodes,
   SchemaWsActionExpandNodes,
   SchemaWsActionGrabNode,
   SchemaWsActionJoinRoom,
@@ -151,6 +152,12 @@ export class SocketIOService implements ApplicationService {
                   { type: 'WSActionExpandNodes' },
                   (m: SchemaWsActionExpandNodes): void => {
                     this._handleExpandNodes(wsClient, m);
+                  },
+                )
+                .with(
+                  { type: 'WSActionDeleteNodes' },
+                  (m: SchemaWsActionDeleteNodes): void => {
+                    this._handleDeleteNodes(wsClient, m);
                   },
                 )
                 .exhaustive();
@@ -398,6 +405,42 @@ export class SocketIOService implements ApplicationService {
           title: 'Nodes added.',
           severity: 'message',
           message: `Did add ${result.newNodeCount.toString()} nodes and ${result.newEdgeCount.toString()} edges.`,
+          date: new Date().toISOString(),
+        } satisfies SchemaWsEventNotification);
+      })
+      .catch((error: unknown): void => {
+        wsClient.sendToRoom(this.createErrorNotification(error));
+      })
+      .finally((): void => {
+        wsClient.sendToRoom({
+          type: 'WSEventScenarioProgress',
+          message: null,
+          progress: null,
+        } satisfies SchemaWsEventScenarioProgress);
+      });
+  }
+
+  private _handleDeleteNodes(
+    wsClient: WSClient,
+    m: SchemaWsActionDeleteNodes,
+  ): void {
+    const roomId: string | null = wsClient.room;
+    if (roomId == null) {
+      this._logger.error(
+        this,
+        `Socket ${wsClient.id} did send expand nodes message but is in no room.`,
+      );
+      return;
+    }
+
+    this._roomService
+      .deleteNodes({ roomId: roomId, nodeIds: m.nodes })
+      .then((): void => {
+        wsClient.sendToRoom({
+          type: 'WSEventNotification',
+          title: 'Nodes added.',
+          severity: 'message',
+          message: `Did delete nodes.`,
           date: new Date().toISOString(),
         } satisfies SchemaWsEventNotification);
       })

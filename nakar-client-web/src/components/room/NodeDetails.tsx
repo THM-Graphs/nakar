@@ -14,6 +14,7 @@ export function NodeDetails(props: {
   node: Node;
   onClose: () => void;
   onExpandNode: () => void;
+  onDeleteNode: () => void;
   scenarioLoading: boolean;
   className?: string;
   style?: CSSProperties;
@@ -31,16 +32,29 @@ export function NodeDetails(props: {
           <Stack>
             <Card.Title>{props.node.title}</Card.Title>
             <span className={"text-muted small"}>{props.node.id}</span>
-            <Button
-              size={"sm"}
-              onClick={props.onExpandNode}
-              disabled={props.scenarioLoading}
-            >
-              {props.scenarioLoading && (
-                <Spinner size={"sm"} className={"me-2"}></Spinner>
-              )}
-              Expand
-            </Button>
+            <Stack direction={"horizontal"} gap={1}>
+              <Button
+                size={"sm"}
+                onClick={props.onExpandNode}
+                disabled={props.scenarioLoading}
+              >
+                {props.scenarioLoading && (
+                  <Spinner size={"sm"} className={"me-2"}></Spinner>
+                )}
+                Expand
+              </Button>
+              <Button
+                size={"sm"}
+                onClick={props.onDeleteNode}
+                disabled={props.scenarioLoading}
+                variant={"danger"}
+              >
+                {props.scenarioLoading && (
+                  <Spinner size={"sm"} className={"me-2"}></Spinner>
+                )}
+                Delete
+              </Button>
+            </Stack>
           </Stack>
           <CloseButton onClick={props.onClose}></CloseButton>
         </Stack>

@@ -58,8 +58,12 @@ export class MutableNodeIndex {
     this.add(mutableNode);
   }
 
-  public remove(node: MutableNode): void {
-    this._byId.delete(node.id);
+  public remove(node: string | MutableNode): void {
+    if (node instanceof MutableNode) {
+      this._byId.delete(node.id);
+    } else {
+      this._byId.delete(node);
+    }
   }
 
   public hasById(id: string): boolean {

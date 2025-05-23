@@ -279,6 +279,39 @@ export class RoomService implements ApplicationService {
     return result;
   }
 
+  public async deleteNodes(params: {
+    roomId: string;
+    nodeIds: readonly string[];
+  }): Promise<void> {
+    const mayGraph: MutableGraph | undefined = this._latestGraphs.get(
+      params.roomId,
+    );
+    if (mayGraph == null) {
+      throw new Error(
+        `Cannot find graph of room ${params.roomId} to run expand nodes.`,
+      );
+    }
+    const graph: MutableGraph = mayGraph;
+
+    for (const nodeId of params.nodeIds) {
+      graph.nodes.remove(nodeId);
+
+      this._logger.debug(this, `Did delete node ${nodeId}`);
+    }
+    graph.removeDanglingEdges(this._logger);
+
+    this._latestGraphs.set(params.roomId, graph);
+    this._sendActionToWorker(params.roomId, {
+      type: 'WTActionSetGraph',
+      graph: graph.toPlain(),
+    });
+    await this._saveGraphToDb(params.roomId, graph.toPlain());
+    this._onRoomUpdated.next({
+      graph: graph,
+      roomId: params.roomId,
+    });
+  }
+
   private async _saveGraphToDb(
     roomId: string,
     graph: z.infer<typeof MutableGraph.schema>,

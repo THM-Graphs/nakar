@@ -510,6 +510,7 @@ components:
         - $ref: "#/components/schemas/WSActionMoveNodes"
         - $ref: "#/components/schemas/WSActionUngrabNode"
         - $ref: "#/components/schemas/WSActionExpandNodes"
+        - $ref: "#/components/schemas/WSActionDeleteNodes"
 
     WSServerToClientMessage:
       oneOf:
@@ -586,6 +587,20 @@ components:
         type:
           type: string
           enum: ["WSActionExpandNodes"]
+        nodes:
+          type: array
+          items:
+            type: string
+      required:
+        - type
+        - nodes
+
+    WSActionDeleteNodes:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: ["WSActionDeleteNodes"]
         nodes:
           type: array
           items:

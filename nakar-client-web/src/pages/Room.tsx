@@ -50,6 +50,7 @@ export function Room(props: { webSockets: WebSocketsManager; env: Env }) {
         type: "WSActionJoinRoom",
         roomId: loaderData.id,
       });
+      setScenarioLoading(null);
     }
   }, [socketState]);
 
@@ -65,6 +66,9 @@ export function Room(props: { webSockets: WebSocketsManager; env: Env }) {
         } else {
           setScenarioProgress(progress);
         }
+      }),
+      props.webSockets.onNotification$.subscribe(() => {
+        setScenarioLoading(null);
       }),
     ];
 
@@ -129,6 +133,9 @@ export function Room(props: { webSockets: WebSocketsManager; env: Env }) {
           </SideToolbar>
           <Canvas
             onExpandNodes={() => {
+              setScenarioLoading("");
+            }}
+            onDeleteNodes={() => {
               setScenarioLoading("");
             }}
             renderer={renderer}
