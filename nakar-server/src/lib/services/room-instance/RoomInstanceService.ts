@@ -60,7 +60,6 @@ export class RoomInstanceService implements ApplicationService {
           (action: WTActionSetGraph): void => {
             this._logger.debug(this, 'WTActionSetGraph');
             this._physics.setGraph(action.graph);
-            void this._physics.run({ maxMs: 2000, maxTicks: null });
           },
         )
         .with(
@@ -84,7 +83,7 @@ export class RoomInstanceService implements ApplicationService {
               foundNode.position.y = movedNode.position.y;
             }
 
-            void this._physics.run({ maxMs: 2000, maxTicks: null });
+            void this._physics.run({ maxMs: PhysicsSimulation.cooldownTime });
           },
         )
         .with(

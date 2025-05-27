@@ -20,6 +20,10 @@ export class Range {
     return this.ceiling - this.floor;
   }
 
+  public static clamp(value: number, min: number, max: number): number {
+    return Math.max(min, Math.min(max, value));
+  }
+
   public scaleValue(to: Range, value: number, scaleType: ScaleType): number {
     const scaler = (i: number): number => {
       if (i === 0) {

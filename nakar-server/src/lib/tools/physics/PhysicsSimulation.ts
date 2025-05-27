@@ -7,16 +7,17 @@ import { PhysicsSimulationRunOptions } from './PhysicsSimulationRunOptions';
 import { PhysicalGraph } from './physical-graph/PhysicalGraph';
 import { PhysicalNode } from './physical-graph/PhysicalNode';
 import { PhysicalEdge } from './physical-graph/PhysicalEdge';
+import { Range } from '../Range';
 
 export class PhysicsSimulation {
   public static readonly maximumVelocity: number = 500;
   public static readonly maximumForce: number = 100;
   public static readonly FPS: number = 30;
+  public static readonly cooldownTime: number = 500;
 
   private _graph: PhysicalGraph;
   private _running: boolean;
   private _onSlowTick: Subject<void>;
-  private _tickCount: number;
   private _targetDate: number;
   private _tickDurationsCache: number[];
 
@@ -28,7 +29,6 @@ export class PhysicsSimulation {
     this._graph = graph;
     this._running = false;
     this._onSlowTick = new Subject();
-    this._tickCount = 0;
     this._targetDate = Date.now();
     this._tickDurationsCache = [];
   }
@@ -47,8 +47,16 @@ export class PhysicsSimulation {
     return avg;
   }
 
+  private get _heat(): number {
+    const delta: number = this._targetDate - performance.now();
+    const heat: number =
+      Range.clamp(delta, 0, PhysicsSimulation.cooldownTime) /
+      PhysicsSimulation.cooldownTime;
+    return heat;
+  }
+
   public runIndefinitely(): void {
-    this.run({ maxMs: null, maxTicks: null }).catch((error: unknown): void => {
+    this.run({ maxMs: null }).catch((error: unknown): void => {
       this._logger.error(this, error);
     });
   }
@@ -58,11 +66,6 @@ export class PhysicsSimulation {
   }
 
   public async run(options: PhysicsSimulationRunOptions): Promise<void> {
-    if (options.maxTicks == null) {
-      this._tickCount = Number.MAX_SAFE_INTEGER;
-    } else {
-      this._tickCount = options.maxTicks;
-    }
     if (options.maxMs == null) {
       this._targetDate = Number.MAX_SAFE_INTEGER;
     } else {
@@ -94,9 +97,6 @@ export class PhysicsSimulation {
       if (!this._running) {
         break;
       }
-      if (this._tickCount <= 0) {
-        break;
-      }
       if (performance.now() > this._targetDate) {
         break;
       }
@@ -104,7 +104,6 @@ export class PhysicsSimulation {
       const timeBeforeTick: number = performance.now();
       this._tick();
       this._tickDurationsCache.push(performance.now() - timeBeforeTick);
-      this._tickCount = this._tickCount - 1;
 
       const waitDelta: number = performance.now() - lastWait;
       if (waitDelta > shouldWaitEveryMs) {
@@ -115,7 +114,6 @@ export class PhysicsSimulation {
     }
 
     this._running = false;
-    this._tickCount = 0;
     this._targetDate = Number.MIN_SAFE_INTEGER;
     this._onSlowTick.next();
   }
@@ -189,8 +187,8 @@ export class PhysicsSimulation {
     forceX: number,
     forceY: number,
   ): void {
-    node.velocityX += forceX;
-    node.velocityY += forceY;
+    node.velocityX += forceX * this._heat;
+    node.velocityY += forceY * this._heat;
 
     const magnitude: number = this._magnitude(node.velocityX, node.velocityY);
     if (magnitude > PhysicsSimulation.maximumForce) {
