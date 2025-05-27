@@ -402,7 +402,7 @@ export class SocketIOService implements ApplicationService {
       .then((result: RSExpandNodesResult): void => {
         wsClient.sendToRoom({
           type: 'WSEventNotification',
-          title: 'Nodes added.',
+          title: 'Nodes added',
           severity: 'message',
           message: `Did add ${result.newNodeCount.toString()} nodes and ${result.newEdgeCount.toString()} edges.`,
           date: new Date().toISOString(),
@@ -443,7 +443,7 @@ export class SocketIOService implements ApplicationService {
       this._roomService.deleteNodes({ roomId: roomId, nodeIds: m.nodes });
       wsClient.sendToRoom({
         type: 'WSEventNotification',
-        title: 'Nodes removed.',
+        title: 'Nodes deleted',
         severity: 'message',
         message: `Did delete nodes.`,
         date: new Date().toISOString(),
