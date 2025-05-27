@@ -372,7 +372,7 @@ export class SocketIOService implements ApplicationService {
     }
 
     this._roomService.ungrabNode({
-      node: m.node,
+      nodeId: m.node.id,
       roomId: roomId,
       userId: wsClient.id,
     });
@@ -433,27 +433,30 @@ export class SocketIOService implements ApplicationService {
       return;
     }
 
-    this._roomService
-      .deleteNodes({ roomId: roomId, nodeIds: m.nodes })
-      .then((): void => {
-        wsClient.sendToRoom({
-          type: 'WSEventNotification',
-          title: 'Nodes added.',
-          severity: 'message',
-          message: `Did delete nodes.`,
-          date: new Date().toISOString(),
-        } satisfies SchemaWsEventNotification);
-      })
-      .catch((error: unknown): void => {
-        wsClient.sendToRoom(this.createErrorNotification(error));
-      })
-      .finally((): void => {
-        wsClient.sendToRoom({
-          type: 'WSEventScenarioProgress',
-          message: null,
-          progress: null,
-        } satisfies SchemaWsEventScenarioProgress);
-      });
+    wsClient.sendToRoom({
+      type: 'WSEventScenarioProgress',
+      message: 'Deleting node...',
+      progress: 0.1,
+    } satisfies SchemaWsEventScenarioProgress);
+
+    try {
+      this._roomService.deleteNodes({ roomId: roomId, nodeIds: m.nodes });
+      wsClient.sendToRoom({
+        type: 'WSEventNotification',
+        title: 'Nodes removed.',
+        severity: 'message',
+        message: `Did delete nodes.`,
+        date: new Date().toISOString(),
+      } satisfies SchemaWsEventNotification);
+    } catch (error: unknown) {
+      wsClient.sendToRoom(this.createErrorNotification(error));
+    }
+
+    wsClient.sendToRoom({
+      type: 'WSEventScenarioProgress',
+      message: null,
+      progress: null,
+    } satisfies SchemaWsEventScenarioProgress);
   }
 
   private _handleRoomPhysicsUpdate(message: RSEventRoomPhysicsUpdated): void {
@@ -463,8 +466,8 @@ export class SocketIOService implements ApplicationService {
       }
 
       const nodesToSend: SchemaPhysicalNode[] = [];
-      for (const node of message.graph.nodes) {
-        if (!node.grabs.includes(socket.id)) {
+      for (const node of message.graph.nodes.nodes) {
+        if (!node.grabs.has(socket.id)) {
           nodesToSend.push({
             id: node.id,
             position: { x: node.position.x, y: node.position.y },

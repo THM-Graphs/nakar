@@ -37,10 +37,6 @@ export class MutableNode {
   public source: string;
   public additionalSources: SSet<string>;
 
-  /* runtime only */
-  public velocityX: number;
-  public velocityY: number;
-
   public constructor(data: {
     id: string;
     labels: SSet<string>;
@@ -61,9 +57,6 @@ export class MutableNode {
     this.grabs = data.grabs;
     this.source = data.source;
     this.additionalSources = data.additionalSources;
-
-    this.velocityX = 0;
-    this.velocityY = 0;
   }
 
   public static fromPlain(data: z.infer<typeof this.schema>): MutableNode {
@@ -204,7 +197,7 @@ export class MutableNode {
   public radius(graph: MutableGraph, logger: LoggerService): number {
     return (
       (this._customRadius(graph, logger) ?? MutableNode.defaultRadius) *
-      this._customRadiusFactor(graph, logger)
+      this._customRadiusFactor(graph)
     );
   }
 
@@ -267,10 +260,7 @@ export class MutableNode {
     return newRadius;
   }
 
-  private _customRadiusFactor(
-    graph: MutableGraph,
-    logger: LoggerService,
-  ): number {
+  private _customRadiusFactor(graph: MutableGraph): number {
     const config: FinalGraphDisplayConfiguration = graph.displayConfiguration;
 
     if (!config.growNodesBasedOnDegree) {

@@ -1,7 +1,6 @@
-import z from 'zod';
-import { MutableGraph } from '../../room/graph/MutableGraph';
+import { PhysicalGraph } from '../../../tools/physics/physical-graph/PhysicalGraph';
 
 export interface WTActionSetGraph {
   type: 'WTActionSetGraph';
-  graph: z.infer<typeof MutableGraph.schema>;
+  graph: PhysicalGraph;
 }

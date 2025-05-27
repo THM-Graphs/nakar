@@ -2,6 +2,7 @@ import { MutableGraph } from '../../graph/MutableGraph';
 import { PhysicsSimulation } from '../../../../tools/physics/PhysicsSimulation';
 import { ScenarioPipelineStep } from '../ScenarioPipelineStep';
 import { ScenarioPipelineState } from '../ScenarioPipelineState';
+import { PhysicalGraph } from '../../../../tools/physics/physical-graph/PhysicalGraph';
 
 export class Layout extends ScenarioPipelineStep {
   public constructor() {
@@ -15,13 +16,16 @@ export class Layout extends ScenarioPipelineStep {
       return;
     }
 
+    const physical: PhysicalGraph = input.toPhysicalGraph(state.logger);
     const simulation: PhysicsSimulation = new PhysicsSimulation(
-      input,
+      physical,
       state.logger,
       state.profiler,
     );
 
     await simulation.run({ maxTicks: 1500, maxMs: 3000 });
+
+    input.applyPhysicalGraph(physical, state.logger);
 
     state.logger.debug(
       this,

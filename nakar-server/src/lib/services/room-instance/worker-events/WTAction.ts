@@ -1,10 +1,5 @@
-import { WTActionGrabNode } from './WTActionGrabNode';
-import { WTActionMoveNodes } from './WTActionMoveNodes';
-import { WTActionUngrabNode } from './WTActionUngrabNode';
 import { WTActionSetGraph } from './WTActionSetGraph';
+import { WTActionMoveNodes } from './WTActionMoveNodes';
+import { WTActionLockNode } from './WTActionLockNode';
 
-export type WTAction =
-  | WTActionGrabNode
-  | WTActionMoveNodes
-  | WTActionUngrabNode
-  | WTActionSetGraph;
+export type WTAction = WTActionSetGraph | WTActionMoveNodes | WTActionLockNode;

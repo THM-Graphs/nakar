@@ -10,6 +10,9 @@ import { MutableEdgeIndex } from './MutableEdgeIndex';
 import { GetScenarioDBDTO } from '../../database/dto/GetScenarioDBDTO';
 import { MutableScenarioInfo } from './MutableScenarioInfo';
 import { FinalGraphDisplayConfiguration } from '../scenario-pipeline/display-configuration/FinalGraphDisplayConfiguration';
+import { PhysicalGraph } from '../../../tools/physics/physical-graph/PhysicalGraph';
+import { PhysicalNode } from '../../../tools/physics/physical-graph/PhysicalNode';
+import { PhysicalEdge } from '../../../tools/physics/physical-graph/PhysicalEdge';
 
 export class MutableGraph {
   // eslint-disable-next-line @typescript-eslint/typedef
@@ -152,6 +155,56 @@ export class MutableGraph {
         );
         this.edges.remove(edge);
       }
+    }
+  }
+
+  public toPhysicalGraph(logger: LoggerService): PhysicalGraph {
+    const nodes: Record<string, PhysicalNode> = {};
+    const edges: Record<string, PhysicalEdge> = {};
+
+    for (const node of this.nodes.nodes) {
+      nodes[node.id] = {
+        id: node.id,
+        radius: node.radius(this, logger),
+        position: { x: node.position.x, y: node.position.y },
+        locked: node.locked,
+        velocityX: 0,
+        velocityY: 0,
+      };
+    }
+
+    for (const edge of this.edges.edges) {
+      edges[edge.id] = {
+        id: edge.id,
+        startNodeId: edge.startNodeId,
+        endNodeId: edge.endNodeId,
+        compressedCount: edge.compressedCount,
+        isLoop: edge.isLoop,
+        title: edge.title,
+      };
+    }
+
+    return {
+      nodes: nodes,
+      edges: edges,
+    };
+  }
+
+  public applyPhysicalGraph(
+    physicalGraph: PhysicalGraph,
+    logger: LoggerService,
+  ): void {
+    for (const node of Object.values(physicalGraph.nodes)) {
+      const foundNode: MutableNode | null = this.nodes.get(node.id);
+      if (foundNode == null) {
+        logger.warn(
+          this,
+          `Unable to apply physical node position to mutable node. ID: ${node.id}. Position: ${JSON.stringify(node.position)}`,
+        );
+        continue;
+      }
+      foundNode.position.x = node.position.x;
+      foundNode.position.y = node.position.y;
     }
   }
 }

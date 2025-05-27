@@ -1,7 +1,6 @@
-import z from 'zod';
-import { MutableGraph } from '../../room/graph/MutableGraph';
+import { PhysicalGraph } from '../../../tools/physics/physical-graph/PhysicalGraph';
 
 export interface WTEventPhysicsUpdate {
   type: 'WTEventPhysicsUpdate';
-  graph: z.infer<typeof MutableGraph.schema>;
+  graph: PhysicalGraph;
 }

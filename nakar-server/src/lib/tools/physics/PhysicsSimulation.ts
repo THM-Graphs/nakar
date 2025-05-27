@@ -1,28 +1,27 @@
 import { Observable, Subject } from 'rxjs';
-import { MutableGraph } from '../../services/room/graph/MutableGraph';
 import { wait } from '../Wait';
-import { MutableNode } from '../../services/room/graph/MutableNode';
-import { MutableEdge } from '../../services/room/graph/MutableEdge';
 import { CombinationCache } from './CombinationCache';
 import { LoggerService } from '../../services/logger/LoggerService';
 import { ProfilerService } from '../../services/profiler/ProfilerService';
 import { PhysicsSimulationRunOptions } from './PhysicsSimulationRunOptions';
-import { SMap } from '../Map';
+import { PhysicalGraph } from './physical-graph/PhysicalGraph';
+import { PhysicalNode } from './physical-graph/PhysicalNode';
+import { PhysicalEdge } from './physical-graph/PhysicalEdge';
 
 export class PhysicsSimulation {
   public static readonly maximumVelocity: number = 500;
   public static readonly maximumForce: number = 100;
   public static readonly FPS: number = 30;
 
-  private _graph: MutableGraph;
+  private _graph: PhysicalGraph;
   private _running: boolean;
   private _onSlowTick: Subject<void>;
   private _tickCount: number;
+  private _targetDate: number;
   private _tickDurationsCache: number[];
-  private _radiusCache: SMap<string, number>;
 
   public constructor(
-    graph: MutableGraph,
+    graph: PhysicalGraph,
     private readonly _logger: LoggerService,
     private readonly _profiler: ProfilerService,
   ) {
@@ -30,16 +29,12 @@ export class PhysicsSimulation {
     this._running = false;
     this._onSlowTick = new Subject();
     this._tickCount = 0;
+    this._targetDate = Date.now();
     this._tickDurationsCache = [];
-    this._radiusCache = new SMap();
   }
 
   public get onSlowTick(): Observable<void> {
     return this._onSlowTick.asObservable();
-  }
-
-  public get tickCount(): number {
-    return this._tickCount;
   }
 
   public get averageTickDuration(): number {
@@ -52,17 +47,10 @@ export class PhysicsSimulation {
     return avg;
   }
 
-  public start(): void {
-    if (this._running) {
-      return;
-    }
-
-    this._running = true;
-    this._runSync({ maxTicks: null, maxMs: null }).catch(
-      (error: unknown): void => {
-        this._logger.error(this, error);
-      },
-    );
+  public runIndefinitely(): void {
+    this.run({ maxMs: null, maxTicks: null }).catch((error: unknown): void => {
+      this._logger.error(this, error);
+    });
   }
 
   public stop(): void {
@@ -70,54 +58,71 @@ export class PhysicsSimulation {
   }
 
   public async run(options: PhysicsSimulationRunOptions): Promise<void> {
+    if (options.maxTicks == null) {
+      this._tickCount = Number.MAX_SAFE_INTEGER;
+    } else {
+      this._tickCount = options.maxTicks;
+    }
+    if (options.maxMs == null) {
+      this._targetDate = Number.MAX_SAFE_INTEGER;
+    } else {
+      this._targetDate = performance.now() + options.maxMs;
+    }
+
     if (this._running) {
       return;
+    } else {
+      this._running = true;
+      await this._runSync();
     }
-
-    this._running = true;
-    await this._runSync(options);
   }
 
-  public setGraph(graph: MutableGraph): void {
+  public setGraph(graph: PhysicalGraph): void {
     this._graph = graph;
-    this._radiusCache = new SMap();
-    for (const node of graph.nodes.nodes) {
-      this._radiusCache.set(node.id, node.radius(graph, this._logger));
-    }
   }
 
-  public getGraph(): MutableGraph {
+  public getGraph(): PhysicalGraph {
     return this._graph;
   }
 
-  private async _runSync(options: PhysicsSimulationRunOptions): Promise<void> {
+  private async _runSync(): Promise<void> {
     let lastWait: number = performance.now();
     const shouldWaitEveryMs: number = (1 / PhysicsSimulation.FPS) * 1000;
-    let ticksElapsed: number = 0;
-    const msStart: number = performance.now();
-    while (
-      this._running &&
-      ticksElapsed < (options.maxTicks ?? Number.POSITIVE_INFINITY) &&
-      msStart + (options.maxMs ?? Number.POSITIVE_INFINITY) > performance.now()
-    ) {
+
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+    while (true) {
+      if (!this._running) {
+        break;
+      }
+      if (this._tickCount <= 0) {
+        break;
+      }
+      if (performance.now() > this._targetDate) {
+        break;
+      }
+
       const timeBeforeTick: number = performance.now();
       this._tick();
       this._tickDurationsCache.push(performance.now() - timeBeforeTick);
-      ticksElapsed += 1;
+      this._tickCount = this._tickCount - 1;
 
-      const delta: number = performance.now() - lastWait;
-      if (delta > shouldWaitEveryMs) {
+      const waitDelta: number = performance.now() - lastWait;
+      if (waitDelta > shouldWaitEveryMs) {
         this._onSlowTick.next();
         await wait(0);
         lastWait = performance.now();
       }
     }
+
     this._running = false;
+    this._tickCount = 0;
+    this._targetDate = Number.MIN_SAFE_INTEGER;
+    this._onSlowTick.next();
   }
 
   private _tick(): void {
-    const nodes: MutableNode[] = this._graph.nodes.nodes.toArray();
-    const edges: MutableEdge[] = this._graph.edges.edges.toArray();
+    const nodes: PhysicalNode[] = Object.values(this._graph.nodes);
+    const edges: PhysicalEdge[] = Object.values(this._graph.edges);
 
     for (let i: number = 0; i < nodes.length; i++) {
       this._centerForce(nodes[i]);
@@ -138,20 +143,22 @@ export class PhysicsSimulation {
         continue;
       }
 
-      const nodeA: MutableNode | null = this._graph.nodes.get(edge.startNodeId);
+      const nodeA: PhysicalNode | null = this._graph.nodes[
+        edge.startNodeId
+      ] as PhysicalNode | null;
       if (nodeA == null) {
         continue;
       }
 
-      const nodeB: MutableNode | null = this._graph.nodes.get(edge.endNodeId);
+      const nodeB: PhysicalNode | null = this._graph.nodes[
+        edge.endNodeId
+      ] as PhysicalNode | null;
       if (nodeB == null) {
         continue;
       }
 
       const targetDistance: number =
-        (this._radiusCache.get(nodeA.id) ?? MutableNode.defaultRadius) +
-        edge.type.length * 20 +
-        (this._radiusCache.get(nodeB.id) ?? MutableNode.defaultRadius);
+        nodeA.radius + edge.title.length * 20 + nodeB.radius;
 
       this._linkForce(targetDistance, nodeA, nodeB);
       handledNodeCombinations.addCombination(edge.startNodeId, edge.endNodeId);
@@ -161,11 +168,9 @@ export class PhysicsSimulation {
     for (const node of nodes) {
       this._applyVelocity(node);
     }
-
-    this._tickCount += 1;
   }
 
-  private _positionEquals(nodeA: MutableNode, nodeB: MutableNode): boolean {
+  private _positionEquals(nodeA: PhysicalNode, nodeB: PhysicalNode): boolean {
     const threshold: number = 0.1;
     return (
       Math.abs(nodeA.position.x - nodeB.position.x) < threshold &&
@@ -173,13 +178,17 @@ export class PhysicsSimulation {
     );
   }
 
-  private _jiggle(node: MutableNode): void {
+  private _jiggle(node: PhysicalNode): void {
     const radians: number = Math.random() * Math.PI * 2;
     node.position.x += Math.cos(radians) * 10;
     node.position.y += Math.sin(radians) * 10;
   }
 
-  private _applyForce(node: MutableNode, forceX: number, forceY: number): void {
+  private _applyForce(
+    node: PhysicalNode,
+    forceX: number,
+    forceY: number,
+  ): void {
     node.velocityX += forceX;
     node.velocityY += forceY;
 
@@ -192,7 +201,7 @@ export class PhysicsSimulation {
     }
   }
 
-  private _applyVelocity(node: MutableNode): void {
+  private _applyVelocity(node: PhysicalNode): void {
     const magnitude: number = this._magnitude(node.velocityX, node.velocityY);
     if (magnitude > PhysicsSimulation.maximumVelocity) {
       node.velocityX =
@@ -211,14 +220,11 @@ export class PhysicsSimulation {
     return Math.sqrt(x * x + y * y);
   }
 
-  private _mass(node: MutableNode): number {
-    return (
-      Math.PI *
-      Math.pow(this._radiusCache.get(node.id) ?? MutableNode.defaultRadius, 2)
-    );
+  private _mass(node: PhysicalNode): number {
+    return Math.PI * Math.pow(node.radius, 2);
   }
 
-  private _twoBodyForce(nodeA: MutableNode, nodeB: MutableNode): void {
+  private _twoBodyForce(nodeA: PhysicalNode, nodeB: PhysicalNode): void {
     if (this._positionEquals(nodeA, nodeB)) {
       this._jiggle(nodeA);
     }
@@ -248,8 +254,8 @@ export class PhysicsSimulation {
 
   private _linkForce(
     targetLength: number,
-    nodeA: MutableNode,
-    nodeB: MutableNode,
+    nodeA: PhysicalNode,
+    nodeB: PhysicalNode,
   ): void {
     if (this._positionEquals(nodeA, nodeB)) {
       this._jiggle(nodeA);
@@ -276,7 +282,7 @@ export class PhysicsSimulation {
     }
   }
 
-  private _centerForce(node: MutableNode): void {
+  private _centerForce(node: PhysicalNode): void {
     const magnitude: number = this._magnitude(node.position.x, node.position.y);
     if (magnitude === 0) {
       return;

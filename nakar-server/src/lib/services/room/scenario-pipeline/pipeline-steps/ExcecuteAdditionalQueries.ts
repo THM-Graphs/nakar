@@ -146,7 +146,7 @@ export class ExcecuteAdditionalQueries extends ScenarioPipelineStep {
       graph.edges.add(relationship);
       state.logger.debug(
         this,
-        `Did change startNodeId of ${relationship.id} (${relationship.type}) from ${additionalNode.id} (${additionalNode.title(graph, state.logger)}) to ${originalNode.id} (${originalNode.title(graph, state.logger)})`,
+        `Did change startNodeId of ${relationship.id} (${relationship.title}) from ${additionalNode.id} (${additionalNode.title(graph, state.logger)}) to ${originalNode.id} (${originalNode.title(graph, state.logger)})`,
       );
     }
     for (const relationship of graph.edges.getByEndNodeId(additionalNode.id)) {
@@ -155,7 +155,7 @@ export class ExcecuteAdditionalQueries extends ScenarioPipelineStep {
       graph.edges.add(relationship);
       state.logger.debug(
         this,
-        `Did change endNodeId of ${relationship.id} (${relationship.type}) from ${additionalNode.id} (${additionalNode.title(graph, state.logger)}) to ${originalNode.id} (${originalNode.title(graph, state.logger)})`,
+        `Did change endNodeId of ${relationship.id} (${relationship.title}) from ${additionalNode.id} (${additionalNode.title(graph, state.logger)}) to ${originalNode.id} (${originalNode.title(graph, state.logger)})`,
       );
     }
 

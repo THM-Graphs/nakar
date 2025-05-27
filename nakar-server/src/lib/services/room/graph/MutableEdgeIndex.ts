@@ -161,4 +161,16 @@ export class MutableEdgeIndex {
 
     return newIndex;
   }
+
+  public removeEdgesOfNode(nodeId: string): void {
+    const byStartNodeId: MutableEdge[] = this.getByStartNodeId(nodeId);
+    const byEndNodeId: MutableEdge[] = this.getByEndNodeId(nodeId);
+
+    for (const edge of byStartNodeId) {
+      this.remove(edge);
+    }
+    for (const edge of byEndNodeId) {
+      this.remove(edge);
+    }
+  }
 }

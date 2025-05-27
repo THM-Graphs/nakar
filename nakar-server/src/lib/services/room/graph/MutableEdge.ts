@@ -55,6 +55,10 @@ export class MutableEdge {
     return this.startNodeId === this.endNodeId;
   }
 
+  public get title(): string {
+    return this.type;
+  }
+
   public static fromPlain(
     data: z.infer<typeof MutableEdge.schema>,
   ): MutableEdge {
