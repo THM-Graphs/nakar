@@ -284,6 +284,9 @@ export class RoomService implements ApplicationService {
       type: 'WTActionSetGraph',
       graph: graph.toPhysicalGraph(this._logger),
     });
+    this._sendActionToWorker(params.roomId, {
+      type: 'WTActionTriggerPhysics',
+    });
     this.saveGraphOfRoom(params.roomId);
     this._onRoomUpdated.next({
       graph: graph,
@@ -316,6 +319,9 @@ export class RoomService implements ApplicationService {
     this._sendActionToWorker(params.roomId, {
       type: 'WTActionSetGraph',
       graph: graph.toPhysicalGraph(this._logger),
+    });
+    this._sendActionToWorker(params.roomId, {
+      type: 'WTActionTriggerPhysics',
     });
     this.saveGraphOfRoom(params.roomId);
     this._onRoomUpdated.next({

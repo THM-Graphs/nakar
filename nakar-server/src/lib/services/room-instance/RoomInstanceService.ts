@@ -12,6 +12,7 @@ import { WTActionMoveNodes } from './worker-events/WTActionMoveNodes';
 import { PhysicalGraph } from '../../tools/physics/physical-graph/PhysicalGraph';
 import { PhysicalNode } from '../../tools/physics/physical-graph/PhysicalNode';
 import { WTActionLockNode } from './worker-events/WTActionLockNode';
+import { WTActionTriggerPhysics } from './worker-events/WTActionTriggerPhysics';
 
 export class RoomInstanceService implements ApplicationService {
   private readonly _roomId: string;
@@ -94,6 +95,9 @@ export class RoomInstanceService implements ApplicationService {
             graph.nodes[action.nodeId].locked = true;
           },
         )
+        .with({ type: 'WTActionTriggerPhysics' }, (): void => {
+          void this._physics.run({ maxMs: PhysicsSimulation.cooldownTime });
+        })
         .exhaustive();
     });
   }
