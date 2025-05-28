@@ -183,6 +183,7 @@ export interface components {
             readonly customTitleColor: string | null;
             readonly source: string;
             readonly additionalSources: readonly string[];
+            readonly locked: boolean;
         };
         readonly PhysicalNode: {
             readonly id: string;
@@ -264,7 +265,7 @@ export interface components {
             readonly version: string;
         };
         readonly WSClientToServerMessage: components["schemas"]["WSActionJoinRoom"] | components["schemas"]["WSActionLoadScenario"] | components["schemas"]["WSActionGrabNode"] | components["schemas"]["WSActionMoveNodes"] | components["schemas"]["WSActionUngrabNode"] | components["schemas"]["WSActionExpandNodes"] | components["schemas"]["WSActionDeleteNodes"] | components["schemas"]["WSActionRelayout"];
-        readonly WSServerToClientMessage: components["schemas"]["WSEventNodesMoved"] | components["schemas"]["WSEventNotification"] | components["schemas"]["WSEventScenarioLoaded"] | components["schemas"]["WSEventScenarioProgress"];
+        readonly WSServerToClientMessage: components["schemas"]["WSEventNodesMoved"] | components["schemas"]["WSEventNotification"] | components["schemas"]["WSEventScenarioLoaded"] | components["schemas"]["WSEventScenarioProgress"] | components["schemas"]["WSEventSetLocks"];
         readonly WSActionJoinRoom: {
             /** @enum {string} */
             readonly type: "WSActionJoinRoom";
@@ -328,9 +329,17 @@ export interface components {
         };
         readonly WSEventScenarioProgress: {
             /** @enum {string} */
-            readonly type?: "WSEventScenarioProgress";
+            readonly type: "WSEventScenarioProgress";
             readonly progress: number | null;
             readonly message: string | null;
+        };
+        readonly WSEventSetLocks: {
+            /** @enum {string} */
+            readonly type: "WSEventSetLocks";
+            readonly locks: readonly {
+                readonly id: string;
+                readonly locked: boolean;
+            }[];
         };
     };
     responses: never;
@@ -376,6 +385,7 @@ export type SchemaWsEventScenarioLoaded = components['schemas']['WSEventScenario
 export type SchemaWsEventNodesMoved = components['schemas']['WSEventNodesMoved'];
 export type SchemaWsEventNotification = components['schemas']['WSEventNotification'];
 export type SchemaWsEventScenarioProgress = components['schemas']['WSEventScenarioProgress'];
+export type SchemaWsEventSetLocks = components['schemas']['WSEventSetLocks'];
 export type $defs = Record<string, never>;
 export interface operations {
     readonly getScenarios: {

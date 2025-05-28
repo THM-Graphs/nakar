@@ -1,10 +1,10 @@
 import { WTActionSetGraph } from './WTActionSetGraph';
 import { WTActionMoveNodes } from './WTActionMoveNodes';
-import { WTActionLockNode } from './WTActionLockNode';
 import { WTActionTriggerPhysics } from './WTActionTriggerPhysics';
+import { WTActionSetLocks } from './WTActionSetLocks';
 
 export type WTAction =
   | WTActionSetGraph
   | WTActionMoveNodes
-  | WTActionLockNode
-  | WTActionTriggerPhysics;
+  | WTActionTriggerPhysics
+  | WTActionSetLocks;

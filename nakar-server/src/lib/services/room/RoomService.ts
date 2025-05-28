@@ -30,6 +30,7 @@ import { Neo4jGraphElements } from '../neo4j/Neo4jGraphElements';
 import { SSet } from '../../tools/Set';
 import { RSExpandNodesResult } from './events/RSExpandNodesResult';
 import { PhysicalGraph } from '../../tools/physics/physical-graph/PhysicalGraph';
+import { RSEventRoomLocksUpdated } from './events/RSEventRoomLocksUpdated';
 
 export class RoomService implements ApplicationService {
   private readonly _workers: SMap<string, Worker>;
@@ -37,6 +38,7 @@ export class RoomService implements ApplicationService {
 
   private readonly _onRoomUpdated: Subject<RSEventRoomUpdated>;
   private readonly _onRoomPhysicsUpdated: Subject<RSEventRoomPhysicsUpdated>;
+  private readonly _onLocksUpdated: Subject<RSEventRoomLocksUpdated>;
 
   public constructor(
     private readonly _database: DatabaseService,
@@ -48,6 +50,7 @@ export class RoomService implements ApplicationService {
     this._graphs = new SMap();
     this._onRoomUpdated = new Subject();
     this._onRoomPhysicsUpdated = new Subject();
+    this._onLocksUpdated = new Subject();
   }
 
   public get onRoomUpdated$(): Observable<RSEventRoomUpdated> {
@@ -56,6 +59,10 @@ export class RoomService implements ApplicationService {
 
   public get onRoomPhysicsUpdated$(): Observable<RSEventRoomPhysicsUpdated> {
     return this._onRoomPhysicsUpdated.asObservable();
+  }
+
+  public get onRoomLocksUpdated$(): Observable<RSEventRoomLocksUpdated> {
+    return this._onLocksUpdated.asObservable();
   }
 
   public async bootstrap(): Promise<void> {
@@ -98,8 +105,15 @@ export class RoomService implements ApplicationService {
     node.grabs.add(params.userId);
     node.locked = true;
     this._sendActionToWorker(params.roomId, {
-      type: 'WTActionLockNode',
-      nodeId: params.nodeId,
+      type: 'WTActionSetLocks',
+      locks: {
+        [node.id]: node.locked,
+      },
+    });
+
+    this._onLocksUpdated.next({
+      roomId: params.roomId,
+      locks: new SMap([[node.id, node.locked]]),
     });
   }
 
@@ -116,24 +130,37 @@ export class RoomService implements ApplicationService {
 
   public ungrabNode(params: {
     roomId: string;
-    nodeId: string;
     userId: string;
+    node: RSPhysicalNode;
   }): void {
     const graph: MutableGraph | undefined = this._graphs.get(params.roomId);
     if (graph == null) {
       throw new Error(`Unable to grab node. Room ${params.roomId} not found.`);
     }
 
-    const node: MutableNode | null = graph.nodes.get(params.nodeId);
+    const node: MutableNode | null = graph.nodes.get(params.node.id);
     if (node == null) {
-      throw new Error(`Unable to grab node: Node ${params.nodeId} not found.`);
+      throw new Error(`Unable to grab node: Node ${params.node.id} not found.`);
     }
 
     node.grabs.delete(params.userId);
-
-    // TODO: STOP PHYSICS IF NEEDED
+    node.position.x = params.node.position.x;
+    node.position.y = params.node.position.y;
 
     this.saveGraphOfRoom(params.roomId);
+
+    this._sendActionToWorker(params.roomId, {
+      type: 'WTActionMoveNodes',
+      nodes: [
+        {
+          id: node.id,
+          position: {
+            x: node.position.x,
+            y: node.position.y,
+          },
+        },
+      ],
+    });
   }
 
   public saveGraphOfRoom(roomId: string): void {
@@ -337,27 +364,32 @@ export class RoomService implements ApplicationService {
     if (graph == null) {
       throw new Error('Unable to execute relayout. Graph not found.');
     }
-    for (const node of graph.nodes.nodes) {
-      if (node.grabs.size > 0) {
-        continue;
-      }
-      node.locked = false;
-    }
 
-    this._onRoomUpdated.next({
-      graph: graph,
+    const nodeLocks: Record<string, boolean> = {};
+    const clientNodeLocks: SMap<string, boolean> = new SMap<string, boolean>();
+    for (const node of graph.nodes.nodes) {
+      if (node.grabs.size === 0) {
+        node.locked = false;
+        nodeLocks[node.id] = node.locked;
+        clientNodeLocks.set(node.id, node.locked);
+      }
+    }
+    this.saveGraphOfRoom(params.roomId);
+
+    this._onLocksUpdated.next({
       roomId: params.roomId,
+      locks: clientNodeLocks,
     });
 
     this._sendActionToWorker(params.roomId, {
-      type: 'WTActionSetGraph',
-      graph: graph.toPhysicalGraph(this._logger),
+      type: 'WTActionSetLocks',
+      locks: nodeLocks,
     });
+
     this._sendActionToWorker(params.roomId, {
       type: 'WTActionTriggerPhysics',
       amount: 'long',
     });
-    this.saveGraphOfRoom(params.roomId);
   }
 
   private async _saveGraphToDb(roomId: string): Promise<void> {

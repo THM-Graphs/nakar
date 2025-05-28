@@ -82,6 +82,7 @@ export class CachingSchemaDTOFactory {
           },
         )
       ).toArray(),
+      locked: node.locked,
     };
   }
 

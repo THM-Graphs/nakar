@@ -11,8 +11,8 @@ import { WTEvent } from './worker-events/WTEvent';
 import { WTActionMoveNodes } from './worker-events/WTActionMoveNodes';
 import { PhysicalGraph } from '../../tools/physics/physical-graph/PhysicalGraph';
 import { PhysicalNode } from '../../tools/physics/physical-graph/PhysicalNode';
-import { WTActionLockNode } from './worker-events/WTActionLockNode';
 import { WTActionTriggerPhysics } from './worker-events/WTActionTriggerPhysics';
+import { WTActionSetLocks } from './worker-events/WTActionSetLocks';
 
 export class RoomInstanceService implements ApplicationService {
   private readonly _roomId: string;
@@ -88,14 +88,6 @@ export class RoomInstanceService implements ApplicationService {
           },
         )
         .with(
-          { type: 'WTActionLockNode' },
-          (action: WTActionLockNode): void => {
-            this._logger.debug(this, 'WTActionLockNode');
-            const graph: PhysicalGraph = this._physics.getGraph();
-            graph.nodes[action.nodeId].locked = true;
-          },
-        )
-        .with(
           { type: 'WTActionTriggerPhysics' },
           (action: WTActionTriggerPhysics): void => {
             void this._physics.run({
@@ -104,6 +96,27 @@ export class RoomInstanceService implements ApplicationService {
                   ? PhysicsSimulation.cooldownTime
                   : PhysicsSimulation.cooldownTime * 4,
             });
+          },
+        )
+        .with(
+          { type: 'WTActionSetLocks' },
+          (action: WTActionSetLocks): void => {
+            const graph: PhysicalGraph = this._physics.getGraph();
+            for (const lock of Object.entries(action.locks)) {
+              const nodeId: string = lock[0];
+              const locked: boolean = lock[1];
+              const node: PhysicalNode | null = graph.nodes[
+                nodeId
+              ] as PhysicalNode | null;
+              if (node == null) {
+                this._logger.warn(
+                  this,
+                  `Unable to apply lock to node ${nodeId}. Node does not exist.`,
+                );
+                continue;
+              }
+              node.locked = locked;
+            }
           },
         )
         .exhaustive();

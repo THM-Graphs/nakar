@@ -8,6 +8,7 @@ import {
   WSEventNotification,
   WSEventScenarioLoaded,
   WSEventScenarioProgress,
+  WSEventSetLocks,
   WSServerToClientMessage,
 } from "../../../src-gen";
 import { BehaviorSubject, Observable, Subject } from "rxjs";
@@ -24,6 +25,7 @@ export class WebSocketsManager {
   private readonly onNodesMoved: Subject<WSEventNodesMoved>;
   private readonly onScenarioLoaded: Subject<WSEventScenarioLoaded>;
   private readonly onScenarioProgress: Subject<WSEventScenarioProgress>;
+  private readonly onSetLocks: Subject<WSEventSetLocks>;
 
   public constructor(env: Env) {
     console.log("Did create instance of WebSocketsManager");
@@ -36,6 +38,7 @@ export class WebSocketsManager {
     this.onNodesMoved = new Subject();
     this.onScenarioLoaded = new Subject();
     this.onScenarioProgress = new Subject();
+    this.onSetLocks = new Subject();
 
     this.socket.on("connect", () => {
       this._socketState.next({ type: "connected" });
@@ -59,6 +62,9 @@ export class WebSocketsManager {
         })
         .with({ type: "WSEventScenarioProgress" }, (m) => {
           this.onScenarioProgress.next(m);
+        })
+        .with({ type: "WSEventSetLocks" }, (m) => {
+          this.onSetLocks.next(m);
         })
         .exhaustive();
     });
@@ -90,5 +96,9 @@ export class WebSocketsManager {
 
   public get onScenarioProgress$(): Observable<WSEventScenarioProgress> {
     return this.onScenarioProgress.asObservable();
+  }
+
+  public get onSetLocks$(): Observable<WSEventSetLocks> {
+    return this.onSetLocks.asObservable();
   }
 }

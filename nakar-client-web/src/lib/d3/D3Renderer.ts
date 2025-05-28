@@ -1,6 +1,6 @@
 import { D3Link } from "./D3Link.ts";
 import { D3Node } from "./D3Node.ts";
-import { Graph, WSEventNodesMoved } from "../../../src-gen";
+import { Graph, WSEventNodesMoved, WSEventSetLocks } from "../../../src-gen";
 import * as d3 from "d3";
 import { adjustColor } from "../color/colorShade.ts";
 import { getBackgroundColor } from "../color/getBackgroundColor.ts";
@@ -25,14 +25,20 @@ export class D3Renderer {
 
   private $onDisplayLinkData: Subject<D3Link>;
   private $onDisplayNodeData: Subject<D3Node>;
-  private $onLockNode: Subject<D3Node>;
+  private $onGrabNode: Subject<D3Node>;
   private $onNodeMoved: Subject<D3Node>;
-  private $onUnlockNode: Subject<D3Node>;
+  private $onUngrabNode: Subject<D3Node>;
 
   private calculator: D3Calculator;
 
   private nodeSelection: d3.Selection<
     SVGGElement,
+    D3Node,
+    SVGElement,
+    null
+  > | null;
+  private nodeCircle: d3.Selection<
+    SVGCircleElement,
     D3Node,
     SVGElement,
     null
@@ -59,15 +65,16 @@ export class D3Renderer {
 
     this.$onDisplayLinkData = new Subject();
     this.$onDisplayNodeData = new Subject();
-    this.$onLockNode = new Subject<D3Node>();
+    this.$onGrabNode = new Subject<D3Node>();
     this.$onNodeMoved = new Subject<D3Node>();
-    this.$onUnlockNode = new Subject<D3Node>();
+    this.$onUngrabNode = new Subject<D3Node>();
 
     this.calculator = new D3Calculator();
 
     this.nodeSelection = null;
     this.linkLabelSelection = null;
     this.linkSelection = null;
+    this.nodeCircle = null;
 
     combineLatest([this.$svgElement, this.$graphState, this.$theme]).subscribe(
       ([svgElement, graph, theme]) => {
@@ -98,8 +105,8 @@ export class D3Renderer {
     return this.$onDisplayNodeData.asObservable();
   }
 
-  public get onLockNode(): Observable<D3Node> {
-    return this.$onLockNode.asObservable();
+  public get onGrabNode(): Observable<D3Node> {
+    return this.$onGrabNode.asObservable();
   }
 
   public get onNodesMoved(): Observable<D3Node> {
@@ -112,8 +119,8 @@ export class D3Renderer {
     // return this.$onNodeMoved.asObservable();
   }
 
-  public get onUnlockNode(): Observable<D3Node> {
-    return this.$onUnlockNode.asObservable();
+  public get onUngrabNode(): Observable<D3Node> {
+    return this.$onUngrabNode.asObservable();
   }
 
   public loadGraphContent(graph: Graph) {
@@ -134,6 +141,17 @@ export class D3Renderer {
       localNode.ty = node.position.y;
     }
     this.smoothedPositionDirty = true;
+  }
+
+  public updateLocks(wsEvent: WSEventSetLocks) {
+    for (const node of wsEvent.locks) {
+      const localNode = this.graphState.nodes.find((n) => n.id === node.id);
+      if (localNode == null) {
+        continue;
+      }
+      localNode.locked = node.locked;
+    }
+    this.applyPropertiesToSVG();
   }
 
   private renderSvgElements(
@@ -246,35 +264,7 @@ export class D3Renderer {
       .enter()
       .append("g")
       .attr("style", "cursor: pointer;");
-    this.nodeSelection.call(
-      d3
-        .drag<SVGGElement, D3Node>()
-        .on(
-          "start",
-          (event: d3.D3DragEvent<SVGGElement, D3Node, null>, d: D3Node) => {
-            this.$onLockNode.next(d);
-          },
-        )
-        .on(
-          "drag",
-          (event: d3.D3DragEvent<SVGGElement, D3Node, null>, d: D3Node) => {
-            d.tx = event.x;
-            d.ty = event.y;
-            d.x = event.x;
-            d.y = event.y;
-            d.vx = 0;
-            d.vy = 0;
-            this.smoothedPositionDirty = true;
-            this.$onNodeMoved.next(d);
-          },
-        )
-        .on(
-          "end",
-          (event: d3.D3DragEvent<SVGGElement, D3Node, null>, d: D3Node) => {
-            this.$onUnlockNode.next(d);
-          },
-        ),
-    );
+
     this.nodeSelection
       .on("mouseover", (e: MouseEvent) => {
         const el = d3.select(e.currentTarget as SVGGElement).select("circle");
@@ -289,7 +279,7 @@ export class D3Renderer {
         this.$onDisplayNodeData.next(node);
       });
 
-    this.nodeSelection
+    this.nodeCircle = this.nodeSelection
       .append("circle")
       .attr("r", (d) => d.radius)
       .attr(
@@ -300,9 +290,7 @@ export class D3Renderer {
             originalGraph.metaData.labels.find((l) => l.label === d.labels[0])
               ?.color ?? null,
           ),
-      )
-      .attr("stroke", () => (theme == "dark" ? "#fff" : "#000"))
-      .attr("stroke-width", "3px");
+      );
 
     this.nodeSelection
       .append("foreignObject")
@@ -325,7 +313,7 @@ export class D3Renderer {
         color: ${color};
         display: flex; 
         align-items: center; 
-        justify-content: center; 
+        justify-content: center;
         width: ${(d.radius * 2).toString()}px; 
         height: ${(d.radius * 2).toString()}px;
         text-align: center;
@@ -336,6 +324,36 @@ export class D3Renderer {
       .attr("height", (d) => d.radius * 2)
       .append("xhtml:span")
       .text((d) => d.title);
+
+    this.nodeSelection.call(
+      d3
+        .drag<SVGGElement, D3Node>()
+        .on(
+          "start",
+          (event: d3.D3DragEvent<SVGGElement, D3Node, null>, d: D3Node) => {
+            this.$onGrabNode.next(d);
+          },
+        )
+        .on(
+          "drag",
+          (event: d3.D3DragEvent<SVGGElement, D3Node, null>, d: D3Node) => {
+            d.tx = event.x;
+            d.ty = event.y;
+            d.x = event.x;
+            d.y = event.y;
+            d.vx = 0;
+            d.vy = 0;
+            this.smoothedPositionDirty = true;
+            this.$onNodeMoved.next(d);
+          },
+        )
+        .on(
+          "end",
+          (event: d3.D3DragEvent<SVGGElement, D3Node, null>, d: D3Node) => {
+            this.$onUngrabNode.next(d);
+          },
+        ),
+    );
   }
 
   public onAnimationTick(deltaTime: number): void {
@@ -368,10 +386,10 @@ export class D3Renderer {
         this.smoothedPositionDirty = true;
       }
     }
-    this.applyNodePositionsToSVG();
+    this.applyPropertiesToSVG();
   }
 
-  private applyNodePositionsToSVG(): void {
+  private applyPropertiesToSVG(): void {
     this.linkSelection?.attr("d", (d) => this.calculator.curvedPath(d));
     this.linkLabelSelection?.attr("transform", (d: D3Link) => {
       const c = this.calculator.curvePoints(d);
@@ -381,6 +399,17 @@ export class D3Renderer {
       "transform",
       (d: D3Node) => `translate(${d.x.toString()}, ${d.y.toString()})`,
     );
+    this.nodeCircle
+      ?.attr("stroke-width", (n: D3Node) => {
+        return n.locked ? "6px" : "3px";
+      })
+      .attr("stroke", (n: D3Node) => {
+        if (n.locked) {
+          return "#ff00ff";
+        } else {
+          return this.$theme.getValue() == "dark" ? "#fff" : "#000";
+        }
+      });
   }
 
   private smoothDamp(

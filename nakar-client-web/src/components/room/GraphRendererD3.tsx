@@ -41,7 +41,7 @@ export function GraphRendererD3(props: {
       props.webSockets.onScenarioLoaded$.subscribe((scenraioData) => {
         graphRenderer.loadGraphContent(scenraioData.graph);
       }),
-      graphRenderer.onLockNode.subscribe((n) => {
+      graphRenderer.onGrabNode.subscribe((n) => {
         props.webSockets.sendMessage({
           type: "WSActionGrabNode",
           nodeId: n.id,
@@ -58,7 +58,7 @@ export function GraphRendererD3(props: {
           ],
         });
       }),
-      graphRenderer.onUnlockNode.subscribe((n) => {
+      graphRenderer.onUngrabNode.subscribe((n) => {
         props.webSockets.sendMessage({
           type: "WSActionUngrabNode",
           node: {
@@ -69,6 +69,9 @@ export function GraphRendererD3(props: {
       }),
       props.webSockets.onNodesMoved$.subscribe((onMove) => {
         graphRenderer.updateNodePositions(onMove);
+      }),
+      props.webSockets.onSetLocks$.subscribe((message) => {
+        graphRenderer.updateLocks(message);
       }),
       graphRenderer.onDisplayNodeData.subscribe((n) => {
         props.onNodeClicked(n);

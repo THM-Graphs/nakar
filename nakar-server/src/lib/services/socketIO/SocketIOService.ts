@@ -17,6 +17,7 @@ import {
   SchemaWsClientToServerMessage,
   SchemaWsEventNotification,
   SchemaWsEventScenarioProgress,
+  SchemaWsEventSetLocks,
   SchemaWsServerToClientMessage,
 } from '../../../../src-gen/schema';
 import { match, P } from 'ts-pattern';
@@ -39,6 +40,7 @@ import { Subscription } from 'rxjs';
 import { HTTPService } from '../http/HTTPService';
 import { CachingSchemaDTOFactory } from '../http/CachingSchemaDTOFactory';
 import { RSExpandNodesResult } from '../room/events/RSExpandNodesResult';
+import { RSEventRoomLocksUpdated } from '../room/events/RSEventRoomLocksUpdated';
 
 export type Server = UntypedServer<ClientToServerEvents, ServerToClientEvents>;
 export type Socket = UntypedSocket<ClientToServerEvents, ServerToClientEvents>;
@@ -164,7 +166,7 @@ export class SocketIOService implements ApplicationService {
                 .with(
                   { type: 'WSActionRelayout' },
                   (m: SchemaWsActionRelayout): void => {
-                    this._handleRelayout(wsClient, m);
+                    this._handleRelayout(wsClient);
                   },
                 )
                 .exhaustive();
@@ -209,6 +211,12 @@ export class SocketIOService implements ApplicationService {
     this._roomService.onRoomUpdated$.subscribe(
       (message: RSEventRoomUpdated): void => {
         this._handleRoomUpdate(message);
+      },
+    );
+
+    this._roomService.onRoomLocksUpdated$.subscribe(
+      (message: RSEventRoomLocksUpdated): void => {
+        this._handleRoomLocksUpdate(message);
       },
     );
   }
@@ -379,7 +387,7 @@ export class SocketIOService implements ApplicationService {
     }
 
     this._roomService.ungrabNode({
-      nodeId: m.node.id,
+      node: m.node,
       roomId: roomId,
       userId: wsClient.id,
     });
@@ -466,7 +474,7 @@ export class SocketIOService implements ApplicationService {
     } satisfies SchemaWsEventScenarioProgress);
   }
 
-  private _handleRelayout(wsClient: WSClient, m: SchemaWsActionRelayout): void {
+  private _handleRelayout(wsClient: WSClient): void {
     const roomId: string | null = wsClient.room;
     if (roomId == null) {
       this._logger.error(
@@ -516,5 +524,19 @@ export class SocketIOService implements ApplicationService {
       .catch((error: unknown): void => {
         this._logger.error(this, error);
       });
+  }
+
+  private _handleRoomLocksUpdate(message: RSEventRoomLocksUpdated): void {
+    const locks: { id: string; locked: boolean }[] = [];
+    for (const lock of message.locks.entries()) {
+      locks.push({
+        id: lock[0],
+        locked: lock[1],
+      });
+    }
+    this.sendToRoom(message.roomId, {
+      type: 'WSEventSetLocks',
+      locks: locks,
+    } satisfies SchemaWsEventSetLocks);
   }
 }

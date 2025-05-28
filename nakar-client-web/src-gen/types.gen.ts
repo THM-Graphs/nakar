@@ -81,6 +81,7 @@ export type Node = {
     customTitleColor: (string) | null;
     source: string;
     additionalSources: Array<(string)>;
+    locked: boolean;
 };
 
 export type PhysicalNode = {
@@ -223,14 +224,24 @@ export type WSEventScenarioLoaded = {
 export type type11 = 'WSEventScenarioLoaded';
 
 export type WSEventScenarioProgress = {
-    type?: 'WSEventScenarioProgress';
+    type: 'WSEventScenarioProgress';
     progress: (number) | null;
     message: (string) | null;
 };
 
 export type type12 = 'WSEventScenarioProgress';
 
-export type WSServerToClientMessage = WSEventNodesMoved | WSEventNotification | WSEventScenarioLoaded | WSEventScenarioProgress;
+export type WSEventSetLocks = {
+    type: 'WSEventSetLocks';
+    locks: Array<{
+        id: string;
+        locked: boolean;
+    }>;
+};
+
+export type type13 = 'WSEventSetLocks';
+
+export type WSServerToClientMessage = WSEventNodesMoved | WSEventNotification | WSEventScenarioLoaded | WSEventScenarioProgress | WSEventSetLocks;
 
 export type GetScenariosData = {
     query: {

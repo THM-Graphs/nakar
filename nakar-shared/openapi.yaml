@@ -243,6 +243,8 @@ components:
           type: array
           items:
             type: string
+        locked:
+          type: boolean
       required:
         - id
         - title
@@ -259,6 +261,7 @@ components:
         - customTitleColor
         - source
         - additionalSources
+        - locked
 
     PhysicalNode:
       type: object
@@ -519,6 +522,7 @@ components:
         - $ref: "#/components/schemas/WSEventNotification"
         - $ref: "#/components/schemas/WSEventScenarioLoaded"
         - $ref: "#/components/schemas/WSEventScenarioProgress"
+        - $ref: "#/components/schemas/WSEventSetLocks"
 
     WSActionJoinRoom:
       type: object
@@ -688,5 +692,28 @@ components:
           type: string
           nullable: true
       required:
+        - type
         - progress
         - message
+
+    WSEventSetLocks:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: ["WSEventSetLocks"]
+        locks:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              locked:
+                type: boolean
+            required:
+              - id
+              - locked
+      required:
+        - type
+        - locks
