@@ -12,6 +12,7 @@ import {
   SchemaWsActionJoinRoom,
   SchemaWsActionLoadScenario,
   SchemaWsActionMoveNodes,
+  SchemaWsActionRelayout,
   SchemaWsActionUngrabNode,
   SchemaWsClientToServerMessage,
   SchemaWsEventNotification,
@@ -158,6 +159,12 @@ export class SocketIOService implements ApplicationService {
                   { type: 'WSActionDeleteNodes' },
                   (m: SchemaWsActionDeleteNodes): void => {
                     this._handleDeleteNodes(wsClient, m);
+                  },
+                )
+                .with(
+                  { type: 'WSActionRelayout' },
+                  (m: SchemaWsActionRelayout): void => {
+                    this._handleRelayout(wsClient, m);
                   },
                 )
                 .exhaustive();
@@ -457,6 +464,18 @@ export class SocketIOService implements ApplicationService {
       message: null,
       progress: null,
     } satisfies SchemaWsEventScenarioProgress);
+  }
+
+  private _handleRelayout(wsClient: WSClient, m: SchemaWsActionRelayout): void {
+    const roomId: string | null = wsClient.room;
+    if (roomId == null) {
+      this._logger.error(
+        this,
+        `Socket ${wsClient.id} did send relayout but is in no room.`,
+      );
+      return;
+    }
+    this._roomService.relayout({ roomId: roomId });
   }
 
   private _handleRoomPhysicsUpdate(message: RSEventRoomPhysicsUpdated): void {

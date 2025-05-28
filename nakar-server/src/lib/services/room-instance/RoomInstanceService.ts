@@ -95,9 +95,17 @@ export class RoomInstanceService implements ApplicationService {
             graph.nodes[action.nodeId].locked = true;
           },
         )
-        .with({ type: 'WTActionTriggerPhysics' }, (): void => {
-          void this._physics.run({ maxMs: PhysicsSimulation.cooldownTime });
-        })
+        .with(
+          { type: 'WTActionTriggerPhysics' },
+          (action: WTActionTriggerPhysics): void => {
+            void this._physics.run({
+              maxMs:
+                action.amount === 'short'
+                  ? PhysicsSimulation.cooldownTime
+                  : PhysicsSimulation.cooldownTime * 4,
+            });
+          },
+        )
         .exhaustive();
     });
   }

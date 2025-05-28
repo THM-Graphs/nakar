@@ -286,6 +286,7 @@ export class RoomService implements ApplicationService {
     });
     this._sendActionToWorker(params.roomId, {
       type: 'WTActionTriggerPhysics',
+      amount: 'short',
     });
     this.saveGraphOfRoom(params.roomId);
     this._onRoomUpdated.next({
@@ -322,12 +323,41 @@ export class RoomService implements ApplicationService {
     });
     this._sendActionToWorker(params.roomId, {
       type: 'WTActionTriggerPhysics',
+      amount: 'short',
     });
     this.saveGraphOfRoom(params.roomId);
     this._onRoomUpdated.next({
       graph: graph,
       roomId: params.roomId,
     });
+  }
+
+  public relayout(params: { roomId: string }): void {
+    const graph: MutableGraph | undefined = this._graphs.get(params.roomId);
+    if (graph == null) {
+      throw new Error('Unable to execute relayout. Graph not found.');
+    }
+    for (const node of graph.nodes.nodes) {
+      if (node.grabs.size > 0) {
+        continue;
+      }
+      node.locked = false;
+    }
+
+    this._onRoomUpdated.next({
+      graph: graph,
+      roomId: params.roomId,
+    });
+
+    this._sendActionToWorker(params.roomId, {
+      type: 'WTActionSetGraph',
+      graph: graph.toPhysicalGraph(this._logger),
+    });
+    this._sendActionToWorker(params.roomId, {
+      type: 'WTActionTriggerPhysics',
+      amount: 'long',
+    });
+    this.saveGraphOfRoom(params.roomId);
   }
 
   private async _saveGraphToDb(roomId: string): Promise<void> {

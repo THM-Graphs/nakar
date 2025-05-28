@@ -1,4 +1,11 @@
-import { Image, Navbar, Stack } from "react-bootstrap";
+import {
+  Button,
+  Image,
+  Navbar,
+  OverlayTrigger,
+  Stack,
+  Tooltip,
+} from "react-bootstrap";
 import { ScenarioWindowButton } from "../room/ScenarioWindowButton.tsx";
 import { BackButton } from "./BackButton.tsx";
 import { GraphRendererEngine } from "../../lib/graph-renderer/GraphRendererEngine.ts";
@@ -6,6 +13,8 @@ import { SocketStateDisplay } from "../room/SocketStateDisplay.tsx";
 import { SocketState } from "../../lib/ws/SocketState.ts";
 import { Env } from "../../lib/env/env.ts";
 import { InfoDropdown } from "./InfoDropdown.tsx";
+import { WebSocketsManager } from "../../lib/ws/WebSocketsManager.ts";
+import { WSActionRelayout } from "../../../src-gen";
 
 export function AppNavbar(props: {
   scenarioWindow?: {
@@ -27,6 +36,7 @@ export function AppNavbar(props: {
     onToggle: () => void;
   };
   env: Env;
+  webSocketsManager?: WebSocketsManager;
 }) {
   return (
     <Navbar
@@ -71,6 +81,24 @@ export function AppNavbar(props: {
           ></SocketStateDisplay>
         )}
         <div className={"flex-grow-1"}></div>
+        {props.room && (
+          <OverlayTrigger
+            placement="bottom"
+            overlay={<Tooltip>Relayout Graph</Tooltip>}
+          >
+            <Button
+              size={"sm"}
+              variant={"secondary"}
+              onClick={() => {
+                props.webSocketsManager?.sendMessage({
+                  type: "WSActionRelayout",
+                } satisfies WSActionRelayout);
+              }}
+            >
+              <i className={`bi bi-tropical-storm`}></i>
+            </Button>
+          </OverlayTrigger>
+        )}
         <InfoDropdown
           env={props.env}
           renderer={props.renderer}

@@ -180,14 +180,20 @@ export type WSActionMoveNodes = {
 
 export type type6 = 'WSActionMoveNodes';
 
+export type WSActionRelayout = {
+    type: 'WSActionRelayout';
+};
+
+export type type7 = 'WSActionRelayout';
+
 export type WSActionUngrabNode = {
     type: 'WSActionUngrabNode';
     node: PhysicalNode;
 };
 
-export type type7 = 'WSActionUngrabNode';
+export type type8 = 'WSActionUngrabNode';
 
-export type WSClientToServerMessage = WSActionJoinRoom | WSActionLoadScenario | WSActionGrabNode | WSActionMoveNodes | WSActionUngrabNode | WSActionExpandNodes | WSActionDeleteNodes;
+export type WSClientToServerMessage = WSActionJoinRoom | WSActionLoadScenario | WSActionGrabNode | WSActionMoveNodes | WSActionUngrabNode | WSActionExpandNodes | WSActionDeleteNodes | WSActionRelayout;
 
 export type WSEventNodesMoved = {
     type: 'WSEventNodesMoved';
@@ -195,7 +201,7 @@ export type WSEventNodesMoved = {
     date: string;
 };
 
-export type type8 = 'WSEventNodesMoved';
+export type type9 = 'WSEventNodesMoved';
 
 export type WSEventNotification = {
     type: 'WSEventNotification';
@@ -205,7 +211,7 @@ export type WSEventNotification = {
     date: string;
 };
 
-export type type9 = 'WSEventNotification';
+export type type10 = 'WSEventNotification';
 
 export type severity = 'error' | 'message' | 'warning';
 
@@ -214,7 +220,7 @@ export type WSEventScenarioLoaded = {
     graph: Graph;
 };
 
-export type type10 = 'WSEventScenarioLoaded';
+export type type11 = 'WSEventScenarioLoaded';
 
 export type WSEventScenarioProgress = {
     type?: 'WSEventScenarioProgress';
@@ -222,7 +228,7 @@ export type WSEventScenarioProgress = {
     message: (string) | null;
 };
 
-export type type11 = 'WSEventScenarioProgress';
+export type type12 = 'WSEventScenarioProgress';
 
 export type WSServerToClientMessage = WSEventNodesMoved | WSEventNotification | WSEventScenarioLoaded | WSEventScenarioProgress;
 

@@ -110,6 +110,7 @@ export function Room(props: { webSockets: WebSocketsManager; env: Env }) {
             current: renderer,
             onChange: setRenderer,
           }}
+          webSocketsManager={props.webSockets}
         ></AppNavbar>
         <ToastStack websocketsManager={props.webSockets}></ToastStack>
         <Stack
