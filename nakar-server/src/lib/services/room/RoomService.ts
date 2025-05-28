@@ -110,7 +110,6 @@ export class RoomService implements ApplicationService {
         [node.id]: node.locked,
       },
     });
-
     this._onLocksUpdated.next({
       roomId: params.roomId,
       locks: new SMap([[node.id, node.locked]]),
@@ -144,23 +143,8 @@ export class RoomService implements ApplicationService {
     }
 
     node.grabs.delete(params.userId);
-    node.position.x = params.node.position.x;
-    node.position.y = params.node.position.y;
 
     this.saveGraphOfRoom(params.roomId);
-
-    this._sendActionToWorker(params.roomId, {
-      type: 'WTActionMoveNodes',
-      nodes: [
-        {
-          id: node.id,
-          position: {
-            x: node.position.x,
-            y: node.position.y,
-          },
-        },
-      ],
-    });
   }
 
   public saveGraphOfRoom(roomId: string): void {

@@ -163,12 +163,9 @@ export class SocketIOService implements ApplicationService {
                     this._handleDeleteNodes(wsClient, m);
                   },
                 )
-                .with(
-                  { type: 'WSActionRelayout' },
-                  (m: SchemaWsActionRelayout): void => {
-                    this._handleRelayout(wsClient);
-                  },
-                )
+                .with({ type: 'WSActionRelayout' }, (): void => {
+                  this._handleRelayout(wsClient);
+                })
                 .exhaustive();
             } catch (error: unknown) {
               wsClient.send(this.createErrorNotification(error));
