@@ -103,17 +103,6 @@ export class RoomService implements ApplicationService {
     }
 
     node.grabs.add(params.userId);
-    node.locked = true;
-    this._sendActionToWorker(params.roomId, {
-      type: 'WTActionSetLocks',
-      locks: {
-        [node.id]: node.locked,
-      },
-    });
-    this._onLocksUpdated.next({
-      roomId: params.roomId,
-      locks: new SMap([[node.id, node.locked]]),
-    });
   }
 
   public moveNodes(params: {
@@ -121,6 +110,32 @@ export class RoomService implements ApplicationService {
     nodes: readonly RSPhysicalNode[];
     userId: string;
   }): void {
+    const graph: MutableGraph | undefined = this._graphs.get(params.roomId);
+    if (graph == null) {
+      throw new Error(`Unable to move node. Room ${params.roomId} not found.`);
+    }
+
+    for (const physialNode of params.nodes) {
+      const node: MutableNode | null = graph.nodes.get(physialNode.id);
+      if (node == null) {
+        throw new Error(
+          `Unable to move node: Node ${physialNode.id} not found.`,
+        );
+      }
+      if (!node.locked) {
+        node.locked = true;
+        this._sendActionToWorker(params.roomId, {
+          type: 'WTActionSetLocks',
+          locks: {
+            [node.id]: node.locked,
+          },
+        });
+        this._onLocksUpdated.next({
+          roomId: params.roomId,
+          locks: new SMap([[node.id, node.locked]]),
+        });
+      }
+    }
     this._sendActionToWorker(params.roomId, {
       type: 'WTActionMoveNodes',
       nodes: params.nodes,
