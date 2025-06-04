@@ -30,11 +30,6 @@ export function AppNavbar(props: {
     current: GraphRendererEngine;
     onChange: (newRenderer: GraphRendererEngine) => void;
   };
-  tableDataWindow?: {
-    rowCount: number;
-    isOpen: boolean;
-    onToggle: () => void;
-  };
   env: Env;
   webSocketsManager?: WebSocketsManager;
 }) {
@@ -99,11 +94,7 @@ export function AppNavbar(props: {
             </Button>
           </OverlayTrigger>
         )}
-        <InfoDropdown
-          env={props.env}
-          renderer={props.renderer}
-          tableDataWindow={props.tableDataWindow}
-        ></InfoDropdown>
+        <InfoDropdown env={props.env} renderer={props.renderer}></InfoDropdown>
       </Stack>
     </Navbar>
   );

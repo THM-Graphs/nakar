@@ -60,6 +60,7 @@ export function Canvas(props: {
     <Stack
       className={"flex-grow-1 align-items-start position-relative"}
       direction={"horizontal"}
+      style={{ height: "100%" }}
     >
       {props.renderer === "d3" && (
         <GraphRendererD3

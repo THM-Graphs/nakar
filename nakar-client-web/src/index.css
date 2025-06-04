@@ -5,3 +5,10 @@ html, body, div#root {
 svg {
     user-select: none;
 }
+
+.tab-content {
+    flex-grow: 1;
+    height: 100%;
+    width: 100%;
+    overflow: auto;
+}

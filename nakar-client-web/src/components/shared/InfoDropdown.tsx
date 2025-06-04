@@ -17,11 +17,6 @@ export function InfoDropdown(props: {
     current: GraphRendererEngine;
     onChange: (newRenderer: GraphRendererEngine) => void;
   };
-  tableDataWindow?: {
-    rowCount: number;
-    isOpen: boolean;
-    onToggle: () => void;
-  };
 }) {
   const [version, setVersion] = useState<Loadable<string>>({ type: "loading" });
 
@@ -41,7 +36,6 @@ export function InfoDropdown(props: {
   }, []);
 
   const renderer = props.renderer;
-  const tableDataWindow = props.tableDataWindow;
 
   return (
     <DropdownButton
@@ -55,28 +49,6 @@ export function InfoDropdown(props: {
         </span>
       }
     >
-      {tableDataWindow && (
-        <>
-          <Dropdown.Item
-            onClick={() => {
-              tableDataWindow.onToggle();
-            }}
-            active={tableDataWindow.isOpen}
-          >
-            <Stack
-              direction={"horizontal"}
-              gap={2}
-              className={"align-items-baseline"}
-            >
-              <i className={"bi bi-table"}></i>
-              <span>Table</span>
-              <Badge bg="secondary">{tableDataWindow.rowCount}</Badge>
-            </Stack>
-          </Dropdown.Item>
-          <Dropdown.Divider />
-        </>
-      )}
-
       <Dropdown.Item disabled>Theme</Dropdown.Item>
       <ThemeDropdownEntry targetTheme={null}></ThemeDropdownEntry>
       <ThemeDropdownEntry targetTheme={"light"}></ThemeDropdownEntry>

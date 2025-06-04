@@ -1,4 +1,4 @@
-import { Stack, Table } from "react-bootstrap";
+import { Table } from "react-bootstrap";
 
 export function DataTable(props: {
   tableData: Record<string, unknown>[] | null;
@@ -8,25 +8,29 @@ export function DataTable(props: {
   }
 
   return (
-    <Stack className={"shadow border-start overflow-auto"}>
-      <Table className={"table-responsive"}>
-        <thead>
-          <tr>
-            {Object.keys(props.tableData[0]).map((key) => (
-              <th key={key}>{key}</th>
+    <Table className={"table-responsive"}>
+      <thead>
+        <tr>
+          {Object.keys(props.tableData[0]).map((key) => (
+            <th key={key}>{key}</th>
+          ))}
+        </tr>
+      </thead>
+      <tbody>
+        {props.tableData.map((row, index) => (
+          <tr key={index}>
+            {Object.entries(row).map(([key, value]) => (
+              <td
+                key={key}
+                style={{ fontSize: "10px", lineHeight: "1.5em" }}
+                className={"font-monospace"}
+              >
+                {JSON.stringify(value)}
+              </td>
             ))}
           </tr>
-        </thead>
-        <tbody>
-          {props.tableData.map((row, index) => (
-            <tr key={index}>
-              {Object.entries(row).map(([key, value]) => (
-                <td key={key}>{JSON.stringify(value)}</td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </Table>
-    </Stack>
+        ))}
+      </tbody>
+    </Table>
   );
 }
