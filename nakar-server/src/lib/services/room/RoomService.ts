@@ -368,9 +368,11 @@ export class RoomService implements ApplicationService {
     const clientNodeLocks: SMap<string, boolean> = new SMap<string, boolean>();
     for (const node of graph.nodes.nodes) {
       if (node.grabs.size === 0) {
-        node.locked = false;
-        nodeLocks[node.id] = node.locked;
-        clientNodeLocks.set(node.id, node.locked);
+        if (node.locked) {
+          node.locked = false;
+          nodeLocks[node.id] = node.locked;
+          clientNodeLocks.set(node.id, node.locked);
+        }
       }
     }
     this.saveGraphOfRoom(params.roomId);
@@ -388,6 +390,50 @@ export class RoomService implements ApplicationService {
     this._sendActionToWorker(params.roomId, {
       type: 'WTActionTriggerPhysics',
       amount: 'long',
+    });
+  }
+
+  public unlockNodes(params: {
+    roomId: string;
+    nodeIds: readonly string[];
+  }): void {
+    const graph: MutableGraph | undefined = this._graphs.get(params.roomId);
+    if (graph == null) {
+      throw new Error('Unable to execute unlock nodes. Graph not found.');
+    }
+
+    const nodeLocks: Record<string, boolean> = {};
+    const clientNodeLocks: SMap<string, boolean> = new SMap<string, boolean>();
+    for (const nodeId of params.nodeIds) {
+      const node: MutableNode | null = graph.nodes.get(nodeId);
+      if (node == null) {
+        this._logger.warn(
+          this,
+          `Unable to unlock node ${nodeId}. Node not found.`,
+        );
+        continue;
+      }
+      if (node.locked) {
+        node.locked = false;
+        nodeLocks[node.id] = node.locked;
+        clientNodeLocks.set(node.id, node.locked);
+      }
+    }
+
+    this.saveGraphOfRoom(params.roomId);
+
+    this._onLocksUpdated.next({
+      roomId: params.roomId,
+      locks: clientNodeLocks,
+    });
+
+    this._sendActionToWorker(params.roomId, {
+      type: 'WTActionSetLocks',
+      locks: nodeLocks,
+    });
+    this._sendActionToWorker(params.roomId, {
+      type: 'WTActionTriggerPhysics',
+      amount: 'short',
     });
   }
 

@@ -14,6 +14,7 @@ import {
   SchemaWsActionMoveNodes,
   SchemaWsActionRelayout,
   SchemaWsActionUngrabNode,
+  SchemaWsActionUnlockNodes,
   SchemaWsClientToServerMessage,
   SchemaWsEventNotification,
   SchemaWsEventScenarioProgress,
@@ -166,6 +167,12 @@ export class SocketIOService implements ApplicationService {
                 .with({ type: 'WSActionRelayout' }, (): void => {
                   this._handleRelayout(wsClient);
                 })
+                .with(
+                  { type: 'WSActionUnlockNodes' },
+                  (message: SchemaWsActionUnlockNodes): void => {
+                    this._handleUnlockNodes(wsClient, message);
+                  },
+                )
                 .exhaustive();
             } catch (error: unknown) {
               wsClient.send(this.createErrorNotification(error));
@@ -481,6 +488,21 @@ export class SocketIOService implements ApplicationService {
       return;
     }
     this._roomService.relayout({ roomId: roomId });
+  }
+
+  private _handleUnlockNodes(
+    wsClient: WSClient,
+    message: SchemaWsActionUnlockNodes,
+  ): void {
+    const roomId: string | null = wsClient.room;
+    if (roomId == null) {
+      this._logger.error(
+        this,
+        `Socket ${wsClient.id} did send unlock nodes but is in no room.`,
+      );
+      return;
+    }
+    this._roomService.unlockNodes({ roomId: roomId, nodeIds: message.nodes });
   }
 
   private _handleRoomPhysicsUpdate(message: RSEventRoomPhysicsUpdated): void {

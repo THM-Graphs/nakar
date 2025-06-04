@@ -264,7 +264,7 @@ export interface components {
         readonly Version: {
             readonly version: string;
         };
-        readonly WSClientToServerMessage: components["schemas"]["WSActionJoinRoom"] | components["schemas"]["WSActionLoadScenario"] | components["schemas"]["WSActionGrabNode"] | components["schemas"]["WSActionMoveNodes"] | components["schemas"]["WSActionUngrabNode"] | components["schemas"]["WSActionExpandNodes"] | components["schemas"]["WSActionDeleteNodes"] | components["schemas"]["WSActionRelayout"];
+        readonly WSClientToServerMessage: components["schemas"]["WSActionJoinRoom"] | components["schemas"]["WSActionLoadScenario"] | components["schemas"]["WSActionGrabNode"] | components["schemas"]["WSActionMoveNodes"] | components["schemas"]["WSActionUngrabNode"] | components["schemas"]["WSActionExpandNodes"] | components["schemas"]["WSActionDeleteNodes"] | components["schemas"]["WSActionRelayout"] | components["schemas"]["WSActionUnlockNodes"];
         readonly WSServerToClientMessage: components["schemas"]["WSEventNodesMoved"] | components["schemas"]["WSEventNotification"] | components["schemas"]["WSEventScenarioLoaded"] | components["schemas"]["WSEventScenarioProgress"] | components["schemas"]["WSEventSetLocks"];
         readonly WSActionJoinRoom: {
             /** @enum {string} */
@@ -304,6 +304,11 @@ export interface components {
         readonly WSActionRelayout: {
             /** @enum {string} */
             readonly type: "WSActionRelayout";
+        };
+        readonly WSActionUnlockNodes: {
+            /** @enum {string} */
+            readonly type: "WSActionUnlockNodes";
+            readonly nodes: readonly string[];
         };
         readonly WSEventScenarioLoaded: {
             /** @enum {string} */
@@ -381,6 +386,7 @@ export type SchemaWsActionUngrabNode = components['schemas']['WSActionUngrabNode
 export type SchemaWsActionExpandNodes = components['schemas']['WSActionExpandNodes'];
 export type SchemaWsActionDeleteNodes = components['schemas']['WSActionDeleteNodes'];
 export type SchemaWsActionRelayout = components['schemas']['WSActionRelayout'];
+export type SchemaWsActionUnlockNodes = components['schemas']['WSActionUnlockNodes'];
 export type SchemaWsEventScenarioLoaded = components['schemas']['WSEventScenarioLoaded'];
 export type SchemaWsEventNodesMoved = components['schemas']['WSEventNodesMoved'];
 export type SchemaWsEventNotification = components['schemas']['WSEventNotification'];

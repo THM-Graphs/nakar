@@ -515,6 +515,7 @@ components:
         - $ref: "#/components/schemas/WSActionExpandNodes"
         - $ref: "#/components/schemas/WSActionDeleteNodes"
         - $ref: "#/components/schemas/WSActionRelayout"
+        - $ref: "#/components/schemas/WSActionUnlockNodes"
 
     WSServerToClientMessage:
       oneOf:
@@ -622,6 +623,20 @@ components:
           enum: ["WSActionRelayout"]
       required:
         - type
+
+    WSActionUnlockNodes:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: ["WSActionUnlockNodes"]
+        nodes:
+          type: array
+          items:
+            type: string
+      required:
+        - type
+        - nodes
 
     WSEventScenarioLoaded:
       type: object

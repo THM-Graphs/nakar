@@ -28,14 +28,33 @@ export function Canvas(props: {
   const [graphLabels, setGraphLabels] = useState<GraphLabel[]>([]);
 
   useEffect(() => {
-    const s1 = props.webSocketsManager.onScenarioLoaded$.subscribe((sd) => {
-      setGraphLabels(sd.graph.metaData.labels);
-    });
+    const subs = [
+      props.webSocketsManager.onScenarioLoaded$.subscribe((sd) => {
+        setGraphLabels(sd.graph.metaData.labels);
+      }),
+      props.webSocketsManager.onSetLocks$.subscribe((message) => {
+        for (const node of message.locks) {
+          if (detailsNode?.id === node.id) {
+            setDetailsNode((old) => {
+              if (old == null) {
+                return null;
+              }
+              return {
+                ...old,
+                locked: node.locked,
+              };
+            });
+          }
+        }
+      }),
+    ];
 
     return () => {
-      s1.unsubscribe();
+      subs.forEach((sub) => {
+        sub.unsubscribe();
+      });
     };
-  }, []);
+  }, [detailsNode]);
 
   return (
     <Stack
@@ -89,6 +108,12 @@ export function Canvas(props: {
               });
               props.onDeleteNodes();
               setDetailsNode(null);
+            }}
+            onUnlockNode={() => {
+              props.webSocketsManager.sendMessage({
+                type: "WSActionUnlockNodes",
+                nodes: [detailsNode.id],
+              });
             }}
             onClose={() => {
               setDetailsNode(null);

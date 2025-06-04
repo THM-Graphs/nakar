@@ -15,6 +15,7 @@ export function NodeDetails(props: {
   onClose: () => void;
   onExpandNode: () => void;
   onDeleteNode: () => void;
+  onUnlockNode: () => void;
   scenarioLoading: boolean;
   className?: string;
   style?: CSSProperties;
@@ -54,6 +55,18 @@ export function NodeDetails(props: {
                 )}
                 Delete
               </Button>
+              {props.node.locked && (
+                <Button
+                  size={"sm"}
+                  onClick={props.onUnlockNode}
+                  disabled={props.scenarioLoading}
+                >
+                  {props.scenarioLoading && (
+                    <Spinner size={"sm"} className={"me-2"}></Spinner>
+                  )}
+                  Unlock
+                </Button>
+              )}
             </Stack>
           </Stack>
           <CloseButton onClick={props.onClose}></CloseButton>

@@ -403,12 +403,11 @@ export class D3Renderer {
       ?.attr("stroke-width", (n: D3Node) => {
         return n.locked ? "6px" : "3px";
       })
+      .attr("stroke-dasharray", (n: D3Node) => {
+        return n.locked ? "10,5" : null;
+      })
       .attr("stroke", (n: D3Node) => {
-        if (n.locked) {
-          return "#ff00ff";
-        } else {
-          return this.$theme.getValue() == "dark" ? "#fff" : "#000";
-        }
+        return this.$theme.getValue() == "dark" ? "#fff" : "#000";
       });
   }
 
