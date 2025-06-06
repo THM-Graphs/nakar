@@ -3,8 +3,8 @@ import { Table } from "react-bootstrap";
 export function DataTable(props: {
   tableData: Record<string, unknown>[] | null;
 }) {
-  if (props.tableData == null) {
-    return null;
+  if (props.tableData == null || props.tableData.length === 0) {
+    return <p className={"p-3 text-muted"}>No data</p>;
   }
 
   return (
