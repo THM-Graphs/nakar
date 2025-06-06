@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import {
   Edge,
   GraphLabel,
+  Histogram,
   Node,
   WSActionRelayout,
   WSEventScenarioProgress,
@@ -16,6 +17,7 @@ import { EdgeDetails } from "./EdgeDetails.tsx";
 import { WebSocketsManager } from "../../lib/ws/WebSocketsManager.ts";
 import { GraphProgressDisplay } from "./GraphProgressDisplay.tsx";
 import { DetailPane } from "./DetailPane/DetailPane.tsx";
+import { HistogramDisplay } from "./HistogramDisplay.tsx";
 
 export function Canvas(props: {
   renderer: GraphRendererEngine;
@@ -29,11 +31,16 @@ export function Canvas(props: {
   const [detailsEdge, setDetailsEdge] = useState<Edge | null>(null);
   const [showHistogram, setShowHistogram] = useState<boolean>(false);
   const [graphLabels, setGraphLabels] = useState<GraphLabel[]>([]);
+  const [histogram, setHistogram] = useState<Histogram>({
+    labels: [],
+    properties: [],
+  });
 
   useEffect(() => {
     const subs = [
       props.webSocketsManager.onScenarioLoaded$.subscribe((sd) => {
         setGraphLabels(sd.graph.metaData.labels);
+        setHistogram(sd.graph.metaData.histogram);
       }),
       props.webSocketsManager.onSetLocks$.subscribe((message) => {
         for (const node of message.locks) {
@@ -169,7 +176,9 @@ export function Canvas(props: {
           otherProperties={[]}
           properties={[]}
           title={""}
-        ></DetailPane>
+        >
+          <HistogramDisplay histogram={histogram}></HistogramDisplay>
+        </DetailPane>
       )}
     </Stack>
   );

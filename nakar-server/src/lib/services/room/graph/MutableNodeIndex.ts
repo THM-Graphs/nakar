@@ -8,8 +8,16 @@ import { MutablePropertyCollection } from './MutablePropertyCollection';
 export class MutableNodeIndex {
   private _byId: SMap<string, MutableNode>;
 
+  /* Maps label => count */
+  private _labelHistogram: SMap<string, number>;
+
+  /* Maps key => value => count */
+  private _propertyHistogram: SMap<string, SMap<string, number>>;
+
   public constructor(nodes: MutableNode[]) {
     this._byId = new SMap();
+    this._labelHistogram = new SMap();
+    this._propertyHistogram = new SMap();
 
     for (const node of nodes) {
       this.add(node);
@@ -28,11 +36,33 @@ export class MutableNodeIndex {
     return new SSet<string>(this._byId.keys());
   }
 
+  public get labelHistogram(): SMap<string, number> {
+    return this._labelHistogram;
+  }
+
+  public get propertyHistogram(): SMap<string, SMap<string, number>> {
+    return this._propertyHistogram;
+  }
+
   public add(node: MutableNode): void {
     if (this._byId.has(node.id)) {
       return;
     }
     this._byId.set(node.id, node);
+    for (const label of node.labels) {
+      this._labelHistogram.set(
+        label,
+        (this._labelHistogram.get(label) ?? 0) + 1,
+      );
+    }
+    for (const property of node.properties.properties) {
+      const slug: string = property[0];
+      const value: string = JSON.stringify(property[1]);
+      const propertyHistogram: SMap<string, number> =
+        this._propertyHistogram.get(slug) ?? new SMap();
+      propertyHistogram.set(value, (propertyHistogram.get(value) ?? 0) + 1);
+      this._propertyHistogram.set(slug, propertyHistogram);
+    }
   }
 
   public addNeo4jNodes(nodes: SMap<string, Neo4jNode>): void {

@@ -2,6 +2,7 @@ import { Button, CloseButton, Spinner, Stack } from "react-bootstrap";
 import { DetailPaneAction } from "./DetailPaneAction.ts";
 import { GraphProperty } from "../../../../src-gen";
 import { PropertyDisplay } from "./PropertyDisplay.tsx";
+import { ReactNode } from "react";
 
 export function DetailPane(props: {
   entityTitle: string;
@@ -11,6 +12,7 @@ export function DetailPane(props: {
   otherProperties: GraphProperty[];
   onClose: () => void;
   loading: boolean;
+  children?: ReactNode;
 }) {
   return (
     <Stack
@@ -27,29 +29,32 @@ export function DetailPane(props: {
         <CloseButton className={"m-1"} onClick={props.onClose}></CloseButton>
       </Stack>
       <Stack className={"overflow-auto flex-shrink-1"}>
-        <Stack className={"p-2 flex-grow-0"}>
-          <h5 style={{ overflowWrap: "anywhere", userSelect: "text" }}>
+        {props.title.length > 0 && (
+          <span
+            style={{ overflowWrap: "anywhere", userSelect: "text" }}
+            className={"p-2 h5"}
+          >
             {props.title}
-          </h5>
-          {props.actions.length > 0 && (
-            <Stack direction={"horizontal"} gap={1} className={"mt-2"}>
-              {props.actions.map((action: DetailPaneAction) => (
-                <Button
-                  size={"sm"}
-                  onClick={action.action}
-                  disabled={props.loading}
-                  variant={action.variant}
-                >
-                  {props.loading && (
-                    <Spinner size={"sm"} className={"me-2"}></Spinner>
-                  )}
-                  <i className={`bi bi-${action.icon} me-1`}></i>
-                  {action.title}
-                </Button>
-              ))}
-            </Stack>
-          )}
-        </Stack>
+          </span>
+        )}
+        {props.actions.length > 0 && (
+          <Stack direction={"horizontal"} gap={2} className={"p-2 pt-0"}>
+            {props.actions.map((action: DetailPaneAction) => (
+              <Button
+                size={"sm"}
+                onClick={action.action}
+                disabled={props.loading}
+                variant={action.variant}
+              >
+                {props.loading && (
+                  <Spinner size={"sm"} className={"me-2"}></Spinner>
+                )}
+                <i className={`bi bi-${action.icon} me-1`}></i>
+                {action.title}
+              </Button>
+            ))}
+          </Stack>
+        )}
         <PropertyDisplay
           title={"Property"}
           properties={props.properties}
@@ -58,6 +63,7 @@ export function DetailPane(props: {
           title={"Other Property"}
           properties={props.otherProperties}
         ></PropertyDisplay>
+        {props.children}
       </Stack>
     </Stack>
   );

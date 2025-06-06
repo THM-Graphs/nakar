@@ -211,6 +211,19 @@ export interface components {
             readonly id: string;
             readonly title: string | null;
         };
+        readonly Histogram: {
+            readonly labels: readonly {
+                readonly label: string;
+                readonly count: number;
+            }[];
+            readonly properties: readonly {
+                readonly key: string;
+                readonly values: readonly {
+                    readonly value: string;
+                    readonly count: number;
+                }[];
+            }[];
+        };
         readonly GraphMetaData: {
             readonly labels: readonly components["schemas"]["GraphLabel"][];
             readonly scenarioInfo: components["schemas"]["ScenarioInfo"];
@@ -218,6 +231,7 @@ export interface components {
                 readonly step: string;
                 readonly durationMs: number;
             }[];
+            readonly histogram: components["schemas"]["Histogram"];
         };
         readonly Graph: {
             readonly nodes: readonly components["schemas"]["Node"][];
@@ -365,6 +379,7 @@ export type SchemaPhysicalNode = components['schemas']['PhysicalNode'];
 export type SchemaPosition = components['schemas']['Position'];
 export type SchemaEdge = components['schemas']['Edge'];
 export type SchemaScenarioInfo = components['schemas']['ScenarioInfo'];
+export type SchemaHistogram = components['schemas']['Histogram'];
 export type SchemaGraphMetaData = components['schemas']['GraphMetaData'];
 export type SchemaGraph = components['schemas']['Graph'];
 export type SchemaRoom = components['schemas']['Room'];

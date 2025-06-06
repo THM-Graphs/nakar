@@ -8,6 +8,7 @@ import {
   SchemaGraphLabel,
   SchemaGraphMetaData,
   SchemaGraphProperty,
+  SchemaHistogram,
   SchemaNode,
   SchemaScenarioInfo,
 } from '../../../../src-gen/schema';
@@ -129,6 +130,52 @@ export class CachingSchemaDTOFactory {
           };
         },
       ),
+      histogram: {
+        labels: graph.nodes.labelHistogram
+          .toArray()
+          .toSorted(
+            (a: [string, number], b: [string, number]): number => b[1] - a[1],
+          )
+          .map((entry: [string, number]): { label: string; count: number } => ({
+            label: entry[0],
+            count: entry[1],
+          })),
+        properties: graph.nodes.propertyHistogram
+          .toArray()
+          .toSorted(
+            (
+              a: [string, SMap<string, number>],
+              b: [string, SMap<string, number>],
+            ): number => a[0].localeCompare(b[0]),
+          )
+          .map(
+            (
+              entry: [string, SMap<string, number>],
+            ): {
+              key: string;
+              values: {
+                value: string;
+                count: number;
+              }[];
+            } => ({
+              key: entry[0],
+              values: entry[1]
+                .toArray()
+                .toSorted(
+                  (a: [string, number], b: [string, number]): number =>
+                    b[1] - a[1],
+                )
+                .map(
+                  (
+                    propertyEntry: [string, number],
+                  ): { value: string; count: number } => ({
+                    value: propertyEntry[0],
+                    count: propertyEntry[1],
+                  }),
+                ),
+            }),
+          ),
+      } satisfies SchemaHistogram,
     };
   }
 

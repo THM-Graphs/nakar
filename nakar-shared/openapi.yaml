@@ -342,6 +342,47 @@ components:
         - id
         - title
 
+    Histogram:
+      type: object
+      properties:
+        labels:
+          type: array
+          items:
+            type: object
+            properties:
+              label:
+                type: string
+              count:
+                type: number
+            required:
+              - label
+              - count
+        properties:
+          type: array
+          items:
+            type: object
+            properties:
+              key:
+                type: string
+              values:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    value:
+                      type: string
+                    count:
+                      type: number
+                  required:
+                    - value
+                    - count
+            required:
+              - key
+              - values
+      required:
+        - labels
+        - properties
+
     GraphMetaData:
       type: object
       properties:
@@ -363,10 +404,13 @@ components:
             required:
               - step
               - durationMs
+        histogram:
+          $ref: "#/components/schemas/Histogram"
       required:
         - labels
         - scenarioInfo
         - pipelineSummary
+        - histogram
 
     Graph:
       type: object

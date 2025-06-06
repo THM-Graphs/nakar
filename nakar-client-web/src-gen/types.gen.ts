@@ -56,6 +56,7 @@ export type GraphMetaData = {
         step: string;
         durationMs: number;
     }>;
+    histogram: Histogram;
 };
 
 export type GraphProperty = {
@@ -64,6 +65,20 @@ export type GraphProperty = {
 };
 
 export type GraphPropertyValue = unknown;
+
+export type Histogram = {
+    labels: Array<{
+        label: string;
+        count: number;
+    }>;
+    properties: Array<{
+        key: string;
+        values: Array<{
+            value: string;
+            count: number;
+        }>;
+    }>;
+};
 
 export type Node = {
     id: string;
