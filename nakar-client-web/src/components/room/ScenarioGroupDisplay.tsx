@@ -18,7 +18,7 @@ export function ScenarioGroupDisplay(props: {
   hidden?: boolean;
   scenarioLoading: string | null;
 }) {
-  const [collapsed, setCollapsed] = useState(true);
+  const [collapsed, setCollapsed] = useState(false);
   const [scnenarios, setScenarios] = useState<Loadable<Scenarios>>({
     type: "loading",
   });

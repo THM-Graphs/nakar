@@ -19,8 +19,11 @@ export function PropertyDisplay(props: {
       <tbody>
         {props.properties.map((property) => (
           <tr key={property.slug}>
-            <td>{property.slug}</td>
-            <td className={"text-break font-monospace"}>
+            <td style={{ userSelect: "text" }}>{property.slug}</td>
+            <td
+              className={"text-break font-monospace"}
+              style={{ userSelect: "text" }}
+            >
               {JSON.stringify(property.value)}
             </td>
           </tr>

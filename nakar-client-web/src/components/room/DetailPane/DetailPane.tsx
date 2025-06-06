@@ -28,7 +28,9 @@ export function DetailPane(props: {
       </Stack>
       <Stack className={"overflow-auto flex-shrink-1"}>
         <Stack className={"p-2 flex-grow-0"}>
-          <h5 style={{ overflowWrap: "anywhere" }}>{props.title}</h5>
+          <h5 style={{ overflowWrap: "anywhere", userSelect: "text" }}>
+            {props.title}
+          </h5>
           {props.actions.length > 0 && (
             <Stack direction={"horizontal"} gap={1} className={"mt-2"}>
               {props.actions.map((action: DetailPaneAction) => (

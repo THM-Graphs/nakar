@@ -21,7 +21,7 @@ export function DatabaseDisplay(props: {
   onScenarioSelect: (scenario: Scenario) => void;
   scenarioLoading: string | null;
 }) {
-  const [collapsed, setCollapsed] = useState(true);
+  const [collapsed, setCollapsed] = useState(false);
 
   const [scenarioGroups, setScenarioGroups] = useState<
     Loadable<ScenarioGroups>
