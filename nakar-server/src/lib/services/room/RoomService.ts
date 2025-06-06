@@ -234,13 +234,12 @@ export class RoomService implements ApplicationService {
       string,
       GetDatabaseDBDTO
     >();
-    const mayGraph: MutableGraph | undefined = this._graphs.get(params.roomId);
-    if (mayGraph == null) {
+    const graph: MutableGraph | undefined = this._graphs.get(params.roomId);
+    if (graph == null) {
       throw new Error(
         `Cannot find graph of room ${params.roomId} to run expand nodes.`,
       );
     }
-    const graph: MutableGraph = mayGraph;
 
     const scenario: GetScenarioDBDTO | null = await this._database.getScenario(
       graph.metaData.scenarioInfo.id,
@@ -282,21 +281,21 @@ export class RoomService implements ApplicationService {
       for (const newNode of expandResult.nodes) {
         if (!graph.nodes.hasById(newNode[0])) {
           result.newNodeCount += 1;
-        }
-        graph.nodes.addNeo4jNode(newNode[1]);
+          graph.nodes.addNeo4jNode(newNode[1]);
 
-        const insertedNode: MutableNode | null = graph.nodes.get(newNode[0]);
-        if (insertedNode != null && !insertedNode.locked) {
-          insertedNode.position.x = node.position.x;
-          insertedNode.position.y = node.position.y;
+          const insertedNode: MutableNode | null = graph.nodes.get(newNode[0]);
+          if (insertedNode != null && !insertedNode.locked) {
+            insertedNode.position.x = node.position.x;
+            insertedNode.position.y = node.position.y;
+          }
         }
       }
 
       for (const newEdge of expandResult.relationships) {
         if (!graph.edges.has(newEdge[0])) {
           result.newEdgeCount += 1;
+          graph.edges.addNeo4jEdge(newEdge[1]);
         }
-        graph.edges.addNeo4jEdge(newEdge[1]);
       }
 
       this._logger.debug(
@@ -305,7 +304,6 @@ export class RoomService implements ApplicationService {
       );
     }
 
-    this._graphs.set(params.roomId, graph);
     this._sendActionToWorker(params.roomId, {
       type: 'WTActionSetGraph',
       graph: graph.toPhysicalGraph(this._logger),
