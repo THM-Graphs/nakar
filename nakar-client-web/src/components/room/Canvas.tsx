@@ -80,7 +80,7 @@ export function Canvas(props: {
           webSockets={props.webSocketsManager}
         ></GraphRendererNVL>
       )}
-      <div className={"m-2"}>
+      <div className={"m-2"} style={{ zIndex: 1 }}>
         <Labels graphLabels={graphLabels}></Labels>
       </div>
       {props.scenarioProgress && (
@@ -91,46 +91,46 @@ export function Canvas(props: {
         </div>
       )}
       <div className={"flex-grow-1"}></div>
-      <div className={"m-2"}>
-        {detailsNode && (
-          <NodeDetails
-            node={detailsNode}
-            onExpandNode={() => {
-              props.webSocketsManager.sendMessage({
-                type: "WSActionExpandNodes",
-                nodes: [detailsNode.id],
-              });
-              props.onExpandNodes();
-            }}
-            onDeleteNode={() => {
-              props.webSocketsManager.sendMessage({
-                type: "WSActionDeleteNodes",
-                nodes: [detailsNode.id],
-              });
-              props.onDeleteNodes();
-              setDetailsNode(null);
-            }}
-            onUnlockNode={() => {
-              props.webSocketsManager.sendMessage({
-                type: "WSActionUnlockNodes",
-                nodes: [detailsNode.id],
-              });
-            }}
-            onClose={() => {
-              setDetailsNode(null);
-            }}
-            scenarioLoading={props.scenarioLoading}
-          ></NodeDetails>
-        )}
-        {detailsEdge && (
-          <EdgeDetails
-            edge={detailsEdge}
-            onClose={() => {
-              setDetailsEdge(null);
-            }}
-          ></EdgeDetails>
-        )}
-      </div>
+      {detailsNode && (
+        <NodeDetails
+          style={{ zIndex: 1 }}
+          node={detailsNode}
+          onExpandNode={() => {
+            props.webSocketsManager.sendMessage({
+              type: "WSActionExpandNodes",
+              nodes: [detailsNode.id],
+            });
+            props.onExpandNodes();
+          }}
+          onDeleteNode={() => {
+            props.webSocketsManager.sendMessage({
+              type: "WSActionDeleteNodes",
+              nodes: [detailsNode.id],
+            });
+            props.onDeleteNodes();
+            setDetailsNode(null);
+          }}
+          onUnlockNode={() => {
+            props.webSocketsManager.sendMessage({
+              type: "WSActionUnlockNodes",
+              nodes: [detailsNode.id],
+            });
+          }}
+          onClose={() => {
+            setDetailsNode(null);
+          }}
+          scenarioLoading={props.scenarioLoading}
+        ></NodeDetails>
+      )}
+      {detailsEdge && (
+        <EdgeDetails
+          style={{ zIndex: 1 }}
+          edge={detailsEdge}
+          onClose={() => {
+            setDetailsEdge(null);
+          }}
+        ></EdgeDetails>
+      )}
     </Stack>
   );
 }
