@@ -1,11 +1,4 @@
-import {
-  Button,
-  CloseButton,
-  Spinner,
-  Stack,
-  Tab,
-  Tabs,
-} from "react-bootstrap";
+import { Button, CloseButton, Spinner, Stack } from "react-bootstrap";
 import { DetailPaneAction } from "./DetailPaneAction.ts";
 import { GraphProperty } from "../../../../src-gen";
 import { PropertyDisplay } from "./PropertyDisplay.tsx";
@@ -28,7 +21,9 @@ export function DetailPane(props: {
         direction={"horizontal"}
         className={"border-bottom justify-content-between flex-0"}
       >
-        <span className={"ms-2 text-muted"}>{props.entityTitle}</span>
+        {props.entityTitle.length > 0 && (
+          <span className={"ms-2 text-muted"}>{props.entityTitle}</span>
+        )}
         <CloseButton className={"m-1"} onClick={props.onClose}></CloseButton>
       </Stack>
       <Stack className={"overflow-auto flex-shrink-1"}>

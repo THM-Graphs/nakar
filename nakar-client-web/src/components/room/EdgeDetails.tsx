@@ -1,11 +1,7 @@
 import { Edge } from "../../../src-gen";
 import { DetailPane } from "./DetailPane/DetailPane.tsx";
 
-export function EdgeDetails(props: {
-  edge: Edge;
-  onClose: () => void;
-  className?: string;
-}) {
+export function EdgeDetails(props: { edge: Edge; onClose: () => void }) {
   return (
     <DetailPane
       actions={[]}

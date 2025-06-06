@@ -298,6 +298,8 @@ export class RoomService implements ApplicationService {
         }
       }
 
+      // TODO: Execute connect result nodes if needed
+
       this._logger.debug(
         this,
         `Expand node result for ${nodeId}: ${expandResult.nodes.size.toString()} nodes and ${expandResult.relationships.size.toString()} edges.`,

@@ -5,6 +5,9 @@ export function PropertyDisplay(props: {
   title: string;
   properties: GraphProperty[];
 }) {
+  if (props.properties.length === 0) {
+    return null;
+  }
   return (
     <Table>
       <thead>

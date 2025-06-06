@@ -3,17 +3,19 @@ import {
   Edge,
   GraphLabel,
   Node,
+  WSActionRelayout,
   WSEventScenarioProgress,
 } from "../../../src-gen";
 import { Labels } from "./Labels.tsx";
 import { GraphRendererD3 } from "./GraphRendererD3.tsx";
 import { GraphRendererNVL } from "./GraphRendererNVL.tsx";
-import { Stack } from "react-bootstrap";
+import { Button, OverlayTrigger, Stack, Tooltip } from "react-bootstrap";
 import { GraphRendererEngine } from "../../lib/graph-renderer/GraphRendererEngine.ts";
 import { NodeDetails } from "./NodeDetails.tsx";
 import { EdgeDetails } from "./EdgeDetails.tsx";
 import { WebSocketsManager } from "../../lib/ws/WebSocketsManager.ts";
 import { GraphProgressDisplay } from "./GraphProgressDisplay.tsx";
+import { DetailPane } from "./DetailPane/DetailPane.tsx";
 
 export function Canvas(props: {
   renderer: GraphRendererEngine;
@@ -25,6 +27,7 @@ export function Canvas(props: {
 }) {
   const [detailsNode, setDetailsNode] = useState<Node | null>(null);
   const [detailsEdge, setDetailsEdge] = useState<Edge | null>(null);
+  const [showHistogram, setShowHistogram] = useState<boolean>(false);
   const [graphLabels, setGraphLabels] = useState<GraphLabel[]>([]);
 
   useEffect(() => {
@@ -91,9 +94,34 @@ export function Canvas(props: {
         </div>
       )}
       <div className={"flex-grow-1"}></div>
+      <OverlayTrigger overlay={<Tooltip>Relayout Graph</Tooltip>}>
+        <Button
+          style={{ zIndex: 1 }}
+          variant={"icon"}
+          onClick={() => {
+            props.webSocketsManager.sendMessage({
+              type: "WSActionRelayout",
+            } satisfies WSActionRelayout);
+          }}
+        >
+          <i className={`bi bi-tropical-storm`}></i>
+        </Button>
+      </OverlayTrigger>
+      {!showHistogram && (
+        <OverlayTrigger overlay={<Tooltip>Histogram</Tooltip>}>
+          <Button
+            variant={"icon"}
+            style={{ zIndex: 1 }}
+            onClick={() => {
+              setShowHistogram(true);
+            }}
+          >
+            <i className={"bi bi-bar-chart-fill"}></i>
+          </Button>
+        </OverlayTrigger>
+      )}
       {detailsNode && (
         <NodeDetails
-          style={{ zIndex: 1 }}
           node={detailsNode}
           onExpandNode={() => {
             props.webSocketsManager.sendMessage({
@@ -124,12 +152,24 @@ export function Canvas(props: {
       )}
       {detailsEdge && (
         <EdgeDetails
-          style={{ zIndex: 1 }}
           edge={detailsEdge}
           onClose={() => {
             setDetailsEdge(null);
           }}
         ></EdgeDetails>
+      )}
+      {showHistogram && (
+        <DetailPane
+          actions={[]}
+          entityTitle={"Histogram"}
+          loading={false}
+          onClose={() => {
+            setShowHistogram(false);
+          }}
+          otherProperties={[]}
+          properties={[]}
+          title={""}
+        ></DetailPane>
       )}
     </Stack>
   );

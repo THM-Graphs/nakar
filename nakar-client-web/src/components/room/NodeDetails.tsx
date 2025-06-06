@@ -1,6 +1,4 @@
-import { Button, CloseButton, Spinner, Stack, Table } from "react-bootstrap";
 import { Node } from "../../../src-gen";
-import { CSSProperties } from "react";
 import { DetailPane } from "./DetailPane/DetailPane.tsx";
 import { DetailPaneAction } from "./DetailPane/DetailPaneAction.ts";
 
@@ -11,8 +9,6 @@ export function NodeDetails(props: {
   onDeleteNode: () => void;
   onUnlockNode: () => void;
   scenarioLoading: boolean;
-  className?: string;
-  style?: CSSProperties;
 }) {
   return (
     <DetailPane
