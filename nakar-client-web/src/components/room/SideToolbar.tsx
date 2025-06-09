@@ -11,7 +11,7 @@ export function SideToolbar(props: {
   }
   return (
     <Stack
-      className={"flex-shrink-0 flex-grow-0 border-end"}
+      className={"flex-shrink-0 flex-grow-0 border-end bg-body-tertiary"}
       style={{
         width: `${props.width.toString()}px`,
       }}

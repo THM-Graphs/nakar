@@ -16,7 +16,7 @@ export function DetailPane(props: {
 }) {
   return (
     <Stack
-      className={"border-start flex-shrink-0 flex-grow-0 bg-body"}
+      className={"border-start flex-shrink-0 flex-grow-0 bg-body-tertiary"}
       style={{ width: "400px", zIndex: 1 }}
     >
       <Stack
