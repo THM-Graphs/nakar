@@ -14,7 +14,7 @@ import { ErrorDisplay } from "../shared/ErrorDisplay.tsx";
 import { Loading } from "../shared/Loading.tsx";
 import { resultOrThrow } from "../../lib/data/resultOrThrow.ts";
 import { NavLink } from "react-router";
-import { Stack } from "react-bootstrap";
+import { Button, Stack } from "react-bootstrap";
 
 export function DatabaseDisplay(props: {
   database: Database;
@@ -59,11 +59,6 @@ export function DatabaseDisplay(props: {
           ></i>
           <span className={"fw-bold"}>{props.database.title}</span>
         </Stack>
-        {props.database.browserUrl && (
-          <NavLink to={props.database.browserUrl} target={"_blank"}>
-            <i className={"bi bi-box-arrow-up-right"}></i>
-          </NavLink>
-        )}
         <Loading
           size={"sm"}
           hidden={scenarioGroups.type !== "loading"}

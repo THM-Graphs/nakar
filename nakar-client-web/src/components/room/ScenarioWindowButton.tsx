@@ -12,7 +12,7 @@ export function ScenarioWindowButton(props: {
         props.onToggle();
       }}
       className={clsx(
-        "border-start border-end rounded-0 ps-2 pe-2 small pointer",
+        "border-start border-end rounded-0 ps-2 pe-2 small pointer text-muted",
         props.isOpen ? "bg-body-secondary" : "",
       )}
     >
