@@ -5,7 +5,7 @@ import { ClipboardButton } from "./ClipboardButton.tsx";
 
 export function HistogramDisplay(props: { histogram: Histogram }) {
   return (
-    <Stack className={"border-bottom mb-5"}>
+    <Stack className={"border-bottom mb-5 flex-grow-0"}>
       <Stack className={"border-bottom"}>
         <span className={"ms-1 fw-bold"}>Labels</span>
         {props.histogram.labels.map((entry) => (

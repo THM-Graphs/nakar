@@ -18,6 +18,7 @@ import { WebSocketsManager } from "../../lib/ws/WebSocketsManager.ts";
 import { GraphProgressDisplay } from "./GraphProgressDisplay.tsx";
 import { DetailPane } from "./DetailPane/DetailPane.tsx";
 import { HistogramDisplay } from "./HistogramDisplay.tsx";
+import { D3Renderer } from "../../lib/d3/D3Renderer.ts";
 
 export function Canvas(props: {
   renderer: GraphRendererEngine;
@@ -26,10 +27,13 @@ export function Canvas(props: {
   scenarioLoading: boolean;
   onExpandNodes: () => void;
   onDeleteNodes: () => void;
+  graphRenderer: D3Renderer;
 }) {
   const [detailsNode, setDetailsNode] = useState<Node | null>(null);
   const [detailsEdge, setDetailsEdge] = useState<Edge | null>(null);
   const [showHistogram, setShowHistogram] = useState<boolean>(false);
+
+  // TODO: Move because it gets lost
   const [graphLabels, setGraphLabels] = useState<GraphLabel[]>([]);
   const [histogram, setHistogram] = useState<Histogram>({
     labels: [],
@@ -83,6 +87,7 @@ export function Canvas(props: {
             setDetailsNode(null);
             setDetailsEdge(l);
           }}
+          graphRenderer={props.graphRenderer}
         ></GraphRendererD3>
       )}
       {props.renderer === "nvl" && (
@@ -103,6 +108,7 @@ export function Canvas(props: {
       <div className={"flex-grow-1"}></div>
       <OverlayTrigger
         delay={{ show: 500, hide: 0 }}
+        placement="left"
         overlay={<Tooltip>Relayout Graph</Tooltip>}
       >
         <Button
@@ -121,6 +127,7 @@ export function Canvas(props: {
         <OverlayTrigger
           delay={{ show: 500, hide: 0 }}
           overlay={<Tooltip>Histogram</Tooltip>}
+          placement="left"
         >
           <Button
             variant={"icon"}

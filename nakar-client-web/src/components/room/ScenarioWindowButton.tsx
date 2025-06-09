@@ -1,20 +1,23 @@
-import { Button } from "react-bootstrap";
+import { Stack } from "react-bootstrap";
+import clsx from "clsx";
 
 export function ScenarioWindowButton(props: {
   isOpen: boolean;
   onToggle: () => void;
 }) {
   return (
-    <Button
+    <Stack
+      direction={"horizontal"}
       onClick={() => {
         props.onToggle();
       }}
-      active={props.isOpen}
-      variant={"secondary"}
-      size={"sm"}
+      className={clsx(
+        "border-start border-end rounded-0 ps-2 pe-2 small pointer",
+        props.isOpen ? "bg-body-secondary" : "",
+      )}
     >
       <i className={"bi bi-easel-fill me-2"}></i>
       <span>Scenarios</span>
-    </Button>
+    </Stack>
   );
 }

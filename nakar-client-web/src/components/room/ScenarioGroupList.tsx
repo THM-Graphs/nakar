@@ -1,5 +1,6 @@
 import { Scenario, ScenarioGroup, ScenarioGroups } from "../../../src-gen";
 import { ScenarioGroupDisplay } from "./ScenarioGroupDisplay.tsx";
+import { Stack } from "react-bootstrap";
 
 export function ScenarioGroupList(props: {
   scenarioGroups: ScenarioGroups;
@@ -8,9 +9,11 @@ export function ScenarioGroupList(props: {
   scenarioLoading: string | null;
 }) {
   return (
-    <ul>
+    <Stack className={"flex-grow-0"}>
       {props.scenarioGroups.scenarioGroups.length == 0 && (
-        <span hidden={props.hidden}>(empty)</span>
+        <span hidden={props.hidden} className={"small text-muted ms-1"}>
+          (empty)
+        </span>
       )}
       {props.scenarioGroups.scenarioGroups.map(
         (scenarioGroup: ScenarioGroup) => (
@@ -23,6 +26,6 @@ export function ScenarioGroupList(props: {
           ></ScenarioGroupDisplay>
         ),
       )}
-    </ul>
+    </Stack>
   );
 }

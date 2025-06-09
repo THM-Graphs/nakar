@@ -8,10 +8,11 @@ export function GraphRendererD3(props: {
   onNodeClicked: (node: Node) => void;
   onEdgeClicked: (edge: Edge) => void;
   webSockets: WebSocketsManager;
+  graphRenderer: D3Renderer;
 }) {
   const svgRef = createRef<SVGSVGElement>();
+  const graphRenderer = props.graphRenderer;
   const theme = useTheme();
-  const [graphRenderer] = useState(new D3Renderer(theme));
 
   useEffect(() => {
     let animationActive: boolean = true;

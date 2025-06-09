@@ -1,6 +1,14 @@
-import { DropdownButton, Dropdown } from "react-bootstrap";
+import { Dropdown, Stack } from "react-bootstrap";
 import { getVersion } from "../../../src-gen";
-import { useState, useCallback, useEffect } from "react";
+import {
+  useState,
+  useCallback,
+  useEffect,
+  forwardRef,
+  ReactNode,
+  ForwardedRef,
+  MouseEvent,
+} from "react";
 import { Loadable } from "../../lib/data/Loadable";
 import { resultOrThrow } from "../../lib/data/resultOrThrow";
 import { handleError } from "../../lib/error/handleError";
@@ -37,74 +45,100 @@ export function InfoDropdown(props: {
 
   const renderer = props.renderer;
 
-  return (
-    <DropdownButton
-      className={props.className}
-      variant={"secondary"}
-      size={"sm"}
-      align={"end"}
-      title={
-        <span>
-          <i className={`bi bi-gear-fill me-1`}></i>
-        </span>
-      }
-    >
-      <Dropdown.Item disabled>Theme</Dropdown.Item>
-      <ThemeDropdownEntry targetTheme={null}></ThemeDropdownEntry>
-      <ThemeDropdownEntry targetTheme={"light"}></ThemeDropdownEntry>
-      <ThemeDropdownEntry targetTheme={"dark"}></ThemeDropdownEntry>
-      <Dropdown.Divider />
-
-      {renderer && (
-        <>
-          <Dropdown.Item disabled>Renderer</Dropdown.Item>
-          <Dropdown.Item
-            onClick={() => {
-              renderer.onChange("d3");
-            }}
-            active={renderer.current === "d3"}
-          >
-            D3.js
-          </Dropdown.Item>
-          <Dropdown.Item
-            onClick={() => {
-              renderer.onChange("nvl");
-            }}
-            active={renderer.current === "nvl"}
-          >
-            Neo4j Visualization Library
-          </Dropdown.Item>
-          <Dropdown.Divider />
-        </>
-      )}
-
-      <Dropdown.Item disabled>Client ({props.env.VERSION})</Dropdown.Item>
-      <Dropdown.Item disabled>Mode: {import.meta.env.MODE}</Dropdown.Item>
-      <Dropdown.Divider />
-
-      <Dropdown.Item disabled>
-        Server (
-        {match(version)
-          .with({ type: "loading" }, () => <span>loading...</span>)
-          .with({ type: "data" }, ({ data }) => <span>{data}</span>)
-          .with({ type: "error" }, ({ message }) => <span>{message}</span>)
-          .exhaustive()}
-        )
-      </Dropdown.Item>
-      <Dropdown.Item href={props.env.BACKEND_URL} target={"_blank"}>
-        <span className="me-1">{props.env.BACKEND_URL}</span>
-        <span className="me-2"></span>
-        <i className="bi bi-box-arrow-up-right"></i>
-      </Dropdown.Item>
-      <Dropdown.Item
-        href={props.env.BACKEND_URL + "/system/backup"}
-        target={"_blank"}
+  const CustomToggle = forwardRef(
+    (
+      {
+        onClick,
+        children,
+      }: {
+        onClick: (event: MouseEvent) => void;
+        children: ReactNode;
+      },
+      ref: ForwardedRef<HTMLSpanElement>,
+    ) => (
+      <Stack
+        ref={ref}
+        direction={"horizontal"}
+        className={
+          "border-start text-muted ps-2 pe-2 justify-content-center pointer"
+        }
+        style={{
+          width: "40px",
+        }}
+        onClick={(event: MouseEvent) => {
+          event.preventDefault();
+          onClick(event);
+        }}
       >
-        <span className="me-1">Download Backup (.tar.gz)</span>
-        <span className="me-2"></span>
-        <i className="bi bi-download"></i>
-      </Dropdown.Item>
-      <ImportBackupDropdownItem></ImportBackupDropdownItem>
-    </DropdownButton>
+        <i className={`bi bi-gear-fill`}></i>
+        {children}
+      </Stack>
+    ),
+  );
+
+  return (
+    <>
+      <Dropdown className={"align-items-stretch d-flex"}>
+        <Dropdown.Toggle as={CustomToggle}></Dropdown.Toggle>
+        <Dropdown.Menu>
+          <Dropdown.Item disabled>Theme</Dropdown.Item>
+          <ThemeDropdownEntry targetTheme={null}></ThemeDropdownEntry>
+          <ThemeDropdownEntry targetTheme={"light"}></ThemeDropdownEntry>
+          <ThemeDropdownEntry targetTheme={"dark"}></ThemeDropdownEntry>
+          <Dropdown.Divider />
+
+          {renderer && (
+            <>
+              <Dropdown.Item disabled>Renderer</Dropdown.Item>
+              <Dropdown.Item
+                onClick={() => {
+                  renderer.onChange("d3");
+                }}
+                active={renderer.current === "d3"}
+              >
+                D3.js
+              </Dropdown.Item>
+              <Dropdown.Item
+                onClick={() => {
+                  renderer.onChange("nvl");
+                }}
+                active={renderer.current === "nvl"}
+              >
+                Neo4j Visualization Library
+              </Dropdown.Item>
+              <Dropdown.Divider />
+            </>
+          )}
+
+          <Dropdown.Item disabled>Client ({props.env.VERSION})</Dropdown.Item>
+          <Dropdown.Item disabled>Mode: {import.meta.env.MODE}</Dropdown.Item>
+          <Dropdown.Divider />
+
+          <Dropdown.Item disabled>
+            Server (
+            {match(version)
+              .with({ type: "loading" }, () => <span>loading...</span>)
+              .with({ type: "data" }, ({ data }) => <span>{data}</span>)
+              .with({ type: "error" }, ({ message }) => <span>{message}</span>)
+              .exhaustive()}
+            )
+          </Dropdown.Item>
+          <Dropdown.Item href={props.env.BACKEND_URL} target={"_blank"}>
+            <span className="me-1">{props.env.BACKEND_URL}</span>
+            <span className="me-2"></span>
+            <i className="bi bi-box-arrow-up-right"></i>
+          </Dropdown.Item>
+          <Dropdown.Item
+            href={props.env.BACKEND_URL + "/system/backup"}
+            target={"_blank"}
+          >
+            <span className="me-1">Download Backup (.tar.gz)</span>
+            <span className="me-2"></span>
+            <i className="bi bi-download"></i>
+          </Dropdown.Item>
+          <ImportBackupDropdownItem></ImportBackupDropdownItem>
+        </Dropdown.Menu>
+      </Dropdown>
+    </>
   );
 }

@@ -1,8 +1,8 @@
 import { Stack } from "react-bootstrap";
-import { ReactElement } from "react";
+import { ReactNode } from "react";
 
 export function SideToolbar(props: {
-  children?: () => ReactElement;
+  children: ReactNode;
   hidden?: boolean;
   width: number;
 }) {
@@ -11,14 +11,12 @@ export function SideToolbar(props: {
   }
   return (
     <Stack
-      className={
-        "flex-shrink-0 flex-grow-0 overflow-x-hidden overflow-y-scroll"
-      }
+      className={"flex-shrink-0 flex-grow-0 border-end"}
       style={{
         width: `${props.width.toString()}px`,
       }}
     >
-      {props.children?.()}
+      {props.children}
     </Stack>
   );
 }

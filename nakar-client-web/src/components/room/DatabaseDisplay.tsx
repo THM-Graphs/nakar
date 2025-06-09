@@ -21,7 +21,7 @@ export function DatabaseDisplay(props: {
   onScenarioSelect: (scenario: Scenario) => void;
   scenarioLoading: string | null;
 }) {
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(true);
 
   const [scenarioGroups, setScenarioGroups] = useState<
     Loadable<ScenarioGroups>
@@ -42,36 +42,33 @@ export function DatabaseDisplay(props: {
   }, [props.database]);
 
   return (
-    <>
-      <li style={{ listStyleType: "none" }}>
-        <Stack direction={"horizontal"} gap={2}>
-          <Stack
-            direction={"horizontal"}
-            gap={2}
-            style={{ cursor: "pointer" }}
-            onClick={() => {
-              setCollapsed((old) => !old);
-            }}
-          >
-            <i
-              className={clsx(
-                "bi",
-                collapsed ? "bi-chevron-right" : "bi-chevron-down",
-              )}
-            ></i>
-            {props.database.title}
-          </Stack>
-          {props.database.browserUrl && (
-            <NavLink to={props.database.browserUrl} target={"_blank"}>
-              <span>{props.database.browserUrl}</span>
-            </NavLink>
-          )}
-          <Loading
-            size={"sm"}
-            hidden={scenarioGroups.type !== "loading"}
-          ></Loading>
+    <Stack className={"border-bottom flex-grow-0"}>
+      <Stack direction={"horizontal"} gap={2} className={"ms-1"}>
+        <Stack
+          direction={"horizontal"}
+          className={"pointer"}
+          onClick={() => {
+            setCollapsed((old) => !old);
+          }}
+        >
+          <i
+            className={clsx(
+              "bi me-1",
+              collapsed ? "bi-chevron-right" : "bi-chevron-down",
+            )}
+          ></i>
+          <span className={"fw-bold"}>{props.database.title}</span>
         </Stack>
-      </li>
+        {props.database.browserUrl && (
+          <NavLink to={props.database.browserUrl} target={"_blank"}>
+            <i className={"bi bi-box-arrow-up-right"}></i>
+          </NavLink>
+        )}
+        <Loading
+          size={"sm"}
+          hidden={scenarioGroups.type !== "loading"}
+        ></Loading>
+      </Stack>
       {match(scenarioGroups)
         .with({ type: "error" }, ({ message }) => (
           <ErrorDisplay message={message}></ErrorDisplay>
@@ -85,6 +82,6 @@ export function DatabaseDisplay(props: {
           ></ScenarioGroupList>
         ))
         .otherwise(() => null)}
-    </>
+    </Stack>
   );
 }

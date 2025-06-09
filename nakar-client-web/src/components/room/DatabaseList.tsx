@@ -36,17 +36,15 @@ export function DatabaseList(props: {
       <ErrorDisplay message={message}></ErrorDisplay>
     ))
     .with({ type: "loading" }, () => <Loading></Loading>)
-    .with({ type: "data" }, ({ data }) => (
-      <ul className={"pe-2"}>
-        {data.databases.map((database: Database) => (
-          <DatabaseDisplay
-            onScenarioSelect={props.onScenarioSelect}
-            key={database.id}
-            database={database}
-            scenarioLoading={props.scenarioLoading}
-          ></DatabaseDisplay>
-        ))}
-      </ul>
-    ))
+    .with({ type: "data" }, ({ data }) =>
+      data.databases.map((database: Database) => (
+        <DatabaseDisplay
+          onScenarioSelect={props.onScenarioSelect}
+          key={database.id}
+          database={database}
+          scenarioLoading={props.scenarioLoading}
+        ></DatabaseDisplay>
+      )),
+    )
     .exhaustive();
 }

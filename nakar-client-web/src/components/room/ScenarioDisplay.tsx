@@ -14,11 +14,11 @@ export function ScenarioDisplay(props: {
   const [collapsed, setCollapsed] = useState(true);
 
   return (
-    <li hidden={props.hidden}>
+    <Stack hidden={props.hidden} className={"ms-3"}>
       <Stack direction={"horizontal"} gap={0}>
         <Stack
+          className={"small pointer"}
           direction={"horizontal"}
-          style={{ listStyleType: "none", cursor: "pointer" }}
           onClick={() => {
             setCollapsed((old) => !old);
           }}
@@ -52,6 +52,6 @@ export function ScenarioDisplay(props: {
         scenario={props.scenario}
         scenarioLoading={props.scenarioLoading}
       ></ScenarioCard>
-    </li>
+    </Stack>
   );
 }

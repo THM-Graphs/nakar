@@ -1,5 +1,6 @@
 import { Scenario, Scenarios } from "../../../src-gen";
 import { ScenarioDisplay } from "./ScenarioDisplay.tsx";
+import { Stack } from "react-bootstrap";
 
 export function ScenariosList(props: {
   scenarios: Scenarios;
@@ -8,7 +9,7 @@ export function ScenariosList(props: {
   scenarioLoading: string | null;
 }) {
   return (
-    <ul style={{ listStyleType: "none" }}>
+    <Stack>
       {props.scenarios.scenarios.length == 0 && (
         <span hidden={props.hidden}>(empty)</span>
       )}
@@ -21,6 +22,6 @@ export function ScenariosList(props: {
           scenarioLoading={props.scenarioLoading}
         ></ScenarioDisplay>
       ))}
-    </ul>
+    </Stack>
   );
 }

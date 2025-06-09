@@ -36,7 +36,6 @@ export function QueryDisplay(props: { query: string }) {
           className={"font-monospace small"}
           style={{
             whiteSpace: "pre-line",
-            cursor: isClipboardEnabled ? "pointer" : undefined,
           }}
         >
           {props.query}

@@ -7,14 +7,6 @@ html, body, div#root {
     user-select: none;
 }
 
-/* Workaround for tabs sizes */
-.tab-content {
-    flex-grow: 1;
-    height: 100%;
-    width: 100%;
-    overflow: auto;
-}
-
 /* Workaround for https://github.com/react-bootstrap/react-bootstrap/issues/3393#issuecomment-1375715749 */
 div[role=tooltip] {
     position: fixed;
@@ -22,4 +14,8 @@ div[role=tooltip] {
 
 .user-select-text {
     user-select: text;
+}
+
+.pointer {
+    cursor: pointer;
 }

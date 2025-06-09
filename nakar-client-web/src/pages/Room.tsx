@@ -1,4 +1,4 @@
-import { Stack, Tab, Tabs } from "react-bootstrap";
+import { CloseButton, Stack, Tab, Tabs } from "react-bootstrap";
 import { AppNavbar } from "../components/shared/AppNavbar.tsx";
 import { SideToolbar } from "../components/room/SideToolbar.tsx";
 import { DatabaseList } from "../components/room/DatabaseList.tsx";
@@ -17,6 +17,8 @@ import { useWebSocketsState } from "../lib/ws/useWebSocketsState.ts";
 import { ToastStack } from "../components/room/ToastStack.tsx";
 import { WebSocketsManager } from "../lib/ws/WebSocketsManager.ts";
 import { Env } from "../lib/env/env.ts";
+import { useTheme } from "../lib/theme/useTheme.ts";
+import { D3Renderer } from "../lib/d3/D3Renderer.ts";
 
 export async function RoomLoader(
   args: LoaderFunctionArgs,
@@ -42,7 +44,9 @@ export function Room(props: { webSockets: WebSocketsManager; env: Env }) {
   const [scenarioProgress, setScenarioProgress] =
     useState<WSEventScenarioProgress | null>(null);
   const socketState = useWebSocketsState(props.webSockets);
-  const [selectedTab, setSelectedTab] = useState<string | null>(null);
+  const [selectedTab, setSelectedTab] = useState<"graph" | "data">("graph");
+  const theme = useTheme();
+  const [graphRenderer] = useState(new D3Renderer(theme));
 
   useEffect(() => {
     if (socketState.type === "connected") {
@@ -100,6 +104,10 @@ export function Room(props: { webSockets: WebSocketsManager; env: Env }) {
             onChange: setRenderer,
           }}
           webSocketsManager={props.webSockets}
+          tabs={{
+            state: selectedTab,
+            setTab: setSelectedTab,
+          }}
         ></AppNavbar>
         <ToastStack websocketsManager={props.webSockets}></ToastStack>
         <Stack
@@ -107,8 +115,24 @@ export function Room(props: { webSockets: WebSocketsManager; env: Env }) {
           className={"align-items-stretch flex-grow-1"}
           style={{ height: "100px" }}
         >
-          <SideToolbar hidden={!scenariosWindowOpened} width={500}>
-            {() => (
+          <SideToolbar hidden={!scenariosWindowOpened} width={400}>
+            <Stack
+              direction={"horizontal"}
+              className={"border-bottom justify-content-between flex-0"}
+            >
+              <span className={"ms-2 text-muted"}>Scenarios</span>
+              <CloseButton
+                className={"m-1"}
+                onClick={() => {
+                  setScenariosWindowOpened(false);
+                }}
+              ></CloseButton>
+            </Stack>
+            <Stack
+              className={
+                "flex-grow-1 flex-shrink-1 overflow-x-hidden overflow-y-auto justify-content-start pb-5"
+              }
+            >
               <DatabaseList
                 onScenarioSelect={(scenario) => {
                   setScenarioLoading(scenario.id);
@@ -119,43 +143,31 @@ export function Room(props: { webSockets: WebSocketsManager; env: Env }) {
                 }}
                 scenarioLoading={scenarioLoading}
               ></DatabaseList>
-            )}
+            </Stack>
           </SideToolbar>
           <Stack
             direction={"vertical"}
             className={"flex-shrink-1 flex-grow-1"}
             style={{ width: "100px" }}
           >
-            <Tabs
-              activeKey={selectedTab ?? "graph"}
-              onSelect={(tab) => {
-                setSelectedTab(tab);
-              }}
-              className={"flex-grow-0"}
-            >
-              <Tab eventKey="graph" title="Graph" style={{ height: "100%" }}>
-                <Canvas
-                  onExpandNodes={() => {
-                    setScenarioLoading("");
-                  }}
-                  onDeleteNodes={() => {
-                    setScenarioLoading("");
-                  }}
-                  renderer={renderer}
-                  webSocketsManager={props.webSockets}
-                  scenarioProgress={scenarioProgress}
-                  scenarioLoading={scenarioLoading != null}
-                ></Canvas>
-              </Tab>
-              <Tab
-                eventKey="table"
-                title="Data"
-                style={{ height: "100%", width: "100%" }}
-                className={"overflow-auto"}
-              >
-                <DataTable tableData={tableData}></DataTable>
-              </Tab>
-            </Tabs>
+            {selectedTab === "graph" && (
+              <Canvas
+                onExpandNodes={() => {
+                  setScenarioLoading("");
+                }}
+                onDeleteNodes={() => {
+                  setScenarioLoading("");
+                }}
+                renderer={renderer}
+                webSocketsManager={props.webSockets}
+                scenarioProgress={scenarioProgress}
+                scenarioLoading={scenarioLoading != null}
+                graphRenderer={graphRenderer}
+              ></Canvas>
+            )}
+            {selectedTab === "data" && (
+              <DataTable tableData={tableData}></DataTable>
+            )}
           </Stack>
         </Stack>
       </Stack>

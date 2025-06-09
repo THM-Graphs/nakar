@@ -11,6 +11,7 @@ import { handleError } from "../../lib/error/handleError.ts";
 import { Loading } from "../shared/Loading.tsx";
 import clsx from "clsx";
 import { resultOrThrow } from "../../lib/data/resultOrThrow";
+import { Stack } from "react-bootstrap";
 
 export function ScenarioGroupDisplay(props: {
   scenarioGroup: ScenarioGroup;
@@ -37,26 +38,27 @@ export function ScenarioGroupDisplay(props: {
 
   return (
     <>
-      <li
+      <Stack
+        className={"border-top pointer"}
+        direction={"horizontal"}
         hidden={props.hidden}
-        style={{ listStyleType: "none", cursor: "pointer" }}
         onClick={() => {
           setCollapsed((old) => !old);
         }}
       >
         <i
           className={clsx(
-            "bi me-2",
+            "bi me-1 ms-1",
             collapsed ? "bi-chevron-right" : "bi-chevron-down",
           )}
         ></i>
-        {props.scenarioGroup.title}
+        <span className={"small text-muted"}>{props.scenarioGroup.title}</span>
         <Loading
           size={"sm"}
           hidden={scnenarios.type !== "loading"}
           className={"ms-1"}
         ></Loading>
-      </li>
+      </Stack>
       {scnenarios.type == "data" && (
         <ScenariosList
           scenarios={scnenarios.data}

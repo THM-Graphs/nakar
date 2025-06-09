@@ -1,4 +1,4 @@
-import { Badge, OverlayTrigger, Tooltip } from "react-bootstrap";
+import { OverlayTrigger, Stack, Tooltip } from "react-bootstrap";
 import { match } from "ts-pattern";
 import clsx from "clsx";
 import { SocketState } from "../../lib/ws/SocketState.ts";
@@ -10,9 +10,14 @@ export function SocketStateDisplay(props: { socketState: SocketState }) {
       delay={{ show: 500, hide: 0 }}
       overlay={<Tooltip>{displayStringForState(props.socketState)}</Tooltip>}
     >
-      <Badge
-        bg="secondary"
-        className={clsx(backgroundColorForState(props.socketState))}
+      <Stack
+        className={clsx(
+          "text-white justify-content-center align-items-center",
+          backgroundColorForState(props.socketState),
+        )}
+        style={{
+          width: "40px",
+        }}
       >
         <i
           className={clsx(
@@ -21,7 +26,7 @@ export function SocketStateDisplay(props: { socketState: SocketState }) {
             // forgroundColorForState(props.socketState),
           )}
         ></i>
-      </Badge>
+      </Stack>
     </OverlayTrigger>
   );
 }
