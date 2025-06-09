@@ -3,7 +3,6 @@ import { DetailPaneAction } from "./DetailPaneAction.ts";
 import { GraphProperty } from "../../../../src-gen";
 import { PropertyDisplay } from "./PropertyDisplay.tsx";
 import { ReactNode } from "react";
-import { ClipboardButton } from "../ClipboardButton.tsx";
 
 export function DetailPane(props: {
   entityTitle: string;

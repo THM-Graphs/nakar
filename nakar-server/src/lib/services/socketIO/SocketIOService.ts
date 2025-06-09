@@ -12,7 +12,6 @@ import {
   SchemaWsActionJoinRoom,
   SchemaWsActionLoadScenario,
   SchemaWsActionMoveNodes,
-  SchemaWsActionRelayout,
   SchemaWsActionUngrabNode,
   SchemaWsActionUnlockNodes,
   SchemaWsClientToServerMessage,

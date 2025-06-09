@@ -1,4 +1,4 @@
-import { DropdownButton, Dropdown, Stack, Badge } from "react-bootstrap";
+import { DropdownButton, Dropdown } from "react-bootstrap";
 import { getVersion } from "../../../src-gen";
 import { useState, useCallback, useEffect } from "react";
 import { Loadable } from "../../lib/data/Loadable";
