@@ -19,3 +19,7 @@ html, body, div#root {
 div[role=tooltip] {
     position: fixed;
 }
+
+.user-select-text {
+    user-select: text;
+}

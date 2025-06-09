@@ -215,12 +215,14 @@ export interface components {
             readonly labels: readonly {
                 readonly label: string;
                 readonly count: number;
+                readonly percentage: number;
             }[];
-            readonly properties: readonly {
+            readonly nodeProperties: readonly {
                 readonly key: string;
                 readonly values: readonly {
                     readonly value: string;
                     readonly count: number;
+                    readonly percentage: number;
                 }[];
             }[];
         };

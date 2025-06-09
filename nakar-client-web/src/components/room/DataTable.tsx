@@ -12,7 +12,9 @@ export function DataTable(props: {
       <thead>
         <tr>
           {Object.keys(props.tableData[0]).map((key) => (
-            <th key={key}>{key}</th>
+            <th key={key} className={"user-select-text"}>
+              {key}
+            </th>
           ))}
         </tr>
       </thead>
@@ -23,7 +25,7 @@ export function DataTable(props: {
               <td
                 key={key}
                 style={{ fontSize: "10px", lineHeight: "1.5em" }}
-                className={"font-monospace"}
+                className={"font-monospace user-select-text"}
               >
                 {JSON.stringify(value)}
               </td>

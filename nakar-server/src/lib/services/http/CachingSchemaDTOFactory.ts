@@ -111,6 +111,10 @@ export class CachingSchemaDTOFactory {
     metaData: MutableGraphMetaData,
     graph: MutableGraph,
   ): Promise<SchemaGraphMetaData> {
+    const labelCountHistogram: number = graph.nodes.labelHistogram.reduce(
+      (akku: number, key: string, value: number): number => akku + value,
+      0,
+    );
     return {
       labels: await metaData
         .getLabels(graph.nodes)
@@ -136,11 +140,16 @@ export class CachingSchemaDTOFactory {
           .toSorted(
             (a: [string, number], b: [string, number]): number => b[1] - a[1],
           )
-          .map((entry: [string, number]): { label: string; count: number } => ({
-            label: entry[0],
-            count: entry[1],
-          })),
-        properties: graph.nodes.propertyHistogram
+          .map(
+            (
+              entry: [string, number],
+            ): { label: string; count: number; percentage: number } => ({
+              label: entry[0],
+              count: entry[1],
+              percentage: entry[1] / labelCountHistogram,
+            }),
+          ),
+        nodeProperties: graph.nodes.propertyHistogram
           .toArray()
           .toSorted(
             (
@@ -156,24 +165,37 @@ export class CachingSchemaDTOFactory {
               values: {
                 value: string;
                 count: number;
+                percentage: number;
               }[];
-            } => ({
-              key: entry[0],
-              values: entry[1]
-                .toArray()
-                .toSorted(
-                  (a: [string, number], b: [string, number]): number =>
-                    b[1] - a[1],
-                )
-                .map(
-                  (
-                    propertyEntry: [string, number],
-                  ): { value: string; count: number } => ({
-                    value: propertyEntry[0],
-                    count: propertyEntry[1],
-                  }),
-                ),
-            }),
+            } => {
+              const count: number = entry[1].reduce(
+                (akku: number, key: string, value: number): number =>
+                  akku + value,
+                0,
+              );
+              return {
+                key: entry[0],
+                values: entry[1]
+                  .toArray()
+                  .toSorted(
+                    (a: [string, number], b: [string, number]): number =>
+                      b[1] - a[1],
+                  )
+                  .map(
+                    (
+                      propertyEntry: [string, number],
+                    ): {
+                      value: string;
+                      count: number;
+                      percentage: number;
+                    } => ({
+                      value: propertyEntry[0],
+                      count: propertyEntry[1],
+                      percentage: propertyEntry[1] / count,
+                    }),
+                  ),
+              };
+            },
           ),
       } satisfies SchemaHistogram,
     };

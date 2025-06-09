@@ -1,5 +1,6 @@
 import { GraphProperty } from "../../../../src-gen";
-import { Table } from "react-bootstrap";
+import { Stack, Table } from "react-bootstrap";
+import { ClipboardButton } from "../ClipboardButton.tsx";
 
 export function PropertyDisplay(props: {
   title: string;
@@ -12,19 +13,21 @@ export function PropertyDisplay(props: {
     <Table>
       <thead>
         <tr>
-          <th>{props.title}</th>
+          <th className={"text-nowrap"}>{props.title}</th>
           <th>Value</th>
         </tr>
       </thead>
       <tbody>
         {props.properties.map((property) => (
           <tr key={property.slug}>
-            <td style={{ userSelect: "text" }}>{property.slug}</td>
-            <td
-              className={"text-break font-monospace"}
-              style={{ userSelect: "text" }}
-            >
-              {JSON.stringify(property.value)}
+            <td className={"small user-select-text"}>{property.slug}</td>
+            <td className={"text-break font-monospace small user-select-text"}>
+              <Stack direction={"horizontal"}>
+                <ClipboardButton
+                  text={JSON.stringify(property.value)}
+                ></ClipboardButton>
+                {JSON.stringify(property.value)}
+              </Stack>
             </td>
           </tr>
         ))}

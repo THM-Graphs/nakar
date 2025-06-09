@@ -70,12 +70,14 @@ export type Histogram = {
     labels: Array<{
         label: string;
         count: number;
+        percentage: number;
     }>;
-    properties: Array<{
+    nodeProperties: Array<{
         key: string;
         values: Array<{
             value: string;
             count: number;
+            percentage: number;
         }>;
     }>;
 };

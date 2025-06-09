@@ -33,7 +33,7 @@ export function Canvas(props: {
   const [graphLabels, setGraphLabels] = useState<GraphLabel[]>([]);
   const [histogram, setHistogram] = useState<Histogram>({
     labels: [],
-    properties: [],
+    nodeProperties: [],
   });
 
   useEffect(() => {
@@ -101,7 +101,10 @@ export function Canvas(props: {
         </div>
       )}
       <div className={"flex-grow-1"}></div>
-      <OverlayTrigger overlay={<Tooltip>Relayout Graph</Tooltip>}>
+      <OverlayTrigger
+        delay={{ show: 500, hide: 0 }}
+        overlay={<Tooltip>Relayout Graph</Tooltip>}
+      >
         <Button
           style={{ zIndex: 1 }}
           variant={"icon"}
@@ -115,7 +118,10 @@ export function Canvas(props: {
         </Button>
       </OverlayTrigger>
       {!showHistogram && (
-        <OverlayTrigger overlay={<Tooltip>Histogram</Tooltip>}>
+        <OverlayTrigger
+          delay={{ show: 500, hide: 0 }}
+          overlay={<Tooltip>Histogram</Tooltip>}
+        >
           <Button
             variant={"icon"}
             style={{ zIndex: 1 }}

@@ -354,10 +354,13 @@ components:
                 type: string
               count:
                 type: number
+              percentage:
+                type: number
             required:
               - label
               - count
-        properties:
+              - percentage
+        nodeProperties:
           type: array
           items:
             type: object
@@ -373,15 +376,18 @@ components:
                       type: string
                     count:
                       type: number
+                    percentage:
+                      type: number
                   required:
                     - value
                     - count
+                    - percentage
             required:
               - key
               - values
       required:
         - labels
-        - properties
+        - nodeProperties
 
     GraphMetaData:
       type: object

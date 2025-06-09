@@ -23,7 +23,7 @@ export class Layout extends ScenarioPipelineStep {
       state.profiler,
     );
 
-    await simulation.run({ maxMs: 3000 });
+    await simulation.run({ maxMs: input.size * 10 });
 
     input.applyPhysicalGraph(physical, state.logger);
 

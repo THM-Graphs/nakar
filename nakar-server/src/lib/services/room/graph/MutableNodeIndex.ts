@@ -50,18 +50,10 @@ export class MutableNodeIndex {
     }
     this._byId.set(node.id, node);
     for (const label of node.labels) {
-      this._labelHistogram.set(
-        label,
-        (this._labelHistogram.get(label) ?? 0) + 1,
-      );
+      this._addToLabelHistogram(label, 1);
     }
     for (const property of node.properties.properties) {
-      const slug: string = property[0];
-      const value: string = JSON.stringify(property[1]);
-      const propertyHistogram: SMap<string, number> =
-        this._propertyHistogram.get(slug) ?? new SMap();
-      propertyHistogram.set(value, (propertyHistogram.get(value) ?? 0) + 1);
-      this._propertyHistogram.set(slug, propertyHistogram);
+      this._addToPropertyHistogram(property[0], property[1], 1);
     }
   }
 
@@ -87,11 +79,22 @@ export class MutableNodeIndex {
     this.add(mutableNode);
   }
 
-  public remove(node: string | MutableNode): void {
-    if (node instanceof MutableNode) {
-      this._byId.delete(node.id);
-    } else {
-      this._byId.delete(node);
+  public remove(nodeReference: string | MutableNode): void {
+    const node: MutableNode | undefined =
+      nodeReference instanceof MutableNode
+        ? nodeReference
+        : this._byId.get(nodeReference);
+    if (node == null) {
+      return;
+    }
+
+    this._byId.delete(node.id);
+    for (const label of node.labels) {
+      this._addToLabelHistogram(label, -1);
+    }
+
+    for (const propertyEntry of node.properties.properties) {
+      this._addToPropertyHistogram(propertyEntry[0], propertyEntry[1], -1);
     }
   }
 
@@ -122,5 +125,27 @@ export class MutableNodeIndex {
     }
 
     return newIndex;
+  }
+
+  private _addToLabelHistogram(label: string, delta: 1 | -1): void {
+    this._labelHistogram.set(
+      label,
+      (this._labelHistogram.get(label) ?? 0) + delta,
+    );
+  }
+
+  private _addToPropertyHistogram(
+    key: string,
+    value: unknown,
+    delta: 1 | -1,
+  ): void {
+    const stringValue: string = JSON.stringify(value);
+    const propertyHistogram: SMap<string, number> =
+      this._propertyHistogram.get(key) ?? new SMap();
+    propertyHistogram.set(
+      stringValue,
+      (propertyHistogram.get(stringValue) ?? 0) + delta,
+    );
+    this._propertyHistogram.set(key, propertyHistogram);
   }
 }

@@ -3,6 +3,7 @@ import { DetailPaneAction } from "./DetailPaneAction.ts";
 import { GraphProperty } from "../../../../src-gen";
 import { PropertyDisplay } from "./PropertyDisplay.tsx";
 import { ReactNode } from "react";
+import { ClipboardButton } from "../ClipboardButton.tsx";
 
 export function DetailPane(props: {
   entityTitle: string;
@@ -30,17 +31,20 @@ export function DetailPane(props: {
       </Stack>
       <Stack className={"overflow-auto flex-shrink-1"}>
         {props.title.length > 0 && (
-          <span
-            style={{ overflowWrap: "anywhere", userSelect: "text" }}
-            className={"p-2 h5"}
-          >
-            {props.title}
-          </span>
+          <Stack direction={"horizontal"}>
+            <span
+              style={{ overflowWrap: "anywhere", userSelect: "text" }}
+              className={"p-2 h5"}
+            >
+              {props.title}
+            </span>
+          </Stack>
         )}
         {props.actions.length > 0 && (
           <Stack direction={"horizontal"} gap={2} className={"p-2 pt-0"}>
             {props.actions.map((action: DetailPaneAction) => (
               <Button
+                key={action.title}
                 size={"sm"}
                 onClick={action.action}
                 disabled={props.loading}

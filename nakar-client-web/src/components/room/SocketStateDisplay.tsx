@@ -7,7 +7,7 @@ export function SocketStateDisplay(props: { socketState: SocketState }) {
   return (
     <OverlayTrigger
       placement="bottom"
-      delay={{ show: 0, hide: 0 }}
+      delay={{ show: 500, hide: 0 }}
       overlay={<Tooltip>{displayStringForState(props.socketState)}</Tooltip>}
     >
       <Badge
