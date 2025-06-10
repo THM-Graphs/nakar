@@ -28,24 +28,15 @@ export function Canvas(props: {
   onExpandNodes: () => void;
   onDeleteNodes: () => void;
   graphRenderer: D3Renderer;
+  graphLabels: GraphLabel[];
+  histogram: Histogram;
 }) {
   const [detailsNode, setDetailsNode] = useState<Node | null>(null);
   const [detailsEdge, setDetailsEdge] = useState<Edge | null>(null);
   const [showHistogram, setShowHistogram] = useState<boolean>(false);
 
-  // TODO: Move because it gets lost
-  const [graphLabels, setGraphLabels] = useState<GraphLabel[]>([]);
-  const [histogram, setHistogram] = useState<Histogram>({
-    labels: [],
-    nodeProperties: [],
-  });
-
   useEffect(() => {
     const subs = [
-      props.webSocketsManager.onScenarioLoaded$.subscribe((sd) => {
-        setGraphLabels(sd.graph.metaData.labels);
-        setHistogram(sd.graph.metaData.histogram);
-      }),
       props.webSocketsManager.onSetLocks$.subscribe((message) => {
         for (const node of message.locks) {
           if (detailsNode?.id === node.id) {
@@ -96,7 +87,7 @@ export function Canvas(props: {
         ></GraphRendererNVL>
       )}
       <div className={"m-2"} style={{ zIndex: 1 }}>
-        <Labels graphLabels={graphLabels}></Labels>
+        <Labels graphLabels={props.graphLabels}></Labels>
       </div>
       {props.scenarioProgress && (
         <div className={"position-absolute bottom-0 m-2"}>
@@ -190,7 +181,7 @@ export function Canvas(props: {
           properties={[]}
           title={""}
         >
-          <HistogramDisplay histogram={histogram}></HistogramDisplay>
+          <HistogramDisplay histogram={props.histogram}></HistogramDisplay>
         </DetailPane>
       )}
     </Stack>

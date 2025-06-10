@@ -9,6 +9,8 @@ import {
   Room as RoomSchema,
   WSEventScenarioProgress,
   getRoom,
+  GraphLabel,
+  Histogram,
 } from "../../src-gen";
 import { LoaderFunctionArgs, useLoaderData } from "react-router";
 import { resultOrThrow } from "../lib/data/resultOrThrow.ts";
@@ -38,6 +40,11 @@ export function Room(props: { webSockets: WebSocketsManager; env: Env }) {
   const [tableData, setTableData] = useState<Record<string, unknown>[] | null>(
     null,
   );
+  const [graphLabels, setGraphLabels] = useState<GraphLabel[]>([]);
+  const [histogram, setHistogram] = useState<Histogram>({
+    labels: [],
+    nodeProperties: [],
+  });
   const [scenariosWindowOpened, setScenariosWindowOpened] = useState(true);
   const [scenarioLoading, setScenarioLoading] = useState<string | null>(null);
   const [renderer, setRenderer] = useState<GraphRendererEngine>("d3");
@@ -62,6 +69,8 @@ export function Room(props: { webSockets: WebSocketsManager; env: Env }) {
     const subscriptions = [
       props.webSockets.onScenarioLoaded$.subscribe((sd) => {
         setTableData(sd.graph.tableData);
+        setGraphLabels(sd.graph.metaData.labels);
+        setHistogram(sd.graph.metaData.histogram);
       }),
       props.webSockets.onScenarioProgress$.subscribe((progress) => {
         if (progress.progress == null) {
@@ -163,6 +172,8 @@ export function Room(props: { webSockets: WebSocketsManager; env: Env }) {
                 scenarioProgress={scenarioProgress}
                 scenarioLoading={scenarioLoading != null}
                 graphRenderer={graphRenderer}
+                graphLabels={graphLabels}
+                histogram={histogram}
               ></Canvas>
             )}
             {selectedTab === "data" && (
