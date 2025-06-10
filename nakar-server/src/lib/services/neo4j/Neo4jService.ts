@@ -92,6 +92,22 @@ export class Neo4jService implements ApplicationService {
     return additional;
   }
 
+  public async loadConnectingRelationshipsFromTo(
+    databaseInfo: Neo4jDatabaseInfo,
+    fromNodeIds: SSet<string>,
+    toNodeIds: SSet<string>,
+  ): Promise<Neo4jGraphElements> {
+    const additional: Neo4jGraphElements = await this.executeQuery(
+      databaseInfo,
+      'MATCH (a)-[additionalRelationship]-(b) WHERE elementId(a) IN $fromNodeIds AND elementId(b) IN $toNodeIds RETURN a, additionalRelationship, b;',
+      {
+        fromNodeIds: [...fromNodeIds.values()],
+        toNodeIds: [...toNodeIds.values()],
+      },
+    );
+    return additional;
+  }
+
   public async expandNode(
     databaseInfo: Neo4jDatabaseInfo,
     nodeIds: SSet<string>,

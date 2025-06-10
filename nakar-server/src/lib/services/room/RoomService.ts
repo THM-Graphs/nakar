@@ -290,7 +290,6 @@ export class RoomService implements ApplicationService {
           }
         }
       }
-
       for (const newEdge of expandResult.relationships) {
         if (!graph.edges.has(newEdge[0])) {
           result.newEdgeCount += 1;
@@ -298,7 +297,15 @@ export class RoomService implements ApplicationService {
         }
       }
 
-      // TODO: Execute connect result nodes if needed
+      // connect result nodes
+      const connectResultNodeResult: Neo4jGraphElements =
+        await this._neo4j.loadConnectingRelationshipsFromTo(
+          neo4jDatabaseInfo,
+          new SSet<string>(expandResult.nodes.keys()),
+          new SSet<string>(graph.nodes.keys),
+        );
+      graph.edges.addNeo4jEdges(connectResultNodeResult.relationships);
+      graph.removeDanglingEdges(this._logger);
 
       this._logger.debug(
         this,
