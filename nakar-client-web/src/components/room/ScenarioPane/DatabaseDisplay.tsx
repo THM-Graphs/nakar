@@ -44,7 +44,7 @@ export function DatabaseDisplay(props: {
     <Stack className={"border-bottom flex-grow-0"}>
       <Collapsable
         initialState={true}
-        title={<span className={"fw-bold"}>{props.database.title}</span>}
+        title={<span className={"small fw-bold"}>{props.database.title}</span>}
       >
         {match(scenarioGroups)
           .with({ type: "error" }, ({ message }) => (

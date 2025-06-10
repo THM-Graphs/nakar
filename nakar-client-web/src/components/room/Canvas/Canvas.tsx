@@ -1,5 +1,6 @@
 import {
   Edge,
+  Graph,
   GraphLabel,
   Node,
   WSEventScenarioProgress,
@@ -9,8 +10,11 @@ import { GraphRendererD3 } from "./GraphRendererD3.tsx";
 import { Stack } from "react-bootstrap";
 import { WebSocketsManager } from "../../../lib/ws/WebSocketsManager.ts";
 import { D3Renderer } from "../../../lib/d3/D3Renderer.ts";
+import { DataTable } from "../DataTable.tsx";
 
 export function Canvas(props: {
+  graph: Graph;
+  tab: "graph" | "data";
   webSocketsManager: WebSocketsManager;
   scenarioProgress: WSEventScenarioProgress | null;
   scenarioLoading: boolean;
@@ -33,7 +37,11 @@ export function Canvas(props: {
         onEdgeClicked={props.onEdgeClicked}
         graphRenderer={props.graphRenderer}
       ></GraphRendererD3>
-      <Labels graphLabels={props.graphLabels}></Labels>
+      {props.tab == "graph" ? (
+        <Labels graphLabels={props.graphLabels}></Labels>
+      ) : (
+        <DataTable tableData={props.graph.tableData}></DataTable>
+      )}
     </Stack>
   );
 }

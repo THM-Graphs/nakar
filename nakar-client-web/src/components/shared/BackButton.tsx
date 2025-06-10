@@ -1,21 +1,17 @@
-import { Stack } from "react-bootstrap";
 import { useNavigate } from "react-router";
+import { NavbarButton } from "./NavbarButton.tsx";
 
 export function BackButton(props: { href: string; title?: string | null }) {
   const navigate = useNavigate();
 
   return (
-    <Stack
-      direction={"horizontal"}
-      className={
-        "border-end ps-2 pe-2 justify-content-center text-muted fw-bold small pointer"
-      }
+    <NavbarButton
+      title={props.title ?? undefined}
+      icon={"chevron-left"}
       onClick={() => {
         void navigate(props.href);
       }}
-    >
-      <i className={"bi bi-chevron-left"}></i>
-      {props.title && <span className={"ms-1"}>{props.title}</span>}
-    </Stack>
+      className={"border-start-0"}
+    ></NavbarButton>
   );
 }

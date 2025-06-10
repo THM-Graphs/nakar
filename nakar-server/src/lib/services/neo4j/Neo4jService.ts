@@ -31,6 +31,7 @@ export class Neo4jService implements ApplicationService {
     databaseInfo: Neo4jDatabaseInfo,
     query: string,
     parameters?: Record<string, unknown>,
+    checkLimit?: boolean,
   ): Promise<Neo4jGraphElements> {
     const driver: Driver = createDriver(
       databaseInfo.url,
@@ -56,7 +57,10 @@ export class Neo4jService implements ApplicationService {
           RecordShape<string, unknown>
         >(query, parameters);
 
-        if (result.records.length > Neo4jService._maximalElements) {
+        if (
+          result.records.length > Neo4jService._maximalElements &&
+          checkLimit === true
+        ) {
           throw new Error(
             `To many elements: ${result.records.length.toString()} (maximum: ${Neo4jService._maximalElements.toString()})`,
           );
@@ -84,10 +88,11 @@ export class Neo4jService implements ApplicationService {
     const nodesIds: string[] = [...nodeIds.values()];
     const additional: Neo4jGraphElements = await this.executeQuery(
       databaseInfo,
-      'MATCH (a)-[additionalRelationship]->(b) WHERE elementId(a) IN $existingNodeIds AND elementId(b) IN $existingNodeIds RETURN a, additionalRelationship, b;',
+      'MATCH (a)-[additionalRelationship]->(b) WHERE elementId(a) IN $existingNodeIds AND elementId(b) IN $existingNodeIds RETURN DISTINCT additionalRelationship;',
       {
         existingNodeIds: nodesIds,
       },
+      false,
     );
     return additional;
   }
@@ -99,11 +104,12 @@ export class Neo4jService implements ApplicationService {
   ): Promise<Neo4jGraphElements> {
     const additional: Neo4jGraphElements = await this.executeQuery(
       databaseInfo,
-      'MATCH (a)-[additionalRelationship]-(b) WHERE elementId(a) IN $fromNodeIds AND elementId(b) IN $toNodeIds RETURN a, additionalRelationship, b;',
+      'MATCH (a)-[additionalRelationship]-(b) WHERE elementId(a) IN $fromNodeIds AND elementId(b) IN $toNodeIds RETURN DISTINCT additionalRelationship;',
       {
         fromNodeIds: [...fromNodeIds.values()],
         toNodeIds: [...toNodeIds.values()],
       },
+      false,
     );
     return additional;
   }

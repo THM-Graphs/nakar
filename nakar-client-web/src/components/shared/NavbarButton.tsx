@@ -1,6 +1,6 @@
 import clsx from "clsx";
 import { Stack } from "react-bootstrap";
-import { forwardRef, MouseEvent } from "react";
+import { forwardRef, MouseEvent, ReactNode } from "react";
 
 export const NavbarButton = forwardRef<
   HTMLDivElement,
@@ -12,6 +12,7 @@ export const NavbarButton = forwardRef<
     onToggle?: (selected: boolean) => void;
     onClick?: (event: MouseEvent) => void;
     className?: string;
+    children?: ReactNode;
   }
 >((props, ref) => {
   return (
@@ -30,6 +31,7 @@ export const NavbarButton = forwardRef<
         "border-start border-end rounded-0 ps-2 pe-2 small text-muted",
         props.selected ? "bg-body-secondary" : "",
         props.disabled ? "" : "pointer",
+        props.disabled ? "" : "bg-body-secondary-hover",
         props.className,
       )}
       style={{
@@ -38,6 +40,7 @@ export const NavbarButton = forwardRef<
     >
       {props.icon && <i className={clsx("bi", `bi-${props.icon}`)}></i>}
       {props.title && <span>{props.title}</span>}
+      {props.children}
     </Stack>
   );
 });

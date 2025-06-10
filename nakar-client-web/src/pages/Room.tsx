@@ -2,7 +2,6 @@ import { OverlayTrigger, Stack, Tooltip } from "react-bootstrap";
 import { AppNavbar } from "../components/shared/AppNavbar.tsx";
 import { DatabaseList } from "../components/room/ScenarioPane/DatabaseList.tsx";
 import { Canvas } from "../components/room/Canvas/Canvas.tsx";
-import { DataTable } from "../components/room/DataTable.tsx";
 import { useEffect, useState } from "react";
 import {
   Room as RoomSchema,
@@ -13,8 +12,9 @@ import {
   Node,
   WSActionRelayout,
   WSActionGetGraph,
+  WSActionLoadScenario,
 } from "../../src-gen";
-import { LoaderFunctionArgs, useLoaderData, useNavigate } from "react-router";
+import { LoaderFunctionArgs, useLoaderData } from "react-router";
 import { resultOrThrow } from "../lib/data/resultOrThrow.ts";
 import { useWebSocketsState } from "../lib/ws/useWebSocketsState.ts";
 import { ToastStack } from "../components/room/ToastStack.tsx";
@@ -33,6 +33,9 @@ import { ProgressDisplay } from "../components/room/ProgressDisplay.tsx";
 import { SocketStateDisplay } from "../components/room/SocketStateDisplay.tsx";
 import { InfoDropdown } from "../components/shared/InfoDropdown.tsx";
 import { NavbarButton } from "../components/shared/NavbarButton.tsx";
+import { Loading } from "../components/shared/Loading.tsx";
+import { SocketState } from "../lib/ws/SocketState.ts";
+import { displayStringForState } from "../lib/ws/displayStringForState.ts";
 
 export async function RoomLoader(
   args: LoaderFunctionArgs,
@@ -70,7 +73,7 @@ export function Room(props: { webSockets: WebSocketsManager; env: Env }) {
   });
   const [detailsNode, setDetailsNode] = useState<Node | null>(null);
   const [detailsEdge, setDetailsEdge] = useState<Edge | null>(null);
-  const [showHistogram, setShowHistogram] = useState<boolean>(false);
+  const [showHistogram, setShowHistogram] = useState<boolean>(true);
   const [scenariosWindowOpened, setScenariosWindowOpened] = useState(true);
   const [scenarioLoading, setScenarioLoading] = useState<string | null>(null);
   const [scenarioProgress, setScenarioProgress] =
@@ -79,7 +82,6 @@ export function Room(props: { webSockets: WebSocketsManager; env: Env }) {
   const [selectedTab, setSelectedTab] = useState<"graph" | "data">("graph");
   const theme = useTheme();
   const [graphRenderer] = useState(new D3Renderer(theme));
-  const navigate = useNavigate();
 
   useEffect(() => {
     if (selectedTab == "data") {
@@ -163,7 +165,7 @@ export function Room(props: { webSockets: WebSocketsManager; env: Env }) {
 
   return (
     <>
-      <Stack style={{ height: "100%" }}>
+      <Stack style={{ height: "100%" }} className={"position-relative"}>
         <AppNavbar
           left={
             <>
@@ -196,10 +198,10 @@ export function Room(props: { webSockets: WebSocketsManager; env: Env }) {
           }
           right={
             <>
-              <ProgressDisplay
-                webSocketsManager={props.webSockets}
-              ></ProgressDisplay>
               <Stack direction={"horizontal"}>
+                <ProgressDisplay
+                  webSocketsManager={props.webSockets}
+                ></ProgressDisplay>
                 <OverlayTrigger
                   delay={{ show: 500, hide: 0 }}
                   placement="bottom"
@@ -216,19 +218,37 @@ export function Room(props: { webSockets: WebSocketsManager; env: Env }) {
                     }}
                   ></NavbarButton>
                 </OverlayTrigger>
+
                 <OverlayTrigger
                   delay={{ show: 500, hide: 0 }}
-                  overlay={<Tooltip>Histogram</Tooltip>}
                   placement="bottom"
+                  overlay={<Tooltip>Reset Graph</Tooltip>}
                 >
                   <NavbarButton
-                    title={"Histogram"}
-                    selected={showHistogram}
-                    onToggle={setShowHistogram}
-                    icon={"bar-chart-fill"}
+                    disabled={graph.metaData.scenarioInfo.id == ""}
+                    icon={"arrow-clockwise"}
+                    title={"Rerun Scenario"}
+                    onClick={() => {
+                      props.webSockets.sendMessage({
+                        type: "WSActionLoadScenario",
+                        scenarioId: graph.metaData.scenarioInfo.id,
+                      } satisfies WSActionLoadScenario);
+                    }}
                   ></NavbarButton>
                 </OverlayTrigger>
               </Stack>
+              <OverlayTrigger
+                delay={{ show: 500, hide: 0 }}
+                overlay={<Tooltip>Histogram</Tooltip>}
+                placement="bottom"
+              >
+                <NavbarButton
+                  title={"Histogram"}
+                  selected={showHistogram}
+                  onToggle={setShowHistogram}
+                  icon={"bar-chart-fill"}
+                ></NavbarButton>
+              </OverlayTrigger>
               <Stack direction={"horizontal"} className={"align-items-stretch"}>
                 <InfoDropdown env={props.env}></InfoDropdown>
                 <SocketStateDisplay
@@ -269,30 +289,27 @@ export function Room(props: { webSockets: WebSocketsManager; env: Env }) {
             className={"flex-shrink-1 flex-grow-1"}
             style={{ width: "100px" }}
           >
-            {selectedTab === "graph" && (
-              <Canvas
-                onNodeClicked={(n) => {
-                  setDetailsNode(n);
-                  setDetailsEdge(null);
-                }}
-                onEdgeClicked={(l) => {
-                  setDetailsEdge(l);
-                  setDetailsNode(null);
-                }}
-                webSocketsManager={props.webSockets}
-                scenarioProgress={scenarioProgress}
-                scenarioLoading={scenarioLoading != null}
-                graphRenderer={graphRenderer}
-                graphLabels={graph.metaData.labels}
-                showHistogram={showHistogram}
-                onShowHistogram={() => {
-                  setShowHistogram(true);
-                }}
-              ></Canvas>
-            )}
-            {selectedTab === "data" && (
-              <DataTable tableData={graph.tableData}></DataTable>
-            )}
+            <Canvas
+              tab={selectedTab}
+              graph={graph}
+              onNodeClicked={(n) => {
+                setDetailsNode(n);
+                setDetailsEdge(null);
+              }}
+              onEdgeClicked={(l) => {
+                setDetailsEdge(l);
+                setDetailsNode(null);
+              }}
+              webSocketsManager={props.webSockets}
+              scenarioProgress={scenarioProgress}
+              scenarioLoading={scenarioLoading != null}
+              graphRenderer={graphRenderer}
+              graphLabels={graph.metaData.labels}
+              showHistogram={showHistogram}
+              onShowHistogram={() => {
+                setShowHistogram(true);
+              }}
+            ></Canvas>
           </Stack>
 
           <NodeDetails
@@ -343,6 +360,37 @@ export function Room(props: { webSockets: WebSocketsManager; env: Env }) {
             ></HistogramDisplay>
           </Pane>
         </Stack>
+        {socketState.type !== "connected" && (
+          <Stack
+            className={"position-absolute bg-body-secondary"}
+            gap={2}
+            style={{ zIndex: 2, width: "100%", height: "100%" }}
+          >
+            <AppNavbar
+              left={<BackButton href={"/"}></BackButton>}
+              right={
+                <SocketStateDisplay
+                  socketState={socketState}
+                ></SocketStateDisplay>
+              }
+            ></AppNavbar>
+            <div className={"flex-grow-1"}></div>
+            <Stack className={"align-items-center flex-grow-0"} gap={5}>
+              <span className={"text-muted small font-monospace"}>
+                {displayStringForState(socketState)}
+              </span>
+              <Stack
+                direction={"horizontal"}
+                gap={2}
+                className={"align-self-center text-muted"}
+              >
+                <Loading size={"sm"}></Loading>
+                <span>Reconnecting...</span>
+              </Stack>
+            </Stack>
+            <div className={"flex-grow-1"}></div>
+          </Stack>
+        )}
       </Stack>
     </>
   );

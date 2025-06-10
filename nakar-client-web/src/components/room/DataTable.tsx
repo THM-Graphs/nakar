@@ -14,13 +14,14 @@ export function DataTable(props: {
         height: "100%",
         width: "100%",
         overflow: "auto",
+        zIndex: 1,
       }}
     >
       <Table className={"table-responsive"}>
         <thead>
-          <tr>
+          <tr className={"sticky-top"}>
             {Object.keys(props.tableData[0]).map((key) => (
-              <th key={key} className={"user-select-text"}>
+              <th key={key} className={"user-select-text border-bottom"}>
                 {key}
               </th>
             ))}

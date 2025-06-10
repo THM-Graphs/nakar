@@ -1,5 +1,4 @@
 import { Stack } from "react-bootstrap";
-import clsx from "clsx";
 import { NavbarButton } from "../shared/NavbarButton.tsx";
 
 export function GraphDataToggle(props: {

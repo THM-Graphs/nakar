@@ -3,6 +3,7 @@ import {
   CardBody,
   OverlayTrigger,
   ProgressBar,
+  Spinner,
   Stack,
   Tooltip,
 } from "react-bootstrap";
@@ -44,23 +45,29 @@ export function ProgressDisplay(props: {
     };
   }, []);
 
-  if (graphProgress.progress == null) {
+  if (graphProgress.progress == null && graphProgress.message == null) {
     return null;
   }
   const message = graphProgress.message ?? "Working";
   return (
-    <Stack
-      className={"border-start border-end ps-2 pe-2"}
-      direction={"horizontal"}
-    >
-      <ProgressBar
-        now={graphProgress.progress}
-        max={1}
-        animated={true}
-        label={`${(graphProgress.progress * 100).toFixed(0)}%`}
-        style={{ width: "200px" }}
-        className={"me-2"}
-      />
+    <Stack className={"border-start ps-2 pe-2"} direction={"horizontal"}>
+      {graphProgress.progress ? (
+        <ProgressBar
+          now={graphProgress.progress}
+          max={1}
+          animated={true}
+          label={`${(graphProgress.progress * 100).toFixed(0)}%`}
+          style={{ width: "200px" }}
+          className={"me-2"}
+        />
+      ) : (
+        <Spinner
+          animation="border"
+          variant="primary"
+          className={"me-2"}
+          size={"sm"}
+        />
+      )}
       <OverlayTrigger
         delay={{ show: 500, hide: 0 }}
         overlay={<Tooltip>{message}</Tooltip>}

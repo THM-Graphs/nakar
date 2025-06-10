@@ -8,7 +8,6 @@ import {
   SchemaPhysicalNode,
   SchemaWsActionDeleteNodes,
   SchemaWsActionExpandNodes,
-  SchemaWsActionGetGraph,
   SchemaWsActionGrabNode,
   SchemaWsActionJoinRoom,
   SchemaWsActionLoadScenario,
@@ -393,7 +392,7 @@ export class SocketIOService implements ApplicationService {
     wsClient.sendToRoom({
       type: 'WSEventScenarioProgress',
       message: 'Expanding node',
-      progress: 0.1,
+      progress: null,
     } satisfies SchemaWsEventScenarioProgress);
 
     this._roomService
@@ -434,8 +433,8 @@ export class SocketIOService implements ApplicationService {
 
     wsClient.sendToRoom({
       type: 'WSEventScenarioProgress',
-      message: 'Deleting node...',
-      progress: 0.1,
+      message: 'Deleting node',
+      progress: null,
     } satisfies SchemaWsEventScenarioProgress);
 
     try {

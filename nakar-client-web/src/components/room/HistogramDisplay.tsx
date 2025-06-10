@@ -15,7 +15,7 @@ export function HistogramDisplay(props: {
       <Stack className={"mb-5 flex-grow-0 flex-shrink-1 mb-auto pb-5"}>
         <Stack className={"border-bottom"}>
           <Collapsable
-            title={<span className={"fw-bold"}>Labels</span>}
+            title={<span className={"fw-bold small"}>Labels</span>}
             initialState={false}
           >
             <EmptyHint list={props.histogram.nodeLabels}></EmptyHint>
@@ -46,7 +46,7 @@ export function HistogramDisplay(props: {
         </Stack>
         <Stack className={"border-bottom"}>
           <Collapsable
-            title={<span className={"fw-bold"}>Relationships</span>}
+            title={<span className={"fw-bold small"}>Relationships</span>}
             initialState={false}
           >
             <EmptyHint list={props.histogram.edgeTypes}></EmptyHint>
@@ -62,7 +62,7 @@ export function HistogramDisplay(props: {
         </Stack>
         <Stack className={"border-bottom"}>
           <Collapsable
-            title={<span className={"fw-bold"}>Node Properties</span>}
+            title={<span className={"fw-bold small"}>Node Properties</span>}
             initialState={false}
           >
             <EmptyHint list={props.histogram.nodeProperties}></EmptyHint>
@@ -76,7 +76,9 @@ export function HistogramDisplay(props: {
         </Stack>
         <Stack className={"border-bottom"}>
           <Collapsable
-            title={<span className={"fw-bold"}>Relationship Properties</span>}
+            title={
+              <span className={"fw-bold small"}>Relationship Properties</span>
+            }
             initialState={false}
           >
             <EmptyHint list={props.histogram.edgeProperties}></EmptyHint>

@@ -19,3 +19,7 @@ div[role=tooltip] {
 .pointer {
     cursor: pointer;
 }
+
+.bg-body-secondary-hover:hover {
+    background-color: rgba(var(--bs-secondary-bg-rgb), var(--bs-bg-opacity));
+}

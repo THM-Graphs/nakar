@@ -2,6 +2,7 @@ import { OverlayTrigger, Stack, Tooltip } from "react-bootstrap";
 import { match } from "ts-pattern";
 import clsx from "clsx";
 import { SocketState } from "../../lib/ws/SocketState.ts";
+import { displayStringForState } from "../../lib/ws/displayStringForState.ts";
 
 export function SocketStateDisplay(props: { socketState: SocketState }) {
   return (
@@ -46,14 +47,5 @@ function iconForState(socketState: SocketState): string {
     .with({ type: "connecting" }, () => "bi-wifi-off")
     .with({ type: "connect_error" }, () => "bi-wifi-off")
     .with({ type: "disconnect" }, () => "bi-wifi-off")
-    .exhaustive();
-}
-
-function displayStringForState(socketState: SocketState): string {
-  return match(socketState)
-    .with({ type: "connected" }, () => "Connected")
-    .with({ type: "connecting" }, () => "Connecting...")
-    .with({ type: "connect_error" }, ({ error }) => `Error: ${error.message}`)
-    .with({ type: "disconnect" }, () => "Disconnected")
     .exhaustive();
 }

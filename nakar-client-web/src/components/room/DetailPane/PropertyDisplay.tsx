@@ -30,7 +30,10 @@ export function PropertyDisplay(props: {
                 "text-break font-monospace small user-select-text bg-body-tertiary"
               }
             >
-              <Stack direction={"horizontal"}>
+              <Stack
+                direction={"horizontal"}
+                className={"align-items-baseline"}
+              >
                 <ClipboardButton
                   text={JSON.stringify(property.value)}
                 ></ClipboardButton>

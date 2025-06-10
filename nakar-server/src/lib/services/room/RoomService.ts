@@ -273,10 +273,20 @@ export class RoomService implements ApplicationService {
 
       const neo4jDatabaseInfo: Neo4jDatabaseInfo =
         Neo4jDatabaseInfo.parse(database);
+
+      // expand result
       const expandResult: Neo4jGraphElements = await this._neo4j.expandNode(
         neo4jDatabaseInfo,
         new SSet<string>([nodeId]),
       );
+
+      // connect result nodes
+      const connectResultNodeResult: Neo4jGraphElements =
+        await this._neo4j.loadConnectingRelationshipsFromTo(
+          neo4jDatabaseInfo,
+          new SSet<string>(expandResult.nodes.keys()),
+          new SSet<string>([...graph.nodes.keys, ...expandResult.nodes.keys()]),
+        );
 
       for (const newNode of expandResult.nodes) {
         if (!graph.nodes.hasById(newNode[0])) {
@@ -297,19 +307,12 @@ export class RoomService implements ApplicationService {
         }
       }
 
-      // connect result nodes
-      const connectResultNodeResult: Neo4jGraphElements =
-        await this._neo4j.loadConnectingRelationshipsFromTo(
-          neo4jDatabaseInfo,
-          new SSet<string>(expandResult.nodes.keys()),
-          new SSet<string>(graph.nodes.keys),
-        );
       graph.edges.addNeo4jEdges(connectResultNodeResult.relationships);
       graph.removeDanglingEdges(this._logger);
 
       this._logger.debug(
         this,
-        `Expand node result for ${nodeId}: ${expandResult.nodes.size.toString()} nodes and ${expandResult.relationships.size.toString()} edges.`,
+        `Expand node result for ${nodeId}: ${expandResult.nodes.size.toString()} nodes.`,
       );
     }
 

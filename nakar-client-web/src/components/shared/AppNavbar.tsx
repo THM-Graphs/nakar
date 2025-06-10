@@ -11,8 +11,8 @@ export function AppNavbar(props: {
       direction={"horizontal"}
       className="bg-body-tertiary border-bottom justify-content-between position-relative"
       style={{
-        zIndex: 600,
-        height: "30px",
+        zIndex: 1,
+        height: "32px",
       }}
     >
       <Stack direction={"horizontal"} className={"align-items-stretch"} gap={5}>
