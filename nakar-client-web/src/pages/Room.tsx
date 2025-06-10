@@ -182,11 +182,15 @@ export function Room(props: { webSockets: WebSocketsManager; env: Env }) {
           }
           center={
             <>
+              <span>-</span>
               <span className={"small text-muted"}>{loaderData.title}</span>
               {graph.metaData.scenarioInfo.title && (
-                <span className={"small text-muted"}>
-                  ({graph.metaData.scenarioInfo.title})
-                </span>
+                <>
+                  <span>-</span>
+                  <span className={"small text-muted"}>
+                    ({graph.metaData.scenarioInfo.title})
+                  </span>
+                </>
               )}
             </>
           }
