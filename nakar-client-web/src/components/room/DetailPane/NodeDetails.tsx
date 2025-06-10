@@ -1,6 +1,6 @@
-import { Node } from "../../../src-gen";
-import { DetailPane } from "./DetailPane/DetailPane.tsx";
-import { DetailPaneAction } from "./DetailPane/DetailPaneAction.ts";
+import { Node } from "../../../../src-gen";
+import { DetailPane } from "./DetailPane.tsx";
+import { DetailPaneAction } from "./DetailPaneAction.ts";
 
 export function NodeDetails(props: {
   node: Node;

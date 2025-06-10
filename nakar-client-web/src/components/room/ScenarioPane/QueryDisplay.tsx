@@ -1,6 +1,6 @@
 import { OverlayTrigger, Stack, Tooltip } from "react-bootstrap";
 import { useState } from "react";
-import { useClipboard } from "../../lib/clipboard/useClipboard.ts";
+import { useClipboard } from "../../../lib/clipboard/useClipboard.ts";
 
 export function QueryDisplay(props: { query: string }) {
   const [copied, setCopied] = useState(false);

@@ -3,15 +3,14 @@ import {
   ScenarioGroup,
   getScenarios,
   Scenarios,
-} from "../../../src-gen";
+} from "../../../../src-gen";
 import { ScenariosList } from "./ScenariosList.tsx";
 import { useEffect, useState } from "react";
-import { Loadable } from "../../lib/data/Loadable.ts";
-import { handleError } from "../../lib/error/handleError.ts";
-import { Loading } from "../shared/Loading.tsx";
-import clsx from "clsx";
-import { resultOrThrow } from "../../lib/data/resultOrThrow";
-import { Stack } from "react-bootstrap";
+import { Loadable } from "../../../lib/data/Loadable.ts";
+import { handleError } from "../../../lib/error/handleError.ts";
+import { Loading } from "../../shared/Loading.tsx";
+import { resultOrThrow } from "../../../lib/data/resultOrThrow.ts";
+import { Collapsable } from "../Collapsable.tsx";
 
 export function ScenarioGroupDisplay(props: {
   scenarioGroup: ScenarioGroup;
@@ -19,7 +18,6 @@ export function ScenarioGroupDisplay(props: {
   hidden?: boolean;
   scenarioLoading: string | null;
 }) {
-  const [collapsed, setCollapsed] = useState(false);
   const [scnenarios, setScenarios] = useState<Loadable<Scenarios>>({
     type: "loading",
   });
@@ -37,36 +35,28 @@ export function ScenarioGroupDisplay(props: {
   }, [props.scenarioGroup]);
 
   return (
-    <>
-      <Stack
-        className={"border-top pointer"}
-        direction={"horizontal"}
-        hidden={props.hidden}
-        onClick={() => {
-          setCollapsed((old) => !old);
-        }}
-      >
-        <i
-          className={clsx(
-            "bi me-1 ms-1",
-            collapsed ? "bi-chevron-right" : "bi-chevron-down",
-          )}
-        ></i>
-        <span className={"small text-muted"}>{props.scenarioGroup.title}</span>
-        <Loading
-          size={"sm"}
-          hidden={scnenarios.type !== "loading"}
-          className={"ms-1"}
-        ></Loading>
-      </Stack>
+    <Collapsable
+      initialState={false}
+      title={
+        <>
+          <span className={"small text-muted"}>
+            {props.scenarioGroup.title}
+          </span>
+          <Loading
+            size={"sm"}
+            hidden={scnenarios.type !== "loading"}
+            className={"ms-1"}
+          ></Loading>
+        </>
+      }
+    >
       {scnenarios.type == "data" && (
         <ScenariosList
           scenarios={scnenarios.data}
-          hidden={props.hidden || collapsed}
           onScenarioSelected={props.onScenarioSelect}
           scenarioLoading={props.scenarioLoading}
         ></ScenariosList>
       )}
-    </>
+    </Collapsable>
   );
 }

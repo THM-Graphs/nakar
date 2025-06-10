@@ -1,5 +1,5 @@
 import { Image, Stack, Tooltip } from "react-bootstrap";
-import { ScenarioWindowButton } from "../room/ScenarioWindowButton.tsx";
+import { ScenarioWindowButton } from "../room/ScenarioPane/ScenarioWindowButton.tsx";
 import { BackButton } from "./BackButton.tsx";
 import { GraphRendererEngine } from "../../lib/graph-renderer/GraphRendererEngine.ts";
 import { SocketStateDisplay } from "../room/SocketStateDisplay.tsx";

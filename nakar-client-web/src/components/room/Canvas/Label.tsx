@@ -1,6 +1,6 @@
-import { GraphLabel } from "../../../src-gen";
-import { getBackgroundColor } from "../../lib/color/getBackgroundColor.ts";
-import { getTextColor } from "../../lib/color/getTextColor.ts";
+import { GraphLabel } from "../../../../src-gen";
+import { getBackgroundColor } from "../../../lib/color/getBackgroundColor.ts";
+import { getTextColor } from "../../../lib/color/getTextColor.ts";
 import { Stack } from "react-bootstrap";
 
 export function Label(props: { label: GraphLabel; multipleSources: boolean }) {
@@ -8,7 +8,7 @@ export function Label(props: { label: GraphLabel; multipleSources: boolean }) {
     <Stack
       direction={"horizontal"}
       gap={1}
-      className={"badge"}
+      className={"small fw-bold ps-2 pe-2"}
       style={{
         backgroundColor: getBackgroundColor(props.label.color),
         color: getTextColor(props.label.color),

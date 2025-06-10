@@ -1,5 +1,5 @@
-import { Edge } from "../../../src-gen";
-import { DetailPane } from "./DetailPane/DetailPane.tsx";
+import { Edge } from "../../../../src-gen";
+import { DetailPane } from "./DetailPane.tsx";
 
 export function EdgeDetails(props: { edge: Edge; onClose: () => void }) {
   return (

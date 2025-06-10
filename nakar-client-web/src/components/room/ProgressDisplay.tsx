@@ -15,7 +15,7 @@ export function ProgressDisplay(props: {
 }) {
   const [graphProgress, setGraphProgress] = useState<WSEventScenarioProgress>({
     type: "WSEventScenarioProgress",
-    progress: 0,
+    progress: null,
     message: null,
   });
   const [dots, setDots] = useState("");

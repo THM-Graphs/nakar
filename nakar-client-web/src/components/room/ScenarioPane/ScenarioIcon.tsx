@@ -1,4 +1,4 @@
-import { Scenario } from "../../../src-gen";
+import { Scenario } from "../../../../src-gen";
 import { Image } from "react-bootstrap";
 
 export function ScenarioIcon(props: { scenario: Scenario; size?: number }) {

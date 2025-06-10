@@ -1,12 +1,18 @@
-import { Database, getDatabases, Databases, Scenario } from "../../../src-gen";
+import {
+  Database,
+  getDatabases,
+  Databases,
+  Scenario,
+} from "../../../../src-gen";
 import { useEffect, useState } from "react";
 import { match } from "ts-pattern";
-import { handleError } from "../../lib/error/handleError.ts";
-import { ErrorDisplay } from "../shared/ErrorDisplay.tsx";
-import { Loading } from "../shared/Loading.tsx";
+import { handleError } from "../../../lib/error/handleError.ts";
+import { ErrorDisplay } from "../../shared/ErrorDisplay.tsx";
+import { Loading } from "../../shared/Loading.tsx";
 import { DatabaseDisplay } from "./DatabaseDisplay.tsx";
-import { Loadable } from "../../lib/data/Loadable.ts";
-import { resultOrThrow } from "../../lib/data/resultOrThrow.ts";
+import { Loadable } from "../../../lib/data/Loadable.ts";
+import { resultOrThrow } from "../../../lib/data/resultOrThrow.ts";
+import { Stack } from "react-bootstrap";
 
 export function DatabaseList(props: {
   onScenarioSelect: (scenario: Scenario) => void;
@@ -36,15 +42,17 @@ export function DatabaseList(props: {
       <ErrorDisplay message={message}></ErrorDisplay>
     ))
     .with({ type: "loading" }, () => <Loading></Loading>)
-    .with({ type: "data" }, ({ data }) =>
-      data.databases.map((database: Database) => (
-        <DatabaseDisplay
-          onScenarioSelect={props.onScenarioSelect}
-          key={database.id}
-          database={database}
-          scenarioLoading={props.scenarioLoading}
-        ></DatabaseDisplay>
-      )),
-    )
+    .with({ type: "data" }, ({ data }) => (
+      <Stack className={"pb-5"}>
+        {data.databases.map((database: Database) => (
+          <DatabaseDisplay
+            onScenarioSelect={props.onScenarioSelect}
+            key={database.id}
+            database={database}
+            scenarioLoading={props.scenarioLoading}
+          ></DatabaseDisplay>
+        ))}
+      </Stack>
+    ))
     .exhaustive();
 }

@@ -1,8 +1,8 @@
 import { Button, Card, Stack } from "react-bootstrap";
 import { ScenarioIcon } from "./ScenarioIcon.tsx";
 import { QueryDisplay } from "./QueryDisplay.tsx";
-import { Scenario } from "../../../src-gen";
-import { Loading } from "../shared/Loading.tsx";
+import { Scenario } from "../../../../src-gen";
+import { Loading } from "../../shared/Loading.tsx";
 
 export function ScenarioCard(props: {
   hidden?: boolean;
@@ -11,7 +11,10 @@ export function ScenarioCard(props: {
   scenarioLoading: string | null;
 }) {
   return (
-    <Card className={"mb-2 me-2"} hidden={props.hidden}>
+    <Card
+      className={"rounded-0 border-start-0 border-end-0"}
+      hidden={props.hidden}
+    >
       <Card.Body>
         <Card.Title>
           <Stack direction={"horizontal"} gap={2}>

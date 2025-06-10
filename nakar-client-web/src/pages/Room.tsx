@@ -1,8 +1,7 @@
-import { CloseButton, Stack } from "react-bootstrap";
+import { Stack } from "react-bootstrap";
 import { AppNavbar } from "../components/shared/AppNavbar.tsx";
-import { SideToolbar } from "../components/room/SideToolbar.tsx";
-import { DatabaseList } from "../components/room/DatabaseList.tsx";
-import { Canvas } from "../components/room/Canvas.tsx";
+import { DatabaseList } from "../components/room/ScenarioPane/DatabaseList.tsx";
+import { Canvas } from "../components/room/Canvas/Canvas.tsx";
 import { DataTable } from "../components/room/DataTable.tsx";
 import { useEffect, useState } from "react";
 import {
@@ -20,6 +19,7 @@ import { WebSocketsManager } from "../lib/ws/WebSocketsManager.ts";
 import { Env } from "../lib/env/env.ts";
 import { useTheme } from "../lib/theme/useTheme.ts";
 import { D3Renderer } from "../lib/d3/D3Renderer.ts";
+import { Pane } from "../components/room/Pane/Pane.tsx";
 
 export async function RoomLoader(
   args: LoaderFunctionArgs,
@@ -121,23 +121,13 @@ export function Room(props: { webSockets: WebSocketsManager; env: Env }) {
           className={"align-items-stretch flex-grow-1"}
           style={{ height: "100px" }}
         >
-          <SideToolbar hidden={!scenariosWindowOpened} width={400}>
-            <Stack
-              direction={"horizontal"}
-              className={"border-bottom justify-content-between flex-0"}
-            >
-              <span className={"ms-2 text-muted"}>Scenarios</span>
-              <CloseButton
-                className={"m-1"}
-                onClick={() => {
-                  setScenariosWindowOpened(false);
-                }}
-              ></CloseButton>
-            </Stack>
-            <Stack
-              className={
-                "flex-grow-1 flex-shrink-1 overflow-x-hidden overflow-y-auto justify-content-start pb-5"
-              }
+          {scenariosWindowOpened && (
+            <Pane
+              direction={"left"}
+              onClose={() => {
+                setScenariosWindowOpened(false);
+              }}
+              title={"Scenarios"}
             >
               <DatabaseList
                 onScenarioSelect={(scenario) => {
@@ -149,8 +139,8 @@ export function Room(props: { webSockets: WebSocketsManager; env: Env }) {
                 }}
                 scenarioLoading={scenarioLoading}
               ></DatabaseList>
-            </Stack>
-          </SideToolbar>
+            </Pane>
+          )}
           {graph && (
             <Stack
               direction={"vertical"}

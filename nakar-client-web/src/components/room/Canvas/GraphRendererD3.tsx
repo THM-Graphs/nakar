@@ -1,8 +1,8 @@
 import { createRef, useEffect, useState } from "react";
-import { useTheme } from "../../lib/theme/useTheme.ts";
-import { D3Renderer } from "../../lib/d3/D3Renderer.ts";
-import { Node, Edge } from "../../../src-gen";
-import { WebSocketsManager } from "../../lib/ws/WebSocketsManager.ts";
+import { useTheme } from "../../../lib/theme/useTheme.ts";
+import { D3Renderer } from "../../../lib/d3/D3Renderer.ts";
+import { Node, Edge } from "../../../../src-gen";
+import { WebSocketsManager } from "../../../lib/ws/WebSocketsManager.ts";
 
 export function GraphRendererD3(props: {
   onNodeClicked: (node: Node) => void;

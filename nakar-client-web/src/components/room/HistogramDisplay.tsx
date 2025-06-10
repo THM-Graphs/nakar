@@ -1,45 +1,53 @@
 import { GraphLabel, Histogram } from "../../../src-gen";
 import { Button, OverlayTrigger, Stack, Tooltip } from "react-bootstrap";
-import { ReactNode, useState } from "react";
+import { useState } from "react";
 import { ClipboardButton } from "./ClipboardButton.tsx";
 import clsx from "clsx";
 import { getBackgroundColor } from "../../lib/color/getBackgroundColor.ts";
+import { Collapsable } from "./Collapsable.tsx";
 
 export function HistogramDisplay(props: {
   histogram: Histogram;
   graphLabels: GraphLabel[];
 }) {
   return (
-    <Stack className={"border-bottom mb-5 flex-grow-0"}>
+    <Stack className={"mb-5 flex-grow-0 flex-shrink-1"}>
       <Stack className={"border-bottom"}>
-        <Collapsable title={"Labels"}>
+        <Collapsable
+          title={<span className={"fw-bold"}>Labels</span>}
+          initialState={false}
+        >
           <EmptyHint list={props.histogram.nodeLabels}></EmptyHint>
-          {props.histogram.nodeLabels.map((entry) => (
-            <ValueDisplay
-              label={entry.label}
-              value={entry.count}
-              percentage={entry.percentage}
-              key={entry.label}
-              bgColor={getBackgroundColor(
-                props.graphLabels.find(
-                  (graphLabel) => graphLabel.label === entry.label,
-                )?.color ?? null,
-              )}
-            ></ValueDisplay>
-          ))}
+          {props.histogram.nodeLabels.map((entry) => {
+            const label = props.graphLabels.find(
+              (graphLabel) => graphLabel.label === entry.label,
+            );
+            if (label == null) {
+              return <></>;
+            } else {
+              return (
+                <ValueDisplay
+                  label={entry.label}
+                  subLabel={
+                    label.sources.length > 0
+                      ? label.sources.join(", ")
+                      : undefined
+                  }
+                  value={entry.count}
+                  percentage={entry.percentage}
+                  key={entry.label}
+                  bgColor={getBackgroundColor(label.color)}
+                ></ValueDisplay>
+              );
+            }
+          })}
         </Collapsable>
       </Stack>
-      <Collapsable title={"Node Properties"}>
-        <EmptyHint list={props.histogram.nodeProperties}></EmptyHint>
-        {props.histogram.nodeProperties.map((propertyEntry) => (
-          <PropertyGroup
-            propertyEntry={propertyEntry}
-            key={propertyEntry.key}
-          ></PropertyGroup>
-        ))}
-      </Collapsable>
       <Stack className={"border-bottom"}>
-        <Collapsable title={"Relationships"}>
+        <Collapsable
+          title={<span className={"fw-bold"}>Relationships</span>}
+          initialState={false}
+        >
           <EmptyHint list={props.histogram.edgeTypes}></EmptyHint>
           {props.histogram.edgeTypes.map((entry) => (
             <ValueDisplay
@@ -51,15 +59,34 @@ export function HistogramDisplay(props: {
           ))}
         </Collapsable>
       </Stack>
-      <Collapsable title={"Relationship Properties"}>
-        <EmptyHint list={props.histogram.edgeProperties}></EmptyHint>
-        {props.histogram.edgeProperties.map((propertyEntry) => (
-          <PropertyGroup
-            propertyEntry={propertyEntry}
-            key={propertyEntry.key}
-          ></PropertyGroup>
-        ))}
-      </Collapsable>
+      <Stack className={"border-bottom"}>
+        <Collapsable
+          title={<span className={"fw-bold"}>Node Properties</span>}
+          initialState={false}
+        >
+          <EmptyHint list={props.histogram.nodeProperties}></EmptyHint>
+          {props.histogram.nodeProperties.map((propertyEntry) => (
+            <PropertyGroup
+              propertyEntry={propertyEntry}
+              key={propertyEntry.key}
+            ></PropertyGroup>
+          ))}
+        </Collapsable>
+      </Stack>
+      <Stack className={"border-bottom"}>
+        <Collapsable
+          title={<span className={"fw-bold"}>Relationship Properties</span>}
+          initialState={false}
+        >
+          <EmptyHint list={props.histogram.edgeProperties}></EmptyHint>
+          {props.histogram.edgeProperties.map((propertyEntry) => (
+            <PropertyGroup
+              propertyEntry={propertyEntry}
+              key={propertyEntry.key}
+            ></PropertyGroup>
+          ))}
+        </Collapsable>
+      </Stack>
     </Stack>
   );
 }
@@ -70,34 +97,10 @@ function EmptyHint(props: { list: unknown[] }) {
   } else {
     return (
       <span className={"small text-muted fst-italic align-self-center p-2"}>
-        empty
+        none
       </span>
     );
   }
-}
-
-function Collapsable(props: { title: string; children: ReactNode }) {
-  const [collapsed, setCollapsed] = useState<boolean>(true);
-  return (
-    <Stack>
-      <Stack
-        direction={"horizontal"}
-        className={"pointer"}
-        onClick={() => {
-          setCollapsed((old) => !old);
-        }}
-      >
-        <i
-          className={clsx(
-            "bi me-1 ms-1",
-            collapsed ? "bi-chevron-right" : "bi-chevron-down",
-          )}
-        ></i>
-        <span className={"fw-bold"}>{props.title}</span>
-      </Stack>
-      {!collapsed && props.children}
-    </Stack>
-  );
 }
 
 function PropertyGroup(props: {
@@ -113,37 +116,45 @@ function PropertyGroup(props: {
   const [hidden, setHidden] = useState<boolean>(true);
   return (
     <Stack key={props.propertyEntry.key} className={"border-bottom"}>
-      <span className={"ps-1 fw-bold small user-select-text font-monospace"}>
-        {props.propertyEntry.key}
-      </span>
-      {props.propertyEntry.values
-        .slice(0, hidden ? 10 : props.propertyEntry.values.length)
-        .map((valueEntry) => (
-          <ValueDisplay
-            label={valueEntry.value}
-            value={valueEntry.count}
-            percentage={valueEntry.percentage}
-            key={valueEntry.value}
-          ></ValueDisplay>
-        ))}
-      {hidden && props.propertyEntry.values.length > 10 && (
-        <Button
-          variant={""}
-          size={"sm"}
-          className={"text-muted fst-italic small rounded-0"}
-          onClick={() => {
-            setHidden(false);
-          }}
-        >
-          ...show all {props.propertyEntry.values.length} elements
-        </Button>
-      )}
+      <Collapsable
+        title={
+          <span className={"fw-bold small user-select-text font-monospace"}>
+            {props.propertyEntry.key}
+          </span>
+        }
+      >
+        <Stack>
+          {props.propertyEntry.values
+            .slice(0, hidden ? 10 : props.propertyEntry.values.length)
+            .map((valueEntry) => (
+              <ValueDisplay
+                label={valueEntry.value}
+                value={valueEntry.count}
+                percentage={valueEntry.percentage}
+                key={valueEntry.value}
+              ></ValueDisplay>
+            ))}
+          {hidden && props.propertyEntry.values.length > 10 && (
+            <Button
+              variant={""}
+              size={"sm"}
+              className={"text-muted fst-italic small rounded-0"}
+              onClick={() => {
+                setHidden(false);
+              }}
+            >
+              ...show all {props.propertyEntry.values.length} elements
+            </Button>
+          )}
+        </Stack>
+      </Collapsable>
     </Stack>
   );
 }
 
 function ValueDisplay(props: {
   label: string;
+  subLabel?: string;
   value: number;
   percentage: number;
   bgColor?: string;
@@ -155,7 +166,7 @@ function ValueDisplay(props: {
     >
       <Stack
         direction={"horizontal"}
-        className={"ps-1 flex-shrink-1 flex-grow-1 overflow-hidden "}
+        className={"ps-0 flex-shrink-1 flex-grow-1 overflow-hidden "}
       >
         <ClipboardButton text={props.label}></ClipboardButton>
         {props.bgColor && (
@@ -172,7 +183,11 @@ function ValueDisplay(props: {
         <OverlayTrigger
           placement={"left"}
           delay={{ show: 500, hide: 0 }}
-          overlay={<Tooltip>{props.label}</Tooltip>}
+          overlay={
+            <Tooltip>
+              {props.label} {props.subLabel && `(${props.subLabel})`}
+            </Tooltip>
+          }
         >
           <span
             style={{
@@ -186,6 +201,9 @@ function ValueDisplay(props: {
             }
           >
             {props.label}
+            {props.subLabel && (
+              <span className={"text-muted"}> ({props.subLabel})</span>
+            )}
           </span>
         </OverlayTrigger>
       </Stack>

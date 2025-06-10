@@ -1,9 +1,9 @@
 import { InteractiveNvlWrapper } from "@neo4j-nvl/react";
-import { useUserTheme } from "../../lib/theme/useUserTheme.ts";
+import { useUserTheme } from "../../../lib/theme/useUserTheme.ts";
 import { Node, Relationship } from "@neo4j-nvl/base";
 import { useEffect, useState } from "react";
-import { Graph } from "../../../src-gen";
-import { WebSocketsManager } from "../../lib/ws/WebSocketsManager.ts";
+import { Graph } from "../../../../src-gen";
+import { WebSocketsManager } from "../../../lib/ws/WebSocketsManager.ts";
 
 export function GraphRendererNVL(props: { webSockets: WebSocketsManager }) {
   const [graph, setGraph] = useState<Graph | null>(null);
