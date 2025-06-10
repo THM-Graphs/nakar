@@ -29,7 +29,7 @@ export const NavbarButton = forwardRef<
         props.onClick?.(event);
       }}
       className={clsx(
-        "border-start border-end rounded-0 ps-2 pe-2 small text-muted",
+        "border-start border-end rounded-0 ps-2 pe-2 small",
         props.selected ? "bg-body-secondary" : "",
         props.disabled ? "" : "pointer",
         props.disabled ? "" : "bg-body-secondary-hover",

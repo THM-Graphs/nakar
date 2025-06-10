@@ -1,7 +1,7 @@
 import { Node } from "../../../../src-gen";
 import { DetailPane } from "./DetailPane.tsx";
 import { DetailPaneAction } from "./DetailPaneAction.ts";
-import { Pane } from "../Pane/Pane.tsx";
+import { Panel } from "../Pane/Panel.tsx";
 
 export function NodeDetails(props: {
   node: Node | null;
@@ -12,7 +12,7 @@ export function NodeDetails(props: {
   scenarioLoading: boolean;
 }) {
   return (
-    <Pane
+    <Panel
       direction={"right"}
       hidden={!props.node}
       onClose={props.onClose}
@@ -89,6 +89,6 @@ export function NodeDetails(props: {
           <div className={"flex-grow-1"}></div>
         </>
       )}
-    </Pane>
+    </Panel>
   );
 }

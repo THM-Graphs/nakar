@@ -11,7 +11,7 @@ export function AppNavbar(props: {
       direction={"horizontal"}
       className="bg-body-tertiary border-bottom justify-content-between position-relative"
       style={{
-        zIndex: 1,
+        zIndex: 2,
         height: "32px",
       }}
     >

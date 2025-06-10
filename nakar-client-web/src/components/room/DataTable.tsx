@@ -16,6 +16,7 @@ export function DataTable(props: {
         overflow: "auto",
         zIndex: 1,
       }}
+      className={"bg-body"}
     >
       <Table className={"table-responsive"}>
         <thead>

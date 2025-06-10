@@ -38,7 +38,7 @@ export function ScenarioGroupDisplay(props: {
 
   return (
     <Collapsable
-      initialState={false}
+      initialState={true}
       title={
         <>
           <span className={"small text-muted"}>

@@ -22,7 +22,7 @@ import { WebSocketsManager } from "../lib/ws/WebSocketsManager.ts";
 import { Env } from "../lib/env/env.ts";
 import { useTheme } from "../lib/theme/useTheme.ts";
 import { D3Renderer } from "../lib/d3/D3Renderer.ts";
-import { Pane } from "../components/room/Pane/Pane.tsx";
+import { Panel } from "../components/room/Pane/Panel.tsx";
 import { NodeDetails } from "../components/room/DetailPane/NodeDetails.tsx";
 import { EdgeDetails } from "../components/room/DetailPane/EdgeDetails.tsx";
 import { HistogramDisplay } from "../components/room/HistogramDisplay.tsx";
@@ -264,7 +264,7 @@ export function Room(props: { webSockets: WebSocketsManager; env: Env }) {
           className={"align-items-stretch flex-grow-1 position-relative"}
           style={{ height: "100px" }}
         >
-          <Pane
+          <Panel
             hidden={!scenariosWindowOpened}
             direction={"left"}
             onClose={() => {
@@ -282,7 +282,7 @@ export function Room(props: { webSockets: WebSocketsManager; env: Env }) {
               }}
               scenarioLoading={scenarioLoading}
             ></DatabaseList>
-          </Pane>
+          </Panel>
 
           <Stack
             direction={"vertical"}
@@ -346,7 +346,7 @@ export function Room(props: { webSockets: WebSocketsManager; env: Env }) {
               setDetailsEdge(null);
             }}
           ></EdgeDetails>
-          <Pane
+          <Panel
             hidden={!showHistogram}
             direction={"right"}
             title={"Histogram"}
@@ -358,13 +358,13 @@ export function Room(props: { webSockets: WebSocketsManager; env: Env }) {
               histogram={graph.metaData.histogram}
               graphLabels={graph.metaData.labels}
             ></HistogramDisplay>
-          </Pane>
+          </Panel>
         </Stack>
         {socketState.type !== "connected" && (
           <Stack
             className={"position-absolute bg-body-secondary"}
             gap={2}
-            style={{ zIndex: 2, width: "100%", height: "100%" }}
+            style={{ zIndex: 3, width: "100%", height: "100%" }}
           >
             <AppNavbar
               left={<BackButton href={"/"}></BackButton>}

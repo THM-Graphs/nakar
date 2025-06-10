@@ -1,10 +1,10 @@
 import { Edge } from "../../../../src-gen";
 import { DetailPane } from "./DetailPane.tsx";
-import { Pane } from "../Pane/Pane.tsx";
+import { Panel } from "../Pane/Panel.tsx";
 
 export function EdgeDetails(props: { edge: Edge | null; onClose: () => void }) {
   return (
-    <Pane
+    <Panel
       direction={"right"}
       hidden={!props.edge}
       onClose={props.onClose}
@@ -64,6 +64,6 @@ export function EdgeDetails(props: { edge: Edge | null; onClose: () => void }) {
           <div className={"flex-grow-1"}></div>
         </>
       )}
-    </Pane>
+    </Panel>
   );
 }
