@@ -1,4 +1,4 @@
-import { CloseButton, Stack, Tab, Tabs } from "react-bootstrap";
+import { CloseButton, Stack } from "react-bootstrap";
 import { AppNavbar } from "../components/shared/AppNavbar.tsx";
 import { SideToolbar } from "../components/room/SideToolbar.tsx";
 import { DatabaseList } from "../components/room/DatabaseList.tsx";
@@ -9,8 +9,7 @@ import {
   Room as RoomSchema,
   WSEventScenarioProgress,
   getRoom,
-  GraphLabel,
-  Histogram,
+  Graph,
 } from "../../src-gen";
 import { LoaderFunctionArgs, useLoaderData } from "react-router";
 import { resultOrThrow } from "../lib/data/resultOrThrow.ts";
@@ -37,16 +36,7 @@ export async function RoomLoader(
 
 export function Room(props: { webSockets: WebSocketsManager; env: Env }) {
   const loaderData: RoomSchema = useLoaderData();
-  const [tableData, setTableData] = useState<Record<string, unknown>[] | null>(
-    null,
-  );
-  const [graphLabels, setGraphLabels] = useState<GraphLabel[]>([]);
-  const [histogram, setHistogram] = useState<Histogram>({
-    nodeLabels: [],
-    nodeProperties: [],
-    edgeTypes: [],
-    edgeProperties: [],
-  });
+  const [graph, setGraph] = useState<Graph | null>(null);
   const [scenariosWindowOpened, setScenariosWindowOpened] = useState(true);
   const [scenarioLoading, setScenarioLoading] = useState<string | null>(null);
   const [renderer, setRenderer] = useState<GraphRendererEngine>("d3");
@@ -70,9 +60,14 @@ export function Room(props: { webSockets: WebSocketsManager; env: Env }) {
   useEffect(() => {
     const subscriptions = [
       props.webSockets.onScenarioLoaded$.subscribe((sd) => {
-        setTableData(sd.graph.tableData);
-        setGraphLabels(sd.graph.metaData.labels);
-        setHistogram(sd.graph.metaData.histogram);
+        setGraph(sd.graph);
+        graphRenderer.loadGraphContent(sd.graph);
+      }),
+      props.webSockets.onNodesMoved$.subscribe((onMove) => {
+        graphRenderer.updateNodePositions(onMove);
+      }),
+      props.webSockets.onSetLocks$.subscribe((message) => {
+        graphRenderer.updateLocks(message);
       }),
       props.webSockets.onScenarioProgress$.subscribe((progress) => {
         if (progress.progress == null) {
@@ -156,32 +151,34 @@ export function Room(props: { webSockets: WebSocketsManager; env: Env }) {
               ></DatabaseList>
             </Stack>
           </SideToolbar>
-          <Stack
-            direction={"vertical"}
-            className={"flex-shrink-1 flex-grow-1"}
-            style={{ width: "100px" }}
-          >
-            {selectedTab === "graph" && (
-              <Canvas
-                onExpandNodes={() => {
-                  setScenarioLoading("");
-                }}
-                onDeleteNodes={() => {
-                  setScenarioLoading("");
-                }}
-                renderer={renderer}
-                webSocketsManager={props.webSockets}
-                scenarioProgress={scenarioProgress}
-                scenarioLoading={scenarioLoading != null}
-                graphRenderer={graphRenderer}
-                graphLabels={graphLabels}
-                histogram={histogram}
-              ></Canvas>
-            )}
-            {selectedTab === "data" && (
-              <DataTable tableData={tableData}></DataTable>
-            )}
-          </Stack>
+          {graph && (
+            <Stack
+              direction={"vertical"}
+              className={"flex-shrink-1 flex-grow-1"}
+              style={{ width: "100px" }}
+            >
+              {selectedTab === "graph" && (
+                <Canvas
+                  onExpandNodes={() => {
+                    setScenarioLoading("");
+                  }}
+                  onDeleteNodes={() => {
+                    setScenarioLoading("");
+                  }}
+                  renderer={renderer}
+                  webSocketsManager={props.webSockets}
+                  scenarioProgress={scenarioProgress}
+                  scenarioLoading={scenarioLoading != null}
+                  graphRenderer={graphRenderer}
+                  graphLabels={graph.metaData.labels}
+                  histogram={graph.metaData.histogram}
+                ></Canvas>
+              )}
+              {selectedTab === "data" && (
+                <DataTable tableData={graph.tableData}></DataTable>
+              )}
+            </Stack>
+          )}
         </Stack>
       </Stack>
     </>

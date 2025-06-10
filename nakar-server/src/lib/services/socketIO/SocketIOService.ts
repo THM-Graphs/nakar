@@ -311,15 +311,6 @@ export class SocketIOService implements ApplicationService {
           } satisfies SchemaWsEventScenarioProgress);
         },
       })
-      .then((scenario: GetScenarioDBDTO): void => {
-        wsClient.sendToRoom({
-          title: 'Scenario',
-          message: `Scenario "${scenario.title ?? ''}" started.`,
-          date: new Date().toISOString(),
-          severity: 'message',
-          type: 'WSEventNotification',
-        });
-      })
       .catch((error: unknown): void => {
         wsClient.sendToRoom(this.createErrorNotification(error));
       })

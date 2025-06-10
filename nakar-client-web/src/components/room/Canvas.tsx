@@ -15,7 +15,6 @@ import { GraphRendererEngine } from "../../lib/graph-renderer/GraphRendererEngin
 import { NodeDetails } from "./NodeDetails.tsx";
 import { EdgeDetails } from "./EdgeDetails.tsx";
 import { WebSocketsManager } from "../../lib/ws/WebSocketsManager.ts";
-import { GraphProgressDisplay } from "./GraphProgressDisplay.tsx";
 import { DetailPane } from "./DetailPane/DetailPane.tsx";
 import { HistogramDisplay } from "./HistogramDisplay.tsx";
 import { D3Renderer } from "../../lib/d3/D3Renderer.ts";
@@ -89,13 +88,6 @@ export function Canvas(props: {
       <div className={"m-2"} style={{ zIndex: 1 }}>
         <Labels graphLabels={props.graphLabels}></Labels>
       </div>
-      {props.scenarioProgress && (
-        <div className={"position-absolute bottom-0 m-2"}>
-          <GraphProgressDisplay
-            graphProgress={props.scenarioProgress}
-          ></GraphProgressDisplay>
-        </div>
-      )}
       <div className={"flex-grow-1"}></div>
       <OverlayTrigger
         delay={{ show: 500, hide: 0 }}

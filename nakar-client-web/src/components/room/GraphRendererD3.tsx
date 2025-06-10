@@ -39,9 +39,6 @@ export function GraphRendererD3(props: {
 
   useEffect(() => {
     const supscriptions = [
-      props.webSockets.onScenarioLoaded$.subscribe((scenraioData) => {
-        graphRenderer.loadGraphContent(scenraioData.graph);
-      }),
       graphRenderer.onGrabNode.subscribe((n) => {
         props.webSockets.sendMessage({
           type: "WSActionGrabNode",
@@ -67,12 +64,6 @@ export function GraphRendererD3(props: {
             position: { x: n.x, y: n.y },
           },
         });
-      }),
-      props.webSockets.onNodesMoved$.subscribe((onMove) => {
-        graphRenderer.updateNodePositions(onMove);
-      }),
-      props.webSockets.onSetLocks$.subscribe((message) => {
-        graphRenderer.updateLocks(message);
       }),
       graphRenderer.onDisplayNodeData.subscribe((n) => {
         props.onNodeClicked(n);
