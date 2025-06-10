@@ -181,7 +181,10 @@ export function Canvas(props: {
           properties={[]}
           title={""}
         >
-          <HistogramDisplay histogram={props.histogram}></HistogramDisplay>
+          <HistogramDisplay
+            histogram={props.histogram}
+            graphLabels={props.graphLabels}
+          ></HistogramDisplay>
         </DetailPane>
       )}
     </Stack>

@@ -345,7 +345,7 @@ components:
     Histogram:
       type: object
       properties:
-        labels:
+        nodeLabels:
           type: array
           items:
             type: object
@@ -385,9 +385,51 @@ components:
             required:
               - key
               - values
+        edgeTypes:
+          type: array
+          items:
+            type: object
+            properties:
+              type:
+                type: string
+              count:
+                type: number
+              percentage:
+                type: number
+            required:
+              - type
+              - count
+              - percentage
+        edgeProperties:
+          type: array
+          items:
+            type: object
+            properties:
+              key:
+                type: string
+              values:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    value:
+                      type: string
+                    count:
+                      type: number
+                    percentage:
+                      type: number
+                  required:
+                    - value
+                    - count
+                    - percentage
+            required:
+              - key
+              - values
       required:
-        - labels
+        - nodeLabels
         - nodeProperties
+        - edgeTypes
+        - edgeProperties
 
     GraphMetaData:
       type: object

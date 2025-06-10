@@ -115,6 +115,10 @@ export class CachingSchemaDTOFactory {
       (akku: number, key: string, value: number): number => akku + value,
       0,
     );
+    const typeCountHistogram: number = graph.edges.typeHistogram.reduce(
+      (akku: number, key: string, value: number): number => akku + value,
+      0,
+    );
     return {
       labels: await metaData
         .getLabels(graph.nodes)
@@ -135,7 +139,7 @@ export class CachingSchemaDTOFactory {
         },
       ),
       histogram: {
-        labels: graph.nodes.labelHistogram
+        nodeLabels: graph.nodes.labelHistogram
           .toArray()
           .toSorted(
             (a: [string, number], b: [string, number]): number => b[1] - a[1],
@@ -150,6 +154,68 @@ export class CachingSchemaDTOFactory {
             }),
           ),
         nodeProperties: graph.nodes.propertyHistogram
+          .toArray()
+          .toSorted(
+            (
+              a: [string, SMap<string, number>],
+              b: [string, SMap<string, number>],
+            ): number => a[0].localeCompare(b[0]),
+          )
+          .map(
+            (
+              entry: [string, SMap<string, number>],
+            ): {
+              key: string;
+              values: {
+                value: string;
+                count: number;
+                percentage: number;
+              }[];
+            } => {
+              const count: number = entry[1].reduce(
+                (akku: number, key: string, value: number): number =>
+                  akku + value,
+                0,
+              );
+              return {
+                key: entry[0],
+                values: entry[1]
+                  .toArray()
+                  .toSorted(
+                    (a: [string, number], b: [string, number]): number =>
+                      b[1] - a[1],
+                  )
+                  .map(
+                    (
+                      propertyEntry: [string, number],
+                    ): {
+                      value: string;
+                      count: number;
+                      percentage: number;
+                    } => ({
+                      value: propertyEntry[0],
+                      count: propertyEntry[1],
+                      percentage: propertyEntry[1] / count,
+                    }),
+                  ),
+              };
+            },
+          ),
+        edgeTypes: graph.edges.typeHistogram
+          .toArray()
+          .toSorted(
+            (a: [string, number], b: [string, number]): number => b[1] - a[1],
+          )
+          .map(
+            (
+              entry: [string, number],
+            ): { type: string; count: number; percentage: number } => ({
+              type: entry[0],
+              count: entry[1],
+              percentage: entry[1] / typeCountHistogram,
+            }),
+          ),
+        edgeProperties: graph.edges.propertyHistogram
           .toArray()
           .toSorted(
             (

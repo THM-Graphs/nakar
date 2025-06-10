@@ -42,8 +42,10 @@ export function Room(props: { webSockets: WebSocketsManager; env: Env }) {
   );
   const [graphLabels, setGraphLabels] = useState<GraphLabel[]>([]);
   const [histogram, setHistogram] = useState<Histogram>({
-    labels: [],
+    nodeLabels: [],
     nodeProperties: [],
+    edgeTypes: [],
+    edgeProperties: [],
   });
   const [scenariosWindowOpened, setScenariosWindowOpened] = useState(true);
   const [scenarioLoading, setScenarioLoading] = useState<string | null>(null);

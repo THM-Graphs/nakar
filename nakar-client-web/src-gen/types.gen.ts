@@ -67,12 +67,25 @@ export type GraphProperty = {
 export type GraphPropertyValue = unknown;
 
 export type Histogram = {
-    labels: Array<{
+    nodeLabels: Array<{
         label: string;
         count: number;
         percentage: number;
     }>;
     nodeProperties: Array<{
+        key: string;
+        values: Array<{
+            value: string;
+            count: number;
+            percentage: number;
+        }>;
+    }>;
+    edgeTypes: Array<{
+        type: string;
+        count: number;
+        percentage: number;
+    }>;
+    edgeProperties: Array<{
         key: string;
         values: Array<{
             value: string;

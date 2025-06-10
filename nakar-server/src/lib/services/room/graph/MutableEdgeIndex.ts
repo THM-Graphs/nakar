@@ -14,11 +14,19 @@ export class MutableEdgeIndex {
     SMap<string, SMap<string, MutableEdge>>
   >;
 
+  /* Maps type => count */
+  private _typeHistogram: SMap<string, number>;
+
+  /* Maps key => value => count */
+  private _propertyHistogram: SMap<string, SMap<string, number>>;
+
   public constructor(edges: MutableEdge[]) {
     this._byId = new SMap();
     this._byStartNodeId = new SMap();
     this._byEndNodeId = new SMap();
     this._byStartAndEndNodeId = new SMap();
+    this._typeHistogram = new SMap();
+    this._propertyHistogram = new SMap();
 
     for (const edge of edges) {
       this.add(edge);
@@ -35,6 +43,14 @@ export class MutableEdgeIndex {
 
   public get keys(): SSet<string> {
     return new SSet<string>(this._byId.keys());
+  }
+
+  public get typeHistogram(): SMap<string, number> {
+    return this._typeHistogram;
+  }
+
+  public get propertyHistogram(): SMap<string, SMap<string, number>> {
+    return this._propertyHistogram;
   }
 
   public add(edge: MutableEdge): void {
@@ -70,6 +86,12 @@ export class MutableEdgeIndex {
         ).bySetting(edge.id, edge),
       ),
     );
+
+    this._addToTypeHistogram(edge.type, 1);
+
+    for (const propertyEntry of edge.properties.properties) {
+      this._addToPropertyHistogram(propertyEntry[0], propertyEntry[1], 1);
+    }
   }
 
   public addNeo4jEdges(neo4jEdges: SMap<string, Neo4jRelationship>): void {
@@ -104,6 +126,12 @@ export class MutableEdgeIndex {
       .get(edge.startNodeId)
       ?.get(edge.endNodeId)
       ?.delete(edge.id);
+
+    this._addToTypeHistogram(edge.type, -1);
+
+    for (const propertyEntry of edge.properties.properties) {
+      this._addToPropertyHistogram(propertyEntry[0], propertyEntry[1], -1);
+    }
   }
 
   public get(id: string): MutableEdge | null {
@@ -172,5 +200,24 @@ export class MutableEdgeIndex {
     for (const edge of byEndNodeId) {
       this.remove(edge);
     }
+  }
+
+  private _addToTypeHistogram(type: string, delta: 1 | -1): void {
+    this._typeHistogram.set(type, (this._typeHistogram.get(type) ?? 0) + delta);
+  }
+
+  private _addToPropertyHistogram(
+    key: string,
+    value: unknown,
+    delta: 1 | -1,
+  ): void {
+    const stringValue: string = JSON.stringify(value);
+    const propertyHistogram: SMap<string, number> =
+      this._propertyHistogram.get(key) ?? new SMap();
+    propertyHistogram.set(
+      stringValue,
+      (propertyHistogram.get(stringValue) ?? 0) + delta,
+    );
+    this._propertyHistogram.set(key, propertyHistogram);
   }
 }

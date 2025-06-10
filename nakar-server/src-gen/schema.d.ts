@@ -212,12 +212,25 @@ export interface components {
             readonly title: string | null;
         };
         readonly Histogram: {
-            readonly labels: readonly {
+            readonly nodeLabels: readonly {
                 readonly label: string;
                 readonly count: number;
                 readonly percentage: number;
             }[];
             readonly nodeProperties: readonly {
+                readonly key: string;
+                readonly values: readonly {
+                    readonly value: string;
+                    readonly count: number;
+                    readonly percentage: number;
+                }[];
+            }[];
+            readonly edgeTypes: readonly {
+                readonly type: string;
+                readonly count: number;
+                readonly percentage: number;
+            }[];
+            readonly edgeProperties: readonly {
                 readonly key: string;
                 readonly values: readonly {
                     readonly value: string;
