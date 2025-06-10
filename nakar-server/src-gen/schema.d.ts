@@ -293,8 +293,8 @@ export interface components {
         readonly Version: {
             readonly version: string;
         };
-        readonly WSClientToServerMessage: components["schemas"]["WSActionJoinRoom"] | components["schemas"]["WSActionLoadScenario"] | components["schemas"]["WSActionGrabNode"] | components["schemas"]["WSActionMoveNodes"] | components["schemas"]["WSActionUngrabNode"] | components["schemas"]["WSActionExpandNodes"] | components["schemas"]["WSActionDeleteNodes"] | components["schemas"]["WSActionRelayout"] | components["schemas"]["WSActionUnlockNodes"];
-        readonly WSServerToClientMessage: components["schemas"]["WSEventNodesMoved"] | components["schemas"]["WSEventNotification"] | components["schemas"]["WSEventScenarioLoaded"] | components["schemas"]["WSEventScenarioProgress"] | components["schemas"]["WSEventSetLocks"];
+        readonly WSClientToServerMessage: components["schemas"]["WSActionJoinRoom"] | components["schemas"]["WSActionLoadScenario"] | components["schemas"]["WSActionGetGraph"] | components["schemas"]["WSActionGrabNode"] | components["schemas"]["WSActionMoveNodes"] | components["schemas"]["WSActionUngrabNode"] | components["schemas"]["WSActionExpandNodes"] | components["schemas"]["WSActionDeleteNodes"] | components["schemas"]["WSActionRelayout"] | components["schemas"]["WSActionUnlockNodes"];
+        readonly WSServerToClientMessage: components["schemas"]["WSEventNodesMoved"] | components["schemas"]["WSEventRoomChanged"] | components["schemas"]["WSEventNotification"] | components["schemas"]["WSEventGraphChanged"] | components["schemas"]["WSEventScenarioProgress"] | components["schemas"]["WSEventSetLocks"];
         readonly WSActionJoinRoom: {
             /** @enum {string} */
             readonly type: "WSActionJoinRoom";
@@ -304,6 +304,10 @@ export interface components {
             /** @enum {string} */
             readonly type: "WSActionLoadScenario";
             readonly scenarioId: string;
+        };
+        readonly WSActionGetGraph: {
+            /** @enum {string} */
+            readonly type: "WSActionGetGraph";
         };
         readonly WSActionMoveNodes: {
             /** @enum {string} */
@@ -339,10 +343,15 @@ export interface components {
             readonly type: "WSActionUnlockNodes";
             readonly nodes: readonly string[];
         };
-        readonly WSEventScenarioLoaded: {
+        readonly WSEventGraphChanged: {
             /** @enum {string} */
-            readonly type: "WSEventScenarioLoaded";
+            readonly type: "WSEventGraphChanged";
             readonly graph: components["schemas"]["Graph"];
+        };
+        readonly WSEventRoomChanged: {
+            /** @enum {string} */
+            readonly type: "WSEventRoomChanged";
+            readonly roomId: string | null;
         };
         readonly WSEventNodesMoved: {
             /** @enum {string} */
@@ -410,6 +419,7 @@ export type SchemaWsClientToServerMessage = components['schemas']['WSClientToSer
 export type SchemaWsServerToClientMessage = components['schemas']['WSServerToClientMessage'];
 export type SchemaWsActionJoinRoom = components['schemas']['WSActionJoinRoom'];
 export type SchemaWsActionLoadScenario = components['schemas']['WSActionLoadScenario'];
+export type SchemaWsActionGetGraph = components['schemas']['WSActionGetGraph'];
 export type SchemaWsActionMoveNodes = components['schemas']['WSActionMoveNodes'];
 export type SchemaWsActionGrabNode = components['schemas']['WSActionGrabNode'];
 export type SchemaWsActionUngrabNode = components['schemas']['WSActionUngrabNode'];
@@ -417,7 +427,8 @@ export type SchemaWsActionExpandNodes = components['schemas']['WSActionExpandNod
 export type SchemaWsActionDeleteNodes = components['schemas']['WSActionDeleteNodes'];
 export type SchemaWsActionRelayout = components['schemas']['WSActionRelayout'];
 export type SchemaWsActionUnlockNodes = components['schemas']['WSActionUnlockNodes'];
-export type SchemaWsEventScenarioLoaded = components['schemas']['WSEventScenarioLoaded'];
+export type SchemaWsEventGraphChanged = components['schemas']['WSEventGraphChanged'];
+export type SchemaWsEventRoomChanged = components['schemas']['WSEventRoomChanged'];
 export type SchemaWsEventNodesMoved = components['schemas']['WSEventNodesMoved'];
 export type SchemaWsEventNotification = components['schemas']['WSEventNotification'];
 export type SchemaWsEventScenarioProgress = components['schemas']['WSEventScenarioProgress'];

@@ -601,6 +601,7 @@ components:
       oneOf:
         - $ref: "#/components/schemas/WSActionJoinRoom"
         - $ref: "#/components/schemas/WSActionLoadScenario"
+        - $ref: "#/components/schemas/WSActionGetGraph"
         - $ref: "#/components/schemas/WSActionGrabNode"
         - $ref: "#/components/schemas/WSActionMoveNodes"
         - $ref: "#/components/schemas/WSActionUngrabNode"
@@ -612,8 +613,9 @@ components:
     WSServerToClientMessage:
       oneOf:
         - $ref: "#/components/schemas/WSEventNodesMoved"
+        - $ref: "#/components/schemas/WSEventRoomChanged"
         - $ref: "#/components/schemas/WSEventNotification"
-        - $ref: "#/components/schemas/WSEventScenarioLoaded"
+        - $ref: "#/components/schemas/WSEventGraphChanged"
         - $ref: "#/components/schemas/WSEventScenarioProgress"
         - $ref: "#/components/schemas/WSEventSetLocks"
 
@@ -640,6 +642,15 @@ components:
       required:
         - type
         - scenarioId
+
+    WSActionGetGraph:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: ["WSActionGetGraph"]
+      required:
+        - type
 
     WSActionMoveNodes:
       type: object
@@ -730,17 +741,30 @@ components:
         - type
         - nodes
 
-    WSEventScenarioLoaded:
+    WSEventGraphChanged:
       type: object
       properties:
         type:
           type: string
-          enum: ["WSEventScenarioLoaded"]
+          enum: ["WSEventGraphChanged"]
         graph:
           $ref: "#/components/schemas/Graph"
       required:
         - type
         - graph
+
+    WSEventRoomChanged:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: ["WSEventRoomChanged"]
+        roomId:
+          type: string
+          nullable: true
+      required:
+        - type
+        - roomId
 
     WSEventNodesMoved:
       type: object

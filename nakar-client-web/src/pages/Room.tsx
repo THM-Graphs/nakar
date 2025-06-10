@@ -12,8 +12,9 @@ import {
   Edge,
   Node,
   WSActionRelayout,
+  WSActionGetGraph,
 } from "../../src-gen";
-import { LoaderFunctionArgs, useLoaderData } from "react-router";
+import { LoaderFunctionArgs, useLoaderData, useNavigate } from "react-router";
 import { resultOrThrow } from "../lib/data/resultOrThrow.ts";
 import { useWebSocketsState } from "../lib/ws/useWebSocketsState.ts";
 import { ToastStack } from "../components/room/ToastStack.tsx";
@@ -78,6 +79,7 @@ export function Room(props: { webSockets: WebSocketsManager; env: Env }) {
   const [selectedTab, setSelectedTab] = useState<"graph" | "data">("graph");
   const theme = useTheme();
   const [graphRenderer] = useState(new D3Renderer(theme));
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (selectedTab == "data") {
@@ -97,10 +99,30 @@ export function Room(props: { webSockets: WebSocketsManager; env: Env }) {
   }, [socketState]);
 
   useEffect(() => {
+    if (socketState.type === "connected") {
+      props.webSockets.sendMessage({
+        type: "WSActionGetGraph",
+      });
+    }
+  }, []);
+
+  useEffect(() => {
+    graphRenderer.loadGraphContent(graph);
+  }, [graph]);
+
+  useEffect(() => {
     const subscriptions = [
-      props.webSockets.onScenarioLoaded$.subscribe((sd) => {
+      props.webSockets.onGraphChanged$.subscribe((sd) => {
         setGraph(sd.graph);
-        graphRenderer.loadGraphContent(sd.graph);
+      }),
+      props.webSockets.onRoomChanged$.subscribe((sd) => {
+        if (sd.roomId == null) {
+          void navigate("/");
+        } else {
+          props.webSockets.sendMessage({
+            type: "WSActionGetGraph",
+          } satisfies WSActionGetGraph);
+        }
       }),
       props.webSockets.onNodesMoved$.subscribe((onMove) => {
         graphRenderer.updateNodePositions(onMove);

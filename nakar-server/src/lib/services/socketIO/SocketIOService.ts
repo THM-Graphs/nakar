@@ -8,6 +8,7 @@ import {
   SchemaPhysicalNode,
   SchemaWsActionDeleteNodes,
   SchemaWsActionExpandNodes,
+  SchemaWsActionGetGraph,
   SchemaWsActionGrabNode,
   SchemaWsActionJoinRoom,
   SchemaWsActionLoadScenario,
@@ -16,6 +17,7 @@ import {
   SchemaWsActionUnlockNodes,
   SchemaWsClientToServerMessage,
   SchemaWsEventNotification,
+  SchemaWsEventRoomChanged,
   SchemaWsEventScenarioProgress,
   SchemaWsEventSetLocks,
   SchemaWsServerToClientMessage,
@@ -31,7 +33,6 @@ import { GetRoomDBDTO } from '../database/dto/GetRoomDBDTO';
 import { RSEventScenarioProgress } from '../room/events/RSEventScenarioProgress';
 import { RSEventRoomPhysicsUpdated } from '../room/events/RSEventRoomPhysicsUpdated';
 import { RSEventRoomUpdated } from '../room/events/RSEventRoomUpdated';
-import { GetScenarioDBDTO } from '../database/dto/GetScenarioDBDTO';
 import { LoggerService } from '../logger/LoggerService';
 import http from 'http';
 import { ApplicationService } from '../../application/ApplicationService';
@@ -95,24 +96,10 @@ export class SocketIOService implements ApplicationService {
             severity: 'message',
             date: new Date().toISOString(),
           });
-
-          if (roomId != null) {
-            const graph: MutableGraph =
-              this._roomService.getGraph(roomId) ?? MutableGraph.empty();
-            const cachedGraphFactory: CachingSchemaDTOFactory =
-              new CachingSchemaDTOFactory(this._databaseService, this._logger);
-            cachedGraphFactory
-              .createSchemaGraph(graph)
-              .then((schemaGraph: SchemaGraph): void => {
-                wsClient.send({
-                  type: 'WSEventScenarioLoaded',
-                  graph: schemaGraph,
-                });
-              })
-              .catch((error: unknown): void => {
-                this._logger.error(this, error);
-              });
-          }
+          wsClient.send({
+            type: 'WSEventRoomChanged',
+            roomId: roomId,
+          } satisfies SchemaWsEventRoomChanged);
         }),
       );
 
@@ -172,6 +159,9 @@ export class SocketIOService implements ApplicationService {
                     this._handleUnlockNodes(wsClient, message);
                   },
                 )
+                .with({ type: 'WSActionGetGraph' }, (): void => {
+                  this._handleGetGraph(wsClient);
+                })
                 .exhaustive();
             } catch (error: unknown) {
               wsClient.send(this.createErrorNotification(error));
@@ -495,6 +485,33 @@ export class SocketIOService implements ApplicationService {
     this._roomService.unlockNodes({ roomId: roomId, nodeIds: message.nodes });
   }
 
+  private _handleGetGraph(wsClient: WSClient): void {
+    const roomId: string | null = wsClient.room;
+    if (roomId == null) {
+      this._logger.error(
+        this,
+        `Socket ${wsClient.id} did send unlock nodes but is in no room.`,
+      );
+      return;
+    }
+
+    const graph: MutableGraph =
+      this._roomService.getGraph(roomId) ?? MutableGraph.empty();
+    const cachedGraphFactory: CachingSchemaDTOFactory =
+      new CachingSchemaDTOFactory(this._databaseService, this._logger);
+    cachedGraphFactory
+      .createSchemaGraph(graph)
+      .then((schemaGraph: SchemaGraph): void => {
+        wsClient.send({
+          type: 'WSEventGraphChanged',
+          graph: schemaGraph,
+        });
+      })
+      .catch((error: unknown): void => {
+        this._logger.error(this, error);
+      });
+  }
+
   private _handleRoomPhysicsUpdate(message: RSEventRoomPhysicsUpdated): void {
     for (const socket of this.sockets) {
       if (socket.room !== message.roomId) {
@@ -527,7 +544,7 @@ export class SocketIOService implements ApplicationService {
       .then((graph: SchemaGraph): void => {
         this.sendToRoom(message.roomId, {
           graph: graph,
-          type: 'WSEventScenarioLoaded',
+          type: 'WSEventGraphChanged',
         });
       })
       .catch((error: unknown): void => {
