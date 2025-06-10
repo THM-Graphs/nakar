@@ -7,14 +7,21 @@ export function Pane(props: {
   children: ReactNode;
   onClose: () => void;
   direction: "left" | "right";
+  hidden: boolean;
 }) {
+  if (props.hidden) {
+    return null;
+  }
   return (
     <Stack
       className={clsx(
-        "flex-shrink-0 flex-grow-0 bg-body-tertiary",
+        "flex-shrink-0 flex-grow-0 bg-body-tertiary overflow-hidden",
         props.direction == "left" ? "border-end" : "border-start",
       )}
-      style={{ width: "400px", zIndex: 1 }}
+      style={{
+        width: "400px",
+        zIndex: 1,
+      }}
     >
       <Stack
         direction={"horizontal"}
@@ -25,7 +32,11 @@ export function Pane(props: {
         )}
         <CloseButton className={"m-1"} onClick={props.onClose}></CloseButton>
       </Stack>
-      <Stack className={"overflow-y-auto flex-shrink-1 align-items-stretch"}>
+      <Stack
+        className={
+          "overflow-y-auto flex-shrink-1 align-items-stretch justify-content-around"
+        }
+      >
         {props.children}
       </Stack>
     </Stack>

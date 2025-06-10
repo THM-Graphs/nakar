@@ -43,6 +43,7 @@ export function DatabaseDisplay(props: {
   return (
     <Stack className={"border-bottom flex-grow-0"}>
       <Collapsable
+        initialState={true}
         title={<span className={"fw-bold"}>{props.database.title}</span>}
       >
         {match(scenarioGroups)

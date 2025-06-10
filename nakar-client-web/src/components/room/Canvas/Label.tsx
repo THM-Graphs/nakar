@@ -8,7 +8,7 @@ export function Label(props: { label: GraphLabel; multipleSources: boolean }) {
     <Stack
       direction={"horizontal"}
       gap={1}
-      className={"small fw-bold ps-2 pe-2"}
+      className={"small fw-bold ps-2 pe-2 flex-grow-1 justify-content-center"}
       style={{
         backgroundColor: getBackgroundColor(props.label.color),
         color: getTextColor(props.label.color),

@@ -1,8 +1,6 @@
-import { useEffect, useState } from "react";
 import {
   Edge,
   GraphLabel,
-  Histogram,
   Node,
   WSActionRelayout,
   WSEventScenarioProgress,
@@ -12,72 +10,32 @@ import { GraphRendererD3 } from "./GraphRendererD3.tsx";
 import { GraphRendererNVL } from "./GraphRendererNVL.tsx";
 import { Button, OverlayTrigger, Stack, Tooltip } from "react-bootstrap";
 import { GraphRendererEngine } from "../../../lib/graph-renderer/GraphRendererEngine.ts";
-import { NodeDetails } from "../DetailPane/NodeDetails.tsx";
-import { EdgeDetails } from "../DetailPane/EdgeDetails.tsx";
 import { WebSocketsManager } from "../../../lib/ws/WebSocketsManager.ts";
-import { DetailPane } from "../DetailPane/DetailPane.tsx";
-import { HistogramDisplay } from "../HistogramDisplay.tsx";
 import { D3Renderer } from "../../../lib/d3/D3Renderer.ts";
-import { Pane } from "../Pane/Pane.tsx";
 
 export function Canvas(props: {
   renderer: GraphRendererEngine;
   webSocketsManager: WebSocketsManager;
   scenarioProgress: WSEventScenarioProgress | null;
   scenarioLoading: boolean;
-  onExpandNodes: () => void;
-  onDeleteNodes: () => void;
+  onNodeClicked: (node: Node) => void;
+  onEdgeClicked: (edge: Edge) => void;
   graphRenderer: D3Renderer;
   graphLabels: GraphLabel[];
-  histogram: Histogram;
+  showHistogram: boolean;
+  onShowHistogram: () => void;
 }) {
-  const [detailsNode, setDetailsNode] = useState<Node | null>(null);
-  const [detailsEdge, setDetailsEdge] = useState<Edge | null>(null);
-  const [showHistogram, setShowHistogram] = useState<boolean>(false);
-
-  useEffect(() => {
-    const subs = [
-      props.webSocketsManager.onSetLocks$.subscribe((message) => {
-        for (const node of message.locks) {
-          if (detailsNode?.id === node.id) {
-            setDetailsNode((old) => {
-              if (old == null) {
-                return null;
-              }
-              return {
-                ...old,
-                locked: node.locked,
-              };
-            });
-          }
-        }
-      }),
-    ];
-
-    return () => {
-      subs.forEach((sub) => {
-        sub.unsubscribe();
-      });
-    };
-  }, [detailsNode]);
-
   return (
     <Stack
-      className={"flex-grow-1 align-items-start position-relative"}
+      className={"flex-grow-1 align-items-start"}
       direction={"horizontal"}
       style={{ height: "100%" }}
     >
       {props.renderer === "d3" && (
         <GraphRendererD3
           webSockets={props.webSocketsManager}
-          onNodeClicked={(n) => {
-            setDetailsNode(n);
-            setDetailsEdge(null);
-          }}
-          onEdgeClicked={(l) => {
-            setDetailsNode(null);
-            setDetailsEdge(l);
-          }}
+          onNodeClicked={props.onNodeClicked}
+          onEdgeClicked={props.onEdgeClicked}
           graphRenderer={props.graphRenderer}
         ></GraphRendererD3>
       )}
@@ -92,7 +50,6 @@ export function Canvas(props: {
         style={{ zIndex: 1 }}
       >
         <Labels graphLabels={props.graphLabels}></Labels>
-        <div className={"me-auto"}></div>
         <OverlayTrigger
           delay={{ show: 500, hide: 0 }}
           placement="left"
@@ -100,7 +57,9 @@ export function Canvas(props: {
         >
           <Button
             variant={"icon"}
-            className={"border-start m-0 rounded-0 ps-2 pe-2 pt-0 pb-0"}
+            className={
+              "border-start m-0 rounded-0 ps-2 pe-2 pt-0 pb-0 flex-grow-0"
+            }
             onClick={() => {
               props.webSocketsManager.sendMessage({
                 type: "WSActionRelayout",
@@ -110,7 +69,7 @@ export function Canvas(props: {
             <i className={`bi bi-tropical-storm`}></i>
           </Button>
         </OverlayTrigger>
-        {!showHistogram && (
+        {!props.showHistogram && (
           <OverlayTrigger
             delay={{ show: 500, hide: 0 }}
             overlay={<Tooltip>Histogram</Tooltip>}
@@ -119,68 +78,13 @@ export function Canvas(props: {
             <Button
               variant={"icon"}
               className={"border-start m-0 rounded-0 ps-2 pe-2 pt-0 pb-0"}
-              onClick={() => {
-                setShowHistogram(true);
-              }}
+              onClick={props.onShowHistogram}
             >
               <i className={"bi bi-bar-chart-fill"}></i>
             </Button>
           </OverlayTrigger>
         )}
       </Stack>
-      <div className={"me-auto"}></div>
-      {detailsNode && (
-        <NodeDetails
-          node={detailsNode}
-          onExpandNode={() => {
-            props.webSocketsManager.sendMessage({
-              type: "WSActionExpandNodes",
-              nodes: [detailsNode.id],
-            });
-            props.onExpandNodes();
-          }}
-          onDeleteNode={() => {
-            props.webSocketsManager.sendMessage({
-              type: "WSActionDeleteNodes",
-              nodes: [detailsNode.id],
-            });
-            props.onDeleteNodes();
-            setDetailsNode(null);
-          }}
-          onUnlockNode={() => {
-            props.webSocketsManager.sendMessage({
-              type: "WSActionUnlockNodes",
-              nodes: [detailsNode.id],
-            });
-          }}
-          onClose={() => {
-            setDetailsNode(null);
-          }}
-          scenarioLoading={props.scenarioLoading}
-        ></NodeDetails>
-      )}
-      {detailsEdge && (
-        <EdgeDetails
-          edge={detailsEdge}
-          onClose={() => {
-            setDetailsEdge(null);
-          }}
-        ></EdgeDetails>
-      )}
-      {showHistogram && (
-        <Pane
-          direction={"right"}
-          title={"Histogram"}
-          onClose={() => {
-            setShowHistogram(false);
-          }}
-        >
-          <HistogramDisplay
-            histogram={props.histogram}
-            graphLabels={props.graphLabels}
-          ></HistogramDisplay>
-        </Pane>
-      )}
     </Stack>
   );
 }

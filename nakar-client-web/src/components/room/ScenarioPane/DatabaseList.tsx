@@ -22,7 +22,7 @@ export function DatabaseList(props: {
     type: "loading",
   });
 
-  useEffect(() => {
+  const reload = () => {
     setDatabases({ type: "loading" });
     getDatabases()
       .then((result) => {
@@ -35,24 +35,35 @@ export function DatabaseList(props: {
           message: handleError(error),
         });
       });
+  };
+
+  useEffect(() => {
+    reload();
   }, []);
 
   return match(databases)
     .with({ type: "error" }, ({ message }) => (
-      <ErrorDisplay message={message}></ErrorDisplay>
+      <>
+        <ErrorDisplay message={message} onReload={reload}></ErrorDisplay>
+        <div className={"flex-grow-1"}></div>
+      </>
     ))
-    .with({ type: "loading" }, () => <Loading></Loading>)
+    .with({ type: "loading" }, () => (
+      <Loading className={"align-self-center"}></Loading>
+    ))
     .with({ type: "data" }, ({ data }) => (
-      <Stack className={"pb-5"}>
-        {data.databases.map((database: Database) => (
-          <DatabaseDisplay
-            onScenarioSelect={props.onScenarioSelect}
-            key={database.id}
-            database={database}
-            scenarioLoading={props.scenarioLoading}
-          ></DatabaseDisplay>
-        ))}
-      </Stack>
+      <>
+        <Stack className={"pb-5 mb-auto"}>
+          {data.databases.map((database: Database) => (
+            <DatabaseDisplay
+              onScenarioSelect={props.onScenarioSelect}
+              key={database.id}
+              database={database}
+              scenarioLoading={props.scenarioLoading}
+            ></DatabaseDisplay>
+          ))}
+        </Stack>
+      </>
     ))
     .exhaustive();
 }

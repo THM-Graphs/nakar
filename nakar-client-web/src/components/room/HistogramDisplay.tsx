@@ -11,83 +11,85 @@ export function HistogramDisplay(props: {
   graphLabels: GraphLabel[];
 }) {
   return (
-    <Stack className={"mb-5 flex-grow-0 flex-shrink-1"}>
-      <Stack className={"border-bottom"}>
-        <Collapsable
-          title={<span className={"fw-bold"}>Labels</span>}
-          initialState={false}
-        >
-          <EmptyHint list={props.histogram.nodeLabels}></EmptyHint>
-          {props.histogram.nodeLabels.map((entry) => {
-            const label = props.graphLabels.find(
-              (graphLabel) => graphLabel.label === entry.label,
-            );
-            if (label == null) {
-              return <></>;
-            } else {
-              return (
-                <ValueDisplay
-                  label={entry.label}
-                  subLabel={
-                    label.sources.length > 0
-                      ? label.sources.join(", ")
-                      : undefined
-                  }
-                  value={entry.count}
-                  percentage={entry.percentage}
-                  key={entry.label}
-                  bgColor={getBackgroundColor(label.color)}
-                ></ValueDisplay>
+    <>
+      <Stack className={"mb-5 flex-grow-0 flex-shrink-1 mb-auto pb-5"}>
+        <Stack className={"border-bottom"}>
+          <Collapsable
+            title={<span className={"fw-bold"}>Labels</span>}
+            initialState={false}
+          >
+            <EmptyHint list={props.histogram.nodeLabels}></EmptyHint>
+            {props.histogram.nodeLabels.map((entry) => {
+              const label = props.graphLabels.find(
+                (graphLabel) => graphLabel.label === entry.label,
               );
-            }
-          })}
-        </Collapsable>
+              if (label == null) {
+                return <></>;
+              } else {
+                return (
+                  <ValueDisplay
+                    label={entry.label}
+                    subLabel={
+                      label.sources.length > 0
+                        ? label.sources.join(", ")
+                        : undefined
+                    }
+                    value={entry.count}
+                    percentage={entry.percentage}
+                    key={entry.label}
+                    bgColor={getBackgroundColor(label.color)}
+                  ></ValueDisplay>
+                );
+              }
+            })}
+          </Collapsable>
+        </Stack>
+        <Stack className={"border-bottom"}>
+          <Collapsable
+            title={<span className={"fw-bold"}>Relationships</span>}
+            initialState={false}
+          >
+            <EmptyHint list={props.histogram.edgeTypes}></EmptyHint>
+            {props.histogram.edgeTypes.map((entry) => (
+              <ValueDisplay
+                label={entry.type}
+                value={entry.count}
+                percentage={entry.percentage}
+                key={entry.type}
+              ></ValueDisplay>
+            ))}
+          </Collapsable>
+        </Stack>
+        <Stack className={"border-bottom"}>
+          <Collapsable
+            title={<span className={"fw-bold"}>Node Properties</span>}
+            initialState={false}
+          >
+            <EmptyHint list={props.histogram.nodeProperties}></EmptyHint>
+            {props.histogram.nodeProperties.map((propertyEntry) => (
+              <PropertyGroup
+                propertyEntry={propertyEntry}
+                key={propertyEntry.key}
+              ></PropertyGroup>
+            ))}
+          </Collapsable>
+        </Stack>
+        <Stack className={"border-bottom"}>
+          <Collapsable
+            title={<span className={"fw-bold"}>Relationship Properties</span>}
+            initialState={false}
+          >
+            <EmptyHint list={props.histogram.edgeProperties}></EmptyHint>
+            {props.histogram.edgeProperties.map((propertyEntry) => (
+              <PropertyGroup
+                propertyEntry={propertyEntry}
+                key={propertyEntry.key}
+              ></PropertyGroup>
+            ))}
+          </Collapsable>
+        </Stack>
       </Stack>
-      <Stack className={"border-bottom"}>
-        <Collapsable
-          title={<span className={"fw-bold"}>Relationships</span>}
-          initialState={false}
-        >
-          <EmptyHint list={props.histogram.edgeTypes}></EmptyHint>
-          {props.histogram.edgeTypes.map((entry) => (
-            <ValueDisplay
-              label={entry.type}
-              value={entry.count}
-              percentage={entry.percentage}
-              key={entry.type}
-            ></ValueDisplay>
-          ))}
-        </Collapsable>
-      </Stack>
-      <Stack className={"border-bottom"}>
-        <Collapsable
-          title={<span className={"fw-bold"}>Node Properties</span>}
-          initialState={false}
-        >
-          <EmptyHint list={props.histogram.nodeProperties}></EmptyHint>
-          {props.histogram.nodeProperties.map((propertyEntry) => (
-            <PropertyGroup
-              propertyEntry={propertyEntry}
-              key={propertyEntry.key}
-            ></PropertyGroup>
-          ))}
-        </Collapsable>
-      </Stack>
-      <Stack className={"border-bottom"}>
-        <Collapsable
-          title={<span className={"fw-bold"}>Relationship Properties</span>}
-          initialState={false}
-        >
-          <EmptyHint list={props.histogram.edgeProperties}></EmptyHint>
-          {props.histogram.edgeProperties.map((propertyEntry) => (
-            <PropertyGroup
-              propertyEntry={propertyEntry}
-              key={propertyEntry.key}
-            ></PropertyGroup>
-          ))}
-        </Collapsable>
-      </Stack>
-    </Stack>
+    </>
   );
 }
 

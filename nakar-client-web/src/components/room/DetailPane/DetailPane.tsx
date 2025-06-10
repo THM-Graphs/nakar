@@ -2,21 +2,16 @@ import { Button, Spinner, Stack } from "react-bootstrap";
 import { DetailPaneAction } from "./DetailPaneAction.ts";
 import { GraphProperty } from "../../../../src-gen";
 import { PropertyDisplay } from "./PropertyDisplay.tsx";
-import { ReactNode } from "react";
-import { Pane } from "../Pane/Pane.tsx";
 
 export function DetailPane(props: {
-  entityTitle: string;
   title: string;
   actions: DetailPaneAction[];
   properties: GraphProperty[];
   otherProperties: GraphProperty[];
-  onClose: () => void;
   loading: boolean;
-  children?: ReactNode;
 }) {
   return (
-    <Pane title={props.entityTitle} onClose={props.onClose} direction={"right"}>
+    <Stack className={"pb-5"}>
       {props.title.length > 0 && (
         <Stack direction={"horizontal"}>
           <span
@@ -54,7 +49,7 @@ export function DetailPane(props: {
         title={"Other Property"}
         properties={props.otherProperties}
       ></PropertyDisplay>
-      {props.children}
-    </Pane>
+      <div className={"flex-grow-1"}></div>
+    </Stack>
   );
 }

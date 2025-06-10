@@ -8,7 +8,7 @@ export function ScenariosList(props: {
   scenarioLoading: string | null;
 }) {
   return (
-    <Stack>
+    <Stack className={"flex-grow-0"}>
       {props.scenarios.scenarios.length == 0 && <span>(empty)</span>}
       {props.scenarios.scenarios.map((scenario: Scenario) => (
         <ScenarioDisplay

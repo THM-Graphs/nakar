@@ -9,6 +9,8 @@ import {
   WSEventScenarioProgress,
   getRoom,
   Graph,
+  Edge,
+  Node,
 } from "../../src-gen";
 import { LoaderFunctionArgs, useLoaderData } from "react-router";
 import { resultOrThrow } from "../lib/data/resultOrThrow.ts";
@@ -20,6 +22,9 @@ import { Env } from "../lib/env/env.ts";
 import { useTheme } from "../lib/theme/useTheme.ts";
 import { D3Renderer } from "../lib/d3/D3Renderer.ts";
 import { Pane } from "../components/room/Pane/Pane.tsx";
+import { NodeDetails } from "../components/room/DetailPane/NodeDetails.tsx";
+import { EdgeDetails } from "../components/room/DetailPane/EdgeDetails.tsx";
+import { HistogramDisplay } from "../components/room/HistogramDisplay.tsx";
 
 export async function RoomLoader(
   args: LoaderFunctionArgs,
@@ -37,6 +42,9 @@ export async function RoomLoader(
 export function Room(props: { webSockets: WebSocketsManager; env: Env }) {
   const loaderData: RoomSchema = useLoaderData();
   const [graph, setGraph] = useState<Graph | null>(null);
+  const [detailsNode, setDetailsNode] = useState<Node | null>(null);
+  const [detailsEdge, setDetailsEdge] = useState<Edge | null>(null);
+  const [showHistogram, setShowHistogram] = useState<boolean>(false);
   const [scenariosWindowOpened, setScenariosWindowOpened] = useState(true);
   const [scenarioLoading, setScenarioLoading] = useState<string | null>(null);
   const [renderer, setRenderer] = useState<GraphRendererEngine>("d3");
@@ -46,6 +54,13 @@ export function Room(props: { webSockets: WebSocketsManager; env: Env }) {
   const [selectedTab, setSelectedTab] = useState<"graph" | "data">("graph");
   const theme = useTheme();
   const [graphRenderer] = useState(new D3Renderer(theme));
+
+  useEffect(() => {
+    if (selectedTab == "data") {
+      setDetailsNode(null);
+      setDetailsEdge(null);
+    }
+  }, [selectedTab]);
 
   useEffect(() => {
     if (socketState.type === "connected") {
@@ -68,6 +83,19 @@ export function Room(props: { webSockets: WebSocketsManager; env: Env }) {
       }),
       props.webSockets.onSetLocks$.subscribe((message) => {
         graphRenderer.updateLocks(message);
+        for (const node of message.locks) {
+          if (detailsNode?.id === node.id) {
+            setDetailsNode((old) => {
+              if (old == null) {
+                return null;
+              }
+              return {
+                ...old,
+                locked: node.locked,
+              };
+            });
+          }
+        }
       }),
       props.webSockets.onScenarioProgress$.subscribe((progress) => {
         if (progress.progress == null) {
@@ -118,29 +146,29 @@ export function Room(props: { webSockets: WebSocketsManager; env: Env }) {
         <ToastStack websocketsManager={props.webSockets}></ToastStack>
         <Stack
           direction={"horizontal"}
-          className={"align-items-stretch flex-grow-1"}
+          className={"align-items-stretch flex-grow-1 position-relative"}
           style={{ height: "100px" }}
         >
-          {scenariosWindowOpened && (
-            <Pane
-              direction={"left"}
-              onClose={() => {
-                setScenariosWindowOpened(false);
+          <Pane
+            hidden={!scenariosWindowOpened}
+            direction={"left"}
+            onClose={() => {
+              setScenariosWindowOpened(false);
+            }}
+            title={"Scenarios"}
+          >
+            <DatabaseList
+              onScenarioSelect={(scenario) => {
+                setScenarioLoading(scenario.id);
+                props.webSockets.sendMessage({
+                  type: "WSActionLoadScenario",
+                  scenarioId: scenario.id,
+                });
               }}
-              title={"Scenarios"}
-            >
-              <DatabaseList
-                onScenarioSelect={(scenario) => {
-                  setScenarioLoading(scenario.id);
-                  props.webSockets.sendMessage({
-                    type: "WSActionLoadScenario",
-                    scenarioId: scenario.id,
-                  });
-                }}
-                scenarioLoading={scenarioLoading}
-              ></DatabaseList>
-            </Pane>
-          )}
+              scenarioLoading={scenarioLoading}
+            ></DatabaseList>
+          </Pane>
+
           {graph && (
             <Stack
               direction={"vertical"}
@@ -149,11 +177,13 @@ export function Room(props: { webSockets: WebSocketsManager; env: Env }) {
             >
               {selectedTab === "graph" && (
                 <Canvas
-                  onExpandNodes={() => {
-                    setScenarioLoading("");
+                  onNodeClicked={(n) => {
+                    setDetailsNode(n);
+                    setDetailsEdge(null);
                   }}
-                  onDeleteNodes={() => {
-                    setScenarioLoading("");
+                  onEdgeClicked={(l) => {
+                    setDetailsEdge(l);
+                    setDetailsNode(null);
                   }}
                   renderer={renderer}
                   webSocketsManager={props.webSockets}
@@ -161,13 +191,65 @@ export function Room(props: { webSockets: WebSocketsManager; env: Env }) {
                   scenarioLoading={scenarioLoading != null}
                   graphRenderer={graphRenderer}
                   graphLabels={graph.metaData.labels}
-                  histogram={graph.metaData.histogram}
+                  showHistogram={showHistogram}
+                  onShowHistogram={() => {
+                    setShowHistogram(true);
+                  }}
                 ></Canvas>
               )}
               {selectedTab === "data" && (
                 <DataTable tableData={graph.tableData}></DataTable>
               )}
             </Stack>
+          )}
+          <NodeDetails
+            node={detailsNode}
+            onExpandNode={(n) => {
+              setScenarioLoading("");
+              props.webSockets.sendMessage({
+                type: "WSActionExpandNodes",
+                nodes: [n.id],
+              });
+            }}
+            onDeleteNode={(n) => {
+              setScenarioLoading("");
+              props.webSockets.sendMessage({
+                type: "WSActionDeleteNodes",
+                nodes: [n.id],
+              });
+              setDetailsNode(null);
+            }}
+            onUnlockNode={(n) => {
+              props.webSockets.sendMessage({
+                type: "WSActionUnlockNodes",
+                nodes: [n.id],
+              });
+            }}
+            onClose={() => {
+              setDetailsNode(null);
+            }}
+            scenarioLoading={scenarioLoading != null}
+          ></NodeDetails>
+          <EdgeDetails
+            edge={detailsEdge}
+            onClose={() => {
+              setDetailsEdge(null);
+            }}
+          ></EdgeDetails>
+          {graph && (
+            <Pane
+              hidden={!showHistogram}
+              direction={"right"}
+              title={"Histogram"}
+              onClose={() => {
+                setShowHistogram(false);
+              }}
+            >
+              <HistogramDisplay
+                histogram={graph.metaData.histogram}
+                graphLabels={graph.metaData.labels}
+              ></HistogramDisplay>
+            </Pane>
           )}
         </Stack>
       </Stack>

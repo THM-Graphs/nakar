@@ -5,7 +5,12 @@ export function ErrorDisplay(props: {
   onReload?: () => void;
 }) {
   return (
-    <Alert variant={"danger"} className={"d-flex align-items-center"}>
+    <Alert
+      variant={"danger"}
+      className={
+        "d-flex align-items-center rounded-0 border-start-0 border-end-0 border-top-0"
+      }
+    >
       <span className={"me-auto"}>{props.message}</span>
       {props.onReload && (
         <Button onClick={props.onReload} variant={""}>
