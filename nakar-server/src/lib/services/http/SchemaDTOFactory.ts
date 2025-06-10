@@ -23,6 +23,7 @@ export class SchemaDTOFactory {
       title: databaseDBDTO.title,
       url: databaseDBDTO.url,
       browserUrl: databaseDBDTO.browserUrl,
+      editUrl: this._getDatabaseEditUrl(databaseDBDTO),
     };
   }
 
@@ -42,6 +43,7 @@ export class SchemaDTOFactory {
       coverUrl: scenario.cover
         ? this._getPublicUrlOfMedia(scenario.cover)
         : null,
+      editUrl: this._getScenarioEditUrl(scenario),
     };
   }
 
@@ -51,6 +53,7 @@ export class SchemaDTOFactory {
     return {
       id: scenarioGroup.documentId,
       title: scenarioGroup.title,
+      editUrl: this._getScenarioGroupEditUrl(scenarioGroup),
     };
   }
 
@@ -63,5 +66,34 @@ export class SchemaDTOFactory {
       return null;
     }
     return host + media.url;
+  }
+
+  private _getDatabaseEditUrl(database: GetDatabaseDBDTO): string | null {
+    const host: string | null = this._configService.publicURL;
+    if (host == null) {
+      return null;
+    }
+    const url: string = `${host}/admin/content-manager/collection-types/api::database.database/${database.documentId}`;
+    return url;
+  }
+
+  private _getScenarioGroupEditUrl(
+    scenarioGroup: GetScenarioGroupDBDTO,
+  ): string | null {
+    const host: string | null = this._configService.publicURL;
+    if (host == null) {
+      return null;
+    }
+    const url: string = `${host}/admin/content-manager/collection-types/api::scenario-group.scenario-group/${scenarioGroup.documentId}`;
+    return url;
+  }
+
+  private _getScenarioEditUrl(scenario: GetScenarioDBDTO): string | null {
+    const host: string | null = this._configService.publicURL;
+    if (host == null) {
+      return null;
+    }
+    const url: string = `${host}/admin/content-manager/collection-types/api::scenario.scenario/${scenario.documentId}`;
+    return url;
   }
 }

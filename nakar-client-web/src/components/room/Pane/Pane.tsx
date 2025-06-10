@@ -26,7 +26,9 @@ export function Pane(props: {
     >
       <Stack
         direction={"horizontal"}
-        className={"border-bottom justify-content-between flex-0"}
+        className={
+          "border-bottom justify-content-between flex-shrink-0 flex-grow-0"
+        }
         style={{ height: "32px" }}
       >
         {props.title.length > 0 && (

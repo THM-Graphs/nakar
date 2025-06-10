@@ -12,6 +12,7 @@ export type Database = {
     title: (string) | null;
     url: (string) | null;
     browserUrl: (string) | null;
+    editUrl: (string) | null;
 };
 
 export type Databases = {
@@ -145,11 +146,13 @@ export type Scenario = {
     query: (string) | null;
     description: (string) | null;
     coverUrl: (string) | null;
+    editUrl: (string) | null;
 };
 
 export type ScenarioGroup = {
     id: string;
     title: (string) | null;
+    editUrl: (string) | null;
 };
 
 export type ScenarioGroups = {

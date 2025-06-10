@@ -519,11 +519,15 @@ components:
         browserUrl:
           type: string
           nullable: true
+        editUrl:
+          type: string
+          nullable: true
       required:
         - id
         - title
         - url
         - browserUrl
+        - editUrl
     Databases:
       type: object
       properties:
@@ -542,9 +546,14 @@ components:
         title:
           type: string
           nullable: true
+        editUrl:
+          type: string
+          nullable: true
       required:
         - id
         - title
+        - editUrl
+
     ScenarioGroups:
       type: object
       properties:
@@ -573,12 +582,17 @@ components:
           type: string
           format: uri
           nullable: true
+        editUrl:
+          type: string
+          nullable: true
       required:
         - id
         - title
         - query
         - description
         - coverUrl
+        - editUrl
+
     Scenarios:
       type: object
       properties:

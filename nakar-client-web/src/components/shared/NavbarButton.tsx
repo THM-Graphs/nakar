@@ -24,6 +24,7 @@ export const NavbarButton = forwardRef<
         if (props.disabled) {
           return;
         }
+        event.stopPropagation();
         props.onToggle?.(!(props.selected ?? false));
         props.onClick?.(event);
       }}

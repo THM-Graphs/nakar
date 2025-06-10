@@ -16,6 +16,7 @@ import { resultOrThrow } from "../../../lib/data/resultOrThrow.ts";
 import { NavLink } from "react-router";
 import { Button, Stack } from "react-bootstrap";
 import { Collapsable } from "../Collapsable.tsx";
+import { NavbarButton } from "../../shared/NavbarButton.tsx";
 
 export function DatabaseDisplay(props: {
   database: Database;
@@ -44,20 +45,56 @@ export function DatabaseDisplay(props: {
     <Stack className={"border-bottom flex-grow-0"}>
       <Collapsable
         initialState={true}
-        title={<span className={"small fw-bold"}>{props.database.title}</span>}
+        title={
+          <>
+            <span className={"small fw-bold"}>{props.database.title}</span>
+          </>
+        }
       >
-        {match(scenarioGroups)
-          .with({ type: "error" }, ({ message }) => (
-            <ErrorDisplay message={message}></ErrorDisplay>
-          ))
-          .with({ type: "data" }, ({ data }) => (
-            <ScenarioGroupList
-              onScenarioSelect={props.onScenarioSelect}
-              scenarioGroups={data}
-              scenarioLoading={props.scenarioLoading}
-            ></ScenarioGroupList>
-          ))
-          .otherwise(() => null)}
+        <Stack direction={"horizontal"} className={"align-items-stretch"}>
+          <div
+            className={"bg-primary flex-shrink-0 flex-grow-0"}
+            style={{ width: "3px" }}
+          ></div>
+          {match(scenarioGroups)
+            .with({ type: "error" }, ({ message }) => (
+              <ErrorDisplay message={message}></ErrorDisplay>
+            ))
+            .with({ type: "data" }, ({ data }) => (
+              <Stack>
+                {props.database.browserUrl && (
+                  <NavbarButton
+                    icon={"box-arrow-up-right"}
+                    title={"Neo4j Browser"}
+                    className={"border-start-0 border-end-0 flex-grow-1"}
+                    onClick={() => {
+                      if (props.database.browserUrl) {
+                        window.open(props.database.browserUrl, "_blank");
+                      }
+                    }}
+                  ></NavbarButton>
+                )}
+                {props.database.editUrl && (
+                  <NavbarButton
+                    icon={"pencil-fill"}
+                    title={"Edit"}
+                    className={"border-start-0 border-end-0 flex-grow-1"}
+                    onClick={() => {
+                      if (props.database.editUrl) {
+                        window.open(props.database.editUrl, "_blank");
+                      }
+                    }}
+                  ></NavbarButton>
+                )}
+                <ScenarioGroupList
+                  onScenarioSelect={props.onScenarioSelect}
+                  scenarioGroups={data}
+                  scenarioLoading={props.scenarioLoading}
+                ></ScenarioGroupList>
+              </Stack>
+            ))
+            .otherwise(() => null)}
+        </Stack>
       </Collapsable>
     </Stack>
   );

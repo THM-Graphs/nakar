@@ -1,8 +1,6 @@
 import { Scenario } from "../../../../src-gen";
-import { useState } from "react";
-import clsx from "clsx";
 import { ScenarioCard } from "./ScenarioCard.tsx";
-import { Button, Stack } from "react-bootstrap";
+import { Button } from "react-bootstrap";
 import { Loading } from "../../shared/Loading.tsx";
 import { Collapsable } from "../Collapsable.tsx";
 
@@ -14,7 +12,7 @@ export function ScenarioDisplay(props: {
 }) {
   return (
     <Collapsable
-      inset={2}
+      inset={0}
       title={
         <>
           <Button

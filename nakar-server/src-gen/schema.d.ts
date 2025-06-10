@@ -268,6 +268,7 @@ export interface components {
             readonly title: string | null;
             readonly url: string | null;
             readonly browserUrl: string | null;
+            readonly editUrl: string | null;
         };
         readonly Databases: {
             readonly databases: readonly components["schemas"]["Database"][];
@@ -275,6 +276,7 @@ export interface components {
         readonly ScenarioGroup: {
             readonly id: string;
             readonly title: string | null;
+            readonly editUrl: string | null;
         };
         readonly ScenarioGroups: {
             readonly scenarioGroups: readonly components["schemas"]["ScenarioGroup"][];
@@ -286,6 +288,7 @@ export interface components {
             readonly description: string | null;
             /** Format: uri */
             readonly coverUrl: string | null;
+            readonly editUrl: string | null;
         };
         readonly Scenarios: {
             readonly scenarios: readonly components["schemas"]["Scenario"][];
