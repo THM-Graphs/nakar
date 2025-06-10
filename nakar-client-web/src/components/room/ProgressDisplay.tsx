@@ -49,7 +49,10 @@ export function ProgressDisplay(props: {
   }
   const message = graphProgress.message ?? "Working";
   return (
-    <Stack className={"border-start ps-2 pe-2"} direction={"horizontal"}>
+    <Stack
+      className={"border-start border-end ps-2 pe-2"}
+      direction={"horizontal"}
+    >
       <ProgressBar
         now={graphProgress.progress}
         max={1}

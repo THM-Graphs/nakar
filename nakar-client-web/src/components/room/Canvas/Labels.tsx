@@ -4,7 +4,14 @@ import { Stack } from "react-bootstrap";
 
 export function Labels(props: { graphLabels: GraphLabel[] }) {
   return (
-    <Stack className={"gap-0 flex-wrap flex-grow-1"} direction={"horizontal"}>
+    <Stack
+      className={"flex-wrap p-1 align-self-start"}
+      direction={"horizontal"}
+      gap={1}
+      style={{
+        zIndex: 1,
+      }}
+    >
       {props.graphLabels.map((label) => (
         <Label
           label={label}

@@ -1,4 +1,4 @@
-import { Dropdown, Stack } from "react-bootstrap";
+import { Dropdown } from "react-bootstrap";
 import { getVersion } from "../../../src-gen";
 import {
   useState,
@@ -15,17 +15,10 @@ import { handleError } from "../../lib/error/handleError";
 import { match } from "ts-pattern";
 import { Env } from "../../lib/env/env";
 import { ThemeDropdownEntry } from "./ThemeDropdownEntry";
-import { GraphRendererEngine } from "../../lib/graph-renderer/GraphRendererEngine";
 import { ImportBackupDropdownItem } from "./ImportBackupDropdownItem.tsx";
+import { NavbarButton } from "./NavbarButton.tsx";
 
-export function InfoDropdown(props: {
-  className?: string;
-  env: Env;
-  renderer?: {
-    current: GraphRendererEngine;
-    onChange: (newRenderer: GraphRendererEngine) => void;
-  };
-}) {
+export function InfoDropdown(props: { env: Env }) {
   const [version, setVersion] = useState<Loadable<string>>({ type: "loading" });
 
   const reloadVersion = useCallback(() => {
@@ -43,36 +36,24 @@ export function InfoDropdown(props: {
     reloadVersion();
   }, []);
 
-  const renderer = props.renderer;
-
   const CustomToggle = forwardRef(
     (
       {
         onClick,
-        children,
       }: {
         onClick: (event: MouseEvent) => void;
         children: ReactNode;
       },
-      ref: ForwardedRef<HTMLSpanElement>,
+      ref: ForwardedRef<HTMLDivElement>,
     ) => (
-      <Stack
+      <NavbarButton
         ref={ref}
-        direction={"horizontal"}
-        className={
-          "border-start text-muted ps-2 pe-2 justify-content-center pointer"
-        }
-        style={{
-          width: "40px",
-        }}
-        onClick={(event: MouseEvent) => {
+        icon={"gear-fill"}
+        onClick={(event) => {
           event.preventDefault();
           onClick(event);
         }}
-      >
-        <i className={`bi bi-gear-fill`}></i>
-        {children}
-      </Stack>
+      ></NavbarButton>
     ),
   );
 
@@ -86,29 +67,6 @@ export function InfoDropdown(props: {
           <ThemeDropdownEntry targetTheme={"light"}></ThemeDropdownEntry>
           <ThemeDropdownEntry targetTheme={"dark"}></ThemeDropdownEntry>
           <Dropdown.Divider />
-
-          {renderer && (
-            <>
-              <Dropdown.Item disabled>Renderer</Dropdown.Item>
-              <Dropdown.Item
-                onClick={() => {
-                  renderer.onChange("d3");
-                }}
-                active={renderer.current === "d3"}
-              >
-                D3.js
-              </Dropdown.Item>
-              <Dropdown.Item
-                onClick={() => {
-                  renderer.onChange("nvl");
-                }}
-                active={renderer.current === "nvl"}
-              >
-                Neo4j Visualization Library
-              </Dropdown.Item>
-              <Dropdown.Divider />
-            </>
-          )}
 
           <Dropdown.Item disabled>Client ({props.env.VERSION})</Dropdown.Item>
           <Dropdown.Item disabled>Mode: {import.meta.env.MODE}</Dropdown.Item>

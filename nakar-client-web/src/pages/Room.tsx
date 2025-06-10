@@ -1,4 +1,4 @@
-import { Stack } from "react-bootstrap";
+import { OverlayTrigger, Stack, Tooltip } from "react-bootstrap";
 import { AppNavbar } from "../components/shared/AppNavbar.tsx";
 import { DatabaseList } from "../components/room/ScenarioPane/DatabaseList.tsx";
 import { Canvas } from "../components/room/Canvas/Canvas.tsx";
@@ -11,10 +11,10 @@ import {
   Graph,
   Edge,
   Node,
+  WSActionRelayout,
 } from "../../src-gen";
 import { LoaderFunctionArgs, useLoaderData } from "react-router";
 import { resultOrThrow } from "../lib/data/resultOrThrow.ts";
-import { GraphRendererEngine } from "../lib/graph-renderer/GraphRendererEngine.ts";
 import { useWebSocketsState } from "../lib/ws/useWebSocketsState.ts";
 import { ToastStack } from "../components/room/ToastStack.tsx";
 import { WebSocketsManager } from "../lib/ws/WebSocketsManager.ts";
@@ -25,6 +25,13 @@ import { Pane } from "../components/room/Pane/Pane.tsx";
 import { NodeDetails } from "../components/room/DetailPane/NodeDetails.tsx";
 import { EdgeDetails } from "../components/room/DetailPane/EdgeDetails.tsx";
 import { HistogramDisplay } from "../components/room/HistogramDisplay.tsx";
+import { BackButton } from "../components/shared/BackButton.tsx";
+import { ScenarioWindowButton } from "../components/room/ScenarioPane/ScenarioWindowButton.tsx";
+import { GraphDataToggle } from "../components/room/GraphDataToggle.tsx";
+import { ProgressDisplay } from "../components/room/ProgressDisplay.tsx";
+import { SocketStateDisplay } from "../components/room/SocketStateDisplay.tsx";
+import { InfoDropdown } from "../components/shared/InfoDropdown.tsx";
+import { NavbarButton } from "../components/shared/NavbarButton.tsx";
 
 export async function RoomLoader(
   args: LoaderFunctionArgs,
@@ -41,13 +48,30 @@ export async function RoomLoader(
 
 export function Room(props: { webSockets: WebSocketsManager; env: Env }) {
   const loaderData: RoomSchema = useLoaderData();
-  const [graph, setGraph] = useState<Graph | null>(null);
+  const [graph, setGraph] = useState<Graph>({
+    nodes: [],
+    edges: [],
+    tableData: [],
+    metaData: {
+      labels: [],
+      histogram: {
+        nodeLabels: [],
+        edgeTypes: [],
+        edgeProperties: [],
+        nodeProperties: [],
+      },
+      pipelineSummary: [],
+      scenarioInfo: {
+        id: "",
+        title: null,
+      },
+    },
+  });
   const [detailsNode, setDetailsNode] = useState<Node | null>(null);
   const [detailsEdge, setDetailsEdge] = useState<Edge | null>(null);
   const [showHistogram, setShowHistogram] = useState<boolean>(false);
   const [scenariosWindowOpened, setScenariosWindowOpened] = useState(true);
   const [scenarioLoading, setScenarioLoading] = useState<string | null>(null);
-  const [renderer, setRenderer] = useState<GraphRendererEngine>("d3");
   const [scenarioProgress, setScenarioProgress] =
     useState<WSEventScenarioProgress | null>(null);
   const socketState = useWebSocketsState(props.webSockets);
@@ -121,27 +145,74 @@ export function Room(props: { webSockets: WebSocketsManager; env: Env }) {
     <>
       <Stack style={{ height: "100%" }}>
         <AppNavbar
-          env={props.env}
-          scenarioWindow={{
-            isOpen: scenariosWindowOpened,
-            onToggle: () => {
-              setScenariosWindowOpened((isOpened) => !isOpened);
-            },
-          }}
-          room={{
-            title: loaderData.title,
-            socketState: socketState,
-          }}
-          showBackButton={true}
-          renderer={{
-            current: renderer,
-            onChange: setRenderer,
-          }}
-          webSocketsManager={props.webSockets}
-          tabs={{
-            state: selectedTab,
-            setTab: setSelectedTab,
-          }}
+          left={
+            <>
+              <BackButton href={"/"} title={"Rooms"}></BackButton>
+              <ScenarioWindowButton
+                isOpen={scenariosWindowOpened}
+                onToggle={() => {
+                  setScenariosWindowOpened((old) => !old);
+                }}
+              ></ScenarioWindowButton>
+              <GraphDataToggle
+                state={selectedTab}
+                setTab={setSelectedTab}
+              ></GraphDataToggle>
+            </>
+          }
+          center={
+            <>
+              <span className={"small text-muted"}>{loaderData.title}</span>
+              {graph.metaData.scenarioInfo.title && (
+                <span className={"small text-muted"}>
+                  ({graph.metaData.scenarioInfo.title})
+                </span>
+              )}
+            </>
+          }
+          right={
+            <>
+              <ProgressDisplay
+                webSocketsManager={props.webSockets}
+              ></ProgressDisplay>
+              <Stack direction={"horizontal"}>
+                <OverlayTrigger
+                  delay={{ show: 500, hide: 0 }}
+                  placement="bottom"
+                  overlay={<Tooltip>Relayout Graph</Tooltip>}
+                >
+                  <NavbarButton
+                    icon={"tropical-storm"}
+                    title={"Layout Graph"}
+                    className={"border-end-0"}
+                    onClick={() => {
+                      props.webSockets.sendMessage({
+                        type: "WSActionRelayout",
+                      } satisfies WSActionRelayout);
+                    }}
+                  ></NavbarButton>
+                </OverlayTrigger>
+                <OverlayTrigger
+                  delay={{ show: 500, hide: 0 }}
+                  overlay={<Tooltip>Histogram</Tooltip>}
+                  placement="bottom"
+                >
+                  <NavbarButton
+                    title={"Histogram"}
+                    selected={showHistogram}
+                    onToggle={setShowHistogram}
+                    icon={"bar-chart-fill"}
+                  ></NavbarButton>
+                </OverlayTrigger>
+              </Stack>
+              <Stack direction={"horizontal"} className={"align-items-stretch"}>
+                <InfoDropdown env={props.env}></InfoDropdown>
+                <SocketStateDisplay
+                  socketState={socketState}
+                ></SocketStateDisplay>
+              </Stack>
+            </>
+          }
         ></AppNavbar>
         <ToastStack websocketsManager={props.webSockets}></ToastStack>
         <Stack
@@ -169,39 +240,37 @@ export function Room(props: { webSockets: WebSocketsManager; env: Env }) {
             ></DatabaseList>
           </Pane>
 
-          {graph && (
-            <Stack
-              direction={"vertical"}
-              className={"flex-shrink-1 flex-grow-1"}
-              style={{ width: "100px" }}
-            >
-              {selectedTab === "graph" && (
-                <Canvas
-                  onNodeClicked={(n) => {
-                    setDetailsNode(n);
-                    setDetailsEdge(null);
-                  }}
-                  onEdgeClicked={(l) => {
-                    setDetailsEdge(l);
-                    setDetailsNode(null);
-                  }}
-                  renderer={renderer}
-                  webSocketsManager={props.webSockets}
-                  scenarioProgress={scenarioProgress}
-                  scenarioLoading={scenarioLoading != null}
-                  graphRenderer={graphRenderer}
-                  graphLabels={graph.metaData.labels}
-                  showHistogram={showHistogram}
-                  onShowHistogram={() => {
-                    setShowHistogram(true);
-                  }}
-                ></Canvas>
-              )}
-              {selectedTab === "data" && (
-                <DataTable tableData={graph.tableData}></DataTable>
-              )}
-            </Stack>
-          )}
+          <Stack
+            direction={"vertical"}
+            className={"flex-shrink-1 flex-grow-1"}
+            style={{ width: "100px" }}
+          >
+            {selectedTab === "graph" && (
+              <Canvas
+                onNodeClicked={(n) => {
+                  setDetailsNode(n);
+                  setDetailsEdge(null);
+                }}
+                onEdgeClicked={(l) => {
+                  setDetailsEdge(l);
+                  setDetailsNode(null);
+                }}
+                webSocketsManager={props.webSockets}
+                scenarioProgress={scenarioProgress}
+                scenarioLoading={scenarioLoading != null}
+                graphRenderer={graphRenderer}
+                graphLabels={graph.metaData.labels}
+                showHistogram={showHistogram}
+                onShowHistogram={() => {
+                  setShowHistogram(true);
+                }}
+              ></Canvas>
+            )}
+            {selectedTab === "data" && (
+              <DataTable tableData={graph.tableData}></DataTable>
+            )}
+          </Stack>
+
           <NodeDetails
             node={detailsNode}
             onExpandNode={(n) => {
@@ -236,21 +305,19 @@ export function Room(props: { webSockets: WebSocketsManager; env: Env }) {
               setDetailsEdge(null);
             }}
           ></EdgeDetails>
-          {graph && (
-            <Pane
-              hidden={!showHistogram}
-              direction={"right"}
-              title={"Histogram"}
-              onClose={() => {
-                setShowHistogram(false);
-              }}
-            >
-              <HistogramDisplay
-                histogram={graph.metaData.histogram}
-                graphLabels={graph.metaData.labels}
-              ></HistogramDisplay>
-            </Pane>
-          )}
+          <Pane
+            hidden={!showHistogram}
+            direction={"right"}
+            title={"Histogram"}
+            onClose={() => {
+              setShowHistogram(false);
+            }}
+          >
+            <HistogramDisplay
+              histogram={graph.metaData.histogram}
+              graphLabels={graph.metaData.labels}
+            ></HistogramDisplay>
+          </Pane>
         </Stack>
       </Stack>
     </>

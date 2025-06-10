@@ -1,16 +1,9 @@
 import { Stack } from "react-bootstrap";
 import { useNavigate } from "react-router";
 
-export function BackButton(props: {
-  hidden?: boolean;
-  href: string;
-  title?: string | null;
-}) {
+export function BackButton(props: { href: string; title?: string | null }) {
   const navigate = useNavigate();
 
-  if (props.hidden) {
-    return null;
-  }
   return (
     <Stack
       direction={"horizontal"}
