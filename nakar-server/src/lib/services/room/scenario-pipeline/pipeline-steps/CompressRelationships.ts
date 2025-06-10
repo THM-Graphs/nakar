@@ -48,7 +48,9 @@ export class CompressRelationships extends ScenarioPipelineStep {
         );
         relationships.add(edge);
       } else {
+        relationships.remove(compressedRelEntry);
         compressedRelEntry.compressedCount += 1;
+        relationships.add(compressedRelEntry);
       }
     }
 
