@@ -116,9 +116,7 @@ export function Room(props: { webSockets: WebSocketsManager; env: Env }) {
         setGraph(sd.graph);
       }),
       props.webSockets.onRoomChanged$.subscribe((sd) => {
-        if (sd.roomId == null) {
-          void navigate("/");
-        } else {
+        if (sd.roomId != null) {
           props.webSockets.sendMessage({
             type: "WSActionGetGraph",
           } satisfies WSActionGetGraph);
