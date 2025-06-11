@@ -6,7 +6,7 @@ export function QueryDisplay(props: { query: string }) {
     <Stack gap={3} direction={"horizontal"} className={"align-items-baseline"}>
       <ClipboardButton text={props.query}></ClipboardButton>
       <div
-        className={"font-monospace small pointer user-select-text"}
+        className={"font-monospace small user-select-text"}
         style={{
           whiteSpace: "pre-line",
         }}
