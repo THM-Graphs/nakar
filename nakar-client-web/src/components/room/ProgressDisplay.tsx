@@ -57,7 +57,7 @@ export function ProgressDisplay(props: {
           max={1}
           animated={true}
           label={`${(graphProgress.progress * 100).toFixed(0)}%`}
-          style={{ width: "200px" }}
+          style={{ width: "100px" }}
           className={"me-2"}
         />
       ) : (
@@ -76,7 +76,7 @@ export function ProgressDisplay(props: {
         <span
           className={"small text-muted"}
           style={{
-            width: "200px",
+            width: "150px",
             textOverflow: "ellipsis",
             overflow: "hidden",
             textWrap: "nowrap",
