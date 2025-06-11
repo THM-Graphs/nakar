@@ -1,7 +1,7 @@
 import { Node } from "../../../../src-gen";
 import { DetailPane } from "./DetailPane.tsx";
 import { DetailPaneAction } from "./DetailPaneAction.ts";
-import { Panel } from "../Pane/Panel.tsx";
+import { Panel } from "../Panel/Panel.tsx";
 
 export function NodeDetails(props: {
   node: Node | null;

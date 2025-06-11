@@ -64,6 +64,7 @@ export function DatabaseDisplay(props: {
               <Stack>
                 {props.database.browserUrl && (
                   <NavbarButton
+                    size={"sm"}
                     icon={"box-arrow-up-right"}
                     title={"Neo4j Browser"}
                     className={"border-start-0 border-end-0 flex-grow-1"}
@@ -76,6 +77,7 @@ export function DatabaseDisplay(props: {
                 )}
                 {props.database.editUrl && (
                   <NavbarButton
+                    size={"sm"}
                     icon={"pencil-fill"}
                     title={"Edit"}
                     className={"border-start-0 border-end-0 flex-grow-1"}

@@ -61,6 +61,7 @@ export function ScenarioGroupDisplay(props: {
           <Stack>
             {props.scenarioGroup.editUrl && (
               <NavbarButton
+                size={"sm"}
                 icon={"pencil-fill"}
                 title={"Edit"}
                 className={

@@ -16,7 +16,7 @@ export function Collapsable(props: {
       <Stack
         direction={"horizontal"}
         className={clsx(
-          "pointer bg-body-secondary-hover",
+          "pointer bg-body-secondary-hover align-items-baseline",
           props.inset && `ms-${props.inset.toString()}`,
         )}
         onClick={() => {

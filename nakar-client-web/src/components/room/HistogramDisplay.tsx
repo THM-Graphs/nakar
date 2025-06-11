@@ -119,10 +119,10 @@ function PropertyGroup(props: {
 }) {
   const [hidden, setHidden] = useState<boolean>(true);
   return (
-    <Stack key={props.propertyEntry.key} className={"border-bottom"}>
+    <Stack key={props.propertyEntry.key} className={""}>
       <Collapsable
         title={
-          <span className={"fw-bold small user-select-text font-monospace"}>
+          <span className={"small user-select-text text-muted"}>
             {props.propertyEntry.key}
           </span>
         }

@@ -3,19 +3,23 @@ import {
   Graph,
   GraphLabel,
   Node,
+  WSActionLoadScenario,
+  WSActionRelayout,
   WSEventScenarioProgress,
 } from "../../../../src-gen";
 import { Labels } from "./Labels.tsx";
 import { GraphRendererD3 } from "./GraphRendererD3.tsx";
-import { Stack } from "react-bootstrap";
+import { OverlayTrigger, Stack, Tooltip } from "react-bootstrap";
 import { WebSocketsManager } from "../../../lib/ws/WebSocketsManager.ts";
 import { D3Renderer } from "../../../lib/d3/D3Renderer.ts";
 import { DataTable } from "../DataTable.tsx";
+import { CanvasToolbar } from "./CanvasToolbar.tsx";
 
 export function Canvas(props: {
   graph: Graph;
   tab: "graph" | "data";
-  webSocketsManager: WebSocketsManager;
+  setTab: (tab: "graph" | "data") => void;
+  webSockets: WebSocketsManager;
   scenarioProgress: WSEventScenarioProgress | null;
   scenarioLoading: boolean;
   onNodeClicked: (node: Node) => void;
@@ -27,16 +31,22 @@ export function Canvas(props: {
 }) {
   return (
     <Stack
-      className={"flex-grow-1 align-items-start"}
-      direction={"horizontal"}
+      className={"flex-grow-1 align-items-stretch"}
+      direction={"vertical"}
       style={{ height: "100%" }}
     >
       <GraphRendererD3
-        webSockets={props.webSocketsManager}
+        webSockets={props.webSockets}
         onNodeClicked={props.onNodeClicked}
         onEdgeClicked={props.onEdgeClicked}
         graphRenderer={props.graphRenderer}
       ></GraphRendererD3>
+      <CanvasToolbar
+        graph={props.graph}
+        tab={props.tab}
+        setTab={props.setTab}
+        webSockets={props.webSockets}
+      ></CanvasToolbar>
       {props.tab == "graph" ? (
         <Labels graphLabels={props.graphLabels}></Labels>
       ) : (

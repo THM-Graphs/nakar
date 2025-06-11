@@ -29,7 +29,6 @@ export function Panel(props: {
         className={
           "border-bottom justify-content-between flex-shrink-0 flex-grow-0"
         }
-        style={{ height: "32px" }}
       >
         {props.title.length > 0 && (
           <span className={"ms-2 small"}>{props.title}</span>

@@ -1,6 +1,6 @@
 import { Scenario } from "../../../../src-gen";
 import { ScenarioCard } from "./ScenarioCard.tsx";
-import { Button } from "react-bootstrap";
+import { Button, Stack } from "react-bootstrap";
 import { Loading } from "../../shared/Loading.tsx";
 import { Collapsable } from "../Collapsable.tsx";
 
@@ -14,7 +14,7 @@ export function ScenarioDisplay(props: {
     <Collapsable
       inset={0}
       title={
-        <>
+        <Stack direction={"horizontal"} className={"align-items-baseline"}>
           <Button
             variant={"link"}
             disabled={props.scenarioLoading != null}
@@ -31,7 +31,7 @@ export function ScenarioDisplay(props: {
           {props.scenarioLoading === props.scenario.id && (
             <Loading size={"sm"} className={"me-1 ms-1"}></Loading>
           )}
-        </>
+        </Stack>
       }
     >
       <ScenarioCard

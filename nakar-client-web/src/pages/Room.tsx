@@ -10,9 +10,7 @@ import {
   Graph,
   Edge,
   Node,
-  WSActionRelayout,
   WSActionGetGraph,
-  WSActionLoadScenario,
 } from "../../src-gen";
 import { LoaderFunctionArgs, useLoaderData } from "react-router";
 import { resultOrThrow } from "../lib/data/resultOrThrow.ts";
@@ -22,20 +20,20 @@ import { WebSocketsManager } from "../lib/ws/WebSocketsManager.ts";
 import { Env } from "../lib/env/env.ts";
 import { useTheme } from "../lib/theme/useTheme.ts";
 import { D3Renderer } from "../lib/d3/D3Renderer.ts";
-import { Panel } from "../components/room/Pane/Panel.tsx";
+import { Panel } from "../components/room/Panel/Panel.tsx";
 import { NodeDetails } from "../components/room/DetailPane/NodeDetails.tsx";
 import { EdgeDetails } from "../components/room/DetailPane/EdgeDetails.tsx";
 import { HistogramDisplay } from "../components/room/HistogramDisplay.tsx";
 import { BackButton } from "../components/shared/BackButton.tsx";
 import { ScenarioWindowButton } from "../components/room/ScenarioPane/ScenarioWindowButton.tsx";
-import { GraphDataToggle } from "../components/room/GraphDataToggle.tsx";
 import { ProgressDisplay } from "../components/room/ProgressDisplay.tsx";
 import { SocketStateDisplay } from "../components/room/SocketStateDisplay.tsx";
 import { InfoDropdown } from "../components/shared/InfoDropdown.tsx";
 import { NavbarButton } from "../components/shared/NavbarButton.tsx";
 import { Loading } from "../components/shared/Loading.tsx";
-import { SocketState } from "../lib/ws/SocketState.ts";
 import { displayStringForState } from "../lib/ws/displayStringForState.ts";
+import { ReconnectOverlay } from "../components/room/ReconnectOverlay.tsx";
+import { NavbarLogo } from "../components/shared/NavbarLogo.tsx";
 
 export async function RoomLoader(
   args: LoaderFunctionArgs,
@@ -176,67 +174,27 @@ export function Room(props: { webSockets: WebSocketsManager; env: Env }) {
                   setScenariosWindowOpened((old) => !old);
                 }}
               ></ScenarioWindowButton>
-              <GraphDataToggle
-                state={selectedTab}
-                setTab={setSelectedTab}
-              ></GraphDataToggle>
             </>
           }
           center={
-            <>
-              <span>-</span>
-              <span className={"small text-muted"}>{loaderData.title}</span>
-              {graph.metaData.scenarioInfo.title && (
-                <>
-                  <span>-</span>
-                  <span className={"small text-muted"}>
-                    {graph.metaData.scenarioInfo.title}
-                  </span>
-                </>
-              )}
-            </>
+            <Stack
+              className={"align-items-center"}
+              direction={"horizontal"}
+              gap={2}
+            >
+              <NavbarLogo></NavbarLogo>
+              <Stack
+                className={"small text-muted"}
+                direction={"horizontal"}
+                gap={2}
+              >
+                <span>-</span>
+                <span>{loaderData.title}</span>
+              </Stack>
+            </Stack>
           }
           right={
             <>
-              <Stack direction={"horizontal"}>
-                <ProgressDisplay
-                  webSocketsManager={props.webSockets}
-                ></ProgressDisplay>
-                <OverlayTrigger
-                  delay={{ show: 500, hide: 0 }}
-                  placement="bottom"
-                  overlay={<Tooltip>Relayout Graph</Tooltip>}
-                >
-                  <NavbarButton
-                    icon={"tropical-storm"}
-                    title={"Layout Graph"}
-                    className={"border-end-0"}
-                    onClick={() => {
-                      props.webSockets.sendMessage({
-                        type: "WSActionRelayout",
-                      } satisfies WSActionRelayout);
-                    }}
-                  ></NavbarButton>
-                </OverlayTrigger>
-
-                <OverlayTrigger
-                  delay={{ show: 500, hide: 0 }}
-                  placement="bottom"
-                  overlay={<Tooltip>Reset Graph</Tooltip>}
-                >
-                  <NavbarButton
-                    disabled={graph.metaData.scenarioInfo.id == ""}
-                    icon={"arrow-clockwise"}
-                    title={"Rerun Scenario"}
-                    onClick={() => {
-                      props.webSockets.sendMessage({
-                        type: "WSActionLoadScenario",
-                        scenarioId: graph.metaData.scenarioInfo.id,
-                      } satisfies WSActionLoadScenario);
-                    }}
-                  ></NavbarButton>
-                </OverlayTrigger>
-              </Stack>
               <OverlayTrigger
                 delay={{ show: 500, hide: 0 }}
                 overlay={<Tooltip>Histogram</Tooltip>}
@@ -251,14 +209,10 @@ export function Room(props: { webSockets: WebSocketsManager; env: Env }) {
               </OverlayTrigger>
               <Stack direction={"horizontal"} className={"align-items-stretch"}>
                 <InfoDropdown env={props.env}></InfoDropdown>
-                <SocketStateDisplay
-                  socketState={socketState}
-                ></SocketStateDisplay>
               </Stack>
             </>
           }
         ></AppNavbar>
-        <ToastStack websocketsManager={props.webSockets}></ToastStack>
         <Stack
           direction={"horizontal"}
           className={"align-items-stretch flex-grow-1 position-relative"}
@@ -291,6 +245,7 @@ export function Room(props: { webSockets: WebSocketsManager; env: Env }) {
           >
             <Canvas
               tab={selectedTab}
+              setTab={setSelectedTab}
               graph={graph}
               onNodeClicked={(n) => {
                 setDetailsNode(n);
@@ -300,7 +255,7 @@ export function Room(props: { webSockets: WebSocketsManager; env: Env }) {
                 setDetailsEdge(l);
                 setDetailsNode(null);
               }}
-              webSocketsManager={props.webSockets}
+              webSockets={props.webSockets}
               scenarioProgress={scenarioProgress}
               scenarioLoading={scenarioLoading != null}
               graphRenderer={graphRenderer}
@@ -360,36 +315,22 @@ export function Room(props: { webSockets: WebSocketsManager; env: Env }) {
             ></HistogramDisplay>
           </Panel>
         </Stack>
+        <Stack
+          direction={"horizontal"}
+          className={
+            "bg-body-tertiary flex-grow-0 flex-shrink-0 border-top align-items-center"
+          }
+          style={{ height: "25px" }}
+        >
+          <ProgressDisplay
+            webSocketsManager={props.webSockets}
+          ></ProgressDisplay>
+          <div className={"flex-grow-1"}></div>
+          <SocketStateDisplay socketState={socketState}></SocketStateDisplay>
+        </Stack>
+        <ToastStack websocketsManager={props.webSockets}></ToastStack>
         {socketState.type !== "connected" && (
-          <Stack
-            className={"position-absolute bg-body-secondary"}
-            gap={2}
-            style={{ zIndex: 3, width: "100%", height: "100%" }}
-          >
-            <AppNavbar
-              left={<BackButton href={"/"}></BackButton>}
-              right={
-                <SocketStateDisplay
-                  socketState={socketState}
-                ></SocketStateDisplay>
-              }
-            ></AppNavbar>
-            <div className={"flex-grow-1"}></div>
-            <Stack className={"align-items-center flex-grow-0"} gap={5}>
-              <span className={"text-muted small font-monospace"}>
-                {displayStringForState(socketState)}
-              </span>
-              <Stack
-                direction={"horizontal"}
-                gap={2}
-                className={"align-self-center text-muted"}
-              >
-                <Loading size={"sm"}></Loading>
-                <span>Reconnecting...</span>
-              </Stack>
-            </Stack>
-            <div className={"flex-grow-1"}></div>
-          </Stack>
+          <ReconnectOverlay socketState={socketState}></ReconnectOverlay>
         )}
       </Stack>
     </>

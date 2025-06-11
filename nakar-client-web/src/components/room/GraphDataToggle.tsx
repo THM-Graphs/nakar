@@ -14,7 +14,7 @@ export function GraphDataToggle(props: {
         onClick={() => {
           props.setTab("graph");
         }}
-        className={"border-end-0"}
+        className={""}
       ></NavbarButton>
       <NavbarButton
         icon={"table"}
@@ -23,6 +23,7 @@ export function GraphDataToggle(props: {
         onClick={() => {
           props.setTab("data");
         }}
+        className={"border-end"}
       ></NavbarButton>
     </Stack>
   );

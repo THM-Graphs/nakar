@@ -50,14 +50,17 @@ export function ProgressDisplay(props: {
   }
   const message = graphProgress.message ?? "Working";
   return (
-    <Stack className={"border-start ps-2 pe-2"} direction={"horizontal"}>
+    <Stack
+      className={"border-end ps-2 pe-2 flex-grow-0 flex-shrink-0"}
+      direction={"horizontal"}
+    >
       {graphProgress.progress ? (
         <ProgressBar
           now={graphProgress.progress}
           max={1}
           animated={true}
           label={`${(graphProgress.progress * 100).toFixed(0)}%`}
-          style={{ width: "100px" }}
+          style={{ width: "200px" }}
           className={"me-2"}
         />
       ) : (
@@ -76,7 +79,7 @@ export function ProgressDisplay(props: {
         <span
           className={"small text-muted"}
           style={{
-            width: "150px",
+            width: "200px",
             textOverflow: "ellipsis",
             overflow: "hidden",
             textWrap: "nowrap",

@@ -7,13 +7,13 @@ import { displayStringForState } from "../../lib/ws/displayStringForState.ts";
 export function SocketStateDisplay(props: { socketState: SocketState }) {
   return (
     <OverlayTrigger
-      placement="bottom"
+      placement="left"
       delay={{ show: 500, hide: 0 }}
       overlay={<Tooltip>{displayStringForState(props.socketState)}</Tooltip>}
     >
       <Stack
         className={clsx(
-          "text-white justify-content-center align-items-center",
+          "text-white justify-content-center align-items-center flex-grow-0 flex-shrink-0",
           backgroundColorForState(props.socketState),
         )}
         style={{
