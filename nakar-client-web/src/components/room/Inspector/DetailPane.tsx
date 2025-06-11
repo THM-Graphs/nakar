@@ -1,10 +1,12 @@
-import { Button, Spinner, Stack } from "react-bootstrap";
+import { Spinner, Stack } from "react-bootstrap";
 import { DetailPaneAction } from "./DetailPaneAction.ts";
 import { GraphProperty } from "../../../../src-gen";
 import { PropertyDisplay } from "./PropertyDisplay.tsx";
+import { NavbarButton } from "../../shared/NavbarButton.tsx";
 
 export function DetailPane(props: {
   title: string;
+  entityTitle: string;
   actions: DetailPaneAction[];
   properties: GraphProperty[];
   otherProperties: GraphProperty[];
@@ -12,32 +14,35 @@ export function DetailPane(props: {
 }) {
   return (
     <Stack className={"pb-5"}>
+      <span className={"text-muted small ps-2 pt-2"}>{props.entityTitle}</span>
       {props.title.length > 0 && (
         <Stack direction={"horizontal"}>
           <span
             style={{ overflowWrap: "anywhere", userSelect: "text" }}
-            className={"p-2 h5"}
+            className={"ps-2 pe-2 pb-2 fs-5 fw-bold"}
           >
             {props.title}
           </span>
         </Stack>
       )}
       {props.actions.length > 0 && (
-        <Stack direction={"horizontal"} gap={2} className={"p-2 pt-0"}>
+        <Stack
+          direction={"horizontal"}
+          className={"border-top border-bottom mb-2"}
+        >
           {props.actions.map((action: DetailPaneAction) => (
-            <Button
+            <NavbarButton
               key={action.title}
-              size={"sm"}
               onClick={action.action}
               disabled={props.loading}
-              variant={action.variant}
+              className={"flex-grow-1 justify-content-center"}
             >
               {props.loading && (
                 <Spinner size={"sm"} className={"me-2"}></Spinner>
               )}
               <i className={`bi bi-${action.icon} me-1`}></i>
               {action.title}
-            </Button>
+            </NavbarButton>
           ))}
         </Stack>
       )}

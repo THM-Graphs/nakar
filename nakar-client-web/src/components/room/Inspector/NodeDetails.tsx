@@ -11,6 +11,7 @@ export function NodeDetails(props: {
 }) {
   return (
     <DetailPane
+      entityTitle={"Node"}
       actions={[
         {
           title: "Expand",
