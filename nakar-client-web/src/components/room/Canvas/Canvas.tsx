@@ -3,13 +3,11 @@ import {
   Graph,
   GraphLabel,
   Node,
-  WSActionLoadScenario,
-  WSActionRelayout,
   WSEventScenarioProgress,
 } from "../../../../src-gen";
 import { Labels } from "./Labels.tsx";
 import { GraphRendererD3 } from "./GraphRendererD3.tsx";
-import { OverlayTrigger, Stack, Tooltip } from "react-bootstrap";
+import { Stack } from "react-bootstrap";
 import { WebSocketsManager } from "../../../lib/ws/WebSocketsManager.ts";
 import { D3Renderer } from "../../../lib/d3/D3Renderer.ts";
 import { DataTable } from "../DataTable.tsx";

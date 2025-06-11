@@ -6,15 +6,12 @@ import {
 } from "../../../../src-gen";
 import { ScenarioGroupList } from "./ScenarioGroupList.tsx";
 import { useEffect, useState } from "react";
-import clsx from "clsx";
 import { Loadable } from "../../../lib/data/Loadable.ts";
 import { handleError } from "../../../lib/error/handleError.ts";
 import { match } from "ts-pattern";
 import { ErrorDisplay } from "../../shared/ErrorDisplay.tsx";
-import { Loading } from "../../shared/Loading.tsx";
 import { resultOrThrow } from "../../../lib/data/resultOrThrow.ts";
-import { NavLink } from "react-router";
-import { Button, Stack } from "react-bootstrap";
+import { Stack } from "react-bootstrap";
 import { Collapsable } from "../Collapsable.tsx";
 import { NavbarButton } from "../../shared/NavbarButton.tsx";
 

@@ -1,7 +1,7 @@
 import { GraphLabel } from "../../../../src-gen";
 import { getBackgroundColor } from "../../../lib/color/getBackgroundColor.ts";
 import { getTextColor } from "../../../lib/color/getTextColor.ts";
-import { Badge, Stack } from "react-bootstrap";
+import { Stack } from "react-bootstrap";
 
 export function Label(props: { label: GraphLabel; multipleSources: boolean }) {
   return (

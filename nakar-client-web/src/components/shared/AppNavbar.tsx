@@ -1,4 +1,4 @@
-import { Image, Stack } from "react-bootstrap";
+import { Stack } from "react-bootstrap";
 import { ReactNode } from "react";
 
 export function AppNavbar(props: {

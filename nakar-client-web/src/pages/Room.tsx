@@ -1,4 +1,4 @@
-import { OverlayTrigger, Stack, Tooltip } from "react-bootstrap";
+import { Stack } from "react-bootstrap";
 import { AppNavbar } from "../components/shared/AppNavbar.tsx";
 import { DatabaseList } from "../components/room/ScenarioPane/DatabaseList.tsx";
 import { Canvas } from "../components/room/Canvas/Canvas.tsx";

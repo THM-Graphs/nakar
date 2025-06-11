@@ -1,6 +1,4 @@
 import {
-  Card,
-  CardBody,
   OverlayTrigger,
   ProgressBar,
   Spinner,
