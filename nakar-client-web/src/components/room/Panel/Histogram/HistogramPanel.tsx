@@ -1,26 +1,37 @@
-import { GraphLabel, Histogram } from "../../../src-gen";
 import { Button, OverlayTrigger, Stack, Tooltip } from "react-bootstrap";
 import { useState } from "react";
-import { ClipboardButton } from "./ClipboardButton.tsx";
+import { ClipboardButton } from "../../ClipboardButton.tsx";
 import clsx from "clsx";
-import { getBackgroundColor } from "../../lib/color/getBackgroundColor.ts";
-import { Collapsable } from "./Collapsable.tsx";
+import { getBackgroundColor } from "../../../../lib/color/getBackgroundColor.ts";
+import { Collapsable } from "../../Collapsable.tsx";
+import { useBearStore } from "../../../../lib/state/useBearStore.ts";
+import { Panel } from "../Panel.tsx";
 
-export function HistogramDisplay(props: {
-  histogram: Histogram;
-  graphLabels: GraphLabel[];
-}) {
+export function HistogramPanel() {
+  const histogramData = useBearStore(
+    (s) => s.room.scenario.graph.metaData.histogram,
+  );
+  const histogram = useBearStore((s) => s.room.panels.histogram);
+  const labels = useBearStore((s) => s.room.scenario.graph.metaData.labels);
+
   return (
-    <>
+    <Panel
+      hidden={!histogram.shown}
+      direction={"right"}
+      title={"Histogram"}
+      onClose={() => {
+        histogram.hide();
+      }}
+    >
       <Stack className={"mb-5 flex-grow-0 flex-shrink-1 mb-auto pb-5"}>
         <Stack className={"border-bottom"}>
           <Collapsable
             title={<span className={"fw-bold small"}>Labels</span>}
             initialState={false}
           >
-            <EmptyHint list={props.histogram.nodeLabels}></EmptyHint>
-            {props.histogram.nodeLabels.map((entry) => {
-              const label = props.graphLabels.find(
+            <EmptyHint list={histogramData.nodeLabels}></EmptyHint>
+            {histogramData.nodeLabels.map((entry) => {
+              const label = labels.find(
                 (graphLabel) => graphLabel.label === entry.label,
               );
               if (label == null) {
@@ -49,8 +60,8 @@ export function HistogramDisplay(props: {
             title={<span className={"fw-bold small"}>Relationships</span>}
             initialState={false}
           >
-            <EmptyHint list={props.histogram.edgeTypes}></EmptyHint>
-            {props.histogram.edgeTypes.map((entry) => (
+            <EmptyHint list={histogramData.edgeTypes}></EmptyHint>
+            {histogramData.edgeTypes.map((entry) => (
               <ValueDisplay
                 label={entry.type}
                 value={entry.count}
@@ -65,8 +76,8 @@ export function HistogramDisplay(props: {
             title={<span className={"fw-bold small"}>Node Properties</span>}
             initialState={false}
           >
-            <EmptyHint list={props.histogram.nodeProperties}></EmptyHint>
-            {props.histogram.nodeProperties.map((propertyEntry) => (
+            <EmptyHint list={histogramData.nodeProperties}></EmptyHint>
+            {histogramData.nodeProperties.map((propertyEntry) => (
               <PropertyGroup
                 propertyEntry={propertyEntry}
                 key={propertyEntry.key}
@@ -81,8 +92,8 @@ export function HistogramDisplay(props: {
             }
             initialState={false}
           >
-            <EmptyHint list={props.histogram.edgeProperties}></EmptyHint>
-            {props.histogram.edgeProperties.map((propertyEntry) => (
+            <EmptyHint list={histogramData.edgeProperties}></EmptyHint>
+            {histogramData.edgeProperties.map((propertyEntry) => (
               <PropertyGroup
                 propertyEntry={propertyEntry}
                 key={propertyEntry.key}
@@ -91,7 +102,7 @@ export function HistogramDisplay(props: {
           </Collapsable>
         </Stack>
       </Stack>
-    </>
+    </Panel>
   );
 }
 

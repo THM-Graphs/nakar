@@ -1,16 +1,17 @@
 import { Button, Card, Stack } from "react-bootstrap";
 import { ScenarioIcon } from "./ScenarioIcon.tsx";
 import { QueryDisplay } from "./QueryDisplay.tsx";
-import { Scenario } from "../../../../src-gen";
-import { Loading } from "../../shared/Loading.tsx";
-import { NavbarButton } from "../../shared/NavbarButton.tsx";
+import { Scenario } from "../../../../../src-gen";
+import { Loading } from "../../../shared/Loading.tsx";
+import { NavbarButton } from "../../../shared/NavbarButton.tsx";
+import { useBearStore } from "../../../../lib/state/useBearStore.ts";
 
 export function ScenarioCard(props: {
   hidden?: boolean;
   scenario: Scenario;
   onScenarioSelected: (scenario: Scenario) => void;
-  scenarioLoading: string | null;
 }) {
+  const uiLocked = useBearStore((s) => s.room.ui.locked);
   return (
     <Card
       className={"rounded-0 border-start-0 border-end-0 position-relative"}
@@ -42,10 +43,10 @@ export function ScenarioCard(props: {
           onClick={() => {
             props.onScenarioSelected(props.scenario);
           }}
-          disabled={props.scenarioLoading != null}
+          disabled={uiLocked}
         >
           <Stack direction={"horizontal"} gap={1}>
-            {props.scenarioLoading === props.scenario.id ? (
+            {uiLocked ? (
               <Loading size={"sm"}></Loading>
             ) : (
               <i className={"bi bi-play-circle"}></i>

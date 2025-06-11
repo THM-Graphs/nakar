@@ -31,6 +31,7 @@ export class WebSocketsManager {
 
   public constructor(env: Env) {
     this.socket = io(env.BACKEND_SOCKET_URL, { path: "/socket.io" });
+    console.log(`Did connect WS to ${env.BACKEND_SOCKET_URL}`);
     this._socketState = new BehaviorSubject<SocketState>({
       type: "connecting",
     });

@@ -16,7 +16,8 @@ export class D3RendererState {
   public static fromWsData(graph: Graph): D3RendererState {
     const nodes = graph.nodes.map((node: Node): D3Node => {
       return {
-        ...node,
+        native: node,
+        locked: node.locked,
         x: node.position.x,
         y: node.position.y,
         vx: 0,
@@ -26,8 +27,8 @@ export class D3RendererState {
       };
     });
     const links = graph.edges.reduce((acc: D3Link[], edge: Edge) => {
-      const sourceNode = nodes.find((n) => n.id === edge.startNodeId);
-      const targetNode = nodes.find((n) => n.id === edge.endNodeId);
+      const sourceNode = nodes.find((n) => n.native.id === edge.startNodeId);
+      const targetNode = nodes.find((n) => n.native.id === edge.endNodeId);
 
       if (sourceNode && targetNode) {
         acc.push({

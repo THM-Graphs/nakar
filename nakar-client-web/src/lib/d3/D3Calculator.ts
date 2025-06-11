@@ -12,7 +12,7 @@ export class D3Calculator {
       const loopSizeRadius = Math.min(90, 360 / d.native.parallelCount / 2) / 2;
       const angle =
         (d.native.parallelIndex / d.native.parallelCount) * 360 - 90;
-      const length = d.source.radius;
+      const length = d.source.native.radius;
       const ps = this.vector(x1, y1, angle - loopSizeRadius, length);
       const pe = this.vector(x1, y1, angle + loopSizeRadius, length);
 
@@ -23,8 +23,8 @@ export class D3Calculator {
         y2: pe.y,
       };
     } else {
-      const r1 = d.source.radius;
-      const r2 = d.target.radius;
+      const r1 = d.source.native.radius;
+      const r2 = d.target.native.radius;
 
       // Vector from c1 to c2
       const dx = x2 - x1;
@@ -123,7 +123,7 @@ export class D3Calculator {
       x2,
       y2,
       d.native.isLoop
-        ? curvAmount + d.source.radius
+        ? curvAmount + d.source.native.radius
         : d.native.parallelIndex * curvAmount,
     );
 

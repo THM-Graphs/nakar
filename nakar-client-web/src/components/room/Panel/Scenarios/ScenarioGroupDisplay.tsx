@@ -3,22 +3,22 @@ import {
   ScenarioGroup,
   getScenarios,
   Scenarios,
-} from "../../../../src-gen";
+} from "../../../../../src-gen";
 import { ScenariosList } from "./ScenariosList.tsx";
 import { useEffect, useState } from "react";
-import { Loadable } from "../../../lib/data/Loadable.ts";
-import { handleError } from "../../../lib/error/handleError.ts";
-import { Loading } from "../../shared/Loading.tsx";
-import { resultOrThrow } from "../../../lib/data/resultOrThrow.ts";
-import { Collapsable } from "../Collapsable.tsx";
-import { NavbarButton } from "../../shared/NavbarButton.tsx";
+import { Loadable } from "../../../../lib/data/Loadable.ts";
+import { handleError } from "../../../../lib/error/handleError.ts";
+import { Loading } from "../../../shared/Loading.tsx";
+import { resultOrThrow } from "../../../../lib/data/resultOrThrow.ts";
+import { Collapsable } from "../../Collapsable.tsx";
+import { NavbarButton } from "../../../shared/NavbarButton.tsx";
 import { Stack } from "react-bootstrap";
+import { AppContext } from "../../../../lib/state/AppContext.ts";
 
 export function ScenarioGroupDisplay(props: {
   scenarioGroup: ScenarioGroup;
-  onScenarioSelect: (scenario: Scenario) => void;
   hidden?: boolean;
-  scenarioLoading: string | null;
+  context: AppContext;
 }) {
   const [scnenarios, setScenarios] = useState<Loadable<Scenarios>>({
     type: "loading",
@@ -75,9 +75,8 @@ export function ScenarioGroupDisplay(props: {
               ></NavbarButton>
             )}
             <ScenariosList
+              context={props.context}
               scenarios={scnenarios.data}
-              onScenarioSelected={props.onScenarioSelect}
-              scenarioLoading={props.scenarioLoading}
             ></ScenariosList>
           </Stack>
         </Stack>

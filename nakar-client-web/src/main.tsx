@@ -7,9 +7,9 @@ import { createBrowserRouter, RouterProvider } from "react-router";
 import { loadEnvOrDefault } from "./lib/env/env.ts";
 import { client } from "../src-gen";
 import { themeManager } from "./lib/theme/ThemeManagerContext.ts";
-import { Start } from "./pages/Start.tsx";
+import { Start, StartLoader } from "./pages/Start.tsx";
 import { Room, RoomLoader } from "./pages/Room.tsx";
-import { WebSocketsManager } from "./lib/ws/WebSocketsManager.ts";
+import { AppContext } from "./lib/state/AppContext.ts";
 
 async function bootstrap() {
   themeManager.bootstrapTheme();
@@ -19,16 +19,17 @@ async function bootstrap() {
     baseUrl: env.BACKEND_URL,
   });
 
-  const webSockets = new WebSocketsManager(env);
+  const context = new AppContext(env);
 
   const router = createBrowserRouter([
     {
       path: "/",
-      element: <Start env={env}></Start>,
+      element: <Start context={context}></Start>,
+      loader: StartLoader,
     },
     {
       path: "/room/:id",
-      element: <Room webSockets={webSockets} env={env}></Room>,
+      element: <Room context={context}></Room>,
       loader: RoomLoader,
     },
   ]);

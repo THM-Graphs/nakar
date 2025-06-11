@@ -3,22 +3,22 @@ import {
   Scenario,
   getScenarioGroups,
   ScenarioGroups,
-} from "../../../../src-gen";
+} from "../../../../../src-gen";
 import { ScenarioGroupList } from "./ScenarioGroupList.tsx";
 import { useEffect, useState } from "react";
-import { Loadable } from "../../../lib/data/Loadable.ts";
-import { handleError } from "../../../lib/error/handleError.ts";
+import { Loadable } from "../../../../lib/data/Loadable.ts";
+import { handleError } from "../../../../lib/error/handleError.ts";
 import { match } from "ts-pattern";
-import { ErrorDisplay } from "../../shared/ErrorDisplay.tsx";
-import { resultOrThrow } from "../../../lib/data/resultOrThrow.ts";
+import { ErrorDisplay } from "../../../shared/ErrorDisplay.tsx";
+import { resultOrThrow } from "../../../../lib/data/resultOrThrow.ts";
 import { Stack } from "react-bootstrap";
-import { Collapsable } from "../Collapsable.tsx";
-import { NavbarButton } from "../../shared/NavbarButton.tsx";
+import { Collapsable } from "../../Collapsable.tsx";
+import { NavbarButton } from "../../../shared/NavbarButton.tsx";
+import { AppContext } from "../../../../lib/state/AppContext.ts";
 
 export function DatabaseDisplay(props: {
   database: Database;
-  onScenarioSelect: (scenario: Scenario) => void;
-  scenarioLoading: string | null;
+  context: AppContext;
 }) {
   const [scenarioGroups, setScenarioGroups] = useState<
     Loadable<ScenarioGroups>
@@ -86,9 +86,8 @@ export function DatabaseDisplay(props: {
                   ></NavbarButton>
                 )}
                 <ScenarioGroupList
-                  onScenarioSelect={props.onScenarioSelect}
                   scenarioGroups={data}
-                  scenarioLoading={props.scenarioLoading}
+                  context={props.context}
                 ></ScenarioGroupList>
               </Stack>
             ))

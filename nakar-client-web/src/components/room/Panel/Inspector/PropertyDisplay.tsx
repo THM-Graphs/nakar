@@ -1,6 +1,6 @@
-import { GraphProperty } from "../../../../src-gen";
+import { GraphProperty } from "../../../../../src-gen";
 import { Stack, Table } from "react-bootstrap";
-import { ClipboardButton } from "../ClipboardButton.tsx";
+import { ClipboardButton } from "../../ClipboardButton.tsx";
 
 export function PropertyDisplay(props: {
   title: string;

@@ -1,9 +1,10 @@
 import { Stack, Table } from "react-bootstrap";
+import { useBearStore } from "../../lib/state/useBearStore.ts";
 
-export function DataTable(props: {
-  tableData: Record<string, unknown>[] | null;
-}) {
-  if (props.tableData == null || props.tableData.length === 0) {
+export function DataTable() {
+  const tableData = useBearStore((s) => s.room.scenario.graph.tableData);
+
+  if (tableData.length === 0) {
     return <p className={"p-3 text-muted"}>No data</p>;
   }
 
@@ -21,7 +22,7 @@ export function DataTable(props: {
       <Table className={"table-responsive"}>
         <thead>
           <tr className={"sticky-top"}>
-            {Object.keys(props.tableData[0]).map((key) => (
+            {Object.keys(tableData[0]).map((key) => (
               <th key={key} className={"user-select-text border-bottom"}>
                 {key}
               </th>
@@ -29,7 +30,7 @@ export function DataTable(props: {
           </tr>
         </thead>
         <tbody>
-          {props.tableData.map((row, index) => (
+          {tableData.map((row, index) => (
             <tr key={index}>
               {Object.entries(row).map(([key, value]) => (
                 <td

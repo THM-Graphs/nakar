@@ -1,18 +1,36 @@
 import { createRef, useEffect } from "react";
 import { useTheme } from "../../../lib/theme/useTheme.ts";
-import { D3Renderer } from "../../../lib/d3/D3Renderer.ts";
-import { Node, Edge } from "../../../../src-gen";
-import { WebSocketsManager } from "../../../lib/ws/WebSocketsManager.ts";
+import { useBearStore } from "../../../lib/state/useBearStore.ts";
+import { AppContext } from "../../../lib/state/AppContext.ts";
 
-export function GraphRendererD3(props: {
-  onNodeClicked: (node: Node) => void;
-  onEdgeClicked: (edge: Edge) => void;
-  webSockets: WebSocketsManager;
-  graphRenderer: D3Renderer;
-}) {
+export function GraphRendererD3(props: { context: AppContext }) {
+  const websocketsManager = props.context.webSocketsManager;
   const svgRef = createRef<SVGSVGElement>();
-  const graphRenderer = props.graphRenderer;
+  const graphRenderer = props.context.renderer;
   const theme = useTheme();
+  const inspector = useBearStore((s) => s.room.panels.inspector);
+  const graph = useBearStore((s) => s.room.scenario.graph);
+
+  useEffect(() => {
+    graphRenderer.loadGraphContent(graph);
+  }, [graph]);
+
+  useEffect(() => {
+    const subs = [
+      websocketsManager.onNodesMoved$.subscribe((onMove) => {
+        graphRenderer.updateNodePositions(onMove);
+      }),
+      websocketsManager.onSetLocks$.subscribe((message) => {
+        graphRenderer.updateLocks(message);
+        // TODO: Check if inspector updates its ui
+      }),
+    ];
+    return () => {
+      for (const s of subs) {
+        s.unsubscribe();
+      }
+    };
+  }, [websocketsManager]);
 
   useEffect(() => {
     let animationActive: boolean = true;
@@ -40,36 +58,36 @@ export function GraphRendererD3(props: {
   useEffect(() => {
     const supscriptions = [
       graphRenderer.onGrabNode.subscribe((n) => {
-        props.webSockets.sendMessage({
+        websocketsManager.sendMessage({
           type: "WSActionGrabNode",
-          nodeId: n.id,
+          nodeId: n.native.id,
         });
       }),
       graphRenderer.onNodesMoved.subscribe((n) => {
-        props.webSockets.sendMessage({
+        websocketsManager.sendMessage({
           type: "WSActionMoveNodes",
           nodes: [
             {
-              id: n.id,
+              id: n.native.id,
               position: { x: n.x, y: n.y },
             },
           ],
         });
       }),
       graphRenderer.onUngrabNode.subscribe((n) => {
-        props.webSockets.sendMessage({
+        websocketsManager.sendMessage({
           type: "WSActionUngrabNode",
           node: {
-            id: n.id,
+            id: n.native.id,
             position: { x: n.x, y: n.y },
           },
         });
       }),
       graphRenderer.onDisplayNodeData.subscribe((n) => {
-        props.onNodeClicked(n);
+        inspector.setElement({ type: "node", node: n.native });
       }),
       graphRenderer.onDisplayLinkData.subscribe((l) => {
-        props.onEdgeClicked(l.native);
+        inspector.setElement({ type: "edge", edge: l.native });
       }),
     ];
 

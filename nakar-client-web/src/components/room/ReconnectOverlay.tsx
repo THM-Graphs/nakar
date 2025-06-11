@@ -4,10 +4,12 @@ import { SocketStateDisplay } from "./SocketStateDisplay.tsx";
 import { Stack } from "react-bootstrap";
 import { displayStringForState } from "../../lib/ws/displayStringForState.ts";
 import { Loading } from "../shared/Loading.tsx";
-import { SocketState } from "../../lib/ws/SocketState.ts";
 import { NavbarLogo } from "../shared/NavbarLogo.tsx";
+import { useBearStore } from "../../lib/state/useBearStore.ts";
 
-export function ReconnectOverlay(props: { socketState: SocketState }) {
+export function ReconnectOverlay() {
+  const socketState = useBearStore((s) => s.room.websockets.state);
+
   return (
     <Stack
       className={"position-absolute bg-body-secondary"}
@@ -17,16 +19,12 @@ export function ReconnectOverlay(props: { socketState: SocketState }) {
       <AppNavbar
         left={<BackButton href={"/"}></BackButton>}
         center={<NavbarLogo></NavbarLogo>}
-        right={
-          <SocketStateDisplay
-            socketState={props.socketState}
-          ></SocketStateDisplay>
-        }
+        right={<SocketStateDisplay></SocketStateDisplay>}
       ></AppNavbar>
       <div className={"flex-grow-1"}></div>
       <Stack className={"align-items-center flex-grow-0"} gap={5}>
         <span className={"text-muted small font-monospace"}>
-          {displayStringForState(props.socketState)}
+          {displayStringForState(socketState)}
         </span>
         <Stack
           direction={"horizontal"}

@@ -3,18 +3,21 @@ import { match } from "ts-pattern";
 import clsx from "clsx";
 import { SocketState } from "../../lib/ws/SocketState.ts";
 import { displayStringForState } from "../../lib/ws/displayStringForState.ts";
+import { useBearStore } from "../../lib/state/useBearStore.ts";
 
-export function SocketStateDisplay(props: { socketState: SocketState }) {
+export function SocketStateDisplay() {
+  const socketState = useBearStore((s) => s.room.websockets.state);
+
   return (
     <OverlayTrigger
       placement="left"
       delay={{ show: 500, hide: 0 }}
-      overlay={<Tooltip>{displayStringForState(props.socketState)}</Tooltip>}
+      overlay={<Tooltip>{displayStringForState(socketState)}</Tooltip>}
     >
       <Stack
         className={clsx(
           "text-white justify-content-center align-items-center flex-grow-0 flex-shrink-0",
-          backgroundColorForState(props.socketState),
+          backgroundColorForState(socketState),
         )}
         style={{
           width: "40px",
@@ -23,7 +26,7 @@ export function SocketStateDisplay(props: { socketState: SocketState }) {
         <i
           className={clsx(
             "bi",
-            iconForState(props.socketState),
+            iconForState(socketState),
             // forgroundColorForState(props.socketState),
           )}
         ></i>

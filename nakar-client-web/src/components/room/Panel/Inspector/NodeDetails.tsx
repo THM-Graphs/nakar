@@ -1,14 +1,16 @@
-import { Node } from "../../../../src-gen";
+import { Node } from "../../../../../src-gen";
 import { DetailPane } from "./DetailPane.tsx";
 import { DetailPaneAction } from "./DetailPaneAction.ts";
+import { useBearStore } from "../../../../lib/state/useBearStore.ts";
+import { AppContext } from "../../../../lib/state/AppContext.ts";
 
-export function NodeDetails(props: {
-  node: Node;
-  onExpandNode: (node: Node) => void;
-  onDeleteNode: (node: Node) => void;
-  onUnlockNode: (node: Node) => void;
-  scenarioLoading: boolean;
-}) {
+export function NodeDetails(props: { node: Node; context: AppContext }) {
+  const lockUI = useBearStore((s) => s.room.ui.lock);
+  const webSockets = props.context.webSocketsManager;
+  const removeInspectorElement = useBearStore(
+    (s) => s.room.panels.inspector.removeElement,
+  );
+
   return (
     <DetailPane
       entityTitle={"Node"}
@@ -18,7 +20,11 @@ export function NodeDetails(props: {
           icon: "zoom-in",
           variant: "primary",
           action: () => {
-            props.onExpandNode(props.node);
+            lockUI();
+            webSockets.sendMessage({
+              type: "WSActionExpandNodes",
+              nodes: [props.node.id],
+            });
           },
         },
         {
@@ -26,7 +32,12 @@ export function NodeDetails(props: {
           icon: "eye-slash",
           variant: "danger",
           action: () => {
-            props.onDeleteNode(props.node);
+            lockUI();
+            webSockets.sendMessage({
+              type: "WSActionDeleteNodes",
+              nodes: [props.node.id],
+            });
+            removeInspectorElement();
           },
         },
         ...(props.node.locked
@@ -36,13 +47,15 @@ export function NodeDetails(props: {
                 icon: "unlock",
                 variant: "primary",
                 action: () => {
-                  props.onUnlockNode(props.node);
+                  webSockets.sendMessage({
+                    type: "WSActionUnlockNodes",
+                    nodes: [props.node.id],
+                  });
                 },
               } satisfies DetailPaneAction,
             ]
           : []),
       ]}
-      loading={props.scenarioLoading}
       otherProperties={[
         {
           slug: "ID",

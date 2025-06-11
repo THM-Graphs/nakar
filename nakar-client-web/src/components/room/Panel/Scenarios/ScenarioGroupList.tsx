@@ -1,11 +1,11 @@
-import { Scenario, ScenarioGroup, ScenarioGroups } from "../../../../src-gen";
+import { ScenarioGroup, ScenarioGroups } from "../../../../../src-gen";
 import { ScenarioGroupDisplay } from "./ScenarioGroupDisplay.tsx";
 import { Stack } from "react-bootstrap";
+import { AppContext } from "../../../../lib/state/AppContext.ts";
 
 export function ScenarioGroupList(props: {
   scenarioGroups: ScenarioGroups;
-  onScenarioSelect: (scenario: Scenario) => void;
-  scenarioLoading: string | null;
+  context: AppContext;
 }) {
   return (
     <Stack className={"flex-grow-0"}>
@@ -19,10 +19,9 @@ export function ScenarioGroupList(props: {
       {props.scenarioGroups.scenarioGroups.map(
         (scenarioGroup: ScenarioGroup) => (
           <ScenarioGroupDisplay
-            onScenarioSelect={props.onScenarioSelect}
+            context={props.context}
             key={scenarioGroup.id}
             scenarioGroup={scenarioGroup}
-            scenarioLoading={props.scenarioLoading}
           ></ScenarioGroupDisplay>
         ),
       )}

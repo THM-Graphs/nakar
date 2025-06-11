@@ -1,28 +1,23 @@
 import { Stack } from "react-bootstrap";
 import { NavbarButton } from "../shared/NavbarButton.tsx";
+import { useBearStore } from "../../lib/state/useBearStore.ts";
 
-export function GraphDataToggle(props: {
-  state: "graph" | "data";
-  setTab: (state: "graph" | "data") => void;
-}) {
+export function GraphDataToggle() {
+  const tabs = useBearStore((s) => s.room.canvas.tabs);
   return (
     <Stack direction={"horizontal"}>
       <NavbarButton
         icon={"bounding-box-circles"}
         title={"Graph"}
-        selected={props.state === "graph"}
-        onClick={() => {
-          props.setTab("graph");
-        }}
+        selected={tabs.selected === "graph"}
+        onClick={tabs.selectGraph}
         className={""}
       ></NavbarButton>
       <NavbarButton
         icon={"table"}
         title={"Data"}
-        selected={props.state === "data"}
-        onClick={() => {
-          props.setTab("data");
-        }}
+        selected={tabs.selected === "data"}
+        onClick={tabs.selectData}
         className={"border-end"}
       ></NavbarButton>
     </Stack>

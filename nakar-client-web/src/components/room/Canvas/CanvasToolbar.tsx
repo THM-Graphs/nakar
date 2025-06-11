@@ -1,19 +1,17 @@
 import { GraphDataToggle } from "../GraphDataToggle.tsx";
 import { Stack } from "react-bootstrap";
 import { NavbarButton } from "../../shared/NavbarButton.tsx";
-import {
-  Graph,
-  WSActionLoadScenario,
-  WSActionRelayout,
-} from "../../../../src-gen";
-import { WebSocketsManager } from "../../../lib/ws/WebSocketsManager.ts";
+import { WSActionLoadScenario, WSActionRelayout } from "../../../../src-gen";
+import { useBearStore } from "../../../lib/state/useBearStore.ts";
+import { AppContext } from "../../../lib/state/AppContext.ts";
 
-export function CanvasToolbar(props: {
-  graph: Graph;
-  tab: "graph" | "data";
-  setTab: (tab: "graph" | "data") => void;
-  webSockets: WebSocketsManager;
-}) {
+export function CanvasToolbar(props: { context: AppContext }) {
+  const webSockets = props.context.webSocketsManager;
+  const graph = useBearStore((s) => s.room.scenario.graph);
+  const tabs = useBearStore((s) => s.room.canvas.tabs);
+  const uiLocked = useBearStore((s) => s.room.ui.locked);
+  const lockUI = useBearStore((s) => s.room.ui.lock);
+
   return (
     <Stack
       direction={"horizontal"}
@@ -22,37 +20,35 @@ export function CanvasToolbar(props: {
       }
       style={{ zIndex: 1 }}
     >
-      <GraphDataToggle
-        state={props.tab}
-        setTab={props.setTab}
-      ></GraphDataToggle>
-      {props.graph.metaData.scenarioInfo.title && (
+      <GraphDataToggle></GraphDataToggle>
+      {graph.metaData.scenarioInfo.title && (
         <>
           <span className={"small text-muted ps-1 pe-1"}>
-            Scenario: {props.graph.metaData.scenarioInfo.title}
+            Scenario: {graph.metaData.scenarioInfo.title}
           </span>
         </>
       )}
       <Stack direction={"horizontal"} className={"flex-wrap"}>
         <NavbarButton
-          disabled={props.tab != "graph"}
+          disabled={tabs.selected != "graph"}
           icon={"tropical-storm"}
           title={"Layout Graph"}
           className={""}
           onClick={() => {
-            props.webSockets.sendMessage({
+            webSockets.sendMessage({
               type: "WSActionRelayout",
             } satisfies WSActionRelayout);
           }}
         ></NavbarButton>
         <NavbarButton
-          disabled={props.graph.metaData.scenarioInfo.id == ""}
+          disabled={graph.metaData.scenarioInfo.id == "" || uiLocked}
           icon={"arrow-clockwise"}
           title={"Rerun Scenario"}
           onClick={() => {
-            props.webSockets.sendMessage({
+            lockUI();
+            webSockets.sendMessage({
               type: "WSActionLoadScenario",
-              scenarioId: props.graph.metaData.scenarioInfo.id,
+              scenarioId: graph.metaData.scenarioInfo.id,
             } satisfies WSActionLoadScenario);
           }}
         ></NavbarButton>

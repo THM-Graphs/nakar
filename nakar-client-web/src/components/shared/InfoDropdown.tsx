@@ -13,12 +13,12 @@ import { Loadable } from "../../lib/data/Loadable";
 import { resultOrThrow } from "../../lib/data/resultOrThrow";
 import { handleError } from "../../lib/error/handleError";
 import { match } from "ts-pattern";
-import { Env } from "../../lib/env/env";
 import { ThemeDropdownEntry } from "./ThemeDropdownEntry";
 import { ImportBackupDropdownItem } from "./ImportBackupDropdownItem.tsx";
 import { NavbarButton } from "./NavbarButton.tsx";
+import { AppContext } from "../../lib/state/AppContext.ts";
 
-export function InfoDropdown(props: { env: Env }) {
+export function InfoDropdown(props: { context: AppContext }) {
   const [version, setVersion] = useState<Loadable<string>>({ type: "loading" });
 
   const reloadVersion = useCallback(() => {
@@ -68,7 +68,9 @@ export function InfoDropdown(props: { env: Env }) {
           <ThemeDropdownEntry targetTheme={"dark"}></ThemeDropdownEntry>
           <Dropdown.Divider />
 
-          <Dropdown.Item disabled>Client ({props.env.VERSION})</Dropdown.Item>
+          <Dropdown.Item disabled>
+            Client ({props.context.env.VERSION})
+          </Dropdown.Item>
           <Dropdown.Item disabled>Mode: {import.meta.env.MODE}</Dropdown.Item>
           <Dropdown.Divider />
 
@@ -81,13 +83,13 @@ export function InfoDropdown(props: { env: Env }) {
               .exhaustive()}
             )
           </Dropdown.Item>
-          <Dropdown.Item href={props.env.BACKEND_URL} target={"_blank"}>
-            <span className="me-1">{props.env.BACKEND_URL}</span>
+          <Dropdown.Item href={props.context.env.BACKEND_URL} target={"_blank"}>
+            <span className="me-1">{props.context.env.BACKEND_URL}</span>
             <span className="me-2"></span>
             <i className="bi bi-box-arrow-up-right"></i>
           </Dropdown.Item>
           <Dropdown.Item
-            href={props.env.BACKEND_URL + "/system/backup"}
+            href={props.context.env.BACKEND_URL + "/system/backup"}
             target={"_blank"}
           >
             <span className="me-1">Download Backup (.tar.gz)</span>

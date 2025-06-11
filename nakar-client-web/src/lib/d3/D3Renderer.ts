@@ -58,9 +58,10 @@ export class D3Renderer {
 
   private smoothedPositionDirty: boolean;
 
-  public constructor(theme: UserTheme) {
+  public constructor() {
+    console.log("Did create instance of graph renderer");
     this.$graphState = new BehaviorSubject(D3RendererState.empty());
-    this.$theme = new BehaviorSubject(theme);
+    this.$theme = new BehaviorSubject<UserTheme>(null);
     this.$svgElement = new BehaviorSubject<SVGSVGElement | null>(null);
 
     this.$onDisplayLinkData = new Subject();
@@ -133,7 +134,9 @@ export class D3Renderer {
 
   public updateNodePositions(wsEvent: WSEventNodesMoved) {
     for (const node of wsEvent.nodes) {
-      const localNode = this.graphState.nodes.find((n) => n.id === node.id);
+      const localNode = this.graphState.nodes.find(
+        (n) => n.native.id === node.id,
+      );
       if (localNode == null) {
         continue;
       }
@@ -145,7 +148,9 @@ export class D3Renderer {
 
   public updateLocks(wsEvent: WSEventSetLocks) {
     for (const node of wsEvent.locks) {
-      const localNode = this.graphState.nodes.find((n) => n.id === node.id);
+      const localNode = this.graphState.nodes.find(
+        (n) => n.native.id === node.id,
+      );
       if (localNode == null) {
         continue;
       }
@@ -281,31 +286,33 @@ export class D3Renderer {
 
     this.nodeCircle = this.nodeSelection
       .append("circle")
-      .attr("r", (d) => d.radius)
+      .attr("r", (d) => d.native.radius)
       .attr(
         "fill",
         (d) =>
-          d.customBackgroundColor ??
+          d.native.customBackgroundColor ??
           getBackgroundColor(
-            originalGraph.metaData.labels.find((l) => l.label === d.labels[0])
-              ?.color ?? null,
+            originalGraph.metaData.labels.find(
+              (l) => l.label === d.native.labels[0],
+            )?.color ?? null,
           ),
       );
 
     this.nodeSelection
       .append("foreignObject")
-      .attr("x", (d) => -d.radius)
-      .attr("y", (d) => -d.radius)
-      .attr("width", (d) => d.radius * 2)
-      .attr("height", (d) => d.radius * 2)
+      .attr("x", (d) => -d.native.radius)
+      .attr("y", (d) => -d.native.radius)
+      .attr("width", (d) => d.native.radius * 2)
+      .attr("height", (d) => d.native.radius * 2)
       .append("xhtml:div")
       .attr("xmlns", "http://www.w3.org/1999/xhtml")
       .attr("style", (d) => {
         const color =
-          d.customTitleColor ??
+          d.native.customTitleColor ??
           getTextColor(
-            originalGraph.metaData.labels.find((l) => l.label === d.labels[0])
-              ?.color ?? null,
+            originalGraph.metaData.labels.find(
+              (l) => l.label === d.native.labels[0],
+            )?.color ?? null,
           );
 
         return `
@@ -314,16 +321,16 @@ export class D3Renderer {
         display: flex; 
         align-items: center; 
         justify-content: center;
-        width: ${(d.radius * 2).toString()}px; 
-        height: ${(d.radius * 2).toString()}px;
+        width: ${(d.native.radius * 2).toString()}px; 
+        height: ${(d.native.radius * 2).toString()}px;
         text-align: center;
-        font-size: ${(d.radius / 5 + 3).toString()}px;
+        font-size: ${(d.native.radius / 5 + 3).toString()}px;
         `;
       })
-      .attr("width", (d) => d.radius * 2)
-      .attr("height", (d) => d.radius * 2)
+      .attr("width", (d) => d.native.radius * 2)
+      .attr("height", (d) => d.native.radius * 2)
       .append("xhtml:span")
-      .text((d) => d.title);
+      .text((d) => d.native.title);
 
     this.nodeSelection.call(
       d3

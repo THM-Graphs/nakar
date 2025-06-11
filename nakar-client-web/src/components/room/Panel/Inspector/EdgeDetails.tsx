@@ -1,4 +1,4 @@
-import { Edge } from "../../../../src-gen";
+import { Edge } from "../../../../../src-gen";
 import { DetailPane } from "./DetailPane.tsx";
 
 export function EdgeDetails(props: { edge: Edge }) {
@@ -6,7 +6,6 @@ export function EdgeDetails(props: { edge: Edge }) {
     <DetailPane
       entityTitle={"Edge"}
       actions={[]}
-      loading={false}
       otherProperties={[
         {
           slug: "ID",

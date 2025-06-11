@@ -1,8 +1,11 @@
 import { GraphLabel } from "../../../../src-gen";
 import { Label } from "./Label.tsx";
 import { Stack } from "react-bootstrap";
+import { useBearStore } from "../../../lib/state/useBearStore.ts";
 
-export function Labels(props: { graphLabels: GraphLabel[] }) {
+export function Labels() {
+  const labels = useBearStore((s) => s.room.scenario.graph.metaData.labels);
+
   return (
     <Stack
       className={"flex-wrap p-1 align-self-start"}
@@ -12,11 +15,11 @@ export function Labels(props: { graphLabels: GraphLabel[] }) {
         zIndex: 1,
       }}
     >
-      {props.graphLabels.map((label) => (
+      {labels.map((label) => (
         <Label
           label={label}
           key={label.label}
-          multipleSources={multipleSources(props.graphLabels)}
+          multipleSources={multipleSources(labels)}
         ></Label>
       ))}
     </Stack>

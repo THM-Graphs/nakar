@@ -1,5 +1,5 @@
 import { Stack } from "react-bootstrap";
-import { ClipboardButton } from "../ClipboardButton.tsx";
+import { ClipboardButton } from "../../ClipboardButton.tsx";
 
 export function QueryDisplay(props: { query: string }) {
   return (

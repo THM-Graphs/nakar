@@ -1,55 +1,22 @@
-import {
-  Edge,
-  Graph,
-  GraphLabel,
-  Node,
-  WSEventScenarioProgress,
-} from "../../../../src-gen";
 import { Labels } from "./Labels.tsx";
 import { GraphRendererD3 } from "./GraphRendererD3.tsx";
 import { Stack } from "react-bootstrap";
-import { WebSocketsManager } from "../../../lib/ws/WebSocketsManager.ts";
-import { D3Renderer } from "../../../lib/d3/D3Renderer.ts";
 import { DataTable } from "../DataTable.tsx";
 import { CanvasToolbar } from "./CanvasToolbar.tsx";
+import { useBearStore } from "../../../lib/state/useBearStore.ts";
+import { AppContext } from "../../../lib/state/AppContext.ts";
 
-export function Canvas(props: {
-  graph: Graph;
-  tab: "graph" | "data";
-  setTab: (tab: "graph" | "data") => void;
-  webSockets: WebSocketsManager;
-  scenarioProgress: WSEventScenarioProgress | null;
-  scenarioLoading: boolean;
-  onNodeClicked: (node: Node) => void;
-  onEdgeClicked: (edge: Edge) => void;
-  graphRenderer: D3Renderer;
-  graphLabels: GraphLabel[];
-  showHistogram: boolean;
-  onShowHistogram: () => void;
-}) {
+export function Canvas(props: { context: AppContext }) {
+  const tabs = useBearStore((s) => s.room.canvas.tabs);
   return (
     <Stack
-      className={"flex-grow-1 align-items-stretch"}
+      className={"flex-grow-1  flex-shrink-1 align-items-stretch"}
       direction={"vertical"}
-      style={{ height: "100%" }}
+      style={{ height: "100%", width: "100px" }}
     >
-      <GraphRendererD3
-        webSockets={props.webSockets}
-        onNodeClicked={props.onNodeClicked}
-        onEdgeClicked={props.onEdgeClicked}
-        graphRenderer={props.graphRenderer}
-      ></GraphRendererD3>
-      <CanvasToolbar
-        graph={props.graph}
-        tab={props.tab}
-        setTab={props.setTab}
-        webSockets={props.webSockets}
-      ></CanvasToolbar>
-      {props.tab == "graph" ? (
-        <Labels graphLabels={props.graphLabels}></Labels>
-      ) : (
-        <DataTable tableData={props.graph.tableData}></DataTable>
-      )}
+      <CanvasToolbar context={props.context}></CanvasToolbar>
+      {tabs.selected == "graph" ? <Labels></Labels> : <DataTable></DataTable>}
+      <GraphRendererD3 context={props.context}></GraphRendererD3>
     </Stack>
   );
 }

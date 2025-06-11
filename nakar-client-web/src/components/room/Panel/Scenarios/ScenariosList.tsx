@@ -1,11 +1,11 @@
-import { Scenario, Scenarios } from "../../../../src-gen";
+import { Scenario, Scenarios } from "../../../../../src-gen";
 import { ScenarioDisplay } from "./ScenarioDisplay.tsx";
 import { Stack } from "react-bootstrap";
+import { AppContext } from "../../../../lib/state/AppContext.ts";
 
 export function ScenariosList(props: {
   scenarios: Scenarios;
-  onScenarioSelected: (scenario: Scenario) => void;
-  scenarioLoading: string | null;
+  context: AppContext;
 }) {
   return (
     <Stack className={"flex-grow-0"}>
@@ -14,8 +14,7 @@ export function ScenariosList(props: {
         <ScenarioDisplay
           key={scenario.id}
           scenario={scenario}
-          onScenarioSelected={props.onScenarioSelected}
-          scenarioLoading={props.scenarioLoading}
+          context={props.context}
         ></ScenarioDisplay>
       ))}
     </Stack>

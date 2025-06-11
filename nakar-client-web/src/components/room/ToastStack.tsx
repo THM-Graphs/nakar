@@ -1,11 +1,12 @@
 import { Toast, ToastContainer } from "react-bootstrap";
 import { useEffect, useState } from "react";
 import { v4 } from "uuid";
-import { WebSocketsManager } from "../../lib/ws/WebSocketsManager.ts";
 import { match } from "ts-pattern";
+import { AppContext } from "../../lib/state/AppContext.ts";
 
-export function ToastStack(props: { websocketsManager: WebSocketsManager }) {
+export function ToastStack(props: { context: AppContext }) {
   const [message, setMessages] = useState<ToastMessage[]>([]);
+  const websocketsManager = props.context.webSocketsManager;
 
   const pushMessage = (message: Omit<ToastMessage, "id">) => {
     const id = v4();
@@ -27,7 +28,7 @@ export function ToastStack(props: { websocketsManager: WebSocketsManager }) {
 
   useEffect(() => {
     const subscriptions = [
-      props.websocketsManager.onNotification$.subscribe((notification) => {
+      websocketsManager.onNotification$.subscribe((notification) => {
         pushMessage({
           message: notification.message,
           date: new Date(notification.date),

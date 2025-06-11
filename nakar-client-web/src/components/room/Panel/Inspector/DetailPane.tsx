@@ -1,8 +1,9 @@
 import { Spinner, Stack } from "react-bootstrap";
 import { DetailPaneAction } from "./DetailPaneAction.ts";
-import { GraphProperty } from "../../../../src-gen";
+import { GraphProperty } from "../../../../../src-gen";
 import { PropertyDisplay } from "./PropertyDisplay.tsx";
-import { NavbarButton } from "../../shared/NavbarButton.tsx";
+import { NavbarButton } from "../../../shared/NavbarButton.tsx";
+import { useBearStore } from "../../../../lib/state/useBearStore.ts";
 
 export function DetailPane(props: {
   title: string;
@@ -10,8 +11,9 @@ export function DetailPane(props: {
   actions: DetailPaneAction[];
   properties: GraphProperty[];
   otherProperties: GraphProperty[];
-  loading: boolean;
 }) {
+  const uiLocked = useBearStore((s) => s.room.ui.locked);
+
   return (
     <Stack className={"pb-5"}>
       <span className={"text-muted small ps-2 pt-2"}>{props.entityTitle}</span>
@@ -34,12 +36,9 @@ export function DetailPane(props: {
             <NavbarButton
               key={action.title}
               onClick={action.action}
-              disabled={props.loading}
+              disabled={uiLocked}
               className={"flex-grow-1 justify-content-center"}
             >
-              {props.loading && (
-                <Spinner size={"sm"} className={"me-2"}></Spinner>
-              )}
               <i className={`bi bi-${action.icon} me-1`}></i>
               {action.title}
             </NavbarButton>

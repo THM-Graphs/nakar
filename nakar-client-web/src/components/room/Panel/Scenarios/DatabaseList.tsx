@@ -3,21 +3,19 @@ import {
   getDatabases,
   Databases,
   Scenario,
-} from "../../../../src-gen";
+} from "../../../../../src-gen";
 import { useEffect, useState } from "react";
 import { match } from "ts-pattern";
-import { handleError } from "../../../lib/error/handleError.ts";
-import { ErrorDisplay } from "../../shared/ErrorDisplay.tsx";
-import { Loading } from "../../shared/Loading.tsx";
+import { handleError } from "../../../../lib/error/handleError.ts";
+import { ErrorDisplay } from "../../../shared/ErrorDisplay.tsx";
+import { Loading } from "../../../shared/Loading.tsx";
 import { DatabaseDisplay } from "./DatabaseDisplay.tsx";
-import { Loadable } from "../../../lib/data/Loadable.ts";
-import { resultOrThrow } from "../../../lib/data/resultOrThrow.ts";
+import { Loadable } from "../../../../lib/data/Loadable.ts";
+import { resultOrThrow } from "../../../../lib/data/resultOrThrow.ts";
 import { Stack } from "react-bootstrap";
+import { AppContext } from "../../../../lib/state/AppContext.ts";
 
-export function DatabaseList(props: {
-  onScenarioSelect: (scenario: Scenario) => void;
-  scenarioLoading: string | null;
-}) {
+export function DatabaseList(props: { context: AppContext }) {
   const [databases, setDatabases] = useState<Loadable<Databases>>({
     type: "loading",
   });
@@ -56,10 +54,9 @@ export function DatabaseList(props: {
         <Stack className={"pb-5 mb-auto"}>
           {data.databases.map((database: Database) => (
             <DatabaseDisplay
-              onScenarioSelect={props.onScenarioSelect}
+              context={props.context}
               key={database.id}
               database={database}
-              scenarioLoading={props.scenarioLoading}
             ></DatabaseDisplay>
           ))}
         </Stack>

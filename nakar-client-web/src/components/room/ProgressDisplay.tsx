@@ -1,37 +1,10 @@
-import {
-  OverlayTrigger,
-  ProgressBar,
-  Spinner,
-  Stack,
-  Tooltip,
-} from "react-bootstrap";
-import { WSEventScenarioProgress } from "../../../src-gen";
+import { ProgressBar, Spinner, Stack } from "react-bootstrap";
 import { useEffect, useState } from "react";
-import { WebSocketsManager } from "../../lib/ws/WebSocketsManager.ts";
+import { useBearStore } from "../../lib/state/useBearStore.ts";
 
-export function ProgressDisplay(props: {
-  webSocketsManager: WebSocketsManager;
-}) {
-  const [graphProgress, setGraphProgress] = useState<WSEventScenarioProgress>({
-    type: "WSEventScenarioProgress",
-    progress: null,
-    message: null,
-  });
+export function ProgressDisplay() {
   const [dots, setDots] = useState("");
-
-  useEffect(() => {
-    const subs = [
-      props.webSocketsManager.onScenarioProgress$.subscribe((progress) => {
-        setGraphProgress(progress);
-      }),
-    ];
-
-    return () => {
-      for (const sub of subs) {
-        sub.unsubscribe();
-      }
-    };
-  }, [props.webSocketsManager]);
+  const progress = useBearStore((s) => s.room.ui.progress);
 
   useEffect(() => {
     const timeout = setInterval(() => {
@@ -43,21 +16,21 @@ export function ProgressDisplay(props: {
     };
   }, []);
 
-  if (graphProgress.progress == null && graphProgress.message == null) {
+  if (progress == null) {
     return null;
   }
-  const message = graphProgress.message ?? "Working";
+  const message = progress.message ?? "Working";
   return (
     <Stack
       className={"border-end ps-2 pe-2 flex-grow-0 flex-shrink-0"}
       direction={"horizontal"}
     >
-      {graphProgress.progress ? (
+      {progress.progress ? (
         <ProgressBar
-          now={graphProgress.progress}
+          now={progress.progress}
           max={1}
           animated={true}
-          label={`${(graphProgress.progress * 100).toFixed(0)}%`}
+          label={`${(progress.progress * 100).toFixed(0)}%`}
           style={{ width: "200px" }}
           className={"me-2"}
         />
