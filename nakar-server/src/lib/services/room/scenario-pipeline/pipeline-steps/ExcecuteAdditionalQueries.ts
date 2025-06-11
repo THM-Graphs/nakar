@@ -45,6 +45,8 @@ export class ExcecuteAdditionalQueries extends ScenarioPipelineStep {
       let result: Neo4jGraphElements = await state.neo4j.executeQuery(
         databaseInfo,
         additionalQuery.mergeQuery,
+        {},
+        true,
       );
       if (state.displayConfiguration.connectResultNodes) {
         const nodeIds: SSet<string> = new SSet<string>(result.nodes.keys());

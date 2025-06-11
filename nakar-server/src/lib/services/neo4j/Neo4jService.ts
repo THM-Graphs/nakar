@@ -30,8 +30,8 @@ export class Neo4jService implements ApplicationService {
   public async executeQuery(
     databaseInfo: Neo4jDatabaseInfo,
     query: string,
-    parameters?: Record<string, unknown>,
-    checkLimit?: boolean,
+    parameters: Record<string, unknown>,
+    checkLimit: boolean,
   ): Promise<Neo4jGraphElements> {
     const driver: Driver = createDriver(
       databaseInfo.url,
@@ -59,7 +59,7 @@ export class Neo4jService implements ApplicationService {
 
         if (
           result.records.length > Neo4jService._maximalElements &&
-          checkLimit === true
+          checkLimit
         ) {
           throw new Error(
             `To many elements: ${result.records.length.toString()} (maximum: ${Neo4jService._maximalElements.toString()})`,
@@ -125,6 +125,7 @@ export class Neo4jService implements ApplicationService {
       {
         nodesIds: nodesIds,
       },
+      true,
     );
     return additional;
   }
