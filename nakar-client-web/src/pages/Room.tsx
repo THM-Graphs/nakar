@@ -8,8 +8,6 @@ import {
   WSEventScenarioProgress,
   getRoom,
   Graph,
-  Edge,
-  Node,
   WSActionGetGraph,
 } from "../../src-gen";
 import { LoaderFunctionArgs, useLoaderData } from "react-router";
@@ -21,8 +19,6 @@ import { Env } from "../lib/env/env.ts";
 import { useTheme } from "../lib/theme/useTheme.ts";
 import { D3Renderer } from "../lib/d3/D3Renderer.ts";
 import { Panel } from "../components/room/Panel/Panel.tsx";
-import { NodeDetails } from "../components/room/DetailPane/NodeDetails.tsx";
-import { EdgeDetails } from "../components/room/DetailPane/EdgeDetails.tsx";
 import { HistogramDisplay } from "../components/room/HistogramDisplay.tsx";
 import { BackButton } from "../components/shared/BackButton.tsx";
 import { ScenarioWindowButton } from "../components/room/ScenarioPane/ScenarioWindowButton.tsx";
@@ -30,10 +26,10 @@ import { ProgressDisplay } from "../components/room/ProgressDisplay.tsx";
 import { SocketStateDisplay } from "../components/room/SocketStateDisplay.tsx";
 import { InfoDropdown } from "../components/shared/InfoDropdown.tsx";
 import { NavbarButton } from "../components/shared/NavbarButton.tsx";
-import { Loading } from "../components/shared/Loading.tsx";
-import { displayStringForState } from "../lib/ws/displayStringForState.ts";
 import { ReconnectOverlay } from "../components/room/ReconnectOverlay.tsx";
 import { NavbarLogo } from "../components/shared/NavbarLogo.tsx";
+import { Inspector } from "../components/room/Inspector/Inspector.tsx";
+import { InspectorElement } from "../components/room/Inspector/InspectorElement.ts";
 
 export async function RoomLoader(
   args: LoaderFunctionArgs,
@@ -69,9 +65,10 @@ export function Room(props: { webSockets: WebSocketsManager; env: Env }) {
       },
     },
   });
-  const [detailsNode, setDetailsNode] = useState<Node | null>(null);
-  const [detailsEdge, setDetailsEdge] = useState<Edge | null>(null);
-  const [showHistogram, setShowHistogram] = useState<boolean>(true);
+  const [inspectorElement, setInspectorElement] =
+    useState<InspectorElement | null>(null);
+  const [showInspector, setShowInspector] = useState(false);
+  const [showHistogram, setShowHistogram] = useState<boolean>(false);
   const [scenariosWindowOpened, setScenariosWindowOpened] = useState(true);
   const [scenarioLoading, setScenarioLoading] = useState<string | null>(null);
   const [scenarioProgress, setScenarioProgress] =
@@ -82,9 +79,14 @@ export function Room(props: { webSockets: WebSocketsManager; env: Env }) {
   const [graphRenderer] = useState(new D3Renderer(theme));
 
   useEffect(() => {
+    if (inspectorElement) {
+      setShowInspector(true);
+    }
+  }, [inspectorElement]);
+
+  useEffect(() => {
     if (selectedTab == "data") {
-      setDetailsNode(null);
-      setDetailsEdge(null);
+      setShowInspector(false);
     }
   }, [selectedTab]);
 
@@ -127,19 +129,7 @@ export function Room(props: { webSockets: WebSocketsManager; env: Env }) {
       }),
       props.webSockets.onSetLocks$.subscribe((message) => {
         graphRenderer.updateLocks(message);
-        for (const node of message.locks) {
-          if (detailsNode?.id === node.id) {
-            setDetailsNode((old) => {
-              if (old == null) {
-                return null;
-              }
-              return {
-                ...old,
-                locked: node.locked,
-              };
-            });
-          }
-        }
+        // TODO: Check if inspector updates its ui
       }),
       props.webSockets.onScenarioProgress$.subscribe((progress) => {
         if (progress.progress == null) {
@@ -195,18 +185,18 @@ export function Room(props: { webSockets: WebSocketsManager; env: Env }) {
           }
           right={
             <>
-              <OverlayTrigger
-                delay={{ show: 500, hide: 0 }}
-                overlay={<Tooltip>Histogram</Tooltip>}
-                placement="bottom"
-              >
-                <NavbarButton
-                  title={"Histogram"}
-                  selected={showHistogram}
-                  onToggle={setShowHistogram}
-                  icon={"bar-chart-fill"}
-                ></NavbarButton>
-              </OverlayTrigger>
+              <NavbarButton
+                title={"Inspector"}
+                selected={showInspector}
+                onToggle={setShowInspector}
+                icon={"info-circle-fill"}
+              ></NavbarButton>
+              <NavbarButton
+                title={"Histogram"}
+                selected={showHistogram}
+                onToggle={setShowHistogram}
+                icon={"bar-chart-fill"}
+              ></NavbarButton>
               <Stack direction={"horizontal"} className={"align-items-stretch"}>
                 <InfoDropdown env={props.env}></InfoDropdown>
               </Stack>
@@ -248,12 +238,10 @@ export function Room(props: { webSockets: WebSocketsManager; env: Env }) {
               setTab={setSelectedTab}
               graph={graph}
               onNodeClicked={(n) => {
-                setDetailsNode(n);
-                setDetailsEdge(null);
+                setInspectorElement({ type: "node", node: n });
               }}
               onEdgeClicked={(l) => {
-                setDetailsEdge(l);
-                setDetailsNode(null);
+                setInspectorElement({ type: "edge", edge: l });
               }}
               webSockets={props.webSockets}
               scenarioProgress={scenarioProgress}
@@ -267,8 +255,12 @@ export function Room(props: { webSockets: WebSocketsManager; env: Env }) {
             ></Canvas>
           </Stack>
 
-          <NodeDetails
-            node={detailsNode}
+          <Inspector
+            element={inspectorElement}
+            hidden={!showInspector}
+            onClose={() => {
+              setShowInspector(false);
+            }}
             onExpandNode={(n) => {
               setScenarioLoading("");
               props.webSockets.sendMessage({
@@ -282,7 +274,7 @@ export function Room(props: { webSockets: WebSocketsManager; env: Env }) {
                 type: "WSActionDeleteNodes",
                 nodes: [n.id],
               });
-              setDetailsNode(null);
+              setInspectorElement(null);
             }}
             onUnlockNode={(n) => {
               props.webSockets.sendMessage({
@@ -290,17 +282,9 @@ export function Room(props: { webSockets: WebSocketsManager; env: Env }) {
                 nodes: [n.id],
               });
             }}
-            onClose={() => {
-              setDetailsNode(null);
-            }}
             scenarioLoading={scenarioLoading != null}
-          ></NodeDetails>
-          <EdgeDetails
-            edge={detailsEdge}
-            onClose={() => {
-              setDetailsEdge(null);
-            }}
-          ></EdgeDetails>
+          ></Inspector>
+
           <Panel
             hidden={!showHistogram}
             direction={"right"}
