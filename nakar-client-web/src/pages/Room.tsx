@@ -85,6 +85,12 @@ export function Room(props: { webSockets: WebSocketsManager; env: Env }) {
   }, [inspectorElement]);
 
   useEffect(() => {
+    if (!showInspector) {
+      setInspectorElement(null);
+    }
+  }, [showInspector]);
+
+  useEffect(() => {
     if (selectedTab == "data") {
       setShowInspector(false);
     }

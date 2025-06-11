@@ -69,23 +69,17 @@ export function ProgressDisplay(props: {
           size={"sm"}
         />
       )}
-      <OverlayTrigger
-        delay={{ show: 500, hide: 0 }}
-        overlay={<Tooltip>{message}</Tooltip>}
-        placement={"bottom"}
+      <span
+        className={"small text-muted"}
+        style={{
+          width: "200px",
+          textOverflow: "ellipsis",
+          overflow: "hidden",
+          textWrap: "nowrap",
+        }}
       >
-        <span
-          className={"small text-muted"}
-          style={{
-            width: "200px",
-            textOverflow: "ellipsis",
-            overflow: "hidden",
-            textWrap: "nowrap",
-          }}
-        >
-          {message + dots}
-        </span>
-      </OverlayTrigger>
+        {message + dots}
+      </span>
     </Stack>
   );
 }

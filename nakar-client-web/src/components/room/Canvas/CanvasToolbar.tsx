@@ -1,5 +1,5 @@
 import { GraphDataToggle } from "../GraphDataToggle.tsx";
-import { OverlayTrigger, Stack, Tooltip } from "react-bootstrap";
+import { Stack } from "react-bootstrap";
 import { NavbarButton } from "../../shared/NavbarButton.tsx";
 import {
   Graph,
@@ -34,40 +34,28 @@ export function CanvasToolbar(props: {
         </>
       )}
       <Stack direction={"horizontal"} className={"flex-wrap"}>
-        <OverlayTrigger
-          delay={{ show: 500, hide: 0 }}
-          placement="bottom"
-          overlay={<Tooltip>Relayout Graph</Tooltip>}
-        >
-          <NavbarButton
-            disabled={props.tab != "graph"}
-            icon={"tropical-storm"}
-            title={"Layout Graph"}
-            className={""}
-            onClick={() => {
-              props.webSockets.sendMessage({
-                type: "WSActionRelayout",
-              } satisfies WSActionRelayout);
-            }}
-          ></NavbarButton>
-        </OverlayTrigger>
-        <OverlayTrigger
-          delay={{ show: 500, hide: 0 }}
-          placement="bottom"
-          overlay={<Tooltip>Reset Graph</Tooltip>}
-        >
-          <NavbarButton
-            disabled={props.graph.metaData.scenarioInfo.id == ""}
-            icon={"arrow-clockwise"}
-            title={"Rerun Scenario"}
-            onClick={() => {
-              props.webSockets.sendMessage({
-                type: "WSActionLoadScenario",
-                scenarioId: props.graph.metaData.scenarioInfo.id,
-              } satisfies WSActionLoadScenario);
-            }}
-          ></NavbarButton>
-        </OverlayTrigger>
+        <NavbarButton
+          disabled={props.tab != "graph"}
+          icon={"tropical-storm"}
+          title={"Layout Graph"}
+          className={""}
+          onClick={() => {
+            props.webSockets.sendMessage({
+              type: "WSActionRelayout",
+            } satisfies WSActionRelayout);
+          }}
+        ></NavbarButton>
+        <NavbarButton
+          disabled={props.graph.metaData.scenarioInfo.id == ""}
+          icon={"arrow-clockwise"}
+          title={"Rerun Scenario"}
+          onClick={() => {
+            props.webSockets.sendMessage({
+              type: "WSActionLoadScenario",
+              scenarioId: props.graph.metaData.scenarioInfo.id,
+            } satisfies WSActionLoadScenario);
+          }}
+        ></NavbarButton>
       </Stack>
     </Stack>
   );
