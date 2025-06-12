@@ -1,8 +1,9 @@
 import { Button, OverlayTrigger, Tooltip } from "react-bootstrap";
 import { useState } from "react";
 import { useClipboard } from "../../lib/clipboard/useClipboard.ts";
+import clsx from "clsx";
 
-export function ClipboardButton(props: { text: string }) {
+export function ClipboardButton(props: { text: string; className?: string }) {
   const [copied, setCopied] = useState(false);
   const [isClipboardEnabled, setClipboard] = useClipboard();
 
@@ -18,7 +19,7 @@ export function ClipboardButton(props: { text: string }) {
       }}
     >
       <Button
-        className={"flex-shrink-0 flex-grow-0"}
+        className={clsx("flex-shrink-0 flex-grow-0 p-0", props.className)}
         style={{ zIndex: 1 }}
         variant={"icon"}
         size={"sm"}

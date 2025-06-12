@@ -15,19 +15,19 @@ export function PropertyDisplay(props: {
         <tr>
           <th className={"text-nowrap bg-body-tertiary"}>{props.title}</th>
           <th className={"bg-body-tertiary"}>
-            <span style={{ paddingLeft: "32px" }}>Value</span>
+            <span style={{ paddingLeft: "20px" }}>Value</span>
           </th>
         </tr>
       </thead>
       <tbody>
         {props.properties.map((property) => (
           <tr key={property.slug}>
-            <td className={"small user-select-text bg-body-tertiary"}>
+            <td className={"small user-select-text bg-body-tertiary pt-1 pb-1"}>
               {property.slug}
             </td>
             <td
               className={
-                "text-break font-monospace small user-select-text bg-body-tertiary"
+                "text-break font-monospace small bg-body-tertiary pt-1 pb-1"
               }
             >
               <Stack
@@ -35,9 +35,12 @@ export function PropertyDisplay(props: {
                 className={"align-items-baseline"}
               >
                 <ClipboardButton
+                  className={"me-1"}
                   text={JSON.stringify(property.value)}
                 ></ClipboardButton>
-                {JSON.stringify(property.value)}
+                <span className={"user-select-text"}>
+                  {JSON.stringify(property.value)}
+                </span>
               </Stack>
             </td>
           </tr>

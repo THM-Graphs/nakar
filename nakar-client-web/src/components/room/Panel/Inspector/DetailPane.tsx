@@ -7,7 +7,6 @@ import { useBearStore } from "../../../../lib/state/useBearStore.ts";
 
 export function DetailPane(props: {
   title: string;
-  entityTitle: string;
   actions: DetailPaneAction[];
   properties: GraphProperty[];
   otherProperties: GraphProperty[];
@@ -16,12 +15,11 @@ export function DetailPane(props: {
 
   return (
     <Stack className={"pb-5"}>
-      <span className={"text-muted small ps-2 pt-2"}>{props.entityTitle}</span>
       {props.title.length > 0 && (
         <Stack direction={"horizontal"}>
           <span
             style={{ overflowWrap: "anywhere", userSelect: "text" }}
-            className={"ps-2 pe-2 pb-2 fs-5 fw-bold"}
+            className={"pt-1 ps-2 pe-2 pb-2 fs-5 fw-bold"}
           >
             {props.title}
           </span>

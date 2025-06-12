@@ -13,7 +13,6 @@ export function NodeDetails(props: { node: Node; context: AppContext }) {
 
   return (
     <DetailPane
-      entityTitle={"Node"}
       actions={[
         {
           title: "Expand",

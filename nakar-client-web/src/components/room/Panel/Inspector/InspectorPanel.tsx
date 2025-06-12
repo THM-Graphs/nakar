@@ -16,7 +16,11 @@ export function InspectorPanel(props: { context: AppContext }) {
       onClose={() => {
         inspector.hide();
       }}
-      title={"Inspector"}
+      title={match(inspector.element)
+        .with({ type: "node" }, () => "Node")
+        .with({ type: "edge" }, () => "Edge")
+        .with(null, () => "Inspector")
+        .exhaustive()}
     >
       {match(inspector.element)
         .returnType<ReactNode>()

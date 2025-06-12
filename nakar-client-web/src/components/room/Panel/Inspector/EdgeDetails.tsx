@@ -4,7 +4,6 @@ import { DetailPane } from "./DetailPane.tsx";
 export function EdgeDetails(props: { edge: Edge }) {
   return (
     <DetailPane
-      entityTitle={"Edge"}
       actions={[]}
       otherProperties={[
         {
