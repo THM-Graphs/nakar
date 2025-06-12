@@ -21,6 +21,7 @@ import { ScenariosPanel } from "../components/room/Panel/Scenarios/ScenariosPane
 import { InspectorPanelButton } from "../components/room/Panel/Inspector/InspectorPanelButton.tsx";
 import { HistogramPanelButton } from "../components/room/Panel/Histogram/HistogramPanelButton.tsx";
 import { StatusBar } from "../components/shared/StatusBar.tsx";
+import { match } from "ts-pattern";
 
 export async function RoomLoader(
   args: LoaderFunctionArgs,
@@ -40,6 +41,7 @@ export function Room(props: { context: AppContext }) {
   const scenario = useBearStore((s) => s.room.scenario);
   const socketState = useBearStore((s) => s.room.websockets.state);
   const unlockUI = useBearStore((s) => s.room.ui.unlock);
+  const lockUI = useBearStore((s) => s.room.ui.lock);
   const setProgress = useBearStore((s) => s.room.ui.setProgress);
   const clearProgress = useBearStore((s) => s.room.ui.clearProgress);
 
@@ -51,35 +53,36 @@ export function Room(props: { context: AppContext }) {
         type: "WSActionJoinRoom",
         roomId: loaderData.id,
       });
-      webSockets.sendMessage({
-        type: "WSActionGetGraph",
-      });
-      unlockUI();
     }
   }, [socketState]);
 
   useEffect(() => {
     const subscriptions = [
-      webSockets.onGraphChanged$.subscribe((sd) => {
-        scenario.setGraph(sd.graph);
-      }),
-      webSockets.onRoomChanged$.subscribe((sd) => {
-        if (sd.roomId != null) {
-          webSockets.sendMessage({
-            type: "WSActionGetGraph",
-          } satisfies WSActionGetGraph);
-        }
-      }),
-      webSockets.onScenarioProgress$.subscribe((progress) => {
-        if (progress.progress == null && progress.message == null) {
-          clearProgress();
-          unlockUI();
-        } else {
-          setProgress(progress);
-        }
-      }),
-      webSockets.onNotification$.subscribe(() => {
-        unlockUI();
+      webSockets.onMessage$.subscribe((message) => {
+        match(message)
+          .with({ type: "WSEventGraphChanged" }, (event) => {
+            scenario.setGraph(event.graph);
+          })
+          .with({ type: "WSEventRoomChanged" }, (event) => {
+            if (event.roomId != null) {
+              webSockets.sendMessage({
+                type: "WSActionGetGraph",
+              } satisfies WSActionGetGraph);
+            }
+          })
+          .with({ type: "WSEventProgress" }, (event) => {
+            setProgress(event);
+          })
+          .with({ type: "WSEventClearProgress" }, () => {
+            clearProgress();
+          })
+          .with({ type: "WSEventLockUi" }, () => {
+            lockUI();
+          })
+          .with({ type: "WSEventUnlockUi" }, () => {
+            unlockUI();
+          })
+          .run();
       }),
     ];
 

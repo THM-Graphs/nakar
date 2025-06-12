@@ -630,8 +630,11 @@ components:
         - $ref: "#/components/schemas/WSEventRoomChanged"
         - $ref: "#/components/schemas/WSEventNotification"
         - $ref: "#/components/schemas/WSEventGraphChanged"
-        - $ref: "#/components/schemas/WSEventScenarioProgress"
+        - $ref: "#/components/schemas/WSEventProgress"
+        - $ref: "#/components/schemas/WSEventClearProgress"
         - $ref: "#/components/schemas/WSEventSetLocks"
+        - $ref: "#/components/schemas/WSEventLockUi"
+        - $ref: "#/components/schemas/WSEventUnlockUi"
 
     WSActionJoinRoom:
       type: object
@@ -824,22 +827,30 @@ components:
         - severity
         - date
 
-    WSEventScenarioProgress:
+    WSEventProgress:
       type: object
       properties:
         type:
           type: string
-          enum: ["WSEventScenarioProgress"]
+          enum: ["WSEventProgress"]
         progress:
           type: number
           nullable: true
         message:
           type: string
-          nullable: true
       required:
         - type
         - progress
         - message
+
+    WSEventClearProgress:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: ["WSEventClearProgress"]
+      required:
+        - type
 
     WSEventSetLocks:
       type: object
@@ -862,3 +873,21 @@ components:
       required:
         - type
         - locks
+
+    WSEventLockUi:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: ["WSEventLockUi"]
+      required:
+        - type
+
+    WSEventUnlockUi:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: ["WSEventUnlockUi"]
+      required:
+        - type

@@ -2,6 +2,7 @@ import { createRef, useEffect } from "react";
 import { useTheme } from "../../../lib/theme/useTheme.ts";
 import { useBearStore } from "../../../lib/state/useBearStore.ts";
 import { AppContext } from "../../../lib/state/AppContext.ts";
+import { match } from "ts-pattern";
 
 export function GraphRendererD3(props: { context: AppContext }) {
   const websocketsManager = props.context.webSocketsManager;
@@ -17,12 +18,16 @@ export function GraphRendererD3(props: { context: AppContext }) {
 
   useEffect(() => {
     const subs = [
-      websocketsManager.onNodesMoved$.subscribe((onMove) => {
-        graphRenderer.updateNodePositions(onMove);
-      }),
-      websocketsManager.onSetLocks$.subscribe((message) => {
-        graphRenderer.updateLocks(message);
-        // TODO: Check if inspector updates its ui
+      websocketsManager.onMessage$.subscribe((message) => {
+        match(message)
+          .with({ type: "WSEventNodesMoved" }, (event) => {
+            graphRenderer.updateNodePositions(event);
+          })
+          .with({ type: "WSEventSetLocks" }, (event) => {
+            graphRenderer.updateLocks(event);
+            // TODO: Check if inspector updates its ui
+          })
+          .run();
       }),
     ];
     return () => {

@@ -28,13 +28,17 @@ export function ToastStack(props: { context: AppContext }) {
 
   useEffect(() => {
     const subscriptions = [
-      websocketsManager.onNotification$.subscribe((notification) => {
-        pushMessage({
-          message: notification.message,
-          date: new Date(notification.date),
-          title: notification.title,
-          severity: notification.severity,
-        });
+      websocketsManager.onMessage$.subscribe((message) => {
+        match(message)
+          .with({ type: "WSEventNotification" }, (notification) => {
+            pushMessage({
+              message: notification.message,
+              date: new Date(notification.date),
+              title: notification.title,
+              severity: notification.severity,
+            });
+          })
+          .run();
       }),
     ];
 

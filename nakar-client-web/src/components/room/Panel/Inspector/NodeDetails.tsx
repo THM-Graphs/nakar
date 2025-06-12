@@ -3,13 +3,24 @@ import { DetailPane } from "./DetailPane.tsx";
 import { DetailPaneAction } from "./DetailPaneAction.ts";
 import { useBearStore } from "../../../../lib/state/useBearStore.ts";
 import { AppContext } from "../../../../lib/state/AppContext.ts";
+import { useEffect } from "react";
 
 export function NodeDetails(props: { node: Node; context: AppContext }) {
-  const lockUI = useBearStore((s) => s.room.ui.lock);
   const webSockets = props.context.webSocketsManager;
   const removeInspectorElement = useBearStore(
     (s) => s.room.panels.inspector.removeElement,
   );
+  const graph = useBearStore((s) => s.room.scenario.graph);
+
+  // Hide inspector if node does not exist;
+  useEffect(() => {
+    if (
+      graph.nodes.find((existingNode) => existingNode.id === props.node.id) ==
+      null
+    ) {
+      removeInspectorElement();
+    }
+  }, [graph]);
 
   return (
     <DetailPane
@@ -19,7 +30,6 @@ export function NodeDetails(props: { node: Node; context: AppContext }) {
           icon: "zoom-in",
           variant: "primary",
           action: () => {
-            lockUI();
             webSockets.sendMessage({
               type: "WSActionExpandNodes",
               nodes: [props.node.id],
@@ -31,7 +41,6 @@ export function NodeDetails(props: { node: Node; context: AppContext }) {
           icon: "eye-slash",
           variant: "danger",
           action: () => {
-            lockUI();
             webSockets.sendMessage({
               type: "WSActionDeleteNodes",
               nodes: [props.node.id],

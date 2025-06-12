@@ -1,4 +1,4 @@
-import { Graph, WSEventScenarioProgress } from "../../../src-gen";
+import { Graph, WSEventProgress } from "../../../src-gen";
 import { InspectorElement } from "../../components/room/Panel/Inspector/InspectorElement.ts";
 import { SocketState } from "../ws/SocketState.ts";
 
@@ -8,8 +8,8 @@ export interface BearState {
       locked: boolean;
       lock: () => void;
       unlock: () => void;
-      progress: WSEventScenarioProgress | null;
-      setProgress: (progress: WSEventScenarioProgress) => void;
+      progress: WSEventProgress | null;
+      setProgress: (progress: WSEventProgress) => void;
       clearProgress: () => void;
     };
     scenario: {

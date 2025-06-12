@@ -10,7 +10,6 @@ export function CanvasToolbar(props: { context: AppContext }) {
   const graph = useBearStore((s) => s.room.scenario.graph);
   const tabs = useBearStore((s) => s.room.canvas.tabs);
   const uiLocked = useBearStore((s) => s.room.ui.locked);
-  const lockUI = useBearStore((s) => s.room.ui.lock);
 
   return (
     <Stack
@@ -45,7 +44,6 @@ export function CanvasToolbar(props: { context: AppContext }) {
           icon={"arrow-clockwise"}
           title={"Rerun Scenario"}
           onClick={() => {
-            lockUI();
             webSockets.sendMessage({
               type: "WSActionLoadScenario",
               scenarioId: graph.metaData.scenarioInfo.id,

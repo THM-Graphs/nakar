@@ -1,7 +1,24 @@
 import { Edge } from "../../../../../src-gen";
 import { DetailPane } from "./DetailPane.tsx";
+import { useEffect } from "react";
+import { useBearStore } from "../../../../lib/state/useBearStore.ts";
 
 export function EdgeDetails(props: { edge: Edge }) {
+  const removeInspectorElement = useBearStore(
+    (s) => s.room.panels.inspector.removeElement,
+  );
+  const graph = useBearStore((s) => s.room.scenario.graph);
+
+  // Hide inspector if edge does not exist;
+  useEffect(() => {
+    if (
+      graph.edges.find((existingEdge) => existingEdge.id === props.edge.id) ==
+      null
+    ) {
+      removeInspectorElement();
+    }
+  }, [graph]);
+
   return (
     <DetailPane
       actions={[]}

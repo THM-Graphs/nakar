@@ -15,10 +15,13 @@ import {
   SchemaWsActionUngrabNode,
   SchemaWsActionUnlockNodes,
   SchemaWsClientToServerMessage,
+  SchemaWsEventClearProgress,
+  SchemaWsEventLockUi,
   SchemaWsEventNotification,
+  SchemaWsEventProgress,
   SchemaWsEventRoomChanged,
-  SchemaWsEventScenarioProgress,
   SchemaWsEventSetLocks,
+  SchemaWsEventUnlockUi,
   SchemaWsServerToClientMessage,
 } from '../../../../src-gen/schema';
 import { match, P } from 'ts-pattern';
@@ -288,30 +291,31 @@ export class SocketIOService implements ApplicationService {
       return;
     }
 
+    wsClient.sendToRoom({
+      type: 'WSEventLockUi',
+    } satisfies SchemaWsEventLockUi);
     this._roomService
       .loadScenario({
         roomId: roomId,
         scenarioId: m.scenarioId,
         onProgrsss: (progress: RSEventScenarioProgress): void => {
           wsClient.sendToRoom({
-            type: 'WSEventScenarioProgress',
+            type: 'WSEventProgress',
             message: progress.message,
             progress: progress.progress,
-          } satisfies SchemaWsEventScenarioProgress);
+          } satisfies SchemaWsEventProgress);
         },
       })
       .catch((error: unknown): void => {
         wsClient.sendToRoom(this.createErrorNotification(error));
       })
-      .then((): void => {
+      .finally((): void => {
         wsClient.sendToRoom({
-          type: 'WSEventScenarioProgress',
-          message: null,
-          progress: null,
-        } satisfies SchemaWsEventScenarioProgress);
-      })
-      .catch((error: unknown): void => {
-        wsClient.sendToRoom(this.createErrorNotification(error));
+          type: 'WSEventClearProgress',
+        } satisfies SchemaWsEventClearProgress);
+        wsClient.sendToRoom({
+          type: 'WSEventUnlockUi',
+        } satisfies SchemaWsEventUnlockUi);
       });
   }
 
@@ -390,10 +394,13 @@ export class SocketIOService implements ApplicationService {
     }
 
     wsClient.sendToRoom({
-      type: 'WSEventScenarioProgress',
+      type: 'WSEventLockUi',
+    } satisfies SchemaWsEventLockUi);
+    wsClient.sendToRoom({
+      type: 'WSEventProgress',
       message: 'Expanding node',
       progress: null,
-    } satisfies SchemaWsEventScenarioProgress);
+    } satisfies SchemaWsEventProgress);
 
     this._roomService
       .expandNodes({ roomId: roomId, nodeIds: m.nodes })
@@ -411,10 +418,11 @@ export class SocketIOService implements ApplicationService {
       })
       .finally((): void => {
         wsClient.sendToRoom({
-          type: 'WSEventScenarioProgress',
-          message: null,
-          progress: null,
-        } satisfies SchemaWsEventScenarioProgress);
+          type: 'WSEventClearProgress',
+        } satisfies SchemaWsEventClearProgress);
+        wsClient.sendToRoom({
+          type: 'WSEventUnlockUi',
+        } satisfies SchemaWsEventUnlockUi);
       });
   }
 
@@ -432,10 +440,13 @@ export class SocketIOService implements ApplicationService {
     }
 
     wsClient.sendToRoom({
-      type: 'WSEventScenarioProgress',
+      type: 'WSEventProgress',
       message: 'Deleting node',
       progress: null,
-    } satisfies SchemaWsEventScenarioProgress);
+    } satisfies SchemaWsEventProgress);
+    wsClient.sendToRoom({
+      type: 'WSEventLockUi',
+    } satisfies SchemaWsEventLockUi);
 
     try {
       this._roomService.deleteNodes({ roomId: roomId, nodeIds: m.nodes });
@@ -451,10 +462,11 @@ export class SocketIOService implements ApplicationService {
     }
 
     wsClient.sendToRoom({
-      type: 'WSEventScenarioProgress',
-      message: null,
-      progress: null,
-    } satisfies SchemaWsEventScenarioProgress);
+      type: 'WSEventClearProgress',
+    } satisfies SchemaWsEventClearProgress);
+    wsClient.sendToRoom({
+      type: 'WSEventUnlockUi',
+    } satisfies SchemaWsEventUnlockUi);
   }
 
   private _handleRelayout(wsClient: WSClient): void {
@@ -494,6 +506,15 @@ export class SocketIOService implements ApplicationService {
       return;
     }
 
+    wsClient.sendToRoom({
+      type: 'WSEventProgress',
+      message: 'Loading graph',
+      progress: null,
+    } satisfies SchemaWsEventProgress);
+    wsClient.sendToRoom({
+      type: 'WSEventLockUi',
+    } satisfies SchemaWsEventLockUi);
+
     const graph: MutableGraph =
       this._roomService.getGraph(roomId) ?? MutableGraph.empty();
     const cachedGraphFactory: CachingSchemaDTOFactory =
@@ -508,6 +529,14 @@ export class SocketIOService implements ApplicationService {
       })
       .catch((error: unknown): void => {
         this._logger.error(this, error);
+      })
+      .finally((): void => {
+        wsClient.sendToRoom({
+          type: 'WSEventClearProgress',
+        } satisfies SchemaWsEventClearProgress);
+        wsClient.sendToRoom({
+          type: 'WSEventUnlockUi',
+        } satisfies SchemaWsEventUnlockUi);
       });
   }
 

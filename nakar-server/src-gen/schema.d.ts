@@ -297,7 +297,7 @@ export interface components {
             readonly version: string;
         };
         readonly WSClientToServerMessage: components["schemas"]["WSActionJoinRoom"] | components["schemas"]["WSActionLoadScenario"] | components["schemas"]["WSActionGetGraph"] | components["schemas"]["WSActionGrabNode"] | components["schemas"]["WSActionMoveNodes"] | components["schemas"]["WSActionUngrabNode"] | components["schemas"]["WSActionExpandNodes"] | components["schemas"]["WSActionDeleteNodes"] | components["schemas"]["WSActionRelayout"] | components["schemas"]["WSActionUnlockNodes"];
-        readonly WSServerToClientMessage: components["schemas"]["WSEventNodesMoved"] | components["schemas"]["WSEventRoomChanged"] | components["schemas"]["WSEventNotification"] | components["schemas"]["WSEventGraphChanged"] | components["schemas"]["WSEventScenarioProgress"] | components["schemas"]["WSEventSetLocks"];
+        readonly WSServerToClientMessage: components["schemas"]["WSEventNodesMoved"] | components["schemas"]["WSEventRoomChanged"] | components["schemas"]["WSEventNotification"] | components["schemas"]["WSEventGraphChanged"] | components["schemas"]["WSEventProgress"] | components["schemas"]["WSEventClearProgress"] | components["schemas"]["WSEventSetLocks"] | components["schemas"]["WSEventLockUi"] | components["schemas"]["WSEventUnlockUi"];
         readonly WSActionJoinRoom: {
             /** @enum {string} */
             readonly type: "WSActionJoinRoom";
@@ -373,11 +373,15 @@ export interface components {
             /** Format: date */
             readonly date: string;
         };
-        readonly WSEventScenarioProgress: {
+        readonly WSEventProgress: {
             /** @enum {string} */
-            readonly type: "WSEventScenarioProgress";
+            readonly type: "WSEventProgress";
             readonly progress: number | null;
-            readonly message: string | null;
+            readonly message: string;
+        };
+        readonly WSEventClearProgress: {
+            /** @enum {string} */
+            readonly type: "WSEventClearProgress";
         };
         readonly WSEventSetLocks: {
             /** @enum {string} */
@@ -386,6 +390,14 @@ export interface components {
                 readonly id: string;
                 readonly locked: boolean;
             }[];
+        };
+        readonly WSEventLockUi: {
+            /** @enum {string} */
+            readonly type: "WSEventLockUi";
+        };
+        readonly WSEventUnlockUi: {
+            /** @enum {string} */
+            readonly type: "WSEventUnlockUi";
         };
     };
     responses: never;
@@ -434,8 +446,11 @@ export type SchemaWsEventGraphChanged = components['schemas']['WSEventGraphChang
 export type SchemaWsEventRoomChanged = components['schemas']['WSEventRoomChanged'];
 export type SchemaWsEventNodesMoved = components['schemas']['WSEventNodesMoved'];
 export type SchemaWsEventNotification = components['schemas']['WSEventNotification'];
-export type SchemaWsEventScenarioProgress = components['schemas']['WSEventScenarioProgress'];
+export type SchemaWsEventProgress = components['schemas']['WSEventProgress'];
+export type SchemaWsEventClearProgress = components['schemas']['WSEventClearProgress'];
 export type SchemaWsEventSetLocks = components['schemas']['WSEventSetLocks'];
+export type SchemaWsEventLockUi = components['schemas']['WSEventLockUi'];
+export type SchemaWsEventUnlockUi = components['schemas']['WSEventUnlockUi'];
 export type $defs = Record<string, never>;
 export interface operations {
     readonly getScenarios: {

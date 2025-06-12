@@ -242,12 +242,24 @@ export type type10 = 'WSActionUnlockNodes';
 
 export type WSClientToServerMessage = WSActionJoinRoom | WSActionLoadScenario | WSActionGetGraph | WSActionGrabNode | WSActionMoveNodes | WSActionUngrabNode | WSActionExpandNodes | WSActionDeleteNodes | WSActionRelayout | WSActionUnlockNodes;
 
+export type WSEventClearProgress = {
+    type: 'WSEventClearProgress';
+};
+
+export type type11 = 'WSEventClearProgress';
+
 export type WSEventGraphChanged = {
     type: 'WSEventGraphChanged';
     graph: Graph;
 };
 
-export type type11 = 'WSEventGraphChanged';
+export type type12 = 'WSEventGraphChanged';
+
+export type WSEventLockUi = {
+    type: 'WSEventLockUi';
+};
+
+export type type13 = 'WSEventLockUi';
 
 export type WSEventNodesMoved = {
     type: 'WSEventNodesMoved';
@@ -255,7 +267,7 @@ export type WSEventNodesMoved = {
     date: string;
 };
 
-export type type12 = 'WSEventNodesMoved';
+export type type14 = 'WSEventNodesMoved';
 
 export type WSEventNotification = {
     type: 'WSEventNotification';
@@ -265,24 +277,24 @@ export type WSEventNotification = {
     date: string;
 };
 
-export type type13 = 'WSEventNotification';
+export type type15 = 'WSEventNotification';
 
 export type severity = 'error' | 'message' | 'warning';
+
+export type WSEventProgress = {
+    type: 'WSEventProgress';
+    progress: (number) | null;
+    message: string;
+};
+
+export type type16 = 'WSEventProgress';
 
 export type WSEventRoomChanged = {
     type: 'WSEventRoomChanged';
     roomId: (string) | null;
 };
 
-export type type14 = 'WSEventRoomChanged';
-
-export type WSEventScenarioProgress = {
-    type: 'WSEventScenarioProgress';
-    progress: (number) | null;
-    message: (string) | null;
-};
-
-export type type15 = 'WSEventScenarioProgress';
+export type type17 = 'WSEventRoomChanged';
 
 export type WSEventSetLocks = {
     type: 'WSEventSetLocks';
@@ -292,9 +304,15 @@ export type WSEventSetLocks = {
     }>;
 };
 
-export type type16 = 'WSEventSetLocks';
+export type type18 = 'WSEventSetLocks';
 
-export type WSServerToClientMessage = WSEventNodesMoved | WSEventRoomChanged | WSEventNotification | WSEventGraphChanged | WSEventScenarioProgress | WSEventSetLocks;
+export type WSEventUnlockUi = {
+    type: 'WSEventUnlockUi';
+};
+
+export type type19 = 'WSEventUnlockUi';
+
+export type WSServerToClientMessage = WSEventNodesMoved | WSEventRoomChanged | WSEventNotification | WSEventGraphChanged | WSEventProgress | WSEventClearProgress | WSEventSetLocks | WSEventLockUi | WSEventUnlockUi;
 
 export type GetScenariosData = {
     query: {

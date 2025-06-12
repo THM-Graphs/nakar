@@ -4,17 +4,10 @@ import { ClientToServerEvents } from "./ClientToServerEvents.ts";
 import { ServerToClientEvents } from "./ServerToClientEvents.ts";
 import {
   WSClientToServerMessage,
-  WSEventNodesMoved,
-  WSEventNotification,
-  WSEventGraphChanged,
-  WSEventScenarioProgress,
-  WSEventSetLocks,
   WSServerToClientMessage,
-  WSEventRoomChanged,
 } from "../../../src-gen";
 import { BehaviorSubject, Observable, Subject } from "rxjs";
 import { SocketState } from "./SocketState.ts";
-import { match } from "ts-pattern";
 
 export type Socket = UntypedSocket<ServerToClientEvents, ClientToServerEvents>;
 
@@ -22,12 +15,7 @@ export class WebSocketsManager {
   private readonly socket: Socket;
   private readonly _socketState: BehaviorSubject<SocketState>;
 
-  private readonly onNotification: Subject<WSEventNotification>;
-  private readonly onNodesMoved: Subject<WSEventNodesMoved>;
-  private readonly onGraphChanged: Subject<WSEventGraphChanged>;
-  private readonly onScenarioProgress: Subject<WSEventScenarioProgress>;
-  private readonly onSetLocks: Subject<WSEventSetLocks>;
-  private readonly onRoomChanged: Subject<WSEventRoomChanged>;
+  private readonly onMessage: Subject<WSServerToClientMessage>;
 
   public constructor(env: Env) {
     this.socket = io(env.BACKEND_SOCKET_URL, { path: "/socket.io" });
@@ -36,12 +24,7 @@ export class WebSocketsManager {
       type: "connecting",
     });
 
-    this.onNotification = new Subject();
-    this.onNodesMoved = new Subject();
-    this.onGraphChanged = new Subject();
-    this.onScenarioProgress = new Subject();
-    this.onSetLocks = new Subject();
-    this.onRoomChanged = new Subject();
+    this.onMessage = new Subject();
 
     this.socket.on("connect", () => {
       this._socketState.next({ type: "connected" });
@@ -52,27 +35,8 @@ export class WebSocketsManager {
     this.socket.on("disconnect", () => {
       this._socketState.next({ type: "disconnect" });
     });
-    this.socket.on("message", (message: WSServerToClientMessage) => {
-      match(message)
-        .with({ type: "WSEventNotification" }, (m) => {
-          this.onNotification.next(m);
-        })
-        .with({ type: "WSEventNodesMoved" }, (m) => {
-          this.onNodesMoved.next(m);
-        })
-        .with({ type: "WSEventGraphChanged" }, (m) => {
-          this.onGraphChanged.next(m);
-        })
-        .with({ type: "WSEventScenarioProgress" }, (m) => {
-          this.onScenarioProgress.next(m);
-        })
-        .with({ type: "WSEventSetLocks" }, (m) => {
-          this.onSetLocks.next(m);
-        })
-        .with({ type: "WSEventRoomChanged" }, (m) => {
-          this.onRoomChanged.next(m);
-        })
-        .exhaustive();
+    this.socket.on("message", (m) => {
+      this.onMessage.next(m);
     });
   }
 
@@ -88,27 +52,7 @@ export class WebSocketsManager {
     return this._socketState.asObservable();
   }
 
-  public get onNotification$(): Observable<WSEventNotification> {
-    return this.onNotification.asObservable();
-  }
-
-  public get onNodesMoved$(): Observable<WSEventNodesMoved> {
-    return this.onNodesMoved.asObservable();
-  }
-
-  public get onGraphChanged$(): Observable<WSEventGraphChanged> {
-    return this.onGraphChanged.asObservable();
-  }
-
-  public get onScenarioProgress$(): Observable<WSEventScenarioProgress> {
-    return this.onScenarioProgress.asObservable();
-  }
-
-  public get onSetLocks$(): Observable<WSEventSetLocks> {
-    return this.onSetLocks.asObservable();
-  }
-
-  public get onRoomChanged$(): Observable<WSEventRoomChanged> {
-    return this.onRoomChanged.asObservable();
+  public get onMessage$(): Observable<WSServerToClientMessage> {
+    return this.onMessage.asObservable();
   }
 }

@@ -1,7 +1,6 @@
 import { Scenario } from "../../../../../src-gen";
 import { ScenarioCard } from "./ScenarioCard.tsx";
 import { Button, Stack } from "react-bootstrap";
-import { Loading } from "../../../shared/Loading.tsx";
 import { Collapsable } from "../../Collapsable.tsx";
 import { useBearStore } from "../../../../lib/state/useBearStore.ts";
 import { useCallback } from "react";
@@ -13,11 +12,9 @@ export function ScenarioDisplay(props: {
   context: AppContext;
 }) {
   const uiLocked = useBearStore((s) => s.room.ui.locked);
-  const lockUI = useBearStore((s) => s.room.ui.lock);
   const webSockets = props.context.webSocketsManager;
 
   const runScenario = useCallback(() => {
-    lockUI();
     webSockets.sendMessage({
       type: "WSActionLoadScenario",
       scenarioId: props.scenario.id,

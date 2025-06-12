@@ -2,7 +2,7 @@ import { create } from "zustand/react";
 import { BearState } from "./BearState.ts";
 import { immer } from "zustand/middleware/immer";
 import { SocketState } from "../ws/SocketState.ts";
-import { WSEventScenarioProgress } from "../../../src-gen";
+import { WSEventProgress } from "../../../src-gen";
 
 export const useBearStore = create<BearState>()(
   immer(
@@ -21,7 +21,7 @@ export const useBearStore = create<BearState>()(
             });
           },
           progress: null,
-          setProgress: (p: WSEventScenarioProgress) => {
+          setProgress: (p: WSEventProgress) => {
             set((s) => {
               s.room.ui.progress = p;
             });
