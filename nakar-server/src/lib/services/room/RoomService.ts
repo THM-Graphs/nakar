@@ -82,8 +82,8 @@ export class RoomService implements ApplicationService {
       );
       await worker.terminate();
     }
-    for (const graphEntry of this._graphs.toArray()) {
-      this.saveGraphOfRoom(graphEntry[0]);
+    for (const roomId of this._graphs.keys()) {
+      this.saveGraphOfRoom(roomId);
     }
   }
 
@@ -158,8 +158,6 @@ export class RoomService implements ApplicationService {
     }
 
     node.grabs.delete(params.userId);
-
-    this.saveGraphOfRoom(params.roomId);
   }
 
   public saveGraphOfRoom(roomId: string): void {
@@ -324,7 +322,6 @@ export class RoomService implements ApplicationService {
       type: 'WTActionTriggerPhysics',
       amount: 'short',
     });
-    this.saveGraphOfRoom(params.roomId);
     this._onRoomUpdated.next({
       graph: graph,
       roomId: params.roomId,
@@ -361,7 +358,6 @@ export class RoomService implements ApplicationService {
       type: 'WTActionTriggerPhysics',
       amount: 'short',
     });
-    this.saveGraphOfRoom(params.roomId);
     this._onRoomUpdated.next({
       graph: graph,
       roomId: params.roomId,
@@ -385,7 +381,6 @@ export class RoomService implements ApplicationService {
         }
       }
     }
-    this.saveGraphOfRoom(params.roomId);
 
     this._onLocksUpdated.next({
       roomId: params.roomId,
@@ -429,8 +424,6 @@ export class RoomService implements ApplicationService {
         clientNodeLocks.set(node.id, node.locked);
       }
     }
-
-    this.saveGraphOfRoom(params.roomId);
 
     this._onLocksUpdated.next({
       roomId: params.roomId,
