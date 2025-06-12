@@ -8,6 +8,7 @@ import { AppContext } from "../../../../lib/state/AppContext.ts";
 
 export function InspectorPanel(props: { context: AppContext }) {
   const inspector = useBearStore((s) => s.room.panels.inspector);
+  const graph = useBearStore((s) => s.room.scenario.graph);
 
   return (
     <Panel
@@ -24,18 +25,32 @@ export function InspectorPanel(props: { context: AppContext }) {
     >
       {match(inspector.element)
         .returnType<ReactNode>()
-        .with({ type: "node" }, ({ node }) => (
-          <NodeDetails context={props.context} node={node}></NodeDetails>
-        ))
-        .with({ type: "edge" }, ({ edge }) => (
-          <EdgeDetails edge={edge}></EdgeDetails>
-        ))
-        .with(null, () => (
-          <span className={"text-muted small fst-italic align-self-center"}>
-            Inspector
-          </span>
-        ))
+        .with({ type: "node" }, ({ nodeId }) => {
+          const node = graph.nodes.find((n) => n.id === nodeId);
+          return node ? (
+            <NodeDetails context={props.context} node={node}></NodeDetails>
+          ) : (
+            <EmptyInspector></EmptyInspector>
+          );
+        })
+        .with({ type: "edge" }, ({ edgeId }) => {
+          const edge = graph.edges.find((n) => n.id === edgeId);
+          return edge ? (
+            <EdgeDetails edge={edge}></EdgeDetails>
+          ) : (
+            <EmptyInspector></EmptyInspector>
+          );
+        })
+        .with(null, () => <EmptyInspector></EmptyInspector>)
         .exhaustive()}
     </Panel>
+  );
+}
+
+function EmptyInspector() {
+  return (
+    <span className={"text-muted small fst-italic align-self-center"}>
+      Inspector
+    </span>
   );
 }

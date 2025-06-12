@@ -332,6 +332,7 @@ components:
 
     ScenarioInfo:
       type: object
+      nullable: true
       properties:
         id:
           type: string

@@ -20,7 +20,7 @@ export function CanvasToolbar(props: { context: AppContext }) {
       style={{ zIndex: 1 }}
     >
       <GraphDataToggle></GraphDataToggle>
-      {graph.metaData.scenarioInfo.title && (
+      {graph.metaData.scenarioInfo?.title && (
         <>
           <span className={"small text-muted ps-1 pe-1"}>
             Scenario: {graph.metaData.scenarioInfo.title}
@@ -40,13 +40,17 @@ export function CanvasToolbar(props: { context: AppContext }) {
           }}
         ></NavbarButton>
         <NavbarButton
-          disabled={graph.metaData.scenarioInfo.id == "" || uiLocked}
+          disabled={graph.metaData.scenarioInfo == null || uiLocked}
           icon={"arrow-clockwise"}
           title={"Rerun Scenario"}
           onClick={() => {
+            const id = graph.metaData.scenarioInfo?.id;
+            if (id == null) {
+              return;
+            }
             webSockets.sendMessage({
               type: "WSActionLoadScenario",
-              scenarioId: graph.metaData.scenarioInfo.id,
+              scenarioId: id,
             } satisfies WSActionLoadScenario);
           }}
         ></NavbarButton>

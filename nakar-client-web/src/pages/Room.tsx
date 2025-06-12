@@ -44,8 +44,8 @@ export function Room(props: { context: AppContext }) {
   const lockUI = useBearStore((s) => s.room.ui.lock);
   const setProgress = useBearStore((s) => s.room.ui.setProgress);
   const clearProgress = useBearStore((s) => s.room.ui.clearProgress);
-
   const webSockets = props.context.webSocketsManager;
+  const setGraph = useBearStore((s) => s.room.scenario.setGraph);
 
   useEffect(() => {
     if (socketState.type === "connected") {
@@ -81,14 +81,29 @@ export function Room(props: { context: AppContext }) {
           })
           .with({ type: "WSEventUnlockUi" }, () => {
             unlockUI();
-          })
-          .run();
+          });
       }),
     ];
 
     return () => {
       subscriptions.forEach((s) => {
         s.unsubscribe();
+      });
+      setGraph({
+        nodes: [],
+        edges: [],
+        metaData: {
+          scenarioInfo: null,
+          histogram: {
+            edgeProperties: [],
+            edgeTypes: [],
+            nodeLabels: [],
+            nodeProperties: [],
+          },
+          labels: [],
+          pipelineSummary: [],
+        },
+        tableData: [],
       });
     };
   }, []);

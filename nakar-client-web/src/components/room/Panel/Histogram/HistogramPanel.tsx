@@ -183,7 +183,10 @@ function ValueDisplay(props: {
         direction={"horizontal"}
         className={"ps-0 flex-shrink-1 flex-grow-1 overflow-hidden "}
       >
-        <ClipboardButton text={props.label}></ClipboardButton>
+        <ClipboardButton
+          text={props.label}
+          className={"ps-1 pe-1"}
+        ></ClipboardButton>
         {props.bgColor && (
           <div
             style={{

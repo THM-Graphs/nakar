@@ -6,22 +6,16 @@ import { adjustColor } from "../color/colorShade.ts";
 import { getBackgroundColor } from "../color/getBackgroundColor.ts";
 import { getTextColor } from "../color/getTextColor.ts";
 import { UserTheme } from "../theme/UserTheme.ts";
-import {
-  BehaviorSubject,
-  combineLatest,
-  Observable,
-  Subject,
-  throttleTime,
-} from "rxjs";
+import { Observable, Subject, throttleTime } from "rxjs";
 import { D3RendererState } from "./D3RendererState.ts";
 import { D3Calculator } from "./D3Calculator.ts";
 
 const fps = 30;
 
 export class D3Renderer {
-  private $graphState: BehaviorSubject<D3RendererState>;
-  private $theme: BehaviorSubject<UserTheme>;
-  private $svgElement: BehaviorSubject<SVGSVGElement | null>;
+  private graphState: D3RendererState;
+  private readonly theme: UserTheme;
+  private readonly svgElement: SVGSVGElement;
 
   private $onDisplayLinkData: Subject<D3Link>;
   private $onDisplayNodeData: Subject<D3Node>;
@@ -31,6 +25,12 @@ export class D3Renderer {
 
   private calculator: D3Calculator;
 
+  private zoomContainer: d3.Selection<
+    SVGGElement,
+    null,
+    null,
+    undefined
+  > | null;
   private nodeSelection: d3.Selection<
     SVGGElement,
     D3Node,
@@ -58,11 +58,15 @@ export class D3Renderer {
 
   private smoothedPositionDirty: boolean;
 
-  public constructor() {
+  public constructor(
+    theme: UserTheme,
+    svgElement: SVGSVGElement,
+    initialGraph: Graph,
+  ) {
     console.log("Did create instance of graph renderer");
-    this.$graphState = new BehaviorSubject(D3RendererState.empty());
-    this.$theme = new BehaviorSubject<UserTheme>(null);
-    this.$svgElement = new BehaviorSubject<SVGSVGElement | null>(null);
+    this.graphState = D3RendererState.fromWsData(initialGraph);
+    this.theme = theme;
+    this.svgElement = svgElement;
 
     this.$onDisplayLinkData = new Subject();
     this.$onDisplayNodeData = new Subject();
@@ -72,30 +76,15 @@ export class D3Renderer {
 
     this.calculator = new D3Calculator();
 
+    this.zoomContainer = null;
     this.nodeSelection = null;
     this.linkLabelSelection = null;
     this.linkSelection = null;
     this.nodeCircle = null;
 
-    combineLatest([this.$svgElement, this.$graphState, this.$theme]).subscribe(
-      ([svgElement, graph, theme]) => {
-        if (svgElement == null) {
-          return;
-        }
-        this.smoothedPositionDirty = true;
-        this.renderSvgElements(svgElement, graph, theme);
-      },
-    );
-
     this.smoothedPositionDirty = true;
-  }
 
-  public setTheme(userTheme: UserTheme): void {
-    this.$theme.next(userTheme);
-  }
-
-  public setSVGElement(svgElement: SVGSVGElement): void {
-    this.$svgElement.next(svgElement);
+    this.renderSvgElements();
   }
 
   public get onDisplayLinkData(): Observable<D3Link> {
@@ -125,18 +114,13 @@ export class D3Renderer {
   }
 
   public loadGraphContent(graph: Graph) {
-    this.$graphState.next(D3RendererState.fromWsData(graph));
-  }
-
-  public get graphState(): D3RendererState {
-    return this.$graphState.getValue();
+    this.graphState = D3RendererState.fromWsData(graph);
+    this.renderSvgElements();
   }
 
   public updateNodePositions(wsEvent: WSEventNodesMoved) {
     for (const node of wsEvent.nodes) {
-      const localNode = this.graphState.nodes.find(
-        (n) => n.native.id === node.id,
-      );
+      const localNode = this.graphState.nodes.find((n) => n.id === node.id);
       if (localNode == null) {
         continue;
       }
@@ -148,9 +132,7 @@ export class D3Renderer {
 
   public updateLocks(wsEvent: WSEventSetLocks) {
     for (const node of wsEvent.locks) {
-      const localNode = this.graphState.nodes.find(
-        (n) => n.native.id === node.id,
-      );
+      const localNode = this.graphState.nodes.find((n) => n.id === node.id);
       if (localNode == null) {
         continue;
       }
@@ -159,29 +141,20 @@ export class D3Renderer {
     this.applyPropertiesToSVG();
   }
 
-  private renderSvgElements(
-    svgElement: SVGSVGElement,
-    d3RendererState: D3RendererState,
-    theme: UserTheme,
-  ): void {
-    const originalGraph = d3RendererState.originalGraph;
-    if (originalGraph == null) {
-      return;
-    }
-
-    const width = svgElement.getBoundingClientRect().width;
-    const height = svgElement.getBoundingClientRect().height;
+  private renderSvgElements(): void {
+    const d3RendererState = this.graphState;
+    const width = this.svgElement.getBoundingClientRect().width;
+    const height = this.svgElement.getBoundingClientRect().height;
 
     const svg: d3.Selection<SVGSVGElement, null, null, undefined> = d3
-      .select<SVGSVGElement, null>(svgElement)
+      .select<SVGSVGElement, null>(this.svgElement)
       .attr("viewBox", [-width / 2, -height / 2, width, height]);
 
-    d3.selectAll("g > *").remove();
+    svg.selectAll("g > *").remove();
 
-    const zoomContainer: d3.Selection<SVGGElement, null, null, undefined> =
-      svg.select("g");
+    this.zoomContainer = svg.select("g");
 
-    zoomContainer
+    this.zoomContainer
       .append("defs")
       .append("marker")
       .attr("id", "arrow")
@@ -193,17 +166,17 @@ export class D3Renderer {
       .attr("orient", "auto")
       .append("path")
       .attr("d", "M 0 0 L 10 5 L 0 10 Z")
-      .attr("fill", () => (theme == "dark" ? "#fff" : "#000"));
+      .attr("fill", () => (this.theme == "dark" ? "#fff" : "#000"));
 
     svg.call(
       d3
         .zoom<SVGSVGElement, null>()
         .on("zoom", (event: d3.D3ZoomEvent<SVGSVGElement, null>) => {
-          zoomContainer.attr("transform", event.transform.toString());
+          this.zoomContainer?.attr("transform", event.transform.toString());
         }),
     );
 
-    this.linkSelection = zoomContainer
+    this.linkSelection = this.zoomContainer
       .append("g")
       .attr("class", "links")
       .selectAll("line")
@@ -211,11 +184,11 @@ export class D3Renderer {
       .enter()
       .append("path")
       .attr("fill", "none")
-      .attr("stroke", theme == "dark" ? "#ffffff" : "#000000")
-      .attr("stroke-width", (d) => d.native.width)
+      .attr("stroke", this.theme == "dark" ? "#ffffff" : "#000000")
+      .attr("stroke-width", (d) => d.width)
       .attr("marker-end", "url(#arrow)");
 
-    this.linkLabelSelection = zoomContainer
+    this.linkLabelSelection = this.zoomContainer
       .append("g")
       .attr("class", "link-labels")
       .selectAll("text")
@@ -225,9 +198,9 @@ export class D3Renderer {
 
     this.linkLabelSelection
       .append("foreignObject")
-      .attr("width", (d) => d.native.type.length * 20)
+      .attr("width", (d) => d.type.length * 20)
       .attr("height", 40)
-      .attr("x", (d) => -(d.native.type.length * 20) / 2)
+      .attr("x", (d) => -(d.type.length * 20) / 2)
       .attr("y", () => -11)
       .append("xhtml:div")
       .attr("xmlns", "http://www.w3.org/1999/xhtml")
@@ -243,25 +216,25 @@ export class D3Renderer {
       .attr("style", () => {
         return `
         font-weight: bold;
-        color: ${theme == "dark" ? "#000" : "#fff"};
+        color: ${this.theme == "dark" ? "#000" : "#fff"};
         font-size: 10px;
         cursor: pointer;
-        background-color: ${theme == "dark" ? "#fff" : "#000"};
+        background-color: ${this.theme == "dark" ? "#fff" : "#000"};
         border-radius: 5px;
         padding: 0px 5px;
         `;
       })
       .text((d) =>
-        d.native.compressedCount > 1
-          ? `${d.native.type} (${d.native.compressedCount.toString()})`
-          : d.native.type,
+        d.compressedCount > 1
+          ? `${d.type} (${d.compressedCount.toString()})`
+          : d.type,
       );
 
     this.linkLabelSelection.on("click", (event: PointerEvent, edge: D3Link) => {
       this.$onDisplayLinkData.next(edge);
     });
 
-    this.nodeSelection = zoomContainer
+    this.nodeSelection = this.zoomContainer
       .append("g")
       .attr("class", "nodes")
       .selectAll("circle")
@@ -286,32 +259,32 @@ export class D3Renderer {
 
     this.nodeCircle = this.nodeSelection
       .append("circle")
-      .attr("r", (d) => d.native.radius)
+      .attr("r", (d) => d.radius)
       .attr(
         "fill",
         (d) =>
-          d.native.customBackgroundColor ??
+          d.customBackgroundColor ??
           getBackgroundColor(
-            originalGraph.metaData.labels.find(
-              (l) => l.label === d.native.labels[0],
+            this.graphState.originalGraph?.metaData.labels.find(
+              (l) => l.label === d.labels[0],
             )?.color ?? null,
           ),
       );
 
     this.nodeSelection
       .append("foreignObject")
-      .attr("x", (d) => -d.native.radius)
-      .attr("y", (d) => -d.native.radius)
-      .attr("width", (d) => d.native.radius * 2)
-      .attr("height", (d) => d.native.radius * 2)
+      .attr("x", (d) => -d.radius)
+      .attr("y", (d) => -d.radius)
+      .attr("width", (d) => d.radius * 2)
+      .attr("height", (d) => d.radius * 2)
       .append("xhtml:div")
       .attr("xmlns", "http://www.w3.org/1999/xhtml")
       .attr("style", (d) => {
         const color =
-          d.native.customTitleColor ??
+          d.customTitleColor ??
           getTextColor(
-            originalGraph.metaData.labels.find(
-              (l) => l.label === d.native.labels[0],
+            this.graphState.originalGraph?.metaData.labels.find(
+              (l) => l.label === d.labels[0],
             )?.color ?? null,
           );
 
@@ -321,16 +294,16 @@ export class D3Renderer {
         display: flex; 
         align-items: center; 
         justify-content: center;
-        width: ${(d.native.radius * 2).toString()}px; 
-        height: ${(d.native.radius * 2).toString()}px;
+        width: ${(d.radius * 2).toString()}px; 
+        height: ${(d.radius * 2).toString()}px;
         text-align: center;
-        font-size: ${(d.native.radius / 5 + 3).toString()}px;
+        font-size: ${(d.radius / 5 + 3).toString()}px;
         `;
       })
-      .attr("width", (d) => d.native.radius * 2)
-      .attr("height", (d) => d.native.radius * 2)
+      .attr("width", (d) => d.radius * 2)
+      .attr("height", (d) => d.radius * 2)
       .append("xhtml:span")
-      .text((d) => d.native.title);
+      .text((d) => d.title);
 
     this.nodeSelection.call(
       d3
@@ -361,6 +334,8 @@ export class D3Renderer {
           },
         ),
     );
+
+    this.applyPropertiesToSVG();
   }
 
   public onAnimationTick(deltaTime: number): void {
@@ -396,7 +371,7 @@ export class D3Renderer {
     this.applyPropertiesToSVG();
   }
 
-  private applyPropertiesToSVG(): void {
+  public applyPropertiesToSVG(): void {
     this.linkSelection?.attr("d", (d) => this.calculator.curvedPath(d));
     this.linkLabelSelection?.attr("transform", (d: D3Link) => {
       const c = this.calculator.curvePoints(d);
@@ -414,7 +389,7 @@ export class D3Renderer {
         return n.locked ? "10,5" : null;
       })
       .attr("stroke", () => {
-        return this.$theme.getValue() == "dark" ? "#fff" : "#000";
+        return this.theme == "dark" ? "#fff" : "#000";
       });
   }
 

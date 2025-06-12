@@ -162,7 +162,7 @@ export type ScenarioGroups = {
 export type ScenarioInfo = {
     id: string;
     title: (string) | null;
-};
+} | null;
 
 export type Scenarios = {
     scenarios: Array<Scenario>;

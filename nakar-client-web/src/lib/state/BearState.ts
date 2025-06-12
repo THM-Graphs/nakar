@@ -15,6 +15,7 @@ export interface BearState {
     scenario: {
       graph: Graph;
       setGraph: (g: Graph) => void;
+      setLocks: (locks: { id: string; locked: boolean }[]) => void;
     };
     websockets: {
       state: SocketState;

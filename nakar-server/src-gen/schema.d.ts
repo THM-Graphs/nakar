@@ -210,7 +210,7 @@ export interface components {
         readonly ScenarioInfo: {
             readonly id: string;
             readonly title: string | null;
-        };
+        } | null;
         readonly Histogram: {
             readonly nodeLabels: readonly {
                 readonly label: string;

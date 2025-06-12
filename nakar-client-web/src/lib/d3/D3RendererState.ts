@@ -16,26 +16,36 @@ export class D3RendererState {
   public static fromWsData(graph: Graph): D3RendererState {
     const nodes = graph.nodes.map((node: Node): D3Node => {
       return {
-        native: node,
-        locked: node.locked,
+        id: node.id,
         x: node.position.x,
         y: node.position.y,
         vx: 0,
         vy: 0,
         tx: node.position.x,
         ty: node.position.y,
+        locked: node.locked,
+        customBackgroundColor: node.customBackgroundColor,
+        customTitleColor: node.customTitleColor,
+        labels: node.labels,
+        radius: node.radius,
+        title: node.title,
       };
     });
     const links = graph.edges.reduce((acc: D3Link[], edge: Edge) => {
-      const sourceNode = nodes.find((n) => n.native.id === edge.startNodeId);
-      const targetNode = nodes.find((n) => n.native.id === edge.endNodeId);
+      const sourceNode = nodes.find((n) => n.id === edge.startNodeId);
+      const targetNode = nodes.find((n) => n.id === edge.endNodeId);
 
       if (sourceNode && targetNode) {
         acc.push({
           id: edge.id,
           source: sourceNode,
           target: targetNode,
-          native: edge,
+          type: edge.type,
+          compressedCount: edge.compressedCount,
+          isLoop: edge.isLoop,
+          parallelCount: edge.parallelCount,
+          parallelIndex: edge.parallelIndex,
+          width: edge.width,
         });
       }
       return acc;

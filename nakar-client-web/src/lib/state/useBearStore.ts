@@ -65,6 +65,19 @@ export const useBearStore = create<BearState>()(
               s.room.scenario.graph = graph;
             });
           },
+          setLocks: (locks: { id: string; locked: boolean }[]) => {
+            set((s) => {
+              for (const node of locks) {
+                const localNode = s.room.scenario.graph.nodes.find(
+                  (n) => n.id === node.id,
+                );
+                if (localNode == null) {
+                  continue;
+                }
+                localNode.locked = node.locked;
+              }
+            });
+          },
         },
         panels: {
           inspector: {
