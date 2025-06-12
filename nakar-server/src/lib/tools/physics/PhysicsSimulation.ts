@@ -116,6 +116,10 @@ export class PhysicsSimulation {
     this._running = false;
     this._targetDate = Number.MIN_SAFE_INTEGER;
     this._onSlowTick.next();
+    this._logger.debug(
+      this,
+      `Average tick duration: ${this.averageTickDuration.toFixed(2)} ms. Target: ${((1 / PhysicsSimulation.FPS) * 1000).toFixed()} ms.`,
+    );
   }
 
   private _tick(): void {
