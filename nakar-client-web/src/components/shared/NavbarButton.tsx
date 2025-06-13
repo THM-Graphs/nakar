@@ -1,6 +1,6 @@
 import clsx from "clsx";
 import { Stack } from "react-bootstrap";
-import { forwardRef, MouseEvent, ReactNode } from "react";
+import { CSSProperties, forwardRef, MouseEvent, ReactNode } from "react";
 
 export const NavbarButton = forwardRef<
   HTMLDivElement,
@@ -14,6 +14,7 @@ export const NavbarButton = forwardRef<
     className?: string;
     children?: ReactNode;
     size?: "sm";
+    style?: CSSProperties;
   }
 >((props, ref) => {
   return (
@@ -39,18 +40,14 @@ export const NavbarButton = forwardRef<
       )}
       style={{
         opacity: props.disabled ? 0.3 : 1,
+        ...(props.style ? props.style : {}),
       }}
     >
       {props.icon && (
         <i className={clsx("bi", `bi-${props.icon} flex-shrink-0`)}></i>
       )}
       {props.title && (
-        <span
-          className={"overflow-hidden text-nowrap flex-shrink-1"}
-          style={{ textOverflow: "ellipsis" }}
-        >
-          {props.title}
-        </span>
+        <span className={"ellipsis flex-shrink-1"}>{props.title}</span>
       )}
       {props.children}
     </Stack>

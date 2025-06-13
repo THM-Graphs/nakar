@@ -24,6 +24,7 @@ import fs from 'node:fs';
 import fileupload from 'express-fileupload';
 import os from 'node:os';
 import path from 'path';
+import { RoomService } from '../room/RoomService';
 
 export class HTTPService implements ApplicationService {
   private readonly _app: Application;
@@ -36,6 +37,7 @@ export class HTTPService implements ApplicationService {
     private readonly _database: DatabaseService,
     private readonly _profiler: ProfilerService,
     private readonly _backup: BackupService,
+    private readonly _room: RoomService,
   ) {
     this._app = express();
     this._server = http.createServer(this._app as http.RequestListener);
@@ -44,6 +46,7 @@ export class HTTPService implements ApplicationService {
       this._logger,
       this._database,
       this._backup,
+      this._room,
     );
 
     this._setupMiddleware();

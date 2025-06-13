@@ -21,5 +21,11 @@ div[role=tooltip] {
 }
 
 .bg-body-secondary-hover:hover {
-    background-color: rgba(var(--bs-secondary-bg-rgb), var(--bs-bg-opacity));
+    background-color: rgba(var(--bs-secondary-bg-rgb), 1);
+}
+
+.ellipsis {
+    overflow: hidden;
+    text-wrap: nowrap;
+    text-overflow: ellipsis;
 }

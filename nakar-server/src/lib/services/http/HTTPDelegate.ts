@@ -22,6 +22,7 @@ import { FileStream } from '../../tools/fs/FileStream';
 import { SchemaDTOFactory } from './SchemaDTOFactory';
 import { FileArray, UploadedFile } from 'express-fileupload';
 import { InsertResult } from '../backup/InsertResult';
+import { RoomService } from '../room/RoomService';
 
 export class HTTPDelegate {
   private readonly _schemaDTOFactory: SchemaDTOFactory;
@@ -31,6 +32,7 @@ export class HTTPDelegate {
     private readonly _logger: LoggerService,
     private readonly _database: DatabaseService,
     private readonly _backup: BackupService,
+    private readonly _room: RoomService,
   ) {
     this._schemaDTOFactory = new SchemaDTOFactory(_config);
   }
@@ -78,9 +80,13 @@ export class HTTPDelegate {
   public async getRoom(): Promise<SchemaRooms> {
     const dbResult: GetRoomDBDTO[] = await this._database.getRooms();
     return {
-      rooms: dbResult.map(
-        (room: GetRoomDBDTO): SchemaRoom =>
-          this._schemaDTOFactory.createSchemaRoom(room),
+      rooms: await Promise.all(
+        dbResult.map(async (room: GetRoomDBDTO): Promise<SchemaRoom> => {
+          return this._schemaDTOFactory.createSchemaRoom(
+            room,
+            await this._getScenarioOfRoom(room),
+          );
+        }),
       ),
     };
   }
@@ -91,7 +97,10 @@ export class HTTPDelegate {
     if (dbResult == null) {
       throw new NotFound('Room not found.');
     }
-    return this._schemaDTOFactory.createSchemaRoom(dbResult);
+    return this._schemaDTOFactory.createSchemaRoom(
+      dbResult,
+      await this._getScenarioOfRoom(dbResult),
+    );
   }
 
   public getVersion(): SchemaVersion {
@@ -147,5 +156,16 @@ export class HTTPDelegate {
   private _getPathParameter(req: Request, name: string): string {
     const value: string = z.string().parse(req.params[name]);
     return value;
+  }
+
+  private async _getScenarioOfRoom(
+    room: GetRoomDBDTO,
+  ): Promise<GetScenarioDBDTO | null> {
+    const scenarioId: string | null =
+      this._room.getGraph(room.documentId)?.metaData?.scenarioInfo?.id ?? null;
+    const scenario: GetScenarioDBDTO | null = scenarioId
+      ? await this._database.getScenario(scenarioId)
+      : null;
+    return scenario;
   }
 }

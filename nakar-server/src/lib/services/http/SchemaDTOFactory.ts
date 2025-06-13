@@ -31,10 +31,19 @@ export class SchemaDTOFactory {
     };
   }
 
-  public createSchemaRoom(room: GetRoomDBDTO): SchemaRoom {
+  public createSchemaRoom(
+    room: GetRoomDBDTO,
+    currentScenario: GetScenarioDBDTO | null,
+  ): SchemaRoom {
     return {
       id: room.documentId,
       title: room.title,
+      scenario: currentScenario
+        ? {
+            current: this.createSchemaScenario(currentScenario),
+          }
+        : null,
+      editUrl: this._getRoomEditUrl(room),
     };
   }
 
@@ -100,6 +109,15 @@ export class SchemaDTOFactory {
       return null;
     }
     const url: string = `${host}/admin/content-manager/collection-types/api::scenario.scenario/${scenario.documentId}`;
+    return url;
+  }
+
+  private _getRoomEditUrl(room: GetRoomDBDTO): string | null {
+    const host: string | null = this._configService.publicURL;
+    if (host == null) {
+      return null;
+    }
+    const url: string = `${host}/admin/content-manager/collection-types/api::room.room/${room.documentId}`;
     return url;
   }
 }

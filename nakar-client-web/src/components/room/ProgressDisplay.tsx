@@ -43,12 +43,9 @@ export function ProgressDisplay() {
         />
       )}
       <span
-        className={"small text-muted"}
+        className={"small text-muted ellipsis"}
         style={{
           width: "200px",
-          textOverflow: "ellipsis",
-          overflow: "hidden",
-          textWrap: "nowrap",
         }}
       >
         {message + dots}

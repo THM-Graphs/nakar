@@ -210,12 +210,9 @@ function ValueDisplay(props: {
           <span
             style={{
               zIndex: 1,
-              overflow: "hidden",
-              textWrap: "nowrap",
-              textOverflow: "ellipsis",
             }}
             className={
-              "user-select-text font-monospace small flex-shrink-1 flex-grow-1"
+              "user-select-text font-monospace small flex-shrink-1 flex-grow-1 ellipsis"
             }
           >
             {props.label}

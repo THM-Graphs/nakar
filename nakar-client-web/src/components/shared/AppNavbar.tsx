@@ -1,15 +1,20 @@
 import { Stack } from "react-bootstrap";
 import { ReactNode } from "react";
+import clsx from "clsx";
 
 export function AppNavbar(props: {
   left?: ReactNode;
   center?: ReactNode;
   right?: ReactNode;
+  className?: string;
 }) {
   return (
     <Stack
       direction={"horizontal"}
-      className="bg-body-tertiary border-bottom justify-content-between position-relative"
+      className={clsx(
+        "bg-body-tertiary border-bottom justify-content-between position-relative flex-grow-0 flex-shrink-0",
+        props.className,
+      )}
       style={{
         zIndex: 2,
       }}

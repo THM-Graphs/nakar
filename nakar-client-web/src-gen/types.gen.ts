@@ -143,6 +143,10 @@ export type PresetColorIndex = 0 | 1 | 2 | 3 | 4 | 5;
 export type Room = {
     id: string;
     title: (string) | null;
+    scenario: {
+        current: Scenario;
+    } | null;
+    editUrl: (string) | null;
 };
 
 export type Rooms = {
