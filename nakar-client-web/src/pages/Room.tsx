@@ -2,7 +2,13 @@ import { Stack } from "react-bootstrap";
 import { AppNavbar } from "../components/shared/AppNavbar.tsx";
 import { Canvas } from "../components/room/Canvas/Canvas.tsx";
 import { useEffect } from "react";
-import { Room as RoomSchema, getRoom, WSActionGetGraph } from "../../src-gen";
+import {
+  Room as RoomSchema,
+  getRoom,
+  WSActionGetGraph,
+  Databases,
+  getScenarios,
+} from "../../src-gen";
 import { LoaderFunctionArgs, useLoaderData } from "react-router";
 import { resultOrThrow } from "../lib/data/resultOrThrow.ts";
 import { ToastStack } from "../components/room/ToastStack.tsx";
@@ -24,21 +30,30 @@ import { StatusBar } from "../components/shared/StatusBar.tsx";
 import { match } from "ts-pattern";
 import { PerformanceDisplay } from "../components/room/PerformanceDisplay.tsx";
 
+export type RoomLoaderResult = {
+  room: RoomSchema;
+  scenarios: Databases;
+};
+
 export async function RoomLoader(
   args: LoaderFunctionArgs,
-): Promise<RoomSchema> {
+): Promise<RoomLoaderResult> {
   const roomId = args.params["id"];
 
   if (roomId == null) {
     throw new Error("No room id provided.");
   }
 
-  const room = await getRoom({ path: { id: roomId } });
-  return resultOrThrow(room);
+  const room = resultOrThrow(await getRoom({ path: { id: roomId } }));
+  const scenarios = resultOrThrow(await getScenarios());
+  return {
+    room: room,
+    scenarios: scenarios,
+  };
 }
 
 export function Room(props: { context: AppContext }) {
-  const loaderData: RoomSchema = useLoaderData();
+  const loaderData: RoomLoaderResult = useLoaderData();
   const scenario = useBearStore((s) => s.room.scenario);
   const socketState = useBearStore((s) => s.room.websockets.state);
   const unlockUI = useBearStore((s) => s.room.ui.unlock);
@@ -48,12 +63,19 @@ export function Room(props: { context: AppContext }) {
   const webSockets = props.context.webSocketsManager;
   const setGraph = useBearStore((s) => s.room.scenario.setGraph);
   const setPerformance = useBearStore((s) => s.room.ui.setPerformance);
+  const setScenarios = useBearStore(
+    (s) => s.room.panels.scenarios.setScenarios,
+  );
+
+  useEffect(() => {
+    setScenarios(loaderData.scenarios);
+  }, [loaderData.scenarios]);
 
   useEffect(() => {
     if (socketState.type === "connected") {
       webSockets.sendMessage({
         type: "WSActionJoinRoom",
-        roomId: loaderData.id,
+        roomId: loaderData.room.id,
       });
     }
   }, [socketState]);
@@ -127,7 +149,7 @@ export function Room(props: { context: AppContext }) {
             <>
               <NavbarLogo></NavbarLogo>
               <span className={"small text-muted align-self-center ms-2"}>
-                {loaderData.title}
+                {loaderData.room.title}
               </span>
             </>
           }

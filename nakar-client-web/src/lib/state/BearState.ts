@@ -1,7 +1,7 @@
 import {
+  Databases,
   Graph,
   PhysicsPerformance,
-  WSEventPerformanceChanged,
   WSEventProgress,
 } from "../../../src-gen";
 import { InspectorElement } from "../../components/room/Panel/Inspector/InspectorElement.ts";
@@ -44,6 +44,8 @@ export interface BearState {
         hide: () => void;
       };
       scenarios: {
+        scenarios: Databases;
+        setScenarios: (scenarios: Databases) => void;
         shown: boolean;
         show: () => void;
         hide: () => void;
