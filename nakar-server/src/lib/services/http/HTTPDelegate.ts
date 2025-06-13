@@ -3,8 +3,6 @@ import { LoggerService } from '../logger/LoggerService';
 import { DatabaseService } from '../database/DatabaseService';
 import {
   SchemaDatabases,
-  SchemaScenarioGroups,
-  SchemaScenarios,
   SchemaRooms,
   SchemaRoom,
   SchemaVersion,
@@ -37,40 +35,43 @@ export class HTTPDelegate {
     this._schemaDTOFactory = new SchemaDTOFactory(_config);
   }
 
-  public async getScenario(req: Request): Promise<SchemaScenarios> {
-    const scenarioGroupId: string = this._getQueryParameter(
-      req,
-      'scenarioGroupId',
-    );
-    const dbResult: GetScenarioDBDTO[] =
-      await this._database.getScenarios(scenarioGroupId);
-    return {
-      scenarios: dbResult.map(
-        (scenario: GetScenarioDBDTO): SchemaScenario =>
-          this._schemaDTOFactory.createSchemaScenario(scenario),
-      ),
-    };
-  }
-
-  public async getScenarioGroup(req: Request): Promise<SchemaScenarioGroups> {
-    const databaseId: string = this._getQueryParameter(req, 'databaseId');
-    const dbResult: GetScenarioGroupDBDTO[] =
-      await this._database.getScenarioGroups(databaseId);
-    return {
-      scenarioGroups: dbResult.map(
-        (scenarioGroup: GetScenarioGroupDBDTO): SchemaScenarioGroup =>
-          this._schemaDTOFactory.createSchemaScenarioGroup(scenarioGroup),
-      ),
-    };
-  }
-
-  public async getDatabase(): Promise<SchemaDatabases> {
+  public async getScenarios(): Promise<SchemaDatabases> {
     const databases: GetDatabaseDBDTO[] = await this._database.getDatabases();
-    return {
-      databases: databases.map(
-        (database: GetDatabaseDBDTO): SchemaDatabase =>
-          this._schemaDTOFactory.createSchemaDatabase(database),
+    const databaseSchema: SchemaDatabase[] = await Promise.all(
+      databases.map(
+        async (database: GetDatabaseDBDTO): Promise<SchemaDatabase> => {
+          const scenarioGroups: GetScenarioGroupDBDTO[] =
+            await this._database.getScenarioGroups(database.documentId);
+          const scenarioGroupSchemas: SchemaScenarioGroup[] = await Promise.all(
+            scenarioGroups.map(
+              async (
+                scenarioGroup: GetScenarioGroupDBDTO,
+              ): Promise<SchemaScenarioGroup> => {
+                const scenarios: GetScenarioDBDTO[] =
+                  await this._database.getScenarios(scenarioGroup.documentId);
+                const scenarioSchemas: SchemaScenario[] = scenarios.map(
+                  (scenario: GetScenarioDBDTO): SchemaScenario => {
+                    return this._schemaDTOFactory.createSchemaScenario(
+                      scenario,
+                    );
+                  },
+                );
+                return this._schemaDTOFactory.createSchemaScenarioGroup(
+                  scenarioGroup,
+                  scenarioSchemas,
+                );
+              },
+            ),
+          );
+          return this._schemaDTOFactory.createSchemaDatabase(
+            database,
+            scenarioGroupSchemas,
+          );
+        },
       ),
+    );
+    return {
+      databases: databaseSchema,
     };
   }
 

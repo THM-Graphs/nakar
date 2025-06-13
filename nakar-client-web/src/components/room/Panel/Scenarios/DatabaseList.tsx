@@ -1,9 +1,4 @@
-import {
-  Database,
-  getDatabases,
-  Databases,
-  Scenario,
-} from "../../../../../src-gen";
+import { Database, Databases, getScenarios } from "../../../../../src-gen";
 import { useEffect, useState } from "react";
 import { match } from "ts-pattern";
 import { handleError } from "../../../../lib/error/handleError.ts";
@@ -22,7 +17,7 @@ export function DatabaseList(props: { context: AppContext }) {
 
   const reload = () => {
     setDatabases({ type: "loading" });
-    getDatabases()
+    getScenarios()
       .then((result) => {
         const data = resultOrThrow(result);
         setDatabases({ type: "data", data: data });

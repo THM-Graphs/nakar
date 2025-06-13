@@ -7,8 +7,6 @@ import {
   SchemaDatabases,
   SchemaRoom,
   SchemaRooms,
-  SchemaScenarioGroups,
-  SchemaScenarios,
   SchemaVersion,
 } from '../../../../src-gen/schema';
 import { DatabaseService } from '../database/DatabaseService';
@@ -122,25 +120,9 @@ export class HTTPService implements ApplicationService {
 
   private _setupRoutes(): void {
     this._app.get(
-      '/scenario',
+      '/scenarios',
       this._handle(
-        (req: Request): Promise<SchemaScenarios> =>
-          this._delegate.getScenario(req),
-      ),
-    );
-
-    this._app.get(
-      '/scenario-group',
-      this._handle(
-        (req: Request): Promise<SchemaScenarioGroups> =>
-          this._delegate.getScenarioGroup(req),
-      ),
-    );
-
-    this._app.get(
-      '/database',
-      this._handle(
-        (): Promise<SchemaDatabases> => this._delegate.getDatabase(),
+        (): Promise<SchemaDatabases> => this._delegate.getScenarios(),
       ),
     );
 

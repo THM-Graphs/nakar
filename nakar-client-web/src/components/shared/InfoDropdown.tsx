@@ -14,7 +14,6 @@ import { resultOrThrow } from "../../lib/data/resultOrThrow";
 import { handleError } from "../../lib/error/handleError";
 import { match } from "ts-pattern";
 import { ThemeDropdownEntry } from "./ThemeDropdownEntry";
-import { ImportBackupDropdownItem } from "./ImportBackupDropdownItem.tsx";
 import { NavbarButton } from "./NavbarButton.tsx";
 import { AppContext } from "../../lib/state/AppContext.ts";
 
@@ -96,7 +95,6 @@ export function InfoDropdown(props: { context: AppContext }) {
             <span className="me-2"></span>
             <i className="bi bi-download"></i>
           </Dropdown.Item>
-          <ImportBackupDropdownItem></ImportBackupDropdownItem>
         </Dropdown.Menu>
       </Dropdown>
     </>

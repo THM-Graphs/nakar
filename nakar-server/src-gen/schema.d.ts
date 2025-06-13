@@ -4,7 +4,7 @@
  */
 
 export interface paths {
-    readonly "/scenario": {
+    readonly "/scenarios": {
         readonly parameters: {
             readonly query?: never;
             readonly header?: never;
@@ -12,38 +12,6 @@ export interface paths {
             readonly cookie?: never;
         };
         readonly get: operations["getScenarios"];
-        readonly put?: never;
-        readonly post?: never;
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
-    };
-    readonly "/scenario-group": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
-        };
-        readonly get: operations["getScenarioGroups"];
-        readonly put?: never;
-        readonly post?: never;
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
-    };
-    readonly "/database": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
-        };
-        readonly get: operations["getDatabases"];
         readonly put?: never;
         readonly post?: never;
         readonly delete?: never;
@@ -94,38 +62,6 @@ export interface paths {
         readonly get: operations["getVersion"];
         readonly put?: never;
         readonly post?: never;
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
-    };
-    readonly "/system/backup": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
-        };
-        readonly get: operations["getBackup"];
-        readonly put?: never;
-        readonly post?: never;
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
-    };
-    readonly "/system/import": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
-        };
-        readonly get?: never;
-        readonly put?: never;
-        readonly post: operations["postImport"];
         readonly delete?: never;
         readonly options?: never;
         readonly head?: never;
@@ -269,6 +205,7 @@ export interface components {
             readonly url: string | null;
             readonly browserUrl: string | null;
             readonly editUrl: string | null;
+            readonly scenarioGroups: readonly components["schemas"]["ScenarioGroup"][];
         };
         readonly Databases: {
             readonly databases: readonly components["schemas"]["Database"][];
@@ -277,9 +214,7 @@ export interface components {
             readonly id: string;
             readonly title: string | null;
             readonly editUrl: string | null;
-        };
-        readonly ScenarioGroups: {
-            readonly scenarioGroups: readonly components["schemas"]["ScenarioGroup"][];
+            readonly scenarios: readonly components["schemas"]["Scenario"][];
         };
         readonly Scenario: {
             readonly id: string;
@@ -289,9 +224,6 @@ export interface components {
             /** Format: uri */
             readonly coverUrl: string | null;
             readonly editUrl: string | null;
-        };
-        readonly Scenarios: {
-            readonly scenarios: readonly components["schemas"]["Scenario"][];
         };
         readonly Version: {
             readonly version: string;
@@ -437,9 +369,7 @@ export type SchemaRooms = components['schemas']['Rooms'];
 export type SchemaDatabase = components['schemas']['Database'];
 export type SchemaDatabases = components['schemas']['Databases'];
 export type SchemaScenarioGroup = components['schemas']['ScenarioGroup'];
-export type SchemaScenarioGroups = components['schemas']['ScenarioGroups'];
 export type SchemaScenario = components['schemas']['Scenario'];
-export type SchemaScenarios = components['schemas']['Scenarios'];
 export type SchemaVersion = components['schemas']['Version'];
 export type SchemaPhysicsPerformance = components['schemas']['PhysicsPerformance'];
 export type SchemaWsClientToServerMessage = components['schemas']['WSClientToServerMessage'];
@@ -467,50 +397,6 @@ export type SchemaWsEventPerformanceChanged = components['schemas']['WSEventPerf
 export type $defs = Record<string, never>;
 export interface operations {
     readonly getScenarios: {
-        readonly parameters: {
-            readonly query: {
-                readonly scenarioGroupId: string;
-            };
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
-        };
-        readonly requestBody?: never;
-        readonly responses: {
-            /** @description OK */
-            readonly 200: {
-                headers: {
-                    readonly [name: string]: unknown;
-                };
-                content: {
-                    readonly "application/json": components["schemas"]["Scenarios"];
-                };
-            };
-        };
-    };
-    readonly getScenarioGroups: {
-        readonly parameters: {
-            readonly query: {
-                readonly databaseId: string;
-            };
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
-        };
-        readonly requestBody?: never;
-        readonly responses: {
-            /** @description OK */
-            readonly 200: {
-                headers: {
-                    readonly [name: string]: unknown;
-                };
-                content: {
-                    readonly "application/json": components["schemas"]["ScenarioGroups"];
-                };
-            };
-        };
-    };
-    readonly getDatabases: {
         readonly parameters: {
             readonly query?: never;
             readonly header?: never;
@@ -589,52 +475,6 @@ export interface operations {
                 content: {
                     readonly "application/json": components["schemas"]["Version"];
                 };
-            };
-        };
-    };
-    readonly getBackup: {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
-        };
-        readonly requestBody?: never;
-        readonly responses: {
-            /** @description OK */
-            readonly 200: {
-                headers: {
-                    readonly [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    readonly postImport: {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
-        };
-        readonly requestBody: {
-            readonly content: {
-                readonly "multipart/form-data": {
-                    /**
-                     * Format: binary
-                     * @description The file to upload.
-                     */
-                    readonly file?: string;
-                };
-            };
-        };
-        readonly responses: {
-            /** @description OK */
-            readonly 200: {
-                headers: {
-                    readonly [name: string]: unknown;
-                };
-                content?: never;
             };
         };
     };

@@ -17,13 +17,17 @@ export class SchemaDTOFactory {
   public constructor(configService: ConfigService) {
     this._configService = configService;
   }
-  public createSchemaDatabase(databaseDBDTO: GetDatabaseDBDTO): SchemaDatabase {
+  public createSchemaDatabase(
+    databaseDBDTO: GetDatabaseDBDTO,
+    scenarioGroups: SchemaScenarioGroup[],
+  ): SchemaDatabase {
     return {
       id: databaseDBDTO.documentId,
       title: databaseDBDTO.title,
       url: databaseDBDTO.url,
       browserUrl: databaseDBDTO.browserUrl,
       editUrl: this._getDatabaseEditUrl(databaseDBDTO),
+      scenarioGroups: scenarioGroups,
     };
   }
 
@@ -49,11 +53,13 @@ export class SchemaDTOFactory {
 
   public createSchemaScenarioGroup(
     scenarioGroup: GetScenarioGroupDBDTO,
+    scenarios: SchemaScenario[],
   ): SchemaScenarioGroup {
     return {
       id: scenarioGroup.documentId,
       title: scenarioGroup.title,
       editUrl: this._getScenarioGroupEditUrl(scenarioGroup),
+      scenarios: scenarios,
     };
   }
 

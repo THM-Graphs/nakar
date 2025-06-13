@@ -13,6 +13,7 @@ export type Database = {
     url: (string) | null;
     browserUrl: (string) | null;
     editUrl: (string) | null;
+    scenarioGroups: Array<ScenarioGroup>;
 };
 
 export type Databases = {
@@ -161,20 +162,13 @@ export type ScenarioGroup = {
     id: string;
     title: (string) | null;
     editUrl: (string) | null;
-};
-
-export type ScenarioGroups = {
-    scenarioGroups: Array<ScenarioGroup>;
+    scenarios: Array<Scenario>;
 };
 
 export type ScenarioInfo = {
     id: string;
     title: (string) | null;
 } | null;
-
-export type Scenarios = {
-    scenarios: Array<Scenario>;
-};
 
 export type Version = {
     version: string;
@@ -329,29 +323,9 @@ export type type20 = 'WSEventUnlockUi';
 
 export type WSServerToClientMessage = WSEventNodesMoved | WSEventRoomChanged | WSEventNotification | WSEventGraphChanged | WSEventProgress | WSEventClearProgress | WSEventSetLocks | WSEventLockUi | WSEventUnlockUi | WSEventPerformanceChanged;
 
-export type GetScenariosData = {
-    query: {
-        scenarioGroupId: string;
-    };
-};
-
-export type GetScenariosResponse = (Scenarios);
+export type GetScenariosResponse = (Databases);
 
 export type GetScenariosError = unknown;
-
-export type GetScenarioGroupsData = {
-    query: {
-        databaseId: string;
-    };
-};
-
-export type GetScenarioGroupsResponse = (ScenarioGroups);
-
-export type GetScenarioGroupsError = unknown;
-
-export type GetDatabasesResponse = (Databases);
-
-export type GetDatabasesError = unknown;
 
 export type GetRoomsResponse = (Rooms);
 
@@ -370,20 +344,3 @@ export type GetRoomError = unknown;
 export type GetVersionResponse = (Version);
 
 export type GetVersionError = unknown;
-
-export type GetBackupResponse = (unknown);
-
-export type GetBackupError = unknown;
-
-export type PostImportData = {
-    body: {
-        /**
-         * The file to upload.
-         */
-        file?: (Blob | File);
-    };
-};
-
-export type PostImportResponse = (unknown);
-
-export type PostImportError = unknown;

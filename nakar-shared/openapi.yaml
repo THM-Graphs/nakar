@@ -8,55 +8,15 @@ servers:
   - url: http://nakar.mni.thm.de:1338
     description: Production
 tags:
-  - name: Scenario
-  - name: ScenarioGroup
-  - name: Database
+  - name: Scenarios
   - name: Room
   - name: System
 paths:
-  /scenario:
+  /scenarios:
     get:
       tags:
-        - Scenario
+        - Scenarios
       operationId: getScenarios
-      parameters:
-        - name: scenarioGroupId
-          in: query
-          required: true
-          schema:
-            type: string
-      responses:
-        "200":
-          description: "OK"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Scenarios"
-
-  /scenario-group:
-    get:
-      tags:
-        - ScenarioGroup
-      operationId: getScenarioGroups
-      parameters:
-        - name: databaseId
-          in: query
-          required: true
-          schema:
-            type: string
-      responses:
-        "200":
-          description: "OK"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ScenarioGroups"
-
-  /database:
-    get:
-      tags:
-        - Database
-      operationId: getDatabases
       responses:
         "200":
           description: "OK"
@@ -108,35 +68,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Version"
-
-  /system/backup:
-    get:
-      tags:
-        - System
-      operationId: getBackup
-      responses:
-        "200":
-          description: "OK"
-
-  /system/import:
-    post:
-      tags:
-        - System
-      operationId: postImport
-      requestBody:
-        required: true
-        content:
-          multipart/form-data:
-            schema:
-              type: object
-              properties:
-                file:
-                  type: string
-                  format: binary
-                  description: The file to upload.
-      responses:
-        "200":
-          description: "OK"
 
 components:
   schemas:
@@ -523,12 +454,18 @@ components:
         editUrl:
           type: string
           nullable: true
+        scenarioGroups:
+          type: array
+          items:
+            $ref: "#/components/schemas/ScenarioGroup"
       required:
         - id
         - title
         - url
         - browserUrl
         - editUrl
+        - scenarioGroups
+
     Databases:
       type: object
       properties:
@@ -550,20 +487,15 @@ components:
         editUrl:
           type: string
           nullable: true
+        scenarios:
+          type: array
+          items:
+            $ref: "#/components/schemas/Scenario"
       required:
         - id
         - title
         - editUrl
-
-    ScenarioGroups:
-      type: object
-      properties:
-        scenarioGroups:
-          type: array
-          items:
-            $ref: "#/components/schemas/ScenarioGroup"
-      required:
-        - scenarioGroups
+        - scenarios
 
     Scenario:
       type: object
@@ -593,16 +525,6 @@ components:
         - description
         - coverUrl
         - editUrl
-
-    Scenarios:
-      type: object
-      properties:
-        scenarios:
-          type: array
-          items:
-            $ref: "#/components/schemas/Scenario"
-      required:
-        - scenarios
 
     Version:
       type: object
