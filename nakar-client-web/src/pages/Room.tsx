@@ -22,6 +22,7 @@ import { InspectorPanelButton } from "../components/room/Panel/Inspector/Inspect
 import { HistogramPanelButton } from "../components/room/Panel/Histogram/HistogramPanelButton.tsx";
 import { StatusBar } from "../components/shared/StatusBar.tsx";
 import { match } from "ts-pattern";
+import { PerformanceDisplay } from "../components/room/PerformanceDisplay.tsx";
 
 export async function RoomLoader(
   args: LoaderFunctionArgs,
@@ -46,6 +47,7 @@ export function Room(props: { context: AppContext }) {
   const clearProgress = useBearStore((s) => s.room.ui.clearProgress);
   const webSockets = props.context.webSocketsManager;
   const setGraph = useBearStore((s) => s.room.scenario.setGraph);
+  const setPerformance = useBearStore((s) => s.room.ui.setPerformance);
 
   useEffect(() => {
     if (socketState.type === "connected") {
@@ -81,6 +83,9 @@ export function Room(props: { context: AppContext }) {
           })
           .with({ type: "WSEventUnlockUi" }, () => {
             unlockUI();
+          })
+          .with({ type: "WSEventPerformanceChanged" }, (event) => {
+            setPerformance(event.performance ?? null);
           });
       }),
     ];
@@ -146,7 +151,12 @@ export function Room(props: { context: AppContext }) {
         </Stack>
         <StatusBar
           left={<ProgressDisplay></ProgressDisplay>}
-          right={<SocketStateDisplay></SocketStateDisplay>}
+          right={
+            <>
+              <PerformanceDisplay></PerformanceDisplay>
+              <SocketStateDisplay></SocketStateDisplay>
+            </>
+          }
         ></StatusBar>
         <ToastStack context={props.context}></ToastStack>
         {socketState.type !== "connected" && (

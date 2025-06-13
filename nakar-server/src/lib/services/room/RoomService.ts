@@ -31,6 +31,8 @@ import { SSet } from '../../tools/Set';
 import { RSExpandNodesResult } from './events/RSExpandNodesResult';
 import { PhysicalGraph } from '../../tools/physics/physical-graph/PhysicalGraph';
 import { RSEventRoomLocksUpdated } from './events/RSEventRoomLocksUpdated';
+import { WTEventPerformanceChanged } from '../room-instance/worker-events/WTEventPerformanceChanged';
+import { RSEventRoomPerformanceChanged } from './events/RSEventRoomPerformanceChanged';
 
 export class RoomService implements ApplicationService {
   private readonly _workers: SMap<string, Worker>;
@@ -39,6 +41,7 @@ export class RoomService implements ApplicationService {
   private readonly _onRoomUpdated: Subject<RSEventRoomUpdated>;
   private readonly _onRoomPhysicsUpdated: Subject<RSEventRoomPhysicsUpdated>;
   private readonly _onLocksUpdated: Subject<RSEventRoomLocksUpdated>;
+  private readonly _onPerformanceChanged: Subject<RSEventRoomPerformanceChanged>;
 
   public constructor(
     private readonly _database: DatabaseService,
@@ -51,6 +54,7 @@ export class RoomService implements ApplicationService {
     this._onRoomUpdated = new Subject();
     this._onRoomPhysicsUpdated = new Subject();
     this._onLocksUpdated = new Subject();
+    this._onPerformanceChanged = new Subject();
   }
 
   public get onRoomUpdated$(): Observable<RSEventRoomUpdated> {
@@ -63,6 +67,10 @@ export class RoomService implements ApplicationService {
 
   public get onRoomLocksUpdated$(): Observable<RSEventRoomLocksUpdated> {
     return this._onLocksUpdated.asObservable();
+  }
+
+  public get onPerformanceChanged$(): Observable<RSEventRoomPerformanceChanged> {
+    return this._onPerformanceChanged.asObservable();
   }
 
   public async bootstrap(): Promise<void> {
@@ -526,6 +534,12 @@ export class RoomService implements ApplicationService {
               this._handleWTEventPhysicsUpdate(roomId, event);
             },
           )
+          .with(
+            { type: 'WTEventPerformanceChanged' },
+            (event: WTEventPerformanceChanged): void => {
+              this._handleWTEventPerformanceChanged(roomId, event);
+            },
+          )
           .exhaustive();
       });
       worker.on('messageerror', (error: Error): void => {
@@ -563,6 +577,16 @@ export class RoomService implements ApplicationService {
     this._onRoomPhysicsUpdated.next({
       graph: mutableGraph,
       roomId: roomId,
+    });
+  }
+
+  private _handleWTEventPerformanceChanged(
+    roomId: string,
+    event: WTEventPerformanceChanged,
+  ): void {
+    this._onPerformanceChanged.next({
+      roomId: roomId,
+      performance: event.performance,
     });
   }
 

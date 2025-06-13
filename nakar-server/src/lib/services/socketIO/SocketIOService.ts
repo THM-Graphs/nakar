@@ -18,6 +18,7 @@ import {
   SchemaWsEventClearProgress,
   SchemaWsEventLockUi,
   SchemaWsEventNotification,
+  SchemaWsEventPerformanceChanged,
   SchemaWsEventProgress,
   SchemaWsEventRoomChanged,
   SchemaWsEventSetLocks,
@@ -44,6 +45,7 @@ import { HTTPService } from '../http/HTTPService';
 import { CachingSchemaDTOFactory } from '../http/CachingSchemaDTOFactory';
 import { RSExpandNodesResult } from '../room/events/RSExpandNodesResult';
 import { RSEventRoomLocksUpdated } from '../room/events/RSEventRoomLocksUpdated';
+import { RSEventRoomPerformanceChanged } from '../room/events/RSEventRoomPerformanceChanged';
 
 export type Server = UntypedServer<ClientToServerEvents, ServerToClientEvents>;
 export type Socket = UntypedSocket<ClientToServerEvents, ServerToClientEvents>;
@@ -212,6 +214,12 @@ export class SocketIOService implements ApplicationService {
     this._roomService.onRoomLocksUpdated$.subscribe(
       (message: RSEventRoomLocksUpdated): void => {
         this._handleRoomLocksUpdate(message);
+      },
+    );
+
+    this._roomService.onPerformanceChanged$.subscribe(
+      (message: RSEventRoomPerformanceChanged): void => {
+        this._handleRoomPerformanceChanged(message);
       },
     );
   }
@@ -592,5 +600,15 @@ export class SocketIOService implements ApplicationService {
       type: 'WSEventSetLocks',
       locks: locks,
     } satisfies SchemaWsEventSetLocks);
+  }
+
+  private _handleRoomPerformanceChanged(
+    message: RSEventRoomPerformanceChanged,
+  ): void {
+    // TODO: Implement in client & Test
+    this.sendToRoom(message.roomId, {
+      type: 'WSEventPerformanceChanged',
+      performance: message.performance ?? undefined,
+    } satisfies SchemaWsEventPerformanceChanged);
   }
 }

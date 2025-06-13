@@ -1,4 +1,4 @@
-import { Observable, Subject } from 'rxjs';
+import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { wait } from '../Wait';
 import { CombinationCache } from './CombinationCache';
 import { LoggerService } from '../../services/logger/LoggerService';
@@ -8,6 +8,7 @@ import { PhysicalGraph } from './physical-graph/PhysicalGraph';
 import { PhysicalNode } from './physical-graph/PhysicalNode';
 import { PhysicalEdge } from './physical-graph/PhysicalEdge';
 import { Range } from '../Range';
+import { SchemaPhysicsPerformance } from '../../../../src-gen/schema';
 
 export class PhysicsSimulation {
   public static readonly maximumVelocity: number = 500;
@@ -17,9 +18,9 @@ export class PhysicsSimulation {
 
   private _graph: PhysicalGraph;
   private _running: boolean;
-  private _onSlowTick: Subject<void>;
+  private _onSlowTick$: Subject<void>;
   private _targetDate: number;
-  private _tickDurationsCache: number[];
+  private _currentPerformance$: BehaviorSubject<SchemaPhysicsPerformance | null>;
 
   public constructor(
     graph: PhysicalGraph,
@@ -28,23 +29,18 @@ export class PhysicsSimulation {
   ) {
     this._graph = graph;
     this._running = false;
-    this._onSlowTick = new Subject();
+    this._onSlowTick$ = new Subject();
     this._targetDate = Date.now();
-    this._tickDurationsCache = [];
+    this._currentPerformance$ =
+      new BehaviorSubject<SchemaPhysicsPerformance | null>(null);
   }
 
-  public get onSlowTick(): Observable<void> {
-    return this._onSlowTick.asObservable();
+  public get onSlowTick$(): Observable<void> {
+    return this._onSlowTick$.asObservable();
   }
 
-  public get averageTickDuration(): number {
-    const avg: number =
-      this._tickDurationsCache.reduce(
-        (a: number, b: number): number => a + b,
-        0,
-      ) / this._tickDurationsCache.length;
-    this._tickDurationsCache = [];
-    return avg;
+  public get onPerformanceChanged$(): Observable<SchemaPhysicsPerformance | null> {
+    return this._currentPerformance$.asObservable();
   }
 
   private get _heat(): number {
@@ -53,6 +49,10 @@ export class PhysicsSimulation {
       Range.clamp(delta, 0, PhysicsSimulation.cooldownTime) /
       PhysicsSimulation.cooldownTime;
     return heat;
+  }
+
+  private get _targetTickDuration(): number {
+    return (1 / PhysicsSimulation.FPS) * 1000;
   }
 
   public runIndefinitely(): void {
@@ -90,7 +90,7 @@ export class PhysicsSimulation {
 
   private async _runSync(): Promise<void> {
     let lastWait: number = performance.now();
-    const shouldWaitEveryMs: number = (1 / PhysicsSimulation.FPS) * 1000;
+    let tickCount: number = 0;
 
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     while (true) {
@@ -101,25 +101,30 @@ export class PhysicsSimulation {
         break;
       }
 
-      const timeBeforeTick: number = performance.now();
       this._tick();
-      this._tickDurationsCache.push(performance.now() - timeBeforeTick);
+      tickCount += 1;
 
       const waitDelta: number = performance.now() - lastWait;
-      if (waitDelta > shouldWaitEveryMs) {
-        this._onSlowTick.next();
-        await wait(0);
+
+      if (waitDelta >= this._targetTickDuration) {
+        const avgTickDuration: number =
+          (performance.now() - lastWait) / tickCount;
+        this._onSlowTick$.next();
+        this._currentPerformance$.next({
+          tickDuration: avgTickDuration,
+          loadPercent: avgTickDuration / this._targetTickDuration,
+          performance:
+            avgTickDuration > this._targetTickDuration ? 'bad' : 'good',
+        });
         lastWait = performance.now();
+        tickCount = 0;
+        await wait(0);
       }
     }
 
     this._running = false;
     this._targetDate = Number.MIN_SAFE_INTEGER;
-    this._onSlowTick.next();
-    this._logger.debug(
-      this,
-      `Average tick duration: ${this.averageTickDuration.toFixed(2)} ms. Target: ${((1 / PhysicsSimulation.FPS) * 1000).toFixed()} ms.`,
-    );
+    this._currentPerformance$.next(null);
   }
 
   private _tick(): void {

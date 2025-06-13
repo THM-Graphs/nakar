@@ -120,6 +120,14 @@ export type PhysicalNode = {
     position: Position;
 };
 
+export type PhysicsPerformance = {
+    performance: 'good' | 'bad';
+    loadPercent: number;
+    tickDuration: number;
+};
+
+export type performance = 'good' | 'bad';
+
 export type Position = {
     x: number;
     y: number;
@@ -281,20 +289,27 @@ export type type15 = 'WSEventNotification';
 
 export type severity = 'error' | 'message' | 'warning';
 
+export type WSEventPerformanceChanged = {
+    type: 'WSEventPerformanceChanged';
+    performance?: PhysicsPerformance;
+};
+
+export type type16 = 'WSEventPerformanceChanged';
+
 export type WSEventProgress = {
     type: 'WSEventProgress';
     progress: (number) | null;
     message: string;
 };
 
-export type type16 = 'WSEventProgress';
+export type type17 = 'WSEventProgress';
 
 export type WSEventRoomChanged = {
     type: 'WSEventRoomChanged';
     roomId: (string) | null;
 };
 
-export type type17 = 'WSEventRoomChanged';
+export type type18 = 'WSEventRoomChanged';
 
 export type WSEventSetLocks = {
     type: 'WSEventSetLocks';
@@ -304,15 +319,15 @@ export type WSEventSetLocks = {
     }>;
 };
 
-export type type18 = 'WSEventSetLocks';
+export type type19 = 'WSEventSetLocks';
 
 export type WSEventUnlockUi = {
     type: 'WSEventUnlockUi';
 };
 
-export type type19 = 'WSEventUnlockUi';
+export type type20 = 'WSEventUnlockUi';
 
-export type WSServerToClientMessage = WSEventNodesMoved | WSEventRoomChanged | WSEventNotification | WSEventGraphChanged | WSEventProgress | WSEventClearProgress | WSEventSetLocks | WSEventLockUi | WSEventUnlockUi;
+export type WSServerToClientMessage = WSEventNodesMoved | WSEventRoomChanged | WSEventNotification | WSEventGraphChanged | WSEventProgress | WSEventClearProgress | WSEventSetLocks | WSEventLockUi | WSEventUnlockUi | WSEventPerformanceChanged;
 
 export type GetScenariosData = {
     query: {

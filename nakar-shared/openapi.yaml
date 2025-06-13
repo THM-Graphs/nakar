@@ -612,6 +612,21 @@ components:
       required:
         - version
 
+    PhysicsPerformance:
+      type: object
+      properties:
+        performance:
+          type: string
+          enum: ["good", "bad"]
+        loadPercent:
+          type: number
+        tickDuration:
+          type: number
+      required:
+        - performance
+        - loadPercent
+        - tickDuration
+
     WSClientToServerMessage:
       oneOf:
         - $ref: "#/components/schemas/WSActionJoinRoom"
@@ -636,6 +651,7 @@ components:
         - $ref: "#/components/schemas/WSEventSetLocks"
         - $ref: "#/components/schemas/WSEventLockUi"
         - $ref: "#/components/schemas/WSEventUnlockUi"
+        - $ref: "#/components/schemas/WSEventPerformanceChanged"
 
     WSActionJoinRoom:
       type: object
@@ -890,5 +906,16 @@ components:
         type:
           type: string
           enum: ["WSEventUnlockUi"]
+      required:
+        - type
+
+    WSEventPerformanceChanged:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: ["WSEventPerformanceChanged"]
+        performance:
+          $ref: "#/components/schemas/PhysicsPerformance"
       required:
         - type

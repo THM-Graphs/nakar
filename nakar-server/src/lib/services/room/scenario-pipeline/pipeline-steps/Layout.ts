@@ -26,10 +26,5 @@ export class Layout extends ScenarioPipelineStep {
     await simulation.run({ maxMs: input.size * 10 });
 
     input.applyPhysicalGraph(physical, state.logger);
-
-    state.logger.debug(
-      this,
-      `Average tick duration: ${simulation.averageTickDuration.toFixed(2)}`,
-    );
   }
 }

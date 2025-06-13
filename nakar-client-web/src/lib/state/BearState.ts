@@ -1,4 +1,9 @@
-import { Graph, WSEventProgress } from "../../../src-gen";
+import {
+  Graph,
+  PhysicsPerformance,
+  WSEventPerformanceChanged,
+  WSEventProgress,
+} from "../../../src-gen";
 import { InspectorElement } from "../../components/room/Panel/Inspector/InspectorElement.ts";
 import { SocketState } from "../ws/SocketState.ts";
 
@@ -11,6 +16,9 @@ export interface BearState {
       progress: WSEventProgress | null;
       setProgress: (progress: WSEventProgress) => void;
       clearProgress: () => void;
+      performance: PhysicsPerformance | null;
+      setPerformance: (performance: PhysicsPerformance | null) => void;
+      clearPerformance: () => void;
     };
     scenario: {
       graph: Graph;

@@ -2,7 +2,7 @@ import { create } from "zustand/react";
 import { BearState } from "./BearState.ts";
 import { immer } from "zustand/middleware/immer";
 import { SocketState } from "../ws/SocketState.ts";
-import { WSEventProgress } from "../../../src-gen";
+import { PhysicsPerformance, WSEventProgress } from "../../../src-gen";
 
 export const useBearStore = create<BearState>()(
   immer(
@@ -29,6 +29,17 @@ export const useBearStore = create<BearState>()(
           clearProgress: () => {
             set((s) => {
               s.room.ui.progress = null;
+            });
+          },
+          performance: null,
+          setPerformance: (performance: PhysicsPerformance | null) => {
+            set((s) => {
+              s.room.ui.performance = performance;
+            });
+          },
+          clearPerformance: () => {
+            set((s) => {
+              s.room.ui.performance = null;
             });
           },
         },
