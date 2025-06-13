@@ -148,6 +148,7 @@ export function Room(props: { context: AppContext }) {
           <Canvas context={props.context}></Canvas>
           <InspectorPanel context={props.context}></InspectorPanel>
           <HistogramPanel></HistogramPanel>
+          <ToastStack context={props.context}></ToastStack>
         </Stack>
         <StatusBar
           left={<ProgressDisplay></ProgressDisplay>}
@@ -158,7 +159,6 @@ export function Room(props: { context: AppContext }) {
             </>
           }
         ></StatusBar>
-        <ToastStack context={props.context}></ToastStack>
         {socketState.type !== "connected" && (
           <ReconnectOverlay></ReconnectOverlay>
         )}

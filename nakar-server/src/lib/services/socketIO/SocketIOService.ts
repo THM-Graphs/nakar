@@ -412,15 +412,6 @@ export class SocketIOService implements ApplicationService {
 
     this._roomService
       .expandNodes({ roomId: roomId, nodeIds: m.nodes })
-      .then((result: RSExpandNodesResult): void => {
-        wsClient.sendToRoom({
-          type: 'WSEventNotification',
-          title: 'Nodes added',
-          severity: 'message',
-          message: `Did add ${result.newNodeCount.toString()} nodes and ${result.newEdgeCount.toString()} edges.`,
-          date: new Date().toISOString(),
-        } satisfies SchemaWsEventNotification);
-      })
       .catch((error: unknown): void => {
         wsClient.sendToRoom(this.createErrorNotification(error));
       })
@@ -458,13 +449,6 @@ export class SocketIOService implements ApplicationService {
 
     try {
       this._roomService.deleteNodes({ roomId: roomId, nodeIds: m.nodes });
-      wsClient.sendToRoom({
-        type: 'WSEventNotification',
-        title: 'Nodes deleted',
-        severity: 'message',
-        message: `Did delete nodes.`,
-        date: new Date().toISOString(),
-      } satisfies SchemaWsEventNotification);
     } catch (error: unknown) {
       wsClient.sendToRoom(this.createErrorNotification(error));
     }
