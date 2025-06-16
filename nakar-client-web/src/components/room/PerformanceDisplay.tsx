@@ -19,7 +19,9 @@ export function PerformanceDisplay() {
     <Stack
       direction={"horizontal"}
       gap={2}
-      className={clsx("border-start pe-2 flex-grow-0 flex-shrink-0 small")}
+      className={clsx(
+        "border-start pe-2 flex-grow-0 flex-shrink-0 small bg-warning ps-2 text-black",
+      )}
     >
       <span>
         Load:{" "}
