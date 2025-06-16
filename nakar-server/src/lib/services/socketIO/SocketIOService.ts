@@ -45,6 +45,7 @@ import { HTTPService } from '../http/HTTPService';
 import { CachingSchemaDTOFactory } from '../http/CachingSchemaDTOFactory';
 import { RSEventRoomLocksUpdated } from '../room/events/RSEventRoomLocksUpdated';
 import { RSEventRoomPerformanceChanged } from '../room/events/RSEventRoomPerformanceChanged';
+import { wait } from '../../tools/Wait';
 
 export type Server = UntypedServer<ClientToServerEvents, ServerToClientEvents>;
 export type Socket = UntypedSocket<ClientToServerEvents, ServerToClientEvents>;
@@ -150,7 +151,13 @@ export class SocketIOService implements ApplicationService {
                 .with(
                   { type: 'WSActionDeleteNodes' },
                   (m: SchemaWsActionDeleteNodes): void => {
-                    this._handleDeleteNodes(wsClient, m);
+                    this._handleDeleteNodes(wsClient, m).catch(
+                      (error: unknown): void => {
+                        wsClient.sendToRoom(
+                          this.createErrorNotification(error),
+                        );
+                      },
+                    );
                   },
                 )
                 .with({ type: 'WSActionRelayout' }, (): void => {
@@ -424,10 +431,10 @@ export class SocketIOService implements ApplicationService {
       });
   }
 
-  private _handleDeleteNodes(
+  private async _handleDeleteNodes(
     wsClient: WSClient,
     m: SchemaWsActionDeleteNodes,
-  ): void {
+  ): Promise<void> {
     const roomId: string | null = wsClient.room;
     if (roomId == null) {
       this._logger.error(
@@ -445,6 +452,7 @@ export class SocketIOService implements ApplicationService {
     wsClient.sendToRoom({
       type: 'WSEventLockUi',
     } satisfies SchemaWsEventLockUi);
+    await wait();
 
     try {
       this._roomService.deleteNodes({ roomId: roomId, nodeIds: m.nodes });
