@@ -91,6 +91,10 @@ export class WSClient {
 
   public sendToRoom(message: SchemaWsServerToClientMessage): void {
     if (this.room == null) {
+      this._logger.error(
+        this,
+        `Cannot send message, because websocket is in no room: ${JSON.stringify(message)}`,
+      );
       return;
     }
     this._server.to(this.room).emit('message', message);
@@ -98,6 +102,10 @@ export class WSClient {
 
   public broadcastToRoom(message: SchemaWsServerToClientMessage): void {
     if (this.room == null) {
+      this._logger.error(
+        this,
+        `Cannot send message, because websocket is in no room: ${JSON.stringify(message)}`,
+      );
       return;
     }
     this._socket.broadcast.to(this.room).emit('message', message);
