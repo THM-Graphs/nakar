@@ -212,60 +212,66 @@ export type WSActionJoinRoom = {
 
 export type type5 = 'WSActionJoinRoom';
 
+export type WSActionLeaveRoom = {
+    type: 'WSActionLeaveRoom';
+};
+
+export type type6 = 'WSActionLeaveRoom';
+
 export type WSActionLoadScenario = {
     type: 'WSActionLoadScenario';
     scenarioId: string;
 };
 
-export type type6 = 'WSActionLoadScenario';
+export type type7 = 'WSActionLoadScenario';
 
 export type WSActionMoveNodes = {
     type: 'WSActionMoveNodes';
     nodes: Array<PhysicalNode>;
 };
 
-export type type7 = 'WSActionMoveNodes';
+export type type8 = 'WSActionMoveNodes';
 
 export type WSActionRelayout = {
     type: 'WSActionRelayout';
 };
 
-export type type8 = 'WSActionRelayout';
+export type type9 = 'WSActionRelayout';
 
 export type WSActionUngrabNode = {
     type: 'WSActionUngrabNode';
     node: PhysicalNode;
 };
 
-export type type9 = 'WSActionUngrabNode';
+export type type10 = 'WSActionUngrabNode';
 
 export type WSActionUnlockNodes = {
     type: 'WSActionUnlockNodes';
     nodes: Array<(string)>;
 };
 
-export type type10 = 'WSActionUnlockNodes';
+export type type11 = 'WSActionUnlockNodes';
 
-export type WSClientToServerMessage = WSActionJoinRoom | WSActionLoadScenario | WSActionGetGraph | WSActionGrabNode | WSActionMoveNodes | WSActionUngrabNode | WSActionExpandNodes | WSActionDeleteNodes | WSActionRelayout | WSActionUnlockNodes;
+export type WSClientToServerMessage = WSActionJoinRoom | WSActionLeaveRoom | WSActionLoadScenario | WSActionGetGraph | WSActionGrabNode | WSActionMoveNodes | WSActionUngrabNode | WSActionExpandNodes | WSActionDeleteNodes | WSActionRelayout | WSActionUnlockNodes;
 
 export type WSEventClearProgress = {
     type: 'WSEventClearProgress';
 };
 
-export type type11 = 'WSEventClearProgress';
+export type type12 = 'WSEventClearProgress';
 
 export type WSEventGraphChanged = {
     type: 'WSEventGraphChanged';
     graph: Graph;
 };
 
-export type type12 = 'WSEventGraphChanged';
+export type type13 = 'WSEventGraphChanged';
 
 export type WSEventLockUi = {
     type: 'WSEventLockUi';
 };
 
-export type type13 = 'WSEventLockUi';
+export type type14 = 'WSEventLockUi';
 
 export type WSEventNodesMoved = {
     type: 'WSEventNodesMoved';
@@ -273,7 +279,7 @@ export type WSEventNodesMoved = {
     date: string;
 };
 
-export type type14 = 'WSEventNodesMoved';
+export type type15 = 'WSEventNodesMoved';
 
 export type WSEventNotification = {
     type: 'WSEventNotification';
@@ -283,7 +289,7 @@ export type WSEventNotification = {
     date: string;
 };
 
-export type type15 = 'WSEventNotification';
+export type type16 = 'WSEventNotification';
 
 export type severity = 'error' | 'message' | 'warning';
 
@@ -292,7 +298,7 @@ export type WSEventPerformanceChanged = {
     performance?: PhysicsPerformance;
 };
 
-export type type16 = 'WSEventPerformanceChanged';
+export type type17 = 'WSEventPerformanceChanged';
 
 export type WSEventProgress = {
     type: 'WSEventProgress';
@@ -300,14 +306,14 @@ export type WSEventProgress = {
     message: string;
 };
 
-export type type17 = 'WSEventProgress';
+export type type18 = 'WSEventProgress';
 
 export type WSEventRoomChanged = {
     type: 'WSEventRoomChanged';
     roomId: (string) | null;
 };
 
-export type type18 = 'WSEventRoomChanged';
+export type type19 = 'WSEventRoomChanged';
 
 export type WSEventSetLocks = {
     type: 'WSEventSetLocks';
@@ -317,13 +323,13 @@ export type WSEventSetLocks = {
     }>;
 };
 
-export type type19 = 'WSEventSetLocks';
+export type type20 = 'WSEventSetLocks';
 
 export type WSEventUnlockUi = {
     type: 'WSEventUnlockUi';
 };
 
-export type type20 = 'WSEventUnlockUi';
+export type type21 = 'WSEventUnlockUi';
 
 export type WSServerToClientMessage = WSEventNodesMoved | WSEventRoomChanged | WSEventNotification | WSEventGraphChanged | WSEventProgress | WSEventClearProgress | WSEventSetLocks | WSEventLockUi | WSEventUnlockUi | WSEventPerformanceChanged;
 

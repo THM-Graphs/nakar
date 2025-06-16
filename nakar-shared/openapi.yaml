@@ -566,6 +566,7 @@ components:
     WSClientToServerMessage:
       oneOf:
         - $ref: "#/components/schemas/WSActionJoinRoom"
+        - $ref: "#/components/schemas/WSActionLeaveRoom"
         - $ref: "#/components/schemas/WSActionLoadScenario"
         - $ref: "#/components/schemas/WSActionGetGraph"
         - $ref: "#/components/schemas/WSActionGrabNode"
@@ -600,6 +601,15 @@ components:
       required:
         - type
         - roomId
+
+    WSActionLeaveRoom:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: ["WSActionLeaveRoom"]
+      required:
+        - type
 
     WSActionLoadScenario:
       type: object

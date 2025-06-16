@@ -162,7 +162,7 @@ export class HTTPDelegate {
     room: GetRoomDBDTO,
   ): Promise<GetScenarioDBDTO | null> {
     const scenarioId: string | null =
-      this._room.getGraph(room.documentId)?.metaData.scenarioInfo.id ?? null;
+      this._room.getGraph(room.documentId).metaData.scenarioInfo?.id ?? null;
     const scenario: GetScenarioDBDTO | null =
       scenarioId != null ? await this._database.getScenario(scenarioId) : null;
     return scenario;

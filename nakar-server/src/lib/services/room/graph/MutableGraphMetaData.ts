@@ -9,15 +9,15 @@ import { MutableNodeIndex } from './MutableNodeIndex';
 export class MutableGraphMetaData {
   // eslint-disable-next-line @typescript-eslint/typedef
   public static readonly schema = z.object({
-    scenarioInfo: MutableScenarioInfo.schema,
+    scenarioInfo: MutableScenarioInfo.schema.nullable(),
     pipelineSummary: z.array(z.tuple([z.string(), z.number()])),
   });
 
-  public scenarioInfo: MutableScenarioInfo;
+  public scenarioInfo: MutableScenarioInfo | null;
   public pipelineSummary: [string, number][];
 
   public constructor(data: {
-    scenarioInfo: MutableScenarioInfo;
+    scenarioInfo: MutableScenarioInfo | null;
     pipelineSummary: [string, number][];
   }) {
     this.scenarioInfo = data.scenarioInfo;
@@ -26,7 +26,7 @@ export class MutableGraphMetaData {
 
   public static empty(): MutableGraphMetaData {
     return new MutableGraphMetaData({
-      scenarioInfo: MutableScenarioInfo.empty(),
+      scenarioInfo: null,
       pipelineSummary: [],
     });
   }
@@ -35,14 +35,16 @@ export class MutableGraphMetaData {
     data: z.infer<typeof this.schema>,
   ): MutableGraphMetaData {
     return new MutableGraphMetaData({
-      scenarioInfo: MutableScenarioInfo.fromPlain(data.scenarioInfo),
+      scenarioInfo: data.scenarioInfo
+        ? MutableScenarioInfo.fromPlain(data.scenarioInfo)
+        : null,
       pipelineSummary: data.pipelineSummary,
     });
   }
 
   public toPlain(): z.infer<typeof MutableGraphMetaData.schema> {
     return {
-      scenarioInfo: this.scenarioInfo.toPlain(),
+      scenarioInfo: this.scenarioInfo?.toPlain() ?? null,
       pipelineSummary: this.pipelineSummary,
     };
   }

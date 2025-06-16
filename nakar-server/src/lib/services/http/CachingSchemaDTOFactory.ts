@@ -129,7 +129,9 @@ export class CachingSchemaDTOFactory {
           ): Promise<SchemaGraphLabel> =>
             await this._createSchemaGraphLabel(id, label),
         ),
-      scenarioInfo: this._createSchemaScenarioInfo(metaData.scenarioInfo),
+      scenarioInfo: metaData.scenarioInfo
+        ? this._createSchemaScenarioInfo(metaData.scenarioInfo)
+        : null,
       pipelineSummary: metaData.pipelineSummary.map(
         (entry: [string, number]): { step: string; durationMs: number } => {
           return {

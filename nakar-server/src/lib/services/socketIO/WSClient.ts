@@ -3,7 +3,12 @@ import {
   SchemaWsClientToServerMessage,
   SchemaWsServerToClientMessage,
 } from '../../../../src-gen/schema';
-import { BehaviorSubject, Observable, Subject } from 'rxjs';
+import {
+  BehaviorSubject,
+  Observable,
+  Subject,
+  distinctUntilChanged,
+} from 'rxjs';
 import { DisconnectReason } from 'socket.io';
 import { LoggerService } from '../logger/LoggerService';
 
@@ -11,7 +16,7 @@ export class WSClient {
   private _socket: Socket;
   private _server: Server;
 
-  private readonly _room: BehaviorSubject<string | null>;
+  private readonly _room: BehaviorSubject<[string | null, string | null]>;
   private readonly _onMessage: Subject<SchemaWsClientToServerMessage>;
   private readonly _onDisconnect: Subject<DisconnectReason>;
 
@@ -23,7 +28,10 @@ export class WSClient {
     this._socket = socket;
     this._server = server;
 
-    this._room = new BehaviorSubject<string | null>(null);
+    this._room = new BehaviorSubject<[string | null, string | null]>([
+      null,
+      null,
+    ]);
     this._onMessage = new Subject<SchemaWsClientToServerMessage>();
     this._onDisconnect = new Subject<DisconnectReason>();
 
@@ -39,6 +47,7 @@ export class WSClient {
         }
       })
       .on('disconnecting', (reason: DisconnectReason): void => {
+        void this.leaveRoom();
         socket.removeAllListeners();
         this._onDisconnect.next(reason);
       });
@@ -49,11 +58,11 @@ export class WSClient {
   }
 
   public get room(): string | null {
-    return this._room.getValue();
+    return this._room.getValue()[1];
   }
 
-  public get onRoomChanged$(): Observable<string | null> {
-    return this._room.asObservable();
+  public get onRoomChanged$(): Observable<[string | null, string | null]> {
+    return this._room.asObservable().pipe(distinctUntilChanged());
   }
 
   public get onMessage$(): Observable<SchemaWsClientToServerMessage> {
@@ -86,7 +95,22 @@ export class WSClient {
 
     await this._socket.join(roomId);
     this._logger.debug(this, `Socket ${this.id} entered room ${roomId}`);
-    this._room.next(roomId);
+    this._room.next([this.room, roomId]);
+  }
+
+  public async leaveRoom(): Promise<void> {
+    const roomId: string | null = this.room;
+    if (roomId == null) {
+      this._logger.warn(
+        this,
+        `Client ${this.id} wants to leave a room, but i currently in no room.`,
+      );
+      return;
+    }
+
+    await this._socket.leave(roomId);
+    this._logger.debug(this, `Socket ${this.id} left room ${roomId}`);
+    this._room.next([roomId, null]);
   }
 
   public sendToRoom(message: SchemaWsServerToClientMessage): void {

@@ -8,6 +8,7 @@ import {
   getScenarios,
   Room as RoomSchema,
   WSActionGetGraph,
+  WSActionLeaveRoom,
 } from "../../src-gen";
 import { LoaderFunctionArgs, useLoaderData } from "react-router";
 import { resultOrThrow } from "../lib/data/resultOrThrow.ts";
@@ -113,6 +114,10 @@ export function Room(props: { context: AppContext }) {
     ];
 
     return () => {
+      webSockets.sendMessage({
+        type: "WSActionLeaveRoom",
+      } satisfies WSActionLeaveRoom);
+
       subscriptions.forEach((s) => {
         s.unsubscribe();
       });

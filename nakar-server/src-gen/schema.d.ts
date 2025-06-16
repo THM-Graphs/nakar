@@ -238,12 +238,16 @@ export interface components {
             readonly loadPercent: number;
             readonly tickDuration: number;
         };
-        readonly WSClientToServerMessage: components["schemas"]["WSActionJoinRoom"] | components["schemas"]["WSActionLoadScenario"] | components["schemas"]["WSActionGetGraph"] | components["schemas"]["WSActionGrabNode"] | components["schemas"]["WSActionMoveNodes"] | components["schemas"]["WSActionUngrabNode"] | components["schemas"]["WSActionExpandNodes"] | components["schemas"]["WSActionDeleteNodes"] | components["schemas"]["WSActionRelayout"] | components["schemas"]["WSActionUnlockNodes"];
+        readonly WSClientToServerMessage: components["schemas"]["WSActionJoinRoom"] | components["schemas"]["WSActionLeaveRoom"] | components["schemas"]["WSActionLoadScenario"] | components["schemas"]["WSActionGetGraph"] | components["schemas"]["WSActionGrabNode"] | components["schemas"]["WSActionMoveNodes"] | components["schemas"]["WSActionUngrabNode"] | components["schemas"]["WSActionExpandNodes"] | components["schemas"]["WSActionDeleteNodes"] | components["schemas"]["WSActionRelayout"] | components["schemas"]["WSActionUnlockNodes"];
         readonly WSServerToClientMessage: components["schemas"]["WSEventNodesMoved"] | components["schemas"]["WSEventRoomChanged"] | components["schemas"]["WSEventNotification"] | components["schemas"]["WSEventGraphChanged"] | components["schemas"]["WSEventProgress"] | components["schemas"]["WSEventClearProgress"] | components["schemas"]["WSEventSetLocks"] | components["schemas"]["WSEventLockUi"] | components["schemas"]["WSEventUnlockUi"] | components["schemas"]["WSEventPerformanceChanged"];
         readonly WSActionJoinRoom: {
             /** @enum {string} */
             readonly type: "WSActionJoinRoom";
             readonly roomId: string;
+        };
+        readonly WSActionLeaveRoom: {
+            /** @enum {string} */
+            readonly type: "WSActionLeaveRoom";
         };
         readonly WSActionLoadScenario: {
             /** @enum {string} */
@@ -379,6 +383,7 @@ export type SchemaPhysicsPerformance = components['schemas']['PhysicsPerformance
 export type SchemaWsClientToServerMessage = components['schemas']['WSClientToServerMessage'];
 export type SchemaWsServerToClientMessage = components['schemas']['WSServerToClientMessage'];
 export type SchemaWsActionJoinRoom = components['schemas']['WSActionJoinRoom'];
+export type SchemaWsActionLeaveRoom = components['schemas']['WSActionLeaveRoom'];
 export type SchemaWsActionLoadScenario = components['schemas']['WSActionLoadScenario'];
 export type SchemaWsActionGetGraph = components['schemas']['WSActionGetGraph'];
 export type SchemaWsActionMoveNodes = components['schemas']['WSActionMoveNodes'];

@@ -15,13 +15,6 @@ export class MutableScenarioInfo {
     this.title = data.title;
   }
 
-  public static empty(): MutableScenarioInfo {
-    return new MutableScenarioInfo({
-      id: '',
-      title: null,
-    });
-  }
-
   public static fromPlain(
     scenarioInfo: z.infer<typeof MutableScenarioInfo.schema>,
   ): MutableScenarioInfo {

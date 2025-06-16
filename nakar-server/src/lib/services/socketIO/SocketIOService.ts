@@ -92,19 +92,35 @@ export class SocketIOService implements ApplicationService {
       const clientSubscriptions: Subscription[] = [];
 
       clientSubscriptions.push(
-        wsClient.onRoomChanged$.subscribe((roomId: string | null): void => {
-          wsClient.broadcastToRoom({
-            type: 'WSEventNotification',
-            title: 'User joined',
-            message: `User ${wsClient.id} joined.`,
-            severity: 'message',
-            date: new Date().toISOString(),
-          });
-          wsClient.send({
-            type: 'WSEventRoomChanged',
-            roomId: roomId,
-          } satisfies SchemaWsEventRoomChanged);
-        }),
+        wsClient.onRoomChanged$.subscribe(
+          (roomChange: [string | null, string | null]): void => {
+            const oldRoomId: string | null = roomChange[0];
+            const newRoomId: string | null = roomChange[1];
+
+            if (oldRoomId != null && newRoomId == null) {
+              this.sendToRoom(oldRoomId, {
+                type: 'WSEventNotification',
+                title: 'User left',
+                message: `User ${wsClient.id} left.`,
+                date: new Date().toISOString(),
+                severity: 'message',
+              } satisfies SchemaWsEventNotification);
+            } else if (oldRoomId == null && newRoomId != null) {
+              wsClient.broadcastToRoom({
+                type: 'WSEventNotification',
+                title: 'User joined',
+                message: `User ${wsClient.id} joined.`,
+                severity: 'message',
+                date: new Date().toISOString(),
+              });
+            }
+
+            wsClient.send({
+              type: 'WSEventRoomChanged',
+              roomId: newRoomId,
+            } satisfies SchemaWsEventRoomChanged);
+          },
+        ),
       );
 
       clientSubscriptions.push(
@@ -118,6 +134,9 @@ export class SocketIOService implements ApplicationService {
                     this._handleJoinRoom(wsClient, m);
                   },
                 )
+                .with({ type: 'WSActionLeaveRoom' }, (): void => {
+                  this._handleLeaveRoom(wsClient);
+                })
                 .with(
                   { type: 'WSActionLoadScenario' },
                   (m: SchemaWsActionLoadScenario): void => {
@@ -145,7 +164,13 @@ export class SocketIOService implements ApplicationService {
                 .with(
                   { type: 'WSActionExpandNodes' },
                   (m: SchemaWsActionExpandNodes): void => {
-                    this._handleExpandNodes(wsClient, m);
+                    this._handleExpandNodes(wsClient, m).catch(
+                      (error: unknown): void => {
+                        wsClient.sendToRoom(
+                          this.createErrorNotification(error),
+                        );
+                      },
+                    );
                   },
                 )
                 .with(
@@ -190,13 +215,6 @@ export class SocketIOService implements ApplicationService {
             this,
             `Socket ${wsClient.id} disconnected: ${reason}`,
           );
-          wsClient.broadcastToRoom({
-            type: 'WSEventNotification',
-            title: 'User left',
-            message: `User ${wsClient.id} left. Reason: ${reason}.`,
-            date: new Date().toISOString(),
-            severity: 'message',
-          });
           this._sockets.delete(wsClient);
           for (const sub of clientSubscriptions) {
             sub.unsubscribe();
@@ -287,6 +305,14 @@ export class SocketIOService implements ApplicationService {
       }
 
       await wsClient.join(roomId);
+    })().catch((error: unknown): void => {
+      this._logger.error(this, error);
+    });
+  }
+
+  private _handleLeaveRoom(wsClient: WSClient): void {
+    (async (): Promise<void> => {
+      await wsClient.leaveRoom();
     })().catch((error: unknown): void => {
       this._logger.error(this, error);
     });
@@ -394,10 +420,10 @@ export class SocketIOService implements ApplicationService {
     });
   }
 
-  private _handleExpandNodes(
+  private async _handleExpandNodes(
     wsClient: WSClient,
     m: SchemaWsActionExpandNodes,
-  ): void {
+  ): Promise<void> {
     const roomId: string | null = wsClient.room;
     if (roomId == null) {
       this._logger.error(
@@ -416,19 +442,18 @@ export class SocketIOService implements ApplicationService {
       progress: null,
     } satisfies SchemaWsEventProgress);
 
-    this._roomService
-      .expandNodes({ roomId: roomId, nodeIds: m.nodes })
-      .catch((error: unknown): void => {
-        wsClient.sendToRoom(this.createErrorNotification(error));
-      })
-      .finally((): void => {
-        wsClient.sendToRoom({
-          type: 'WSEventClearProgress',
-        } satisfies SchemaWsEventClearProgress);
-        wsClient.sendToRoom({
-          type: 'WSEventUnlockUi',
-        } satisfies SchemaWsEventUnlockUi);
-      });
+    try {
+      await this._roomService.expandNodes({ roomId: roomId, nodeIds: m.nodes });
+    } catch (error: unknown) {
+      wsClient.sendToRoom(this.createErrorNotification(error));
+    }
+
+    wsClient.sendToRoom({
+      type: 'WSEventClearProgress',
+    } satisfies SchemaWsEventClearProgress);
+    wsClient.sendToRoom({
+      type: 'WSEventUnlockUi',
+    } satisfies SchemaWsEventUnlockUi);
   }
 
   private async _handleDeleteNodes(
@@ -514,8 +539,7 @@ export class SocketIOService implements ApplicationService {
       type: 'WSEventLockUi',
     } satisfies SchemaWsEventLockUi);
 
-    const graph: MutableGraph =
-      this._roomService.getGraph(roomId) ?? MutableGraph.empty();
+    const graph: MutableGraph = this._roomService.getGraph(roomId);
     const cachedGraphFactory: CachingSchemaDTOFactory =
       new CachingSchemaDTOFactory(this._databaseService, this._logger);
     cachedGraphFactory

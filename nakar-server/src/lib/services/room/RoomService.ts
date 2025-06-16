@@ -91,8 +91,12 @@ export class RoomService implements ApplicationService {
       await worker.terminate();
     }
     for (const roomId of this._graphs.keys()) {
-      this.saveGraphOfRoom(roomId);
+      await this.saveGraph(roomId);
     }
+  }
+
+  public getGraph(roomId: string): MutableGraph {
+    return this._graphs.get(roomId) ?? MutableGraph.empty();
   }
 
   public grabNode(params: {
@@ -100,10 +104,7 @@ export class RoomService implements ApplicationService {
     nodeId: string;
     userId: string;
   }): void {
-    const graph: MutableGraph | undefined = this._graphs.get(params.roomId);
-    if (graph == null) {
-      throw new Error(`Unable to grab node. Room ${params.roomId} not found.`);
-    }
+    const graph: MutableGraph = this.getGraph(params.roomId);
 
     const node: MutableNode | null = graph.nodes.get(params.nodeId);
     if (node == null) {
@@ -118,10 +119,7 @@ export class RoomService implements ApplicationService {
     nodes: readonly RSPhysicalNode[];
     userId: string;
   }): void {
-    const graph: MutableGraph | undefined = this._graphs.get(params.roomId);
-    if (graph == null) {
-      throw new Error(`Unable to move node. Room ${params.roomId} not found.`);
-    }
+    const graph: MutableGraph = this.getGraph(params.roomId);
 
     for (const physialNode of params.nodes) {
       const node: MutableNode | null = graph.nodes.get(physialNode.id);
@@ -155,10 +153,7 @@ export class RoomService implements ApplicationService {
     userId: string;
     node: RSPhysicalNode;
   }): void {
-    const graph: MutableGraph | undefined = this._graphs.get(params.roomId);
-    if (graph == null) {
-      throw new Error(`Unable to grab node. Room ${params.roomId} not found.`);
-    }
+    const graph: MutableGraph = this.getGraph(params.roomId);
 
     const node: MutableNode | null = graph.nodes.get(params.node.id);
     if (node == null) {
@@ -166,20 +161,6 @@ export class RoomService implements ApplicationService {
     }
 
     node.grabs.delete(params.userId);
-  }
-
-  public saveGraphOfRoom(roomId: string): void {
-    const graph: MutableGraph | undefined = this._graphs.get(roomId);
-    if (graph == null) {
-      this._logger.error(
-        this,
-        `Cannot save graph of room ${roomId}, because the graph does not exist.`,
-      );
-      return;
-    }
-    this._saveGraphToDb(roomId).catch((error: unknown): void => {
-      this._logger.error(this, error);
-    });
   }
 
   public async loadScenario(params: {
@@ -219,17 +200,13 @@ export class RoomService implements ApplicationService {
       type: 'WTActionSetGraph',
       graph: result.graph.toPhysicalGraph(this._logger),
     });
-    this.saveGraphOfRoom(params.roomId);
+    await this.saveGraph(params.roomId);
     this._onRoomUpdated.next({
       graph: result.graph,
       roomId: params.roomId,
     });
 
     return result.scenario;
-  }
-
-  public getGraph(roomId: string): MutableGraph | null {
-    return this._graphs.get(roomId) ?? null;
   }
 
   public async expandNodes(params: {
@@ -240,16 +217,15 @@ export class RoomService implements ApplicationService {
       string,
       GetDatabaseDBDTO
     >();
-    const graph: MutableGraph | undefined = this._graphs.get(params.roomId);
-    if (graph == null) {
-      throw new Error(
-        `Cannot find graph of room ${params.roomId} to run expand nodes.`,
-      );
+    const graph: MutableGraph = this.getGraph(params.roomId);
+
+    const scenarioId: string | null = graph.metaData.scenarioInfo?.id ?? null;
+    if (scenarioId == null) {
+      throw new Error(`Cannot expand node because there is no scneario info.`);
     }
 
-    const scenario: GetScenarioDBDTO | null = await this._database.getScenario(
-      graph.metaData.scenarioInfo.id,
-    );
+    const scenario: GetScenarioDBDTO | null =
+      await this._database.getScenario(scenarioId);
     if (scenario == null) {
       throw new Error(
         `Cannot find scenario of room ${params.roomId} to run expand nodes.`,
@@ -341,23 +317,15 @@ export class RoomService implements ApplicationService {
     roomId: string;
     nodeIds: readonly string[];
   }): void {
-    const mayGraph: MutableGraph | undefined = this._graphs.get(params.roomId);
-    if (mayGraph == null) {
-      throw new Error(
-        `Cannot find graph of room ${params.roomId} to run expand nodes.`,
-      );
-    }
-    const graph: MutableGraph = mayGraph;
+    const graph: MutableGraph = this.getGraph(params.roomId);
 
     for (const nodeId of params.nodeIds) {
       graph.nodes.remove(nodeId);
+      graph.edges.removeEdgesOfNode(nodeId);
 
       this._logger.debug(this, `Did delete node ${nodeId}`);
-
-      graph.edges.removeEdgesOfNode(nodeId);
     }
 
-    this._graphs.set(params.roomId, graph);
     this._sendActionToWorker(params.roomId, {
       type: 'WTActionSetGraph',
       graph: graph.toPhysicalGraph(this._logger),
@@ -373,10 +341,7 @@ export class RoomService implements ApplicationService {
   }
 
   public relayout(params: { roomId: string }): void {
-    const graph: MutableGraph | undefined = this._graphs.get(params.roomId);
-    if (graph == null) {
-      throw new Error('Unable to execute relayout. Graph not found.');
-    }
+    const graph: MutableGraph = this.getGraph(params.roomId);
 
     const nodeLocks: Record<string, boolean> = {};
     const clientNodeLocks: SMap<string, boolean> = new SMap<string, boolean>();
@@ -410,10 +375,7 @@ export class RoomService implements ApplicationService {
     roomId: string;
     nodeIds: readonly string[];
   }): void {
-    const graph: MutableGraph | undefined = this._graphs.get(params.roomId);
-    if (graph == null) {
-      throw new Error('Unable to execute unlock nodes. Graph not found.');
-    }
+    const graph: MutableGraph | undefined = this.getGraph(params.roomId);
 
     const nodeLocks: Record<string, boolean> = {};
     const clientNodeLocks: SMap<string, boolean> = new SMap<string, boolean>();
@@ -437,7 +399,6 @@ export class RoomService implements ApplicationService {
       roomId: params.roomId,
       locks: clientNodeLocks,
     });
-
     this._sendActionToWorker(params.roomId, {
       type: 'WTActionSetLocks',
       locks: nodeLocks,
@@ -448,7 +409,7 @@ export class RoomService implements ApplicationService {
     });
   }
 
-  private async _saveGraphToDb(roomId: string): Promise<void> {
+  public async saveGraph(roomId: string): Promise<void> {
     const graph: MutableGraph | undefined = this._graphs.get(roomId);
     if (graph == null) {
       this._logger.error(
@@ -468,40 +429,36 @@ export class RoomService implements ApplicationService {
   }
 
   private async _initRooms(): Promise<void> {
-    try {
-      const rooms: GetRoomDBDTO[] = await this._database.getRooms();
+    const rooms: GetRoomDBDTO[] = await this._database.getRooms();
 
-      for (const room of rooms) {
-        this._logger.debug(
-          this,
-          `Will load graph of room ${room.documentId} ('${room.title ?? ''}') into memory.`,
-        );
+    for (const room of rooms) {
+      this._logger.debug(
+        this,
+        `Will load graph of room ${room.documentId} ('${room.title ?? ''}') into memory.`,
+      );
 
-        if (room.graphJson == null) {
+      if (room.graphJson == null) {
+        this._graphs.set(room.documentId, MutableGraph.empty());
+      } else {
+        try {
+          const graph: MutableGraph = MutableGraph.fromUnknownOrEmpty(
+            JSON.parse(room.graphJson),
+          );
+          this._logger.debug(
+            this,
+            `Did load ${graph.size.toString()} graph elements into room ${room.documentId} ('${room.title ?? ''}').`,
+          );
+          this._graphs.set(room.documentId, graph);
+        } catch (error) {
+          this._logger.error(
+            this,
+            `Unable to load graph from Room: ${JSON.stringify(error)}`,
+          );
           this._graphs.set(room.documentId, MutableGraph.empty());
-        } else {
-          try {
-            const graph: MutableGraph = MutableGraph.fromUnknownOrEmpty(
-              JSON.parse(room.graphJson),
-            );
-            this._logger.debug(
-              this,
-              `Did load ${graph.size.toString()} graph elements into room ${room.documentId} ('${room.title ?? ''}').`,
-            );
-            this._graphs.set(room.documentId, graph);
-          } catch (error) {
-            this._logger.error(
-              this,
-              `Unable to load graph from Room: ${JSON.stringify(error)}`,
-            );
-            this._graphs.set(room.documentId, MutableGraph.empty());
-          }
         }
-
-        this._getOrStartWorker(room.documentId);
       }
-    } catch (error) {
-      this._logger.error(this, error);
+
+      this._getOrStartWorker(room.documentId);
     }
   }
 
@@ -509,8 +466,8 @@ export class RoomService implements ApplicationService {
     const foundWorker: Worker | undefined = this._workers.get(roomId);
 
     if (foundWorker == null) {
-      const physicalGraph: PhysicalGraph = (
-        this._graphs.get(roomId) ?? MutableGraph.empty()
+      const physicalGraph: PhysicalGraph = this.getGraph(
+        roomId,
       ).toPhysicalGraph(this._logger);
       const workerData: RoomWorkerData = {
         roomId: roomId,
@@ -524,7 +481,10 @@ export class RoomService implements ApplicationService {
       );
       this._workers.set(roomId, worker);
       worker.on('error', (error: Error): void => {
-        this._logger.error(this, `Worker error: ${error.message}`);
+        this._logger.error(
+          this,
+          `Worker ${worker.threadId.toString()} error: ${error.message}`,
+        );
       });
       worker.on('message', (message: WTEvent): void => {
         match(message)
@@ -543,15 +503,21 @@ export class RoomService implements ApplicationService {
           .exhaustive();
       });
       worker.on('messageerror', (error: Error): void => {
-        this._logger.error(this, `Worker messageerror: ${error.message}`);
+        this._logger.error(
+          this,
+          `Worker ${worker.threadId.toString()} messageerror: ${error.message}`,
+        );
       });
       worker.on('exit', (exitCode: number): void => {
-        this._logger.error(this, `Worker exit code: ${exitCode.toString()}`);
+        this._logger.error(
+          this,
+          `Worker ${worker.threadId.toString()} exit code: ${exitCode.toString()}`,
+        );
         this._workers.delete(roomId);
         worker.removeAllListeners();
       });
       worker.on('online', (): void => {
-        this._logger.debug(this, `Worker online`);
+        this._logger.debug(this, `Worker ${worker.threadId.toString()} online`);
       });
       return worker;
     } else {
@@ -563,19 +529,10 @@ export class RoomService implements ApplicationService {
     roomId: string,
     event: WTEventPhysicsUpdate,
   ): void {
-    const mutableGraph: MutableGraph | undefined = this._graphs.get(roomId);
-    if (mutableGraph == null) {
-      this._logger.error(
-        this,
-        `Unable to apply worker positions. Room ${roomId} not found.`,
-      );
-      return;
-    }
-
-    mutableGraph.applyPhysicalGraph(event.graph, this._logger);
-
+    const graph: MutableGraph = this.getGraph(roomId);
+    graph.applyPhysicalGraph(event.graph, this._logger);
     this._onRoomPhysicsUpdated.next({
-      graph: mutableGraph,
+      graph: graph,
       roomId: roomId,
     });
   }
