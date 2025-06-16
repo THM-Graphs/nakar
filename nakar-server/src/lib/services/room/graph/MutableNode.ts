@@ -22,7 +22,6 @@ export class MutableNode {
     position: MutablePosition.schema,
     namesInQuery: z.array(z.string()),
     locked: z.boolean(),
-    grabs: z.array(z.string()),
     source: z.string(),
     additionalSources: z.array(z.string()),
   });
@@ -67,7 +66,7 @@ export class MutableNode {
       position: MutablePosition.fromPlain(data.position),
       namesInQuery: new SSet(data.namesInQuery),
       locked: data.locked,
-      grabs: new SSet(data.grabs),
+      grabs: new SSet(),
       source: data.source,
       additionalSources: new SSet(data.additionalSources),
     });
@@ -81,7 +80,6 @@ export class MutableNode {
       position: this.position,
       namesInQuery: this.namesInQuery.toArray(),
       locked: this.locked,
-      grabs: this.grabs.toArray(),
       source: this.source,
       additionalSources: this.additionalSources.toArray(),
     };

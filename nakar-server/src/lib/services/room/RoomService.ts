@@ -444,9 +444,6 @@ export class RoomService implements ApplicationService {
           const graph: MutableGraph = MutableGraph.fromUnknownOrEmpty(
             JSON.parse(room.graphJson),
           );
-          for (const node of graph.nodes.nodes) {
-            node.grabs.clear();
-          }
           this._logger.debug(
             this,
             `Did load ${graph.size.toString()} graph elements into room ${room.documentId} ('${room.title ?? ''}').`,
