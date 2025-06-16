@@ -1,4 +1,4 @@
-import { Spinner, Stack } from "react-bootstrap";
+import { Stack } from "react-bootstrap";
 import { DetailPaneAction } from "./DetailPaneAction.ts";
 import { GraphProperty } from "../../../../../src-gen";
 import { PropertyDisplay } from "./PropertyDisplay.tsx";

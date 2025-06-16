@@ -1,6 +1,5 @@
 import http from 'http';
-import express from 'express';
-import { Request, Response, Application } from 'express';
+import express, { Application, Request, Response } from 'express';
 import { ConfigService } from '../config/ConfigService';
 import { LoggerService } from '../logger/LoggerService';
 import {

@@ -1,5 +1,3 @@
-import { ProgressDisplay } from "../room/ProgressDisplay.tsx";
-import { SocketStateDisplay } from "../room/SocketStateDisplay.tsx";
 import { Stack } from "react-bootstrap";
 import { ReactNode } from "react";
 

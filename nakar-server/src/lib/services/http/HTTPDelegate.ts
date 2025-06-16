@@ -2,13 +2,13 @@ import { Request } from 'express';
 import { LoggerService } from '../logger/LoggerService';
 import { DatabaseService } from '../database/DatabaseService';
 import {
+  SchemaDatabase,
   SchemaDatabases,
-  SchemaRooms,
   SchemaRoom,
-  SchemaVersion,
+  SchemaRooms,
   SchemaScenario,
   SchemaScenarioGroup,
-  SchemaDatabase,
+  SchemaVersion,
 } from '../../../../src-gen/schema';
 import { GetDatabaseDBDTO } from '../database/dto/GetDatabaseDBDTO';
 import { GetScenarioDBDTO } from '../database/dto/GetScenarioDBDTO';
@@ -162,10 +162,9 @@ export class HTTPDelegate {
     room: GetRoomDBDTO,
   ): Promise<GetScenarioDBDTO | null> {
     const scenarioId: string | null =
-      this._room.getGraph(room.documentId)?.metaData?.scenarioInfo?.id ?? null;
-    const scenario: GetScenarioDBDTO | null = scenarioId
-      ? await this._database.getScenario(scenarioId)
-      : null;
+      this._room.getGraph(room.documentId)?.metaData.scenarioInfo.id ?? null;
+    const scenario: GetScenarioDBDTO | null =
+      scenarioId != null ? await this._database.getScenario(scenarioId) : null;
     return scenario;
   }
 }

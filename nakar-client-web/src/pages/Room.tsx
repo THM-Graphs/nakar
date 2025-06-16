@@ -3,11 +3,11 @@ import { AppNavbar } from "../components/shared/AppNavbar.tsx";
 import { Canvas } from "../components/room/Canvas/Canvas.tsx";
 import { useEffect } from "react";
 import {
-  Room as RoomSchema,
-  getRoom,
-  WSActionGetGraph,
   Databases,
+  getRoom,
   getScenarios,
+  Room as RoomSchema,
+  WSActionGetGraph,
 } from "../../src-gen";
 import { LoaderFunctionArgs, useLoaderData } from "react-router";
 import { resultOrThrow } from "../lib/data/resultOrThrow.ts";

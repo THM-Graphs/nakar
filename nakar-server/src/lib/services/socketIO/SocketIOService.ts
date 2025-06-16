@@ -43,7 +43,6 @@ import { MutableGraph } from '../room/graph/MutableGraph';
 import { Subscription } from 'rxjs';
 import { HTTPService } from '../http/HTTPService';
 import { CachingSchemaDTOFactory } from '../http/CachingSchemaDTOFactory';
-import { RSExpandNodesResult } from '../room/events/RSExpandNodesResult';
 import { RSEventRoomLocksUpdated } from '../room/events/RSEventRoomLocksUpdated';
 import { RSEventRoomPerformanceChanged } from '../room/events/RSEventRoomPerformanceChanged';
 

@@ -19,7 +19,6 @@ export function ProgressDisplay() {
   if (progress == null) {
     return null;
   }
-  const message = progress.message ?? "Working";
   return (
     <Stack
       className={"border-end ps-2 pe-2 flex-grow-0 flex-shrink-0"}
@@ -48,7 +47,7 @@ export function ProgressDisplay() {
           width: "200px",
         }}
       >
-        {message + dots}
+        {progress.message + dots}
       </span>
     </Stack>
   );

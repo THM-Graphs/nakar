@@ -1,7 +1,5 @@
 import { Edge } from "../../../../../src-gen";
 import { DetailPane } from "./DetailPane.tsx";
-import { useEffect } from "react";
-import { useBearStore } from "../../../../lib/state/useBearStore.ts";
 
 export function EdgeDetails(props: { edge: Edge }) {
   return (
