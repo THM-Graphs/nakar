@@ -4,7 +4,7 @@ import { Stack } from "react-bootstrap";
 import { useBearStore } from "../../../lib/state/useBearStore.ts";
 
 export function Labels() {
-  const labels = useBearStore((s) => s.room.scenario.graph.metaData.labels);
+  const labels = useBearStore((s) => s.room.scenario.graph.elements.labels);
 
   return (
     <Stack

@@ -122,8 +122,11 @@ export function Room(props: { context: AppContext }) {
         s.unsubscribe();
       });
       setGraph({
-        nodes: [],
-        edges: [],
+        elements: {
+          nodes: [],
+          edges: [],
+          labels: [],
+        },
         metaData: {
           scenarioInfo: null,
           histogram: {
@@ -132,10 +135,11 @@ export function Room(props: { context: AppContext }) {
             nodeLabels: [],
             nodeProperties: [],
           },
-          labels: [],
           pipelineSummary: [],
         },
-        tableData: [],
+        table: {
+          data: [],
+        },
       });
     };
   }, []);

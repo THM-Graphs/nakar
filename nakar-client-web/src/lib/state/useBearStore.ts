@@ -53,11 +53,15 @@ export const useBearStore = create<BearState>()(
         },
         scenario: {
           graph: {
-            nodes: [],
-            edges: [],
-            tableData: [],
-            metaData: {
+            elements: {
+              nodes: [],
+              edges: [],
               labels: [],
+            },
+            table: {
+              data: [],
+            },
+            metaData: {
               histogram: {
                 nodeLabels: [],
                 edgeTypes: [],
@@ -79,7 +83,7 @@ export const useBearStore = create<BearState>()(
           setLocks: (locks: { id: string; locked: boolean }[]) => {
             set((s) => {
               for (const node of locks) {
-                const localNode = s.room.scenario.graph.nodes.find(
+                const localNode = s.room.scenario.graph.elements.nodes.find(
                   (n) => n.id === node.id,
                 );
                 if (localNode == null) {

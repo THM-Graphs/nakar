@@ -64,7 +64,7 @@ export class D3Renderer {
     initialGraph: Graph,
   ) {
     console.log("Did create instance of graph renderer");
-    this.graphState = D3RendererState.fromWsData(initialGraph);
+    this.graphState = D3RendererState.fromWsData(initialGraph.elements);
     this.theme = theme;
     this.svgElement = svgElement;
 
@@ -114,7 +114,7 @@ export class D3Renderer {
   }
 
   public loadGraphContent(graph: Graph) {
-    this.graphState = D3RendererState.fromWsData(graph);
+    this.graphState = D3RendererState.fromWsData(graph.elements);
     this.renderSvgElements();
   }
 
@@ -265,7 +265,7 @@ export class D3Renderer {
         (d) =>
           d.customBackgroundColor ??
           getBackgroundColor(
-            this.graphState.originalGraph?.metaData.labels.find(
+            this.graphState.originalGraphElements?.labels.find(
               (l) => l.label === d.labels[0],
             )?.color ?? null,
           ),
@@ -283,7 +283,7 @@ export class D3Renderer {
         const color =
           d.customTitleColor ??
           getTextColor(
-            this.graphState.originalGraph?.metaData.labels.find(
+            this.graphState.originalGraphElements?.labels.find(
               (l) => l.label === d.labels[0],
             )?.color ?? null,
           );

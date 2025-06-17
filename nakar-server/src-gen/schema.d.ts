@@ -52,6 +52,22 @@ export interface paths {
         readonly patch?: never;
         readonly trace?: never;
     };
+    readonly "/room/{id}/graph": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get: operations["getRoomGraph"];
+        readonly put?: never;
+        readonly post?: never;
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
     readonly "/system/version": {
         readonly parameters: {
             readonly query?: never;
@@ -176,7 +192,6 @@ export interface components {
             }[];
         };
         readonly GraphMetaData: {
-            readonly labels: readonly components["schemas"]["GraphLabel"][];
             readonly scenarioInfo: components["schemas"]["ScenarioInfo"];
             readonly pipelineSummary: readonly {
                 readonly step: string;
@@ -184,13 +199,20 @@ export interface components {
             }[];
             readonly histogram: components["schemas"]["Histogram"];
         };
-        readonly Graph: {
+        readonly GraphElements: {
             readonly nodes: readonly components["schemas"]["Node"][];
             readonly edges: readonly components["schemas"]["Edge"][];
-            readonly metaData: components["schemas"]["GraphMetaData"];
-            readonly tableData: readonly {
+            readonly labels: readonly components["schemas"]["GraphLabel"][];
+        };
+        readonly GraphTable: {
+            readonly data: readonly {
                 readonly [key: string]: unknown;
             }[];
+        };
+        readonly Graph: {
+            readonly elements: components["schemas"]["GraphElements"];
+            readonly metaData: components["schemas"]["GraphMetaData"];
+            readonly table: components["schemas"]["GraphTable"];
         };
         readonly Room: {
             readonly id: string;
@@ -371,6 +393,8 @@ export type SchemaEdge = components['schemas']['Edge'];
 export type SchemaScenarioInfo = components['schemas']['ScenarioInfo'];
 export type SchemaHistogram = components['schemas']['Histogram'];
 export type SchemaGraphMetaData = components['schemas']['GraphMetaData'];
+export type SchemaGraphElements = components['schemas']['GraphElements'];
+export type SchemaGraphTable = components['schemas']['GraphTable'];
 export type SchemaGraph = components['schemas']['Graph'];
 export type SchemaRoom = components['schemas']['Room'];
 export type SchemaRooms = components['schemas']['Rooms'];
@@ -463,6 +487,28 @@ export interface operations {
                 };
                 content: {
                     readonly "application/json": components["schemas"]["Room"];
+                };
+            };
+        };
+    };
+    readonly getRoomGraph: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path: {
+                readonly id: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            /** @description OK */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["Graph"];
                 };
             };
         };

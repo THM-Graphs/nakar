@@ -36,12 +36,15 @@ export type Edge = {
 };
 
 export type Graph = {
+    elements: GraphElements;
+    metaData: GraphMetaData;
+    table: GraphTable;
+};
+
+export type GraphElements = {
     nodes: Array<Node>;
     edges: Array<Edge>;
-    metaData: GraphMetaData;
-    tableData: Array<{
-        [key: string]: unknown;
-    }>;
+    labels: Array<GraphLabel>;
 };
 
 export type GraphLabel = {
@@ -52,7 +55,6 @@ export type GraphLabel = {
 };
 
 export type GraphMetaData = {
-    labels: Array<GraphLabel>;
     scenarioInfo: ScenarioInfo;
     pipelineSummary: Array<{
         step: string;
@@ -67,6 +69,12 @@ export type GraphProperty = {
 };
 
 export type GraphPropertyValue = unknown;
+
+export type GraphTable = {
+    data: Array<{
+        [key: string]: unknown;
+    }>;
+};
 
 export type Histogram = {
     nodeLabels: Array<{
@@ -350,6 +358,16 @@ export type GetRoomData = {
 export type GetRoomResponse = (Room);
 
 export type GetRoomError = unknown;
+
+export type GetRoomGraphData = {
+    path: {
+        id: string;
+    };
+};
+
+export type GetRoomGraphResponse = (Graph);
+
+export type GetRoomGraphError = unknown;
 
 export type GetVersionResponse = (Version);
 

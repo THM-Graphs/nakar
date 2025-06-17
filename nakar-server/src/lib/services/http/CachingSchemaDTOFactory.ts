@@ -5,9 +5,11 @@ import { LoggerService } from '../logger/LoggerService';
 import {
   SchemaEdge,
   SchemaGraph,
+  SchemaGraphElements,
   SchemaGraphLabel,
   SchemaGraphMetaData,
   SchemaGraphProperty,
+  SchemaGraphTable,
   SchemaHistogram,
   SchemaNode,
   SchemaScenarioInfo,
@@ -17,7 +19,6 @@ import { MutableEdge } from '../room/graph/MutableEdge';
 import { MutableGraph } from '../room/graph/MutableGraph';
 import { NodeDisplayConfigurationContext } from '../room/scenario-pipeline/display-configuration/NodeDisplayConfigurationContext';
 import { MutableGraphLabel } from '../room/graph/MutableGraphLabel';
-import { MutableGraphMetaData } from '../room/graph/MutableGraphMetaData';
 import { MutablePropertyCollection } from '../room/graph/MutablePropertyCollection';
 import { MutableScenarioInfo } from '../room/graph/MutableScenarioInfo';
 
@@ -34,6 +35,16 @@ export class CachingSchemaDTOFactory {
 
   public async createSchemaGraph(graph: MutableGraph): Promise<SchemaGraph> {
     return {
+      elements: await this.createSchemaGraphElements(graph),
+      metaData: await this.createSchemaGraphMetaData(graph),
+      table: this.createSchemaTable(graph),
+    };
+  }
+
+  public async createSchemaGraphElements(
+    graph: MutableGraph,
+  ): Promise<SchemaGraphElements> {
+    return {
       nodes: await graph.nodes.nodes.asyncFlatMap(
         async (node: MutableNode): Promise<SchemaNode> =>
           await this._createSchemaNode(node, graph),
@@ -42,73 +53,28 @@ export class CachingSchemaDTOFactory {
         async (edge: MutableEdge): Promise<SchemaEdge> =>
           await this._createSchemaEdge(edge, graph),
       ),
-      metaData: await this._createSchemaGraphMetaData(graph.metaData, graph),
-      tableData: graph.tableData.map(
+      labels: await graph.metaData
+        .getLabels(graph.nodes)
+        .asyncFlatMap(
+          async (
+            id: string,
+            label: MutableGraphLabel,
+          ): Promise<SchemaGraphLabel> =>
+            await this._createSchemaGraphLabel(id, label),
+        ),
+    };
+  }
+
+  public createSchemaTable(graph: MutableGraph): SchemaGraphTable {
+    return {
+      data: graph.tableData.map(
         (entry: SMap<string, unknown>): Record<string, unknown> =>
           entry.toRecord(),
       ),
     };
   }
 
-  private async _createSchemaNode(
-    node: MutableNode,
-    graph: MutableGraph,
-  ): Promise<SchemaNode> {
-    return {
-      id: node.id,
-      title: node.title(graph, this._logger),
-      labels: node.labels.toArray(),
-      properties: this._createSchemaGraphProperties(node.properties),
-      radius: node.radius(graph, this._logger),
-      position: node.position,
-      inDegree: node.inDegree(graph),
-      outDegree: node.outDegree(graph),
-      degree: node.degree(graph),
-      namesInQuery: node.namesInQuery.toArray(),
-      displayConfigurationContext: NodeDisplayConfigurationContext.create(
-        node,
-        graph,
-        this._logger,
-      ).toPlain(),
-      customBackgroundColor: node.customBackgroundColor(graph, this._logger),
-      customTitleColor: node.customTitleColor(graph, this._logger),
-      source: (await this._getDatabase(node.source))?.title ?? node.source,
-      additionalSources: (
-        await node.additionalSources.asyncMap(
-          async (additionalSource: string): Promise<string> => {
-            return (
-              (await this._getDatabase(additionalSource))?.title ??
-              additionalSource
-            );
-          },
-        )
-      ).toArray(),
-      locked: node.locked,
-    };
-  }
-
-  private async _createSchemaEdge(
-    edge: MutableEdge,
-    graph: MutableGraph,
-  ): Promise<SchemaEdge> {
-    return {
-      id: edge.id,
-      startNodeId: edge.startNodeId,
-      endNodeId: edge.endNodeId,
-      type: edge.type,
-      isLoop: edge.isLoop,
-      parallelCount: edge.parallelCount(graph),
-      parallelIndex: edge.parallelIndex(graph),
-      compressedCount: edge.compressedCount,
-      width: edge.width,
-      properties: this._createSchemaGraphProperties(edge.properties),
-      namesInQuery: edge.namesInQuery.toArray(),
-      source: (await this._getDatabase(edge.source))?.title ?? edge.source,
-    };
-  }
-
-  private async _createSchemaGraphMetaData(
-    metaData: MutableGraphMetaData,
+  public async createSchemaGraphMetaData(
     graph: MutableGraph,
   ): Promise<SchemaGraphMetaData> {
     const labelCountHistogram: number = graph.nodes.labelHistogram.reduce(
@@ -120,19 +86,10 @@ export class CachingSchemaDTOFactory {
       0,
     );
     return {
-      labels: await metaData
-        .getLabels(graph.nodes)
-        .asyncFlatMap(
-          async (
-            id: string,
-            label: MutableGraphLabel,
-          ): Promise<SchemaGraphLabel> =>
-            await this._createSchemaGraphLabel(id, label),
-        ),
-      scenarioInfo: metaData.scenarioInfo
-        ? this._createSchemaScenarioInfo(metaData.scenarioInfo)
+      scenarioInfo: graph.metaData.scenarioInfo
+        ? this._createSchemaScenarioInfo(graph.metaData.scenarioInfo)
         : null,
-      pipelineSummary: metaData.pipelineSummary.map(
+      pipelineSummary: graph.metaData.pipelineSummary.map(
         (entry: [string, number]): { step: string; durationMs: number } => {
           return {
             step: entry[0],
@@ -266,6 +223,63 @@ export class CachingSchemaDTOFactory {
             },
           ),
       } satisfies SchemaHistogram,
+    };
+  }
+
+  private async _createSchemaNode(
+    node: MutableNode,
+    graph: MutableGraph,
+  ): Promise<SchemaNode> {
+    return {
+      id: node.id,
+      title: node.title(graph, this._logger),
+      labels: node.labels.toArray(),
+      properties: this._createSchemaGraphProperties(node.properties),
+      radius: node.radius(graph, this._logger),
+      position: node.position,
+      inDegree: node.inDegree(graph),
+      outDegree: node.outDegree(graph),
+      degree: node.degree(graph),
+      namesInQuery: node.namesInQuery.toArray(),
+      displayConfigurationContext: NodeDisplayConfigurationContext.create(
+        node,
+        graph,
+        this._logger,
+      ).toPlain(),
+      customBackgroundColor: node.customBackgroundColor(graph, this._logger),
+      customTitleColor: node.customTitleColor(graph, this._logger),
+      source: (await this._getDatabase(node.source))?.title ?? node.source,
+      additionalSources: (
+        await node.additionalSources.asyncMap(
+          async (additionalSource: string): Promise<string> => {
+            return (
+              (await this._getDatabase(additionalSource))?.title ??
+              additionalSource
+            );
+          },
+        )
+      ).toArray(),
+      locked: node.locked,
+    };
+  }
+
+  private async _createSchemaEdge(
+    edge: MutableEdge,
+    graph: MutableGraph,
+  ): Promise<SchemaEdge> {
+    return {
+      id: edge.id,
+      startNodeId: edge.startNodeId,
+      endNodeId: edge.endNodeId,
+      type: edge.type,
+      isLoop: edge.isLoop,
+      parallelCount: edge.parallelCount(graph),
+      parallelIndex: edge.parallelIndex(graph),
+      compressedCount: edge.compressedCount,
+      width: edge.width,
+      properties: this._createSchemaGraphProperties(edge.properties),
+      namesInQuery: edge.namesInQuery.toArray(),
+      source: (await this._getDatabase(edge.source))?.title ?? edge.source,
     };
   }
 

@@ -8,7 +8,7 @@ import { AppContext } from "../../../../lib/state/AppContext.ts";
 
 export function InspectorPanel(props: { context: AppContext }) {
   const inspector = useBearStore((s) => s.room.panels.inspector);
-  const graph = useBearStore((s) => s.room.scenario.graph);
+  const graphElements = useBearStore((s) => s.room.scenario.graph.elements);
 
   return (
     <Panel
@@ -26,7 +26,7 @@ export function InspectorPanel(props: { context: AppContext }) {
       {match(inspector.element)
         .returnType<ReactNode>()
         .with({ type: "node" }, ({ nodeId }) => {
-          const node = graph.nodes.find((n) => n.id === nodeId);
+          const node = graphElements.nodes.find((n) => n.id === nodeId);
           return node ? (
             <NodeDetails context={props.context} node={node}></NodeDetails>
           ) : (
@@ -34,7 +34,7 @@ export function InspectorPanel(props: { context: AppContext }) {
           );
         })
         .with({ type: "edge" }, ({ edgeId }) => {
-          const edge = graph.edges.find((n) => n.id === edgeId);
+          const edge = graphElements.edges.find((n) => n.id === edgeId);
           return edge ? (
             <EdgeDetails edge={edge}></EdgeDetails>
           ) : (

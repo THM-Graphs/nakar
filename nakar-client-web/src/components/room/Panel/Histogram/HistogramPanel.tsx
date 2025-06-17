@@ -12,7 +12,7 @@ export function HistogramPanel() {
     (s) => s.room.scenario.graph.metaData.histogram,
   );
   const histogram = useBearStore((s) => s.room.panels.histogram);
-  const labels = useBearStore((s) => s.room.scenario.graph.metaData.labels);
+  const labels = useBearStore((s) => s.room.scenario.graph.elements.labels);
 
   return (
     <Panel

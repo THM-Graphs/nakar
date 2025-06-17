@@ -1,20 +1,20 @@
 import { D3Link } from "./D3Link.ts";
 import { D3Node } from "./D3Node.ts";
-import { Edge, Graph, Node } from "../../../src-gen";
+import { Edge, GraphElements, Node } from "../../../src-gen";
 
 export class D3RendererState {
   public constructor(
     public readonly links: D3Link[],
     public readonly nodes: D3Node[],
-    public readonly originalGraph: Graph | null,
+    public readonly originalGraphElements: GraphElements | null,
   ) {}
 
   public static empty(): D3RendererState {
     return new D3RendererState([], [], null);
   }
 
-  public static fromWsData(graph: Graph): D3RendererState {
-    const nodes = graph.nodes.map((node: Node): D3Node => {
+  public static fromWsData(graphElements: GraphElements): D3RendererState {
+    const nodes = graphElements.nodes.map((node: Node): D3Node => {
       return {
         id: node.id,
         x: node.position.x,
@@ -31,7 +31,7 @@ export class D3RendererState {
         title: node.title,
       };
     });
-    const links = graph.edges.reduce((acc: D3Link[], edge: Edge) => {
+    const links = graphElements.edges.reduce((acc: D3Link[], edge: Edge) => {
       const sourceNode = nodes.find((n) => n.id === edge.startNodeId);
       const targetNode = nodes.find((n) => n.id === edge.endNodeId);
 
@@ -51,6 +51,6 @@ export class D3RendererState {
       return acc;
     }, []);
 
-    return new D3RendererState(links, nodes, graph);
+    return new D3RendererState(links, nodes, graphElements);
   }
 }

@@ -56,6 +56,25 @@ paths:
               schema:
                 $ref: "#/components/schemas/Room"
 
+  /room/{id}/graph:
+    get:
+      tags:
+        - Room
+      operationId: getRoomGraph
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Graph"
+
   /system/version:
     get:
       tags:
@@ -366,10 +385,6 @@ components:
     GraphMetaData:
       type: object
       properties:
-        labels:
-          type: array
-          items:
-            $ref: "#/components/schemas/GraphLabel"
         scenarioInfo:
           $ref: "#/components/schemas/ScenarioInfo"
         pipelineSummary:
@@ -392,7 +407,7 @@ components:
         - pipelineSummary
         - histogram
 
-    Graph:
+    GraphElements:
       type: object
       properties:
         nodes:
@@ -403,18 +418,39 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/Edge"
-        metaData:
-          $ref: "#/components/schemas/GraphMetaData"
-        tableData:
+        labels:
           type: array
           items:
-            type: object
-            additionalProperties: {}
+            $ref: "#/components/schemas/GraphLabel"
       required:
         - nodes
         - edges
+        - labels
+
+    GraphTable:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            type: object
+            additionalProperties: { }
+      required:
+        - data
+
+    Graph:
+      type: object
+      properties:
+        elements:
+          $ref: "#/components/schemas/GraphElements"
+        metaData:
+          $ref: "#/components/schemas/GraphMetaData"
+        table:
+          $ref: "#/components/schemas/GraphTable"
+      required:
+        - elements
         - metaData
-        - tableData
+        - table
 
     Room:
       type: object

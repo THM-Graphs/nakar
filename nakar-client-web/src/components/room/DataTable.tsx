@@ -2,7 +2,7 @@ import { Stack, Table } from "react-bootstrap";
 import { useBearStore } from "../../lib/state/useBearStore.ts";
 
 export function DataTable() {
-  const tableData = useBearStore((s) => s.room.scenario.graph.tableData);
+  const tableData = useBearStore((s) => s.room.scenario.graph.table.data);
 
   if (tableData.length === 0) {
     return <p className={"p-3 text-muted"}>No data</p>;
