@@ -24,15 +24,18 @@ export function ClipboardButton(props: { text: string; className?: string }) {
         variant={"icon"}
         size={"sm"}
         onClick={() => {
-          if (!isClipboardEnabled) {
-            return;
-          }
+          (async () => {
+            if (!isClipboardEnabled) {
+              return;
+            }
 
-          setClipboard(extractString(props.text))
-            .then(() => {
+            try {
+              await setClipboard(extractString(props.text));
               setCopied(true);
-            })
-            .catch(console.error);
+            } catch (error) {
+              console.error(error);
+            }
+          })().catch(console.error);
         }}
       >
         <i className={"bi bi-copy"}></i>

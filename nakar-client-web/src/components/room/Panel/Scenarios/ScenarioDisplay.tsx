@@ -16,12 +16,16 @@ export function ScenarioDisplay(props: {
   const uiLocked = useBearStore((s) => s.room.ui.locked);
 
   const runScenario = useCallback(() => {
-    postRoomActionLoadScenario({
-      path: { id: props.roomContext.initialRoomData.id },
-      body: { scenarioId: props.scenario.id },
-    }).catch((error: unknown) => {
-      // TODO: Add error message
-    });
+    (async () => {
+      try {
+        await postRoomActionLoadScenario({
+          path: { id: props.roomContext.initialRoomData.id },
+          body: { scenarioId: props.scenario.id },
+        });
+      } catch (error) {
+        // TODO: Add error message
+      }
+    })().catch(console.error);
   }, [props.scenario]);
 
   return (

@@ -8,8 +8,8 @@ export function BackButton(props: { href: string; title?: string | null }) {
     <NavbarButton
       title={props.title ?? undefined}
       icon={"chevron-left"}
-      onClick={() => {
-        void navigate(props.href);
+      onClick={async () => {
+        await navigate(props.href);
       }}
       className={"border-start-0"}
     ></NavbarButton>

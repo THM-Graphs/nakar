@@ -36,8 +36,8 @@ export function DetailPane(props: {
               onClick={action.action}
               disabled={uiLocked}
               className={"flex-grow-1 justify-content-center"}
+              icon={action.icon}
             >
-              <i className={`bi bi-${action.icon} me-1`}></i>
               {action.title}
             </NavbarButton>
           ))}

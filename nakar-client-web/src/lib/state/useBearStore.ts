@@ -77,7 +77,6 @@ export const useBearStore = create<BearState>()(
             setGraph: (graph) => {
               set((s) => {
                 s.room.scenario.graph = graph;
-                console.log(JSON.stringify(graph));
               });
             },
             setGraphMetaData: (metaData) => {

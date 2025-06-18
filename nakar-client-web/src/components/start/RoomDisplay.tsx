@@ -10,8 +10,8 @@ export function RoomDisplay(props: { room: Room }) {
     <>
       <Stack direction={"horizontal"} className={"ellipsis flex-shrink-0"}>
         <NavbarButton
-          onClick={() => {
-            void navigate(`/room/${props.room.id}`);
+          onClick={async () => {
+            await navigate(`/room/${props.room.id}`);
           }}
           className={"flex-shrink-1 flex-grow-1 pb-2 pt-2 ellipsis"}
         >

@@ -1,6 +1,12 @@
 import clsx from "clsx";
-import { Stack } from "react-bootstrap";
-import { CSSProperties, forwardRef, MouseEvent, ReactNode } from "react";
+import { Spinner, Stack } from "react-bootstrap";
+import {
+  CSSProperties,
+  forwardRef,
+  MouseEvent,
+  ReactNode,
+  useState,
+} from "react";
 
 export const NavbarButton = forwardRef<
   HTMLDivElement,
@@ -17,43 +23,63 @@ export const NavbarButton = forwardRef<
     style?: CSSProperties;
   }
 >((props, ref) => {
+  const [loading, setLoading] = useState<boolean>(false);
+  const disabled = props.disabled || loading;
+
   return (
     <Stack
       ref={ref}
-      gap={2}
       direction={"horizontal"}
       onClick={(event: MouseEvent) => {
-        if (props.disabled) {
-          return;
-        }
-        event.stopPropagation();
-        props.onToggle?.(!(props.selected ?? false));
-        if (props.onClick) {
-          Promise.resolve(props.onClick(event)).catch((error: unknown) => {
-            // TODO: handle error
-          });
-        }
+        (async () => {
+          if (disabled) {
+            return;
+          }
+          event.stopPropagation();
+          props.onToggle?.(!(props.selected ?? false));
+          if (props.onClick) {
+            setLoading(true);
+            try {
+              await props.onClick(event);
+            } catch (error) {
+              alert(error);
+            }
+            setLoading(false);
+          }
+        })().catch(console.error);
       }}
       className={clsx(
-        "rounded-0 ps-2 pe-2 small flex-shrink-1",
+        "small flex-shrink-1 position-relative overflow-hidden",
         props.selected ? "bg-body-secondary" : "",
-        props.disabled ? "" : "pointer",
-        props.disabled ? "" : "bg-body-secondary-hover",
+        disabled ? "" : "pointer",
+        disabled ? "" : "bg-body-secondary-hover",
         props.className,
-        props.size == "sm" ? "" : "pt-1 pb-1",
       )}
       style={{
-        opacity: props.disabled ? 0.3 : 1,
+        opacity: disabled ? 0.3 : 1,
         ...(props.style ? props.style : {}),
       }}
     >
-      {props.icon && (
-        <i className={clsx("bi", `bi-${props.icon} flex-shrink-0`)}></i>
-      )}
-      {props.title && (
-        <span className={"ellipsis flex-shrink-1"}>{props.title}</span>
-      )}
-      {props.children}
+      <Stack
+        gap={2}
+        direction={"horizontal"}
+        className={clsx("ps-2 pe-2", props.size == "sm" ? "" : "pt-1 pb-1")}
+      >
+        {loading ? (
+          <Spinner animation="border" role="status" size={"sm"}>
+            <span className="visually-hidden">Loading...</span>
+          </Spinner>
+        ) : (
+          props.icon && (
+            <i className={clsx("bi", `bi-${props.icon} flex-shrink-0`)}></i>
+          )
+        )}
+
+        {props.title && (
+          <span className={"ellipsis flex-shrink-1"}>{props.title}</span>
+        )}
+        {props.children}
+      </Stack>
     </Stack>
   );
 });

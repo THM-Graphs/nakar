@@ -21,14 +21,15 @@ export function InfoDropdown(props: { context: AppContext }) {
   const [version, setVersion] = useState<Loadable<string>>({ type: "loading" });
 
   const reloadVersion = useCallback(() => {
-    getVersion()
-      .then((result) => {
+    (async () => {
+      try {
+        const result = await getVersion();
         const data = resultOrThrow(result);
         setVersion({ type: "data", data: data.version });
-      })
-      .catch((error: unknown) => {
+      } catch (error) {
         setVersion({ type: "error", message: handleError(error) });
-      });
+      }
+    })().catch(console.error);
   }, []);
 
   useEffect(() => {

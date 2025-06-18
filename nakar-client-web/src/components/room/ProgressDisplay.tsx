@@ -21,7 +21,7 @@ export function ProgressDisplay() {
   }
   return (
     <Stack
-      className={"border-end ps-2 pe-2 flex-grow-0 flex-shrink-0"}
+      className={"border-end ps-1 pe-2 flex-grow-0 flex-shrink-0"}
       direction={"horizontal"}
     >
       {progress.progress ? (
