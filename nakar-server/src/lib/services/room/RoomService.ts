@@ -111,6 +111,11 @@ export class RoomService implements ApplicationService {
           `Unable to move node: Node ${physialNode.id} not found.`,
         );
       }
+      if (!node.grabs.has(params.userId)) {
+        throw new Error(
+          `Unable to move node ${node.id}. User ${params.userId} did not grab it.`,
+        );
+      }
       if (!node.locked) {
         node.locked = true;
         this._sendActionToWorker(params.roomId, {
@@ -125,11 +130,11 @@ export class RoomService implements ApplicationService {
           locks: new SMap([[node.id, node.locked]]),
         } satisfies RoomServiceEvent);
       }
+      this._sendActionToWorker(params.roomId, {
+        type: 'WTActionMoveNodes',
+        nodes: params.nodes,
+      });
     }
-    this._sendActionToWorker(params.roomId, {
-      type: 'WTActionMoveNodes',
-      nodes: params.nodes,
-    });
   }
 
   public ungrabNode(params: {

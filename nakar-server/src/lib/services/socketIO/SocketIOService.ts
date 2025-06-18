@@ -216,6 +216,7 @@ export class SocketIOService implements ApplicationService {
                     roomId: roomId,
                     userId: wsClient.id,
                   });
+                  throw new Error('Test');
                 },
               )
               .with(
@@ -242,6 +243,7 @@ export class SocketIOService implements ApplicationService {
               )
               .exhaustive(),
           ).catch((error: unknown): void => {
+            // TODO: Check if handling is working. Server shuts down?
             this._logger.error(
               this,
               `Error handeling WS message: ${JSON.stringify(clientToServerMessage)}`,

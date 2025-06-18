@@ -1,7 +1,6 @@
 import { D3Link } from "./D3Link.ts";
 import { D3Node } from "./D3Node.ts";
 import {
-  Graph,
   GraphElements,
   WSEventNodesMoved,
   WSEventSetNodeLocks,
@@ -335,7 +334,9 @@ export class D3Renderer {
         .on(
           "end",
           (event: d3.D3DragEvent<SVGGElement, D3Node, null>, d: D3Node) => {
-            this.$onUngrabNode.next(d);
+            setTimeout(() => {
+              this.$onUngrabNode.next(d);
+            }, 500);
           },
         ),
     );
