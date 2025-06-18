@@ -5,9 +5,10 @@ import { useEffect } from "react";
 import {
   Databases,
   getRoom,
+  getRoomGraph,
   getScenarios,
+  Graph,
   Room as RoomSchema,
-  WSActionGetGraph,
   WSActionLeaveRoom,
 } from "../../src-gen";
 import { LoaderFunctionArgs, useLoaderData } from "react-router";
@@ -31,14 +32,15 @@ import { StatusBar } from "../components/shared/StatusBar.tsx";
 import { match } from "ts-pattern";
 import { PerformanceDisplay } from "../components/room/PerformanceDisplay.tsx";
 
-export type RoomLoaderResult = {
-  room: RoomSchema;
-  scenarios: Databases;
+export type RoomContext = {
+  initialRoomData: RoomSchema;
+  initialScenariosData: Databases;
+  initialGraphData: Graph;
 };
 
 export async function RoomLoader(
   args: LoaderFunctionArgs,
-): Promise<RoomLoaderResult> {
+): Promise<RoomContext> {
   const roomId = args.params["id"];
 
   if (roomId == null) {
@@ -47,36 +49,45 @@ export async function RoomLoader(
 
   const room = resultOrThrow(await getRoom({ path: { id: roomId } }));
   const scenarios = resultOrThrow(await getScenarios());
+  const graph = resultOrThrow(await getRoomGraph({ path: { id: roomId } }));
   return {
-    room: room,
-    scenarios: scenarios,
+    initialRoomData: room,
+    initialScenariosData: scenarios,
+    initialGraphData: graph,
   };
 }
 
 export function Room(props: { context: AppContext }) {
-  const loaderData: RoomLoaderResult = useLoaderData();
-  const scenario = useBearStore((s) => s.room.scenario);
+  const roomContext: RoomContext = useLoaderData();
+  const setGraph = useBearStore((s) => s.room.scenario.setGraph);
+  const setGraphElements = useBearStore(
+    (s) => s.room.scenario.setGraphElements,
+  );
+  const setGraphMetaData = useBearStore(
+    (s) => s.room.scenario.setGraphMetaData,
+  );
+  const setGraphTable = useBearStore((s) => s.room.scenario.setGraphTable);
   const socketState = useBearStore((s) => s.room.websockets.state);
   const unlockUI = useBearStore((s) => s.room.ui.unlock);
   const lockUI = useBearStore((s) => s.room.ui.lock);
   const setProgress = useBearStore((s) => s.room.ui.setProgress);
   const clearProgress = useBearStore((s) => s.room.ui.clearProgress);
   const webSockets = props.context.webSocketsManager;
-  const setGraph = useBearStore((s) => s.room.scenario.setGraph);
   const setPerformance = useBearStore((s) => s.room.ui.setPerformance);
   const setScenarios = useBearStore(
     (s) => s.room.panels.scenarios.setScenarios,
   );
 
   useEffect(() => {
-    setScenarios(loaderData.scenarios);
-  }, [loaderData.scenarios]);
+    setScenarios(roomContext.initialScenariosData);
+    setGraph(roomContext.initialGraphData);
+  }, [roomContext]);
 
   useEffect(() => {
     if (socketState.type === "connected") {
       webSockets.sendMessage({
         type: "WSActionJoinRoom",
-        roomId: loaderData.room.id,
+        roomId: roomContext.initialRoomData.id,
       });
     }
   }, [socketState]);
@@ -85,15 +96,17 @@ export function Room(props: { context: AppContext }) {
     const subscriptions = [
       webSockets.onMessage$.subscribe((message) => {
         match(message)
-          .with({ type: "WSEventGraphChanged" }, (event) => {
-            scenario.setGraph(event.graph);
+          .with({ type: "WSEventGraphMetaDataChanged" }, (event) => {
+            setGraphMetaData(event.metaData);
           })
-          .with({ type: "WSEventRoomChanged" }, (event) => {
-            if (event.roomId != null) {
-              webSockets.sendMessage({
-                type: "WSActionGetGraph",
-              } satisfies WSActionGetGraph);
-            }
+          .with({ type: "WSEventGraphElementsChanged" }, (e) => {
+            setGraphElements(e.elements);
+          })
+          .with({ type: "WSEventGraphTableChanged" }, (e) => {
+            setGraphTable(e.table);
+          })
+          .with({ type: "WSEventRoomChanged" }, () => {
+            /* */
           })
           .with({ type: "WSEventProgress" }, (event) => {
             setProgress(event);
@@ -109,7 +122,17 @@ export function Room(props: { context: AppContext }) {
           })
           .with({ type: "WSEventPerformanceChanged" }, (event) => {
             setPerformance(event.performance ?? null);
-          });
+          })
+          .with({ type: "WSEventNodesMoved" }, () => {
+            /* */
+          })
+          .with({ type: "WSEventNotification" }, () => {
+            /* */
+          })
+          .with({ type: "WSEventSetNodeLocks" }, () => {
+            /* */
+          })
+          .exhaustive();
       }),
     ];
 
@@ -126,15 +149,15 @@ export function Room(props: { context: AppContext }) {
           nodes: [],
           edges: [],
           labels: [],
-        },
-        metaData: {
-          scenarioInfo: null,
           histogram: {
             edgeProperties: [],
             edgeTypes: [],
             nodeLabels: [],
             nodeProperties: [],
           },
+        },
+        metaData: {
+          scenarioInfo: null,
           pipelineSummary: [],
         },
         table: {
@@ -158,7 +181,7 @@ export function Room(props: { context: AppContext }) {
             <>
               <NavbarLogo></NavbarLogo>
               <span className={"small text-muted align-self-center ms-2"}>
-                {loaderData.room.title}
+                {roomContext.initialRoomData.title}
               </span>
             </>
           }
@@ -175,9 +198,15 @@ export function Room(props: { context: AppContext }) {
           className={"align-items-stretch flex-grow-1 position-relative"}
           style={{ height: "100px" }}
         >
-          <ScenariosPanel context={props.context}></ScenariosPanel>
-          <Canvas context={props.context}></Canvas>
-          <InspectorPanel context={props.context}></InspectorPanel>
+          <ScenariosPanel
+            context={props.context}
+            roomContext={roomContext}
+          ></ScenariosPanel>
+          <Canvas context={props.context} roomContext={roomContext}></Canvas>
+          <InspectorPanel
+            context={props.context}
+            roomContext={roomContext}
+          ></InspectorPanel>
           <HistogramPanel></HistogramPanel>
           <ToastStack context={props.context}></ToastStack>
         </Stack>

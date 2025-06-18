@@ -1,6 +1,9 @@
 import {
   Databases,
   Graph,
+  GraphElements,
+  GraphMetaData,
+  GraphTable,
   PhysicsPerformance,
   WSEventProgress,
 } from "../../../src-gen";
@@ -23,6 +26,9 @@ export interface BearState {
     scenario: {
       graph: Graph;
       setGraph: (g: Graph) => void;
+      setGraphElements: (g: GraphElements) => void;
+      setGraphMetaData: (g: GraphMetaData) => void;
+      setGraphTable: (g: GraphTable) => void;
       setLocks: (locks: { id: string; locked: boolean }[]) => void;
     };
     websockets: {

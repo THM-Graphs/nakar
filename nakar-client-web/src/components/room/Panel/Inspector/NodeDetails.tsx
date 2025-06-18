@@ -1,11 +1,19 @@
-import { Node } from "../../../../../src-gen";
+import {
+  Node,
+  postRoomActionDeleteNodes,
+  postRoomActionExpandNodes,
+  postRoomActionUnlockNodes,
+} from "../../../../../src-gen";
 import { DetailPane } from "./DetailPane.tsx";
 import { DetailPaneAction } from "./DetailPaneAction.ts";
 import { AppContext } from "../../../../lib/state/AppContext.ts";
+import { RoomContext } from "../../../../pages/Room.tsx";
 
-export function NodeDetails(props: { node: Node; context: AppContext }) {
-  const webSockets = props.context.webSocketsManager;
-
+export function NodeDetails(props: {
+  node: Node;
+  context: AppContext;
+  roomContext: RoomContext;
+}) {
   return (
     <DetailPane
       actions={[
@@ -13,10 +21,12 @@ export function NodeDetails(props: { node: Node; context: AppContext }) {
           title: "Expand",
           icon: "zoom-in",
           variant: "primary",
-          action: () => {
-            webSockets.sendMessage({
-              type: "WSActionExpandNodes",
-              nodes: [props.node.id],
+          action: async () => {
+            await postRoomActionExpandNodes({
+              path: {
+                id: props.roomContext.initialRoomData.id,
+              },
+              body: { nodes: [props.node.id] },
             });
           },
         },
@@ -24,10 +34,12 @@ export function NodeDetails(props: { node: Node; context: AppContext }) {
           title: "Remove",
           icon: "eye-slash",
           variant: "danger",
-          action: () => {
-            webSockets.sendMessage({
-              type: "WSActionDeleteNodes",
-              nodes: [props.node.id],
+          action: async () => {
+            await postRoomActionDeleteNodes({
+              path: {
+                id: props.roomContext.initialRoomData.id,
+              },
+              body: { nodes: [props.node.id] },
             });
           },
         },
@@ -37,10 +49,12 @@ export function NodeDetails(props: { node: Node; context: AppContext }) {
                 title: "Unlock",
                 icon: "unlock",
                 variant: "primary",
-                action: () => {
-                  webSockets.sendMessage({
-                    type: "WSActionUnlockNodes",
-                    nodes: [props.node.id],
+                action: async () => {
+                  await postRoomActionUnlockNodes({
+                    path: { id: props.roomContext.initialRoomData.id },
+                    body: {
+                      nodes: [props.node.id],
+                    },
                   });
                 },
               } satisfies DetailPaneAction,

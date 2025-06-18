@@ -10,7 +10,7 @@ export const NavbarButton = forwardRef<
     selected?: boolean;
     disabled?: boolean;
     onToggle?: (selected: boolean) => void;
-    onClick?: (event: MouseEvent) => void;
+    onClick?: (event: MouseEvent) => void | Promise<void>;
     className?: string;
     children?: ReactNode;
     size?: "sm";
@@ -28,7 +28,11 @@ export const NavbarButton = forwardRef<
         }
         event.stopPropagation();
         props.onToggle?.(!(props.selected ?? false));
-        props.onClick?.(event);
+        if (props.onClick) {
+          Promise.resolve(props.onClick(event)).catch((error: unknown) => {
+            // TODO: handle error
+          });
+        }
       }}
       className={clsx(
         "rounded-0 ps-2 pe-2 small flex-shrink-1",

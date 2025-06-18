@@ -9,7 +9,7 @@ import { Panel } from "../Panel.tsx";
 
 export function HistogramPanel() {
   const histogramData = useBearStore(
-    (s) => s.room.scenario.graph.metaData.histogram,
+    (s) => s.room.scenario.graph.elements.histogram,
   );
   const histogram = useBearStore((s) => s.room.panels.histogram);
   const labels = useBearStore((s) => s.room.scenario.graph.elements.labels);

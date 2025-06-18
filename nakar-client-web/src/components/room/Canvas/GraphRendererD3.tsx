@@ -4,20 +4,27 @@ import { useBearStore } from "../../../lib/state/useBearStore.ts";
 import { AppContext } from "../../../lib/state/AppContext.ts";
 import { match } from "ts-pattern";
 import { D3Renderer } from "../../../lib/d3/D3Renderer.ts";
+import { RoomContext } from "../../../pages/Room.tsx";
 
-export function GraphRendererD3(props: { context: AppContext }) {
+export function GraphRendererD3(props: {
+  context: AppContext;
+  roomContext: RoomContext;
+}) {
   const websocketsManager = props.context.webSocketsManager;
   const svgRef = createRef<SVGSVGElement>();
   const theme = useTheme();
   const inspector = useBearStore((s) => s.room.panels.inspector);
   const setLocks = useBearStore((s) => s.room.scenario.setLocks);
-  const graph = useBearStore((s) => s.room.scenario.graph);
 
   useEffect(() => {
     if (svgRef.current == null) {
       return;
     }
-    const _graphRenderer = new D3Renderer(theme, svgRef.current, graph);
+    const _graphRenderer = new D3Renderer(
+      theme,
+      svgRef.current,
+      props.roomContext.initialGraphData.elements,
+    );
 
     const subs = [
       websocketsManager.onMessage$.subscribe((message) => {
@@ -25,12 +32,12 @@ export function GraphRendererD3(props: { context: AppContext }) {
           .with({ type: "WSEventNodesMoved" }, (event) => {
             _graphRenderer.updateNodePositions(event);
           })
-          .with({ type: "WSEventSetLocks" }, (event) => {
+          .with({ type: "WSEventSetNodeLocks" }, (event) => {
             setLocks(event.locks);
             _graphRenderer.updateLocks(event);
           })
-          .with({ type: "WSEventGraphChanged" }, (event) => {
-            _graphRenderer.loadGraphContent(event.graph);
+          .with({ type: "WSEventGraphElementsChanged" }, (event) => {
+            _graphRenderer.loadGraphContent(event.elements);
           });
       }),
       _graphRenderer.onGrabNode.subscribe((n) => {

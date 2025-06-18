@@ -4,10 +4,12 @@ import { Stack } from "react-bootstrap";
 import { Collapsable } from "../../Collapsable.tsx";
 import { NavbarButton } from "../../../shared/NavbarButton.tsx";
 import { AppContext } from "../../../../lib/state/AppContext.ts";
+import { RoomContext } from "../../../../pages/Room.tsx";
 
 export function DatabaseDisplay(props: {
   database: Database;
   context: AppContext;
+  roomContext: RoomContext;
 }) {
   return (
     <Stack className={"border-bottom flex-grow-0"}>
@@ -55,6 +57,7 @@ export function DatabaseDisplay(props: {
             <ScenarioGroupList
               scenarioGroups={props.database.scenarioGroups}
               context={props.context}
+              roomContext={props.roomContext}
             ></ScenarioGroupList>
           </Stack>
         </Stack>

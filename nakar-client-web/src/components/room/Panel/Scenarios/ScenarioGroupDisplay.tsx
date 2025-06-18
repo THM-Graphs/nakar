@@ -4,11 +4,13 @@ import { Collapsable } from "../../Collapsable.tsx";
 import { NavbarButton } from "../../../shared/NavbarButton.tsx";
 import { Stack } from "react-bootstrap";
 import { AppContext } from "../../../../lib/state/AppContext.ts";
+import { RoomContext } from "../../../../pages/Room.tsx";
 
 export function ScenarioGroupDisplay(props: {
   scenarioGroup: ScenarioGroup;
   hidden?: boolean;
   context: AppContext;
+  roomContext: RoomContext;
 }) {
   return (
     <Collapsable
@@ -43,6 +45,7 @@ export function ScenarioGroupDisplay(props: {
             ></NavbarButton>
           )}
           <ScenariosList
+            roomContext={props.roomContext}
             context={props.context}
             scenarios={props.scenarioGroup.scenarios}
           ></ScenariosList>

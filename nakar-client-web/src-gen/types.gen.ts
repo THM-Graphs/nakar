@@ -45,6 +45,7 @@ export type GraphElements = {
     nodes: Array<Node>;
     edges: Array<Edge>;
     labels: Array<GraphLabel>;
+    histogram: Histogram;
 };
 
 export type GraphLabel = {
@@ -60,7 +61,6 @@ export type GraphMetaData = {
         step: string;
         durationMs: number;
     }>;
-    histogram: Histogram;
 };
 
 export type GraphProperty = {
@@ -186,100 +186,74 @@ export type Version = {
     version: string;
 };
 
-export type WSActionDeleteNodes = {
-    type: 'WSActionDeleteNodes';
-    nodes: Array<(string)>;
-};
-
-export type type = 'WSActionDeleteNodes';
-
-export type WSActionExpandNodes = {
-    type: 'WSActionExpandNodes';
-    nodes: Array<(string)>;
-};
-
-export type type2 = 'WSActionExpandNodes';
-
-export type WSActionGetGraph = {
-    type: 'WSActionGetGraph';
-};
-
-export type type3 = 'WSActionGetGraph';
-
 export type WSActionGrabNode = {
     type: 'WSActionGrabNode';
     nodeId: string;
 };
 
-export type type4 = 'WSActionGrabNode';
+export type type = 'WSActionGrabNode';
 
 export type WSActionJoinRoom = {
     type: 'WSActionJoinRoom';
     roomId: string;
 };
 
-export type type5 = 'WSActionJoinRoom';
+export type type2 = 'WSActionJoinRoom';
 
 export type WSActionLeaveRoom = {
     type: 'WSActionLeaveRoom';
 };
 
-export type type6 = 'WSActionLeaveRoom';
-
-export type WSActionLoadScenario = {
-    type: 'WSActionLoadScenario';
-    scenarioId: string;
-};
-
-export type type7 = 'WSActionLoadScenario';
+export type type3 = 'WSActionLeaveRoom';
 
 export type WSActionMoveNodes = {
     type: 'WSActionMoveNodes';
     nodes: Array<PhysicalNode>;
 };
 
-export type type8 = 'WSActionMoveNodes';
-
-export type WSActionRelayout = {
-    type: 'WSActionRelayout';
-};
-
-export type type9 = 'WSActionRelayout';
+export type type4 = 'WSActionMoveNodes';
 
 export type WSActionUngrabNode = {
     type: 'WSActionUngrabNode';
     node: PhysicalNode;
 };
 
-export type type10 = 'WSActionUngrabNode';
+export type type5 = 'WSActionUngrabNode';
 
-export type WSActionUnlockNodes = {
-    type: 'WSActionUnlockNodes';
-    nodes: Array<(string)>;
-};
-
-export type type11 = 'WSActionUnlockNodes';
-
-export type WSClientToServerMessage = WSActionJoinRoom | WSActionLeaveRoom | WSActionLoadScenario | WSActionGetGraph | WSActionGrabNode | WSActionMoveNodes | WSActionUngrabNode | WSActionExpandNodes | WSActionDeleteNodes | WSActionRelayout | WSActionUnlockNodes;
+export type WSClientToServerMessage = WSActionJoinRoom | WSActionLeaveRoom | WSActionGrabNode | WSActionMoveNodes | WSActionUngrabNode;
 
 export type WSEventClearProgress = {
     type: 'WSEventClearProgress';
 };
 
-export type type12 = 'WSEventClearProgress';
+export type type6 = 'WSEventClearProgress';
 
-export type WSEventGraphChanged = {
-    type: 'WSEventGraphChanged';
-    graph: Graph;
+export type WSEventGraphElementsChanged = {
+    type: 'WSEventGraphElementsChanged';
+    elements: GraphElements;
 };
 
-export type type13 = 'WSEventGraphChanged';
+export type type7 = 'WSEventGraphElementsChanged';
+
+export type WSEventGraphMetaDataChanged = {
+    type: 'WSEventGraphMetaDataChanged';
+    metaData: GraphMetaData;
+};
+
+export type type8 = 'WSEventGraphMetaDataChanged';
+
+export type WSEventGraphTableChanged = {
+    type: 'WSEventGraphTableChanged';
+    table: GraphTable;
+};
+
+export type type9 = 'WSEventGraphTableChanged';
 
 export type WSEventLockUi = {
     type: 'WSEventLockUi';
 };
 
-export type type14 = 'WSEventLockUi';
+export type type10 = 'WSEventLockUi';
 
 export type WSEventNodesMoved = {
     type: 'WSEventNodesMoved';
@@ -287,7 +261,7 @@ export type WSEventNodesMoved = {
     date: string;
 };
 
-export type type15 = 'WSEventNodesMoved';
+export type type11 = 'WSEventNodesMoved';
 
 export type WSEventNotification = {
     type: 'WSEventNotification';
@@ -297,7 +271,7 @@ export type WSEventNotification = {
     date: string;
 };
 
-export type type16 = 'WSEventNotification';
+export type type12 = 'WSEventNotification';
 
 export type severity = 'error' | 'message' | 'warning';
 
@@ -306,7 +280,7 @@ export type WSEventPerformanceChanged = {
     performance?: PhysicsPerformance;
 };
 
-export type type17 = 'WSEventPerformanceChanged';
+export type type13 = 'WSEventPerformanceChanged';
 
 export type WSEventProgress = {
     type: 'WSEventProgress';
@@ -314,32 +288,32 @@ export type WSEventProgress = {
     message: string;
 };
 
-export type type18 = 'WSEventProgress';
+export type type14 = 'WSEventProgress';
 
 export type WSEventRoomChanged = {
     type: 'WSEventRoomChanged';
     roomId: (string) | null;
 };
 
-export type type19 = 'WSEventRoomChanged';
+export type type15 = 'WSEventRoomChanged';
 
-export type WSEventSetLocks = {
-    type: 'WSEventSetLocks';
+export type WSEventSetNodeLocks = {
+    type: 'WSEventSetNodeLocks';
     locks: Array<{
         id: string;
         locked: boolean;
     }>;
 };
 
-export type type20 = 'WSEventSetLocks';
+export type type16 = 'WSEventSetNodeLocks';
 
 export type WSEventUnlockUi = {
     type: 'WSEventUnlockUi';
 };
 
-export type type21 = 'WSEventUnlockUi';
+export type type17 = 'WSEventUnlockUi';
 
-export type WSServerToClientMessage = WSEventNodesMoved | WSEventRoomChanged | WSEventNotification | WSEventGraphChanged | WSEventProgress | WSEventClearProgress | WSEventSetLocks | WSEventLockUi | WSEventUnlockUi | WSEventPerformanceChanged;
+export type WSServerToClientMessage = WSEventNodesMoved | WSEventRoomChanged | WSEventNotification | WSEventGraphElementsChanged | WSEventGraphMetaDataChanged | WSEventGraphTableChanged | WSEventProgress | WSEventClearProgress | WSEventSetNodeLocks | WSEventLockUi | WSEventUnlockUi | WSEventPerformanceChanged;
 
 export type GetScenariosResponse = (Databases);
 
@@ -369,6 +343,115 @@ export type GetRoomGraphResponse = (Graph);
 
 export type GetRoomGraphError = unknown;
 
+export type GetRoomGraphElementsData = {
+    path: {
+        id: string;
+    };
+};
+
+export type GetRoomGraphElementsResponse = (GraphElements);
+
+export type GetRoomGraphElementsError = unknown;
+
+export type GetRoomGraphMetaDataData = {
+    path: {
+        id: string;
+    };
+};
+
+export type GetRoomGraphMetaDataResponse = (GraphMetaData);
+
+export type GetRoomGraphMetaDataError = unknown;
+
+export type GetRoomGraphTableData = {
+    path: {
+        id: string;
+    };
+};
+
+export type GetRoomGraphTableResponse = (GraphTable);
+
+export type GetRoomGraphTableError = unknown;
+
+export type PostRoomActionLoadScenarioData = {
+    body: {
+        scenarioId: string;
+    };
+    path: {
+        id: string;
+    };
+};
+
+export type PostRoomActionLoadScenarioResponse = (unknown);
+
+export type PostRoomActionLoadScenarioError = unknown;
+
+export type PostRoomActionExpandNodesData = {
+    body: {
+        nodes: Array<(string)>;
+    };
+    path: {
+        id: string;
+    };
+};
+
+export type PostRoomActionExpandNodesResponse = (unknown);
+
+export type PostRoomActionExpandNodesError = unknown;
+
+export type PostRoomActionDeleteNodesData = {
+    body: {
+        nodes: Array<(string)>;
+    };
+    path: {
+        id: string;
+    };
+};
+
+export type PostRoomActionDeleteNodesResponse = (unknown);
+
+export type PostRoomActionDeleteNodesError = unknown;
+
+export type PostRoomActionRelayoutData = {
+    path: {
+        id: string;
+    };
+};
+
+export type PostRoomActionRelayoutResponse = (unknown);
+
+export type PostRoomActionRelayoutError = unknown;
+
+export type PostRoomActionUnlockNodesData = {
+    body: {
+        nodes: Array<(string)>;
+    };
+    path: {
+        id: string;
+    };
+};
+
+export type PostRoomActionUnlockNodesResponse = (unknown);
+
+export type PostRoomActionUnlockNodesError = unknown;
+
 export type GetVersionResponse = (Version);
 
 export type GetVersionError = unknown;
+
+export type GetBackupResponse = (unknown);
+
+export type GetBackupError = unknown;
+
+export type PostImportData = {
+    body: {
+        /**
+         * The file to upload.
+         */
+        file?: (Blob | File);
+    };
+};
+
+export type PostImportResponse = (unknown);
+
+export type PostImportError = unknown;

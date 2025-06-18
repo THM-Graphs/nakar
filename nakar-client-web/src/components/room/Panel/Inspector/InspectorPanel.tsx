@@ -1,12 +1,16 @@
 import { match } from "ts-pattern";
 import { Panel } from "../Panel.tsx";
-import { ReactNode } from "react";
+import { ReactNode, useEffect } from "react";
 import { NodeDetails } from "./NodeDetails.tsx";
 import { EdgeDetails } from "./EdgeDetails.tsx";
 import { useBearStore } from "../../../../lib/state/useBearStore.ts";
 import { AppContext } from "../../../../lib/state/AppContext.ts";
+import { RoomContext } from "../../../../pages/Room.tsx";
 
-export function InspectorPanel(props: { context: AppContext }) {
+export function InspectorPanel(props: {
+  context: AppContext;
+  roomContext: RoomContext;
+}) {
   const inspector = useBearStore((s) => s.room.panels.inspector);
   const graphElements = useBearStore((s) => s.room.scenario.graph.elements);
 
@@ -28,7 +32,11 @@ export function InspectorPanel(props: { context: AppContext }) {
         .with({ type: "node" }, ({ nodeId }) => {
           const node = graphElements.nodes.find((n) => n.id === nodeId);
           return node ? (
-            <NodeDetails context={props.context} node={node}></NodeDetails>
+            <NodeDetails
+              context={props.context}
+              node={node}
+              roomContext={props.roomContext}
+            ></NodeDetails>
           ) : (
             <EmptyInspector></EmptyInspector>
           );

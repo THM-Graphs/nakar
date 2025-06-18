@@ -3,10 +3,7 @@ import { Observable, Subject } from 'rxjs';
 import { MutableGraph } from './graph/MutableGraph';
 import { GetRoomDBDTO } from '../database/dto/GetRoomDBDTO';
 import { ScenarioPipeline } from './scenario-pipeline/ScenarioPipeline';
-import { RSEventScenarioProgress } from './events/RSEventScenarioProgress';
-import { RSEventRoomUpdated } from './events/RSEventRoomUpdated';
-import { RSEventRoomPhysicsUpdated } from './events/RSEventRoomPhysicsUpdated';
-import { RSPhysicalNode } from './events/RSPhysicalNode';
+import { RSPhysicalNode } from './RSPhysicalNode';
 import { GetScenarioDBDTO } from '../database/dto/GetScenarioDBDTO';
 import { LoggerService } from '../logger/LoggerService';
 import { ProfilerService } from '../profiler/ProfilerService';
@@ -28,20 +25,17 @@ import { GetDatabaseDBDTO } from '../database/dto/GetDatabaseDBDTO';
 import { Neo4jDatabaseInfo } from '../neo4j/Neo4jDatabaseInfo';
 import { Neo4jGraphElements } from '../neo4j/Neo4jGraphElements';
 import { SSet } from '../../tools/Set';
-import { RSExpandNodesResult } from './events/RSExpandNodesResult';
 import { PhysicalGraph } from '../../tools/physics/physical-graph/PhysicalGraph';
-import { RSEventRoomLocksUpdated } from './events/RSEventRoomLocksUpdated';
 import { WTEventPerformanceChanged } from '../room-instance/worker-events/WTEventPerformanceChanged';
-import { RSEventRoomPerformanceChanged } from './events/RSEventRoomPerformanceChanged';
+import { RoomServiceEvent } from './events/RoomServiceEvent';
+import { RoomServiceEventGraphElementsChanged } from './events/RoomServiceEventGraphElementsChanged';
+import { RoomServiceEventGraphMetaDataChanged } from './events/RoomServiceEventGraphMetaDataChanged';
+import { RoomServiceEventGraphTableChanged } from './events/RoomServiceEventGraphTableChanged';
 
 export class RoomService implements ApplicationService {
   private readonly _workers: SMap<string, Worker>;
   private readonly _graphs: SMap<string, MutableGraph>;
-
-  private readonly _onRoomUpdated: Subject<RSEventRoomUpdated>;
-  private readonly _onRoomPhysicsUpdated: Subject<RSEventRoomPhysicsUpdated>;
-  private readonly _onLocksUpdated: Subject<RSEventRoomLocksUpdated>;
-  private readonly _onPerformanceChanged: Subject<RSEventRoomPerformanceChanged>;
+  private readonly _onEvent: Subject<RoomServiceEvent>;
 
   public constructor(
     private readonly _database: DatabaseService,
@@ -51,26 +45,11 @@ export class RoomService implements ApplicationService {
   ) {
     this._workers = new SMap();
     this._graphs = new SMap();
-    this._onRoomUpdated = new Subject();
-    this._onRoomPhysicsUpdated = new Subject();
-    this._onLocksUpdated = new Subject();
-    this._onPerformanceChanged = new Subject();
+    this._onEvent = new Subject();
   }
 
-  public get onRoomUpdated$(): Observable<RSEventRoomUpdated> {
-    return this._onRoomUpdated.asObservable();
-  }
-
-  public get onRoomPhysicsUpdated$(): Observable<RSEventRoomPhysicsUpdated> {
-    return this._onRoomPhysicsUpdated.asObservable();
-  }
-
-  public get onRoomLocksUpdated$(): Observable<RSEventRoomLocksUpdated> {
-    return this._onLocksUpdated.asObservable();
-  }
-
-  public get onPerformanceChanged$(): Observable<RSEventRoomPerformanceChanged> {
-    return this._onPerformanceChanged.asObservable();
+  public get onEvent$(): Observable<RoomServiceEvent> {
+    return this._onEvent.asObservable();
   }
 
   public async bootstrap(): Promise<void> {
@@ -96,7 +75,11 @@ export class RoomService implements ApplicationService {
   }
 
   public getGraph(roomId: string): MutableGraph {
-    return this._graphs.get(roomId) ?? MutableGraph.empty();
+    const graph: MutableGraph | undefined = this._graphs.get(roomId);
+    if (graph == null) {
+      throw new Error(`Room ${roomId} not found.`);
+    }
+    return graph;
   }
 
   public grabNode(params: {
@@ -136,10 +119,11 @@ export class RoomService implements ApplicationService {
             [node.id]: node.locked,
           },
         });
-        this._onLocksUpdated.next({
+        this._onEvent.next({
+          type: 'RoomServiceEventNodeLocksUpdated',
           roomId: params.roomId,
           locks: new SMap([[node.id, node.locked]]),
-        });
+        } satisfies RoomServiceEvent);
       }
     }
     this._sendActionToWorker(params.roomId, {
@@ -166,181 +150,218 @@ export class RoomService implements ApplicationService {
   public async loadScenario(params: {
     roomId: string;
     scenarioId: string;
-    onProgrsss: (progress: RSEventScenarioProgress) => void;
   }): Promise<GetScenarioDBDTO> {
-    if (!(await this._database.roomExists(params.roomId))) {
-      this._logger.error(this, `Room ${params.roomId} does not exist!`);
-    }
+    return this._runWithRoomLock(
+      params.roomId,
+      'Loading scenario',
+      async (): Promise<GetScenarioDBDTO> => {
+        this._assertRoomId(params.roomId);
 
-    const scenarioPipeline: ScenarioPipeline = new ScenarioPipeline(
-      this._database,
-      this._logger,
-      this._profiler,
-      this._neo4j,
-    );
+        const scenarioPipeline: ScenarioPipeline = new ScenarioPipeline(
+          this._database,
+          this._logger,
+          this._profiler,
+          this._neo4j,
+        );
 
-    const task: ProfilerTask = this._profiler.profile(
-      this,
-      'Scenario Pipeline',
-    );
-    const result: ScenarioPipelineResult = await scenarioPipeline.run(
-      params.scenarioId,
-      (step: string, progress: number): void => {
-        params.onProgrsss({
-          roomId: params.roomId,
-          message: step,
-          progress: progress,
+        const task: ProfilerTask = this._profiler.profile(
+          this,
+          'Scenario Pipeline',
+        );
+        const result: ScenarioPipelineResult = await scenarioPipeline.run(
+          params.scenarioId,
+          (step: string, progress: number): void => {
+            this._onEvent.next({
+              type: 'RoomServiceEventProgressChanged',
+              roomId: params.roomId,
+              message: step,
+              progress: progress,
+            } satisfies RoomServiceEvent);
+          },
+        );
+        task.finish();
+
+        this._graphs.set(params.roomId, result.graph);
+        this._sendActionToWorker(params.roomId, {
+          type: 'WTActionSetGraph',
+          graph: result.graph.toPhysicalGraph(this._logger),
         });
+        await this.saveGraph(params.roomId);
+        this._onEvent.next({
+          type: 'RoomServiceEventGraphMetaDataChanged',
+          metaData: result.graph.metaData,
+          roomId: params.roomId,
+        } satisfies RoomServiceEventGraphMetaDataChanged);
+        this._onEvent.next({
+          type: 'RoomServiceEventGraphElementsChanged',
+          graph: result.graph,
+          roomId: params.roomId,
+        } satisfies RoomServiceEventGraphElementsChanged);
+        this._onEvent.next({
+          type: 'RoomServiceEventGraphTableChanged',
+          table: result.graph.tableData,
+          roomId: params.roomId,
+        } satisfies RoomServiceEventGraphTableChanged);
+
+        return result.scenario;
       },
     );
-    task.finish();
-
-    this._graphs.set(params.roomId, result.graph);
-    this._sendActionToWorker(params.roomId, {
-      type: 'WTActionSetGraph',
-      graph: result.graph.toPhysicalGraph(this._logger),
-    });
-    await this.saveGraph(params.roomId);
-    this._onRoomUpdated.next({
-      graph: result.graph,
-      roomId: params.roomId,
-    });
-
-    return result.scenario;
   }
 
   public async expandNodes(params: {
     roomId: string;
     nodeIds: readonly string[];
-  }): Promise<RSExpandNodesResult> {
-    const databaseCache: SMap<string, GetDatabaseDBDTO> = new SMap<
-      string,
-      GetDatabaseDBDTO
-    >();
-    const graph: MutableGraph = this.getGraph(params.roomId);
+  }): Promise<void> {
+    return this._runWithRoomLock(
+      params.roomId,
+      'Expanding nodes',
+      async (): Promise<void> => {
+        this._assertRoomId(params.roomId);
 
-    const scenarioId: string | null = graph.metaData.scenarioInfo?.id ?? null;
-    if (scenarioId == null) {
-      throw new Error(`Cannot expand node because there is no scneario info.`);
-    }
+        const databaseCache: SMap<string, GetDatabaseDBDTO> = new SMap<
+          string,
+          GetDatabaseDBDTO
+        >();
+        const graph: MutableGraph = this.getGraph(params.roomId);
 
-    const scenario: GetScenarioDBDTO | null =
-      await this._database.getScenario(scenarioId);
-    if (scenario == null) {
-      throw new Error(
-        `Cannot find scenario of room ${params.roomId} to run expand nodes.`,
-      );
-    }
+        const scenarioId: string | null =
+          graph.metaData.scenarioInfo?.id ?? null;
+        if (scenarioId == null) {
+          throw new Error(
+            `Cannot expand node because there is no scneario info.`,
+          );
+        }
 
-    const result: RSExpandNodesResult = {
-      newNodeCount: 0,
-      newEdgeCount: 0,
-    };
+        const scenario: GetScenarioDBDTO | null =
+          await this._database.getScenario(scenarioId);
+        if (scenario == null) {
+          throw new Error(
+            `Cannot find scenario of room ${params.roomId} to run expand nodes.`,
+          );
+        }
 
-    for (const nodeId of params.nodeIds) {
-      const node: MutableNode | null = graph.nodes.get(nodeId);
-      if (node == null) {
-        throw new Error(`Cannot find node ${nodeId} to expand.`);
-      }
+        const result: { newNodeCount: number; newEdgeCount: number } = {
+          newNodeCount: 0,
+          newEdgeCount: 0,
+        };
 
-      const database: GetDatabaseDBDTO | null =
-        databaseCache.get(node.source) ??
-        (await this._database.getDatabase(node.source));
-      if (database == null) {
-        throw new Error(
-          `Cannot find database ${node.source} to run expand node query on.`,
-        );
-      }
-      databaseCache.set(node.source, database);
-
-      const neo4jDatabaseInfo: Neo4jDatabaseInfo =
-        Neo4jDatabaseInfo.parse(database);
-
-      // expand result
-      const expandResult: Neo4jGraphElements = await this._neo4j.expandNode(
-        neo4jDatabaseInfo,
-        new SSet<string>([nodeId]),
-      );
-
-      // connect result nodes
-      const connectResultNodeResult: Neo4jGraphElements =
-        await this._neo4j.loadConnectingRelationshipsFromTo(
-          neo4jDatabaseInfo,
-          new SSet<string>(expandResult.nodes.keys()),
-          new SSet<string>([...graph.nodes.keys, ...expandResult.nodes.keys()]),
-        );
-
-      for (const newNode of expandResult.nodes) {
-        if (!graph.nodes.hasById(newNode[0])) {
-          result.newNodeCount += 1;
-          graph.nodes.addNeo4jNode(newNode[1]);
-
-          const insertedNode: MutableNode | null = graph.nodes.get(newNode[0]);
-          if (insertedNode != null && !insertedNode.locked) {
-            insertedNode.position.x = node.position.x;
-            insertedNode.position.y = node.position.y;
+        for (const nodeId of params.nodeIds) {
+          const node: MutableNode | null = graph.nodes.get(nodeId);
+          if (node == null) {
+            throw new Error(`Cannot find node ${nodeId} to expand.`);
           }
+
+          const database: GetDatabaseDBDTO | null =
+            databaseCache.get(node.source) ??
+            (await this._database.getDatabase(node.source));
+          if (database == null) {
+            throw new Error(
+              `Cannot find database ${node.source} to run expand node query on.`,
+            );
+          }
+          databaseCache.set(node.source, database);
+
+          const neo4jDatabaseInfo: Neo4jDatabaseInfo =
+            Neo4jDatabaseInfo.parse(database);
+
+          // expand result
+          const expandResult: Neo4jGraphElements = await this._neo4j.expandNode(
+            neo4jDatabaseInfo,
+            new SSet<string>([nodeId]),
+          );
+
+          // connect result nodes
+          const connectResultNodeResult: Neo4jGraphElements =
+            await this._neo4j.loadConnectingRelationshipsFromTo(
+              neo4jDatabaseInfo,
+              new SSet<string>(expandResult.nodes.keys()),
+              new SSet<string>([
+                ...graph.nodes.keys,
+                ...expandResult.nodes.keys(),
+              ]),
+            );
+
+          for (const newNode of expandResult.nodes) {
+            if (!graph.nodes.hasById(newNode[0])) {
+              result.newNodeCount += 1;
+              graph.nodes.addNeo4jNode(newNode[1]);
+
+              const insertedNode: MutableNode | null = graph.nodes.get(
+                newNode[0],
+              );
+              if (insertedNode != null && !insertedNode.locked) {
+                insertedNode.position.x = node.position.x;
+                insertedNode.position.y = node.position.y;
+              }
+            }
+          }
+          for (const newEdge of expandResult.relationships) {
+            if (!graph.edges.has(newEdge[0])) {
+              result.newEdgeCount += 1;
+              graph.edges.addNeo4jEdge(newEdge[1]);
+            }
+          }
+
+          graph.edges.addNeo4jEdges(connectResultNodeResult.relationships);
+          graph.removeDanglingEdges(this._logger);
+
+          this._logger.debug(
+            this,
+            `Expand node result for ${nodeId}: ${expandResult.nodes.size.toString()} nodes.`,
+          );
         }
-      }
-      for (const newEdge of expandResult.relationships) {
-        if (!graph.edges.has(newEdge[0])) {
-          result.newEdgeCount += 1;
-          graph.edges.addNeo4jEdge(newEdge[1]);
-        }
-      }
 
-      graph.edges.addNeo4jEdges(connectResultNodeResult.relationships);
-      graph.removeDanglingEdges(this._logger);
-
-      this._logger.debug(
-        this,
-        `Expand node result for ${nodeId}: ${expandResult.nodes.size.toString()} nodes.`,
-      );
-    }
-
-    this._sendActionToWorker(params.roomId, {
-      type: 'WTActionSetGraph',
-      graph: graph.toPhysicalGraph(this._logger),
-    });
-    this._sendActionToWorker(params.roomId, {
-      type: 'WTActionTriggerPhysics',
-      amount: 'short',
-    });
-    this._onRoomUpdated.next({
-      graph: graph,
-      roomId: params.roomId,
-    });
-    return result;
+        this._sendActionToWorker(params.roomId, {
+          type: 'WTActionSetGraph',
+          graph: graph.toPhysicalGraph(this._logger),
+        });
+        this._sendActionToWorker(params.roomId, {
+          type: 'WTActionTriggerPhysics',
+          amount: 'short',
+        });
+        this._onEvent.next({
+          type: 'RoomServiceEventGraphElementsChanged',
+          graph: graph,
+          roomId: params.roomId,
+        } satisfies RoomServiceEvent);
+      },
+    );
   }
 
-  public deleteNodes(params: {
+  public async deleteNodes(params: {
     roomId: string;
     nodeIds: readonly string[];
-  }): void {
-    const graph: MutableGraph = this.getGraph(params.roomId);
+  }): Promise<void> {
+    await this._runWithRoomLock(params.roomId, 'Deleting nodes', (): void => {
+      this._assertRoomId(params.roomId);
 
-    for (const nodeId of params.nodeIds) {
-      graph.nodes.remove(nodeId);
-      graph.edges.removeEdgesOfNode(nodeId);
+      const graph: MutableGraph = this.getGraph(params.roomId);
 
-      this._logger.debug(this, `Did delete node ${nodeId}`);
-    }
+      for (const nodeId of params.nodeIds) {
+        graph.nodes.remove(nodeId);
+        graph.edges.removeEdgesOfNode(nodeId);
 
-    this._sendActionToWorker(params.roomId, {
-      type: 'WTActionSetGraph',
-      graph: graph.toPhysicalGraph(this._logger),
-    });
-    this._sendActionToWorker(params.roomId, {
-      type: 'WTActionTriggerPhysics',
-      amount: 'short',
-    });
-    this._onRoomUpdated.next({
-      graph: graph,
-      roomId: params.roomId,
+        this._logger.debug(this, `Did delete node ${nodeId}`);
+      }
+
+      this._sendActionToWorker(params.roomId, {
+        type: 'WTActionSetGraph',
+        graph: graph.toPhysicalGraph(this._logger),
+      });
+      this._sendActionToWorker(params.roomId, {
+        type: 'WTActionTriggerPhysics',
+        amount: 'short',
+      });
+      this._onEvent.next({
+        type: 'RoomServiceEventGraphElementsChanged',
+        graph: graph,
+        roomId: params.roomId,
+      } satisfies RoomServiceEvent);
     });
   }
 
   public relayout(params: { roomId: string }): void {
+    this._assertRoomId(params.roomId);
     const graph: MutableGraph = this.getGraph(params.roomId);
 
     const nodeLocks: Record<string, boolean> = {};
@@ -355,10 +376,11 @@ export class RoomService implements ApplicationService {
       }
     }
 
-    this._onLocksUpdated.next({
+    this._onEvent.next({
+      type: 'RoomServiceEventNodeLocksUpdated',
       roomId: params.roomId,
       locks: clientNodeLocks,
-    });
+    } satisfies RoomServiceEvent);
 
     this._sendActionToWorker(params.roomId, {
       type: 'WTActionSetLocks',
@@ -375,7 +397,8 @@ export class RoomService implements ApplicationService {
     roomId: string;
     nodeIds: readonly string[];
   }): void {
-    const graph: MutableGraph | undefined = this.getGraph(params.roomId);
+    this._assertRoomId(params.roomId);
+    const graph: MutableGraph = this.getGraph(params.roomId);
 
     const nodeLocks: Record<string, boolean> = {};
     const clientNodeLocks: SMap<string, boolean> = new SMap<string, boolean>();
@@ -395,10 +418,11 @@ export class RoomService implements ApplicationService {
       }
     }
 
-    this._onLocksUpdated.next({
+    this._onEvent.next({
+      type: 'RoomServiceEventNodeLocksUpdated',
       roomId: params.roomId,
       locks: clientNodeLocks,
-    });
+    } satisfies RoomServiceEvent);
     this._sendActionToWorker(params.roomId, {
       type: 'WTActionSetLocks',
       locks: nodeLocks,
@@ -410,14 +434,8 @@ export class RoomService implements ApplicationService {
   }
 
   public async saveGraph(roomId: string): Promise<void> {
-    const graph: MutableGraph | undefined = this._graphs.get(roomId);
-    if (graph == null) {
-      this._logger.error(
-        this,
-        `Cannot save graph of room ${roomId}. Graph does not exist.`,
-      );
-      return;
-    }
+    this._assertRoomId(roomId);
+    const graph: MutableGraph = this.getGraph(roomId);
 
     const room: GetRoomDBDTO | null = await this._database.getRoom(roomId);
     if (room == null) {
@@ -531,24 +549,72 @@ export class RoomService implements ApplicationService {
   ): void {
     const graph: MutableGraph = this.getGraph(roomId);
     graph.applyPhysicalGraph(event.graph, this._logger);
-    this._onRoomPhysicsUpdated.next({
+    this._onEvent.next({
+      type: 'RoomServiceEventRoomPhysicsUpdated',
       graph: graph,
       roomId: roomId,
-    });
+    } satisfies RoomServiceEvent);
   }
 
   private _handleWTEventPerformanceChanged(
     roomId: string,
     event: WTEventPerformanceChanged,
   ): void {
-    this._onPerformanceChanged.next({
+    this._onEvent.next({
+      type: 'RoomServiceEventRoomPerformanceChanged',
       roomId: roomId,
       performance: event.performance,
-    });
+    } satisfies RoomServiceEvent);
   }
 
   private _sendActionToWorker(roomId: string, action: WTAction): void {
     const worker: Worker = this._getOrStartWorker(roomId);
     worker.postMessage(action);
+  }
+
+  private async _runWithRoomLock<T>(
+    roomId: string,
+    actionTitle: string,
+    action: () => T | Promise<T>,
+  ): Promise<T> {
+    this._assertRoomId(roomId);
+    this._onEvent.next({
+      type: 'RoomServiceEventRoomLocked',
+      roomId: roomId,
+    } satisfies RoomServiceEvent);
+    this._onEvent.next({
+      type: 'RoomServiceEventProgressChanged',
+      roomId: roomId,
+      progress: null,
+      message: actionTitle,
+    } satisfies RoomServiceEvent);
+    try {
+      const result: T = await action();
+      this._onEvent.next({
+        type: 'RoomServiceEventProgressCleared',
+        roomId: roomId,
+      } satisfies RoomServiceEvent);
+      this._onEvent.next({
+        type: 'RoomServiceEventRoomUnlocked',
+        roomId: roomId,
+      } satisfies RoomServiceEvent);
+      return result;
+    } catch (error: unknown) {
+      this._onEvent.next({
+        type: 'RoomServiceEventProgressCleared',
+        roomId: roomId,
+      } satisfies RoomServiceEvent);
+      this._onEvent.next({
+        type: 'RoomServiceEventRoomUnlocked',
+        roomId: roomId,
+      } satisfies RoomServiceEvent);
+      throw error;
+    }
+  }
+
+  private _assertRoomId(roomId: string): void {
+    if (!this._graphs.has(roomId)) {
+      throw new Error(`Room ${roomId} not found.`);
+    }
   }
 }

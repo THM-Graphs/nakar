@@ -21,6 +21,7 @@ import { NodeDisplayConfigurationContext } from '../room/scenario-pipeline/displ
 import { MutableGraphLabel } from '../room/graph/MutableGraphLabel';
 import { MutablePropertyCollection } from '../room/graph/MutablePropertyCollection';
 import { MutableScenarioInfo } from '../room/graph/MutableScenarioInfo';
+import { MutableGraphMetaData } from '../room/graph/MutableGraphMetaData';
 
 export class CachingSchemaDTOFactory {
   private readonly _databaseCache: SMap<string, GetDatabaseDBDTO>;
@@ -36,8 +37,8 @@ export class CachingSchemaDTOFactory {
   public async createSchemaGraph(graph: MutableGraph): Promise<SchemaGraph> {
     return {
       elements: await this.createSchemaGraphElements(graph),
-      metaData: await this.createSchemaGraphMetaData(graph),
-      table: this.createSchemaTable(graph),
+      metaData: this.createSchemaGraphMetaData(graph.metaData),
+      table: this.createSchemaTable(graph.tableData),
     };
   }
 
@@ -62,21 +63,40 @@ export class CachingSchemaDTOFactory {
           ): Promise<SchemaGraphLabel> =>
             await this._createSchemaGraphLabel(id, label),
         ),
+      histogram: this._createSchemaHistogram(graph),
     };
   }
 
-  public createSchemaTable(graph: MutableGraph): SchemaGraphTable {
+  public createSchemaTable(
+    tableData: SMap<string, unknown>[],
+  ): SchemaGraphTable {
     return {
-      data: graph.tableData.map(
+      data: tableData.map(
         (entry: SMap<string, unknown>): Record<string, unknown> =>
           entry.toRecord(),
       ),
     };
   }
 
-  public async createSchemaGraphMetaData(
-    graph: MutableGraph,
-  ): Promise<SchemaGraphMetaData> {
+  public createSchemaGraphMetaData(
+    metaData: MutableGraphMetaData,
+  ): SchemaGraphMetaData {
+    return {
+      scenarioInfo: metaData.scenarioInfo
+        ? this._createSchemaScenarioInfo(metaData.scenarioInfo)
+        : null,
+      pipelineSummary: metaData.pipelineSummary.map(
+        (entry: [string, number]): { step: string; durationMs: number } => {
+          return {
+            step: entry[0],
+            durationMs: entry[1],
+          };
+        },
+      ),
+    };
+  }
+
+  private _createSchemaHistogram(graph: MutableGraph): SchemaHistogram {
     const labelCountHistogram: number = graph.nodes.labelHistogram.reduce(
       (akku: number, key: string, value: number): number => akku + value,
       0,
@@ -86,144 +106,131 @@ export class CachingSchemaDTOFactory {
       0,
     );
     return {
-      scenarioInfo: graph.metaData.scenarioInfo
-        ? this._createSchemaScenarioInfo(graph.metaData.scenarioInfo)
-        : null,
-      pipelineSummary: graph.metaData.pipelineSummary.map(
-        (entry: [string, number]): { step: string; durationMs: number } => {
-          return {
-            step: entry[0],
-            durationMs: entry[1],
-          };
-        },
-      ),
-      histogram: {
-        nodeLabels: graph.nodes.labelHistogram
-          .toArray()
-          .toSorted(
-            (a: [string, number], b: [string, number]): number => b[1] - a[1],
-          )
-          .map(
-            (
-              entry: [string, number],
-            ): { label: string; count: number; percentage: number } => ({
-              label: entry[0],
-              count: entry[1],
-              percentage: entry[1] / labelCountHistogram,
-            }),
-          ),
-        nodeProperties: graph.nodes.propertyHistogram
-          .toArray()
-          .toSorted(
-            (
-              a: [string, SMap<string, number>],
-              b: [string, SMap<string, number>],
-            ): number => a[0].localeCompare(b[0]),
-          )
-          .map(
-            (
-              entry: [string, SMap<string, number>],
-            ): {
-              key: string;
-              values: {
-                value: string;
-                count: number;
-                percentage: number;
-              }[];
-            } => {
-              const count: number = entry[1].reduce(
-                (akku: number, key: string, value: number): number =>
-                  akku + value,
-                0,
-              );
-              return {
-                key: entry[0],
-                values: entry[1]
-                  .toArray()
-                  .toSorted(
-                    (a: [string, number], b: [string, number]): number =>
-                      b[1] - a[1],
-                  )
-                  .map(
-                    (
-                      propertyEntry: [string, number],
-                    ): {
-                      value: string;
-                      count: number;
-                      percentage: number;
-                    } => ({
-                      value: propertyEntry[0],
-                      count: propertyEntry[1],
-                      percentage: propertyEntry[1] / count,
-                    }),
-                  ),
-              };
-            },
-          ),
-        edgeTypes: graph.edges.typeHistogram
-          .toArray()
-          .toSorted(
-            (a: [string, number], b: [string, number]): number => b[1] - a[1],
-          )
-          .map(
-            (
-              entry: [string, number],
-            ): { type: string; count: number; percentage: number } => ({
-              type: entry[0],
-              count: entry[1],
-              percentage: entry[1] / typeCountHistogram,
-            }),
-          ),
-        edgeProperties: graph.edges.propertyHistogram
-          .toArray()
-          .toSorted(
-            (
-              a: [string, SMap<string, number>],
-              b: [string, SMap<string, number>],
-            ): number => a[0].localeCompare(b[0]),
-          )
-          .map(
-            (
-              entry: [string, SMap<string, number>],
-            ): {
-              key: string;
-              values: {
-                value: string;
-                count: number;
-                percentage: number;
-              }[];
-            } => {
-              const count: number = entry[1].reduce(
-                (akku: number, key: string, value: number): number =>
-                  akku + value,
-                0,
-              );
-              return {
-                key: entry[0],
-                values: entry[1]
-                  .toArray()
-                  .toSorted(
-                    (a: [string, number], b: [string, number]): number =>
-                      b[1] - a[1],
-                  )
-                  .map(
-                    (
-                      propertyEntry: [string, number],
-                    ): {
-                      value: string;
-                      count: number;
-                      percentage: number;
-                    } => ({
-                      value: propertyEntry[0],
-                      count: propertyEntry[1],
-                      percentage: propertyEntry[1] / count,
-                    }),
-                  ),
-              };
-            },
-          ),
-      } satisfies SchemaHistogram,
-    };
+      nodeLabels: graph.nodes.labelHistogram
+        .toArray()
+        .toSorted(
+          (a: [string, number], b: [string, number]): number => b[1] - a[1],
+        )
+        .map(
+          (
+            entry: [string, number],
+          ): { label: string; count: number; percentage: number } => ({
+            label: entry[0],
+            count: entry[1],
+            percentage: entry[1] / labelCountHistogram,
+          }),
+        ),
+      nodeProperties: graph.nodes.propertyHistogram
+        .toArray()
+        .toSorted(
+          (
+            a: [string, SMap<string, number>],
+            b: [string, SMap<string, number>],
+          ): number => a[0].localeCompare(b[0]),
+        )
+        .map(
+          (
+            entry: [string, SMap<string, number>],
+          ): {
+            key: string;
+            values: {
+              value: string;
+              count: number;
+              percentage: number;
+            }[];
+          } => {
+            const count: number = entry[1].reduce(
+              (akku: number, key: string, value: number): number =>
+                akku + value,
+              0,
+            );
+            return {
+              key: entry[0],
+              values: entry[1]
+                .toArray()
+                .toSorted(
+                  (a: [string, number], b: [string, number]): number =>
+                    b[1] - a[1],
+                )
+                .map(
+                  (
+                    propertyEntry: [string, number],
+                  ): {
+                    value: string;
+                    count: number;
+                    percentage: number;
+                  } => ({
+                    value: propertyEntry[0],
+                    count: propertyEntry[1],
+                    percentage: propertyEntry[1] / count,
+                  }),
+                ),
+            };
+          },
+        ),
+      edgeTypes: graph.edges.typeHistogram
+        .toArray()
+        .toSorted(
+          (a: [string, number], b: [string, number]): number => b[1] - a[1],
+        )
+        .map(
+          (
+            entry: [string, number],
+          ): { type: string; count: number; percentage: number } => ({
+            type: entry[0],
+            count: entry[1],
+            percentage: entry[1] / typeCountHistogram,
+          }),
+        ),
+      edgeProperties: graph.edges.propertyHistogram
+        .toArray()
+        .toSorted(
+          (
+            a: [string, SMap<string, number>],
+            b: [string, SMap<string, number>],
+          ): number => a[0].localeCompare(b[0]),
+        )
+        .map(
+          (
+            entry: [string, SMap<string, number>],
+          ): {
+            key: string;
+            values: {
+              value: string;
+              count: number;
+              percentage: number;
+            }[];
+          } => {
+            const count: number = entry[1].reduce(
+              (akku: number, key: string, value: number): number =>
+                akku + value,
+              0,
+            );
+            return {
+              key: entry[0],
+              values: entry[1]
+                .toArray()
+                .toSorted(
+                  (a: [string, number], b: [string, number]): number =>
+                    b[1] - a[1],
+                )
+                .map(
+                  (
+                    propertyEntry: [string, number],
+                  ): {
+                    value: string;
+                    count: number;
+                    percentage: number;
+                  } => ({
+                    value: propertyEntry[0],
+                    count: propertyEntry[1],
+                    percentage: propertyEntry[1] / count,
+                  }),
+                ),
+            };
+          },
+        ),
+    } satisfies SchemaHistogram;
   }
 
   private async _createSchemaNode(

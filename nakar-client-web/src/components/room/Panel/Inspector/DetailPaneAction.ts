@@ -2,5 +2,5 @@ export interface DetailPaneAction {
   title: string;
   icon: string;
   variant: "primary" | "danger";
-  action: () => void;
+  action: () => void | Promise<void>;
 }

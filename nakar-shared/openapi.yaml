@@ -75,6 +75,188 @@ paths:
               schema:
                 $ref: "#/components/schemas/Graph"
 
+  /room/{id}/graph/elements:
+    get:
+      tags:
+        - Room
+      operationId: getRoomGraphElements
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GraphElements"
+
+  /room/{id}/graph/meta-data:
+    get:
+      tags:
+        - Room
+      operationId: getRoomGraphMetaData
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GraphMetaData"
+
+  /room/{id}/graph/table:
+    get:
+      tags:
+        - Room
+      operationId: getRoomGraphTable
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GraphTable"
+
+  /room/{id}/actions/load-scenario:
+    post:
+      tags:
+        - Room Actions
+      operationId: postRoomActionLoadScenario
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                scenarioId:
+                  type: string
+              required:
+                - scenarioId
+      responses:
+        "200":
+          description: "OK"
+
+  /room/{id}/actions/expand-nodes:
+    post:
+      tags:
+        - Room Actions
+      operationId: postRoomActionExpandNodes
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nodes:
+                  type: array
+                  items:
+                    type: string
+              required:
+                - nodes
+      responses:
+        "200":
+          description: "OK"
+
+  /room/{id}/actions/delete-nodes:
+    post:
+      tags:
+        - Room Actions
+      operationId: postRoomActionDeleteNodes
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nodes:
+                  type: array
+                  items:
+                    type: string
+              required:
+                - nodes
+      responses:
+        "200":
+          description: "OK"
+
+  /room/{id}/actions/relayout:
+    post:
+      tags:
+        - Room Actions
+      operationId: postRoomActionRelayout
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "OK"
+
+  /room/{id}/actions/unlock-nodes:
+    post:
+      tags:
+        - Room Actions
+      operationId: postRoomActionUnlockNodes
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nodes:
+                  type: array
+                  items:
+                    type: string
+              required:
+                - nodes
+      responses:
+        "200":
+          description: "OK"
+
   /system/version:
     get:
       tags:
@@ -87,6 +269,35 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Version"
+
+  /system/backup:
+    get:
+      tags:
+        - System
+      operationId: getBackup
+      responses:
+        "200":
+          description: "OK"
+
+  /system/import:
+    post:
+      tags:
+        - System
+      operationId: postImport
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: The file to upload.
+      responses:
+        "200":
+          description: "OK"
 
 components:
   schemas:
@@ -399,13 +610,9 @@ components:
             required:
               - step
               - durationMs
-        histogram:
-          $ref: "#/components/schemas/Histogram"
       required:
-        - labels
         - scenarioInfo
         - pipelineSummary
-        - histogram
 
     GraphElements:
       type: object
@@ -422,10 +629,13 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/GraphLabel"
+        histogram:
+          $ref: "#/components/schemas/Histogram"
       required:
         - nodes
         - edges
         - labels
+        - histogram
 
     GraphTable:
       type: object
@@ -603,25 +813,21 @@ components:
       oneOf:
         - $ref: "#/components/schemas/WSActionJoinRoom"
         - $ref: "#/components/schemas/WSActionLeaveRoom"
-        - $ref: "#/components/schemas/WSActionLoadScenario"
-        - $ref: "#/components/schemas/WSActionGetGraph"
         - $ref: "#/components/schemas/WSActionGrabNode"
         - $ref: "#/components/schemas/WSActionMoveNodes"
         - $ref: "#/components/schemas/WSActionUngrabNode"
-        - $ref: "#/components/schemas/WSActionExpandNodes"
-        - $ref: "#/components/schemas/WSActionDeleteNodes"
-        - $ref: "#/components/schemas/WSActionRelayout"
-        - $ref: "#/components/schemas/WSActionUnlockNodes"
 
     WSServerToClientMessage:
       oneOf:
         - $ref: "#/components/schemas/WSEventNodesMoved"
         - $ref: "#/components/schemas/WSEventRoomChanged"
         - $ref: "#/components/schemas/WSEventNotification"
-        - $ref: "#/components/schemas/WSEventGraphChanged"
+        - $ref: "#/components/schemas/WSEventGraphElementsChanged"
+        - $ref: "#/components/schemas/WSEventGraphMetaDataChanged"
+        - $ref: "#/components/schemas/WSEventGraphTableChanged"
         - $ref: "#/components/schemas/WSEventProgress"
         - $ref: "#/components/schemas/WSEventClearProgress"
-        - $ref: "#/components/schemas/WSEventSetLocks"
+        - $ref: "#/components/schemas/WSEventSetNodeLocks"
         - $ref: "#/components/schemas/WSEventLockUi"
         - $ref: "#/components/schemas/WSEventUnlockUi"
         - $ref: "#/components/schemas/WSEventPerformanceChanged"
@@ -644,27 +850,6 @@ components:
         type:
           type: string
           enum: ["WSActionLeaveRoom"]
-      required:
-        - type
-
-    WSActionLoadScenario:
-      type: object
-      properties:
-        type:
-          type: string
-          enum: ["WSActionLoadScenario"]
-        scenarioId:
-          type: string
-      required:
-        - type
-        - scenarioId
-
-    WSActionGetGraph:
-      type: object
-      properties:
-        type:
-          type: string
-          enum: ["WSActionGetGraph"]
       required:
         - type
 
@@ -706,68 +891,41 @@ components:
         - type
         - node
 
-    WSActionExpandNodes:
+    WSEventGraphMetaDataChanged:
       type: object
       properties:
         type:
           type: string
-          enum: ["WSActionExpandNodes"]
-        nodes:
-          type: array
-          items:
-            type: string
+          enum: ["WSEventGraphMetaDataChanged"]
+        metaData:
+          $ref: "#/components/schemas/GraphMetaData"
       required:
         - type
-        - nodes
+        - metaData
 
-    WSActionDeleteNodes:
+    WSEventGraphElementsChanged:
       type: object
       properties:
         type:
           type: string
-          enum: ["WSActionDeleteNodes"]
-        nodes:
-          type: array
-          items:
-            type: string
+          enum: ["WSEventGraphElementsChanged"]
+        elements:
+          $ref: "#/components/schemas/GraphElements"
       required:
         - type
-        - nodes
+        - elements
 
-    WSActionRelayout:
+    WSEventGraphTableChanged:
       type: object
       properties:
         type:
           type: string
-          enum: ["WSActionRelayout"]
+          enum: ["WSEventGraphTableChanged"]
+        table:
+          $ref: "#/components/schemas/GraphTable"
       required:
         - type
-
-    WSActionUnlockNodes:
-      type: object
-      properties:
-        type:
-          type: string
-          enum: ["WSActionUnlockNodes"]
-        nodes:
-          type: array
-          items:
-            type: string
-      required:
-        - type
-        - nodes
-
-    WSEventGraphChanged:
-      type: object
-      properties:
-        type:
-          type: string
-          enum: ["WSEventGraphChanged"]
-        graph:
-          $ref: "#/components/schemas/Graph"
-      required:
-        - type
-        - graph
+        - table
 
     WSEventRoomChanged:
       type: object
@@ -851,12 +1009,12 @@ components:
       required:
         - type
 
-    WSEventSetLocks:
+    WSEventSetNodeLocks:
       type: object
       properties:
         type:
           type: string
-          enum: ["WSEventSetLocks"]
+          enum: ["WSEventSetNodeLocks"]
         locks:
           type: array
           items:

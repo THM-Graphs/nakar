@@ -1,23 +1,26 @@
-import { Scenario } from "../../../../../src-gen";
+import { postRoomActionLoadScenario, Scenario } from "../../../../../src-gen";
 import { ScenarioCard } from "./ScenarioCard.tsx";
 import { Button, Stack } from "react-bootstrap";
 import { Collapsable } from "../../Collapsable.tsx";
 import { useBearStore } from "../../../../lib/state/useBearStore.ts";
 import { useCallback } from "react";
 import { AppContext } from "../../../../lib/state/AppContext.ts";
+import { RoomContext } from "../../../../pages/Room.tsx";
 
 export function ScenarioDisplay(props: {
   scenario: Scenario;
   hidden?: boolean;
   context: AppContext;
+  roomContext: RoomContext;
 }) {
   const uiLocked = useBearStore((s) => s.room.ui.locked);
-  const webSockets = props.context.webSocketsManager;
 
   const runScenario = useCallback(() => {
-    webSockets.sendMessage({
-      type: "WSActionLoadScenario",
-      scenarioId: props.scenario.id,
+    postRoomActionLoadScenario({
+      path: { id: props.roomContext.initialRoomData.id },
+      body: { scenarioId: props.scenario.id },
+    }).catch((error: unknown) => {
+      // TODO: Add error message
     });
   }, [props.scenario]);
 

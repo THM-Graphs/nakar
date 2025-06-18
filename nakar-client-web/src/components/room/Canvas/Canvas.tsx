@@ -5,8 +5,12 @@ import { DataTable } from "../DataTable.tsx";
 import { CanvasToolbar } from "./CanvasToolbar.tsx";
 import { useBearStore } from "../../../lib/state/useBearStore.ts";
 import { AppContext } from "../../../lib/state/AppContext.ts";
+import { RoomContext } from "../../../pages/Room.tsx";
 
-export function Canvas(props: { context: AppContext }) {
+export function Canvas(props: {
+  context: AppContext;
+  roomContext: RoomContext;
+}) {
   const tabs = useBearStore((s) => s.room.canvas.tabs);
   return (
     <Stack
@@ -14,9 +18,15 @@ export function Canvas(props: { context: AppContext }) {
       direction={"vertical"}
       style={{ height: "100%", width: "100px" }}
     >
-      <CanvasToolbar context={props.context}></CanvasToolbar>
+      <CanvasToolbar
+        context={props.context}
+        roomContext={props.roomContext}
+      ></CanvasToolbar>
       {tabs.selected == "graph" ? <Labels></Labels> : <DataTable></DataTable>}
-      <GraphRendererD3 context={props.context}></GraphRendererD3>
+      <GraphRendererD3
+        context={props.context}
+        roomContext={props.roomContext}
+      ></GraphRendererD3>
     </Stack>
   );
 }

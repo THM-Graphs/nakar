@@ -1,6 +1,11 @@
 import { D3Link } from "./D3Link.ts";
 import { D3Node } from "./D3Node.ts";
-import { Graph, WSEventNodesMoved, WSEventSetLocks } from "../../../src-gen";
+import {
+  Graph,
+  GraphElements,
+  WSEventNodesMoved,
+  WSEventSetNodeLocks,
+} from "../../../src-gen";
 import * as d3 from "d3";
 import { adjustColor } from "../color/colorShade.ts";
 import { getBackgroundColor } from "../color/getBackgroundColor.ts";
@@ -61,10 +66,10 @@ export class D3Renderer {
   public constructor(
     theme: UserTheme,
     svgElement: SVGSVGElement,
-    initialGraph: Graph,
+    initialGraphElements: GraphElements,
   ) {
     console.log("Did create instance of graph renderer");
-    this.graphState = D3RendererState.fromWsData(initialGraph.elements);
+    this.graphState = D3RendererState.fromWsData(initialGraphElements);
     this.theme = theme;
     this.svgElement = svgElement;
 
@@ -113,8 +118,8 @@ export class D3Renderer {
     return this.$onUngrabNode.asObservable();
   }
 
-  public loadGraphContent(graph: Graph) {
-    this.graphState = D3RendererState.fromWsData(graph.elements);
+  public loadGraphContent(graphElements: GraphElements) {
+    this.graphState = D3RendererState.fromWsData(graphElements);
     this.renderSvgElements();
   }
 
@@ -130,7 +135,7 @@ export class D3Renderer {
     this.smoothedPositionDirty = true;
   }
 
-  public updateLocks(wsEvent: WSEventSetLocks) {
+  public updateLocks(wsEvent: WSEventSetNodeLocks) {
     for (const node of wsEvent.locks) {
       const localNode = this.graphState.nodes.find((n) => n.id === node.id);
       if (localNode == null) {

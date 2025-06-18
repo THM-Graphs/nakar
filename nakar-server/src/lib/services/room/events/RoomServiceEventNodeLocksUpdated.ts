@@ -1,6 +1,7 @@
 import { SMap } from '../../../tools/Map';
 
-export interface RSEventRoomLocksUpdated {
+export interface RoomServiceEventNodeLocksUpdated {
+  type: 'RoomServiceEventNodeLocksUpdated';
   roomId: string;
   locks: SMap<string, boolean>;
 }

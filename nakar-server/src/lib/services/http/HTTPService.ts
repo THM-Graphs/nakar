@@ -3,16 +3,27 @@ import express, { Application, Request, Response } from 'express';
 import { ConfigService } from '../config/ConfigService';
 import { LoggerService } from '../logger/LoggerService';
 import {
+  SchemaDatabase,
   SchemaDatabases,
+  SchemaGraph,
+  SchemaGraphElements,
+  SchemaGraphMetaData,
+  SchemaGraphTable,
   SchemaRoom,
   SchemaRooms,
+  SchemaScenario,
+  SchemaScenarioGroup,
   SchemaVersion,
 } from '../../../../src-gen/schema';
 import { DatabaseService } from '../database/DatabaseService';
 import { match, P } from 'ts-pattern';
-import { HttpError, InternalServerError } from 'http-errors';
+import {
+  BadRequest,
+  HttpError,
+  InternalServerError,
+  NotFound,
+} from 'http-errors';
 import cors from 'cors';
-import { HTTPDelegate } from './HTTPDelegate';
 import { ProfilerService } from '../profiler/ProfilerService';
 import { ProfilerTask } from '../profiler/ProfilerTask';
 import { ApplicationService } from '../../application/ApplicationService';
@@ -20,33 +31,37 @@ import { BackupService } from '../backup/BackupService';
 import { FileStream } from '../../tools/fs/FileStream';
 import fsAsync from 'node:fs/promises';
 import fs from 'node:fs';
-import fileupload from 'express-fileupload';
+import fileupload, { FileArray, UploadedFile } from 'express-fileupload';
 import os from 'node:os';
 import path from 'path';
 import { RoomService } from '../room/RoomService';
+import { GetDatabaseDBDTO } from '../database/dto/GetDatabaseDBDTO';
+import { GetScenarioGroupDBDTO } from '../database/dto/GetScenarioGroupDBDTO';
+import { GetScenarioDBDTO } from '../database/dto/GetScenarioDBDTO';
+import { SchemaDTOFactory } from './SchemaDTOFactory';
+import { GetRoomDBDTO } from '../database/dto/GetRoomDBDTO';
+import z from 'zod';
+import { InsertResult } from '../backup/InsertResult';
+import { MutableGraph } from '../room/graph/MutableGraph';
+import { CachingSchemaDTOFactory } from './CachingSchemaDTOFactory';
 
 export class HTTPService implements ApplicationService {
   private readonly _app: Application;
   private readonly _server: http.Server;
-  private readonly _delegate: HTTPDelegate;
+
+  private readonly _schemaDTOFactory: SchemaDTOFactory;
 
   public constructor(
     private readonly _config: ConfigService,
     private readonly _logger: LoggerService,
-    private readonly _database: DatabaseService,
+    private readonly _databaseService: DatabaseService,
     private readonly _profiler: ProfilerService,
     private readonly _backup: BackupService,
-    private readonly _room: RoomService,
+    private readonly _roomService: RoomService,
   ) {
     this._app = express();
     this._server = http.createServer(this._app as http.RequestListener);
-    this._delegate = new HTTPDelegate(
-      this._config,
-      this._logger,
-      this._database,
-      this._backup,
-      this._room,
-    );
+    this._schemaDTOFactory = new SchemaDTOFactory(_config);
 
     this._setupMiddleware();
     this._setupRoutes();
@@ -123,38 +138,261 @@ export class HTTPService implements ApplicationService {
   private _setupRoutes(): void {
     this._app.get(
       '/scenarios',
-      this._handle(
-        (): Promise<SchemaDatabases> => this._delegate.getScenarios(),
-      ),
+      this._handle(async (): Promise<SchemaDatabases> => {
+        const databases: GetDatabaseDBDTO[] =
+          await this._databaseService.getDatabases();
+        const databaseSchema: SchemaDatabase[] = await Promise.all(
+          databases.map(
+            async (database: GetDatabaseDBDTO): Promise<SchemaDatabase> => {
+              const scenarioGroups: GetScenarioGroupDBDTO[] =
+                await this._databaseService.getScenarioGroups(
+                  database.documentId,
+                );
+              const scenarioGroupSchemas: SchemaScenarioGroup[] =
+                await Promise.all(
+                  scenarioGroups.map(
+                    async (
+                      scenarioGroup: GetScenarioGroupDBDTO,
+                    ): Promise<SchemaScenarioGroup> => {
+                      const scenarios: GetScenarioDBDTO[] =
+                        await this._databaseService.getScenarios(
+                          scenarioGroup.documentId,
+                        );
+                      const scenarioSchemas: SchemaScenario[] = scenarios.map(
+                        (scenario: GetScenarioDBDTO): SchemaScenario => {
+                          return this._schemaDTOFactory.createSchemaScenario(
+                            scenario,
+                          );
+                        },
+                      );
+                      return this._schemaDTOFactory.createSchemaScenarioGroup(
+                        scenarioGroup,
+                        scenarioSchemas,
+                      );
+                    },
+                  ),
+                );
+              return this._schemaDTOFactory.createSchemaDatabase(
+                database,
+                scenarioGroupSchemas,
+              );
+            },
+          ),
+        );
+        return {
+          databases: databaseSchema,
+        };
+      }),
     );
 
     this._app.get(
       '/room',
-      this._handle((): Promise<SchemaRooms> => this._delegate.getRoom()),
+      this._handle(async (): Promise<SchemaRooms> => {
+        const dbResult: GetRoomDBDTO[] = await this._databaseService.getRooms();
+        return {
+          rooms: await Promise.all(
+            dbResult.map(async (room: GetRoomDBDTO): Promise<SchemaRoom> => {
+              return this._schemaDTOFactory.createSchemaRoom(
+                room,
+                await this._getScenarioOfRoom(room),
+              );
+            }),
+          ),
+        };
+      }),
     );
 
     this._app.get(
       '/room/:id',
-      this._handle(
-        (req: Request): Promise<SchemaRoom> => this._delegate.getRoomById(req),
-      ),
+      this._handle(async (req: Request): Promise<SchemaRoom> => {
+        const dbResult: GetRoomDBDTO = await this._assertRoom(req);
+        return this._schemaDTOFactory.createSchemaRoom(
+          dbResult,
+          await this._getScenarioOfRoom(dbResult),
+        );
+      }),
+    );
+
+    this._app.get(
+      '/room/:id/graph',
+      this._handle(async (req: Request): Promise<SchemaGraph> => {
+        const room: GetRoomDBDTO = await this._assertRoom(req);
+        const graph: MutableGraph = this._roomService.getGraph(room.documentId);
+        const cachedGraphFactory: CachingSchemaDTOFactory =
+          new CachingSchemaDTOFactory(this._databaseService, this._logger);
+        const result: SchemaGraph =
+          await cachedGraphFactory.createSchemaGraph(graph);
+        return result;
+      }),
+    );
+
+    this._app.get(
+      '/room/:id/graph/elements',
+      this._handle(async (req: Request): Promise<SchemaGraphElements> => {
+        const room: GetRoomDBDTO = await this._assertRoom(req);
+        const graph: MutableGraph = this._roomService.getGraph(room.documentId);
+        const cachedGraphFactory: CachingSchemaDTOFactory =
+          new CachingSchemaDTOFactory(this._databaseService, this._logger);
+        const result: SchemaGraphElements =
+          await cachedGraphFactory.createSchemaGraphElements(graph);
+        return result;
+      }),
+    );
+
+    this._app.get(
+      '/room/:id/graph/meta-data',
+      this._handle(async (req: Request): Promise<SchemaGraphMetaData> => {
+        const room: GetRoomDBDTO = await this._assertRoom(req);
+        const graph: MutableGraph = this._roomService.getGraph(room.documentId);
+        const cachedGraphFactory: CachingSchemaDTOFactory =
+          new CachingSchemaDTOFactory(this._databaseService, this._logger);
+        const result: SchemaGraphMetaData =
+          cachedGraphFactory.createSchemaGraphMetaData(graph.metaData);
+        return result;
+      }),
+    );
+
+    this._app.get(
+      '/room/:id/graph/table',
+      this._handle(async (req: Request): Promise<SchemaGraphTable> => {
+        const room: GetRoomDBDTO = await this._assertRoom(req);
+        const graph: MutableGraph = this._roomService.getGraph(room.documentId);
+        const cachedGraphFactory: CachingSchemaDTOFactory =
+          new CachingSchemaDTOFactory(this._databaseService, this._logger);
+        const result: SchemaGraphTable = cachedGraphFactory.createSchemaTable(
+          graph.tableData,
+        );
+        return result;
+      }),
     );
 
     this._app.get(
       '/system/version',
-      this._handle((): SchemaVersion => this._delegate.getVersion()),
+      this._handle((): SchemaVersion => {
+        const packageVersion: string | undefined =
+          process.env['npm_package_version'];
+        return {
+          version: packageVersion ?? 'unknown',
+        };
+      }),
     );
 
     this._app.get(
       '/system/backup',
-      this._handle((): Promise<FileStream> => this._delegate.getBackup()),
+      this._handle(async (): Promise<FileStream> => {
+        const stream: FileStream = await this._backup.createBackupFile();
+        return stream;
+      }),
     );
 
     this._app.post(
       '/system/import',
-      this._handle(
-        (req: Request): Promise<unknown> => this._delegate.postImport(req),
-      ),
+      this._handle(async (req: Request): Promise<unknown> => {
+        const files: FileArray | null | undefined = req.files;
+        if (files == null) {
+          throw new BadRequest('No files on request body.');
+        }
+        const file: UploadedFile | UploadedFile[] = files['file'];
+
+        if (Array.isArray(file)) {
+          throw new BadRequest('Only one file is allowed.');
+        }
+
+        const insertResult: InsertResult = await this._backup.importBackupFile(
+          file.tempFilePath,
+        );
+
+        if (insertResult.errors.length > 0) {
+          throw new BadRequest(
+            JSON.stringify(
+              insertResult.errors
+                .map((error: unknown): string => JSON.stringify(error))
+                .join('\n'),
+            ),
+          );
+        }
+
+        return {
+          insertedDatabases: insertResult.insertedDatabases.toArray(),
+          insertedScenarioGroups: insertResult.insertedScenarioGroups.toArray(),
+          insertedScenarios: insertResult.insertedScenarios.toArray(),
+        };
+      }),
+    );
+
+    this._app.post(
+      '/room/:id/actions/load-scenario',
+      this._handle(async (req: Request): Promise<void> => {
+        const room: GetRoomDBDTO = await this._assertRoom(req);
+        const scenarioId: string = this._getBodyString(req, 'scenarioId');
+
+        await this._roomService.loadScenario({
+          roomId: room.documentId,
+          scenarioId: scenarioId,
+        });
+      }),
+    );
+
+    this._app.post(
+      '/room/:id/actions/expand-nodes',
+      this._handle(async (req: Request): Promise<void> => {
+        const room: GetRoomDBDTO = await this._assertRoom(req);
+        const requestBody: { nodes: string[] } = z
+          .object({
+            nodes: z.array(z.string()),
+          })
+          .parse(req.body);
+        const nodes: string[] = requestBody.nodes;
+
+        await this._roomService.expandNodes({
+          roomId: room.documentId,
+          nodeIds: nodes,
+        });
+      }),
+    );
+
+    this._app.post(
+      '/room/:id/actions/delete-nodes',
+      this._handle(async (req: Request): Promise<void> => {
+        const room: GetRoomDBDTO = await this._assertRoom(req);
+        const requestBody: { nodes: string[] } = z
+          .object({
+            nodes: z.array(z.string()),
+          })
+          .parse(req.body);
+        const nodes: string[] = requestBody.nodes;
+
+        await this._roomService.deleteNodes({
+          roomId: room.documentId,
+          nodeIds: nodes,
+        });
+      }),
+    );
+
+    this._app.post(
+      '/room/:id/actions/relayout',
+      this._handle(async (req: Request): Promise<void> => {
+        const room: GetRoomDBDTO = await this._assertRoom(req);
+        this._roomService.relayout({ roomId: room.documentId });
+      }),
+    );
+
+    this._app.post(
+      '/room/:id/actions/unlock-nodes',
+      this._handle(async (req: Request): Promise<void> => {
+        const room: GetRoomDBDTO = await this._assertRoom(req);
+        const requestBody: { nodes: string[] } = z
+          .object({
+            nodes: z.array(z.string()),
+          })
+          .parse(req.body);
+        const nodes: string[] = requestBody.nodes;
+
+        this._roomService.unlockNodes({
+          roomId: room.documentId,
+          nodeIds: nodes,
+        });
+      }),
     );
   }
 
@@ -203,5 +441,47 @@ export class HTTPService implements ApplicationService {
   private _handleError(res: Response, error: HttpError): void {
     res.status(error.status);
     res.send(error.message);
+  }
+
+  private async _assertRoom(req: Request): Promise<GetRoomDBDTO> {
+    const id: string = this._getPathParameter(req, 'id');
+    const dbResult: GetRoomDBDTO | null =
+      await this._databaseService.getRoom(id);
+    if (dbResult == null) {
+      throw new NotFound('Room not found.');
+    }
+    return dbResult;
+  }
+
+  private _getQueryParameter(req: Request, name: string): string {
+    const value: string = z.string().parse(req.query[name]);
+    return value;
+  }
+
+  private _getPathParameter(req: Request, name: string): string {
+    const value: string = z.string().parse(req.params[name]);
+    return value;
+  }
+
+  private _getBodyString(req: Request, name: string): string {
+    // eslint-disable-next-line @typescript-eslint/typedef
+    const schema = z.object({
+      [name]: z.string(),
+    });
+    const value: string = schema.parse(req.body)[name];
+    return value;
+  }
+
+  private async _getScenarioOfRoom(
+    room: GetRoomDBDTO,
+  ): Promise<GetScenarioDBDTO | null> {
+    const scenarioId: string | null =
+      this._roomService.getGraph(room.documentId).metaData.scenarioInfo?.id ??
+      null;
+    const scenario: GetScenarioDBDTO | null =
+      scenarioId != null
+        ? await this._databaseService.getScenario(scenarioId)
+        : null;
+    return scenario;
   }
 }

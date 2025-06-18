@@ -4,16 +4,14 @@ import {
   Socket as UntypedSocket,
 } from 'socket.io';
 import {
-  SchemaGraph,
+  SchemaGraphElements,
+  SchemaGraphMetaData,
+  SchemaGraphTable,
   SchemaPhysicalNode,
-  SchemaWsActionDeleteNodes,
-  SchemaWsActionExpandNodes,
   SchemaWsActionGrabNode,
   SchemaWsActionJoinRoom,
-  SchemaWsActionLoadScenario,
   SchemaWsActionMoveNodes,
   SchemaWsActionUngrabNode,
-  SchemaWsActionUnlockNodes,
   SchemaWsClientToServerMessage,
   SchemaWsEventClearProgress,
   SchemaWsEventLockUi,
@@ -21,7 +19,7 @@ import {
   SchemaWsEventPerformanceChanged,
   SchemaWsEventProgress,
   SchemaWsEventRoomChanged,
-  SchemaWsEventSetLocks,
+  SchemaWsEventSetNodeLocks,
   SchemaWsEventUnlockUi,
   SchemaWsServerToClientMessage,
 } from '../../../../src-gen/schema';
@@ -33,19 +31,23 @@ import { SSet } from '../../tools/Set';
 import { RoomService } from '../room/RoomService';
 import { DatabaseService } from '../database/DatabaseService';
 import { GetRoomDBDTO } from '../database/dto/GetRoomDBDTO';
-import { RSEventScenarioProgress } from '../room/events/RSEventScenarioProgress';
-import { RSEventRoomPhysicsUpdated } from '../room/events/RSEventRoomPhysicsUpdated';
-import { RSEventRoomUpdated } from '../room/events/RSEventRoomUpdated';
 import { LoggerService } from '../logger/LoggerService';
 import http from 'http';
 import { ApplicationService } from '../../application/ApplicationService';
-import { MutableGraph } from '../room/graph/MutableGraph';
 import { Subscription } from 'rxjs';
 import { HTTPService } from '../http/HTTPService';
 import { CachingSchemaDTOFactory } from '../http/CachingSchemaDTOFactory';
-import { RSEventRoomLocksUpdated } from '../room/events/RSEventRoomLocksUpdated';
-import { RSEventRoomPerformanceChanged } from '../room/events/RSEventRoomPerformanceChanged';
-import { wait } from '../../tools/Wait';
+import { RoomServiceEvent } from '../room/events/RoomServiceEvent';
+import { RoomServiceEventGraphMetaDataChanged } from '../room/events/RoomServiceEventGraphMetaDataChanged';
+import { RoomServiceEventRoomPhysicsUpdated } from '../room/events/RoomServiceEventRoomPhysicsUpdated';
+import { RoomServiceEventNodeLocksUpdated } from '../room/events/RoomServiceEventNodeLocksUpdated';
+import { RoomServiceEventRoomPerformanceChanged } from '../room/events/RoomServiceEventRoomPerformanceChanged';
+import { RoomServiceEventRoomUnlocked } from '../room/events/RoomServiceEventRoomUnlocked';
+import { RoomServiceEventRoomLocked } from '../room/events/RoomServiceEventRoomLocked';
+import { RoomServiceEventProgressChanged } from '../room/events/RoomServiceEventProgressChanged';
+import { RoomServiceEventProgressCleared } from '../room/events/RoomServiceEventProgressCleared';
+import { RoomServiceEventGraphElementsChanged } from '../room/events/RoomServiceEventGraphElementsChanged';
+import { RoomServiceEventGraphTableChanged } from '../room/events/RoomServiceEventGraphTableChanged';
 
 export type Server = UntypedServer<ClientToServerEvents, ServerToClientEvents>;
 export type Socket = UntypedSocket<ClientToServerEvents, ServerToClientEvents>;
@@ -85,167 +87,8 @@ export class SocketIOService implements ApplicationService {
       `Did register socket.io server on ${JSON.stringify(httpServer.address())}. Path: ${this._io.path()}`,
     );
 
-    io.on('connection', (s: Socket): void => {
-      const wsClient: WSClient = new WSClient(s, io, this._logger);
-      this._sockets.add(wsClient);
-      this._logger.debug(this, `New socket ${wsClient.id} connection.`);
-      const clientSubscriptions: Subscription[] = [];
-
-      clientSubscriptions.push(
-        wsClient.onRoomChanged$.subscribe(
-          (roomChange: [string | null, string | null]): void => {
-            const oldRoomId: string | null = roomChange[0];
-            const newRoomId: string | null = roomChange[1];
-
-            if (oldRoomId != null && newRoomId == null) {
-              this.sendToRoom(oldRoomId, {
-                type: 'WSEventNotification',
-                title: 'User left',
-                message: `User ${wsClient.id} left.`,
-                date: new Date().toISOString(),
-                severity: 'message',
-              } satisfies SchemaWsEventNotification);
-            } else if (oldRoomId == null && newRoomId != null) {
-              wsClient.broadcastToRoom({
-                type: 'WSEventNotification',
-                title: 'User joined',
-                message: `User ${wsClient.id} joined.`,
-                severity: 'message',
-                date: new Date().toISOString(),
-              });
-            }
-
-            wsClient.send({
-              type: 'WSEventRoomChanged',
-              roomId: newRoomId,
-            } satisfies SchemaWsEventRoomChanged);
-          },
-        ),
-      );
-
-      clientSubscriptions.push(
-        wsClient.onMessage$.subscribe(
-          (clientToServerMessage: SchemaWsClientToServerMessage): void => {
-            try {
-              match(clientToServerMessage)
-                .with(
-                  { type: 'WSActionJoinRoom' },
-                  (m: SchemaWsActionJoinRoom): void => {
-                    this._handleJoinRoom(wsClient, m);
-                  },
-                )
-                .with({ type: 'WSActionLeaveRoom' }, (): void => {
-                  this._handleLeaveRoom(wsClient);
-                })
-                .with(
-                  { type: 'WSActionLoadScenario' },
-                  (m: SchemaWsActionLoadScenario): void => {
-                    this._handleLoadScenario(wsClient, m);
-                  },
-                )
-                .with(
-                  { type: 'WSActionGrabNode' },
-                  (m: SchemaWsActionGrabNode): void => {
-                    this._handleGrabNode(wsClient, m);
-                  },
-                )
-                .with(
-                  { type: 'WSActionMoveNodes' },
-                  (m: SchemaWsActionMoveNodes): void => {
-                    this._handleMoveNodes(wsClient, m);
-                  },
-                )
-                .with(
-                  { type: 'WSActionUngrabNode' },
-                  (m: SchemaWsActionUngrabNode): void => {
-                    this._handleUngrabNode(wsClient, m);
-                  },
-                )
-                .with(
-                  { type: 'WSActionExpandNodes' },
-                  (m: SchemaWsActionExpandNodes): void => {
-                    this._handleExpandNodes(wsClient, m).catch(
-                      (error: unknown): void => {
-                        wsClient.sendToRoom(
-                          this.createErrorNotification(error),
-                        );
-                      },
-                    );
-                  },
-                )
-                .with(
-                  { type: 'WSActionDeleteNodes' },
-                  (m: SchemaWsActionDeleteNodes): void => {
-                    this._handleDeleteNodes(wsClient, m).catch(
-                      (error: unknown): void => {
-                        wsClient.sendToRoom(
-                          this.createErrorNotification(error),
-                        );
-                      },
-                    );
-                  },
-                )
-                .with({ type: 'WSActionRelayout' }, (): void => {
-                  this._handleRelayout(wsClient);
-                })
-                .with(
-                  { type: 'WSActionUnlockNodes' },
-                  (message: SchemaWsActionUnlockNodes): void => {
-                    this._handleUnlockNodes(wsClient, message);
-                  },
-                )
-                .with({ type: 'WSActionGetGraph' }, (): void => {
-                  this._handleGetGraph(wsClient);
-                })
-                .exhaustive();
-            } catch (error: unknown) {
-              wsClient.send(this.createErrorNotification(error));
-              this._logger.error(
-                this,
-                `Unhandled ws message: ${JSON.stringify(clientToServerMessage)}`,
-              );
-            }
-          },
-        ),
-      );
-
-      clientSubscriptions.push(
-        wsClient.onDisconnect$.subscribe((reason: DisconnectReason): void => {
-          this._logger.debug(
-            this,
-            `Socket ${wsClient.id} disconnected: ${reason}`,
-          );
-          this._sockets.delete(wsClient);
-          for (const sub of clientSubscriptions) {
-            sub.unsubscribe();
-          }
-        }),
-      );
-    });
-
-    this._roomService.onRoomPhysicsUpdated$.subscribe(
-      (message: RSEventRoomPhysicsUpdated): void => {
-        this._handleRoomPhysicsUpdate(message);
-      },
-    );
-
-    this._roomService.onRoomUpdated$.subscribe(
-      (message: RSEventRoomUpdated): void => {
-        this._handleRoomUpdate(message);
-      },
-    );
-
-    this._roomService.onRoomLocksUpdated$.subscribe(
-      (message: RSEventRoomLocksUpdated): void => {
-        this._handleRoomLocksUpdate(message);
-      },
-    );
-
-    this._roomService.onPerformanceChanged$.subscribe(
-      (message: RSEventRoomPerformanceChanged): void => {
-        this._handleRoomPerformanceChanged(message);
-      },
-    );
+    this._registerWebsocketEvents(io);
+    this._registerRoomServiceEvents();
   }
 
   public destroy(): void {
@@ -273,6 +116,10 @@ export class SocketIOService implements ApplicationService {
     this._io.to(roomId).emit('message', message);
   }
 
+  public handleRoomError(roomId: string, error: unknown): void {
+    this.sendToRoom(roomId, this.createErrorNotification(error));
+  }
+
   public createErrorNotification(error: unknown): SchemaWsEventNotification {
     const errorMessage: string = match(error)
       .with(P.instanceOf(Error), (e: Error): string => e.message)
@@ -286,344 +133,285 @@ export class SocketIOService implements ApplicationService {
     };
   }
 
-  private _handleJoinRoom(
-    wsClient: WSClient,
-    message: SchemaWsActionJoinRoom,
-  ): void {
-    (async (): Promise<void> => {
-      const roomId: string = message.roomId;
+  private _registerWebsocketEvents(io: UntypedServer): void {
+    io.on('connection', (s: Socket): void => {
+      const wsClient: WSClient = new WSClient(s, io, this._logger);
+      this._sockets.add(wsClient);
+      this._logger.debug(this, `New socket ${wsClient.id} connection.`);
+      this._registerWebsocketClientEvents(wsClient);
+    });
+  }
 
-      const room: GetRoomDBDTO | null =
-        await this._databaseService.getRoom(roomId);
+  private _registerWebsocketClientEvents(wsClient: WSClient): void {
+    const clientSubscriptions: Subscription[] = [
+      wsClient.onRoomChanged$.subscribe(
+        (roomChange: [string | null, string | null]): void => {
+          const oldRoomId: string | null = roomChange[0];
+          const newRoomId: string | null = roomChange[1];
 
-      if (room == null) {
+          if (oldRoomId != null && newRoomId == null) {
+            this.sendToRoom(oldRoomId, {
+              type: 'WSEventNotification',
+              title: 'User left',
+              message: `User ${wsClient.id} left.`,
+              date: new Date().toISOString(),
+              severity: 'message',
+            } satisfies SchemaWsEventNotification);
+          } else if (oldRoomId == null && newRoomId != null) {
+            wsClient.broadcastToRoom({
+              type: 'WSEventNotification',
+              title: 'User joined',
+              message: `User ${wsClient.id} joined.`,
+              severity: 'message',
+              date: new Date().toISOString(),
+            });
+          }
+
+          wsClient.send({
+            type: 'WSEventRoomChanged',
+            roomId: newRoomId,
+          } satisfies SchemaWsEventRoomChanged);
+        },
+      ),
+      wsClient.onMessage$.subscribe(
+        (clientToServerMessage: SchemaWsClientToServerMessage): void => {
+          Promise.resolve(
+            match(clientToServerMessage)
+              .returnType<void | Promise<void>>()
+              .with(
+                { type: 'WSActionJoinRoom' },
+                async (m: SchemaWsActionJoinRoom): Promise<void> => {
+                  const roomId: string = m.roomId;
+
+                  const room: GetRoomDBDTO | null =
+                    await this._databaseService.getRoom(roomId);
+                  if (room == null) {
+                    throw new Error(
+                      `Room ${roomId} not found. Socket tried to join.`,
+                    );
+                  }
+
+                  await wsClient.join(roomId);
+                },
+              )
+              .with({ type: 'WSActionLeaveRoom' }, async (): Promise<void> => {
+                await wsClient.leaveRoom();
+              })
+              .with(
+                { type: 'WSActionGrabNode' },
+                (m: SchemaWsActionGrabNode): void => {
+                  const roomId: string = this._assertRoom(wsClient);
+                  this._roomService.grabNode({
+                    nodeId: m.nodeId,
+                    roomId: roomId,
+                    userId: wsClient.id,
+                  });
+                },
+              )
+              .with(
+                { type: 'WSActionMoveNodes' },
+                (m: SchemaWsActionMoveNodes): void => {
+                  const roomId: string = this._assertRoom(wsClient);
+                  this._roomService.moveNodes({
+                    roomId: roomId,
+                    nodes: m.nodes,
+                    userId: wsClient.id,
+                  });
+                },
+              )
+              .with(
+                { type: 'WSActionUngrabNode' },
+                (m: SchemaWsActionUngrabNode): void => {
+                  const roomId: string = this._assertRoom(wsClient);
+                  this._roomService.ungrabNode({
+                    node: m.node,
+                    roomId: roomId,
+                    userId: wsClient.id,
+                  });
+                },
+              )
+              .exhaustive(),
+          ).catch((error: unknown): void => {
+            this._logger.error(
+              this,
+              `Error handeling WS message: ${JSON.stringify(clientToServerMessage)}`,
+            );
+            this._logger.error(this, error);
+            wsClient.send(this.createErrorNotification(error));
+          });
+        },
+      ),
+      wsClient.onDisconnect$.subscribe((reason: DisconnectReason): void => {
+        this._logger.debug(
+          this,
+          `Socket ${wsClient.id} disconnected: ${reason}`,
+        );
+        this._sockets.delete(wsClient);
+        for (const sub of clientSubscriptions) {
+          sub.unsubscribe();
+        }
+      }),
+    ];
+  }
+
+  private _registerRoomServiceEvents(): void {
+    this._roomService.onEvent$.subscribe((event: RoomServiceEvent): void => {
+      Promise.resolve(
+        match(event)
+          .returnType<void | Promise<void>>()
+          .with(
+            { type: 'RoomServiceEventGraphTableChanged' },
+            (message: RoomServiceEventGraphTableChanged): void => {
+              const cachedGraphFactory: CachingSchemaDTOFactory =
+                new CachingSchemaDTOFactory(
+                  this._databaseService,
+                  this._logger,
+                );
+              const table: SchemaGraphTable =
+                cachedGraphFactory.createSchemaTable(message.table);
+              this.sendToRoom(message.roomId, {
+                table: table,
+                type: 'WSEventGraphTableChanged',
+              });
+            },
+          )
+          .with(
+            { type: 'RoomServiceEventGraphMetaDataChanged' },
+            (message: RoomServiceEventGraphMetaDataChanged): void => {
+              const cachedGraphFactory: CachingSchemaDTOFactory =
+                new CachingSchemaDTOFactory(
+                  this._databaseService,
+                  this._logger,
+                );
+              const metaData: SchemaGraphMetaData =
+                cachedGraphFactory.createSchemaGraphMetaData(message.metaData);
+              this.sendToRoom(message.roomId, {
+                metaData: metaData,
+                type: 'WSEventGraphMetaDataChanged',
+              });
+            },
+          )
+          .with(
+            { type: 'RoomServiceEventGraphElementsChanged' },
+            (message: RoomServiceEventGraphElementsChanged): void => {
+              const cachedGraphFactory: CachingSchemaDTOFactory =
+                new CachingSchemaDTOFactory(
+                  this._databaseService,
+                  this._logger,
+                );
+              cachedGraphFactory
+                .createSchemaGraphElements(message.graph)
+                .then((graphElements: SchemaGraphElements): void => {
+                  this.sendToRoom(message.roomId, {
+                    elements: graphElements,
+                    type: 'WSEventGraphElementsChanged',
+                  });
+                })
+                .catch((error: unknown): void => {
+                  this._logger.error(this, error);
+                });
+            },
+          )
+          .with(
+            { type: 'RoomServiceEventRoomPhysicsUpdated' },
+            (message: RoomServiceEventRoomPhysicsUpdated): void => {
+              for (const socket of this.sockets) {
+                if (socket.room !== message.roomId) {
+                  continue;
+                }
+
+                const nodesToSend: SchemaPhysicalNode[] = [];
+                for (const node of message.graph.nodes.nodes) {
+                  if (!node.grabs.has(socket.id)) {
+                    nodesToSend.push({
+                      id: node.id,
+                      position: { x: node.position.x, y: node.position.y },
+                    });
+                  }
+                }
+
+                socket.send({
+                  type: 'WSEventNodesMoved',
+                  nodes: nodesToSend,
+                  date: new Date().toISOString(),
+                });
+              }
+            },
+          )
+          .with(
+            { type: 'RoomServiceEventNodeLocksUpdated' },
+            (message: RoomServiceEventNodeLocksUpdated): void => {
+              const locks: { id: string; locked: boolean }[] = [];
+              for (const lock of message.locks.entries()) {
+                locks.push({
+                  id: lock[0],
+                  locked: lock[1],
+                });
+              }
+              this.sendToRoom(message.roomId, {
+                type: 'WSEventSetNodeLocks',
+                locks: locks,
+              } satisfies SchemaWsEventSetNodeLocks);
+            },
+          )
+          .with(
+            { type: 'RoomServiceEventRoomPerformanceChanged' },
+            (message: RoomServiceEventRoomPerformanceChanged): void => {
+              this.sendToRoom(message.roomId, {
+                type: 'WSEventPerformanceChanged',
+                performance: message.performance ?? undefined,
+              } satisfies SchemaWsEventPerformanceChanged);
+            },
+          )
+          .with(
+            { type: 'RoomServiceEventRoomLocked' },
+            (message: RoomServiceEventRoomLocked): void => {
+              this.sendToRoom(message.roomId, {
+                type: 'WSEventLockUi',
+              } satisfies SchemaWsEventLockUi);
+            },
+          )
+          .with(
+            { type: 'RoomServiceEventRoomUnlocked' },
+            (message: RoomServiceEventRoomUnlocked): void => {
+              this.sendToRoom(message.roomId, {
+                type: 'WSEventUnlockUi',
+              } satisfies SchemaWsEventUnlockUi);
+            },
+          )
+          .with(
+            { type: 'RoomServiceEventProgressChanged' },
+            (message: RoomServiceEventProgressChanged): void => {
+              this.sendToRoom(message.roomId, {
+                type: 'WSEventProgress',
+                message: message.message,
+                progress: message.progress,
+              } satisfies SchemaWsEventProgress);
+            },
+          )
+          .with(
+            { type: 'RoomServiceEventProgressCleared' },
+            (message: RoomServiceEventProgressCleared): void => {
+              this.sendToRoom(message.roomId, {
+                type: 'WSEventClearProgress',
+              } satisfies SchemaWsEventClearProgress);
+            },
+          )
+          .exhaustive(),
+      ).catch((error: unknown): void => {
         this._logger.error(
           this,
-          `Room ${roomId} not found. Socket tried to join.`,
+          `Error handling room service event: ${JSON.stringify(event)}`,
         );
-        return;
-      }
-
-      await wsClient.join(roomId);
-    })().catch((error: unknown): void => {
-      this._logger.error(this, error);
-    });
-  }
-
-  private _handleLeaveRoom(wsClient: WSClient): void {
-    (async (): Promise<void> => {
-      await wsClient.leaveRoom();
-    })().catch((error: unknown): void => {
-      this._logger.error(this, error);
-    });
-  }
-
-  private _handleLoadScenario(
-    wsClient: WSClient,
-    m: SchemaWsActionLoadScenario,
-  ): void {
-    const roomId: string | null = wsClient.room;
-    if (roomId == null) {
-      this._logger.error(
-        this,
-        `Socket ${wsClient.id} is in no room but did run a scenario.`,
-      );
-      return;
-    }
-
-    wsClient.sendToRoom({
-      type: 'WSEventLockUi',
-    } satisfies SchemaWsEventLockUi);
-    this._roomService
-      .loadScenario({
-        roomId: roomId,
-        scenarioId: m.scenarioId,
-        onProgrsss: (progress: RSEventScenarioProgress): void => {
-          wsClient.sendToRoom({
-            type: 'WSEventProgress',
-            message: progress.message,
-            progress: progress.progress,
-          } satisfies SchemaWsEventProgress);
-        },
-      })
-      .catch((error: unknown): void => {
-        wsClient.sendToRoom(this.createErrorNotification(error));
-      })
-      .finally((): void => {
-        wsClient.sendToRoom({
-          type: 'WSEventClearProgress',
-        } satisfies SchemaWsEventClearProgress);
-        wsClient.sendToRoom({
-          type: 'WSEventUnlockUi',
-        } satisfies SchemaWsEventUnlockUi);
-      });
-  }
-
-  private _handleGrabNode(
-    wsClient: WSClient,
-    message: SchemaWsActionGrabNode,
-  ): void {
-    const roomId: string | null = wsClient.room;
-    if (roomId == null) {
-      this._logger.error(
-        this,
-        `Socket ${wsClient.id} did send grab node message but is in no room.`,
-      );
-      return;
-    }
-    const nodeId: string = message.nodeId;
-
-    this._roomService.grabNode({
-      nodeId: nodeId,
-      roomId: roomId,
-      userId: wsClient.id,
-    });
-  }
-
-  private _handleMoveNodes(
-    wsClient: WSClient,
-    m: SchemaWsActionMoveNodes,
-  ): void {
-    const roomId: string | null = wsClient.room;
-    if (roomId == null) {
-      this._logger.error(
-        this,
-        `Socket ${wsClient.id} did send move node message but is in no room.`,
-      );
-      return;
-    }
-
-    this._roomService.moveNodes({
-      roomId: roomId,
-      nodes: m.nodes,
-      userId: wsClient.id,
-    });
-  }
-
-  private _handleUngrabNode(
-    wsClient: WSClient,
-    m: SchemaWsActionUngrabNode,
-  ): void {
-    const roomId: string | null = wsClient.room;
-    if (roomId == null) {
-      this._logger.error(
-        this,
-        `Socket ${wsClient.id} did send ungrab node message but is in no room.`,
-      );
-      return;
-    }
-
-    this._roomService.ungrabNode({
-      node: m.node,
-      roomId: roomId,
-      userId: wsClient.id,
-    });
-  }
-
-  private async _handleExpandNodes(
-    wsClient: WSClient,
-    m: SchemaWsActionExpandNodes,
-  ): Promise<void> {
-    const roomId: string | null = wsClient.room;
-    if (roomId == null) {
-      this._logger.error(
-        this,
-        `Socket ${wsClient.id} did send expand nodes message but is in no room.`,
-      );
-      return;
-    }
-
-    wsClient.sendToRoom({
-      type: 'WSEventLockUi',
-    } satisfies SchemaWsEventLockUi);
-    wsClient.sendToRoom({
-      type: 'WSEventProgress',
-      message: 'Expanding node',
-      progress: null,
-    } satisfies SchemaWsEventProgress);
-
-    try {
-      await this._roomService.expandNodes({ roomId: roomId, nodeIds: m.nodes });
-    } catch (error: unknown) {
-      wsClient.sendToRoom(this.createErrorNotification(error));
-    }
-
-    wsClient.sendToRoom({
-      type: 'WSEventClearProgress',
-    } satisfies SchemaWsEventClearProgress);
-    wsClient.sendToRoom({
-      type: 'WSEventUnlockUi',
-    } satisfies SchemaWsEventUnlockUi);
-  }
-
-  private async _handleDeleteNodes(
-    wsClient: WSClient,
-    m: SchemaWsActionDeleteNodes,
-  ): Promise<void> {
-    const roomId: string | null = wsClient.room;
-    if (roomId == null) {
-      this._logger.error(
-        this,
-        `Socket ${wsClient.id} did send expand nodes message but is in no room.`,
-      );
-      return;
-    }
-
-    wsClient.sendToRoom({
-      type: 'WSEventProgress',
-      message: 'Deleting node',
-      progress: null,
-    } satisfies SchemaWsEventProgress);
-    wsClient.sendToRoom({
-      type: 'WSEventLockUi',
-    } satisfies SchemaWsEventLockUi);
-    await wait();
-
-    try {
-      this._roomService.deleteNodes({ roomId: roomId, nodeIds: m.nodes });
-    } catch (error: unknown) {
-      wsClient.sendToRoom(this.createErrorNotification(error));
-    }
-
-    wsClient.sendToRoom({
-      type: 'WSEventClearProgress',
-    } satisfies SchemaWsEventClearProgress);
-    wsClient.sendToRoom({
-      type: 'WSEventUnlockUi',
-    } satisfies SchemaWsEventUnlockUi);
-  }
-
-  private _handleRelayout(wsClient: WSClient): void {
-    const roomId: string | null = wsClient.room;
-    if (roomId == null) {
-      this._logger.error(
-        this,
-        `Socket ${wsClient.id} did send relayout but is in no room.`,
-      );
-      return;
-    }
-    this._roomService.relayout({ roomId: roomId });
-  }
-
-  private _handleUnlockNodes(
-    wsClient: WSClient,
-    message: SchemaWsActionUnlockNodes,
-  ): void {
-    const roomId: string | null = wsClient.room;
-    if (roomId == null) {
-      this._logger.error(
-        this,
-        `Socket ${wsClient.id} did send unlock nodes but is in no room.`,
-      );
-      return;
-    }
-    this._roomService.unlockNodes({ roomId: roomId, nodeIds: message.nodes });
-  }
-
-  private _handleGetGraph(wsClient: WSClient): void {
-    const roomId: string | null = wsClient.room;
-    if (roomId == null) {
-      this._logger.error(
-        this,
-        `Socket ${wsClient.id} did send unlock nodes but is in no room.`,
-      );
-      return;
-    }
-
-    wsClient.sendToRoom({
-      type: 'WSEventProgress',
-      message: 'Loading graph',
-      progress: null,
-    } satisfies SchemaWsEventProgress);
-    wsClient.sendToRoom({
-      type: 'WSEventLockUi',
-    } satisfies SchemaWsEventLockUi);
-
-    const graph: MutableGraph = this._roomService.getGraph(roomId);
-    const cachedGraphFactory: CachingSchemaDTOFactory =
-      new CachingSchemaDTOFactory(this._databaseService, this._logger);
-    cachedGraphFactory
-      .createSchemaGraph(graph)
-      .then((schemaGraph: SchemaGraph): void => {
-        wsClient.send({
-          type: 'WSEventGraphChanged',
-          graph: schemaGraph,
-        });
-      })
-      .catch((error: unknown): void => {
-        this._logger.error(this, error);
-      })
-      .finally((): void => {
-        wsClient.sendToRoom({
-          type: 'WSEventClearProgress',
-        } satisfies SchemaWsEventClearProgress);
-        wsClient.sendToRoom({
-          type: 'WSEventUnlockUi',
-        } satisfies SchemaWsEventUnlockUi);
-      });
-  }
-
-  private _handleRoomPhysicsUpdate(message: RSEventRoomPhysicsUpdated): void {
-    for (const socket of this.sockets) {
-      if (socket.room !== message.roomId) {
-        continue;
-      }
-
-      const nodesToSend: SchemaPhysicalNode[] = [];
-      for (const node of message.graph.nodes.nodes) {
-        if (!node.grabs.has(socket.id)) {
-          nodesToSend.push({
-            id: node.id,
-            position: { x: node.position.x, y: node.position.y },
-          });
-        }
-      }
-
-      socket.send({
-        type: 'WSEventNodesMoved',
-        nodes: nodesToSend,
-        date: new Date().toISOString(),
-      });
-    }
-  }
-
-  private _handleRoomUpdate(message: RSEventRoomUpdated): void {
-    const cachedGraphFactory: CachingSchemaDTOFactory =
-      new CachingSchemaDTOFactory(this._databaseService, this._logger);
-    cachedGraphFactory
-      .createSchemaGraph(message.graph)
-      .then((graph: SchemaGraph): void => {
-        this.sendToRoom(message.roomId, {
-          graph: graph,
-          type: 'WSEventGraphChanged',
-        });
-      })
-      .catch((error: unknown): void => {
         this._logger.error(this, error);
       });
+    });
   }
 
-  private _handleRoomLocksUpdate(message: RSEventRoomLocksUpdated): void {
-    const locks: { id: string; locked: boolean }[] = [];
-    for (const lock of message.locks.entries()) {
-      locks.push({
-        id: lock[0],
-        locked: lock[1],
-      });
+  private _assertRoom(client: WSClient): string {
+    if (client.room == null) {
+      throw new Error(`Client ${client.id} is in no room.`);
     }
-    this.sendToRoom(message.roomId, {
-      type: 'WSEventSetLocks',
-      locks: locks,
-    } satisfies SchemaWsEventSetLocks);
-  }
-
-  private _handleRoomPerformanceChanged(
-    message: RSEventRoomPerformanceChanged,
-  ): void {
-    // TODO: Implement in client & Test
-    this.sendToRoom(message.roomId, {
-      type: 'WSEventPerformanceChanged',
-      performance: message.performance ?? undefined,
-    } satisfies SchemaWsEventPerformanceChanged);
+    return client.room;
   }
 }

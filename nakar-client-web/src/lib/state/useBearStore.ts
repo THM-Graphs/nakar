@@ -57,17 +57,17 @@ export const useBearStore = create<BearState>()(
               nodes: [],
               edges: [],
               labels: [],
-            },
-            table: {
-              data: [],
-            },
-            metaData: {
               histogram: {
                 nodeLabels: [],
                 edgeTypes: [],
                 edgeProperties: [],
                 nodeProperties: [],
               },
+            },
+            table: {
+              data: [],
+            },
+            metaData: {
               pipelineSummary: [],
               scenarioInfo: {
                 id: "",
@@ -78,6 +78,21 @@ export const useBearStore = create<BearState>()(
           setGraph: (graph) => {
             set((s) => {
               s.room.scenario.graph = graph;
+            });
+          },
+          setGraphMetaData: (metaData) => {
+            set((s) => {
+              s.room.scenario.graph.metaData = metaData;
+            });
+          },
+          setGraphTable: (table) => {
+            set((s) => {
+              s.room.scenario.graph.table = table;
+            });
+          },
+          setGraphElements: (graphElements) => {
+            set((s) => {
+              s.room.scenario.graph.elements = graphElements;
             });
           },
           setLocks: (locks: { id: string; locked: boolean }[]) => {

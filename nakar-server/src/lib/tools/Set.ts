@@ -77,4 +77,13 @@ export class SSet<T> extends Set<T> {
     }
     return n;
   }
+
+  public find(filter: (element: T) => boolean): T | null {
+    for (const value of this) {
+      if (filter(value)) {
+        return value;
+      }
+    }
+    return null;
+  }
 }
