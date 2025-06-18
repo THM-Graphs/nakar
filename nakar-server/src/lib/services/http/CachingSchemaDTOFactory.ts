@@ -12,7 +12,6 @@ import {
   SchemaGraphTable,
   SchemaHistogram,
   SchemaNode,
-  SchemaScenarioInfo,
 } from '../../../../src-gen/schema';
 import { MutableNode } from '../room/graph/MutableNode';
 import { MutableEdge } from '../room/graph/MutableEdge';
@@ -20,24 +19,28 @@ import { MutableGraph } from '../room/graph/MutableGraph';
 import { NodeDisplayConfigurationContext } from '../room/scenario-pipeline/display-configuration/NodeDisplayConfigurationContext';
 import { MutableGraphLabel } from '../room/graph/MutableGraphLabel';
 import { MutablePropertyCollection } from '../room/graph/MutablePropertyCollection';
-import { MutableScenarioInfo } from '../room/graph/MutableScenarioInfo';
 import { MutableGraphMetaData } from '../room/graph/MutableGraphMetaData';
+import { GetScenarioDBDTO } from '../database/dto/GetScenarioDBDTO';
+import { SchemaDTOFactory } from './SchemaDTOFactory';
+import { ConfigService } from '../config/ConfigService';
 
 export class CachingSchemaDTOFactory {
   private readonly _databaseCache: SMap<string, GetDatabaseDBDTO>;
-  private readonly _database: DatabaseService;
-  private readonly _logger: LoggerService;
+  private readonly _dtoFactory: SchemaDTOFactory;
 
-  public constructor(database: DatabaseService, logger: LoggerService) {
+  public constructor(
+    private readonly _database: DatabaseService,
+    private readonly _logger: LoggerService,
+    private readonly _config: ConfigService,
+  ) {
     this._databaseCache = new SMap();
-    this._logger = logger;
-    this._database = database;
+    this._dtoFactory = new SchemaDTOFactory(_config);
   }
 
   public async createSchemaGraph(graph: MutableGraph): Promise<SchemaGraph> {
     return {
       elements: await this.createSchemaGraphElements(graph),
-      metaData: this.createSchemaGraphMetaData(graph.metaData),
+      metaData: await this.createSchemaGraphMetaData(graph.metaData),
       table: this.createSchemaTable(graph.tableData),
     };
   }
@@ -78,12 +81,16 @@ export class CachingSchemaDTOFactory {
     };
   }
 
-  public createSchemaGraphMetaData(
+  public async createSchemaGraphMetaData(
     metaData: MutableGraphMetaData,
-  ): SchemaGraphMetaData {
+  ): Promise<SchemaGraphMetaData> {
+    const scenario: GetScenarioDBDTO | null =
+      metaData.scenarioId != null
+        ? await this._database.getScenario(metaData.scenarioId)
+        : null;
     return {
-      scenarioInfo: metaData.scenarioInfo
-        ? this._createSchemaScenarioInfo(metaData.scenarioInfo)
+      scenario: scenario
+        ? { current: this._dtoFactory.createSchemaScenario(scenario) }
         : null,
       pipelineSummary: metaData.pipelineSummary.map(
         (entry: [string, number]): { step: string; durationMs: number } => {
@@ -314,15 +321,6 @@ export class CachingSchemaDTOFactory {
           return (await this._getDatabase(sourceId))?.title ?? sourceId;
         },
       ),
-    };
-  }
-
-  private _createSchemaScenarioInfo(
-    scenarioInfo: MutableScenarioInfo,
-  ): SchemaScenarioInfo {
-    return {
-      id: scenarioInfo.id,
-      title: scenarioInfo.title,
     };
   }
 

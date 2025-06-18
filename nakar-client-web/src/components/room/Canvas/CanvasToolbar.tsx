@@ -27,10 +27,10 @@ export function CanvasToolbar(props: {
       style={{ zIndex: 1 }}
     >
       <GraphDataToggle></GraphDataToggle>
-      {graph.metaData.scenarioInfo?.title && (
+      {graph.metaData.scenario && (
         <>
           <span className={"small text-muted ps-1 pe-1"}>
-            Scenario: {graph.metaData.scenarioInfo.title}
+            Scenario: {graph.metaData.scenario.current.title}
           </span>
         </>
       )}
@@ -47,11 +47,11 @@ export function CanvasToolbar(props: {
           }}
         ></NavbarButton>
         <NavbarButton
-          disabled={graph.metaData.scenarioInfo == null || uiLocked}
+          disabled={graph.metaData.scenario == null || uiLocked}
           icon={"arrow-clockwise"}
           title={"Rerun Scenario"}
           onClick={async () => {
-            const id = graph.metaData.scenarioInfo?.id;
+            const id = graph.metaData.scenario?.current.id;
             if (id == null) {
               return;
             }

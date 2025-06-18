@@ -224,16 +224,14 @@ export class RoomService implements ApplicationService {
         >();
         const graph: MutableGraph = this.getGraph(params.roomId);
 
-        const scenarioId: string | null =
-          graph.metaData.scenarioInfo?.id ?? null;
-        if (scenarioId == null) {
+        if (graph.metaData.scenarioId == null) {
           throw new Error(
-            `Cannot expand node because there is no scneario info.`,
+            `Cannot expand node because there is no scenario info.`,
           );
         }
 
         const scenario: GetScenarioDBDTO | null =
-          await this._database.getScenario(scenarioId);
+          await this._database.getScenario(graph.metaData.scenarioId);
         if (scenario == null) {
           throw new Error(
             `Cannot find scenario of room ${params.roomId} to run expand nodes.`,

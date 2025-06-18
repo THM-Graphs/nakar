@@ -491,19 +491,6 @@ components:
         - namesInQuery
         - source
 
-    ScenarioInfo:
-      type: object
-      nullable: true
-      properties:
-        id:
-          type: string
-        title:
-          type: string
-          nullable: true
-      required:
-        - id
-        - title
-
     Histogram:
       type: object
       properties:
@@ -596,8 +583,14 @@ components:
     GraphMetaData:
       type: object
       properties:
-        scenarioInfo:
-          $ref: "#/components/schemas/ScenarioInfo"
+        scenario:
+          type: object
+          nullable: true
+          properties:
+            current:
+              $ref: "#/components/schemas/Scenario"
+          required:
+            - current
         pipelineSummary:
           type: array
           items:

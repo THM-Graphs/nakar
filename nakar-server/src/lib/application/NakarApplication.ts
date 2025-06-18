@@ -60,6 +60,7 @@ export class NakarApplication {
       this.databaseService,
       this.httpService,
       this.logger,
+      this.config,
     );
 
     this._services = [

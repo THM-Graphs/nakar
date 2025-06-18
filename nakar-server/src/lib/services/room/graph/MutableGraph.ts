@@ -8,7 +8,6 @@ import { LoggerService } from '../../logger/LoggerService';
 import { MutableNodeIndex } from './MutableNodeIndex';
 import { MutableEdgeIndex } from './MutableEdgeIndex';
 import { GetScenarioDBDTO } from '../../database/dto/GetScenarioDBDTO';
-import { MutableScenarioInfo } from './MutableScenarioInfo';
 import { FinalGraphDisplayConfiguration } from '../scenario-pipeline/display-configuration/FinalGraphDisplayConfiguration';
 import { PhysicalGraph } from '../../../tools/physics/physical-graph/PhysicalGraph';
 import { PhysicalNode } from '../../../tools/physics/physical-graph/PhysicalNode';
@@ -72,10 +71,7 @@ export class MutableGraph {
       nodes: new MutableNodeIndex([]),
       edges: new MutableEdgeIndex([]),
       metaData: new MutableGraphMetaData({
-        scenarioInfo: new MutableScenarioInfo({
-          id: scenario.documentId,
-          title: scenario.title,
-        }),
+        scenarioId: scenario.documentId,
         pipelineSummary: [],
       }),
       tableData: [],

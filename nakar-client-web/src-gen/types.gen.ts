@@ -56,7 +56,9 @@ export type GraphLabel = {
 };
 
 export type GraphMetaData = {
-    scenarioInfo: ScenarioInfo;
+    scenario?: {
+        current: Scenario;
+    } | null;
     pipelineSummary: Array<{
         step: string;
         durationMs: number;
@@ -176,11 +178,6 @@ export type ScenarioGroup = {
     editUrl: (string) | null;
     scenarios: Array<Scenario>;
 };
-
-export type ScenarioInfo = {
-    id: string;
-    title: (string) | null;
-} | null;
 
 export type Version = {
     version: string;

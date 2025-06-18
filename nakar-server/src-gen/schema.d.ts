@@ -319,10 +319,6 @@ export interface components {
             readonly namesInQuery: readonly string[];
             readonly source: string;
         };
-        readonly ScenarioInfo: {
-            readonly id: string;
-            readonly title: string | null;
-        } | null;
         readonly Histogram: {
             readonly nodeLabels: readonly {
                 readonly label: string;
@@ -352,7 +348,9 @@ export interface components {
             }[];
         };
         readonly GraphMetaData: {
-            readonly scenarioInfo: components["schemas"]["ScenarioInfo"];
+            readonly scenario?: {
+                readonly current: components["schemas"]["Scenario"];
+            } | null;
             readonly pipelineSummary: readonly {
                 readonly step: string;
                 readonly durationMs: number;
@@ -532,7 +530,6 @@ export type SchemaNode = components['schemas']['Node'];
 export type SchemaPhysicalNode = components['schemas']['PhysicalNode'];
 export type SchemaPosition = components['schemas']['Position'];
 export type SchemaEdge = components['schemas']['Edge'];
-export type SchemaScenarioInfo = components['schemas']['ScenarioInfo'];
 export type SchemaHistogram = components['schemas']['Histogram'];
 export type SchemaGraphMetaData = components['schemas']['GraphMetaData'];
 export type SchemaGraphElements = components['schemas']['GraphElements'];

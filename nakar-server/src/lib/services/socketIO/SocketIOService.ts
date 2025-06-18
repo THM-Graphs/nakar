@@ -48,6 +48,7 @@ import { RoomServiceEventProgressChanged } from '../room/events/RoomServiceEvent
 import { RoomServiceEventProgressCleared } from '../room/events/RoomServiceEventProgressCleared';
 import { RoomServiceEventGraphElementsChanged } from '../room/events/RoomServiceEventGraphElementsChanged';
 import { RoomServiceEventGraphTableChanged } from '../room/events/RoomServiceEventGraphTableChanged';
+import { ConfigService } from '../config/ConfigService';
 
 export type Server = UntypedServer<ClientToServerEvents, ServerToClientEvents>;
 export type Socket = UntypedSocket<ClientToServerEvents, ServerToClientEvents>;
@@ -61,6 +62,7 @@ export class SocketIOService implements ApplicationService {
     private _databaseService: DatabaseService,
     private _httpService: HTTPService,
     private _logger: LoggerService,
+    private _config: ConfigService,
   ) {
     this._sockets = new SSet();
     this._io = null;
@@ -266,6 +268,7 @@ export class SocketIOService implements ApplicationService {
                 new CachingSchemaDTOFactory(
                   this._databaseService,
                   this._logger,
+                  this._config,
                 );
               const table: SchemaGraphTable =
                 cachedGraphFactory.createSchemaTable(message.table);
@@ -277,14 +280,19 @@ export class SocketIOService implements ApplicationService {
           )
           .with(
             { type: 'RoomServiceEventGraphMetaDataChanged' },
-            (message: RoomServiceEventGraphMetaDataChanged): void => {
+            async (
+              message: RoomServiceEventGraphMetaDataChanged,
+            ): Promise<void> => {
               const cachedGraphFactory: CachingSchemaDTOFactory =
                 new CachingSchemaDTOFactory(
                   this._databaseService,
                   this._logger,
+                  this._config,
                 );
               const metaData: SchemaGraphMetaData =
-                cachedGraphFactory.createSchemaGraphMetaData(message.metaData);
+                await cachedGraphFactory.createSchemaGraphMetaData(
+                  message.metaData,
+                );
               this.sendToRoom(message.roomId, {
                 metaData: metaData,
                 type: 'WSEventGraphMetaDataChanged',
@@ -298,6 +306,7 @@ export class SocketIOService implements ApplicationService {
                 new CachingSchemaDTOFactory(
                   this._databaseService,
                   this._logger,
+                  this._config,
                 );
               cachedGraphFactory
                 .createSchemaGraphElements(message.graph)

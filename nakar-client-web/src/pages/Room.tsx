@@ -157,7 +157,7 @@ export function Room(props: { context: AppContext }) {
           },
         },
         metaData: {
-          scenarioInfo: null,
+          scenario: null,
           pipelineSummary: [],
         },
         table: {

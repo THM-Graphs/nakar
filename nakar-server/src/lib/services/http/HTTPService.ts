@@ -219,7 +219,11 @@ export class HTTPService implements ApplicationService {
         const room: GetRoomDBDTO = await this._assertRoom(req);
         const graph: MutableGraph = this._roomService.getGraph(room.documentId);
         const cachedGraphFactory: CachingSchemaDTOFactory =
-          new CachingSchemaDTOFactory(this._databaseService, this._logger);
+          new CachingSchemaDTOFactory(
+            this._databaseService,
+            this._logger,
+            this._config,
+          );
         const result: SchemaGraph =
           await cachedGraphFactory.createSchemaGraph(graph);
         return result;
@@ -232,7 +236,11 @@ export class HTTPService implements ApplicationService {
         const room: GetRoomDBDTO = await this._assertRoom(req);
         const graph: MutableGraph = this._roomService.getGraph(room.documentId);
         const cachedGraphFactory: CachingSchemaDTOFactory =
-          new CachingSchemaDTOFactory(this._databaseService, this._logger);
+          new CachingSchemaDTOFactory(
+            this._databaseService,
+            this._logger,
+            this._config,
+          );
         const result: SchemaGraphElements =
           await cachedGraphFactory.createSchemaGraphElements(graph);
         return result;
@@ -245,9 +253,13 @@ export class HTTPService implements ApplicationService {
         const room: GetRoomDBDTO = await this._assertRoom(req);
         const graph: MutableGraph = this._roomService.getGraph(room.documentId);
         const cachedGraphFactory: CachingSchemaDTOFactory =
-          new CachingSchemaDTOFactory(this._databaseService, this._logger);
+          new CachingSchemaDTOFactory(
+            this._databaseService,
+            this._logger,
+            this._config,
+          );
         const result: SchemaGraphMetaData =
-          cachedGraphFactory.createSchemaGraphMetaData(graph.metaData);
+          await cachedGraphFactory.createSchemaGraphMetaData(graph.metaData);
         return result;
       }),
     );
@@ -258,7 +270,11 @@ export class HTTPService implements ApplicationService {
         const room: GetRoomDBDTO = await this._assertRoom(req);
         const graph: MutableGraph = this._roomService.getGraph(room.documentId);
         const cachedGraphFactory: CachingSchemaDTOFactory =
-          new CachingSchemaDTOFactory(this._databaseService, this._logger);
+          new CachingSchemaDTOFactory(
+            this._databaseService,
+            this._logger,
+            this._config,
+          );
         const result: SchemaGraphTable = cachedGraphFactory.createSchemaTable(
           graph.tableData,
         );
@@ -475,9 +491,8 @@ export class HTTPService implements ApplicationService {
   private async _getScenarioOfRoom(
     room: GetRoomDBDTO,
   ): Promise<GetScenarioDBDTO | null> {
-    const scenarioId: string | null =
-      this._roomService.getGraph(room.documentId).metaData.scenarioInfo?.id ??
-      null;
+    const graph: MutableGraph = this._roomService.getGraph(room.documentId);
+    const scenarioId: string | null = graph.metaData.scenarioId;
     const scenario: GetScenarioDBDTO | null =
       scenarioId != null
         ? await this._databaseService.getScenario(scenarioId)
