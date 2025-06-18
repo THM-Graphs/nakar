@@ -126,6 +126,15 @@ export type Node = {
     locked: boolean;
 };
 
+export type Notification = {
+    title: string;
+    message: string;
+    severity: 'error' | 'message' | 'warning';
+    date: string;
+};
+
+export type severity = 'error' | 'message' | 'warning';
+
 export type PhysicalNode = {
     id: string;
     position: Position;
@@ -262,15 +271,10 @@ export type type11 = 'WSEventNodesMoved';
 
 export type WSEventNotification = {
     type: 'WSEventNotification';
-    title: string;
-    message: string;
-    severity: 'error' | 'message' | 'warning';
-    date: string;
+    notification: Notification;
 };
 
 export type type12 = 'WSEventNotification';
-
-export type severity = 'error' | 'message' | 'warning';
 
 export type WSEventPerformanceChanged = {
     type: 'WSEventPerformanceChanged';

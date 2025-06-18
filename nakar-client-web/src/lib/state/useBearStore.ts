@@ -4,6 +4,7 @@ import { immer } from "zustand/middleware/immer";
 import { SocketState } from "../ws/SocketState.ts";
 import { PhysicsPerformance, WSEventProgress } from "../../../src-gen";
 import { devtools } from "zustand/middleware";
+import { v4 } from "uuid";
 
 export const useBearStore = create<BearState>()(
   devtools(
@@ -42,6 +43,42 @@ export const useBearStore = create<BearState>()(
             clearPerformance: () => {
               set((s) => {
                 s.room.ui.performance = null;
+              });
+            },
+            notifications: [],
+            pushNotification: (notification) => {
+              set((s) => {
+                const id = v4();
+                s.room.ui.notifications = [
+                  ...s.room.ui.notifications,
+                  {
+                    id: id,
+                    message: notification.message,
+                    date: notification.date,
+                    severity: notification.severity,
+                    title: notification.title,
+                  },
+                ];
+
+                setTimeout(() => {
+                  useBearStore.getState().room.ui.removeNotification(id);
+                }, 5000);
+              });
+            },
+            pushErrorNotification: (error: unknown) => {
+              useBearStore.getState().room.ui.pushNotification({
+                title: "Error",
+                message:
+                  typeof error == "string" ? error : JSON.stringify(error),
+                date: new Date(),
+                severity: "error",
+              });
+            },
+            removeNotification: (id: string) => {
+              set((s) => {
+                s.room.ui.notifications = s.room.ui.notifications.filter(
+                  (n) => n.id !== id,
+                );
               });
             },
           },

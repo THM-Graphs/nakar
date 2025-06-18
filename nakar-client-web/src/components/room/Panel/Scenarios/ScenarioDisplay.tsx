@@ -6,6 +6,7 @@ import { useBearStore } from "../../../../lib/state/useBearStore.ts";
 import { useCallback } from "react";
 import { AppContext } from "../../../../lib/state/AppContext.ts";
 import { RoomContext } from "../../../../pages/Room.tsx";
+import { resultOrThrow } from "../../../../lib/data/resultOrThrow.ts";
 
 export function ScenarioDisplay(props: {
   scenario: Scenario;
@@ -14,16 +15,21 @@ export function ScenarioDisplay(props: {
   roomContext: RoomContext;
 }) {
   const uiLocked = useBearStore((s) => s.room.ui.locked);
+  const pushErrorNotification = useBearStore(
+    (s) => s.room.ui.pushErrorNotification,
+  );
 
   const runScenario = useCallback(() => {
     (async () => {
       try {
-        await postRoomActionLoadScenario({
-          path: { id: props.roomContext.initialRoomData.id },
-          body: { scenarioId: props.scenario.id },
-        });
+        resultOrThrow(
+          await postRoomActionLoadScenario({
+            path: { id: props.roomContext.initialRoomData.id },
+            body: { scenarioId: props.scenario.id },
+          }),
+        );
       } catch (error) {
-        // TODO: Add error message
+        pushErrorNotification(error);
       }
     })().catch(console.error);
   }, [props.scenario]);

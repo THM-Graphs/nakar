@@ -77,6 +77,7 @@ export function Room(props: { context: AppContext }) {
   const setScenarios = useBearStore(
     (s) => s.room.panels.scenarios.setScenarios,
   );
+  const pushNotification = useBearStore((s) => s.room.ui.pushNotification);
 
   useEffect(() => {
     setScenarios(roomContext.initialScenariosData);
@@ -126,8 +127,14 @@ export function Room(props: { context: AppContext }) {
           .with({ type: "WSEventNodesMoved" }, () => {
             /* */
           })
-          .with({ type: "WSEventNotification" }, () => {
-            /* */
+          .with({ type: "WSEventNotification" }, (event) => {
+            const notification = event.notification;
+            pushNotification({
+              message: notification.message,
+              date: new Date(notification.date),
+              title: notification.title,
+              severity: notification.severity,
+            });
           })
           .with({ type: "WSEventSetNodeLocks" }, () => {
             /* */

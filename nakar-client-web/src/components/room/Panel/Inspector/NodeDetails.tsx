@@ -8,6 +8,7 @@ import { DetailPane } from "./DetailPane.tsx";
 import { DetailPaneAction } from "./DetailPaneAction.ts";
 import { AppContext } from "../../../../lib/state/AppContext.ts";
 import { RoomContext } from "../../../../pages/Room.tsx";
+import { resultOrThrow } from "../../../../lib/data/resultOrThrow.ts";
 
 export function NodeDetails(props: {
   node: Node;
@@ -22,12 +23,14 @@ export function NodeDetails(props: {
           icon: "zoom-in",
           variant: "primary",
           action: async () => {
-            await postRoomActionExpandNodes({
-              path: {
-                id: props.roomContext.initialRoomData.id,
-              },
-              body: { nodes: [props.node.id] },
-            });
+            resultOrThrow(
+              await postRoomActionExpandNodes({
+                path: {
+                  id: props.roomContext.initialRoomData.id,
+                },
+                body: { nodes: [props.node.id] },
+              }),
+            );
           },
         },
         {
@@ -35,12 +38,14 @@ export function NodeDetails(props: {
           icon: "eye-slash",
           variant: "danger",
           action: async () => {
-            await postRoomActionDeleteNodes({
-              path: {
-                id: props.roomContext.initialRoomData.id,
-              },
-              body: { nodes: [props.node.id] },
-            });
+            resultOrThrow(
+              await postRoomActionDeleteNodes({
+                path: {
+                  id: props.roomContext.initialRoomData.id,
+                },
+                body: { nodes: [props.node.id] },
+              }),
+            );
           },
         },
         ...(props.node.locked
@@ -50,12 +55,14 @@ export function NodeDetails(props: {
                 icon: "unlock",
                 variant: "primary",
                 action: async () => {
-                  await postRoomActionUnlockNodes({
-                    path: { id: props.roomContext.initialRoomData.id },
-                    body: {
-                      nodes: [props.node.id],
-                    },
-                  });
+                  resultOrThrow(
+                    await postRoomActionUnlockNodes({
+                      path: { id: props.roomContext.initialRoomData.id },
+                      body: {
+                        nodes: [props.node.id],
+                      },
+                    }),
+                  );
                 },
               } satisfies DetailPaneAction,
             ]

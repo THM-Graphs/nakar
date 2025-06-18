@@ -412,6 +412,14 @@ export interface components {
         readonly Version: {
             readonly version: string;
         };
+        readonly Notification: {
+            readonly title: string;
+            readonly message: string;
+            /** @enum {string} */
+            readonly severity: "error" | "message" | "warning";
+            /** Format: date */
+            readonly date: string;
+        };
         readonly PhysicsPerformance: {
             /** @enum {string} */
             readonly performance: "good" | "bad";
@@ -474,12 +482,7 @@ export interface components {
         readonly WSEventNotification: {
             /** @enum {string} */
             readonly type: "WSEventNotification";
-            readonly title: string;
-            readonly message: string;
-            /** @enum {string} */
-            readonly severity: "error" | "message" | "warning";
-            /** Format: date */
-            readonly date: string;
+            readonly notification: components["schemas"]["Notification"];
         };
         readonly WSEventProgress: {
             /** @enum {string} */
@@ -542,6 +545,7 @@ export type SchemaDatabases = components['schemas']['Databases'];
 export type SchemaScenarioGroup = components['schemas']['ScenarioGroup'];
 export type SchemaScenario = components['schemas']['Scenario'];
 export type SchemaVersion = components['schemas']['Version'];
+export type SchemaNotification = components['schemas']['Notification'];
 export type SchemaPhysicsPerformance = components['schemas']['PhysicsPerformance'];
 export type SchemaWsClientToServerMessage = components['schemas']['WSClientToServerMessage'];
 export type SchemaWsServerToClientMessage = components['schemas']['WSServerToClientMessage'];

@@ -787,6 +787,28 @@ components:
       required:
         - version
 
+    Notification:
+      type: object
+      properties:
+        title:
+          type: string
+        message:
+          type: string
+        severity:
+          type: string
+          enum:
+            - error
+            - message
+            - warning
+        date:
+          type: string
+          format: date
+      required:
+        - title
+        - message
+        - severity
+        - date
+
     PhysicsPerformance:
       type: object
       properties:
@@ -957,25 +979,11 @@ components:
         type:
           type: string
           enum: ["WSEventNotification"]
-        title:
-          type: string
-        message:
-          type: string
-        severity:
-          type: string
-          enum:
-            - error
-            - message
-            - warning
-        date:
-          type: string
-          format: date
+        notification:
+          $ref: "#/components/schemas/Notification"
       required:
         - type
-        - title
-        - message
-        - severity
-        - date
+        - notification
 
     WSEventProgress:
       type: object

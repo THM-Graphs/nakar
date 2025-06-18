@@ -4,6 +4,7 @@ import {
   GraphElements,
   GraphMetaData,
   GraphTable,
+  Notification,
   PhysicsPerformance,
   WSEventProgress,
 } from "../../../src-gen";
@@ -22,6 +23,19 @@ export interface BearState {
       performance: PhysicsPerformance | null;
       setPerformance: (performance: PhysicsPerformance | null) => void;
       clearPerformance: () => void;
+      notifications: Array<
+        {
+          id: string;
+          date: Date;
+        } & Omit<Notification, "date">
+      >;
+      pushNotification: (
+        notification: {
+          date: Date;
+        } & Omit<Notification, "date">,
+      ) => void;
+      pushErrorNotification: (error: unknown) => void;
+      removeNotification: (id: string) => void;
     };
     scenario: {
       graph: Graph;

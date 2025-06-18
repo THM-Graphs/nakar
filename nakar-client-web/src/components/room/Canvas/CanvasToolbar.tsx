@@ -8,12 +8,12 @@ import {
   postRoomActionRelayout,
 } from "../../../../src-gen";
 import { RoomContext } from "../../../pages/Room.tsx";
+import { resultOrThrow } from "../../../lib/data/resultOrThrow.ts";
 
 export function CanvasToolbar(props: {
   context: AppContext;
   roomContext: RoomContext;
 }) {
-  const webSockets = props.context.webSocketsManager;
   const graph = useBearStore((s) => s.room.scenario.graph);
   const tabs = useBearStore((s) => s.room.canvas.tabs);
   const uiLocked = useBearStore((s) => s.room.ui.locked);
@@ -41,9 +41,11 @@ export function CanvasToolbar(props: {
           title={"Layout Graph"}
           className={""}
           onClick={async () => {
-            await postRoomActionRelayout({
-              path: { id: props.roomContext.initialRoomData.id },
-            });
+            resultOrThrow(
+              await postRoomActionRelayout({
+                path: { id: props.roomContext.initialRoomData.id },
+              }),
+            );
           }}
         ></NavbarButton>
         <NavbarButton
@@ -55,12 +57,14 @@ export function CanvasToolbar(props: {
             if (id == null) {
               return;
             }
-            await postRoomActionLoadScenario({
-              path: { id: props.roomContext.initialRoomData.id },
-              body: {
-                scenarioId: id,
-              },
-            });
+            resultOrThrow(
+              await postRoomActionLoadScenario({
+                path: { id: props.roomContext.initialRoomData.id },
+                body: {
+                  scenarioId: id,
+                },
+              }),
+            );
           }}
         ></NavbarButton>
       </Stack>

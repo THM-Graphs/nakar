@@ -7,6 +7,7 @@ import {
   ReactNode,
   useState,
 } from "react";
+import { useBearStore } from "../../lib/state/useBearStore.ts";
 
 export const NavbarButton = forwardRef<
   HTMLDivElement,
@@ -25,6 +26,9 @@ export const NavbarButton = forwardRef<
 >((props, ref) => {
   const [loading, setLoading] = useState<boolean>(false);
   const disabled = props.disabled || loading;
+  const pushErrorNotification = useBearStore(
+    (s) => s.room.ui.pushErrorNotification,
+  );
 
   return (
     <Stack
@@ -42,7 +46,7 @@ export const NavbarButton = forwardRef<
             try {
               await props.onClick(event);
             } catch (error) {
-              alert(error);
+              pushErrorNotification(error);
             }
             setLoading(false);
           }

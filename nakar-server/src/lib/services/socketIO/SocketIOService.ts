@@ -100,10 +100,12 @@ export class SocketIOService implements ApplicationService {
 
     this._io.emit('message', {
       type: 'WSEventNotification',
-      severity: 'error',
-      message: 'The Server did shut down.',
-      title: 'Server notification',
-      date: new Date().toISOString(),
+      notification: {
+        severity: 'error',
+        message: 'The Server did shut down.',
+        title: 'Server notification',
+        date: new Date().toISOString(),
+      },
     } satisfies SchemaWsEventNotification);
   }
 
@@ -128,10 +130,12 @@ export class SocketIOService implements ApplicationService {
       .otherwise((e: unknown): string => JSON.stringify(e));
     return {
       type: 'WSEventNotification',
-      severity: 'error',
-      title: 'Error',
-      message: errorMessage,
-      date: new Date().toISOString(),
+      notification: {
+        severity: 'error',
+        title: 'Error',
+        message: errorMessage,
+        date: new Date().toISOString(),
+      },
     };
   }
 
@@ -154,18 +158,22 @@ export class SocketIOService implements ApplicationService {
           if (oldRoomId != null && newRoomId == null) {
             this.sendToRoom(oldRoomId, {
               type: 'WSEventNotification',
-              title: 'User left',
-              message: `User ${wsClient.id} left.`,
-              date: new Date().toISOString(),
-              severity: 'message',
+              notification: {
+                title: 'User left',
+                message: `User ${wsClient.id} left.`,
+                date: new Date().toISOString(),
+                severity: 'message',
+              },
             } satisfies SchemaWsEventNotification);
           } else if (oldRoomId == null && newRoomId != null) {
             wsClient.broadcastToRoom({
               type: 'WSEventNotification',
-              title: 'User joined',
-              message: `User ${wsClient.id} joined.`,
-              severity: 'message',
-              date: new Date().toISOString(),
+              notification: {
+                title: 'User joined',
+                message: `User ${wsClient.id} joined.`,
+                severity: 'message',
+                date: new Date().toISOString(),
+              },
             });
           }
 
