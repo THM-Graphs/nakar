@@ -1,9 +1,13 @@
-import { GraphLabel } from "../../../../src-gen";
+import { GraphElements, GraphLabel } from "../../../../src-gen";
 import { getBackgroundColor } from "../../../lib/color/getBackgroundColor.ts";
 import { getTextColor } from "../../../lib/color/getTextColor.ts";
 import { Stack } from "react-bootstrap";
 
-export function Label(props: { label: GraphLabel; multipleSources: boolean }) {
+export function Label(props: {
+  label: GraphLabel;
+  graphElements: GraphElements;
+  showAmount: boolean;
+}) {
   return (
     <Stack
       gap={1}
@@ -16,9 +20,22 @@ export function Label(props: { label: GraphLabel; multipleSources: boolean }) {
         color: getTextColor(props.label.color),
       }}
     >
-      {props.multipleSources && <span>[{props.label.sources.join(", ")}]</span>}
+      {multipleSources(props.graphElements.labels) && (
+        <span>[{props.label.sources.join(", ")}]</span>
+      )}
       <span>{props.label.label}</span>
-      <span>({props.label.count})</span>
+      {props.showAmount && <span>({props.label.count})</span>}
     </Stack>
   );
+}
+
+function multipleSources(graphLabels: GraphLabel[]): boolean {
+  const allSources: Set<string> = new Set();
+  for (const graphlabel of graphLabels) {
+    for (const source of graphlabel.sources) {
+      allSources.add(source);
+    }
+  }
+
+  return allSources.size > 1;
 }

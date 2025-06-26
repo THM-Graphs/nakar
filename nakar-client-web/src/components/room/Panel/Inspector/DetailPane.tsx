@@ -4,9 +4,11 @@ import { GraphProperty } from "../../../../../src-gen";
 import { PropertyDisplay } from "./PropertyDisplay.tsx";
 import { NavbarButton } from "../../../shared/NavbarButton.tsx";
 import { useBearStore } from "../../../../lib/state/useBearStore.ts";
+import { ReactNode } from "react";
 
 export function DetailPane(props: {
   title: string;
+  subTitleElements?: ReactNode;
   actions: DetailPaneAction[];
   properties: GraphProperty[];
   otherProperties: GraphProperty[];
@@ -14,17 +16,18 @@ export function DetailPane(props: {
   const uiLocked = useBearStore((s) => s.room.ui.locked);
 
   return (
-    <Stack className={"pb-5"}>
+    <Stack className={"pb-5"} gap={1}>
       {props.title.length > 0 && (
         <Stack direction={"horizontal"}>
           <span
             style={{ overflowWrap: "anywhere", userSelect: "text" }}
-            className={"pt-1 ps-2 pe-2 pb-2 fs-5 fw-bold"}
+            className={"pt-1 ps-2 pe-2 fs-5 fw-bold"}
           >
             {props.title}
           </span>
         </Stack>
       )}
+      {props.subTitleElements}
       {props.actions.length > 0 && (
         <Stack
           direction={"horizontal"}

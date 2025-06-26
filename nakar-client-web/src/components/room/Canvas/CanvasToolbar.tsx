@@ -30,7 +30,10 @@ export function CanvasToolbar(props: {
       {graph.metaData.scenario && (
         <>
           <span className={"small text-muted ps-1 pe-1"}>
-            Scenario: {graph.metaData.scenario.current.title}
+            Scenario:{" "}
+            <span className={"user-select-text"}>
+              {graph.metaData.scenario.current.title}
+            </span>
           </span>
         </>
       )}

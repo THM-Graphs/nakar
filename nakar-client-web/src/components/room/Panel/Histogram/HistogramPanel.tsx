@@ -26,6 +26,7 @@ export function HistogramPanel() {
       <Stack className={"mb-5 flex-grow-0 flex-shrink-1 mb-auto pb-5"}>
         <Stack className={"border-bottom"}>
           <Collapsable
+            key={"labels"}
             title={<span className={"fw-bold small"}>Labels</span>}
             initialState={false}
           >
@@ -35,7 +36,7 @@ export function HistogramPanel() {
                 (graphLabel) => graphLabel.label === entry.label,
               );
               if (label == null) {
-                return <></>;
+                return null;
               } else {
                 return (
                   <ValueDisplay

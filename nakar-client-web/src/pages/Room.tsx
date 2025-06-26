@@ -187,7 +187,11 @@ export function Room(props: { context: AppContext }) {
           center={
             <>
               <NavbarLogo></NavbarLogo>
-              <span className={"small text-muted align-self-center ms-2"}>
+              <span
+                className={
+                  "small text-muted align-self-center ms-2 user-select-text"
+                }
+              >
                 {roomContext.initialRoomData.title}
               </span>
             </>
