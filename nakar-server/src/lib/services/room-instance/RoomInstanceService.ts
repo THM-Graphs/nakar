@@ -55,12 +55,16 @@ export class RoomInstanceService implements ApplicationService {
 
   private _registerParentPortMessages(): void {
     this._parentPort.on('message', (message: WTAction): void => {
-      // this._logger.debug(this, message.type);
+      if (!['WTActionMoveNodes'].includes(message.type)) {
+        this._logger.debug(
+          this,
+          `Did receive from parent port: ${message.type}`,
+        );
+      }
       match(message)
         .with(
           { type: 'WTActionSetGraph' },
           (action: WTActionSetGraph): void => {
-            this._logger.debug(this, 'WTActionSetGraph');
             this._physics.setGraph(action.graph);
           },
         )
@@ -92,9 +96,10 @@ export class RoomInstanceService implements ApplicationService {
           { type: 'WTActionTriggerPhysics' },
           (action: WTActionTriggerPhysics): void => {
             const shortDuration: number =
+              200 +
               2 *
-              (Object.keys(this._physics.getGraph().nodes).length +
-                Object.keys(this._physics.getGraph().nodes).length);
+                (Object.keys(this._physics.getGraph().nodes).length +
+                  Object.keys(this._physics.getGraph().nodes).length);
             void this._physics.run({
               maxMs:
                 action.amount === 'short' ? shortDuration : shortDuration * 4,

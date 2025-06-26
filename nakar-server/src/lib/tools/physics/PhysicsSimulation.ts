@@ -94,6 +94,9 @@ export class PhysicsSimulation {
 
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     while (true) {
+      this._tick();
+      tickCount += 1;
+
       if (!this._running) {
         break;
       }
@@ -101,11 +104,7 @@ export class PhysicsSimulation {
         break;
       }
 
-      this._tick();
-      tickCount += 1;
-
       const waitDelta: number = performance.now() - lastWait;
-
       if (waitDelta >= this._targetTickDuration) {
         const avgTickDuration: number =
           (performance.now() - lastWait) / tickCount;
@@ -179,10 +178,10 @@ export class PhysicsSimulation {
 
   private _positionEquals(nodeA: PhysicalNode, nodeB: PhysicalNode): boolean {
     const threshold: number = 0.1;
-    return (
+    const result: boolean =
       Math.abs(nodeA.position.x - nodeB.position.x) < threshold &&
-      Math.abs(nodeA.position.y - nodeB.position.y) < threshold
-    );
+      Math.abs(nodeA.position.y - nodeB.position.y) < threshold;
+    return result;
   }
 
   private _jiggle(node: PhysicalNode): void {

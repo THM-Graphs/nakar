@@ -31,6 +31,7 @@ import { RoomServiceEvent } from './events/RoomServiceEvent';
 import { RoomServiceEventGraphElementsChanged } from './events/RoomServiceEventGraphElementsChanged';
 import { RoomServiceEventGraphMetaDataChanged } from './events/RoomServiceEventGraphMetaDataChanged';
 import { RoomServiceEventGraphTableChanged } from './events/RoomServiceEventGraphTableChanged';
+import { PhysicsSimulation } from '../../tools/physics/PhysicsSimulation';
 
 export class RoomService implements ApplicationService {
   private readonly _workers: SMap<string, Worker>;
@@ -287,12 +288,11 @@ export class RoomService implements ApplicationService {
           for (const newNode of expandResult.nodes) {
             if (!graph.nodes.hasById(newNode[0])) {
               result.newNodeCount += 1;
-              graph.nodes.addNeo4jNode(newNode[1]);
 
-              const insertedNode: MutableNode | null = graph.nodes.get(
-                newNode[0],
+              const insertedNode: MutableNode | null = graph.nodes.addNeo4jNode(
+                newNode[1],
               );
-              if (insertedNode != null && !insertedNode.locked) {
+              if (insertedNode != null) {
                 insertedNode.position.x = node.position.x;
                 insertedNode.position.y = node.position.y;
               }

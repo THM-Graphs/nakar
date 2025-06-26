@@ -44,9 +44,9 @@ export class MutableNodeIndex {
     return this._propertyHistogram;
   }
 
-  public add(node: MutableNode): void {
+  public add(node: MutableNode): boolean {
     if (this._byId.has(node.id)) {
-      return;
+      return false;
     }
     this._byId.set(node.id, node);
     for (const label of node.labels) {
@@ -55,6 +55,7 @@ export class MutableNodeIndex {
     for (const property of node.properties.properties) {
       this._addToPropertyHistogram(property[0], property[1], 1);
     }
+    return true;
   }
 
   public addNeo4jNodes(nodes: SMap<string, Neo4jNode>): void {
@@ -63,7 +64,7 @@ export class MutableNodeIndex {
     }
   }
 
-  public addNeo4jNode(node: Neo4jNode): void {
+  public addNeo4jNode(node: Neo4jNode): MutableNode | null {
     const mutableNode: MutableNode = new MutableNode({
       id: node.node.elementId,
       labels: new SSet<string>(node.node.labels),
@@ -76,16 +77,21 @@ export class MutableNodeIndex {
       additionalSources: new SSet(),
     });
 
-    this.add(mutableNode);
+    const insertResult: boolean = this.add(mutableNode);
+    if (!insertResult) {
+      return null;
+    } else {
+      return mutableNode;
+    }
   }
 
-  public remove(nodeReference: string | MutableNode): void {
+  public remove(nodeReference: string | MutableNode): boolean {
     const node: MutableNode | undefined =
       nodeReference instanceof MutableNode
         ? nodeReference
         : this._byId.get(nodeReference);
     if (node == null) {
-      return;
+      return false;
     }
 
     this._byId.delete(node.id);
@@ -96,6 +102,8 @@ export class MutableNodeIndex {
     for (const propertyEntry of node.properties.properties) {
       this._addToPropertyHistogram(propertyEntry[0], propertyEntry[1], -1);
     }
+
+    return true;
   }
 
   public hasById(id: string): boolean {
