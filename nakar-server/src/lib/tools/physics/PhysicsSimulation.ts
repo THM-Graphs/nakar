@@ -9,6 +9,7 @@ import { PhysicalNode } from './physical-graph/PhysicalNode';
 import { PhysicalEdge } from './physical-graph/PhysicalEdge';
 import { Range } from '../Range';
 import { SchemaPhysicsPerformance } from '../../../../src-gen/schema';
+import { MutableNode } from '../../services/room/graph/MutableNode';
 
 export class PhysicsSimulation {
   public static readonly maximumVelocity: number = 500;
@@ -53,6 +54,12 @@ export class PhysicsSimulation {
 
   private get _targetTickDuration(): number {
     return (1 / PhysicsSimulation.FPS) * 1000;
+  }
+
+  public static jiggle(node: PhysicalNode | MutableNode): void {
+    const radians: number = Math.random() * Math.PI * 2;
+    node.position.x += Math.cos(radians) * 10;
+    node.position.y += Math.sin(radians) * 10;
   }
 
   public runIndefinitely(): void {
@@ -184,12 +191,6 @@ export class PhysicsSimulation {
     return result;
   }
 
-  private _jiggle(node: PhysicalNode): void {
-    const radians: number = Math.random() * Math.PI * 2;
-    node.position.x += Math.cos(radians) * 10;
-    node.position.y += Math.sin(radians) * 10;
-  }
-
   private _applyForce(
     node: PhysicalNode,
     forceX: number,
@@ -232,7 +233,7 @@ export class PhysicsSimulation {
 
   private _twoBodyForce(nodeA: PhysicalNode, nodeB: PhysicalNode): void {
     if (this._positionEquals(nodeA, nodeB)) {
-      this._jiggle(nodeA);
+      PhysicsSimulation.jiggle(nodeA);
     }
 
     const directionX: number = nodeA.position.x - nodeB.position.x;
@@ -264,7 +265,7 @@ export class PhysicsSimulation {
     nodeB: PhysicalNode,
   ): void {
     if (this._positionEquals(nodeA, nodeB)) {
-      this._jiggle(nodeA);
+      PhysicsSimulation.jiggle(nodeA);
     }
 
     const directionX: number = nodeA.position.x - nodeB.position.x;

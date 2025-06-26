@@ -190,16 +190,21 @@ export class MutableEdgeIndex {
     return newIndex;
   }
 
-  public removeEdgesOfNode(nodeId: string): void {
+  public removeEdgesOfNode(nodeId: string): number {
     const byStartNodeId: MutableEdge[] = this.getByStartNodeId(nodeId);
     const byEndNodeId: MutableEdge[] = this.getByEndNodeId(nodeId);
 
+    let count: number = 0;
     for (const edge of byStartNodeId) {
       this.remove(edge);
+      count += 1;
     }
     for (const edge of byEndNodeId) {
       this.remove(edge);
+      count += 1;
     }
+
+    return count;
   }
 
   private _addToTypeHistogram(type: string, delta: number): void {

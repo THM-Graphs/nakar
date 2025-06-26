@@ -32,6 +32,7 @@ import { RoomServiceEventGraphElementsChanged } from './events/RoomServiceEventG
 import { RoomServiceEventGraphMetaDataChanged } from './events/RoomServiceEventGraphMetaDataChanged';
 import { RoomServiceEventGraphTableChanged } from './events/RoomServiceEventGraphTableChanged';
 import { PhysicsSimulation } from '../../tools/physics/PhysicsSimulation';
+import { ExpandNodesResult } from './results/ExpandNodesResult';
 
 export class RoomService implements ApplicationService {
   private readonly _workers: SMap<string, Worker>;
@@ -202,6 +203,8 @@ export class RoomService implements ApplicationService {
           type: 'RoomServiceEventGraphElementsChanged',
           graph: result.graph,
           roomId: params.roomId,
+          nodesAdded: result.graph.nodes.size,
+          edgesAdded: result.graph.edges.size,
         } satisfies RoomServiceEventGraphElementsChanged);
         this._onEvent.next({
           type: 'RoomServiceEventGraphTableChanged',
@@ -244,9 +247,9 @@ export class RoomService implements ApplicationService {
           );
         }
 
-        const result: { newNodeCount: number; newEdgeCount: number } = {
-          newNodeCount: 0,
-          newEdgeCount: 0,
+        const result: ExpandNodesResult = {
+          nodesAddedCount: 0,
+          edgeAddedCount: 0,
         };
 
         for (const nodeId of params.nodeIds) {
@@ -287,7 +290,7 @@ export class RoomService implements ApplicationService {
 
           for (const newNode of expandResult.nodes) {
             if (!graph.nodes.hasById(newNode[0])) {
-              result.newNodeCount += 1;
+              result.nodesAddedCount += 1;
 
               const insertedNode: MutableNode | null = graph.nodes.addNeo4jNode(
                 newNode[1],
@@ -295,12 +298,13 @@ export class RoomService implements ApplicationService {
               if (insertedNode != null) {
                 insertedNode.position.x = node.position.x;
                 insertedNode.position.y = node.position.y;
+                PhysicsSimulation.jiggle(insertedNode);
               }
             }
           }
           for (const newEdge of expandResult.relationships) {
             if (!graph.edges.has(newEdge[0])) {
-              result.newEdgeCount += 1;
+              result.edgeAddedCount += 1;
               graph.edges.addNeo4jEdge(newEdge[1]);
             }
           }
@@ -326,7 +330,9 @@ export class RoomService implements ApplicationService {
           type: 'RoomServiceEventGraphElementsChanged',
           graph: graph,
           roomId: params.roomId,
-        } satisfies RoomServiceEvent);
+          nodesAdded: result.nodesAddedCount,
+          edgesAdded: result.edgeAddedCount,
+        } satisfies RoomServiceEventGraphElementsChanged);
       },
     );
   }
@@ -340,9 +346,17 @@ export class RoomService implements ApplicationService {
 
       const graph: MutableGraph = this.getGraph(params.roomId);
 
+      const result: ExpandNodesResult = {
+        nodesAddedCount: 0,
+        edgeAddedCount: 0,
+      };
       for (const nodeId of params.nodeIds) {
-        graph.nodes.remove(nodeId);
-        graph.edges.removeEdgesOfNode(nodeId);
+        const didDelete: boolean = graph.nodes.remove(nodeId);
+        if (didDelete) {
+          result.nodesAddedCount -= 1;
+        }
+        const edgesDeleted: number = graph.edges.removeEdgesOfNode(nodeId);
+        result.edgeAddedCount -= edgesDeleted;
 
         this._logger.debug(this, `Did delete node ${nodeId}`);
       }
@@ -359,6 +373,8 @@ export class RoomService implements ApplicationService {
         type: 'RoomServiceEventGraphElementsChanged',
         graph: graph,
         roomId: params.roomId,
+        nodesAdded: result.nodesAddedCount,
+        edgesAdded: result.edgeAddedCount,
       } satisfies RoomServiceEvent);
     });
   }

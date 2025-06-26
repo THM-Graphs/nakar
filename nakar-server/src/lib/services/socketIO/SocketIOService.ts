@@ -330,6 +330,17 @@ export class SocketIOService implements ApplicationService {
                     elements: graphElements,
                     type: 'WSEventGraphElementsChanged',
                   });
+                  if (message.nodesAdded === 0) {
+                    this.sendToRoom(message.roomId, {
+                      type: 'WSEventNotification',
+                      notification: {
+                        severity: 'message',
+                        message: `No nodes added.`,
+                        title: 'Graph Update',
+                        date: new Date().toISOString(),
+                      },
+                    } satisfies SchemaWsEventNotification);
+                  }
                 })
                 .catch((error: unknown): void => {
                   this._logger.error(this, error);
