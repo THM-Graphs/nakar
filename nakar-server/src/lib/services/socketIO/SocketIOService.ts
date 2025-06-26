@@ -185,71 +185,76 @@ export class SocketIOService implements ApplicationService {
       ),
       wsClient.onMessage$.subscribe(
         (clientToServerMessage: SchemaWsClientToServerMessage): void => {
-          Promise.resolve(
-            match(clientToServerMessage)
-              .returnType<void | Promise<void>>()
-              .with(
-                { type: 'WSActionJoinRoom' },
-                async (m: SchemaWsActionJoinRoom): Promise<void> => {
-                  const roomId: string = m.roomId;
+          (async (): Promise<void> => {
+            try {
+              await match(clientToServerMessage)
+                .returnType<void | Promise<void>>()
+                .with(
+                  { type: 'WSActionJoinRoom' },
+                  async (m: SchemaWsActionJoinRoom): Promise<void> => {
+                    const roomId: string = m.roomId;
 
-                  const room: GetRoomDBDTO | null =
-                    await this._databaseService.getRoom(roomId);
-                  if (room == null) {
-                    throw new Error(
-                      `Room ${roomId} not found. Socket tried to join.`,
-                    );
-                  }
+                    const room: GetRoomDBDTO | null =
+                      await this._databaseService.getRoom(roomId);
+                    if (room == null) {
+                      throw new Error(
+                        `Room ${roomId} not found. Socket tried to join.`,
+                      );
+                    }
 
-                  await wsClient.join(roomId);
-                },
-              )
-              .with({ type: 'WSActionLeaveRoom' }, async (): Promise<void> => {
-                await wsClient.leaveRoom();
-              })
-              .with(
-                { type: 'WSActionGrabNode' },
-                (m: SchemaWsActionGrabNode): void => {
-                  const roomId: string = this._assertRoom(wsClient);
-                  this._roomService.grabNode({
-                    nodeId: m.nodeId,
-                    roomId: roomId,
-                    userId: wsClient.id,
-                  });
-                  throw new Error('Test');
-                },
-              )
-              .with(
-                { type: 'WSActionMoveNodes' },
-                (m: SchemaWsActionMoveNodes): void => {
-                  const roomId: string = this._assertRoom(wsClient);
-                  this._roomService.moveNodes({
-                    roomId: roomId,
-                    nodes: m.nodes,
-                    userId: wsClient.id,
-                  });
-                },
-              )
-              .with(
-                { type: 'WSActionUngrabNode' },
-                (m: SchemaWsActionUngrabNode): void => {
-                  const roomId: string = this._assertRoom(wsClient);
-                  this._roomService.ungrabNode({
-                    node: m.node,
-                    roomId: roomId,
-                    userId: wsClient.id,
-                  });
-                },
-              )
-              .exhaustive(),
-          ).catch((error: unknown): void => {
-            // TODO: Check if handling is working. Server shuts down?
-            this._logger.error(
-              this,
-              `Error handeling WS message: ${JSON.stringify(clientToServerMessage)}`,
-            );
+                    await wsClient.join(roomId);
+                  },
+                )
+                .with(
+                  { type: 'WSActionLeaveRoom' },
+                  async (): Promise<void> => {
+                    await wsClient.leaveRoom();
+                  },
+                )
+                .with(
+                  { type: 'WSActionGrabNode' },
+                  (m: SchemaWsActionGrabNode): void => {
+                    const roomId: string = this._assertRoom(wsClient);
+                    this._roomService.grabNode({
+                      nodeId: m.nodeId,
+                      roomId: roomId,
+                      userId: wsClient.id,
+                    });
+                  },
+                )
+                .with(
+                  { type: 'WSActionMoveNodes' },
+                  (m: SchemaWsActionMoveNodes): void => {
+                    const roomId: string = this._assertRoom(wsClient);
+                    this._roomService.moveNodes({
+                      roomId: roomId,
+                      nodes: m.nodes,
+                      userId: wsClient.id,
+                    });
+                  },
+                )
+                .with(
+                  { type: 'WSActionUngrabNode' },
+                  (m: SchemaWsActionUngrabNode): void => {
+                    const roomId: string = this._assertRoom(wsClient);
+                    this._roomService.ungrabNode({
+                      node: m.node,
+                      roomId: roomId,
+                      userId: wsClient.id,
+                    });
+                  },
+                )
+                .exhaustive();
+            } catch (error: unknown) {
+              this._logger.error(
+                this,
+                `Error handeling WS message: ${JSON.stringify(clientToServerMessage)}`,
+              );
+              this._logger.error(this, error);
+              wsClient.send(this.createErrorNotification(error));
+            }
+          })().catch((error: unknown): void => {
             this._logger.error(this, error);
-            wsClient.send(this.createErrorNotification(error));
           });
         },
       ),
