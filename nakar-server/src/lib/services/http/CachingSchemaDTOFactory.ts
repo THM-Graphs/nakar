@@ -300,12 +300,18 @@ export class CachingSchemaDTOFactory {
   private _createSchemaGraphProperties(
     mutableProperties: MutablePropertyCollection,
   ): SchemaGraphProperty[] {
-    return mutableProperties.properties.toArray().map(
-      ([key, value]: [string, unknown]): SchemaGraphProperty => ({
-        slug: key,
-        value: value,
-      }),
-    );
+    return mutableProperties.properties
+      .toArray()
+      .sort(
+        (propertyA: [string, unknown], propertyB: [string, unknown]): number =>
+          propertyA[0].localeCompare(propertyB[0]),
+      )
+      .map(
+        ([key, value]: [string, unknown]): SchemaGraphProperty => ({
+          slug: key,
+          value: value,
+        }),
+      );
   }
 
   private async _createSchemaGraphLabel(
