@@ -34,4 +34,4 @@ HEALTHCHECK \
     --start-interval=5s \
     CMD curl -f http://localhost/_health || exit 1
 
-CMD ["npm", "start"]
+CMD ["node", "node_modules/@strapi/strapi/bin/strapi.js", "start"]
