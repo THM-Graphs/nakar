@@ -13,6 +13,7 @@ export class MutableEdgeIndex {
     string,
     SMap<string, SMap<string, MutableEdge>>
   >;
+  private _byType: SMap<string, SSet<MutableEdge>>;
 
   /* Maps type => count */
   private _typeHistogram: SMap<string, number>;
@@ -22,6 +23,7 @@ export class MutableEdgeIndex {
 
   public constructor(edges: MutableEdge[]) {
     this._byId = new SMap();
+    this._byType = new SMap();
     this._byStartNodeId = new SMap();
     this._byEndNodeId = new SMap();
     this._byStartAndEndNodeId = new SMap();
@@ -59,6 +61,10 @@ export class MutableEdgeIndex {
     }
 
     this._byId.set(edge.id, edge);
+    this._byType.set(
+      edge.type,
+      (this._byType.get(edge.type) ?? new SSet()).byAdding(edge),
+    );
 
     this._byStartNodeId.set(
       edge.startNodeId,
@@ -118,8 +124,13 @@ export class MutableEdgeIndex {
     this.add(mutableEdge);
   }
 
-  public remove(edge: MutableEdge): void {
+  public remove(edge: MutableEdge): boolean {
+    if (!this.has(edge.id)) {
+      return false;
+    }
+
     this._byId.delete(edge.id);
+    this._byType.get(edge.type)?.delete(edge);
     this._byStartNodeId.get(edge.startNodeId)?.delete(edge.id);
     this._byEndNodeId.get(edge.endNodeId)?.delete(edge.id);
     this._byStartAndEndNodeId
@@ -132,10 +143,16 @@ export class MutableEdgeIndex {
     for (const propertyEntry of edge.properties.properties) {
       this._addToPropertyHistogram(propertyEntry[0], propertyEntry[1], -1);
     }
+
+    return true;
   }
 
   public get(id: string): MutableEdge | null {
     return this._byId.get(id) ?? null;
+  }
+
+  public getByType(type: string): SSet<MutableEdge> {
+    return this._byType.get(type) ?? new SSet();
   }
 
   public has(id: string): boolean {
@@ -173,6 +190,17 @@ export class MutableEdgeIndex {
     );
   }
 
+  public getByStartOrEndNodeId(nodeId: string): SSet<MutableEdge> {
+    const result: SSet<MutableEdge> = new SSet<MutableEdge>();
+    for (const startNodeEdge of this.getByStartNodeId(nodeId)) {
+      result.add(startNodeEdge);
+    }
+    for (const endNodeEdge of this.getByEndNodeId(nodeId)) {
+      result.add(endNodeEdge);
+    }
+    return result;
+  }
+
   public byMergingWithNonOverriding(
     otherIndex: MutableEdgeIndex,
   ): MutableEdgeIndex {
@@ -190,25 +218,13 @@ export class MutableEdgeIndex {
     return newIndex;
   }
 
-  public removeEdgesOfNode(nodeId: string): number {
-    const byStartNodeId: MutableEdge[] = this.getByStartNodeId(nodeId);
-    const byEndNodeId: MutableEdge[] = this.getByEndNodeId(nodeId);
-
-    let count: number = 0;
-    for (const edge of byStartNodeId) {
-      this.remove(edge);
-      count += 1;
-    }
-    for (const edge of byEndNodeId) {
-      this.remove(edge);
-      count += 1;
-    }
-
-    return count;
-  }
-
   private _addToTypeHistogram(type: string, delta: number): void {
-    this._typeHistogram.set(type, (this._typeHistogram.get(type) ?? 0) + delta);
+    const newValue: number = (this._typeHistogram.get(type) ?? 0) + delta;
+    if (newValue === 0) {
+      this._typeHistogram.delete(type);
+    } else {
+      this._typeHistogram.set(type, newValue);
+    }
   }
 
   private _addToPropertyHistogram(
@@ -223,6 +239,12 @@ export class MutableEdgeIndex {
       stringValue,
       (propertyHistogram.get(stringValue) ?? 0) + delta,
     );
+    if (propertyHistogram.get(stringValue) === 0) {
+      propertyHistogram.delete(stringValue);
+    }
     this._propertyHistogram.set(key, propertyHistogram);
+    if (this._propertyHistogram.get(key)?.size === 0) {
+      this._propertyHistogram.delete(key);
+    }
   }
 }

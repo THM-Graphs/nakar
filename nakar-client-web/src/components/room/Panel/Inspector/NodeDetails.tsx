@@ -1,7 +1,7 @@
 import {
   GraphLabel,
   Node,
-  postRoomActionDeleteNodes,
+  postRoomActionDeleteElements,
   postRoomActionExpandNodes,
   postRoomActionUnlockNodes,
 } from "../../../../../src-gen";
@@ -44,11 +44,16 @@ export function NodeDetails(props: {
           variant: "danger",
           action: async () => {
             resultOrThrow(
-              await postRoomActionDeleteNodes({
+              await postRoomActionDeleteElements({
                 path: {
                   id: props.roomContext.initialRoomData.id,
                 },
-                body: { nodes: [props.node.id] },
+                body: {
+                  nodes: [props.node.id],
+                  labels: [],
+                  edges: [],
+                  edgeTypes: [],
+                },
               }),
             );
           },

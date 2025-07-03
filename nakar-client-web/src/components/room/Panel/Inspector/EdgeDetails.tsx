@@ -1,10 +1,33 @@
-import { Edge } from "../../../../../src-gen";
+import { Edge, postRoomActionDeleteElements } from "../../../../../src-gen";
 import { DetailPane } from "./DetailPane.tsx";
+import { resultOrThrow } from "../../../../lib/data/resultOrThrow.ts";
+import { RoomContext } from "../../../../pages/Room.tsx";
 
-export function EdgeDetails(props: { edge: Edge }) {
+export function EdgeDetails(props: { edge: Edge; roomContext: RoomContext }) {
   return (
     <DetailPane
-      actions={[]}
+      actions={[
+        {
+          title: "Remove",
+          icon: "eye-slash",
+          variant: "danger",
+          action: async () => {
+            resultOrThrow(
+              await postRoomActionDeleteElements({
+                path: {
+                  id: props.roomContext.initialRoomData.id,
+                },
+                body: {
+                  nodes: [],
+                  labels: [],
+                  edges: [props.edge.id],
+                  edgeTypes: [],
+                },
+              }),
+            );
+          },
+        },
+      ]}
       otherProperties={[
         {
           slug: "ID",

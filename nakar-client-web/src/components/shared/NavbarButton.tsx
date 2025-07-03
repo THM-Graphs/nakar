@@ -53,7 +53,7 @@ export const NavbarButton = forwardRef<
         })().catch(console.error);
       }}
       className={clsx(
-        "small flex-shrink-1 position-relative overflow-hidden",
+        "small flex-shrink-0 position-relative overflow-hidden",
         props.selected ? "bg-body-secondary" : "",
         disabled ? "" : "pointer",
         disabled ? "" : "bg-body-secondary-hover",

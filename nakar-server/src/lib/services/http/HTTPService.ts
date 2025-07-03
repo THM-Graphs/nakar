@@ -3,6 +3,7 @@ import express, { Application, Request, Response } from 'express';
 import { ConfigService } from '../config/ConfigService';
 import { LoggerService } from '../logger/LoggerService';
 import {
+  operations,
   SchemaDatabase,
   SchemaDatabases,
   SchemaGraph,
@@ -351,34 +352,35 @@ export class HTTPService implements ApplicationService {
       '/room/:id/actions/expand-nodes',
       this._handle(async (req: Request): Promise<void> => {
         const room: GetRoomDBDTO = await this._assertRoom(req);
-        const requestBody: { nodes: string[] } = z
-          .object({
-            nodes: z.array(z.string()),
-          })
-          .parse(req.body);
-        const nodes: string[] = requestBody.nodes;
+
+        type Body =
+          operations['postRoomActionExpandNodes']['requestBody']['content']['application/json'];
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+        const requestBody: Body = req.body as Body;
 
         await this._roomService.expandNodes({
           roomId: room.documentId,
-          nodeIds: nodes,
+          nodeIds: requestBody.nodes,
         });
       }),
     );
 
     this._app.post(
-      '/room/:id/actions/delete-nodes',
+      '/room/:id/actions/delete-elements',
       this._handle(async (req: Request): Promise<void> => {
         const room: GetRoomDBDTO = await this._assertRoom(req);
-        const requestBody: { nodes: string[] } = z
-          .object({
-            nodes: z.array(z.string()),
-          })
-          .parse(req.body);
-        const nodes: string[] = requestBody.nodes;
 
-        await this._roomService.deleteNodes({
+        type Body =
+          operations['postRoomActionDeleteElements']['requestBody']['content']['application/json'];
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+        const requestBody: Body = req.body as Body;
+
+        await this._roomService.deleteElements({
           roomId: room.documentId,
-          nodeIds: nodes,
+          nodeIds: requestBody.nodes,
+          labels: requestBody.labels,
+          edgeIds: requestBody.edges,
+          edgeTypes: requestBody.edgeTypes,
         });
       }),
     );

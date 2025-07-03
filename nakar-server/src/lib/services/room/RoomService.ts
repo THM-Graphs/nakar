@@ -33,6 +33,7 @@ import { RoomServiceEventGraphMetaDataChanged } from './events/RoomServiceEventG
 import { RoomServiceEventGraphTableChanged } from './events/RoomServiceEventGraphTableChanged';
 import { PhysicsSimulation } from '../../tools/physics/PhysicsSimulation';
 import { ExpandNodesResult } from './results/ExpandNodesResult';
+import { MutableEdge } from './graph/MutableEdge';
 
 export class RoomService implements ApplicationService {
   private readonly _workers: SMap<string, Worker>;
@@ -337,9 +338,12 @@ export class RoomService implements ApplicationService {
     );
   }
 
-  public async deleteNodes(params: {
+  public async deleteElements(params: {
     roomId: string;
     nodeIds: readonly string[];
+    labels: readonly string[];
+    edgeIds: readonly string[];
+    edgeTypes: readonly string[];
   }): Promise<void> {
     await this._runWithRoomLock(params.roomId, 'Deleting nodes', (): void => {
       this._assertRoomId(params.roomId);
@@ -350,15 +354,54 @@ export class RoomService implements ApplicationService {
         nodesAddedCount: 0,
         edgeAddedCount: 0,
       };
+
+      const nodesToDelete: SSet<MutableNode> = new SSet<MutableNode>();
+      const edgesToDelete: SSet<MutableEdge> = new SSet<MutableEdge>();
+
       for (const nodeId of params.nodeIds) {
-        const didDelete: boolean = graph.nodes.remove(nodeId);
+        const node: MutableNode | null = graph.nodes.get(nodeId);
+        if (node != null) {
+          nodesToDelete.add(node);
+        }
+      }
+      for (const label of params.labels) {
+        for (const node of graph.nodes.getByLabel(label)) {
+          nodesToDelete.add(node);
+        }
+      }
+
+      for (const node of nodesToDelete) {
+        const didDelete: boolean = graph.nodes.remove(node);
         if (didDelete) {
           result.nodesAddedCount -= 1;
         }
-        const edgesDeleted: number = graph.edges.removeEdgesOfNode(nodeId);
-        result.edgeAddedCount -= edgesDeleted;
 
-        this._logger.debug(this, `Did delete node ${nodeId}`);
+        for (const edge of graph.edges.getByStartOrEndNodeId(node.id)) {
+          edgesToDelete.add(edge);
+        }
+
+        this._logger.debug(this, `Did delete node ${node.id}`);
+      }
+
+      for (const edgeId of params.edgeIds) {
+        const edge: MutableEdge | null = graph.edges.get(edgeId);
+        if (edge != null) {
+          edgesToDelete.add(edge);
+        }
+      }
+
+      for (const edgeType of params.edgeTypes) {
+        const edges: SSet<MutableEdge> = graph.edges.getByType(edgeType);
+        for (const edge of edges) {
+          edgesToDelete.add(edge);
+        }
+      }
+
+      for (const edge of edgesToDelete) {
+        const didDelete: boolean = graph.edges.remove(edge);
+        if (didDelete) {
+          result.edgeAddedCount -= 1;
+        }
       }
 
       this._sendActionToWorker(params.roomId, {

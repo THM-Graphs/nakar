@@ -1,6 +1,6 @@
 import { match } from "ts-pattern";
 import { Panel } from "../Panel.tsx";
-import { ReactNode, useEffect } from "react";
+import { ReactNode } from "react";
 import { NodeDetails } from "./NodeDetails.tsx";
 import { EdgeDetails } from "./EdgeDetails.tsx";
 import { useBearStore } from "../../../../lib/state/useBearStore.ts";
@@ -44,7 +44,10 @@ export function InspectorPanel(props: {
         .with({ type: "edge" }, ({ edgeId }) => {
           const edge = graphElements.edges.find((n) => n.id === edgeId);
           return edge ? (
-            <EdgeDetails edge={edge}></EdgeDetails>
+            <EdgeDetails
+              edge={edge}
+              roomContext={props.roomContext}
+            ></EdgeDetails>
           ) : (
             <EmptyInspector></EmptyInspector>
           );

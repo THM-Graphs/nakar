@@ -8,6 +8,8 @@ import { MutablePropertyCollection } from './MutablePropertyCollection';
 export class MutableNodeIndex {
   private _byId: SMap<string, MutableNode>;
 
+  private _byLabel: SMap<string, SSet<MutableNode>>;
+
   /* Maps label => count */
   private _labelHistogram: SMap<string, number>;
 
@@ -16,6 +18,7 @@ export class MutableNodeIndex {
 
   public constructor(nodes: MutableNode[]) {
     this._byId = new SMap();
+    this._byLabel = new SMap();
     this._labelHistogram = new SMap();
     this._propertyHistogram = new SMap();
 
@@ -54,6 +57,12 @@ export class MutableNodeIndex {
     }
     for (const property of node.properties.properties) {
       this._addToPropertyHistogram(property[0], property[1], 1);
+    }
+    for (const label of node.labels) {
+      this._byLabel.set(
+        label,
+        (this._byLabel.get(label) ?? new SSet()).byAdding(node),
+      );
     }
     return true;
   }
@@ -96,6 +105,9 @@ export class MutableNodeIndex {
 
     this._byId.delete(node.id);
     for (const label of node.labels) {
+      this._byLabel.get(label)?.delete(node);
+    }
+    for (const label of node.labels) {
       this._addToLabelHistogram(label, -1);
     }
 
@@ -116,6 +128,10 @@ export class MutableNodeIndex {
 
   public get(id: string): MutableNode | null {
     return this._byId.get(id) ?? null;
+  }
+
+  public getByLabel(label: string): SSet<MutableNode> {
+    return this._byLabel.get(label) ?? new SSet();
   }
 
   public byMergingWithNonOverriding(
@@ -140,6 +156,9 @@ export class MutableNodeIndex {
       label,
       (this._labelHistogram.get(label) ?? 0) + delta,
     );
+    if (this._labelHistogram.get(label) === 0) {
+      this._labelHistogram.delete(label);
+    }
   }
 
   private _addToPropertyHistogram(
@@ -154,6 +173,12 @@ export class MutableNodeIndex {
       stringValue,
       (propertyHistogram.get(stringValue) ?? 0) + delta,
     );
+    if (propertyHistogram.get(stringValue) === 0) {
+      propertyHistogram.delete(stringValue);
+    }
     this._propertyHistogram.set(key, propertyHistogram);
+    if (this._propertyHistogram.get(key)?.size === 0) {
+      this._propertyHistogram.delete(key);
+    }
   }
 }

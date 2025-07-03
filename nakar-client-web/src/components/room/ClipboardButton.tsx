@@ -2,6 +2,7 @@ import { Button, OverlayTrigger, Tooltip } from "react-bootstrap";
 import { useState } from "react";
 import { useClipboard } from "../../lib/clipboard/useClipboard.ts";
 import clsx from "clsx";
+import { NavbarButton } from "../shared/NavbarButton.tsx";
 
 export function ClipboardButton(props: { text: string; className?: string }) {
   const [copied, setCopied] = useState(false);
@@ -18,11 +19,11 @@ export function ClipboardButton(props: { text: string; className?: string }) {
         }
       }}
     >
-      <Button
-        className={clsx("flex-shrink-0 flex-grow-0 p-0", props.className)}
+      <NavbarButton
+        className={props.className}
         style={{ zIndex: 1 }}
-        variant={"icon"}
         size={"sm"}
+        icon={"copy"}
         onClick={() => {
           (async () => {
             if (!isClipboardEnabled) {
@@ -37,9 +38,7 @@ export function ClipboardButton(props: { text: string; className?: string }) {
             }
           })().catch(console.error);
         }}
-      >
-        <i className={"bi bi-copy"}></i>
-      </Button>
+      ></NavbarButton>
     </OverlayTrigger>
   );
 }

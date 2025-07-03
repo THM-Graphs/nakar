@@ -148,7 +148,7 @@ export interface paths {
         readonly patch?: never;
         readonly trace?: never;
     };
-    readonly "/room/{id}/actions/delete-nodes": {
+    readonly "/room/{id}/actions/delete-elements": {
         readonly parameters: {
             readonly query?: never;
             readonly header?: never;
@@ -157,7 +157,7 @@ export interface paths {
         };
         readonly get?: never;
         readonly put?: never;
-        readonly post: operations["postRoomActionDeleteNodes"];
+        readonly post: operations["postRoomActionDeleteElements"];
         readonly delete?: never;
         readonly options?: never;
         readonly head?: never;
@@ -770,7 +770,7 @@ export interface operations {
             };
         };
     };
-    readonly postRoomActionDeleteNodes: {
+    readonly postRoomActionDeleteElements: {
         readonly parameters: {
             readonly query?: never;
             readonly header?: never;
@@ -783,6 +783,9 @@ export interface operations {
             readonly content: {
                 readonly "application/json": {
                     readonly nodes: readonly string[];
+                    readonly edges: readonly string[];
+                    readonly labels: readonly string[];
+                    readonly edgeTypes: readonly string[];
                 };
             };
         };

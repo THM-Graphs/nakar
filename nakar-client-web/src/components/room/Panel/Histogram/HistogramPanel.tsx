@@ -6,8 +6,12 @@ import { getBackgroundColor } from "../../../../lib/color/getBackgroundColor.ts"
 import { Collapsable } from "../../Collapsable.tsx";
 import { useBearStore } from "../../../../lib/state/useBearStore.ts";
 import { Panel } from "../Panel.tsx";
+import { NavbarButton } from "../../../shared/NavbarButton.tsx";
+import { postRoomActionDeleteElements } from "../../../../../src-gen";
+import { RoomContext } from "../../../../pages/Room.tsx";
+import { resultOrThrow } from "../../../../lib/data/resultOrThrow.ts";
 
-export function HistogramPanel() {
+export function HistogramPanel(props: { roomContext: RoomContext }) {
   const histogramData = useBearStore(
     (s) => s.room.scenario.graph.elements.histogram,
   );
@@ -35,24 +39,36 @@ export function HistogramPanel() {
               const label = labels.find(
                 (graphLabel) => graphLabel.label === entry.label,
               );
-              if (label == null) {
-                return null;
-              } else {
-                return (
-                  <ValueDisplay
-                    label={entry.label}
-                    subLabel={
-                      label.sources.length > 0
-                        ? label.sources.join(", ")
-                        : undefined
-                    }
-                    value={entry.count}
-                    percentage={entry.percentage}
-                    key={entry.label}
-                    bgColor={getBackgroundColor(label.color)}
-                  ></ValueDisplay>
-                );
-              }
+
+              return (
+                <ValueDisplay
+                  label={entry.label}
+                  subLabel={
+                    label && label.sources.length > 0
+                      ? label.sources.join(", ")
+                      : undefined
+                  }
+                  value={entry.count}
+                  percentage={entry.percentage}
+                  key={entry.label}
+                  bgColor={label ? getBackgroundColor(label.color) : undefined}
+                  onRemove={async (): Promise<void> => {
+                    resultOrThrow(
+                      await postRoomActionDeleteElements({
+                        path: {
+                          id: props.roomContext.initialRoomData.id,
+                        },
+                        body: {
+                          nodes: [],
+                          labels: [entry.label],
+                          edges: [],
+                          edgeTypes: [],
+                        },
+                      }),
+                    );
+                  }}
+                ></ValueDisplay>
+              );
             })}
           </Collapsable>
         </Stack>
@@ -68,6 +84,21 @@ export function HistogramPanel() {
                 value={entry.count}
                 percentage={entry.percentage}
                 key={entry.type}
+                onRemove={async (): Promise<void> => {
+                  resultOrThrow(
+                    await postRoomActionDeleteElements({
+                      path: {
+                        id: props.roomContext.initialRoomData.id,
+                      },
+                      body: {
+                        nodes: [],
+                        labels: [],
+                        edges: [],
+                        edgeTypes: [entry.type],
+                      },
+                    }),
+                  );
+                }}
               ></ValueDisplay>
             ))}
           </Collapsable>
@@ -174,6 +205,7 @@ function ValueDisplay(props: {
   value: number;
   percentage: number;
   bgColor?: string;
+  onRemove?: () => void | Promise<void>;
 }) {
   return (
     <Stack
@@ -223,15 +255,27 @@ function ValueDisplay(props: {
           </span>
         </OverlayTrigger>
       </Stack>
-      <span
-        style={{ zIndex: 1 }}
-        className={"pe-2 flex-shrink-0 user-select-text small"}
-      >
-        {props.value}{" "}
-        <span className={"text-muted user-select-text"}>
-          ({(props.percentage * 100).toFixed(2)}%)
+      <Stack direction={"horizontal"} className={"flex-shrink-0"}>
+        <span
+          style={{ zIndex: 1 }}
+          className={"pe-2 flex-shrink-0 user-select-text small"}
+        >
+          {props.value}{" "}
+          <span className={"text-muted user-select-text"}>
+            ({(props.percentage * 100).toFixed(2)}%)
+          </span>
         </span>
-      </span>
+        {props.onRemove && (
+          <NavbarButton
+            icon={"eye-slash"}
+            onClick={props.onRemove}
+            style={{ zIndex: 2 }}
+            className={"pt-0 pb-0 ps-0 pe-0"}
+            size={"sm"}
+          ></NavbarButton>
+        )}
+      </Stack>
+
       <div
         style={{
           position: "absolute",

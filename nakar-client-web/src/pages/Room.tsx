@@ -218,7 +218,7 @@ export function Room(props: { context: AppContext }) {
             context={props.context}
             roomContext={roomContext}
           ></InspectorPanel>
-          <HistogramPanel></HistogramPanel>
+          <HistogramPanel roomContext={roomContext}></HistogramPanel>
           <ToastStack context={props.context}></ToastStack>
         </Stack>
         <StatusBar

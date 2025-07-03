@@ -186,11 +186,11 @@ paths:
         "200":
           description: "OK"
 
-  /room/{id}/actions/delete-nodes:
+  /room/{id}/actions/delete-elements:
     post:
       tags:
         - Room Actions
-      operationId: postRoomActionDeleteNodes
+      operationId: postRoomActionDeleteElements
       parameters:
         - name: id
           in: path
@@ -208,8 +208,23 @@ paths:
                   type: array
                   items:
                     type: string
+                edges:
+                  type: array
+                  items:
+                    type: string
+                labels:
+                  type: array
+                  items:
+                    type: string
+                edgeTypes:
+                  type: array
+                  items:
+                    type: string
               required:
                 - nodes
+                - edges
+                - labels
+                - edgeTypes
       responses:
         "200":
           description: "OK"

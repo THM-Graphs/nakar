@@ -400,18 +400,21 @@ export type PostRoomActionExpandNodesResponse = (unknown);
 
 export type PostRoomActionExpandNodesError = unknown;
 
-export type PostRoomActionDeleteNodesData = {
+export type PostRoomActionDeleteElementsData = {
     body: {
         nodes: Array<(string)>;
+        edges: Array<(string)>;
+        labels: Array<(string)>;
+        edgeTypes: Array<(string)>;
     };
     path: {
         id: string;
     };
 };
 
-export type PostRoomActionDeleteNodesResponse = (unknown);
+export type PostRoomActionDeleteElementsResponse = (unknown);
 
-export type PostRoomActionDeleteNodesError = unknown;
+export type PostRoomActionDeleteElementsError = unknown;
 
 export type PostRoomActionRelayoutData = {
     path: {
