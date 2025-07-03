@@ -15,6 +15,10 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: '22'
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
       - name: Install
         run: |
           cd nakar-server
@@ -38,6 +42,10 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: '22'
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
       - name: Install
         run: |
           cd nakar-client-web
