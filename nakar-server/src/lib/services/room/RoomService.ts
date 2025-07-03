@@ -34,6 +34,7 @@ import { RoomServiceEventGraphTableChanged } from './events/RoomServiceEventGrap
 import { PhysicsSimulation } from '../../tools/physics/PhysicsSimulation';
 import { ExpandNodesResult } from './results/ExpandNodesResult';
 import { MutableEdge } from './graph/MutableEdge';
+import { FinalGraphDisplayConfiguration } from './scenario-pipeline/display-configuration/FinalGraphDisplayConfiguration';
 
 export class RoomService implements ApplicationService {
   private readonly _workers: SMap<string, Worker>;
@@ -278,16 +279,22 @@ export class RoomService implements ApplicationService {
             new SSet<string>([nodeId]),
           );
 
-          // connect result nodes
-          const connectResultNodeResult: Neo4jGraphElements =
-            await this._neo4j.loadConnectingRelationshipsFromTo(
-              neo4jDatabaseInfo,
-              new SSet<string>(expandResult.nodes.keys()),
-              new SSet<string>([
-                ...graph.nodes.keys,
-                ...expandResult.nodes.keys(),
-              ]),
+          // connect result nodes (only if connectResultNodes is active)
+          const graphDisplayConfig: FinalGraphDisplayConfiguration =
+            await this._database.getGraphDisplayConfiguration(
+              scenario.documentId,
             );
+          const connectResultNodeResult: Neo4jGraphElements | null =
+            graphDisplayConfig.connectResultNodes
+              ? await this._neo4j.loadConnectingRelationshipsFromTo(
+                  neo4jDatabaseInfo,
+                  new SSet<string>(expandResult.nodes.keys()),
+                  new SSet<string>([
+                    ...graph.nodes.keys,
+                    ...expandResult.nodes.keys(),
+                  ]),
+                )
+              : null;
 
           for (const newNode of expandResult.nodes) {
             if (!graph.nodes.hasById(newNode[0])) {
@@ -310,7 +317,9 @@ export class RoomService implements ApplicationService {
             }
           }
 
-          graph.edges.addNeo4jEdges(connectResultNodeResult.relationships);
+          if (connectResultNodeResult != null) {
+            graph.edges.addNeo4jEdges(connectResultNodeResult.relationships);
+          }
           graph.removeDanglingEdges(this._logger);
 
           this._logger.debug(

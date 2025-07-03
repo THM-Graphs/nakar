@@ -3,7 +3,6 @@ import { Neo4jService } from '../../neo4j/Neo4jService';
 import { ScenarioPipelineStep } from './ScenarioPipelineStep';
 import { LoadScenario } from './pipeline-steps/LoadScenario';
 import { ExecuteInitialQuery } from './pipeline-steps/ExecuteInitialQuery';
-import { CollectGraphDisplayConfiguration } from './pipeline-steps/CollectDisplayConfiguration';
 import { ParseNeo4jLoginCredentials } from './pipeline-steps/ParseNeo4jLoginCredentials';
 import { CompressRelationships } from './pipeline-steps/CompressRelationships';
 import { ConnectNodes } from './pipeline-steps/ConnectNodes';
@@ -17,7 +16,7 @@ import { ScenarioPipelineResult } from './ScenarioPipelineResult';
 import { ExcecuteAdditionalQueries } from './pipeline-steps/ExcecuteAdditionalQueries';
 
 export class ScenarioPipeline {
-  private readonly _stepCount: number = 8;
+  private readonly _stepCount: number = 7;
 
   public constructor(
     private readonly _database: DatabaseService,
@@ -40,11 +39,6 @@ export class ScenarioPipeline {
     this._logger.debug(this, '----------- Scenario Pipeline Start -----------');
 
     await this._runStep(state, new LoadScenario(), onProgress);
-    await this._runStep(
-      state,
-      new CollectGraphDisplayConfiguration(),
-      onProgress,
-    );
     await this._runStep(state, new ParseNeo4jLoginCredentials(), onProgress);
     await this._runStep(state, new ExecuteInitialQuery(), onProgress);
     await this._runStep(state, new ExcecuteAdditionalQueries(), onProgress);

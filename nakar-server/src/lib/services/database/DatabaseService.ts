@@ -15,6 +15,8 @@ import { StrapiFactory } from './StrapiFactory';
 import { Input } from '@strapi/types/dist/modules/documents/params/data';
 import { SaveScenarioGroupDBDTO } from './dto/SaveScenarioGroupDBDTO';
 import { SaveScenarioDBDTO } from './dto/SaveScenarioDBDTO';
+import { FinalGraphDisplayConfiguration } from '../room/scenario-pipeline/display-configuration/FinalGraphDisplayConfiguration';
+import { MergableGraphDisplayConfiguration } from '../room/scenario-pipeline/display-configuration/MergableGraphDisplayConfiguration';
 
 export class DatabaseService implements ApplicationService {
   private readonly _databaseDtoFactory: DatabaseDTOFactory;
@@ -193,6 +195,32 @@ export class DatabaseService implements ApplicationService {
       return null;
     }
     return this._databaseDtoFactory.createGetScenarioDTOFromStrapi(result);
+  }
+
+  public async getGraphDisplayConfiguration(
+    scenarioId: string,
+  ): Promise<FinalGraphDisplayConfiguration> {
+    const scenario: GetScenarioDBDTO | null =
+      await this.getScenario(scenarioId);
+    if (scenario == null) {
+      throw new Error(`Scenario ${scenarioId} not found.`);
+    }
+    const displayConfiguration: FinalGraphDisplayConfiguration =
+      MergableGraphDisplayConfiguration.createFromDb(
+        scenario.scenarioGroup?.database?.graphDisplayConfiguration,
+      )
+        .byMerging(
+          MergableGraphDisplayConfiguration.createFromDb(
+            scenario.scenarioGroup?.graphDisplayConfiguration,
+          ),
+        )
+        .byMerging(
+          MergableGraphDisplayConfiguration.createFromDb(
+            scenario.graphDisplayConfiguration,
+          ),
+        )
+        .finalize();
+    return displayConfiguration;
   }
 
   public async getScenarios(

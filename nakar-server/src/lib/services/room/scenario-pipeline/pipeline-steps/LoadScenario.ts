@@ -22,5 +22,7 @@ export class LoadScenario extends ScenarioPipelineStep {
       throw new NotFound('There is no database configuration on the scenario.');
     }
     state.scenarioDBDTO = scenario;
+    state.displayConfiguration =
+      await state.database.getGraphDisplayConfiguration(scenario.documentId);
   }
 }
