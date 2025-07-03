@@ -1,6 +1,6 @@
 {
   "name": "nakar-shared",
-  "version": "1.0.0",
+  "version": "0.0.0",
   "scripts": {
     "build": "npm run build:server && npm run build:client",
     "build:server": "cd ../nakar-server && npx openapi-typescript ../nakar-shared/openapi.yaml -o ./src-gen/schema.d.ts --root-types --immutable",

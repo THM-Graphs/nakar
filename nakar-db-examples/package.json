@@ -1,6 +1,6 @@
 {
   "name": "nakar-db-examples",
-  "version": "1.0.0",
+  "version": "0.0.0",
   "scripts": {
     "build:docker": "docker build -f Dockerfile -t ghcr.io/thm-graphs/nakar/db-examples:dev .",
     "start:docker": "docker run -it --rm --name nakar-db-examples -p 7475:7474 -p 7688:7687 -e NEO4J_AUTH=neo4j/12345678 -e NEO4J_server_bolt_advertised__address=localhost:7688 -e NEO4J_server_http_advertised__address=localhost:7475 ghcr.io/thm-graphs/nakar/db-examples:dev",
