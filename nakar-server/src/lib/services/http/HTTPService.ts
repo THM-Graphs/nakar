@@ -285,10 +285,8 @@ export class HTTPService implements ApplicationService {
     this._app.get(
       '/system/version',
       this._handle((): SchemaVersion => {
-        const packageVersion: string | undefined =
-          process.env['npm_package_version'];
         return {
-          version: packageVersion ?? 'unknown',
+          version: this._config.version,
         };
       }),
     );
