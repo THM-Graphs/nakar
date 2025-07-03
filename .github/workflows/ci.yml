@@ -27,6 +27,7 @@ jobs:
         run: |
           cd nakar-server
           npm run build
+          docker buildx ls
           npm run build:docker
       - name: Analysis
         run: |
@@ -54,6 +55,7 @@ jobs:
         run: |
           cd nakar-client-web
           npm run build
+          docker buildx ls
           npm run build:docker
       - name: Analysis
         run: |
@@ -68,6 +70,7 @@ jobs:
       - name: Build
         run: |
           cd nakar-db-pole
+          docker buildx ls
           npm run build:docker
 
   ci-nakar-db-examples:
@@ -78,6 +81,7 @@ jobs:
       - name: Build
         run: |
           cd nakar-db-examples
+          docker buildx ls
           npm run build:docker
 
   ci-client-vision:
