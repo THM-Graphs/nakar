@@ -5,10 +5,12 @@ import { AppContext } from "../../../lib/state/AppContext.ts";
 import { match } from "ts-pattern";
 import { D3Renderer } from "../../../lib/d3/D3Renderer.ts";
 import { RoomContext } from "../../../pages/Room.tsx";
+import { D3RendererEvents } from "../../../lib/d3/D3RendererEvents.ts";
 
 export function GraphRendererD3(props: {
   context: AppContext;
   roomContext: RoomContext;
+  events: D3RendererEvents;
 }) {
   const websocketsManager = props.context.webSocketsManager;
   const svgRef = createRef<SVGSVGElement>();
@@ -71,6 +73,15 @@ export function GraphRendererD3(props: {
       }),
       _graphRenderer.onDisplayLinkData.subscribe((l) => {
         inspector.setElement({ type: "edge", edgeId: l.id });
+      }),
+      props.events.onZoomIn.subscribe(() => {
+        _graphRenderer.zoomIn();
+      }),
+      props.events.onZoomOut.subscribe(() => {
+        _graphRenderer.zoomOut();
+      }),
+      props.events.onCenter.subscribe(() => {
+        _graphRenderer.center();
       }),
     ];
 

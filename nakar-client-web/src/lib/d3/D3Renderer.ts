@@ -13,6 +13,7 @@ import { UserTheme } from "../theme/UserTheme.ts";
 import { Observable, Subject, throttleTime } from "rxjs";
 import { D3RendererState } from "./D3RendererState.ts";
 import { D3Calculator } from "./D3Calculator.ts";
+import { ZoomBehavior } from "d3";
 
 const fps = 30;
 
@@ -29,12 +30,19 @@ export class D3Renderer {
 
   private calculator: D3Calculator;
 
+  private svgContainer: d3.Selection<
+    SVGSVGElement,
+    null,
+    null,
+    undefined
+  > | null;
   private zoomContainer: d3.Selection<
     SVGGElement,
     null,
     null,
     undefined
   > | null;
+  private zoomBehaviour: ZoomBehavior<SVGSVGElement, null> | null;
   private nodeSelection: d3.Selection<
     SVGGElement,
     D3Node,
@@ -80,7 +88,9 @@ export class D3Renderer {
 
     this.calculator = new D3Calculator();
 
+    this.svgContainer = null;
     this.zoomContainer = null;
+    this.zoomBehaviour = null;
     this.nodeSelection = null;
     this.linkLabelSelection = null;
     this.linkSelection = null;
@@ -153,6 +163,7 @@ export class D3Renderer {
     const svg: d3.Selection<SVGSVGElement, null, null, undefined> = d3
       .select<SVGSVGElement, null>(this.svgElement)
       .attr("viewBox", [-width / 2, -height / 2, width, height]);
+    this.svgContainer = svg;
 
     svg.selectAll("g > *").remove();
 
@@ -172,13 +183,13 @@ export class D3Renderer {
       .attr("d", "M 0 0 L 10 5 L 0 10 Z")
       .attr("fill", () => (this.theme == "dark" ? "#fff" : "#000"));
 
-    svg.call(
-      d3
-        .zoom<SVGSVGElement, null>()
-        .on("zoom", (event: d3.D3ZoomEvent<SVGSVGElement, null>) => {
-          this.zoomContainer?.attr("transform", event.transform.toString());
-        }),
-    );
+    const zoomBehaviour: ZoomBehavior<SVGSVGElement, null> = d3
+      .zoom<SVGSVGElement, null>()
+      .on("zoom", (event: d3.D3ZoomEvent<SVGSVGElement, null>) => {
+        this.zoomContainer?.attr("transform", event.transform.toString());
+      });
+    svg.call(zoomBehaviour);
+    this.zoomBehaviour = zoomBehaviour;
 
     this.linkSelection = this.zoomContainer
       .append("g")
@@ -397,6 +408,67 @@ export class D3Renderer {
       .attr("stroke", () => {
         return this.theme == "dark" ? "#fff" : "#000";
       });
+  }
+
+  public zoomIn(): void {
+    this.zoomTo(this.getZoom() * 1.3);
+  }
+
+  public zoomOut(): void {
+    this.zoomTo(this.getZoom() * 0.7);
+  }
+
+  public center(): void {
+    this.transform(0, 0, 1);
+  }
+
+  public zoomTo(zoom: number): void {
+    const svgContainerNode = this.svgContainer?.node();
+    if (svgContainerNode == null) {
+      console.warn("SVG Container Node is null");
+      return;
+    }
+    if (this.zoomBehaviour == null) {
+      console.warn("Zoom Behaviour is null");
+      return;
+    }
+    const node = svgContainerNode;
+    this.svgContainer
+      ?.transition()
+      .duration(100)
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      .call(this.zoomBehaviour.scaleTo, zoom);
+  }
+
+  public transform(x: number, y: number, zoom: number): void {
+    const svgContainerNode = this.svgContainer?.node();
+    if (svgContainerNode == null) {
+      console.warn("SVG Container Node is null");
+      return;
+    }
+    if (this.zoomBehaviour == null) {
+      console.warn("Zoom Behaviour is null");
+      return;
+    }
+    this.svgContainer
+      ?.transition()
+      .duration(100)
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      .call(this.zoomBehaviour.transform, new d3.ZoomTransform(zoom, x, y));
+  }
+
+  public getZoomTransform(): d3.ZoomTransform {
+    const svgContainerNode = this.svgContainer?.node();
+    if (svgContainerNode == null) {
+      console.warn("SVG Container Node is null");
+      return new d3.ZoomTransform(1, 0, 0);
+    }
+    const node = svgContainerNode;
+    return d3.zoomTransform(node);
+  }
+
+  public getZoom(): number {
+    return this.getZoomTransform().k;
   }
 
   private smoothDamp(
