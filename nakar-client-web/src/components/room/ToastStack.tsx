@@ -1,10 +1,9 @@
 import { Toast, ToastContainer } from "react-bootstrap";
 import { match } from "ts-pattern";
-import { AppContext } from "../../lib/state/AppContext.ts";
 import { useBearStore } from "../../lib/state/useBearStore.ts";
 import clsx from "clsx";
 
-export function ToastStack(props: { context: AppContext }) {
+export function ToastStack() {
   const notifications = useBearStore((s) => s.room.ui.notifications);
   const removeNotification = useBearStore((s) => s.room.ui.removeNotification);
 

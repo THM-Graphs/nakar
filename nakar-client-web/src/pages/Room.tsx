@@ -219,7 +219,7 @@ export function Room(props: { context: AppContext }) {
             roomContext={roomContext}
           ></InspectorPanel>
           <HistogramPanel roomContext={roomContext}></HistogramPanel>
-          <ToastStack context={props.context}></ToastStack>
+          <ToastStack></ToastStack>
         </Stack>
         <StatusBar
           left={<ProgressDisplay></ProgressDisplay>}

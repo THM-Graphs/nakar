@@ -432,7 +432,6 @@ export class D3Renderer {
       console.warn("Zoom Behaviour is null");
       return;
     }
-    const node = svgContainerNode;
     this.svgContainer
       ?.transition()
       .duration(100)
