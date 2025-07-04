@@ -14,6 +14,7 @@ import { LoggerService } from '../../logger/LoggerService';
 import { ScenarioPipelineState } from './ScenarioPipelineState';
 import { ScenarioPipelineResult } from './ScenarioPipelineResult';
 import { ExcecuteAdditionalQueries } from './pipeline-steps/ExcecuteAdditionalQueries';
+import { SMap } from '../../../tools/Map';
 
 export class ScenarioPipeline {
   private readonly _stepCount: number = 7;
@@ -27,6 +28,7 @@ export class ScenarioPipeline {
 
   public async run(
     scenarioId: string,
+    scenarioArguments: SMap<string, unknown>,
     onProgress: (title: string, progress: number) => void,
   ): Promise<ScenarioPipelineResult> {
     const state: ScenarioPipelineState = new ScenarioPipelineState(
@@ -35,6 +37,7 @@ export class ScenarioPipeline {
       this._neo4j,
       this._logger,
       this._profiler,
+      scenarioArguments,
     );
     this._logger.debug(this, '----------- Scenario Pipeline Start -----------');
 

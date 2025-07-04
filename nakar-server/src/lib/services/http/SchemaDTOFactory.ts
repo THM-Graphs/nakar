@@ -3,6 +3,7 @@ import {
   SchemaRoom,
   SchemaScenario,
   SchemaScenarioGroup,
+  SchemaScenarioParameter,
 } from '../../../../src-gen/schema';
 import { GetDatabaseDBDTO } from '../database/dto/GetDatabaseDBDTO';
 import { GetRoomDBDTO } from '../database/dto/GetRoomDBDTO';
@@ -10,6 +11,7 @@ import { ConfigService } from '../config/ConfigService';
 import { GetScenarioDBDTO } from '../database/dto/GetScenarioDBDTO';
 import { GetScenarioGroupDBDTO } from '../database/dto/GetScenarioGroupDBDTO';
 import { GetMediaDBDTO } from '../database/dto/GetMediaDBDTO';
+import { GetScenarioParameterDTO } from '../database/dto/GetScenarioParameterDTO';
 
 export class SchemaDTOFactory {
   private _configService: ConfigService;
@@ -57,6 +59,20 @@ export class SchemaDTOFactory {
         ? this._getPublicUrlOfMedia(scenario.cover)
         : null,
       editUrl: this._getScenarioEditUrl(scenario),
+      parameters: scenario.parameters.map(
+        (parameter: GetScenarioParameterDTO): SchemaScenarioParameter =>
+          this.createSchemaScenarioParameter(parameter),
+      ),
+    };
+  }
+
+  public createSchemaScenarioParameter(
+    scenarioParameter: GetScenarioParameterDTO,
+  ): SchemaScenarioParameter {
+    return {
+      identifier: scenarioParameter.identifier,
+      title: scenarioParameter.title,
+      defaultValue: scenarioParameter.defaultValue,
     };
   }
 

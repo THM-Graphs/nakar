@@ -5,6 +5,7 @@ import { PropertyDisplay } from "./PropertyDisplay.tsx";
 import { NavbarButton } from "../../../shared/NavbarButton.tsx";
 import { useBearStore } from "../../../../lib/state/useBearStore.ts";
 import { ReactNode } from "react";
+import { RoomContext } from "../../../../pages/Room.tsx";
 
 export function DetailPane(props: {
   title: string;
@@ -12,6 +13,7 @@ export function DetailPane(props: {
   actions: DetailPaneAction[];
   properties: GraphProperty[];
   otherProperties: GraphProperty[];
+  roomContext: RoomContext;
 }) {
   const uiLocked = useBearStore((s) => s.room.ui.locked);
 
@@ -49,10 +51,12 @@ export function DetailPane(props: {
       <PropertyDisplay
         title={"Property"}
         properties={props.properties}
+        roomContext={props.roomContext}
       ></PropertyDisplay>
       <PropertyDisplay
         title={"Other Property"}
         properties={props.otherProperties}
+        roomContext={props.roomContext}
       ></PropertyDisplay>
       <div className={"flex-grow-1"}></div>
     </Stack>

@@ -65,6 +65,7 @@ export class MutableGraph {
   public static fromInitialScenario(
     scenario: GetScenarioDBDTO,
     displayConfig: FinalGraphDisplayConfiguration,
+    scenarioArguments: SMap<string, unknown>,
   ): MutableGraph {
     const graph: MutableGraph = new MutableGraph({
       id: uuidv4(),
@@ -73,6 +74,7 @@ export class MutableGraph {
       metaData: new MutableGraphMetaData({
         scenarioId: scenario.documentId,
         pipelineSummary: [],
+        arguments: scenarioArguments,
       }),
       tableData: [],
       displayConfiguration: displayConfig,

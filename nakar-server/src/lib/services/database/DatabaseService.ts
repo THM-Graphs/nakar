@@ -255,6 +255,7 @@ export class DatabaseService implements ApplicationService {
               nodeDisplayConfigurations: {},
             },
           },
+          parameters: {},
         },
         filters: {
           scenarioGroup: {

@@ -9,6 +9,7 @@ export function ThemeDropdownEntry(props: { targetTheme: UserTheme }) {
 
   return (
     <Dropdown.Item
+      className={"small"}
       onClick={() => {
         setTheme(props.targetTheme);
       }}

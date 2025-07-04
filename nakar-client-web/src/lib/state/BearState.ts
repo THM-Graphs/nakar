@@ -6,6 +6,8 @@ import {
   GraphTable,
   Notification,
   PhysicsPerformance,
+  Scenario,
+  ScenarioArgument,
   WSEventProgress,
 } from "../../../src-gen";
 import { InspectorElement } from "../../components/room/Panel/Inspector/InspectorElement.ts";
@@ -44,6 +46,15 @@ export interface BearState {
       setGraphMetaData: (g: GraphMetaData) => void;
       setGraphTable: (g: GraphTable) => void;
       setLocks: (locks: { id: string; locked: boolean }[]) => void;
+      runScenarioModal: {
+        shown: boolean;
+        scenario: Scenario | null;
+        arguments: ScenarioArgument[];
+        setArgumentValue: (identifier: string, value: string) => void;
+        open: (scenario: Scenario, firstArgument: string | null) => void;
+        close: () => void;
+        clean: () => void;
+      };
     };
     websockets: {
       state: SocketState;

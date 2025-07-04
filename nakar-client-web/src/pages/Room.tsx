@@ -31,6 +31,7 @@ import { HistogramPanelButton } from "../components/room/Panel/Histogram/Histogr
 import { StatusBar } from "../components/shared/StatusBar.tsx";
 import { match } from "ts-pattern";
 import { PerformanceDisplay } from "../components/room/PerformanceDisplay.tsx";
+import { RunScenarioModal } from "../components/room/RunScenarioModal/RunScenarioModal.tsx";
 
 export type RoomContext = {
   initialRoomData: RoomSchema;
@@ -166,6 +167,7 @@ export function Room(props: { context: AppContext }) {
         metaData: {
           scenario: null,
           pipelineSummary: [],
+          arguments: [],
         },
         table: {
           data: [],
@@ -220,6 +222,7 @@ export function Room(props: { context: AppContext }) {
           ></InspectorPanel>
           <HistogramPanel roomContext={roomContext}></HistogramPanel>
           <ToastStack></ToastStack>
+          <RunScenarioModal roomContext={roomContext}></RunScenarioModal>
         </Stack>
         <StatusBar
           left={<ProgressDisplay></ProgressDisplay>}

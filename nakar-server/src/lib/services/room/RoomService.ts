@@ -156,9 +156,24 @@ export class RoomService implements ApplicationService {
     node.grabs.delete(params.userId);
   }
 
+  public async reloadScenario(params: {
+    roomId: string;
+    scenarioId: string;
+  }): Promise<GetScenarioDBDTO> {
+    this._assertRoomId(params.roomId);
+    const args: SMap<string, unknown> = this.getGraph(params.roomId).metaData
+      .arguments;
+    return await this.loadScenario({
+      roomId: params.roomId,
+      scenarioId: params.scenarioId,
+      arguments: args,
+    });
+  }
+
   public async loadScenario(params: {
     roomId: string;
     scenarioId: string;
+    arguments: SMap<string, unknown>;
   }): Promise<GetScenarioDBDTO> {
     return this._runWithRoomLock(
       params.roomId,
@@ -179,6 +194,7 @@ export class RoomService implements ApplicationService {
         );
         const result: ScenarioPipelineResult = await scenarioPipeline.run(
           params.scenarioId,
+          params.arguments,
           (step: string, progress: number): void => {
             this._onEvent.next({
               type: 'RoomServiceEventProgressChanged',

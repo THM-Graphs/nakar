@@ -65,6 +65,21 @@ export function ScenarioCard(props: {
         {props.scenario.query && (
           <QueryDisplay query={props.scenario.query}></QueryDisplay>
         )}
+        {props.scenario.parameters.length > 0 && (
+          <Stack className={"mt-3"}>
+            <span className={"fw-bold text-muted small"}>Parameters</span>
+            <ul>
+              {props.scenario.parameters.map((parameter) => (
+                <li key={parameter.identifier} className={"small"}>
+                  {parameter.title}{" "}
+                  <span className={"text-muted font-monospace"}>
+                    ({parameter.identifier})
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </Stack>
+        )}
       </Card.Body>
     </Card>
   );

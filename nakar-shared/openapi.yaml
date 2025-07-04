@@ -152,6 +152,37 @@ paths:
               properties:
                 scenarioId:
                   type: string
+                arguments:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/ScenarioArgument"
+              required:
+                - scenarioId
+                - arguments
+      responses:
+        "200":
+          description: "OK"
+
+  /room/{id}/actions/reload-scenario:
+    post:
+      tags:
+        - Room Actions
+      operationId: postRoomActionReloadScenario
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                scenarioId:
+                  type: string
               required:
                 - scenarioId
       responses:
@@ -618,9 +649,14 @@ components:
             required:
               - step
               - durationMs
+        arguments:
+          type: array
+          items:
+            $ref: "#/components/schemas/ScenarioArgument"
       required:
         - scenarioInfo
         - pipelineSummary
+        - arguments
 
     GraphElements:
       type: object
@@ -786,6 +822,10 @@ components:
         editUrl:
           type: string
           nullable: true
+        parameters:
+          type: array
+          items:
+            $ref: "#/components/schemas/ScenarioParameter"
       required:
         - id
         - title
@@ -793,6 +833,33 @@ components:
         - description
         - coverUrl
         - editUrl
+        - parameters
+
+    ScenarioParameter:
+      type: object
+      properties:
+        identifier:
+          type: string
+        title:
+          type: string
+        defaultValue:
+          type: string
+          nullable: true
+      required:
+        - identifier
+        - title
+        - defaultValue
+
+    ScenarioArgument:
+      type: object
+      properties:
+        identifier:
+          type: string
+        value:
+          type: string
+      required:
+        - identifier
+        - value
 
     Version:
       type: object

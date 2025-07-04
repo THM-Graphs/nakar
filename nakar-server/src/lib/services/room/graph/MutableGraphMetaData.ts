@@ -10,23 +10,28 @@ export class MutableGraphMetaData {
   public static readonly schema = z.object({
     scenarioId: z.string().nullable(),
     pipelineSummary: z.array(z.tuple([z.string(), z.number()])),
+    arguments: z.record(z.string(), z.unknown()),
   });
 
   public scenarioId: string | null;
   public pipelineSummary: [string, number][];
+  public arguments: SMap<string, unknown>;
 
   public constructor(data: {
     scenarioId: string | null;
     pipelineSummary: [string, number][];
+    arguments: SMap<string, unknown>;
   }) {
     this.scenarioId = data.scenarioId;
     this.pipelineSummary = data.pipelineSummary;
+    this.arguments = data.arguments;
   }
 
   public static empty(): MutableGraphMetaData {
     return new MutableGraphMetaData({
       scenarioId: null,
       pipelineSummary: [],
+      arguments: new SMap(),
     });
   }
 
@@ -36,6 +41,7 @@ export class MutableGraphMetaData {
     return new MutableGraphMetaData({
       scenarioId: data.scenarioId,
       pipelineSummary: data.pipelineSummary,
+      arguments: SMap.fromRecord(data.arguments),
     });
   }
 
@@ -43,6 +49,7 @@ export class MutableGraphMetaData {
     return {
       scenarioId: this.scenarioId,
       pipelineSummary: this.pipelineSummary,
+      arguments: this.arguments.toRecord(),
     };
   }
 

@@ -12,6 +12,7 @@ import {
   SchemaGraphTable,
   SchemaHistogram,
   SchemaNode,
+  SchemaScenarioArgument,
 } from '../../../../src-gen/schema';
 import { MutableNode } from '../room/graph/MutableNode';
 import { MutableEdge } from '../room/graph/MutableEdge';
@@ -99,6 +100,17 @@ export class CachingSchemaDTOFactory {
             durationMs: entry[1],
           };
         },
+      ),
+      arguments: metaData.arguments.reduce<SchemaScenarioArgument[]>(
+        (
+          akku: SchemaScenarioArgument[],
+          key: string,
+          value: unknown,
+        ): SchemaScenarioArgument[] => [
+          ...akku,
+          { identifier: key, value: JSON.stringify(value) },
+        ],
+        [],
       ),
     };
   }

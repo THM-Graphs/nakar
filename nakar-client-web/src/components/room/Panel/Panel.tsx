@@ -7,8 +7,10 @@ export function Panel(props: {
   title: string;
   children: ReactNode;
   onClose: () => void;
-  direction: "left" | "right";
+  direction: "left" | "right" | "center" | "none";
   hidden: boolean;
+  fullWidth?: boolean;
+  className?: string;
 }) {
   if (props.hidden) {
     return null;
@@ -17,10 +19,13 @@ export function Panel(props: {
     <Stack
       className={clsx(
         "flex-shrink-0 flex-grow-0 bg-body-tertiary overflow-hidden",
-        props.direction == "left" ? "border-end" : "border-start",
+        props.direction == "left" && "border-end",
+        props.direction == "right" && "border-start",
+        props.direction == "center" && "border-end border-start",
+        props.className,
       )}
       style={{
-        width: "400px",
+        width: props.fullWidth ? undefined : "400px",
         zIndex: 1,
       }}
     >

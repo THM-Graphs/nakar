@@ -13,6 +13,7 @@ import {
   SchemaRoom,
   SchemaRooms,
   SchemaScenario,
+  SchemaScenarioArgument,
   SchemaScenarioGroup,
   SchemaVersion,
 } from '../../../../src-gen/schema';
@@ -45,6 +46,7 @@ import z from 'zod';
 import { InsertResult } from '../backup/InsertResult';
 import { MutableGraph } from '../room/graph/MutableGraph';
 import { CachingSchemaDTOFactory } from './CachingSchemaDTOFactory';
+import { SMap } from '../../tools/Map';
 
 export class HTTPService implements ApplicationService {
   private readonly _app: Application;
@@ -339,9 +341,41 @@ export class HTTPService implements ApplicationService {
       '/room/:id/actions/load-scenario',
       this._handle(async (req: Request): Promise<void> => {
         const room: GetRoomDBDTO = await this._assertRoom(req);
-        const scenarioId: string = this._getBodyString(req, 'scenarioId');
+
+        type Body =
+          operations['postRoomActionLoadScenario']['requestBody']['content']['application/json'];
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+        const body: Body = req.body as Body;
+        const scenarioId: string = body.scenarioId;
+        const args: readonly SchemaScenarioArgument[] = body.arguments;
 
         await this._roomService.loadScenario({
+          roomId: room.documentId,
+          scenarioId: scenarioId,
+          arguments: args.reduce<SMap<string, unknown>>(
+            (
+              akku: SMap<string, unknown>,
+              next: SchemaScenarioArgument,
+            ): SMap<string, unknown> =>
+              akku.bySetting(next.identifier, next.value),
+            new SMap<string, unknown>(),
+          ),
+        });
+      }),
+    );
+
+    this._app.post(
+      '/room/:id/actions/reload-scenario',
+      this._handle(async (req: Request): Promise<void> => {
+        const room: GetRoomDBDTO = await this._assertRoom(req);
+
+        type Body =
+          operations['postRoomActionReloadScenario']['requestBody']['content']['application/json'];
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+        const body: Body = req.body as Body;
+        const scenarioId: string = body.scenarioId;
+
+        await this._roomService.reloadScenario({
           roomId: room.documentId,
           scenarioId: scenarioId,
         });

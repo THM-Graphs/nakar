@@ -2,6 +2,7 @@ import { OverlayTrigger, Tooltip } from "react-bootstrap";
 import { useState } from "react";
 import { useClipboard } from "../../lib/clipboard/useClipboard.ts";
 import { NavbarButton } from "../shared/NavbarButton.tsx";
+import clsx from "clsx";
 
 export function ClipboardButton(props: { text: string; className?: string }) {
   const [copied, setCopied] = useState(false);
@@ -19,10 +20,9 @@ export function ClipboardButton(props: { text: string; className?: string }) {
       }}
     >
       <NavbarButton
-        className={props.className}
+        className={clsx(props.className)}
         style={{ zIndex: 1 }}
-        size={"sm"}
-        icon={"copy"}
+        icon={copied ? "check" : "copy"}
         onClick={() => {
           (async () => {
             if (!isClipboardEnabled) {
@@ -32,6 +32,9 @@ export function ClipboardButton(props: { text: string; className?: string }) {
             try {
               await setClipboard(extractString(props.text));
               setCopied(true);
+              setTimeout(() => {
+                setCopied(false);
+              }, 1000);
             } catch (error) {
               console.error(error);
             }

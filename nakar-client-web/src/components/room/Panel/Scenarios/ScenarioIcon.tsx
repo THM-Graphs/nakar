@@ -22,7 +22,7 @@ export function ScenarioIcon(props: {
           style={{
             width: `${size.toString()}px`,
             height: `${size.toString()}px`,
-            backgroundColor: "gray",
+            backgroundColor: "lightgrey",
           }}
           className={
             "d-flex justify-content-center align-items-center flex-shrink-0 rounded-circle"

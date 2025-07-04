@@ -130,6 +130,7 @@ export function NodeDetails(props: {
           })}
         </Stack>
       }
+      roomContext={props.roomContext}
     ></DetailPane>
   );
 }

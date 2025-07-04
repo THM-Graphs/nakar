@@ -4,8 +4,8 @@ import { NavbarButton } from "../../shared/NavbarButton.tsx";
 import { useBearStore } from "../../../lib/state/useBearStore.ts";
 import { AppContext } from "../../../lib/state/AppContext.ts";
 import {
-  postRoomActionLoadScenario,
   postRoomActionRelayout,
+  postRoomActionReloadScenario,
 } from "../../../../src-gen";
 import { RoomContext } from "../../../pages/Room.tsx";
 import { resultOrThrow } from "../../../lib/data/resultOrThrow.ts";
@@ -14,6 +14,9 @@ export function CanvasToolbar(props: {
   context: AppContext;
   roomContext: RoomContext;
 }) {
+  const pushErrorNotification = useBearStore(
+    (s) => s.room.ui.pushErrorNotification,
+  );
   const graph = useBearStore((s) => s.room.scenario.graph);
   const tabs = useBearStore((s) => s.room.canvas.tabs);
   const uiLocked = useBearStore((s) => s.room.ui.locked);
@@ -56,18 +59,22 @@ export function CanvasToolbar(props: {
           icon={"arrow-clockwise"}
           title={"Rerun Scenario"}
           onClick={async () => {
-            const id = graph.metaData.scenario?.current.id;
-            if (id == null) {
+            const currentScenario = graph.metaData.scenario;
+            if (currentScenario == null) {
               return;
             }
-            resultOrThrow(
-              await postRoomActionLoadScenario({
-                path: { id: props.roomContext.initialRoomData.id },
-                body: {
-                  scenarioId: id,
-                },
-              }),
-            );
+            try {
+              resultOrThrow(
+                await postRoomActionReloadScenario({
+                  path: { id: props.roomContext.initialRoomData.id },
+                  body: {
+                    scenarioId: currentScenario.current.id,
+                  },
+                }),
+              );
+            } catch (error) {
+              pushErrorNotification(error);
+            }
           }}
         ></NavbarButton>
       </Stack>

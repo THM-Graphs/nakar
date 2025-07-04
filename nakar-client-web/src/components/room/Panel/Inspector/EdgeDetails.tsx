@@ -68,6 +68,7 @@ export function EdgeDetails(props: { edge: Edge; roomContext: RoomContext }) {
       ]}
       properties={props.edge.properties}
       title={props.edge.type}
+      roomContext={props.roomContext}
     ></DetailPane>
   );
 }

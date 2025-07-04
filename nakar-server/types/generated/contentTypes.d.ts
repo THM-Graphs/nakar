@@ -504,6 +504,7 @@ export interface ApiScenarioScenario extends Struct.CollectionTypeSchema {
       'api::scenario.scenario'
     > &
       Schema.Attribute.Private;
+    parameters: Schema.Attribute.Component<'graph.parameter', true>;
     publishedAt: Schema.Attribute.DateTime;
     query: Schema.Attribute.Text;
     scenarioGroup: Schema.Attribute.Relation<

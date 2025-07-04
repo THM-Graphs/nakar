@@ -2,9 +2,11 @@ html, body, div#root {
     height: 100%
 }
 
-/* Prevent SVG elements to show text cursor */
 * {
+    /* Prevent SVG elements to show text cursor */
     user-select: none;
+
+    font-family: system-ui;
 }
 
 /* Workaround for https://github.com/react-bootstrap/react-bootstrap/issues/3393#issuecomment-1375715749 */
@@ -28,4 +30,9 @@ div[role=tooltip] {
     overflow: hidden;
     text-wrap: nowrap;
     text-overflow: ellipsis;
+}
+
+.modal-content {
+    border-radius: 0;
+    border: 0;
 }

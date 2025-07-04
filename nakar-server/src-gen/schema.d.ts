@@ -132,6 +132,22 @@ export interface paths {
         readonly patch?: never;
         readonly trace?: never;
     };
+    readonly "/room/{id}/actions/reload-scenario": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        readonly put?: never;
+        readonly post: operations["postRoomActionReloadScenario"];
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
     readonly "/room/{id}/actions/expand-nodes": {
         readonly parameters: {
             readonly query?: never;
@@ -355,6 +371,7 @@ export interface components {
                 readonly step: string;
                 readonly durationMs: number;
             }[];
+            readonly arguments: readonly components["schemas"]["ScenarioArgument"][];
         };
         readonly GraphElements: {
             readonly nodes: readonly components["schemas"]["Node"][];
@@ -408,6 +425,16 @@ export interface components {
             /** Format: uri */
             readonly coverUrl: string | null;
             readonly editUrl: string | null;
+            readonly parameters: readonly components["schemas"]["ScenarioParameter"][];
+        };
+        readonly ScenarioParameter: {
+            readonly identifier: string;
+            readonly title: string;
+            readonly defaultValue: string | null;
+        };
+        readonly ScenarioArgument: {
+            readonly identifier: string;
+            readonly value: string;
         };
         readonly Version: {
             readonly version: string;
@@ -544,6 +571,8 @@ export type SchemaDatabase = components['schemas']['Database'];
 export type SchemaDatabases = components['schemas']['Databases'];
 export type SchemaScenarioGroup = components['schemas']['ScenarioGroup'];
 export type SchemaScenario = components['schemas']['Scenario'];
+export type SchemaScenarioParameter = components['schemas']['ScenarioParameter'];
+export type SchemaScenarioArgument = components['schemas']['ScenarioArgument'];
 export type SchemaVersion = components['schemas']['Version'];
 export type SchemaNotification = components['schemas']['Notification'];
 export type SchemaPhysicsPerformance = components['schemas']['PhysicsPerformance'];
@@ -719,6 +748,33 @@ export interface operations {
         };
     };
     readonly postRoomActionLoadScenario: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path: {
+                readonly id: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": {
+                    readonly scenarioId: string;
+                    readonly arguments: readonly components["schemas"]["ScenarioArgument"][];
+                };
+            };
+        };
+        readonly responses: {
+            /** @description OK */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly postRoomActionReloadScenario: {
         readonly parameters: {
             readonly query?: never;
             readonly header?: never;

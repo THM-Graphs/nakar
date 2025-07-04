@@ -1,0 +1,20 @@
+{
+  "collectionName": "components_graph_parameters",
+  "info": {
+    "displayName": "Parameter",
+    "icon": "code"
+  },
+  "options": {},
+  "attributes": {
+    "identifier": {
+      "type": "string",
+      "required": true
+    },
+    "title": {
+      "type": "string"
+    },
+    "defaultValue": {
+      "type": "string"
+    }
+  }
+}

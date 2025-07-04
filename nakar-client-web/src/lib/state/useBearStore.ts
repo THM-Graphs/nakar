@@ -5,6 +5,7 @@ import { SocketState } from "../ws/SocketState.ts";
 import { PhysicsPerformance, WSEventProgress } from "../../../src-gen";
 import { devtools } from "zustand/middleware";
 import { v4 } from "uuid";
+import { match, P } from "ts-pattern";
 
 export const useBearStore = create<BearState>()(
   devtools(
@@ -68,8 +69,10 @@ export const useBearStore = create<BearState>()(
             pushErrorNotification: (error: unknown) => {
               useBearStore.getState().room.ui.pushNotification({
                 title: "Error",
-                message:
-                  typeof error == "string" ? error : JSON.stringify(error),
+                message: match(error)
+                  .with(P.string, (e) => e)
+                  .with(P.instanceOf(Error), (e) => e.message)
+                  .otherwise(() => JSON.stringify(error)),
                 date: new Date(),
                 severity: "error",
               });
@@ -109,6 +112,7 @@ export const useBearStore = create<BearState>()(
               metaData: {
                 pipelineSummary: [],
                 scenario: null,
+                arguments: [],
               },
             },
             setGraph: (graph) => {
@@ -143,6 +147,52 @@ export const useBearStore = create<BearState>()(
                   localNode.locked = node.locked;
                 }
               });
+            },
+            runScenarioModal: {
+              shown: false,
+              scenario: null,
+              arguments: [],
+              setArgumentValue: (identifier, value) => {
+                set((s) => {
+                  s.room.scenario.runScenarioModal.arguments =
+                    s.room.scenario.runScenarioModal.arguments.map((arg) => {
+                      if (arg.identifier === identifier) {
+                        return {
+                          ...arg,
+                          value: value,
+                        };
+                      } else {
+                        return arg;
+                      }
+                    });
+                });
+              },
+              open: (scenario, firstArgument) => {
+                set((s) => {
+                  s.room.scenario.runScenarioModal.shown = true;
+                  s.room.scenario.runScenarioModal.scenario = scenario;
+                  for (const parameter of scenario.parameters) {
+                    s.room.scenario.runScenarioModal.arguments.push({
+                      identifier: parameter.identifier,
+                      value:
+                        scenario.parameters[0] === parameter
+                          ? (firstArgument ?? parameter.defaultValue ?? "")
+                          : (parameter.defaultValue ?? ""),
+                    });
+                  }
+                });
+              },
+              close: () => {
+                set((s) => {
+                  s.room.scenario.runScenarioModal.shown = false;
+                });
+              },
+              clean: () => {
+                set((s) => {
+                  s.room.scenario.runScenarioModal.arguments = [];
+                  s.room.scenario.runScenarioModal.scenario = null;
+                });
+              },
             },
           },
           panels: {

@@ -80,12 +80,26 @@ export interface GraphNodeDisplayConfiguration extends Struct.ComponentSchema {
   };
 }
 
+export interface GraphParameter extends Struct.ComponentSchema {
+  collectionName: 'components_graph_parameters';
+  info: {
+    displayName: 'Parameter';
+    icon: 'code';
+  };
+  attributes: {
+    defaultValue: Schema.Attribute.String;
+    identifier: Schema.Attribute.String & Schema.Attribute.Required;
+    title: Schema.Attribute.String;
+  };
+}
+
 declare module '@strapi/strapi' {
   export module Public {
     export interface ComponentSchemas {
       'graph.additional-query': GraphAdditionalQuery;
       'graph.graph-display-configuration': GraphGraphDisplayConfiguration;
       'graph.node-display-configuration': GraphNodeDisplayConfiguration;
+      'graph.parameter': GraphParameter;
     }
   }
 }

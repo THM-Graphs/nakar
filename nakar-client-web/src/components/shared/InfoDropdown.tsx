@@ -1,4 +1,4 @@
-import { Dropdown } from "react-bootstrap";
+import { Dropdown, Stack } from "react-bootstrap";
 import { getVersion } from "../../../src-gen";
 import {
   ForwardedRef,
@@ -61,20 +61,22 @@ export function InfoDropdown(props: { context: AppContext }) {
     <>
       <Dropdown className={"align-items-stretch d-flex"}>
         <Dropdown.Toggle as={CustomToggle}></Dropdown.Toggle>
-        <Dropdown.Menu>
-          <Dropdown.Item disabled>Theme</Dropdown.Item>
+        <Dropdown.Menu className={"rounded-0"}>
+          <Dropdown.Header>Theme</Dropdown.Header>
           <ThemeDropdownEntry targetTheme={null}></ThemeDropdownEntry>
           <ThemeDropdownEntry targetTheme={"light"}></ThemeDropdownEntry>
           <ThemeDropdownEntry targetTheme={"dark"}></ThemeDropdownEntry>
           <Dropdown.Divider />
 
-          <Dropdown.Item disabled>
+          <Dropdown.Item disabled className={"small"}>
             Client ({props.context.env.VERSION})
           </Dropdown.Item>
-          <Dropdown.Item disabled>Mode: {import.meta.env.MODE}</Dropdown.Item>
+          <Dropdown.Item disabled className={"small"}>
+            Mode: {import.meta.env.MODE}
+          </Dropdown.Item>
           <Dropdown.Divider />
 
-          <Dropdown.Item disabled>
+          <Dropdown.Item disabled className={"small"}>
             Server (
             {match(version)
               .with({ type: "loading" }, () => <span>loading...</span>)
@@ -83,18 +85,25 @@ export function InfoDropdown(props: { context: AppContext }) {
               .exhaustive()}
             )
           </Dropdown.Item>
-          <Dropdown.Item href={props.context.env.BACKEND_URL} target={"_blank"}>
-            <span className="me-1">{props.context.env.BACKEND_URL}</span>
-            <span className="me-2"></span>
-            <i className="bi bi-box-arrow-up-right"></i>
+          <Dropdown.Item
+            href={props.context.env.BACKEND_URL}
+            target={"_blank"}
+            className={"small"}
+          >
+            <Stack gap={2} direction={"horizontal"}>
+              <i className="bi bi-box-arrow-up-right"></i>
+              <span className="">{props.context.env.BACKEND_URL}</span>
+            </Stack>
           </Dropdown.Item>
           <Dropdown.Item
             href={props.context.env.BACKEND_URL + "/system/backup"}
             target={"_blank"}
+            className={"small"}
           >
-            <span className="me-1">Download Backup (.tar.gz)</span>
-            <span className="me-2"></span>
-            <i className="bi bi-download"></i>
+            <Stack gap={2} direction={"horizontal"}>
+              <i className="bi bi-download"></i>
+              <span>Download Backup (.tar.gz)</span>
+            </Stack>
           </Dropdown.Item>
         </Dropdown.Menu>
       </Dropdown>

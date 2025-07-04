@@ -1,11 +1,18 @@
 import { GraphProperty } from "../../../../../src-gen";
 import { Stack, Table } from "react-bootstrap";
 import { ClipboardButton } from "../../ClipboardButton.tsx";
+import { PropertyMenu } from "./PropertyMenu.tsx";
+import { useBearStore } from "../../../../lib/state/useBearStore.ts";
+import { RoomContext } from "../../../../pages/Room.tsx";
 
 export function PropertyDisplay(props: {
   title: string;
   properties: GraphProperty[];
+  roomContext: RoomContext;
 }) {
+  const scenario = useBearStore(
+    (s) => s.room.scenario.graph.metaData.scenario?.current,
+  );
   if (props.properties.length === 0) {
     return null;
   }
@@ -22,12 +29,16 @@ export function PropertyDisplay(props: {
       <tbody>
         {props.properties.map((property) => (
           <tr key={property.slug}>
-            <td className={"small user-select-text bg-body-tertiary pt-1 pb-1"}>
+            <td
+              className={
+                "small user-select-text bg-body-tertiary pb-0 pt-0 align-middle"
+              }
+            >
               {property.slug}
             </td>
             <td
               className={
-                "text-break font-monospace small bg-body-tertiary pt-1 pb-1"
+                "text-break small bg-body-tertiary pt-0 pb-0 align-middle pe-0"
               }
             >
               <Stack
@@ -35,12 +46,24 @@ export function PropertyDisplay(props: {
                 className={"align-items-baseline"}
               >
                 <ClipboardButton
-                  className={"me-1"}
+                  className={"me-1 align-self-baseline p-1"}
                   text={JSON.stringify(property.value)}
                 ></ClipboardButton>
-                <span className={"user-select-text"}>
+                <span
+                  className={
+                    "font-monospace user-select-text align-self-center"
+                  }
+                >
                   {JSON.stringify(property.value)}
                 </span>
+                <div className={"me-auto"}></div>
+                {scenario && (
+                  <PropertyMenu
+                    scenario={scenario}
+                    value={property.value}
+                    roomContext={props.roomContext}
+                  ></PropertyMenu>
+                )}
               </Stack>
             </td>
           </tr>

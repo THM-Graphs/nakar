@@ -16,13 +16,14 @@ export class ExecuteInitialQuery extends ScenarioPipelineStep {
     const graphElements: Neo4jGraphElements = await state.neo4j.executeQuery(
       state.databaseInfo,
       state.scenarioDBDTO.query,
-      {},
+      state.scenarioArguments.toRecord(),
       true,
     );
 
     const graph: MutableGraph = MutableGraph.fromInitialScenario(
       state.scenarioDBDTO,
       state.displayConfiguration,
+      state.scenarioArguments,
     );
 
     graph.nodes.addNeo4jNodes(graphElements.nodes);
@@ -34,5 +35,13 @@ export class ExecuteInitialQuery extends ScenarioPipelineStep {
       `Did load ${graph.size.toString()} graph elements.`,
     );
     state.graph = graph;
+  }
+
+  private _tryParseOrString(input: string): unknown {
+    try {
+      return JSON.parse(input);
+    } catch {
+      return input;
+    }
   }
 }

@@ -10,6 +10,7 @@ import { match, P } from 'ts-pattern';
 import { ScaleType } from '../../tools/ScaleType';
 import { AdditionalQueryDBDTO } from './dto/AdditionalQueryDBDTO';
 import z from 'zod';
+import { GetScenarioParameterDTO } from './dto/GetScenarioParameterDTO';
 
 export class DatabaseDTOFactory {
   public createGetDatabaseDTOFromStrapi(
@@ -59,6 +60,7 @@ export class DatabaseDTOFactory {
           'graphDisplayConfiguration',
           'scenarioGroup',
           'additionalQueries',
+          'parameters',
         ];
       }
     > & {
@@ -86,6 +88,21 @@ export class DatabaseDTOFactory {
           ): AdditionalQueryDBDTO =>
             this._createAdditionalQueryDTOFromStrapi(additionalQuery),
         ) ?? [],
+      parameters:
+        db.parameters?.map(
+          (parameter: Result<'graph.parameter'>): GetScenarioParameterDTO =>
+            this.createGetScenarioParameter(parameter),
+        ) ?? [],
+    };
+  }
+
+  public createGetScenarioParameter(
+    db: Result<'graph.parameter'>,
+  ): GetScenarioParameterDTO {
+    return {
+      identifier: db.identifier ?? '',
+      title: db.title ?? '',
+      defaultValue: db.defaultValue ?? null,
     };
   }
 
@@ -165,6 +182,7 @@ export class DatabaseDTOFactory {
       scenarioGroup: z.unknown(),
       graphDisplayConfiguration: z.unknown(),
       additionalQueries: z.array(z.unknown()),
+      parameters: z.array(z.unknown()),
     });
 
     const parsed: z.infer<typeof schema> = schema.parse(input);
@@ -191,6 +209,29 @@ export class DatabaseDTOFactory {
           return this._createAdditionalQueryDTOFromUnknown(additionalQuery);
         },
       ),
+      parameters: parsed.parameters.map(
+        (parameter: unknown): GetScenarioParameterDTO =>
+          this.createScenarioParameterFromUnknown(parameter),
+      ),
+    };
+  }
+
+  public createScenarioParameterFromUnknown(
+    input: unknown,
+  ): GetScenarioParameterDTO {
+    // eslint-disable-next-line @typescript-eslint/typedef
+    const schema = z.object({
+      title: z.string(),
+      identifier: z.string(),
+      defaultValue: z.string().nullable(),
+    });
+
+    const parsed: z.infer<typeof schema> = schema.parse(input);
+
+    return {
+      identifier: parsed.identifier,
+      title: parsed.title,
+      defaultValue: parsed.defaultValue,
     };
   }
 

@@ -22,6 +22,8 @@ RUN neo4j-admin database import full \
     --relationships=/import/08_compress_relationships/relationships.csv  \
     --nodes=/import/09_merge_sources/nodes.csv  \
     --relationships=/import/09_merge_sources/relationships.csv  \
+    --nodes=/import/10_parameters/nodes.csv  \
+    --relationships=/import/10_parameters/relationships.csv  \
     --verbose
 
 ENV NEO4J_server_databases_read__only=true

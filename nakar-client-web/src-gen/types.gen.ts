@@ -63,6 +63,7 @@ export type GraphMetaData = {
         step: string;
         durationMs: number;
     }>;
+    arguments: Array<ScenarioArgument>;
 };
 
 export type GraphProperty = {
@@ -179,6 +180,12 @@ export type Scenario = {
     description: (string) | null;
     coverUrl: (string) | null;
     editUrl: (string) | null;
+    parameters: Array<ScenarioParameter>;
+};
+
+export type ScenarioArgument = {
+    identifier: string;
+    value: string;
 };
 
 export type ScenarioGroup = {
@@ -186,6 +193,12 @@ export type ScenarioGroup = {
     title: (string) | null;
     editUrl: (string) | null;
     scenarios: Array<Scenario>;
+};
+
+export type ScenarioParameter = {
+    identifier: string;
+    title: string;
+    defaultValue: (string) | null;
 };
 
 export type Version = {
@@ -377,6 +390,7 @@ export type GetRoomGraphTableError = unknown;
 export type PostRoomActionLoadScenarioData = {
     body: {
         scenarioId: string;
+        arguments: Array<ScenarioArgument>;
     };
     path: {
         id: string;
@@ -386,6 +400,19 @@ export type PostRoomActionLoadScenarioData = {
 export type PostRoomActionLoadScenarioResponse = (unknown);
 
 export type PostRoomActionLoadScenarioError = unknown;
+
+export type PostRoomActionReloadScenarioData = {
+    body: {
+        scenarioId: string;
+    };
+    path: {
+        id: string;
+    };
+};
+
+export type PostRoomActionReloadScenarioResponse = (unknown);
+
+export type PostRoomActionReloadScenarioError = unknown;
 
 export type PostRoomActionExpandNodesData = {
     body: {

@@ -8,6 +8,7 @@ import { FinalGraphDisplayConfiguration } from './display-configuration/FinalGra
 import { GetDatabaseDBDTO } from '../../database/dto/GetDatabaseDBDTO';
 import { ProfilerService } from '../../profiler/ProfilerService';
 import { GetScenarioGroupDBDTO } from '../../database/dto/GetScenarioGroupDBDTO';
+import { SMap } from '../../../tools/Map';
 
 export class ScenarioPipelineState {
   public readonly database: DatabaseService;
@@ -15,6 +16,7 @@ export class ScenarioPipelineState {
   public readonly logger: LoggerService;
   public readonly profiler: ProfilerService;
   public readonly scenarioId: string;
+  public readonly scenarioArguments: SMap<string, unknown>;
 
   private _stepCounter: number;
   private _pipelineSummary: [string, number][];
@@ -29,12 +31,14 @@ export class ScenarioPipelineState {
     neo4j: Neo4jService,
     logger: LoggerService,
     profiler: ProfilerService,
+    scenarioArguments: SMap<string, unknown>,
   ) {
     this.database = database;
     this.neo4j = neo4j;
     this.logger = logger;
     this.profiler = profiler;
     this.scenarioId = scenarioId;
+    this.scenarioArguments = scenarioArguments;
 
     this._stepCounter = 0;
     this._pipelineSummary = [];
