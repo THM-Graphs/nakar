@@ -140,7 +140,7 @@ export function NodeDetails(props: {
                 graphElements={graphElements}
                 key={labelName}
                 label={label}
-                showAmount={true}
+                showAmount={false}
               ></Label>
             );
           })}
