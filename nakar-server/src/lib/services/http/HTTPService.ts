@@ -368,12 +368,11 @@ export class HTTPService implements ApplicationService {
       '/room/:id/actions/reload-scenario',
       this._handle(async (req: Request): Promise<void> => {
         const room: GetRoomDBDTO = await this._assertRoom(req);
-
-        type Body =
-          operations['postRoomActionReloadScenario']['requestBody']['content']['application/json'];
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-        const body: Body = req.body as Body;
-        const scenarioId: string = body.scenarioId;
+        const graph: MutableGraph = this._roomService.getGraph(room.documentId);
+        const scenarioId: string | null = graph.metaData.scenarioId;
+        if (scenarioId == null) {
+          throw new NotFound(`Scenario of room ${room.documentId} not found.`);
+        }
 
         await this._roomService.reloadScenario({
           roomId: room.documentId,

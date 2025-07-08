@@ -59,17 +59,10 @@ export function CanvasToolbar(props: {
           icon={"arrow-clockwise"}
           title={"Rerun Scenario"}
           onClick={async () => {
-            const currentScenario = graph.metaData.scenario;
-            if (currentScenario == null) {
-              return;
-            }
             try {
               resultOrThrow(
                 await postRoomActionReloadScenario({
                   path: { id: props.roomContext.initialRoomData.id },
-                  body: {
-                    scenarioId: currentScenario.current.id,
-                  },
                 }),
               );
             } catch (error) {

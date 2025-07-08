@@ -408,9 +408,6 @@ export type PostRoomActionLoadScenarioResponse = (unknown);
 export type PostRoomActionLoadScenarioError = unknown;
 
 export type PostRoomActionReloadScenarioData = {
-    body: {
-        scenarioId: string;
-    };
     path: {
         id: string;
     };

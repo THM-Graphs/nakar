@@ -174,17 +174,6 @@ paths:
           required: true
           schema:
             type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                scenarioId:
-                  type: string
-              required:
-                - scenarioId
       responses:
         "200":
           description: "OK"

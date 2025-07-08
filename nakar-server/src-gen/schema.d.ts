@@ -804,13 +804,7 @@ export interface operations {
             };
             readonly cookie?: never;
         };
-        readonly requestBody: {
-            readonly content: {
-                readonly "application/json": {
-                    readonly scenarioId: string;
-                };
-            };
-        };
+        readonly requestBody?: never;
         readonly responses: {
             /** @description OK */
             readonly 200: {
