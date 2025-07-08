@@ -12,7 +12,6 @@ import { FinalGraphDisplayConfiguration } from '../scenario-pipeline/display-con
 import { PhysicalGraph } from '../../../tools/physics/physical-graph/PhysicalGraph';
 import { PhysicalNode } from '../../../tools/physics/physical-graph/PhysicalNode';
 import { PhysicalEdge } from '../../../tools/physics/physical-graph/PhysicalEdge';
-import { bool } from 'yup';
 
 export class MutableGraph {
   // eslint-disable-next-line @typescript-eslint/typedef

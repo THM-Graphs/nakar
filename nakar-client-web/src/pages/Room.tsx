@@ -12,12 +12,7 @@ import {
   WSActionLeaveRoom,
   WSEventPresentExpandNodePreview,
 } from "../../src-gen";
-import {
-  LoaderFunctionArgs,
-  useLoaderData,
-  useNavigate,
-  useNavigation,
-} from "react-router";
+import { LoaderFunctionArgs, useLoaderData, useNavigate } from "react-router";
 import { resultOrThrow } from "../lib/data/resultOrThrow.ts";
 import { ToastStack } from "../components/room/ToastStack.tsx";
 import { HistogramPanel } from "../components/room/Panel/Histogram/HistogramPanel.tsx";
