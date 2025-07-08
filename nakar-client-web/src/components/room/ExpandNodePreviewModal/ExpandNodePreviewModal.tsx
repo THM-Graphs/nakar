@@ -58,8 +58,10 @@ export function ExpandNodePreviewModal(props: { roomContext: RoomContext }) {
             fullWidth={true}
           >
             <Stack
-              style={{ height: `${(window.innerHeight - 150).toString()}px` }}
-              className={"overflow-y-scroll"}
+              style={{
+                maxHeight: `${(window.innerHeight - 150).toString()}px`,
+              }}
+              className={"overflow-y-auto"}
             >
               <Stack className={"pb-2 pt-2 bg-body-tertiary"} gap={3}>
                 <span className={"small text-muted ps-3 pe-3"}>
