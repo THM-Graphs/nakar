@@ -449,6 +449,7 @@ export class SocketIOService implements ApplicationService {
             (message: RoomServiceEventPresentExpandNodePreview): void => {
               this.sendToRoom(message.roomId, {
                 type: 'WSEventPresentExpandNodePreview',
+                nodeId: message.nodeId,
                 relationships: message.relationships,
                 labels: message.labels,
               } satisfies SchemaWsEventPresentExpandNodePreview);

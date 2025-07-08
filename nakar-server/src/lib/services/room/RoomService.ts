@@ -248,6 +248,10 @@ export class RoomService implements ApplicationService {
   public async expandNode(params: {
     roomId: string;
     nodeId: string;
+    limit: {
+      labels: SSet<string>;
+      relationships: SSet<string>;
+    } | null;
   }): Promise<void> {
     return this._runWithRoomLock(
       params.roomId,
@@ -302,6 +306,7 @@ export class RoomService implements ApplicationService {
           const expandResult: Neo4jGraphElements = await this._neo4j.expandNode(
             neo4jDatabaseInfo,
             new SSet<string>([nodeId]),
+            params.limit,
           );
 
           // connect result nodes (only if connectResultNodes is active)
@@ -377,10 +382,10 @@ export class RoomService implements ApplicationService {
             this._onEvent.next({
               type: 'RoomServiceEventPresentExpandNodePreview',
               roomId: params.roomId,
+              nodeId: params.nodeId,
               labels: expandNodePreview.labels,
               relationships: expandNodePreview.relationships,
             } satisfies RoomServiceEventPresentExpandNodePreview);
-            throw error;
           } else {
             throw error;
           }

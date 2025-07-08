@@ -469,12 +469,8 @@ export interface components {
             readonly loadPercent: number;
             readonly tickDuration: number;
         };
-        readonly ExpandNodePreviewRelationship: {
-            readonly relationship: string;
-            readonly count: number;
-        };
-        readonly ExpandNodePreviewLabel: {
-            readonly label: string;
+        readonly ExpandNodePreviewElement: {
+            readonly identificator: string;
             readonly count: number;
         };
         readonly WSClientToServerMessage: components["schemas"]["WSActionJoinRoom"] | components["schemas"]["WSActionLeaveRoom"] | components["schemas"]["WSActionGrabNode"] | components["schemas"]["WSActionMoveNodes"] | components["schemas"]["WSActionUngrabNode"];
@@ -573,8 +569,9 @@ export interface components {
         readonly WSEventPresentExpandNodePreview: {
             /** @enum {string} */
             readonly type: "WSEventPresentExpandNodePreview";
-            readonly relationships: readonly components["schemas"]["ExpandNodePreviewRelationship"][];
-            readonly labels: readonly components["schemas"]["ExpandNodePreviewLabel"][];
+            readonly nodeId: string;
+            readonly relationships: readonly components["schemas"]["ExpandNodePreviewElement"][];
+            readonly labels: readonly components["schemas"]["ExpandNodePreviewElement"][];
         };
     };
     responses: never;
@@ -610,8 +607,7 @@ export type SchemaScenarioArgument = components['schemas']['ScenarioArgument'];
 export type SchemaVersion = components['schemas']['Version'];
 export type SchemaNotification = components['schemas']['Notification'];
 export type SchemaPhysicsPerformance = components['schemas']['PhysicsPerformance'];
-export type SchemaExpandNodePreviewRelationship = components['schemas']['ExpandNodePreviewRelationship'];
-export type SchemaExpandNodePreviewLabel = components['schemas']['ExpandNodePreviewLabel'];
+export type SchemaExpandNodePreviewElement = components['schemas']['ExpandNodePreviewElement'];
 export type SchemaWsClientToServerMessage = components['schemas']['WSClientToServerMessage'];
 export type SchemaWsServerToClientMessage = components['schemas']['WSServerToClientMessage'];
 export type SchemaWsActionJoinRoom = components['schemas']['WSActionJoinRoom'];
@@ -845,6 +841,10 @@ export interface operations {
             readonly content: {
                 readonly "application/json": {
                     readonly nodeId: string;
+                    readonly limit: {
+                        readonly labels: readonly string[];
+                        readonly relationships: readonly string[];
+                    } | null;
                 };
             };
         };

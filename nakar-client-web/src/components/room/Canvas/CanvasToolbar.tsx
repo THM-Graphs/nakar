@@ -14,9 +14,6 @@ export function CanvasToolbar(props: {
   context: AppContext;
   roomContext: RoomContext;
 }) {
-  const pushErrorNotification = useBearStore(
-    (s) => s.room.ui.pushErrorNotification,
-  );
   const graph = useBearStore((s) => s.room.scenario.graph);
   const tabs = useBearStore((s) => s.room.canvas.tabs);
   const uiLocked = useBearStore((s) => s.room.ui.locked);
@@ -59,15 +56,11 @@ export function CanvasToolbar(props: {
           icon={"arrow-clockwise"}
           title={"Rerun Scenario"}
           onClick={async () => {
-            try {
-              resultOrThrow(
-                await postRoomActionReloadScenario({
-                  path: { id: props.roomContext.initialRoomData.id },
-                }),
-              );
-            } catch (error) {
-              pushErrorNotification(error);
-            }
+            resultOrThrow(
+              await postRoomActionReloadScenario({
+                path: { id: props.roomContext.initialRoomData.id },
+              }),
+            );
           }}
         ></NavbarButton>
       </Stack>

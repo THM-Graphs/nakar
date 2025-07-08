@@ -6,6 +6,9 @@ import { PhysicsPerformance, WSEventProgress } from "../../../src-gen";
 import { devtools } from "zustand/middleware";
 import { v4 } from "uuid";
 import { match, P } from "ts-pattern";
+import { enableMapSet } from "immer";
+
+enableMapSet();
 
 export const useBearStore = create<BearState>()(
   devtools(
@@ -191,6 +194,58 @@ export const useBearStore = create<BearState>()(
                 set((s) => {
                   s.room.scenario.runScenarioModal.arguments = [];
                   s.room.scenario.runScenarioModal.scenario = null;
+                });
+              },
+            },
+            expandNodePreview: {
+              shown: false,
+              data: null,
+              open: (data) => {
+                set((s) => {
+                  s.room.scenario.expandNodePreview.data = {
+                    nodeId: data.nodeId,
+                    labels: data.labels,
+                    relationships: data.relationships,
+                    selectedLabels: new Set(),
+                    selectedRelationships: new Set(),
+                  };
+                  s.room.scenario.expandNodePreview.shown = true;
+                });
+              },
+              close: () => {
+                set((s) => {
+                  s.room.scenario.expandNodePreview.shown = false;
+                });
+              },
+              clean: () => {
+                set((s) => {
+                  s.room.scenario.expandNodePreview.data = null;
+                });
+              },
+              setSelectedRelationships: (element, selected) => {
+                set((s) => {
+                  const data = s.room.scenario.expandNodePreview.data;
+                  if (!data) {
+                    return;
+                  }
+                  if (selected) {
+                    data.selectedRelationships.add(element.identificator);
+                  } else {
+                    data.selectedRelationships.delete(element.identificator);
+                  }
+                });
+              },
+              setSelectedLabel: (element, selected) => {
+                set((s) => {
+                  const data = s.room.scenario.expandNodePreview.data;
+                  if (!data) {
+                    return;
+                  }
+                  if (selected) {
+                    data.selectedLabels.add(element.identificator);
+                  } else {
+                    data.selectedLabels.delete(element.identificator);
+                  }
                 });
               },
             },

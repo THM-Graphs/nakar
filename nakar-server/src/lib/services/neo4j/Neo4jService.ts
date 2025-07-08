@@ -14,9 +14,8 @@ import { Neo4jGraphElementsFactory } from './Neo4jGraphElementsFactory';
 import { SessionConfig } from 'neo4j-driver-core/types/driver';
 import { ApplicationService } from '../../application/ApplicationService';
 import { ExpandNodePreview } from './expand-node-preview/ExpandNodePreview';
-import { ExpandNodePreviewRelationshipEntry } from './expand-node-preview/ExpandNodePreviewRelationshipEntry';
+import { ExpandNodePreviewEntry } from './expand-node-preview/ExpandNodePreviewEntry';
 import { SMap } from '../../tools/Map';
-import { ExpandNodePreviewLabelEntry } from './expand-node-preview/ExpandNodePreviewLabelEntry';
 import { ToManyElementsError } from './ToManyElementsError';
 
 export class Neo4jService implements ApplicationService {
@@ -57,11 +56,13 @@ export class Neo4jService implements ApplicationService {
         `Did open session: ${JSON.stringify(sessionConfig)}`,
       );
       try {
-        this._logger.debug(this, `Will run query: ${query}`);
-        this._logger.debug(this, `Query data: ${JSON.stringify(parameters)}`);
+        this._logger.debug(
+          this,
+          `Will run query: ${query} with data: ${JSON.stringify(parameters)}`,
+        );
         const result: QueryResult = await session.run<
           RecordShape<string, unknown>
-        >(query, parameters, { timeout: 30000 });
+        >(query, parameters, { timeout: 60000 });
 
         if (
           result.records.length > Neo4jService.maximalElements &&
@@ -69,6 +70,10 @@ export class Neo4jService implements ApplicationService {
         ) {
           throw new ToManyElementsError(result.records.length);
         }
+        this._logger.debug(
+          this,
+          `Did receive ${result.records.length.toString()} records.`,
+        );
 
         const nei4jGraphElementsFactory: Neo4jGraphElementsFactory =
           new Neo4jGraphElementsFactory(this._logger);
@@ -121,17 +126,34 @@ export class Neo4jService implements ApplicationService {
   public async expandNode(
     databaseInfo: Neo4jDatabaseInfo,
     nodeIds: SSet<string>,
+    limit: { relationships: SSet<string>; labels: SSet<string> } | null,
   ): Promise<Neo4jGraphElements> {
     const nodesIds: string[] = [...nodeIds.values()];
-    const additional: Neo4jGraphElements = await this.executeQuery(
-      databaseInfo,
-      `MATCH (a)-[additionalRelationship]-(b) WHERE elementId(a) IN $nodesIds LIMIT ${(Neo4jService.maximalElements + 1).toString()} RETURN a, additionalRelationship, b;`,
-      {
-        nodesIds: nodesIds,
-      },
-      true,
-    );
-    return additional;
+    if (limit) {
+      return await this.executeQuery(
+        databaseInfo,
+        `MATCH (a)-[additionalRelationship]-(b)
+        WHERE elementId(a) IN $nodesIds
+        AND (type(additionalRelationship) in $relationships OR ANY(label IN labels(b) WHERE label IN $labels))
+        LIMIT ${Neo4jService.maximalElements.toString()}
+        RETURN a, additionalRelationship, b;`,
+        {
+          nodesIds: nodesIds,
+          relationships: limit.relationships,
+          labels: limit.labels,
+        },
+        true,
+      );
+    } else {
+      return await this.executeQuery(
+        databaseInfo,
+        `MATCH (a)-[additionalRelationship]-(b) WHERE elementId(a) IN $nodesIds LIMIT ${(Neo4jService.maximalElements + 1).toString()} RETURN a, additionalRelationship, b;`,
+        {
+          nodesIds: nodesIds,
+        },
+        true,
+      );
+    }
   }
 
   public async expandNodePreview(
@@ -144,21 +166,18 @@ export class Neo4jService implements ApplicationService {
       `MATCH (a)-[neighbor]-(b)
 WHERE elementId(a) IN $nodesIds AND a <> b
 RETURN type(neighbor) AS rtype, count(*) AS rcount
-ORDER BY rcount DESC
-LIMIT ${Neo4jService.maximalElements.toString()}`,
+ORDER BY rcount DESC, rtype ASC`,
       {
         nodesIds: nodesIds,
       },
       true,
     );
-    const expandNodePreviewRelationshipEntries: ExpandNodePreviewRelationshipEntry[] =
+    const expandNodePreviewRelationshipEntries: ExpandNodePreviewEntry[] =
       relationships.tableData.map(
-        (entry: SMap<string, unknown>): ExpandNodePreviewRelationshipEntry =>
-          new ExpandNodePreviewRelationshipEntry(
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-            entry.get('rtype') as string,
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-            entry.get('rcount') as number,
+        (entry: SMap<string, unknown>): ExpandNodePreviewEntry =>
+          new ExpandNodePreviewEntry(
+            String(entry.get('rtype')),
+            Number(entry.get('rcount')),
           ),
       );
 
@@ -168,21 +187,18 @@ LIMIT ${Neo4jService.maximalElements.toString()}`,
 WHERE elementId(a) IN $nodesIds AND a <> b
 UNWIND labels(b) as label
 RETURN label, count(*) AS lcount
-ORDER BY lcount DESC
-LIMIT ${Neo4jService.maximalElements.toString()}`,
+ORDER BY lcount DESC, label ASC`,
       {
         nodesIds: nodesIds,
       },
       true,
     );
-    const expandNodePreviewLabelEntries: ExpandNodePreviewLabelEntry[] =
+    const expandNodePreviewLabelEntries: ExpandNodePreviewEntry[] =
       labels.tableData.map(
-        (entry: SMap<string, unknown>): ExpandNodePreviewLabelEntry =>
-          new ExpandNodePreviewLabelEntry(
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-            entry.get('label') as string,
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-            entry.get('lcount') as number,
+        (entry: SMap<string, unknown>): ExpandNodePreviewEntry =>
+          new ExpandNodePreviewEntry(
+            String(entry.get('label')),
+            Number(entry.get('lcount')),
           ),
       );
 

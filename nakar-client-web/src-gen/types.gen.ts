@@ -35,13 +35,8 @@ export type Edge = {
     source: string;
 };
 
-export type ExpandNodePreviewLabel = {
-    label: string;
-    count: number;
-};
-
-export type ExpandNodePreviewRelationship = {
-    relationship: string;
+export type ExpandNodePreviewElement = {
+    identificator: string;
     count: number;
 };
 
@@ -314,8 +309,9 @@ export type type14 = 'WSEventPerformanceChanged';
 
 export type WSEventPresentExpandNodePreview = {
     type: 'WSEventPresentExpandNodePreview';
-    relationships: Array<ExpandNodePreviewRelationship>;
-    labels: Array<ExpandNodePreviewLabel>;
+    nodeId: string;
+    relationships: Array<ExpandNodePreviewElement>;
+    labels: Array<ExpandNodePreviewElement>;
 };
 
 export type type15 = 'WSEventPresentExpandNodePreview';
@@ -438,6 +434,10 @@ export type PostRoomActionReloadScenarioError = unknown;
 export type PostRoomActionExpandNodeData = {
     body: {
         nodeId: string;
+        limit: {
+            labels: Array<(string)>;
+            relationships: Array<(string)>;
+        } | null;
     };
     path: {
         id: string;

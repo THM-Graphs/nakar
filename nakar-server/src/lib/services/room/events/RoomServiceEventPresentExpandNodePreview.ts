@@ -1,9 +1,9 @@
-import { ExpandNodePreviewLabelEntry } from '../../neo4j/expand-node-preview/ExpandNodePreviewLabelEntry';
-import { ExpandNodePreviewRelationshipEntry } from '../../neo4j/expand-node-preview/ExpandNodePreviewRelationshipEntry';
+import { ExpandNodePreviewEntry } from '../../neo4j/expand-node-preview/ExpandNodePreviewEntry';
 
 export interface RoomServiceEventPresentExpandNodePreview {
   type: 'RoomServiceEventPresentExpandNodePreview';
   roomId: string;
-  labels: ExpandNodePreviewLabelEntry[];
-  relationships: ExpandNodePreviewRelationshipEntry[];
+  nodeId: string;
+  labels: ExpandNodePreviewEntry[];
+  relationships: ExpandNodePreviewEntry[];
 }

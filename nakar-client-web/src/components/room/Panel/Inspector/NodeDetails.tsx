@@ -34,7 +34,7 @@ export function NodeDetails(props: {
                 path: {
                   id: props.roomContext.initialRoomData.id,
                 },
-                body: { nodeId: props.node.id },
+                body: { nodeId: props.node.id, limit: null },
               }),
             );
           },

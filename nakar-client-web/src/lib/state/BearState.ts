@@ -1,5 +1,6 @@
 import {
   Databases,
+  ExpandNodePreviewElement,
   Graph,
   GraphElements,
   GraphMetaData,
@@ -54,6 +55,31 @@ export interface BearState {
         open: (scenario: Scenario, firstArgument: string | null) => void;
         close: () => void;
         clean: () => void;
+      };
+      expandNodePreview: {
+        shown: boolean;
+        data: {
+          relationships: ExpandNodePreviewElement[];
+          labels: ExpandNodePreviewElement[];
+          nodeId: string;
+          selectedRelationships: Set<string>;
+          selectedLabels: Set<string>;
+        } | null;
+        open: (data: {
+          relationships: ExpandNodePreviewElement[];
+          labels: ExpandNodePreviewElement[];
+          nodeId: string;
+        }) => void;
+        close: () => void;
+        clean: () => void;
+        setSelectedRelationships: (
+          element: ExpandNodePreviewElement,
+          selected: boolean,
+        ) => void;
+        setSelectedLabel: (
+          element: ExpandNodePreviewElement,
+          selected: boolean,
+        ) => void;
       };
     };
     websockets: {

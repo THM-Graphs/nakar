@@ -47,6 +47,7 @@ import { InsertResult } from '../backup/InsertResult';
 import { MutableGraph } from '../room/graph/MutableGraph';
 import { CachingSchemaDTOFactory } from './CachingSchemaDTOFactory';
 import { SMap } from '../../tools/Map';
+import { SSet } from '../../tools/Set';
 
 export class HTTPService implements ApplicationService {
   private readonly _app: Application;
@@ -394,6 +395,12 @@ export class HTTPService implements ApplicationService {
         await this._roomService.expandNode({
           roomId: room.documentId,
           nodeId: requestBody.nodeId,
+          limit: requestBody.limit
+            ? {
+                relationships: new SSet(requestBody.limit.relationships),
+                labels: new SSet(requestBody.limit.labels),
+              }
+            : null,
         });
       }),
     );

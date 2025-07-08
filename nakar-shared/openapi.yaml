@@ -198,8 +198,24 @@ paths:
               properties:
                 nodeId:
                   type: string
+                limit:
+                  type: object
+                  nullable: true
+                  properties:
+                    labels:
+                      type: array
+                      items:
+                        type: string
+                    relationships:
+                      type: array
+                      items:
+                        type: string
+                  required:
+                    - labels
+                    - relationships
               required:
                 - nodeId
+                - limit
       responses:
         "200":
           description: "OK"
@@ -921,26 +937,15 @@ components:
         - loadPercent
         - tickDuration
 
-    ExpandNodePreviewRelationship:
+    ExpandNodePreviewElement:
       type: object
       properties:
-        relationship:
+        identificator:
           type: string
         count:
           type: number
       required:
-        - relationship
-        - count
-
-    ExpandNodePreviewLabel:
-      type: object
-      properties:
-        label:
-          type: string
-        count:
-          type: number
-      required:
-        - label
+        - identificator
         - count
 
     WSClientToServerMessage:
@@ -1197,15 +1202,18 @@ components:
         type:
           type: string
           enum: ["WSEventPresentExpandNodePreview"]
+        nodeId:
+          type: string
         relationships:
           type: array
           items:
-            $ref: "#/components/schemas/ExpandNodePreviewRelationship"
+            $ref: "#/components/schemas/ExpandNodePreviewElement"
         labels:
           type: array
           items:
-            $ref: "#/components/schemas/ExpandNodePreviewLabel"
+            $ref: "#/components/schemas/ExpandNodePreviewElement"
       required:
         - type
+        - nodeId
         - relationships
         - labels

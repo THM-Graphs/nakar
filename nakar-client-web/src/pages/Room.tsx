@@ -38,6 +38,7 @@ import { StatusBar } from "../components/shared/StatusBar.tsx";
 import { match } from "ts-pattern";
 import { PerformanceDisplay } from "../components/room/PerformanceDisplay.tsx";
 import { RunScenarioModal } from "../components/room/RunScenarioModal/RunScenarioModal.tsx";
+import { ExpandNodePreviewModal } from "../components/room/ExpandNodePreviewModal/ExpandNodePreviewModal.tsx";
 
 export type RoomContext = {
   initialRoomData: RoomSchema;
@@ -86,6 +87,9 @@ export function Room(props: { context: AppContext }) {
   );
   const pushNotification = useBearStore((s) => s.room.ui.pushNotification);
   const navigate = useNavigate();
+  const showExpandNodePreview = useBearStore(
+    (s) => s.room.scenario.expandNodePreview.open,
+  );
 
   useEffect(() => {
     setScenarios(roomContext.initialScenariosData);
@@ -153,7 +157,11 @@ export function Room(props: { context: AppContext }) {
           .with(
             { type: "WSEventPresentExpandNodePreview" },
             (event: WSEventPresentExpandNodePreview) => {
-              console.log(event);
+              showExpandNodePreview({
+                relationships: event.relationships,
+                labels: event.labels,
+                nodeId: event.nodeId,
+              });
             },
           )
           .exhaustive();
@@ -239,6 +247,9 @@ export function Room(props: { context: AppContext }) {
           <HistogramPanel roomContext={roomContext}></HistogramPanel>
           <ToastStack></ToastStack>
           <RunScenarioModal roomContext={roomContext}></RunScenarioModal>
+          <ExpandNodePreviewModal
+            roomContext={roomContext}
+          ></ExpandNodePreviewModal>
         </Stack>
         <StatusBar
           left={<ProgressDisplay></ProgressDisplay>}
