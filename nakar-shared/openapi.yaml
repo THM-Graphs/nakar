@@ -928,6 +928,7 @@ components:
         - $ref: "#/components/schemas/WSEventLockUi"
         - $ref: "#/components/schemas/WSEventUnlockUi"
         - $ref: "#/components/schemas/WSEventPerformanceChanged"
+        - $ref: "#/components/schemas/WSEventKick"
 
     WSActionJoinRoom:
       type: object
@@ -1140,5 +1141,14 @@ components:
           enum: ["WSEventPerformanceChanged"]
         performance:
           $ref: "#/components/schemas/PhysicsPerformance"
+      required:
+        - type
+
+    WSEventKick:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: ["WSEventKick"]
       required:
         - type

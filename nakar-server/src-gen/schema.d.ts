@@ -454,7 +454,7 @@ export interface components {
             readonly tickDuration: number;
         };
         readonly WSClientToServerMessage: components["schemas"]["WSActionJoinRoom"] | components["schemas"]["WSActionLeaveRoom"] | components["schemas"]["WSActionGrabNode"] | components["schemas"]["WSActionMoveNodes"] | components["schemas"]["WSActionUngrabNode"];
-        readonly WSServerToClientMessage: components["schemas"]["WSEventNodesMoved"] | components["schemas"]["WSEventRoomChanged"] | components["schemas"]["WSEventNotification"] | components["schemas"]["WSEventGraphElementsChanged"] | components["schemas"]["WSEventGraphMetaDataChanged"] | components["schemas"]["WSEventGraphTableChanged"] | components["schemas"]["WSEventProgress"] | components["schemas"]["WSEventClearProgress"] | components["schemas"]["WSEventSetNodeLocks"] | components["schemas"]["WSEventLockUi"] | components["schemas"]["WSEventUnlockUi"] | components["schemas"]["WSEventPerformanceChanged"];
+        readonly WSServerToClientMessage: components["schemas"]["WSEventNodesMoved"] | components["schemas"]["WSEventRoomChanged"] | components["schemas"]["WSEventNotification"] | components["schemas"]["WSEventGraphElementsChanged"] | components["schemas"]["WSEventGraphMetaDataChanged"] | components["schemas"]["WSEventGraphTableChanged"] | components["schemas"]["WSEventProgress"] | components["schemas"]["WSEventClearProgress"] | components["schemas"]["WSEventSetNodeLocks"] | components["schemas"]["WSEventLockUi"] | components["schemas"]["WSEventUnlockUi"] | components["schemas"]["WSEventPerformanceChanged"] | components["schemas"]["WSEventKick"];
         readonly WSActionJoinRoom: {
             /** @enum {string} */
             readonly type: "WSActionJoinRoom";
@@ -542,6 +542,10 @@ export interface components {
             readonly type: "WSEventPerformanceChanged";
             readonly performance?: components["schemas"]["PhysicsPerformance"];
         };
+        readonly WSEventKick: {
+            /** @enum {string} */
+            readonly type: "WSEventKick";
+        };
     };
     responses: never;
     parameters: never;
@@ -595,6 +599,7 @@ export type SchemaWsEventSetNodeLocks = components['schemas']['WSEventSetNodeLoc
 export type SchemaWsEventLockUi = components['schemas']['WSEventLockUi'];
 export type SchemaWsEventUnlockUi = components['schemas']['WSEventUnlockUi'];
 export type SchemaWsEventPerformanceChanged = components['schemas']['WSEventPerformanceChanged'];
+export type SchemaWsEventKick = components['schemas']['WSEventKick'];
 export type $defs = Record<string, never>;
 export interface operations {
     readonly getScenarios: {

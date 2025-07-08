@@ -17,16 +17,75 @@ import { SaveScenarioGroupDBDTO } from './dto/SaveScenarioGroupDBDTO';
 import { SaveScenarioDBDTO } from './dto/SaveScenarioDBDTO';
 import { FinalGraphDisplayConfiguration } from '../room/scenario-pipeline/display-configuration/FinalGraphDisplayConfiguration';
 import { MergableGraphDisplayConfiguration } from '../room/scenario-pipeline/display-configuration/MergableGraphDisplayConfiguration';
+import { Event } from '@strapi/database/dist/lifecycles';
+import { Observable, Subject } from 'rxjs';
 
 export class DatabaseService implements ApplicationService {
   private readonly _databaseDtoFactory: DatabaseDTOFactory;
 
+  private readonly _onRoomAdded: Subject<GetRoomDBDTO>;
+  private readonly _onRoomDeleted: Subject<GetRoomDBDTO>;
+
   public constructor(private readonly _logger: LoggerService) {
     this._databaseDtoFactory = new DatabaseDTOFactory();
+    this._onRoomAdded = new Subject();
+    this._onRoomDeleted = new Subject();
+  }
+
+  public get onRoomAdded$(): Observable<GetRoomDBDTO> {
+    return this._onRoomAdded.asObservable();
+  }
+
+  public get onRoomDeleted$(): Observable<GetRoomDBDTO> {
+    return this._onRoomDeleted.asObservable();
   }
 
   public bootstrap(): void | Promise<void> {
-    /* */
+    strapi.db.lifecycles.subscribe({
+      models: ['api::room.room'],
+      afterCreate: (event: Event): void => {
+        this._printDatabaseEvent(event);
+        const room: GetRoomDBDTO =
+          this._databaseDtoFactory.createGetRoomDTOFromStrapi(
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+            event.result as Result<'api::room.room'>,
+          );
+        this._onRoomAdded.next(room);
+      },
+      afterCreateMany: (event: Event): void => {
+        this._printDatabaseEvent(event);
+        throw new Error('This method is not supported.');
+      },
+      beforeDelete: async (event: Event): Promise<void> => {
+        this._printDatabaseEvent(event);
+        // eslint-disable-next-line @typescript-eslint/typedef
+        const paramsSchema = z.object({
+          where: z.object({
+            id: z.number(),
+          }),
+        });
+        type Params = z.infer<typeof paramsSchema>;
+        const params: Params = paramsSchema.parse(event.params);
+        const id: number = params.where.id;
+        const roomResult: Result<'api::room.room'> | null = await strapi
+          .documents('api::room.room')
+          .findFirst({ filters: { id: { $eq: id } } });
+        if (roomResult == null) {
+          this._logger.error(
+            this,
+            `Cannot find room with db id ${id.toString()}. Unable to handle ${event.action}.`,
+          );
+          return;
+        }
+        const room: GetRoomDBDTO =
+          this._databaseDtoFactory.createGetRoomDTOFromStrapi(roomResult);
+        this._onRoomDeleted.next(room);
+      },
+      beforeDeleteMany: (event: Event): void => {
+        this._printDatabaseEvent(event);
+        throw new Error('This method is not supported.');
+      },
+    });
   }
 
   public destroy(): void | Promise<void> {
@@ -354,6 +413,17 @@ export class DatabaseService implements ApplicationService {
       path,
       '',
       `${targetFileNameWithoutExtension}${media.ext}`,
+    );
+  }
+
+  private _printDatabaseEvent(event: Event): void {
+    this._logger.debug(
+      this,
+      JSON.stringify({
+        event: event.action,
+        params: event.params,
+        result: event.result as unknown,
+      }),
     );
   }
 }

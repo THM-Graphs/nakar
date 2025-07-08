@@ -268,11 +268,17 @@ export type WSEventGraphTableChanged = {
 
 export type type9 = 'WSEventGraphTableChanged';
 
+export type WSEventKick = {
+    type: 'WSEventKick';
+};
+
+export type type10 = 'WSEventKick';
+
 export type WSEventLockUi = {
     type: 'WSEventLockUi';
 };
 
-export type type10 = 'WSEventLockUi';
+export type type11 = 'WSEventLockUi';
 
 export type WSEventNodesMoved = {
     type: 'WSEventNodesMoved';
@@ -280,21 +286,21 @@ export type WSEventNodesMoved = {
     date: string;
 };
 
-export type type11 = 'WSEventNodesMoved';
+export type type12 = 'WSEventNodesMoved';
 
 export type WSEventNotification = {
     type: 'WSEventNotification';
     notification: Notification;
 };
 
-export type type12 = 'WSEventNotification';
+export type type13 = 'WSEventNotification';
 
 export type WSEventPerformanceChanged = {
     type: 'WSEventPerformanceChanged';
     performance?: PhysicsPerformance;
 };
 
-export type type13 = 'WSEventPerformanceChanged';
+export type type14 = 'WSEventPerformanceChanged';
 
 export type WSEventProgress = {
     type: 'WSEventProgress';
@@ -302,14 +308,14 @@ export type WSEventProgress = {
     message: string;
 };
 
-export type type14 = 'WSEventProgress';
+export type type15 = 'WSEventProgress';
 
 export type WSEventRoomChanged = {
     type: 'WSEventRoomChanged';
     roomId: (string) | null;
 };
 
-export type type15 = 'WSEventRoomChanged';
+export type type16 = 'WSEventRoomChanged';
 
 export type WSEventSetNodeLocks = {
     type: 'WSEventSetNodeLocks';
@@ -319,15 +325,15 @@ export type WSEventSetNodeLocks = {
     }>;
 };
 
-export type type16 = 'WSEventSetNodeLocks';
+export type type17 = 'WSEventSetNodeLocks';
 
 export type WSEventUnlockUi = {
     type: 'WSEventUnlockUi';
 };
 
-export type type17 = 'WSEventUnlockUi';
+export type type18 = 'WSEventUnlockUi';
 
-export type WSServerToClientMessage = WSEventNodesMoved | WSEventRoomChanged | WSEventNotification | WSEventGraphElementsChanged | WSEventGraphMetaDataChanged | WSEventGraphTableChanged | WSEventProgress | WSEventClearProgress | WSEventSetNodeLocks | WSEventLockUi | WSEventUnlockUi | WSEventPerformanceChanged;
+export type WSServerToClientMessage = WSEventNodesMoved | WSEventRoomChanged | WSEventNotification | WSEventGraphElementsChanged | WSEventGraphMetaDataChanged | WSEventGraphTableChanged | WSEventProgress | WSEventClearProgress | WSEventSetNodeLocks | WSEventLockUi | WSEventUnlockUi | WSEventPerformanceChanged | WSEventKick;
 
 export type GetScenariosResponse = (Databases);
 

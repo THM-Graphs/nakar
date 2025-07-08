@@ -11,7 +11,12 @@ import {
   Room as RoomSchema,
   WSActionLeaveRoom,
 } from "../../src-gen";
-import { LoaderFunctionArgs, useLoaderData } from "react-router";
+import {
+  LoaderFunctionArgs,
+  useLoaderData,
+  useNavigate,
+  useNavigation,
+} from "react-router";
 import { resultOrThrow } from "../lib/data/resultOrThrow.ts";
 import { ToastStack } from "../components/room/ToastStack.tsx";
 import { HistogramPanel } from "../components/room/Panel/Histogram/HistogramPanel.tsx";
@@ -79,6 +84,7 @@ export function Room(props: { context: AppContext }) {
     (s) => s.room.panels.scenarios.setScenarios,
   );
   const pushNotification = useBearStore((s) => s.room.ui.pushNotification);
+  const navigate = useNavigate();
 
   useEffect(() => {
     setScenarios(roomContext.initialScenariosData);
@@ -139,6 +145,9 @@ export function Room(props: { context: AppContext }) {
           })
           .with({ type: "WSEventSetNodeLocks" }, () => {
             /* */
+          })
+          .with({ type: "WSEventKick" }, () => {
+            void navigate("/");
           })
           .exhaustive();
       }),

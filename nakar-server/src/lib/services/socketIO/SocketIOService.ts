@@ -14,6 +14,7 @@ import {
   SchemaWsActionUngrabNode,
   SchemaWsClientToServerMessage,
   SchemaWsEventClearProgress,
+  SchemaWsEventKick,
   SchemaWsEventLockUi,
   SchemaWsEventNotification,
   SchemaWsEventPerformanceChanged,
@@ -49,6 +50,7 @@ import { RoomServiceEventProgressCleared } from '../room/events/RoomServiceEvent
 import { RoomServiceEventGraphElementsChanged } from '../room/events/RoomServiceEventGraphElementsChanged';
 import { RoomServiceEventGraphTableChanged } from '../room/events/RoomServiceEventGraphTableChanged';
 import { ConfigService } from '../config/ConfigService';
+import { RoomServiceEventKick } from '../room/events/RoomServiceEventKick';
 
 export type Server = UntypedServer<ClientToServerEvents, ServerToClientEvents>;
 export type Socket = UntypedSocket<ClientToServerEvents, ServerToClientEvents>;
@@ -430,6 +432,14 @@ export class SocketIOService implements ApplicationService {
               this.sendToRoom(message.roomId, {
                 type: 'WSEventClearProgress',
               } satisfies SchemaWsEventClearProgress);
+            },
+          )
+          .with(
+            { type: 'RoomServiceEventKick' },
+            (message: RoomServiceEventKick): void => {
+              this.sendToRoom(message.roomId, {
+                type: 'WSEventKick',
+              } satisfies SchemaWsEventKick);
             },
           )
           .exhaustive(),

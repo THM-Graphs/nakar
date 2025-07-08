@@ -8,6 +8,7 @@ import { RoomServiceEventRoomLocked } from './RoomServiceEventRoomLocked';
 import { RoomServiceEventRoomUnlocked } from './RoomServiceEventRoomUnlocked';
 import { RoomServiceEventGraphElementsChanged } from './RoomServiceEventGraphElementsChanged';
 import { RoomServiceEventGraphTableChanged } from './RoomServiceEventGraphTableChanged';
+import { RoomServiceEventKick } from './RoomServiceEventKick';
 
 export type RoomServiceEvent =
   | RoomServiceEventGraphMetaDataChanged
@@ -19,4 +20,5 @@ export type RoomServiceEvent =
   | RoomServiceEventProgressChanged
   | RoomServiceEventProgressCleared
   | RoomServiceEventRoomLocked
-  | RoomServiceEventRoomUnlocked;
+  | RoomServiceEventRoomUnlocked
+  | RoomServiceEventKick;
