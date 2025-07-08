@@ -382,18 +382,18 @@ export class HTTPService implements ApplicationService {
     );
 
     this._app.post(
-      '/room/:id/actions/expand-nodes',
+      '/room/:id/actions/expand-node',
       this._handle(async (req: Request): Promise<void> => {
         const room: GetRoomDBDTO = await this._assertRoom(req);
 
         type Body =
-          operations['postRoomActionExpandNodes']['requestBody']['content']['application/json'];
+          operations['postRoomActionExpandNode']['requestBody']['content']['application/json'];
         // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
         const requestBody: Body = req.body as Body;
 
-        await this._roomService.expandNodes({
+        await this._roomService.expandNode({
           roomId: room.documentId,
-          nodeIds: requestBody.nodes,
+          nodeId: requestBody.nodeId,
         });
       }),
     );

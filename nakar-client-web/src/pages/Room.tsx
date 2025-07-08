@@ -10,6 +10,7 @@ import {
   Graph,
   Room as RoomSchema,
   WSActionLeaveRoom,
+  WSEventPresentExpandNodePreview,
 } from "../../src-gen";
 import {
   LoaderFunctionArgs,
@@ -149,6 +150,12 @@ export function Room(props: { context: AppContext }) {
           .with({ type: "WSEventKick" }, () => {
             void navigate("/");
           })
+          .with(
+            { type: "WSEventPresentExpandNodePreview" },
+            (event: WSEventPresentExpandNodePreview) => {
+              console.log(event);
+            },
+          )
           .exhaustive();
       }),
     ];

@@ -18,6 +18,7 @@ import {
   SchemaWsEventLockUi,
   SchemaWsEventNotification,
   SchemaWsEventPerformanceChanged,
+  SchemaWsEventPresentExpandNodePreview,
   SchemaWsEventProgress,
   SchemaWsEventRoomChanged,
   SchemaWsEventSetNodeLocks,
@@ -51,6 +52,7 @@ import { RoomServiceEventGraphElementsChanged } from '../room/events/RoomService
 import { RoomServiceEventGraphTableChanged } from '../room/events/RoomServiceEventGraphTableChanged';
 import { ConfigService } from '../config/ConfigService';
 import { RoomServiceEventKick } from '../room/events/RoomServiceEventKick';
+import { RoomServiceEventPresentExpandNodePreview } from '../room/events/RoomServiceEventPresentExpandNodePreview';
 
 export type Server = UntypedServer<ClientToServerEvents, ServerToClientEvents>;
 export type Socket = UntypedSocket<ClientToServerEvents, ServerToClientEvents>;
@@ -440,6 +442,16 @@ export class SocketIOService implements ApplicationService {
               this.sendToRoom(message.roomId, {
                 type: 'WSEventKick',
               } satisfies SchemaWsEventKick);
+            },
+          )
+          .with(
+            { type: 'RoomServiceEventPresentExpandNodePreview' },
+            (message: RoomServiceEventPresentExpandNodePreview): void => {
+              this.sendToRoom(message.roomId, {
+                type: 'WSEventPresentExpandNodePreview',
+                relationships: message.relationships,
+                labels: message.labels,
+              } satisfies SchemaWsEventPresentExpandNodePreview);
             },
           )
           .exhaustive(),

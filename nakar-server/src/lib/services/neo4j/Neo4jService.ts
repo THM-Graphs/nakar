@@ -13,9 +13,14 @@ import { LoggerService } from '../logger/LoggerService';
 import { Neo4jGraphElementsFactory } from './Neo4jGraphElementsFactory';
 import { SessionConfig } from 'neo4j-driver-core/types/driver';
 import { ApplicationService } from '../../application/ApplicationService';
+import { ExpandNodePreview } from './expand-node-preview/ExpandNodePreview';
+import { ExpandNodePreviewRelationshipEntry } from './expand-node-preview/ExpandNodePreviewRelationshipEntry';
+import { SMap } from '../../tools/Map';
+import { ExpandNodePreviewLabelEntry } from './expand-node-preview/ExpandNodePreviewLabelEntry';
+import { ToManyElementsError } from './ToManyElementsError';
 
 export class Neo4jService implements ApplicationService {
-  private static readonly _maximalElements: number = 500;
+  public static readonly maximalElements: number = 500;
 
   public constructor(private readonly _logger: LoggerService) {}
 
@@ -59,12 +64,10 @@ export class Neo4jService implements ApplicationService {
         >(query, parameters, { timeout: 30000 });
 
         if (
-          result.records.length > Neo4jService._maximalElements &&
+          result.records.length > Neo4jService.maximalElements &&
           checkLimit
         ) {
-          throw new Error(
-            `To many elements: ${result.records.length.toString()} (maximum: ${Neo4jService._maximalElements.toString()})`,
-          );
+          throw new ToManyElementsError(result.records.length);
         }
 
         const nei4jGraphElementsFactory: Neo4jGraphElementsFactory =
@@ -122,12 +125,70 @@ export class Neo4jService implements ApplicationService {
     const nodesIds: string[] = [...nodeIds.values()];
     const additional: Neo4jGraphElements = await this.executeQuery(
       databaseInfo,
-      `MATCH (a)-[additionalRelationship]-(b) WHERE elementId(a) IN $nodesIds LIMIT ${(Neo4jService._maximalElements + 1).toString()} RETURN a, additionalRelationship, b;`,
+      `MATCH (a)-[additionalRelationship]-(b) WHERE elementId(a) IN $nodesIds LIMIT ${(Neo4jService.maximalElements + 1).toString()} RETURN a, additionalRelationship, b;`,
       {
         nodesIds: nodesIds,
       },
       true,
     );
     return additional;
+  }
+
+  public async expandNodePreview(
+    databaseInfo: Neo4jDatabaseInfo,
+    nodeIds: SSet<string>,
+  ): Promise<ExpandNodePreview> {
+    const nodesIds: string[] = [...nodeIds.values()];
+    const relationships: Neo4jGraphElements = await this.executeQuery(
+      databaseInfo,
+      `MATCH (a)-[neighbor]-(b)
+WHERE elementId(a) IN $nodesIds AND a <> b
+RETURN type(neighbor) AS rtype, count(*) AS rcount
+ORDER BY rcount DESC
+LIMIT ${Neo4jService.maximalElements.toString()}`,
+      {
+        nodesIds: nodesIds,
+      },
+      true,
+    );
+    const expandNodePreviewRelationshipEntries: ExpandNodePreviewRelationshipEntry[] =
+      relationships.tableData.map(
+        (entry: SMap<string, unknown>): ExpandNodePreviewRelationshipEntry =>
+          new ExpandNodePreviewRelationshipEntry(
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+            entry.get('rtype') as string,
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+            entry.get('rcount') as number,
+          ),
+      );
+
+    const labels: Neo4jGraphElements = await this.executeQuery(
+      databaseInfo,
+      `MATCH (a)-[]-(b)
+WHERE elementId(a) IN $nodesIds AND a <> b
+UNWIND labels(b) as label
+RETURN label, count(*) AS lcount
+ORDER BY lcount DESC
+LIMIT ${Neo4jService.maximalElements.toString()}`,
+      {
+        nodesIds: nodesIds,
+      },
+      true,
+    );
+    const expandNodePreviewLabelEntries: ExpandNodePreviewLabelEntry[] =
+      labels.tableData.map(
+        (entry: SMap<string, unknown>): ExpandNodePreviewLabelEntry =>
+          new ExpandNodePreviewLabelEntry(
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+            entry.get('label') as string,
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+            entry.get('lcount') as number,
+          ),
+      );
+
+    return new ExpandNodePreview(
+      expandNodePreviewLabelEntries,
+      expandNodePreviewRelationshipEntries,
+    );
   }
 }

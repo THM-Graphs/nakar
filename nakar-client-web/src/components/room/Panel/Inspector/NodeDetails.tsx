@@ -2,7 +2,7 @@ import {
   GraphLabel,
   Node,
   postRoomActionDeleteElements,
-  postRoomActionExpandNodes,
+  postRoomActionExpandNode,
   postRoomActionFocusNodes,
   postRoomActionUnlockNodes,
 } from "../../../../../src-gen";
@@ -30,11 +30,11 @@ export function NodeDetails(props: {
           variant: "primary",
           action: async () => {
             resultOrThrow(
-              await postRoomActionExpandNodes({
+              await postRoomActionExpandNode({
                 path: {
                   id: props.roomContext.initialRoomData.id,
                 },
-                body: { nodes: [props.node.id] },
+                body: { nodeId: props.node.id },
               }),
             );
           },

@@ -35,6 +35,16 @@ export type Edge = {
     source: string;
 };
 
+export type ExpandNodePreviewLabel = {
+    label: string;
+    count: number;
+};
+
+export type ExpandNodePreviewRelationship = {
+    relationship: string;
+    count: number;
+};
+
 export type Graph = {
     elements: GraphElements;
     metaData: GraphMetaData;
@@ -302,20 +312,28 @@ export type WSEventPerformanceChanged = {
 
 export type type14 = 'WSEventPerformanceChanged';
 
+export type WSEventPresentExpandNodePreview = {
+    type: 'WSEventPresentExpandNodePreview';
+    relationships: Array<ExpandNodePreviewRelationship>;
+    labels: Array<ExpandNodePreviewLabel>;
+};
+
+export type type15 = 'WSEventPresentExpandNodePreview';
+
 export type WSEventProgress = {
     type: 'WSEventProgress';
     progress: (number) | null;
     message: string;
 };
 
-export type type15 = 'WSEventProgress';
+export type type16 = 'WSEventProgress';
 
 export type WSEventRoomChanged = {
     type: 'WSEventRoomChanged';
     roomId: (string) | null;
 };
 
-export type type16 = 'WSEventRoomChanged';
+export type type17 = 'WSEventRoomChanged';
 
 export type WSEventSetNodeLocks = {
     type: 'WSEventSetNodeLocks';
@@ -325,15 +343,15 @@ export type WSEventSetNodeLocks = {
     }>;
 };
 
-export type type17 = 'WSEventSetNodeLocks';
+export type type18 = 'WSEventSetNodeLocks';
 
 export type WSEventUnlockUi = {
     type: 'WSEventUnlockUi';
 };
 
-export type type18 = 'WSEventUnlockUi';
+export type type19 = 'WSEventUnlockUi';
 
-export type WSServerToClientMessage = WSEventNodesMoved | WSEventRoomChanged | WSEventNotification | WSEventGraphElementsChanged | WSEventGraphMetaDataChanged | WSEventGraphTableChanged | WSEventProgress | WSEventClearProgress | WSEventSetNodeLocks | WSEventLockUi | WSEventUnlockUi | WSEventPerformanceChanged | WSEventKick;
+export type WSServerToClientMessage = WSEventNodesMoved | WSEventRoomChanged | WSEventNotification | WSEventGraphElementsChanged | WSEventGraphMetaDataChanged | WSEventGraphTableChanged | WSEventProgress | WSEventClearProgress | WSEventSetNodeLocks | WSEventLockUi | WSEventUnlockUi | WSEventPerformanceChanged | WSEventKick | WSEventPresentExpandNodePreview;
 
 export type GetScenariosResponse = (Databases);
 
@@ -417,18 +435,18 @@ export type PostRoomActionReloadScenarioResponse = (unknown);
 
 export type PostRoomActionReloadScenarioError = unknown;
 
-export type PostRoomActionExpandNodesData = {
+export type PostRoomActionExpandNodeData = {
     body: {
-        nodes: Array<(string)>;
+        nodeId: string;
     };
     path: {
         id: string;
     };
 };
 
-export type PostRoomActionExpandNodesResponse = (unknown);
+export type PostRoomActionExpandNodeResponse = (unknown);
 
-export type PostRoomActionExpandNodesError = unknown;
+export type PostRoomActionExpandNodeError = unknown;
 
 export type PostRoomActionDeleteElementsData = {
     body: {

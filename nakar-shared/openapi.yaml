@@ -178,11 +178,11 @@ paths:
         "200":
           description: "OK"
 
-  /room/{id}/actions/expand-nodes:
+  /room/{id}/actions/expand-node:
     post:
       tags:
         - Room Actions
-      operationId: postRoomActionExpandNodes
+      operationId: postRoomActionExpandNode
       parameters:
         - name: id
           in: path
@@ -196,12 +196,10 @@ paths:
             schema:
               type: object
               properties:
-                nodes:
-                  type: array
-                  items:
-                    type: string
+                nodeId:
+                  type: string
               required:
-                - nodes
+                - nodeId
       responses:
         "200":
           description: "OK"
@@ -923,6 +921,28 @@ components:
         - loadPercent
         - tickDuration
 
+    ExpandNodePreviewRelationship:
+      type: object
+      properties:
+        relationship:
+          type: string
+        count:
+          type: number
+      required:
+        - relationship
+        - count
+
+    ExpandNodePreviewLabel:
+      type: object
+      properties:
+        label:
+          type: string
+        count:
+          type: number
+      required:
+        - label
+        - count
+
     WSClientToServerMessage:
       oneOf:
         - $ref: "#/components/schemas/WSActionJoinRoom"
@@ -946,6 +966,7 @@ components:
         - $ref: "#/components/schemas/WSEventUnlockUi"
         - $ref: "#/components/schemas/WSEventPerformanceChanged"
         - $ref: "#/components/schemas/WSEventKick"
+        - $ref: "#/components/schemas/WSEventPresentExpandNodePreview"
 
     WSActionJoinRoom:
       type: object
@@ -1169,3 +1190,22 @@ components:
           enum: ["WSEventKick"]
       required:
         - type
+
+    WSEventPresentExpandNodePreview:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: ["WSEventPresentExpandNodePreview"]
+        relationships:
+          type: array
+          items:
+            $ref: "#/components/schemas/ExpandNodePreviewRelationship"
+        labels:
+          type: array
+          items:
+            $ref: "#/components/schemas/ExpandNodePreviewLabel"
+      required:
+        - type
+        - relationships
+        - labels

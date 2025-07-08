@@ -36,6 +36,9 @@ import { ExpandNodesResult } from './results/ExpandNodesResult';
 import { MutableEdge } from './graph/MutableEdge';
 import { FinalGraphDisplayConfiguration } from './scenario-pipeline/display-configuration/FinalGraphDisplayConfiguration';
 import { RoomServiceEventKick } from './events/RoomServiceEventKick';
+import { ToManyElementsError } from '../neo4j/ToManyElementsError';
+import { ExpandNodePreview } from '../neo4j/expand-node-preview/ExpandNodePreview';
+import { RoomServiceEventPresentExpandNodePreview } from './events/RoomServiceEventPresentExpandNodePreview';
 
 export class RoomService implements ApplicationService {
   private readonly _workers: SMap<string, Worker>;
@@ -242,14 +245,15 @@ export class RoomService implements ApplicationService {
     );
   }
 
-  public async expandNodes(params: {
+  public async expandNode(params: {
     roomId: string;
-    nodeIds: readonly string[];
+    nodeId: string;
   }): Promise<void> {
     return this._runWithRoomLock(
       params.roomId,
       'Expanding nodes',
       async (): Promise<void> => {
+        const nodeId: string = params.nodeId;
         const databaseCache: SMap<string, GetDatabaseDBDTO> = new SMap<
           string,
           GetDatabaseDBDTO
@@ -275,25 +279,25 @@ export class RoomService implements ApplicationService {
           edgeAddedCount: 0,
         };
 
-        for (const nodeId of params.nodeIds) {
-          const node: MutableNode | null = graph.nodes.get(nodeId);
-          if (node == null) {
-            throw new Error(`Cannot find node ${nodeId} to expand.`);
-          }
+        const node: MutableNode | null = graph.nodes.get(nodeId);
+        if (node == null) {
+          throw new Error(`Cannot find node ${nodeId} to expand.`);
+        }
 
-          const database: GetDatabaseDBDTO | null =
-            databaseCache.get(node.source) ??
-            (await this._database.getDatabase(node.source));
-          if (database == null) {
-            throw new Error(
-              `Cannot find database ${node.source} to run expand node query on.`,
-            );
-          }
-          databaseCache.set(node.source, database);
+        const database: GetDatabaseDBDTO | null =
+          databaseCache.get(node.source) ??
+          (await this._database.getDatabase(node.source));
+        if (database == null) {
+          throw new Error(
+            `Cannot find database ${node.source} to run expand node query on.`,
+          );
+        }
+        databaseCache.set(node.source, database);
 
-          const neo4jDatabaseInfo: Neo4jDatabaseInfo =
-            Neo4jDatabaseInfo.parse(database);
+        const neo4jDatabaseInfo: Neo4jDatabaseInfo =
+          Neo4jDatabaseInfo.parse(database);
 
+        try {
           // expand result
           const expandResult: Neo4jGraphElements = await this._neo4j.expandNode(
             neo4jDatabaseInfo,
@@ -347,23 +351,40 @@ export class RoomService implements ApplicationService {
             this,
             `Expand node result for ${nodeId}: ${expandResult.nodes.size.toString()} nodes and ${expandResult.relationships.size.toString()} relationships.`,
           );
-        }
 
-        this._sendActionToWorker(params.roomId, {
-          type: 'WTActionSetGraph',
-          graph: graph.toPhysicalGraph(this._logger),
-        });
-        this._sendActionToWorker(params.roomId, {
-          type: 'WTActionTriggerPhysics',
-          amount: 'short',
-        });
-        this._onEvent.next({
-          type: 'RoomServiceEventGraphElementsChanged',
-          graph: graph,
-          roomId: params.roomId,
-          nodesAdded: result.nodesAddedCount,
-          edgesAdded: result.edgeAddedCount,
-        } satisfies RoomServiceEventGraphElementsChanged);
+          this._sendActionToWorker(params.roomId, {
+            type: 'WTActionSetGraph',
+            graph: graph.toPhysicalGraph(this._logger),
+          });
+          this._sendActionToWorker(params.roomId, {
+            type: 'WTActionTriggerPhysics',
+            amount: 'short',
+          });
+          this._onEvent.next({
+            type: 'RoomServiceEventGraphElementsChanged',
+            graph: graph,
+            roomId: params.roomId,
+            nodesAdded: result.nodesAddedCount,
+            edgesAdded: result.edgeAddedCount,
+          } satisfies RoomServiceEventGraphElementsChanged);
+        } catch (error: unknown) {
+          if (error instanceof ToManyElementsError) {
+            const expandNodePreview: ExpandNodePreview =
+              await this._neo4j.expandNodePreview(
+                neo4jDatabaseInfo,
+                new SSet<string>([nodeId]),
+              );
+            this._onEvent.next({
+              type: 'RoomServiceEventPresentExpandNodePreview',
+              roomId: params.roomId,
+              labels: expandNodePreview.labels,
+              relationships: expandNodePreview.relationships,
+            } satisfies RoomServiceEventPresentExpandNodePreview);
+            throw error;
+          } else {
+            throw error;
+          }
+        }
       },
     );
   }

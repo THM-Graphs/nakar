@@ -148,7 +148,7 @@ export interface paths {
         readonly patch?: never;
         readonly trace?: never;
     };
-    readonly "/room/{id}/actions/expand-nodes": {
+    readonly "/room/{id}/actions/expand-node": {
         readonly parameters: {
             readonly query?: never;
             readonly header?: never;
@@ -157,7 +157,7 @@ export interface paths {
         };
         readonly get?: never;
         readonly put?: never;
-        readonly post: operations["postRoomActionExpandNodes"];
+        readonly post: operations["postRoomActionExpandNode"];
         readonly delete?: never;
         readonly options?: never;
         readonly head?: never;
@@ -469,8 +469,16 @@ export interface components {
             readonly loadPercent: number;
             readonly tickDuration: number;
         };
+        readonly ExpandNodePreviewRelationship: {
+            readonly relationship: string;
+            readonly count: number;
+        };
+        readonly ExpandNodePreviewLabel: {
+            readonly label: string;
+            readonly count: number;
+        };
         readonly WSClientToServerMessage: components["schemas"]["WSActionJoinRoom"] | components["schemas"]["WSActionLeaveRoom"] | components["schemas"]["WSActionGrabNode"] | components["schemas"]["WSActionMoveNodes"] | components["schemas"]["WSActionUngrabNode"];
-        readonly WSServerToClientMessage: components["schemas"]["WSEventNodesMoved"] | components["schemas"]["WSEventRoomChanged"] | components["schemas"]["WSEventNotification"] | components["schemas"]["WSEventGraphElementsChanged"] | components["schemas"]["WSEventGraphMetaDataChanged"] | components["schemas"]["WSEventGraphTableChanged"] | components["schemas"]["WSEventProgress"] | components["schemas"]["WSEventClearProgress"] | components["schemas"]["WSEventSetNodeLocks"] | components["schemas"]["WSEventLockUi"] | components["schemas"]["WSEventUnlockUi"] | components["schemas"]["WSEventPerformanceChanged"] | components["schemas"]["WSEventKick"];
+        readonly WSServerToClientMessage: components["schemas"]["WSEventNodesMoved"] | components["schemas"]["WSEventRoomChanged"] | components["schemas"]["WSEventNotification"] | components["schemas"]["WSEventGraphElementsChanged"] | components["schemas"]["WSEventGraphMetaDataChanged"] | components["schemas"]["WSEventGraphTableChanged"] | components["schemas"]["WSEventProgress"] | components["schemas"]["WSEventClearProgress"] | components["schemas"]["WSEventSetNodeLocks"] | components["schemas"]["WSEventLockUi"] | components["schemas"]["WSEventUnlockUi"] | components["schemas"]["WSEventPerformanceChanged"] | components["schemas"]["WSEventKick"] | components["schemas"]["WSEventPresentExpandNodePreview"];
         readonly WSActionJoinRoom: {
             /** @enum {string} */
             readonly type: "WSActionJoinRoom";
@@ -562,6 +570,12 @@ export interface components {
             /** @enum {string} */
             readonly type: "WSEventKick";
         };
+        readonly WSEventPresentExpandNodePreview: {
+            /** @enum {string} */
+            readonly type: "WSEventPresentExpandNodePreview";
+            readonly relationships: readonly components["schemas"]["ExpandNodePreviewRelationship"][];
+            readonly labels: readonly components["schemas"]["ExpandNodePreviewLabel"][];
+        };
     };
     responses: never;
     parameters: never;
@@ -596,6 +610,8 @@ export type SchemaScenarioArgument = components['schemas']['ScenarioArgument'];
 export type SchemaVersion = components['schemas']['Version'];
 export type SchemaNotification = components['schemas']['Notification'];
 export type SchemaPhysicsPerformance = components['schemas']['PhysicsPerformance'];
+export type SchemaExpandNodePreviewRelationship = components['schemas']['ExpandNodePreviewRelationship'];
+export type SchemaExpandNodePreviewLabel = components['schemas']['ExpandNodePreviewLabel'];
 export type SchemaWsClientToServerMessage = components['schemas']['WSClientToServerMessage'];
 export type SchemaWsServerToClientMessage = components['schemas']['WSServerToClientMessage'];
 export type SchemaWsActionJoinRoom = components['schemas']['WSActionJoinRoom'];
@@ -616,6 +632,7 @@ export type SchemaWsEventLockUi = components['schemas']['WSEventLockUi'];
 export type SchemaWsEventUnlockUi = components['schemas']['WSEventUnlockUi'];
 export type SchemaWsEventPerformanceChanged = components['schemas']['WSEventPerformanceChanged'];
 export type SchemaWsEventKick = components['schemas']['WSEventKick'];
+export type SchemaWsEventPresentExpandNodePreview = components['schemas']['WSEventPresentExpandNodePreview'];
 export type $defs = Record<string, never>;
 export interface operations {
     readonly getScenarios: {
@@ -815,7 +832,7 @@ export interface operations {
             };
         };
     };
-    readonly postRoomActionExpandNodes: {
+    readonly postRoomActionExpandNode: {
         readonly parameters: {
             readonly query?: never;
             readonly header?: never;
@@ -827,7 +844,7 @@ export interface operations {
         readonly requestBody: {
             readonly content: {
                 readonly "application/json": {
-                    readonly nodes: readonly string[];
+                    readonly nodeId: string;
                 };
             };
         };
