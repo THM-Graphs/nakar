@@ -9,6 +9,7 @@ export function Panel(props: {
   onClose: () => void;
   direction: "left" | "right" | "center" | "none";
   hidden: boolean;
+  toolbar?: ReactNode;
   fullWidth?: boolean;
   className?: string;
 }) {
@@ -38,11 +39,14 @@ export function Panel(props: {
         {props.title.length > 0 && (
           <span className={"ms-2 small"}>{props.title}</span>
         )}
-        <NavbarButton
-          icon={"x-lg"}
-          onClick={props.onClose}
-          className={"border-end-0"}
-        ></NavbarButton>
+        <Stack direction={"horizontal"}>
+          {props.toolbar}
+          <NavbarButton
+            icon={"x-lg"}
+            onClick={props.onClose}
+            className={"border-end-0"}
+          ></NavbarButton>
+        </Stack>
       </Stack>
       <Stack
         className={
