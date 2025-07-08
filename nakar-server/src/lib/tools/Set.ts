@@ -86,4 +86,12 @@ export class SSet<T> extends Set<T> {
     }
     return null;
   }
+
+  public map<U>(cb: (element: T) => U): SSet<U> {
+    const n: SSet<U> = new SSet<U>();
+    for (const el of this) {
+      n.add(cb(el));
+    }
+    return n;
+  }
 }

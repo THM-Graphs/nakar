@@ -44,6 +44,7 @@ export class Neo4jService implements ApplicationService {
     try {
       const sessionConfig: SessionConfig = {
         defaultAccessMode: neo4j.session.READ,
+        database: databaseInfo.database ?? undefined,
       };
       const session: Session = driver.session(sessionConfig);
       this._logger.debug(
@@ -55,7 +56,7 @@ export class Neo4jService implements ApplicationService {
         this._logger.debug(this, `Query data: ${JSON.stringify(parameters)}`);
         const result: QueryResult = await session.run<
           RecordShape<string, unknown>
-        >(query, parameters);
+        >(query, parameters, { timeout: 30000 });
 
         if (
           result.records.length > Neo4jService._maximalElements &&
@@ -88,7 +89,7 @@ export class Neo4jService implements ApplicationService {
     const nodesIds: string[] = [...nodeIds.values()];
     const additional: Neo4jGraphElements = await this.executeQuery(
       databaseInfo,
-      'MATCH (a)-[additionalRelationship]->(b) WHERE elementId(a) IN $existingNodeIds AND elementId(b) IN $existingNodeIds RETURN DISTINCT additionalRelationship;',
+      `MATCH (a)-[additionalRelationship]->(b) WHERE elementId(a) IN $existingNodeIds AND elementId(b) IN $existingNodeIds RETURN DISTINCT additionalRelationship;`,
       {
         existingNodeIds: nodesIds,
       },
@@ -104,7 +105,7 @@ export class Neo4jService implements ApplicationService {
   ): Promise<Neo4jGraphElements> {
     const additional: Neo4jGraphElements = await this.executeQuery(
       databaseInfo,
-      'MATCH (a)-[additionalRelationship]-(b) WHERE elementId(a) IN $fromNodeIds AND elementId(b) IN $toNodeIds RETURN DISTINCT additionalRelationship;',
+      `MATCH (a)-[additionalRelationship]-(b) WHERE elementId(a) IN $fromNodeIds AND elementId(b) IN $toNodeIds RETURN DISTINCT additionalRelationship;`,
       {
         fromNodeIds: [...fromNodeIds.values()],
         toNodeIds: [...toNodeIds.values()],
@@ -121,7 +122,7 @@ export class Neo4jService implements ApplicationService {
     const nodesIds: string[] = [...nodeIds.values()];
     const additional: Neo4jGraphElements = await this.executeQuery(
       databaseInfo,
-      'MATCH (a)-[additionalRelationship]-(b) WHERE elementId(a) IN $nodesIds RETURN a, additionalRelationship, b;',
+      `MATCH (a)-[additionalRelationship]-(b) WHERE elementId(a) IN $nodesIds LIMIT ${(Neo4jService._maximalElements + 1).toString()} RETURN a, additionalRelationship, b;`,
       {
         nodesIds: nodesIds,
       },

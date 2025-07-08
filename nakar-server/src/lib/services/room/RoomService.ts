@@ -345,7 +345,7 @@ export class RoomService implements ApplicationService {
 
           this._logger.debug(
             this,
-            `Expand node result for ${nodeId}: ${expandResult.nodes.size.toString()} nodes.`,
+            `Expand node result for ${nodeId}: ${expandResult.nodes.size.toString()} nodes and ${expandResult.relationships.size.toString()} relationships.`,
           );
         }
 

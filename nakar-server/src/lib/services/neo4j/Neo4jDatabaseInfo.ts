@@ -4,21 +4,21 @@ export class Neo4jDatabaseInfo {
   public readonly url: string;
   public readonly username: string;
   public readonly password: string;
-  public readonly databaseTitle: string;
-  public readonly databaseId: string;
+  public readonly database: string | null;
+  public readonly nakarId: string;
 
   public constructor(data: {
     url: string;
     username: string;
     password: string;
-    databaseTitle: string;
-    databaseId: string;
+    database: string | null;
+    nakarId: string;
   }) {
     this.url = data.url;
     this.username = data.username;
     this.password = data.password;
-    this.databaseTitle = data.databaseTitle;
-    this.databaseId = data.databaseId;
+    this.database = data.database;
+    this.nakarId = data.nakarId;
   }
 
   public static parse(database: GetDatabaseDBDTO): Neo4jDatabaseInfo {
@@ -36,8 +36,8 @@ export class Neo4jDatabaseInfo {
       url: database.url,
       username: database.username,
       password: database.password,
-      databaseTitle: database.title ?? '',
-      databaseId: database.documentId,
+      database: null,
+      nakarId: database.documentId,
     });
   }
 }

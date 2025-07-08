@@ -82,7 +82,7 @@ export class MutableNodeIndex {
       namesInQuery: node.keys,
       locked: false,
       grabs: new SSet(),
-      source: node.source.databaseId,
+      source: node.source.nakarId,
       additionalSources: new SSet(),
     });
 

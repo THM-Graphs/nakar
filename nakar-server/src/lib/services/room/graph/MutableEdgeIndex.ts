@@ -118,7 +118,7 @@ export class MutableEdgeIndex {
         relationship.relationship.properties,
       ),
       namesInQuery: relationship.keys,
-      source: relationship.source.databaseId,
+      source: relationship.source.nakarId,
     });
 
     this.add(mutableEdge);
