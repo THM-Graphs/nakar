@@ -303,6 +303,34 @@ paths:
         "200":
           description: "OK"
 
+  /room/{id}/actions/focus-nodes:
+    post:
+      tags:
+        - Room Actions
+      operationId: postRoomActionFocusNodes
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nodes:
+                  type: array
+                  items:
+                    type: string
+              required:
+                - nodes
+      responses:
+        "200":
+          description: "OK"
+
   /system/version:
     get:
       tags:

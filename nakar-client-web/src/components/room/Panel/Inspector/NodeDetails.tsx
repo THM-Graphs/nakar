@@ -3,6 +3,7 @@ import {
   Node,
   postRoomActionDeleteElements,
   postRoomActionExpandNodes,
+  postRoomActionFocusNodes,
   postRoomActionUnlockNodes,
 } from "../../../../../src-gen";
 import { DetailPane } from "./DetailPane.tsx";
@@ -30,6 +31,21 @@ export function NodeDetails(props: {
           action: async () => {
             resultOrThrow(
               await postRoomActionExpandNodes({
+                path: {
+                  id: props.roomContext.initialRoomData.id,
+                },
+                body: { nodes: [props.node.id] },
+              }),
+            );
+          },
+        },
+        {
+          title: "Focus",
+          icon: "binoculars",
+          variant: "primary",
+          action: async () => {
+            resultOrThrow(
+              await postRoomActionFocusNodes({
                 path: {
                   id: props.roomContext.initialRoomData.id,
                 },

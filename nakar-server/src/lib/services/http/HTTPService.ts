@@ -444,6 +444,23 @@ export class HTTPService implements ApplicationService {
         });
       }),
     );
+
+    this._app.post(
+      '/room/:id/actions/focus-nodes',
+      this._handle(async (req: Request): Promise<void> => {
+        const room: GetRoomDBDTO = await this._assertRoom(req);
+
+        type Body =
+          operations['postRoomActionFocusNodes']['requestBody']['content']['application/json'];
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+        const requestBody: Body = req.body as Body;
+
+        await this._roomService.focusNodes({
+          roomId: room.documentId,
+          nodeIds: requestBody.nodes,
+        });
+      }),
+    );
   }
 
   private _handle<T>(

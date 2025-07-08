@@ -368,6 +368,42 @@ export class RoomService implements ApplicationService {
     );
   }
 
+  public async focusNodes(params: {
+    roomId: string;
+    nodeIds: readonly string[];
+  }): Promise<void> {
+    const graph: MutableGraph = this.getGraph(params.roomId);
+
+    await this._runWithRoomLock(params.roomId, 'Focus nodes', (): void => {
+      const result: ExpandNodesResult = {
+        nodesAddedCount: 0,
+        edgeAddedCount: 0,
+      };
+      graph.nodes.nodes
+        .filter(
+          (node: MutableNode): boolean => !params.nodeIds.includes(node.id),
+        )
+        .forEach((node: MutableNode): void => {
+          graph.nodes.remove(node);
+          result.nodesAddedCount -= 1;
+        });
+      const edgesRemovedCount: number = graph.removeDanglingEdges(this._logger);
+      result.edgeAddedCount -= edgesRemovedCount;
+
+      this._sendActionToWorker(params.roomId, {
+        type: 'WTActionSetGraph',
+        graph: graph.toPhysicalGraph(this._logger),
+      });
+      this._onEvent.next({
+        type: 'RoomServiceEventGraphElementsChanged',
+        graph: graph,
+        roomId: params.roomId,
+        nodesAdded: result.nodesAddedCount,
+        edgesAdded: result.edgeAddedCount,
+      } satisfies RoomServiceEventGraphElementsChanged);
+    });
+  }
+
   public async deleteElements(params: {
     roomId: string;
     nodeIds: readonly string[];

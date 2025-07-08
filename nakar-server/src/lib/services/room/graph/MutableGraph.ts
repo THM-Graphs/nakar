@@ -12,6 +12,7 @@ import { FinalGraphDisplayConfiguration } from '../scenario-pipeline/display-con
 import { PhysicalGraph } from '../../../tools/physics/physical-graph/PhysicalGraph';
 import { PhysicalNode } from '../../../tools/physics/physical-graph/PhysicalNode';
 import { PhysicalEdge } from '../../../tools/physics/physical-graph/PhysicalEdge';
+import { bool } from 'yup';
 
 export class MutableGraph {
   // eslint-disable-next-line @typescript-eslint/typedef
@@ -142,7 +143,8 @@ export class MutableGraph {
     };
   }
 
-  public removeDanglingEdges(logger?: LoggerService): void {
+  public removeDanglingEdges(logger?: LoggerService): number {
+    let edgesRemoved: number = 0;
     for (const edge of this.edges.edges) {
       const isDangling: boolean = edge.isDangling(this);
 
@@ -151,9 +153,13 @@ export class MutableGraph {
           this,
           `Relationship ${edge.type} (${edge.startNodeId} -> ${edge.endNodeId}) is dangling and will be removed.`,
         );
-        this.edges.remove(edge);
+        const didRemove: boolean = this.edges.remove(edge);
+        if (didRemove) {
+          edgesRemoved += 1;
+        }
       }
     }
+    return edgesRemoved;
   }
 
   public toPhysicalGraph(logger: LoggerService): PhysicalGraph {

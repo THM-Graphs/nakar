@@ -472,6 +472,19 @@ export type PostRoomActionUnlockNodesResponse = (unknown);
 
 export type PostRoomActionUnlockNodesError = unknown;
 
+export type PostRoomActionFocusNodesData = {
+    body: {
+        nodes: Array<(string)>;
+    };
+    path: {
+        id: string;
+    };
+};
+
+export type PostRoomActionFocusNodesResponse = (unknown);
+
+export type PostRoomActionFocusNodesError = unknown;
+
 export type GetVersionResponse = (Version);
 
 export type GetVersionError = unknown;
