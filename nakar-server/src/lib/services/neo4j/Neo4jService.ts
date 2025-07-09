@@ -135,8 +135,8 @@ export class Neo4jService implements ApplicationService {
         `MATCH (a)-[additionalRelationship]-(b)
         WHERE elementId(a) IN $nodesIds
         AND (type(additionalRelationship) in $relationships OR ANY(label IN labels(b) WHERE label IN $labels))
-        LIMIT ${Neo4jService.maximalElements.toString()}
-        RETURN a, additionalRelationship, b;`,
+        RETURN a, additionalRelationship, b
+        LIMIT ${Neo4jService.maximalElements.toString()};`,
         {
           nodesIds: nodesIds,
           relationships: limit.relationships,
@@ -147,7 +147,7 @@ export class Neo4jService implements ApplicationService {
     } else {
       return await this.executeQuery(
         databaseInfo,
-        `MATCH (a)-[additionalRelationship]-(b) WHERE elementId(a) IN $nodesIds LIMIT ${(Neo4jService.maximalElements + 1).toString()} RETURN a, additionalRelationship, b;`,
+        `MATCH (a)-[additionalRelationship]-(b) WHERE elementId(a) IN $nodesIds RETURN a, additionalRelationship, b LIMIT ${(Neo4jService.maximalElements + 1).toString()};`,
         {
           nodesIds: nodesIds,
         },
