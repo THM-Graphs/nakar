@@ -30,9 +30,8 @@ export function PropertyDisplay(props: {
         {props.properties.map((property) => (
           <tr key={property.slug}>
             <td
-              className={
-                "small user-select-text bg-body-tertiary pb-0 pt-0 align-middle"
-              }
+              className={"small user-select-text bg-body-tertiary"}
+              style={{ verticalAlign: "top" }}
             >
               {property.slug}
             </td>
@@ -46,12 +45,13 @@ export function PropertyDisplay(props: {
                 className={"align-items-baseline"}
               >
                 <ClipboardButton
+                  size={"sm"}
                   className={"me-1 align-self-baseline p-1"}
                   text={JSON.stringify(property.value)}
                 ></ClipboardButton>
                 <span
                   className={
-                    "font-monospace user-select-text align-self-center"
+                    "font-monospace user-select-text align-self-center pe-2"
                   }
                 >
                   {JSON.stringify(property.value)}

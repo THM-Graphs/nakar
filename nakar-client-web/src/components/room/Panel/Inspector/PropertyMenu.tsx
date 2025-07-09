@@ -83,6 +83,10 @@ export function PropertyMenu(props: {
     ),
   );
 
+  if (scenariosAndGroups.length === 0) {
+    return null;
+  }
+
   return (
     <>
       <Dropdown className={"align-items-stretch d-flex"}>

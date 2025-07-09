@@ -4,7 +4,11 @@ import { useClipboard } from "../../lib/clipboard/useClipboard.ts";
 import { NavbarButton } from "../shared/NavbarButton.tsx";
 import clsx from "clsx";
 
-export function ClipboardButton(props: { text: string; className?: string }) {
+export function ClipboardButton(props: {
+  text: string;
+  className?: string;
+  size?: "sm";
+}) {
   const [copied, setCopied] = useState(false);
   const [isClipboardEnabled, setClipboard] = useClipboard();
 
@@ -23,6 +27,7 @@ export function ClipboardButton(props: { text: string; className?: string }) {
         className={clsx(props.className)}
         style={{ zIndex: 1 }}
         icon={copied ? "check" : "copy"}
+        size={props.size}
         onClick={() => {
           (async () => {
             if (!isClipboardEnabled) {
