@@ -6,7 +6,6 @@ import {
   WSEventSetNodeLocks,
 } from "../../../src-gen";
 import * as d3 from "d3";
-import { adjustColor } from "../color/colorShade.ts";
 import { getBackgroundColor } from "../color/getBackgroundColor.ts";
 import { getTextColor } from "../color/getTextColor.ts";
 import { UserTheme } from "../theme/UserTheme.ts";
@@ -14,8 +13,10 @@ import { Observable, Subject, throttleTime } from "rxjs";
 import { D3RendererState } from "./D3RendererState.ts";
 import { D3Calculator } from "./D3Calculator.ts";
 import { ZoomBehavior } from "d3";
+import { adjustColor } from "../color/colorShade.ts";
 
 const fps = 30;
+const strokeWidth: number = 3;
 
 export class D3Renderer {
   private graphState: D3RendererState;
@@ -61,7 +62,7 @@ export class D3Renderer {
     SVGGElement,
     null
   > | null;
-  private linkSelection: d3.Selection<
+  private linkPathSelection: d3.Selection<
     SVGPathElement,
     D3Link,
     SVGGElement,
@@ -93,7 +94,7 @@ export class D3Renderer {
     this.zoomBehaviour = null;
     this.nodeSelection = null;
     this.linkLabelSelection = null;
-    this.linkSelection = null;
+    this.linkPathSelection = null;
     this.nodeCircle = null;
 
     this.smoothedPositionDirty = true;
@@ -187,17 +188,20 @@ export class D3Renderer {
       .zoom<SVGSVGElement, null>()
       .on("zoom", (event: d3.D3ZoomEvent<SVGSVGElement, null>) => {
         this.zoomContainer?.attr("transform", event.transform.toString());
+        this._optimizePerfoamcne();
       });
     svg.call(zoomBehaviour);
     this.zoomBehaviour = zoomBehaviour;
 
-    this.linkSelection = this.zoomContainer
+    this.linkPathSelection = this.zoomContainer
       .append("g")
       .attr("class", "links")
       .selectAll("line")
       .data(d3RendererState.links)
       .enter()
       .append("path")
+      .attr("data-link-id", (l) => l.id)
+      .style("cursor", "pointer")
       .attr("fill", "none")
       .attr("stroke", this.theme == "dark" ? "#ffffff" : "#000000")
       .attr("stroke-width", (d) => d.width)
@@ -205,11 +209,13 @@ export class D3Renderer {
 
     this.linkLabelSelection = this.zoomContainer
       .append("g")
+      .style("pointer-events", "none")
       .attr("class", "link-labels")
       .selectAll("text")
       .data(d3RendererState.links)
       .enter()
-      .append("g");
+      .append("g")
+      .attr("data-link-id", (l) => l.id);
 
     this.linkLabelSelection
       .append("foreignObject")
@@ -230,6 +236,7 @@ export class D3Renderer {
       .append("xhtml:span")
       .attr("style", () => {
         return `
+        pointer-events: auto;
         font-weight: bold;
         color: ${this.theme == "dark" ? "#000" : "#fff"};
         font-size: 10px;
@@ -245,9 +252,34 @@ export class D3Renderer {
           : d.type,
       );
 
-    this.linkLabelSelection.on("click", (event: PointerEvent, edge: D3Link) => {
-      this.$onDisplayLinkData.next(edge);
-    });
+    this.linkLabelSelection
+      .select("foreignObject")
+      .select("div")
+      .select("span")
+      .on("mouseover", (e: MouseEvent) => {
+        const el = d3.select(e.currentTarget as SVGGElement);
+        el.style("background-color", "#888");
+      })
+      .on("mouseout", (e: MouseEvent) => {
+        const el = d3.select(e.currentTarget as SVGGElement);
+        el.style("background-color", this.theme == "dark" ? "#fff" : "#000");
+      })
+      .on("click", (event: PointerEvent, edge: D3Link) => {
+        this.$onDisplayLinkData.next(edge);
+      });
+
+    this.linkPathSelection
+      .on("mouseover", (e: MouseEvent) => {
+        const el = d3.select(e.currentTarget as SVGGElement);
+        el.attr("stroke", "#888");
+      })
+      .on("mouseout", (e: MouseEvent) => {
+        const el = d3.select(e.currentTarget as SVGGElement);
+        el.attr("stroke", this.theme == "dark" ? "#ffffff" : "#000000");
+      })
+      .on("click", (event: PointerEvent, edge: D3Link) => {
+        this.$onDisplayLinkData.next(edge);
+      });
 
     this.nodeSelection = this.zoomContainer
       .append("g")
@@ -258,15 +290,53 @@ export class D3Renderer {
       .append("g")
       .attr("style", "cursor: pointer;");
 
+    const bgColorsOfNode = (d: D3Node): string[] => {
+      if (d.customBackgroundColor) {
+        return [d.customBackgroundColor];
+      } else {
+        const colors: (string | null)[] = d.labels.map(
+          (dlabel: string): string | null => {
+            return getBackgroundColor(
+              this.graphState.originalGraphElements?.labels.find(
+                (l) => l.label === dlabel,
+              )?.color ?? null,
+            );
+          },
+        );
+        return colors.reduce<string[]>((a, n) => (n ? [...a, n] : a), []);
+      }
+    };
+
+    this.nodeSelection
+      .append("defs")
+      .append("linearGradient")
+      .attr("id", (n) => `gradient_${n.id}`)
+      .html((n) => {
+        let buffer: string = "";
+        const colors = bgColorsOfNode(n);
+        const stepSize = colors.length > 1 ? 100 / (colors.length - 1) : 0;
+        for (let i = 0; i < colors.length; i += 1) {
+          buffer += `<stop offset="${(i * stepSize).toString()}%" stop-color="${colors[i]}"></stop>`;
+        }
+        return buffer;
+      });
+
     this.nodeSelection
       .on("mouseover", (e: MouseEvent) => {
-        const el = d3.select(e.currentTarget as SVGGElement).select("circle");
-        el.attr("data-original-color", el.attr("fill"));
-        el.attr("fill", adjustColor(el.attr("fill"), -0.5));
+        const el = d3
+          .select(e.currentTarget as SVGGElement)
+          .selectChildren(`.hover`);
+        el.style("opacity", 0.5);
+        d3.select(e.currentTarget as SVGGElement)
+          .select("foreignObject")
+          .attr("hidden", null);
       })
       .on("mouseout", (e: MouseEvent) => {
-        const el = d3.select(e.currentTarget as SVGGElement).select("circle");
-        el.attr("fill", el.attr("data-original-color"));
+        const el = d3
+          .select(e.currentTarget as SVGGElement)
+          .selectChildren(`.hover`);
+        el.style("opacity", 0);
+        this._optimizePerfoamcne();
       })
       .on("click", (event: PointerEvent, node: D3Node) => {
         this.$onDisplayNodeData.next(node);
@@ -275,16 +345,21 @@ export class D3Renderer {
     this.nodeCircle = this.nodeSelection
       .append("circle")
       .attr("r", (d) => d.radius)
-      .attr(
-        "fill",
-        (d) =>
-          d.customBackgroundColor ??
-          getBackgroundColor(
-            this.graphState.originalGraphElements?.labels.find(
-              (l) => l.label === d.labels[0],
-            )?.color ?? null,
-          ),
-      );
+      .attr("fill", (d) => {
+        const colors = bgColorsOfNode(d);
+        if (colors.length > 1) {
+          return `url(#gradient_${d.id})`;
+        } else {
+          return colors[0];
+        }
+      });
+
+    this.nodeSelection
+      .append("circle")
+      .attr("r", (n) => n.radius - strokeWidth / 2)
+      .attr("class", () => `hover`)
+      .style("opacity", 0)
+      .attr("fill", () => "#000000");
 
     this.nodeSelection
       .append("foreignObject")
@@ -318,7 +393,14 @@ export class D3Renderer {
       .attr("width", (d) => d.radius * 2)
       .attr("height", (d) => d.radius * 2)
       .append("xhtml:span")
-      .text((d) => d.title);
+      .text((d) => {
+        const titleCut = 50;
+        if (d.title.length > titleCut) {
+          return d.title.substring(0, titleCut) + "...";
+        } else {
+          return d.title;
+        }
+      });
 
     this.nodeSelection.call(
       d3
@@ -389,7 +471,7 @@ export class D3Renderer {
   }
 
   public applyPropertiesToSVG(): void {
-    this.linkSelection?.attr("d", (d) => this.calculator.curvedPath(d));
+    this.linkPathSelection?.attr("d", (d) => this.calculator.curvedPath(d));
     this.linkLabelSelection?.attr("transform", (d: D3Link) => {
       const c = this.calculator.curvePoints(d);
       return `translate(${c.center.x.toString()},${c.center.y.toString()})rotate(${c.angle.toString()})`;
@@ -400,7 +482,9 @@ export class D3Renderer {
     );
     this.nodeCircle
       ?.attr("stroke-width", (n: D3Node) => {
-        return n.locked ? "6px" : "3px";
+        return n.locked
+          ? `${(strokeWidth * 2).toString()}px`
+          : `${strokeWidth.toString()}px`;
       })
       .attr("stroke-dasharray", (n: D3Node) => {
         return n.locked ? "10,5" : null;
@@ -508,5 +592,18 @@ export class D3Renderer {
     }
 
     return [output, newVelocity];
+  }
+
+  private _optimizePerfoamcne() {
+    const performanceOpimazations =
+      this.getZoom() < 0.3 &&
+      this.graphState.nodes.length + this.graphState.links.length > 500;
+    if (performanceOpimazations) {
+      this.linkLabelSelection?.attr("hidden", true);
+      this.nodeSelection?.select("foreignObject").attr("hidden", true);
+    } else {
+      this.linkLabelSelection?.attr("hidden", null);
+      this.nodeSelection?.select("foreignObject").attr("hidden", null);
+    }
   }
 }

@@ -1,7 +1,7 @@
 export function adjustColor(hex: string, factor: number): string {
   // Sicherstellen, dass der Hex-Wert mit # beginnt und 6 Zeichen lang ist
   if (!/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(hex)) {
-    throw new Error("Ungültiger Hex-Farbwert");
+    throw new Error(`Ungültiger Hex-Farbwert: ${hex}`);
   }
 
   // Dreistelligen Hex-Wert in einen sechsstelligen umwandeln
