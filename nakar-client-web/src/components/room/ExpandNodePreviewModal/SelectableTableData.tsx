@@ -66,25 +66,26 @@ export function SelectableTableData(props: {
             key={element.identificator}
             direction={"horizontal"}
             gap={2}
-            className={"small bg-body pt-1 pb-1"}
+            className={"small pt-1 pb-1 bg-body-hover"}
+            onClick={() => {
+              props.onSelectionChange(
+                element,
+                !props.selections.has(element.identificator),
+              );
+            }}
           >
             <FormCheck
               className={"ps-2"}
               checked={props.selections.has(element.identificator)}
-              onChange={(event) => {
-                props.onSelectionChange(element, event.target.checked);
-              }}
             ></FormCheck>
             <span
-              className={
-                "user-select-text font-monospace text-break flex-grow-1 flex-shrink-1"
-              }
+              className={"font-monospace text-break flex-grow-1 flex-shrink-1"}
             >
               {element.identificator}
             </span>
             <span
               className={
-                "user-select-text pe-2 text-end font-monospace flex-grow-0 flex-shrink-0 text-end"
+                "pe-2 text-end font-monospace flex-grow-0 flex-shrink-0 text-end"
               }
             >
               {element.count}
