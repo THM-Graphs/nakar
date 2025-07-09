@@ -39,19 +39,6 @@ export function CanvasToolbar(props: {
       )}
       <Stack direction={"horizontal"} className={"flex-wrap"}>
         <NavbarButton
-          disabled={tabs.selected != "graph"}
-          icon={"tropical-storm"}
-          title={"Layout Graph"}
-          className={""}
-          onClick={async () => {
-            resultOrThrow(
-              await postRoomActionRelayout({
-                path: { id: props.roomContext.initialRoomData.id },
-              }),
-            );
-          }}
-        ></NavbarButton>
-        <NavbarButton
           disabled={graph.metaData.scenario == null || uiLocked}
           icon={"arrow-clockwise"}
           title={"Rerun Scenario"}

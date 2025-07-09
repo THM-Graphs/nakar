@@ -9,6 +9,11 @@ import { RoomContext } from "../../../pages/Room.tsx";
 import { NavbarButton } from "../../shared/NavbarButton.tsx";
 import { useEffect, useState } from "react";
 import { D3RendererEvents } from "../../../lib/d3/D3RendererEvents.ts";
+import { resultOrThrow } from "../../../lib/data/resultOrThrow.ts";
+import {
+  postRoomActionRelayout,
+  postRoomActionReloadScenario,
+} from "../../../../src-gen";
 
 export function Canvas(props: {
   context: AppContext;
@@ -34,27 +39,42 @@ export function Canvas(props: {
         context={props.context}
         roomContext={props.roomContext}
       ></CanvasToolbar>
-      <Stack direction={"horizontal"}>
-        {tabs.selected == "graph" ? <Labels></Labels> : <DataTable></DataTable>}
-        <div className={"flex-grow-1"}></div>
-        <Stack className={"flex-grow-0"}>
-          <NavbarButton
-            icon={"crosshair"}
-            style={{ zIndex: 1 }}
-            onClick={() => rendererEvents?.onCenter.next()}
-          ></NavbarButton>
-          <NavbarButton
-            icon={"zoom-in"}
-            style={{ zIndex: 1 }}
-            onClick={() => rendererEvents?.onZoomIn.next()}
-          ></NavbarButton>
-          <NavbarButton
-            icon={"zoom-out"}
-            style={{ zIndex: 1 }}
-            onClick={() => rendererEvents?.onZoomOut.next()}
-          ></NavbarButton>
+      {tabs.selected == "graph" ? (
+        <Stack direction={"horizontal"} className={"justify-content-between"}>
+          <Labels></Labels>
+          <Stack className={"flex-grow-0"}>
+            <NavbarButton
+              icon={"tropical-storm"}
+              style={{ zIndex: 1 }}
+              onClick={async () => {
+                resultOrThrow(
+                  await postRoomActionRelayout({
+                    path: { id: props.roomContext.initialRoomData.id },
+                  }),
+                );
+              }}
+            ></NavbarButton>
+            <NavbarButton
+              icon={"crosshair"}
+              style={{ zIndex: 1 }}
+              onClick={() => rendererEvents?.onCenter.next()}
+            ></NavbarButton>
+            <NavbarButton
+              icon={"zoom-in"}
+              style={{ zIndex: 1 }}
+              onClick={() => rendererEvents?.onZoomIn.next()}
+            ></NavbarButton>
+            <NavbarButton
+              icon={"zoom-out"}
+              style={{ zIndex: 1 }}
+              onClick={() => rendererEvents?.onZoomOut.next()}
+            ></NavbarButton>
+          </Stack>
         </Stack>
-      </Stack>
+      ) : (
+        <DataTable></DataTable>
+      )}
+      <div className={"flex-grow-1"}></div>
       {rendererEvents && (
         <GraphRendererD3
           context={props.context}
