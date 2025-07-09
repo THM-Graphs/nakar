@@ -3,10 +3,7 @@ import { Stack } from "react-bootstrap";
 import { NavbarButton } from "../../shared/NavbarButton.tsx";
 import { useBearStore } from "../../../lib/state/useBearStore.ts";
 import { AppContext } from "../../../lib/state/AppContext.ts";
-import {
-  postRoomActionRelayout,
-  postRoomActionReloadScenario,
-} from "../../../../src-gen";
+import { postRoomActionReloadScenario } from "../../../../src-gen";
 import { RoomContext } from "../../../pages/Room.tsx";
 import { resultOrThrow } from "../../../lib/data/resultOrThrow.ts";
 
@@ -15,7 +12,6 @@ export function CanvasToolbar(props: {
   roomContext: RoomContext;
 }) {
   const graph = useBearStore((s) => s.room.scenario.graph);
-  const tabs = useBearStore((s) => s.room.canvas.tabs);
   const uiLocked = useBearStore((s) => s.room.ui.locked);
 
   return (

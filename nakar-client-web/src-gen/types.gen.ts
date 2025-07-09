@@ -377,6 +377,17 @@ export type GetRoomGraphResponse = (Graph);
 
 export type GetRoomGraphError = unknown;
 
+export type GetParameterizedScenariosOfGraphElementData = {
+    path: {
+        elementId: string;
+        roomId: string;
+    };
+};
+
+export type GetParameterizedScenariosOfGraphElementResponse = (Array<ScenarioGroup>);
+
+export type GetParameterizedScenariosOfGraphElementError = unknown;
+
 export type GetRoomGraphElementsData = {
     path: {
         id: string;

@@ -31,7 +31,7 @@ export function Canvas(props: {
 
   return (
     <Stack
-      className={"flex-grow-1  flex-shrink-1 align-items-stretch"}
+      className={"flex-grow-1 flex-shrink-1 align-items-stretch"}
       direction={"vertical"}
       style={{ height: "100%", width: "100px" }}
     >
@@ -42,9 +42,16 @@ export function Canvas(props: {
       {tabs.selected == "graph" ? (
         <Stack direction={"horizontal"} className={"justify-content-between"}>
           <Labels></Labels>
-          <Stack className={"flex-grow-0"}>
+          <Stack
+            className={
+              "flex-grow-0 flex-shrink-1 justify-content-end flex-wrap"
+            }
+            direction={"horizontal"}
+            gap={0}
+          >
             <NavbarButton
               icon={"tropical-storm"}
+              title={"Layout"}
               style={{ zIndex: 1 }}
               onClick={async () => {
                 resultOrThrow(
@@ -53,28 +60,41 @@ export function Canvas(props: {
                   }),
                 );
               }}
+              className={"bg-body-hover"}
             ></NavbarButton>
             <NavbarButton
               icon={"crosshair"}
+              title={"Center"}
               style={{ zIndex: 1 }}
               onClick={() => rendererEvents?.onCenter.next()}
+              className={"bg-body-hover"}
+            ></NavbarButton>
+            <NavbarButton
+              icon={"aspect-ratio"}
+              title={"Overview"}
+              style={{ zIndex: 1 }}
+              onClick={() => rendererEvents?.onZoomOutOverview.next()}
+              className={"bg-body-hover"}
             ></NavbarButton>
             <NavbarButton
               icon={"zoom-in"}
+              title={"Zoom in"}
               style={{ zIndex: 1 }}
               onClick={() => rendererEvents?.onZoomIn.next()}
+              className={"bg-body-hover"}
             ></NavbarButton>
             <NavbarButton
               icon={"zoom-out"}
+              title={"Zoom out"}
               style={{ zIndex: 1 }}
               onClick={() => rendererEvents?.onZoomOut.next()}
+              className={"bg-body-hover"}
             ></NavbarButton>
           </Stack>
         </Stack>
       ) : (
         <DataTable></DataTable>
       )}
-      <div className={"flex-grow-1"}></div>
       {rendererEvents && (
         <GraphRendererD3
           context={props.context}

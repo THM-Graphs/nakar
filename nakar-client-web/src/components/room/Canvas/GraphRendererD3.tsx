@@ -83,6 +83,9 @@ export function GraphRendererD3(props: {
       props.events.onCenter.subscribe(() => {
         _graphRenderer.center();
       }),
+      props.events.onZoomOutOverview.subscribe(() => {
+        _graphRenderer.zoomOutOverview();
+      }),
     ];
 
     let animationActive: boolean = true;

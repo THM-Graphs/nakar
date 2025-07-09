@@ -75,6 +75,32 @@ paths:
               schema:
                 $ref: "#/components/schemas/Graph"
 
+  /room/{roomId}/graph/element/{elementId}/parameterized-scenarios:
+    get:
+      tags:
+        - Room
+      operationId: getParameterizedScenariosOfGraphElement
+      parameters:
+        - name: roomId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: elementId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ScenarioGroup"
+
   /room/{id}/graph/elements:
     get:
       tags:

@@ -17,6 +17,7 @@ import { adjustColor } from "../color/colorShade.ts";
 
 const fps = 30;
 const strokeWidth: number = 3;
+const performanceZoomThreshhold = 0.3;
 
 export class D3Renderer {
   private graphState: D3RendererState;
@@ -507,6 +508,10 @@ export class D3Renderer {
     this.transform(0, 0, 1);
   }
 
+  public zoomOutOverview(): void {
+    this.zoomTo(performanceZoomThreshhold);
+  }
+
   public zoomTo(zoom: number): void {
     const svgContainerNode = this.svgContainer?.node();
     if (svgContainerNode == null) {
@@ -597,7 +602,7 @@ export class D3Renderer {
 
   private _optimizePerformance() {
     const performanceOpimazations =
-      this.getZoom() < 0.3 &&
+      this.getZoom() <= performanceZoomThreshhold &&
       this.graphState.nodes.length + this.graphState.links.length > 500;
     if (performanceOpimazations) {
       this.linkLabelSelection?.attr("hidden", true);

@@ -28,6 +28,7 @@ export function NodeDetails(props: {
           title: "Expand",
           icon: "zoom-in",
           variant: "primary",
+          disabled: false,
           action: async () => {
             resultOrThrow(
               await postRoomActionExpandNode({
@@ -40,24 +41,10 @@ export function NodeDetails(props: {
           },
         },
         {
-          title: "Focus",
-          icon: "binoculars",
-          variant: "primary",
-          action: async () => {
-            resultOrThrow(
-              await postRoomActionFocusNodes({
-                path: {
-                  id: props.roomContext.initialRoomData.id,
-                },
-                body: { nodes: [props.node.id] },
-              }),
-            );
-          },
-        },
-        {
           title: "Remove",
           icon: "eye-slash",
           variant: "danger",
+          disabled: false,
           action: async () => {
             resultOrThrow(
               await postRoomActionDeleteElements({
@@ -74,25 +61,38 @@ export function NodeDetails(props: {
             );
           },
         },
-        ...(props.node.locked
-          ? [
-              {
-                title: "Unlock",
-                icon: "unlock",
-                variant: "primary",
-                action: async () => {
-                  resultOrThrow(
-                    await postRoomActionUnlockNodes({
-                      path: { id: props.roomContext.initialRoomData.id },
-                      body: {
-                        nodes: [props.node.id],
-                      },
-                    }),
-                  );
+        {
+          title: "Focus",
+          icon: "binoculars",
+          variant: "primary",
+          disabled: false,
+          action: async () => {
+            resultOrThrow(
+              await postRoomActionFocusNodes({
+                path: {
+                  id: props.roomContext.initialRoomData.id,
                 },
-              } satisfies DetailPaneAction,
-            ]
-          : []),
+                body: { nodes: [props.node.id] },
+              }),
+            );
+          },
+        },
+        {
+          title: "Unlock",
+          icon: "unlock",
+          variant: "primary",
+          disabled: !props.node.locked,
+          action: async () => {
+            resultOrThrow(
+              await postRoomActionUnlockNodes({
+                path: { id: props.roomContext.initialRoomData.id },
+                body: {
+                  nodes: [props.node.id],
+                },
+              }),
+            );
+          },
+        },
       ]}
       otherProperties={[
         {
@@ -125,7 +125,7 @@ export function NodeDetails(props: {
       subTitleElements={
         <Stack
           direction={"horizontal"}
-          className={"p-1 flex-wrap flex-shrink-0 flex-grow-0"}
+          className={"p-2 flex-wrap flex-shrink-0 flex-grow-0"}
           gap={1}
         >
           {props.node.labels.map((labelName: string) => {
@@ -147,6 +147,7 @@ export function NodeDetails(props: {
         </Stack>
       }
       roomContext={props.roomContext}
+      elementId={props.node.id}
     ></DetailPane>
   );
 }

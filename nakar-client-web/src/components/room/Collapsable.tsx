@@ -7,12 +7,13 @@ export function Collapsable(props: {
   children: ReactNode;
   inset?: number;
   initialState?: boolean;
+  className?: string;
 }) {
   const [collapsed, setCollapsed] = useState<boolean>(
     props.initialState ?? true,
   );
   return (
-    <Stack>
+    <Stack className={props.className}>
       <Stack
         direction={"horizontal"}
         className={clsx(

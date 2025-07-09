@@ -68,6 +68,22 @@ export interface paths {
         readonly patch?: never;
         readonly trace?: never;
     };
+    readonly "/room/{roomId}/graph/element/{elementId}/parameterized-scenarios": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get: operations["getParameterizedScenariosOfGraphElement"];
+        readonly put?: never;
+        readonly post?: never;
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
     readonly "/room/{id}/graph/elements": {
         readonly parameters: {
             readonly query?: never;
@@ -711,6 +727,29 @@ export interface operations {
                 };
                 content: {
                     readonly "application/json": components["schemas"]["Graph"];
+                };
+            };
+        };
+    };
+    readonly getParameterizedScenariosOfGraphElement: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path: {
+                readonly roomId: string;
+                readonly elementId: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            /** @description OK */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": readonly components["schemas"]["ScenarioGroup"][];
                 };
             };
         };

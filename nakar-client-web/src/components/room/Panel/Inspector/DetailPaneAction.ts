@@ -3,4 +3,5 @@ export interface DetailPaneAction {
   icon: string;
   variant: "primary" | "danger";
   action: () => void | Promise<void>;
+  disabled: boolean;
 }

@@ -11,6 +11,7 @@ export function EdgeDetails(props: { edge: Edge; roomContext: RoomContext }) {
           title: "Remove",
           icon: "eye-slash",
           variant: "danger",
+          disabled: false,
           action: async () => {
             resultOrThrow(
               await postRoomActionDeleteElements({
@@ -69,6 +70,7 @@ export function EdgeDetails(props: { edge: Edge; roomContext: RoomContext }) {
       properties={props.edge.properties}
       title={props.edge.type}
       roomContext={props.roomContext}
+      elementId={props.edge.id}
     ></DetailPane>
   );
 }

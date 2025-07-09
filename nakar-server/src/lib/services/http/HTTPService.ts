@@ -48,6 +48,8 @@ import { MutableGraph } from '../room/graph/MutableGraph';
 import { CachingSchemaDTOFactory } from './CachingSchemaDTOFactory';
 import { SMap } from '../../tools/Map';
 import { SSet } from '../../tools/Set';
+import { MutableNode } from '../room/graph/MutableNode';
+import { MutableEdge } from '../room/graph/MutableEdge';
 
 export class HTTPService implements ApplicationService {
   private readonly _app: Application;
@@ -230,6 +232,48 @@ export class HTTPService implements ApplicationService {
           );
         const result: SchemaGraph =
           await cachedGraphFactory.createSchemaGraph(graph);
+        return result;
+      }),
+    );
+
+    this._app.get(
+      '/room/:id/graph/element/:elementId/parameterized-scenarios',
+      this._handle(async (req: Request): Promise<SchemaScenarioGroup[]> => {
+        const room: GetRoomDBDTO = await this._assertRoom(req);
+        const elementId: string = this._getPathParameter(req, 'elementId');
+        const graph: MutableGraph = this._roomService.getGraph(room.documentId);
+
+        const element: MutableNode | MutableEdge | null =
+          graph.nodes.get(elementId) ?? graph.edges.get(elementId);
+        if (!element) {
+          throw new NotFound(
+            `Element with id ${elementId} not found in room ${room.documentId}`,
+          );
+        }
+        const databaseId: string = element.source;
+
+        const result: SchemaScenarioGroup[] = [];
+
+        const scenarioGroups =
+          await this._databaseService.getScenarioGroups(databaseId);
+        for (const scenarioGroup of scenarioGroups) {
+          const scenarios = await this._databaseService.getScenarios(
+            scenarioGroup.documentId,
+          );
+          const parametrizedScenarios = scenarios.filter(
+            (s) => s.parameters.length > 0,
+          );
+          if (parametrizedScenarios.length > 0) {
+            const groupdDto = this._schemaDTOFactory.createSchemaScenarioGroup(
+              scenarioGroup,
+              parametrizedScenarios.map((s) =>
+                this._schemaDTOFactory.createSchemaScenario(s),
+              ),
+            );
+            result.push(groupdDto);
+          }
+        }
+
         return result;
       }),
     );
