@@ -188,7 +188,7 @@ export class D3Renderer {
       .zoom<SVGSVGElement, null>()
       .on("zoom", (event: d3.D3ZoomEvent<SVGSVGElement, null>) => {
         this.zoomContainer?.attr("transform", event.transform.toString());
-        this._optimizePerfoamcne();
+        this._optimizePerformance();
       });
     svg.call(zoomBehaviour);
     this.zoomBehaviour = zoomBehaviour;
@@ -336,7 +336,7 @@ export class D3Renderer {
           .select(e.currentTarget as SVGGElement)
           .selectChildren(`.hover`);
         el.style("opacity", 0);
-        this._optimizePerfoamcne();
+        this._optimizePerformance();
       })
       .on("click", (event: PointerEvent, node: D3Node) => {
         this.$onDisplayNodeData.next(node);
@@ -435,6 +435,7 @@ export class D3Renderer {
     );
 
     this.applyPropertiesToSVG();
+    this._optimizePerformance();
   }
 
   public onAnimationTick(deltaTime: number): void {
@@ -594,7 +595,7 @@ export class D3Renderer {
     return [output, newVelocity];
   }
 
-  private _optimizePerfoamcne() {
+  private _optimizePerformance() {
     const performanceOpimazations =
       this.getZoom() < 0.3 &&
       this.graphState.nodes.length + this.graphState.links.length > 500;
