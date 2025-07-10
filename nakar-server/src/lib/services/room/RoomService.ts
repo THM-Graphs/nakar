@@ -2,12 +2,10 @@ import { DatabaseService } from '../database/DatabaseService';
 import { Observable, Subject } from 'rxjs';
 import { MutableGraph } from './graph/MutableGraph';
 import { GetRoomDBDTO } from '../database/dto/GetRoomDBDTO';
-import { ScenarioPipeline } from './scenario-pipeline/ScenarioPipeline';
 import { RSPhysicalNode } from './RSPhysicalNode';
 import { GetScenarioDBDTO } from '../database/dto/GetScenarioDBDTO';
 import { LoggerService } from '../logger/LoggerService';
 import { ProfilerService } from '../profiler/ProfilerService';
-import { ProfilerTask } from '../profiler/ProfilerTask';
 import { ApplicationService } from '../../application/ApplicationService';
 import installHandlebarHelpers from 'handlebars-helpers';
 import { Worker } from 'node:worker_threads';
@@ -19,7 +17,6 @@ import { WTEvent } from '../room-instance/worker-events/WTEvent';
 import { match } from 'ts-pattern';
 import { WTEventPhysicsUpdate } from '../room-instance/worker-events/WTEventPhysicsUpdate';
 import { Neo4jService } from '../neo4j/Neo4jService';
-import { ScenarioPipelineResult } from './scenario-pipeline/ScenarioPipelineResult';
 import { MutableNode } from './graph/MutableNode';
 import { GetDatabaseDBDTO } from '../database/dto/GetDatabaseDBDTO';
 import { Neo4jDatabaseInfo } from '../neo4j/Neo4jDatabaseInfo';
@@ -39,6 +36,11 @@ import { RoomServiceEventKick } from './events/RoomServiceEventKick';
 import { ToManyElementsError } from '../neo4j/ToManyElementsError';
 import { ExpandNodePreview } from '../neo4j/expand-node-preview/ExpandNodePreview';
 import { RoomServiceEventPresentExpandNodePreview } from './events/RoomServiceEventPresentExpandNodePreview';
+import { NotFound } from 'http-errors';
+import { AdditionalQueryDBDTO } from '../database/dto/AdditionalQueryDBDTO';
+import { MutableEdgeIndex } from './graph/MutableEdgeIndex';
+import { Range } from '../../tools/Range';
+import { GraphDisplayConfigurationDBDTO } from '../database/dto/GraphDisplayConfigurationDBDTO';
 
 export class RoomService implements ApplicationService {
   private readonly _workers: SMap<string, Worker>;
@@ -191,56 +193,151 @@ export class RoomService implements ApplicationService {
       params.roomId,
       'Loading scenario',
       async (): Promise<GetScenarioDBDTO> => {
-        const scenarioPipeline: ScenarioPipeline = new ScenarioPipeline(
-          this._database,
-          this._logger,
-          this._profiler,
-          this._neo4j,
+        const scenario: GetScenarioDBDTO | null =
+          await this._database.getScenario(params.scenarioId);
+        if (scenario == null) {
+          throw new NotFound('Scenario not found.');
+        }
+        if (scenario.query == null) {
+          throw new NotFound('The scenario has no query.');
+        }
+        if (scenario.scenarioGroup?.database == null) {
+          throw new NotFound(
+            'There is no database configuration on the scenario.',
+          );
+        }
+        const displayConfiguration: FinalGraphDisplayConfiguration =
+          await this._database.getGraphDisplayConfiguration(
+            scenario.documentId,
+          );
+        const credentials: Neo4jDatabaseInfo = Neo4jDatabaseInfo.parse(
+          scenario.scenarioGroup.database,
         );
 
-        const task: ProfilerTask = this._profiler.profile(
-          this,
-          'Scenario Pipeline',
-        );
-        const result: ScenarioPipelineResult = await scenarioPipeline.run(
-          params.scenarioId,
+        const graphElements: Neo4jGraphElements =
+          await this._neo4j.executeQuery(
+            credentials,
+            scenario.query,
+            params.arguments.toRecord(),
+            true,
+          );
+        const graph: MutableGraph = MutableGraph.fromInitialScenario(
+          scenario,
+          displayConfiguration,
           params.arguments,
-          (step: string, progress: number): void => {
-            this._onEvent.next({
-              type: 'RoomServiceEventProgressChanged',
-              roomId: params.roomId,
-              message: step,
-              progress: progress,
-            } satisfies RoomServiceEvent);
-          },
         );
-        task.finish();
+        graph.nodes.addNeo4jNodes(graphElements.nodes);
+        graph.edges.addNeo4jEdges(graphElements.relationships);
+        graph.tableData = graphElements.tableData;
 
-        this._graphs.set(params.roomId, result.graph);
+        // --- Additional Queries
+        for (const additionalQuery of scenario.additionalQueries) {
+          if (
+            additionalQuery.mergeProperties.length !==
+            additionalQuery.originalProperties.length
+          ) {
+            this._logger.error(
+              this,
+              'Merge property length does not match original property length. This will always fail to match nodes.',
+            );
+          }
+
+          const database: GetDatabaseDBDTO | null =
+            additionalQuery.mergeDatabase;
+          if (database == null) {
+            this._logger.error(
+              this,
+              'Cannot execute addional query, because the database is not set.',
+            );
+            continue;
+          }
+
+          this._logger.debug(
+            this,
+            `Will run additional query on ${database.title ?? '[no title]'}: ${additionalQuery.mergeQuery}`,
+          );
+
+          const databaseInfo: Neo4jDatabaseInfo =
+            Neo4jDatabaseInfo.parse(database);
+          let result: Neo4jGraphElements = await this._neo4j.executeQuery(
+            databaseInfo,
+            additionalQuery.mergeQuery,
+            {},
+            true,
+          );
+          if (displayConfiguration.connectResultNodes) {
+            const nodeIds: SSet<string> = new SSet<string>(result.nodes.keys());
+            const connectResult: Neo4jGraphElements =
+              await this._neo4j.loadConnectingRelationships(
+                databaseInfo,
+                nodeIds,
+              );
+            result = result.byMergingWith(connectResult);
+          }
+
+          this._logger.debug(
+            this,
+            `Result: ${result.nodes.size.toString()} nodes, ${result.relationships.size.toString()} relationships.`,
+          );
+
+          graph.nodes.addNeo4jNodes(result.nodes);
+          graph.edges.addNeo4jEdges(result.relationships);
+
+          this._mergeNodes(graph, additionalQuery, result);
+        }
+
+        // --- Connect Nodes
+        if (displayConfiguration.connectResultNodes && graph.nodes.size > 0) {
+          await this._connectNodes(graph, credentials);
+        }
+
+        // --- Compress Relationships
+        if (
+          displayConfiguration.compressRelationships &&
+          graph.edges.size > 0
+        ) {
+          this._compressRelationships(graph, displayConfiguration);
+        }
+
+        // Layout
+        if (graph.nodes.size > 0) {
+          const physical: PhysicalGraph = graph.toPhysicalGraph(this._logger);
+          const simulation: PhysicsSimulation = new PhysicsSimulation(
+            physical,
+            this._logger,
+            this._profiler,
+          );
+
+          await simulation.run({ maxMs: graph.size * 10 });
+
+          graph.applyPhysicalGraph(physical, this._logger);
+        }
+
+        this._graphs.set(params.roomId, graph);
         this._sendActionToWorker(params.roomId, {
           type: 'WTActionSetGraph',
-          graph: result.graph.toPhysicalGraph(this._logger),
+          graph: graph.toPhysicalGraph(this._logger),
         });
         await this.saveGraph(params.roomId);
         this._onEvent.next({
           type: 'RoomServiceEventGraphMetaDataChanged',
-          metaData: result.graph.metaData,
+          metaData: graph.metaData,
           roomId: params.roomId,
         } satisfies RoomServiceEventGraphMetaDataChanged);
         this._onEvent.next({
           type: 'RoomServiceEventGraphElementsChanged',
-          graph: result.graph,
+          graph: graph,
           roomId: params.roomId,
-          nodesAdded: result.graph.nodes.size,
-          edgesAdded: result.graph.edges.size,
+          nodesAdded: graph.nodes.size,
+          edgesAdded: graph.edges.size,
         } satisfies RoomServiceEventGraphElementsChanged);
         this._onEvent.next({
           type: 'RoomServiceEventGraphTableChanged',
-          table: result.graph.tableData,
+          table: graph.tableData,
           roomId: params.roomId,
         } satisfies RoomServiceEventGraphTableChanged);
 
-        return result.scenario;
+        return scenario;
       },
     );
   }
@@ -784,5 +881,212 @@ export class RoomService implements ApplicationService {
       } satisfies RoomServiceEvent);
       throw error;
     }
+  }
+
+  private _mergeNodes(
+    graph: MutableGraph,
+    additionalQuery: AdditionalQueryDBDTO,
+    result: Neo4jGraphElements,
+  ): void {
+    const shouldMergeNodes = (
+      originalNode: MutableNode,
+      additionalNode: MutableNode,
+      config: AdditionalQueryDBDTO,
+      additionalGraph: Neo4jGraphElements,
+    ): boolean => {
+      if (!additionalGraph.nodes.has(additionalNode.id)) {
+        return false;
+      }
+
+      if (config.mergeProperties.length !== config.originalProperties.length) {
+        return false;
+      }
+
+      if (originalNode.id === additionalNode.id) {
+        return false;
+      }
+
+      if (
+        !originalNode.labels.has(config.originalLabel) ||
+        !additionalNode.labels.has(config.mergeLabel)
+      ) {
+        return false;
+      }
+
+      for (let i: number = 0; i < config.originalProperties.length; i += 1) {
+        const originalValue: unknown = originalNode.properties.properties.get(
+          config.originalProperties[i],
+        );
+        if (originalValue == null) {
+          return false;
+        }
+
+        const mergeValue: unknown = additionalNode.properties.properties.get(
+          config.mergeProperties[i],
+        );
+        if (mergeValue == null) {
+          return false;
+        }
+
+        if (originalValue !== mergeValue) {
+          return false;
+        }
+      }
+
+      return true;
+    };
+
+    const mergeNodes = (
+      originalNode: MutableNode,
+      additionalNode: MutableNode,
+    ): void => {
+      originalNode.additionalSources.add(additionalNode.source);
+
+      for (const relationship of graph.edges.getByStartNodeId(
+        additionalNode.id,
+      )) {
+        graph.edges.remove(relationship);
+        relationship.startNodeId = originalNode.id;
+        graph.edges.add(relationship);
+        this._logger.debug(
+          this,
+          `Did change startNodeId of ${relationship.id} (${relationship.title}) from ${additionalNode.id} (${additionalNode.title(graph, this._logger)}) to ${originalNode.id} (${originalNode.title(graph, this._logger)})`,
+        );
+      }
+      for (const relationship of graph.edges.getByEndNodeId(
+        additionalNode.id,
+      )) {
+        graph.edges.remove(relationship);
+        relationship.endNodeId = originalNode.id;
+        graph.edges.add(relationship);
+        this._logger.debug(
+          this,
+          `Did change endNodeId of ${relationship.id} (${relationship.title}) from ${additionalNode.id} (${additionalNode.title(graph, this._logger)}) to ${originalNode.id} (${originalNode.title(graph, this._logger)})`,
+        );
+      }
+
+      graph.nodes.remove(additionalNode);
+      this._logger.debug(
+        this,
+        `Did delete additional node after merge: ${additionalNode.id} (${additionalNode.title(graph, this._logger)})`,
+      );
+    };
+
+    for (const originalNode of graph.nodes.nodes) {
+      for (const mergeNode of graph.nodes.nodes) {
+        if (
+          shouldMergeNodes(originalNode, mergeNode, additionalQuery, result)
+        ) {
+          this._logger.debug(
+            this,
+            `Will merge nodes: ${originalNode.title(graph, this._logger)}, ${mergeNode.title(graph, this._logger)}`,
+          );
+          mergeNodes(originalNode, mergeNode);
+        }
+      }
+    }
+  }
+
+  private async _connectNodes(
+    graph: MutableGraph,
+    credentials: Neo4jDatabaseInfo,
+  ): Promise<void> {
+    const nodeIds: SSet<string> = new SSet<string>(graph.nodes.keys);
+    const result: Neo4jGraphElements =
+      await this._neo4j.loadConnectingRelationships(credentials, nodeIds);
+    graph.edges.addNeo4jEdges(result.relationships);
+  }
+
+  private _compressRelationships(
+    graph: MutableGraph,
+    displayConfiguration: FinalGraphDisplayConfiguration,
+  ): void {
+    const getFromHandledRelsCache = (
+      nodeAId: string,
+      nodeBId: string,
+      relType: string,
+    ): MutableEdge | null => {
+      return handledRelsCache.get(nodeAId)?.get(nodeBId)?.get(relType) ?? null;
+    };
+
+    const addToHandledRelsCache = (
+      nodeAId: string,
+      nodeBId: string,
+      relType: string,
+      rel: MutableEdge,
+    ): void => {
+      let subMap1: SMap<string, SMap<string, MutableEdge>> | undefined =
+        handledRelsCache.get(nodeAId);
+      if (!subMap1) {
+        subMap1 = new SMap<string, SMap<string, MutableEdge>>();
+        handledRelsCache.set(nodeAId, subMap1);
+      }
+
+      let subMap2: SMap<string, MutableEdge> | undefined = subMap1.get(nodeBId);
+      if (!subMap2) {
+        subMap2 = new SMap<string, MutableEdge>();
+        subMap1.set(nodeBId, subMap2);
+      }
+
+      subMap2.set(relType, rel);
+    };
+
+    const handledRelsCache: SMap<
+      string,
+      SMap<string, SMap<string, MutableEdge>>
+    > = new SMap<string, SMap<string, SMap<string, MutableEdge>>>();
+    const relationships: MutableEdgeIndex = new MutableEdgeIndex([]);
+    for (const edge of graph.edges.edges) {
+      const compressedRelEntry: MutableEdge | null = getFromHandledRelsCache(
+        edge.startNodeId,
+        edge.endNodeId,
+        edge.type,
+      );
+      if (compressedRelEntry == null) {
+        edge.compressedCount = 1;
+        addToHandledRelsCache(
+          edge.startNodeId,
+          edge.endNodeId,
+          edge.type,
+          edge,
+        );
+        relationships.add(edge);
+      } else {
+        relationships.remove(compressedRelEntry);
+        compressedRelEntry.compressedCount += 1;
+        relationships.add(compressedRelEntry);
+      }
+    }
+
+    let minimumCompressedCounts: number = 1;
+    let maximumCompressedCounts: number = 1;
+    for (const relationship of relationships.edges) {
+      if (relationship.compressedCount < minimumCompressedCounts) {
+        minimumCompressedCounts = relationship.compressedCount;
+      }
+      if (relationship.compressedCount > maximumCompressedCounts) {
+        maximumCompressedCounts = relationship.compressedCount;
+      }
+    }
+
+    const fromRange: Range = new Range({
+      floor: minimumCompressedCounts,
+      ceiling: maximumCompressedCounts,
+    });
+
+    const toRange: Range = new Range({
+      floor: 2,
+      ceiling: 2 * displayConfiguration.compressRelationshipsWidthFactor,
+    });
+
+    for (const relationship of relationships.edges) {
+      relationship.width = fromRange.scaleValue(
+        toRange,
+        relationship.compressedCount,
+        displayConfiguration.scaleType,
+      );
+    }
+
+    graph.edges = relationships;
   }
 }

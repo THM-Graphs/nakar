@@ -122,8 +122,8 @@ export class MutableNodeIndex {
     return this._byId.has(id);
   }
 
-  public has(node: MutableNode): boolean {
-    return this._byId.has(node.id);
+  public has(node: MutableNode | string): boolean {
+    return this._byId.has(typeof node === 'string' ? node : node.id);
   }
 
   public get(id: string): MutableNode | null {
