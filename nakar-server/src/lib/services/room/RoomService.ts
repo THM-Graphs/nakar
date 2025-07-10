@@ -296,7 +296,7 @@ export class RoomService implements ApplicationService {
           displayConfiguration.compressRelationships &&
           graph.edges.size > 0
         ) {
-          this._compressRelationships(graph, displayConfiguration);
+          this._compressRelationships(graph);
         }
 
         // Layout
@@ -453,6 +453,10 @@ export class RoomService implements ApplicationService {
             this,
             `Expand node result for ${nodeId}: ${expandResult.nodes.size.toString()} nodes and ${expandResult.relationships.size.toString()} relationships.`,
           );
+
+          if (graph.displayConfiguration.compressRelationships) {
+            this._compressRelationships(graph);
+          }
 
           this._sendActionToWorker(params.roomId, {
             type: 'WTActionSetGraph',
@@ -997,10 +1001,7 @@ export class RoomService implements ApplicationService {
     graph.edges.addNeo4jEdges(result.relationships);
   }
 
-  private _compressRelationships(
-    graph: MutableGraph,
-    displayConfiguration: FinalGraphDisplayConfiguration,
-  ): void {
+  private _compressRelationships(graph: MutableGraph): void {
     const getFromHandledRelsCache = (
       nodeAId: string,
       nodeBId: string,
@@ -1076,14 +1077,14 @@ export class RoomService implements ApplicationService {
 
     const toRange: Range = new Range({
       floor: 2,
-      ceiling: 2 * displayConfiguration.compressRelationshipsWidthFactor,
+      ceiling: 2 * graph.displayConfiguration.compressRelationshipsWidthFactor,
     });
 
     for (const relationship of relationships.edges) {
       relationship.width = fromRange.scaleValue(
         toRange,
         relationship.compressedCount,
-        displayConfiguration.scaleType,
+        graph.displayConfiguration.scaleType,
       );
     }
 
