@@ -3,7 +3,7 @@ import { GetRoomDBDTO } from './dto/GetRoomDBDTO';
 import { GetScenarioDBDTO } from './dto/GetScenarioDBDTO';
 import { GetScenarioGroupDBDTO } from './dto/GetScenarioGroupDBDTO';
 import { MutableGraph } from '../room/graph/MutableGraph';
-import { GetValues, Result } from '@strapi/types/dist/modules/documents';
+import { Result } from '@strapi/types/dist/modules/documents';
 import { LoggerService } from '../logger/LoggerService';
 import { ApplicationService } from '../../application/ApplicationService';
 import { GetMediaDBDTO } from './dto/GetMediaDBDTO';
@@ -87,116 +87,6 @@ export class DatabaseService implements ApplicationService {
     //     throw new Error('This method is not supported.');
     //   },
     // });
-
-    for (const scenario of await strapi
-      .documents('api::scenario.scenario')
-      .findMany({
-        populate: {
-          queries: { populate: { database: {} } },
-          scenarioGroup: {
-            populate: {
-              database: {},
-            },
-          },
-        },
-      })) {
-      await strapi.documents('api::scenario.scenario').update({
-        documentId: scenario.documentId,
-        data: {
-          queries: [
-            {
-              query: scenario.query ?? '',
-              database: scenario.scenarioGroup?.database?.documentId ?? null,
-            },
-          ],
-        },
-        status: 'published',
-      });
-    }
-
-    for (const scenarioGroup of await strapi
-      .documents('api::scenario-group.scenario-group')
-      .findMany({
-        populate: {
-          room: {},
-          database: {
-            populate: {
-              graphDisplayConfiguration: {
-                populate: { nodeDisplayConfigurations: {} },
-              },
-            },
-          },
-        },
-      })) {
-      if (scenarioGroup.database != null) {
-        const roomTitle: string = scenarioGroup.database.title ?? '';
-        const roomId: string =
-          (
-            await strapi
-              .documents('api::room.room')
-              .findFirst({ filters: { title: { $eq: roomTitle } } })
-          )?.documentId ??
-          (
-            await strapi.documents('api::room.room').create({
-              data: {
-                title: roomTitle,
-              },
-              status: 'published',
-            })
-          ).documentId;
-
-        await strapi.documents('api::room.room').update({
-          documentId: roomId,
-          data: {
-            graphDisplayConfiguration: scenarioGroup.database
-              .graphDisplayConfiguration
-              ? {
-                  connectResultNodes:
-                    scenarioGroup.database.graphDisplayConfiguration
-                      .connectResultNodes ?? undefined,
-                  growNodesBasedOnDegree:
-                    scenarioGroup.database.graphDisplayConfiguration
-                      .growNodesBasedOnDegree ?? undefined,
-                  nodeDisplayConfigurations:
-                    scenarioGroup.database.graphDisplayConfiguration.nodeDisplayConfigurations?.map(
-                      (
-                        nodeDisplayConfiguration: GetValues<'graph.node-display-configuration'>,
-                      ): Input<'graph.node-display-configuration'> => ({
-                        targetLabel:
-                          nodeDisplayConfiguration.targetLabel ?? undefined,
-                        displayText:
-                          nodeDisplayConfiguration.displayText ?? undefined,
-                        radius: nodeDisplayConfiguration.radius ?? undefined,
-                        backgroundColor:
-                          nodeDisplayConfiguration.backgroundColor ?? undefined,
-                      }),
-                    ) ?? [],
-                  compressRelationships:
-                    scenarioGroup.database.graphDisplayConfiguration
-                      .compressRelationships ?? undefined,
-                  scaleType:
-                    scenarioGroup.database.graphDisplayConfiguration
-                      .scaleType ?? undefined,
-                  growNodesBasedOnDegreeFactor:
-                    scenarioGroup.database.graphDisplayConfiguration
-                      .growNodesBasedOnDegreeFactor ?? undefined,
-                  compressRelationshipsWidthFactor:
-                    scenarioGroup.database.graphDisplayConfiguration
-                      .compressRelationshipsWidthFactor ?? undefined,
-                  mergeNodeConfigurations: [],
-                }
-              : {},
-          },
-          status: 'published',
-        });
-
-        await strapi.documents('api::scenario-group.scenario-group').update({
-          documentId: scenarioGroup.documentId,
-          data: { room: roomId },
-          status: 'published',
-        });
-      }
-    }
   }
 
   public destroy(): void | Promise<void> {
