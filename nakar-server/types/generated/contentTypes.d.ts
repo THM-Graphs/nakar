@@ -385,10 +385,6 @@ export interface ApiDatabaseDatabase extends Struct.CollectionTypeSchema {
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
-    graphDisplayConfiguration: Schema.Attribute.Component<
-      'graph.graph-display-configuration',
-      false
-    >;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
       'oneToMany',
@@ -397,10 +393,6 @@ export interface ApiDatabaseDatabase extends Struct.CollectionTypeSchema {
       Schema.Attribute.Private;
     password: Schema.Attribute.String;
     publishedAt: Schema.Attribute.DateTime;
-    scenarioGroups: Schema.Attribute.Relation<
-      'oneToMany',
-      'api::scenario-group.scenario-group'
-    >;
     title: Schema.Attribute.String;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
@@ -461,7 +453,6 @@ export interface ApiScenarioGroupScenarioGroup
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
-    database: Schema.Attribute.Relation<'manyToOne', 'api::database.database'>;
     graphDisplayConfiguration: Schema.Attribute.Component<
       'graph.graph-display-configuration',
       false
@@ -494,10 +485,6 @@ export interface ApiScenarioScenario extends Struct.CollectionTypeSchema {
     draftAndPublish: true;
   };
   attributes: {
-    additionalQueries: Schema.Attribute.Component<
-      'graph.additional-query',
-      true
-    >;
     cover: Schema.Attribute.Media<'files' | 'images'>;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
@@ -516,7 +503,6 @@ export interface ApiScenarioScenario extends Struct.CollectionTypeSchema {
     parameters: Schema.Attribute.Component<'graph.parameter', true>;
     publishedAt: Schema.Attribute.DateTime;
     queries: Schema.Attribute.Component<'graph.query', true>;
-    query: Schema.Attribute.Text;
     scenarioGroup: Schema.Attribute.Relation<
       'manyToOne',
       'api::scenario-group.scenario-group'

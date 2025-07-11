@@ -15,12 +15,6 @@
     "title": {
       "type": "string"
     },
-    "database": {
-      "type": "relation",
-      "relation": "manyToOne",
-      "target": "api::database.database",
-      "inversedBy": "scenarioGroups"
-    },
     "scenarios": {
       "type": "relation",
       "relation": "oneToMany",

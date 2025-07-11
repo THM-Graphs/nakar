@@ -15,9 +15,6 @@
     "title": {
       "type": "string"
     },
-    "query": {
-      "type": "text"
-    },
     "cover": {
       "type": "media",
       "multiple": false,
@@ -40,11 +37,6 @@
       "type": "component",
       "repeatable": false,
       "component": "graph.graph-display-configuration"
-    },
-    "additionalQueries": {
-      "type": "component",
-      "repeatable": true,
-      "component": "graph.additional-query"
     },
     "parameters": {
       "type": "component",

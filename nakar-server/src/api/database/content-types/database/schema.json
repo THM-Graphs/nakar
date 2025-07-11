@@ -24,19 +24,8 @@
     "url": {
       "type": "string"
     },
-    "scenarioGroups": {
-      "type": "relation",
-      "relation": "oneToMany",
-      "target": "api::scenario-group.scenario-group",
-      "mappedBy": "database"
-    },
     "browserUrl": {
       "type": "string"
-    },
-    "graphDisplayConfiguration": {
-      "type": "component",
-      "repeatable": false,
-      "component": "graph.graph-display-configuration"
     }
   }
 }

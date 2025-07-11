@@ -17,9 +17,6 @@ export class StrapiFactory {
       username: saveDto.username ?? undefined,
       password: saveDto.password ?? undefined,
       browserUrl: saveDto.browserUrl ?? undefined,
-      graphDisplayConfiguration: this._createGraphDisplayConfiguration(
-        saveDto.graphDisplayConfiguration,
-      ),
     };
   }
 
@@ -44,7 +41,6 @@ export class StrapiFactory {
   ): Input<'api::scenario.scenario'> {
     return {
       title: saveDto.title ?? undefined,
-      query: '',
       description: saveDto.description ?? undefined,
       cover:
         saveDto.cover != null
@@ -60,25 +56,6 @@ export class StrapiFactory {
       graphDisplayConfiguration: this._createGraphDisplayConfiguration(
         saveDto.graphDisplayConfiguration,
       ),
-      additionalQueries: [],
-    };
-  }
-
-  private _createAdditionalQuery(
-    additionalQuery: AdditionalQueryDBDTO,
-  ): Input<'graph.additional-query'> {
-    return {
-      originalLabel: additionalQuery.originalLabel,
-      originalProperties: additionalQuery.originalProperties.join(', '),
-      mergeLabel: additionalQuery.mergeLabel,
-      mergeProperties: additionalQuery.mergeProperties.join(', '),
-      mergeQuery: additionalQuery.mergeQuery,
-      mergeDatabase:
-        additionalQuery.mergeDatabase != null
-          ? {
-              documentId: additionalQuery.mergeDatabase.documentId,
-            }
-          : undefined,
     };
   }
 
