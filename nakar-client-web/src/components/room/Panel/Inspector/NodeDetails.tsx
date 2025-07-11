@@ -7,7 +7,6 @@ import {
   postRoomActionUnlockNodes,
 } from "../../../../../src-gen";
 import { DetailPane } from "./DetailPane.tsx";
-import { DetailPaneAction } from "./DetailPaneAction.ts";
 import { AppContext } from "../../../../lib/state/AppContext.ts";
 import { RoomContext } from "../../../../pages/Room.tsx";
 import { resultOrThrow } from "../../../../lib/data/resultOrThrow.ts";
@@ -106,10 +105,6 @@ export function NodeDetails(props: {
         {
           slug: "Source",
           value: props.node.source,
-        },
-        {
-          slug: "Additional Sources",
-          value: props.node.additionalSources,
         },
         {
           slug: "Names in Query",

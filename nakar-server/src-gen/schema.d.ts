@@ -338,11 +338,9 @@ export interface components {
             readonly outDegree: number;
             readonly degree: number;
             readonly namesInQuery: readonly string[];
-            readonly displayConfigurationContext: unknown;
             readonly customBackgroundColor: string | null;
             readonly customTitleColor: string | null;
             readonly source: string;
-            readonly additionalSources: readonly string[];
             readonly locked: boolean;
         };
         readonly PhysicalNode: {
@@ -448,10 +446,16 @@ export interface components {
         readonly ScenarioGroups: {
             readonly scenarioGroups: readonly components["schemas"]["ScenarioGroup"][];
         };
+        readonly ScenarioQuery: {
+            readonly query: string;
+            readonly database: {
+                readonly current: components["schemas"]["Database"];
+            } | null;
+        };
         readonly Scenario: {
             readonly id: string;
             readonly title: string | null;
-            readonly query: string | null;
+            readonly queries: readonly components["schemas"]["ScenarioQuery"][];
             readonly description: string | null;
             /** Format: uri */
             readonly coverUrl: string | null;
@@ -616,6 +620,7 @@ export type SchemaRooms = components['schemas']['Rooms'];
 export type SchemaDatabase = components['schemas']['Database'];
 export type SchemaScenarioGroup = components['schemas']['ScenarioGroup'];
 export type SchemaScenarioGroups = components['schemas']['ScenarioGroups'];
+export type SchemaScenarioQuery = components['schemas']['ScenarioQuery'];
 export type SchemaScenario = components['schemas']['Scenario'];
 export type SchemaScenarioParameter = components['schemas']['ScenarioParameter'];
 export type SchemaScenarioArgument = components['schemas']['ScenarioArgument'];

@@ -17,7 +17,6 @@ import {
 import { MutableNode } from '../room/graph/MutableNode';
 import { MutableEdge } from '../room/graph/MutableEdge';
 import { MutableGraph } from '../room/graph/MutableGraph';
-import { NodeDisplayConfigurationContext } from '../room/scenario-pipeline/display-configuration/NodeDisplayConfigurationContext';
 import { MutableGraphLabel } from '../room/graph/MutableGraphLabel';
 import { MutablePropertyCollection } from '../room/graph/MutablePropertyCollection';
 import { MutableGraphMetaData } from '../room/graph/MutableGraphMetaData';
@@ -275,11 +274,6 @@ export class CachingSchemaDTOFactory {
       outDegree: node.outDegree(graph),
       degree: node.degree(graph),
       namesInQuery: node.namesInQuery.toArray(),
-      displayConfigurationContext: NodeDisplayConfigurationContext.create(
-        node,
-        graph,
-        this._logger,
-      ).toPlain(),
       customBackgroundColor: node.customBackgroundColor(
         graph,
         config,
@@ -287,16 +281,6 @@ export class CachingSchemaDTOFactory {
       ),
       customTitleColor: node.customTitleColor(graph, config, this._logger),
       source: (await this._getDatabase(node.source))?.title ?? node.source,
-      additionalSources: (
-        await node.additionalSources.asyncMap(
-          async (additionalSource: string): Promise<string> => {
-            return (
-              (await this._getDatabase(additionalSource))?.title ??
-              additionalSource
-            );
-          },
-        )
-      ).toArray(),
       locked: node.locked,
     };
   }

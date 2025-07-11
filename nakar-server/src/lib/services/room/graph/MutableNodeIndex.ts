@@ -90,7 +90,6 @@ export class MutableNodeIndex {
       locked: false,
       grabs: new SSet(),
       source: node.source.nakarId,
-      additionalSources: new SSet(),
     });
 
     const insertResult: boolean = this.add(mutableNode);

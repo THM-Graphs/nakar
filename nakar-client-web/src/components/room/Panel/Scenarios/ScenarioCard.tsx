@@ -31,55 +31,85 @@ export function ScenarioCard(props: {
         ></NavbarButton>
       )}
       <Card.Body>
-        <Card.Title>
-          <Stack direction={"horizontal"} gap={2}>
-            <ScenarioIcon size={40} scenario={props.scenario}></ScenarioIcon>
-            <span className={"user-select-text"}>{props.scenario.title}</span>
+        <Stack gap={2}>
+          <Stack className={"border-bottom pb-2"}>
+            <Card.Title>
+              <Stack direction={"horizontal"} gap={2}>
+                <ScenarioIcon
+                  size={40}
+                  scenario={props.scenario}
+                ></ScenarioIcon>
+                <span className={"user-select-text"}>
+                  {props.scenario.title}
+                </span>
+              </Stack>
+            </Card.Title>
+            <Button
+              size={"sm"}
+              onClick={() => {
+                props.onScenarioSelected(props.scenario);
+              }}
+              disabled={uiLocked}
+            >
+              <Stack direction={"horizontal"} gap={1}>
+                {uiLocked ? (
+                  <Loading size={"sm"}></Loading>
+                ) : (
+                  <i className={"bi bi-play-circle"}></i>
+                )}
+                <span>Run Scenario</span>
+              </Stack>
+            </Button>
           </Stack>
-        </Card.Title>
-        <Button
-          size={"sm"}
-          className={"mb-2 mt-2"}
-          onClick={() => {
-            props.onScenarioSelected(props.scenario);
-          }}
-          disabled={uiLocked}
-        >
-          <Stack direction={"horizontal"} gap={1}>
-            {uiLocked ? (
-              <Loading size={"sm"}></Loading>
+
+          <Stack className={"border-bottom pb-2"}>
+            <span className={"fw-bold text-muted small"}>Description</span>
+            {props.scenario.description ? (
+              <Card.Text>
+                <span
+                  className={"small user-select-text"}
+                  style={{ whiteSpace: "pre-line" }}
+                >
+                  {props.scenario.description}
+                </span>
+              </Card.Text>
             ) : (
-              <i className={"bi bi-play-circle"}></i>
+              <span className={"text-muted small fst-italic"}>None</span>
             )}
-            <span>Run Scenario</span>
           </Stack>
-        </Button>
-        <Card.Text>
-          <span
-            className={"small user-select-text"}
-            style={{ whiteSpace: "pre-line" }}
-          >
-            {props.scenario.description}
-          </span>
-        </Card.Text>
-        {props.scenario.query && (
-          <QueryDisplay query={props.scenario.query}></QueryDisplay>
-        )}
-        {props.scenario.parameters.length > 0 && (
-          <Stack className={"mt-3"}>
+
+          <Stack className={"border-bottom pb-2"}>
+            <span className={"fw-bold text-muted small"}>Queries</span>
+            {props.scenario.queries.map((q) => (
+              <QueryDisplay
+                query={q}
+                key={q.query + (q.database?.current.id ?? "")}
+              ></QueryDisplay>
+            ))}
+          </Stack>
+
+          <Stack>
             <span className={"fw-bold text-muted small"}>Parameters</span>
-            <ul>
-              {props.scenario.parameters.map((parameter) => (
-                <li key={parameter.identifier} className={"small"}>
-                  {parameter.title}{" "}
-                  <span className={"text-muted font-monospace"}>
-                    ({parameter.identifier})
-                  </span>
-                </li>
-              ))}
-            </ul>
+            {props.scenario.parameters.length > 0 ? (
+              <ul>
+                {props.scenario.parameters.map((parameter) => (
+                  <li key={parameter.identifier} className={"small"}>
+                    {parameter.title}{" "}
+                    <span className={"text-muted font-monospace"}>
+                      (
+                      <span className={"user-select-text"}>
+                        {parameter.identifier}
+                      </span>
+                      )
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <span className={"text-muted small fst-italic"}>None</span>
+            )}
           </Stack>
-        )}
+        </Stack>
       </Card.Body>
     </Card>
   );

@@ -1036,6 +1036,12 @@ export class RoomService implements ApplicationService {
     config: MergeNodeConfiguration,
   ): boolean {
     // TODO: Prevent double merge
+    if (
+      graph.edges.getByStartAndEndNodeId(originalNode.id, mergeNode.id).length >
+      0
+    ) {
+      return false;
+    }
 
     if (config.mergeProperties.length !== config.originalProperties.length) {
       return false;

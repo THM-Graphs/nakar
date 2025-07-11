@@ -313,6 +313,11 @@ export class DatabaseService implements ApplicationService {
             },
           },
           parameters: {},
+          queries: {
+            populate: {
+              database: {},
+            },
+          },
         },
         filters: {
           scenarioGroup: {

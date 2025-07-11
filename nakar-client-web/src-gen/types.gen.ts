@@ -119,11 +119,9 @@ export type Node = {
     outDegree: number;
     degree: number;
     namesInQuery: Array<(string)>;
-    displayConfigurationContext: unknown;
     customBackgroundColor: (string) | null;
     customTitleColor: (string) | null;
     source: string;
-    additionalSources: Array<(string)>;
     locked: boolean;
 };
 
@@ -176,7 +174,7 @@ export type Rooms = {
 export type Scenario = {
     id: string;
     title: (string) | null;
-    query: (string) | null;
+    queries: Array<ScenarioQuery>;
     description: (string) | null;
     coverUrl: (string) | null;
     editUrl: (string) | null;
@@ -203,6 +201,13 @@ export type ScenarioParameter = {
     identifier: string;
     title: string;
     defaultValue: (string) | null;
+};
+
+export type ScenarioQuery = {
+    query: string;
+    database: {
+        current: Database;
+    } | null;
 };
 
 export type Version = {

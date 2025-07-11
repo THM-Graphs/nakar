@@ -504,7 +504,6 @@ components:
           type: array
           items:
             type: string
-        displayConfigurationContext: {}
         customBackgroundColor:
           type: string
           nullable: true
@@ -513,10 +512,6 @@ components:
           nullable: true
         source:
           type: string
-        additionalSources:
-          type: array
-          items:
-            type: string
         locked:
           type: boolean
       required:
@@ -530,11 +525,9 @@ components:
         - outDegree
         - degree
         - namesInQuery
-        - displayConfigurationContext
         - customBackgroundColor
         - customTitleColor
         - source
-        - additionalSources
         - locked
 
     PhysicalNode:
@@ -863,6 +856,23 @@ components:
       required:
         - scenarioGroups
 
+    ScenarioQuery:
+      type: object
+      properties:
+        query:
+          type: string
+        database:
+          type: object
+          nullable: true
+          properties:
+            current:
+              $ref: "#/components/schemas/Database"
+          required:
+            - current
+      required:
+        - query
+        - database
+
     Scenario:
       type: object
       properties:
@@ -871,9 +881,10 @@ components:
         title:
           type: string
           nullable: true
-        query:
-          type: string
-          nullable: true
+        queries:
+          type: array
+          items:
+            $ref: "#/components/schemas/ScenarioQuery"
         description:
           type: string
           nullable: true
@@ -896,6 +907,7 @@ components:
         - coverUrl
         - editUrl
         - parameters
+        - queries
 
     ScenarioParameter:
       type: object

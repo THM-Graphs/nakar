@@ -23,7 +23,6 @@ export class MutableNode {
     namesInQuery: z.array(z.string()),
     locked: z.boolean(),
     source: z.string(),
-    additionalSources: z.array(z.string()),
   });
 
   public readonly id: string;
@@ -34,7 +33,6 @@ export class MutableNode {
   public locked: boolean;
   public grabs: SSet<string>;
   public source: string;
-  public additionalSources: SSet<string>;
 
   public constructor(data: {
     id: string;
@@ -45,7 +43,6 @@ export class MutableNode {
     locked: boolean;
     grabs: SSet<string>;
     source: string;
-    additionalSources: SSet<string>;
   }) {
     this.id = data.id;
     this.labels = data.labels;
@@ -55,7 +52,6 @@ export class MutableNode {
     this.locked = data.locked;
     this.grabs = data.grabs;
     this.source = data.source;
-    this.additionalSources = data.additionalSources;
   }
 
   public static fromPlain(data: z.infer<typeof this.schema>): MutableNode {
@@ -68,7 +64,6 @@ export class MutableNode {
       locked: data.locked,
       grabs: new SSet(),
       source: data.source,
-      additionalSources: new SSet(data.additionalSources),
     });
   }
 
@@ -81,7 +76,6 @@ export class MutableNode {
       namesInQuery: this.namesInQuery.toArray(),
       locked: this.locked,
       source: this.source,
-      additionalSources: this.additionalSources.toArray(),
     };
   }
 

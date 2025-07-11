@@ -4,6 +4,7 @@ import {
   SchemaScenario,
   SchemaScenarioGroup,
   SchemaScenarioParameter,
+  SchemaScenarioQuery,
 } from '../../../../src-gen/schema';
 import { GetDatabaseDBDTO } from '../database/dto/GetDatabaseDBDTO';
 import { GetRoomDBDTO } from '../database/dto/GetRoomDBDTO';
@@ -12,6 +13,7 @@ import { GetScenarioDBDTO } from '../database/dto/GetScenarioDBDTO';
 import { GetScenarioGroupDBDTO } from '../database/dto/GetScenarioGroupDBDTO';
 import { GetMediaDBDTO } from '../database/dto/GetMediaDBDTO';
 import { GetScenarioParameterDBDTO } from '../database/dto/GetScenarioParameterDBDTO';
+import { GetScenarioQueryDBDTO } from '../database/dto/GetScenarioQueryDBDTO';
 
 export class SchemaDTOFactory {
   private _configService: ConfigService;
@@ -49,7 +51,16 @@ export class SchemaDTOFactory {
     return {
       id: scenario.documentId,
       title: scenario.title,
-      query: '',
+      queries: scenario.queries.map(
+        (q: GetScenarioQueryDBDTO): SchemaScenarioQuery => ({
+          query: q.query,
+          database: q.database
+            ? {
+                current: this.createSchemaDatabase(q.database),
+              }
+            : null,
+        }),
+      ),
       description: scenario.description,
       coverUrl: scenario.cover
         ? this._getPublicUrlOfMedia(scenario.cover)
@@ -95,11 +106,8 @@ export class SchemaDTOFactory {
     return host + media.url;
   }
 
-  private _getDatabaseEditUrl(database: GetDatabaseDBDTO): string | null {
-    const host: string | null = this._configService.publicURL;
-    if (host == null) {
-      return null;
-    }
+  private _getDatabaseEditUrl(database: GetDatabaseDBDTO): string {
+    const host: string | null = this._configService.publicURL ?? '';
     const url: string = `${host}/admin/content-manager/collection-types/api::database.database/${database.documentId}`;
     return url;
   }
