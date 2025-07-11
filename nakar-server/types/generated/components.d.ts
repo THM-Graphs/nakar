@@ -54,6 +54,10 @@ export interface GraphGraphDisplayConfiguration extends Struct.ComponentSchema {
         },
         number
       >;
+    mergeNodeConfigurations: Schema.Attribute.Component<
+      'graph.merge-node-configuration',
+      true
+    >;
     nodeDisplayConfigurations: Schema.Attribute.Component<
       'graph.node-display-configuration',
       true
@@ -62,6 +66,28 @@ export interface GraphGraphDisplayConfiguration extends Struct.ComponentSchema {
       ['inherit', 'linear', 'log2', 'logn', 'log10']
     > &
       Schema.Attribute.DefaultTo<'inherit'>;
+  };
+}
+
+export interface GraphMergeNodeConfiguration extends Struct.ComponentSchema {
+  collectionName: 'components_graph_merge_node_configurations';
+  info: {
+    displayName: 'Merge Node Configuration';
+    icon: 'code';
+  };
+  attributes: {
+    mergeDatabase: Schema.Attribute.Relation<
+      'oneToOne',
+      'api::database.database'
+    >;
+    mergeLabel: Schema.Attribute.String;
+    mergeProperties: Schema.Attribute.String;
+    originalDatabase: Schema.Attribute.Relation<
+      'oneToOne',
+      'api::database.database'
+    >;
+    originalLabel: Schema.Attribute.String;
+    originalProperties: Schema.Attribute.String;
   };
 }
 
@@ -93,13 +119,27 @@ export interface GraphParameter extends Struct.ComponentSchema {
   };
 }
 
+export interface GraphQuery extends Struct.ComponentSchema {
+  collectionName: 'components_graph_queries';
+  info: {
+    displayName: 'Query';
+    icon: 'code';
+  };
+  attributes: {
+    database: Schema.Attribute.Relation<'oneToOne', 'api::database.database'>;
+    query: Schema.Attribute.Text;
+  };
+}
+
 declare module '@strapi/strapi' {
   export module Public {
     export interface ComponentSchemas {
       'graph.additional-query': GraphAdditionalQuery;
       'graph.graph-display-configuration': GraphGraphDisplayConfiguration;
+      'graph.merge-node-configuration': GraphMergeNodeConfiguration;
       'graph.node-display-configuration': GraphNodeDisplayConfiguration;
       'graph.parameter': GraphParameter;
+      'graph.query': GraphQuery;
     }
   }
 }

@@ -98,10 +98,6 @@ export class Neo4jGraphElementsFactory {
           (a: unknown[]): Neo4jGraphElements => this.fromFields(key, a, source),
         )
         .otherwise((): Neo4jGraphElements => {
-          this._logger.debug(
-            this,
-            `Unable to collect nodes and edges from field: ${JSON.stringify(field)}`,
-          );
           return Neo4jGraphElements.empty();
         });
     }

@@ -14,18 +14,16 @@ export function ScenarioGroupDisplay(props: {
 }) {
   return (
     <Collapsable
-      initialState={true}
+      initialState={false}
       title={
         <>
-          <span className={"small text-muted"}>
-            {props.scenarioGroup.title}
-          </span>
+          <span className={"small fw-bold"}>{props.scenarioGroup.title}</span>
         </>
       }
     >
       <Stack direction={"horizontal"} className={"align-items-stretch"}>
         <div
-          className={"bg-success flex-shrink-0 flex-grow-0 ms-1"}
+          className={"bg-primary flex-shrink-0 flex-grow-0 ms-1"}
           style={{ width: "3px" }}
         ></div>
         <Stack>

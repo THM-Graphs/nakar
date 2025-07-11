@@ -291,7 +291,7 @@ export const useBearStore = create<BearState>()(
               },
             },
             scenarios: {
-              scenarios: { databases: [] },
+              scenarios: { scenarioGroups: [] },
               setScenarios: (scenarios) => {
                 set((s) => {
                   s.room.panels.scenarios.scenarios = scenarios;

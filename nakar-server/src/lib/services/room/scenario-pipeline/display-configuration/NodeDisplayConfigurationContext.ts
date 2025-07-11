@@ -76,11 +76,6 @@ export class NodeDisplayConfigurationContext {
     try {
       return template(this._nativeData);
     } catch (error: unknown) {
-      if (error instanceof Error) {
-        this._logger.error(this, error);
-      } else {
-        this._logger.error(this, `Unknown template error`);
-      }
       return '';
     }
   }

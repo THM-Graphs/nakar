@@ -2,28 +2,38 @@ openapi: 3.0.0
 info:
   title: NAKAR
   version: 1.0.0
+
 servers:
   - url: http://localhost:1338
     description: Development
   - url: http://nakar.mni.thm.de:1338
     description: Production
+
 tags:
   - name: Scenarios
   - name: Room
+  - name: Room Actions
   - name: System
+
 paths:
-  /scenarios:
+  /room/{id}/scenarios:
     get:
       tags:
         - Scenarios
       operationId: getScenarios
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
       responses:
         "200":
           description: "OK"
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Databases"
+                $ref: "#/components/schemas/ScenarioGroups"
 
   /room:
     get:
@@ -815,27 +825,12 @@ components:
         editUrl:
           type: string
           nullable: true
-        scenarioGroups:
-          type: array
-          items:
-            $ref: "#/components/schemas/ScenarioGroup"
       required:
         - id
         - title
         - url
         - browserUrl
         - editUrl
-        - scenarioGroups
-
-    Databases:
-      type: object
-      properties:
-        databases:
-          type: array
-          items:
-            $ref: "#/components/schemas/Database"
-      required:
-        - databases
 
     ScenarioGroup:
       type: object
@@ -857,6 +852,16 @@ components:
         - title
         - editUrl
         - scenarios
+
+    ScenarioGroups:
+      type: object
+      properties:
+        scenarioGroups:
+          type: array
+          items:
+            $ref: "#/components/schemas/ScenarioGroup"
+      required:
+        - scenarioGroups
 
     Scenario:
       type: object

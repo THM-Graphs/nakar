@@ -28,9 +28,9 @@ export class StrapiFactory {
   ): Input<'api::scenario-group.scenario-group'> {
     return {
       title: saveDto.title ?? undefined,
-      database: saveDto.database
+      room: saveDto.room
         ? {
-            documentId: saveDto.database.documentId,
+            documentId: saveDto.room.documentId,
           }
         : null,
       graphDisplayConfiguration: this._createGraphDisplayConfiguration(
@@ -44,7 +44,7 @@ export class StrapiFactory {
   ): Input<'api::scenario.scenario'> {
     return {
       title: saveDto.title ?? undefined,
-      query: saveDto.query ?? undefined,
+      query: '',
       description: saveDto.description ?? undefined,
       cover:
         saveDto.cover != null
@@ -60,13 +60,7 @@ export class StrapiFactory {
       graphDisplayConfiguration: this._createGraphDisplayConfiguration(
         saveDto.graphDisplayConfiguration,
       ),
-      additionalQueries: saveDto.additionalQueries.map(
-        (
-          additionalQuery: AdditionalQueryDBDTO,
-        ): Input<'graph.additional-query'> => {
-          return this._createAdditionalQuery(additionalQuery);
-        },
-      ),
+      additionalQueries: [],
     };
   }
 

@@ -77,6 +77,7 @@ export function PropertyMenu(props: {
                     scenarioGroup={scenarioGroup}
                     roomContext={props.roomContext}
                     value={props.value}
+                    key={scenarioGroup.id}
                   ></PropertyMenuScenarioGroupEntry>
                 )),
             )

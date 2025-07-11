@@ -40,7 +40,6 @@ import { NotFound } from 'http-errors';
 import { AdditionalQueryDBDTO } from '../database/dto/AdditionalQueryDBDTO';
 import { MutableEdgeIndex } from './graph/MutableEdgeIndex';
 import { Range } from '../../tools/Range';
-import { GraphDisplayConfigurationDBDTO } from '../database/dto/GraphDisplayConfigurationDBDTO';
 
 export class RoomService implements ApplicationService {
   private readonly _workers: SMap<string, Worker>;
@@ -198,98 +197,53 @@ export class RoomService implements ApplicationService {
         if (scenario == null) {
           throw new NotFound('Scenario not found.');
         }
-        if (scenario.query == null) {
-          throw new NotFound('The scenario has no query.');
-        }
-        if (scenario.scenarioGroup?.database == null) {
-          throw new NotFound(
-            'There is no database configuration on the scenario.',
-          );
+        if (scenario.queries.length === 0) {
+          throw new NotFound('The scenario has no queries.');
         }
         const displayConfiguration: FinalGraphDisplayConfiguration =
           await this._database.getGraphDisplayConfiguration(
             scenario.documentId,
           );
-        const credentials: Neo4jDatabaseInfo = Neo4jDatabaseInfo.parse(
-          scenario.scenarioGroup.database,
-        );
 
-        const graphElements: Neo4jGraphElements =
-          await this._neo4j.executeQuery(
-            credentials,
-            scenario.query,
-            params.arguments.toRecord(),
-            true,
-          );
         const graph: MutableGraph = MutableGraph.fromInitialScenario(
           scenario,
           displayConfiguration,
           params.arguments,
         );
-        graph.nodes.addNeo4jNodes(graphElements.nodes);
-        graph.edges.addNeo4jEdges(graphElements.relationships);
-        graph.tableData = graphElements.tableData;
 
-        // --- Additional Queries
-        for (const additionalQuery of scenario.additionalQueries) {
-          if (
-            additionalQuery.mergeProperties.length !==
-            additionalQuery.originalProperties.length
-          ) {
-            this._logger.error(
-              this,
-              'Merge property length does not match original property length. This will always fail to match nodes.',
+        for (const query of scenario.queries) {
+          if (query.database == null) {
+            throw new Error(
+              'One of the queries has no database configued. Abort.',
             );
           }
 
-          const database: GetDatabaseDBDTO | null =
-            additionalQuery.mergeDatabase;
-          if (database == null) {
-            this._logger.error(
-              this,
-              'Cannot execute addional query, because the database is not set.',
+          const credentials: Neo4jDatabaseInfo = Neo4jDatabaseInfo.parse(
+            query.database,
+          );
+
+          const graphElements: Neo4jGraphElements =
+            await this._neo4j.executeQuery(
+              credentials,
+              query.query,
+              params.arguments.toRecord(),
+              true,
             );
-            continue;
+          graph.nodes.addNeo4jNodes(graphElements.nodes);
+          graph.edges.addNeo4jEdges(graphElements.relationships);
+          if (graph.tableData.length === 0) {
+            graph.tableData = graphElements.tableData;
           }
-
-          this._logger.debug(
-            this,
-            `Will run additional query on ${database.title ?? '[no title]'}: ${additionalQuery.mergeQuery}`,
-          );
-
-          const databaseInfo: Neo4jDatabaseInfo =
-            Neo4jDatabaseInfo.parse(database);
-          let result: Neo4jGraphElements = await this._neo4j.executeQuery(
-            databaseInfo,
-            additionalQuery.mergeQuery,
-            {},
-            true,
-          );
-          if (displayConfiguration.connectResultNodes) {
-            const nodeIds: SSet<string> = new SSet<string>(result.nodes.keys());
-            const connectResult: Neo4jGraphElements =
-              await this._neo4j.loadConnectingRelationships(
-                databaseInfo,
-                nodeIds,
-              );
-            result = result.byMergingWith(connectResult);
-          }
-
-          this._logger.debug(
-            this,
-            `Result: ${result.nodes.size.toString()} nodes, ${result.relationships.size.toString()} relationships.`,
-          );
-
-          graph.nodes.addNeo4jNodes(result.nodes);
-          graph.edges.addNeo4jEdges(result.relationships);
-
-          this._mergeNodes(graph, additionalQuery, result);
         }
 
         // --- Connect Nodes
-        if (displayConfiguration.connectResultNodes && graph.nodes.size > 0) {
-          await this._connectNodes(graph, credentials);
-        }
+        // if (displayConfiguration.connectResultNodes && graph.nodes.size > 0) {
+        //   await this._connectNodes(graph, credentials);
+        // }
+        // TODO: Implement connect on db basis
+
+        // --- Additional Queries
+        // TODO: Implement Merge config
 
         // --- Compress Relationships
         if (
@@ -355,10 +309,6 @@ export class RoomService implements ApplicationService {
       'Expanding nodes',
       async (): Promise<void> => {
         const nodeId: string = params.nodeId;
-        const databaseCache: SMap<string, GetDatabaseDBDTO> = new SMap<
-          string,
-          GetDatabaseDBDTO
-        >();
         const graph: MutableGraph = this.getGraph(params.roomId);
 
         if (graph.metaData.scenarioId == null) {
@@ -386,14 +336,12 @@ export class RoomService implements ApplicationService {
         }
 
         const database: GetDatabaseDBDTO | null =
-          databaseCache.get(node.source) ??
-          (await this._database.getDatabase(node.source));
+          await this._database.getDatabase(node.source);
         if (database == null) {
           throw new Error(
             `Cannot find database ${node.source} to run expand node query on.`,
           );
         }
-        databaseCache.set(node.source, database);
 
         const neo4jDatabaseInfo: Neo4jDatabaseInfo =
           Neo4jDatabaseInfo.parse(database);
@@ -407,6 +355,7 @@ export class RoomService implements ApplicationService {
           );
 
           // connect result nodes (only if connectResultNodes is active)
+          // TODO Replace with per db auto connect
           const graphDisplayConfig: FinalGraphDisplayConfiguration =
             await this._database.getGraphDisplayConfiguration(
               scenario.documentId,

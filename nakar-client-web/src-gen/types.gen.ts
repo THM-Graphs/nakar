@@ -13,11 +13,6 @@ export type Database = {
     url: (string) | null;
     browserUrl: (string) | null;
     editUrl: (string) | null;
-    scenarioGroups: Array<ScenarioGroup>;
-};
-
-export type Databases = {
-    databases: Array<Database>;
 };
 
 export type Edge = {
@@ -200,6 +195,10 @@ export type ScenarioGroup = {
     scenarios: Array<Scenario>;
 };
 
+export type ScenarioGroups = {
+    scenarioGroups: Array<ScenarioGroup>;
+};
+
 export type ScenarioParameter = {
     identifier: string;
     title: string;
@@ -349,7 +348,13 @@ export type type19 = 'WSEventUnlockUi';
 
 export type WSServerToClientMessage = WSEventNodesMoved | WSEventRoomChanged | WSEventNotification | WSEventGraphElementsChanged | WSEventGraphMetaDataChanged | WSEventGraphTableChanged | WSEventProgress | WSEventClearProgress | WSEventSetNodeLocks | WSEventLockUi | WSEventUnlockUi | WSEventPerformanceChanged | WSEventKick | WSEventPresentExpandNodePreview;
 
-export type GetScenariosResponse = (Databases);
+export type GetScenariosData = {
+    path: {
+        id: string;
+    };
+};
+
+export type GetScenariosResponse = (ScenarioGroups);
 
 export type GetScenariosError = unknown;
 

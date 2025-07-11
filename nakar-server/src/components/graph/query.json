@@ -1,0 +1,18 @@
+{
+  "collectionName": "components_graph_queries",
+  "info": {
+    "displayName": "Query",
+    "icon": "code"
+  },
+  "options": {},
+  "attributes": {
+    "query": {
+      "type": "text"
+    },
+    "database": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::database.database"
+    }
+  }
+}

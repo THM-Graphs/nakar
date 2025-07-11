@@ -1,9 +1,9 @@
-import { GetDatabaseDBDTO } from './GetDatabaseDBDTO';
 import { GraphDisplayConfigurationDBDTO } from './GraphDisplayConfigurationDBDTO';
+import { GetRoomDBDTO } from './GetRoomDBDTO';
 
 export interface GetScenarioGroupDBDTO {
   readonly documentId: string;
   readonly title: string | null;
-  readonly database: GetDatabaseDBDTO | null;
+  readonly room: GetRoomDBDTO | null;
   readonly graphDisplayConfiguration: GraphDisplayConfigurationDBDTO;
 }

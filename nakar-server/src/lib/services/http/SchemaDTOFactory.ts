@@ -11,7 +11,7 @@ import { ConfigService } from '../config/ConfigService';
 import { GetScenarioDBDTO } from '../database/dto/GetScenarioDBDTO';
 import { GetScenarioGroupDBDTO } from '../database/dto/GetScenarioGroupDBDTO';
 import { GetMediaDBDTO } from '../database/dto/GetMediaDBDTO';
-import { GetScenarioParameterDTO } from '../database/dto/GetScenarioParameterDTO';
+import { GetScenarioParameterDBDTO } from '../database/dto/GetScenarioParameterDBDTO';
 
 export class SchemaDTOFactory {
   private _configService: ConfigService;
@@ -19,17 +19,13 @@ export class SchemaDTOFactory {
   public constructor(configService: ConfigService) {
     this._configService = configService;
   }
-  public createSchemaDatabase(
-    databaseDBDTO: GetDatabaseDBDTO,
-    scenarioGroups: SchemaScenarioGroup[],
-  ): SchemaDatabase {
+  public createSchemaDatabase(databaseDBDTO: GetDatabaseDBDTO): SchemaDatabase {
     return {
       id: databaseDBDTO.documentId,
       title: databaseDBDTO.title,
       url: databaseDBDTO.url,
       browserUrl: databaseDBDTO.browserUrl,
       editUrl: this._getDatabaseEditUrl(databaseDBDTO),
-      scenarioGroups: scenarioGroups,
     };
   }
 
@@ -53,21 +49,21 @@ export class SchemaDTOFactory {
     return {
       id: scenario.documentId,
       title: scenario.title,
-      query: scenario.query,
+      query: '',
       description: scenario.description,
       coverUrl: scenario.cover
         ? this._getPublicUrlOfMedia(scenario.cover)
         : null,
       editUrl: this._getScenarioEditUrl(scenario),
       parameters: scenario.parameters.map(
-        (parameter: GetScenarioParameterDTO): SchemaScenarioParameter =>
+        (parameter: GetScenarioParameterDBDTO): SchemaScenarioParameter =>
           this.createSchemaScenarioParameter(parameter),
       ),
     };
   }
 
   public createSchemaScenarioParameter(
-    scenarioParameter: GetScenarioParameterDTO,
+    scenarioParameter: GetScenarioParameterDBDTO,
   ): SchemaScenarioParameter {
     return {
       identifier: scenarioParameter.identifier,

@@ -3,7 +3,7 @@ import { GetRoomDBDTO } from './dto/GetRoomDBDTO';
 import { GetScenarioDBDTO } from './dto/GetScenarioDBDTO';
 import { GetScenarioGroupDBDTO } from './dto/GetScenarioGroupDBDTO';
 import { MutableGraph } from '../room/graph/MutableGraph';
-import { Result } from '@strapi/types/dist/modules/documents';
+import { GetValues, Result } from '@strapi/types/dist/modules/documents';
 import { LoggerService } from '../logger/LoggerService';
 import { ApplicationService } from '../../application/ApplicationService';
 import { GetMediaDBDTO } from './dto/GetMediaDBDTO';
@@ -40,52 +40,163 @@ export class DatabaseService implements ApplicationService {
     return this._onRoomDeleted.asObservable();
   }
 
-  public bootstrap(): void | Promise<void> {
-    strapi.db.lifecycles.subscribe({
-      models: ['api::room.room'],
-      afterCreate: (event: Event): void => {
-        this._printDatabaseEvent(event);
-        const room: GetRoomDBDTO =
-          this._databaseDtoFactory.createGetRoomDTOFromStrapi(
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-            event.result as Result<'api::room.room'>,
-          );
-        this._onRoomAdded.next(room);
-      },
-      afterCreateMany: (event: Event): void => {
-        this._printDatabaseEvent(event);
-        throw new Error('This method is not supported.');
-      },
-      beforeDelete: async (event: Event): Promise<void> => {
-        this._printDatabaseEvent(event);
-        // eslint-disable-next-line @typescript-eslint/typedef
-        const paramsSchema = z.object({
-          where: z.object({
-            id: z.number(),
-          }),
+  public async bootstrap(): Promise<void> {
+    // TODO REPLACE WITH https://strapi.io/blog/what-are-document-service-middleware-and-what-happened-to-lifecycle-hooks-1
+    // strapi.db.lifecycles.subscribe({
+    //   models: ['api::room.room'],
+    //   afterCreate: (event: Event): void => {
+    //     this._printDatabaseEvent(event);
+    //     const room: GetRoomDBDTO =
+    //       this._databaseDtoFactory.createGetRoomDTOFromStrapi(
+    //         // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+    //         event.result as Result<'api::room.room'>,
+    //       );
+    //     this._onRoomAdded.next(room);
+    //   },
+    //   afterCreateMany: (event: Event): void => {
+    //     this._printDatabaseEvent(event);
+    //     throw new Error('This method is not supported.');
+    //   },
+    //   beforeDelete: async (event: Event): Promise<void> => {
+    //     this._printDatabaseEvent(event);
+    //     // eslint-disable-next-line @typescript-eslint/typedef
+    //     const paramsSchema = z.object({
+    //       where: z.object({
+    //         id: z.number(),
+    //       }),
+    //     });
+    //     type Params = z.infer<typeof paramsSchema>;
+    //     const params: Params = paramsSchema.parse(event.params);
+    //     const id: number = params.where.id;
+    //     const roomResult: Result<'api::room.room'> | null = await strapi
+    //       .documents('api::room.room')
+    //       .findFirst({ filters: { id: { $eq: id } } });
+    //     if (roomResult == null) {
+    //       this._logger.error(
+    //         this,
+    //         `Cannot find room with db id ${id.toString()}. Unable to handle ${event.action}.`,
+    //       );
+    //       return;
+    //     }
+    //     const room: GetRoomDBDTO =
+    //       this._databaseDtoFactory.createGetRoomDTOFromStrapi(roomResult);
+    //     this._onRoomDeleted.next(room);
+    //   },
+    //   beforeDeleteMany: (event: Event): void => {
+    //     this._printDatabaseEvent(event);
+    //     throw new Error('This method is not supported.');
+    //   },
+    // });
+
+    for (const scenario of await strapi
+      .documents('api::scenario.scenario')
+      .findMany({
+        populate: {
+          queries: { populate: { database: {} } },
+          scenarioGroup: {
+            populate: {
+              database: {},
+            },
+          },
+        },
+      })) {
+      await strapi.documents('api::scenario.scenario').update({
+        documentId: scenario.documentId,
+        data: {
+          queries: [
+            {
+              query: scenario.query ?? '',
+              database: scenario.scenarioGroup?.database?.documentId ?? null,
+            },
+          ],
+        },
+        status: 'published',
+      });
+    }
+
+    for (const scenarioGroup of await strapi
+      .documents('api::scenario-group.scenario-group')
+      .findMany({
+        populate: {
+          room: {},
+          database: {
+            populate: {
+              graphDisplayConfiguration: {
+                populate: { nodeDisplayConfigurations: {} },
+              },
+            },
+          },
+        },
+      })) {
+      if (scenarioGroup.database != null) {
+        const roomTitle: string = scenarioGroup.database.title ?? '';
+        const roomId: string =
+          (
+            await strapi
+              .documents('api::room.room')
+              .findFirst({ filters: { title: { $eq: roomTitle } } })
+          )?.documentId ??
+          (
+            await strapi.documents('api::room.room').create({
+              data: {
+                title: roomTitle,
+              },
+              status: 'published',
+            })
+          ).documentId;
+
+        await strapi.documents('api::room.room').update({
+          documentId: roomId,
+          data: {
+            graphDisplayConfiguration: scenarioGroup.database
+              .graphDisplayConfiguration
+              ? {
+                  connectResultNodes:
+                    scenarioGroup.database.graphDisplayConfiguration
+                      .connectResultNodes ?? undefined,
+                  growNodesBasedOnDegree:
+                    scenarioGroup.database.graphDisplayConfiguration
+                      .growNodesBasedOnDegree ?? undefined,
+                  nodeDisplayConfigurations:
+                    scenarioGroup.database.graphDisplayConfiguration.nodeDisplayConfigurations?.map(
+                      (
+                        nodeDisplayConfiguration: GetValues<'graph.node-display-configuration'>,
+                      ): Input<'graph.node-display-configuration'> => ({
+                        targetLabel:
+                          nodeDisplayConfiguration.targetLabel ?? undefined,
+                        displayText:
+                          nodeDisplayConfiguration.displayText ?? undefined,
+                        radius: nodeDisplayConfiguration.radius ?? undefined,
+                        backgroundColor:
+                          nodeDisplayConfiguration.backgroundColor ?? undefined,
+                      }),
+                    ) ?? [],
+                  compressRelationships:
+                    scenarioGroup.database.graphDisplayConfiguration
+                      .compressRelationships ?? undefined,
+                  scaleType:
+                    scenarioGroup.database.graphDisplayConfiguration
+                      .scaleType ?? undefined,
+                  growNodesBasedOnDegreeFactor:
+                    scenarioGroup.database.graphDisplayConfiguration
+                      .growNodesBasedOnDegreeFactor ?? undefined,
+                  compressRelationshipsWidthFactor:
+                    scenarioGroup.database.graphDisplayConfiguration
+                      .compressRelationshipsWidthFactor ?? undefined,
+                  mergeNodeConfigurations: [],
+                }
+              : {},
+          },
+          status: 'published',
         });
-        type Params = z.infer<typeof paramsSchema>;
-        const params: Params = paramsSchema.parse(event.params);
-        const id: number = params.where.id;
-        const roomResult: Result<'api::room.room'> | null = await strapi
-          .documents('api::room.room')
-          .findFirst({ filters: { id: { $eq: id } } });
-        if (roomResult == null) {
-          this._logger.error(
-            this,
-            `Cannot find room with db id ${id.toString()}. Unable to handle ${event.action}.`,
-          );
-          return;
-        }
-        const room: GetRoomDBDTO =
-          this._databaseDtoFactory.createGetRoomDTOFromStrapi(roomResult);
-        this._onRoomDeleted.next(room);
-      },
-      beforeDeleteMany: (event: Event): void => {
-        this._printDatabaseEvent(event);
-        throw new Error('This method is not supported.');
-      },
-    });
+
+        await strapi.documents('api::scenario-group.scenario-group').update({
+          documentId: scenarioGroup.documentId,
+          data: { room: roomId },
+          status: 'published',
+        });
+      }
+    }
   }
 
   public destroy(): void | Promise<void> {
@@ -188,6 +299,13 @@ export class DatabaseService implements ApplicationService {
       .findOne({
         status: 'published',
         documentId: roomId,
+        populate: {
+          graphDisplayConfiguration: {
+            populate: {
+              nodeDisplayConfigurations: {},
+            },
+          },
+        },
       });
     if (rawRoom == null) {
       return null;
@@ -222,7 +340,7 @@ export class DatabaseService implements ApplicationService {
         cover: {},
         scenarioGroup: {
           populate: {
-            database: {
+            room: {
               populate: {
                 graphDisplayConfiguration: {
                   populate: {
@@ -248,6 +366,11 @@ export class DatabaseService implements ApplicationService {
             mergeDatabase: {},
           },
         },
+        queries: {
+          populate: {
+            database: {},
+          },
+        },
       },
     });
     if (result == null) {
@@ -266,7 +389,7 @@ export class DatabaseService implements ApplicationService {
     }
     const displayConfiguration: FinalGraphDisplayConfiguration =
       MergableGraphDisplayConfiguration.createFromDb(
-        scenario.scenarioGroup?.database?.graphDisplayConfiguration,
+        scenario.scenarioGroup?.room?.graphDisplayConfiguration,
       )
         .byMerging(
           MergableGraphDisplayConfiguration.createFromDb(
@@ -331,14 +454,14 @@ export class DatabaseService implements ApplicationService {
   }
 
   public async getScenarioGroups(
-    databaseId: string,
+    roomId: string,
   ): Promise<GetScenarioGroupDBDTO[]> {
     return (
       await strapi.documents('api::scenario-group.scenario-group').findMany({
         status: 'published',
         sort: 'title:asc',
         populate: {
-          database: {
+          room: {
             populate: {
               graphDisplayConfiguration: {
                 populate: {
@@ -354,9 +477,9 @@ export class DatabaseService implements ApplicationService {
           },
         },
         filters: {
-          database: {
+          room: {
             documentId: {
-              $eq: databaseId,
+              $eq: roomId,
             },
           },
         },
@@ -421,8 +544,7 @@ export class DatabaseService implements ApplicationService {
       this,
       JSON.stringify({
         event: event.action,
-        params: event.params,
-        result: event.result as unknown,
+        model: event.model.uid,
       }),
     );
   }

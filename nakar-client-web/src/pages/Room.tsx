@@ -3,12 +3,12 @@ import { AppNavbar } from "../components/shared/AppNavbar.tsx";
 import { Canvas } from "../components/room/Canvas/Canvas.tsx";
 import { useEffect } from "react";
 import {
-  Databases,
   getRoom,
   getRoomGraph,
   getScenarios,
   Graph,
   Room as RoomSchema,
+  ScenarioGroups,
   WSActionLeaveRoom,
   WSEventPresentExpandNodePreview,
 } from "../../src-gen";
@@ -37,7 +37,7 @@ import { ExpandNodePreviewModal } from "../components/room/ExpandNodePreviewModa
 
 export type RoomContext = {
   initialRoomData: RoomSchema;
-  initialScenariosData: Databases;
+  initialScenariosData: ScenarioGroups;
   initialGraphData: Graph;
 };
 
@@ -51,7 +51,9 @@ export async function RoomLoader(
   }
 
   const room = resultOrThrow(await getRoom({ path: { id: roomId } }));
-  const scenarios = resultOrThrow(await getScenarios());
+  const scenarios = resultOrThrow(
+    await getScenarios({ path: { id: room.id } }),
+  );
   const graph = resultOrThrow(await getRoomGraph({ path: { id: roomId } }));
   return {
     initialRoomData: room,

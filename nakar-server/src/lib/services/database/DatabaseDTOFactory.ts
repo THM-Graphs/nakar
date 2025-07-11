@@ -10,7 +10,8 @@ import { match, P } from 'ts-pattern';
 import { ScaleType } from '../../tools/ScaleType';
 import { AdditionalQueryDBDTO } from './dto/AdditionalQueryDBDTO';
 import z from 'zod';
-import { GetScenarioParameterDTO } from './dto/GetScenarioParameterDTO';
+import { GetScenarioParameterDBDTO } from './dto/GetScenarioParameterDBDTO';
+import { GetScenarioQueryDBDTO } from './dto/GetScenarioQueryDBDTO';
 
 export class DatabaseDTOFactory {
   public createGetDatabaseDTOFromStrapi(
@@ -36,15 +37,13 @@ export class DatabaseDTOFactory {
   public createGetScenarioGroupDTOFromStrapi(
     db: Result<
       'api::scenario-group.scenario-group',
-      { populate: ['graphDisplayConfiguration', 'database'] }
+      { populate: ['graphDisplayConfiguration', 'room'] }
     >,
   ): GetScenarioGroupDBDTO {
     return {
       documentId: db.documentId,
       title: db.title ?? null,
-      database: db.database
-        ? this.createGetDatabaseDTOFromStrapi(db.database)
-        : null,
+      room: db.room ? this.createGetRoomDTOFromStrapi(db.room) : null,
       graphDisplayConfiguration:
         this._createGraphDisplayConfigurationDTOFromStrapi(
           db.graphDisplayConfiguration,
@@ -59,8 +58,8 @@ export class DatabaseDTOFactory {
         populate: [
           'graphDisplayConfiguration',
           'scenarioGroup',
-          'additionalQueries',
           'parameters',
+          'queries',
         ];
       }
     > & {
@@ -70,7 +69,6 @@ export class DatabaseDTOFactory {
     return {
       documentId: db.documentId,
       title: db.title ?? null,
-      query: db.query ?? null,
       description: db.description ?? null,
       cover:
         db.cover != null ? this._createGetMediaDTOFromStrapi(db.cover) : null,
@@ -81,24 +79,22 @@ export class DatabaseDTOFactory {
         this._createGraphDisplayConfigurationDTOFromStrapi(
           db.graphDisplayConfiguration,
         ),
-      additionalQueries:
-        db.additionalQueries?.map(
-          (
-            additionalQuery: Result<'graph.additional-query'>,
-          ): AdditionalQueryDBDTO =>
-            this._createAdditionalQueryDTOFromStrapi(additionalQuery),
-        ) ?? [],
       parameters:
         db.parameters?.map(
-          (parameter: Result<'graph.parameter'>): GetScenarioParameterDTO =>
+          (parameter: Result<'graph.parameter'>): GetScenarioParameterDBDTO =>
             this.createGetScenarioParameter(parameter),
+        ) ?? [],
+      queries:
+        db.queries?.map(
+          (q: Result<'graph.query'>): GetScenarioQueryDBDTO =>
+            this.createGetScenarioQuery(q),
         ) ?? [],
     };
   }
 
   public createGetScenarioParameter(
     db: Result<'graph.parameter'>,
-  ): GetScenarioParameterDTO {
+  ): GetScenarioParameterDBDTO {
     return {
       identifier: db.identifier ?? '',
       title: db.title ?? '',
@@ -106,13 +102,28 @@ export class DatabaseDTOFactory {
     };
   }
 
+  public createGetScenarioQuery(
+    db: Result<'graph.query', { populate: ['database'] }>,
+  ): GetScenarioQueryDBDTO {
+    return {
+      query: db.query ?? '',
+      database: db.database
+        ? this.createGetDatabaseDTOFromStrapi(db.database)
+        : null,
+    };
+  }
+
   public createGetRoomDTOFromStrapi(
-    db: Result<'api::room.room'>,
+    db: Result<'api::room.room', { populate: ['graphDisplayConfiguration'] }>,
   ): GetRoomDBDTO {
     return {
       documentId: db.documentId,
       title: db.title ?? null,
       graphJson: db.graphJson ?? null,
+      graphDisplayConfiguration:
+        this._createGraphDisplayConfigurationDTOFromStrapi(
+          db.graphDisplayConfiguration,
+        ),
     };
   }
 
@@ -151,7 +162,7 @@ export class DatabaseDTOFactory {
     const schema = z.object({
       documentId: z.string(),
       title: z.string().nullable(),
-      database: z.unknown(),
+      room: z.unknown().nullable(),
       graphDisplayConfiguration: z.unknown(),
     });
 
@@ -160,10 +171,32 @@ export class DatabaseDTOFactory {
     return {
       documentId: parsed.documentId,
       title: parsed.title,
-      database:
-        parsed.database != null
-          ? this.createGetDatabaseDTOFromUnknown(parsed.database)
+      room:
+        parsed.room != null
+          ? this.createGetRoomDTOFromUnknown(parsed.room)
           : null,
+      graphDisplayConfiguration:
+        this._createGraphDisplayConfigurationDTOFromUnknown(
+          parsed.graphDisplayConfiguration,
+        ),
+    };
+  }
+
+  public createGetRoomDTOFromUnknown(input: unknown): GetRoomDBDTO {
+    // eslint-disable-next-line @typescript-eslint/typedef
+    const schema = z.object({
+      documentId: z.string(),
+      title: z.string().nullable(),
+      graphJson: z.string().nullable(),
+      graphDisplayConfiguration: z.unknown().nullable(),
+    });
+
+    const parsed: z.infer<typeof schema> = schema.parse(input);
+
+    return {
+      documentId: parsed.documentId,
+      title: parsed.title,
+      graphJson: parsed.graphJson,
       graphDisplayConfiguration:
         this._createGraphDisplayConfigurationDTOFromUnknown(
           parsed.graphDisplayConfiguration,
@@ -176,13 +209,12 @@ export class DatabaseDTOFactory {
     const schema = z.object({
       documentId: z.string(),
       title: z.string().nullable(),
-      query: z.string().nullable(),
       cover: z.unknown(),
       description: z.string().nullable(),
       scenarioGroup: z.unknown(),
       graphDisplayConfiguration: z.unknown(),
-      additionalQueries: z.array(z.unknown()),
       parameters: z.array(z.unknown()),
+      queries: z.array(z.unknown()),
     });
 
     const parsed: z.infer<typeof schema> = schema.parse(input);
@@ -190,7 +222,6 @@ export class DatabaseDTOFactory {
     return {
       documentId: parsed.documentId,
       title: parsed.title,
-      query: parsed.query,
       description: parsed.description,
       cover:
         parsed.cover != null
@@ -204,21 +235,20 @@ export class DatabaseDTOFactory {
         this._createGraphDisplayConfigurationDTOFromUnknown(
           parsed.graphDisplayConfiguration,
         ),
-      additionalQueries: parsed.additionalQueries.map(
-        (additionalQuery: unknown): AdditionalQueryDBDTO => {
-          return this._createAdditionalQueryDTOFromUnknown(additionalQuery);
-        },
-      ),
       parameters: parsed.parameters.map(
-        (parameter: unknown): GetScenarioParameterDTO =>
+        (parameter: unknown): GetScenarioParameterDBDTO =>
           this.createScenarioParameterFromUnknown(parameter),
+      ),
+      queries: parsed.queries.map(
+        (q: unknown): GetScenarioQueryDBDTO =>
+          this.createScenarioQueryFromUnknown(q),
       ),
     };
   }
 
   public createScenarioParameterFromUnknown(
     input: unknown,
-  ): GetScenarioParameterDTO {
+  ): GetScenarioParameterDBDTO {
     // eslint-disable-next-line @typescript-eslint/typedef
     const schema = z.object({
       title: z.string(),
@@ -232,6 +262,24 @@ export class DatabaseDTOFactory {
       identifier: parsed.identifier,
       title: parsed.title,
       defaultValue: parsed.defaultValue,
+    };
+  }
+
+  public createScenarioQueryFromUnknown(input: unknown): GetScenarioQueryDBDTO {
+    // eslint-disable-next-line @typescript-eslint/typedef
+    const schema = z.object({
+      query: z.string(),
+      database: z.unknown().nullable(),
+    });
+
+    const parsed: z.infer<typeof schema> = schema.parse(input);
+
+    return {
+      query: parsed.query,
+      database:
+        parsed.database != null
+          ? this.createGetDatabaseDTOFromUnknown(parsed.database)
+          : null,
     };
   }
 

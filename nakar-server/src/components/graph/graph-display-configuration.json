@@ -58,6 +58,11 @@
     "compressRelationshipsWidthFactor": {
       "type": "decimal",
       "min": 1
+    },
+    "mergeNodeConfigurations": {
+      "type": "component",
+      "repeatable": true,
+      "component": "graph.merge-node-configuration"
     }
   }
 }

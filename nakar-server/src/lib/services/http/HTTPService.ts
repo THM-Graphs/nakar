@@ -5,7 +5,6 @@ import { LoggerService } from '../logger/LoggerService';
 import {
   operations,
   SchemaDatabase,
-  SchemaDatabases,
   SchemaGraph,
   SchemaGraphElements,
   SchemaGraphMetaData,
@@ -15,6 +14,7 @@ import {
   SchemaScenario,
   SchemaScenarioArgument,
   SchemaScenarioGroup,
+  SchemaScenarioGroups,
   SchemaVersion,
 } from '../../../../src-gen/schema';
 import { DatabaseService } from '../database/DatabaseService';
@@ -143,50 +143,35 @@ export class HTTPService implements ApplicationService {
 
   private _setupRoutes(): void {
     this._app.get(
-      '/scenarios',
-      this._handle(async (): Promise<SchemaDatabases> => {
-        const databases: GetDatabaseDBDTO[] =
-          await this._databaseService.getDatabases();
-        const databaseSchema: SchemaDatabase[] = await Promise.all(
-          databases.map(
-            async (database: GetDatabaseDBDTO): Promise<SchemaDatabase> => {
-              const scenarioGroups: GetScenarioGroupDBDTO[] =
-                await this._databaseService.getScenarioGroups(
-                  database.documentId,
+      '/room/:id/scenarios',
+      this._handle(async (req: Request): Promise<SchemaScenarioGroups> => {
+        const room: GetRoomDBDTO = await this._assertRoom(req);
+        const scenarioGroups: GetScenarioGroupDBDTO[] =
+          await this._databaseService.getScenarioGroups(room.documentId);
+        const scenarioGroupSchemas: SchemaScenarioGroup[] = await Promise.all(
+          scenarioGroups.map(
+            async (
+              scenarioGroup: GetScenarioGroupDBDTO,
+            ): Promise<SchemaScenarioGroup> => {
+              const scenarios: GetScenarioDBDTO[] =
+                await this._databaseService.getScenarios(
+                  scenarioGroup.documentId,
                 );
-              const scenarioGroupSchemas: SchemaScenarioGroup[] =
-                await Promise.all(
-                  scenarioGroups.map(
-                    async (
-                      scenarioGroup: GetScenarioGroupDBDTO,
-                    ): Promise<SchemaScenarioGroup> => {
-                      const scenarios: GetScenarioDBDTO[] =
-                        await this._databaseService.getScenarios(
-                          scenarioGroup.documentId,
-                        );
-                      const scenarioSchemas: SchemaScenario[] = scenarios.map(
-                        (scenario: GetScenarioDBDTO): SchemaScenario => {
-                          return this._schemaDTOFactory.createSchemaScenario(
-                            scenario,
-                          );
-                        },
-                      );
-                      return this._schemaDTOFactory.createSchemaScenarioGroup(
-                        scenarioGroup,
-                        scenarioSchemas,
-                      );
-                    },
-                  ),
-                );
-              return this._schemaDTOFactory.createSchemaDatabase(
-                database,
-                scenarioGroupSchemas,
+              const scenarioSchemas: SchemaScenario[] = scenarios.map(
+                (scenario: GetScenarioDBDTO): SchemaScenario => {
+                  return this._schemaDTOFactory.createSchemaScenario(scenario);
+                },
+              );
+              return this._schemaDTOFactory.createSchemaScenarioGroup(
+                scenarioGroup,
+                scenarioSchemas,
               );
             },
           ),
         );
+
         return {
-          databases: databaseSchema,
+          scenarioGroups: scenarioGroupSchemas,
         };
       }),
     );
@@ -250,26 +235,25 @@ export class HTTPService implements ApplicationService {
             `Element with id ${elementId} not found in room ${room.documentId}`,
           );
         }
-        const databaseId: string = element.source;
-
         const result: SchemaScenarioGroup[] = [];
 
-        const scenarioGroups =
-          await this._databaseService.getScenarioGroups(databaseId);
+        const scenarioGroups: GetScenarioGroupDBDTO[] =
+          await this._databaseService.getScenarioGroups(room.documentId);
         for (const scenarioGroup of scenarioGroups) {
-          const scenarios = await this._databaseService.getScenarios(
-            scenarioGroup.documentId,
-          );
-          const parametrizedScenarios = scenarios.filter(
-            (s) => s.parameters.length > 0,
+          const scenarios: GetScenarioDBDTO[] =
+            await this._databaseService.getScenarios(scenarioGroup.documentId);
+          const parametrizedScenarios: GetScenarioDBDTO[] = scenarios.filter(
+            (s: GetScenarioDBDTO): boolean => s.parameters.length > 0,
           );
           if (parametrizedScenarios.length > 0) {
-            const groupdDto = this._schemaDTOFactory.createSchemaScenarioGroup(
-              scenarioGroup,
-              parametrizedScenarios.map((s) =>
-                this._schemaDTOFactory.createSchemaScenario(s),
-              ),
-            );
+            const groupdDto: SchemaScenarioGroup =
+              this._schemaDTOFactory.createSchemaScenarioGroup(
+                scenarioGroup,
+                parametrizedScenarios.map(
+                  (s: GetScenarioDBDTO): SchemaScenario =>
+                    this._schemaDTOFactory.createSchemaScenario(s),
+                ),
+              );
             result.push(groupdDto);
           }
         }

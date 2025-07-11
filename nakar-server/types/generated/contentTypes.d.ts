@@ -425,11 +425,19 @@ export interface ApiRoomRoom extends Struct.CollectionTypeSchema {
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    graphDisplayConfiguration: Schema.Attribute.Component<
+      'graph.graph-display-configuration',
+      false
+    >;
     graphJson: Schema.Attribute.Text;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<'oneToMany', 'api::room.room'> &
       Schema.Attribute.Private;
     publishedAt: Schema.Attribute.DateTime;
+    scenarioGroups: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::scenario-group.scenario-group'
+    >;
     title: Schema.Attribute.String;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
@@ -465,6 +473,7 @@ export interface ApiScenarioGroupScenarioGroup
     > &
       Schema.Attribute.Private;
     publishedAt: Schema.Attribute.DateTime;
+    room: Schema.Attribute.Relation<'manyToOne', 'api::room.room'>;
     scenarios: Schema.Attribute.Relation<'oneToMany', 'api::scenario.scenario'>;
     title: Schema.Attribute.String;
     updatedAt: Schema.Attribute.DateTime;
@@ -506,6 +515,7 @@ export interface ApiScenarioScenario extends Struct.CollectionTypeSchema {
       Schema.Attribute.Private;
     parameters: Schema.Attribute.Component<'graph.parameter', true>;
     publishedAt: Schema.Attribute.DateTime;
+    queries: Schema.Attribute.Component<'graph.query', true>;
     query: Schema.Attribute.Text;
     scenarioGroup: Schema.Attribute.Relation<
       'manyToOne',

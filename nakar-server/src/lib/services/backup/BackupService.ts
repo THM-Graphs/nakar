@@ -217,22 +217,12 @@ export class BackupService implements ApplicationService {
       const getScenarioGroupObject: GetScenarioGroupDBDTO =
         factory.createGetScenarioGroupDTOFromUnknown(json);
 
-      const databaseId: string | null = getScenarioGroupObject.database
-        ? (insertResult.insertedDatabases.get(
-            getScenarioGroupObject.database.documentId,
-          )?.documentId ?? null)
-        : null;
       const insertedObject: GetScenarioGroupDBDTO =
         await this._database.saveScenarioGroup({
           title: getScenarioGroupObject.title,
           graphDisplayConfiguration:
             getScenarioGroupObject.graphDisplayConfiguration,
-          database:
-            databaseId != null
-              ? {
-                  documentId: databaseId,
-                }
-              : null,
+          room: null,
         });
       insertResult.insertedScenarioGroups.set(
         getScenarioGroupObject.documentId,
@@ -267,7 +257,6 @@ export class BackupService implements ApplicationService {
       const insertedObject: GetScenarioDBDTO =
         await this._database.saveScenario({
           title: getScenarioObject.title,
-          query: getScenarioObject.query,
           description: getScenarioObject.description,
           cover: null, // TODO
           scenarioGroup:
@@ -278,7 +267,6 @@ export class BackupService implements ApplicationService {
               : null,
           graphDisplayConfiguration:
             getScenarioObject.graphDisplayConfiguration,
-          additionalQueries: getScenarioObject.additionalQueries,
         });
       insertResult.insertedScenarios.set(
         getScenarioObject.documentId,

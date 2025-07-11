@@ -1,0 +1,32 @@
+{
+  "collectionName": "components_graph_merge_node_configurations",
+  "info": {
+    "displayName": "Merge Node Configuration",
+    "icon": "code"
+  },
+  "options": {},
+  "attributes": {
+    "originalLabel": {
+      "type": "string"
+    },
+    "originalProperties": {
+      "type": "string"
+    },
+    "mergeLabel": {
+      "type": "string"
+    },
+    "mergeProperties": {
+      "type": "string"
+    },
+    "originalDatabase": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::database.database"
+    },
+    "mergeDatabase": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::database.database"
+    }
+  }
+}

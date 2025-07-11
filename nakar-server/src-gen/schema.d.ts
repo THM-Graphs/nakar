@@ -4,7 +4,7 @@
  */
 
 export interface paths {
-    readonly "/scenarios": {
+    readonly "/room/{id}/scenarios": {
         readonly parameters: {
             readonly query?: never;
             readonly header?: never;
@@ -438,16 +438,15 @@ export interface components {
             readonly url: string | null;
             readonly browserUrl: string | null;
             readonly editUrl: string | null;
-            readonly scenarioGroups: readonly components["schemas"]["ScenarioGroup"][];
-        };
-        readonly Databases: {
-            readonly databases: readonly components["schemas"]["Database"][];
         };
         readonly ScenarioGroup: {
             readonly id: string;
             readonly title: string | null;
             readonly editUrl: string | null;
             readonly scenarios: readonly components["schemas"]["Scenario"][];
+        };
+        readonly ScenarioGroups: {
+            readonly scenarioGroups: readonly components["schemas"]["ScenarioGroup"][];
         };
         readonly Scenario: {
             readonly id: string;
@@ -615,8 +614,8 @@ export type SchemaGraph = components['schemas']['Graph'];
 export type SchemaRoom = components['schemas']['Room'];
 export type SchemaRooms = components['schemas']['Rooms'];
 export type SchemaDatabase = components['schemas']['Database'];
-export type SchemaDatabases = components['schemas']['Databases'];
 export type SchemaScenarioGroup = components['schemas']['ScenarioGroup'];
+export type SchemaScenarioGroups = components['schemas']['ScenarioGroups'];
 export type SchemaScenario = components['schemas']['Scenario'];
 export type SchemaScenarioParameter = components['schemas']['ScenarioParameter'];
 export type SchemaScenarioArgument = components['schemas']['ScenarioArgument'];
@@ -651,7 +650,9 @@ export interface operations {
         readonly parameters: {
             readonly query?: never;
             readonly header?: never;
-            readonly path?: never;
+            readonly path: {
+                readonly id: string;
+            };
             readonly cookie?: never;
         };
         readonly requestBody?: never;
@@ -662,7 +663,7 @@ export interface operations {
                     readonly [name: string]: unknown;
                 };
                 content: {
-                    readonly "application/json": components["schemas"]["Databases"];
+                    readonly "application/json": components["schemas"]["ScenarioGroups"];
                 };
             };
         };
