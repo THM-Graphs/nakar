@@ -37,9 +37,11 @@ import { ToManyElementsError } from '../neo4j/ToManyElementsError';
 import { ExpandNodePreview } from '../neo4j/expand-node-preview/ExpandNodePreview';
 import { RoomServiceEventPresentExpandNodePreview } from './events/RoomServiceEventPresentExpandNodePreview';
 import { NotFound } from 'http-errors';
-import { AdditionalQueryDBDTO } from '../database/dto/AdditionalQueryDBDTO';
 import { MutableEdgeIndex } from './graph/MutableEdgeIndex';
 import { Range } from '../../tools/Range';
+import { MergeNodeConfiguration } from './scenario-pipeline/display-configuration/MergeNodeConfiguration';
+import { randomUUID } from 'node:crypto';
+import { MutablePropertyCollection } from './graph/MutablePropertyCollection';
 
 export class RoomService implements ApplicationService {
   private readonly _workers: SMap<string, Worker>;
@@ -70,7 +72,9 @@ export class RoomService implements ApplicationService {
     }
 
     this._database.onRoomAdded$.subscribe((room: GetRoomDBDTO): void => {
-      this._initRoom(room);
+      this._initRoom(room).catch((error: unknown): void => {
+        this._logger.error(this, error);
+      });
     });
     this._database.onRoomDeleted$.subscribe((room: GetRoomDBDTO): void => {
       this._destroyRoom(room.documentId).catch((error: unknown): void => {
@@ -241,20 +245,23 @@ export class RoomService implements ApplicationService {
           await this._connectNodes(graph);
         }
 
-        // --- Additional Queries
-        // TODO: Implement Merge config
+        // --- Merge nodes
+        this._mergeNodes(graph, displayConfiguration);
 
         // --- Compress Relationships
         if (
           displayConfiguration.compressRelationships &&
           graph.edges.size > 0
         ) {
-          this._compressRelationships(graph);
+          this._compressRelationships(graph, displayConfiguration);
         }
 
         // Layout
         if (graph.nodes.size > 0) {
-          const physical: PhysicalGraph = graph.toPhysicalGraph(this._logger);
+          const physical: PhysicalGraph = graph.toPhysicalGraph(
+            displayConfiguration,
+            this._logger,
+          );
           const simulation: PhysicsSimulation = new PhysicsSimulation(
             physical,
             this._logger,
@@ -269,7 +276,7 @@ export class RoomService implements ApplicationService {
         this._graphs.set(params.roomId, graph);
         this._sendActionToWorker(params.roomId, {
           type: 'WTActionSetGraph',
-          graph: graph.toPhysicalGraph(this._logger),
+          graph: graph.toPhysicalGraph(displayConfiguration, this._logger),
         });
         await this.saveGraph(params.roomId);
         this._onEvent.next({
@@ -379,16 +386,21 @@ export class RoomService implements ApplicationService {
             `Expand node result for ${nodeId}: ${expandResult.nodes.size.toString()} nodes and ${expandResult.relationships.size.toString()} relationships.`,
           );
 
-          if (graph.displayConfiguration.connectResultNodes) {
+          const displayConfiguration: FinalGraphDisplayConfiguration =
+            await this._database.getGraphDisplayConfiguration(
+              scenario.documentId,
+            );
+          this._mergeNodes(graph, displayConfiguration);
+          if (displayConfiguration.connectResultNodes) {
             await this._connectNodes(graph);
           }
-          if (graph.displayConfiguration.compressRelationships) {
-            this._compressRelationships(graph);
+          if (displayConfiguration.compressRelationships) {
+            this._compressRelationships(graph, displayConfiguration);
           }
 
           this._sendActionToWorker(params.roomId, {
             type: 'WTActionSetGraph',
-            graph: graph.toPhysicalGraph(this._logger),
+            graph: graph.toPhysicalGraph(displayConfiguration, this._logger),
           });
           this._sendActionToWorker(params.roomId, {
             type: 'WTActionTriggerPhysics',
@@ -428,6 +440,12 @@ export class RoomService implements ApplicationService {
     nodeIds: readonly string[];
   }): Promise<void> {
     const graph: MutableGraph = this.getGraph(params.roomId);
+    const config: FinalGraphDisplayConfiguration =
+      graph.metaData.scenarioId != null
+        ? await this._database.getGraphDisplayConfiguration(
+            graph.metaData.scenarioId,
+          )
+        : FinalGraphDisplayConfiguration.empty();
 
     await this._runWithRoomLock(params.roomId, 'Focus nodes', (): void => {
       const result: ExpandNodesResult = {
@@ -447,7 +465,7 @@ export class RoomService implements ApplicationService {
 
       this._sendActionToWorker(params.roomId, {
         type: 'WTActionSetGraph',
-        graph: graph.toPhysicalGraph(this._logger),
+        graph: graph.toPhysicalGraph(config, this._logger),
       });
       this._onEvent.next({
         type: 'RoomServiceEventGraphElementsChanged',
@@ -466,79 +484,89 @@ export class RoomService implements ApplicationService {
     edgeIds: readonly string[];
     edgeTypes: readonly string[];
   }): Promise<void> {
-    await this._runWithRoomLock(params.roomId, 'Deleting nodes', (): void => {
-      const graph: MutableGraph = this.getGraph(params.roomId);
+    await this._runWithRoomLock(
+      params.roomId,
+      'Deleting nodes',
+      async (): Promise<void> => {
+        const graph: MutableGraph = this.getGraph(params.roomId);
+        const config: FinalGraphDisplayConfiguration =
+          graph.metaData.scenarioId != null
+            ? await this._database.getGraphDisplayConfiguration(
+                graph.metaData.scenarioId,
+              )
+            : FinalGraphDisplayConfiguration.empty();
 
-      const result: ExpandNodesResult = {
-        nodesAddedCount: 0,
-        edgeAddedCount: 0,
-      };
+        const result: ExpandNodesResult = {
+          nodesAddedCount: 0,
+          edgeAddedCount: 0,
+        };
 
-      const nodesToDelete: SSet<MutableNode> = new SSet<MutableNode>();
-      const edgesToDelete: SSet<MutableEdge> = new SSet<MutableEdge>();
+        const nodesToDelete: SSet<MutableNode> = new SSet<MutableNode>();
+        const edgesToDelete: SSet<MutableEdge> = new SSet<MutableEdge>();
 
-      for (const nodeId of params.nodeIds) {
-        const node: MutableNode | null = graph.nodes.get(nodeId);
-        if (node != null) {
-          nodesToDelete.add(node);
+        for (const nodeId of params.nodeIds) {
+          const node: MutableNode | null = graph.nodes.get(nodeId);
+          if (node != null) {
+            nodesToDelete.add(node);
+          }
         }
-      }
-      for (const label of params.labels) {
-        for (const node of graph.nodes.getByLabel(label)) {
-          nodesToDelete.add(node);
-        }
-      }
-
-      for (const node of nodesToDelete) {
-        const didDelete: boolean = graph.nodes.remove(node);
-        if (didDelete) {
-          result.nodesAddedCount -= 1;
+        for (const label of params.labels) {
+          for (const node of graph.nodes.getByLabel(label)) {
+            nodesToDelete.add(node);
+          }
         }
 
-        for (const edge of graph.edges.getByStartOrEndNodeId(node.id)) {
-          edgesToDelete.add(edge);
+        for (const node of nodesToDelete) {
+          const didDelete: boolean = graph.nodes.remove(node);
+          if (didDelete) {
+            result.nodesAddedCount -= 1;
+          }
+
+          for (const edge of graph.edges.getByStartOrEndNodeId(node.id)) {
+            edgesToDelete.add(edge);
+          }
+
+          this._logger.debug(this, `Did delete node ${node.id}`);
         }
 
-        this._logger.debug(this, `Did delete node ${node.id}`);
-      }
-
-      for (const edgeId of params.edgeIds) {
-        const edge: MutableEdge | null = graph.edges.get(edgeId);
-        if (edge != null) {
-          edgesToDelete.add(edge);
+        for (const edgeId of params.edgeIds) {
+          const edge: MutableEdge | null = graph.edges.get(edgeId);
+          if (edge != null) {
+            edgesToDelete.add(edge);
+          }
         }
-      }
 
-      for (const edgeType of params.edgeTypes) {
-        const edges: SSet<MutableEdge> = graph.edges.getByType(edgeType);
-        for (const edge of edges) {
-          edgesToDelete.add(edge);
+        for (const edgeType of params.edgeTypes) {
+          const edges: SSet<MutableEdge> = graph.edges.getByType(edgeType);
+          for (const edge of edges) {
+            edgesToDelete.add(edge);
+          }
         }
-      }
 
-      for (const edge of edgesToDelete) {
-        const didDelete: boolean = graph.edges.remove(edge);
-        if (didDelete) {
-          result.edgeAddedCount -= 1;
+        for (const edge of edgesToDelete) {
+          const didDelete: boolean = graph.edges.remove(edge);
+          if (didDelete) {
+            result.edgeAddedCount -= 1;
+          }
         }
-      }
 
-      this._sendActionToWorker(params.roomId, {
-        type: 'WTActionSetGraph',
-        graph: graph.toPhysicalGraph(this._logger),
-      });
-      this._sendActionToWorker(params.roomId, {
-        type: 'WTActionTriggerPhysics',
-        amount: 'short',
-      });
-      this._onEvent.next({
-        type: 'RoomServiceEventGraphElementsChanged',
-        graph: graph,
-        roomId: params.roomId,
-        nodesAdded: result.nodesAddedCount,
-        edgesAdded: result.edgeAddedCount,
-      } satisfies RoomServiceEvent);
-    });
+        this._sendActionToWorker(params.roomId, {
+          type: 'WTActionSetGraph',
+          graph: graph.toPhysicalGraph(config, this._logger),
+        });
+        this._sendActionToWorker(params.roomId, {
+          type: 'WTActionTriggerPhysics',
+          amount: 'short',
+        });
+        this._onEvent.next({
+          type: 'RoomServiceEventGraphElementsChanged',
+          graph: graph,
+          roomId: params.roomId,
+          nodesAdded: result.nodesAddedCount,
+          edgesAdded: result.edgeAddedCount,
+        } satisfies RoomServiceEvent);
+      },
+    );
   }
 
   public relayout(params: { roomId: string }): void {
@@ -628,11 +656,11 @@ export class RoomService implements ApplicationService {
     const rooms: GetRoomDBDTO[] = await this._database.getRooms();
 
     for (const room of rooms) {
-      this._initRoom(room);
+      await this._initRoom(room);
     }
   }
 
-  private _initRoom(room: GetRoomDBDTO): void {
+  private async _initRoom(room: GetRoomDBDTO): Promise<void> {
     this._logger.debug(
       this,
       `Will load graph of room ${room.documentId} ('${room.title ?? ''}') into memory.`,
@@ -659,17 +687,26 @@ export class RoomService implements ApplicationService {
       }
     }
 
-    this._startWorkerIfStopped(room.documentId);
+    await this._startWorkerIfStopped(room.documentId);
   }
 
-  private _startWorkerIfStopped(roomId: string): void {
+  private async _startWorkerIfStopped(roomId: string): Promise<void> {
     const foundWorker: Worker | undefined = this._workers.get(roomId);
 
     if (foundWorker != null) {
       return;
     }
 
+    const graph: MutableGraph = this.getGraph(roomId);
+    const config: FinalGraphDisplayConfiguration =
+      graph.metaData.scenarioId != null
+        ? await this._database.getGraphDisplayConfiguration(
+            graph.metaData.scenarioId,
+          )
+        : FinalGraphDisplayConfiguration.empty();
+
     const physicalGraph: PhysicalGraph = this.getGraph(roomId).toPhysicalGraph(
+      config,
       this._logger,
     );
     const workerData: RoomWorkerData = {
@@ -815,110 +852,6 @@ export class RoomService implements ApplicationService {
     }
   }
 
-  private _mergeNodes(
-    graph: MutableGraph,
-    additionalQuery: AdditionalQueryDBDTO,
-    result: Neo4jGraphElements,
-  ): void {
-    const shouldMergeNodes = (
-      originalNode: MutableNode,
-      additionalNode: MutableNode,
-      config: AdditionalQueryDBDTO,
-      additionalGraph: Neo4jGraphElements,
-    ): boolean => {
-      if (!additionalGraph.nodes.has(additionalNode.id)) {
-        return false;
-      }
-
-      if (config.mergeProperties.length !== config.originalProperties.length) {
-        return false;
-      }
-
-      if (originalNode.id === additionalNode.id) {
-        return false;
-      }
-
-      if (
-        !originalNode.labels.has(config.originalLabel) ||
-        !additionalNode.labels.has(config.mergeLabel)
-      ) {
-        return false;
-      }
-
-      for (let i: number = 0; i < config.originalProperties.length; i += 1) {
-        const originalValue: unknown = originalNode.properties.properties.get(
-          config.originalProperties[i],
-        );
-        if (originalValue == null) {
-          return false;
-        }
-
-        const mergeValue: unknown = additionalNode.properties.properties.get(
-          config.mergeProperties[i],
-        );
-        if (mergeValue == null) {
-          return false;
-        }
-
-        if (originalValue !== mergeValue) {
-          return false;
-        }
-      }
-
-      return true;
-    };
-
-    const mergeNodes = (
-      originalNode: MutableNode,
-      additionalNode: MutableNode,
-    ): void => {
-      originalNode.additionalSources.add(additionalNode.source);
-
-      for (const relationship of graph.edges.getByStartNodeId(
-        additionalNode.id,
-      )) {
-        graph.edges.remove(relationship);
-        relationship.startNodeId = originalNode.id;
-        graph.edges.add(relationship);
-        this._logger.debug(
-          this,
-          `Did change startNodeId of ${relationship.id} (${relationship.title}) from ${additionalNode.id} (${additionalNode.title(graph, this._logger)}) to ${originalNode.id} (${originalNode.title(graph, this._logger)})`,
-        );
-      }
-      for (const relationship of graph.edges.getByEndNodeId(
-        additionalNode.id,
-      )) {
-        graph.edges.remove(relationship);
-        relationship.endNodeId = originalNode.id;
-        graph.edges.add(relationship);
-        this._logger.debug(
-          this,
-          `Did change endNodeId of ${relationship.id} (${relationship.title}) from ${additionalNode.id} (${additionalNode.title(graph, this._logger)}) to ${originalNode.id} (${originalNode.title(graph, this._logger)})`,
-        );
-      }
-
-      graph.nodes.remove(additionalNode);
-      this._logger.debug(
-        this,
-        `Did delete additional node after merge: ${additionalNode.id} (${additionalNode.title(graph, this._logger)})`,
-      );
-    };
-
-    for (const originalNode of graph.nodes.nodes) {
-      for (const mergeNode of graph.nodes.nodes) {
-        if (
-          shouldMergeNodes(originalNode, mergeNode, additionalQuery, result)
-        ) {
-          this._logger.debug(
-            this,
-            `Will merge nodes: ${originalNode.title(graph, this._logger)}, ${mergeNode.title(graph, this._logger)}`,
-          );
-          mergeNodes(originalNode, mergeNode);
-        }
-      }
-    }
-  }
-
   private async _connectNodes(graph: MutableGraph): Promise<void> {
     for (const source of graph.nodes.getSources()) {
       const nodesToConnect: SSet<string> = graph.nodes
@@ -946,7 +879,10 @@ export class RoomService implements ApplicationService {
     }
   }
 
-  private _compressRelationships(graph: MutableGraph): void {
+  private _compressRelationships(
+    graph: MutableGraph,
+    displayConfiguration: FinalGraphDisplayConfiguration,
+  ): void {
     const getFromHandledRelsCache = (
       nodeAId: string,
       nodeBId: string,
@@ -1022,17 +958,116 @@ export class RoomService implements ApplicationService {
 
     const toRange: Range = new Range({
       floor: 2,
-      ceiling: 2 * graph.displayConfiguration.compressRelationshipsWidthFactor,
+      ceiling: 2 * displayConfiguration.compressRelationshipsWidthFactor,
     });
 
     for (const relationship of relationships.edges) {
       relationship.width = fromRange.scaleValue(
         toRange,
         relationship.compressedCount,
-        graph.displayConfiguration.scaleType,
+        displayConfiguration.scaleType,
       );
     }
 
     graph.edges = relationships;
+  }
+
+  private _mergeNodes(
+    graph: MutableGraph,
+    displayConfiguration: FinalGraphDisplayConfiguration,
+  ): void {
+    for (const mergeConfig of displayConfiguration.mergeNodeConfigurations) {
+      const originalNodes: SSet<MutableNode> = graph.nodes.getBySource(
+        mergeConfig.originalDatabaseId,
+      );
+      const mergeNodes: SSet<MutableNode> = graph.nodes.getBySource(
+        mergeConfig.mergeDatabaseId,
+      );
+
+      for (const originalNode of originalNodes) {
+        for (const mergeNode of mergeNodes) {
+          const shouldMerge: boolean = this._shouldMergeNodes(
+            graph,
+            originalNode,
+            mergeNode,
+            mergeConfig,
+          );
+          if (shouldMerge) {
+            graph.edges.add(
+              new MutableEdge({
+                id: randomUUID(),
+                compressedCount: 1,
+                startNodeId: originalNode.id,
+                endNodeId: mergeNode.id,
+                source: originalNode.source,
+                type: 'MERGED_WITH',
+                width: MutableEdge.defaultWidth,
+                properties: new MutablePropertyCollection({
+                  properties: new SMap([['merge', mergeConfig]]),
+                }),
+                namesInQuery: new SSet(),
+              }),
+            );
+            graph.edges.add(
+              new MutableEdge({
+                id: randomUUID(),
+                compressedCount: 1,
+                startNodeId: mergeNode.id,
+                endNodeId: originalNode.id,
+                source: mergeNode.source,
+                type: 'MERGED_WITH',
+                width: MutableEdge.defaultWidth,
+                properties: new MutablePropertyCollection({
+                  properties: new SMap([['merge', mergeConfig]]),
+                }),
+                namesInQuery: new SSet(),
+              }),
+            );
+          }
+        }
+      }
+    }
+  }
+
+  private _shouldMergeNodes(
+    graph: MutableGraph,
+    originalNode: MutableNode,
+    mergeNode: MutableNode,
+    config: MergeNodeConfiguration,
+  ): boolean {
+    // TODO: Prevent double merge
+
+    if (config.mergeProperties.length !== config.originalProperties.length) {
+      return false;
+    }
+
+    if (
+      !originalNode.labels.has(config.originalLabel) ||
+      !mergeNode.labels.has(config.mergeLabel)
+    ) {
+      return false;
+    }
+
+    for (let i: number = 0; i < config.originalProperties.length; i += 1) {
+      const originalValue: unknown = originalNode.properties.properties.get(
+        config.originalProperties[i],
+      );
+      if (originalValue == null) {
+        return false;
+      }
+
+      const mergeValue: unknown = mergeNode.properties.properties.get(
+        config.mergeProperties[i],
+      );
+      if (mergeValue == null) {
+        return false;
+      }
+
+      if (originalValue !== mergeValue) {
+        return false;
+      }
+    }
+
+    return true;
   }
 }

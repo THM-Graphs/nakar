@@ -5,6 +5,9 @@ import { FinalGraphDisplayConfiguration } from './FinalGraphDisplayConfiguration
 import { SMap } from '../../../../tools/Map';
 import { NodeDisplayConfigurationDBDTO } from '../../../database/dto/NodeDisplayConfigurationDBDTO';
 import { FinalNodeDisplayConfiguration } from './FinalNodeDisplayConfiguration';
+import { SSet } from '../../../../tools/Set';
+import { MergeNodeConfiguration } from './MergeNodeConfiguration';
+import { MergeNodeConfigurationDBDTO } from '../../../database/dto/MergeNodeConfigurationDBDTO';
 
 export class MergableGraphDisplayConfiguration {
   public readonly connectResultNodes: boolean | null;
@@ -17,6 +20,7 @@ export class MergableGraphDisplayConfiguration {
   public readonly compressRelationships: boolean | null;
   public readonly compressRelationshipsWidthFactor: number | null;
   public readonly scaleType: ScaleType | null;
+  public readonly mergeNodeConfigurations: SSet<MergeNodeConfiguration>;
 
   public constructor(data: {
     connectResultNodes: boolean | null;
@@ -26,6 +30,7 @@ export class MergableGraphDisplayConfiguration {
     compressRelationships: boolean | null;
     compressRelationshipsWidthFactor: number | null;
     scaleType: ScaleType | null;
+    mergeNodeConfigurations: SSet<MergeNodeConfiguration>;
   }) {
     this.connectResultNodes = data.connectResultNodes;
     this.growNodesBasedOnDegree = data.growNodesBasedOnDegree;
@@ -35,6 +40,7 @@ export class MergableGraphDisplayConfiguration {
     this.compressRelationshipsWidthFactor =
       data.compressRelationshipsWidthFactor;
     this.scaleType = data.scaleType;
+    this.mergeNodeConfigurations = data.mergeNodeConfigurations;
   }
 
   public static createFromDb(
@@ -74,6 +80,26 @@ export class MergableGraphDisplayConfiguration {
         nodeDisplayConfigurations ??
         new SMap<string, MergableNodeDisplayConfiguration>(),
       scaleType: dbConfig?.scaleType ?? null,
+      mergeNodeConfigurations: new SSet(
+        (dbConfig?.mergeNodeConfigurations ?? []).map(
+          (
+            mergeNodeConfiguration: MergeNodeConfigurationDBDTO,
+          ): MergeNodeConfiguration => ({
+            originalLabel: mergeNodeConfiguration.originalLabel ?? '',
+            originalProperties: (
+              mergeNodeConfiguration.originalProperties ?? ''
+            )
+              .split(',')
+              .map((s: string): string => s.trim()),
+            originalDatabaseId: mergeNodeConfiguration.originalDatabaseId ?? '',
+            mergeLabel: mergeNodeConfiguration.originalLabel ?? '',
+            mergeProperties: (mergeNodeConfiguration.mergeProperties ?? '')
+              .split(',')
+              .map((s: string): string => s.trim()),
+            mergeDatabaseId: mergeNodeConfiguration.mergeDatabaseId ?? '',
+          }),
+        ),
+      ),
     });
   }
 
@@ -86,6 +112,7 @@ export class MergableGraphDisplayConfiguration {
       compressRelationships: null,
       compressRelationshipsWidthFactor: null,
       scaleType: null,
+      mergeNodeConfigurations: new SSet(),
     });
   }
 
@@ -125,6 +152,9 @@ export class MergableGraphDisplayConfiguration {
         other.compressRelationshipsWidthFactor ??
         this.compressRelationshipsWidthFactor,
       scaleType: other.scaleType ?? this.scaleType,
+      mergeNodeConfigurations: this.mergeNodeConfigurations.byMerging(
+        other.mergeNodeConfigurations,
+      ),
     });
   }
 
@@ -143,6 +173,7 @@ export class MergableGraphDisplayConfiguration {
       compressRelationshipsWidthFactor:
         this.compressRelationshipsWidthFactor ?? 10,
       scaleType: this.scaleType ?? ScaleType.linear,
+      mergeNodeConfigurations: this.mergeNodeConfigurations,
     });
   }
 }

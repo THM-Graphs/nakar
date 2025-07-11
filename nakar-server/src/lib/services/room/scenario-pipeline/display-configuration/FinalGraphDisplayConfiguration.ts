@@ -3,6 +3,8 @@ import { FinalNodeDisplayConfiguration } from './FinalNodeDisplayConfiguration';
 import { SMap } from '../../../../tools/Map';
 import { MergableGraphDisplayConfiguration } from './MergableGraphDisplayConfiguration';
 import { z } from 'zod';
+import { MergeNodeConfiguration } from './MergeNodeConfiguration';
+import { SSet } from '../../../../tools/Set';
 
 export class FinalGraphDisplayConfiguration {
   // eslint-disable-next-line @typescript-eslint/typedef
@@ -29,6 +31,7 @@ export class FinalGraphDisplayConfiguration {
   public readonly compressRelationships: boolean;
   public readonly compressRelationshipsWidthFactor: number;
   public readonly scaleType: ScaleType;
+  public readonly mergeNodeConfigurations: SSet<MergeNodeConfiguration>;
 
   public constructor(data: {
     connectResultNodes: boolean;
@@ -38,6 +41,7 @@ export class FinalGraphDisplayConfiguration {
     compressRelationships: boolean;
     compressRelationshipsWidthFactor: number;
     scaleType: ScaleType;
+    mergeNodeConfigurations: SSet<MergeNodeConfiguration>;
   }) {
     this.connectResultNodes = data.connectResultNodes;
     this.growNodesBasedOnDegree = data.growNodesBasedOnDegree;
@@ -47,54 +51,10 @@ export class FinalGraphDisplayConfiguration {
     this.compressRelationshipsWidthFactor =
       data.compressRelationshipsWidthFactor;
     this.scaleType = data.scaleType;
+    this.mergeNodeConfigurations = data.mergeNodeConfigurations;
   }
 
   public static empty(): FinalGraphDisplayConfiguration {
     return MergableGraphDisplayConfiguration.empty().finalize();
-  }
-
-  public static fromPlain(
-    plain: z.infer<typeof FinalGraphDisplayConfiguration.schema>,
-  ): FinalGraphDisplayConfiguration {
-    return new FinalGraphDisplayConfiguration({
-      connectResultNodes: plain.connectResultNodes,
-      growNodesBasedOnDegree: plain.growNodesBasedOnDegree,
-      growNodesBasedOnDegreeFactor: plain.growNodesBasedOnDegreeFactor,
-      nodeDisplayConfigurations: SMap.fromRecord(
-        plain.nodeDisplayConfigurations,
-      ).map(
-        (
-          plainNodeDisplayConfig: z.infer<
-            typeof FinalNodeDisplayConfiguration.schema
-          >,
-        ): FinalNodeDisplayConfiguration => {
-          return FinalNodeDisplayConfiguration.fromPlain(
-            plainNodeDisplayConfig,
-          );
-        },
-      ),
-      compressRelationships: plain.compressRelationships,
-      compressRelationshipsWidthFactor: plain.compressRelationshipsWidthFactor,
-      scaleType: plain.scaleType,
-    });
-  }
-
-  public toPlain(): z.infer<typeof FinalGraphDisplayConfiguration.schema> {
-    return {
-      connectResultNodes: this.connectResultNodes,
-      growNodesBasedOnDegree: this.growNodesBasedOnDegree,
-      growNodesBasedOnDegreeFactor: this.growNodesBasedOnDegreeFactor,
-      nodeDisplayConfigurations: this.nodeDisplayConfigurations
-        .map(
-          (
-            nodeDisplayConfig: FinalNodeDisplayConfiguration,
-          ): z.infer<typeof FinalNodeDisplayConfiguration.schema> =>
-            nodeDisplayConfig.toPlain(),
-        )
-        .toRecord(),
-      compressRelationships: this.compressRelationships,
-      compressRelationshipsWidthFactor: this.compressRelationshipsWidthFactor,
-      scaleType: this.scaleType,
-    } satisfies z.infer<typeof FinalGraphDisplayConfiguration.schema>;
   }
 }

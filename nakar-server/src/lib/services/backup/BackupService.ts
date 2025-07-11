@@ -4,7 +4,7 @@ import path from 'node:path';
 import os from 'node:os';
 import fs from 'node:fs/promises';
 import fsSync, { Dirent } from 'node:fs';
-import { create, x } from 'tar';
+import { create } from 'tar';
 import { FileStream } from '../../tools/fs/FileStream';
 import { DatabaseService } from '../database/DatabaseService';
 import { GetDatabaseDBDTO } from '../database/dto/GetDatabaseDBDTO';
@@ -12,9 +12,6 @@ import sanitize from 'sanitize-filename';
 import { GetScenarioGroupDBDTO } from '../database/dto/GetScenarioGroupDBDTO';
 import { GetScenarioDBDTO } from '../database/dto/GetScenarioDBDTO';
 import { ToolsService } from '../tools/ToolsService';
-import { v4 } from 'uuid';
-import { DatabaseDTOFactory } from '../database/DatabaseDTOFactory';
-import { InsertResult } from './InsertResult';
 
 export class BackupService implements ApplicationService {
   public constructor(
@@ -97,186 +94,12 @@ export class BackupService implements ApplicationService {
     return new FileStream(outputFilePath, 'application/tar+gzip', fileName);
   }
 
-  public async importBackupFile(inputPath: string): Promise<InsertResult> {
-    this._logger.debug(this, `Will import file from ${inputPath}`);
-
-    const basePath: string = path.join(this._temporaryDirectory(), v4());
-    const fileName: string = 'import.tar.gz';
-    const zipFilePath: string = path.join(basePath, fileName);
-    await fs.mkdir(basePath, { recursive: true });
-    await fs.rename(inputPath, zipFilePath);
-
-    this._logger.debug(this, `Import file: ${zipFilePath}`);
-
-    await x({
-      file: zipFilePath,
-      gzip: true,
-      cwd: basePath,
-    });
-
-    const insertResult: InsertResult = new InsertResult();
-
-    for (const rootFolder of await this._getFoldersInDirectory(basePath)) {
-      this._logger.debug(this, `Will import root folder ${rootFolder}`);
-
-      for (const databaseFile of await this._getJsonFilesInDirectory(
-        path.join(basePath, rootFolder),
-      )) {
-        await this._importDatabaseFile(
-          path.join(basePath, rootFolder, databaseFile),
-          insertResult,
-        );
-      }
-
-      for (const databaseFolder of await this._getFoldersInDirectory(
-        path.join(basePath, rootFolder),
-      )) {
-        for (const scenarioGroupFile of await this._getJsonFilesInDirectory(
-          path.join(basePath, rootFolder, databaseFolder),
-        )) {
-          await this._importScenarioGroupFile(
-            path.join(basePath, rootFolder, databaseFolder, scenarioGroupFile),
-            insertResult,
-          );
-        }
-        for (const sceanrioGroupFolder of await this._getFoldersInDirectory(
-          path.join(basePath, rootFolder, databaseFolder),
-        )) {
-          for (const scenarioFile of await this._getJsonFilesInDirectory(
-            path.join(
-              basePath,
-              rootFolder,
-              databaseFolder,
-              sceanrioGroupFolder,
-            ),
-          )) {
-            await this._importScenarioFile(
-              path.join(
-                basePath,
-                rootFolder,
-                databaseFolder,
-                sceanrioGroupFolder,
-                scenarioFile,
-              ),
-              insertResult,
-            );
-          }
-        }
-      }
-    }
-
-    return insertResult;
-  }
-
   public async bootstrap(): Promise<void> {
     await this._cleanup();
   }
 
   public async destroy(): Promise<void> {
     await this._cleanup();
-  }
-
-  private async _importDatabaseFile(
-    filePath: string,
-    insertResult: InsertResult,
-  ): Promise<void> {
-    try {
-      this._logger.debug(this, `Will import database file ${filePath}`);
-      const contents: string = await fs.readFile(filePath, {
-        encoding: 'utf-8',
-      });
-      const factory: DatabaseDTOFactory = new DatabaseDTOFactory();
-      const json: unknown = JSON.parse(contents);
-      const getDatabaseObject: GetDatabaseDBDTO =
-        factory.createGetDatabaseDTOFromUnknown(json);
-
-      const insertedObject: GetDatabaseDBDTO =
-        await this._database.saveDatabase(getDatabaseObject);
-      insertResult.insertedDatabases.set(
-        getDatabaseObject.documentId,
-        insertedObject,
-      );
-    } catch (error: unknown) {
-      this._logger.error(this, 'Insert database failed. Will log error.');
-      this._logger.error(this, error);
-      insertResult.errors.push(error);
-    }
-  }
-
-  private async _importScenarioGroupFile(
-    filePath: string,
-    insertResult: InsertResult,
-  ): Promise<void> {
-    try {
-      this._logger.debug(this, `Will import scenarioGroup file ${filePath}`);
-      const contents: string = await fs.readFile(filePath, {
-        encoding: 'utf-8',
-      });
-      const factory: DatabaseDTOFactory = new DatabaseDTOFactory();
-      const json: unknown = JSON.parse(contents);
-      const getScenarioGroupObject: GetScenarioGroupDBDTO =
-        factory.createGetScenarioGroupDTOFromUnknown(json);
-
-      const insertedObject: GetScenarioGroupDBDTO =
-        await this._database.saveScenarioGroup({
-          title: getScenarioGroupObject.title,
-          graphDisplayConfiguration:
-            getScenarioGroupObject.graphDisplayConfiguration,
-          room: null,
-        });
-      insertResult.insertedScenarioGroups.set(
-        getScenarioGroupObject.documentId,
-        insertedObject,
-      );
-    } catch (error: unknown) {
-      this._logger.error(this, 'Insert scenario group failed. Will log error.');
-      this._logger.error(this, error);
-      insertResult.errors.push(error);
-    }
-  }
-
-  private async _importScenarioFile(
-    filePath: string,
-    insertResult: InsertResult,
-  ): Promise<void> {
-    try {
-      this._logger.debug(this, `Will import scenario file ${filePath}`);
-      const contents: string = await fs.readFile(filePath, {
-        encoding: 'utf-8',
-      });
-      const factory: DatabaseDTOFactory = new DatabaseDTOFactory();
-      const json: unknown = JSON.parse(contents);
-      const getScenarioObject: GetScenarioDBDTO =
-        factory.createGetScenarioDTOFromUnknown(json);
-
-      const scenarioGroupId: string | null = getScenarioObject.scenarioGroup
-        ? (insertResult.insertedScenarioGroups.get(
-            getScenarioObject.scenarioGroup.documentId,
-          )?.documentId ?? null)
-        : null;
-      const insertedObject: GetScenarioDBDTO =
-        await this._database.saveScenario({
-          title: getScenarioObject.title,
-          description: getScenarioObject.description,
-          cover: null, // TODO
-          scenarioGroup:
-            scenarioGroupId != null
-              ? {
-                  documentId: scenarioGroupId,
-                }
-              : null,
-          graphDisplayConfiguration:
-            getScenarioObject.graphDisplayConfiguration,
-        });
-      insertResult.insertedScenarios.set(
-        getScenarioObject.documentId,
-        insertedObject,
-      );
-    } catch (error: unknown) {
-      this._logger.error(this, 'Insert scenario group failed. Will log error.');
-      this._logger.error(this, error);
-      insertResult.errors.push(error);
-    }
   }
 
   private async _getFoldersInDirectory(

@@ -98,13 +98,6 @@ export class DatabaseService implements ApplicationService {
       await strapi.documents('api::database.database').findMany({
         status: 'published',
         sort: 'title:asc',
-        populate: {
-          graphDisplayConfiguration: {
-            populate: {
-              nodeDisplayConfigurations: {},
-            },
-          },
-        },
       })
     ).map(
       (database: Result<'api::database.database'>): GetDatabaseDBDTO =>
@@ -189,13 +182,7 @@ export class DatabaseService implements ApplicationService {
       .findOne({
         status: 'published',
         documentId: roomId,
-        populate: {
-          graphDisplayConfiguration: {
-            populate: {
-              nodeDisplayConfigurations: {},
-            },
-          },
-        },
+        populate: {},
       });
     if (rawRoom == null) {
       return null;
@@ -221,7 +208,7 @@ export class DatabaseService implements ApplicationService {
     const result: Result<
       'api::scenario.scenario',
       {
-        populate: ['graphDisplayConfiguration', 'scenarioGroup'];
+        populate: ['scenarioGroup'];
       }
     > | null = await strapi.documents('api::scenario.scenario').findOne({
       status: 'published',
@@ -230,30 +217,7 @@ export class DatabaseService implements ApplicationService {
         cover: {},
         scenarioGroup: {
           populate: {
-            room: {
-              populate: {
-                graphDisplayConfiguration: {
-                  populate: {
-                    nodeDisplayConfigurations: {},
-                  },
-                },
-              },
-            },
-            graphDisplayConfiguration: {
-              populate: {
-                nodeDisplayConfigurations: {},
-              },
-            },
-          },
-        },
-        graphDisplayConfiguration: {
-          populate: {
-            nodeDisplayConfigurations: {},
-          },
-        },
-        additionalQueries: {
-          populate: {
-            mergeDatabase: {},
+            room: {},
           },
         },
         queries: {
@@ -272,23 +236,62 @@ export class DatabaseService implements ApplicationService {
   public async getGraphDisplayConfiguration(
     scenarioId: string,
   ): Promise<FinalGraphDisplayConfiguration> {
-    const scenario: GetScenarioDBDTO | null =
-      await this.getScenario(scenarioId);
+    const populate = {
+      graphDisplayConfiguration: {
+        populate: {
+          nodeDisplayConfigurations: {},
+          mergeNodeConfigurations: {
+            populate: {
+              originalDatabase: {},
+              mergeDatabase: {},
+            },
+          },
+        },
+      },
+    };
+    const scenario: Result<
+      'api::scenario.scenario',
+      {
+        populate: ['scenarioGroup', 'graphDisplayConfiguration'];
+      }
+    > | null = await strapi.documents('api::scenario.scenario').findOne({
+      status: 'published',
+      documentId: scenarioId,
+      populate: {
+        ...populate,
+        scenarioGroup: {
+          populate: {
+            ...populate,
+            room: {
+              populate: {
+                ...populate,
+              },
+            },
+          },
+        },
+      },
+    });
     if (scenario == null) {
       throw new Error(`Scenario ${scenarioId} not found.`);
     }
     const displayConfiguration: FinalGraphDisplayConfiguration =
       MergableGraphDisplayConfiguration.createFromDb(
-        scenario.scenarioGroup?.room?.graphDisplayConfiguration,
+        this._databaseDtoFactory.createGraphDisplayConfigurationDTOFromStrapi(
+          scenario.scenarioGroup?.room?.graphDisplayConfiguration,
+        ),
       )
         .byMerging(
           MergableGraphDisplayConfiguration.createFromDb(
-            scenario.scenarioGroup?.graphDisplayConfiguration,
+            this._databaseDtoFactory.createGraphDisplayConfigurationDTOFromStrapi(
+              scenario.scenarioGroup?.graphDisplayConfiguration,
+            ),
           ),
         )
         .byMerging(
           MergableGraphDisplayConfiguration.createFromDb(
-            scenario.graphDisplayConfiguration,
+            this._databaseDtoFactory.createGraphDisplayConfigurationDTOFromStrapi(
+              scenario.graphDisplayConfiguration,
+            ),
           ),
         )
         .finalize();
@@ -306,25 +309,7 @@ export class DatabaseService implements ApplicationService {
           cover: {},
           scenarioGroup: {
             populate: {
-              database: {
-                populate: {
-                  graphDisplayConfiguration: {
-                    populate: {
-                      nodeDisplayConfigurations: {},
-                    },
-                  },
-                },
-              },
-              graphDisplayConfiguration: {
-                populate: {
-                  nodeDisplayConfigurations: {},
-                },
-              },
-            },
-          },
-          graphDisplayConfiguration: {
-            populate: {
-              nodeDisplayConfigurations: {},
+              room: {},
             },
           },
           parameters: {},
@@ -352,18 +337,7 @@ export class DatabaseService implements ApplicationService {
         sort: 'title:asc',
         populate: {
           room: {
-            populate: {
-              graphDisplayConfiguration: {
-                populate: {
-                  nodeDisplayConfigurations: {},
-                },
-              },
-            },
-          },
-          graphDisplayConfiguration: {
-            populate: {
-              nodeDisplayConfigurations: {},
-            },
+            populate: {},
           },
         },
         filters: {

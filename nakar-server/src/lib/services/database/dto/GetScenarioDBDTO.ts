@@ -10,7 +10,6 @@ export interface GetScenarioDBDTO {
   readonly description: string | null;
   readonly cover: GetMediaDBDTO | null;
   readonly scenarioGroup: GetScenarioGroupDBDTO | null;
-  readonly graphDisplayConfiguration: GraphDisplayConfigurationDBDTO;
   readonly parameters: GetScenarioParameterDBDTO[];
   readonly queries: GetScenarioQueryDBDTO[];
 }

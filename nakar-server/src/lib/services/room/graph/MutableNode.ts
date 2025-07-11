@@ -114,13 +114,12 @@ export class MutableNode {
   }
 
   public displayConfiguration(
-    graph: MutableGraph,
+    displayConfiguration: FinalGraphDisplayConfiguration,
   ): FinalNodeDisplayConfiguration | null {
     for (const label of this.labels) {
       const foundNodeDisplayCOnfiguration:
         | FinalNodeDisplayConfiguration
-        | undefined =
-        graph.displayConfiguration.nodeDisplayConfigurations.get(label);
+        | undefined = displayConfiguration.nodeDisplayConfigurations.get(label);
       if (foundNodeDisplayCOnfiguration != null) {
         return foundNodeDisplayCOnfiguration;
       }
@@ -137,10 +136,11 @@ export class MutableNode {
 
   public customBackgroundColor(
     graph: MutableGraph,
+    config: FinalGraphDisplayConfiguration,
     logger: LoggerService,
   ): string | null {
     const nodeConfig: FinalNodeDisplayConfiguration | null =
-      this.displayConfiguration(graph);
+      this.displayConfiguration(config);
     if (nodeConfig == null) {
       return null;
     }
@@ -162,10 +162,12 @@ export class MutableNode {
 
   public customTitleColor(
     graph: MutableGraph,
+    config: FinalGraphDisplayConfiguration,
     logger: LoggerService,
   ): string | null {
     const backgroundColor: string | null = this.customBackgroundColor(
       graph,
+      config,
       logger,
     );
     if (backgroundColor == null) {
@@ -178,9 +180,13 @@ export class MutableNode {
     }
   }
 
-  public title(graph: MutableGraph, logger: LoggerService): string {
+  public title(
+    graph: MutableGraph,
+    config: FinalGraphDisplayConfiguration,
+    logger: LoggerService,
+  ): string {
     return (
-      this._customTitle(graph, logger) ??
+      this._customTitle(graph, config, logger) ??
       this.properties.getStringValueOfProperty('label') ??
       this.properties.getStringValueOfProperty('name') ??
       this.properties.getStringValueOfProperty('title') ??
@@ -192,19 +198,24 @@ export class MutableNode {
     );
   }
 
-  public radius(graph: MutableGraph, logger: LoggerService): number {
+  public radius(
+    graph: MutableGraph,
+    config: FinalGraphDisplayConfiguration,
+    logger: LoggerService,
+  ): number {
     return (
-      (this._customRadius(graph, logger) ?? MutableNode.defaultRadius) *
-      this._customRadiusFactor(graph)
+      (this._customRadius(graph, config, logger) ?? MutableNode.defaultRadius) *
+      this._customRadiusFactor(graph, config)
     );
   }
 
   private _customTitle(
     graph: MutableGraph,
+    config: FinalGraphDisplayConfiguration,
     logger: LoggerService,
   ): string | null {
     const nodeConfig: FinalNodeDisplayConfiguration | null =
-      this.displayConfiguration(graph);
+      this.displayConfiguration(config);
     if (nodeConfig == null) {
       return null;
     }
@@ -226,10 +237,11 @@ export class MutableNode {
 
   private _customRadius(
     graph: MutableGraph,
+    config: FinalGraphDisplayConfiguration,
     logger: LoggerService,
   ): number | null {
     const nodeConfig: FinalNodeDisplayConfiguration | null =
-      this.displayConfiguration(graph);
+      this.displayConfiguration(config);
     if (nodeConfig == null) {
       return null;
     }
@@ -258,9 +270,10 @@ export class MutableNode {
     return newRadius;
   }
 
-  private _customRadiusFactor(graph: MutableGraph): number {
-    const config: FinalGraphDisplayConfiguration = graph.displayConfiguration;
-
+  private _customRadiusFactor(
+    graph: MutableGraph,
+    config: FinalGraphDisplayConfiguration,
+  ): number {
     if (!config.growNodesBasedOnDegree) {
       return 1;
     }

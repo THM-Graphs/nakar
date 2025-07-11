@@ -4,7 +4,6 @@ import { ConfigService } from '../config/ConfigService';
 import { LoggerService } from '../logger/LoggerService';
 import {
   operations,
-  SchemaDatabase,
   SchemaGraph,
   SchemaGraphElements,
   SchemaGraphMetaData,
@@ -20,10 +19,10 @@ import {
 import { DatabaseService } from '../database/DatabaseService';
 import { match, P } from 'ts-pattern';
 import {
-  BadRequest,
   HttpError,
   InternalServerError,
   NotFound,
+  NotImplemented,
 } from 'http-errors';
 import cors from 'cors';
 import { ProfilerService } from '../profiler/ProfilerService';
@@ -33,17 +32,15 @@ import { BackupService } from '../backup/BackupService';
 import { FileStream } from '../../tools/fs/FileStream';
 import fsAsync from 'node:fs/promises';
 import fs from 'node:fs';
-import fileupload, { FileArray, UploadedFile } from 'express-fileupload';
+import fileupload from 'express-fileupload';
 import os from 'node:os';
 import path from 'path';
 import { RoomService } from '../room/RoomService';
-import { GetDatabaseDBDTO } from '../database/dto/GetDatabaseDBDTO';
 import { GetScenarioGroupDBDTO } from '../database/dto/GetScenarioGroupDBDTO';
 import { GetScenarioDBDTO } from '../database/dto/GetScenarioDBDTO';
 import { SchemaDTOFactory } from './SchemaDTOFactory';
 import { GetRoomDBDTO } from '../database/dto/GetRoomDBDTO';
 import z from 'zod';
-import { InsertResult } from '../backup/InsertResult';
 import { MutableGraph } from '../room/graph/MutableGraph';
 import { CachingSchemaDTOFactory } from './CachingSchemaDTOFactory';
 import { SMap } from '../../tools/Map';
@@ -333,36 +330,8 @@ export class HTTPService implements ApplicationService {
 
     this._app.post(
       '/system/import',
-      this._handle(async (req: Request): Promise<unknown> => {
-        const files: FileArray | null | undefined = req.files;
-        if (files == null) {
-          throw new BadRequest('No files on request body.');
-        }
-        const file: UploadedFile | UploadedFile[] = files['file'];
-
-        if (Array.isArray(file)) {
-          throw new BadRequest('Only one file is allowed.');
-        }
-
-        const insertResult: InsertResult = await this._backup.importBackupFile(
-          file.tempFilePath,
-        );
-
-        if (insertResult.errors.length > 0) {
-          throw new BadRequest(
-            JSON.stringify(
-              insertResult.errors
-                .map((error: unknown): string => JSON.stringify(error))
-                .join('\n'),
-            ),
-          );
-        }
-
-        return {
-          insertedDatabases: insertResult.insertedDatabases.toArray(),
-          insertedScenarioGroups: insertResult.insertedScenarioGroups.toArray(),
-          insertedScenarios: insertResult.insertedScenarios.toArray(),
-        };
+      this._handle((): void => {
+        throw new NotImplemented();
       }),
     );
 

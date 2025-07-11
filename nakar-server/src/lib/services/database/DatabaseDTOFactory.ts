@@ -12,13 +12,11 @@ import { AdditionalQueryDBDTO } from './dto/AdditionalQueryDBDTO';
 import z from 'zod';
 import { GetScenarioParameterDBDTO } from './dto/GetScenarioParameterDBDTO';
 import { GetScenarioQueryDBDTO } from './dto/GetScenarioQueryDBDTO';
+import { MergeNodeConfigurationDBDTO } from './dto/MergeNodeConfigurationDBDTO';
 
 export class DatabaseDTOFactory {
   public createGetDatabaseDTOFromStrapi(
-    db: Result<
-      'api::database.database',
-      { populate: ['graphDisplayConfiguration'] }
-    >,
+    db: Result<'api::database.database'>,
   ): GetDatabaseDBDTO {
     return {
       documentId: db.documentId,
@@ -27,27 +25,16 @@ export class DatabaseDTOFactory {
       username: db.username ?? null,
       password: db.password ?? null,
       browserUrl: db.browserUrl ?? null,
-      graphDisplayConfiguration:
-        this._createGraphDisplayConfigurationDTOFromStrapi(
-          db.graphDisplayConfiguration,
-        ),
     };
   }
 
   public createGetScenarioGroupDTOFromStrapi(
-    db: Result<
-      'api::scenario-group.scenario-group',
-      { populate: ['graphDisplayConfiguration', 'room'] }
-    >,
+    db: Result<'api::scenario-group.scenario-group', { populate: ['room'] }>,
   ): GetScenarioGroupDBDTO {
     return {
       documentId: db.documentId,
       title: db.title ?? null,
       room: db.room ? this.createGetRoomDTOFromStrapi(db.room) : null,
-      graphDisplayConfiguration:
-        this._createGraphDisplayConfigurationDTOFromStrapi(
-          db.graphDisplayConfiguration,
-        ),
     };
   }
 
@@ -55,12 +42,7 @@ export class DatabaseDTOFactory {
     db: Result<
       'api::scenario.scenario',
       {
-        populate: [
-          'graphDisplayConfiguration',
-          'scenarioGroup',
-          'parameters',
-          'queries',
-        ];
+        populate: ['scenarioGroup', 'parameters', 'queries'];
       }
     > & {
       cover?: Result<'plugin::upload.file'> | null;
@@ -75,10 +57,6 @@ export class DatabaseDTOFactory {
       scenarioGroup: db.scenarioGroup
         ? this.createGetScenarioGroupDTOFromStrapi(db.scenarioGroup)
         : null,
-      graphDisplayConfiguration:
-        this._createGraphDisplayConfigurationDTOFromStrapi(
-          db.graphDisplayConfiguration,
-        ),
       parameters:
         db.parameters?.map(
           (parameter: Result<'graph.parameter'>): GetScenarioParameterDBDTO =>
@@ -114,16 +92,12 @@ export class DatabaseDTOFactory {
   }
 
   public createGetRoomDTOFromStrapi(
-    db: Result<'api::room.room', { populate: ['graphDisplayConfiguration'] }>,
+    db: Result<'api::room.room', { populate: [] }>,
   ): GetRoomDBDTO {
     return {
       documentId: db.documentId,
       title: db.title ?? null,
       graphJson: db.graphJson ?? null,
-      graphDisplayConfiguration:
-        this._createGraphDisplayConfigurationDTOFromStrapi(
-          db.graphDisplayConfiguration,
-        ),
     };
   }
 
@@ -136,7 +110,6 @@ export class DatabaseDTOFactory {
       username: z.string().nullable(),
       password: z.string().nullable(),
       browserUrl: z.string().nullable(),
-      graphDisplayConfiguration: z.unknown(),
     });
 
     const parsed: z.infer<typeof schema> = schema.parse(input);
@@ -148,10 +121,6 @@ export class DatabaseDTOFactory {
       username: parsed.username,
       password: parsed.password,
       browserUrl: parsed.browserUrl,
-      graphDisplayConfiguration:
-        this._createGraphDisplayConfigurationDTOFromUnknown(
-          parsed.graphDisplayConfiguration,
-        ),
     };
   }
 
@@ -163,7 +132,6 @@ export class DatabaseDTOFactory {
       documentId: z.string(),
       title: z.string().nullable(),
       room: z.unknown().nullable(),
-      graphDisplayConfiguration: z.unknown(),
     });
 
     const parsed: z.infer<typeof schema> = schema.parse(input);
@@ -175,10 +143,6 @@ export class DatabaseDTOFactory {
         parsed.room != null
           ? this.createGetRoomDTOFromUnknown(parsed.room)
           : null,
-      graphDisplayConfiguration:
-        this._createGraphDisplayConfigurationDTOFromUnknown(
-          parsed.graphDisplayConfiguration,
-        ),
     };
   }
 
@@ -188,7 +152,6 @@ export class DatabaseDTOFactory {
       documentId: z.string(),
       title: z.string().nullable(),
       graphJson: z.string().nullable(),
-      graphDisplayConfiguration: z.unknown().nullable(),
     });
 
     const parsed: z.infer<typeof schema> = schema.parse(input);
@@ -197,10 +160,6 @@ export class DatabaseDTOFactory {
       documentId: parsed.documentId,
       title: parsed.title,
       graphJson: parsed.graphJson,
-      graphDisplayConfiguration:
-        this._createGraphDisplayConfigurationDTOFromUnknown(
-          parsed.graphDisplayConfiguration,
-        ),
     };
   }
 
@@ -212,7 +171,6 @@ export class DatabaseDTOFactory {
       cover: z.unknown(),
       description: z.string().nullable(),
       scenarioGroup: z.unknown(),
-      graphDisplayConfiguration: z.unknown(),
       parameters: z.array(z.unknown()),
       queries: z.array(z.unknown()),
     });
@@ -231,10 +189,6 @@ export class DatabaseDTOFactory {
         parsed.scenarioGroup != null
           ? this.createGetScenarioGroupDTOFromUnknown(parsed.scenarioGroup)
           : null,
-      graphDisplayConfiguration:
-        this._createGraphDisplayConfigurationDTOFromUnknown(
-          parsed.graphDisplayConfiguration,
-        ),
       parameters: parsed.parameters.map(
         (parameter: unknown): GetScenarioParameterDBDTO =>
           this.createScenarioParameterFromUnknown(parameter),
@@ -280,6 +234,58 @@ export class DatabaseDTOFactory {
         parsed.database != null
           ? this.createGetDatabaseDTOFromUnknown(parsed.database)
           : null,
+    };
+  }
+
+  public createGraphDisplayConfigurationDTOFromStrapi(
+    db:
+      | Result<
+          'graph.graph-display-configuration',
+          { populate: ['nodeDisplayConfigurations', 'mergeNodeConfigurations'] }
+        >
+      | null
+      | undefined,
+  ): GraphDisplayConfigurationDBDTO {
+    return {
+      connectResultNodes: this._createNullableBooleanFromStrapi(
+        db?.connectResultNodes,
+      ),
+      growNodesBasedOnDegree: this._createNullableBooleanFromStrapi(
+        db?.growNodesBasedOnDegree,
+      ),
+      growNodesBasedOnDegreeFactor: db?.growNodesBasedOnDegreeFactor ?? null,
+      nodeDisplayConfigurations:
+        db?.nodeDisplayConfigurations?.map(
+          (
+            nodeDisplayConfiguration: Result<'graph.node-display-configuration'>,
+          ): NodeDisplayConfigurationDBDTO =>
+            this._createNodeDisplayConfigurationDTOFromStrapi(
+              nodeDisplayConfiguration,
+            ),
+        ) ?? [],
+      compressRelationships: this._createNullableBooleanFromStrapi(
+        db?.compressRelationships,
+      ),
+      compressRelationshipsWidthFactor:
+        db?.compressRelationshipsWidthFactor ?? null,
+      scaleType: this._createNullableScaleTypeFromStrapi(db?.scaleType),
+      mergeNodeConfigurations: (db?.mergeNodeConfigurations ?? []).map(
+        (
+          mergeNodeConfiguration: Result<
+            'graph.merge-node-configuration',
+            { populate: ['originalDatabase', 'mergeDatabase'] }
+          >,
+        ): MergeNodeConfigurationDBDTO => ({
+          originalLabel: mergeNodeConfiguration.originalLabel ?? null,
+          originalProperties: mergeNodeConfiguration.originalProperties ?? null,
+          originalDatabaseId:
+            mergeNodeConfiguration.originalDatabase?.documentId ?? null,
+          mergeLabel: mergeNodeConfiguration.mergeLabel ?? null,
+          mergeProperties: mergeNodeConfiguration.mergeProperties ?? null,
+          mergeDatabaseId:
+            mergeNodeConfiguration.mergeDatabase?.documentId ?? null,
+        }),
+      ),
     };
   }
 
@@ -332,41 +338,6 @@ export class DatabaseDTOFactory {
         parsed.mergeDatabase != null
           ? this.createGetDatabaseDTOFromUnknown(parsed.mergeDatabase)
           : null,
-    };
-  }
-
-  private _createGraphDisplayConfigurationDTOFromStrapi(
-    db:
-      | Result<
-          'graph.graph-display-configuration',
-          { populate: ['nodeDisplayConfigurations'] }
-        >
-      | null
-      | undefined,
-  ): GraphDisplayConfigurationDBDTO {
-    return {
-      connectResultNodes: this._createNullableBooleanFromStrapi(
-        db?.connectResultNodes,
-      ),
-      growNodesBasedOnDegree: this._createNullableBooleanFromStrapi(
-        db?.growNodesBasedOnDegree,
-      ),
-      growNodesBasedOnDegreeFactor: db?.growNodesBasedOnDegreeFactor ?? null,
-      nodeDisplayConfigurations:
-        db?.nodeDisplayConfigurations?.map(
-          (
-            nodeDisplayConfiguration: Result<'graph.node-display-configuration'>,
-          ): NodeDisplayConfigurationDBDTO =>
-            this._createNodeDisplayConfigurationDTOFromStrapi(
-              nodeDisplayConfiguration,
-            ),
-        ) ?? [],
-      compressRelationships: this._createNullableBooleanFromStrapi(
-        db?.compressRelationships,
-      ),
-      compressRelationshipsWidthFactor:
-        db?.compressRelationshipsWidthFactor ?? null,
-      scaleType: this._createNullableScaleTypeFromStrapi(db?.scaleType),
     };
   }
 
@@ -432,37 +403,6 @@ export class DatabaseDTOFactory {
       url: parsed.url,
       ext: parsed.ext,
       hash: parsed.hash,
-    };
-  }
-
-  private _createGraphDisplayConfigurationDTOFromUnknown(
-    input: unknown,
-  ): GraphDisplayConfigurationDBDTO {
-    // eslint-disable-next-line @typescript-eslint/typedef
-    const schema = z.object({
-      connectResultNodes: z.boolean().nullable(),
-      growNodesBasedOnDegree: z.boolean().nullable(),
-      growNodesBasedOnDegreeFactor: z.number().nullable(),
-      nodeDisplayConfigurations: z.array(z.unknown()),
-      compressRelationships: z.boolean().nullable(),
-      compressRelationshipsWidthFactor: z.number().nullable(),
-      scaleType: z.unknown(),
-    });
-    const parsed: z.infer<typeof schema> = schema.parse(input);
-
-    return {
-      connectResultNodes: parsed.connectResultNodes,
-      growNodesBasedOnDegree: parsed.growNodesBasedOnDegree,
-      growNodesBasedOnDegreeFactor: parsed.growNodesBasedOnDegreeFactor,
-      nodeDisplayConfigurations: parsed.nodeDisplayConfigurations.map(
-        (nodeDisplayConfiguration: unknown): NodeDisplayConfigurationDBDTO =>
-          this._createNodeDisplayConfigurationDTOFromUnknown(
-            nodeDisplayConfiguration,
-          ),
-      ),
-      compressRelationships: parsed.compressRelationships,
-      compressRelationshipsWidthFactor: parsed.compressRelationshipsWidthFactor,
-      scaleType: this._createScaleTypeFromUnknown(parsed.scaleType),
     };
   }
 

@@ -21,7 +21,6 @@ export class MutableGraph {
     edges: z.array(MutableEdge.schema),
     metaData: MutableGraphMetaData.schema,
     tableData: z.array(z.record(z.unknown())),
-    displayConfiguration: FinalGraphDisplayConfiguration.schema,
   });
 
   public readonly id: string;
@@ -29,7 +28,6 @@ export class MutableGraph {
   public edges: MutableEdgeIndex;
   public metaData: MutableGraphMetaData;
   public tableData: SMap<string, unknown>[];
-  public displayConfiguration: FinalGraphDisplayConfiguration;
 
   public constructor(data: {
     id: string;
@@ -37,14 +35,12 @@ export class MutableGraph {
     edges: MutableEdgeIndex;
     metaData: MutableGraphMetaData;
     tableData: SMap<string, unknown>[];
-    displayConfiguration: FinalGraphDisplayConfiguration;
   }) {
     this.id = data.id;
     this.nodes = data.nodes;
     this.edges = data.edges;
     this.metaData = data.metaData;
     this.tableData = data.tableData;
-    this.displayConfiguration = data.displayConfiguration;
   }
 
   public get size(): number {
@@ -58,7 +54,6 @@ export class MutableGraph {
       edges: new MutableEdgeIndex([]),
       metaData: MutableGraphMetaData.empty(),
       tableData: [],
-      displayConfiguration: FinalGraphDisplayConfiguration.empty(),
     });
   }
 
@@ -77,7 +72,6 @@ export class MutableGraph {
         arguments: scenarioArguments,
       }),
       tableData: [],
-      displayConfiguration: displayConfig,
     });
 
     return graph;
@@ -104,9 +98,6 @@ export class MutableGraph {
       tableData: data.tableData.map(
         (td: Record<string, unknown>): SMap<string, unknown> =>
           SMap.fromRecord(td),
-      ),
-      displayConfiguration: FinalGraphDisplayConfiguration.fromPlain(
-        data.displayConfiguration,
       ),
     });
   }
@@ -138,7 +129,6 @@ export class MutableGraph {
       tableData: this.tableData.map(
         (td: SMap<string, unknown>): Record<string, unknown> => td.toRecord(),
       ),
-      displayConfiguration: this.displayConfiguration.toPlain(),
     };
   }
 
@@ -161,14 +151,17 @@ export class MutableGraph {
     return edgesRemoved;
   }
 
-  public toPhysicalGraph(logger: LoggerService): PhysicalGraph {
+  public toPhysicalGraph(
+    config: FinalGraphDisplayConfiguration,
+    logger: LoggerService,
+  ): PhysicalGraph {
     const nodes: Record<string, PhysicalNode> = {};
     const edges: Record<string, PhysicalEdge> = {};
 
     for (const node of this.nodes.nodes) {
       nodes[node.id] = {
         id: node.id,
-        radius: node.radius(this, logger),
+        radius: node.radius(this, config, logger),
         position: { x: node.position.x, y: node.position.y },
         locked: node.locked,
         velocityX: 0,

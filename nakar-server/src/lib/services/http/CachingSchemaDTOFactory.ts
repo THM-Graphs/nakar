@@ -24,6 +24,7 @@ import { MutableGraphMetaData } from '../room/graph/MutableGraphMetaData';
 import { GetScenarioDBDTO } from '../database/dto/GetScenarioDBDTO';
 import { SchemaDTOFactory } from './SchemaDTOFactory';
 import { ConfigService } from '../config/ConfigService';
+import { FinalGraphDisplayConfiguration } from '../room/scenario-pipeline/display-configuration/FinalGraphDisplayConfiguration';
 
 export class CachingSchemaDTOFactory {
   private readonly _databaseCache: SMap<string, GetDatabaseDBDTO>;
@@ -49,10 +50,16 @@ export class CachingSchemaDTOFactory {
   public async createSchemaGraphElements(
     graph: MutableGraph,
   ): Promise<SchemaGraphElements> {
+    const config: FinalGraphDisplayConfiguration =
+      graph.metaData.scenarioId != null
+        ? await this._database.getGraphDisplayConfiguration(
+            graph.metaData.scenarioId,
+          )
+        : FinalGraphDisplayConfiguration.empty();
     return {
       nodes: await graph.nodes.nodes.asyncFlatMap(
         async (node: MutableNode): Promise<SchemaNode> =>
-          await this._createSchemaNode(node, graph),
+          await this._createSchemaNode(node, graph, config),
       ),
       edges: await graph.edges.edges.asyncFlatMap(
         async (edge: MutableEdge): Promise<SchemaEdge> =>
@@ -255,13 +262,14 @@ export class CachingSchemaDTOFactory {
   private async _createSchemaNode(
     node: MutableNode,
     graph: MutableGraph,
+    config: FinalGraphDisplayConfiguration,
   ): Promise<SchemaNode> {
     return {
       id: node.id,
-      title: node.title(graph, this._logger),
+      title: node.title(graph, config, this._logger),
       labels: node.labels.toArray(),
       properties: this._createSchemaGraphProperties(node.properties),
-      radius: node.radius(graph, this._logger),
+      radius: node.radius(graph, config, this._logger),
       position: node.position,
       inDegree: node.inDegree(graph),
       outDegree: node.outDegree(graph),
@@ -272,8 +280,12 @@ export class CachingSchemaDTOFactory {
         graph,
         this._logger,
       ).toPlain(),
-      customBackgroundColor: node.customBackgroundColor(graph, this._logger),
-      customTitleColor: node.customTitleColor(graph, this._logger),
+      customBackgroundColor: node.customBackgroundColor(
+        graph,
+        config,
+        this._logger,
+      ),
+      customTitleColor: node.customTitleColor(graph, config, this._logger),
       source: (await this._getDatabase(node.source))?.title ?? node.source,
       additionalSources: (
         await node.additionalSources.asyncMap(
