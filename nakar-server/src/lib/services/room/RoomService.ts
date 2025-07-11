@@ -237,27 +237,8 @@ export class RoomService implements ApplicationService {
         }
 
         // --- Connect Nodes
-        if (displayConfiguration.connectResultNodes && graph.nodes.size > 0) {
-          for (const source of graph.nodes.getSources()) {
-            const db: GetDatabaseDBDTO | null =
-              await this._database.getDatabase(source);
-            if (db == null) {
-              this._logger.error(
-                this,
-                `Unable to connect result nodes: Source ${source} not found.`,
-              );
-              continue;
-            }
-            const credentials: Neo4jDatabaseInfo = Neo4jDatabaseInfo.parse(db);
-            const result: Neo4jGraphElements =
-              await this._neo4j.loadConnectingRelationships(
-                credentials,
-                graph.nodes
-                  .getBySource(source)
-                  .map((n: MutableNode): string => n.id),
-              );
-            graph.edges.addNeo4jEdges(result.relationships);
-          }
+        if (displayConfiguration.connectResultNodes) {
+          await this._connectNodes(graph);
         }
 
         // --- Additional Queries
@@ -365,30 +346,11 @@ export class RoomService implements ApplicationService {
           Neo4jDatabaseInfo.parse(database);
 
         try {
-          // expand result
           const expandResult: Neo4jGraphElements = await this._neo4j.expandNode(
             neo4jDatabaseInfo,
             new SSet<string>([nodeId]),
             params.limit,
           );
-
-          // connect result nodes (only if connectResultNodes is active)
-          // TODO Replace with per db auto connect
-          const graphDisplayConfig: FinalGraphDisplayConfiguration =
-            await this._database.getGraphDisplayConfiguration(
-              scenario.documentId,
-            );
-          const connectResultNodeResult: Neo4jGraphElements | null =
-            graphDisplayConfig.connectResultNodes
-              ? await this._neo4j.loadConnectingRelationshipsFromTo(
-                  neo4jDatabaseInfo,
-                  new SSet<string>(expandResult.nodes.keys()),
-                  new SSet<string>([
-                    ...graph.nodes.keys,
-                    ...expandResult.nodes.keys(),
-                  ]),
-                )
-              : null;
 
           for (const newNode of expandResult.nodes) {
             if (!graph.nodes.hasById(newNode[0])) {
@@ -410,10 +372,6 @@ export class RoomService implements ApplicationService {
               graph.edges.addNeo4jEdge(newEdge[1]);
             }
           }
-
-          if (connectResultNodeResult != null) {
-            graph.edges.addNeo4jEdges(connectResultNodeResult.relationships);
-          }
           graph.removeDanglingEdges(this._logger);
 
           this._logger.debug(
@@ -421,6 +379,9 @@ export class RoomService implements ApplicationService {
             `Expand node result for ${nodeId}: ${expandResult.nodes.size.toString()} nodes and ${expandResult.relationships.size.toString()} relationships.`,
           );
 
+          if (graph.displayConfiguration.connectResultNodes) {
+            await this._connectNodes(graph);
+          }
           if (graph.displayConfiguration.compressRelationships) {
             this._compressRelationships(graph);
           }
@@ -958,14 +919,31 @@ export class RoomService implements ApplicationService {
     }
   }
 
-  private async _connectNodes(
-    graph: MutableGraph,
-    credentials: Neo4jDatabaseInfo,
-  ): Promise<void> {
-    const nodeIds: SSet<string> = new SSet<string>(graph.nodes.keys);
-    const result: Neo4jGraphElements =
-      await this._neo4j.loadConnectingRelationships(credentials, nodeIds);
-    graph.edges.addNeo4jEdges(result.relationships);
+  private async _connectNodes(graph: MutableGraph): Promise<void> {
+    for (const source of graph.nodes.getSources()) {
+      const nodesToConnect: SSet<string> = graph.nodes
+        .getBySource(source)
+        .map((n: MutableNode): string => n.id);
+      if (nodesToConnect.size === 0) {
+        continue;
+      }
+      const db: GetDatabaseDBDTO | null =
+        await this._database.getDatabase(source);
+      if (db == null) {
+        this._logger.error(
+          this,
+          `Unable to connect result nodes: Source ${source} not found.`,
+        );
+        continue;
+      }
+      const credentials: Neo4jDatabaseInfo = Neo4jDatabaseInfo.parse(db);
+      const result: Neo4jGraphElements =
+        await this._neo4j.loadConnectingRelationships(
+          credentials,
+          nodesToConnect,
+        );
+      graph.edges.addNeo4jEdges(result.relationships);
+    }
   }
 
   private _compressRelationships(graph: MutableGraph): void {
