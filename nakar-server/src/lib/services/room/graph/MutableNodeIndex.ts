@@ -16,11 +16,14 @@ export class MutableNodeIndex {
   /* Maps key => value => count */
   private _propertyHistogram: SMap<string, SMap<string, number>>;
 
+  private _bySource: SMap<string, SSet<MutableNode>>;
+
   public constructor(nodes: MutableNode[]) {
     this._byId = new SMap();
     this._byLabel = new SMap();
     this._labelHistogram = new SMap();
     this._propertyHistogram = new SMap();
+    this._bySource = new SMap();
 
     for (const node of nodes) {
       this.add(node);
@@ -64,6 +67,10 @@ export class MutableNodeIndex {
         (this._byLabel.get(label) ?? new SSet()).byAdding(node),
       );
     }
+    this._bySource.set(
+      node.source,
+      (this._bySource.get(node.source) ?? new SSet()).byAdding(node),
+    );
     return true;
   }
 
@@ -115,6 +122,8 @@ export class MutableNodeIndex {
       this._addToPropertyHistogram(propertyEntry[0], propertyEntry[1], -1);
     }
 
+    this._bySource.get(node.source)?.delete(node);
+
     return true;
   }
 
@@ -132,6 +141,27 @@ export class MutableNodeIndex {
 
   public getByLabel(label: string): SSet<MutableNode> {
     return this._byLabel.get(label) ?? new SSet();
+  }
+
+  public getBySource(source: string): SSet<MutableNode> {
+    return this._bySource.get(source) ?? new SSet();
+  }
+
+  public getSources(): SSet<string> {
+    return this._bySource.reduce(
+      (
+        akku: SSet<string>,
+        key: string,
+        value: SSet<MutableNode>,
+      ): SSet<string> => {
+        if (value.size === 0) {
+          return akku;
+        } else {
+          return akku.byAdding(key);
+        }
+      },
+      new SSet<string>(),
+    );
   }
 
   public byMergingWithNonOverriding(

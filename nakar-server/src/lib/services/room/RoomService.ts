@@ -237,10 +237,28 @@ export class RoomService implements ApplicationService {
         }
 
         // --- Connect Nodes
-        // if (displayConfiguration.connectResultNodes && graph.nodes.size > 0) {
-        //   await this._connectNodes(graph, credentials);
-        // }
-        // TODO: Implement connect on db basis
+        if (displayConfiguration.connectResultNodes && graph.nodes.size > 0) {
+          for (const source of graph.nodes.getSources()) {
+            const db: GetDatabaseDBDTO | null =
+              await this._database.getDatabase(source);
+            if (db == null) {
+              this._logger.error(
+                this,
+                `Unable to connect result nodes: Source ${source} not found.`,
+              );
+              continue;
+            }
+            const credentials: Neo4jDatabaseInfo = Neo4jDatabaseInfo.parse(db);
+            const result: Neo4jGraphElements =
+              await this._neo4j.loadConnectingRelationships(
+                credentials,
+                graph.nodes
+                  .getBySource(source)
+                  .map((n: MutableNode): string => n.id),
+              );
+            graph.edges.addNeo4jEdges(result.relationships);
+          }
+        }
 
         // --- Additional Queries
         // TODO: Implement Merge config
