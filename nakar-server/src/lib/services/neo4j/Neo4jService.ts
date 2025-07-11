@@ -58,7 +58,7 @@ export class Neo4jService implements ApplicationService {
       try {
         this._logger.debug(
           this,
-          `Will run query: ${query} with data: ${JSON.stringify(parameters)}`,
+          `Will run query: ${query} with data: ${JSON.stringify(parameters).length.toString()} bytes`,
         );
         const result: QueryResult = await session.run<
           RecordShape<string, unknown>
@@ -95,28 +95,15 @@ export class Neo4jService implements ApplicationService {
     nodeIds: SSet<string>,
   ): Promise<Neo4jGraphElements> {
     const nodesIds: string[] = [...nodeIds.values()];
+    this._logger.log(
+      this,
+      `Will load connecting relationships of ${nodesIds.length.toString()} nodes in ${databaseInfo.url}`,
+    );
     const additional: Neo4jGraphElements = await this.executeQuery(
       databaseInfo,
       `MATCH (a)-[additionalRelationship]->(b) WHERE elementId(a) IN $existingNodeIds AND elementId(b) IN $existingNodeIds RETURN DISTINCT additionalRelationship;`,
       {
         existingNodeIds: nodesIds,
-      },
-      false,
-    );
-    return additional;
-  }
-
-  public async loadConnectingRelationshipsFromTo(
-    databaseInfo: Neo4jDatabaseInfo,
-    fromNodeIds: SSet<string>,
-    toNodeIds: SSet<string>,
-  ): Promise<Neo4jGraphElements> {
-    const additional: Neo4jGraphElements = await this.executeQuery(
-      databaseInfo,
-      `MATCH (a)-[additionalRelationship]-(b) WHERE elementId(a) IN $fromNodeIds AND elementId(b) IN $toNodeIds RETURN DISTINCT additionalRelationship;`,
-      {
-        fromNodeIds: [...fromNodeIds.values()],
-        toNodeIds: [...toNodeIds.values()],
       },
       false,
     );
