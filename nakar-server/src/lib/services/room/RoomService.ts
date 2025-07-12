@@ -644,6 +644,11 @@ export class RoomService implements ApplicationService {
       nodesAdded: graph.nodes.size,
       edgesAdded: graph.edges.size,
     } satisfies RoomServiceEventGraphElementsChanged);
+    this._onEvent.next({
+      type: 'RoomServiceEventGraphTableChanged',
+      table: graph.tableData,
+      roomId: params.roomId,
+    } satisfies RoomServiceEventGraphTableChanged);
   }
 
   public async redo(params: { roomId: string }): Promise<void> {
@@ -681,6 +686,11 @@ export class RoomService implements ApplicationService {
       nodesAdded: graph.nodes.size,
       edgesAdded: graph.edges.size,
     } satisfies RoomServiceEventGraphElementsChanged);
+    this._onEvent.next({
+      type: 'RoomServiceEventGraphTableChanged',
+      table: graph.tableData,
+      roomId: params.roomId,
+    } satisfies RoomServiceEventGraphTableChanged);
   }
 
   public unlockNodes(params: {

@@ -183,7 +183,9 @@ export class MutableGraph {
   ): PhysicalGraph {
     const nodes: Record<string, PhysicalNode> = {};
     const edges: Record<string, PhysicalEdge> = {};
-    const degreeRange: Range | null = this.nodes.getNodeDegreeRange(this);
+    const degreeRange: Range | null = config.growNodesBasedOnDegree
+      ? this.nodes.getNodeDegreeRange(this)
+      : null;
 
     for (const node of this.nodes.nodes) {
       nodes[node.id] = {
