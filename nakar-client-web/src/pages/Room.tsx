@@ -34,6 +34,7 @@ import { match } from "ts-pattern";
 import { PerformanceDisplay } from "../components/room/PerformanceDisplay.tsx";
 import { RunScenarioModal } from "../components/room/RunScenarioModal/RunScenarioModal.tsx";
 import { ExpandNodePreviewModal } from "../components/room/ExpandNodePreviewModal/ExpandNodePreviewModal.tsx";
+import { boolean } from "zod";
 
 export type RoomContext = {
   initialRoomData: RoomSchema;
@@ -190,6 +191,7 @@ export function Room(props: { context: AppContext }) {
           pipelineSummary: [],
           arguments: [],
           canUndo: false,
+          canRedo: false,
         },
         table: {
           data: [],
