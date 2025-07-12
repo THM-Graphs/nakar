@@ -24,6 +24,7 @@ import { GetScenarioDBDTO } from '../database/dto/GetScenarioDBDTO';
 import { SchemaDTOFactory } from './SchemaDTOFactory';
 import { ConfigService } from '../config/ConfigService';
 import { FinalGraphDisplayConfiguration } from '../room/scenario-pipeline/display-configuration/FinalGraphDisplayConfiguration';
+import { Range } from '../../tools/Range';
 
 export class CachingSchemaDTOFactory {
   private readonly _databaseCache: SMap<string, GetDatabaseDBDTO>;
@@ -55,10 +56,11 @@ export class CachingSchemaDTOFactory {
             graph.metaData.scenarioId,
           )
         : FinalGraphDisplayConfiguration.empty();
+    const degreeRange: Range | null = graph.nodes.getNodeDegreeRange(graph);
     return {
       nodes: await graph.nodes.nodes.asyncFlatMap(
         async (node: MutableNode): Promise<SchemaNode> =>
-          await this._createSchemaNode(node, graph, config),
+          await this._createSchemaNode(node, graph, config, degreeRange),
       ),
       edges: await graph.edges.edges.asyncFlatMap(
         async (edge: MutableEdge): Promise<SchemaEdge> =>
@@ -265,13 +267,14 @@ export class CachingSchemaDTOFactory {
     node: MutableNode,
     graph: MutableGraph,
     config: FinalGraphDisplayConfiguration,
+    range: Range | null,
   ): Promise<SchemaNode> {
     return {
       id: node.id,
       title: node.title(graph, config, this._logger),
       labels: node.labels.toArray(),
       properties: this._createSchemaGraphProperties(node.properties),
-      radius: node.radius(graph, config, this._logger),
+      radius: node.radius(graph, config, range, this._logger),
       position: node.position,
       inDegree: node.inDegree(graph),
       outDegree: node.outDegree(graph),

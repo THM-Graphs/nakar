@@ -4,6 +4,8 @@ import { SSet } from '../../../tools/Set';
 import { Neo4jNode } from '../../neo4j/Neo4jNode';
 import { MutablePosition } from './MutablePosition';
 import { MutablePropertyCollection } from './MutablePropertyCollection';
+import { Range } from '../../../tools/Range';
+import { MutableGraph } from './MutableGraph';
 
 export class MutableNodeIndex {
   private _byId: SMap<string, MutableNode>;
@@ -184,6 +186,26 @@ export class MutableNodeIndex {
     return new MutableNodeIndex(
       this.nodes.toArray().map((n: MutableNode): MutableNode => n.copy()),
     );
+  }
+
+  public getNodeDegreeRange(graph: MutableGraph): Range | null {
+    const degrees: number[] = this.nodes.reduce(
+      (akku: number[], node: MutableNode): number[] => [
+        ...akku,
+        node.degree(graph),
+      ],
+      [],
+    );
+
+    if (degrees.length === 0) {
+      return null;
+    }
+
+    const range: Range = new Range({
+      floor: Math.min(...degrees),
+      ceiling: Math.max(...degrees),
+    });
+    return range;
   }
 
   private _addToLabelHistogram(label: string, delta: 1 | -1): void {

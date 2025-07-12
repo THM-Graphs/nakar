@@ -195,11 +195,12 @@ export class MutableNode {
   public radius(
     graph: MutableGraph,
     config: FinalGraphDisplayConfiguration,
+    degreeRange: Range | null,
     logger: LoggerService,
   ): number {
     return (
       (this._customRadius(graph, config, logger) ?? MutableNode.defaultRadius) *
-      this._customRadiusFactor(graph, config)
+      this._customRadiusFactor(graph, config, degreeRange)
     );
   }
 
@@ -280,6 +281,7 @@ export class MutableNode {
   private _customRadiusFactor(
     graph: MutableGraph,
     config: FinalGraphDisplayConfiguration,
+    degreeRange: Range | null,
   ): number {
     if (!config.growNodesBasedOnDegree) {
       return 1;
@@ -289,28 +291,19 @@ export class MutableNode {
       return 1;
     }
 
-    const degrees: number[] = graph.nodes.nodes.reduce(
-      (akku: number[], value: MutableNode): number[] => [
-        ...akku,
-        value.degree(graph),
-      ],
-      [],
-    );
-
-    if (degrees.length === 0) {
+    if (degreeRange == null) {
       return 1;
     }
-
-    const fromRange: Range = new Range({
-      floor: Math.min(...degrees),
-      ceiling: Math.max(...degrees),
-    });
 
     const toRange: Range = new Range({
       floor: 1,
       ceiling: config.growNodesBasedOnDegreeFactor,
     });
 
-    return fromRange.scaleValue(toRange, this.degree(graph), config.scaleType);
+    return degreeRange.scaleValue(
+      toRange,
+      this.degree(graph),
+      config.scaleType,
+    );
   }
 }

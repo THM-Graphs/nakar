@@ -12,6 +12,7 @@ import { FinalGraphDisplayConfiguration } from '../scenario-pipeline/display-con
 import { PhysicalGraph } from '../../../tools/physics/physical-graph/PhysicalGraph';
 import { PhysicalNode } from '../../../tools/physics/physical-graph/PhysicalNode';
 import { PhysicalEdge } from '../../../tools/physics/physical-graph/PhysicalEdge';
+import { Range } from '../../../tools/Range';
 
 export class MutableGraph {
   // eslint-disable-next-line @typescript-eslint/typedef
@@ -182,11 +183,12 @@ export class MutableGraph {
   ): PhysicalGraph {
     const nodes: Record<string, PhysicalNode> = {};
     const edges: Record<string, PhysicalEdge> = {};
+    const degreeRange: Range | null = this.nodes.getNodeDegreeRange(this);
 
     for (const node of this.nodes.nodes) {
       nodes[node.id] = {
         id: node.id,
-        radius: node.radius(this, config, logger),
+        radius: node.radius(this, config, degreeRange, logger),
         position: { x: node.position.x, y: node.position.y },
         locked: node.locked,
         velocityX: 0,
