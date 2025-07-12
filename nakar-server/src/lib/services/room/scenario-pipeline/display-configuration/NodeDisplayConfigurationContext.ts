@@ -75,7 +75,7 @@ export class NodeDisplayConfigurationContext {
   public applyToTemplate(template: TemplateDelegate): string {
     try {
       return template(this._nativeData);
-    } catch (error: unknown) {
+    } catch {
       return '';
     }
   }

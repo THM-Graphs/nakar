@@ -13,7 +13,6 @@ import { Observable, Subject, throttleTime } from "rxjs";
 import { D3RendererState } from "./D3RendererState.ts";
 import { D3Calculator } from "./D3Calculator.ts";
 import { ZoomBehavior } from "d3";
-import { adjustColor } from "../color/colorShade.ts";
 
 const fps = 30;
 const strokeWidth: number = 3;

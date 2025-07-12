@@ -288,7 +288,7 @@ export class HTTPService implements ApplicationService {
             this._config,
           );
         const result: SchemaGraphMetaData =
-          await cachedGraphFactory.createSchemaGraphMetaData(graph.metaData);
+          await cachedGraphFactory.createSchemaGraphMetaData(graph);
         return result;
       }),
     );
@@ -461,6 +461,28 @@ export class HTTPService implements ApplicationService {
         await this._roomService.focusNodes({
           roomId: room.documentId,
           nodeIds: requestBody.nodes,
+        });
+      }),
+    );
+
+    this._app.post(
+      '/room/:id/actions/undo',
+      this._handle(async (req: Request): Promise<void> => {
+        const room: GetRoomDBDTO = await this._assertRoom(req);
+
+        await this._roomService.undo({
+          roomId: room.documentId,
+        });
+      }),
+    );
+
+    this._app.post(
+      '/room/:id/actions/redo',
+      this._handle(async (req: Request): Promise<void> => {
+        const room: GetRoomDBDTO = await this._assertRoom(req);
+
+        await this._roomService.redo({
+          roomId: room.documentId,
         });
       }),
     );

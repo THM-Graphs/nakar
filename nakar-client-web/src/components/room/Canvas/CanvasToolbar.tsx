@@ -3,7 +3,11 @@ import { Stack } from "react-bootstrap";
 import { NavbarButton } from "../../shared/NavbarButton.tsx";
 import { useBearStore } from "../../../lib/state/useBearStore.ts";
 import { AppContext } from "../../../lib/state/AppContext.ts";
-import { postRoomActionReloadScenario } from "../../../../src-gen";
+import {
+  postRoomActionRedo,
+  postRoomActionReloadScenario,
+  postRoomActionUndo,
+} from "../../../../src-gen";
 import { RoomContext } from "../../../pages/Room.tsx";
 import { resultOrThrow } from "../../../lib/data/resultOrThrow.ts";
 
@@ -22,7 +26,36 @@ export function CanvasToolbar(props: {
       }
       style={{ zIndex: 1 }}
     >
-      <GraphDataToggle></GraphDataToggle>
+      <Stack direction={"horizontal"}>
+        <NavbarButton
+          icon={"arrow-left"}
+          disabled={!graph.metaData.canUndo}
+          onClick={async () => {
+            resultOrThrow(
+              await postRoomActionUndo({
+                path: {
+                  id: props.roomContext.initialRoomData.id,
+                },
+              }),
+            );
+          }}
+        ></NavbarButton>
+        <NavbarButton
+          icon={"arrow-right"}
+          disabled={!graph.metaData.canRedo}
+          onClick={async () => {
+            resultOrThrow(
+              await postRoomActionRedo({
+                path: {
+                  id: props.roomContext.initialRoomData.id,
+                },
+              }),
+            );
+          }}
+        ></NavbarButton>
+        <GraphDataToggle></GraphDataToggle>
+      </Stack>
+
       {graph.metaData.scenario && (
         <>
           <span className={"small text-muted ps-1 pe-1"}>

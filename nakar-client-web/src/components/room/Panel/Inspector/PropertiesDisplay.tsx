@@ -1,14 +1,12 @@
 import { GraphProperty, ScenarioGroup } from "../../../../../src-gen";
-import { Stack, Table } from "react-bootstrap";
+import { Stack } from "react-bootstrap";
 import { ClipboardButton } from "../../ClipboardButton.tsx";
 import { PropertyMenu } from "./PropertyMenu.tsx";
-import { useBearStore } from "../../../../lib/state/useBearStore.ts";
 import { RoomContext } from "../../../../pages/Room.tsx";
 import { Loadable } from "../../../../lib/data/Loadable.ts";
 import { useState } from "react";
 import { NavbarButton } from "../../../shared/NavbarButton.tsx";
 import clsx from "clsx";
-import { Collapsable } from "../../Collapsable.tsx";
 
 export function PropertiesDisplay(props: {
   title: string;

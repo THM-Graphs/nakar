@@ -35,4 +35,8 @@ export class MutablePosition {
       y: this.y,
     };
   }
+
+  public copy(): MutablePosition {
+    return new MutablePosition({ x: this.x, y: this.y });
+  }
 }

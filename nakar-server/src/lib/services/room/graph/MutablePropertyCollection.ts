@@ -51,4 +51,10 @@ export class MutablePropertyCollection {
       properties: this.properties.toRecord(),
     };
   }
+
+  public copy(): MutablePropertyCollection {
+    return new MutablePropertyCollection({
+      properties: this.properties.copy(),
+    });
+  }
 }

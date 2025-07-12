@@ -116,6 +116,7 @@ export const useBearStore = create<BearState>()(
                 pipelineSummary: [],
                 scenario: null,
                 arguments: [],
+                canUndo: false,
               },
             },
             setGraph: (graph) => {

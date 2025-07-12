@@ -1,5 +1,4 @@
 import { GraphDisplayConfigurationDBDTO } from './GraphDisplayConfigurationDBDTO';
-import { AdditionalQueryDBDTO } from './AdditionalQueryDBDTO';
 
 export interface SaveScenarioDBDTO {
   title: string | null;

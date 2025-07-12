@@ -370,6 +370,36 @@ paths:
         "200":
           description: "OK"
 
+  /room/{id}/actions/undo:
+    post:
+      tags:
+        - Room Actions
+      operationId: postRoomActionUndo
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "OK"
+
+  /room/{id}/actions/redo:
+    post:
+      tags:
+        - Room Actions
+      operationId: postRoomActionRedo
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "OK"
+
   /system/version:
     get:
       tags:
@@ -713,10 +743,16 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/ScenarioArgument"
+        canUndo:
+          type: boolean
+        canRedo:
+          type: boolean
       required:
         - scenarioInfo
         - pipelineSummary
         - arguments
+        - canUndo
+        - canRedo
 
     GraphElements:
       type: object

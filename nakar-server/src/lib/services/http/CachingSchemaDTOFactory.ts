@@ -41,7 +41,7 @@ export class CachingSchemaDTOFactory {
   public async createSchemaGraph(graph: MutableGraph): Promise<SchemaGraph> {
     return {
       elements: await this.createSchemaGraphElements(graph),
-      metaData: await this.createSchemaGraphMetaData(graph.metaData),
+      metaData: await this.createSchemaGraphMetaData(graph),
       table: this.createSchemaTable(graph.tableData),
     };
   }
@@ -89,8 +89,9 @@ export class CachingSchemaDTOFactory {
   }
 
   public async createSchemaGraphMetaData(
-    metaData: MutableGraphMetaData,
+    graph: MutableGraph,
   ): Promise<SchemaGraphMetaData> {
+    const metaData: MutableGraphMetaData = graph.metaData;
     const scenario: GetScenarioDBDTO | null =
       metaData.scenarioId != null
         ? await this._database.getScenario(metaData.scenarioId)
@@ -118,6 +119,8 @@ export class CachingSchemaDTOFactory {
         ],
         [],
       ),
+      canUndo: graph.currentUndoDepth > 0,
+      canRedo: graph.currentRedoDepth > 0,
     };
   }
 

@@ -189,6 +189,7 @@ export function Room(props: { context: AppContext }) {
           scenario: null,
           pipelineSummary: [],
           arguments: [],
+          canUndo: false,
         },
         table: {
           data: [],

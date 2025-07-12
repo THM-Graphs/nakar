@@ -28,6 +28,8 @@ export class MutableGraph {
   public edges: MutableEdgeIndex;
   public metaData: MutableGraphMetaData;
   public tableData: SMap<string, unknown>[];
+  public previous: MutableGraph | null;
+  public next: MutableGraph | null;
 
   public constructor(data: {
     id: string;
@@ -35,16 +37,40 @@ export class MutableGraph {
     edges: MutableEdgeIndex;
     metaData: MutableGraphMetaData;
     tableData: SMap<string, unknown>[];
+    previous: MutableGraph | null;
+    next: MutableGraph | null;
   }) {
     this.id = data.id;
     this.nodes = data.nodes;
     this.edges = data.edges;
     this.metaData = data.metaData;
     this.tableData = data.tableData;
+    this.previous = data.previous;
+    this.next = data.next;
   }
 
   public get size(): number {
     return this.nodes.size + this.edges.size;
+  }
+
+  public get currentUndoDepth(): number {
+    let result: number = 0;
+    let c: MutableGraph | null = this.previous;
+    while (c != null) {
+      result += 1;
+      c = c.previous;
+    }
+    return result;
+  }
+
+  public get currentRedoDepth(): number {
+    let result: number = 0;
+    let c: MutableGraph | null = this.next;
+    while (c != null) {
+      result += 1;
+      c = c.next;
+    }
+    return result;
   }
 
   public static empty(): MutableGraph {
@@ -54,27 +80,9 @@ export class MutableGraph {
       edges: new MutableEdgeIndex([]),
       metaData: MutableGraphMetaData.empty(),
       tableData: [],
+      previous: null,
+      next: null,
     });
-  }
-
-  public static fromInitialScenario(
-    scenario: GetScenarioDBDTO,
-    displayConfig: FinalGraphDisplayConfiguration,
-    scenarioArguments: SMap<string, unknown>,
-  ): MutableGraph {
-    const graph: MutableGraph = new MutableGraph({
-      id: uuidv4(),
-      nodes: new MutableNodeIndex([]),
-      edges: new MutableEdgeIndex([]),
-      metaData: new MutableGraphMetaData({
-        scenarioId: scenario.documentId,
-        pipelineSummary: [],
-        arguments: scenarioArguments,
-      }),
-      tableData: [],
-    });
-
-    return graph;
   }
 
   public static fromPlain(
@@ -99,6 +107,8 @@ export class MutableGraph {
         (td: Record<string, unknown>): SMap<string, unknown> =>
           SMap.fromRecord(td),
       ),
+      previous: null,
+      next: null,
     });
   }
 
@@ -114,6 +124,21 @@ export class MutableGraph {
     } catch {
       return MutableGraph.empty();
     }
+  }
+
+  public fillFromInitialScenario(
+    scenario: GetScenarioDBDTO,
+    displayConfig: FinalGraphDisplayConfiguration,
+    scenarioArguments: SMap<string, unknown>,
+  ): void {
+    this.metaData = new MutableGraphMetaData({
+      scenarioId: scenario.documentId,
+      pipelineSummary: [],
+      arguments: scenarioArguments,
+    });
+    this.nodes = new MutableNodeIndex([]);
+    this.edges = new MutableEdgeIndex([]);
+    this.tableData = [];
   }
 
   public toPlain(): z.infer<typeof MutableGraph.schema> {
@@ -202,6 +227,33 @@ export class MutableGraph {
       foundNode.position.x = node.position.x;
       foundNode.position.y = node.position.y;
       foundNode.locked = node.locked;
+    }
+  }
+
+  public copy(): MutableGraph {
+    return new MutableGraph({
+      id: uuidv4(),
+      nodes: this.nodes.copy(),
+      edges: this.edges.copy(),
+      metaData: this.metaData.copy(),
+      tableData: this.tableData.map(
+        (e: SMap<string, unknown>): SMap<string, unknown> => e.copy(),
+      ),
+      previous: null,
+      next: null,
+    });
+  }
+
+  public trimUndoStack(limit: number): void {
+    let counter: number = 1;
+    let c: MutableGraph | null = this.previous;
+    while (c != null) {
+      if (counter >= limit) {
+        c.previous = null;
+        return;
+      }
+      counter += 1;
+      c = c.previous;
     }
   }
 }

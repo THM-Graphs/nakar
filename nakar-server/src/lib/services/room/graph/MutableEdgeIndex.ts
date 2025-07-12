@@ -218,6 +218,12 @@ export class MutableEdgeIndex {
     return newIndex;
   }
 
+  public copy(): MutableEdgeIndex {
+    return new MutableEdgeIndex(
+      this.edges.toArray().map((e: MutableEdge): MutableEdge => e.copy()),
+    );
+  }
+
   private _addToTypeHistogram(type: string, delta: number): void {
     const newValue: number = (this._typeHistogram.get(type) ?? 0) + delta;
     if (newValue === 0) {

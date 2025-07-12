@@ -170,4 +170,18 @@ export class MutableEdge {
 
     return isDangling;
   }
+
+  public copy(): MutableEdge {
+    return new MutableEdge({
+      id: this.id,
+      startNodeId: this.startNodeId,
+      endNodeId: this.endNodeId,
+      type: this.type,
+      compressedCount: this.compressedCount,
+      width: this.width,
+      properties: this.properties.copy(),
+      namesInQuery: this.namesInQuery.copy(),
+      source: this.source,
+    });
+  }
 }

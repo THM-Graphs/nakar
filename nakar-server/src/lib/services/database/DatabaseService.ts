@@ -236,6 +236,7 @@ export class DatabaseService implements ApplicationService {
   public async getGraphDisplayConfiguration(
     scenarioId: string,
   ): Promise<FinalGraphDisplayConfiguration> {
+    // eslint-disable-next-line @typescript-eslint/typedef
     const populate = {
       graphDisplayConfiguration: {
         populate: {

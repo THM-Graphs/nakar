@@ -310,7 +310,7 @@ export class SocketIOService implements ApplicationService {
                 );
               const metaData: SchemaGraphMetaData =
                 await cachedGraphFactory.createSchemaGraphMetaData(
-                  message.metaData,
+                  message.graph,
                 );
               this.sendToRoom(message.roomId, {
                 metaData: metaData,

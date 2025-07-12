@@ -40,8 +40,9 @@ import { NotFound } from 'http-errors';
 import { MutableEdgeIndex } from './graph/MutableEdgeIndex';
 import { Range } from '../../tools/Range';
 import { MergeNodeConfiguration } from './scenario-pipeline/display-configuration/MergeNodeConfiguration';
-import { randomUUID } from 'node:crypto';
 import { MutablePropertyCollection } from './graph/MutablePropertyCollection';
+import { ProfilerTask } from '../profiler/ProfilerTask';
+import { v4 } from 'uuid';
 
 export class RoomService implements ApplicationService {
   private readonly _workers: SMap<string, Worker>;
@@ -209,7 +210,8 @@ export class RoomService implements ApplicationService {
             scenario.documentId,
           );
 
-        const graph: MutableGraph = MutableGraph.fromInitialScenario(
+        const graph: MutableGraph = this._snapshotGraph(params.roomId);
+        graph.fillFromInitialScenario(
           scenario,
           displayConfiguration,
           params.arguments,
@@ -273,7 +275,6 @@ export class RoomService implements ApplicationService {
           graph.applyPhysicalGraph(physical, this._logger);
         }
 
-        this._graphs.set(params.roomId, graph);
         this._sendActionToWorker(params.roomId, {
           type: 'WTActionSetGraph',
           graph: graph.toPhysicalGraph(displayConfiguration, this._logger),
@@ -281,7 +282,7 @@ export class RoomService implements ApplicationService {
         await this.saveGraph(params.roomId);
         this._onEvent.next({
           type: 'RoomServiceEventGraphMetaDataChanged',
-          metaData: graph.metaData,
+          graph: graph,
           roomId: params.roomId,
         } satisfies RoomServiceEventGraphMetaDataChanged);
         this._onEvent.next({
@@ -315,16 +316,16 @@ export class RoomService implements ApplicationService {
       'Expanding nodes',
       async (): Promise<void> => {
         const nodeId: string = params.nodeId;
-        const graph: MutableGraph = this.getGraph(params.roomId);
+        const oldGraph: MutableGraph = this.getGraph(params.roomId);
 
-        if (graph.metaData.scenarioId == null) {
+        if (oldGraph.metaData.scenarioId == null) {
           throw new Error(
             `Cannot expand node because there is no scenario info.`,
           );
         }
 
         const scenario: GetScenarioDBDTO | null =
-          await this._database.getScenario(graph.metaData.scenarioId);
+          await this._database.getScenario(oldGraph.metaData.scenarioId);
         if (scenario == null) {
           throw new Error(
             `Cannot find scenario of room ${params.roomId} to run expand nodes.`,
@@ -336,7 +337,7 @@ export class RoomService implements ApplicationService {
           edgeAddedCount: 0,
         };
 
-        const node: MutableNode | null = graph.nodes.get(nodeId);
+        const node: MutableNode | null = oldGraph.nodes.get(nodeId);
         if (node == null) {
           throw new Error(`Cannot find node ${nodeId} to expand.`);
         }
@@ -358,6 +359,7 @@ export class RoomService implements ApplicationService {
             new SSet<string>([nodeId]),
             params.limit,
           );
+          const graph: MutableGraph = this._snapshotGraph(params.roomId);
 
           for (const newNode of expandResult.nodes) {
             if (!graph.nodes.hasById(newNode[0])) {
@@ -439,42 +441,48 @@ export class RoomService implements ApplicationService {
     roomId: string;
     nodeIds: readonly string[];
   }): Promise<void> {
-    const graph: MutableGraph = this.getGraph(params.roomId);
-    const config: FinalGraphDisplayConfiguration =
-      graph.metaData.scenarioId != null
-        ? await this._database.getGraphDisplayConfiguration(
-            graph.metaData.scenarioId,
+    await this._runWithRoomLock(
+      params.roomId,
+      'Focus nodes',
+      async (): Promise<void> => {
+        const graph: MutableGraph = this._snapshotGraph(params.roomId);
+        const config: FinalGraphDisplayConfiguration =
+          graph.metaData.scenarioId != null
+            ? await this._database.getGraphDisplayConfiguration(
+                graph.metaData.scenarioId,
+              )
+            : FinalGraphDisplayConfiguration.empty();
+
+        const result: ExpandNodesResult = {
+          nodesAddedCount: 0,
+          edgeAddedCount: 0,
+        };
+        graph.nodes.nodes
+          .filter(
+            (node: MutableNode): boolean => !params.nodeIds.includes(node.id),
           )
-        : FinalGraphDisplayConfiguration.empty();
+          .forEach((node: MutableNode): void => {
+            graph.nodes.remove(node);
+            result.nodesAddedCount -= 1;
+          });
+        const edgesRemovedCount: number = graph.removeDanglingEdges(
+          this._logger,
+        );
+        result.edgeAddedCount -= edgesRemovedCount;
 
-    await this._runWithRoomLock(params.roomId, 'Focus nodes', (): void => {
-      const result: ExpandNodesResult = {
-        nodesAddedCount: 0,
-        edgeAddedCount: 0,
-      };
-      graph.nodes.nodes
-        .filter(
-          (node: MutableNode): boolean => !params.nodeIds.includes(node.id),
-        )
-        .forEach((node: MutableNode): void => {
-          graph.nodes.remove(node);
-          result.nodesAddedCount -= 1;
+        this._sendActionToWorker(params.roomId, {
+          type: 'WTActionSetGraph',
+          graph: graph.toPhysicalGraph(config, this._logger),
         });
-      const edgesRemovedCount: number = graph.removeDanglingEdges(this._logger);
-      result.edgeAddedCount -= edgesRemovedCount;
-
-      this._sendActionToWorker(params.roomId, {
-        type: 'WTActionSetGraph',
-        graph: graph.toPhysicalGraph(config, this._logger),
-      });
-      this._onEvent.next({
-        type: 'RoomServiceEventGraphElementsChanged',
-        graph: graph,
-        roomId: params.roomId,
-        nodesAdded: result.nodesAddedCount,
-        edgesAdded: result.edgeAddedCount,
-      } satisfies RoomServiceEventGraphElementsChanged);
-    });
+        this._onEvent.next({
+          type: 'RoomServiceEventGraphElementsChanged',
+          graph: graph,
+          roomId: params.roomId,
+          nodesAdded: result.nodesAddedCount,
+          edgesAdded: result.edgeAddedCount,
+        } satisfies RoomServiceEventGraphElementsChanged);
+      },
+    );
   }
 
   public async deleteElements(params: {
@@ -488,7 +496,7 @@ export class RoomService implements ApplicationService {
       params.roomId,
       'Deleting nodes',
       async (): Promise<void> => {
-        const graph: MutableGraph = this.getGraph(params.roomId);
+        const graph: MutableGraph = this._snapshotGraph(params.roomId);
         const config: FinalGraphDisplayConfiguration =
           graph.metaData.scenarioId != null
             ? await this._database.getGraphDisplayConfiguration(
@@ -599,6 +607,80 @@ export class RoomService implements ApplicationService {
       type: 'WTActionTriggerPhysics',
       amount: 'long',
     });
+  }
+
+  public async undo(params: { roomId: string }): Promise<void> {
+    const oldGraph: MutableGraph = this.getGraph(params.roomId);
+    const graph: MutableGraph | null = oldGraph.previous;
+    if (graph == null) {
+      throw new Error('Unable to execute undo: No undo step available.');
+    }
+
+    graph.next = oldGraph;
+    oldGraph.previous = null;
+    this._graphs.set(params.roomId, graph);
+
+    const displayConfiguration: FinalGraphDisplayConfiguration =
+      graph.metaData.scenarioId != null
+        ? await this._database.getGraphDisplayConfiguration(
+            graph.metaData.scenarioId,
+          )
+        : FinalGraphDisplayConfiguration.empty();
+
+    await this.saveGraph(params.roomId);
+    this._sendActionToWorker(params.roomId, {
+      type: 'WTActionSetGraph',
+      graph: graph.toPhysicalGraph(displayConfiguration, this._logger),
+    });
+    this._onEvent.next({
+      type: 'RoomServiceEventGraphMetaDataChanged',
+      graph: graph,
+      roomId: params.roomId,
+    } satisfies RoomServiceEventGraphMetaDataChanged);
+    this._onEvent.next({
+      type: 'RoomServiceEventGraphElementsChanged',
+      graph: graph,
+      roomId: params.roomId,
+      nodesAdded: graph.nodes.size,
+      edgesAdded: graph.edges.size,
+    } satisfies RoomServiceEventGraphElementsChanged);
+  }
+
+  public async redo(params: { roomId: string }): Promise<void> {
+    const oldGraph: MutableGraph = this.getGraph(params.roomId);
+    const graph: MutableGraph | null = oldGraph.next;
+    if (graph == null) {
+      throw new Error('Unable to execute redo: No redo step available.');
+    }
+    graph.previous = oldGraph;
+    oldGraph.next = null;
+
+    this._graphs.set(params.roomId, graph);
+
+    const displayConfiguration: FinalGraphDisplayConfiguration =
+      graph.metaData.scenarioId != null
+        ? await this._database.getGraphDisplayConfiguration(
+            graph.metaData.scenarioId,
+          )
+        : FinalGraphDisplayConfiguration.empty();
+
+    await this.saveGraph(params.roomId);
+    this._sendActionToWorker(params.roomId, {
+      type: 'WTActionSetGraph',
+      graph: graph.toPhysicalGraph(displayConfiguration, this._logger),
+    });
+    this._onEvent.next({
+      type: 'RoomServiceEventGraphMetaDataChanged',
+      graph: graph,
+      roomId: params.roomId,
+    } satisfies RoomServiceEventGraphMetaDataChanged);
+    this._onEvent.next({
+      type: 'RoomServiceEventGraphElementsChanged',
+      graph: graph,
+      roomId: params.roomId,
+      nodesAdded: graph.nodes.size,
+      edgesAdded: graph.edges.size,
+    } satisfies RoomServiceEventGraphElementsChanged);
   }
 
   public unlockNodes(params: {
@@ -995,7 +1077,7 @@ export class RoomService implements ApplicationService {
           if (shouldMerge) {
             graph.edges.add(
               new MutableEdge({
-                id: randomUUID(),
+                id: v4(),
                 compressedCount: 1,
                 startNodeId: originalNode.id,
                 endNodeId: mergeNode.id,
@@ -1010,7 +1092,7 @@ export class RoomService implements ApplicationService {
             );
             graph.edges.add(
               new MutableEdge({
-                id: randomUUID(),
+                id: v4(),
                 compressedCount: 1,
                 startNodeId: mergeNode.id,
                 endNodeId: originalNode.id,
@@ -1075,5 +1157,34 @@ export class RoomService implements ApplicationService {
     }
 
     return true;
+  }
+
+  private _snapshotGraph(roomId: string): MutableGraph {
+    const oldGraph: MutableGraph = this.getGraph(roomId);
+
+    const p: ProfilerTask = this._profiler.profile(this, 'Graph Snapshot');
+    const newGraph: MutableGraph = oldGraph.copy();
+    p.finish();
+
+    newGraph.previous = oldGraph;
+    this._graphs.set(roomId, newGraph);
+
+    this._logger.debug(
+      this,
+      `Undo depth in room ${roomId}: ${newGraph.currentUndoDepth.toString()}`,
+    );
+    newGraph.trimUndoStack(10);
+    this._logger.debug(
+      this,
+      `Undo depth after trim in room ${roomId}: ${newGraph.currentUndoDepth.toString()}`,
+    );
+
+    this._onEvent.next({
+      type: 'RoomServiceEventGraphMetaDataChanged',
+      graph: newGraph,
+      roomId: roomId,
+    } satisfies RoomServiceEventGraphMetaDataChanged);
+
+    return newGraph;
   }
 }

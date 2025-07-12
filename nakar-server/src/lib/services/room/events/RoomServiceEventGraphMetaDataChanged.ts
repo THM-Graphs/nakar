@@ -1,7 +1,7 @@
-import { MutableGraphMetaData } from '../graph/MutableGraphMetaData';
+import { MutableGraph } from '../graph/MutableGraph';
 
 export interface RoomServiceEventGraphMetaDataChanged {
   type: 'RoomServiceEventGraphMetaDataChanged';
   roomId: string;
-  metaData: MutableGraphMetaData;
+  graph: MutableGraph;
 }

@@ -1,5 +1,3 @@
-import { GraphDisplayConfigurationDBDTO } from './GraphDisplayConfigurationDBDTO';
-
 export interface GetRoomDBDTO {
   readonly documentId: string;
   readonly title: string | null;

@@ -10,10 +10,7 @@ import { NavbarButton } from "../../shared/NavbarButton.tsx";
 import { useEffect, useState } from "react";
 import { D3RendererEvents } from "../../../lib/d3/D3RendererEvents.ts";
 import { resultOrThrow } from "../../../lib/data/resultOrThrow.ts";
-import {
-  postRoomActionRelayout,
-  postRoomActionReloadScenario,
-} from "../../../../src-gen";
+import { postRoomActionRelayout } from "../../../../src-gen";
 
 export function Canvas(props: {
   context: AppContext;

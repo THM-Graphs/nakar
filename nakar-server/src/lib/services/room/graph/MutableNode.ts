@@ -203,6 +203,19 @@ export class MutableNode {
     );
   }
 
+  public copy(): MutableNode {
+    return new MutableNode({
+      id: this.id,
+      labels: this.labels.copy(),
+      properties: this.properties.copy(),
+      position: this.position.copy(),
+      namesInQuery: this.namesInQuery.copy(),
+      locked: this.locked,
+      grabs: this.grabs.copy(),
+      source: this.source,
+    });
+  }
+
   private _customTitle(
     graph: MutableGraph,
     config: FinalGraphDisplayConfiguration,

@@ -64,6 +64,8 @@ export type GraphMetaData = {
         durationMs: number;
     }>;
     arguments: Array<ScenarioArgument>;
+    canUndo: boolean;
+    canRedo: boolean;
 };
 
 export type GraphProperty = {
@@ -520,6 +522,26 @@ export type PostRoomActionFocusNodesData = {
 export type PostRoomActionFocusNodesResponse = (unknown);
 
 export type PostRoomActionFocusNodesError = unknown;
+
+export type PostRoomActionUndoData = {
+    path: {
+        id: string;
+    };
+};
+
+export type PostRoomActionUndoResponse = (unknown);
+
+export type PostRoomActionUndoError = unknown;
+
+export type PostRoomActionRedoData = {
+    path: {
+        id: string;
+    };
+};
+
+export type PostRoomActionRedoResponse = (unknown);
+
+export type PostRoomActionRedoError = unknown;
 
 export type GetVersionResponse = (Version);
 

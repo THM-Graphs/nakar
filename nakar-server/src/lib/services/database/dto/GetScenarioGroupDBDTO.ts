@@ -1,4 +1,3 @@
-import { GraphDisplayConfigurationDBDTO } from './GraphDisplayConfigurationDBDTO';
 import { GetRoomDBDTO } from './GetRoomDBDTO';
 
 export interface GetScenarioGroupDBDTO {

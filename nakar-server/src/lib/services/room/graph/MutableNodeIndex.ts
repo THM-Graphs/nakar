@@ -180,6 +180,12 @@ export class MutableNodeIndex {
     return newIndex;
   }
 
+  public copy(): MutableNodeIndex {
+    return new MutableNodeIndex(
+      this.nodes.toArray().map((n: MutableNode): MutableNode => n.copy()),
+    );
+  }
+
   private _addToLabelHistogram(label: string, delta: 1 | -1): void {
     this._labelHistogram.set(
       label,

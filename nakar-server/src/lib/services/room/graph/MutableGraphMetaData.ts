@@ -82,4 +82,14 @@ export class MutableGraphMetaData {
     }
     return labels;
   }
+
+  public copy(): MutableGraphMetaData {
+    return new MutableGraphMetaData({
+      scenarioId: this.scenarioId,
+      pipelineSummary: this.pipelineSummary.map(
+        (a: [string, number]): [string, number] => [a[0], a[1]],
+      ),
+      arguments: this.arguments.copy(),
+    });
+  }
 }

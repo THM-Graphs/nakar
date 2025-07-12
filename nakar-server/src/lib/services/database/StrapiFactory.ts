@@ -5,7 +5,6 @@ import { match } from 'ts-pattern';
 import { NodeDisplayConfigurationDBDTO } from './dto/NodeDisplayConfigurationDBDTO';
 import { SaveScenarioGroupDBDTO } from './dto/SaveScenarioGroupDBDTO';
 import { SaveScenarioDBDTO } from './dto/SaveScenarioDBDTO';
-import { AdditionalQueryDBDTO } from './dto/AdditionalQueryDBDTO';
 
 export class StrapiFactory {
   public createDatabaseInsertObject(

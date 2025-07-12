@@ -1,5 +1,4 @@
 import { GetScenarioGroupDBDTO } from './GetScenarioGroupDBDTO';
-import { GraphDisplayConfigurationDBDTO } from './GraphDisplayConfigurationDBDTO';
 import { GetMediaDBDTO } from './GetMediaDBDTO';
 import { GetScenarioParameterDBDTO } from './GetScenarioParameterDBDTO';
 import { GetScenarioQueryDBDTO } from './GetScenarioQueryDBDTO';
