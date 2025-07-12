@@ -36,7 +36,7 @@ export function ArgumentDisplay(props: {
         </OverlayTrigger>
         <Form.Control
           type="text"
-          placeholder={"Enter a value ..."}
+          placeholder={"Enter a value…"}
           size={"sm"}
           value={props.arg.value}
           onChange={(event) => {

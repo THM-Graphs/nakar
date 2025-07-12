@@ -18,6 +18,8 @@ export function HistogramPanel(props: { roomContext: RoomContext }) {
   const histogram = useBearStore((s) => s.room.panels.histogram);
   const labels = useBearStore((s) => s.room.scenario.graph.elements.labels);
 
+  const [showAllNodes, setShowAllNodes] = useState<boolean>(false);
+
   return (
     <Panel
       hidden={!histogram.shown}
@@ -51,7 +53,9 @@ export function HistogramPanel(props: { roomContext: RoomContext }) {
                   value={entry.count}
                   percentage={entry.percentage}
                   key={entry.label}
-                  bgColor={label ? getBackgroundColor(label.color) : undefined}
+                  bgColors={
+                    label ? [getBackgroundColor(label.color)] : undefined
+                  }
                   onRemove={async (): Promise<void> => {
                     resultOrThrow(
                       await postRoomActionDeleteElements({
@@ -70,6 +74,59 @@ export function HistogramPanel(props: { roomContext: RoomContext }) {
                 ></ValueDisplay>
               );
             })}
+          </Collapsable>
+        </Stack>
+        <Stack className={"border-bottom"}>
+          <Collapsable
+            title={<span className={"fw-bold small"}>Nodes</span>}
+            initialState={false}
+          >
+            <EmptyHint list={histogramData.nodes}></EmptyHint>
+            {histogramData.nodes
+              .slice(0, showAllNodes ? histogramData.nodes.length : 10)
+              .map((nodeEntry) => {
+                const nodeLabels = labels.filter((graphLabel) =>
+                  nodeEntry.labels.includes(graphLabel.label),
+                );
+                return (
+                  <ValueDisplay
+                    value={nodeEntry.degree}
+                    percentage={nodeEntry.percentage}
+                    label={nodeEntry.title}
+                    subLabel={nodeEntry.id}
+                    bgColors={nodeLabels.map((l) =>
+                      getBackgroundColor(l.color),
+                    )}
+                    onRemove={async () => {
+                      resultOrThrow(
+                        await postRoomActionDeleteElements({
+                          path: {
+                            id: props.roomContext.initialRoomData.id,
+                          },
+                          body: {
+                            nodes: [nodeEntry.id],
+                            labels: [],
+                            edges: [],
+                            edgeTypes: [],
+                          },
+                        }),
+                      );
+                    }}
+                  ></ValueDisplay>
+                );
+              })}
+            {!showAllNodes && histogramData.nodes.length > 10 && (
+              <Button
+                variant={""}
+                size={"sm"}
+                className={"text-muted fst-italic small rounded-0"}
+                onClick={() => {
+                  setShowAllNodes(true);
+                }}
+              >
+                …show all {histogramData.nodes.length} elements
+              </Button>
+            )}
           </Collapsable>
         </Stack>
         <Stack className={"border-bottom"}>
@@ -204,7 +261,7 @@ function ValueDisplay(props: {
   subLabel?: string;
   value: number;
   percentage: number;
-  bgColor?: string;
+  bgColors?: string[];
   onRemove?: () => void | Promise<void>;
 }) {
   return (
@@ -217,20 +274,24 @@ function ValueDisplay(props: {
         className={"ps-0 flex-shrink-1 flex-grow-1 overflow-hidden "}
       >
         <ClipboardButton
-          text={props.label}
+          text={
+            props.subLabel ? `${props.label} ${props.subLabel}` : props.label
+          }
           className={"ps-1 pe-1"}
+          size={"sm"}
         ></ClipboardButton>
-        {props.bgColor && (
+        {props.bgColors?.map((color) => (
           <div
+            key={color}
             style={{
               zIndex: 1,
               width: "15px",
               height: "15px",
-              backgroundColor: props.bgColor ? props.bgColor : "",
+              backgroundColor: color,
             }}
             className={"flex-grow-0 flex-shrink-0 rounded-circle me-2"}
           ></div>
-        )}
+        ))}
         <OverlayTrigger
           placement={"left"}
           delay={{ show: 500, hide: 0 }}
@@ -250,7 +311,10 @@ function ValueDisplay(props: {
           >
             {props.label}
             {props.subLabel && (
-              <span className={"text-muted"}> ({props.subLabel})</span>
+              <span className={"text-muted font-monospace"}>
+                {" "}
+                ({props.subLabel})
+              </span>
             )}
           </span>
         </OverlayTrigger>

@@ -79,7 +79,7 @@ export function InfoDropdown(props: { context: AppContext }) {
           <Dropdown.Item disabled className={"small"}>
             Server (
             {match(version)
-              .with({ type: "loading" }, () => <span>loading...</span>)
+              .with({ type: "loading" }, () => <span>loading…</span>)
               .with({ type: "data" }, ({ data }) => <span>{data}</span>)
               .with({ type: "error" }, ({ message }) => <span>{message}</span>)
               .exhaustive()}

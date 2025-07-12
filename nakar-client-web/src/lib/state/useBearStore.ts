@@ -107,6 +107,7 @@ export const useBearStore = create<BearState>()(
                   edgeTypes: [],
                   edgeProperties: [],
                   nodeProperties: [],
+                  nodes: [],
                 },
               },
               table: {

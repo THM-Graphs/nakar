@@ -183,6 +183,7 @@ export function Room(props: { context: AppContext }) {
             edgeTypes: [],
             nodeLabels: [],
             nodeProperties: [],
+            nodes: [],
           },
         },
         metaData: {

@@ -71,7 +71,7 @@ export const NavbarButton = forwardRef<
       >
         {loading ? (
           <Spinner animation="border" role="status" size={"sm"}>
-            <span className="visually-hidden">Loading...</span>
+            <span className="visually-hidden">Loading…</span>
           </Spinner>
         ) : (
           props.icon && (

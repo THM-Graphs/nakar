@@ -710,11 +710,35 @@ components:
             required:
               - key
               - values
+        nodes:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              title:
+                type: string
+              labels:
+                type: array
+                items:
+                  type: string
+              degree:
+                type: number
+              percentage:
+                type: number
+            required:
+              - id
+              - title
+              - labels
+              - degree
+              - percentage
       required:
         - nodeLabels
         - nodeProperties
         - edgeTypes
         - edgeProperties
+        - nodes
 
     GraphMetaData:
       type: object

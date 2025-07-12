@@ -32,7 +32,7 @@ export function ReconnectOverlay() {
           className={"align-self-center text-muted"}
         >
           <Loading size={"sm"}></Loading>
-          <span>Reconnecting...</span>
+          <span>Reconnecting…</span>
         </Stack>
       </Stack>
       <div className={"flex-grow-1"}></div>

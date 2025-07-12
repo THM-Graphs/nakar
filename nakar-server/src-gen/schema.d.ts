@@ -424,6 +424,13 @@ export interface components {
                     readonly percentage: number;
                 }[];
             }[];
+            readonly nodes: readonly {
+                readonly id: string;
+                readonly title: string;
+                readonly labels: readonly string[];
+                readonly degree: number;
+                readonly percentage: number;
+            }[];
         };
         readonly GraphMetaData: {
             readonly scenario?: {

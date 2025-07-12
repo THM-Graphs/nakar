@@ -77,7 +77,7 @@ export class CachingSchemaDTOFactory {
           ): Promise<SchemaGraphLabel> =>
             await this._createSchemaGraphLabel(id, label),
         ),
-      histogram: this._createSchemaHistogram(graph),
+      histogram: this._createSchemaHistogram(graph, config),
     };
   }
 
@@ -128,13 +128,21 @@ export class CachingSchemaDTOFactory {
     };
   }
 
-  private _createSchemaHistogram(graph: MutableGraph): SchemaHistogram {
+  private _createSchemaHistogram(
+    graph: MutableGraph,
+    config: FinalGraphDisplayConfiguration,
+  ): SchemaHistogram {
     const labelCountHistogram: number = graph.nodes.labelHistogram.reduce(
       (akku: number, key: string, value: number): number => akku + value,
       0,
     );
     const typeCountHistogram: number = graph.edges.typeHistogram.reduce(
       (akku: number, key: string, value: number): number => akku + value,
+      0,
+    );
+    const degreeCount: number = graph.nodes.nodes.reduce(
+      (degree: number, node: MutableNode): number =>
+        degree + node.degree(graph),
       0,
     );
     return {
@@ -262,6 +270,32 @@ export class CachingSchemaDTOFactory {
             };
           },
         ),
+      nodes: graph.nodes.nodes
+        .toArray()
+        .map(
+          (
+            node: MutableNode,
+          ): {
+            id: string;
+            title: string;
+            labels: string[];
+            degree: number;
+            percentage: number;
+          } => ({
+            id: node.id,
+            title: node.title(graph, config, this._logger),
+            labels: node.labels.toArray(),
+            degree: node.degree(graph),
+            percentage: degreeCount > 0 ? node.degree(graph) / degreeCount : 0,
+          }),
+        )
+        .sort((a, b): number => {
+          if (a.degree !== b.degree) {
+            return b.degree - a.degree;
+          } else {
+            return a.title.localeCompare(b.title);
+          }
+        }),
     } satisfies SchemaHistogram;
   }
 

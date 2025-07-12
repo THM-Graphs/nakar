@@ -108,6 +108,13 @@ export type Histogram = {
             percentage: number;
         }>;
     }>;
+    nodes: Array<{
+        id: string;
+        title: string;
+        labels: Array<(string)>;
+        degree: number;
+        percentage: number;
+    }>;
 };
 
 export type Node = {
