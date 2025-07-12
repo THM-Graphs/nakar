@@ -34,7 +34,6 @@ import { match } from "ts-pattern";
 import { PerformanceDisplay } from "../components/room/PerformanceDisplay.tsx";
 import { RunScenarioModal } from "../components/room/RunScenarioModal/RunScenarioModal.tsx";
 import { ExpandNodePreviewModal } from "../components/room/ExpandNodePreviewModal/ExpandNodePreviewModal.tsx";
-import { boolean } from "zod";
 
 export type RoomContext = {
   initialRoomData: RoomSchema;
