@@ -16,13 +16,14 @@ export function HistogramPanel(props: { roomContext: RoomContext }) {
     (s) => s.room.scenario.graph.elements.histogram,
   );
   const histogram = useBearStore((s) => s.room.panels.histogram);
+  const rightPanel = useBearStore((s) => s.room.panels.right);
   const labels = useBearStore((s) => s.room.scenario.graph.elements.labels);
 
   const [showAllNodes, setShowAllNodes] = useState<boolean>(false);
 
   return (
     <Panel
-      hidden={!histogram.shown}
+      hidden={rightPanel !== "histogram"}
       direction={"right"}
       title={"Histogram"}
       onClose={() => {

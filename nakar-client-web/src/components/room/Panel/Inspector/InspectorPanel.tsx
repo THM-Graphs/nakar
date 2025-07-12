@@ -12,12 +12,13 @@ export function InspectorPanel(props: {
   roomContext: RoomContext;
 }) {
   const inspector = useBearStore((s) => s.room.panels.inspector);
+  const rightPanel = useBearStore((s) => s.room.panels.right);
   const graphElements = useBearStore((s) => s.room.scenario.graph.elements);
 
   return (
     <Panel
       direction={"right"}
-      hidden={!inspector.shown}
+      hidden={rightPanel !== "inspector"}
       onClose={() => {
         inspector.hide();
       }}

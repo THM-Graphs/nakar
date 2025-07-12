@@ -207,7 +207,6 @@ export function Room(props: { context: AppContext }) {
           left={
             <>
               <BackButton href={"/"} title={"Rooms"}></BackButton>
-              <ScenariosPanelButton></ScenariosPanelButton>
             </>
           }
           center={
@@ -224,8 +223,6 @@ export function Room(props: { context: AppContext }) {
           }
           right={
             <>
-              <InspectorPanelButton></InspectorPanelButton>
-              <HistogramPanelButton></HistogramPanelButton>
               <InfoDropdown context={props.context}></InfoDropdown>
             </>
           }
@@ -235,6 +232,9 @@ export function Room(props: { context: AppContext }) {
           className={"align-items-stretch flex-grow-1 position-relative"}
           style={{ height: "100px" }}
         >
+          <Stack className={"bg-body-tertiary border-end z-1 flex-grow-0"}>
+            <ScenariosPanelButton></ScenariosPanelButton>
+          </Stack>
           <ScenariosPanel
             context={props.context}
             roomContext={roomContext}
@@ -245,6 +245,10 @@ export function Room(props: { context: AppContext }) {
             roomContext={roomContext}
           ></InspectorPanel>
           <HistogramPanel roomContext={roomContext}></HistogramPanel>
+          <Stack className={"flex-grow-0 bg-body-tertiary border-start z-1"}>
+            <InspectorPanelButton></InspectorPanelButton>
+            <HistogramPanelButton></HistogramPanelButton>
+          </Stack>
           <ToastStack></ToastStack>
           <RunScenarioModal roomContext={roomContext}></RunScenarioModal>
           <ExpandNodePreviewModal

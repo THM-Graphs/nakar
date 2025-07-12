@@ -87,8 +87,9 @@ export interface BearState {
       setState: (state: SocketState) => void;
     };
     panels: {
+      left: "scenarios" | null;
+      right: "histogram" | "inspector" | null;
       inspector: {
-        shown: boolean;
         show: () => void;
         hide: () => void;
         element: InspectorElement | null;
@@ -96,14 +97,12 @@ export interface BearState {
         removeElement: () => void;
       };
       histogram: {
-        shown: boolean;
         show: () => void;
         hide: () => void;
       };
       scenarios: {
         scenarios: ScenarioGroups;
         setScenarios: (scenarios: ScenarioGroups) => void;
-        shown: boolean;
         show: () => void;
         hide: () => void;
       };

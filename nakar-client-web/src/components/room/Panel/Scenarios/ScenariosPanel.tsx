@@ -13,7 +13,7 @@ export function ScenariosPanel(props: {
   context: AppContext;
   roomContext: RoomContext;
 }) {
-  const shown = useBearStore((s) => s.room.panels.scenarios.shown);
+  const leftPanel = useBearStore((s) => s.room.panels.left);
   const hide = useBearStore((s) => s.room.panels.scenarios.hide);
   const setScenarios = useBearStore(
     (s) => s.room.panels.scenarios.setScenarios,
@@ -26,7 +26,7 @@ export function ScenariosPanel(props: {
 
   return (
     <Panel
-      hidden={!shown}
+      hidden={leftPanel !== "scenarios"}
       direction={"left"}
       onClose={hide}
       title={"Scenarios"}

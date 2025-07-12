@@ -43,12 +43,11 @@ export function Canvas(props: {
             className={
               "flex-grow-0 flex-shrink-1 justify-content-end flex-wrap"
             }
-            direction={"horizontal"}
+            direction={"vertical"}
             gap={0}
           >
             <NavbarButton
               icon={"tropical-storm"}
-              title={"Layout"}
               style={{ zIndex: 1 }}
               onClick={async () => {
                 resultOrThrow(
@@ -61,28 +60,24 @@ export function Canvas(props: {
             ></NavbarButton>
             <NavbarButton
               icon={"crosshair"}
-              title={"Center"}
               style={{ zIndex: 1 }}
               onClick={() => rendererEvents?.onCenter.next()}
               className={"bg-body-hover"}
             ></NavbarButton>
             <NavbarButton
               icon={"aspect-ratio"}
-              title={"Overview"}
               style={{ zIndex: 1 }}
               onClick={() => rendererEvents?.onZoomOutOverview.next()}
               className={"bg-body-hover"}
             ></NavbarButton>
             <NavbarButton
               icon={"zoom-in"}
-              title={"Zoom in"}
               style={{ zIndex: 1 }}
               onClick={() => rendererEvents?.onZoomIn.next()}
               className={"bg-body-hover"}
             ></NavbarButton>
             <NavbarButton
               icon={"zoom-out"}
-              title={"Zoom out"}
               style={{ zIndex: 1 }}
               onClick={() => rendererEvents?.onZoomOut.next()}
               className={"bg-body-hover"}

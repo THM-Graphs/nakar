@@ -254,12 +254,14 @@ export const useBearStore = create<BearState>()(
             },
           },
           panels: {
+            left: "scenarios",
+            right: null,
             inspector: {
               element: null,
               setElement: (i) => {
                 set((s) => {
                   s.room.panels.inspector.element = i;
-                  s.room.panels.inspector.shown = true;
+                  s.room.panels.right = "inspector";
                 });
               },
               removeElement: () => {
@@ -267,29 +269,27 @@ export const useBearStore = create<BearState>()(
                   s.room.panels.inspector.element = null;
                 });
               },
-              shown: false,
               show: () => {
                 set((s) => {
-                  s.room.panels.inspector.shown = true;
+                  s.room.panels.right = "inspector";
                 });
               },
               hide: () => {
                 set((s) => {
-                  s.room.panels.inspector.shown = false;
+                  s.room.panels.right = null;
                   s.room.panels.inspector.element = null;
                 });
               },
             },
             histogram: {
-              shown: false,
               show: () => {
                 set((s) => {
-                  s.room.panels.histogram.shown = true;
+                  s.room.panels.right = "histogram";
                 });
               },
               hide: () => {
                 set((s) => {
-                  s.room.panels.histogram.shown = false;
+                  s.room.panels.right = null;
                 });
               },
             },
@@ -300,15 +300,14 @@ export const useBearStore = create<BearState>()(
                   s.room.panels.scenarios.scenarios = scenarios;
                 });
               },
-              shown: true,
               show: () => {
                 set((s) => {
-                  s.room.panels.scenarios.shown = true;
+                  s.room.panels.left = "scenarios";
                 });
               },
               hide: () => {
                 set((s) => {
-                  s.room.panels.scenarios.shown = false;
+                  s.room.panels.left = null;
                 });
               },
             },
