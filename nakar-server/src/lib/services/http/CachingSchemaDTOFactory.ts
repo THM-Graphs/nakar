@@ -132,6 +132,20 @@ export class CachingSchemaDTOFactory {
     graph: MutableGraph,
     config: FinalGraphDisplayConfiguration,
   ): SchemaHistogram {
+    interface NodeHistogramEntry {
+      id: string;
+      title: string;
+      labels: string[];
+      degree: number;
+      percentage: number;
+    }
+
+    interface HistogramPropertyEntry {
+      value: string;
+      count: number;
+      percentage: number;
+    }
+
     const labelCountHistogram: number = graph.nodes.labelHistogram.reduce(
       (akku: number, key: string, value: number): number => akku + value,
       0,
@@ -173,11 +187,7 @@ export class CachingSchemaDTOFactory {
             entry: [string, SMap<string, number>],
           ): {
             key: string;
-            values: {
-              value: string;
-              count: number;
-              percentage: number;
-            }[];
+            values: HistogramPropertyEntry[];
           } => {
             const count: number = entry[1].reduce(
               (akku: number, key: string, value: number): number =>
@@ -195,11 +205,7 @@ export class CachingSchemaDTOFactory {
                 .map(
                   (
                     propertyEntry: [string, number],
-                  ): {
-                    value: string;
-                    count: number;
-                    percentage: number;
-                  } => ({
+                  ): HistogramPropertyEntry => ({
                     value: propertyEntry[0],
                     count: propertyEntry[1],
                     percentage: propertyEntry[1] / count,
@@ -235,11 +241,7 @@ export class CachingSchemaDTOFactory {
             entry: [string, SMap<string, number>],
           ): {
             key: string;
-            values: {
-              value: string;
-              count: number;
-              percentage: number;
-            }[];
+            values: HistogramPropertyEntry[];
           } => {
             const count: number = entry[1].reduce(
               (akku: number, key: string, value: number): number =>
@@ -257,11 +259,7 @@ export class CachingSchemaDTOFactory {
                 .map(
                   (
                     propertyEntry: [string, number],
-                  ): {
-                    value: string;
-                    count: number;
-                    percentage: number;
-                  } => ({
+                  ): HistogramPropertyEntry => ({
                     value: propertyEntry[0],
                     count: propertyEntry[1],
                     percentage: propertyEntry[1] / count,
@@ -273,15 +271,7 @@ export class CachingSchemaDTOFactory {
       nodes: graph.nodes.nodes
         .toArray()
         .map(
-          (
-            node: MutableNode,
-          ): {
-            id: string;
-            title: string;
-            labels: string[];
-            degree: number;
-            percentage: number;
-          } => ({
+          (node: MutableNode): NodeHistogramEntry => ({
             id: node.id,
             title: node.title(graph, config, this._logger),
             labels: node.labels.toArray(),
@@ -289,7 +279,7 @@ export class CachingSchemaDTOFactory {
             percentage: degreeCount > 0 ? node.degree(graph) / degreeCount : 0,
           }),
         )
-        .sort((a, b): number => {
+        .sort((a: NodeHistogramEntry, b: NodeHistogramEntry): number => {
           if (a.degree !== b.degree) {
             return b.degree - a.degree;
           } else {
