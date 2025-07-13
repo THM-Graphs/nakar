@@ -6,6 +6,7 @@ import { MutablePosition } from './MutablePosition';
 import { MutablePropertyCollection } from './MutablePropertyCollection';
 import { Range } from '../../../tools/Range';
 import { MutableGraph } from './MutableGraph';
+import { PhysicsSimulation } from '../../../tools/physics/PhysicsSimulation';
 
 export class MutableNodeIndex {
   private _byId: SMap<string, MutableNode>;
@@ -93,6 +94,7 @@ export class MutableNodeIndex {
       grabs: new SSet(),
       source: node.source.nakarId,
     });
+    PhysicsSimulation.jiggle(mutableNode);
 
     const insertResult: boolean = this.add(mutableNode);
     if (!insertResult) {

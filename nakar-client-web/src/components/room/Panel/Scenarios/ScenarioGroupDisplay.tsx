@@ -15,6 +15,7 @@ export function ScenarioGroupDisplay(props: {
   return (
     <Collapsable
       initialState={false}
+      className={"border-bottom"}
       title={
         <>
           <span className={"small fw-bold"}>{props.scenarioGroup.title}</span>
@@ -22,10 +23,6 @@ export function ScenarioGroupDisplay(props: {
       }
     >
       <Stack direction={"horizontal"} className={"align-items-stretch"}>
-        <div
-          className={"bg-primary flex-shrink-0 flex-grow-0 ms-1"}
-          style={{ width: "3px" }}
-        ></div>
         <Stack>
           {props.scenarioGroup.editUrl && (
             <NavbarButton
