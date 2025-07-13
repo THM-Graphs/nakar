@@ -1,3 +1,5 @@
+import { useBearStore } from "../state/useBearStore.ts";
+
 // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
 const isClipboardEnabled = navigator.clipboard != null;
 
@@ -6,6 +8,9 @@ export function useClipboard(): [
   (value: string) => Promise<void>,
   () => Promise<string>,
 ] {
+  const pushErrorNotification = useBearStore(
+    (s) => s.room.ui.pushErrorNotification,
+  );
   return [
     isClipboardEnabled,
     async (value: string): Promise<void> => {
@@ -15,7 +20,7 @@ export function useClipboard(): [
       try {
         await navigator.clipboard.writeText(value);
       } catch (error) {
-        console.error(error);
+        pushErrorNotification(error);
       }
     },
     async (): Promise<string> => {
@@ -25,7 +30,7 @@ export function useClipboard(): [
       try {
         return await navigator.clipboard.readText();
       } catch (error) {
-        console.error(error);
+        pushErrorNotification(error);
         return "";
       }
     },

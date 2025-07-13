@@ -35,6 +35,11 @@ export type ExpandNodePreviewElement = {
     count: number;
 };
 
+export type GetScenariosResult = {
+    scenarioGroups: Array<ScenarioGroup>;
+    parameterizedScenarios: Array<ScenarioGroup>;
+};
+
 export type Graph = {
     elements: GraphElements;
     metaData: GraphMetaData;
@@ -202,10 +207,6 @@ export type ScenarioGroup = {
     scenarios: Array<Scenario>;
 };
 
-export type ScenarioGroups = {
-    scenarioGroups: Array<ScenarioGroup>;
-};
-
 export type ScenarioParameter = {
     identifier: string;
     title: string;
@@ -368,7 +369,7 @@ export type GetScenariosData = {
     };
 };
 
-export type GetScenariosResponse = (ScenarioGroups);
+export type GetScenariosResponse = (GetScenariosResult);
 
 export type GetScenariosError = unknown;
 
@@ -395,17 +396,6 @@ export type GetRoomGraphData = {
 export type GetRoomGraphResponse = (Graph);
 
 export type GetRoomGraphError = unknown;
-
-export type GetParameterizedScenariosOfGraphElementData = {
-    path: {
-        elementId: string;
-        roomId: string;
-    };
-};
-
-export type GetParameterizedScenariosOfGraphElementResponse = (Array<ScenarioGroup>);
-
-export type GetParameterizedScenariosOfGraphElementError = unknown;
 
 export type GetRoomGraphElementsData = {
     path: {

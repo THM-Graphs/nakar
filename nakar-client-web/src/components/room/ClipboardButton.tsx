@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useClipboard } from "../../lib/clipboard/useClipboard.ts";
 import { NavbarButton } from "../shared/NavbarButton.tsx";
 import clsx from "clsx";
+import { useBearStore } from "../../lib/state/useBearStore.ts";
 
 export function ClipboardButton(props: {
   text: string;
@@ -11,6 +12,9 @@ export function ClipboardButton(props: {
 }) {
   const [copied, setCopied] = useState(false);
   const [isClipboardEnabled, setClipboard] = useClipboard();
+  const pushErrorNotification = useBearStore(
+    (s) => s.room.ui.pushErrorNotification,
+  );
 
   return (
     <OverlayTrigger
@@ -41,9 +45,9 @@ export function ClipboardButton(props: {
                 setCopied(false);
               }, 1000);
             } catch (error) {
-              console.error(error);
+              pushErrorNotification(error);
             }
-          })().catch(console.error);
+          })().catch(pushErrorNotification);
         }}
       ></NavbarButton>
     </OverlayTrigger>

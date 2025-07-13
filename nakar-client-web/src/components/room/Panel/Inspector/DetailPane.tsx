@@ -1,20 +1,13 @@
 import { Stack } from "react-bootstrap";
 import { DetailPaneAction } from "./DetailPaneAction.ts";
-import {
-  getParameterizedScenariosOfGraphElement,
-  GraphProperty,
-  ScenarioGroup,
-} from "../../../../../src-gen";
+import { GraphProperty } from "../../../../../src-gen";
 import { PropertiesDisplay } from "./PropertiesDisplay.tsx";
 import { NavbarButton } from "../../../shared/NavbarButton.tsx";
 import { useBearStore } from "../../../../lib/state/useBearStore.ts";
-import { ReactNode, useEffect, useState } from "react";
+import { ReactNode, useState } from "react";
 import { RoomContext } from "../../../../pages/Room.tsx";
-import { PropertyMenu } from "./PropertyMenu.tsx";
+import { PropertyMenu } from "../../PropertyMenu.tsx";
 import clsx from "clsx";
-import { Loadable } from "../../../../lib/data/Loadable.ts";
-import { resultOrThrow } from "../../../../lib/data/resultOrThrow.ts";
-import { handleError } from "../../../../lib/error/handleError.ts";
 import { Collapsable } from "../../Collapsable.tsx";
 
 export function DetailPane(props: {
@@ -28,39 +21,7 @@ export function DetailPane(props: {
 }) {
   const uiLocked = useBearStore((s) => s.room.ui.locked);
 
-  const [
-    scenarioGroupsWithParameterizedScenarios,
-    setScenarioGroupsWithParameterizedScenarios,
-  ] = useState<Loadable<ScenarioGroup[]>>({ type: "loading" });
-
   const [showFullTitle, setShowFullTitle] = useState(false);
-
-  const reload = async () => {
-    try {
-      setScenarioGroupsWithParameterizedScenarios({
-        type: "data",
-        data: resultOrThrow<ScenarioGroup[]>(
-          await getParameterizedScenariosOfGraphElement({
-            path: {
-              roomId: props.roomContext.initialRoomData.id,
-              elementId: props.elementId,
-            },
-          }),
-        ),
-      });
-    } catch (error) {
-      setScenarioGroupsWithParameterizedScenarios({
-        type: "error",
-        message: handleError(error),
-      });
-    }
-  };
-
-  useEffect(() => {
-    (async () => {
-      await reload();
-    })().catch(console.error);
-  }, []);
 
   const titleLengthLimit = 100;
 
@@ -100,10 +61,6 @@ export function DetailPane(props: {
             </span>
           </Stack>
           <PropertyMenu
-            scenarioGroupsWithParameterizedScenarios={
-              scenarioGroupsWithParameterizedScenarios
-            }
-            onReload={reload}
             roomContext={props.roomContext}
             value={props.elementId}
           ></PropertyMenu>
@@ -143,10 +100,6 @@ export function DetailPane(props: {
           properties={props.properties}
           roomContext={props.roomContext}
           elementId={props.elementId}
-          onReload={reload}
-          scenarioGroupsWithParameterizedScenarios={
-            scenarioGroupsWithParameterizedScenarios
-          }
         ></PropertiesDisplay>
       </Collapsable>
       <Collapsable
@@ -158,10 +111,6 @@ export function DetailPane(props: {
           properties={props.otherProperties}
           roomContext={props.roomContext}
           elementId={props.elementId}
-          onReload={reload}
-          scenarioGroupsWithParameterizedScenarios={
-            scenarioGroupsWithParameterizedScenarios
-          }
         ></PropertiesDisplay>
       </Collapsable>
       <div className={"flex-grow-1"}></div>

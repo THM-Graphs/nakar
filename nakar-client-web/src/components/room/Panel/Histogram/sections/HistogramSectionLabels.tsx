@@ -29,6 +29,7 @@ export function HistogramSectionLabels(props: { roomContext: RoomContext }) {
 
           return (
             <ValueDisplay
+              roomContext={props.roomContext}
               label={entry.label}
               subLabel={
                 label && label.sources.length > 0

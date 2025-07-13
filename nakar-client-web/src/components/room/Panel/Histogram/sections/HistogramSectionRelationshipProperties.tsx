@@ -3,8 +3,11 @@ import { EmptyHint } from "../EmptyHint.tsx";
 import { PropertyGroup } from "../PropertyGroup.tsx";
 import { Stack } from "react-bootstrap";
 import { useBearStore } from "../../../../../lib/state/useBearStore.ts";
+import { RoomContext } from "../../../../../pages/Room.tsx";
 
-export function HistogramSectionRelationshipProperties() {
+export function HistogramSectionRelationshipProperties(props: {
+  roomContext: RoomContext;
+}) {
   const histogram = useBearStore(
     (s) => s.room.scenario.graph.elements.histogram,
   );
@@ -18,6 +21,7 @@ export function HistogramSectionRelationshipProperties() {
         <EmptyHint list={histogram.edgeProperties}></EmptyHint>
         {histogram.edgeProperties.map((propertyEntry) => (
           <PropertyGroup
+            roomContext={props.roomContext}
             propertyEntry={propertyEntry}
             key={propertyEntry.key}
           ></PropertyGroup>

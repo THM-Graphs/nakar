@@ -31,6 +31,8 @@ export function HistogramSectionNodes(props: { roomContext: RoomContext }) {
             );
             return (
               <ValueDisplay
+                key={nodeEntry.id}
+                roomContext={props.roomContext}
                 value={nodeEntry.degree}
                 percentage={nodeEntry.percentage}
                 label={nodeEntry.title}

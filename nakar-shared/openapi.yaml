@@ -33,7 +33,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ScenarioGroups"
+                $ref: "#/components/schemas/GetScenariosResult"
 
   /room:
     get:
@@ -84,32 +84,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Graph"
-
-  /room/{roomId}/graph/element/{elementId}/parameterized-scenarios:
-    get:
-      tags:
-        - Room
-      operationId: getParameterizedScenariosOfGraphElement
-      parameters:
-        - name: roomId
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: elementId
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        "200":
-          description: "OK"
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/ScenarioGroup"
 
   /room/{id}/graph/elements:
     get:
@@ -444,6 +418,21 @@ paths:
 
 components:
   schemas:
+    GetScenariosResult:
+      type: object
+      properties:
+        scenarioGroups:
+          type: array
+          items:
+            $ref: "#/components/schemas/ScenarioGroup"
+        parameterizedScenarios:
+          type: array
+          items:
+            $ref: "#/components/schemas/ScenarioGroup"
+      required:
+        - scenarioGroups
+        - parameterizedScenarios
+
     PresetColorIndex:
       type: integer
       enum: [0, 1, 2, 3, 4, 5]
@@ -905,16 +894,6 @@ components:
         - title
         - editUrl
         - scenarios
-
-    ScenarioGroups:
-      type: object
-      properties:
-        scenarioGroups:
-          type: array
-          items:
-            $ref: "#/components/schemas/ScenarioGroup"
-      required:
-        - scenarioGroups
 
     ScenarioQuery:
       type: object

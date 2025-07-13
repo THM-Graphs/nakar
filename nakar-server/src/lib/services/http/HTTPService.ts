@@ -4,6 +4,7 @@ import { ConfigService } from '../config/ConfigService';
 import { LoggerService } from '../logger/LoggerService';
 import {
   operations,
+  SchemaGetScenariosResult,
   SchemaGraph,
   SchemaGraphElements,
   SchemaGraphMetaData,
@@ -13,7 +14,6 @@ import {
   SchemaScenario,
   SchemaScenarioArgument,
   SchemaScenarioGroup,
-  SchemaScenarioGroups,
   SchemaVersion,
 } from '../../../../src-gen/schema';
 import { DatabaseService } from '../database/DatabaseService';
@@ -45,8 +45,7 @@ import { MutableGraph } from '../room/graph/MutableGraph';
 import { CachingSchemaDTOFactory } from './CachingSchemaDTOFactory';
 import { SMap } from '../../tools/Map';
 import { SSet } from '../../tools/Set';
-import { MutableNode } from '../room/graph/MutableNode';
-import { MutableEdge } from '../room/graph/MutableEdge';
+import { GetParameterizedScenariosDBDTO } from '../database/dto/GetParameterizedScenariosDBDTO';
 
 export class HTTPService implements ApplicationService {
   private readonly _app: Application;
@@ -141,7 +140,7 @@ export class HTTPService implements ApplicationService {
   private _setupRoutes(): void {
     this._app.get(
       '/room/:id/scenarios',
-      this._handle(async (req: Request): Promise<SchemaScenarioGroups> => {
+      this._handle(async (req: Request): Promise<SchemaGetScenariosResult> => {
         const room: GetRoomDBDTO = await this._assertRoom(req);
         const scenarioGroups: GetScenarioGroupDBDTO[] =
           await this._databaseService.getScenarioGroups(room.documentId);
@@ -167,8 +166,27 @@ export class HTTPService implements ApplicationService {
           ),
         );
 
+        const parameterizedSceanrios: GetParameterizedScenariosDBDTO =
+          await this._databaseService.getParameterizedScenarios(
+            room.documentId,
+          );
+
         return {
           scenarioGroups: scenarioGroupSchemas,
+          parameterizedScenarios: parameterizedSceanrios.groups.map(
+            (
+              g: GetScenarioGroupDBDTO & {
+                parameterizedScenarios: GetScenarioDBDTO[];
+              },
+            ): SchemaScenarioGroup =>
+              this._schemaDTOFactory.createSchemaScenarioGroup(
+                g,
+                g.parameterizedScenarios.map(
+                  (s: GetScenarioDBDTO): SchemaScenario =>
+                    this._schemaDTOFactory.createSchemaScenario(s),
+                ),
+              ),
+          ),
         };
       }),
     );
@@ -214,47 +232,6 @@ export class HTTPService implements ApplicationService {
           );
         const result: SchemaGraph =
           await cachedGraphFactory.createSchemaGraph(graph);
-        return result;
-      }),
-    );
-
-    this._app.get(
-      '/room/:id/graph/element/:elementId/parameterized-scenarios',
-      this._handle(async (req: Request): Promise<SchemaScenarioGroup[]> => {
-        const room: GetRoomDBDTO = await this._assertRoom(req);
-        const elementId: string = this._getPathParameter(req, 'elementId');
-        const graph: MutableGraph = this._roomService.getGraph(room.documentId);
-
-        const element: MutableNode | MutableEdge | null =
-          graph.nodes.get(elementId) ?? graph.edges.get(elementId);
-        if (!element) {
-          throw new NotFound(
-            `Element with id ${elementId} not found in room ${room.documentId}`,
-          );
-        }
-        const result: SchemaScenarioGroup[] = [];
-
-        const scenarioGroups: GetScenarioGroupDBDTO[] =
-          await this._databaseService.getScenarioGroups(room.documentId);
-        for (const scenarioGroup of scenarioGroups) {
-          const scenarios: GetScenarioDBDTO[] =
-            await this._databaseService.getScenarios(scenarioGroup.documentId);
-          const parametrizedScenarios: GetScenarioDBDTO[] = scenarios.filter(
-            (s: GetScenarioDBDTO): boolean => s.parameters.length > 0,
-          );
-          if (parametrizedScenarios.length > 0) {
-            const groupdDto: SchemaScenarioGroup =
-              this._schemaDTOFactory.createSchemaScenarioGroup(
-                scenarioGroup,
-                parametrizedScenarios.map(
-                  (s: GetScenarioDBDTO): SchemaScenario =>
-                    this._schemaDTOFactory.createSchemaScenario(s),
-                ),
-              );
-            result.push(groupdDto);
-          }
-        }
-
         return result;
       }),
     );

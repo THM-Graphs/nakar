@@ -28,11 +28,15 @@ export function HistogramPanel(props: { roomContext: RoomContext }) {
         <HistogramSectionNodes
           roomContext={props.roomContext}
         ></HistogramSectionNodes>
-        <HistogramSectionNodeProperties></HistogramSectionNodeProperties>
+        <HistogramSectionNodeProperties
+          roomContext={props.roomContext}
+        ></HistogramSectionNodeProperties>
         <HistogramSectionRelationships
           roomContext={props.roomContext}
         ></HistogramSectionRelationships>
-        <HistogramSectionRelationshipProperties></HistogramSectionRelationshipProperties>
+        <HistogramSectionRelationshipProperties
+          roomContext={props.roomContext}
+        ></HistogramSectionRelationshipProperties>
       </Stack>
     </Panel>
   );

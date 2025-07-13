@@ -19,6 +19,7 @@ import { FinalGraphDisplayConfiguration } from '../room/scenario-pipeline/displa
 import { MergableGraphDisplayConfiguration } from '../room/scenario-pipeline/display-configuration/MergableGraphDisplayConfiguration';
 import { Event } from '@strapi/database/dist/lifecycles';
 import { Observable, Subject } from 'rxjs';
+import { GetParameterizedScenariosDBDTO } from './dto/GetParameterizedScenariosDBDTO';
 
 export class DatabaseService implements ApplicationService {
   private readonly _databaseDtoFactory: DatabaseDTOFactory;
@@ -407,6 +408,31 @@ export class DatabaseService implements ApplicationService {
       '',
       `${targetFileNameWithoutExtension}${media.ext}`,
     );
+  }
+
+  public async getParameterizedScenarios(
+    roomId: string,
+  ): Promise<GetParameterizedScenariosDBDTO> {
+    const result: GetParameterizedScenariosDBDTO = {
+      groups: [],
+    };
+    const scenarioGroups: GetScenarioGroupDBDTO[] =
+      await this.getScenarioGroups(roomId);
+    for (const scenarioGroup of scenarioGroups) {
+      const scenarios: GetScenarioDBDTO[] = await this.getScenarios(
+        scenarioGroup.documentId,
+      );
+      const parametrizedScenarios: GetScenarioDBDTO[] = scenarios.filter(
+        (s: GetScenarioDBDTO): boolean => s.parameters.length > 0,
+      );
+      if (parametrizedScenarios.length > 0) {
+        result.groups.push({
+          ...scenarioGroup,
+          parameterizedScenarios: parametrizedScenarios,
+        });
+      }
+    }
+    return result;
   }
 
   private _printDatabaseEvent(event: Event): void {

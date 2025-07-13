@@ -1,7 +1,8 @@
 import clsx from "clsx";
-import { OverlayTrigger, Stack, Tooltip } from "react-bootstrap";
-import { ClipboardButton } from "../../ClipboardButton.tsx";
+import { Stack } from "react-bootstrap";
 import { NavbarButton } from "../../../shared/NavbarButton.tsx";
+import { PropertyMenu } from "../../PropertyMenu.tsx";
+import { RoomContext } from "../../../../pages/Room.tsx";
 
 export function ValueDisplay(props: {
   label: string;
@@ -10,23 +11,27 @@ export function ValueDisplay(props: {
   percentage: number;
   bgColors?: string[];
   onRemove?: () => void | Promise<void>;
+  roomContext: RoomContext;
 }) {
   return (
     <Stack
       direction={"horizontal"}
-      className={clsx("gap-3 justify-content-between position-relative")}
+      className={clsx("justify-content-between position-relative")}
+      gap={2}
     >
       <Stack
         direction={"horizontal"}
         className={"ps-0 flex-shrink-1 flex-grow-1 overflow-hidden "}
       >
-        <ClipboardButton
-          text={
-            props.subLabel ? `${props.label} ${props.subLabel}` : props.label
-          }
-          className={"ps-1 pe-1"}
-          size={"sm"}
-        ></ClipboardButton>
+        {props.onRemove && (
+          <NavbarButton
+            icon={"eye-slash"}
+            onClick={props.onRemove}
+            style={{ zIndex: 2 }}
+            className={"pt-0 pb-0 ps-0 pe-0"}
+            size={"sm"}
+          ></NavbarButton>
+        )}
         {props.bgColors?.map((color) => (
           <div
             key={color}
@@ -39,52 +44,39 @@ export function ValueDisplay(props: {
             className={"flex-grow-0 flex-shrink-0 rounded-circle me-2"}
           ></div>
         ))}
-        <OverlayTrigger
-          placement={"left"}
-          delay={{ show: 500, hide: 0 }}
-          overlay={
-            <Tooltip>
-              {props.label} {props.subLabel && `(${props.subLabel})`}
-            </Tooltip>
-          }
+        <span
+          style={{
+            zIndex: 1,
+          }}
+          className={clsx(
+            "user-select-text font-monospace small flex-shrink-1 flex-grow-1 ellipsis",
+            props.onRemove == null && "ps-1",
+          )}
         >
-          <span
-            style={{
-              zIndex: 1,
-            }}
-            className={
-              "user-select-text font-monospace small flex-shrink-1 flex-grow-1 ellipsis"
-            }
-          >
-            {props.label}
-            {props.subLabel && (
-              <span className={"text-muted font-monospace"}>
-                {" "}
-                ({props.subLabel})
-              </span>
-            )}
-          </span>
-        </OverlayTrigger>
+          {props.label}
+          {props.subLabel && (
+            <span className={"text-muted font-monospace"}>
+              {" "}
+              ({props.subLabel})
+            </span>
+          )}
+        </span>
       </Stack>
       <Stack direction={"horizontal"} className={"flex-shrink-0"}>
         <span
           style={{ zIndex: 1 }}
-          className={"pe-2 flex-shrink-0 user-select-text small"}
+          className={"flex-shrink-0 user-select-text small"}
         >
           {props.value}{" "}
           <span className={"text-muted user-select-text"}>
             ({(props.percentage * 100).toFixed(2)}%)
           </span>
         </span>
-        {props.onRemove && (
-          <NavbarButton
-            icon={"eye-slash"}
-            onClick={props.onRemove}
-            style={{ zIndex: 2 }}
-            className={"pt-0 pb-0 ps-0 pe-0"}
-            size={"sm"}
-          ></NavbarButton>
-        )}
+        <PropertyMenu
+          roomContext={props.roomContext}
+          value={props.label}
+          size={"sm"}
+        ></PropertyMenu>
       </Stack>
 
       <div

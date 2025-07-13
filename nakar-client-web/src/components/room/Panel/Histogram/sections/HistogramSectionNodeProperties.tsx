@@ -3,8 +3,11 @@ import { EmptyHint } from "../EmptyHint.tsx";
 import { PropertyGroup } from "../PropertyGroup.tsx";
 import { Stack } from "react-bootstrap";
 import { useBearStore } from "../../../../../lib/state/useBearStore.ts";
+import { RoomContext } from "../../../../../pages/Room.tsx";
 
-export function HistogramSectionNodeProperties() {
+export function HistogramSectionNodeProperties(props: {
+  roomContext: RoomContext;
+}) {
   const histogram = useBearStore(
     (s) => s.room.scenario.graph.elements.histogram,
   );
@@ -20,6 +23,7 @@ export function HistogramSectionNodeProperties() {
           <PropertyGroup
             propertyEntry={propertyEntry}
             key={propertyEntry.key}
+            roomContext={props.roomContext}
           ></PropertyGroup>
         ))}
       </Collapsable>

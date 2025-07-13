@@ -41,7 +41,7 @@ export function ScenarioDisplay(props: {
         } catch (error) {
           pushErrorNotification(error);
         }
-      })().catch(console.error);
+      })().catch(pushErrorNotification);
     }
   }, [props.scenario]);
 

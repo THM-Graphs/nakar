@@ -50,7 +50,7 @@ export const NavbarButton = forwardRef<
             }
             setLoading(false);
           }
-        })().catch(console.error);
+        })().catch(pushErrorNotification);
       }}
       className={clsx(
         "small flex-shrink-0 position-relative overflow-hidden",

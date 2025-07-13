@@ -16,9 +16,13 @@ import { match } from "ts-pattern";
 import { ThemeDropdownEntry } from "./ThemeDropdownEntry";
 import { NavbarButton } from "./NavbarButton.tsx";
 import { AppContext } from "../../lib/state/AppContext.ts";
+import { useBearStore } from "../../lib/state/useBearStore.ts";
 
 export function InfoDropdown(props: { context: AppContext }) {
   const [version, setVersion] = useState<Loadable<string>>({ type: "loading" });
+  const pushErrorNotification = useBearStore(
+    (s) => s.room.ui.pushErrorNotification,
+  );
 
   const reloadVersion = useCallback(() => {
     (async () => {
@@ -29,7 +33,7 @@ export function InfoDropdown(props: { context: AppContext }) {
       } catch (error) {
         setVersion({ type: "error", message: handleError(error) });
       }
-    })().catch(console.error);
+    })().catch(pushErrorNotification);
   }, []);
 
   useEffect(() => {

@@ -68,22 +68,6 @@ export interface paths {
         readonly patch?: never;
         readonly trace?: never;
     };
-    readonly "/room/{roomId}/graph/element/{elementId}/parameterized-scenarios": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
-        };
-        readonly get: operations["getParameterizedScenariosOfGraphElement"];
-        readonly put?: never;
-        readonly post?: never;
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
-    };
     readonly "/room/{id}/graph/elements": {
         readonly parameters: {
             readonly query?: never;
@@ -328,6 +312,10 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        readonly GetScenariosResult: {
+            readonly scenarioGroups: readonly components["schemas"]["ScenarioGroup"][];
+            readonly parameterizedScenarios: readonly components["schemas"]["ScenarioGroup"][];
+        };
         /** @enum {integer} */
         readonly PresetColorIndex: 0 | 1 | 2 | 3 | 4 | 5;
         readonly PresetColor: {
@@ -484,9 +472,6 @@ export interface components {
             readonly editUrl: string | null;
             readonly scenarios: readonly components["schemas"]["Scenario"][];
         };
-        readonly ScenarioGroups: {
-            readonly scenarioGroups: readonly components["schemas"]["ScenarioGroup"][];
-        };
         readonly ScenarioQuery: {
             readonly query: string;
             readonly database: {
@@ -640,6 +625,7 @@ export interface components {
     headers: never;
     pathItems: never;
 }
+export type SchemaGetScenariosResult = components['schemas']['GetScenariosResult'];
 export type SchemaPresetColorIndex = components['schemas']['PresetColorIndex'];
 export type SchemaPresetColor = components['schemas']['PresetColor'];
 export type SchemaCustomColor = components['schemas']['CustomColor'];
@@ -660,7 +646,6 @@ export type SchemaRoom = components['schemas']['Room'];
 export type SchemaRooms = components['schemas']['Rooms'];
 export type SchemaDatabase = components['schemas']['Database'];
 export type SchemaScenarioGroup = components['schemas']['ScenarioGroup'];
-export type SchemaScenarioGroups = components['schemas']['ScenarioGroups'];
 export type SchemaScenarioQuery = components['schemas']['ScenarioQuery'];
 export type SchemaScenario = components['schemas']['Scenario'];
 export type SchemaScenarioParameter = components['schemas']['ScenarioParameter'];
@@ -709,7 +694,7 @@ export interface operations {
                     readonly [name: string]: unknown;
                 };
                 content: {
-                    readonly "application/json": components["schemas"]["ScenarioGroups"];
+                    readonly "application/json": components["schemas"]["GetScenariosResult"];
                 };
             };
         };
@@ -774,29 +759,6 @@ export interface operations {
                 };
                 content: {
                     readonly "application/json": components["schemas"]["Graph"];
-                };
-            };
-        };
-    };
-    readonly getParameterizedScenariosOfGraphElement: {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path: {
-                readonly roomId: string;
-                readonly elementId: string;
-            };
-            readonly cookie?: never;
-        };
-        readonly requestBody?: never;
-        readonly responses: {
-            /** @description OK */
-            readonly 200: {
-                headers: {
-                    readonly [name: string]: unknown;
-                };
-                content: {
-                    readonly "application/json": readonly components["schemas"]["ScenarioGroup"][];
                 };
             };
         };

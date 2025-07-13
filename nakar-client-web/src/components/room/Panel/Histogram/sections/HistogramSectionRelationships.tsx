@@ -24,6 +24,7 @@ export function HistogramSectionRelationships(props: {
           <ValueDisplay
             label={entry.type}
             value={entry.count}
+            roomContext={props.roomContext}
             percentage={entry.percentage}
             key={entry.type}
             onRemove={async (): Promise<void> => {

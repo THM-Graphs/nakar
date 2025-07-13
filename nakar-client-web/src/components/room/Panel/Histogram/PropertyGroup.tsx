@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Button, Stack } from "react-bootstrap";
 import { Collapsable } from "../../Collapsable.tsx";
 import { ValueDisplay } from "./ValueDisplay.tsx";
+import { RoomContext } from "../../../../pages/Room.tsx";
 
 export function PropertyGroup(props: {
   propertyEntry: {
@@ -12,6 +13,7 @@ export function PropertyGroup(props: {
       percentage: number;
     }>;
   };
+  roomContext: RoomContext;
 }) {
   const [hidden, setHidden] = useState<boolean>(true);
   return (
@@ -32,6 +34,7 @@ export function PropertyGroup(props: {
                 value={valueEntry.count}
                 percentage={valueEntry.percentage}
                 key={valueEntry.value}
+                roomContext={props.roomContext}
               ></ValueDisplay>
             ))}
           {hidden && props.propertyEntry.values.length > 10 && (

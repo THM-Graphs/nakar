@@ -6,9 +6,9 @@ import {
   getRoom,
   getRoomGraph,
   getScenarios,
+  GetScenariosResult,
   Graph,
   Room as RoomSchema,
-  ScenarioGroups,
   WSActionLeaveRoom,
   WSEventPresentExpandNodePreview,
 } from "../../src-gen";
@@ -37,7 +37,7 @@ import { ExpandNodePreviewModal } from "../components/room/ExpandNodePreviewModa
 
 export type RoomContext = {
   initialRoomData: RoomSchema;
-  initialScenariosData: ScenarioGroups;
+  initialScenariosData: GetScenariosResult;
   initialGraphData: Graph;
 };
 

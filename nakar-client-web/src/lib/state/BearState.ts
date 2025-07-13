@@ -1,5 +1,6 @@
 import {
   ExpandNodePreviewElement,
+  GetScenariosResult,
   Graph,
   GraphElements,
   GraphMetaData,
@@ -8,7 +9,6 @@ import {
   PhysicsPerformance,
   Scenario,
   ScenarioArgument,
-  ScenarioGroups,
   WSEventProgress,
 } from "../../../src-gen";
 import { InspectorElement } from "../../components/room/Panel/Inspector/InspectorElement.ts";
@@ -101,8 +101,8 @@ export interface BearState {
         hide: () => void;
       };
       scenarios: {
-        scenarios: ScenarioGroups;
-        setScenarios: (scenarios: ScenarioGroups) => void;
+        scenarios: GetScenariosResult;
+        setScenarios: (scenarios: GetScenariosResult) => void;
         show: () => void;
         hide: () => void;
       };
