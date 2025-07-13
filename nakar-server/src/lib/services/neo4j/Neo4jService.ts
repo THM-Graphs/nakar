@@ -62,7 +62,7 @@ export class Neo4jService implements ApplicationService {
         );
         const result: QueryResult = await session.run<
           RecordShape<string, unknown>
-        >(query, parameters, { timeout: 60000 });
+        >(query, parameters, { timeout: 2 * 60000 });
 
         if (
           result.records.length > Neo4jService.maximalElements &&

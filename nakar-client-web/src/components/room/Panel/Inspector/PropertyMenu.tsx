@@ -116,6 +116,7 @@ function PropertyMenuScenarioGroupEntry(props: {
   const pushErrorNotification = useBearStore(
     (s) => s.room.ui.pushErrorNotification,
   );
+  const uiLocked = useBearStore((s) => s.room.ui.locked);
 
   return (
     <>
@@ -125,6 +126,7 @@ function PropertyMenuScenarioGroupEntry(props: {
       {scenarioGroup.scenarios.map((scenario) => {
         return (
           <Dropdown.Item
+            disabled={uiLocked}
             key={scenario.id}
             onClick={() => {
               // showRunScenarioModal(

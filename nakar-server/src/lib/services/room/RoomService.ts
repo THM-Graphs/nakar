@@ -242,44 +242,17 @@ export class RoomService implements ApplicationService {
           }
         }
 
-        // --- Connect Nodes
-        if (displayConfiguration.connectResultNodes) {
-          await this._connectNodes(graph);
-        }
-
         // --- Merge nodes
         this._mergeNodes(graph, displayConfiguration);
-
-        // --- Compress Relationships
-        if (
-          displayConfiguration.compressRelationships &&
-          graph.edges.size > 0
-        ) {
-          this._compressRelationships(graph, displayConfiguration);
-        }
-
-        // Layout
-        if (graph.nodes.size > 0) {
-          const physical: PhysicalGraph = graph.toPhysicalGraph(
-            displayConfiguration,
-            this._logger,
-          );
-          const simulation: PhysicsSimulation = new PhysicsSimulation(
-            physical,
-            this._logger,
-            this._profiler,
-          );
-
-          await simulation.run({ maxMs: graph.size * 10 });
-
-          graph.applyPhysicalGraph(physical, this._logger);
-        }
 
         this._sendActionToWorker(params.roomId, {
           type: 'WTActionSetGraph',
           graph: graph.toPhysicalGraph(displayConfiguration, this._logger),
         });
-        await this.saveGraph(params.roomId);
+        this._sendActionToWorker(params.roomId, {
+          type: 'WTActionTriggerPhysics',
+          amount: 'long',
+        });
         this._onEvent.next({
           type: 'RoomServiceEventGraphMetaDataChanged',
           graph: graph,
@@ -297,6 +270,52 @@ export class RoomService implements ApplicationService {
           table: graph.tableData,
           roomId: params.roomId,
         } satisfies RoomServiceEventGraphTableChanged);
+
+        // --- Connect Nodes
+        if (displayConfiguration.connectResultNodes) {
+          await this._connectNodes(graph);
+
+          this._sendActionToWorker(params.roomId, {
+            type: 'WTActionSetGraph',
+            graph: graph.toPhysicalGraph(displayConfiguration, this._logger),
+          });
+          this._sendActionToWorker(params.roomId, {
+            type: 'WTActionTriggerPhysics',
+            amount: 'long',
+          });
+          this._onEvent.next({
+            type: 'RoomServiceEventGraphElementsChanged',
+            graph: graph,
+            roomId: params.roomId,
+            nodesAdded: graph.nodes.size,
+            edgesAdded: graph.edges.size,
+          } satisfies RoomServiceEventGraphElementsChanged);
+        }
+
+        // --- Compress Relationships
+        if (
+          displayConfiguration.compressRelationships &&
+          graph.edges.size > 0
+        ) {
+          this._compressRelationships(graph, displayConfiguration);
+          this._sendActionToWorker(params.roomId, {
+            type: 'WTActionSetGraph',
+            graph: graph.toPhysicalGraph(displayConfiguration, this._logger),
+          });
+          this._sendActionToWorker(params.roomId, {
+            type: 'WTActionTriggerPhysics',
+            amount: 'long',
+          });
+          this._onEvent.next({
+            type: 'RoomServiceEventGraphElementsChanged',
+            graph: graph,
+            roomId: params.roomId,
+            nodesAdded: graph.nodes.size,
+            edgesAdded: graph.edges.size,
+          } satisfies RoomServiceEventGraphElementsChanged);
+        }
+
+        await this.saveGraph(params.roomId);
 
         return scenario;
       },
@@ -393,12 +412,6 @@ export class RoomService implements ApplicationService {
               scenario.documentId,
             );
           this._mergeNodes(graph, displayConfiguration);
-          if (displayConfiguration.connectResultNodes) {
-            await this._connectNodes(graph);
-          }
-          if (displayConfiguration.compressRelationships) {
-            this._compressRelationships(graph, displayConfiguration);
-          }
 
           this._sendActionToWorker(params.roomId, {
             type: 'WTActionSetGraph',
@@ -415,6 +428,45 @@ export class RoomService implements ApplicationService {
             nodesAdded: result.nodesAddedCount,
             edgesAdded: result.edgeAddedCount,
           } satisfies RoomServiceEventGraphElementsChanged);
+
+          if (displayConfiguration.connectResultNodes) {
+            await this._connectNodes(graph);
+
+            this._sendActionToWorker(params.roomId, {
+              type: 'WTActionSetGraph',
+              graph: graph.toPhysicalGraph(displayConfiguration, this._logger),
+            });
+            this._sendActionToWorker(params.roomId, {
+              type: 'WTActionTriggerPhysics',
+              amount: 'short',
+            });
+            this._onEvent.next({
+              type: 'RoomServiceEventGraphElementsChanged',
+              graph: graph,
+              roomId: params.roomId,
+              nodesAdded: result.nodesAddedCount,
+              edgesAdded: result.edgeAddedCount,
+            } satisfies RoomServiceEventGraphElementsChanged);
+          }
+          if (displayConfiguration.compressRelationships) {
+            this._compressRelationships(graph, displayConfiguration);
+
+            this._sendActionToWorker(params.roomId, {
+              type: 'WTActionSetGraph',
+              graph: graph.toPhysicalGraph(displayConfiguration, this._logger),
+            });
+            this._sendActionToWorker(params.roomId, {
+              type: 'WTActionTriggerPhysics',
+              amount: 'short',
+            });
+            this._onEvent.next({
+              type: 'RoomServiceEventGraphElementsChanged',
+              graph: graph,
+              roomId: params.roomId,
+              nodesAdded: result.nodesAddedCount,
+              edgesAdded: result.edgeAddedCount,
+            } satisfies RoomServiceEventGraphElementsChanged);
+          }
         } catch (error: unknown) {
           if (error instanceof ToManyElementsError) {
             const expandNodePreview: ExpandNodePreview =
