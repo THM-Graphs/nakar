@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "build:docker": "docker buildx build --platform linux/amd64,linux/arm64 -f Dockerfile -t ghcr.io/thm-graphs/nakar/client-web:dev .",
+    "build:docker": "docker buildx build --platform linux/amd64 -f Dockerfile -t ghcr.io/thm-graphs/nakar/client-web:dev .",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "audit": "npm audit",

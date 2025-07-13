@@ -5,7 +5,7 @@
   "description": "A Strapi application",
   "scripts": {
     "build": "strapi build",
-    "build:docker": "docker buildx build --platform linux/amd64,linux/arm64 -f Dockerfile -t ghcr.io/thm-graphs/nakar/server:dev .",
+    "build:docker": "docker buildx build --platform linux/amd64 -f Dockerfile -t ghcr.io/thm-graphs/nakar/server:dev .",
     "develop": "strapi develop",
     "start": "strapi start",
     "lint": "eslint src",

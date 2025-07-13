@@ -2,7 +2,7 @@
   "name": "nakar-db-pole",
   "version": "0.0.0",
   "scripts": {
-    "build:docker": "docker build -f Dockerfile -t ghcr.io/thm-graphs/nakar/db-pole:dev .",
+    "build:docker": "docker build --platform linux/amd64 -f Dockerfile -t ghcr.io/thm-graphs/nakar/db-pole:dev .",
     "start:docker": "docker run -it --rm --name nakar-db-pole -p 7474:7474 -p 7687:7687 -e NEO4J_AUTH=neo4j/12345678 ghcr.io/thm-graphs/nakar/db-pole:dev",
     "version": "echo $npm_package_version"
   }
