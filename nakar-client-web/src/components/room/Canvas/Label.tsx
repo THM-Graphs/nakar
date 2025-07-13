@@ -1,13 +1,13 @@
-import { GraphElements, GraphLabel } from "../../../../src-gen";
+import { GraphLabel } from "../../../../src-gen";
 import { getBackgroundColor } from "../../../lib/color/getBackgroundColor.ts";
 import { getTextColor } from "../../../lib/color/getTextColor.ts";
 import { Stack } from "react-bootstrap";
+import { useBearStore } from "../../../lib/state/useBearStore.ts";
 
-export function Label(props: {
-  label: GraphLabel;
-  graphElements: GraphElements;
-  showAmount: boolean;
-}) {
+export function Label(props: { label: string; showAmount: boolean }) {
+  const labels = useBearStore((s) => s.room.scenario.graph.elements.labels);
+  const label = labels.find((l) => l.label === props.label);
+
   return (
     <Stack
       gap={1}
@@ -16,15 +16,15 @@ export function Label(props: {
         "badge flex-grow-0 flex-shrink-0 justify-content-center shadow-sm"
       }
       style={{
-        backgroundColor: getBackgroundColor(props.label.color),
-        color: getTextColor(props.label.color),
+        backgroundColor: label ? getBackgroundColor(label.color) : "#f0f0f0",
+        color: label ? getTextColor(label.color) : "#000000",
       }}
     >
-      {multipleSources(props.graphElements.labels) && (
-        <span>[{props.label.sources.join(", ")}]</span>
+      {multipleSources(labels) && (
+        <span>[{(label?.sources ?? []).join(", ")}]</span>
       )}
-      <span>{props.label.label}</span>
-      {props.showAmount && <span>({props.label.count})</span>}
+      <span>{props.label}</span>
+      {props.showAmount && label && <span>({label.count})</span>}
     </Stack>
   );
 }

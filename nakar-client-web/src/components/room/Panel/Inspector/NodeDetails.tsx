@@ -1,5 +1,4 @@
 import {
-  GraphLabel,
   Node,
   postRoomActionDeleteElements,
   postRoomActionExpandNode,
@@ -11,7 +10,6 @@ import { AppContext } from "../../../../lib/state/AppContext.ts";
 import { RoomContext } from "../../../../pages/Room.tsx";
 import { resultOrThrow } from "../../../../lib/data/resultOrThrow.ts";
 import { Stack } from "react-bootstrap";
-import { useBearStore } from "../../../../lib/state/useBearStore.ts";
 import { Label } from "../../Canvas/Label.tsx";
 
 export function NodeDetails(props: {
@@ -19,7 +17,6 @@ export function NodeDetails(props: {
   context: AppContext;
   roomContext: RoomContext;
 }) {
-  const graphElements = useBearStore((s) => s.room.scenario.graph.elements);
   return (
     <DetailPane
       actions={[
@@ -123,21 +120,8 @@ export function NodeDetails(props: {
           className={"p-2 flex-wrap flex-shrink-0 flex-grow-0"}
           gap={1}
         >
-          {props.node.labels.map((labelName: string) => {
-            const label: GraphLabel | undefined = graphElements.labels.find(
-              (l) => l.label === labelName,
-            );
-            if (label == null) {
-              return null;
-            }
-            return (
-              <Label
-                graphElements={graphElements}
-                key={labelName}
-                label={label}
-                showAmount={false}
-              ></Label>
-            );
+          {props.node.labels.map((label: string) => {
+            return <Label key={label} label={label} showAmount={false}></Label>;
           })}
         </Stack>
       }
