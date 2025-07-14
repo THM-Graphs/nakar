@@ -1187,7 +1187,6 @@ export class RoomService implements ApplicationService {
     mergeNode: MutableNode,
     config: MergeNodeConfiguration,
   ): boolean {
-    // TODO: Prevent double merge
     if (
       graph.edges.getByStartAndEndNodeId(originalNode.id, mergeNode.id).length >
       0
