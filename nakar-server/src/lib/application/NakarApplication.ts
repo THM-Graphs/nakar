@@ -1,14 +1,14 @@
-import { DatabaseService } from '../services/database/DatabaseService';
-import { RoomService } from '../services/room/RoomService';
-import { SocketIOService } from '../services/socketIO/SocketIOService';
-import { LoggerService } from '../services/logger/LoggerService';
-import { ProfilerService } from '../services/profiler/ProfilerService';
-import { ConfigService } from '../services/config/ConfigService';
+import { DatabaseService } from '../database/DatabaseService';
+import { RoomService } from '../room/RoomService';
+import { SocketIOService } from '../socketIO/SocketIOService';
+import { LoggerService } from '../logger/LoggerService';
+import { ProfilerService } from '../profiler/ProfilerService';
+import { ConfigService } from '../config/ConfigService';
 import { ClassHelper } from '../tools/ClassHelper';
-import { BackupService } from '../services/backup/BackupService';
-import { HTTPService } from '../services/http/HTTPService';
-import { Neo4jService } from '../services/neo4j/Neo4jService';
-import { ToolsService } from '../services/tools/ToolsService';
+import { BackupService } from '../backup/BackupService';
+import { HTTPService } from '../http/HTTPService';
+import { Neo4jService } from '../neo4j/Neo4jService';
+import { ToolsService } from '../tools/ToolsService';
 import { ApplicationService } from './ApplicationService';
 
 export class NakarApplication {
