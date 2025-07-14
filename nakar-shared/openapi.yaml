@@ -14,6 +14,7 @@ tags:
   - name: Room
   - name: Room Actions
   - name: System
+  - name: Database
 
 paths:
   /room/{id}/scenarios:
@@ -374,6 +375,75 @@ paths:
         "200":
           description: "OK"
 
+  /room/{id}/actions/run-query:
+    post:
+      tags:
+        - Room Actions
+      operationId: postRoomActionRunQuery
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                databaseId:
+                  type: string
+                query:
+                  type: string
+                connectResultNodes:
+                  type: boolean
+                replace:
+                  type: boolean
+              required:
+                - databaseId
+                - query
+                - connectResultNodes
+                - replace
+      responses:
+        "200":
+          description: "OK"
+
+  /room/{id}/actions/connect-result-nodes:
+    post:
+      tags:
+        - Room Actions
+      operationId: postRoomActionConnectResultNodes
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "OK"
+
+  /database/{id}/stats:
+    get:
+      tags:
+        - Database
+      operationId: getDatabaseStats
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DatabaseStats"
+
   /system/version:
     get:
       tags:
@@ -429,9 +499,14 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/ScenarioGroup"
+        referencedDatabases:
+          type: array
+          items:
+            $ref: "#/components/schemas/Database"
       required:
         - scenarioGroups
         - parameterizedScenarios
+        - referencedDatabases
 
     PresetColorIndex:
       type: integer
@@ -1029,6 +1104,55 @@ components:
       required:
         - identificator
         - count
+
+    DatabaseStats:
+      type: object
+      properties:
+        relTypeCount:
+          type: integer
+        labelCount:
+          type: integer
+        relCount:
+          type: integer
+        labels:
+          type: array
+          items:
+            type: object
+            properties:
+              label:
+                type: string
+              count:
+                type: integer
+              exploreQuery:
+                type: string
+            required:
+              - label
+              - count
+              - exploreQuery
+        rels:
+          type: array
+          items:
+            type: object
+            properties:
+              relType:
+                type: string
+              count:
+                type: integer
+              exploreQuery:
+                type: string
+            required:
+              - relType
+              - count
+              - exploreQuery
+        nodeCount:
+          type: number
+      required:
+        - relTypeCount
+        - labelCount
+        - relCount
+        - labels
+        - rels
+        - nodeCount
 
     WSClientToServerMessage:
       oneOf:

@@ -13,11 +13,9 @@ export function Panel(props: {
   fullWidth?: boolean;
   className?: string;
 }) {
-  if (props.hidden) {
-    return null;
-  }
   return (
     <Stack
+      hidden={props.hidden}
       className={clsx(
         "flex-shrink-0 flex-grow-0 bg-body-tertiary overflow-hidden",
         props.direction == "left" && "border-end",

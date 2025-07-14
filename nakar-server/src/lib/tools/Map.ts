@@ -55,6 +55,10 @@ export class SMap<K extends string | number | symbol, V> extends Map<K, V> {
     return Array.from(this.entries());
   }
 
+  public toValueArray(): V[] {
+    return Array.from(this.values());
+  }
+
   public copy(): SMap<K, V> {
     return new SMap<K, V>(this);
   }

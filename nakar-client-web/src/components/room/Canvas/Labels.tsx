@@ -15,7 +15,12 @@ export function Labels() {
       }}
     >
       {graphElements.labels.map((label) => (
-        <Label label={label.label} key={label.label} showAmount={true}></Label>
+        <Label
+          label={label.label}
+          key={label.label}
+          showAmount={true}
+          showSources={true}
+        ></Label>
       ))}
     </Stack>
   );

@@ -55,9 +55,9 @@ export class MutableEdgeIndex {
     return this._propertyHistogram;
   }
 
-  public add(edge: MutableEdge): void {
+  public add(edge: MutableEdge): boolean {
     if (this._byId.has(edge.id)) {
-      return;
+      return false;
     }
 
     this._byId.set(edge.id, edge);
@@ -98,15 +98,22 @@ export class MutableEdgeIndex {
     for (const propertyEntry of edge.properties.properties) {
       this._addToPropertyHistogram(propertyEntry[0], propertyEntry[1], 1);
     }
+
+    return true;
   }
 
-  public addNeo4jEdges(neo4jEdges: SMap<string, Neo4jRelationship>): void {
+  public addNeo4jEdges(neo4jEdges: SMap<string, Neo4jRelationship>): number {
+    let result: number = 0;
     for (const relationship of neo4jEdges) {
-      this.addNeo4jEdge(relationship[1]);
+      const didAdd: boolean = this.addNeo4jEdge(relationship[1]);
+      if (didAdd) {
+        result += 1;
+      }
     }
+    return result;
   }
 
-  public addNeo4jEdge(relationship: Neo4jRelationship): void {
+  public addNeo4jEdge(relationship: Neo4jRelationship): boolean {
     const mutableEdge: MutableEdge = new MutableEdge({
       id: relationship.relationship.elementId,
       startNodeId: relationship.relationship.startNodeElementId,
@@ -121,7 +128,8 @@ export class MutableEdgeIndex {
       source: relationship.source.nakarId,
     });
 
-    this.add(mutableEdge);
+    const didAdd: boolean = this.add(mutableEdge);
+    return didAdd;
   }
 
   public remove(edge: MutableEdge): boolean {

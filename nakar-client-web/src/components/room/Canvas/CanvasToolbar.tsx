@@ -4,6 +4,7 @@ import { NavbarButton } from "../../shared/NavbarButton.tsx";
 import { useBearStore } from "../../../lib/state/useBearStore.ts";
 import { AppContext } from "../../../lib/state/AppContext.ts";
 import {
+  postRoomActionConnectResultNodes,
   postRoomActionRedo,
   postRoomActionReloadScenario,
   postRoomActionUndo,
@@ -67,6 +68,18 @@ export function CanvasToolbar(props: {
         </>
       )}
       <Stack direction={"horizontal"} className={"flex-wrap"}>
+        <NavbarButton
+          disabled={graph.metaData.scenario == null || uiLocked}
+          icon={"intersect"}
+          title={"Connect Result Nodes"}
+          onClick={async () => {
+            resultOrThrow(
+              await postRoomActionConnectResultNodes({
+                path: { id: props.roomContext.initialRoomData.id },
+              }),
+            );
+          }}
+        ></NavbarButton>
         <NavbarButton
           disabled={graph.metaData.scenario == null || uiLocked}
           icon={"arrow-clockwise"}

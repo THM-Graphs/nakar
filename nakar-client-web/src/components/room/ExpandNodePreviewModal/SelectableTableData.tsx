@@ -77,6 +77,7 @@ export function SelectableTableData(props: {
             <FormCheck
               className={"ps-2"}
               checked={props.selections.has(element.identificator)}
+              readOnly={true}
             ></FormCheck>
             <span
               className={"font-monospace text-break flex-grow-1 flex-shrink-1"}

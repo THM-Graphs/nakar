@@ -294,7 +294,11 @@ export const useBearStore = create<BearState>()(
               },
             },
             scenarios: {
-              scenarios: { scenarioGroups: [], parameterizedScenarios: [] },
+              scenarios: {
+                scenarioGroups: [],
+                parameterizedScenarios: [],
+                referencedDatabases: [],
+              },
               setScenarios: (scenarios) => {
                 set((s) => {
                   s.room.panels.scenarios.scenarios = scenarios;
@@ -308,6 +312,24 @@ export const useBearStore = create<BearState>()(
               hide: () => {
                 set((s) => {
                   s.room.panels.left = null;
+                });
+              },
+            },
+            query: {
+              queryText: "",
+              show: () => {
+                set((s) => {
+                  s.room.panels.left = "query";
+                });
+              },
+              hide: () => {
+                set((s) => {
+                  s.room.panels.left = null;
+                });
+              },
+              setQueryText: (q) => {
+                set((s) => {
+                  s.room.panels.query.queryText = q;
                 });
               },
             },

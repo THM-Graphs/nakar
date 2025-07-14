@@ -54,6 +54,7 @@ export class NakarApplication {
       this.profiler,
       this.backup,
       this.roomService,
+      this.neo4j,
     );
     this.socketIOService = new SocketIOService(
       this.roomService,

@@ -87,7 +87,7 @@ export interface BearState {
       setState: (state: SocketState) => void;
     };
     panels: {
-      left: "scenarios" | null;
+      left: "scenarios" | "query" | null;
       right: "histogram" | "inspector" | null;
       inspector: {
         show: () => void;
@@ -105,6 +105,12 @@ export interface BearState {
         setScenarios: (scenarios: GetScenariosResult) => void;
         show: () => void;
         hide: () => void;
+      };
+      query: {
+        queryText: string;
+        show: () => void;
+        hide: () => void;
+        setQueryText: (queryText: string) => void;
       };
     };
     canvas: {

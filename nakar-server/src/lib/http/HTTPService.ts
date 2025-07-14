@@ -4,6 +4,8 @@ import { ConfigService } from '../config/ConfigService';
 import { LoggerService } from '../logger/LoggerService';
 import {
   operations,
+  SchemaDatabase,
+  SchemaDatabaseStats,
   SchemaGetScenariosResult,
   SchemaGraph,
   SchemaGraphElements,
@@ -46,6 +48,9 @@ import { CachingSchemaDTOFactory } from './CachingSchemaDTOFactory';
 import { SMap } from '../tools/Map';
 import { SSet } from '../tools/Set';
 import { GetParameterizedScenariosDBDTO } from '../database/dto/GetParameterizedScenariosDBDTO';
+import { GetDatabaseDBDTO } from '../database/dto/GetDatabaseDBDTO';
+import { Neo4jDatabaseInfo } from '../neo4j/Neo4jDatabaseInfo';
+import { Neo4jService } from '../neo4j/Neo4jService';
 
 export class HTTPService implements ApplicationService {
   private readonly _app: Application;
@@ -60,6 +65,7 @@ export class HTTPService implements ApplicationService {
     private readonly _profiler: ProfilerService,
     private readonly _backup: BackupService,
     private readonly _roomService: RoomService,
+    private readonly _neo4jService: Neo4jService,
   ) {
     this._app = express();
     this._server = http.createServer(this._app as http.RequestListener);
@@ -171,6 +177,25 @@ export class HTTPService implements ApplicationService {
             room.documentId,
           );
 
+        const referencedDatabases: SMap<string, GetDatabaseDBDTO> = new SMap<
+          string,
+          GetDatabaseDBDTO
+        >();
+        for (const scenarioGroup of scenarioGroups) {
+          const scenarios: GetScenarioDBDTO[] =
+            await this._databaseService.getScenarios(scenarioGroup.documentId);
+          for (const scenario of scenarios) {
+            for (const query of scenario.queries) {
+              if (query.database != null) {
+                referencedDatabases.set(
+                  query.database.documentId,
+                  query.database,
+                );
+              }
+            }
+          }
+        }
+
         return {
           scenarioGroups: scenarioGroupSchemas,
           parameterizedScenarios: parameterizedSceanrios.groups.map(
@@ -187,6 +212,12 @@ export class HTTPService implements ApplicationService {
                 ),
               ),
           ),
+          referencedDatabases: referencedDatabases
+            .toValueArray()
+            .map(
+              (referencedDatabase: GetDatabaseDBDTO): SchemaDatabase =>
+                this._schemaDTOFactory.createSchemaDatabase(referencedDatabase),
+            ),
         };
       }),
     );
@@ -461,6 +492,56 @@ export class HTTPService implements ApplicationService {
         await this._roomService.redo({
           roomId: room.documentId,
         });
+      }),
+    );
+
+    this._app.post(
+      '/room/:id/actions/run-query',
+      this._handle(async (req: Request): Promise<void> => {
+        const room: GetRoomDBDTO = await this._assertRoom(req);
+
+        type Body =
+          operations['postRoomActionRunQuery']['requestBody']['content']['application/json'];
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+        const requestBody: Body = req.body as Body;
+
+        await this._roomService.runQuery({
+          roomId: room.documentId,
+          query: requestBody.query,
+          databaseId: requestBody.databaseId,
+          connectResultNodes: requestBody.connectResultNodes,
+          replace: requestBody.replace,
+        });
+      }),
+    );
+
+    this._app.post(
+      '/room/:id/actions/connect-result-nodes',
+      this._handle(async (req: Request): Promise<void> => {
+        const room: GetRoomDBDTO = await this._assertRoom(req);
+
+        await this._roomService.connectResultNodes({
+          roomId: room.documentId,
+        });
+      }),
+    );
+
+    this._app.get(
+      '/database/:id/stats',
+      this._handle(async (req: Request): Promise<SchemaDatabaseStats> => {
+        const databaseId: string = this._getPathParameter(req, 'id');
+        const database: GetDatabaseDBDTO | null =
+          await this._databaseService.getDatabase(databaseId);
+        if (database == null) {
+          throw new NotFound(`Database ${databaseId} not found.`);
+        }
+        const credentials: Neo4jDatabaseInfo =
+          Neo4jDatabaseInfo.parse(database);
+        const stats: SchemaDatabaseStats = await this._neo4jService.getStats({
+          credentials: credentials,
+        });
+
+        return stats;
       }),
     );
   }

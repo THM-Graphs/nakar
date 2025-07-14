@@ -15,6 +15,23 @@ export type Database = {
     editUrl: (string) | null;
 };
 
+export type DatabaseStats = {
+    relTypeCount: number;
+    labelCount: number;
+    relCount: number;
+    labels: Array<{
+        label: string;
+        count: number;
+        exploreQuery: string;
+    }>;
+    rels: Array<{
+        relType: string;
+        count: number;
+        exploreQuery: string;
+    }>;
+    nodeCount: number;
+};
+
 export type Edge = {
     id: string;
     startNodeId: string;
@@ -38,6 +55,7 @@ export type ExpandNodePreviewElement = {
 export type GetScenariosResult = {
     scenarioGroups: Array<ScenarioGroup>;
     parameterizedScenarios: Array<ScenarioGroup>;
+    referencedDatabases: Array<Database>;
 };
 
 export type Graph = {
@@ -539,6 +557,42 @@ export type PostRoomActionRedoData = {
 export type PostRoomActionRedoResponse = (unknown);
 
 export type PostRoomActionRedoError = unknown;
+
+export type PostRoomActionRunQueryData = {
+    body: {
+        databaseId: string;
+        query: string;
+        connectResultNodes: boolean;
+        replace: boolean;
+    };
+    path: {
+        id: string;
+    };
+};
+
+export type PostRoomActionRunQueryResponse = (unknown);
+
+export type PostRoomActionRunQueryError = unknown;
+
+export type PostRoomActionConnectResultNodesData = {
+    path: {
+        id: string;
+    };
+};
+
+export type PostRoomActionConnectResultNodesResponse = (unknown);
+
+export type PostRoomActionConnectResultNodesError = unknown;
+
+export type GetDatabaseStatsData = {
+    path: {
+        id: string;
+    };
+};
+
+export type GetDatabaseStatsResponse = (DatabaseStats);
+
+export type GetDatabaseStatsError = unknown;
 
 export type GetVersionResponse = (Version);
 

@@ -43,6 +43,7 @@ import { MergeNodeConfiguration } from './scenario-pipeline/display-configuratio
 import { MutablePropertyCollection } from './graph/MutablePropertyCollection';
 import { ProfilerTask } from '../profiler/ProfilerTask';
 import { v4 } from 'uuid';
+import { MutableNodeIndex } from './graph/MutableNodeIndex';
 
 export class RoomService implements ApplicationService {
   private readonly _workers: SMap<string, Worker>;
@@ -193,23 +194,22 @@ export class RoomService implements ApplicationService {
     scenarioId: string;
     arguments: SMap<string, unknown>;
   }): Promise<GetScenarioDBDTO> {
-    return this._runWithRoomLock(
+    const scenario: GetScenarioDBDTO | null = await this._database.getScenario(
+      params.scenarioId,
+    );
+    if (scenario == null) {
+      throw new NotFound('Scenario not found.');
+    }
+    if (scenario.queries.length === 0) {
+      throw new NotFound('The scenario has no queries.');
+    }
+    const displayConfiguration: FinalGraphDisplayConfiguration =
+      await this._database.getGraphDisplayConfiguration(scenario.documentId);
+
+    const result: GetScenarioDBDTO = await this._runWithRoomLock(
       params.roomId,
       'Loading scenario',
       async (): Promise<GetScenarioDBDTO> => {
-        const scenario: GetScenarioDBDTO | null =
-          await this._database.getScenario(params.scenarioId);
-        if (scenario == null) {
-          throw new NotFound('Scenario not found.');
-        }
-        if (scenario.queries.length === 0) {
-          throw new NotFound('The scenario has no queries.');
-        }
-        const displayConfiguration: FinalGraphDisplayConfiguration =
-          await this._database.getGraphDisplayConfiguration(
-            scenario.documentId,
-          );
-
         const graph: MutableGraph = this._snapshotGraph(params.roomId);
         graph.fillFromInitialScenario(
           scenario,
@@ -251,6 +251,7 @@ export class RoomService implements ApplicationService {
           this._profiler,
         );
         await physics.run({ maxMs: 1000 });
+        graph.applyPhysicalGraph(physics.getGraph(), this._logger);
 
         this._onEvent.next({
           type: 'RoomServiceEventGraphMetaDataChanged',
@@ -278,56 +279,20 @@ export class RoomService implements ApplicationService {
           amount: 'long',
         });
 
-        // --- Connect Nodes
-        if (displayConfiguration.connectResultNodes) {
-          await this._connectNodes(graph);
-
-          this._onEvent.next({
-            type: 'RoomServiceEventGraphElementsChanged',
-            graph: graph,
-            roomId: params.roomId,
-            nodesAdded: graph.nodes.size,
-            edgesAdded: graph.edges.size,
-          } satisfies RoomServiceEventGraphElementsChanged);
-          this._sendActionToWorker(params.roomId, {
-            type: 'WTActionSetGraph',
-            graph: graph.toPhysicalGraph(displayConfiguration, this._logger),
-          });
-          this._sendActionToWorker(params.roomId, {
-            type: 'WTActionTriggerPhysics',
-            amount: 'long',
-          });
-        }
-
-        // --- Compress Relationships
-        if (
-          displayConfiguration.compressRelationships &&
-          graph.edges.size > 0
-        ) {
-          this._compressRelationships(graph, displayConfiguration);
-
-          this._onEvent.next({
-            type: 'RoomServiceEventGraphElementsChanged',
-            graph: graph,
-            roomId: params.roomId,
-            nodesAdded: graph.nodes.size,
-            edgesAdded: graph.edges.size,
-          } satisfies RoomServiceEventGraphElementsChanged);
-          this._sendActionToWorker(params.roomId, {
-            type: 'WTActionSetGraph',
-            graph: graph.toPhysicalGraph(displayConfiguration, this._logger),
-          });
-          this._sendActionToWorker(params.roomId, {
-            type: 'WTActionTriggerPhysics',
-            amount: 'long',
-          });
-        }
-
         await this.saveGraph(params.roomId);
 
         return scenario;
       },
     );
+
+    if (displayConfiguration.connectResultNodes) {
+      await this.connectResultNodes({ roomId: params.roomId });
+    }
+    if (displayConfiguration.compressRelationships) {
+      await this.compressRelationships({ roomId: params.roomId });
+    }
+
+    return result;
   }
 
   public async expandNode(params: {
@@ -338,35 +303,26 @@ export class RoomService implements ApplicationService {
       relationships: SSet<string>;
     } | null;
   }): Promise<void> {
-    return this._runWithRoomLock(
+    const oldGraph: MutableGraph = this.getGraph(params.roomId);
+    const displayConfiguration: FinalGraphDisplayConfiguration =
+      oldGraph.metaData.scenarioId != null
+        ? await this._database.getGraphDisplayConfiguration(
+            oldGraph.metaData.scenarioId,
+          )
+        : FinalGraphDisplayConfiguration.empty();
+
+    const didExpand: boolean = await this._runWithRoomLock(
       params.roomId,
       'Expanding nodes',
-      async (): Promise<void> => {
-        const nodeId: string = params.nodeId;
-        const oldGraph: MutableGraph = this.getGraph(params.roomId);
-
-        if (oldGraph.metaData.scenarioId == null) {
-          throw new Error(
-            `Cannot expand node because there is no scenario info.`,
-          );
-        }
-
-        const scenario: GetScenarioDBDTO | null =
-          await this._database.getScenario(oldGraph.metaData.scenarioId);
-        if (scenario == null) {
-          throw new Error(
-            `Cannot find scenario of room ${params.roomId} to run expand nodes.`,
-          );
-        }
-
+      async (): Promise<boolean> => {
         const result: ExpandNodesResult = {
           nodesAddedCount: 0,
           edgeAddedCount: 0,
         };
 
-        const node: MutableNode | null = oldGraph.nodes.get(nodeId);
+        const node: MutableNode | null = oldGraph.nodes.get(params.nodeId);
         if (node == null) {
-          throw new Error(`Cannot find node ${nodeId} to expand.`);
+          throw new Error(`Cannot find node ${params.nodeId} to expand.`);
         }
 
         const database: GetDatabaseDBDTO | null =
@@ -383,7 +339,7 @@ export class RoomService implements ApplicationService {
         try {
           const expandResult: Neo4jGraphElements = await this._neo4j.expandNode(
             neo4jDatabaseInfo,
-            new SSet<string>([nodeId]),
+            new SSet<string>([params.nodeId]),
             params.limit,
           );
           const graph: MutableGraph = this._snapshotGraph(params.roomId);
@@ -412,13 +368,9 @@ export class RoomService implements ApplicationService {
 
           this._logger.debug(
             this,
-            `Expand node result for ${nodeId}: ${expandResult.nodes.size.toString()} nodes and ${expandResult.relationships.size.toString()} relationships.`,
+            `Expand node result for ${params.nodeId}: ${expandResult.nodes.size.toString()} nodes and ${expandResult.relationships.size.toString()} relationships.`,
           );
 
-          const displayConfiguration: FinalGraphDisplayConfiguration =
-            await this._database.getGraphDisplayConfiguration(
-              scenario.documentId,
-            );
           this._mergeNodes(graph, displayConfiguration);
 
           this._sendActionToWorker(params.roomId, {
@@ -436,51 +388,13 @@ export class RoomService implements ApplicationService {
             nodesAdded: result.nodesAddedCount,
             edgesAdded: result.edgeAddedCount,
           } satisfies RoomServiceEventGraphElementsChanged);
-
-          if (displayConfiguration.connectResultNodes) {
-            await this._connectNodes(graph);
-
-            this._sendActionToWorker(params.roomId, {
-              type: 'WTActionSetGraph',
-              graph: graph.toPhysicalGraph(displayConfiguration, this._logger),
-            });
-            this._sendActionToWorker(params.roomId, {
-              type: 'WTActionTriggerPhysics',
-              amount: 'short',
-            });
-            this._onEvent.next({
-              type: 'RoomServiceEventGraphElementsChanged',
-              graph: graph,
-              roomId: params.roomId,
-              nodesAdded: result.nodesAddedCount,
-              edgesAdded: result.edgeAddedCount,
-            } satisfies RoomServiceEventGraphElementsChanged);
-          }
-          if (displayConfiguration.compressRelationships) {
-            this._compressRelationships(graph, displayConfiguration);
-
-            this._sendActionToWorker(params.roomId, {
-              type: 'WTActionSetGraph',
-              graph: graph.toPhysicalGraph(displayConfiguration, this._logger),
-            });
-            this._sendActionToWorker(params.roomId, {
-              type: 'WTActionTriggerPhysics',
-              amount: 'short',
-            });
-            this._onEvent.next({
-              type: 'RoomServiceEventGraphElementsChanged',
-              graph: graph,
-              roomId: params.roomId,
-              nodesAdded: result.nodesAddedCount,
-              edgesAdded: result.edgeAddedCount,
-            } satisfies RoomServiceEventGraphElementsChanged);
-          }
+          return true;
         } catch (error: unknown) {
           if (error instanceof ToManyElementsError) {
             const expandNodePreview: ExpandNodePreview =
               await this._neo4j.expandNodePreview(
                 neo4jDatabaseInfo,
-                new SSet<string>([nodeId]),
+                new SSet<string>([params.nodeId]),
               );
             this._onEvent.next({
               type: 'RoomServiceEventPresentExpandNodePreview',
@@ -489,12 +403,22 @@ export class RoomService implements ApplicationService {
               labels: expandNodePreview.labels,
               relationships: expandNodePreview.relationships,
             } satisfies RoomServiceEventPresentExpandNodePreview);
+            return false;
           } else {
             throw error;
           }
         }
       },
     );
+
+    if (didExpand) {
+      if (displayConfiguration.connectResultNodes) {
+        await this.connectResultNodes({ roomId: params.roomId });
+      }
+      if (displayConfiguration.compressRelationships) {
+        await this.compressRelationships({ roomId: params.roomId });
+      }
+    }
   }
 
   public async focusNodes(params: {
@@ -753,6 +677,145 @@ export class RoomService implements ApplicationService {
     } satisfies RoomServiceEventGraphTableChanged);
   }
 
+  public async runQuery(params: {
+    roomId: string;
+    databaseId: string;
+    query: string;
+    connectResultNodes: boolean;
+    replace: boolean;
+  }): Promise<void> {
+    await this._runWithRoomLock(
+      params.roomId,
+      'Running query',
+      async (): Promise<void> => {
+        const scenarioId: string | null = this.getGraph(params.roomId).metaData
+          .scenarioId;
+        const displayConfiguration: FinalGraphDisplayConfiguration =
+          scenarioId != null
+            ? await this._database.getGraphDisplayConfiguration(scenarioId)
+            : FinalGraphDisplayConfiguration.empty();
+        const database: GetDatabaseDBDTO | null =
+          await this._database.getDatabase(params.databaseId);
+        if (database == null) {
+          throw NotFound(`Database ${params.databaseId} not found.`);
+        }
+        const credentials: Neo4jDatabaseInfo =
+          Neo4jDatabaseInfo.parse(database);
+
+        const graphElements: Neo4jGraphElements =
+          await this._neo4j.executeQuery(credentials, params.query, {}, true);
+        const graph: MutableGraph = this._snapshotGraph(params.roomId);
+        if (params.replace) {
+          graph.nodes = new MutableNodeIndex([]);
+          graph.edges = new MutableEdgeIndex([]);
+          graph.tableData = [];
+        }
+        graph.nodes.addNeo4jNodes(graphElements.nodes);
+        graph.edges.addNeo4jEdges(graphElements.relationships);
+        graph.tableData = graphElements.tableData;
+
+        this._sendActionToWorker(params.roomId, {
+          type: 'WTActionSetGraph',
+          graph: graph.toPhysicalGraph(displayConfiguration, this._logger),
+        });
+        this._sendActionToWorker(params.roomId, {
+          type: 'WTActionTriggerPhysics',
+          amount: 'long',
+        });
+        await this.saveGraph(params.roomId);
+        this._onEvent.next({
+          type: 'RoomServiceEventGraphMetaDataChanged',
+          graph: graph,
+          roomId: params.roomId,
+        } satisfies RoomServiceEventGraphMetaDataChanged);
+        this._onEvent.next({
+          type: 'RoomServiceEventGraphElementsChanged',
+          graph: graph,
+          roomId: params.roomId,
+          nodesAdded: graph.nodes.size,
+          edgesAdded: graph.edges.size,
+        } satisfies RoomServiceEventGraphElementsChanged);
+        this._onEvent.next({
+          type: 'RoomServiceEventGraphTableChanged',
+          table: graph.tableData,
+          roomId: params.roomId,
+        } satisfies RoomServiceEventGraphTableChanged);
+      },
+    );
+
+    if (params.connectResultNodes) {
+      await this.connectResultNodes({ roomId: params.roomId });
+    }
+  }
+
+  public async connectResultNodes(params: { roomId: string }): Promise<void> {
+    await this._runWithRoomLock(
+      params.roomId,
+      'Connecting result nodes',
+      async (): Promise<void> => {
+        const oldGraph: MutableGraph = this.getGraph(params.roomId);
+        const scenarioId: string | null = oldGraph.metaData.scenarioId;
+        const displayConfiguration: FinalGraphDisplayConfiguration =
+          scenarioId != null
+            ? await this._database.getGraphDisplayConfiguration(scenarioId)
+            : FinalGraphDisplayConfiguration.empty();
+
+        const result: number = await this._connectNodes(oldGraph);
+        const graph: MutableGraph = this._snapshotGraph(params.roomId);
+
+        this._sendActionToWorker(params.roomId, {
+          type: 'WTActionSetGraph',
+          graph: graph.toPhysicalGraph(displayConfiguration, this._logger),
+        });
+        this._sendActionToWorker(params.roomId, {
+          type: 'WTActionTriggerPhysics',
+          amount: 'short',
+        });
+        this._onEvent.next({
+          type: 'RoomServiceEventGraphElementsChanged',
+          graph: graph,
+          roomId: params.roomId,
+          nodesAdded: 0,
+          edgesAdded: result,
+        } satisfies RoomServiceEventGraphElementsChanged);
+      },
+    );
+  }
+
+  public async compressRelationships(params: {
+    roomId: string;
+  }): Promise<void> {
+    await this._runWithRoomLock(
+      params.roomId,
+      'Compressing relationships',
+      async (): Promise<void> => {
+        const graph: MutableGraph = this._snapshotGraph(params.roomId);
+        const scenarioId: string | null = graph.metaData.scenarioId;
+        const displayConfiguration: FinalGraphDisplayConfiguration =
+          scenarioId != null
+            ? await this._database.getGraphDisplayConfiguration(scenarioId)
+            : FinalGraphDisplayConfiguration.empty();
+        this._compressRelationships(graph, displayConfiguration);
+
+        this._sendActionToWorker(params.roomId, {
+          type: 'WTActionSetGraph',
+          graph: graph.toPhysicalGraph(displayConfiguration, this._logger),
+        });
+        this._sendActionToWorker(params.roomId, {
+          type: 'WTActionTriggerPhysics',
+          amount: 'short',
+        });
+        this._onEvent.next({
+          type: 'RoomServiceEventGraphElementsChanged',
+          graph: graph,
+          roomId: params.roomId,
+          nodesAdded: 0,
+          edgesAdded: 0,
+        } satisfies RoomServiceEventGraphElementsChanged);
+      },
+    );
+  }
+
   public unlockNodes(params: {
     roomId: string;
     nodeIds: readonly string[];
@@ -1004,7 +1067,8 @@ export class RoomService implements ApplicationService {
     }
   }
 
-  private async _connectNodes(graph: MutableGraph): Promise<void> {
+  private async _connectNodes(graph: MutableGraph): Promise<number> {
+    let addedEdgesCount: number = 0;
     for (const source of graph.nodes.getSources()) {
       const nodesToConnect: SSet<string> = graph.nodes
         .getBySource(source)
@@ -1027,8 +1091,10 @@ export class RoomService implements ApplicationService {
           credentials,
           nodesToConnect,
         );
-      graph.edges.addNeo4jEdges(result.relationships);
+      const didAdd: number = graph.edges.addNeo4jEdges(result.relationships);
+      addedEdgesCount += didAdd;
     }
+    return addedEdgesCount;
   }
 
   private _compressRelationships(

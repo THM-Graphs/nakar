@@ -3,6 +3,7 @@ import neo4j, {
   auth,
   driver as createDriver,
   Driver,
+  Integer,
   QueryResult,
   RecordShape,
   Session,
@@ -17,6 +18,8 @@ import { ExpandNodePreview } from './expand-node-preview/ExpandNodePreview';
 import { ExpandNodePreviewEntry } from './expand-node-preview/ExpandNodePreviewEntry';
 import { SMap } from '../tools/Map';
 import { ToManyElementsError } from './ToManyElementsError';
+import { SchemaDatabaseStats } from '../../../src-gen/schema';
+import { z } from 'zod';
 
 export class Neo4jService implements ApplicationService {
   public static readonly maximalElements: number = 500;
@@ -193,5 +196,76 @@ ORDER BY lcount DESC, label ASC`,
       expandNodePreviewLabelEntries,
       expandNodePreviewRelationshipEntries,
     );
+  }
+
+  public async getStats(params: {
+    credentials: Neo4jDatabaseInfo;
+  }): Promise<SchemaDatabaseStats> {
+    const result: Neo4jGraphElements = await this.executeQuery(
+      params.credentials,
+      'CALL apoc.meta.stats()',
+      {},
+      false,
+    );
+    if (result.tableData.length === 0) {
+      throw new Error(
+        'Unable to collect database stats. Result of query is empty.',
+      );
+    }
+    const data: Record<string, unknown> = result.tableData[0].toRecord();
+
+    // eslint-disable-next-line @typescript-eslint/typedef
+    const countSchema = z.object({
+      low: z.number(),
+      high: z.number(),
+    });
+    // eslint-disable-next-line @typescript-eslint/typedef
+    const schema = z.object({
+      labelCount: z.string(),
+      relTypeCount: z.string(),
+      propertyKeyCount: z.string(),
+      nodeCount: z.string(),
+      relCount: z.string(),
+      labels: z.record(countSchema),
+      relTypes: z.record(countSchema),
+      relTypesCount: z.record(countSchema),
+    });
+    const stats: z.infer<typeof schema> = schema.parse(data);
+
+    return {
+      labelCount: Number(stats.labelCount),
+      labels: Object.entries(stats.labels)
+        .sort(
+          (
+            a: [string, { high: number; low: number }],
+            b: [string, { high: number; low: number }],
+          ): number => a[0].localeCompare(b[0]),
+        )
+        .map(
+          (
+            entry: [string, { high: number; low: number }],
+          ): { label: string; count: number; exploreQuery: string } => {
+            return {
+              label: entry[0],
+              count: new Integer(entry[1].low, entry[1].high).toInt(),
+              exploreQuery: `MATCH (n:\`${entry[0]}\`) RETURN * LIMIT ${Neo4jService.maximalElements.toString()};`,
+            };
+          },
+        ),
+      nodeCount: Number(stats.nodeCount),
+      relCount: Number(stats.relCount),
+      rels: Object.entries(stats.relTypesCount).map(
+        (
+          entry: [string, { high: number; low: number }],
+        ): { relType: string; count: number; exploreQuery: string } => {
+          return {
+            relType: entry[0],
+            count: new Integer(entry[1].low, entry[1].high).toInt(),
+            exploreQuery: `MATCH (a)-[r:\`${entry[0]}\`]-(b) RETURN * LIMIT ${Neo4jService.maximalElements.toString()};`,
+          };
+        },
+      ),
+      relTypeCount: Number(stats.relTypeCount),
+    };
   }
 }

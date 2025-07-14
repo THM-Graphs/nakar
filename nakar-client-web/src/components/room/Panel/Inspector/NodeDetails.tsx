@@ -121,7 +121,14 @@ export function NodeDetails(props: {
           gap={1}
         >
           {props.node.labels.map((label: string) => {
-            return <Label key={label} label={label} showAmount={false}></Label>;
+            return (
+              <Label
+                key={label}
+                label={label}
+                showAmount={false}
+                showSources={true}
+              ></Label>
+            );
           })}
         </Stack>
       }

@@ -34,6 +34,8 @@ import { match } from "ts-pattern";
 import { PerformanceDisplay } from "../components/room/PerformanceDisplay.tsx";
 import { RunScenarioModal } from "../components/room/RunScenarioModal/RunScenarioModal.tsx";
 import { ExpandNodePreviewModal } from "../components/room/ExpandNodePreviewModal/ExpandNodePreviewModal.tsx";
+import { QueryPanel } from "../components/room/Panel/Query/QueryPanel.tsx";
+import { QueryPanelButton } from "../components/room/Panel/Query/QueryPanelButton.tsx";
 
 export type RoomContext = {
   initialRoomData: RoomSchema;
@@ -234,11 +236,13 @@ export function Room(props: { context: AppContext }) {
         >
           <Stack className={"bg-body-tertiary border-end z-1 flex-grow-0"}>
             <ScenariosPanelButton></ScenariosPanelButton>
+            <QueryPanelButton></QueryPanelButton>
           </Stack>
           <ScenariosPanel
             context={props.context}
             roomContext={roomContext}
           ></ScenariosPanel>
+          <QueryPanel roomContext={roomContext}></QueryPanel>
           <Canvas context={props.context} roomContext={roomContext}></Canvas>
           <InspectorPanel
             context={props.context}
