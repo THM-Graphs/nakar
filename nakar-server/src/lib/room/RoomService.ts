@@ -29,7 +29,6 @@ import { RoomServiceEventGraphElementsChanged } from './events/RoomServiceEventG
 import { RoomServiceEventGraphMetaDataChanged } from './events/RoomServiceEventGraphMetaDataChanged';
 import { RoomServiceEventGraphTableChanged } from './events/RoomServiceEventGraphTableChanged';
 import { PhysicsSimulation } from '../physics/PhysicsSimulation';
-import { ExpandNodesResult } from './results/ExpandNodesResult';
 import { MutableEdge } from './graph/MutableEdge';
 import { FinalGraphDisplayConfiguration } from './scenario-pipeline/display-configuration/FinalGraphDisplayConfiguration';
 import { RoomServiceEventKick } from './events/RoomServiceEventKick';
@@ -44,6 +43,7 @@ import { MutablePropertyCollection } from './graph/MutablePropertyCollection';
 import { ProfilerTask } from '../profiler/ProfilerTask';
 import { v4 } from 'uuid';
 import { MutableNodeIndex } from './graph/MutableNodeIndex';
+import { ExpandNodesResult } from './ExpandNodesResult';
 
 export class RoomService implements ApplicationService {
   private readonly _workers: SMap<string, Worker>;
