@@ -127,18 +127,22 @@ export class RoomService implements ApplicationService {
     userId: string;
   }): void {
     const graph: MutableGraph = this.getGraph(params.roomId);
-
+    const nodesToSend: RSPhysicalNode[] = [];
     for (const physialNode of params.nodes) {
       const node: MutableNode | null = graph.nodes.get(physialNode.id);
       if (node == null) {
-        throw new Error(
+        this._logger.error(
+          this,
           `Unable to move node: Node ${physialNode.id} not found.`,
         );
+        continue;
       }
       if (!node.grabs.has(params.userId)) {
-        throw new Error(
+        this._logger.error(
+          this,
           `Unable to move node ${node.id}. User ${params.userId} did not grab it.`,
         );
+        continue;
       }
       if (!node.locked) {
         node.locked = true;
@@ -154,11 +158,14 @@ export class RoomService implements ApplicationService {
           locks: new SMap([[node.id, node.locked]]),
         } satisfies RoomServiceEvent);
       }
-      this._sendActionToWorker(params.roomId, {
-        type: 'WTActionMoveNodes',
-        nodes: params.nodes,
-      });
+
+      nodesToSend.push(physialNode);
     }
+
+    this._sendActionToWorker(params.roomId, {
+      type: 'WTActionMoveNodes',
+      nodes: nodesToSend,
+    });
   }
 
   public ungrabNode(params: {

@@ -12,10 +12,10 @@ import { SchemaPhysicsPerformance } from '../../../src-gen/schema';
 import { MutableNode } from '../room/graph/MutableNode';
 
 export class PhysicsSimulation {
-  public static readonly maximumVelocity: number = 500;
-  public static readonly maximumForce: number = 100;
+  public static readonly maximumVelocity: number = 2000;
+  public static readonly maximumForce: number = 300;
   public static readonly FPS: number = 30;
-  public static readonly cooldownTime: number = 500;
+  public static readonly cooldownTime: number = 1000;
 
   private _graph: PhysicalGraph;
   private _running: boolean;
