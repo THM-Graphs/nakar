@@ -244,22 +244,26 @@ ORDER BY lcount DESC, label ASC`,
       await this._getRelationshipTypes(credentials);
     const stats: SchemaDatabaseStats = {
       labelCount: labels.size,
-      labels: labels.flatMap(
-        (
+      labels: await labels.asyncFlatMap(
+        async (
           label: string,
-        ): { label: string; count: number; exploreQuery: string } => ({
+        ): Promise<{ label: string; count: number; exploreQuery: string }> => ({
           label: label,
-          count: -1,
+          count: await this._getLabelCount(credentials, label),
           exploreQuery: this._exploreQueryOfLabel(label),
         }),
       ),
       relTypeCount: relTypes.size,
-      rels: relTypes.flatMap(
-        (
+      rels: await relTypes.asyncFlatMap(
+        async (
           relType: string,
-        ): { relType: string; count: number; exploreQuery: string } => ({
+        ): Promise<{
+          relType: string;
+          count: number;
+          exploreQuery: string;
+        }> => ({
           relType: relType,
-          count: -1,
+          count: await this._getRelationshipTypeCount(credentials, relType),
           exploreQuery: this._exploreQueryOfRelationshipType(relType),
         }),
       ),
@@ -280,6 +284,7 @@ ORDER BY lcount DESC, label ASC`,
   private async _getNodesCount(
     credentials: Neo4jDatabaseInfo,
   ): Promise<number> {
+    this._logger.debug(this, `Will query nodes count.`);
     const result: Neo4jGraphElements = await this.executeQuery(
       credentials,
       'MATCH (n) RETURN count(n) AS nodeCount',
@@ -295,6 +300,7 @@ ORDER BY lcount DESC, label ASC`,
   private async _getRelationshipsCount(
     credentials: Neo4jDatabaseInfo,
   ): Promise<number> {
+    this._logger.debug(this, `Will query rels count.`);
     const result: Neo4jGraphElements = await this.executeQuery(
       credentials,
       'MATCH ()-[r]->() RETURN count(r) AS relationshipCount',
@@ -305,5 +311,42 @@ ORDER BY lcount DESC, label ASC`,
       throw new Error('Unable to get relationship count from query.');
     }
     return Number(result.tableData[0].get('relationshipCount'));
+  }
+
+  private async _getLabelCount(
+    credentials: Neo4jDatabaseInfo,
+    label: string,
+  ): Promise<number> {
+    this._logger.debug(this, `Will query label count of label ${label}`);
+    const result: Neo4jGraphElements = await this.executeQuery(
+      credentials,
+      `MATCH (n:\`${label}\`) RETURN count(n) as count;`,
+      {},
+      false,
+    );
+    if (result.tableData.length === 0) {
+      throw new Error(`Unable to get node count of label ${label} from query.`);
+    }
+    return Number(result.tableData[0].get('count'));
+  }
+
+  private async _getRelationshipTypeCount(
+    credentials: Neo4jDatabaseInfo,
+    relType: string,
+  ): Promise<number> {
+    this._logger.debug(
+      this,
+      `Will query rel type count of rel type ${relType}`,
+    );
+    const result: Neo4jGraphElements = await this.executeQuery(
+      credentials,
+      `MATCH ()-[r:\`${relType}\`]-() RETURN count(r) as count`,
+      {},
+      false,
+    );
+    if (result.tableData.length === 0) {
+      throw new Error(`Unable to get rel type count of ${relType} from query.`);
+    }
+    return Number(result.tableData[0].get('count'));
   }
 }

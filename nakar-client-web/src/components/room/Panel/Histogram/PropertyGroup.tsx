@@ -18,6 +18,7 @@ export function PropertyGroup(props: {
   return (
     <Stack key={props.propertyEntry.key} className={""}>
       <Collapsable
+        sticky={false}
         title={
           <span className={"small user-select-text text-muted"}>
             {props.propertyEntry.key}

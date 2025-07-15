@@ -48,6 +48,7 @@ export function ScenarioDisplay(props: {
   return (
     <Collapsable
       inset={0}
+      sticky={false}
       title={
         <Stack
           direction={"horizontal"}
