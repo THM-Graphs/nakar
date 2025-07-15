@@ -21,12 +21,10 @@ export type DatabaseStats = {
     relCount: number;
     labels: Array<{
         label: string;
-        count: number;
         exploreQuery: string;
     }>;
     rels: Array<{
         relType: string;
-        count: number;
         exploreQuery: string;
     }>;
     nodeCount: number;

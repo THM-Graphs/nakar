@@ -233,8 +233,7 @@ export function QueryPanel(props: { roomContext: RoomContext }) {
                           <Label
                             key={entry.label}
                             label={entry.label}
-                            showAmount={true}
-                            customAmount={entry.count}
+                            showAmount={false}
                             showSources={false}
                             onClick={() => {
                               query.setQueryText(entry.exploreQuery);
@@ -263,8 +262,7 @@ export function QueryPanel(props: { roomContext: RoomContext }) {
                           <Label
                             key={entry.relType}
                             label={entry.relType}
-                            showAmount={true}
-                            customAmount={entry.count}
+                            showAmount={false}
                             showSources={false}
                             onClick={() => {
                               query.setQueryText(entry.exploreQuery);

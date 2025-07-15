@@ -1121,13 +1121,10 @@ components:
             properties:
               label:
                 type: string
-              count:
-                type: integer
               exploreQuery:
                 type: string
             required:
               - label
-              - count
               - exploreQuery
         rels:
           type: array
@@ -1136,13 +1133,10 @@ components:
             properties:
               relType:
                 type: string
-              count:
-                type: integer
               exploreQuery:
                 type: string
             required:
               - relType
-              - count
               - exploreQuery
         nodeCount:
           type: number

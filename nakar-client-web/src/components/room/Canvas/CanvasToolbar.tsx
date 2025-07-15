@@ -30,7 +30,7 @@ export function CanvasToolbar(props: {
       <Stack direction={"horizontal"}>
         <NavbarButton
           icon={"arrow-left"}
-          disabled={!graph.metaData.canUndo}
+          disabled={!graph.metaData.canUndo || uiLocked}
           onClick={async () => {
             resultOrThrow(
               await postRoomActionUndo({
@@ -43,7 +43,7 @@ export function CanvasToolbar(props: {
         ></NavbarButton>
         <NavbarButton
           icon={"arrow-right"}
-          disabled={!graph.metaData.canRedo}
+          disabled={!graph.metaData.canRedo || uiLocked}
           onClick={async () => {
             resultOrThrow(
               await postRoomActionRedo({

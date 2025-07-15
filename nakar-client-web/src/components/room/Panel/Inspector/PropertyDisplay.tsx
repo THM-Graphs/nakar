@@ -35,7 +35,7 @@ export function PropertyDisplay(props: {
       </span>
       <ClipboardButton
         size={"sm"}
-        className={"p-1 align-self-baseline"}
+        className={clsx("p-1 align-self-baseline")}
         text={stringValue}
       ></ClipboardButton>
       {stringValue.length > valueLengthLimit && !showFullValue && (

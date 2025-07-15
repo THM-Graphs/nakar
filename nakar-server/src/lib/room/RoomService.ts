@@ -716,6 +716,10 @@ export class RoomService implements ApplicationService {
         graph.edges.addNeo4jEdges(graphElements.relationships);
         graph.tableData = graphElements.tableData;
 
+        if (params.connectResultNodes) {
+          await this._connectNodes(graph);
+        }
+
         this._sendActionToWorker(params.roomId, {
           type: 'WTActionSetGraph',
           graph: graph.toPhysicalGraph(displayConfiguration, this._logger),
@@ -744,10 +748,6 @@ export class RoomService implements ApplicationService {
         } satisfies RoomServiceEventGraphTableChanged);
       },
     );
-
-    if (params.connectResultNodes) {
-      await this.connectResultNodes({ roomId: params.roomId });
-    }
   }
 
   public async connectResultNodes(params: { roomId: string }): Promise<void> {

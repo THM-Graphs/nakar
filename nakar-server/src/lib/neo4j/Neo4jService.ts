@@ -244,26 +244,21 @@ ORDER BY lcount DESC, label ASC`,
       await this._getRelationshipTypes(credentials);
     const stats: SchemaDatabaseStats = {
       labelCount: labels.size,
-      labels: await labels.asyncFlatMap(
-        async (
-          label: string,
-        ): Promise<{ label: string; count: number; exploreQuery: string }> => ({
+      labels: labels.flatMap(
+        (label: string): { label: string; exploreQuery: string } => ({
           label: label,
-          count: await this._getLabelCount(credentials, label),
           exploreQuery: this._exploreQueryOfLabel(label),
         }),
       ),
       relTypeCount: relTypes.size,
-      rels: await relTypes.asyncFlatMap(
-        async (
+      rels: relTypes.flatMap(
+        (
           relType: string,
-        ): Promise<{
+        ): {
           relType: string;
-          count: number;
           exploreQuery: string;
-        }> => ({
+        } => ({
           relType: relType,
-          count: await this._getRelationshipTypeCount(credentials, relType),
           exploreQuery: this._exploreQueryOfRelationshipType(relType),
         }),
       ),

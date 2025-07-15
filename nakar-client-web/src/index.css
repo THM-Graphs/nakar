@@ -22,15 +22,13 @@ div[role=tooltip] {
     cursor: pointer;
 }
 
+
 .bg-body-secondary-hover:hover {
-    background-color: rgba(var(--bs-secondary-bg-rgb), 1);
+    background-color: rgba(var(--bs-secondary-bg-rgb), 1) !important;
 }
 
-.bg-body-hover {
-    background-color: rgba(var(--bs-body-bg-rgb), 1);
-}
 .bg-body-hover:hover {
-    background-color: rgba(var(--bs-secondary-bg-rgb), 1);
+    background-color: rgba(var(--bs-secondary-bg-rgb), 1) !important;
 }
 
 .ellipsis {

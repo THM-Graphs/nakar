@@ -42,7 +42,12 @@ export function ValueDisplay(props: {
             size={"sm"}
           ></NavbarButton>
         )}
-        <Stack direction={"horizontal"} style={{ marginRight: "12px" }}>
+        <Stack
+          direction={"horizontal"}
+          style={{
+            marginRight: (props.bgColors ?? []).length === 0 ? "0px" : "12px",
+          }}
+        >
           {props.bgColors?.map((color, index) => (
             <div
               key={color}

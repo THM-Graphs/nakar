@@ -42,7 +42,9 @@ export function SelectableTableData(props: {
                 gap={2}
                 className={clsx(
                   "small pt-1 pb-1 border-bottom",
-                  index % 2 === 1 ? "bg-body-hover" : "bg-body-secondary-hover",
+                  index % 2 === 1
+                    ? "bg-body bg-body-hover"
+                    : "bg-body-tertiary bg-body-secondary-hover",
                 )}
                 onClick={() => {
                   props.onSelectionChange(

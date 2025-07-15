@@ -573,12 +573,10 @@ export interface components {
             readonly relCount: number;
             readonly labels: readonly {
                 readonly label: string;
-                readonly count: number;
                 readonly exploreQuery: string;
             }[];
             readonly rels: readonly {
                 readonly relType: string;
-                readonly count: number;
                 readonly exploreQuery: string;
             }[];
             readonly nodeCount: number;
