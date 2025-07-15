@@ -11,18 +11,28 @@ export function ValueDisplay(props: {
   percentage: number;
   bgColors?: string[];
   onRemove?: () => void | Promise<void>;
+  onSelect?: () => void | Promise<void>;
   roomContext: RoomContext;
 }) {
   return (
     <Stack
       direction={"horizontal"}
-      className={clsx("justify-content-between position-relative")}
+      className={clsx("justify-content-between position-relative w-100")}
       gap={2}
     >
       <Stack
         direction={"horizontal"}
         className={"ps-0 flex-shrink-1 flex-grow-1 overflow-hidden "}
       >
+        {props.onSelect && (
+          <NavbarButton
+            icon={"crosshair"}
+            onClick={props.onSelect}
+            style={{ zIndex: 2 }}
+            className={"pt-0 pb-0 ps-0 pe-0"}
+            size={"sm"}
+          ></NavbarButton>
+        )}
         {props.onRemove && (
           <NavbarButton
             icon={"eye-slash"}
@@ -32,18 +42,21 @@ export function ValueDisplay(props: {
             size={"sm"}
           ></NavbarButton>
         )}
-        {props.bgColors?.map((color) => (
-          <div
-            key={color}
-            style={{
-              zIndex: 1,
-              width: "15px",
-              height: "15px",
-              backgroundColor: color,
-            }}
-            className={"flex-grow-0 flex-shrink-0 rounded-circle me-2"}
-          ></div>
-        ))}
+        <Stack direction={"horizontal"} style={{ marginRight: "12px" }}>
+          {props.bgColors?.map((color, index) => (
+            <div
+              key={color}
+              style={{
+                zIndex: 1 + ((props.bgColors ?? []).length - index),
+                width: "15px",
+                height: "15px",
+                backgroundColor: color,
+                marginRight: "-8px",
+              }}
+              className={"flex-grow-0 flex-shrink-0 rounded-circle"}
+            ></div>
+          ))}
+        </Stack>
         <span
           style={{
             zIndex: 1,

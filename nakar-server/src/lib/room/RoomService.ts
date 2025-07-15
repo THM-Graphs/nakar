@@ -213,7 +213,7 @@ export class RoomService implements ApplicationService {
     const displayConfiguration: FinalGraphDisplayConfiguration =
       await this._database.getGraphDisplayConfiguration(scenario.documentId);
 
-    const result: GetScenarioDBDTO = await this._runWithRoomLock(
+    return this._runWithRoomLock(
       params.roomId,
       'Loading scenario',
       async (): Promise<GetScenarioDBDTO> => {
@@ -249,8 +249,15 @@ export class RoomService implements ApplicationService {
           }
         }
 
-        // --- Merge nodes
+        if (displayConfiguration.connectResultNodes) {
+          await this._connectNodes(graph);
+        }
+
         this._mergeNodes(graph, displayConfiguration);
+
+        if (displayConfiguration.compressRelationships) {
+          this._compressRelationships(graph, displayConfiguration);
+        }
 
         const physics: PhysicsSimulation = new PhysicsSimulation(
           graph.toPhysicalGraph(displayConfiguration, this._logger),
@@ -291,15 +298,6 @@ export class RoomService implements ApplicationService {
         return scenario;
       },
     );
-
-    if (displayConfiguration.connectResultNodes) {
-      await this.connectResultNodes({ roomId: params.roomId });
-    }
-    if (displayConfiguration.compressRelationships) {
-      await this.compressRelationships({ roomId: params.roomId });
-    }
-
-    return result;
   }
 
   public async expandNode(params: {
@@ -318,10 +316,10 @@ export class RoomService implements ApplicationService {
           )
         : FinalGraphDisplayConfiguration.empty();
 
-    const didExpand: boolean = await this._runWithRoomLock(
+    await this._runWithRoomLock(
       params.roomId,
       'Expanding nodes',
-      async (): Promise<boolean> => {
+      async (): Promise<void> => {
         const result: ExpandNodesResult = {
           nodesAddedCount: 0,
           edgeAddedCount: 0,
@@ -378,7 +376,15 @@ export class RoomService implements ApplicationService {
             `Expand node result for ${params.nodeId}: ${expandResult.nodes.size.toString()} nodes and ${expandResult.relationships.size.toString()} relationships.`,
           );
 
+          if (displayConfiguration.connectResultNodes) {
+            await this._connectNodes(graph);
+          }
+
           this._mergeNodes(graph, displayConfiguration);
+
+          if (displayConfiguration.compressRelationships) {
+            this._compressRelationships(graph, displayConfiguration);
+          }
 
           this._sendActionToWorker(params.roomId, {
             type: 'WTActionSetGraph',
@@ -395,7 +401,6 @@ export class RoomService implements ApplicationService {
             nodesAdded: result.nodesAddedCount,
             edgesAdded: result.edgeAddedCount,
           } satisfies RoomServiceEventGraphElementsChanged);
-          return true;
         } catch (error: unknown) {
           if (error instanceof ToManyElementsError) {
             const expandNodePreview: ExpandNodePreview =
@@ -410,22 +415,12 @@ export class RoomService implements ApplicationService {
               labels: expandNodePreview.labels,
               relationships: expandNodePreview.relationships,
             } satisfies RoomServiceEventPresentExpandNodePreview);
-            return false;
           } else {
             throw error;
           }
         }
       },
     );
-
-    if (didExpand) {
-      if (displayConfiguration.connectResultNodes) {
-        await this.connectResultNodes({ roomId: params.roomId });
-      }
-      if (displayConfiguration.compressRelationships) {
-        await this.compressRelationships({ roomId: params.roomId });
-      }
-    }
   }
 
   public async focusNodes(params: {
@@ -767,8 +762,8 @@ export class RoomService implements ApplicationService {
             ? await this._database.getGraphDisplayConfiguration(scenarioId)
             : FinalGraphDisplayConfiguration.empty();
 
-        const result: number = await this._connectNodes(oldGraph);
         const graph: MutableGraph = this._snapshotGraph(params.roomId);
+        const result: number = await this._connectNodes(graph);
 
         this._sendActionToWorker(params.roomId, {
           type: 'WTActionSetGraph',
@@ -784,40 +779,6 @@ export class RoomService implements ApplicationService {
           roomId: params.roomId,
           nodesAdded: 0,
           edgesAdded: result,
-        } satisfies RoomServiceEventGraphElementsChanged);
-      },
-    );
-  }
-
-  public async compressRelationships(params: {
-    roomId: string;
-  }): Promise<void> {
-    await this._runWithRoomLock(
-      params.roomId,
-      'Compressing relationships',
-      async (): Promise<void> => {
-        const graph: MutableGraph = this._snapshotGraph(params.roomId);
-        const scenarioId: string | null = graph.metaData.scenarioId;
-        const displayConfiguration: FinalGraphDisplayConfiguration =
-          scenarioId != null
-            ? await this._database.getGraphDisplayConfiguration(scenarioId)
-            : FinalGraphDisplayConfiguration.empty();
-        this._compressRelationships(graph, displayConfiguration);
-
-        this._sendActionToWorker(params.roomId, {
-          type: 'WTActionSetGraph',
-          graph: graph.toPhysicalGraph(displayConfiguration, this._logger),
-        });
-        this._sendActionToWorker(params.roomId, {
-          type: 'WTActionTriggerPhysics',
-          amount: 'short',
-        });
-        this._onEvent.next({
-          type: 'RoomServiceEventGraphElementsChanged',
-          graph: graph,
-          roomId: params.roomId,
-          nodesAdded: 0,
-          edgesAdded: 0,
         } satisfies RoomServiceEventGraphElementsChanged);
       },
     );

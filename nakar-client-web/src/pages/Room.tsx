@@ -199,6 +199,9 @@ export function Room(props: { context: AppContext }) {
           data: [],
         },
       });
+      setPerformance(null);
+      clearProgress();
+      unlockUI();
     };
   }, []);
 

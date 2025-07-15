@@ -8,67 +8,60 @@ import { Button, Stack } from "react-bootstrap";
 import { RoomContext } from "../../../../../pages/Room.tsx";
 import { useState } from "react";
 import { useBearStore } from "../../../../../lib/state/useBearStore.ts";
+import { DynamicList } from "../../../DynamicList.tsx";
 
 export function HistogramSectionNodes(props: { roomContext: RoomContext }) {
   const histogram = useBearStore(
     (s) => s.room.scenario.graph.elements.histogram,
   );
   const labels = useBearStore((s) => s.room.scenario.graph.elements.labels);
-  const [showAllNodes, setShowAllNodes] = useState<boolean>(false);
+  const setElement = useBearStore((s) => s.room.panels.inspector.setElement);
 
   return (
     <Stack className={"border-bottom"}>
-      <Collapsable
-        title={<span className={"fw-bold small"}>Nodes</span>}
-        initialState={false}
-      >
-        <EmptyHint list={histogram.nodes}></EmptyHint>
-        {histogram.nodes
-          .slice(0, showAllNodes ? histogram.nodes.length : 10)
-          .map((nodeEntry) => {
-            const nodeLabels = labels.filter((graphLabel) =>
-              nodeEntry.labels.includes(graphLabel.label),
-            );
-            return (
-              <ValueDisplay
-                key={nodeEntry.id}
-                roomContext={props.roomContext}
-                value={nodeEntry.degree}
-                percentage={nodeEntry.percentage}
-                label={nodeEntry.title}
-                subLabel={nodeEntry.id}
-                bgColors={nodeLabels.map((l) => getBackgroundColor(l.color))}
-                onRemove={async () => {
-                  resultOrThrow(
-                    await postRoomActionDeleteElements({
-                      path: {
-                        id: props.roomContext.initialRoomData.id,
-                      },
-                      body: {
-                        nodes: [nodeEntry.id],
-                        labels: [],
-                        edges: [],
-                        edgeTypes: [],
-                      },
-                    }),
-                  );
-                }}
-              ></ValueDisplay>
-            );
-          })}
-        {!showAllNodes && histogram.nodes.length > 10 && (
-          <Button
-            variant={""}
-            size={"sm"}
-            className={"text-muted fst-italic small rounded-0"}
-            onClick={() => {
-              setShowAllNodes(true);
-            }}
-          >
-            …show all {histogram.nodes.length} elements
-          </Button>
+      <DynamicList
+        data={histogram.nodes}
+        entityNamePlural={"Nodes"}
+        filter={(exp, n) => n.title.toLowerCase().includes(exp.toLowerCase())}
+        render={(list) => (
+          <>
+            {list.map((nodeEntry) => {
+              const nodeLabels = labels.filter((graphLabel) =>
+                nodeEntry.labels.includes(graphLabel.label),
+              );
+              return (
+                <ValueDisplay
+                  key={nodeEntry.id}
+                  roomContext={props.roomContext}
+                  value={nodeEntry.degree}
+                  percentage={nodeEntry.percentage}
+                  label={nodeEntry.title}
+                  subLabel={nodeEntry.id}
+                  bgColors={nodeLabels.map((l) => getBackgroundColor(l.color))}
+                  onSelect={() => {
+                    setElement({ type: "node", nodeId: nodeEntry.id });
+                  }}
+                  onRemove={async () => {
+                    resultOrThrow(
+                      await postRoomActionDeleteElements({
+                        path: {
+                          id: props.roomContext.initialRoomData.id,
+                        },
+                        body: {
+                          nodes: [nodeEntry.id],
+                          labels: [],
+                          edges: [],
+                          edgeTypes: [],
+                        },
+                      }),
+                    );
+                  }}
+                ></ValueDisplay>
+              );
+            })}
+          </>
         )}
-      </Collapsable>
+      ></DynamicList>
     </Stack>
   );
 }

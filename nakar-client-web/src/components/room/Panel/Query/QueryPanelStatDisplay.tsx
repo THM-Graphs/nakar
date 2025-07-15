@@ -1,5 +1,7 @@
 import { Stack } from "react-bootstrap";
 import clsx from "clsx";
+import { useCallback } from "react";
+import { numberFormat } from "../../../../lib/data/numberFormat.ts";
 
 export function QueryPanelStatDisplay(props: {
   label: string;
@@ -16,7 +18,7 @@ export function QueryPanelStatDisplay(props: {
     >
       <span className={"small"}>{props.label}</span>
       <span className={"small font-monospace user-select-text"}>
-        {props.value}
+        {numberFormat(props.value)}
       </span>
     </Stack>
   );

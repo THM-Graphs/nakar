@@ -53,13 +53,12 @@ export function ScenariosPanel(props: {
         ></NavbarButton>
       }
     >
-      <Stack>
-        <ScenarioGroupList
-          scenarioGroups={scenarios.scenarioGroups}
-          context={props.context}
-          roomContext={props.roomContext}
-        ></ScenarioGroupList>
-      </Stack>
+      <ScenarioGroupList
+        scenarioGroups={scenarios.scenarioGroups}
+        context={props.context}
+        roomContext={props.roomContext}
+      ></ScenarioGroupList>
+      <div className={"flex-grow-1"}></div>
     </Panel>
   );
 }

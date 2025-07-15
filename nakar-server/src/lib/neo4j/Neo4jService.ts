@@ -3,7 +3,6 @@ import neo4j, {
   auth,
   driver as createDriver,
   Driver,
-  Integer,
   QueryResult,
   RecordShape,
   Session,
@@ -201,71 +200,111 @@ ORDER BY lcount DESC, label ASC`,
   public async getStats(params: {
     credentials: Neo4jDatabaseInfo;
   }): Promise<SchemaDatabaseStats> {
+    return this._fetchDbStats(params.credentials);
+  }
+
+  private async _getLabels(
+    credentials: Neo4jDatabaseInfo,
+  ): Promise<SSet<string>> {
+    const labelsResult: Neo4jGraphElements = await this.executeQuery(
+      credentials,
+      'CALL db.labels() YIELD label RETURN label ORDER BY label ASC',
+      {},
+      false,
+    );
+    const labels: SSet<string> = new SSet<string>(
+      labelsResult.tableData.map((line: SMap<string, unknown>): string =>
+        String(line.get('label')),
+      ),
+    );
+    return labels;
+  }
+
+  private async _getRelationshipTypes(
+    credentials: Neo4jDatabaseInfo,
+  ): Promise<SSet<string>> {
+    const relTypesResult: Neo4jGraphElements = await this.executeQuery(
+      credentials,
+      'CALL db.relationshipTypes() YIELD relationshipType RETURN relationshipType ORDER BY relationshipType ASC',
+      {},
+      false,
+    );
+    const relTypes: SSet<string> = new SSet<string>(
+      relTypesResult.tableData.map((line: SMap<string, unknown>): string =>
+        String(line.get('relationshipType')),
+      ),
+    );
+    return relTypes;
+  }
+
+  private async _fetchDbStats(
+    credentials: Neo4jDatabaseInfo,
+  ): Promise<SchemaDatabaseStats> {
+    const labels: SSet<string> = await this._getLabels(credentials);
+    const relTypes: SSet<string> =
+      await this._getRelationshipTypes(credentials);
+    const stats: SchemaDatabaseStats = {
+      labelCount: labels.size,
+      labels: labels.flatMap(
+        (
+          label: string,
+        ): { label: string; count: number; exploreQuery: string } => ({
+          label: label,
+          count: -1,
+          exploreQuery: this._exploreQueryOfLabel(label),
+        }),
+      ),
+      relTypeCount: relTypes.size,
+      rels: relTypes.flatMap(
+        (
+          relType: string,
+        ): { relType: string; count: number; exploreQuery: string } => ({
+          relType: relType,
+          count: -1,
+          exploreQuery: this._exploreQueryOfRelationshipType(relType),
+        }),
+      ),
+      nodeCount: await this._getNodesCount(credentials),
+      relCount: await this._getRelationshipsCount(credentials),
+    };
+    return stats;
+  }
+
+  private _exploreQueryOfLabel(label: string): string {
+    return `MATCH (n:\`${label}\`) RETURN * LIMIT ${Neo4jService.maximalElements.toString()};`;
+  }
+
+  private _exploreQueryOfRelationshipType(relType: string): string {
+    return `MATCH (a)-[r:\`${relType}\`]-(b) RETURN * LIMIT ${Neo4jService.maximalElements.toString()};`;
+  }
+
+  private async _getNodesCount(
+    credentials: Neo4jDatabaseInfo,
+  ): Promise<number> {
     const result: Neo4jGraphElements = await this.executeQuery(
-      params.credentials,
-      'CALL apoc.meta.stats()',
+      credentials,
+      'MATCH (n) RETURN count(n) AS nodeCount',
       {},
       false,
     );
     if (result.tableData.length === 0) {
-      throw new Error(
-        'Unable to collect database stats. Result of query is empty.',
-      );
+      throw new Error('Unable to get node count from query.');
     }
-    const data: Record<string, unknown> = result.tableData[0].toRecord();
+    return Number(result.tableData[0].get('nodeCount'));
+  }
 
-    // eslint-disable-next-line @typescript-eslint/typedef
-    const countSchema = z.object({
-      low: z.number(),
-      high: z.number(),
-    });
-    // eslint-disable-next-line @typescript-eslint/typedef
-    const schema = z.object({
-      labelCount: z.string(),
-      relTypeCount: z.string(),
-      propertyKeyCount: z.string(),
-      nodeCount: z.string(),
-      relCount: z.string(),
-      labels: z.record(countSchema),
-      relTypes: z.record(countSchema),
-      relTypesCount: z.record(countSchema),
-    });
-    const stats: z.infer<typeof schema> = schema.parse(data);
-
-    return {
-      labelCount: Number(stats.labelCount),
-      labels: Object.entries(stats.labels)
-        .sort(
-          (
-            a: [string, { high: number; low: number }],
-            b: [string, { high: number; low: number }],
-          ): number => a[0].localeCompare(b[0]),
-        )
-        .map(
-          (
-            entry: [string, { high: number; low: number }],
-          ): { label: string; count: number; exploreQuery: string } => {
-            return {
-              label: entry[0],
-              count: new Integer(entry[1].low, entry[1].high).toInt(),
-              exploreQuery: `MATCH (n:\`${entry[0]}\`) RETURN * LIMIT ${Neo4jService.maximalElements.toString()};`,
-            };
-          },
-        ),
-      nodeCount: Number(stats.nodeCount),
-      relCount: Number(stats.relCount),
-      rels: Object.entries(stats.relTypesCount).map(
-        (
-          entry: [string, { high: number; low: number }],
-        ): { relType: string; count: number; exploreQuery: string } => {
-          return {
-            relType: entry[0],
-            count: new Integer(entry[1].low, entry[1].high).toInt(),
-            exploreQuery: `MATCH (a)-[r:\`${entry[0]}\`]-(b) RETURN * LIMIT ${Neo4jService.maximalElements.toString()};`,
-          };
-        },
-      ),
-      relTypeCount: Number(stats.relTypeCount),
-    };
+  private async _getRelationshipsCount(
+    credentials: Neo4jDatabaseInfo,
+  ): Promise<number> {
+    const result: Neo4jGraphElements = await this.executeQuery(
+      credentials,
+      'MATCH ()-[r]->() RETURN count(r) AS relationshipCount',
+      {},
+      false,
+    );
+    if (result.tableData.length === 0) {
+      throw new Error('Unable to get relationship count from query.');
+    }
+    return Number(result.tableData[0].get('relationshipCount'));
   }
 }

@@ -15,13 +15,25 @@ export function Label(props: {
   const labels = useBearStore((s) => s.room.scenario.graph.elements.labels);
   const label = labels.find((l) => l.label === props.label);
 
+  const text: string = (() => {
+    let buffer: string = "";
+    if (multipleSources(labels) && props.showSources) {
+      buffer += `[${(label?.sources ?? []).join(", ")}] `;
+    }
+    buffer += props.label;
+    if (props.showAmount && (props.customAmount || label)) {
+      buffer += ` (${(props.customAmount ?? label?.count ?? 0).toString()})`;
+    }
+    return buffer;
+  })();
+
   return (
     <Stack
       gap={1}
       direction={"horizontal"}
       onClick={props.onClick}
       className={clsx(
-        "badge flex-grow-0 flex-shrink-0 justify-content-center shadow-sm",
+        "badge flex-grow-0 flex-shrink-1 shadow-sm text-wrap text-break flex-wrap justify-content-start",
         props.onClick && "pointer",
       )}
       style={{
@@ -29,13 +41,7 @@ export function Label(props: {
         color: label ? getTextColor(label.color) : undefined,
       }}
     >
-      {multipleSources(labels) && props.showSources && (
-        <span>[{(label?.sources ?? []).join(", ")}]</span>
-      )}
-      <span>{props.label}</span>
-      {props.showAmount && (props.customAmount || label) && (
-        <span>({props.customAmount ?? label?.count})</span>
-      )}
+      <span className={"text-start"}>{text}</span>
     </Stack>
   );
 }

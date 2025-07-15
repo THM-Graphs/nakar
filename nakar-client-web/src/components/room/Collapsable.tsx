@@ -1,4 +1,4 @@
-import { ReactNode, useState } from "react";
+import { ReactElement, ReactNode, useState } from "react";
 import { Stack } from "react-bootstrap";
 import clsx from "clsx";
 
@@ -8,7 +8,7 @@ export function Collapsable(props: {
   inset?: number;
   initialState?: boolean;
   className?: string;
-}) {
+}): ReactElement {
   const [collapsed, setCollapsed] = useState<boolean>(
     props.initialState ?? true,
   );

@@ -70,13 +70,13 @@ export function ExpandNodePreviewModal(props: { roomContext: RoomContext }) {
                 </span>
               </Stack>
               <SelectableTableData
-                title={"Label"}
+                title={"Labels"}
                 data={data.labels}
                 onSelectionChange={setSelectedLabel}
                 selections={data.selectedLabels}
               ></SelectableTableData>
               <SelectableTableData
-                title={"Relationship"}
+                title={"Relationships"}
                 data={data.relationships}
                 onSelectionChange={setSelectedRelationships}
                 selections={data.selectedRelationships}

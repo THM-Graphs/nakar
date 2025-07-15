@@ -4,7 +4,6 @@ import { Panel } from "../Panel.tsx";
 import { Form, Spinner, Stack } from "react-bootstrap";
 import { NavbarButton } from "../../../shared/NavbarButton.tsx";
 import { Collapsable } from "../../Collapsable.tsx";
-import { EmptyHint } from "../Histogram/EmptyHint.tsx";
 import { useEffect, useState } from "react";
 import {
   Database,
@@ -17,6 +16,8 @@ import { resultOrThrow } from "../../../../lib/data/resultOrThrow.ts";
 import { match } from "ts-pattern";
 import { Label } from "../../Canvas/Label.tsx";
 import { QueryPanelStatsDisplay } from "./QueryPanelStatsDisplay.tsx";
+import { DynamicList } from "../../DynamicList.tsx";
+import { numberFormat } from "../../../../lib/data/numberFormat.ts";
 
 export function QueryPanel(props: { roomContext: RoomContext }) {
   const query = useBearStore((s) => s.room.panels.query);
@@ -98,7 +99,7 @@ export function QueryPanel(props: { roomContext: RoomContext }) {
               setSelectedDatabaseId(event.target.value);
             }}
           >
-            <option value={""} disabled={true}>
+            <option value={""} disabled={false}>
               Select a database...
             </option>
             {referencedDatabases.map((referencedDatabase) => (
@@ -215,79 +216,65 @@ export function QueryPanel(props: { roomContext: RoomContext }) {
             (data) =>
               data.data != null && (
                 <>
-                  <Collapsable
-                    className={"flex-grow-0 border-bottom"}
-                    initialState={false}
-                    title={
+                  <DynamicList
+                    data={data.data.labels}
+                    previewLimit={20}
+                    entityNamePlural={"Labels"}
+                    collapsable={true}
+                    filter={(exp, l) =>
+                      l.label.toLowerCase().includes(exp.toLowerCase())
+                    }
+                    render={(list) => (
                       <Stack
                         direction={"horizontal"}
-                        className={"flex-grow-1 pe-1 align-items-baseline"}
-                        gap={2}
+                        gap={1}
+                        className={"flex-wrap p-1"}
                       >
-                        <span className={"fw-bold small"}>Labels</span>
+                        {list.map((entry) => (
+                          <Label
+                            key={entry.label}
+                            label={entry.label}
+                            showAmount={true}
+                            customAmount={entry.count}
+                            showSources={false}
+                            onClick={() => {
+                              query.setQueryText(entry.exploreQuery);
+                            }}
+                          ></Label>
+                        ))}
+                      </Stack>
+                    )}
+                  ></DynamicList>
 
-                        <span className={"text-muted small font-monospace"}>
-                          {data.data.labelCount}
-                        </span>
-                      </Stack>
+                  <DynamicList
+                    data={data.data.rels}
+                    previewLimit={20}
+                    entityNamePlural={"Relationships"}
+                    collapsable={true}
+                    filter={(exp, rel) =>
+                      rel.relType.toLowerCase().includes(exp.toLowerCase())
                     }
-                  >
-                    <EmptyHint list={data.data.labels}></EmptyHint>
-                    <Stack
-                      direction={"horizontal"}
-                      gap={1}
-                      className={"flex-wrap p-1"}
-                    >
-                      {data.data.labels.map((entry) => (
-                        <Label
-                          key={entry.label}
-                          label={entry.label}
-                          showAmount={true}
-                          customAmount={entry.count}
-                          showSources={false}
-                          onClick={() => {
-                            query.setQueryText(entry.exploreQuery);
-                          }}
-                        ></Label>
-                      ))}
-                    </Stack>
-                  </Collapsable>
-                  <Collapsable
-                    className={"flex-grow-0 border-bottom"}
-                    initialState={false}
-                    title={
+                    render={(rels) => (
                       <Stack
-                        className={"flex-grow-1 pe-1 align-items-baseline"}
-                        gap={2}
                         direction={"horizontal"}
+                        gap={1}
+                        className={"flex-wrap p-1"}
                       >
-                        <span className={"fw-bold small"}>Relationships</span>
-                        <span className={"text-muted font-monospace small"}>
-                          {data.data.relTypeCount}
-                        </span>
+                        {rels.map((entry) => (
+                          <Label
+                            key={entry.relType}
+                            label={entry.relType}
+                            showAmount={true}
+                            customAmount={entry.count}
+                            showSources={false}
+                            onClick={() => {
+                              query.setQueryText(entry.exploreQuery);
+                            }}
+                          ></Label>
+                        ))}
                       </Stack>
-                    }
-                  >
-                    <EmptyHint list={data.data.rels}></EmptyHint>
-                    <Stack
-                      direction={"horizontal"}
-                      gap={1}
-                      className={"flex-wrap p-1"}
-                    >
-                      {data.data.rels.map((entry) => (
-                        <Label
-                          key={entry.relType}
-                          label={entry.relType}
-                          showAmount={true}
-                          customAmount={entry.count}
-                          showSources={false}
-                          onClick={() => {
-                            query.setQueryText(entry.exploreQuery);
-                          }}
-                        ></Label>
-                      ))}
-                    </Stack>
-                  </Collapsable>
+                    )}
+                  ></DynamicList>
                   <Collapsable
                     className={"flex-grow-0 border-bottom"}
                     initialState={false}

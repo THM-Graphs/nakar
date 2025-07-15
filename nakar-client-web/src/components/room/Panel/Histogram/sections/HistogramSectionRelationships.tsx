@@ -6,6 +6,7 @@ import { RoomContext } from "../../../../../pages/Room.tsx";
 import { ValueDisplay } from "../ValueDisplay.tsx";
 import { resultOrThrow } from "../../../../../lib/data/resultOrThrow.ts";
 import { useBearStore } from "../../../../../lib/state/useBearStore.ts";
+import { DynamicList } from "../../../DynamicList.tsx";
 
 export function HistogramSectionRelationships(props: {
   roomContext: RoomContext;
@@ -15,36 +16,39 @@ export function HistogramSectionRelationships(props: {
   );
   return (
     <Stack className={"border-bottom"}>
-      <Collapsable
-        title={<span className={"fw-bold small"}>Relationships</span>}
-        initialState={false}
-      >
-        <EmptyHint list={histogram.edgeTypes}></EmptyHint>
-        {histogram.edgeTypes.map((entry) => (
-          <ValueDisplay
-            label={entry.type}
-            value={entry.count}
-            roomContext={props.roomContext}
-            percentage={entry.percentage}
-            key={entry.type}
-            onRemove={async (): Promise<void> => {
-              resultOrThrow(
-                await postRoomActionDeleteElements({
-                  path: {
-                    id: props.roomContext.initialRoomData.id,
-                  },
-                  body: {
-                    nodes: [],
-                    labels: [],
-                    edges: [],
-                    edgeTypes: [entry.type],
-                  },
-                }),
-              );
-            }}
-          ></ValueDisplay>
-        ))}
-      </Collapsable>
+      <DynamicList
+        data={histogram.edgeTypes}
+        entityNamePlural={"Relationship Types"}
+        filter={(exp, rt) => rt.type.toLowerCase().includes(exp.toLowerCase())}
+        render={(list) => (
+          <>
+            {list.map((entry) => (
+              <ValueDisplay
+                label={entry.type}
+                value={entry.count}
+                roomContext={props.roomContext}
+                percentage={entry.percentage}
+                key={entry.type}
+                onRemove={async (): Promise<void> => {
+                  resultOrThrow(
+                    await postRoomActionDeleteElements({
+                      path: {
+                        id: props.roomContext.initialRoomData.id,
+                      },
+                      body: {
+                        nodes: [],
+                        labels: [],
+                        edges: [],
+                        edgeTypes: [entry.type],
+                      },
+                    }),
+                  );
+                }}
+              ></ValueDisplay>
+            ))}
+          </>
+        )}
+      ></DynamicList>
     </Stack>
   );
 }
