@@ -1,6 +1,5 @@
 import { Stack } from "react-bootstrap";
 import clsx from "clsx";
-import { useCallback } from "react";
 import { numberFormat } from "../../../../lib/data/numberFormat.ts";
 
 export function QueryPanelStatDisplay(props: {

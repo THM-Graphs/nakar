@@ -1,5 +1,4 @@
-import { useState } from "react";
-import { Button, Stack } from "react-bootstrap";
+import { Stack } from "react-bootstrap";
 import { Collapsable } from "../../Collapsable.tsx";
 import { ValueDisplay } from "./ValueDisplay.tsx";
 import { RoomContext } from "../../../../pages/Room.tsx";

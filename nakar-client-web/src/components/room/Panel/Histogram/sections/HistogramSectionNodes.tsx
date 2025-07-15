@@ -1,12 +1,9 @@
-import { Collapsable } from "../../../Collapsable.tsx";
-import { EmptyHint } from "../EmptyHint.tsx";
 import { ValueDisplay } from "../ValueDisplay.tsx";
 import { getBackgroundColor } from "../../../../../lib/color/getBackgroundColor.ts";
 import { resultOrThrow } from "../../../../../lib/data/resultOrThrow.ts";
 import { postRoomActionDeleteElements } from "../../../../../../src-gen";
-import { Button, Stack } from "react-bootstrap";
+import { Stack } from "react-bootstrap";
 import { RoomContext } from "../../../../../pages/Room.tsx";
-import { useState } from "react";
 import { useBearStore } from "../../../../../lib/state/useBearStore.ts";
 import { DynamicList } from "../../../DynamicList.tsx";
 

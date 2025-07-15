@@ -7,7 +7,6 @@ import { resultOrThrow } from "../../../../lib/data/resultOrThrow.ts";
 import { getScenarios } from "../../../../../src-gen";
 import { useState } from "react";
 import { ScenarioGroupList } from "./ScenarioGroupList.tsx";
-import { Stack } from "react-bootstrap";
 
 export function ScenariosPanel(props: {
   context: AppContext;

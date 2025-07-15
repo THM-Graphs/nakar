@@ -6,13 +6,13 @@ import {
   WSEventSetNodeLocks,
 } from "../../../src-gen";
 import * as d3 from "d3";
+import { ZoomBehavior } from "d3";
 import { getBackgroundColor } from "../color/getBackgroundColor.ts";
 import { getTextColor } from "../color/getTextColor.ts";
 import { UserTheme } from "../theme/UserTheme.ts";
 import { Observable, Subject, throttleTime } from "rxjs";
 import { D3RendererState } from "./D3RendererState.ts";
 import { D3Calculator } from "./D3Calculator.ts";
-import { ZoomBehavior } from "d3";
 
 const fps = 30;
 const strokeWidth: number = 3;

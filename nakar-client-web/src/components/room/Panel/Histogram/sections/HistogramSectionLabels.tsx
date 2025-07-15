@@ -1,4 +1,3 @@
-import { Collapsable } from "../../../Collapsable.tsx";
 import { ValueDisplay } from "../ValueDisplay.tsx";
 import { getBackgroundColor } from "../../../../../lib/color/getBackgroundColor.ts";
 import { resultOrThrow } from "../../../../../lib/data/resultOrThrow.ts";

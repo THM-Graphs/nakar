@@ -17,7 +17,6 @@ import { match } from "ts-pattern";
 import { Label } from "../../Canvas/Label.tsx";
 import { QueryPanelStatsDisplay } from "./QueryPanelStatsDisplay.tsx";
 import { DynamicList } from "../../DynamicList.tsx";
-import { numberFormat } from "../../../../lib/data/numberFormat.ts";
 
 export function QueryPanel(props: { roomContext: RoomContext }) {
   const query = useBearStore((s) => s.room.panels.query);

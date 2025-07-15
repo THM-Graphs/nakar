@@ -5,9 +5,9 @@ import {
 } from '../../../src-gen/schema';
 import {
   BehaviorSubject,
+  distinctUntilChanged,
   Observable,
   Subject,
-  distinctUntilChanged,
 } from 'rxjs';
 import { DisconnectReason } from 'socket.io';
 import { LoggerService } from '../logger/LoggerService';

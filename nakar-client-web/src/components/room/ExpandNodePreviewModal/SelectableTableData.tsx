@@ -1,7 +1,5 @@
 import { ExpandNodePreviewElement } from "../../../../src-gen";
-import { useState } from "react";
-import { Form, FormCheck, Stack } from "react-bootstrap";
-import { NavbarButton } from "../../shared/NavbarButton.tsx";
+import { FormCheck, Stack } from "react-bootstrap";
 import { DynamicList } from "../DynamicList.tsx";
 import clsx from "clsx";
 

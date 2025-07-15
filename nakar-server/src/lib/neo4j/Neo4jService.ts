@@ -18,7 +18,6 @@ import { ExpandNodePreviewEntry } from './expand-node-preview/ExpandNodePreviewE
 import { SMap } from '../tools/Map';
 import { ToManyElementsError } from './ToManyElementsError';
 import { SchemaDatabaseStats } from '../../../src-gen/schema';
-import { z } from 'zod';
 
 export class Neo4jService implements ApplicationService {
   public static readonly maximalElements: number = 500;

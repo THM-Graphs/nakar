@@ -1,5 +1,3 @@
-import { Collapsable } from "../../../Collapsable.tsx";
-import { EmptyHint } from "../EmptyHint.tsx";
 import { Stack } from "react-bootstrap";
 import { postRoomActionDeleteElements } from "../../../../../../src-gen";
 import { RoomContext } from "../../../../../pages/Room.tsx";
