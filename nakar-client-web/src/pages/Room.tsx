@@ -10,7 +10,6 @@ import {
   Graph,
   Room as RoomSchema,
   WSActionLeaveRoom,
-  WSEventPresentExpandNodePreview,
 } from "../../src-gen";
 import { LoaderFunctionArgs, useLoaderData, useNavigate } from "react-router";
 import { resultOrThrow } from "../lib/data/resultOrThrow.ts";
@@ -86,9 +85,6 @@ export function Room(props: { context: AppContext }) {
   );
   const pushNotification = useBearStore((s) => s.room.ui.pushNotification);
   const navigate = useNavigate();
-  const showExpandNodePreview = useBearStore(
-    (s) => s.room.scenario.expandNodePreview.open,
-  );
 
   useEffect(() => {
     setScenarios(roomContext.initialScenariosData);
@@ -153,16 +149,6 @@ export function Room(props: { context: AppContext }) {
           .with({ type: "WSEventKick" }, () => {
             void navigate("/");
           })
-          .with(
-            { type: "WSEventPresentExpandNodePreview" },
-            (event: WSEventPresentExpandNodePreview) => {
-              showExpandNodePreview({
-                relationships: event.relationships,
-                labels: event.labels,
-                nodeId: event.nodeId,
-              });
-            },
-          )
           .exhaustive();
       }),
     ];

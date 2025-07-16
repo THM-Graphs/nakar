@@ -583,7 +583,7 @@ export interface components {
             readonly nodeCount: number;
         };
         readonly WSClientToServerMessage: components["schemas"]["WSActionJoinRoom"] | components["schemas"]["WSActionLeaveRoom"] | components["schemas"]["WSActionGrabNode"] | components["schemas"]["WSActionMoveNodes"] | components["schemas"]["WSActionUngrabNode"];
-        readonly WSServerToClientMessage: components["schemas"]["WSEventNodesMoved"] | components["schemas"]["WSEventRoomChanged"] | components["schemas"]["WSEventNotification"] | components["schemas"]["WSEventGraphElementsChanged"] | components["schemas"]["WSEventGraphMetaDataChanged"] | components["schemas"]["WSEventGraphTableChanged"] | components["schemas"]["WSEventProgress"] | components["schemas"]["WSEventClearProgress"] | components["schemas"]["WSEventSetNodeLocks"] | components["schemas"]["WSEventLockUi"] | components["schemas"]["WSEventUnlockUi"] | components["schemas"]["WSEventPerformanceChanged"] | components["schemas"]["WSEventKick"] | components["schemas"]["WSEventPresentExpandNodePreview"];
+        readonly WSServerToClientMessage: components["schemas"]["WSEventNodesMoved"] | components["schemas"]["WSEventRoomChanged"] | components["schemas"]["WSEventNotification"] | components["schemas"]["WSEventGraphElementsChanged"] | components["schemas"]["WSEventGraphMetaDataChanged"] | components["schemas"]["WSEventGraphTableChanged"] | components["schemas"]["WSEventProgress"] | components["schemas"]["WSEventClearProgress"] | components["schemas"]["WSEventSetNodeLocks"] | components["schemas"]["WSEventLockUi"] | components["schemas"]["WSEventUnlockUi"] | components["schemas"]["WSEventPerformanceChanged"] | components["schemas"]["WSEventKick"];
         readonly WSActionJoinRoom: {
             /** @enum {string} */
             readonly type: "WSActionJoinRoom";
@@ -675,13 +675,6 @@ export interface components {
             /** @enum {string} */
             readonly type: "WSEventKick";
         };
-        readonly WSEventPresentExpandNodePreview: {
-            /** @enum {string} */
-            readonly type: "WSEventPresentExpandNodePreview";
-            readonly nodeId: string;
-            readonly relationships: readonly components["schemas"]["ExpandNodePreviewElement"][];
-            readonly labels: readonly components["schemas"]["ExpandNodePreviewElement"][];
-        };
     };
     responses: never;
     parameters: never;
@@ -739,7 +732,6 @@ export type SchemaWsEventLockUi = components['schemas']['WSEventLockUi'];
 export type SchemaWsEventUnlockUi = components['schemas']['WSEventUnlockUi'];
 export type SchemaWsEventPerformanceChanged = components['schemas']['WSEventPerformanceChanged'];
 export type SchemaWsEventKick = components['schemas']['WSEventKick'];
-export type SchemaWsEventPresentExpandNodePreview = components['schemas']['WSEventPresentExpandNodePreview'];
 export type $defs = Record<string, never>;
 export interface operations {
     readonly getScenarios: {
@@ -967,7 +959,12 @@ export interface operations {
                 headers: {
                     readonly [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    readonly "application/json": {
+                        readonly relationships: readonly components["schemas"]["ExpandNodePreviewElement"][];
+                        readonly labels: readonly components["schemas"]["ExpandNodePreviewElement"][];
+                    } | null;
+                };
             };
         };
     };

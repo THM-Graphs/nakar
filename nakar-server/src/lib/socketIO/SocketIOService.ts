@@ -18,7 +18,6 @@ import {
   SchemaWsEventLockUi,
   SchemaWsEventNotification,
   SchemaWsEventPerformanceChanged,
-  SchemaWsEventPresentExpandNodePreview,
   SchemaWsEventProgress,
   SchemaWsEventRoomChanged,
   SchemaWsEventSetNodeLocks,
@@ -52,7 +51,6 @@ import { RoomServiceEventGraphElementsChanged } from '../room/events/RoomService
 import { RoomServiceEventGraphTableChanged } from '../room/events/RoomServiceEventGraphTableChanged';
 import { ConfigService } from '../config/ConfigService';
 import { RoomServiceEventKick } from '../room/events/RoomServiceEventKick';
-import { RoomServiceEventPresentExpandNodePreview } from '../room/events/RoomServiceEventPresentExpandNodePreview';
 
 export type Server = UntypedServer<ClientToServerEvents, ServerToClientEvents>;
 export type Socket = UntypedSocket<ClientToServerEvents, ServerToClientEvents>;
@@ -122,6 +120,23 @@ export class SocketIOService implements ApplicationService {
       return;
     }
     this._io.to(roomId).emit('message', message);
+  }
+
+  public sendToUser(
+    userId: string,
+    message: SchemaWsServerToClientMessage,
+  ): void {
+    const user: WSClient | null = this.sockets.find(
+      (s: WSClient): boolean => s.id === userId,
+    );
+    if (user == null) {
+      this._logger.error(
+        this,
+        `Unable to send ${message.type} to user ${userId}. User does not exist.`,
+      );
+      return;
+    }
+    user.send(message);
   }
 
   public handleRoomError(roomId: string, error: unknown): void {
@@ -433,17 +448,7 @@ export class SocketIOService implements ApplicationService {
               } satisfies SchemaWsEventKick);
             },
           )
-          .with(
-            { type: 'RoomServiceEventPresentExpandNodePreview' },
-            (message: RoomServiceEventPresentExpandNodePreview): void => {
-              this.sendToRoom(message.roomId, {
-                type: 'WSEventPresentExpandNodePreview',
-                nodeId: message.nodeId,
-                relationships: message.relationships,
-                labels: message.labels,
-              } satisfies SchemaWsEventPresentExpandNodePreview);
-            },
-          )
+
           .exhaustive(),
       ).catch((error: unknown): void => {
         this._logger.error(

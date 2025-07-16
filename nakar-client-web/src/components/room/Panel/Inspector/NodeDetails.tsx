@@ -11,12 +11,17 @@ import { RoomContext } from "../../../../pages/Room.tsx";
 import { resultOrThrow } from "../../../../lib/data/resultOrThrow.ts";
 import { Stack } from "react-bootstrap";
 import { Label } from "../../Canvas/Label.tsx";
+import { useBearStore } from "../../../../lib/state/useBearStore.ts";
 
 export function NodeDetails(props: {
   node: Node;
   context: AppContext;
   roomContext: RoomContext;
 }) {
+  const showExpandNodePreview = useBearStore(
+    (s) => s.room.scenario.expandNodePreview.open,
+  );
+
   return (
     <DetailPane
       actions={[
@@ -26,7 +31,7 @@ export function NodeDetails(props: {
           variant: "primary",
           disabled: false,
           action: async () => {
-            resultOrThrow(
+            const result = resultOrThrow(
               await postRoomActionExpandNode({
                 path: {
                   id: props.roomContext.initialRoomData.id,
@@ -34,6 +39,13 @@ export function NodeDetails(props: {
                 body: { nodeId: props.node.id, limit: null },
               }),
             );
+            if (result != null) {
+              showExpandNodePreview({
+                relationships: result.relationships,
+                labels: result.labels,
+                nodeId: props.node.id,
+              });
+            }
           },
         },
         {

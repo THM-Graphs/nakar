@@ -11,11 +11,10 @@ export function mapResult<T, R>(
   onData: (data: T) => R,
   onError: (error: unknown) => R,
 ) {
-  if (result.data != null) {
-    return onData(result.data);
-  } else if (result.error != null) {
+  if (result.error != null) {
     return onError(result.error);
   } else {
-    throw new Error(`Unknown error. Cannot handle result.`);
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    return onData(result.data!);
   }
 }

@@ -51,6 +51,7 @@ import { GetParameterizedScenariosDBDTO } from '../database/dto/GetParameterized
 import { GetDatabaseDBDTO } from '../database/dto/GetDatabaseDBDTO';
 import { Neo4jDatabaseInfo } from '../neo4j/Neo4jDatabaseInfo';
 import { Neo4jService } from '../neo4j/Neo4jService';
+import { ExpandNodePreview } from '../neo4j/expand-node-preview/ExpandNodePreview';
 
 export class HTTPService implements ApplicationService {
   private readonly _app: Application;
@@ -389,25 +390,33 @@ export class HTTPService implements ApplicationService {
 
     this._app.post(
       '/room/:id/actions/expand-node',
-      this._handle(async (req: Request): Promise<void> => {
-        const room: GetRoomDBDTO = await this._assertRoom(req);
+      this._handle(
+        async (
+          req: Request,
+        ): Promise<
+          operations['postRoomActionExpandNode']['responses']['200']['content']['application/json']
+        > => {
+          const room: GetRoomDBDTO = await this._assertRoom(req);
 
-        type Body =
-          operations['postRoomActionExpandNode']['requestBody']['content']['application/json'];
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-        const requestBody: Body = req.body as Body;
+          type Body =
+            operations['postRoomActionExpandNode']['requestBody']['content']['application/json'];
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+          const requestBody: Body = req.body as Body;
 
-        await this._roomService.expandNode({
-          roomId: room.documentId,
-          nodeId: requestBody.nodeId,
-          limit: requestBody.limit
-            ? {
-                relationships: new SSet(requestBody.limit.relationships),
-                labels: new SSet(requestBody.limit.labels),
-              }
-            : null,
-        });
-      }),
+          const result: ExpandNodePreview | null =
+            await this._roomService.expandNode({
+              roomId: room.documentId,
+              nodeId: requestBody.nodeId,
+              limit: requestBody.limit
+                ? {
+                    relationships: new SSet(requestBody.limit.relationships),
+                    labels: new SSet(requestBody.limit.labels),
+                  }
+                : null,
+            });
+          return result;
+        },
+      ),
     );
 
     this._app.post(

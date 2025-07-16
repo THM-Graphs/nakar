@@ -34,7 +34,6 @@ import { FinalGraphDisplayConfiguration } from './scenario-pipeline/display-conf
 import { RoomServiceEventKick } from './events/RoomServiceEventKick';
 import { ToManyElementsError } from '../neo4j/ToManyElementsError';
 import { ExpandNodePreview } from '../neo4j/expand-node-preview/ExpandNodePreview';
-import { RoomServiceEventPresentExpandNodePreview } from './events/RoomServiceEventPresentExpandNodePreview';
 import { NotFound } from 'http-errors';
 import { MutableEdgeIndex } from './graph/MutableEdgeIndex';
 import { Range } from '../tools/Range';
@@ -310,7 +309,7 @@ export class RoomService implements ApplicationService {
       labels: SSet<string>;
       relationships: SSet<string>;
     } | null;
-  }): Promise<void> {
+  }): Promise<ExpandNodePreview | null> {
     const oldGraph: MutableGraph = this.getGraph(params.roomId);
     const displayConfiguration: FinalGraphDisplayConfiguration =
       oldGraph.metaData.scenarioId != null
@@ -319,10 +318,10 @@ export class RoomService implements ApplicationService {
           )
         : FinalGraphDisplayConfiguration.empty();
 
-    await this._runWithRoomLock(
+    return await this._runWithRoomLock(
       params.roomId,
       'Expanding nodes',
-      async (): Promise<void> => {
+      async (): Promise<ExpandNodePreview | null> => {
         const result: ExpandNodesResult = {
           nodesAddedCount: 0,
           edgeAddedCount: 0,
@@ -404,6 +403,8 @@ export class RoomService implements ApplicationService {
             nodesAdded: result.nodesAddedCount,
             edgesAdded: result.edgeAddedCount,
           } satisfies RoomServiceEventGraphElementsChanged);
+
+          return null;
         } catch (error: unknown) {
           if (error instanceof ToManyElementsError) {
             const expandNodePreview: ExpandNodePreview =
@@ -411,13 +412,7 @@ export class RoomService implements ApplicationService {
                 neo4jDatabaseInfo,
                 new SSet<string>([params.nodeId]),
               );
-            this._onEvent.next({
-              type: 'RoomServiceEventPresentExpandNodePreview',
-              roomId: params.roomId,
-              nodeId: params.nodeId,
-              labels: expandNodePreview.labels,
-              relationships: expandNodePreview.relationships,
-            } satisfies RoomServiceEventPresentExpandNodePreview);
+            return expandNodePreview;
           } else {
             throw error;
           }

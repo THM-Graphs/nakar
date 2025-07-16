@@ -230,6 +230,23 @@ paths:
       responses:
         "200":
           description: "OK"
+          content:
+            application/json:
+              schema:
+                type: object
+                nullable: true
+                properties:
+                  relationships:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/ExpandNodePreviewElement"
+                  labels:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/ExpandNodePreviewElement"
+                required:
+                  - relationships
+                  - labels
 
   /room/{id}/actions/delete-elements:
     post:
@@ -1171,7 +1188,6 @@ components:
         - $ref: "#/components/schemas/WSEventUnlockUi"
         - $ref: "#/components/schemas/WSEventPerformanceChanged"
         - $ref: "#/components/schemas/WSEventKick"
-        - $ref: "#/components/schemas/WSEventPresentExpandNodePreview"
 
     WSActionJoinRoom:
       type: object
@@ -1395,25 +1411,3 @@ components:
           enum: ["WSEventKick"]
       required:
         - type
-
-    WSEventPresentExpandNodePreview:
-      type: object
-      properties:
-        type:
-          type: string
-          enum: ["WSEventPresentExpandNodePreview"]
-        nodeId:
-          type: string
-        relationships:
-          type: array
-          items:
-            $ref: "#/components/schemas/ExpandNodePreviewElement"
-        labels:
-          type: array
-          items:
-            $ref: "#/components/schemas/ExpandNodePreviewElement"
-      required:
-        - type
-        - nodeId
-        - relationships
-        - labels

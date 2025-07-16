@@ -338,29 +338,20 @@ export type WSEventPerformanceChanged = {
 
 export type type14 = 'WSEventPerformanceChanged';
 
-export type WSEventPresentExpandNodePreview = {
-    type: 'WSEventPresentExpandNodePreview';
-    nodeId: string;
-    relationships: Array<ExpandNodePreviewElement>;
-    labels: Array<ExpandNodePreviewElement>;
-};
-
-export type type15 = 'WSEventPresentExpandNodePreview';
-
 export type WSEventProgress = {
     type: 'WSEventProgress';
     progress: (number) | null;
     message: string;
 };
 
-export type type16 = 'WSEventProgress';
+export type type15 = 'WSEventProgress';
 
 export type WSEventRoomChanged = {
     type: 'WSEventRoomChanged';
     roomId: (string) | null;
 };
 
-export type type17 = 'WSEventRoomChanged';
+export type type16 = 'WSEventRoomChanged';
 
 export type WSEventSetNodeLocks = {
     type: 'WSEventSetNodeLocks';
@@ -370,15 +361,15 @@ export type WSEventSetNodeLocks = {
     }>;
 };
 
-export type type18 = 'WSEventSetNodeLocks';
+export type type17 = 'WSEventSetNodeLocks';
 
 export type WSEventUnlockUi = {
     type: 'WSEventUnlockUi';
 };
 
-export type type19 = 'WSEventUnlockUi';
+export type type18 = 'WSEventUnlockUi';
 
-export type WSServerToClientMessage = WSEventNodesMoved | WSEventRoomChanged | WSEventNotification | WSEventGraphElementsChanged | WSEventGraphMetaDataChanged | WSEventGraphTableChanged | WSEventProgress | WSEventClearProgress | WSEventSetNodeLocks | WSEventLockUi | WSEventUnlockUi | WSEventPerformanceChanged | WSEventKick | WSEventPresentExpandNodePreview;
+export type WSServerToClientMessage = WSEventNodesMoved | WSEventRoomChanged | WSEventNotification | WSEventGraphElementsChanged | WSEventGraphMetaDataChanged | WSEventGraphTableChanged | WSEventProgress | WSEventClearProgress | WSEventSetNodeLocks | WSEventLockUi | WSEventUnlockUi | WSEventPerformanceChanged | WSEventKick;
 
 export type GetScenariosData = {
     path: {
@@ -481,7 +472,10 @@ export type PostRoomActionExpandNodeData = {
     };
 };
 
-export type PostRoomActionExpandNodeResponse = (unknown);
+export type PostRoomActionExpandNodeResponse = ({
+    relationships: Array<ExpandNodePreviewElement>;
+    labels: Array<ExpandNodePreviewElement>;
+} | null);
 
 export type PostRoomActionExpandNodeError = unknown;
 
