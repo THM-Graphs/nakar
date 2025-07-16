@@ -1,13 +1,11 @@
 import { postRoomActionLoadScenario, Scenario } from "../../../../../src-gen";
 import { ScenarioCard } from "./ScenarioCard.tsx";
-import { Button, OverlayTrigger, Stack, Tooltip } from "react-bootstrap";
 import { Collapsable } from "../../Collapsable.tsx";
 import { useBearStore } from "../../../../lib/state/useBearStore.ts";
 import { useCallback } from "react";
 import { AppContext } from "../../../../lib/state/AppContext.ts";
 import { RoomContext } from "../../../../pages/Room.tsx";
 import { resultOrThrow } from "../../../../lib/data/resultOrThrow.ts";
-import clsx from "clsx";
 import { ScenarioTitleAndBadges } from "./ScenarioTitleAndBadges.tsx";
 
 export function ScenarioDisplay(props: {
@@ -16,7 +14,6 @@ export function ScenarioDisplay(props: {
   context: AppContext;
   roomContext: RoomContext;
 }) {
-  const uiLocked = useBearStore((s) => s.room.ui.locked);
   const showRunScenarioModal = useBearStore(
     (s) => s.room.scenario.runScenarioModal.open,
   );

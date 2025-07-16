@@ -97,7 +97,7 @@ export function ExpandNodePreviewModal(props: { roomContext: RoomContext }) {
                   <NavbarButton
                     onClick={async () => {
                       close();
-                      await resultOrThrow(
+                      resultOrThrow(
                         await postRoomActionExpandNode({
                           path: {
                             id: props.roomContext.initialRoomData.id,
