@@ -218,11 +218,14 @@ export class RoomService implements ApplicationService {
       'Loading scenario',
       async (): Promise<GetScenarioDBDTO> => {
         const graph: MutableGraph = this._snapshotGraph(params.roomId);
-        graph.fillFromInitialScenario(
-          scenario,
-          displayConfiguration,
-          params.arguments,
-        );
+
+        if (!scenario.additive) {
+          graph.resetFromInitialScenario(
+            scenario,
+            displayConfiguration,
+            params.arguments,
+          );
+        }
 
         for (const query of scenario.queries) {
           if (query.database == null) {
@@ -259,13 +262,13 @@ export class RoomService implements ApplicationService {
           this._compressRelationships(graph, displayConfiguration);
         }
 
-        const physics: PhysicsSimulation = new PhysicsSimulation(
-          graph.toPhysicalGraph(displayConfiguration, this._logger),
-          this._logger,
-          this._profiler,
-        );
-        await physics.run({ maxMs: 1000 });
-        graph.applyPhysicalGraph(physics.getGraph(), this._logger);
+        // const physics: PhysicsSimulation = new PhysicsSimulation(
+        //   graph.toPhysicalGraph(displayConfiguration, this._logger),
+        //   this._logger,
+        //   this._profiler,
+        // );
+        // await physics.run({ maxMs: 1000 });
+        // graph.applyPhysicalGraph(physics.getGraph(), this._logger);
 
         this._onEvent.next({
           type: 'RoomServiceEventGraphMetaDataChanged',

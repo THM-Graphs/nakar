@@ -1010,6 +1010,8 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/ScenarioParameter"
+        additive:
+          type: boolean
       required:
         - id
         - title
@@ -1019,6 +1021,7 @@ components:
         - editUrl
         - parameters
         - queries
+        - additive
 
     ScenarioParameter:
       type: object

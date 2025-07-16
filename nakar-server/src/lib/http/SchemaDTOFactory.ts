@@ -70,6 +70,7 @@ export class SchemaDTOFactory {
         (parameter: GetScenarioParameterDBDTO): SchemaScenarioParameter =>
           this.createSchemaScenarioParameter(parameter),
       ),
+      additive: scenario.additive,
     };
   }
 

@@ -123,7 +123,7 @@ export function DynamicList<T>(props: {
             {props.customTitle ?? props.entityNamePlural}
           </span>
 
-          <span className={"text-muted small font-monospace"}>
+          <span className={"text-muted small"}>
             {numberFormat(props.data.length)}
           </span>
         </Stack>

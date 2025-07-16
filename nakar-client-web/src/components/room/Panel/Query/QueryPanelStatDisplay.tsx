@@ -16,7 +16,7 @@ export function QueryPanelStatDisplay(props: {
       )}
     >
       <span className={"small"}>{props.label}</span>
-      <span className={"small font-monospace user-select-text"}>
+      <span className={"small user-select-text"}>
         {numberFormat(props.value)}
       </span>
     </Stack>

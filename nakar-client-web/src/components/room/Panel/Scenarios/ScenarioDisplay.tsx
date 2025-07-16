@@ -8,6 +8,7 @@ import { AppContext } from "../../../../lib/state/AppContext.ts";
 import { RoomContext } from "../../../../pages/Room.tsx";
 import { resultOrThrow } from "../../../../lib/data/resultOrThrow.ts";
 import clsx from "clsx";
+import { ScenarioTitleAndBadges } from "./ScenarioTitleAndBadges.tsx";
 
 export function ScenarioDisplay(props: {
   scenario: Scenario;
@@ -50,32 +51,13 @@ export function ScenarioDisplay(props: {
       inset={0}
       sticky={false}
       title={
-        <Stack
-          direction={"horizontal"}
-          className={"align-items-baseline"}
-          gap={1}
-        >
-          <Button
-            variant={"link"}
-            disabled={uiLocked}
-            size={"sm"}
-            onClick={(event) => {
-              event.stopPropagation();
-              runScenario();
-            }}
-            className={"p-0"}
-          >
-            <i className={clsx("bi bi-play-circle-fill")}></i>
-          </Button>
-          {props.scenario.parameters.length > 0 && (
-            <OverlayTrigger
-              overlay={<Tooltip>This scenario requires arguments.</Tooltip>}
-            >
-              <i className={"bi bi-code-square small text-mutedd"}></i>
-            </OverlayTrigger>
-          )}
-          <span className={"pe-1 small"}>{props.scenario.title}</span>
-        </Stack>
+        <ScenarioTitleAndBadges
+          scenario={props.scenario}
+          onRun={(event) => {
+            event.stopPropagation();
+            runScenario();
+          }}
+        ></ScenarioTitleAndBadges>
       }
     >
       <ScenarioCard

@@ -209,6 +209,7 @@ export type Scenario = {
     coverUrl: (string) | null;
     editUrl: (string) | null;
     parameters: Array<ScenarioParameter>;
+    additive: boolean;
 };
 
 export type ScenarioArgument = {

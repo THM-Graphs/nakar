@@ -11,4 +11,5 @@ export interface GetScenarioDBDTO {
   readonly scenarioGroup: GetScenarioGroupDBDTO | null;
   readonly parameters: GetScenarioParameterDBDTO[];
   readonly queries: GetScenarioQueryDBDTO[];
+  readonly additive: boolean;
 }

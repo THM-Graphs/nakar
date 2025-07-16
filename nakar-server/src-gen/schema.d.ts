@@ -536,6 +536,7 @@ export interface components {
             readonly coverUrl: string | null;
             readonly editUrl: string | null;
             readonly parameters: readonly components["schemas"]["ScenarioParameter"][];
+            readonly additive: boolean;
         };
         readonly ScenarioParameter: {
             readonly identifier: string;

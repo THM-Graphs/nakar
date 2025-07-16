@@ -67,6 +67,7 @@ export class DatabaseDTOFactory {
           (q: Result<'graph.query'>): GetScenarioQueryDBDTO =>
             this.createGetScenarioQuery(q),
         ) ?? [],
+      additive: db.additive ?? false,
     };
   }
 
@@ -160,43 +161,6 @@ export class DatabaseDTOFactory {
       documentId: parsed.documentId,
       title: parsed.title,
       graphJson: parsed.graphJson,
-    };
-  }
-
-  public createGetScenarioDTOFromUnknown(input: unknown): GetScenarioDBDTO {
-    // eslint-disable-next-line @typescript-eslint/typedef
-    const schema = z.object({
-      documentId: z.string(),
-      title: z.string().nullable(),
-      cover: z.unknown(),
-      description: z.string().nullable(),
-      scenarioGroup: z.unknown(),
-      parameters: z.array(z.unknown()),
-      queries: z.array(z.unknown()),
-    });
-
-    const parsed: z.infer<typeof schema> = schema.parse(input);
-
-    return {
-      documentId: parsed.documentId,
-      title: parsed.title,
-      description: parsed.description,
-      cover:
-        parsed.cover != null
-          ? this._createGetMediaDTOFromUnknown(parsed.cover)
-          : null,
-      scenarioGroup:
-        parsed.scenarioGroup != null
-          ? this.createGetScenarioGroupDTOFromUnknown(parsed.scenarioGroup)
-          : null,
-      parameters: parsed.parameters.map(
-        (parameter: unknown): GetScenarioParameterDBDTO =>
-          this.createScenarioParameterFromUnknown(parameter),
-      ),
-      queries: parsed.queries.map(
-        (q: unknown): GetScenarioQueryDBDTO =>
-          this.createScenarioQueryFromUnknown(q),
-      ),
     };
   }
 

@@ -2,6 +2,7 @@ import { ExpandNodePreviewElement } from "../../../../src-gen";
 import { FormCheck, Stack } from "react-bootstrap";
 import { DynamicList } from "../DynamicList.tsx";
 import clsx from "clsx";
+import { numberFormat } from "../../../lib/data/numberFormat.ts";
 
 export function SelectableTableData(props: {
   title: string;
@@ -58,19 +59,13 @@ export function SelectableTableData(props: {
                   checked={props.selections.has(element.identificator)}
                   readOnly={true}
                 ></FormCheck>
-                <span
-                  className={
-                    "font-monospace text-break flex-grow-1 flex-shrink-1"
-                  }
-                >
+                <span className={"text-break flex-grow-1 flex-shrink-1"}>
                   {element.identificator}
                 </span>
                 <span
-                  className={
-                    "pe-2 text-end font-monospace flex-grow-0 flex-shrink-0 text-end"
-                  }
+                  className={"pe-2 text-end flex-grow-0 flex-shrink-0 text-end"}
                 >
-                  {element.count}
+                  {numberFormat(element.count)}
                 </span>
               </Stack>
             );

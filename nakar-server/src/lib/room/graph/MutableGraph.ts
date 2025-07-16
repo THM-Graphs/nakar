@@ -127,7 +127,7 @@ export class MutableGraph {
     }
   }
 
-  public fillFromInitialScenario(
+  public resetFromInitialScenario(
     scenario: GetScenarioDBDTO,
     displayConfig: FinalGraphDisplayConfiguration,
     scenarioArguments: SMap<string, unknown>,

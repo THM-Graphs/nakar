@@ -9,6 +9,7 @@ import { RoomContext } from "../../../../pages/Room.tsx";
 import { PropertyMenu } from "../../PropertyMenu.tsx";
 import clsx from "clsx";
 import { Collapsable } from "../../Collapsable.tsx";
+import { ClipboardButton } from "../../ClipboardButton.tsx";
 
 export function DetailPane(props: {
   title: string;
@@ -32,28 +33,31 @@ export function DetailPane(props: {
           direction={"horizontal"}
           className={"justify-content-between align-items-baseline"}
         >
-          {props.title.length > titleLengthLimit && !showFullTitle && (
-            <NavbarButton
-              icon={"chevron-right"}
-              className={"align-self-baseline"}
-              onClick={() => {
-                setShowFullTitle(true);
-              }}
-            ></NavbarButton>
-          )}
-          {props.title.length > titleLengthLimit && showFullTitle && (
-            <NavbarButton
-              className={"align-self-baseline"}
-              icon={"chevron-down"}
-              onClick={() => {
-                setShowFullTitle(false);
-              }}
-            ></NavbarButton>
-          )}
+          <Stack className={"flex-grow-0"}>
+            <ClipboardButton text={props.title}></ClipboardButton>
+            {props.title.length > titleLengthLimit && !showFullTitle && (
+              <NavbarButton
+                icon={"chevron-right"}
+                className={"align-self-baseline"}
+                onClick={() => {
+                  setShowFullTitle(true);
+                }}
+              ></NavbarButton>
+            )}
+            {props.title.length > titleLengthLimit && showFullTitle && (
+              <NavbarButton
+                className={"align-self-baseline"}
+                icon={"chevron-down"}
+                onClick={() => {
+                  setShowFullTitle(false);
+                }}
+              ></NavbarButton>
+            )}
+          </Stack>
           <Stack>
             <span
               style={{ overflowWrap: "anywhere", userSelect: "text" }}
-              className={"ps-2 pe-2 fs-5 fw-bold align-self-baseline"}
+              className={"fs-5 fw-bold align-self-baseline"}
             >
               {props.title.length > titleLengthLimit && !showFullTitle
                 ? props.title.substring(0, titleLengthLimit) + "…"
@@ -62,10 +66,22 @@ export function DetailPane(props: {
           </Stack>
           <PropertyMenu
             roomContext={props.roomContext}
-            value={props.elementId}
+            value={props.title}
           ></PropertyMenu>
         </Stack>
       )}
+      <Stack direction={"horizontal"} className={"justify-content-between"}>
+        <Stack direction={"horizontal"} className={"ellipsis"}>
+          <ClipboardButton text={props.elementId}></ClipboardButton>
+          <span className={"ellipsis text-muted small user-select-text"}>
+            {props.elementId}
+          </span>
+        </Stack>
+        <PropertyMenu
+          roomContext={props.roomContext}
+          value={props.elementId}
+        ></PropertyMenu>
+      </Stack>
       {props.subTitleElements}
       <Collapsable
         title={<span className={"small fw-bold"}>Actions</span>}

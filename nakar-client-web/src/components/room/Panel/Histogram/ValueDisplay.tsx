@@ -67,16 +67,13 @@ export function ValueDisplay(props: {
             zIndex: 1,
           }}
           className={clsx(
-            "user-select-text font-monospace small flex-shrink-1 flex-grow-1 ellipsis",
+            "user-select-text small flex-shrink-1 flex-grow-1 ellipsis",
             props.onRemove == null && "ps-1",
           )}
         >
           {props.label}
           {props.subLabel && (
-            <span className={"text-muted font-monospace"}>
-              {" "}
-              ({props.subLabel})
-            </span>
+            <span className={"text-muted"}> ({props.subLabel})</span>
           )}
         </span>
       </Stack>

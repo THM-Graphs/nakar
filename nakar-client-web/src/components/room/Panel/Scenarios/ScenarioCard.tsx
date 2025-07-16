@@ -5,6 +5,7 @@ import { Scenario } from "../../../../../src-gen";
 import { Loading } from "../../../shared/Loading.tsx";
 import { NavbarButton } from "../../../shared/NavbarButton.tsx";
 import { useBearStore } from "../../../../lib/state/useBearStore.ts";
+import { ScenarioCardSection } from "./ScenarioCardSection.tsx";
 
 export function ScenarioCard(props: {
   hidden?: boolean;
@@ -32,7 +33,7 @@ export function ScenarioCard(props: {
       )}
       <Card.Body>
         <Stack gap={2}>
-          <Stack className={"border-bottom pb-2"}>
+          <Stack className={""}>
             <Card.Title>
               <Stack direction={"horizontal"} gap={2}>
                 <ScenarioIcon
@@ -62,8 +63,7 @@ export function ScenarioCard(props: {
             </Button>
           </Stack>
 
-          <Stack className={"border-bottom pb-2"}>
-            <span className={"fw-bold text-muted small"}>Description</span>
+          <ScenarioCardSection title={"Description"}>
             {props.scenario.description ? (
               <Card.Text>
                 <span
@@ -76,22 +76,20 @@ export function ScenarioCard(props: {
             ) : (
               <span className={"text-muted small fst-italic"}>None</span>
             )}
-          </Stack>
+          </ScenarioCardSection>
 
-          <Stack className={"border-bottom pb-2"}>
-            <span className={"fw-bold text-muted small"}>Queries</span>
+          <ScenarioCardSection title={"Queries"}>
             {props.scenario.queries.map((q) => (
               <QueryDisplay
                 query={q}
                 key={q.query + (q.database?.current.id ?? "")}
               ></QueryDisplay>
             ))}
-          </Stack>
+          </ScenarioCardSection>
 
-          <Stack>
-            <span className={"fw-bold text-muted small"}>Parameters</span>
+          <ScenarioCardSection title={"Parameters"}>
             {props.scenario.parameters.length > 0 ? (
-              <ul>
+              <ul className={"mb-0"}>
                 {props.scenario.parameters.map((parameter) => (
                   <li key={parameter.identifier} className={"small"}>
                     {parameter.title}{" "}
@@ -108,7 +106,15 @@ export function ScenarioCard(props: {
             ) : (
               <span className={"text-muted small fst-italic"}>None</span>
             )}
-          </Stack>
+          </ScenarioCardSection>
+
+          <ScenarioCardSection title={"Additive"}>
+            <Card.Text>
+              <span className={"small fst-italic"}>
+                {props.scenario.additive ? "Yes" : "No"}
+              </span>
+            </Card.Text>
+          </ScenarioCardSection>
         </Stack>
       </Card.Body>
     </Card>

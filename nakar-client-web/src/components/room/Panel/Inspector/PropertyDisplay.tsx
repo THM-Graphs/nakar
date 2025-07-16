@@ -15,7 +15,10 @@ export function PropertyDisplay(props: {
   const property = props.property;
   const [showFullValue, setShowFullValue] = useState(false);
   const valueLengthLimit = 100;
-  const stringValue = JSON.stringify(property.value);
+  const stringValue =
+    typeof property.value === "string"
+      ? property.value
+      : JSON.stringify(property.value);
 
   return (
     <Stack
@@ -58,7 +61,7 @@ export function PropertyDisplay(props: {
       )}
       <span
         className={
-          "font-monospace user-select-text pe-2 text-break text-wrap small align-self-baseline"
+          "user-select-text pe-2 text-break text-wrap small align-self-baseline"
         }
       >
         {stringValue.length > valueLengthLimit && !showFullValue

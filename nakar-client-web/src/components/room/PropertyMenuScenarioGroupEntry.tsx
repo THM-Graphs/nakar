@@ -3,6 +3,7 @@ import { RoomContext } from "../../pages/Room.tsx";
 import { useBearStore } from "../../lib/state/useBearStore.ts";
 import { Dropdown, Stack } from "react-bootstrap";
 import { resultOrThrow } from "../../lib/data/resultOrThrow.ts";
+import { ScenarioTitleAndBadges } from "./Panel/Scenarios/ScenarioTitleAndBadges.tsx";
 
 export function PropertyMenuScenarioGroupEntry(props: {
   scenarioGroup: ScenarioGroup;
@@ -62,12 +63,9 @@ export function PropertyMenuScenarioGroupEntry(props: {
               direction={"horizontal"}
               className={"justify-content-between"}
             >
-              <Stack direction={"horizontal"} gap={2}>
-                <i
-                  className={"bi bi-play-circle-fill btn btn-link btn-sm p-0"}
-                ></i>
-                <span className={"small"}>{scenario.title}</span>
-              </Stack>
+              <ScenarioTitleAndBadges
+                scenario={scenario}
+              ></ScenarioTitleAndBadges>
               <span className={"small text-muted"}>{scenarioGroup.title}</span>
             </Stack>
           </Dropdown.Item>
