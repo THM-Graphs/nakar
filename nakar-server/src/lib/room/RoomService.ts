@@ -683,7 +683,6 @@ export class RoomService implements ApplicationService {
     roomId: string;
     databaseId: string;
     query: string;
-    connectResultNodes: boolean;
     replace: boolean;
   }): Promise<void> {
     await this._runWithRoomLock(
@@ -716,9 +715,7 @@ export class RoomService implements ApplicationService {
         graph.edges.addNeo4jEdges(graphElements.relationships);
         graph.tableData = graphElements.tableData;
 
-        if (params.connectResultNodes) {
-          await this._connectNodes(graph);
-        }
+        this._mergeNodes(graph, displayConfiguration);
 
         this._sendActionToWorker(params.roomId, {
           type: 'WTActionSetGraph',

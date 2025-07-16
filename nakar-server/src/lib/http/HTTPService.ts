@@ -509,7 +509,6 @@ export class HTTPService implements ApplicationService {
           roomId: room.documentId,
           query: requestBody.query,
           databaseId: requestBody.databaseId,
-          connectResultNodes: requestBody.connectResultNodes,
           replace: requestBody.replace,
         });
       }),

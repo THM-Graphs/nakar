@@ -560,7 +560,6 @@ export type PostRoomActionRunQueryData = {
     body: {
         databaseId: string;
         query: string;
-        connectResultNodes: boolean;
         replace: boolean;
     };
     path: {

@@ -1125,7 +1125,6 @@ export interface operations {
                 readonly "application/json": {
                     readonly databaseId: string;
                     readonly query: string;
-                    readonly connectResultNodes: boolean;
                     readonly replace: boolean;
                 };
             };

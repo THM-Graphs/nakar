@@ -397,14 +397,11 @@ paths:
                   type: string
                 query:
                   type: string
-                connectResultNodes:
-                  type: boolean
                 replace:
                   type: boolean
               required:
                 - databaseId
                 - query
-                - connectResultNodes
                 - replace
       responses:
         "200":

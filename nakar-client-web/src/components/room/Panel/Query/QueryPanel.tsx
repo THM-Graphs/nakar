@@ -29,7 +29,6 @@ export function QueryPanel(props: { roomContext: RoomContext }) {
     (s) => s.room.ui.pushErrorNotification,
   );
   const [selectedDatabaseId, setSelectedDatabaseId] = useState<string>("");
-  const [connectResultNodes, setConntectResultNodes] = useState(true);
   const [replace, setReplace] = useState(false);
 
   const referencedDatabase: Database | null =
@@ -160,25 +159,14 @@ export function QueryPanel(props: { roomContext: RoomContext }) {
                 <Stack>
                   <Form.Check
                     className={"ms-1"}
-                    id={"connect-result-nodes"}
-                    checked={connectResultNodes}
-                    onChange={(event) => {
-                      setConntectResultNodes(event.target.checked);
-                    }}
-                    label={
-                      <span className={"small text-muted"}>
-                        Connect Result Nodes
-                      </span>
-                    }
-                  ></Form.Check>
-                  <Form.Check
-                    className={"ms-1"}
                     id={"replace"}
                     checked={replace}
                     onChange={(event) => {
                       setReplace(event.target.checked);
                     }}
-                    label={<span className={"small text-muted"}>Replace</span>}
+                    label={
+                      <span className={"small text-muted"}>Replace Graph</span>
+                    }
                   ></Form.Check>
                 </Stack>
                 <NavbarButton
@@ -189,7 +177,6 @@ export function QueryPanel(props: { roomContext: RoomContext }) {
                       await postRoomActionRunQuery({
                         path: { id: props.roomContext.initialRoomData.id },
                         body: {
-                          connectResultNodes: connectResultNodes,
                           databaseId: selectedDatabaseId,
                           query: query.queryText,
                           replace: replace,
