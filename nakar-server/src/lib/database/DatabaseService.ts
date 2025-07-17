@@ -41,53 +41,38 @@ export class DatabaseService implements ApplicationService {
     return this._onRoomDeleted.asObservable();
   }
 
-  public async bootstrap(): Promise<void> {
-    // TODO REPLACE WITH https://strapi.io/blog/what-are-document-service-middleware-and-what-happened-to-lifecycle-hooks-1
-    // strapi.db.lifecycles.subscribe({
-    //   models: ['api::room.room'],
-    //   afterCreate: (event: Event): void => {
-    //     this._printDatabaseEvent(event);
-    //     const room: GetRoomDBDTO =
-    //       this._databaseDtoFactory.createGetRoomDTOFromStrapi(
-    //         // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-    //         event.result as Result<'api::room.room'>,
-    //       );
-    //     this._onRoomAdded.next(room);
-    //   },
-    //   afterCreateMany: (event: Event): void => {
-    //     this._printDatabaseEvent(event);
-    //     throw new Error('This method is not supported.');
-    //   },
-    //   beforeDelete: async (event: Event): Promise<void> => {
-    //     this._printDatabaseEvent(event);
-    //     // eslint-disable-next-line @typescript-eslint/typedef
-    //     const paramsSchema = z.object({
-    //       where: z.object({
-    //         id: z.number(),
-    //       }),
-    //     });
-    //     type Params = z.infer<typeof paramsSchema>;
-    //     const params: Params = paramsSchema.parse(event.params);
-    //     const id: number = params.where.id;
-    //     const roomResult: Result<'api::room.room'> | null = await strapi
-    //       .documents('api::room.room')
-    //       .findFirst({ filters: { id: { $eq: id } } });
-    //     if (roomResult == null) {
-    //       this._logger.error(
-    //         this,
-    //         `Cannot find room with db id ${id.toString()}. Unable to handle ${event.action}.`,
-    //       );
-    //       return;
-    //     }
-    //     const room: GetRoomDBDTO =
-    //       this._databaseDtoFactory.createGetRoomDTOFromStrapi(roomResult);
-    //     this._onRoomDeleted.next(room);
-    //   },
-    //   beforeDeleteMany: (event: Event): void => {
-    //     this._printDatabaseEvent(event);
-    //     throw new Error('This method is not supported.');
-    //   },
-    // });
+  public bootstrap(): void {
+    // eslint-disable-next-line @typescript-eslint/typedef
+    strapi.documents.use(async (context, next) => {
+      if (context.uid === 'api::room.room') {
+        this._logger.debug(this, `Room ${context.action}`);
+        if (context.action === 'publish') {
+          const id: string = context.params.documentId;
+          setTimeout((): void => {
+            (async (): Promise<void> => {
+              const room: GetRoomDBDTO | null = await this.getRoom(id);
+              if (room !== null) {
+                this._onRoomAdded.next(room);
+              } else {
+                this._logger.error(this, `Newly created room ${id} not found.`);
+              }
+            })().catch((error: unknown): void => {
+              this._logger.error(this, error);
+            });
+          }, 1000);
+        }
+        if (context.action === 'delete') {
+          const id: string = context.params.documentId;
+          const room: GetRoomDBDTO | null = await this.getRoom(id);
+          if (room !== null) {
+            this._onRoomDeleted.next(room);
+          } else {
+            this._logger.error(this, `Newly deleted room ${id} not found.`);
+          }
+        }
+      }
+      return next();
+    });
   }
 
   public destroy(): void | Promise<void> {
