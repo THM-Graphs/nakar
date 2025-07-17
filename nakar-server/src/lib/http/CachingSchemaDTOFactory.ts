@@ -51,11 +51,9 @@ export class CachingSchemaDTOFactory {
     graph: MutableGraph,
   ): Promise<SchemaGraphElements> {
     const config: FinalGraphDisplayConfiguration =
-      graph.metaData.scenarioId != null
-        ? await this._database.getGraphDisplayConfiguration(
-            graph.metaData.scenarioId,
-          )
-        : FinalGraphDisplayConfiguration.empty();
+      await this._database.getGraphDisplayConfiguration(
+        graph.metaData.scenarioId,
+      );
     const degreeRange: Range | null = config.growNodesBasedOnDegree
       ? graph.nodes.getNodeDegreeRange(graph)
       : null;

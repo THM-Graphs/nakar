@@ -69,7 +69,7 @@ export function CanvasToolbar(props: {
       )}
       <Stack direction={"horizontal"} className={"flex-wrap"}>
         <NavbarButton
-          disabled={graph.metaData.scenario == null || uiLocked}
+          disabled={uiLocked}
           icon={"intersect"}
           title={"Connect Result Nodes"}
           onClick={async () => {

@@ -235,8 +235,16 @@ export class DatabaseService implements ApplicationService {
   }
 
   public async getGraphDisplayConfiguration(
-    scenarioId: string,
+    scenarioId: string | null,
   ): Promise<FinalGraphDisplayConfiguration> {
+    if (scenarioId == null) {
+      this._logger.warn(
+        this,
+        'Trying to create FinalGraphDisplayConfiguration with null scenarioId. Will create empty config.',
+      );
+      return FinalGraphDisplayConfiguration.empty();
+    }
+
     // eslint-disable-next-line @typescript-eslint/typedef
     const populate = {
       graphDisplayConfiguration: {
@@ -274,7 +282,11 @@ export class DatabaseService implements ApplicationService {
       },
     });
     if (scenario == null) {
-      throw new Error(`Scenario ${scenarioId} not found.`);
+      this._logger.warn(
+        this,
+        `Cannot find scenario ${scenarioId} to build FinalGraphDisplayConfiguration. Will create an empty config.`,
+      );
+      return FinalGraphDisplayConfiguration.empty();
     }
     const displayConfiguration: FinalGraphDisplayConfiguration =
       MergableGraphDisplayConfiguration.createFromDb(

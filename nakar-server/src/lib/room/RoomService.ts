@@ -69,7 +69,12 @@ export class RoomService implements ApplicationService {
     try {
       await this._initRooms();
     } catch (error) {
+      this._logger.error(
+        this,
+        'An unhandled error occured during init of rooms.',
+      );
       this._logger.error(this, error);
+      process.exit(1);
     }
 
     this._database.onRoomAdded$.subscribe((room: GetRoomDBDTO): void => {
@@ -312,11 +317,9 @@ export class RoomService implements ApplicationService {
   }): Promise<ExpandNodePreview | null> {
     const oldGraph: MutableGraph = this.getGraph(params.roomId);
     const displayConfiguration: FinalGraphDisplayConfiguration =
-      oldGraph.metaData.scenarioId != null
-        ? await this._database.getGraphDisplayConfiguration(
-            oldGraph.metaData.scenarioId,
-          )
-        : FinalGraphDisplayConfiguration.empty();
+      await this._database.getGraphDisplayConfiguration(
+        oldGraph.metaData.scenarioId,
+      );
 
     return await this._runWithRoomLock(
       params.roomId,
@@ -431,11 +434,9 @@ export class RoomService implements ApplicationService {
       async (): Promise<void> => {
         const graph: MutableGraph = this._snapshotGraph(params.roomId);
         const config: FinalGraphDisplayConfiguration =
-          graph.metaData.scenarioId != null
-            ? await this._database.getGraphDisplayConfiguration(
-                graph.metaData.scenarioId,
-              )
-            : FinalGraphDisplayConfiguration.empty();
+          await this._database.getGraphDisplayConfiguration(
+            graph.metaData.scenarioId,
+          );
 
         const result: ExpandNodesResult = {
           nodesAddedCount: 0,
@@ -605,11 +606,9 @@ export class RoomService implements ApplicationService {
     this._graphs.set(params.roomId, graph);
 
     const displayConfiguration: FinalGraphDisplayConfiguration =
-      graph.metaData.scenarioId != null
-        ? await this._database.getGraphDisplayConfiguration(
-            graph.metaData.scenarioId,
-          )
-        : FinalGraphDisplayConfiguration.empty();
+      await this._database.getGraphDisplayConfiguration(
+        graph.metaData.scenarioId,
+      );
 
     await this.saveGraph(params.roomId);
     this._sendActionToWorker(params.roomId, {
@@ -647,11 +646,9 @@ export class RoomService implements ApplicationService {
     this._graphs.set(params.roomId, graph);
 
     const displayConfiguration: FinalGraphDisplayConfiguration =
-      graph.metaData.scenarioId != null
-        ? await this._database.getGraphDisplayConfiguration(
-            graph.metaData.scenarioId,
-          )
-        : FinalGraphDisplayConfiguration.empty();
+      await this._database.getGraphDisplayConfiguration(
+        graph.metaData.scenarioId,
+      );
 
     await this.saveGraph(params.roomId);
     this._sendActionToWorker(params.roomId, {
@@ -690,9 +687,7 @@ export class RoomService implements ApplicationService {
         const scenarioId: string | null = this.getGraph(params.roomId).metaData
           .scenarioId;
         const displayConfiguration: FinalGraphDisplayConfiguration =
-          scenarioId != null
-            ? await this._database.getGraphDisplayConfiguration(scenarioId)
-            : FinalGraphDisplayConfiguration.empty();
+          await this._database.getGraphDisplayConfiguration(scenarioId);
         const database: GetDatabaseDBDTO | null =
           await this._database.getDatabase(params.databaseId);
         if (database == null) {
@@ -753,9 +748,7 @@ export class RoomService implements ApplicationService {
         const oldGraph: MutableGraph = this.getGraph(params.roomId);
         const scenarioId: string | null = oldGraph.metaData.scenarioId;
         const displayConfiguration: FinalGraphDisplayConfiguration =
-          scenarioId != null
-            ? await this._database.getGraphDisplayConfiguration(scenarioId)
-            : FinalGraphDisplayConfiguration.empty();
+          await this._database.getGraphDisplayConfiguration(scenarioId);
 
         const graph: MutableGraph = this._snapshotGraph(params.roomId);
         const result: number = await this._connectNodes(graph);
@@ -845,6 +838,10 @@ export class RoomService implements ApplicationService {
     );
 
     if (room.graphJson == null) {
+      this._logger.debug(
+        this,
+        `Will init room ${room.documentId} with empty graph, because graph json is null.`,
+      );
       this._graphs.set(room.documentId, MutableGraph.empty());
     } else {
       try {
@@ -859,7 +856,7 @@ export class RoomService implements ApplicationService {
       } catch (error) {
         this._logger.error(
           this,
-          `Unable to load graph from Room: ${JSON.stringify(error)}`,
+          `Unable to load graph from Room: ${JSON.stringify(error)}. Will init room ${room.documentId} with empty graph.`,
         );
         this._graphs.set(room.documentId, MutableGraph.empty());
       }
@@ -877,11 +874,9 @@ export class RoomService implements ApplicationService {
 
     const graph: MutableGraph = this.getGraph(roomId);
     const config: FinalGraphDisplayConfiguration =
-      graph.metaData.scenarioId != null
-        ? await this._database.getGraphDisplayConfiguration(
-            graph.metaData.scenarioId,
-          )
-        : FinalGraphDisplayConfiguration.empty();
+      await this._database.getGraphDisplayConfiguration(
+        graph.metaData.scenarioId,
+      );
 
     const physicalGraph: PhysicalGraph = this.getGraph(roomId).toPhysicalGraph(
       config,
