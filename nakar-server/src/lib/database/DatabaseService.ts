@@ -7,7 +7,6 @@ import { Result } from '@strapi/types/dist/modules/documents';
 import { LoggerService } from '../logger/LoggerService';
 import { ApplicationService } from '../application/ApplicationService';
 import { GetMediaDBDTO } from './dto/GetMediaDBDTO';
-import { FileStream } from '../fs/FileStream';
 import z from 'zod';
 import { DatabaseDTOFactory } from './DatabaseDTOFactory';
 import { SaveDatabaseDBDTO } from './dto/SaveDatabaseDBDTO';

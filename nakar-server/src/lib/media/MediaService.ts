@@ -5,7 +5,6 @@ import { FileStream } from '../fs/FileStream';
 import { ConfigService } from '../config/ConfigService';
 import path from 'path';
 import fs from 'node:fs/promises';
-import { Service } from '@strapi/types/dist/core';
 import os from 'node:os';
 import { v4 } from 'uuid';
 import sanitize from 'sanitize-filename';
@@ -39,9 +38,9 @@ export class MediaService implements ApplicationService {
       );
       return null;
     }
-    const path: string = `${strapi.dirs.static.public}/uploads/${media.hash}${media.ext}`;
+    const filePath: string = `${strapi.dirs.static.public}/uploads/${media.hash}${media.ext}`;
     return new FileStream(
-      path,
+      filePath,
       '',
       `${targetFileNameWithoutExtension}${media.ext}`,
     );
@@ -106,7 +105,7 @@ export class MediaService implements ApplicationService {
   }
 
   public async deleteFile(reference: GetMediaDBDTO): Promise<GetMediaDBDTO> {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment,@typescript-eslint/no-unsafe-call
     const result: GetMediaDBDTO[] = await strapi
       .plugin('upload')
       .service('file')
