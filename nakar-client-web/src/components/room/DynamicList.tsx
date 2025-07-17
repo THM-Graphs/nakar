@@ -50,7 +50,7 @@ export function DynamicList<T>(props: {
 
   const list = (
     <Stack className={"flex-shrink-1 align-items-stretch"}>
-      {useFilter && props.data.length > previewLimit && (
+      {useFilter && (
         <Stack
           direction={"horizontal"}
           className={"bg-body border-top border-bottom ps-2"}

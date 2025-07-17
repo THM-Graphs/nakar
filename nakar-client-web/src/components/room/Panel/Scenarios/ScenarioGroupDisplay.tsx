@@ -20,6 +20,7 @@ export function ScenarioGroupDisplay(props: {
       filter={(exp, s) =>
         (s.title ?? "").toLowerCase().includes(exp.toLowerCase())
       }
+      previewLimit={100}
       className={"border-bottom"}
       render={(list) => (
         <>
