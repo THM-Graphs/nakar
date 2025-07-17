@@ -423,7 +423,6 @@ export interface ApiRoomRoom extends Struct.CollectionTypeSchema {
       'graph.graph-display-configuration',
       false
     >;
-    graphJson: Schema.Attribute.Text;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<'oneToMany', 'api::room.room'> &
       Schema.Attribute.Private;

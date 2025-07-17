@@ -15,9 +15,6 @@
     "title": {
       "type": "string"
     },
-    "graphJson": {
-      "type": "text"
-    },
     "scenarioGroups": {
       "type": "relation",
       "relation": "oneToMany",
@@ -30,11 +27,12 @@
       "component": "graph.graph-display-configuration"
     },
     "graph": {
+      "type": "media",
+      "multiple": false,
+      "required": false,
       "allowedTypes": [
         "files"
-      ],
-      "type": "media",
-      "multiple": false
+      ]
     }
   }
 }
