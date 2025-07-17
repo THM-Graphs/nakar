@@ -42,7 +42,7 @@ export class DatabaseService implements ApplicationService {
   }
 
   public bootstrap(): void {
-    // eslint-disable-next-line @typescript-eslint/typedef
+    // eslint-disable-next-line @typescript-eslint/typedef,@typescript-eslint/explicit-function-return-type
     strapi.documents.use(async (context, next) => {
       if (context.uid === 'api::room.room') {
         this._logger.debug(this, `Room ${context.action}`);
