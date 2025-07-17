@@ -622,6 +622,8 @@ components:
           type: string
         locked:
           type: boolean
+        compressedCount:
+          type: integer
       required:
         - id
         - title
@@ -637,6 +639,7 @@ components:
         - customTitleColor
         - source
         - locked
+        - compressedCount
 
     PhysicalNode:
       type: object

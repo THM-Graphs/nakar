@@ -312,6 +312,7 @@ export class CachingSchemaDTOFactory {
       customTitleColor: node.customTitleColor(graph, config, this._logger),
       source: (await this._getDatabase(node.source))?.title ?? node.source,
       locked: node.locked,
+      compressedCount: node.compressedCount,
     };
   }
 

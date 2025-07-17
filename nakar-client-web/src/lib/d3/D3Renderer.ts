@@ -395,10 +395,14 @@ export class D3Renderer {
       .append("xhtml:span")
       .text((d) => {
         const titleCut = 50;
-        if (d.title.length > titleCut) {
-          return d.title.substring(0, titleCut) + "...";
+        const fullTitle =
+          d.compressedCount > 1
+            ? `${d.title} (${d.compressedCount.toString()})`
+            : d.title;
+        if (fullTitle.length > titleCut) {
+          return fullTitle.substring(0, titleCut) + "…";
         } else {
-          return d.title;
+          return fullTitle;
         }
       });
 
@@ -602,13 +606,15 @@ export class D3Renderer {
   private _optimizePerformance() {
     const performanceOpimazations =
       this.getZoom() <= performanceZoomThreshhold &&
-      this.graphState.nodes.length + this.graphState.links.length > 500;
+      this.graphState.nodes.length + this.graphState.links.length > 300;
     if (performanceOpimazations) {
       this.linkLabelSelection?.attr("hidden", true);
       this.nodeSelection?.select("foreignObject").attr("hidden", true);
+      this.linkPathSelection?.attr("marker-end", null);
     } else {
       this.linkLabelSelection?.attr("hidden", null);
       this.nodeSelection?.select("foreignObject").attr("hidden", null);
+      this.linkPathSelection?.attr("marker-end", "url(#arrow)");
     }
   }
 }

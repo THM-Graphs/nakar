@@ -2,25 +2,10 @@ import { ScaleType } from '../../../tools/ScaleType';
 import { FinalNodeDisplayConfiguration } from './FinalNodeDisplayConfiguration';
 import { SMap } from '../../../tools/Map';
 import { MergableGraphDisplayConfiguration } from './MergableGraphDisplayConfiguration';
-import { z } from 'zod';
 import { MergeNodeConfiguration } from './MergeNodeConfiguration';
 import { SSet } from '../../../tools/Set';
 
 export class FinalGraphDisplayConfiguration {
-  // eslint-disable-next-line @typescript-eslint/typedef
-  public static readonly schema = z.object({
-    connectResultNodes: z.boolean(),
-    growNodesBasedOnDegree: z.boolean(),
-    growNodesBasedOnDegreeFactor: z.number(),
-    nodeDisplayConfigurations: z.record(
-      z.string(),
-      FinalNodeDisplayConfiguration.schema,
-    ),
-    compressRelationships: z.boolean(),
-    compressRelationshipsWidthFactor: z.number(),
-    scaleType: z.nativeEnum(ScaleType),
-  });
-
   public readonly connectResultNodes: boolean;
   public readonly growNodesBasedOnDegree: boolean;
   public readonly growNodesBasedOnDegreeFactor: number;

@@ -13,6 +13,10 @@ export class MutablePropertyCollection {
     this.properties = data.properties;
   }
 
+  public static empty(): MutablePropertyCollection {
+    return new MutablePropertyCollection({ properties: new SMap() });
+  }
+
   public static fromPlain(
     data: z.infer<typeof this.schema>,
   ): MutablePropertyCollection {

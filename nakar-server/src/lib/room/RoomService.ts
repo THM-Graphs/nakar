@@ -43,6 +43,7 @@ import { ProfilerTask } from '../profiler/ProfilerTask';
 import { v4 } from 'uuid';
 import { MutableNodeIndex } from './graph/MutableNodeIndex';
 import { ExpandNodesResult } from './ExpandNodesResult';
+import { FinalNodeDisplayConfiguration } from './scenario-pipeline/display-configuration/FinalNodeDisplayConfiguration';
 
 export class RoomService implements ApplicationService {
   private readonly _workers: SMap<string, Worker>;
@@ -247,7 +248,7 @@ export class RoomService implements ApplicationService {
               credentials,
               query.query,
               params.arguments.toRecord(),
-              true,
+              { type: 'default' },
             );
           graph.nodes.addNeo4jNodes(graphElements.nodes);
           graph.edges.addNeo4jEdges(graphElements.relationships);
@@ -680,7 +681,12 @@ export class RoomService implements ApplicationService {
           Neo4jDatabaseInfo.parse(database);
 
         const graphElements: Neo4jGraphElements =
-          await this._neo4j.executeQuery(credentials, params.query, {}, true);
+          await this._neo4j.executeQuery(
+            credentials,
+            params.query,
+            {},
+            { type: 'default' },
+          );
         const graph: MutableGraph = this._snapshotGraph(params.roomId);
         if (params.replace) {
           graph.nodes = new MutableNodeIndex([]);
@@ -1273,8 +1279,68 @@ export class RoomService implements ApplicationService {
       await this._connectNodes(graph);
     }
     this._mergeNodes(graph, displayConfiguration);
+    this._compressNodes(graph, displayConfiguration);
     if (displayConfiguration.compressRelationships) {
       this._compressRelationships(graph, displayConfiguration);
+    }
+  }
+
+  private _compressNodes(
+    graph: MutableGraph,
+    displayConfiguration: FinalGraphDisplayConfiguration,
+  ): void {
+    for (const nodeConfigEntry of displayConfiguration.nodeDisplayConfigurations) {
+      const targetLabel: string = nodeConfigEntry[0];
+      const nodeConfig: FinalNodeDisplayConfiguration = nodeConfigEntry[1];
+      if (!nodeConfig.compress) {
+        continue;
+      }
+      this._logger.debug(
+        this,
+        `Will check nodes of ${targetLabel} for compressing`,
+      );
+      for (const node of graph.nodes.getByLabel(targetLabel)) {
+        const siblings: SSet<MutableNode> = graph.getClusterBuddiesOfNode(
+          node,
+          targetLabel,
+        );
+        if (siblings.size < 2) {
+          continue;
+        }
+        this._logger.debug(
+          this,
+          `Will comporess ${node.id} because it has ${siblings.size.toString()} siblings.`,
+        );
+        const newNode: MutableNode = new MutableNode({
+          id: v4(),
+          position: node.position.copy(),
+          grabs: new SSet(),
+          labels: node.labels,
+          source: node.source,
+          locked: node.locked,
+          properties: MutablePropertyCollection.empty(),
+          namesInQuery: new SSet(),
+          compressedCount: 1,
+        });
+        for (const sibling of siblings) {
+          for (const outgoingEdge of graph.edges.getByStartNodeId(sibling.id)) {
+            graph.edges.remove(outgoingEdge);
+            outgoingEdge.startNodeId = newNode.id;
+            graph.edges.add(outgoingEdge);
+          }
+          for (const incomingEdge of graph.edges.getByEndNodeId(sibling.id)) {
+            graph.edges.remove(incomingEdge);
+            incomingEdge.endNodeId = newNode.id;
+            graph.edges.add(incomingEdge);
+          }
+          const removed: boolean = graph.nodes.remove(sibling);
+          if (!removed) {
+            this._logger.warn(this, `Unable to remove ${sibling.id}`);
+          }
+          newNode.compressedCount += 1;
+        }
+        graph.nodes.add(newNode);
+      }
     }
   }
 }

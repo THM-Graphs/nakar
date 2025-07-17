@@ -93,6 +93,7 @@ export class MutableNodeIndex {
       locked: false,
       grabs: new SSet(),
       source: node.source.nakarId,
+      compressedCount: 1,
     });
     PhysicsSimulation.jiggle(mutableNode);
 

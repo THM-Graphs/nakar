@@ -3,4 +3,5 @@ export interface NodeDisplayConfigurationDBDTO {
   readonly displayText: string | null;
   readonly radius: string | null;
   readonly backgroundColor: string | null;
+  readonly compress: boolean | null;
 }

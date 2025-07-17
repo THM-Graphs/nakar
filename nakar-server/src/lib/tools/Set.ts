@@ -94,4 +94,8 @@ export class SSet<T> extends Set<T> {
     }
     return n;
   }
+
+  public intersection(other: SSet<T>): SSet<T> {
+    return this.filter((item: T): boolean => other.has(item));
+  }
 }

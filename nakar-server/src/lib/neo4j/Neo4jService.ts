@@ -18,9 +18,10 @@ import { ExpandNodePreviewEntry } from './expand-node-preview/ExpandNodePreviewE
 import { SMap } from '../tools/Map';
 import { ToManyElementsError } from './ToManyElementsError';
 import { SchemaDatabaseStats } from '../../../src-gen/schema';
+import { match, P } from 'ts-pattern';
 
 export class Neo4jService implements ApplicationService {
-  public static readonly maximalElements: number = 500;
+  public static readonly maximalElements: number = 5000;
 
   public constructor(private readonly _logger: LoggerService) {}
 
@@ -36,7 +37,10 @@ export class Neo4jService implements ApplicationService {
     databaseInfo: Neo4jDatabaseInfo,
     query: string,
     parameters: Record<string, unknown>,
-    checkLimit: boolean,
+    limitConfig:
+      | { type: 'custom'; limit: number }
+      | { type: 'default' }
+      | { type: 'none' },
   ): Promise<Neo4jGraphElements> {
     const driver: Driver = createDriver(
       databaseInfo.url,
@@ -65,12 +69,25 @@ export class Neo4jService implements ApplicationService {
           RecordShape<string, unknown>
         >(query, parameters, { timeout: 2 * 60000 });
 
-        if (
-          result.records.length > Neo4jService.maximalElements &&
-          checkLimit
-        ) {
-          throw new ToManyElementsError(result.records.length);
-        }
+        match(limitConfig)
+          .with({ type: 'none' }, (): void => {
+            /* do nothing */
+          })
+          .with(
+            { type: 'custom', limit: P.select() },
+            (limit: number): void => {
+              if (result.records.length > limit) {
+                throw new ToManyElementsError(result.records.length);
+              }
+            },
+          )
+          .with({ type: 'default' }, (): void => {
+            if (result.records.length > Neo4jService.maximalElements) {
+              throw new ToManyElementsError(result.records.length);
+            }
+          })
+          .exhaustive();
+
         this._logger.debug(
           this,
           `Did receive ${result.records.length.toString()} records.`,
@@ -106,7 +123,7 @@ export class Neo4jService implements ApplicationService {
       {
         existingNodeIds: nodesIds,
       },
-      false,
+      { type: 'none' },
     );
     return additional;
   }
@@ -130,16 +147,17 @@ export class Neo4jService implements ApplicationService {
           relationships: limit.relationships,
           labels: limit.labels,
         },
-        true,
+        { type: 'default' },
       );
     } else {
+      const limitToTriggerPreview: number = 100;
       return await this.executeQuery(
         databaseInfo,
-        `MATCH (a)-[additionalRelationship]-(b) WHERE elementId(a) IN $nodesIds RETURN a, additionalRelationship, b LIMIT ${(Neo4jService.maximalElements + 1).toString()};`,
+        `MATCH (a)-[additionalRelationship]-(b) WHERE elementId(a) IN $nodesIds RETURN a, additionalRelationship, b LIMIT ${(limitToTriggerPreview + 1).toString()};`,
         {
           nodesIds: nodesIds,
         },
-        true,
+        { type: 'custom', limit: limitToTriggerPreview },
       );
     }
   }
@@ -158,7 +176,7 @@ ORDER BY rcount DESC, rtype ASC`,
       {
         nodesIds: nodesIds,
       },
-      true,
+      { type: 'none' },
     );
     const expandNodePreviewRelationshipEntries: ExpandNodePreviewEntry[] =
       relationships.tableData.map(
@@ -179,7 +197,7 @@ ORDER BY lcount DESC, label ASC`,
       {
         nodesIds: nodesIds,
       },
-      true,
+      { type: 'none' },
     );
     const expandNodePreviewLabelEntries: ExpandNodePreviewEntry[] =
       labels.tableData.map(
@@ -209,7 +227,7 @@ ORDER BY lcount DESC, label ASC`,
       credentials,
       'CALL db.labels() YIELD label RETURN label ORDER BY label ASC',
       {},
-      false,
+      { type: 'none' },
     );
     const labels: SSet<string> = new SSet<string>(
       labelsResult.tableData.map((line: SMap<string, unknown>): string =>
@@ -226,7 +244,7 @@ ORDER BY lcount DESC, label ASC`,
       credentials,
       'CALL db.relationshipTypes() YIELD relationshipType RETURN relationshipType ORDER BY relationshipType ASC',
       {},
-      false,
+      { type: 'none' },
     );
     const relTypes: SSet<string> = new SSet<string>(
       relTypesResult.tableData.map((line: SMap<string, unknown>): string =>
@@ -284,7 +302,7 @@ ORDER BY lcount DESC, label ASC`,
       credentials,
       'MATCH (n) RETURN count(n) AS nodeCount',
       {},
-      false,
+      { type: 'none' },
     );
     if (result.tableData.length === 0) {
       throw new Error('Unable to get node count from query.');
@@ -300,7 +318,7 @@ ORDER BY lcount DESC, label ASC`,
       credentials,
       'MATCH ()-[r]->() RETURN count(r) AS relationshipCount',
       {},
-      false,
+      { type: 'none' },
     );
     if (result.tableData.length === 0) {
       throw new Error('Unable to get relationship count from query.');
@@ -317,7 +335,7 @@ ORDER BY lcount DESC, label ASC`,
       credentials,
       `MATCH (n:\`${label}\`) RETURN count(n) as count;`,
       {},
-      false,
+      { type: 'none' },
     );
     if (result.tableData.length === 0) {
       throw new Error(`Unable to get node count of label ${label} from query.`);
@@ -337,7 +355,7 @@ ORDER BY lcount DESC, label ASC`,
       credentials,
       `MATCH ()-[r:\`${relType}\`]-() RETURN count(r) as count`,
       {},
-      false,
+      { type: 'none' },
     );
     if (result.tableData.length === 0) {
       throw new Error(`Unable to get rel type count of ${relType} from query.`);

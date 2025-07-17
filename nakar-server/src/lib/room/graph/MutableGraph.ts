@@ -13,6 +13,7 @@ import { PhysicalGraph } from '../../physics/physical-graph/PhysicalGraph';
 import { PhysicalNode } from '../../physics/physical-graph/PhysicalNode';
 import { PhysicalEdge } from '../../physics/physical-graph/PhysicalEdge';
 import { Range } from '../../tools/Range';
+import { SSet } from '../../tools/Set';
 
 export class MutableGraph {
   // eslint-disable-next-line @typescript-eslint/typedef
@@ -259,5 +260,50 @@ export class MutableGraph {
       counter += 1;
       c = c.previous;
     }
+  }
+
+  public getNeighborsOfNode(node: MutableNode): SSet<MutableNode> {
+    const result: SMap<string, MutableNode> = new SMap<string, MutableNode>();
+    for (const outgoingEdge of this.edges.getByStartNodeId(node.id)) {
+      const outgoindNode: MutableNode | null = this.nodes.get(
+        outgoingEdge.endNodeId,
+      );
+      if (outgoindNode != null) {
+        result.set(outgoindNode.id, outgoindNode);
+      }
+    }
+    for (const incomingEdge of this.edges.getByEndNodeId(node.id)) {
+      const incomingNode: MutableNode | null = this.nodes.get(
+        incomingEdge.startNodeId,
+      );
+      if (incomingNode != null) {
+        result.set(incomingNode.id, incomingNode);
+      }
+    }
+    return new SSet(result.values());
+  }
+
+  /** This method will return siblings, but only if all siblings the exact same two neighbors and have the same label */
+  public getClusterBuddiesOfNode(
+    node: MutableNode,
+    label: string,
+  ): SSet<MutableNode> {
+    const neighbors: MutableNode[] = this.getNeighborsOfNode(node).toArray();
+    if (neighbors.length !== 2) {
+      return new SSet();
+    }
+    const mother: MutableNode = neighbors[0];
+    const father: MutableNode = neighbors[1];
+
+    const childrenOfMother: SSet<MutableNode> = this.getNeighborsOfNode(mother);
+    const childrenOfFather: SSet<MutableNode> = this.getNeighborsOfNode(father);
+
+    const siblings: SSet<MutableNode> = childrenOfMother
+      .intersection(childrenOfFather)
+      .filter(
+        (sibling: MutableNode): boolean =>
+          sibling.degree(this) === 2 && sibling.labels.has(label),
+      );
+    return siblings;
   }
 }

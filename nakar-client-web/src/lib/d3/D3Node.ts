@@ -12,4 +12,5 @@ export type D3Node = {
   title: string;
   customBackgroundColor: string | null;
   customTitleColor: string | null;
+  compressedCount: number;
 };

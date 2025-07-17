@@ -8,8 +8,6 @@ import { GetRoomDBDTO } from './dto/GetRoomDBDTO';
 import { NodeDisplayConfigurationDBDTO } from './dto/NodeDisplayConfigurationDBDTO';
 import { match, P } from 'ts-pattern';
 import { ScaleType } from '../tools/ScaleType';
-import { AdditionalQueryDBDTO } from './dto/AdditionalQueryDBDTO';
-import z from 'zod';
 import { GetScenarioParameterDBDTO } from './dto/GetScenarioParameterDBDTO';
 import { GetScenarioQueryDBDTO } from './dto/GetScenarioQueryDBDTO';
 import { MergeNodeConfigurationDBDTO } from './dto/MergeNodeConfigurationDBDTO';
@@ -102,105 +100,6 @@ export class DatabaseDTOFactory {
     };
   }
 
-  public createGetDatabaseDTOFromUnknown(input: unknown): GetDatabaseDBDTO {
-    // eslint-disable-next-line @typescript-eslint/typedef
-    const schema = z.object({
-      documentId: z.string(),
-      title: z.string().nullable(),
-      url: z.string().nullable(),
-      username: z.string().nullable(),
-      password: z.string().nullable(),
-      browserUrl: z.string().nullable(),
-    });
-
-    const parsed: z.infer<typeof schema> = schema.parse(input);
-
-    return {
-      documentId: parsed.documentId,
-      title: parsed.title,
-      url: parsed.url,
-      username: parsed.username,
-      password: parsed.password,
-      browserUrl: parsed.browserUrl,
-    };
-  }
-
-  public createGetScenarioGroupDTOFromUnknown(
-    input: unknown,
-  ): GetScenarioGroupDBDTO {
-    // eslint-disable-next-line @typescript-eslint/typedef
-    const schema = z.object({
-      documentId: z.string(),
-      title: z.string().nullable(),
-      room: z.unknown().nullable(),
-    });
-
-    const parsed: z.infer<typeof schema> = schema.parse(input);
-
-    return {
-      documentId: parsed.documentId,
-      title: parsed.title,
-      room:
-        parsed.room != null
-          ? this.createGetRoomDTOFromUnknown(parsed.room)
-          : null,
-    };
-  }
-
-  public createGetRoomDTOFromUnknown(input: unknown): GetRoomDBDTO {
-    // eslint-disable-next-line @typescript-eslint/typedef
-    const schema = z.object({
-      documentId: z.string(),
-      title: z.string().nullable(),
-      graphJson: z.string().nullable(),
-    });
-
-    const parsed: z.infer<typeof schema> = schema.parse(input);
-
-    return {
-      documentId: parsed.documentId,
-      title: parsed.title,
-      graphJson: parsed.graphJson,
-    };
-  }
-
-  public createScenarioParameterFromUnknown(
-    input: unknown,
-  ): GetScenarioParameterDBDTO {
-    // eslint-disable-next-line @typescript-eslint/typedef
-    const schema = z.object({
-      title: z.string(),
-      identifier: z.string(),
-      defaultValue: z.string().nullable(),
-    });
-
-    const parsed: z.infer<typeof schema> = schema.parse(input);
-
-    return {
-      identifier: parsed.identifier,
-      title: parsed.title,
-      defaultValue: parsed.defaultValue,
-    };
-  }
-
-  public createScenarioQueryFromUnknown(input: unknown): GetScenarioQueryDBDTO {
-    // eslint-disable-next-line @typescript-eslint/typedef
-    const schema = z.object({
-      query: z.string(),
-      database: z.unknown().nullable(),
-    });
-
-    const parsed: z.infer<typeof schema> = schema.parse(input);
-
-    return {
-      query: parsed.query,
-      database:
-        parsed.database != null
-          ? this.createGetDatabaseDTOFromUnknown(parsed.database)
-          : null,
-    };
-  }
-
   public createGraphDisplayConfigurationDTOFromStrapi(
     db:
       | Result<
@@ -253,58 +152,6 @@ export class DatabaseDTOFactory {
     };
   }
 
-  private _createAdditionalQueryDTOFromStrapi(
-    additionalQuery: Result<
-      'graph.additional-query',
-      { populate: 'mergeDatabase' }
-    >,
-  ): AdditionalQueryDBDTO {
-    return {
-      originalLabel: additionalQuery.originalLabel ?? '',
-      originalProperties:
-        additionalQuery.originalProperties
-          ?.split(',')
-          .map((element: string): string => element.trim()) ?? [],
-      mergeLabel: additionalQuery.mergeLabel ?? '',
-      mergeProperties:
-        additionalQuery.mergeProperties
-          ?.split(',')
-          .map((element: string): string => element.trim()) ?? [],
-      mergeQuery: additionalQuery.mergeQuery ?? '',
-      mergeDatabase: additionalQuery.mergeDatabase
-        ? this.createGetDatabaseDTOFromStrapi(additionalQuery.mergeDatabase)
-        : null,
-    };
-  }
-
-  private _createAdditionalQueryDTOFromUnknown(
-    input: unknown,
-  ): AdditionalQueryDBDTO {
-    // eslint-disable-next-line @typescript-eslint/typedef
-    const schema = z.object({
-      originalLabel: z.string(),
-      originalProperties: z.array(z.string()),
-      mergeLabel: z.string(),
-      mergeProperties: z.array(z.string()),
-      mergeQuery: z.string(),
-      mergeDatabase: z.unknown(),
-    });
-
-    const parsed: z.infer<typeof schema> = schema.parse(input);
-
-    return {
-      originalLabel: parsed.originalLabel,
-      originalProperties: parsed.originalProperties,
-      mergeLabel: parsed.mergeLabel,
-      mergeProperties: parsed.mergeProperties,
-      mergeQuery: parsed.mergeQuery,
-      mergeDatabase:
-        parsed.mergeDatabase != null
-          ? this.createGetDatabaseDTOFromUnknown(parsed.mergeDatabase)
-          : null,
-    };
-  }
-
   private _createNodeDisplayConfigurationDTOFromStrapi(
     db: Result<'graph.node-display-configuration'>,
   ): NodeDisplayConfigurationDBDTO {
@@ -313,6 +160,7 @@ export class DatabaseDTOFactory {
       displayText: db.displayText ?? null,
       radius: db.radius ?? null,
       backgroundColor: db.backgroundColor ?? null,
+      compress: this._createNullableBooleanFromStrapi(db.compress),
     };
   }
 
@@ -350,60 +198,6 @@ export class DatabaseDTOFactory {
       url: db.url ?? null,
       ext: db.ext ?? null,
       hash: db.hash ?? null,
-    };
-  }
-
-  private _createGetMediaDTOFromUnknown(input: unknown): GetMediaDBDTO {
-    // eslint-disable-next-line @typescript-eslint/typedef
-    const schema = z.object({
-      documentId: z.string(),
-      url: z.string().nullable(),
-      ext: z.string().nullable(),
-      hash: z.string().nullable(),
-    });
-    const parsed: z.infer<typeof schema> = schema.parse(input);
-    return {
-      documentId: parsed.documentId,
-      url: parsed.url,
-      ext: parsed.ext,
-      hash: parsed.hash,
-    };
-  }
-
-  private _createScaleTypeFromUnknown(input: unknown): ScaleType | null {
-    // eslint-disable-next-line @typescript-eslint/typedef
-    const schema = z.enum(['linear', 'log2', 'logN', 'log10']).nullable();
-
-    const parsed: z.infer<typeof schema> = schema.parse(input);
-
-    return match(parsed)
-      .returnType<ScaleType | null>()
-      .with(null, (): null => null)
-      .with('linear', (): ScaleType => ScaleType.linear)
-      .with('log2', (): ScaleType => ScaleType.log2)
-      .with('logN', (): ScaleType => ScaleType.logN)
-      .with('log10', (): ScaleType => ScaleType.log10)
-      .exhaustive();
-  }
-
-  private _createNodeDisplayConfigurationDTOFromUnknown(
-    input: unknown,
-  ): NodeDisplayConfigurationDBDTO {
-    // eslint-disable-next-line @typescript-eslint/typedef
-    const schema = z.object({
-      targetLabel: z.string().nullable(),
-      displayText: z.string().nullable(),
-      radius: z.string().nullable(),
-      backgroundColor: z.string().nullable(),
-    });
-
-    const parsed: z.infer<typeof schema> = schema.parse(input);
-
-    return {
-      targetLabel: parsed.targetLabel,
-      displayText: parsed.displayText,
-      radius: parsed.radius,
-      backgroundColor: parsed.backgroundColor,
     };
   }
 }

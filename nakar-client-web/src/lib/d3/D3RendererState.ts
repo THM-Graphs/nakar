@@ -29,6 +29,7 @@ export class D3RendererState {
         labels: node.labels,
         radius: node.radius,
         title: node.title,
+        compressedCount: node.compressedCount,
       };
     });
     const links = graphElements.edges.reduce((acc: D3Link[], edge: Edge) => {

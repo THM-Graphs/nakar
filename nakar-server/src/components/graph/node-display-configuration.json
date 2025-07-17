@@ -19,6 +19,15 @@
     },
     "backgroundColor": {
       "type": "string"
+    },
+    "compress": {
+      "type": "enumeration",
+      "enum": [
+        "true",
+        "false",
+        "inherit"
+      ],
+      "default": "inherit"
     }
   }
 }

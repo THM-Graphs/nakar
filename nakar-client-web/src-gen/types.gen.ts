@@ -153,6 +153,7 @@ export type Node = {
     customTitleColor: (string) | null;
     source: string;
     locked: boolean;
+    compressedCount: number;
 };
 
 export type Notification = {

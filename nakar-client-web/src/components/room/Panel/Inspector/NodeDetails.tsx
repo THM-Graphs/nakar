@@ -123,6 +123,10 @@ export function NodeDetails(props: {
           slug: "Degree",
           value: props.node.degree,
         },
+        {
+          slug: "Compressed Count",
+          value: props.node.compressedCount,
+        },
       ]}
       properties={props.node.properties}
       title={props.node.title}

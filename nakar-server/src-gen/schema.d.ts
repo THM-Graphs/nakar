@@ -411,6 +411,7 @@ export interface components {
             readonly customTitleColor: string | null;
             readonly source: string;
             readonly locked: boolean;
+            readonly compressedCount: number;
         };
         readonly PhysicalNode: {
             readonly id: string;
