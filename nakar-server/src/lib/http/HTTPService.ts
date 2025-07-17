@@ -363,8 +363,15 @@ export class HTTPService implements ApplicationService {
             (
               akku: SMap<string, unknown>,
               next: SchemaScenarioArgument,
-            ): SMap<string, unknown> =>
-              akku.bySetting(next.identifier, next.value),
+            ): SMap<string, unknown> => {
+              try {
+                // Try to interpret argument as json.
+                const parsed: unknown = JSON.parse(next.value);
+                return akku.bySetting(next.identifier, parsed);
+              } catch {
+                return akku.bySetting(next.identifier, next.value);
+              }
+            },
             new SMap<string, unknown>(),
           ),
         });
