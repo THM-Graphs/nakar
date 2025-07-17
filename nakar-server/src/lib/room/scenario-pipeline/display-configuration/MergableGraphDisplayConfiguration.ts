@@ -92,7 +92,7 @@ export class MergableGraphDisplayConfiguration {
               .split(',')
               .map((s: string): string => s.trim()),
             originalDatabaseId: mergeNodeConfiguration.originalDatabaseId ?? '',
-            mergeLabel: mergeNodeConfiguration.originalLabel ?? '',
+            mergeLabel: mergeNodeConfiguration.mergeLabel ?? '',
             mergeProperties: (mergeNodeConfiguration.mergeProperties ?? '')
               .split(',')
               .map((s: string): string => s.trim()),
