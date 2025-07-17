@@ -52,6 +52,7 @@ import { GetDatabaseDBDTO } from '../database/dto/GetDatabaseDBDTO';
 import { Neo4jDatabaseInfo } from '../neo4j/Neo4jDatabaseInfo';
 import { Neo4jService } from '../neo4j/Neo4jService';
 import { ExpandNodePreview } from '../neo4j/expand-node-preview/ExpandNodePreview';
+import { MediaService } from '../media/MediaService';
 
 export class HTTPService implements ApplicationService {
   private readonly _app: Application;
@@ -67,10 +68,11 @@ export class HTTPService implements ApplicationService {
     private readonly _backup: BackupService,
     private readonly _roomService: RoomService,
     private readonly _neo4jService: Neo4jService,
+    private readonly _media: MediaService,
   ) {
     this._app = express();
     this._server = http.createServer(this._app as http.RequestListener);
-    this._schemaDTOFactory = new SchemaDTOFactory(_config);
+    this._schemaDTOFactory = new SchemaDTOFactory(_config, _media);
 
     this._setupMiddleware();
     this._setupRoutes();
@@ -261,6 +263,7 @@ export class HTTPService implements ApplicationService {
             this._databaseService,
             this._logger,
             this._config,
+            this._media,
           );
         const result: SchemaGraph =
           await cachedGraphFactory.createSchemaGraph(graph);
@@ -278,6 +281,7 @@ export class HTTPService implements ApplicationService {
             this._databaseService,
             this._logger,
             this._config,
+            this._media,
           );
         const result: SchemaGraphElements =
           await cachedGraphFactory.createSchemaGraphElements(graph);
@@ -295,6 +299,7 @@ export class HTTPService implements ApplicationService {
             this._databaseService,
             this._logger,
             this._config,
+            this._media,
           );
         const result: SchemaGraphMetaData =
           await cachedGraphFactory.createSchemaGraphMetaData(graph);
@@ -312,6 +317,7 @@ export class HTTPService implements ApplicationService {
             this._databaseService,
             this._logger,
             this._config,
+            this._media,
           );
         const result: SchemaGraphTable = cachedGraphFactory.createSchemaTable(
           graph.tableData,

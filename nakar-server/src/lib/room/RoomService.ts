@@ -44,6 +44,7 @@ import { v4 } from 'uuid';
 import { MutableNodeIndex } from './graph/MutableNodeIndex';
 import { ExpandNodesResult } from './ExpandNodesResult';
 import { FinalNodeDisplayConfiguration } from './scenario-pipeline/display-configuration/FinalNodeDisplayConfiguration';
+import { MediaService } from '../media/MediaService';
 
 export class RoomService implements ApplicationService {
   private readonly _workers: SMap<string, Worker>;
@@ -55,6 +56,7 @@ export class RoomService implements ApplicationService {
     private readonly _logger: LoggerService,
     private readonly _profiler: ProfilerService,
     private readonly _neo4j: Neo4jService,
+    private readonly _media: MediaService,
   ) {
     this._workers = new SMap();
     this._graphs = new SMap();
@@ -826,29 +828,26 @@ export class RoomService implements ApplicationService {
       `Will load graph of room ${room.documentId} ('${room.title ?? ''}') into memory.`,
     );
 
-    if (room.graphJson == null) {
+    try {
+      const graphJson: string = await this._media.getStringPayloadOfMediaFile(
+        room.graph,
+      );
+      const graph: MutableGraph = MutableGraph.fromUnknownOrEmpty(
+        JSON.parse(graphJson),
+      );
       this._logger.debug(
         this,
-        `Will init room ${room.documentId} with empty graph, because graph json is null.`,
+        `Did load ${graph.size.toString()} graph elements into room ${room.documentId} ('${room.title ?? ''}').`,
+      );
+      this._graphs.set(room.documentId, graph);
+    } catch (error) {
+      this._logger.error(this, `Unable to load graph from Room:`);
+      this._logger.error(this, error);
+      this._logger.debug(
+        this,
+        `Will init room ${room.documentId} with empty graph.`,
       );
       this._graphs.set(room.documentId, MutableGraph.empty());
-    } else {
-      try {
-        const graph: MutableGraph = MutableGraph.fromUnknownOrEmpty(
-          JSON.parse(room.graphJson),
-        );
-        this._logger.debug(
-          this,
-          `Did load ${graph.size.toString()} graph elements into room ${room.documentId} ('${room.title ?? ''}').`,
-        );
-        this._graphs.set(room.documentId, graph);
-      } catch (error) {
-        this._logger.error(
-          this,
-          `Unable to load graph from Room: ${JSON.stringify(error)}. Will init room ${room.documentId} with empty graph.`,
-        );
-        this._graphs.set(room.documentId, MutableGraph.empty());
-      }
     }
 
     await this._startWorkerIfStopped(room.documentId);

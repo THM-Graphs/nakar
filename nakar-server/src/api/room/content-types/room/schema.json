@@ -28,6 +28,13 @@
       "type": "component",
       "repeatable": false,
       "component": "graph.graph-display-configuration"
+    },
+    "graph": {
+      "allowedTypes": [
+        "files"
+      ],
+      "type": "media",
+      "multiple": false
     }
   }
 }

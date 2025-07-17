@@ -51,6 +51,7 @@ import { RoomServiceEventGraphElementsChanged } from '../room/events/RoomService
 import { RoomServiceEventGraphTableChanged } from '../room/events/RoomServiceEventGraphTableChanged';
 import { ConfigService } from '../config/ConfigService';
 import { RoomServiceEventKick } from '../room/events/RoomServiceEventKick';
+import { MediaService } from '../media/MediaService';
 
 export type Server = UntypedServer<ClientToServerEvents, ServerToClientEvents>;
 export type Socket = UntypedSocket<ClientToServerEvents, ServerToClientEvents>;
@@ -65,6 +66,7 @@ export class SocketIOService implements ApplicationService {
     private _httpService: HTTPService,
     private _logger: LoggerService,
     private _config: ConfigService,
+    private readonly _media: MediaService,
   ) {
     this._sockets = new SSet();
     this._io = null;
@@ -303,6 +305,8 @@ export class SocketIOService implements ApplicationService {
                   this._databaseService,
                   this._logger,
                   this._config,
+
+                  this._media,
                 );
               const table: SchemaGraphTable =
                 cachedGraphFactory.createSchemaTable(message.table);
@@ -322,6 +326,7 @@ export class SocketIOService implements ApplicationService {
                   this._databaseService,
                   this._logger,
                   this._config,
+                  this._media,
                 );
               const metaData: SchemaGraphMetaData =
                 await cachedGraphFactory.createSchemaGraphMetaData(
@@ -341,6 +346,7 @@ export class SocketIOService implements ApplicationService {
                   this._databaseService,
                   this._logger,
                   this._config,
+                  this._media,
                 );
               cachedGraphFactory
                 .createSchemaGraphElements(message.graph)

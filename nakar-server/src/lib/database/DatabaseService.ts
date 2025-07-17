@@ -20,6 +20,7 @@ import { MergableGraphDisplayConfiguration } from '../room/scenario-pipeline/dis
 import { Event } from '@strapi/database/dist/lifecycles';
 import { Observable, Subject } from 'rxjs';
 import { GetParameterizedScenariosDBDTO } from './dto/GetParameterizedScenariosDBDTO';
+import { MediaService } from '../media/MediaService';
 
 export class DatabaseService implements ApplicationService {
   private readonly _databaseDtoFactory: DatabaseDTOFactory;
@@ -27,7 +28,10 @@ export class DatabaseService implements ApplicationService {
   private readonly _onRoomAdded: Subject<GetRoomDBDTO>;
   private readonly _onRoomDeleted: Subject<GetRoomDBDTO>;
 
-  public constructor(private readonly _logger: LoggerService) {
+  public constructor(
+    private readonly _logger: LoggerService,
+    private readonly _media: MediaService,
+  ) {
     this._databaseDtoFactory = new DatabaseDTOFactory();
     this._onRoomAdded = new Subject();
     this._onRoomDeleted = new Subject();
@@ -168,7 +172,7 @@ export class DatabaseService implements ApplicationService {
       .findOne({
         status: 'published',
         documentId: roomId,
-        populate: {},
+        populate: { graph: {} },
       });
     if (rawRoom == null) {
       return null;
@@ -181,6 +185,9 @@ export class DatabaseService implements ApplicationService {
       await strapi.documents('api::room.room').findMany({
         status: 'published',
         sort: 'title:asc',
+        populate: {
+          graph: {},
+        },
       })
     ).map(
       (room: Result<'api::room.room'>): GetRoomDBDTO =>
@@ -366,11 +373,26 @@ export class DatabaseService implements ApplicationService {
     roomId: string,
     graph: z.infer<typeof MutableGraph.schema>,
   ): Promise<void> {
+    const room: GetRoomDBDTO | null = await this.getRoom(roomId);
+    if (room == null) {
+      throw new Error(`Unable to save graph: Room ${roomId} not found.`);
+    }
+    const oldGraphJson: GetMediaDBDTO | null = room.graph;
+    if (oldGraphJson != null) {
+      await this._media.deleteFile(oldGraphJson);
+    }
+
     const graphJson: string = JSON.stringify(graph);
+    const mediaDBDTO: GetMediaDBDTO = await this._media.saveStringFile(
+      graphJson,
+      room.title,
+    );
     await strapi.documents('api::room.room').update({
       documentId: roomId,
       data: {
-        graphJson: graphJson,
+        graph: {
+          id: mediaDBDTO.id,
+        },
       },
       status: 'published',
     });
@@ -382,29 +404,6 @@ export class DatabaseService implements ApplicationService {
       .documents('api::room.room')
       .findOne({ documentId: roomId });
     return room != null;
-  }
-
-  public getFileStream(
-    targetFileNameWithoutExtension: string,
-    media: GetMediaDBDTO,
-  ): FileStream | null {
-    if (media.hash == null) {
-      this._logger.warn(this, `Hash of media ${media.documentId} is null.`);
-      return null;
-    }
-    if (media.ext == null) {
-      this._logger.warn(
-        this,
-        `File extension of media ${media.documentId} is null.`,
-      );
-      return null;
-    }
-    const path: string = `${strapi.dirs.static.public}/uploads/${media.hash}${media.ext}`;
-    return new FileStream(
-      path,
-      '',
-      `${targetFileNameWithoutExtension}${media.ext}`,
-    );
   }
 
   public async getParameterizedScenarios(

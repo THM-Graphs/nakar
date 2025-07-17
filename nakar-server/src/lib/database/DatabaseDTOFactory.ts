@@ -92,12 +92,13 @@ export class DatabaseDTOFactory {
   }
 
   public createGetRoomDTOFromStrapi(
-    db: Result<'api::room.room', { populate: [] }>,
+    db: Result<'api::room.room', { populate: { graph: {} } }>,
   ): GetRoomDBDTO {
     return {
       documentId: db.documentId,
       title: db.title ?? null,
-      graphJson: db.graphJson ?? null,
+      graph:
+        db.graph != null ? this._createGetMediaDTOFromStrapi(db.graph) : null,
     };
   }
 
@@ -195,6 +196,7 @@ export class DatabaseDTOFactory {
     db: Result<'plugin::upload.file'>,
   ): GetMediaDBDTO {
     return {
+      id: db.id,
       documentId: db.documentId,
       url: db.url ?? null,
       ext: db.ext ?? null,

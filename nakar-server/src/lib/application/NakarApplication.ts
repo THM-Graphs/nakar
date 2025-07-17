@@ -10,6 +10,7 @@ import { HTTPService } from '../http/HTTPService';
 import { Neo4jService } from '../neo4j/Neo4jService';
 import { ToolsService } from '../tools/ToolsService';
 import { ApplicationService } from './ApplicationService';
+import { MediaService } from '../media/MediaService';
 
 export class NakarApplication {
   public static shared: NakarApplication = new NakarApplication();
@@ -22,6 +23,7 @@ export class NakarApplication {
   public readonly databaseService: DatabaseService;
   public readonly roomService: RoomService;
   public readonly neo4j: Neo4jService;
+  public readonly media: MediaService;
 
   public readonly httpService: HTTPService;
   public readonly socketIOService: SocketIOService;
@@ -33,11 +35,13 @@ export class NakarApplication {
     this.tools = new ToolsService();
     this.config = new ConfigService(this.logger);
     this.profiler = new ProfilerService(this.logger);
-    this.databaseService = new DatabaseService(this.logger);
+    this.media = new MediaService(this.logger, this.config);
+    this.databaseService = new DatabaseService(this.logger, this.media);
     this.backup = new BackupService(
       this.logger,
       this.databaseService,
       this.tools,
+      this.media,
     );
     this.neo4j = new Neo4jService(this.logger);
     this.roomService = new RoomService(
@@ -45,6 +49,7 @@ export class NakarApplication {
       this.logger,
       this.profiler,
       this.neo4j,
+      this.media,
     );
 
     this.httpService = new HTTPService(
@@ -55,6 +60,7 @@ export class NakarApplication {
       this.backup,
       this.roomService,
       this.neo4j,
+      this.media,
     );
     this.socketIOService = new SocketIOService(
       this.roomService,
@@ -62,6 +68,7 @@ export class NakarApplication {
       this.httpService,
       this.logger,
       this.config,
+      this.media,
     );
 
     this._services = [
@@ -69,6 +76,7 @@ export class NakarApplication {
       this.tools,
       this.config,
       this.profiler,
+      this.media,
       this.databaseService,
       this.backup,
       this.neo4j,

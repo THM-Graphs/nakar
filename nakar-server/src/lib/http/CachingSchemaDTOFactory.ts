@@ -25,6 +25,7 @@ import { SchemaDTOFactory } from './SchemaDTOFactory';
 import { ConfigService } from '../config/ConfigService';
 import { FinalGraphDisplayConfiguration } from '../room/scenario-pipeline/display-configuration/FinalGraphDisplayConfiguration';
 import { Range } from '../tools/Range';
+import { MediaService } from '../media/MediaService';
 
 export class CachingSchemaDTOFactory {
   private readonly _databaseCache: SMap<string, GetDatabaseDBDTO>;
@@ -34,9 +35,10 @@ export class CachingSchemaDTOFactory {
     private readonly _database: DatabaseService,
     private readonly _logger: LoggerService,
     private readonly _config: ConfigService,
+    private readonly _media: MediaService,
   ) {
     this._databaseCache = new SMap();
-    this._dtoFactory = new SchemaDTOFactory(_config);
+    this._dtoFactory = new SchemaDTOFactory(_config, _media);
   }
 
   public async createSchemaGraph(graph: MutableGraph): Promise<SchemaGraph> {

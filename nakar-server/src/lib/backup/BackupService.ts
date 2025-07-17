@@ -12,12 +12,14 @@ import sanitize from 'sanitize-filename';
 import { GetScenarioGroupDBDTO } from '../database/dto/GetScenarioGroupDBDTO';
 import { GetScenarioDBDTO } from '../database/dto/GetScenarioDBDTO';
 import { ToolsService } from '../tools/ToolsService';
+import { MediaService } from '../media/MediaService';
 
 export class BackupService implements ApplicationService {
   public constructor(
     private readonly _logger: LoggerService,
     private readonly _database: DatabaseService,
     private readonly _tools: ToolsService,
+    private readonly _media: MediaService,
   ) {}
 
   public async createBackupFile(): Promise<FileStream> {
@@ -66,7 +68,7 @@ export class BackupService implements ApplicationService {
             JSON.stringify(scenario, null, 2),
           );
           if (scenario.cover != null) {
-            const coverStream: FileStream | null = this._database.getFileStream(
+            const coverStream: FileStream | null = this._media.getFileStream(
               'cover',
               scenario.cover,
             );

@@ -418,6 +418,7 @@ export interface ApiRoomRoom extends Struct.CollectionTypeSchema {
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    graph: Schema.Attribute.Media<'files'>;
     graphDisplayConfiguration: Schema.Attribute.Component<
       'graph.graph-display-configuration',
       false
