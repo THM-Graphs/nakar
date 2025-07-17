@@ -3,6 +3,7 @@ import { useBearStore } from "../../../lib/state/useBearStore.ts";
 import { useClipboard } from "../../../lib/clipboard/useClipboard.ts";
 import { Form, OverlayTrigger, Stack, Tooltip } from "react-bootstrap";
 import { NavbarButton } from "../../shared/NavbarButton.tsx";
+import clsx from "clsx";
 
 export function ArgumentDisplay(props: {
   scenario: Scenario;
@@ -12,6 +13,12 @@ export function ArgumentDisplay(props: {
   const setArgumentValue = useBearStore(
     (s) => s.room.scenario.runScenarioModal.setArgumentValue,
   );
+  const argumentValue = useBearStore(
+    (s) =>
+      s.room.scenario.runScenarioModal.arguments.find(
+        (a) => a.identifier === props.arg.identifier,
+      )?.value ?? "",
+  );
   const [clipboardEnabled, , readClipboard] = useClipboard();
 
   const parameter = props.scenario.parameters.find(
@@ -20,16 +27,28 @@ export function ArgumentDisplay(props: {
 
   const parameterTitle = parameter?.title ?? props.arg.identifier;
 
+  const argumentValueIsValid: boolean = (() => {
+    try {
+      JSON.parse(argumentValue);
+      return true;
+    } catch {
+      return false;
+    }
+  })();
+
   return (
     <Form.Group key={props.arg.identifier}>
       <Stack
         direction={"horizontal"}
-        className={"bg-body border-top border-bottom align-items-stretch ps-2"}
+        className={clsx(
+          "bg-body border-top border-bottom align-items-stretch ps-2",
+          argumentValueIsValid ? "" : "bg-danger-subtle",
+        )}
       >
         <OverlayTrigger overlay={<Tooltip>${props.arg.identifier}</Tooltip>}>
           <Form.Label
             style={{ width: "150px" }}
-            className={"mb-0 d-flex align-items-center pt-1 pb-1"}
+            className={clsx("mb-0 d-flex align-items-center pt-1 pb-1")}
           >
             <span className={"small"}>{parameterTitle}</span>
           </Form.Label>
@@ -38,7 +57,7 @@ export function ArgumentDisplay(props: {
           type="text"
           placeholder={"Enter a value…"}
           size={"sm"}
-          value={props.arg.value}
+          value={argumentValue}
           onChange={(event) => {
             setArgumentValue(props.arg.identifier, event.target.value);
           }}

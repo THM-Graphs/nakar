@@ -43,10 +43,7 @@ export function PropertyMenuScenarioGroupEntry(props: {
                         arguments: [
                           {
                             identifier: scenario.parameters[0].identifier,
-                            value:
-                              typeof props.value === "string"
-                                ? props.value
-                                : JSON.stringify(props.value),
+                            value: JSON.stringify(props.value),
                           },
                         ],
                       },

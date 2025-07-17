@@ -356,24 +356,23 @@ export class HTTPService implements ApplicationService {
         const scenarioId: string = body.scenarioId;
         const args: readonly SchemaScenarioArgument[] = body.arguments;
 
+        const scenarioArgs: SMap<string, unknown> = args.reduce<
+          SMap<string, unknown>
+        >(
+          (
+            akku: SMap<string, unknown>,
+            next: SchemaScenarioArgument,
+          ): SMap<string, unknown> => {
+            const parsed: unknown = JSON.parse(next.value);
+            return akku.bySetting(next.identifier, parsed);
+          },
+          new SMap<string, unknown>(),
+        );
+
         await this._roomService.loadScenario({
           roomId: room.documentId,
           scenarioId: scenarioId,
-          arguments: args.reduce<SMap<string, unknown>>(
-            (
-              akku: SMap<string, unknown>,
-              next: SchemaScenarioArgument,
-            ): SMap<string, unknown> => {
-              try {
-                // Try to interpret argument as json.
-                const parsed: unknown = JSON.parse(next.value);
-                return akku.bySetting(next.identifier, parsed);
-              } catch {
-                return akku.bySetting(next.identifier, next.value);
-              }
-            },
-            new SMap<string, unknown>(),
-          ),
+          arguments: scenarioArgs,
         });
       }),
     );
