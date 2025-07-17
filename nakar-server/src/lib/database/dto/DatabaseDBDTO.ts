@@ -4,4 +4,5 @@ export interface DatabaseDBDTO {
   readonly username: string | null;
   readonly password: string | null;
   readonly browserUrl: string | null;
+  readonly database: string | null;
 }

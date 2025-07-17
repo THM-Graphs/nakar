@@ -26,6 +26,9 @@
     },
     "browserUrl": {
       "type": "string"
+    },
+    "database": {
+      "type": "string"
     }
   }
 }

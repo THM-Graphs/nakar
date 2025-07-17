@@ -23,6 +23,7 @@ export class DatabaseDTOFactory {
       username: db.username ?? null,
       password: db.password ?? null,
       browserUrl: db.browserUrl ?? null,
+      database: db.database ?? null,
     };
   }
 

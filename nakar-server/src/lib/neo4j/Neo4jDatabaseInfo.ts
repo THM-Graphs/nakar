@@ -36,7 +36,7 @@ export class Neo4jDatabaseInfo {
       url: database.url,
       username: database.username,
       password: database.password,
-      database: null,
+      database: database.database,
       nakarId: database.documentId,
     });
   }
