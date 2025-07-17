@@ -256,15 +256,7 @@ export class RoomService implements ApplicationService {
           }
         }
 
-        if (displayConfiguration.connectResultNodes) {
-          await this._connectNodes(graph);
-        }
-
-        this._mergeNodes(graph, displayConfiguration);
-
-        if (displayConfiguration.compressRelationships) {
-          this._compressRelationships(graph, displayConfiguration);
-        }
+        await this._postProcessGraph(graph, displayConfiguration);
 
         // const physics: PhysicsSimulation = new PhysicsSimulation(
         //   graph.toPhysicalGraph(displayConfiguration, this._logger),
@@ -374,22 +366,13 @@ export class RoomService implements ApplicationService {
               graph.edges.addNeo4jEdge(newEdge[1]);
             }
           }
-          graph.removeDanglingEdges(this._logger);
 
           this._logger.debug(
             this,
             `Expand node result for ${params.nodeId}: ${expandResult.nodes.size.toString()} nodes and ${expandResult.relationships.size.toString()} relationships.`,
           );
 
-          if (displayConfiguration.connectResultNodes) {
-            await this._connectNodes(graph);
-          }
-
-          this._mergeNodes(graph, displayConfiguration);
-
-          if (displayConfiguration.compressRelationships) {
-            this._compressRelationships(graph, displayConfiguration);
-          }
+          await this._postProcessGraph(graph, displayConfiguration);
 
           this._sendActionToWorker(params.roomId, {
             type: 'WTActionSetGraph',
@@ -708,7 +691,7 @@ export class RoomService implements ApplicationService {
         graph.edges.addNeo4jEdges(graphElements.relationships);
         graph.tableData = graphElements.tableData;
 
-        this._mergeNodes(graph, displayConfiguration);
+        await this._postProcessGraph(graph, displayConfiguration);
 
         this._sendActionToWorker(params.roomId, {
           type: 'WTActionSetGraph',
@@ -1279,5 +1262,19 @@ export class RoomService implements ApplicationService {
     } satisfies RoomServiceEventGraphMetaDataChanged);
 
     return newGraph;
+  }
+
+  private async _postProcessGraph(
+    graph: MutableGraph,
+    displayConfiguration: FinalGraphDisplayConfiguration,
+  ): Promise<void> {
+    graph.removeDanglingEdges(this._logger);
+    if (displayConfiguration.connectResultNodes) {
+      await this._connectNodes(graph);
+    }
+    this._mergeNodes(graph, displayConfiguration);
+    if (displayConfiguration.compressRelationships) {
+      this._compressRelationships(graph, displayConfiguration);
+    }
   }
 }
