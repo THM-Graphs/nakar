@@ -31,6 +31,7 @@ export function ClipboardButton(props: {
         className={clsx(props.className)}
         style={{ zIndex: 1 }}
         icon={copied ? "check" : "copy"}
+        disabled={!isClipboardEnabled}
         size={props.size}
         onClick={() => {
           (async () => {

@@ -70,18 +70,18 @@ export function ArgumentDisplay(props: {
             setArgumentValue(props.arg.identifier, "");
           }}
         ></NavbarButton>
-        {clipboardEnabled && (
-          <OverlayTrigger overlay={<Tooltip>Paste</Tooltip>}>
-            <Stack className={"align-self-stretch"} direction={"horizontal"}>
-              <NavbarButton
-                icon={"clipboard-check"}
-                onClick={async () => {
-                  setArgumentValue(props.arg.identifier, await readClipboard());
-                }}
-              ></NavbarButton>
-            </Stack>
-          </OverlayTrigger>
-        )}
+
+        <OverlayTrigger overlay={<Tooltip>Paste</Tooltip>}>
+          <Stack className={"align-self-stretch"} direction={"horizontal"}>
+            <NavbarButton
+              disabled={!clipboardEnabled}
+              icon={"clipboard-check"}
+              onClick={async () => {
+                setArgumentValue(props.arg.identifier, await readClipboard());
+              }}
+            ></NavbarButton>
+          </Stack>
+        </OverlayTrigger>
       </Stack>
     </Form.Group>
   );
