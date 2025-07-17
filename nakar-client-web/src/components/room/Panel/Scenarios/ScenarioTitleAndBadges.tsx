@@ -7,10 +7,15 @@ import { MouseEvent } from "react";
 export function ScenarioTitleAndBadges(props: {
   scenario: Scenario;
   onRun?: (event: MouseEvent) => void;
+  className?: string;
 }) {
   const uiLocked = useBearStore((s) => s.room.ui.locked);
   return (
-    <Stack direction={"horizontal"} className={"align-items-baseline"} gap={1}>
+    <Stack
+      direction={"horizontal"}
+      className={clsx("align-items-baseline", props.className)}
+      gap={1}
+    >
       <Button
         variant={"link"}
         disabled={uiLocked}
@@ -36,7 +41,7 @@ export function ScenarioTitleAndBadges(props: {
           <i className={"bi bi-plus-square small"}></i>
         </OverlayTrigger>
       )}
-      <span className={"pe-1 small"}>{props.scenario.title}</span>
+      <span className={"pe-1 small text-wrap"}>{props.scenario.title}</span>
     </Stack>
   );
 }

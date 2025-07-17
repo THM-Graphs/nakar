@@ -59,14 +59,14 @@ export function PropertyMenuScenarioGroupEntry(props: {
             }}
           >
             <Stack
-              gap={2}
-              direction={"horizontal"}
+              gap={0}
+              direction={"vertical"}
               className={"justify-content-between"}
             >
+              <span className={"small text-muted"}>{scenarioGroup.title}</span>
               <ScenarioTitleAndBadges
                 scenario={scenario}
               ></ScenarioTitleAndBadges>
-              <span className={"small text-muted"}>{scenarioGroup.title}</span>
             </Stack>
           </Dropdown.Item>
         );

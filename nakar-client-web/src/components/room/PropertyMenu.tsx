@@ -24,6 +24,7 @@ export function PropertyMenu(props: {
     (
       {
         onClick,
+        children,
       }: {
         onClick: (event: MouseEvent) => void;
         children: ReactNode;
@@ -39,7 +40,9 @@ export function PropertyMenu(props: {
           event.preventDefault();
           onClick(event);
         }}
-      ></NavbarButton>
+      >
+        {children}
+      </NavbarButton>
     ),
   );
 
@@ -49,9 +52,9 @@ export function PropertyMenu(props: {
 
   return (
     <>
-      <Dropdown className={props.className}>
+      <Dropdown className={props.className} autoClose={true}>
         <Dropdown.Toggle as={CustomToggle}></Dropdown.Toggle>
-        <Dropdown.Menu className={"rounded-0"}>
+        <Dropdown.Menu className={"rounded-0"} style={{ width: "350px" }}>
           <Dropdown.Item
             className={"small"}
             disabled={!isClipboardEnabled}
