@@ -7,7 +7,7 @@ export function Labels() {
 
   return (
     <Stack
-      className={"flex-wrap p-1 align-self-start"}
+      className={"flex-wrap p-1 align-self-start bg-body"}
       direction={"horizontal"}
       gap={1}
       style={{}}

@@ -33,7 +33,7 @@ export function Canvas(props: {
           </Stack>
           <Stack
             className={
-              "flex-grow-0 flex-shrink-1 justify-content-end flex-wrap z-1"
+              "flex-grow-0 flex-shrink-1 justify-content-end flex-wrap z-1 bg-body"
             }
             direction={"vertical"}
             gap={0}

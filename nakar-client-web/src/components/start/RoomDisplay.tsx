@@ -8,28 +8,28 @@ export function RoomDisplay(props: { room: Room }) {
   const navigate = useNavigate();
   return (
     <>
-      <Stack direction={"horizontal"} className={"ellipsis flex-shrink-0"}>
+      <Stack direction={"horizontal"} className={"flex-shrink-0"}>
         <NavbarButton
           onClick={async () => {
             await navigate(`/room/${props.room.id}`);
           }}
-          className={"flex-shrink-1 flex-grow-1 pb-2 pt-2 ellipsis"}
+          className={"flex-shrink-1 flex-grow-1 pb-1 pt-1"}
         >
           <ScenarioIcon
             scenario={props.room.scenario?.current ?? null}
-            size={40}
+            size={30}
           ></ScenarioIcon>
-          <Stack className={"flex-shrink-1 ellipsis ms-2"}>
-            <span className={"fs-4 ellipsis"}>{props.room.title}</span>
+          <Stack className={"flex-shrink-1 ms-2"}>
+            <span className={"fs-6 text-wrap text-break"}>
+              {props.room.title}
+            </span>
 
             {props.room.scenario ? (
-              <span className={"text-muted ellipsis"}>
+              <span className={"text-muted text-break text-wrap"}>
                 {props.room.scenario.current.title ?? "Untitled Scenario"}
               </span>
             ) : (
-              <span className={"text-muted fst-italic ellipsis"}>
-                No Scenario
-              </span>
+              <span className={"text-muted fst-italic"}>No Scenario</span>
             )}
           </Stack>
         </NavbarButton>

@@ -3,7 +3,7 @@ import { NavbarButton } from "../../../shared/NavbarButton.tsx";
 import { Stack } from "react-bootstrap";
 import { AppContext } from "../../../../lib/state/AppContext.ts";
 import { RoomContext } from "../../../../pages/Room.tsx";
-import { DynamicList } from "../../DynamicList.tsx";
+import { DynamicList } from "../../../shared/DynamicList.tsx";
 import { ScenarioDisplay } from "./ScenarioDisplay.tsx";
 
 export function ScenarioGroupDisplay(props: {

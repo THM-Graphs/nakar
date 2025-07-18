@@ -8,6 +8,7 @@ export function InspectorPanelButton() {
 
   return (
     <NavbarButton
+      size={"big"}
       selected={rightPanels === "inspector"}
       onToggle={(selected) => {
         if (selected) {
@@ -16,7 +17,7 @@ export function InspectorPanelButton() {
           hide();
         }
       }}
-      icon={"info-circle-fill"}
+      icon={"info-circle"}
     ></NavbarButton>
   );
 }

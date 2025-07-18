@@ -1,4 +1,4 @@
-import { Stack } from "react-bootstrap";
+import { Dropdown, Stack } from "react-bootstrap";
 import { AppNavbar } from "../components/shared/AppNavbar.tsx";
 import { Canvas } from "../components/room/Canvas/Canvas.tsx";
 import { useEffect } from "react";
@@ -36,6 +36,7 @@ import { ExpandNodePreviewModal } from "../components/room/ExpandNodePreviewModa
 import { QueryPanel } from "../components/room/Panel/Query/QueryPanel.tsx";
 import { QueryPanelButton } from "../components/room/Panel/Query/QueryPanelButton.tsx";
 import { GraphRendererD3 } from "../components/room/Canvas/GraphRendererD3.tsx";
+import { DropdownButton } from "../components/shared/DropdownButton.tsx";
 
 export type RoomContext = {
   initialRoomData: RoomSchema;
@@ -212,6 +213,24 @@ export function Room(props: { context: AppContext }) {
                 >
                   {roomContext.initialRoomData.title}
                 </span>
+                <DropdownButton icon={"three-dots-vertical"}>
+                  <Dropdown.Item
+                    disabled={roomContext.initialRoomData.editUrl == null}
+                    onClick={() => {
+                      if (roomContext.initialRoomData.editUrl != null) {
+                        window.open(
+                          roomContext.initialRoomData.editUrl,
+                          "_blank",
+                        );
+                      }
+                    }}
+                  >
+                    <Stack direction={"horizontal"} gap={2}>
+                      <i className={"bi bi-pencil-fill"}></i>
+                      <span className={"small"}>Edit Room</span>
+                    </Stack>
+                  </Dropdown.Item>
+                </DropdownButton>
               </>
             }
             right={

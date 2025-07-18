@@ -8,7 +8,8 @@ export function ScenariosPanelButton() {
 
   return (
     <NavbarButton
-      icon={"easel-fill"}
+      size={"big"}
+      icon={"easel"}
       selected={leftPanel === "scenarios"}
       className={"align-self-start flex-grow-0"}
       onToggle={(selected) => {

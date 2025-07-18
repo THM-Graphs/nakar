@@ -25,15 +25,11 @@ export function PerformanceDisplay() {
     >
       <span>
         Load:{" "}
-        <span className={"font-monospace"}>
-          {(performance.loadPercent * 100).toFixed()}%
-        </span>
+        <span className={""}>{(performance.loadPercent * 100).toFixed()}%</span>
       </span>
       <span>
         Tick Duration:{" "}
-        <span className={"font-monospace"}>
-          {performance.tickDuration.toFixed(2)}ms
-        </span>
+        <span className={""}>{performance.tickDuration.toFixed(2)}ms</span>
       </span>
     </Stack>
   );

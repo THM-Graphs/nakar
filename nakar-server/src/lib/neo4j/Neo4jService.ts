@@ -22,6 +22,7 @@ import { match, P } from 'ts-pattern';
 
 export class Neo4jService implements ApplicationService {
   public static readonly maximalElements: number = 5000;
+  public static readonly maximalPreviewElements: number = 5000;
 
   public constructor(private readonly _logger: LoggerService) {}
 
@@ -150,7 +151,7 @@ export class Neo4jService implements ApplicationService {
         { type: 'default' },
       );
     } else {
-      const limitToTriggerPreview: number = 100;
+      const limitToTriggerPreview: number = Neo4jService.maximalPreviewElements;
       return await this.executeQuery(
         databaseInfo,
         `MATCH (a)-[additionalRelationship]-(b) WHERE elementId(a) IN $nodesIds RETURN a, additionalRelationship, b LIMIT ${(limitToTriggerPreview + 1).toString()};`,
@@ -287,11 +288,11 @@ ORDER BY lcount DESC, label ASC`,
   }
 
   private _exploreQueryOfLabel(label: string): string {
-    return `MATCH (n:\`${label}\`) RETURN * LIMIT ${Neo4jService.maximalElements.toString()};`;
+    return `MATCH (n:\`${label}\`) RETURN * LIMIT ${Neo4jService.maximalPreviewElements.toString()};`;
   }
 
   private _exploreQueryOfRelationshipType(relType: string): string {
-    return `MATCH (a)-[r:\`${relType}\`]-(b) RETURN * LIMIT ${Neo4jService.maximalElements.toString()};`;
+    return `MATCH (a)-[r:\`${relType}\`]-(b) RETURN * LIMIT ${Neo4jService.maximalPreviewElements.toString()};`;
   }
 
   private async _getNodesCount(

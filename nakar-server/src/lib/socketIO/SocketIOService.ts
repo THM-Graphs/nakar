@@ -52,6 +52,7 @@ import { RoomServiceEventGraphTableChanged } from '../room/events/RoomServiceEve
 import { ConfigService } from '../config/ConfigService';
 import { RoomServiceEventKick } from '../room/events/RoomServiceEventKick';
 import { MediaService } from '../media/MediaService';
+import { RoomServiceEventNotAllNodesLoaded } from '../room/events/RoomServiceEventNotAllNodesLoaded';
 
 export type Server = UntypedServer<ClientToServerEvents, ServerToClientEvents>;
 export type Socket = UntypedSocket<ClientToServerEvents, ServerToClientEvents>;
@@ -452,6 +453,20 @@ export class SocketIOService implements ApplicationService {
               this.sendToRoom(message.roomId, {
                 type: 'WSEventKick',
               } satisfies SchemaWsEventKick);
+            },
+          )
+          .with(
+            { type: 'RoomServiceEventNotAllNodesLoaded' },
+            (message: RoomServiceEventNotAllNodesLoaded): void => {
+              this.sendToRoom(message.roomId, {
+                type: 'WSEventNotification',
+                notification: {
+                  message: `Not all nodes loaded. Did load ${message.count.toString()} nodes.`,
+                  date: new Date().toISOString(),
+                  severity: 'warning',
+                  title: 'Warning',
+                },
+              } satisfies SchemaWsEventNotification);
             },
           )
 

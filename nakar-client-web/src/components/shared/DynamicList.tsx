@@ -1,8 +1,8 @@
 import { ReactElement, useEffect, useState } from "react";
 import { Form, Stack } from "react-bootstrap";
-import { NavbarButton } from "../shared/NavbarButton.tsx";
+import { NavbarButton } from "./NavbarButton.tsx";
 import { numberFormat } from "../../lib/data/numberFormat.ts";
-import { Collapsable } from "./Collapsable.tsx";
+import { Collapsable } from "../room/Collapsable.tsx";
 import clsx from "clsx";
 
 export function DynamicList<T>(props: {
@@ -130,15 +130,7 @@ export function DynamicList<T>(props: {
       }
       initialState={false}
     >
-      <Stack className={"w-100 align-items-stretch"} direction={"horizontal"}>
-        <div
-          style={{ width: "3px" }}
-          className={"bg-primary flex-shrink-0 flex-grow-0"}
-        ></div>
-        <div className={"flex-shrink-1 flex-grow-1"} style={{ width: "1px" }}>
-          {list}
-        </div>
-      </Stack>
+      <Stack className={"flex-shrink-1 flex-grow-1"}>{list}</Stack>
     </Collapsable>
   ) : (
     <>{list}</>

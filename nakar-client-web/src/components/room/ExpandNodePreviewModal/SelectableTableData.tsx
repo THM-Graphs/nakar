@@ -1,6 +1,6 @@
 import { ExpandNodePreviewElement } from "../../../../src-gen";
 import { FormCheck, Stack } from "react-bootstrap";
-import { DynamicList } from "../DynamicList.tsx";
+import { DynamicList } from "../../shared/DynamicList.tsx";
 import clsx from "clsx";
 import { numberFormat } from "../../../lib/data/numberFormat.ts";
 

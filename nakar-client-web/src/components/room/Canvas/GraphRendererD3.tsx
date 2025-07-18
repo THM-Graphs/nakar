@@ -1,4 +1,4 @@
-import { createRef, useEffect } from "react";
+import { createRef, useContext, useEffect } from "react";
 import { useTheme } from "../../../lib/theme/useTheme.ts";
 import { useBearStore } from "../../../lib/state/useBearStore.ts";
 import { AppContext } from "../../../lib/state/AppContext.ts";
@@ -97,16 +97,17 @@ export function GraphRendererD3(props: {
       lastAnimationTimeStamp = timestamp;
       _graphRenderer.onAnimationTick(deltaTime);
       if (animationActive) {
-        requestAnimationFrame(onAnimationTick);
+        animationFrame = requestAnimationFrame(onAnimationTick);
       }
     };
-    requestAnimationFrame(onAnimationTick);
+    let animationFrame: number = requestAnimationFrame(onAnimationTick);
 
     return () => {
       for (const s of subs) {
         s.unsubscribe();
       }
       animationActive = false;
+      cancelAnimationFrame(animationFrame);
     };
   }, [websocketsManager, svgRef.current, theme]);
 

@@ -22,7 +22,7 @@ export const NavbarButton = forwardRef<
     onClick?: (event: MouseEvent) => void | Promise<void>;
     className?: string;
     children?: ReactNode;
-    size?: "sm";
+    size?: "sm" | "big";
     style?: CSSProperties;
     tooltip?: string;
     tooltipPlacement?: Placement;
@@ -76,7 +76,11 @@ export const NavbarButton = forwardRef<
         <Stack
           gap={2}
           direction={"horizontal"}
-          className={clsx("ps-2 pe-2", props.size == "sm" ? "" : "pt-1 pb-1")}
+          className={clsx(
+            props.size == "sm" && "ps-1 pe-1 pt-0 pb-0",
+            props.size == null && "ps-2 pe-2 pt-1 pb-1",
+            props.size == "big" && "ps-3 pe-3 pt-2 pb-2 fs-5",
+          )}
         >
           {loading ? (
             <Spinner animation="border" role="status" size={"sm"}>

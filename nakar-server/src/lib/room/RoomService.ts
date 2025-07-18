@@ -45,6 +45,7 @@ import { MutableNodeIndex } from './graph/MutableNodeIndex';
 import { ExpandNodesResult } from './ExpandNodesResult';
 import { FinalNodeDisplayConfiguration } from './scenario-pipeline/display-configuration/FinalNodeDisplayConfiguration';
 import { MediaService } from '../media/MediaService';
+import { RoomServiceEventNotAllNodesLoaded } from './events/RoomServiceEventNotAllNodesLoaded';
 
 export class RoomService implements ApplicationService {
   private readonly _workers: SMap<string, Worker>;
@@ -393,6 +394,16 @@ export class RoomService implements ApplicationService {
             edgesAdded: result.edgeAddedCount,
           } satisfies RoomServiceEventGraphElementsChanged);
 
+          if (
+            expandResult.tableData.length ===
+            Neo4jService.maximalPreviewElements
+          ) {
+            this._onEvent.next({
+              type: 'RoomServiceEventNotAllNodesLoaded',
+              roomId: params.roomId,
+              count: expandResult.tableData.length,
+            } satisfies RoomServiceEventNotAllNodesLoaded);
+          }
           return null;
         } catch (error: unknown) {
           if (error instanceof ToManyElementsError) {

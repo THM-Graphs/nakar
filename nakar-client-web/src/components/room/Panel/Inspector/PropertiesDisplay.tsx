@@ -16,12 +16,6 @@ export function PropertiesDisplay(props: {
   return (
     <>
       <Stack className={"flex-grow-0 flex-shrink-0"}>
-        <Stack direction={"horizontal"} className={"align-items-end"}>
-          <span className={"w-25 ps-2 pb-1 fw-bold small"}>{props.title}</span>
-          <span className={"fw-bold small"} style={{ paddingLeft: "40px" }}>
-            Value
-          </span>
-        </Stack>
         {props.properties.map((property, index: number) => (
           <PropertyDisplay
             key={property.slug}

@@ -2,7 +2,7 @@ import { Stack } from "react-bootstrap";
 import { Collapsable } from "../../Collapsable.tsx";
 import { ValueDisplay } from "./ValueDisplay.tsx";
 import { RoomContext } from "../../../../pages/Room.tsx";
-import { DynamicList } from "../../DynamicList.tsx";
+import { DynamicList } from "../../../shared/DynamicList.tsx";
 
 export function PropertyGroup(props: {
   propertyEntry: {

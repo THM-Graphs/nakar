@@ -9,6 +9,7 @@ export function HistogramPanelButton() {
   return (
     <NavbarButton
       selected={rightPanels === "histogram"}
+      size={"big"}
       onToggle={(selected) => {
         if (selected) {
           show();
@@ -16,7 +17,7 @@ export function HistogramPanelButton() {
           hide();
         }
       }}
-      icon={"bar-chart-fill"}
+      icon={"bar-chart"}
     ></NavbarButton>
   );
 }

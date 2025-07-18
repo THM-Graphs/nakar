@@ -31,8 +31,9 @@ export function PropertyDisplay(props: {
     >
       <span
         className={
-          "small user-select-text text-wrap text-break w-25 flex-shrink-0 ps-2 pe-2 align-self-baseline"
+          "small user-select-text text-wrap text-break flex-shrink-0 ps-2 pe-2 align-self-baseline"
         }
+        style={{ width: "30%" }}
       >
         {property.slug}
       </span>

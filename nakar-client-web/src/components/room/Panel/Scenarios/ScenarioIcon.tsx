@@ -29,7 +29,7 @@ export function ScenarioIcon(props: {
           }
         >
           <i
-            style={{ fontSize: `${(size * 0.4).toString()}px` }}
+            style={{ fontSize: `${(size * 0.4).toString()}px`, color: "black" }}
             className={"bi bi-easel-fill"}
           ></i>
         </div>
