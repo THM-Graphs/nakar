@@ -19,6 +19,7 @@ export function CanvasToolbar(props: {
 }) {
   const graph = useBearStore((s) => s.room.scenario.graph);
   const uiLocked = useBearStore((s) => s.room.ui.locked);
+  const selectedTab = useBearStore((s) => s.room.canvas.tabs.selected);
 
   return (
     <Stack
@@ -69,7 +70,7 @@ export function CanvasToolbar(props: {
       )}
       <DropdownButton title={"Actions"} icon={"chevron-down"}>
         <NavbarButton
-          disabled={uiLocked}
+          disabled={uiLocked || selectedTab !== "graph"}
           icon={"intersect"}
           title={"Connect Result Nodes"}
           onClick={async () => {
@@ -81,7 +82,11 @@ export function CanvasToolbar(props: {
           }}
         ></NavbarButton>
         <NavbarButton
-          disabled={graph.metaData.scenario == null || uiLocked}
+          disabled={
+            graph.metaData.scenario == null ||
+            uiLocked ||
+            selectedTab !== "graph"
+          }
           icon={"arrow-clockwise"}
           title={"Rerun Scenario"}
           onClick={async () => {
