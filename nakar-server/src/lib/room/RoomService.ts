@@ -1033,6 +1033,7 @@ export class RoomService implements ApplicationService {
       if (nodesToConnect.size === 0) {
         continue;
       }
+
       const db: GetDatabaseDBDTO | null =
         await this._database.getDatabase(source);
       if (db == null) {
@@ -1043,6 +1044,11 @@ export class RoomService implements ApplicationService {
         continue;
       }
       const credentials: Neo4jDatabaseInfo = Neo4jDatabaseInfo.parse(db);
+
+      this._logger.log(
+        this,
+        `Will run connect result nodes on ${nodesToConnect.size.toString()} on database ${db.title ?? db.documentId}.`,
+      );
       const result: Neo4jGraphElements =
         await this._neo4j.loadConnectingRelationships(
           credentials,
@@ -1058,6 +1064,7 @@ export class RoomService implements ApplicationService {
     graph: MutableGraph,
     displayConfiguration: FinalGraphDisplayConfiguration,
   ): void {
+    let compressedCount: number = 0;
     const getFromHandledRelsCache = (
       nodeAId: string,
       nodeBId: string,
@@ -1100,7 +1107,6 @@ export class RoomService implements ApplicationService {
         edge.type,
       );
       if (compressedRelEntry == null) {
-        edge.compressedCount = 1;
         addToHandledRelsCache(
           edge.startNodeId,
           edge.endNodeId,
@@ -1112,9 +1118,16 @@ export class RoomService implements ApplicationService {
         relationships.remove(compressedRelEntry);
         compressedRelEntry.compressedCount += 1;
         relationships.add(compressedRelEntry);
+        compressedCount += 1;
       }
     }
 
+    this._logger.log(
+      this,
+      `Did compress ${compressedCount.toString()} relationships. Will now apply widths.`,
+    );
+
+    // TODO: Use index
     let minimumCompressedCounts: number = 1;
     let maximumCompressedCounts: number = 1;
     for (const relationship of relationships.edges) {
@@ -1152,6 +1165,10 @@ export class RoomService implements ApplicationService {
     displayConfiguration: FinalGraphDisplayConfiguration,
   ): void {
     for (const mergeConfig of displayConfiguration.mergeNodeConfigurations) {
+      this._logger.log(
+        this,
+        `Will check nodes for merging ${mergeConfig.originalLabel} with ${mergeConfig.mergeLabel}`,
+      );
       const originalNodes: SSet<MutableNode> = graph.nodes.getBySource(
         mergeConfig.originalDatabaseId,
       );
@@ -1197,6 +1214,10 @@ export class RoomService implements ApplicationService {
                 }),
                 namesInQuery: new SSet(),
               }),
+            );
+            this._logger.log(
+              this,
+              `Did merge ${originalNode.id} with ${mergeNode.id}`,
             );
           }
         }
@@ -1309,6 +1330,7 @@ export class RoomService implements ApplicationService {
         this,
         `Will check nodes of ${targetLabel} for compressing`,
       );
+      let compressCount: number = 0;
       for (const node of graph.nodes.getByLabel(targetLabel)) {
         const siblings: SSet<MutableNode> = graph.getClusterBuddiesOfNode(
           node,
@@ -1347,10 +1369,15 @@ export class RoomService implements ApplicationService {
           if (!removed) {
             this._logger.warn(this, `Unable to remove ${sibling.id}`);
           }
-          newNode.compressedCount += 1;
+          newNode.compressedCount += sibling.compressedCount;
+          compressCount += 1;
         }
         graph.nodes.add(newNode);
       }
+      this._logger.log(
+        this,
+        `Did compress ${compressCount.toString()} nodes of label ${targetLabel}.`,
+      );
     }
   }
 }
