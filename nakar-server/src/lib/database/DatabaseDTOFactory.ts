@@ -92,7 +92,9 @@ export class DatabaseDTOFactory {
   }
 
   public createGetRoomDTOFromStrapi(
-    db: Result<'api::room.room', { populate: ['graph'] }>,
+    db: Result<'api::room.room'> & {
+      graph?: Result<'plugin::upload.file'> | null;
+    },
   ): GetRoomDBDTO {
     return {
       documentId: db.documentId,

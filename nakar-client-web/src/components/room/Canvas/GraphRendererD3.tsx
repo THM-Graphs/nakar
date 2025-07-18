@@ -1,4 +1,4 @@
-import { createRef, useContext, useEffect } from "react";
+import { createRef, useEffect } from "react";
 import { useTheme } from "../../../lib/theme/useTheme.ts";
 import { useBearStore } from "../../../lib/state/useBearStore.ts";
 import { AppContext } from "../../../lib/state/AppContext.ts";
