@@ -11,6 +11,7 @@ import {
 } from "../../../../src-gen";
 import { RoomContext } from "../../../pages/Room.tsx";
 import { resultOrThrow } from "../../../lib/data/resultOrThrow.ts";
+import { DropdownButton } from "../../shared/DropdownButton.tsx";
 
 export function CanvasToolbar(props: {
   context: AppContext;
@@ -23,9 +24,8 @@ export function CanvasToolbar(props: {
     <Stack
       direction={"horizontal"}
       className={
-        "flex-grow-0 bg-body flex-shrink-0 border-bottom align-items-center justify-content-between flex-wrap"
+        "flex-grow-0 bg-body flex-shrink-0 border-bottom align-items-center justify-content-between flex-wrap z-2"
       }
-      style={{ zIndex: 1 }}
     >
       <Stack direction={"horizontal"}>
         <NavbarButton
@@ -67,7 +67,7 @@ export function CanvasToolbar(props: {
           </span>
         </>
       )}
-      <Stack direction={"horizontal"} className={"flex-wrap"}>
+      <DropdownButton title={"Actions"} icon={"chevron-down"}>
         <NavbarButton
           disabled={uiLocked}
           icon={"intersect"}
@@ -92,7 +92,7 @@ export function CanvasToolbar(props: {
             );
           }}
         ></NavbarButton>
-      </Stack>
+      </DropdownButton>
     </Stack>
   );
 }

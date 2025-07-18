@@ -7,7 +7,6 @@ html, body, div#root {
     user-select: none;
 
     font-family: system-ui;
-    --bs-dropdown-zindex: 1050 !important;
 }
 
 /* Workaround for https://github.com/react-bootstrap/react-bootstrap/issues/3393#issuecomment-1375715749 */

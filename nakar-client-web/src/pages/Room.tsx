@@ -35,6 +35,7 @@ import { RunScenarioModal } from "../components/room/RunScenarioModal/RunScenari
 import { ExpandNodePreviewModal } from "../components/room/ExpandNodePreviewModal/ExpandNodePreviewModal.tsx";
 import { QueryPanel } from "../components/room/Panel/Query/QueryPanel.tsx";
 import { QueryPanelButton } from "../components/room/Panel/Query/QueryPanelButton.tsx";
+import { GraphRendererD3 } from "../components/room/Canvas/GraphRendererD3.tsx";
 
 export type RoomContext = {
   initialRoomData: RoomSchema;
@@ -194,72 +195,78 @@ export function Room(props: { context: AppContext }) {
   return (
     <>
       <Stack style={{ height: "100%" }} className={"position-relative"}>
-        <AppNavbar
-          left={
-            <>
-              <BackButton href={"/"} title={"Rooms"}></BackButton>
-            </>
-          }
-          center={
-            <>
-              <NavbarLogo></NavbarLogo>
-              <span
-                className={
-                  "small text-muted align-self-center ms-2 user-select-text"
-                }
-              >
-                {roomContext.initialRoomData.title}
-              </span>
-            </>
-          }
-          right={
-            <>
-              <InfoDropdown context={props.context}></InfoDropdown>
-            </>
-          }
-        ></AppNavbar>
-        <Stack
-          direction={"horizontal"}
-          className={"align-items-stretch flex-grow-1 position-relative"}
-          style={{ height: "100px" }}
-        >
-          <Stack className={"bg-body-tertiary border-end z-1 flex-grow-0"}>
-            <ScenariosPanelButton></ScenariosPanelButton>
-            <QueryPanelButton></QueryPanelButton>
+        <Stack>
+          <AppNavbar
+            left={
+              <>
+                <BackButton href={"/"} title={"Rooms"}></BackButton>
+              </>
+            }
+            center={
+              <>
+                <NavbarLogo></NavbarLogo>
+                <span
+                  className={
+                    "small text-muted align-self-center ms-2 user-select-text"
+                  }
+                >
+                  {roomContext.initialRoomData.title}
+                </span>
+              </>
+            }
+            right={
+              <>
+                <InfoDropdown context={props.context}></InfoDropdown>
+              </>
+            }
+          ></AppNavbar>
+          <Stack
+            direction={"horizontal"}
+            className={"align-items-stretch flex-grow-1 position-relative"}
+            style={{ height: "100px" }}
+          >
+            <Stack className={"bg-body-tertiary border-end flex-grow-0 z-1"}>
+              <ScenariosPanelButton></ScenariosPanelButton>
+              <QueryPanelButton></QueryPanelButton>
+            </Stack>
+            <ScenariosPanel
+              context={props.context}
+              roomContext={roomContext}
+            ></ScenariosPanel>
+            <QueryPanel roomContext={roomContext}></QueryPanel>
+            <Canvas context={props.context} roomContext={roomContext}></Canvas>
+            <InspectorPanel
+              context={props.context}
+              roomContext={roomContext}
+            ></InspectorPanel>
+            <HistogramPanel roomContext={roomContext}></HistogramPanel>
+            <Stack className={"flex-grow-0 bg-body-tertiary border-start z-1"}>
+              <InspectorPanelButton></InspectorPanelButton>
+              <HistogramPanelButton></HistogramPanelButton>
+            </Stack>
+            <ToastStack></ToastStack>
+            <RunScenarioModal roomContext={roomContext}></RunScenarioModal>
+            <ExpandNodePreviewModal
+              roomContext={roomContext}
+            ></ExpandNodePreviewModal>
           </Stack>
-          <ScenariosPanel
-            context={props.context}
-            roomContext={roomContext}
-          ></ScenariosPanel>
-          <QueryPanel roomContext={roomContext}></QueryPanel>
-          <Canvas context={props.context} roomContext={roomContext}></Canvas>
-          <InspectorPanel
-            context={props.context}
-            roomContext={roomContext}
-          ></InspectorPanel>
-          <HistogramPanel roomContext={roomContext}></HistogramPanel>
-          <Stack className={"flex-grow-0 bg-body-tertiary border-start z-1"}>
-            <InspectorPanelButton></InspectorPanelButton>
-            <HistogramPanelButton></HistogramPanelButton>
-          </Stack>
-          <ToastStack></ToastStack>
-          <RunScenarioModal roomContext={roomContext}></RunScenarioModal>
-          <ExpandNodePreviewModal
-            roomContext={roomContext}
-          ></ExpandNodePreviewModal>
+          <StatusBar
+            left={<ProgressDisplay></ProgressDisplay>}
+            right={
+              <>
+                <PerformanceDisplay></PerformanceDisplay>
+                <SocketStateDisplay></SocketStateDisplay>
+              </>
+            }
+          ></StatusBar>
+          {socketState.type !== "connected" && (
+            <ReconnectOverlay></ReconnectOverlay>
+          )}
         </Stack>
-        <StatusBar
-          left={<ProgressDisplay></ProgressDisplay>}
-          right={
-            <>
-              <PerformanceDisplay></PerformanceDisplay>
-              <SocketStateDisplay></SocketStateDisplay>
-            </>
-          }
-        ></StatusBar>
-        {socketState.type !== "connected" && (
-          <ReconnectOverlay></ReconnectOverlay>
-        )}
+        <GraphRendererD3
+          context={props.context}
+          roomContext={roomContext}
+        ></GraphRendererD3>
       </Stack>
     </>
   );

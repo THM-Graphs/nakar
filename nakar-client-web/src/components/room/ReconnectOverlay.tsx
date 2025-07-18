@@ -14,7 +14,7 @@ export function ReconnectOverlay() {
     <Stack
       className={"position-absolute bg-body-secondary"}
       gap={2}
-      style={{ zIndex: 3, width: "100%", height: "100%" }}
+      style={{ width: "100%", height: "100%", zIndex: 500 }}
     >
       <AppNavbar
         left={<BackButton href={"/"}></BackButton>}

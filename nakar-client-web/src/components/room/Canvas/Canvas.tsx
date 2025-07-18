@@ -1,5 +1,4 @@
 import { Labels } from "./Labels.tsx";
-import { GraphRendererD3 } from "./GraphRendererD3.tsx";
 import { Stack } from "react-bootstrap";
 import { DataTable } from "../DataTable.tsx";
 import { CanvasToolbar } from "./CanvasToolbar.tsx";
@@ -7,8 +6,6 @@ import { useBearStore } from "../../../lib/state/useBearStore.ts";
 import { AppContext } from "../../../lib/state/AppContext.ts";
 import { RoomContext } from "../../../pages/Room.tsx";
 import { NavbarButton } from "../../shared/NavbarButton.tsx";
-import { useEffect, useState } from "react";
-import { D3RendererEvents } from "../../../lib/d3/D3RendererEvents.ts";
 import { resultOrThrow } from "../../../lib/data/resultOrThrow.ts";
 import { postRoomActionRelayout } from "../../../../src-gen";
 
@@ -17,14 +14,7 @@ export function Canvas(props: {
   roomContext: RoomContext;
 }) {
   const tabs = useBearStore((s) => s.room.canvas.tabs);
-
-  const [rendererEvents, setRendererEvents] = useState<D3RendererEvents | null>(
-    null,
-  );
-
-  useEffect(() => {
-    setRendererEvents(new D3RendererEvents());
-  }, []);
+  const rendererEvents = useBearStore((s) => s.room.ui.rendererEvents);
 
   return (
     <Stack
@@ -38,17 +28,20 @@ export function Canvas(props: {
       ></CanvasToolbar>
       {tabs.selected == "graph" ? (
         <Stack direction={"horizontal"} className={"justify-content-between"}>
-          <Labels></Labels>
+          <Stack className={"z-1 flex-grow-0 align-self-start"}>
+            <Labels></Labels>
+          </Stack>
           <Stack
             className={
-              "flex-grow-0 flex-shrink-1 justify-content-end flex-wrap"
+              "flex-grow-0 flex-shrink-1 justify-content-end flex-wrap z-1"
             }
             direction={"vertical"}
             gap={0}
           >
             <NavbarButton
               icon={"tropical-storm"}
-              style={{ zIndex: 1 }}
+              tooltip={"Relayout"}
+              tooltipPlacement={"left"}
               onClick={async () => {
                 resultOrThrow(
                   await postRoomActionRelayout({
@@ -60,39 +53,44 @@ export function Canvas(props: {
             ></NavbarButton>
             <NavbarButton
               icon={"crosshair"}
-              style={{ zIndex: 1 }}
-              onClick={() => rendererEvents?.onCenter.next()}
+              tooltip={"Pan to center"}
+              tooltipPlacement={"left"}
+              onClick={() => {
+                rendererEvents.onCenter.next();
+              }}
               className={"bg-body-hover"}
             ></NavbarButton>
             <NavbarButton
               icon={"aspect-ratio"}
-              style={{ zIndex: 1 }}
-              onClick={() => rendererEvents?.onZoomOutOverview.next()}
+              tooltip={"Overview"}
+              tooltipPlacement={"left"}
+              onClick={() => {
+                rendererEvents.onZoomOutOverview.next();
+              }}
               className={"bg-body-hover"}
             ></NavbarButton>
             <NavbarButton
               icon={"zoom-in"}
-              style={{ zIndex: 1 }}
-              onClick={() => rendererEvents?.onZoomIn.next()}
+              tooltip={"Zoom In"}
+              tooltipPlacement={"left"}
+              onClick={() => {
+                rendererEvents.onZoomIn.next();
+              }}
               className={"bg-body-hover"}
             ></NavbarButton>
             <NavbarButton
               icon={"zoom-out"}
-              style={{ zIndex: 1 }}
-              onClick={() => rendererEvents?.onZoomOut.next()}
+              tooltip={"Zoom Out"}
+              tooltipPlacement={"left"}
+              onClick={() => {
+                rendererEvents.onZoomOut.next();
+              }}
               className={"bg-body-hover"}
             ></NavbarButton>
           </Stack>
         </Stack>
       ) : (
         <DataTable></DataTable>
-      )}
-      {rendererEvents && (
-        <GraphRendererD3
-          context={props.context}
-          roomContext={props.roomContext}
-          events={rendererEvents}
-        ></GraphRendererD3>
       )}
     </Stack>
   );

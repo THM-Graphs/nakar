@@ -7,6 +7,7 @@ import { devtools } from "zustand/middleware";
 import { v4 } from "uuid";
 import { match, P } from "ts-pattern";
 import { enableMapSet } from "immer";
+import { D3RendererEvents } from "../d3/D3RendererEvents.ts";
 
 enableMapSet();
 
@@ -87,6 +88,7 @@ export const useBearStore = create<BearState>()(
                 );
               });
             },
+            rendererEvents: new D3RendererEvents(),
           },
           websockets: {
             state: { type: "connecting" },

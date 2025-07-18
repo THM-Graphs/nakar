@@ -41,7 +41,7 @@ export function Label(props: {
         color: label ? getTextColor(label.color) : undefined,
       }}
     >
-      <span className={"text-start"}>{text}</span>
+      <span className={"text-start user-select-text"}>{text}</span>
     </Stack>
   );
 }

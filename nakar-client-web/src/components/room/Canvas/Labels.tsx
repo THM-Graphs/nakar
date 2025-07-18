@@ -10,9 +10,7 @@ export function Labels() {
       className={"flex-wrap p-1 align-self-start"}
       direction={"horizontal"}
       gap={1}
-      style={{
-        zIndex: 1,
-      }}
+      style={{}}
     >
       {graphElements.labels.map((label) => (
         <Label

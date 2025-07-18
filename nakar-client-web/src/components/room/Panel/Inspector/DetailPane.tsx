@@ -121,9 +121,10 @@ export function DetailPane(props: {
       <Collapsable
         title={<span className={"small fw-bold"}>Other Properties</span>}
         className={"border-top border-bottom flex-grow-0"}
+        initialState={false}
       >
         <PropertiesDisplay
-          title={"Other Property"}
+          title={"Property"}
           properties={props.otherProperties}
           roomContext={props.roomContext}
           elementId={props.elementId}

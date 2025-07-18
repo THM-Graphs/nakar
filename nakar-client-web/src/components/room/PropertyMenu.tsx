@@ -1,16 +1,14 @@
-import { ForwardedRef, forwardRef, MouseEvent, ReactNode } from "react";
-import { NavbarButton } from "../shared/NavbarButton.tsx";
 import { Dropdown, Stack } from "react-bootstrap";
 import { useBearStore } from "../../lib/state/useBearStore.ts";
 import { RoomContext } from "../../pages/Room.tsx";
 import { PropertyMenuScenarioGroupEntry } from "./PropertyMenuScenarioGroupEntry.tsx";
 import { useClipboard } from "../../lib/clipboard/useClipboard.ts";
+import { DropdownButton } from "../shared/DropdownButton.tsx";
 
 export function PropertyMenu(props: {
   value: unknown;
   roomContext: RoomContext;
-  className?: string;
-  size?: "sm";
+  buttonSize?: "sm";
 }) {
   const [isClipboardEnabled, setClipboard] = useClipboard();
   const parameterizedScenarios = useBearStore(
@@ -20,75 +18,51 @@ export function PropertyMenu(props: {
     (s) => s.room.ui.pushErrorNotification,
   );
 
-  const CustomToggle = forwardRef(
-    (
-      {
-        onClick,
-        children,
-      }: {
-        onClick: (event: MouseEvent) => void;
-        children: ReactNode;
-      },
-      ref: ForwardedRef<HTMLDivElement>,
-    ) => (
-      <NavbarButton
-        icon={"three-dots-vertical"}
-        ref={ref}
-        className={"z-1"}
-        size={props.size}
-        onClick={(event) => {
-          event.preventDefault();
-          onClick(event);
-        }}
-      >
-        {children}
-      </NavbarButton>
-    ),
-  );
-
   if (parameterizedScenarios.length === 0) {
     return null;
   }
 
   return (
     <>
-      <Dropdown className={props.className} autoClose={true}>
-        <Dropdown.Toggle as={CustomToggle}></Dropdown.Toggle>
-        <Dropdown.Menu className={"rounded-0"} style={{ width: "350px" }}>
-          <Dropdown.Item
-            className={"small"}
-            disabled={!isClipboardEnabled}
-            onClick={() => {
-              (async () => {
-                try {
-                  await setClipboard(
-                    typeof props.value == "string"
-                      ? props.value
-                      : JSON.stringify(props.value),
-                  );
-                } catch (error) {
-                  pushErrorNotification(error);
-                }
-              })().catch(pushErrorNotification);
-            }}
-          >
-            <Stack direction={"horizontal"} gap={2}>
-              <i className={"bi bi-copy"}></i>
-              <span>Copy</span>
-            </Stack>
-          </Dropdown.Item>
-          <Dropdown.Divider></Dropdown.Divider>
-          <Dropdown.Header>Run Scenario</Dropdown.Header>
-          {parameterizedScenarios.map((scenarioGroup) => (
-            <PropertyMenuScenarioGroupEntry
-              scenarioGroup={scenarioGroup}
-              roomContext={props.roomContext}
-              value={props.value}
-              key={scenarioGroup.id}
-            ></PropertyMenuScenarioGroupEntry>
-          ))}
-        </Dropdown.Menu>
-      </Dropdown>
+      <DropdownButton
+        icon={"three-dots-vertical"}
+        buttonSize={props.buttonSize ?? undefined}
+        buttonClassName={"align-self-baseline"}
+        menuStyle={{ width: "350px" }}
+      >
+        <Dropdown.Item
+          className={"small"}
+          disabled={!isClipboardEnabled}
+          onClick={() => {
+            (async () => {
+              try {
+                await setClipboard(
+                  typeof props.value == "string"
+                    ? props.value
+                    : JSON.stringify(props.value),
+                );
+              } catch (error) {
+                pushErrorNotification(error);
+              }
+            })().catch(pushErrorNotification);
+          }}
+        >
+          <Stack direction={"horizontal"} gap={2}>
+            <i className={"bi bi-copy"}></i>
+            <span>Copy</span>
+          </Stack>
+        </Dropdown.Item>
+        <Dropdown.Divider></Dropdown.Divider>
+        <Dropdown.Header>Run Scenario</Dropdown.Header>
+        {parameterizedScenarios.map((scenarioGroup) => (
+          <PropertyMenuScenarioGroupEntry
+            scenarioGroup={scenarioGroup}
+            roomContext={props.roomContext}
+            value={props.value}
+            key={scenarioGroup.id}
+          ></PropertyMenuScenarioGroupEntry>
+        ))}
+      </DropdownButton>
     </>
   );
 }

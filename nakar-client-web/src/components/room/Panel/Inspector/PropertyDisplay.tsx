@@ -72,7 +72,6 @@ export function PropertyDisplay(props: {
       <PropertyMenu
         value={property.value}
         roomContext={props.roomContext}
-        className={"align-self-baseline"}
       ></PropertyMenu>
     </Stack>
   );

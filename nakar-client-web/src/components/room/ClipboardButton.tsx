@@ -29,9 +29,9 @@ export function ClipboardButton(props: {
     >
       <NavbarButton
         className={clsx(props.className)}
-        style={{ zIndex: 1 }}
         icon={copied ? "check" : "copy"}
         disabled={!isClipboardEnabled}
+        tooltip={"Copy"}
         size={props.size}
         onClick={() => {
           (async () => {

@@ -6,7 +6,7 @@ export function StatusBar(props: { left?: ReactNode; right?: ReactNode }) {
     <Stack
       direction={"horizontal"}
       className={
-        "bg-body-tertiary flex-grow-0 flex-shrink-0 border-top align-items-center"
+        "bg-body-tertiary flex-grow-0 flex-shrink-0 border-top align-items-center z-1"
       }
     >
       {props.left}

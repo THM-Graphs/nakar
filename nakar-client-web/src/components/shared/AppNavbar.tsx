@@ -12,12 +12,10 @@ export function AppNavbar(props: {
     <Stack
       direction={"horizontal"}
       className={clsx(
-        "bg-body-tertiary border-bottom justify-content-between position-relative flex-grow-0 flex-shrink-0",
+        "bg-body-tertiary border-bottom justify-content-between flex-grow-0 flex-shrink-0 z-3",
         props.className,
       )}
-      style={{
-        zIndex: 2,
-      }}
+      style={{}}
     >
       <Stack direction={"horizontal"} className={"align-items-stretch"}>
         {props.left}

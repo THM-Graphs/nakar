@@ -15,9 +15,8 @@ export function DataTable() {
         height: "100%",
         width: "100%",
         overflow: "auto",
-        zIndex: 1,
       }}
-      className={"bg-body"}
+      className={"bg-body z-1"}
     >
       <Table className={"table-responsive"}>
         <thead>
