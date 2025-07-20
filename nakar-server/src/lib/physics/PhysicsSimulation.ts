@@ -118,10 +118,6 @@ export class PhysicsSimulation {
 
       const waitDelta: number = performance.now() - lastWait;
       if (waitDelta >= this._targetTickDuration) {
-        this._logger.debug(
-          this,
-          `Was able to run ${tickCount.toString()} physics ticks until await.`,
-        );
         const avgTickDuration: number =
           (performance.now() - lastWait) / tickCount;
         this._onSlowTick$.next();
@@ -131,6 +127,10 @@ export class PhysicsSimulation {
           performance:
             avgTickDuration > this._targetTickDuration ? 'bad' : 'good',
         });
+        this._logger.debug(
+          this,
+          `Was able to run ${tickCount.toString()} physics ticks until await ${avgTickDuration.toFixed(2)} ms/tick.`,
+        );
         lastWait = performance.now();
         tickCount = 0;
         await wait(0);
