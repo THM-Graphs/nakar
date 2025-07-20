@@ -49,6 +49,7 @@ import { RoomServiceEventNotAllNodesLoaded } from './events/RoomServiceEventNotA
 import { LayoutAlgorithm } from '../tools/LayoutAlgorithm';
 import { circularWeightedSpread } from '../tools/circleLayoutAlgorithms/circularWeightedSpread';
 import { PhysicalPosition } from '../physics/physical-graph/PhysicalPosition';
+import { wait } from '../tools/Wait';
 
 export class RoomService implements ApplicationService {
   private readonly _workers: SMap<string, Worker>;
@@ -327,16 +328,18 @@ export class RoomService implements ApplicationService {
 
               const neighbors: SSet<MutableNode> =
                 graph.getNeighborsOfNode(node);
-              const neighborPointsSum: PhysicalPosition = neighbors.reduce(
-                (
-                  position: PhysicalPosition,
-                  neighbor: MutableNode,
-                ): PhysicalPosition => ({
-                  x: position.x + neighbor.position.x,
-                  y: position.y + neighbor.position.y,
-                }),
-                { x: 0, y: 0 },
-              );
+              const neighborPointsSum: PhysicalPosition = neighbors
+                .filter((n: MutableNode): boolean => n.labels.has(targetLabel))
+                .reduce(
+                  (
+                    position: PhysicalPosition,
+                    neighbor: MutableNode,
+                  ): PhysicalPosition => ({
+                    x: position.x + neighbor.position.x,
+                    y: position.y + neighbor.position.y,
+                  }),
+                  { x: 0, y: 0 },
+                );
               node.position.x = neighborPointsSum.x / neighbors.size;
               node.position.y = neighborPointsSum.y / neighbors.size;
               PhysicsSimulation.jiggle(node);
@@ -1420,16 +1423,16 @@ export class RoomService implements ApplicationService {
       await this._connectNodes(graph);
     }
     this._mergeNodes(graph, displayConfiguration);
-    this._compressNodes(graph, displayConfiguration);
+    await this._compressNodes(graph, displayConfiguration);
     if (displayConfiguration.compressRelationships) {
       this._compressRelationships(graph, displayConfiguration);
     }
   }
 
-  private _compressNodes(
+  private async _compressNodes(
     graph: MutableGraph,
     displayConfiguration: FinalGraphDisplayConfiguration,
-  ): void {
+  ): Promise<void> {
     for (const nodeConfigEntry of displayConfiguration.nodeDisplayConfigurations) {
       const targetLabel: string = nodeConfigEntry[0];
       const nodeConfig: FinalNodeDisplayConfiguration = nodeConfigEntry[1];
@@ -1483,6 +1486,7 @@ export class RoomService implements ApplicationService {
           compressCount += 1;
         }
         graph.nodes.add(newNode);
+        await wait(0);
       }
       this._logger.log(
         this,
