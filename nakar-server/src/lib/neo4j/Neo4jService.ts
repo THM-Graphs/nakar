@@ -18,11 +18,11 @@ import { ExpandNodePreviewEntry } from './expand-node-preview/ExpandNodePreviewE
 import { SMap } from '../tools/Map';
 import { ToManyElementsError } from './ToManyElementsError';
 import { SchemaDatabaseStats } from '../../../src-gen/schema';
-import { match, P } from 'ts-pattern';
+import { match } from 'ts-pattern';
 
 export class Neo4jService implements ApplicationService {
   public static readonly maximalElements: number = 5000;
-  public static readonly maximalPreviewElements: number = 5000;
+  public static readonly maximalPreviewElements: number = 300;
 
   public constructor(private readonly _logger: LoggerService) {}
 
@@ -38,10 +38,7 @@ export class Neo4jService implements ApplicationService {
     databaseInfo: Neo4jDatabaseInfo,
     query: string,
     parameters: Record<string, unknown>,
-    limitConfig:
-      | { type: 'custom'; limit: number }
-      | { type: 'default' }
-      | { type: 'none' },
+    limitConfig: { type: 'preview' } | { type: 'default' } | { type: 'none' },
   ): Promise<Neo4jGraphElements> {
     const driver: Driver = createDriver(
       databaseInfo.url,
@@ -74,17 +71,20 @@ export class Neo4jService implements ApplicationService {
           .with({ type: 'none' }, (): void => {
             /* do nothing */
           })
-          .with(
-            { type: 'custom', limit: P.select() },
-            (limit: number): void => {
-              if (result.records.length > limit) {
-                throw new ToManyElementsError(result.records.length);
-              }
-            },
-          )
+          .with({ type: 'preview' }, (): void => {
+            if (result.records.length > Neo4jService.maximalPreviewElements) {
+              throw new ToManyElementsError(
+                result.records.length,
+                Neo4jService.maximalPreviewElements,
+              );
+            }
+          })
           .with({ type: 'default' }, (): void => {
             if (result.records.length > Neo4jService.maximalElements) {
-              throw new ToManyElementsError(result.records.length);
+              throw new ToManyElementsError(
+                result.records.length,
+                Neo4jService.maximalElements,
+              );
             }
           })
           .exhaustive();
@@ -151,14 +151,13 @@ export class Neo4jService implements ApplicationService {
         { type: 'default' },
       );
     } else {
-      const limitToTriggerPreview: number = Neo4jService.maximalPreviewElements;
       return await this.executeQuery(
         databaseInfo,
-        `MATCH (a)-[additionalRelationship]-(b) WHERE elementId(a) IN $nodesIds RETURN a, additionalRelationship, b LIMIT ${(limitToTriggerPreview + 1).toString()};`,
+        `MATCH (a)-[additionalRelationship]-(b) WHERE elementId(a) IN $nodesIds RETURN a, additionalRelationship, b LIMIT ${(Neo4jService.maximalPreviewElements + 1).toString()};`,
         {
           nodesIds: nodesIds,
         },
-        { type: 'custom', limit: limitToTriggerPreview },
+        { type: 'preview' },
       );
     }
   }

@@ -1,9 +1,10 @@
-import { Neo4jService } from './Neo4jService';
-
 export class ToManyElementsError extends Error {
-  public constructor(public readonly length: number) {
+  public constructor(
+    public readonly length: number,
+    public readonly limit: number,
+  ) {
     super(
-      `To many elements: ${length.toString()} (maximum: ${Neo4jService.maximalElements.toString()})`,
+      `To many elements: ${length.toString()} (maximum: ${limit.toString()})`,
     );
   }
 }
