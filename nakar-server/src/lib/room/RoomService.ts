@@ -820,6 +820,31 @@ export class RoomService implements ApplicationService {
     });
   }
 
+  public async removeDanglingNodes(params: { roomId: string }): Promise<void> {
+    const nodeIds: readonly string[] = await this._runWithRoomLock(
+      params.roomId,
+      'Collecting nodes to delete',
+      (): readonly string[] => {
+        const graph: MutableGraph = this.getGraph(params.roomId);
+        const danglingNodes: SSet<MutableNode> = graph.nodes.nodes.filter(
+          (node: MutableNode): boolean => node.degree(graph) === 0,
+        );
+        const ids: readonly string[] = danglingNodes
+          .map((node: MutableNode): string => node.id)
+          .toArray();
+        return ids;
+      },
+    );
+
+    await this.deleteElements({
+      roomId: params.roomId,
+      nodeIds: nodeIds,
+      labels: [],
+      edgeTypes: [],
+      edgeIds: [],
+    });
+  }
+
   public async saveGraph(roomId: string): Promise<void> {
     const graph: MutableGraph = this.getGraph(roomId);
 

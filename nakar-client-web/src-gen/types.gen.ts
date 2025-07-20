@@ -587,6 +587,16 @@ export type PostRoomActionUnlockAllNodesResponse = (unknown);
 
 export type PostRoomActionUnlockAllNodesError = unknown;
 
+export type PostRoomActionRemoveDanglingNodesData = {
+    path: {
+        id: string;
+    };
+};
+
+export type PostRoomActionRemoveDanglingNodesResponse = (unknown);
+
+export type PostRoomActionRemoveDanglingNodesError = unknown;
+
 export type GetDatabaseStatsData = {
     path: {
         id: string;

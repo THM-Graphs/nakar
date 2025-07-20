@@ -7,6 +7,7 @@ import {
   postRoomActionConnectResultNodes,
   postRoomActionRedo,
   postRoomActionReloadScenario,
+  postRoomActionRemoveDanglingNodes,
   postRoomActionUndo,
 } from "../../../../src-gen";
 import { RoomContext } from "../../../pages/Room.tsx";
@@ -92,6 +93,22 @@ export function CanvasToolbar(props: {
           onClick={async () => {
             resultOrThrow(
               await postRoomActionReloadScenario({
+                path: { id: props.roomContext.initialRoomData.id },
+              }),
+            );
+          }}
+        ></NavbarButton>
+        <NavbarButton
+          disabled={
+            graph.metaData.scenario == null ||
+            uiLocked ||
+            selectedTab !== "graph"
+          }
+          icon={"eye-slash"}
+          title={"Remove Dangling Nodes"}
+          onClick={async () => {
+            resultOrThrow(
+              await postRoomActionRemoveDanglingNodes({
                 path: { id: props.roomContext.initialRoomData.id },
               }),
             );
