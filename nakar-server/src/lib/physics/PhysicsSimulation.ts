@@ -16,6 +16,7 @@ export class PhysicsSimulation {
   public static readonly maximumForce: number = 300;
   public static readonly FPS: number = 30;
   public static readonly cooldownTime: number = 1000;
+  public static readonly frictionFactor: number = 0.4;
 
   private _graph: PhysicalGraph;
   private _running: boolean;
@@ -219,8 +220,8 @@ export class PhysicsSimulation {
     node.position.x += node.velocityX;
     node.position.y += node.velocityY;
 
-    node.velocityX *= 0.8;
-    node.velocityY *= 0.8;
+    node.velocityX *= 1 - PhysicsSimulation.frictionFactor;
+    node.velocityY *= 1 - PhysicsSimulation.frictionFactor;
   }
 
   private _magnitude(x: number, y: number): number {
