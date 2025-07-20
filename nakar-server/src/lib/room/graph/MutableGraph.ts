@@ -229,6 +229,9 @@ export class MutableGraph {
         );
         continue;
       }
+      if (foundNode.locked) {
+        continue;
+      }
       foundNode.position.x = node.position.x;
       foundNode.position.y = node.position.y;
       foundNode.locked = node.locked;

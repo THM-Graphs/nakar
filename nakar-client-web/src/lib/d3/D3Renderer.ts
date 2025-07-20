@@ -434,9 +434,7 @@ export class D3Renderer {
         .on(
           "end",
           (event: d3.D3DragEvent<SVGGElement, D3Node, null>, d: D3Node) => {
-            setTimeout(() => {
-              this.$onUngrabNode.next(d);
-            }, 500);
+            this.$onUngrabNode.next(d);
           },
         ),
     );

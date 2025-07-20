@@ -155,6 +155,9 @@ export class RoomService implements ApplicationService {
         );
         continue;
       }
+      node.position.x = physialNode.position.x;
+      node.position.y = physialNode.position.y;
+
       if (!node.locked) {
         node.locked = true;
         this._sendActionToWorker(params.roomId, {
@@ -190,6 +193,13 @@ export class RoomService implements ApplicationService {
     if (node == null) {
       throw new Error(`Unable to grab node: Node ${params.node.id} not found.`);
     }
+    node.position.x = params.node.position.x;
+    node.position.y = params.node.position.y;
+
+    this._sendActionToWorker(params.roomId, {
+      type: 'WTActionMoveNodes',
+      nodes: [params.node],
+    });
 
     node.grabs.delete(params.userId);
   }

@@ -209,6 +209,7 @@ export class SocketIOService implements ApplicationService {
         (clientToServerMessage: SchemaWsClientToServerMessage): void => {
           (async (): Promise<void> => {
             try {
+              this._logger.debug(this, clientToServerMessage.type);
               await match(clientToServerMessage)
                 .returnType<void | Promise<void>>()
                 .with(
