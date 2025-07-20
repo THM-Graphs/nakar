@@ -83,6 +83,10 @@ export class PhysicsSimulation {
     if (this._running) {
       return;
     } else {
+      this._logger.debug(
+        this,
+        `Will start physics simulation: ${JSON.stringify(options)}`,
+      );
       this._running = true;
       await this._runSync();
     }
@@ -114,6 +118,10 @@ export class PhysicsSimulation {
 
       const waitDelta: number = performance.now() - lastWait;
       if (waitDelta >= this._targetTickDuration) {
+        this._logger.debug(
+          this,
+          `Was able to run ${tickCount.toString()} physics ticks until await.`,
+        );
         const avgTickDuration: number =
           (performance.now() - lastWait) / tickCount;
         this._onSlowTick$.next();
@@ -132,6 +140,7 @@ export class PhysicsSimulation {
     this._running = false;
     this._targetDate = Number.MIN_SAFE_INTEGER;
     this._currentPerformance$.next(null);
+    this._logger.debug(this, 'Physics Simulation stoppped.');
   }
 
   private _tick(): void {

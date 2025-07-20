@@ -1005,6 +1005,10 @@ export class RoomService implements ApplicationService {
       );
     });
     worker.on('message', (message: WTEvent): void => {
+      this._logger.debug(
+        this,
+        `Did receive from worker ${worker.threadId.toString()} (room ${roomId}): ${message.type}`,
+      );
       match(message)
         .with(
           { type: 'WTEventPhysicsUpdate' },
