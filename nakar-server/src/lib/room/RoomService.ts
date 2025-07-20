@@ -816,7 +816,7 @@ export class RoomService implements ApplicationService {
 
     this._sendActionToWorker(params.roomId, {
       type: 'WTActionTriggerPhysics',
-      amount: 'long',
+      amount: 'short',
     });
   }
 

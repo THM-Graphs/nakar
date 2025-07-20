@@ -96,10 +96,9 @@ export class RoomInstanceService implements ApplicationService {
           { type: 'WTActionTriggerPhysics' },
           (action: WTActionTriggerPhysics): void => {
             const shortDuration: number =
-              200 +
-              2 *
-                (Object.keys(this._physics.getGraph().nodes).length +
-                  Object.keys(this._physics.getGraph().nodes).length);
+              400 +
+              (Object.keys(this._physics.getGraph().nodes).length +
+                Object.keys(this._physics.getGraph().nodes).length);
             void this._physics.run({
               maxMs:
                 action.amount === 'short' ? shortDuration : shortDuration * 4,
