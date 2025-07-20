@@ -13,7 +13,7 @@ import {
 } from "../../../src-gen";
 import { InspectorElement } from "../../components/room/Panel/Inspector/InspectorElement.ts";
 import { SocketState } from "../ws/SocketState.ts";
-import { D3RendererEvents } from "../d3/D3RendererEvents.ts";
+import { Subject } from "rxjs";
 
 export interface BearState {
   room: {
@@ -40,7 +40,12 @@ export interface BearState {
       ) => void;
       pushErrorNotification: (error: unknown) => void;
       removeNotification: (id: string) => void;
-      rendererEvents: D3RendererEvents;
+      rendererEvents: {
+        onZoomIn: Subject<void>;
+        onZoomOut: Subject<void>;
+        onCenter: Subject<void>;
+        onZoomOutOverview: Subject<void>;
+      };
     };
     scenario: {
       graph: Graph;

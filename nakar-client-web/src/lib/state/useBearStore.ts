@@ -7,7 +7,7 @@ import { devtools } from "zustand/middleware";
 import { v4 } from "uuid";
 import { match, P } from "ts-pattern";
 import { enableMapSet } from "immer";
-import { D3RendererEvents } from "../d3/D3RendererEvents.ts";
+import { Subject } from "rxjs";
 
 enableMapSet();
 
@@ -88,7 +88,12 @@ export const useBearStore = create<BearState>()(
                 );
               });
             },
-            rendererEvents: new D3RendererEvents(),
+            rendererEvents: {
+              onZoomIn: new Subject<void>(),
+              onZoomOut: new Subject<void>(),
+              onCenter: new Subject<void>(),
+              onZoomOutOverview: new Subject<void>(),
+            },
           },
           websockets: {
             state: { type: "connecting" },
