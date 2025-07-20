@@ -546,6 +546,17 @@ export class HTTPService implements ApplicationService {
       }),
     );
 
+    this._app.post(
+      '/room/:id/actions/unlock-all-nodes',
+      this._handle(async (req: Request): Promise<void> => {
+        const room: GetRoomDBDTO = await this._assertRoom(req);
+
+        this._roomService.unlockAllNodes({
+          roomId: room.documentId,
+        });
+      }),
+    );
+
     this._app.get(
       '/database/:id/stats',
       this._handle(async (req: Request): Promise<SchemaDatabaseStats> => {

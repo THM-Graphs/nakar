@@ -7,7 +7,10 @@ import { AppContext } from "../../../lib/state/AppContext.ts";
 import { RoomContext } from "../../../pages/Room.tsx";
 import { NavbarButton } from "../../shared/NavbarButton.tsx";
 import { resultOrThrow } from "../../../lib/data/resultOrThrow.ts";
-import { postRoomActionRelayout } from "../../../../src-gen";
+import {
+  postRoomActionRelayout,
+  postRoomActionUnlockAllNodes,
+} from "../../../../src-gen";
 
 export function Canvas(props: {
   context: AppContext;
@@ -45,6 +48,19 @@ export function Canvas(props: {
               onClick={async () => {
                 resultOrThrow(
                   await postRoomActionRelayout({
+                    path: { id: props.roomContext.initialRoomData.id },
+                  }),
+                );
+              }}
+              className={"bg-body-hover"}
+            ></NavbarButton>
+            <NavbarButton
+              icon={"unlock"}
+              tooltip={"Unlock all nodes"}
+              tooltipPlacement={"left"}
+              onClick={async () => {
+                resultOrThrow(
+                  await postRoomActionUnlockAllNodes({
                     path: { id: props.roomContext.initialRoomData.id },
                   }),
                 );

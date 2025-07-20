@@ -439,6 +439,21 @@ paths:
         "200":
           description: "OK"
 
+  /room/{id}/actions/unlock-all-nodes:
+    post:
+      tags:
+        - Room Actions
+      operationId: postRoomActionUnlockAllNodes
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "OK"
+
   /database/{id}/stats:
     get:
       tags:

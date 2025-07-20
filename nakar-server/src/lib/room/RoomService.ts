@@ -560,31 +560,6 @@ export class RoomService implements ApplicationService {
   }
 
   public relayout(params: { roomId: string }): void {
-    const graph: MutableGraph = this.getGraph(params.roomId);
-
-    const nodeLocks: Record<string, boolean> = {};
-    const clientNodeLocks: SMap<string, boolean> = new SMap<string, boolean>();
-    for (const node of graph.nodes.nodes) {
-      if (node.grabs.size === 0) {
-        if (node.locked) {
-          node.locked = false;
-          nodeLocks[node.id] = node.locked;
-          clientNodeLocks.set(node.id, node.locked);
-        }
-      }
-    }
-
-    this._onEvent.next({
-      type: 'RoomServiceEventNodeLocksUpdated',
-      roomId: params.roomId,
-      locks: clientNodeLocks,
-    } satisfies RoomServiceEvent);
-
-    this._sendActionToWorker(params.roomId, {
-      type: 'WTActionSetLocks',
-      locks: nodeLocks,
-    });
-
     this._sendActionToWorker(params.roomId, {
       type: 'WTActionTriggerPhysics',
       amount: 'long',
@@ -810,6 +785,38 @@ export class RoomService implements ApplicationService {
     this._sendActionToWorker(params.roomId, {
       type: 'WTActionTriggerPhysics',
       amount: 'short',
+    });
+  }
+
+  public unlockAllNodes(params: { roomId: string }): void {
+    const graph: MutableGraph = this.getGraph(params.roomId);
+
+    const nodeLocks: Record<string, boolean> = {};
+    const clientNodeLocks: SMap<string, boolean> = new SMap<string, boolean>();
+    for (const node of graph.nodes.nodes) {
+      if (node.grabs.size === 0) {
+        if (node.locked) {
+          node.locked = false;
+          nodeLocks[node.id] = node.locked;
+          clientNodeLocks.set(node.id, node.locked);
+        }
+      }
+    }
+
+    this._onEvent.next({
+      type: 'RoomServiceEventNodeLocksUpdated',
+      roomId: params.roomId,
+      locks: clientNodeLocks,
+    } satisfies RoomServiceEvent);
+
+    this._sendActionToWorker(params.roomId, {
+      type: 'WTActionSetLocks',
+      locks: nodeLocks,
+    });
+
+    this._sendActionToWorker(params.roomId, {
+      type: 'WTActionTriggerPhysics',
+      amount: 'long',
     });
   }
 

@@ -577,6 +577,16 @@ export type PostRoomActionConnectResultNodesResponse = (unknown);
 
 export type PostRoomActionConnectResultNodesError = unknown;
 
+export type PostRoomActionUnlockAllNodesData = {
+    path: {
+        id: string;
+    };
+};
+
+export type PostRoomActionUnlockAllNodesResponse = (unknown);
+
+export type PostRoomActionUnlockAllNodesError = unknown;
+
 export type GetDatabaseStatsData = {
     path: {
         id: string;
