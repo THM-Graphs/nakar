@@ -140,7 +140,7 @@ export class PhysicsSimulation {
     this._running = false;
     this._targetDate = Number.MIN_SAFE_INTEGER;
     this._currentPerformance$.next(null);
-    this._logger.debug(this, 'Physics Simulation stoppped.');
+    this._logger.debug(this, 'Physics Simulation stopped.');
   }
 
   private _tick(): void {
