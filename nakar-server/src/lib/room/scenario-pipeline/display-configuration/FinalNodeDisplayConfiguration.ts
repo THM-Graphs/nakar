@@ -1,10 +1,13 @@
 import { compile, TemplateDelegate } from 'handlebars';
+import { LayoutAlgorithm } from '../../../tools/LayoutAlgorithm';
 
 export class FinalNodeDisplayConfiguration {
   public readonly displayText: string | null;
   public readonly radius: string | null;
   public readonly backgroundColor: string | null;
   public readonly compress: boolean;
+  public readonly circleLayoutDistance: number;
+  public readonly layoutAlgorithm: LayoutAlgorithm;
 
   public readonly displayTextTemplate: TemplateDelegate | null;
   public readonly radiusTemplate: TemplateDelegate | null;
@@ -15,11 +18,15 @@ export class FinalNodeDisplayConfiguration {
     radius: string | null;
     backgroundColor: string | null;
     compress: boolean;
+    circleLayoutDistance: number;
+    layoutAlgorithm: LayoutAlgorithm;
   }) {
     this.displayText = data.displayText;
     this.radius = data.radius;
     this.backgroundColor = data.backgroundColor;
     this.compress = data.compress;
+    this.circleLayoutDistance = data.circleLayoutDistance;
+    this.layoutAlgorithm = data.layoutAlgorithm;
 
     this.displayTextTemplate = FinalNodeDisplayConfiguration._createTemplate(
       data.displayText,

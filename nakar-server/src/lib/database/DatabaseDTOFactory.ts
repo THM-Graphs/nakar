@@ -11,6 +11,7 @@ import { ScaleType } from '../tools/ScaleType';
 import { GetScenarioParameterDBDTO } from './dto/GetScenarioParameterDBDTO';
 import { GetScenarioQueryDBDTO } from './dto/GetScenarioQueryDBDTO';
 import { MergeNodeConfigurationDBDTO } from './dto/MergeNodeConfigurationDBDTO';
+import { LayoutAlgorithm } from '../tools/LayoutAlgorithm';
 
 export class DatabaseDTOFactory {
   public createGetDatabaseDTOFromStrapi(
@@ -165,6 +166,16 @@ export class DatabaseDTOFactory {
       radius: db.radius ?? null,
       backgroundColor: db.backgroundColor ?? null,
       compress: this._createNullableBooleanFromStrapi(db.compress),
+      circleLayoutDistance: db.circleLayoutDistance ?? null,
+      layoutAlgorithm: match(db.layoutAlgorithm)
+        .with(P.nullish, (): null => null)
+        .with('inherit', (): null => null)
+        .with(
+          'forceDirected',
+          (): LayoutAlgorithm => LayoutAlgorithm.forceDirected,
+        )
+        .with('circle', (): LayoutAlgorithm => LayoutAlgorithm.circle)
+        .exhaustive(),
     };
   }
 

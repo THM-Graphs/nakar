@@ -28,6 +28,18 @@
         "inherit"
       ],
       "default": "inherit"
+    },
+    "circleLayoutDistance": {
+      "type": "decimal"
+    },
+    "layoutAlgorithm": {
+      "type": "enumeration",
+      "enum": [
+        "inherit",
+        "forceDirected",
+        "circle"
+      ],
+      "default": "inherit"
     }
   }
 }

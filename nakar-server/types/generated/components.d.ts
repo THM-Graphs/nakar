@@ -100,9 +100,14 @@ export interface GraphNodeDisplayConfiguration extends Struct.ComponentSchema {
   };
   attributes: {
     backgroundColor: Schema.Attribute.String;
+    circleLayoutDistance: Schema.Attribute.Decimal;
     compress: Schema.Attribute.Enumeration<['true', 'false', 'inherit']> &
       Schema.Attribute.DefaultTo<'inherit'>;
     displayText: Schema.Attribute.String;
+    layoutAlgorithm: Schema.Attribute.Enumeration<
+      ['inherit', 'forceDirected', 'circle']
+    > &
+      Schema.Attribute.DefaultTo<'inherit'>;
     radius: Schema.Attribute.String;
     targetLabel: Schema.Attribute.String;
   };

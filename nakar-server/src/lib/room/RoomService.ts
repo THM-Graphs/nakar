@@ -46,6 +46,9 @@ import { ExpandNodesResult } from './ExpandNodesResult';
 import { FinalNodeDisplayConfiguration } from './scenario-pipeline/display-configuration/FinalNodeDisplayConfiguration';
 import { MediaService } from '../media/MediaService';
 import { RoomServiceEventNotAllNodesLoaded } from './events/RoomServiceEventNotAllNodesLoaded';
+import { LayoutAlgorithm } from '../tools/LayoutAlgorithm';
+import { circularWeightedSpread } from '../tools/circleLayoutAlgorithms/circularWeightedSpread';
+import { PhysicalPosition } from '../physics/physical-graph/PhysicalPosition';
 
 export class RoomService implements ApplicationService {
   private readonly _workers: SMap<string, Worker>;
@@ -262,13 +265,74 @@ export class RoomService implements ApplicationService {
 
         await this._postProcessGraph(graph, displayConfiguration);
 
-        // const physics: PhysicsSimulation = new PhysicsSimulation(
-        //   graph.toPhysicalGraph(displayConfiguration, this._logger),
-        //   this._logger,
-        //   this._profiler,
-        // );
-        // await physics.run({ maxMs: 1000 });
-        // graph.applyPhysicalGraph(physics.getGraph(), this._logger);
+        // Apply layout algorithm
+        for (const entry of displayConfiguration.nodeDisplayConfigurations.entries()) {
+          const targetLabel: string = entry[0];
+          const nodeDisplayConfig: FinalNodeDisplayConfiguration = entry[1];
+          if (nodeDisplayConfig.layoutAlgorithm === LayoutAlgorithm.circle) {
+            const nodesOfLabel: MutableNode[] = graph.nodes
+              .getByLabel(targetLabel)
+              .toArray();
+            if (nodesOfLabel.length < 2) {
+              continue;
+            }
+            const sortedNodesToLayout: MutableNode[] = circularWeightedSpread(
+              nodesOfLabel,
+              (n: MutableNode): number => n.degree(graph),
+            );
+
+            const degreeRange: Range | null =
+              graph.nodes.getNodeDegreeRange(graph);
+            const circumference: number =
+              nodeDisplayConfig.circleLayoutDistance *
+                sortedNodesToLayout.length +
+              sortedNodesToLayout.reduce(
+                (widths: number, node: MutableNode): number =>
+                  widths +
+                  node.radius(
+                    graph,
+                    displayConfiguration,
+                    degreeRange,
+                    this._logger,
+                  ) *
+                    2,
+                0,
+              );
+            const radius: number = circumference / (2 * Math.PI);
+            for (let i: number = 0; i < sortedNodesToLayout.length; i += 1) {
+              const degreeRad: number =
+                ((2 * Math.PI) / sortedNodesToLayout.length) * i - Math.PI / 2;
+              const x: number = radius * Math.cos(degreeRad);
+              const y: number = radius * Math.sin(degreeRad);
+              sortedNodesToLayout[i].position.x = x;
+              sortedNodesToLayout[i].position.y = y;
+              sortedNodesToLayout[i].locked = true;
+            }
+
+            // Put other nodes between
+            for (const node of graph.nodes.nodes) {
+              if (node.labels.has(targetLabel) || node.locked) {
+                continue;
+              }
+
+              const neighbors: SSet<MutableNode> =
+                graph.getNeighborsOfNode(node);
+              const neighborPointsSum: PhysicalPosition = neighbors.reduce(
+                (
+                  position: PhysicalPosition,
+                  neighbor: MutableNode,
+                ): PhysicalPosition => ({
+                  x: position.x + neighbor.position.x,
+                  y: position.y + neighbor.position.y,
+                }),
+                { x: 0, y: 0 },
+              );
+              node.position.x = neighborPointsSum.x / neighbors.size;
+              node.position.y = neighborPointsSum.y / neighbors.size;
+              PhysicsSimulation.jiggle(node);
+            }
+          }
+        }
 
         this._onEvent.next({
           type: 'RoomServiceEventGraphMetaDataChanged',

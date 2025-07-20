@@ -99,5 +99,6 @@ export default tseslint.config({
       },
     ],
     '@typescript-eslint/no-extraneous-class': 'off',
+    '@typescript-eslint/prefer-nullish-coalescing': 'off',
   },
 });

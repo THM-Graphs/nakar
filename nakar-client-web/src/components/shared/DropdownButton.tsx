@@ -8,7 +8,7 @@ import {
 import { NavbarButton } from "./NavbarButton.tsx";
 import { Dropdown } from "react-bootstrap";
 import clsx from "clsx";
-import { AlignType } from "react-bootstrap/types";
+import { AlignType, Placement } from "react-bootstrap/types";
 
 export function DropdownButton(props: {
   icon?: string;
@@ -19,6 +19,8 @@ export function DropdownButton(props: {
   menuStyle?: CSSProperties;
   children: ReactNode;
   align?: AlignType;
+  tooltip?: string;
+  tooltipPlacement?: Placement;
 }) {
   const CustomToggle = forwardRef(
     (
@@ -34,6 +36,8 @@ export function DropdownButton(props: {
       <NavbarButton
         icon={props.icon}
         ref={ref}
+        tooltip={props.tooltip}
+        tooltipPlacement={props.tooltipPlacement}
         title={props.title}
         size={props.buttonSize}
         onClick={(event) => {
