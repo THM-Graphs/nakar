@@ -8,6 +8,7 @@ import {
 import { NavbarButton } from "./NavbarButton.tsx";
 import { Dropdown } from "react-bootstrap";
 import clsx from "clsx";
+import { AlignType } from "react-bootstrap/types";
 
 export function DropdownButton(props: {
   icon?: string;
@@ -17,6 +18,7 @@ export function DropdownButton(props: {
   menuClassName?: string;
   menuStyle?: CSSProperties;
   children: ReactNode;
+  align?: AlignType;
 }) {
   const CustomToggle = forwardRef(
     (
@@ -46,7 +48,11 @@ export function DropdownButton(props: {
 
   return (
     <>
-      <Dropdown autoClose={true} className={props.buttonClassName}>
+      <Dropdown
+        autoClose={true}
+        className={props.buttonClassName}
+        align={props.align}
+      >
         <Dropdown.Toggle as={CustomToggle}></Dropdown.Toggle>
         <Dropdown.Menu
           className={clsx("rounded-0", props.menuClassName)}

@@ -1,5 +1,5 @@
 import { Labels } from "./Labels.tsx";
-import { Stack } from "react-bootstrap";
+import { Dropdown, Stack } from "react-bootstrap";
 import { DataTable } from "../DataTable.tsx";
 import { CanvasToolbar } from "./CanvasToolbar.tsx";
 import { useBearStore } from "../../../lib/state/useBearStore.ts";
@@ -11,6 +11,7 @@ import {
   postRoomActionRelayout,
   postRoomActionUnlockAllNodes,
 } from "../../../../src-gen";
+import { DropdownButton } from "../../shared/DropdownButton.tsx";
 
 export function Canvas(props: {
   context: AppContext;
@@ -18,6 +19,10 @@ export function Canvas(props: {
 }) {
   const tabs = useBearStore((s) => s.room.canvas.tabs);
   const rendererEvents = useBearStore((s) => s.room.ui.rendererEvents);
+  const performanceMode = useBearStore((s) => s.room.canvas.performanceMode);
+  const setPerformanceMode = useBearStore(
+    (s) => s.room.canvas.setPerformanceMode,
+  );
 
   return (
     <Stack
@@ -52,7 +57,6 @@ export function Canvas(props: {
                   }),
                 );
               }}
-              className={"bg-body-hover"}
             ></NavbarButton>
             <NavbarButton
               icon={"unlock"}
@@ -65,8 +69,27 @@ export function Canvas(props: {
                   }),
                 );
               }}
-              className={"bg-body-hover"}
             ></NavbarButton>
+            <DropdownButton icon={"speedometer"} align={"end"}>
+              <Dropdown.Header>Performance Mode</Dropdown.Header>
+              <Dropdown.Divider></Dropdown.Divider>
+              {[
+                ["auto", "Auto", "square-half"],
+                ["on", "On", "check-square"],
+                ["off", "Off", "x-square"],
+              ].map((pm) => (
+                <Dropdown.Item
+                  key={pm[0]}
+                  active={performanceMode === pm[0]}
+                  onClick={() => {
+                    setPerformanceMode(pm[0] as "auto" | "on" | "off");
+                  }}
+                >
+                  <i className={`bi bi-${pm[2]} me-2`}></i>
+                  {pm[1]}
+                </Dropdown.Item>
+              ))}
+            </DropdownButton>
             <NavbarButton
               icon={"crosshair"}
               tooltip={"Pan to center"}
@@ -74,16 +97,15 @@ export function Canvas(props: {
               onClick={() => {
                 rendererEvents.onCenter.next();
               }}
-              className={"bg-body-hover"}
             ></NavbarButton>
             <NavbarButton
               icon={"aspect-ratio"}
               tooltip={"Overview"}
+              disabled={true}
               tooltipPlacement={"left"}
               onClick={() => {
                 rendererEvents.onZoomOutOverview.next();
               }}
-              className={"bg-body-hover"}
             ></NavbarButton>
             <NavbarButton
               icon={"zoom-in"}
@@ -92,7 +114,6 @@ export function Canvas(props: {
               onClick={() => {
                 rendererEvents.onZoomIn.next();
               }}
-              className={"bg-body-hover"}
             ></NavbarButton>
             <NavbarButton
               icon={"zoom-out"}
@@ -101,7 +122,6 @@ export function Canvas(props: {
               onClick={() => {
                 rendererEvents.onZoomOut.next();
               }}
-              className={"bg-body-hover"}
             ></NavbarButton>
           </Stack>
         </Stack>

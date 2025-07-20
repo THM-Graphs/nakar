@@ -69,7 +69,7 @@ export function CanvasToolbar(props: {
           </span>
         </>
       )}
-      <DropdownButton title={"Actions"} icon={"chevron-down"}>
+      <DropdownButton title={"Actions"} icon={"chevron-down"} align={"end"}>
         <NavbarButton
           disabled={uiLocked || selectedTab !== "graph"}
           icon={"intersect"}

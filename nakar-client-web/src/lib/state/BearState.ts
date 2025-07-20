@@ -126,6 +126,8 @@ export interface BearState {
         selectGraph: () => void;
         selectData: () => void;
       };
+      performanceMode: "auto" | "on" | "off";
+      setPerformanceMode: (pm: "auto" | "on" | "off") => void;
     };
   };
 }

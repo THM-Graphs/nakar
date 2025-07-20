@@ -16,6 +16,7 @@ export function GraphRendererD3(props: {
   const inspector = useBearStore((s) => s.room.panels.inspector);
   const setLocks = useBearStore((s) => s.room.scenario.setLocks);
   const events = useBearStore((s) => s.room.ui.rendererEvents);
+  const performanceMode = useBearStore((s) => s.room.canvas.performanceMode);
 
   useEffect(() => {
     if (svgRef.current == null) {
@@ -25,9 +26,10 @@ export function GraphRendererD3(props: {
       theme,
       svgRef.current,
       props.roomContext.initialGraphData.elements,
+      performanceMode,
     );
 
-    const subs = [
+    const subs: { unsubscribe: () => void }[] = [
       websocketsManager.onMessage$.subscribe((message) => {
         match(message)
           .with({ type: "WSEventNodesMoved" }, (event) => {
@@ -85,6 +87,14 @@ export function GraphRendererD3(props: {
       events.onZoomOutOverview.subscribe(() => {
         _graphRenderer.zoomOutOverview();
       }),
+      {
+        unsubscribe: useBearStore.subscribe(
+          (s) => s.room.canvas.performanceMode,
+          (pm) => {
+            _graphRenderer.setPerformanceMode(pm);
+          },
+        ),
+      },
     ];
 
     let animationActive: boolean = true;

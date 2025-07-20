@@ -13,15 +13,17 @@ import { UserTheme } from "../theme/UserTheme.ts";
 import { Observable, Subject, throttleTime } from "rxjs";
 import { D3RendererState } from "./D3RendererState.ts";
 import { D3Calculator } from "./D3Calculator.ts";
+import { D3PerformanceMode } from "./D3PerformanceMode.ts";
+import { match } from "ts-pattern";
 
 const fps = 30;
 const strokeWidth: number = 3;
-const performanceZoomThreshhold = 0.3;
 
 export class D3Renderer {
   private graphState: D3RendererState;
   private readonly theme: UserTheme;
   private readonly svgElement: SVGSVGElement;
+  private performanceMode: D3PerformanceMode;
 
   private $onDisplayLinkData: Subject<D3Link>;
   private $onDisplayNodeData: Subject<D3Node>;
@@ -75,11 +77,13 @@ export class D3Renderer {
     theme: UserTheme,
     svgElement: SVGSVGElement,
     initialGraphElements: GraphElements,
+    performanceMode: D3PerformanceMode,
   ) {
     console.log("Did create instance of graph renderer");
     this.graphState = D3RendererState.fromWsData(initialGraphElements);
     this.theme = theme;
     this.svgElement = svgElement;
+    this.performanceMode = performanceMode;
 
     this.$onDisplayLinkData = new Subject();
     this.$onDisplayNodeData = new Subject();
@@ -188,7 +192,6 @@ export class D3Renderer {
       .zoom<SVGSVGElement, null>()
       .on("zoom", (event: d3.D3ZoomEvent<SVGSVGElement, null>) => {
         this.zoomContainer?.attr("transform", event.transform.toString());
-        this._optimizePerformance();
       });
     svg.call(zoomBehaviour);
     this.zoomBehaviour = zoomBehaviour;
@@ -512,7 +515,7 @@ export class D3Renderer {
   }
 
   public zoomOutOverview(): void {
-    this.zoomTo(performanceZoomThreshhold);
+    // TODO
   }
 
   public zoomTo(zoom: number): void {
@@ -563,6 +566,11 @@ export class D3Renderer {
     return this.getZoomTransform().k;
   }
 
+  public setPerformanceMode(pm: D3PerformanceMode): void {
+    this.performanceMode = pm;
+    this._optimizePerformance();
+  }
+
   private smoothDamp(
     current: number,
     target: number,
@@ -604,10 +612,7 @@ export class D3Renderer {
   }
 
   private _optimizePerformance() {
-    const performanceOpimazations =
-      this.getZoom() <= performanceZoomThreshhold &&
-      this.graphState.nodes.length + this.graphState.links.length > 300;
-    if (performanceOpimazations) {
+    if (this._shouldUseFastPerformance()) {
       this.linkLabelSelection?.attr("hidden", true);
       this.nodeSelection?.select("foreignObject").attr("hidden", true);
       this.linkPathSelection?.attr("marker-end", null);
@@ -616,5 +621,16 @@ export class D3Renderer {
       this.nodeSelection?.select("foreignObject").attr("hidden", null);
       this.linkPathSelection?.attr("marker-end", "url(#arrow)");
     }
+  }
+
+  private _shouldUseFastPerformance(): boolean {
+    return match(this.performanceMode)
+      .with(
+        "auto",
+        () => this.graphState.nodes.length + this.graphState.links.length > 300,
+      )
+      .with("on", () => true)
+      .with("off", () => false)
+      .exhaustive();
   }
 }
