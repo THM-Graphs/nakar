@@ -6,7 +6,7 @@ RUN npm install
 
 COPY config ./config
 COPY database ./database
-COPY public ./public
+COPY public/robots.txt ./public/robots.txt
 COPY src ./src
 COPY src-gen ./src-gen
 COPY types ./types
@@ -20,7 +20,7 @@ WORKDIR /app
 ENV NODE_ENV=production
 
 COPY --from=builder /app/dist ./
-COPY public ./public
+COPY public/robots.txt ./public/robots.txt
 COPY favicon.ico package.json package-lock.json ./
 RUN npm ci --omit=dev
 

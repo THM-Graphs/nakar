@@ -5,7 +5,8 @@
   "description": "A Strapi application",
   "scripts": {
     "build": "strapi build",
-    "build:docker": "docker buildx build --platform linux/amd64 -f Dockerfile -t ghcr.io/thm-graphs/nakar/server:dev .",
+    "build:docker": "docker buildx build -f Dockerfile -t ghcr.io/thm-graphs/nakar/server:dev .",
+    "build:docker:mutliarch": "docker buildx build --platform linux/amd64,linux/arm64 -f Dockerfile -t ghcr.io/thm-graphs/nakar/server:dev .",
     "develop": "strapi develop",
     "start": "strapi start",
     "lint": "eslint src",
@@ -14,7 +15,6 @@
     "test": "jest",
     "export": "strapi export --no-compress --no-encrypt -f export",
     "import": "strapi import -f export.tar",
-    "transfer": "strapi transfer --from http://nakar.mni.thm.de:1337/admin",
     "version": "echo $npm_package_version"
   },
   "dependencies": {
