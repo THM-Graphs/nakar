@@ -13,7 +13,7 @@ import { UserTheme } from "../theme/UserTheme.ts";
 import { Observable, Subject, throttleTime } from "rxjs";
 import { D3RendererState } from "./D3RendererState.ts";
 import { D3Calculator } from "./D3Calculator.ts";
-import { D3PerformanceMode } from "./D3PerformanceMode.ts";
+import { PerformanceMode } from "../data/PerformanceMode.ts";
 import { match } from "ts-pattern";
 
 const fps = 30;
@@ -23,7 +23,7 @@ export class D3Renderer {
   private graphState: D3RendererState;
   private readonly theme: UserTheme;
   private readonly svgElement: SVGSVGElement;
-  private performanceMode: D3PerformanceMode;
+  private performanceMode: PerformanceMode;
 
   private $onDisplayLinkData: Subject<D3Link>;
   private $onDisplayNodeData: Subject<D3Node>;
@@ -77,7 +77,7 @@ export class D3Renderer {
     theme: UserTheme,
     svgElement: SVGSVGElement,
     initialGraphElements: GraphElements,
-    performanceMode: D3PerformanceMode,
+    performanceMode: PerformanceMode,
   ) {
     console.log("Did create instance of graph renderer");
     this.graphState = D3RendererState.fromWsData(initialGraphElements);
@@ -450,8 +450,9 @@ export class D3Renderer {
     this.smoothedPositionDirty = false;
 
     const smoothTime = (1000 / fps) * 1.5; // compensate slow ws
-    const maxSpeed = 500;
-    for (const node of this.graphState.nodes) {
+    const maxSpeed = 10000;
+    for (let i = 0; i < this.graphState.nodes.length; i += 1) {
+      const node: D3Node = this.graphState.nodes[i];
       [node.x, node.vx] = this.smoothDamp(
         node.x,
         node.tx,
@@ -473,7 +474,7 @@ export class D3Renderer {
         this.smoothedPositionDirty = true;
       }
     }
-    this.applyPropertiesToSVG();
+    this.applyPositionsToSVG();
 
     if (deltaTime > (1 / 60) * 1000 * 1.1) {
       console.warn(
@@ -483,15 +484,7 @@ export class D3Renderer {
   }
 
   public applyPropertiesToSVG(): void {
-    this.linkPathSelection?.attr("d", (d) => this.calculator.curvedPath(d));
-    this.linkLabelSelection?.attr("transform", (d: D3Link) => {
-      const c = this.calculator.curvePoints(d);
-      return `translate(${c.center.x.toString()},${c.center.y.toString()})rotate(${c.angle.toString()})`;
-    });
-    this.nodeSelection?.attr(
-      "transform",
-      (d: D3Node) => `translate(${d.x.toString()}, ${d.y.toString()})`,
-    );
+    this.applyPositionsToSVG();
     this.nodeCircle
       ?.attr("stroke-width", (n: D3Node) => {
         return n.locked
@@ -504,6 +497,18 @@ export class D3Renderer {
       .attr("stroke", () => {
         return this.theme == "dark" ? "#fff" : "#000";
       });
+  }
+
+  public applyPositionsToSVG() {
+    this.linkPathSelection?.attr("d", (d) => this.calculator.curvedPath(d));
+    this.linkLabelSelection?.attr("transform", (d: D3Link) => {
+      const c = this.calculator.curvePoints(d);
+      return `translate(${c.center.x.toString()},${c.center.y.toString()})rotate(${c.angle.toString()})`;
+    });
+    this.nodeSelection?.attr(
+      "transform",
+      (d: D3Node) => `translate(${d.x.toString()}, ${d.y.toString()})`,
+    );
   }
 
   public zoomIn(): void {
@@ -570,7 +575,7 @@ export class D3Renderer {
     return this.getZoomTransform().k;
   }
 
-  public setPerformanceMode(pm: D3PerformanceMode): void {
+  public setPerformanceMode(pm: PerformanceMode): void {
     this.performanceMode = pm;
     this._optimizePerformance();
   }

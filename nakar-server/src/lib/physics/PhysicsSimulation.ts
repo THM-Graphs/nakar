@@ -1,4 +1,10 @@
-import { BehaviorSubject, Observable, Subject } from 'rxjs';
+import {
+  BehaviorSubject,
+  debounceTime,
+  Observable,
+  Subject,
+  throttleTime,
+} from 'rxjs';
 import { wait } from '../tools/Wait';
 import { CombinationCache } from './CombinationCache';
 import { LoggerService } from '../logger/LoggerService';
@@ -42,7 +48,9 @@ export class PhysicsSimulation {
   }
 
   public get onPerformanceChanged$(): Observable<SchemaPhysicsPerformance | null> {
-    return this._currentPerformance$.asObservable();
+    return this._currentPerformance$
+      .asObservable()
+      .pipe(throttleTime(1000, undefined, { leading: true, trailing: true }));
   }
 
   private get _heat(): number {
@@ -128,7 +136,7 @@ export class PhysicsSimulation {
         });
         this._logger.debug(
           this,
-          `Was able to run ${tickCount.toString()} physics ticks until await ${avgTickDuration.toFixed(2)} ms/tick.`,
+          `Was able to run ${tickCount.toString()} physics ticks until await ${avgTickDuration.toFixed(0)} ms/tick.`,
         );
         lastWait = Date.now();
         tickCount = 0;

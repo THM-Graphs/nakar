@@ -29,7 +29,7 @@ export function PerformanceDisplay() {
       </span>
       <span>
         Tick Duration:{" "}
-        <span className={""}>{performance.tickDuration.toFixed(2)}ms</span>
+        <span className={""}>{performance.tickDuration.toFixed()}ms</span>
       </span>
     </Stack>
   );

@@ -71,18 +71,6 @@ export function CanvasToolbar(props: {
       )}
       <DropdownButton title={"Actions"} icon={"chevron-down"} align={"end"}>
         <NavbarButton
-          disabled={uiLocked || selectedTab !== "graph"}
-          icon={"intersect"}
-          title={"Connect Result Nodes"}
-          onClick={async () => {
-            resultOrThrow(
-              await postRoomActionConnectResultNodes({
-                path: { id: props.roomContext.initialRoomData.id },
-              }),
-            );
-          }}
-        ></NavbarButton>
-        <NavbarButton
           disabled={
             graph.metaData.scenario == null ||
             uiLocked ||
@@ -93,6 +81,18 @@ export function CanvasToolbar(props: {
           onClick={async () => {
             resultOrThrow(
               await postRoomActionReloadScenario({
+                path: { id: props.roomContext.initialRoomData.id },
+              }),
+            );
+          }}
+        ></NavbarButton>
+        <NavbarButton
+          disabled={uiLocked || selectedTab !== "graph"}
+          icon={"intersect"}
+          title={"Connect Result Nodes"}
+          onClick={async () => {
+            resultOrThrow(
+              await postRoomActionConnectResultNodes({
                 path: { id: props.roomContext.initialRoomData.id },
               }),
             );
