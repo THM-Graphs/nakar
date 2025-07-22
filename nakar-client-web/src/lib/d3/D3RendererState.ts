@@ -3,11 +3,23 @@ import { D3Node } from "./D3Node.ts";
 import { Edge, GraphElements, Node } from "../../../src-gen";
 
 export class D3RendererState {
+  private _nodeByIdCache: Record<string, D3Node | null>;
+
   public constructor(
     public readonly links: D3Link[],
     public readonly nodes: D3Node[],
     public readonly originalGraphElements: GraphElements | null,
-  ) {}
+  ) {
+    this._nodeByIdCache = nodes.reduce<Record<string, D3Node | null>>(
+      (cache, node) => {
+        return {
+          ...cache,
+          [node.id]: node,
+        };
+      },
+      {},
+    );
+  }
 
   public static empty(): D3RendererState {
     return new D3RendererState([], [], null);
@@ -53,5 +65,9 @@ export class D3RendererState {
     }, []);
 
     return new D3RendererState(links, nodes, graphElements);
+  }
+
+  public getNodeById(id: string): D3Node | null {
+    return this._nodeByIdCache[id];
   }
 }

@@ -15,7 +15,7 @@ export class ProfilerTask {
   ) {
     this._sender = sender;
     this._title = title;
-    this._startDate = performance.now();
+    this._startDate = Date.now();
     this._endDate = null;
     this._profiler = profiler;
   }
@@ -29,11 +29,11 @@ export class ProfilerTask {
   }
 
   public get elapsedTimeMs(): number {
-    return (this._endDate ?? performance.now()) - this._startDate;
+    return (this._endDate ?? Date.now()) - this._startDate;
   }
 
   public finish(): void {
-    this._endDate = performance.now();
+    this._endDate = Date.now();
     this._profiler.finishTask(this);
   }
 }

@@ -53,6 +53,8 @@ import { ConfigService } from '../config/ConfigService';
 import { RoomServiceEventKick } from '../room/events/RoomServiceEventKick';
 import { MediaService } from '../media/MediaService';
 import { RoomServiceEventNotAllNodesLoaded } from '../room/events/RoomServiceEventNotAllNodesLoaded';
+import { ProfilerTask } from '../profiler/ProfilerTask';
+import { ProfilerService } from '../profiler/ProfilerService';
 
 export type Server = UntypedServer<ClientToServerEvents, ServerToClientEvents>;
 export type Socket = UntypedSocket<ClientToServerEvents, ServerToClientEvents>;
@@ -68,6 +70,7 @@ export class SocketIOService implements ApplicationService {
     private _logger: LoggerService,
     private _config: ConfigService,
     private readonly _media: MediaService,
+    private readonly _profiler: ProfilerService,
   ) {
     this._sockets = new SSet();
     this._io = null;
@@ -371,6 +374,10 @@ export class SocketIOService implements ApplicationService {
                   continue;
                 }
 
+                const task: ProfilerTask = this._profiler.profile(
+                  this,
+                  'Filter node grabs for client',
+                );
                 const nodesToSend: SchemaPhysicalNode[] = [];
                 for (const node of message.graph.nodes.nodes) {
                   if (!node.grabs.has(socket.id)) {
@@ -380,6 +387,7 @@ export class SocketIOService implements ApplicationService {
                     });
                   }
                 }
+                task.finish();
 
                 socket.send({
                   type: 'WSEventNodesMoved',
@@ -470,7 +478,6 @@ export class SocketIOService implements ApplicationService {
               } satisfies SchemaWsEventNotification);
             },
           )
-
           .exhaustive(),
       ).catch((error: unknown): void => {
         this._logger.error(

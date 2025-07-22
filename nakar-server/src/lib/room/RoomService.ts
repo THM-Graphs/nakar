@@ -1067,7 +1067,12 @@ export class RoomService implements ApplicationService {
     event: WTEventPhysicsUpdate,
   ): void {
     const graph: MutableGraph = this.getGraph(roomId);
+    const task: ProfilerTask = this._profiler.profile(
+      this,
+      'Apply physics simulation to graph',
+    );
     graph.applyPhysicalGraph(event.graph, this._logger);
+    task.finish();
     this._onEvent.next({
       type: 'RoomServiceEventRoomPhysicsUpdated',
       graph: graph,

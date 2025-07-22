@@ -139,7 +139,7 @@ export class D3Renderer {
 
   public updateNodePositions(wsEvent: WSEventNodesMoved) {
     for (const node of wsEvent.nodes) {
-      const localNode = this.graphState.nodes.find((n) => n.id === node.id);
+      const localNode = this.graphState.getNodeById(node.id);
       if (localNode == null) {
         continue;
       }
@@ -474,6 +474,12 @@ export class D3Renderer {
       }
     }
     this.applyPropertiesToSVG();
+
+    if (deltaTime > (1 / 60) * 1000 * 1.1) {
+      console.warn(
+        `Request Animation Frame Delta Time is to large for 60 fps: ${deltaTime.toFixed(2)} ms. Target: ${((1 / 60) * 1000).toFixed(2)} ms`,
+      );
+    }
   }
 
   public applyPropertiesToSVG(): void {

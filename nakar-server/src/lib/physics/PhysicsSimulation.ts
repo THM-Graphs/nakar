@@ -46,7 +46,7 @@ export class PhysicsSimulation {
   }
 
   private get _heat(): number {
-    const delta: number = this._targetDate - performance.now();
+    const delta: number = this._targetDate - Date.now();
     const heat: number =
       Range.clamp(delta, 0, PhysicsSimulation.cooldownTime) /
       PhysicsSimulation.cooldownTime;
@@ -77,7 +77,7 @@ export class PhysicsSimulation {
     if (options.maxMs == null) {
       this._targetDate = Number.MAX_SAFE_INTEGER;
     } else {
-      this._targetDate = performance.now() + options.maxMs;
+      this._targetDate = Date.now() + options.maxMs;
     }
 
     if (this._running) {
@@ -101,7 +101,7 @@ export class PhysicsSimulation {
   }
 
   private async _runSync(): Promise<void> {
-    let lastWait: number = performance.now();
+    let lastWait: number = Date.now();
     let tickCount: number = 0;
 
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
@@ -112,14 +112,13 @@ export class PhysicsSimulation {
       if (!this._running) {
         break;
       }
-      if (performance.now() > this._targetDate) {
+      if (Date.now() > this._targetDate) {
         break;
       }
 
-      const waitDelta: number = performance.now() - lastWait;
+      const waitDelta: number = Date.now() - lastWait;
       if (waitDelta >= this._targetTickDuration) {
-        const avgTickDuration: number =
-          (performance.now() - lastWait) / tickCount;
+        const avgTickDuration: number = (Date.now() - lastWait) / tickCount;
         this._onSlowTick$.next();
         this._currentPerformance$.next({
           tickDuration: avgTickDuration,
@@ -131,7 +130,7 @@ export class PhysicsSimulation {
           this,
           `Was able to run ${tickCount.toString()} physics ticks until await ${avgTickDuration.toFixed(2)} ms/tick.`,
         );
-        lastWait = performance.now();
+        lastWait = Date.now();
         tickCount = 0;
         await wait(0);
       }
@@ -206,8 +205,8 @@ export class PhysicsSimulation {
     forceX: number,
     forceY: number,
   ): void {
-    node.velocityX += forceX * this._heat;
-    node.velocityY += forceY * this._heat;
+    node.velocityX += forceX;
+    node.velocityY += forceY;
 
     const magnitude: number = this._magnitude(node.velocityX, node.velocityY);
     if (magnitude > PhysicsSimulation.maximumForce) {
@@ -226,8 +225,8 @@ export class PhysicsSimulation {
       node.velocityX =
         (node.velocityY / magnitude) * PhysicsSimulation.maximumVelocity;
     }
-    node.position.x += node.velocityX;
-    node.position.y += node.velocityY;
+    node.position.x += node.velocityX * this._heat;
+    node.position.y += node.velocityY * this._heat;
 
     node.velocityX *= 1 - PhysicsSimulation.frictionFactor;
     node.velocityY *= 1 - PhysicsSimulation.frictionFactor;

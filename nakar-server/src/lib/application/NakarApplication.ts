@@ -69,6 +69,7 @@ export class NakarApplication {
       this.logger,
       this.config,
       this.media,
+      this.profiler,
     );
 
     this._services = [
