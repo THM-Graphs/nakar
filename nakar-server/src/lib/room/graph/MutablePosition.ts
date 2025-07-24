@@ -29,6 +29,19 @@ export class MutablePosition {
     });
   }
 
+  public static average(positions: MutablePosition[]): MutablePosition {
+    if (positions.length === 0) {
+      return MutablePosition.default();
+    }
+    const sum: MutablePosition = positions.reduce(
+      (akku: MutablePosition, next: MutablePosition): MutablePosition =>
+        akku.byAdding(next),
+      MutablePosition.default(),
+    );
+    const avg: MutablePosition = sum.byDividing(positions.length);
+    return avg;
+  }
+
   public toPlain(): z.infer<typeof MutablePosition.schema> {
     return {
       x: this.x,
@@ -38,5 +51,13 @@ export class MutablePosition {
 
   public copy(): MutablePosition {
     return new MutablePosition({ x: this.x, y: this.y });
+  }
+
+  public byAdding(other: MutablePosition): MutablePosition {
+    return new MutablePosition({ x: this.x + other.x, y: this.y + other.y });
+  }
+
+  public byDividing(value: number): MutablePosition {
+    return new MutablePosition({ x: this.x / value, y: this.y / value });
   }
 }

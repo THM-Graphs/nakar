@@ -41,7 +41,7 @@ export class D3RendererState {
         labels: node.labels,
         radius: node.radius,
         title: node.title,
-        compressedCount: node.compressedCount,
+        compressedCount: node.compressed.length,
       };
     });
     const links = graphElements.edges.reduce((acc: D3Link[], edge: Edge) => {
@@ -54,7 +54,7 @@ export class D3RendererState {
           source: sourceNode,
           target: targetNode,
           type: edge.type,
-          compressedCount: edge.compressedCount,
+          compressedCount: edge.compressed.length,
           isLoop: edge.isLoop,
           parallelCount: edge.parallelCount,
           parallelIndex: edge.parallelIndex,

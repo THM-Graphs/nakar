@@ -12,7 +12,7 @@ export class MutableEdge {
     startNodeId: z.string(),
     endNodeId: z.string(),
     type: z.string(),
-    compressedCount: z.number(),
+    compressed: z.array(z.string()),
     width: z.number(),
     properties: MutablePropertyCollection.schema,
     namesInQuery: z.array(z.string()),
@@ -23,7 +23,9 @@ export class MutableEdge {
   public startNodeId: string;
   public endNodeId: string;
   public type: string;
-  public compressedCount: number;
+  public compressed: SSet<string>;
+
+  // TODO: Make getter with index
   public width: number;
   public properties: MutablePropertyCollection;
   public namesInQuery: SSet<string>;
@@ -34,7 +36,7 @@ export class MutableEdge {
     startNodeId: string;
     endNodeId: string;
     type: string;
-    compressedCount: number;
+    compressed: SSet<string>;
     width: number;
     properties: MutablePropertyCollection;
     namesInQuery: SSet<string>;
@@ -44,7 +46,7 @@ export class MutableEdge {
     this.startNodeId = data.startNodeId;
     this.endNodeId = data.endNodeId;
     this.type = data.type;
-    this.compressedCount = data.compressedCount;
+    this.compressed = data.compressed;
     this.width = data.width;
     this.properties = data.properties;
     this.namesInQuery = data.namesInQuery;
@@ -59,6 +61,14 @@ export class MutableEdge {
     return this.type;
   }
 
+  public get representationCount(): number {
+    if (this.compressed.size === 0) {
+      return 1;
+    } else {
+      return this.compressed.size;
+    }
+  }
+
   public static fromPlain(
     data: z.infer<typeof MutableEdge.schema>,
   ): MutableEdge {
@@ -67,7 +77,7 @@ export class MutableEdge {
       startNodeId: data.startNodeId,
       endNodeId: data.endNodeId,
       type: data.type,
-      compressedCount: data.compressedCount,
+      compressed: new SSet(data.compressed),
       width: data.width,
       properties: MutablePropertyCollection.fromPlain(data.properties),
       namesInQuery: new SSet(data.namesInQuery),
@@ -90,7 +100,7 @@ export class MutableEdge {
       startNodeId: this.startNodeId,
       endNodeId: this.endNodeId,
       type: this.type,
-      compressedCount: this.compressedCount,
+      compressed: this.compressed.toArray(),
       width: this.width,
       properties: this.properties.toPlain(),
       namesInQuery: this.namesInQuery.toArray(),
@@ -177,7 +187,7 @@ export class MutableEdge {
       startNodeId: this.startNodeId,
       endNodeId: this.endNodeId,
       type: this.type,
-      compressedCount: this.compressedCount,
+      compressed: this.compressed.copy(),
       width: this.width,
       properties: this.properties.copy(),
       namesInQuery: this.namesInQuery.copy(),

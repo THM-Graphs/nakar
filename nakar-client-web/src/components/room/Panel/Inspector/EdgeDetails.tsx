@@ -64,7 +64,7 @@ export function EdgeDetails(props: { edge: Edge; roomContext: RoomContext }) {
         },
         {
           slug: "Compressed Count",
-          value: props.edge.compressedCount,
+          value: props.edge.compressed.length,
         },
       ]}
       properties={props.edge.properties}

@@ -652,8 +652,10 @@ components:
           type: string
         locked:
           type: boolean
-        compressedCount:
-          type: integer
+        compressed:
+          type: array
+          items:
+            type: string
       required:
         - id
         - title
@@ -669,7 +671,7 @@ components:
         - customTitleColor
         - source
         - locked
-        - compressedCount
+        - compressed
 
     PhysicalNode:
       type: object
@@ -710,8 +712,10 @@ components:
           type: integer
         parallelIndex:
           type: integer
-        compressedCount:
-          type: integer
+        compressed:
+          type: array
+          items:
+            type: string
         width:
           type: number
         properties:
@@ -733,7 +737,7 @@ components:
         - isLoop
         - parallelCount
         - parallelIndex
-        - compressedCount
+        - compressed
         - width
         - namesInQuery
         - source

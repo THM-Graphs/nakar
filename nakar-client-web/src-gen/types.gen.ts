@@ -38,7 +38,7 @@ export type Edge = {
     isLoop: boolean;
     parallelCount: number;
     parallelIndex: number;
-    compressedCount: number;
+    compressed: Array<(string)>;
     width: number;
     properties: Array<GraphProperty>;
     namesInQuery: Array<(string)>;
@@ -153,7 +153,7 @@ export type Node = {
     customTitleColor: (string) | null;
     source: string;
     locked: boolean;
-    compressedCount: number;
+    compressed: Array<(string)>;
 };
 
 export type Notification = {

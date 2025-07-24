@@ -23,7 +23,7 @@ export class MutableNode {
     namesInQuery: z.array(z.string()),
     locked: z.boolean(),
     source: z.string(),
-    compressedCount: z.number(),
+    compressed: z.array(z.string()),
   });
 
   public readonly id: string;
@@ -34,7 +34,7 @@ export class MutableNode {
   public locked: boolean;
   public grabs: SSet<string>;
   public source: string;
-  public compressedCount: number;
+  public compressed: SSet<string>;
 
   public constructor(data: {
     id: string;
@@ -45,7 +45,7 @@ export class MutableNode {
     locked: boolean;
     grabs: SSet<string>;
     source: string;
-    compressedCount: number;
+    compressed: SSet<string>;
   }) {
     this.id = data.id;
     this.labels = data.labels;
@@ -55,7 +55,15 @@ export class MutableNode {
     this.locked = data.locked;
     this.grabs = data.grabs;
     this.source = data.source;
-    this.compressedCount = data.compressedCount;
+    this.compressed = data.compressed;
+  }
+
+  public get representationCount(): number {
+    if (this.compressed.size === 0) {
+      return 1;
+    } else {
+      return this.compressed.size;
+    }
   }
 
   public static fromPlain(data: z.infer<typeof this.schema>): MutableNode {
@@ -68,7 +76,7 @@ export class MutableNode {
       locked: data.locked,
       grabs: new SSet(),
       source: data.source,
-      compressedCount: data.compressedCount,
+      compressed: new SSet(data.compressed),
     });
   }
 
@@ -81,7 +89,7 @@ export class MutableNode {
       namesInQuery: this.namesInQuery.toArray(),
       locked: this.locked,
       source: this.source,
-      compressedCount: this.compressedCount,
+      compressed: this.compressed.toArray(),
     };
   }
 
@@ -94,7 +102,7 @@ export class MutableNode {
       .getByEndNodeId(this.id)
       .reduce(
         (count: number, rel: MutableEdge): number =>
-          count + rel.compressedCount,
+          count + rel.representationCount,
         0,
       );
 
@@ -106,7 +114,7 @@ export class MutableNode {
       .getByStartNodeId(this.id)
       .reduce(
         (count: number, rel: MutableEdge): number =>
-          count + rel.compressedCount,
+          count + rel.representationCount,
         0,
       );
 
@@ -220,7 +228,7 @@ export class MutableNode {
       locked: this.locked,
       grabs: this.grabs.copy(),
       source: this.source,
-      compressedCount: this.compressedCount,
+      compressed: this.compressed.copy(),
     });
   }
 

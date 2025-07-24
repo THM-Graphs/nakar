@@ -48,8 +48,8 @@ import { MediaService } from '../media/MediaService';
 import { RoomServiceEventNotAllNodesLoaded } from './events/RoomServiceEventNotAllNodesLoaded';
 import { LayoutAlgorithm } from '../tools/LayoutAlgorithm';
 import { circularWeightedSpread } from '../tools/circleLayoutAlgorithms/circularWeightedSpread';
-import { PhysicalPosition } from '../physics/physical-graph/PhysicalPosition';
 import { wait } from '../tools/Wait';
+import { MutablePosition } from './graph/MutablePosition';
 
 export class RoomService implements ApplicationService {
   private readonly _workers: SMap<string, Worker>;
@@ -274,7 +274,7 @@ export class RoomService implements ApplicationService {
           }
         }
 
-        await this._postProcessGraph(graph, displayConfiguration);
+        await this._postProcessGraph(graph, displayConfiguration, false);
 
         // Apply layout algorithm
         for (const entry of displayConfiguration.nodeDisplayConfigurations.entries()) {
@@ -326,23 +326,18 @@ export class RoomService implements ApplicationService {
                 continue;
               }
 
-              const neighbors: SSet<MutableNode> =
-                graph.getNeighborsOfNode(node);
-              const neighborPointsSum: PhysicalPosition = neighbors
+              const neighbors: MutableNode[] = graph
+                .getNeighborsOfNode(node)
                 .filter((n: MutableNode): boolean => n.labels.has(targetLabel))
-                .reduce(
-                  (
-                    position: PhysicalPosition,
-                    neighbor: MutableNode,
-                  ): PhysicalPosition => ({
-                    x: position.x + neighbor.position.x,
-                    y: position.y + neighbor.position.y,
-                  }),
-                  { x: 0, y: 0 },
+                .toArray();
+              if (neighbors.length > 0) {
+                node.position = MutablePosition.average(
+                  neighbors.map(
+                    (n: MutableNode): MutablePosition => n.position,
+                  ),
                 );
-              node.position.x = neighborPointsSum.x / neighbors.size;
-              node.position.y = neighborPointsSum.y / neighbors.size;
-              PhysicsSimulation.jiggle(node);
+                PhysicsSimulation.jiggle(node);
+              }
             }
           }
         }
@@ -453,7 +448,7 @@ export class RoomService implements ApplicationService {
             `Expand node result for ${params.nodeId}: ${expandResult.nodes.size.toString()} nodes and ${expandResult.relationships.size.toString()} relationships.`,
           );
 
-          await this._postProcessGraph(graph, displayConfiguration);
+          await this._postProcessGraph(graph, displayConfiguration, true);
 
           this._sendActionToWorker(params.roomId, {
             type: 'WTActionSetGraph',
@@ -616,6 +611,7 @@ export class RoomService implements ApplicationService {
             result.edgeAddedCount -= 1;
           }
         }
+        graph.removeDanglingEdges(this._logger);
 
         this._sendActionToWorker(params.roomId, {
           type: 'WTActionSetGraph',
@@ -762,7 +758,7 @@ export class RoomService implements ApplicationService {
         graph.edges.addNeo4jEdges(graphElements.relationships);
         graph.tableData = graphElements.tableData;
 
-        await this._postProcessGraph(graph, displayConfiguration);
+        await this._postProcessGraph(graph, displayConfiguration, false);
 
         this._sendActionToWorker(params.roomId, {
           type: 'WTActionSetGraph',
@@ -1183,60 +1179,50 @@ export class RoomService implements ApplicationService {
     displayConfiguration: FinalGraphDisplayConfiguration,
   ): void {
     let compressedCount: number = 0;
-    const getFromHandledRelsCache = (
-      nodeAId: string,
-      nodeBId: string,
-      relType: string,
-    ): MutableEdge | null => {
-      return handledRelsCache.get(nodeAId)?.get(nodeBId)?.get(relType) ?? null;
-    };
 
-    const addToHandledRelsCache = (
-      nodeAId: string,
-      nodeBId: string,
-      relType: string,
-      rel: MutableEdge,
-    ): void => {
-      let subMap1: SMap<string, SMap<string, MutableEdge>> | undefined =
-        handledRelsCache.get(nodeAId);
-      if (!subMap1) {
-        subMap1 = new SMap<string, SMap<string, MutableEdge>>();
-        handledRelsCache.set(nodeAId, subMap1);
-      }
-
-      let subMap2: SMap<string, MutableEdge> | undefined = subMap1.get(nodeBId);
-      if (!subMap2) {
-        subMap2 = new SMap<string, MutableEdge>();
-        subMap1.set(nodeBId, subMap2);
-      }
-
-      subMap2.set(relType, rel);
-    };
-
-    const handledRelsCache: SMap<
-      string,
-      SMap<string, SMap<string, MutableEdge>>
-    > = new SMap<string, SMap<string, SMap<string, MutableEdge>>>();
-    const relationships: MutableEdgeIndex = new MutableEdgeIndex([]);
-    for (const edge of graph.edges.edges) {
-      const compressedRelEntry: MutableEdge | null = getFromHandledRelsCache(
-        edge.startNodeId,
-        edge.endNodeId,
-        edge.type,
-      );
-      if (compressedRelEntry == null) {
-        addToHandledRelsCache(
-          edge.startNodeId,
-          edge.endNodeId,
-          edge.type,
-          edge,
+    for (const nodeA of graph.nodes.nodes) {
+      for (const nodeB of graph.nodes.nodes) {
+        const edges: MutableEdge[] = graph.edges.getByStartAndEndNodeId(
+          nodeA.id,
+          nodeB.id,
         );
-        relationships.add(edge);
-      } else {
-        relationships.remove(compressedRelEntry);
-        compressedRelEntry.compressedCount += 1;
-        relationships.add(compressedRelEntry);
-        compressedCount += 1;
+        const byType: SMap<string, MutableEdge[]> = edges.reduce(
+          (
+            akku: SMap<string, MutableEdge[]>,
+            next: MutableEdge,
+          ): SMap<string, MutableEdge[]> =>
+            akku.bySetting(next.type, [...(akku.get(next.type) ?? []), next]),
+          new SMap<string, MutableEdge[]>(),
+        );
+        for (const edgesToCompress of byType.values()) {
+          if (edgesToCompress.length <= 1) {
+            continue;
+          }
+          const newEdge: MutableEdge = new MutableEdge({
+            id: v4(),
+            namesInQuery: edgesToCompress.reduce(
+              (akku: SSet<string>, next: MutableEdge): SSet<string> =>
+                akku.byMerging(next.namesInQuery),
+              new SSet<string>(),
+            ),
+            properties: MutablePropertyCollection.fromRecord({
+              compressed: edgesToCompress.map((e: MutableEdge): string => e.id),
+            }),
+            type: edgesToCompress[0].type,
+            source: edgesToCompress[0].source,
+            startNodeId: edgesToCompress[0].startNodeId,
+            endNodeId: edgesToCompress[0].endNodeId,
+            compressed: new SSet(
+              edgesToCompress.map((e: MutableEdge): string => e.id),
+            ),
+            width: 0,
+          });
+          compressedCount += edgesToCompress.length;
+          for (const edgeToCompress of edgesToCompress) {
+            graph.edges.remove(edgeToCompress);
+          }
+          graph.edges.add(newEdge);
+        }
       }
     }
 
@@ -1248,12 +1234,12 @@ export class RoomService implements ApplicationService {
     // TODO: Use index
     let minimumCompressedCounts: number = 1;
     let maximumCompressedCounts: number = 1;
-    for (const relationship of relationships.edges) {
-      if (relationship.compressedCount < minimumCompressedCounts) {
-        minimumCompressedCounts = relationship.compressedCount;
+    for (const relationship of graph.edges.edges) {
+      if (relationship.representationCount < minimumCompressedCounts) {
+        minimumCompressedCounts = relationship.representationCount;
       }
-      if (relationship.compressedCount > maximumCompressedCounts) {
-        maximumCompressedCounts = relationship.compressedCount;
+      if (relationship.representationCount > maximumCompressedCounts) {
+        maximumCompressedCounts = relationship.representationCount;
       }
     }
 
@@ -1267,15 +1253,13 @@ export class RoomService implements ApplicationService {
       ceiling: 2 * displayConfiguration.compressRelationshipsWidthFactor,
     });
 
-    for (const relationship of relationships.edges) {
+    for (const relationship of graph.edges.edges) {
       relationship.width = fromRange.scaleValue(
         toRange,
-        relationship.compressedCount,
+        relationship.representationCount,
         displayConfiguration.scaleType,
       );
     }
-
-    graph.edges = relationships;
   }
 
   private _mergeNodes(
@@ -1306,7 +1290,7 @@ export class RoomService implements ApplicationService {
             graph.edges.add(
               new MutableEdge({
                 id: v4(),
-                compressedCount: 1,
+                compressed: new SSet(),
                 startNodeId: originalNode.id,
                 endNodeId: mergeNode.id,
                 source: originalNode.source,
@@ -1321,7 +1305,7 @@ export class RoomService implements ApplicationService {
             graph.edges.add(
               new MutableEdge({
                 id: v4(),
-                compressedCount: 1,
+                compressed: new SSet(),
                 startNodeId: mergeNode.id,
                 endNodeId: originalNode.id,
                 source: mergeNode.source,
@@ -1422,15 +1406,18 @@ export class RoomService implements ApplicationService {
   private async _postProcessGraph(
     graph: MutableGraph,
     displayConfiguration: FinalGraphDisplayConfiguration,
+    noCompress: boolean,
   ): Promise<void> {
     graph.removeDanglingEdges(this._logger);
     if (displayConfiguration.connectResultNodes) {
       await this._connectNodes(graph);
     }
     this._mergeNodes(graph, displayConfiguration);
-    await this._compressNodes(graph, displayConfiguration);
-    if (displayConfiguration.compressRelationships) {
-      this._compressRelationships(graph, displayConfiguration);
+    if (!noCompress) {
+      await this._compressNodes(graph, displayConfiguration);
+      if (displayConfiguration.compressRelationships) {
+        this._compressRelationships(graph, displayConfiguration);
+      }
     }
   }
 
@@ -1450,29 +1437,42 @@ export class RoomService implements ApplicationService {
       );
       let compressCount: number = 0;
       for (const node of graph.nodes.getByLabel(targetLabel)) {
-        const siblings: SSet<MutableNode> = graph.getClusterBuddiesOfNode(
+        const clusterBuddies: SSet<MutableNode> = graph.getClusterBuddiesOfNode(
           node,
           targetLabel,
         );
-        if (siblings.size < 2) {
+        if (clusterBuddies.size <= 1) {
           continue;
         }
         this._logger.debug(
           this,
-          `Will comporess ${node.id} because it has ${siblings.size.toString()} siblings.`,
+          `Will comporess ${node.id} because it is part of a cluster with ${clusterBuddies.size.toString()} cluster buddies.`,
         );
         const newNode: MutableNode = new MutableNode({
           id: v4(),
-          position: node.position.copy(),
+          position: MutablePosition.average(
+            clusterBuddies
+              .toArray()
+              .map((n: MutableNode): MutablePosition => n.position),
+          ),
           grabs: new SSet(),
-          labels: node.labels,
+          labels: clusterBuddies.reduce(
+            (akku: SSet<string>, next: MutableNode): SSet<string> =>
+              akku.byMerging(next.labels),
+            new SSet<string>(),
+          ),
           source: node.source,
           locked: node.locked,
           properties: MutablePropertyCollection.empty(),
-          namesInQuery: new SSet(),
-          compressedCount: 1,
+          namesInQuery: clusterBuddies.reduce(
+            (akku: SSet<string>, next: MutableNode): SSet<string> =>
+              akku.byMerging(next.namesInQuery),
+            new SSet<string>(),
+          ),
+          compressed: clusterBuddies.map((n: MutableNode): string => n.id),
         });
-        for (const sibling of siblings) {
+        graph.nodes.add(newNode);
+        for (const sibling of clusterBuddies) {
           for (const outgoingEdge of graph.edges.getByStartNodeId(sibling.id)) {
             graph.edges.remove(outgoingEdge);
             outgoingEdge.startNodeId = newNode.id;
@@ -1487,10 +1487,8 @@ export class RoomService implements ApplicationService {
           if (!removed) {
             this._logger.warn(this, `Unable to remove ${sibling.id}`);
           }
-          newNode.compressedCount += sibling.compressedCount;
           compressCount += 1;
         }
-        graph.nodes.add(newNode);
         await wait(0);
       }
       this._logger.log(

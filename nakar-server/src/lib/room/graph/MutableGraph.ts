@@ -204,7 +204,7 @@ export class MutableGraph {
         id: edge.id,
         startNodeId: edge.startNodeId,
         endNodeId: edge.endNodeId,
-        compressedCount: edge.compressedCount,
+        compressedCount: edge.representationCount,
         isLoop: edge.isLoop,
         title: edge.title,
       };
@@ -286,27 +286,32 @@ export class MutableGraph {
     return new SSet(result.values());
   }
 
-  /** This method will return siblings, but only if all siblings the exact same two neighbors and have the same label */
+  /** This method will return siblings, but only if all siblings the exact same neighbors and have the same label */
   public getClusterBuddiesOfNode(
     node: MutableNode,
     label: string,
   ): SSet<MutableNode> {
-    const neighbors: MutableNode[] = this.getNeighborsOfNode(node).toArray();
-    if (neighbors.length !== 2) {
-      return new SSet();
-    }
-    const mother: MutableNode = neighbors[0];
-    const father: MutableNode = neighbors[1];
+    const neighbors: SSet<MutableNode> = this.getNeighborsOfNode(node);
 
-    const childrenOfMother: SSet<MutableNode> = this.getNeighborsOfNode(mother);
-    const childrenOfFather: SSet<MutableNode> = this.getNeighborsOfNode(father);
+    const possibleClusterBuddies: SSet<MutableNode> = neighbors.reduce(
+      (akku: SSet<MutableNode>, next: MutableNode): SSet<MutableNode> =>
+        akku.byMerging(this.getNeighborsOfNode(next)),
+      new SSet(),
+    );
 
-    const siblings: SSet<MutableNode> = childrenOfMother
-      .intersection(childrenOfFather)
-      .filter(
-        (sibling: MutableNode): boolean =>
-          sibling.degree(this) === 2 && sibling.labels.has(label),
-      );
-    return siblings;
+    const clusterBuddies: SSet<MutableNode> = neighbors.reduce(
+      (akku: SSet<MutableNode>, neighbor: MutableNode): SSet<MutableNode> =>
+        akku.intersection(
+          this.getNeighborsOfNode(neighbor).filter(
+            (n: MutableNode): boolean =>
+              n.labels.has(label) &&
+              n.degree(this) === node.degree(this) &&
+              n.compressed.size === 0,
+          ),
+        ),
+      possibleClusterBuddies,
+    );
+
+    return clusterBuddies;
   }
 }

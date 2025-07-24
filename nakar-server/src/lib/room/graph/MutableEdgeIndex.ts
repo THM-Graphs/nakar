@@ -93,7 +93,7 @@ export class MutableEdgeIndex {
       ),
     );
 
-    this._addToTypeHistogram(edge.type, edge.compressedCount);
+    this._addToTypeHistogram(edge.type, edge.representationCount);
 
     for (const propertyEntry of edge.properties.properties) {
       this._addToPropertyHistogram(propertyEntry[0], propertyEntry[1], 1);
@@ -119,7 +119,7 @@ export class MutableEdgeIndex {
       startNodeId: relationship.relationship.startNodeElementId,
       endNodeId: relationship.relationship.endNodeElementId,
       type: relationship.relationship.type,
-      compressedCount: 1,
+      compressed: new SSet(),
       width: MutableEdge.defaultWidth,
       properties: MutablePropertyCollection.fromRecord(
         relationship.relationship.properties,
@@ -146,7 +146,7 @@ export class MutableEdgeIndex {
       ?.get(edge.endNodeId)
       ?.delete(edge.id);
 
-    this._addToTypeHistogram(edge.type, -edge.compressedCount);
+    this._addToTypeHistogram(edge.type, -edge.representationCount);
 
     for (const propertyEntry of edge.properties.properties) {
       this._addToPropertyHistogram(propertyEntry[0], propertyEntry[1], -1);

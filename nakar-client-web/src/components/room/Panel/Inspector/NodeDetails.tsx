@@ -125,7 +125,7 @@ export function NodeDetails(props: {
         },
         {
           slug: "Compressed Count",
-          value: props.node.compressedCount,
+          value: props.node.compressed.length,
         },
       ]}
       properties={props.node.properties}
