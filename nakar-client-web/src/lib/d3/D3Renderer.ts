@@ -18,7 +18,7 @@ import { match, P } from "ts-pattern";
 import { useBearStore } from "../state/useBearStore.ts";
 
 const fps = 30;
-const strokeWidth: number = 3;
+const baseStrokeWidth: number = 3;
 
 export class D3Renderer {
   private graphState: D3RendererState;
@@ -353,8 +353,8 @@ export class D3Renderer {
           return colors[0];
         }
       })
-      .attr("stroke-width", () => {
-        return `${strokeWidth.toString()}px`;
+      .attr("stroke-width", (d) => {
+        return `${this._getStrokeWidth(d).toFixed()}px`;
       })
       .attr("stroke", () => {
         return this.theme == "dark" ? "#fff" : "#000";
@@ -362,7 +362,7 @@ export class D3Renderer {
 
     this.nodeSelection
       .append("circle")
-      .attr("r", (n) => n.radius - strokeWidth / 2)
+      .attr("r", (n) => n.radius - this._getStrokeWidth(n) / 2)
       .attr("class", () => `hover`)
       .style("opacity", 0)
       .attr("fill", () => "#000000");
@@ -374,9 +374,9 @@ export class D3Renderer {
         "r",
         (n) =>
           n.radius +
-          strokeWidth / 2 +
-          strokeWidth +
-          (strokeWidth * (n.radius * 0.05)) / 2,
+          this._getStrokeWidth(n) / 2 +
+          this._getStrokeWidth(n) +
+          this._getStrokeWidth(n) / 2,
       )
       .attr("fill", () => "rgba(0, 0, 0, 0)")
       .attr("stroke", (d) => {
@@ -387,7 +387,7 @@ export class D3Renderer {
           return colors[0];
         }
       })
-      .attr("stroke-width", (n) => strokeWidth * (n.radius * 0.05));
+      .attr("stroke-width", (n) => this._getStrokeWidth(n));
 
     this.nodeLockedOverlay = this.nodeSelection
       .append("circle")
@@ -395,33 +395,22 @@ export class D3Renderer {
         "r",
         (n) =>
           n.radius -
-          strokeWidth / 2 -
-          strokeWidth -
-          (strokeWidth * (n.radius * 0.05)) / 2,
+          this._getStrokeWidth(n) / 2 -
+          this._getStrokeWidth(n) -
+          this._getStrokeWidth(n) / 2,
       )
       .attr("fill", () => "rgba(0, 0, 0, 0)")
-      .attr("stroke", (d) => {
+      .attr("stroke", () => {
         return this.theme == "dark" ? "#fff" : "#000";
       })
-      .attr("stroke-width", (n) => strokeWidth * (n.radius * 0.05))
+      .attr("stroke-width", (n) => this._getStrokeWidth(n))
       .attr("stroke-dasharray", (n) => n.radius * 0.1);
 
     this.nodeSelectedOverlay = this.nodeSelection
       .append("circle")
-      .attr(
-        "r",
-        (n) =>
-          n.radius -
-          strokeWidth / 2 -
-          strokeWidth -
-          (strokeWidth * (n.radius * 0.05)) / 2,
-      )
-      .attr("fill", () => "rgba(0, 0, 0, 0)")
-      .attr("stroke", () => {
-        const color = "#ff00ff";
-        return color;
-      })
-      .attr("stroke-width", (n) => strokeWidth * (n.radius * 0.05));
+      .attr("r", (n) => n.radius + this._getStrokeWidth(n) * 4)
+      .attr("fill", () => "#ff00ff")
+      .attr("opacity", 0.5);
 
     const foreignObjectNode = this.nodeSelection
       .append("foreignObject")
@@ -783,5 +772,9 @@ export class D3Renderer {
         ];
       })
       .exhaustive();
+  }
+
+  private _getStrokeWidth(n: D3Node): number {
+    return (baseStrokeWidth * n.radius) / 50;
   }
 }
