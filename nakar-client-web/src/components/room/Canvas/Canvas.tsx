@@ -19,10 +19,8 @@ export function Canvas(props: {
 }) {
   const tabs = useBearStore((s) => s.room.canvas.tabs);
   const rendererEvents = useBearStore((s) => s.room.ui.rendererEvents);
-  const performanceMode = useBearStore((s) => s.room.canvas.performanceMode);
-  const setPerformanceMode = useBearStore(
-    (s) => s.room.canvas.setPerformanceMode,
-  );
+  const hideLabels = useBearStore((s) => s.room.canvas.hideLabels);
+  const setHideLabels = useBearStore((s) => s.room.canvas.setHideLabels);
 
   return (
     <Stack
@@ -76,24 +74,14 @@ export function Canvas(props: {
               tooltipPlacement={"left"}
               align={"end"}
             >
-              <Dropdown.Header>Performance Mode</Dropdown.Header>
-              <Dropdown.Divider></Dropdown.Divider>
-              {[
-                ["auto", "Auto", "square-half"],
-                ["on", "On", "check-square"],
-                ["off", "Off", "x-square"],
-              ].map((pm) => (
-                <Dropdown.Item
-                  key={pm[0]}
-                  active={performanceMode === pm[0]}
-                  onClick={() => {
-                    setPerformanceMode(pm[0] as "auto" | "on" | "off");
-                  }}
-                >
-                  <i className={`bi bi-${pm[2]} me-2`}></i>
-                  {pm[1]}
-                </Dropdown.Item>
-              ))}
+              <Dropdown.Header>Performance Settings</Dropdown.Header>
+              <NavbarButton
+                icon={"card-text"}
+                title={hideLabels ? "Show Labels" : "Hide Labels"}
+                onClick={() => {
+                  setHideLabels(!hideLabels);
+                }}
+              ></NavbarButton>
             </DropdownButton>
             <NavbarButton
               icon={"crosshair"}

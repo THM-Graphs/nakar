@@ -16,7 +16,7 @@ export function GraphRendererD3(props: {
   const inspector = useBearStore((s) => s.room.panels.inspector);
   const setLocks = useBearStore((s) => s.room.scenario.setLocks);
   const events = useBearStore((s) => s.room.ui.rendererEvents);
-  const performanceMode = useBearStore((s) => s.room.canvas.performanceMode);
+  const hideLabels = useBearStore((s) => s.room.canvas.hideLabels);
 
   useEffect(() => {
     if (svgRef.current == null) {
@@ -26,7 +26,7 @@ export function GraphRendererD3(props: {
       theme,
       svgRef.current,
       props.roomContext.initialGraphData.elements,
-      performanceMode,
+      hideLabels,
     );
 
     const subs: { unsubscribe: () => void }[] = [
@@ -89,16 +89,16 @@ export function GraphRendererD3(props: {
       }),
       {
         unsubscribe: useBearStore.subscribe(
-          (s) => s.room.canvas.performanceMode,
-          (pm) => {
-            _graphRenderer.setPerformanceMode(pm);
+          (s) => s.room.canvas.hideLabels,
+          (hideLabels) => {
+            _graphRenderer.setHideLabels(hideLabels);
           },
         ),
       },
       {
         unsubscribe: useBearStore.subscribe(
           (s) => s.room.panels.inspector.element,
-          (pm) => {
+          () => {
             _graphRenderer.applyPropertiesToSVG();
           },
         ),

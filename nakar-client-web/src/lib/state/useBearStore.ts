@@ -358,10 +358,10 @@ export const useBearStore = create<BearState>()(
                   });
                 },
               },
-              performanceMode: "auto",
-              setPerformanceMode: (pm: "auto" | "on" | "off") => {
+              hideLabels: false,
+              setHideLabels: (hideLabels: boolean) => {
                 set((s) => {
-                  s.room.canvas.performanceMode = pm;
+                  s.room.canvas.hideLabels = hideLabels;
                 });
               },
             },

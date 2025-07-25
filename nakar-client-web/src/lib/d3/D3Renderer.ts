@@ -13,7 +13,6 @@ import { UserTheme } from "../theme/UserTheme.ts";
 import { Observable, Subject, throttleTime } from "rxjs";
 import { D3RendererState } from "./D3RendererState.ts";
 import { D3Calculator } from "./D3Calculator.ts";
-import { PerformanceMode } from "../data/PerformanceMode.ts";
 import { match, P } from "ts-pattern";
 import { useBearStore } from "../state/useBearStore.ts";
 
@@ -24,7 +23,7 @@ export class D3Renderer {
   private graphState: D3RendererState;
   private readonly theme: UserTheme;
   private readonly svgElement: SVGSVGElement;
-  private performanceMode: PerformanceMode;
+  private hideLabels: boolean;
 
   private $onDisplayLinkData: Subject<D3Link>;
   private $onDisplayNodeData: Subject<D3Node>;
@@ -90,13 +89,13 @@ export class D3Renderer {
     theme: UserTheme,
     svgElement: SVGSVGElement,
     initialGraphElements: GraphElements,
-    performanceMode: PerformanceMode,
+    hideLabels: boolean,
   ) {
     console.log("Did create instance of graph renderer");
     this.graphState = D3RendererState.fromWsData(initialGraphElements);
     this.theme = theme;
     this.svgElement = svgElement;
-    this.performanceMode = performanceMode;
+    this.hideLabels = hideLabels;
 
     this.$onDisplayLinkData = new Subject();
     this.$onDisplayNodeData = new Subject();
@@ -336,7 +335,7 @@ export class D3Renderer {
           .select(e.currentTarget as SVGGElement)
           .selectChildren(`.hover`);
         el.style("opacity", 0);
-        this._optimizePerformance();
+        this._updateShowLabels();
       })
       .on("click", (event: PointerEvent, node: D3Node) => {
         this.$onDisplayNodeData.next(node);
@@ -497,7 +496,7 @@ export class D3Renderer {
     );
 
     this.applyPropertiesToSVG();
-    this._optimizePerformance();
+    this._updateShowLabels();
   }
 
   public onAnimationTick(deltaTime: number): void {
@@ -629,9 +628,9 @@ export class D3Renderer {
     return this.getZoomTransform().k;
   }
 
-  public setPerformanceMode(pm: PerformanceMode): void {
-    this.performanceMode = pm;
-    this._optimizePerformance();
+  public setHideLabels(hideLabels: boolean): void {
+    this.hideLabels = hideLabels;
+    this._updateShowLabels();
   }
 
   private smoothDamp(
@@ -674,8 +673,8 @@ export class D3Renderer {
     return [output, newVelocity];
   }
 
-  private _optimizePerformance() {
-    if (this._shouldUseFastPerformance()) {
+  private _updateShowLabels() {
+    if (this.hideLabels) {
       this.linkLabelSelection?.attr("hidden", true);
       this.nodeSelection?.select("foreignObject").attr("hidden", true);
       this.linkPathSelection?.attr("marker-end", null);
@@ -684,17 +683,6 @@ export class D3Renderer {
       this.nodeSelection?.select("foreignObject").attr("hidden", null);
       this.linkPathSelection?.attr("marker-end", "url(#arrow)");
     }
-  }
-
-  private _shouldUseFastPerformance(): boolean {
-    return match(this.performanceMode)
-      .with(
-        "auto",
-        () => this.graphState.nodes.length + this.graphState.links.length > 300,
-      )
-      .with("on", () => true)
-      .with("off", () => false)
-      .exhaustive();
   }
 
   private _getTitleColorOfNode(d: D3Node): string {
