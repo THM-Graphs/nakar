@@ -95,6 +95,14 @@ export function GraphRendererD3(props: {
           },
         ),
       },
+      {
+        unsubscribe: useBearStore.subscribe(
+          (s) => s.room.panels.inspector.element,
+          (pm) => {
+            _graphRenderer.applyPropertiesToSVG();
+          },
+        ),
+      },
     ];
 
     let animationActive: boolean = true;

@@ -14,7 +14,8 @@ import { Observable, Subject, throttleTime } from "rxjs";
 import { D3RendererState } from "./D3RendererState.ts";
 import { D3Calculator } from "./D3Calculator.ts";
 import { PerformanceMode } from "../data/PerformanceMode.ts";
-import { match } from "ts-pattern";
+import { match, P } from "ts-pattern";
+import { useBearStore } from "../state/useBearStore.ts";
 
 const fps = 30;
 const strokeWidth: number = 3;
@@ -53,6 +54,12 @@ export class D3Renderer {
     null
   > | null;
   private nodeLockedOverlay: d3.Selection<
+    SVGCircleElement,
+    D3Node,
+    SVGElement,
+    null
+  > | null;
+  private nodeSelectedOverlay: d3.Selection<
     SVGCircleElement,
     D3Node,
     SVGElement,
@@ -107,6 +114,7 @@ export class D3Renderer {
     this.linkPathSelection = null;
     this.nodeCircle = null;
     this.nodeLockedOverlay = null;
+    this.nodeSelectedOverlay = null;
 
     this.smoothedPositionDirty = true;
 
@@ -213,7 +221,6 @@ export class D3Renderer {
       .attr("data-link-id", (l) => l.id)
       .style("cursor", "pointer")
       .attr("fill", "none")
-      .attr("stroke", this.theme == "dark" ? "#ffffff" : "#000000")
       .attr("stroke-width", (d) => d.width)
       .attr("marker-end", "url(#arrow)");
 
@@ -282,8 +289,10 @@ export class D3Renderer {
         el.attr("stroke", "#888");
       })
       .on("mouseout", (e: MouseEvent) => {
-        const el = d3.select(e.currentTarget as SVGGElement);
-        el.attr("stroke", this.theme == "dark" ? "#ffffff" : "#000000");
+        const el = d3.select<SVGElement, D3Link>(
+          e.currentTarget as SVGGElement,
+        );
+        el.attr("stroke", (d: D3Link): string => this._getEdgeStrokeColor(d));
       })
       .on("click", (event: PointerEvent, edge: D3Link) => {
         this.$onDisplayLinkData.next(edge);
@@ -364,7 +373,10 @@ export class D3Renderer {
       .attr(
         "r",
         (n) =>
-          n.radius + strokeWidth / 2 + strokeWidth * ((n.radius * 0.05) / 2),
+          n.radius +
+          strokeWidth / 2 +
+          strokeWidth +
+          (strokeWidth * (n.radius * 0.05)) / 2,
       )
       .attr("fill", () => "rgba(0, 0, 0, 0)")
       .attr("stroke", (d) => {
@@ -375,23 +387,41 @@ export class D3Renderer {
           return colors[0];
         }
       })
-      .attr("stroke-width", (n) => strokeWidth * (n.radius * 0.05))
-      .attr("stroke-dasharray", "10,5");
+      .attr("stroke-width", (n) => strokeWidth * (n.radius * 0.05));
 
     this.nodeLockedOverlay = this.nodeSelection
       .append("circle")
       .attr(
         "r",
         (n) =>
-          n.radius - strokeWidth / 2 - (strokeWidth * (n.radius * 0.05)) / 2,
+          n.radius -
+          strokeWidth / 2 -
+          strokeWidth -
+          (strokeWidth * (n.radius * 0.05)) / 2,
       )
       .attr("fill", () => "rgba(0, 0, 0, 0)")
       .attr("stroke", (d) => {
-        const color = this._getTitleColorOfNode(d);
-        return color;
+        return this.theme == "dark" ? "#fff" : "#000";
       })
       .attr("stroke-width", (n) => strokeWidth * (n.radius * 0.05))
       .attr("stroke-dasharray", (n) => n.radius * 0.1);
+
+    this.nodeSelectedOverlay = this.nodeSelection
+      .append("circle")
+      .attr(
+        "r",
+        (n) =>
+          n.radius -
+          strokeWidth / 2 -
+          strokeWidth -
+          (strokeWidth * (n.radius * 0.05)) / 2,
+      )
+      .attr("fill", () => "rgba(0, 0, 0, 0)")
+      .attr("stroke", () => {
+        const color = "#ff00ff";
+        return color;
+      })
+      .attr("stroke-width", (n) => strokeWidth * (n.radius * 0.05));
 
     const foreignObjectNode = this.nodeSelection
       .append("foreignObject")
@@ -524,8 +554,13 @@ export class D3Renderer {
   public applyPropertiesToSVG(): void {
     this.applyPositionsToSVG();
 
-    // TODO Apply locked state
     this.nodeLockedOverlay?.attr("hidden", (d) => (d.locked ? null : true));
+
+    this.nodeSelectedOverlay?.attr("hidden", (d) =>
+      this._nodeIsSelected(d) ? null : true,
+    );
+
+    this.linkPathSelection?.attr("stroke", (d) => this._getEdgeStrokeColor(d));
   }
 
   public applyPositionsToSVG() {
@@ -549,7 +584,8 @@ export class D3Renderer {
   }
 
   public center(): void {
-    this.transform(0, 0, 1);
+    const [x, y] = this._getPositionOfSelectedElement();
+    this.transform(-x, -y, 1);
   }
 
   public zoomOutOverview(): void {
@@ -698,5 +734,54 @@ export class D3Renderer {
       );
       return colors.reduce<string[]>((a, n) => (n ? [...a, n] : a), []);
     }
+  }
+
+  private _nodeIsSelected(node: D3Node): boolean {
+    const element = useBearStore.getState().room.panels.inspector.element;
+    if (element?.type === "node") {
+      return element.nodeId === node.id;
+    }
+    return false;
+  }
+
+  private _edgeIsSelected(edge: D3Link): boolean {
+    const element = useBearStore.getState().room.panels.inspector.element;
+    if (element?.type === "edge") {
+      return element.edgeId === edge.id;
+    }
+    return false;
+  }
+
+  private _getEdgeStrokeColor(d: D3Link): string {
+    return this._edgeIsSelected(d)
+      ? "#ff00ff"
+      : this.theme == "dark"
+        ? "#ffffff"
+        : "#000000";
+  }
+
+  private _getPositionOfSelectedElement(): [number, number] {
+    const element = useBearStore.getState().room.panels.inspector.element;
+    return match(element)
+      .returnType<[number, number]>()
+      .with(P.nullish, () => [0, 0])
+      .with({ type: "node" }, (n) => {
+        const node = this.graphState.nodes.find((d) => d.id === n.nodeId);
+        if (node == null) {
+          return [0, 0];
+        }
+        return [node.x, node.y];
+      })
+      .with({ type: "edge" }, (n) => {
+        const edge = this.graphState.links.find((d) => d.id === n.edgeId);
+        if (edge == null) {
+          return [0, 0];
+        }
+        return [
+          (edge.source.x + edge.target.x) / 2,
+          (edge.source.y + edge.target.y) / 2,
+        ];
+      })
+      .exhaustive();
   }
 }
