@@ -61,6 +61,10 @@ export class MutableEdge {
     return this.type;
   }
 
+  public get isCluster(): boolean {
+    return this.compressed.size > 0;
+  }
+
   public get representationCount(): number {
     if (this.compressed.size === 0) {
       return 1;

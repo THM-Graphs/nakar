@@ -652,10 +652,10 @@ components:
           type: string
         locked:
           type: boolean
-        compressed:
-          type: array
-          items:
-            type: string
+        isCluster:
+          type: boolean
+        clusterSize:
+          type: integer
       required:
         - id
         - title
@@ -671,7 +671,8 @@ components:
         - customTitleColor
         - source
         - locked
-        - compressed
+        - isCluster
+        - clusterSize
 
     PhysicalNode:
       type: object
@@ -712,10 +713,8 @@ components:
           type: integer
         parallelIndex:
           type: integer
-        compressed:
-          type: array
-          items:
-            type: string
+        isCluster:
+          type: boolean
         width:
           type: number
         properties:
@@ -728,6 +727,8 @@ components:
             type: string
         source:
           type: string
+        clusterSize:
+          type: integer
       required:
         - id
         - startNodeId
@@ -737,10 +738,11 @@ components:
         - isLoop
         - parallelCount
         - parallelIndex
-        - compressed
+        - isCluster
         - width
         - namesInQuery
         - source
+        - clusterSize
 
     Histogram:
       type: object

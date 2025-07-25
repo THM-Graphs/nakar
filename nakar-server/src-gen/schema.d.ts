@@ -443,7 +443,8 @@ export interface components {
             readonly customTitleColor: string | null;
             readonly source: string;
             readonly locked: boolean;
-            readonly compressed: readonly string[];
+            readonly isCluster: boolean;
+            readonly clusterSize: number;
         };
         readonly PhysicalNode: {
             readonly id: string;
@@ -461,11 +462,12 @@ export interface components {
             readonly isLoop: boolean;
             readonly parallelCount: number;
             readonly parallelIndex: number;
-            readonly compressed: readonly string[];
+            readonly isCluster: boolean;
             readonly width: number;
             readonly properties: readonly components["schemas"]["GraphProperty"][];
             readonly namesInQuery: readonly string[];
             readonly source: string;
+            readonly clusterSize: number;
         };
         readonly Histogram: {
             readonly nodeLabels: readonly {

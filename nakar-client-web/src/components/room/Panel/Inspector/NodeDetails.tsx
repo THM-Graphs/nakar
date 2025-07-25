@@ -124,8 +124,12 @@ export function NodeDetails(props: {
           value: props.node.degree,
         },
         {
-          slug: "Compressed Count",
-          value: props.node.compressed.length,
+          slug: "Cluster Size",
+          value: props.node.clusterSize,
+        },
+        {
+          slug: "Is Cluster?",
+          value: props.node.isCluster,
         },
       ]}
       properties={props.node.properties}

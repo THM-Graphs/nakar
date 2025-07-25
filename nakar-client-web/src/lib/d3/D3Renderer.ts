@@ -52,6 +52,12 @@ export class D3Renderer {
     SVGElement,
     null
   > | null;
+  private nodeLockedOverlay: d3.Selection<
+    SVGCircleElement,
+    D3Node,
+    SVGElement,
+    null
+  > | null;
   private nodeCircle: d3.Selection<
     SVGCircleElement,
     D3Node,
@@ -100,6 +106,7 @@ export class D3Renderer {
     this.linkLabelSelection = null;
     this.linkPathSelection = null;
     this.nodeCircle = null;
+    this.nodeLockedOverlay = null;
 
     this.smoothedPositionDirty = true;
 
@@ -250,9 +257,7 @@ export class D3Renderer {
         `;
       })
       .text((d) =>
-        d.compressedCount > 1
-          ? `${d.type} (${d.compressedCount.toString()})`
-          : d.type,
+        d.clusterSize > 1 ? `${d.type} (${d.clusterSize.toString()})` : d.type,
       );
 
     this.linkLabelSelection
@@ -293,30 +298,13 @@ export class D3Renderer {
       .append("g")
       .attr("style", "cursor: pointer;");
 
-    const bgColorsOfNode = (d: D3Node): string[] => {
-      if (d.customBackgroundColor) {
-        return [d.customBackgroundColor];
-      } else {
-        const colors: (string | null)[] = d.labels.map(
-          (dlabel: string): string | null => {
-            return getBackgroundColor(
-              this.graphState.originalGraphElements?.labels.find(
-                (l) => l.label === dlabel,
-              )?.color ?? null,
-            );
-          },
-        );
-        return colors.reduce<string[]>((a, n) => (n ? [...a, n] : a), []);
-      }
-    };
-
     this.nodeSelection
       .append("defs")
       .append("linearGradient")
       .attr("id", (n) => `gradient_${n.id}`)
       .html((n) => {
         let buffer: string = "";
-        const colors = bgColorsOfNode(n);
+        const colors = this._getBgColorsOfNode(n);
         const stepSize = colors.length > 1 ? 100 / (colors.length - 1) : 0;
         for (let i = 0; i < colors.length; i += 1) {
           buffer += `<stop offset="${(i * stepSize).toString()}%" stop-color="${colors[i]}"></stop>`;
@@ -349,12 +337,18 @@ export class D3Renderer {
       .append("circle")
       .attr("r", (d) => d.radius)
       .attr("fill", (d) => {
-        const colors = bgColorsOfNode(d);
+        const colors = this._getBgColorsOfNode(d);
         if (colors.length > 1) {
           return `url(#gradient_${d.id})`;
         } else {
           return colors[0];
         }
+      })
+      .attr("stroke-width", () => {
+        return `${strokeWidth.toString()}px`;
+      })
+      .attr("stroke", () => {
+        return this.theme == "dark" ? "#fff" : "#000";
       });
 
     this.nodeSelection
@@ -365,6 +359,41 @@ export class D3Renderer {
       .attr("fill", () => "#000000");
 
     this.nodeSelection
+      .append("circle")
+      .attr("hidden", (d) => (d.clusterSize === 0 ? true : null))
+      .attr(
+        "r",
+        (n) =>
+          n.radius + strokeWidth / 2 + strokeWidth * ((n.radius * 0.05) / 2),
+      )
+      .attr("fill", () => "rgba(0, 0, 0, 0)")
+      .attr("stroke", (d) => {
+        const colors = this._getBgColorsOfNode(d);
+        if (colors.length > 1) {
+          return `url(#gradient_${d.id})`;
+        } else {
+          return colors[0];
+        }
+      })
+      .attr("stroke-width", (n) => strokeWidth * (n.radius * 0.05))
+      .attr("stroke-dasharray", "10,5");
+
+    this.nodeLockedOverlay = this.nodeSelection
+      .append("circle")
+      .attr(
+        "r",
+        (n) =>
+          n.radius - strokeWidth / 2 - (strokeWidth * (n.radius * 0.05)) / 2,
+      )
+      .attr("fill", () => "rgba(0, 0, 0, 0)")
+      .attr("stroke", (d) => {
+        const color = this._getTitleColorOfNode(d);
+        return color;
+      })
+      .attr("stroke-width", (n) => strokeWidth * (n.radius * 0.05))
+      .attr("stroke-dasharray", (n) => n.radius * 0.1);
+
+    const foreignObjectNode = this.nodeSelection
       .append("foreignObject")
       .attr("x", (d) => -d.radius)
       .attr("y", (d) => -d.radius)
@@ -373,13 +402,7 @@ export class D3Renderer {
       .append("xhtml:div")
       .attr("xmlns", "http://www.w3.org/1999/xhtml")
       .attr("style", (d) => {
-        const color =
-          d.customTitleColor ??
-          getTextColor(
-            this.graphState.originalGraphElements?.labels.find(
-              (l) => l.label === d.labels[0],
-            )?.color ?? null,
-          );
+        const color = this._getTitleColorOfNode(d);
 
         return `
         font-weight: bolder;
@@ -391,22 +414,37 @@ export class D3Renderer {
         height: ${(d.radius * 2).toString()}px;
         text-align: center;
         font-size: ${(d.radius / 5 + 3).toString()}px;
+        position: relative;
         `;
       })
       .attr("width", (d) => d.radius * 2)
-      .attr("height", (d) => d.radius * 2)
+      .attr("height", (d) => d.radius * 2);
+
+    foreignObjectNode.append("xhtml:span").text((d) => {
+      const titleCut = 50;
+      const fullTitle = d.title;
+      if (fullTitle.length > titleCut) {
+        return fullTitle.substring(0, titleCut) + "…";
+      } else {
+        return fullTitle;
+      }
+    });
+
+    foreignObjectNode
       .append("xhtml:span")
+      .attr("hidden", (d) => (d.clusterSize === 0 ? true : null))
+      .attr(
+        "style",
+        (d) => `
+          position: absolute;
+          top: 0;
+          background: #000000;
+          padding: 0px ${(d.radius / 10).toFixed()}px;
+          border-radius: ${(d.radius / 10).toFixed()}px;
+        `,
+      )
       .text((d) => {
-        const titleCut = 50;
-        const fullTitle =
-          d.compressedCount > 1
-            ? `${d.title} (${d.compressedCount.toString()})`
-            : d.title;
-        if (fullTitle.length > titleCut) {
-          return fullTitle.substring(0, titleCut) + "…";
-        } else {
-          return fullTitle;
-        }
+        return d.clusterSize;
       });
 
     this.nodeSelection.call(
@@ -485,18 +523,9 @@ export class D3Renderer {
 
   public applyPropertiesToSVG(): void {
     this.applyPositionsToSVG();
-    this.nodeCircle
-      ?.attr("stroke-width", (n: D3Node) => {
-        return n.locked
-          ? `${(strokeWidth * 2).toString()}px`
-          : `${strokeWidth.toString()}px`;
-      })
-      .attr("stroke-dasharray", (n: D3Node) => {
-        return n.locked ? "10,5" : null;
-      })
-      .attr("stroke", () => {
-        return this.theme == "dark" ? "#fff" : "#000";
-      });
+
+    // TODO Apply locked state
+    this.nodeLockedOverlay?.attr("hidden", (d) => (d.locked ? null : true));
   }
 
   public applyPositionsToSVG() {
@@ -641,5 +670,33 @@ export class D3Renderer {
       .with("on", () => true)
       .with("off", () => false)
       .exhaustive();
+  }
+
+  private _getTitleColorOfNode(d: D3Node): string {
+    return (
+      d.customTitleColor ??
+      getTextColor(
+        this.graphState.originalGraphElements?.labels.find(
+          (l) => l.label === d.labels[0],
+        )?.color ?? null,
+      )
+    );
+  }
+
+  private _getBgColorsOfNode(d: D3Node): string[] {
+    if (d.customBackgroundColor) {
+      return [d.customBackgroundColor];
+    } else {
+      const colors: (string | null)[] = d.labels.map(
+        (dlabel: string): string | null => {
+          return getBackgroundColor(
+            this.graphState.originalGraphElements?.labels.find(
+              (l) => l.label === dlabel,
+            )?.color ?? null,
+          );
+        },
+      );
+      return colors.reduce<string[]>((a, n) => (n ? [...a, n] : a), []);
+    }
   }
 }

@@ -391,7 +391,7 @@ export class RoomService implements ApplicationService {
 
     return await this._runWithRoomLock(
       params.roomId,
-      'Expanding nodes',
+      'Expanding node',
       async (): Promise<ExpandNodePreview | null> => {
         const result: ExpandNodesResult = {
           nodesAddedCount: 0,
@@ -415,11 +415,24 @@ export class RoomService implements ApplicationService {
           Neo4jDatabaseInfo.parse(database);
 
         try {
-          const expandResult: Neo4jGraphElements = await this._neo4j.expandNode(
-            neo4jDatabaseInfo,
-            new SSet<string>([params.nodeId]),
-            params.limit,
-          );
+          const expandResult: Neo4jGraphElements = node.isCluster
+            ? await this._neo4j.executeQuery(
+                neo4jDatabaseInfo,
+                'MATCH (n)-[r]-(neighbor) WHERE elementId(n) IN $nodeIds AND elementId(neighbor) in $neighbors RETURN n, r',
+                {
+                  nodeIds: node.compressed.toArray(),
+                  neighbors: oldGraph
+                    .getNeighborsOfNode(node)
+                    .toArray()
+                    .map((n: MutableNode): string => n.id),
+                },
+                { type: 'none' },
+              )
+            : await this._neo4j.expandNode(
+                neo4jDatabaseInfo,
+                new SSet<string>([params.nodeId]),
+                params.limit,
+              );
           const graph: MutableGraph = this._snapshotGraph(params.roomId);
 
           for (const newNode of expandResult.nodes) {
@@ -443,12 +456,20 @@ export class RoomService implements ApplicationService {
             }
           }
 
+          if (node.isCluster) {
+            graph.nodes.remove(node);
+          }
+
           this._logger.debug(
             this,
             `Expand node result for ${params.nodeId}: ${expandResult.nodes.size.toString()} nodes and ${expandResult.relationships.size.toString()} relationships.`,
           );
 
-          await this._postProcessGraph(graph, displayConfiguration, true);
+          await this._postProcessGraph(
+            graph,
+            displayConfiguration,
+            node.isCluster,
+          );
 
           this._sendActionToWorker(params.roomId, {
             type: 'WTActionSetGraph',

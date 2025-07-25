@@ -314,7 +314,8 @@ export class CachingSchemaDTOFactory {
       customTitleColor: node.customTitleColor(graph, config, this._logger),
       source: (await this._getDatabase(node.source))?.title ?? node.source,
       locked: node.locked,
-      compressed: node.compressed.toArray(),
+      isCluster: node.isCluster,
+      clusterSize: node.compressed.size,
     };
   }
 
@@ -330,11 +331,12 @@ export class CachingSchemaDTOFactory {
       isLoop: edge.isLoop,
       parallelCount: edge.parallelCount(graph),
       parallelIndex: edge.parallelIndex(graph),
-      compressed: edge.compressed.toArray(),
+      isCluster: edge.isCluster,
       width: edge.width,
       properties: this._createSchemaGraphProperties(edge.properties),
       namesInQuery: edge.namesInQuery.toArray(),
       source: (await this._getDatabase(edge.source))?.title ?? edge.source,
+      clusterSize: edge.compressed.size,
     };
   }
 

@@ -38,11 +38,12 @@ export type Edge = {
     isLoop: boolean;
     parallelCount: number;
     parallelIndex: number;
-    compressed: Array<(string)>;
+    isCluster: boolean;
     width: number;
     properties: Array<GraphProperty>;
     namesInQuery: Array<(string)>;
     source: string;
+    clusterSize: number;
 };
 
 export type ExpandNodePreviewElement = {
@@ -153,7 +154,8 @@ export type Node = {
     customTitleColor: (string) | null;
     source: string;
     locked: boolean;
-    compressed: Array<(string)>;
+    isCluster: boolean;
+    clusterSize: number;
 };
 
 export type Notification = {

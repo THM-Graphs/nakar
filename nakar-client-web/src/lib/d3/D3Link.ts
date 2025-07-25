@@ -6,7 +6,7 @@ export type D3Link = {
   target: D3Node;
   width: number;
   type: string;
-  compressedCount: number;
+  clusterSize: number;
   isLoop: boolean;
   parallelCount: number;
   parallelIndex: number;

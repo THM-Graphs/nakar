@@ -66,6 +66,10 @@ export class MutableNode {
     }
   }
 
+  public get isCluster(): boolean {
+    return this.compressed.size > 0;
+  }
+
   public static fromPlain(data: z.infer<typeof this.schema>): MutableNode {
     return new MutableNode({
       id: data.id,

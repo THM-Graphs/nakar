@@ -51,7 +51,7 @@ export function EdgeDetails(props: { edge: Edge; roomContext: RoomContext }) {
           value: props.edge.endNodeId,
         },
         {
-          slug: "Loop?",
+          slug: "Is Loop?",
           value: props.edge.isLoop,
         },
         {
@@ -63,8 +63,12 @@ export function EdgeDetails(props: { edge: Edge; roomContext: RoomContext }) {
           value: props.edge.parallelCount,
         },
         {
-          slug: "Compressed Count",
-          value: props.edge.compressed.length,
+          slug: "Cluster Size",
+          value: props.edge.clusterSize,
+        },
+        {
+          slug: "Is Cluster?",
+          value: props.edge.isCluster,
         },
       ]}
       properties={props.edge.properties}
