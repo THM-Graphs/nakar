@@ -89,6 +89,7 @@ export class DatabaseDTOFactory {
       database: db.database
         ? this.createGetDatabaseDTOFromStrapi(db.database)
         : null,
+      isTableQuery: db.isTableQuery ?? false,
     };
   }
 

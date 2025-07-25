@@ -129,11 +129,13 @@ export interface GraphParameter extends Struct.ComponentSchema {
 export interface GraphQuery extends Struct.ComponentSchema {
   collectionName: 'components_graph_queries';
   info: {
+    description: '';
     displayName: 'Query';
     icon: 'code';
   };
   attributes: {
     database: Schema.Attribute.Relation<'oneToOne', 'api::database.database'>;
+    isTableQuery: Schema.Attribute.Boolean;
     query: Schema.Attribute.Text;
   };
 }

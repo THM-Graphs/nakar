@@ -267,10 +267,12 @@ export class RoomService implements ApplicationService {
               params.arguments.toRecord(),
               { type: 'default' },
             );
-          graph.nodes.addNeo4jNodes(graphElements.nodes);
-          graph.edges.addNeo4jEdges(graphElements.relationships);
-          if (graph.tableData.length === 0) {
+
+          if (query.isTableQuery) {
             graph.tableData = graphElements.tableData;
+          } else {
+            graph.nodes.addNeo4jNodes(graphElements.nodes);
+            graph.edges.addNeo4jEdges(graphElements.relationships);
           }
         }
 
