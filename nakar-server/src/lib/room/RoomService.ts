@@ -32,7 +32,6 @@ import { PhysicsSimulation } from '../physics/PhysicsSimulation';
 import { MutableEdge } from './graph/MutableEdge';
 import { FinalGraphDisplayConfiguration } from './scenario-pipeline/display-configuration/FinalGraphDisplayConfiguration';
 import { RoomServiceEventKick } from './events/RoomServiceEventKick';
-import { ToManyElementsError } from '../neo4j/ToManyElementsError';
 import { ExpandNodePreview } from '../neo4j/expand-node-preview/ExpandNodePreview';
 import { NotFound } from 'http-errors';
 import { MutableEdgeIndex } from './graph/MutableEdgeIndex';
@@ -45,12 +44,12 @@ import { MutableNodeIndex } from './graph/MutableNodeIndex';
 import { ExpandNodesResult } from './ExpandNodesResult';
 import { FinalNodeDisplayConfiguration } from './scenario-pipeline/display-configuration/FinalNodeDisplayConfiguration';
 import { MediaService } from '../media/MediaService';
-import { RoomServiceEventNotAllNodesLoaded } from './events/RoomServiceEventNotAllNodesLoaded';
 import { LayoutAlgorithm } from '../tools/LayoutAlgorithm';
 import { circularWeightedSpread } from '../tools/circleLayoutAlgorithms/circularWeightedSpread';
 import { wait } from '../tools/Wait';
 import { MutablePosition } from './graph/MutablePosition';
 import { Neo4jLimitConfig } from '../neo4j/Neo4jLimitConfig';
+import { RoomServiceEventNotAllNodesLoaded } from './events/RoomServiceEventNotAllNodesLoaded';
 
 export class RoomService implements ApplicationService {
   private readonly _workers: SMap<string, Worker>;
@@ -268,8 +267,19 @@ export class RoomService implements ApplicationService {
               credentials,
               query.query,
               params.arguments.toRecord(),
-              new Neo4jLimitConfig('default'),
+              new Neo4jLimitConfig(
+                'default',
+                query.isTableQuery ? 'tableData' : 'graphElements',
+              ),
             );
+
+          if (graphElements.limitReached) {
+            this._onEvent.next({
+              type: 'RoomServiceEventNotAllNodesLoaded',
+              roomId: params.roomId,
+              loadedCount: graphElements.size,
+            } satisfies RoomServiceEventNotAllNodesLoaded);
+          }
 
           if (query.isTableQuery) {
             graph.tableData = graphElements.tableData;
@@ -419,102 +429,97 @@ export class RoomService implements ApplicationService {
         const neo4jDatabaseInfo: Neo4jDatabaseInfo =
           Neo4jDatabaseInfo.parse(database);
 
-        try {
-          const expandResult: Neo4jGraphElements = node.isCluster
-            ? await this._neo4j.executeQuery(
-                neo4jDatabaseInfo,
-                'MATCH (n)-[r]-(neighbor) WHERE elementId(n) IN $nodeIds AND elementId(neighbor) in $neighbors RETURN n, r',
-                {
-                  nodeIds: node.compressed.toArray(),
-                  neighbors: oldGraph
-                    .getNeighborsOfNode(node)
-                    .toArray()
-                    .map((n: MutableNode): string => n.id),
-                },
-                new Neo4jLimitConfig('none'),
-              )
-            : await this._neo4j.expandNode(
-                neo4jDatabaseInfo,
-                new SSet<string>([params.nodeId]),
-                params.limit,
-              );
-          const graph: MutableGraph = this._snapshotGraph(params.roomId);
+        const expandResult: Neo4jGraphElements = node.isCluster
+          ? await this._neo4j.executeQuery(
+              neo4jDatabaseInfo,
+              'MATCH (n)-[r]-(neighbor) WHERE elementId(n) IN $nodeIds AND elementId(neighbor) in $neighbors RETURN n, r',
+              {
+                nodeIds: node.compressed.toArray(),
+                neighbors: oldGraph
+                  .getNeighborsOfNode(node)
+                  .toArray()
+                  .map((n: MutableNode): string => n.id),
+              },
+              new Neo4jLimitConfig('default', 'graphElements'),
+            )
+          : await this._neo4j.expandNode(
+              neo4jDatabaseInfo,
+              new SSet<string>([params.nodeId]),
+              params.limit,
+            );
 
-          for (const newNode of expandResult.nodes) {
-            if (!graph.nodes.hasById(newNode[0])) {
-              result.nodesAddedCount += 1;
+        if (expandResult.limitReached && params.limit == null) {
+          const expandNodePreview: ExpandNodePreview =
+            await this._neo4j.expandNodePreview(
+              neo4jDatabaseInfo,
+              new SSet<string>([params.nodeId]),
+            );
+          return expandNodePreview;
+        }
 
-              const insertedNode: MutableNode | null = graph.nodes.addNeo4jNode(
-                newNode[1],
-              );
-              if (insertedNode != null) {
-                insertedNode.position.x = node.position.x;
-                insertedNode.position.y = node.position.y;
-                PhysicsSimulation.jiggle(insertedNode);
-              }
+        const graph: MutableGraph = this._snapshotGraph(params.roomId);
+
+        for (const newNode of expandResult.nodes) {
+          if (!graph.nodes.hasById(newNode[0])) {
+            result.nodesAddedCount += 1;
+
+            const insertedNode: MutableNode | null = graph.nodes.addNeo4jNode(
+              newNode[1],
+            );
+            if (insertedNode != null) {
+              insertedNode.position.x = node.position.x;
+              insertedNode.position.y = node.position.y;
+              PhysicsSimulation.jiggle(insertedNode);
             }
-          }
-          for (const newEdge of expandResult.relationships) {
-            if (!graph.edges.has(newEdge[0])) {
-              result.edgeAddedCount += 1;
-              graph.edges.addNeo4jEdge(newEdge[1]);
-            }
-          }
-
-          if (node.isCluster) {
-            graph.nodes.remove(node);
-          }
-
-          this._logger.debug(
-            this,
-            `Expand node result for ${params.nodeId}: ${expandResult.nodes.size.toString()} nodes and ${expandResult.relationships.size.toString()} relationships.`,
-          );
-
-          await this._postProcessGraph(
-            graph,
-            displayConfiguration,
-            node.isCluster,
-          );
-
-          this._sendActionToWorker(params.roomId, {
-            type: 'WTActionSetGraph',
-            graph: graph.toPhysicalGraph(displayConfiguration, this._logger),
-          });
-          this._sendActionToWorker(params.roomId, {
-            type: 'WTActionTriggerPhysics',
-            amount: 'short',
-          });
-          this._onEvent.next({
-            type: 'RoomServiceEventGraphElementsChanged',
-            graph: graph,
-            roomId: params.roomId,
-            nodesAdded: result.nodesAddedCount,
-            edgesAdded: result.edgeAddedCount,
-          } satisfies RoomServiceEventGraphElementsChanged);
-
-          if (
-            expandResult.tableData.length ===
-            Neo4jLimitConfig.maximalPreviewElements
-          ) {
-            this._onEvent.next({
-              type: 'RoomServiceEventNotAllNodesLoaded',
-              roomId: params.roomId,
-              count: expandResult.tableData.length,
-            } satisfies RoomServiceEventNotAllNodesLoaded);
-          }
-          return null;
-        } catch (error: unknown) {
-          if (error instanceof ToManyElementsError && params.limit == null) {
-            const expandNodePreview: ExpandNodePreview =
-              await this._neo4j.expandNodePreview(
-                neo4jDatabaseInfo,
-                new SSet<string>([params.nodeId]),
-              );
-            return expandNodePreview;
-          } else {
-            throw error;
           }
         }
+        for (const newEdge of expandResult.relationships) {
+          if (!graph.edges.has(newEdge[0])) {
+            result.edgeAddedCount += 1;
+            graph.edges.addNeo4jEdge(newEdge[1]);
+          }
+        }
+
+        if (node.isCluster) {
+          graph.nodes.remove(node);
+        }
+
+        this._logger.debug(
+          this,
+          `Expand node result for ${params.nodeId}: ${expandResult.nodes.size.toString()} nodes and ${expandResult.relationships.size.toString()} relationships.`,
+        );
+
+        await this._postProcessGraph(
+          graph,
+          displayConfiguration,
+          node.isCluster,
+        );
+
+        this._sendActionToWorker(params.roomId, {
+          type: 'WTActionSetGraph',
+          graph: graph.toPhysicalGraph(displayConfiguration, this._logger),
+        });
+        this._sendActionToWorker(params.roomId, {
+          type: 'WTActionTriggerPhysics',
+          amount: 'short',
+        });
+        this._onEvent.next({
+          type: 'RoomServiceEventGraphElementsChanged',
+          graph: graph,
+          roomId: params.roomId,
+          nodesAdded: result.nodesAddedCount,
+          edgesAdded: result.edgeAddedCount,
+        } satisfies RoomServiceEventGraphElementsChanged);
+
+        if (expandResult.limitReached) {
+          this._onEvent.next({
+            type: 'RoomServiceEventNotAllNodesLoaded',
+            roomId: params.roomId,
+            loadedCount: expandResult.size,
+          } satisfies RoomServiceEventNotAllNodesLoaded);
+        }
+
+        return null;
       },
     );
   }
@@ -772,17 +777,24 @@ export class RoomService implements ApplicationService {
             credentials,
             params.query,
             {},
-            new Neo4jLimitConfig('default'),
+            new Neo4jLimitConfig('default', 'graphElements'),
           );
+
+        if (graphElements.limitReached) {
+          this._onEvent.next({
+            type: 'RoomServiceEventNotAllNodesLoaded',
+            roomId: params.roomId,
+            loadedCount: graphElements.size,
+          } satisfies RoomServiceEventNotAllNodesLoaded);
+        }
+
         const graph: MutableGraph = this._snapshotGraph(params.roomId);
         if (params.replace) {
           graph.nodes = new MutableNodeIndex([]);
           graph.edges = new MutableEdgeIndex([]);
-          graph.tableData = [];
         }
         graph.nodes.addNeo4jNodes(graphElements.nodes);
         graph.edges.addNeo4jEdges(graphElements.relationships);
-        graph.tableData = graphElements.tableData;
 
         await this._postProcessGraph(graph, displayConfiguration, false);
 
@@ -1192,6 +1204,7 @@ export class RoomService implements ApplicationService {
           credentials,
           nodesToConnect,
         );
+
       const didAdd: number = graph.edges.addNeo4jEdges(result.relationships);
       addedEdgesCount += didAdd;
     }

@@ -69,8 +69,9 @@ export class Neo4jService implements ApplicationService {
         );
 
         const nei4jGraphElementsFactory: Neo4jGraphElementsFactory =
-          new Neo4jGraphElementsFactory(this._logger, limitConfig.getLimit());
-        nei4jGraphElementsFactory.fromQueryResult(result, databaseInfo);
+          new Neo4jGraphElementsFactory(this._logger, limitConfig);
+        nei4jGraphElementsFactory.collectQueryResult(result, databaseInfo);
+
         return nei4jGraphElementsFactory.getResult();
       } catch (error) {
         await session.close();
@@ -99,7 +100,7 @@ export class Neo4jService implements ApplicationService {
       {
         existingNodeIds: nodesIds,
       },
-      new Neo4jLimitConfig('none'),
+      new Neo4jLimitConfig('default', 'graphElements'),
     );
     return additional;
   }
@@ -123,16 +124,16 @@ export class Neo4jService implements ApplicationService {
           relationships: limit.relationships,
           labels: limit.labels,
         },
-        new Neo4jLimitConfig('default'),
+        new Neo4jLimitConfig('default', 'graphElements'),
       );
     } else {
       return await this.executeQuery(
         databaseInfo,
-        `MATCH (a)-[additionalRelationship]-(b) WHERE elementId(a) IN $nodesIds RETURN a, additionalRelationship, b LIMIT ${(Neo4jLimitConfig.maximalPreviewElements + 1).toString()};`,
+        `MATCH (a)-[additionalRelationship]-(b) WHERE elementId(a) IN $nodesIds RETURN additionalRelationship, b LIMIT ${Neo4jLimitConfig.maximalPreviewElements.toString()};`,
         {
           nodesIds: nodesIds,
         },
-        new Neo4jLimitConfig('preview'),
+        new Neo4jLimitConfig('preview', 'graphElements'),
       );
     }
   }
@@ -151,7 +152,7 @@ ORDER BY rcount DESC, rtype ASC`,
       {
         nodesIds: nodesIds,
       },
-      new Neo4jLimitConfig('none'),
+      new Neo4jLimitConfig('default', 'tableData'),
     );
     const expandNodePreviewRelationshipEntries: ExpandNodePreviewEntry[] =
       relationships.tableData.map(
@@ -172,7 +173,7 @@ ORDER BY lcount DESC, label ASC`,
       {
         nodesIds: nodesIds,
       },
-      new Neo4jLimitConfig('none'),
+      new Neo4jLimitConfig('default', 'tableData'),
     );
     const expandNodePreviewLabelEntries: ExpandNodePreviewEntry[] =
       labels.tableData.map(
@@ -202,7 +203,7 @@ ORDER BY lcount DESC, label ASC`,
       credentials,
       'CALL db.labels() YIELD label RETURN label ORDER BY label ASC',
       {},
-      new Neo4jLimitConfig('none'),
+      new Neo4jLimitConfig('default', 'tableData'),
     );
     const labels: SSet<string> = new SSet<string>(
       labelsResult.tableData.map((line: SMap<string, unknown>): string =>
@@ -219,7 +220,7 @@ ORDER BY lcount DESC, label ASC`,
       credentials,
       'CALL db.relationshipTypes() YIELD relationshipType RETURN relationshipType ORDER BY relationshipType ASC',
       {},
-      new Neo4jLimitConfig('none'),
+      new Neo4jLimitConfig('default', 'tableData'),
     );
     const relTypes: SSet<string> = new SSet<string>(
       relTypesResult.tableData.map((line: SMap<string, unknown>): string =>
@@ -277,7 +278,7 @@ ORDER BY lcount DESC, label ASC`,
       credentials,
       'MATCH (n) RETURN count(n) AS nodeCount',
       {},
-      new Neo4jLimitConfig('none'),
+      new Neo4jLimitConfig('default', 'tableData'),
     );
     if (result.tableData.length === 0) {
       throw new Error('Unable to get node count from query.');
@@ -293,7 +294,7 @@ ORDER BY lcount DESC, label ASC`,
       credentials,
       'MATCH ()-[r]->() RETURN count(r) AS relationshipCount',
       {},
-      new Neo4jLimitConfig('none'),
+      new Neo4jLimitConfig('default', 'tableData'),
     );
     if (result.tableData.length === 0) {
       throw new Error('Unable to get relationship count from query.');
@@ -310,7 +311,7 @@ ORDER BY lcount DESC, label ASC`,
       credentials,
       `MATCH (n:\`${label}\`) RETURN count(n) as count;`,
       {},
-      new Neo4jLimitConfig('none'),
+      new Neo4jLimitConfig('default', 'tableData'),
     );
     if (result.tableData.length === 0) {
       throw new Error(`Unable to get node count of label ${label} from query.`);
@@ -330,7 +331,7 @@ ORDER BY lcount DESC, label ASC`,
       credentials,
       `MATCH ()-[r:\`${relType}\`]-() RETURN count(r) as count`,
       {},
-      new Neo4jLimitConfig('none'),
+      new Neo4jLimitConfig('default', 'tableData'),
     );
     if (result.tableData.length === 0) {
       throw new Error(`Unable to get rel type count of ${relType} from query.`);

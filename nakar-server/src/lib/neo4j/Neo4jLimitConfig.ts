@@ -4,13 +4,23 @@ export class Neo4jLimitConfig {
   public static readonly maximalElements: number = 5000;
   public static readonly maximalPreviewElements: number = 300;
 
-  public constructor(private readonly _type: 'preview' | 'default' | 'none') {}
+  public constructor(
+    private readonly _type: 'preview' | 'default',
+    private readonly _collectionType: 'graphElements' | 'tableData',
+  ) {}
 
-  public getLimit(): number | null {
+  public getLimit(): number {
     return match(this._type)
       .with('preview', (): number => Neo4jLimitConfig.maximalPreviewElements)
       .with('default', (): number => Neo4jLimitConfig.maximalElements)
-      .with('none', (): null => null)
       .exhaustive();
+  }
+
+  public shouldCollectGraphElements(): boolean {
+    return this._collectionType === 'graphElements';
+  }
+
+  public shouldCollectTableData(): boolean {
+    return this._collectionType === 'tableData';
   }
 }

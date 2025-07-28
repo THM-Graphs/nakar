@@ -475,7 +475,7 @@ export class SocketIOService implements ApplicationService {
               this.sendToRoom(message.roomId, {
                 type: 'WSEventNotification',
                 notification: {
-                  message: `Not all nodes loaded. Did load ${message.count.toString()} nodes.`,
+                  message: `Not all graph elements loaded. Did load ${message.loadedCount.toString()} elements.`,
                   date: new Date().toISOString(),
                   severity: 'warning',
                   title: 'Warning',
