@@ -16,14 +16,10 @@ import { ApplicationService } from '../application/ApplicationService';
 import { ExpandNodePreview } from './expand-node-preview/ExpandNodePreview';
 import { ExpandNodePreviewEntry } from './expand-node-preview/ExpandNodePreviewEntry';
 import { SMap } from '../tools/Map';
-import { ToManyElementsError } from './ToManyElementsError';
 import { SchemaDatabaseStats } from '../../../src-gen/schema';
-import { match } from 'ts-pattern';
+import { Neo4jLimitConfig } from './Neo4jLimitConfig';
 
 export class Neo4jService implements ApplicationService {
-  public static readonly maximalElements: number = 5000;
-  public static readonly maximalPreviewElements: number = 300;
-
   public constructor(private readonly _logger: LoggerService) {}
 
   public bootstrap(): void | Promise<void> {
@@ -38,7 +34,7 @@ export class Neo4jService implements ApplicationService {
     databaseInfo: Neo4jDatabaseInfo,
     query: string,
     parameters: Record<string, unknown>,
-    limitConfig: { type: 'preview' } | { type: 'default' } | { type: 'none' },
+    limitConfig: Neo4jLimitConfig,
   ): Promise<Neo4jGraphElements> {
     const driver: Driver = createDriver(
       databaseInfo.url,
@@ -67,36 +63,15 @@ export class Neo4jService implements ApplicationService {
           RecordShape<string, unknown>
         >(query, parameters, { timeout: 2 * 60000 });
 
-        match(limitConfig)
-          .with({ type: 'none' }, (): void => {
-            /* do nothing */
-          })
-          .with({ type: 'preview' }, (): void => {
-            if (result.records.length > Neo4jService.maximalPreviewElements) {
-              throw new ToManyElementsError(
-                result.records.length,
-                Neo4jService.maximalPreviewElements,
-              );
-            }
-          })
-          .with({ type: 'default' }, (): void => {
-            if (result.records.length > Neo4jService.maximalElements) {
-              throw new ToManyElementsError(
-                result.records.length,
-                Neo4jService.maximalElements,
-              );
-            }
-          })
-          .exhaustive();
-
         this._logger.debug(
           this,
           `Did receive ${result.records.length.toString()} records.`,
         );
 
         const nei4jGraphElementsFactory: Neo4jGraphElementsFactory =
-          new Neo4jGraphElementsFactory(this._logger);
-        return nei4jGraphElementsFactory.fromQueryResult(result, databaseInfo);
+          new Neo4jGraphElementsFactory(this._logger, limitConfig.getLimit());
+        nei4jGraphElementsFactory.fromQueryResult(result, databaseInfo);
+        return nei4jGraphElementsFactory.getResult();
       } catch (error) {
         await session.close();
         this._logger.error(this, error);
@@ -124,7 +99,7 @@ export class Neo4jService implements ApplicationService {
       {
         existingNodeIds: nodesIds,
       },
-      { type: 'none' },
+      new Neo4jLimitConfig('none'),
     );
     return additional;
   }
@@ -141,23 +116,23 @@ export class Neo4jService implements ApplicationService {
         `MATCH (a)-[additionalRelationship]-(b)
         WHERE elementId(a) IN $nodesIds
         AND (type(additionalRelationship) in $relationships OR ANY(label IN labels(b) WHERE label IN $labels))
-        RETURN a, additionalRelationship, b
-        LIMIT ${Neo4jService.maximalElements.toString()};`,
+        RETURN additionalRelationship, b
+        LIMIT ${Neo4jLimitConfig.maximalElements.toString()};`,
         {
           nodesIds: nodesIds,
           relationships: limit.relationships,
           labels: limit.labels,
         },
-        { type: 'default' },
+        new Neo4jLimitConfig('default'),
       );
     } else {
       return await this.executeQuery(
         databaseInfo,
-        `MATCH (a)-[additionalRelationship]-(b) WHERE elementId(a) IN $nodesIds RETURN a, additionalRelationship, b LIMIT ${(Neo4jService.maximalPreviewElements + 1).toString()};`,
+        `MATCH (a)-[additionalRelationship]-(b) WHERE elementId(a) IN $nodesIds RETURN a, additionalRelationship, b LIMIT ${(Neo4jLimitConfig.maximalPreviewElements + 1).toString()};`,
         {
           nodesIds: nodesIds,
         },
-        { type: 'preview' },
+        new Neo4jLimitConfig('preview'),
       );
     }
   }
@@ -176,7 +151,7 @@ ORDER BY rcount DESC, rtype ASC`,
       {
         nodesIds: nodesIds,
       },
-      { type: 'none' },
+      new Neo4jLimitConfig('none'),
     );
     const expandNodePreviewRelationshipEntries: ExpandNodePreviewEntry[] =
       relationships.tableData.map(
@@ -197,7 +172,7 @@ ORDER BY lcount DESC, label ASC`,
       {
         nodesIds: nodesIds,
       },
-      { type: 'none' },
+      new Neo4jLimitConfig('none'),
     );
     const expandNodePreviewLabelEntries: ExpandNodePreviewEntry[] =
       labels.tableData.map(
@@ -227,7 +202,7 @@ ORDER BY lcount DESC, label ASC`,
       credentials,
       'CALL db.labels() YIELD label RETURN label ORDER BY label ASC',
       {},
-      { type: 'none' },
+      new Neo4jLimitConfig('none'),
     );
     const labels: SSet<string> = new SSet<string>(
       labelsResult.tableData.map((line: SMap<string, unknown>): string =>
@@ -244,7 +219,7 @@ ORDER BY lcount DESC, label ASC`,
       credentials,
       'CALL db.relationshipTypes() YIELD relationshipType RETURN relationshipType ORDER BY relationshipType ASC',
       {},
-      { type: 'none' },
+      new Neo4jLimitConfig('none'),
     );
     const relTypes: SSet<string> = new SSet<string>(
       relTypesResult.tableData.map((line: SMap<string, unknown>): string =>
@@ -287,11 +262,11 @@ ORDER BY lcount DESC, label ASC`,
   }
 
   private _exploreQueryOfLabel(label: string): string {
-    return `MATCH (n:\`${label}\`) RETURN * LIMIT ${Neo4jService.maximalPreviewElements.toString()};`;
+    return `MATCH (n:\`${label}\`) RETURN * LIMIT ${Neo4jLimitConfig.maximalPreviewElements.toString()};`;
   }
 
   private _exploreQueryOfRelationshipType(relType: string): string {
-    return `MATCH (a)-[r:\`${relType}\`]-(b) RETURN * LIMIT ${Neo4jService.maximalPreviewElements.toString()};`;
+    return `MATCH (a)-[r:\`${relType}\`]-(b) RETURN * LIMIT ${Neo4jLimitConfig.maximalPreviewElements.toString()};`;
   }
 
   private async _getNodesCount(
@@ -302,7 +277,7 @@ ORDER BY lcount DESC, label ASC`,
       credentials,
       'MATCH (n) RETURN count(n) AS nodeCount',
       {},
-      { type: 'none' },
+      new Neo4jLimitConfig('none'),
     );
     if (result.tableData.length === 0) {
       throw new Error('Unable to get node count from query.');
@@ -318,7 +293,7 @@ ORDER BY lcount DESC, label ASC`,
       credentials,
       'MATCH ()-[r]->() RETURN count(r) AS relationshipCount',
       {},
-      { type: 'none' },
+      new Neo4jLimitConfig('none'),
     );
     if (result.tableData.length === 0) {
       throw new Error('Unable to get relationship count from query.');
@@ -335,7 +310,7 @@ ORDER BY lcount DESC, label ASC`,
       credentials,
       `MATCH (n:\`${label}\`) RETURN count(n) as count;`,
       {},
-      { type: 'none' },
+      new Neo4jLimitConfig('none'),
     );
     if (result.tableData.length === 0) {
       throw new Error(`Unable to get node count of label ${label} from query.`);
@@ -355,7 +330,7 @@ ORDER BY lcount DESC, label ASC`,
       credentials,
       `MATCH ()-[r:\`${relType}\`]-() RETURN count(r) as count`,
       {},
-      { type: 'none' },
+      new Neo4jLimitConfig('none'),
     );
     if (result.tableData.length === 0) {
       throw new Error(`Unable to get rel type count of ${relType} from query.`);

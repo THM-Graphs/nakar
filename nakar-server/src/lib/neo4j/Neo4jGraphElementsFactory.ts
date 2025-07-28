@@ -12,144 +12,138 @@ import { SMap } from '../tools/Map';
 import { Neo4jNode } from './Neo4jNode';
 import { Neo4jRelationship } from './Neo4jRelationship';
 import { LoggerService } from '../logger/LoggerService';
-import { PathSegment, Record as Neo4jRecord } from 'neo4j-driver-core';
+import { Record as Neo4jRecord } from 'neo4j-driver-core';
 import { match, P } from 'ts-pattern';
 import { Neo4jGraphElements } from './Neo4jGraphElements';
 import { Neo4jDatabaseInfo } from './Neo4jDatabaseInfo';
+import { ToManyElementsError } from './ToManyElementsError';
 
 export class Neo4jGraphElementsFactory {
-  public constructor(private readonly _logger: LoggerService) {}
+  private readonly _result: Neo4jGraphElements;
 
-  public mergeMultiple(
-    ...graphElements: Neo4jGraphElements[]
-  ): Neo4jGraphElements {
-    return graphElements.reduce(
-      (
-        akku: Neo4jGraphElements,
-        next: Neo4jGraphElements,
-      ): Neo4jGraphElements => akku.byMergingWith(next),
-      Neo4jGraphElements.empty(),
-    );
+  public constructor(
+    private readonly _logger: LoggerService,
+    private readonly _limit: number | null,
+  ) {
+    this._result = new Neo4jGraphElements({
+      nodes: new SMap(),
+      relationships: new SMap(),
+      tableData: [],
+    });
   }
 
   public fromRawNode(
     node: Node,
     key: string | null,
     source: Neo4jDatabaseInfo,
-  ): Neo4jGraphElements {
-    return new Neo4jGraphElements({
-      nodes: new SMap([
-        [node.elementId, Neo4jNode.fromRawNode(node, key, source)],
-      ]),
-      relationships: new SMap(),
-      tableData: [],
-    });
+  ): void {
+    this._result.nodes.set(
+      node.elementId,
+      Neo4jNode.fromRawNode(node, key, source),
+    );
+    this._assertLimit();
   }
 
   public fromRawRelationship(
     relationship: Relationship,
     key: string | null,
     source: Neo4jDatabaseInfo,
-  ): Neo4jGraphElements {
-    return new Neo4jGraphElements({
-      relationships: new SMap([
-        [
-          relationship.elementId,
-          Neo4jRelationship.fromRawRelationship(relationship, key, source),
-        ],
-      ]),
-      nodes: new SMap(),
-      tableData: [],
-    });
-  }
-
-  public fromTableData(tableData: SMap<string, unknown>[]): Neo4jGraphElements {
-    return new Neo4jGraphElements({
-      nodes: new SMap(),
-      relationships: new SMap(),
-      tableData: tableData,
-    });
+  ): void {
+    this._result.relationships.set(
+      relationship.elementId,
+      Neo4jRelationship.fromRawRelationship(relationship, key, source),
+    );
+    this._assertLimit();
   }
 
   public fromField(
     key: string,
     field: unknown,
     source: Neo4jDatabaseInfo,
-  ): Neo4jGraphElements {
+  ): void {
     if (isNode(field)) {
-      return this.fromRawNode(field, key, source);
+      this.fromRawNode(field, key, source);
     } else if (isRelationship(field)) {
-      return this.fromRawRelationship(field, key, source);
+      this.fromRawRelationship(field, key, source);
     } else if (isPath(field)) {
-      return this.mergeMultiple(
-        ...field.segments.map((segment: PathSegment): Neo4jGraphElements => {
-          return this.mergeMultiple(
-            this.fromRawNode(segment.start, null, source),
-            this.fromRawNode(segment.end, null, source),
-            this.fromRawRelationship(segment.relationship, null, source),
-          );
-        }),
-      );
+      for (const segment of field.segments) {
+        this.fromRawNode(segment.start, null, source);
+        this.fromRawNode(segment.end, null, source);
+        this.fromRawRelationship(segment.relationship, null, source);
+      }
     } else {
-      // TODO: match everything
-      return match(field)
-        .with(
-          P.array(),
-          (a: unknown[]): Neo4jGraphElements => this.fromFields(key, a, source),
-        )
-        .otherwise((): Neo4jGraphElements => {
-          return Neo4jGraphElements.empty();
+      match(field)
+        .with(P.array(), (a: unknown[]): void => {
+          this.fromFields(key, a, source);
+        })
+        .otherwise((): void => {
+          /* */
         });
     }
+    this._assertLimit();
   }
 
   public fromFields(
     key: string,
     fields: unknown[],
     source: Neo4jDatabaseInfo,
-  ): Neo4jGraphElements {
-    return this.mergeMultiple(
-      ...fields.map(
-        (subField: unknown): Neo4jGraphElements =>
-          this.fromField(key, subField, source),
-      ),
-    );
+  ): void {
+    for (const field of fields) {
+      this.fromField(key, field, source);
+      this._assertLimit();
+    }
   }
 
   public fromQueryResult(
     queryResult: QueryResult<RecordShape<string, unknown>>,
     source: Neo4jDatabaseInfo,
-  ): Neo4jGraphElements {
-    return this.mergeMultiple(
-      ...queryResult.records.map(
-        (
-          record: Neo4jRecord<RecordShape<string, unknown>>,
-        ): Neo4jGraphElements => this.fromRecord(record, source),
-      ),
-    );
+  ): void {
+    for (const record of queryResult.records) {
+      this.fromRecord(record, source);
+      this._assertLimit();
+    }
   }
 
   public fromRecord(
     record: Neo4jRecord<RecordShape<string, unknown>>,
     source: Neo4jDatabaseInfo,
-  ): Neo4jGraphElements {
-    const results: Neo4jGraphElements[] = record.keys.map(
-      (key: string): Neo4jGraphElements =>
-        this.fromField(key, record.get(key), source),
-    );
+  ): void {
+    const tableDataRow: SMap<string, unknown> = new SMap<string, unknown>();
+    for (const key of record.keys) {
+      // Collect Graph Elements
+      this.fromField(key, record.get(key), source);
 
-    const tableDataEntry: SMap<string, unknown> = record.keys.reduce<
-      SMap<string, unknown>
-    >((akku: SMap<string, unknown>, next: string): SMap<string, unknown> => {
-      const value: unknown = record.get(next);
+      // Collect Table Data
+      const value: unknown = record.get(key);
       if (isInt(value)) {
-        return akku.bySetting(next, value.toString());
+        tableDataRow.set(key, value.toString());
       } else {
-        // todo: match everything
-        return akku.bySetting(next, value);
+        tableDataRow.set(key, value);
       }
-    }, new SMap());
+    }
+    this._result.tableData.push(tableDataRow);
+    this._assertLimit();
+  }
 
-    return this.mergeMultiple(...results, this.fromTableData([tableDataEntry]));
+  public getResult(): Neo4jGraphElements {
+    return this._result;
+  }
+
+  private _assertLimit(): void {
+    if (this._limit == null) {
+      return;
+    }
+    if (this._result.nodes.size > this._limit) {
+      throw new ToManyElementsError(this._result.nodes.size, this._limit);
+    }
+    if (this._result.relationships.size > this._limit) {
+      throw new ToManyElementsError(
+        this._result.relationships.size,
+        this._limit,
+      );
+    }
+    if (this._result.tableData.length > this._limit) {
+      throw new ToManyElementsError(this._result.tableData.length, this._limit);
+    }
   }
 }

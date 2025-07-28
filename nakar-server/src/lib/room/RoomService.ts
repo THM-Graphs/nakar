@@ -50,6 +50,7 @@ import { LayoutAlgorithm } from '../tools/LayoutAlgorithm';
 import { circularWeightedSpread } from '../tools/circleLayoutAlgorithms/circularWeightedSpread';
 import { wait } from '../tools/Wait';
 import { MutablePosition } from './graph/MutablePosition';
+import { Neo4jLimitConfig } from '../neo4j/Neo4jLimitConfig';
 
 export class RoomService implements ApplicationService {
   private readonly _workers: SMap<string, Worker>;
@@ -267,7 +268,7 @@ export class RoomService implements ApplicationService {
               credentials,
               query.query,
               params.arguments.toRecord(),
-              { type: 'default' },
+              new Neo4jLimitConfig('default'),
             );
 
           if (query.isTableQuery) {
@@ -430,7 +431,7 @@ export class RoomService implements ApplicationService {
                     .toArray()
                     .map((n: MutableNode): string => n.id),
                 },
-                { type: 'none' },
+                new Neo4jLimitConfig('none'),
               )
             : await this._neo4j.expandNode(
                 neo4jDatabaseInfo,
@@ -493,7 +494,7 @@ export class RoomService implements ApplicationService {
 
           if (
             expandResult.tableData.length ===
-            Neo4jService.maximalPreviewElements
+            Neo4jLimitConfig.maximalPreviewElements
           ) {
             this._onEvent.next({
               type: 'RoomServiceEventNotAllNodesLoaded',
@@ -503,7 +504,7 @@ export class RoomService implements ApplicationService {
           }
           return null;
         } catch (error: unknown) {
-          if (error instanceof ToManyElementsError) {
+          if (error instanceof ToManyElementsError && params.limit == null) {
             const expandNodePreview: ExpandNodePreview =
               await this._neo4j.expandNodePreview(
                 neo4jDatabaseInfo,
@@ -771,7 +772,7 @@ export class RoomService implements ApplicationService {
             credentials,
             params.query,
             {},
-            { type: 'default' },
+            new Neo4jLimitConfig('default'),
           );
         const graph: MutableGraph = this._snapshotGraph(params.roomId);
         if (params.replace) {
