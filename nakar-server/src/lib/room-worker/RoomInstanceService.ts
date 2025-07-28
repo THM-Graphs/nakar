@@ -84,7 +84,9 @@ export class RoomInstanceService implements ApplicationService {
               foundNode.position.y = movedNode.position.y;
             }
 
-            void this._physics.run({ maxMs: PhysicsSimulation.cooldownTime });
+            if (action.runShortPhysics) {
+              void this._physics.run({ maxMs: PhysicsSimulation.cooldownTime });
+            }
           },
         )
         .with(
