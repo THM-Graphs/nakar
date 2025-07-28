@@ -1,5 +1,6 @@
 import { D3Link } from "./D3Link.ts";
 import * as d3 from "d3";
+import { D3Node } from "./D3Node.ts";
 
 export class D3Calculator {
   public closestPointsOnNodes(d: D3Link) {
@@ -22,27 +23,43 @@ export class D3Calculator {
         y2: pe.y,
       };
     } else {
-      const r1 = d.source.radius;
-      const r2 = d.target.radius;
-
-      // Vector from c1 to c2
-      const dx = x2 - x1;
-      const dy = y2 - y1;
-
-      // Distance between the centers
-      const distance = Math.sqrt(dx * dx + dy * dy);
-
-      // Normalize the vector to get the direction
-      const ux = dx / distance;
-      const uy = dy / distance;
+      const point1 = this.pointOnRadius(d.source, {
+        x: d.target.x,
+        y: d.target.y,
+      });
+      const point2 = this.pointOnRadius(d.target, {
+        x: d.source.x,
+        y: d.source.y,
+      });
 
       return {
-        x1: x1 + r1 * ux,
-        y1: y1 + r1 * uy,
-        x2: x2 - r2 * ux,
-        y2: y2 - r2 * uy,
+        x1: point1.x,
+        y1: point1.y,
+        x2: point2.x,
+        y2: point2.y,
       };
     }
+  }
+
+  public pointOnRadius(
+    node: D3Node,
+    point: { x: number; y: number },
+  ): { x: number; y: number } {
+    // Vector from c1 to c2
+    const dx = point.x - node.x;
+    const dy = point.y - node.y;
+
+    // Distance between the centers
+    const distance = Math.sqrt(dx * dx + dy * dy);
+
+    // Normalize the vector to get the direction
+    const ux = dx / distance;
+    const uy = dy / distance;
+
+    return {
+      x: node.x + node.radius * ux,
+      y: node.y + node.radius * uy,
+    };
   }
 
   public curvedPath(d: D3Link) {
@@ -83,10 +100,13 @@ export class D3Calculator {
   public pushVectorOfCurve(
     x1: number,
     y1: number,
+    n1: D3Node,
     x2: number,
     y2: number,
+    n2: D3Node,
     distance: number,
-  ): { x: number; y: number } {
+    moveEnds: boolean,
+  ): { x: number; y: number }[] {
     const midX = (x1 + x2) / 2;
     const midY = (y1 + y2) / 2;
 
@@ -99,11 +119,15 @@ export class D3Calculator {
     const controlX = midX + dx;
     const controlY = midY + dy;
 
-    const p = {
+    const center = {
       x: controlX,
       y: controlY,
     };
-    return p;
+    return [
+      moveEnds ? this.pointOnRadius(n1, center) : { x: x1, y: y1 },
+      center,
+      moveEnds ? this.pointOnRadius(n2, center) : { x: x2, y: y2 },
+    ];
   }
 
   public curvePoints(d: D3Link): {
@@ -116,17 +140,20 @@ export class D3Calculator {
 
     const curvAmount = 15;
 
-    const p = this.pushVectorOfCurve(
+    const newPoints = this.pushVectorOfCurve(
       x1,
       y1,
+      d.source,
       x2,
       y2,
+      d.target,
       d.isLoop ? curvAmount + d.source.radius : d.parallelIndex * curvAmount,
+      !d.isLoop,
     );
 
     return {
-      center: p,
-      points: [{ x: x1, y: y1 }, p, { x: x2, y: y2 }],
+      center: newPoints[1],
+      points: newPoints,
       angle: this.fixDegAngle(angle),
     };
   }
