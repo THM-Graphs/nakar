@@ -293,12 +293,14 @@ export class DatabaseService implements ApplicationService {
         this._databaseDtoFactory.createGraphDisplayConfigurationDTOFromStrapi(
           scenario.scenarioGroup?.room?.graphDisplayConfiguration,
         ),
+        this._logger,
       )
         .byMerging(
           MergableGraphDisplayConfiguration.createFromDb(
             this._databaseDtoFactory.createGraphDisplayConfigurationDTOFromStrapi(
               scenario.scenarioGroup?.graphDisplayConfiguration,
             ),
+            this._logger,
           ),
         )
         .byMerging(
@@ -306,6 +308,7 @@ export class DatabaseService implements ApplicationService {
             this._databaseDtoFactory.createGraphDisplayConfigurationDTOFromStrapi(
               scenario.graphDisplayConfiguration,
             ),
+            this._logger,
           ),
         )
         .finalize();

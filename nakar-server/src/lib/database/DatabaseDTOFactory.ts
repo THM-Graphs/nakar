@@ -145,12 +145,14 @@ export class DatabaseDTOFactory {
             { populate: ['originalDatabase', 'mergeDatabase'] }
           >,
         ): MergeNodeConfigurationDBDTO => ({
-          originalLabel: mergeNodeConfiguration.originalLabel ?? null,
-          originalProperties: mergeNodeConfiguration.originalProperties ?? null,
+          originalLabel: mergeNodeConfiguration.originalLabel?.trim() ?? null,
+          originalProperties:
+            mergeNodeConfiguration.originalProperties?.trim() ?? null,
           originalDatabaseId:
             mergeNodeConfiguration.originalDatabase?.documentId ?? null,
-          mergeLabel: mergeNodeConfiguration.mergeLabel ?? null,
-          mergeProperties: mergeNodeConfiguration.mergeProperties ?? null,
+          mergeLabel: mergeNodeConfiguration.mergeLabel?.trim() ?? null,
+          mergeProperties:
+            mergeNodeConfiguration.mergeProperties?.trim() ?? null,
           mergeDatabaseId:
             mergeNodeConfiguration.mergeDatabase?.documentId ?? null,
         }),
@@ -162,7 +164,7 @@ export class DatabaseDTOFactory {
     db: Result<'graph.node-display-configuration'>,
   ): NodeDisplayConfigurationDBDTO {
     return {
-      targetLabel: db.targetLabel ?? null,
+      targetLabel: db.targetLabel?.trim() ?? null,
       displayText: db.displayText ?? null,
       radius: db.radius ?? null,
       backgroundColor: db.backgroundColor ?? null,

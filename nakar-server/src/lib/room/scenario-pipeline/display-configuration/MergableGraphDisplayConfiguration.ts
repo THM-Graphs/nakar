@@ -8,6 +8,7 @@ import { FinalNodeDisplayConfiguration } from './FinalNodeDisplayConfiguration';
 import { SSet } from '../../../tools/Set';
 import { MergeNodeConfiguration } from './MergeNodeConfiguration';
 import { MergeNodeConfigurationDBDTO } from '../../../database/dto/MergeNodeConfigurationDBDTO';
+import { LoggerService } from '../../../logger/LoggerService';
 
 export class MergableGraphDisplayConfiguration {
   public readonly connectResultNodes: boolean | null;
@@ -45,6 +46,7 @@ export class MergableGraphDisplayConfiguration {
 
   public static createFromDb(
     dbConfig: GraphDisplayConfigurationDBDTO | undefined | null,
+    logger: LoggerService,
   ): MergableGraphDisplayConfiguration {
     const nodeDisplayConfigurations:
       | SMap<string, MergableNodeDisplayConfiguration>
@@ -54,6 +56,13 @@ export class MergableGraphDisplayConfiguration {
         next: NodeDisplayConfigurationDBDTO,
       ): SMap<string, MergableNodeDisplayConfiguration> => {
         const targetLabel: string = next.targetLabel ?? '';
+        if (targetLabel === '') {
+          logger.warn(
+            this,
+            'Will skip Node Display Configuration, because Target Label is empty.',
+          );
+          return akku;
+        }
         const existingEntry: MergableNodeDisplayConfiguration | undefined =
           akku.get(targetLabel);
         const newEntry: MergableNodeDisplayConfiguration =
