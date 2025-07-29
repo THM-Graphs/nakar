@@ -289,66 +289,93 @@ export class RoomService implements ApplicationService {
           }
         }
 
-        await this._postProcessGraph(graph, displayConfiguration, false);
+        this._postProcessGraph(graph, displayConfiguration);
 
-        // Apply layout algorithm
-        for (const entry of displayConfiguration.nodeDisplayConfigurations.entries()) {
-          const targetLabel: string = entry[0];
-          const nodeDisplayConfig: FinalNodeDisplayConfiguration = entry[1];
-          if (nodeDisplayConfig.layoutAlgorithm === LayoutAlgorithm.circle) {
-            const nodesOfLabel: MutableNode[] = graph.nodes
-              .getByLabel(targetLabel)
-              .toArray();
-            if (nodesOfLabel.length < 2) {
+        if (!scenario.additive) {
+          const task: ProfilerTask = this._profiler.profile(
+            this,
+            'Run Post-Scenario Actions',
+          );
+          if (displayConfiguration.connectResultNodes) {
+            await this._connectNodes(graph);
+          }
+          for (const nodeConfigEntry of displayConfiguration.nodeDisplayConfigurations) {
+            const targetLabel: string = nodeConfigEntry[0];
+            const nodeConfig: FinalNodeDisplayConfiguration =
+              nodeConfigEntry[1];
+            if (!nodeConfig.compress) {
               continue;
             }
-            const sortedNodesToLayout: MutableNode[] = circularWeightedSpread(
-              nodesOfLabel,
-              (n: MutableNode): number => n.degree(graph),
-            );
+            await this._compressNodes(graph, targetLabel);
+          }
 
-            const degreeRange: Range | null =
-              graph.nodes.getNodeDegreeRange(graph);
-            const circumference: number =
-              nodeDisplayConfig.circleLayoutDistance *
-                sortedNodesToLayout.length +
-              sortedNodesToLayout.reduce(
-                (widths: number, node: MutableNode): number =>
-                  widths +
-                  node.radius(graph, displayConfiguration, degreeRange) * 2,
-                0,
-              );
-            const radius: number = circumference / (2 * Math.PI);
-            for (let i: number = 0; i < sortedNodesToLayout.length; i += 1) {
-              const degreeRad: number =
-                ((2 * Math.PI) / sortedNodesToLayout.length) * i - Math.PI / 2;
-              const x: number = radius * Math.cos(degreeRad);
-              const y: number = radius * Math.sin(degreeRad);
-              sortedNodesToLayout[i].position.x = x;
-              sortedNodesToLayout[i].position.y = y;
-              sortedNodesToLayout[i].locked = true;
-            }
+          if (displayConfiguration.compressRelationships) {
+            this._compressRelationships(graph, displayConfiguration);
+          }
 
-            // Put other nodes between
-            for (const node of graph.nodes.nodes) {
-              if (node.labels.has(targetLabel) || node.locked) {
+          // Apply layout algorithm
+          for (const entry of displayConfiguration.nodeDisplayConfigurations.entries()) {
+            const targetLabel: string = entry[0];
+            const nodeDisplayConfig: FinalNodeDisplayConfiguration = entry[1];
+            if (nodeDisplayConfig.layoutAlgorithm === LayoutAlgorithm.circle) {
+              const nodesOfLabel: MutableNode[] = graph.nodes
+                .getByLabel(targetLabel)
+                .toArray();
+              if (nodesOfLabel.length < 2) {
                 continue;
               }
+              const sortedNodesToLayout: MutableNode[] = circularWeightedSpread(
+                nodesOfLabel,
+                (n: MutableNode): number => n.degree(graph),
+              );
 
-              const neighbors: MutableNode[] = graph
-                .getNeighborsOfNode(node)
-                .filter((n: MutableNode): boolean => n.labels.has(targetLabel))
-                .toArray();
-              if (neighbors.length > 0) {
-                node.position = MutablePosition.average(
-                  neighbors.map(
-                    (n: MutableNode): MutablePosition => n.position,
-                  ),
+              const degreeRange: Range | null =
+                graph.nodes.getNodeDegreeRange(graph);
+              const circumference: number =
+                nodeDisplayConfig.circleLayoutDistance *
+                  sortedNodesToLayout.length +
+                sortedNodesToLayout.reduce(
+                  (widths: number, node: MutableNode): number =>
+                    widths +
+                    node.radius(graph, displayConfiguration, degreeRange) * 2,
+                  0,
                 );
-                PhysicsSimulation.jiggle(node);
+              const radius: number = circumference / (2 * Math.PI);
+              for (let i: number = 0; i < sortedNodesToLayout.length; i += 1) {
+                const degreeRad: number =
+                  ((2 * Math.PI) / sortedNodesToLayout.length) * i -
+                  Math.PI / 2;
+                const x: number = radius * Math.cos(degreeRad);
+                const y: number = radius * Math.sin(degreeRad);
+                sortedNodesToLayout[i].position.x = x;
+                sortedNodesToLayout[i].position.y = y;
+                sortedNodesToLayout[i].locked = true;
+              }
+
+              // Put other nodes between
+              for (const node of graph.nodes.nodes) {
+                if (node.labels.has(targetLabel) || node.locked) {
+                  continue;
+                }
+
+                const neighbors: MutableNode[] = graph
+                  .getNeighborsOfNode(node)
+                  .filter((n: MutableNode): boolean =>
+                    n.labels.has(targetLabel),
+                  )
+                  .toArray();
+                if (neighbors.length > 0) {
+                  node.position = MutablePosition.average(
+                    neighbors.map(
+                      (n: MutableNode): MutablePosition => n.position,
+                    ),
+                  );
+                  PhysicsSimulation.jiggle(node);
+                }
               }
             }
           }
+          task.finish();
         }
 
         this._onEvent.next({
@@ -486,7 +513,7 @@ export class RoomService implements ApplicationService {
           `Expand node result for ${params.nodeId}: ${expandResult.nodes.size.toString()} nodes and ${expandResult.relationships.size.toString()} relationships.`,
         );
 
-        await this._postProcessGraph(graph, displayConfiguration, true);
+        this._postProcessGraph(graph, displayConfiguration);
 
         this._sendActionToWorker(params.roomId, {
           type: 'WTActionSetGraph',
@@ -791,7 +818,7 @@ export class RoomService implements ApplicationService {
         graph.nodes.addNeo4jNodes(graphElements.nodes);
         graph.edges.addNeo4jEdges(graphElements.relationships);
 
-        await this._postProcessGraph(graph, displayConfiguration, false);
+        this._postProcessGraph(graph, displayConfiguration);
 
         this._sendActionToWorker(params.roomId, {
           type: 'WTActionSetGraph',
@@ -974,6 +1001,45 @@ export class RoomService implements ApplicationService {
           );
         this._compressRelationships(graph, config);
 
+        this._sendActionToWorker(params.roomId, {
+          type: 'WTActionSetGraph',
+          graph: graph.toPhysicalGraph(config),
+        });
+        this._onEvent.next({
+          type: 'RoomServiceEventGraphElementsChanged',
+          graph: graph,
+          roomId: params.roomId,
+          nodesAdded: 0,
+          edgesAdded: 0,
+        } satisfies RoomServiceEvent);
+      },
+    );
+  }
+
+  public async compressNodes(params: {
+    roomId: string;
+    label: string;
+  }): Promise<void> {
+    await this._runWithRoomLock(
+      params.roomId,
+      'Compressing Nodes',
+      async (): Promise<void> => {
+        const graph: MutableGraph = this._snapshotGraph(params.roomId);
+        const config: FinalGraphDisplayConfiguration =
+          await this._database.getGraphDisplayConfiguration(
+            graph.metaData.scenarioId,
+          );
+
+        await this._compressNodes(graph, params.label);
+
+        this._sendActionToWorker(params.roomId, {
+          type: 'WTActionSetGraph',
+          graph: graph.toPhysicalGraph(config),
+        });
+        this._sendActionToWorker(params.roomId, {
+          type: 'WTActionTriggerPhysics',
+          amount: 'short',
+        });
         this._onEvent.next({
           type: 'RoomServiceEventGraphElementsChanged',
           graph: graph,
@@ -1478,106 +1544,89 @@ export class RoomService implements ApplicationService {
     return newGraph;
   }
 
-  private async _postProcessGraph(
+  private _postProcessGraph(
     graph: MutableGraph,
     displayConfiguration: FinalGraphDisplayConfiguration,
-    noCompress: boolean,
-  ): Promise<void> {
+  ): void {
     const task: ProfilerTask = this._profiler.profile(
       this,
       'Post Process Graph',
     );
     graph.removeDanglingEdges();
-    if (displayConfiguration.connectResultNodes) {
-      await this._connectNodes(graph);
-    }
     this._mergeNodes(graph, displayConfiguration);
-    if (!noCompress) {
-      await this._compressNodes(graph, displayConfiguration);
-    }
-    if (displayConfiguration.compressRelationships) {
-      this._compressRelationships(graph, displayConfiguration);
-    }
     task.finish();
   }
 
   private async _compressNodes(
     graph: MutableGraph,
-    displayConfiguration: FinalGraphDisplayConfiguration,
+    targetLabel: string,
   ): Promise<void> {
-    for (const nodeConfigEntry of displayConfiguration.nodeDisplayConfigurations) {
-      const targetLabel: string = nodeConfigEntry[0];
-      const nodeConfig: FinalNodeDisplayConfiguration = nodeConfigEntry[1];
-      if (!nodeConfig.compress) {
+    this._logger.debug(
+      this,
+      `Will check nodes of ${targetLabel} for compressing`,
+    );
+    let compressCount: number = 0;
+    for (const node of graph.nodes.getByLabel(targetLabel)) {
+      const clusterBuddies: SSet<MutableNode> = graph.getClusterBuddiesOfNode(
+        node,
+        targetLabel,
+      );
+      if (clusterBuddies.size <= 1) {
         continue;
       }
       this._logger.debug(
         this,
-        `Will check nodes of ${targetLabel} for compressing`,
+        `Will comporess ${node.id} because it is part of a cluster with ${clusterBuddies.size.toString()} cluster buddies.`,
       );
-      let compressCount: number = 0;
-      for (const node of graph.nodes.getByLabel(targetLabel)) {
-        const clusterBuddies: SSet<MutableNode> = graph.getClusterBuddiesOfNode(
-          node,
-          targetLabel,
-        );
-        if (clusterBuddies.size <= 1) {
-          continue;
+      const newNode: MutableNode = new MutableNode(
+        {
+          id: v4(),
+          position: MutablePosition.average(
+            clusterBuddies
+              .toArray()
+              .map((n: MutableNode): MutablePosition => n.position),
+          ),
+          grabs: new SSet(),
+          labels: clusterBuddies.reduce(
+            (akku: SSet<string>, next: MutableNode): SSet<string> =>
+              akku.byMerging(next.labels),
+            new SSet<string>(),
+          ),
+          source: node.source,
+          locked: node.locked,
+          properties: MutablePropertyCollection.empty(),
+          namesInQuery: clusterBuddies.reduce(
+            (akku: SSet<string>, next: MutableNode): SSet<string> =>
+              akku.byMerging(next.namesInQuery),
+            new SSet<string>(),
+          ),
+          compressed: clusterBuddies.map((n: MutableNode): string => n.id),
+        },
+        this._logger,
+      );
+      graph.nodes.add(newNode);
+      for (const sibling of clusterBuddies) {
+        for (const outgoingEdge of graph.edges.getByStartNodeId(sibling.id)) {
+          graph.edges.remove(outgoingEdge);
+          outgoingEdge.startNodeId = newNode.id;
+          graph.edges.add(outgoingEdge);
         }
-        this._logger.debug(
-          this,
-          `Will comporess ${node.id} because it is part of a cluster with ${clusterBuddies.size.toString()} cluster buddies.`,
-        );
-        const newNode: MutableNode = new MutableNode(
-          {
-            id: v4(),
-            position: MutablePosition.average(
-              clusterBuddies
-                .toArray()
-                .map((n: MutableNode): MutablePosition => n.position),
-            ),
-            grabs: new SSet(),
-            labels: clusterBuddies.reduce(
-              (akku: SSet<string>, next: MutableNode): SSet<string> =>
-                akku.byMerging(next.labels),
-              new SSet<string>(),
-            ),
-            source: node.source,
-            locked: node.locked,
-            properties: MutablePropertyCollection.empty(),
-            namesInQuery: clusterBuddies.reduce(
-              (akku: SSet<string>, next: MutableNode): SSet<string> =>
-                akku.byMerging(next.namesInQuery),
-              new SSet<string>(),
-            ),
-            compressed: clusterBuddies.map((n: MutableNode): string => n.id),
-          },
-          this._logger,
-        );
-        graph.nodes.add(newNode);
-        for (const sibling of clusterBuddies) {
-          for (const outgoingEdge of graph.edges.getByStartNodeId(sibling.id)) {
-            graph.edges.remove(outgoingEdge);
-            outgoingEdge.startNodeId = newNode.id;
-            graph.edges.add(outgoingEdge);
-          }
-          for (const incomingEdge of graph.edges.getByEndNodeId(sibling.id)) {
-            graph.edges.remove(incomingEdge);
-            incomingEdge.endNodeId = newNode.id;
-            graph.edges.add(incomingEdge);
-          }
-          const removed: boolean = graph.nodes.remove(sibling);
-          if (!removed) {
-            this._logger.warn(this, `Unable to remove ${sibling.id}`);
-          }
-          compressCount += 1;
+        for (const incomingEdge of graph.edges.getByEndNodeId(sibling.id)) {
+          graph.edges.remove(incomingEdge);
+          incomingEdge.endNodeId = newNode.id;
+          graph.edges.add(incomingEdge);
         }
-        await wait(0);
+        const removed: boolean = graph.nodes.remove(sibling);
+        if (!removed) {
+          this._logger.warn(this, `Unable to remove ${sibling.id}`);
+        }
+        compressCount += 1;
       }
-      this._logger.log(
-        this,
-        `Did compress ${compressCount.toString()} nodes of label ${targetLabel}.`,
-      );
+      await wait(0);
     }
+    this._logger.log(
+      this,
+      `Did compress ${compressCount.toString()} nodes of label ${targetLabel}.`,
+    );
   }
 }

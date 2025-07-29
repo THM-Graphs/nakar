@@ -608,6 +608,19 @@ export type PostRoomActionCompressRelationshipsResponse = (unknown);
 
 export type PostRoomActionCompressRelationshipsError = unknown;
 
+export type PostRoomActionCompressNodesData = {
+    body: {
+        label: string;
+    };
+    path: {
+        id: string;
+    };
+};
+
+export type PostRoomActionCompressNodesResponse = (unknown);
+
+export type PostRoomActionCompressNodesError = unknown;
+
 export type GetDatabaseStatsData = {
     path: {
         id: string;

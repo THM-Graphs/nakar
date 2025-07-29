@@ -4,6 +4,7 @@ import { NavbarButton } from "../../shared/NavbarButton.tsx";
 import { useBearStore } from "../../../lib/state/useBearStore.ts";
 import { AppContext } from "../../../lib/state/AppContext.ts";
 import {
+  postRoomActionCompressNodes,
   postRoomActionCompressRelationships,
   postRoomActionConnectResultNodes,
   postRoomActionRedo,
@@ -14,6 +15,9 @@ import {
 import { RoomContext } from "../../../pages/Room.tsx";
 import { resultOrThrow } from "../../../lib/data/resultOrThrow.ts";
 import { DropdownButton } from "../../shared/DropdownButton.tsx";
+import { Label } from "./Label.tsx";
+import { getBackgroundColor } from "../../../lib/color/getBackgroundColor.ts";
+import { getTextColor } from "../../../lib/color/getTextColor.ts";
 
 export function CanvasToolbar(props: {
   context: AppContext;
@@ -84,6 +88,7 @@ export function CanvasToolbar(props: {
           }}
         ></NavbarButton>
         <Dropdown.Divider></Dropdown.Divider>
+        <Dropdown.Header>Actions</Dropdown.Header>
         <NavbarButton
           disabled={uiLocked || selectedTab !== "graph"}
           icon={"intersect"}
@@ -128,6 +133,40 @@ export function CanvasToolbar(props: {
             );
           }}
         ></NavbarButton>
+        <Dropdown.Divider></Dropdown.Divider>
+        <Dropdown.Header>Compress Nodes</Dropdown.Header>
+        {graph.elements.labels.map((label) => (
+          <NavbarButton
+            key={label.label}
+            disabled={
+              graph.metaData.scenario == null ||
+              uiLocked ||
+              selectedTab !== "graph"
+            }
+            onClick={async () => {
+              resultOrThrow(
+                await postRoomActionCompressNodes({
+                  path: { id: props.roomContext.initialRoomData.id },
+                  body: {
+                    label: label.label,
+                  },
+                }),
+              );
+            }}
+            className={"w-100"}
+          >
+            <div
+              style={{
+                backgroundColor: getBackgroundColor(label.color),
+                color: getTextColor(label.color),
+                width: "15px",
+                height: "15px",
+              }}
+              className={"rounded-circle"}
+            ></div>
+            <span className={"small"}>{label.label}</span>
+          </NavbarButton>
+        ))}
       </DropdownButton>
     </Stack>
   );

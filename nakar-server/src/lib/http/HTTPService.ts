@@ -583,6 +583,23 @@ export class HTTPService implements ApplicationService {
       }),
     );
 
+    this._app.post(
+      '/room/:id/actions/compress-nodes',
+      this._handle(async (req: Request): Promise<void> => {
+        const room: GetRoomDBDTO = await this._assertRoom(req);
+
+        type Body =
+          operations['postRoomActionCompressNodes']['requestBody']['content']['application/json'];
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+        const requestBody: Body = req.body as Body;
+
+        await this._roomService.compressNodes({
+          roomId: room.documentId,
+          label: requestBody.label,
+        });
+      }),
+    );
+
     this._app.get(
       '/database/:id/stats',
       this._handle(async (req: Request): Promise<SchemaDatabaseStats> => {

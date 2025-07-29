@@ -11,6 +11,7 @@ export function Label(props: {
   customAmount?: number;
   showSources: boolean;
   onClick?: () => void;
+  className?: string;
 }) {
   const labels = useBearStore((s) => s.room.scenario.graph.elements.labels);
   const label = labels.find((l) => l.label === props.label);
@@ -35,6 +36,7 @@ export function Label(props: {
       className={clsx(
         "badge flex-grow-0 flex-shrink-1 shadow-sm text-wrap text-break flex-wrap justify-content-start",
         props.onClick && "pointer",
+        props.className,
       )}
       style={{
         backgroundColor: label ? getBackgroundColor(label.color) : "#555555",

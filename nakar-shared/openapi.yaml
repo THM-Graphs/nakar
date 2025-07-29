@@ -484,6 +484,32 @@ paths:
         "200":
           description: "OK"
 
+  /room/{id}/actions/compress-nodes:
+    post:
+      tags:
+        - Room Actions
+      operationId: postRoomActionCompressNodes
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                label:
+                  type: string
+              required:
+                - label
+      responses:
+        "200":
+          description: "OK"
+
   /database/{id}/stats:
     get:
       tags:

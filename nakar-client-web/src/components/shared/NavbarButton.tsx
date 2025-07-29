@@ -62,7 +62,7 @@ export const NavbarButton = forwardRef<
           })().catch(pushErrorNotification);
         }}
         className={clsx(
-          "small flex-shrink-0 position-relative overflow-hidden",
+          "flex-shrink-0 position-relative overflow-hidden",
           props.selected ? "bg-body-secondary" : "",
           disabled ? "" : "pointer",
           disabled ? "" : "bg-body-secondary-hover",
@@ -88,12 +88,16 @@ export const NavbarButton = forwardRef<
             </Spinner>
           ) : (
             props.icon && (
-              <i className={clsx("bi", `bi-${props.icon} flex-shrink-0`)}></i>
+              <i
+                className={clsx("bi", `bi-${props.icon} flex-shrink-0 small`)}
+              ></i>
             )
           )}
 
           {props.title && (
-            <span className={"ellipsis flex-shrink-1"}>{props.title}</span>
+            <span className={"ellipsis flex-shrink-1 small"}>
+              {props.title}
+            </span>
           )}
           {props.children}
         </Stack>

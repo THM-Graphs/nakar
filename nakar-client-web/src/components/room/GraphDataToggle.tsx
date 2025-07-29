@@ -19,7 +19,7 @@ export function GraphDataToggle() {
         className={""}
       >
         {graphElementsCount > 0 && (
-          <span className={"text-muted"}>{graphElementsCount}</span>
+          <span className={"text-muted small"}>{graphElementsCount}</span>
         )}
       </NavbarButton>
       <NavbarButton
@@ -30,7 +30,7 @@ export function GraphDataToggle() {
         className={"border-end"}
       >
         {tableData.length > 0 && (
-          <span className={"text-muted"}>{tableData.length}</span>
+          <span className={"text-muted small"}>{tableData.length}</span>
         )}
       </NavbarButton>
     </Stack>
