@@ -768,7 +768,10 @@ export class RoomService implements ApplicationService {
             credentials,
             params.query,
             {},
-            new Neo4jLimitConfig('default', 'graphElements'),
+            new Neo4jLimitConfig(
+              'default',
+              params.replace ? 'all' : 'graphElements',
+            ),
           );
 
         if (graphElements.limitReached) {
@@ -783,6 +786,7 @@ export class RoomService implements ApplicationService {
         if (params.replace) {
           graph.nodes = new MutableNodeIndex([], this._logger);
           graph.edges = new MutableEdgeIndex([]);
+          graph.tableData = graphElements.tableData;
         }
         graph.nodes.addNeo4jNodes(graphElements.nodes);
         graph.edges.addNeo4jEdges(graphElements.relationships);

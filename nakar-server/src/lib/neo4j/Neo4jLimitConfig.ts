@@ -6,7 +6,7 @@ export class Neo4jLimitConfig {
 
   public constructor(
     private readonly _type: 'preview' | 'default',
-    private readonly _collectionType: 'graphElements' | 'tableData',
+    private readonly _collectionType: 'graphElements' | 'tableData' | 'all',
   ) {}
 
   public getLimit(): number {
@@ -17,10 +17,14 @@ export class Neo4jLimitConfig {
   }
 
   public shouldCollectGraphElements(): boolean {
-    return this._collectionType === 'graphElements';
+    return (
+      this._collectionType === 'graphElements' || this._collectionType === 'all'
+    );
   }
 
   public shouldCollectTableData(): boolean {
-    return this._collectionType === 'tableData';
+    return (
+      this._collectionType === 'tableData' || this._collectionType === 'all'
+    );
   }
 }
