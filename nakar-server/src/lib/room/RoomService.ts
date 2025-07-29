@@ -923,18 +923,39 @@ export class RoomService implements ApplicationService {
   }
 
   public async removeDanglingNodes(params: { roomId: string }): Promise<void> {
-    const nodeIds: readonly string[] = await this._runWithRoomLock(
+    await this._runWithRoomLock(
       params.roomId,
       'Collecting nodes to delete',
-      (): readonly string[] => {
+      async (): Promise<void> => {
         const graph: MutableGraph = this.getGraph(params.roomId);
-        const danglingNodes: SSet<MutableNode> = graph.nodes.nodes.filter(
-          (node: MutableNode): boolean => node.degree(graph) === 0,
-        );
-        const ids: readonly string[] = danglingNodes
+        const config: FinalGraphDisplayConfiguration =
+          await this._database.getGraphDisplayConfiguration(
+            graph.metaData.scenarioId,
+          );
+        const ids: readonly string[] = graph.nodes.nodes
+          .filter((node: MutableNode): boolean => node.degree(graph) === 0)
           .map((node: MutableNode): string => node.id)
           .toArray();
-        return ids;
+
+        for (const id of ids) {
+          graph.nodes.remove(id);
+        }
+
+        this._sendActionToWorker(params.roomId, {
+          type: 'WTActionSetGraph',
+          graph: graph.toPhysicalGraph(config),
+        });
+        this._sendActionToWorker(params.roomId, {
+          type: 'WTActionTriggerPhysics',
+          amount: 'short',
+        });
+        this._onEvent.next({
+          type: 'RoomServiceEventGraphElementsChanged',
+          graph: graph,
+          roomId: params.roomId,
+          nodesAdded: -ids.length,
+          edgesAdded: 0,
+        } satisfies RoomServiceEvent);
       },
     );
 
