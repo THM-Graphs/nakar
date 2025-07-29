@@ -22,6 +22,8 @@ export class MutableNodeIndex {
 
   private _bySource: SMap<string, SSet<MutableNode>>;
 
+  private _compressed: SSet<string>;
+
   public constructor(
     nodes: MutableNode[],
     private readonly _logger: LoggerService,
@@ -31,6 +33,7 @@ export class MutableNodeIndex {
     this._labelHistogram = new SMap();
     this._propertyHistogram = new SMap();
     this._bySource = new SMap();
+    this._compressed = new SSet();
 
     for (const node of nodes) {
       this.add(node);
@@ -61,6 +64,9 @@ export class MutableNodeIndex {
     if (this._byId.has(node.id)) {
       return false;
     }
+    if (this._compressed.has(node.id)) {
+      return false;
+    }
     this._byId.set(node.id, node);
     for (const label of node.labels) {
       this._addToLabelHistogram(label, 1);
@@ -78,6 +84,9 @@ export class MutableNodeIndex {
       node.source,
       (this._bySource.get(node.source) ?? new SSet()).byAdding(node),
     );
+    for (const compressed of node.compressed) {
+      this._compressed.add(compressed);
+    }
     return true;
   }
 
@@ -134,6 +143,9 @@ export class MutableNodeIndex {
     }
 
     this._bySource.get(node.source)?.delete(node);
+    for (const compressed of node.compressed) {
+      this._compressed.delete(compressed);
+    }
 
     return true;
   }

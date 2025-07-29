@@ -3,6 +3,7 @@ import { MutableEdge } from './MutableEdge';
 import { SSet } from '../../tools/Set';
 import { Neo4jRelationship } from '../../neo4j/Neo4jRelationship';
 import { MutablePropertyCollection } from './MutablePropertyCollection';
+import { MutableNode } from './MutableNode';
 
 export class MutableEdgeIndex {
   private _byId: SMap<string, MutableEdge>;
@@ -21,6 +22,8 @@ export class MutableEdgeIndex {
   /* Maps key => value => count */
   private _propertyHistogram: SMap<string, SMap<string, number>>;
 
+  private _compressed: SSet<string>;
+
   public constructor(edges: MutableEdge[]) {
     this._byId = new SMap();
     this._byType = new SMap();
@@ -29,6 +32,7 @@ export class MutableEdgeIndex {
     this._byStartAndEndNodeId = new SMap();
     this._typeHistogram = new SMap();
     this._propertyHistogram = new SMap();
+    this._compressed = new SSet();
 
     for (const edge of edges) {
       this.add(edge);
@@ -57,6 +61,9 @@ export class MutableEdgeIndex {
 
   public add(edge: MutableEdge): boolean {
     if (this._byId.has(edge.id)) {
+      return false;
+    }
+    if (this._compressed.has(edge.id)) {
       return false;
     }
 
@@ -97,6 +104,10 @@ export class MutableEdgeIndex {
 
     for (const propertyEntry of edge.properties.properties) {
       this._addToPropertyHistogram(propertyEntry[0], propertyEntry[1], 1);
+    }
+
+    for (const compressed of edge.compressed) {
+      this._compressed.add(compressed);
     }
 
     return true;
@@ -150,6 +161,10 @@ export class MutableEdgeIndex {
 
     for (const propertyEntry of edge.properties.properties) {
       this._addToPropertyHistogram(propertyEntry[0], propertyEntry[1], -1);
+    }
+
+    for (const compressed of edge.compressed) {
+      this._compressed.delete(compressed);
     }
 
     return true;
@@ -207,23 +222,6 @@ export class MutableEdgeIndex {
       result.add(endNodeEdge);
     }
     return result;
-  }
-
-  public byMergingWithNonOverriding(
-    otherIndex: MutableEdgeIndex,
-  ): MutableEdgeIndex {
-    const newIndex: MutableEdgeIndex = new MutableEdgeIndex(
-      this.edges.toArray(),
-    );
-
-    for (const otherEdge of otherIndex.edges) {
-      if (newIndex.has(otherEdge.id)) {
-        continue;
-      }
-      newIndex.add(otherEdge);
-    }
-
-    return newIndex;
   }
 
   public copy(): MutableEdgeIndex {

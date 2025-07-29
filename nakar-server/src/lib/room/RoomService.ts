@@ -453,6 +453,13 @@ export class RoomService implements ApplicationService {
 
         const graph: MutableGraph = this._snapshotGraph(params.roomId);
 
+        if (node.isCluster) {
+          graph.nodes.remove(node);
+          for (const edge of graph.edges.getByStartOrEndNodeId(node.id)) {
+            graph.edges.remove(edge);
+          }
+        }
+
         for (const newNode of expandResult.nodes) {
           if (!graph.nodes.hasById(newNode[0])) {
             result.nodesAddedCount += 1;
@@ -474,20 +481,12 @@ export class RoomService implements ApplicationService {
           }
         }
 
-        if (node.isCluster) {
-          graph.nodes.remove(node);
-        }
-
         this._logger.debug(
           this,
           `Expand node result for ${params.nodeId}: ${expandResult.nodes.size.toString()} nodes and ${expandResult.relationships.size.toString()} relationships.`,
         );
 
-        await this._postProcessGraph(
-          graph,
-          displayConfiguration,
-          node.isCluster,
-        );
+        await this._postProcessGraph(graph, displayConfiguration, true);
 
         this._sendActionToWorker(params.roomId, {
           type: 'WTActionSetGraph',
@@ -1453,9 +1452,9 @@ export class RoomService implements ApplicationService {
     this._mergeNodes(graph, displayConfiguration);
     if (!noCompress) {
       await this._compressNodes(graph, displayConfiguration);
-      if (displayConfiguration.compressRelationships) {
-        this._compressRelationships(graph, displayConfiguration);
-      }
+    }
+    if (displayConfiguration.compressRelationships) {
+      this._compressRelationships(graph, displayConfiguration);
     }
     task.finish();
   }
