@@ -621,6 +621,21 @@ export type PostRoomActionCompressNodesResponse = (unknown);
 
 export type PostRoomActionCompressNodesError = unknown;
 
+export type PostRoomActionLayoutLabelData = {
+    body: {
+        label: string;
+        layoutAlgorithm: 'forceDirected' | 'circle';
+        circleLayoutDistance: (number) | null;
+    };
+    path: {
+        id: string;
+    };
+};
+
+export type PostRoomActionLayoutLabelResponse = (unknown);
+
+export type PostRoomActionLayoutLabelError = unknown;
+
 export type GetDatabaseStatsData = {
     path: {
         id: string;

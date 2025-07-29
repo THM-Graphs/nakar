@@ -26,6 +26,9 @@ export function CanvasToolbar(props: {
   const graph = useBearStore((s) => s.room.scenario.graph);
   const uiLocked = useBearStore((s) => s.room.ui.locked);
   const selectedTab = useBearStore((s) => s.room.canvas.tabs.selected);
+  const pushErrorNotification = useBearStore(
+    (s) => s.room.ui.pushErrorNotification,
+  );
 
   return (
     <Stack
@@ -75,98 +78,76 @@ export function CanvasToolbar(props: {
         </>
       )}
       <DropdownButton title={"Actions"} icon={"chevron-down"} align={"end"}>
-        <NavbarButton
+        <Dropdown.Item
           disabled={graph.metaData.scenario == null || uiLocked}
-          icon={"arrow-clockwise"}
-          title={"Rerun Scenario"}
-          onClick={async () => {
-            resultOrThrow(
-              await postRoomActionReloadScenario({
-                path: { id: props.roomContext.initialRoomData.id },
-              }),
-            );
+          onClick={() => {
+            postRoomActionReloadScenario({
+              path: { id: props.roomContext.initialRoomData.id },
+            })
+              .then(resultOrThrow)
+              .catch(pushErrorNotification);
           }}
-        ></NavbarButton>
+        >
+          <Stack direction={"horizontal"} gap={2}>
+            <i className={"bi bi-arrow-clockwise"}></i>
+            <span className={"small"}>Rerun Scenario</span>
+          </Stack>
+        </Dropdown.Item>
         <Dropdown.Divider></Dropdown.Divider>
         <Dropdown.Header>Actions</Dropdown.Header>
-        <NavbarButton
+        <Dropdown.Item
           disabled={uiLocked || selectedTab !== "graph"}
-          icon={"intersect"}
-          title={"Connect Result Nodes"}
-          onClick={async () => {
-            resultOrThrow(
-              await postRoomActionConnectResultNodes({
-                path: { id: props.roomContext.initialRoomData.id },
-              }),
-            );
+          onClick={() => {
+            postRoomActionConnectResultNodes({
+              path: { id: props.roomContext.initialRoomData.id },
+            })
+              .then(resultOrThrow)
+              .catch(pushErrorNotification);
           }}
-        ></NavbarButton>
-        <NavbarButton
+        >
+          <Stack direction={"horizontal"} gap={2}>
+            <i className={"bi bi-intersect"}></i>
+            <span className={"small"}>Connect Result Nodes</span>
+          </Stack>
+        </Dropdown.Item>
+        <Dropdown.Item
           disabled={
             graph.metaData.scenario == null ||
             uiLocked ||
             selectedTab !== "graph"
           }
-          icon={"eye-slash"}
-          title={"Remove Dangling Nodes"}
-          onClick={async () => {
-            resultOrThrow(
-              await postRoomActionRemoveDanglingNodes({
-                path: { id: props.roomContext.initialRoomData.id },
-              }),
-            );
+          onClick={() => {
+            postRoomActionRemoveDanglingNodes({
+              path: { id: props.roomContext.initialRoomData.id },
+            })
+              .then(resultOrThrow)
+              .catch(pushErrorNotification);
           }}
-        ></NavbarButton>
-        <NavbarButton
+        >
+          <Stack direction={"horizontal"} gap={2}>
+            <i className={"bi bi-eye-slash"}></i>
+            <span className={"small"}>Remove Dangling Nodes</span>
+          </Stack>
+        </Dropdown.Item>
+        <Dropdown.Item
           disabled={
             graph.metaData.scenario == null ||
             uiLocked ||
             selectedTab !== "graph"
           }
-          icon={"arrows-collapse"}
-          title={"Compress Relationships"}
-          onClick={async () => {
-            resultOrThrow(
-              await postRoomActionCompressRelationships({
-                path: { id: props.roomContext.initialRoomData.id },
-              }),
-            );
+          onClick={() => {
+            postRoomActionCompressRelationships({
+              path: { id: props.roomContext.initialRoomData.id },
+            })
+              .then(resultOrThrow)
+              .catch(pushErrorNotification);
           }}
-        ></NavbarButton>
-        <Dropdown.Divider></Dropdown.Divider>
-        <Dropdown.Header>Compress Nodes</Dropdown.Header>
-        {graph.elements.labels.map((label) => (
-          <NavbarButton
-            key={label.label}
-            disabled={
-              graph.metaData.scenario == null ||
-              uiLocked ||
-              selectedTab !== "graph"
-            }
-            onClick={async () => {
-              resultOrThrow(
-                await postRoomActionCompressNodes({
-                  path: { id: props.roomContext.initialRoomData.id },
-                  body: {
-                    label: label.label,
-                  },
-                }),
-              );
-            }}
-            className={"w-100"}
-          >
-            <div
-              style={{
-                backgroundColor: getBackgroundColor(label.color),
-                color: getTextColor(label.color),
-                width: "15px",
-                height: "15px",
-              }}
-              className={"rounded-circle"}
-            ></div>
-            <span className={"small"}>{label.label}</span>
-          </NavbarButton>
-        ))}
+        >
+          <Stack direction={"horizontal"} gap={2}>
+            <i className={"bi bi-arrows-collapse"}></i>
+            <span className={"small"}>Compress Relationships</span>
+          </Stack>
+        </Dropdown.Item>
       </DropdownButton>
     </Stack>
   );

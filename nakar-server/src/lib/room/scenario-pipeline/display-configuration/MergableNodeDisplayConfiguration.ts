@@ -59,7 +59,7 @@ export class MergableNodeDisplayConfiguration {
       radius: this.radius,
       backgroundColor: this.backgroundColor,
       compress: this.compress ?? false,
-      circleLayoutDistance: this.circleLayoutDistance ?? 100,
+      circleLayoutDistance: this.circleLayoutDistance,
       layoutAlgorithm: this.layoutAlgorithm ?? LayoutAlgorithm.forceDirected,
     });
   }

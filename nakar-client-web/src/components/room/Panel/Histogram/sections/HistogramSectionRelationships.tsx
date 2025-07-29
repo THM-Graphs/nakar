@@ -27,21 +27,27 @@ export function HistogramSectionRelationships(props: {
                 roomContext={props.roomContext}
                 percentage={entry.percentage}
                 key={entry.type}
-                onRemove={async (): Promise<void> => {
-                  resultOrThrow(
-                    await postRoomActionDeleteElements({
-                      path: {
-                        id: props.roomContext.initialRoomData.id,
-                      },
-                      body: {
-                        nodes: [],
-                        labels: [],
-                        edges: [],
-                        edgeTypes: [entry.type],
-                      },
-                    }),
-                  );
-                }}
+                customActions={[
+                  {
+                    title: "Remove",
+                    icon: "eye-slash",
+                    action: async () => {
+                      resultOrThrow(
+                        await postRoomActionDeleteElements({
+                          path: {
+                            id: props.roomContext.initialRoomData.id,
+                          },
+                          body: {
+                            nodes: [],
+                            labels: [],
+                            edges: [],
+                            edgeTypes: [entry.type],
+                          },
+                        }),
+                      );
+                    },
+                  },
+                ]}
               ></ValueDisplay>
             ))}
           </>

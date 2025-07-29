@@ -4,11 +4,17 @@ import { RoomContext } from "../../pages/Room.tsx";
 import { PropertyMenuScenarioGroupEntry } from "./PropertyMenuScenarioGroupEntry.tsx";
 import { useClipboard } from "../../lib/clipboard/useClipboard.ts";
 import { DropdownButton } from "../shared/DropdownButton.tsx";
+import { NavbarButton } from "../shared/NavbarButton.tsx";
 
 export function PropertyMenu(props: {
   value: unknown;
   roomContext: RoomContext;
   buttonSize?: "sm";
+  customActions?: {
+    title: string;
+    icon: string;
+    action: () => void | Promise<void>;
+  }[];
 }) {
   const [isClipboardEnabled, setClipboard] = useClipboard();
   const parameterizedScenarios = useBearStore(
@@ -52,6 +58,26 @@ export function PropertyMenu(props: {
             <span>Copy</span>
           </Stack>
         </Dropdown.Item>
+        {props.customActions && (
+          <>
+            <Dropdown.Divider></Dropdown.Divider>
+            {props.customActions.map((action) => (
+              <Dropdown.Item
+                key={action.title}
+                onClick={(): void => {
+                  Promise.resolve(action.action()).catch((e) => {
+                    pushErrorNotification(e);
+                  });
+                }}
+              >
+                <Stack direction={"horizontal"} gap={2}>
+                  <i className={`bi bi-${action.icon}`}></i>
+                  <span className={"small"}>{action.title}</span>
+                </Stack>
+              </Dropdown.Item>
+            ))}
+          </>
+        )}
         <Dropdown.Divider></Dropdown.Divider>
         <Dropdown.Header>Run Scenario</Dropdown.Header>
         {parameterizedScenarios.map((scenarioGroup) => (

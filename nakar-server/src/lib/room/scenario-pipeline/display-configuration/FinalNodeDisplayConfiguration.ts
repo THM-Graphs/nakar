@@ -6,7 +6,7 @@ export class FinalNodeDisplayConfiguration {
   public readonly radius: string | null;
   public readonly backgroundColor: string | null;
   public readonly compress: boolean;
-  public readonly circleLayoutDistance: number;
+  public readonly circleLayoutDistance: number | null;
   public readonly layoutAlgorithm: LayoutAlgorithm;
 
   public readonly displayTextTemplate: TemplateDelegate | null;
@@ -18,7 +18,7 @@ export class FinalNodeDisplayConfiguration {
     radius: string | null;
     backgroundColor: string | null;
     compress: boolean;
-    circleLayoutDistance: number;
+    circleLayoutDistance: number | null;
     layoutAlgorithm: LayoutAlgorithm;
   }) {
     this.displayText = data.displayText;

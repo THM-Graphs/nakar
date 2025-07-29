@@ -1,7 +1,11 @@
 import { ValueDisplay } from "../ValueDisplay.tsx";
 import { getBackgroundColor } from "../../../../../lib/color/getBackgroundColor.ts";
 import { resultOrThrow } from "../../../../../lib/data/resultOrThrow.ts";
-import { postRoomActionDeleteElements } from "../../../../../../src-gen";
+import {
+  postRoomActionCompressNodes,
+  postRoomActionDeleteElements,
+  postRoomActionLayoutLabel,
+} from "../../../../../../src-gen";
 import { Stack } from "react-bootstrap";
 import { RoomContext } from "../../../../../pages/Room.tsx";
 import { useBearStore } from "../../../../../lib/state/useBearStore.ts";
@@ -41,21 +45,115 @@ export function HistogramSectionLabels(props: { roomContext: RoomContext }) {
                   bgColors={
                     label ? [getBackgroundColor(label.color)] : undefined
                   }
-                  onRemove={async (): Promise<void> => {
-                    resultOrThrow(
-                      await postRoomActionDeleteElements({
-                        path: {
-                          id: props.roomContext.initialRoomData.id,
-                        },
-                        body: {
-                          nodes: [],
-                          labels: [entry.label],
-                          edges: [],
-                          edgeTypes: [],
-                        },
-                      }),
-                    );
-                  }}
+                  customActions={[
+                    {
+                      title: "Remove",
+                      icon: "eye-slash",
+                      action: async () => {
+                        resultOrThrow(
+                          await postRoomActionDeleteElements({
+                            path: {
+                              id: props.roomContext.initialRoomData.id,
+                            },
+                            body: {
+                              nodes: [],
+                              labels: [entry.label],
+                              edges: [],
+                              edgeTypes: [],
+                            },
+                          }),
+                        );
+                      },
+                    },
+                    {
+                      title: "Compress",
+                      icon: "arrows-collapse",
+                      action: async () => {
+                        resultOrThrow(
+                          await postRoomActionCompressNodes({
+                            path: {
+                              id: props.roomContext.initialRoomData.id,
+                            },
+                            body: {
+                              label: entry.label,
+                            },
+                          }),
+                        );
+                      },
+                    },
+                    {
+                      title: "Layout Small Circle",
+                      icon: "1-circle",
+                      action: async () => {
+                        resultOrThrow(
+                          await postRoomActionLayoutLabel({
+                            path: {
+                              id: props.roomContext.initialRoomData.id,
+                            },
+                            body: {
+                              label: entry.label,
+                              layoutAlgorithm: "circle",
+                              circleLayoutDistance: 100,
+                            },
+                          }),
+                        );
+                      },
+                    },
+                    {
+                      title: "Layout Medium Circle",
+                      icon: "2-circle",
+                      action: async () => {
+                        resultOrThrow(
+                          await postRoomActionLayoutLabel({
+                            path: {
+                              id: props.roomContext.initialRoomData.id,
+                            },
+                            body: {
+                              label: entry.label,
+                              layoutAlgorithm: "circle",
+                              circleLayoutDistance: 1000,
+                            },
+                          }),
+                        );
+                      },
+                    },
+                    {
+                      title: "Layout Large Circle",
+                      icon: "3-circle",
+                      action: async () => {
+                        resultOrThrow(
+                          await postRoomActionLayoutLabel({
+                            path: {
+                              id: props.roomContext.initialRoomData.id,
+                            },
+                            body: {
+                              label: entry.label,
+                              layoutAlgorithm: "circle",
+                              circleLayoutDistance: 10000,
+                            },
+                          }),
+                        );
+                      },
+                    },
+                    {
+                      title: "Layout Force Directed",
+                      icon: "tropical-storm",
+                      action: async () => {
+                        resultOrThrow(
+                          await postRoomActionLayoutLabel({
+                            path: {
+                              id: props.roomContext.initialRoomData.id,
+                            },
+                            body: {
+                              label: entry.label,
+                              layoutAlgorithm: "forceDirected",
+                              circleLayoutDistance: null,
+                            },
+                          }),
+                        );
+                      },
+                    },
+                  ]}
                 ></ValueDisplay>
               );
             })}

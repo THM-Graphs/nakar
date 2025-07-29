@@ -38,21 +38,27 @@ export function HistogramSectionNodes(props: { roomContext: RoomContext }) {
                   onSelect={() => {
                     setElement({ type: "node", nodeId: nodeEntry.id });
                   }}
-                  onRemove={async () => {
-                    resultOrThrow(
-                      await postRoomActionDeleteElements({
-                        path: {
-                          id: props.roomContext.initialRoomData.id,
-                        },
-                        body: {
-                          nodes: [nodeEntry.id],
-                          labels: [],
-                          edges: [],
-                          edgeTypes: [],
-                        },
-                      }),
-                    );
-                  }}
+                  customActions={[
+                    {
+                      title: "Remove",
+                      icon: "eye-slash",
+                      action: async () => {
+                        resultOrThrow(
+                          await postRoomActionDeleteElements({
+                            path: {
+                              id: props.roomContext.initialRoomData.id,
+                            },
+                            body: {
+                              nodes: [nodeEntry.id],
+                              labels: [],
+                              edges: [],
+                              edgeTypes: [],
+                            },
+                          }),
+                        );
+                      },
+                    },
+                  ]}
                 ></ValueDisplay>
               );
             })}

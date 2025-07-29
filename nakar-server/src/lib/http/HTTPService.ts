@@ -53,6 +53,7 @@ import { Neo4jDatabaseInfo } from '../neo4j/Neo4jDatabaseInfo';
 import { Neo4jService } from '../neo4j/Neo4jService';
 import { ExpandNodePreview } from '../neo4j/expand-node-preview/ExpandNodePreview';
 import { MediaService } from '../media/MediaService';
+import { LayoutAlgorithm } from '../tools/LayoutAlgorithm';
 
 export class HTTPService implements ApplicationService {
   private readonly _app: Application;
@@ -596,6 +597,31 @@ export class HTTPService implements ApplicationService {
         await this._roomService.compressNodes({
           roomId: room.documentId,
           label: requestBody.label,
+        });
+      }),
+    );
+
+    this._app.post(
+      '/room/:id/actions/layout-label',
+      this._handle(async (req: Request): Promise<void> => {
+        const room: GetRoomDBDTO = await this._assertRoom(req);
+
+        type Body =
+          operations['postRoomActionLayoutLabel']['requestBody']['content']['application/json'];
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+        const requestBody: Body = req.body as Body;
+
+        await this._roomService.layoutLabel({
+          roomId: room.documentId,
+          label: requestBody.label,
+          layoutAlgorithm: match(requestBody.layoutAlgorithm)
+            .with(
+              'forceDirected',
+              (): LayoutAlgorithm => LayoutAlgorithm.forceDirected,
+            )
+            .with('circle', (): LayoutAlgorithm => LayoutAlgorithm.circle)
+            .exhaustive(),
+          circleLayoutDistance: requestBody.circleLayoutDistance,
         });
       }),
     );

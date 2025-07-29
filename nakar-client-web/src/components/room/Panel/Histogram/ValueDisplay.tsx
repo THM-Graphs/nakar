@@ -10,9 +10,13 @@ export function ValueDisplay(props: {
   value: number;
   percentage: number;
   bgColors?: string[];
-  onRemove?: () => void | Promise<void>;
   onSelect?: () => void | Promise<void>;
   roomContext: RoomContext;
+  customActions?: {
+    title: string;
+    icon: string;
+    action: () => void | Promise<void>;
+  }[];
 }) {
   return (
     <Stack>
@@ -23,23 +27,16 @@ export function ValueDisplay(props: {
       >
         <Stack
           direction={"horizontal"}
-          className={"ps-0 flex-shrink-1 flex-grow-1 overflow-hidden "}
+          className={clsx(
+            "flex-shrink-1 flex-grow-1 overflow-hidden",
+            props.onSelect == null && "ps-1",
+          )}
         >
           {props.onSelect && (
             <NavbarButton
               icon={"crosshair"}
               onClick={props.onSelect}
               tooltip={"Select"}
-              tooltipPlacement={"left"}
-              className={"pt-0 pb-0 ps-0 pe-0"}
-              size={"sm"}
-            ></NavbarButton>
-          )}
-          {props.onRemove && (
-            <NavbarButton
-              icon={"eye-slash"}
-              onClick={props.onRemove}
-              tooltip={"Remove"}
               tooltipPlacement={"left"}
               className={"pt-0 pb-0 ps-0 pe-0"}
               size={"sm"}
@@ -69,7 +66,7 @@ export function ValueDisplay(props: {
             style={{}}
             className={clsx(
               "user-select-text small flex-shrink-1 flex-grow-1 ellipsis",
-              props.onRemove == null && "ps-1",
+              props.onSelect == null && "ps-1",
             )}
           >
             {props.label}
@@ -89,6 +86,7 @@ export function ValueDisplay(props: {
             roomContext={props.roomContext}
             value={props.label}
             buttonSize={"sm"}
+            customActions={props.customActions}
           ></PropertyMenu>
         </Stack>
       </Stack>
