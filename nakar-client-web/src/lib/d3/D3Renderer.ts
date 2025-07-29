@@ -193,9 +193,8 @@ export class D3Renderer {
     svg.selectAll("g > *").remove();
 
     this.zoomContainer = svg.select("g");
-    svg.on("click", (event: MouseEvent) => {
+    svg.on("click", () => {
       this.$onDeselectAll.next();
-      event.stopPropagation();
     });
 
     this.zoomContainer
