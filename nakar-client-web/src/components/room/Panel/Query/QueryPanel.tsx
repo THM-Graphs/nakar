@@ -1,7 +1,7 @@
 import { RoomContext } from "../../../../pages/Room.tsx";
 import { useBearStore } from "../../../../lib/state/useBearStore.ts";
 import { Panel } from "../Panel.tsx";
-import { Form, Spinner, Stack } from "react-bootstrap";
+import { Dropdown, Form, Spinner, Stack } from "react-bootstrap";
 import { NavbarButton } from "../../../shared/NavbarButton.tsx";
 import { Collapsable } from "../../Collapsable.tsx";
 import { useEffect, useState } from "react";
@@ -17,6 +17,7 @@ import { match } from "ts-pattern";
 import { Label } from "../../Canvas/Label.tsx";
 import { QueryPanelStatsDisplay } from "./QueryPanelStatsDisplay.tsx";
 import { DynamicList } from "../../../shared/DynamicList.tsx";
+import { DropdownButton } from "../../../shared/DropdownButton.tsx";
 
 export function QueryPanel(props: { roomContext: RoomContext }) {
   const query = useBearStore((s) => s.room.panels.query);
@@ -169,6 +170,29 @@ export function QueryPanel(props: { roomContext: RoomContext }) {
                     }
                   ></Form.Check>
                 </Stack>
+                <DropdownButton title={"Presets"} icon={"chevron-down"}>
+                  {[
+                    {
+                      title: "Schema Visualization",
+                      query: "CALL db.schema.visualization();",
+                    },
+                    { title: "DB Info", query: "CALL db.info()" },
+                  ].map((entry) => (
+                    <Dropdown.Item
+                      key={entry.query}
+                      onClick={() => {
+                        query.setQueryText(entry.query);
+                      }}
+                    >
+                      <Stack>
+                        <span className={"small"}>{entry.title}</span>
+                        <span className={"small text-muted font-monospace"}>
+                          {entry.query}
+                        </span>
+                      </Stack>
+                    </Dropdown.Item>
+                  ))}
+                </DropdownButton>
                 <NavbarButton
                   className={"justify-content-end"}
                   disabled={locked}
