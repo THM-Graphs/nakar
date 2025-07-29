@@ -17,6 +17,7 @@ export function GraphRendererD3(props: {
   const setLocks = useBearStore((s) => s.room.scenario.setLocks);
   const events = useBearStore((s) => s.room.ui.rendererEvents);
   const hideLabels = useBearStore((s) => s.room.canvas.hideLabels);
+  const setHideLabels = useBearStore((s) => s.room.canvas.setHideLabels);
 
   useEffect(() => {
     if (svgRef.current == null) {
@@ -41,6 +42,9 @@ export function GraphRendererD3(props: {
           })
           .with({ type: "WSEventGraphElementsChanged" }, (event) => {
             _graphRenderer.loadGraphContent(event.elements);
+            setHideLabels(
+              event.elements.nodes.length + event.elements.edges.length > 1000,
+            );
           });
       }),
       _graphRenderer.onGrabNode.subscribe((n) => {
