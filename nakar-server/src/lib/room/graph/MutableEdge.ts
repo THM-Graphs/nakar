@@ -127,17 +127,7 @@ export class MutableEdge {
     const parallelEdges: MutableEdge[] = [
       ...graph.edges.getByStartAndEndNodeId(startNodeId, endNodeId),
       ...graph.edges.getByStartAndEndNodeId(endNodeId, startNodeId),
-    ].filter(
-      (
-        parallelEdge: MutableEdge,
-        index: number,
-        self: MutableEdge[],
-      ): boolean =>
-        index ===
-        self.findIndex(
-          (other: MutableEdge): boolean => other.id === parallelEdge.id,
-        ),
-    );
+    ];
 
     return parallelEdges;
   }
