@@ -1562,7 +1562,7 @@ export class RoomService implements ApplicationService {
       }
       this._logger.debug(
         this,
-        `Will comporess ${node.id} because it is part of a cluster with ${clusterBuddies.size.toString()} cluster buddies.`,
+        `Will compress ${node.id} because it is part of a cluster with ${clusterBuddies.size.toString()} cluster buddies.`,
       );
       const newNode: MutableNode = new MutableNode(
         {
