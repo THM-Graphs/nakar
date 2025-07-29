@@ -63,7 +63,6 @@ export function GraphRendererD3(props: {
               pushNotification({
                 message: `Labels have been hidden, because there are more then ${maxElementsBeforHide.toString()} graph elements to display.`,
                 severity: "warning",
-                title: "Warning",
                 date: new Date(),
               });
             }

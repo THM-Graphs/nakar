@@ -29,7 +29,13 @@ export function ToastStack() {
             .exhaustive()}
         >
           <Toast.Header>
-            <strong className="me-auto">{notification.title}</strong>
+            <strong className="me-auto">
+              {match(notification.severity)
+                .with("warning", () => "Warning")
+                .with("message", () => "Message")
+                .with("error", () => "Error")
+                .exhaustive()}
+            </strong>
             <small className="text-muted">
               {notification.date.toLocaleString()}
             </small>

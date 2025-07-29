@@ -586,7 +586,6 @@ export interface components {
             readonly version: string;
         };
         readonly Notification: {
-            readonly title: string;
             readonly message: string;
             /** @enum {string} */
             readonly severity: "error" | "message" | "warning";

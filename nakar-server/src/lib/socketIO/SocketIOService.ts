@@ -111,7 +111,6 @@ export class SocketIOService implements ApplicationService {
       notification: {
         severity: 'error',
         message: 'The Server did shut down.',
-        title: 'Server notification',
         date: new Date().toISOString(),
       },
     } satisfies SchemaWsEventNotification);
@@ -157,7 +156,6 @@ export class SocketIOService implements ApplicationService {
       type: 'WSEventNotification',
       notification: {
         severity: 'error',
-        title: 'Error',
         message: errorMessage,
         date: new Date().toISOString(),
       },
@@ -184,7 +182,6 @@ export class SocketIOService implements ApplicationService {
             this.sendToRoom(oldRoomId, {
               type: 'WSEventNotification',
               notification: {
-                title: 'User left',
                 message: `User ${wsClient.id} left.`,
                 date: new Date().toISOString(),
                 severity: 'message',
@@ -194,7 +191,6 @@ export class SocketIOService implements ApplicationService {
             wsClient.broadcastToRoom({
               type: 'WSEventNotification',
               notification: {
-                title: 'User joined',
                 message: `User ${wsClient.id} joined.`,
                 severity: 'message',
                 date: new Date().toISOString(),
@@ -487,7 +483,6 @@ export class SocketIOService implements ApplicationService {
                   message: `Not all graph elements loaded. Did load ${message.loadedCount.toString()} elements.`,
                   date: new Date().toISOString(),
                   severity: 'warning',
-                  title: 'Warning',
                 },
               } satisfies SchemaWsEventNotification);
             },

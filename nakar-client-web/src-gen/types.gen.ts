@@ -159,7 +159,6 @@ export type Node = {
 };
 
 export type Notification = {
-    title: string;
     message: string;
     severity: 'error' | 'message' | 'warning';
     date: string;

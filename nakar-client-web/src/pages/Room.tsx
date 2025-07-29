@@ -142,7 +142,6 @@ export function Room(props: { context: AppContext }) {
             pushNotification({
               message: notification.message,
               date: new Date(notification.date),
-              title: notification.title,
               severity: notification.severity,
             });
           })

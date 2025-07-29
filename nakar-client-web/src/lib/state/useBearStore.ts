@@ -62,7 +62,6 @@ export const useBearStore = create<BearState>()(
                       message: notification.message,
                       date: notification.date,
                       severity: notification.severity,
-                      title: notification.title,
                     },
                   ];
 
@@ -73,7 +72,6 @@ export const useBearStore = create<BearState>()(
               },
               pushErrorNotification: (error: unknown) => {
                 useBearStore.getState().room.ui.pushNotification({
-                  title: "Error",
                   message: match(error)
                     .with(P.string, (e) => e)
                     .with(P.instanceOf(Error), (e) => e.message)
