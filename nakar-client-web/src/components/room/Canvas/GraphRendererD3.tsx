@@ -19,6 +19,7 @@ export function GraphRendererD3(props: {
   const events = useBearStore((s) => s.room.ui.rendererEvents);
   const hideLabels = useBearStore((s) => s.room.canvas.hideLabels);
   const setHideLabels = useBearStore((s) => s.room.canvas.setHideLabels);
+  const pushNotification = useBearStore((s) => s.room.ui.pushNotification);
 
   useEffect(() => {
     if (svgRef.current == null) {
@@ -51,10 +52,22 @@ export function GraphRendererD3(props: {
           })
           .with({ type: "WSEventGraphElementsChanged" }, (event) => {
             _graphRenderer.loadGraphContent(event.elements);
-            setHideLabels(
+
+            const newHideLabels: boolean =
               event.elements.nodes.length + event.elements.edges.length >
-                maxElementsBeforHide,
-            );
+              maxElementsBeforHide;
+            if (
+              newHideLabels &&
+              !useBearStore.getState().room.canvas.hideLabels
+            ) {
+              pushNotification({
+                message: `Labels have been hidden, because there are more then ${maxElementsBeforHide.toString()} graph elements to display.`,
+                severity: "warning",
+                title: "Warning",
+                date: new Date(),
+              });
+            }
+            setHideLabels(newHideLabels);
           });
       }),
       _graphRenderer.onGrabNode.subscribe((n) => {
