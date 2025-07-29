@@ -32,8 +32,8 @@ export class ProfilerTask {
     return (this._endDate ?? Date.now()) - this._startDate;
   }
 
-  public finish(): void {
+  public finish(silent?: boolean): void {
     this._endDate = Date.now();
-    this._profiler.finishTask(this);
+    this._profiler.finishTask(this, silent ?? null);
   }
 }

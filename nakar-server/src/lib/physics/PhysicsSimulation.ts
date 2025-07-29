@@ -128,10 +128,6 @@ export class PhysicsSimulation {
           performance:
             avgTickDuration > this._targetTickDuration ? 'bad' : 'good',
         });
-        this._logger.debug(
-          this,
-          `Was able to run ${tickCount.toString()} physics ticks until await ${avgTickDuration.toFixed(0)} ms/tick.`,
-        );
         lastWait = Date.now();
         tickCount = 0;
         await wait(0);
@@ -140,8 +136,11 @@ export class PhysicsSimulation {
 
     this._running = false;
     this._targetDate = Number.MIN_SAFE_INTEGER;
+    this._logger.debug(
+      this,
+      `Physics Simulation stopped: Latest performance: ${JSON.stringify(this._currentPerformance$.value)}`,
+    );
     this._currentPerformance$.next(null);
-    this._logger.debug(this, 'Physics Simulation stopped.');
   }
 
   private _tick(): void {

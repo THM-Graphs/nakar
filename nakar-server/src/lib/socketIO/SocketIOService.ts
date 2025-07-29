@@ -212,7 +212,12 @@ export class SocketIOService implements ApplicationService {
         (clientToServerMessage: SchemaWsClientToServerMessage): void => {
           (async (): Promise<void> => {
             try {
-              this._logger.debug(this, clientToServerMessage.type);
+              if (clientToServerMessage.type !== 'WSActionMoveNodes') {
+                this._logger.debug(
+                  this,
+                  `Did receive from client ${wsClient.id}: ${clientToServerMessage.type}`,
+                );
+              }
               await match(clientToServerMessage)
                 .returnType<void | Promise<void>>()
                 .with(
@@ -387,7 +392,7 @@ export class SocketIOService implements ApplicationService {
                     });
                   }
                 }
-                task.finish();
+                task.finish(true);
 
                 socket.send({
                   type: 'WSEventNodesMoved',

@@ -55,7 +55,12 @@ export class RoomInstanceService implements ApplicationService {
 
   private _registerParentPortMessages(): void {
     this._parentPort.on('message', (message: WTAction): void => {
-      this._logger.debug(this, `Did receive from parent port: ${message.type}`);
+      if (message.type !== 'WTActionMoveNodes') {
+        this._logger.debug(
+          this,
+          `Did receive from parent port: ${message.type}`,
+        );
+      }
       match(message)
         .with(
           { type: 'WTActionSetGraph' },

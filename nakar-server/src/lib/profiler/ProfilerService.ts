@@ -30,15 +30,17 @@ export class ProfilerService implements ApplicationService {
     return task;
   }
 
-  public finishTask(task: ProfilerTask): void {
+  public finishTask(task: ProfilerTask, silent: boolean | null): void {
     this._checkTimeoutTasks();
     if (!this._tasks.includes(task)) {
       this._logger.error(this, `Profiler task ${task.title} not found.`);
     }
-    this._logger.debug(
-      task.sender,
-      `${task.title}: ${task.elapsedTimeMs.toFixed(0)}ms`,
-    );
+    if (silent != null && !silent) {
+      this._logger.debug(
+        task.sender,
+        `${task.title}: ${task.elapsedTimeMs.toFixed(0)}ms`,
+      );
+    }
     this._removeTask(task);
   }
 
