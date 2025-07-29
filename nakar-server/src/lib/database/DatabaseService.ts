@@ -20,6 +20,8 @@ import { Event } from '@strapi/database/dist/lifecycles';
 import { Observable, Subject } from 'rxjs';
 import { GetParameterizedScenariosDBDTO } from './dto/GetParameterizedScenariosDBDTO';
 import { MediaService } from '../media/MediaService';
+import { ProfilerTask } from '../profiler/ProfilerTask';
+import { ProfilerService } from '../profiler/ProfilerService';
 
 export class DatabaseService implements ApplicationService {
   private readonly _databaseDtoFactory: DatabaseDTOFactory;
@@ -30,6 +32,7 @@ export class DatabaseService implements ApplicationService {
   public constructor(
     private readonly _logger: LoggerService,
     private readonly _media: MediaService,
+    private readonly _profiler: ProfilerService,
   ) {
     this._databaseDtoFactory = new DatabaseDTOFactory();
     this._onRoomAdded = new Subject();
@@ -47,7 +50,10 @@ export class DatabaseService implements ApplicationService {
   public bootstrap(): void {
     // eslint-disable-next-line @typescript-eslint/typedef,@typescript-eslint/explicit-function-return-type
     strapi.documents.use(async (context, next) => {
-      this._logger.debug(this, `${context.uid} ${context.action}`);
+      const task: ProfilerTask = this._profiler.profile(
+        this,
+        `${context.uid} ${context.action}`,
+      );
       if (context.uid === 'api::room.room') {
         if (context.action === 'publish') {
           const id: string = context.params.documentId;
@@ -74,7 +80,10 @@ export class DatabaseService implements ApplicationService {
           }
         }
       }
-      return next();
+      // eslint-disable-next-line @typescript-eslint/typedef
+      const result = await next();
+      task.finish();
+      return result;
     });
   }
 

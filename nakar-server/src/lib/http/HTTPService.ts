@@ -264,6 +264,7 @@ export class HTTPService implements ApplicationService {
             this._logger,
             this._config,
             this._media,
+            this._profiler,
           );
         const result: SchemaGraph =
           await cachedGraphFactory.createSchemaGraph(graph);
@@ -282,6 +283,7 @@ export class HTTPService implements ApplicationService {
             this._logger,
             this._config,
             this._media,
+            this._profiler,
           );
         const result: SchemaGraphElements =
           await cachedGraphFactory.createSchemaGraphElements(graph);
@@ -300,6 +302,7 @@ export class HTTPService implements ApplicationService {
             this._logger,
             this._config,
             this._media,
+            this._profiler,
           );
         const result: SchemaGraphMetaData =
           await cachedGraphFactory.createSchemaGraphMetaData(graph);
@@ -318,6 +321,7 @@ export class HTTPService implements ApplicationService {
             this._logger,
             this._config,
             this._media,
+            this._profiler,
           );
         const result: SchemaGraphTable = cachedGraphFactory.createSchemaTable(
           graph.tableData,

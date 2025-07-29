@@ -3,8 +3,9 @@ import neo4j, {
   auth,
   driver as createDriver,
   Driver,
-  QueryResult,
+  Record as Neo4jRecord,
   RecordShape,
+  ResultSummary,
   Session,
 } from 'neo4j-driver';
 import { Neo4jGraphElements } from './Neo4jGraphElements';
@@ -59,20 +60,47 @@ export class Neo4jService implements ApplicationService {
           this,
           `Will run query: ${query} with data: ${JSON.stringify(parameters).length.toString()} bytes`,
         );
-        const result: QueryResult = await session.run<
-          RecordShape<string, unknown>
-        >(query, parameters, { timeout: 2 * 60000 });
 
-        this._logger.debug(
-          this,
-          `Did receive ${result.records.length.toString()} records.`,
+        const neo4jGraphElementsFactory: Neo4jGraphElementsFactory =
+          new Neo4jGraphElementsFactory(this._logger, limitConfig);
+        await new Promise<void>(
+          (resolve: () => void, reject: (error: Error) => void): void => {
+            session
+              .run<
+                RecordShape<string, unknown>
+              >(query, parameters, { timeout: 2 * 60000 })
+              .subscribe({
+                onNext: (
+                  record: Neo4jRecord<RecordShape<string, unknown>>,
+                ): void => {
+                  if (neo4jGraphElementsFactory.limitReached) {
+                    /* discard result. */
+                  } else {
+                    neo4jGraphElementsFactory.collectRecord(
+                      record,
+                      databaseInfo,
+                    );
+                  }
+                },
+                onCompleted: (result: ResultSummary): void => {
+                  this._logger.debug(this, JSON.stringify(result));
+                  resolve();
+                },
+                onError: (error: Error): void => {
+                  reject(error);
+                },
+              });
+          },
         );
 
-        const nei4jGraphElementsFactory: Neo4jGraphElementsFactory =
-          new Neo4jGraphElementsFactory(this._logger, limitConfig);
-        nei4jGraphElementsFactory.collectQueryResult(result, databaseInfo);
+        const result: Neo4jGraphElements =
+          neo4jGraphElementsFactory.getResult();
+        this._logger.debug(
+          this,
+          `Did receive ${result.size.toString()} graph elements.`,
+        );
 
-        return nei4jGraphElementsFactory.getResult();
+        return result;
       } catch (error) {
         await session.close();
         this._logger.error(this, error);

@@ -304,6 +304,12 @@ export class SocketIOService implements ApplicationService {
 
   private _registerRoomServiceEvents(): void {
     this._roomService.onEvent$.subscribe((event: RoomServiceEvent): void => {
+      if (event.type !== 'RoomServiceEventRoomPhysicsUpdated') {
+        this._logger.debug(
+          this,
+          `Did receive from room service (room ${event.roomId}): ${event.type}`,
+        );
+      }
       Promise.resolve(
         match(event)
           .returnType<void | Promise<void>>()
@@ -315,8 +321,8 @@ export class SocketIOService implements ApplicationService {
                   this._databaseService,
                   this._logger,
                   this._config,
-
                   this._media,
+                  this._profiler,
                 );
               const table: SchemaGraphTable =
                 cachedGraphFactory.createSchemaTable(message.table);
@@ -337,6 +343,7 @@ export class SocketIOService implements ApplicationService {
                   this._logger,
                   this._config,
                   this._media,
+                  this._profiler,
                 );
               const metaData: SchemaGraphMetaData =
                 await cachedGraphFactory.createSchemaGraphMetaData(
@@ -357,6 +364,7 @@ export class SocketIOService implements ApplicationService {
                   this._logger,
                   this._config,
                   this._media,
+                  this._profiler,
                 );
               cachedGraphFactory
                 .createSchemaGraphElements(message.graph)
@@ -381,7 +389,8 @@ export class SocketIOService implements ApplicationService {
 
                 const task: ProfilerTask = this._profiler.profile(
                   this,
-                  'Filter node grabs for client',
+                  `Filter node grabs for client ${socket.id} in room ${socket.room}`,
+                  true,
                 );
                 const nodesToSend: SchemaPhysicalNode[] = [];
                 for (const node of message.graph.nodes.nodes) {
@@ -392,7 +401,7 @@ export class SocketIOService implements ApplicationService {
                     });
                   }
                 }
-                task.finish(true);
+                task.finish();
 
                 socket.send({
                   type: 'WSEventNodesMoved',

@@ -26,6 +26,8 @@ import { ConfigService } from '../config/ConfigService';
 import { FinalGraphDisplayConfiguration } from '../room/scenario-pipeline/display-configuration/FinalGraphDisplayConfiguration';
 import { Range } from '../tools/Range';
 import { MediaService } from '../media/MediaService';
+import { ProfilerService } from '../profiler/ProfilerService';
+import { ProfilerTask } from '../profiler/ProfilerTask';
 
 export class CachingSchemaDTOFactory {
   private readonly _databaseCache: SMap<string, GetDatabaseDBDTO>;
@@ -36,22 +38,30 @@ export class CachingSchemaDTOFactory {
     private readonly _logger: LoggerService,
     private readonly _config: ConfigService,
     private readonly _media: MediaService,
+    private readonly _profiler: ProfilerService,
   ) {
     this._databaseCache = new SMap();
     this._dtoFactory = new SchemaDTOFactory(_config, _media);
   }
 
   public async createSchemaGraph(graph: MutableGraph): Promise<SchemaGraph> {
-    return {
+    const t: ProfilerTask = this._profiler.profile(this, 'createSchemaGraph');
+    const schemaGraph: SchemaGraph = {
       elements: await this.createSchemaGraphElements(graph),
       metaData: await this.createSchemaGraphMetaData(graph),
       table: this.createSchemaTable(graph.tableData),
     };
+    t.finish();
+    return schemaGraph;
   }
 
   public async createSchemaGraphElements(
     graph: MutableGraph,
   ): Promise<SchemaGraphElements> {
+    const t: ProfilerTask = this._profiler.profile(
+      this,
+      'createSchemaGraphElements',
+    );
     const config: FinalGraphDisplayConfiguration =
       await this._database.getGraphDisplayConfiguration(
         graph.metaData.scenarioId,
@@ -59,7 +69,7 @@ export class CachingSchemaDTOFactory {
     const degreeRange: Range | null = config.growNodesBasedOnDegree
       ? graph.nodes.getNodeDegreeRange(graph)
       : null;
-    return {
+    const result: SchemaGraphElements = {
       nodes: await graph.nodes.nodes.asyncFlatMap(
         async (node: MutableNode): Promise<SchemaNode> =>
           await this._createSchemaNode(node, graph, config, degreeRange),
@@ -79,28 +89,37 @@ export class CachingSchemaDTOFactory {
         ),
       histogram: this._createSchemaHistogram(graph, config),
     };
+    t.finish();
+    return result;
   }
 
   public createSchemaTable(
     tableData: SMap<string, unknown>[],
   ): SchemaGraphTable {
-    return {
+    const t: ProfilerTask = this._profiler.profile(this, 'createSchemaTable');
+    const result: SchemaGraphTable = {
       data: tableData.map(
         (entry: SMap<string, unknown>): Record<string, unknown> =>
           entry.toRecord(),
       ),
     };
+    t.finish();
+    return result;
   }
 
   public async createSchemaGraphMetaData(
     graph: MutableGraph,
   ): Promise<SchemaGraphMetaData> {
+    const t: ProfilerTask = this._profiler.profile(
+      this,
+      'createSchemaGraphMetaData',
+    );
     const metaData: MutableGraphMetaData = graph.metaData;
     const scenario: GetScenarioDBDTO | null =
       metaData.scenarioId != null
         ? await this._database.getScenario(metaData.scenarioId)
         : null;
-    return {
+    const result: SchemaGraphMetaData = {
       scenario: scenario
         ? { current: this._dtoFactory.createSchemaScenario(scenario) }
         : null,
@@ -126,12 +145,18 @@ export class CachingSchemaDTOFactory {
       canUndo: graph.currentUndoDepth > 0,
       canRedo: graph.currentRedoDepth > 0,
     };
+    t.finish();
+    return result;
   }
 
   private _createSchemaHistogram(
     graph: MutableGraph,
     config: FinalGraphDisplayConfiguration,
   ): SchemaHistogram {
+    const t: ProfilerTask = this._profiler.profile(
+      this,
+      '_createSchemaHistogram',
+    );
     interface NodeHistogramEntry {
       id: string;
       title: string;
@@ -159,7 +184,7 @@ export class CachingSchemaDTOFactory {
         degree + node.degree(graph),
       0,
     );
-    return {
+    const result: SchemaHistogram = {
       nodeLabels: graph.nodes.labelHistogram
         .toArray()
         .toSorted(
@@ -273,7 +298,7 @@ export class CachingSchemaDTOFactory {
         .map(
           (node: MutableNode): NodeHistogramEntry => ({
             id: node.id,
-            title: node.title(graph, config, this._logger),
+            title: node.title(graph, config),
             labels: node.labels.toArray(),
             degree: node.degree(graph),
             percentage: degreeCount > 0 ? node.degree(graph) / degreeCount : 0,
@@ -287,6 +312,8 @@ export class CachingSchemaDTOFactory {
           }
         }),
     } satisfies SchemaHistogram;
+    t.finish();
+    return result;
   }
 
   private async _createSchemaNode(
@@ -297,21 +324,17 @@ export class CachingSchemaDTOFactory {
   ): Promise<SchemaNode> {
     return {
       id: node.id,
-      title: node.title(graph, config, this._logger),
+      title: node.title(graph, config),
       labels: node.labels.toArray(),
       properties: this._createSchemaGraphProperties(node.properties),
-      radius: node.radius(graph, config, range, this._logger),
+      radius: node.radius(graph, config, range),
       position: node.position,
       inDegree: node.inDegree(graph),
       outDegree: node.outDegree(graph),
       degree: node.degree(graph),
       namesInQuery: node.namesInQuery.toArray(),
-      customBackgroundColor: node.customBackgroundColor(
-        graph,
-        config,
-        this._logger,
-      ),
-      customTitleColor: node.customTitleColor(graph, config, this._logger),
+      customBackgroundColor: node.customBackgroundColor(graph, config),
+      customTitleColor: node.customTitleColor(graph, config),
       source: (await this._getDatabase(node.source))?.title ?? node.source,
       locked: node.locked,
       isCluster: node.isCluster,

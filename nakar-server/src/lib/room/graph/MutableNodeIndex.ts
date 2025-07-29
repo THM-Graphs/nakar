@@ -7,6 +7,7 @@ import { MutablePropertyCollection } from './MutablePropertyCollection';
 import { Range } from '../../tools/Range';
 import { MutableGraph } from './MutableGraph';
 import { PhysicsSimulation } from '../../physics/PhysicsSimulation';
+import { LoggerService } from '../../logger/LoggerService';
 
 export class MutableNodeIndex {
   private _byId: SMap<string, MutableNode>;
@@ -21,7 +22,10 @@ export class MutableNodeIndex {
 
   private _bySource: SMap<string, SSet<MutableNode>>;
 
-  public constructor(nodes: MutableNode[]) {
+  public constructor(
+    nodes: MutableNode[],
+    private readonly _logger: LoggerService,
+  ) {
     this._byId = new SMap();
     this._byLabel = new SMap();
     this._labelHistogram = new SMap();
@@ -84,17 +88,20 @@ export class MutableNodeIndex {
   }
 
   public addNeo4jNode(node: Neo4jNode): MutableNode | null {
-    const mutableNode: MutableNode = new MutableNode({
-      id: node.node.elementId,
-      labels: new SSet<string>(node.node.labels),
-      properties: MutablePropertyCollection.fromRecord(node.node.properties),
-      position: MutablePosition.default(),
-      namesInQuery: node.keys,
-      locked: false,
-      grabs: new SSet(),
-      source: node.source.nakarId,
-      compressed: new SSet(),
-    });
+    const mutableNode: MutableNode = new MutableNode(
+      {
+        id: node.node.elementId,
+        labels: new SSet<string>(node.node.labels),
+        properties: MutablePropertyCollection.fromRecord(node.node.properties),
+        position: MutablePosition.default(),
+        namesInQuery: node.keys,
+        locked: false,
+        grabs: new SSet(),
+        source: node.source.nakarId,
+        compressed: new SSet(),
+      },
+      this._logger,
+    );
     PhysicsSimulation.jiggle(mutableNode);
 
     const insertResult: boolean = this.add(mutableNode);
@@ -168,26 +175,10 @@ export class MutableNodeIndex {
     );
   }
 
-  public byMergingWithNonOverriding(
-    otherIndex: MutableNodeIndex,
-  ): MutableNodeIndex {
-    const newIndex: MutableNodeIndex = new MutableNodeIndex(
-      this.nodes.toArray(),
-    );
-
-    for (const otherNode of otherIndex.nodes) {
-      if (newIndex.hasById(otherNode.id)) {
-        continue;
-      }
-      newIndex.add(otherNode);
-    }
-
-    return newIndex;
-  }
-
   public copy(): MutableNodeIndex {
     return new MutableNodeIndex(
       this.nodes.toArray().map((n: MutableNode): MutableNode => n.copy()),
+      this._logger,
     );
   }
 

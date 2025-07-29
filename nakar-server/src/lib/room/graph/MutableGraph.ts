@@ -14,6 +14,8 @@ import { PhysicalNode } from '../../physics/physical-graph/PhysicalNode';
 import { PhysicalEdge } from '../../physics/physical-graph/PhysicalEdge';
 import { Range } from '../../tools/Range';
 import { SSet } from '../../tools/Set';
+import { ProfilerService } from '../../profiler/ProfilerService';
+import { ProfilerTask } from '../../profiler/ProfilerTask';
 
 export class MutableGraph {
   // eslint-disable-next-line @typescript-eslint/typedef
@@ -33,15 +35,19 @@ export class MutableGraph {
   public previous: MutableGraph | null;
   public next: MutableGraph | null;
 
-  public constructor(data: {
-    id: string;
-    nodes: MutableNodeIndex;
-    edges: MutableEdgeIndex;
-    metaData: MutableGraphMetaData;
-    tableData: SMap<string, unknown>[];
-    previous: MutableGraph | null;
-    next: MutableGraph | null;
-  }) {
+  public constructor(
+    data: {
+      id: string;
+      nodes: MutableNodeIndex;
+      edges: MutableEdgeIndex;
+      metaData: MutableGraphMetaData;
+      tableData: SMap<string, unknown>[];
+      previous: MutableGraph | null;
+      next: MutableGraph | null;
+    },
+    private readonly _logger: LoggerService,
+    private readonly _profiler: ProfilerService,
+  ) {
     this.id = data.id;
     this.nodes = data.nodes;
     this.edges = data.edges;
@@ -75,56 +81,78 @@ export class MutableGraph {
     return result;
   }
 
-  public static empty(): MutableGraph {
-    return new MutableGraph({
-      id: uuidv4(),
-      nodes: new MutableNodeIndex([]),
-      edges: new MutableEdgeIndex([]),
-      metaData: MutableGraphMetaData.empty(),
-      tableData: [],
-      previous: null,
-      next: null,
-    });
+  public static empty(
+    logger: LoggerService,
+    profiler: ProfilerService,
+  ): MutableGraph {
+    return new MutableGraph(
+      {
+        id: uuidv4(),
+        nodes: new MutableNodeIndex([], logger),
+        edges: new MutableEdgeIndex([]),
+        metaData: MutableGraphMetaData.empty(),
+        tableData: [],
+        previous: null,
+        next: null,
+      },
+      logger,
+      profiler,
+    );
   }
 
   public static fromPlain(
     data: z.infer<typeof MutableGraph.schema>,
+    logger: LoggerService,
+    profiler: ProfilerService,
   ): MutableGraph {
-    return new MutableGraph({
-      id: data.id,
-      nodes: new MutableNodeIndex(
-        data.nodes.map(
-          (n: z.infer<typeof MutableNode.schema>): MutableNode =>
-            MutableNode.fromPlain(n),
+    return new MutableGraph(
+      {
+        id: data.id,
+        nodes: new MutableNodeIndex(
+          data.nodes.map(
+            (n: z.infer<typeof MutableNode.schema>): MutableNode =>
+              MutableNode.fromPlain(n, logger),
+          ),
+          logger,
         ),
-      ),
-      edges: new MutableEdgeIndex(
-        data.edges.map(
-          (e: z.infer<typeof MutableEdge.schema>): MutableEdge =>
-            MutableEdge.fromPlain(e),
+        edges: new MutableEdgeIndex(
+          data.edges.map(
+            (e: z.infer<typeof MutableEdge.schema>): MutableEdge =>
+              MutableEdge.fromPlain(e),
+          ),
         ),
-      ),
-      metaData: MutableGraphMetaData.fromPlain(data.metaData),
-      tableData: data.tableData.map(
-        (td: Record<string, unknown>): SMap<string, unknown> =>
-          SMap.fromRecord(td),
-      ),
-      previous: null,
-      next: null,
-    });
+        metaData: MutableGraphMetaData.fromPlain(data.metaData),
+        tableData: data.tableData.map(
+          (td: Record<string, unknown>): SMap<string, unknown> =>
+            SMap.fromRecord(td),
+        ),
+        previous: null,
+        next: null,
+      },
+      logger,
+      profiler,
+    );
   }
 
-  public static fromUnknown(input: unknown): MutableGraph {
+  public static fromUnknown(
+    input: unknown,
+    logger: LoggerService,
+    profiler: ProfilerService,
+  ): MutableGraph {
     const data: z.infer<typeof MutableGraph.schema> =
       MutableGraph.schema.parse(input);
-    return MutableGraph.fromPlain(data);
+    return MutableGraph.fromPlain(data, logger, profiler);
   }
 
-  public static fromUnknownOrEmpty(input: unknown): MutableGraph {
+  public static fromUnknownOrEmpty(
+    input: unknown,
+    logger: LoggerService,
+    profiler: ProfilerService,
+  ): MutableGraph {
     try {
-      return MutableGraph.fromUnknown(input);
+      return MutableGraph.fromUnknown(input, logger, profiler);
     } catch {
-      return MutableGraph.empty();
+      return MutableGraph.empty(logger, profiler);
     }
   }
 
@@ -138,7 +166,7 @@ export class MutableGraph {
       pipelineSummary: [],
       arguments: scenarioArguments,
     });
-    this.nodes = new MutableNodeIndex([]);
+    this.nodes = new MutableNodeIndex([], this._logger);
     this.edges = new MutableEdgeIndex([]);
     this.tableData = [];
   }
@@ -159,13 +187,17 @@ export class MutableGraph {
     };
   }
 
-  public removeDanglingEdges(logger?: LoggerService): number {
+  public removeDanglingEdges(): number {
+    const task: ProfilerTask = this._profiler.profile(
+      this,
+      'removeDanglingEdges',
+    );
     let edgesRemoved: number = 0;
     for (const edge of this.edges.edges) {
       const isDangling: boolean = edge.isDangling(this);
 
       if (isDangling) {
-        logger?.debug(
+        this._logger.debug(
           this,
           `Relationship ${edge.type} (${edge.startNodeId} -> ${edge.endNodeId}) is dangling and will be removed.`,
         );
@@ -175,13 +207,15 @@ export class MutableGraph {
         }
       }
     }
+    task.finish();
     return edgesRemoved;
   }
 
   public toPhysicalGraph(
     config: FinalGraphDisplayConfiguration,
-    logger: LoggerService,
   ): PhysicalGraph {
+    const task: ProfilerTask = this._profiler.profile(this, 'toPhysicalGraph');
+
     const nodes: Record<string, PhysicalNode> = {};
     const edges: Record<string, PhysicalEdge> = {};
     const degreeRange: Range | null = config.growNodesBasedOnDegree
@@ -191,7 +225,7 @@ export class MutableGraph {
     for (const node of this.nodes.nodes) {
       nodes[node.id] = {
         id: node.id,
-        radius: node.radius(this, config, degreeRange, logger),
+        radius: node.radius(this, config, degreeRange),
         position: { x: node.position.x, y: node.position.y },
         locked: node.locked,
         velocityX: 0,
@@ -210,10 +244,13 @@ export class MutableGraph {
       };
     }
 
-    return {
+    const result: PhysicalGraph = {
       nodes: nodes,
       edges: edges,
     };
+
+    task.finish();
+    return result;
   }
 
   public applyPhysicalGraph(
@@ -238,17 +275,24 @@ export class MutableGraph {
   }
 
   public copy(): MutableGraph {
-    return new MutableGraph({
-      id: uuidv4(),
-      nodes: this.nodes.copy(),
-      edges: this.edges.copy(),
-      metaData: this.metaData.copy(),
-      tableData: this.tableData.map(
-        (e: SMap<string, unknown>): SMap<string, unknown> => e.copy(),
-      ),
-      previous: null,
-      next: null,
-    });
+    const task: ProfilerTask = this._profiler.profile(this, 'copy');
+    const copy: MutableGraph = new MutableGraph(
+      {
+        id: uuidv4(),
+        nodes: this.nodes.copy(),
+        edges: this.edges.copy(),
+        metaData: this.metaData.copy(),
+        tableData: this.tableData.map(
+          (e: SMap<string, unknown>): SMap<string, unknown> => e.copy(),
+        ),
+        previous: null,
+        next: null,
+      },
+      this._logger,
+      this._profiler,
+    );
+    task.finish();
+    return copy;
   }
 
   public trimUndoStack(limit: number): void {

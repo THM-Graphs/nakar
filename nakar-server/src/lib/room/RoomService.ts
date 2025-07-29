@@ -315,13 +315,7 @@ export class RoomService implements ApplicationService {
               sortedNodesToLayout.reduce(
                 (widths: number, node: MutableNode): number =>
                   widths +
-                  node.radius(
-                    graph,
-                    displayConfiguration,
-                    degreeRange,
-                    this._logger,
-                  ) *
-                    2,
+                  node.radius(graph, displayConfiguration, degreeRange) * 2,
                 0,
               );
             const radius: number = circumference / (2 * Math.PI);
@@ -376,7 +370,7 @@ export class RoomService implements ApplicationService {
         } satisfies RoomServiceEventGraphTableChanged);
         this._sendActionToWorker(params.roomId, {
           type: 'WTActionSetGraph',
-          graph: graph.toPhysicalGraph(displayConfiguration, this._logger),
+          graph: graph.toPhysicalGraph(displayConfiguration),
         });
         this._sendActionToWorker(params.roomId, {
           type: 'WTActionTriggerPhysics',
@@ -497,7 +491,7 @@ export class RoomService implements ApplicationService {
 
         this._sendActionToWorker(params.roomId, {
           type: 'WTActionSetGraph',
-          graph: graph.toPhysicalGraph(displayConfiguration, this._logger),
+          graph: graph.toPhysicalGraph(displayConfiguration),
         });
         this._sendActionToWorker(params.roomId, {
           type: 'WTActionTriggerPhysics',
@@ -550,14 +544,12 @@ export class RoomService implements ApplicationService {
             graph.nodes.remove(node);
             result.nodesAddedCount -= 1;
           });
-        const edgesRemovedCount: number = graph.removeDanglingEdges(
-          this._logger,
-        );
+        const edgesRemovedCount: number = graph.removeDanglingEdges();
         result.edgeAddedCount -= edgesRemovedCount;
 
         this._sendActionToWorker(params.roomId, {
           type: 'WTActionSetGraph',
-          graph: graph.toPhysicalGraph(config, this._logger),
+          graph: graph.toPhysicalGraph(config),
         });
         this._onEvent.next({
           type: 'RoomServiceEventGraphElementsChanged',
@@ -642,11 +634,11 @@ export class RoomService implements ApplicationService {
             result.edgeAddedCount -= 1;
           }
         }
-        graph.removeDanglingEdges(this._logger);
+        graph.removeDanglingEdges();
 
         this._sendActionToWorker(params.roomId, {
           type: 'WTActionSetGraph',
-          graph: graph.toPhysicalGraph(config, this._logger),
+          graph: graph.toPhysicalGraph(config),
         });
         this._sendActionToWorker(params.roomId, {
           type: 'WTActionTriggerPhysics',
@@ -689,7 +681,7 @@ export class RoomService implements ApplicationService {
     await this.saveGraph(params.roomId);
     this._sendActionToWorker(params.roomId, {
       type: 'WTActionSetGraph',
-      graph: graph.toPhysicalGraph(displayConfiguration, this._logger),
+      graph: graph.toPhysicalGraph(displayConfiguration),
     });
     this._onEvent.next({
       type: 'RoomServiceEventGraphMetaDataChanged',
@@ -729,7 +721,7 @@ export class RoomService implements ApplicationService {
     await this.saveGraph(params.roomId);
     this._sendActionToWorker(params.roomId, {
       type: 'WTActionSetGraph',
-      graph: graph.toPhysicalGraph(displayConfiguration, this._logger),
+      graph: graph.toPhysicalGraph(displayConfiguration),
     });
     this._onEvent.next({
       type: 'RoomServiceEventGraphMetaDataChanged',
@@ -790,7 +782,7 @@ export class RoomService implements ApplicationService {
 
         const graph: MutableGraph = this._snapshotGraph(params.roomId);
         if (params.replace) {
-          graph.nodes = new MutableNodeIndex([]);
+          graph.nodes = new MutableNodeIndex([], this._logger);
           graph.edges = new MutableEdgeIndex([]);
         }
         graph.nodes.addNeo4jNodes(graphElements.nodes);
@@ -800,7 +792,7 @@ export class RoomService implements ApplicationService {
 
         this._sendActionToWorker(params.roomId, {
           type: 'WTActionSetGraph',
-          graph: graph.toPhysicalGraph(displayConfiguration, this._logger),
+          graph: graph.toPhysicalGraph(displayConfiguration),
         });
         this._sendActionToWorker(params.roomId, {
           type: 'WTActionTriggerPhysics',
@@ -843,7 +835,7 @@ export class RoomService implements ApplicationService {
 
         this._sendActionToWorker(params.roomId, {
           type: 'WTActionSetGraph',
-          graph: graph.toPhysicalGraph(displayConfiguration, this._logger),
+          graph: graph.toPhysicalGraph(displayConfiguration),
         });
         this._sendActionToWorker(params.roomId, {
           type: 'WTActionTriggerPhysics',
@@ -953,6 +945,7 @@ export class RoomService implements ApplicationService {
   }
 
   public async saveGraph(roomId: string): Promise<void> {
+    const task: ProfilerTask = this._profiler.profile(this, 'Save Graph');
     const graph: MutableGraph = this.getGraph(roomId);
 
     const room: GetRoomDBDTO | null = await this._database.getRoom(roomId);
@@ -962,6 +955,7 @@ export class RoomService implements ApplicationService {
     }
 
     await this._database.setRoomGraph(room.documentId, graph.toPlain());
+    task.finish();
   }
 
   private async _initRooms(): Promise<void> {
@@ -973,6 +967,10 @@ export class RoomService implements ApplicationService {
   }
 
   private async _initRoom(room: GetRoomDBDTO): Promise<void> {
+    const task: ProfilerTask = this._profiler.profile(
+      this,
+      `Init room ${room.title ?? room.documentId}`,
+    );
     this._logger.debug(
       this,
       `Will load graph of room ${room.documentId} ('${room.title ?? ''}') into memory.`,
@@ -984,6 +982,8 @@ export class RoomService implements ApplicationService {
       );
       const graph: MutableGraph = MutableGraph.fromUnknownOrEmpty(
         JSON.parse(graphJson),
+        this._logger,
+        this._profiler,
       );
       this._logger.debug(
         this,
@@ -997,10 +997,14 @@ export class RoomService implements ApplicationService {
         this,
         `Will init room ${room.documentId} with empty graph.`,
       );
-      this._graphs.set(room.documentId, MutableGraph.empty());
+      this._graphs.set(
+        room.documentId,
+        MutableGraph.empty(this._logger, this._profiler),
+      );
     }
 
     await this._startWorkerIfStopped(room.documentId);
+    task.finish();
   }
 
   private async _startWorkerIfStopped(roomId: string): Promise<void> {
@@ -1016,10 +1020,8 @@ export class RoomService implements ApplicationService {
         graph.metaData.scenarioId,
       );
 
-    const physicalGraph: PhysicalGraph = this.getGraph(roomId).toPhysicalGraph(
-      config,
-      this._logger,
-    );
+    const physicalGraph: PhysicalGraph =
+      this.getGraph(roomId).toPhysicalGraph(config);
     const workerData: RoomWorkerData = {
       roomId: roomId,
       graph: physicalGraph,
@@ -1099,12 +1101,7 @@ export class RoomService implements ApplicationService {
     event: WTEventPhysicsUpdate,
   ): void {
     const graph: MutableGraph = this.getGraph(roomId);
-    const task: ProfilerTask = this._profiler.profile(
-      this,
-      'Apply physics simulation to graph',
-    );
     graph.applyPhysicalGraph(event.graph, this._logger);
-    task.finish(true);
     this._onEvent.next({
       type: 'RoomServiceEventRoomPhysicsUpdated',
       graph: graph,
@@ -1445,7 +1442,11 @@ export class RoomService implements ApplicationService {
     displayConfiguration: FinalGraphDisplayConfiguration,
     noCompress: boolean,
   ): Promise<void> {
-    graph.removeDanglingEdges(this._logger);
+    const task: ProfilerTask = this._profiler.profile(
+      this,
+      'Post Process Graph',
+    );
+    graph.removeDanglingEdges();
     if (displayConfiguration.connectResultNodes) {
       await this._connectNodes(graph);
     }
@@ -1456,6 +1457,7 @@ export class RoomService implements ApplicationService {
         this._compressRelationships(graph, displayConfiguration);
       }
     }
+    task.finish();
   }
 
   private async _compressNodes(
@@ -1485,29 +1487,32 @@ export class RoomService implements ApplicationService {
           this,
           `Will comporess ${node.id} because it is part of a cluster with ${clusterBuddies.size.toString()} cluster buddies.`,
         );
-        const newNode: MutableNode = new MutableNode({
-          id: v4(),
-          position: MutablePosition.average(
-            clusterBuddies
-              .toArray()
-              .map((n: MutableNode): MutablePosition => n.position),
-          ),
-          grabs: new SSet(),
-          labels: clusterBuddies.reduce(
-            (akku: SSet<string>, next: MutableNode): SSet<string> =>
-              akku.byMerging(next.labels),
-            new SSet<string>(),
-          ),
-          source: node.source,
-          locked: node.locked,
-          properties: MutablePropertyCollection.empty(),
-          namesInQuery: clusterBuddies.reduce(
-            (akku: SSet<string>, next: MutableNode): SSet<string> =>
-              akku.byMerging(next.namesInQuery),
-            new SSet<string>(),
-          ),
-          compressed: clusterBuddies.map((n: MutableNode): string => n.id),
-        });
+        const newNode: MutableNode = new MutableNode(
+          {
+            id: v4(),
+            position: MutablePosition.average(
+              clusterBuddies
+                .toArray()
+                .map((n: MutableNode): MutablePosition => n.position),
+            ),
+            grabs: new SSet(),
+            labels: clusterBuddies.reduce(
+              (akku: SSet<string>, next: MutableNode): SSet<string> =>
+                akku.byMerging(next.labels),
+              new SSet<string>(),
+            ),
+            source: node.source,
+            locked: node.locked,
+            properties: MutablePropertyCollection.empty(),
+            namesInQuery: clusterBuddies.reduce(
+              (akku: SSet<string>, next: MutableNode): SSet<string> =>
+                akku.byMerging(next.namesInQuery),
+              new SSet<string>(),
+            ),
+            compressed: clusterBuddies.map((n: MutableNode): string => n.id),
+          },
+          this._logger,
+        );
         graph.nodes.add(newNode);
         for (const sibling of clusterBuddies) {
           for (const outgoingEdge of graph.edges.getByStartNodeId(sibling.id)) {

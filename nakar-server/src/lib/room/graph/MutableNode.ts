@@ -36,17 +36,20 @@ export class MutableNode {
   public source: string;
   public compressed: SSet<string>;
 
-  public constructor(data: {
-    id: string;
-    labels: SSet<string>;
-    properties: MutablePropertyCollection;
-    position: MutablePosition;
-    namesInQuery: SSet<string>;
-    locked: boolean;
-    grabs: SSet<string>;
-    source: string;
-    compressed: SSet<string>;
-  }) {
+  public constructor(
+    data: {
+      id: string;
+      labels: SSet<string>;
+      properties: MutablePropertyCollection;
+      position: MutablePosition;
+      namesInQuery: SSet<string>;
+      locked: boolean;
+      grabs: SSet<string>;
+      source: string;
+      compressed: SSet<string>;
+    },
+    private readonly _logger: LoggerService,
+  ) {
     this.id = data.id;
     this.labels = data.labels;
     this.properties = data.properties;
@@ -70,18 +73,24 @@ export class MutableNode {
     return this.compressed.size > 0;
   }
 
-  public static fromPlain(data: z.infer<typeof this.schema>): MutableNode {
-    return new MutableNode({
-      id: data.id,
-      labels: new SSet(data.labels),
-      properties: MutablePropertyCollection.fromPlain(data.properties),
-      position: MutablePosition.fromPlain(data.position),
-      namesInQuery: new SSet(data.namesInQuery),
-      locked: data.locked,
-      grabs: new SSet(),
-      source: data.source,
-      compressed: new SSet(data.compressed),
-    });
+  public static fromPlain(
+    data: z.infer<typeof this.schema>,
+    logger: LoggerService,
+  ): MutableNode {
+    return new MutableNode(
+      {
+        id: data.id,
+        labels: new SSet(data.labels),
+        properties: MutablePropertyCollection.fromPlain(data.properties),
+        position: MutablePosition.fromPlain(data.position),
+        namesInQuery: new SSet(data.namesInQuery),
+        locked: data.locked,
+        grabs: new SSet(),
+        source: data.source,
+        compressed: new SSet(data.compressed),
+      },
+      logger,
+    );
   }
 
   public toPlain(): z.infer<typeof MutableNode.schema> {
@@ -141,15 +150,13 @@ export class MutableNode {
 
   public displayConfigurationContext(
     graph: MutableGraph,
-    logger: LoggerService,
   ): NodeDisplayConfigurationContext {
-    return NodeDisplayConfigurationContext.create(this, graph, logger);
+    return NodeDisplayConfigurationContext.create(this, graph, this._logger);
   }
 
   public customBackgroundColor(
     graph: MutableGraph,
     config: FinalGraphDisplayConfiguration,
-    logger: LoggerService,
   ): string | null {
     const nodeConfig: FinalNodeDisplayConfiguration | null =
       this.displayConfiguration(config);
@@ -163,7 +170,6 @@ export class MutableNode {
 
     const newValue: string = this.displayConfigurationContext(
       graph,
-      logger,
     ).applyToTemplate(nodeConfig.backgroundColorTemplate);
 
     if (newValue.trim().length === 0) {
@@ -175,12 +181,10 @@ export class MutableNode {
   public customTitleColor(
     graph: MutableGraph,
     config: FinalGraphDisplayConfiguration,
-    logger: LoggerService,
   ): string | null {
     const backgroundColor: string | null = this.customBackgroundColor(
       graph,
       config,
-      logger,
     );
     if (backgroundColor == null) {
       return null;
@@ -195,10 +199,9 @@ export class MutableNode {
   public title(
     graph: MutableGraph,
     config: FinalGraphDisplayConfiguration,
-    logger: LoggerService,
   ): string {
     return (
-      this._customTitle(graph, config, logger) ??
+      this._customTitle(graph, config) ??
       this.properties.getStringValueOfProperty('label') ??
       this.properties.getStringValueOfProperty('name') ??
       this.properties.getStringValueOfProperty('title') ??
@@ -214,32 +217,33 @@ export class MutableNode {
     graph: MutableGraph,
     config: FinalGraphDisplayConfiguration,
     degreeRange: Range | null,
-    logger: LoggerService,
   ): number {
     return (
-      (this._customRadius(graph, config, logger) ?? MutableNode.defaultRadius) *
+      (this._customRadius(graph, config) ?? MutableNode.defaultRadius) *
       this._customRadiusFactor(graph, config, degreeRange)
     );
   }
 
   public copy(): MutableNode {
-    return new MutableNode({
-      id: this.id,
-      labels: this.labels.copy(),
-      properties: this.properties.copy(),
-      position: this.position.copy(),
-      namesInQuery: this.namesInQuery.copy(),
-      locked: this.locked,
-      grabs: this.grabs.copy(),
-      source: this.source,
-      compressed: this.compressed.copy(),
-    });
+    return new MutableNode(
+      {
+        id: this.id,
+        labels: this.labels.copy(),
+        properties: this.properties.copy(),
+        position: this.position.copy(),
+        namesInQuery: this.namesInQuery.copy(),
+        locked: this.locked,
+        grabs: this.grabs.copy(),
+        source: this.source,
+        compressed: this.compressed.copy(),
+      },
+      this._logger,
+    );
   }
 
   private _customTitle(
     graph: MutableGraph,
     config: FinalGraphDisplayConfiguration,
-    logger: LoggerService,
   ): string | null {
     const nodeConfig: FinalNodeDisplayConfiguration | null =
       this.displayConfiguration(config);
@@ -253,7 +257,7 @@ export class MutableNode {
     const newValue: string = NodeDisplayConfigurationContext.create(
       this,
       graph,
-      logger,
+      this._logger,
     ).applyToTemplate(nodeConfig.displayTextTemplate);
     if (newValue.trim().length === 0) {
       return null;
@@ -265,7 +269,6 @@ export class MutableNode {
   private _customRadius(
     graph: MutableGraph,
     config: FinalGraphDisplayConfiguration,
-    logger: LoggerService,
   ): number | null {
     const nodeConfig: FinalNodeDisplayConfiguration | null =
       this.displayConfiguration(config);
@@ -279,7 +282,7 @@ export class MutableNode {
     const newValue: string = NodeDisplayConfigurationContext.create(
       this,
       graph,
-      logger,
+      this._logger,
     ).applyToTemplate(nodeConfig.radiusTemplate);
     if (newValue.trim().length === 0) {
       return null;
@@ -287,7 +290,7 @@ export class MutableNode {
 
     const newRadius: number = parseFloat(newValue);
     if (isNaN(newRadius)) {
-      logger.warn(
+      this._logger.warn(
         this,
         `Unable to parse node radius config: "${newRadius.toString()}" for node ${this.id}`,
       );

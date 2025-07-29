@@ -4,8 +4,8 @@ import {
   isPath,
   isRelationship,
   Node,
-  QueryResult,
   RecordShape,
+  Record as Neo4jRecord,
   Relationship,
 } from 'neo4j-driver';
 import { SMap } from '../tools/Map';
@@ -30,6 +30,10 @@ export class Neo4jGraphElementsFactory {
       tableData: [],
       limitReached: false,
     });
+  }
+
+  public get limitReached(): boolean {
+    return this._result.limitReached;
   }
 
   public addNode(
@@ -92,36 +96,34 @@ export class Neo4jGraphElementsFactory {
     }
   }
 
-  public collectQueryResult(
-    queryResult: QueryResult<RecordShape<string, unknown>>,
+  public collectRecord(
+    record: Neo4jRecord<RecordShape<string, unknown>>,
     source: Neo4jDatabaseInfo,
   ): void {
-    for (const record of queryResult.records) {
-      const tableDataRow: SMap<string, unknown> = new SMap<string, unknown>();
-      for (const key of record.keys) {
-        // Collect Graph Elements
-        if (this._limit.shouldCollectGraphElements()) {
-          this.collectField(key, record.get(key), source);
-        }
-
-        // Collect Table Data
-        if (this._limit.shouldCollectTableData()) {
-          const value: unknown = record.get(key);
-          if (isInt(value)) {
-            tableDataRow.set(key, value.toString());
-          } else {
-            tableDataRow.set(key, value);
-          }
-        }
-
-        if (this._result.limitReached) {
-          return;
-        }
+    const tableDataRow: SMap<string, unknown> = new SMap<string, unknown>();
+    for (const key of record.keys) {
+      // Collect Graph Elements
+      if (this._limit.shouldCollectGraphElements()) {
+        this.collectField(key, record.get(key), source);
       }
 
+      // Collect Table Data
       if (this._limit.shouldCollectTableData()) {
-        this.addTableRow(tableDataRow);
+        const value: unknown = record.get(key);
+        if (isInt(value)) {
+          tableDataRow.set(key, value.toString());
+        } else {
+          tableDataRow.set(key, value);
+        }
       }
+
+      if (this._result.limitReached) {
+        return;
+      }
+    }
+
+    if (this._limit.shouldCollectTableData()) {
+      this.addTableRow(tableDataRow);
     }
   }
 

@@ -11,6 +11,7 @@ import { Neo4jService } from '../neo4j/Neo4jService';
 import { ToolsService } from '../tools/ToolsService';
 import { ApplicationService } from './ApplicationService';
 import { MediaService } from '../media/MediaService';
+import { ProfilerTask } from '../profiler/ProfilerTask';
 
 export class NakarApplication {
   public static shared: NakarApplication = new NakarApplication();
@@ -36,7 +37,11 @@ export class NakarApplication {
     this.config = new ConfigService(this.logger);
     this.profiler = new ProfilerService(this.logger);
     this.media = new MediaService(this.logger, this.config);
-    this.databaseService = new DatabaseService(this.logger, this.media);
+    this.databaseService = new DatabaseService(
+      this.logger,
+      this.media,
+      this.profiler,
+    );
     this.backup = new BackupService(
       this.logger,
       this.databaseService,
@@ -90,11 +95,12 @@ export class NakarApplication {
   public async bootstrap(): Promise<void> {
     this.logger.debug(this, 'Will bootstrap services...');
     for (const service of this._services) {
-      this.logger.log(
+      const task: ProfilerTask = this.profiler.profile(
         this,
         `Bootstrap Service ${ClassHelper.getName(service)}`,
       );
       await service.bootstrap();
+      task.finish();
     }
     this.logger.debug(this, `Done bootstrapping services.`);
     process.title = 'Nakar Server';
@@ -103,8 +109,12 @@ export class NakarApplication {
   public async destroy(): Promise<void> {
     this.logger.debug(this, 'Will destroy services...');
     for (const service of this._services.toReversed()) {
-      this.logger.log(this, `Destroy Service ${ClassHelper.getName(service)}`);
+      const task: ProfilerTask = this.profiler.profile(
+        this,
+        `Destroy Service ${ClassHelper.getName(service)}`,
+      );
       await service.destroy();
+      task.finish();
     }
     this.logger.debug(this, `Done destroying services.`);
   }

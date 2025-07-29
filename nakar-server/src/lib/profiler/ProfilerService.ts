@@ -9,7 +9,7 @@ export class ProfilerService implements ApplicationService {
 
   public constructor(
     private readonly _logger: LoggerService,
-    timeoutMs: number = 60_000,
+    timeoutMs: number = 99_000,
   ) {
     this._tasks = [];
     this.timeoutMs = timeoutMs;
@@ -23,22 +23,34 @@ export class ProfilerService implements ApplicationService {
     /* */
   }
 
-  public profile(sender: unknown, title: string): ProfilerTask {
+  public profile(
+    sender: unknown,
+    title: string,
+    silent?: boolean,
+  ): ProfilerTask {
     this._checkTimeoutTasks();
-    const task: ProfilerTask = new ProfilerTask(sender, title, this);
+    const task: ProfilerTask = new ProfilerTask(
+      sender,
+      title,
+      this,
+      silent ?? null,
+    );
     this._tasks.push(task);
+    // if (!task.isSilent) {
+    //   this._logger.debug(task.sender, `🛫 Start: ${title}`);
+    // }
     return task;
   }
 
-  public finishTask(task: ProfilerTask, silent: boolean | null): void {
+  public finishTask(task: ProfilerTask): void {
     this._checkTimeoutTasks();
     if (!this._tasks.includes(task)) {
       this._logger.error(this, `Profiler task ${task.title} not found.`);
     }
-    if (silent != null && !silent) {
+    if (!task.isSilent) {
       this._logger.debug(
         task.sender,
-        `${task.title}: ${task.elapsedTimeMs.toFixed(0)}ms`,
+        `${task.title} (${task.elapsedTimeMs.toFixed(0)}ms)`,
       );
     }
     this._removeTask(task);
