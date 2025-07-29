@@ -590,8 +590,8 @@ export class D3Renderer {
   }
 
   public center(): void {
-    const [x, y] = this._getPositionOfSelectedElement();
-    this.transform(-x, -y, 1);
+    const [x, y, zoom] = this._getPositionOfSelectedElement();
+    this.transform(-x, -y, zoom);
   }
 
   public zoomOutOverview(): void {
@@ -628,8 +628,11 @@ export class D3Renderer {
     this.svgContainer
       ?.transition()
       .duration(100)
-      // eslint-disable-next-line @typescript-eslint/unbound-method
-      .call(this.zoomBehaviour.transform, new d3.ZoomTransform(zoom, x, y));
+      .call(
+        // eslint-disable-next-line @typescript-eslint/unbound-method
+        this.zoomBehaviour.transform,
+        new d3.ZoomTransform(zoom, x * zoom, y * zoom),
+      );
   }
 
   public getZoomTransform(): d3.ZoomTransform {
@@ -755,26 +758,27 @@ export class D3Renderer {
         : "#000000";
   }
 
-  private _getPositionOfSelectedElement(): [number, number] {
+  private _getPositionOfSelectedElement(): [number, number, number] {
     const element = useBearStore.getState().room.panels.inspector.element;
     return match(element)
-      .returnType<[number, number]>()
-      .with(P.nullish, () => [0, 0])
+      .returnType<[number, number, number]>()
+      .with(P.nullish, () => [0, 0, 1])
       .with({ type: "node" }, (n) => {
         const node = this.graphState.nodes.find((d) => d.id === n.nodeId);
         if (node == null) {
-          return [0, 0];
+          return [0, 0, 1];
         }
-        return [node.x, node.y];
+        return [node.x, node.y, 80 / node.radius / 2];
       })
       .with({ type: "edge" }, (n) => {
         const edge = this.graphState.links.find((d) => d.id === n.edgeId);
         if (edge == null) {
-          return [0, 0];
+          return [0, 0, 1];
         }
         return [
           (edge.source.x + edge.target.x) / 2,
           (edge.source.y + edge.target.y) / 2,
+          1,
         ];
       })
       .exhaustive();

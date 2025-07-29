@@ -13,6 +13,7 @@ export function HistogramSectionNodes(props: { roomContext: RoomContext }) {
   );
   const labels = useBearStore((s) => s.room.scenario.graph.elements.labels);
   const setElement = useBearStore((s) => s.room.panels.inspector.setElement);
+  const onCenter = useBearStore((s) => s.room.ui.rendererEvents.onCenter);
 
   return (
     <Stack className={"border-bottom"}>
@@ -37,6 +38,7 @@ export function HistogramSectionNodes(props: { roomContext: RoomContext }) {
                   bgColors={nodeLabels.map((l) => getBackgroundColor(l.color))}
                   onSelect={() => {
                     setElement({ type: "node", nodeId: nodeEntry.id });
+                    onCenter.next();
                   }}
                   customActions={[
                     {
