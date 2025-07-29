@@ -89,8 +89,8 @@ export function GraphRendererD3(props: {
       _graphRenderer.onDisplayLinkData.subscribe((l) => {
         inspector.setElement({ type: "edge", edgeId: l.id });
       }),
-      events.onZoomIn.subscribe(() => {
-        _graphRenderer.zoomIn();
+      _graphRenderer.onDeselectAll.subscribe(() => {
+        inspector.deselectElement();
       }),
       events.onZoomOut.subscribe(() => {
         _graphRenderer.zoomOut();

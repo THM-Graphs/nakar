@@ -27,6 +27,7 @@ export class D3Renderer {
 
   private $onDisplayLinkData: Subject<D3Link>;
   private $onDisplayNodeData: Subject<D3Node>;
+  private $onDeselectAll: Subject<void>;
   private $onGrabNode: Subject<D3Node>;
   private $onNodeMoved: Subject<D3Node>;
   private $onUngrabNode: Subject<D3Node>;
@@ -99,6 +100,7 @@ export class D3Renderer {
 
     this.$onDisplayLinkData = new Subject();
     this.$onDisplayNodeData = new Subject();
+    this.$onDeselectAll = new Subject();
     this.$onGrabNode = new Subject<D3Node>();
     this.$onNodeMoved = new Subject<D3Node>();
     this.$onUngrabNode = new Subject<D3Node>();
@@ -126,6 +128,10 @@ export class D3Renderer {
 
   public get onDisplayNodeData(): Observable<D3Node> {
     return this.$onDisplayNodeData.asObservable();
+  }
+
+  public get onDeselectAll(): Observable<void> {
+    return this.$onDeselectAll.asObservable();
   }
 
   public get onGrabNode(): Observable<D3Node> {
@@ -187,6 +193,10 @@ export class D3Renderer {
     svg.selectAll("g > *").remove();
 
     this.zoomContainer = svg.select("g");
+    svg.on("click", (event: MouseEvent) => {
+      this.$onDeselectAll.next();
+      event.stopPropagation();
+    });
 
     this.zoomContainer
       .append("defs")
@@ -280,6 +290,7 @@ export class D3Renderer {
       })
       .on("click", (event: PointerEvent, edge: D3Link) => {
         this.$onDisplayLinkData.next(edge);
+        event.stopPropagation();
       });
 
     this.linkPathSelection
@@ -295,6 +306,7 @@ export class D3Renderer {
       })
       .on("click", (event: PointerEvent, edge: D3Link) => {
         this.$onDisplayLinkData.next(edge);
+        event.stopPropagation();
       });
 
     this.nodeSelection = this.zoomContainer
@@ -339,6 +351,7 @@ export class D3Renderer {
       })
       .on("click", (event: PointerEvent, node: D3Node) => {
         this.$onDisplayNodeData.next(node);
+        event.stopPropagation();
       });
 
     this.nodeCircle = this.nodeSelection

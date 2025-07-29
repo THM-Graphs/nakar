@@ -272,7 +272,7 @@ export const useBearStore = create<BearState>()(
                     s.room.panels.right = "inspector";
                   });
                 },
-                removeElement: () => {
+                deselectElement: () => {
                   set((s) => {
                     s.room.panels.inspector.element = null;
                   });

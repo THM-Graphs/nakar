@@ -101,7 +101,7 @@ export interface BearState {
         hide: () => void;
         element: InspectorElement | null;
         setElement: (i: InspectorElement) => void;
-        removeElement: () => void;
+        deselectElement: () => void;
       };
       histogram: {
         show: () => void;
