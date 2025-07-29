@@ -958,14 +958,31 @@ export class RoomService implements ApplicationService {
         } satisfies RoomServiceEvent);
       },
     );
+  }
 
-    await this.deleteElements({
-      roomId: params.roomId,
-      nodeIds: nodeIds,
-      labels: [],
-      edgeTypes: [],
-      edgeIds: [],
-    });
+  public async compressRelationships(params: {
+    roomId: string;
+  }): Promise<void> {
+    await this._runWithRoomLock(
+      params.roomId,
+      'Compressing Relationships',
+      async (): Promise<void> => {
+        const graph: MutableGraph = this._snapshotGraph(params.roomId);
+        const config: FinalGraphDisplayConfiguration =
+          await this._database.getGraphDisplayConfiguration(
+            graph.metaData.scenarioId,
+          );
+        this._compressRelationships(graph, config);
+
+        this._onEvent.next({
+          type: 'RoomServiceEventGraphElementsChanged',
+          graph: graph,
+          roomId: params.roomId,
+          nodesAdded: 0,
+          edgesAdded: 0,
+        } satisfies RoomServiceEvent);
+      },
+    );
   }
 
   public async saveGraph(roomId: string): Promise<void> {

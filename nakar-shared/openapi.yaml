@@ -469,6 +469,21 @@ paths:
         "200":
           description: "OK"
 
+  /room/{id}/actions/compress-relationships:
+    post:
+      tags:
+        - Room Actions
+      operationId: postRoomActionCompressRelationships
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "OK"
+
   /database/{id}/stats:
     get:
       tags:

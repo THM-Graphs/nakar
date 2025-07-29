@@ -4,6 +4,7 @@ import { NavbarButton } from "../../shared/NavbarButton.tsx";
 import { useBearStore } from "../../../lib/state/useBearStore.ts";
 import { AppContext } from "../../../lib/state/AppContext.ts";
 import {
+  postRoomActionCompressRelationships,
   postRoomActionConnectResultNodes,
   postRoomActionRedo,
   postRoomActionReloadScenario,
@@ -106,6 +107,22 @@ export function CanvasToolbar(props: {
           onClick={async () => {
             resultOrThrow(
               await postRoomActionRemoveDanglingNodes({
+                path: { id: props.roomContext.initialRoomData.id },
+              }),
+            );
+          }}
+        ></NavbarButton>
+        <NavbarButton
+          disabled={
+            graph.metaData.scenario == null ||
+            uiLocked ||
+            selectedTab !== "graph"
+          }
+          icon={"arrows-collapse"}
+          title={"Compress Relationships"}
+          onClick={async () => {
+            resultOrThrow(
+              await postRoomActionCompressRelationships({
                 path: { id: props.roomContext.initialRoomData.id },
               }),
             );

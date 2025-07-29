@@ -572,6 +572,17 @@ export class HTTPService implements ApplicationService {
       }),
     );
 
+    this._app.post(
+      '/room/:id/actions/compress-relationships',
+      this._handle(async (req: Request): Promise<void> => {
+        const room: GetRoomDBDTO = await this._assertRoom(req);
+
+        await this._roomService.compressRelationships({
+          roomId: room.documentId,
+        });
+      }),
+    );
+
     this._app.get(
       '/database/:id/stats',
       this._handle(async (req: Request): Promise<SchemaDatabaseStats> => {

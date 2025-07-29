@@ -598,6 +598,16 @@ export type PostRoomActionRemoveDanglingNodesResponse = (unknown);
 
 export type PostRoomActionRemoveDanglingNodesError = unknown;
 
+export type PostRoomActionCompressRelationshipsData = {
+    path: {
+        id: string;
+    };
+};
+
+export type PostRoomActionCompressRelationshipsResponse = (unknown);
+
+export type PostRoomActionCompressRelationshipsError = unknown;
+
 export type GetDatabaseStatsData = {
     path: {
         id: string;
