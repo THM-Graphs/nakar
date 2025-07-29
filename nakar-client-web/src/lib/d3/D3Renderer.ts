@@ -375,9 +375,9 @@ export class D3Renderer {
           n.radius +
           this._getStrokeWidth(n) / 2 +
           this._getStrokeWidth(n) +
-          this._getStrokeWidth(n) / 2,
+          this._getStrokeWidth(n) * 2,
       )
-      .attr("fill", () => "rgba(0, 0, 0, 0)")
+      .attr("fill", () => "none")
       .attr("stroke", (d) => {
         const colors = this._getBgColorsOfNode(d);
         if (colors.length > 1) {
@@ -386,7 +386,7 @@ export class D3Renderer {
           return colors[0];
         }
       })
-      .attr("stroke-width", (n) => this._getStrokeWidth(n));
+      .attr("stroke-width", (n) => this._getStrokeWidth(n) * 4);
 
     this.nodeLockedOverlay = this.nodeSelection
       .append("circle")
@@ -396,18 +396,24 @@ export class D3Renderer {
           n.radius -
           this._getStrokeWidth(n) / 2 -
           this._getStrokeWidth(n) -
-          this._getStrokeWidth(n) / 2,
+          this._getStrokeWidth(n) * 2,
       )
       .attr("fill", () => "rgba(0, 0, 0, 0)")
       .attr("stroke", () => {
         return this.theme == "dark" ? "#fff" : "#000";
       })
-      .attr("stroke-width", (n) => this._getStrokeWidth(n))
+      .attr("stroke-width", (n) => this._getStrokeWidth(n) * 4)
       .attr("stroke-dasharray", (n) => n.radius * 0.1);
 
     this.nodeSelectedOverlay = this.nodeSelection
       .append("circle")
-      .attr("r", (n) => n.radius + this._getStrokeWidth(n) * 4)
+      .attr(
+        "r",
+        (n) =>
+          n.radius +
+          this._getStrokeWidth(n) * 0.5 +
+          this._getStrokeWidth(n) * 6,
+      )
       .attr("fill", () => "#ff00ff")
       .attr("opacity", 0.5);
 

@@ -10,6 +10,7 @@ export function GraphRendererD3(props: {
   context: AppContext;
   roomContext: RoomContext;
 }) {
+  const maxElementsBeforHide: number = 300;
   const websocketsManager = props.context.webSocketsManager;
   const svgRef = createRef<SVGSVGElement>();
   const theme = useTheme();
@@ -23,11 +24,19 @@ export function GraphRendererD3(props: {
     if (svgRef.current == null) {
       return;
     }
+
+    const initialHideLabels: boolean =
+      props.roomContext.initialGraphData.elements.nodes.length +
+        props.roomContext.initialGraphData.elements.edges.length >
+      maxElementsBeforHide;
+
+    setHideLabels(initialHideLabels);
+
     const _graphRenderer = new D3Renderer(
       theme,
       svgRef.current,
       props.roomContext.initialGraphData.elements,
-      hideLabels,
+      initialHideLabels,
     );
 
     const subs: { unsubscribe: () => void }[] = [
@@ -43,7 +52,8 @@ export function GraphRendererD3(props: {
           .with({ type: "WSEventGraphElementsChanged" }, (event) => {
             _graphRenderer.loadGraphContent(event.elements);
             setHideLabels(
-              event.elements.nodes.length + event.elements.edges.length > 1000,
+              event.elements.nodes.length + event.elements.edges.length >
+                maxElementsBeforHide,
             );
           });
       }),

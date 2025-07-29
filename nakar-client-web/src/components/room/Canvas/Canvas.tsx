@@ -70,7 +70,7 @@ export function Canvas(props: {
             ></NavbarButton>
             <DropdownButton
               icon={"speedometer"}
-              tooltip={"Performance Mode"}
+              tooltip={"Performance Settings"}
               tooltipPlacement={"left"}
               align={"end"}
             >
