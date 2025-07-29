@@ -1033,13 +1033,6 @@ export class RoomService implements ApplicationService {
           type: 'WTActionTriggerPhysics',
           amount: 'long',
         });
-        this._onEvent.next({
-          type: 'RoomServiceEventGraphElementsChanged',
-          graph: graph,
-          roomId: params.roomId,
-          nodesAdded: 0,
-          edgesAdded: 0,
-        } satisfies RoomServiceEvent);
       },
     );
   }
