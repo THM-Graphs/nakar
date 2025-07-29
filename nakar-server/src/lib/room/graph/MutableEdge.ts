@@ -2,6 +2,7 @@ import { MutablePropertyCollection } from './MutablePropertyCollection';
 import { z } from 'zod';
 import { SSet } from '../../tools/Set';
 import { MutableGraph } from './MutableGraph';
+import { SMap } from '../../tools/Map';
 
 export class MutableEdge {
   public static readonly defaultWidth: number = 2;
@@ -124,12 +125,21 @@ export class MutableEdge {
       ? this.endNodeId
       : this.startNodeId;
 
-    const parallelEdges: MutableEdge[] = [
-      ...graph.edges.getByStartAndEndNodeId(startNodeId, endNodeId),
-      ...graph.edges.getByStartAndEndNodeId(endNodeId, startNodeId),
-    ];
+    const result: SMap<string, MutableEdge> = new SMap<string, MutableEdge>();
+    for (const edge of graph.edges.getByStartAndEndNodeId(
+      startNodeId,
+      endNodeId,
+    )) {
+      result.set(edge.id, edge);
+    }
+    for (const edge of graph.edges.getByStartAndEndNodeId(
+      endNodeId,
+      startNodeId,
+    )) {
+      result.set(edge.id, edge);
+    }
 
-    return parallelEdges;
+    return result.toValueArray();
   }
 
   public parallelCount(graph: MutableGraph): number {

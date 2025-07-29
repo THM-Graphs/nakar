@@ -5,6 +5,7 @@ import { RoomWorkerData } from './RoomWorkerData';
 import { parentPort, workerData } from 'node:worker_threads';
 import { ProfilerService } from '../profiler/ProfilerService';
 import { RoomInstanceService } from './RoomInstanceService';
+import { ProfilerTask } from '../profiler/ProfilerTask';
 
 export class RoomWorker implements ApplicationService {
   private readonly _logger: LoggerService;
@@ -29,19 +30,24 @@ export class RoomWorker implements ApplicationService {
   public async bootstrap(): Promise<void> {
     this._logger.debug(this, 'Will bootstrap services...');
     for (const service of this._services) {
-      this._logger.log(
+      const task: ProfilerTask = this._profiler.profile(
         this,
         `Bootstrap Service ${ClassHelper.getName(service)}`,
       );
       await service.bootstrap();
+      task.finish();
     }
   }
 
   public async destroy(): Promise<void> {
     this._logger.debug(this, 'Will destroy services...');
     for (const service of this._services.toReversed()) {
-      this._logger.log(this, `Destroy Service ${ClassHelper.getName(service)}`);
+      const task: ProfilerTask = this._profiler.profile(
+        this,
+        `Destroy Service ${ClassHelper.getName(service)}`,
+      );
       await service.destroy();
+      task.finish();
     }
   }
 }
