@@ -99,6 +99,7 @@ export function Room(props: { context: AppContext }) {
         type: "WSActionJoinRoom",
         roomId: roomContext.initialRoomData.id,
       });
+      unlockUI();
     }
   }, [socketState]);
 
