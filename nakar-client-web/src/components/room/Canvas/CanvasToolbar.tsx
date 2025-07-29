@@ -1,5 +1,5 @@
 import { GraphDataToggle } from "../GraphDataToggle.tsx";
-import { Stack } from "react-bootstrap";
+import { Dropdown, Stack } from "react-bootstrap";
 import { NavbarButton } from "../../shared/NavbarButton.tsx";
 import { useBearStore } from "../../../lib/state/useBearStore.ts";
 import { AppContext } from "../../../lib/state/AppContext.ts";
@@ -71,11 +71,7 @@ export function CanvasToolbar(props: {
       )}
       <DropdownButton title={"Actions"} icon={"chevron-down"} align={"end"}>
         <NavbarButton
-          disabled={
-            graph.metaData.scenario == null ||
-            uiLocked ||
-            selectedTab !== "graph"
-          }
+          disabled={graph.metaData.scenario == null || uiLocked}
           icon={"arrow-clockwise"}
           title={"Rerun Scenario"}
           onClick={async () => {
@@ -86,6 +82,7 @@ export function CanvasToolbar(props: {
             );
           }}
         ></NavbarButton>
+        <Dropdown.Divider></Dropdown.Divider>
         <NavbarButton
           disabled={uiLocked || selectedTab !== "graph"}
           icon={"intersect"}

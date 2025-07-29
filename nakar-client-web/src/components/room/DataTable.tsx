@@ -1,8 +1,10 @@
 import { Stack, Table } from "react-bootstrap";
 import { useBearStore } from "../../lib/state/useBearStore.ts";
+import { NavbarButton } from "../shared/NavbarButton.tsx";
 
 export function DataTable() {
   const tableData = useBearStore((s) => s.room.scenario.graph.table.data);
+  const scenario = useBearStore((s) => s.room.scenario.graph.metaData.scenario);
 
   return (
     <Stack
@@ -15,7 +17,23 @@ export function DataTable() {
       className={"bg-body z-1"}
     >
       {tableData.length === 0 ? (
-        <p className={"p-3 text-muted"}>No data</p>
+        <Stack
+          className={"flex-grow-1 align-items-center justify-content-center"}
+        >
+          <p className={"p-3 text-muted"}>
+            No table data in scenario. Add a table query.
+          </p>
+          {scenario?.current.editUrl && (
+            <NavbarButton
+              title={"Add Table Query"}
+              icon={"plus-lg"}
+              className={"border align-self-center"}
+              onClick={() => {
+                window.open(scenario.current.editUrl ?? undefined);
+              }}
+            ></NavbarButton>
+          )}
+        </Stack>
       ) : (
         <Table className={"table-responsive"}>
           <thead>
