@@ -195,13 +195,9 @@ export class MutableNodeIndex {
   }
 
   public getNodeDegreeRange(graph: MutableGraph): Range | null {
-    const degrees: number[] = this.nodes.reduce(
-      (akku: number[], node: MutableNode): number[] => [
-        ...akku,
-        node.degree(graph),
-      ],
-      [],
-    );
+    const degrees: number[] = this.nodes
+      .map((node: MutableNode): number => node.degree(graph))
+      .toArray();
 
     if (degrees.length === 0) {
       return null;

@@ -69,6 +69,7 @@ export class CachingSchemaDTOFactory {
     const degreeRange: Range | null = config.growNodesBasedOnDegree
       ? graph.nodes.getNodeDegreeRange(graph)
       : null;
+    const widthRange: Range | null = graph.edges.getEdgeDegreeRange();
     const result: SchemaGraphElements = {
       nodes: await graph.nodes.nodes.asyncFlatMap(
         async (node: MutableNode): Promise<SchemaNode> =>
@@ -76,7 +77,7 @@ export class CachingSchemaDTOFactory {
       ),
       edges: await graph.edges.edges.asyncFlatMap(
         async (edge: MutableEdge): Promise<SchemaEdge> =>
-          await this._createSchemaEdge(edge, graph),
+          await this._createSchemaEdge(edge, graph, config, widthRange),
       ),
       labels: await graph.metaData
         .getLabels(graph.nodes)
@@ -345,6 +346,8 @@ export class CachingSchemaDTOFactory {
   private async _createSchemaEdge(
     edge: MutableEdge,
     graph: MutableGraph,
+    config: FinalGraphDisplayConfiguration,
+    range: Range | null,
   ): Promise<SchemaEdge> {
     return {
       id: edge.id,
@@ -355,7 +358,7 @@ export class CachingSchemaDTOFactory {
       parallelCount: edge.parallelCount(graph),
       parallelIndex: edge.parallelIndex(graph),
       isCluster: edge.isCluster,
-      width: edge.width,
+      width: edge.getWidth(range, config),
       properties: this._createSchemaGraphProperties(edge.properties),
       namesInQuery: edge.namesInQuery.toArray(),
       source: (await this._getDatabase(edge.source))?.title ?? edge.source,

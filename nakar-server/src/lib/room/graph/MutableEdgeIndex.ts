@@ -3,7 +3,7 @@ import { MutableEdge } from './MutableEdge';
 import { SSet } from '../../tools/Set';
 import { Neo4jRelationship } from '../../neo4j/Neo4jRelationship';
 import { MutablePropertyCollection } from './MutablePropertyCollection';
-import { MutableNode } from './MutableNode';
+import { Range } from '../../tools/Range';
 
 export class MutableEdgeIndex {
   private _byId: SMap<string, MutableEdge>;
@@ -131,7 +131,6 @@ export class MutableEdgeIndex {
       endNodeId: relationship.relationship.endNodeElementId,
       type: relationship.relationship.type,
       compressed: new SSet(),
-      width: MutableEdge.defaultWidth,
       properties: MutablePropertyCollection.fromRecord(
         relationship.relationship.properties,
       ),
@@ -222,6 +221,22 @@ export class MutableEdgeIndex {
       result.add(endNodeEdge);
     }
     return result;
+  }
+
+  public getEdgeDegreeRange(): Range | null {
+    if (this.edges.size === 0) {
+      return null;
+    }
+    const representationCounts: number[] = this.edges
+      .map((edge: MutableEdge): number => edge.representationCount)
+      .toArray();
+
+    const range: Range = new Range({
+      floor: Math.min(...representationCounts),
+      ceiling: Math.max(...representationCounts),
+    });
+
+    return range;
   }
 
   public copy(): MutableEdgeIndex {

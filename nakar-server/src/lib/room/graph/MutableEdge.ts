@@ -3,6 +3,8 @@ import { z } from 'zod';
 import { SSet } from '../../tools/Set';
 import { MutableGraph } from './MutableGraph';
 import { SMap } from '../../tools/Map';
+import { FinalGraphDisplayConfiguration } from '../scenario-pipeline/display-configuration/FinalGraphDisplayConfiguration';
+import { Range } from '../../tools/Range';
 
 export class MutableEdge {
   public static readonly defaultWidth: number = 2;
@@ -14,7 +16,6 @@ export class MutableEdge {
     endNodeId: z.string(),
     type: z.string(),
     compressed: z.array(z.string()),
-    width: z.number(),
     properties: MutablePropertyCollection.schema,
     namesInQuery: z.array(z.string()),
     source: z.string(),
@@ -25,9 +26,6 @@ export class MutableEdge {
   public endNodeId: string;
   public type: string;
   public compressed: SSet<string>;
-
-  // TODO: Make getter with index
-  public width: number;
   public properties: MutablePropertyCollection;
   public namesInQuery: SSet<string>;
   public source: string;
@@ -38,7 +36,6 @@ export class MutableEdge {
     endNodeId: string;
     type: string;
     compressed: SSet<string>;
-    width: number;
     properties: MutablePropertyCollection;
     namesInQuery: SSet<string>;
     source: string;
@@ -48,7 +45,6 @@ export class MutableEdge {
     this.endNodeId = data.endNodeId;
     this.type = data.type;
     this.compressed = data.compressed;
-    this.width = data.width;
     this.properties = data.properties;
     this.namesInQuery = data.namesInQuery;
     this.source = data.source;
@@ -83,11 +79,31 @@ export class MutableEdge {
       endNodeId: data.endNodeId,
       type: data.type,
       compressed: new SSet(data.compressed),
-      width: data.width,
       properties: MutablePropertyCollection.fromPlain(data.properties),
       namesInQuery: new SSet(data.namesInQuery),
       source: data.source,
     });
+  }
+
+  public getWidth(
+    edgeWidthRange: Range | null,
+    config: FinalGraphDisplayConfiguration,
+  ): number {
+    if (edgeWidthRange == null) {
+      return MutableEdge.defaultWidth;
+    }
+
+    const toRange: Range = new Range({
+      floor: MutableEdge.defaultWidth,
+      ceiling:
+        MutableEdge.defaultWidth * config.compressRelationshipsWidthFactor,
+    });
+
+    return edgeWidthRange.scaleValue(
+      toRange,
+      this.representationCount,
+      config.scaleType,
+    );
   }
 
   public isParallelTo(other: MutableEdge): boolean {
@@ -106,7 +122,6 @@ export class MutableEdge {
       endNodeId: this.endNodeId,
       type: this.type,
       compressed: this.compressed.toArray(),
-      width: this.width,
       properties: this.properties.toPlain(),
       namesInQuery: this.namesInQuery.toArray(),
       source: this.source,
@@ -192,7 +207,6 @@ export class MutableEdge {
       endNodeId: this.endNodeId,
       type: this.type,
       compressed: this.compressed.copy(),
-      width: this.width,
       properties: this.properties.copy(),
       namesInQuery: this.namesInQuery.copy(),
       source: this.source,

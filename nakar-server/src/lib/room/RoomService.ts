@@ -310,7 +310,7 @@ export class RoomService implements ApplicationService {
           }
 
           if (displayConfiguration.compressRelationships) {
-            this._compressRelationships(graph, displayConfiguration);
+            this._compressRelationships(graph);
           }
 
           // Apply layout algorithm
@@ -949,7 +949,7 @@ export class RoomService implements ApplicationService {
           await this._database.getGraphDisplayConfiguration(
             graph.metaData.scenarioId,
           );
-        this._compressRelationships(graph, config);
+        this._compressRelationships(graph);
 
         this._sendActionToWorker(params.roomId, {
           type: 'WTActionSetGraph',
@@ -1301,10 +1301,7 @@ export class RoomService implements ApplicationService {
     return addedEdgesCount;
   }
 
-  private _compressRelationships(
-    graph: MutableGraph,
-    displayConfiguration: FinalGraphDisplayConfiguration,
-  ): void {
+  private _compressRelationships(graph: MutableGraph): void {
     let compressedCount: number = 0;
 
     for (const nodeA of graph.nodes.nodes) {
@@ -1342,7 +1339,6 @@ export class RoomService implements ApplicationService {
             compressed: new SSet(
               edgesToCompress.map((e: MutableEdge): string => e.id),
             ),
-            width: 0,
           });
           compressedCount += edgesToCompress.length;
           for (const edgeToCompress of edgesToCompress) {
@@ -1355,38 +1351,8 @@ export class RoomService implements ApplicationService {
 
     this._logger.log(
       this,
-      `Did compress ${compressedCount.toString()} relationships. Will now apply widths.`,
+      `Did compress ${compressedCount.toString()} relationships.`,
     );
-
-    // TODO: Use index
-    let minimumCompressedCounts: number = 1;
-    let maximumCompressedCounts: number = 1;
-    for (const relationship of graph.edges.edges) {
-      if (relationship.representationCount < minimumCompressedCounts) {
-        minimumCompressedCounts = relationship.representationCount;
-      }
-      if (relationship.representationCount > maximumCompressedCounts) {
-        maximumCompressedCounts = relationship.representationCount;
-      }
-    }
-
-    const fromRange: Range = new Range({
-      floor: minimumCompressedCounts,
-      ceiling: maximumCompressedCounts,
-    });
-
-    const toRange: Range = new Range({
-      floor: 2,
-      ceiling: 2 * displayConfiguration.compressRelationshipsWidthFactor,
-    });
-
-    for (const relationship of graph.edges.edges) {
-      relationship.width = fromRange.scaleValue(
-        toRange,
-        relationship.representationCount,
-        displayConfiguration.scaleType,
-      );
-    }
   }
 
   private _mergeNodes(
@@ -1422,7 +1388,6 @@ export class RoomService implements ApplicationService {
                 endNodeId: mergeNode.id,
                 source: originalNode.source,
                 type: 'MERGED_WITH',
-                width: MutableEdge.defaultWidth,
                 properties: new MutablePropertyCollection({
                   properties: new SMap([['merge', mergeConfig]]),
                 }),
@@ -1437,7 +1402,6 @@ export class RoomService implements ApplicationService {
                 endNodeId: originalNode.id,
                 source: mergeNode.source,
                 type: 'MERGED_WITH',
-                width: MutableEdge.defaultWidth,
                 properties: new MutablePropertyCollection({
                   properties: new SMap([['merge', mergeConfig]]),
                 }),
