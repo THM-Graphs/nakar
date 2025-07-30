@@ -336,26 +336,19 @@ export class MutableGraph {
   ): SSet<MutableNode> {
     const neighbors: SSet<MutableNode> = this.getNeighborsOfNode(node);
 
-    const possibleClusterBuddies: SSet<MutableNode> = neighbors.reduce(
-      (akku: SSet<MutableNode>, next: MutableNode): SSet<MutableNode> =>
-        akku.byMerging(this.getNeighborsOfNode(next)),
-      new SSet(),
-    );
+    const clusterBuddies: SSet<MutableNode> = neighbors
+      .reduce(
+        (akku: SSet<MutableNode>, next: MutableNode): SSet<MutableNode> =>
+          akku.byMerging(this.getNeighborsOfNode(next)),
+        new SSet(),
+      )
+      .filter(
+        (n: MutableNode): boolean =>
+          n.labels.has(label) &&
+          n.compressed.size === 0 &&
+          this.getNeighborsOfNode(n).isEqual(neighbors),
+      );
 
-    const clusterBuddies: SSet<MutableNode> = neighbors.reduce(
-      (akku: SSet<MutableNode>, neighbor: MutableNode): SSet<MutableNode> =>
-        akku.intersection(
-          this.getNeighborsOfNode(neighbor).filter(
-            (n: MutableNode): boolean =>
-              n.labels.has(label) &&
-              n.degree(this) === node.degree(this) &&
-              n.compressed.size === 0,
-          ),
-        ),
-      possibleClusterBuddies,
-    );
-
-    // TODO: To Many Clusterbuddies
     return clusterBuddies;
   }
 }

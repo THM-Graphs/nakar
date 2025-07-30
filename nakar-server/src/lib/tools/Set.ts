@@ -98,4 +98,11 @@ export class SSet<T> extends Set<T> {
   public intersection(other: SSet<T>): SSet<T> {
     return this.filter((item: T): boolean => other.has(item));
   }
+
+  public isEqual(other: SSet<T>): boolean {
+    return (
+      this.size === other.size &&
+      [...this].every((value: T): boolean => other.has(value))
+    );
+  }
 }
