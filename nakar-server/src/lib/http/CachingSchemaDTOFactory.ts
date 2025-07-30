@@ -4,6 +4,7 @@ import { DatabaseService } from '../database/DatabaseService';
 import { LoggerService } from '../logger/LoggerService';
 import {
   SchemaEdge,
+  SchemaEdgePreview,
   SchemaGraph,
   SchemaGraphElements,
   SchemaGraphLabel,
@@ -323,6 +324,28 @@ export class CachingSchemaDTOFactory {
     config: FinalGraphDisplayConfiguration,
     range: Range | null,
   ): Promise<SchemaNode> {
+    const incomingEdges: MutableEdge[] = graph.edges.getByEndNodeId(node.id);
+    const outgoingEdges: MutableEdge[] = graph.edges.getByStartNodeId(node.id);
+    const squashToTypeMap = (
+      akku: SMap<string, number>,
+      next: MutableEdge,
+    ): SMap<string, number> =>
+      akku.bySetting(
+        next.type,
+        (akku.get(next.type) ?? 0) + next.representationCount,
+      );
+    const createEdgePreview = (
+      entry: [string, number],
+      index: number,
+      self: [string, number][],
+    ): SchemaEdgePreview => ({
+      type: entry[0],
+      count: entry[1],
+      percentage: entry[1] / self.reduce((a, n) => a + n[1], 0),
+    });
+    const sort = (a: SchemaEdgePreview, b: SchemaEdgePreview): number =>
+      b.count - a.count;
+
     return {
       id: node.id,
       title: node.title(graph, config),
@@ -340,6 +363,16 @@ export class CachingSchemaDTOFactory {
       locked: node.locked,
       isCluster: node.isCluster,
       clusterSize: node.compressed.size,
+      incomingEdges: incomingEdges
+        .reduce(squashToTypeMap, new SMap<string, number>())
+        .toArray()
+        .map(createEdgePreview)
+        .sort(sort),
+      outgoingEdges: outgoingEdges
+        .reduce(squashToTypeMap, new SMap<string, number>())
+        .toArray()
+        .map(createEdgePreview)
+        .sort(sort),
     };
   }
 

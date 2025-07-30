@@ -12,6 +12,8 @@ import { resultOrThrow } from "../../../../lib/data/resultOrThrow.ts";
 import { Stack } from "react-bootstrap";
 import { Label } from "../../Canvas/Label.tsx";
 import { useBearStore } from "../../../../lib/state/useBearStore.ts";
+import { DynamicList } from "../../../shared/DynamicList.tsx";
+import { ValueDisplay } from "../Histogram/ValueDisplay.tsx";
 
 export function NodeDetails(props: {
   node: Node;
@@ -124,6 +126,14 @@ export function NodeDetails(props: {
           value: props.node.degree,
         },
         {
+          slug: "Incoming Degree",
+          value: props.node.inDegree,
+        },
+        {
+          slug: "Outgoing Degree",
+          value: props.node.outDegree,
+        },
+        {
           slug: "Cluster Size",
           value: props.node.clusterSize,
         },
@@ -154,6 +164,43 @@ export function NodeDetails(props: {
       }
       roomContext={props.roomContext}
       elementId={props.node.id}
-    ></DetailPane>
+    >
+      <DynamicList
+        data={props.node.incomingEdges}
+        filter={(exp, e) => e.type.toLowerCase().includes(exp.toLowerCase())}
+        entityNamePlural={"Incoming Edges"}
+        render={(list) => (
+          <>
+            {list.map((entry) => (
+              <ValueDisplay
+                key={entry.type}
+                value={entry.count}
+                label={entry.type}
+                roomContext={props.roomContext}
+                percentage={entry.percentage}
+              ></ValueDisplay>
+            ))}
+          </>
+        )}
+      ></DynamicList>
+      <DynamicList
+        data={props.node.outgoingEdges}
+        filter={(exp, e) => e.type.toLowerCase().includes(exp.toLowerCase())}
+        entityNamePlural={"Outgoing Edges"}
+        render={(list) => (
+          <>
+            {list.map((entry) => (
+              <ValueDisplay
+                key={entry.type}
+                value={entry.count}
+                label={entry.type}
+                roomContext={props.roomContext}
+                percentage={entry.percentage}
+              ></ValueDisplay>
+            ))}
+          </>
+        )}
+      ></DynamicList>
+    </DetailPane>
   );
 }

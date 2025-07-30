@@ -17,7 +17,7 @@ export function DynamicList<T>(props: {
 }): ReactElement | null {
   const previewLimit = props.previewLimit ?? 10;
   const collapsable = props.collapsable ?? true;
-  const useFilter = props.filter ?? false;
+  const useFilter = props.filter != null && props.data.length > 5;
 
   const [showAllElements, setShowAllElements] = useState(false);
   const [filterValue, setFilterValue] = useState("");
@@ -82,7 +82,7 @@ export function DynamicList<T>(props: {
             setShowAllElements(true);
           }}
         >
-          <span className={"text-muted fst-italic"}>
+          <span className={"text-muted fst-italic small"}>
             … show all {numberFormat(filteredElements.length)}{" "}
             {props.entityNamePlural.toLowerCase()}
           </span>
@@ -94,7 +94,7 @@ export function DynamicList<T>(props: {
             setShowAllElements(false);
           }}
         >
-          <span className={"text-muted fst-italic"}>
+          <span className={"text-muted fst-italic small"}>
             … hide {(filteredElements.length - previewLimit).toString()}{" "}
             {props.entityNamePlural.toLowerCase()}
           </span>

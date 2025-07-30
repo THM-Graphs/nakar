@@ -493,6 +493,8 @@ export interface components {
             readonly locked: boolean;
             readonly isCluster: boolean;
             readonly clusterSize: number;
+            readonly incomingEdges: readonly components["schemas"]["EdgePreview"][];
+            readonly outgoingEdges: readonly components["schemas"]["EdgePreview"][];
         };
         readonly PhysicalNode: {
             readonly id: string;
@@ -523,6 +525,11 @@ export interface components {
             readonly id: string;
             readonly title: string;
             readonly labels: readonly string[];
+        };
+        readonly EdgePreview: {
+            readonly type: string;
+            readonly count: number;
+            readonly percentage: number;
         };
         readonly Histogram: {
             readonly nodeLabels: readonly {
@@ -784,6 +791,7 @@ export type SchemaPhysicalNode = components['schemas']['PhysicalNode'];
 export type SchemaPosition = components['schemas']['Position'];
 export type SchemaEdge = components['schemas']['Edge'];
 export type SchemaNodePreview = components['schemas']['NodePreview'];
+export type SchemaEdgePreview = components['schemas']['EdgePreview'];
 export type SchemaHistogram = components['schemas']['Histogram'];
 export type SchemaGraphMetaData = components['schemas']['GraphMetaData'];
 export type SchemaGraphElements = components['schemas']['GraphElements'];

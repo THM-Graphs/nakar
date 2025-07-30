@@ -8,7 +8,7 @@ export function ValueDisplay(props: {
   label: string;
   subLabel?: string;
   value: number;
-  percentage: number;
+  percentage: number | null;
   bgColors?: string[];
   onSelect?: () => void | Promise<void>;
   roomContext: RoomContext;
@@ -77,9 +77,11 @@ export function ValueDisplay(props: {
         <Stack direction={"horizontal"} className={"flex-shrink-0"}>
           <span className={"flex-shrink-0 user-select-text small"}>
             {props.value}{" "}
-            <span className={"text-muted user-select-text"}>
-              ({(props.percentage * 100).toFixed(2)}%)
-            </span>
+            {props.percentage != null && (
+              <span className={"text-muted user-select-text"}>
+                ({(props.percentage * 100).toFixed(2)}%)
+              </span>
+            )}
           </span>
           <PropertyMenu
             roomContext={props.roomContext}
@@ -89,13 +91,15 @@ export function ValueDisplay(props: {
           ></PropertyMenu>
         </Stack>
       </Stack>
-      <div
-        style={{
-          height: `4px`,
-          width: `${(props.percentage * 100).toFixed(2)}%`,
-        }}
-        className={"bg-secondary border-2 flex-grow-0 flex-shrink-0"}
-      ></div>
+      {props.percentage != null && (
+        <div
+          style={{
+            height: `4px`,
+            width: `${(props.percentage * 100).toFixed(2)}%`,
+          }}
+          className={"bg-secondary border-2 flex-grow-0 flex-shrink-0"}
+        ></div>
+      )}
     </Stack>
   );
 }

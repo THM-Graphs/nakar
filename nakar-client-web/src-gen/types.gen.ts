@@ -48,6 +48,12 @@ export type Edge = {
     targetNode: NodePreview;
 };
 
+export type EdgePreview = {
+    type: string;
+    count: number;
+    percentage: number;
+};
+
 export type ExpandNodePreviewElement = {
     identificator: string;
     count: number;
@@ -158,6 +164,8 @@ export type Node = {
     locked: boolean;
     isCluster: boolean;
     clusterSize: number;
+    incomingEdges: Array<EdgePreview>;
+    outgoingEdges: Array<EdgePreview>;
 };
 
 export type NodePreview = {

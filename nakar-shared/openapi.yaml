@@ -731,6 +731,14 @@ components:
           type: boolean
         clusterSize:
           type: integer
+        incomingEdges:
+          type: array
+          items:
+            $ref: "#/components/schemas/EdgePreview"
+        outgoingEdges:
+          type: array
+          items:
+            $ref: "#/components/schemas/EdgePreview"
       required:
         - id
         - title
@@ -748,6 +756,8 @@ components:
         - locked
         - isCluster
         - clusterSize
+        - incomingEdges
+        - outgoingEdges
 
     PhysicalNode:
       type: object
@@ -839,6 +849,19 @@ components:
         - id
         - title
         - labels
+
+    EdgePreview:
+      properties:
+        type:
+          type: string
+        count:
+          type: number
+        percentage:
+          type: number
+      required:
+        - type
+        - count
+        - percentage
 
     Histogram:
       type: object
