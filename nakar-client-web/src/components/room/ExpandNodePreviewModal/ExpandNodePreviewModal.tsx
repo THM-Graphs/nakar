@@ -62,6 +62,7 @@ export function ExpandNodePreviewModal(props: { roomContext: RoomContext }) {
                 maxHeight: `${(window.innerHeight - 150).toString()}px`,
               }}
               className={"overflow-y-auto"}
+              gap={5}
             >
               <Stack className={"pb-2 pt-2 bg-body-tertiary"} gap={3}>
                 <span className={"small text-muted ps-3 pe-3"}>
@@ -118,7 +119,7 @@ export function ExpandNodePreviewModal(props: { roomContext: RoomContext }) {
                     className={"ps-1 pe-1 justify-content-center border-start"}
                   >
                     <i className={"bi bi-zoom-in btn p-0"}></i>
-                    <span>Expand</span>
+                    <span className={"small"}>Expand</span>
                   </NavbarButton>
                 </Stack>
               </Stack>

@@ -25,7 +25,7 @@ export function PropertyDisplay(props: {
       key={property.slug}
       direction={"horizontal"}
       className={clsx(
-        "border-top",
+        "border-bottom",
         props.index % 2 === 0 ? "bg-body" : "bg-body-tertiary",
       )}
     >

@@ -88,8 +88,8 @@ export function QueryPanel(props: { roomContext: RoomContext }) {
         <NavbarButton icon={"arrow-clockwise"} onClick={reload}></NavbarButton>
       }
     >
-      <Stack className={"pb-5"}>
-        <Stack className={"border-bottom flex-grow-0"}>
+      <Stack className={"pb-5"} gap={5}>
+        <Stack className={"flex-grow-0"}>
           <Form.Select
             className={"rounded-0 border-0 border-bottom"}
             style={{ fontSize: "13px" }}
@@ -117,18 +117,18 @@ export function QueryPanel(props: { roomContext: RoomContext }) {
                   }}
                 >
                   <i className={"bi bi-pencil-fill"}></i>
-                  <span className={"ellipsis"}>Edit</span>
+                  <span className={"ellipsis small"}>Edit</span>
                 </NavbarButton>
               )}
               {referencedDatabase.browserUrl != null && (
                 <NavbarButton
-                  className={"flex-grow-1"}
+                  className={"flex-grow-1 border-bottom"}
                   onClick={() => {
                     window.open(referencedDatabase.browserUrl ?? undefined);
                   }}
                 >
                   <i className={"bi bi-box-arrow-up-right"}></i>
-                  <span>Neo4j Browser</span>
+                  <span className={"small"}>Neo4j Browser</span>
                 </NavbarButton>
               )}
             </>
@@ -137,7 +137,7 @@ export function QueryPanel(props: { roomContext: RoomContext }) {
         {referencedDatabase && (
           <>
             <Collapsable
-              className={"flex-grow-0 border-bottom"}
+              className={"flex-grow-0 border-bottom border-top"}
               initialState={false}
               title={<span className={"fw-bold small"}>Query</span>}
             >
@@ -214,7 +214,7 @@ export function QueryPanel(props: { roomContext: RoomContext }) {
                       "bi bi-play-circle-fill btn btn-link btn-sm p-0 m-0"
                     }
                   ></i>
-                  <span>Run</span>
+                  <span className={"small"}>Run</span>
                 </NavbarButton>
               </Stack>
             </Collapsable>
@@ -229,6 +229,7 @@ export function QueryPanel(props: { roomContext: RoomContext }) {
                   <DynamicList
                     data={data.data.labels}
                     previewLimit={20}
+                    className={"border-top"}
                     entityNamePlural={"Labels"}
                     collapsable={true}
                     filter={(exp, l) =>
@@ -258,6 +259,7 @@ export function QueryPanel(props: { roomContext: RoomContext }) {
                   <DynamicList
                     data={data.data.rels}
                     previewLimit={20}
+                    className={"border-top"}
                     entityNamePlural={"Relationships"}
                     collapsable={true}
                     filter={(exp, rel) =>
@@ -284,7 +286,7 @@ export function QueryPanel(props: { roomContext: RoomContext }) {
                     )}
                   ></DynamicList>
                   <Collapsable
-                    className={"flex-grow-0 border-bottom"}
+                    className={"flex-grow-0 border-bottom border-top"}
                     initialState={false}
                     title={<span className={"fw-bold small"}>Stats</span>}
                   >

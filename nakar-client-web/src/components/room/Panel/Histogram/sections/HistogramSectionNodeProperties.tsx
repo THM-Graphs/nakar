@@ -12,23 +12,22 @@ export function HistogramSectionNodeProperties(props: {
   );
 
   return (
-    <Stack className={"border-bottom"}>
-      <DynamicList
-        data={histogram.nodeProperties}
-        entityNamePlural={"Node Properties"}
-        filter={(exp, np) => np.key.toLowerCase().includes(exp.toLowerCase())}
-        render={(list) => (
-          <>
-            {list.map((propertyEntry) => (
-              <PropertyGroup
-                propertyEntry={propertyEntry}
-                key={propertyEntry.key}
-                roomContext={props.roomContext}
-              ></PropertyGroup>
-            ))}
-          </>
-        )}
-      ></DynamicList>
-    </Stack>
+    <DynamicList
+      data={histogram.nodeProperties}
+      className={"border-top"}
+      entityNamePlural={"Node Properties"}
+      filter={(exp, np) => np.key.toLowerCase().includes(exp.toLowerCase())}
+      render={(list) => (
+        <>
+          {list.map((propertyEntry) => (
+            <PropertyGroup
+              propertyEntry={propertyEntry}
+              key={propertyEntry.key}
+              roomContext={props.roomContext}
+            ></PropertyGroup>
+          ))}
+        </>
+      )}
+    ></DynamicList>
   );
 }

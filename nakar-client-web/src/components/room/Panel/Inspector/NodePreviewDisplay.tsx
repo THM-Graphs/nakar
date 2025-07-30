@@ -27,7 +27,10 @@ export function NodePreviewDisplay(props: {
 
   return (
     <span
-      className={clsx("badge pointer text-center", props.className)}
+      className={clsx(
+        "badge pointer text-center text-wrap text-break",
+        props.className,
+      )}
       style={{
         backgroundColor: bgColor ?? undefined,
         color: fgColor ?? undefined,

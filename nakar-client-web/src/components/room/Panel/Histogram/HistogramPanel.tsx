@@ -21,7 +21,7 @@ export function HistogramPanel(props: { roomContext: RoomContext }) {
         histogram.hide();
       }}
     >
-      <Stack className={"mb-5 flex-grow-0 flex-shrink-1 mb-auto pb-5"}>
+      <Stack className={"mb-5 flex-grow-0 flex-shrink-1 mb-auto pb-5"} gap={5}>
         <HistogramSectionLabels
           roomContext={props.roomContext}
         ></HistogramSectionLabels>

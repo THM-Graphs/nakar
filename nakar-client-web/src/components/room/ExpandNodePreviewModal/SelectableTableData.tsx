@@ -17,7 +17,7 @@ export function SelectableTableData(props: {
     <DynamicList
       data={props.data}
       entityNamePlural={props.title}
-      className={"mb-4"}
+      className={"border-top"}
       filter={(exp, d) =>
         d.identificator.toLowerCase().includes(exp.toLowerCase())
       }
@@ -26,7 +26,7 @@ export function SelectableTableData(props: {
           <Stack
             direction={"horizontal"}
             className={
-              "small fw-bold justify-content-between bg-body border-bottom pt-1 pb-1"
+              "small fw-bold justify-content-between bg-body border-top border-bottom pt-1 pb-1"
             }
           >
             <span style={{ marginLeft: "30px" }}>{props.title}</span>

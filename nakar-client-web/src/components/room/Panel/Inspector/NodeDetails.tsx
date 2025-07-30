@@ -169,6 +169,7 @@ export function NodeDetails(props: {
         data={props.node.incomingEdges}
         filter={(exp, e) => e.type.toLowerCase().includes(exp.toLowerCase())}
         entityNamePlural={"Incoming Edges"}
+        className={"border-bottom border-top"}
         render={(list) => (
           <>
             {list.map((entry) => (
@@ -187,6 +188,7 @@ export function NodeDetails(props: {
         data={props.node.outgoingEdges}
         filter={(exp, e) => e.type.toLowerCase().includes(exp.toLowerCase())}
         entityNamePlural={"Outgoing Edges"}
+        className={"border-bottom border-top"}
         render={(list) => (
           <>
             {list.map((entry) => (

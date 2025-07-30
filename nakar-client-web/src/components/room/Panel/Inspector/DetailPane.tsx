@@ -10,6 +10,8 @@ import { PropertyMenu } from "../../PropertyMenu.tsx";
 import clsx from "clsx";
 import { Collapsable } from "../../Collapsable.tsx";
 import { ClipboardButton } from "../../ClipboardButton.tsx";
+import { DynamicList } from "../../../shared/DynamicList.tsx";
+import { PropertyDisplay } from "./PropertyDisplay.tsx";
 
 export function DetailPane(props: {
   title: string;
@@ -28,65 +30,67 @@ export function DetailPane(props: {
   const titleLengthLimit = 100;
 
   return (
-    <Stack className={"pb-5 pt-1"} gap={0}>
-      {props.title.length > 0 && (
-        <Stack
-          direction={"horizontal"}
-          className={"justify-content-between align-items-baseline"}
-        >
-          <Stack className={"flex-grow-0"}>
-            <ClipboardButton text={props.title}></ClipboardButton>
-            {props.title.length > titleLengthLimit && !showFullTitle && (
-              <NavbarButton
-                icon={"chevron-right"}
-                className={"align-self-baseline"}
-                onClick={() => {
-                  setShowFullTitle(true);
-                }}
-              ></NavbarButton>
-            )}
-            {props.title.length > titleLengthLimit && showFullTitle && (
-              <NavbarButton
-                className={"align-self-baseline"}
-                icon={"chevron-down"}
-                onClick={() => {
-                  setShowFullTitle(false);
-                }}
-              ></NavbarButton>
-            )}
+    <Stack className={"pb-5 pt-1"} gap={5}>
+      <Stack className={"flex-grow-0 flex-shrink-1"}>
+        {props.title.length > 0 && (
+          <Stack
+            direction={"horizontal"}
+            className={"justify-content-between align-items-baseline"}
+          >
+            <Stack className={"flex-grow-0"}>
+              <ClipboardButton text={props.title}></ClipboardButton>
+              {props.title.length > titleLengthLimit && !showFullTitle && (
+                <NavbarButton
+                  icon={"chevron-right"}
+                  className={"align-self-baseline"}
+                  onClick={() => {
+                    setShowFullTitle(true);
+                  }}
+                ></NavbarButton>
+              )}
+              {props.title.length > titleLengthLimit && showFullTitle && (
+                <NavbarButton
+                  className={"align-self-baseline"}
+                  icon={"chevron-down"}
+                  onClick={() => {
+                    setShowFullTitle(false);
+                  }}
+                ></NavbarButton>
+              )}
+            </Stack>
+            <Stack>
+              <span
+                style={{ overflowWrap: "anywhere", userSelect: "text" }}
+                className={"fs-5 fw-bold align-self-baseline"}
+              >
+                {props.title.length > titleLengthLimit && !showFullTitle
+                  ? props.title.substring(0, titleLengthLimit) + "…"
+                  : props.title}
+              </span>
+            </Stack>
+            <PropertyMenu
+              roomContext={props.roomContext}
+              value={props.title}
+            ></PropertyMenu>
           </Stack>
-          <Stack>
-            <span
-              style={{ overflowWrap: "anywhere", userSelect: "text" }}
-              className={"fs-5 fw-bold align-self-baseline"}
-            >
-              {props.title.length > titleLengthLimit && !showFullTitle
-                ? props.title.substring(0, titleLengthLimit) + "…"
-                : props.title}
+        )}
+        <Stack direction={"horizontal"} className={"justify-content-between"}>
+          <Stack direction={"horizontal"} className={"ellipsis"}>
+            <ClipboardButton text={props.elementId}></ClipboardButton>
+            <span className={"ellipsis text-muted small user-select-text"}>
+              {props.elementId}
             </span>
           </Stack>
           <PropertyMenu
             roomContext={props.roomContext}
-            value={props.title}
+            value={props.elementId}
           ></PropertyMenu>
         </Stack>
-      )}
-      <Stack direction={"horizontal"} className={"justify-content-between"}>
-        <Stack direction={"horizontal"} className={"ellipsis"}>
-          <ClipboardButton text={props.elementId}></ClipboardButton>
-          <span className={"ellipsis text-muted small user-select-text"}>
-            {props.elementId}
-          </span>
-        </Stack>
-        <PropertyMenu
-          roomContext={props.roomContext}
-          value={props.elementId}
-        ></PropertyMenu>
+        {props.subTitleElements}
       </Stack>
-      {props.subTitleElements}
       <Collapsable
         title={<span className={"small fw-bold"}>Actions</span>}
-        className={"border-top flex-grow-0"}
+        className={"border-bottom border-top flex-grow-0"}
         initialState={false}
       >
         {props.actions.length > 0 && (
@@ -107,30 +111,22 @@ export function DetailPane(props: {
           </Stack>
         )}
       </Collapsable>
-      <Collapsable
-        title={<span className={"small fw-bold"}>Properties</span>}
+
+      <PropertiesDisplay
+        title={"Properties"}
         className={"border-top flex-grow-0"}
-        initialState={false}
-      >
-        <PropertiesDisplay
-          title={"Property"}
-          properties={props.properties}
-          roomContext={props.roomContext}
-          elementId={props.elementId}
-        ></PropertiesDisplay>
-      </Collapsable>
-      <Collapsable
-        title={<span className={"small fw-bold"}>Other Properties</span>}
-        className={"border-top border-bottom flex-grow-0"}
-        initialState={false}
-      >
-        <PropertiesDisplay
-          title={"Property"}
-          properties={props.otherProperties}
-          roomContext={props.roomContext}
-          elementId={props.elementId}
-        ></PropertiesDisplay>
-      </Collapsable>
+        properties={props.properties}
+        roomContext={props.roomContext}
+        elementId={props.elementId}
+      ></PropertiesDisplay>
+
+      <PropertiesDisplay
+        title={"Other Properties"}
+        className={"border-top flex-grow-0"}
+        properties={props.otherProperties}
+        roomContext={props.roomContext}
+        elementId={props.elementId}
+      ></PropertiesDisplay>
       {props.children}
       <div className={"flex-grow-1"}></div>
     </Stack>
