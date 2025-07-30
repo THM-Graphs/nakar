@@ -2,6 +2,8 @@ import { Edge, postRoomActionDeleteElements } from "../../../../../src-gen";
 import { DetailPane } from "./DetailPane.tsx";
 import { resultOrThrow } from "../../../../lib/data/resultOrThrow.ts";
 import { RoomContext } from "../../../../pages/Room.tsx";
+import { Stack } from "react-bootstrap";
+import { NodePreviewDisplay } from "./NodePreviewDisplay.tsx";
 
 export function EdgeDetails(props: { edge: Edge; roomContext: RoomContext }) {
   return (
@@ -70,11 +72,38 @@ export function EdgeDetails(props: { edge: Edge; roomContext: RoomContext }) {
           slug: "Is Cluster?",
           value: props.edge.isCluster,
         },
+        {
+          slug: "Source Node",
+          value: props.edge.sourceNode.title,
+        },
+        {
+          slug: "Target Node",
+          value: props.edge.targetNode.title,
+        },
       ]}
       properties={props.edge.properties}
       title={props.edge.type}
       roomContext={props.roomContext}
       elementId={props.edge.id}
+      subTitleElements={
+        <Stack
+          direction={"horizontal"}
+          gap={2}
+          className={"justify-content-start p-1"}
+        >
+          <NodePreviewDisplay
+            nodeId={props.edge.sourceNode.id}
+            nodeTitle={props.edge.sourceNode.title}
+            labels={props.edge.sourceNode.labels}
+          ></NodePreviewDisplay>
+          <i className={"bi bi-arrow-right flex-grow-0"}></i>
+          <NodePreviewDisplay
+            nodeId={props.edge.targetNode.id}
+            nodeTitle={props.edge.targetNode.title}
+            labels={props.edge.targetNode.labels}
+          ></NodePreviewDisplay>
+        </Stack>
+      }
     ></DetailPane>
   );
 }

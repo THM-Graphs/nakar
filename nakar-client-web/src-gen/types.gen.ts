@@ -44,6 +44,8 @@ export type Edge = {
     namesInQuery: Array<(string)>;
     source: string;
     clusterSize: number;
+    sourceNode: NodePreview;
+    targetNode: NodePreview;
 };
 
 export type ExpandNodePreviewElement = {
@@ -156,6 +158,12 @@ export type Node = {
     locked: boolean;
     isCluster: boolean;
     clusterSize: number;
+};
+
+export type NodePreview = {
+    id: string;
+    title: string;
+    labels: Array<(string)>;
 };
 
 export type Notification = {

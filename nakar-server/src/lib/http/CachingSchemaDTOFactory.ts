@@ -349,6 +349,8 @@ export class CachingSchemaDTOFactory {
     config: FinalGraphDisplayConfiguration,
     range: Range | null,
   ): Promise<SchemaEdge> {
+    const sourceNode: MutableNode | null = graph.nodes.get(edge.startNodeId);
+    const targetNode: MutableNode | null = graph.nodes.get(edge.endNodeId);
     return {
       id: edge.id,
       startNodeId: edge.startNodeId,
@@ -363,6 +365,16 @@ export class CachingSchemaDTOFactory {
       namesInQuery: edge.namesInQuery.toArray(),
       source: (await this._getDatabase(edge.source))?.title ?? edge.source,
       clusterSize: edge.compressed.size,
+      sourceNode: {
+        id: sourceNode?.id ?? '',
+        title: sourceNode?.title(graph, config) ?? '',
+        labels: sourceNode?.labels.toArray() ?? [],
+      },
+      targetNode: {
+        id: targetNode?.id ?? '',
+        title: targetNode?.title(graph, config) ?? '',
+        labels: targetNode?.labels.toArray() ?? [],
+      },
     };
   }
 

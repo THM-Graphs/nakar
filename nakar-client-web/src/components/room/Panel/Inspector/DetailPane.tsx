@@ -19,6 +19,7 @@ export function DetailPane(props: {
   otherProperties: GraphProperty[];
   roomContext: RoomContext;
   elementId: string;
+  children?: ReactNode;
 }) {
   const uiLocked = useBearStore((s) => s.room.ui.locked);
 
@@ -130,6 +131,7 @@ export function DetailPane(props: {
           elementId={props.elementId}
         ></PropertiesDisplay>
       </Collapsable>
+      {props.children}
       <div className={"flex-grow-1"}></div>
     </Stack>
   );

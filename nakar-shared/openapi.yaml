@@ -804,6 +804,10 @@ components:
           type: string
         clusterSize:
           type: integer
+        sourceNode:
+          $ref: "#/components/schemas/NodePreview"
+        targetNode:
+          $ref: "#/components/schemas/NodePreview"
       required:
         - id
         - startNodeId
@@ -818,6 +822,23 @@ components:
         - namesInQuery
         - source
         - clusterSize
+        - sourceNode
+        - targetNode
+
+    NodePreview:
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        labels:
+          type: array
+          items:
+            type: string
+      required:
+        - id
+        - title
+        - labels
 
     Histogram:
       type: object

@@ -516,6 +516,13 @@ export interface components {
             readonly namesInQuery: readonly string[];
             readonly source: string;
             readonly clusterSize: number;
+            readonly sourceNode: components["schemas"]["NodePreview"];
+            readonly targetNode: components["schemas"]["NodePreview"];
+        };
+        readonly NodePreview: {
+            readonly id: string;
+            readonly title: string;
+            readonly labels: readonly string[];
         };
         readonly Histogram: {
             readonly nodeLabels: readonly {
@@ -776,6 +783,7 @@ export type SchemaNode = components['schemas']['Node'];
 export type SchemaPhysicalNode = components['schemas']['PhysicalNode'];
 export type SchemaPosition = components['schemas']['Position'];
 export type SchemaEdge = components['schemas']['Edge'];
+export type SchemaNodePreview = components['schemas']['NodePreview'];
 export type SchemaHistogram = components['schemas']['Histogram'];
 export type SchemaGraphMetaData = components['schemas']['GraphMetaData'];
 export type SchemaGraphElements = components['schemas']['GraphElements'];
