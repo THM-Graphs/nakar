@@ -24,10 +24,6 @@ export function PropertyMenu(props: {
     (s) => s.room.ui.pushErrorNotification,
   );
 
-  if (parameterizedScenarios.length === 0) {
-    return null;
-  }
-
   return (
     <>
       <DropdownButton
@@ -78,16 +74,20 @@ export function PropertyMenu(props: {
             ))}
           </>
         )}
-        <Dropdown.Divider></Dropdown.Divider>
-        <Dropdown.Header>Run Scenario</Dropdown.Header>
-        {parameterizedScenarios.map((scenarioGroup) => (
-          <PropertyMenuScenarioGroupEntry
-            scenarioGroup={scenarioGroup}
-            roomContext={props.roomContext}
-            value={props.value}
-            key={scenarioGroup.id}
-          ></PropertyMenuScenarioGroupEntry>
-        ))}
+        {parameterizedScenarios.length > 0 && (
+          <>
+            <Dropdown.Divider></Dropdown.Divider>
+            <Dropdown.Header>Run Scenario</Dropdown.Header>
+            {parameterizedScenarios.map((scenarioGroup) => (
+              <PropertyMenuScenarioGroupEntry
+                scenarioGroup={scenarioGroup}
+                roomContext={props.roomContext}
+                value={props.value}
+                key={scenarioGroup.id}
+              ></PropertyMenuScenarioGroupEntry>
+            ))}
+          </>
+        )}
       </DropdownButton>
     </>
   );

@@ -50,7 +50,7 @@ export function ValueDisplay(props: {
           >
             {props.bgColors?.map((color, index) => (
               <div
-                key={color}
+                key={color + index.toString()}
                 style={{
                   zIndex: 1 + ((props.bgColors ?? []).length - index),
                   width: "15px",
@@ -66,7 +66,6 @@ export function ValueDisplay(props: {
             style={{}}
             className={clsx(
               "user-select-text small flex-shrink-1 flex-grow-1 ellipsis",
-              props.onSelect == null && "ps-1",
             )}
           >
             {props.label}
