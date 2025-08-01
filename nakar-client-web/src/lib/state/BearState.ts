@@ -14,6 +14,7 @@ import {
 import { InspectorElement } from "../../components/room/Panel/Inspector/InspectorElement.ts";
 import { SocketState } from "../ws/SocketState.ts";
 import { Subject } from "rxjs";
+import { ColorSchema } from "../color/ColorSchema.ts";
 
 export interface BearState {
   room: {
@@ -128,6 +129,8 @@ export interface BearState {
       };
       hideLabels: boolean;
       setHideLabels: (pm: boolean) => void;
+      colorSchema: ColorSchema;
+      setColorSchema: (newSchema: ColorSchema) => void;
     };
   };
 }

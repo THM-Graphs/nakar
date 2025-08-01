@@ -15,6 +15,7 @@ export function HistogramSectionLabels(props: { roomContext: RoomContext }) {
   const histogram = useBearStore(
     (s) => s.room.scenario.graph.elements.histogram,
   );
+  const colorSchema = useBearStore((s) => s.room.canvas.colorSchema);
 
   return (
     <DynamicList
@@ -40,7 +41,11 @@ export function HistogramSectionLabels(props: { roomContext: RoomContext }) {
                 value={entry.count}
                 percentage={entry.percentage}
                 key={entry.label}
-                bgColors={label ? [getBackgroundColor(label.color)] : undefined}
+                bgColors={
+                  label
+                    ? [getBackgroundColor(label.color, colorSchema)]
+                    : undefined
+                }
                 customActions={[
                   {
                     title: "Remove",

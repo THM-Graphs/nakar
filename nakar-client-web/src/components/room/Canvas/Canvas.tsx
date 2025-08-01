@@ -19,8 +19,6 @@ export function Canvas(props: {
 }) {
   const tabs = useBearStore((s) => s.room.canvas.tabs);
   const rendererEvents = useBearStore((s) => s.room.ui.rendererEvents);
-  const hideLabels = useBearStore((s) => s.room.canvas.hideLabels);
-  const setHideLabels = useBearStore((s) => s.room.canvas.setHideLabels);
 
   return (
     <Stack
@@ -44,45 +42,6 @@ export function Canvas(props: {
             direction={"vertical"}
             gap={0}
           >
-            <NavbarButton
-              icon={"tropical-storm"}
-              tooltip={"Relayout"}
-              tooltipPlacement={"left"}
-              onClick={async () => {
-                resultOrThrow(
-                  await postRoomActionRelayout({
-                    path: { id: props.roomContext.initialRoomData.id },
-                  }),
-                );
-              }}
-            ></NavbarButton>
-            <NavbarButton
-              icon={"unlock"}
-              tooltip={"Unlock all nodes"}
-              tooltipPlacement={"left"}
-              onClick={async () => {
-                resultOrThrow(
-                  await postRoomActionUnlockAllNodes({
-                    path: { id: props.roomContext.initialRoomData.id },
-                  }),
-                );
-              }}
-            ></NavbarButton>
-            <DropdownButton
-              icon={"speedometer"}
-              tooltip={"Performance Settings"}
-              tooltipPlacement={"left"}
-              align={"end"}
-            >
-              <Dropdown.Header>Performance Settings</Dropdown.Header>
-              <NavbarButton
-                icon={"card-text"}
-                title={hideLabels ? "Show Labels" : "Hide Labels"}
-                onClick={() => {
-                  setHideLabels(!hideLabels);
-                }}
-              ></NavbarButton>
-            </DropdownButton>
             <NavbarButton
               icon={"crosshair"}
               tooltip={"Pan to center"}

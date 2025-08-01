@@ -13,10 +13,16 @@ export function NodePreviewDisplay(props: {
   const graphLabels = useBearStore(
     (s) => s.room.scenario.graph.elements.labels,
   );
+  const colorSchema = useBearStore((s) => s.room.canvas.colorSchema);
+
   const firstLabel = props.labels[0];
   const graphLabel = graphLabels.find((l) => l.label === firstLabel);
-  const bgColor = graphLabel ? getBackgroundColor(graphLabel.color) : null;
-  const fgColor = graphLabel ? getTextColor(graphLabel.color) : null;
+  const bgColor = graphLabel
+    ? getBackgroundColor(graphLabel.color, colorSchema)
+    : null;
+  const fgColor = graphLabel
+    ? getTextColor(graphLabel.color, colorSchema)
+    : null;
   const setDetailElement = useBearStore(
     (s) => s.room.panels.inspector.setElement,
   );

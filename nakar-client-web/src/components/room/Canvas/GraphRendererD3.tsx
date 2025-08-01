@@ -19,6 +19,7 @@ export function GraphRendererD3(props: {
   const events = useBearStore((s) => s.room.ui.rendererEvents);
   const setHideLabels = useBearStore((s) => s.room.canvas.setHideLabels);
   const pushNotification = useBearStore((s) => s.room.ui.pushNotification);
+  const colorSchema = useBearStore((s) => s.room.canvas.colorSchema);
 
   useEffect(() => {
     if (svgRef.current == null) {
@@ -37,6 +38,7 @@ export function GraphRendererD3(props: {
       svgRef.current,
       props.roomContext.initialGraphData.elements,
       initialHideLabels,
+      colorSchema,
     );
 
     const subs: { unsubscribe: () => void }[] = [
@@ -152,7 +154,7 @@ export function GraphRendererD3(props: {
       animationActive = false;
       cancelAnimationFrame(animationFrame);
     };
-  }, [websocketsManager, svgRef.current, theme]);
+  }, [websocketsManager, svgRef.current, theme, colorSchema]);
 
   return (
     <svg

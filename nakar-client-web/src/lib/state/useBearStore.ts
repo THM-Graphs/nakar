@@ -8,6 +8,7 @@ import { match, P } from "ts-pattern";
 import { enableMapSet } from "immer";
 import { Subject } from "rxjs";
 import { immer } from "zustand/middleware/immer";
+import { ColorSchema } from "../color/ColorSchema.ts";
 
 enableMapSet();
 
@@ -360,6 +361,12 @@ export const useBearStore = create<BearState>()(
               setHideLabels: (hideLabels: boolean) => {
                 set((s) => {
                   s.room.canvas.hideLabels = hideLabels;
+                });
+              },
+              colorSchema: ColorSchema.pastel(),
+              setColorSchema: (newSchema: ColorSchema) => {
+                set((s) => {
+                  s.room.canvas.colorSchema = newSchema;
                 });
               },
             },

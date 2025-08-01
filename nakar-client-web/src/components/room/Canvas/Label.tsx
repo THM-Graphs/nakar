@@ -15,6 +15,7 @@ export function Label(props: {
 }) {
   const labels = useBearStore((s) => s.room.scenario.graph.elements.labels);
   const label = labels.find((l) => l.label === props.label);
+  const colorSchema = useBearStore((s) => s.room.canvas.colorSchema);
 
   const text: string = (() => {
     let buffer: string = "";
@@ -39,8 +40,10 @@ export function Label(props: {
         props.className,
       )}
       style={{
-        backgroundColor: label ? getBackgroundColor(label.color) : "#555555",
-        color: label ? getTextColor(label.color) : undefined,
+        backgroundColor: label
+          ? getBackgroundColor(label.color, colorSchema)
+          : "#555555",
+        color: label ? getTextColor(label.color, colorSchema) : undefined,
       }}
     >
       <span className={"text-start user-select-text"}>{text}</span>

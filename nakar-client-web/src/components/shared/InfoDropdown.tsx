@@ -9,12 +9,15 @@ import { ThemeDropdownEntry } from "./ThemeDropdownEntry";
 import { AppContext } from "../../lib/state/AppContext.ts";
 import { useBearStore } from "../../lib/state/useBearStore.ts";
 import { DropdownButton } from "./DropdownButton.tsx";
+import { ColorSchema } from "../../lib/color/ColorSchema.ts";
 
 export function InfoDropdown(props: { context: AppContext }) {
   const [version, setVersion] = useState<Loadable<string>>({ type: "loading" });
   const pushErrorNotification = useBearStore(
     (s) => s.room.ui.pushErrorNotification,
   );
+  const colorSchema = useBearStore((s) => s.room.canvas.colorSchema);
+  const setColorSchema = useBearStore((s) => s.room.canvas.setColorSchema);
 
   const reloadVersion = useCallback(() => {
     (async () => {
@@ -40,6 +43,29 @@ export function InfoDropdown(props: { context: AppContext }) {
         <ThemeDropdownEntry targetTheme={"light"}></ThemeDropdownEntry>
         <ThemeDropdownEntry targetTheme={"dark"}></ThemeDropdownEntry>
         <Dropdown.Divider />
+
+        <Dropdown.Header>Color Schema</Dropdown.Header>
+        <Dropdown.Item
+          active={colorSchema.slug === "bootstrap"}
+          onClick={() => {
+            setColorSchema(ColorSchema.bootstrap());
+          }}
+        >
+          <Stack direction={"horizontal"} gap={2}>
+            <span className={"small"}>Bootstrap</span>
+          </Stack>
+        </Dropdown.Item>
+        <Dropdown.Item
+          active={colorSchema.slug === "pastel"}
+          onClick={() => {
+            setColorSchema(ColorSchema.pastel());
+          }}
+        >
+          <Stack direction={"horizontal"} gap={2}>
+            <span className={"small"}>Pastel</span>
+          </Stack>
+        </Dropdown.Item>
+        <Dropdown.Divider></Dropdown.Divider>
 
         <Dropdown.Item disabled className={"small"}>
           Client ({props.context.env.VERSION})

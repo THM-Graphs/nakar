@@ -15,6 +15,7 @@ import { D3RendererState } from "./D3RendererState.ts";
 import { D3Calculator } from "./D3Calculator.ts";
 import { match, P } from "ts-pattern";
 import { useBearStore } from "../state/useBearStore.ts";
+import { ColorSchema } from "../color/ColorSchema.ts";
 
 const fps = 30;
 const baseStrokeWidth: number = 3;
@@ -22,6 +23,7 @@ const baseStrokeWidth: number = 3;
 export class D3Renderer {
   private graphState: D3RendererState;
   private readonly theme: UserTheme;
+  public colorSchema: ColorSchema;
   private readonly svgElement: SVGSVGElement;
   private hideLabels: boolean;
 
@@ -91,12 +93,14 @@ export class D3Renderer {
     svgElement: SVGSVGElement,
     initialGraphElements: GraphElements,
     hideLabels: boolean,
+    colorSchema: ColorSchema,
   ) {
     console.log("Did create instance of graph renderer");
     this.graphState = D3RendererState.fromWsData(initialGraphElements);
     this.theme = theme;
     this.svgElement = svgElement;
     this.hideLabels = hideLabels;
+    this.colorSchema = colorSchema;
 
     this.$onDisplayLinkData = new Subject();
     this.$onDisplayNodeData = new Subject();
@@ -713,6 +717,7 @@ export class D3Renderer {
         this.graphState.originalGraphElements?.labels.find(
           (l) => l.label === d.labels[0],
         )?.color ?? null,
+        this.colorSchema,
       )
     );
   }
@@ -727,6 +732,7 @@ export class D3Renderer {
             this.graphState.originalGraphElements?.labels.find(
               (l) => l.label === dlabel,
             )?.color ?? null,
+            this.colorSchema,
           );
         },
       );
