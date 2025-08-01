@@ -9,6 +9,7 @@ import { MutableGraph } from './MutableGraph';
 import { PhysicsSimulation } from '../../physics/PhysicsSimulation';
 import { LoggerService } from '../../logger/LoggerService';
 import { MutableGraphElementCreationAction } from './MutableGraphElementCreationAction';
+import { FinalGraphDisplayConfiguration } from '../scenario-pipeline/display-configuration/FinalGraphDisplayConfiguration';
 
 export class MutableNodeIndex {
   private _byId: SMap<string, MutableNode>;
@@ -94,20 +95,27 @@ export class MutableNodeIndex {
   public addNeo4jNodes(
     nodes: SMap<string, Neo4jNode>,
     creationAction: MutableGraphElementCreationAction,
+    config: FinalGraphDisplayConfiguration,
   ): void {
     for (const node of nodes) {
-      this.addNeo4jNode(node[1], creationAction);
+      this.addNeo4jNode(node[1], creationAction, config);
     }
   }
 
   public addNeo4jNode(
     node: Neo4jNode,
     creationAction: MutableGraphElementCreationAction,
+    config: FinalGraphDisplayConfiguration,
   ): MutableNode | null {
     const mutableNode: MutableNode = new MutableNode(
       {
         id: node.node.elementId,
-        labels: new SSet<string>(node.node.labels),
+        labels:
+          config.treatNameInQueryAsLabel &&
+          this._nameInQueryCanBeTreatedAsLabel(creationAction)
+            ? node.keys
+            : new SSet(node.node.labels),
+        nativeLabels: new SSet<string>(node.node.labels),
         properties: MutablePropertyCollection.fromRecord(node.node.properties),
         position: MutablePosition.default(),
         namesInQuery: node.keys,
@@ -247,5 +255,14 @@ export class MutableNodeIndex {
     if (this._propertyHistogram.get(key)?.size === 0) {
       this._propertyHistogram.delete(key);
     }
+  }
+
+  private _nameInQueryCanBeTreatedAsLabel(
+    creationAction: MutableGraphElementCreationAction,
+  ): boolean {
+    return [
+      MutableGraphElementCreationAction.loadScenario,
+      MutableGraphElementCreationAction.query,
+    ].includes(creationAction);
   }
 }

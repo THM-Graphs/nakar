@@ -16,6 +16,7 @@ export function PropertiesDisplay(props: {
       entityNamePlural={props.title}
       filter={(exp, e) => e.slug.toLowerCase().includes(exp.toLowerCase())}
       className={props.className}
+      previewLimit={20}
       render={(properties) => (
         <>
           {properties.map((property, index) => (

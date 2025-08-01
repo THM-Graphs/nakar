@@ -81,7 +81,7 @@ export class CachingSchemaDTOFactory {
           await this._createSchemaEdge(edge, graph, config, widthRange),
       ),
       labels: await graph.metaData
-        .getLabels(graph.nodes, config)
+        .getLabels(graph.nodes)
         .asyncFlatMap(
           async (
             id: string,
@@ -351,11 +351,8 @@ export class CachingSchemaDTOFactory {
     return {
       id: node.id,
       title: node.title(graph, config),
-      labels:
-        config.treatNameInQueryAsLabel && node.nameInQueryCanBeTreatedAsLabel
-          ? node.namesInQuery.toArray()
-          : node.labels.toArray(),
-      nativeLabels: node.labels.toArray(),
+      labels: node.labels.toArray(),
+      nativeLabels: node.nativeLabels.toArray(),
       properties: this._createSchemaGraphProperties(node.properties),
       radius: node.radius(graph, config, range),
       position: node.position,

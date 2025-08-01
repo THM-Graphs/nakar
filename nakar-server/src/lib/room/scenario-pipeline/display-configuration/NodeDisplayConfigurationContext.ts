@@ -11,6 +11,7 @@ export class NodeDisplayConfigurationContext {
   public schema = z.object({
     id: z.string(),
     label: z.record(z.literal(true)),
+    nativeLabel: z.record(z.literal(true)),
     nameInQuery: z.record(z.literal(true)),
     properties: z.record(z.unknown()),
     inDegree: z.number(),
@@ -24,6 +25,7 @@ export class NodeDisplayConfigurationContext {
     data: {
       id: string;
       label: SMap<string, true>;
+      nativeLabel: SMap<string, true>;
       nameInQuery: SMap<string, true>;
       properties: SMap<string, unknown>;
       inDegree: number;
@@ -35,6 +37,7 @@ export class NodeDisplayConfigurationContext {
     this._nativeData = {
       id: data.id,
       label: data.label.toRecord(),
+      nativeLabel: data.nativeLabel.toRecord(),
       nameInQuery: data.nameInQuery.toRecord(),
       properties: data.properties.toRecord(),
       inDegree: data.inDegree,
@@ -52,6 +55,9 @@ export class NodeDisplayConfigurationContext {
       {
         id: node.id,
         label: NodeDisplayConfigurationContext._toTrueishMap(node.labels),
+        nativeLabel: NodeDisplayConfigurationContext._toTrueishMap(
+          node.nativeLabels,
+        ),
         nameInQuery: NodeDisplayConfigurationContext._toTrueishMap(
           node.namesInQuery,
         ),

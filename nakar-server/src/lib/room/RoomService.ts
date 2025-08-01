@@ -288,6 +288,7 @@ export class RoomService implements ApplicationService {
             graph.nodes.addNeo4jNodes(
               graphElements.nodes,
               MutableGraphElementCreationAction.loadScenario,
+              displayConfiguration,
             );
             graph.edges.addNeo4jEdges(
               graphElements.relationships,
@@ -451,6 +452,7 @@ export class RoomService implements ApplicationService {
             const insertedNode: MutableNode | null = graph.nodes.addNeo4jNode(
               newNode[1],
               MutableGraphElementCreationAction.expand,
+              displayConfiguration,
             );
             if (insertedNode != null) {
               insertedNode.position.x = node.position.x;
@@ -779,6 +781,7 @@ export class RoomService implements ApplicationService {
         graph.nodes.addNeo4jNodes(
           graphElements.nodes,
           MutableGraphElementCreationAction.query,
+          displayConfiguration,
         );
         graph.edges.addNeo4jEdges(
           graphElements.relationships,
@@ -1563,6 +1566,11 @@ export class RoomService implements ApplicationService {
           labels: clusterBuddies.reduce(
             (akku: SSet<string>, next: MutableNode): SSet<string> =>
               akku.byMerging(next.labels),
+            new SSet<string>(),
+          ),
+          nativeLabels: clusterBuddies.reduce(
+            (akku: SSet<string>, next: MutableNode): SSet<string> =>
+              akku.byMerging(next.nativeLabels),
             new SSet<string>(),
           ),
           source: node.source,
