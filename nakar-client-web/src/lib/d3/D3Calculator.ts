@@ -4,17 +4,22 @@ import { D3Node } from "./D3Node.ts";
 
 export class D3Calculator {
   public closestPointsOnNodes(d: D3Link) {
-    const x1 = d.source.x;
-    const y1 = d.source.y;
-    const x2 = d.target.x;
-    const y2 = d.target.y;
-
     if (d.isLoop) {
       const loopSizeRadius = Math.min(90, 360 / d.parallelCount / 2) / 2;
       const angle = (d.parallelIndex / d.parallelCount) * 360 - 90;
       const length = d.source.radius;
-      const ps = this.vector(x1, y1, angle - loopSizeRadius, length);
-      const pe = this.vector(x1, y1, angle + loopSizeRadius, length);
+      const ps = this.vector(
+        d.source.x,
+        d.source.y,
+        angle - loopSizeRadius,
+        length,
+      );
+      const pe = this.vector(
+        d.source.x,
+        d.source.y,
+        angle + loopSizeRadius,
+        length,
+      );
 
       return {
         x1: ps.x,

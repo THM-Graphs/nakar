@@ -10,8 +10,6 @@ import { PropertyMenu } from "../../PropertyMenu.tsx";
 import clsx from "clsx";
 import { Collapsable } from "../../Collapsable.tsx";
 import { ClipboardButton } from "../../ClipboardButton.tsx";
-import { DynamicList } from "../../../shared/DynamicList.tsx";
-import { PropertyDisplay } from "./PropertyDisplay.tsx";
 
 export function DetailPane(props: {
   title: string;

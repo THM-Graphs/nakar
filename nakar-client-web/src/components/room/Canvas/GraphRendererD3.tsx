@@ -17,7 +17,6 @@ export function GraphRendererD3(props: {
   const inspector = useBearStore((s) => s.room.panels.inspector);
   const setLocks = useBearStore((s) => s.room.scenario.setLocks);
   const events = useBearStore((s) => s.room.ui.rendererEvents);
-  const hideLabels = useBearStore((s) => s.room.canvas.hideLabels);
   const setHideLabels = useBearStore((s) => s.room.canvas.setHideLabels);
   const pushNotification = useBearStore((s) => s.room.ui.pushNotification);
 

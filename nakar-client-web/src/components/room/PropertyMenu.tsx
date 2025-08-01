@@ -4,7 +4,6 @@ import { RoomContext } from "../../pages/Room.tsx";
 import { PropertyMenuScenarioGroupEntry } from "./PropertyMenuScenarioGroupEntry.tsx";
 import { useClipboard } from "../../lib/clipboard/useClipboard.ts";
 import { DropdownButton } from "../shared/DropdownButton.tsx";
-import { NavbarButton } from "../shared/NavbarButton.tsx";
 
 export function PropertyMenu(props: {
   value: unknown;
@@ -61,7 +60,7 @@ export function PropertyMenu(props: {
               <Dropdown.Item
                 key={action.title}
                 onClick={(): void => {
-                  Promise.resolve(action.action()).catch((e) => {
+                  Promise.resolve(action.action()).catch((e: unknown) => {
                     pushErrorNotification(e);
                   });
                 }}

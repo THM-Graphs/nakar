@@ -1,5 +1,4 @@
 import { PropertyGroup } from "../PropertyGroup.tsx";
-import { Stack } from "react-bootstrap";
 import { useBearStore } from "../../../../../lib/state/useBearStore.ts";
 import { RoomContext } from "../../../../../pages/Room.tsx";
 import { DynamicList } from "../../../../shared/DynamicList.tsx";

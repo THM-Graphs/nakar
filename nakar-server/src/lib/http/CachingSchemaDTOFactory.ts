@@ -341,7 +341,9 @@ export class CachingSchemaDTOFactory {
     ): SchemaEdgePreview => ({
       type: entry[0],
       count: entry[1],
-      percentage: entry[1] / self.reduce((a, n) => a + n[1], 0),
+      percentage:
+        entry[1] /
+        self.reduce((a: number, n: [string, number]): number => a + n[1], 0),
     });
     const sort = (a: SchemaEdgePreview, b: SchemaEdgePreview): number =>
       b.count - a.count;

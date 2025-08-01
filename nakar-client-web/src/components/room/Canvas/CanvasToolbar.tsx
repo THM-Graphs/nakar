@@ -4,7 +4,6 @@ import { NavbarButton } from "../../shared/NavbarButton.tsx";
 import { useBearStore } from "../../../lib/state/useBearStore.ts";
 import { AppContext } from "../../../lib/state/AppContext.ts";
 import {
-  postRoomActionCompressNodes,
   postRoomActionCompressRelationships,
   postRoomActionConnectResultNodes,
   postRoomActionRedo,
@@ -15,9 +14,6 @@ import {
 import { RoomContext } from "../../../pages/Room.tsx";
 import { resultOrThrow } from "../../../lib/data/resultOrThrow.ts";
 import { DropdownButton } from "../../shared/DropdownButton.tsx";
-import { Label } from "./Label.tsx";
-import { getBackgroundColor } from "../../../lib/color/getBackgroundColor.ts";
-import { getTextColor } from "../../../lib/color/getTextColor.ts";
 
 export function CanvasToolbar(props: {
   context: AppContext;

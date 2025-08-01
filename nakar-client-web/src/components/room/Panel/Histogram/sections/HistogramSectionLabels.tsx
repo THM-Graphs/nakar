@@ -6,7 +6,6 @@ import {
   postRoomActionDeleteElements,
   postRoomActionLayoutLabel,
 } from "../../../../../../src-gen";
-import { Stack } from "react-bootstrap";
 import { RoomContext } from "../../../../../pages/Room.tsx";
 import { useBearStore } from "../../../../../lib/state/useBearStore.ts";
 import { DynamicList } from "../../../../shared/DynamicList.tsx";

@@ -2,7 +2,6 @@ import { ValueDisplay } from "../ValueDisplay.tsx";
 import { getBackgroundColor } from "../../../../../lib/color/getBackgroundColor.ts";
 import { resultOrThrow } from "../../../../../lib/data/resultOrThrow.ts";
 import { postRoomActionDeleteElements } from "../../../../../../src-gen";
-import { Stack } from "react-bootstrap";
 import { RoomContext } from "../../../../../pages/Room.tsx";
 import { useBearStore } from "../../../../../lib/state/useBearStore.ts";
 import { DynamicList } from "../../../../shared/DynamicList.tsx";

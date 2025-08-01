@@ -1,4 +1,3 @@
-import { Stack } from "react-bootstrap";
 import { postRoomActionDeleteElements } from "../../../../../../src-gen";
 import { RoomContext } from "../../../../../pages/Room.tsx";
 import { ValueDisplay } from "../ValueDisplay.tsx";
