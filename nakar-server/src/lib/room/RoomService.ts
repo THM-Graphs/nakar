@@ -50,6 +50,7 @@ import { wait } from '../tools/Wait';
 import { MutablePosition } from './graph/MutablePosition';
 import { Neo4jLimitConfig } from '../neo4j/Neo4jLimitConfig';
 import { RoomServiceEventNotAllNodesLoaded } from './events/RoomServiceEventNotAllNodesLoaded';
+import { MutableGraphElementCreationAction } from './graph/MutableGraphElementCreationAction';
 
 export class RoomService implements ApplicationService {
   private readonly _workers: SMap<string, Worker>;
@@ -286,10 +287,12 @@ export class RoomService implements ApplicationService {
           } else {
             graph.nodes.addNeo4jNodes(
               graphElements.nodes,
-              displayConfiguration,
-              false,
+              MutableGraphElementCreationAction.loadScenario,
             );
-            graph.edges.addNeo4jEdges(graphElements.relationships);
+            graph.edges.addNeo4jEdges(
+              graphElements.relationships,
+              MutableGraphElementCreationAction.loadScenario,
+            );
           }
         }
 
@@ -447,8 +450,7 @@ export class RoomService implements ApplicationService {
 
             const insertedNode: MutableNode | null = graph.nodes.addNeo4jNode(
               newNode[1],
-              displayConfiguration,
-              true,
+              MutableGraphElementCreationAction.expand,
             );
             if (insertedNode != null) {
               insertedNode.position.x = node.position.x;
@@ -460,7 +462,10 @@ export class RoomService implements ApplicationService {
         for (const newEdge of expandResult.relationships) {
           if (!graph.edges.has(newEdge[0])) {
             result.edgeAddedCount += 1;
-            graph.edges.addNeo4jEdge(newEdge[1]);
+            graph.edges.addNeo4jEdge(
+              newEdge[1],
+              MutableGraphElementCreationAction.expand,
+            );
           }
         }
 
@@ -773,10 +778,12 @@ export class RoomService implements ApplicationService {
         }
         graph.nodes.addNeo4jNodes(
           graphElements.nodes,
-          displayConfiguration,
-          false,
+          MutableGraphElementCreationAction.query,
         );
-        graph.edges.addNeo4jEdges(graphElements.relationships);
+        graph.edges.addNeo4jEdges(
+          graphElements.relationships,
+          MutableGraphElementCreationAction.query,
+        );
 
         this._postProcessGraph(graph, displayConfiguration);
 
@@ -1305,7 +1312,10 @@ export class RoomService implements ApplicationService {
           nodesToConnect,
         );
 
-      const didAdd: number = graph.edges.addNeo4jEdges(result.relationships);
+      const didAdd: number = graph.edges.addNeo4jEdges(
+        result.relationships,
+        MutableGraphElementCreationAction.connectResultNodes,
+      );
       addedEdgesCount += didAdd;
     }
     return addedEdgesCount;
@@ -1349,6 +1359,7 @@ export class RoomService implements ApplicationService {
             compressed: new SSet(
               edgesToCompress.map((e: MutableEdge): string => e.id),
             ),
+            creationAction: MutableGraphElementCreationAction.compress,
           });
           compressedCount += edgesToCompress.length;
           for (const edgeToCompress of edgesToCompress) {
@@ -1402,6 +1413,7 @@ export class RoomService implements ApplicationService {
                   properties: new SMap([['merge', mergeConfig]]),
                 }),
                 namesInQuery: new SSet(),
+                creationAction: MutableGraphElementCreationAction.merge,
               }),
             );
             graph.edges.add(
@@ -1416,6 +1428,7 @@ export class RoomService implements ApplicationService {
                   properties: new SMap([['merge', mergeConfig]]),
                 }),
                 namesInQuery: new SSet(),
+                creationAction: MutableGraphElementCreationAction.merge,
               }),
             );
             this._logger.log(
@@ -1561,6 +1574,7 @@ export class RoomService implements ApplicationService {
             new SSet<string>(),
           ),
           compressed: clusterBuddies.map((n: MutableNode): string => n.id),
+          creationAction: MutableGraphElementCreationAction.compress,
         },
         this._logger,
       );

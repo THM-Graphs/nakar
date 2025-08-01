@@ -4,6 +4,7 @@ import { SSet } from '../../tools/Set';
 import { Neo4jRelationship } from '../../neo4j/Neo4jRelationship';
 import { MutablePropertyCollection } from './MutablePropertyCollection';
 import { Range } from '../../tools/Range';
+import { MutableGraphElementCreationAction } from './MutableGraphElementCreationAction';
 
 export class MutableEdgeIndex {
   private _byId: SMap<string, MutableEdge>;
@@ -113,10 +114,16 @@ export class MutableEdgeIndex {
     return true;
   }
 
-  public addNeo4jEdges(neo4jEdges: SMap<string, Neo4jRelationship>): number {
+  public addNeo4jEdges(
+    neo4jEdges: SMap<string, Neo4jRelationship>,
+    creationAction: MutableGraphElementCreationAction,
+  ): number {
     let result: number = 0;
     for (const relationship of neo4jEdges) {
-      const didAdd: boolean = this.addNeo4jEdge(relationship[1]);
+      const didAdd: boolean = this.addNeo4jEdge(
+        relationship[1],
+        creationAction,
+      );
       if (didAdd) {
         result += 1;
       }
@@ -124,7 +131,10 @@ export class MutableEdgeIndex {
     return result;
   }
 
-  public addNeo4jEdge(relationship: Neo4jRelationship): boolean {
+  public addNeo4jEdge(
+    relationship: Neo4jRelationship,
+    creationAction: MutableGraphElementCreationAction,
+  ): boolean {
     const mutableEdge: MutableEdge = new MutableEdge({
       id: relationship.relationship.elementId,
       startNodeId: relationship.relationship.startNodeElementId,
@@ -136,6 +146,7 @@ export class MutableEdgeIndex {
       ),
       namesInQuery: relationship.keys,
       source: relationship.source.nakarId,
+      creationAction: creationAction,
     });
 
     const didAdd: boolean = this.add(mutableEdge);

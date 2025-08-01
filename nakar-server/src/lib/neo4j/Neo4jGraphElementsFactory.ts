@@ -41,9 +41,13 @@ export class Neo4jGraphElementsFactory {
     key: string | null,
     source: Neo4jDatabaseInfo,
   ): void {
+    const existingNode: Neo4jNode | undefined = this._result.nodes.get(
+      node.elementId,
+    );
+    const newNode: Neo4jNode = Neo4jNode.fromRawNode(node, key, source);
     this._result.nodes.set(
       node.elementId,
-      Neo4jNode.fromRawNode(node, key, source),
+      existingNode ? existingNode.byMergingWith(newNode) : newNode,
     );
     this._checkLimit();
   }
@@ -53,9 +57,15 @@ export class Neo4jGraphElementsFactory {
     key: string | null,
     source: Neo4jDatabaseInfo,
   ): void {
+    const existingRelationship: Neo4jRelationship | undefined =
+      this._result.relationships.get(relationship.elementId);
+    const newRelationship: Neo4jRelationship =
+      Neo4jRelationship.fromRawRelationship(relationship, key, source);
     this._result.relationships.set(
       relationship.elementId,
-      Neo4jRelationship.fromRawRelationship(relationship, key, source),
+      existingRelationship
+        ? existingRelationship.byMergingWith(newRelationship)
+        : newRelationship,
     );
     this._checkLimit();
   }

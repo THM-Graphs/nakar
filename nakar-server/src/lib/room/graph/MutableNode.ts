@@ -10,6 +10,7 @@ import { MutableGraph } from './MutableGraph';
 import { Color } from '../../tools/Color';
 import { FinalGraphDisplayConfiguration } from '../scenario-pipeline/display-configuration/FinalGraphDisplayConfiguration';
 import { Range } from '../../tools/Range';
+import { MutableGraphElementCreationAction } from './MutableGraphElementCreationAction';
 
 export class MutableNode {
   public static readonly defaultRadius: number = 40;
@@ -24,6 +25,7 @@ export class MutableNode {
     locked: z.boolean(),
     source: z.string(),
     compressed: z.array(z.string()),
+    creationAction: z.nativeEnum(MutableGraphElementCreationAction),
   });
 
   public readonly id: string;
@@ -35,6 +37,7 @@ export class MutableNode {
   public grabs: SSet<string>;
   public source: string;
   public compressed: SSet<string>;
+  public creationAction: MutableGraphElementCreationAction;
 
   public constructor(
     data: {
@@ -47,6 +50,7 @@ export class MutableNode {
       grabs: SSet<string>;
       source: string;
       compressed: SSet<string>;
+      creationAction: MutableGraphElementCreationAction;
     },
     private readonly _logger: LoggerService,
   ) {
@@ -59,6 +63,7 @@ export class MutableNode {
     this.grabs = data.grabs;
     this.source = data.source;
     this.compressed = data.compressed;
+    this.creationAction = data.creationAction;
   }
 
   public get representationCount(): number {
@@ -71,6 +76,13 @@ export class MutableNode {
 
   public get isCluster(): boolean {
     return this.compressed.size > 0;
+  }
+
+  public get nameInQueryCanBeTreatedAsLabel(): boolean {
+    return [
+      MutableGraphElementCreationAction.loadScenario,
+      MutableGraphElementCreationAction.query,
+    ].includes(this.creationAction);
   }
 
   public static fromPlain(
@@ -88,6 +100,7 @@ export class MutableNode {
         grabs: new SSet(),
         source: data.source,
         compressed: new SSet(data.compressed),
+        creationAction: data.creationAction,
       },
       logger,
     );
@@ -103,6 +116,7 @@ export class MutableNode {
       locked: this.locked,
       source: this.source,
       compressed: this.compressed.toArray(),
+      creationAction: this.creationAction,
     };
   }
 
@@ -236,6 +250,7 @@ export class MutableNode {
         grabs: this.grabs.copy(),
         source: this.source,
         compressed: this.compressed.copy(),
+        creationAction: this.creationAction,
       },
       this._logger,
     );

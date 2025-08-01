@@ -80,6 +80,10 @@ export function EdgeDetails(props: { edge: Edge; roomContext: RoomContext }) {
           slug: "Target Node",
           value: props.edge.targetNode.title,
         },
+        {
+          slug: "Creation Reason",
+          value: props.edge.creationReason,
+        },
       ]}
       properties={props.edge.properties}
       title={props.edge.type}

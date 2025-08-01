@@ -114,6 +114,10 @@ export function NodeDetails(props: {
           value: props.node.labels,
         },
         {
+          slug: "Native Labels",
+          value: props.node.nativeLabels,
+        },
+        {
           slug: "Source",
           value: props.node.source,
         },
@@ -140,6 +144,10 @@ export function NodeDetails(props: {
         {
           slug: "Is Cluster?",
           value: props.node.isCluster,
+        },
+        {
+          slug: "Creation Reason",
+          value: props.node.creationReason,
         },
       ]}
       properties={props.node.properties}

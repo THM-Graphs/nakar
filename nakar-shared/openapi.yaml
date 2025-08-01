@@ -688,6 +688,17 @@ components:
         - value
     GraphPropertyValue: {}
 
+    CreationReason:
+      type: string
+      enum: [
+        "loadScenario",
+        "expand",
+        "query",
+        "merge",
+        "compress",
+        "connectResultNodes"
+      ]
+
     Node:
       type: object
       properties:
@@ -696,6 +707,10 @@ components:
         title:
           type: string
         labels:
+          type: array
+          items:
+            type: string
+        nativeLabels:
           type: array
           items:
             type: string
@@ -739,10 +754,13 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/EdgePreview"
+        creationReason:
+          $ref: "#/components/schemas/CreationReason"
       required:
         - id
         - title
         - labels
+        - nativeLabels
         - properties
         - radius
         - position
@@ -758,6 +776,7 @@ components:
         - clusterSize
         - incomingEdges
         - outgoingEdges
+        - creationReason
 
     PhysicalNode:
       type: object
@@ -818,6 +837,8 @@ components:
           $ref: "#/components/schemas/NodePreview"
         targetNode:
           $ref: "#/components/schemas/NodePreview"
+        creationReason:
+          $ref: "#/components/schemas/CreationReason"
       required:
         - id
         - startNodeId
@@ -834,6 +855,7 @@ components:
         - clusterSize
         - sourceNode
         - targetNode
+        - creationReason
 
     NodePreview:
       properties:

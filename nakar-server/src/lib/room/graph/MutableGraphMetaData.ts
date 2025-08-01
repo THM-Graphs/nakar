@@ -4,6 +4,7 @@ import { SMap } from '../../tools/Map';
 import { MutableGraphColorPreset } from './MutableGraphColorPreset';
 import { SSet } from '../../tools/Set';
 import { MutableNodeIndex } from './MutableNodeIndex';
+import { FinalGraphDisplayConfiguration } from '../scenario-pipeline/display-configuration/FinalGraphDisplayConfiguration';
 
 export class MutableGraphMetaData {
   // eslint-disable-next-line @typescript-eslint/typedef
@@ -53,13 +54,21 @@ export class MutableGraphMetaData {
     };
   }
 
-  public getLabels(nodes: MutableNodeIndex): SMap<string, MutableGraphLabel> {
+  public getLabels(
+    nodes: MutableNodeIndex,
+    config: FinalGraphDisplayConfiguration,
+  ): SMap<string, MutableGraphLabel> {
     const labels: SMap<string, MutableGraphLabel> = new SMap<
       string,
       MutableGraphLabel
     >();
     for (const node of nodes.nodes) {
-      for (const label of node.labels) {
+      const nodeLabels: SSet<string> =
+        config.treatNameInQueryAsLabel && node.nameInQueryCanBeTreatedAsLabel
+          ? node.namesInQuery
+          : node.labels;
+
+      for (const label of nodeLabels) {
         const foundEntry: MutableGraphLabel | undefined = labels.get(label);
 
         if (!foundEntry) {

@@ -2,6 +2,8 @@
 
 export type Color = PresetColor | CustomColor;
 
+export type CreationReason = 'loadScenario' | 'expand' | 'query' | 'merge' | 'compress' | 'connectResultNodes';
+
 export type CustomColor = {
     backgroundColor: string;
     textColor: string;
@@ -46,6 +48,7 @@ export type Edge = {
     clusterSize: number;
     sourceNode: NodePreview;
     targetNode: NodePreview;
+    creationReason: CreationReason;
 };
 
 export type EdgePreview = {
@@ -151,6 +154,7 @@ export type Node = {
     id: string;
     title: string;
     labels: Array<(string)>;
+    nativeLabels: Array<(string)>;
     properties: Array<GraphProperty>;
     radius: number;
     position: Position;
@@ -166,6 +170,7 @@ export type Node = {
     clusterSize: number;
     incomingEdges: Array<EdgePreview>;
     outgoingEdges: Array<EdgePreview>;
+    creationReason: CreationReason;
 };
 
 export type NodePreview = {

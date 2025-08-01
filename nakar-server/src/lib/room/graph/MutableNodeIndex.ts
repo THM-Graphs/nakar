@@ -8,7 +8,7 @@ import { Range } from '../../tools/Range';
 import { MutableGraph } from './MutableGraph';
 import { PhysicsSimulation } from '../../physics/PhysicsSimulation';
 import { LoggerService } from '../../logger/LoggerService';
-import { FinalGraphDisplayConfiguration } from '../scenario-pipeline/display-configuration/FinalGraphDisplayConfiguration';
+import { MutableGraphElementCreationAction } from './MutableGraphElementCreationAction';
 
 export class MutableNodeIndex {
   private _byId: SMap<string, MutableNode>;
@@ -93,26 +93,21 @@ export class MutableNodeIndex {
 
   public addNeo4jNodes(
     nodes: SMap<string, Neo4jNode>,
-    config: FinalGraphDisplayConfiguration,
-    ignoreTreatNameInQueryAsLabel: boolean,
+    creationAction: MutableGraphElementCreationAction,
   ): void {
     for (const node of nodes) {
-      this.addNeo4jNode(node[1], config, ignoreTreatNameInQueryAsLabel);
+      this.addNeo4jNode(node[1], creationAction);
     }
   }
 
   public addNeo4jNode(
     node: Neo4jNode,
-    config: FinalGraphDisplayConfiguration,
-    ignoreTreatNameInQueryAsLabel: boolean,
+    creationAction: MutableGraphElementCreationAction,
   ): MutableNode | null {
     const mutableNode: MutableNode = new MutableNode(
       {
         id: node.node.elementId,
-        labels:
-          config.treatNameInQueryAsLabel && !ignoreTreatNameInQueryAsLabel
-            ? node.keys
-            : new SSet<string>(node.node.labels),
+        labels: new SSet<string>(node.node.labels),
         properties: MutablePropertyCollection.fromRecord(node.node.properties),
         position: MutablePosition.default(),
         namesInQuery: node.keys,
@@ -120,6 +115,7 @@ export class MutableNodeIndex {
         grabs: new SSet(),
         source: node.source.nakarId,
         compressed: new SSet(),
+        creationAction: creationAction,
       },
       this._logger,
     );

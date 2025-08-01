@@ -476,10 +476,13 @@ export interface components {
             readonly value: components["schemas"]["GraphPropertyValue"];
         };
         readonly GraphPropertyValue: unknown;
+        /** @enum {string} */
+        readonly CreationReason: "loadScenario" | "expand" | "query" | "merge" | "compress" | "connectResultNodes";
         readonly Node: {
             readonly id: string;
             readonly title: string;
             readonly labels: readonly string[];
+            readonly nativeLabels: readonly string[];
             readonly properties: readonly components["schemas"]["GraphProperty"][];
             readonly radius: number;
             readonly position: components["schemas"]["Position"];
@@ -495,6 +498,7 @@ export interface components {
             readonly clusterSize: number;
             readonly incomingEdges: readonly components["schemas"]["EdgePreview"][];
             readonly outgoingEdges: readonly components["schemas"]["EdgePreview"][];
+            readonly creationReason: components["schemas"]["CreationReason"];
         };
         readonly PhysicalNode: {
             readonly id: string;
@@ -520,6 +524,7 @@ export interface components {
             readonly clusterSize: number;
             readonly sourceNode: components["schemas"]["NodePreview"];
             readonly targetNode: components["schemas"]["NodePreview"];
+            readonly creationReason: components["schemas"]["CreationReason"];
         };
         readonly NodePreview: {
             readonly id: string;
@@ -786,6 +791,7 @@ export type SchemaColor = components['schemas']['Color'];
 export type SchemaGraphLabel = components['schemas']['GraphLabel'];
 export type SchemaGraphProperty = components['schemas']['GraphProperty'];
 export type SchemaGraphPropertyValue = components['schemas']['GraphPropertyValue'];
+export type SchemaCreationReason = components['schemas']['CreationReason'];
 export type SchemaNode = components['schemas']['Node'];
 export type SchemaPhysicalNode = components['schemas']['PhysicalNode'];
 export type SchemaPosition = components['schemas']['Position'];

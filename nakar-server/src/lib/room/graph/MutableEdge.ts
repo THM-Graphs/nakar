@@ -5,6 +5,7 @@ import { MutableGraph } from './MutableGraph';
 import { SMap } from '../../tools/Map';
 import { FinalGraphDisplayConfiguration } from '../scenario-pipeline/display-configuration/FinalGraphDisplayConfiguration';
 import { Range } from '../../tools/Range';
+import { MutableGraphElementCreationAction } from './MutableGraphElementCreationAction';
 
 export class MutableEdge {
   public static readonly defaultWidth: number = 2;
@@ -19,6 +20,7 @@ export class MutableEdge {
     properties: MutablePropertyCollection.schema,
     namesInQuery: z.array(z.string()),
     source: z.string(),
+    creationAction: z.nativeEnum(MutableGraphElementCreationAction),
   });
 
   public readonly id: string;
@@ -29,6 +31,7 @@ export class MutableEdge {
   public properties: MutablePropertyCollection;
   public namesInQuery: SSet<string>;
   public source: string;
+  public creationAction: MutableGraphElementCreationAction;
 
   public constructor(data: {
     id: string;
@@ -39,6 +42,7 @@ export class MutableEdge {
     properties: MutablePropertyCollection;
     namesInQuery: SSet<string>;
     source: string;
+    creationAction: MutableGraphElementCreationAction;
   }) {
     this.id = data.id;
     this.startNodeId = data.startNodeId;
@@ -48,6 +52,7 @@ export class MutableEdge {
     this.properties = data.properties;
     this.namesInQuery = data.namesInQuery;
     this.source = data.source;
+    this.creationAction = data.creationAction;
   }
 
   public get isLoop(): boolean {
@@ -82,6 +87,7 @@ export class MutableEdge {
       properties: MutablePropertyCollection.fromPlain(data.properties),
       namesInQuery: new SSet(data.namesInQuery),
       source: data.source,
+      creationAction: data.creationAction,
     });
   }
 
@@ -125,6 +131,7 @@ export class MutableEdge {
       properties: this.properties.toPlain(),
       namesInQuery: this.namesInQuery.toArray(),
       source: this.source,
+      creationAction: this.creationAction,
     };
   }
 
@@ -210,6 +217,7 @@ export class MutableEdge {
       properties: this.properties.copy(),
       namesInQuery: this.namesInQuery.copy(),
       source: this.source,
+      creationAction: this.creationAction,
     });
   }
 }
