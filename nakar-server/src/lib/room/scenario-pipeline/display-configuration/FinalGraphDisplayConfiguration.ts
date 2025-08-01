@@ -17,6 +17,7 @@ export class FinalGraphDisplayConfiguration {
   public readonly compressRelationshipsWidthFactor: number;
   public readonly scaleType: ScaleType;
   public readonly mergeNodeConfigurations: SSet<MergeNodeConfiguration>;
+  public readonly treatNameInQueryAsLabel: boolean;
 
   public constructor(data: {
     connectResultNodes: boolean;
@@ -27,6 +28,7 @@ export class FinalGraphDisplayConfiguration {
     compressRelationshipsWidthFactor: number;
     scaleType: ScaleType;
     mergeNodeConfigurations: SSet<MergeNodeConfiguration>;
+    treatNameInQueryAsLabel: boolean;
   }) {
     this.connectResultNodes = data.connectResultNodes;
     this.growNodesBasedOnDegree = data.growNodesBasedOnDegree;
@@ -37,6 +39,7 @@ export class FinalGraphDisplayConfiguration {
       data.compressRelationshipsWidthFactor;
     this.scaleType = data.scaleType;
     this.mergeNodeConfigurations = data.mergeNodeConfigurations;
+    this.treatNameInQueryAsLabel = data.treatNameInQueryAsLabel;
   }
 
   public static empty(): FinalGraphDisplayConfiguration {

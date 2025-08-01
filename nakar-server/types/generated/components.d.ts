@@ -66,6 +66,10 @@ export interface GraphGraphDisplayConfiguration extends Struct.ComponentSchema {
       ['inherit', 'linear', 'log2', 'logn', 'log10']
     > &
       Schema.Attribute.DefaultTo<'inherit'>;
+    treatNameInQueryAsLabel: Schema.Attribute.Enumeration<
+      ['inherit', 'true', 'false']
+    > &
+      Schema.Attribute.DefaultTo<'inherit'>;
   };
 }
 

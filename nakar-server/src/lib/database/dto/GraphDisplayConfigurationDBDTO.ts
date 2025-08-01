@@ -11,4 +11,5 @@ export interface GraphDisplayConfigurationDBDTO {
   readonly compressRelationshipsWidthFactor: number | null;
   readonly scaleType: ScaleType | null;
   readonly mergeNodeConfigurations: MergeNodeConfigurationDBDTO[];
+  readonly treatNameInQueryAsLabel: boolean | null;
 }

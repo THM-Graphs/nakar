@@ -284,7 +284,11 @@ export class RoomService implements ApplicationService {
           if (query.isTableQuery) {
             graph.tableData = graphElements.tableData;
           } else {
-            graph.nodes.addNeo4jNodes(graphElements.nodes);
+            graph.nodes.addNeo4jNodes(
+              graphElements.nodes,
+              displayConfiguration,
+              false,
+            );
             graph.edges.addNeo4jEdges(graphElements.relationships);
           }
         }
@@ -443,6 +447,8 @@ export class RoomService implements ApplicationService {
 
             const insertedNode: MutableNode | null = graph.nodes.addNeo4jNode(
               newNode[1],
+              displayConfiguration,
+              true,
             );
             if (insertedNode != null) {
               insertedNode.position.x = node.position.x;
@@ -765,7 +771,11 @@ export class RoomService implements ApplicationService {
           graph.edges = new MutableEdgeIndex([]);
           graph.tableData = graphElements.tableData;
         }
-        graph.nodes.addNeo4jNodes(graphElements.nodes);
+        graph.nodes.addNeo4jNodes(
+          graphElements.nodes,
+          displayConfiguration,
+          false,
+        );
         graph.edges.addNeo4jEdges(graphElements.relationships);
 
         this._postProcessGraph(graph, displayConfiguration);

@@ -22,6 +22,7 @@ export class MergableGraphDisplayConfiguration {
   public readonly compressRelationshipsWidthFactor: number | null;
   public readonly scaleType: ScaleType | null;
   public readonly mergeNodeConfigurations: SSet<MergeNodeConfiguration>;
+  public readonly treatNameInQueryAsLabel: boolean | null;
 
   public constructor(data: {
     connectResultNodes: boolean | null;
@@ -32,6 +33,7 @@ export class MergableGraphDisplayConfiguration {
     compressRelationshipsWidthFactor: number | null;
     scaleType: ScaleType | null;
     mergeNodeConfigurations: SSet<MergeNodeConfiguration>;
+    treatNameInQueryAsLabel: boolean | null;
   }) {
     this.connectResultNodes = data.connectResultNodes;
     this.growNodesBasedOnDegree = data.growNodesBasedOnDegree;
@@ -42,6 +44,7 @@ export class MergableGraphDisplayConfiguration {
       data.compressRelationshipsWidthFactor;
     this.scaleType = data.scaleType;
     this.mergeNodeConfigurations = data.mergeNodeConfigurations;
+    this.treatNameInQueryAsLabel = data.treatNameInQueryAsLabel;
   }
 
   public static createFromDb(
@@ -109,6 +112,7 @@ export class MergableGraphDisplayConfiguration {
           }),
         ),
       ),
+      treatNameInQueryAsLabel: dbConfig?.treatNameInQueryAsLabel ?? null,
     });
   }
 
@@ -122,6 +126,7 @@ export class MergableGraphDisplayConfiguration {
       compressRelationshipsWidthFactor: null,
       scaleType: null,
       mergeNodeConfigurations: new SSet(),
+      treatNameInQueryAsLabel: null,
     });
   }
 
@@ -164,6 +169,8 @@ export class MergableGraphDisplayConfiguration {
       mergeNodeConfigurations: this.mergeNodeConfigurations.byMerging(
         other.mergeNodeConfigurations,
       ),
+      treatNameInQueryAsLabel:
+        other.treatNameInQueryAsLabel ?? this.treatNameInQueryAsLabel,
     });
   }
 
@@ -183,6 +190,7 @@ export class MergableGraphDisplayConfiguration {
         this.compressRelationshipsWidthFactor ?? 10,
       scaleType: this.scaleType ?? ScaleType.linear,
       mergeNodeConfigurations: this.mergeNodeConfigurations,
+      treatNameInQueryAsLabel: this.treatNameInQueryAsLabel ?? false,
     });
   }
 }

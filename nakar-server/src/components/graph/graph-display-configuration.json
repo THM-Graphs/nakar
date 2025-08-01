@@ -63,6 +63,15 @@
       "type": "component",
       "repeatable": true,
       "component": "graph.merge-node-configuration"
+    },
+    "treatNameInQueryAsLabel": {
+      "type": "enumeration",
+      "enum": [
+        "inherit",
+        "true",
+        "false"
+      ],
+      "default": "inherit"
     }
   }
 }

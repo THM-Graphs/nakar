@@ -157,6 +157,9 @@ export class DatabaseDTOFactory {
             mergeNodeConfiguration.mergeDatabase?.documentId ?? null,
         }),
       ),
+      treatNameInQueryAsLabel: this._createNullableBooleanFromStrapi(
+        db?.treatNameInQueryAsLabel,
+      ),
     };
   }
 
