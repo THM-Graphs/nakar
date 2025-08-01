@@ -363,10 +363,14 @@ export const useBearStore = create<BearState>()(
                   s.room.canvas.hideLabels = hideLabels;
                 });
               },
-              colorSchema: ColorSchema.bootstrap(),
+              colorSchema: match(localStorage.getItem("colorSchema"))
+                .with("bootstrap", () => ColorSchema.bootstrap())
+                .with("pastel", () => ColorSchema.pastel())
+                .otherwise(() => ColorSchema.bootstrap()),
               setColorSchema: (newSchema: ColorSchema) => {
                 set((s) => {
                   s.room.canvas.colorSchema = newSchema;
+                  localStorage.setItem("colorSchema", newSchema.slug);
                 });
               },
             },
