@@ -363,10 +363,10 @@ export const useBearStore = create<BearState>()(
                   s.room.canvas.hideLabels = hideLabels;
                 });
               },
-              colorSchema: match(localStorage.getItem("colorSchema"))
-                .with("bootstrap", () => ColorSchema.bootstrap())
-                .with("pastel", () => ColorSchema.pastel())
-                .otherwise(() => ColorSchema.bootstrap()),
+              colorSchema:
+                ColorSchema.allColorSchema().find(
+                  (c) => c.slug === localStorage.getItem("colorSchema"),
+                ) ?? ColorSchema.allColorSchema()[0],
               setColorSchema: (newSchema: ColorSchema) => {
                 set((s) => {
                   s.room.canvas.colorSchema = newSchema;

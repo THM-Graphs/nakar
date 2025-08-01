@@ -10,13 +10,14 @@ import { AppContext } from "../../lib/state/AppContext.ts";
 import { useBearStore } from "../../lib/state/useBearStore.ts";
 import { DropdownButton } from "./DropdownButton.tsx";
 import { ColorSchema } from "../../lib/color/ColorSchema.ts";
+import { ColorSchemaPreview } from "./ColorSchemaPreview.tsx";
 
 export function InfoDropdown(props: { context: AppContext }) {
   const [version, setVersion] = useState<Loadable<string>>({ type: "loading" });
   const pushErrorNotification = useBearStore(
     (s) => s.room.ui.pushErrorNotification,
   );
-  const colorSchema = useBearStore((s) => s.room.canvas.colorSchema);
+  const currentColorSchema = useBearStore((s) => s.room.canvas.colorSchema);
   const setColorSchema = useBearStore((s) => s.room.canvas.setColorSchema);
 
   const reloadVersion = useCallback(() => {
@@ -45,26 +46,26 @@ export function InfoDropdown(props: { context: AppContext }) {
         <Dropdown.Divider />
 
         <Dropdown.Header>Color Schema</Dropdown.Header>
-        <Dropdown.Item
-          active={colorSchema.slug === "bootstrap"}
-          onClick={() => {
-            setColorSchema(ColorSchema.bootstrap());
-          }}
-        >
-          <Stack direction={"horizontal"} gap={2}>
-            <span className={"small"}>Bootstrap</span>
-          </Stack>
-        </Dropdown.Item>
-        <Dropdown.Item
-          active={colorSchema.slug === "pastel"}
-          onClick={() => {
-            setColorSchema(ColorSchema.pastel());
-          }}
-        >
-          <Stack direction={"horizontal"} gap={2}>
-            <span className={"small"}>Pastel</span>
-          </Stack>
-        </Dropdown.Item>
+        {ColorSchema.allColorSchema().map((colorSchema) => (
+          <Dropdown.Item
+            key={colorSchema.slug}
+            active={colorSchema.slug === currentColorSchema.slug}
+            onClick={() => {
+              setColorSchema(colorSchema);
+            }}
+          >
+            <Stack
+              direction={"horizontal"}
+              gap={2}
+              className={"justify-content-between"}
+            >
+              <span className={"small"}>{colorSchema.title}</span>
+              <ColorSchemaPreview
+                colorSchema={colorSchema}
+              ></ColorSchemaPreview>
+            </Stack>
+          </Dropdown.Item>
+        ))}
         <Dropdown.Divider></Dropdown.Divider>
 
         <Dropdown.Item disabled className={"small"}>

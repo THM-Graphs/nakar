@@ -1,5 +1,6 @@
 export class ColorSchema {
   public readonly slug: string;
+  public readonly title: string;
   private readonly _backgroundColors: [
     string,
     string,
@@ -19,10 +20,12 @@ export class ColorSchema {
   ];
 
   public constructor(
+    title: string,
     slug: string,
     backgroundColors: [string, string, string, string, string, string],
     textColors: [string, string, string, string, string, string],
   ) {
+    this.title = title;
     this.slug = slug;
     this._backgroundColors = backgroundColors;
     this._textColors = textColors;
@@ -36,19 +39,38 @@ export class ColorSchema {
     return this._textColors[index];
   }
 
-  public static bootstrap(): ColorSchema {
-    return new ColorSchema(
-      "bootstrap",
-      ["#3B71CA", "#14A44D", "#DC4C64", "#E4A11B", "#54B4D3", "#332D2D"],
-      ["#fff", "#fff", "#fff", "#fff", "#fff", "#fff"],
-    );
-  }
-
-  public static pastel(): ColorSchema {
-    return new ColorSchema(
-      "pastel",
-      ["#ffcbe1", "#d6e5bd", "#bcd8ec", "#dcccec", "#ffcbe1", "#d6e5bd"],
-      ["#000", "#000", "#000", "#000", "#000", "#000"],
-    );
+  public static allColorSchema(): ColorSchema[] {
+    return [
+      new ColorSchema(
+        "Bootstrap",
+        "bootstrap",
+        ["#3B71CA", "#14A44D", "#DC4C64", "#E4A11B", "#54B4D3", "#332D2D"],
+        ["#fff", "#fff", "#fff", "#fff", "#fff", "#fff"],
+      ),
+      new ColorSchema(
+        "Pastel",
+        "pastel",
+        ["#ffadad", "#ffd6a5", "#fdffb6", "#caffbf", "#9bf6ff", "#bdb2ff"],
+        ["#000", "#000", "#000", "#000", "#000", "#000"],
+      ),
+      new ColorSchema(
+        "Neon",
+        "neon",
+        ["#0000ff", "#ff00ff", "#ff0000", "#00ff00", "#00ffff", "#ffff00"],
+        ["#fff", "#000", "#fff", "#000", "#000", "#000"],
+      ),
+      new ColorSchema(
+        "White",
+        "white",
+        ["#fff", "#fff", "#fff", "#fff", "#fff", "#fff"],
+        ["#000", "#000", "#000", "#000", "#000", "#000"],
+      ),
+      new ColorSchema(
+        "Black",
+        "black",
+        ["#000", "#000", "#000", "#000", "#000", "#000"],
+        ["#fff", "#fff", "#fff", "#fff", "#fff", "#fff"],
+      ),
+    ];
   }
 }
