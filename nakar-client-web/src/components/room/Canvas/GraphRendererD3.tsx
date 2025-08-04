@@ -158,6 +158,7 @@ export function GraphRendererD3(props: {
 
   return (
     <svg
+      id={"svg-canvas"}
       ref={svgRef}
       className={"position-absolute"}
       style={{ top: 0, left: 0, width: "100%", height: "100%" }}

@@ -389,6 +389,7 @@ export class D3Renderer {
 
     this.nodeSelection
       .append("circle")
+      .attr("class", "clusterCircle")
       .attr("hidden", (d) => (d.clusterSize === 0 ? true : null))
       .attr(
         "r",
@@ -411,6 +412,7 @@ export class D3Renderer {
 
     this.nodeLockedOverlay = this.nodeSelection
       .append("circle")
+      .attr("class", "nodeLockedOverlay")
       .attr(
         "r",
         (n) =>
@@ -428,6 +430,7 @@ export class D3Renderer {
 
     this.nodeSelectedOverlay = this.nodeSelection
       .append("circle")
+      .attr("class", "nodeSelectedOverlay")
       .attr(
         "r",
         (n) =>

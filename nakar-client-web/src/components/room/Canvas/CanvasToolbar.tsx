@@ -16,6 +16,7 @@ import {
 import { RoomContext } from "../../../pages/Room.tsx";
 import { resultOrThrow } from "../../../lib/data/resultOrThrow.ts";
 import { DropdownButton } from "../../shared/DropdownButton.tsx";
+import { exportSVG } from "../../../lib/svg-export/exportSVG.ts";
 
 export function CanvasToolbar(props: {
   context: AppContext;
@@ -198,6 +199,22 @@ export function CanvasToolbar(props: {
           <Stack direction={"horizontal"} gap={2}>
             <i className={"bi bi-arrows-collapse"}></i>
             <span className={"small"}>Compress Relationships</span>
+          </Stack>
+        </Dropdown.Item>
+        <Dropdown.Divider></Dropdown.Divider>
+        <Dropdown.Item
+          disabled={selectedTab !== "graph"}
+          onClick={() => {
+            try {
+              exportSVG();
+            } catch (error: unknown) {
+              pushErrorNotification(error);
+            }
+          }}
+        >
+          <Stack direction={"horizontal"} gap={2}>
+            <i className={"bi bi-download"}></i>
+            <span className={"small"}>Download SVG-File</span>
           </Stack>
         </Dropdown.Item>
       </DropdownButton>
