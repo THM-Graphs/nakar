@@ -1056,13 +1056,19 @@ export class RoomService implements ApplicationService {
             graph.metaData.scenarioId,
           );
 
-        this._layout(
+        const lockChanges: SMap<string, boolean> = this._layout(
           graph,
           params.label,
           params.layoutAlgorithm,
           params.circleLayoutDistance,
           config,
         );
+
+        this._onEvent.next({
+          type: 'RoomServiceEventNodeLocksUpdated',
+          roomId: params.roomId,
+          locks: lockChanges,
+        } satisfies RoomServiceEvent);
 
         this._sendActionToWorker(params.roomId, {
           type: 'WTActionSetGraph',
@@ -1637,10 +1643,11 @@ export class RoomService implements ApplicationService {
     layoutAlgorithm: LayoutAlgorithm,
     circleLayoutDistance: number | null,
     displayConfiguration: FinalGraphDisplayConfiguration,
-  ): void {
+  ): SMap<string, boolean> {
     const nodesOfLabel: MutableNode[] = graph.nodes
       .getByLabel(targetLabel)
       .toArray();
+    const lockChanges: SMap<string, boolean> = new SMap<string, boolean>();
 
     match(layoutAlgorithm)
       .with(LayoutAlgorithm.circle, (): void => {
@@ -1673,6 +1680,7 @@ export class RoomService implements ApplicationService {
           sortedNodesToLayout[i].position.x = x;
           sortedNodesToLayout[i].position.y = y;
           sortedNodesToLayout[i].locked = true;
+          lockChanges.set(sortedNodesToLayout[i].id, true);
         }
 
         // Put other nodes between
@@ -1696,8 +1704,11 @@ export class RoomService implements ApplicationService {
       .with(LayoutAlgorithm.forceDirected, (): void => {
         for (const node of nodesOfLabel) {
           node.locked = false;
+          lockChanges.set(node.id, false);
         }
       })
       .exhaustive();
+
+    return lockChanges;
   }
 }
