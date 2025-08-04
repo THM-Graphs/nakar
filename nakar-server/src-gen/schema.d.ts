@@ -164,6 +164,22 @@ export interface paths {
         readonly patch?: never;
         readonly trace?: never;
     };
+    readonly "/room/{id}/actions/expand-node-preview": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        readonly put?: never;
+        readonly post: operations["postRoomActionExpandNodePreview"];
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
     readonly "/room/{id}/actions/delete-elements": {
         readonly parameters: {
             readonly query?: never;
@@ -1053,7 +1069,33 @@ export interface operations {
                     readonly limit: {
                         readonly labels: readonly string[];
                         readonly relationships: readonly string[];
-                    } | null;
+                    };
+                };
+            };
+        };
+        readonly responses: {
+            /** @description OK */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly postRoomActionExpandNodePreview: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path: {
+                readonly id: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": {
+                    readonly nodeId: string;
                 };
             };
         };

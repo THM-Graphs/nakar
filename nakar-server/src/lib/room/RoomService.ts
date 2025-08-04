@@ -375,18 +375,18 @@ export class RoomService implements ApplicationService {
     limit: {
       labels: SSet<string>;
       relationships: SSet<string>;
-    } | null;
-  }): Promise<ExpandNodePreview | null> {
+    };
+  }): Promise<void> {
     const oldGraph: MutableGraph = this.getGraph(params.roomId);
     const displayConfiguration: FinalGraphDisplayConfiguration =
       await this._database.getGraphDisplayConfiguration(
         oldGraph.metaData.scenarioId,
       );
 
-    return await this._runWithRoomLock(
+    await this._runWithRoomLock(
       params.roomId,
       'Expanding node',
-      async (): Promise<ExpandNodePreview | null> => {
+      async (): Promise<void> => {
         const result: ExpandNodesResult = {
           nodesAddedCount: 0,
           edgeAddedCount: 0,
@@ -426,15 +426,6 @@ export class RoomService implements ApplicationService {
               new SSet<string>([params.nodeId]),
               params.limit,
             );
-
-        if (expandResult.limitReached && params.limit == null) {
-          const expandNodePreview: ExpandNodePreview =
-            await this._neo4j.expandNodePreview(
-              neo4jDatabaseInfo,
-              new SSet<string>([params.nodeId]),
-            );
-          return expandNodePreview;
-        }
 
         const graph: MutableGraph = this._snapshotGraph(params.roomId);
 
@@ -501,10 +492,38 @@ export class RoomService implements ApplicationService {
             loadedCount: expandResult.size,
           } satisfies RoomServiceEventNotAllNodesLoaded);
         }
-
-        return null;
       },
     );
+  }
+
+  public async expandNodePreview(params: {
+    roomId: string;
+    nodeId: string;
+  }): Promise<ExpandNodePreview> {
+    const graph: MutableGraph = this.getGraph(params.roomId);
+    const node: MutableNode | null = graph.nodes.get(params.nodeId);
+    if (node == null) {
+      throw new Error(`Cannot find node ${params.nodeId} to expand preview.`);
+    }
+
+    const database: GetDatabaseDBDTO | null = await this._database.getDatabase(
+      node.source,
+    );
+    if (database == null) {
+      throw new Error(
+        `Cannot find database ${node.source} to run expand node preview query on.`,
+      );
+    }
+
+    const neo4jDatabaseInfo: Neo4jDatabaseInfo =
+      Neo4jDatabaseInfo.parse(database);
+
+    const expandNodePreview: ExpandNodePreview =
+      await this._neo4j.expandNodePreview(
+        neo4jDatabaseInfo,
+        new SSet<string>([params.nodeId]),
+      );
+    return expandNodePreview;
   }
 
   public async focusNodes(params: {

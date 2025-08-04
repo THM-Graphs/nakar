@@ -2,6 +2,7 @@ import {
   Node,
   postRoomActionDeleteElements,
   postRoomActionExpandNode,
+  postRoomActionExpandNodePreview,
   postRoomActionFocusNodes,
   postRoomActionUnlockNodes,
 } from "../../../../../src-gen";
@@ -33,20 +34,33 @@ export function NodeDetails(props: {
           variant: "primary",
           disabled: false,
           action: async () => {
-            const result = resultOrThrow(
+            if (props.node.isCluster) {
               await postRoomActionExpandNode({
                 path: {
                   id: props.roomContext.initialRoomData.id,
                 },
-                body: { nodeId: props.node.id, limit: null },
-              }),
-            );
-            if (result != null) {
-              showExpandNodePreview({
-                relationships: result.relationships,
-                labels: result.labels,
-                nodeId: props.node.id,
+                body: {
+                  nodeId: props.node.id,
+                  limit: { labels: [], relationships: [] },
+                },
               });
+            } else {
+              showExpandNodePreview(null);
+              const result = resultOrThrow(
+                await postRoomActionExpandNodePreview({
+                  path: {
+                    id: props.roomContext.initialRoomData.id,
+                  },
+                  body: { nodeId: props.node.id },
+                }),
+              );
+              if (result != null) {
+                showExpandNodePreview({
+                  relationships: result.relationships,
+                  labels: result.labels,
+                  nodeId: props.node.id,
+                });
+              }
             }
           },
         },

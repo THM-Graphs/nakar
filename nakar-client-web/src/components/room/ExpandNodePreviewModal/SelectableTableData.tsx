@@ -13,6 +13,9 @@ export function SelectableTableData(props: {
   ) => void;
   selections: Set<string>;
 }) {
+  const allChecked =
+    props.data.find((d) => !props.selections.has(d.identificator)) == null;
+
   return (
     <DynamicList
       data={props.data}
@@ -29,7 +32,27 @@ export function SelectableTableData(props: {
               "small fw-bold justify-content-between bg-body border-top border-bottom pt-1 pb-1"
             }
           >
-            <span style={{ marginLeft: "30px" }}>{props.title}</span>
+            <Stack
+              direction={"horizontal"}
+              onClick={(event) => {
+                if (allChecked) {
+                  for (const element of props.data) {
+                    props.onSelectionChange(element, false);
+                  }
+                } else {
+                  for (const element of props.data) {
+                    props.onSelectionChange(element, true);
+                  }
+                }
+              }}
+            >
+              <FormCheck
+                className={"ps-2"}
+                checked={allChecked}
+                readOnly={true}
+              ></FormCheck>
+              <span className={"ms-2"}>{props.title}</span>
+            </Stack>
             <Stack direction={"horizontal"} gap={1}>
               <i className={"bi bi-sort-down"}></i>
               <span className={"me-2"}>Count</span>

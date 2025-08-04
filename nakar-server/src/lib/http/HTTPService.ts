@@ -407,29 +407,44 @@ export class HTTPService implements ApplicationService {
 
     this._app.post(
       '/room/:id/actions/expand-node',
+      this._handle(async (req: Request): Promise<void> => {
+        const room: GetRoomDBDTO = await this._assertRoom(req);
+
+        type Body =
+          operations['postRoomActionExpandNode']['requestBody']['content']['application/json'];
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+        const requestBody: Body = req.body as Body;
+
+        await this._roomService.expandNode({
+          roomId: room.documentId,
+          nodeId: requestBody.nodeId,
+          limit: {
+            relationships: new SSet(requestBody.limit.relationships),
+            labels: new SSet(requestBody.limit.labels),
+          },
+        });
+      }),
+    );
+
+    this._app.post(
+      '/room/:id/actions/expand-node-preview',
       this._handle(
         async (
           req: Request,
         ): Promise<
-          operations['postRoomActionExpandNode']['responses']['200']['content']['application/json']
+          operations['postRoomActionExpandNodePreview']['responses']['200']['content']['application/json']
         > => {
           const room: GetRoomDBDTO = await this._assertRoom(req);
 
           type Body =
-            operations['postRoomActionExpandNode']['requestBody']['content']['application/json'];
+            operations['postRoomActionExpandNodePreview']['requestBody']['content']['application/json'];
           // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
           const requestBody: Body = req.body as Body;
 
           const result: ExpandNodePreview | null =
-            await this._roomService.expandNode({
+            await this._roomService.expandNodePreview({
               roomId: room.documentId,
               nodeId: requestBody.nodeId,
-              limit: requestBody.limit
-                ? {
-                    relationships: new SSet(requestBody.limit.relationships),
-                    labels: new SSet(requestBody.limit.labels),
-                  }
-                : null,
             });
           return result;
         },

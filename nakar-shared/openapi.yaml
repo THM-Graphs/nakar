@@ -211,7 +211,6 @@ paths:
                   type: string
                 limit:
                   type: object
-                  nullable: true
                   properties:
                     labels:
                       type: array
@@ -227,6 +226,32 @@ paths:
               required:
                 - nodeId
                 - limit
+      responses:
+        "200":
+          description: "OK"
+
+  /room/{id}/actions/expand-node-preview:
+    post:
+      tags:
+        - Room Actions
+      operationId: postRoomActionExpandNodePreview
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nodeId:
+                  type: string
+              required:
+                - nodeId
       responses:
         "200":
           description: "OK"

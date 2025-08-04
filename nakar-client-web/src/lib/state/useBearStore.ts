@@ -212,13 +212,15 @@ export const useBearStore = create<BearState>()(
                 data: null,
                 open: (data) => {
                   set((s) => {
-                    s.room.scenario.expandNodePreview.data = {
-                      nodeId: data.nodeId,
-                      labels: data.labels,
-                      relationships: data.relationships,
-                      selectedLabels: new Set(),
-                      selectedRelationships: new Set(),
-                    };
+                    s.room.scenario.expandNodePreview.data = data
+                      ? {
+                          nodeId: data.nodeId,
+                          labels: data.labels,
+                          relationships: data.relationships,
+                          selectedLabels: new Set(),
+                          selectedRelationships: new Set(),
+                        }
+                      : null;
                     s.room.scenario.expandNodePreview.shown = true;
                   });
                 },

@@ -488,19 +488,32 @@ export type PostRoomActionExpandNodeData = {
         limit: {
             labels: Array<(string)>;
             relationships: Array<(string)>;
-        } | null;
+        };
     };
     path: {
         id: string;
     };
 };
 
-export type PostRoomActionExpandNodeResponse = ({
+export type PostRoomActionExpandNodeResponse = (unknown);
+
+export type PostRoomActionExpandNodeError = unknown;
+
+export type PostRoomActionExpandNodePreviewData = {
+    body: {
+        nodeId: string;
+    };
+    path: {
+        id: string;
+    };
+};
+
+export type PostRoomActionExpandNodePreviewResponse = ({
     relationships: Array<ExpandNodePreviewElement>;
     labels: Array<ExpandNodePreviewElement>;
 } | null);
 
-export type PostRoomActionExpandNodeError = unknown;
+export type PostRoomActionExpandNodePreviewError = unknown;
 
 export type PostRoomActionDeleteElementsData = {
     body: {

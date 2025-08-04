@@ -73,11 +73,13 @@ export interface BearState {
           selectedRelationships: Set<string>;
           selectedLabels: Set<string>;
         } | null;
-        open: (data: {
-          relationships: ExpandNodePreviewElement[];
-          labels: ExpandNodePreviewElement[];
-          nodeId: string;
-        }) => void;
+        open: (
+          data: {
+            relationships: ExpandNodePreviewElement[];
+            labels: ExpandNodePreviewElement[];
+            nodeId: string;
+          } | null,
+        ) => void;
         close: () => void;
         clean: () => void;
         setSelectedRelationships: (
