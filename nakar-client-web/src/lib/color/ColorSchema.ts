@@ -54,10 +54,16 @@ export class ColorSchema {
         ["#000", "#000", "#000", "#000", "#000", "#000"],
       ),
       new ColorSchema(
+        "Nature",
+        "nature",
+        ["#cb997e", "#ddbea9", "#ffe8d6", "#b7b7a4", "#a5a58d", "#6b705c"],
+        ["#000", "#000", "#000", "#000", "#000", "#000"],
+      ),
+      new ColorSchema(
         "Neon",
         "neon",
         ["#0000ff", "#ff00ff", "#ff0000", "#00ff00", "#00ffff", "#ffff00"],
-        ["#fff", "#000", "#fff", "#000", "#000", "#000"],
+        ["#fff", "#fff", "#fff", "#000", "#000", "#000"],
       ),
       new ColorSchema(
         "White",

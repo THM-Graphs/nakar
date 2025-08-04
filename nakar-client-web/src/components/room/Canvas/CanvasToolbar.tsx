@@ -16,8 +16,6 @@ import {
 import { RoomContext } from "../../../pages/Room.tsx";
 import { resultOrThrow } from "../../../lib/data/resultOrThrow.ts";
 import { DropdownButton } from "../../shared/DropdownButton.tsx";
-import { ColorSchema } from "../../../lib/color/ColorSchema.ts";
-import clsx from "clsx";
 
 export function CanvasToolbar(props: {
   context: AppContext;

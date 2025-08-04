@@ -1,17 +1,11 @@
 import { Labels } from "./Labels.tsx";
-import { Dropdown, Stack } from "react-bootstrap";
 import { DataTable } from "../DataTable.tsx";
 import { CanvasToolbar } from "./CanvasToolbar.tsx";
 import { useBearStore } from "../../../lib/state/useBearStore.ts";
 import { AppContext } from "../../../lib/state/AppContext.ts";
 import { RoomContext } from "../../../pages/Room.tsx";
 import { NavbarButton } from "../../shared/NavbarButton.tsx";
-import { resultOrThrow } from "../../../lib/data/resultOrThrow.ts";
-import {
-  postRoomActionRelayout,
-  postRoomActionUnlockAllNodes,
-} from "../../../../src-gen";
-import { DropdownButton } from "../../shared/DropdownButton.tsx";
+import { Stack } from "react-bootstrap";
 
 export function Canvas(props: {
   context: AppContext;
