@@ -11,13 +11,14 @@ import { useBearStore } from "../../lib/state/useBearStore.ts";
 import { DropdownButton } from "./DropdownButton.tsx";
 import { ColorSchema } from "../../lib/color/ColorSchema.ts";
 import { ColorSchemaPreview } from "./ColorSchemaPreview.tsx";
+import { useColorSchema } from "../../lib/color/useColorSchema.ts";
 
 export function InfoDropdown(props: { context: AppContext }) {
   const [version, setVersion] = useState<Loadable<string>>({ type: "loading" });
   const pushErrorNotification = useBearStore(
     (s) => s.room.ui.pushErrorNotification,
   );
-  const currentColorSchema = useBearStore((s) => s.room.canvas.colorSchema);
+  const currentColorSchema = useColorSchema();
   const setColorSchema = useBearStore((s) => s.room.canvas.setColorSchema);
 
   const reloadVersion = useCallback(() => {
@@ -51,7 +52,7 @@ export function InfoDropdown(props: { context: AppContext }) {
             key={colorSchema.slug}
             active={colorSchema.slug === currentColorSchema.slug}
             onClick={() => {
-              setColorSchema(colorSchema);
+              setColorSchema(colorSchema.slug);
             }}
           >
             <Stack

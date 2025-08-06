@@ -5,6 +5,7 @@ import { postRoomActionDeleteElements } from "../../../../../../src-gen";
 import { RoomContext } from "../../../../../pages/Room.tsx";
 import { useBearStore } from "../../../../../lib/state/useBearStore.ts";
 import { DynamicList } from "../../../../shared/DynamicList.tsx";
+import { useColorSchema } from "../../../../../lib/color/useColorSchema.ts";
 
 export function HistogramSectionNodes(props: { roomContext: RoomContext }) {
   const histogram = useBearStore(
@@ -13,7 +14,7 @@ export function HistogramSectionNodes(props: { roomContext: RoomContext }) {
   const labels = useBearStore((s) => s.room.scenario.graph.elements.labels);
   const setElement = useBearStore((s) => s.room.panels.inspector.setElement);
   const onCenter = useBearStore((s) => s.room.ui.rendererEvents.onCenter);
-  const colorSchema = useBearStore((s) => s.room.canvas.colorSchema);
+  const colorSchema = useColorSchema();
 
   return (
     <DynamicList

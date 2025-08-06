@@ -11,12 +11,13 @@ export function GraphRendererD3(props: {
 }) {
   const websocketsManager = props.context.webSocketsManager;
   const svgRef = createRef<SVGSVGElement>();
-  const theme = useBearStore((s) => s.global.theme.theme);
+  const getTheme = useBearStore((s) => s.global.theme.getTheme);
   const inspector = useBearStore((s) => s.room.panels.inspector);
   const setLocks = useBearStore((s) => s.room.scenario.setLocks);
   const events = useBearStore((s) => s.room.ui.rendererEvents);
   const hideLabels = useBearStore((s) => s.room.canvas.hideLabels);
-  const colorSchema = useBearStore((s) => s.room.canvas.colorSchema);
+  const colorSchemaSlug = useBearStore((s) => s.room.canvas.colorSchemaSlug);
+  const theme = getTheme();
 
   useEffect(() => {
     if (svgRef.current == null) {
@@ -28,7 +29,7 @@ export function GraphRendererD3(props: {
       svgRef.current,
       props.roomContext.initialGraphData.elements,
       hideLabels,
-      colorSchema,
+      colorSchemaSlug,
     );
 
     const subs: { unsubscribe: () => void }[] = [
@@ -91,9 +92,17 @@ export function GraphRendererD3(props: {
       }),
       {
         unsubscribe: useBearStore.subscribe(
-          (s) => s.global.theme.theme,
-          (s) => {
-            _graphRenderer.setTheme(s);
+          (s) => s.global.theme.user,
+          () => {
+            _graphRenderer.setTheme(getTheme());
+          },
+        ),
+      },
+      {
+        unsubscribe: useBearStore.subscribe(
+          (s) => s.global.theme.system,
+          () => {
+            _graphRenderer.setTheme(getTheme());
           },
         ),
       },
@@ -115,7 +124,7 @@ export function GraphRendererD3(props: {
       },
       {
         unsubscribe: useBearStore.subscribe(
-          (s) => s.room.canvas.colorSchema,
+          (s) => s.room.canvas.colorSchemaSlug,
           (s) => {
             _graphRenderer.setColorSchema(s);
           },

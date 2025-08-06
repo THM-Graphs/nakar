@@ -79,4 +79,15 @@ export class ColorSchema {
       ),
     ];
   }
+
+  public static find(slug: string): ColorSchema {
+    return (
+      ColorSchema.allColorSchema().find((c) => c.slug === slug) ??
+      ColorSchema.default()
+    );
+  }
+
+  public static default(): ColorSchema {
+    return ColorSchema.allColorSchema()[0];
+  }
 }

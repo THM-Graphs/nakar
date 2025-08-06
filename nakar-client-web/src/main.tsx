@@ -35,13 +35,21 @@ async function bootstrap() {
     },
   ]);
 
+  const getTheme = useBearStore.getState().global.theme.getTheme;
   useBearStore.subscribe(
-    (s) => s.global.theme.theme,
-    (theme) => {
-      applyTheme(theme);
+    (s) => s.global.theme.user,
+    () => {
+      applyTheme(getTheme());
+    },
+  );
+  useBearStore.subscribe(
+    (s) => s.global.theme.system,
+    () => {
+      applyTheme(getTheme());
     },
   );
 
+  console.log("Will mount app...");
   createRoot(document.getElementById("root") as HTMLElement).render(
     <StrictMode>
       <RouterProvider router={router} />

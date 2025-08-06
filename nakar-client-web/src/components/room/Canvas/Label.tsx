@@ -4,6 +4,7 @@ import { getTextColor } from "../../../lib/color/getTextColor.ts";
 import { Stack } from "react-bootstrap";
 import { useBearStore } from "../../../lib/state/useBearStore.ts";
 import clsx from "clsx";
+import { useColorSchema } from "../../../lib/color/useColorSchema.ts";
 
 export function Label(props: {
   label: string;
@@ -15,7 +16,7 @@ export function Label(props: {
 }) {
   const labels = useBearStore((s) => s.room.scenario.graph.elements.labels);
   const label = labels.find((l) => l.label === props.label);
-  const colorSchema = useBearStore((s) => s.room.canvas.colorSchema);
+  const colorSchema = useColorSchema();
 
   const text: string = (() => {
     let buffer: string = "";

@@ -9,7 +9,6 @@ import * as d3 from "d3";
 import { ZoomBehavior } from "d3";
 import { getBackgroundColor } from "../color/getBackgroundColor.ts";
 import { getTextColor } from "../color/getTextColor.ts";
-import { UserTheme } from "../theme/UserTheme.ts";
 import { Observable, Subject, throttleTime } from "rxjs";
 import { D3RendererState } from "./D3RendererState.ts";
 import { D3Calculator } from "./D3Calculator.ts";
@@ -23,7 +22,7 @@ const baseStrokeWidth: number = 3;
 
 export class D3Renderer {
   private graphState: D3RendererState;
-  private theme: UserTheme;
+  private theme: Theme;
   public colorSchema: ColorSchema;
   private readonly svgElement: SVGSVGElement;
   private hideLabels: boolean;
@@ -90,18 +89,18 @@ export class D3Renderer {
   private smoothedPositionDirty: boolean;
 
   public constructor(
-    theme: UserTheme,
+    theme: Theme,
     svgElement: SVGSVGElement,
     initialGraphElements: GraphElements,
     hideLabels: boolean,
-    colorSchema: ColorSchema,
+    colorSchema: string,
   ) {
-    console.log("Did create instance of graph renderer");
+    console.log(`Did create instance of graph renderer. theme: ${theme}`);
     this.graphState = D3RendererState.fromWsData(initialGraphElements);
     this.theme = theme;
     this.svgElement = svgElement;
     this.hideLabels = hideLabels;
-    this.colorSchema = colorSchema;
+    this.colorSchema = ColorSchema.find(colorSchema);
 
     this.$onDisplayLinkData = new Subject();
     this.$onDisplayNodeData = new Subject();
@@ -220,9 +219,14 @@ export class D3Renderer {
       .zoom<SVGSVGElement, null>()
       .on("zoom", (event: d3.D3ZoomEvent<SVGSVGElement, null>) => {
         this.zoomContainer?.attr("transform", event.transform.toString());
+        useBearStore.getState().room.canvas.setZoomTransform(event.transform);
       });
     svg.call(zoomBehaviour);
     this.zoomBehaviour = zoomBehaviour;
+    zoomBehaviour.transform(
+      svg,
+      useBearStore.getState().room.canvas.zoomTransform,
+    );
 
     this.linkPathSelection = this.zoomContainer
       .append("g")
@@ -660,8 +664,8 @@ export class D3Renderer {
     this._updateShowLabels();
   }
 
-  public setColorSchema(colorSchema: ColorSchema) {
-    this.colorSchema = colorSchema;
+  public setColorSchema(colorSchema: string) {
+    this.colorSchema = ColorSchema.find(colorSchema);
     this.renderSvgElements();
   }
 

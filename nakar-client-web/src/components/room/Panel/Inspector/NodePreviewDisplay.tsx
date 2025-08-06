@@ -2,6 +2,7 @@ import { useBearStore } from "../../../../lib/state/useBearStore.ts";
 import { getBackgroundColor } from "../../../../lib/color/getBackgroundColor.ts";
 import { getTextColor } from "../../../../lib/color/getTextColor.ts";
 import clsx from "clsx";
+import { useColorSchema } from "../../../../lib/color/useColorSchema.ts";
 
 const maxTitleLength: number = 50;
 export function NodePreviewDisplay(props: {
@@ -13,7 +14,7 @@ export function NodePreviewDisplay(props: {
   const graphLabels = useBearStore(
     (s) => s.room.scenario.graph.elements.labels,
   );
-  const colorSchema = useBearStore((s) => s.room.canvas.colorSchema);
+  const colorSchema = useColorSchema();
 
   const firstLabel = props.labels[0];
   const graphLabel = graphLabels.find((l) => l.label === firstLabel);

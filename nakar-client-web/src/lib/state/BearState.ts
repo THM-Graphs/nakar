@@ -14,9 +14,10 @@ import {
 import { InspectorElement } from "../../components/room/Panel/Inspector/InspectorElement.ts";
 import { SocketState } from "../ws/SocketState.ts";
 import { Subject } from "rxjs";
-import { ColorSchema } from "../color/ColorSchema.ts";
 import { UserTheme } from "../theme/UserTheme.ts";
 import { Theme } from "../theme/Theme.ts";
+import { SelectedCanvasTab } from "./SelectedCanvasTab.ts";
+import { ZoomTransform } from "d3";
 
 export interface BearState {
   global: {
@@ -25,7 +26,7 @@ export interface BearState {
       system: Theme;
       setUserTheme: (theme: UserTheme) => void;
       setSystemTheme: (theme: Theme) => void;
-      theme: Theme;
+      getTheme: () => Theme;
     };
   };
   room: {
@@ -136,14 +137,16 @@ export interface BearState {
     };
     canvas: {
       tabs: {
-        selected: "graph" | "data";
+        selected: SelectedCanvasTab;
         selectGraph: () => void;
         selectData: () => void;
       };
       hideLabels: boolean;
       setHideLabels: (pm: boolean) => void;
-      colorSchema: ColorSchema;
-      setColorSchema: (newSchema: ColorSchema) => void;
+      colorSchemaSlug: string;
+      setColorSchema: (newSchemaSlug: string) => void;
+      zoomTransform: ZoomTransform;
+      setZoomTransform: (zoomTransform: ZoomTransform) => void;
     };
   };
 }
