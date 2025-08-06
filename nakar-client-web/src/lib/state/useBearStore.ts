@@ -12,7 +12,6 @@ import { ColorSchema } from "../color/ColorSchema.ts";
 import { UserTheme } from "../theme/UserTheme.ts";
 import { Theme } from "../theme/Theme.ts";
 import {
-  applyTheme,
   loadSystemTheme,
   loadUserTheme,
   saveUserTheme,
@@ -387,11 +386,17 @@ export const useBearStore = create<BearState>()(
                   });
                 },
               },
-              hideLabels: false,
+              hideLabels: match(localStorage.getItem("hideLabels"))
+                .with("true", () => true)
+                .otherwise(() => false),
               setHideLabels: (hideLabels: boolean) => {
                 set((s) => {
                   s.room.canvas.hideLabels = hideLabels;
                 });
+                localStorage.setItem(
+                  "hideLabels",
+                  hideLabels ? "true" : "false",
+                );
               },
               colorSchema:
                 ColorSchema.allColorSchema().find(
