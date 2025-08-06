@@ -15,8 +15,19 @@ import { InspectorElement } from "../../components/room/Panel/Inspector/Inspecto
 import { SocketState } from "../ws/SocketState.ts";
 import { Subject } from "rxjs";
 import { ColorSchema } from "../color/ColorSchema.ts";
+import { UserTheme } from "../theme/UserTheme.ts";
+import { Theme } from "../theme/Theme.ts";
 
 export interface BearState {
+  global: {
+    theme: {
+      user: UserTheme;
+      system: Theme;
+      setUserTheme: (theme: UserTheme) => void;
+      setSystemTheme: (theme: Theme) => void;
+      theme: Theme;
+    };
+  };
   room: {
     ui: {
       locked: boolean;

@@ -9,6 +9,14 @@ import { enableMapSet } from "immer";
 import { Subject } from "rxjs";
 import { immer } from "zustand/middleware/immer";
 import { ColorSchema } from "../color/ColorSchema.ts";
+import { UserTheme } from "../theme/UserTheme.ts";
+import { Theme } from "../theme/Theme.ts";
+import {
+  applyTheme,
+  loadSystemTheme,
+  loadUserTheme,
+  saveUserTheme,
+} from "../theme/ThemeManager.ts";
 
 enableMapSet();
 
@@ -16,7 +24,27 @@ export const useBearStore = create<BearState>()(
   devtools(
     subscribeWithSelector(
       immer(
-        (set): BearState => ({
+        (set, get): BearState => ({
+          global: {
+            theme: {
+              user: loadUserTheme(),
+              system: loadSystemTheme(),
+              setUserTheme: (userTheme: UserTheme) => {
+                saveUserTheme(userTheme);
+                set((s) => {
+                  s.global.theme.user = userTheme;
+                  s.global.theme.theme = userTheme ?? get().global.theme.system;
+                });
+              },
+              setSystemTheme: (systemTheme: Theme) => {
+                set((s) => {
+                  s.global.theme.system = systemTheme;
+                  s.global.theme.theme = get().global.theme.user ?? systemTheme;
+                });
+              },
+              theme: loadUserTheme() ?? loadSystemTheme(),
+            },
+          },
           room: {
             ui: {
               locked: false,

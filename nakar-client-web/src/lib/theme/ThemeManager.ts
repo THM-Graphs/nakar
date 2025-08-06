@@ -1,44 +1,46 @@
-import { BehaviorSubject } from "rxjs";
 import { UserTheme } from "./UserTheme.ts";
 import { Theme } from "./Theme.ts";
+import { match } from "ts-pattern";
+import { useBearStore } from "../state/useBearStore.ts";
 
-export class ThemeManager {
-  private readonly localStorageKey = "user_theme";
+const localStorageKey = "user_theme";
 
-  public readonly $userTheme: BehaviorSubject<UserTheme>;
+export function loadUserTheme(): UserTheme {
+  return match(localStorage.getItem(localStorageKey))
+    .returnType<UserTheme>()
+    .with("dark", () => "dark")
+    .with("light", () => "light")
+    .otherwise(() => null);
+}
 
-  constructor() {
-    this.$userTheme = new BehaviorSubject(this.loadUserTheme());
+export function saveUserTheme(theme: UserTheme): void {
+  if (theme == null) {
+    localStorage.removeItem(localStorageKey);
+  } else {
+    localStorage.setItem(localStorageKey, theme);
+  }
+}
 
-    this.$userTheme.subscribe((userTheme: UserTheme): void => {
-      this.saveUserTheme(userTheme);
-      this.bootstrapTheme();
+export function loadSystemTheme(): Theme {
+  return window.matchMedia("(prefers-color-scheme: dark)").matches
+    ? "dark"
+    : "light";
+}
+
+export function applyTheme(theme: Theme): void {
+  document.documentElement.setAttribute("data-bs-theme", theme);
+}
+
+export function bootstrapTheme(): void {
+  applyTheme(
+    useBearStore.getState().global.theme.user ??
+      useBearStore.getState().global.theme.system,
+  );
+
+  window
+    .matchMedia("(prefers-color-scheme: dark)")
+    .addEventListener("change", (event) => {
+      const theme: Theme = event.matches ? "dark" : "light";
+      useBearStore.getState().global.theme.setSystemTheme(theme);
     });
-  }
-
-  public loadUserTheme(): UserTheme {
-    return localStorage.getItem(this.localStorageKey) as UserTheme;
-  }
-
-  private saveUserTheme(theme: UserTheme): void {
-    if (theme == null) {
-      localStorage.removeItem(this.localStorageKey);
-    } else {
-      localStorage.setItem(this.localStorageKey, theme);
-    }
-  }
-
-  public loadSystemTheme(): Theme {
-    return window.matchMedia("(prefers-color-scheme: dark)").matches
-      ? "dark"
-      : "light";
-  }
-
-  private applyTheme(theme: Theme): void {
-    document.documentElement.setAttribute("data-bs-theme", theme);
-  }
-
-  public bootstrapTheme(): void {
-    this.applyTheme(this.loadUserTheme() ?? this.loadSystemTheme());
-  }
 }

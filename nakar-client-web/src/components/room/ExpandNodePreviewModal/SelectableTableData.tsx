@@ -34,7 +34,7 @@ export function SelectableTableData(props: {
           >
             <Stack
               direction={"horizontal"}
-              onClick={(event) => {
+              onClick={() => {
                 if (allChecked) {
                   for (const element of props.data) {
                     props.onSelectionChange(element, false);

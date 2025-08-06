@@ -1,5 +1,4 @@
 import { createRef, useEffect } from "react";
-import { useTheme } from "../../../lib/theme/useTheme.ts";
 import { useBearStore } from "../../../lib/state/useBearStore.ts";
 import { AppContext } from "../../../lib/state/AppContext.ts";
 import { match } from "ts-pattern";
@@ -10,15 +9,13 @@ export function GraphRendererD3(props: {
   context: AppContext;
   roomContext: RoomContext;
 }) {
-  const maxElementsBeforHide: number = 300;
   const websocketsManager = props.context.webSocketsManager;
   const svgRef = createRef<SVGSVGElement>();
-  const theme = useTheme();
+  const theme = useBearStore((s) => s.global.theme.theme);
   const inspector = useBearStore((s) => s.room.panels.inspector);
   const setLocks = useBearStore((s) => s.room.scenario.setLocks);
   const events = useBearStore((s) => s.room.ui.rendererEvents);
-  const setHideLabels = useBearStore((s) => s.room.canvas.setHideLabels);
-  const pushNotification = useBearStore((s) => s.room.ui.pushNotification);
+  const hideLabels = useBearStore((s) => s.room.canvas.hideLabels);
   const colorSchema = useBearStore((s) => s.room.canvas.colorSchema);
 
   useEffect(() => {
@@ -26,18 +23,11 @@ export function GraphRendererD3(props: {
       return;
     }
 
-    const initialHideLabels: boolean =
-      props.roomContext.initialGraphData.elements.nodes.length +
-        props.roomContext.initialGraphData.elements.edges.length >
-      maxElementsBeforHide;
-
-    setHideLabels(initialHideLabels);
-
     const _graphRenderer = new D3Renderer(
       theme,
       svgRef.current,
       props.roomContext.initialGraphData.elements,
-      initialHideLabels,
+      hideLabels,
       colorSchema,
     );
 
@@ -53,21 +43,6 @@ export function GraphRendererD3(props: {
           })
           .with({ type: "WSEventGraphElementsChanged" }, (event) => {
             _graphRenderer.loadGraphContent(event.elements);
-
-            const newHideLabels: boolean =
-              event.elements.nodes.length + event.elements.edges.length >
-              maxElementsBeforHide;
-            if (
-              newHideLabels &&
-              !useBearStore.getState().room.canvas.hideLabels
-            ) {
-              pushNotification({
-                message: `Labels have been hidden, because there are more then ${maxElementsBeforHide.toString()} graph elements to display.`,
-                severity: "warning",
-                date: new Date(),
-              });
-            }
-            setHideLabels(newHideLabels);
           });
       }),
       _graphRenderer.onGrabNode.subscribe((n) => {
@@ -116,6 +91,14 @@ export function GraphRendererD3(props: {
       }),
       {
         unsubscribe: useBearStore.subscribe(
+          (s) => s.global.theme.theme,
+          (s) => {
+            _graphRenderer.setTheme(s);
+          },
+        ),
+      },
+      {
+        unsubscribe: useBearStore.subscribe(
           (s) => s.room.canvas.hideLabels,
           (hideLabels) => {
             _graphRenderer.setHideLabels(hideLabels);
@@ -127,6 +110,14 @@ export function GraphRendererD3(props: {
           (s) => s.room.panels.inspector.element,
           () => {
             _graphRenderer.applyPropertiesToSVG();
+          },
+        ),
+      },
+      {
+        unsubscribe: useBearStore.subscribe(
+          (s) => s.room.canvas.colorSchema,
+          (s) => {
+            _graphRenderer.setColorSchema(s);
           },
         ),
       },
@@ -154,7 +145,7 @@ export function GraphRendererD3(props: {
       animationActive = false;
       cancelAnimationFrame(animationFrame);
     };
-  }, [websocketsManager, svgRef.current, theme, colorSchema]);
+  }, [websocketsManager, svgRef.current]);
 
   return (
     <svg

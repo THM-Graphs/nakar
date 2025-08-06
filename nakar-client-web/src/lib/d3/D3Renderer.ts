@@ -16,13 +16,14 @@ import { D3Calculator } from "./D3Calculator.ts";
 import { match, P } from "ts-pattern";
 import { useBearStore } from "../state/useBearStore.ts";
 import { ColorSchema } from "../color/ColorSchema.ts";
+import { Theme } from "../theme/Theme.ts";
 
 const fps = 30;
 const baseStrokeWidth: number = 3;
 
 export class D3Renderer {
   private graphState: D3RendererState;
-  private readonly theme: UserTheme;
+  private theme: UserTheme;
   public colorSchema: ColorSchema;
   private readonly svgElement: SVGSVGElement;
   private hideLabels: boolean;
@@ -479,6 +480,7 @@ export class D3Renderer {
           position: absolute;
           top: 0;
           background: #000000;
+          color: white;
           padding: 0px ${(d.radius / 10).toFixed()}px;
           border-radius: ${(d.radius / 10).toFixed()}px;
         `,
@@ -656,6 +658,16 @@ export class D3Renderer {
   public setHideLabels(hideLabels: boolean): void {
     this.hideLabels = hideLabels;
     this._updateShowLabels();
+  }
+
+  public setColorSchema(colorSchema: ColorSchema) {
+    this.colorSchema = colorSchema;
+    this.renderSvgElements();
+  }
+
+  public setTheme(theme: Theme) {
+    this.theme = theme;
+    this.renderSvgElements();
   }
 
   private smoothDamp(

@@ -6,13 +6,14 @@ import "./index.css";
 import { createBrowserRouter, RouterProvider } from "react-router";
 import { loadEnvOrDefault } from "./lib/env/env.ts";
 import { client } from "../src-gen";
-import { themeManager } from "./lib/theme/ThemeManagerContext.ts";
 import { Start, StartLoader } from "./pages/Start.tsx";
 import { Room, RoomLoader } from "./pages/Room.tsx";
 import { AppContext } from "./lib/state/AppContext.ts";
+import { applyTheme, bootstrapTheme } from "./lib/theme/ThemeManager.ts";
+import { useBearStore } from "./lib/state/useBearStore.ts";
 
 async function bootstrap() {
-  themeManager.bootstrapTheme();
+  bootstrapTheme();
 
   const env = await loadEnvOrDefault();
   client.setConfig({
@@ -33,6 +34,13 @@ async function bootstrap() {
       loader: RoomLoader,
     },
   ]);
+
+  useBearStore.subscribe(
+    (s) => s.global.theme.theme,
+    (theme) => {
+      applyTheme(theme);
+    },
+  );
 
   createRoot(document.getElementById("root") as HTMLElement).render(
     <StrictMode>
