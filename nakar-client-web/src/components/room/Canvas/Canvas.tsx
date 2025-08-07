@@ -40,7 +40,7 @@ export function Canvas(props: {
             <NavbarButton
               icon={"crosshair"}
               tooltip={"Pan to center"}
-              disabled={element == null}
+              disabled={element.length === 0}
               tooltipPlacement={"left"}
               onClick={() => {
                 rendererEvents.onCenter.next();

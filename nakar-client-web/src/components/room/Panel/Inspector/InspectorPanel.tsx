@@ -8,7 +8,6 @@ import { RoomContext } from "../../../../pages/Room.tsx";
 import { Collapsable } from "../../Collapsable.tsx";
 import { Edge, Node } from "../../../../../src-gen";
 import { NavbarButton } from "../../../shared/NavbarButton.tsx";
-import { expandNode } from "../../../../actions/expandNode.ts";
 import { deleteNodes } from "../../../../actions/deleteNodes.ts";
 import { focusNodes } from "../../../../actions/focusNodes.ts";
 import { DynamicList } from "../../../shared/DynamicList.tsx";

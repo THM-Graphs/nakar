@@ -1,6 +1,5 @@
 import * as d3 from "d3";
 import { saveAs } from "file-saver";
-import { useBearStore } from "../state/useBearStore.ts";
 
 export function exportSVG() {
   const svgCanvas: HTMLElement | null = document.getElementById("svg-canvas");

@@ -1,6 +1,5 @@
-import { Edge, postRoomActionDeleteElements } from "../../../../../src-gen";
+import { Edge } from "../../../../../src-gen";
 import { DetailPane } from "./DetailPane.tsx";
-import { resultOrThrow } from "../../../../lib/data/resultOrThrow.ts";
 import { RoomContext } from "../../../../pages/Room.tsx";
 import { Stack } from "react-bootstrap";
 import { NodePreviewDisplay } from "./NodePreviewDisplay.tsx";

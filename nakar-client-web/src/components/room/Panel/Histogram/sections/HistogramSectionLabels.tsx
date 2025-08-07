@@ -1,5 +1,4 @@
 import { ValueDisplay } from "../ValueDisplay.tsx";
-import { getBackgroundColor } from "../../../../../lib/color/getBackgroundColor.ts";
 import { resultOrThrow } from "../../../../../lib/data/resultOrThrow.ts";
 import {
   postRoomActionCompressNodes,
@@ -9,14 +8,12 @@ import {
 import { RoomContext } from "../../../../../pages/Room.tsx";
 import { useBearStore } from "../../../../../lib/state/useBearStore.ts";
 import { DynamicList } from "../../../../shared/DynamicList.tsx";
-import { useColorSchema } from "../../../../../lib/color/useColorSchema.ts";
 
 export function HistogramSectionLabels(props: { roomContext: RoomContext }) {
   const labels = useBearStore((s) => s.room.scenario.graph.elements.labels);
   const histogram = useBearStore(
     (s) => s.room.scenario.graph.elements.histogram,
   );
-  const colorSchema = useColorSchema();
 
   return (
     <DynamicList

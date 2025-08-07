@@ -1,18 +1,9 @@
-import {
-  Node,
-  postRoomActionDeleteElements,
-  postRoomActionExpandNode,
-  postRoomActionExpandNodePreview,
-  postRoomActionFocusNodes,
-  postRoomActionUnlockNodes,
-} from "../../../../../src-gen";
+import { Node } from "../../../../../src-gen";
 import { DetailPane } from "./DetailPane.tsx";
 import { AppContext } from "../../../../lib/state/AppContext.ts";
 import { RoomContext } from "../../../../pages/Room.tsx";
-import { resultOrThrow } from "../../../../lib/data/resultOrThrow.ts";
 import { Stack } from "react-bootstrap";
 import { Label } from "../../Canvas/Label.tsx";
-import { useBearStore } from "../../../../lib/state/useBearStore.ts";
 import { DynamicList } from "../../../shared/DynamicList.tsx";
 import { ValueDisplay } from "../Histogram/ValueDisplay.tsx";
 import { expandNode } from "../../../../actions/expandNode.ts";
