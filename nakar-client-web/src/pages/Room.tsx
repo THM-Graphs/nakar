@@ -37,6 +37,7 @@ import { QueryPanel } from "../components/room/Panel/Query/QueryPanel.tsx";
 import { QueryPanelButton } from "../components/room/Panel/Query/QueryPanelButton.tsx";
 import { GraphRendererD3 } from "../components/room/Canvas/GraphRendererD3.tsx";
 import { DropdownButton } from "../components/shared/DropdownButton.tsx";
+import { MenuBar } from "../components/room/MenuBar.tsx";
 
 export type RoomContext = {
   initialRoomData: RoomSchema;
@@ -201,6 +202,7 @@ export function Room(props: { context: AppContext }) {
             left={
               <>
                 <BackButton href={"/"} title={"Rooms"}></BackButton>
+                <MenuBar context={props.context}></MenuBar>
               </>
             }
             center={

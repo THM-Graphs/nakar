@@ -3,6 +3,16 @@ import { UserTheme } from "../../lib/theme/UserTheme";
 import { match } from "ts-pattern";
 import { useBearStore } from "../../lib/state/useBearStore.ts";
 
+export function ThemeDropdownEntries() {
+  return (
+    <>
+      <ThemeDropdownEntry targetTheme={null}></ThemeDropdownEntry>
+      <ThemeDropdownEntry targetTheme={"light"}></ThemeDropdownEntry>
+      <ThemeDropdownEntry targetTheme={"dark"}></ThemeDropdownEntry>
+    </>
+  );
+}
+
 export function ThemeDropdownEntry(props: { targetTheme: UserTheme }) {
   const setUserTheme = useBearStore((s) => s.global.theme.setUserTheme);
   const userTheme = useBearStore((s) => s.global.theme.user);
@@ -15,7 +25,7 @@ export function ThemeDropdownEntry(props: { targetTheme: UserTheme }) {
       }}
       active={props.targetTheme === userTheme}
     >
-      <i className={`bi bi-${getIcon(props.targetTheme)} me-2`}></i>
+      <i className={`bi bi-${getIcon(props.targetTheme)} me-1`}></i>{" "}
       {getLabel(props.targetTheme)}
     </Dropdown.Item>
   );
