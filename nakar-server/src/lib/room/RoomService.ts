@@ -943,7 +943,7 @@ export class RoomService implements ApplicationService {
       params.roomId,
       'Collecting nodes to delete',
       async (): Promise<void> => {
-        const graph: MutableGraph = this.getGraph(params.roomId);
+        const graph: MutableGraph = this._snapshotGraph(params.roomId);
         const config: FinalGraphDisplayConfiguration =
           await this._database.getGraphDisplayConfiguration(
             graph.metaData.scenarioId,
