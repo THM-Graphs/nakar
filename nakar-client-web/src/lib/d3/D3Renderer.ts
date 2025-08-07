@@ -628,8 +628,8 @@ export class D3Renderer {
   public center(): void {
     const positionOfSelectedElement = this._getPositionOfSelectedElement();
     if (positionOfSelectedElement != null) {
-      const [x, y, zoom] = positionOfSelectedElement;
-      this.transform(-x, -y, zoom);
+      const [x, y] = positionOfSelectedElement;
+      this.transform(-x, -y, this.getZoom());
     } else {
       this.zoomOutOverview();
     }
@@ -844,25 +844,32 @@ export class D3Renderer {
         : "#000000";
   }
 
-  private _getPositionOfSelectedElement(): [number, number, number] | null {
+  private _getPositionOfSelectedElement(): [number, number] | null {
     const elements = useBearStore.getState().room.panels.inspector.element;
-    if (elements.length !== 1) {
+    if (elements.length === 0) {
       return null;
     }
-    const element = elements[0];
-    const node = this.graphState.nodes.find((d) => d.id === element);
-    if (node != null) {
-      return [node.x, node.y, 80 / node.radius / 2];
+    const positions: [number, number][] = [];
+    for (const element of elements) {
+      const node = this.graphState.nodes.find((d) => d.id === element);
+      if (node != null) {
+        positions.push([node.x, node.y]);
+      }
+      const edge = this.graphState.links.find((d) => d.id === element);
+      if (edge != null) {
+        positions.push([
+          (edge.source.x + edge.target.x) / 2,
+          (edge.source.y + edge.target.y) / 2,
+        ]);
+      }
     }
-    const edge = this.graphState.links.find((d) => d.id === element);
-    if (edge != null) {
-      return [
-        (edge.source.x + edge.target.x) / 2,
-        (edge.source.y + edge.target.y) / 2,
-        1,
-      ];
+    if (positions.length === 0) {
+      return null;
     }
-    return null;
+    return [
+      positions.reduce((akku, p) => akku + p[0], 0) / positions.length,
+      positions.reduce((akku, p) => akku + p[1], 0) / positions.length,
+    ];
   }
 
   private _getStrokeWidth(n: D3Node): number {
