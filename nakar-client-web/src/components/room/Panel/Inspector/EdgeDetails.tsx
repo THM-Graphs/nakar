@@ -4,6 +4,7 @@ import { resultOrThrow } from "../../../../lib/data/resultOrThrow.ts";
 import { RoomContext } from "../../../../pages/Room.tsx";
 import { Stack } from "react-bootstrap";
 import { NodePreviewDisplay } from "./NodePreviewDisplay.tsx";
+import { deleteEdges } from "../../../../actions/deleteEdges.ts";
 
 export function EdgeDetails(props: { edge: Edge; roomContext: RoomContext }) {
   return (
@@ -15,19 +16,7 @@ export function EdgeDetails(props: { edge: Edge; roomContext: RoomContext }) {
           variant: "danger",
           disabled: false,
           action: async () => {
-            resultOrThrow(
-              await postRoomActionDeleteElements({
-                path: {
-                  id: props.roomContext.initialRoomData.id,
-                },
-                body: {
-                  nodes: [],
-                  labels: [],
-                  edges: [props.edge.id],
-                  edgeTypes: [],
-                },
-              }),
-            );
+            await deleteEdges([props.edge], props.roomContext);
           },
         },
       ]}

@@ -42,11 +42,7 @@ export function HistogramSectionLabels(props: { roomContext: RoomContext }) {
                 value={entry.count}
                 percentage={entry.percentage}
                 key={entry.label}
-                bgColors={
-                  label
-                    ? [getBackgroundColor(label.color, colorSchema)]
-                    : undefined
-                }
+                nodeLabels={[entry.label]}
                 customActions={[
                   {
                     title: "Remove",

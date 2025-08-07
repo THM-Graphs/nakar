@@ -12,7 +12,6 @@ import { getTextColor } from "../color/getTextColor.ts";
 import { Observable, Subject, throttleTime } from "rxjs";
 import { D3RendererState } from "./D3RendererState.ts";
 import { D3Calculator } from "./D3Calculator.ts";
-import { match, P } from "ts-pattern";
 import { useBearStore } from "../state/useBearStore.ts";
 import { ColorSchema } from "../color/ColorSchema.ts";
 import { Theme } from "../theme/Theme.ts";
@@ -29,6 +28,8 @@ export class D3Renderer {
 
   private $onDisplayLinkData: Subject<D3Link>;
   private $onDisplayNodeData: Subject<D3Node>;
+  private $onDisplayLinkDataWithModifier: Subject<D3Link>;
+  private $onDisplayNodeDataWithModifier: Subject<D3Node>;
   private $onDeselectAll: Subject<void>;
   private $onGrabNode: Subject<D3Node>;
   private $onNodeMoved: Subject<D3Node>;
@@ -104,6 +105,8 @@ export class D3Renderer {
 
     this.$onDisplayLinkData = new Subject();
     this.$onDisplayNodeData = new Subject();
+    this.$onDisplayLinkDataWithModifier = new Subject();
+    this.$onDisplayNodeDataWithModifier = new Subject();
     this.$onDeselectAll = new Subject();
     this.$onGrabNode = new Subject<D3Node>();
     this.$onNodeMoved = new Subject<D3Node>();
@@ -132,6 +135,14 @@ export class D3Renderer {
 
   public get onDisplayNodeData(): Observable<D3Node> {
     return this.$onDisplayNodeData.asObservable();
+  }
+
+  public get onDisplayLinkDataWithModifier(): Observable<D3Link> {
+    return this.$onDisplayLinkDataWithModifier.asObservable();
+  }
+
+  public get onDisplayNodeDataWithModifier(): Observable<D3Node> {
+    return this.$onDisplayNodeDataWithModifier.asObservable();
   }
 
   public get onDeselectAll(): Observable<void> {
@@ -297,7 +308,11 @@ export class D3Renderer {
         el.style("background-color", this.theme == "dark" ? "#fff" : "#000");
       })
       .on("click", (event: PointerEvent, edge: D3Link) => {
-        this.$onDisplayLinkData.next(edge);
+        if (event.getModifierState("Control")) {
+          this.$onDisplayLinkDataWithModifier.next(edge);
+        } else {
+          this.$onDisplayLinkData.next(edge);
+        }
         event.stopPropagation();
       });
 
@@ -313,7 +328,11 @@ export class D3Renderer {
         el.attr("stroke", (d: D3Link): string => this._getEdgeStrokeColor(d));
       })
       .on("click", (event: PointerEvent, edge: D3Link) => {
-        this.$onDisplayLinkData.next(edge);
+        if (event.getModifierState("Control")) {
+          this.$onDisplayLinkDataWithModifier.next(edge);
+        } else {
+          this.$onDisplayLinkData.next(edge);
+        }
         event.stopPropagation();
       });
 
@@ -358,7 +377,11 @@ export class D3Renderer {
         this._updateShowLabels();
       })
       .on("click", (event: PointerEvent, node: D3Node) => {
-        this.$onDisplayNodeData.next(node);
+        if (event.getModifierState("Control")) {
+          this.$onDisplayNodeDataWithModifier.next(node);
+        } else {
+          this.$onDisplayNodeData.next(node);
+        }
         event.stopPropagation();
       });
 
@@ -804,19 +827,13 @@ export class D3Renderer {
   }
 
   private _nodeIsSelected(node: D3Node): boolean {
-    const element = useBearStore.getState().room.panels.inspector.element;
-    if (element?.type === "node") {
-      return element.nodeId === node.id;
-    }
-    return false;
+    const elements = useBearStore.getState().room.panels.inspector.element;
+    return elements.includes(node.id);
   }
 
   private _edgeIsSelected(edge: D3Link): boolean {
-    const element = useBearStore.getState().room.panels.inspector.element;
-    if (element?.type === "edge") {
-      return element.edgeId === edge.id;
-    }
-    return false;
+    const elements = useBearStore.getState().room.panels.inspector.element;
+    return elements.includes(edge.id);
   }
 
   private _getEdgeStrokeColor(d: D3Link): string {
@@ -828,29 +845,24 @@ export class D3Renderer {
   }
 
   private _getPositionOfSelectedElement(): [number, number, number] | null {
-    const element = useBearStore.getState().room.panels.inspector.element;
-    return match(element)
-      .returnType<[number, number, number] | null>()
-      .with(P.nullish, () => null)
-      .with({ type: "node" }, (n) => {
-        const node = this.graphState.nodes.find((d) => d.id === n.nodeId);
-        if (node == null) {
-          return null;
-        }
-        return [node.x, node.y, 80 / node.radius / 2];
-      })
-      .with({ type: "edge" }, (n) => {
-        const edge = this.graphState.links.find((d) => d.id === n.edgeId);
-        if (edge == null) {
-          return null;
-        }
-        return [
-          (edge.source.x + edge.target.x) / 2,
-          (edge.source.y + edge.target.y) / 2,
-          1,
-        ];
-      })
-      .exhaustive();
+    const elements = useBearStore.getState().room.panels.inspector.element;
+    if (elements.length !== 1) {
+      return null;
+    }
+    const element = elements[0];
+    const node = this.graphState.nodes.find((d) => d.id === element);
+    if (node != null) {
+      return [node.x, node.y, 80 / node.radius / 2];
+    }
+    const edge = this.graphState.links.find((d) => d.id === element);
+    if (edge != null) {
+      return [
+        (edge.source.x + edge.target.x) / 2,
+        (edge.source.y + edge.target.y) / 2,
+        1,
+      ];
+    }
+    return null;
   }
 
   private _getStrokeWidth(n: D3Node): number {

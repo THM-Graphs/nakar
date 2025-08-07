@@ -69,7 +69,6 @@ export const NavbarButton = forwardRef<
           props.className,
         )}
         style={{
-          opacity: disabled ? 0.3 : 1,
           ...(props.style ? props.style : {}),
         }}
       >
@@ -81,6 +80,7 @@ export const NavbarButton = forwardRef<
             props.size == null && "ps-2 pe-2 pt-1 pb-1",
             props.size == "big" && "ps-3 pe-3 pt-2 pb-2 fs-5",
           )}
+          style={{ opacity: disabled ? 0.3 : 1 }}
         >
           {loading ? (
             <Spinner animation="border" role="status" size={"sm"}>

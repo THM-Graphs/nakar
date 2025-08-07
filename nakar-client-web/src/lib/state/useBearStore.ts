@@ -302,16 +302,29 @@ export const useBearStore = create<BearState>()(
                 left: "scenarios",
                 right: null,
                 inspector: {
-                  element: null,
+                  element: [],
                   setElement: (i) => {
                     set((s) => {
-                      s.room.panels.inspector.element = i;
+                      s.room.panels.inspector.element = [i];
                       s.room.panels.right = "inspector";
                     });
                   },
-                  deselectElement: () => {
+                  appendElement: (i) => {
                     set((s) => {
-                      s.room.panels.inspector.element = null;
+                      const elements = get().room.panels.inspector.element;
+                      if (elements.includes(i)) {
+                        s.room.panels.inspector.element = elements.filter(
+                          (a) => a !== i,
+                        );
+                      } else {
+                        s.room.panels.inspector.element = [...elements, i];
+                      }
+                      s.room.panels.right = "inspector";
+                    });
+                  },
+                  deselectElements: () => {
+                    set((s) => {
+                      s.room.panels.inspector.element = [];
                     });
                   },
                   show: () => {
@@ -322,7 +335,7 @@ export const useBearStore = create<BearState>()(
                   hide: () => {
                     set((s) => {
                       s.room.panels.right = null;
-                      s.room.panels.inspector.element = null;
+                      s.room.panels.inspector.element = [];
                     });
                   },
                 },
@@ -385,13 +398,13 @@ export const useBearStore = create<BearState>()(
                   selectGraph: () => {
                     set((s) => {
                       s.room.canvas.tabs.selected = "graph";
-                      s.room.panels.inspector.element = null;
+                      s.room.panels.inspector.element = [];
                     });
                   },
                   selectData: () => {
                     set((s) => {
                       s.room.canvas.tabs.selected = "data";
-                      s.room.panels.inspector.element = null;
+                      s.room.panels.inspector.element = [];
                     });
                   },
                 },

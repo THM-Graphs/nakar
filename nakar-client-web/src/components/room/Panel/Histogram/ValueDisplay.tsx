@@ -3,13 +3,14 @@ import { Stack } from "react-bootstrap";
 import { NavbarButton } from "../../../shared/NavbarButton.tsx";
 import { PropertyMenu } from "../../PropertyMenu.tsx";
 import { RoomContext } from "../../../../pages/Room.tsx";
+import { NodeLabelColors } from "../../../shared/NodeLabelColors.tsx";
 
 export function ValueDisplay(props: {
   label: string;
   subLabel?: string;
   value: number;
   percentage: number | null;
-  bgColors?: string[];
+  nodeLabels?: string[];
   onSelect?: () => void | Promise<void>;
   roomContext: RoomContext;
   customActions?: {
@@ -42,26 +43,9 @@ export function ValueDisplay(props: {
               size={"sm"}
             ></NavbarButton>
           )}
-          <Stack
-            direction={"horizontal"}
-            style={{
-              marginRight: (props.bgColors ?? []).length === 0 ? "0px" : "12px",
-            }}
-          >
-            {props.bgColors?.map((color, index) => (
-              <div
-                key={color + index.toString()}
-                style={{
-                  zIndex: 1 + ((props.bgColors ?? []).length - index),
-                  width: "15px",
-                  height: "15px",
-                  backgroundColor: color,
-                  marginRight: "-8px",
-                }}
-                className={"flex-grow-0 flex-shrink-0 rounded-circle"}
-              ></div>
-            ))}
-          </Stack>
+          {props.nodeLabels && (
+            <NodeLabelColors labels={props.nodeLabels}></NodeLabelColors>
+          )}
           <span
             style={{}}
             className={clsx(

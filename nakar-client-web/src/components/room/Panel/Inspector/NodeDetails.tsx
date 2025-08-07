@@ -15,16 +15,16 @@ import { Label } from "../../Canvas/Label.tsx";
 import { useBearStore } from "../../../../lib/state/useBearStore.ts";
 import { DynamicList } from "../../../shared/DynamicList.tsx";
 import { ValueDisplay } from "../Histogram/ValueDisplay.tsx";
+import { expandNode } from "../../../../actions/expandNode.ts";
+import { deleteNodes } from "../../../../actions/deleteNodes.ts";
+import { focusNodes } from "../../../../actions/focusNodes.ts";
+import { unlockNodes } from "../../../../actions/unlockNodes.ts";
 
 export function NodeDetails(props: {
   node: Node;
   context: AppContext;
   roomContext: RoomContext;
 }) {
-  const showExpandNodePreview = useBearStore(
-    (s) => s.room.scenario.expandNodePreview.open,
-  );
-
   return (
     <DetailPane
       actions={[
@@ -34,34 +34,7 @@ export function NodeDetails(props: {
           variant: "primary",
           disabled: false,
           action: async () => {
-            if (props.node.isCluster) {
-              await postRoomActionExpandNode({
-                path: {
-                  id: props.roomContext.initialRoomData.id,
-                },
-                body: {
-                  nodeId: props.node.id,
-                  limit: { labels: [], relationships: [] },
-                },
-              });
-            } else {
-              showExpandNodePreview(null);
-              const result = resultOrThrow(
-                await postRoomActionExpandNodePreview({
-                  path: {
-                    id: props.roomContext.initialRoomData.id,
-                  },
-                  body: { nodeId: props.node.id },
-                }),
-              );
-              if (result != null) {
-                showExpandNodePreview({
-                  relationships: result.relationships,
-                  labels: result.labels,
-                  nodeId: props.node.id,
-                });
-              }
-            }
+            await expandNode(props.node, props.roomContext);
           },
         },
         {
@@ -70,19 +43,7 @@ export function NodeDetails(props: {
           variant: "danger",
           disabled: false,
           action: async () => {
-            resultOrThrow(
-              await postRoomActionDeleteElements({
-                path: {
-                  id: props.roomContext.initialRoomData.id,
-                },
-                body: {
-                  nodes: [props.node.id],
-                  labels: [],
-                  edges: [],
-                  edgeTypes: [],
-                },
-              }),
-            );
+            await deleteNodes([props.node], props.roomContext);
           },
         },
         {
@@ -91,14 +52,7 @@ export function NodeDetails(props: {
           variant: "primary",
           disabled: false,
           action: async () => {
-            resultOrThrow(
-              await postRoomActionFocusNodes({
-                path: {
-                  id: props.roomContext.initialRoomData.id,
-                },
-                body: { nodes: [props.node.id] },
-              }),
-            );
+            await focusNodes([props.node], props.roomContext);
           },
         },
         {
@@ -107,14 +61,7 @@ export function NodeDetails(props: {
           variant: "primary",
           disabled: !props.node.locked,
           action: async () => {
-            resultOrThrow(
-              await postRoomActionUnlockNodes({
-                path: { id: props.roomContext.initialRoomData.id },
-                body: {
-                  nodes: [props.node.id],
-                },
-              }),
-            );
+            await unlockNodes([props.node], props.roomContext);
           },
         },
       ]}

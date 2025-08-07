@@ -1,20 +1,16 @@
 import { ValueDisplay } from "../ValueDisplay.tsx";
-import { getBackgroundColor } from "../../../../../lib/color/getBackgroundColor.ts";
 import { resultOrThrow } from "../../../../../lib/data/resultOrThrow.ts";
 import { postRoomActionDeleteElements } from "../../../../../../src-gen";
 import { RoomContext } from "../../../../../pages/Room.tsx";
 import { useBearStore } from "../../../../../lib/state/useBearStore.ts";
 import { DynamicList } from "../../../../shared/DynamicList.tsx";
-import { useColorSchema } from "../../../../../lib/color/useColorSchema.ts";
 
 export function HistogramSectionNodes(props: { roomContext: RoomContext }) {
   const histogram = useBearStore(
     (s) => s.room.scenario.graph.elements.histogram,
   );
-  const labels = useBearStore((s) => s.room.scenario.graph.elements.labels);
   const setElement = useBearStore((s) => s.room.panels.inspector.setElement);
   const onCenter = useBearStore((s) => s.room.ui.rendererEvents.onCenter);
-  const colorSchema = useColorSchema();
 
   return (
     <DynamicList
@@ -25,9 +21,6 @@ export function HistogramSectionNodes(props: { roomContext: RoomContext }) {
       render={(list) => (
         <>
           {list.map((nodeEntry) => {
-            const nodeLabels = labels.filter((graphLabel) =>
-              nodeEntry.labels.includes(graphLabel.label),
-            );
             return (
               <ValueDisplay
                 key={nodeEntry.id}
@@ -36,11 +29,9 @@ export function HistogramSectionNodes(props: { roomContext: RoomContext }) {
                 percentage={nodeEntry.percentage}
                 label={nodeEntry.title}
                 subLabel={nodeEntry.id}
-                bgColors={nodeLabels.map((l) =>
-                  getBackgroundColor(l.color, colorSchema),
-                )}
+                nodeLabels={nodeEntry.labels}
                 onSelect={() => {
-                  setElement({ type: "node", nodeId: nodeEntry.id });
+                  setElement(nodeEntry.id);
                   onCenter.next();
                 }}
                 customActions={[

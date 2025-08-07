@@ -73,13 +73,19 @@ export function GraphRendererD3(props: {
         });
       }),
       _graphRenderer.onDisplayNodeData.subscribe((n) => {
-        inspector.setElement({ type: "node", nodeId: n.id });
+        inspector.setElement(n.id);
       }),
       _graphRenderer.onDisplayLinkData.subscribe((l) => {
-        inspector.setElement({ type: "edge", edgeId: l.id });
+        inspector.setElement(l.id);
+      }),
+      _graphRenderer.onDisplayNodeDataWithModifier.subscribe((n) => {
+        inspector.appendElement(n.id);
+      }),
+      _graphRenderer.onDisplayLinkDataWithModifier.subscribe((l) => {
+        inspector.appendElement(l.id);
       }),
       _graphRenderer.onDeselectAll.subscribe(() => {
-        inspector.deselectElement();
+        inspector.deselectElements();
       }),
       events.onZoomOut.subscribe(() => {
         _graphRenderer.zoomOut();

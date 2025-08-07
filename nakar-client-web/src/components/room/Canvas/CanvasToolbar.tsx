@@ -78,7 +78,12 @@ export function CanvasToolbar(props: {
           </span>
         </>
       )}
-      <DropdownButton title={"Actions"} icon={"chevron-down"} align={"end"}>
+      <DropdownButton
+        title={"Actions"}
+        icon={"chevron-down"}
+        align={"end"}
+        buttonClassName={"border-start"}
+      >
         <Dropdown.Item
           disabled={graph.metaData.scenario == null || uiLocked}
           onClick={() => {

@@ -11,7 +11,6 @@ import {
   ScenarioArgument,
   WSEventProgress,
 } from "../../../src-gen";
-import { InspectorElement } from "../../components/room/Panel/Inspector/InspectorElement.ts";
 import { SocketState } from "../ws/SocketState.ts";
 import { Subject } from "rxjs";
 import { UserTheme } from "../theme/UserTheme.ts";
@@ -114,9 +113,10 @@ export interface BearState {
       inspector: {
         show: () => void;
         hide: () => void;
-        element: InspectorElement | null;
-        setElement: (i: InspectorElement) => void;
-        deselectElement: () => void;
+        element: string[];
+        setElement: (i: string) => void;
+        appendElement: (i: string) => void;
+        deselectElements: () => void;
       };
       histogram: {
         show: () => void;

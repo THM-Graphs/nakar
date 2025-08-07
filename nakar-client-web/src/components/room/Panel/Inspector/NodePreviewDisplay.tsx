@@ -43,7 +43,7 @@ export function NodePreviewDisplay(props: {
         color: fgColor ?? undefined,
       }}
       onClick={() => {
-        setDetailElement({ type: "node", nodeId: props.nodeId });
+        setDetailElement(props.nodeId);
       }}
     >
       {trimmedTitle}
