@@ -641,18 +641,18 @@ export class D3Renderer {
       return;
     }
 
-    const paddingPercent = 0.9;
     const bounds = this.zoomContainer?.node()?.getBBox();
     if (bounds == null) {
       console.error("Cannot get bounds.");
       return;
     }
-    const parent = this.zoomContainer?.node()?.parentElement;
+    const parent = this.svgContainer?.node();
     if (parent == null) {
       console.error("Parent is null");
       return;
     }
 
+    const paddingPercent = 0.9;
     const leftInset = 400 + 50;
     const rightInset = 400 + 50;
     const topInset = 30 + 30;
@@ -670,7 +670,7 @@ export class D3Renderer {
     if (width == 0 || height == 0) return; // nothing to fit
     const scale =
       paddingPercent / Math.max(width / fullWidth, height / fullHeight);
-    const translate = [-midX, -midY + topInset];
+    const translate = [-midX, -midY + (topInset - bottomInset) / 2 / scale];
 
     this.transform(translate[0], translate[1], scale);
     console.trace("zoomFit", translate, scale);
