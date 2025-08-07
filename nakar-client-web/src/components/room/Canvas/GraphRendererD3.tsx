@@ -84,6 +84,9 @@ export function GraphRendererD3(props: {
       events.onZoomOut.subscribe(() => {
         _graphRenderer.zoomOut();
       }),
+      events.onZoomIn.subscribe(() => {
+        _graphRenderer.zoomIn();
+      }),
       events.onCenter.subscribe(() => {
         _graphRenderer.center();
       }),

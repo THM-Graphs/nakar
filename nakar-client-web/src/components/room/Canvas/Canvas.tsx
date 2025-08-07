@@ -13,6 +13,7 @@ export function Canvas(props: {
 }) {
   const tabs = useBearStore((s) => s.room.canvas.tabs);
   const rendererEvents = useBearStore((s) => s.room.ui.rendererEvents);
+  const element = useBearStore((s) => s.room.panels.inspector.element);
 
   return (
     <Stack
@@ -39,6 +40,7 @@ export function Canvas(props: {
             <NavbarButton
               icon={"crosshair"}
               tooltip={"Pan to center"}
+              disabled={element == null}
               tooltipPlacement={"left"}
               onClick={() => {
                 rendererEvents.onCenter.next();
@@ -47,7 +49,6 @@ export function Canvas(props: {
             <NavbarButton
               icon={"aspect-ratio"}
               tooltip={"Overview"}
-              disabled={true}
               tooltipPlacement={"left"}
               onClick={() => {
                 rendererEvents.onZoomOutOverview.next();

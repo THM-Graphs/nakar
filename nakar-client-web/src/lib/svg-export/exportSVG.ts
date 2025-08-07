@@ -4,7 +4,6 @@ import { useBearStore } from "../state/useBearStore.ts";
 
 export function exportSVG() {
   const svgCanvas: HTMLElement | null = document.getElementById("svg-canvas");
-  const theme = useBearStore.getState().global.theme.getTheme();
   if (svgCanvas == null) {
     throw new Error("Canvas not found.");
   }

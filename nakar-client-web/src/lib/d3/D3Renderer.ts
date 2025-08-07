@@ -6,7 +6,7 @@ import {
   WSEventSetNodeLocks,
 } from "../../../src-gen";
 import * as d3 from "d3";
-import { ZoomBehavior } from "d3";
+import { ZoomBehavior, ZoomTransform } from "d3";
 import { getBackgroundColor } from "../color/getBackgroundColor.ts";
 import { getTextColor } from "../color/getTextColor.ts";
 import { Observable, Subject, throttleTime } from "rxjs";
@@ -603,12 +603,54 @@ export class D3Renderer {
   }
 
   public center(): void {
-    const [x, y, zoom] = this._getPositionOfSelectedElement();
-    this.transform(-x, -y, zoom);
+    const positionOfSelectedElement = this._getPositionOfSelectedElement();
+    if (positionOfSelectedElement != null) {
+      const [x, y, zoom] = positionOfSelectedElement;
+      this.transform(-x, -y, zoom);
+    } else {
+      this.zoomOutOverview();
+    }
   }
 
   public zoomOutOverview(): void {
-    // TODO
+    if (this.zoomBehaviour == null) {
+      console.warn("Zoom Behaviour is null");
+      return;
+    }
+
+    const paddingPercent = 0.9;
+    const bounds = this.zoomContainer?.node()?.getBBox();
+    if (bounds == null) {
+      console.error("Cannot get bounds.");
+      return;
+    }
+    const parent = this.zoomContainer?.node()?.parentElement;
+    if (parent == null) {
+      console.error("Parent is null");
+      return;
+    }
+
+    const leftInset = 400 + 50;
+    const rightInset = 400 + 50;
+    const topInset = 30 + 30;
+    const bottomInset = 25;
+    const fullWidth = parent.clientWidth - leftInset - rightInset,
+      fullHeight = parent.clientHeight - topInset - bottomInset;
+    if (fullWidth < 10 || fullHeight < 10) {
+      console.warn("Unable to zoom to fit: Not enough window size");
+      return;
+    }
+    const width = bounds.width,
+      height = bounds.height;
+    const midX = bounds.x + width / 2,
+      midY = bounds.y + height / 2;
+    if (width == 0 || height == 0) return; // nothing to fit
+    const scale =
+      paddingPercent / Math.max(width / fullWidth, height / fullHeight);
+    const translate = [-midX, -midY + topInset];
+
+    this.transform(translate[0], translate[1], scale);
+    console.trace("zoomFit", translate, scale);
   }
 
   public zoomTo(zoom: number): void {
@@ -626,6 +668,9 @@ export class D3Renderer {
       .duration(100)
       // eslint-disable-next-line @typescript-eslint/unbound-method
       .call(this.zoomBehaviour.scaleTo, zoom);
+    useBearStore
+      .getState()
+      .room.canvas.setZoomTransform(this.getZoomTransform());
   }
 
   public transform(x: number, y: number, zoom: number): void {
@@ -638,14 +683,13 @@ export class D3Renderer {
       console.warn("Zoom Behaviour is null");
       return;
     }
-    this.svgContainer
-      ?.transition()
-      .duration(100)
-      .call(
-        // eslint-disable-next-line @typescript-eslint/unbound-method
-        this.zoomBehaviour.transform,
-        new d3.ZoomTransform(zoom, x * zoom, y * zoom),
-      );
+    const zoomTransform = new ZoomTransform(zoom, x * zoom, y * zoom);
+    this.svgContainer?.transition().duration(100).call(
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      this.zoomBehaviour.transform,
+      zoomTransform,
+    );
+    useBearStore.getState().room.canvas.setZoomTransform(zoomTransform);
   }
 
   public getZoomTransform(): d3.ZoomTransform {
@@ -783,22 +827,22 @@ export class D3Renderer {
         : "#000000";
   }
 
-  private _getPositionOfSelectedElement(): [number, number, number] {
+  private _getPositionOfSelectedElement(): [number, number, number] | null {
     const element = useBearStore.getState().room.panels.inspector.element;
     return match(element)
-      .returnType<[number, number, number]>()
-      .with(P.nullish, () => [0, 0, 1])
+      .returnType<[number, number, number] | null>()
+      .with(P.nullish, () => null)
       .with({ type: "node" }, (n) => {
         const node = this.graphState.nodes.find((d) => d.id === n.nodeId);
         if (node == null) {
-          return [0, 0, 1];
+          return null;
         }
         return [node.x, node.y, 80 / node.radius / 2];
       })
       .with({ type: "edge" }, (n) => {
         const edge = this.graphState.links.find((d) => d.id === n.edgeId);
         if (edge == null) {
-          return [0, 0, 1];
+          return null;
         }
         return [
           (edge.source.x + edge.target.x) / 2,
