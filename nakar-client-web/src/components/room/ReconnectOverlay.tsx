@@ -1,14 +1,17 @@
 import { AppNavbar } from "../shared/AppNavbar.tsx";
-import { BackButton } from "../shared/BackButton.tsx";
 import { SocketStateDisplay } from "./SocketStateDisplay.tsx";
 import { Stack } from "react-bootstrap";
 import { displayStringForState } from "../../lib/ws/displayStringForState.ts";
 import { Loading } from "../shared/Loading.tsx";
 import { NavbarLogo } from "../shared/NavbarLogo.tsx";
 import { useBearStore } from "../../lib/state/useBearStore.ts";
+import { ActionNavbarButton } from "../../actions/ActionNavbarButton.tsx";
+import { CloseRoomAction } from "../../actions/CloseRoomAction.ts";
+import { useNavigate } from "react-router";
 
 export function ReconnectOverlay() {
   const socketState = useBearStore((s) => s.room.websockets.state);
+  const navigate = useNavigate();
 
   return (
     <Stack
@@ -17,7 +20,13 @@ export function ReconnectOverlay() {
       style={{ width: "100%", height: "100%", zIndex: 500 }}
     >
       <AppNavbar
-        left={<BackButton href={"/"}></BackButton>}
+        left={
+          <ActionNavbarButton
+            action={CloseRoomAction.shared}
+            params={{ navigate }}
+            customTitle={"Rooms"}
+          ></ActionNavbarButton>
+        }
         center={<NavbarLogo></NavbarLogo>}
         right={<SocketStateDisplay></SocketStateDisplay>}
       ></AppNavbar>

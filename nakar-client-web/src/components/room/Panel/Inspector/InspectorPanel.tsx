@@ -7,14 +7,14 @@ import { AppContext } from "../../../../lib/state/AppContext.ts";
 import { RoomContext } from "../../../../pages/Room.tsx";
 import { Collapsable } from "../../Collapsable.tsx";
 import { Edge, Node } from "../../../../../src-gen";
-import { NavbarButton } from "../../../shared/NavbarButton.tsx";
-import { deleteNodes } from "../../../../actions/deleteNodes.ts";
-import { focusNodes } from "../../../../actions/focusNodes.ts";
 import { DynamicList } from "../../../shared/DynamicList.tsx";
 import { Stack } from "react-bootstrap";
-import { deleteEdges } from "../../../../actions/deleteEdges.ts";
 import { NodeLabelColors } from "../../../shared/NodeLabelColors.tsx";
-import { unlockNodes } from "../../../../actions/unlockNodes.ts";
+import { RemoveRelationshipsAction } from "../../../../actions/RemoveRelationshipsAction.ts";
+import { ActionNavbarButton } from "../../../../actions/ActionNavbarButton.tsx";
+import { RemoveNodesAction } from "../../../../actions/RemoveNodesAction.ts";
+import { FocusNodesAction } from "../../../../actions/FocusNodesAction.ts";
+import { UnlockNodesAction } from "../../../../actions/UnlockNodesAction.ts";
 
 export function InspectorPanel(props: {
   context: AppContext;
@@ -63,8 +63,6 @@ export function InspectorPanel(props: {
             (akku, next) => ("startNodeId" in next ? [...akku, next] : akku),
             [],
           );
-          const oneOrMoreNodesAreUnlockable =
-            nodes.find((n) => n.locked) != null;
           return (
             <Stack gap={5}>
               {nodes.length > 0 && (
@@ -82,31 +80,27 @@ export function InspectorPanel(props: {
                       ))}
                       {list.length > 0 && (
                         <>
-                          <NavbarButton
-                            title={`Remove ${nodes.length.toString()} nodes`}
-                            className={"border-top"}
-                            icon={"eye-slash"}
-                            onClick={async () => {
-                              await deleteNodes(nodes, props.roomContext);
+                          <ActionNavbarButton
+                            action={RemoveNodesAction.shared}
+                            params={{
+                              nodes: nodes,
+                              roomContext: props.roomContext,
                             }}
-                          ></NavbarButton>
-                          <NavbarButton
-                            title={`Focus on ${nodes.length.toString()} nodes`}
-                            className={"border-top"}
-                            icon={"binoculars"}
-                            onClick={async () => {
-                              await focusNodes(nodes, props.roomContext);
+                          ></ActionNavbarButton>
+                          <ActionNavbarButton
+                            action={FocusNodesAction.shared}
+                            params={{
+                              nodes: nodes,
+                              roomContext: props.roomContext,
                             }}
-                          ></NavbarButton>
-                          <NavbarButton
-                            title={`Unlock ${nodes.length.toString()} nodes`}
-                            className={"border-top border-bottom"}
-                            disabled={!oneOrMoreNodesAreUnlockable}
-                            icon={"unlock"}
-                            onClick={async () => {
-                              await unlockNodes(nodes, props.roomContext);
+                          ></ActionNavbarButton>
+                          <ActionNavbarButton
+                            action={UnlockNodesAction.shared}
+                            params={{
+                              nodes: nodes,
+                              roomContext: props.roomContext,
                             }}
-                          ></NavbarButton>
+                          ></ActionNavbarButton>
                         </>
                       )}
                     </>
@@ -129,14 +123,13 @@ export function InspectorPanel(props: {
                       ))}
                       {list.length > 0 && (
                         <>
-                          <NavbarButton
-                            title={`Remove ${edges.length.toString()} edges`}
-                            className={"border-top border-bottom"}
-                            icon={"eye-slash"}
-                            onClick={async () => {
-                              await deleteEdges(edges, props.roomContext);
+                          <ActionNavbarButton
+                            action={RemoveRelationshipsAction.shared}
+                            params={{
+                              edges: edges,
+                              roomContext: props.roomContext,
                             }}
-                          ></NavbarButton>
+                          ></ActionNavbarButton>
                         </>
                       )}
                     </>

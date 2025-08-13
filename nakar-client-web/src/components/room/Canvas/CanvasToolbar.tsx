@@ -1,35 +1,24 @@
 import { GraphDataToggle } from "../GraphDataToggle.tsx";
-import { Dropdown, Stack } from "react-bootstrap";
-import { NavbarButton } from "../../shared/NavbarButton.tsx";
+import { Stack } from "react-bootstrap";
 import { useBearStore } from "../../../lib/state/useBearStore.ts";
 import { AppContext } from "../../../lib/state/AppContext.ts";
-import {
-  postRoomActionCompressRelationships,
-  postRoomActionConnectResultNodes,
-  postRoomActionRedo,
-  postRoomActionRelayout,
-  postRoomActionReloadScenario,
-  postRoomActionRemoveDanglingNodes,
-  postRoomActionUndo,
-  postRoomActionUnlockAllNodes,
-} from "../../../../src-gen";
 import { RoomContext } from "../../../pages/Room.tsx";
-import { resultOrThrow } from "../../../lib/data/resultOrThrow.ts";
 import { DropdownButton } from "../../shared/DropdownButton.tsx";
-import { exportSVG } from "../../../lib/svg-export/exportSVG.ts";
+import { ActionDropdownItem } from "../../../actions/ActionDropdownItem.tsx";
+import { ActionNavbarButton } from "../../../actions/ActionNavbarButton.tsx";
+import { UndoAction } from "../../../actions/UndoAction.ts";
+import { RedoAction } from "../../../actions/RedoAction.ts";
+import { EditScenarioAction } from "../../../actions/EditScenarioAction.ts";
+import { RerunScenarioAction } from "../../../actions/RerunScenarioAction.ts";
 
 export function CanvasToolbar(props: {
   context: AppContext;
   roomContext: RoomContext;
 }) {
-  const graph = useBearStore((s) => s.room.scenario.graph);
+  const canUndo = useBearStore((s) => s.room.scenario.graph.metaData.canUndo);
+  const canRedo = useBearStore((s) => s.room.scenario.graph.metaData.canRedo);
+  const scenario = useBearStore((s) => s.room.scenario.graph.metaData.scenario);
   const uiLocked = useBearStore((s) => s.room.ui.locked);
-  const selectedTab = useBearStore((s) => s.room.canvas.tabs.selected);
-  const pushErrorNotification = useBearStore(
-    (s) => s.room.ui.pushErrorNotification,
-  );
-  const hideLabels = useBearStore((s) => s.room.canvas.hideLabels);
-  const setHideLabels = useBearStore((s) => s.room.canvas.setHideLabels);
 
   return (
     <Stack
@@ -39,190 +28,58 @@ export function CanvasToolbar(props: {
       }
     >
       <Stack direction={"horizontal"}>
-        <NavbarButton
-          icon={"arrow-left"}
-          disabled={!graph.metaData.canUndo || uiLocked}
-          onClick={async () => {
-            resultOrThrow(
-              await postRoomActionUndo({
-                path: {
-                  id: props.roomContext.initialRoomData.id,
-                },
-              }),
-            );
+        <ActionNavbarButton
+          action={UndoAction.shared}
+          params={{
+            roomContext: props.roomContext,
+            canUndo: canUndo,
+            uiLocked: uiLocked,
           }}
-        ></NavbarButton>
-        <NavbarButton
-          icon={"arrow-right"}
-          disabled={!graph.metaData.canRedo || uiLocked}
-          onClick={async () => {
-            resultOrThrow(
-              await postRoomActionRedo({
-                path: {
-                  id: props.roomContext.initialRoomData.id,
-                },
-              }),
-            );
+          hideTitle={true}
+          tooltipPlacement={"bottom"}
+        ></ActionNavbarButton>
+        <ActionNavbarButton
+          action={RedoAction.shared}
+          params={{
+            roomContext: props.roomContext,
+            canRedo,
+            uiLocked,
           }}
-        ></NavbarButton>
+          hideTitle={true}
+          tooltipPlacement={"bottom"}
+        ></ActionNavbarButton>
+
         <GraphDataToggle></GraphDataToggle>
       </Stack>
 
-      {graph.metaData.scenario && (
+      {scenario && (
         <>
-          <span className={"small text-muted ps-1 pe-1"}>
-            Scenario:{" "}
-            <span className={"user-select-text"}>
-              {graph.metaData.scenario.current.title}
+          <Stack direction={"horizontal"} className={" ps-1"}>
+            <span className={"small text-muted"}>
+              Scenario:{" "}
+              <span className={"user-select-text"}>
+                {scenario.current.title}
+              </span>
             </span>
-          </span>
+          </Stack>
         </>
       )}
-      <DropdownButton
-        title={"Actions"}
-        icon={"chevron-down"}
-        align={"end"}
-        buttonClassName={"border-start"}
-      >
-        <Dropdown.Item
-          disabled={graph.metaData.scenario == null || uiLocked}
-          onClick={() => {
-            postRoomActionReloadScenario({
-              path: { id: props.roomContext.initialRoomData.id },
-            })
-              .then(resultOrThrow)
-              .catch(pushErrorNotification);
-          }}
-        >
-          <Stack direction={"horizontal"} gap={2}>
-            <i className={"bi bi-arrow-clockwise"}></i>
-            <span className={"small"}>Rerun Scenario</span>
-          </Stack>
-        </Dropdown.Item>
-        <Dropdown.Divider></Dropdown.Divider>
-        <Dropdown.Item
-          disabled={
-            graph.metaData.scenario == null ||
-            uiLocked ||
-            selectedTab !== "graph"
-          }
-          onClick={() => {
-            postRoomActionRelayout({
-              path: { id: props.roomContext.initialRoomData.id },
-            })
-              .then(resultOrThrow)
-              .catch(pushErrorNotification);
-          }}
-        >
-          <Stack direction={"horizontal"} gap={2}>
-            <i className={"bi bi-tropical-storm"}></i>
-            <span className={"small"}>Relayout</span>
-          </Stack>
-        </Dropdown.Item>
-        <Dropdown.Item
-          disabled={
-            graph.metaData.scenario == null ||
-            uiLocked ||
-            selectedTab !== "graph"
-          }
-          onClick={() => {
-            postRoomActionUnlockAllNodes({
-              path: { id: props.roomContext.initialRoomData.id },
-            })
-              .then(resultOrThrow)
-              .catch(pushErrorNotification);
-          }}
-        >
-          <Stack direction={"horizontal"} gap={2}>
-            <i className={"bi bi-unlock"}></i>
-            <span className={"small"}>Unlock all nodes</span>
-          </Stack>
-        </Dropdown.Item>
-        <Dropdown.Item
-          disabled={graph.metaData.scenario == null || selectedTab !== "graph"}
-          onClick={() => {
-            setHideLabels(!hideLabels);
-          }}
-        >
-          <Stack direction={"horizontal"} gap={2}>
-            <i className={"bi bi-card-text"}></i>
-            <span className={"small"}>
-              {hideLabels ? "Show Labels" : "Hide Labels"}
-            </span>
-          </Stack>
-        </Dropdown.Item>
-
-        <Dropdown.Divider></Dropdown.Divider>
-        <Dropdown.Item
-          disabled={uiLocked || selectedTab !== "graph"}
-          onClick={() => {
-            postRoomActionConnectResultNodes({
-              path: { id: props.roomContext.initialRoomData.id },
-            })
-              .then(resultOrThrow)
-              .catch(pushErrorNotification);
-          }}
-        >
-          <Stack direction={"horizontal"} gap={2}>
-            <i className={"bi bi-intersect"}></i>
-            <span className={"small"}>Connect Result Nodes</span>
-          </Stack>
-        </Dropdown.Item>
-        <Dropdown.Item
-          disabled={
-            graph.metaData.scenario == null ||
-            uiLocked ||
-            selectedTab !== "graph"
-          }
-          onClick={() => {
-            postRoomActionRemoveDanglingNodes({
-              path: { id: props.roomContext.initialRoomData.id },
-            })
-              .then(resultOrThrow)
-              .catch(pushErrorNotification);
-          }}
-        >
-          <Stack direction={"horizontal"} gap={2}>
-            <i className={"bi bi-eye-slash"}></i>
-            <span className={"small"}>Remove Dangling Nodes</span>
-          </Stack>
-        </Dropdown.Item>
-        <Dropdown.Item
-          disabled={
-            graph.metaData.scenario == null ||
-            uiLocked ||
-            selectedTab !== "graph"
-          }
-          onClick={() => {
-            postRoomActionCompressRelationships({
-              path: { id: props.roomContext.initialRoomData.id },
-            })
-              .then(resultOrThrow)
-              .catch(pushErrorNotification);
-          }}
-        >
-          <Stack direction={"horizontal"} gap={2}>
-            <i className={"bi bi-arrows-collapse"}></i>
-            <span className={"small"}>Compress Relationships</span>
-          </Stack>
-        </Dropdown.Item>
-        <Dropdown.Divider></Dropdown.Divider>
-        <Dropdown.Item
-          disabled={selectedTab !== "graph"}
-          onClick={() => {
-            try {
-              exportSVG();
-            } catch (error: unknown) {
-              pushErrorNotification(error);
-            }
-          }}
-        >
-          <Stack direction={"horizontal"} gap={2}>
-            <i className={"bi bi-download"}></i>
-            <span className={"small"}>Download SVG-File</span>
-          </Stack>
-        </Dropdown.Item>
-      </DropdownButton>
+      {scenario && (
+        <DropdownButton icon={"three-dots-vertical"}>
+          <ActionDropdownItem
+            action={RerunScenarioAction.shared}
+            params={{
+              roomContext: props.roomContext,
+              scenario: scenario.current,
+              uiLocked,
+            }}
+          ></ActionDropdownItem>
+          <ActionDropdownItem
+            action={EditScenarioAction.shared}
+            params={{ scenario: scenario.current }}
+          ></ActionDropdownItem>
+        </DropdownButton>
+      )}
     </Stack>
   );
 }

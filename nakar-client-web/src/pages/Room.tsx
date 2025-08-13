@@ -1,4 +1,4 @@
-import { Dropdown, Stack } from "react-bootstrap";
+import { Stack } from "react-bootstrap";
 import { AppNavbar } from "../components/shared/AppNavbar.tsx";
 import { Canvas } from "../components/room/Canvas/Canvas.tsx";
 import { useEffect } from "react";
@@ -15,11 +15,9 @@ import { LoaderFunctionArgs, useLoaderData, useNavigate } from "react-router";
 import { resultOrThrow } from "../lib/data/resultOrThrow.ts";
 import { ToastStack } from "../components/room/ToastStack.tsx";
 import { HistogramPanel } from "../components/room/Panel/Histogram/HistogramPanel.tsx";
-import { BackButton } from "../components/shared/BackButton.tsx";
 import { ScenariosPanelButton } from "../components/room/Panel/Scenarios/ScenariosPanelButton.tsx";
 import { ProgressDisplay } from "../components/room/ProgressDisplay.tsx";
 import { SocketStateDisplay } from "../components/room/SocketStateDisplay.tsx";
-import { InfoDropdown } from "../components/shared/InfoDropdown.tsx";
 import { ReconnectOverlay } from "../components/room/ReconnectOverlay.tsx";
 import { NavbarLogo } from "../components/shared/NavbarLogo.tsx";
 import { InspectorPanel } from "../components/room/Panel/Inspector/InspectorPanel.tsx";
@@ -38,6 +36,10 @@ import { QueryPanelButton } from "../components/room/Panel/Query/QueryPanelButto
 import { GraphRendererD3 } from "../components/room/Canvas/GraphRendererD3.tsx";
 import { DropdownButton } from "../components/shared/DropdownButton.tsx";
 import { MenuBar } from "../components/room/MenuBar.tsx";
+import { ActionNavbarButton } from "../actions/ActionNavbarButton.tsx";
+import { CloseRoomAction } from "../actions/CloseRoomAction.ts";
+import { ActionDropdownItem } from "../actions/ActionDropdownItem.tsx";
+import { EditRoomAction } from "../actions/EditRoomAction.ts";
 
 export type RoomContext = {
   initialRoomData: RoomSchema;
@@ -201,8 +203,15 @@ export function Room(props: { context: AppContext }) {
           <AppNavbar
             left={
               <>
-                <BackButton href={"/"} title={"Rooms"}></BackButton>
-                <MenuBar context={props.context}></MenuBar>
+                <ActionNavbarButton
+                  action={CloseRoomAction.shared}
+                  params={{ navigate }}
+                  customTitle={"Rooms"}
+                ></ActionNavbarButton>
+                <MenuBar
+                  context={props.context}
+                  roomContext={roomContext}
+                ></MenuBar>
               </>
             }
             center={
@@ -216,28 +225,11 @@ export function Room(props: { context: AppContext }) {
                   {roomContext.initialRoomData.title}
                 </span>
                 <DropdownButton icon={"three-dots-vertical"}>
-                  <Dropdown.Item
-                    disabled={roomContext.initialRoomData.editUrl == null}
-                    onClick={() => {
-                      if (roomContext.initialRoomData.editUrl != null) {
-                        window.open(
-                          roomContext.initialRoomData.editUrl,
-                          "_blank",
-                        );
-                      }
-                    }}
-                  >
-                    <Stack direction={"horizontal"} gap={2}>
-                      <i className={"bi bi-pencil-fill"}></i>
-                      <span className={"small"}>Edit Room</span>
-                    </Stack>
-                  </Dropdown.Item>
+                  <ActionDropdownItem
+                    action={EditRoomAction.shared}
+                    params={{ roomContext: roomContext }}
+                  ></ActionDropdownItem>
                 </DropdownButton>
-              </>
-            }
-            right={
-              <>
-                <InfoDropdown context={props.context}></InfoDropdown>
               </>
             }
           ></AppNavbar>

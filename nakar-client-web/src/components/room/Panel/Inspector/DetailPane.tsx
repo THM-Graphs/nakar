@@ -103,7 +103,7 @@ export function DetailPane(props: {
                   index % 2 == 0 && "border-end",
                 )}
                 title={action.title}
-                icon={action.icon}
+                icon={action.icon ?? undefined}
               ></NavbarButton>
             ))}
           </Stack>

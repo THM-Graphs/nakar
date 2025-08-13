@@ -3,9 +3,10 @@ import { ScenarioIcon } from "./ScenarioIcon.tsx";
 import { QueryDisplay } from "./QueryDisplay.tsx";
 import { Scenario } from "../../../../../src-gen";
 import { Loading } from "../../../shared/Loading.tsx";
-import { NavbarButton } from "../../../shared/NavbarButton.tsx";
 import { useBearStore } from "../../../../lib/state/useBearStore.ts";
 import { ScenarioCardSection } from "./ScenarioCardSection.tsx";
+import { ActionNavbarButton } from "../../../../actions/ActionNavbarButton.tsx";
+import { EditScenarioAction } from "../../../../actions/EditScenarioAction.ts";
 
 export function ScenarioCard(props: {
   hidden?: boolean;
@@ -19,17 +20,13 @@ export function ScenarioCard(props: {
       hidden={props.hidden}
     >
       {props.scenario.editUrl && (
-        <NavbarButton
-          icon={"pencil-fill"}
-          className={
-            "border-bottom-0 border-start-0 border-end-0 align-self-end position-absolute pt-1 pb-1"
-          }
-          onClick={() => {
-            if (props.scenario.editUrl) {
-              window.open(props.scenario.editUrl, "_blank");
-            }
-          }}
-        ></NavbarButton>
+        <ActionNavbarButton
+          action={EditScenarioAction.shared}
+          params={{ scenario: props.scenario }}
+          className={"align-self-end position-absolute"}
+          hideTitle={true}
+          tooltipPlacement={"bottom"}
+        ></ActionNavbarButton>
       )}
       <Card.Body>
         <Stack gap={2}>

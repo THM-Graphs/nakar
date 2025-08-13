@@ -6,10 +6,10 @@ import { Stack } from "react-bootstrap";
 import { Label } from "../../Canvas/Label.tsx";
 import { DynamicList } from "../../../shared/DynamicList.tsx";
 import { ValueDisplay } from "../Histogram/ValueDisplay.tsx";
-import { expandNode } from "../../../../actions/expandNode.ts";
-import { deleteNodes } from "../../../../actions/deleteNodes.ts";
-import { focusNodes } from "../../../../actions/focusNodes.ts";
-import { unlockNodes } from "../../../../actions/unlockNodes.ts";
+import { ExpandNodesAction } from "../../../../actions/ExpandNodesAction.ts";
+import { RemoveNodesAction } from "../../../../actions/RemoveNodesAction.ts";
+import { FocusNodesAction } from "../../../../actions/FocusNodesAction.ts";
+import { UnlockNodesAction } from "../../../../actions/UnlockNodesAction.ts";
 
 export function NodeDetails(props: {
   node: Node;
@@ -19,42 +19,22 @@ export function NodeDetails(props: {
   return (
     <DetailPane
       actions={[
-        {
-          title: "Expand",
-          icon: "zoom-in",
-          variant: "primary",
-          disabled: false,
-          action: async () => {
-            await expandNode(props.node, props.roomContext);
-          },
-        },
-        {
-          title: "Remove",
-          icon: "eye-slash",
-          variant: "danger",
-          disabled: false,
-          action: async () => {
-            await deleteNodes([props.node], props.roomContext);
-          },
-        },
-        {
-          title: "Focus",
-          icon: "binoculars",
-          variant: "primary",
-          disabled: false,
-          action: async () => {
-            await focusNodes([props.node], props.roomContext);
-          },
-        },
-        {
-          title: "Unlock",
-          icon: "unlock",
-          variant: "primary",
-          disabled: !props.node.locked,
-          action: async () => {
-            await unlockNodes([props.node], props.roomContext);
-          },
-        },
+        ExpandNodesAction.shared.detailPaneAction(() => ({
+          nodes: [props.node],
+          roomContext: props.roomContext,
+        })),
+        RemoveNodesAction.shared.detailPaneAction(() => ({
+          nodes: [props.node],
+          roomContext: props.roomContext,
+        })),
+        FocusNodesAction.shared.detailPaneAction(() => ({
+          nodes: [props.node],
+          roomContext: props.roomContext,
+        })),
+        UnlockNodesAction.shared.detailPaneAction(() => ({
+          nodes: [props.node],
+          roomContext: props.roomContext,
+        })),
       ]}
       otherProperties={[
         {

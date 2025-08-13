@@ -115,6 +115,7 @@ export interface BearState {
         hide: () => void;
         element: string[];
         setElement: (i: string) => void;
+        setElements: (i: string[]) => void;
         appendElement: (i: string) => void;
         deselectElements: () => void;
       };

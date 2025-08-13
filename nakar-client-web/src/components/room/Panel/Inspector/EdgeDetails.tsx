@@ -3,21 +3,16 @@ import { DetailPane } from "./DetailPane.tsx";
 import { RoomContext } from "../../../../pages/Room.tsx";
 import { Stack } from "react-bootstrap";
 import { NodePreviewDisplay } from "./NodePreviewDisplay.tsx";
-import { deleteEdges } from "../../../../actions/deleteEdges.ts";
+import { RemoveRelationshipsAction } from "../../../../actions/RemoveRelationshipsAction.ts";
 
 export function EdgeDetails(props: { edge: Edge; roomContext: RoomContext }) {
   return (
     <DetailPane
       actions={[
-        {
-          title: "Remove",
-          icon: "eye-slash",
-          variant: "danger",
-          disabled: false,
-          action: async () => {
-            await deleteEdges([props.edge], props.roomContext);
-          },
-        },
+        RemoveRelationshipsAction.shared.detailPaneAction(() => ({
+          edges: [props.edge],
+          roomContext: props.roomContext,
+        })),
       ]}
       otherProperties={[
         {

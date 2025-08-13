@@ -4,8 +4,12 @@ import { CanvasToolbar } from "./CanvasToolbar.tsx";
 import { useBearStore } from "../../../lib/state/useBearStore.ts";
 import { AppContext } from "../../../lib/state/AppContext.ts";
 import { RoomContext } from "../../../pages/Room.tsx";
-import { NavbarButton } from "../../shared/NavbarButton.tsx";
 import { Stack } from "react-bootstrap";
+import { ActionNavbarButton } from "../../../actions/ActionNavbarButton.tsx";
+import { ZoomToFitAction } from "../../../actions/ZoomToFitAction.ts";
+import { PanToElementAction } from "../../../actions/PanToElementAction.ts";
+import { ZoomInAction } from "../../../actions/ZoomInAction.ts";
+import { ZoomOutAction } from "../../../actions/ZoomOutAction.ts";
 
 export function Canvas(props: {
   context: AppContext;
@@ -14,6 +18,8 @@ export function Canvas(props: {
   const tabs = useBearStore((s) => s.room.canvas.tabs);
   const rendererEvents = useBearStore((s) => s.room.ui.rendererEvents);
   const element = useBearStore((s) => s.room.panels.inspector.element);
+  const nodes = useBearStore((s) => s.room.scenario.graph.elements.nodes);
+  const selectedTab = useBearStore((s) => s.room.canvas.tabs.selected);
 
   return (
     <Stack
@@ -37,39 +43,45 @@ export function Canvas(props: {
             direction={"vertical"}
             gap={0}
           >
-            <NavbarButton
-              icon={"crosshair"}
-              tooltip={"Pan to center"}
-              disabled={element.length === 0}
+            <ActionNavbarButton
+              action={PanToElementAction.shared}
               tooltipPlacement={"left"}
-              onClick={() => {
-                rendererEvents.onCenter.next();
+              params={{
+                selectedElements: element,
+                onCenter: rendererEvents.onCenter,
               }}
-            ></NavbarButton>
-            <NavbarButton
-              icon={"aspect-ratio"}
-              tooltip={"Overview"}
+              hideTitle={true}
+            ></ActionNavbarButton>
+            <ActionNavbarButton
               tooltipPlacement={"left"}
-              onClick={() => {
-                rendererEvents.onZoomOutOverview.next();
+              action={ZoomToFitAction.shared}
+              params={{
+                onZoomOutOverview: rendererEvents.onZoomOutOverview,
+                nodes: nodes,
+                selectedTab,
               }}
-            ></NavbarButton>
-            <NavbarButton
-              icon={"zoom-in"}
-              tooltip={"Zoom In"}
+              hideTitle={true}
+            ></ActionNavbarButton>
+            <ActionNavbarButton
               tooltipPlacement={"left"}
-              onClick={() => {
-                rendererEvents.onZoomIn.next();
+              action={ZoomInAction.shared}
+              params={{
+                onZoomIn: rendererEvents.onZoomIn,
+                nodes: nodes,
+                selectedTab,
               }}
-            ></NavbarButton>
-            <NavbarButton
-              icon={"zoom-out"}
-              tooltip={"Zoom Out"}
+              hideTitle={true}
+            ></ActionNavbarButton>
+            <ActionNavbarButton
               tooltipPlacement={"left"}
-              onClick={() => {
-                rendererEvents.onZoomOut.next();
+              action={ZoomOutAction.shared}
+              params={{
+                onZoomOut: rendererEvents.onZoomOut,
+                nodes: nodes,
+                selectedTab,
               }}
-            ></NavbarButton>
+              hideTitle={true}
+            ></ActionNavbarButton>
           </Stack>
         </Stack>
       ) : (

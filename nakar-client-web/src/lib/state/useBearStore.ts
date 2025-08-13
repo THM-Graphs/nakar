@@ -309,6 +309,12 @@ export const useBearStore = create<BearState>()(
                       s.room.panels.right = "inspector";
                     });
                   },
+                  setElements: (i) => {
+                    set((s) => {
+                      s.room.panels.inspector.element = i;
+                      s.room.panels.right = "inspector";
+                    });
+                  },
                   appendElement: (i) => {
                     set((s) => {
                       const elements = get().room.panels.inspector.element;
