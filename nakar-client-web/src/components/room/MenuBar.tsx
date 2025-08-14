@@ -19,11 +19,6 @@ import { UndoAction } from "../../actions/UndoAction.ts";
 import { RedoAction } from "../../actions/RedoAction.ts";
 import { SelectAllAction } from "../../actions/SelectAllAction.ts";
 import { DeselectAction } from "../../actions/DeselectAction.ts";
-import { ExpandNodesAction } from "../../actions/ExpandNodesAction.ts";
-import { RemoveNodesAction } from "../../actions/RemoveNodesAction.ts";
-import { FocusNodesAction } from "../../actions/FocusNodesAction.ts";
-import { UnlockNodesAction } from "../../actions/UnlockNodesAction.ts";
-import { RemoveRelationshipsAction } from "../../actions/RemoveRelationshipsAction.ts";
 import { EditRoomAction } from "../../actions/EditRoomAction.ts";
 import { EditScenarioAction } from "../../actions/EditScenarioAction.ts";
 import { RerunScenarioAction } from "../../actions/RerunScenarioAction.ts";
@@ -39,8 +34,6 @@ import { ZoomOutAction } from "../../actions/ZoomOutAction.ts";
 import { HideLabelsAction } from "../../actions/HideLabelsAction.ts";
 import { nodeActions } from "../../actions/groups/nodeActions.ts";
 import { relationshipActions } from "../../actions/groups/relationshipActions.ts";
-import { Label } from "./Canvas/Label.tsx";
-import { labelActions } from "../../actions/groups/labelActions.ts";
 
 export function MenuBar(props: {
   context: AppContext;
@@ -89,7 +82,6 @@ export function MenuBar(props: {
   const rendererEvents = useBearStore((s) => s.room.ui.rendererEvents);
   const hideLabels = useBearStore((s) => s.room.canvas.hideLabels);
   const setHideLabels = useBearStore((s) => s.room.canvas.setHideLabels);
-  const labels = useBearStore((s) => s.room.scenario.graph.elements.labels);
 
   return (
     <Stack direction={"horizontal"}>

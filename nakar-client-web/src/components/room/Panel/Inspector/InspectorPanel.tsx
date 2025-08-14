@@ -10,11 +10,7 @@ import { Edge, Node } from "../../../../../src-gen";
 import { DynamicList } from "../../../shared/DynamicList.tsx";
 import { Stack } from "react-bootstrap";
 import { NodeLabelColors } from "../../../shared/NodeLabelColors.tsx";
-import { RemoveRelationshipsAction } from "../../../../actions/RemoveRelationshipsAction.ts";
 import { ActionNavbarButton } from "../../../../actions/ActionNavbarButton.tsx";
-import { RemoveNodesAction } from "../../../../actions/RemoveNodesAction.ts";
-import { FocusNodesAction } from "../../../../actions/FocusNodesAction.ts";
-import { UnlockNodesAction } from "../../../../actions/UnlockNodesAction.ts";
 import { nodeActions } from "../../../../actions/groups/nodeActions.ts";
 import { relationshipActions } from "../../../../actions/groups/relationshipActions.ts";
 

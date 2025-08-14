@@ -6,10 +6,6 @@ import { Stack } from "react-bootstrap";
 import { Label } from "../../Canvas/Label.tsx";
 import { DynamicList } from "../../../shared/DynamicList.tsx";
 import { ValueDisplay } from "../Histogram/ValueDisplay.tsx";
-import { ExpandNodesAction } from "../../../../actions/ExpandNodesAction.ts";
-import { RemoveNodesAction } from "../../../../actions/RemoveNodesAction.ts";
-import { FocusNodesAction } from "../../../../actions/FocusNodesAction.ts";
-import { UnlockNodesAction } from "../../../../actions/UnlockNodesAction.ts";
 import { nodeActions } from "../../../../actions/groups/nodeActions.ts";
 
 export function NodeDetails(props: {

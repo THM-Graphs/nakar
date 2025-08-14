@@ -1,10 +1,4 @@
 import { ValueDisplay } from "../ValueDisplay.tsx";
-import { resultOrThrow } from "../../../../../lib/data/resultOrThrow.ts";
-import {
-  postRoomActionCompressNodes,
-  postRoomActionDeleteElements,
-  postRoomActionLayoutLabel,
-} from "../../../../../../src-gen";
 import { RoomContext } from "../../../../../pages/Room.tsx";
 import { useBearStore } from "../../../../../lib/state/useBearStore.ts";
 import { DynamicList } from "../../../../shared/DynamicList.tsx";

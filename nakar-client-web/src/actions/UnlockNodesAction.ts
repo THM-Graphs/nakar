@@ -1,6 +1,5 @@
 import { Action } from "./Action.ts";
-import { Node, postRoomActionUnlockNodes } from "../../src-gen";
-import { RoomContext } from "../pages/Room.tsx";
+import { postRoomActionUnlockNodes } from "../../src-gen";
 import { match } from "ts-pattern";
 import { resultOrThrow } from "../lib/data/resultOrThrow.ts";
 import { NodesActionParams } from "./NodesActionParams.ts";

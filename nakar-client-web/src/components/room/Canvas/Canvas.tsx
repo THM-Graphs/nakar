@@ -13,7 +13,6 @@ import { ZoomOutAction } from "../../../actions/ZoomOutAction.ts";
 import { RelayoutAction } from "../../../actions/RelayoutAction.ts";
 import { UnlockAllNodesAction } from "../../../actions/UnlockAllNodesAction.ts";
 import { HideLabelsAction } from "../../../actions/HideLabelsAction.ts";
-import { RerunScenarioAction } from "../../../actions/RerunScenarioAction.ts";
 import { ConnectResultNodesAction } from "../../../actions/ConnectResultNodesAction.ts";
 import { RemoveDanglingNodesAction } from "../../../actions/RemoveDanglingNodesAction.ts";
 import { CompressRelationshipsAction } from "../../../actions/CompressRelationshipsAction.ts";

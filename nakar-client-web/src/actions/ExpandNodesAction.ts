@@ -1,6 +1,5 @@
 import { Action } from "./Action.ts";
 import {
-  Node,
   postRoomActionExpandNode,
   postRoomActionExpandNodePreview,
 } from "../../src-gen";

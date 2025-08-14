@@ -1,4 +1,4 @@
-import { Node, postRoomActionFocusNodes } from "../../src-gen";
+import { postRoomActionFocusNodes } from "../../src-gen";
 import { Action } from "./Action.ts";
 import { match } from "ts-pattern";
 import { resultOrThrow } from "../lib/data/resultOrThrow.ts";

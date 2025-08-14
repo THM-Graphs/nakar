@@ -1,4 +1,4 @@
-import { Edge, postRoomActionDeleteElements } from "../../src-gen";
+import { postRoomActionDeleteElements } from "../../src-gen";
 import { Action } from "./Action.ts";
 import { resultOrThrow } from "../lib/data/resultOrThrow.ts";
 import { match } from "ts-pattern";
