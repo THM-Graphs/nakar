@@ -83,6 +83,14 @@ export function Canvas(props: {
                 hideTitle={hideTitles}
               ></ActionNavbarButton>
               <ActionNavbarButton
+                action={HideLabelsAction.shared}
+                params={{ hideLabels, setHideLabels, selectedTab }}
+                hideTitle={hideTitles}
+                tooltipPlacement={"left"}
+              ></ActionNavbarButton>
+            </Stack>
+            <Stack>
+              <ActionNavbarButton
                 tooltipPlacement={"left"}
                 action={ZoomInAction.shared}
                 params={{
@@ -126,24 +134,8 @@ export function Canvas(props: {
                 hideTitle={hideTitles}
                 tooltipPlacement={"left"}
               ></ActionNavbarButton>
-              <ActionNavbarButton
-                action={HideLabelsAction.shared}
-                params={{ hideLabels, setHideLabels, selectedTab }}
-                hideTitle={hideTitles}
-                tooltipPlacement={"left"}
-              ></ActionNavbarButton>
             </Stack>
             <Stack>
-              <ActionNavbarButton
-                action={RerunScenarioAction.shared}
-                params={{
-                  roomContext: props.roomContext,
-                  scenario: scenario?.current ?? null,
-                  uiLocked,
-                }}
-                hideTitle={hideTitles}
-                tooltipPlacement={"left"}
-              ></ActionNavbarButton>
               <ActionNavbarButton
                 action={ConnectResultNodesAction.shared}
                 params={{

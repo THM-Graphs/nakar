@@ -169,6 +169,26 @@ export function MenuBar(props: {
             uiLocked,
           }}
         ></ActionDropdownItem>
+      </DropdownButton>
+      <DropdownButton title={"Graph"}>
+        <ActionDropdownItem
+          action={RelayoutAction.shared}
+          params={{
+            uiLocked,
+            selectedTab,
+            nodes: graphElements.nodes,
+            roomContext: props.roomContext,
+          }}
+        ></ActionDropdownItem>
+        <ActionDropdownItem
+          action={UnlockAllNodesAction.shared}
+          params={{
+            uiLocked,
+            selectedTab,
+            nodes: graphElements.nodes,
+            roomContext: props.roomContext,
+          }}
+        ></ActionDropdownItem>
         <Dropdown.Divider></Dropdown.Divider>
         <ActionDropdownItem
           action={ConnectResultNodesAction.shared}
@@ -197,35 +217,16 @@ export function MenuBar(props: {
             roomContext: props.roomContext,
           }}
         ></ActionDropdownItem>
-      </DropdownButton>
-      <DropdownButton title={"Canvas"}>
-        <ActionDropdownItem
-          action={RelayoutAction.shared}
-          params={{
-            uiLocked,
-            selectedTab,
-            nodes: graphElements.nodes,
-            roomContext: props.roomContext,
-          }}
-        ></ActionDropdownItem>
-        <ActionDropdownItem
-          action={UnlockAllNodesAction.shared}
-          params={{
-            uiLocked,
-            selectedTab,
-            nodes: graphElements.nodes,
-            roomContext: props.roomContext,
-          }}
-        ></ActionDropdownItem>
-        <ActionDropdownItem
-          action={HideLabelsAction.shared}
-          params={{
-            selectedTab,
-            hideLabels,
-            setHideLabels,
-          }}
-        ></ActionDropdownItem>
         <Dropdown.Divider></Dropdown.Divider>
+        <ActionDropdownItem
+          action={SaveSVGAction.shared}
+          params={{
+            selectedTab,
+          }}
+        ></ActionDropdownItem>
+      </DropdownButton>
+      <DropdownButton title={"View"}>
+        <Dropdown.Header>Canvas</Dropdown.Header>
         <ActionDropdownItem
           action={PanToElementAction.shared}
           params={{
@@ -241,7 +242,14 @@ export function MenuBar(props: {
             selectedTab,
           }}
         ></ActionDropdownItem>
-        <Dropdown.Divider></Dropdown.Divider>
+        <ActionDropdownItem
+          action={HideLabelsAction.shared}
+          params={{
+            selectedTab,
+            hideLabels,
+            setHideLabels,
+          }}
+        ></ActionDropdownItem>
         <ActionDropdownItem
           action={ZoomInAction.shared}
           params={{
@@ -258,25 +266,6 @@ export function MenuBar(props: {
             selectedTab,
           }}
         ></ActionDropdownItem>
-        <Dropdown.Divider></Dropdown.Divider>
-        <ActionDropdownItem
-          action={SaveSVGAction.shared}
-          params={{
-            selectedTab,
-          }}
-        ></ActionDropdownItem>
-      </DropdownButton>
-      <DropdownButton title={"View"}>
-        <Dropdown.Header>Theme</Dropdown.Header>
-        <ThemeDropdownEntries></ThemeDropdownEntries>
-        {selectedTab === "graph" && (
-          <>
-            <Dropdown.Divider></Dropdown.Divider>
-            <Dropdown.Header>Color Schema</Dropdown.Header>
-            <ColorSchemaDropdownEntries></ColorSchemaDropdownEntries>
-          </>
-        )}
-
         <Dropdown.Divider></Dropdown.Divider>
         <Dropdown.Header className={"small"}>Tool Windows</Dropdown.Header>
         <Dropdown.Item
@@ -332,7 +321,7 @@ export function MenuBar(props: {
           <i className={"bi bi-bar-chart me-1"}></i> Histogram
         </Dropdown.Item>
         <Dropdown.Divider></Dropdown.Divider>
-        <Dropdown.Header className={"small"}>Canvas</Dropdown.Header>
+        <Dropdown.Header className={"small"}>Canvas Tabs</Dropdown.Header>
         <Dropdown.Item
           className={"small"}
           active={selectedTab === "graph"}
@@ -347,6 +336,17 @@ export function MenuBar(props: {
         >
           <i className={"bi bi-table me-1"}></i> Table
         </Dropdown.Item>
+      </DropdownButton>
+      <DropdownButton title={"Settings"}>
+        <Dropdown.Header>Theme</Dropdown.Header>
+        <ThemeDropdownEntries></ThemeDropdownEntries>
+        {selectedTab === "graph" && (
+          <>
+            <Dropdown.Divider></Dropdown.Divider>
+            <Dropdown.Header>Color Schema</Dropdown.Header>
+            <ColorSchemaDropdownEntries></ColorSchemaDropdownEntries>
+          </>
+        )}
       </DropdownButton>
       <DropdownButton title={"Help"}>
         <ClientInfoDropdownEntry
