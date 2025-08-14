@@ -3,17 +3,17 @@ import { DetailPane } from "./DetailPane.tsx";
 import { RoomContext } from "../../../../pages/Room.tsx";
 import { Stack } from "react-bootstrap";
 import { NodePreviewDisplay } from "./NodePreviewDisplay.tsx";
-import { RemoveRelationshipsAction } from "../../../../actions/RemoveRelationshipsAction.ts";
+import { relationshipActions } from "../../../../actions/groups/relationshipActions.ts";
 
 export function EdgeDetails(props: { edge: Edge; roomContext: RoomContext }) {
   return (
     <DetailPane
-      actions={[
-        RemoveRelationshipsAction.shared.detailPaneAction(() => ({
+      actions={relationshipActions.map((a) =>
+        a.detailPaneAction(() => ({
           edges: [props.edge],
           roomContext: props.roomContext,
         })),
-      ]}
+      )}
       otherProperties={[
         {
           slug: "ID",

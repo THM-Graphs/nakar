@@ -6,17 +6,12 @@ import {
 } from "../../src-gen";
 import { useBearStore } from "../lib/state/useBearStore.ts";
 import { resultOrThrow } from "../lib/data/resultOrThrow.ts";
-import { RoomContext } from "../pages/Room.tsx";
+import { NodesActionParams } from "./NodesActionParams.ts";
 
-export type ExpandNodesActionParams = {
-  nodes: Node[];
-  roomContext: RoomContext;
-};
-
-export class ExpandNodesAction extends Action<ExpandNodesActionParams> {
+export class ExpandNodesAction extends Action<NodesActionParams> {
   public static shared: ExpandNodesAction = new ExpandNodesAction();
 
-  protected async action(input: ExpandNodesActionParams): Promise<void> {
+  protected async action(input: NodesActionParams): Promise<void> {
     if (input.nodes.length !== 1) {
       throw new Error("Unable to expand multiple nodes.");
     }
@@ -51,7 +46,7 @@ export class ExpandNodesAction extends Action<ExpandNodesActionParams> {
     }
   }
 
-  disabled(input: ExpandNodesActionParams): boolean {
+  disabled(input: NodesActionParams): boolean {
     return input.nodes.length !== 1;
   }
 
@@ -63,7 +58,7 @@ export class ExpandNodesAction extends Action<ExpandNodesActionParams> {
     return "expand-nodes";
   }
 
-  title(input: ExpandNodesActionParams): string {
+  title(input: NodesActionParams): string {
     if (input.nodes.length === 1) {
       const node = input.nodes[0];
       if (node.isCluster) {

@@ -15,6 +15,8 @@ import { ActionNavbarButton } from "../../../../actions/ActionNavbarButton.tsx";
 import { RemoveNodesAction } from "../../../../actions/RemoveNodesAction.ts";
 import { FocusNodesAction } from "../../../../actions/FocusNodesAction.ts";
 import { UnlockNodesAction } from "../../../../actions/UnlockNodesAction.ts";
+import { nodeActions } from "../../../../actions/groups/nodeActions.ts";
+import { relationshipActions } from "../../../../actions/groups/relationshipActions.ts";
 
 export function InspectorPanel(props: {
   context: AppContext;
@@ -78,31 +80,17 @@ export function InspectorPanel(props: {
                           key={element.id}
                         ></InspectorPanelForMultiType>
                       ))}
-                      {list.length > 0 && (
-                        <>
+                      {list.length > 0 &&
+                        nodeActions.map((action) => (
                           <ActionNavbarButton
-                            action={RemoveNodesAction.shared}
+                            action={action}
+                            key={action.slug()}
                             params={{
                               nodes: nodes,
                               roomContext: props.roomContext,
                             }}
                           ></ActionNavbarButton>
-                          <ActionNavbarButton
-                            action={FocusNodesAction.shared}
-                            params={{
-                              nodes: nodes,
-                              roomContext: props.roomContext,
-                            }}
-                          ></ActionNavbarButton>
-                          <ActionNavbarButton
-                            action={UnlockNodesAction.shared}
-                            params={{
-                              nodes: nodes,
-                              roomContext: props.roomContext,
-                            }}
-                          ></ActionNavbarButton>
-                        </>
-                      )}
+                        ))}
                     </>
                   )}
                   entityNamePlural={"Nodes"}
@@ -121,17 +109,17 @@ export function InspectorPanel(props: {
                           key={element.id}
                         ></InspectorPanelForMultiType>
                       ))}
-                      {list.length > 0 && (
-                        <>
+                      {list.length > 0 &&
+                        relationshipActions.map((action) => (
                           <ActionNavbarButton
-                            action={RemoveRelationshipsAction.shared}
+                            action={action}
+                            key={action.slug()}
                             params={{
-                              edges: edges,
+                              edges: list,
                               roomContext: props.roomContext,
                             }}
                           ></ActionNavbarButton>
-                        </>
-                      )}
+                        ))}
                     </>
                   )}
                   entityNamePlural={"Edges"}

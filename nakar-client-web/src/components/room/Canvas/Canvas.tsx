@@ -32,7 +32,7 @@ export function Canvas(props: {
   const setHideLabels = useBearStore((s) => s.room.canvas.setHideLabels);
   const uiLocked = useBearStore((s) => s.room.ui.locked);
   const scenario = useBearStore((s) => s.room.scenario.graph.metaData.scenario);
-  const [hideTitles, setHideTitles] = useState<boolean>(false);
+  const [hideTitles, setHideTitles] = useState<boolean>(true);
 
   return (
     <Stack
@@ -47,7 +47,7 @@ export function Canvas(props: {
       {tabs.selected == "graph" ? (
         <Stack direction={"horizontal"} className={"justify-content-between"}>
           <Stack className={"z-1 flex-grow-0 align-self-start"}>
-            <Labels></Labels>
+            <Labels roomContext={props.roomContext}></Labels>
           </Stack>
           <Stack
             className={

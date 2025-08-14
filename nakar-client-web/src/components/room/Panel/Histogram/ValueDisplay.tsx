@@ -4,6 +4,7 @@ import { NavbarButton } from "../../../shared/NavbarButton.tsx";
 import { PropertyMenu } from "../../PropertyMenu.tsx";
 import { RoomContext } from "../../../../pages/Room.tsx";
 import { NodeLabelColors } from "../../../shared/NodeLabelColors.tsx";
+import { DetailPaneAction } from "../Inspector/DetailPaneAction.ts";
 
 export function ValueDisplay(props: {
   label: string;
@@ -13,11 +14,7 @@ export function ValueDisplay(props: {
   nodeLabels?: string[];
   onSelect?: () => void | Promise<void>;
   roomContext: RoomContext;
-  customActions?: {
-    title: string;
-    icon: string;
-    action: () => void | Promise<void>;
-  }[];
+  customActions?: DetailPaneAction[];
 }) {
   return (
     <Stack>

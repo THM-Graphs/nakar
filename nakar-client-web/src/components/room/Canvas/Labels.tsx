@@ -1,8 +1,9 @@
 import { Label } from "./Label.tsx";
 import { Stack } from "react-bootstrap";
 import { useBearStore } from "../../../lib/state/useBearStore.ts";
+import { RoomContext } from "../../../pages/Room.tsx";
 
-export function Labels() {
+export function Labels(props: { roomContext: RoomContext }) {
   const graphElements = useBearStore((s) => s.room.scenario.graph.elements);
 
   return (
@@ -18,6 +19,7 @@ export function Labels() {
           key={label.label}
           showAmount={true}
           showSources={true}
+          roomContext={props.roomContext}
         ></Label>
       ))}
     </Stack>

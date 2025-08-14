@@ -1,9 +1,8 @@
-import { postRoomActionDeleteElements } from "../../../../../../src-gen";
 import { RoomContext } from "../../../../../pages/Room.tsx";
 import { ValueDisplay } from "../ValueDisplay.tsx";
-import { resultOrThrow } from "../../../../../lib/data/resultOrThrow.ts";
 import { useBearStore } from "../../../../../lib/state/useBearStore.ts";
 import { DynamicList } from "../../../../shared/DynamicList.tsx";
+import { relationshipActions } from "../../../../../actions/groups/relationshipActions.ts";
 
 export function HistogramSectionRelationships(props: {
   roomContext: RoomContext;
@@ -11,6 +10,8 @@ export function HistogramSectionRelationships(props: {
   const histogram = useBearStore(
     (s) => s.room.scenario.graph.elements.histogram,
   );
+  const edges = useBearStore((s) => s.room.scenario.graph.elements.edges);
+
   return (
     <DynamicList
       className={"border-top"}
@@ -26,27 +27,14 @@ export function HistogramSectionRelationships(props: {
               roomContext={props.roomContext}
               percentage={entry.percentage}
               key={entry.type}
-              customActions={[
-                {
-                  title: "Remove",
-                  icon: "eye-slash",
-                  action: async () => {
-                    resultOrThrow(
-                      await postRoomActionDeleteElements({
-                        path: {
-                          id: props.roomContext.initialRoomData.id,
-                        },
-                        body: {
-                          nodes: [],
-                          labels: [],
-                          edges: [],
-                          edgeTypes: [entry.type],
-                        },
-                      }),
-                    );
-                  },
-                },
-              ]}
+              customActions={relationshipActions.map((action) =>
+                action.detailPaneAction(() => {
+                  return {
+                    edges: edges.filter((e) => e.type === entry.type),
+                    roomContext: props.roomContext,
+                  };
+                }),
+              )}
             ></ValueDisplay>
           ))}
         </>

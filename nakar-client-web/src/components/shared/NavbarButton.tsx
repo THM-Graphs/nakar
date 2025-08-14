@@ -15,7 +15,7 @@ export const NavbarButton = forwardRef<
   HTMLDivElement,
   {
     icon?: string;
-    title?: string;
+    title?: ReactNode;
     selected?: boolean;
     disabled?: boolean;
     onToggle?: (selected: boolean) => void;

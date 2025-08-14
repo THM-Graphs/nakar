@@ -4,16 +4,13 @@ import { RoomContext } from "../../pages/Room.tsx";
 import { PropertyMenuScenarioGroupEntry } from "./PropertyMenuScenarioGroupEntry.tsx";
 import { useClipboard } from "../../lib/clipboard/useClipboard.ts";
 import { DropdownButton } from "../shared/DropdownButton.tsx";
+import { DetailPaneAction } from "./Panel/Inspector/DetailPaneAction.ts";
 
 export function PropertyMenu(props: {
   value: unknown;
   roomContext: RoomContext;
   buttonSize?: "sm";
-  customActions?: {
-    title: string;
-    icon: string;
-    action: () => void | Promise<void>;
-  }[];
+  customActions?: DetailPaneAction[];
 }) {
   const [isClipboardEnabled, setClipboard] = useClipboard();
   const parameterizedScenarios = useBearStore(
@@ -59,6 +56,7 @@ export function PropertyMenu(props: {
             {props.customActions.map((action) => (
               <Dropdown.Item
                 key={action.title}
+                disabled={action.disabled}
                 onClick={(): void => {
                   Promise.resolve(action.action()).catch((e: unknown) => {
                     pushErrorNotification(e);
@@ -66,7 +64,7 @@ export function PropertyMenu(props: {
                 }}
               >
                 <Stack direction={"horizontal"} gap={2}>
-                  <i className={`bi bi-${action.icon}`}></i>
+                  {action.icon && <i className={`bi bi-${action.icon}`}></i>}
                   <span className={"small"}>{action.title}</span>
                 </Stack>
               </Dropdown.Item>

@@ -250,6 +250,7 @@ export function QueryPanel(props: { roomContext: RoomContext }) {
                             onClick={() => {
                               query.setQueryText(entry.exploreQuery);
                             }}
+                            roomContext={props.roomContext}
                           ></Label>
                         ))}
                       </Stack>
@@ -280,6 +281,8 @@ export function QueryPanel(props: { roomContext: RoomContext }) {
                             onClick={() => {
                               query.setQueryText(entry.exploreQuery);
                             }}
+                            roomContext={props.roomContext}
+                            hideLabelMenu={true}
                           ></Label>
                         ))}
                       </Stack>

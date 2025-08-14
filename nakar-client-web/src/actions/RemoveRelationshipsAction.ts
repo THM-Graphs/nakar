@@ -1,21 +1,14 @@
 import { Edge, postRoomActionDeleteElements } from "../../src-gen";
 import { Action } from "./Action.ts";
 import { resultOrThrow } from "../lib/data/resultOrThrow.ts";
-import { RoomContext } from "../pages/Room.tsx";
 import { match } from "ts-pattern";
+import { RelationshipsActionParams } from "./RelationshipsActionParams.ts";
 
-export type RemoveRelationshipsActionParams = {
-  edges: Edge[];
-  roomContext: RoomContext;
-};
-
-export class RemoveRelationshipsAction extends Action<RemoveRelationshipsActionParams> {
+export class RemoveRelationshipsAction extends Action<RelationshipsActionParams> {
   public static shared: RemoveRelationshipsAction =
     new RemoveRelationshipsAction();
 
-  protected async action(
-    input: RemoveRelationshipsActionParams,
-  ): Promise<void> {
+  protected async action(input: RelationshipsActionParams): Promise<void> {
     await resultOrThrow(
       await postRoomActionDeleteElements({
         path: {
@@ -31,7 +24,7 @@ export class RemoveRelationshipsAction extends Action<RemoveRelationshipsActionP
     );
   }
 
-  disabled(input: RemoveRelationshipsActionParams): boolean {
+  disabled(input: RelationshipsActionParams): boolean {
     return input.edges.length === 0;
   }
 
@@ -43,7 +36,7 @@ export class RemoveRelationshipsAction extends Action<RemoveRelationshipsActionP
     return "remove-edges";
   }
 
-  title(input: RemoveRelationshipsActionParams): string {
+  title(input: RelationshipsActionParams): string {
     return match(input.edges.length)
       .with(0, () => "Remove Relationships")
       .with(1, () => "Remove Relationship")

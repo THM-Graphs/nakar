@@ -37,6 +37,10 @@ import { PanToElementAction } from "../../actions/PanToElementAction.ts";
 import { ZoomInAction } from "../../actions/ZoomInAction.ts";
 import { ZoomOutAction } from "../../actions/ZoomOutAction.ts";
 import { HideLabelsAction } from "../../actions/HideLabelsAction.ts";
+import { nodeActions } from "../../actions/groups/nodeActions.ts";
+import { relationshipActions } from "../../actions/groups/relationshipActions.ts";
+import { Label } from "./Canvas/Label.tsx";
+import { labelActions } from "../../actions/groups/labelActions.ts";
 
 export function MenuBar(props: {
   context: AppContext;
@@ -85,6 +89,7 @@ export function MenuBar(props: {
   const rendererEvents = useBearStore((s) => s.room.ui.rendererEvents);
   const hideLabels = useBearStore((s) => s.room.canvas.hideLabels);
   const setHideLabels = useBearStore((s) => s.room.canvas.setHideLabels);
+  const labels = useBearStore((s) => s.room.scenario.graph.elements.labels);
 
   return (
     <Stack direction={"horizontal"}>
@@ -127,28 +132,6 @@ export function MenuBar(props: {
         <ActionDropdownItem
           action={DeselectAction.shared}
           params={{ elements, deselectElements }}
-        ></ActionDropdownItem>
-        <Dropdown.Divider></Dropdown.Divider>
-        <ActionDropdownItem
-          action={ExpandNodesAction.shared}
-          params={{ roomContext: props.roomContext, nodes: selectedNodes }}
-        ></ActionDropdownItem>
-        <ActionDropdownItem
-          action={RemoveNodesAction.shared}
-          params={{ roomContext: props.roomContext, nodes: selectedNodes }}
-        ></ActionDropdownItem>
-        <ActionDropdownItem
-          action={FocusNodesAction.shared}
-          params={{ roomContext: props.roomContext, nodes: selectedNodes }}
-        ></ActionDropdownItem>
-        <ActionDropdownItem
-          action={UnlockNodesAction.shared}
-          params={{ roomContext: props.roomContext, nodes: selectedNodes }}
-        ></ActionDropdownItem>
-        <Dropdown.Divider></Dropdown.Divider>
-        <ActionDropdownItem
-          action={RemoveRelationshipsAction.shared}
-          params={{ roomContext: props.roomContext, edges: selectedEdges }}
         ></ActionDropdownItem>
         <Dropdown.Divider></Dropdown.Divider>
         <ActionDropdownItem
@@ -224,6 +207,24 @@ export function MenuBar(props: {
             selectedTab,
           }}
         ></ActionDropdownItem>
+      </DropdownButton>
+      <DropdownButton title={"Node"}>
+        {nodeActions.map((action) => (
+          <ActionDropdownItem
+            key={action.slug()}
+            action={action}
+            params={{ roomContext: props.roomContext, nodes: selectedNodes }}
+          ></ActionDropdownItem>
+        ))}
+      </DropdownButton>
+      <DropdownButton title={"Relationship"}>
+        {relationshipActions.map((action) => (
+          <ActionDropdownItem
+            key={action.slug()}
+            action={action}
+            params={{ roomContext: props.roomContext, edges: selectedEdges }}
+          ></ActionDropdownItem>
+        ))}
       </DropdownButton>
       <DropdownButton title={"View"}>
         <Dropdown.Header>Canvas</Dropdown.Header>

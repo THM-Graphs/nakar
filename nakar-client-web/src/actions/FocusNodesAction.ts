@@ -2,17 +2,12 @@ import { Node, postRoomActionFocusNodes } from "../../src-gen";
 import { Action } from "./Action.ts";
 import { match } from "ts-pattern";
 import { resultOrThrow } from "../lib/data/resultOrThrow.ts";
-import { RoomContext } from "../pages/Room.tsx";
+import { NodesActionParams } from "./NodesActionParams.ts";
 
-export type FocusNodesActionParams = {
-  nodes: Node[];
-  roomContext: RoomContext;
-};
-
-export class FocusNodesAction extends Action<FocusNodesActionParams> {
+export class FocusNodesAction extends Action<NodesActionParams> {
   public static shared: FocusNodesAction = new FocusNodesAction();
 
-  protected async action(input: FocusNodesActionParams): Promise<void> {
+  protected async action(input: NodesActionParams): Promise<void> {
     await resultOrThrow(
       await postRoomActionFocusNodes({
         path: {
@@ -23,7 +18,7 @@ export class FocusNodesAction extends Action<FocusNodesActionParams> {
     );
   }
 
-  disabled(input: FocusNodesActionParams): boolean {
+  disabled(input: NodesActionParams): boolean {
     return input.nodes.length === 0;
   }
 
@@ -35,7 +30,7 @@ export class FocusNodesAction extends Action<FocusNodesActionParams> {
     return "focus-nodes";
   }
 
-  title(input: FocusNodesActionParams): string {
+  title(input: NodesActionParams): string {
     return match(input.nodes.length)
       .with(0, () => "Focus Nodes")
       .with(1, () => "Focus Node")

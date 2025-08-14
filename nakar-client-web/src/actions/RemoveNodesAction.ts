@@ -1,18 +1,13 @@
-import { Node, postRoomActionDeleteElements } from "../../src-gen";
+import { postRoomActionDeleteElements } from "../../src-gen";
 import { Action } from "./Action.ts";
 import { resultOrThrow } from "../lib/data/resultOrThrow.ts";
-import { RoomContext } from "../pages/Room.tsx";
 import { match } from "ts-pattern";
+import { NodesActionParams } from "./NodesActionParams.ts";
 
-export type RemoveNodesActionParams = {
-  nodes: Node[];
-  roomContext: RoomContext;
-};
-
-export class RemoveNodesAction extends Action<RemoveNodesActionParams> {
+export class RemoveNodesAction extends Action<NodesActionParams> {
   public static shared: RemoveNodesAction = new RemoveNodesAction();
 
-  protected async action(input: RemoveNodesActionParams): Promise<void> {
+  protected async action(input: NodesActionParams): Promise<void> {
     await resultOrThrow(
       await postRoomActionDeleteElements({
         path: {
@@ -28,7 +23,7 @@ export class RemoveNodesAction extends Action<RemoveNodesActionParams> {
     );
   }
 
-  disabled(input: RemoveNodesActionParams): boolean {
+  disabled(input: NodesActionParams): boolean {
     return input.nodes.length === 0;
   }
 
@@ -40,7 +35,7 @@ export class RemoveNodesAction extends Action<RemoveNodesActionParams> {
     return "remove-nodes";
   }
 
-  title(input: RemoveNodesActionParams): string {
+  title(input: NodesActionParams): string {
     return match(input.nodes.length)
       .with(0, () => "Remove Nodes")
       .with(1, () => "Remove Node")

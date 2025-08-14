@@ -10,6 +10,7 @@ import { ExpandNodesAction } from "../../../../actions/ExpandNodesAction.ts";
 import { RemoveNodesAction } from "../../../../actions/RemoveNodesAction.ts";
 import { FocusNodesAction } from "../../../../actions/FocusNodesAction.ts";
 import { UnlockNodesAction } from "../../../../actions/UnlockNodesAction.ts";
+import { nodeActions } from "../../../../actions/groups/nodeActions.ts";
 
 export function NodeDetails(props: {
   node: Node;
@@ -18,24 +19,12 @@ export function NodeDetails(props: {
 }) {
   return (
     <DetailPane
-      actions={[
-        ExpandNodesAction.shared.detailPaneAction(() => ({
+      actions={nodeActions.map((a) =>
+        a.detailPaneAction(() => ({
           nodes: [props.node],
           roomContext: props.roomContext,
         })),
-        RemoveNodesAction.shared.detailPaneAction(() => ({
-          nodes: [props.node],
-          roomContext: props.roomContext,
-        })),
-        FocusNodesAction.shared.detailPaneAction(() => ({
-          nodes: [props.node],
-          roomContext: props.roomContext,
-        })),
-        UnlockNodesAction.shared.detailPaneAction(() => ({
-          nodes: [props.node],
-          roomContext: props.roomContext,
-        })),
-      ]}
+      )}
       otherProperties={[
         {
           slug: "ID",
@@ -97,6 +86,7 @@ export function NodeDetails(props: {
                 label={label}
                 showAmount={false}
                 showSources={true}
+                roomContext={props.roomContext}
               ></Label>
             );
           })}

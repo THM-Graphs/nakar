@@ -12,8 +12,9 @@ import { AlignType, Placement } from "react-bootstrap/types";
 
 export function DropdownButton(props: {
   icon?: string;
-  title?: string;
+  title?: ReactNode;
   buttonClassName?: string;
+  buttonStyle?: CSSProperties;
   buttonSize?: "sm";
   menuClassName?: string;
   menuStyle?: CSSProperties;
@@ -40,10 +41,12 @@ export function DropdownButton(props: {
         tooltipPlacement={props.tooltipPlacement}
         title={props.title}
         size={props.buttonSize}
+        className={props.buttonClassName}
         onClick={(event) => {
           event.preventDefault();
           onClick(event);
         }}
+        style={props.buttonStyle}
       >
         {children}
       </NavbarButton>
@@ -52,11 +55,7 @@ export function DropdownButton(props: {
 
   return (
     <>
-      <Dropdown
-        autoClose={true}
-        className={props.buttonClassName}
-        align={props.align}
-      >
+      <Dropdown autoClose={true} align={props.align}>
         <Dropdown.Toggle as={CustomToggle}></Dropdown.Toggle>
         <Dropdown.Menu
           className={clsx("rounded-0", props.menuClassName)}

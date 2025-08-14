@@ -1,9 +1,8 @@
 import { ValueDisplay } from "../ValueDisplay.tsx";
-import { resultOrThrow } from "../../../../../lib/data/resultOrThrow.ts";
-import { postRoomActionDeleteElements } from "../../../../../../src-gen";
 import { RoomContext } from "../../../../../pages/Room.tsx";
 import { useBearStore } from "../../../../../lib/state/useBearStore.ts";
 import { DynamicList } from "../../../../shared/DynamicList.tsx";
+import { nodeActions } from "../../../../../actions/groups/nodeActions.ts";
 
 export function HistogramSectionNodes(props: { roomContext: RoomContext }) {
   const histogram = useBearStore(
@@ -11,6 +10,7 @@ export function HistogramSectionNodes(props: { roomContext: RoomContext }) {
   );
   const setElement = useBearStore((s) => s.room.panels.inspector.setElement);
   const onCenter = useBearStore((s) => s.room.ui.rendererEvents.onCenter);
+  const nodes = useBearStore((s) => s.room.scenario.graph.elements.nodes);
 
   return (
     <DynamicList
@@ -34,27 +34,15 @@ export function HistogramSectionNodes(props: { roomContext: RoomContext }) {
                   setElement(nodeEntry.id);
                   onCenter.next();
                 }}
-                customActions={[
-                  {
-                    title: "Remove",
-                    icon: "eye-slash",
-                    action: async () => {
-                      resultOrThrow(
-                        await postRoomActionDeleteElements({
-                          path: {
-                            id: props.roomContext.initialRoomData.id,
-                          },
-                          body: {
-                            nodes: [nodeEntry.id],
-                            labels: [],
-                            edges: [],
-                            edgeTypes: [],
-                          },
-                        }),
-                      );
-                    },
-                  },
-                ]}
+                customActions={nodeActions.map((action) =>
+                  action.detailPaneAction(() => {
+                    const node = nodes.find((n) => n.id === nodeEntry.id);
+                    return {
+                      nodes: node ? [node] : [],
+                      roomContext: props.roomContext,
+                    };
+                  }),
+                )}
               ></ValueDisplay>
             );
           })}
