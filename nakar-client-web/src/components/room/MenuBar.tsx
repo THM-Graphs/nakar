@@ -269,9 +269,14 @@ export function MenuBar(props: {
       <DropdownButton title={"View"}>
         <Dropdown.Header>Theme</Dropdown.Header>
         <ThemeDropdownEntries></ThemeDropdownEntries>
-        <Dropdown.Divider></Dropdown.Divider>
-        <Dropdown.Header>Color Schema</Dropdown.Header>
-        <ColorSchemaDropdownEntries></ColorSchemaDropdownEntries>
+        {selectedTab === "graph" && (
+          <>
+            <Dropdown.Divider></Dropdown.Divider>
+            <Dropdown.Header>Color Schema</Dropdown.Header>
+            <ColorSchemaDropdownEntries></ColorSchemaDropdownEntries>
+          </>
+        )}
+
         <Dropdown.Divider></Dropdown.Divider>
         <Dropdown.Header className={"small"}>Tool Windows</Dropdown.Header>
         <Dropdown.Item

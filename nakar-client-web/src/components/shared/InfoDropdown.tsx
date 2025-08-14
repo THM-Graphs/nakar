@@ -2,7 +2,6 @@ import { Dropdown, Stack } from "react-bootstrap";
 import { ThemeDropdownEntries } from "./ThemeDropdownEntry";
 import { AppContext } from "../../lib/state/AppContext.ts";
 import { DropdownButton } from "./DropdownButton.tsx";
-import { ColorSchemaDropdownEntries } from "./ColorSchemaDropdownEntries.tsx";
 import { ClientInfoDropdownEntry } from "./ClientInfoDropdownEntry.tsx";
 import { ServerInfoDropdownEntry } from "./ServerInfoDropdownEntry.tsx";
 
@@ -12,10 +11,6 @@ export function InfoDropdown(props: { context: AppContext }) {
       <DropdownButton icon={"gear-fill"}>
         <Dropdown.Header>Theme</Dropdown.Header>
         <ThemeDropdownEntries></ThemeDropdownEntries>
-        <Dropdown.Divider />
-
-        <Dropdown.Header>Color Schema</Dropdown.Header>
-        <ColorSchemaDropdownEntries></ColorSchemaDropdownEntries>
         <Dropdown.Divider></Dropdown.Divider>
         <ClientInfoDropdownEntry
           context={props.context}
