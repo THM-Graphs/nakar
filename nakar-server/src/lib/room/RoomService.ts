@@ -909,7 +909,7 @@ export class RoomService implements ApplicationService {
   }
 
   public unlockAllNodes(params: { roomId: string }): void {
-    const graph: MutableGraph = this.getGraph(params.roomId);
+    const graph: MutableGraph = this._snapshotGraph(params.roomId);
 
     const nodeLocksChanged: SMap<string, boolean> = new SMap<string, boolean>();
     for (const node of graph.nodes.nodes) {
