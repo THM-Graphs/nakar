@@ -68,14 +68,6 @@ export function InspectorPanel(props: {
                   data={nodes}
                   render={(list) => (
                     <>
-                      {list.map((element) => (
-                        <InspectorPanelForMultiType
-                          element={element}
-                          roomContext={props.roomContext}
-                          context={props.context}
-                          key={element.id}
-                        ></InspectorPanelForMultiType>
-                      ))}
                       {list.length > 0 &&
                         nodeActions.map((action) => (
                           <ActionNavbarButton
@@ -87,6 +79,14 @@ export function InspectorPanel(props: {
                             }}
                           ></ActionNavbarButton>
                         ))}
+                      {list.map((element) => (
+                        <InspectorPanelForMultiType
+                          element={element}
+                          roomContext={props.roomContext}
+                          context={props.context}
+                          key={element.id}
+                        ></InspectorPanelForMultiType>
+                      ))}
                     </>
                   )}
                   entityNamePlural={"Nodes"}
@@ -97,14 +97,6 @@ export function InspectorPanel(props: {
                   data={edges}
                   render={(list) => (
                     <>
-                      {list.map((element) => (
-                        <InspectorPanelForMultiType
-                          element={element}
-                          roomContext={props.roomContext}
-                          context={props.context}
-                          key={element.id}
-                        ></InspectorPanelForMultiType>
-                      ))}
                       {list.length > 0 &&
                         relationshipActions.map((action) => (
                           <ActionNavbarButton
@@ -116,6 +108,14 @@ export function InspectorPanel(props: {
                             }}
                           ></ActionNavbarButton>
                         ))}
+                      {list.map((element) => (
+                        <InspectorPanelForMultiType
+                          element={element}
+                          roomContext={props.roomContext}
+                          context={props.context}
+                          key={element.id}
+                        ></InspectorPanelForMultiType>
+                      ))}
                     </>
                   )}
                   entityNamePlural={"Edges"}
@@ -170,7 +170,7 @@ function InspectorPanelForMultiType(props: {
   return (
     <Collapsable
       title={
-        <Stack direction={"horizontal"}>
+        <Stack direction={"horizontal"} className={"ellipsis"}>
           {"title" in props.element ? (
             <NodeLabelColors labels={props.element.labels}></NodeLabelColors>
           ) : null}
