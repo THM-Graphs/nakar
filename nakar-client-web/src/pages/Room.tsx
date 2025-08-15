@@ -203,20 +203,25 @@ export function Room(props: { context: AppContext }) {
           <AppNavbar
             left={
               <>
-                <ActionNavbarButton
-                  action={CloseRoomAction.shared}
-                  params={{ navigate }}
-                  customTitle={"Rooms"}
-                ></ActionNavbarButton>
-                <MenuBar
-                  context={props.context}
-                  roomContext={roomContext}
-                ></MenuBar>
+                <Stack direction={"horizontal"} gap={1}>
+                  <Stack direction={"horizontal"}>
+                    <ActionNavbarButton
+                      action={CloseRoomAction.shared}
+                      params={{ navigate }}
+                      hideTitle={true}
+                    ></ActionNavbarButton>
+                    <NavbarLogo></NavbarLogo>
+                  </Stack>
+                  <MenuBar
+                    context={props.context}
+                    roomContext={roomContext}
+                  ></MenuBar>
+                </Stack>
               </>
             }
-            center={
+            center={<></>}
+            right={
               <>
-                <NavbarLogo></NavbarLogo>
                 <span
                   className={
                     "small text-muted align-self-center ms-2 user-select-text"

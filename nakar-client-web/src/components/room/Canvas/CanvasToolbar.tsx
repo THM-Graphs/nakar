@@ -56,30 +56,28 @@ export function CanvasToolbar(props: {
         <>
           <Stack direction={"horizontal"} className={" ps-1"}>
             <span className={"small text-muted"}>
-              Scenario:{" "}
               <span className={"user-select-text"}>
                 {scenario.current.title}
               </span>
             </span>
+            <DropdownButton icon={"three-dots-vertical"}>
+              <ActionDropdownItem
+                action={RerunScenarioAction.shared}
+                params={{
+                  roomContext: props.roomContext,
+                  scenario: scenario.current,
+                  uiLocked,
+                }}
+              ></ActionDropdownItem>
+              <ActionDropdownItem
+                action={EditScenarioAction.shared}
+                params={{ scenario: scenario.current }}
+              ></ActionDropdownItem>
+            </DropdownButton>
           </Stack>
         </>
       )}
-      {scenario && (
-        <DropdownButton icon={"three-dots-vertical"}>
-          <ActionDropdownItem
-            action={RerunScenarioAction.shared}
-            params={{
-              roomContext: props.roomContext,
-              scenario: scenario.current,
-              uiLocked,
-            }}
-          ></ActionDropdownItem>
-          <ActionDropdownItem
-            action={EditScenarioAction.shared}
-            params={{ scenario: scenario.current }}
-          ></ActionDropdownItem>
-        </DropdownButton>
-      )}
+      <div></div>
     </Stack>
   );
 }
