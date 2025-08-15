@@ -77,7 +77,6 @@ export function CanvasToolbar(props: {
           </Stack>
         </>
       )}
-      <div></div>
     </Stack>
   );
 }
