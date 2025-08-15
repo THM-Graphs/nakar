@@ -411,7 +411,7 @@ export class RoomService implements ApplicationService {
         const expandResult: Neo4jGraphElements = node.isCluster
           ? await this._neo4j.executeQuery(
               neo4jDatabaseInfo,
-              'MATCH (n)-[r]-(neighbor) WHERE elementId(n) IN $nodeIds AND elementId(neighbor) in $neighbors RETURN n, r',
+              'MATCH (n) WHERE elementId(n) IN $nodeIds OPTIONAL MATCH (n)-[r]-(neighbor) WHERE elementId(neighbor) in $neighbors RETURN n, r',
               {
                 nodeIds: node.compressed.toArray(),
                 neighbors: oldGraph
