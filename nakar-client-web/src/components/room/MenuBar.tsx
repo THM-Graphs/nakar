@@ -119,7 +119,7 @@ export function MenuBar(props: {
         <Dropdown.Divider></Dropdown.Divider>
         <ActionDropdownItem
           action={SelectAllAction.shared}
-          params={{ graphElements, setElements }}
+          params={{ graphElements, setElements, selectedTab }}
         ></ActionDropdownItem>
         <ActionDropdownItem
           action={DeselectAction.shared}

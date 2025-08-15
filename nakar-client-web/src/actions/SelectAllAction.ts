@@ -1,9 +1,11 @@
 import { Action } from "./Action.ts";
 import { GraphElements } from "../../src-gen";
+import { SelectedCanvasTab } from "../lib/state/SelectedCanvasTab.ts";
 
 export type SelectAllActionParams = {
   graphElements: GraphElements;
   setElements: (ids: string[]) => void;
+  selectedTab: SelectedCanvasTab;
 };
 
 export class SelectAllAction extends Action<SelectAllActionParams> {
@@ -15,7 +17,9 @@ export class SelectAllAction extends Action<SelectAllActionParams> {
   }
 
   disabled(input: SelectAllActionParams): boolean {
-    return input.graphElements.nodes.length === 0;
+    return (
+      input.graphElements.nodes.length === 0 || input.selectedTab !== "graph"
+    );
   }
 
   icon(): string | null {
