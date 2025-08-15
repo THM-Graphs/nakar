@@ -15,6 +15,7 @@ import { D3Calculator } from "./D3Calculator.ts";
 import { useBearStore } from "../state/useBearStore.ts";
 import { ColorSchema } from "../color/ColorSchema.ts";
 import { Theme } from "../theme/Theme.ts";
+import { isMultiSelectKey } from "../dom/isMultiSelectKey.ts";
 
 const fps = 30;
 const baseStrokeWidth: number = 3;
@@ -308,7 +309,7 @@ export class D3Renderer {
         el.style("background-color", this.theme == "dark" ? "#fff" : "#000");
       })
       .on("click", (event: PointerEvent, edge: D3Link) => {
-        if (event.getModifierState("Control")) {
+        if (isMultiSelectKey(event)) {
           this.$onDisplayLinkDataWithModifier.next(edge);
         } else {
           this.$onDisplayLinkData.next(edge);
@@ -328,7 +329,7 @@ export class D3Renderer {
         el.attr("stroke", (d: D3Link): string => this._getEdgeStrokeColor(d));
       })
       .on("click", (event: PointerEvent, edge: D3Link) => {
-        if (event.getModifierState("Control")) {
+        if (isMultiSelectKey(event)) {
           this.$onDisplayLinkDataWithModifier.next(edge);
         } else {
           this.$onDisplayLinkData.next(edge);
@@ -377,7 +378,7 @@ export class D3Renderer {
         this._updateShowLabels();
       })
       .on("click", (event: PointerEvent, node: D3Node) => {
-        if (event.getModifierState("Control")) {
+        if (isMultiSelectKey(event)) {
           this.$onDisplayNodeDataWithModifier.next(node);
         } else {
           this.$onDisplayNodeData.next(node);
