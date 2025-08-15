@@ -57,6 +57,14 @@ export interface BearState {
         onZoomOut: Subject<void>;
         onCenter: Subject<void>;
         onZoomOutOverview: Subject<void>;
+        onShowNodeContextMenu: Subject<{
+          nodeId: string;
+          position: [number, number];
+        }>;
+        onShowEdgeContextMenu: Subject<{
+          edgeId: string;
+          position: [number, number];
+        }>;
       };
     };
     scenario: {

@@ -26,6 +26,7 @@ export const NavbarButton = forwardRef<
     style?: CSSProperties;
     tooltip?: string;
     tooltipPlacement?: Placement;
+    hidden?: boolean;
   }
 >((props, ref) => {
   const [loading, setLoading] = useState<boolean>(false);
@@ -41,6 +42,7 @@ export const NavbarButton = forwardRef<
       overlay={props.tooltip ? <Tooltip>{props.tooltip}</Tooltip> : <></>}
     >
       <Stack
+        hidden={props.hidden}
         ref={ref}
         direction={"horizontal"}
         onClick={(event: MouseEvent) => {

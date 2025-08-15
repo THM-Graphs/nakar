@@ -22,6 +22,7 @@ export function DropdownButton(props: {
   align?: AlignType;
   tooltip?: string;
   tooltipPlacement?: Placement;
+  hidden?: boolean;
 }) {
   const CustomToggle = forwardRef(
     (
@@ -35,6 +36,7 @@ export function DropdownButton(props: {
       ref: ForwardedRef<HTMLDivElement>,
     ) => (
       <NavbarButton
+        hidden={props.hidden}
         icon={props.icon}
         ref={ref}
         tooltip={props.tooltip}

@@ -35,6 +35,14 @@ export class D3Renderer {
   private $onGrabNode: Subject<D3Node>;
   private $onNodeMoved: Subject<D3Node>;
   private $onUngrabNode: Subject<D3Node>;
+  private $onShowNodeContextMenu: Subject<{
+    node: D3Node;
+    position: [number, number];
+  }>;
+  private $onShowEdgeContextMenu: Subject<{
+    edge: D3Link;
+    position: [number, number];
+  }>;
 
   private calculator: D3Calculator;
 
@@ -112,6 +120,8 @@ export class D3Renderer {
     this.$onGrabNode = new Subject<D3Node>();
     this.$onNodeMoved = new Subject<D3Node>();
     this.$onUngrabNode = new Subject<D3Node>();
+    this.$onShowNodeContextMenu = new Subject();
+    this.$onShowEdgeContextMenu = new Subject();
 
     this.calculator = new D3Calculator();
 
@@ -152,6 +162,20 @@ export class D3Renderer {
 
   public get onGrabNode(): Observable<D3Node> {
     return this.$onGrabNode.asObservable();
+  }
+
+  public get onShowNodeContextMenu(): Observable<{
+    node: D3Node;
+    position: [number, number];
+  }> {
+    return this.$onShowNodeContextMenu.asObservable();
+  }
+
+  public get onShowEdgeContextMenu(): Observable<{
+    edge: D3Link;
+    position: [number, number];
+  }> {
+    return this.$onShowEdgeContextMenu.asObservable();
   }
 
   public get onNodesMoved(): Observable<D3Node> {
@@ -315,6 +339,13 @@ export class D3Renderer {
           this.$onDisplayLinkData.next(edge);
         }
         event.stopPropagation();
+      })
+      .on("contextmenu", (event: PointerEvent, edge: D3Link) => {
+        event.preventDefault();
+        this.$onShowEdgeContextMenu.next({
+          edge: edge,
+          position: [event.clientX, event.clientY],
+        });
       });
 
     this.linkPathSelection
@@ -335,6 +366,13 @@ export class D3Renderer {
           this.$onDisplayLinkData.next(edge);
         }
         event.stopPropagation();
+      })
+      .on("contextmenu", (event: PointerEvent, edge: D3Link) => {
+        event.preventDefault();
+        this.$onShowEdgeContextMenu.next({
+          edge: edge,
+          position: [event.clientX, event.clientY],
+        });
       });
 
     this.nodeSelection = this.zoomContainer
@@ -384,6 +422,13 @@ export class D3Renderer {
           this.$onDisplayNodeData.next(node);
         }
         event.stopPropagation();
+      })
+      .on("contextmenu", (event: PointerEvent, node: D3Node) => {
+        event.preventDefault();
+        this.$onShowNodeContextMenu.next({
+          node: node,
+          position: [event.clientX, event.clientY],
+        });
       });
 
     this.nodeCircle = this.nodeSelection

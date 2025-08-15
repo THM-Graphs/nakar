@@ -4,6 +4,7 @@ import { AppContext } from "../../../lib/state/AppContext.ts";
 import { match } from "ts-pattern";
 import { D3Renderer } from "../../../lib/d3/D3Renderer.ts";
 import { RoomContext } from "../../../pages/Room.tsx";
+import { ContextMenu } from "./ContextMenu.tsx";
 
 export function GraphRendererD3(props: {
   context: AppContext;
@@ -87,6 +88,18 @@ export function GraphRendererD3(props: {
       _graphRenderer.onDeselectAll.subscribe(() => {
         inspector.deselectElements();
       }),
+      _graphRenderer.onShowNodeContextMenu.subscribe((p) => {
+        events.onShowNodeContextMenu.next({
+          nodeId: p.node.id,
+          position: p.position,
+        });
+      }),
+      _graphRenderer.onShowEdgeContextMenu.subscribe((p) => {
+        events.onShowEdgeContextMenu.next({
+          edgeId: p.edge.id,
+          position: p.position,
+        });
+      }),
       events.onZoomOut.subscribe(() => {
         _graphRenderer.zoomOut();
       }),
@@ -166,14 +179,17 @@ export function GraphRendererD3(props: {
   }, [websocketsManager, svgRef.current]);
 
   return (
-    <svg
-      id={"svg-canvas"}
-      ref={svgRef}
-      className={"position-absolute"}
-      style={{ top: 0, left: 0, width: "100%", height: "100%" }}
-      xmlns={"http://www.w3.org/1999/xhtml"}
-    >
-      <g></g>
-    </svg>
+    <>
+      <svg
+        id={"svg-canvas"}
+        ref={svgRef}
+        className={"position-absolute"}
+        style={{ top: 0, left: 0, width: "100%", height: "100%" }}
+        xmlns={"http://www.w3.org/1999/xhtml"}
+      >
+        <g></g>
+      </svg>
+      <ContextMenu roomContext={props.roomContext}></ContextMenu>
+    </>
   );
 }

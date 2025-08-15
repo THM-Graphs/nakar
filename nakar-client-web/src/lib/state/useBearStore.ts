@@ -124,6 +124,14 @@ export const useBearStore = create<BearState>()(
                   onZoomOut: new Subject<void>(),
                   onCenter: new Subject<void>(),
                   onZoomOutOverview: new Subject<void>(),
+                  onShowNodeContextMenu: new Subject<{
+                    nodeId: string;
+                    position: [number, number];
+                  }>(),
+                  onShowEdgeContextMenu: new Subject<{
+                    edgeId: string;
+                    position: [number, number];
+                  }>(),
                 },
               },
               websockets: {
