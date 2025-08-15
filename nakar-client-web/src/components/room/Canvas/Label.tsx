@@ -41,7 +41,7 @@ export function Label(props: {
   const bgColor = label
     ? getBackgroundColor(label.color, colorSchema)
     : "#555555";
-  const color = label ? getTextColor(label.color, colorSchema) : undefined;
+  const color = label ? getTextColor(label.color, colorSchema) : "#fff";
 
   return (
     <Stack direction={"horizontal"}>
