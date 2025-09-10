@@ -40,6 +40,9 @@ import { ActionNavbarButton } from "../actions/ActionNavbarButton.tsx";
 import { CloseRoomAction } from "../actions/CloseRoomAction.ts";
 import { ActionDropdownItem } from "../actions/ActionDropdownItem.tsx";
 import { EditRoomAction } from "../actions/EditRoomAction.ts";
+import { NotesPanel } from "../components/room/Panel/Notes/NotesPanel.tsx";
+import { NotesPanelButton } from "../components/room/Panel/Notes/NotesPanelButton.tsx";
+import { AddEditNoteModal } from "../components/room/Panel/Notes/AddEditNoteModal.tsx";
 
 export type RoomContext = {
   initialRoomData: RoomSchema;
@@ -178,6 +181,7 @@ export function Room(props: { context: AppContext }) {
             nodeProperties: [],
             nodes: [],
           },
+          notes: [],
         },
         metaData: {
           scenario: null,
@@ -246,12 +250,17 @@ export function Room(props: { context: AppContext }) {
             <Stack className={"bg-body-tertiary border-end flex-grow-0 z-1"}>
               <ScenariosPanelButton></ScenariosPanelButton>
               <QueryPanelButton></QueryPanelButton>
+              <NotesPanelButton></NotesPanelButton>
             </Stack>
             <ScenariosPanel
               context={props.context}
               roomContext={roomContext}
             ></ScenariosPanel>
             <QueryPanel roomContext={roomContext}></QueryPanel>
+            <NotesPanel
+              roomContext={roomContext}
+              context={props.context}
+            ></NotesPanel>
             <Canvas context={props.context} roomContext={roomContext}></Canvas>
             <InspectorPanel
               context={props.context}
@@ -267,6 +276,7 @@ export function Room(props: { context: AppContext }) {
             <ExpandNodePreviewModal
               roomContext={roomContext}
             ></ExpandNodePreviewModal>
+            <AddEditNoteModal roomContext={roomContext}></AddEditNoteModal>
           </Stack>
           <StatusBar
             left={<ProgressDisplay></ProgressDisplay>}

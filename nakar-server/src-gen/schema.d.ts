@@ -116,6 +116,38 @@ export interface paths {
         readonly patch?: never;
         readonly trace?: never;
     };
+    readonly "/room/{id}/notes": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        readonly put?: never;
+        readonly post: operations["postNote"];
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/room/{id}/note/{noteId}": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        readonly put: operations["putNote"];
+        readonly post?: never;
+        readonly delete: operations["deleteNote"];
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
     readonly "/room/{id}/actions/load-scenario": {
         readonly parameters: {
             readonly query?: never;
@@ -515,6 +547,7 @@ export interface components {
             readonly incomingEdges: readonly components["schemas"]["EdgePreview"][];
             readonly outgoingEdges: readonly components["schemas"]["EdgePreview"][];
             readonly creationReason: components["schemas"]["CreationReason"];
+            readonly notes: readonly components["schemas"]["Note"][];
         };
         readonly PhysicalNode: {
             readonly id: string;
@@ -604,6 +637,7 @@ export interface components {
             readonly edges: readonly components["schemas"]["Edge"][];
             readonly labels: readonly components["schemas"]["GraphLabel"][];
             readonly histogram: components["schemas"]["Histogram"];
+            readonly notes: readonly components["schemas"]["Note"][];
         };
         readonly GraphTable: {
             readonly data: readonly {
@@ -698,6 +732,14 @@ export interface components {
                 readonly exploreQuery: string;
             }[];
             readonly nodeCount: number;
+        };
+        readonly Note: {
+            readonly id: string;
+            readonly content: string;
+            readonly nodes: readonly components["schemas"]["NodePreview"][];
+            readonly author: string | null;
+            /** Format: date-time */
+            readonly dateTime: string;
         };
         readonly WSClientToServerMessage: components["schemas"]["WSActionJoinRoom"] | components["schemas"]["WSActionLeaveRoom"] | components["schemas"]["WSActionGrabNode"] | components["schemas"]["WSActionMoveNodes"] | components["schemas"]["WSActionUngrabNode"];
         readonly WSServerToClientMessage: components["schemas"]["WSEventNodesMoved"] | components["schemas"]["WSEventRoomChanged"] | components["schemas"]["WSEventNotification"] | components["schemas"]["WSEventGraphElementsChanged"] | components["schemas"]["WSEventGraphMetaDataChanged"] | components["schemas"]["WSEventGraphTableChanged"] | components["schemas"]["WSEventProgress"] | components["schemas"]["WSEventClearProgress"] | components["schemas"]["WSEventSetNodeLocks"] | components["schemas"]["WSEventLockUi"] | components["schemas"]["WSEventUnlockUi"] | components["schemas"]["WSEventPerformanceChanged"] | components["schemas"]["WSEventKick"];
@@ -832,6 +874,7 @@ export type SchemaNotification = components['schemas']['Notification'];
 export type SchemaPhysicsPerformance = components['schemas']['PhysicsPerformance'];
 export type SchemaExpandNodePreviewElement = components['schemas']['ExpandNodePreviewElement'];
 export type SchemaDatabaseStats = components['schemas']['DatabaseStats'];
+export type SchemaNote = components['schemas']['Note'];
 export type SchemaWsClientToServerMessage = components['schemas']['WSClientToServerMessage'];
 export type SchemaWsServerToClientMessage = components['schemas']['WSServerToClientMessage'];
 export type SchemaWsActionJoinRoom = components['schemas']['WSActionJoinRoom'];
@@ -1003,6 +1046,82 @@ export interface operations {
                 content: {
                     readonly "application/json": components["schemas"]["GraphTable"];
                 };
+            };
+        };
+    };
+    readonly postNote: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path: {
+                readonly id: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": {
+                    readonly nodeIds: readonly string[];
+                    readonly content: string;
+                };
+            };
+        };
+        readonly responses: {
+            /** @description OK */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly putNote: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path: {
+                readonly id: string;
+                readonly noteId: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": {
+                    readonly nodeIds: readonly string[];
+                    readonly content: string;
+                };
+            };
+        };
+        readonly responses: {
+            /** @description OK */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly deleteNote: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path: {
+                readonly id: string;
+                readonly noteId: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            /** @description OK */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

@@ -42,6 +42,7 @@ export class D3RendererState {
         radius: node.radius,
         title: node.title,
         clusterSize: node.clusterSize,
+        notesCount: node.notes.length,
       };
     });
     const links = graphElements.edges.reduce((acc: D3Link[], edge: Edge) => {

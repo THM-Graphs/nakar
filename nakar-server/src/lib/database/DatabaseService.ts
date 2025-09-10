@@ -22,12 +22,19 @@ import { GetParameterizedScenariosDBDTO } from './dto/GetParameterizedScenariosD
 import { MediaService } from '../media/MediaService';
 import { ProfilerTask } from '../profiler/ProfilerTask';
 import { ProfilerService } from '../profiler/ProfilerService';
+import { CreateNoteDBDTO } from './dto/CreateNoteDBDTO';
+import { GetNoteDBDTO } from './dto/GetNoteDBDTO';
+import { SSet } from '../tools/Set';
+import { GetNotesDBDTO } from './dto/GetNotesDBDTO';
+import { SMap } from '../tools/Map';
+import { UpdateNoteDBDTO } from './dto/UpdateNoteDBDTO';
 
 export class DatabaseService implements ApplicationService {
   private readonly _databaseDtoFactory: DatabaseDTOFactory;
 
   private readonly _onRoomAdded: Subject<GetRoomDBDTO>;
   private readonly _onRoomDeleted: Subject<GetRoomDBDTO>;
+  private readonly _onNoteChanges: Subject<{ roomId: string }>;
 
   public constructor(
     private readonly _logger: LoggerService,
@@ -37,6 +44,7 @@ export class DatabaseService implements ApplicationService {
     this._databaseDtoFactory = new DatabaseDTOFactory();
     this._onRoomAdded = new Subject();
     this._onRoomDeleted = new Subject();
+    this._onNoteChanges = new Subject();
   }
 
   public get onRoomAdded$(): Observable<GetRoomDBDTO> {
@@ -45,6 +53,10 @@ export class DatabaseService implements ApplicationService {
 
   public get onRoomDeleted$(): Observable<GetRoomDBDTO> {
     return this._onRoomDeleted.asObservable();
+  }
+
+  public get onNoteChanges$(): Observable<{ roomId: string }> {
+    return this._onNoteChanges.asObservable();
   }
 
   public bootstrap(): void {
@@ -77,6 +89,42 @@ export class DatabaseService implements ApplicationService {
             this._onRoomDeleted.next(room);
           } else {
             this._logger.error(this, `Newly deleted room ${id} not found.`);
+          }
+        }
+      } else if (context.uid === 'api::note.note') {
+        if (context.action === 'delete') {
+          const id: string = context.params.documentId;
+          const note: GetNoteDBDTO = await this.getNote({ id: id });
+          const roomId: string | null = note.roomId;
+          if (roomId != null) {
+            this._onNoteChanges.next({ roomId: roomId });
+          }
+        } else if (context.action === 'update') {
+          const id: string = context.params.documentId;
+          const note: GetNoteDBDTO = await this.getNote({ id: id });
+          const roomId: string | null = note.roomId;
+          if (roomId != null) {
+            this._onNoteChanges.next({ roomId: roomId });
+          }
+        } else if (context.action === 'create') {
+          // eslint-disable-next-line @typescript-eslint/typedef
+          const dataSchema = z.object({
+            room: z.object({ documentId: z.string() }).nullable(),
+          });
+          const data: z.infer<typeof dataSchema> = dataSchema.parse(
+            context.params.data,
+          );
+
+          const roomId: string | null = data.room?.documentId ?? null;
+          if (roomId != null) {
+            this._onNoteChanges.next({ roomId: roomId });
+          }
+        } else if (context.action === 'publish') {
+          const id: string = context.params.documentId;
+          const note: GetNoteDBDTO = await this.getNote({ id: id });
+          const roomId: string | null = note.roomId;
+          if (roomId != null) {
+            this._onNoteChanges.next({ roomId: roomId });
           }
         }
       }
@@ -440,6 +488,100 @@ export class DatabaseService implements ApplicationService {
       }
     }
     return result;
+  }
+
+  public async addNote(params: CreateNoteDBDTO): Promise<void> {
+    await strapi.documents('api::note.note').create({
+      data: {
+        content: params.content,
+        room: {
+          documentId: params.room.documentId,
+        },
+        author: params.author ?? undefined,
+        elementIds: JSON.stringify(params.nodeIds),
+      },
+      status: 'published',
+    });
+  }
+
+  public async updateNote(
+    noteId: string,
+    params: UpdateNoteDBDTO,
+  ): Promise<void> {
+    await strapi.documents('api::note.note').update({
+      data: {
+        content: params.content,
+        elementIds: JSON.stringify(params.nodeIds),
+      },
+      documentId: noteId,
+      status: 'published',
+    });
+  }
+
+  public async getNotes(params: {
+    room: GetRoomDBDTO;
+    graph: MutableGraph;
+  }): Promise<GetNotesDBDTO> {
+    const results: Result<'api::note.note'>[] = await strapi
+      .documents('api::note.note')
+      .findMany({
+        status: 'published',
+        sort: [{ createdAt: 'desc' }],
+        populate: {
+          room: {},
+        },
+        filters: {
+          room: {
+            documentId: params.room.documentId,
+          },
+        },
+      });
+
+    const result: GetNotesDBDTO = { notes: new SSet(), byNodeId: new SMap() };
+    for (const rawNote of results) {
+      const note: GetNoteDBDTO =
+        this._databaseDtoFactory.createGetNoteDBDTO(rawNote);
+      let match: boolean = false;
+      for (const nodeId of params.graph.nodes.keys) {
+        if (note.nodeIds.has(nodeId)) {
+          match = true; // indicates if note has at least one node id in common with params.nodeIds
+          result.byNodeId.set(
+            nodeId,
+            (result.byNodeId.get(nodeId) ?? new SSet<GetNoteDBDTO>()).byAdding(
+              note,
+            ),
+          );
+        }
+      }
+      if (match) {
+        result.notes.add(note);
+      }
+    }
+
+    return result;
+  }
+
+  public async getNote(params: { id: string }): Promise<GetNoteDBDTO> {
+    const result: Result<'api::note.note', { populate: ['room'] }> | null =
+      await strapi.documents('api::note.note').findOne({
+        status: 'published',
+        populate: {
+          room: {},
+        },
+        documentId: params.id,
+      });
+
+    if (result == null) {
+      throw new Error(`Note not found.`);
+    }
+
+    const note: GetNoteDBDTO =
+      this._databaseDtoFactory.createGetNoteDBDTO(result);
+    return note;
+  }
+
+  public async removeNote(params: { id: string }): Promise<void> {
+    await strapi.documents('api::note.note').delete({ documentId: params.id });
   }
 
   private _printDatabaseEvent(event: Event): void {

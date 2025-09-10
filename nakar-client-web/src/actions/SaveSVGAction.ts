@@ -71,6 +71,7 @@ export class SaveSVGAction extends Action<SaveSVGActionParams> {
     svg.selectAll("[hidden]").remove();
     // svg.selectAll(".nodeLockedOverlay").remove();
     // svg.selectAll(".nodeSelectedOverlay").remove();
+    svg.selectAll(".bi").remove();
 
     const htmlCharacterRefToNumericalRef = (node: SVGSVGElement) =>
       new window.XMLSerializer()

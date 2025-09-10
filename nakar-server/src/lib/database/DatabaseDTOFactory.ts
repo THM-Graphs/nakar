@@ -12,6 +12,9 @@ import { GetScenarioParameterDBDTO } from './dto/GetScenarioParameterDBDTO';
 import { GetScenarioQueryDBDTO } from './dto/GetScenarioQueryDBDTO';
 import { MergeNodeConfigurationDBDTO } from './dto/MergeNodeConfigurationDBDTO';
 import { LayoutAlgorithm } from '../tools/LayoutAlgorithm';
+import { GetNoteDBDTO } from './dto/GetNoteDBDTO';
+import z from 'zod';
+import { SSet } from '../tools/Set';
 
 export class DatabaseDTOFactory {
   public createGetDatabaseDTOFromStrapi(
@@ -161,6 +164,42 @@ export class DatabaseDTOFactory {
         db?.treatNameInQueryAsLabel,
       ),
     };
+  }
+
+  public createGetNoteDBDTO(
+    result: Result<'api::note.note', { populate: ['room'] }>,
+  ): GetNoteDBDTO {
+    return {
+      id: result.documentId,
+      author: result.author ?? null,
+      content: result.content ?? '',
+      nodeIds: new SSet(
+        this._tryParseStringArrayJson(result.elementIds ?? '') ?? [],
+      ),
+      createdAt: this._parseStrapiDate(result.createdAt) ?? new Date(),
+      updatedAt: this._parseStrapiDate(result.updatedAt),
+      roomId: result.room?.documentId ?? null,
+    } satisfies GetNoteDBDTO;
+  }
+
+  private _tryParseStringArrayJson(input: string): string[] | null {
+    try {
+      return z.array(z.string()).parse(JSON.parse(input));
+    } catch {
+      return null;
+    }
+  }
+
+  private _parseStrapiDate(
+    input: string | Date | null | undefined,
+  ): Date | null {
+    if (input == null) {
+      return null;
+    }
+    if (typeof input === 'string') {
+      return new Date(input);
+    }
+    return input;
   }
 
   private _createNodeDisplayConfigurationDTOFromStrapi(

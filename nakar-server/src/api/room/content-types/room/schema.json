@@ -33,6 +33,12 @@
       "allowedTypes": [
         "files"
       ]
+    },
+    "notes": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::note.note",
+      "mappedBy": "room"
     }
   }
 }

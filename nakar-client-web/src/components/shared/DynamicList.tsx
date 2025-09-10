@@ -49,7 +49,12 @@ export function DynamicList<T>(props: {
   }, [filteredElements, showAllElements]);
 
   const list = (
-    <Stack className={"flex-shrink-1 align-items-stretch"}>
+    <Stack
+      className={clsx(
+        "flex-shrink-1 align-items-stretch",
+        props.collapsable === false && props.className,
+      )}
+    >
       {useFilter && (
         <Stack
           direction={"horizontal"}

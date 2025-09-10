@@ -7,6 +7,9 @@ import { Label } from "../../Canvas/Label.tsx";
 import { DynamicList } from "../../../shared/DynamicList.tsx";
 import { ValueDisplay } from "../Histogram/ValueDisplay.tsx";
 import { nodeActions } from "../../../../actions/groups/nodeActions.ts";
+import { ActionNavbarButton } from "../../../../actions/ActionNavbarButton.tsx";
+import { AddNoteAction } from "../../../../actions/AddNoteAction.ts";
+import { NoteDisplay } from "../Notes/NoteDisplay.tsx";
 
 export function NodeDetails(props: {
   node: Node;
@@ -95,7 +98,7 @@ export function NodeDetails(props: {
         data={props.node.incomingEdges}
         filter={(exp, e) => e.type.toLowerCase().includes(exp.toLowerCase())}
         entityNamePlural={"Incoming Edges"}
-        className={"border-bottom border-top"}
+        className={"border-top"}
         render={(list) => (
           <>
             {list.map((entry) => (
@@ -114,7 +117,7 @@ export function NodeDetails(props: {
         data={props.node.outgoingEdges}
         filter={(exp, e) => e.type.toLowerCase().includes(exp.toLowerCase())}
         entityNamePlural={"Outgoing Edges"}
-        className={"border-bottom border-top"}
+        className={"border-top"}
         render={(list) => (
           <>
             {list.map((entry) => (
@@ -129,6 +132,30 @@ export function NodeDetails(props: {
           </>
         )}
       ></DynamicList>
+
+      <Stack className={"border-top"} gap={0}>
+        <DynamicList
+          data={props.node.notes}
+          render={(notes) => (
+            <Stack>
+              <ActionNavbarButton
+                action={AddNoteAction.shared}
+                params={{ nodes: [props.node], roomContext: props.roomContext }}
+              ></ActionNavbarButton>
+              <Stack gap={3}>
+                {notes.map((note) => (
+                  <NoteDisplay
+                    note={note}
+                    key={note.id}
+                    roomContext={props.roomContext}
+                  ></NoteDisplay>
+                ))}
+              </Stack>
+            </Stack>
+          )}
+          entityNamePlural={"Notes"}
+        ></DynamicList>
+      </Stack>
     </DetailPane>
   );
 }

@@ -4,12 +4,13 @@ import { getTextColor } from "../../../../lib/color/getTextColor.ts";
 import clsx from "clsx";
 import { useColorSchema } from "../../../../lib/color/useColorSchema.ts";
 
-const maxTitleLength: number = 50;
+const maxTitleLength: number = 20;
 export function NodePreviewDisplay(props: {
   nodeId: string;
   nodeTitle: string;
   labels: string[];
   className?: string;
+  disableClick?: boolean;
 }) {
   const graphLabels = useBearStore(
     (s) => s.room.scenario.graph.elements.labels,
@@ -20,7 +21,7 @@ export function NodePreviewDisplay(props: {
   const graphLabel = graphLabels.find((l) => l.label === firstLabel);
   const bgColor = graphLabel
     ? getBackgroundColor(graphLabel.color, colorSchema)
-    : null;
+    : "#555555";
   const fgColor = graphLabel
     ? getTextColor(graphLabel.color, colorSchema)
     : null;
@@ -35,14 +36,18 @@ export function NodePreviewDisplay(props: {
   return (
     <span
       className={clsx(
-        "badge pointer text-center text-wrap text-break",
+        "badge text-center text-wrap text-break",
         props.className,
+        props.disableClick ? "" : "pointer",
       )}
       style={{
-        backgroundColor: bgColor ?? undefined,
+        backgroundColor: bgColor,
         color: fgColor ?? undefined,
       }}
       onClick={() => {
+        if (props.disableClick === true) {
+          return;
+        }
         setDetailElement(props.nodeId);
       }}
     >

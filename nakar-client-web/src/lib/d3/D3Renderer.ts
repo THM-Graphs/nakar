@@ -565,6 +565,22 @@ export class D3Renderer {
         return d.clusterSize;
       });
 
+    foreignObjectNode
+      .append("xhtml:i")
+      .attr("class", "bi bi-sticky-fill")
+      .attr("hidden", (d) => (d.notesCount === 0 ? "true" : null))
+      .attr(
+        "style",
+        (d) => `
+          position: absolute;
+          bottom: 0;
+          background: #000000;
+          color: white;
+          padding: 0px ${(d.radius / 10).toFixed()}px;
+          border-radius: ${(d.radius / 10).toFixed()}px;
+        `,
+      );
+
     this.nodeSelection.call(
       d3
         .drag<SVGGElement, D3Node>()

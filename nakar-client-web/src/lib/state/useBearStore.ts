@@ -1,7 +1,13 @@
 import { create } from "zustand/react";
 import { BearState } from "./BearState.ts";
 import { SocketState } from "../ws/SocketState.ts";
-import { PhysicsPerformance, WSEventProgress } from "../../../src-gen";
+import {
+  Node,
+  NodePreview,
+  Note,
+  PhysicsPerformance,
+  WSEventProgress,
+} from "../../../src-gen";
 import {
   devtools,
   persist,
@@ -155,6 +161,7 @@ export const useBearStore = create<BearState>()(
                       nodeProperties: [],
                       nodes: [],
                     },
+                    notes: [],
                   },
                   table: {
                     data: [],
@@ -405,6 +412,65 @@ export const useBearStore = create<BearState>()(
                     });
                   },
                 },
+                notes: {
+                  show: () => {
+                    set((s) => {
+                      s.room.panels.left = "notes";
+                    });
+                  },
+                  hide: () => {
+                    set((s) => {
+                      s.room.panels.left = null;
+                    });
+                  },
+                  addNoteModal: {
+                    shown: false,
+                    showForCreate: (nodes: Node[]) => {
+                      set((s) => {
+                        s.room.panels.notes.addNoteModal.shown = true;
+                        s.room.panels.notes.addNoteModal.nodes = nodes.map(
+                          (n) =>
+                            ({
+                              id: n.id,
+                              title: n.title,
+                              labels: n.labels,
+                            }) satisfies NodePreview,
+                        );
+                        s.room.panels.notes.addNoteModal.noteId = null;
+                      });
+                    },
+                    showForUpdate: (note: Note) => {
+                      set((s) => {
+                        s.room.panels.notes.addNoteModal.shown = true;
+                        s.room.panels.notes.addNoteModal.nodes = [
+                          ...note.nodes,
+                        ];
+                        s.room.panels.notes.addNoteModal.noteId = note.id;
+                        s.room.panels.notes.addNoteModal.content = note.content;
+                      });
+                    },
+                    close: () => {
+                      set((s) => {
+                        s.room.panels.notes.addNoteModal.shown = false;
+                      });
+                    },
+                    clean: () => {
+                      set((s) => {
+                        s.room.panels.notes.addNoteModal.nodes = [];
+                        s.room.panels.notes.addNoteModal.content = "";
+                        s.room.panels.notes.addNoteModal.noteId = null;
+                      });
+                    },
+                    nodes: [],
+                    content: "",
+                    noteId: null,
+                    setContent: (c: string) => {
+                      set((s) => {
+                        s.room.panels.notes.addNoteModal.content = c;
+                      });
+                    },
+                  },
+                },
               },
               canvas: {
                 tabs: {
@@ -471,9 +537,10 @@ export const useBearStore = create<BearState>()(
             .with("data", () => "data")
             .otherwise(() => "graph");
           state.room.panels.left = match(storage.leftPanel)
-            .returnType<"scenarios" | "query" | null>()
+            .returnType<"scenarios" | "query" | "notes" | null>()
             .with("scenarios", () => "scenarios")
             .with("query", () => "query")
+            .with("notes", () => "notes")
             .otherwise(() => null);
           state.room.panels.right = match(storage.rightPanel)
             .returnType<"histogram" | "inspector" | null>()

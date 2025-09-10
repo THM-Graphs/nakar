@@ -12,7 +12,9 @@ servers:
 tags:
   - name: Scenarios
   - name: Room
-  - name: Room Actions
+  - name: Graph
+  - name: Notes
+  - name: Actions
   - name: System
   - name: Database
 
@@ -70,7 +72,7 @@ paths:
   /room/{id}/graph:
     get:
       tags:
-        - Room
+        - Graph
       operationId: getRoomGraph
       parameters:
         - name: id
@@ -89,7 +91,7 @@ paths:
   /room/{id}/graph/elements:
     get:
       tags:
-        - Room
+        - Graph
       operationId: getRoomGraphElements
       parameters:
         - name: id
@@ -108,7 +110,7 @@ paths:
   /room/{id}/graph/meta-data:
     get:
       tags:
-        - Room
+        - Graph
       operationId: getRoomGraphMetaData
       parameters:
         - name: id
@@ -127,7 +129,7 @@ paths:
   /room/{id}/graph/table:
     get:
       tags:
-        - Room
+        - Graph
       operationId: getRoomGraphTable
       parameters:
         - name: id
@@ -143,10 +145,95 @@ paths:
               schema:
                 $ref: "#/components/schemas/GraphTable"
 
+  /room/{id}/notes:
+    post:
+      tags:
+        - Notes
+      operationId: postNote
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nodeIds:
+                  type: array
+                  items:
+                    type: string
+                content:
+                  type: string
+              required:
+                - nodeIds
+                - content
+      responses:
+        "200":
+          description: "OK"
+
+  /room/{id}/note/{noteId}:
+    delete:
+      tags:
+        - Notes
+      operationId: deleteNote
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: noteId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "OK"
+    put:
+      tags:
+        - Notes
+      operationId: putNote
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: noteId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nodeIds:
+                  type: array
+                  items:
+                    type: string
+                content:
+                  type: string
+              required:
+                - nodeIds
+                - content
+      responses:
+        "200":
+          description: "OK"
+
   /room/{id}/actions/load-scenario:
     post:
       tags:
-        - Room Actions
+        - Actions
       operationId: postRoomActionLoadScenario
       parameters:
         - name: id
@@ -177,7 +264,7 @@ paths:
   /room/{id}/actions/reload-scenario:
     post:
       tags:
-        - Room Actions
+        - Actions
       operationId: postRoomActionReloadScenario
       parameters:
         - name: id
@@ -192,7 +279,7 @@ paths:
   /room/{id}/actions/expand-node:
     post:
       tags:
-        - Room Actions
+        - Actions
       operationId: postRoomActionExpandNode
       parameters:
         - name: id
@@ -233,7 +320,7 @@ paths:
   /room/{id}/actions/expand-node-preview:
     post:
       tags:
-        - Room Actions
+        - Actions
       operationId: postRoomActionExpandNodePreview
       parameters:
         - name: id
@@ -276,7 +363,7 @@ paths:
   /room/{id}/actions/delete-elements:
     post:
       tags:
-        - Room Actions
+        - Actions
       operationId: postRoomActionDeleteElements
       parameters:
         - name: id
@@ -319,7 +406,7 @@ paths:
   /room/{id}/actions/relayout:
     post:
       tags:
-        - Room Actions
+        - Actions
       operationId: postRoomActionRelayout
       parameters:
         - name: id
@@ -334,7 +421,7 @@ paths:
   /room/{id}/actions/unlock-nodes:
     post:
       tags:
-        - Room Actions
+        - Actions
       operationId: postRoomActionUnlockNodes
       parameters:
         - name: id
@@ -362,7 +449,7 @@ paths:
   /room/{id}/actions/focus-nodes:
     post:
       tags:
-        - Room Actions
+        - Actions
       operationId: postRoomActionFocusNodes
       parameters:
         - name: id
@@ -390,7 +477,7 @@ paths:
   /room/{id}/actions/undo:
     post:
       tags:
-        - Room Actions
+        - Actions
       operationId: postRoomActionUndo
       parameters:
         - name: id
@@ -405,7 +492,7 @@ paths:
   /room/{id}/actions/redo:
     post:
       tags:
-        - Room Actions
+        - Actions
       operationId: postRoomActionRedo
       parameters:
         - name: id
@@ -420,7 +507,7 @@ paths:
   /room/{id}/actions/run-query:
     post:
       tags:
-        - Room Actions
+        - Actions
       operationId: postRoomActionRunQuery
       parameters:
         - name: id
@@ -452,7 +539,7 @@ paths:
   /room/{id}/actions/connect-result-nodes:
     post:
       tags:
-        - Room Actions
+        - Actions
       operationId: postRoomActionConnectResultNodes
       parameters:
         - name: id
@@ -467,7 +554,7 @@ paths:
   /room/{id}/actions/unlock-all-nodes:
     post:
       tags:
-        - Room Actions
+        - Actions
       operationId: postRoomActionUnlockAllNodes
       parameters:
         - name: id
@@ -482,7 +569,7 @@ paths:
   /room/{id}/actions/remove-dangling-nodes:
     post:
       tags:
-        - Room Actions
+        - Actions
       operationId: postRoomActionRemoveDanglingNodes
       parameters:
         - name: id
@@ -497,7 +584,7 @@ paths:
   /room/{id}/actions/compress-relationships:
     post:
       tags:
-        - Room Actions
+        - Actions
       operationId: postRoomActionCompressRelationships
       parameters:
         - name: id
@@ -512,7 +599,7 @@ paths:
   /room/{id}/actions/compress-nodes:
     post:
       tags:
-        - Room Actions
+        - Actions
       operationId: postRoomActionCompressNodes
       parameters:
         - name: id
@@ -538,7 +625,7 @@ paths:
   /room/{id}/actions/layout-label:
     post:
       tags:
-        - Room Actions
+        - Actions
       operationId: postRoomActionLayoutLabel
       parameters:
         - name: id
@@ -781,6 +868,10 @@ components:
             $ref: "#/components/schemas/EdgePreview"
         creationReason:
           $ref: "#/components/schemas/CreationReason"
+        notes:
+          type: array
+          items:
+            $ref: "#/components/schemas/Note"
       required:
         - id
         - title
@@ -802,6 +893,7 @@ components:
         - incomingEdges
         - outgoingEdges
         - creationReason
+        - notes
 
     PhysicalNode:
       type: object
@@ -1078,11 +1170,16 @@ components:
             $ref: "#/components/schemas/GraphLabel"
         histogram:
           $ref: "#/components/schemas/Histogram"
+        notes:
+          type: array
+          items:
+            $ref: "#/components/schemas/Note"
       required:
         - nodes
         - edges
         - labels
         - histogram
+        - notes
 
     GraphTable:
       type: object
@@ -1366,6 +1463,30 @@ components:
         - labels
         - rels
         - nodeCount
+
+    Note:
+      type: object
+      properties:
+        id:
+          type: string
+        content:
+          type: string
+        nodes:
+          type: array
+          items:
+            $ref: "#/components/schemas/NodePreview"
+        author:
+          type: string
+          nullable: true
+        dateTime:
+          type: string
+          format: date-time
+      required:
+        - id
+        - content
+        - nodes
+        - author
+        - dateTime
 
     WSClientToServerMessage:
       oneOf:

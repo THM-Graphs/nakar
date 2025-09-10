@@ -5,6 +5,9 @@ import {
   GraphElements,
   GraphMetaData,
   GraphTable,
+  Node,
+  NodePreview,
+  Note,
   Notification,
   PhysicsPerformance,
   Scenario,
@@ -116,7 +119,7 @@ export interface BearState {
       setState: (state: SocketState) => void;
     };
     panels: {
-      left: "scenarios" | "query" | null;
+      left: "scenarios" | "query" | "notes" | null;
       right: "histogram" | "inspector" | null;
       inspector: {
         show: () => void;
@@ -142,6 +145,21 @@ export interface BearState {
         show: () => void;
         hide: () => void;
         setQueryText: (queryText: string) => void;
+      };
+      notes: {
+        show: () => void;
+        hide: () => void;
+        addNoteModal: {
+          shown: boolean;
+          showForCreate: (nodes: Node[]) => void;
+          showForUpdate: (note: Note) => void;
+          close: () => void;
+          clean: () => void;
+          noteId: string | null;
+          nodes: NodePreview[];
+          content: string;
+          setContent: (c: string) => void;
+        };
       };
     };
     canvas: {

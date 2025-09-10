@@ -79,6 +79,7 @@ export type GraphElements = {
     edges: Array<Edge>;
     labels: Array<GraphLabel>;
     histogram: Histogram;
+    notes: Array<Note>;
 };
 
 export type GraphLabel = {
@@ -171,12 +172,21 @@ export type Node = {
     incomingEdges: Array<EdgePreview>;
     outgoingEdges: Array<EdgePreview>;
     creationReason: CreationReason;
+    notes: Array<Note>;
 };
 
 export type NodePreview = {
     id: string;
     title: string;
     labels: Array<(string)>;
+};
+
+export type Note = {
+    id: string;
+    content: string;
+    nodes: Array<NodePreview>;
+    author: (string) | null;
+    dateTime: string;
 };
 
 export type Notification = {
@@ -457,6 +467,46 @@ export type GetRoomGraphTableData = {
 export type GetRoomGraphTableResponse = (GraphTable);
 
 export type GetRoomGraphTableError = unknown;
+
+export type PostNoteData = {
+    body: {
+        nodeIds: Array<(string)>;
+        content: string;
+    };
+    path: {
+        id: string;
+    };
+};
+
+export type PostNoteResponse = (unknown);
+
+export type PostNoteError = unknown;
+
+export type DeleteNoteData = {
+    path: {
+        id: string;
+        noteId: string;
+    };
+};
+
+export type DeleteNoteResponse = (unknown);
+
+export type DeleteNoteError = unknown;
+
+export type PutNoteData = {
+    body: {
+        nodeIds: Array<(string)>;
+        content: string;
+    };
+    path: {
+        id: string;
+        noteId: string;
+    };
+};
+
+export type PutNoteResponse = (unknown);
+
+export type PutNoteError = unknown;
 
 export type PostRoomActionLoadScenarioData = {
     body: {

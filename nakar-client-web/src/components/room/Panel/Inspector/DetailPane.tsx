@@ -88,7 +88,7 @@ export function DetailPane(props: {
       </Stack>
       <Collapsable
         title={<span className={"small fw-bold"}>Actions</span>}
-        className={"border-bottom border-top flex-grow-0"}
+        className={"border-top flex-grow-0"}
         initialState={false}
       >
         {props.actions.length > 0 && (

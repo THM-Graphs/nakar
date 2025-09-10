@@ -403,6 +403,35 @@ export interface ApiDatabaseDatabase extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiNoteNote extends Struct.CollectionTypeSchema {
+  collectionName: 'notes';
+  info: {
+    description: '';
+    displayName: 'Note';
+    pluralName: 'notes';
+    singularName: 'note';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    author: Schema.Attribute.String;
+    content: Schema.Attribute.RichText;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    elementIds: Schema.Attribute.String;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<'oneToMany', 'api::note.note'> &
+      Schema.Attribute.Private;
+    publishedAt: Schema.Attribute.DateTime;
+    room: Schema.Attribute.Relation<'manyToOne', 'api::room.room'>;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface ApiRoomRoom extends Struct.CollectionTypeSchema {
   collectionName: 'rooms';
   info: {
@@ -426,6 +455,7 @@ export interface ApiRoomRoom extends Struct.CollectionTypeSchema {
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<'oneToMany', 'api::room.room'> &
       Schema.Attribute.Private;
+    notes: Schema.Attribute.Relation<'oneToMany', 'api::note.note'>;
     publishedAt: Schema.Attribute.DateTime;
     scenarioGroups: Schema.Attribute.Relation<
       'oneToMany',
@@ -1026,6 +1056,7 @@ declare module '@strapi/strapi' {
       'admin::transfer-token-permission': AdminTransferTokenPermission;
       'admin::user': AdminUser;
       'api::database.database': ApiDatabaseDatabase;
+      'api::note.note': ApiNoteNote;
       'api::room.room': ApiRoomRoom;
       'api::scenario-group.scenario-group': ApiScenarioGroupScenarioGroup;
       'api::scenario.scenario': ApiScenarioScenario;

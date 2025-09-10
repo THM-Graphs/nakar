@@ -55,6 +55,8 @@ import { MediaService } from '../media/MediaService';
 import { RoomServiceEventNotAllNodesLoaded } from '../room/events/RoomServiceEventNotAllNodesLoaded';
 import { ProfilerTask } from '../profiler/ProfilerTask';
 import { ProfilerService } from '../profiler/ProfilerService';
+import { GetNotesDBDTO } from '../database/dto/GetNotesDBDTO';
+import { MutableGraph } from '../room/graph/MutableGraph';
 
 export type Server = UntypedServer<ClientToServerEvents, ServerToClientEvents>;
 export type Socket = UntypedSocket<ClientToServerEvents, ServerToClientEvents>;
@@ -99,6 +101,7 @@ export class SocketIOService implements ApplicationService {
 
     this._registerWebsocketEvents(io);
     this._registerRoomServiceEvents();
+    this._registerDatabaseServiceEvents();
   }
 
   public destroy(): void {
@@ -354,25 +357,41 @@ export class SocketIOService implements ApplicationService {
           .with(
             { type: 'RoomServiceEventGraphElementsChanged' },
             (message: RoomServiceEventGraphElementsChanged): void => {
-              const cachedGraphFactory: CachingSchemaDTOFactory =
-                new CachingSchemaDTOFactory(
-                  this._databaseService,
-                  this._logger,
-                  this._config,
-                  this._media,
-                  this._profiler,
-                );
-              cachedGraphFactory
-                .createSchemaGraphElements(message.graph)
-                .then((graphElements: SchemaGraphElements): void => {
-                  this.sendToRoom(message.roomId, {
-                    elements: graphElements,
-                    type: 'WSEventGraphElementsChanged',
+              (async (): Promise<void> => {
+                const cachedGraphFactory: CachingSchemaDTOFactory =
+                  new CachingSchemaDTOFactory(
+                    this._databaseService,
+                    this._logger,
+                    this._config,
+                    this._media,
+                    this._profiler,
+                  );
+                const room: GetRoomDBDTO | null =
+                  await this._databaseService.getRoom(message.roomId);
+                if (room == null) {
+                  this._logger.error(
+                    this,
+                    'Cannot handle RoomServiceEventGraphElementsChanged. Room not found.',
+                  );
+                  return;
+                }
+                const notes: GetNotesDBDTO =
+                  await this._databaseService.getNotes({
+                    room: room,
+                    graph: message.graph,
                   });
-                })
-                .catch((error: unknown): void => {
-                  this._logger.error(this, error);
+                const graphElements: SchemaGraphElements =
+                  await cachedGraphFactory.createSchemaGraphElements(
+                    message.graph,
+                    notes,
+                  );
+                this.sendToRoom(message.roomId, {
+                  elements: graphElements,
+                  type: 'WSEventGraphElementsChanged',
                 });
+              })().catch((error: unknown): void => {
+                this._logger.error(this, error);
+              });
             },
           )
           .with(
@@ -496,6 +515,48 @@ export class SocketIOService implements ApplicationService {
         this._logger.error(this, error);
       });
     });
+  }
+
+  private _registerDatabaseServiceEvents(): void {
+    this._databaseService.onNoteChanges$.subscribe(
+      (message: { roomId: string }): void => {
+        (async (): Promise<void> => {
+          const cachedGraphFactory: CachingSchemaDTOFactory =
+            new CachingSchemaDTOFactory(
+              this._databaseService,
+              this._logger,
+              this._config,
+              this._media,
+              this._profiler,
+            );
+          const room: GetRoomDBDTO | null = await this._databaseService.getRoom(
+            message.roomId,
+          );
+          if (room == null) {
+            this._logger.error(
+              this,
+              'Cannot handle Note Change. Room not found.',
+            );
+            return;
+          }
+          const graph: MutableGraph = this._roomService.getGraph(
+            message.roomId,
+          );
+          const notes: GetNotesDBDTO = await this._databaseService.getNotes({
+            room: room,
+            graph: graph,
+          });
+          const graphElements: SchemaGraphElements =
+            await cachedGraphFactory.createSchemaGraphElements(graph, notes);
+          this.sendToRoom(message.roomId, {
+            elements: graphElements,
+            type: 'WSEventGraphElementsChanged',
+          });
+        })().catch((error: unknown): void => {
+          this._logger.error(this, error);
+        });
+      },
+    );
   }
 
   private _assertRoom(client: WSClient): string {

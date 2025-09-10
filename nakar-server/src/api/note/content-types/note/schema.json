@@ -1,0 +1,30 @@
+{
+  "kind": "collectionType",
+  "collectionName": "notes",
+  "info": {
+    "singularName": "note",
+    "pluralName": "notes",
+    "displayName": "Note",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "attributes": {
+    "content": {
+      "type": "richtext"
+    },
+    "room": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::room.room",
+      "inversedBy": "notes"
+    },
+    "author": {
+      "type": "string"
+    },
+    "elementIds": {
+      "type": "string"
+    }
+  }
+}

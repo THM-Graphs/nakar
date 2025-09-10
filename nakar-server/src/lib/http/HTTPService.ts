@@ -54,6 +54,7 @@ import { Neo4jService } from '../neo4j/Neo4jService';
 import { ExpandNodePreview } from '../neo4j/expand-node-preview/ExpandNodePreview';
 import { MediaService } from '../media/MediaService';
 import { LayoutAlgorithm } from '../tools/LayoutAlgorithm';
+import { GetNotesDBDTO } from '../database/dto/GetNotesDBDTO';
 
 export class HTTPService implements ApplicationService {
   private readonly _app: Application;
@@ -143,7 +144,11 @@ export class HTTPService implements ApplicationService {
         tempFileDir: path.join(os.tmpdir(), 'nakar', 'fileupload'),
       }),
     );
-    this._app.use(express.json());
+    this._app.use(
+      express.json({
+        limit: 1_000_000_000,
+      }),
+    );
     this._app.use(cors());
   }
 
@@ -267,8 +272,14 @@ export class HTTPService implements ApplicationService {
             this._media,
             this._profiler,
           );
-        const result: SchemaGraph =
-          await cachedGraphFactory.createSchemaGraph(graph);
+        const notes: GetNotesDBDTO = await this._databaseService.getNotes({
+          room: room,
+          graph: graph,
+        });
+        const result: SchemaGraph = await cachedGraphFactory.createSchemaGraph(
+          graph,
+          notes,
+        );
         return result;
       }),
     );
@@ -286,8 +297,12 @@ export class HTTPService implements ApplicationService {
             this._media,
             this._profiler,
           );
+        const notes: GetNotesDBDTO = await this._databaseService.getNotes({
+          room: room,
+          graph: graph,
+        });
         const result: SchemaGraphElements =
-          await cachedGraphFactory.createSchemaGraphElements(graph);
+          await cachedGraphFactory.createSchemaGraphElements(graph, notes);
         return result;
       }),
     );
@@ -328,6 +343,63 @@ export class HTTPService implements ApplicationService {
           graph.tableData,
         );
         return result;
+      }),
+    );
+
+    this._app.post(
+      '/room/:id/notes',
+      this._handle(async (req: Request): Promise<void> => {
+        const room: GetRoomDBDTO = await this._assertRoom(req);
+
+        type Body =
+          operations['postNote']['requestBody']['content']['application/json'];
+
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+        const requestBody: Body = req.body as Body;
+
+        this._logger.debug(this, JSON.stringify(requestBody));
+        await this._databaseService.addNote({
+          content: requestBody.content,
+          room: room,
+          nodeIds: requestBody.nodeIds,
+          author: null,
+        });
+      }),
+    );
+
+    this._app.delete(
+      '/room/:id/note/:noteId',
+      this._handle(async (req: Request): Promise<void> => {
+        const room: GetRoomDBDTO = await this._assertRoom(req);
+        const noteId: string = this._getPathParameter(req, 'noteId');
+
+        this._logger.debug(
+          this,
+          `Will delete note ${noteId} in room ${room.documentId}`,
+        );
+        await this._databaseService.removeNote({ id: noteId });
+      }),
+    );
+
+    this._app.put(
+      '/room/:id/note/:noteId',
+      this._handle(async (req: Request): Promise<void> => {
+        const room: GetRoomDBDTO = await this._assertRoom(req);
+        const noteId: string = this._getPathParameter(req, 'noteId');
+        type Body =
+          operations['putNote']['requestBody']['content']['application/json'];
+
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+        const requestBody: Body = req.body as Body;
+
+        this._logger.debug(
+          this,
+          `Will update note ${noteId} in room ${room.documentId} with ${JSON.stringify(requestBody)}`,
+        );
+        await this._databaseService.updateNote(noteId, {
+          nodeIds: requestBody.nodeIds,
+          content: requestBody.content,
+        });
       }),
     );
 

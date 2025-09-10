@@ -13,4 +13,5 @@ export type D3Node = {
   customBackgroundColor: string | null;
   customTitleColor: string | null;
   clusterSize: number;
+  notesCount: number;
 };

@@ -13,6 +13,8 @@ import {
   SchemaGraphTable,
   SchemaHistogram,
   SchemaNode,
+  SchemaNodePreview,
+  SchemaNote,
   SchemaScenarioArgument,
 } from '../../../src-gen/schema';
 import { MutableNode } from '../room/graph/MutableNode';
@@ -29,6 +31,9 @@ import { Range } from '../tools/Range';
 import { MediaService } from '../media/MediaService';
 import { ProfilerService } from '../profiler/ProfilerService';
 import { ProfilerTask } from '../profiler/ProfilerTask';
+import { GetNotesDBDTO } from '../database/dto/GetNotesDBDTO';
+import { GetNoteDBDTO } from '../database/dto/GetNoteDBDTO';
+import { SSet } from '../tools/Set';
 
 export class CachingSchemaDTOFactory {
   private readonly _databaseCache: SMap<string, GetDatabaseDBDTO>;
@@ -45,10 +50,13 @@ export class CachingSchemaDTOFactory {
     this._dtoFactory = new SchemaDTOFactory(_config, _media);
   }
 
-  public async createSchemaGraph(graph: MutableGraph): Promise<SchemaGraph> {
+  public async createSchemaGraph(
+    graph: MutableGraph,
+    notes: GetNotesDBDTO,
+  ): Promise<SchemaGraph> {
     const t: ProfilerTask = this._profiler.profile(this, 'createSchemaGraph');
     const schemaGraph: SchemaGraph = {
-      elements: await this.createSchemaGraphElements(graph),
+      elements: await this.createSchemaGraphElements(graph, notes),
       metaData: await this.createSchemaGraphMetaData(graph),
       table: this.createSchemaTable(graph.tableData),
     };
@@ -58,6 +66,7 @@ export class CachingSchemaDTOFactory {
 
   public async createSchemaGraphElements(
     graph: MutableGraph,
+    notes: GetNotesDBDTO,
   ): Promise<SchemaGraphElements> {
     const t: ProfilerTask = this._profiler.profile(
       this,
@@ -71,10 +80,11 @@ export class CachingSchemaDTOFactory {
       ? graph.nodes.getNodeDegreeRange(graph)
       : null;
     const widthRange: Range | null = graph.edges.getEdgeDegreeRange();
+
     const result: SchemaGraphElements = {
       nodes: await graph.nodes.nodes.asyncFlatMap(
         async (node: MutableNode): Promise<SchemaNode> =>
-          await this._createSchemaNode(node, graph, config, degreeRange),
+          await this._createSchemaNode(node, graph, config, degreeRange, notes),
       ),
       edges: await graph.edges.edges.asyncFlatMap(
         async (edge: MutableEdge): Promise<SchemaEdge> =>
@@ -90,6 +100,12 @@ export class CachingSchemaDTOFactory {
             await this._createSchemaGraphLabel(id, label),
         ),
       histogram: this._createSchemaHistogram(graph, config),
+      notes: notes.notes
+        .toArray()
+        .map(
+          (note: GetNoteDBDTO): SchemaNote =>
+            this._createSchemaNote(note, graph, config),
+        ),
     };
     t.finish();
     return result;
@@ -323,6 +339,7 @@ export class CachingSchemaDTOFactory {
     graph: MutableGraph,
     config: FinalGraphDisplayConfiguration,
     range: Range | null,
+    notes: GetNotesDBDTO,
   ): Promise<SchemaNode> {
     const incomingEdges: MutableEdge[] = graph.edges.getByEndNodeId(node.id);
     const outgoingEdges: MutableEdge[] = graph.edges.getByStartNodeId(node.id);
@@ -377,6 +394,12 @@ export class CachingSchemaDTOFactory {
         .map(createEdgePreview)
         .sort(sort),
       creationReason: node.creationAction,
+      notes: (notes.byNodeId.get(node.id) ?? new SSet())
+        .toArray()
+        .map(
+          (note: GetNoteDBDTO): SchemaNote =>
+            this._createSchemaNote(note, graph, config),
+        ),
     };
   }
 
@@ -446,6 +469,29 @@ export class CachingSchemaDTOFactory {
           return (await this._getDatabase(sourceId))?.title ?? sourceId;
         },
       ),
+    };
+  }
+
+  private _createSchemaNote(
+    note: GetNoteDBDTO,
+    graph: MutableGraph,
+    config: FinalGraphDisplayConfiguration,
+  ): SchemaNote {
+    return {
+      id: note.id,
+      content: note.content,
+      dateTime: note.updatedAt?.toISOString() ?? note.createdAt.toISOString(),
+      author: note.author,
+      nodes: note.nodeIds
+        .map((nodeId: string): SchemaNodePreview => {
+          const node: MutableNode | null = graph.nodes.get(nodeId);
+          return {
+            id: nodeId,
+            title: node?.title(graph, config) ?? nodeId,
+            labels: node?.labels.toArray() ?? [],
+          };
+        })
+        .toArray(),
     };
   }
 
