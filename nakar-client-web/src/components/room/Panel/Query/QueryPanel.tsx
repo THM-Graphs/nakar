@@ -321,7 +321,7 @@ export function QueryPanel(props: { roomContext: RoomContext }) {
             <Spinner size={"sm"} className={"align-self-center m-5"}></Spinner>
           ))
           .with({ type: "error" }, (error) => (
-            <>
+            <Stack>
               <span
                 className={
                   "small text-muted p-2 text-wrap text-break user-select-text"
@@ -334,7 +334,7 @@ export function QueryPanel(props: { roomContext: RoomContext }) {
                 icon={"arrow-clockwise"}
                 onClick={reload}
               ></NavbarButton>
-            </>
+            </Stack>
           ))
           .exhaustive()}
       </Stack>
