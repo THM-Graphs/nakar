@@ -677,7 +677,11 @@ export class HTTPService implements ApplicationService {
             );
             fs.createReadStream(result.filePath).pipe(res);
           } else {
-            res.json(result);
+            if (result == null) {
+              res.end();
+            } else {
+              res.json(result);
+            }
           }
           task.finish();
         })
