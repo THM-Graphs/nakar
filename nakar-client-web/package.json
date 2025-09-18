@@ -9,7 +9,9 @@
     "build:docker": "docker buildx build -f Dockerfile -t ghcr.io/thm-graphs/nakar/client-web:dev .",
     "build:docker:mutliarch": "docker buildx build --platform linux/amd64,linux/arm64 -f Dockerfile -t ghcr.io/thm-graphs/nakar/client-web:dev .",
     "lint": "eslint .",
-    "lint:fix": "eslint . --fix",
+    "lint:fix": "eslint --fix .",
+    "format": "prettier . --check",
+    "format:fix": "prettier . --write",
     "audit": "npm audit",
     "version": "echo $npm_package_version"
   },
@@ -42,17 +44,15 @@
     "@types/file-saver": "^2.0.7",
     "@types/react": "^18.3.18",
     "@types/react-dom": "^18.3.5",
-    "@vitejs/plugin-react": "^4.3.4",
+    "@vitejs/plugin-react": "^4.7.0",
     "esbuild": "^0.24.0",
-    "eslint": "^9.17.0",
-    "eslint-config-prettier": "^9.1.0",
-    "eslint-plugin-prettier": "^5.2.1",
+    "eslint": "^9.35.0",
     "eslint-plugin-react-hooks": "^5.0.0",
     "eslint-plugin-react-refresh": "^0.4.16",
     "globals": "^15.14.0",
     "prettier": "^3.4.2",
     "typescript": "~5.6.2",
     "typescript-eslint": "^8.18.2",
-    "vite": "^6.3.3"
+    "vite": "^7.1.5"
   }
 }
