@@ -1,45 +1,46 @@
-html, body, div#root {
-    height: 100%
+html,
+body,
+div#root {
+  height: 100%;
 }
 
 * {
-    /* Prevent SVG elements to show text cursor */
-    user-select: none;
+  /* Prevent SVG elements to show text cursor */
+  user-select: none;
 
-    font-family: system-ui;
+  font-family: system-ui;
 }
 
 /* Workaround for https://github.com/react-bootstrap/react-bootstrap/issues/3393#issuecomment-1375715749 */
-div[role=tooltip] {
-    position: fixed;
+div[role="tooltip"] {
+  position: fixed;
 }
 
 .user-select-text, .user-select-text * {
-    user-select: text;
+  user-select: text;
 }
 
 .pointer {
-    cursor: pointer;
+  cursor: pointer;
 }
 
-
 .bg-body-secondary-hover:hover {
-    background-color: rgba(var(--bs-secondary-bg-rgb), 1) !important;
+  background-color: rgba(var(--bs-secondary-bg-rgb), 1) !important;
 }
 
 .bg-body-hover:hover {
-    background-color: rgba(var(--bs-secondary-bg-rgb), 1) !important;
+  background-color: rgba(var(--bs-secondary-bg-rgb), 1) !important;
 }
 
 .ellipsis {
-    overflow: hidden;
-    text-wrap: nowrap;
-    text-overflow: ellipsis;
+  overflow: hidden;
+  text-wrap: nowrap;
+  text-overflow: ellipsis;
 }
 
 .modal-content {
-    border-radius: 0;
-    border: 0;
+  border-radius: 0;
+  border: 0;
 }
 
 .markdown img {

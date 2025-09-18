@@ -5,12 +5,15 @@
 ### Starting and setting up the application
 
 #### 1: Install node packages:
+
 ```shell
 npm i
 ```
 
 #### 2: Set environment variables:
+
 The example environment file will configure the application to talk to the locally running server.
+
 ```shell
 cp ".env.example" "public/.env"
 ```
@@ -20,6 +23,7 @@ cp ".env.example" "public/.env"
 ```shell
 npm run dev
 ```
+
 Visit the displayed URL.
 
 ### Before commit

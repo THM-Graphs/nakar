@@ -5,12 +5,15 @@
 ### Starting and setting up the server
 
 #### 1: Install node packages:
+
 ```shell
 npm i
 ```
 
 #### 2: Set environment variables:
+
 The example environment file will configure the server to run locally on localhost:1337.
+
 ```shell
 cp ".env.example" ".env"
 ```
@@ -18,10 +21,13 @@ cp ".env.example" ".env"
 #### 3: Start the live server:
 
 With hot-reloading:
+
 ```shell
 npm run develop
 ```
+
 Without hot-reloading:
+
 ```shell
 npm run build
 npm run start
@@ -34,7 +40,7 @@ Open http://localhost:1337 and create a local admin account.
 Tip: Use the following login data for the admin account:
 
 | Email          | Password             |
-|----------------|----------------------|
+| -------------- | -------------------- |
 | admin@nakar.de | seuzgfesuz3672tUZGZU |
 
 #### 5: Enable the API endpoints to be accessible without authentication
