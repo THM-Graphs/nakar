@@ -16,7 +16,8 @@ div[role="tooltip"] {
   position: fixed;
 }
 
-.user-select-text, .user-select-text * {
+.user-select-text,
+.user-select-text * {
   user-select: text;
 }
 
@@ -44,9 +45,11 @@ div[role="tooltip"] {
 }
 
 .markdown img {
-    width: 100%;
+  width: 100%;
 }
 
-.markdown table, .markdown th, .markdown td {
-    border-collapse: collapse;
+.markdown table,
+.markdown th,
+.markdown td {
+  border-collapse: collapse;
 }
