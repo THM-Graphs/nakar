@@ -24,33 +24,51 @@ export function ContextMenu(props: { roomContext: RoomContext }) {
   );
   const [posX, setPosX] = useState(0);
   const [posY, setPosY] = useState(0);
-  const [node, setNode] = useState<Node | null>(null);
-  const [edge, setEdge] = useState<Edge | null>(null);
+  const [selectedNodes, setSelectedNodes] = useState<Node[] | null>(null);
+  const [selectedEdges, setSelectedEdges] = useState<Edge[] | null>(null);
   const nodes = useBearStore((s) => s.room.scenario.graph.elements.nodes);
   const edges = useBearStore((s) => s.room.scenario.graph.elements.edges);
+  const selectedElements: string[] = useBearStore(
+    (s) => s.room.panels.inspector.element,
+  );
   const dropdownEl = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    if (node != null) {
-      setEdge(null);
+    if (selectedNodes != null) {
+      setSelectedEdges(null);
     }
-  }, [node]);
+  }, [selectedNodes]);
 
   useEffect(() => {
-    if (edge != null) {
-      setNode(null);
+    if (selectedEdges != null) {
+      setSelectedNodes(null);
     }
-  }, [edge]);
+  }, [selectedEdges]);
 
   useEffect(() => {
     const subs = [
       onShowNodeContextMenu.subscribe(
         (params: { nodeId: string; position: [number, number] }) => {
-          const node = nodes.find((n) => n.id === params.nodeId);
-          if (node == null) {
-            return;
+          if (selectedElements.includes(params.nodeId)) {
+            const newSelectedNodes: Node[] = selectedElements.reduce<Node[]>(
+              (akku, next) => {
+                const foundNodes = nodes.find((n) => n.id === next);
+                if (foundNodes == null) {
+                  return akku;
+                } else {
+                  return [...akku, foundNodes];
+                }
+              },
+              [],
+            );
+            setSelectedNodes(newSelectedNodes);
+          } else {
+            const selectedNode = nodes.find((n) => n.id === params.nodeId);
+            if (selectedNode == null) {
+              return;
+            }
+            setSelectedNodes([selectedNode]);
           }
-          setNode(node);
           setPosX(params.position[0]);
           setPosY(params.position[1]);
           dropdownEl.current?.click();
@@ -58,13 +76,28 @@ export function ContextMenu(props: { roomContext: RoomContext }) {
       ),
       onShowEdgeContextMenu.subscribe(
         (params: { edgeId: string; position: [number, number] }) => {
-          const edge = edges.find((n) => n.id === params.edgeId);
-          if (edge == null) {
-            return;
+          if (selectedElements.includes(params.edgeId)) {
+            const foundEdges: Edge[] = selectedElements.reduce<Edge[]>(
+              (akku, next) => {
+                const edge = edges.find((e) => e.id === next);
+                if (edge == null) {
+                  return akku;
+                } else {
+                  return [...akku, edge];
+                }
+              },
+              [],
+            );
+            setSelectedEdges(foundEdges);
+          } else {
+            const selectedEdge = edges.find((e) => e.id === params.edgeId);
+            if (selectedEdge == null) {
+              return;
+            }
+            setSelectedEdges([selectedEdge]);
           }
           setPosX(params.position[0]);
           setPosY(params.position[1]);
-          setEdge(edge);
           dropdownEl.current?.click();
         },
       ),
@@ -74,12 +107,18 @@ export function ContextMenu(props: { roomContext: RoomContext }) {
         s.unsubscribe();
       });
     };
-  }, [onShowNodeContextMenu, onShowEdgeContextMenu, nodes, edges]);
+  }, [
+    onShowNodeContextMenu,
+    onShowEdgeContextMenu,
+    nodes,
+    edges,
+    selectedElements,
+  ]);
 
   useEffect(() => {
     const listener = () => {
-      setNode(null);
-      setEdge(null);
+      setSelectedNodes(null);
+      setSelectedEdges(null);
     };
     dropdownEl.current?.addEventListener("hidden.bs.dropdown", listener);
     return () => {
@@ -111,20 +150,20 @@ export function ContextMenu(props: { roomContext: RoomContext }) {
     >
       <Dropdown.Toggle as={CustomToggle} ref={dropdownEl}></Dropdown.Toggle>
       <Dropdown.Menu className={"rounded-0"}>
-        {node &&
+        {selectedNodes &&
           nodeActions.map((action) => (
             <ActionDropdownItem
               key={action.slug()}
               action={action}
-              params={{ nodes: [node], roomContext: props.roomContext }}
+              params={{ nodes: selectedNodes, roomContext: props.roomContext }}
             ></ActionDropdownItem>
           ))}
-        {edge &&
+        {selectedEdges &&
           relationshipActions.map((action) => (
             <ActionDropdownItem
               key={action.slug()}
               action={action}
-              params={{ edges: [edge], roomContext: props.roomContext }}
+              params={{ edges: selectedEdges, roomContext: props.roomContext }}
             ></ActionDropdownItem>
           ))}
       </Dropdown.Menu>
