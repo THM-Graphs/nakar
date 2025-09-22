@@ -16,7 +16,6 @@ import { SaveScenarioGroupDBDTO } from './dto/SaveScenarioGroupDBDTO';
 import { SaveScenarioDBDTO } from './dto/SaveScenarioDBDTO';
 import { FinalGraphDisplayConfiguration } from '../room/scenario-pipeline/display-configuration/FinalGraphDisplayConfiguration';
 import { MergableGraphDisplayConfiguration } from '../room/scenario-pipeline/display-configuration/MergableGraphDisplayConfiguration';
-import { Event } from '@strapi/database/dist/lifecycles';
 import { Observable, Subject } from 'rxjs';
 import { GetParameterizedScenariosDBDTO } from './dto/GetParameterizedScenariosDBDTO';
 import { MediaService } from '../media/MediaService';
@@ -66,40 +65,49 @@ export class DatabaseService implements ApplicationService {
         this,
         `${context.uid} ${context.action}`,
       );
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let result: any = null;
+
       if (context.uid === 'api::room.room') {
         if (context.action === 'publish') {
-          const id: string = context.params.documentId;
-          setTimeout((): void => {
-            (async (): Promise<void> => {
-              const room: GetRoomDBDTO | null = await this.getRoom(id);
-              if (room !== null) {
-                this._onRoomAdded.next(room);
-              } else {
-                this._logger.error(this, `Newly created room ${id} not found.`);
-              }
-            })().catch((error: unknown): void => {
-              this._logger.error(this, error);
-            });
-          }, 1000);
-        }
-        if (context.action === 'delete') {
+          result = await next();
+
           const id: string = context.params.documentId;
           const room: GetRoomDBDTO | null = await this.getRoom(id);
+          if (room !== null) {
+            this._onRoomAdded.next(room);
+          } else {
+            this._logger.error(this, `Newly created room ${id} not found.`);
+          }
+        } else if (context.action === 'delete') {
+          const id: string = context.params.documentId;
+          const room: GetRoomDBDTO | null = await this.getRoom(id);
+
+          result = await next();
+
           if (room !== null) {
             this._onRoomDeleted.next(room);
           } else {
             this._logger.error(this, `Newly deleted room ${id} not found.`);
           }
+        } else {
+          result = await next();
         }
       } else if (context.uid === 'api::note.note') {
         if (context.action === 'delete') {
           const id: string = context.params.documentId;
           const note: GetNoteDBDTO = await this.getNote({ id: id });
           const roomId: string | null = note.roomId;
+
+          result = await next();
+
           if (roomId != null) {
             this._onNoteChanges.next({ roomId: roomId });
           }
         } else if (context.action === 'update') {
+          result = await next();
+
           const id: string = context.params.documentId;
           const note: GetNoteDBDTO = await this.getNote({ id: id });
           const roomId: string | null = note.roomId;
@@ -107,6 +115,8 @@ export class DatabaseService implements ApplicationService {
             this._onNoteChanges.next({ roomId: roomId });
           }
         } else if (context.action === 'create') {
+          result = await next();
+
           // eslint-disable-next-line @typescript-eslint/typedef
           const dataSchema = z.object({
             room: z.object({ documentId: z.string() }).nullable(),
@@ -120,17 +130,23 @@ export class DatabaseService implements ApplicationService {
             this._onNoteChanges.next({ roomId: roomId });
           }
         } else if (context.action === 'publish') {
+          result = await next();
+
           const id: string = context.params.documentId;
           const note: GetNoteDBDTO = await this.getNote({ id: id });
           const roomId: string | null = note.roomId;
           if (roomId != null) {
             this._onNoteChanges.next({ roomId: roomId });
           }
+        } else {
+          result = await next();
         }
+      } else {
+        result = await next();
       }
-      // eslint-disable-next-line @typescript-eslint/typedef
-      const result = await next();
+
       task.finish();
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
       return result;
     });
   }
@@ -582,15 +598,5 @@ export class DatabaseService implements ApplicationService {
 
   public async removeNote(params: { id: string }): Promise<void> {
     await strapi.documents('api::note.note').delete({ documentId: params.id });
-  }
-
-  private _printDatabaseEvent(event: Event): void {
-    this._logger.debug(
-      this,
-      JSON.stringify({
-        event: event.action,
-        model: event.model.uid,
-      }),
-    );
   }
 }
