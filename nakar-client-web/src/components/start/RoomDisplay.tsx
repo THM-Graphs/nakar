@@ -20,16 +20,16 @@ export function RoomDisplay(props: { room: Room }) {
             size={30}
           ></ScenarioIcon>
           <Stack className={"flex-shrink-1 ms-2"}>
-            <span className={"fs-6 text-wrap text-break"}>
+            <span className={"fs-6 text-wrap text-break small"}>
               {props.room.title}
             </span>
 
             {props.room.scenario ? (
-              <span className={"text-muted text-break text-wrap"}>
+              <span className={"text-muted text-break text-wrap small"}>
                 {props.room.scenario.current.title ?? "Untitled Scenario"}
               </span>
             ) : (
-              <span className={"text-muted fst-italic"}>No Scenario</span>
+              <span className={"text-muted fst-italic small"}>No Scenario</span>
             )}
           </Stack>
         </NavbarButton>
