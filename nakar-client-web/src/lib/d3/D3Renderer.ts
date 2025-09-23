@@ -859,20 +859,19 @@ export class D3Renderer {
   }
 
   private _getTitleColorOfNode(d: D3Node): string {
-    return (
-      d.customTitleColor ??
-      getTextColor(
+    return getTextColor(
+      d.customColor ??
         this.graphState.originalGraphElements?.labels.find(
           (l) => l.label === d.labels[0],
-        )?.color ?? null,
-        this.colorSchema,
-      )
+        )?.color ??
+        null,
+      this.colorSchema,
     );
   }
 
   private _getBgColorsOfNode(d: D3Node): string[] {
-    if (d.customBackgroundColor) {
-      return [d.customBackgroundColor];
+    if (d.customColor != null) {
+      return [getBackgroundColor(d.customColor, this.colorSchema)];
     } else {
       const colors: (string | null)[] = d.labels.map(
         (dlabel: string): string | null => {

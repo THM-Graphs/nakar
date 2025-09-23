@@ -2,6 +2,7 @@ import { create } from "zustand/react";
 import { BearState } from "./BearState.ts";
 import { SocketState } from "../ws/SocketState.ts";
 import {
+  Color,
   Node,
   NodePreview,
   Note,
@@ -434,6 +435,7 @@ export const useBearStore = create<BearState>()(
                               id: n.id,
                               title: n.title,
                               labels: n.labels,
+                              customColor: null,
                             }) satisfies NodePreview,
                         );
                         s.room.panels.notes.addNoteModal.noteId = null;
@@ -447,6 +449,8 @@ export const useBearStore = create<BearState>()(
                         ];
                         s.room.panels.notes.addNoteModal.noteId = note.id;
                         s.room.panels.notes.addNoteModal.content = note.content;
+                        s.room.panels.notes.addNoteModal.color =
+                          note.color?.color ?? null;
                       });
                     },
                     close: () => {
@@ -459,6 +463,7 @@ export const useBearStore = create<BearState>()(
                         s.room.panels.notes.addNoteModal.nodes = [];
                         s.room.panels.notes.addNoteModal.content = "";
                         s.room.panels.notes.addNoteModal.noteId = null;
+                        s.room.panels.notes.addNoteModal.color = null;
                       });
                     },
                     nodes: [],
@@ -467,6 +472,12 @@ export const useBearStore = create<BearState>()(
                     setContent: (c: string) => {
                       set((s) => {
                         s.room.panels.notes.addNoteModal.content = c;
+                      });
+                    },
+                    color: null,
+                    setColor: (c: Color | null) => {
+                      set((s) => {
+                        s.room.panels.notes.addNoteModal.color = c;
                       });
                     },
                   },

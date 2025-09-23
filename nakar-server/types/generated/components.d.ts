@@ -20,6 +20,20 @@ export interface GraphAdditionalQuery extends Struct.ComponentSchema {
   };
 }
 
+export interface GraphColor extends Struct.ComponentSchema {
+  collectionName: 'components_graph_colors';
+  info: {
+    description: '';
+    displayName: 'Color';
+    icon: 'brush';
+  };
+  attributes: {
+    background: Schema.Attribute.String;
+    index: Schema.Attribute.Integer;
+    text: Schema.Attribute.String;
+  };
+}
+
 export interface GraphGraphDisplayConfiguration extends Struct.ComponentSchema {
   collectionName: 'components_graph_graph_display_configurations';
   info: {
@@ -148,6 +162,7 @@ declare module '@strapi/strapi' {
   export module Public {
     export interface ComponentSchemas {
       'graph.additional-query': GraphAdditionalQuery;
+      'graph.color': GraphColor;
       'graph.graph-display-configuration': GraphGraphDisplayConfiguration;
       'graph.merge-node-configuration': GraphMergeNodeConfiguration;
       'graph.node-display-configuration': GraphNodeDisplayConfiguration;

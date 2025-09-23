@@ -15,6 +15,16 @@ import { LayoutAlgorithm } from '../tools/LayoutAlgorithm';
 import { GetNoteDBDTO } from './dto/GetNoteDBDTO';
 import z from 'zod';
 import { SSet } from '../tools/Set';
+import { GetColorDBDTO } from './dto/GetColorDBDTO';
+import { GetColorPresetDBDTO } from './dto/GetColorPresetDBDTO';
+import { GetColorCustomDBDTO } from './dto/GetColorCustomDBDTO';
+import {
+  SchemaColor,
+  SchemaCustomColor,
+  SchemaPresetColor,
+} from '../../../src-gen/schema';
+import { Input } from '@strapi/types/dist/modules/documents/params/data';
+import { GetColorPresetIndexDBDTO } from './dto/GetColorPresetIndexDBDTO';
 
 export class DatabaseDTOFactory {
   public createGetDatabaseDTOFromStrapi(
@@ -167,7 +177,7 @@ export class DatabaseDTOFactory {
   }
 
   public createGetNoteDBDTO(
-    result: Result<'api::note.note', { populate: ['room'] }>,
+    result: Result<'api::note.note', { populate: ['room', 'color'] }>,
   ): GetNoteDBDTO {
     return {
       id: result.documentId,
@@ -179,7 +189,88 @@ export class DatabaseDTOFactory {
       createdAt: this._parseStrapiDate(result.createdAt) ?? new Date(),
       updatedAt: this._parseStrapiDate(result.updatedAt),
       roomId: result.room?.documentId ?? null,
+      color: this.createGetColorDBDTO(result.color ?? null),
     } satisfies GetNoteDBDTO;
+  }
+
+  public createGetColorDBDTO(
+    result: Result<'graph.color'> | null,
+  ): GetColorDBDTO | null {
+    if (result == null) {
+      return null;
+    }
+    if (result.index != null) {
+      return {
+        index: this.createGetColorPresetIndexDBDTO(result.index),
+        type: 'preset',
+      } satisfies GetColorPresetDBDTO;
+    }
+    if (result.background != null && result.text != null) {
+      return {
+        type: 'custom',
+        backgroundColor: result.background,
+        textColor: result.text,
+      } satisfies GetColorCustomDBDTO;
+    }
+    return null;
+  }
+
+  public createGetColorPresetIndexDBDTO(
+    index: number,
+  ): GetColorPresetIndexDBDTO {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+    return index as GetColorPresetIndexDBDTO;
+  }
+
+  public createGetColorDBDTOFromSchema(
+    result: SchemaColor | null,
+  ): GetColorDBDTO | null {
+    return match(result)
+      .returnType<GetColorDBDTO | null>()
+      .with(
+        { type: 'PresetColor' },
+        (c: SchemaPresetColor): GetColorPresetDBDTO => ({
+          type: 'preset',
+          index: c.index,
+        }),
+      )
+      .with(
+        { type: 'CustomColor' },
+        (c: SchemaCustomColor): GetColorCustomDBDTO => ({
+          type: 'custom',
+          backgroundColor: c.backgroundColor,
+          textColor: c.textColor,
+        }),
+      )
+      .with(P.nullish, (): null => null)
+      .exhaustive();
+  }
+
+  public createColorComponent(
+    color: GetColorDBDTO | null,
+  ): Input<'graph.color'> | null {
+    return match(color)
+      .returnType<Input<'graph.color'> | null>()
+      .with(
+        { type: 'preset' },
+        (c: GetColorPresetDBDTO): Input<'graph.color'> =>
+          ({
+            index: c.index,
+            background: undefined,
+            text: undefined,
+          }) satisfies Input<'graph.color'>,
+      )
+      .with(
+        { type: 'custom' },
+        (c: GetColorCustomDBDTO): Input<'graph.color'> =>
+          ({
+            index: undefined,
+            background: c.backgroundColor,
+            text: c.textColor,
+          }) satisfies Input<'graph.color'>,
+      )
+      .with(P.nullish, (): null => null)
+      .exhaustive();
   }
 
   private _tryParseStringArrayJson(input: string): string[] | null {

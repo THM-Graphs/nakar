@@ -3,6 +3,7 @@ import { GetDatabaseDBDTO } from '../database/dto/GetDatabaseDBDTO';
 import { DatabaseService } from '../database/DatabaseService';
 import { LoggerService } from '../logger/LoggerService';
 import {
+  SchemaColor,
   SchemaEdge,
   SchemaEdgePreview,
   SchemaGraph,
@@ -34,6 +35,8 @@ import { ProfilerTask } from '../profiler/ProfilerTask';
 import { GetNotesDBDTO } from '../database/dto/GetNotesDBDTO';
 import { GetNoteDBDTO } from '../database/dto/GetNoteDBDTO';
 import { SSet } from '../tools/Set';
+import { MutableGraphColor } from '../room/graph/MutableGraphColor';
+import { MutableGraphColorFactory } from '../room/graph/MutableGraphColorFactory';
 
 export class CachingSchemaDTOFactory {
   private readonly _databaseCache: SMap<string, GetDatabaseDBDTO>;
@@ -88,7 +91,7 @@ export class CachingSchemaDTOFactory {
       ),
       edges: await graph.edges.edges.asyncFlatMap(
         async (edge: MutableEdge): Promise<SchemaEdge> =>
-          await this._createSchemaEdge(edge, graph, config, widthRange),
+          await this._createSchemaEdge(edge, graph, config, widthRange, notes),
       ),
       labels: await graph.metaData
         .getLabels(graph.nodes)
@@ -104,7 +107,7 @@ export class CachingSchemaDTOFactory {
         .toArray()
         .map(
           (note: GetNoteDBDTO): SchemaNote =>
-            this._createSchemaNote(note, graph, config),
+            this._createSchemaNote(note, graph, config, notes),
         ),
     };
     t.finish();
@@ -364,6 +367,11 @@ export class CachingSchemaDTOFactory {
     });
     const sort = (a: SchemaEdgePreview, b: SchemaEdgePreview): number =>
       b.count - a.count;
+    const customColor: MutableGraphColor | null = node.customColor(
+      graph,
+      config,
+      notes,
+    );
 
     return {
       id: node.id,
@@ -377,8 +385,7 @@ export class CachingSchemaDTOFactory {
       outDegree: node.outDegree(graph),
       degree: node.degree(graph),
       namesInQuery: node.namesInQuery.toArray(),
-      customBackgroundColor: node.customBackgroundColor(graph, config),
-      customTitleColor: node.customTitleColor(graph, config),
+      customColor: customColor != null ? { color: customColor.toDto() } : null,
       source: (await this._getDatabase(node.source))?.title ?? node.source,
       locked: node.locked,
       isCluster: node.isCluster,
@@ -398,7 +405,7 @@ export class CachingSchemaDTOFactory {
         .toArray()
         .map(
           (note: GetNoteDBDTO): SchemaNote =>
-            this._createSchemaNote(note, graph, config),
+            this._createSchemaNote(note, graph, config, notes),
         ),
     };
   }
@@ -408,9 +415,14 @@ export class CachingSchemaDTOFactory {
     graph: MutableGraph,
     config: FinalGraphDisplayConfiguration,
     range: Range | null,
+    notes: GetNotesDBDTO,
   ): Promise<SchemaEdge> {
     const sourceNode: MutableNode | null = graph.nodes.get(edge.startNodeId);
     const targetNode: MutableNode | null = graph.nodes.get(edge.endNodeId);
+    const sourceNodeColor: SchemaColor | null =
+      sourceNode?.customColor(graph, config, notes)?.toDto() ?? null;
+    const targetNodeColor: SchemaColor | null =
+      targetNode?.customColor(graph, config, notes)?.toDto() ?? null;
     return {
       id: edge.id,
       startNodeId: edge.startNodeId,
@@ -429,11 +441,15 @@ export class CachingSchemaDTOFactory {
         id: sourceNode?.id ?? '',
         title: sourceNode?.title(graph, config) ?? '',
         labels: sourceNode?.labels.toArray() ?? [],
+        customColor:
+          sourceNodeColor != null ? { color: sourceNodeColor } : null,
       },
       targetNode: {
         id: targetNode?.id ?? '',
         title: targetNode?.title(graph, config) ?? '',
         labels: targetNode?.labels.toArray() ?? [],
+        customColor:
+          targetNodeColor != null ? { color: targetNodeColor } : null,
       },
       creationReason: edge.creationAction,
     };
@@ -476,7 +492,11 @@ export class CachingSchemaDTOFactory {
     note: GetNoteDBDTO,
     graph: MutableGraph,
     config: FinalGraphDisplayConfiguration,
+    notes: GetNotesDBDTO,
   ): SchemaNote {
+    const mutableColor: MutableGraphColor | null =
+      MutableGraphColorFactory.fromDB(note.color);
+    const color: SchemaColor | null = mutableColor?.toDto() ?? null;
     return {
       id: note.id,
       content: note.content,
@@ -485,13 +505,17 @@ export class CachingSchemaDTOFactory {
       nodes: note.nodeIds
         .map((nodeId: string): SchemaNodePreview => {
           const node: MutableNode | null = graph.nodes.get(nodeId);
+          const customColor: SchemaColor | null =
+            node?.customColor(graph, config, notes)?.toDto() ?? null;
           return {
             id: nodeId,
             title: node?.title(graph, config) ?? nodeId,
             labels: node?.labels.toArray() ?? [],
+            customColor: customColor != null ? { color: customColor } : null,
           };
         })
         .toArray(),
+      color: color ? { color: color } : null,
     };
   }
 

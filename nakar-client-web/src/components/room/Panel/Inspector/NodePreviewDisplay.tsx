@@ -3,12 +3,11 @@ import { getBackgroundColor } from "../../../../lib/color/getBackgroundColor.ts"
 import { getTextColor } from "../../../../lib/color/getTextColor.ts";
 import clsx from "clsx";
 import { useColorSchema } from "../../../../lib/color/useColorSchema.ts";
+import { NodePreview } from "../../../../../src-gen";
 
 const maxTitleLength: number = 20;
 export function NodePreviewDisplay(props: {
-  nodeId: string;
-  nodeTitle: string;
-  labels: string[];
+  node: NodePreview;
   className?: string;
   disableClick?: boolean;
 }) {
@@ -17,21 +16,23 @@ export function NodePreviewDisplay(props: {
   );
   const colorSchema = useColorSchema();
 
-  const firstLabel = props.labels[0];
+  const firstLabel = props.node.labels[0];
   const graphLabel = graphLabels.find((l) => l.label === firstLabel);
-  const bgColor = graphLabel
-    ? getBackgroundColor(graphLabel.color, colorSchema)
-    : "#555555";
-  const fgColor = graphLabel
-    ? getTextColor(graphLabel.color, colorSchema)
-    : null;
+  const bgColor = getBackgroundColor(
+    props.node.customColor?.color ?? graphLabel?.color ?? null,
+    colorSchema,
+  );
+  const fgColor = getTextColor(
+    props.node.customColor?.color ?? graphLabel?.color ?? null,
+    colorSchema,
+  );
   const setDetailElement = useBearStore(
     (s) => s.room.panels.inspector.setElement,
   );
   const trimmedTitle =
-    props.nodeTitle.length > maxTitleLength
-      ? props.nodeTitle.slice(0, maxTitleLength).trim() + "…"
-      : props.nodeTitle;
+    props.node.title.length > maxTitleLength
+      ? props.node.title.slice(0, maxTitleLength).trim() + "…"
+      : props.node.title;
 
   return (
     <span
@@ -42,13 +43,13 @@ export function NodePreviewDisplay(props: {
       )}
       style={{
         backgroundColor: bgColor,
-        color: fgColor ?? undefined,
+        color: fgColor,
       }}
       onClick={() => {
         if (props.disableClick === true) {
           return;
         }
-        setDetailElement(props.nodeId);
+        setDetailElement(props.node.id);
       }}
     >
       {trimmedTitle}

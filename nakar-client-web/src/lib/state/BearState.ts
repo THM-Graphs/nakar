@@ -1,4 +1,5 @@
 import {
+  Color,
   ExpandNodePreviewElement,
   GetScenariosResult,
   Graph,
@@ -159,6 +160,8 @@ export interface BearState {
           nodes: NodePreview[];
           content: string;
           setContent: (c: string) => void;
+          color: Color | null;
+          setColor: (c: Color | null) => void;
         };
       };
     };

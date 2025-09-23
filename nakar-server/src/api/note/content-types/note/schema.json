@@ -25,6 +25,11 @@
     },
     "elementIds": {
       "type": "string"
+    },
+    "color": {
+      "type": "component",
+      "repeatable": false,
+      "component": "graph.color"
     }
   }
 }

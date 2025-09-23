@@ -78,17 +78,9 @@ export function EdgeDetails(props: { edge: Edge; roomContext: RoomContext }) {
           gap={2}
           className={"justify-content-start p-1"}
         >
-          <NodePreviewDisplay
-            nodeId={props.edge.sourceNode.id}
-            nodeTitle={props.edge.sourceNode.title}
-            labels={props.edge.sourceNode.labels}
-          ></NodePreviewDisplay>
+          <NodePreviewDisplay node={props.edge.sourceNode}></NodePreviewDisplay>
           <i className={"bi bi-arrow-right flex-grow-0"}></i>
-          <NodePreviewDisplay
-            nodeId={props.edge.targetNode.id}
-            nodeTitle={props.edge.targetNode.title}
-            labels={props.edge.targetNode.labels}
-          ></NodePreviewDisplay>
+          <NodePreviewDisplay node={props.edge.targetNode}></NodePreviewDisplay>
         </Stack>
       }
     ></DetailPane>

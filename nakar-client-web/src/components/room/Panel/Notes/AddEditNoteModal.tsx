@@ -7,6 +7,8 @@ import { NodePreviewDisplay } from "../Inspector/NodePreviewDisplay.tsx";
 import { resultOrThrow } from "../../../../lib/data/resultOrThrow.ts";
 import { postNote, putNote } from "../../../../../src-gen";
 import clsx from "clsx";
+import { ColorPicker } from "../../../shared/ColorPicker.tsx";
+import { Collapsable } from "../../Collapsable.tsx";
 
 type AddEditNoteModalMode = "create" | "update";
 
@@ -21,6 +23,10 @@ export function AddEditNoteModal(props: { roomContext: RoomContext }) {
   const noteId = useBearStore((s) => s.room.panels.notes.addNoteModal.noteId);
   const nodes = useBearStore((s) => s.room.panels.notes.addNoteModal.nodes);
   const content = useBearStore((s) => s.room.panels.notes.addNoteModal.content);
+  const color = useBearStore((s) => s.room.panels.notes.addNoteModal.color);
+  const setColor = useBearStore(
+    (s) => s.room.panels.notes.addNoteModal.setColor,
+  );
   const setContent = useBearStore(
     (s) => s.room.panels.notes.addNoteModal.setContent,
   );
@@ -39,6 +45,7 @@ export function AddEditNoteModal(props: { roomContext: RoomContext }) {
             body: {
               nodeIds: nodes.map((node) => node.id),
               content: content,
+              color: color ? { color: color } : null,
             },
           }),
         );
@@ -49,6 +56,7 @@ export function AddEditNoteModal(props: { roomContext: RoomContext }) {
             body: {
               nodeIds: nodes.map((node) => node.id),
               content: content,
+              color: color ? { color: color } : null,
             },
           }),
         );
@@ -72,15 +80,13 @@ export function AddEditNoteModal(props: { roomContext: RoomContext }) {
         hidden={false}
         fullWidth={true}
       >
-        <Stack className={""} gap={0}>
+        <Stack className={"mb-5"} gap={0}>
           <Stack className={"p-2 flex-wrap"} direction={"horizontal"}>
             {nodes.map((node) => (
               <NodePreviewDisplay
                 className={"m-1"}
                 key={node.id}
-                nodeId={node.id}
-                nodeTitle={node.title}
-                labels={node.labels}
+                node={node}
                 disableClick={true}
               ></NodePreviewDisplay>
             ))}
@@ -99,6 +105,13 @@ export function AddEditNoteModal(props: { roomContext: RoomContext }) {
               setContent(e.target.value);
             }}
           ></textarea>
+          <Collapsable
+            title={"Color"}
+            initialState={color == null}
+            className={"small border-top border-bottom"}
+          >
+            <ColorPicker color={color} onColorChange={setColor}></ColorPicker>
+          </Collapsable>
         </Stack>
         <Stack
           direction={"horizontal"}

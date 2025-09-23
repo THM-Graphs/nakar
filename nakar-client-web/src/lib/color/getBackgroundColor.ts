@@ -7,7 +7,7 @@ export function getBackgroundColor(
   colorSchema: ColorSchema,
 ): string {
   return match(color)
-    .with(P.nullish, () => "#3B71CA")
+    .with(P.nullish, () => "#555555")
     .with({ index: P.number }, (color): string => {
       return colorSchema.getBackgroundColor(color.index);
     })

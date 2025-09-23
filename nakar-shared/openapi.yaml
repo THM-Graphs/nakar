@@ -169,9 +169,18 @@ paths:
                     type: string
                 content:
                   type: string
+                color:
+                  type: object
+                  nullable: true
+                  properties:
+                    color:
+                      $ref: "#/components/schemas/Color"
+                  required:
+                    - color
               required:
                 - nodeIds
                 - content
+                - color
       responses:
         "200":
           description: "OK"
@@ -223,9 +232,18 @@ paths:
                     type: string
                 content:
                   type: string
+                color:
+                  type: object
+                  nullable: true
+                  properties:
+                    color:
+                      $ref: "#/components/schemas/Color"
+                  required:
+                    - color
               required:
                 - nodeIds
                 - content
+                - color
       responses:
         "200":
           description: "OK"
@@ -746,25 +764,31 @@ components:
     PresetColor:
       type: object
       properties:
+        type:
+          type: string
+          enum: ["PresetColor"]
         index:
           $ref: "#/components/schemas/PresetColorIndex"
       required:
         - index
+        - type
 
     CustomColor:
       type: object
       properties:
+        type:
+          type: string
+          enum: ["CustomColor"]
         backgroundColor:
           type: string
         textColor:
           type: string
       required:
+        - type
         - backgroundColor
         - textColor
 
     Color:
-      discriminator:
-        propertyName: type
       oneOf:
         - $ref: "#/components/schemas/PresetColor"
         - $ref: "#/components/schemas/CustomColor"
@@ -844,9 +868,14 @@ components:
           type: array
           items:
             type: string
-        customBackgroundColor:
-          type: string
+        customColor:
+          type: object
           nullable: true
+          properties:
+            color:
+              $ref: "#/components/schemas/Color"
+          required:
+            - color
         customTitleColor:
           type: string
           nullable: true
@@ -884,8 +913,7 @@ components:
         - outDegree
         - degree
         - namesInQuery
-        - customBackgroundColor
-        - customTitleColor
+        - customColor
         - source
         - locked
         - isCluster
@@ -984,10 +1012,19 @@ components:
           type: array
           items:
             type: string
+        customColor:
+          type: object
+          nullable: true
+          properties:
+            color:
+              $ref: "#/components/schemas/Color"
+          required:
+            - color
       required:
         - id
         - title
         - labels
+        - customColor
 
     EdgePreview:
       properties:
@@ -1481,12 +1518,21 @@ components:
         dateTime:
           type: string
           format: date-time
+        color:
+          type: object
+          nullable: true
+          properties:
+            color:
+              $ref: "#/components/schemas/Color"
+          required:
+            - color
       required:
         - id
         - content
         - nodes
         - author
         - dateTime
+        - color
 
     WSClientToServerMessage:
       oneOf:

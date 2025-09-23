@@ -46,9 +46,7 @@ export function NoteDisplay(props: { note: Note; roomContext: RoomContext }) {
                   {list.map((node) => (
                     <NodePreviewDisplay
                       key={node.id}
-                      nodeId={node.id}
-                      nodeTitle={node.title}
-                      labels={node.labels}
+                      node={node}
                       className={"me-1 mb-1 align-self-baseline"}
                     ></NodePreviewDisplay>
                   ))}

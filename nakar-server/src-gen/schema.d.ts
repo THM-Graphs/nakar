@@ -496,21 +496,15 @@ export interface components {
         /** @enum {integer} */
         readonly PresetColorIndex: 0 | 1 | 2 | 3 | 4 | 5;
         readonly PresetColor: {
-            readonly index: components["schemas"]["PresetColorIndex"];
-            /**
-             * @description discriminator enum property added by openapi-typescript
-             * @enum {string}
-             */
+            /** @enum {string} */
             readonly type: "PresetColor";
+            readonly index: components["schemas"]["PresetColorIndex"];
         };
         readonly CustomColor: {
+            /** @enum {string} */
+            readonly type: "CustomColor";
             readonly backgroundColor: string;
             readonly textColor: string;
-            /**
-             * @description discriminator enum property added by openapi-typescript
-             * @enum {string}
-             */
-            readonly type: "CustomColor";
         };
         readonly Color: components["schemas"]["PresetColor"] | components["schemas"]["CustomColor"];
         readonly GraphLabel: {
@@ -538,8 +532,10 @@ export interface components {
             readonly outDegree: number;
             readonly degree: number;
             readonly namesInQuery: readonly string[];
-            readonly customBackgroundColor: string | null;
-            readonly customTitleColor: string | null;
+            readonly customColor: {
+                readonly color: components["schemas"]["Color"];
+            } | null;
+            readonly customTitleColor?: string | null;
             readonly source: string;
             readonly locked: boolean;
             readonly isCluster: boolean;
@@ -579,6 +575,9 @@ export interface components {
             readonly id: string;
             readonly title: string;
             readonly labels: readonly string[];
+            readonly customColor: {
+                readonly color: components["schemas"]["Color"];
+            } | null;
         };
         readonly EdgePreview: {
             readonly type: string;
@@ -740,6 +739,9 @@ export interface components {
             readonly author: string | null;
             /** Format: date-time */
             readonly dateTime: string;
+            readonly color: {
+                readonly color: components["schemas"]["Color"];
+            } | null;
         };
         readonly WSClientToServerMessage: components["schemas"]["WSActionJoinRoom"] | components["schemas"]["WSActionLeaveRoom"] | components["schemas"]["WSActionGrabNode"] | components["schemas"]["WSActionMoveNodes"] | components["schemas"]["WSActionUngrabNode"];
         readonly WSServerToClientMessage: components["schemas"]["WSEventNodesMoved"] | components["schemas"]["WSEventRoomChanged"] | components["schemas"]["WSEventNotification"] | components["schemas"]["WSEventGraphElementsChanged"] | components["schemas"]["WSEventGraphMetaDataChanged"] | components["schemas"]["WSEventGraphTableChanged"] | components["schemas"]["WSEventProgress"] | components["schemas"]["WSEventClearProgress"] | components["schemas"]["WSEventSetNodeLocks"] | components["schemas"]["WSEventLockUi"] | components["schemas"]["WSEventUnlockUi"] | components["schemas"]["WSEventPerformanceChanged"] | components["schemas"]["WSEventKick"];
@@ -1063,6 +1065,9 @@ export interface operations {
                 readonly "application/json": {
                     readonly nodeIds: readonly string[];
                     readonly content: string;
+                    readonly color: {
+                        readonly color: components["schemas"]["Color"];
+                    } | null;
                 };
             };
         };
@@ -1091,6 +1096,9 @@ export interface operations {
                 readonly "application/json": {
                     readonly nodeIds: readonly string[];
                     readonly content: string;
+                    readonly color: {
+                        readonly color: components["schemas"]["Color"];
+                    } | null;
                 };
             };
         };

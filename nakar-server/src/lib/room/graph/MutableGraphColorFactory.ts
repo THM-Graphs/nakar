@@ -1,8 +1,11 @@
-import { match } from 'ts-pattern';
+import { match, P } from 'ts-pattern';
 import { MutableGraphColor } from './MutableGraphColor';
 import { MutableGraphColorCustom } from './MutableGraphColorCustom';
 import { MutableGraphColorPreset } from './MutableGraphColorPreset';
 import { z } from 'zod';
+import { GetColorDBDTO } from '../../database/dto/GetColorDBDTO';
+import { GetColorCustomDBDTO } from '../../database/dto/GetColorCustomDBDTO';
+import { GetColorPresetDBDTO } from '../../database/dto/GetColorPresetDBDTO';
 
 export class MutableGraphColorFactory {
   public static fromPlain(
@@ -28,6 +31,25 @@ export class MutableGraphColorFactory {
             index: preset.index,
           }),
       )
+      .exhaustive();
+  }
+
+  public static fromDB(input: GetColorDBDTO | null): MutableGraphColor | null {
+    return match(input)
+      .with(
+        { type: 'custom' },
+        (c: GetColorCustomDBDTO): MutableGraphColorCustom =>
+          new MutableGraphColorCustom({
+            backgroundColor: c.backgroundColor,
+            textColor: c.textColor,
+          }),
+      )
+      .with(
+        { type: 'preset' },
+        (c: GetColorPresetDBDTO): MutableGraphColorPreset =>
+          new MutableGraphColorPreset({ index: c.index }),
+      )
+      .with(P.nullish, (): null => null)
       .exhaustive();
   }
 }

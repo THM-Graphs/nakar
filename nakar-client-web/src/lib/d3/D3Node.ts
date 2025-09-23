@@ -1,3 +1,5 @@
+import { Color } from "../../../src-gen";
+
 export type D3Node = {
   id: string;
   x: number;
@@ -10,8 +12,7 @@ export type D3Node = {
   locked: boolean;
   labels: string[];
   title: string;
-  customBackgroundColor: string | null;
-  customTitleColor: string | null;
+  customColor: Color | null;
   clusterSize: number;
   notesCount: number;
 };

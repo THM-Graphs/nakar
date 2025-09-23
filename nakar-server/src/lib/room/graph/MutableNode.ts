@@ -11,6 +11,11 @@ import { Color } from '../../tools/Color';
 import { FinalGraphDisplayConfiguration } from '../scenario-pipeline/display-configuration/FinalGraphDisplayConfiguration';
 import { Range } from '../../tools/Range';
 import { MutableGraphElementCreationAction } from './MutableGraphElementCreationAction';
+import { GetNotesDBDTO } from '../../database/dto/GetNotesDBDTO';
+import { GetNoteDBDTO } from '../../database/dto/GetNoteDBDTO';
+import { MutableGraphColor } from './MutableGraphColor';
+import { MutableGraphColorFactory } from './MutableGraphColorFactory';
+import { MutableGraphColorCustom } from './MutableGraphColorCustom';
 
 export class MutableNode {
   public static readonly defaultRadius: number = 40;
@@ -167,46 +172,34 @@ export class MutableNode {
     return NodeDisplayConfigurationContext.create(this, graph, this._logger);
   }
 
-  public customBackgroundColor(
+  public customColor(
     graph: MutableGraph,
     config: FinalGraphDisplayConfiguration,
-  ): string | null {
-    const nodeConfig: FinalNodeDisplayConfiguration | null =
-      this.displayConfiguration(config);
-    if (nodeConfig == null) {
-      return null;
+    notes: GetNotesDBDTO,
+  ): MutableGraphColor | null {
+    // Try to get color config from first note
+    const firstNote: GetNoteDBDTO | null = this._firstNote(notes);
+    if (firstNote?.color != null) {
+      return MutableGraphColorFactory.fromDB(firstNote.color);
     }
 
-    if (nodeConfig.backgroundColorTemplate == null) {
-      return null;
-    }
-
-    const newValue: string = this.displayConfigurationContext(
-      graph,
-    ).applyToTemplate(nodeConfig.backgroundColorTemplate);
-
-    if (newValue.trim().length === 0) {
-      return null;
-    }
-    return newValue;
-  }
-
-  public customTitleColor(
-    graph: MutableGraph,
-    config: FinalGraphDisplayConfiguration,
-  ): string | null {
-    const backgroundColor: string | null = this.customBackgroundColor(
+    // Try get from custom graph display config
+    const customBg: string | null = this._customBackgroundColorFromConfig(
       graph,
       config,
     );
-    if (backgroundColor == null) {
-      return null;
+    const customTextColor: string | null = this._customTitleColorFromConfig(
+      graph,
+      config,
+    );
+    if (customBg != null || customTextColor != null) {
+      return new MutableGraphColorCustom({
+        backgroundColor: customBg ?? '#ffffff',
+        textColor: customTextColor ?? '#000000',
+      });
     }
-    if (Color.isLightColor(backgroundColor)) {
-      return '#000000';
-    } else {
-      return '#ffffff';
-    }
+
+    return null;
   }
 
   public title(
@@ -342,5 +335,54 @@ export class MutableNode {
       this.degree(graph),
       config.scaleType,
     );
+  }
+
+  private _customBackgroundColorFromConfig(
+    graph: MutableGraph,
+    config: FinalGraphDisplayConfiguration,
+  ): string | null {
+    const nodeConfig: FinalNodeDisplayConfiguration | null =
+      this.displayConfiguration(config);
+    if (nodeConfig == null) {
+      return null;
+    }
+
+    if (nodeConfig.backgroundColorTemplate == null) {
+      return null;
+    }
+
+    const newValue: string = this.displayConfigurationContext(
+      graph,
+    ).applyToTemplate(nodeConfig.backgroundColorTemplate);
+
+    if (newValue.trim().length === 0) {
+      return null;
+    }
+    return newValue;
+  }
+
+  private _customTitleColorFromConfig(
+    graph: MutableGraph,
+    config: FinalGraphDisplayConfiguration,
+  ): string | null {
+    const backgroundColor: string | null =
+      this._customBackgroundColorFromConfig(graph, config);
+    if (backgroundColor == null) {
+      return null;
+    }
+    if (Color.isLightColor(backgroundColor)) {
+      return '#000000';
+    } else {
+      return '#ffffff';
+    }
+  }
+
+  private _firstNote(notes: GetNotesDBDTO): GetNoteDBDTO | null {
+    const allNotes: GetNoteDBDTO[] = (
+      notes.byNodeId.get(this.id) ?? new SSet<GetNoteDBDTO>()
+    ).toArray();
+    const firstNote: GetNoteDBDTO | null =
+      allNotes.length > 0 ? allNotes[0] : null;
+    return firstNote;
   }
 }

@@ -363,6 +363,7 @@ export class HTTPService implements ApplicationService {
           room: room,
           nodeIds: requestBody.nodeIds,
           author: null,
+          color: requestBody.color?.color ?? null,
         });
       }),
     );
@@ -399,6 +400,7 @@ export class HTTPService implements ApplicationService {
         await this._databaseService.updateNote(noteId, {
           nodeIds: requestBody.nodeIds,
           content: requestBody.content,
+          color: requestBody.color?.color ?? null,
         });
       }),
     );

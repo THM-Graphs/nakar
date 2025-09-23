@@ -5,9 +5,12 @@ export type Color = PresetColor | CustomColor;
 export type CreationReason = 'loadScenario' | 'expand' | 'query' | 'merge' | 'compress' | 'connectResultNodes';
 
 export type CustomColor = {
+    type: 'CustomColor';
     backgroundColor: string;
     textColor: string;
 };
+
+export type type = 'CustomColor';
 
 export type Database = {
     id: string;
@@ -163,8 +166,10 @@ export type Node = {
     outDegree: number;
     degree: number;
     namesInQuery: Array<(string)>;
-    customBackgroundColor: (string) | null;
-    customTitleColor: (string) | null;
+    customColor: {
+        color: Color;
+    } | null;
+    customTitleColor?: (string) | null;
     source: string;
     locked: boolean;
     isCluster: boolean;
@@ -179,6 +184,9 @@ export type NodePreview = {
     id: string;
     title: string;
     labels: Array<(string)>;
+    customColor: {
+        color: Color;
+    } | null;
 };
 
 export type Note = {
@@ -187,6 +195,9 @@ export type Note = {
     nodes: Array<NodePreview>;
     author: (string) | null;
     dateTime: string;
+    color: {
+        color: Color;
+    } | null;
 };
 
 export type Notification = {
@@ -216,8 +227,11 @@ export type Position = {
 };
 
 export type PresetColor = {
+    type: 'PresetColor';
     index: PresetColorIndex;
 };
+
+export type type2 = 'PresetColor';
 
 export type PresetColorIndex = 0 | 1 | 2 | 3 | 4 | 5;
 
@@ -279,34 +293,34 @@ export type WSActionGrabNode = {
     nodeId: string;
 };
 
-export type type = 'WSActionGrabNode';
+export type type3 = 'WSActionGrabNode';
 
 export type WSActionJoinRoom = {
     type: 'WSActionJoinRoom';
     roomId: string;
 };
 
-export type type2 = 'WSActionJoinRoom';
+export type type4 = 'WSActionJoinRoom';
 
 export type WSActionLeaveRoom = {
     type: 'WSActionLeaveRoom';
 };
 
-export type type3 = 'WSActionLeaveRoom';
+export type type5 = 'WSActionLeaveRoom';
 
 export type WSActionMoveNodes = {
     type: 'WSActionMoveNodes';
     nodes: Array<PhysicalNode>;
 };
 
-export type type4 = 'WSActionMoveNodes';
+export type type6 = 'WSActionMoveNodes';
 
 export type WSActionUngrabNode = {
     type: 'WSActionUngrabNode';
     node: PhysicalNode;
 };
 
-export type type5 = 'WSActionUngrabNode';
+export type type7 = 'WSActionUngrabNode';
 
 export type WSClientToServerMessage = WSActionJoinRoom | WSActionLeaveRoom | WSActionGrabNode | WSActionMoveNodes | WSActionUngrabNode;
 
@@ -314,40 +328,40 @@ export type WSEventClearProgress = {
     type: 'WSEventClearProgress';
 };
 
-export type type6 = 'WSEventClearProgress';
+export type type8 = 'WSEventClearProgress';
 
 export type WSEventGraphElementsChanged = {
     type: 'WSEventGraphElementsChanged';
     elements: GraphElements;
 };
 
-export type type7 = 'WSEventGraphElementsChanged';
+export type type9 = 'WSEventGraphElementsChanged';
 
 export type WSEventGraphMetaDataChanged = {
     type: 'WSEventGraphMetaDataChanged';
     metaData: GraphMetaData;
 };
 
-export type type8 = 'WSEventGraphMetaDataChanged';
+export type type10 = 'WSEventGraphMetaDataChanged';
 
 export type WSEventGraphTableChanged = {
     type: 'WSEventGraphTableChanged';
     table: GraphTable;
 };
 
-export type type9 = 'WSEventGraphTableChanged';
+export type type11 = 'WSEventGraphTableChanged';
 
 export type WSEventKick = {
     type: 'WSEventKick';
 };
 
-export type type10 = 'WSEventKick';
+export type type12 = 'WSEventKick';
 
 export type WSEventLockUi = {
     type: 'WSEventLockUi';
 };
 
-export type type11 = 'WSEventLockUi';
+export type type13 = 'WSEventLockUi';
 
 export type WSEventNodesMoved = {
     type: 'WSEventNodesMoved';
@@ -355,21 +369,21 @@ export type WSEventNodesMoved = {
     date: string;
 };
 
-export type type12 = 'WSEventNodesMoved';
+export type type14 = 'WSEventNodesMoved';
 
 export type WSEventNotification = {
     type: 'WSEventNotification';
     notification: Notification;
 };
 
-export type type13 = 'WSEventNotification';
+export type type15 = 'WSEventNotification';
 
 export type WSEventPerformanceChanged = {
     type: 'WSEventPerformanceChanged';
     performance?: PhysicsPerformance;
 };
 
-export type type14 = 'WSEventPerformanceChanged';
+export type type16 = 'WSEventPerformanceChanged';
 
 export type WSEventProgress = {
     type: 'WSEventProgress';
@@ -377,14 +391,14 @@ export type WSEventProgress = {
     message: string;
 };
 
-export type type15 = 'WSEventProgress';
+export type type17 = 'WSEventProgress';
 
 export type WSEventRoomChanged = {
     type: 'WSEventRoomChanged';
     roomId: (string) | null;
 };
 
-export type type16 = 'WSEventRoomChanged';
+export type type18 = 'WSEventRoomChanged';
 
 export type WSEventSetNodeLocks = {
     type: 'WSEventSetNodeLocks';
@@ -394,13 +408,13 @@ export type WSEventSetNodeLocks = {
     }>;
 };
 
-export type type17 = 'WSEventSetNodeLocks';
+export type type19 = 'WSEventSetNodeLocks';
 
 export type WSEventUnlockUi = {
     type: 'WSEventUnlockUi';
 };
 
-export type type18 = 'WSEventUnlockUi';
+export type type20 = 'WSEventUnlockUi';
 
 export type WSServerToClientMessage = WSEventNodesMoved | WSEventRoomChanged | WSEventNotification | WSEventGraphElementsChanged | WSEventGraphMetaDataChanged | WSEventGraphTableChanged | WSEventProgress | WSEventClearProgress | WSEventSetNodeLocks | WSEventLockUi | WSEventUnlockUi | WSEventPerformanceChanged | WSEventKick;
 
@@ -472,6 +486,9 @@ export type PostNoteData = {
     body: {
         nodeIds: Array<(string)>;
         content: string;
+        color: {
+            color: Color;
+        } | null;
     };
     path: {
         id: string;
@@ -497,6 +514,9 @@ export type PutNoteData = {
     body: {
         nodeIds: Array<(string)>;
         content: string;
+        color: {
+            color: Color;
+        } | null;
     };
     path: {
         id: string;

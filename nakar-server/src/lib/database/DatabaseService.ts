@@ -27,6 +27,7 @@ import { SSet } from '../tools/Set';
 import { GetNotesDBDTO } from './dto/GetNotesDBDTO';
 import { SMap } from '../tools/Map';
 import { UpdateNoteDBDTO } from './dto/UpdateNoteDBDTO';
+import { GetColorDBDTO } from './dto/GetColorDBDTO';
 
 export class DatabaseService implements ApplicationService {
   private readonly _databaseDtoFactory: DatabaseDTOFactory;
@@ -507,12 +508,16 @@ export class DatabaseService implements ApplicationService {
   }
 
   public async addNote(params: CreateNoteDBDTO): Promise<void> {
+    const color: GetColorDBDTO | null =
+      this._databaseDtoFactory.createGetColorDBDTOFromSchema(params.color);
     await strapi.documents('api::note.note').create({
       data: {
         content: params.content,
         room: {
           documentId: params.room.documentId,
         },
+        color:
+          this._databaseDtoFactory.createColorComponent(color) ?? undefined,
         author: params.author ?? undefined,
         elementIds: JSON.stringify(params.nodeIds),
       },
@@ -524,10 +529,15 @@ export class DatabaseService implements ApplicationService {
     noteId: string,
     params: UpdateNoteDBDTO,
   ): Promise<void> {
+    const color: GetColorDBDTO | null =
+      this._databaseDtoFactory.createGetColorDBDTOFromSchema(params.color);
+    const colorComp: Input<'graph.color'> | null =
+      this._databaseDtoFactory.createColorComponent(color);
     await strapi.documents('api::note.note').update({
       data: {
         content: params.content,
         elementIds: JSON.stringify(params.nodeIds),
+        color: colorComp ?? {},
       },
       documentId: noteId,
       status: 'published',
@@ -545,6 +555,7 @@ export class DatabaseService implements ApplicationService {
         sort: [{ createdAt: 'desc' }],
         populate: {
           room: {},
+          color: {},
         },
         filters: {
           room: {
@@ -557,10 +568,10 @@ export class DatabaseService implements ApplicationService {
     for (const rawNote of results) {
       const note: GetNoteDBDTO =
         this._databaseDtoFactory.createGetNoteDBDTO(rawNote);
-      let match: boolean = false;
+      let foundMatch: boolean = false;
       for (const nodeId of params.graph.nodes.keys) {
         if (note.nodeIds.has(nodeId)) {
-          match = true; // indicates if note has at least one node id in common with params.nodeIds
+          foundMatch = true; // indicates if note has at least one node id in common with params.nodeIds
           result.byNodeId.set(
             nodeId,
             (result.byNodeId.get(nodeId) ?? new SSet<GetNoteDBDTO>()).byAdding(
@@ -569,7 +580,7 @@ export class DatabaseService implements ApplicationService {
           );
         }
       }
-      if (match) {
+      if (foundMatch) {
         result.notes.add(note);
       }
     }
@@ -578,14 +589,16 @@ export class DatabaseService implements ApplicationService {
   }
 
   public async getNote(params: { id: string }): Promise<GetNoteDBDTO> {
-    const result: Result<'api::note.note', { populate: ['room'] }> | null =
-      await strapi.documents('api::note.note').findOne({
-        status: 'published',
-        populate: {
-          room: {},
-        },
-        documentId: params.id,
-      });
+    const result: Result<
+      'api::note.note',
+      { populate: ['room', 'color'] }
+    > | null = await strapi.documents('api::note.note').findOne({
+      status: 'published',
+      populate: {
+        room: {},
+      },
+      documentId: params.id,
+    });
 
     if (result == null) {
       throw new Error(`Note not found.`);
