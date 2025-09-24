@@ -4,6 +4,8 @@ import { getTextColor } from "../../../../lib/color/getTextColor.ts";
 import clsx from "clsx";
 import { useColorSchema } from "../../../../lib/color/useColorSchema.ts";
 import { NodePreview } from "../../../../../src-gen";
+import { isMultiSelectKey } from "../../../../lib/dom/isMultiSelectKey.ts";
+import { MouseEvent } from "react";
 
 const maxTitleLength: number = 20;
 export function NodePreviewDisplay(props: {
@@ -30,6 +32,9 @@ export function NodePreviewDisplay(props: {
   const setDetailElement = useBearStore(
     (s) => s.room.panels.inspector.setElement,
   );
+  const appendElement = useBearStore(
+    (s) => s.room.panels.inspector.appendElement,
+  );
   const trimmedTitle =
     props.node.title.length > maxTitleLength
       ? props.node.title.slice(0, maxTitleLength).trim() + "…"
@@ -46,11 +51,15 @@ export function NodePreviewDisplay(props: {
         backgroundColor: bgColor,
         color: fgColor,
       }}
-      onClick={() => {
+      onClick={(event: MouseEvent<HTMLSpanElement>) => {
         if (props.disableClick === true) {
           return;
         }
-        setDetailElement(props.node.id);
+        if (isMultiSelectKey(event)) {
+          appendElement(props.node.id);
+        } else {
+          setDetailElement(props.node.id);
+        }
       }}
     >
       {trimmedTitle}

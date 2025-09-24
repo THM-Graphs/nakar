@@ -13,6 +13,12 @@ import { NodeLabelColors } from "../../../shared/NodeLabelColors.tsx";
 import { ActionNavbarButton } from "../../../../actions/ActionNavbarButton.tsx";
 import { nodeActions } from "../../../../actions/groups/nodeActions.ts";
 import { relationshipActions } from "../../../../actions/groups/relationshipActions.ts";
+import {
+  getBackgroundColorOfColor,
+  getBackgroundColorOfLabel,
+  getBackgroundColorOfNode,
+} from "../../../../lib/color/getBackgroundColor.ts";
+import { useColorSchema } from "../../../../lib/color/useColorSchema.ts";
 
 export function InspectorPanel(props: {
   context: AppContext;
@@ -167,12 +173,32 @@ function InspectorPanelForMultiType(props: {
 }) {
   const title =
     "title" in props.element ? props.element.title : props.element.type;
+  const colorSchema = useColorSchema();
+  const graphLabels = useBearStore(
+    (s) => s.room.scenario.graph.elements.labels,
+  );
+
   return (
     <Collapsable
       title={
         <Stack direction={"horizontal"} className={"ellipsis"}>
           {"title" in props.element ? (
-            <NodeLabelColors labels={props.element.labels}></NodeLabelColors>
+            <NodeLabelColors
+              colors={
+                props.element.customColor
+                  ? [
+                      getBackgroundColorOfColor(
+                        props.element.customColor.color,
+                        colorSchema,
+                      ),
+                    ]
+                  : props.element.labels.map((next) => {
+                      const label =
+                        graphLabels.find((gl) => gl.label === next) ?? null;
+                      return getBackgroundColorOfLabel(label, colorSchema);
+                    }, [])
+              }
+            ></NodeLabelColors>
           ) : null}
           <span className={"small ellipsis"}>{title}</span>
         </Stack>
