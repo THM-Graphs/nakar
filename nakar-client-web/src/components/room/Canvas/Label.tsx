@@ -1,5 +1,5 @@
 import { GraphLabel } from "../../../../src-gen";
-import { getBackgroundColor } from "../../../lib/color/getBackgroundColor.ts";
+import { getBackgroundColorOfLabel } from "../../../lib/color/getBackgroundColor.ts";
 import { getTextColor } from "../../../lib/color/getTextColor.ts";
 import { Stack } from "react-bootstrap";
 import { useBearStore } from "../../../lib/state/useBearStore.ts";
@@ -21,7 +21,8 @@ export function Label(props: {
   hideLabelMenu?: boolean;
 }) {
   const labels = useBearStore((s) => s.room.scenario.graph.elements.labels);
-  const label = labels.find((l) => l.label === props.label);
+  const label: GraphLabel | null =
+    labels.find((l) => l.label === props.label) ?? null;
   const showLabelMenu: boolean =
     !(props.hideLabelMenu ?? false) && label != null;
   const colorSchema = useColorSchema();
@@ -38,9 +39,7 @@ export function Label(props: {
     return buffer;
   })();
 
-  const bgColor = label
-    ? getBackgroundColor(label.color, colorSchema)
-    : "#555555";
+  const bgColor = getBackgroundColorOfLabel(label, colorSchema);
   const color = label ? getTextColor(label.color, colorSchema) : "#fff";
 
   return (

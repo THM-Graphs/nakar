@@ -617,6 +617,9 @@ export interface components {
                 readonly labels: readonly string[];
                 readonly degree: number;
                 readonly percentage: number;
+                readonly customColor: {
+                    readonly color: components["schemas"]["Color"];
+                } | null;
             }[];
         };
         readonly GraphMetaData: {

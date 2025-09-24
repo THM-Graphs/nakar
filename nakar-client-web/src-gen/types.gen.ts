@@ -151,6 +151,9 @@ export type Histogram = {
         labels: Array<(string)>;
         degree: number;
         percentage: number;
+        customColor: {
+            color: Color;
+        } | null;
     }>;
 };
 

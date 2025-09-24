@@ -1,5 +1,5 @@
 import { useBearStore } from "../../../../lib/state/useBearStore.ts";
-import { getBackgroundColor } from "../../../../lib/color/getBackgroundColor.ts";
+import { getBackgroundColorOfNode } from "../../../../lib/color/getBackgroundColor.ts";
 import { getTextColor } from "../../../../lib/color/getTextColor.ts";
 import clsx from "clsx";
 import { useColorSchema } from "../../../../lib/color/useColorSchema.ts";
@@ -18,9 +18,10 @@ export function NodePreviewDisplay(props: {
 
   const firstLabel = props.node.labels[0];
   const graphLabel = graphLabels.find((l) => l.label === firstLabel);
-  const bgColor = getBackgroundColor(
-    props.node.customColor?.color ?? graphLabel?.color ?? null,
+  const bgColor = getBackgroundColorOfNode(
+    props.node,
     colorSchema,
+    graphLabels,
   );
   const fgColor = getTextColor(
     props.node.customColor?.color ?? graphLabel?.color ?? null,

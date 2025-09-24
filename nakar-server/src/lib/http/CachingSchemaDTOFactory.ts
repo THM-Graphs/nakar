@@ -102,7 +102,7 @@ export class CachingSchemaDTOFactory {
           ): Promise<SchemaGraphLabel> =>
             await this._createSchemaGraphLabel(id, label),
         ),
-      histogram: this._createSchemaHistogram(graph, config),
+      histogram: this._createSchemaHistogram(graph, config, notes),
       notes: notes.notes
         .toArray()
         .map(
@@ -173,6 +173,7 @@ export class CachingSchemaDTOFactory {
   private _createSchemaHistogram(
     graph: MutableGraph,
     config: FinalGraphDisplayConfiguration,
+    notes: GetNotesDBDTO,
   ): SchemaHistogram {
     const t: ProfilerTask = this._profiler.profile(
       this,
@@ -184,6 +185,7 @@ export class CachingSchemaDTOFactory {
       labels: string[];
       degree: number;
       percentage: number;
+      customColor: { color: SchemaColor } | null;
     }
 
     interface HistogramPropertyEntry {
@@ -316,15 +318,22 @@ export class CachingSchemaDTOFactory {
         ),
       nodes: graph.nodes.nodes
         .toArray()
-        .map(
-          (node: MutableNode): NodeHistogramEntry => ({
+        .map((node: MutableNode): NodeHistogramEntry => {
+          const customColor: MutableGraphColor | null = node.customColor(
+            graph,
+            config,
+            notes,
+          );
+          return {
             id: node.id,
             title: node.title(graph, config),
             labels: node.labels.toArray(),
             degree: node.degree(graph),
             percentage: degreeCount > 0 ? node.degree(graph) / degreeCount : 0,
-          }),
-        )
+            customColor:
+              customColor != null ? { color: customColor.toDto() } : null,
+          };
+        })
         .sort((a: NodeHistogramEntry, b: NodeHistogramEntry): number => {
           if (a.degree !== b.degree) {
             return b.degree - a.degree;

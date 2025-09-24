@@ -11,7 +11,7 @@ export function ValueDisplay(props: {
   subLabel?: string;
   value: number;
   percentage: number | null;
-  nodeLabels?: string[];
+  nodeColors?: string[];
   onSelect?: () => void | Promise<void>;
   roomContext: RoomContext;
   customActions?: DetailPaneAction[];
@@ -40,8 +40,8 @@ export function ValueDisplay(props: {
               size={"sm"}
             ></NavbarButton>
           )}
-          {props.nodeLabels && (
-            <NodeLabelColors labels={props.nodeLabels}></NodeLabelColors>
+          {props.nodeColors && (
+            <NodeLabelColors colors={props.nodeColors}></NodeLabelColors>
           )}
           <span
             style={{}}

@@ -7,7 +7,10 @@ import {
 } from "../../../src-gen";
 import * as d3 from "d3";
 import { ZoomBehavior, ZoomTransform } from "d3";
-import { getBackgroundColor } from "../color/getBackgroundColor.ts";
+import {
+  getBackgroundColorOfColor,
+  getBackgroundColorOfLabel,
+} from "../color/getBackgroundColor.ts";
 import { getTextColor } from "../color/getTextColor.ts";
 import { Observable, Subject, throttleTime } from "rxjs";
 import { D3RendererState } from "./D3RendererState.ts";
@@ -871,14 +874,14 @@ export class D3Renderer {
 
   private _getBgColorsOfNode(d: D3Node): string[] {
     if (d.customColor != null) {
-      return [getBackgroundColor(d.customColor, this.colorSchema)];
+      return [getBackgroundColorOfColor(d.customColor, this.colorSchema)];
     } else {
       const colors: (string | null)[] = d.labels.map(
         (dlabel: string): string | null => {
-          return getBackgroundColor(
+          return getBackgroundColorOfLabel(
             this.graphState.originalGraphElements?.labels.find(
               (l) => l.label === dlabel,
-            )?.color ?? null,
+            ) ?? null,
             this.colorSchema,
           );
         },

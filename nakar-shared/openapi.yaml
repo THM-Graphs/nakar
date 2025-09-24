@@ -1139,12 +1139,21 @@ components:
                 type: number
               percentage:
                 type: number
+              customColor:
+                type: object
+                nullable: true
+                properties:
+                  color:
+                    $ref: "#/components/schemas/Color"
+                required:
+                  - color
             required:
               - id
               - title
               - labels
               - degree
               - percentage
+              - customColor
       required:
         - nodeLabels
         - nodeProperties
