@@ -1,4 +1,4 @@
-import { MutableGraph } from '../graph/MutableGraph';
+import type { MutableGraph } from '../graph/MutableGraph';
 
 export interface RoomServiceEventRoomPhysicsUpdated {
   type: 'RoomServiceEventRoomPhysicsUpdated';

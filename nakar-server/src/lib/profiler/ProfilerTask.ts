@@ -1,4 +1,4 @@
-import { ProfilerService } from './ProfilerService';
+import type { ProfilerService } from './ProfilerService';
 
 export class ProfilerTask {
   private readonly _sender: unknown;

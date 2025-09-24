@@ -1,6 +1,6 @@
-import { Neo4jNode } from './Neo4jNode';
-import { Neo4jRelationship } from './Neo4jRelationship';
-import { SMap } from '../tools/Map';
+import type { Neo4jNode } from './Neo4jNode';
+import type { Neo4jRelationship } from './Neo4jRelationship';
+import type { SMap } from '../tools/Map';
 
 export class Neo4jGraphElements {
   public readonly nodes: SMap<string, Neo4jNode>;

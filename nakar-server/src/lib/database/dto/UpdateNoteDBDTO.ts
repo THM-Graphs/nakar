@@ -1,4 +1,4 @@
-import { SchemaColor } from '../../../../src-gen/schema';
+import type { SchemaColor } from '../../../../src-gen/schema';
 
 export interface UpdateNoteDBDTO {
   nodeIds: readonly string[];

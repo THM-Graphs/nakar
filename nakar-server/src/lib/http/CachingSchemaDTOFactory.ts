@@ -1,8 +1,8 @@
 import { SMap } from '../tools/Map';
-import { GetDatabaseDBDTO } from '../database/dto/GetDatabaseDBDTO';
-import { DatabaseService } from '../database/DatabaseService';
-import { LoggerService } from '../logger/LoggerService';
-import {
+import type { GetDatabaseDBDTO } from '../database/dto/GetDatabaseDBDTO';
+import type { DatabaseService } from '../database/DatabaseService';
+import type { LoggerService } from '../logger/LoggerService';
+import type {
   SchemaColor,
   SchemaEdge,
   SchemaEdgePreview,
@@ -18,24 +18,24 @@ import {
   SchemaNote,
   SchemaScenarioArgument,
 } from '../../../src-gen/schema';
-import { MutableNode } from '../room/graph/MutableNode';
-import { MutableEdge } from '../room/graph/MutableEdge';
-import { MutableGraph } from '../room/graph/MutableGraph';
-import { MutableGraphLabel } from '../room/graph/MutableGraphLabel';
-import { MutablePropertyCollection } from '../room/graph/MutablePropertyCollection';
-import { MutableGraphMetaData } from '../room/graph/MutableGraphMetaData';
-import { GetScenarioDBDTO } from '../database/dto/GetScenarioDBDTO';
+import type { MutableNode } from '../room/graph/MutableNode';
+import type { MutableEdge } from '../room/graph/MutableEdge';
+import type { MutableGraph } from '../room/graph/MutableGraph';
+import type { MutableGraphLabel } from '../room/graph/MutableGraphLabel';
+import type { MutablePropertyCollection } from '../room/graph/MutablePropertyCollection';
+import type { MutableGraphMetaData } from '../room/graph/MutableGraphMetaData';
+import type { GetScenarioDBDTO } from '../database/dto/GetScenarioDBDTO';
 import { SchemaDTOFactory } from './SchemaDTOFactory';
-import { ConfigService } from '../config/ConfigService';
-import { FinalGraphDisplayConfiguration } from '../room/scenario-pipeline/display-configuration/FinalGraphDisplayConfiguration';
-import { Range } from '../tools/Range';
-import { MediaService } from '../media/MediaService';
-import { ProfilerService } from '../profiler/ProfilerService';
-import { ProfilerTask } from '../profiler/ProfilerTask';
-import { GetNotesDBDTO } from '../database/dto/GetNotesDBDTO';
-import { GetNoteDBDTO } from '../database/dto/GetNoteDBDTO';
+import type { ConfigService } from '../config/ConfigService';
+import type { FinalGraphDisplayConfiguration } from '../room/scenario-pipeline/display-configuration/FinalGraphDisplayConfiguration';
+import type { Range } from '../tools/Range';
+import type { MediaService } from '../media/MediaService';
+import type { ProfilerService } from '../profiler/ProfilerService';
+import type { ProfilerTask } from '../profiler/ProfilerTask';
+import type { GetNotesDBDTO } from '../database/dto/GetNotesDBDTO';
+import type { GetNoteDBDTO } from '../database/dto/GetNoteDBDTO';
 import { SSet } from '../tools/Set';
-import { MutableGraphColor } from '../room/graph/MutableGraphColor';
+import type { MutableGraphColor } from '../room/graph/MutableGraphColor';
 import { MutableGraphColorFactory } from '../room/graph/MutableGraphColorFactory';
 
 export class CachingSchemaDTOFactory {

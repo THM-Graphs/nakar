@@ -1,4 +1,4 @@
-import { GetDatabaseDBDTO } from './GetDatabaseDBDTO';
+import type { GetDatabaseDBDTO } from './GetDatabaseDBDTO';
 
 export interface GetScenarioQueryDBDTO {
   query: string;

@@ -4,18 +4,18 @@ import { MutableGraphMetaData } from './MutableGraphMetaData';
 import { z } from 'zod';
 import { SMap } from '../../tools/Map';
 import { v4 as uuidv4 } from 'uuid';
-import { LoggerService } from '../../logger/LoggerService';
+import type { LoggerService } from '../../logger/LoggerService';
 import { MutableNodeIndex } from './MutableNodeIndex';
 import { MutableEdgeIndex } from './MutableEdgeIndex';
-import { GetScenarioDBDTO } from '../../database/dto/GetScenarioDBDTO';
-import { FinalGraphDisplayConfiguration } from '../scenario-pipeline/display-configuration/FinalGraphDisplayConfiguration';
-import { PhysicalGraph } from '../../physics/physical-graph/PhysicalGraph';
-import { PhysicalNode } from '../../physics/physical-graph/PhysicalNode';
-import { PhysicalEdge } from '../../physics/physical-graph/PhysicalEdge';
-import { Range } from '../../tools/Range';
+import type { GetScenarioDBDTO } from '../../database/dto/GetScenarioDBDTO';
+import type { FinalGraphDisplayConfiguration } from '../scenario-pipeline/display-configuration/FinalGraphDisplayConfiguration';
+import type { PhysicalGraph } from '../../physics/physical-graph/PhysicalGraph';
+import type { PhysicalNode } from '../../physics/physical-graph/PhysicalNode';
+import type { PhysicalEdge } from '../../physics/physical-graph/PhysicalEdge';
+import type { Range } from '../../tools/Range';
 import { SSet } from '../../tools/Set';
-import { ProfilerService } from '../../profiler/ProfilerService';
-import { ProfilerTask } from '../../profiler/ProfilerTask';
+import type { ProfilerService } from '../../profiler/ProfilerService';
+import type { ProfilerTask } from '../../profiler/ProfilerTask';
 
 export class MutableGraph {
   // eslint-disable-next-line @typescript-eslint/typedef

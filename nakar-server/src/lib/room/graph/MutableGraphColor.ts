@@ -1,4 +1,4 @@
-import { SchemaColor } from '../../../../src-gen/schema';
+import type { SchemaColor } from '../../../../src-gen/schema';
 import z from 'zod';
 
 export abstract class MutableGraphColor {

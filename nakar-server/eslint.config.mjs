@@ -14,11 +14,7 @@ export default defineConfig([
     '*.js',
   ]),
   {
-    extends: [
-      eslint.configs.recommended,
-      tseslint.configs.stylisticTypeChecked,
-      tseslint.configs.strictTypeChecked,
-    ],
+    extends: [eslint.configs.recommended, tseslint.configs.all],
     languageOptions: {
       parserOptions: {
         project: [
@@ -99,6 +95,13 @@ export default defineConfig([
       '@typescript-eslint/no-extraneous-class': 'off',
       '@typescript-eslint/prefer-nullish-coalescing': 'off',
       'no-unexpected-multiline': 'off',
+      '@typescript-eslint/no-magic-numbers': 'off',
+      '@typescript-eslint/prefer-readonly-parameter-types': 'off',
+      '@typescript-eslint/class-methods-use-this': 'off',
+      '@typescript-eslint/max-params': 'off',
+      '@typescript-eslint/parameter-properties': 'off',
+      '@typescript-eslint/method-signature-style': ['error', 'method'],
+      '@typescript-eslint/return-await': ['error', 'always'],
     },
   },
 ]);

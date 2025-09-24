@@ -9,9 +9,9 @@ import { BackupService } from '../backup/BackupService';
 import { HTTPService } from '../http/HTTPService';
 import { Neo4jService } from '../neo4j/Neo4jService';
 import { ToolsService } from '../tools/ToolsService';
-import { ApplicationService } from './ApplicationService';
+import type { ApplicationService } from './ApplicationService';
 import { MediaService } from '../media/MediaService';
-import { ProfilerTask } from '../profiler/ProfilerTask';
+import type { ProfilerTask } from '../profiler/ProfilerTask';
 
 export class NakarApplication {
   public static shared: NakarApplication = new NakarApplication();

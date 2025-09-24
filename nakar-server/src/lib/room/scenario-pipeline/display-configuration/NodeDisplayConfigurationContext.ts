@@ -1,10 +1,10 @@
-import { MutableNode } from '../../graph/MutableNode';
-import { TemplateDelegate } from 'handlebars';
+import type { MutableNode } from '../../graph/MutableNode';
+import type { TemplateDelegate } from 'handlebars';
 import { SMap } from '../../../tools/Map';
-import { SSet } from '../../../tools/Set';
-import { LoggerService } from '../../../logger/LoggerService';
+import type { SSet } from '../../../tools/Set';
+import type { LoggerService } from '../../../logger/LoggerService';
 import z from 'zod';
-import { MutableGraph } from '../../graph/MutableGraph';
+import type { MutableGraph } from '../../graph/MutableGraph';
 
 export class NodeDisplayConfigurationContext {
   // eslint-disable-next-line @typescript-eslint/typedef

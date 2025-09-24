@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { SMap } from '../../tools/Map';
 import { MutableGraphColorPreset } from './MutableGraphColorPreset';
 import { SSet } from '../../tools/Set';
-import { MutableNodeIndex } from './MutableNodeIndex';
+import type { MutableNodeIndex } from './MutableNodeIndex';
 
 export class MutableGraphMetaData {
   // eslint-disable-next-line @typescript-eslint/typedef

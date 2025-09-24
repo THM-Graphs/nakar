@@ -1,5 +1,5 @@
-import { LoggerService } from '../logger/LoggerService';
-import { ApplicationService } from '../application/ApplicationService';
+import type { LoggerService } from '../logger/LoggerService';
+import type { ApplicationService } from '../application/ApplicationService';
 import { resolve } from 'node:path';
 import { readFileSync } from 'node:fs';
 import z from 'zod';

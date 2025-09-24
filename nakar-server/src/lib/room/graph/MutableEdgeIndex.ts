@@ -1,29 +1,29 @@
 import { SMap } from '../../tools/Map';
 import { MutableEdge } from './MutableEdge';
 import { SSet } from '../../tools/Set';
-import { Neo4jRelationship } from '../../neo4j/Neo4jRelationship';
+import type { Neo4jRelationship } from '../../neo4j/Neo4jRelationship';
 import { MutablePropertyCollection } from './MutablePropertyCollection';
 import { Range } from '../../tools/Range';
-import { MutableGraphElementCreationAction } from './MutableGraphElementCreationAction';
+import type { MutableGraphElementCreationAction } from './MutableGraphElementCreationAction';
 
 export class MutableEdgeIndex {
-  private _byId: SMap<string, MutableEdge>;
+  private readonly _byId: SMap<string, MutableEdge>;
 
-  private _byStartNodeId: SMap<string, SMap<string, MutableEdge>>;
-  private _byEndNodeId: SMap<string, SMap<string, MutableEdge>>;
-  private _byStartAndEndNodeId: SMap<
+  private readonly _byStartNodeId: SMap<string, SMap<string, MutableEdge>>;
+  private readonly _byEndNodeId: SMap<string, SMap<string, MutableEdge>>;
+  private readonly _byStartAndEndNodeId: SMap<
     string,
     SMap<string, SMap<string, MutableEdge>>
   >;
-  private _byType: SMap<string, SSet<MutableEdge>>;
+  private readonly _byType: SMap<string, SSet<MutableEdge>>;
 
   /* Maps type => count */
-  private _typeHistogram: SMap<string, number>;
+  private readonly _typeHistogram: SMap<string, number>;
 
   /* Maps key => value => count */
-  private _propertyHistogram: SMap<string, SMap<string, number>>;
+  private readonly _propertyHistogram: SMap<string, SMap<string, number>>;
 
-  private _compressed: SSet<string>;
+  private readonly _compressed: SSet<string>;
 
   public constructor(edges: MutableEdge[]) {
     this._byId = new SMap();

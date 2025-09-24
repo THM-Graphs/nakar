@@ -1,30 +1,30 @@
 import type { Result } from '@strapi/types/dist/modules/documents/result';
-import { GraphDisplayConfigurationDBDTO } from './dto/GraphDisplayConfigurationDBDTO';
-import { GetDatabaseDBDTO } from './dto/GetDatabaseDBDTO';
-import { GetScenarioGroupDBDTO } from './dto/GetScenarioGroupDBDTO';
-import { GetMediaDBDTO } from './dto/GetMediaDBDTO';
-import { GetScenarioDBDTO } from './dto/GetScenarioDBDTO';
-import { GetRoomDBDTO } from './dto/GetRoomDBDTO';
-import { NodeDisplayConfigurationDBDTO } from './dto/NodeDisplayConfigurationDBDTO';
+import type { GraphDisplayConfigurationDBDTO } from './dto/GraphDisplayConfigurationDBDTO';
+import type { GetDatabaseDBDTO } from './dto/GetDatabaseDBDTO';
+import type { GetScenarioGroupDBDTO } from './dto/GetScenarioGroupDBDTO';
+import type { GetMediaDBDTO } from './dto/GetMediaDBDTO';
+import type { GetScenarioDBDTO } from './dto/GetScenarioDBDTO';
+import type { GetRoomDBDTO } from './dto/GetRoomDBDTO';
+import type { NodeDisplayConfigurationDBDTO } from './dto/NodeDisplayConfigurationDBDTO';
 import { match, P } from 'ts-pattern';
 import { ScaleType } from '../tools/ScaleType';
-import { GetScenarioParameterDBDTO } from './dto/GetScenarioParameterDBDTO';
-import { GetScenarioQueryDBDTO } from './dto/GetScenarioQueryDBDTO';
-import { MergeNodeConfigurationDBDTO } from './dto/MergeNodeConfigurationDBDTO';
-import { GetNoteDBDTO } from './dto/GetNoteDBDTO';
+import type { GetScenarioParameterDBDTO } from './dto/GetScenarioParameterDBDTO';
+import type { GetScenarioQueryDBDTO } from './dto/GetScenarioQueryDBDTO';
+import type { MergeNodeConfigurationDBDTO } from './dto/MergeNodeConfigurationDBDTO';
+import type { GetNoteDBDTO } from './dto/GetNoteDBDTO';
 import z from 'zod';
 import { SSet } from '../tools/Set';
-import { GetColorDBDTO } from './dto/GetColorDBDTO';
-import { GetColorPresetDBDTO } from './dto/GetColorPresetDBDTO';
-import { GetColorCustomDBDTO } from './dto/GetColorCustomDBDTO';
-import {
+import type { GetColorDBDTO } from './dto/GetColorDBDTO';
+import type { GetColorPresetDBDTO } from './dto/GetColorPresetDBDTO';
+import type { GetColorCustomDBDTO } from './dto/GetColorCustomDBDTO';
+import type {
   SchemaColor,
   SchemaCustomColor,
   SchemaLayoutSpecification,
   SchemaPresetColor,
 } from '../../../src-gen/schema';
-import { Input } from '@strapi/types/dist/modules/documents/params/data';
-import { GetColorPresetIndexDBDTO } from './dto/GetColorPresetIndexDBDTO';
+import type { Input } from '@strapi/types/dist/modules/documents/params/data';
+import type { GetColorPresetIndexDBDTO } from './dto/GetColorPresetIndexDBDTO';
 
 export class DatabaseDTOFactory {
   public createGetDatabaseDTOFromStrapi(

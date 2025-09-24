@@ -1,19 +1,20 @@
-import { ApplicationService } from '../application/ApplicationService';
-import { LoggerService } from '../logger/LoggerService';
-import { ProfilerService } from '../profiler/ProfilerService';
-import { MessagePort, parentPort } from 'node:worker_threads';
+import type { ApplicationService } from '../application/ApplicationService';
+import type { LoggerService } from '../logger/LoggerService';
+import type { ProfilerService } from '../profiler/ProfilerService';
+import type { MessagePort} from 'node:worker_threads';
+import { parentPort } from 'node:worker_threads';
 import { PhysicsSimulation } from '../physics/PhysicsSimulation';
-import { RoomWorkerData } from './RoomWorkerData';
-import { WTActionSetGraph } from './worker-events/WTActionSetGraph';
-import { WTAction } from './worker-events/WTAction';
+import type { RoomWorkerData } from './RoomWorkerData';
+import type { WTActionSetGraph } from './worker-events/WTActionSetGraph';
+import type { WTAction } from './worker-events/WTAction';
 import { match } from 'ts-pattern';
-import { WTEvent } from './worker-events/WTEvent';
-import { WTActionMoveNodes } from './worker-events/WTActionMoveNodes';
-import { PhysicalGraph } from '../physics/physical-graph/PhysicalGraph';
-import { PhysicalNode } from '../physics/physical-graph/PhysicalNode';
-import { WTActionTriggerPhysics } from './worker-events/WTActionTriggerPhysics';
-import { WTActionSetLocks } from './worker-events/WTActionSetLocks';
-import { SchemaPhysicsPerformance } from '../../../src-gen/schema';
+import type { WTEvent } from './worker-events/WTEvent';
+import type { WTActionMoveNodes } from './worker-events/WTActionMoveNodes';
+import type { PhysicalGraph } from '../physics/physical-graph/PhysicalGraph';
+import type { PhysicalNode } from '../physics/physical-graph/PhysicalNode';
+import type { WTActionTriggerPhysics } from './worker-events/WTActionTriggerPhysics';
+import type { WTActionSetLocks } from './worker-events/WTActionSetLocks';
+import type { SchemaPhysicsPerformance } from '../../../src-gen/schema';
 
 export class RoomInstanceService implements ApplicationService {
   private readonly _roomId: string;

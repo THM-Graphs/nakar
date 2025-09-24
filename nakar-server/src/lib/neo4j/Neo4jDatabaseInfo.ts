@@ -1,4 +1,4 @@
-import { GetDatabaseDBDTO } from '../database/dto/GetDatabaseDBDTO';
+import type { GetDatabaseDBDTO } from '../database/dto/GetDatabaseDBDTO';
 
 export class Neo4jDatabaseInfo {
   public readonly url: string;

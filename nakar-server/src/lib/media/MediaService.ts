@@ -1,8 +1,8 @@
-import { ApplicationService } from '../application/ApplicationService';
-import { LoggerService } from '../logger/LoggerService';
-import { GetMediaDBDTO } from '../database/dto/GetMediaDBDTO';
+import type { ApplicationService } from '../application/ApplicationService';
+import type { LoggerService } from '../logger/LoggerService';
+import type { GetMediaDBDTO } from '../database/dto/GetMediaDBDTO';
 import { FileStream } from '../fs/FileStream';
-import { ConfigService } from '../config/ConfigService';
+import type { ConfigService } from '../config/ConfigService';
 import path from 'path';
 import fs from 'node:fs/promises';
 import os from 'node:os';

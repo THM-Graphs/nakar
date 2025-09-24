@@ -1,5 +1,5 @@
-import { GetRoomDBDTO } from './GetRoomDBDTO';
-import { SchemaColor } from '../../../../src-gen/schema';
+import type { GetRoomDBDTO } from './GetRoomDBDTO';
+import type { SchemaColor } from '../../../../src-gen/schema';
 
 export interface CreateNoteDBDTO {
   author: string | null;

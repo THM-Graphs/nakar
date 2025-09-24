@@ -1,18 +1,19 @@
-import { LoggerService } from '../logger/LoggerService';
-import { ApplicationService } from '../application/ApplicationService';
+import type { LoggerService } from '../logger/LoggerService';
+import type { ApplicationService } from '../application/ApplicationService';
 import path from 'node:path';
 import os from 'node:os';
 import fs from 'node:fs/promises';
-import fsSync, { Dirent } from 'node:fs';
+import type { Dirent } from 'node:fs';
+import fsSync from 'node:fs';
 import { create } from 'tar';
 import { FileStream } from '../fs/FileStream';
-import { DatabaseService } from '../database/DatabaseService';
-import { GetDatabaseDBDTO } from '../database/dto/GetDatabaseDBDTO';
+import type { DatabaseService } from '../database/DatabaseService';
+import type { GetDatabaseDBDTO } from '../database/dto/GetDatabaseDBDTO';
 import sanitize from 'sanitize-filename';
-import { GetScenarioGroupDBDTO } from '../database/dto/GetScenarioGroupDBDTO';
-import { GetScenarioDBDTO } from '../database/dto/GetScenarioDBDTO';
-import { ToolsService } from '../tools/ToolsService';
-import { MediaService } from '../media/MediaService';
+import type { GetScenarioGroupDBDTO } from '../database/dto/GetScenarioGroupDBDTO';
+import type { GetScenarioDBDTO } from '../database/dto/GetScenarioDBDTO';
+import type { ToolsService } from '../tools/ToolsService';
+import type { MediaService } from '../media/MediaService';
 
 export class BackupService implements ApplicationService {
   public constructor(

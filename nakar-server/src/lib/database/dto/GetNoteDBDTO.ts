@@ -1,5 +1,5 @@
-import { SSet } from '../../tools/Set';
-import { GetColorDBDTO } from './GetColorDBDTO';
+import type { SSet } from '../../tools/Set';
+import type { GetColorDBDTO } from './GetColorDBDTO';
 
 export interface GetNoteDBDTO {
   id: string;

@@ -1,7 +1,7 @@
 import { SMap } from '../tools/Map';
-import { GetDatabaseDBDTO } from '../database/dto/GetDatabaseDBDTO';
-import { GetScenarioGroupDBDTO } from '../database/dto/GetScenarioGroupDBDTO';
-import { GetScenarioDBDTO } from '../database/dto/GetScenarioDBDTO';
+import type { GetDatabaseDBDTO } from '../database/dto/GetDatabaseDBDTO';
+import type { GetScenarioGroupDBDTO } from '../database/dto/GetScenarioGroupDBDTO';
+import type { GetScenarioDBDTO } from '../database/dto/GetScenarioDBDTO';
 
 export class InsertResult {
   public readonly insertedDatabases: SMap<string, GetDatabaseDBDTO>;

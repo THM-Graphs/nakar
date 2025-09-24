@@ -1,4 +1,4 @@
-import {
+import type {
   SchemaDatabase,
   SchemaRoom,
   SchemaScenario,
@@ -6,17 +6,17 @@ import {
   SchemaScenarioParameter,
   SchemaScenarioQuery,
 } from '../../../src-gen/schema';
-import { GetDatabaseDBDTO } from '../database/dto/GetDatabaseDBDTO';
-import { GetRoomDBDTO } from '../database/dto/GetRoomDBDTO';
-import { ConfigService } from '../config/ConfigService';
-import { GetScenarioDBDTO } from '../database/dto/GetScenarioDBDTO';
-import { GetScenarioGroupDBDTO } from '../database/dto/GetScenarioGroupDBDTO';
-import { GetScenarioParameterDBDTO } from '../database/dto/GetScenarioParameterDBDTO';
-import { GetScenarioQueryDBDTO } from '../database/dto/GetScenarioQueryDBDTO';
-import { MediaService } from '../media/MediaService';
+import type { GetDatabaseDBDTO } from '../database/dto/GetDatabaseDBDTO';
+import type { GetRoomDBDTO } from '../database/dto/GetRoomDBDTO';
+import type { ConfigService } from '../config/ConfigService';
+import type { GetScenarioDBDTO } from '../database/dto/GetScenarioDBDTO';
+import type { GetScenarioGroupDBDTO } from '../database/dto/GetScenarioGroupDBDTO';
+import type { GetScenarioParameterDBDTO } from '../database/dto/GetScenarioParameterDBDTO';
+import type { GetScenarioQueryDBDTO } from '../database/dto/GetScenarioQueryDBDTO';
+import type { MediaService } from '../media/MediaService';
 
 export class SchemaDTOFactory {
-  private _configService: ConfigService;
+  private readonly _configService: ConfigService;
 
   public constructor(
     configService: ConfigService,

@@ -1,6 +1,6 @@
-import { NodeDisplayConfigurationDBDTO } from '../../../database/dto/NodeDisplayConfigurationDBDTO';
+import type { NodeDisplayConfigurationDBDTO } from '../../../database/dto/NodeDisplayConfigurationDBDTO';
 import { FinalNodeDisplayConfiguration } from './FinalNodeDisplayConfiguration';
-import { SchemaLayoutSpecification } from '../../../../../src-gen/schema';
+import type { SchemaLayoutSpecification } from '../../../../../src-gen/schema';
 
 export class MergableNodeDisplayConfiguration {
   public readonly displayText: string | null;

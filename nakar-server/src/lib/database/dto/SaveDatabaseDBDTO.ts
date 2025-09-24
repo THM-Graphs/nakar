@@ -1,4 +1,4 @@
-import { GraphDisplayConfigurationDBDTO } from './GraphDisplayConfigurationDBDTO';
+import type { GraphDisplayConfigurationDBDTO } from './GraphDisplayConfigurationDBDTO';
 
 export interface SaveDatabaseDBDTO {
   readonly title: string | null;

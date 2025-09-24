@@ -1,14 +1,14 @@
 import { ScaleType } from '../../../tools/ScaleType';
-import { GraphDisplayConfigurationDBDTO } from '../../../database/dto/GraphDisplayConfigurationDBDTO';
+import type { GraphDisplayConfigurationDBDTO } from '../../../database/dto/GraphDisplayConfigurationDBDTO';
 import { MergableNodeDisplayConfiguration } from './MergableNodeDisplayConfiguration';
 import { FinalGraphDisplayConfiguration } from './FinalGraphDisplayConfiguration';
 import { SMap } from '../../../tools/Map';
-import { NodeDisplayConfigurationDBDTO } from '../../../database/dto/NodeDisplayConfigurationDBDTO';
-import { FinalNodeDisplayConfiguration } from './FinalNodeDisplayConfiguration';
+import type { NodeDisplayConfigurationDBDTO } from '../../../database/dto/NodeDisplayConfigurationDBDTO';
+import type { FinalNodeDisplayConfiguration } from './FinalNodeDisplayConfiguration';
 import { SSet } from '../../../tools/Set';
-import { MergeNodeConfiguration } from './MergeNodeConfiguration';
-import { MergeNodeConfigurationDBDTO } from '../../../database/dto/MergeNodeConfigurationDBDTO';
-import { LoggerService } from '../../../logger/LoggerService';
+import type { MergeNodeConfiguration } from './MergeNodeConfiguration';
+import type { MergeNodeConfigurationDBDTO } from '../../../database/dto/MergeNodeConfigurationDBDTO';
+import type { LoggerService } from '../../../logger/LoggerService';
 
 export class MergableGraphDisplayConfiguration {
   public readonly connectResultNodes: boolean | null;

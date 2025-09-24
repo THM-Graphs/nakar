@@ -1,5 +1,5 @@
-import { MutableGraphColor } from './MutableGraphColor';
-import { SSet } from '../../tools/Set';
+import type { MutableGraphColor } from './MutableGraphColor';
+import type { SSet } from '../../tools/Set';
 
 export class MutableGraphLabel {
   public color: MutableGraphColor;

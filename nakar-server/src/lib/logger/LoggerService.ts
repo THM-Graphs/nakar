@@ -1,7 +1,8 @@
-import { ApplicationService } from '../application/ApplicationService';
+import type { ApplicationService } from '../application/ApplicationService';
 import { ClassHelper } from '../tools/ClassHelper';
 import { isMainThread, threadId } from 'node:worker_threads';
-import { createLogger, Logger } from '@strapi/logger';
+import type { Logger } from '@strapi/logger';
+import { createLogger } from '@strapi/logger';
 import loggerConfig from '../../../config/logger';
 
 export class LoggerService implements ApplicationService {

@@ -1,15 +1,16 @@
-import { BehaviorSubject, Observable, Subject, throttleTime } from 'rxjs';
+import type { Observable} from 'rxjs';
+import { BehaviorSubject, Subject, throttleTime } from 'rxjs';
 import { wait } from '../tools/Wait';
 import { CombinationCache } from './CombinationCache';
-import { LoggerService } from '../logger/LoggerService';
-import { ProfilerService } from '../profiler/ProfilerService';
-import { PhysicsSimulationRunOptions } from './PhysicsSimulationRunOptions';
-import { PhysicalGraph } from './physical-graph/PhysicalGraph';
-import { PhysicalNode } from './physical-graph/PhysicalNode';
-import { PhysicalEdge } from './physical-graph/PhysicalEdge';
+import type { LoggerService } from '../logger/LoggerService';
+import type { ProfilerService } from '../profiler/ProfilerService';
+import type { PhysicsSimulationRunOptions } from './PhysicsSimulationRunOptions';
+import type { PhysicalGraph } from './physical-graph/PhysicalGraph';
+import type { PhysicalNode } from './physical-graph/PhysicalNode';
+import type { PhysicalEdge } from './physical-graph/PhysicalEdge';
 import { Range } from '../tools/Range';
-import { SchemaPhysicsPerformance } from '../../../src-gen/schema';
-import { MutableNode } from '../room/graph/MutableNode';
+import type { SchemaPhysicsPerformance } from '../../../src-gen/schema';
+import type { MutableNode } from '../room/graph/MutableNode';
 
 export class PhysicsSimulation {
   public static readonly maximumVelocity: number = 2000;
@@ -20,9 +21,9 @@ export class PhysicsSimulation {
 
   private _graph: PhysicalGraph;
   private _running: boolean;
-  private _onSlowTick$: Subject<void>;
+  private readonly _onSlowTick$: Subject<void>;
   private _targetDate: number;
-  private _currentPerformance$: BehaviorSubject<SchemaPhysicsPerformance | null>;
+  private readonly _currentPerformance$: BehaviorSubject<SchemaPhysicsPerformance | null>;
 
   public constructor(
     graph: PhysicalGraph,

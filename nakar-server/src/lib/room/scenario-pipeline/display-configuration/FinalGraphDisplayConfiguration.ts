@@ -1,9 +1,9 @@
-import { ScaleType } from '../../../tools/ScaleType';
-import { FinalNodeDisplayConfiguration } from './FinalNodeDisplayConfiguration';
-import { SMap } from '../../../tools/Map';
+import type { ScaleType } from '../../../tools/ScaleType';
+import type { FinalNodeDisplayConfiguration } from './FinalNodeDisplayConfiguration';
+import type { SMap } from '../../../tools/Map';
 import { MergableGraphDisplayConfiguration } from './MergableGraphDisplayConfiguration';
-import { MergeNodeConfiguration } from './MergeNodeConfiguration';
-import { SSet } from '../../../tools/Set';
+import type { MergeNodeConfiguration } from './MergeNodeConfiguration';
+import type { SSet } from '../../../tools/Set';
 
 export class FinalGraphDisplayConfiguration {
   public readonly connectResultNodes: boolean;

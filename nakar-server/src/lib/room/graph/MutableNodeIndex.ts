@@ -1,30 +1,30 @@
 import { SMap } from '../../tools/Map';
 import { MutableNode } from './MutableNode';
 import { SSet } from '../../tools/Set';
-import { Neo4jNode } from '../../neo4j/Neo4jNode';
+import type { Neo4jNode } from '../../neo4j/Neo4jNode';
 import { MutablePosition } from './MutablePosition';
 import { MutablePropertyCollection } from './MutablePropertyCollection';
 import { Range } from '../../tools/Range';
-import { MutableGraph } from './MutableGraph';
+import type { MutableGraph } from './MutableGraph';
 import { PhysicsSimulation } from '../../physics/PhysicsSimulation';
-import { LoggerService } from '../../logger/LoggerService';
+import type { LoggerService } from '../../logger/LoggerService';
 import { MutableGraphElementCreationAction } from './MutableGraphElementCreationAction';
-import { FinalGraphDisplayConfiguration } from '../scenario-pipeline/display-configuration/FinalGraphDisplayConfiguration';
+import type { FinalGraphDisplayConfiguration } from '../scenario-pipeline/display-configuration/FinalGraphDisplayConfiguration';
 
 export class MutableNodeIndex {
-  private _byId: SMap<string, MutableNode>;
+  private readonly _byId: SMap<string, MutableNode>;
 
-  private _byLabel: SMap<string, SSet<MutableNode>>;
+  private readonly _byLabel: SMap<string, SSet<MutableNode>>;
 
   /* Maps label => count */
-  private _labelHistogram: SMap<string, number>;
+  private readonly _labelHistogram: SMap<string, number>;
 
   /* Maps key => value => count */
-  private _propertyHistogram: SMap<string, SMap<string, number>>;
+  private readonly _propertyHistogram: SMap<string, SMap<string, number>>;
 
-  private _bySource: SMap<string, SSet<MutableNode>>;
+  private readonly _bySource: SMap<string, SSet<MutableNode>>;
 
-  private _compressed: SSet<string>;
+  private readonly _compressed: SSet<string>;
 
   public constructor(
     nodes: MutableNode[],

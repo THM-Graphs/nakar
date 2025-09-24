@@ -1,4 +1,4 @@
-import { ApplicationService } from '../application/ApplicationService';
+import type { ApplicationService } from '../application/ApplicationService';
 
 export class ToolsService implements ApplicationService {
   public bootstrap(): void | Promise<void> {

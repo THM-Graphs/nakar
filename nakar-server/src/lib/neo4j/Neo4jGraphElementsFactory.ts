@@ -1,21 +1,22 @@
+import type {
+  Node,
+  RecordShape,
+  Record as Neo4jRecord,
+  Relationship} from 'neo4j-driver';
 import {
   isInt,
   isNode,
   isPath,
-  isRelationship,
-  Node,
-  RecordShape,
-  Record as Neo4jRecord,
-  Relationship,
+  isRelationship
 } from 'neo4j-driver';
 import { SMap } from '../tools/Map';
 import { Neo4jNode } from './Neo4jNode';
 import { Neo4jRelationship } from './Neo4jRelationship';
-import { LoggerService } from '../logger/LoggerService';
+import type { LoggerService } from '../logger/LoggerService';
 import { match, P } from 'ts-pattern';
 import { Neo4jGraphElements } from './Neo4jGraphElements';
-import { Neo4jDatabaseInfo } from './Neo4jDatabaseInfo';
-import { Neo4jLimitConfig } from './Neo4jLimitConfig';
+import type { Neo4jDatabaseInfo } from './Neo4jDatabaseInfo';
+import type { Neo4jLimitConfig } from './Neo4jLimitConfig';
 
 export class Neo4jGraphElementsFactory {
   private readonly _result: Neo4jGraphElements;

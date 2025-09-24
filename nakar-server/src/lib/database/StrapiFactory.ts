@@ -1,10 +1,10 @@
-import { Input } from '@strapi/types/dist/modules/documents/params/data';
-import { SaveDatabaseDBDTO } from './dto/SaveDatabaseDBDTO';
-import { GraphDisplayConfigurationDBDTO } from './dto/GraphDisplayConfigurationDBDTO';
+import type { Input } from '@strapi/types/dist/modules/documents/params/data';
+import type { SaveDatabaseDBDTO } from './dto/SaveDatabaseDBDTO';
+import type { GraphDisplayConfigurationDBDTO } from './dto/GraphDisplayConfigurationDBDTO';
 import { match } from 'ts-pattern';
-import { NodeDisplayConfigurationDBDTO } from './dto/NodeDisplayConfigurationDBDTO';
-import { SaveScenarioGroupDBDTO } from './dto/SaveScenarioGroupDBDTO';
-import { SaveScenarioDBDTO } from './dto/SaveScenarioDBDTO';
+import type { NodeDisplayConfigurationDBDTO } from './dto/NodeDisplayConfigurationDBDTO';
+import type { SaveScenarioGroupDBDTO } from './dto/SaveScenarioGroupDBDTO';
+import type { SaveScenarioDBDTO } from './dto/SaveScenarioDBDTO';
 
 export class StrapiFactory {
   public createDatabaseInsertObject(

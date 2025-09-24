@@ -1,4 +1,4 @@
-import { SchemaLayoutSpecification } from '../../../../src-gen/schema';
+import type { SchemaLayoutSpecification } from '../../../../src-gen/schema';
 
 export interface NodeDisplayConfigurationDBDTO {
   readonly targetLabel: string | null;

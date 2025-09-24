@@ -1,9 +1,10 @@
-import {
+import type {
   DisconnectReason,
-  Server as UntypedServer,
-  Socket as UntypedSocket,
-} from 'socket.io';
+  Socket as UntypedSocket} from 'socket.io';
 import {
+  Server as UntypedServer
+} from 'socket.io';
+import type {
   SchemaGraphElements,
   SchemaGraphMetaData,
   SchemaGraphTable,
@@ -25,38 +26,38 @@ import {
   SchemaWsServerToClientMessage,
 } from '../../../src-gen/schema';
 import { match, P } from 'ts-pattern';
-import { ServerToClientEvents } from './ServerToClientEvents';
-import { ClientToServerEvents } from './ClientToServerEvents';
+import type { ServerToClientEvents } from './ServerToClientEvents';
+import type { ClientToServerEvents } from './ClientToServerEvents';
 import { WSClient } from './WSClient';
 import { SSet } from '../tools/Set';
-import { RoomService } from '../room/RoomService';
-import { DatabaseService } from '../database/DatabaseService';
-import { GetRoomDBDTO } from '../database/dto/GetRoomDBDTO';
-import { LoggerService } from '../logger/LoggerService';
-import http from 'http';
-import { ApplicationService } from '../application/ApplicationService';
-import { Subscription } from 'rxjs';
-import { HTTPService } from '../http/HTTPService';
+import type { RoomService } from '../room/RoomService';
+import type { DatabaseService } from '../database/DatabaseService';
+import type { GetRoomDBDTO } from '../database/dto/GetRoomDBDTO';
+import type { LoggerService } from '../logger/LoggerService';
+import type http from 'http';
+import type { ApplicationService } from '../application/ApplicationService';
+import type { Subscription } from 'rxjs';
+import type { HTTPService } from '../http/HTTPService';
 import { CachingSchemaDTOFactory } from '../http/CachingSchemaDTOFactory';
-import { RoomServiceEvent } from '../room/events/RoomServiceEvent';
-import { RoomServiceEventGraphMetaDataChanged } from '../room/events/RoomServiceEventGraphMetaDataChanged';
-import { RoomServiceEventRoomPhysicsUpdated } from '../room/events/RoomServiceEventRoomPhysicsUpdated';
-import { RoomServiceEventNodeLocksUpdated } from '../room/events/RoomServiceEventNodeLocksUpdated';
-import { RoomServiceEventRoomPerformanceChanged } from '../room/events/RoomServiceEventRoomPerformanceChanged';
-import { RoomServiceEventRoomUnlocked } from '../room/events/RoomServiceEventRoomUnlocked';
-import { RoomServiceEventRoomLocked } from '../room/events/RoomServiceEventRoomLocked';
-import { RoomServiceEventProgressChanged } from '../room/events/RoomServiceEventProgressChanged';
-import { RoomServiceEventProgressCleared } from '../room/events/RoomServiceEventProgressCleared';
-import { RoomServiceEventGraphElementsChanged } from '../room/events/RoomServiceEventGraphElementsChanged';
-import { RoomServiceEventGraphTableChanged } from '../room/events/RoomServiceEventGraphTableChanged';
-import { ConfigService } from '../config/ConfigService';
-import { RoomServiceEventKick } from '../room/events/RoomServiceEventKick';
-import { MediaService } from '../media/MediaService';
-import { RoomServiceEventNotAllNodesLoaded } from '../room/events/RoomServiceEventNotAllNodesLoaded';
-import { ProfilerTask } from '../profiler/ProfilerTask';
-import { ProfilerService } from '../profiler/ProfilerService';
-import { GetNotesDBDTO } from '../database/dto/GetNotesDBDTO';
-import { MutableGraph } from '../room/graph/MutableGraph';
+import type { RoomServiceEvent } from '../room/events/RoomServiceEvent';
+import type { RoomServiceEventGraphMetaDataChanged } from '../room/events/RoomServiceEventGraphMetaDataChanged';
+import type { RoomServiceEventRoomPhysicsUpdated } from '../room/events/RoomServiceEventRoomPhysicsUpdated';
+import type { RoomServiceEventNodeLocksUpdated } from '../room/events/RoomServiceEventNodeLocksUpdated';
+import type { RoomServiceEventRoomPerformanceChanged } from '../room/events/RoomServiceEventRoomPerformanceChanged';
+import type { RoomServiceEventRoomUnlocked } from '../room/events/RoomServiceEventRoomUnlocked';
+import type { RoomServiceEventRoomLocked } from '../room/events/RoomServiceEventRoomLocked';
+import type { RoomServiceEventProgressChanged } from '../room/events/RoomServiceEventProgressChanged';
+import type { RoomServiceEventProgressCleared } from '../room/events/RoomServiceEventProgressCleared';
+import type { RoomServiceEventGraphElementsChanged } from '../room/events/RoomServiceEventGraphElementsChanged';
+import type { RoomServiceEventGraphTableChanged } from '../room/events/RoomServiceEventGraphTableChanged';
+import type { ConfigService } from '../config/ConfigService';
+import type { RoomServiceEventKick } from '../room/events/RoomServiceEventKick';
+import type { MediaService } from '../media/MediaService';
+import type { RoomServiceEventNotAllNodesLoaded } from '../room/events/RoomServiceEventNotAllNodesLoaded';
+import type { ProfilerTask } from '../profiler/ProfilerTask';
+import type { ProfilerService } from '../profiler/ProfilerService';
+import type { GetNotesDBDTO } from '../database/dto/GetNotesDBDTO';
+import type { MutableGraph } from '../room/graph/MutableGraph';
 
 export type Server = UntypedServer<ClientToServerEvents, ServerToClientEvents>;
 export type Socket = UntypedSocket<ClientToServerEvents, ServerToClientEvents>;
@@ -66,11 +67,11 @@ export class SocketIOService implements ApplicationService {
   private _io: UntypedServer | null;
 
   public constructor(
-    private _roomService: RoomService,
-    private _databaseService: DatabaseService,
-    private _httpService: HTTPService,
-    private _logger: LoggerService,
-    private _config: ConfigService,
+    private readonly _roomService: RoomService,
+    private readonly _databaseService: DatabaseService,
+    private readonly _httpService: HTTPService,
+    private readonly _logger: LoggerService,
+    private readonly _config: ConfigService,
     private readonly _media: MediaService,
     private readonly _profiler: ProfilerService,
   ) {

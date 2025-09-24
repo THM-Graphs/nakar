@@ -1,23 +1,24 @@
-import { Neo4jDatabaseInfo } from './Neo4jDatabaseInfo';
-import neo4j, {
-  auth,
-  driver as createDriver,
+import type { Neo4jDatabaseInfo } from './Neo4jDatabaseInfo';
+import type {
   Driver,
   Record as Neo4jRecord,
   RecordShape,
   ResultSummary,
-  Session,
+  Session} from 'neo4j-driver';
+import neo4j, {
+  auth,
+  driver as createDriver
 } from 'neo4j-driver';
-import { Neo4jGraphElements } from './Neo4jGraphElements';
+import type { Neo4jGraphElements } from './Neo4jGraphElements';
 import { SSet } from '../tools/Set';
-import { LoggerService } from '../logger/LoggerService';
+import type { LoggerService } from '../logger/LoggerService';
 import { Neo4jGraphElementsFactory } from './Neo4jGraphElementsFactory';
-import { SessionConfig } from 'neo4j-driver-core/types/driver';
-import { ApplicationService } from '../application/ApplicationService';
+import type { SessionConfig } from 'neo4j-driver-core/types/driver';
+import type { ApplicationService } from '../application/ApplicationService';
 import { ExpandNodePreview } from './expand-node-preview/ExpandNodePreview';
 import { ExpandNodePreviewEntry } from './expand-node-preview/ExpandNodePreviewEntry';
-import { SMap } from '../tools/Map';
-import { SchemaDatabaseStats } from '../../../src-gen/schema';
+import type { SMap } from '../tools/Map';
+import type { SchemaDatabaseStats } from '../../../src-gen/schema';
 import { Neo4jLimitConfig } from './Neo4jLimitConfig';
 
 export class Neo4jService implements ApplicationService {
@@ -221,7 +222,7 @@ ORDER BY lcount DESC, label ASC`,
   public async getStats(params: {
     credentials: Neo4jDatabaseInfo;
   }): Promise<SchemaDatabaseStats> {
-    return this._fetchDbStats(params.credentials);
+    return await this._fetchDbStats(params.credentials);
   }
 
   private async _getLabels(

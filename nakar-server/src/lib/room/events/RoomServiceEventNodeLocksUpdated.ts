@@ -1,4 +1,4 @@
-import { SMap } from '../../tools/Map';
+import type { SMap } from '../../tools/Map';
 
 export interface RoomServiceEventNodeLocksUpdated {
   type: 'RoomServiceEventNodeLocksUpdated';

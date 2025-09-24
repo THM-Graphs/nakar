@@ -1,6 +1,6 @@
 import { MutableGraphColor } from './MutableGraphColor';
-import { SchemaCustomColor } from '../../../../src-gen/schema';
-import z from 'zod';
+import type { SchemaCustomColor } from '../../../../src-gen/schema';
+import type z from 'zod';
 
 export class MutableGraphColorCustom extends MutableGraphColor {
   public backgroundColor: string;

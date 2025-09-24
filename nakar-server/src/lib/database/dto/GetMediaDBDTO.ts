@@ -1,4 +1,4 @@
-import { ID } from '@strapi/database/dist/types';
+import type { ID } from '@strapi/database/dist/types';
 
 export interface GetMediaDBDTO {
   readonly documentId: string;

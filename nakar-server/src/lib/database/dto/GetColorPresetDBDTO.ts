@@ -1,4 +1,4 @@
-import { GetColorPresetIndexDBDTO } from './GetColorPresetIndexDBDTO';
+import type { GetColorPresetIndexDBDTO } from './GetColorPresetIndexDBDTO';
 
 export interface GetColorPresetDBDTO {
   type: 'preset';

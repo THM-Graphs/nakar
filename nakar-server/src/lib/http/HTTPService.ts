@@ -1,8 +1,9 @@
 import http from 'http';
-import express, { Application, Request, Response } from 'express';
-import { ConfigService } from '../config/ConfigService';
-import { LoggerService } from '../logger/LoggerService';
-import {
+import type { Application, Request, Response } from 'express';
+import express from 'express';
+import type { ConfigService } from '../config/ConfigService';
+import type { LoggerService } from '../logger/LoggerService';
+import type {
   operations,
   SchemaDatabase,
   SchemaDatabaseStats,
@@ -18,7 +19,7 @@ import {
   SchemaScenarioGroup,
   SchemaVersion,
 } from '../../../src-gen/schema';
-import { DatabaseService } from '../database/DatabaseService';
+import type { DatabaseService } from '../database/DatabaseService';
 import { match, P } from 'ts-pattern';
 import {
   HttpError,
@@ -27,33 +28,33 @@ import {
   NotImplemented,
 } from 'http-errors';
 import cors from 'cors';
-import { ProfilerService } from '../profiler/ProfilerService';
-import { ProfilerTask } from '../profiler/ProfilerTask';
-import { ApplicationService } from '../application/ApplicationService';
-import { BackupService } from '../backup/BackupService';
+import type { ProfilerService } from '../profiler/ProfilerService';
+import type { ProfilerTask } from '../profiler/ProfilerTask';
+import type { ApplicationService } from '../application/ApplicationService';
+import type { BackupService } from '../backup/BackupService';
 import { FileStream } from '../fs/FileStream';
 import fsAsync from 'node:fs/promises';
 import fs from 'node:fs';
 import fileupload from 'express-fileupload';
 import os from 'node:os';
 import path from 'path';
-import { RoomService } from '../room/RoomService';
-import { GetScenarioGroupDBDTO } from '../database/dto/GetScenarioGroupDBDTO';
-import { GetScenarioDBDTO } from '../database/dto/GetScenarioDBDTO';
+import type { RoomService } from '../room/RoomService';
+import type { GetScenarioGroupDBDTO } from '../database/dto/GetScenarioGroupDBDTO';
+import type { GetScenarioDBDTO } from '../database/dto/GetScenarioDBDTO';
 import { SchemaDTOFactory } from './SchemaDTOFactory';
-import { GetRoomDBDTO } from '../database/dto/GetRoomDBDTO';
+import type { GetRoomDBDTO } from '../database/dto/GetRoomDBDTO';
 import z from 'zod';
-import { MutableGraph } from '../room/graph/MutableGraph';
+import type { MutableGraph } from '../room/graph/MutableGraph';
 import { CachingSchemaDTOFactory } from './CachingSchemaDTOFactory';
 import { SMap } from '../tools/Map';
 import { SSet } from '../tools/Set';
-import { GetParameterizedScenariosDBDTO } from '../database/dto/GetParameterizedScenariosDBDTO';
-import { GetDatabaseDBDTO } from '../database/dto/GetDatabaseDBDTO';
+import type { GetParameterizedScenariosDBDTO } from '../database/dto/GetParameterizedScenariosDBDTO';
+import type { GetDatabaseDBDTO } from '../database/dto/GetDatabaseDBDTO';
 import { Neo4jDatabaseInfo } from '../neo4j/Neo4jDatabaseInfo';
-import { Neo4jService } from '../neo4j/Neo4jService';
-import { ExpandNodePreview } from '../neo4j/expand-node-preview/ExpandNodePreview';
-import { MediaService } from '../media/MediaService';
-import { GetNotesDBDTO } from '../database/dto/GetNotesDBDTO';
+import type { Neo4jService } from '../neo4j/Neo4jService';
+import type { ExpandNodePreview } from '../neo4j/expand-node-preview/ExpandNodePreview';
+import type { MediaService } from '../media/MediaService';
+import type { GetNotesDBDTO } from '../database/dto/GetNotesDBDTO';
 
 export class HTTPService implements ApplicationService {
   private readonly _app: Application;

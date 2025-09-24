@@ -1,6 +1,6 @@
-import { SSet } from '../../tools/Set';
-import { GetNoteDBDTO } from './GetNoteDBDTO';
-import { SMap } from '../../tools/Map';
+import type { SSet } from '../../tools/Set';
+import type { GetNoteDBDTO } from './GetNoteDBDTO';
+import type { SMap } from '../../tools/Map';
 
 export interface GetNotesDBDTO {
   notes: SSet<GetNoteDBDTO>;

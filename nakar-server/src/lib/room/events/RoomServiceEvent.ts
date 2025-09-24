@@ -1,15 +1,15 @@
-import { RoomServiceEventNodeLocksUpdated } from './RoomServiceEventNodeLocksUpdated';
-import { RoomServiceEventRoomPerformanceChanged } from './RoomServiceEventRoomPerformanceChanged';
-import { RoomServiceEventRoomPhysicsUpdated } from './RoomServiceEventRoomPhysicsUpdated';
-import { RoomServiceEventGraphMetaDataChanged } from './RoomServiceEventGraphMetaDataChanged';
-import { RoomServiceEventProgressChanged } from './RoomServiceEventProgressChanged';
-import { RoomServiceEventProgressCleared } from './RoomServiceEventProgressCleared';
-import { RoomServiceEventRoomLocked } from './RoomServiceEventRoomLocked';
-import { RoomServiceEventRoomUnlocked } from './RoomServiceEventRoomUnlocked';
-import { RoomServiceEventGraphElementsChanged } from './RoomServiceEventGraphElementsChanged';
-import { RoomServiceEventGraphTableChanged } from './RoomServiceEventGraphTableChanged';
-import { RoomServiceEventKick } from './RoomServiceEventKick';
-import { RoomServiceEventNotAllNodesLoaded } from './RoomServiceEventNotAllNodesLoaded';
+import type { RoomServiceEventNodeLocksUpdated } from './RoomServiceEventNodeLocksUpdated';
+import type { RoomServiceEventRoomPerformanceChanged } from './RoomServiceEventRoomPerformanceChanged';
+import type { RoomServiceEventRoomPhysicsUpdated } from './RoomServiceEventRoomPhysicsUpdated';
+import type { RoomServiceEventGraphMetaDataChanged } from './RoomServiceEventGraphMetaDataChanged';
+import type { RoomServiceEventProgressChanged } from './RoomServiceEventProgressChanged';
+import type { RoomServiceEventProgressCleared } from './RoomServiceEventProgressCleared';
+import type { RoomServiceEventRoomLocked } from './RoomServiceEventRoomLocked';
+import type { RoomServiceEventRoomUnlocked } from './RoomServiceEventRoomUnlocked';
+import type { RoomServiceEventGraphElementsChanged } from './RoomServiceEventGraphElementsChanged';
+import type { RoomServiceEventGraphTableChanged } from './RoomServiceEventGraphTableChanged';
+import type { RoomServiceEventKick } from './RoomServiceEventKick';
+import type { RoomServiceEventNotAllNodesLoaded } from './RoomServiceEventNotAllNodesLoaded';
 
 export type RoomServiceEvent =
   | RoomServiceEventGraphMetaDataChanged

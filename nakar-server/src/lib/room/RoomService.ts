@@ -1,55 +1,56 @@
-import { DatabaseService } from '../database/DatabaseService';
-import { Observable, Subject } from 'rxjs';
+import type { DatabaseService } from '../database/DatabaseService';
+import type { Observable} from 'rxjs';
+import { Subject } from 'rxjs';
 import { MutableGraph } from './graph/MutableGraph';
-import { GetRoomDBDTO } from '../database/dto/GetRoomDBDTO';
-import { RSPhysicalNode } from './RSPhysicalNode';
-import { GetScenarioDBDTO } from '../database/dto/GetScenarioDBDTO';
-import { LoggerService } from '../logger/LoggerService';
-import { ProfilerService } from '../profiler/ProfilerService';
-import { ApplicationService } from '../application/ApplicationService';
+import type { GetRoomDBDTO } from '../database/dto/GetRoomDBDTO';
+import type { RSPhysicalNode } from './RSPhysicalNode';
+import type { GetScenarioDBDTO } from '../database/dto/GetScenarioDBDTO';
+import type { LoggerService } from '../logger/LoggerService';
+import type { ProfilerService } from '../profiler/ProfilerService';
+import type { ApplicationService } from '../application/ApplicationService';
 import installHandlebarHelpers from 'handlebars-helpers';
 import { Worker } from 'node:worker_threads';
 import { SMap } from '../tools/Map';
-import { WTAction } from '../room-worker/worker-events/WTAction';
+import type { WTAction } from '../room-worker/worker-events/WTAction';
 import path from 'path';
-import { RoomWorkerData } from '../room-worker/RoomWorkerData';
-import { WTEvent } from '../room-worker/worker-events/WTEvent';
+import type { RoomWorkerData } from '../room-worker/RoomWorkerData';
+import type { WTEvent } from '../room-worker/worker-events/WTEvent';
 import { match } from 'ts-pattern';
-import { WTEventPhysicsUpdate } from '../room-worker/worker-events/WTEventPhysicsUpdate';
-import { Neo4jService } from '../neo4j/Neo4jService';
+import type { WTEventPhysicsUpdate } from '../room-worker/worker-events/WTEventPhysicsUpdate';
+import type { Neo4jService } from '../neo4j/Neo4jService';
 import { MutableNode } from './graph/MutableNode';
-import { GetDatabaseDBDTO } from '../database/dto/GetDatabaseDBDTO';
+import type { GetDatabaseDBDTO } from '../database/dto/GetDatabaseDBDTO';
 import { Neo4jDatabaseInfo } from '../neo4j/Neo4jDatabaseInfo';
-import { Neo4jGraphElements } from '../neo4j/Neo4jGraphElements';
+import type { Neo4jGraphElements } from '../neo4j/Neo4jGraphElements';
 import { SSet } from '../tools/Set';
-import { PhysicalGraph } from '../physics/physical-graph/PhysicalGraph';
-import { WTEventPerformanceChanged } from '../room-worker/worker-events/WTEventPerformanceChanged';
-import { RoomServiceEvent } from './events/RoomServiceEvent';
-import { RoomServiceEventGraphElementsChanged } from './events/RoomServiceEventGraphElementsChanged';
-import { RoomServiceEventGraphMetaDataChanged } from './events/RoomServiceEventGraphMetaDataChanged';
-import { RoomServiceEventGraphTableChanged } from './events/RoomServiceEventGraphTableChanged';
+import type { PhysicalGraph } from '../physics/physical-graph/PhysicalGraph';
+import type { WTEventPerformanceChanged } from '../room-worker/worker-events/WTEventPerformanceChanged';
+import type { RoomServiceEvent } from './events/RoomServiceEvent';
+import type { RoomServiceEventGraphElementsChanged } from './events/RoomServiceEventGraphElementsChanged';
+import type { RoomServiceEventGraphMetaDataChanged } from './events/RoomServiceEventGraphMetaDataChanged';
+import type { RoomServiceEventGraphTableChanged } from './events/RoomServiceEventGraphTableChanged';
 import { PhysicsSimulation } from '../physics/PhysicsSimulation';
 import { MutableEdge } from './graph/MutableEdge';
 import { FinalGraphDisplayConfiguration } from './scenario-pipeline/display-configuration/FinalGraphDisplayConfiguration';
-import { RoomServiceEventKick } from './events/RoomServiceEventKick';
-import { ExpandNodePreview } from '../neo4j/expand-node-preview/ExpandNodePreview';
+import type { RoomServiceEventKick } from './events/RoomServiceEventKick';
+import type { ExpandNodePreview } from '../neo4j/expand-node-preview/ExpandNodePreview';
 import { NotFound } from 'http-errors';
 import { MutableEdgeIndex } from './graph/MutableEdgeIndex';
-import { MergeNodeConfiguration } from './scenario-pipeline/display-configuration/MergeNodeConfiguration';
+import type { MergeNodeConfiguration } from './scenario-pipeline/display-configuration/MergeNodeConfiguration';
 import { MutablePropertyCollection } from './graph/MutablePropertyCollection';
-import { ProfilerTask } from '../profiler/ProfilerTask';
+import type { ProfilerTask } from '../profiler/ProfilerTask';
 import { v4 } from 'uuid';
 import { MutableNodeIndex } from './graph/MutableNodeIndex';
-import { ExpandNodesResult } from './ExpandNodesResult';
-import { FinalNodeDisplayConfiguration } from './scenario-pipeline/display-configuration/FinalNodeDisplayConfiguration';
-import { MediaService } from '../media/MediaService';
+import type { ExpandNodesResult } from './ExpandNodesResult';
+import type { FinalNodeDisplayConfiguration } from './scenario-pipeline/display-configuration/FinalNodeDisplayConfiguration';
+import type { MediaService } from '../media/MediaService';
 import { circularWeightedSpread } from '../tools/circleLayoutAlgorithms/circularWeightedSpread';
 import { wait } from '../tools/Wait';
 import { MutablePosition } from './graph/MutablePosition';
 import { Neo4jLimitConfig } from '../neo4j/Neo4jLimitConfig';
-import { RoomServiceEventNotAllNodesLoaded } from './events/RoomServiceEventNotAllNodesLoaded';
+import type { RoomServiceEventNotAllNodesLoaded } from './events/RoomServiceEventNotAllNodesLoaded';
 import { MutableGraphElementCreationAction } from './graph/MutableGraphElementCreationAction';
-import {
+import type {
   SchemaLayoutSpecification,
   SchemaLayoutSpecificationCircle,
 } from '../../../src-gen/schema';
@@ -240,7 +241,7 @@ export class RoomService implements ApplicationService {
     const displayConfiguration: FinalGraphDisplayConfiguration =
       await this._database.getGraphDisplayConfiguration(scenario.documentId);
 
-    return this._runWithRoomLock(
+    return await this._runWithRoomLock(
       params.roomId,
       'Loading scenario',
       async (): Promise<GetScenarioDBDTO> => {

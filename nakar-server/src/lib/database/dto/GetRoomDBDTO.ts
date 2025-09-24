@@ -1,4 +1,4 @@
-import { GetMediaDBDTO } from './GetMediaDBDTO';
+import type { GetMediaDBDTO } from './GetMediaDBDTO';
 
 export interface GetRoomDBDTO {
   readonly documentId: string;

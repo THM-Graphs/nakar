@@ -1,20 +1,21 @@
-import { Server, Socket } from './SocketIOService';
-import {
+import type { Server, Socket } from './SocketIOService';
+import type {
   SchemaWsClientToServerMessage,
   SchemaWsServerToClientMessage,
 } from '../../../src-gen/schema';
+import type {
+  Observable} from 'rxjs';
 import {
   BehaviorSubject,
   distinctUntilChanged,
-  Observable,
   Subject,
 } from 'rxjs';
-import { DisconnectReason } from 'socket.io';
-import { LoggerService } from '../logger/LoggerService';
+import type { DisconnectReason } from 'socket.io';
+import type { LoggerService } from '../logger/LoggerService';
 
 export class WSClient {
-  private _socket: Socket;
-  private _server: Server;
+  private readonly _socket: Socket;
+  private readonly _server: Server;
 
   private readonly _room: BehaviorSubject<[string | null, string | null]>;
   private readonly _onMessage: Subject<SchemaWsClientToServerMessage>;
@@ -23,7 +24,7 @@ export class WSClient {
   public constructor(
     socket: Socket,
     server: Server,
-    private _logger: LoggerService,
+    private readonly _logger: LoggerService,
   ) {
     this._socket = socket;
     this._server = server;

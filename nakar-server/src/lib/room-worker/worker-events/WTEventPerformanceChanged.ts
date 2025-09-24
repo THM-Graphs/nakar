@@ -1,4 +1,4 @@
-import { SchemaPhysicsPerformance } from '../../../../src-gen/schema';
+import type { SchemaPhysicsPerformance } from '../../../../src-gen/schema';
 
 export interface WTEventPerformanceChanged {
   type: 'WTEventPerformanceChanged';

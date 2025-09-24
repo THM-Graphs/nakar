@@ -2,7 +2,7 @@ import { SMap } from '../tools/Map';
 import { SSet } from '../tools/Set';
 
 export class CombinationCache {
-  private _combinations: SMap<string, SSet<string>>;
+  private readonly _combinations: SMap<string, SSet<string>>;
 
   public constructor() {
     this._combinations = new SMap();

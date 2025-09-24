@@ -1,5 +1,6 @@
-import { compile, TemplateDelegate } from 'handlebars';
-import { SchemaLayoutSpecification } from '../../../../../src-gen/schema';
+import type { TemplateDelegate } from 'handlebars';
+import { compile } from 'handlebars';
+import type { SchemaLayoutSpecification } from '../../../../../src-gen/schema';
 
 export class FinalNodeDisplayConfiguration {
   public readonly displayText: string | null;

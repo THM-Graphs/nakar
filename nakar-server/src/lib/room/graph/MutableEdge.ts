@@ -1,9 +1,9 @@
 import { MutablePropertyCollection } from './MutablePropertyCollection';
 import { z } from 'zod';
 import { SSet } from '../../tools/Set';
-import { MutableGraph } from './MutableGraph';
+import type { MutableGraph } from './MutableGraph';
 import { SMap } from '../../tools/Map';
-import { FinalGraphDisplayConfiguration } from '../scenario-pipeline/display-configuration/FinalGraphDisplayConfiguration';
+import type { FinalGraphDisplayConfiguration } from '../scenario-pipeline/display-configuration/FinalGraphDisplayConfiguration';
 import { Range } from '../../tools/Range';
 import { MutableGraphElementCreationAction } from './MutableGraphElementCreationAction';
 

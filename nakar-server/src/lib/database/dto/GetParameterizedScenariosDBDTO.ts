@@ -1,5 +1,5 @@
-import { GetScenarioGroupDBDTO } from './GetScenarioGroupDBDTO';
-import { GetScenarioDBDTO } from './GetScenarioDBDTO';
+import type { GetScenarioGroupDBDTO } from './GetScenarioGroupDBDTO';
+import type { GetScenarioDBDTO } from './GetScenarioDBDTO';
 
 export interface GetParameterizedScenariosDBDTO {
   groups: (GetScenarioGroupDBDTO & {

@@ -1,4 +1,4 @@
-import { GetRoomDBDTO } from './GetRoomDBDTO';
+import type { GetRoomDBDTO } from './GetRoomDBDTO';
 
 export interface GetScenarioGroupDBDTO {
   readonly documentId: string;

@@ -1,11 +1,11 @@
 import { match, P } from 'ts-pattern';
-import { MutableGraphColor } from './MutableGraphColor';
+import type { MutableGraphColor } from './MutableGraphColor';
 import { MutableGraphColorCustom } from './MutableGraphColorCustom';
 import { MutableGraphColorPreset } from './MutableGraphColorPreset';
-import { z } from 'zod';
-import { GetColorDBDTO } from '../../database/dto/GetColorDBDTO';
-import { GetColorCustomDBDTO } from '../../database/dto/GetColorCustomDBDTO';
-import { GetColorPresetDBDTO } from '../../database/dto/GetColorPresetDBDTO';
+import type { z } from 'zod';
+import type { GetColorDBDTO } from '../../database/dto/GetColorDBDTO';
+import type { GetColorCustomDBDTO } from '../../database/dto/GetColorCustomDBDTO';
+import type { GetColorPresetDBDTO } from '../../database/dto/GetColorPresetDBDTO';
 
 export class MutableGraphColorFactory {
   public static fromPlain(

@@ -1,11 +1,11 @@
 import { LoggerService } from '../logger/LoggerService';
-import { ApplicationService } from '../application/ApplicationService';
+import type { ApplicationService } from '../application/ApplicationService';
 import { ClassHelper } from '../tools/ClassHelper';
-import { RoomWorkerData } from './RoomWorkerData';
+import type { RoomWorkerData } from './RoomWorkerData';
 import { parentPort, workerData } from 'node:worker_threads';
 import { ProfilerService } from '../profiler/ProfilerService';
 import { RoomInstanceService } from './RoomInstanceService';
-import { ProfilerTask } from '../profiler/ProfilerTask';
+import type { ProfilerTask } from '../profiler/ProfilerTask';
 
 export class RoomWorker implements ApplicationService {
   private readonly _logger: LoggerService;

@@ -1,5 +1,5 @@
-import { SchemaWsClientToServerMessage } from '../../../src-gen/schema';
+import type { SchemaWsClientToServerMessage } from '../../../src-gen/schema';
 
 export interface ClientToServerEvents {
-  message: (message: SchemaWsClientToServerMessage) => void;
+  message(message: SchemaWsClientToServerMessage): void;
 }

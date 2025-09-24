@@ -1,7 +1,7 @@
-import { GetScenarioGroupDBDTO } from './GetScenarioGroupDBDTO';
-import { GetMediaDBDTO } from './GetMediaDBDTO';
-import { GetScenarioParameterDBDTO } from './GetScenarioParameterDBDTO';
-import { GetScenarioQueryDBDTO } from './GetScenarioQueryDBDTO';
+import type { GetScenarioGroupDBDTO } from './GetScenarioGroupDBDTO';
+import type { GetMediaDBDTO } from './GetMediaDBDTO';
+import type { GetScenarioParameterDBDTO } from './GetScenarioParameterDBDTO';
+import type { GetScenarioQueryDBDTO } from './GetScenarioQueryDBDTO';
 
 export interface GetScenarioDBDTO {
   readonly documentId: string;

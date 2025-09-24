@@ -1,6 +1,6 @@
 import { ProfilerTask } from './ProfilerTask';
-import { LoggerService } from '../logger/LoggerService';
-import { ApplicationService } from '../application/ApplicationService';
+import type { LoggerService } from '../logger/LoggerService';
+import type { ApplicationService } from '../application/ApplicationService';
 
 export class ProfilerService implements ApplicationService {
   public readonly timeoutMs: number;

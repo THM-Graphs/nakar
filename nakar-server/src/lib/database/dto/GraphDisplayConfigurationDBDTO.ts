@@ -1,6 +1,6 @@
-import { NodeDisplayConfigurationDBDTO } from './NodeDisplayConfigurationDBDTO';
-import { ScaleType } from '../../tools/ScaleType';
-import { MergeNodeConfigurationDBDTO } from './MergeNodeConfigurationDBDTO';
+import type { NodeDisplayConfigurationDBDTO } from './NodeDisplayConfigurationDBDTO';
+import type { ScaleType } from '../../tools/ScaleType';
+import type { MergeNodeConfigurationDBDTO } from './MergeNodeConfigurationDBDTO';
 
 export interface GraphDisplayConfigurationDBDTO {
   readonly connectResultNodes: boolean | null;

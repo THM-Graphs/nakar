@@ -1,5 +1,5 @@
-export function wait(ms: number = 0): Promise<void> {
-  return new Promise((resolve: () => void): void => {
+export async function wait(ms: number = 0): Promise<void> {
+  await new Promise<void>((resolve: () => void): void => {
     setTimeout((): void => {
       resolve();
     }, ms);
