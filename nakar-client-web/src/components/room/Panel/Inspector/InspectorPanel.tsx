@@ -16,7 +16,6 @@ import { relationshipActions } from "../../../../actions/groups/relationshipActi
 import {
   getBackgroundColorOfColor,
   getBackgroundColorOfLabel,
-  getBackgroundColorOfNode,
 } from "../../../../lib/color/getBackgroundColor.ts";
 import { useColorSchema } from "../../../../lib/color/useColorSchema.ts";
 

@@ -331,7 +331,6 @@ export class RoomService implements ApplicationService {
               graph,
               targetLabel,
               nodeDisplayConfig.layoutSpecification,
-              displayConfiguration,
             );
           }
           task.finish();
@@ -1060,7 +1059,6 @@ export class RoomService implements ApplicationService {
           graph,
           params.label,
           params.layoutSpecification,
-          config,
         );
 
         this._onEvent.next({
@@ -1640,7 +1638,6 @@ export class RoomService implements ApplicationService {
     graph: MutableGraph,
     targetLabel: string,
     layoutSpecification: SchemaLayoutSpecification,
-    displayConfiguration: FinalGraphDisplayConfiguration,
   ): SMap<string, boolean> {
     const nodesOfLabel: MutableNode[] = graph.nodes
       .getByLabel(targetLabel)

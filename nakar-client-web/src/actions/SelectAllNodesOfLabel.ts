@@ -34,7 +34,7 @@ export class SelectAllNodesOfLabel extends Action<LabelActionParams> {
     return "select-all-nodes-of-label";
   }
 
-  title(input: LabelActionParams): string {
+  title(): string {
     return `Select All Nodes`;
   }
 
