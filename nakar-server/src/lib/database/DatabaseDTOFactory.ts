@@ -11,7 +11,6 @@ import { ScaleType } from '../tools/ScaleType';
 import { GetScenarioParameterDBDTO } from './dto/GetScenarioParameterDBDTO';
 import { GetScenarioQueryDBDTO } from './dto/GetScenarioQueryDBDTO';
 import { MergeNodeConfigurationDBDTO } from './dto/MergeNodeConfigurationDBDTO';
-import { LayoutAlgorithm } from '../tools/LayoutAlgorithm';
 import { GetNoteDBDTO } from './dto/GetNoteDBDTO';
 import z from 'zod';
 import { SSet } from '../tools/Set';
@@ -21,6 +20,7 @@ import { GetColorCustomDBDTO } from './dto/GetColorCustomDBDTO';
 import {
   SchemaColor,
   SchemaCustomColor,
+  SchemaLayoutSpecification,
   SchemaPresetColor,
 } from '../../../src-gen/schema';
 import { Input } from '@strapi/types/dist/modules/documents/params/data';
@@ -302,15 +302,22 @@ export class DatabaseDTOFactory {
       radius: db.radius ?? null,
       backgroundColor: db.backgroundColor ?? null,
       compress: this._createNullableBooleanFromStrapi(db.compress),
-      circleLayoutDistance: db.circleLayoutDistance ?? null,
-      layoutAlgorithm: match(db.layoutAlgorithm)
+      layoutSpecification: match(db.layoutAlgorithm)
         .with(P.nullish, (): null => null)
         .with('inherit', (): null => null)
         .with(
           'forceDirected',
-          (): LayoutAlgorithm => LayoutAlgorithm.forceDirected,
+          (): SchemaLayoutSpecification => ({
+            type: 'LayoutSpecificationForceDirected',
+          }),
         )
-        .with('circle', (): LayoutAlgorithm => LayoutAlgorithm.circle)
+        .with(
+          'circle',
+          (): SchemaLayoutSpecification => ({
+            type: 'LayoutSpecificationCircle',
+            radius: db.circleLayoutDistance ?? 100,
+          }),
+        )
         .exhaustive(),
     };
   }

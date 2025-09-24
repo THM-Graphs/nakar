@@ -21,8 +21,9 @@ export class LayoutLabelsForceDirectedAction extends Action<LabelActionParams> {
         },
         body: {
           label: label,
-          layoutAlgorithm: "forceDirected",
-          circleLayoutDistance: null,
+          layoutSpecification: {
+            type: "LayoutSpecificationForceDirected",
+          },
         },
       }),
     );

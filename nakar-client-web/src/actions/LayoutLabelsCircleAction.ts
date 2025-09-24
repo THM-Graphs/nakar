@@ -14,7 +14,7 @@ export class LayoutLabelsCircleAction extends Action<LabelActionParams> {
       throw new Error("Unable to layout multiple labels.");
     }
     const label = input.labels[0];
-    const distanceString = prompt("Node distance (10 - 10000)", "100");
+    const distanceString = prompt("Circle Radius (Pixels):", "1000");
     if (distanceString == null) {
       return;
     }
@@ -29,8 +29,10 @@ export class LayoutLabelsCircleAction extends Action<LabelActionParams> {
         },
         body: {
           label: label,
-          layoutAlgorithm: "circle",
-          circleLayoutDistance: n,
+          layoutSpecification: {
+            type: "LayoutSpecificationCircle",
+            radius: n,
+          },
         },
       }),
     );

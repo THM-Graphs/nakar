@@ -746,6 +746,16 @@ export interface components {
                 readonly color: components["schemas"]["Color"];
             } | null;
         };
+        readonly LayoutSpecification: components["schemas"]["LayoutSpecificationForceDirected"] | components["schemas"]["LayoutSpecificationCircle"];
+        readonly LayoutSpecificationForceDirected: {
+            /** @enum {string} */
+            readonly type: "LayoutSpecificationForceDirected";
+        };
+        readonly LayoutSpecificationCircle: {
+            /** @enum {string} */
+            readonly type: "LayoutSpecificationCircle";
+            readonly radius: number;
+        };
         readonly WSClientToServerMessage: components["schemas"]["WSActionJoinRoom"] | components["schemas"]["WSActionLeaveRoom"] | components["schemas"]["WSActionGrabNode"] | components["schemas"]["WSActionMoveNodes"] | components["schemas"]["WSActionUngrabNode"];
         readonly WSServerToClientMessage: components["schemas"]["WSEventNodesMoved"] | components["schemas"]["WSEventRoomChanged"] | components["schemas"]["WSEventNotification"] | components["schemas"]["WSEventGraphElementsChanged"] | components["schemas"]["WSEventGraphMetaDataChanged"] | components["schemas"]["WSEventGraphTableChanged"] | components["schemas"]["WSEventProgress"] | components["schemas"]["WSEventClearProgress"] | components["schemas"]["WSEventSetNodeLocks"] | components["schemas"]["WSEventLockUi"] | components["schemas"]["WSEventUnlockUi"] | components["schemas"]["WSEventPerformanceChanged"] | components["schemas"]["WSEventKick"];
         readonly WSActionJoinRoom: {
@@ -880,6 +890,9 @@ export type SchemaPhysicsPerformance = components['schemas']['PhysicsPerformance
 export type SchemaExpandNodePreviewElement = components['schemas']['ExpandNodePreviewElement'];
 export type SchemaDatabaseStats = components['schemas']['DatabaseStats'];
 export type SchemaNote = components['schemas']['Note'];
+export type SchemaLayoutSpecification = components['schemas']['LayoutSpecification'];
+export type SchemaLayoutSpecificationForceDirected = components['schemas']['LayoutSpecificationForceDirected'];
+export type SchemaLayoutSpecificationCircle = components['schemas']['LayoutSpecificationCircle'];
 export type SchemaWsClientToServerMessage = components['schemas']['WSClientToServerMessage'];
 export type SchemaWsServerToClientMessage = components['schemas']['WSServerToClientMessage'];
 export type SchemaWsActionJoinRoom = components['schemas']['WSActionJoinRoom'];
@@ -1532,9 +1545,7 @@ export interface operations {
             readonly content: {
                 readonly "application/json": {
                     readonly label: string;
-                    /** @enum {string} */
-                    readonly layoutAlgorithm: "forceDirected" | "circle";
-                    readonly circleLayoutDistance: number | null;
+                    readonly layoutSpecification: components["schemas"]["LayoutSpecification"];
                 };
             };
         };

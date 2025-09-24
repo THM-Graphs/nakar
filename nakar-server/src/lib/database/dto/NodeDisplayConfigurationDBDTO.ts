@@ -1,4 +1,4 @@
-import { LayoutAlgorithm } from '../../tools/LayoutAlgorithm';
+import { SchemaLayoutSpecification } from '../../../../src-gen/schema';
 
 export interface NodeDisplayConfigurationDBDTO {
   readonly targetLabel: string | null;
@@ -6,6 +6,5 @@ export interface NodeDisplayConfigurationDBDTO {
   readonly radius: string | null;
   readonly backgroundColor: string | null;
   readonly compress: boolean | null;
-  readonly circleLayoutDistance: number | null;
-  readonly layoutAlgorithm: LayoutAlgorithm | null;
+  readonly layoutSpecification: SchemaLayoutSpecification | null;
 }

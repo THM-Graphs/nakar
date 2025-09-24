@@ -157,6 +157,21 @@ export type Histogram = {
     }>;
 };
 
+export type LayoutSpecification = LayoutSpecificationForceDirected | LayoutSpecificationCircle;
+
+export type LayoutSpecificationCircle = {
+    type: 'LayoutSpecificationCircle';
+    radius: number;
+};
+
+export type type2 = 'LayoutSpecificationCircle';
+
+export type LayoutSpecificationForceDirected = {
+    type: 'LayoutSpecificationForceDirected';
+};
+
+export type type3 = 'LayoutSpecificationForceDirected';
+
 export type Node = {
     id: string;
     title: string;
@@ -234,7 +249,7 @@ export type PresetColor = {
     index: PresetColorIndex;
 };
 
-export type type2 = 'PresetColor';
+export type type4 = 'PresetColor';
 
 export type PresetColorIndex = 0 | 1 | 2 | 3 | 4 | 5;
 
@@ -296,34 +311,34 @@ export type WSActionGrabNode = {
     nodeId: string;
 };
 
-export type type3 = 'WSActionGrabNode';
+export type type5 = 'WSActionGrabNode';
 
 export type WSActionJoinRoom = {
     type: 'WSActionJoinRoom';
     roomId: string;
 };
 
-export type type4 = 'WSActionJoinRoom';
+export type type6 = 'WSActionJoinRoom';
 
 export type WSActionLeaveRoom = {
     type: 'WSActionLeaveRoom';
 };
 
-export type type5 = 'WSActionLeaveRoom';
+export type type7 = 'WSActionLeaveRoom';
 
 export type WSActionMoveNodes = {
     type: 'WSActionMoveNodes';
     nodes: Array<PhysicalNode>;
 };
 
-export type type6 = 'WSActionMoveNodes';
+export type type8 = 'WSActionMoveNodes';
 
 export type WSActionUngrabNode = {
     type: 'WSActionUngrabNode';
     node: PhysicalNode;
 };
 
-export type type7 = 'WSActionUngrabNode';
+export type type9 = 'WSActionUngrabNode';
 
 export type WSClientToServerMessage = WSActionJoinRoom | WSActionLeaveRoom | WSActionGrabNode | WSActionMoveNodes | WSActionUngrabNode;
 
@@ -331,40 +346,40 @@ export type WSEventClearProgress = {
     type: 'WSEventClearProgress';
 };
 
-export type type8 = 'WSEventClearProgress';
+export type type10 = 'WSEventClearProgress';
 
 export type WSEventGraphElementsChanged = {
     type: 'WSEventGraphElementsChanged';
     elements: GraphElements;
 };
 
-export type type9 = 'WSEventGraphElementsChanged';
+export type type11 = 'WSEventGraphElementsChanged';
 
 export type WSEventGraphMetaDataChanged = {
     type: 'WSEventGraphMetaDataChanged';
     metaData: GraphMetaData;
 };
 
-export type type10 = 'WSEventGraphMetaDataChanged';
+export type type12 = 'WSEventGraphMetaDataChanged';
 
 export type WSEventGraphTableChanged = {
     type: 'WSEventGraphTableChanged';
     table: GraphTable;
 };
 
-export type type11 = 'WSEventGraphTableChanged';
+export type type13 = 'WSEventGraphTableChanged';
 
 export type WSEventKick = {
     type: 'WSEventKick';
 };
 
-export type type12 = 'WSEventKick';
+export type type14 = 'WSEventKick';
 
 export type WSEventLockUi = {
     type: 'WSEventLockUi';
 };
 
-export type type13 = 'WSEventLockUi';
+export type type15 = 'WSEventLockUi';
 
 export type WSEventNodesMoved = {
     type: 'WSEventNodesMoved';
@@ -372,21 +387,21 @@ export type WSEventNodesMoved = {
     date: string;
 };
 
-export type type14 = 'WSEventNodesMoved';
+export type type16 = 'WSEventNodesMoved';
 
 export type WSEventNotification = {
     type: 'WSEventNotification';
     notification: Notification;
 };
 
-export type type15 = 'WSEventNotification';
+export type type17 = 'WSEventNotification';
 
 export type WSEventPerformanceChanged = {
     type: 'WSEventPerformanceChanged';
     performance?: PhysicsPerformance;
 };
 
-export type type16 = 'WSEventPerformanceChanged';
+export type type18 = 'WSEventPerformanceChanged';
 
 export type WSEventProgress = {
     type: 'WSEventProgress';
@@ -394,14 +409,14 @@ export type WSEventProgress = {
     message: string;
 };
 
-export type type17 = 'WSEventProgress';
+export type type19 = 'WSEventProgress';
 
 export type WSEventRoomChanged = {
     type: 'WSEventRoomChanged';
     roomId: (string) | null;
 };
 
-export type type18 = 'WSEventRoomChanged';
+export type type20 = 'WSEventRoomChanged';
 
 export type WSEventSetNodeLocks = {
     type: 'WSEventSetNodeLocks';
@@ -411,13 +426,13 @@ export type WSEventSetNodeLocks = {
     }>;
 };
 
-export type type19 = 'WSEventSetNodeLocks';
+export type type21 = 'WSEventSetNodeLocks';
 
 export type WSEventUnlockUi = {
     type: 'WSEventUnlockUi';
 };
 
-export type type20 = 'WSEventUnlockUi';
+export type type22 = 'WSEventUnlockUi';
 
 export type WSServerToClientMessage = WSEventNodesMoved | WSEventRoomChanged | WSEventNotification | WSEventGraphElementsChanged | WSEventGraphMetaDataChanged | WSEventGraphTableChanged | WSEventProgress | WSEventClearProgress | WSEventSetNodeLocks | WSEventLockUi | WSEventUnlockUi | WSEventPerformanceChanged | WSEventKick;
 
@@ -731,8 +746,7 @@ export type PostRoomActionCompressNodesError = unknown;
 export type PostRoomActionLayoutLabelData = {
     body: {
         label: string;
-        layoutAlgorithm: 'forceDirected' | 'circle';
-        circleLayoutDistance: (number) | null;
+        layoutSpecification: LayoutSpecification;
     };
     path: {
         id: string;

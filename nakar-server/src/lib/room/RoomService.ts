@@ -35,7 +35,6 @@ import { RoomServiceEventKick } from './events/RoomServiceEventKick';
 import { ExpandNodePreview } from '../neo4j/expand-node-preview/ExpandNodePreview';
 import { NotFound } from 'http-errors';
 import { MutableEdgeIndex } from './graph/MutableEdgeIndex';
-import { Range } from '../tools/Range';
 import { MergeNodeConfiguration } from './scenario-pipeline/display-configuration/MergeNodeConfiguration';
 import { MutablePropertyCollection } from './graph/MutablePropertyCollection';
 import { ProfilerTask } from '../profiler/ProfilerTask';
@@ -44,13 +43,16 @@ import { MutableNodeIndex } from './graph/MutableNodeIndex';
 import { ExpandNodesResult } from './ExpandNodesResult';
 import { FinalNodeDisplayConfiguration } from './scenario-pipeline/display-configuration/FinalNodeDisplayConfiguration';
 import { MediaService } from '../media/MediaService';
-import { LayoutAlgorithm } from '../tools/LayoutAlgorithm';
 import { circularWeightedSpread } from '../tools/circleLayoutAlgorithms/circularWeightedSpread';
 import { wait } from '../tools/Wait';
 import { MutablePosition } from './graph/MutablePosition';
 import { Neo4jLimitConfig } from '../neo4j/Neo4jLimitConfig';
 import { RoomServiceEventNotAllNodesLoaded } from './events/RoomServiceEventNotAllNodesLoaded';
 import { MutableGraphElementCreationAction } from './graph/MutableGraphElementCreationAction';
+import {
+  SchemaLayoutSpecification,
+  SchemaLayoutSpecificationCircle,
+} from '../../../src-gen/schema';
 
 export class RoomService implements ApplicationService {
   private readonly _workers: SMap<string, Worker>;
@@ -328,8 +330,7 @@ export class RoomService implements ApplicationService {
             this._layout(
               graph,
               targetLabel,
-              nodeDisplayConfig.layoutAlgorithm,
-              nodeDisplayConfig.circleLayoutDistance,
+              nodeDisplayConfig.layoutSpecification,
               displayConfiguration,
             );
           }
@@ -1043,8 +1044,7 @@ export class RoomService implements ApplicationService {
   public async layoutLabel(params: {
     roomId: string;
     label: string;
-    layoutAlgorithm: LayoutAlgorithm;
-    circleLayoutDistance: number | null;
+    layoutSpecification: SchemaLayoutSpecification;
   }): Promise<void> {
     await this._runWithRoomLock(
       params.roomId,
@@ -1059,8 +1059,7 @@ export class RoomService implements ApplicationService {
         const lockChanges: SMap<string, boolean> = this._layout(
           graph,
           params.label,
-          params.layoutAlgorithm,
-          params.circleLayoutDistance,
+          params.layoutSpecification,
           config,
         );
 
@@ -1640,8 +1639,7 @@ export class RoomService implements ApplicationService {
   private _layout(
     graph: MutableGraph,
     targetLabel: string,
-    layoutAlgorithm: LayoutAlgorithm,
-    circleLayoutDistance: number | null,
+    layoutSpecification: SchemaLayoutSpecification,
     displayConfiguration: FinalGraphDisplayConfiguration,
   ): SMap<string, boolean> {
     const nodesOfLabel: MutableNode[] = graph.nodes
@@ -1649,59 +1647,50 @@ export class RoomService implements ApplicationService {
       .toArray();
     const lockChanges: SMap<string, boolean> = new SMap<string, boolean>();
 
-    match(layoutAlgorithm)
-      .with(LayoutAlgorithm.circle, (): void => {
-        const resultingCircleLayoutDistance: number =
-          circleLayoutDistance ?? 100;
-
-        if (nodesOfLabel.length < 2) {
-          return;
-        }
-        const sortedNodesToLayout: MutableNode[] = circularWeightedSpread(
-          nodesOfLabel,
-          (n: MutableNode): number => n.degree(graph),
-        );
-
-        const degreeRange: Range | null = graph.nodes.getNodeDegreeRange(graph);
-        const circumference: number =
-          resultingCircleLayoutDistance * sortedNodesToLayout.length +
-          sortedNodesToLayout.reduce(
-            (widths: number, node: MutableNode): number =>
-              widths +
-              node.radius(graph, displayConfiguration, degreeRange) * 2,
-            0,
+    match(layoutSpecification)
+      .with(
+        { type: 'LayoutSpecificationCircle' },
+        (l: SchemaLayoutSpecificationCircle): void => {
+          if (nodesOfLabel.length < 2) {
+            return;
+          }
+          const sortedNodesToLayout: MutableNode[] = circularWeightedSpread(
+            nodesOfLabel,
+            (n: MutableNode): number => n.degree(graph),
           );
-        const radius: number = circumference / (2 * Math.PI);
-        for (let i: number = 0; i < sortedNodesToLayout.length; i += 1) {
-          const degreeRad: number =
-            ((2 * Math.PI) / sortedNodesToLayout.length) * i - Math.PI / 2;
-          const x: number = radius * Math.cos(degreeRad);
-          const y: number = radius * Math.sin(degreeRad);
-          sortedNodesToLayout[i].position.x = x;
-          sortedNodesToLayout[i].position.y = y;
-          sortedNodesToLayout[i].locked = true;
-          lockChanges.set(sortedNodesToLayout[i].id, true);
-        }
 
-        // Put other nodes between
-        for (const node of graph.nodes.nodes) {
-          if (node.labels.has(targetLabel) || node.locked) {
-            continue;
+          const radius: number = l.radius;
+          for (let i: number = 0; i < sortedNodesToLayout.length; i += 1) {
+            const degreeRad: number =
+              ((2 * Math.PI) / sortedNodesToLayout.length) * i - Math.PI / 2;
+            const x: number = radius * Math.cos(degreeRad);
+            const y: number = radius * Math.sin(degreeRad);
+            sortedNodesToLayout[i].position.x = x;
+            sortedNodesToLayout[i].position.y = y;
+            sortedNodesToLayout[i].locked = true;
+            lockChanges.set(sortedNodesToLayout[i].id, true);
           }
 
-          const neighbors: MutableNode[] = graph
-            .getNeighborsOfNode(node)
-            .filter((n: MutableNode): boolean => n.labels.has(targetLabel))
-            .toArray();
-          if (neighbors.length > 0) {
-            node.position = MutablePosition.average(
-              neighbors.map((n: MutableNode): MutablePosition => n.position),
-            );
-            PhysicsSimulation.jiggle(node);
+          // Put other nodes between
+          for (const node of graph.nodes.nodes) {
+            if (node.labels.has(targetLabel) || node.locked) {
+              continue;
+            }
+
+            const neighbors: MutableNode[] = graph
+              .getNeighborsOfNode(node)
+              .filter((n: MutableNode): boolean => n.labels.has(targetLabel))
+              .toArray();
+            if (neighbors.length > 0) {
+              node.position = MutablePosition.average(
+                neighbors.map((n: MutableNode): MutablePosition => n.position),
+              );
+              PhysicsSimulation.jiggle(node);
+            }
           }
-        }
-      })
-      .with(LayoutAlgorithm.forceDirected, (): void => {
+        },
+      )
+      .with({ type: 'LayoutSpecificationForceDirected' }, (): void => {
         for (const node of nodesOfLabel) {
           node.locked = false;
           lockChanges.set(node.id, false);

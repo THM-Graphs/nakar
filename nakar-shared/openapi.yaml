@@ -660,16 +660,11 @@ paths:
               properties:
                 label:
                   type: string
-                layoutAlgorithm:
-                  type: string
-                  enum: ["forceDirected", "circle"]
-                circleLayoutDistance:
-                  type: number
-                  nullable: true
+                layoutSpecification:
+                  $ref: "#/components/schemas/LayoutSpecification"
               required:
                 - label
-                - layoutAlgorithm
-                - circleLayoutDistance
+                - layoutSpecification
       responses:
         "200":
           description: "OK"
@@ -1542,6 +1537,32 @@ components:
         - author
         - dateTime
         - color
+
+    LayoutSpecification:
+      oneOf:
+        - $ref: "#/components/schemas/LayoutSpecificationForceDirected"
+        - $ref: "#/components/schemas/LayoutSpecificationCircle"
+
+    LayoutSpecificationForceDirected:
+      type: object
+      properties:
+        type:
+          type: "string"
+          enum: ["LayoutSpecificationForceDirected"]
+      required:
+        - type
+
+    LayoutSpecificationCircle:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: ["LayoutSpecificationCircle"]
+        radius:
+          type: number
+      required:
+        - type
+        - radius
 
     WSClientToServerMessage:
       oneOf:
