@@ -7,7 +7,7 @@ export class FinalNodeDisplayConfiguration {
   public readonly radius: string | null;
   public readonly backgroundColor: string | null;
   public readonly compress: boolean;
-  public readonly layoutSpecification: SchemaLayoutSpecification;
+  public readonly layoutSpecification: SchemaLayoutSpecification; // TODO change to OOP
 
   public readonly displayTextTemplate: TemplateDelegate | null;
   public readonly radiusTemplate: TemplateDelegate | null;
