@@ -5,6 +5,7 @@ import { DynamicList } from "../../../../shared/DynamicList.tsx";
 import { labelActions } from "../../../../../actions/groups/labelActions.ts";
 import { getBackgroundColorOfLabel } from "../../../../../lib/color/getBackgroundColor.ts";
 import { useColorSchema } from "../../../../../lib/color/useColorSchema.ts";
+import { SelectAllNodesOfLabel } from "../../../../../actions/SelectAllNodesOfLabel.ts";
 
 export function HistogramSectionLabels(props: { roomContext: RoomContext }) {
   const labels = useBearStore((s) => s.room.scenario.graph.elements.labels);
@@ -34,6 +35,12 @@ export function HistogramSectionLabels(props: { roomContext: RoomContext }) {
                     ? label.sources.join(", ")
                     : undefined
                 }
+                onSelect={() => {
+                  SelectAllNodesOfLabel.shared.runAsync({
+                    labels: [entry.label],
+                    roomContext: props.roomContext,
+                  });
+                }}
                 value={entry.count}
                 percentage={entry.percentage}
                 key={entry.label}
