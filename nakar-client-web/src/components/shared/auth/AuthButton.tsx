@@ -15,6 +15,7 @@ export function AuthButton() {
 
   const [loading, setLoading] = useState(false);
 
+  // TODO: Move this to AppContext
   useEffect(() => {
     (async () => {
       setLoading(true);
