@@ -6,7 +6,7 @@ import {
   ReactNode,
 } from "react";
 import { NavbarButton } from "./NavbarButton.tsx";
-import { Dropdown } from "react-bootstrap";
+import { Dropdown, Stack } from "react-bootstrap";
 import clsx from "clsx";
 import { AlignType, Placement } from "react-bootstrap/types";
 
@@ -33,25 +33,29 @@ export function DropdownButton(props: {
         onClick: (event: MouseEvent) => void;
         children: ReactNode;
       },
-      ref: ForwardedRef<HTMLDivElement>,
+      ref: ForwardedRef<HTMLButtonElement>,
     ) => (
-      <NavbarButton
-        hidden={props.hidden}
-        icon={props.icon}
-        ref={ref}
-        tooltip={props.tooltip}
-        tooltipPlacement={props.tooltipPlacement}
-        title={props.title}
-        size={props.buttonSize}
-        className={props.buttonClassName}
-        onClick={(event) => {
-          event.preventDefault();
-          onClick(event);
-        }}
-        style={props.buttonStyle}
-      >
-        {children}
-      </NavbarButton>
+      <Stack>
+        <NavbarButton
+          hidden={props.hidden}
+          icon={props.icon}
+          ref={ref}
+          tooltip={props.tooltip}
+          tooltipPlacement={props.tooltipPlacement}
+          title={props.title}
+          size={props.buttonSize}
+          className={props.buttonClassName}
+          onClick={(event) => {
+            event.preventDefault();
+            onClick(event);
+          }}
+          style={{
+            ...props.buttonStyle,
+          }}
+        >
+          {children}
+        </NavbarButton>
+      </Stack>
     ),
   );
 

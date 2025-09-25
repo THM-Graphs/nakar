@@ -1,5 +1,11 @@
 import http from 'http';
-import type { Application, Request, Response } from 'express';
+import type {
+  Application,
+  NextFunction,
+  Request,
+  RequestHandler,
+  Response,
+} from 'express';
 import express from 'express';
 import type { ConfigService } from '../config/ConfigService';
 import type { LoggerService } from '../logger/LoggerService';
@@ -26,6 +32,7 @@ import {
   InternalServerError,
   NotFound,
   NotImplemented,
+  Unauthorized,
 } from 'http-errors';
 import cors from 'cors';
 import type { ProfilerService } from '../profiler/ProfilerService';
@@ -55,6 +62,7 @@ import type { Neo4jService } from '../neo4j/Neo4jService';
 import type { ExpandNodePreview } from '../neo4j/expand-node-preview/ExpandNodePreview';
 import type { MediaService } from '../media/MediaService';
 import type { GetNotesDBDTO } from '../database/dto/GetNotesDBDTO';
+import * as undici from 'undici';
 
 export class HTTPService implements ApplicationService {
   private readonly _app: Application;
@@ -153,6 +161,139 @@ export class HTTPService implements ApplicationService {
   }
 
   private _setupRoutes(): void {
+    const assertLoggedIn: RequestHandler = async (
+      req: Request,
+      res: Response,
+      next: NextFunction,
+    ): Promise<void> => {
+      const jwt: string | null = this._getJWT(req);
+      if (jwt == null) {
+        this._handleError(res, new Unauthorized());
+        return;
+      }
+      const result: undici.Response = await undici.fetch(
+        `http://localhost:${this._config.port}/api/users/me`,
+        {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${jwt}`,
+          },
+        },
+      );
+      if (!result.ok) {
+        this._handleError(res, new Unauthorized());
+        return;
+      }
+      next();
+    };
+
+    this._app.post(
+      '/auth',
+      this._handle(
+        async (
+          res: Request,
+        ): Promise<
+          operations['postAuth']['responses']['200']['content']['application/json']
+        > => {
+          type Body =
+            operations['postAuth']['requestBody']['content']['application/json'];
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+          const body: Body = res.body as Body;
+
+          const result: undici.Response = await undici.fetch(
+            `http://localhost:${this._config.port}/api/auth/local`,
+            {
+              method: 'POST',
+              body: JSON.stringify({
+                identifier: body.username,
+                password: body.password,
+              }),
+              headers: {
+                'Content-Type': 'application/json',
+              },
+            },
+          );
+          const json: unknown = await result.json();
+          // eslint-disable-next-line @typescript-eslint/typedef
+          const responseType = z.object({
+            jwt: z.string().optional(),
+            user: z
+              .object({
+                documentId: z.string(),
+                username: z.string(),
+              })
+              .optional(),
+            error: z
+              .object({
+                status: z.number(),
+                name: z.string(),
+                message: z.string(),
+              })
+              .optional(),
+          });
+          const response: z.infer<typeof responseType> =
+            responseType.parse(json);
+
+          if (response.jwt == null || response.user == null) {
+            throw new Unauthorized();
+          }
+
+          return {
+            username: response.user.username,
+            jwt: response.jwt,
+          };
+        },
+      ),
+    );
+    this._app.get(
+      '/auth',
+      assertLoggedIn,
+      this._handle(
+        async (
+          req: Request,
+        ): Promise<
+          operations['getAuth']['responses']['200']['content']['application/json']
+        > => {
+          const jwt: string | null = this._getJWT(req);
+          if (jwt == null) {
+            throw new Unauthorized();
+          }
+
+          const result: undici.Response = await undici.fetch(
+            `http://localhost:${this._config.port}/api/users/me`,
+            {
+              method: 'GET',
+              headers: {
+                Authorization: `Bearer ${jwt}`,
+              },
+            },
+          );
+          const json: unknown = await result.json();
+          // eslint-disable-next-line @typescript-eslint/typedef
+          const responseType = z.object({
+            documentId: z.string().optional(),
+            username: z.string().optional(),
+            error: z
+              .object({
+                status: z.number(),
+                name: z.string(),
+                message: z.string(),
+              })
+              .optional(),
+          });
+          const response: z.infer<typeof responseType> =
+            responseType.parse(json);
+
+          if (response.username == null) {
+            throw new Unauthorized();
+          }
+
+          return {
+            username: response.username,
+          };
+        },
+      ),
+    );
     this._app.get(
       '/room/:id/scenarios',
       this._handle(async (req: Request): Promise<SchemaGetScenariosResult> => {
@@ -348,6 +489,7 @@ export class HTTPService implements ApplicationService {
 
     this._app.post(
       '/room/:id/notes',
+      assertLoggedIn,
       this._handle(async (req: Request): Promise<void> => {
         const room: GetRoomDBDTO = await this._assertRoom(req);
 
@@ -370,6 +512,7 @@ export class HTTPService implements ApplicationService {
 
     this._app.delete(
       '/room/:id/note/:noteId',
+      assertLoggedIn,
       this._handle(async (req: Request): Promise<void> => {
         const room: GetRoomDBDTO = await this._assertRoom(req);
         const noteId: string = this._getPathParameter(req, 'noteId');
@@ -384,6 +527,7 @@ export class HTTPService implements ApplicationService {
 
     this._app.put(
       '/room/:id/note/:noteId',
+      assertLoggedIn,
       this._handle(async (req: Request): Promise<void> => {
         const room: GetRoomDBDTO = await this._assertRoom(req);
         const noteId: string = this._getPathParameter(req, 'noteId');
@@ -416,6 +560,7 @@ export class HTTPService implements ApplicationService {
 
     this._app.get(
       '/system/backup',
+      assertLoggedIn,
       this._handle(async (): Promise<FileStream> => {
         const stream: FileStream = await this._backup.createBackupFile();
         return stream;
@@ -424,6 +569,7 @@ export class HTTPService implements ApplicationService {
 
     this._app.post(
       '/system/import',
+      assertLoggedIn,
       this._handle((): void => {
         throw new NotImplemented();
       }),
@@ -612,6 +758,7 @@ export class HTTPService implements ApplicationService {
 
     this._app.post(
       '/room/:id/actions/run-query',
+      assertLoggedIn,
       this._handle(async (req: Request): Promise<void> => {
         const room: GetRoomDBDTO = await this._assertRoom(req);
 
@@ -710,6 +857,7 @@ export class HTTPService implements ApplicationService {
 
     this._app.get(
       '/database/:id/stats',
+      assertLoggedIn,
       this._handle(async (req: Request): Promise<SchemaDatabaseStats> => {
         const databaseId: string = this._getPathParameter(req, 'id');
         const database: GetDatabaseDBDTO | null =
@@ -806,6 +954,19 @@ export class HTTPService implements ApplicationService {
     });
     const value: string = schema.parse(req.body)[name];
     return value;
+  }
+
+  private _getJWT(req: Request): string | null {
+    const authHeader: string | null = req.headers.authorization ?? null;
+    if (authHeader == null) {
+      return null;
+    }
+    if (authHeader.startsWith('Bearer ')) {
+      const jwt: string = authHeader.substring(7, authHeader.length);
+      return jwt;
+    } else {
+      return null;
+    }
   }
 
   private async _getScenarioOfRoom(

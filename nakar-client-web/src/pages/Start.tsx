@@ -9,6 +9,7 @@ import { NavbarLogo } from "../components/shared/NavbarLogo.tsx";
 import { AppContext } from "../lib/state/AppContext.ts";
 import { StatusBar } from "../components/shared/StatusBar.tsx";
 import { SocketStateDisplay } from "../components/room/SocketStateDisplay.tsx";
+import { AuthButton } from "../components/shared/auth/AuthButton.tsx";
 
 export async function StartLoader(): Promise<RoomsSchema> {
   const rooms = await getRooms();
@@ -32,7 +33,14 @@ export function Start(props: { context: AppContext }) {
           <RoomList rooms={loaderData} context={props.context}></RoomList>
         </Container>
       </div>
-      <StatusBar right={<SocketStateDisplay></SocketStateDisplay>}></StatusBar>
+      <StatusBar
+        right={
+          <Stack direction={"horizontal"}>
+            <AuthButton></AuthButton>
+            <SocketStateDisplay></SocketStateDisplay>
+          </Stack>
+        }
+      ></StatusBar>
     </Stack>
   );
 }

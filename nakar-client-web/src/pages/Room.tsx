@@ -43,6 +43,7 @@ import { EditRoomAction } from "../actions/EditRoomAction.ts";
 import { NotesPanel } from "../components/room/Panel/Notes/NotesPanel.tsx";
 import { NotesPanelButton } from "../components/room/Panel/Notes/NotesPanelButton.tsx";
 import { AddEditNoteModal } from "../components/room/Panel/Notes/AddEditNoteModal.tsx";
+import { AuthButton } from "../components/shared/auth/AuthButton.tsx";
 
 export type RoomContext = {
   initialRoomData: RoomSchema;
@@ -283,6 +284,7 @@ export function Room(props: { context: AppContext }) {
             right={
               <>
                 <PerformanceDisplay></PerformanceDisplay>
+                <AuthButton></AuthButton>
                 <SocketStateDisplay></SocketStateDisplay>
               </>
             }

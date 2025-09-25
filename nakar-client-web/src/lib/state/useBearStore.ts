@@ -37,6 +37,47 @@ export const useBearStore = create<BearState>()(
         immer(
           (set, get): BearState => ({
             global: {
+              auth: {
+                jwt: null,
+                setJWT: (jwt: string | null) => {
+                  set((s) => {
+                    s.global.auth.jwt = jwt;
+                  });
+                },
+                username: null,
+                setUsername: (username: string | null) => {
+                  set((s) => {
+                    s.global.auth.username = username;
+                  });
+                },
+                loginWindow: {
+                  password: "",
+                  setPassword: (pw) => {
+                    set((s) => {
+                      s.global.auth.loginWindow.password = pw;
+                    });
+                  },
+                  username: "",
+                  setUsername: (username) => {
+                    set((s) => {
+                      s.global.auth.loginWindow.username = username;
+                    });
+                  },
+                  hide: () => {
+                    set((s) => {
+                      s.global.auth.loginWindow.shown = false;
+                      s.global.auth.loginWindow.username = "";
+                      s.global.auth.loginWindow.password = "";
+                    });
+                  },
+                  show: () => {
+                    set((s) => {
+                      s.global.auth.loginWindow.shown = true;
+                    });
+                  },
+                  shown: false,
+                },
+              },
               theme: {
                 user: null,
                 system: loadSystemTheme(),
@@ -534,6 +575,7 @@ export const useBearStore = create<BearState>()(
           canvasZoom: s.room.canvas.zoomTransform.k,
           canvasTransformX: s.room.canvas.zoomTransform.x,
           canvasTransformY: s.room.canvas.zoomTransform.y,
+          jwt: s.global.auth.jwt,
         }),
         merge: (rawStorage: unknown, state: BearState): BearState => {
           const storage: PersistStorage = rawStorage as PersistStorage;
@@ -565,6 +607,7 @@ export const useBearStore = create<BearState>()(
             storage.canvasTransformX ?? 0,
             storage.canvasTransformY ?? 0,
           );
+          state.global.auth.jwt = storage.jwt;
           return state;
         },
         onRehydrateStorage: () => {

@@ -4,6 +4,22 @@
  */
 
 export interface paths {
+    readonly "/auth": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get: operations["getAuth"];
+        readonly put?: never;
+        readonly post: operations["postAuth"];
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
     readonly "/room/{id}/scenarios": {
         readonly parameters: {
             readonly query?: never;
@@ -915,6 +931,58 @@ export type SchemaWsEventPerformanceChanged = components['schemas']['WSEventPerf
 export type SchemaWsEventKick = components['schemas']['WSEventKick'];
 export type $defs = Record<string, never>;
 export interface operations {
+    readonly getAuth: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            /** @description OK */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": {
+                        readonly username: string;
+                    };
+                };
+            };
+        };
+    };
+    readonly postAuth: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": {
+                    readonly username: string;
+                    readonly password: string;
+                };
+            };
+        };
+        readonly responses: {
+            /** @description OK */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": {
+                        readonly jwt: string;
+                        readonly username: string;
+                    };
+                };
+            };
+        };
+    };
     readonly getScenarios: {
         readonly parameters: {
             readonly query?: never;

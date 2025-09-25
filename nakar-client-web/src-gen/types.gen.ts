@@ -436,6 +436,26 @@ export type type22 = 'WSEventUnlockUi';
 
 export type WSServerToClientMessage = WSEventNodesMoved | WSEventRoomChanged | WSEventNotification | WSEventGraphElementsChanged | WSEventGraphMetaDataChanged | WSEventGraphTableChanged | WSEventProgress | WSEventClearProgress | WSEventSetNodeLocks | WSEventLockUi | WSEventUnlockUi | WSEventPerformanceChanged | WSEventKick;
 
+export type PostAuthData = {
+    body: {
+        username: string;
+        password: string;
+    };
+};
+
+export type PostAuthResponse = ({
+    jwt: string;
+    username: string;
+});
+
+export type PostAuthError = unknown;
+
+export type GetAuthResponse = ({
+    username: string;
+});
+
+export type GetAuthError = unknown;
+
 export type GetScenariosData = {
     path: {
         id: string;

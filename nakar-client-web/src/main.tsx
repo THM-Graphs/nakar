@@ -11,6 +11,7 @@ import { Room, RoomLoader } from "./pages/Room.tsx";
 import { AppContext } from "./lib/state/AppContext.ts";
 import { applyTheme, bootstrapTheme } from "./lib/theme/ThemeManager.ts";
 import { useBearStore } from "./lib/state/useBearStore.ts";
+import { AuthModal } from "./components/shared/auth/AuthModal.tsx";
 
 async function bootstrap() {
   bootstrapTheme();
@@ -49,10 +50,24 @@ async function bootstrap() {
     },
   );
 
+  useBearStore.subscribe(
+    (s) => s.global.auth.jwt,
+    (jwt) => {
+      client.setConfig({
+        headers: {
+          Authorization: jwt ? `Bearer ${jwt}` : null,
+        },
+      });
+      console.log("Did update auth token on client.");
+    },
+    { fireImmediately: true },
+  );
+
   console.log("Will mount app...");
   createRoot(document.getElementById("root") as HTMLElement).render(
     <StrictMode>
       <RouterProvider router={router} />
+      <AuthModal></AuthModal>
     </StrictMode>,
   );
 }

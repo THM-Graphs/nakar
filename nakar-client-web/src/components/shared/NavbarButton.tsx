@@ -1,5 +1,11 @@
 import clsx from "clsx";
-import { OverlayTrigger, Spinner, Stack, Tooltip } from "react-bootstrap";
+import {
+  Button,
+  OverlayTrigger,
+  Spinner,
+  Stack,
+  Tooltip,
+} from "react-bootstrap";
 import {
   CSSProperties,
   forwardRef,
@@ -12,7 +18,7 @@ import { useBearStore } from "../../lib/state/useBearStore.ts";
 import { Placement } from "react-bootstrap/types";
 
 export const NavbarButton = forwardRef<
-  HTMLDivElement,
+  HTMLButtonElement,
   {
     icon?: string;
     title?: ReactNode;
@@ -27,6 +33,7 @@ export const NavbarButton = forwardRef<
     tooltip?: string;
     tooltipPlacement?: Placement;
     hidden?: boolean;
+    buttonType?: "submit" | "button";
   }
 >((props, ref) => {
   const [loading, setLoading] = useState<boolean>(false);
@@ -41,10 +48,10 @@ export const NavbarButton = forwardRef<
       delay={{ show: 1000, hide: 0 }}
       overlay={props.tooltip ? <Tooltip>{props.tooltip}</Tooltip> : <></>}
     >
-      <Stack
+      <Button
         hidden={props.hidden}
         ref={ref}
-        direction={"horizontal"}
+        type={props.buttonType}
         onClick={(event: MouseEvent) => {
           (async () => {
             if (disabled) {
@@ -63,13 +70,14 @@ export const NavbarButton = forwardRef<
           })().catch(pushErrorNotification);
         }}
         className={clsx(
-          "flex-shrink-0 position-relative overflow-hidden",
+          "border-0 p-0 m-0 rounded-0 flex-shrink-0 position-relative overflow-hidden text-start",
           props.selected ? "bg-body-secondary" : "",
           disabled ? "" : "pointer",
           disabled ? "" : "bg-body-secondary-hover",
           props.className,
         )}
         style={{
+          backgroundColor: props.selected ? "inherit" : "rgba(0, 0, 0, 0)",
           ...(props.style ? props.style : {}),
         }}
       >
@@ -102,7 +110,7 @@ export const NavbarButton = forwardRef<
           )}
           {props.children}
         </Stack>
-      </Stack>
+      </Button>
     </OverlayTrigger>
   );
 

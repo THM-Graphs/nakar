@@ -8,4 +8,5 @@ export interface PersistStorage {
   canvasZoom: number | null;
   canvasTransformX: number | null;
   canvasTransformY: number | null;
+  jwt: string | null;
 }

@@ -10,6 +10,7 @@ servers:
     description: Production
 
 tags:
+  - name: Authentication
   - name: Scenarios
   - name: Room
   - name: Graph
@@ -19,6 +20,59 @@ tags:
   - name: Database
 
 paths:
+  /auth:
+    post:
+      tags:
+        - Authentication
+      operationId: postAuth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+              required:
+                - username
+                - password
+      responses:
+        "200":
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  jwt:
+                    type: string
+                  username:
+                    type: string
+                required:
+                  - jwt
+                  - username
+    get:
+      tags:
+        - Authentication
+      operationId: getAuth
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  username:
+                    type: string
+                required:
+                  - username
+
   /room/{id}/scenarios:
     get:
       tags:
@@ -527,6 +581,8 @@ paths:
       tags:
         - Actions
       operationId: postRoomActionRunQuery
+      security:
+        - bearerAuth: []
       parameters:
         - name: id
           in: path
@@ -731,6 +787,11 @@ paths:
           description: "OK"
 
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
   schemas:
     GetScenariosResult:
       type: object
