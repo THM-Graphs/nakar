@@ -181,11 +181,11 @@ export function QueryPanel(props: { roomContext: RoomContext }) {
                 ></textarea>
                 <Stack
                   direction={"horizontal"}
-                  className={"justify-content-between"}
+                  className={"justify-content-between align-items-center"}
                 >
-                  <Stack>
+                  <Stack className={"align-self-center"}>
                     <Form.Check
-                      className={"ms-1"}
+                      className={"m-0 ms-1"}
                       id={"replace"}
                       checked={replace}
                       onChange={(event) => {
