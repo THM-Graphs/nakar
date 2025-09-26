@@ -19,6 +19,7 @@ export function DropdownButton(props: {
   menuClassName?: string;
   menuStyle?: CSSProperties;
   children: ReactNode;
+  buttonChildren?: ReactNode;
   align?: AlignType;
   tooltip?: string;
   tooltipPlacement?: Placement;
@@ -54,6 +55,7 @@ export function DropdownButton(props: {
           }}
         >
           {children}
+          {props.buttonChildren}
         </NavbarButton>
       </Stack>
     ),

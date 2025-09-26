@@ -71,7 +71,7 @@ export const NavbarButton = forwardRef<
           })().catch(pushErrorNotification);
         }}
         className={clsx(
-          "border-0 p-0 m-0 rounded-0 flex-shrink-0 position-relative overflow-hidden text-start",
+          "text-body fw-normal border-0 p-0 m-0 rounded-0 flex-shrink-0 position-relative overflow-hidden text-start",
           props.selected ? "bg-body-secondary" : "",
           disabled ? "" : "pointer",
           disabled ? "" : "bg-body-secondary-hover",

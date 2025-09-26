@@ -64,13 +64,18 @@ export function Label(props: {
       </Stack>
       {showLabelMenu && (
         <DropdownButton
-          icon={"three-dots-vertical"}
           buttonSize={"sm"}
           buttonClassName={"rounded-end"}
           buttonStyle={{
             backgroundColor: bgColor,
             color: color,
           }}
+          buttonChildren={
+            <i
+              className={"bi bi-three-dots-vertical small"}
+              style={{ color: color }}
+            ></i>
+          }
         >
           {labelActions.map((action) => (
             <ActionDropdownItem
