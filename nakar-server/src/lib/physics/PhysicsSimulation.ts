@@ -1,4 +1,4 @@
-import type { Observable} from 'rxjs';
+import type { Observable } from 'rxjs';
 import { BehaviorSubject, Subject, throttleTime } from 'rxjs';
 import { wait } from '../tools/Wait';
 import { CombinationCache } from './CombinationCache';
@@ -15,7 +15,7 @@ import type { MutableNode } from '../room/graph/MutableNode';
 export class PhysicsSimulation {
   public static readonly maximumVelocity: number = 2000;
   public static readonly maximumForce: number = 300;
-  public static readonly FPS: number = 30;
+  public static readonly FPS: number = 16;
   public static readonly cooldownTime: number = 1000;
   public static readonly frictionFactor: number = 0.4;
 

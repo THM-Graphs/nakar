@@ -20,7 +20,8 @@ import { ColorSchema } from "../color/ColorSchema.ts";
 import { Theme } from "../theme/Theme.ts";
 import { isMultiSelectKey } from "../dom/isMultiSelectKey.ts";
 
-const fps = 30;
+const inputFps = 16;
+const outputFps = 32;
 const baseStrokeWidth: number = 3;
 
 export class D3Renderer {
@@ -187,7 +188,9 @@ export class D3Renderer {
     Um sicherzustellen, dass die letzte Bewegung auch übertragen wird müssen
     wir das im drag-end event machen.
     */
-    return this.$onNodeMoved.asObservable().pipe(throttleTime(1000 / fps));
+    return this.$onNodeMoved
+      .asObservable()
+      .pipe(throttleTime(1000 / outputFps));
     // return this.$onNodeMoved.asObservable();
   }
 
@@ -624,7 +627,7 @@ export class D3Renderer {
     }
     this.smoothedPositionDirty = false;
 
-    const smoothTime = (1000 / fps) * 1.5; // compensate slow ws
+    const smoothTime = (1000 / inputFps) * 1.5; // compensate slow ws
     const maxSpeed = 10000;
     for (let i = 0; i < this.graphState.nodes.length; i += 1) {
       const node: D3Node = this.graphState.nodes[i];
@@ -817,6 +820,8 @@ export class D3Renderer {
     maxSpeed: number,
     deltaTime: number,
   ): [number, number] {
+    // return [target, 0];
+
     smoothTime = Math.max(0.0001, smoothTime);
     const omega = 2 / smoothTime;
 
