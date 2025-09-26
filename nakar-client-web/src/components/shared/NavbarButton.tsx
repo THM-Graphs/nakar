@@ -51,6 +51,7 @@ export const NavbarButton = forwardRef<
       <Button
         hidden={props.hidden}
         ref={ref}
+        variant={"light"}
         type={props.buttonType}
         onClick={(event: MouseEvent) => {
           (async () => {
