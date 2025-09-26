@@ -49,7 +49,7 @@ export function CanvasToolbar(props: {
           tooltipPlacement={"bottom"}
         ></ActionNavbarButton>
 
-        <GraphDataToggle></GraphDataToggle>
+        <GraphDataToggle context={props.context}></GraphDataToggle>
       </Stack>
 
       {scenario && (
