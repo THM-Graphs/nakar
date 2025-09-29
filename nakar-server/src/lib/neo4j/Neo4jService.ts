@@ -4,11 +4,9 @@ import type {
   Record as Neo4jRecord,
   RecordShape,
   ResultSummary,
-  Session} from 'neo4j-driver';
-import neo4j, {
-  auth,
-  driver as createDriver
+  Session,
 } from 'neo4j-driver';
+import neo4j, { auth, driver as createDriver } from 'neo4j-driver';
 import type { Neo4jGraphElements } from './Neo4jGraphElements';
 import { SSet } from '../tools/Set';
 import type { LoggerService } from '../logger/LoggerService';

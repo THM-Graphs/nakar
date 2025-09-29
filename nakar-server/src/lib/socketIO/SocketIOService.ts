@@ -1,9 +1,5 @@
-import type {
-  DisconnectReason,
-  Socket as UntypedSocket} from 'socket.io';
-import {
-  Server as UntypedServer
-} from 'socket.io';
+import type { DisconnectReason, Socket as UntypedSocket } from 'socket.io';
+import { Server as UntypedServer } from 'socket.io';
 import type {
   SchemaGraphElements,
   SchemaGraphMetaData,

@@ -1,7 +1,7 @@
 import type { ApplicationService } from '../application/ApplicationService';
 import type { LoggerService } from '../logger/LoggerService';
 import type { ProfilerService } from '../profiler/ProfilerService';
-import type { MessagePort} from 'node:worker_threads';
+import type { MessagePort } from 'node:worker_threads';
 import { parentPort } from 'node:worker_threads';
 import { PhysicsSimulation } from '../physics/PhysicsSimulation';
 import type { RoomWorkerData } from './RoomWorkerData';

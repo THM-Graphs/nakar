@@ -1,5 +1,5 @@
 import type { DatabaseService } from '../database/DatabaseService';
-import type { Observable} from 'rxjs';
+import type { Observable } from 'rxjs';
 import { Subject } from 'rxjs';
 import { MutableGraph } from './graph/MutableGraph';
 import type { GetRoomDBDTO } from '../database/dto/GetRoomDBDTO';

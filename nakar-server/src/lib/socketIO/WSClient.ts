@@ -3,13 +3,8 @@ import type {
   SchemaWsClientToServerMessage,
   SchemaWsServerToClientMessage,
 } from '../../../src-gen/schema';
-import type {
-  Observable} from 'rxjs';
-import {
-  BehaviorSubject,
-  distinctUntilChanged,
-  Subject,
-} from 'rxjs';
+import type { Observable } from 'rxjs';
+import { BehaviorSubject, distinctUntilChanged, Subject } from 'rxjs';
 import type { DisconnectReason } from 'socket.io';
 import type { LoggerService } from '../logger/LoggerService';
 

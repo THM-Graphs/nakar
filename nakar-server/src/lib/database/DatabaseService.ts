@@ -16,7 +16,7 @@ import type { SaveScenarioGroupDBDTO } from './dto/SaveScenarioGroupDBDTO';
 import type { SaveScenarioDBDTO } from './dto/SaveScenarioDBDTO';
 import { FinalGraphDisplayConfiguration } from '../room/scenario-pipeline/display-configuration/FinalGraphDisplayConfiguration';
 import { MergableGraphDisplayConfiguration } from '../room/scenario-pipeline/display-configuration/MergableGraphDisplayConfiguration';
-import type { Observable} from 'rxjs';
+import type { Observable } from 'rxjs';
 import { Subject } from 'rxjs';
 import type { GetParameterizedScenariosDBDTO } from './dto/GetParameterizedScenariosDBDTO';
 import type { MediaService } from '../media/MediaService';
