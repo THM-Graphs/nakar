@@ -57,11 +57,13 @@ export function AuthModal() {
           <Stack gap={0}>
             <Stack gap={2} className={"p-2"}>
               <Form.Group controlId={"email"}>
-                <Form.Label className={"small"}>Email address</Form.Label>
+                <Form.Label className={"small"}>
+                  Username / Email address
+                </Form.Label>
                 <Form.Control
                   size={"sm"}
-                  type="email"
-                  placeholder="Enter email"
+                  type="text"
+                  placeholder="Username / Email address"
                   value={username}
                   onChange={(e) => {
                     setUsername(e.target.value);
