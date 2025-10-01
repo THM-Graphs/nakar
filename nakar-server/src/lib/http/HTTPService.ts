@@ -81,7 +81,7 @@ export class HTTPService implements ApplicationService {
     private readonly _media: MediaService,
   ) {
     this._app = express();
-    this._server = http.createServer(this._app as http.RequestListener);
+    this._server = http.createServer(void this._app);
     this._schemaDTOFactory = new SchemaDTOFactory(_config, _media);
 
     this._setupMiddleware();
