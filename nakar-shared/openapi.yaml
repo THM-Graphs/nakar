@@ -370,6 +370,7 @@ paths:
                   type: string
                 limit:
                   type: object
+                  nullable: true
                   properties:
                     labels:
                       type: array
@@ -721,6 +722,34 @@ paths:
               required:
                 - label
                 - layoutSpecification
+      responses:
+        "200":
+          description: "OK"
+
+  /room/{id}/actions/show-shortest-path:
+    post:
+      tags:
+        - Actions
+      operationId: postRoomActionShowShortestPath
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nodeIds:
+                  type: array
+                  items:
+                    type: string
+              required:
+                - nodeIds
       responses:
         "200":
           description: "OK"

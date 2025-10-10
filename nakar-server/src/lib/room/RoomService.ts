@@ -376,7 +376,7 @@ export class RoomService implements ApplicationService {
     limit: {
       labels: SSet<string>;
       relationships: SSet<string>;
-    };
+    } | null;
   }): Promise<void> {
     const oldGraph: MutableGraph = this.getGraph(params.roomId);
     const displayConfiguration: FinalGraphDisplayConfiguration =
@@ -809,7 +809,6 @@ export class RoomService implements ApplicationService {
         );
 
         this._postProcessGraph(graph, displayConfiguration);
-
         this._sendActionToWorker(params.roomId, {
           type: 'WTActionSetGraph',
           graph: graph.toPhysicalGraph(displayConfiguration),
@@ -1076,6 +1075,134 @@ export class RoomService implements ApplicationService {
           type: 'WTActionTriggerPhysics',
           amount: 'long',
         });
+      },
+    );
+  }
+
+  public async showShortestPath(params: {
+    nodeIds: string[];
+    roomId: string;
+  }): Promise<void> {
+    await this._runWithRoomLock(
+      params.roomId,
+      'Calculating Shortest Path',
+      async (): Promise<void> => {
+        this._logger.debug(
+          this,
+          `Will calculate shortest path of nodes: ${JSON.stringify(params.nodeIds)}`,
+        );
+        const oldGraph: MutableGraph = this.getGraph(params.roomId);
+        const scenarioId: string | null = oldGraph.metaData.scenarioId;
+        if (scenarioId == null) {
+          throw new Error(`Cannot find scenario in room ${params.roomId}`);
+        }
+        const displayConfiguration: FinalGraphDisplayConfiguration =
+          await this._database.getGraphDisplayConfiguration(scenarioId);
+        const scenario: GetScenarioDBDTO | null =
+          await this._database.getScenario(scenarioId);
+        if (scenario == null) {
+          throw new Error(`Cannot find scenario ${scenarioId}`);
+        }
+        const results: Neo4jGraphElements[] = [];
+
+        /* create unique pairs */
+        for (let i: number = 0; i < params.nodeIds.length - 1; i += 1) {
+          const idA: string = params.nodeIds[i];
+          const nodeA: MutableNode | null = oldGraph.nodes.get(idA);
+          if (nodeA == null) {
+            throw new Error(
+              `Unable to calculate shortest path: Node id ${idA} not found.`,
+            );
+          }
+
+          for (let j: number = i + 1; j < params.nodeIds.length; j += 1) {
+            const idB: string = params.nodeIds[j];
+
+            const nodeB: MutableNode | null = oldGraph.nodes.get(idB);
+            if (nodeB == null) {
+              throw new Error(
+                `Unable to calculate shortest path: Node id ${idB} not found.`,
+              );
+            }
+
+            if (nodeA.source !== nodeB.source) {
+              this._logger.warn(
+                this,
+                `Cannot calculate shortest path between ${idA} and ${idB}: Sources are not equal: Node A: ${nodeA.source}, Node B: ${nodeB.source}`,
+              );
+              continue;
+            }
+
+            this._logger.debug(
+              this,
+              `Will calculate shortest path between ${idA} and ${idB}`,
+            );
+
+            const source: string = nodeA.source;
+            const dbDocument: GetDatabaseDBDTO | null =
+              await this._database.getDatabase(source);
+            if (dbDocument == null) {
+              throw new Error(`Unable to get database info from node ${idA}.`);
+            }
+            const dbInfo: Neo4jDatabaseInfo =
+              Neo4jDatabaseInfo.parse(dbDocument);
+            // 'MATCH p = SHORTEST 1 (a)-[]-+(b) WHERE elementId(a) = $elementIdA AND elementId(b) = $elementIdB RETURN p';
+            const query: string =
+              'MATCH p = allShortestPaths((a)-[*]-(b)) WHERE elementId(a) = $elementIdA AND elementId(b) = $elementIdB RETURN p';
+            const data: Record<string, unknown> = {
+              elementIdA: idA,
+              elementIdB: idB,
+            };
+            const result: Neo4jGraphElements = await this._neo4j.executeQuery(
+              dbInfo,
+              query,
+              data,
+              new Neo4jLimitConfig('default', 'graphElements'),
+            );
+            results.push(result);
+          }
+        }
+
+        const graph: MutableGraph = this._snapshotGraph(params.roomId);
+        // graph.resetFromInitialScenario(
+        //   scenario,
+        //   displayConfiguration,
+        //   new SMap(),
+        // );
+        for (const result of results) {
+          graph.nodes.addNeo4jNodes(
+            result.nodes,
+            MutableGraphElementCreationAction.expand,
+            displayConfiguration,
+          );
+          graph.edges.addNeo4jEdges(
+            result.relationships,
+            MutableGraphElementCreationAction.expand,
+          );
+        }
+
+        this._postProcessGraph(graph, displayConfiguration);
+        this._sendActionToWorker(params.roomId, {
+          type: 'WTActionSetGraph',
+          graph: graph.toPhysicalGraph(displayConfiguration),
+        });
+        this._sendActionToWorker(params.roomId, {
+          type: 'WTActionTriggerPhysics',
+          amount: 'long',
+        });
+        await this.saveGraph(params.roomId);
+        this._onEvent.next({
+          type: 'RoomServiceEventGraphMetaDataChanged',
+          graph: graph,
+          roomId: params.roomId,
+        } satisfies RoomServiceEventGraphMetaDataChanged);
+        this._onEvent.next({
+          type: 'RoomServiceEventGraphElementsChanged',
+          graph: graph,
+          roomId: params.roomId,
+          nodesAdded: graph.nodes.size,
+          edgesAdded: graph.edges.size,
+        } satisfies RoomServiceEventGraphElementsChanged);
       },
     );
   }

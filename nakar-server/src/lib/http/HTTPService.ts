@@ -639,10 +639,13 @@ export class HTTPService implements ApplicationService {
         await this._roomService.expandNode({
           roomId: room.documentId,
           nodeId: requestBody.nodeId,
-          limit: {
-            relationships: new SSet(requestBody.limit.relationships),
-            labels: new SSet(requestBody.limit.labels),
-          },
+          limit:
+            requestBody.limit != null
+              ? {
+                  relationships: new SSet(requestBody.limit.relationships),
+                  labels: new SSet(requestBody.limit.labels),
+                }
+              : null,
         });
       }),
     );
@@ -852,6 +855,23 @@ export class HTTPService implements ApplicationService {
           roomId: room.documentId,
           label: requestBody.label,
           layoutSpecification: requestBody.layoutSpecification,
+        });
+      }),
+    );
+
+    this._app.post(
+      '/room/:id/actions/show-shortest-path',
+      this._handle(async (req: Request): Promise<void> => {
+        const room: GetRoomDBDTO = await this._assertRoom(req);
+
+        type Body =
+          operations['postRoomActionShowShortestPath']['requestBody']['content']['application/json'];
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+        const requestBody: Body = req.body as Body;
+
+        await this._roomService.showShortestPath({
+          nodeIds: [...requestBody.nodeIds],
+          roomId: room.documentId,
         });
       }),
     );

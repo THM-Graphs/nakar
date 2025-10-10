@@ -596,7 +596,7 @@ export type PostRoomActionExpandNodeData = {
         limit: {
             labels: Array<(string)>;
             relationships: Array<(string)>;
-        };
+        } | null;
     };
     path: {
         id: string;
@@ -776,6 +776,19 @@ export type PostRoomActionLayoutLabelData = {
 export type PostRoomActionLayoutLabelResponse = (unknown);
 
 export type PostRoomActionLayoutLabelError = unknown;
+
+export type PostRoomActionShowShortestPathData = {
+    body: {
+        nodeIds: Array<(string)>;
+    };
+    path: {
+        id: string;
+    };
+};
+
+export type PostRoomActionShowShortestPathResponse = (unknown);
+
+export type PostRoomActionShowShortestPathError = unknown;
 
 export type GetDatabaseStatsData = {
     path: {

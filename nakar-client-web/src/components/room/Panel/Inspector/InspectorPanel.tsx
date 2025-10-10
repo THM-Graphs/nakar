@@ -69,62 +69,64 @@ export function InspectorPanel(props: {
           return (
             <Stack gap={5}>
               {nodes.length > 0 && (
-                <DynamicList
-                  data={nodes}
-                  render={(list) => (
-                    <>
-                      {list.length > 0 &&
-                        nodeActions.map((action) => (
-                          <ActionNavbarButton
-                            action={action}
-                            key={action.slug()}
-                            params={{
-                              nodes: nodes,
-                              roomContext: props.roomContext,
-                            }}
-                          ></ActionNavbarButton>
+                <Stack className={"flex-grow-0"}>
+                  {nodeActions.map((action) => (
+                    <ActionNavbarButton
+                      action={action}
+                      key={action.slug()}
+                      params={{
+                        nodes: nodes,
+                        roomContext: props.roomContext,
+                      }}
+                    ></ActionNavbarButton>
+                  ))}
+                  <DynamicList
+                    data={nodes}
+                    render={(list) => (
+                      <>
+                        {list.map((element) => (
+                          <InspectorPanelForMultiType
+                            element={element}
+                            roomContext={props.roomContext}
+                            context={props.context}
+                            key={element.id}
+                          ></InspectorPanelForMultiType>
                         ))}
-                      {list.map((element) => (
-                        <InspectorPanelForMultiType
-                          element={element}
-                          roomContext={props.roomContext}
-                          context={props.context}
-                          key={element.id}
-                        ></InspectorPanelForMultiType>
-                      ))}
-                    </>
-                  )}
-                  entityNamePlural={"Nodes"}
-                ></DynamicList>
+                      </>
+                    )}
+                    entityNamePlural={"Selected Nodes"}
+                  ></DynamicList>
+                </Stack>
               )}
               {edges.length > 0 && (
-                <DynamicList
-                  data={edges}
-                  render={(list) => (
-                    <>
-                      {list.length > 0 &&
-                        relationshipActions.map((action) => (
-                          <ActionNavbarButton
-                            action={action}
-                            key={action.slug()}
-                            params={{
-                              edges: list,
-                              roomContext: props.roomContext,
-                            }}
-                          ></ActionNavbarButton>
+                <Stack className={"flex-grow-0"}>
+                  {relationshipActions.map((action) => (
+                    <ActionNavbarButton
+                      action={action}
+                      key={action.slug()}
+                      params={{
+                        edges: edges,
+                        roomContext: props.roomContext,
+                      }}
+                    ></ActionNavbarButton>
+                  ))}
+                  <DynamicList
+                    data={edges}
+                    render={(list) => (
+                      <>
+                        {list.map((element) => (
+                          <InspectorPanelForMultiType
+                            element={element}
+                            roomContext={props.roomContext}
+                            context={props.context}
+                            key={element.id}
+                          ></InspectorPanelForMultiType>
                         ))}
-                      {list.map((element) => (
-                        <InspectorPanelForMultiType
-                          element={element}
-                          roomContext={props.roomContext}
-                          context={props.context}
-                          key={element.id}
-                        ></InspectorPanelForMultiType>
-                      ))}
-                    </>
-                  )}
-                  entityNamePlural={"Edges"}
-                ></DynamicList>
+                      </>
+                    )}
+                    entityNamePlural={"Selected Relationships"}
+                  ></DynamicList>
+                </Stack>
               )}
               <div className={"flex-grow-1"}></div>
             </Stack>
