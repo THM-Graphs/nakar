@@ -11,13 +11,7 @@ export function ScenarioTitleAndBadges(props: {
 }) {
   const uiLocked = useBearStore((s) => s.room.ui.locked);
 
-  const parameterList = props.scenario.parameters
-    .map((p) => p.title)
-    .join(", ");
-  const title: string =
-    (props.scenario.title ?? "untitled") +
-    (props.scenario.parameters.length > 0 ? ` (${parameterList})` : "");
-
+  const title: string = props.scenario.title ?? "untitled";
   return (
     <Stack
       direction={"horizontal"}
@@ -35,13 +29,6 @@ export function ScenarioTitleAndBadges(props: {
       >
         <i className={clsx("bi bi-play-circle-fill")}></i>
       </Button>
-      {props.scenario.parameters.length > 0 && (
-        <OverlayTrigger
-          overlay={<Tooltip>This scenario requires arguments.</Tooltip>}
-        >
-          <i className={"bi bi-code-square small text-mutedd"}></i>
-        </OverlayTrigger>
-      )}
       {props.scenario.additive && (
         <OverlayTrigger
           overlay={<Tooltip>This scenario adds elements to the graph.</Tooltip>}
@@ -49,7 +36,28 @@ export function ScenarioTitleAndBadges(props: {
           <i className={"bi bi-plus-square small"}></i>
         </OverlayTrigger>
       )}
-      <span className={"pe-1 small text-wrap"}>{title}</span>
+      <Stack gap={1} className={"flex-wrap"} direction={"horizontal"}>
+        <span className={"pe-1 small text-wrap align-self-baseline"}>
+          {title}
+        </span>
+        {props.scenario.parameters.map((p) => (
+          <OverlayTrigger
+            overlay={<Tooltip>This scenario requires arguments.</Tooltip>}
+          >
+            <Stack
+              direction={"horizontal"}
+              gap={1}
+              className={
+                "bg-body rounded-pill ps-2 pe-2 align-items-baseline align-self-baseline"
+              }
+              style={{ fontSize: "12px" }}
+            >
+              <i className={"bi bi-code-square small text-mutedd"}></i>{" "}
+              <span className={""}>{p.title}</span>
+            </Stack>
+          </OverlayTrigger>
+        ))}
+      </Stack>
     </Stack>
   );
 }
