@@ -63,6 +63,7 @@ import type { ExpandNodePreview } from '../neo4j/expand-node-preview/ExpandNodeP
 import type { MediaService } from '../media/MediaService';
 import type { GetNotesDBDTO } from '../database/dto/GetNotesDBDTO';
 import * as undici from 'undici';
+import { FinalGraphDisplayConfiguration } from '../room/scenario-pipeline/display-configuration/FinalGraphDisplayConfiguration';
 
 export class HTTPService implements ApplicationService {
   private readonly _app: Application;
@@ -375,6 +376,7 @@ export class HTTPService implements ApplicationService {
 
     this._app.get(
       '/room',
+      assertLoggedIn,
       this._handle(async (): Promise<SchemaRooms> => {
         const dbResult: GetRoomDBDTO[] = await this._databaseService.getRooms();
         return {
@@ -418,9 +420,15 @@ export class HTTPService implements ApplicationService {
           room: room,
           graph: graph,
         });
+        const config: FinalGraphDisplayConfiguration =
+          await this._databaseService.getGraphDisplayConfiguration(
+            graph.metaData.scenarioId,
+            room.documentId,
+          );
         const result: SchemaGraph = await cachedGraphFactory.createSchemaGraph(
           graph,
           notes,
+          config,
         );
         return result;
       }),
@@ -443,8 +451,17 @@ export class HTTPService implements ApplicationService {
           room: room,
           graph: graph,
         });
+        const config: FinalGraphDisplayConfiguration =
+          await this._databaseService.getGraphDisplayConfiguration(
+            graph.metaData.scenarioId,
+            room.documentId,
+          );
         const result: SchemaGraphElements =
-          await cachedGraphFactory.createSchemaGraphElements(graph, notes);
+          await cachedGraphFactory.createSchemaGraphElements(
+            graph,
+            notes,
+            config,
+          );
         return result;
       }),
     );

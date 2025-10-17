@@ -239,7 +239,10 @@ export class RoomService implements ApplicationService {
       throw new NotFound('The scenario has no queries.');
     }
     const displayConfiguration: FinalGraphDisplayConfiguration =
-      await this._database.getGraphDisplayConfiguration(scenario.documentId);
+      await this._database.getGraphDisplayConfiguration(
+        scenario.documentId,
+        params.roomId,
+      );
 
     return await this._runWithRoomLock(
       params.roomId,
@@ -382,6 +385,7 @@ export class RoomService implements ApplicationService {
     const displayConfiguration: FinalGraphDisplayConfiguration =
       await this._database.getGraphDisplayConfiguration(
         oldGraph.metaData.scenarioId,
+        params.roomId,
       );
 
     await this._runWithRoomLock(
@@ -539,6 +543,7 @@ export class RoomService implements ApplicationService {
         const config: FinalGraphDisplayConfiguration =
           await this._database.getGraphDisplayConfiguration(
             graph.metaData.scenarioId,
+            params.roomId,
           );
 
         const result: ExpandNodesResult = {
@@ -587,6 +592,7 @@ export class RoomService implements ApplicationService {
           graph.metaData.scenarioId != null
             ? await this._database.getGraphDisplayConfiguration(
                 graph.metaData.scenarioId,
+                params.roomId,
               )
             : FinalGraphDisplayConfiguration.empty();
 
@@ -685,6 +691,7 @@ export class RoomService implements ApplicationService {
     const displayConfiguration: FinalGraphDisplayConfiguration =
       await this._database.getGraphDisplayConfiguration(
         graph.metaData.scenarioId,
+        params.roomId,
       );
 
     await this.saveGraph(params.roomId);
@@ -725,6 +732,7 @@ export class RoomService implements ApplicationService {
     const displayConfiguration: FinalGraphDisplayConfiguration =
       await this._database.getGraphDisplayConfiguration(
         graph.metaData.scenarioId,
+        params.roomId,
       );
 
     await this.saveGraph(params.roomId);
@@ -764,7 +772,10 @@ export class RoomService implements ApplicationService {
         const scenarioId: string | null = this.getGraph(params.roomId).metaData
           .scenarioId;
         const displayConfiguration: FinalGraphDisplayConfiguration =
-          await this._database.getGraphDisplayConfiguration(scenarioId);
+          await this._database.getGraphDisplayConfiguration(
+            scenarioId,
+            params.roomId,
+          );
         const database: GetDatabaseDBDTO | null =
           await this._database.getDatabase(params.databaseId);
         if (database == null) {
@@ -847,7 +858,10 @@ export class RoomService implements ApplicationService {
         const oldGraph: MutableGraph = this.getGraph(params.roomId);
         const scenarioId: string | null = oldGraph.metaData.scenarioId;
         const displayConfiguration: FinalGraphDisplayConfiguration =
-          await this._database.getGraphDisplayConfiguration(scenarioId);
+          await this._database.getGraphDisplayConfiguration(
+            scenarioId,
+            params.roomId,
+          );
 
         const graph: MutableGraph = this._snapshotGraph(params.roomId);
         const result: number = await this._connectNodes(graph);
@@ -947,6 +961,7 @@ export class RoomService implements ApplicationService {
         const config: FinalGraphDisplayConfiguration =
           await this._database.getGraphDisplayConfiguration(
             graph.metaData.scenarioId,
+            params.roomId,
           );
         const ids: readonly string[] = graph.nodes.nodes
           .filter((node: MutableNode): boolean => node.degree(graph) === 0)
@@ -987,6 +1002,7 @@ export class RoomService implements ApplicationService {
         const config: FinalGraphDisplayConfiguration =
           await this._database.getGraphDisplayConfiguration(
             graph.metaData.scenarioId,
+            params.roomId,
           );
         this._compressRelationships(graph);
 
@@ -1017,6 +1033,7 @@ export class RoomService implements ApplicationService {
         const config: FinalGraphDisplayConfiguration =
           await this._database.getGraphDisplayConfiguration(
             graph.metaData.scenarioId,
+            params.roomId,
           );
 
         await this._compressNodes(graph, params.label);
@@ -1053,6 +1070,7 @@ export class RoomService implements ApplicationService {
         const config: FinalGraphDisplayConfiguration =
           await this._database.getGraphDisplayConfiguration(
             graph.metaData.scenarioId,
+            params.roomId,
           );
 
         const lockChanges: SMap<string, boolean> = this._layout(
@@ -1097,7 +1115,10 @@ export class RoomService implements ApplicationService {
           throw new Error(`Cannot find scenario in room ${params.roomId}`);
         }
         const displayConfiguration: FinalGraphDisplayConfiguration =
-          await this._database.getGraphDisplayConfiguration(scenarioId);
+          await this._database.getGraphDisplayConfiguration(
+            scenarioId,
+            params.roomId,
+          );
         const scenario: GetScenarioDBDTO | null =
           await this._database.getScenario(scenarioId);
         if (scenario == null) {
@@ -1281,6 +1302,7 @@ export class RoomService implements ApplicationService {
     const config: FinalGraphDisplayConfiguration =
       await this._database.getGraphDisplayConfiguration(
         graph.metaData.scenarioId,
+        roomId,
       );
 
     const physicalGraph: PhysicalGraph =

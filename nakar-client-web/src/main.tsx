@@ -23,19 +23,6 @@ async function bootstrap() {
 
   const context = new AppContext(env);
 
-  const router = createBrowserRouter([
-    {
-      path: "/",
-      element: <Start context={context}></Start>,
-      loader: StartLoader,
-    },
-    {
-      path: "/room/:id",
-      element: <Room context={context}></Room>,
-      loader: RoomLoader,
-    },
-  ]);
-
   const getTheme = useBearStore.getState().global.theme.getTheme;
   useBearStore.subscribe(
     (s) => s.global.theme.user,
@@ -63,7 +50,18 @@ async function bootstrap() {
     { fireImmediately: true },
   );
 
-  console.log("Will mount app...");
+  const router = createBrowserRouter([
+    {
+      path: "/",
+      element: <Start context={context}></Start>,
+      loader: StartLoader,
+    },
+    {
+      path: "/room/:id",
+      element: <Room context={context}></Room>,
+      loader: RoomLoader,
+    },
+  ]);
   createRoot(document.getElementById("root") as HTMLElement).render(
     <StrictMode>
       <RouterProvider router={router} />

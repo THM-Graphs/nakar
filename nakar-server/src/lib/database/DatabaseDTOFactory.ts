@@ -25,6 +25,7 @@ import type {
 } from '../../../src-gen/schema';
 import type { Input } from '@strapi/types/dist/modules/documents/params/data';
 import type { GetColorPresetIndexDBDTO } from './dto/GetColorPresetIndexDBDTO';
+import { GetTemplateDBDTO } from './dto/GetTemplateDBDTO';
 
 export class DatabaseDTOFactory {
   public createGetDatabaseDTOFromStrapi(
@@ -42,12 +43,11 @@ export class DatabaseDTOFactory {
   }
 
   public createGetScenarioGroupDTOFromStrapi(
-    db: Result<'api::scenario-group.scenario-group', { populate: ['room'] }>,
+    db: Result<'api::scenario-group.scenario-group'>,
   ): GetScenarioGroupDBDTO {
     return {
       documentId: db.documentId,
       title: db.title ?? null,
-      room: db.room ? this.createGetRoomDTOFromStrapi(db.room) : null,
     };
   }
 
@@ -107,7 +107,7 @@ export class DatabaseDTOFactory {
   }
 
   public createGetRoomDTOFromStrapi(
-    db: Result<'api::room.room'> & {
+    db: Result<'api::room.room', { populate: { template: {} } }> & {
       graph?: Result<'plugin::upload.file'> | null;
     },
   ): GetRoomDBDTO {
@@ -116,6 +116,12 @@ export class DatabaseDTOFactory {
       title: db.title ?? null,
       graph:
         db.graph != null ? this._createGetMediaDTOFromStrapi(db.graph) : null,
+      template: db.template
+        ? ({
+            documentId: db.template.documentId,
+            title: db.template.title ?? null,
+          } satisfies GetTemplateDBDTO)
+        : null,
     };
   }
 

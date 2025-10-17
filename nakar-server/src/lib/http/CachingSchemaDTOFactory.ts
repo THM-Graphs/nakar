@@ -56,10 +56,11 @@ export class CachingSchemaDTOFactory {
   public async createSchemaGraph(
     graph: MutableGraph,
     notes: GetNotesDBDTO,
+    config: FinalGraphDisplayConfiguration,
   ): Promise<SchemaGraph> {
     const t: ProfilerTask = this._profiler.profile(this, 'createSchemaGraph');
     const schemaGraph: SchemaGraph = {
-      elements: await this.createSchemaGraphElements(graph, notes),
+      elements: await this.createSchemaGraphElements(graph, notes, config),
       metaData: await this.createSchemaGraphMetaData(graph),
       table: this.createSchemaTable(graph.tableData),
     };
@@ -70,15 +71,12 @@ export class CachingSchemaDTOFactory {
   public async createSchemaGraphElements(
     graph: MutableGraph,
     notes: GetNotesDBDTO,
+    config: FinalGraphDisplayConfiguration,
   ): Promise<SchemaGraphElements> {
     const t: ProfilerTask = this._profiler.profile(
       this,
       'createSchemaGraphElements',
     );
-    const config: FinalGraphDisplayConfiguration =
-      await this._database.getGraphDisplayConfiguration(
-        graph.metaData.scenarioId,
-      );
     const degreeRange: Range | null = config.growNodesBasedOnDegree
       ? graph.nodes.getNodeDegreeRange(graph)
       : null;

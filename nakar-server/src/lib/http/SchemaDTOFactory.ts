@@ -14,6 +14,7 @@ import type { GetScenarioGroupDBDTO } from '../database/dto/GetScenarioGroupDBDT
 import type { GetScenarioParameterDBDTO } from '../database/dto/GetScenarioParameterDBDTO';
 import type { GetScenarioQueryDBDTO } from '../database/dto/GetScenarioQueryDBDTO';
 import type { MediaService } from '../media/MediaService';
+import { GetTemplateDBDTO } from '../database/dto/GetTemplateDBDTO';
 
 export class SchemaDTOFactory {
   private readonly _configService: ConfigService;
@@ -47,6 +48,13 @@ export class SchemaDTOFactory {
           }
         : null,
       editUrl: this._getRoomEditUrl(room),
+      template: room.template
+        ? {
+            id: room.template.documentId,
+            title: room.template.title,
+            editUrl: this._getTemplateEditUrl(room.template),
+          }
+        : null,
     };
   }
 
@@ -131,6 +139,15 @@ export class SchemaDTOFactory {
       return null;
     }
     const url: string = `${host}/admin/content-manager/collection-types/api::room.room/${room.documentId}`;
+    return url;
+  }
+
+  private _getTemplateEditUrl(template: GetTemplateDBDTO): string | null {
+    const host: string | null = this._configService.publicURL;
+    if (host == null) {
+      return null;
+    }
+    const url: string = `${host}/admin/content-manager/collection-types/api::room-template.room-template/${template.documentId}`;
     return url;
   }
 }

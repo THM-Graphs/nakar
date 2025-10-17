@@ -54,6 +54,7 @@ import type { ProfilerTask } from '../profiler/ProfilerTask';
 import type { ProfilerService } from '../profiler/ProfilerService';
 import type { GetNotesDBDTO } from '../database/dto/GetNotesDBDTO';
 import type { MutableGraph } from '../room/graph/MutableGraph';
+import { FinalGraphDisplayConfiguration } from '../room/scenario-pipeline/display-configuration/FinalGraphDisplayConfiguration';
 
 export type Server = UntypedServer<ClientToServerEvents, ServerToClientEvents>;
 export type Socket = UntypedSocket<ClientToServerEvents, ServerToClientEvents>;
@@ -377,10 +378,16 @@ export class SocketIOService implements ApplicationService {
                     room: room,
                     graph: message.graph,
                   });
+                const config: FinalGraphDisplayConfiguration =
+                  await this._databaseService.getGraphDisplayConfiguration(
+                    message.graph.metaData.scenarioId,
+                    room.documentId,
+                  );
                 const graphElements: SchemaGraphElements =
                   await cachedGraphFactory.createSchemaGraphElements(
                     message.graph,
                     notes,
+                    config,
                   );
                 this.sendToRoom(message.roomId, {
                   elements: graphElements,
@@ -543,8 +550,17 @@ export class SocketIOService implements ApplicationService {
             room: room,
             graph: graph,
           });
+          const config: FinalGraphDisplayConfiguration =
+            await this._databaseService.getGraphDisplayConfiguration(
+              graph.metaData.scenarioId,
+              room.documentId,
+            );
           const graphElements: SchemaGraphElements =
-            await cachedGraphFactory.createSchemaGraphElements(graph, notes);
+            await cachedGraphFactory.createSchemaGraphElements(
+              graph,
+              notes,
+              config,
+            );
           this.sendToRoom(message.roomId, {
             elements: graphElements,
             type: 'WSEventGraphElementsChanged',

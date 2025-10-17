@@ -1356,11 +1356,28 @@ components:
         editUrl:
           type: string
           nullable: true
+        template:
+          type: object
+          nullable: true
+          properties:
+            id:
+              type: string
+            title:
+              type: string
+              nullable: true
+            editUrl:
+              type: string
+              nullable: true
+          required:
+            - id
+            - title
+            - editUrl
       required:
         - id
         - title
         - scenario
         - editUrl
+        - template
 
     Rooms:
       type: object

@@ -260,6 +260,11 @@ export type Room = {
         current: Scenario;
     } | null;
     editUrl: (string) | null;
+    template: {
+        id: string;
+        title: (string) | null;
+        editUrl: (string) | null;
+    } | null;
 };
 
 export type Rooms = {

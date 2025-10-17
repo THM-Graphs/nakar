@@ -31,6 +31,12 @@
       "relation": "manyToOne",
       "target": "api::room.room",
       "inversedBy": "scenarioGroups"
+    },
+    "room_templates": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::room-template.room-template",
+      "mappedBy": "scenario_groups"
     }
   }
 }

@@ -29,6 +29,7 @@ import type { GetNotesDBDTO } from './dto/GetNotesDBDTO';
 import { SMap } from '../tools/Map';
 import type { UpdateNoteDBDTO } from './dto/UpdateNoteDBDTO';
 import type { GetColorDBDTO } from './dto/GetColorDBDTO';
+import { v4 } from 'uuid';
 
 export class DatabaseService implements ApplicationService {
   private readonly _databaseDtoFactory: DatabaseDTOFactory;
@@ -60,7 +61,9 @@ export class DatabaseService implements ApplicationService {
     return this._onNoteChanges.asObservable();
   }
 
-  public bootstrap(): void {
+  public async bootstrap(): Promise<void> {
+    await this._specialFeatureCreateTemplatesFromNonTemplateRoomsAndAssign();
+
     // eslint-disable-next-line @typescript-eslint/typedef,@typescript-eslint/explicit-function-return-type
     strapi.documents.use(async (context, next) => {
       const task: ProfilerTask = this._profiler.profile(
@@ -246,7 +249,7 @@ export class DatabaseService implements ApplicationService {
       .findOne({
         status: 'published',
         documentId: roomId,
-        populate: { graph: {} },
+        populate: { graph: {}, template: {} },
       });
     if (rawRoom == null) {
       return null;
@@ -261,6 +264,7 @@ export class DatabaseService implements ApplicationService {
         sort: 'title:asc',
         populate: {
           graph: {},
+          template: {},
         },
       })
     ).map(
@@ -302,6 +306,7 @@ export class DatabaseService implements ApplicationService {
 
   public async getGraphDisplayConfiguration(
     scenarioId: string | null,
+    roomId: string,
   ): Promise<FinalGraphDisplayConfiguration> {
     if (scenarioId == null) {
       this._logger.warn(
@@ -338,7 +343,7 @@ export class DatabaseService implements ApplicationService {
         scenarioGroup: {
           populate: {
             ...populate,
-            room: {
+            room_templates: {
               populate: {
                 ...populate,
               },
@@ -347,24 +352,34 @@ export class DatabaseService implements ApplicationService {
         },
       },
     });
-    if (scenario == null) {
-      this._logger.warn(
-        this,
-        `Cannot find scenario ${scenarioId} to build FinalGraphDisplayConfiguration. Will create an empty config.`,
-      );
-      return FinalGraphDisplayConfiguration.empty();
-    }
+    const room: Result<
+      'api::room.room',
+      {
+        populate: ['template'];
+      }
+    > | null = await strapi.documents('api::room.room').findOne({
+      status: 'published',
+      documentId: roomId,
+      populate: {
+        template: {
+          populate: {
+            ...populate,
+          },
+        },
+      },
+    });
+
     const displayConfiguration: FinalGraphDisplayConfiguration =
       MergableGraphDisplayConfiguration.createFromDb(
         this._databaseDtoFactory.createGraphDisplayConfigurationDTOFromStrapi(
-          scenario.scenarioGroup?.room?.graphDisplayConfiguration,
+          room?.template?.graphDisplayConfiguration,
         ),
         this._logger,
       )
         .byMerging(
           MergableGraphDisplayConfiguration.createFromDb(
             this._databaseDtoFactory.createGraphDisplayConfigurationDTOFromStrapi(
-              scenario.scenarioGroup?.graphDisplayConfiguration,
+              scenario?.scenarioGroup?.graphDisplayConfiguration,
             ),
             this._logger,
           ),
@@ -372,7 +387,7 @@ export class DatabaseService implements ApplicationService {
         .byMerging(
           MergableGraphDisplayConfiguration.createFromDb(
             this._databaseDtoFactory.createGraphDisplayConfigurationDTOFromStrapi(
-              scenario.graphDisplayConfiguration,
+              scenario?.graphDisplayConfiguration,
             ),
             this._logger,
           ),
@@ -423,15 +438,13 @@ export class DatabaseService implements ApplicationService {
       await strapi.documents('api::scenario-group.scenario-group').findMany({
         status: 'published',
         sort: 'title:asc',
-        populate: {
-          room: {
-            populate: {},
-          },
-        },
+        populate: {},
         filters: {
-          room: {
-            documentId: {
-              $eq: roomId,
+          room_templates: {
+            rooms: {
+              documentId: {
+                $eq: roomId,
+              },
             },
           },
         },
@@ -612,5 +625,140 @@ export class DatabaseService implements ApplicationService {
 
   public async removeNote(params: { id: string }): Promise<void> {
     await strapi.documents('api::note.note').delete({ documentId: params.id });
+  }
+
+  private async _specialFeatureCreateTemplatesFromNonTemplateRoomsAndAssign(): Promise<void> {
+    const rooms: Result<
+      'api::room.room',
+      {
+        populate: {
+          template: {};
+          scenarioGroups: {};
+          graphDisplayConfiguration: {
+            populate: {
+              nodeDisplayConfigurations: {};
+              mergeNodeConfigurations: {
+                populate: {
+                  originalDatabase: {};
+                  mergeDatabase: {};
+                };
+              };
+            };
+          };
+        };
+      }
+    >[] = await strapi.documents('api::room.room').findMany({
+      populate: {
+        template: {},
+        scenarioGroups: {},
+        graphDisplayConfiguration: {
+          populate: {
+            nodeDisplayConfigurations: {},
+            mergeNodeConfigurations: {
+              populate: {
+                originalDatabase: {},
+                mergeDatabase: {},
+              },
+            },
+          },
+        },
+      },
+      filters: { template: { documentId: { $null: true } } },
+    });
+
+    this._logger.warn(this, `Rooms that need a template: ${rooms.length}`);
+
+    for (const room of rooms) {
+      this._logger.warn(
+        this,
+        `Will create room template from room: ${room.title ?? room.documentId}`,
+      );
+      const graphDisplayConfig:
+        | Input<'graph.graph-display-configuration'>
+        | undefined =
+        room.graphDisplayConfiguration != null
+          ? ({
+              connectResultNodes:
+                room.graphDisplayConfiguration.connectResultNodes ?? undefined,
+              growNodesBasedOnDegree:
+                room.graphDisplayConfiguration.growNodesBasedOnDegree ??
+                undefined,
+              nodeDisplayConfigurations:
+                room.graphDisplayConfiguration.nodeDisplayConfigurations?.map(
+                  (
+                    nodeDisplayConfiguration: Result<'graph.node-display-configuration'>,
+                  ): Input<'graph.node-display-configuration'> => ({
+                    targetLabel:
+                      nodeDisplayConfiguration.targetLabel ?? undefined,
+                    displayText:
+                      nodeDisplayConfiguration.displayText ?? undefined,
+                    radius: nodeDisplayConfiguration.radius ?? undefined,
+                    backgroundColor:
+                      nodeDisplayConfiguration.backgroundColor ?? undefined,
+                    compress: nodeDisplayConfiguration.compress ?? undefined,
+                    circleLayoutDistance:
+                      nodeDisplayConfiguration.circleLayoutDistance ??
+                      undefined,
+                    layoutAlgorithm:
+                      nodeDisplayConfiguration.layoutAlgorithm ?? undefined,
+                  }),
+                ) ?? [],
+              compressRelationships:
+                room.graphDisplayConfiguration.compressRelationships ??
+                undefined,
+              scaleType: room.graphDisplayConfiguration.scaleType ?? undefined,
+              growNodesBasedOnDegreeFactor:
+                room.graphDisplayConfiguration.growNodesBasedOnDegreeFactor ??
+                undefined,
+              compressRelationshipsWidthFactor:
+                room.graphDisplayConfiguration
+                  .compressRelationshipsWidthFactor ?? undefined,
+              mergeNodeConfigurations:
+                room.graphDisplayConfiguration.mergeNodeConfigurations?.map(
+                  (
+                    mergeNodeConfiguration: Result<
+                      'graph.merge-node-configuration',
+                      { populate: ['originalDatabase', 'mergeDatabase'] }
+                    >,
+                  ): Input<'graph.merge-node-configuration'> => ({
+                    originalLabel:
+                      mergeNodeConfiguration.originalLabel ?? undefined,
+                    originalProperties:
+                      mergeNodeConfiguration.originalProperties ?? undefined,
+                    mergeLabel: mergeNodeConfiguration.mergeLabel ?? undefined,
+                    mergeProperties:
+                      mergeNodeConfiguration.mergeProperties ?? undefined,
+                    originalDatabase:
+                      mergeNodeConfiguration.originalDatabase ?? undefined,
+                    mergeDatabase:
+                      mergeNodeConfiguration.mergeDatabase ?? undefined,
+                  }),
+                ) ?? [],
+              treatNameInQueryAsLabel:
+                room.graphDisplayConfiguration.treatNameInQueryAsLabel ??
+                undefined,
+            } satisfies Input<'graph.graph-display-configuration'>)
+          : undefined;
+      const roomTeamplate: Result<'api::room-template.room-template'> =
+        await strapi.documents('api::room-template.room-template').create({
+          status: 'published',
+          data: {
+            title: room.title ?? `Template ${v4()}`,
+            scenario_groups: room.scenarioGroups,
+            graphDisplayConfiguration: graphDisplayConfig,
+          },
+        });
+
+      await strapi.documents('api::room.room').update({
+        documentId: room.documentId,
+        data: { template: roomTeamplate.documentId },
+        status: 'published',
+      });
+
+      this._logger.debug(
+        this,
+        `Did create template from room ${room.title ?? room.documentId}`,
+      );
+    }
   }
 }

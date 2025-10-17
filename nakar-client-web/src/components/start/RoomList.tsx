@@ -4,7 +4,7 @@ import { Stack } from "react-bootstrap";
 import { AppContext } from "../../lib/state/AppContext.ts";
 import { DynamicList } from "../shared/DynamicList.tsx";
 
-export function RoomList(props: { rooms: Rooms; context: AppContext }) {
+export function RoomList(props: { rooms: Rooms | null; context: AppContext }) {
   return (
     <Stack
       gap={0}
@@ -13,7 +13,7 @@ export function RoomList(props: { rooms: Rooms; context: AppContext }) {
       }
     >
       <DynamicList
-        data={props.rooms.rooms}
+        data={props.rooms?.rooms ?? []}
         entityNamePlural={"Rooms"}
         collapsable={true}
         filter={(exp, r) =>

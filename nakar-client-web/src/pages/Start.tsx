@@ -11,13 +11,17 @@ import { StatusBar } from "../components/shared/StatusBar.tsx";
 import { SocketStateDisplay } from "../components/room/SocketStateDisplay.tsx";
 import { AuthButton } from "../components/shared/auth/AuthButton.tsx";
 
-export async function StartLoader(): Promise<RoomsSchema> {
-  const rooms = await getRooms();
-  return resultOrThrow(rooms);
+export async function StartLoader(): Promise<RoomsSchema | null> {
+  try {
+    const rooms = await getRooms();
+    return resultOrThrow(rooms);
+  } catch {
+    return null;
+  }
 }
 
 export function Start(props: { context: AppContext }) {
-  const loaderData: RoomsSchema = useLoaderData();
+  const loaderData: RoomsSchema | null = useLoaderData();
 
   return (
     <Stack

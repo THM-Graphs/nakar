@@ -17,7 +17,7 @@ export function RoomDisplay(props: { room: Room }) {
         >
           <ScenarioIcon
             scenario={props.room.scenario?.current ?? null}
-            size={30}
+            size={50}
           ></ScenarioIcon>
           <Stack className={"flex-shrink-1 ms-2"}>
             <span className={"fs-6 text-wrap text-break small"}>
@@ -30,6 +30,12 @@ export function RoomDisplay(props: { room: Room }) {
               </span>
             ) : (
               <span className={"text-muted fst-italic small"}>No Scenario</span>
+            )}
+
+            {props.room.template && (
+              <span className={"text-muted small"}>
+                Template: {props.room.template.title ?? props.room.template.id}
+              </span>
             )}
           </Stack>
         </NavbarButton>

@@ -39,6 +39,12 @@
       "relation": "oneToMany",
       "target": "api::note.note",
       "mappedBy": "room"
+    },
+    "template": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::room-template.room-template",
+      "inversedBy": "rooms"
     }
   }
 }

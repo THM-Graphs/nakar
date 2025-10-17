@@ -433,6 +433,45 @@ export interface ApiNoteNote extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiRoomTemplateRoomTemplate
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'room_templates';
+  info: {
+    description: '';
+    displayName: 'Room Template';
+    pluralName: 'room-templates';
+    singularName: 'room-template';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    graphDisplayConfiguration: Schema.Attribute.Component<
+      'graph.graph-display-configuration',
+      false
+    >;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::room-template.room-template'
+    > &
+      Schema.Attribute.Private;
+    publishedAt: Schema.Attribute.DateTime;
+    rooms: Schema.Attribute.Relation<'oneToMany', 'api::room.room'>;
+    scenario_groups: Schema.Attribute.Relation<
+      'manyToMany',
+      'api::scenario-group.scenario-group'
+    >;
+    title: Schema.Attribute.String;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface ApiRoomRoom extends Struct.CollectionTypeSchema {
   collectionName: 'rooms';
   info: {
@@ -461,6 +500,10 @@ export interface ApiRoomRoom extends Struct.CollectionTypeSchema {
     scenarioGroups: Schema.Attribute.Relation<
       'oneToMany',
       'api::scenario-group.scenario-group'
+    >;
+    template: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::room-template.room-template'
     >;
     title: Schema.Attribute.String;
     updatedAt: Schema.Attribute.DateTime;
@@ -497,6 +540,10 @@ export interface ApiScenarioGroupScenarioGroup
       Schema.Attribute.Private;
     publishedAt: Schema.Attribute.DateTime;
     room: Schema.Attribute.Relation<'manyToOne', 'api::room.room'>;
+    room_templates: Schema.Attribute.Relation<
+      'manyToMany',
+      'api::room-template.room-template'
+    >;
     scenarios: Schema.Attribute.Relation<'oneToMany', 'api::scenario.scenario'>;
     title: Schema.Attribute.String;
     updatedAt: Schema.Attribute.DateTime;
@@ -1058,6 +1105,7 @@ declare module '@strapi/strapi' {
       'admin::user': AdminUser;
       'api::database.database': ApiDatabaseDatabase;
       'api::note.note': ApiNoteNote;
+      'api::room-template.room-template': ApiRoomTemplateRoomTemplate;
       'api::room.room': ApiRoomRoom;
       'api::scenario-group.scenario-group': ApiScenarioGroupScenarioGroup;
       'api::scenario.scenario': ApiScenarioScenario;
