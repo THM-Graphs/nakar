@@ -26,12 +26,6 @@
       "repeatable": false,
       "component": "graph.graph-display-configuration"
     },
-    "room": {
-      "type": "relation",
-      "relation": "manyToOne",
-      "target": "api::room.room",
-      "inversedBy": "scenarioGroups"
-    },
     "room_templates": {
       "type": "relation",
       "relation": "manyToMany",

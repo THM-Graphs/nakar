@@ -488,19 +488,11 @@ export interface ApiRoomRoom extends Struct.CollectionTypeSchema {
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     graph: Schema.Attribute.Media<'files'>;
-    graphDisplayConfiguration: Schema.Attribute.Component<
-      'graph.graph-display-configuration',
-      false
-    >;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<'oneToMany', 'api::room.room'> &
       Schema.Attribute.Private;
     notes: Schema.Attribute.Relation<'oneToMany', 'api::note.note'>;
     publishedAt: Schema.Attribute.DateTime;
-    scenarioGroups: Schema.Attribute.Relation<
-      'oneToMany',
-      'api::scenario-group.scenario-group'
-    >;
     template: Schema.Attribute.Relation<
       'manyToOne',
       'api::room-template.room-template'
@@ -539,7 +531,6 @@ export interface ApiScenarioGroupScenarioGroup
     > &
       Schema.Attribute.Private;
     publishedAt: Schema.Attribute.DateTime;
-    room: Schema.Attribute.Relation<'manyToOne', 'api::room.room'>;
     room_templates: Schema.Attribute.Relation<
       'manyToMany',
       'api::room-template.room-template'
