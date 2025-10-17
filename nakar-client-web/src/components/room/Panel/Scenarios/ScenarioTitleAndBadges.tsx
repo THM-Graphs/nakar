@@ -10,6 +10,14 @@ export function ScenarioTitleAndBadges(props: {
   className?: string;
 }) {
   const uiLocked = useBearStore((s) => s.room.ui.locked);
+
+  const parameterList = props.scenario.parameters
+    .map((p) => p.title)
+    .join(", ");
+  const title: string =
+    (props.scenario.title ?? "untitled") +
+    (props.scenario.parameters.length > 0 ? ` (${parameterList})` : "");
+
   return (
     <Stack
       direction={"horizontal"}
@@ -41,7 +49,7 @@ export function ScenarioTitleAndBadges(props: {
           <i className={"bi bi-plus-square small"}></i>
         </OverlayTrigger>
       )}
-      <span className={"pe-1 small text-wrap"}>{props.scenario.title}</span>
+      <span className={"pe-1 small text-wrap"}>{title}</span>
     </Stack>
   );
 }
