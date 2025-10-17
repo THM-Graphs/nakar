@@ -1,5 +1,5 @@
 import type { GetMediaDBDTO } from './GetMediaDBDTO';
-import { GetTemplateDBDTO } from './GetTemplateDBDTO';
+import type { GetTemplateDBDTO } from './GetTemplateDBDTO';
 
 export interface GetRoomDBDTO {
   readonly documentId: string;

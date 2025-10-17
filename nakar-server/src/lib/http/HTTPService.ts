@@ -63,7 +63,7 @@ import type { ExpandNodePreview } from '../neo4j/expand-node-preview/ExpandNodeP
 import type { MediaService } from '../media/MediaService';
 import type { GetNotesDBDTO } from '../database/dto/GetNotesDBDTO';
 import * as undici from 'undici';
-import { FinalGraphDisplayConfiguration } from '../room/scenario-pipeline/display-configuration/FinalGraphDisplayConfiguration';
+import type { FinalGraphDisplayConfiguration } from '../room/scenario-pipeline/display-configuration/FinalGraphDisplayConfiguration';
 
 export class HTTPService implements ApplicationService {
   private readonly _app: Application;

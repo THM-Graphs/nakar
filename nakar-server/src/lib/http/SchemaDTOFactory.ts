@@ -14,7 +14,7 @@ import type { GetScenarioGroupDBDTO } from '../database/dto/GetScenarioGroupDBDT
 import type { GetScenarioParameterDBDTO } from '../database/dto/GetScenarioParameterDBDTO';
 import type { GetScenarioQueryDBDTO } from '../database/dto/GetScenarioQueryDBDTO';
 import type { MediaService } from '../media/MediaService';
-import { GetTemplateDBDTO } from '../database/dto/GetTemplateDBDTO';
+import type { GetTemplateDBDTO } from '../database/dto/GetTemplateDBDTO';
 
 export class SchemaDTOFactory {
   private readonly _configService: ConfigService;

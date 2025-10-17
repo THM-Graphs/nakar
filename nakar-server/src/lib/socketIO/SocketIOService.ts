@@ -54,7 +54,7 @@ import type { ProfilerTask } from '../profiler/ProfilerTask';
 import type { ProfilerService } from '../profiler/ProfilerService';
 import type { GetNotesDBDTO } from '../database/dto/GetNotesDBDTO';
 import type { MutableGraph } from '../room/graph/MutableGraph';
-import { FinalGraphDisplayConfiguration } from '../room/scenario-pipeline/display-configuration/FinalGraphDisplayConfiguration';
+import type { FinalGraphDisplayConfiguration } from '../room/scenario-pipeline/display-configuration/FinalGraphDisplayConfiguration';
 
 export type Server = UntypedServer<ClientToServerEvents, ServerToClientEvents>;
 export type Socket = UntypedSocket<ClientToServerEvents, ServerToClientEvents>;

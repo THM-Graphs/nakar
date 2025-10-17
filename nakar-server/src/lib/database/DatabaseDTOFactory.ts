@@ -25,7 +25,7 @@ import type {
 } from '../../../src-gen/schema';
 import type { Input } from '@strapi/types/dist/modules/documents/params/data';
 import type { GetColorPresetIndexDBDTO } from './dto/GetColorPresetIndexDBDTO';
-import { GetTemplateDBDTO } from './dto/GetTemplateDBDTO';
+import type { GetTemplateDBDTO } from './dto/GetTemplateDBDTO';
 
 export class DatabaseDTOFactory {
   public createGetDatabaseDTOFromStrapi(
@@ -107,7 +107,7 @@ export class DatabaseDTOFactory {
   }
 
   public createGetRoomDTOFromStrapi(
-    db: Result<'api::room.room', { populate: { template: {} } }> & {
+    db: Result<'api::room.room', { populate: { template: object } }> & {
       graph?: Result<'plugin::upload.file'> | null;
     },
   ): GetRoomDBDTO {

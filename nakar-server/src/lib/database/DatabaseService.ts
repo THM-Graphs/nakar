@@ -564,15 +564,15 @@ export class DatabaseService implements ApplicationService {
       'api::room.room',
       {
         populate: {
-          template: {};
-          scenarioGroups: {};
+          template: object;
+          scenarioGroups: object;
           graphDisplayConfiguration: {
             populate: {
-              nodeDisplayConfigurations: {};
+              nodeDisplayConfigurations: object;
               mergeNodeConfigurations: {
                 populate: {
-                  originalDatabase: {};
-                  mergeDatabase: {};
+                  originalDatabase: object;
+                  mergeDatabase: object;
                 };
               };
             };
