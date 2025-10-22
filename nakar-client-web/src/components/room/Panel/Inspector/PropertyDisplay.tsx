@@ -73,6 +73,7 @@ export function PropertyDisplay(props: {
       <PropertyMenu
         value={property.value}
         roomContext={props.roomContext}
+        
       ></PropertyMenu>
     </Stack>
   );

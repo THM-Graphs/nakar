@@ -14,6 +14,7 @@ export function DropdownButton(props: {
   icon?: string;
   title?: ReactNode;
   buttonClassName?: string;
+  containerClassName?: string;
   buttonStyle?: CSSProperties;
   buttonSize?: "sm";
   menuClassName?: string;
@@ -63,7 +64,11 @@ export function DropdownButton(props: {
 
   return (
     <>
-      <Dropdown autoClose={true} align={props.align}>
+      <Dropdown
+        autoClose={true}
+        align={props.align}
+        className={props.containerClassName}
+      >
         <Dropdown.Toggle as={CustomToggle}></Dropdown.Toggle>
         <Dropdown.Menu
           className={clsx("rounded-0", props.menuClassName)}
