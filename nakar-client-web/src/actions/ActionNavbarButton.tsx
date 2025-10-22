@@ -1,5 +1,5 @@
 import { Action } from "./Action.ts";
-import { NavbarButton } from "../components/shared/NavbarButton.tsx";
+import { NavbarButton } from "../shared/elements/NavbarButton.tsx";
 import { CSSProperties } from "react";
 import { Placement } from "react-bootstrap/types";
 

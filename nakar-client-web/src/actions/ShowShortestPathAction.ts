@@ -1,5 +1,5 @@
 import { Action } from "./Action.ts";
-import { resultOrThrow } from "../lib/data/resultOrThrow.ts";
+import { resultOrThrow } from "../data/resultOrThrow.ts";
 import { NodesActionParams } from "./NodesActionParams.ts";
 import { postRoomActionShowShortestPath } from "../../src-gen";
 

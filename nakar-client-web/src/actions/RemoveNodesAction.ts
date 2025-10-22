@@ -1,6 +1,6 @@
 import { postRoomActionDeleteElements } from "../../src-gen";
 import { Action } from "./Action.ts";
-import { resultOrThrow } from "../lib/data/resultOrThrow.ts";
+import { resultOrThrow } from "../data/resultOrThrow.ts";
 import { match } from "ts-pattern";
 import { NodesActionParams } from "./NodesActionParams.ts";
 

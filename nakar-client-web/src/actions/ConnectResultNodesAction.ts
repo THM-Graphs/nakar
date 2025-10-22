@@ -1,6 +1,6 @@
 import { Action } from "./Action.ts";
-import { SelectedCanvasTab } from "../lib/state/SelectedCanvasTab.ts";
-import { resultOrThrow } from "../lib/data/resultOrThrow.ts";
+import { SelectedCanvasTab } from "../state/SelectedCanvasTab.ts";
+import { resultOrThrow } from "../data/resultOrThrow.ts";
 import { postRoomActionConnectResultNodes, Scenario } from "../../src-gen";
 import { RoomContext } from "../pages/Room.tsx";
 

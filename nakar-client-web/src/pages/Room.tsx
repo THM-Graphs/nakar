@@ -1,6 +1,6 @@
 import { Stack } from "react-bootstrap";
-import { AppNavbar } from "../components/shared/AppNavbar.tsx";
-import { Canvas } from "../components/room/Canvas/Canvas.tsx";
+import { AppNavbar } from "../shared/bars/AppNavbar.tsx";
+import { Canvas } from "../room/canvas/Canvas.tsx";
 import { useEffect } from "react";
 import {
   getRoom,
@@ -12,40 +12,40 @@ import {
   WSActionLeaveRoom,
 } from "../../src-gen";
 import { LoaderFunctionArgs, useLoaderData, useNavigate } from "react-router";
-import { resultOrThrow } from "../lib/data/resultOrThrow.ts";
-import { ToastStack } from "../components/room/ToastStack.tsx";
-import { HistogramPanel } from "../components/room/Panel/Histogram/HistogramPanel.tsx";
-import { ScenariosPanelButton } from "../components/room/Panel/Scenarios/ScenariosPanelButton.tsx";
-import { ProgressDisplay } from "../components/room/ProgressDisplay.tsx";
-import { SocketStateDisplay } from "../components/room/SocketStateDisplay.tsx";
-import { ReconnectOverlay } from "../components/room/ReconnectOverlay.tsx";
-import { NavbarLogo } from "../components/shared/NavbarLogo.tsx";
-import { InspectorPanel } from "../components/room/Panel/Inspector/InspectorPanel.tsx";
-import { useBearStore } from "../lib/state/useBearStore.ts";
-import { AppContext } from "../lib/state/AppContext.ts";
-import { ScenariosPanel } from "../components/room/Panel/Scenarios/ScenariosPanel.tsx";
-import { InspectorPanelButton } from "../components/room/Panel/Inspector/InspectorPanelButton.tsx";
-import { HistogramPanelButton } from "../components/room/Panel/Histogram/HistogramPanelButton.tsx";
-import { StatusBar } from "../components/shared/StatusBar.tsx";
+import { resultOrThrow } from "../data/resultOrThrow.ts";
+import { ToastStack } from "../shared/bars/ToastStack.tsx";
+import { HistogramPanel } from "../room/histogram-panel/HistogramPanel.tsx";
+import { ScenariosPanelButton } from "../room/scenarios-panel/ScenariosPanelButton.tsx";
+import { ProgressDisplay } from "../shared/bars/ProgressDisplay.tsx";
+import { SocketStateDisplay } from "../shared/socket/SocketStateDisplay.tsx";
+import { ReconnectOverlay } from "../shared/socket/ReconnectOverlay.tsx";
+import { NavbarLogo } from "../shared/bars/NavbarLogo.tsx";
+import { InspectorPanel } from "../room/inspector-panel/InspectorPanel.tsx";
+import { useBearStore } from "../state/useBearStore.ts";
+import { AppContext } from "../state/AppContext.ts";
+import { ScenariosPanel } from "../room/scenarios-panel/ScenariosPanel.tsx";
+import { InspectorPanelButton } from "../room/inspector-panel/InspectorPanelButton.tsx";
+import { HistogramPanelButton } from "../room/histogram-panel/HistogramPanelButton.tsx";
+import { StatusBar } from "../shared/bars/StatusBar.tsx";
 import { match } from "ts-pattern";
-import { PerformanceDisplay } from "../components/room/PerformanceDisplay.tsx";
-import { RunScenarioModal } from "../components/room/RunScenarioModal/RunScenarioModal.tsx";
-import { ExpandNodePreviewModal } from "../components/room/ExpandNodePreviewModal/ExpandNodePreviewModal.tsx";
-import { QueryPanel } from "../components/room/Panel/Query/QueryPanel.tsx";
-import { QueryPanelButton } from "../components/room/Panel/Query/QueryPanelButton.tsx";
-import { GraphRendererD3 } from "../components/room/Canvas/GraphRendererD3.tsx";
-import { DropdownButton } from "../components/shared/DropdownButton.tsx";
-import { MenuBar } from "../components/room/MenuBar.tsx";
+import { PerformanceDisplay } from "../room/canvas/PerformanceDisplay.tsx";
+import { RunScenarioModal } from "../room/run-scenario-modal/RunScenarioModal.tsx";
+import { ExpandNodePreviewModal } from "../room/expand-node-preview-modal/ExpandNodePreviewModal.tsx";
+import { QueryPanel } from "../room/query-panel/QueryPanel.tsx";
+import { QueryPanelButton } from "../room/query-panel/QueryPanelButton.tsx";
+import { GraphRendererD3 } from "../room/canvas/GraphRendererD3.tsx";
+import { DropdownButton } from "../shared/elements/DropdownButton.tsx";
+import { MenuBar } from "../shared/bars/MenuBar.tsx";
 import { ActionNavbarButton } from "../actions/ActionNavbarButton.tsx";
 import { CloseRoomAction } from "../actions/CloseRoomAction.ts";
 import { ActionDropdownItem } from "../actions/ActionDropdownItem.tsx";
 import { EditRoomAction } from "../actions/EditRoomAction.ts";
-import { NotesPanel } from "../components/room/Panel/Notes/NotesPanel.tsx";
-import { NotesPanelButton } from "../components/room/Panel/Notes/NotesPanelButton.tsx";
-import { AddEditNoteModal } from "../components/room/Panel/Notes/AddEditNoteModal.tsx";
-import { AuthButton } from "../components/shared/auth/AuthButton.tsx";
+import { NotesPanel } from "../room/notes-panel/NotesPanel.tsx";
+import { NotesPanelButton } from "../room/notes-panel/NotesPanelButton.tsx";
+import { AddEditNoteModal } from "../room/notes-panel/AddEditNoteModal.tsx";
+import { AuthButton } from "../shared/auth/AuthButton.tsx";
 import { EditRoomTemplateAction } from "../actions/EditRoomTemplateAction.ts";
-import { mapResult } from "../lib/data/mapResult.ts";
+import { mapResult } from "../data/mapResult.ts";
 
 export type RoomContext = {
   initialRoomData: RoomSchema;

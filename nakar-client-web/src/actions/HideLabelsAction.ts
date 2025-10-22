@@ -1,5 +1,5 @@
 import { Action } from "./Action.ts";
-import { SelectedCanvasTab } from "../lib/state/SelectedCanvasTab.ts";
+import { SelectedCanvasTab } from "../state/SelectedCanvasTab.ts";
 
 export type HideLabelsActionParams = {
   selectedTab: SelectedCanvasTab;

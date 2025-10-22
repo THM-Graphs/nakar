@@ -1,6 +1,6 @@
 import { Action } from "./Action.ts";
 import { RoomContext } from "../pages/Room.tsx";
-import { resultOrThrow } from "../lib/data/resultOrThrow.ts";
+import { resultOrThrow } from "../data/resultOrThrow.ts";
 import { postRoomActionReloadScenario, Scenario } from "../../src-gen";
 
 export type RerunScenarioActionParams = {

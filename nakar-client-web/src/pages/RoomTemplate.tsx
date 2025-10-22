@@ -1,21 +1,21 @@
 import { Alert, Stack } from "react-bootstrap";
-import { AppNavbar } from "../components/shared/AppNavbar.tsx";
-import { NavbarLogo } from "../components/shared/NavbarLogo.tsx";
-import { InfoDropdown } from "../components/shared/InfoDropdown.tsx";
-import { StatusBar } from "../components/shared/StatusBar.tsx";
-import { AuthButton } from "../components/shared/auth/AuthButton.tsx";
-import { SocketStateDisplay } from "../components/room/SocketStateDisplay.tsx";
-import { AppContext } from "../lib/state/AppContext.ts";
+import { AppNavbar } from "../shared/bars/AppNavbar.tsx";
+import { NavbarLogo } from "../shared/bars/NavbarLogo.tsx";
+import { InfoDropdown } from "../shared/bars/InfoDropdown.tsx";
+import { StatusBar } from "../shared/bars/StatusBar.tsx";
+import { AuthButton } from "../shared/auth/AuthButton.tsx";
+import { SocketStateDisplay } from "../shared/socket/SocketStateDisplay.tsx";
+import { AppContext } from "../state/AppContext.ts";
 import {
   createRoom,
   getRoomTemplate,
   RoomTemplate as RoomTemplateSchema,
   Room as RoomSchema,
 } from "../../src-gen";
-import { resultOrThrow } from "../lib/data/resultOrThrow.ts";
+import { resultOrThrow } from "../data/resultOrThrow.ts";
 import { LoaderFunctionArgs, useLoaderData, useNavigate } from "react-router";
-import { NavbarButton } from "../components/shared/NavbarButton.tsx";
-import { ToastStack } from "../components/room/ToastStack.tsx";
+import { NavbarButton } from "../shared/elements/NavbarButton.tsx";
+import { ToastStack } from "../shared/bars/ToastStack.tsx";
 
 export async function RoomTemplateLoader(
   args: LoaderFunctionArgs,

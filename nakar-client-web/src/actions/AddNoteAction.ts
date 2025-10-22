@@ -1,6 +1,6 @@
 import { Action } from "./Action.ts";
 import { NodesActionParams } from "./NodesActionParams.ts";
-import { useBearStore } from "../lib/state/useBearStore.ts";
+import { useBearStore } from "../state/useBearStore.ts";
 
 export class AddNoteAction extends Action<NodesActionParams> {
   public static shared: AddNoteAction = new AddNoteAction();

@@ -1,7 +1,7 @@
 import { Action } from "./Action.ts";
 import { postRoomActionExpandNodePreview } from "../../src-gen";
-import { useBearStore } from "../lib/state/useBearStore.ts";
-import { resultOrThrow } from "../lib/data/resultOrThrow.ts";
+import { useBearStore } from "../state/useBearStore.ts";
+import { resultOrThrow } from "../data/resultOrThrow.ts";
 import { NodesActionParams } from "./NodesActionParams.ts";
 
 export class ExpandNodePreviewAction extends Action<NodesActionParams> {

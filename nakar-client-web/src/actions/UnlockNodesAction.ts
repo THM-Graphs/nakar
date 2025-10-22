@@ -1,7 +1,7 @@
 import { Action } from "./Action.ts";
 import { postRoomActionUnlockNodes } from "../../src-gen";
 import { match } from "ts-pattern";
-import { resultOrThrow } from "../lib/data/resultOrThrow.ts";
+import { resultOrThrow } from "../data/resultOrThrow.ts";
 import { NodesActionParams } from "./NodesActionParams.ts";
 
 export class UnlockNodesAction extends Action<NodesActionParams> {

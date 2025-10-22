@@ -1,5 +1,5 @@
 import { Action } from "./Action.ts";
-import { AppContext } from "../lib/state/AppContext.ts";
+import { AppContext } from "../state/AppContext.ts";
 
 export type SaveZIPActionParams = { context: AppContext };
 

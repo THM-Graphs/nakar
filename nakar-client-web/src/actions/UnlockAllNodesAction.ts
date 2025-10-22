@@ -1,8 +1,8 @@
 import { Action } from "./Action.ts";
 import { RoomContext } from "../pages/Room.tsx";
-import { resultOrThrow } from "../lib/data/resultOrThrow.ts";
+import { resultOrThrow } from "../data/resultOrThrow.ts";
 import { Node, postRoomActionUnlockAllNodes } from "../../src-gen";
-import { SelectedCanvasTab } from "../lib/state/SelectedCanvasTab.ts";
+import { SelectedCanvasTab } from "../state/SelectedCanvasTab.ts";
 
 export type UnlockAllNodesActionParams = {
   nodes: Node[];

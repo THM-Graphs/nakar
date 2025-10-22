@@ -1,7 +1,7 @@
 import { Node } from "../../src-gen";
 import { BehaviorSubject } from "rxjs";
 import { Action } from "./Action.ts";
-import { SelectedCanvasTab } from "../lib/state/SelectedCanvasTab.ts";
+import { SelectedCanvasTab } from "../state/SelectedCanvasTab.ts";
 
 export type ZoomInActionParams = {
   nodes: Node[];

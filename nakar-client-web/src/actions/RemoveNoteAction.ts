@@ -1,6 +1,6 @@
 import { deleteNote } from "../../src-gen";
 import { Action } from "./Action.ts";
-import { resultOrThrow } from "../lib/data/resultOrThrow.ts";
+import { resultOrThrow } from "../data/resultOrThrow.ts";
 import { RoomContext } from "../pages/Room.tsx";
 
 export type RemoveNoteActionParams = {

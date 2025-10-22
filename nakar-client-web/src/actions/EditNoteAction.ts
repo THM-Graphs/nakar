@@ -1,5 +1,5 @@
 import { Action } from "./Action.ts";
-import { useBearStore } from "../lib/state/useBearStore.ts";
+import { useBearStore } from "../state/useBearStore.ts";
 import { Note } from "../../src-gen";
 
 type EditNoteActionParams = { note: Note };

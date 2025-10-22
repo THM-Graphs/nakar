@@ -1,5 +1,5 @@
-import { useBearStore } from "../lib/state/useBearStore.ts";
-import { DetailPaneAction } from "../components/room/Panel/Inspector/DetailPaneAction.ts";
+import { useBearStore } from "../state/useBearStore.ts";
+import { DetailPaneAction } from "../room/inspector-panel/DetailPaneAction.ts";
 
 export abstract class Action<I> {
   public abstract slug(): string;

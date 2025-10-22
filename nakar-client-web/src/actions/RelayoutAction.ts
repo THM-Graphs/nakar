@@ -1,8 +1,8 @@
 import { Action } from "./Action.ts";
-import { resultOrThrow } from "../lib/data/resultOrThrow.ts";
+import { resultOrThrow } from "../data/resultOrThrow.ts";
 import { Node, postRoomActionRelayout } from "../../src-gen";
 import { RoomContext } from "../pages/Room.tsx";
-import { SelectedCanvasTab } from "../lib/state/SelectedCanvasTab.ts";
+import { SelectedCanvasTab } from "../state/SelectedCanvasTab.ts";
 
 export type RelayoutActionParams = {
   roomContext: RoomContext;

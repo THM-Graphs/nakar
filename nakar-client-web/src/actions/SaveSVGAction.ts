@@ -1,7 +1,7 @@
 import { Action } from "./Action.ts";
 import * as d3 from "d3";
 import { saveAs } from "file-saver";
-import { SelectedCanvasTab } from "../lib/state/SelectedCanvasTab.ts";
+import { SelectedCanvasTab } from "../state/SelectedCanvasTab.ts";
 
 export type SaveSVGActionParams = {
   selectedTab: SelectedCanvasTab;

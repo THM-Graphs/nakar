@@ -1,5 +1,5 @@
 import { Action } from "./Action.ts";
-import { useBearStore } from "../lib/state/useBearStore.ts";
+import { useBearStore } from "../state/useBearStore.ts";
 import { LabelActionParams } from "./LabelActionParams.ts";
 import { Node } from "../../src-gen";
 

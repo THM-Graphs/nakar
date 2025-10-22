@@ -1,6 +1,6 @@
 import { Action } from "./Action.ts";
 import { LabelActionParams } from "./LabelActionParams.ts";
-import { resultOrThrow } from "../lib/data/resultOrThrow.ts";
+import { resultOrThrow } from "../data/resultOrThrow.ts";
 import { postRoomActionCompressNodes } from "../../src-gen";
 import { match } from "ts-pattern";
 

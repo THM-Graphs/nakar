@@ -1,7 +1,7 @@
-import { AppNavbar } from "../components/shared/AppNavbar.tsx";
+import { AppNavbar } from "../shared/bars/AppNavbar.tsx";
 import { Alert, Container, Stack } from "react-bootstrap";
-import { RoomList } from "../components/start/RoomList.tsx";
-import { InfoDropdown } from "../components/shared/InfoDropdown.tsx";
+import { RoomList } from "../start/RoomList.tsx";
+import { InfoDropdown } from "../shared/bars/InfoDropdown.tsx";
 import { useLoaderData, useNavigate } from "react-router";
 import {
   getRoom,
@@ -11,14 +11,14 @@ import {
   Rooms as RoomsSchema,
   RoomTemplates,
 } from "../../src-gen";
-import { resultOrThrow } from "../lib/data/resultOrThrow.ts";
-import { NavbarLogo } from "../components/shared/NavbarLogo.tsx";
-import { AppContext } from "../lib/state/AppContext.ts";
-import { StatusBar } from "../components/shared/StatusBar.tsx";
-import { SocketStateDisplay } from "../components/room/SocketStateDisplay.tsx";
-import { AuthButton } from "../components/shared/auth/AuthButton.tsx";
-import { useBearStore } from "../lib/state/useBearStore.ts";
-import { RoomTemplateList } from "../components/start/RoomTemplateList.tsx";
+import { resultOrThrow } from "../data/resultOrThrow.ts";
+import { NavbarLogo } from "../shared/bars/NavbarLogo.tsx";
+import { AppContext } from "../state/AppContext.ts";
+import { StatusBar } from "../shared/bars/StatusBar.tsx";
+import { SocketStateDisplay } from "../shared/socket/SocketStateDisplay.tsx";
+import { AuthButton } from "../shared/auth/AuthButton.tsx";
+import { useBearStore } from "../state/useBearStore.ts";
+import { RoomTemplateList } from "../start/RoomTemplateList.tsx";
 import { match, P } from "ts-pattern";
 
 type StartPageLoaderData = {
