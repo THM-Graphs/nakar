@@ -19,6 +19,7 @@ import { SocketStateDisplay } from "../components/room/SocketStateDisplay.tsx";
 import { AuthButton } from "../components/shared/auth/AuthButton.tsx";
 import { useBearStore } from "../lib/state/useBearStore.ts";
 import { RoomTemplateList } from "../components/start/RoomTemplateList.tsx";
+import { match, P } from "ts-pattern";
 
 type StartPageLoaderData = {
   rooms: RoomSchema[];
@@ -29,13 +30,16 @@ export async function StartLoader(): Promise<StartPageLoaderData> {
   const myRooms = useBearStore.getState().start.myRooms;
   const rooms: RoomSchema[] = [];
   for (const roomId of myRooms) {
-    try {
-      rooms.push(resultOrThrow(await getRoom({ path: { id: roomId } })));
-    } catch (error) {
-      if (error) {
-        console.error(error);
-      }
-    }
+    const result = await getRoom({ path: { id: roomId } });
+    match(result)
+      .with({ data: P.nonNullable }, (r) => {
+        rooms.push(r.data);
+      })
+      .otherwise((error) => {
+        if (error.response.status === 404) {
+          useBearStore.getState().start.removeRoom(roomId);
+        }
+      });
   }
   const templates: RoomTemplates = resultOrThrow(await getRoomTemplates());
   return {
@@ -46,7 +50,6 @@ export async function StartLoader(): Promise<StartPageLoaderData> {
 
 export function Start(props: { context: AppContext }) {
   const loaderData: StartPageLoaderData = useLoaderData();
-  const username = useBearStore((s) => s.global.auth.username);
 
   return (
     <Stack
@@ -59,6 +62,9 @@ export function Start(props: { context: AppContext }) {
       ></AppNavbar>
       <div className={"overflow-auto mb-auto p-5"}>
         <Container>
+          <p className={"text-muted mb-5"}>
+            Enter a room or create one using the given templates.
+          </p>
           <Stack direction={"horizontal"} className={"flex-wrap"} gap={5}>
             <RoomList
               rooms={loaderData.rooms}
