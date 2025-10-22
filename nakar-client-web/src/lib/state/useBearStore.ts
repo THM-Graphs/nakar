@@ -100,9 +100,12 @@ export const useBearStore = create<BearState>()(
               myRooms: [],
               addRoom: (roomId: string) => {
                 set((s) => {
-                  if (!s.start.myRooms.includes(roomId)) {
-                    s.start.myRooms.push(roomId);
+                  if (s.start.myRooms.includes(roomId)) {
+                    s.start.myRooms = s.start.myRooms.filter(
+                      (r) => r !== roomId,
+                    );
                   }
+                  s.start.myRooms = [roomId, ...s.start.myRooms];
                 });
               },
               removeRoom: (roomId: string) => {
