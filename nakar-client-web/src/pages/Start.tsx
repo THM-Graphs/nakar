@@ -1,14 +1,12 @@
 import { AppNavbar } from "../shared/bars/AppNavbar.tsx";
-import { Alert, Container, Stack } from "react-bootstrap";
+import { Container, Stack } from "react-bootstrap";
 import { RoomList } from "../start/RoomList.tsx";
 import { InfoDropdown } from "../shared/bars/InfoDropdown.tsx";
-import { useLoaderData, useNavigate } from "react-router";
+import { useLoaderData } from "react-router";
 import {
   getRoom,
-  getRooms,
   getRoomTemplates,
   Room as RoomSchema,
-  Rooms as RoomsSchema,
   RoomTemplates,
 } from "../../src-gen";
 import { resultOrThrow } from "../data/resultOrThrow.ts";

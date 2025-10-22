@@ -45,7 +45,6 @@ import { NotesPanelButton } from "../room/notes-panel/NotesPanelButton.tsx";
 import { AddEditNoteModal } from "../room/notes-panel/AddEditNoteModal.tsx";
 import { AuthButton } from "../shared/auth/AuthButton.tsx";
 import { EditRoomTemplateAction } from "../actions/EditRoomTemplateAction.ts";
-import { mapResult } from "../data/mapResult.ts";
 
 export type RoomContext = {
   initialRoomData: RoomSchema;
