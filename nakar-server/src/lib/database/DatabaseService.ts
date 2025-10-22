@@ -25,7 +25,7 @@ import type { GetNotesDBDTO } from './dto/GetNotesDBDTO';
 import { SMap } from '../tools/Map';
 import type { UpdateNoteDBDTO } from './dto/UpdateNoteDBDTO';
 import type { GetColorDBDTO } from './dto/GetColorDBDTO';
-import { v4 } from 'uuid';
+import type { GetTemplateDBDTO } from './dto/GetTemplateDBDTO';
 
 export class DatabaseService implements ApplicationService {
   private readonly _databaseDtoFactory: DatabaseDTOFactory;
@@ -57,7 +57,7 @@ export class DatabaseService implements ApplicationService {
     return this._onNoteChanges.asObservable();
   }
 
-  public async bootstrap(): Promise<void> {
+  public bootstrap(): void {
     // eslint-disable-next-line @typescript-eslint/typedef,@typescript-eslint/explicit-function-return-type
     strapi.documents.use(async (context, next) => {
       const task: ProfilerTask = this._profiler.profile(
@@ -89,6 +89,17 @@ export class DatabaseService implements ApplicationService {
             this._onRoomDeleted.next(room);
           } else {
             this._logger.error(this, `Newly deleted room ${id} not found.`);
+          }
+        } else if (context.action === 'create') {
+          result = await next();
+
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+          const id: string = (result as Result<'api::room.room'>).documentId;
+          const room: GetRoomDBDTO | null = await this.getRoom(id);
+          if (room !== null) {
+            this._onRoomAdded.next(room);
+          } else {
+            this._logger.error(this, `Newly created room ${id} not found.`);
           }
         } else {
           result = await next();
@@ -209,6 +220,49 @@ export class DatabaseService implements ApplicationService {
       (room: Result<'api::room.room'>): GetRoomDBDTO =>
         this._databaseDtoFactory.createGetRoomDTOFromStrapi(room),
     );
+  }
+
+  public async getRoomTemplates(): Promise<GetTemplateDBDTO[]> {
+    return (
+      await strapi.documents('api::room-template.room-template').findMany({
+        status: 'published',
+        sort: 'title:asc',
+      })
+    ).map(
+      (room: Result<'api::room-template.room-template'>): GetTemplateDBDTO =>
+        this._databaseDtoFactory.createGetRoomTemplateDTOFromStrapi(room),
+    );
+  }
+
+  public async getRoomTemplate(
+    roomTemplateId: string,
+  ): Promise<GetTemplateDBDTO | null> {
+    const rawRoomTemplate: Result<'api::room-template.room-template'> | null =
+      await strapi.documents('api::room-template.room-template').findOne({
+        status: 'published',
+        documentId: roomTemplateId,
+      });
+    if (rawRoomTemplate == null) {
+      return null;
+    }
+    return this._databaseDtoFactory.createGetRoomTemplateDTOFromStrapi(
+      rawRoomTemplate,
+    );
+  }
+
+  public async createRoom(template: GetTemplateDBDTO): Promise<GetRoomDBDTO> {
+    const room: Result<'api::room.room'> = await strapi
+      .documents('api::room.room')
+      .create({
+        status: 'published',
+        data: {
+          title: `${template.title} (${new Date().toISOString()})`,
+          template: template.documentId,
+        },
+      });
+    const result: GetRoomDBDTO =
+      this._databaseDtoFactory.createGetRoomDTOFromStrapi(room);
+    return result;
   }
 
   public async getScenario(

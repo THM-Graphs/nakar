@@ -20,6 +20,8 @@ import type {
   SchemaGraphTable,
   SchemaRoom,
   SchemaRooms,
+  SchemaRoomTemplate,
+  SchemaRoomTemplates,
   SchemaScenario,
   SchemaScenarioArgument,
   SchemaScenarioGroup,
@@ -64,6 +66,7 @@ import type { MediaService } from '../media/MediaService';
 import type { GetNotesDBDTO } from '../database/dto/GetNotesDBDTO';
 import * as undici from 'undici';
 import type { FinalGraphDisplayConfiguration } from '../room/scenario-pipeline/display-configuration/FinalGraphDisplayConfiguration';
+import type { GetTemplateDBDTO } from '../database/dto/GetTemplateDBDTO';
 
 export class HTTPService implements ApplicationService {
   private readonly _app: Application;
@@ -389,6 +392,59 @@ export class HTTPService implements ApplicationService {
             }),
           ),
         };
+      }),
+    );
+
+    this._app.post(
+      '/room',
+      this._handle(async (req: Request): Promise<SchemaRoom> => {
+        type Body =
+          operations['createRoom']['requestBody']['content']['application/json'];
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+        const body: Body = req.body as Body;
+        const template: GetTemplateDBDTO | null =
+          await this._databaseService.getRoomTemplate(body.templateId);
+        if (template == null) {
+          throw new NotFound(`Template ${body.templateId} not found.`);
+        }
+
+        const room: GetRoomDBDTO =
+          await this._databaseService.createRoom(template);
+        const result: SchemaRoom = this._schemaDTOFactory.createSchemaRoom(
+          room,
+          await this._getScenarioOfRoom(room),
+        );
+        return result;
+      }),
+    );
+
+    this._app.get(
+      '/room-template',
+      this._handle(async (): Promise<SchemaRoomTemplates> => {
+        const dbResult: GetTemplateDBDTO[] =
+          await this._databaseService.getRoomTemplates();
+        return {
+          roomTemplates: dbResult.map(
+            (roomTemplate: GetTemplateDBDTO): SchemaRoomTemplate => {
+              return this._schemaDTOFactory.createSchemaRoomTemplate(
+                roomTemplate,
+              );
+            },
+          ),
+        };
+      }),
+    );
+
+    this._app.get(
+      '/room-template/:id',
+      this._handle(async (req: Request): Promise<SchemaRoomTemplate> => {
+        const id: string = this._getPathParameter(req, 'id');
+        const dbResult: GetTemplateDBDTO | null =
+          await this._databaseService.getRoomTemplate(id);
+        if (dbResult == null) {
+          throw new NotFound(`Template ${id} not found.`);
+        }
+        return this._schemaDTOFactory.createSchemaRoomTemplate(dbResult);
       }),
     );
 
@@ -1010,12 +1066,15 @@ export class HTTPService implements ApplicationService {
   private async _getScenarioOfRoom(
     room: GetRoomDBDTO,
   ): Promise<GetScenarioDBDTO | null> {
-    const graph: MutableGraph = this._roomService.getGraph(room.documentId);
+    const graph: MutableGraph | null = this._roomService.getGraph(
+      room.documentId,
+    );
     const scenarioId: string | null = graph.metaData.scenarioId;
+    if (scenarioId == null) {
+      return null;
+    }
     const scenario: GetScenarioDBDTO | null =
-      scenarioId != null
-        ? await this._databaseService.getScenario(scenarioId)
-        : null;
+      await this._databaseService.getScenario(scenarioId);
     return scenario;
   }
 }

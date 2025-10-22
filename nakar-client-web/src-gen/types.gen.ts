@@ -271,6 +271,16 @@ export type Rooms = {
     rooms: Array<Room>;
 };
 
+export type RoomTemplate = {
+    id: string;
+    title: (string) | null;
+    editUrl: (string) | null;
+};
+
+export type RoomTemplates = {
+    roomTemplates: Array<RoomTemplate>;
+};
+
 export type Scenario = {
     id: string;
     title: (string) | null;
@@ -475,6 +485,16 @@ export type GetRoomsResponse = (Rooms);
 
 export type GetRoomsError = unknown;
 
+export type CreateRoomData = {
+    body: {
+        templateId: string;
+    };
+};
+
+export type CreateRoomResponse = (Room);
+
+export type CreateRoomError = unknown;
+
 export type GetRoomData = {
     path: {
         id: string;
@@ -484,6 +504,20 @@ export type GetRoomData = {
 export type GetRoomResponse = (Room);
 
 export type GetRoomError = unknown;
+
+export type GetRoomTemplatesResponse = (RoomTemplates);
+
+export type GetRoomTemplatesError = unknown;
+
+export type GetRoomTemplateData = {
+    path: {
+        id: string;
+    };
+};
+
+export type GetRoomTemplateResponse = (RoomTemplate);
+
+export type GetRoomTemplateError = unknown;
 
 export type GetRoomGraphData = {
     path: {

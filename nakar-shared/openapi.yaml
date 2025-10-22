@@ -13,6 +13,7 @@ tags:
   - name: Authentication
   - name: Scenarios
   - name: Room
+  - name: Room Template
   - name: Graph
   - name: Notes
   - name: Actions
@@ -104,6 +105,29 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Rooms"
+    post:
+      tags:
+        - Room
+      operationId: createRoom
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                templateId:
+                  type: string
+              required:
+                - templateId
+      responses:
+        "200":
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Room"
+
   /room/{id}:
     get:
       tags:
@@ -122,6 +146,38 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Room"
+
+  /room-template:
+    get:
+      tags:
+        - Room Template
+      operationId: getRoomTemplates
+      responses:
+        "200":
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RoomTemplates"
+
+  /room-template/{id}:
+    get:
+      tags:
+        - Room Template
+      operationId: getRoomTemplate
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RoomTemplate"
 
   /room/{id}/graph:
     get:
@@ -1388,6 +1444,32 @@ components:
             $ref: "#/components/schemas/Room"
       required:
         - rooms
+
+    RoomTemplate:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+          nullable: true
+        editUrl:
+          type: string
+          nullable: true
+      required:
+        - id
+        - title
+        - editUrl
+
+    RoomTemplates:
+      type: object
+      properties:
+        roomTemplates:
+          type: array
+          items:
+            $ref: "#/components/schemas/RoomTemplate"
+      required:
+        - roomTemplates
 
     Database:
       type: object

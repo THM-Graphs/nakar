@@ -3,15 +3,20 @@ import { useNavigate } from "react-router";
 import { Stack } from "react-bootstrap";
 import { NavbarButton } from "../shared/NavbarButton.tsx";
 import { ScenarioIcon } from "../room/Panel/Scenarios/ScenarioIcon.tsx";
+import { useBearStore } from "../../lib/state/useBearStore.ts";
+import { ClipboardButton } from "../room/ClipboardButton.tsx";
 
 export function RoomDisplay(props: { room: Room }) {
   const navigate = useNavigate();
+  const removeMyRoom = useBearStore((s) => s.start.removeRoom);
+  const roomUrl = `/room/${props.room.id}`;
+
   return (
     <>
       <Stack direction={"horizontal"} className={"flex-shrink-0"}>
         <NavbarButton
           onClick={async () => {
-            await navigate(`/room/${props.room.id}`);
+            await navigate(roomUrl);
           }}
           className={"flex-shrink-1 flex-grow-1 pb-1 pt-1"}
         >
@@ -49,6 +54,23 @@ export function RoomDisplay(props: { room: Room }) {
             className={"flex-grow-0 flex-shrink-0"}
           ></NavbarButton>
         )}
+
+        <ClipboardButton text={roomUrl}></ClipboardButton>
+
+        <NavbarButton
+          icon={"x-lg"}
+          onClick={async () => {
+            if (
+              confirm(
+                "Remove room from recents list? You will only be able to acces the room using its link.",
+              )
+            ) {
+              removeMyRoom(props.room.id);
+              await navigate(".");
+            }
+          }}
+          className={"flex-grow-0 flex-shrink-0"}
+        ></NavbarButton>
       </Stack>
     </>
   );

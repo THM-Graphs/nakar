@@ -96,6 +96,21 @@ export const useBearStore = create<BearState>()(
                 },
               },
             },
+            start: {
+              myRooms: [],
+              addRoom: (roomId: string) => {
+                set((s) => {
+                  if (!s.start.myRooms.includes(roomId)) {
+                    s.start.myRooms.push(roomId);
+                  }
+                });
+              },
+              removeRoom: (roomId: string) => {
+                set((s) => {
+                  s.start.myRooms = s.start.myRooms.filter((r) => r !== roomId);
+                });
+              },
+            },
             room: {
               ui: {
                 locked: false,
@@ -218,7 +233,35 @@ export const useBearStore = create<BearState>()(
                 },
                 setGraph: (graph) => {
                   set((s) => {
-                    s.room.scenario.graph = graph;
+                    if (graph == null) {
+                      s.room.scenario.graph = {
+                        elements: {
+                          nodes: [],
+                          labels: [],
+                          notes: [],
+                          edges: [],
+                          histogram: {
+                            edgeProperties: [],
+                            edgeTypes: [],
+                            nodeLabels: [],
+                            nodeProperties: [],
+                            nodes: [],
+                          },
+                        },
+                        metaData: {
+                          arguments: [],
+                          canRedo: false,
+                          canUndo: false,
+                          pipelineSummary: [],
+                          scenario: null,
+                        },
+                        table: {
+                          data: [],
+                        },
+                      };
+                    } else {
+                      s.room.scenario.graph = graph;
+                    }
                   });
                 },
                 setGraphMetaData: (metaData) => {
@@ -576,6 +619,7 @@ export const useBearStore = create<BearState>()(
           canvasTransformX: s.room.canvas.zoomTransform.x,
           canvasTransformY: s.room.canvas.zoomTransform.y,
           jwt: s.global.auth.jwt,
+          myRooms: s.start.myRooms,
         }),
         merge: (rawStorage: unknown, state: BearState): BearState => {
           const storage: PersistStorage = rawStorage as PersistStorage;
@@ -608,6 +652,7 @@ export const useBearStore = create<BearState>()(
             storage.canvasTransformY ?? 0,
           );
           state.global.auth.jwt = storage.jwt;
+          state.start.myRooms = storage.myRooms ?? [];
           return state;
         },
         onRehydrateStorage: () => {

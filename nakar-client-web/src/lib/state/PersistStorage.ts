@@ -9,4 +9,5 @@ export interface PersistStorage {
   canvasTransformX: number | null;
   canvasTransformY: number | null;
   jwt: string | null;
+  myRooms: string[] | null;
 }

@@ -47,6 +47,11 @@ export interface BearState {
       getTheme: () => Theme;
     };
   };
+  start: {
+    myRooms: string[];
+    addRoom: (roomId: string) => void;
+    removeRoom: (roomId: string) => void;
+  };
   room: {
     ui: {
       locked: boolean;
@@ -88,7 +93,7 @@ export interface BearState {
     };
     scenario: {
       graph: Graph;
-      setGraph: (g: Graph) => void;
+      setGraph: (g: Graph | null) => void;
       setGraphElements: (g: GraphElements) => void;
       setGraphMetaData: (g: GraphMetaData) => void;
       setGraphTable: (g: GraphTable) => void;

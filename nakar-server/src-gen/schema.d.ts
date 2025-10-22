@@ -45,7 +45,7 @@ export interface paths {
         };
         readonly get: operations["getRooms"];
         readonly put?: never;
-        readonly post?: never;
+        readonly post: operations["createRoom"];
         readonly delete?: never;
         readonly options?: never;
         readonly head?: never;
@@ -60,6 +60,38 @@ export interface paths {
             readonly cookie?: never;
         };
         readonly get: operations["getRoom"];
+        readonly put?: never;
+        readonly post?: never;
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/room-template": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get: operations["getRoomTemplates"];
+        readonly put?: never;
+        readonly post?: never;
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/room-template/{id}": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get: operations["getRoomTemplate"];
         readonly put?: never;
         readonly post?: never;
         readonly delete?: never;
@@ -699,6 +731,14 @@ export interface components {
         readonly Rooms: {
             readonly rooms: readonly components["schemas"]["Room"][];
         };
+        readonly RoomTemplate: {
+            readonly id: string;
+            readonly title: string | null;
+            readonly editUrl: string | null;
+        };
+        readonly RoomTemplates: {
+            readonly roomTemplates: readonly components["schemas"]["RoomTemplate"][];
+        };
         readonly Database: {
             readonly id: string;
             readonly title: string | null;
@@ -915,6 +955,8 @@ export type SchemaGraphTable = components['schemas']['GraphTable'];
 export type SchemaGraph = components['schemas']['Graph'];
 export type SchemaRoom = components['schemas']['Room'];
 export type SchemaRooms = components['schemas']['Rooms'];
+export type SchemaRoomTemplate = components['schemas']['RoomTemplate'];
+export type SchemaRoomTemplates = components['schemas']['RoomTemplates'];
 export type SchemaDatabase = components['schemas']['Database'];
 export type SchemaScenarioGroup = components['schemas']['ScenarioGroup'];
 export type SchemaScenarioQuery = components['schemas']['ScenarioQuery'];
@@ -1046,6 +1088,32 @@ export interface operations {
             };
         };
     };
+    readonly createRoom: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": {
+                    readonly templateId: string;
+                };
+            };
+        };
+        readonly responses: {
+            /** @description OK */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["Room"];
+                };
+            };
+        };
+    };
     readonly getRoom: {
         readonly parameters: {
             readonly query?: never;
@@ -1064,6 +1132,48 @@ export interface operations {
                 };
                 content: {
                     readonly "application/json": components["schemas"]["Room"];
+                };
+            };
+        };
+    };
+    readonly getRoomTemplates: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            /** @description OK */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["RoomTemplates"];
+                };
+            };
+        };
+    };
+    readonly getRoomTemplate: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path: {
+                readonly id: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            /** @description OK */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["RoomTemplate"];
                 };
             };
         };

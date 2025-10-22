@@ -117,11 +117,17 @@ export class DatabaseDTOFactory {
       graph:
         db.graph != null ? this._createGetMediaDTOFromStrapi(db.graph) : null,
       template: db.template
-        ? ({
-            documentId: db.template.documentId,
-            title: db.template.title ?? null,
-          } satisfies GetTemplateDBDTO)
+        ? this.createGetRoomTemplateDTOFromStrapi(db.template)
         : null,
+    };
+  }
+
+  public createGetRoomTemplateDTOFromStrapi(
+    db: Result<'api::room-template.room-template'>,
+  ): GetTemplateDBDTO {
+    return {
+      documentId: db.documentId,
+      title: db.title ?? null,
     };
   }
 

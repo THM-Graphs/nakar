@@ -1,6 +1,7 @@
 import type {
   SchemaDatabase,
   SchemaRoom,
+  SchemaRoomTemplate,
   SchemaScenario,
   SchemaScenarioGroup,
   SchemaScenarioParameter,
@@ -49,12 +50,18 @@ export class SchemaDTOFactory {
         : null,
       editUrl: this._getRoomEditUrl(room),
       template: room.template
-        ? {
-            id: room.template.documentId,
-            title: room.template.title,
-            editUrl: this._getTemplateEditUrl(room.template),
-          }
+        ? this.createSchemaRoomTemplate(room.template)
         : null,
+    };
+  }
+
+  public createSchemaRoomTemplate(
+    roomTemplate: GetTemplateDBDTO,
+  ): SchemaRoomTemplate {
+    return {
+      id: roomTemplate.documentId,
+      title: roomTemplate.title,
+      editUrl: this._getTemplateEditUrl(roomTemplate),
     };
   }
 

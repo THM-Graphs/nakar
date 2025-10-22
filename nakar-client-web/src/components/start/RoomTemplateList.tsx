@@ -1,13 +1,13 @@
-import { Room } from "../../../src-gen";
-import { RoomDisplay } from "./RoomDisplay.tsx";
+import { RoomTemplate, RoomTemplates } from "../../../src-gen";
 import { Stack } from "react-bootstrap";
 import { AppContext } from "../../lib/state/AppContext.ts";
 import { DynamicList } from "../shared/DynamicList.tsx";
+import { RoomTemplateDisplay } from "./RoomTemplateDisplay.tsx";
 import clsx from "clsx";
 import { CSSProperties } from "react";
 
-export function RoomList(props: {
-  rooms: Room[] | null;
+export function RoomTemplateList(props: {
+  roomTemplates: RoomTemplates;
   context: AppContext;
   className?: string;
   style?: CSSProperties;
@@ -23,16 +23,19 @@ export function RoomList(props: {
     >
       <DynamicList
         sticky={false}
-        data={props.rooms ?? []}
-        entityNamePlural={"Recent Rooms"}
+        data={props.roomTemplates.roomTemplates}
+        entityNamePlural={"Templates"}
         collapsable={true}
         filter={(exp, r) =>
           (r.title ?? r.id).toLowerCase().includes(exp.toLowerCase())
         }
         render={(list) => (
           <>
-            {list.map((room: Room) => (
-              <RoomDisplay key={room.id} room={room}></RoomDisplay>
+            {list.map((roomTemplate: RoomTemplate) => (
+              <RoomTemplateDisplay
+                key={roomTemplate.id}
+                roomTemplate={roomTemplate}
+              ></RoomTemplateDisplay>
             ))}
           </>
         )}

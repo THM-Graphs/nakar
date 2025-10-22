@@ -14,6 +14,7 @@ export function DynamicList<T>(props: {
   collapsable?: boolean;
   customTitle?: string;
   className?: string;
+  sticky?: boolean;
 }): ReactElement | null {
   const previewLimit = props.previewLimit ?? 10;
   const collapsable = props.collapsable ?? true;
@@ -116,6 +117,7 @@ export function DynamicList<T>(props: {
   return collapsable ? (
     <Collapsable
       className={clsx("flex-grow-0 flex-shrink-1", props.className)}
+      sticky={props.sticky}
       title={
         <Stack
           direction={"horizontal"}

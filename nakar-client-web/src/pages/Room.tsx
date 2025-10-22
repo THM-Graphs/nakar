@@ -45,6 +45,7 @@ import { NotesPanelButton } from "../components/room/Panel/Notes/NotesPanelButto
 import { AddEditNoteModal } from "../components/room/Panel/Notes/AddEditNoteModal.tsx";
 import { AuthButton } from "../components/shared/auth/AuthButton.tsx";
 import { EditRoomTemplateAction } from "../actions/EditRoomTemplateAction.ts";
+import { mapResult } from "../lib/data/mapResult.ts";
 
 export type RoomContext = {
   initialRoomData: RoomSchema;
@@ -62,6 +63,7 @@ export async function RoomLoader(
   }
 
   const room = resultOrThrow(await getRoom({ path: { id: roomId } }));
+
   const scenarios = resultOrThrow(
     await getScenarios({ path: { id: room.id } }),
   );
@@ -95,6 +97,11 @@ export function Room(props: { context: AppContext }) {
   );
   const pushNotification = useBearStore((s) => s.room.ui.pushNotification);
   const navigate = useNavigate();
+  const addMyRoom = useBearStore((s) => s.start.addRoom);
+
+  useEffect(() => {
+    addMyRoom(roomContext.initialRoomData.id);
+  }, [roomContext.initialRoomData.id]);
 
   useEffect(() => {
     setScenarios(roomContext.initialScenariosData);
@@ -171,31 +178,7 @@ export function Room(props: { context: AppContext }) {
       subscriptions.forEach((s) => {
         s.unsubscribe();
       });
-      setGraph({
-        elements: {
-          nodes: [],
-          edges: [],
-          labels: [],
-          histogram: {
-            edgeProperties: [],
-            edgeTypes: [],
-            nodeLabels: [],
-            nodeProperties: [],
-            nodes: [],
-          },
-          notes: [],
-        },
-        metaData: {
-          scenario: null,
-          pipelineSummary: [],
-          arguments: [],
-          canUndo: false,
-          canRedo: false,
-        },
-        table: {
-          data: [],
-        },
-      });
+      setGraph(null);
       setPerformance(null);
       clearProgress();
       unlockUI();
