@@ -18,6 +18,7 @@ import { Label } from "../labels/Label.tsx";
 import { QueryPanelStatsDisplay } from "./QueryPanelStatsDisplay.tsx";
 import { DynamicList } from "../../shared/elements/DynamicList.tsx";
 import { DropdownButton } from "../../shared/elements/DropdownButton.tsx";
+import { DatabaseSelect } from "../database/DatabaseSelect.tsx";
 
 // TODO: Split into parts to prevent layout shift on login
 export function QueryPanel(props: { roomContext: RoomContext }) {
@@ -32,7 +33,9 @@ export function QueryPanel(props: { roomContext: RoomContext }) {
   );
   const username = useBearStore((s) => s.global.auth.username);
   const showLoginWindow = useBearStore((s) => s.global.auth.loginWindow.show);
-  const [selectedDatabaseId, setSelectedDatabaseId] = useState<string>("");
+  const [selectedDatabaseId, setSelectedDatabaseId] = useState<string | null>(
+    null,
+  );
   const [replace, setReplace] = useState(false);
 
   const referencedDatabase: Database | null =
@@ -111,26 +114,10 @@ export function QueryPanel(props: { roomContext: RoomContext }) {
       {username && (
         <Stack className={"pb-5"} gap={5}>
           <Stack className={"flex-grow-0"}>
-            <Form.Select
-              className={"rounded-0 border-0 border-bottom"}
-              style={{ fontSize: "13px" }}
-              value={selectedDatabaseId}
-              onChange={(event) => {
-                setSelectedDatabaseId(event.target.value);
-              }}
-            >
-              <option value={""} disabled={false}>
-                Select a database...
-              </option>
-              {referencedDatabases.map((referencedDatabase) => (
-                <option
-                  value={referencedDatabase.id}
-                  key={referencedDatabase.id}
-                >
-                  {referencedDatabase.title}
-                </option>
-              ))}
-            </Form.Select>
+            <DatabaseSelect
+              database={selectedDatabaseId}
+              onChange={setSelectedDatabaseId}
+            ></DatabaseSelect>
             {referencedDatabase && (
               <>
                 {referencedDatabase.editUrl != null && (
@@ -229,7 +216,7 @@ export function QueryPanel(props: { roomContext: RoomContext }) {
                         await postRoomActionRunQuery({
                           path: { id: props.roomContext.initialRoomData.id },
                           body: {
-                            databaseId: selectedDatabaseId,
+                            databaseId: selectedDatabaseId ?? "",
                             query: query.queryText,
                             replace: replace,
                           },

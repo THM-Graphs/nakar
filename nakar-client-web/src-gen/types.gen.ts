@@ -839,6 +839,21 @@ export type GetDatabaseStatsResponse = (DatabaseStats);
 
 export type GetDatabaseStatsError = unknown;
 
+export type PostDatabaseSearchData = {
+    body: {
+        searchTerm: string;
+    };
+    path: {
+        id: string;
+    };
+};
+
+export type PostDatabaseSearchResponse = ({
+    nodes: Array<Node>;
+});
+
+export type PostDatabaseSearchError = unknown;
+
 export type GetVersionResponse = (Version);
 
 export type GetVersionError = unknown;
