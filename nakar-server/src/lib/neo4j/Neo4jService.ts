@@ -314,9 +314,9 @@ ORDER BY lcount DESC, label ASC`,
       `MATCH (n) WHERE elementId(n) = $searchTerm\nRETURN n\nLIMIT ${limit.getLimit()}`,
     );
     if (searchCapabilities.canExactMatchLabel) {
-      // queries.push(
-      //   `MATCH (n) WHERE $searchTerm in labels(n)\nRETURN n\nLIMIT ${limit.getLimit()}`,
-      // );
+      queries.push(
+        `MATCH (n: $searchTerm)\nRETURN n\nLIMIT ${limit.getLimit()}`,
+      );
     }
     for (const exactMatchLabelAndProperty of searchCapabilities.exactMatchNodeProperties) {
       const label: string = exactMatchLabelAndProperty[0];

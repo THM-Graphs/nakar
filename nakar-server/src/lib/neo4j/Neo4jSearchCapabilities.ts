@@ -20,7 +20,8 @@ export class Neo4jSearchCapabilities {
 
   // Token lookup indexes: only solves node label and relationship type predicates
   public get canExactMatchLabel(): boolean {
-    return this._canExactMatchLabel;
+    // return this._canExactMatchLabel;
+    return false; // Unable to sanitize label correctly
   }
 
   // Range indexes: Neo4j’s default index. Supports most types of predicates.
