@@ -9,17 +9,22 @@ import { Loadable } from "../../data/Loadable.ts";
 import { handleError } from "../../error/handleError.ts";
 import { match } from "ts-pattern";
 import { Loading } from "../../shared/elements/Loading.tsx";
+import { useBearStore } from "../../state/useBearStore.ts";
+import { SearchForm } from "./SearchForm.tsx";
+import { SearchResultDisplay } from "./SearchResultDisplay.tsx";
+import { SearchCapabilitiesDisplay } from "./SearchCapabilitiesDisplay.tsx";
+import { RoomContext } from "../../pages/Room.tsx";
 
-export function SearchModal() {
-  const shown = true;
-  const handleClose = () => {};
-  const handleClean = () => {};
-
+export function SearchPanel(props: { roomContext: RoomContext }) {
   const [selectedDatabaseId, setSelectedDatabaseId] = useState<string | null>(
     null,
   );
 
-  const [searchTerm, setSearchTerm] = useState<string>("");
+  const searchTerm = useBearStore((s) => s.room.panels.search.searchTerm);
+  const setSearchTerm = useBearStore((s) => s.room.panels.search.setSearchTerm);
+  const leftPanel = useBearStore((s) => s.room.panels.left);
+  const hide = useBearStore((s) => s.room.panels.search.hide);
+
   const [result, setResult] = useState<Loadable<Node[] | null>>({
     type: "data",
     data: null,
@@ -51,14 +56,13 @@ export function SearchModal() {
   };
 
   return (
-    <Modal show={shown} onHide={handleClose} onExited={handleClean}>
-      <Panel
-        title={"Search"}
-        onClose={handleClose}
-        direction={"none"}
-        hidden={false}
-        fullWidth={true}
-      >
+    <Panel
+      title={"Search"}
+      onClose={hide}
+      direction={"left"}
+      hidden={leftPanel != "search"}
+    >
+      <Stack gap={3}>
         <DatabaseSelect
           database={selectedDatabaseId}
           onChange={setSelectedDatabaseId}
@@ -71,45 +75,22 @@ export function SearchModal() {
         )}
         {selectedDatabaseId != null && (
           <>
-            <Form
-              onSubmit={(e) => {
-                e.preventDefault();
+            <SearchForm
+              onSearch={() => {
                 void executeSearch();
               }}
-            >
-              <Stack
-                direction={"horizontal"}
-                className={"bg-body border-top border-bottom mt-2 mb-2"}
-              >
-                <Form.Control
-                  className={"rounded-0 border-0"}
-                  style={{ fontSize: "14px" }}
-                  value={searchTerm}
-                  onChange={(e) => {
-                    setSearchTerm(e.target.value);
-                  }}
-                ></Form.Control>
-                <NavbarButton icon={"search"}></NavbarButton>
-              </Stack>
-            </Form>
-            {match(result)
-              .returnType<ReactElement>()
-              .with({ type: "loading" }, () => <Loading></Loading>)
-              .with({ type: "data" }, (data) => (
-                <span>{JSON.stringify(data.data)}</span>
-              ))
-              .with({ type: "error" }, (error) => (
-                <Alert
-                  variant={"danger"}
-                  className={"border-start-0 border-end-0 rounded-0 small"}
-                >
-                  {error.message}
-                </Alert>
-              ))
-              .exhaustive()}
+            ></SearchForm>
+            <SearchResultDisplay
+              result={result}
+              roomContext={props.roomContext}
+            ></SearchResultDisplay>
+            <SearchCapabilitiesDisplay
+              databaseId={selectedDatabaseId}
+            ></SearchCapabilitiesDisplay>
           </>
         )}
-      </Panel>
-    </Modal>
+        <div className={"flex-grow-1"}></div>
+      </Stack>
+    </Panel>
   );
 }

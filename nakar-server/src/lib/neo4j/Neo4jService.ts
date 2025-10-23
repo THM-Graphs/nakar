@@ -310,9 +310,12 @@ ORDER BY lcount DESC, label ASC`,
       'graphElements',
     );
 
+    queries.push(
+      `MATCH (n) WHERE elementId(n) = $searchTerm\nRETURN n\nLIMIT ${limit.getLimit()}`,
+    );
     if (searchCapabilities.canExactMatchLabel) {
       // queries.push(
-      //   `MATCH (n) WHERE $searchTerm in labels(n) \nLIMIT ${limit.getLimit()}\nRETURN n`,
+      //   `MATCH (n) WHERE $searchTerm in labels(n)\nRETURN n\nLIMIT ${limit.getLimit()}`,
       // );
     }
     for (const exactMatchLabelAndProperty of searchCapabilities.exactMatchNodeProperties) {
@@ -320,7 +323,7 @@ ORDER BY lcount DESC, label ASC`,
       const propeties: SSet<string> = exactMatchLabelAndProperty[1];
       for (const property of propeties) {
         queries.push(
-          `MATCH (n: ${label}) WHERE n.${property} = $searchTerm \nLIMIT ${limit.getLimit()}\nRETURN n`,
+          `MATCH (n: \`${label}\`) WHERE n.\`${property}\` = $searchTerm\nRETURN n\nLIMIT ${limit.getLimit()}`,
         );
       }
     }
@@ -329,7 +332,7 @@ ORDER BY lcount DESC, label ASC`,
       const propeties: SSet<string> = fuzzyMatchLabelAndProperty[1];
       for (const property of propeties) {
         queries.push(
-          `MATCH (n: ${label}) WHERE n.${property} CONTAINS $searchTerm \nLIMIT ${limit.getLimit()}\nRETURN n`,
+          `MATCH (n: \`${label}\`) WHERE n.\`${property}\` CONTAINS $searchTerm\nRETURN n\nLIMIT ${limit.getLimit()}`,
         );
       }
     }

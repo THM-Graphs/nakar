@@ -5,4 +5,5 @@ export enum MutableGraphElementCreationAction {
   merge = 'merge',
   compress = 'compress',
   connectResultNodes = 'connectResultNodes',
+  search = 'search',
 }

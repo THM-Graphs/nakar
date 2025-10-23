@@ -866,6 +866,25 @@ paths:
                 required:
                   - nodes
 
+  /database/{id}/search-capabilities:
+    get:
+      tags:
+        - Database
+      operationId: getDatabaseSearchCapabilities
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DatabaseSearchCapabilities"
+
   /system/version:
     get:
       tags:
@@ -1010,7 +1029,8 @@ components:
         "query",
         "merge",
         "compress",
-        "connectResultNodes"
+        "connectResultNodes",
+        "search"
       ]
 
     Node:
@@ -1730,6 +1750,38 @@ components:
         - labels
         - rels
         - nodeCount
+
+    DatabaseSearchCapabilities:
+      type: object
+      properties:
+        canExactMatchElementId:
+          type: boolean
+        canExactMatchLabel:
+          type: boolean
+        exactMatchNodeProperties:
+          type: array
+          items:
+            $ref: "#/components/schemas/DatabaseSearchCapabilitiesEntry"
+        fuzzyMatchNodeProperties:
+          type: array
+          items:
+            $ref: "#/components/schemas/DatabaseSearchCapabilitiesEntry"
+      required:
+        - canExactMatchElementId
+        - canExactMatchLabel
+        - exactMatchNodeProperties
+        - fuzzyMatchNodeProperties
+
+    DatabaseSearchCapabilitiesEntry:
+      type: object
+      properties:
+        label:
+          type: string
+        property:
+          type: string
+      required:
+        - label
+        - property
 
     Note:
       type: object

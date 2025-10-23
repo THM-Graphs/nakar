@@ -45,7 +45,8 @@ import { NotesPanelButton } from "../room/notes-panel/NotesPanelButton.tsx";
 import { AddEditNoteModal } from "../room/notes-panel/AddEditNoteModal.tsx";
 import { AuthButton } from "../shared/auth/AuthButton.tsx";
 import { EditRoomTemplateAction } from "../actions/EditRoomTemplateAction.ts";
-import { SearchModal } from "../room/search/SearchModal.tsx";
+import { SearchPanel } from "../room/search-panel/SearchPanel.tsx";
+import { SearchPanelButton } from "../room/search-panel/SearchPanelButton.tsx";
 
 export type RoomContext = {
   initialRoomData: RoomSchema;
@@ -240,6 +241,7 @@ export function Room(props: { context: AppContext }) {
               <ScenariosPanelButton></ScenariosPanelButton>
               <QueryPanelButton></QueryPanelButton>
               <NotesPanelButton></NotesPanelButton>
+              <SearchPanelButton></SearchPanelButton>
             </Stack>
             <ScenariosPanel
               context={props.context}
@@ -250,6 +252,7 @@ export function Room(props: { context: AppContext }) {
               roomContext={roomContext}
               context={props.context}
             ></NotesPanel>
+            <SearchPanel roomContext={roomContext}></SearchPanel>
             <Canvas context={props.context} roomContext={roomContext}></Canvas>
             <InspectorPanel
               context={props.context}
@@ -266,7 +269,6 @@ export function Room(props: { context: AppContext }) {
               roomContext={roomContext}
             ></ExpandNodePreviewModal>
             <AddEditNoteModal roomContext={roomContext}></AddEditNoteModal>
-            <SearchModal></SearchModal>
           </Stack>
           <StatusBar
             left={<ProgressDisplay></ProgressDisplay>}

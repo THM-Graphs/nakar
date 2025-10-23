@@ -2,7 +2,7 @@
 
 export type Color = PresetColor | CustomColor;
 
-export type CreationReason = 'loadScenario' | 'expand' | 'query' | 'merge' | 'compress' | 'connectResultNodes';
+export type CreationReason = 'loadScenario' | 'expand' | 'query' | 'merge' | 'compress' | 'connectResultNodes' | 'search';
 
 export type CustomColor = {
     type: 'CustomColor';
@@ -18,6 +18,18 @@ export type Database = {
     url: (string) | null;
     browserUrl: (string) | null;
     editUrl: (string) | null;
+};
+
+export type DatabaseSearchCapabilities = {
+    canExactMatchElementId: boolean;
+    canExactMatchLabel: boolean;
+    exactMatchNodeProperties: Array<DatabaseSearchCapabilitiesEntry>;
+    fuzzyMatchNodeProperties: Array<DatabaseSearchCapabilitiesEntry>;
+};
+
+export type DatabaseSearchCapabilitiesEntry = {
+    label: string;
+    property: string;
 };
 
 export type DatabaseStats = {
@@ -853,6 +865,16 @@ export type PostDatabaseSearchResponse = ({
 });
 
 export type PostDatabaseSearchError = unknown;
+
+export type GetDatabaseSearchCapabilitiesData = {
+    path: {
+        id: string;
+    };
+};
+
+export type GetDatabaseSearchCapabilitiesResponse = (DatabaseSearchCapabilities);
+
+export type GetDatabaseSearchCapabilitiesError = unknown;
 
 export type GetVersionResponse = (Version);
 

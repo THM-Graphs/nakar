@@ -12,6 +12,7 @@ import type { LoggerService } from '../logger/LoggerService';
 import type {
   operations,
   SchemaDatabase,
+  SchemaDatabaseSearchCapabilitiesEntry,
   SchemaDatabaseStats,
   SchemaGetScenariosResult,
   SchemaGraph,
@@ -19,7 +20,6 @@ import type {
   SchemaGraphMetaData,
   SchemaGraphTable,
   SchemaNode,
-  SchemaNodePreview,
   SchemaRoom,
   SchemaRooms,
   SchemaRoomTemplate,
@@ -55,7 +55,7 @@ import type { GetScenarioDBDTO } from '../database/dto/GetScenarioDBDTO';
 import { SchemaDTOFactory } from './SchemaDTOFactory';
 import type { GetRoomDBDTO } from '../database/dto/GetRoomDBDTO';
 import z from 'zod';
-import type { MutableGraph } from '../room/graph/MutableGraph';
+import { MutableGraph } from '../room/graph/MutableGraph';
 import { CachingSchemaDTOFactory } from './CachingSchemaDTOFactory';
 import { SMap } from '../tools/Map';
 import { SSet } from '../tools/Set';
@@ -67,9 +67,13 @@ import type { ExpandNodePreview } from '../neo4j/expand-node-preview/ExpandNodeP
 import type { MediaService } from '../media/MediaService';
 import type { GetNotesDBDTO } from '../database/dto/GetNotesDBDTO';
 import * as undici from 'undici';
-import type { FinalGraphDisplayConfiguration } from '../room/scenario-pipeline/display-configuration/FinalGraphDisplayConfiguration';
+import { FinalGraphDisplayConfiguration } from '../room/scenario-pipeline/display-configuration/FinalGraphDisplayConfiguration';
 import type { GetTemplateDBDTO } from '../database/dto/GetTemplateDBDTO';
 import { Neo4jNode } from '../neo4j/Neo4jNode';
+import { Neo4jSearchCapabilities } from '../neo4j/Neo4jSearchCapabilities';
+import { MutableNodeIndex } from '../room/graph/MutableNodeIndex';
+import { MutableGraphElementCreationAction } from '../room/graph/MutableGraphElementCreationAction';
+import { GetNoteDBDTO } from '../database/dto/GetNoteDBDTO';
 
 export class HTTPService implements ApplicationService {
   private readonly _app: Application;
@@ -974,7 +978,6 @@ export class HTTPService implements ApplicationService {
 
     this._app.post(
       '/database/:id/search',
-      assertLoggedIn,
       this._handle(
         async (
           req: Request,
@@ -989,6 +992,8 @@ export class HTTPService implements ApplicationService {
           }
           const credentials: Neo4jDatabaseInfo =
             Neo4jDatabaseInfo.parse(database);
+          const config: FinalGraphDisplayConfiguration =
+            FinalGraphDisplayConfiguration.empty(); // TODO
 
           type Body =
             operations['postDatabaseSearch']['requestBody']['content']['application/json'];
@@ -1001,12 +1006,110 @@ export class HTTPService implements ApplicationService {
             credentials: credentials,
           });
 
+          const graph: MutableGraph = MutableGraph.empty(
+            this._logger,
+            this._profiler,
+          );
+          for (const node of result) {
+            graph.nodes.addNeo4jNode(
+              node,
+              MutableGraphElementCreationAction.search,
+              config,
+            );
+          }
+          const cachingFactory: CachingSchemaDTOFactory =
+            new CachingSchemaDTOFactory(
+              this._databaseService,
+              this._logger,
+              this._config,
+              this._media,
+              this._profiler,
+            );
+          const schemaGraph: SchemaGraph =
+            await cachingFactory.createSchemaGraph(
+              graph,
+              { notes: new SSet<GetNoteDBDTO>(), byNodeId: new SMap() },
+              config,
+            );
+
           return {
-            // @ts-ignore
-            nodes: result.map((n) => ({
-              id: n.node.elementId,
-              title: n.node.toString(),
-            })),
+            nodes: schemaGraph.elements.nodes,
+          };
+        },
+      ),
+    );
+
+    this._app.get(
+      '/database/:id/search-capabilities',
+      this._handle(
+        async (
+          req: Request,
+        ): Promise<
+          operations['getDatabaseSearchCapabilities']['responses']['200']['content']['application/json']
+        > => {
+          const databaseId: string = this._getPathParameter(req, 'id');
+          const database: GetDatabaseDBDTO | null =
+            await this._databaseService.getDatabase(databaseId);
+          if (database == null) {
+            throw new NotFound(`Database ${databaseId} not found.`);
+          }
+          const credentials: Neo4jDatabaseInfo =
+            Neo4jDatabaseInfo.parse(database);
+
+          const capabilities: Neo4jSearchCapabilities =
+            await this._neo4jService.getSearchCapabilities({
+              credentials: credentials,
+            });
+
+          return {
+            canExactMatchElementId: capabilities.canExactMatchElementId,
+            canExactMatchLabel: capabilities.canExactMatchLabel,
+            exactMatchNodeProperties:
+              capabilities.exactMatchNodeProperties.reduce(
+                (
+                  result: SchemaDatabaseSearchCapabilitiesEntry[],
+                  label: string,
+                  propertyList: SSet<string>,
+                ): SchemaDatabaseSearchCapabilitiesEntry[] => {
+                  return [
+                    ...result,
+                    ...propertyList.reduce(
+                      (
+                        properties: SchemaDatabaseSearchCapabilitiesEntry[],
+                        property: string,
+                      ): SchemaDatabaseSearchCapabilitiesEntry[] => [
+                        ...properties,
+                        { property: property, label: label },
+                      ],
+                      [],
+                    ),
+                  ];
+                },
+                [],
+              ),
+            fuzzyMatchNodeProperties:
+              capabilities.fuzzyMatchNodeProperties.reduce(
+                (
+                  result: SchemaDatabaseSearchCapabilitiesEntry[],
+                  label: string,
+                  propertyList: SSet<string>,
+                ): SchemaDatabaseSearchCapabilitiesEntry[] => {
+                  return [
+                    ...result,
+                    ...propertyList.reduce(
+                      (
+                        properties: SchemaDatabaseSearchCapabilitiesEntry[],
+                        property: string,
+                      ): SchemaDatabaseSearchCapabilitiesEntry[] => [
+                        ...properties,
+                        { property: property, label: label },
+                      ],
+                      [],
+                    ),
+                  ];
+                },
+                [],
+              ),
           };
         },
       ),

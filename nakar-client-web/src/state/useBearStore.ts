@@ -569,6 +569,24 @@ export const useBearStore = create<BearState>()(
                     },
                   },
                 },
+                search: {
+                  searchTerm: "",
+                  show: () => {
+                    set((s) => {
+                      s.room.panels.left = "search";
+                    });
+                  },
+                  hide: () => {
+                    set((s) => {
+                      s.room.panels.left = null;
+                    });
+                  },
+                  setSearchTerm: (q) => {
+                    set((s) => {
+                      s.room.panels.search.searchTerm = q;
+                    });
+                  },
+                },
               },
               canvas: {
                 tabs: {
@@ -637,10 +655,11 @@ export const useBearStore = create<BearState>()(
             .with("data", () => "data")
             .otherwise(() => "graph");
           state.room.panels.left = match(storage.leftPanel)
-            .returnType<"scenarios" | "query" | "notes" | null>()
+            .returnType<"scenarios" | "query" | "notes" | "search" | null>()
             .with("scenarios", () => "scenarios")
             .with("query", () => "query")
             .with("notes", () => "notes")
+            .with("search", () => "search")
             .otherwise(() => null);
           state.room.panels.right = match(storage.rightPanel)
             .returnType<"histogram" | "inspector" | null>()

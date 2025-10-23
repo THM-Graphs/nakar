@@ -2,6 +2,8 @@ import type { SMap } from '../tools/Map';
 import type { SSet } from '../tools/Set';
 
 export class Neo4jSearchCapabilities {
+  public readonly canExactMatchElementId: boolean = true;
+
   private readonly _canExactMatchLabel: boolean;
   private readonly _exactMatchNodeProperties: SMap<string, SSet<string>>;
   private readonly _fuzzyMatchNodeProperties: SMap<string, SSet<string>>;

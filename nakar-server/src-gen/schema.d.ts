@@ -516,6 +516,22 @@ export interface paths {
         readonly patch?: never;
         readonly trace?: never;
     };
+    readonly "/database/{id}/search-capabilities": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get: operations["getDatabaseSearchCapabilities"];
+        readonly put?: never;
+        readonly post?: never;
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
     readonly "/system/version": {
         readonly parameters: {
             readonly query?: never;
@@ -599,7 +615,7 @@ export interface components {
         };
         readonly GraphPropertyValue: unknown;
         /** @enum {string} */
-        readonly CreationReason: "loadScenario" | "expand" | "query" | "merge" | "compress" | "connectResultNodes";
+        readonly CreationReason: "loadScenario" | "expand" | "query" | "merge" | "compress" | "connectResultNodes" | "search";
         readonly Node: {
             readonly id: string;
             readonly title: string;
@@ -828,6 +844,16 @@ export interface components {
             }[];
             readonly nodeCount: number;
         };
+        readonly DatabaseSearchCapabilities: {
+            readonly canExactMatchElementId: boolean;
+            readonly canExactMatchLabel: boolean;
+            readonly exactMatchNodeProperties: readonly components["schemas"]["DatabaseSearchCapabilitiesEntry"][];
+            readonly fuzzyMatchNodeProperties: readonly components["schemas"]["DatabaseSearchCapabilitiesEntry"][];
+        };
+        readonly DatabaseSearchCapabilitiesEntry: {
+            readonly label: string;
+            readonly property: string;
+        };
         readonly Note: {
             readonly id: string;
             readonly content: string;
@@ -984,6 +1010,8 @@ export type SchemaNotification = components['schemas']['Notification'];
 export type SchemaPhysicsPerformance = components['schemas']['PhysicsPerformance'];
 export type SchemaExpandNodePreviewElement = components['schemas']['ExpandNodePreviewElement'];
 export type SchemaDatabaseStats = components['schemas']['DatabaseStats'];
+export type SchemaDatabaseSearchCapabilities = components['schemas']['DatabaseSearchCapabilities'];
+export type SchemaDatabaseSearchCapabilitiesEntry = components['schemas']['DatabaseSearchCapabilitiesEntry'];
 export type SchemaNote = components['schemas']['Note'];
 export type SchemaLayoutSpecification = components['schemas']['LayoutSpecification'];
 export type SchemaLayoutSpecificationForceDirected = components['schemas']['LayoutSpecificationForceDirected'];
@@ -1848,6 +1876,28 @@ export interface operations {
                     readonly "application/json": {
                         readonly nodes: readonly components["schemas"]["Node"][];
                     };
+                };
+            };
+        };
+    };
+    readonly getDatabaseSearchCapabilities: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path: {
+                readonly id: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            /** @description OK */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["DatabaseSearchCapabilities"];
                 };
             };
         };

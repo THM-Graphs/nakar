@@ -140,7 +140,7 @@ export interface BearState {
       setState: (state: SocketState) => void;
     };
     panels: {
-      left: "scenarios" | "query" | "notes" | null;
+      left: "scenarios" | "query" | "notes" | "search" | null;
       right: "histogram" | "inspector" | null;
       inspector: {
         show: () => void;
@@ -183,6 +183,12 @@ export interface BearState {
           color: Color | null;
           setColor: (c: Color | null) => void;
         };
+      };
+      search: {
+        searchTerm: string;
+        show: () => void;
+        hide: () => void;
+        setSearchTerm: (queryText: string) => void;
       };
     };
     canvas: {
