@@ -18,6 +18,8 @@ import type {
   SchemaGraphElements,
   SchemaGraphMetaData,
   SchemaGraphTable,
+  SchemaNode,
+  SchemaNodePreview,
   SchemaRoom,
   SchemaRooms,
   SchemaRoomTemplate,
@@ -67,6 +69,7 @@ import type { GetNotesDBDTO } from '../database/dto/GetNotesDBDTO';
 import * as undici from 'undici';
 import type { FinalGraphDisplayConfiguration } from '../room/scenario-pipeline/display-configuration/FinalGraphDisplayConfiguration';
 import type { GetTemplateDBDTO } from '../database/dto/GetTemplateDBDTO';
+import { Neo4jNode } from '../neo4j/Neo4jNode';
 
 export class HTTPService implements ApplicationService {
   private readonly _app: Application;
@@ -967,6 +970,46 @@ export class HTTPService implements ApplicationService {
 
         return stats;
       }),
+    );
+
+    this._app.post(
+      '/database/:id/search',
+      assertLoggedIn,
+      this._handle(
+        async (
+          req: Request,
+        ): Promise<
+          operations['postDatabaseSearch']['responses']['200']['content']['application/json']
+        > => {
+          const databaseId: string = this._getPathParameter(req, 'id');
+          const database: GetDatabaseDBDTO | null =
+            await this._databaseService.getDatabase(databaseId);
+          if (database == null) {
+            throw new NotFound(`Database ${databaseId} not found.`);
+          }
+          const credentials: Neo4jDatabaseInfo =
+            Neo4jDatabaseInfo.parse(database);
+
+          type Body =
+            operations['postDatabaseSearch']['requestBody']['content']['application/json'];
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+          const body: Body = req.body as Body;
+          const searchTerm: string = body.searchTerm;
+
+          const result: Neo4jNode[] = await this._neo4jService.search({
+            searchTerm: searchTerm,
+            credentials: credentials,
+          });
+
+          return {
+            // @ts-ignore
+            nodes: result.map((n) => ({
+              id: n.node.elementId,
+              title: n.node.toString(),
+            })),
+          };
+        },
+      ),
     );
   }
 

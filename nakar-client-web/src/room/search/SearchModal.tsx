@@ -25,15 +25,15 @@ export function SearchModal() {
     data: null,
   });
 
-  useEffect(() => {
-    if (searchTerm.length > 0) {
-      if (result.type != "loading") {
-        void executeSearch();
-      }
-    } else {
-      setResult({ type: "data", data: null });
-    }
-  }, [searchTerm]);
+  // useEffect(() => {
+  //   if (searchTerm.length > 0) {
+  //     if (result.type != "loading") {
+  //       void executeSearch();
+  //     }
+  //   } else {
+  //     setResult({ type: "data", data: null });
+  //   }
+  // }, [searchTerm]);
 
   const executeSearch = async (): Promise<void> => {
     setResult({ type: "loading" });

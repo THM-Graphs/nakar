@@ -15,9 +15,12 @@ import type { SessionConfig } from 'neo4j-driver-core/types/driver';
 import type { ApplicationService } from '../application/ApplicationService';
 import { ExpandNodePreview } from './expand-node-preview/ExpandNodePreview';
 import { ExpandNodePreviewEntry } from './expand-node-preview/ExpandNodePreviewEntry';
-import type { SMap } from '../tools/Map';
+import { SMap } from '../tools/Map';
 import type { SchemaDatabaseStats } from '../../../src-gen/schema';
 import { Neo4jLimitConfig } from './Neo4jLimitConfig';
+import { Neo4jSearchCapabilities } from './Neo4jSearchCapabilities';
+import z from 'zod';
+import { Neo4jNode } from './Neo4jNode';
 
 export class Neo4jService implements ApplicationService {
   public constructor(private readonly _logger: LoggerService) {}
@@ -221,6 +224,126 @@ ORDER BY lcount DESC, label ASC`,
     credentials: Neo4jDatabaseInfo;
   }): Promise<SchemaDatabaseStats> {
     return await this._fetchDbStats(params.credentials);
+  }
+
+  public async getSearchCapabilities(params: {
+    credentials: Neo4jDatabaseInfo;
+  }): Promise<Neo4jSearchCapabilities> {
+    const result: Neo4jGraphElements = await this.executeQuery(
+      params.credentials,
+      'SHOW INDEXES',
+      {},
+      new Neo4jLimitConfig('default', 'tableData'),
+    );
+
+    let canExactMatchLabel: boolean = false;
+    const exactMatchNodeProperties: SMap<string, SSet<string>> = new SMap<
+      string,
+      SSet<string>
+    >();
+    const fuzzyMatchNodeProperties: SMap<string, SSet<string>> = new SMap<
+      string,
+      SSet<string>
+    >();
+
+    for (const line of result.tableData) {
+      if (line.get('state') !== 'ONLINE') {
+        continue;
+      }
+      if (line.get('type') === 'LOOKUP' && line.get('entityType') === 'NODE') {
+        canExactMatchLabel = true;
+      } else if (
+        line.get('type') === 'RANGE' &&
+        line.get('entityType') === 'NODE'
+      ) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+        const labelsOrTypes: string[] = line.get('labelsOrTypes') as string[];
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+        const properties: string[] = line.get('properties') as string[];
+        for (const labelOrType of labelsOrTypes) {
+          exactMatchNodeProperties.set(
+            labelOrType,
+            exactMatchNodeProperties.get(labelOrType) ??
+              new SSet<string>().byMerging(new SSet<string>(properties)),
+          );
+        }
+      } else if (
+        line.get('type') === 'TEXT' &&
+        line.get('entityType') === 'NODE'
+      ) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+        const labelsOrTypes: string[] = line.get('labelsOrTypes') as string[];
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+        const properties: string[] = line.get('properties') as string[];
+        for (const labelOrType of labelsOrTypes) {
+          fuzzyMatchNodeProperties.set(
+            labelOrType,
+            fuzzyMatchNodeProperties.get(labelOrType) ??
+              new SSet<string>().byMerging(new SSet<string>(properties)),
+          );
+        }
+      }
+    }
+
+    const capabilities: Neo4jSearchCapabilities = new Neo4jSearchCapabilities({
+      canExactMatchLabel: canExactMatchLabel,
+      exactMatchNodeProperties: exactMatchNodeProperties,
+      fuzzyMatchNodeProperties: fuzzyMatchNodeProperties,
+    });
+
+    return capabilities;
+  }
+
+  public async search(params: {
+    credentials: Neo4jDatabaseInfo;
+    searchTerm: string;
+  }): Promise<Neo4jNode[]> {
+    const searchCapabilities: Neo4jSearchCapabilities =
+      await this.getSearchCapabilities({ credentials: params.credentials });
+
+    let queries: string[] = [];
+    let data: Record<string, unknown> = {
+      searchTerm: params.searchTerm,
+    };
+    const limit: Neo4jLimitConfig = new Neo4jLimitConfig(
+      'preview',
+      'graphElements',
+    );
+
+    if (searchCapabilities.canExactMatchLabel) {
+      // queries.push(
+      //   `MATCH (n) WHERE $searchTerm in labels(n) \nLIMIT ${limit.getLimit()}\nRETURN n`,
+      // );
+    }
+    for (const exactMatchLabelAndProperty of searchCapabilities.exactMatchNodeProperties) {
+      const label: string = exactMatchLabelAndProperty[0];
+      const propeties: SSet<string> = exactMatchLabelAndProperty[1];
+      for (const property of propeties) {
+        queries.push(
+          `MATCH (n: ${label}) WHERE n.${property} = $searchTerm \nLIMIT ${limit.getLimit()}\nRETURN n`,
+        );
+      }
+    }
+    for (const fuzzyMatchLabelAndProperty of searchCapabilities.fuzzyMatchNodeProperties) {
+      const label: string = fuzzyMatchLabelAndProperty[0];
+      const propeties: SSet<string> = fuzzyMatchLabelAndProperty[1];
+      for (const property of propeties) {
+        queries.push(
+          `MATCH (n: ${label}) WHERE n.${property} CONTAINS $searchTerm \nLIMIT ${limit.getLimit()}\nRETURN n`,
+        );
+      }
+    }
+
+    const query: string = queries.join('\nUNION ALL\n');
+
+    const result: Neo4jGraphElements = await this.executeQuery(
+      params.credentials,
+      query,
+      data,
+      limit,
+    );
+
+    return result.nodes.toValueArray();
   }
 
   private async _getLabels(
