@@ -1,5 +1,6 @@
 import { useBearStore } from "../../state/useBearStore.ts";
 import { Form } from "react-bootstrap";
+import { useEffect } from "react";
 
 export function DatabaseSelect(props: {
   database: string | null;
@@ -8,6 +9,12 @@ export function DatabaseSelect(props: {
   const referencedDatabases = useBearStore(
     (s) => s.room.panels.scenarios.scenarios.referencedDatabases,
   );
+
+  useEffect(() => {
+    if (referencedDatabases.length > 0 && props.database == null) {
+      props.onChange(referencedDatabases[0].id);
+    }
+  }, [referencedDatabases]);
 
   return (
     <Form.Select

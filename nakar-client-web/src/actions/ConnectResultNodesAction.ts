@@ -24,9 +24,7 @@ export class ConnectResultNodesAction extends Action<ConnectResultNodesActionPar
   }
 
   disabled(input: ConnectResultNodesActionParams): boolean {
-    return (
-      input.uiLocked || input.selectedTab !== "graph" || input.scenario == null
-    );
+    return input.uiLocked || input.selectedTab !== "graph";
   }
 
   icon(): string | null {

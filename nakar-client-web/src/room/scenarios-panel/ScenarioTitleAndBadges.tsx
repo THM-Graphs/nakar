@@ -43,6 +43,7 @@ export function ScenarioTitleAndBadges(props: {
         {props.scenario.parameters.map((p) => (
           <OverlayTrigger
             overlay={<Tooltip>This scenario requires arguments.</Tooltip>}
+            key={p.identifier}
           >
             <Stack
               direction={"horizontal"}

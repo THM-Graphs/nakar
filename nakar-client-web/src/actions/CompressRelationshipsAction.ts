@@ -26,9 +26,7 @@ export class CompressRelationshipsAction extends Action<CompressRelationshipsAct
   }
 
   disabled(input: CompressRelationshipsActionParams): boolean {
-    return (
-      input.uiLocked || input.selectedTab !== "graph" || input.scenario == null
-    );
+    return input.uiLocked || input.selectedTab !== "graph";
   }
 
   icon(): string | null {

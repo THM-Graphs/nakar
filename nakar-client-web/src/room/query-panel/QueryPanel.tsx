@@ -64,20 +64,11 @@ export function QueryPanel(props: { roomContext: RoomContext }) {
   };
 
   useEffect(() => {
-    if (selectedDatabaseId === "") {
-      if (referencedDatabases.length > 0) {
-        setSelectedDatabaseId(referencedDatabases[0].id);
-      }
-    }
-  }, [referencedDatabases]);
-
-  useEffect(() => {
     reload();
   }, [selectedDatabaseId]);
 
   useEffect(() => {
     return () => {
-      setSelectedDatabaseId("");
       query.setQueryText("");
     };
   }, []);

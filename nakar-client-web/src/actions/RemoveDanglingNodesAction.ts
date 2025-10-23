@@ -26,9 +26,7 @@ export class RemoveDanglingNodesAction extends Action<RemoveDanglingNodesActionP
   }
 
   disabled(input: RemoveDanglingNodesActionParams): boolean {
-    return (
-      input.uiLocked || input.selectedTab !== "graph" || input.scenario == null
-    );
+    return input.uiLocked || input.selectedTab !== "graph";
   }
 
   icon(): string | null {
