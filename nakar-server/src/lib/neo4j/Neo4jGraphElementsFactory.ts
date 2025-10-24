@@ -1,7 +1,7 @@
 import type {
   Node,
-  RecordShape,
   Record as Neo4jRecord,
+  RecordShape,
   Relationship,
 } from 'neo4j-driver';
 import { isInt, isNode, isPath, isRelationship } from 'neo4j-driver';

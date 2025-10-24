@@ -1,14 +1,11 @@
-import { Alert, Form, Modal, Stack } from "react-bootstrap";
+import { Stack } from "react-bootstrap";
 import { Panel } from "../../shared/elements/Panel.tsx";
-import { ReactElement, useEffect, useState } from "react";
+import { useState } from "react";
 import { DatabaseSelect } from "../database/DatabaseSelect.tsx";
-import { NavbarButton } from "../../shared/elements/NavbarButton.tsx";
 import { Node, postDatabaseSearch } from "../../../src-gen";
 import { resultOrThrow } from "../../data/resultOrThrow.ts";
 import { Loadable } from "../../data/Loadable.ts";
 import { handleError } from "../../error/handleError.ts";
-import { match } from "ts-pattern";
-import { Loading } from "../../shared/elements/Loading.tsx";
 import { useBearStore } from "../../state/useBearStore.ts";
 import { SearchForm } from "./SearchForm.tsx";
 import { SearchResultDisplay } from "./SearchResultDisplay.tsx";
@@ -21,7 +18,6 @@ export function SearchPanel(props: { roomContext: RoomContext }) {
   );
 
   const searchTerm = useBearStore((s) => s.room.panels.search.searchTerm);
-  const setSearchTerm = useBearStore((s) => s.room.panels.search.setSearchTerm);
   const leftPanel = useBearStore((s) => s.room.panels.left);
   const hide = useBearStore((s) => s.room.panels.search.hide);
 

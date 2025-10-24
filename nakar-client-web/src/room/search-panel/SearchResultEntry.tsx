@@ -1,5 +1,5 @@
 import { Stack } from "react-bootstrap";
-import { Database, Node } from "../../../src-gen";
+import { Node } from "../../../src-gen";
 import { Label } from "../labels/Label.tsx";
 import { RoomContext } from "../../pages/Room.tsx";
 import { ClipboardButton } from "../../shared/elements/ClipboardButton.tsx";

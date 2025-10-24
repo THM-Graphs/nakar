@@ -19,8 +19,7 @@ import { SMap } from '../tools/Map';
 import type { SchemaDatabaseStats } from '../../../src-gen/schema';
 import { Neo4jLimitConfig } from './Neo4jLimitConfig';
 import { Neo4jSearchCapabilities } from './Neo4jSearchCapabilities';
-import z from 'zod';
-import { Neo4jNode } from './Neo4jNode';
+import type { Neo4jNode } from './Neo4jNode';
 
 export class Neo4jService implements ApplicationService {
   public constructor(private readonly _logger: LoggerService) {}
@@ -301,8 +300,8 @@ ORDER BY lcount DESC, label ASC`,
     const searchCapabilities: Neo4jSearchCapabilities =
       await this.getSearchCapabilities({ credentials: params.credentials });
 
-    let queries: string[] = [];
-    let data: Record<string, unknown> = {
+    const queries: string[] = [];
+    const data: Record<string, unknown> = {
       searchTerm: params.searchTerm,
     };
     const limit: Neo4jLimitConfig = new Neo4jLimitConfig(

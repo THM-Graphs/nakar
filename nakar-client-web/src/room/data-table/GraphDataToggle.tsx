@@ -1,13 +1,8 @@
 import { Stack } from "react-bootstrap";
 import { NavbarButton } from "../../shared/elements/NavbarButton.tsx";
 import { useBearStore } from "../../state/useBearStore.ts";
-import { AppContext } from "../../state/AppContext.ts";
-import { useEffect } from "react";
-import { Subscription } from "rxjs";
-import { WSServerToClientMessage } from "../../../src-gen";
-import { match } from "ts-pattern";
 
-export function GraphDataToggle(props: { context: AppContext }) {
+export function GraphDataToggle() {
   const tabs = useBearStore((s) => s.room.canvas.tabs);
   const tableData = useBearStore((s) => s.room.scenario.graph.table.data);
   const graphElements = useBearStore((s) => s.room.scenario.graph.elements);

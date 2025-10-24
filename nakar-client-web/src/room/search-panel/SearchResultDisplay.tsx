@@ -3,7 +3,7 @@ import { ReactElement } from "react";
 import { Loading } from "../../shared/elements/Loading.tsx";
 import { Alert, Stack } from "react-bootstrap";
 import { Loadable } from "../../data/Loadable.ts";
-import { Database, Node } from "../../../src-gen";
+import { Node } from "../../../src-gen";
 import { DynamicList } from "../../shared/elements/DynamicList.tsx";
 import { RoomContext } from "../../pages/Room.tsx";
 import { SearchResultEntry } from "./SearchResultEntry.tsx";

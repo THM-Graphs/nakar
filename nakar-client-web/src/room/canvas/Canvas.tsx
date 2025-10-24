@@ -17,7 +17,6 @@ import { ConnectResultNodesAction } from "../../actions/ConnectResultNodesAction
 import { RemoveDanglingNodesAction } from "../../actions/RemoveDanglingNodesAction.ts";
 import { CompressRelationshipsAction } from "../../actions/CompressRelationshipsAction.ts";
 import { useState } from "react";
-import { SpawnNodeAction } from "../../actions/SpawnNodeAction.ts";
 
 export function Canvas(props: {
   context: AppContext;

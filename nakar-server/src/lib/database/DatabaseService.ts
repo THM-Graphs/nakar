@@ -10,7 +10,7 @@ import type { GetMediaDBDTO } from './dto/GetMediaDBDTO';
 import z from 'zod';
 import { DatabaseDTOFactory } from './DatabaseDTOFactory';
 import type { Input } from '@strapi/types/dist/modules/documents/params/data';
-import { FinalGraphDisplayConfiguration } from '../room/scenario-pipeline/display-configuration/FinalGraphDisplayConfiguration';
+import type { FinalGraphDisplayConfiguration } from '../room/scenario-pipeline/display-configuration/FinalGraphDisplayConfiguration';
 import { MergableGraphDisplayConfiguration } from '../room/scenario-pipeline/display-configuration/MergableGraphDisplayConfiguration';
 import type { Observable } from 'rxjs';
 import { Subject } from 'rxjs';

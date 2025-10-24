@@ -9,8 +9,8 @@ import { AppContext } from "../state/AppContext.ts";
 import {
   createRoom,
   getRoomTemplate,
-  RoomTemplate as RoomTemplateSchema,
   Room as RoomSchema,
+  RoomTemplate as RoomTemplateSchema,
 } from "../../src-gen";
 import { resultOrThrow } from "../data/resultOrThrow.ts";
 import { LoaderFunctionArgs, useLoaderData, useNavigate } from "react-router";

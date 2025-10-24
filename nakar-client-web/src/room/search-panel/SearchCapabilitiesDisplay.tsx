@@ -8,7 +8,6 @@ import { handleError } from "../../error/handleError.ts";
 import { resultOrThrow } from "../../data/resultOrThrow.ts";
 import { Alert, Stack } from "react-bootstrap";
 import { match, P } from "ts-pattern";
-import { Loading } from "../../shared/elements/Loading.tsx";
 import { SuccessIcon } from "./SuccessIcon.tsx";
 import { Collapsable } from "../../shared/elements/Collapsable.tsx";
 import { NavbarButton } from "../../shared/elements/NavbarButton.tsx";
