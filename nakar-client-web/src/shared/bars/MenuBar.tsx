@@ -34,6 +34,7 @@ import { ZoomOutAction } from "../../actions/ZoomOutAction.ts";
 import { HideLabelsAction } from "../../actions/HideLabelsAction.ts";
 import { nodeActions } from "../../actions/groups/nodeActions.ts";
 import { relationshipActions } from "../../actions/groups/relationshipActions.ts";
+import { SpawnNodeAction } from "../../actions/SpawnNodeAction.ts";
 
 export function MenuBar(props: {
   context: AppContext;

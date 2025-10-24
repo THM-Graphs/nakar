@@ -46,7 +46,10 @@ export function SearchPanel(props: { roomContext: RoomContext }) {
       const postResult = resultOrThrow(
         await postDatabaseSearch({
           path: { id: selectedDatabaseId ?? "" },
-          body: { searchTerm: searchTerm },
+          body: {
+            searchTerm: searchTerm,
+            roomId: props.roomContext.initialRoomData.id,
+          },
         }),
       );
       setResult({ type: "data", data: postResult.nodes });
@@ -83,6 +86,7 @@ export function SearchPanel(props: { roomContext: RoomContext }) {
             <SearchResultDisplay
               result={result}
               roomContext={props.roomContext}
+              databaseId={selectedDatabaseId}
             ></SearchResultDisplay>
             <SearchCapabilitiesDisplay
               databaseId={selectedDatabaseId}

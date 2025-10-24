@@ -841,6 +841,20 @@ export type PostRoomActionShowShortestPathResponse = (unknown);
 
 export type PostRoomActionShowShortestPathError = unknown;
 
+export type PostRoomActionLoadNodeData = {
+    body: {
+        nodeId: string;
+        databaseId: string;
+    };
+    path: {
+        id: string;
+    };
+};
+
+export type PostRoomActionLoadNodeResponse = (unknown);
+
+export type PostRoomActionLoadNodeError = unknown;
+
 export type GetDatabaseStatsData = {
     path: {
         id: string;
@@ -854,6 +868,7 @@ export type GetDatabaseStatsError = unknown;
 export type PostDatabaseSearchData = {
     body: {
         searchTerm: string;
+        roomId: string;
     };
     path: {
         id: string;

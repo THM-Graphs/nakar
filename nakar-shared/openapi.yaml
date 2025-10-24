@@ -810,6 +810,35 @@ paths:
         "200":
           description: "OK"
 
+  /room/{id}/actions/load-node:
+    post:
+      tags:
+        - Actions
+      operationId: postRoomActionLoadNode
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nodeId:
+                  type: string
+                databaseId:
+                  type: string
+              required:
+                - nodeId
+                - databaseId
+      responses:
+        "200":
+          description: "OK"
+
   /database/{id}/stats:
     get:
       tags:
@@ -849,8 +878,11 @@ paths:
               properties:
                 searchTerm:
                   type: string
+                roomId:
+                  type: string
               required:
                 - searchTerm
+                - roomId
       responses:
         "200":
           description: "OK"

@@ -15,31 +15,6 @@ export function GraphDataToggle(props: { context: AppContext }) {
   const graphElementsCount =
     graphElements.edges.length + graphElements.nodes.length;
 
-  useEffect(() => {
-    const subs: Subscription[] = [
-      props.context.webSocketsManager.onMessage$.subscribe(
-        (message: WSServerToClientMessage): void => {
-          match(message)
-            .with({ type: "WSEventGraphElementsChanged" }, (msg) => {
-              if (msg.elements.nodes.length > 0) {
-                tabs.selectGraph();
-              }
-            })
-            .with({ type: "WSEventGraphTableChanged" }, (msg) => {
-              if (msg.table.data.length > 0) {
-                tabs.selectData();
-              }
-            });
-        },
-      ),
-    ];
-    return () => {
-      for (const sub of subs) {
-        sub.unsubscribe();
-      }
-    };
-  }, []);
-
   return (
     <Stack direction={"horizontal"}>
       <NavbarButton

@@ -956,9 +956,26 @@ export class HTTPService implements ApplicationService {
       }),
     );
 
+    this._app.post(
+      '/room/:id/actions/load-node',
+      this._handle(async (req: Request): Promise<void> => {
+        const room: GetRoomDBDTO = await this._assertRoom(req);
+
+        type Body =
+          operations['postRoomActionLoadNode']['requestBody']['content']['application/json'];
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+        const requestBody: Body = req.body as Body;
+
+        await this._roomService.loadNode({
+          nodeId: requestBody.nodeId,
+          databaseId: requestBody.databaseId,
+          roomId: room.documentId,
+        });
+      }),
+    );
+
     this._app.get(
       '/database/:id/stats',
-      assertLoggedIn,
       this._handle(async (req: Request): Promise<SchemaDatabaseStats> => {
         const databaseId: string = this._getPathParameter(req, 'id');
         const database: GetDatabaseDBDTO | null =
@@ -992,14 +1009,25 @@ export class HTTPService implements ApplicationService {
           }
           const credentials: Neo4jDatabaseInfo =
             Neo4jDatabaseInfo.parse(database);
-          const config: FinalGraphDisplayConfiguration =
-            FinalGraphDisplayConfiguration.empty(); // TODO
 
           type Body =
             operations['postDatabaseSearch']['requestBody']['content']['application/json'];
           // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
           const body: Body = req.body as Body;
           const searchTerm: string = body.searchTerm;
+          const room: GetRoomDBDTO | null = await this._databaseService.getRoom(
+            body.roomId,
+          );
+          if (room == null) {
+            throw new NotFound('Room not found.');
+          }
+          const scenario: GetScenarioDBDTO | null =
+            await this._getScenarioOfRoom(room);
+          const config: FinalGraphDisplayConfiguration =
+            await this._databaseService.getGraphDisplayConfiguration(
+              scenario?.documentId ?? null,
+              room.documentId,
+            );
 
           const result: Neo4jNode[] = await this._neo4jService.search({
             searchTerm: searchTerm,

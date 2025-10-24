@@ -484,6 +484,22 @@ export interface paths {
         readonly patch?: never;
         readonly trace?: never;
     };
+    readonly "/room/{id}/actions/load-node": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        readonly put?: never;
+        readonly post: operations["postRoomActionLoadNode"];
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
     readonly "/database/{id}/stats": {
         readonly parameters: {
             readonly query?: never;
@@ -1828,6 +1844,33 @@ export interface operations {
             };
         };
     };
+    readonly postRoomActionLoadNode: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path: {
+                readonly id: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": {
+                    readonly nodeId: string;
+                    readonly databaseId: string;
+                };
+            };
+        };
+        readonly responses: {
+            /** @description OK */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     readonly getDatabaseStats: {
         readonly parameters: {
             readonly query?: never;
@@ -1863,6 +1906,7 @@ export interface operations {
             readonly content: {
                 readonly "application/json": {
                     readonly searchTerm: string;
+                    readonly roomId: string;
                 };
             };
         };

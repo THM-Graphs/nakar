@@ -296,14 +296,6 @@ export class DatabaseService implements ApplicationService {
     scenarioId: string | null,
     roomId: string,
   ): Promise<FinalGraphDisplayConfiguration> {
-    if (scenarioId == null) {
-      this._logger.warn(
-        this,
-        'Trying to create FinalGraphDisplayConfiguration with null scenarioId. Will create empty config.',
-      );
-      return FinalGraphDisplayConfiguration.empty();
-    }
-
     // eslint-disable-next-line @typescript-eslint/typedef
     const populate = {
       graphDisplayConfiguration: {
@@ -323,23 +315,26 @@ export class DatabaseService implements ApplicationService {
       {
         populate: ['scenarioGroup', 'graphDisplayConfiguration'];
       }
-    > | null = await strapi.documents('api::scenario.scenario').findOne({
-      status: 'published',
-      documentId: scenarioId,
-      populate: {
-        ...populate,
-        scenarioGroup: {
-          populate: {
-            ...populate,
-            room_templates: {
-              populate: {
-                ...populate,
+    > | null =
+      scenarioId != null
+        ? await strapi.documents('api::scenario.scenario').findOne({
+            status: 'published',
+            documentId: scenarioId,
+            populate: {
+              ...populate,
+              scenarioGroup: {
+                populate: {
+                  ...populate,
+                  room_templates: {
+                    populate: {
+                      ...populate,
+                    },
+                  },
+                },
               },
             },
-          },
-        },
-      },
-    });
+          })
+        : null;
     const room: Result<
       'api::room.room',
       {

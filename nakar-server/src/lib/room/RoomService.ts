@@ -1228,6 +1228,74 @@ export class RoomService implements ApplicationService {
     );
   }
 
+  public async loadNode(params: {
+    nodeId: string;
+    roomId: string;
+    databaseId: string;
+  }): Promise<void> {
+    await this._runWithRoomLock(
+      params.roomId,
+      'Loading Node',
+      async (): Promise<void> => {
+        const oldGraph: MutableGraph = this.getGraph(params.roomId);
+        const scenarioId: string | null = oldGraph.metaData.scenarioId;
+        const displayConfiguration: FinalGraphDisplayConfiguration =
+          await this._database.getGraphDisplayConfiguration(
+            scenarioId,
+            params.roomId,
+          );
+
+        const dbDocument: GetDatabaseDBDTO | null =
+          await this._database.getDatabase(params.databaseId);
+        if (dbDocument == null) {
+          throw new Error(`Unable to get database ${params.databaseId}.`);
+        }
+        const dbInfo: Neo4jDatabaseInfo = Neo4jDatabaseInfo.parse(dbDocument);
+
+        const result: Neo4jGraphElements = await this._neo4j.executeQuery(
+          dbInfo,
+          'MATCH (n) WHERE elementId(n) = $id RETURN n LIMIT 1;',
+          { id: params.nodeId },
+          new Neo4jLimitConfig('default', 'graphElements'),
+        );
+        if (result.nodes.size === 0) {
+          throw new Error(`Node ${params.nodeId} not found.`);
+        }
+
+        const graph: MutableGraph = this._snapshotGraph(params.roomId);
+
+        graph.nodes.addNeo4jNode(
+          result.nodes.toValueArray()[0],
+          MutableGraphElementCreationAction.search,
+          displayConfiguration,
+        );
+
+        this._postProcessGraph(graph, displayConfiguration);
+        this._sendActionToWorker(params.roomId, {
+          type: 'WTActionSetGraph',
+          graph: graph.toPhysicalGraph(displayConfiguration),
+        });
+        this._sendActionToWorker(params.roomId, {
+          type: 'WTActionTriggerPhysics',
+          amount: 'long',
+        });
+        await this.saveGraph(params.roomId);
+        this._onEvent.next({
+          type: 'RoomServiceEventGraphMetaDataChanged',
+          graph: graph,
+          roomId: params.roomId,
+        } satisfies RoomServiceEventGraphMetaDataChanged);
+        this._onEvent.next({
+          type: 'RoomServiceEventGraphElementsChanged',
+          graph: graph,
+          roomId: params.roomId,
+          nodesAdded: graph.nodes.size,
+          edgesAdded: graph.edges.size,
+        } satisfies RoomServiceEventGraphElementsChanged);
+      },
+    );
+  }
+
   public async saveGraph(roomId: string): Promise<void> {
     const task: ProfilerTask = this._profiler.profile(this, 'Save Graph');
     const graph: MutableGraph = this.getGraph(roomId);

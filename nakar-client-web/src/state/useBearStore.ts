@@ -594,13 +594,11 @@ export const useBearStore = create<BearState>()(
                   selectGraph: () => {
                     set((s) => {
                       s.room.canvas.tabs.selected = "graph";
-                      s.room.panels.inspector.element = [];
                     });
                   },
                   selectData: () => {
                     set((s) => {
                       s.room.canvas.tabs.selected = "data";
-                      s.room.panels.inspector.element = [];
                     });
                   },
                 },

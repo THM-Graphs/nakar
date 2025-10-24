@@ -2,8 +2,12 @@ import { Form, Stack } from "react-bootstrap";
 import { NavbarButton } from "../../shared/elements/NavbarButton.tsx";
 import { useBearStore } from "../../state/useBearStore.ts";
 import { useRef } from "react";
+import clsx from "clsx";
 
-export function SearchForm(props: { onSearch: () => void }) {
+export function SearchForm(props: {
+  onSearch: () => void;
+  className?: string;
+}) {
   const searchTerm = useBearStore((s) => s.room.panels.search.searchTerm);
   const setSearchTerm = useBearStore((s) => s.room.panels.search.setSearchTerm);
   const textInput = useRef<HTMLInputElement>(null);
@@ -15,10 +19,11 @@ export function SearchForm(props: { onSearch: () => void }) {
         textInput.current?.focus();
         props.onSearch();
       }}
+      className={props.className}
     >
       <Stack
         direction={"horizontal"}
-        className={"bg-body border-top border-bottom"}
+        className={clsx("bg-body border-top border-bottom")}
       >
         <Form.Control
           ref={textInput}
