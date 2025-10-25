@@ -42,4 +42,12 @@ export class DateTool {
 
     return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
   }
+
+  public static formatSomeDate(date: Date | null): string | null {
+    if (date != null) {
+      return DateTool.formatDate(date);
+    } else {
+      return null;
+    }
+  }
 }

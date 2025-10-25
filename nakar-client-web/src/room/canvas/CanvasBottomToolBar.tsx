@@ -5,7 +5,6 @@ import { postRoomActionLoadScenario, ScenarioArgument } from "../../../src-gen";
 import { DateTool } from "../../data/DateTool.ts";
 import { NavbarButton } from "../../shared/elements/NavbarButton.tsx";
 import { DateTimeSpanSelect } from "../../shared/date-time-span-select/DateTimeSpanSelect.tsx";
-import { RerunScenarioAction } from "../../actions/RerunScenarioAction.ts";
 import { RoomContext } from "../../pages/Room.tsx";
 import { resultOrThrow } from "../../data/resultOrThrow.ts";
 
@@ -41,22 +40,24 @@ export function CanvasBottomToolBar(props: { roomContext: RoomContext }) {
     endDateArguments.length > 0 ? endDateArguments[0] : null;
 
   const getInitialStartDate = () =>
-    DateTool.formatDate(
+    DateTool.formatSomeDate(
       dateTimeValueFromArgument(
         startDateArgument?.value ?? startDateParameter?.defaultValue ?? null,
-      ) ?? new Date(),
+      ),
     );
   const getInitialEndDate = () =>
-    DateTool.formatDate(
+    DateTool.formatSomeDate(
       dateTimeValueFromArgument(
         endDateArgument?.value ?? endDateParameter?.defaultValue ?? null,
-      ) ?? new Date(),
+      ),
     );
 
-  const [startDateTime, setStartDateTime] = useState<string>(
+  const [startDateTime, setStartDateTime] = useState<string | null>(
     getInitialStartDate(),
   );
-  const [endDateTime, setEndDateTime] = useState<string>(getInitialEndDate());
+  const [endDateTime, setEndDateTime] = useState<string | null>(
+    getInitialEndDate(),
+  );
   const [collapsed, setCollapsed] = useState<boolean>(false);
 
   useEffect(() => {
@@ -116,7 +117,7 @@ export function CanvasBottomToolBar(props: { roomContext: RoomContext }) {
     });
   };
 
-  if (startDateParameter == null && endDateParameter == null) {
+  if (startDateTime == null || endDateTime == null) {
     return null;
   }
 
@@ -125,58 +126,59 @@ export function CanvasBottomToolBar(props: { roomContext: RoomContext }) {
       className={"border-top flex-grow-0 bg-body z-2"}
       direction={"horizontal"}
     >
-      <Stack
-        direction={"horizontal"}
-        className={"align-items-start flex-grow-1"}
-      >
-        <NavbarButton
-          icon={collapsed ? "chevron-right" : "chevron-down"}
-          className={"flex-grow-0 align-self-baseline"}
-          onClick={() => {
-            setCollapsed((c) => !c);
-          }}
-        ></NavbarButton>
-        {collapsed ? (
-          <Stack
-            className={"align-self-baseline small text-muted"}
-            direction={"horizontal"}
-            gap={2}
-          >
-            <i className={"bi bi-calendar-date"}></i>
-            <span className={"user-select-text"}>
-              {DateTool.parseExactLocalDate(startDateTime)?.toLocaleString()}
-            </span>
-            <i className={"bi bi-arrow-right"}></i>
-            <span className={"user-select-text"}>
-              {DateTool.parseExactLocalDate(endDateTime)?.toLocaleString()}
-            </span>
-          </Stack>
-        ) : (
-          <Stack>
-            <DateTimeSpanSelect
-              startDateTime={startDateTime}
-              endDateTime={endDateTime}
-              onStartDateTimeChange={(d) => {
-                setStartDateTime(d);
-                rerunScenario({ startDate: d, endDate: endDateTime });
-              }}
-              onEndDateTimeChange={(d) => {
-                setEndDateTime(d);
-                rerunScenario({ startDate: startDateTime, endDate: d });
-              }}
-              onSpanDateTimeChange={(start, end) => {
-                setStartDateTime(start);
-                setEndDateTime(end);
-                rerunScenario({ startDate: start, endDate: end });
-              }}
-            ></DateTimeSpanSelect>
+      <Stack className={"align-items-start flex-grow-1"}>
+        <Stack direction={"horizontal"}>
+          <NavbarButton
+            icon={collapsed ? "chevron-right" : "chevron-down"}
+            className={"flex-grow-0 align-self-baseline"}
+            onClick={() => {
+              setCollapsed((c) => !c);
+            }}
+          ></NavbarButton>
+          {collapsed && (
+            <Stack
+              className={"align-self-baseline small text-muted"}
+              direction={"horizontal"}
+              gap={2}
+            >
+              <i className={"bi bi-calendar-date"}></i>
+              <span className={"user-select-text"}>
+                {DateTool.parseExactLocalDate(startDateTime)?.toLocaleString()}
+              </span>
+              <i className={"bi bi-arrow-right"}></i>
+              <span className={"user-select-text"}>
+                {DateTool.parseExactLocalDate(endDateTime)?.toLocaleString()}
+              </span>
+            </Stack>
+          )}
+          {!collapsed && (
             <NavbarButton
               title={"Reset"}
               onClick={() => {
                 reset();
               }}
             ></NavbarButton>
-          </Stack>
+          )}
+        </Stack>
+        {!collapsed && (
+          <DateTimeSpanSelect
+            className={"mb-2"}
+            startDateTime={startDateTime}
+            endDateTime={endDateTime}
+            onStartDateTimeChange={(d) => {
+              setStartDateTime(d);
+              rerunScenario({ startDate: d, endDate: endDateTime });
+            }}
+            onEndDateTimeChange={(d) => {
+              setEndDateTime(d);
+              rerunScenario({ startDate: startDateTime, endDate: d });
+            }}
+            onSpanDateTimeChange={(start, end) => {
+              setStartDateTime(start);
+              setEndDateTime(end);
+              rerunScenario({ startDate: start, endDate: end });
+            }}
+          ></DateTimeSpanSelect>
         )}
       </Stack>
     </Stack>
