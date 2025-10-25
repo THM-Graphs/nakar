@@ -2,6 +2,30 @@ import { Stack } from "react-bootstrap";
 import { NavbarButton } from "../elements/NavbarButton.tsx";
 import { ReactNode, RefObject, useEffect, useRef, useState } from "react";
 
+function valueToPosition(params: {
+  minimum: number;
+  maximum: number;
+  value: number;
+  barWidth: number;
+}): number {
+  const range = params.maximum - params.minimum;
+  const percent = (params.value - params.minimum) / range;
+  const positionX = params.barWidth * percent;
+  return positionX;
+}
+
+function _positionToValue(params: {
+  minimum: number;
+  maximum: number;
+  positionX: number;
+  barWidth: number;
+}): number {
+  const percent = params.positionX / params.barWidth;
+  const range = params.maximum - params.minimum;
+  const value = params.minimum + range * percent;
+  return value;
+}
+
 export function NumericSpanSelect(props: {
   startValue: number;
   endValue: number;
@@ -34,8 +58,22 @@ export function NumericSpanSelect(props: {
       : props.endValue + (props.endValue - props.startValue) * 0.1,
   );
 
-  const [startValue, setStartValue] = useState(props.startValue);
-  const [endValue, setEndValue] = useState(props.endValue);
+  const [startValuePosition, setStartValuePosition] = useState(
+    valueToPosition({
+      minimum: minimum,
+      maximum: maximum,
+      barWidth: currentWidth - handleWidth,
+      value: props.startValue,
+    }),
+  );
+  const [endValuePosition, setEndValuePosition] = useState(
+    valueToPosition({
+      minimum: minimum,
+      maximum: maximum,
+      barWidth: currentWidth - handleWidth,
+      value: props.endValue,
+    }) + handleWidth,
+  );
 
   const [leftHandleXOffset, setLeftHandleXOffset] = useState<number | null>(
     null,
@@ -44,40 +82,31 @@ export function NumericSpanSelect(props: {
     null,
   );
 
-  const getLeftHandlePosition = () =>
-    ((Math.min(startValue, endValue) - minimum) / (maximum - minimum)) *
-    (currentWidth - handleWidth - handleWidth);
-  const getRightHandlePosition = () =>
-    handleWidth +
-    ((Math.max(endValue, startValue) - minimum) / (maximum - minimum)) *
-      (currentWidth - handleWidth - handleWidth);
-
   useEffect(() => {
     setCurrentWidth(fullWidthElement.current?.clientWidth ?? 200);
   }, [fullWidthElement.current?.clientWidth]);
-  useEffect(() => {
-    setStartValue(props.startValue);
-  }, [props.startValue, currentWidth, maximum, minimum]);
 
   useEffect(() => {
-    setEndValue(props.endValue);
-  }, [props.endValue, currentWidth, maximum, minimum]);
+    setStartValuePosition(
+      valueToPosition({
+        minimum: minimum,
+        maximum: maximum,
+        barWidth: currentWidth - handleWidth - handleWidth,
+        value: props.startValue,
+      }),
+    );
+  }, [props.startValue, currentWidth, maximum, minimum, handleWidth]);
 
-  // useEffect(() => {
-  //   const percent =
-  //     leftHandlePosition / (currentWidth - handleWidth - handleWidth);
-  //   const span = maximum - minimum;
-  //   const newValue = span * percent;
-  //   setStartValue(newValue);
-  // }, [leftHandlePosition, currentWidth, minimum, maximum, handleWidth]);
-
-  // useEffect(() => {
-  //   const percent =
-  //     (rightHandlePosition - handleWidth) / (currentWidth - handleWidth);
-  //   const span = maximum - minimum;
-  //   const newValue = span * percent;
-  //   setEndValue(newValue);
-  // }, [rightHandlePosition, currentWidth, minimum, maximum, handleWidth]);
+  useEffect(() => {
+    setEndValuePosition(
+      valueToPosition({
+        minimum: minimum,
+        maximum: maximum,
+        barWidth: currentWidth - handleWidth - handleWidth,
+        value: props.endValue,
+      }) + handleWidth,
+    );
+  }, [props.endValue, currentWidth, maximum, minimum, handleWidth]);
 
   useEffect(() => {
     const listener = () => {
@@ -87,50 +116,95 @@ export function NumericSpanSelect(props: {
     return () => {
       window.removeEventListener("resize", listener);
     };
-  }, [fullWidthElement.current?.clientWidth]);
+  }, [fullWidthElement.current]);
+
+  const currentStartValue = () =>
+    _positionToValue({
+      minimum: minimum,
+      maximum: maximum,
+      positionX:
+        (leftHandle.current?.getBoundingClientRect().x ?? 0) -
+        (fullWidthElement.current?.getBoundingClientRect().x ?? 0) -
+        1,
+      barWidth: currentWidth - handleWidth - handleWidth - 2,
+    });
+  const currentEndValue = () =>
+    _positionToValue({
+      minimum: minimum,
+      maximum: maximum,
+      positionX:
+        (rightHandle.current?.getBoundingClientRect().x ?? 0) -
+        (fullWidthElement.current?.getBoundingClientRect().x ?? 0) -
+        1 -
+        handleWidth,
+      barWidth: currentWidth - handleWidth - handleWidth - 2,
+    });
 
   useEffect(() => {
     const onMouseDown = (ev: MouseEvent) => {
-      if (ev.target == leftHandle.current) {
-        setLeftHandleXOffset(ev.clientX);
+      if (ev.target == leftHandle.current && leftHandle.current != null) {
+        setLeftHandleXOffset(
+          ev.clientX - leftHandle.current.getBoundingClientRect().x,
+        );
       }
-      if (ev.target == rightHandle.current) {
-        setRightHandleXOffset(ev.clientX);
+      if (ev.target == rightHandle.current && rightHandle.current != null) {
+        setRightHandleXOffset(
+          ev.clientX - rightHandle.current.getBoundingClientRect().x,
+        );
       }
-      if (ev.target == middleHandle.current) {
-        setLeftHandleXOffset(ev.clientX);
-        setRightHandleXOffset(ev.clientX);
+      if (
+        ev.target == middleHandle.current &&
+        leftHandle.current != null &&
+        rightHandle.current != null
+      ) {
+        setLeftHandleXOffset(
+          ev.clientX - leftHandle.current.getBoundingClientRect().x,
+        );
+        setRightHandleXOffset(
+          ev.clientX - rightHandle.current.getBoundingClientRect().x,
+        );
       }
     };
     const onMouseMove = (ev: MouseEvent) => {
+      if (fullWidthElement.current == null) {
+        return;
+      }
       if (leftHandleXOffset != null) {
-        const delta = ev.clientX - leftHandleXOffset;
-        const percent = delta / (currentWidth - handleWidth);
-        const range = maximum - minimum;
-        const valueChange = range * percent;
-        setStartValue((s) => Math.min(s + valueChange, endValue));
-        setLeftHandleXOffset(ev.clientX);
+        const left =
+          ev.clientX -
+          fullWidthElement.current.getBoundingClientRect().x -
+          leftHandleXOffset;
+        setStartValuePosition(left);
       }
       if (rightHandleXOffset != null) {
-        const delta = ev.clientX - rightHandleXOffset;
-        const percent = delta / (currentWidth - handleWidth);
-        const range = maximum - minimum;
-        const valueChange = range * percent;
-        setEndValue((s) => Math.max(s + valueChange, startValue));
-        setRightHandleXOffset(ev.clientX);
+        const left =
+          ev.clientX -
+          fullWidthElement.current.getBoundingClientRect().x -
+          rightHandleXOffset;
+        setEndValuePosition(left);
       }
     };
-    const onMouseUp = (ev: MouseEvent) => {
+    const onMouseUp = () => {
       if (leftHandleXOffset != null && rightHandleXOffset != null) {
         setLeftHandleXOffset(null);
         setRightHandleXOffset(null);
-        props.onBothChange(startValue, endValue);
+        if (
+          leftHandle.current != null &&
+          fullWidthElement.current != null &&
+          rightHandle.current != null
+        ) {
+          props.onBothChange(currentStartValue(), currentEndValue());
+        }
       } else if (leftHandleXOffset != null) {
         setLeftHandleXOffset(null);
-        props.onStartValueChange(startValue);
+        if (leftHandle.current != null && fullWidthElement.current != null) {
+          props.onStartValueChange(currentStartValue());
+        }
       } else if (rightHandleXOffset != null) {
         setRightHandleXOffset(null);
-        props.onEndValueChange(endValue);
+        if (rightHandle.current != null && fullWidthElement.current != null) {
+          props.onEndValueChange(currentEndValue());
+        }
       }
     };
 
@@ -143,7 +217,13 @@ export function NumericSpanSelect(props: {
       document.removeEventListener("mousemove", onMouseMove);
       document.removeEventListener("mouseup", onMouseUp);
     };
-  }, [rightHandle, leftHandle, leftHandleXOffset, rightHandleXOffset]);
+  }, [
+    rightHandle.current,
+    leftHandle.current,
+    leftHandleXOffset,
+    rightHandleXOffset,
+    fullWidthElement.current,
+  ]);
 
   return (
     <Stack className={props.className}>
@@ -160,60 +240,62 @@ export function NumericSpanSelect(props: {
             setMinimum((m) => m + (maximum - m) * changeFactor);
           }}
         ></NavbarButton>
-        <Stack
-          direction={"horizontal"}
-          className={
-            "flex-grow-1 position-relative  overflow-hidden border rounded-start-2 rounded-end-2"
-          }
-          ref={fullWidthElement}
-          style={{ height: height }}
-        >
-          <div
-            className={"bg-body-tertiary flex-grow-0 position-absolute"}
-            style={{
-              height: height,
-              left: 0,
-              right: `${(currentWidth - getLeftHandlePosition()).toString()}px`,
-            }}
-          ></div>
-          <div
-            className={"bg-body-secondary flex-grow-0 position-absolute"}
-            ref={leftHandle}
-            style={{
-              width: `${handleWidth.toString()}px`,
-              height: height,
-              cursor: "col-resize",
-              left: `${getLeftHandlePosition().toString()}px`,
-            }}
-          ></div>
-          <div
-            style={{
-              height: height,
-              left: `${(getLeftHandlePosition() + handleWidth).toString()}px`,
-              right: `${(currentWidth - getRightHandlePosition()).toString()}px`,
-              cursor: "grab",
-            }}
-            className={"position-absolute"}
-            ref={middleHandle}
-          ></div>
-          <div
-            className={"bg-body-secondary position-absolute"}
-            ref={rightHandle}
-            style={{
-              width: `${handleWidth.toString()}px`,
-              height: height,
-              cursor: "col-resize",
-              left: `${getRightHandlePosition().toString()}px`,
-            }}
-          ></div>
-          <div
-            className={"bg-body-tertiary position-absolute"}
-            style={{
-              height: height,
-              right: 0,
-              left: `${(getRightHandlePosition() + handleWidth).toString()}px`,
-            }}
-          ></div>
+        <Stack className={"border"}>
+          <Stack
+            direction={"horizontal"}
+            className={
+              "flex-grow-1 position-relative overflow-hidden rounded-start-2 rounded-end-2"
+            }
+            ref={fullWidthElement}
+            style={{ height: height }}
+          >
+            <div
+              className={"bg-body-tertiary flex-grow-0 position-absolute"}
+              style={{
+                height: height,
+                left: 0,
+                right: `${(currentWidth - startValuePosition).toString()}px`,
+              }}
+            ></div>
+            <div
+              className={"bg-body-secondary flex-grow-0 position-absolute"}
+              ref={leftHandle}
+              style={{
+                width: `${handleWidth.toString()}px`,
+                height: height,
+                cursor: "col-resize",
+                left: `${startValuePosition.toString()}px`,
+              }}
+            ></div>
+            <div
+              style={{
+                height: height,
+                left: `${(startValuePosition + handleWidth).toString()}px`,
+                right: `${(currentWidth - endValuePosition).toString()}px`,
+                cursor: "grab",
+              }}
+              className={"position-absolute"}
+              ref={middleHandle}
+            ></div>
+            <div
+              className={"bg-body-secondary position-absolute"}
+              ref={rightHandle}
+              style={{
+                width: `${handleWidth.toString()}px`,
+                height: height,
+                cursor: "col-resize",
+                left: `${endValuePosition.toString()}px`,
+              }}
+            ></div>
+            <div
+              className={"bg-body-tertiary position-absolute"}
+              style={{
+                height: height,
+                right: 0,
+                left: `${(endValuePosition + handleWidth).toString()}px`,
+              }}
+            ></div>
+          </Stack>
         </Stack>
         <NavbarButton
           icon={"dash-lg"}
@@ -228,21 +310,24 @@ export function NumericSpanSelect(props: {
           }}
         ></NavbarButton>
       </Stack>
-      <Stack
-        className={"justify-content-between small text-muted"}
-        direction={"horizontal"}
-      >
-        <span style={{ marginLeft: "60px" }} className={"user-select-text"}>
-          {props.renderValue(minimum)}
-        </span>
-        <span className={"user-select-text"}>
-          {props.renderValue(startValue)}{" "}
-          <i className={"bi bi-arrow-right"}></i> {props.renderValue(endValue)}
-        </span>
-        <span style={{ marginRight: "60px" }} className={"user-select-text"}>
-          {props.renderValue(maximum)}
-        </span>
-      </Stack>
+      {leftHandle.current && rightHandle.current && (
+        <Stack
+          className={"justify-content-between small text-muted"}
+          direction={"horizontal"}
+        >
+          <span style={{ marginLeft: "60px" }} className={"user-select-text"}>
+            {props.renderValue(minimum)}
+          </span>
+          <span className={"user-select-text"}>
+            {props.renderValue(currentStartValue())}{" "}
+            <i className={"bi bi-arrow-right"}></i>{" "}
+            {props.renderValue(currentEndValue())}
+          </span>
+          <span style={{ marginRight: "60px" }} className={"user-select-text"}>
+            {props.renderValue(maximum)}
+          </span>
+        </Stack>
+      )}
     </Stack>
   );
 }

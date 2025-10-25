@@ -98,8 +98,10 @@ export function RunScenarioModal(props: { roomContext: RoomContext }) {
                 onClick={handleRun}
                 className={"ps-1 pe-1 justify-content-center border-start"}
               >
-                <i className={"bi bi-play-circle-fill btn btn-link p-0"}></i>
-                <span>Run</span>
+                <i
+                  className={"bi bi-play-circle-fill btn btn-link p-0 btn-sm"}
+                ></i>
+                <span className={"small"}>Run</span>
               </NavbarButton>
             </Stack>
           </Panel>
