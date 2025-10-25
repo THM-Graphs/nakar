@@ -1,16 +1,22 @@
 import { Stack } from "react-bootstrap";
 import { useBearStore } from "../../state/useBearStore.ts";
-import { useState } from "react";
-import { ScenarioArgument } from "../../../src-gen";
+import { useEffect, useState } from "react";
+import { postRoomActionLoadScenario, ScenarioArgument } from "../../../src-gen";
 import { DateTool } from "../../data/DateTool.ts";
+import { NavbarButton } from "../../shared/elements/NavbarButton.tsx";
+import { DateTimeSpanSelect } from "../../shared/date-time-span-select/DateTimeSpanSelect.tsx";
+import { RerunScenarioAction } from "../../actions/RerunScenarioAction.ts";
+import { RoomContext } from "../../pages/Room.tsx";
+import { resultOrThrow } from "../../data/resultOrThrow.ts";
 
-export function CanvasBottomToolBar() {
-  const scenario = useBearStore((s) => s.room.scenario.graph.metaData.scenario);
-  const currentArguments = useBearStore(
-    (s) => s.room.scenario.graph.metaData.arguments,
+export function CanvasBottomToolBar(props: { roomContext: RoomContext }) {
+  const metaData = useBearStore((s) => s.room.scenario.graph.metaData);
+  const pushErrorNotification = useBearStore(
+    (s) => s.room.ui.pushErrorNotification,
   );
 
-  const parameters = scenario?.current.parameters ?? [];
+  const currentArguments = metaData.arguments;
+  const parameters = metaData.scenario?.current.parameters ?? [];
 
   const startDateParameters = parameters.filter(
     (p) => p.dataType === "startDateTime",
@@ -34,12 +40,81 @@ export function CanvasBottomToolBar() {
   const endDateArgument =
     endDateArguments.length > 0 ? endDateArguments[0] : null;
 
-  const [startDateTime, setStartDateTime] = useState<Date>(
-    dateTimeValueFromArgument(startDateArgument) ?? new Date(),
+  const getInitialStartDate = () =>
+    DateTool.formatDate(
+      dateTimeValueFromArgument(
+        startDateArgument?.value ?? startDateParameter?.defaultValue ?? null,
+      ) ?? new Date(),
+    );
+  const getInitialEndDate = () =>
+    DateTool.formatDate(
+      dateTimeValueFromArgument(
+        endDateArgument?.value ?? endDateParameter?.defaultValue ?? null,
+      ) ?? new Date(),
+    );
+
+  const [startDateTime, setStartDateTime] = useState<string>(
+    getInitialStartDate(),
   );
-  const [endDateTime, setEndDateTime] = useState<Date>(
-    dateTimeValueFromArgument(endDateArgument) ?? new Date(),
-  );
+  const [endDateTime, setEndDateTime] = useState<string>(getInitialEndDate());
+  const [collapsed, setCollapsed] = useState<boolean>(false);
+
+  useEffect(() => {
+    setStartDateTime(() => getInitialStartDate());
+    setEndDateTime(() => getInitialEndDate());
+  }, [getInitialStartDate(), getInitialEndDate()]);
+
+  const rerunScenario = (params: { startDate: string; endDate: string }) => {
+    (async (): Promise<void> => {
+      const scenario = metaData.scenario?.current;
+      if (scenario == null) {
+        throw new Error(
+          "Unable to run scenario: There is no scenario in this room.",
+        );
+      }
+
+      const newArguments: ScenarioArgument[] = [];
+      for (const oldArgument of metaData.arguments) {
+        if (oldArgument.identifier === startDateParameter?.identifier) {
+          newArguments.push({
+            value: params.startDate,
+            identifier: oldArgument.identifier,
+          });
+        } else if (oldArgument.identifier === endDateParameter?.identifier) {
+          newArguments.push({
+            value: params.endDate,
+            identifier: oldArgument.identifier,
+          });
+        } else {
+          newArguments.push(oldArgument);
+        }
+      }
+
+      try {
+        await resultOrThrow(
+          await postRoomActionLoadScenario({
+            path: { id: props.roomContext.initialRoomData.id },
+            body: {
+              scenarioId: scenario.id,
+              arguments: newArguments,
+            },
+          }),
+        );
+        console.log("Will run");
+      } catch (error) {
+        pushErrorNotification(error);
+      }
+    })().catch(console.error);
+  };
+
+  const reset = () => {
+    setStartDateTime(startDateParameter?.defaultValue ?? "");
+    setEndDateTime(endDateParameter?.defaultValue ?? "");
+    rerunScenario({
+      startDate: startDateParameter?.defaultValue ?? "",
+      endDate: endDateParameter?.defaultValue ?? "",
+    });
+  };
 
   if (startDateParameter == null && endDateParameter == null) {
     return null;
@@ -47,26 +122,70 @@ export function CanvasBottomToolBar() {
 
   return (
     <Stack
-      className={"border-top flex-grow-0 bg-body z-2 justify-content-between"}
+      className={"border-top flex-grow-0 bg-body z-2"}
       direction={"horizontal"}
     >
-      <Stack>
-        <span>Start Date Time</span>
-        <span>{startDateTime.toLocaleString()}</span>
-      </Stack>
-      <Stack>
-        <span>End Date Time</span>
-        <span>{endDateTime.toLocaleString()}</span>
+      <Stack
+        direction={"horizontal"}
+        className={"align-items-start flex-grow-1"}
+      >
+        <NavbarButton
+          icon={collapsed ? "chevron-right" : "chevron-down"}
+          className={"flex-grow-0 align-self-baseline"}
+          onClick={() => {
+            setCollapsed((c) => !c);
+          }}
+        ></NavbarButton>
+        {collapsed ? (
+          <Stack
+            className={"align-self-baseline small text-muted"}
+            direction={"horizontal"}
+            gap={2}
+          >
+            <i className={"bi bi-calendar-date"}></i>
+            <span className={"user-select-text"}>
+              {DateTool.parseExactLocalDate(startDateTime)?.toLocaleString()}
+            </span>
+            <i className={"bi bi-arrow-right"}></i>
+            <span className={"user-select-text"}>
+              {DateTool.parseExactLocalDate(endDateTime)?.toLocaleString()}
+            </span>
+          </Stack>
+        ) : (
+          <Stack>
+            <DateTimeSpanSelect
+              startDateTime={startDateTime}
+              endDateTime={endDateTime}
+              onStartDateTimeChange={(d) => {
+                setStartDateTime(d);
+                rerunScenario({ startDate: d, endDate: endDateTime });
+              }}
+              onEndDateTimeChange={(d) => {
+                setEndDateTime(d);
+                rerunScenario({ startDate: startDateTime, endDate: d });
+              }}
+              onSpanDateTimeChange={(start, end) => {
+                setStartDateTime(start);
+                setEndDateTime(end);
+                rerunScenario({ startDate: start, endDate: end });
+              }}
+            ></DateTimeSpanSelect>
+            <NavbarButton
+              title={"Reset"}
+              onClick={() => {
+                reset();
+              }}
+            ></NavbarButton>
+          </Stack>
+        )}
       </Stack>
     </Stack>
   );
 }
 
-function dateTimeValueFromArgument(
-  argument: ScenarioArgument | null,
-): Date | null {
+function dateTimeValueFromArgument(argument: string | null): Date | null {
   if (argument == null) {
     return null;
   }
-  return DateTool.parseExactLocalDate(argument.value);
+  return DateTool.parseExactLocalDate(argument);
 }

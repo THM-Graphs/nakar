@@ -173,7 +173,9 @@ export function Canvas(props: {
               </Stack>
             </Stack>
           </Stack>
-          <CanvasBottomToolBar></CanvasBottomToolBar>
+          <CanvasBottomToolBar
+            roomContext={props.roomContext}
+          ></CanvasBottomToolBar>
         </Stack>
       ) : (
         <DataTable></DataTable>
