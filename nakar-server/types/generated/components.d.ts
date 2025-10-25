@@ -134,10 +134,15 @@ export interface GraphNodeDisplayConfiguration extends Struct.ComponentSchema {
 export interface GraphParameter extends Struct.ComponentSchema {
   collectionName: 'components_graph_parameters';
   info: {
+    description: '';
     displayName: 'Parameter';
     icon: 'code';
   };
   attributes: {
+    dataType: Schema.Attribute.Enumeration<
+      ['json', 'startDateTime', 'endDateTime']
+    > &
+      Schema.Attribute.DefaultTo<'json'>;
     defaultValue: Schema.Attribute.String;
     identifier: Schema.Attribute.String & Schema.Attribute.Required;
     title: Schema.Attribute.String;

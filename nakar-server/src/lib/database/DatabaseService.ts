@@ -268,24 +268,22 @@ export class DatabaseService implements ApplicationService {
   public async getScenario(
     scenarioId: string,
   ): Promise<GetScenarioDBDTO | null> {
-    const result: Result<
-      'api::scenario.scenario',
-      {
-        populate: ['scenarioGroup'];
-      }
-    > | null = await strapi.documents('api::scenario.scenario').findOne({
-      status: 'published',
-      documentId: scenarioId,
-      populate: {
-        cover: {},
-        scenarioGroup: {},
-        queries: {
-          populate: {
-            database: {},
+    const result: Result<'api::scenario.scenario'> | null = await strapi
+      .documents('api::scenario.scenario')
+      .findOne({
+        status: 'published',
+        documentId: scenarioId,
+        populate: {
+          cover: {},
+          scenarioGroup: {},
+          queries: {
+            populate: {
+              database: {},
+            },
           },
+          parameters: {},
         },
-      },
-    });
+      });
     if (result == null) {
       return null;
     }

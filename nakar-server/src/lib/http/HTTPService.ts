@@ -666,17 +666,14 @@ export class HTTPService implements ApplicationService {
         const scenarioId: string = body.scenarioId;
         const args: readonly SchemaScenarioArgument[] = body.arguments;
 
-        const scenarioArgs: SMap<string, unknown> = args.reduce<
-          SMap<string, unknown>
-        >(
+        const scenarioArgs: SMap<string, string> = args.reduce(
           (
-            akku: SMap<string, unknown>,
+            akku: SMap<string, string>,
             next: SchemaScenarioArgument,
-          ): SMap<string, unknown> => {
-            const parsed: unknown = JSON.parse(next.value);
-            return akku.bySetting(next.identifier, parsed);
+          ): SMap<string, string> => {
+            return akku.bySetting(next.identifier, next.value);
           },
-          new SMap<string, unknown>(),
+          new SMap<string, string>(),
         );
 
         await this._roomService.loadScenario({

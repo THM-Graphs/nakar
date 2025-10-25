@@ -159,7 +159,7 @@ export class MutableGraph {
   public resetFromInitialScenario(
     scenario: GetScenarioDBDTO,
     displayConfig: FinalGraphDisplayConfiguration,
-    scenarioArguments: SMap<string, unknown>,
+    scenarioArguments: SMap<string, string>,
   ): void {
     this.metaData = new MutableGraphMetaData({
       scenarioId: scenario.documentId,

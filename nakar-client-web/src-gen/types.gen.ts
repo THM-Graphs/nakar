@@ -320,7 +320,10 @@ export type ScenarioParameter = {
     identifier: string;
     title: string;
     defaultValue: (string) | null;
+    dataType: 'json' | 'startDateTime' | 'endDateTime';
 };
+
+export type dataType = 'json' | 'startDateTime' | 'endDateTime';
 
 export type ScenarioQuery = {
     query: string;

@@ -10,17 +10,17 @@ export class MutableGraphMetaData {
   public static readonly schema = z.object({
     scenarioId: z.string().nullable(),
     pipelineSummary: z.array(z.tuple([z.string(), z.number()])),
-    arguments: z.record(z.string(), z.unknown()),
+    arguments: z.record(z.string(), z.string()),
   });
 
   public scenarioId: string | null;
   public pipelineSummary: [string, number][];
-  public arguments: SMap<string, unknown>;
+  public arguments: SMap<string, string>;
 
   public constructor(data: {
     scenarioId: string | null;
     pipelineSummary: [string, number][];
-    arguments: SMap<string, unknown>;
+    arguments: SMap<string, string>;
   }) {
     this.scenarioId = data.scenarioId;
     this.pipelineSummary = data.pipelineSummary;

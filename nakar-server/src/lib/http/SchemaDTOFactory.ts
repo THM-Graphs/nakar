@@ -99,6 +99,7 @@ export class SchemaDTOFactory {
       identifier: scenarioParameter.identifier,
       title: scenarioParameter.title,
       defaultValue: scenarioParameter.defaultValue,
+      dataType: scenarioParameter.dataType,
     };
   }
 

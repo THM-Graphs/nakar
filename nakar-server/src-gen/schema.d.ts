@@ -821,6 +821,8 @@ export interface components {
             readonly identifier: string;
             readonly title: string;
             readonly defaultValue: string | null;
+            /** @enum {string} */
+            readonly dataType: "json" | "startDateTime" | "endDateTime";
         };
         readonly ScenarioArgument: {
             readonly identifier: string;

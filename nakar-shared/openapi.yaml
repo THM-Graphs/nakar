@@ -1671,10 +1671,14 @@ components:
         defaultValue:
           type: string
           nullable: true
+        dataType:
+          type: string
+          enum: ["json", "startDateTime", "endDateTime"]
       required:
         - identifier
         - title
         - defaultValue
+        - dataType
 
     ScenarioArgument:
       type: object

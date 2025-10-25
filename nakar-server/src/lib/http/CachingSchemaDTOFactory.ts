@@ -154,10 +154,10 @@ export class CachingSchemaDTOFactory {
         (
           akku: SchemaScenarioArgument[],
           key: string,
-          value: unknown,
+          value: string,
         ): SchemaScenarioArgument[] => [
           ...akku,
-          { identifier: key, value: JSON.stringify(value) },
+          { identifier: key, value: value },
         ],
         [],
       ),

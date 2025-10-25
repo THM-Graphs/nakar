@@ -54,6 +54,7 @@ import type {
   SchemaLayoutSpecification,
   SchemaLayoutSpecificationCircle,
 } from '../../../src-gen/schema';
+import { GetScenarioParameterDBDTO } from '../database/dto/GetScenarioParameterDBDTO';
 
 export class RoomService implements ApplicationService {
   private readonly _workers: SMap<string, Worker>;
@@ -215,7 +216,7 @@ export class RoomService implements ApplicationService {
     roomId: string;
     scenarioId: string;
   }): Promise<GetScenarioDBDTO> {
-    const args: SMap<string, unknown> = this.getGraph(params.roomId).metaData
+    const args: SMap<string, string> = this.getGraph(params.roomId).metaData
       .arguments;
     return await this.loadScenario({
       roomId: params.roomId,
@@ -227,7 +228,7 @@ export class RoomService implements ApplicationService {
   public async loadScenario(params: {
     roomId: string;
     scenarioId: string;
-    arguments: SMap<string, unknown>;
+    arguments: SMap<string, string>;
   }): Promise<GetScenarioDBDTO> {
     const scenario: GetScenarioDBDTO | null = await this._database.getScenario(
       params.scenarioId,
@@ -269,11 +270,27 @@ export class RoomService implements ApplicationService {
             query.database,
           );
 
+          const argsForNeo4j: Record<string, unknown> = params.arguments
+            .map((value: string, identifier: string): unknown => {
+              const parameter: GetScenarioParameterDBDTO | null =
+                scenario.parameters.find((p) => p.identifier === identifier) ??
+                null;
+              if (parameter == null) {
+                throw new Error(`Parameter ${identifier} not found.`);
+              }
+              return match(parameter.dataType)
+                .with('json', () => JSON.parse(value))
+                .with('startDateTime', () => value) // TODO: Validate format YYYY-MM-DDTHH:mm:ss
+                .with('endDateTime', () => value) // TODO YYYY-MM-DDTHH:mm:ss
+                .exhaustive();
+            })
+            .toRecord();
+
           const graphElements: Neo4jGraphElements =
             await this._neo4j.executeQuery(
               credentials,
               query.query,
-              params.arguments.toRecord(),
+              argsForNeo4j,
               new Neo4jLimitConfig(
                 'default',
                 query.isTableQuery ? 'tableData' : 'graphElements',

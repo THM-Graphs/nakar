@@ -17,6 +17,7 @@ import { ConnectResultNodesAction } from "../../actions/ConnectResultNodesAction
 import { RemoveDanglingNodesAction } from "../../actions/RemoveDanglingNodesAction.ts";
 import { CompressRelationshipsAction } from "../../actions/CompressRelationshipsAction.ts";
 import { useState } from "react";
+import { CanvasBottomToolBar } from "./CanvasBottomToolBar.tsx";
 
 export function Canvas(props: {
   context: AppContext;
@@ -44,132 +45,135 @@ export function Canvas(props: {
         roomContext={props.roomContext}
       ></CanvasToolbar>
       {tabs.selected == "graph" ? (
-        <Stack direction={"horizontal"} className={"justify-content-between"}>
-          <Stack className={"z-1 flex-grow-0 align-self-start"}>
-            <Labels roomContext={props.roomContext}></Labels>
+        <Stack className={"justify-content-between"}>
+          <Stack direction={"horizontal"} className={"justify-content-between"}>
+            <Stack className={"z-1 flex-grow-0 align-self-start"}>
+              <Labels roomContext={props.roomContext}></Labels>
+            </Stack>
+            <Stack
+              className={
+                "flex-grow-0 flex-shrink-1 justify-content-end flex-wrap z-1 bg-body"
+              }
+              direction={"vertical"}
+              gap={2}
+              onMouseEnter={() => {
+                setHideTitles(false);
+              }}
+              onMouseLeave={() => {
+                setHideTitles(true);
+              }}
+            >
+              <Stack>
+                <ActionNavbarButton
+                  action={PanToElementAction.shared}
+                  tooltipPlacement={"left"}
+                  params={{
+                    selectedElements: element,
+                    onCenter: rendererEvents.onCenter,
+                  }}
+                  hideTitle={hideTitles}
+                ></ActionNavbarButton>
+                <ActionNavbarButton
+                  tooltipPlacement={"left"}
+                  action={ZoomToFitAction.shared}
+                  params={{
+                    onZoomOutOverview: rendererEvents.onZoomOutOverview,
+                    nodes: nodes,
+                    selectedTab,
+                  }}
+                  hideTitle={hideTitles}
+                ></ActionNavbarButton>
+                <ActionNavbarButton
+                  action={HideLabelsAction.shared}
+                  params={{ hideLabels, setHideLabels, selectedTab }}
+                  hideTitle={hideTitles}
+                  tooltipPlacement={"left"}
+                ></ActionNavbarButton>
+              </Stack>
+              <Stack>
+                <ActionNavbarButton
+                  tooltipPlacement={"left"}
+                  action={ZoomInAction.shared}
+                  params={{
+                    onZoomIn: rendererEvents.onZoomIn,
+                    nodes: nodes,
+                    selectedTab,
+                  }}
+                  hideTitle={hideTitles}
+                ></ActionNavbarButton>
+                <ActionNavbarButton
+                  tooltipPlacement={"left"}
+                  action={ZoomOutAction.shared}
+                  params={{
+                    onZoomOut: rendererEvents.onZoomOut,
+                    nodes: nodes,
+                    selectedTab,
+                  }}
+                  hideTitle={hideTitles}
+                ></ActionNavbarButton>
+              </Stack>
+              <Stack>
+                <ActionNavbarButton
+                  action={RelayoutAction.shared}
+                  params={{
+                    roomContext: props.roomContext,
+                    nodes,
+                    selectedTab,
+                    uiLocked,
+                  }}
+                  hideTitle={hideTitles}
+                  tooltipPlacement={"left"}
+                ></ActionNavbarButton>
+                <ActionNavbarButton
+                  action={UnlockAllNodesAction.shared}
+                  params={{
+                    roomContext: props.roomContext,
+                    nodes,
+                    selectedTab,
+                    uiLocked,
+                  }}
+                  hideTitle={hideTitles}
+                  tooltipPlacement={"left"}
+                ></ActionNavbarButton>
+              </Stack>
+              <Stack>
+                <ActionNavbarButton
+                  action={ConnectResultNodesAction.shared}
+                  params={{
+                    roomContext: props.roomContext,
+                    scenario: scenario?.current ?? null,
+                    uiLocked,
+                    selectedTab,
+                  }}
+                  hideTitle={hideTitles}
+                  tooltipPlacement={"left"}
+                ></ActionNavbarButton>
+                <ActionNavbarButton
+                  action={RemoveDanglingNodesAction.shared}
+                  params={{
+                    roomContext: props.roomContext,
+                    scenario: scenario?.current ?? null,
+                    uiLocked,
+                    selectedTab,
+                  }}
+                  hideTitle={hideTitles}
+                  tooltipPlacement={"left"}
+                ></ActionNavbarButton>
+                <ActionNavbarButton
+                  action={CompressRelationshipsAction.shared}
+                  params={{
+                    roomContext: props.roomContext,
+                    scenario: scenario?.current ?? null,
+                    uiLocked,
+                    selectedTab,
+                  }}
+                  hideTitle={hideTitles}
+                  tooltipPlacement={"left"}
+                ></ActionNavbarButton>
+              </Stack>
+            </Stack>
           </Stack>
-          <Stack
-            className={
-              "flex-grow-0 flex-shrink-1 justify-content-end flex-wrap z-1 bg-body"
-            }
-            direction={"vertical"}
-            gap={2}
-            onMouseEnter={() => {
-              setHideTitles(false);
-            }}
-            onMouseLeave={() => {
-              setHideTitles(true);
-            }}
-          >
-            <Stack>
-              <ActionNavbarButton
-                action={PanToElementAction.shared}
-                tooltipPlacement={"left"}
-                params={{
-                  selectedElements: element,
-                  onCenter: rendererEvents.onCenter,
-                }}
-                hideTitle={hideTitles}
-              ></ActionNavbarButton>
-              <ActionNavbarButton
-                tooltipPlacement={"left"}
-                action={ZoomToFitAction.shared}
-                params={{
-                  onZoomOutOverview: rendererEvents.onZoomOutOverview,
-                  nodes: nodes,
-                  selectedTab,
-                }}
-                hideTitle={hideTitles}
-              ></ActionNavbarButton>
-              <ActionNavbarButton
-                action={HideLabelsAction.shared}
-                params={{ hideLabels, setHideLabels, selectedTab }}
-                hideTitle={hideTitles}
-                tooltipPlacement={"left"}
-              ></ActionNavbarButton>
-            </Stack>
-            <Stack>
-              <ActionNavbarButton
-                tooltipPlacement={"left"}
-                action={ZoomInAction.shared}
-                params={{
-                  onZoomIn: rendererEvents.onZoomIn,
-                  nodes: nodes,
-                  selectedTab,
-                }}
-                hideTitle={hideTitles}
-              ></ActionNavbarButton>
-              <ActionNavbarButton
-                tooltipPlacement={"left"}
-                action={ZoomOutAction.shared}
-                params={{
-                  onZoomOut: rendererEvents.onZoomOut,
-                  nodes: nodes,
-                  selectedTab,
-                }}
-                hideTitle={hideTitles}
-              ></ActionNavbarButton>
-            </Stack>
-            <Stack>
-              <ActionNavbarButton
-                action={RelayoutAction.shared}
-                params={{
-                  roomContext: props.roomContext,
-                  nodes,
-                  selectedTab,
-                  uiLocked,
-                }}
-                hideTitle={hideTitles}
-                tooltipPlacement={"left"}
-              ></ActionNavbarButton>
-              <ActionNavbarButton
-                action={UnlockAllNodesAction.shared}
-                params={{
-                  roomContext: props.roomContext,
-                  nodes,
-                  selectedTab,
-                  uiLocked,
-                }}
-                hideTitle={hideTitles}
-                tooltipPlacement={"left"}
-              ></ActionNavbarButton>
-            </Stack>
-            <Stack>
-              <ActionNavbarButton
-                action={ConnectResultNodesAction.shared}
-                params={{
-                  roomContext: props.roomContext,
-                  scenario: scenario?.current ?? null,
-                  uiLocked,
-                  selectedTab,
-                }}
-                hideTitle={hideTitles}
-                tooltipPlacement={"left"}
-              ></ActionNavbarButton>
-              <ActionNavbarButton
-                action={RemoveDanglingNodesAction.shared}
-                params={{
-                  roomContext: props.roomContext,
-                  scenario: scenario?.current ?? null,
-                  uiLocked,
-                  selectedTab,
-                }}
-                hideTitle={hideTitles}
-                tooltipPlacement={"left"}
-              ></ActionNavbarButton>
-              <ActionNavbarButton
-                action={CompressRelationshipsAction.shared}
-                params={{
-                  roomContext: props.roomContext,
-                  scenario: scenario?.current ?? null,
-                  uiLocked,
-                  selectedTab,
-                }}
-                hideTitle={hideTitles}
-                tooltipPlacement={"left"}
-              ></ActionNavbarButton>
-            </Stack>
-          </Stack>
+          <CanvasBottomToolBar></CanvasBottomToolBar>
         </Stack>
       ) : (
         <DataTable></DataTable>

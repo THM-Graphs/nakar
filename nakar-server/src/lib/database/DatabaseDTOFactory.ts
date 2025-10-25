@@ -91,6 +91,7 @@ export class DatabaseDTOFactory {
       identifier: db.identifier ?? '',
       title: db.title ?? '',
       defaultValue: db.defaultValue ?? null,
+      dataType: db.dataType ?? 'json',
     };
   }
 
