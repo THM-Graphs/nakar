@@ -55,6 +55,7 @@ import type {
   SchemaLayoutSpecificationCircle,
 } from '../../../src-gen/schema';
 import { GetScenarioParameterDBDTO } from '../database/dto/GetScenarioParameterDBDTO';
+import { PositionsCache } from './graph/PositionsCache';
 
 export class RoomService implements ApplicationService {
   private readonly _workers: SMap<string, Worker>;
@@ -250,6 +251,7 @@ export class RoomService implements ApplicationService {
       'Loading scenario',
       async (): Promise<GetScenarioDBDTO> => {
         const graph: MutableGraph = this._snapshotGraph(params.roomId);
+        const positionsCache: PositionsCache = PositionsCache.fromGraph(graph);
 
         if (!scenario.additive) {
           graph.resetFromInitialScenario(
@@ -320,6 +322,7 @@ export class RoomService implements ApplicationService {
           }
         }
 
+        positionsCache.applyToGraph(graph);
         this._postProcessGraph(graph, displayConfiguration);
 
         if (!scenario.additive) {
