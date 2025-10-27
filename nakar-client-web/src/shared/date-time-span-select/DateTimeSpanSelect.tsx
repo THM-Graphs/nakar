@@ -1,6 +1,4 @@
-import { Form, Stack } from "react-bootstrap";
 import { DateTool } from "../../data/DateTool.ts";
-import { useEffect, useState } from "react";
 import { NumericSpanSelect } from "./NumericSpanSelect.tsx";
 
 export function DateTimeSpanSelect(props: {
@@ -34,7 +32,6 @@ export function DateTimeSpanSelect(props: {
       }}
       renderValue={(value: number) => {
         const date = new Date(value);
-        const s = DateTool.formatDate(date);
         return (
           <span className={"small text-muted"}>{date.toLocaleString()}</span>
         );

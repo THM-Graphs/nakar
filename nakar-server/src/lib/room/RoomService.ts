@@ -54,7 +54,7 @@ import type {
   SchemaLayoutSpecification,
   SchemaLayoutSpecificationCircle,
 } from '../../../src-gen/schema';
-import { GetScenarioParameterDBDTO } from '../database/dto/GetScenarioParameterDBDTO';
+import type { GetScenarioParameterDBDTO } from '../database/dto/GetScenarioParameterDBDTO';
 import { PositionsCache } from './graph/PositionsCache';
 
 export class RoomService implements ApplicationService {
@@ -275,15 +275,17 @@ export class RoomService implements ApplicationService {
           const argsForNeo4j: Record<string, unknown> = params.arguments
             .map((value: string, identifier: string): unknown => {
               const parameter: GetScenarioParameterDBDTO | null =
-                scenario.parameters.find((p) => p.identifier === identifier) ??
-                null;
+                scenario.parameters.find(
+                  (p: GetScenarioParameterDBDTO): boolean =>
+                    p.identifier === identifier,
+                ) ?? null;
               if (parameter == null) {
                 throw new Error(`Parameter ${identifier} not found.`);
               }
               return match(parameter.dataType)
-                .with('json', () => JSON.parse(value))
-                .with('startDateTime', () => value) // TODO: Validate format YYYY-MM-DDTHH:mm:ss
-                .with('endDateTime', () => value) // TODO YYYY-MM-DDTHH:mm:ss
+                .with('json', (): unknown => JSON.parse(value))
+                .with('startDateTime', (): string => value) // TODO: Validate format YYYY-MM-DDTHH:mm:ss
+                .with('endDateTime', (): string => value) // TODO YYYY-MM-DDTHH:mm:ss
                 .exhaustive();
             })
             .toRecord();

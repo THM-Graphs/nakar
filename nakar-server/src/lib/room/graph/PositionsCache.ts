@@ -1,14 +1,17 @@
 import { SMap } from '../../tools/Map';
-import { MutablePosition } from './MutablePosition';
-import { MutableGraph } from './MutableGraph';
+import type { MutablePosition } from './MutablePosition';
+import type { MutableGraph } from './MutableGraph';
 
-type Entry = { position: MutablePosition; locked: boolean };
+interface Entry {
+  position: MutablePosition;
+  locked: boolean;
+}
 
 export class PositionsCache {
   private constructor(public readonly nodes: SMap<string, Entry>) {}
 
   public static fromGraph(graph: MutableGraph): PositionsCache {
-    const result: SMap<string, Entry> = new SMap();
+    const result: SMap<string, Entry> = new SMap<string, Entry>();
     for (const node of graph.nodes.nodes) {
       result.set(node.id, {
         position: node.position.copy(),

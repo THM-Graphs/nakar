@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class DateTool {
   public static parseExactLocalDate(dateStr: string): Date | null {
     // Strictly match the format YYYY-MM-DDTHH:mm:ss (no timezone)
@@ -40,7 +41,7 @@ export class DateTool {
     const minutes = String(date.getMinutes()).padStart(2, "0");
     const seconds = String(date.getSeconds()).padStart(2, "0");
 
-    return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+    return `${year.toString()}-${month.toString()}-${day.toString()}T${hours.toString()}:${minutes.toString()}:${seconds.toString()}`;
   }
 
   public static formatSomeDate(date: Date | null): string | null {
