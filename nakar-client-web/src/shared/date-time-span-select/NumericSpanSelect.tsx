@@ -118,27 +118,15 @@ export function NumericSpanSelect(props: {
     };
   }, [fullWidthElement.current]);
 
-  const currentStartValue = () =>
-    _positionToValue({
-      minimum: minimum,
-      maximum: maximum,
-      positionX:
-        (leftHandle.current?.getBoundingClientRect().x ?? 0) -
-        (fullWidthElement.current?.getBoundingClientRect().x ?? 0) -
-        1,
-      barWidth: currentWidth - handleWidth - handleWidth - 2,
-    });
-  const currentEndValue = () =>
-    _positionToValue({
-      minimum: minimum,
-      maximum: maximum,
-      positionX:
-        (rightHandle.current?.getBoundingClientRect().x ?? 0) -
-        (fullWidthElement.current?.getBoundingClientRect().x ?? 0) -
-        1 -
-        handleWidth,
-      barWidth: currentWidth - handleWidth - handleWidth - 2,
-    });
+  const [currentStartValue, setCurrentStartValue] = useState(props.startValue);
+  useEffect(() => {
+    setCurrentStartValue(props.startValue);
+  }, [props.startValue]);
+
+  const [currentEndValue, setCurrentEndValue] = useState(props.endValue);
+  useEffect(() => {
+    setCurrentEndValue(props.endValue);
+  }, [props.endValue]);
 
   useEffect(() => {
     const onMouseDown = (ev: MouseEvent) => {
@@ -175,6 +163,17 @@ export function NumericSpanSelect(props: {
           fullWidthElement.current.getBoundingClientRect().x -
           leftHandleXOffset;
         setStartValuePosition(left);
+        setCurrentStartValue(
+          _positionToValue({
+            minimum: minimum,
+            maximum: maximum,
+            positionX:
+              (leftHandle.current?.getBoundingClientRect().x ?? 0) -
+              fullWidthElement.current.getBoundingClientRect().x -
+              1,
+            barWidth: currentWidth - handleWidth - handleWidth - 2,
+          }),
+        );
       }
       if (rightHandleXOffset != null) {
         const left =
@@ -182,6 +181,18 @@ export function NumericSpanSelect(props: {
           fullWidthElement.current.getBoundingClientRect().x -
           rightHandleXOffset;
         setEndValuePosition(left);
+        setCurrentEndValue(
+          _positionToValue({
+            minimum: minimum,
+            maximum: maximum,
+            positionX:
+              (rightHandle.current?.getBoundingClientRect().x ?? 0) -
+              fullWidthElement.current.getBoundingClientRect().x -
+              1 -
+              handleWidth,
+            barWidth: currentWidth - handleWidth - handleWidth - 2,
+          }),
+        );
       }
     };
     const onMouseUp = () => {
@@ -193,17 +204,17 @@ export function NumericSpanSelect(props: {
           fullWidthElement.current != null &&
           rightHandle.current != null
         ) {
-          props.onBothChange(currentStartValue(), currentEndValue());
+          props.onBothChange(currentStartValue, currentEndValue);
         }
       } else if (leftHandleXOffset != null) {
         setLeftHandleXOffset(null);
         if (leftHandle.current != null && fullWidthElement.current != null) {
-          props.onStartValueChange(currentStartValue());
+          props.onStartValueChange(currentStartValue);
         }
       } else if (rightHandleXOffset != null) {
         setRightHandleXOffset(null);
         if (rightHandle.current != null && fullWidthElement.current != null) {
-          props.onEndValueChange(currentEndValue());
+          props.onEndValueChange(currentEndValue);
         }
       }
     };
@@ -223,6 +234,8 @@ export function NumericSpanSelect(props: {
     leftHandleXOffset,
     rightHandleXOffset,
     fullWidthElement.current,
+    currentStartValue,
+    currentEndValue,
   ]);
 
   return (
@@ -319,9 +332,9 @@ export function NumericSpanSelect(props: {
             {props.renderValue(minimum)}
           </span>
           <span className={"user-select-text"}>
-            {props.renderValue(currentStartValue())}{" "}
+            {props.renderValue(currentStartValue)}{" "}
             <i className={"bi bi-arrow-right"}></i>{" "}
-            {props.renderValue(currentEndValue())}
+            {props.renderValue(currentEndValue)}
           </span>
           <span style={{ marginRight: "60px" }} className={"user-select-text"}>
             {props.renderValue(maximum)}
