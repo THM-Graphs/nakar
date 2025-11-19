@@ -1,6 +1,6 @@
 # Navigation and Exploration of Knowledge Graphs in Augmented Reality (NAKAR)
 
-User-centered serendipitous discoveries
+See https://www.thm.de/mni/forschung/institute-gruppen/ii/ii-projekte/nakar.html.
 
 ## Contribution Guide
 
