@@ -262,8 +262,9 @@ ORDER BY lcount DESC, label ASC`,
         for (const labelOrType of labelsOrTypes) {
           exactMatchNodeProperties.set(
             labelOrType,
-            exactMatchNodeProperties.get(labelOrType) ??
-              new SSet<string>().byMerging(new SSet<string>(properties)),
+            (
+              exactMatchNodeProperties.get(labelOrType) ?? new SSet<string>()
+            ).byMerging(new SSet<string>(properties)),
           );
         }
       } else if (
@@ -277,8 +278,9 @@ ORDER BY lcount DESC, label ASC`,
         for (const labelOrType of labelsOrTypes) {
           fuzzyMatchNodeProperties.set(
             labelOrType,
-            fuzzyMatchNodeProperties.get(labelOrType) ??
-              new SSet<string>().byMerging(new SSet<string>(properties)),
+            (
+              fuzzyMatchNodeProperties.get(labelOrType) ?? new SSet<string>()
+            ).byMerging(new SSet<string>(properties)),
           );
         }
       }
