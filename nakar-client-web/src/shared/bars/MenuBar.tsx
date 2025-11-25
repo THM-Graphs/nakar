@@ -51,6 +51,10 @@ export function MenuBar(props: {
   const hideScenarios = useBearStore((s) => s.room.panels.scenarios.hide);
   const showQuery = useBearStore((s) => s.room.panels.query.show);
   const hideQuery = useBearStore((s) => s.room.panels.query.hide);
+  const showNotes = useBearStore((s) => s.room.panels.notes.show);
+  const hideNotes = useBearStore((s) => s.room.panels.notes.hide);
+  const showSearch = useBearStore((s) => s.room.panels.search.show);
+  const hideSearch = useBearStore((s) => s.room.panels.search.hide);
   const showInspector = useBearStore((s) => s.room.panels.inspector.show);
   const hideInspector = useBearStore((s) => s.room.panels.inspector.hide);
   const showHistogram = useBearStore((s) => s.room.panels.histogram.show);
@@ -286,6 +290,32 @@ export function MenuBar(props: {
           }}
         >
           <i className={"bi bi-play-circle me-1"}></i> Query
+        </Dropdown.Item>
+        <Dropdown.Item
+          className={"small"}
+          active={leftPanel === "notes"}
+          onClick={() => {
+            if (leftPanel == "notes") {
+              hideNotes();
+            } else {
+              showNotes();
+            }
+          }}
+        >
+          <i className={"bi bi-sticky me-1"}></i> Notes
+        </Dropdown.Item>
+        <Dropdown.Item
+          className={"small"}
+          active={leftPanel === "search"}
+          onClick={() => {
+            if (leftPanel == "search") {
+              hideSearch();
+            } else {
+              showSearch();
+            }
+          }}
+        >
+          <i className={"bi bi-search me-1"}></i> Search
         </Dropdown.Item>
         <Dropdown.Item
           className={"small"}
