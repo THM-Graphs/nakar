@@ -24,7 +24,7 @@
       "type": "string"
     },
     "elementIds": {
-      "type": "string"
+      "type": "text"
     },
     "color": {
       "type": "component",
