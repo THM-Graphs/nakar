@@ -164,7 +164,7 @@ export interface paths {
         readonly patch?: never;
         readonly trace?: never;
     };
-    readonly "/room/{id}/notes": {
+    readonly "/room/{id}/note": {
         readonly parameters: {
             readonly query?: never;
             readonly header?: never;

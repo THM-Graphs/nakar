@@ -92,7 +92,7 @@ export const getRoomGraphTable = <ThrowOnError extends boolean = false>(options:
 export const postNote = <ThrowOnError extends boolean = false>(options: OptionsLegacyParser<PostNoteData, ThrowOnError>) => {
     return (options?.client ?? client).post<PostNoteResponse, PostNoteError, ThrowOnError>({
         ...options,
-        url: '/room/{id}/notes'
+        url: '/room/{id}/note'
     });
 };
 
