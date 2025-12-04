@@ -43,7 +43,7 @@ export class WSClient {
         }
       })
       .on('disconnecting', (reason: DisconnectReason): void => {
-        void this.leaveRoom();
+        void this.leaveRoom({ silent: true });
         socket.removeAllListeners();
         this._onDisconnect.next(reason);
       });
@@ -94,13 +94,15 @@ export class WSClient {
     this._room.next([this.room, roomId]);
   }
 
-  public async leaveRoom(): Promise<void> {
+  public async leaveRoom(params: { silent: boolean }): Promise<void> {
     const roomId: string | null = this.room;
     if (roomId == null) {
-      this._logger.warn(
-        this,
-        `Client ${this.id} wants to leave a room, but i currently in no room.`,
-      );
+      if (!params.silent) {
+        this._logger.warn(
+          this,
+          `Client ${this.id} wants to leave a room, but i currently in no room.`,
+        );
+      }
       return;
     }
 

@@ -235,7 +235,7 @@ export class SocketIOService implements ApplicationService {
                 .with(
                   { type: 'WSActionLeaveRoom' },
                   async (): Promise<void> => {
-                    await wsClient.leaveRoom();
+                    await wsClient.leaveRoom({ silent: false });
                   },
                 )
                 .with(
