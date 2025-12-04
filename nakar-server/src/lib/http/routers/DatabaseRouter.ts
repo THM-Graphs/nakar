@@ -21,11 +21,11 @@ import { FinalGraphDisplayConfiguration } from '../../room/scenario-pipeline/dis
 import { Neo4jNode } from '../../neo4j/Neo4jNode';
 import { MutableGraph } from '../../room/graph/MutableGraph';
 import { MutableGraphElementCreationAction } from '../../room/graph/MutableGraphElementCreationAction';
-import { CachingSchemaDTOFactory } from '../CachingSchemaDTOFactory';
 import { SSet } from '../../tools/Set';
 import { GetNoteDBDTO } from '../../database/dto/GetNoteDBDTO';
 import { SMap } from '../../tools/Map';
 import { Neo4jSearchCapabilities } from '../../neo4j/Neo4jSearchCapabilities';
+import { SchemaFactoryService } from '../../schema/SchemaFactoryService';
 
 export class DatabaseRouter {
   public constructor(
@@ -36,6 +36,7 @@ export class DatabaseRouter {
     private readonly _profiler: ProfilerService,
     private readonly _config: ConfigService,
     private readonly _media: MediaService,
+    private readonly _schemaFactory: SchemaFactoryService,
   ) {}
 
   public register(): Router {
@@ -127,18 +128,13 @@ export class DatabaseRouter {
         config,
       );
     }
-    const cachingFactory: CachingSchemaDTOFactory = new CachingSchemaDTOFactory(
-      this._databaseService,
-      this._logger,
-      this._config,
-      this._media,
-      this._profiler,
-    );
-    const schemaGraph: SchemaGraph = await cachingFactory.createSchemaGraph(
-      graph,
-      { notes: new SSet<GetNoteDBDTO>(), byNodeId: new SMap() },
-      config,
-    );
+
+    const schemaGraph: SchemaGraph =
+      await this._schemaFactory.createSchemaGraph(
+        graph,
+        { notes: new SSet<GetNoteDBDTO>(), byNodeId: new SMap() },
+        config,
+      );
 
     return {
       nodes: schemaGraph.elements.nodes,

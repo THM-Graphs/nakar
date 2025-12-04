@@ -1,9 +1,9 @@
-import { SMap } from '../tools/Map';
-import type { GetDatabaseDBDTO } from '../database/dto/GetDatabaseDBDTO';
-import type { DatabaseService } from '../database/DatabaseService';
-import type { LoggerService } from '../logger/LoggerService';
-import type {
+import { ApplicationService } from '../application/ApplicationService';
+import { GetScenarioParameterDBDTO } from '../database/dto/GetScenarioParameterDBDTO';
+import { GetDatabaseDBDTO } from '../database/dto/GetDatabaseDBDTO';
+import {
   SchemaColor,
+  SchemaDatabase,
   SchemaEdge,
   SchemaEdgePreview,
   SchemaGraph,
@@ -16,41 +16,143 @@ import type {
   SchemaNode,
   SchemaNodePreview,
   SchemaNote,
+  SchemaRoom,
+  SchemaRoomTemplate,
+  SchemaScenario,
   SchemaScenarioArgument,
+  SchemaScenarioGroup,
+  SchemaScenarioParameter,
+  SchemaScenarioQuery,
 } from '../../../src-gen/schema';
-import type { MutableNode } from '../room/graph/MutableNode';
-import type { MutableEdge } from '../room/graph/MutableEdge';
-import type { MutableGraph } from '../room/graph/MutableGraph';
-import type { MutableGraphLabel } from '../room/graph/MutableGraphLabel';
-import type { MutablePropertyCollection } from '../room/graph/MutablePropertyCollection';
-import type { MutableGraphMetaData } from '../room/graph/MutableGraphMetaData';
-import type { GetScenarioDBDTO } from '../database/dto/GetScenarioDBDTO';
-import { SchemaDTOFactory } from './SchemaDTOFactory';
-import type { ConfigService } from '../config/ConfigService';
-import type { FinalGraphDisplayConfiguration } from '../room/scenario-pipeline/display-configuration/FinalGraphDisplayConfiguration';
-import type { Range } from '../tools/Range';
-import type { MediaService } from '../media/MediaService';
-import type { ProfilerService } from '../profiler/ProfilerService';
-import type { ProfilerTask } from '../profiler/ProfilerTask';
-import type { GetNotesDBDTO } from '../database/dto/GetNotesDBDTO';
-import type { GetNoteDBDTO } from '../database/dto/GetNoteDBDTO';
+import { GetRoomDBDTO } from '../database/dto/GetRoomDBDTO';
+import { GetScenarioDBDTO } from '../database/dto/GetScenarioDBDTO';
+import { GetTemplateDBDTO } from '../database/dto/GetTemplateDBDTO';
+import { GetScenarioQueryDBDTO } from '../database/dto/GetScenarioQueryDBDTO';
+import { GetScenarioGroupDBDTO } from '../database/dto/GetScenarioGroupDBDTO';
+import { ConfigService } from '../config/ConfigService';
+import { MediaService } from '../media/MediaService';
+import { MutableGraph } from '../room/graph/MutableGraph';
+import { GetNotesDBDTO } from '../database/dto/GetNotesDBDTO';
+import { FinalGraphDisplayConfiguration } from '../room/scenario-pipeline/display-configuration/FinalGraphDisplayConfiguration';
+import { ProfilerTask } from '../profiler/ProfilerTask';
+import { Range } from '../tools/Range';
+import { MutableNode } from '../room/graph/MutableNode';
+import { MutableEdge } from '../room/graph/MutableEdge';
+import { MutableGraphLabel } from '../room/graph/MutableGraphLabel';
+import { GetNoteDBDTO } from '../database/dto/GetNoteDBDTO';
+import { SMap } from '../tools/Map';
+import { MutableGraphMetaData } from '../room/graph/MutableGraphMetaData';
+import { MutableGraphColor } from '../room/graph/MutableGraphColor';
 import { SSet } from '../tools/Set';
-import type { MutableGraphColor } from '../room/graph/MutableGraphColor';
+import { MutablePropertyCollection } from '../room/graph/MutablePropertyCollection';
 import { MutableGraphColorFactory } from '../room/graph/MutableGraphColorFactory';
+import { ProfilerService } from '../profiler/ProfilerService';
+import { DatabaseService } from '../database/DatabaseService';
+import { DatabaseReferenceCache } from './DatabaseReferenceCache';
 
-export class CachingSchemaDTOFactory {
-  private readonly _databaseCache: SMap<string, GetDatabaseDBDTO>;
-  private readonly _dtoFactory: SchemaDTOFactory;
-
+export class SchemaFactoryService implements ApplicationService {
   public constructor(
-    private readonly _database: DatabaseService,
-    private readonly _logger: LoggerService,
-    private readonly _config: ConfigService,
+    private readonly _configService: ConfigService,
     private readonly _media: MediaService,
     private readonly _profiler: ProfilerService,
-  ) {
-    this._databaseCache = new SMap();
-    this._dtoFactory = new SchemaDTOFactory(_config, _media);
+    private readonly _database: DatabaseService,
+  ) {}
+
+  public bootstrap(): void {
+    /* */
+  }
+
+  public destroy(): void {
+    /* */
+  }
+
+  public createSchemaDatabase(databaseDBDTO: GetDatabaseDBDTO): SchemaDatabase {
+    return {
+      id: databaseDBDTO.documentId,
+      title: databaseDBDTO.title,
+      url: databaseDBDTO.url,
+      browserUrl: databaseDBDTO.browserUrl,
+      editUrl: this._getDatabaseEditUrl(databaseDBDTO),
+    };
+  }
+
+  public createSchemaRoom(
+    room: GetRoomDBDTO,
+    currentScenario: GetScenarioDBDTO | null,
+  ): SchemaRoom {
+    return {
+      id: room.documentId,
+      title: room.title,
+      scenario: currentScenario
+        ? {
+            current: this.createSchemaScenario(currentScenario),
+          }
+        : null,
+      editUrl: this._getRoomEditUrl(room),
+      template: room.template
+        ? this.createSchemaRoomTemplate(room.template)
+        : null,
+    };
+  }
+
+  public createSchemaRoomTemplate(
+    roomTemplate: GetTemplateDBDTO,
+  ): SchemaRoomTemplate {
+    return {
+      id: roomTemplate.documentId,
+      title: roomTemplate.title,
+      editUrl: this._getTemplateEditUrl(roomTemplate),
+    };
+  }
+
+  public createSchemaScenario(scenario: GetScenarioDBDTO): SchemaScenario {
+    return {
+      id: scenario.documentId,
+      title: scenario.title,
+      queries: scenario.queries.map(
+        (q: GetScenarioQueryDBDTO): SchemaScenarioQuery => ({
+          query: q.query,
+          database: q.database
+            ? {
+                current: this.createSchemaDatabase(q.database),
+              }
+            : null,
+        }),
+      ),
+      description: scenario.description,
+      coverUrl: scenario.cover
+        ? this._media.getPublicUrlOfMedia(scenario.cover)
+        : null,
+      editUrl: this._getScenarioEditUrl(scenario),
+      parameters: scenario.parameters.map(
+        (parameter: GetScenarioParameterDBDTO): SchemaScenarioParameter =>
+          this.createSchemaScenarioParameter(parameter),
+      ),
+      additive: scenario.additive,
+    };
+  }
+
+  public createSchemaScenarioParameter(
+    scenarioParameter: GetScenarioParameterDBDTO,
+  ): SchemaScenarioParameter {
+    return {
+      identifier: scenarioParameter.identifier,
+      title: scenarioParameter.title,
+      defaultValue: scenarioParameter.defaultValue,
+      dataType: scenarioParameter.dataType,
+    };
+  }
+
+  public createSchemaScenarioGroup(
+    scenarioGroup: GetScenarioGroupDBDTO,
+    scenarios: SchemaScenario[],
+  ): SchemaScenarioGroup {
+    return {
+      id: scenarioGroup.documentId,
+      title: scenarioGroup.title,
+      editUrl: this._getScenarioGroupEditUrl(scenarioGroup),
+      scenarios: scenarios,
+    };
   }
 
   public async createSchemaGraph(
@@ -81,15 +183,32 @@ export class CachingSchemaDTOFactory {
       ? graph.nodes.getNodeDegreeRange(graph)
       : null;
     const widthRange: Range | null = graph.edges.getEdgeDegreeRange();
+    const databaseCache: DatabaseReferenceCache = new DatabaseReferenceCache(
+      this._database,
+    );
 
     const result: SchemaGraphElements = {
       nodes: await graph.nodes.nodes.asyncFlatMap(
         async (node: MutableNode): Promise<SchemaNode> =>
-          await this._createSchemaNode(node, graph, config, degreeRange, notes),
+          await this._createSchemaNode(
+            node,
+            graph,
+            config,
+            degreeRange,
+            notes,
+            databaseCache,
+          ),
       ),
       edges: await graph.edges.edges.asyncFlatMap(
         async (edge: MutableEdge): Promise<SchemaEdge> =>
-          await this._createSchemaEdge(edge, graph, config, widthRange, notes),
+          await this._createSchemaEdge(
+            edge,
+            graph,
+            config,
+            widthRange,
+            notes,
+            databaseCache,
+          ),
       ),
       labels: await graph.metaData
         .getLabels(graph.nodes)
@@ -98,7 +217,7 @@ export class CachingSchemaDTOFactory {
             id: string,
             label: MutableGraphLabel,
           ): Promise<SchemaGraphLabel> =>
-            await this._createSchemaGraphLabel(id, label),
+            await this._createSchemaGraphLabel(id, label, databaseCache),
         ),
       histogram: this._createSchemaHistogram(graph, config, notes),
       notes: notes.notes
@@ -140,7 +259,7 @@ export class CachingSchemaDTOFactory {
         : null;
     const result: SchemaGraphMetaData = {
       scenario: scenario
-        ? { current: this._dtoFactory.createSchemaScenario(scenario) }
+        ? { current: this.createSchemaScenario(scenario) }
         : null,
       pipelineSummary: metaData.pipelineSummary.map(
         (entry: [string, number]): { step: string; durationMs: number } => {
@@ -350,6 +469,7 @@ export class CachingSchemaDTOFactory {
     config: FinalGraphDisplayConfiguration,
     range: Range | null,
     notes: GetNotesDBDTO,
+    databaseCache: DatabaseReferenceCache,
   ): Promise<SchemaNode> {
     const incomingEdges: MutableEdge[] = graph.edges.getByEndNodeId(node.id);
     const outgoingEdges: MutableEdge[] = graph.edges.getByStartNodeId(node.id);
@@ -393,7 +513,8 @@ export class CachingSchemaDTOFactory {
       degree: node.degree(graph),
       namesInQuery: node.namesInQuery.toArray(),
       customColor: customColor != null ? { color: customColor.toDto() } : null,
-      source: (await this._getDatabase(node.source))?.title ?? node.source,
+      source:
+        (await databaseCache.getDatabase(node.source))?.title ?? node.source,
       locked: node.locked,
       isCluster: node.isCluster,
       clusterSize: node.compressed.size,
@@ -423,6 +544,7 @@ export class CachingSchemaDTOFactory {
     config: FinalGraphDisplayConfiguration,
     range: Range | null,
     notes: GetNotesDBDTO,
+    databaseCcache: DatabaseReferenceCache,
   ): Promise<SchemaEdge> {
     const sourceNode: MutableNode | null = graph.nodes.get(edge.startNodeId);
     const targetNode: MutableNode | null = graph.nodes.get(edge.endNodeId);
@@ -442,7 +564,8 @@ export class CachingSchemaDTOFactory {
       width: edge.getWidth(range, config),
       properties: this._createSchemaGraphProperties(edge.properties),
       namesInQuery: edge.namesInQuery.toArray(),
-      source: (await this._getDatabase(edge.source))?.title ?? edge.source,
+      source:
+        (await databaseCcache.getDatabase(edge.source))?.title ?? edge.source,
       clusterSize: edge.compressed.size,
       sourceNode: {
         id: sourceNode?.id ?? '',
@@ -482,6 +605,7 @@ export class CachingSchemaDTOFactory {
   private async _createSchemaGraphLabel(
     id: string,
     label: MutableGraphLabel,
+    databaseCache: DatabaseReferenceCache,
   ): Promise<SchemaGraphLabel> {
     return {
       label: id,
@@ -489,7 +613,7 @@ export class CachingSchemaDTOFactory {
       color: label.color.toDto(),
       sources: await label.sources.asyncFlatMap(
         async (sourceId: string): Promise<string> => {
-          return (await this._getDatabase(sourceId))?.title ?? sourceId;
+          return (await databaseCache.getDatabase(sourceId))?.title ?? sourceId;
         },
       ),
     };
@@ -526,21 +650,47 @@ export class CachingSchemaDTOFactory {
     };
   }
 
-  private async _getDatabase(
-    databaseId: string,
-  ): Promise<GetDatabaseDBDTO | null> {
-    const foundDatabase: GetDatabaseDBDTO | undefined =
-      this._databaseCache.get(databaseId);
-    if (foundDatabase != null) {
-      return foundDatabase;
-    }
+  private _getDatabaseEditUrl(database: GetDatabaseDBDTO): string {
+    const host: string | null = this._configService.publicURL ?? '';
+    const url: string = `${host}/admin/content-manager/collection-types/api::database.database/${database.documentId}`;
+    return url;
+  }
 
-    const db: GetDatabaseDBDTO | null =
-      await this._database.getDatabase(databaseId);
-    if (db == null) {
+  private _getScenarioGroupEditUrl(
+    scenarioGroup: GetScenarioGroupDBDTO,
+  ): string | null {
+    const host: string | null = this._configService.publicURL;
+    if (host == null) {
       return null;
     }
-    this._databaseCache.set(databaseId, db);
-    return db;
+    const url: string = `${host}/admin/content-manager/collection-types/api::scenario-group.scenario-group/${scenarioGroup.documentId}`;
+    return url;
+  }
+
+  private _getScenarioEditUrl(scenario: GetScenarioDBDTO): string | null {
+    const host: string | null = this._configService.publicURL;
+    if (host == null) {
+      return null;
+    }
+    const url: string = `${host}/admin/content-manager/collection-types/api::scenario.scenario/${scenario.documentId}`;
+    return url;
+  }
+
+  private _getRoomEditUrl(room: GetRoomDBDTO): string | null {
+    const host: string | null = this._configService.publicURL;
+    if (host == null) {
+      return null;
+    }
+    const url: string = `${host}/admin/content-manager/collection-types/api::room.room/${room.documentId}`;
+    return url;
+  }
+
+  private _getTemplateEditUrl(template: GetTemplateDBDTO): string | null {
+    const host: string | null = this._configService.publicURL;
+    if (host == null) {
+      return null;
+    }
+    const url: string = `${host}/admin/content-manager/collection-types/api::room-template.room-template/${template.documentId}`;
+    return url;
   }
 }

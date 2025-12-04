@@ -9,7 +9,6 @@ import type {
 } from '../../../../src-gen/schema';
 import { MutableGraph } from '../../room/graph/MutableGraph';
 import { GetRoomDBDTO } from '../../database/dto/GetRoomDBDTO';
-import { CachingSchemaDTOFactory } from '../CachingSchemaDTOFactory';
 import { GetNotesDBDTO } from '../../database/dto/GetNotesDBDTO';
 import { FinalGraphDisplayConfiguration } from '../../room/scenario-pipeline/display-configuration/FinalGraphDisplayConfiguration';
 import { RoomService } from '../../room/RoomService';
@@ -17,6 +16,7 @@ import { LoggerService } from '../../logger/LoggerService';
 import { ConfigService } from '../../config/ConfigService';
 import { MediaService } from '../../media/MediaService';
 import { ProfilerService } from '../../profiler/ProfilerService';
+import { SchemaFactoryService } from '../../schema/SchemaFactoryService';
 
 export class GraphRouter {
   public constructor(
@@ -27,6 +27,7 @@ export class GraphRouter {
     private readonly _config: ConfigService,
     private readonly _media: MediaService,
     private readonly _profiler: ProfilerService,
+    private readonly _schemaFactory: SchemaFactoryService,
   ) {}
 
   public register(): Router {
@@ -52,14 +53,6 @@ export class GraphRouter {
   private async _getGraph(req: Request): Promise<SchemaGraph> {
     const room: GetRoomDBDTO = req.nakarRoom;
     const graph: MutableGraph = this._roomService.getGraph(room.documentId);
-    const cachedGraphFactory: CachingSchemaDTOFactory =
-      new CachingSchemaDTOFactory(
-        this._databaseService,
-        this._logger,
-        this._config,
-        this._media,
-        this._profiler,
-      );
     const notes: GetNotesDBDTO = await this._databaseService.getNotes({
       room: room,
       graph: graph,
@@ -69,7 +62,7 @@ export class GraphRouter {
         graph.metaData.scenarioId,
         room.documentId,
       );
-    const result: SchemaGraph = await cachedGraphFactory.createSchemaGraph(
+    const result: SchemaGraph = await this._schemaFactory.createSchemaGraph(
       graph,
       notes,
       config,
@@ -80,14 +73,6 @@ export class GraphRouter {
   private async _getGraphElements(req: Request): Promise<SchemaGraphElements> {
     const room: GetRoomDBDTO = req.nakarRoom;
     const graph: MutableGraph = this._roomService.getGraph(room.documentId);
-    const cachedGraphFactory: CachingSchemaDTOFactory =
-      new CachingSchemaDTOFactory(
-        this._databaseService,
-        this._logger,
-        this._config,
-        this._media,
-        this._profiler,
-      );
     const notes: GetNotesDBDTO = await this._databaseService.getNotes({
       room: room,
       graph: graph,
@@ -98,38 +83,22 @@ export class GraphRouter {
         room.documentId,
       );
     const result: SchemaGraphElements =
-      await cachedGraphFactory.createSchemaGraphElements(graph, notes, config);
+      await this._schemaFactory.createSchemaGraphElements(graph, notes, config);
     return result;
   }
 
   private async _getGraphMetaData(req: Request): Promise<SchemaGraphMetaData> {
     const room: GetRoomDBDTO = req.nakarRoom;
     const graph: MutableGraph = this._roomService.getGraph(room.documentId);
-    const cachedGraphFactory: CachingSchemaDTOFactory =
-      new CachingSchemaDTOFactory(
-        this._databaseService,
-        this._logger,
-        this._config,
-        this._media,
-        this._profiler,
-      );
     const result: SchemaGraphMetaData =
-      await cachedGraphFactory.createSchemaGraphMetaData(graph);
+      await this._schemaFactory.createSchemaGraphMetaData(graph);
     return result;
   }
 
   private _getGraphTable(req: Request): SchemaGraphTable {
     const room: GetRoomDBDTO = req.nakarRoom;
     const graph: MutableGraph = this._roomService.getGraph(room.documentId);
-    const cachedGraphFactory: CachingSchemaDTOFactory =
-      new CachingSchemaDTOFactory(
-        this._databaseService,
-        this._logger,
-        this._config,
-        this._media,
-        this._profiler,
-      );
-    const result: SchemaGraphTable = cachedGraphFactory.createSchemaTable(
+    const result: SchemaGraphTable = this._schemaFactory.createSchemaTable(
       graph.tableData,
     );
     return result;

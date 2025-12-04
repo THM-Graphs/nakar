@@ -34,7 +34,6 @@ import type http from 'http';
 import type { ApplicationService } from '../application/ApplicationService';
 import type { Subscription } from 'rxjs';
 import type { HTTPService } from '../http/HTTPService';
-import { CachingSchemaDTOFactory } from '../http/CachingSchemaDTOFactory';
 import type { RoomServiceEvent } from '../room/events/RoomServiceEvent';
 import type { RoomServiceEventGraphMetaDataChanged } from '../room/events/RoomServiceEventGraphMetaDataChanged';
 import type { RoomServiceEventRoomPhysicsUpdated } from '../room/events/RoomServiceEventRoomPhysicsUpdated';
@@ -55,6 +54,7 @@ import type { ProfilerService } from '../profiler/ProfilerService';
 import type { GetNotesDBDTO } from '../database/dto/GetNotesDBDTO';
 import type { MutableGraph } from '../room/graph/MutableGraph';
 import type { FinalGraphDisplayConfiguration } from '../room/scenario-pipeline/display-configuration/FinalGraphDisplayConfiguration';
+import { SchemaFactoryService } from '../schema/SchemaFactoryService';
 
 export type Server = UntypedServer<ClientToServerEvents, ServerToClientEvents>;
 export type Socket = UntypedSocket<ClientToServerEvents, ServerToClientEvents>;
@@ -71,6 +71,7 @@ export class SocketIOService implements ApplicationService {
     private readonly _config: ConfigService,
     private readonly _media: MediaService,
     private readonly _profiler: ProfilerService,
+    private readonly _schemaFactory: SchemaFactoryService,
   ) {
     this._sockets = new SSet();
     this._io = null;
@@ -313,16 +314,8 @@ export class SocketIOService implements ApplicationService {
           .with(
             { type: 'RoomServiceEventGraphTableChanged' },
             (message: RoomServiceEventGraphTableChanged): void => {
-              const cachedGraphFactory: CachingSchemaDTOFactory =
-                new CachingSchemaDTOFactory(
-                  this._databaseService,
-                  this._logger,
-                  this._config,
-                  this._media,
-                  this._profiler,
-                );
               const table: SchemaGraphTable =
-                cachedGraphFactory.createSchemaTable(message.table);
+                this._schemaFactory.createSchemaTable(message.table);
               this.sendToRoom(message.roomId, {
                 table: table,
                 type: 'WSEventGraphTableChanged',
@@ -334,16 +327,8 @@ export class SocketIOService implements ApplicationService {
             async (
               message: RoomServiceEventGraphMetaDataChanged,
             ): Promise<void> => {
-              const cachedGraphFactory: CachingSchemaDTOFactory =
-                new CachingSchemaDTOFactory(
-                  this._databaseService,
-                  this._logger,
-                  this._config,
-                  this._media,
-                  this._profiler,
-                );
               const metaData: SchemaGraphMetaData =
-                await cachedGraphFactory.createSchemaGraphMetaData(
+                await this._schemaFactory.createSchemaGraphMetaData(
                   message.graph,
                 );
               this.sendToRoom(message.roomId, {
@@ -356,14 +341,6 @@ export class SocketIOService implements ApplicationService {
             { type: 'RoomServiceEventGraphElementsChanged' },
             (message: RoomServiceEventGraphElementsChanged): void => {
               (async (): Promise<void> => {
-                const cachedGraphFactory: CachingSchemaDTOFactory =
-                  new CachingSchemaDTOFactory(
-                    this._databaseService,
-                    this._logger,
-                    this._config,
-                    this._media,
-                    this._profiler,
-                  );
                 const room: GetRoomDBDTO | null =
                   await this._databaseService.getRoom(message.roomId);
                 if (room == null) {
@@ -384,7 +361,7 @@ export class SocketIOService implements ApplicationService {
                     room.documentId,
                   );
                 const graphElements: SchemaGraphElements =
-                  await cachedGraphFactory.createSchemaGraphElements(
+                  await this._schemaFactory.createSchemaGraphElements(
                     message.graph,
                     notes,
                     config,
@@ -525,14 +502,6 @@ export class SocketIOService implements ApplicationService {
     this._databaseService.onNoteChanges$.subscribe(
       (message: { roomId: string }): void => {
         (async (): Promise<void> => {
-          const cachedGraphFactory: CachingSchemaDTOFactory =
-            new CachingSchemaDTOFactory(
-              this._databaseService,
-              this._logger,
-              this._config,
-              this._media,
-              this._profiler,
-            );
           const room: GetRoomDBDTO | null = await this._databaseService.getRoom(
             message.roomId,
           );
@@ -556,7 +525,7 @@ export class SocketIOService implements ApplicationService {
               room.documentId,
             );
           const graphElements: SchemaGraphElements =
-            await cachedGraphFactory.createSchemaGraphElements(
+            await this._schemaFactory.createSchemaGraphElements(
               graph,
               notes,
               config,

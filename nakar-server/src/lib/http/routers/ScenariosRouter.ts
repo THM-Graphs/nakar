@@ -13,13 +13,13 @@ import { GetParameterizedScenariosDBDTO } from '../../database/dto/GetParameteri
 import { SMap } from '../../tools/Map';
 import { GetDatabaseDBDTO } from '../../database/dto/GetDatabaseDBDTO';
 import { DatabaseService } from '../../database/DatabaseService';
-import { SchemaDTOFactory } from '../SchemaDTOFactory';
+import { SchemaFactoryService } from '../../schema/SchemaFactoryService';
 
 export class ScenariosRouter {
   public constructor(
     private readonly _httpTools: HTTPTools,
     private readonly _databaseService: DatabaseService,
-    private readonly _schemaDTOFactory: SchemaDTOFactory,
+    private readonly _schemaFactory: SchemaFactoryService,
   ) {}
 
   public register(): Router {
@@ -41,10 +41,10 @@ export class ScenariosRouter {
             await this._databaseService.getScenarios(scenarioGroup.documentId);
           const scenarioSchemas: SchemaScenario[] = scenarios.map(
             (scenario: GetScenarioDBDTO): SchemaScenario => {
-              return this._schemaDTOFactory.createSchemaScenario(scenario);
+              return this._schemaFactory.createSchemaScenario(scenario);
             },
           );
-          return this._schemaDTOFactory.createSchemaScenarioGroup(
+          return this._schemaFactory.createSchemaScenarioGroup(
             scenarioGroup,
             scenarioSchemas,
           );
@@ -79,11 +79,11 @@ export class ScenariosRouter {
             parameterizedScenarios: GetScenarioDBDTO[];
           },
         ): SchemaScenarioGroup =>
-          this._schemaDTOFactory.createSchemaScenarioGroup(
+          this._schemaFactory.createSchemaScenarioGroup(
             g,
             g.parameterizedScenarios.map(
               (s: GetScenarioDBDTO): SchemaScenario =>
-                this._schemaDTOFactory.createSchemaScenario(s),
+                this._schemaFactory.createSchemaScenario(s),
             ),
           ),
       ),
@@ -91,7 +91,7 @@ export class ScenariosRouter {
         .toValueArray()
         .map(
           (referencedDatabase: GetDatabaseDBDTO): SchemaDatabase =>
-            this._schemaDTOFactory.createSchemaDatabase(referencedDatabase),
+            this._schemaFactory.createSchemaDatabase(referencedDatabase),
         ),
     };
   }

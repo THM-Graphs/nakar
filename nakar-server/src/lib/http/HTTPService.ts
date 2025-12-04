@@ -8,12 +8,7 @@ import cors from 'cors';
 import type { ProfilerService } from '../profiler/ProfilerService';
 import type { ApplicationService } from '../application/ApplicationService';
 import type { BackupService } from '../backup/BackupService';
-import fsAsync from 'node:fs/promises';
-import fileupload from 'express-fileupload';
-import os from 'node:os';
-import path from 'path';
 import type { RoomService } from '../room/RoomService';
-import { SchemaDTOFactory } from './SchemaDTOFactory';
 import type { GetRoomDBDTO } from '../database/dto/GetRoomDBDTO';
 import type { GetDatabaseDBDTO } from '../database/dto/GetDatabaseDBDTO';
 import type { Neo4jService } from '../neo4j/Neo4jService';
@@ -26,6 +21,7 @@ import { RoomRouter } from './routers/RoomRouter';
 import { RoomTemplateRouter } from './routers/RoomTemplateRouter';
 import { SystemRouter } from './routers/SystemRouter';
 import { DatabaseRouter } from './routers/DatabaseRouter';
+import { SchemaFactoryService } from '../schema/SchemaFactoryService';
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -43,7 +39,6 @@ export class HTTPService implements ApplicationService {
   private readonly _app: Application;
   private readonly _server: http.Server;
 
-  private readonly _schemaDTOFactory: SchemaDTOFactory;
   private readonly _httpTools: HTTPTools;
 
   private readonly _authenticationRouter: AuthenticationRouter;
@@ -61,11 +56,11 @@ export class HTTPService implements ApplicationService {
     private readonly _roomService: RoomService,
     private readonly _neo4jService: Neo4jService,
     private readonly _media: MediaService,
+    private readonly _schemaFactory: SchemaFactoryService,
   ) {
     this._app = express();
     // eslint-disable-next-line @typescript-eslint/no-misused-promises
     this._server = http.createServer(this._app);
-    this._schemaDTOFactory = new SchemaDTOFactory(_config, _media);
     this._httpTools = new HTTPTools(
       _profiler,
       _logger,
@@ -80,7 +75,7 @@ export class HTTPService implements ApplicationService {
     this._roomRouter = new RoomRouter(
       this._httpTools,
       _databaseService,
-      this._schemaDTOFactory,
+      _schemaFactory,
       _roomService,
       _logger,
       _config,
@@ -90,7 +85,7 @@ export class HTTPService implements ApplicationService {
     this._roomTemplateRouter = new RoomTemplateRouter(
       this._httpTools,
       _databaseService,
-      this._schemaDTOFactory,
+      _schemaFactory,
     );
     this._systemRouter = new SystemRouter(this._httpTools, _config, _backup);
     this._databaseRouter = new DatabaseRouter(
@@ -101,19 +96,14 @@ export class HTTPService implements ApplicationService {
       _profiler,
       _config,
       _media,
+      _schemaFactory,
     );
 
     this._setupMiddleware();
     this._setupRoutes();
   }
 
-  private get _uploadTemporaryDirectoryPath(): string {
-    return path.join(os.tmpdir(), 'nakar-fileupload');
-  }
-
   public async bootstrap(): Promise<void> {
-    await this._tmpCleanup();
-
     this._server.on('close', (): void => {
       this._logger.debug(this, 'Server will close.');
     });
@@ -144,33 +134,14 @@ export class HTTPService implements ApplicationService {
   }
 
   public async destroy(): Promise<void> {
-    await this._tmpCleanup();
+    /* */
   }
 
   public getServerInstance(): http.Server {
     return this._server;
   }
 
-  private async _tmpCleanup(): Promise<void> {
-    try {
-      this._logger.debug(
-        this,
-        `Will remove fileupload path ${this._uploadTemporaryDirectoryPath}`,
-      );
-      await fsAsync.rm(this._uploadTemporaryDirectoryPath, { recursive: true });
-    } catch {
-      /* ok */
-    }
-  }
-
   private _setupMiddleware(): void {
-    this._app.use(
-      fileupload({
-        limits: { fileSize: 2 * Math.pow(1024, 3) }, // 2 GB
-        useTempFiles: true,
-        tempFileDir: path.join(os.tmpdir(), 'nakar', 'fileupload'),
-      }),
-    );
     this._app.use(
       express.json({
         limit: 1_000_000_000,

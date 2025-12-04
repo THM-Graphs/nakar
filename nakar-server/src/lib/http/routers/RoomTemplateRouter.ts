@@ -1,6 +1,5 @@
 import { HTTPTools } from '../HTTPTools';
 import { DatabaseService } from '../../database/DatabaseService';
-import { SchemaDTOFactory } from '../SchemaDTOFactory';
 import { NextFunction, type Request, Response, Router } from 'express';
 import type {
   SchemaRoomTemplate,
@@ -8,12 +7,13 @@ import type {
 } from '../../../../src-gen/schema';
 import { GetTemplateDBDTO } from '../../database/dto/GetTemplateDBDTO';
 import { NotFound } from 'http-errors';
+import { SchemaFactoryService } from '../../schema/SchemaFactoryService';
 
 export class RoomTemplateRouter {
   public constructor(
     private readonly _httpTools: HTTPTools,
     private readonly _databaseService: DatabaseService,
-    private readonly _schemaDTOFactory: SchemaDTOFactory,
+    private readonly _schemaFactory: SchemaFactoryService,
   ) {}
 
   public register(): Router {
@@ -35,7 +35,7 @@ export class RoomTemplateRouter {
     return {
       roomTemplates: dbResult.map(
         (roomTemplate: GetTemplateDBDTO): SchemaRoomTemplate => {
-          return this._schemaDTOFactory.createSchemaRoomTemplate(roomTemplate);
+          return this._schemaFactory.createSchemaRoomTemplate(roomTemplate);
         },
       ),
     };
@@ -61,8 +61,6 @@ export class RoomTemplateRouter {
   }
 
   private _getRoomTemplate(req: Request): SchemaRoomTemplate {
-    return this._schemaDTOFactory.createSchemaRoomTemplate(
-      req.nakarRoomTemplate,
-    );
+    return this._schemaFactory.createSchemaRoomTemplate(req.nakarRoomTemplate);
   }
 }

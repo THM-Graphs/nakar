@@ -12,6 +12,7 @@ import { ToolsService } from '../tools/ToolsService';
 import type { ApplicationService } from './ApplicationService';
 import { MediaService } from '../media/MediaService';
 import type { ProfilerTask } from '../profiler/ProfilerTask';
+import { SchemaFactoryService } from '../schema/SchemaFactoryService';
 
 export class NakarApplication {
   public static shared: NakarApplication = new NakarApplication();
@@ -22,6 +23,7 @@ export class NakarApplication {
   public readonly config: ConfigService;
   public readonly profiler: ProfilerService;
   public readonly databaseService: DatabaseService;
+  public readonly schemaFactory: SchemaFactoryService;
   public readonly roomService: RoomService;
   public readonly neo4j: Neo4jService;
   public readonly media: MediaService;
@@ -41,6 +43,12 @@ export class NakarApplication {
       this.logger,
       this.media,
       this.profiler,
+    );
+    this.schemaFactory = new SchemaFactoryService(
+      this.config,
+      this.media,
+      this.profiler,
+      this.databaseService,
     );
     this.backup = new BackupService(
       this.logger,
@@ -66,6 +74,7 @@ export class NakarApplication {
       this.roomService,
       this.neo4j,
       this.media,
+      this.schemaFactory,
     );
     this.socketIOService = new SocketIOService(
       this.roomService,
@@ -75,6 +84,7 @@ export class NakarApplication {
       this.config,
       this.media,
       this.profiler,
+      this.schemaFactory,
     );
 
     this._services = [
@@ -84,6 +94,7 @@ export class NakarApplication {
       this.profiler,
       this.media,
       this.databaseService,
+      this.schemaFactory,
       this.backup,
       this.neo4j,
       this.roomService,

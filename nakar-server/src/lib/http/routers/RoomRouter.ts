@@ -13,7 +13,6 @@ import type {
 } from '../../../../src-gen/schema';
 import { GetRoomDBDTO } from '../../database/dto/GetRoomDBDTO';
 import { DatabaseService } from '../../database/DatabaseService';
-import { SchemaDTOFactory } from '../SchemaDTOFactory';
 import type { GetTemplateDBDTO } from '../../database/dto/GetTemplateDBDTO';
 import { NotFound } from 'http-errors';
 import { ScenariosRouter } from './ScenariosRouter';
@@ -24,6 +23,7 @@ import { MediaService } from '../../media/MediaService';
 import { ProfilerService } from '../../profiler/ProfilerService';
 import { NotesRouter } from './NotesRouter';
 import { ActionsRouter } from './ActionsRouter';
+import { SchemaFactoryService } from '../../schema/SchemaFactoryService';
 
 export class RoomRouter {
   private readonly _scenariosRouter: ScenariosRouter;
@@ -34,7 +34,7 @@ export class RoomRouter {
   public constructor(
     private readonly _httpTools: HTTPTools,
     private readonly _databaseService: DatabaseService,
-    private readonly _schemaDTOFactory: SchemaDTOFactory,
+    private readonly _schemaFactory: SchemaFactoryService,
     private readonly _roomService: RoomService,
     private readonly _logger: LoggerService,
     private readonly _config: ConfigService,
@@ -44,7 +44,7 @@ export class RoomRouter {
     this._scenariosRouter = new ScenariosRouter(
       _httpTools,
       _databaseService,
-      _schemaDTOFactory,
+      _schemaFactory,
     );
     this._graphRouter = new GraphRouter(
       _httpTools,
@@ -54,6 +54,7 @@ export class RoomRouter {
       _config,
       _media,
       _profiler,
+      _schemaFactory,
     );
     this._notesRouter = new NotesRouter(_httpTools, _databaseService, _logger);
     this._actionsRouter = new ActionsRouter(_httpTools, _roomService);
@@ -97,7 +98,7 @@ export class RoomRouter {
     return {
       rooms: await Promise.all(
         dbResult.map(async (room: GetRoomDBDTO): Promise<SchemaRoom> => {
-          return this._schemaDTOFactory.createSchemaRoom(
+          return this._schemaFactory.createSchemaRoom(
             room,
             await this._httpTools.getScenarioOfRoom(room),
           );
@@ -118,7 +119,7 @@ export class RoomRouter {
     }
 
     const room: GetRoomDBDTO = await this._databaseService.createRoom(template);
-    const result: SchemaRoom = this._schemaDTOFactory.createSchemaRoom(
+    const result: SchemaRoom = this._schemaFactory.createSchemaRoom(
       room,
       await this._httpTools.getScenarioOfRoom(room),
     );
@@ -127,7 +128,7 @@ export class RoomRouter {
 
   private async _getRoom(req: Request): Promise<SchemaRoom> {
     const dbResult: GetRoomDBDTO = req.nakarRoom;
-    return this._schemaDTOFactory.createSchemaRoom(
+    return this._schemaFactory.createSchemaRoom(
       dbResult,
       await this._httpTools.getScenarioOfRoom(dbResult),
     );
