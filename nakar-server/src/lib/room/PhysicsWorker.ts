@@ -1,4 +1,3 @@
-import { ApplicationService } from '../application/ApplicationService';
 import { MutableGraph } from './graph/MutableGraph';
 import { Worker } from 'node:worker_threads';
 import type { WTEvent } from '../room-worker/worker-events/WTEvent';

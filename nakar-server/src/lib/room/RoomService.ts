@@ -34,7 +34,7 @@ export class RoomService implements ApplicationService {
     return this._onEvent.asObservable();
   }
 
-  public async bootstrap(): Promise<void> {
+  public bootstrap(): void {
     installHandlebarHelpers();
 
     this._database.onRoomDeleted$.subscribe((room: GetRoomDBDTO): void => {
