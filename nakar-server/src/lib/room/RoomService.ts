@@ -38,7 +38,7 @@ export class RoomService implements ApplicationService {
     installHandlebarHelpers();
 
     this._database.onRoomDeleted$.subscribe((room: GetRoomDBDTO): void => {
-      this._destroyRoom(room.documentId).catch((error: unknown): void => {
+      this.destroyRoom(room.documentId).catch((error: unknown): void => {
         this._logger.error(this, error);
       });
     });
@@ -105,7 +105,7 @@ export class RoomService implements ApplicationService {
     task.finish();
   }
 
-  private async _destroyRoom(roomId: string): Promise<void> {
+  public async destroyRoom(roomId: string): Promise<void> {
     this._logger.debug(this, `Will destroy room ${roomId}.`);
 
     const liveRoom: LiveRoom | undefined = this._liveRooms.get(roomId);

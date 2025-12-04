@@ -187,7 +187,15 @@ export class SocketIOService implements ApplicationService {
                 severity: 'message',
               },
             } satisfies SchemaWsEventNotification);
-          } else if (oldRoomId == null && newRoomId != null) {
+
+            if (this._userCountOfRoom(oldRoomId) === 0) {
+              this._roomService
+                .destroyRoom(oldRoomId)
+                .catch((error: unknown): void => {
+                  this._logger.error(this, error);
+                });
+            }
+          } else if (newRoomId != null && newRoomId !== oldRoomId) {
             wsClient.broadcastToRoom({
               type: 'WSEventNotification',
               notification: {
@@ -293,9 +301,12 @@ export class SocketIOService implements ApplicationService {
           `Socket ${wsClient.id} disconnected: ${reason}`,
         );
         this._sockets.delete(wsClient);
-        for (const sub of clientSubscriptions) {
-          sub.unsubscribe();
-        }
+        setTimeout((): void => {
+          // Workaround to receive leave room event
+          for (const sub of clientSubscriptions) {
+            sub.unsubscribe();
+          }
+        }, 10000);
       }),
     ];
   }
@@ -538,5 +549,11 @@ export class SocketIOService implements ApplicationService {
       throw new Error(`Client ${client.id} is in no room.`);
     }
     return client.room;
+  }
+
+  private _userCountOfRoom(roomId: string): number {
+    return this._sockets.filter(
+      (wsclient: WSClient): boolean => wsclient.room === roomId,
+    ).size;
   }
 }
