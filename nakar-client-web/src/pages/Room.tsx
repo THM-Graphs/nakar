@@ -147,11 +147,8 @@ export function Room(props: { context: AppContext }) {
           .with({ type: "WSEventUnlockUi" }, () => {
             unlockUI();
           })
-          .with({ type: "WSEventPerformanceChanged" }, (event) => {
-            setPerformance(event.performance ?? null);
-          })
-          .with({ type: "WSEventNodesMoved" }, () => {
-            /* */
+          .with({ type: "WSEventNodesMoved" }, (event) => {
+            setPerformance(event.performance);
           })
           .with({ type: "WSEventNotification" }, (event) => {
             const notification = event.notification;

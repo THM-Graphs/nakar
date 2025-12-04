@@ -1,5 +1,4 @@
 import type { RoomServiceEventNodeLocksUpdated } from './RoomServiceEventNodeLocksUpdated';
-import type { RoomServiceEventRoomPerformanceChanged } from './RoomServiceEventRoomPerformanceChanged';
 import type { RoomServiceEventRoomPhysicsUpdated } from './RoomServiceEventRoomPhysicsUpdated';
 import type { RoomServiceEventGraphMetaDataChanged } from './RoomServiceEventGraphMetaDataChanged';
 import type { RoomServiceEventProgressChanged } from './RoomServiceEventProgressChanged';
@@ -15,7 +14,6 @@ export type RoomServiceEvent =
   | RoomServiceEventGraphMetaDataChanged
   | RoomServiceEventGraphTableChanged
   | RoomServiceEventGraphElementsChanged
-  | RoomServiceEventRoomPerformanceChanged
   | RoomServiceEventRoomPhysicsUpdated
   | RoomServiceEventNodeLocksUpdated
   | RoomServiceEventProgressChanged

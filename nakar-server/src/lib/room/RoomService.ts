@@ -24,7 +24,6 @@ import { Neo4jDatabaseInfo } from '../neo4j/Neo4jDatabaseInfo';
 import type { Neo4jGraphElements } from '../neo4j/Neo4jGraphElements';
 import { SSet } from '../tools/Set';
 import type { PhysicalGraph } from '../physics/physical-graph/PhysicalGraph';
-import type { WTEventPerformanceChanged } from '../room-worker/worker-events/WTEventPerformanceChanged';
 import type { RoomServiceEvent } from './events/RoomServiceEvent';
 import type { RoomServiceEventGraphElementsChanged } from './events/RoomServiceEventGraphElementsChanged';
 import type { RoomServiceEventGraphMetaDataChanged } from './events/RoomServiceEventGraphMetaDataChanged';
@@ -1415,23 +1414,15 @@ export class RoomService implements ApplicationService {
       );
     });
     worker.on('message', (message: WTEvent): void => {
-      if (message.type !== 'WTEventPhysicsUpdate') {
-        this._logger.debug(
-          this,
-          `Did receive from worker ${worker.threadId.toString()} (room ${roomId}): ${message.type}`,
-        );
-      }
+      // this._logger.debug(
+      //   this,
+      //   `Did receive from worker ${worker.threadId.toString()} (room ${roomId}): ${message.type}`,
+      // );
       match(message)
         .with(
           { type: 'WTEventPhysicsUpdate' },
           (event: WTEventPhysicsUpdate): void => {
             this._handleWTEventPhysicsUpdate(roomId, event);
-          },
-        )
-        .with(
-          { type: 'WTEventPerformanceChanged' },
-          (event: WTEventPerformanceChanged): void => {
-            this._handleWTEventPerformanceChanged(roomId, event);
           },
         )
         .exhaustive();
@@ -1480,16 +1471,6 @@ export class RoomService implements ApplicationService {
     this._onEvent.next({
       type: 'RoomServiceEventRoomPhysicsUpdated',
       graph: graph,
-      roomId: roomId,
-    } satisfies RoomServiceEvent);
-  }
-
-  private _handleWTEventPerformanceChanged(
-    roomId: string,
-    event: WTEventPerformanceChanged,
-  ): void {
-    this._onEvent.next({
-      type: 'RoomServiceEventRoomPerformanceChanged',
       roomId: roomId,
       performance: event.performance,
     } satisfies RoomServiceEvent);

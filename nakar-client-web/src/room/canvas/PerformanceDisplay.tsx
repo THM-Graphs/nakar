@@ -20,7 +20,7 @@ export function PerformanceDisplay() {
       direction={"horizontal"}
       gap={2}
       className={clsx(
-        "border-start pe-2 flex-grow-0 flex-shrink-0 small bg-warning ps-2 text-black",
+        "border-start pe-2 flex-grow-0 flex-shrink-0 small ps-2 bg-warning text-black",
       )}
     >
       <span>
@@ -30,6 +30,10 @@ export function PerformanceDisplay() {
       <span>
         Tick Duration:{" "}
         <span className={""}>{performance.tickDuration.toFixed()}ms</span>
+      </span>
+      <span>
+        Tick Count:{" "}
+        <span className={""}>{performance.tickCount.toFixed()}</span>
       </span>
     </Stack>
   );

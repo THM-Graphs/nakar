@@ -247,6 +247,7 @@ export type PhysicsPerformance = {
     performance: 'good' | 'bad';
     loadPercent: number;
     tickDuration: number;
+    tickCount: number;
 };
 
 export type performance = 'good' | 'bad';
@@ -415,6 +416,7 @@ export type WSEventNodesMoved = {
     type: 'WSEventNodesMoved';
     nodes: Array<PhysicalNode>;
     date: string;
+    performance: PhysicsPerformance;
 };
 
 export type type16 = 'WSEventNodesMoved';
@@ -426,27 +428,20 @@ export type WSEventNotification = {
 
 export type type17 = 'WSEventNotification';
 
-export type WSEventPerformanceChanged = {
-    type: 'WSEventPerformanceChanged';
-    performance?: PhysicsPerformance;
-};
-
-export type type18 = 'WSEventPerformanceChanged';
-
 export type WSEventProgress = {
     type: 'WSEventProgress';
     progress: (number) | null;
     message: string;
 };
 
-export type type19 = 'WSEventProgress';
+export type type18 = 'WSEventProgress';
 
 export type WSEventRoomChanged = {
     type: 'WSEventRoomChanged';
     roomId: (string) | null;
 };
 
-export type type20 = 'WSEventRoomChanged';
+export type type19 = 'WSEventRoomChanged';
 
 export type WSEventSetNodeLocks = {
     type: 'WSEventSetNodeLocks';
@@ -456,15 +451,15 @@ export type WSEventSetNodeLocks = {
     }>;
 };
 
-export type type21 = 'WSEventSetNodeLocks';
+export type type20 = 'WSEventSetNodeLocks';
 
 export type WSEventUnlockUi = {
     type: 'WSEventUnlockUi';
 };
 
-export type type22 = 'WSEventUnlockUi';
+export type type21 = 'WSEventUnlockUi';
 
-export type WSServerToClientMessage = WSEventNodesMoved | WSEventRoomChanged | WSEventNotification | WSEventGraphElementsChanged | WSEventGraphMetaDataChanged | WSEventGraphTableChanged | WSEventProgress | WSEventClearProgress | WSEventSetNodeLocks | WSEventLockUi | WSEventUnlockUi | WSEventPerformanceChanged | WSEventKick;
+export type WSServerToClientMessage = WSEventNodesMoved | WSEventRoomChanged | WSEventNotification | WSEventGraphElementsChanged | WSEventGraphMetaDataChanged | WSEventGraphTableChanged | WSEventProgress | WSEventClearProgress | WSEventSetNodeLocks | WSEventLockUi | WSEventUnlockUi | WSEventKick;
 
 export type PostAuthData = {
     body: {

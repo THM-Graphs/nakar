@@ -1728,10 +1728,13 @@ components:
           type: number
         tickDuration:
           type: number
+        tickCount:
+          type: number
       required:
         - performance
         - loadPercent
         - tickDuration
+        - tickCount
 
     ExpandNodePreviewElement:
       type: object
@@ -1899,7 +1902,6 @@ components:
         - $ref: "#/components/schemas/WSEventSetNodeLocks"
         - $ref: "#/components/schemas/WSEventLockUi"
         - $ref: "#/components/schemas/WSEventUnlockUi"
-        - $ref: "#/components/schemas/WSEventPerformanceChanged"
         - $ref: "#/components/schemas/WSEventKick"
 
     WSActionJoinRoom:
@@ -2023,10 +2025,13 @@ components:
         date:
           type: string
           format: date
+        performance:
+          $ref: "#/components/schemas/PhysicsPerformance"
       required:
         - type
         - nodes
         - date
+        - performance
 
     WSEventNotification:
       type: object
@@ -2102,17 +2107,6 @@ components:
         type:
           type: string
           enum: ["WSEventUnlockUi"]
-      required:
-        - type
-
-    WSEventPerformanceChanged:
-      type: object
-      properties:
-        type:
-          type: string
-          enum: ["WSEventPerformanceChanged"]
-        performance:
-          $ref: "#/components/schemas/PhysicsPerformance"
       required:
         - type
 

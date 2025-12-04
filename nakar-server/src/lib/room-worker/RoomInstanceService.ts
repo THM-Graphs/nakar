@@ -14,7 +14,7 @@ import type { PhysicalGraph } from '../physics/physical-graph/PhysicalGraph';
 import type { PhysicalNode } from '../physics/physical-graph/PhysicalNode';
 import type { WTActionTriggerPhysics } from './worker-events/WTActionTriggerPhysics';
 import type { WTActionSetLocks } from './worker-events/WTActionSetLocks';
-import type { SchemaPhysicsPerformance } from '../../../src-gen/schema';
+import { PhysicsSimulationEventSlowTick } from '../physics/PhysicsSimulationEventSlowTick';
 
 export class RoomInstanceService implements ApplicationService {
   private readonly _roomId: string;
@@ -131,17 +131,12 @@ export class RoomInstanceService implements ApplicationService {
   }
 
   private _registerPhysicsEvents(): void {
-    this._physics.onSlowTick$.subscribe((): void => {
-      this._sendEvent({
-        type: 'WTEventPhysicsUpdate',
-        graph: this._physics.getGraph(),
-      });
-    });
-    this._physics.onPerformanceChanged$.subscribe(
-      (performance: SchemaPhysicsPerformance | null): void => {
+    this._physics.onSlowTick$.subscribe(
+      (event: PhysicsSimulationEventSlowTick): void => {
         this._sendEvent({
-          type: 'WTEventPerformanceChanged',
-          performance: performance,
+          type: 'WTEventPhysicsUpdate',
+          graph: event.graph,
+          performance: event.performance,
         });
       },
     );

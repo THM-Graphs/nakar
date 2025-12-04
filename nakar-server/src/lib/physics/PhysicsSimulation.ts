@@ -1,5 +1,5 @@
 import type { Observable } from 'rxjs';
-import { BehaviorSubject, Subject, throttleTime } from 'rxjs';
+import { Subject } from 'rxjs';
 import { wait } from '../tools/Wait';
 import { CombinationCache } from './CombinationCache';
 import type { LoggerService } from '../logger/LoggerService';
@@ -9,8 +9,8 @@ import type { PhysicalGraph } from './physical-graph/PhysicalGraph';
 import type { PhysicalNode } from './physical-graph/PhysicalNode';
 import type { PhysicalEdge } from './physical-graph/PhysicalEdge';
 import { Range } from '../tools/Range';
-import type { SchemaPhysicsPerformance } from '../../../src-gen/schema';
 import type { MutableNode } from '../room/graph/MutableNode';
+import { PhysicsSimulationEventSlowTick } from './PhysicsSimulationEventSlowTick';
 
 export class PhysicsSimulation {
   public static readonly maximumVelocity: number = 2000;
@@ -18,12 +18,12 @@ export class PhysicsSimulation {
   public static readonly FPS: number = 16;
   public static readonly cooldownTime: number = 1000;
   public static readonly frictionFactor: number = 0.4;
+  public static readonly targetPhysicsTickDuration: number = 15;
 
   private _graph: PhysicalGraph;
   private _running: boolean;
-  private readonly _onSlowTick$: Subject<void>;
+  private readonly _onSlowTick$: Subject<PhysicsSimulationEventSlowTick>;
   private _targetDate: number;
-  private readonly _currentPerformance$: BehaviorSubject<SchemaPhysicsPerformance | null>;
 
   public constructor(
     graph: PhysicalGraph,
@@ -34,18 +34,10 @@ export class PhysicsSimulation {
     this._running = false;
     this._onSlowTick$ = new Subject();
     this._targetDate = Date.now();
-    this._currentPerformance$ =
-      new BehaviorSubject<SchemaPhysicsPerformance | null>(null);
   }
 
-  public get onSlowTick$(): Observable<void> {
+  public get onSlowTick$(): Observable<PhysicsSimulationEventSlowTick> {
     return this._onSlowTick$.asObservable();
-  }
-
-  public get onPerformanceChanged$(): Observable<SchemaPhysicsPerformance | null> {
-    return this._currentPerformance$
-      .asObservable()
-      .pipe(throttleTime(1000, undefined, { leading: true, trailing: true }));
   }
 
   private get _heat(): number {
@@ -56,7 +48,7 @@ export class PhysicsSimulation {
     return heat;
   }
 
-  private get _targetTickDuration(): number {
+  private get _targetSlowTickDuration(): number {
     return (1 / PhysicsSimulation.FPS) * 1000;
   }
 
@@ -120,14 +112,20 @@ export class PhysicsSimulation {
       }
 
       const waitDelta: number = Date.now() - lastWait;
-      if (waitDelta >= this._targetTickDuration) {
+      if (waitDelta >= this._targetSlowTickDuration) {
         const avgTickDuration: number = (Date.now() - lastWait) / tickCount;
-        this._onSlowTick$.next();
-        this._currentPerformance$.next({
-          tickDuration: avgTickDuration,
-          loadPercent: avgTickDuration / this._targetTickDuration,
-          performance:
-            avgTickDuration > this._targetTickDuration ? 'bad' : 'good',
+        this._onSlowTick$.next({
+          graph: this._graph,
+          performance: {
+            tickDuration: avgTickDuration,
+            loadPercent:
+              avgTickDuration / PhysicsSimulation.targetPhysicsTickDuration,
+            performance:
+              avgTickDuration > PhysicsSimulation.targetPhysicsTickDuration
+                ? 'bad'
+                : 'good',
+            tickCount: tickCount,
+          },
         });
         lastWait = Date.now();
         tickCount = 0;
@@ -137,11 +135,7 @@ export class PhysicsSimulation {
 
     this._running = false;
     this._targetDate = Number.MIN_SAFE_INTEGER;
-    this._logger.debug(
-      this,
-      `Physics Simulation stopped: Latest performance: ${JSON.stringify(this._currentPerformance$.value)}`,
-    );
-    this._currentPerformance$.next(null);
+    this._logger.debug(this, `Physics Simulation stopped.`);
   }
 
   private _tick(): void {

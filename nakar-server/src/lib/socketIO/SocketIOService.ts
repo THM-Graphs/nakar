@@ -14,7 +14,6 @@ import type {
   SchemaWsEventKick,
   SchemaWsEventLockUi,
   SchemaWsEventNotification,
-  SchemaWsEventPerformanceChanged,
   SchemaWsEventProgress,
   SchemaWsEventRoomChanged,
   SchemaWsEventSetNodeLocks,
@@ -38,7 +37,6 @@ import type { RoomServiceEvent } from '../room/events/RoomServiceEvent';
 import type { RoomServiceEventGraphMetaDataChanged } from '../room/events/RoomServiceEventGraphMetaDataChanged';
 import type { RoomServiceEventRoomPhysicsUpdated } from '../room/events/RoomServiceEventRoomPhysicsUpdated';
 import type { RoomServiceEventNodeLocksUpdated } from '../room/events/RoomServiceEventNodeLocksUpdated';
-import type { RoomServiceEventRoomPerformanceChanged } from '../room/events/RoomServiceEventRoomPerformanceChanged';
 import type { RoomServiceEventRoomUnlocked } from '../room/events/RoomServiceEventRoomUnlocked';
 import type { RoomServiceEventRoomLocked } from '../room/events/RoomServiceEventRoomLocked';
 import type { RoomServiceEventProgressChanged } from '../room/events/RoomServiceEventProgressChanged';
@@ -403,6 +401,7 @@ export class SocketIOService implements ApplicationService {
                   type: 'WSEventNodesMoved',
                   nodes: nodesToSend,
                   date: new Date().toISOString(),
+                  performance: message.performance,
                 });
               }
             },
@@ -421,15 +420,6 @@ export class SocketIOService implements ApplicationService {
                 type: 'WSEventSetNodeLocks',
                 locks: locks,
               } satisfies SchemaWsEventSetNodeLocks);
-            },
-          )
-          .with(
-            { type: 'RoomServiceEventRoomPerformanceChanged' },
-            (message: RoomServiceEventRoomPerformanceChanged): void => {
-              this.sendToRoom(message.roomId, {
-                type: 'WSEventPerformanceChanged',
-                performance: message.performance ?? undefined,
-              } satisfies SchemaWsEventPerformanceChanged);
             },
           )
           .with(
