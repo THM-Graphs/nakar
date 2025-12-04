@@ -55,6 +55,7 @@ import type {
 } from '../../../src-gen/schema';
 import type { GetScenarioParameterDBDTO } from '../database/dto/GetScenarioParameterDBDTO';
 import { PositionsCache } from './graph/PositionsCache';
+import { WTEventPhysicsStopped } from '../room-worker/worker-events/WTEventPhysicsStopped';
 
 export class RoomService implements ApplicationService {
   private readonly _workers: SMap<string, Worker>;
@@ -1331,6 +1332,12 @@ export class RoomService implements ApplicationService {
     task.finish();
   }
 
+  public saveGraphAsync(roomId: string): void {
+    this.saveGraph(roomId).catch((error: unknown): void => {
+      this._logger.error(this, error);
+    });
+  }
+
   private async _initRooms(): Promise<void> {
     const rooms: GetRoomDBDTO[] = await this._database.getRooms();
 
@@ -1425,6 +1432,13 @@ export class RoomService implements ApplicationService {
             this._handleWTEventPhysicsUpdate(roomId, event);
           },
         )
+        .with({ type: 'WTEventPhysicsStopped' }, (): void => {
+          this._logger.debug(
+            this,
+            `Save graph of room ${roomId}, because the physics simulation stopped.`,
+          );
+          this.saveGraphAsync(roomId);
+        })
         .exhaustive();
     });
     worker.on('messageerror', (error: Error): void => {

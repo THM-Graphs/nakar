@@ -140,6 +140,11 @@ export class RoomInstanceService implements ApplicationService {
         });
       },
     );
+    this._physics.onStopped$.subscribe((): void => {
+      this._sendEvent({
+        type: 'WTEventPhysicsStopped',
+      });
+    });
   }
 
   private _sendEvent(event: WTEvent): void {

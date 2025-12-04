@@ -23,6 +23,7 @@ export class PhysicsSimulation {
   private _graph: PhysicalGraph;
   private _running: boolean;
   private readonly _onSlowTick$: Subject<PhysicsSimulationEventSlowTick>;
+  private readonly _onStopped$: Subject<void>;
   private _targetDate: number;
 
   public constructor(
@@ -33,11 +34,16 @@ export class PhysicsSimulation {
     this._graph = graph;
     this._running = false;
     this._onSlowTick$ = new Subject();
+    this._onStopped$ = new Subject();
     this._targetDate = Date.now();
   }
 
   public get onSlowTick$(): Observable<PhysicsSimulationEventSlowTick> {
     return this._onSlowTick$.asObservable();
+  }
+
+  public get onStopped$(): Observable<void> {
+    return this._onStopped$.asObservable();
   }
 
   private get _heat(): number {
@@ -135,6 +141,7 @@ export class PhysicsSimulation {
 
     this._running = false;
     this._targetDate = Number.MIN_SAFE_INTEGER;
+    this._onStopped$.next();
     this._logger.debug(this, `Physics Simulation stopped.`);
   }
 
