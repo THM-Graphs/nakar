@@ -35,11 +35,11 @@ export class RoomRouter {
     private readonly _httpTools: HTTPTools,
     private readonly _databaseService: DatabaseService,
     private readonly _schemaFactory: SchemaFactoryService,
-    private readonly _roomService: RoomService,
     private readonly _logger: LoggerService,
     private readonly _config: ConfigService,
     private readonly _media: MediaService,
     private readonly _profiler: ProfilerService,
+    private readonly _roomService: RoomService,
   ) {
     this._scenariosRouter = new ScenariosRouter(
       _httpTools,
@@ -49,7 +49,6 @@ export class RoomRouter {
     this._graphRouter = new GraphRouter(
       _httpTools,
       _databaseService,
-      _roomService,
       _logger,
       _config,
       _media,

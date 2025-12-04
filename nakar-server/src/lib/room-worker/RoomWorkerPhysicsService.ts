@@ -16,7 +16,7 @@ import type { WTActionTriggerPhysics } from './worker-events/WTActionTriggerPhys
 import type { WTActionSetLocks } from './worker-events/WTActionSetLocks';
 import { PhysicsSimulationEventSlowTick } from '../physics/PhysicsSimulationEventSlowTick';
 
-export class RoomInstanceService implements ApplicationService {
+export class RoomWorkerPhysicsService implements ApplicationService {
   private readonly _roomId: string;
   private readonly _parentPort: MessagePort;
   private readonly _physics: PhysicsSimulation;

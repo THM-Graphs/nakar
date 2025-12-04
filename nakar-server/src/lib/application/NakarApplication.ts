@@ -71,10 +71,10 @@ export class NakarApplication {
       this.databaseService,
       this.profiler,
       this.backup,
-      this.roomService,
       this.neo4j,
       this.media,
       this.schemaFactory,
+      this.roomService,
     );
     this.socketIOService = new SocketIOService(
       this.roomService,

@@ -2,7 +2,7 @@ import type { GetDatabaseDBDTO } from './dto/GetDatabaseDBDTO';
 import type { GetRoomDBDTO } from './dto/GetRoomDBDTO';
 import type { GetScenarioDBDTO } from './dto/GetScenarioDBDTO';
 import type { GetScenarioGroupDBDTO } from './dto/GetScenarioGroupDBDTO';
-import type { MutableGraph } from '../room/graph/MutableGraph';
+import { MutableGraph } from '../room/graph/MutableGraph';
 import type { Result } from '@strapi/types/dist/modules/documents';
 import type { LoggerService } from '../logger/LoggerService';
 import type { ApplicationService } from '../application/ApplicationService';
@@ -220,6 +220,29 @@ export class DatabaseService implements ApplicationService {
       (room: Result<'api::room.room'>): GetRoomDBDTO =>
         this._databaseDtoFactory.createGetRoomDTOFromStrapi(room),
     );
+  }
+
+  public async getGraph(roomId: string): Promise<MutableGraph> {
+    const room: GetRoomDBDTO | null = await this.getRoom(roomId);
+    if (room == null) {
+      throw new Error(`Unable to load graph. Room ${roomId} not found.`);
+    }
+
+    try {
+      const graphJson: string = await this._media.getStringPayloadOfMediaFile(
+        room.graph,
+      );
+      const graph: MutableGraph = MutableGraph.fromUnknownOrEmpty(
+        JSON.parse(graphJson),
+        this._logger,
+        this._profiler,
+      );
+      return graph;
+    } catch (error) {
+      this._logger.error(this, `Unable to parse graph from Room:`);
+      this._logger.error(this, error);
+      return MutableGraph.empty(this._logger, this._profiler);
+    }
   }
 
   public async getRoomTemplates(): Promise<GetTemplateDBDTO[]> {

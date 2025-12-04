@@ -11,7 +11,6 @@ import { MutableGraph } from '../../room/graph/MutableGraph';
 import { GetRoomDBDTO } from '../../database/dto/GetRoomDBDTO';
 import { GetNotesDBDTO } from '../../database/dto/GetNotesDBDTO';
 import { FinalGraphDisplayConfiguration } from '../../room/scenario-pipeline/display-configuration/FinalGraphDisplayConfiguration';
-import { RoomService } from '../../room/RoomService';
 import { LoggerService } from '../../logger/LoggerService';
 import { ConfigService } from '../../config/ConfigService';
 import { MediaService } from '../../media/MediaService';
@@ -22,7 +21,6 @@ export class GraphRouter {
   public constructor(
     private readonly _httpTools: HTTPTools,
     private readonly _databaseService: DatabaseService,
-    private readonly _roomService: RoomService,
     private readonly _logger: LoggerService,
     private readonly _config: ConfigService,
     private readonly _media: MediaService,
@@ -52,7 +50,9 @@ export class GraphRouter {
 
   private async _getGraph(req: Request): Promise<SchemaGraph> {
     const room: GetRoomDBDTO = req.nakarRoom;
-    const graph: MutableGraph = this._roomService.getGraph(room.documentId);
+    const graph: MutableGraph = await this._databaseService.getGraph(
+      room.documentId,
+    );
     const notes: GetNotesDBDTO = await this._databaseService.getNotes({
       room: room,
       graph: graph,
@@ -72,7 +72,9 @@ export class GraphRouter {
 
   private async _getGraphElements(req: Request): Promise<SchemaGraphElements> {
     const room: GetRoomDBDTO = req.nakarRoom;
-    const graph: MutableGraph = this._roomService.getGraph(room.documentId);
+    const graph: MutableGraph = await this._databaseService.getGraph(
+      room.documentId,
+    );
     const notes: GetNotesDBDTO = await this._databaseService.getNotes({
       room: room,
       graph: graph,
@@ -89,15 +91,19 @@ export class GraphRouter {
 
   private async _getGraphMetaData(req: Request): Promise<SchemaGraphMetaData> {
     const room: GetRoomDBDTO = req.nakarRoom;
-    const graph: MutableGraph = this._roomService.getGraph(room.documentId);
+    const graph: MutableGraph = await this._databaseService.getGraph(
+      room.documentId,
+    );
     const result: SchemaGraphMetaData =
       await this._schemaFactory.createSchemaGraphMetaData(graph);
     return result;
   }
 
-  private _getGraphTable(req: Request): SchemaGraphTable {
+  private async _getGraphTable(req: Request): Promise<SchemaGraphTable> {
     const room: GetRoomDBDTO = req.nakarRoom;
-    const graph: MutableGraph = this._roomService.getGraph(room.documentId);
+    const graph: MutableGraph = await this._databaseService.getGraph(
+      room.documentId,
+    );
     const result: SchemaGraphTable = this._schemaFactory.createSchemaTable(
       graph.tableData,
     );

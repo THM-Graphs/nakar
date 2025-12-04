@@ -4,20 +4,20 @@ import { ClassHelper } from '../tools/ClassHelper';
 import type { RoomWorkerData } from './RoomWorkerData';
 import { parentPort, workerData } from 'node:worker_threads';
 import { ProfilerService } from '../profiler/ProfilerService';
-import { RoomInstanceService } from './RoomInstanceService';
+import { RoomWorkerPhysicsService } from './RoomWorkerPhysicsService';
 import type { ProfilerTask } from '../profiler/ProfilerTask';
 
 export class RoomWorker implements ApplicationService {
   private readonly _logger: LoggerService;
   private readonly _profiler: ProfilerService;
-  private readonly _roomInstance: RoomInstanceService;
+  private readonly _roomInstance: RoomWorkerPhysicsService;
 
   private readonly _services: ApplicationService[];
 
   public constructor() {
     this._logger = new LoggerService();
     this._profiler = new ProfilerService(this._logger);
-    this._roomInstance = new RoomInstanceService(
+    this._roomInstance = new RoomWorkerPhysicsService(
       // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
       workerData as RoomWorkerData,
       this._logger,

@@ -16,7 +16,6 @@ import { MutableGraph } from '../room/graph/MutableGraph';
 import { ProfilerService } from '../profiler/ProfilerService';
 import { LoggerService } from '../logger/LoggerService';
 import { DatabaseService } from '../database/DatabaseService';
-import { RoomService } from '../room/RoomService';
 import * as undici from 'undici';
 import { ConfigService } from '../config/ConfigService';
 
@@ -25,7 +24,6 @@ export class HTTPTools {
     private readonly _profiler: ProfilerService,
     private readonly _logger: LoggerService,
     private readonly _databaseService: DatabaseService,
-    private readonly _roomService: RoomService,
     private readonly _config: ConfigService,
   ) {}
 
@@ -122,7 +120,7 @@ export class HTTPTools {
   public async getScenarioOfRoom(
     room: GetRoomDBDTO,
   ): Promise<GetScenarioDBDTO | null> {
-    const graph: MutableGraph | null = this._roomService.getGraph(
+    const graph: MutableGraph = await this._databaseService.getGraph(
       room.documentId,
     );
     const scenarioId: string | null = graph.metaData.scenarioId;

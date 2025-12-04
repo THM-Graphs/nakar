@@ -109,8 +109,7 @@ export class ActionsRouter {
       new SMap<string, string>(),
     );
 
-    await this._roomService.loadScenario({
-      roomId: room.documentId,
+    await this._roomService.getRoom(room.documentId).loadScenario({
       scenarioId: scenarioId,
       arguments: scenarioArgs,
     });
@@ -124,8 +123,7 @@ export class ActionsRouter {
       throw new NotFound(`Scenario of room ${room.documentId} not found.`);
     }
 
-    await this._roomService.reloadScenario({
-      roomId: room.documentId,
+    await this._roomService.getRoom(room.documentId).reloadScenario({
       scenarioId: scenarioId,
     });
   }
@@ -138,8 +136,7 @@ export class ActionsRouter {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
     const requestBody: Body = req.body as Body;
 
-    await this._roomService.expandNode({
-      roomId: room.documentId,
+    await this._roomService.getRoom(room.documentId).expandNode({
       nodeId: requestBody.nodeId,
       limit:
         requestBody.limit != null
@@ -163,9 +160,9 @@ export class ActionsRouter {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
     const requestBody: Body = req.body as Body;
 
-    const result: ExpandNodePreview | null =
-      await this._roomService.expandNodePreview({
-        roomId: room.documentId,
+    const result: ExpandNodePreview | null = await this._roomService
+      .getRoom(room.documentId)
+      .expandNodePreview({
         nodeId: requestBody.nodeId,
       });
     return result;
@@ -179,8 +176,7 @@ export class ActionsRouter {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
     const requestBody: Body = req.body as Body;
 
-    await this._roomService.deleteElements({
-      roomId: room.documentId,
+    await this._roomService.getRoom(room.documentId).deleteElements({
       nodeIds: requestBody.nodes,
       labels: requestBody.labels,
       edgeIds: requestBody.edges,
@@ -190,7 +186,7 @@ export class ActionsRouter {
 
   private _relayout(req: Request): void {
     const room: GetRoomDBDTO = req.nakarRoom;
-    this._roomService.relayout({ roomId: room.documentId });
+    this._roomService.getRoom(room.documentId).relayout();
   }
 
   private _unlockNodes(req: Request): void {
@@ -201,8 +197,7 @@ export class ActionsRouter {
     const requestBody: Body = req.body as Body;
     const nodes: readonly string[] = requestBody.nodes;
 
-    this._roomService.unlockNodes({
-      roomId: room.documentId,
+    this._roomService.getRoom(room.documentId).unlockNodes({
       nodeIds: nodes,
     });
   }
@@ -215,8 +210,7 @@ export class ActionsRouter {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
     const requestBody: Body = req.body as Body;
 
-    await this._roomService.focusNodes({
-      roomId: room.documentId,
+    await this._roomService.getRoom(room.documentId).focusNodes({
       nodeIds: requestBody.nodes,
     });
   }
@@ -224,17 +218,13 @@ export class ActionsRouter {
   private async _undo(req: Request): Promise<void> {
     const room: GetRoomDBDTO = req.nakarRoom;
 
-    await this._roomService.undo({
-      roomId: room.documentId,
-    });
+    await this._roomService.getRoom(room.documentId).undo();
   }
 
   private async _redo(req: Request): Promise<void> {
     const room: GetRoomDBDTO = req.nakarRoom;
 
-    await this._roomService.redo({
-      roomId: room.documentId,
-    });
+    await this._roomService.getRoom(room.documentId).redo();
   }
 
   private async _runQuery(req: Request): Promise<void> {
@@ -245,8 +235,7 @@ export class ActionsRouter {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
     const requestBody: Body = req.body as Body;
 
-    await this._roomService.runQuery({
-      roomId: room.documentId,
+    await this._roomService.getRoom(room.documentId).runQuery({
       query: requestBody.query,
       databaseId: requestBody.databaseId,
       replace: requestBody.replace,
@@ -256,33 +245,25 @@ export class ActionsRouter {
   private async _connectResultNodes(req: Request): Promise<void> {
     const room: GetRoomDBDTO = req.nakarRoom;
 
-    await this._roomService.connectResultNodes({
-      roomId: room.documentId,
-    });
+    await this._roomService.getRoom(room.documentId).connectResultNodes();
   }
 
   private _unlockAllNodes(req: Request): void {
     const room: GetRoomDBDTO = req.nakarRoom;
 
-    this._roomService.unlockAllNodes({
-      roomId: room.documentId,
-    });
+    this._roomService.getRoom(room.documentId).unlockAllNodes();
   }
 
   private async _removeDanglingNodes(req: Request): Promise<void> {
     const room: GetRoomDBDTO = req.nakarRoom;
 
-    await this._roomService.removeDanglingNodes({
-      roomId: room.documentId,
-    });
+    await this._roomService.getRoom(room.documentId).removeDanglingNodes();
   }
 
   private async _compressRelationships(req: Request): Promise<void> {
     const room: GetRoomDBDTO = req.nakarRoom;
 
-    await this._roomService.compressRelationships({
-      roomId: room.documentId,
-    });
+    await this._roomService.getRoom(room.documentId).compressRelationships();
   }
 
   private async _compressNodes(req: Request): Promise<void> {
@@ -293,8 +274,7 @@ export class ActionsRouter {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
     const requestBody: Body = req.body as Body;
 
-    await this._roomService.compressNodes({
-      roomId: room.documentId,
+    await this._roomService.getRoom(room.documentId).compressNodes({
       label: requestBody.label,
     });
   }
@@ -307,8 +287,7 @@ export class ActionsRouter {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
     const requestBody: Body = req.body as Body;
 
-    await this._roomService.layoutLabel({
-      roomId: room.documentId,
+    await this._roomService.getRoom(room.documentId).layoutLabel({
       label: requestBody.label,
       layoutSpecification: requestBody.layoutSpecification,
     });
@@ -322,9 +301,8 @@ export class ActionsRouter {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
     const requestBody: Body = req.body as Body;
 
-    await this._roomService.showShortestPath({
+    await this._roomService.getRoom(room.documentId).showShortestPath({
       nodeIds: [...requestBody.nodeIds],
-      roomId: room.documentId,
     });
   }
 
@@ -336,10 +314,9 @@ export class ActionsRouter {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
     const requestBody: Body = req.body as Body;
 
-    await this._roomService.loadNode({
+    await this._roomService.getRoom(room.documentId).loadNode({
       nodeId: requestBody.nodeId,
       databaseId: requestBody.databaseId,
-      roomId: room.documentId,
     });
   }
 }

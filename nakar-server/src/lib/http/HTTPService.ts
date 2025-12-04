@@ -53,10 +53,10 @@ export class HTTPService implements ApplicationService {
     private readonly _databaseService: DatabaseService,
     private readonly _profiler: ProfilerService,
     private readonly _backup: BackupService,
-    private readonly _roomService: RoomService,
     private readonly _neo4jService: Neo4jService,
     private readonly _media: MediaService,
     private readonly _schemaFactory: SchemaFactoryService,
+    private readonly _roomService: RoomService,
   ) {
     this._app = express();
     // eslint-disable-next-line @typescript-eslint/no-misused-promises
@@ -65,7 +65,6 @@ export class HTTPService implements ApplicationService {
       _profiler,
       _logger,
       _databaseService,
-      _roomService,
       _config,
     );
     this._authenticationRouter = new AuthenticationRouter(
@@ -76,11 +75,11 @@ export class HTTPService implements ApplicationService {
       this._httpTools,
       _databaseService,
       _schemaFactory,
-      _roomService,
       _logger,
       _config,
       _media,
       _profiler,
+      _roomService,
     );
     this._roomTemplateRouter = new RoomTemplateRouter(
       this._httpTools,

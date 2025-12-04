@@ -242,9 +242,8 @@ export class SocketIOService implements ApplicationService {
                   { type: 'WSActionGrabNode' },
                   (m: SchemaWsActionGrabNode): void => {
                     const roomId: string = this._assertRoom(wsClient);
-                    this._roomService.grabNode({
+                    this._roomService.getRoom(roomId).grabNode({
                       nodeId: m.nodeId,
-                      roomId: roomId,
                       userId: wsClient.id,
                     });
                   },
@@ -253,8 +252,7 @@ export class SocketIOService implements ApplicationService {
                   { type: 'WSActionMoveNodes' },
                   (m: SchemaWsActionMoveNodes): void => {
                     const roomId: string = this._assertRoom(wsClient);
-                    this._roomService.moveNodes({
-                      roomId: roomId,
+                    this._roomService.getRoom(roomId).moveNodes({
                       nodes: m.nodes,
                       userId: wsClient.id,
                     });
@@ -264,9 +262,8 @@ export class SocketIOService implements ApplicationService {
                   { type: 'WSActionUngrabNode' },
                   (m: SchemaWsActionUngrabNode): void => {
                     const roomId: string = this._assertRoom(wsClient);
-                    this._roomService.ungrabNode({
+                    this._roomService.getRoom(roomId).ungrabNode({
                       node: m.node,
-                      roomId: roomId,
                       userId: wsClient.id,
                     });
                   },
