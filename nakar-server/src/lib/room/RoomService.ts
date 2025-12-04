@@ -36,22 +36,7 @@ export class RoomService implements ApplicationService {
 
   public async bootstrap(): Promise<void> {
     installHandlebarHelpers();
-    try {
-      await this._initRooms();
-    } catch (error) {
-      this._logger.error(
-        this,
-        'An unhandled error occured during init of rooms.',
-      );
-      this._logger.error(this, error);
-      process.exit(1);
-    }
 
-    this._database.onRoomAdded$.subscribe((room: GetRoomDBDTO): void => {
-      this._initRoom(room).catch((error: unknown): void => {
-        this._logger.error(this, error);
-      });
-    });
     this._database.onRoomDeleted$.subscribe((room: GetRoomDBDTO): void => {
       this._destroyRoom(room.documentId).catch((error: unknown): void => {
         this._logger.error(this, error);
@@ -75,20 +60,20 @@ export class RoomService implements ApplicationService {
   public getRoom(roomId: string): LiveRoom {
     const room: LiveRoom | undefined = this._liveRooms.get(roomId);
     if (room == null) {
-      throw new Error(`Room ${roomId} not found.`);
+      throw new Error(`Room ${roomId} is not alive yet.`);
     }
     return room;
   }
 
-  private async _initRooms(): Promise<void> {
-    const rooms: GetRoomDBDTO[] = await this._database.getRooms();
-
-    for (const room of rooms) {
-      await this._initRoom(room);
+  public async startRoom(roomId: string): Promise<void> {
+    if (this._liveRooms.has(roomId)) {
+      return;
     }
-  }
 
-  private async _initRoom(room: GetRoomDBDTO): Promise<void> {
+    const room: GetRoomDBDTO | null = await this._database.getRoom(roomId);
+    if (room == null) {
+      throw new Error(`Room ${roomId} not found.`);
+    }
     const task: ProfilerTask = this._profiler.profile(
       this,
       `Init room ${room.title ?? room.documentId}`,
@@ -107,7 +92,16 @@ export class RoomService implements ApplicationService {
         this._onEvent.next(event);
       }),
     );
-    this._liveRooms.set(room.documentId, liveRoom);
+
+    if (this._liveRooms.has(room.documentId)) {
+      this._logger.warn(
+        this,
+        'Race Condition detected while creating live room.',
+      );
+      await liveRoom.destroy();
+    } else {
+      this._liveRooms.set(room.documentId, liveRoom);
+    }
     task.finish();
   }
 

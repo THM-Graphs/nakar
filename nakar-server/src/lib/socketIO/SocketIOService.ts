@@ -196,6 +196,11 @@ export class SocketIOService implements ApplicationService {
                 date: new Date().toISOString(),
               },
             });
+            this._roomService
+              .startRoom(newRoomId)
+              .catch((error: unknown): void => {
+                this._logger.error(this, error);
+              });
           }
 
           wsClient.send({
