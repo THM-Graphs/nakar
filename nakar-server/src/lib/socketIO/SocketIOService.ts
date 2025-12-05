@@ -101,7 +101,7 @@ export class SocketIOService implements ApplicationService {
     this._registerDatabaseServiceEvents();
   }
 
-  public destroy(): void {
+  public async destroy(): Promise<void> {
     if (this._io == null) {
       return;
     }
@@ -114,6 +114,11 @@ export class SocketIOService implements ApplicationService {
         date: new Date().toISOString(),
       },
     } satisfies SchemaWsEventNotification);
+
+    for (const client of this.sockets) {
+      this._logger.log(this, `Will disconnect ws client: ${client.id}`);
+      client.native.disconnect(true);
+    }
   }
 
   public sendToRoom(

@@ -59,7 +59,7 @@ export class PhysicsWorker {
     worker.on('exit', (exitCode: number): void => {
       this._logger.error(
         this,
-        `Worker ${worker.threadId.toString()} exit code: ${exitCode.toString()}`,
+        `Worker ${worker.threadId.toString()} (Room ${this._roomId}) exit code: ${exitCode.toString()}`,
       );
       this._worker = null;
       worker.removeAllListeners();

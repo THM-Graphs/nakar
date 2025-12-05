@@ -137,6 +137,8 @@ export class HTTPService implements ApplicationService {
     this._logger.log(this, 'Closing http server...');
     await new Promise<void>(
       (resolve: () => void, reject: (error: Error) => void): void => {
+        this._logger.log(this, `Will close all http connections...`);
+        this._server.closeAllConnections();
         this._server.close((error?: Error): void => {
           if (error) {
             reject(error);
@@ -144,9 +146,9 @@ export class HTTPService implements ApplicationService {
             resolve();
           }
         });
-        this._server.closeAllConnections();
       },
     );
+    this._logger.log(this, 'HTTP Server did close.');
   }
 
   public getServerInstance(): http.Server {

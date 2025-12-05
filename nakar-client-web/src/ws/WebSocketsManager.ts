@@ -34,6 +34,9 @@ export class WebSocketsManager {
     });
     this.socket.on("disconnect", () => {
       this._socketState.next({ type: "disconnect" });
+      setTimeout(() => {
+        this.socket.connect();
+      }, 1000);
     });
     this.socket.on("message", (m) => {
       this.onMessage.next(m);

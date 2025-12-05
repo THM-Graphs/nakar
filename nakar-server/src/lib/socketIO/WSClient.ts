@@ -69,6 +69,10 @@ export class WSClient {
     return this._onDisconnect.asObservable();
   }
 
+  public get native(): Socket {
+    return this._socket;
+  }
+
   public send(message: SchemaWsServerToClientMessage): void {
     this._socket.emit('message', message);
   }
