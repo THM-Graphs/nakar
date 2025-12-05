@@ -5,7 +5,6 @@ import { LoggerService } from '../logger/LoggerService';
 import { ProfilerService } from '../profiler/ProfilerService';
 import { ConfigService } from '../config/ConfigService';
 import { ClassHelper } from '../tools/ClassHelper';
-import { BackupService } from '../backup/BackupService';
 import { HTTPService } from '../http/HTTPService';
 import { Neo4jService } from '../neo4j/Neo4jService';
 import { ToolsService } from '../tools/ToolsService';
@@ -19,7 +18,6 @@ export class NakarApplication {
 
   public readonly logger: LoggerService;
   public readonly tools: ToolsService;
-  public readonly backup: BackupService;
   public readonly config: ConfigService;
   public readonly profiler: ProfilerService;
   public readonly databaseService: DatabaseService;
@@ -50,12 +48,6 @@ export class NakarApplication {
       this.profiler,
       this.databaseService,
     );
-    this.backup = new BackupService(
-      this.logger,
-      this.databaseService,
-      this.tools,
-      this.media,
-    );
     this.neo4j = new Neo4jService(this.logger);
     this.roomService = new RoomService(
       this.databaseService,
@@ -70,7 +62,6 @@ export class NakarApplication {
       this.logger,
       this.databaseService,
       this.profiler,
-      this.backup,
       this.neo4j,
       this.media,
       this.schemaFactory,
@@ -95,7 +86,6 @@ export class NakarApplication {
       this.media,
       this.databaseService,
       this.schemaFactory,
-      this.backup,
       this.neo4j,
       this.roomService,
       this.httpService,

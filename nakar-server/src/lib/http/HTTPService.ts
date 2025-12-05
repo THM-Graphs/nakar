@@ -7,7 +7,6 @@ import type { DatabaseService } from '../database/DatabaseService';
 import cors from 'cors';
 import type { ProfilerService } from '../profiler/ProfilerService';
 import type { ApplicationService } from '../application/ApplicationService';
-import type { BackupService } from '../backup/BackupService';
 import type { RoomService } from '../room/RoomService';
 import type { GetRoomDBDTO } from '../database/dto/GetRoomDBDTO';
 import type { GetDatabaseDBDTO } from '../database/dto/GetDatabaseDBDTO';
@@ -54,7 +53,6 @@ export class HTTPService implements ApplicationService {
     private readonly _logger: LoggerService,
     private readonly _databaseService: DatabaseService,
     private readonly _profiler: ProfilerService,
-    private readonly _backup: BackupService,
     private readonly _neo4jService: Neo4jService,
     private readonly _media: MediaService,
     private readonly _schemaFactory: SchemaFactoryService,
@@ -88,7 +86,7 @@ export class HTTPService implements ApplicationService {
       _databaseService,
       _schemaFactory,
     );
-    this._systemRouter = new SystemRouter(this._httpTools, _config, _backup);
+    this._systemRouter = new SystemRouter(this._httpTools, _config);
     this._databaseRouter = new DatabaseRouter(
       this._httpTools,
       _databaseService,

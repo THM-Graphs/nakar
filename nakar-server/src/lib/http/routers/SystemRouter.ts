@@ -4,13 +4,11 @@ import { Router } from 'express';
 import type { SchemaVersion } from '../../../../src-gen/schema';
 import { FileStream } from '../../fs/FileStream';
 import { NotImplemented } from 'http-errors';
-import { BackupService } from '../../backup/BackupService';
 
 export class SystemRouter {
   public constructor(
     private readonly _httpTools: HTTPTools,
     private readonly _config: ConfigService,
-    private readonly _backup: BackupService,
   ) {}
 
   public register(): Router {
@@ -37,9 +35,8 @@ export class SystemRouter {
     };
   }
 
-  private async _getBackup(): Promise<FileStream> {
-    const stream: FileStream = await this._backup.createBackupFile();
-    return stream;
+  private _getBackup(): FileStream {
+    throw new NotImplemented();
   }
 
   private _postImport(): void {
