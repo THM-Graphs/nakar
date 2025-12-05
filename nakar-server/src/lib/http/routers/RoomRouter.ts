@@ -1,11 +1,6 @@
 import { HTTPTools } from '../HTTPTools';
 import { ConfigService } from '../../config/ConfigService';
-import {
-  type NextFunction,
-  type Request,
-  type Response,
-  Router,
-} from 'express';
+import { type Request, Router } from 'express';
 import type {
   operations,
   SchemaRoom,
@@ -68,7 +63,10 @@ export class RoomRouter {
       this._httpTools.handle(this._getRooms.bind(this)),
     );
     router.post('/', this._httpTools.handle(this._postRoom.bind(this)));
-    router.use('/:id', this._assertRoom.bind(this));
+    router.use(
+      '/:id',
+      this._httpTools.handleMiddleware(this._assertRoom.bind(this)),
+    );
     router.get('/:id', this._httpTools.handle(this._getRoom.bind(this)));
     router.use('/:id/scenarios', this._scenariosRouter.register());
     router.use('/:id/graph', this._graphRouter.register());
@@ -78,18 +76,16 @@ export class RoomRouter {
     return router;
   }
 
-  private async _assertRoom(
-    req: Request,
-    res: Response,
-    next: NextFunction,
-  ): Promise<void> {
-    try {
-      const room: GetRoomDBDTO = await this._httpTools.assertRoom(req);
-      req.nakarRoom = room;
-      next();
-    } catch (error) {
-      this._httpTools.handleUnknownError(res, error);
+  private async _assertRoom(req: Request): Promise<void> {
+    const id: string = this._httpTools.getPathParameter(req, 'id');
+    const room: GetRoomDBDTO | null = await this._databaseService.getRoom(id);
+    if (room == null) {
+      throw new NotFound('Room not found.');
     }
+    req.nakar = {
+      ...req.nakar,
+      room: room,
+    };
   }
 
   private async _getRooms(): Promise<SchemaRooms> {
@@ -126,7 +122,7 @@ export class RoomRouter {
   }
 
   private async _getRoom(req: Request): Promise<SchemaRoom> {
-    const dbResult: GetRoomDBDTO = req.nakarRoom;
+    const dbResult: GetRoomDBDTO = req.nakar.room;
     return this._schemaFactory.createSchemaRoom(
       dbResult,
       await this._httpTools.getScenarioOfRoom(dbResult),

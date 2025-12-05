@@ -49,7 +49,7 @@ export class GraphRouter {
   }
 
   private async _getGraph(req: Request): Promise<SchemaGraph> {
-    const room: GetRoomDBDTO = req.nakarRoom;
+    const room: GetRoomDBDTO = req.nakar.room;
     const graph: MutableGraph = await this._databaseService.getGraph(
       room.documentId,
     );
@@ -71,7 +71,7 @@ export class GraphRouter {
   }
 
   private async _getGraphElements(req: Request): Promise<SchemaGraphElements> {
-    const room: GetRoomDBDTO = req.nakarRoom;
+    const room: GetRoomDBDTO = req.nakar.room;
     const graph: MutableGraph = await this._databaseService.getGraph(
       room.documentId,
     );
@@ -90,7 +90,7 @@ export class GraphRouter {
   }
 
   private async _getGraphMetaData(req: Request): Promise<SchemaGraphMetaData> {
-    const room: GetRoomDBDTO = req.nakarRoom;
+    const room: GetRoomDBDTO = req.nakar.room;
     const graph: MutableGraph = await this._databaseService.getGraph(
       room.documentId,
     );
@@ -100,7 +100,7 @@ export class GraphRouter {
   }
 
   private async _getGraphTable(req: Request): Promise<SchemaGraphTable> {
-    const room: GetRoomDBDTO = req.nakarRoom;
+    const room: GetRoomDBDTO = req.nakar.room;
     const graph: MutableGraph = await this._databaseService.getGraph(
       room.documentId,
     );

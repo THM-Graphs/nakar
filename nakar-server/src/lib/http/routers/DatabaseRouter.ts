@@ -4,7 +4,7 @@ import { LoggerService } from '../../logger/LoggerService';
 import { ConfigService } from '../../config/ConfigService';
 import { MediaService } from '../../media/MediaService';
 import { ProfilerService } from '../../profiler/ProfilerService';
-import { NextFunction, type Request, Response, Router } from 'express';
+import { type Request, Router } from 'express';
 import type {
   operations,
   SchemaDatabaseSearchCapabilitiesEntry,
@@ -42,7 +42,10 @@ export class DatabaseRouter {
   public register(): Router {
     const router: Router = Router();
 
-    router.use('/:id', this._assertDatabase.bind(this));
+    router.use(
+      '/:id',
+      this._httpTools.handleMiddleware(this._assertDatabase.bind(this)),
+    );
     router.get('/:id/stats', this._httpTools.handle(this._getStats.bind(this)));
     router.post(
       '/:id/search',
@@ -56,27 +59,21 @@ export class DatabaseRouter {
     return router;
   }
 
-  private async _assertDatabase(
-    req: Request,
-    res: Response,
-    next: NextFunction,
-  ): Promise<void> {
-    try {
-      const databaseId: string = this._httpTools.getPathParameter(req, 'id');
-      const database: GetDatabaseDBDTO | null =
-        await this._databaseService.getDatabase(databaseId);
-      if (database == null) {
-        throw new NotFound(`Database ${databaseId} not found.`);
-      }
-      req.nakarDatabase = database;
-      next();
-    } catch (error: unknown) {
-      this._httpTools.handleUnknownError(res, error);
+  private async _assertDatabase(req: Request): Promise<void> {
+    const databaseId: string = this._httpTools.getPathParameter(req, 'id');
+    const database: GetDatabaseDBDTO | null =
+      await this._databaseService.getDatabase(databaseId);
+    if (database == null) {
+      throw new NotFound(`Database ${databaseId} not found.`);
     }
+    req.nakar = {
+      ...req.nakar,
+      database: database,
+    };
   }
 
   private async _getStats(req: Request): Promise<SchemaDatabaseStats> {
-    const database: GetDatabaseDBDTO = req.nakarDatabase;
+    const database: GetDatabaseDBDTO = req.nakar.database;
     const credentials: Neo4jDatabaseInfo = Neo4jDatabaseInfo.parse(database);
     const stats: SchemaDatabaseStats = await this._neo4jService.getStats({
       credentials: credentials,
@@ -90,7 +87,7 @@ export class DatabaseRouter {
   ): Promise<
     operations['postDatabaseSearch']['responses']['200']['content']['application/json']
   > {
-    const database: GetDatabaseDBDTO = req.nakarDatabase;
+    const database: GetDatabaseDBDTO = req.nakar.database;
     const credentials: Neo4jDatabaseInfo = Neo4jDatabaseInfo.parse(database);
 
     type Body =
@@ -146,7 +143,7 @@ export class DatabaseRouter {
   ): Promise<
     operations['getDatabaseSearchCapabilities']['responses']['200']['content']['application/json']
   > {
-    const database: GetDatabaseDBDTO = req.nakarDatabase;
+    const database: GetDatabaseDBDTO = req.nakar.database;
     const credentials: Neo4jDatabaseInfo = Neo4jDatabaseInfo.parse(database);
 
     const capabilities: Neo4jSearchCapabilities =

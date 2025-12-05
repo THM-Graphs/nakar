@@ -3,12 +3,7 @@ import type { ProfilerTask } from '../profiler/ProfilerTask';
 import { FileStream } from '../fs/FileStream';
 import fs from 'node:fs';
 import { match, P } from 'ts-pattern';
-import {
-  HttpError,
-  InternalServerError,
-  NotFound,
-  Unauthorized,
-} from 'http-errors';
+import { HttpError, InternalServerError, Unauthorized } from 'http-errors';
 import type { GetRoomDBDTO } from '../database/dto/GetRoomDBDTO';
 import z from 'zod';
 import type { GetScenarioDBDTO } from '../database/dto/GetScenarioDBDTO';
@@ -85,6 +80,21 @@ export class HTTPTools {
     };
   }
 
+  public handleMiddleware(
+    handler: (req: Request) => Promise<void> | void,
+  ): (req: Request, res: Response, next: NextFunction) => void {
+    return (req: Request, res: Response, next: NextFunction): void => {
+      Promise.resolve(handler(req))
+        .then((): void => {
+          next();
+        })
+        .catch((unknownError: unknown): void => {
+          this._logger.error(this, unknownError);
+          this.handleUnknownError(res, unknownError);
+        });
+    };
+  }
+
   public getQueryParameter(req: Request, name: string): string {
     const value: string = z.string().parse(req.query[name]);
     return value;
@@ -130,16 +140,6 @@ export class HTTPTools {
     const scenario: GetScenarioDBDTO | null =
       await this._databaseService.getScenario(scenarioId);
     return scenario;
-  }
-
-  public async assertRoom(req: Request): Promise<GetRoomDBDTO> {
-    const id: string = this.getPathParameter(req, 'id');
-    const dbResult: GetRoomDBDTO | null =
-      await this._databaseService.getRoom(id);
-    if (dbResult == null) {
-      throw new NotFound('Room not found.');
-    }
-    return dbResult;
   }
 
   public handleUnknownError(res: Response, unknownError: unknown): void {

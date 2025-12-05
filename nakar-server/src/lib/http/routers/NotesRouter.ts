@@ -1,7 +1,7 @@
 import { HTTPTools } from '../HTTPTools';
 import { DatabaseService } from '../../database/DatabaseService';
 import { LoggerService } from '../../logger/LoggerService';
-import { NextFunction, type Request, Response, Router } from 'express';
+import { type Request, Router } from 'express';
 import { GetRoomDBDTO } from '../../database/dto/GetRoomDBDTO';
 import { operations } from '../../../../src-gen/schema';
 import { GetNoteDBDTO } from '../../database/dto/GetNoteDBDTO';
@@ -21,7 +21,10 @@ export class NotesRouter {
       this._httpTools.assertLoggedIn,
       this._httpTools.handle(this._postNote.bind(this)),
     );
-    router.use('/:id', this._assertNote.bind(this));
+    router.use(
+      '/:id',
+      this._httpTools.handleMiddleware(this._assertNote.bind(this)),
+    );
     router.delete(
       '/:id',
       this._httpTools.assertLoggedIn,
@@ -36,25 +39,19 @@ export class NotesRouter {
     return router;
   }
 
-  private async _assertNote(
-    req: Request,
-    res: Response,
-    next: NextFunction,
-  ): Promise<void> {
-    try {
-      const noteId: string = this._httpTools.getPathParameter(req, 'id');
-      const note: GetNoteDBDTO = await this._databaseService.getNote({
-        id: noteId,
-      });
-      req.nakarNote = note;
-      next();
-    } catch (error) {
-      this._httpTools.handleUnknownError(res, error);
-    }
+  private async _assertNote(req: Request): Promise<void> {
+    const noteId: string = this._httpTools.getPathParameter(req, 'id');
+    const note: GetNoteDBDTO = await this._databaseService.getNote({
+      id: noteId,
+    });
+    req.nakar = {
+      ...req.nakar,
+      note: note,
+    };
   }
 
   private async _postNote(req: Request): Promise<void> {
-    const room: GetRoomDBDTO = req.nakarRoom;
+    const room: GetRoomDBDTO = req.nakar.room;
 
     type Body =
       operations['postNote']['requestBody']['content']['application/json'];
@@ -73,8 +70,8 @@ export class NotesRouter {
   }
 
   private async _deleteNote(req: Request): Promise<void> {
-    const room: GetRoomDBDTO = req.nakarRoom;
-    const note: GetNoteDBDTO = req.nakarNote;
+    const room: GetRoomDBDTO = req.nakar.room;
+    const note: GetNoteDBDTO = req.nakar.note;
 
     this._logger.debug(
       this,
@@ -84,8 +81,8 @@ export class NotesRouter {
   }
 
   private async _putNote(req: Request): Promise<void> {
-    const room: GetRoomDBDTO = req.nakarRoom;
-    const note: GetNoteDBDTO = req.nakarNote;
+    const room: GetRoomDBDTO = req.nakar.room;
+    const note: GetNoteDBDTO = req.nakar.note;
 
     type Body =
       operations['putNote']['requestBody']['content']['application/json'];

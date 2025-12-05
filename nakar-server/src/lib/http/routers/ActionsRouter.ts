@@ -90,7 +90,7 @@ export class ActionsRouter {
   }
 
   private async _loadScenario(req: Request): Promise<void> {
-    const room: GetRoomDBDTO = req.nakarRoom;
+    const room: GetRoomDBDTO = req.nakar.room;
 
     type Body =
       operations['postRoomActionLoadScenario']['requestBody']['content']['application/json'];
@@ -116,7 +116,7 @@ export class ActionsRouter {
   }
 
   private async _reloadScenario(req: Request): Promise<void> {
-    const room: GetRoomDBDTO = req.nakarRoom;
+    const room: GetRoomDBDTO = req.nakar.room;
     const graph: MutableGraph = this._roomService.getGraph(room.documentId);
     const scenarioId: string | null = graph.metaData.scenarioId;
     if (scenarioId == null) {
@@ -129,7 +129,7 @@ export class ActionsRouter {
   }
 
   private async _expandNode(req: Request): Promise<void> {
-    const room: GetRoomDBDTO = req.nakarRoom;
+    const room: GetRoomDBDTO = req.nakar.room;
 
     type Body =
       operations['postRoomActionExpandNode']['requestBody']['content']['application/json'];
@@ -153,7 +153,7 @@ export class ActionsRouter {
   ): Promise<
     operations['postRoomActionExpandNodePreview']['responses']['200']['content']['application/json']
   > {
-    const room: GetRoomDBDTO = req.nakarRoom;
+    const room: GetRoomDBDTO = req.nakar.room;
 
     type Body =
       operations['postRoomActionExpandNodePreview']['requestBody']['content']['application/json'];
@@ -169,7 +169,7 @@ export class ActionsRouter {
   }
 
   private async _deleteElements(req: Request): Promise<void> {
-    const room: GetRoomDBDTO = req.nakarRoom;
+    const room: GetRoomDBDTO = req.nakar.room;
 
     type Body =
       operations['postRoomActionDeleteElements']['requestBody']['content']['application/json'];
@@ -185,12 +185,12 @@ export class ActionsRouter {
   }
 
   private _relayout(req: Request): void {
-    const room: GetRoomDBDTO = req.nakarRoom;
+    const room: GetRoomDBDTO = req.nakar.room;
     this._roomService.getRoom(room.documentId).relayout();
   }
 
   private _unlockNodes(req: Request): void {
-    const room: GetRoomDBDTO = req.nakarRoom;
+    const room: GetRoomDBDTO = req.nakar.room;
     type Body =
       operations['postRoomActionUnlockNodes']['requestBody']['content']['application/json'];
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
@@ -203,7 +203,7 @@ export class ActionsRouter {
   }
 
   private async _focusNodes(req: Request): Promise<void> {
-    const room: GetRoomDBDTO = req.nakarRoom;
+    const room: GetRoomDBDTO = req.nakar.room;
 
     type Body =
       operations['postRoomActionFocusNodes']['requestBody']['content']['application/json'];
@@ -216,19 +216,19 @@ export class ActionsRouter {
   }
 
   private async _undo(req: Request): Promise<void> {
-    const room: GetRoomDBDTO = req.nakarRoom;
+    const room: GetRoomDBDTO = req.nakar.room;
 
     await this._roomService.getRoom(room.documentId).undo();
   }
 
   private async _redo(req: Request): Promise<void> {
-    const room: GetRoomDBDTO = req.nakarRoom;
+    const room: GetRoomDBDTO = req.nakar.room;
 
     await this._roomService.getRoom(room.documentId).redo();
   }
 
   private async _runQuery(req: Request): Promise<void> {
-    const room: GetRoomDBDTO = req.nakarRoom;
+    const room: GetRoomDBDTO = req.nakar.room;
 
     type Body =
       operations['postRoomActionRunQuery']['requestBody']['content']['application/json'];
@@ -243,31 +243,31 @@ export class ActionsRouter {
   }
 
   private async _connectResultNodes(req: Request): Promise<void> {
-    const room: GetRoomDBDTO = req.nakarRoom;
+    const room: GetRoomDBDTO = req.nakar.room;
 
     await this._roomService.getRoom(room.documentId).connectResultNodes();
   }
 
   private _unlockAllNodes(req: Request): void {
-    const room: GetRoomDBDTO = req.nakarRoom;
+    const room: GetRoomDBDTO = req.nakar.room;
 
     this._roomService.getRoom(room.documentId).unlockAllNodes();
   }
 
   private async _removeDanglingNodes(req: Request): Promise<void> {
-    const room: GetRoomDBDTO = req.nakarRoom;
+    const room: GetRoomDBDTO = req.nakar.room;
 
     await this._roomService.getRoom(room.documentId).removeDanglingNodes();
   }
 
   private async _compressRelationships(req: Request): Promise<void> {
-    const room: GetRoomDBDTO = req.nakarRoom;
+    const room: GetRoomDBDTO = req.nakar.room;
 
     await this._roomService.getRoom(room.documentId).compressRelationships();
   }
 
   private async _compressNodes(req: Request): Promise<void> {
-    const room: GetRoomDBDTO = req.nakarRoom;
+    const room: GetRoomDBDTO = req.nakar.room;
 
     type Body =
       operations['postRoomActionCompressNodes']['requestBody']['content']['application/json'];
@@ -280,7 +280,7 @@ export class ActionsRouter {
   }
 
   private async _layoutLabel(req: Request): Promise<void> {
-    const room: GetRoomDBDTO = req.nakarRoom;
+    const room: GetRoomDBDTO = req.nakar.room;
 
     type Body =
       operations['postRoomActionLayoutLabel']['requestBody']['content']['application/json'];
@@ -294,7 +294,7 @@ export class ActionsRouter {
   }
 
   private async _showShortestPath(req: Request): Promise<void> {
-    const room: GetRoomDBDTO = req.nakarRoom;
+    const room: GetRoomDBDTO = req.nakar.room;
 
     type Body =
       operations['postRoomActionShowShortestPath']['requestBody']['content']['application/json'];
@@ -307,7 +307,7 @@ export class ActionsRouter {
   }
 
   private async _loadNode(req: Request): Promise<void> {
-    const room: GetRoomDBDTO = req.nakarRoom;
+    const room: GetRoomDBDTO = req.nakar.room;
 
     type Body =
       operations['postRoomActionLoadNode']['requestBody']['content']['application/json'];

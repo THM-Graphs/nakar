@@ -27,10 +27,12 @@ declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace Express {
     export interface Request {
-      nakarRoom: GetRoomDBDTO;
-      nakarNote: GetNoteDBDTO;
-      nakarRoomTemplate: GetTemplateDBDTO;
-      nakarDatabase: GetDatabaseDBDTO;
+      nakar: {
+        room: GetRoomDBDTO;
+        note: GetNoteDBDTO;
+        roomTemplate: GetTemplateDBDTO;
+        database: GetDatabaseDBDTO;
+      };
     }
   }
 }
@@ -98,7 +100,6 @@ export class HTTPService implements ApplicationService {
       _schemaFactory,
     );
 
-    this._setupMiddleware();
     this._setupRoutes();
   }
 
@@ -133,23 +134,32 @@ export class HTTPService implements ApplicationService {
   }
 
   public async destroy(): Promise<void> {
-    /* */
+    this._logger.log(this, 'Closing http server...');
+    await new Promise<void>(
+      (resolve: () => void, reject: (error: Error) => void): void => {
+        this._server.close((error?: Error): void => {
+          if (error) {
+            reject(error);
+          } else {
+            resolve();
+          }
+        });
+        this._server.closeAllConnections();
+      },
+    );
   }
 
   public getServerInstance(): http.Server {
     return this._server;
   }
 
-  private _setupMiddleware(): void {
+  private _setupRoutes(): void {
     this._app.use(
       express.json({
         limit: 1_000_000_000,
       }),
     );
     this._app.use(cors());
-  }
-
-  private _setupRoutes(): void {
     this._app.use('/auth', this._authenticationRouter.register());
     this._app.use('/room', this._roomRouter.register());
     this._app.use('/room-template', this._roomTemplateRouter.register());

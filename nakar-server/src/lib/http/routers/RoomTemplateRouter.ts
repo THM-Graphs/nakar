@@ -1,6 +1,6 @@
 import { HTTPTools } from '../HTTPTools';
 import { DatabaseService } from '../../database/DatabaseService';
-import { NextFunction, type Request, Response, Router } from 'express';
+import { type Request, Router } from 'express';
 import type {
   SchemaRoomTemplate,
   SchemaRoomTemplates,
@@ -20,7 +20,10 @@ export class RoomTemplateRouter {
     const router: Router = Router();
 
     router.get('/', this._httpTools.handle(this._getRoomTemplates.bind(this)));
-    router.use('/:id', this._assertRoomTemplate.bind(this));
+    router.use(
+      '/:id',
+      this._httpTools.handleMiddleware(this._assertRoomTemplate.bind(this)),
+    );
     router.get(
       '/:id',
       this._httpTools.handle(this._getRoomTemplate.bind(this)),
@@ -41,26 +44,20 @@ export class RoomTemplateRouter {
     };
   }
 
-  private async _assertRoomTemplate(
-    req: Request,
-    res: Response,
-    next: NextFunction,
-  ): Promise<void> {
-    try {
-      const id: string = this._httpTools.getPathParameter(req, 'id');
-      const dbResult: GetTemplateDBDTO | null =
-        await this._databaseService.getRoomTemplate(id);
-      if (dbResult == null) {
-        throw new NotFound(`Template ${id} not found.`);
-      }
-      req.nakarRoomTemplate = dbResult;
-      next();
-    } catch (error: unknown) {
-      this._httpTools.handleUnknownError(res, error);
+  private async _assertRoomTemplate(req: Request): Promise<void> {
+    const id: string = this._httpTools.getPathParameter(req, 'id');
+    const roomTemplate: GetTemplateDBDTO | null =
+      await this._databaseService.getRoomTemplate(id);
+    if (roomTemplate == null) {
+      throw new NotFound(`Template ${id} not found.`);
     }
+    req.nakar = {
+      ...req.nakar,
+      roomTemplate: roomTemplate,
+    };
   }
 
   private _getRoomTemplate(req: Request): SchemaRoomTemplate {
-    return this._schemaFactory.createSchemaRoomTemplate(req.nakarRoomTemplate);
+    return this._schemaFactory.createSchemaRoomTemplate(req.nakar.roomTemplate);
   }
 }

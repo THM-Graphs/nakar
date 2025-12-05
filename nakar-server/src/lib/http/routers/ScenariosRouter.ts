@@ -29,7 +29,7 @@ export class ScenariosRouter {
   }
 
   private async _getScenarios(req: Request): Promise<SchemaGetScenariosResult> {
-    const room: GetRoomDBDTO = req.nakarRoom;
+    const room: GetRoomDBDTO = req.nakar.room;
     const scenarioGroups: GetScenarioGroupDBDTO[] =
       await this._databaseService.getScenarioGroups(room.documentId);
     const scenarioGroupSchemas: SchemaScenarioGroup[] = await Promise.all(
