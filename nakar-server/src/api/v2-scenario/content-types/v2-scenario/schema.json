@@ -1,0 +1,36 @@
+{
+  "kind": "collectionType",
+  "collectionName": "v2_scenarios",
+  "info": {
+    "singularName": "v2-scenario",
+    "pluralName": "v2-scenarios",
+    "displayName": "V2 Scenario",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "attributes": {
+    "title": {
+      "type": "string"
+    },
+    "description": {
+      "type": "text"
+    },
+    "queries": {
+      "type": "component",
+      "repeatable": true,
+      "component": "scenario.v2-query"
+    },
+    "parameters": {
+      "type": "component",
+      "repeatable": true,
+      "component": "scenario.v2-query-parameter"
+    },
+    "postActions": {
+      "type": "component",
+      "repeatable": true,
+      "component": "scenario.v2-post-scenario-action"
+    }
+  }
+}

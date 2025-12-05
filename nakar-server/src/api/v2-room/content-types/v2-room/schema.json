@@ -1,0 +1,39 @@
+{
+  "kind": "collectionType",
+  "collectionName": "v2_rooms",
+  "info": {
+    "singularName": "v2-room",
+    "pluralName": "v2-rooms",
+    "displayName": "V2 Room",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "attributes": {
+    "title": {
+      "type": "string"
+    },
+    "visibility": {
+      "type": "enumeration",
+      "enum": [
+        "private",
+        "unlisted",
+        "public"
+      ],
+      "default": "private"
+    },
+    "project": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::v2-project.v2-project",
+      "inversedBy": "rooms"
+    },
+    "canvases": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::v2-canvas.v2-canvas",
+      "mappedBy": "room"
+    }
+  }
+}

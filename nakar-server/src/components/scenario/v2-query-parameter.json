@@ -1,0 +1,29 @@
+{
+  "collectionName": "components_scenario_v2_query_parameters",
+  "info": {
+    "displayName": "V2 Query Parameter",
+    "description": ""
+  },
+  "options": {},
+  "attributes": {
+    "identifier": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "defaultValue": {
+      "type": "string"
+    },
+    "dataType": {
+      "type": "enumeration",
+      "enum": [
+        "string",
+        "number",
+        "json",
+        "startDateTime",
+        "endDateTime"
+      ]
+    }
+  }
+}

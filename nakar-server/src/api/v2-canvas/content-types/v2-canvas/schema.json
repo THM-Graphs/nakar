@@ -1,0 +1,31 @@
+{
+  "kind": "collectionType",
+  "collectionName": "v2_canvases",
+  "info": {
+    "singularName": "v2-canvas",
+    "pluralName": "v2-canvases",
+    "displayName": "V2 Canvas",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "attributes": {
+    "title": {
+      "type": "string"
+    },
+    "room": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::v2-room.v2-room",
+      "inversedBy": "canvases"
+    },
+    "graph": {
+      "allowedTypes": [
+        "files"
+      ],
+      "type": "media",
+      "multiple": false
+    }
+  }
+}

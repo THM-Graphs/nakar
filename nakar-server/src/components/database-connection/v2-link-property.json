@@ -1,0 +1,18 @@
+{
+  "collectionName": "components_database_connection_v2_link_properties",
+  "info": {
+    "displayName": "V2 Link Property"
+  },
+  "options": {},
+  "attributes": {
+    "label": {
+      "type": "string"
+    },
+    "property": {
+      "type": "string"
+    },
+    "url": {
+      "type": "string"
+    }
+  }
+}

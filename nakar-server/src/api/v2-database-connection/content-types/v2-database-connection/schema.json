@@ -1,0 +1,54 @@
+{
+  "kind": "collectionType",
+  "collectionName": "v2_database_connections",
+  "info": {
+    "singularName": "v2-database-connection",
+    "pluralName": "v2-database-connections",
+    "displayName": "V2 Database Connection",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "attributes": {
+    "title": {
+      "type": "string"
+    },
+    "project": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::v2-project.v2-project",
+      "inversedBy": "databaseConnections"
+    },
+    "commonProperties": {
+      "type": "component",
+      "repeatable": true,
+      "component": "database-connection.v2-common-property"
+    },
+    "linkProperties": {
+      "type": "component",
+      "repeatable": true,
+      "component": "database-connection.v2-link-property"
+    },
+    "titleProperties": {
+      "type": "component",
+      "repeatable": true,
+      "component": "database-connection.v2-title-property"
+    },
+    "username": {
+      "type": "string"
+    },
+    "password": {
+      "type": "string"
+    },
+    "database": {
+      "type": "string"
+    },
+    "connectionUrl": {
+      "type": "string"
+    },
+    "browserUrl": {
+      "type": "string"
+    }
+  }
+}

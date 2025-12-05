@@ -1,0 +1,35 @@
+{
+  "kind": "collectionType",
+  "collectionName": "v2_notes",
+  "info": {
+    "singularName": "v2-note",
+    "pluralName": "v2-notes",
+    "displayName": "V2 Note",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "attributes": {
+    "content": {
+      "type": "text"
+    },
+    "project": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::v2-project.v2-project",
+      "inversedBy": "notes"
+    },
+    "author": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user",
+      "inversedBy": "notes"
+    },
+    "nodes": {
+      "type": "component",
+      "repeatable": true,
+      "component": "note.v2-node-reference"
+    }
+  }
+}
