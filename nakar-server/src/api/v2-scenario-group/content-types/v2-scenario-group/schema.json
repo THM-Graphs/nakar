@@ -19,6 +19,12 @@
       "relation": "manyToOne",
       "target": "api::v2-project.v2-project",
       "inversedBy": "scenarioGroups"
+    },
+    "scenarios": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::v2-scenario.v2-scenario",
+      "mappedBy": "group"
     }
   }
 }

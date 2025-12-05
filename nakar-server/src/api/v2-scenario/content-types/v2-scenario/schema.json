@@ -31,6 +31,12 @@
       "type": "component",
       "repeatable": true,
       "component": "scenario.v2-post-scenario-action"
+    },
+    "group": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::v2-scenario-group.v2-scenario-group",
+      "inversedBy": "scenarios"
     }
   }
 }

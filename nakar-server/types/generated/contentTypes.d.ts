@@ -820,6 +820,10 @@ export interface ApiV2ScenarioGroupV2ScenarioGroup
       'api::v2-project.v2-project'
     >;
     publishedAt: Schema.Attribute.DateTime;
+    scenarios: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::v2-scenario.v2-scenario'
+    >;
     title: Schema.Attribute.String;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
@@ -843,6 +847,10 @@ export interface ApiV2ScenarioV2Scenario extends Struct.CollectionTypeSchema {
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     description: Schema.Attribute.Text;
+    group: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::v2-scenario-group.v2-scenario-group'
+    >;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
       'oneToMany',
