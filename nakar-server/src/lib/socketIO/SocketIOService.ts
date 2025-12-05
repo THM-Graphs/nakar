@@ -101,7 +101,7 @@ export class SocketIOService implements ApplicationService {
     this._registerDatabaseServiceEvents();
   }
 
-  public async destroy(): Promise<void> {
+  public destroy(): void {
     if (this._io == null) {
       return;
     }
