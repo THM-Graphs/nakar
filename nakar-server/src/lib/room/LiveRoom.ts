@@ -107,6 +107,7 @@ export class LiveRoom implements ApplicationService {
       subscription.unsubscribe();
     }
     await this._physicsWorker.destroy();
+    await this.saveGraph();
   }
 
   public getGraph(): MutableGraph {
