@@ -12,12 +12,10 @@ import type {
   SchemaWsClientToServerMessage,
   SchemaWsEventClearProgress,
   SchemaWsEventKick,
-  SchemaWsEventLockUi,
   SchemaWsEventNotification,
   SchemaWsEventProgress,
   SchemaWsEventRoomChanged,
   SchemaWsEventSetNodeLocks,
-  SchemaWsEventUnlockUi,
   SchemaWsServerToClientMessage,
 } from '../../../src-gen/schema';
 import { match, P } from 'ts-pattern';
@@ -37,8 +35,6 @@ import type { RoomServiceEvent } from '../room/events/RoomServiceEvent';
 import type { RoomServiceEventGraphMetaDataChanged } from '../room/events/RoomServiceEventGraphMetaDataChanged';
 import type { RoomServiceEventRoomPhysicsUpdated } from '../room/events/RoomServiceEventRoomPhysicsUpdated';
 import type { RoomServiceEventNodeLocksUpdated } from '../room/events/RoomServiceEventNodeLocksUpdated';
-import type { RoomServiceEventRoomUnlocked } from '../room/events/RoomServiceEventRoomUnlocked';
-import type { RoomServiceEventRoomLocked } from '../room/events/RoomServiceEventRoomLocked';
 import type { RoomServiceEventProgressChanged } from '../room/events/RoomServiceEventProgressChanged';
 import type { RoomServiceEventProgressCleared } from '../room/events/RoomServiceEventProgressCleared';
 import type { RoomServiceEventGraphElementsChanged } from '../room/events/RoomServiceEventGraphElementsChanged';
@@ -51,6 +47,7 @@ import type { GetNotesDBDTO } from '../database/dto/GetNotesDBDTO';
 import type { MutableGraph } from '../room/graph/MutableGraph';
 import type { FinalGraphDisplayConfiguration } from '../room/scenario-pipeline/display-configuration/FinalGraphDisplayConfiguration';
 import { SchemaFactoryService } from '../schema/SchemaFactoryService';
+import { RoomServiceEventError } from '../room/events/RoomServiceEventError';
 
 export type Server = UntypedServer<ClientToServerEvents, ServerToClientEvents>;
 export type Socket = UntypedSocket<ClientToServerEvents, ServerToClientEvents>;
@@ -437,22 +434,6 @@ export class SocketIOService implements ApplicationService {
             },
           )
           .with(
-            { type: 'RoomServiceEventRoomLocked' },
-            (message: RoomServiceEventRoomLocked): void => {
-              this.sendToRoom(message.roomId, {
-                type: 'WSEventLockUi',
-              } satisfies SchemaWsEventLockUi);
-            },
-          )
-          .with(
-            { type: 'RoomServiceEventRoomUnlocked' },
-            (message: RoomServiceEventRoomUnlocked): void => {
-              this.sendToRoom(message.roomId, {
-                type: 'WSEventUnlockUi',
-              } satisfies SchemaWsEventUnlockUi);
-            },
-          )
-          .with(
             { type: 'RoomServiceEventProgressChanged' },
             (message: RoomServiceEventProgressChanged): void => {
               this.sendToRoom(message.roomId, {
@@ -489,6 +470,12 @@ export class SocketIOService implements ApplicationService {
                   severity: 'warning',
                 },
               } satisfies SchemaWsEventNotification);
+            },
+          )
+          .with(
+            { type: 'RoomServiceEventError' },
+            (message: RoomServiceEventError): void => {
+              this.handleRoomError(message.roomId, message.error);
             },
           )
           .exhaustive(),

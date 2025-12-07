@@ -7,7 +7,6 @@ import { SelectedCanvasTab } from "../state/SelectedCanvasTab.ts";
 export type RelayoutActionParams = {
   roomContext: RoomContext;
   nodes: Node[];
-  uiLocked: boolean;
   selectedTab: SelectedCanvasTab;
 };
 export class RelayoutAction extends Action<RelayoutActionParams> {
@@ -22,11 +21,7 @@ export class RelayoutAction extends Action<RelayoutActionParams> {
   }
 
   disabled(input: RelayoutActionParams): boolean {
-    return (
-      input.nodes.length === 0 ||
-      input.uiLocked ||
-      input.selectedTab !== "graph"
-    );
+    return input.nodes.length === 0 || input.selectedTab !== "graph";
   }
 
   icon(): string | null {

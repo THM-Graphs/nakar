@@ -1,7 +1,6 @@
 import { Button, OverlayTrigger, Stack, Tooltip } from "react-bootstrap";
 import clsx from "clsx";
 import { Scenario } from "../../../src-gen";
-import { useBearStore } from "../../state/useBearStore.ts";
 import { MouseEvent } from "react";
 
 export function ScenarioTitleAndBadges(props: {
@@ -9,8 +8,6 @@ export function ScenarioTitleAndBadges(props: {
   onRun?: (event: MouseEvent) => void;
   className?: string;
 }) {
-  const uiLocked = useBearStore((s) => s.room.ui.locked);
-
   const title: string = props.scenario.title ?? "untitled";
   return (
     <Stack
@@ -20,7 +17,6 @@ export function ScenarioTitleAndBadges(props: {
     >
       <Button
         variant={"link"}
-        disabled={uiLocked}
         size={"sm"}
         onClick={(event) => {
           props.onRun?.(event);

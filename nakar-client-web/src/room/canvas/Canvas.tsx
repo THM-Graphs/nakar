@@ -30,7 +30,6 @@ export function Canvas(props: {
   const selectedTab = useBearStore((s) => s.room.canvas.tabs.selected);
   const hideLabels = useBearStore((s) => s.room.canvas.hideLabels);
   const setHideLabels = useBearStore((s) => s.room.canvas.setHideLabels);
-  const uiLocked = useBearStore((s) => s.room.ui.locked);
   const scenario = useBearStore((s) => s.room.scenario.graph.metaData.scenario);
   const [hideTitles, setHideTitles] = useState<boolean>(true);
 
@@ -119,7 +118,6 @@ export function Canvas(props: {
                     roomContext: props.roomContext,
                     nodes,
                     selectedTab,
-                    uiLocked,
                   }}
                   hideTitle={hideTitles}
                   tooltipPlacement={"left"}
@@ -130,7 +128,6 @@ export function Canvas(props: {
                     roomContext: props.roomContext,
                     nodes,
                     selectedTab,
-                    uiLocked,
                   }}
                   hideTitle={hideTitles}
                   tooltipPlacement={"left"}
@@ -142,7 +139,6 @@ export function Canvas(props: {
                   params={{
                     roomContext: props.roomContext,
                     scenario: scenario?.current ?? null,
-                    uiLocked,
                     selectedTab,
                   }}
                   hideTitle={hideTitles}
@@ -153,7 +149,6 @@ export function Canvas(props: {
                   params={{
                     roomContext: props.roomContext,
                     scenario: scenario?.current ?? null,
-                    uiLocked,
                     selectedTab,
                   }}
                   hideTitle={hideTitles}
@@ -164,7 +159,6 @@ export function Canvas(props: {
                   params={{
                     roomContext: props.roomContext,
                     scenario: scenario?.current ?? null,
-                    uiLocked,
                     selectedTab,
                   }}
                   hideTitle={hideTitles}

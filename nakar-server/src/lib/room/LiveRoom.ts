@@ -48,12 +48,16 @@ import { Neo4jService } from '../neo4j/Neo4jService';
 import { wait } from '../tools/Wait';
 import { circularWeightedSpread } from '../tools/circleLayoutAlgorithms/circularWeightedSpread';
 import { PhysicsWorker } from './PhysicsWorker';
+import { TaskQueue } from '../task-queue/TaskQueue';
+import { TaskQueueState } from '../task-queue/TaskQueueState';
+import { TaskQueueTask } from '../task-queue/TaskQueueTask';
 
 export class LiveRoom implements ApplicationService {
   private readonly _physicsWorker: PhysicsWorker;
   private _graph: MutableGraph | null;
   private readonly _onEvent: Subject<RoomServiceEvent>;
   private readonly _subscriptions: SSet<Subscription>;
+  private readonly _queue: TaskQueue;
 
   public constructor(
     private readonly _roomId: string,
@@ -67,6 +71,7 @@ export class LiveRoom implements ApplicationService {
     this._onEvent = new Subject();
     this._subscriptions = new SSet();
     this._physicsWorker = new PhysicsWorker(_roomId, _database, _logger);
+    this._queue = new TaskQueue(this._logger);
   }
 
   public get onEvent$(): Observable<RoomServiceEvent> {
@@ -100,6 +105,31 @@ export class LiveRoom implements ApplicationService {
           .exhaustive();
       }),
     );
+    this._subscriptions.add(
+      this._queue.onUpdate$.subscribe((state: TaskQueueState): void => {
+        if (state.active == null) {
+          this._onEvent.next({
+            type: 'RoomServiceEventProgressCleared',
+            roomId: this.roomId,
+          } satisfies RoomServiceEvent);
+        } else {
+          this._onEvent.next({
+            type: 'RoomServiceEventProgressChanged',
+            roomId: this.roomId,
+            progress: null,
+            message:
+              state.pending.length > 0
+                ? `${state.active} (${state.pending.length} pending)`
+                : state.active,
+          } satisfies RoomServiceEvent);
+        }
+      }),
+    );
+    this._subscriptions.add(
+      this._queue.onError$.subscribe((error: unknown): void => {
+        this._handleError(error);
+      }),
+    );
   }
 
   public async destroy(): Promise<void> {
@@ -107,6 +137,7 @@ export class LiveRoom implements ApplicationService {
       subscription.unsubscribe();
     }
     await this._physicsWorker.destroy();
+    this._queue.shutdown();
     await this.saveGraph();
   }
 
@@ -198,38 +229,34 @@ export class LiveRoom implements ApplicationService {
     node.grabs.delete(params.userId);
   }
 
-  public async reloadScenario(params: {
-    scenarioId: string;
-  }): Promise<GetScenarioDBDTO> {
+  public reloadScenario(params: { scenarioId: string }): void {
     const args: SMap<string, string> = this.getGraph().metaData.arguments;
-    return await this.loadScenario({
+    this.loadScenario({
       scenarioId: params.scenarioId,
       arguments: args,
     });
   }
 
-  public async loadScenario(params: {
+  public loadScenario(params: {
     scenarioId: string;
     arguments: SMap<string, string>;
-  }): Promise<GetScenarioDBDTO> {
-    const scenario: GetScenarioDBDTO | null = await this._database.getScenario(
-      params.scenarioId,
-    );
-    if (scenario == null) {
-      throw new NotFound('Scenario not found.');
-    }
-    if (scenario.queries.length === 0) {
-      throw new NotFound('The scenario has no queries.');
-    }
-    const displayConfiguration: FinalGraphDisplayConfiguration =
-      await this._database.getGraphDisplayConfiguration(
-        scenario.documentId,
-        this.roomId,
-      );
+  }): void {
+    this._queue.addTask(
+      new TaskQueueTask('Loading scenario', async (): Promise<void> => {
+        const scenario: GetScenarioDBDTO | null =
+          await this._database.getScenario(params.scenarioId);
+        if (scenario == null) {
+          throw new NotFound('Scenario not found.');
+        }
+        if (scenario.queries.length === 0) {
+          throw new NotFound('The scenario has no queries.');
+        }
+        const displayConfiguration: FinalGraphDisplayConfiguration =
+          await this._database.getGraphDisplayConfiguration(
+            scenario.documentId,
+            this.roomId,
+          );
 
-    return await this._runWithRoomLock(
-      'Loading scenario',
-      async (): Promise<GetScenarioDBDTO> => {
         const graph: MutableGraph = this._snapshotGraph();
         const positionsCache: PositionsCache = PositionsCache.fromGraph(graph);
 
@@ -244,7 +271,7 @@ export class LiveRoom implements ApplicationService {
         for (const query of scenario.queries) {
           if (query.database == null) {
             throw new Error(
-              'One of the queries has no database configued. Abort.',
+              'One of the queries has no database configured. Abort.',
             );
           }
 
@@ -365,129 +392,131 @@ export class LiveRoom implements ApplicationService {
         this._physicsWorker.triggerPhysics({ amount: 'long' });
 
         await this.saveGraph();
-
-        return scenario;
-      },
+      }),
     );
   }
 
-  public async expandNode(params: {
+  public expandNode(params: {
     nodeId: string;
     limit: {
       labels: SSet<string>;
       relationships: SSet<string>;
     } | null;
-  }): Promise<void> {
-    const oldGraph: MutableGraph = this.getGraph();
-    const displayConfiguration: FinalGraphDisplayConfiguration =
-      await this._database.getGraphDisplayConfiguration(
-        oldGraph.metaData.scenarioId,
-        this.roomId,
-      );
-
-    await this._runWithRoomLock('Expanding node', async (): Promise<void> => {
-      const result: ExpandNodesResult = {
-        nodesAddedCount: 0,
-        edgeAddedCount: 0,
-      };
-
-      const node: MutableNode | null = oldGraph.nodes.get(params.nodeId);
-      if (node == null) {
-        throw new Error(`Cannot find node ${params.nodeId} to expand.`);
-      }
-
-      const database: GetDatabaseDBDTO | null =
-        await this._database.getDatabase(node.source);
-      if (database == null) {
-        throw new Error(
-          `Cannot find database ${node.source} to run expand node query on.`,
-        );
-      }
-
-      const neo4jDatabaseInfo: Neo4jDatabaseInfo =
-        Neo4jDatabaseInfo.parse(database);
-
-      const expandResult: Neo4jGraphElements = node.isCluster
-        ? await this._neo4j.executeQuery(
-            neo4jDatabaseInfo,
-            'MATCH (n) WHERE elementId(n) IN $nodeIds OPTIONAL MATCH (n)-[r]-(neighbor) WHERE elementId(neighbor) in $neighbors RETURN n, r',
-            {
-              nodeIds: node.compressed.toArray(),
-              neighbors: oldGraph
-                .getNeighborsOfNode(node)
-                .toArray()
-                .map((n: MutableNode): string => n.id),
-            },
-            new Neo4jLimitConfig('default', 'graphElements'),
-          )
-        : await this._neo4j.expandNode(
-            neo4jDatabaseInfo,
-            new SSet<string>([params.nodeId]),
-            params.limit,
+  }): void {
+    this._queue.addTask(
+      new TaskQueueTask('Expanding node', async (): Promise<void> => {
+        const oldGraph: MutableGraph = this.getGraph();
+        const displayConfiguration: FinalGraphDisplayConfiguration =
+          await this._database.getGraphDisplayConfiguration(
+            oldGraph.metaData.scenarioId,
+            this.roomId,
           );
 
-      const graph: MutableGraph = this._snapshotGraph();
+        const result: ExpandNodesResult = {
+          nodesAddedCount: 0,
+          edgeAddedCount: 0,
+        };
 
-      if (node.isCluster) {
-        graph.nodes.remove(node);
-        for (const edge of graph.edges.getByStartOrEndNodeId(node.id)) {
-          graph.edges.remove(edge);
+        const node: MutableNode | null = oldGraph.nodes.get(params.nodeId);
+        if (node == null) {
+          throw new Error(`Cannot find node ${params.nodeId} to expand.`);
         }
-      }
 
-      for (const newNode of expandResult.nodes) {
-        if (!graph.nodes.hasById(newNode[0])) {
-          result.nodesAddedCount += 1;
-
-          const insertedNode: MutableNode | null = graph.nodes.addNeo4jNode(
-            newNode[1],
-            MutableGraphElementCreationAction.expand,
-            displayConfiguration,
+        const database: GetDatabaseDBDTO | null =
+          await this._database.getDatabase(node.source);
+        if (database == null) {
+          throw new Error(
+            `Cannot find database ${node.source} to run expand node query on.`,
           );
-          if (insertedNode != null) {
-            insertedNode.position.x = node.position.x;
-            insertedNode.position.y = node.position.y;
-            PhysicsSimulation.jiggle(insertedNode);
+        }
+
+        const neo4jDatabaseInfo: Neo4jDatabaseInfo =
+          Neo4jDatabaseInfo.parse(database);
+
+        const expandResult: Neo4jGraphElements = node.isCluster
+          ? await this._neo4j.executeQuery(
+              neo4jDatabaseInfo,
+              'MATCH (n) WHERE elementId(n) IN $nodeIds OPTIONAL MATCH (n)-[r]-(neighbor) WHERE elementId(neighbor) in $neighbors RETURN n, r',
+              {
+                nodeIds: node.compressed.toArray(),
+                neighbors: oldGraph
+                  .getNeighborsOfNode(node)
+                  .toArray()
+                  .map((n: MutableNode): string => n.id),
+              },
+              new Neo4jLimitConfig('default', 'graphElements'),
+            )
+          : await this._neo4j.expandNode(
+              neo4jDatabaseInfo,
+              new SSet<string>([params.nodeId]),
+              params.limit,
+            );
+
+        const graph: MutableGraph = this._snapshotGraph();
+
+        if (node.isCluster) {
+          graph.nodes.remove(node);
+          for (const edge of graph.edges.getByStartOrEndNodeId(node.id)) {
+            graph.edges.remove(edge);
           }
         }
-      }
-      for (const newEdge of expandResult.relationships) {
-        if (!graph.edges.has(newEdge[0])) {
-          result.edgeAddedCount += 1;
-          graph.edges.addNeo4jEdge(
-            newEdge[1],
-            MutableGraphElementCreationAction.expand,
-          );
+
+        for (const newNode of expandResult.nodes) {
+          if (!graph.nodes.hasById(newNode[0])) {
+            result.nodesAddedCount += 1;
+
+            const insertedNode: MutableNode | null = graph.nodes.addNeo4jNode(
+              newNode[1],
+              MutableGraphElementCreationAction.expand,
+              displayConfiguration,
+            );
+            if (insertedNode != null) {
+              insertedNode.position.x = node.position.x;
+              insertedNode.position.y = node.position.y;
+              PhysicsSimulation.jiggle(insertedNode);
+            }
+          }
         }
-      }
+        for (const newEdge of expandResult.relationships) {
+          if (!graph.edges.has(newEdge[0])) {
+            result.edgeAddedCount += 1;
+            graph.edges.addNeo4jEdge(
+              newEdge[1],
+              MutableGraphElementCreationAction.expand,
+            );
+          }
+        }
 
-      this._logger.debug(
-        this,
-        `Expand node result for ${params.nodeId}: ${expandResult.nodes.size.toString()} nodes and ${expandResult.relationships.size.toString()} relationships.`,
-      );
+        this._logger.debug(
+          this,
+          `Expand node result for ${params.nodeId}: ${expandResult.nodes.size.toString()} nodes and ${expandResult.relationships.size.toString()} relationships.`,
+        );
 
-      this._postProcessGraph(graph, displayConfiguration);
+        this._postProcessGraph(graph, displayConfiguration);
 
-      this._physicsWorker.setGraph(graph.toPhysicalGraph(displayConfiguration));
-      this._physicsWorker.triggerPhysics({
-        amount: 'short',
-      });
-      this._onEvent.next({
-        type: 'RoomServiceEventGraphElementsChanged',
-        graph: graph,
-        roomId: this.roomId,
-        nodesAdded: result.nodesAddedCount,
-        edgesAdded: result.edgeAddedCount,
-      } satisfies RoomServiceEventGraphElementsChanged);
-
-      if (expandResult.limitReached) {
+        this._physicsWorker.setGraph(
+          graph.toPhysicalGraph(displayConfiguration),
+        );
+        this._physicsWorker.triggerPhysics({
+          amount: 'short',
+        });
         this._onEvent.next({
-          type: 'RoomServiceEventNotAllNodesLoaded',
+          type: 'RoomServiceEventGraphElementsChanged',
+          graph: graph,
           roomId: this.roomId,
-          loadedCount: expandResult.size,
-        } satisfies RoomServiceEventNotAllNodesLoaded);
-      }
-    });
+          nodesAdded: result.nodesAddedCount,
+          edgesAdded: result.edgeAddedCount,
+        } satisfies RoomServiceEventGraphElementsChanged);
+
+        if (expandResult.limitReached) {
+          this._onEvent.next({
+            type: 'RoomServiceEventNotAllNodesLoaded',
+            roomId: this.roomId,
+            loadedCount: expandResult.size,
+          } satisfies RoomServiceEventNotAllNodesLoaded);
+        }
+      }),
+    );
   }
 
   public async expandNodePreview(params: {
@@ -519,126 +548,128 @@ export class LiveRoom implements ApplicationService {
     return expandNodePreview;
   }
 
-  public async focusNodes(params: {
-    nodeIds: readonly string[];
-  }): Promise<void> {
-    await this._runWithRoomLock('Focus nodes', async (): Promise<void> => {
-      const graph: MutableGraph = this._snapshotGraph();
-      const config: FinalGraphDisplayConfiguration =
-        await this._database.getGraphDisplayConfiguration(
-          graph.metaData.scenarioId,
-          this.roomId,
-        );
+  public focusNodes(params: { nodeIds: readonly string[] }): void {
+    this._queue.addTask(
+      new TaskQueueTask('Focus nodes', async (): Promise<void> => {
+        const graph: MutableGraph = this._snapshotGraph();
+        const config: FinalGraphDisplayConfiguration =
+          await this._database.getGraphDisplayConfiguration(
+            graph.metaData.scenarioId,
+            this.roomId,
+          );
 
-      const result: ExpandNodesResult = {
-        nodesAddedCount: 0,
-        edgeAddedCount: 0,
-      };
-      graph.nodes.nodes
-        .filter(
-          (node: MutableNode): boolean => !params.nodeIds.includes(node.id),
-        )
-        .forEach((node: MutableNode): void => {
-          graph.nodes.remove(node);
-          result.nodesAddedCount -= 1;
-        });
-      const edgesRemovedCount: number = graph.removeDanglingEdges();
-      result.edgeAddedCount -= edgesRemovedCount;
+        const result: ExpandNodesResult = {
+          nodesAddedCount: 0,
+          edgeAddedCount: 0,
+        };
+        graph.nodes.nodes
+          .filter(
+            (node: MutableNode): boolean => !params.nodeIds.includes(node.id),
+          )
+          .forEach((node: MutableNode): void => {
+            graph.nodes.remove(node);
+            result.nodesAddedCount -= 1;
+          });
+        const edgesRemovedCount: number = graph.removeDanglingEdges();
+        result.edgeAddedCount -= edgesRemovedCount;
 
-      this._physicsWorker.setGraph(graph.toPhysicalGraph(config));
-      this._onEvent.next({
-        type: 'RoomServiceEventGraphElementsChanged',
-        graph: graph,
-        roomId: this.roomId,
-        nodesAdded: result.nodesAddedCount,
-        edgesAdded: result.edgeAddedCount,
-      } satisfies RoomServiceEventGraphElementsChanged);
-    });
+        this._physicsWorker.setGraph(graph.toPhysicalGraph(config));
+        this._onEvent.next({
+          type: 'RoomServiceEventGraphElementsChanged',
+          graph: graph,
+          roomId: this.roomId,
+          nodesAdded: result.nodesAddedCount,
+          edgesAdded: result.edgeAddedCount,
+        } satisfies RoomServiceEventGraphElementsChanged);
+      }),
+    );
   }
 
-  public async deleteElements(params: {
+  public deleteElements(params: {
     nodeIds: readonly string[];
     labels: readonly string[];
     edgeIds: readonly string[];
     edgeTypes: readonly string[];
-  }): Promise<void> {
-    await this._runWithRoomLock('Deleting nodes', async (): Promise<void> => {
-      const graph: MutableGraph = this._snapshotGraph();
-      const config: FinalGraphDisplayConfiguration =
-        graph.metaData.scenarioId != null
-          ? await this._database.getGraphDisplayConfiguration(
-              graph.metaData.scenarioId,
-              this.roomId,
-            )
-          : FinalGraphDisplayConfiguration.empty();
+  }): void {
+    this._queue.addTask(
+      new TaskQueueTask('Deleting nodes', async (): Promise<void> => {
+        const graph: MutableGraph = this._snapshotGraph();
+        const config: FinalGraphDisplayConfiguration =
+          graph.metaData.scenarioId != null
+            ? await this._database.getGraphDisplayConfiguration(
+                graph.metaData.scenarioId,
+                this.roomId,
+              )
+            : FinalGraphDisplayConfiguration.empty();
 
-      const result: ExpandNodesResult = {
-        nodesAddedCount: 0,
-        edgeAddedCount: 0,
-      };
+        const result: ExpandNodesResult = {
+          nodesAddedCount: 0,
+          edgeAddedCount: 0,
+        };
 
-      const nodesToDelete: SSet<MutableNode> = new SSet<MutableNode>();
-      const edgesToDelete: SSet<MutableEdge> = new SSet<MutableEdge>();
+        const nodesToDelete: SSet<MutableNode> = new SSet<MutableNode>();
+        const edgesToDelete: SSet<MutableEdge> = new SSet<MutableEdge>();
 
-      for (const nodeId of params.nodeIds) {
-        const node: MutableNode | null = graph.nodes.get(nodeId);
-        if (node != null) {
-          nodesToDelete.add(node);
+        for (const nodeId of params.nodeIds) {
+          const node: MutableNode | null = graph.nodes.get(nodeId);
+          if (node != null) {
+            nodesToDelete.add(node);
+          }
         }
-      }
-      for (const label of params.labels) {
-        for (const node of graph.nodes.getByLabel(label)) {
-          nodesToDelete.add(node);
-        }
-      }
-
-      for (const node of nodesToDelete) {
-        const didDelete: boolean = graph.nodes.remove(node);
-        if (didDelete) {
-          result.nodesAddedCount -= 1;
+        for (const label of params.labels) {
+          for (const node of graph.nodes.getByLabel(label)) {
+            nodesToDelete.add(node);
+          }
         }
 
-        for (const edge of graph.edges.getByStartOrEndNodeId(node.id)) {
-          edgesToDelete.add(edge);
+        for (const node of nodesToDelete) {
+          const didDelete: boolean = graph.nodes.remove(node);
+          if (didDelete) {
+            result.nodesAddedCount -= 1;
+          }
+
+          for (const edge of graph.edges.getByStartOrEndNodeId(node.id)) {
+            edgesToDelete.add(edge);
+          }
+
+          this._logger.debug(this, `Did delete node ${node.id}`);
         }
 
-        this._logger.debug(this, `Did delete node ${node.id}`);
-      }
-
-      for (const edgeId of params.edgeIds) {
-        const edge: MutableEdge | null = graph.edges.get(edgeId);
-        if (edge != null) {
-          edgesToDelete.add(edge);
+        for (const edgeId of params.edgeIds) {
+          const edge: MutableEdge | null = graph.edges.get(edgeId);
+          if (edge != null) {
+            edgesToDelete.add(edge);
+          }
         }
-      }
 
-      for (const edgeType of params.edgeTypes) {
-        const edges: SSet<MutableEdge> = graph.edges.getByType(edgeType);
-        for (const edge of edges) {
-          edgesToDelete.add(edge);
+        for (const edgeType of params.edgeTypes) {
+          const edges: SSet<MutableEdge> = graph.edges.getByType(edgeType);
+          for (const edge of edges) {
+            edgesToDelete.add(edge);
+          }
         }
-      }
 
-      for (const edge of edgesToDelete) {
-        const didDelete: boolean = graph.edges.remove(edge);
-        if (didDelete) {
-          result.edgeAddedCount -= 1;
+        for (const edge of edgesToDelete) {
+          const didDelete: boolean = graph.edges.remove(edge);
+          if (didDelete) {
+            result.edgeAddedCount -= 1;
+          }
         }
-      }
-      graph.removeDanglingEdges();
+        graph.removeDanglingEdges();
 
-      this._physicsWorker.setGraph(graph.toPhysicalGraph(config));
-      this._physicsWorker.triggerPhysics({
-        amount: 'short',
-      });
-      this._onEvent.next({
-        type: 'RoomServiceEventGraphElementsChanged',
-        graph: graph,
-        roomId: this.roomId,
-        nodesAdded: result.nodesAddedCount,
-        edgesAdded: result.edgeAddedCount,
-      } satisfies RoomServiceEvent);
-    });
+        this._physicsWorker.setGraph(graph.toPhysicalGraph(config));
+        this._physicsWorker.triggerPhysics({
+          amount: 'short',
+        });
+        this._onEvent.next({
+          type: 'RoomServiceEventGraphElementsChanged',
+          graph: graph,
+          roomId: this.roomId,
+          nodesAdded: result.nodesAddedCount,
+          edgesAdded: result.edgeAddedCount,
+        } satisfies RoomServiceEvent);
+      }),
+    );
   }
 
   public relayout(): void {
@@ -647,165 +678,182 @@ export class LiveRoom implements ApplicationService {
     });
   }
 
-  public async undo(): Promise<void> {
-    const oldGraph: MutableGraph = this.getGraph();
-    const graph: MutableGraph | null = oldGraph.previous;
-    if (graph == null) {
-      throw new Error('Unable to execute undo: No undo step available.');
-    }
+  public undo(): void {
+    this._queue.addTask(
+      new TaskQueueTask('Undo', async (): Promise<void> => {
+        const oldGraph: MutableGraph = this.getGraph();
+        const graph: MutableGraph | null = oldGraph.previous;
+        if (graph == null) {
+          throw new Error('Unable to execute undo: No undo step available.');
+        }
 
-    graph.next = oldGraph;
-    oldGraph.previous = null;
-    this.setGraph(graph);
+        graph.next = oldGraph;
+        oldGraph.previous = null;
+        this.setGraph(graph);
 
-    const displayConfiguration: FinalGraphDisplayConfiguration =
-      await this._database.getGraphDisplayConfiguration(
-        graph.metaData.scenarioId,
-        this.roomId,
-      );
+        const displayConfiguration: FinalGraphDisplayConfiguration =
+          await this._database.getGraphDisplayConfiguration(
+            graph.metaData.scenarioId,
+            this.roomId,
+          );
 
-    await this.saveGraph();
-    this._physicsWorker.setGraph(graph.toPhysicalGraph(displayConfiguration));
-    this._onEvent.next({
-      type: 'RoomServiceEventGraphMetaDataChanged',
-      graph: graph,
-      roomId: this.roomId,
-    } satisfies RoomServiceEventGraphMetaDataChanged);
-    this._onEvent.next({
-      type: 'RoomServiceEventGraphElementsChanged',
-      graph: graph,
-      roomId: this.roomId,
-      nodesAdded: graph.nodes.size,
-      edgesAdded: graph.edges.size,
-    } satisfies RoomServiceEventGraphElementsChanged);
-    this._onEvent.next({
-      type: 'RoomServiceEventGraphTableChanged',
-      table: graph.tableData,
-      roomId: this.roomId,
-    } satisfies RoomServiceEventGraphTableChanged);
+        await this.saveGraph();
+        this._physicsWorker.setGraph(
+          graph.toPhysicalGraph(displayConfiguration),
+        );
+        this._onEvent.next({
+          type: 'RoomServiceEventGraphMetaDataChanged',
+          graph: graph,
+          roomId: this.roomId,
+        } satisfies RoomServiceEventGraphMetaDataChanged);
+        this._onEvent.next({
+          type: 'RoomServiceEventGraphElementsChanged',
+          graph: graph,
+          roomId: this.roomId,
+          nodesAdded: graph.nodes.size,
+          edgesAdded: graph.edges.size,
+        } satisfies RoomServiceEventGraphElementsChanged);
+        this._onEvent.next({
+          type: 'RoomServiceEventGraphTableChanged',
+          table: graph.tableData,
+          roomId: this.roomId,
+        } satisfies RoomServiceEventGraphTableChanged);
+      }),
+    );
   }
 
-  public async redo(): Promise<void> {
-    const oldGraph: MutableGraph = this.getGraph();
-    const graph: MutableGraph | null = oldGraph.next;
-    if (graph == null) {
-      throw new Error('Unable to execute redo: No redo step available.');
-    }
-    graph.previous = oldGraph;
-    oldGraph.next = null;
+  public redo(): void {
+    this._queue.addTask(
+      new TaskQueueTask('Redo', async (): Promise<void> => {
+        const oldGraph: MutableGraph = this.getGraph();
+        const graph: MutableGraph | null = oldGraph.next;
+        if (graph == null) {
+          throw new Error('Unable to execute redo: No redo step available.');
+        }
+        graph.previous = oldGraph;
+        oldGraph.next = null;
 
-    this.setGraph(graph);
+        this.setGraph(graph);
 
-    const displayConfiguration: FinalGraphDisplayConfiguration =
-      await this._database.getGraphDisplayConfiguration(
-        graph.metaData.scenarioId,
-        this.roomId,
-      );
+        const displayConfiguration: FinalGraphDisplayConfiguration =
+          await this._database.getGraphDisplayConfiguration(
+            graph.metaData.scenarioId,
+            this.roomId,
+          );
 
-    await this.saveGraph();
-    this._physicsWorker.setGraph(graph.toPhysicalGraph(displayConfiguration));
-    this._onEvent.next({
-      type: 'RoomServiceEventGraphMetaDataChanged',
-      graph: graph,
-      roomId: this.roomId,
-    } satisfies RoomServiceEventGraphMetaDataChanged);
-    this._onEvent.next({
-      type: 'RoomServiceEventGraphElementsChanged',
-      graph: graph,
-      roomId: this.roomId,
-      nodesAdded: graph.nodes.size,
-      edgesAdded: graph.edges.size,
-    } satisfies RoomServiceEventGraphElementsChanged);
-    this._onEvent.next({
-      type: 'RoomServiceEventGraphTableChanged',
-      table: graph.tableData,
-      roomId: this.roomId,
-    } satisfies RoomServiceEventGraphTableChanged);
+        await this.saveGraph();
+        this._physicsWorker.setGraph(
+          graph.toPhysicalGraph(displayConfiguration),
+        );
+        this._onEvent.next({
+          type: 'RoomServiceEventGraphMetaDataChanged',
+          graph: graph,
+          roomId: this.roomId,
+        } satisfies RoomServiceEventGraphMetaDataChanged);
+        this._onEvent.next({
+          type: 'RoomServiceEventGraphElementsChanged',
+          graph: graph,
+          roomId: this.roomId,
+          nodesAdded: graph.nodes.size,
+          edgesAdded: graph.edges.size,
+        } satisfies RoomServiceEventGraphElementsChanged);
+        this._onEvent.next({
+          type: 'RoomServiceEventGraphTableChanged',
+          table: graph.tableData,
+          roomId: this.roomId,
+        } satisfies RoomServiceEventGraphTableChanged);
+      }),
+    );
   }
 
-  public async runQuery(params: {
+  public runQuery(params: {
     databaseId: string;
     query: string;
     replace: boolean;
-  }): Promise<void> {
-    await this._runWithRoomLock('Running query', async (): Promise<void> => {
-      const scenarioId: string | null = this.getGraph().metaData.scenarioId;
-      const displayConfiguration: FinalGraphDisplayConfiguration =
-        await this._database.getGraphDisplayConfiguration(
-          scenarioId,
-          this.roomId,
+  }): void {
+    this._queue.addTask(
+      new TaskQueueTask('Running query', async (): Promise<void> => {
+        const scenarioId: string | null = this.getGraph().metaData.scenarioId;
+        const displayConfiguration: FinalGraphDisplayConfiguration =
+          await this._database.getGraphDisplayConfiguration(
+            scenarioId,
+            this.roomId,
+          );
+        const database: GetDatabaseDBDTO | null =
+          await this._database.getDatabase(params.databaseId);
+        if (database == null) {
+          throw NotFound(`Database ${params.databaseId} not found.`);
+        }
+        const credentials: Neo4jDatabaseInfo =
+          Neo4jDatabaseInfo.parse(database);
+
+        const graphElements: Neo4jGraphElements =
+          await this._neo4j.executeQuery(
+            credentials,
+            params.query,
+            {},
+            new Neo4jLimitConfig(
+              'default',
+              params.replace ? 'all' : 'graphElements',
+            ),
+          );
+
+        if (graphElements.limitReached) {
+          this._onEvent.next({
+            type: 'RoomServiceEventNotAllNodesLoaded',
+            roomId: this.roomId,
+            loadedCount: graphElements.size,
+          } satisfies RoomServiceEventNotAllNodesLoaded);
+        }
+
+        const graph: MutableGraph = this._snapshotGraph();
+        if (params.replace) {
+          graph.nodes = new MutableNodeIndex([], this._logger);
+          graph.edges = new MutableEdgeIndex([]);
+          graph.tableData = graphElements.tableData;
+        }
+        graph.nodes.addNeo4jNodes(
+          graphElements.nodes,
+          MutableGraphElementCreationAction.query,
+          displayConfiguration,
         );
-      const database: GetDatabaseDBDTO | null =
-        await this._database.getDatabase(params.databaseId);
-      if (database == null) {
-        throw NotFound(`Database ${params.databaseId} not found.`);
-      }
-      const credentials: Neo4jDatabaseInfo = Neo4jDatabaseInfo.parse(database);
+        graph.edges.addNeo4jEdges(
+          graphElements.relationships,
+          MutableGraphElementCreationAction.query,
+        );
 
-      const graphElements: Neo4jGraphElements = await this._neo4j.executeQuery(
-        credentials,
-        params.query,
-        {},
-        new Neo4jLimitConfig(
-          'default',
-          params.replace ? 'all' : 'graphElements',
-        ),
-      );
-
-      if (graphElements.limitReached) {
+        this._postProcessGraph(graph, displayConfiguration);
+        this._physicsWorker.setGraph(
+          graph.toPhysicalGraph(displayConfiguration),
+        );
+        this._physicsWorker.triggerPhysics({
+          amount: 'long',
+        });
+        await this.saveGraph();
         this._onEvent.next({
-          type: 'RoomServiceEventNotAllNodesLoaded',
+          type: 'RoomServiceEventGraphMetaDataChanged',
+          graph: graph,
           roomId: this.roomId,
-          loadedCount: graphElements.size,
-        } satisfies RoomServiceEventNotAllNodesLoaded);
-      }
-
-      const graph: MutableGraph = this._snapshotGraph();
-      if (params.replace) {
-        graph.nodes = new MutableNodeIndex([], this._logger);
-        graph.edges = new MutableEdgeIndex([]);
-        graph.tableData = graphElements.tableData;
-      }
-      graph.nodes.addNeo4jNodes(
-        graphElements.nodes,
-        MutableGraphElementCreationAction.query,
-        displayConfiguration,
-      );
-      graph.edges.addNeo4jEdges(
-        graphElements.relationships,
-        MutableGraphElementCreationAction.query,
-      );
-
-      this._postProcessGraph(graph, displayConfiguration);
-      this._physicsWorker.setGraph(graph.toPhysicalGraph(displayConfiguration));
-      this._physicsWorker.triggerPhysics({
-        amount: 'long',
-      });
-      await this.saveGraph();
-      this._onEvent.next({
-        type: 'RoomServiceEventGraphMetaDataChanged',
-        graph: graph,
-        roomId: this.roomId,
-      } satisfies RoomServiceEventGraphMetaDataChanged);
-      this._onEvent.next({
-        type: 'RoomServiceEventGraphElementsChanged',
-        graph: graph,
-        roomId: this.roomId,
-        nodesAdded: graph.nodes.size,
-        edgesAdded: graph.edges.size,
-      } satisfies RoomServiceEventGraphElementsChanged);
-      this._onEvent.next({
-        type: 'RoomServiceEventGraphTableChanged',
-        table: graph.tableData,
-        roomId: this.roomId,
-      } satisfies RoomServiceEventGraphTableChanged);
-    });
+        } satisfies RoomServiceEventGraphMetaDataChanged);
+        this._onEvent.next({
+          type: 'RoomServiceEventGraphElementsChanged',
+          graph: graph,
+          roomId: this.roomId,
+          nodesAdded: graph.nodes.size,
+          edgesAdded: graph.edges.size,
+        } satisfies RoomServiceEventGraphElementsChanged);
+        this._onEvent.next({
+          type: 'RoomServiceEventGraphTableChanged',
+          table: graph.tableData,
+          roomId: this.roomId,
+        } satisfies RoomServiceEventGraphTableChanged);
+      }),
+    );
   }
 
-  public async connectResultNodes(): Promise<void> {
-    await this._runWithRoomLock(
-      'Connecting result nodes',
-      async (): Promise<void> => {
+  public connectResultNodes(): void {
+    this._queue.addTask(
+      new TaskQueueTask('Connecting result nodes', async (): Promise<void> => {
         const oldGraph: MutableGraph = this.getGraph();
         const scenarioId: string | null = oldGraph.metaData.scenarioId;
         const displayConfiguration: FinalGraphDisplayConfiguration =
@@ -830,7 +878,7 @@ export class LiveRoom implements ApplicationService {
           nodesAdded: 0,
           edgesAdded: result,
         } satisfies RoomServiceEventGraphElementsChanged);
-      },
+      }),
     );
   }
 
@@ -889,10 +937,9 @@ export class LiveRoom implements ApplicationService {
     });
   }
 
-  public async removeDanglingNodes(): Promise<void> {
-    await this._runWithRoomLock(
-      'Collecting nodes to delete',
-      async (): Promise<void> => {
+  public removeDanglingNodes(): void {
+    this._queue.addTask(
+      new TaskQueueTask('Removing dangling nodes', async (): Promise<void> => {
         const graph: MutableGraph = this._snapshotGraph();
         const config: FinalGraphDisplayConfiguration =
           await this._database.getGraphDisplayConfiguration(
@@ -919,38 +966,39 @@ export class LiveRoom implements ApplicationService {
           nodesAdded: -ids.length,
           edgesAdded: 0,
         } satisfies RoomServiceEvent);
-      },
+      }),
     );
   }
 
-  public async compressRelationships(): Promise<void> {
-    await this._runWithRoomLock(
-      'Compressing Relationships',
-      async (): Promise<void> => {
-        const graph: MutableGraph = this._snapshotGraph();
-        const config: FinalGraphDisplayConfiguration =
-          await this._database.getGraphDisplayConfiguration(
-            graph.metaData.scenarioId,
-            this.roomId,
-          );
-        this._compressRelationships(graph);
+  public compressRelationships(): void {
+    this._queue.addTask(
+      new TaskQueueTask(
+        'Compressing relationships',
+        async (): Promise<void> => {
+          const graph: MutableGraph = this._snapshotGraph();
+          const config: FinalGraphDisplayConfiguration =
+            await this._database.getGraphDisplayConfiguration(
+              graph.metaData.scenarioId,
+              this.roomId,
+            );
+          this._compressRelationships(graph);
 
-        this._physicsWorker.setGraph(graph.toPhysicalGraph(config));
-        this._onEvent.next({
-          type: 'RoomServiceEventGraphElementsChanged',
-          graph: graph,
-          roomId: this.roomId,
-          nodesAdded: 0,
-          edgesAdded: 0,
-        } satisfies RoomServiceEvent);
-      },
+          this._physicsWorker.setGraph(graph.toPhysicalGraph(config));
+          this._onEvent.next({
+            type: 'RoomServiceEventGraphElementsChanged',
+            graph: graph,
+            roomId: this.roomId,
+            nodesAdded: 0,
+            edgesAdded: 0,
+          } satisfies RoomServiceEvent);
+        },
+      ),
     );
   }
 
-  public async compressNodes(params: { label: string }): Promise<void> {
-    await this._runWithRoomLock(
-      'Compressing Nodes',
-      async (): Promise<void> => {
+  public compressNodes(params: { label: string }): void {
+    this._queue.addTask(
+      new TaskQueueTask('Compressing nodes', async (): Promise<void> => {
         const graph: MutableGraph = this._snapshotGraph();
         const config: FinalGraphDisplayConfiguration =
           await this._database.getGraphDisplayConfiguration(
@@ -971,7 +1019,7 @@ export class LiveRoom implements ApplicationService {
           nodesAdded: 0,
           edgesAdded: 0,
         } satisfies RoomServiceEvent);
-      },
+      }),
     );
   }
 
@@ -979,133 +1027,195 @@ export class LiveRoom implements ApplicationService {
     label: string;
     layoutSpecification: SchemaLayoutSpecification;
   }): Promise<void> {
-    await this._runWithRoomLock('Layout Label', async (): Promise<void> => {
-      const graph: MutableGraph = this._snapshotGraph();
-      const config: FinalGraphDisplayConfiguration =
-        await this._database.getGraphDisplayConfiguration(
-          graph.metaData.scenarioId,
-          this.roomId,
-        );
-
-      const lockChanges: SMap<string, boolean> = this._layout(
-        graph,
-        params.label,
-        params.layoutSpecification,
+    const graph: MutableGraph = this._snapshotGraph();
+    const config: FinalGraphDisplayConfiguration =
+      await this._database.getGraphDisplayConfiguration(
+        graph.metaData.scenarioId,
+        this.roomId,
       );
 
-      this._onEvent.next({
-        type: 'RoomServiceEventNodeLocksUpdated',
-        roomId: this.roomId,
-        locks: lockChanges,
-      } satisfies RoomServiceEvent);
+    const lockChanges: SMap<string, boolean> = this._layout(
+      graph,
+      params.label,
+      params.layoutSpecification,
+    );
 
-      this._physicsWorker.setGraph(graph.toPhysicalGraph(config));
-      this._physicsWorker.triggerPhysics({
-        amount: 'long',
-      });
+    this._onEvent.next({
+      type: 'RoomServiceEventNodeLocksUpdated',
+      roomId: this.roomId,
+      locks: lockChanges,
+    } satisfies RoomServiceEvent);
+
+    this._physicsWorker.setGraph(graph.toPhysicalGraph(config));
+    this._physicsWorker.triggerPhysics({
+      amount: 'long',
     });
   }
 
-  public async showShortestPath(params: { nodeIds: string[] }): Promise<void> {
-    await this._runWithRoomLock(
-      'Calculating Shortest Path',
-      async (): Promise<void> => {
-        this._logger.debug(
-          this,
-          `Will calculate shortest path of nodes: ${JSON.stringify(params.nodeIds)}`,
-        );
+  public showShortestPath(params: { nodeIds: string[] }): void {
+    this._queue.addTask(
+      new TaskQueueTask(
+        'Calculating shortest path',
+        async (): Promise<void> => {
+          this._logger.debug(
+            this,
+            `Will calculate shortest path of nodes: ${JSON.stringify(params.nodeIds)}`,
+          );
+          const oldGraph: MutableGraph = this.getGraph();
+          const scenarioId: string | null = oldGraph.metaData.scenarioId;
+          if (scenarioId == null) {
+            throw new Error(`Cannot find scenario in room ${this.roomId}`);
+          }
+          const displayConfiguration: FinalGraphDisplayConfiguration =
+            await this._database.getGraphDisplayConfiguration(
+              scenarioId,
+              this.roomId,
+            );
+          const scenario: GetScenarioDBDTO | null =
+            await this._database.getScenario(scenarioId);
+          if (scenario == null) {
+            throw new Error(`Cannot find scenario ${scenarioId}`);
+          }
+          const results: Neo4jGraphElements[] = [];
+
+          /* create unique pairs */
+          for (let i: number = 0; i < params.nodeIds.length - 1; i += 1) {
+            const idA: string = params.nodeIds[i];
+            const nodeA: MutableNode | null = oldGraph.nodes.get(idA);
+            if (nodeA == null) {
+              throw new Error(
+                `Unable to calculate shortest path: Node id ${idA} not found.`,
+              );
+            }
+
+            for (let j: number = i + 1; j < params.nodeIds.length; j += 1) {
+              const idB: string = params.nodeIds[j];
+
+              const nodeB: MutableNode | null = oldGraph.nodes.get(idB);
+              if (nodeB == null) {
+                throw new Error(
+                  `Unable to calculate shortest path: Node id ${idB} not found.`,
+                );
+              }
+
+              if (nodeA.source !== nodeB.source) {
+                this._logger.warn(
+                  this,
+                  `Cannot calculate shortest path between ${idA} and ${idB}: Sources are not equal: Node A: ${nodeA.source}, Node B: ${nodeB.source}`,
+                );
+                continue;
+              }
+
+              this._logger.debug(
+                this,
+                `Will calculate shortest path between ${idA} and ${idB}`,
+              );
+
+              const source: string = nodeA.source;
+              const dbDocument: GetDatabaseDBDTO | null =
+                await this._database.getDatabase(source);
+              if (dbDocument == null) {
+                throw new Error(
+                  `Unable to get database info from node ${idA}.`,
+                );
+              }
+              const dbInfo: Neo4jDatabaseInfo =
+                Neo4jDatabaseInfo.parse(dbDocument);
+              // 'MATCH p = SHORTEST 1 (a)-[]-+(b) WHERE elementId(a) = $elementIdA AND elementId(b) = $elementIdB RETURN p';
+              const query: string =
+                'MATCH p = allShortestPaths((a)-[*]-(b)) WHERE elementId(a) = $elementIdA AND elementId(b) = $elementIdB RETURN p';
+              const data: Record<string, unknown> = {
+                elementIdA: idA,
+                elementIdB: idB,
+              };
+              const result: Neo4jGraphElements = await this._neo4j.executeQuery(
+                dbInfo,
+                query,
+                data,
+                new Neo4jLimitConfig('default', 'graphElements'),
+              );
+              results.push(result);
+            }
+          }
+
+          const graph: MutableGraph = this._snapshotGraph();
+          // graph.resetFromInitialScenario(
+          //   scenario,
+          //   displayConfiguration,
+          //   new SMap(),
+          // );
+          for (const result of results) {
+            graph.nodes.addNeo4jNodes(
+              result.nodes,
+              MutableGraphElementCreationAction.expand,
+              displayConfiguration,
+            );
+            graph.edges.addNeo4jEdges(
+              result.relationships,
+              MutableGraphElementCreationAction.expand,
+            );
+          }
+
+          this._postProcessGraph(graph, displayConfiguration);
+          this._physicsWorker.setGraph(
+            graph.toPhysicalGraph(displayConfiguration),
+          );
+          this._physicsWorker.triggerPhysics({
+            amount: 'long',
+          });
+          await this.saveGraph();
+          this._onEvent.next({
+            type: 'RoomServiceEventGraphMetaDataChanged',
+            graph: graph,
+            roomId: this.roomId,
+          } satisfies RoomServiceEventGraphMetaDataChanged);
+          this._onEvent.next({
+            type: 'RoomServiceEventGraphElementsChanged',
+            graph: graph,
+            roomId: this.roomId,
+            nodesAdded: graph.nodes.size,
+            edgesAdded: graph.edges.size,
+          } satisfies RoomServiceEventGraphElementsChanged);
+        },
+      ),
+    );
+  }
+
+  public loadNode(params: { nodeId: string; databaseId: string }): void {
+    this._queue.addTask(
+      new TaskQueueTask('Loading nde', async (): Promise<void> => {
         const oldGraph: MutableGraph = this.getGraph();
         const scenarioId: string | null = oldGraph.metaData.scenarioId;
-        if (scenarioId == null) {
-          throw new Error(`Cannot find scenario in room ${this.roomId}`);
-        }
         const displayConfiguration: FinalGraphDisplayConfiguration =
           await this._database.getGraphDisplayConfiguration(
             scenarioId,
             this.roomId,
           );
-        const scenario: GetScenarioDBDTO | null =
-          await this._database.getScenario(scenarioId);
-        if (scenario == null) {
-          throw new Error(`Cannot find scenario ${scenarioId}`);
+
+        const dbDocument: GetDatabaseDBDTO | null =
+          await this._database.getDatabase(params.databaseId);
+        if (dbDocument == null) {
+          throw new Error(`Unable to get database ${params.databaseId}.`);
         }
-        const results: Neo4jGraphElements[] = [];
+        const dbInfo: Neo4jDatabaseInfo = Neo4jDatabaseInfo.parse(dbDocument);
 
-        /* create unique pairs */
-        for (let i: number = 0; i < params.nodeIds.length - 1; i += 1) {
-          const idA: string = params.nodeIds[i];
-          const nodeA: MutableNode | null = oldGraph.nodes.get(idA);
-          if (nodeA == null) {
-            throw new Error(
-              `Unable to calculate shortest path: Node id ${idA} not found.`,
-            );
-          }
-
-          for (let j: number = i + 1; j < params.nodeIds.length; j += 1) {
-            const idB: string = params.nodeIds[j];
-
-            const nodeB: MutableNode | null = oldGraph.nodes.get(idB);
-            if (nodeB == null) {
-              throw new Error(
-                `Unable to calculate shortest path: Node id ${idB} not found.`,
-              );
-            }
-
-            if (nodeA.source !== nodeB.source) {
-              this._logger.warn(
-                this,
-                `Cannot calculate shortest path between ${idA} and ${idB}: Sources are not equal: Node A: ${nodeA.source}, Node B: ${nodeB.source}`,
-              );
-              continue;
-            }
-
-            this._logger.debug(
-              this,
-              `Will calculate shortest path between ${idA} and ${idB}`,
-            );
-
-            const source: string = nodeA.source;
-            const dbDocument: GetDatabaseDBDTO | null =
-              await this._database.getDatabase(source);
-            if (dbDocument == null) {
-              throw new Error(`Unable to get database info from node ${idA}.`);
-            }
-            const dbInfo: Neo4jDatabaseInfo =
-              Neo4jDatabaseInfo.parse(dbDocument);
-            // 'MATCH p = SHORTEST 1 (a)-[]-+(b) WHERE elementId(a) = $elementIdA AND elementId(b) = $elementIdB RETURN p';
-            const query: string =
-              'MATCH p = allShortestPaths((a)-[*]-(b)) WHERE elementId(a) = $elementIdA AND elementId(b) = $elementIdB RETURN p';
-            const data: Record<string, unknown> = {
-              elementIdA: idA,
-              elementIdB: idB,
-            };
-            const result: Neo4jGraphElements = await this._neo4j.executeQuery(
-              dbInfo,
-              query,
-              data,
-              new Neo4jLimitConfig('default', 'graphElements'),
-            );
-            results.push(result);
-          }
+        const result: Neo4jGraphElements = await this._neo4j.executeQuery(
+          dbInfo,
+          'MATCH (n) WHERE elementId(n) = $id RETURN n LIMIT 1;',
+          { id: params.nodeId },
+          new Neo4jLimitConfig('default', 'graphElements'),
+        );
+        if (result.nodes.size === 0) {
+          throw new Error(`Node ${params.nodeId} not found.`);
         }
 
         const graph: MutableGraph = this._snapshotGraph();
-        // graph.resetFromInitialScenario(
-        //   scenario,
-        //   displayConfiguration,
-        //   new SMap(),
-        // );
-        for (const result of results) {
-          graph.nodes.addNeo4jNodes(
-            result.nodes,
-            MutableGraphElementCreationAction.expand,
-            displayConfiguration,
-          );
-          graph.edges.addNeo4jEdges(
-            result.relationships,
-            MutableGraphElementCreationAction.expand,
-          );
-        }
+
+        graph.nodes.addNeo4jNode(
+          result.nodes.toValueArray()[0],
+          MutableGraphElementCreationAction.search,
+          displayConfiguration,
+        );
 
         this._postProcessGraph(graph, displayConfiguration);
         this._physicsWorker.setGraph(
@@ -1127,67 +1237,8 @@ export class LiveRoom implements ApplicationService {
           nodesAdded: graph.nodes.size,
           edgesAdded: graph.edges.size,
         } satisfies RoomServiceEventGraphElementsChanged);
-      },
+      }),
     );
-  }
-
-  public async loadNode(params: {
-    nodeId: string;
-    databaseId: string;
-  }): Promise<void> {
-    await this._runWithRoomLock('Loading Node', async (): Promise<void> => {
-      const oldGraph: MutableGraph = this.getGraph();
-      const scenarioId: string | null = oldGraph.metaData.scenarioId;
-      const displayConfiguration: FinalGraphDisplayConfiguration =
-        await this._database.getGraphDisplayConfiguration(
-          scenarioId,
-          this.roomId,
-        );
-
-      const dbDocument: GetDatabaseDBDTO | null =
-        await this._database.getDatabase(params.databaseId);
-      if (dbDocument == null) {
-        throw new Error(`Unable to get database ${params.databaseId}.`);
-      }
-      const dbInfo: Neo4jDatabaseInfo = Neo4jDatabaseInfo.parse(dbDocument);
-
-      const result: Neo4jGraphElements = await this._neo4j.executeQuery(
-        dbInfo,
-        'MATCH (n) WHERE elementId(n) = $id RETURN n LIMIT 1;',
-        { id: params.nodeId },
-        new Neo4jLimitConfig('default', 'graphElements'),
-      );
-      if (result.nodes.size === 0) {
-        throw new Error(`Node ${params.nodeId} not found.`);
-      }
-
-      const graph: MutableGraph = this._snapshotGraph();
-
-      graph.nodes.addNeo4jNode(
-        result.nodes.toValueArray()[0],
-        MutableGraphElementCreationAction.search,
-        displayConfiguration,
-      );
-
-      this._postProcessGraph(graph, displayConfiguration);
-      this._physicsWorker.setGraph(graph.toPhysicalGraph(displayConfiguration));
-      this._physicsWorker.triggerPhysics({
-        amount: 'long',
-      });
-      await this.saveGraph();
-      this._onEvent.next({
-        type: 'RoomServiceEventGraphMetaDataChanged',
-        graph: graph,
-        roomId: this.roomId,
-      } satisfies RoomServiceEventGraphMetaDataChanged);
-      this._onEvent.next({
-        type: 'RoomServiceEventGraphElementsChanged',
-        graph: graph,
-        roomId: this.roomId,
-        nodesAdded: graph.nodes.size,
-        edgesAdded: graph.edges.size,
-      } satisfies RoomServiceEventGraphElementsChanged);
-    });
   }
 
   public async saveGraph(): Promise<void> {
@@ -1229,44 +1280,6 @@ export class LiveRoom implements ApplicationService {
       `Save graph of room ${this.roomId}, because the physics simulation stopped.`,
     );
     this.saveGraphAsync();
-  }
-
-  private async _runWithRoomLock<T>(
-    actionTitle: string,
-    action: () => T | Promise<T>,
-  ): Promise<T> {
-    this._onEvent.next({
-      type: 'RoomServiceEventRoomLocked',
-      roomId: this.roomId,
-    } satisfies RoomServiceEvent);
-    this._onEvent.next({
-      type: 'RoomServiceEventProgressChanged',
-      roomId: this.roomId,
-      progress: null,
-      message: actionTitle,
-    } satisfies RoomServiceEvent);
-    try {
-      const result: T = await action();
-      this._onEvent.next({
-        type: 'RoomServiceEventProgressCleared',
-        roomId: this.roomId,
-      } satisfies RoomServiceEvent);
-      this._onEvent.next({
-        type: 'RoomServiceEventRoomUnlocked',
-        roomId: this.roomId,
-      } satisfies RoomServiceEvent);
-      return result;
-    } catch (error: unknown) {
-      this._onEvent.next({
-        type: 'RoomServiceEventProgressCleared',
-        roomId: this.roomId,
-      } satisfies RoomServiceEvent);
-      this._onEvent.next({
-        type: 'RoomServiceEventRoomUnlocked',
-        roomId: this.roomId,
-      } satisfies RoomServiceEvent);
-      throw error;
-    }
   }
 
   private async _connectNodes(graph: MutableGraph): Promise<number> {
@@ -1696,5 +1709,13 @@ export class LiveRoom implements ApplicationService {
       );
       return MutableGraph.empty(this._logger, this._profiler);
     }
+  }
+
+  private _handleError(error: unknown): void {
+    this._onEvent.next({
+      type: 'RoomServiceEventError',
+      roomId: this.roomId,
+      error: error,
+    });
   }
 }

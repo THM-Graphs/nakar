@@ -6,7 +6,6 @@ import { postRoomActionRedo } from "../../src-gen";
 export type RedoActionParams = {
   roomContext: RoomContext;
   canRedo: boolean;
-  uiLocked: boolean;
 };
 
 export class RedoAction extends Action<RedoActionParams> {
@@ -23,7 +22,7 @@ export class RedoAction extends Action<RedoActionParams> {
   }
 
   disabled(input: RedoActionParams): boolean {
-    return !input.canRedo || input.uiLocked;
+    return !input.canRedo;
   }
 
   icon(): string {

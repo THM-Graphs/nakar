@@ -6,7 +6,6 @@ import { postRoomActionUndo } from "../../src-gen";
 export type UndoActionParams = {
   roomContext: RoomContext;
   canUndo: boolean;
-  uiLocked: boolean;
 };
 
 export class UndoAction extends Action<UndoActionParams> {
@@ -23,7 +22,7 @@ export class UndoAction extends Action<UndoActionParams> {
   }
 
   disabled(input: UndoActionParams): boolean {
-    return !input.canUndo || input.uiLocked;
+    return !input.canUndo;
   }
 
   icon(): string {

@@ -7,7 +7,6 @@ import { SelectedCanvasTab } from "../state/SelectedCanvasTab.ts";
 export type UnlockAllNodesActionParams = {
   nodes: Node[];
   roomContext: RoomContext;
-  uiLocked: boolean;
   selectedTab: SelectedCanvasTab;
 };
 
@@ -23,11 +22,7 @@ export class UnlockAllNodesAction extends Action<UnlockAllNodesActionParams> {
   }
 
   disabled(input: UnlockAllNodesActionParams): boolean {
-    return (
-      input.nodes.length === 0 ||
-      input.uiLocked ||
-      input.selectedTab !== "graph"
-    );
+    return input.nodes.length === 0 || input.selectedTab !== "graph";
   }
 
   icon(): string | null {

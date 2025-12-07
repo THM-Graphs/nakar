@@ -5,7 +5,6 @@ import { postRoomActionConnectResultNodes, Scenario } from "../../src-gen";
 import { RoomContext } from "../pages/Room.tsx";
 
 export type ConnectResultNodesActionParams = {
-  uiLocked: boolean;
   selectedTab: SelectedCanvasTab;
   roomContext: RoomContext;
   scenario: Scenario | null;
@@ -24,7 +23,7 @@ export class ConnectResultNodesAction extends Action<ConnectResultNodesActionPar
   }
 
   disabled(input: ConnectResultNodesActionParams): boolean {
-    return input.uiLocked || input.selectedTab !== "graph";
+    return input.selectedTab !== "graph";
   }
 
   icon(): string | null {

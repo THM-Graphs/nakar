@@ -87,10 +87,9 @@ export function Room(props: { context: AppContext }) {
   );
   const setGraphTable = useBearStore((s) => s.room.scenario.setGraphTable);
   const socketState = useBearStore((s) => s.room.websockets.state);
-  const unlockUI = useBearStore((s) => s.room.ui.unlock);
-  const lockUI = useBearStore((s) => s.room.ui.lock);
   const setProgress = useBearStore((s) => s.room.ui.setProgress);
   const clearProgress = useBearStore((s) => s.room.ui.clearProgress);
+  const clearPerformance = useBearStore((s) => s.room.ui.clearPerformance);
   const webSockets = props.context.webSocketsManager;
   const setPerformance = useBearStore((s) => s.room.ui.setPerformance);
   const setScenarios = useBearStore(
@@ -115,7 +114,8 @@ export function Room(props: { context: AppContext }) {
         type: "WSActionJoinRoom",
         roomId: roomContext.initialRoomData.id,
       });
-      unlockUI();
+      clearProgress();
+      clearPerformance();
     }
   }, [socketState]);
 
@@ -140,12 +140,6 @@ export function Room(props: { context: AppContext }) {
           })
           .with({ type: "WSEventClearProgress" }, () => {
             clearProgress();
-          })
-          .with({ type: "WSEventLockUi" }, () => {
-            lockUI();
-          })
-          .with({ type: "WSEventUnlockUi" }, () => {
-            unlockUI();
           })
           .with({ type: "WSEventNodesMoved" }, (event) => {
             setPerformance(event.performance);
@@ -179,7 +173,6 @@ export function Room(props: { context: AppContext }) {
       setGraph(null);
       setPerformance(null);
       clearProgress();
-      unlockUI();
     };
   }, []);
 

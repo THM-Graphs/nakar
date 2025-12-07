@@ -1892,8 +1892,6 @@ components:
         - $ref: "#/components/schemas/WSEventProgress"
         - $ref: "#/components/schemas/WSEventClearProgress"
         - $ref: "#/components/schemas/WSEventSetNodeLocks"
-        - $ref: "#/components/schemas/WSEventLockUi"
-        - $ref: "#/components/schemas/WSEventUnlockUi"
         - $ref: "#/components/schemas/WSEventKick"
 
     WSActionJoinRoom:
@@ -2083,24 +2081,6 @@ components:
       required:
         - type
         - locks
-
-    WSEventLockUi:
-      type: object
-      properties:
-        type:
-          type: string
-          enum: ["WSEventLockUi"]
-      required:
-        - type
-
-    WSEventUnlockUi:
-      type: object
-      properties:
-        type:
-          type: string
-          enum: ["WSEventUnlockUi"]
-      required:
-        - type
 
     WSEventKick:
       type: object

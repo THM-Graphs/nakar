@@ -5,7 +5,6 @@ import { postRoomActionCompressRelationships, Scenario } from "../../src-gen";
 import { RoomContext } from "../pages/Room.tsx";
 
 export type CompressRelationshipsActionParams = {
-  uiLocked: boolean;
   selectedTab: SelectedCanvasTab;
   roomContext: RoomContext;
   scenario: Scenario | null;
@@ -26,7 +25,7 @@ export class CompressRelationshipsAction extends Action<CompressRelationshipsAct
   }
 
   disabled(input: CompressRelationshipsActionParams): boolean {
-    return input.uiLocked || input.selectedTab !== "graph";
+    return input.selectedTab !== "graph";
   }
 
   icon(): string | null {

@@ -3,7 +3,6 @@ import { DetailPaneAction } from "./DetailPaneAction.ts";
 import { GraphProperty } from "../../../src-gen";
 import { PropertiesDisplay } from "./PropertiesDisplay.tsx";
 import { NavbarButton } from "../../shared/elements/NavbarButton.tsx";
-import { useBearStore } from "../../state/useBearStore.ts";
 import { ReactNode, useState } from "react";
 import { RoomContext } from "../../pages/Room.tsx";
 import { PropertyMenu } from "../properties/PropertyMenu.tsx";
@@ -21,8 +20,6 @@ export function DetailPane(props: {
   elementId: string;
   children?: ReactNode;
 }) {
-  const uiLocked = useBearStore((s) => s.room.ui.locked);
-
   const [showFullTitle, setShowFullTitle] = useState(false);
 
   const titleLengthLimit = 100;
@@ -97,7 +94,7 @@ export function DetailPane(props: {
               <NavbarButton
                 key={action.title}
                 onClick={action.action}
-                disabled={uiLocked || action.disabled}
+                disabled={action.disabled}
                 className={clsx(
                   "flex-grow-1 justify-content-between w-50 border-top",
                   index % 2 == 0 && "border-end",

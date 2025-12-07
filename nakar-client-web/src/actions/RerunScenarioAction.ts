@@ -6,7 +6,6 @@ import { postRoomActionReloadScenario, Scenario } from "../../src-gen";
 export type RerunScenarioActionParams = {
   roomContext: RoomContext;
   scenario: Scenario | null;
-  uiLocked: boolean;
 };
 
 export class RerunScenarioAction extends Action<RerunScenarioActionParams> {
@@ -20,8 +19,8 @@ export class RerunScenarioAction extends Action<RerunScenarioActionParams> {
     );
   }
 
-  disabled(input: RerunScenarioActionParams): boolean {
-    return input.scenario == null || input.uiLocked;
+  disabled(): boolean {
+    return false;
   }
 
   icon(): string | null {

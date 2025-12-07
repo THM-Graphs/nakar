@@ -54,9 +54,6 @@ export interface BearState {
   };
   room: {
     ui: {
-      locked: boolean;
-      lock: () => void;
-      unlock: () => void;
       progress: WSEventProgress | null;
       setProgress: (progress: WSEventProgress) => void;
       clearProgress: () => void;

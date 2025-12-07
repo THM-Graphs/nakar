@@ -403,12 +403,6 @@ export type WSEventKick = {
 
 export type type14 = 'WSEventKick';
 
-export type WSEventLockUi = {
-    type: 'WSEventLockUi';
-};
-
-export type type15 = 'WSEventLockUi';
-
 export type WSEventNodesMoved = {
     type: 'WSEventNodesMoved';
     nodes: Array<PhysicalNode>;
@@ -416,14 +410,14 @@ export type WSEventNodesMoved = {
     performance: PhysicsPerformance;
 };
 
-export type type16 = 'WSEventNodesMoved';
+export type type15 = 'WSEventNodesMoved';
 
 export type WSEventNotification = {
     type: 'WSEventNotification';
     notification: Notification;
 };
 
-export type type17 = 'WSEventNotification';
+export type type16 = 'WSEventNotification';
 
 export type WSEventProgress = {
     type: 'WSEventProgress';
@@ -431,14 +425,14 @@ export type WSEventProgress = {
     message: string;
 };
 
-export type type18 = 'WSEventProgress';
+export type type17 = 'WSEventProgress';
 
 export type WSEventRoomChanged = {
     type: 'WSEventRoomChanged';
     roomId: (string) | null;
 };
 
-export type type19 = 'WSEventRoomChanged';
+export type type18 = 'WSEventRoomChanged';
 
 export type WSEventSetNodeLocks = {
     type: 'WSEventSetNodeLocks';
@@ -448,15 +442,9 @@ export type WSEventSetNodeLocks = {
     }>;
 };
 
-export type type20 = 'WSEventSetNodeLocks';
+export type type19 = 'WSEventSetNodeLocks';
 
-export type WSEventUnlockUi = {
-    type: 'WSEventUnlockUi';
-};
-
-export type type21 = 'WSEventUnlockUi';
-
-export type WSServerToClientMessage = WSEventNodesMoved | WSEventRoomChanged | WSEventNotification | WSEventGraphElementsChanged | WSEventGraphMetaDataChanged | WSEventGraphTableChanged | WSEventProgress | WSEventClearProgress | WSEventSetNodeLocks | WSEventLockUi | WSEventUnlockUi | WSEventKick;
+export type WSServerToClientMessage = WSEventNodesMoved | WSEventRoomChanged | WSEventNotification | WSEventGraphElementsChanged | WSEventGraphMetaDataChanged | WSEventGraphTableChanged | WSEventProgress | WSEventClearProgress | WSEventSetNodeLocks | WSEventKick;
 
 export type PostAuthData = {
     body: {

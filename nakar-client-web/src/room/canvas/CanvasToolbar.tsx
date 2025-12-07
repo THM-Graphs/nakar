@@ -18,7 +18,6 @@ export function CanvasToolbar(props: {
   const canUndo = useBearStore((s) => s.room.scenario.graph.metaData.canUndo);
   const canRedo = useBearStore((s) => s.room.scenario.graph.metaData.canRedo);
   const scenario = useBearStore((s) => s.room.scenario.graph.metaData.scenario);
-  const uiLocked = useBearStore((s) => s.room.ui.locked);
 
   return (
     <Stack
@@ -33,7 +32,6 @@ export function CanvasToolbar(props: {
           params={{
             roomContext: props.roomContext,
             canUndo: canUndo,
-            uiLocked: uiLocked,
           }}
           hideTitle={true}
           tooltipPlacement={"bottom"}
@@ -43,7 +41,6 @@ export function CanvasToolbar(props: {
           params={{
             roomContext: props.roomContext,
             canRedo,
-            uiLocked,
           }}
           hideTitle={true}
           tooltipPlacement={"bottom"}
@@ -66,7 +63,6 @@ export function CanvasToolbar(props: {
                 params={{
                   roomContext: props.roomContext,
                   scenario: scenario.current,
-                  uiLocked,
                 }}
               ></ActionDropdownItem>
               <ActionDropdownItem

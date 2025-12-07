@@ -24,7 +24,6 @@ import { DatabaseSelect } from "../database/DatabaseSelect.tsx";
 export function QueryPanel(props: { roomContext: RoomContext }) {
   const query = useBearStore((s) => s.room.panels.query);
   const leftPanel = useBearStore((s) => s.room.panels.left);
-  const locked = useBearStore((s) => s.room.ui.locked);
   const referencedDatabases = useBearStore(
     (s) => s.room.panels.scenarios.scenarios.referencedDatabases,
   );
@@ -178,7 +177,6 @@ export function QueryPanel(props: { roomContext: RoomContext }) {
                 </DropdownButton>
                 <NavbarButton
                   className={"justify-content-end"}
-                  disabled={locked}
                   onClick={async () => {
                     resultOrThrow(
                       await postRoomActionRunQuery({

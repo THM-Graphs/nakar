@@ -116,17 +116,6 @@ export const useBearStore = create<BearState>()(
             },
             room: {
               ui: {
-                locked: false,
-                lock: () => {
-                  set((s) => {
-                    s.room.ui.locked = true;
-                  });
-                },
-                unlock: () => {
-                  set((s) => {
-                    s.room.ui.locked = false;
-                  });
-                },
                 progress: null,
                 setProgress: (p: WSEventProgress) => {
                   set((s) => {

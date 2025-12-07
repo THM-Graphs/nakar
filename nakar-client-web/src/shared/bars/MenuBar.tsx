@@ -78,7 +78,6 @@ export function MenuBar(props: {
   const navigate = useNavigate();
   const canUndo = useBearStore((s) => s.room.scenario.graph.metaData.canUndo);
   const canRedo = useBearStore((s) => s.room.scenario.graph.metaData.canRedo);
-  const uiLocked = useBearStore((s) => s.room.ui.locked);
   const scenario = useBearStore((s) => s.room.scenario.graph.metaData.scenario);
   const selectedTab = useBearStore((s) => s.room.canvas.tabs.selected);
   const selectGraph = useBearStore((s) => s.room.canvas.tabs.selectGraph);
@@ -114,11 +113,11 @@ export function MenuBar(props: {
       <DropdownButton title={"Edit"}>
         <ActionDropdownItem
           action={UndoAction.shared}
-          params={{ roomContext: props.roomContext, canUndo, uiLocked }}
+          params={{ roomContext: props.roomContext, canUndo }}
         ></ActionDropdownItem>
         <ActionDropdownItem
           action={RedoAction.shared}
-          params={{ roomContext: props.roomContext, canRedo, uiLocked }}
+          params={{ roomContext: props.roomContext, canRedo }}
         ></ActionDropdownItem>
         <Dropdown.Divider></Dropdown.Divider>
         <ActionDropdownItem
@@ -145,7 +144,6 @@ export function MenuBar(props: {
           params={{
             roomContext: props.roomContext,
             scenario: scenario?.current ?? null,
-            uiLocked,
           }}
         ></ActionDropdownItem>
       </DropdownButton>
@@ -153,7 +151,6 @@ export function MenuBar(props: {
         <ActionDropdownItem
           action={RelayoutAction.shared}
           params={{
-            uiLocked,
             selectedTab,
             nodes: graphElements.nodes,
             roomContext: props.roomContext,
@@ -162,7 +159,6 @@ export function MenuBar(props: {
         <ActionDropdownItem
           action={UnlockAllNodesAction.shared}
           params={{
-            uiLocked,
             selectedTab,
             nodes: graphElements.nodes,
             roomContext: props.roomContext,
@@ -172,7 +168,6 @@ export function MenuBar(props: {
         <ActionDropdownItem
           action={ConnectResultNodesAction.shared}
           params={{
-            uiLocked,
             selectedTab,
             scenario: scenario?.current ?? null,
             roomContext: props.roomContext,
@@ -181,7 +176,6 @@ export function MenuBar(props: {
         <ActionDropdownItem
           action={RemoveDanglingNodesAction.shared}
           params={{
-            uiLocked,
             selectedTab,
             scenario: scenario?.current ?? null,
             roomContext: props.roomContext,
@@ -190,7 +184,6 @@ export function MenuBar(props: {
         <ActionDropdownItem
           action={CompressRelationshipsAction.shared}
           params={{
-            uiLocked,
             selectedTab,
             scenario: scenario?.current ?? null,
             roomContext: props.roomContext,

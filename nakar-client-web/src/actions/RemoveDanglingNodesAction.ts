@@ -5,7 +5,6 @@ import { postRoomActionRemoveDanglingNodes, Scenario } from "../../src-gen";
 import { RoomContext } from "../pages/Room.tsx";
 
 export type RemoveDanglingNodesActionParams = {
-  uiLocked: boolean;
   selectedTab: SelectedCanvasTab;
   roomContext: RoomContext;
   scenario: Scenario | null;
@@ -26,7 +25,7 @@ export class RemoveDanglingNodesAction extends Action<RemoveDanglingNodesActionP
   }
 
   disabled(input: RemoveDanglingNodesActionParams): boolean {
-    return input.uiLocked || input.selectedTab !== "graph";
+    return input.selectedTab !== "graph";
   }
 
   icon(): string | null {

@@ -3,14 +3,14 @@ import type { RoomServiceEventRoomPhysicsUpdated } from './RoomServiceEventRoomP
 import type { RoomServiceEventGraphMetaDataChanged } from './RoomServiceEventGraphMetaDataChanged';
 import type { RoomServiceEventProgressChanged } from './RoomServiceEventProgressChanged';
 import type { RoomServiceEventProgressCleared } from './RoomServiceEventProgressCleared';
-import type { RoomServiceEventRoomLocked } from './RoomServiceEventRoomLocked';
-import type { RoomServiceEventRoomUnlocked } from './RoomServiceEventRoomUnlocked';
 import type { RoomServiceEventGraphElementsChanged } from './RoomServiceEventGraphElementsChanged';
 import type { RoomServiceEventGraphTableChanged } from './RoomServiceEventGraphTableChanged';
 import type { RoomServiceEventKick } from './RoomServiceEventKick';
 import type { RoomServiceEventNotAllNodesLoaded } from './RoomServiceEventNotAllNodesLoaded';
+import { RoomServiceEventError } from './RoomServiceEventError';
 
 export type RoomServiceEvent =
+  | RoomServiceEventError
   | RoomServiceEventGraphMetaDataChanged
   | RoomServiceEventGraphTableChanged
   | RoomServiceEventGraphElementsChanged
@@ -18,7 +18,5 @@ export type RoomServiceEvent =
   | RoomServiceEventNodeLocksUpdated
   | RoomServiceEventProgressChanged
   | RoomServiceEventProgressCleared
-  | RoomServiceEventRoomLocked
-  | RoomServiceEventRoomUnlocked
   | RoomServiceEventKick
   | RoomServiceEventNotAllNodesLoaded;

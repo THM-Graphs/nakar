@@ -2,8 +2,6 @@ import { Button, Card, Stack } from "react-bootstrap";
 import { ScenarioIcon } from "./ScenarioIcon.tsx";
 import { QueryDisplay } from "./QueryDisplay.tsx";
 import { Scenario } from "../../../src-gen";
-import { Loading } from "../../shared/elements/Loading.tsx";
-import { useBearStore } from "../../state/useBearStore.ts";
 import { ScenarioCardSection } from "./ScenarioCardSection.tsx";
 import { ActionNavbarButton } from "../../actions/ActionNavbarButton.tsx";
 import { EditScenarioAction } from "../../actions/EditScenarioAction.ts";
@@ -13,7 +11,6 @@ export function ScenarioCard(props: {
   scenario: Scenario;
   onScenarioSelected: (scenario: Scenario) => void;
 }) {
-  const uiLocked = useBearStore((s) => s.room.ui.locked);
   return (
     <Card
       className={"rounded-0 border-start-0 border-end-0 position-relative"}
@@ -47,14 +44,9 @@ export function ScenarioCard(props: {
               onClick={() => {
                 props.onScenarioSelected(props.scenario);
               }}
-              disabled={uiLocked}
             >
               <Stack direction={"horizontal"} gap={1}>
-                {uiLocked ? (
-                  <Loading size={"sm"}></Loading>
-                ) : (
-                  <i className={"bi bi-play-circle"}></i>
-                )}
+                <i className={"bi bi-play-circle"}></i>
                 <span>Run Scenario</span>
               </Stack>
             </Button>
