@@ -7,10 +7,12 @@ import clsx from "clsx";
 import { CSSProperties } from "react";
 
 export function RoomList(props: {
+  title?: string;
   rooms: Room[] | null;
   context: AppContext;
   className?: string;
   style?: CSSProperties;
+  onDelete?: (room: Room) => void | Promise<void>;
 }) {
   return (
     <Stack
@@ -24,7 +26,7 @@ export function RoomList(props: {
       <DynamicList
         sticky={false}
         data={props.rooms ?? []}
-        entityNamePlural={"Recent Rooms"}
+        entityNamePlural={props.title ?? "Rooms"}
         collapsable={true}
         filter={(exp, r) =>
           (r.title ?? r.id).toLowerCase().includes(exp.toLowerCase())
@@ -32,7 +34,11 @@ export function RoomList(props: {
         render={(list) => (
           <>
             {list.map((room: Room) => (
-              <RoomDisplay key={room.id} room={room}></RoomDisplay>
+              <RoomDisplay
+                key={room.id}
+                room={room}
+                onDelete={props.onDelete}
+              ></RoomDisplay>
             ))}
           </>
         )}

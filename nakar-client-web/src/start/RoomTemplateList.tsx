@@ -26,6 +26,7 @@ export function RoomTemplateList(props: {
         data={props.roomTemplates.roomTemplates}
         entityNamePlural={"Templates"}
         collapsable={true}
+        previewLimit={1000}
         filter={(exp, r) =>
           (r.title ?? r.id).toLowerCase().includes(exp.toLowerCase())
         }
