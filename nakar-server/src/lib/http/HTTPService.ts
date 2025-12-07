@@ -51,20 +51,19 @@ export class HTTPService implements ApplicationService {
   public constructor(
     private readonly _config: ConfigService,
     private readonly _logger: LoggerService,
-    private readonly _databaseService: DatabaseService,
-    private readonly _profiler: ProfilerService,
-    private readonly _neo4jService: Neo4jService,
-    private readonly _media: MediaService,
-    private readonly _schemaFactory: SchemaFactoryService,
-    private readonly _roomService: RoomService,
+    databaseService: DatabaseService,
+    profiler: ProfilerService,
+    neo4jService: Neo4jService,
+    media: MediaService,
+    schemaFactory: SchemaFactoryService,
+    roomService: RoomService,
   ) {
     this._app = express();
-    // eslint-disable-next-line @typescript-eslint/no-misused-promises
     this._server = http.createServer(this._app);
     this._httpTools = new HTTPTools(
-      _profiler,
+      profiler,
       _logger,
-      _databaseService,
+      databaseService,
       _config,
     );
     this._authenticationRouter = new AuthenticationRouter(
@@ -73,29 +72,26 @@ export class HTTPService implements ApplicationService {
     );
     this._roomRouter = new RoomRouter(
       this._httpTools,
-      _databaseService,
-      _schemaFactory,
+      databaseService,
+      schemaFactory,
       _logger,
-      _config,
-      _media,
-      _profiler,
-      _roomService,
+      roomService,
     );
     this._roomTemplateRouter = new RoomTemplateRouter(
       this._httpTools,
-      _databaseService,
-      _schemaFactory,
+      databaseService,
+      schemaFactory,
     );
     this._systemRouter = new SystemRouter(this._httpTools, _config);
     this._databaseRouter = new DatabaseRouter(
       this._httpTools,
-      _databaseService,
-      _neo4jService,
+      databaseService,
+      neo4jService,
       _logger,
-      _profiler,
+      profiler,
       _config,
-      _media,
-      _schemaFactory,
+      media,
+      schemaFactory,
     );
 
     this._setupRoutes();

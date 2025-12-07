@@ -44,10 +44,7 @@ export class NakarApplication {
       this.media,
       this.profiler,
     );
-    this.migrationService = new MigrationService(
-      this.logger,
-      this.databaseService,
-    );
+    this.migrationService = new MigrationService(this.logger);
     this.schemaFactory = new SchemaFactoryService(
       this.config,
       this.media,
@@ -78,8 +75,6 @@ export class NakarApplication {
       this.databaseService,
       this.httpService,
       this.logger,
-      this.config,
-      this.media,
       this.profiler,
       this.schemaFactory,
     );

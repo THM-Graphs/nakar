@@ -1,17 +1,13 @@
 /* eslint-disable @typescript-eslint/no-empty-object-type */
 import { ApplicationService } from '../application/ApplicationService';
 import { LoggerService } from '../logger/LoggerService';
-import { DatabaseService } from '../database/DatabaseService';
 import type { UID } from '@strapi/types';
 import { Result } from '@strapi/types/dist/modules/documents';
 import { Input } from '@strapi/types/dist/modules/documents/params/data';
 import { SMap } from '../tools/Map';
 
 export class MigrationService implements ApplicationService {
-  public constructor(
-    private readonly _logger: LoggerService,
-    private readonly _database: DatabaseService,
-  ) {}
+  public constructor(private readonly _logger: LoggerService) {}
 
   public async bootstrap(): Promise<void> {
     this._logger.warn(this, 'Will check database for migration to v2.');

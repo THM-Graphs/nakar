@@ -43,9 +43,7 @@ import type { RoomServiceEventProgressChanged } from '../room/events/RoomService
 import type { RoomServiceEventProgressCleared } from '../room/events/RoomServiceEventProgressCleared';
 import type { RoomServiceEventGraphElementsChanged } from '../room/events/RoomServiceEventGraphElementsChanged';
 import type { RoomServiceEventGraphTableChanged } from '../room/events/RoomServiceEventGraphTableChanged';
-import type { ConfigService } from '../config/ConfigService';
 import type { RoomServiceEventKick } from '../room/events/RoomServiceEventKick';
-import type { MediaService } from '../media/MediaService';
 import type { RoomServiceEventNotAllNodesLoaded } from '../room/events/RoomServiceEventNotAllNodesLoaded';
 import type { ProfilerTask } from '../profiler/ProfilerTask';
 import type { ProfilerService } from '../profiler/ProfilerService';
@@ -66,8 +64,6 @@ export class SocketIOService implements ApplicationService {
     private readonly _databaseService: DatabaseService,
     private readonly _httpService: HTTPService,
     private readonly _logger: LoggerService,
-    private readonly _config: ConfigService,
-    private readonly _media: MediaService,
     private readonly _profiler: ProfilerService,
     private readonly _schemaFactory: SchemaFactoryService,
   ) {

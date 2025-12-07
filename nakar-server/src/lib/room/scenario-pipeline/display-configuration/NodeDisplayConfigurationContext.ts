@@ -2,7 +2,6 @@ import type { MutableNode } from '../../graph/MutableNode';
 import type { TemplateDelegate } from 'handlebars';
 import { SMap } from '../../../tools/Map';
 import type { SSet } from '../../../tools/Set';
-import type { LoggerService } from '../../../logger/LoggerService';
 import z from 'zod';
 import type { MutableGraph } from '../../graph/MutableGraph';
 
@@ -21,19 +20,16 @@ export class NodeDisplayConfigurationContext {
 
   private readonly _nativeData: z.infer<typeof this.schema>;
 
-  public constructor(
-    data: {
-      id: string;
-      label: SMap<string, true>;
-      nativeLabel: SMap<string, true>;
-      nameInQuery: SMap<string, true>;
-      properties: SMap<string, unknown>;
-      inDegree: number;
-      outDegree: number;
-      degree: number;
-    },
-    private readonly _logger: LoggerService,
-  ) {
+  public constructor(data: {
+    id: string;
+    label: SMap<string, true>;
+    nativeLabel: SMap<string, true>;
+    nameInQuery: SMap<string, true>;
+    properties: SMap<string, unknown>;
+    inDegree: number;
+    outDegree: number;
+    degree: number;
+  }) {
     this._nativeData = {
       id: data.id,
       label: data.label.toRecord(),
@@ -49,25 +45,21 @@ export class NodeDisplayConfigurationContext {
   public static create(
     node: MutableNode,
     graph: MutableGraph,
-    logger: LoggerService,
   ): NodeDisplayConfigurationContext {
-    return new NodeDisplayConfigurationContext(
-      {
-        id: node.id,
-        label: NodeDisplayConfigurationContext._toTrueishMap(node.labels),
-        nativeLabel: NodeDisplayConfigurationContext._toTrueishMap(
-          node.nativeLabels,
-        ),
-        nameInQuery: NodeDisplayConfigurationContext._toTrueishMap(
-          node.namesInQuery,
-        ),
-        properties: node.properties.properties,
-        degree: node.degree(graph),
-        inDegree: node.inDegree(graph),
-        outDegree: node.outDegree(graph),
-      },
-      logger,
-    );
+    return new NodeDisplayConfigurationContext({
+      id: node.id,
+      label: NodeDisplayConfigurationContext._toTrueishMap(node.labels),
+      nativeLabel: NodeDisplayConfigurationContext._toTrueishMap(
+        node.nativeLabels,
+      ),
+      nameInQuery: NodeDisplayConfigurationContext._toTrueishMap(
+        node.namesInQuery,
+      ),
+      properties: node.properties.properties,
+      degree: node.degree(graph),
+      inDegree: node.inDegree(graph),
+      outDegree: node.outDegree(graph),
+    });
   }
 
   private static _toTrueishMap(input: SSet<string>): SMap<string, true> {

@@ -4,6 +4,7 @@ import type { SSet } from '../tools/Set';
 export class Neo4jSearchCapabilities {
   public readonly canExactMatchElementId: boolean = true;
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-private-class-members
   private readonly _canExactMatchLabel: boolean;
   private readonly _exactMatchNodeProperties: SMap<string, SSet<string>>;
   private readonly _fuzzyMatchNodeProperties: SMap<string, SSet<string>>;

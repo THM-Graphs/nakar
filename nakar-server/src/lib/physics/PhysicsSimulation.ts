@@ -3,7 +3,6 @@ import { Subject } from 'rxjs';
 import { wait } from '../tools/Wait';
 import { CombinationCache } from './CombinationCache';
 import type { LoggerService } from '../logger/LoggerService';
-import type { ProfilerService } from '../profiler/ProfilerService';
 import type { PhysicsSimulationRunOptions } from './PhysicsSimulationRunOptions';
 import type { PhysicalGraph } from './physical-graph/PhysicalGraph';
 import type { PhysicalNode } from './physical-graph/PhysicalNode';
@@ -29,7 +28,6 @@ export class PhysicsSimulation {
   public constructor(
     graph: PhysicalGraph,
     private readonly _logger: LoggerService,
-    private readonly _profiler: ProfilerService,
   ) {
     this._graph = graph;
     this._running = false;

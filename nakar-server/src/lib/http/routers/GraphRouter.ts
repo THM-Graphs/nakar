@@ -11,20 +11,12 @@ import { MutableGraph } from '../../room/graph/MutableGraph';
 import { GetRoomDBDTO } from '../../database/dto/GetRoomDBDTO';
 import { GetNotesDBDTO } from '../../database/dto/GetNotesDBDTO';
 import { FinalGraphDisplayConfiguration } from '../../room/scenario-pipeline/display-configuration/FinalGraphDisplayConfiguration';
-import { LoggerService } from '../../logger/LoggerService';
-import { ConfigService } from '../../config/ConfigService';
-import { MediaService } from '../../media/MediaService';
-import { ProfilerService } from '../../profiler/ProfilerService';
 import { SchemaFactoryService } from '../../schema/SchemaFactoryService';
 
 export class GraphRouter {
   public constructor(
     private readonly _httpTools: HTTPTools,
     private readonly _databaseService: DatabaseService,
-    private readonly _logger: LoggerService,
-    private readonly _config: ConfigService,
-    private readonly _media: MediaService,
-    private readonly _profiler: ProfilerService,
     private readonly _schemaFactory: SchemaFactoryService,
   ) {}
 

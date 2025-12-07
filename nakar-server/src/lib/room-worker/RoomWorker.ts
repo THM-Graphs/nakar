@@ -21,7 +21,6 @@ export class RoomWorker implements ApplicationService {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
       workerData as RoomWorkerData,
       this._logger,
-      this._profiler,
     );
 
     this._services = [this._logger, this._profiler, this._roomInstance];

@@ -1,5 +1,4 @@
 import { HTTPTools } from '../HTTPTools';
-import { ConfigService } from '../../config/ConfigService';
 import { type Request, Router } from 'express';
 import type {
   operations,
@@ -14,8 +13,6 @@ import { ScenariosRouter } from './ScenariosRouter';
 import { GraphRouter } from './GraphRouter';
 import { RoomService } from '../../room/RoomService';
 import { LoggerService } from '../../logger/LoggerService';
-import { MediaService } from '../../media/MediaService';
-import { ProfilerService } from '../../profiler/ProfilerService';
 import { NotesRouter } from './NotesRouter';
 import { ActionsRouter } from './ActionsRouter';
 import { SchemaFactoryService } from '../../schema/SchemaFactoryService';
@@ -30,11 +27,8 @@ export class RoomRouter {
     private readonly _httpTools: HTTPTools,
     private readonly _databaseService: DatabaseService,
     private readonly _schemaFactory: SchemaFactoryService,
-    private readonly _logger: LoggerService,
-    private readonly _config: ConfigService,
-    private readonly _media: MediaService,
-    private readonly _profiler: ProfilerService,
-    private readonly _roomService: RoomService,
+    logger: LoggerService,
+    roomService: RoomService,
   ) {
     this._scenariosRouter = new ScenariosRouter(
       _httpTools,
@@ -44,14 +38,10 @@ export class RoomRouter {
     this._graphRouter = new GraphRouter(
       _httpTools,
       _databaseService,
-      _logger,
-      _config,
-      _media,
-      _profiler,
       _schemaFactory,
     );
-    this._notesRouter = new NotesRouter(_httpTools, _databaseService, _logger);
-    this._actionsRouter = new ActionsRouter(_httpTools, _roomService);
+    this._notesRouter = new NotesRouter(_httpTools, _databaseService, logger);
+    this._actionsRouter = new ActionsRouter(_httpTools, roomService);
   }
 
   public register(): Router {

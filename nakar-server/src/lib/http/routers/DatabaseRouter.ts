@@ -34,8 +34,8 @@ export class DatabaseRouter {
     private readonly _neo4jService: Neo4jService,
     private readonly _logger: LoggerService,
     private readonly _profiler: ProfilerService,
-    private readonly _config: ConfigService,
-    private readonly _media: MediaService,
+    config: ConfigService,
+    media: MediaService,
     private readonly _schemaFactory: SchemaFactoryService,
   ) {}
 

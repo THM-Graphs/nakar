@@ -169,7 +169,7 @@ export class MutableNode {
   public displayConfigurationContext(
     graph: MutableGraph,
   ): NodeDisplayConfigurationContext {
-    return NodeDisplayConfigurationContext.create(this, graph, this._logger);
+    return NodeDisplayConfigurationContext.create(this, graph);
   }
 
   public customColor(
@@ -265,7 +265,6 @@ export class MutableNode {
     const newValue: string = NodeDisplayConfigurationContext.create(
       this,
       graph,
-      this._logger,
     ).applyToTemplate(nodeConfig.displayTextTemplate);
     if (newValue.trim().length === 0) {
       return null;
@@ -290,7 +289,6 @@ export class MutableNode {
     const newValue: string = NodeDisplayConfigurationContext.create(
       this,
       graph,
-      this._logger,
     ).applyToTemplate(nodeConfig.radiusTemplate);
     if (newValue.trim().length === 0) {
       return null;

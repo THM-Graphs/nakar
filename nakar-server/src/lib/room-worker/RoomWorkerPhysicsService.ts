@@ -1,6 +1,5 @@
 import type { ApplicationService } from '../application/ApplicationService';
 import type { LoggerService } from '../logger/LoggerService';
-import type { ProfilerService } from '../profiler/ProfilerService';
 import type { MessagePort } from 'node:worker_threads';
 import { parentPort } from 'node:worker_threads';
 import { PhysicsSimulation } from '../physics/PhysicsSimulation';
@@ -24,13 +23,8 @@ export class RoomWorkerPhysicsService implements ApplicationService {
   public constructor(
     data: RoomWorkerData,
     private readonly _logger: LoggerService,
-    private readonly _profiler: ProfilerService,
   ) {
-    this._physics = new PhysicsSimulation(
-      data.graph,
-      this._logger,
-      this._profiler,
-    );
+    this._physics = new PhysicsSimulation(data.graph, this._logger);
     this._roomId = data.roomId;
 
     if (parentPort == null) {

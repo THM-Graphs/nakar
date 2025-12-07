@@ -1,6 +1,5 @@
 // eslint-disable-next-line no-restricted-globals
 export class SSet<T> extends Set<T> {
-  // eslint-disable-next-line no-restricted-globals
   public static upgrade<T>(old: Set<T>): SSet<T> {
     const s: SSet<T> = new SSet<T>();
 
