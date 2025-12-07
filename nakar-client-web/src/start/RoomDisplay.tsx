@@ -21,10 +21,7 @@ export function RoomDisplay(props: {
           }}
           className={"flex-shrink-1 flex-grow-1 pb-1 pt-1"}
         >
-          <ScenarioIcon
-            scenario={props.room.scenario?.current ?? null}
-            size={50}
-          ></ScenarioIcon>
+          <ScenarioIcon scenario={null} size={50}></ScenarioIcon>
           <Stack className={"flex-shrink-1 ms-2"}>
             <span className={"text-break text-wrap"}>{props.room.title}</span>
             {props.room.template && (
