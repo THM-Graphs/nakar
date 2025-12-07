@@ -81,11 +81,9 @@ export class RoomRouter {
   private async _getRooms(): Promise<SchemaRooms> {
     const dbResult: GetRoomDBDTO[] = await this._databaseService.getRooms();
     return {
-      rooms: await Promise.all(
-        dbResult.map(async (room: GetRoomDBDTO): Promise<SchemaRoom> => {
-          return this._schemaFactory.createSchemaRoom(room);
-        }),
-      ),
+      rooms: dbResult.map((room: GetRoomDBDTO): SchemaRoom => {
+        return this._schemaFactory.createSchemaRoom(room);
+      }),
     };
   }
 
@@ -105,7 +103,7 @@ export class RoomRouter {
     return result;
   }
 
-  private async _getRoom(req: Request): Promise<SchemaRoom> {
+  private _getRoom(req: Request): SchemaRoom {
     const dbResult: GetRoomDBDTO = req.nakar.room;
     return this._schemaFactory.createSchemaRoom(dbResult);
   }
