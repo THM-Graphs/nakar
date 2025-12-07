@@ -222,6 +222,19 @@ export class DatabaseService implements ApplicationService {
     );
   }
 
+  public async getScenarioOfRoom(
+    room: GetRoomDBDTO,
+  ): Promise<GetScenarioDBDTO | null> {
+    const graph: MutableGraph = await this.getGraph(room.documentId);
+    const scenarioId: string | null = graph.metaData.scenarioId;
+    if (scenarioId == null) {
+      return null;
+    }
+    const scenario: GetScenarioDBDTO | null =
+      await this.getScenario(scenarioId);
+    return scenario;
+  }
+
   public async getGraph(roomId: string): Promise<MutableGraph> {
     const room: GetRoomDBDTO | null = await this.getRoom(roomId);
     if (room == null) {

@@ -1490,14 +1490,6 @@ components:
         title:
           type: string
           nullable: true
-        scenario:
-          type: object
-          nullable: true
-          properties:
-            current:
-              $ref: "#/components/schemas/Scenario"
-          required:
-            - current
         editUrl:
           type: string
           nullable: true

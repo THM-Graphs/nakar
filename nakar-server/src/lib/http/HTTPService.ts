@@ -60,12 +60,7 @@ export class HTTPService implements ApplicationService {
   ) {
     this._app = express();
     this._server = http.createServer(this._app);
-    this._httpTools = new HTTPTools(
-      profiler,
-      _logger,
-      databaseService,
-      _config,
-    );
+    this._httpTools = new HTTPTools(profiler, _logger, _config);
     this._authenticationRouter = new AuthenticationRouter(
       this._httpTools,
       _config,

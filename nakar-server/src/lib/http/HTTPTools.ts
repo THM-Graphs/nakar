@@ -4,13 +4,9 @@ import { FileStream } from '../fs/FileStream';
 import fs from 'node:fs';
 import { match, P } from 'ts-pattern';
 import { HttpError, InternalServerError, Unauthorized } from 'http-errors';
-import type { GetRoomDBDTO } from '../database/dto/GetRoomDBDTO';
 import z from 'zod';
-import type { GetScenarioDBDTO } from '../database/dto/GetScenarioDBDTO';
-import { MutableGraph } from '../room/graph/MutableGraph';
 import { ProfilerService } from '../profiler/ProfilerService';
 import { LoggerService } from '../logger/LoggerService';
-import { DatabaseService } from '../database/DatabaseService';
 import * as undici from 'undici';
 import { ConfigService } from '../config/ConfigService';
 
@@ -18,7 +14,6 @@ export class HTTPTools {
   public constructor(
     private readonly _profiler: ProfilerService,
     private readonly _logger: LoggerService,
-    private readonly _databaseService: DatabaseService,
     private readonly _config: ConfigService,
   ) {}
 
@@ -125,21 +120,6 @@ export class HTTPTools {
     } else {
       return null;
     }
-  }
-
-  public async getScenarioOfRoom(
-    room: GetRoomDBDTO,
-  ): Promise<GetScenarioDBDTO | null> {
-    const graph: MutableGraph = await this._databaseService.getGraph(
-      room.documentId,
-    );
-    const scenarioId: string | null = graph.metaData.scenarioId;
-    if (scenarioId == null) {
-      return null;
-    }
-    const scenario: GetScenarioDBDTO | null =
-      await this._databaseService.getScenario(scenarioId);
-    return scenario;
   }
 
   public handleUnknownError(res: Response, unknownError: unknown): void {

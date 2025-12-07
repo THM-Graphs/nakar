@@ -102,7 +102,7 @@ export class DatabaseRouter {
       throw new NotFound('Room not found.');
     }
     const scenario: GetScenarioDBDTO | null =
-      await this._httpTools.getScenarioOfRoom(room);
+      await this._databaseService.getScenarioOfRoom(room);
     const config: FinalGraphDisplayConfiguration =
       await this._databaseService.getGraphDisplayConfiguration(
         scenario?.documentId ?? null,

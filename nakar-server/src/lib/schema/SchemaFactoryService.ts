@@ -76,18 +76,10 @@ export class SchemaFactoryService implements ApplicationService {
     };
   }
 
-  public createSchemaRoom(
-    room: GetRoomDBDTO,
-    currentScenario: GetScenarioDBDTO | null,
-  ): SchemaRoom {
+  public createSchemaRoom(room: GetRoomDBDTO): SchemaRoom {
     return {
       id: room.documentId,
       title: room.title,
-      scenario: currentScenario
-        ? {
-            current: this.createSchemaScenario(currentScenario),
-          }
-        : null,
       editUrl: this._getRoomEditUrl(room),
       template: room.template
         ? this.createSchemaRoomTemplate(room.template)

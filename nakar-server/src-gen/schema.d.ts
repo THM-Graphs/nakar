@@ -766,9 +766,6 @@ export interface components {
         readonly Room: {
             readonly id: string;
             readonly title: string | null;
-            readonly scenario: {
-                readonly current: components["schemas"]["Scenario"];
-            } | null;
             readonly editUrl: string | null;
             readonly template: {
                 readonly id: string;
