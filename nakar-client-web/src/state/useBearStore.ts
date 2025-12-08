@@ -219,8 +219,8 @@ export const useBearStore = create<BearState>()(
                     pipelineSummary: [],
                     scenario: null,
                     arguments: [],
-                    canUndo: false,
-                    canRedo: false,
+                    undoAction: null,
+                    redoAction: null,
                   },
                 },
                 setGraph: (graph) => {
@@ -242,8 +242,8 @@ export const useBearStore = create<BearState>()(
                         },
                         metaData: {
                           arguments: [],
-                          canRedo: false,
-                          canUndo: false,
+                          undoAction: null,
+                          redoAction: null,
                           pipelineSummary: [],
                           scenario: null,
                         },

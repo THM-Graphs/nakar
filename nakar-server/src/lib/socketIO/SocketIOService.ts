@@ -339,6 +339,7 @@ export class SocketIOService implements ApplicationService {
               const metaData: SchemaGraphMetaData =
                 await this._schemaFactory.createSchemaGraphMetaData(
                   message.graph,
+                  message.undoInfo,
                 );
               this.sendToRoom(message.roomId, {
                 metaData: metaData,

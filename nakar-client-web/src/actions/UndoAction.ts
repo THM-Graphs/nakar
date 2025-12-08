@@ -5,7 +5,7 @@ import { postRoomActionUndo } from "../../src-gen";
 
 export type UndoActionParams = {
   roomContext: RoomContext;
-  canUndo: boolean;
+  undoAction: string | null;
 };
 
 export class UndoAction extends Action<UndoActionParams> {
@@ -22,7 +22,7 @@ export class UndoAction extends Action<UndoActionParams> {
   }
 
   disabled(input: UndoActionParams): boolean {
-    return !input.canUndo;
+    return !input.undoAction;
   }
 
   icon(): string {
@@ -33,7 +33,11 @@ export class UndoAction extends Action<UndoActionParams> {
     return "undo";
   }
 
-  title(): string {
-    return "Undo";
+  title(params: UndoActionParams): string {
+    if (params.undoAction == null) {
+      return "Undo";
+    } else {
+      return `Undo '${params.undoAction}'`;
+    }
   }
 }

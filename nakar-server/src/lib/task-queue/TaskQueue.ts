@@ -68,7 +68,7 @@ export class TaskQueue {
 
       this._currentTask = null;
 
-      await wait(2000);
+      await wait(100);
       this._check();
     })();
   }

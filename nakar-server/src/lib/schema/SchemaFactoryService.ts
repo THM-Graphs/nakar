@@ -49,6 +49,7 @@ import { MutableGraphColorFactory } from '../room/graph/MutableGraphColorFactory
 import { ProfilerService } from '../profiler/ProfilerService';
 import { DatabaseService } from '../database/DatabaseService';
 import { DatabaseReferenceCache } from './DatabaseReferenceCache';
+import { UndoWrapperInfo } from '../undo/UndoWrapperInfo';
 
 export class SchemaFactoryService implements ApplicationService {
   public constructor(
@@ -151,11 +152,12 @@ export class SchemaFactoryService implements ApplicationService {
     graph: MutableGraph,
     notes: GetNotesDBDTO,
     config: FinalGraphDisplayConfiguration,
+    undoWrapperInfo: UndoWrapperInfo | null,
   ): Promise<SchemaGraph> {
     const t: ProfilerTask = this._profiler.profile(this, 'createSchemaGraph');
     const schemaGraph: SchemaGraph = {
       elements: await this.createSchemaGraphElements(graph, notes, config),
-      metaData: await this.createSchemaGraphMetaData(graph),
+      metaData: await this.createSchemaGraphMetaData(graph, undoWrapperInfo),
       table: this.createSchemaTable(graph.tableData),
     };
     t.finish();
@@ -239,6 +241,7 @@ export class SchemaFactoryService implements ApplicationService {
 
   public async createSchemaGraphMetaData(
     graph: MutableGraph,
+    undoWrapperInfo: UndoWrapperInfo | null,
   ): Promise<SchemaGraphMetaData> {
     const t: ProfilerTask = this._profiler.profile(
       this,
@@ -272,8 +275,8 @@ export class SchemaFactoryService implements ApplicationService {
         ],
         [],
       ),
-      canUndo: graph.currentUndoDepth > 0,
-      canRedo: graph.currentRedoDepth > 0,
+      undoAction: undoWrapperInfo?.undoAction ?? null,
+      redoAction: undoWrapperInfo?.redoAction ?? null,
     };
     t.finish();
     return result;

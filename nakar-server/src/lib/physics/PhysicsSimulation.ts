@@ -62,6 +62,14 @@ export class PhysicsSimulation {
     node.position.y += Math.sin(radians) * 10;
   }
 
+  public static jiggled(): { x: number; y: number } {
+    const radians: number = Math.random() * Math.PI * 2;
+    return {
+      x: Math.cos(radians) * 10,
+      y: Math.sin(radians) * 10,
+    };
+  }
+
   public runIndefinitely(): void {
     this.run({ maxMs: null }).catch((error: unknown): void => {
       this._logger.error(this, error);

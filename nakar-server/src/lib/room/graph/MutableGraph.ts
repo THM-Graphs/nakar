@@ -32,8 +32,6 @@ export class MutableGraph {
   public edges: MutableEdgeIndex;
   public metaData: MutableGraphMetaData;
   public tableData: SMap<string, unknown>[];
-  public previous: MutableGraph | null;
-  public next: MutableGraph | null;
 
   public constructor(
     data: {
@@ -42,8 +40,6 @@ export class MutableGraph {
       edges: MutableEdgeIndex;
       metaData: MutableGraphMetaData;
       tableData: SMap<string, unknown>[];
-      previous: MutableGraph | null;
-      next: MutableGraph | null;
     },
     private readonly _logger: LoggerService,
     private readonly _profiler: ProfilerService,
@@ -53,32 +49,10 @@ export class MutableGraph {
     this.edges = data.edges;
     this.metaData = data.metaData;
     this.tableData = data.tableData;
-    this.previous = data.previous;
-    this.next = data.next;
   }
 
   public get size(): number {
     return this.nodes.size + this.edges.size;
-  }
-
-  public get currentUndoDepth(): number {
-    let result: number = 0;
-    let c: MutableGraph | null = this.previous;
-    while (c != null) {
-      result += 1;
-      c = c.previous;
-    }
-    return result;
-  }
-
-  public get currentRedoDepth(): number {
-    let result: number = 0;
-    let c: MutableGraph | null = this.next;
-    while (c != null) {
-      result += 1;
-      c = c.next;
-    }
-    return result;
   }
 
   public static empty(
@@ -92,8 +66,6 @@ export class MutableGraph {
         edges: new MutableEdgeIndex([]),
         metaData: MutableGraphMetaData.empty(),
         tableData: [],
-        previous: null,
-        next: null,
       },
       logger,
       profiler,
@@ -126,8 +98,6 @@ export class MutableGraph {
           (td: Record<string, unknown>): SMap<string, unknown> =>
             SMap.fromRecord(td),
         ),
-        previous: null,
-        next: null,
       },
       logger,
       profiler,
@@ -287,27 +257,12 @@ export class MutableGraph {
         tableData: this.tableData.map(
           (e: SMap<string, unknown>): SMap<string, unknown> => e.copy(),
         ),
-        previous: null,
-        next: null,
       },
       this._logger,
       this._profiler,
     );
     task.finish();
     return copy;
-  }
-
-  public trimUndoStack(limit: number): void {
-    let counter: number = 1;
-    let c: MutableGraph | null = this.previous;
-    while (c != null) {
-      if (counter >= limit) {
-        c.previous = null;
-        return;
-      }
-      counter += 1;
-      c = c.previous;
-    }
   }
 
   public getNeighborsOfNode(node: MutableNode): SSet<MutableNode> {

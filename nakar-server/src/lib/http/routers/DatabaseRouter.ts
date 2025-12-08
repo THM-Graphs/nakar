@@ -131,6 +131,7 @@ export class DatabaseRouter {
         graph,
         { notes: new SSet<GetNoteDBDTO>(), byNodeId: new SMap() },
         config,
+        null,
       );
 
     return {

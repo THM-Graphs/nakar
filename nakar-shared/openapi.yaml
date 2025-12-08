@@ -1418,16 +1418,18 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/ScenarioArgument"
-        canUndo:
-          type: boolean
-        canRedo:
-          type: boolean
+        undoAction:
+          type: string
+          nullable: true
+        redoAction:
+          type: string
+          nullable: true
       required:
         - scenarioInfo
         - pipelineSummary
         - arguments
-        - canUndo
-        - canRedo
+        - undoAction
+        - redoAction
 
     GraphElements:
       type: object

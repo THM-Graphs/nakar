@@ -15,8 +15,12 @@ export function CanvasToolbar(props: {
   context: AppContext;
   roomContext: RoomContext;
 }) {
-  const canUndo = useBearStore((s) => s.room.scenario.graph.metaData.canUndo);
-  const canRedo = useBearStore((s) => s.room.scenario.graph.metaData.canRedo);
+  const undoAction = useBearStore(
+    (s) => s.room.scenario.graph.metaData.undoAction,
+  );
+  const redoAction = useBearStore(
+    (s) => s.room.scenario.graph.metaData.redoAction,
+  );
   const scenario = useBearStore((s) => s.room.scenario.graph.metaData.scenario);
 
   return (
@@ -31,7 +35,7 @@ export function CanvasToolbar(props: {
           action={UndoAction.shared}
           params={{
             roomContext: props.roomContext,
-            canUndo: canUndo,
+            undoAction: undoAction,
           }}
           hideTitle={true}
           tooltipPlacement={"bottom"}
@@ -40,7 +44,7 @@ export function CanvasToolbar(props: {
           action={RedoAction.shared}
           params={{
             roomContext: props.roomContext,
-            canRedo,
+            redoAction,
           }}
           hideTitle={true}
           tooltipPlacement={"bottom"}

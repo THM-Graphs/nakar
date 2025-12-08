@@ -45,16 +45,17 @@ import { MutablePropertyCollection } from './graph/MutablePropertyCollection';
 import { MergeNodeConfiguration } from './scenario-pipeline/display-configuration/MergeNodeConfiguration';
 import { MutablePosition } from './graph/MutablePosition';
 import { Neo4jService } from '../neo4j/Neo4jService';
-import { wait } from '../tools/Wait';
 import { circularWeightedSpread } from '../tools/circleLayoutAlgorithms/circularWeightedSpread';
 import { PhysicsWorker } from './PhysicsWorker';
 import { TaskQueue } from '../task-queue/TaskQueue';
 import { TaskQueueState } from '../task-queue/TaskQueueState';
 import { TaskQueueTask } from '../task-queue/TaskQueueTask';
+import { UndoWrapper } from '../undo/UndoWrapper';
+import { Neo4jRelationship } from '../neo4j/Neo4jRelationship';
 
 export class LiveRoom implements ApplicationService {
   private readonly _physicsWorker: PhysicsWorker;
-  private _graph: MutableGraph | null;
+  private readonly _graph: UndoWrapper<MutableGraph | null>;
   private readonly _onEvent: Subject<RoomServiceEvent>;
   private readonly _subscriptions: SSet<Subscription>;
   private readonly _queue: TaskQueue;
@@ -67,7 +68,13 @@ export class LiveRoom implements ApplicationService {
     private readonly _database: DatabaseService,
     private readonly _neo4j: Neo4jService,
   ) {
-    this._graph = null;
+    this._graph = new UndoWrapper<MutableGraph | null>(
+      null,
+      (graph: MutableGraph | null): MutableGraph | null => {
+        return graph?.copy() ?? null;
+      },
+      { maximumStackSize: 10 },
+    );
     this._onEvent = new Subject();
     this._subscriptions = new SSet();
     this._physicsWorker = new PhysicsWorker(_roomId, _database, _logger);
@@ -88,7 +95,7 @@ export class LiveRoom implements ApplicationService {
 
   public async bootstrap(): Promise<void> {
     const graph: MutableGraph = await this._loadGraph();
-    this._graph = graph;
+    this._graph.reset(graph);
     await this._physicsWorker.bootstrap(graph);
     this._subscriptions.add(
       this._physicsWorker.onWTEvent$.subscribe((message: WTEvent): void => {
@@ -142,16 +149,12 @@ export class LiveRoom implements ApplicationService {
   }
 
   public getGraph(): MutableGraph {
-    if (this._graph == null) {
+    if (this._graph.current == null) {
       throw new Error(
         `Cannot get graph of room ${this.roomId}. Graph not found.`,
       );
     }
-    return this._graph;
-  }
-
-  public setGraph(graph: MutableGraph): void {
-    this._graph = graph;
+    return this._graph.current;
   }
 
   public grabNode(params: { nodeId: string; userId: string }): void {
@@ -315,87 +318,93 @@ export class LiveRoom implements ApplicationService {
           }
         }
 
-        const graph: MutableGraph = this._snapshotGraph();
-        const positionsCache: PositionsCache = PositionsCache.fromGraph(graph);
+        const newGraph: MutableGraph = this._transaction(
+          'Load scenario',
+          (graph: MutableGraph): void => {
+            const positionsCache: PositionsCache =
+              PositionsCache.fromGraph(graph);
 
-        if (!scenario.additive) {
-          graph.resetFromInitialScenario(
-            scenario,
-            displayConfiguration,
-            params.arguments,
-          );
-        }
-
-        graph.tableData = tableData;
-        for (const graphElements of graphElementsList) {
-          graph.nodes.addNeo4jNodes(
-            graphElements.nodes,
-            MutableGraphElementCreationAction.loadScenario,
-            displayConfiguration,
-          );
-          graph.edges.addNeo4jEdges(
-            graphElements.relationships,
-            MutableGraphElementCreationAction.loadScenario,
-          );
-        }
-
-        positionsCache.applyToGraph(graph);
-        this._postProcessGraph(graph, displayConfiguration);
-
-        if (!scenario.additive) {
-          const task: ProfilerTask = this._profiler.profile(
-            this,
-            'Run Post-Scenario Actions',
-          );
-          if (displayConfiguration.connectResultNodes) {
-            await this._connectNodes(graph);
-          }
-          for (const nodeConfigEntry of displayConfiguration.nodeDisplayConfigurations) {
-            const targetLabel: string = nodeConfigEntry[0];
-            const nodeConfig: FinalNodeDisplayConfiguration =
-              nodeConfigEntry[1];
-            if (!nodeConfig.compress) {
-              continue;
+            if (!scenario.additive) {
+              graph.resetFromInitialScenario(
+                scenario,
+                displayConfiguration,
+                params.arguments,
+              );
             }
-            await this._compressNodes(graph, targetLabel);
-          }
 
-          if (displayConfiguration.compressRelationships) {
-            this._compressRelationships(graph);
-          }
+            graph.tableData = tableData;
+            for (const graphElements of graphElementsList) {
+              graph.nodes.addNeo4jNodes(
+                graphElements.nodes,
+                MutableGraphElementCreationAction.loadScenario,
+                displayConfiguration,
+              );
+              graph.edges.addNeo4jEdges(
+                graphElements.relationships,
+                MutableGraphElementCreationAction.loadScenario,
+              );
+            }
 
-          // Apply layout algorithm
-          for (const entry of displayConfiguration.nodeDisplayConfigurations.entries()) {
-            const targetLabel: string = entry[0];
-            const nodeDisplayConfig: FinalNodeDisplayConfiguration = entry[1];
-            this._layout(
-              graph,
-              targetLabel,
-              nodeDisplayConfig.layoutSpecification,
-            );
-          }
-          task.finish();
-        }
+            positionsCache.applyToGraph(graph);
+            this._postProcessGraph(graph, displayConfiguration);
+
+            if (!scenario.additive) {
+              const task: ProfilerTask = this._profiler.profile(
+                this,
+                'Run Post-Scenario Actions',
+              );
+              if (displayConfiguration.connectResultNodes) {
+                this.connectResultNodes();
+              }
+              for (const nodeConfigEntry of displayConfiguration.nodeDisplayConfigurations) {
+                const targetLabel: string = nodeConfigEntry[0];
+                const nodeConfig: FinalNodeDisplayConfiguration =
+                  nodeConfigEntry[1];
+                if (!nodeConfig.compress) {
+                  continue;
+                }
+                this.compressNodes({ label: targetLabel });
+              }
+
+              if (displayConfiguration.compressRelationships) {
+                this.compressRelationships();
+              }
+
+              // Apply layout algorithm
+              for (const entry of displayConfiguration.nodeDisplayConfigurations.entries()) {
+                const targetLabel: string = entry[0];
+                const nodeDisplayConfig: FinalNodeDisplayConfiguration =
+                  entry[1];
+                this.layoutLabel({
+                  layoutSpecification: nodeDisplayConfig.layoutSpecification,
+                  label: targetLabel,
+                });
+              }
+              task.finish();
+            }
+          },
+        );
 
         this._onEvent.next({
           type: 'RoomServiceEventGraphMetaDataChanged',
-          graph: graph,
+          graph: newGraph,
           roomId: this.roomId,
+          undoInfo: this._graph.info,
         } satisfies RoomServiceEventGraphMetaDataChanged);
         this._onEvent.next({
           type: 'RoomServiceEventGraphElementsChanged',
-          graph: graph,
+          graph: newGraph,
           roomId: this.roomId,
-          nodesAdded: graph.nodes.size,
-          edgesAdded: graph.edges.size,
+          nodesAdded: newGraph.nodes.size,
+          edgesAdded: newGraph.edges.size,
         } satisfies RoomServiceEventGraphElementsChanged);
         this._onEvent.next({
           type: 'RoomServiceEventGraphTableChanged',
-          table: graph.tableData,
+          table: newGraph.tableData,
           roomId: this.roomId,
         } satisfies RoomServiceEventGraphTableChanged);
         this._physicsWorker.setGraph(
-          graph.toPhysicalGraph(displayConfiguration),
+          newGraph.toPhysicalGraph(displayConfiguration),
         );
         this._physicsWorker.triggerPhysics({ amount: 'long' });
 
@@ -460,57 +469,61 @@ export class LiveRoom implements ApplicationService {
               params.limit,
             );
 
-        const graph: MutableGraph = this._snapshotGraph();
-
-        if (node.isCluster) {
-          graph.nodes.remove(node);
-          for (const edge of graph.edges.getByStartOrEndNodeId(node.id)) {
-            graph.edges.remove(edge);
-          }
-        }
-
-        for (const newNode of expandResult.nodes) {
-          if (!graph.nodes.hasById(newNode[0])) {
-            result.nodesAddedCount += 1;
-
-            const insertedNode: MutableNode | null = graph.nodes.addNeo4jNode(
-              newNode[1],
-              MutableGraphElementCreationAction.expand,
-              displayConfiguration,
-            );
-            if (insertedNode != null) {
-              insertedNode.position.x = node.position.x;
-              insertedNode.position.y = node.position.y;
-              PhysicsSimulation.jiggle(insertedNode);
+        const newGraph: MutableGraph = this._transaction(
+          'Expand node',
+          (graph: MutableGraph): void => {
+            if (node.isCluster) {
+              graph.nodes.remove(node);
+              for (const edge of graph.edges.getByStartOrEndNodeId(node.id)) {
+                graph.edges.remove(edge);
+              }
             }
-          }
-        }
-        for (const newEdge of expandResult.relationships) {
-          if (!graph.edges.has(newEdge[0])) {
-            result.edgeAddedCount += 1;
-            graph.edges.addNeo4jEdge(
-              newEdge[1],
-              MutableGraphElementCreationAction.expand,
-            );
-          }
-        }
 
-        this._logger.debug(
-          this,
-          `Expand node result for ${params.nodeId}: ${expandResult.nodes.size.toString()} nodes and ${expandResult.relationships.size.toString()} relationships.`,
+            for (const newNode of expandResult.nodes) {
+              if (!graph.nodes.hasById(newNode[0])) {
+                result.nodesAddedCount += 1;
+
+                const insertedNode: MutableNode | null =
+                  graph.nodes.addNeo4jNode(
+                    newNode[1],
+                    MutableGraphElementCreationAction.expand,
+                    displayConfiguration,
+                  );
+                if (insertedNode != null) {
+                  insertedNode.position.x = node.position.x;
+                  insertedNode.position.y = node.position.y;
+                  PhysicsSimulation.jiggle(insertedNode);
+                }
+              }
+            }
+            for (const newEdge of expandResult.relationships) {
+              if (!graph.edges.has(newEdge[0])) {
+                result.edgeAddedCount += 1;
+                graph.edges.addNeo4jEdge(
+                  newEdge[1],
+                  MutableGraphElementCreationAction.expand,
+                );
+              }
+            }
+
+            this._logger.debug(
+              this,
+              `Expand node result for ${params.nodeId}: ${expandResult.nodes.size.toString()} nodes and ${expandResult.relationships.size.toString()} relationships.`,
+            );
+
+            this._postProcessGraph(graph, displayConfiguration);
+          },
         );
 
-        this._postProcessGraph(graph, displayConfiguration);
-
         this._physicsWorker.setGraph(
-          graph.toPhysicalGraph(displayConfiguration),
+          newGraph.toPhysicalGraph(displayConfiguration),
         );
         this._physicsWorker.triggerPhysics({
           amount: 'short',
         });
         this._onEvent.next({
           type: 'RoomServiceEventGraphElementsChanged',
-          graph: graph,
+          graph: newGraph,
           roomId: this.roomId,
           nodesAdded: result.nodesAddedCount,
           edgesAdded: result.edgeAddedCount,
@@ -559,10 +572,9 @@ export class LiveRoom implements ApplicationService {
   public focusNodes(params: { nodeIds: readonly string[] }): void {
     this._queue.addTask(
       new TaskQueueTask('Focus nodes', async (): Promise<void> => {
-        const graph: MutableGraph = this._snapshotGraph();
         const config: FinalGraphDisplayConfiguration =
           await this._database.getGraphDisplayConfiguration(
-            graph.metaData.scenarioId,
+            this.getGraph().metaData.scenarioId,
             this.roomId,
           );
 
@@ -570,17 +582,21 @@ export class LiveRoom implements ApplicationService {
           nodesAddedCount: 0,
           edgeAddedCount: 0,
         };
-        graph.nodes.nodes
-          .filter(
-            (node: MutableNode): boolean => !params.nodeIds.includes(node.id),
-          )
-          .forEach((node: MutableNode): void => {
-            graph.nodes.remove(node);
-            result.nodesAddedCount -= 1;
-          });
-        const edgesRemovedCount: number = graph.removeDanglingEdges();
-        result.edgeAddedCount -= edgesRemovedCount;
 
+        this._transaction('Focus nodes', (graph: MutableGraph): void => {
+          graph.nodes.nodes
+            .filter(
+              (node: MutableNode): boolean => !params.nodeIds.includes(node.id),
+            )
+            .forEach((node: MutableNode): void => {
+              graph.nodes.remove(node);
+              result.nodesAddedCount -= 1;
+            });
+          const edgesRemovedCount: number = graph.removeDanglingEdges();
+          result.edgeAddedCount -= edgesRemovedCount;
+        });
+
+        const graph: MutableGraph = this.getGraph();
         this._physicsWorker.setGraph(graph.toPhysicalGraph(config));
         this._onEvent.next({
           type: 'RoomServiceEventGraphElementsChanged',
@@ -601,15 +617,11 @@ export class LiveRoom implements ApplicationService {
   }): void {
     this._queue.addTask(
       new TaskQueueTask('Deleting nodes', async (): Promise<void> => {
-        const graph: MutableGraph = this._snapshotGraph();
         const config: FinalGraphDisplayConfiguration =
-          graph.metaData.scenarioId != null
-            ? await this._database.getGraphDisplayConfiguration(
-                graph.metaData.scenarioId,
-                this.roomId,
-              )
-            : FinalGraphDisplayConfiguration.empty();
-
+          await this._database.getGraphDisplayConfiguration(
+            this.getGraph().metaData.scenarioId,
+            this.roomId,
+          );
         const result: ExpandNodesResult = {
           nodesAddedCount: 0,
           edgeAddedCount: 0,
@@ -618,60 +630,65 @@ export class LiveRoom implements ApplicationService {
         const nodesToDelete: SSet<MutableNode> = new SSet<MutableNode>();
         const edgesToDelete: SSet<MutableEdge> = new SSet<MutableEdge>();
 
-        for (const nodeId of params.nodeIds) {
-          const node: MutableNode | null = graph.nodes.get(nodeId);
-          if (node != null) {
-            nodesToDelete.add(node);
-          }
-        }
-        for (const label of params.labels) {
-          for (const node of graph.nodes.getByLabel(label)) {
-            nodesToDelete.add(node);
-          }
-        }
+        const newGraph: MutableGraph = this._transaction(
+          'Delete elements',
+          (graph: MutableGraph): void => {
+            for (const nodeId of params.nodeIds) {
+              const node: MutableNode | null = graph.nodes.get(nodeId);
+              if (node != null) {
+                nodesToDelete.add(node);
+              }
+            }
+            for (const label of params.labels) {
+              for (const node of graph.nodes.getByLabel(label)) {
+                nodesToDelete.add(node);
+              }
+            }
 
-        for (const node of nodesToDelete) {
-          const didDelete: boolean = graph.nodes.remove(node);
-          if (didDelete) {
-            result.nodesAddedCount -= 1;
-          }
+            for (const node of nodesToDelete) {
+              const didDelete: boolean = graph.nodes.remove(node);
+              if (didDelete) {
+                result.nodesAddedCount -= 1;
+              }
 
-          for (const edge of graph.edges.getByStartOrEndNodeId(node.id)) {
-            edgesToDelete.add(edge);
-          }
+              for (const edge of graph.edges.getByStartOrEndNodeId(node.id)) {
+                edgesToDelete.add(edge);
+              }
 
-          this._logger.debug(this, `Did delete node ${node.id}`);
-        }
+              this._logger.debug(this, `Did delete node ${node.id}`);
+            }
 
-        for (const edgeId of params.edgeIds) {
-          const edge: MutableEdge | null = graph.edges.get(edgeId);
-          if (edge != null) {
-            edgesToDelete.add(edge);
-          }
-        }
+            for (const edgeId of params.edgeIds) {
+              const edge: MutableEdge | null = graph.edges.get(edgeId);
+              if (edge != null) {
+                edgesToDelete.add(edge);
+              }
+            }
 
-        for (const edgeType of params.edgeTypes) {
-          const edges: SSet<MutableEdge> = graph.edges.getByType(edgeType);
-          for (const edge of edges) {
-            edgesToDelete.add(edge);
-          }
-        }
+            for (const edgeType of params.edgeTypes) {
+              const edges: SSet<MutableEdge> = graph.edges.getByType(edgeType);
+              for (const edge of edges) {
+                edgesToDelete.add(edge);
+              }
+            }
 
-        for (const edge of edgesToDelete) {
-          const didDelete: boolean = graph.edges.remove(edge);
-          if (didDelete) {
-            result.edgeAddedCount -= 1;
-          }
-        }
-        graph.removeDanglingEdges();
+            for (const edge of edgesToDelete) {
+              const didDelete: boolean = graph.edges.remove(edge);
+              if (didDelete) {
+                result.edgeAddedCount -= 1;
+              }
+            }
+            graph.removeDanglingEdges();
+          },
+        );
 
-        this._physicsWorker.setGraph(graph.toPhysicalGraph(config));
+        this._physicsWorker.setGraph(newGraph.toPhysicalGraph(config));
         this._physicsWorker.triggerPhysics({
           amount: 'short',
         });
         this._onEvent.next({
           type: 'RoomServiceEventGraphElementsChanged',
-          graph: graph,
+          graph: newGraph,
           roomId: this.roomId,
           nodesAdded: result.nodesAddedCount,
           edgesAdded: result.edgeAddedCount,
@@ -689,15 +706,8 @@ export class LiveRoom implements ApplicationService {
   public undo(): void {
     this._queue.addTask(
       new TaskQueueTask('Undo', async (): Promise<void> => {
-        const oldGraph: MutableGraph = this.getGraph();
-        const graph: MutableGraph | null = oldGraph.previous;
-        if (graph == null) {
-          throw new Error('Unable to execute undo: No undo step available.');
-        }
-
-        graph.next = oldGraph;
-        oldGraph.previous = null;
-        this.setGraph(graph);
+        this._graph.undo();
+        const graph: MutableGraph = this.getGraph();
 
         const displayConfiguration: FinalGraphDisplayConfiguration =
           await this._database.getGraphDisplayConfiguration(
@@ -713,6 +723,7 @@ export class LiveRoom implements ApplicationService {
           type: 'RoomServiceEventGraphMetaDataChanged',
           graph: graph,
           roomId: this.roomId,
+          undoInfo: this._graph.info,
         } satisfies RoomServiceEventGraphMetaDataChanged);
         this._onEvent.next({
           type: 'RoomServiceEventGraphElementsChanged',
@@ -733,15 +744,8 @@ export class LiveRoom implements ApplicationService {
   public redo(): void {
     this._queue.addTask(
       new TaskQueueTask('Redo', async (): Promise<void> => {
-        const oldGraph: MutableGraph = this.getGraph();
-        const graph: MutableGraph | null = oldGraph.next;
-        if (graph == null) {
-          throw new Error('Unable to execute redo: No redo step available.');
-        }
-        graph.previous = oldGraph;
-        oldGraph.next = null;
-
-        this.setGraph(graph);
+        this._graph.redo();
+        const graph: MutableGraph = this.getGraph();
 
         const displayConfiguration: FinalGraphDisplayConfiguration =
           await this._database.getGraphDisplayConfiguration(
@@ -757,6 +761,7 @@ export class LiveRoom implements ApplicationService {
           type: 'RoomServiceEventGraphMetaDataChanged',
           graph: graph,
           roomId: this.roomId,
+          undoInfo: this._graph.info,
         } satisfies RoomServiceEventGraphMetaDataChanged);
         this._onEvent.next({
           type: 'RoomServiceEventGraphElementsChanged',
@@ -814,25 +819,30 @@ export class LiveRoom implements ApplicationService {
           } satisfies RoomServiceEventNotAllNodesLoaded);
         }
 
-        const graph: MutableGraph = this._snapshotGraph();
-        if (params.replace) {
-          graph.nodes = new MutableNodeIndex([], this._logger);
-          graph.edges = new MutableEdgeIndex([]);
-          graph.tableData = graphElements.tableData;
-        }
-        graph.nodes.addNeo4jNodes(
-          graphElements.nodes,
-          MutableGraphElementCreationAction.query,
-          displayConfiguration,
-        );
-        graph.edges.addNeo4jEdges(
-          graphElements.relationships,
-          MutableGraphElementCreationAction.query,
+        const newGraph: MutableGraph = this._transaction(
+          'Run query',
+          (graph: MutableGraph): void => {
+            if (params.replace) {
+              graph.nodes = new MutableNodeIndex([], this._logger);
+              graph.edges = new MutableEdgeIndex([]);
+              graph.tableData = graphElements.tableData;
+            }
+            graph.nodes.addNeo4jNodes(
+              graphElements.nodes,
+              MutableGraphElementCreationAction.query,
+              displayConfiguration,
+            );
+            graph.edges.addNeo4jEdges(
+              graphElements.relationships,
+              MutableGraphElementCreationAction.query,
+            );
+
+            this._postProcessGraph(graph, displayConfiguration);
+          },
         );
 
-        this._postProcessGraph(graph, displayConfiguration);
         this._physicsWorker.setGraph(
-          graph.toPhysicalGraph(displayConfiguration),
+          newGraph.toPhysicalGraph(displayConfiguration),
         );
         this._physicsWorker.triggerPhysics({
           amount: 'long',
@@ -840,19 +850,20 @@ export class LiveRoom implements ApplicationService {
         await this.saveGraph();
         this._onEvent.next({
           type: 'RoomServiceEventGraphMetaDataChanged',
-          graph: graph,
+          graph: newGraph,
           roomId: this.roomId,
+          undoInfo: this._graph.info,
         } satisfies RoomServiceEventGraphMetaDataChanged);
         this._onEvent.next({
           type: 'RoomServiceEventGraphElementsChanged',
-          graph: graph,
+          graph: newGraph,
           roomId: this.roomId,
-          nodesAdded: graph.nodes.size,
-          edgesAdded: graph.edges.size,
+          nodesAdded: newGraph.nodes.size,
+          edgesAdded: newGraph.edges.size,
         } satisfies RoomServiceEventGraphElementsChanged);
         this._onEvent.next({
           type: 'RoomServiceEventGraphTableChanged',
-          table: graph.tableData,
+          table: newGraph.tableData,
           roomId: this.roomId,
         } satisfies RoomServiceEventGraphTableChanged);
       }),
@@ -870,44 +881,90 @@ export class LiveRoom implements ApplicationService {
             this.roomId,
           );
 
-        const graph: MutableGraph = this._snapshotGraph();
-        const result: number = await this._connectNodes(graph);
+        const egdesToAdd: Neo4jRelationship[] = [];
+        for (const source of oldGraph.nodes.getSources()) {
+          const nodesToConnect: SSet<string> = oldGraph.nodes
+            .getBySource(source)
+            .map((n: MutableNode): string => n.id);
+          if (nodesToConnect.size === 0) {
+            continue;
+          }
+
+          const db: GetDatabaseDBDTO | null =
+            await this._database.getDatabase(source);
+          if (db == null) {
+            this._logger.error(
+              this,
+              `Unable to connect result nodes: Source ${source} not found.`,
+            );
+            continue;
+          }
+          const credentials: Neo4jDatabaseInfo = Neo4jDatabaseInfo.parse(db);
+
+          this._logger.log(
+            this,
+            `Will run connect result nodes on ${nodesToConnect.size.toString()} on database ${db.title ?? db.documentId}.`,
+          );
+          const result: Neo4jGraphElements =
+            await this._neo4j.loadConnectingRelationships(
+              credentials,
+              nodesToConnect,
+            );
+
+          egdesToAdd.push(...result.relationships.toValueArray());
+        }
+
+        let addedEdgesCount: number = 0;
+        const newGraph: MutableGraph = this._transaction(
+          'Connect result nodes',
+          (graph: MutableGraph): void => {
+            for (const edgeToAdd of egdesToAdd) {
+              const didAdd: boolean = graph.edges.addNeo4jEdge(
+                edgeToAdd,
+                MutableGraphElementCreationAction.connectResultNodes,
+              );
+              if (didAdd) {
+                addedEdgesCount += 1;
+              }
+            }
+          },
+        );
 
         this._physicsWorker.setGraph(
-          graph.toPhysicalGraph(displayConfiguration),
+          newGraph.toPhysicalGraph(displayConfiguration),
         );
         this._physicsWorker.triggerPhysics({
           amount: 'short',
         });
         this._onEvent.next({
           type: 'RoomServiceEventGraphElementsChanged',
-          graph: graph,
+          graph: newGraph,
           roomId: this.roomId,
           nodesAdded: 0,
-          edgesAdded: result,
+          edgesAdded: addedEdgesCount,
         } satisfies RoomServiceEventGraphElementsChanged);
       }),
     );
   }
 
   public unlockNodes(params: { nodeIds: readonly string[] }): void {
-    const graph: MutableGraph = this.getGraph();
-
     const nodeLocksChanged: SMap<string, boolean> = new SMap<string, boolean>();
-    for (const nodeId of params.nodeIds) {
-      const node: MutableNode | null = graph.nodes.get(nodeId);
-      if (node == null) {
-        this._logger.warn(
-          this,
-          `Unable to unlock node ${nodeId}. Node not found.`,
-        );
-        continue;
+    this._transaction('Unlock nodes', (graph: MutableGraph): void => {
+      for (const nodeId of params.nodeIds) {
+        const node: MutableNode | null = graph.nodes.get(nodeId);
+        if (node == null) {
+          this._logger.warn(
+            this,
+            `Unable to unlock node ${nodeId}. Node not found.`,
+          );
+          continue;
+        }
+        if (node.locked) {
+          node.locked = false;
+          nodeLocksChanged.set(node.id, node.locked);
+        }
       }
-      if (node.locked) {
-        node.locked = false;
-        nodeLocksChanged.set(node.id, node.locked);
-      }
-    }
+    });
 
     this._onEvent.next({
       type: 'RoomServiceEventNodeLocksUpdated',
@@ -921,17 +978,17 @@ export class LiveRoom implements ApplicationService {
   }
 
   public unlockAllNodes(): void {
-    const graph: MutableGraph = this._snapshotGraph();
-
     const nodeLocksChanged: SMap<string, boolean> = new SMap<string, boolean>();
-    for (const node of graph.nodes.nodes) {
-      if (node.grabs.size === 0) {
-        if (node.locked) {
-          node.locked = false;
-          nodeLocksChanged.set(node.id, node.locked);
+    this._transaction('Unlock all nodes', (graph: MutableGraph): void => {
+      for (const node of graph.nodes.nodes) {
+        if (node.grabs.size === 0) {
+          if (node.locked) {
+            node.locked = false;
+            nodeLocksChanged.set(node.id, node.locked);
+          }
         }
       }
-    }
+    });
 
     this._onEvent.next({
       type: 'RoomServiceEventNodeLocksUpdated',
@@ -948,28 +1005,33 @@ export class LiveRoom implements ApplicationService {
   public removeDanglingNodes(): void {
     this._queue.addTask(
       new TaskQueueTask('Removing dangling nodes', async (): Promise<void> => {
-        const graph: MutableGraph = this._snapshotGraph();
+        const oldGraph: MutableGraph = this.getGraph();
         const config: FinalGraphDisplayConfiguration =
           await this._database.getGraphDisplayConfiguration(
-            graph.metaData.scenarioId,
+            oldGraph.metaData.scenarioId,
             this.roomId,
           );
-        const ids: readonly string[] = graph.nodes.nodes
-          .filter((node: MutableNode): boolean => node.degree(graph) === 0)
+        const ids: readonly string[] = oldGraph.nodes.nodes
+          .filter((node: MutableNode): boolean => node.degree(oldGraph) === 0)
           .map((node: MutableNode): string => node.id)
           .toArray();
 
-        for (const id of ids) {
-          graph.nodes.remove(id);
-        }
+        const newGraph: MutableGraph = this._transaction(
+          'Remove dangling nodes',
+          (graph: MutableGraph): void => {
+            for (const id of ids) {
+              graph.nodes.remove(id);
+            }
+          },
+        );
 
-        this._physicsWorker.setGraph(graph.toPhysicalGraph(config));
+        this._physicsWorker.setGraph(newGraph.toPhysicalGraph(config));
         this._physicsWorker.triggerPhysics({
           amount: 'short',
         });
         this._onEvent.next({
           type: 'RoomServiceEventGraphElementsChanged',
-          graph: graph,
+          graph: newGraph,
           roomId: this.roomId,
           nodesAdded: -ids.length,
           edgesAdded: 0,
@@ -983,18 +1045,23 @@ export class LiveRoom implements ApplicationService {
       new TaskQueueTask(
         'Compressing relationships',
         async (): Promise<void> => {
-          const graph: MutableGraph = this._snapshotGraph();
           const config: FinalGraphDisplayConfiguration =
             await this._database.getGraphDisplayConfiguration(
-              graph.metaData.scenarioId,
+              this.getGraph().metaData.scenarioId,
               this.roomId,
             );
-          this._compressRelationships(graph);
 
-          this._physicsWorker.setGraph(graph.toPhysicalGraph(config));
+          const newGraph: MutableGraph = this._transaction(
+            'Compress relationships',
+            (graph: MutableGraph): void => {
+              this._compressRelationships(graph);
+            },
+          );
+
+          this._physicsWorker.setGraph(newGraph.toPhysicalGraph(config));
           this._onEvent.next({
             type: 'RoomServiceEventGraphElementsChanged',
-            graph: graph,
+            graph: newGraph,
             roomId: this.roomId,
             nodesAdded: 0,
             edgesAdded: 0,
@@ -1007,22 +1074,26 @@ export class LiveRoom implements ApplicationService {
   public compressNodes(params: { label: string }): void {
     this._queue.addTask(
       new TaskQueueTask('Compressing nodes', async (): Promise<void> => {
-        const graph: MutableGraph = this._snapshotGraph();
         const config: FinalGraphDisplayConfiguration =
           await this._database.getGraphDisplayConfiguration(
-            graph.metaData.scenarioId,
+            this.getGraph().metaData.scenarioId,
             this.roomId,
           );
 
-        await this._compressNodes(graph, params.label);
+        const newGraph: MutableGraph = this._transaction(
+          'Compress nodes',
+          (graph: MutableGraph): void => {
+            this._compressNodes(graph, params.label);
+          },
+        );
 
-        this._physicsWorker.setGraph(graph.toPhysicalGraph(config));
+        this._physicsWorker.setGraph(newGraph.toPhysicalGraph(config));
         this._physicsWorker.triggerPhysics({
           amount: 'short',
         });
         this._onEvent.next({
           type: 'RoomServiceEventGraphElementsChanged',
-          graph: graph,
+          graph: newGraph,
           roomId: this.roomId,
           nodesAdded: 0,
           edgesAdded: 0,
@@ -1031,33 +1102,42 @@ export class LiveRoom implements ApplicationService {
     );
   }
 
-  public async layoutLabel(params: {
+  public layoutLabel(params: {
     label: string;
     layoutSpecification: SchemaLayoutSpecification;
-  }): Promise<void> {
-    const graph: MutableGraph = this._snapshotGraph();
-    const config: FinalGraphDisplayConfiguration =
-      await this._database.getGraphDisplayConfiguration(
-        graph.metaData.scenarioId,
-        this.roomId,
-      );
+  }): void {
+    this._queue.addTask(
+      new TaskQueueTask('Layout label', async (): Promise<void> => {
+        const config: FinalGraphDisplayConfiguration =
+          await this._database.getGraphDisplayConfiguration(
+            this.getGraph().metaData.scenarioId,
+            this.roomId,
+          );
 
-    const lockChanges: SMap<string, boolean> = this._layout(
-      graph,
-      params.label,
-      params.layoutSpecification,
+        let lockChanges: SMap<string, boolean> = new SMap<string, boolean>();
+        const newGraph: MutableGraph = this._transaction(
+          'Layout label',
+          (graph: MutableGraph): void => {
+            lockChanges = this._layout(
+              graph,
+              params.label,
+              params.layoutSpecification,
+            );
+          },
+        );
+
+        this._onEvent.next({
+          type: 'RoomServiceEventNodeLocksUpdated',
+          roomId: this.roomId,
+          locks: lockChanges,
+        } satisfies RoomServiceEvent);
+
+        this._physicsWorker.setGraph(newGraph.toPhysicalGraph(config));
+        this._physicsWorker.triggerPhysics({
+          amount: 'long',
+        });
+      }),
     );
-
-    this._onEvent.next({
-      type: 'RoomServiceEventNodeLocksUpdated',
-      roomId: this.roomId,
-      locks: lockChanges,
-    } satisfies RoomServiceEvent);
-
-    this._physicsWorker.setGraph(graph.toPhysicalGraph(config));
-    this._physicsWorker.triggerPhysics({
-      amount: 'long',
-    });
   }
 
   public showShortestPath(params: { nodeIds: string[] }): void {
@@ -1146,27 +1226,26 @@ export class LiveRoom implements ApplicationService {
             }
           }
 
-          const graph: MutableGraph = this._snapshotGraph();
-          // graph.resetFromInitialScenario(
-          //   scenario,
-          //   displayConfiguration,
-          //   new SMap(),
-          // );
-          for (const result of results) {
-            graph.nodes.addNeo4jNodes(
-              result.nodes,
-              MutableGraphElementCreationAction.expand,
-              displayConfiguration,
-            );
-            graph.edges.addNeo4jEdges(
-              result.relationships,
-              MutableGraphElementCreationAction.expand,
-            );
-          }
+          const newGraph: MutableGraph = this._transaction(
+            'Show shortest path',
+            (graph: MutableGraph): void => {
+              for (const result of results) {
+                graph.nodes.addNeo4jNodes(
+                  result.nodes,
+                  MutableGraphElementCreationAction.expand,
+                  displayConfiguration,
+                );
+                graph.edges.addNeo4jEdges(
+                  result.relationships,
+                  MutableGraphElementCreationAction.expand,
+                );
+              }
+            },
+          );
 
-          this._postProcessGraph(graph, displayConfiguration);
+          this._postProcessGraph(newGraph, displayConfiguration);
           this._physicsWorker.setGraph(
-            graph.toPhysicalGraph(displayConfiguration),
+            newGraph.toPhysicalGraph(displayConfiguration),
           );
           this._physicsWorker.triggerPhysics({
             amount: 'long',
@@ -1174,15 +1253,16 @@ export class LiveRoom implements ApplicationService {
           await this.saveGraph();
           this._onEvent.next({
             type: 'RoomServiceEventGraphMetaDataChanged',
-            graph: graph,
+            graph: newGraph,
             roomId: this.roomId,
+            undoInfo: this._graph.info,
           } satisfies RoomServiceEventGraphMetaDataChanged);
           this._onEvent.next({
             type: 'RoomServiceEventGraphElementsChanged',
-            graph: graph,
+            graph: newGraph,
             roomId: this.roomId,
-            nodesAdded: graph.nodes.size,
-            edgesAdded: graph.edges.size,
+            nodesAdded: newGraph.nodes.size,
+            edgesAdded: newGraph.edges.size,
           } satisfies RoomServiceEventGraphElementsChanged);
         },
       ),
@@ -1191,7 +1271,7 @@ export class LiveRoom implements ApplicationService {
 
   public loadNode(params: { nodeId: string; databaseId: string }): void {
     this._queue.addTask(
-      new TaskQueueTask('Loading nde', async (): Promise<void> => {
+      new TaskQueueTask('Loading node', async (): Promise<void> => {
         const oldGraph: MutableGraph = this.getGraph();
         const scenarioId: string | null = oldGraph.metaData.scenarioId;
         const displayConfiguration: FinalGraphDisplayConfiguration =
@@ -1217,17 +1297,20 @@ export class LiveRoom implements ApplicationService {
           throw new Error(`Node ${params.nodeId} not found.`);
         }
 
-        const graph: MutableGraph = this._snapshotGraph();
-
-        graph.nodes.addNeo4jNode(
-          result.nodes.toValueArray()[0],
-          MutableGraphElementCreationAction.search,
-          displayConfiguration,
+        const newGraph: MutableGraph = this._transaction(
+          'Load node',
+          (graph: MutableGraph): void => {
+            graph.nodes.addNeo4jNode(
+              result.nodes.toValueArray()[0],
+              MutableGraphElementCreationAction.search,
+              displayConfiguration,
+            );
+            this._postProcessGraph(graph, displayConfiguration);
+          },
         );
 
-        this._postProcessGraph(graph, displayConfiguration);
         this._physicsWorker.setGraph(
-          graph.toPhysicalGraph(displayConfiguration),
+          newGraph.toPhysicalGraph(displayConfiguration),
         );
         this._physicsWorker.triggerPhysics({
           amount: 'long',
@@ -1235,15 +1318,16 @@ export class LiveRoom implements ApplicationService {
         await this.saveGraph();
         this._onEvent.next({
           type: 'RoomServiceEventGraphMetaDataChanged',
-          graph: graph,
+          graph: newGraph,
           roomId: this.roomId,
+          undoInfo: this._graph.info,
         } satisfies RoomServiceEventGraphMetaDataChanged);
         this._onEvent.next({
           type: 'RoomServiceEventGraphElementsChanged',
-          graph: graph,
+          graph: newGraph,
           roomId: this.roomId,
-          nodesAdded: graph.nodes.size,
-          edgesAdded: graph.edges.size,
+          nodesAdded: newGraph.nodes.size,
+          edgesAdded: newGraph.edges.size,
         } satisfies RoomServiceEventGraphElementsChanged);
       }),
     );
@@ -1288,46 +1372,6 @@ export class LiveRoom implements ApplicationService {
       `Save graph of room ${this.roomId}, because the physics simulation stopped.`,
     );
     this.saveGraphAsync();
-  }
-
-  private async _connectNodes(graph: MutableGraph): Promise<number> {
-    let addedEdgesCount: number = 0;
-    for (const source of graph.nodes.getSources()) {
-      const nodesToConnect: SSet<string> = graph.nodes
-        .getBySource(source)
-        .map((n: MutableNode): string => n.id);
-      if (nodesToConnect.size === 0) {
-        continue;
-      }
-
-      const db: GetDatabaseDBDTO | null =
-        await this._database.getDatabase(source);
-      if (db == null) {
-        this._logger.error(
-          this,
-          `Unable to connect result nodes: Source ${source} not found.`,
-        );
-        continue;
-      }
-      const credentials: Neo4jDatabaseInfo = Neo4jDatabaseInfo.parse(db);
-
-      this._logger.log(
-        this,
-        `Will run connect result nodes on ${nodesToConnect.size.toString()} on database ${db.title ?? db.documentId}.`,
-      );
-      const result: Neo4jGraphElements =
-        await this._neo4j.loadConnectingRelationships(
-          credentials,
-          nodesToConnect,
-        );
-
-      const didAdd: number = graph.edges.addNeo4jEdges(
-        result.relationships,
-        MutableGraphElementCreationAction.connectResultNodes,
-      );
-      addedEdgesCount += didAdd;
-    }
-    return addedEdgesCount;
   }
 
   private _compressRelationships(graph: MutableGraph): void {
@@ -1497,32 +1541,29 @@ export class LiveRoom implements ApplicationService {
     return true;
   }
 
-  private _snapshotGraph(): MutableGraph {
-    const oldGraph: MutableGraph = this.getGraph();
-
-    const p: ProfilerTask = this._profiler.profile(this, 'Graph Snapshot');
-    const newGraph: MutableGraph = oldGraph.copy();
-    p.finish();
-
-    newGraph.previous = oldGraph;
-    this.setGraph(newGraph);
-
-    this._logger.debug(
-      this,
-      `Undo depth in room ${this.roomId}: ${newGraph.currentUndoDepth.toString()}`,
+  private _transaction(
+    title: string,
+    action: (g: MutableGraph) => void,
+  ): MutableGraph {
+    const newGraph: MutableGraph | null = this._graph.transaction(
+      title,
+      (graph: MutableGraph | null): MutableGraph | null => {
+        if (graph == null) {
+          throw new Error(`Cannot get graph in room ${this.roomId}`);
+        }
+        action(graph);
+        return graph;
+      },
     );
-    newGraph.trimUndoStack(10);
-    this._logger.debug(
-      this,
-      `Undo depth after trim in room ${this.roomId}: ${newGraph.currentUndoDepth.toString()}`,
-    );
-
+    if (newGraph == null) {
+      throw new Error(`Cannot get graph in room ${this.roomId}`);
+    }
     this._onEvent.next({
       type: 'RoomServiceEventGraphMetaDataChanged',
       graph: newGraph,
       roomId: this.roomId,
+      undoInfo: this._graph.info,
     } satisfies RoomServiceEventGraphMetaDataChanged);
-
     return newGraph;
   }
 
@@ -1539,10 +1580,7 @@ export class LiveRoom implements ApplicationService {
     task.finish();
   }
 
-  private async _compressNodes(
-    graph: MutableGraph,
-    targetLabel: string,
-  ): Promise<void> {
+  private _compressNodes(graph: MutableGraph, targetLabel: string): void {
     this._logger.debug(
       this,
       `Will check nodes of ${targetLabel} for compressing`,
@@ -1610,7 +1648,6 @@ export class LiveRoom implements ApplicationService {
         }
         compressCount += 1;
       }
-      await wait(0);
     }
     this._logger.log(
       this,

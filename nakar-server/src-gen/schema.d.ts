@@ -743,8 +743,8 @@ export interface components {
                 readonly durationMs: number;
             }[];
             readonly arguments: readonly components["schemas"]["ScenarioArgument"][];
-            readonly canUndo: boolean;
-            readonly canRedo: boolean;
+            readonly undoAction: string | null;
+            readonly redoAction: string | null;
         };
         readonly GraphElements: {
             readonly nodes: readonly components["schemas"]["Node"][];

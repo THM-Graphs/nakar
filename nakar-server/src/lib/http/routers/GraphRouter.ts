@@ -58,6 +58,7 @@ export class GraphRouter {
       graph,
       notes,
       config,
+      null,
     );
     return result;
   }
@@ -87,7 +88,7 @@ export class GraphRouter {
       room.documentId,
     );
     const result: SchemaGraphMetaData =
-      await this._schemaFactory.createSchemaGraphMetaData(graph);
+      await this._schemaFactory.createSchemaGraphMetaData(graph, null);
     return result;
   }
 

@@ -76,8 +76,12 @@ export function MenuBar(props: {
     }
   }, []);
   const navigate = useNavigate();
-  const canUndo = useBearStore((s) => s.room.scenario.graph.metaData.canUndo);
-  const canRedo = useBearStore((s) => s.room.scenario.graph.metaData.canRedo);
+  const undoAction = useBearStore(
+    (s) => s.room.scenario.graph.metaData.undoAction,
+  );
+  const redoAction = useBearStore(
+    (s) => s.room.scenario.graph.metaData.redoAction,
+  );
   const scenario = useBearStore((s) => s.room.scenario.graph.metaData.scenario);
   const selectedTab = useBearStore((s) => s.room.canvas.tabs.selected);
   const selectGraph = useBearStore((s) => s.room.canvas.tabs.selectGraph);
@@ -113,11 +117,11 @@ export function MenuBar(props: {
       <DropdownButton title={"Edit"}>
         <ActionDropdownItem
           action={UndoAction.shared}
-          params={{ roomContext: props.roomContext, canUndo }}
+          params={{ roomContext: props.roomContext, undoAction }}
         ></ActionDropdownItem>
         <ActionDropdownItem
           action={RedoAction.shared}
-          params={{ roomContext: props.roomContext, canRedo }}
+          params={{ roomContext: props.roomContext, redoAction }}
         ></ActionDropdownItem>
         <Dropdown.Divider></Dropdown.Divider>
         <ActionDropdownItem

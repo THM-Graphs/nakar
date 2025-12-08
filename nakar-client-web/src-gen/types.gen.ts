@@ -113,8 +113,8 @@ export type GraphMetaData = {
         durationMs: number;
     }>;
     arguments: Array<ScenarioArgument>;
-    canUndo: boolean;
-    canRedo: boolean;
+    undoAction: (string) | null;
+    redoAction: (string) | null;
 };
 
 export type GraphProperty = {

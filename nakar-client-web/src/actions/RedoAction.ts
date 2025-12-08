@@ -5,7 +5,7 @@ import { postRoomActionRedo } from "../../src-gen";
 
 export type RedoActionParams = {
   roomContext: RoomContext;
-  canRedo: boolean;
+  redoAction: string | null;
 };
 
 export class RedoAction extends Action<RedoActionParams> {
@@ -22,7 +22,7 @@ export class RedoAction extends Action<RedoActionParams> {
   }
 
   disabled(input: RedoActionParams): boolean {
-    return !input.canRedo;
+    return !input.redoAction;
   }
 
   icon(): string {
@@ -33,7 +33,11 @@ export class RedoAction extends Action<RedoActionParams> {
     return "redo";
   }
 
-  title(): string {
-    return "Redo";
+  title(params: RedoActionParams): string {
+    if (params.redoAction == null) {
+      return "Redo";
+    } else {
+      return `Redo '${params.redoAction}'`;
+    }
   }
 }
