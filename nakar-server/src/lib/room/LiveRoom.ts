@@ -257,16 +257,8 @@ export class LiveRoom implements ApplicationService {
             this.roomId,
           );
 
-        const graph: MutableGraph = this._snapshotGraph();
-        const positionsCache: PositionsCache = PositionsCache.fromGraph(graph);
-
-        if (!scenario.additive) {
-          graph.resetFromInitialScenario(
-            scenario,
-            displayConfiguration,
-            params.arguments,
-          );
-        }
+        const tableData: SMap<string, unknown>[] = [];
+        const graphElementsList: Neo4jGraphElements[] = [];
 
         for (const query of scenario.queries) {
           if (query.database == null) {
@@ -317,18 +309,34 @@ export class LiveRoom implements ApplicationService {
           }
 
           if (query.isTableQuery) {
-            graph.tableData = graphElements.tableData;
+            tableData.push(...graphElements.tableData);
           } else {
-            graph.nodes.addNeo4jNodes(
-              graphElements.nodes,
-              MutableGraphElementCreationAction.loadScenario,
-              displayConfiguration,
-            );
-            graph.edges.addNeo4jEdges(
-              graphElements.relationships,
-              MutableGraphElementCreationAction.loadScenario,
-            );
+            graphElementsList.push(graphElements);
           }
+        }
+
+        const graph: MutableGraph = this._snapshotGraph();
+        const positionsCache: PositionsCache = PositionsCache.fromGraph(graph);
+
+        if (!scenario.additive) {
+          graph.resetFromInitialScenario(
+            scenario,
+            displayConfiguration,
+            params.arguments,
+          );
+        }
+
+        graph.tableData = tableData;
+        for (const graphElements of graphElementsList) {
+          graph.nodes.addNeo4jNodes(
+            graphElements.nodes,
+            MutableGraphElementCreationAction.loadScenario,
+            displayConfiguration,
+          );
+          graph.edges.addNeo4jEdges(
+            graphElements.relationships,
+            MutableGraphElementCreationAction.loadScenario,
+          );
         }
 
         positionsCache.applyToGraph(graph);
