@@ -7,12 +7,18 @@ import { Input } from '@strapi/types/dist/modules/documents/params/data';
 import { SMap } from '../tools/Map';
 
 export class MigrationService implements ApplicationService {
+  private readonly _active: boolean = false;
+
   public constructor(private readonly _logger: LoggerService) {}
 
   public async bootstrap(): Promise<void> {
-    this._logger.warn(this, 'Will check database for migration to v2.');
-    await this._deleteAllData();
-    await this._createProjects();
+    if (this._active) {
+      this._logger.warn(this, 'Will check database for migration to v2.');
+      await this._deleteAllData();
+      await this._createProjects();
+    } else {
+      this._logger.warn(this, 'Not active. Will do nothing.');
+    }
   }
 
   public destroy(): Promise<void> | void {
