@@ -279,7 +279,7 @@ export class ActionsRouter {
     });
   }
 
-  private async _layoutLabel(req: Request): Promise<void> {
+  private _layoutLabel(req: Request): void {
     const room: GetRoomDBDTO = req.nakar.room;
 
     type Body =
@@ -287,7 +287,7 @@ export class ActionsRouter {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
     const requestBody: Body = req.body as Body;
 
-    await this._roomService.getRoom(room.documentId).layoutLabel({
+    this._roomService.getRoom(room.documentId).layoutLabel({
       label: requestBody.label,
       layoutSpecification: requestBody.layoutSpecification,
     });
