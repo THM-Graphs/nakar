@@ -46,10 +46,10 @@ export class MigrationService implements ApplicationService {
 
     for (const contentType of contentTypes) {
       this._logger.warn(this, `Will delete ${contentType}`);
-      for (const canvas of await strapi.documents(contentType).findMany()) {
+      for (const document of await strapi.documents(contentType).findMany()) {
         await strapi
           .documents(contentType)
-          .delete({ documentId: canvas.documentId });
+          .delete({ documentId: document.documentId });
       }
     }
   }
@@ -408,6 +408,20 @@ export class MigrationService implements ApplicationService {
     >,
     databaseCache: SMap<string, string>,
   ): Promise<void> {
+    const leftDatabaseId: string | null =
+      mergeNodeConfig.originalDatabase != null
+        ? (databaseCache.get(mergeNodeConfig.originalDatabase.documentId) ??
+          null)
+        : null;
+
+    const rightDatabaseId: string | null = mergeNodeConfig.mergeDatabase
+      ? (databaseCache.get(mergeNodeConfig.mergeDatabase.documentId) ?? null)
+      : null;
+
+    if (leftDatabaseId == null || rightDatabaseId == null) {
+      return;
+    }
+
     try {
       await strapi
         .documents('api::v2-common-property.v2-common-property')
@@ -415,15 +429,10 @@ export class MigrationService implements ApplicationService {
           data: {
             leftLabel: mergeNodeConfig.originalLabel ?? undefined,
             leftProperty: mergeNodeConfig.originalProperties ?? undefined,
-            leftDatabase:
-              mergeNodeConfig.originalDatabase != null
-                ? databaseCache.get(mergeNodeConfig.originalDatabase.documentId)
-                : undefined,
+            leftDatabase: leftDatabaseId,
             rightLabel: mergeNodeConfig.mergeLabel ?? undefined,
             rightProperty: mergeNodeConfig.originalProperties ?? undefined,
-            rightDatabase: mergeNodeConfig.mergeDatabase
-              ? databaseCache.get(mergeNodeConfig.mergeDatabase.documentId)
-              : undefined,
+            rightDatabase: rightDatabaseId,
           },
           status: 'published',
         });
