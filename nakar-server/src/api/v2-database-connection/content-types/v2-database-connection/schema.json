@@ -10,6 +10,7 @@
   "options": {
     "draftAndPublish": true
   },
+  "pluginOptions": {},
   "attributes": {
     "title": {
       "type": "string"
@@ -19,21 +20,6 @@
       "relation": "manyToOne",
       "target": "api::v2-project.v2-project",
       "inversedBy": "databaseConnections"
-    },
-    "commonProperties": {
-      "type": "component",
-      "repeatable": true,
-      "component": "database-connection.v2-common-property"
-    },
-    "linkProperties": {
-      "type": "component",
-      "repeatable": true,
-      "component": "database-connection.v2-link-property"
-    },
-    "titleProperties": {
-      "type": "component",
-      "repeatable": true,
-      "component": "database-connection.v2-title-property"
     },
     "username": {
       "type": "string"
@@ -49,6 +35,36 @@
     },
     "browserUrl": {
       "type": "string"
+    },
+    "commonPropertiesLeft": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::v2-common-property.v2-common-property",
+      "mappedBy": "leftDatabase"
+    },
+    "commonPropertiesRight": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::v2-common-property.v2-common-property",
+      "mappedBy": "rightDatabase"
+    },
+    "linkProperties": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::v2-link-property.v2-link-property",
+      "mappedBy": "database"
+    },
+    "nodeTitleProperties": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::v2-node-title-property.v2-node-title-property",
+      "mappedBy": "database"
+    },
+    "queries": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::v2-query.v2-query",
+      "mappedBy": "database"
     }
   }
 }

@@ -10,6 +10,7 @@
   "options": {
     "draftAndPublish": true
   },
+  "pluginOptions": {},
   "attributes": {
     "title": {
       "type": "string"
@@ -17,26 +18,29 @@
     "description": {
       "type": "text"
     },
-    "queries": {
-      "type": "component",
-      "repeatable": true,
-      "component": "scenario.v2-query"
-    },
-    "parameters": {
-      "type": "component",
-      "repeatable": true,
-      "component": "scenario.v2-query-parameter"
-    },
-    "postActions": {
-      "type": "component",
-      "repeatable": true,
-      "component": "scenario.v2-post-scenario-action"
-    },
     "group": {
       "type": "relation",
       "relation": "manyToOne",
       "target": "api::v2-scenario-group.v2-scenario-group",
       "inversedBy": "scenarios"
+    },
+    "postActions": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::v2-post-scenario-action.v2-post-scenario-action",
+      "mappedBy": "scenario"
+    },
+    "queries": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::v2-query.v2-query",
+      "mappedBy": "scenario"
+    },
+    "queryParameters": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::v2-query-parameter.v2-query-parameter",
+      "mappedBy": "scenario"
     }
   }
 }

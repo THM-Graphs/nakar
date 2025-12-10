@@ -29,9 +29,16 @@ export class MigrationService implements ApplicationService {
     this._logger.warn(this, 'Will delete all v2 data.');
     const contentTypes: UID.ContentType[] = [
       'api::v2-canvas.v2-canvas',
+      'api::v2-common-property.v2-common-property',
       'api::v2-database-connection.v2-database-connection',
+      'api::v2-link-property.v2-link-property',
+      'api::v2-node-reference.v2-node-reference',
+      'api::v2-node-title-property.v2-node-title-property',
       'api::v2-note.v2-note',
+      'api::v2-post-scenario-action.v2-post-scenario-action',
       'api::v2-project.v2-project',
+      'api::v2-query.v2-query',
+      'api::v2-query-parameter.v2-query-parameter',
       'api::v2-room.v2-room',
       'api::v2-scenario.v2-scenario',
       'api::v2-scenario-group.v2-scenario-group',
@@ -74,15 +81,28 @@ export class MigrationService implements ApplicationService {
         status: 'published',
       });
 
-    for (const roomNumber of [1, 2, 3]) {
-      await strapi.documents('api::v2-room.v2-room').create({
-        data: {
-          title: `Room #${roomNumber.toString()}`,
-          project: project.documentId,
-        },
-        status: 'published',
-      });
-    }
+    await strapi.documents('api::v2-room.v2-room').create({
+      data: {
+        title: `Room #1`,
+        project: project.documentId,
+        visibility: 'public',
+      },
+      status: 'published',
+    });
+    await strapi.documents('api::v2-room.v2-room').create({
+      data: {
+        title: `Room #2`,
+        project: project.documentId,
+      },
+      status: 'published',
+    });
+    await strapi.documents('api::v2-room.v2-room').create({
+      data: {
+        title: `Room #3`,
+        project: project.documentId,
+      },
+      status: 'published',
+    });
 
     for (const oldScenarioGroup of (
       await strapi.documents('api::room-template.room-template').findOne({
@@ -142,54 +162,124 @@ export class MigrationService implements ApplicationService {
         populate: {
           queries: { populate: ['database'] };
           parameters: {};
+          graphDisplayConfiguration: {
+            populate: { nodeDisplayConfigurations: {} };
+          };
         };
       }
     > | null = await strapi.documents('api::scenario.scenario').findOne({
       documentId: oldScenario.documentId,
-      populate: { queries: { populate: { database: {} } }, parameters: {} },
+      populate: {
+        queries: { populate: { database: {} } },
+        parameters: {},
+        graphDisplayConfiguration: {
+          populate: { nodeDisplayConfigurations: {} },
+        },
+      },
     });
     if (fullScenario == null) {
       return;
     }
 
-    const queries: Input<'scenario.v2-query'>[] = [];
+    const scenario: Result<'api::v2-scenario.v2-scenario'> = await strapi
+      .documents('api::v2-scenario.v2-scenario')
+      .create({
+        status: 'published',
+        data: {
+          title: oldScenario.title ?? undefined,
+          group: scenarioGroup.documentId,
+        },
+      });
+
+    if (fullScenario.graphDisplayConfiguration?.connectResultNodes === 'true') {
+      await strapi
+        .documents('api::v2-post-scenario-action.v2-post-scenario-action')
+        .create({
+          data: { type: 'connectResultNodes', scenario: scenario.documentId },
+          status: 'published',
+        });
+    }
+
+    if (
+      fullScenario.graphDisplayConfiguration?.compressRelationships === 'true'
+    ) {
+      await strapi
+        .documents('api::v2-post-scenario-action.v2-post-scenario-action')
+        .create({
+          data: {
+            type: 'compressRelationships',
+            scenario: scenario.documentId,
+          },
+          status: 'published',
+        });
+    }
+
+    for (const nodeDisplayConfig of fullScenario.graphDisplayConfiguration
+      ?.nodeDisplayConfigurations ?? []) {
+      if (nodeDisplayConfig.compress === 'true') {
+        await strapi
+          .documents('api::v2-post-scenario-action.v2-post-scenario-action')
+          .create({
+            data: {
+              type: 'compressNodes',
+              label: nodeDisplayConfig.targetLabel ?? undefined,
+              scenario: scenario.documentId,
+            },
+            status: 'published',
+          });
+      }
+      if (
+        nodeDisplayConfig.layoutAlgorithm !== 'inherit' &&
+        nodeDisplayConfig.layoutAlgorithm != null
+      ) {
+        await strapi
+          .documents('api::v2-post-scenario-action.v2-post-scenario-action')
+          .create({
+            data: {
+              type: 'layout',
+              label: nodeDisplayConfig.targetLabel ?? undefined,
+              layoutAlgorithm: nodeDisplayConfig.layoutAlgorithm ?? undefined,
+              circleRadius: nodeDisplayConfig.circleLayoutDistance ?? undefined,
+              scenario: scenario.documentId,
+            },
+            status: 'published',
+          });
+      }
+    }
+
     for (const query of fullScenario.queries ?? []) {
-      queries.push({
-        id: query.id,
-        query: query.query ?? undefined,
-        isTableQuery: query.isTableQuery ?? undefined,
-        database:
-          (
-            await this._createDatabase(
-              project,
-              query.database ?? null,
-              databaseCache,
-            )
-          )?.documentId ?? undefined,
+      await strapi.documents('api::v2-query.v2-query').create({
+        data: {
+          query: query.query ?? undefined,
+          isTableQuery: query.isTableQuery ?? undefined,
+          scenario: scenario.documentId,
+          database:
+            (
+              await this._createDatabase(
+                project,
+                query.database ?? null,
+                databaseCache,
+              )
+            )?.documentId ?? undefined,
+        },
+        status: 'published',
       });
     }
 
-    await strapi.documents('api::v2-scenario.v2-scenario').create({
-      status: 'published',
-      data: {
-        title: oldScenario.title ?? undefined,
-        group: scenarioGroup.documentId,
-        queries: queries,
-        parameters:
-          fullScenario.parameters?.map(
-            (
-              parameter: Result<'graph.parameter'>,
-            ): Input<'scenario.v2-query-parameter'> => {
-              return {
-                identifier: parameter.identifier ?? undefined,
-                title: parameter.title ?? undefined,
-                defaultValue: parameter.defaultValue ?? undefined,
-                dataType: parameter.dataType ?? undefined,
-              };
-            },
-          ) ?? [],
-      },
-    });
+    for (const parameter of fullScenario.parameters ?? []) {
+      await strapi
+        .documents('api::v2-query-parameter.v2-query-parameter')
+        .create({
+          data: {
+            scenario: scenario.documentId,
+            identifier: parameter.identifier ?? undefined,
+            title: parameter.title ?? undefined,
+            defaultValue: parameter.defaultValue ?? undefined,
+            dataType: parameter.dataType ?? undefined,
+          },
+          status: 'published',
+        });
+    }
   }
 
   private async _createDatabase(
@@ -318,57 +408,28 @@ export class MigrationService implements ApplicationService {
     >,
     databaseCache: SMap<string, string>,
   ): Promise<void> {
-    if (mergeNodeConfig.originalDatabase == null) {
-      return;
+    try {
+      await strapi
+        .documents('api::v2-common-property.v2-common-property')
+        .create({
+          data: {
+            leftLabel: mergeNodeConfig.originalLabel ?? undefined,
+            leftProperty: mergeNodeConfig.originalProperties ?? undefined,
+            leftDatabase:
+              mergeNodeConfig.originalDatabase != null
+                ? databaseCache.get(mergeNodeConfig.originalDatabase.documentId)
+                : undefined,
+            rightLabel: mergeNodeConfig.mergeLabel ?? undefined,
+            rightProperty: mergeNodeConfig.originalProperties ?? undefined,
+            rightDatabase: mergeNodeConfig.mergeDatabase
+              ? databaseCache.get(mergeNodeConfig.mergeDatabase.documentId)
+              : undefined,
+          },
+          status: 'published',
+        });
+    } catch (error: unknown) {
+      this._logger.error(this, 'Error creating a common property entry.');
+      this._logger.error(this, error);
     }
-    const newLeftDatabaseId: string | undefined = databaseCache.get(
-      mergeNodeConfig.originalDatabase.documentId,
-    );
-    if (newLeftDatabaseId == null) {
-      return;
-    }
-    const leftDatabase: Result<
-      'api::v2-database-connection.v2-database-connection',
-      { populate: { commonProperties: {} } }
-    > | null = await strapi
-      .documents('api::v2-database-connection.v2-database-connection')
-      .findOne({
-        documentId: newLeftDatabaseId,
-        populate: { commonProperties: {} },
-      });
-    if (leftDatabase == null) {
-      return;
-    }
-
-    const commonProperties: Input<'database-connection.v2-common-property'>[] =
-      [];
-    for (const existing of leftDatabase.commonProperties ?? []) {
-      commonProperties.push({ id: existing.id });
-    }
-    const rightDatabaseId: string | null = mergeNodeConfig.mergeDatabase
-      ? (databaseCache.get(mergeNodeConfig.mergeDatabase.documentId) ?? null)
-      : null;
-    commonProperties.push({
-      leftLabel: mergeNodeConfig.originalLabel ?? undefined,
-      leftProperty: mergeNodeConfig.originalProperties ?? undefined,
-      rightLabel: mergeNodeConfig.mergeLabel ?? undefined,
-      rightProperty: mergeNodeConfig.originalProperties ?? undefined,
-      rightDatabase:
-        rightDatabaseId != null
-          ? {
-              documentId: rightDatabaseId,
-            }
-          : undefined,
-    });
-
-    await strapi
-      .documents('api::v2-database-connection.v2-database-connection')
-      .update({
-        documentId: leftDatabase.documentId,
-        data: {
-          commonProperties: commonProperties,
-        },
-        status: 'published',
-      });
   }
 }

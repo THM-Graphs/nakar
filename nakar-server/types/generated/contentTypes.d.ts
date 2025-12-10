@@ -34,6 +34,10 @@ export interface AdminApiToken extends Struct.CollectionTypeSchema {
         minLength: 1;
       }> &
       Schema.Attribute.DefaultTo<''>;
+    encryptedKey: Schema.Attribute.Text &
+      Schema.Attribute.SetMinMaxLength<{
+        minLength: 1;
+      }>;
     expiresAt: Schema.Attribute.DateTime;
     lastUsedAt: Schema.Attribute.DateTime;
     lifespan: Schema.Attribute.BigInteger;
@@ -196,6 +200,63 @@ export interface AdminRole extends Struct.CollectionTypeSchema {
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     users: Schema.Attribute.Relation<'manyToMany', 'admin::user'>;
+  };
+}
+
+export interface AdminSession extends Struct.CollectionTypeSchema {
+  collectionName: 'strapi_sessions';
+  info: {
+    description: 'Session Manager storage';
+    displayName: 'Session';
+    name: 'Session';
+    pluralName: 'sessions';
+    singularName: 'session';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  pluginOptions: {
+    'content-manager': {
+      visible: false;
+    };
+    'content-type-builder': {
+      visible: false;
+    };
+    i18n: {
+      localized: false;
+    };
+  };
+  attributes: {
+    absoluteExpiresAt: Schema.Attribute.DateTime & Schema.Attribute.Private;
+    childId: Schema.Attribute.String & Schema.Attribute.Private;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    deviceId: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Private;
+    expiresAt: Schema.Attribute.DateTime &
+      Schema.Attribute.Required &
+      Schema.Attribute.Private;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<'oneToMany', 'admin::session'> &
+      Schema.Attribute.Private;
+    origin: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Private;
+    publishedAt: Schema.Attribute.DateTime;
+    sessionId: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Private &
+      Schema.Attribute.Unique;
+    status: Schema.Attribute.String & Schema.Attribute.Private;
+    type: Schema.Attribute.String & Schema.Attribute.Private;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    userId: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Private;
   };
 }
 
@@ -585,6 +646,42 @@ export interface ApiScenarioScenario extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiV2CanvasLabelSettingV2CanvasLabelSetting
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'v2_canvas_label_settings';
+  info: {
+    displayName: 'V2 Canvas Node Setting';
+    pluralName: 'v2-canvas-label-settings';
+    singularName: 'v2-canvas-label-setting';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    colorIndex: Schema.Attribute.Enumeration<
+      ['color0', 'color1', 'color2', 'color3', 'color4', 'color5']
+    >;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    customColorIndex: Schema.Attribute.Boolean &
+      Schema.Attribute.DefaultTo<false>;
+    customRadius: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
+    label: Schema.Attribute.String;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::v2-canvas-label-setting.v2-canvas-label-setting'
+    > &
+      Schema.Attribute.Private;
+    publishedAt: Schema.Attribute.DateTime;
+    radius: Schema.Attribute.Decimal;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface ApiV2CanvasV2Canvas extends Struct.CollectionTypeSchema {
   collectionName: 'v2_canvases';
   info: {
@@ -597,10 +694,16 @@ export interface ApiV2CanvasV2Canvas extends Struct.CollectionTypeSchema {
     draftAndPublish: true;
   };
   attributes: {
+    compressRelationshipsWidthFactor: Schema.Attribute.Decimal &
+      Schema.Attribute.DefaultTo<2>;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     graph: Schema.Attribute.Media<'files'>;
+    growNodesBasedOnDegree: Schema.Attribute.Boolean &
+      Schema.Attribute.DefaultTo<false>;
+    growNodesBasedOnDegreeFactor: Schema.Attribute.Decimal &
+      Schema.Attribute.DefaultTo<2>;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
       'oneToMany',
@@ -609,7 +712,53 @@ export interface ApiV2CanvasV2Canvas extends Struct.CollectionTypeSchema {
       Schema.Attribute.Private;
     publishedAt: Schema.Attribute.DateTime;
     room: Schema.Attribute.Relation<'manyToOne', 'api::v2-room.v2-room'>;
+    scaleType: Schema.Attribute.Enumeration<
+      ['linear', 'log2', 'logn', 'log10']
+    > &
+      Schema.Attribute.DefaultTo<'linear'>;
     title: Schema.Attribute.String;
+    treatNameInQueryAsLabel: Schema.Attribute.Boolean &
+      Schema.Attribute.DefaultTo<false>;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiV2CommonPropertyV2CommonProperty
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'v2_common_properties';
+  info: {
+    displayName: 'V2 Common Property';
+    pluralName: 'v2-common-properties';
+    singularName: 'v2-common-property';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    leftDatabase: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::v2-database-connection.v2-database-connection'
+    >;
+    leftLabel: Schema.Attribute.String;
+    leftProperty: Schema.Attribute.String;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::v2-common-property.v2-common-property'
+    > &
+      Schema.Attribute.Private;
+    publishedAt: Schema.Attribute.DateTime;
+    rightDatabase: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::v2-database-connection.v2-database-connection'
+    >;
+    rightLabel: Schema.Attribute.String;
+    rightProperty: Schema.Attribute.String;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -630,18 +779,22 @@ export interface ApiV2DatabaseConnectionV2DatabaseConnection
   };
   attributes: {
     browserUrl: Schema.Attribute.String;
-    commonProperties: Schema.Attribute.Component<
-      'database-connection.v2-common-property',
-      true
+    commonPropertiesLeft: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::v2-common-property.v2-common-property'
+    >;
+    commonPropertiesRight: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::v2-common-property.v2-common-property'
     >;
     connectionUrl: Schema.Attribute.String;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     database: Schema.Attribute.String;
-    linkProperties: Schema.Attribute.Component<
-      'database-connection.v2-link-property',
-      true
+    linkProperties: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::v2-link-property.v2-link-property'
     >;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
@@ -649,21 +802,121 @@ export interface ApiV2DatabaseConnectionV2DatabaseConnection
       'api::v2-database-connection.v2-database-connection'
     > &
       Schema.Attribute.Private;
+    nodeTitleProperties: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::v2-node-title-property.v2-node-title-property'
+    >;
     password: Schema.Attribute.String;
     project: Schema.Attribute.Relation<
       'manyToOne',
       'api::v2-project.v2-project'
     >;
     publishedAt: Schema.Attribute.DateTime;
+    queries: Schema.Attribute.Relation<'oneToMany', 'api::v2-query.v2-query'>;
     title: Schema.Attribute.String;
-    titleProperties: Schema.Attribute.Component<
-      'database-connection.v2-title-property',
-      true
-    >;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     username: Schema.Attribute.String;
+  };
+}
+
+export interface ApiV2LinkPropertyV2LinkProperty
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'v2_link_properties';
+  info: {
+    displayName: 'V2 Link Property';
+    pluralName: 'v2-link-properties';
+    singularName: 'v2-link-property';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    database: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::v2-database-connection.v2-database-connection'
+    >;
+    label: Schema.Attribute.String;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::v2-link-property.v2-link-property'
+    > &
+      Schema.Attribute.Private;
+    property: Schema.Attribute.String;
+    publishedAt: Schema.Attribute.DateTime;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    url: Schema.Attribute.String;
+  };
+}
+
+export interface ApiV2NodeReferenceV2NodeReference
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'v2_node_references';
+  info: {
+    displayName: 'V2 Node Reference';
+    pluralName: 'v2-node-references';
+    singularName: 'v2-node-reference';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::v2-node-reference.v2-node-reference'
+    > &
+      Schema.Attribute.Private;
+    nodeId: Schema.Attribute.String;
+    notes: Schema.Attribute.Relation<'manyToMany', 'api::v2-note.v2-note'>;
+    publishedAt: Schema.Attribute.DateTime;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiV2NodeTitlePropertyV2NodeTitleProperty
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'v2_node_title_properties';
+  info: {
+    displayName: 'V2 Node Title Property';
+    pluralName: 'v2-node-title-properties';
+    singularName: 'v2-node-title-property';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    database: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::v2-database-connection.v2-database-connection'
+    >;
+    label: Schema.Attribute.String;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::v2-node-title-property.v2-node-title-property'
+    > &
+      Schema.Attribute.Private;
+    property: Schema.Attribute.String;
+    publishedAt: Schema.Attribute.DateTime;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
   };
 }
 
@@ -693,12 +946,53 @@ export interface ApiV2NoteV2Note extends Struct.CollectionTypeSchema {
       'api::v2-note.v2-note'
     > &
       Schema.Attribute.Private;
-    nodes: Schema.Attribute.Component<'note.v2-node-reference', true>;
+    nodes: Schema.Attribute.Relation<
+      'manyToMany',
+      'api::v2-node-reference.v2-node-reference'
+    >;
     project: Schema.Attribute.Relation<
       'manyToOne',
       'api::v2-project.v2-project'
     >;
     publishedAt: Schema.Attribute.DateTime;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiV2PostScenarioActionV2PostScenarioAction
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'v2_post_scenario_actions';
+  info: {
+    displayName: 'V2 Post Scenario Action';
+    pluralName: 'v2-post-scenario-actions';
+    singularName: 'v2-post-scenario-action';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    circleRadius: Schema.Attribute.Decimal;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    label: Schema.Attribute.String;
+    layoutAlgorithm: Schema.Attribute.Enumeration<['forceDirected', 'circle']>;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::v2-post-scenario-action.v2-post-scenario-action'
+    > &
+      Schema.Attribute.Private;
+    publishedAt: Schema.Attribute.DateTime;
+    scenario: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::v2-scenario.v2-scenario'
+    >;
+    type: Schema.Attribute.Enumeration<
+      ['connectResultNodes', 'compressRelationships', 'compressNodes', 'layout']
+    >;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -746,6 +1040,82 @@ export interface ApiV2ProjectV2Project extends Struct.CollectionTypeSchema {
       'api::v2-scenario-group.v2-scenario-group'
     >;
     title: Schema.Attribute.String;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiV2QueryParameterV2QueryParameter
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'v2_query_parameters';
+  info: {
+    displayName: 'V2 Query Parameter';
+    pluralName: 'v2-query-parameters';
+    singularName: 'v2-query-parameter';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    dataType: Schema.Attribute.Enumeration<
+      ['string', 'number', 'json', 'startDateTime', 'endDateTime']
+    > &
+      Schema.Attribute.DefaultTo<'string'>;
+    defaultValue: Schema.Attribute.String;
+    identifier: Schema.Attribute.String;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::v2-query-parameter.v2-query-parameter'
+    > &
+      Schema.Attribute.Private;
+    publishedAt: Schema.Attribute.DateTime;
+    scenario: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::v2-scenario.v2-scenario'
+    >;
+    title: Schema.Attribute.String;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiV2QueryV2Query extends Struct.CollectionTypeSchema {
+  collectionName: 'v2_queries';
+  info: {
+    displayName: 'V2 Query';
+    pluralName: 'v2-queries';
+    singularName: 'v2-query';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    database: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::v2-database-connection.v2-database-connection'
+    >;
+    isTableQuery: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::v2-query.v2-query'
+    > &
+      Schema.Attribute.Private;
+    publishedAt: Schema.Attribute.DateTime;
+    query: Schema.Attribute.String;
+    scenario: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::v2-scenario.v2-scenario'
+    >;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -857,13 +1227,16 @@ export interface ApiV2ScenarioV2Scenario extends Struct.CollectionTypeSchema {
       'api::v2-scenario.v2-scenario'
     > &
       Schema.Attribute.Private;
-    parameters: Schema.Attribute.Component<'scenario.v2-query-parameter', true>;
-    postActions: Schema.Attribute.Component<
-      'scenario.v2-post-scenario-action',
-      true
+    postActions: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::v2-post-scenario-action.v2-post-scenario-action'
     >;
     publishedAt: Schema.Attribute.DateTime;
-    queries: Schema.Attribute.Component<'scenario.v2-query', true>;
+    queries: Schema.Attribute.Relation<'oneToMany', 'api::v2-query.v2-query'>;
+    queryParameters: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::v2-query-parameter.v2-query-parameter'
+    >;
     title: Schema.Attribute.String;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
@@ -1386,6 +1759,7 @@ declare module '@strapi/strapi' {
       'admin::api-token-permission': AdminApiTokenPermission;
       'admin::permission': AdminPermission;
       'admin::role': AdminRole;
+      'admin::session': AdminSession;
       'admin::transfer-token': AdminTransferToken;
       'admin::transfer-token-permission': AdminTransferTokenPermission;
       'admin::user': AdminUser;
@@ -1395,10 +1769,18 @@ declare module '@strapi/strapi' {
       'api::room.room': ApiRoomRoom;
       'api::scenario-group.scenario-group': ApiScenarioGroupScenarioGroup;
       'api::scenario.scenario': ApiScenarioScenario;
+      'api::v2-canvas-label-setting.v2-canvas-label-setting': ApiV2CanvasLabelSettingV2CanvasLabelSetting;
       'api::v2-canvas.v2-canvas': ApiV2CanvasV2Canvas;
+      'api::v2-common-property.v2-common-property': ApiV2CommonPropertyV2CommonProperty;
       'api::v2-database-connection.v2-database-connection': ApiV2DatabaseConnectionV2DatabaseConnection;
+      'api::v2-link-property.v2-link-property': ApiV2LinkPropertyV2LinkProperty;
+      'api::v2-node-reference.v2-node-reference': ApiV2NodeReferenceV2NodeReference;
+      'api::v2-node-title-property.v2-node-title-property': ApiV2NodeTitlePropertyV2NodeTitleProperty;
       'api::v2-note.v2-note': ApiV2NoteV2Note;
+      'api::v2-post-scenario-action.v2-post-scenario-action': ApiV2PostScenarioActionV2PostScenarioAction;
       'api::v2-project.v2-project': ApiV2ProjectV2Project;
+      'api::v2-query-parameter.v2-query-parameter': ApiV2QueryParameterV2QueryParameter;
+      'api::v2-query.v2-query': ApiV2QueryV2Query;
       'api::v2-room.v2-room': ApiV2RoomV2Room;
       'api::v2-scenario-group.v2-scenario-group': ApiV2ScenarioGroupV2ScenarioGroup;
       'api::v2-scenario.v2-scenario': ApiV2ScenarioV2Scenario;

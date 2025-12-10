@@ -1,0 +1,41 @@
+{
+  "kind": "collectionType",
+  "collectionName": "v2_canvas_label_settings",
+  "info": {
+    "singularName": "v2-canvas-label-setting",
+    "pluralName": "v2-canvas-label-settings",
+    "displayName": "V2 Canvas Node Setting"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "label": {
+      "type": "string",
+      "unique": false
+    },
+    "radius": {
+      "type": "decimal"
+    },
+    "customRadius": {
+      "type": "boolean",
+      "default": false
+    },
+    "colorIndex": {
+      "type": "enumeration",
+      "enum": [
+        "color0",
+        "color1",
+        "color2",
+        "color3",
+        "color4",
+        "color5"
+      ]
+    },
+    "customColorIndex": {
+      "type": "boolean",
+      "default": false
+    }
+  }
+}

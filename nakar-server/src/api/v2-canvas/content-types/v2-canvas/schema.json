@@ -10,6 +10,7 @@
   "options": {
     "draftAndPublish": true
   },
+  "pluginOptions": {},
   "attributes": {
     "title": {
       "type": "string"
@@ -21,11 +22,37 @@
       "inversedBy": "canvases"
     },
     "graph": {
+      "type": "media",
+      "multiple": false,
       "allowedTypes": [
         "files"
-      ],
-      "type": "media",
-      "multiple": false
+      ]
+    },
+    "growNodesBasedOnDegree": {
+      "type": "boolean",
+      "default": false
+    },
+    "scaleType": {
+      "type": "enumeration",
+      "default": "linear",
+      "enum": [
+        "linear",
+        "log2",
+        "logn",
+        "log10"
+      ]
+    },
+    "growNodesBasedOnDegreeFactor": {
+      "type": "decimal",
+      "default": 2
+    },
+    "compressRelationshipsWidthFactor": {
+      "type": "decimal",
+      "default": 2
+    },
+    "treatNameInQueryAsLabel": {
+      "type": "boolean",
+      "default": false
     }
   }
 }
