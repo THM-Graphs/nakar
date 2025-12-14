@@ -112,9 +112,13 @@ export class NakarApplication {
   public async destroy(): Promise<void> {
     this.logger.debug(this, 'Will destroy services...');
     for (const service of this._services.toReversed()) {
+      this.logger.debug(
+        this,
+        `Will destroy ${ClassHelper.getName(service)}...`,
+      );
       const task: ProfilerTask = this.profiler.profile(
         this,
-        `Destroy Service ${ClassHelper.getName(service)}`,
+        `Did destroy Service ${ClassHelper.getName(service)}`,
       );
       await service.destroy();
       task.finish();

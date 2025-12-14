@@ -1,7 +1,7 @@
 import { ApplicationService } from '../application/ApplicationService';
 import { SMap } from '../tools/Map';
 import { MutableGraph } from './graph/MutableGraph';
-import { Observable, Subject, Subscription } from 'rxjs';
+import { BehaviorSubject, Observable, Subject, Subscription } from 'rxjs';
 import type { RoomServiceEvent } from './events/RoomServiceEvent';
 import { LoggerService } from '../logger/LoggerService';
 import { MediaService } from '../media/MediaService';
@@ -52,6 +52,7 @@ import { TaskQueueState } from '../task-queue/TaskQueueState';
 import { TaskQueueTask } from '../task-queue/TaskQueueTask';
 import { UndoWrapper } from '../undo/UndoWrapper';
 import { Neo4jRelationship } from '../neo4j/Neo4jRelationship';
+import { LiveRoomState } from './LiveRoomState';
 
 export class LiveRoom implements ApplicationService {
   private readonly _physicsWorker: PhysicsWorker;
@@ -59,6 +60,8 @@ export class LiveRoom implements ApplicationService {
   private readonly _onEvent: Subject<RoomServiceEvent>;
   private readonly _subscriptions: SSet<Subscription>;
   private readonly _queue: TaskQueue;
+  private readonly _state: BehaviorSubject<LiveRoomState>;
+  private readonly _stateSubscription: Subscription;
 
   public constructor(
     private readonly _roomId: string,
@@ -79,6 +82,15 @@ export class LiveRoom implements ApplicationService {
     this._subscriptions = new SSet();
     this._physicsWorker = new PhysicsWorker(_roomId, _database, _logger);
     this._queue = new TaskQueue(this._logger);
+    this._state = new BehaviorSubject<LiveRoomState>(LiveRoomState.created);
+    this._stateSubscription = this._state.subscribe(
+      (newState: LiveRoomState): void => {
+        this._logger.debug(
+          this,
+          `State of room ${this.roomId} changed to ${newState}`,
+        );
+      },
+    );
   }
 
   public get onEvent$(): Observable<RoomServiceEvent> {
@@ -89,11 +101,16 @@ export class LiveRoom implements ApplicationService {
     return this._roomId;
   }
 
+  public get state$(): Observable<LiveRoomState> {
+    return this._state.asObservable();
+  }
+
   public addSubscription(subscription: Subscription): void {
     this._subscriptions.add(subscription);
   }
 
   public async bootstrap(): Promise<void> {
+    this._state.next(LiveRoomState.starting);
     const graph: MutableGraph = await this._loadGraph();
     this._graph.reset(graph);
     await this._physicsWorker.bootstrap(graph);
@@ -137,15 +154,26 @@ export class LiveRoom implements ApplicationService {
         this._handleError(error);
       }),
     );
+    this._state.next(LiveRoomState.started);
   }
 
   public async destroy(): Promise<void> {
+    if (this._state.value !== LiveRoomState.started) {
+      this._logger.warn(
+        this,
+        `Warning: Wanting to stop live room ${this.roomId}, but state is ${this._state.value}. Abort stopping.`,
+      );
+      return;
+    }
+    this._state.next(LiveRoomState.stopping);
     for (const subscription of this._subscriptions) {
       subscription.unsubscribe();
     }
     await this._physicsWorker.destroy();
     this._queue.shutdown();
     await this.saveGraph();
+    this._state.next(LiveRoomState.stopped);
+    this._stateSubscription.unsubscribe();
   }
 
   public getGraph(): MutableGraph {

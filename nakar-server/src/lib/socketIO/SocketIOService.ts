@@ -55,6 +55,7 @@ export type Socket = UntypedSocket<ClientToServerEvents, ServerToClientEvents>;
 export class SocketIOService implements ApplicationService {
   private readonly _sockets: SSet<WSClient>;
   private _io: UntypedServer | null;
+  private _isShuttingDownFlag: boolean;
 
   public constructor(
     private readonly _roomService: RoomService,
@@ -66,6 +67,7 @@ export class SocketIOService implements ApplicationService {
   ) {
     this._sockets = new SSet();
     this._io = null;
+    this._isShuttingDownFlag = false;
   }
 
   public get sockets(): SSet<WSClient> {
@@ -95,6 +97,7 @@ export class SocketIOService implements ApplicationService {
   }
 
   public destroy(): void {
+    this._isShuttingDownFlag = true;
     if (this._io == null) {
       return;
     }
@@ -187,11 +190,16 @@ export class SocketIOService implements ApplicationService {
             } satisfies SchemaWsEventNotification);
 
             if (this._userCountOfRoom(oldRoomId) === 0) {
-              this._roomService
-                .destroyRoom(oldRoomId)
-                .catch((error: unknown): void => {
-                  this._logger.error(this, error);
-                });
+              if (!this._isShuttingDownFlag) {
+                // Do not close rooms if service is shutting down,
+                // because we cannot wait for the rooms to close.
+                // Room closing will be done by the RoomService.
+                this._roomService
+                  .destroyRoom(oldRoomId)
+                  .catch((error: unknown): void => {
+                    this._logger.error(this, error);
+                  });
+              }
             }
           } else if (newRoomId != null && newRoomId !== oldRoomId) {
             wsClient.broadcastToRoom({
