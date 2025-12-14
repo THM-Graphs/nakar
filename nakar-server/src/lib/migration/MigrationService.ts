@@ -3,7 +3,6 @@ import { ApplicationService } from '../application/ApplicationService';
 import { LoggerService } from '../logger/LoggerService';
 import type { UID } from '@strapi/types';
 import { Result } from '@strapi/types/dist/modules/documents';
-import { Input } from '@strapi/types/dist/modules/documents/params/data';
 import { SMap } from '../tools/Map';
 
 export class MigrationService implements ApplicationService {

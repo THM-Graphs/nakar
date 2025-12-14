@@ -17,7 +17,8 @@
     "test": "jest",
     "export": "strapi export --no-compress --no-encrypt -f export",
     "import": "strapi import -f export.tar",
-    "version": "echo $npm_package_version"
+    "version": "echo $npm_package_version",
+    "pre-commit": "npm run lint && npm run format"
   },
   "dependencies": {
     "@strapi/plugin-users-permissions": "5.31.3",
