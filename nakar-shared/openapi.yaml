@@ -11,6 +11,7 @@ servers:
 
 tags:
   - name: Authentication
+  - name: Project
   - name: Room
   - name: Scenarios
   - name: Graph
@@ -73,6 +74,19 @@ paths:
                     type: string
                 required:
                   - username
+
+  /project:
+    get:
+      tags:
+        - Project
+      operationId: getProjects
+      responses:
+        "200":
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Projects"
 
   /room/{id}/scenarios:
     get:
@@ -1874,6 +1888,50 @@ components:
       required:
         - type
         - radius
+
+    Projects:
+      type: object
+      properties:
+        projects:
+          type: array
+          items:
+            $ref: "#/components/schemas/Project"
+      required:
+        - projects
+
+    Project:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        role:
+          type: string
+          enum: ["owner", "collaborator"]
+        owner:
+          $ref: "#/components/schemas/UserPreview"
+        collaborators:
+          type: array
+          items:
+            $ref: "#/components/schemas/UserPreview"
+      required:
+        - id
+        - title
+        - role
+        - owner
+        - collaborators
+
+    UserPreview:
+      type: object
+      properties:
+        id:
+          type: string
+        displayName:
+          type: string
+      required:
+        - id
+        - displayName
 
     WSClientToServerMessage:
       oneOf:
