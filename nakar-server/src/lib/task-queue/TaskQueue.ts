@@ -2,7 +2,7 @@ import { TaskQueueTask } from './TaskQueueTask';
 import { LoggerService } from '../logger/LoggerService';
 import { Observable, Subject } from 'rxjs';
 import { TaskQueueState } from './TaskQueueState';
-import { wait } from '../tools/Wait';
+import { enqueueEventLoop } from '../tools/enqueueEventLoop';
 
 export class TaskQueue {
   private _queue: TaskQueueTask[];
@@ -53,6 +53,7 @@ export class TaskQueue {
       this._propagateUpdate();
 
       try {
+        await enqueueEventLoop();
         await newTask.action();
         this._logger.log(
           this,
@@ -68,7 +69,6 @@ export class TaskQueue {
 
       this._currentTask = null;
 
-      await wait(100);
       this._check();
     })();
   }

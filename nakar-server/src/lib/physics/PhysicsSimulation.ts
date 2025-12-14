@@ -1,6 +1,5 @@
 import type { Observable } from 'rxjs';
 import { Subject } from 'rxjs';
-import { wait } from '../tools/Wait';
 import { CombinationCache } from './CombinationCache';
 import type { LoggerService } from '../logger/LoggerService';
 import type { PhysicsSimulationRunOptions } from './PhysicsSimulationRunOptions';
@@ -10,6 +9,7 @@ import type { PhysicalEdge } from './physical-graph/PhysicalEdge';
 import { Range } from '../tools/Range';
 import type { MutableNode } from '../room/graph/MutableNode';
 import { PhysicsSimulationEventSlowTick } from './PhysicsSimulationEventSlowTick';
+import { enqueueEventLoop } from '../tools/enqueueEventLoop';
 
 export class PhysicsSimulation {
   public static readonly maximumVelocity: number = 2000;
@@ -141,7 +141,7 @@ export class PhysicsSimulation {
         });
         lastWait = Date.now();
         tickCount = 0;
-        await wait(0);
+        await enqueueEventLoop();
       }
     }
 
