@@ -18,7 +18,7 @@
     "export": "strapi export --no-compress --no-encrypt -f export",
     "import": "strapi import -f export.tar",
     "version": "echo $npm_package_version",
-    "pre-commit": "npm run lint && npm run format"
+    "pre-commit": "npm run lint:fix && npm run format:fix"
   },
   "dependencies": {
     "@strapi/plugin-users-permissions": "5.31.3",
