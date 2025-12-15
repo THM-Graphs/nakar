@@ -1,6 +1,5 @@
 import { Card, Stack } from "react-bootstrap";
-import { ReactNode, useTransition } from "react";
-import { Link, useNavigate } from "react-router";
+import { ReactNode } from "react";
 import clsx from "clsx";
 
 export function CMSCard(props: {
