@@ -9,12 +9,15 @@ import { ProfilerService } from '../profiler/ProfilerService';
 import { LoggerService } from '../logger/LoggerService';
 import * as undici from 'undici';
 import { ConfigService } from '../config/ConfigService';
+import { Result } from '@strapi/types/dist/modules/documents/result';
+import { DatabaseService } from '../database/DatabaseService';
 
 export class HTTPTools {
   public constructor(
     private readonly _profiler: ProfilerService,
     private readonly _logger: LoggerService,
     private readonly _config: ConfigService,
+    private readonly _database: DatabaseService,
   ) {}
 
   public readonly assertLoggedIn: RequestHandler = async (
@@ -40,6 +43,23 @@ export class HTTPTools {
       this.handleHTTPError(res, new Unauthorized());
       return;
     }
+    const userId: string =
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+      ((await result.json()) as Result<'plugin::users-permissions.user'>)
+        .documentId;
+    const user: Result<'plugin::users-permissions.user'> | null = await strapi
+      .documents('plugin::users-permissions.user')
+      .findOne({ documentId: userId });
+
+    if (user == null) {
+      this.handleHTTPError(res, new Unauthorized());
+      return;
+    }
+
+    req.nakar = {
+      ...req.nakar,
+      user: user,
+    };
     next();
   };
 

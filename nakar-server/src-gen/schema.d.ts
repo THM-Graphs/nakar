@@ -20,6 +20,38 @@ export interface paths {
         readonly patch?: never;
         readonly trace?: never;
     };
+    readonly "/project": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get: operations["getProjects"];
+        readonly put?: never;
+        readonly post?: never;
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/project/{id}": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get: operations["getProject"];
+        readonly put?: never;
+        readonly post?: never;
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
     readonly "/room/{id}/scenarios": {
         readonly parameters: {
             readonly query?: never;
@@ -891,6 +923,58 @@ export interface components {
             readonly type: "LayoutSpecificationCircle";
             readonly radius: number;
         };
+        readonly Projects: {
+            readonly myProjects: readonly components["schemas"]["ProjectPreview"][];
+            readonly collaborationProjects: readonly components["schemas"]["ProjectPreview"][];
+        };
+        readonly Project: {
+            readonly id: string;
+            readonly title: string;
+            readonly owner: {
+                readonly current: components["schemas"]["UserPreview"];
+            } | null;
+            readonly collaborators: readonly components["schemas"]["UserPreview"][];
+            readonly databases: readonly components["schemas"]["DatabaseConnectionPreview"][];
+            readonly scenarioGroups: readonly components["schemas"]["ScenarioGroupPreview"][];
+            readonly rooms: readonly components["schemas"]["RoomPreview"][];
+        };
+        readonly ProjectPreview: {
+            readonly id: string;
+            readonly title: string;
+            readonly owner: {
+                readonly current: components["schemas"]["UserPreview"];
+            } | null;
+            readonly collaborators: readonly components["schemas"]["UserPreview"][];
+            readonly databases: readonly components["schemas"]["DatabaseConnectionPreview"][];
+        };
+        /** @enum {string} */
+        readonly ProjectRole: "owner" | "collaborator" | "none";
+        readonly UserPreview: {
+            readonly id: string;
+            readonly displayName: string;
+        };
+        readonly DatabaseConnectionPreview: {
+            readonly id: string;
+            readonly title: string;
+            readonly browserUrl: string;
+            readonly connectionUrl: string;
+        };
+        readonly RoomPreview: {
+            readonly id: string;
+            readonly title: string;
+            readonly visibility: components["schemas"]["RoomVisibility"];
+        };
+        /** @enum {string} */
+        readonly RoomVisibility: "private" | "public" | "unlisted";
+        readonly ScenarioGroupPreview: {
+            readonly id: string;
+            readonly title: string;
+            readonly scenarios: readonly components["schemas"]["ScenarioPreview"][];
+        };
+        readonly ScenarioPreview: {
+            readonly id: string;
+            readonly title: string;
+        };
         readonly WSClientToServerMessage: components["schemas"]["WSActionJoinRoom"] | components["schemas"]["WSActionLeaveRoom"] | components["schemas"]["WSActionGrabNode"] | components["schemas"]["WSActionMoveNodes"] | components["schemas"]["WSActionUngrabNode"];
         readonly WSServerToClientMessage: components["schemas"]["WSEventNodesMoved"] | components["schemas"]["WSEventRoomChanged"] | components["schemas"]["WSEventNotification"] | components["schemas"]["WSEventGraphElementsChanged"] | components["schemas"]["WSEventGraphMetaDataChanged"] | components["schemas"]["WSEventGraphTableChanged"] | components["schemas"]["WSEventProgress"] | components["schemas"]["WSEventClearProgress"] | components["schemas"]["WSEventSetNodeLocks"] | components["schemas"]["WSEventKick"];
         readonly WSActionJoinRoom: {
@@ -1020,6 +1104,16 @@ export type SchemaNote = components['schemas']['Note'];
 export type SchemaLayoutSpecification = components['schemas']['LayoutSpecification'];
 export type SchemaLayoutSpecificationForceDirected = components['schemas']['LayoutSpecificationForceDirected'];
 export type SchemaLayoutSpecificationCircle = components['schemas']['LayoutSpecificationCircle'];
+export type SchemaProjects = components['schemas']['Projects'];
+export type SchemaProject = components['schemas']['Project'];
+export type SchemaProjectPreview = components['schemas']['ProjectPreview'];
+export type SchemaProjectRole = components['schemas']['ProjectRole'];
+export type SchemaUserPreview = components['schemas']['UserPreview'];
+export type SchemaDatabaseConnectionPreview = components['schemas']['DatabaseConnectionPreview'];
+export type SchemaRoomPreview = components['schemas']['RoomPreview'];
+export type SchemaRoomVisibility = components['schemas']['RoomVisibility'];
+export type SchemaScenarioGroupPreview = components['schemas']['ScenarioGroupPreview'];
+export type SchemaScenarioPreview = components['schemas']['ScenarioPreview'];
 export type SchemaWsClientToServerMessage = components['schemas']['WSClientToServerMessage'];
 export type SchemaWsServerToClientMessage = components['schemas']['WSServerToClientMessage'];
 export type SchemaWsActionJoinRoom = components['schemas']['WSActionJoinRoom'];
@@ -1087,6 +1181,46 @@ export interface operations {
                         readonly jwt: string;
                         readonly username: string;
                     };
+                };
+            };
+        };
+    };
+    readonly getProjects: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            /** @description OK */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["Projects"];
+                };
+            };
+        };
+    };
+    readonly getProject: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            /** @description OK */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["Project"];
                 };
             };
         };

@@ -88,6 +88,19 @@ paths:
               schema:
                 $ref: "#/components/schemas/Projects"
 
+  /project/{id}:
+    get:
+      tags:
+        - Project
+      operationId: getProject
+      responses:
+        "200":
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Project"
+
   /room/{id}/scenarios:
     get:
       tags:
@@ -1892,12 +1905,17 @@ components:
     Projects:
       type: object
       properties:
-        projects:
+        myProjects:
           type: array
           items:
-            $ref: "#/components/schemas/Project"
+            $ref: "#/components/schemas/ProjectPreview"
+        collaborationProjects:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProjectPreview"
       required:
-        - projects
+        - myProjects
+        - collaborationProjects
 
     Project:
       type: object
@@ -1906,21 +1924,73 @@ components:
           type: string
         title:
           type: string
-        role:
-          type: string
-          enum: ["owner", "collaborator"]
         owner:
-          $ref: "#/components/schemas/UserPreview"
+          type: object
+          nullable: true
+          properties:
+            current:
+              $ref: "#/components/schemas/UserPreview"
+          required:
+            - current
         collaborators:
           type: array
           items:
             $ref: "#/components/schemas/UserPreview"
+        databases:
+          type: array
+          items:
+            $ref: "#/components/schemas/DatabaseConnectionPreview"
+        scenarioGroups:
+          type: array
+          items:
+            $ref: "#/components/schemas/ScenarioGroupPreview"
+        rooms:
+          type: array
+          items:
+            $ref: "#/components/schemas/RoomPreview"
+      required:
+        - id
+        - title
+        - owner
+        - collaborators
+        - databases
+        - scenarioGroups
+        - rooms
+
+    ProjectPreview:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        owner:
+          type: object
+          nullable: true
+          properties:
+            current:
+              $ref: "#/components/schemas/UserPreview"
+          required:
+            - current
+        collaborators:
+          type: array
+          items:
+            $ref: "#/components/schemas/UserPreview"
+        databases:
+          type: array
+          items:
+            $ref: "#/components/schemas/DatabaseConnectionPreview"
       required:
         - id
         - title
         - role
         - owner
         - collaborators
+        - databases
+
+    ProjectRole:
+      type: string
+      enum: [ "owner", "collaborator", "none" ]
 
     UserPreview:
       type: object
@@ -1932,6 +2002,68 @@ components:
       required:
         - id
         - displayName
+
+    DatabaseConnectionPreview:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        browserUrl:
+          type: string
+        connectionUrl:
+          type: string
+      required:
+        - id
+        - title
+        - browserUrl
+        - connectionUrl
+
+    RoomPreview:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        visibility:
+          $ref: "#/components/schemas/RoomVisibility"
+      required:
+        - id
+        - title
+        - visibility
+
+    RoomVisibility:
+      type: string
+      enum: ["private", "public", "unlisted"]
+
+    ScenarioGroupPreview:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        scenarios:
+          type: array
+          items:
+            $ref: "#/components/schemas/ScenarioPreview"
+      required:
+        - id
+        - title
+        - scenarios
+
+    ScenarioPreview:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+      required:
+        - id
+        - title
 
     WSClientToServerMessage:
       oneOf:

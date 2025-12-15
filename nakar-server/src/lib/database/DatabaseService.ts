@@ -639,4 +639,109 @@ export class DatabaseService implements ApplicationService {
   public async removeNote(params: { id: string }): Promise<void> {
     await strapi.documents('api::note.note').delete({ documentId: params.id });
   }
+
+  public async getOwnerOfProject(
+    project: Result<'api::v2-project.v2-project'>,
+  ): Promise<Result<'plugin::users-permissions.user'> | null> {
+    return (
+      (
+        await strapi
+          .documents('api::v2-project.v2-project')
+          .findOne({ documentId: project.documentId, populate: ['owner'] })
+      )?.owner ?? null
+    );
+  }
+
+  public async getCollaboratorsOfProject(
+    project: Result<'api::v2-project.v2-project'>,
+  ): Promise<Result<'plugin::users-permissions.user'>[]> {
+    return (
+      (
+        await strapi.documents('api::v2-project.v2-project').findOne({
+          documentId: project.documentId,
+          populate: ['collaborators'],
+        })
+      )?.collaborators ?? []
+    );
+  }
+
+  public async getScenarioGroupsOfProject(
+    project: Result<'api::v2-project.v2-project'>,
+  ): Promise<Result<'api::v2-scenario-group.v2-scenario-group'>[]> {
+    return (
+      (
+        await strapi.documents('api::v2-project.v2-project').findOne({
+          documentId: project.documentId,
+          populate: ['scenarioGroups'],
+        })
+      )?.scenarioGroups ?? []
+    );
+  }
+
+  public async getRoomsOfProject(
+    project: Result<'api::v2-project.v2-project'>,
+  ): Promise<Result<'api::v2-room.v2-room'>[]> {
+    return (
+      (
+        await strapi.documents('api::v2-project.v2-project').findOne({
+          documentId: project.documentId,
+          populate: ['rooms'],
+        })
+      )?.rooms ?? []
+    );
+  }
+
+  public async getDatabaseConnectionsOfProject(
+    project: Result<'api::v2-project.v2-project'>,
+  ): Promise<Result<'plugin::users-permissions.user'>[]> {
+    return (
+      (
+        await strapi.documents('api::v2-project.v2-project').findOne({
+          documentId: project.documentId,
+          populate: ['databaseConnections'],
+        })
+      )?.databaseConnections ?? []
+    );
+  }
+
+  public async getProjectsOfUser(
+    user: Result<'plugin::users-permissions.user'>,
+  ): Promise<Result<'api::v2-project.v2-project'>[]> {
+    return (
+      (
+        await strapi.documents('plugin::users-permissions.user').findOne({
+          documentId: user.documentId,
+          populate: ['projects'],
+        })
+      )?.projects ?? []
+    );
+  }
+
+  public async getCollaborationProjectsOfUser(
+    user: Result<'plugin::users-permissions.user'>,
+  ): Promise<Result<'api::v2-project.v2-project'>[]> {
+    return (
+      (
+        await strapi.documents('plugin::users-permissions.user').findOne({
+          documentId: user.documentId,
+          populate: ['projectCollaborations'],
+        })
+      )?.projectCollaborations ?? []
+    );
+  }
+
+  public async getScenariosOfScenarioGroup(
+    scenarioGroup: Result<'api::v2-scenario-group.v2-scenario-group'>,
+  ): Promise<Result<'api::v2-scenario.v2-scenario'>[]> {
+    return (
+      (
+        await strapi
+          .documents('api::v2-scenario-group.v2-scenario-group')
+          .findOne({
+            documentId: scenarioGroup.documentId,
+            populate: ['scenarios'],
+          })
+      )?.scenarios ?? []
+    );
+  }
 }

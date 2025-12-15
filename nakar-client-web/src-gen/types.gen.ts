@@ -20,6 +20,13 @@ export type Database = {
     editUrl: (string) | null;
 };
 
+export type DatabaseConnectionPreview = {
+    id: string;
+    title: string;
+    browserUrl: string;
+    connectionUrl: string;
+};
+
 export type DatabaseSearchCapabilities = {
     canExactMatchElementId: boolean;
     canExactMatchLabel: boolean;
@@ -266,6 +273,35 @@ export type type4 = 'PresetColor';
 
 export type PresetColorIndex = 0 | 1 | 2 | 3 | 4 | 5;
 
+export type Project = {
+    id: string;
+    title: string;
+    owner: {
+        current: UserPreview;
+    } | null;
+    collaborators: Array<UserPreview>;
+    databases: Array<DatabaseConnectionPreview>;
+    scenarioGroups: Array<ScenarioGroupPreview>;
+    rooms: Array<RoomPreview>;
+};
+
+export type ProjectPreview = {
+    id: string;
+    title: string;
+    owner: {
+        current: UserPreview;
+    } | null;
+    collaborators: Array<UserPreview>;
+    databases: Array<DatabaseConnectionPreview>;
+};
+
+export type ProjectRole = 'owner' | 'collaborator' | 'none';
+
+export type Projects = {
+    myProjects: Array<ProjectPreview>;
+    collaborationProjects: Array<ProjectPreview>;
+};
+
 export type Room = {
     id: string;
     title: (string) | null;
@@ -275,6 +311,12 @@ export type Room = {
         title: (string) | null;
         editUrl: (string) | null;
     } | null;
+};
+
+export type RoomPreview = {
+    id: string;
+    title: string;
+    visibility: RoomVisibility;
 };
 
 export type Rooms = {
@@ -290,6 +332,8 @@ export type RoomTemplate = {
 export type RoomTemplates = {
     roomTemplates: Array<RoomTemplate>;
 };
+
+export type RoomVisibility = 'private' | 'public' | 'unlisted';
 
 export type Scenario = {
     id: string;
@@ -314,6 +358,12 @@ export type ScenarioGroup = {
     scenarios: Array<Scenario>;
 };
 
+export type ScenarioGroupPreview = {
+    id: string;
+    title: string;
+    scenarios: Array<ScenarioPreview>;
+};
+
 export type ScenarioParameter = {
     identifier: string;
     title: string;
@@ -323,11 +373,21 @@ export type ScenarioParameter = {
 
 export type dataType = 'json' | 'startDateTime' | 'endDateTime';
 
+export type ScenarioPreview = {
+    id: string;
+    title: string;
+};
+
 export type ScenarioQuery = {
     query: string;
     database: {
         current: Database;
     } | null;
+};
+
+export type UserPreview = {
+    id: string;
+    displayName: string;
 };
 
 export type Version = {
@@ -465,6 +525,14 @@ export type GetAuthResponse = ({
 });
 
 export type GetAuthError = unknown;
+
+export type GetProjectsResponse = (Projects);
+
+export type GetProjectsError = unknown;
+
+export type GetProjectResponse = (Project);
+
+export type GetProjectError = unknown;
 
 export type GetScenariosData = {
     path: {

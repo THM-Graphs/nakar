@@ -14,6 +14,7 @@ import { useBearStore } from "./state/useBearStore.ts";
 import { AuthModal } from "./shared/auth/AuthModal.tsx";
 import { RoomTemplate, RoomTemplateLoader } from "./pages/RoomTemplate.tsx";
 import { ErrorComp } from "./pages/Error.tsx";
+import { Project, ProjectLoader } from "./pages/Project.tsx";
 
 async function bootstrap() {
   bootstrapTheme();
@@ -71,6 +72,11 @@ async function bootstrap() {
           path: "/room/:id",
           element: <Room context={context}></Room>,
           loader: RoomLoader,
+        },
+        {
+          path: "/project/:id",
+          element: <Project context={context}></Project>,
+          loader: ProjectLoader,
         },
       ],
     },

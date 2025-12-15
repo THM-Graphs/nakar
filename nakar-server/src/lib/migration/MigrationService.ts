@@ -301,7 +301,7 @@ export class MigrationService implements ApplicationService {
             .create({
               status: 'published',
               data: {
-                title: `${database.title} (${project.title ?? '?'})`,
+                title: `${database.title}`,
                 project: project.documentId,
                 username: database.username ?? undefined,
                 password: database.password ?? undefined,

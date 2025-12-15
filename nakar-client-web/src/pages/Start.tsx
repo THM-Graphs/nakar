@@ -2,9 +2,11 @@ import { Container, Stack } from "react-bootstrap";
 import { RoomList } from "../start/RoomList.tsx";
 import { useLoaderData, useNavigate } from "react-router";
 import {
+  getProjects,
   getRoom,
   getRooms,
   getRoomTemplates,
+  Projects,
   Room as RoomSchema,
   Rooms,
   RoomTemplates,
@@ -18,11 +20,13 @@ import { loadableFromResult } from "../shared/data/loadableFromResult.ts";
 import { Loadable } from "../shared/data/Loadable.ts";
 import { CMSNavbar } from "../cms/CMSNavbar.tsx";
 import { CMSFooter } from "../cms/CMSFooter.tsx";
+import { ProjectList } from "../start/ProjectList.tsx";
 
 type StartPageLoaderData = {
   recentRooms: RoomSchema[];
   templates: RoomTemplates;
   rooms: Loadable<Rooms>;
+  projects: Loadable<Projects>;
 };
 
 export async function StartLoader(): Promise<StartPageLoaderData> {
@@ -42,10 +46,12 @@ export async function StartLoader(): Promise<StartPageLoaderData> {
   }
   const templates: RoomTemplates = resultOrThrow(await getRoomTemplates());
   const rooms: Loadable<Rooms> = loadableFromResult(await getRooms());
+  const projects: Loadable<Projects> = loadableFromResult(await getProjects());
   return {
     recentRooms: recentRooms,
     templates: templates,
     rooms: rooms,
+    projects: projects,
   };
 }
 
@@ -59,18 +65,21 @@ export function Start(props: { context: AppContext }) {
       style={{ height: "100%", width: "100%" }}
       className={"justify-content-start"}
     >
-      <CMSNavbar context={props.context}></CMSNavbar>
+      <CMSNavbar context={props.context} backUrl={null}></CMSNavbar>
       <div className={"overflow-auto mb-auto p-5"}>
         <Container>
           <p className={"text-muted mb-5"}>
             Enter a room or create one using the given templates.
           </p>
-          <Stack direction={"horizontal"} className={"flex-wrap"} gap={5}>
+          <Stack
+            direction={"horizontal"}
+            className={"flex-wrap align-items-top"}
+            gap={5}
+          >
             <RoomList
               title={"Recent Rooms"}
               rooms={loaderData.recentRooms}
               context={props.context}
-              style={{ maxWidth: "500px" }}
               onDelete={async (room: RoomSchema) => {
                 if (
                   confirm(
@@ -85,8 +94,22 @@ export function Start(props: { context: AppContext }) {
             <RoomTemplateList
               roomTemplates={loaderData.templates}
               context={props.context}
-              style={{ maxWidth: "400px" }}
             ></RoomTemplateList>
+            {loaderData.projects.type == "data" && (
+              <>
+                <ProjectList
+                  rooms={loaderData.projects.data.myProjects}
+                  context={props.context}
+                  title={"My Projects"}
+                ></ProjectList>
+                <ProjectList
+                  rooms={loaderData.projects.data.collaborationProjects}
+                  context={props.context}
+                  title={"Collaboration Projects"}
+                ></ProjectList>
+              </>
+            )}
+
             {loaderData.rooms.type === "data" && (
               <RoomList
                 rooms={loaderData.rooms.data.rooms}

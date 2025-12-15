@@ -21,6 +21,8 @@ import { RoomTemplateRouter } from './routers/RoomTemplateRouter';
 import { SystemRouter } from './routers/SystemRouter';
 import { DatabaseRouter } from './routers/DatabaseRouter';
 import { SchemaFactoryService } from '../schema/SchemaFactoryService';
+import { ProjectsRouter } from './routers/ProjectsRouter';
+import { Result } from '@strapi/types/dist/modules/documents/result';
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -31,6 +33,8 @@ declare global {
         note: GetNoteDBDTO;
         roomTemplate: GetTemplateDBDTO;
         database: GetDatabaseDBDTO;
+        user: Result<'plugin::users-permissions.user'>;
+        project: Result<'api::v2-project.v2-project'>;
       };
     }
   }
@@ -47,6 +51,7 @@ export class HTTPService implements ApplicationService {
   private readonly _roomTemplateRouter: RoomTemplateRouter;
   private readonly _systemRouter: SystemRouter;
   private readonly _databaseRouter: DatabaseRouter;
+  private readonly _projectsRouter: ProjectsRouter;
 
   public constructor(
     private readonly _config: ConfigService,
@@ -60,7 +65,12 @@ export class HTTPService implements ApplicationService {
   ) {
     this._app = express();
     this._server = http.createServer(this._app);
-    this._httpTools = new HTTPTools(profiler, _logger, _config);
+    this._httpTools = new HTTPTools(
+      profiler,
+      _logger,
+      _config,
+      databaseService,
+    );
     this._authenticationRouter = new AuthenticationRouter(
       this._httpTools,
       _config,
@@ -87,6 +97,12 @@ export class HTTPService implements ApplicationService {
       _config,
       media,
       schemaFactory,
+    );
+    this._projectsRouter = new ProjectsRouter(
+      this._httpTools,
+      schemaFactory,
+      _logger,
+      databaseService,
     );
 
     this._setupRoutes();
@@ -156,5 +172,6 @@ export class HTTPService implements ApplicationService {
     this._app.use('/room-template', this._roomTemplateRouter.register());
     this._app.use('/system', this._systemRouter.register());
     this._app.use('/database', this._databaseRouter.register());
+    this._app.use('/project', this._projectsRouter.register());
   }
 }

@@ -4,6 +4,7 @@ import { GetDatabaseDBDTO } from '../database/dto/GetDatabaseDBDTO';
 import {
   SchemaColor,
   SchemaDatabase,
+  SchemaDatabaseConnectionPreview,
   SchemaEdge,
   SchemaEdgePreview,
   SchemaGraph,
@@ -16,13 +17,21 @@ import {
   SchemaNode,
   SchemaNodePreview,
   SchemaNote,
+  SchemaProject,
+  SchemaProjectPreview,
+  SchemaProjectRole,
+  SchemaProjects,
   SchemaRoom,
+  SchemaRoomPreview,
   SchemaRoomTemplate,
   SchemaScenario,
   SchemaScenarioArgument,
   SchemaScenarioGroup,
+  SchemaScenarioGroupPreview,
   SchemaScenarioParameter,
+  SchemaScenarioPreview,
   SchemaScenarioQuery,
+  SchemaUserPreview,
 } from '../../../src-gen/schema';
 import { GetRoomDBDTO } from '../database/dto/GetRoomDBDTO';
 import { GetScenarioDBDTO } from '../database/dto/GetScenarioDBDTO';
@@ -50,6 +59,7 @@ import { ProfilerService } from '../profiler/ProfilerService';
 import { DatabaseService } from '../database/DatabaseService';
 import { DatabaseReferenceCache } from './DatabaseReferenceCache';
 import { UndoWrapperInfo } from '../undo/UndoWrapperInfo';
+import { Result } from '@strapi/types/dist/modules/documents/result';
 
 export class SchemaFactoryService implements ApplicationService {
   public constructor(
@@ -280,6 +290,142 @@ export class SchemaFactoryService implements ApplicationService {
     };
     t.finish();
     return result;
+  }
+
+  public async createSchemaProjectPreview(
+    project: Result<'api::v2-project.v2-project'>,
+    currentUser: Result<'plugin::users-permissions.user'>,
+  ): Promise<SchemaProjectPreview> {
+    const owner: Result<'plugin::users-permissions.user'> | null =
+      await this._database.getOwnerOfProject(project);
+    const collaborators: Result<'plugin::users-permissions.user'>[] =
+      await this._database.getCollaboratorsOfProject(project);
+    const databaseConnections: Result<'api::v2-database-connection.v2-database-connection'>[] =
+      await this._database.getDatabaseConnectionsOfProject(project);
+
+    return {
+      id: project.documentId,
+      title: project.title ?? '',
+      owner: owner
+        ? {
+            current: this.createSchemaUserPreview(owner),
+          }
+        : null,
+      collaborators: collaborators.map(
+        (
+          collaborator: Result<'plugin::users-permissions.user'>,
+        ): SchemaUserPreview => this.createSchemaUserPreview(collaborator),
+      ),
+      databases: databaseConnections.map(
+        (
+          database: Result<'api::v2-database-connection.v2-database-connection'>,
+        ): SchemaDatabaseConnectionPreview =>
+          this.createwSchemaDatabaseConnectionPreview(database),
+      ),
+    };
+  }
+
+  public async createSchemaProject(
+    project: Result<'api::v2-project.v2-project'>,
+  ): Promise<SchemaProject> {
+    const owner: Result<'plugin::users-permissions.user'> | null =
+      await this._database.getOwnerOfProject(project);
+    const collaborators: Result<'plugin::users-permissions.user'>[] =
+      await this._database.getCollaboratorsOfProject(project);
+    const databaseConnections: Result<'api::v2-database-connection.v2-database-connection'>[] =
+      await this._database.getDatabaseConnectionsOfProject(project);
+    const scenarioGroups: Result<'api::v2-scenario-group.v2-scenario-group'>[] =
+      await this._database.getScenarioGroupsOfProject(project);
+    const rooms: Result<'api::v2-room.v2-room'>[] =
+      await this._database.getRoomsOfProject(project);
+
+    return {
+      id: project.documentId,
+      title: project.title ?? '',
+      owner: owner
+        ? {
+            current: this.createSchemaUserPreview(owner),
+          }
+        : null,
+      collaborators: collaborators.map(
+        (
+          collaborator: Result<'plugin::users-permissions.user'>,
+        ): SchemaUserPreview => this.createSchemaUserPreview(collaborator),
+      ),
+      databases: databaseConnections.map(
+        (
+          database: Result<'api::v2-database-connection.v2-database-connection'>,
+        ): SchemaDatabaseConnectionPreview =>
+          this.createwSchemaDatabaseConnectionPreview(database),
+      ),
+      scenarioGroups: await Promise.all(
+        scenarioGroups.map(
+          async (
+            sg: Result<'api::v2-scenario-group.v2-scenario-group'>,
+          ): Promise<SchemaScenarioGroupPreview> =>
+            await this.createSchemaScenarioGroupPreview(sg),
+        ),
+      ),
+      rooms: rooms.map(
+        (room: Result<'api::v2-room.v2-room'>): SchemaRoomPreview =>
+          this.createSchemaRoomPreview(room),
+      ),
+    };
+  }
+
+  public createSchemaRoomPreview(
+    room: Result<'api::v2-room.v2-room'>,
+  ): SchemaRoomPreview {
+    return {
+      id: room.documentId,
+      title: room.title ?? '',
+      visibility: room.visibility ?? 'private',
+    };
+  }
+
+  public async createSchemaScenarioGroupPreview(
+    scenarioGroup: Result<'api::v2-scenario-group.v2-scenario-group'>,
+  ): Promise<SchemaScenarioGroupPreview> {
+    const scenarios: Result<'api::v2-scenario.v2-scenario'>[] =
+      await this._database.getScenariosOfScenarioGroup(scenarioGroup);
+
+    return {
+      id: scenarioGroup.documentId,
+      title: scenarioGroup.title ?? '',
+      scenarios: scenarios.map(
+        (s: Result<'api::v2-scenario.v2-scenario'>): SchemaScenarioPreview =>
+          this.createSchemaScenarioPreview(s),
+      ),
+    };
+  }
+
+  public createSchemaScenarioPreview(
+    scenario: Result<'api::v2-scenario.v2-scenario'>,
+  ): SchemaScenarioPreview {
+    return {
+      id: scenario.documentId,
+      title: scenario.title ?? '',
+    };
+  }
+
+  public createSchemaUserPreview(
+    user: Result<'plugin::users-permissions.user'>,
+  ): SchemaUserPreview {
+    return {
+      id: user.documentId,
+      displayName: user.username ?? user.email ?? user.documentId,
+    };
+  }
+
+  public createwSchemaDatabaseConnectionPreview(
+    databaseConnection: Result<'api::v2-database-connection.v2-database-connection'>,
+  ): SchemaDatabaseConnectionPreview {
+    return {
+      id: databaseConnection.documentId,
+      title: databaseConnection.title ?? '',
+      connectionUrl: databaseConnection.connectionUrl ?? '',
+      browserUrl: databaseConnection.browserUrl ?? '',
+    };
   }
 
   private _createSchemaHistogram(
