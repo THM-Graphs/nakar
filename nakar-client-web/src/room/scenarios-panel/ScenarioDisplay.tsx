@@ -5,7 +5,7 @@ import { useBearStore } from "../../state/useBearStore.ts";
 import { useCallback } from "react";
 import { AppContext } from "../../state/AppContext.ts";
 import { RoomContext } from "../../pages/Room.tsx";
-import { resultOrThrow } from "../../data/resultOrThrow.ts";
+import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
 import { ScenarioTitleAndBadges } from "./ScenarioTitleAndBadges.tsx";
 
 export function ScenarioDisplay(props: {

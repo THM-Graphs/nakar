@@ -3,8 +3,8 @@ import { Node } from "../../../src-gen";
 import { Label } from "../labels/Label.tsx";
 import { RoomContext } from "../../pages/Room.tsx";
 import { ClipboardButton } from "../../shared/elements/ClipboardButton.tsx";
-import { ActionNavbarButton } from "../../actions/ActionNavbarButton.tsx";
-import { SpawnNodeAction } from "../../actions/SpawnNodeAction.ts";
+import { ActionNavbarButton } from "../actions/ActionNavbarButton.tsx";
+import { SpawnNodeAction } from "../actions/SpawnNodeAction.ts";
 
 export function SearchResultEntry(props: {
   node: Node;

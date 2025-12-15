@@ -1,5 +1,5 @@
 import { Dropdown } from "react-bootstrap";
-import { UserTheme } from "../../theme/UserTheme.ts";
+import { UserTheme } from "../theme/UserTheme.ts";
 import { match } from "ts-pattern";
 import { useBearStore } from "../../state/useBearStore.ts";
 

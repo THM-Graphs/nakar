@@ -4,12 +4,12 @@ import { useBearStore } from "../../state/useBearStore.ts";
 import { AppContext } from "../../state/AppContext.ts";
 import { RoomContext } from "../../pages/Room.tsx";
 import { DropdownButton } from "../../shared/elements/DropdownButton.tsx";
-import { ActionDropdownItem } from "../../actions/ActionDropdownItem.tsx";
-import { ActionNavbarButton } from "../../actions/ActionNavbarButton.tsx";
-import { UndoAction } from "../../actions/UndoAction.ts";
-import { RedoAction } from "../../actions/RedoAction.ts";
-import { EditScenarioAction } from "../../actions/EditScenarioAction.ts";
-import { RerunScenarioAction } from "../../actions/RerunScenarioAction.ts";
+import { ActionDropdownItem } from "../actions/ActionDropdownItem.tsx";
+import { ActionNavbarButton } from "../actions/ActionNavbarButton.tsx";
+import { UndoAction } from "../actions/UndoAction.ts";
+import { RedoAction } from "../actions/RedoAction.ts";
+import { EditScenarioAction } from "../actions/EditScenarioAction.ts";
+import { RerunScenarioAction } from "../actions/RerunScenarioAction.ts";
 
 export function CanvasToolbar(props: {
   context: AppContext;

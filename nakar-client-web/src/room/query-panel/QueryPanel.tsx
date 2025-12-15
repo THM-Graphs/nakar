@@ -11,8 +11,8 @@ import {
   getDatabaseStats,
   postRoomActionRunQuery,
 } from "../../../src-gen";
-import { Loadable } from "../../data/Loadable.ts";
-import { resultOrThrow } from "../../data/resultOrThrow.ts";
+import { Loadable } from "../../shared/data/Loadable.ts";
+import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
 import { match } from "ts-pattern";
 import { Label } from "../labels/Label.tsx";
 import { QueryPanelStatsDisplay } from "./QueryPanelStatsDisplay.tsx";

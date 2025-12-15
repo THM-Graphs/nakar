@@ -2,7 +2,7 @@ import { postRoomActionLoadScenario, ScenarioGroup } from "../../../src-gen";
 import { RoomContext } from "../../pages/Room.tsx";
 import { useBearStore } from "../../state/useBearStore.ts";
 import { Dropdown, Stack } from "react-bootstrap";
-import { resultOrThrow } from "../../data/resultOrThrow.ts";
+import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
 import { ScenarioTitleAndBadges } from "../scenarios-panel/ScenarioTitleAndBadges.tsx";
 
 export function PropertyMenuScenarioGroupEntry(props: {

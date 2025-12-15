@@ -1,11 +1,11 @@
 import { Scenario, ScenarioArgument } from "../../../src-gen";
 import { useBearStore } from "../../state/useBearStore.ts";
-import { useClipboard } from "../../clipboard/useClipboard.ts";
+import { useClipboard } from "../../shared/clipboard/useClipboard.ts";
 import { Form, OverlayTrigger, Stack, Tooltip } from "react-bootstrap";
 import { NavbarButton } from "../../shared/elements/NavbarButton.tsx";
 import clsx from "clsx";
 import { match } from "ts-pattern";
-import { DateTool } from "../../data/DateTool.ts";
+import { DateTool } from "../../shared/data/DateTool.ts";
 
 export function ArgumentDisplay(props: {
   scenario: Scenario;

@@ -2,11 +2,11 @@ import { Stack } from "react-bootstrap";
 import { useBearStore } from "../../state/useBearStore.ts";
 import { useEffect, useState } from "react";
 import { postRoomActionLoadScenario, ScenarioArgument } from "../../../src-gen";
-import { DateTool } from "../../data/DateTool.ts";
+import { DateTool } from "../../shared/data/DateTool.ts";
 import { NavbarButton } from "../../shared/elements/NavbarButton.tsx";
 import { DateTimeSpanSelect } from "../../shared/date-time-span-select/DateTimeSpanSelect.tsx";
 import { RoomContext } from "../../pages/Room.tsx";
-import { resultOrThrow } from "../../data/resultOrThrow.ts";
+import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
 
 export function CanvasBottomToolBar(props: { roomContext: RoomContext }) {
   const metaData = useBearStore((s) => s.room.scenario.graph.metaData);

@@ -3,7 +3,7 @@ import { AppContext } from "../../state/AppContext.ts";
 import { useBearStore } from "../../state/useBearStore.ts";
 import { RoomContext } from "../../pages/Room.tsx";
 import { NavbarButton } from "../../shared/elements/NavbarButton.tsx";
-import { resultOrThrow } from "../../data/resultOrThrow.ts";
+import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
 import { getScenarios } from "../../../src-gen";
 import { useState } from "react";
 import { ScenarioGroupList } from "./ScenarioGroupList.tsx";

@@ -1,12 +1,12 @@
 import { AppNavbar } from "../bars/AppNavbar.tsx";
 import { SocketStateDisplay } from "./SocketStateDisplay.tsx";
 import { Stack } from "react-bootstrap";
-import { displayStringForState } from "../../ws/displayStringForState.ts";
+import { displayStringForState } from "../ws/displayStringForState.ts";
 import { Loading } from "../elements/Loading.tsx";
 import { NavbarLogo } from "../bars/NavbarLogo.tsx";
 import { useBearStore } from "../../state/useBearStore.ts";
-import { ActionNavbarButton } from "../../actions/ActionNavbarButton.tsx";
-import { CloseRoomAction } from "../../actions/CloseRoomAction.ts";
+import { ActionNavbarButton } from "../../room/actions/ActionNavbarButton.tsx";
+import { CloseRoomAction } from "../../room/actions/CloseRoomAction.ts";
 import { useNavigate } from "react-router";
 
 export function ReconnectOverlay() {

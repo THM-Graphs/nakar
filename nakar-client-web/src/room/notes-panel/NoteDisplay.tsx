@@ -4,11 +4,11 @@ import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { NodePreviewDisplay } from "../inspector-panel/NodePreviewDisplay.tsx";
 import clsx from "clsx";
-import { ActionNavbarButton } from "../../actions/ActionNavbarButton.tsx";
-import { RemoveNoteAction } from "../../actions/RemoveNoteAction.ts";
+import { ActionNavbarButton } from "../actions/ActionNavbarButton.tsx";
+import { RemoveNoteAction } from "../actions/RemoveNoteAction.ts";
 import { RoomContext } from "../../pages/Room.tsx";
 import { DynamicList } from "../../shared/elements/DynamicList.tsx";
-import { EditNoteAction } from "../../actions/EditNoteAction.ts";
+import { EditNoteAction } from "../actions/EditNoteAction.ts";
 
 export function NoteDisplay(props: { note: Note; roomContext: RoomContext }) {
   const note = props.note;

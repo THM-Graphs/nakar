@@ -1,5 +1,5 @@
-import { Env } from "../env/env.ts";
-import { WebSocketsManager } from "../ws/WebSocketsManager.ts";
+import { Env } from "../shared/env/env.ts";
+import { WebSocketsManager } from "../shared/ws/WebSocketsManager.ts";
 import { useBearStore } from "./useBearStore.ts";
 
 export class AppContext {

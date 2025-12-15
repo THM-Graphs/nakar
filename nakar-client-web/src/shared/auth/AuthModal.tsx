@@ -3,7 +3,7 @@ import { Alert, Form, Modal, Stack } from "react-bootstrap";
 import { NavbarButton } from "../elements/NavbarButton.tsx";
 import { useBearStore } from "../../state/useBearStore.ts";
 import { useState } from "react";
-import { resultOrThrow } from "../../data/resultOrThrow.ts";
+import { resultOrThrow } from "../data/resultOrThrow.ts";
 import { postAuth } from "../../../src-gen";
 import { Loading } from "../elements/Loading.tsx";
 

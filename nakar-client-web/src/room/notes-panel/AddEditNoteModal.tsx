@@ -4,7 +4,7 @@ import { Modal, Stack } from "react-bootstrap";
 import { Panel } from "../../shared/elements/Panel.tsx";
 import { NavbarButton } from "../../shared/elements/NavbarButton.tsx";
 import { NodePreviewDisplay } from "../inspector-panel/NodePreviewDisplay.tsx";
-import { resultOrThrow } from "../../data/resultOrThrow.ts";
+import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
 import { postNote, putNote } from "../../../src-gen";
 import clsx from "clsx";
 import { ColorPicker } from "../../shared/elements/ColorPicker.tsx";

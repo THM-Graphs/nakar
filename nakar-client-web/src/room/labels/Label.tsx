@@ -1,13 +1,13 @@
 import { GraphLabel } from "../../../src-gen";
-import { getBackgroundColorOfLabel } from "../../color/getBackgroundColor.ts";
-import { getTextColor } from "../../color/getTextColor.ts";
+import { getBackgroundColorOfLabel } from "../color/getBackgroundColor.ts";
+import { getTextColor } from "../color/getTextColor.ts";
 import { Stack } from "react-bootstrap";
 import { useBearStore } from "../../state/useBearStore.ts";
 import clsx from "clsx";
-import { useColorSchema } from "../../color/useColorSchema.ts";
+import { useColorSchema } from "../color/useColorSchema.ts";
 import { DropdownButton } from "../../shared/elements/DropdownButton.tsx";
-import { labelActions } from "../../actions/groups/labelActions.ts";
-import { ActionDropdownItem } from "../../actions/ActionDropdownItem.tsx";
+import { labelActions } from "../actions/groups/labelActions.ts";
+import { ActionDropdownItem } from "../actions/ActionDropdownItem.tsx";
 import { RoomContext } from "../../pages/Room.tsx";
 
 export function Label(props: {

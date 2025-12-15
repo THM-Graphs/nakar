@@ -2,7 +2,7 @@ import { createRef, useEffect } from "react";
 import { useBearStore } from "../../state/useBearStore.ts";
 import { AppContext } from "../../state/AppContext.ts";
 import { match } from "ts-pattern";
-import { D3Renderer } from "../../d3/D3Renderer.ts";
+import { D3Renderer } from "../d3/D3Renderer.ts";
 import { RoomContext } from "../../pages/Room.tsx";
 import { CanvasContextMenu } from "./CanvasContextMenu.tsx";
 

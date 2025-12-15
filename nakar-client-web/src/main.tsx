@@ -4,15 +4,16 @@ import "bootstrap/dist/css/bootstrap.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import "./index.css";
 import { createBrowserRouter, RouterProvider } from "react-router";
-import { loadEnvOrDefault } from "./env/env.ts";
+import { loadEnvOrDefault } from "./shared/env/env.ts";
 import { client } from "../src-gen";
 import { Start, StartLoader } from "./pages/Start.tsx";
 import { Room, RoomLoader } from "./pages/Room.tsx";
 import { AppContext } from "./state/AppContext.ts";
-import { applyTheme, bootstrapTheme } from "./theme/ThemeManager.ts";
+import { applyTheme, bootstrapTheme } from "./shared/theme/ThemeManager.ts";
 import { useBearStore } from "./state/useBearStore.ts";
 import { AuthModal } from "./shared/auth/AuthModal.tsx";
 import { RoomTemplate, RoomTemplateLoader } from "./pages/RoomTemplate.tsx";
+import { ErrorComp } from "./pages/Error.tsx";
 
 async function bootstrap() {
   bootstrapTheme();
@@ -54,18 +55,24 @@ async function bootstrap() {
   const router = createBrowserRouter([
     {
       path: "/",
-      element: <Start context={context}></Start>,
-      loader: StartLoader,
-    },
-    {
-      path: "/room-template/:id",
-      element: <RoomTemplate context={context}></RoomTemplate>,
-      loader: RoomTemplateLoader,
-    },
-    {
-      path: "/room/:id",
-      element: <Room context={context}></Room>,
-      loader: RoomLoader,
+      errorElement: <ErrorComp></ErrorComp>,
+      children: [
+        {
+          index: true,
+          element: <Start context={context}></Start>,
+          loader: StartLoader,
+        },
+        {
+          path: "/room-template/:id",
+          element: <RoomTemplate context={context}></RoomTemplate>,
+          loader: RoomTemplateLoader,
+        },
+        {
+          path: "/room/:id",
+          element: <Room context={context}></Room>,
+          loader: RoomLoader,
+        },
+      ],
     },
   ]);
   createRoot(document.getElementById("root") as HTMLElement).render(

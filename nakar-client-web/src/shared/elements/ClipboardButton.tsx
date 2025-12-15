@@ -1,6 +1,6 @@
 import { OverlayTrigger, Tooltip } from "react-bootstrap";
 import { useState } from "react";
-import { useClipboard } from "../../clipboard/useClipboard.ts";
+import { useClipboard } from "../clipboard/useClipboard.ts";
 import { NavbarButton } from "./NavbarButton.tsx";
 import clsx from "clsx";
 import { useBearStore } from "../../state/useBearStore.ts";

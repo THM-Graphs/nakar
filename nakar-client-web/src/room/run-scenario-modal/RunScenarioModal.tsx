@@ -1,6 +1,6 @@
 import { useBearStore } from "../../state/useBearStore.ts";
 import { Modal, Stack } from "react-bootstrap";
-import { resultOrThrow } from "../../data/resultOrThrow.ts";
+import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
 import { postRoomActionLoadScenario } from "../../../src-gen";
 import { RoomContext } from "../../pages/Room.tsx";
 import { Panel } from "../../shared/elements/Panel.tsx";

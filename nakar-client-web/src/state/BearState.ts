@@ -15,10 +15,10 @@ import {
   ScenarioArgument,
   WSEventProgress,
 } from "../../src-gen";
-import { SocketState } from "../ws/SocketState.ts";
+import { SocketState } from "../shared/ws/SocketState.ts";
 import { Subject } from "rxjs";
-import { UserTheme } from "../theme/UserTheme.ts";
-import { Theme } from "../theme/Theme.ts";
+import { UserTheme } from "../shared/theme/UserTheme.ts";
+import { Theme } from "../shared/theme/Theme.ts";
 import { SelectedCanvasTab } from "./SelectedCanvasTab.ts";
 import { ZoomTransform } from "d3";
 

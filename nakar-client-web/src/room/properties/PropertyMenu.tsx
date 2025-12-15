@@ -2,7 +2,7 @@ import { Dropdown, Stack } from "react-bootstrap";
 import { useBearStore } from "../../state/useBearStore.ts";
 import { RoomContext } from "../../pages/Room.tsx";
 import { PropertyMenuScenarioGroupEntry } from "./PropertyMenuScenarioGroupEntry.tsx";
-import { useClipboard } from "../../clipboard/useClipboard.ts";
+import { useClipboard } from "../../shared/clipboard/useClipboard.ts";
 import { DropdownButton } from "../../shared/elements/DropdownButton.tsx";
 import { DetailPaneAction } from "../inspector-panel/DetailPaneAction.ts";
 

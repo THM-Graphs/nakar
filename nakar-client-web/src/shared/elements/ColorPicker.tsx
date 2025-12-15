@@ -1,6 +1,6 @@
 import { Color } from "../../../src-gen";
 import { Form, Stack } from "react-bootstrap";
-import { useColorSchema } from "../../color/useColorSchema.ts";
+import { useColorSchema } from "../../room/color/useColorSchema.ts";
 import { useBearStore } from "../../state/useBearStore.ts";
 
 export type ColorIndex = 0 | 2 | 1 | 3 | 4 | 5;

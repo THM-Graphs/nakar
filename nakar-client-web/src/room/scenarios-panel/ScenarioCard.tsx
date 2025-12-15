@@ -3,8 +3,8 @@ import { ScenarioIcon } from "./ScenarioIcon.tsx";
 import { QueryDisplay } from "./QueryDisplay.tsx";
 import { Scenario } from "../../../src-gen";
 import { ScenarioCardSection } from "./ScenarioCardSection.tsx";
-import { ActionNavbarButton } from "../../actions/ActionNavbarButton.tsx";
-import { EditScenarioAction } from "../../actions/EditScenarioAction.ts";
+import { ActionNavbarButton } from "../actions/ActionNavbarButton.tsx";
+import { EditScenarioAction } from "../actions/EditScenarioAction.ts";
 
 export function ScenarioCard(props: {
   hidden?: boolean;

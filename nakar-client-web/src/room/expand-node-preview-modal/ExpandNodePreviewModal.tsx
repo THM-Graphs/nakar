@@ -4,7 +4,7 @@ import { NavbarButton } from "../../shared/elements/NavbarButton.tsx";
 import { useBearStore } from "../../state/useBearStore.ts";
 import { postRoomActionExpandNode } from "../../../src-gen";
 import { useEffect, useState } from "react";
-import { resultOrThrow } from "../../data/resultOrThrow.ts";
+import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
 import { RoomContext } from "../../pages/Room.tsx";
 import { SelectableTableData } from "./SelectableTableData.tsx";
 

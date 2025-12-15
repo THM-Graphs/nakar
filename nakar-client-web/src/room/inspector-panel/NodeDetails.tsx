@@ -6,9 +6,9 @@ import { Stack } from "react-bootstrap";
 import { Label } from "../labels/Label.tsx";
 import { DynamicList } from "../../shared/elements/DynamicList.tsx";
 import { ValueDisplay } from "../histogram-panel/ValueDisplay.tsx";
-import { nodeActions } from "../../actions/groups/nodeActions.ts";
-import { ActionNavbarButton } from "../../actions/ActionNavbarButton.tsx";
-import { AddNoteAction } from "../../actions/AddNoteAction.ts";
+import { nodeActions } from "../actions/groups/nodeActions.ts";
+import { ActionNavbarButton } from "../actions/ActionNavbarButton.tsx";
+import { AddNoteAction } from "../actions/AddNoteAction.ts";
 import { NoteDisplay } from "../notes-panel/NoteDisplay.tsx";
 
 export function NodeDetails(props: {

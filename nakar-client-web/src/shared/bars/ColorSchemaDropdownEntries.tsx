@@ -1,7 +1,7 @@
-import { ColorSchema } from "../../color/ColorSchema.ts";
+import { ColorSchema } from "../../room/color/ColorSchema.ts";
 import { Dropdown, Stack } from "react-bootstrap";
 import { ColorSchemaPreview } from "./ColorSchemaPreview.tsx";
-import { useColorSchema } from "../../color/useColorSchema.ts";
+import { useColorSchema } from "../../room/color/useColorSchema.ts";
 import { useBearStore } from "../../state/useBearStore.ts";
 
 export function ColorSchemaDropdownEntries() {

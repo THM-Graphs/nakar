@@ -1,6 +1,6 @@
 import { Stack } from "react-bootstrap";
 import clsx from "clsx";
-import { numberFormat } from "../../data/numberFormat.ts";
+import { numberFormat } from "../../shared/data/numberFormat.ts";
 
 export function QueryPanelStatDisplay(props: {
   label: string;

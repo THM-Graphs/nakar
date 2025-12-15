@@ -3,9 +3,9 @@ import {
   DatabaseSearchCapabilities,
   getDatabaseSearchCapabilities,
 } from "../../../src-gen";
-import { Loadable } from "../../data/Loadable.ts";
-import { handleError } from "../../error/handleError.ts";
-import { resultOrThrow } from "../../data/resultOrThrow.ts";
+import { Loadable } from "../../shared/data/Loadable.ts";
+import { handleError } from "../../shared/error/handleError.ts";
+import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
 import { Alert, Stack } from "react-bootstrap";
 import { match, P } from "ts-pattern";
 import { SuccessIcon } from "./SuccessIcon.tsx";

@@ -2,7 +2,7 @@ import { DropdownButton } from "../elements/DropdownButton.tsx";
 import { useBearStore } from "../../state/useBearStore.ts";
 import { Dropdown } from "react-bootstrap";
 import { useEffect, useState } from "react";
-import { resultOrThrow } from "../../data/resultOrThrow.ts";
+import { resultOrThrow } from "../data/resultOrThrow.ts";
 import { getAuth } from "../../../src-gen";
 import { Loading } from "../elements/Loading.tsx";
 

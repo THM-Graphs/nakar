@@ -2,10 +2,10 @@ import { Dropdown, Stack } from "react-bootstrap";
 import { AppContext } from "../../state/AppContext.ts";
 import { match } from "ts-pattern";
 import { useCallback, useEffect, useState } from "react";
-import { Loadable } from "../../data/Loadable.ts";
+import { Loadable } from "../data/Loadable.ts";
 import { getVersion } from "../../../src-gen";
-import { resultOrThrow } from "../../data/resultOrThrow.ts";
-import { handleError } from "../../error/handleError.ts";
+import { resultOrThrow } from "../data/resultOrThrow.ts";
+import { handleError } from "../error/handleError.ts";
 import { useBearStore } from "../../state/useBearStore.ts";
 
 export function ServerInfoDropdownEntry(props: { context: AppContext }) {

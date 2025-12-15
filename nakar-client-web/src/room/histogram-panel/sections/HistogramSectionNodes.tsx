@@ -2,13 +2,13 @@ import { ValueDisplay } from "../ValueDisplay.tsx";
 import { RoomContext } from "../../../pages/Room.tsx";
 import { useBearStore } from "../../../state/useBearStore.ts";
 import { DynamicList } from "../../../shared/elements/DynamicList.tsx";
-import { nodeActions } from "../../../actions/groups/nodeActions.ts";
+import { nodeActions } from "../../actions/groups/nodeActions.ts";
 import { GraphLabel } from "../../../../src-gen";
 import {
   getBackgroundColorOfLabel,
   getBackgroundColorOfOptionalColor,
-} from "../../../color/getBackgroundColor.ts";
-import { useColorSchema } from "../../../color/useColorSchema.ts";
+} from "../../color/getBackgroundColor.ts";
+import { useColorSchema } from "../../color/useColorSchema.ts";
 
 export function HistogramSectionNodes(props: { roomContext: RoomContext }) {
   const histogram = useBearStore(

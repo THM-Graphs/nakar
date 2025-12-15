@@ -3,7 +3,7 @@ import { DetailPane } from "./DetailPane.tsx";
 import { RoomContext } from "../../pages/Room.tsx";
 import { Stack } from "react-bootstrap";
 import { NodePreviewDisplay } from "./NodePreviewDisplay.tsx";
-import { relationshipActions } from "../../actions/groups/relationshipActions.ts";
+import { relationshipActions } from "../actions/groups/relationshipActions.ts";
 
 export function EdgeDetails(props: { edge: Edge; roomContext: RoomContext }) {
   return (

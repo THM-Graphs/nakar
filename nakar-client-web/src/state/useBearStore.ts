@@ -1,6 +1,6 @@
 import { create } from "zustand/react";
 import { BearState } from "./BearState.ts";
-import { SocketState } from "../ws/SocketState.ts";
+import { SocketState } from "../shared/ws/SocketState.ts";
 import {
   Color,
   Node,
@@ -20,10 +20,10 @@ import { match, P } from "ts-pattern";
 import { enableMapSet } from "immer";
 import { Subject } from "rxjs";
 import { immer } from "zustand/middleware/immer";
-import { ColorSchema } from "../color/ColorSchema.ts";
-import { UserTheme } from "../theme/UserTheme.ts";
-import { Theme } from "../theme/Theme.ts";
-import { loadSystemTheme } from "../theme/ThemeManager.ts";
+import { ColorSchema } from "../room/color/ColorSchema.ts";
+import { UserTheme } from "../shared/theme/UserTheme.ts";
+import { Theme } from "../shared/theme/Theme.ts";
+import { loadSystemTheme } from "../shared/theme/ThemeManager.ts";
 import { PersistStorage } from "./PersistStorage.ts";
 import { SelectedCanvasTab } from "./SelectedCanvasTab.ts";
 import { ZoomTransform } from "d3";

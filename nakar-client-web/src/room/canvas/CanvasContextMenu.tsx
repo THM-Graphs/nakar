@@ -10,10 +10,10 @@ import {
 import { Dropdown } from "react-bootstrap";
 import { useBearStore } from "../../state/useBearStore.ts";
 import { Edge, Node } from "../../../src-gen";
-import { nodeActions } from "../../actions/groups/nodeActions.ts";
-import { ActionDropdownItem } from "../../actions/ActionDropdownItem.tsx";
+import { nodeActions } from "../actions/groups/nodeActions.ts";
+import { ActionDropdownItem } from "../actions/ActionDropdownItem.tsx";
 import { RoomContext } from "../../pages/Room.tsx";
-import { relationshipActions } from "../../actions/groups/relationshipActions.ts";
+import { relationshipActions } from "../actions/groups/relationshipActions.ts";
 
 export function CanvasContextMenu(props: { roomContext: RoomContext }) {
   const onShowNodeContextMenu = useBearStore(

@@ -2,7 +2,7 @@ import { match } from "ts-pattern";
 import { ReactElement } from "react";
 import { Loading } from "../../shared/elements/Loading.tsx";
 import { Alert, Stack } from "react-bootstrap";
-import { Loadable } from "../../data/Loadable.ts";
+import { Loadable } from "../../shared/data/Loadable.ts";
 import { Node } from "../../../src-gen";
 import { DynamicList } from "../../shared/elements/DynamicList.tsx";
 import { RoomContext } from "../../pages/Room.tsx";

@@ -10,14 +10,14 @@ import { Edge, Node } from "../../../src-gen";
 import { DynamicList } from "../../shared/elements/DynamicList.tsx";
 import { Stack } from "react-bootstrap";
 import { NodeLabelColors } from "../labels/NodeLabelColors.tsx";
-import { ActionNavbarButton } from "../../actions/ActionNavbarButton.tsx";
-import { nodeActions } from "../../actions/groups/nodeActions.ts";
-import { relationshipActions } from "../../actions/groups/relationshipActions.ts";
+import { ActionNavbarButton } from "../actions/ActionNavbarButton.tsx";
+import { nodeActions } from "../actions/groups/nodeActions.ts";
+import { relationshipActions } from "../actions/groups/relationshipActions.ts";
 import {
   getBackgroundColorOfColor,
   getBackgroundColorOfLabel,
-} from "../../color/getBackgroundColor.ts";
-import { useColorSchema } from "../../color/useColorSchema.ts";
+} from "../color/getBackgroundColor.ts";
+import { useColorSchema } from "../color/useColorSchema.ts";
 
 export function InspectorPanel(props: {
   context: AppContext;

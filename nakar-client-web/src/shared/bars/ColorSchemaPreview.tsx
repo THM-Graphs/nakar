@@ -1,4 +1,4 @@
-import { ColorSchema } from "../../color/ColorSchema.ts";
+import { ColorSchema } from "../../room/color/ColorSchema.ts";
 import { Stack } from "react-bootstrap";
 
 export function ColorSchemaPreview(props: { colorSchema: ColorSchema }) {

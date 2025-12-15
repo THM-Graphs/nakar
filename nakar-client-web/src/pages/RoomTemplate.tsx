@@ -12,7 +12,7 @@ import {
   Room as RoomSchema,
   RoomTemplate as RoomTemplateSchema,
 } from "../../src-gen";
-import { resultOrThrow } from "../data/resultOrThrow.ts";
+import { resultOrThrow } from "../shared/data/resultOrThrow.ts";
 import { LoaderFunctionArgs, useLoaderData, useNavigate } from "react-router";
 import { NavbarButton } from "../shared/elements/NavbarButton.tsx";
 import { ToastStack } from "../shared/bars/ToastStack.tsx";

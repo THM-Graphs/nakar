@@ -1,8 +1,8 @@
 import { OverlayTrigger, Stack, Tooltip } from "react-bootstrap";
 import { match } from "ts-pattern";
 import clsx from "clsx";
-import { SocketState } from "../../ws/SocketState.ts";
-import { displayStringForState } from "../../ws/displayStringForState.ts";
+import { SocketState } from "../ws/SocketState.ts";
+import { displayStringForState } from "../ws/displayStringForState.ts";
 import { useBearStore } from "../../state/useBearStore.ts";
 
 export function SocketStateDisplay() {

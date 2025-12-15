@@ -1,7 +1,5 @@
-import { AppNavbar } from "../shared/bars/AppNavbar.tsx";
 import { Container, Stack } from "react-bootstrap";
 import { RoomList } from "../start/RoomList.tsx";
-import { InfoDropdown } from "../shared/bars/InfoDropdown.tsx";
 import { useLoaderData, useNavigate } from "react-router";
 import {
   getRoom,
@@ -11,17 +9,15 @@ import {
   Rooms,
   RoomTemplates,
 } from "../../src-gen";
-import { resultOrThrow } from "../data/resultOrThrow.ts";
-import { NavbarLogo } from "../shared/bars/NavbarLogo.tsx";
+import { resultOrThrow } from "../shared/data/resultOrThrow.ts";
 import { AppContext } from "../state/AppContext.ts";
-import { StatusBar } from "../shared/bars/StatusBar.tsx";
-import { SocketStateDisplay } from "../shared/socket/SocketStateDisplay.tsx";
-import { AuthButton } from "../shared/auth/AuthButton.tsx";
 import { useBearStore } from "../state/useBearStore.ts";
 import { RoomTemplateList } from "../start/RoomTemplateList.tsx";
 import { match, P } from "ts-pattern";
-import { loadableFromResult } from "../data/loadableFromResult.ts";
-import { Loadable } from "../data/Loadable.ts";
+import { loadableFromResult } from "../shared/data/loadableFromResult.ts";
+import { Loadable } from "../shared/data/Loadable.ts";
+import { CMSNavbar } from "../cms/CMSNavbar.tsx";
+import { CMSFooter } from "../cms/CMSFooter.tsx";
 
 type StartPageLoaderData = {
   recentRooms: RoomSchema[];
@@ -63,10 +59,7 @@ export function Start(props: { context: AppContext }) {
       style={{ height: "100%", width: "100%" }}
       className={"justify-content-start"}
     >
-      <AppNavbar
-        center={<NavbarLogo></NavbarLogo>}
-        right={<InfoDropdown context={props.context}></InfoDropdown>}
-      ></AppNavbar>
+      <CMSNavbar context={props.context}></CMSNavbar>
       <div className={"overflow-auto mb-auto p-5"}>
         <Container>
           <p className={"text-muted mb-5"}>
@@ -103,14 +96,7 @@ export function Start(props: { context: AppContext }) {
           </Stack>
         </Container>
       </div>
-      <StatusBar
-        right={
-          <Stack direction={"horizontal"}>
-            <AuthButton></AuthButton>
-            <SocketStateDisplay></SocketStateDisplay>
-          </Stack>
-        }
-      ></StatusBar>
+      <CMSFooter></CMSFooter>
     </Stack>
   );
 }

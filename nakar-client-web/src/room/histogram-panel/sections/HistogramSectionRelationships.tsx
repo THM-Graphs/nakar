@@ -2,7 +2,7 @@ import { RoomContext } from "../../../pages/Room.tsx";
 import { ValueDisplay } from "../ValueDisplay.tsx";
 import { useBearStore } from "../../../state/useBearStore.ts";
 import { DynamicList } from "../../../shared/elements/DynamicList.tsx";
-import { relationshipActions } from "../../../actions/groups/relationshipActions.ts";
+import { relationshipActions } from "../../actions/groups/relationshipActions.ts";
 
 export function HistogramSectionRelationships(props: {
   roomContext: RoomContext;

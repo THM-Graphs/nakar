@@ -12,7 +12,7 @@ import {
   WSActionLeaveRoom,
 } from "../../src-gen";
 import { LoaderFunctionArgs, useLoaderData, useNavigate } from "react-router";
-import { resultOrThrow } from "../data/resultOrThrow.ts";
+import { resultOrThrow } from "../shared/data/resultOrThrow.ts";
 import { ToastStack } from "../shared/bars/ToastStack.tsx";
 import { HistogramPanel } from "../room/histogram-panel/HistogramPanel.tsx";
 import { ScenariosPanelButton } from "../room/scenarios-panel/ScenariosPanelButton.tsx";
@@ -36,15 +36,15 @@ import { QueryPanelButton } from "../room/query-panel/QueryPanelButton.tsx";
 import { GraphRendererD3 } from "../room/canvas/GraphRendererD3.tsx";
 import { DropdownButton } from "../shared/elements/DropdownButton.tsx";
 import { MenuBar } from "../shared/bars/MenuBar.tsx";
-import { ActionNavbarButton } from "../actions/ActionNavbarButton.tsx";
-import { CloseRoomAction } from "../actions/CloseRoomAction.ts";
-import { ActionDropdownItem } from "../actions/ActionDropdownItem.tsx";
-import { EditRoomAction } from "../actions/EditRoomAction.ts";
+import { ActionNavbarButton } from "../room/actions/ActionNavbarButton.tsx";
+import { CloseRoomAction } from "../room/actions/CloseRoomAction.ts";
+import { ActionDropdownItem } from "../room/actions/ActionDropdownItem.tsx";
+import { EditRoomAction } from "../room/actions/EditRoomAction.ts";
 import { NotesPanel } from "../room/notes-panel/NotesPanel.tsx";
 import { NotesPanelButton } from "../room/notes-panel/NotesPanelButton.tsx";
 import { AddEditNoteModal } from "../room/notes-panel/AddEditNoteModal.tsx";
 import { AuthButton } from "../shared/auth/AuthButton.tsx";
-import { EditRoomTemplateAction } from "../actions/EditRoomTemplateAction.ts";
+import { EditRoomTemplateAction } from "../room/actions/EditRoomTemplateAction.ts";
 import { SearchPanel } from "../room/search-panel/SearchPanel.tsx";
 import { SearchPanelButton } from "../room/search-panel/SearchPanelButton.tsx";
 

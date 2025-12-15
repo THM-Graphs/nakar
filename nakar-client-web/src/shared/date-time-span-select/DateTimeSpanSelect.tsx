@@ -1,4 +1,4 @@
-import { DateTool } from "../../data/DateTool.ts";
+import { DateTool } from "../data/DateTool.ts";
 import { NumericSpanSelect } from "./NumericSpanSelect.tsx";
 
 export function DateTimeSpanSelect(props: {

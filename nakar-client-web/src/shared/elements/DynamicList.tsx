@@ -1,7 +1,7 @@
 import { ReactElement, useEffect, useState } from "react";
 import { Form, Stack } from "react-bootstrap";
 import { NavbarButton } from "./NavbarButton.tsx";
-import { numberFormat } from "../../data/numberFormat.ts";
+import { numberFormat } from "../data/numberFormat.ts";
 import { Collapsable } from "./Collapsable.tsx";
 import clsx from "clsx";
 
