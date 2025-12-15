@@ -963,6 +963,7 @@ export interface components {
             readonly id: string;
             readonly title: string;
             readonly visibility: components["schemas"]["RoomVisibility"];
+            readonly canvases: readonly components["schemas"]["CanvasPreview"][];
         };
         /** @enum {string} */
         readonly RoomVisibility: "private" | "public" | "unlisted";
@@ -972,6 +973,10 @@ export interface components {
             readonly scenarios: readonly components["schemas"]["ScenarioPreview"][];
         };
         readonly ScenarioPreview: {
+            readonly id: string;
+            readonly title: string;
+        };
+        readonly CanvasPreview: {
             readonly id: string;
             readonly title: string;
         };
@@ -1114,6 +1119,7 @@ export type SchemaRoomPreview = components['schemas']['RoomPreview'];
 export type SchemaRoomVisibility = components['schemas']['RoomVisibility'];
 export type SchemaScenarioGroupPreview = components['schemas']['ScenarioGroupPreview'];
 export type SchemaScenarioPreview = components['schemas']['ScenarioPreview'];
+export type SchemaCanvasPreview = components['schemas']['CanvasPreview'];
 export type SchemaWsClientToServerMessage = components['schemas']['WSClientToServerMessage'];
 export type SchemaWsServerToClientMessage = components['schemas']['WSServerToClientMessage'];
 export type SchemaWsActionJoinRoom = components['schemas']['WSActionJoinRoom'];

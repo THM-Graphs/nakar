@@ -19,8 +19,7 @@ import {
   SchemaNote,
   SchemaProject,
   SchemaProjectPreview,
-  SchemaProjectRole,
-  SchemaProjects,
+  SchemaCanvasPreview,
   SchemaRoom,
   SchemaRoomPreview,
   SchemaRoomTemplate,
@@ -366,20 +365,39 @@ export class SchemaFactoryService implements ApplicationService {
             await this.createSchemaScenarioGroupPreview(sg),
         ),
       ),
-      rooms: rooms.map(
-        (room: Result<'api::v2-room.v2-room'>): SchemaRoomPreview =>
-          this.createSchemaRoomPreview(room),
+      rooms: await Promise.all(
+        rooms.map(
+          async (
+            room: Result<'api::v2-room.v2-room'>,
+          ): Promise<SchemaRoomPreview> =>
+            await this.createSchemaRoomPreview(room),
+        ),
       ),
     };
   }
 
-  public createSchemaRoomPreview(
+  public async createSchemaRoomPreview(
     room: Result<'api::v2-room.v2-room'>,
-  ): SchemaRoomPreview {
+  ): Promise<SchemaRoomPreview> {
+    const canvases: Result<'api::v2-canvas.v2-canvas'>[] =
+      await this._database.getCanvasesOfRoom(room);
     return {
       id: room.documentId,
       title: room.title ?? '',
       visibility: room.visibility ?? 'private',
+      canvases: canvases.map(
+        (c: Result<'api::v2-canvas.v2-canvas'>): SchemaCanvasPreview =>
+          this.createSchemaCanvasPreview(c),
+      ),
+    };
+  }
+
+  public createSchemaCanvasPreview(
+    canvas: Result<'api::v2-canvas.v2-canvas'>,
+  ): SchemaCanvasPreview {
+    return {
+      id: canvas.documentId,
+      title: canvas.title ?? '',
     };
   }
 

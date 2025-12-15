@@ -744,4 +744,28 @@ export class DatabaseService implements ApplicationService {
       )?.scenarios ?? []
     );
   }
+
+  public async getCanvasesOfRoom(
+    room: Result<'api::v2-room.v2-room'>,
+  ): Promise<Result<'api::v2-canvas.v2-canvas'>[]> {
+    const canvases: Result<'api::v2-canvas.v2-canvas'>[] =
+      (
+        await strapi.documents('api::v2-room.v2-room').findOne({
+          documentId: room.documentId,
+          populate: ['canvases'],
+        })
+      )?.canvases ?? [];
+
+    if (canvases.length > 0) {
+      return canvases;
+    } else {
+      const newCanvas: Result<'api::v2-canvas.v2-canvas'> = await strapi
+        .documents('api::v2-canvas.v2-canvas')
+        .create({
+          data: { title: 'A', room: { documentId: room.documentId } },
+          status: 'published',
+        });
+      return [newCanvas];
+    }
+  }
 }

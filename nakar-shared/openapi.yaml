@@ -2029,10 +2029,15 @@ components:
           type: string
         visibility:
           $ref: "#/components/schemas/RoomVisibility"
+        canvases:
+          type: array
+          items:
+            $ref: "#/components/schemas/CanvasPreview"
       required:
         - id
         - title
         - visibility
+        - canvases
 
     RoomVisibility:
       type: string
@@ -2055,6 +2060,17 @@ components:
         - scenarios
 
     ScenarioPreview:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+      required:
+        - id
+        - title
+
+    CanvasPreview:
       type: object
       properties:
         id:

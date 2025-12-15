@@ -15,6 +15,7 @@ export function ScenarioGroupCard(props: {
       rightBodyPaddingStart={250}
       rightBody={
         <Stack>
+          <span className={"text-muted small"}>Scenarios</span>
           {props.scenarioGroup.scenarios.map((scenario) => (
             <span className={"muted small user-select-text"} key={scenario.id}>
               {scenario.title}
