@@ -1,14 +1,14 @@
 import { useBearStore } from "../../state/useBearStore.ts";
 import { Modal, Stack } from "react-bootstrap";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
-import { postRoomActionLoadScenario } from "../../../src-gen";
-import { RoomContext } from "../../pages/Room.tsx";
+import { CanvasContext } from "../../pages/CanvasPage.tsx";
 import { Panel } from "../../shared/elements/Panel.tsx";
 import { NavbarButton } from "../../shared/elements/NavbarButton.tsx";
 import { ScenarioIcon } from "../scenarios-panel/ScenarioIcon.tsx";
 import { ArgumentDisplay } from "./ArgumentDisplay.tsx";
+import { postCanvasActionLoadScenario } from "../../../src-gen";
 
-export function RunScenarioModal(props: { roomContext: RoomContext }) {
+export function RunScenarioModal(props: { roomContext: CanvasContext }) {
   const pushErrorNotification = useBearStore(
     (s) => s.room.ui.pushErrorNotification,
   );
@@ -34,11 +34,12 @@ export function RunScenarioModal(props: { roomContext: RoomContext }) {
     handleClose();
     try {
       await resultOrThrow(
-        await postRoomActionLoadScenario({
-          path: { id: props.roomContext.initialRoomData.id },
+        await postCanvasActionLoadScenario({
+          path: { id: props.roomContext.initialCanvasData.id },
           body: {
             scenarioId: scenario.id,
             arguments: scenarioArguments,
+            additive: false, // TODO
           },
         }),
       );

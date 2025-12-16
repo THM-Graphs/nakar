@@ -1,10 +1,10 @@
 import { Action } from "./Action.ts";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
-import { RoomContext } from "../../pages/Room.tsx";
-import { postRoomActionUndo } from "../../../src-gen";
+import { CanvasContext } from "../../pages/CanvasPage.tsx";
+import { postCanvasActionUndo } from "../../../src-gen";
 
 export type UndoActionParams = {
-  roomContext: RoomContext;
+  roomContext: CanvasContext;
   undoAction: string | null;
 };
 
@@ -13,9 +13,9 @@ export class UndoAction extends Action<UndoActionParams> {
 
   protected async action(input: UndoActionParams): Promise<void> {
     resultOrThrow(
-      await postRoomActionUndo({
+      await postCanvasActionUndo({
         path: {
-          id: input.roomContext.initialRoomData.id,
+          id: input.roomContext.initialCanvasData.id,
         },
       }),
     );

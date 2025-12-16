@@ -9,7 +9,6 @@ import type { MutableGraph } from './MutableGraph';
 import { PhysicsSimulation } from '../../physics/PhysicsSimulation';
 import type { LoggerService } from '../../logger/LoggerService';
 import { MutableGraphElementCreationAction } from './MutableGraphElementCreationAction';
-import type { FinalGraphDisplayConfiguration } from '../scenario-pipeline/display-configuration/FinalGraphDisplayConfiguration';
 
 export class MutableNodeIndex {
   private readonly _byId: SMap<string, MutableNode>;
@@ -95,26 +94,20 @@ export class MutableNodeIndex {
   public addNeo4jNodes(
     nodes: SMap<string, Neo4jNode>,
     creationAction: MutableGraphElementCreationAction,
-    config: FinalGraphDisplayConfiguration,
   ): void {
     for (const node of nodes) {
-      this.addNeo4jNode(node[1], creationAction, config);
+      this.addNeo4jNode(node[1], creationAction);
     }
   }
 
   public addNeo4jNode(
     node: Neo4jNode,
     creationAction: MutableGraphElementCreationAction,
-    config: FinalGraphDisplayConfiguration,
   ): MutableNode | null {
     const mutableNode: MutableNode = new MutableNode(
       {
         id: node.node.elementId,
-        labels:
-          config.treatNameInQueryAsLabel &&
-          this._nameInQueryCanBeTreatedAsLabel(creationAction)
-            ? node.keys
-            : new SSet(node.node.labels),
+        labels: new SSet(node.node.labels), // TODO treatNameInQueryAsLabel
         nativeLabels: new SSet<string>(node.node.labels),
         properties: MutablePropertyCollection.fromRecord(node.node.properties),
         position: MutablePosition.default(),

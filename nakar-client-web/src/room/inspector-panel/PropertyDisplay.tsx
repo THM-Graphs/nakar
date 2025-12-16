@@ -1,5 +1,5 @@
 import { GraphProperty } from "../../../src-gen";
-import { RoomContext } from "../../pages/Room.tsx";
+import { CanvasContext } from "../../pages/CanvasPage.tsx";
 import { useState } from "react";
 import { Stack } from "react-bootstrap";
 import clsx from "clsx";
@@ -9,7 +9,7 @@ import { PropertyMenu } from "../properties/PropertyMenu.tsx";
 
 export function PropertyDisplay(props: {
   property: GraphProperty;
-  roomContext: RoomContext;
+  roomContext: CanvasContext;
   index: number;
 }) {
   const property = props.property;

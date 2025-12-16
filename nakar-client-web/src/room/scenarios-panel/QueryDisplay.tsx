@@ -12,18 +12,6 @@ export function QueryDisplay(props: { query: ScenarioQuery }) {
             {props.query.database.current.title}
           </span>
         )}
-        {props.query.database?.current.editUrl && (
-          <NavbarButton
-            size={"sm"}
-            icon={"pencil-fill"}
-            className={"border-start-0 border-end-0 flex-grow-0"}
-            onClick={() => {
-              if (props.query.database?.current.editUrl) {
-                window.open(props.query.database.current.editUrl, "_blank");
-              }
-            }}
-          ></NavbarButton>
-        )}
         {props.query.database?.current.browserUrl && (
           <NavbarButton
             size={"sm"}

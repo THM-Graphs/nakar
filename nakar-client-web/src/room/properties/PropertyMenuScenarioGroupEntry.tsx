@@ -1,5 +1,5 @@
-import { postRoomActionLoadScenario, ScenarioGroup } from "../../../src-gen";
-import { RoomContext } from "../../pages/Room.tsx";
+import { postCanvasActionLoadScenario, ScenarioGroup } from "../../../src-gen";
+import { CanvasContext } from "../../pages/CanvasPage.tsx";
 import { useBearStore } from "../../state/useBearStore.ts";
 import { Dropdown, Stack } from "react-bootstrap";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
@@ -7,7 +7,7 @@ import { ScenarioTitleAndBadges } from "../scenarios-panel/ScenarioTitleAndBadge
 
 export function PropertyMenuScenarioGroupEntry(props: {
   scenarioGroup: ScenarioGroup;
-  roomContext: RoomContext;
+  roomContext: CanvasContext;
   value: unknown;
 }) {
   const scenarioGroup = props.scenarioGroup;
@@ -32,9 +32,9 @@ export function PropertyMenuScenarioGroupEntry(props: {
               (async () => {
                 try {
                   await resultOrThrow(
-                    await postRoomActionLoadScenario({
+                    await postCanvasActionLoadScenario({
                       path: {
-                        id: props.roomContext.initialRoomData.id,
+                        id: props.roomContext.initialCanvasData.id,
                       },
                       body: {
                         scenarioId: scenario.id,
@@ -44,6 +44,7 @@ export function PropertyMenuScenarioGroupEntry(props: {
                             value: JSON.stringify(props.value),
                           },
                         ],
+                        additive: false, // TODO
                       },
                     }),
                   );

@@ -1,14 +1,17 @@
 import { Stack } from "react-bootstrap";
 import { useBearStore } from "../../state/useBearStore.ts";
 import { useEffect, useState } from "react";
-import { postRoomActionLoadScenario, ScenarioArgument } from "../../../src-gen";
+import {
+  postCanvasActionLoadScenario,
+  ScenarioArgument,
+} from "../../../src-gen";
 import { DateTool } from "../../shared/data/DateTool.ts";
 import { NavbarButton } from "../../shared/elements/NavbarButton.tsx";
 import { DateTimeSpanSelect } from "../../shared/date-time-span-select/DateTimeSpanSelect.tsx";
-import { RoomContext } from "../../pages/Room.tsx";
+import { CanvasContext } from "../../pages/CanvasPage.tsx";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
 
-export function CanvasBottomToolBar(props: { roomContext: RoomContext }) {
+export function CanvasBottomToolBar(props: { roomContext: CanvasContext }) {
   const metaData = useBearStore((s) => s.room.scenario.graph.metaData);
   const pushErrorNotification = useBearStore(
     (s) => s.room.ui.pushErrorNotification,
@@ -93,11 +96,12 @@ export function CanvasBottomToolBar(props: { roomContext: RoomContext }) {
 
       try {
         await resultOrThrow(
-          await postRoomActionLoadScenario({
-            path: { id: props.roomContext.initialRoomData.id },
+          await postCanvasActionLoadScenario({
+            path: { id: props.roomContext.initialCanvasData.id },
             body: {
               scenarioId: scenario.id,
               arguments: newArguments,
+              additive: false, // TODO
             },
           }),
         );

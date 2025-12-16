@@ -1,4 +1,4 @@
-import { postRoomActionDeleteElements } from "../../../src-gen";
+import { postCanvasActionDeleteElements } from "../../../src-gen";
 import { Action } from "./Action.ts";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
 import { match } from "ts-pattern";
@@ -10,9 +10,9 @@ export class RemoveRelationshipsAction extends Action<RelationshipsActionParams>
 
   protected async action(input: RelationshipsActionParams): Promise<void> {
     await resultOrThrow(
-      await postRoomActionDeleteElements({
+      await postCanvasActionDeleteElements({
         path: {
-          id: input.roomContext.initialRoomData.id,
+          id: input.roomContext.initialCanvasData.id,
         },
         body: {
           nodes: [],

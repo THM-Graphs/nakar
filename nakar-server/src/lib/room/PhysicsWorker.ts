@@ -1,7 +1,6 @@
 import { MutableGraph } from './graph/MutableGraph';
 import { Worker } from 'node:worker_threads';
 import type { WTEvent } from '../room-worker/worker-events/WTEvent';
-import { FinalGraphDisplayConfiguration } from './scenario-pipeline/display-configuration/FinalGraphDisplayConfiguration';
 import { PhysicalGraph } from '../physics/physical-graph/PhysicalGraph';
 import { RoomWorkerData } from '../room-worker/RoomWorkerData';
 import path from 'path';
@@ -16,7 +15,7 @@ export class PhysicsWorker {
   private readonly _onWTEvent: Subject<WTEvent>;
 
   public constructor(
-    private readonly _roomId: string,
+    private readonly _canvasId: string,
     private readonly _database: DatabaseService,
     private readonly _logger: LoggerService,
   ) {
@@ -29,15 +28,9 @@ export class PhysicsWorker {
   }
 
   public async bootstrap(graph: MutableGraph): Promise<void> {
-    const config: FinalGraphDisplayConfiguration =
-      await this._database.getGraphDisplayConfiguration(
-        graph.metaData.scenarioId,
-        this._roomId,
-      );
-
-    const physicalGraph: PhysicalGraph = graph.toPhysicalGraph(config);
+    const physicalGraph: PhysicalGraph = graph.toPhysicalGraph();
     const workerData: RoomWorkerData = {
-      roomId: this._roomId,
+      canvasId: this._canvasId,
       graph: physicalGraph,
     };
     const worker: Worker = new Worker(
@@ -59,7 +52,7 @@ export class PhysicsWorker {
     worker.on('exit', (exitCode: number): void => {
       this._logger.error(
         this,
-        `Worker ${worker.threadId.toString()} (Room ${this._roomId}) exit code: ${exitCode.toString()}`,
+        `Worker ${worker.threadId.toString()} (Canvas ${this._canvasId}) exit code: ${exitCode.toString()}`,
       );
       this._worker = null;
       worker.removeAllListeners();
@@ -129,7 +122,7 @@ export class PhysicsWorker {
     if (worker == null) {
       this._logger.error(
         this,
-        `Cannot send ${action.type} to worker of room ${this._roomId}. It does not exist.`,
+        `Cannot send ${action.type} to worker of canvas ${this._canvasId}. It does not exist.`,
       );
       return;
     }

@@ -33,6 +33,12 @@ export function ArgumentDisplay(props: {
 
   const argumentValueIsValid: boolean = (() => {
     return match(parameter.dataType)
+      .with("string", () => {
+        return true;
+      })
+      .with("number", () => {
+        return !isNaN(Number(argumentValue));
+      })
       .with("json", () => {
         try {
           JSON.parse(argumentValue);

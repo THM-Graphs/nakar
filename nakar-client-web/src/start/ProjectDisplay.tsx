@@ -2,10 +2,10 @@ import { useNavigate } from "react-router";
 import { Stack } from "react-bootstrap";
 import { NavbarButton } from "../shared/elements/NavbarButton.tsx";
 import { ScenarioIcon } from "../room/scenarios-panel/ScenarioIcon.tsx";
-import { ProjectPreview } from "../../src-gen";
+import { Project } from "../../src-gen";
 import { StringListDisplay } from "../cms/StringListDisplay.tsx";
 
-export function ProjectDisplay(props: { project: ProjectPreview }) {
+export function ProjectDisplay(props: { project: Project }) {
   const navigate = useNavigate();
   const roomUrl = `/project/${props.project.id}`;
 

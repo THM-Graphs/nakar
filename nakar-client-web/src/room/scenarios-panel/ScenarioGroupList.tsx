@@ -2,12 +2,12 @@ import { ScenarioGroup } from "../../../src-gen";
 import { ScenarioGroupDisplay } from "./ScenarioGroupDisplay.tsx";
 import { Stack } from "react-bootstrap";
 import { AppContext } from "../../state/AppContext.ts";
-import { RoomContext } from "../../pages/Room.tsx";
+import { CanvasContext } from "../../pages/CanvasPage.tsx";
 
 export function ScenarioGroupList(props: {
   scenarioGroups: ScenarioGroup[];
   context: AppContext;
-  roomContext: RoomContext;
+  roomContext: CanvasContext;
 }) {
   return (
     <Stack className={"flex-grow-0 pb-5"}>

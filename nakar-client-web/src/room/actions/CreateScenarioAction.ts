@@ -1,7 +1,7 @@
 import { Action } from "./Action.ts";
-import { RoomContext } from "../../pages/Room.tsx";
+import { CanvasContext } from "../../pages/CanvasPage.tsx";
 
-export type CreateScenarioActionParams = { roomContext: RoomContext };
+export type CreateScenarioActionParams = { roomContext: CanvasContext };
 
 export class CreateScenarioAction extends Action<CreateScenarioActionParams> {
   public static shared: CreateScenarioAction = new CreateScenarioAction();

@@ -1,4 +1,4 @@
-import type { GetDatabaseDBDTO } from '../database/dto/GetDatabaseDBDTO';
+import { Result } from '@strapi/types/dist/modules/documents/result';
 
 export class Neo4jDatabaseInfo {
   public readonly url: string;
@@ -21,8 +21,10 @@ export class Neo4jDatabaseInfo {
     this.nakarId = data.nakarId;
   }
 
-  public static parse(database: GetDatabaseDBDTO): Neo4jDatabaseInfo {
-    if (database.url == null) {
+  public static parse(
+    database: Result<'api::v2-database-connection.v2-database-connection'>,
+  ): Neo4jDatabaseInfo {
+    if (database.connectionUrl == null) {
       throw new Error('db url not found');
     }
     if (database.username == null) {
@@ -33,10 +35,10 @@ export class Neo4jDatabaseInfo {
     }
 
     return new Neo4jDatabaseInfo({
-      url: database.url,
+      url: database.connectionUrl,
       username: database.username,
       password: database.password,
-      database: database.database,
+      database: database.database ?? null,
       nakarId: database.documentId,
     });
   }

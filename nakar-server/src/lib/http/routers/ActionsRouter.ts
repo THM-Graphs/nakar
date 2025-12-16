@@ -1,18 +1,18 @@
 import { HTTPTools } from '../HTTPTools';
-import { RoomService } from '../../room/RoomService';
+import { CanvasService } from '../../room/CanvasService';
 import { type Request, Router } from 'express';
 import { operations, SchemaScenarioArgument } from '../../../../src-gen/schema';
-import { GetRoomDBDTO } from '../../database/dto/GetRoomDBDTO';
 import { SMap } from '../../tools/Map';
 import { MutableGraph } from '../../room/graph/MutableGraph';
 import { NotFound } from 'http-errors';
 import { SSet } from '../../tools/Set';
 import { ExpandNodePreview } from '../../neo4j/expand-node-preview/ExpandNodePreview';
+import { LiveCanvas } from '../../room/LiveCanvas';
 
 export class ActionsRouter {
   public constructor(
     private readonly _httpTools: HTTPTools,
-    private readonly _roomService: RoomService,
+    private readonly _roomService: CanvasService,
   ) {}
 
   public register(): Router {
@@ -90,10 +90,8 @@ export class ActionsRouter {
   }
 
   private _loadScenario(req: Request): void {
-    const room: GetRoomDBDTO = req.nakar.room;
-
     type Body =
-      operations['postRoomActionLoadScenario']['requestBody']['content']['application/json'];
+      operations['postCanvasActionLoadScenario']['requestBody']['content']['application/json'];
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
     const body: Body = req.body as Body;
     const scenarioId: string = body.scenarioId;
@@ -109,34 +107,36 @@ export class ActionsRouter {
       new SMap<string, string>(),
     );
 
-    this._roomService.getRoom(room.documentId).loadScenario({
+    this._roomService.getCanvas(req.nakar.canvas).loadScenario({
       scenarioId: scenarioId,
       arguments: scenarioArgs,
+      additive: body.additive,
     });
   }
 
   private _reloadScenario(req: Request): void {
-    const room: GetRoomDBDTO = req.nakar.room;
-    const graph: MutableGraph = this._roomService.getGraph(room.documentId);
+    const canvas: LiveCanvas = this._roomService.getCanvas(req.nakar.canvas);
+
+    const graph: MutableGraph = canvas.getGraph();
     const scenarioId: string | null = graph.metaData.scenarioId;
     if (scenarioId == null) {
-      throw new NotFound(`Scenario of room ${room.documentId} not found.`);
+      throw new NotFound(
+        `Scenario of canvas ${req.nakar.canvas.documentId} not found.`,
+      );
     }
 
-    this._roomService.getRoom(room.documentId).reloadScenario({
+    canvas.reloadScenario({
       scenarioId: scenarioId,
     });
   }
 
   private _expandNode(req: Request): void {
-    const room: GetRoomDBDTO = req.nakar.room;
-
     type Body =
-      operations['postRoomActionExpandNode']['requestBody']['content']['application/json'];
+      operations['postCanvasActionExpandNode']['requestBody']['content']['application/json'];
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
     const requestBody: Body = req.body as Body;
 
-    this._roomService.getRoom(room.documentId).expandNode({
+    this._roomService.getCanvas(req.nakar.canvas).expandNode({
       nodeId: requestBody.nodeId,
       limit:
         requestBody.limit != null
@@ -151,17 +151,15 @@ export class ActionsRouter {
   private async _expandNodePreview(
     req: Request,
   ): Promise<
-    operations['postRoomActionExpandNodePreview']['responses']['200']['content']['application/json']
+    operations['postCanvasActionExpandNodePreview']['responses']['200']['content']['application/json']
   > {
-    const room: GetRoomDBDTO = req.nakar.room;
-
     type Body =
-      operations['postRoomActionExpandNodePreview']['requestBody']['content']['application/json'];
+      operations['postCanvasActionExpandNodePreview']['requestBody']['content']['application/json'];
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
     const requestBody: Body = req.body as Body;
 
     const result: ExpandNodePreview | null = await this._roomService
-      .getRoom(room.documentId)
+      .getCanvas(req.nakar.canvas)
       .expandNodePreview({
         nodeId: requestBody.nodeId,
       });
@@ -169,14 +167,12 @@ export class ActionsRouter {
   }
 
   private _deleteElements(req: Request): void {
-    const room: GetRoomDBDTO = req.nakar.room;
-
     type Body =
-      operations['postRoomActionDeleteElements']['requestBody']['content']['application/json'];
+      operations['postCanvasActionDeleteElements']['requestBody']['content']['application/json'];
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
     const requestBody: Body = req.body as Body;
 
-    this._roomService.getRoom(room.documentId).deleteElements({
+    this._roomService.getCanvas(req.nakar.canvas).deleteElements({
       nodeIds: requestBody.nodes,
       labels: requestBody.labels,
       edgeIds: requestBody.edges,
@@ -185,57 +181,47 @@ export class ActionsRouter {
   }
 
   private _relayout(req: Request): void {
-    const room: GetRoomDBDTO = req.nakar.room;
-    this._roomService.getRoom(room.documentId).relayout();
+    this._roomService.getCanvas(req.nakar.canvas).relayout();
   }
 
   private _unlockNodes(req: Request): void {
-    const room: GetRoomDBDTO = req.nakar.room;
     type Body =
-      operations['postRoomActionUnlockNodes']['requestBody']['content']['application/json'];
+      operations['postCanvasActionUnlockNodes']['requestBody']['content']['application/json'];
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
     const requestBody: Body = req.body as Body;
     const nodes: readonly string[] = requestBody.nodes;
 
-    this._roomService.getRoom(room.documentId).unlockNodes({
+    this._roomService.getCanvas(req.nakar.canvas).unlockNodes({
       nodeIds: nodes,
     });
   }
 
   private _focusNodes(req: Request): void {
-    const room: GetRoomDBDTO = req.nakar.room;
-
     type Body =
-      operations['postRoomActionFocusNodes']['requestBody']['content']['application/json'];
+      operations['postCanvasActionFocusNodes']['requestBody']['content']['application/json'];
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
     const requestBody: Body = req.body as Body;
 
-    this._roomService.getRoom(room.documentId).focusNodes({
+    this._roomService.getCanvas(req.nakar.canvas).focusNodes({
       nodeIds: requestBody.nodes,
     });
   }
 
   private _undo(req: Request): void {
-    const room: GetRoomDBDTO = req.nakar.room;
-
-    this._roomService.getRoom(room.documentId).undo();
+    this._roomService.getCanvas(req.nakar.canvas).undo();
   }
 
   private _redo(req: Request): void {
-    const room: GetRoomDBDTO = req.nakar.room;
-
-    this._roomService.getRoom(room.documentId).redo();
+    this._roomService.getCanvas(req.nakar.canvas).redo();
   }
 
   private _runQuery(req: Request): void {
-    const room: GetRoomDBDTO = req.nakar.room;
-
     type Body =
-      operations['postRoomActionRunQuery']['requestBody']['content']['application/json'];
+      operations['postCanvasActionRunQuery']['requestBody']['content']['application/json'];
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
     const requestBody: Body = req.body as Body;
 
-    this._roomService.getRoom(room.documentId).runQuery({
+    this._roomService.getCanvas(req.nakar.canvas).runQuery({
       query: requestBody.query,
       databaseId: requestBody.databaseId,
       replace: requestBody.replace,
@@ -243,78 +229,62 @@ export class ActionsRouter {
   }
 
   private _connectResultNodes(req: Request): void {
-    const room: GetRoomDBDTO = req.nakar.room;
-
-    this._roomService.getRoom(room.documentId).connectResultNodes();
+    this._roomService.getCanvas(req.nakar.canvas).connectResultNodes();
   }
 
   private _unlockAllNodes(req: Request): void {
-    const room: GetRoomDBDTO = req.nakar.room;
-
-    this._roomService.getRoom(room.documentId).unlockAllNodes();
+    this._roomService.getCanvas(req.nakar.canvas).unlockAllNodes();
   }
 
   private _removeDanglingNodes(req: Request): void {
-    const room: GetRoomDBDTO = req.nakar.room;
-
-    this._roomService.getRoom(room.documentId).removeDanglingNodes();
+    this._roomService.getCanvas(req.nakar.canvas).removeDanglingNodes();
   }
 
   private _compressRelationships(req: Request): void {
-    const room: GetRoomDBDTO = req.nakar.room;
-
-    this._roomService.getRoom(room.documentId).compressRelationships();
+    this._roomService.getCanvas(req.nakar.canvas).compressRelationships();
   }
 
   private _compressNodes(req: Request): void {
-    const room: GetRoomDBDTO = req.nakar.room;
-
     type Body =
-      operations['postRoomActionCompressNodes']['requestBody']['content']['application/json'];
+      operations['postCanvasActionCompressNodes']['requestBody']['content']['application/json'];
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
     const requestBody: Body = req.body as Body;
 
-    this._roomService.getRoom(room.documentId).compressNodes({
+    this._roomService.getCanvas(req.nakar.canvas).compressNodes({
       label: requestBody.label,
     });
   }
 
   private _layoutLabel(req: Request): void {
-    const room: GetRoomDBDTO = req.nakar.room;
-
     type Body =
-      operations['postRoomActionLayoutLabel']['requestBody']['content']['application/json'];
+      operations['postCanvasActionLayoutLabel']['requestBody']['content']['application/json'];
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
     const requestBody: Body = req.body as Body;
 
-    this._roomService.getRoom(room.documentId).layoutLabel({
+    this._roomService.getCanvas(req.nakar.canvas).layoutLabel({
       label: requestBody.label,
       layoutSpecification: requestBody.layoutSpecification,
     });
   }
 
   private _showShortestPath(req: Request): void {
-    const room: GetRoomDBDTO = req.nakar.room;
-
     type Body =
-      operations['postRoomActionShowShortestPath']['requestBody']['content']['application/json'];
+      operations['postCanvasActionShowShortestPath']['requestBody']['content']['application/json'];
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
     const requestBody: Body = req.body as Body;
 
-    this._roomService.getRoom(room.documentId).showShortestPath({
+    this._roomService.getCanvas(req.nakar.canvas).showShortestPath({
       nodeIds: [...requestBody.nodeIds],
     });
   }
 
   private _loadNode(req: Request): void {
-    const room: GetRoomDBDTO = req.nakar.room;
-
     type Body =
-      operations['postRoomActionLoadNode']['requestBody']['content']['application/json'];
+      operations['postCanvasActionLoadNode']['requestBody']['content']['application/json'];
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
     const requestBody: Body = req.body as Body;
 
-    this._roomService.getRoom(room.documentId).loadNode({
+    this._roomService.getCanvas(req.nakar.canvas).loadNode({
       nodeId: requestBody.nodeId,
       databaseId: requestBody.databaseId,
     });

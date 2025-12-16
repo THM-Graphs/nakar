@@ -1,5 +1,5 @@
 import { DatabaseService } from '../database/DatabaseService';
-import { RoomService } from '../room/RoomService';
+import { CanvasService } from '../room/CanvasService';
 import { SocketIOService } from '../socketIO/SocketIOService';
 import { LoggerService } from '../logger/LoggerService';
 import { ProfilerService } from '../profiler/ProfilerService';
@@ -24,7 +24,7 @@ export class NakarApplication {
   public readonly databaseService: DatabaseService;
   public readonly migrationService: MigrationService;
   public readonly schemaFactory: SchemaFactoryService;
-  public readonly roomService: RoomService;
+  public readonly roomService: CanvasService;
   public readonly neo4j: Neo4jService;
   public readonly media: MediaService;
 
@@ -52,7 +52,7 @@ export class NakarApplication {
       this.databaseService,
     );
     this.neo4j = new Neo4jService(this.logger);
-    this.roomService = new RoomService(
+    this.roomService = new CanvasService(
       this.databaseService,
       this.logger,
       this.profiler,

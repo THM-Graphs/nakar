@@ -1,14 +1,14 @@
 import { Stack } from "react-bootstrap";
 import { useBearStore } from "../../state/useBearStore.ts";
 import { Panel } from "../../shared/elements/Panel.tsx";
-import { RoomContext } from "../../pages/Room.tsx";
+import { CanvasContext } from "../../pages/CanvasPage.tsx";
 import { HistogramSectionLabels } from "./sections/HistogramSectionLabels.tsx";
 import { HistogramSectionNodes } from "./sections/HistogramSectionNodes.tsx";
 import { HistogramSectionRelationships } from "./sections/HistogramSectionRelationships.tsx";
 import { HistogramSectionNodeProperties } from "./sections/HistogramSectionNodeProperties.tsx";
 import { HistogramSectionRelationshipProperties } from "./sections/HistogramSectionRelationshipProperties.tsx";
 
-export function HistogramPanel(props: { roomContext: RoomContext }) {
+export function HistogramPanel(props: { roomContext: CanvasContext }) {
   const histogram = useBearStore((s) => s.room.panels.histogram);
   const rightPanel = useBearStore((s) => s.room.panels.right);
 

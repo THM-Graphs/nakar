@@ -1,0 +1,76 @@
+import { HTTPTools } from '../HTTPTools';
+import { ConfigService } from '../../config/ConfigService';
+import { Request, Router } from 'express';
+import { GraphRouter } from './GraphRouter';
+import { DatabaseService } from '../../database/DatabaseService';
+import { SchemaFactoryService } from '../../schema/SchemaFactoryService';
+import { Result } from '@strapi/types/dist/modules/documents/result';
+import { NotFound } from 'http-errors';
+import { ActionsRouter } from './ActionsRouter';
+import { CanvasService } from '../../room/CanvasService';
+import { SchemaCanvas } from '../../../../src-gen/schema';
+
+export class CanvasRouter {
+  private readonly _graphRouter: GraphRouter;
+  private readonly _actionsRouter: ActionsRouter;
+
+  public constructor(
+    private readonly _httpTools: HTTPTools,
+    private readonly _databaseService: DatabaseService,
+    private readonly _schemaFactory: SchemaFactoryService,
+    private readonly _canvasService: CanvasService,
+  ) {
+    this._graphRouter = new GraphRouter(
+      _httpTools,
+      _databaseService,
+      _schemaFactory,
+    );
+    this._actionsRouter = new ActionsRouter(_httpTools, _canvasService);
+  }
+
+  public register(): Router {
+    const router: Router = Router();
+
+    router.use(
+      '/:id',
+      this._httpTools.handleMiddleware(this._assertCanvas.bind(this)),
+    );
+    router.use('/:id/graph', this._graphRouter.register());
+    router.use('/:id/actions', this._actionsRouter.register());
+    router.use('/:id', this._httpTools.handle(this._getCanvas.bind(this)));
+
+    return router;
+  }
+
+  private async _assertCanvas(req: Request): Promise<void> {
+    const id: string = this._httpTools.getPathParameter(req, 'id');
+    const canvas: Result<'api::v2-canvas.v2-canvas'> | null =
+      await this._databaseService.getCanvas(id);
+    if (canvas == null) {
+      throw new NotFound();
+    }
+    const room: Result<'api::v2-room.v2-room'> | null =
+      await this._databaseService.getRoomOfCanvas(canvas);
+    if (room == null) {
+      throw new NotFound();
+    }
+    const project: Result<'api::v2-project.v2-project'> | null =
+      await this._databaseService.getProjectOfRoom(room);
+    if (project == null) {
+      throw new NotFound();
+    }
+
+    req.nakar = {
+      ...req.nakar,
+      project: project,
+      room: room,
+      canvas: canvas,
+    };
+  }
+
+  private async _getCanvas(req: Request): Promise<SchemaCanvas> {
+    return await this._schemaFactory.createSchemaCanvasPreview(
+      req.nakar.canvas,
+    );
+  }
+}

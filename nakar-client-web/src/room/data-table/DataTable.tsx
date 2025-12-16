@@ -23,16 +23,6 @@ export function DataTable() {
           <p className={"p-3 text-muted"}>
             No table data in scenario. Add a table query.
           </p>
-          {scenario?.current.editUrl && (
-            <NavbarButton
-              title={"Add Table Query"}
-              icon={"plus-lg"}
-              className={"border align-self-center"}
-              onClick={() => {
-                window.open(scenario.current.editUrl ?? undefined);
-              }}
-            ></NavbarButton>
-          )}
         </Stack>
       ) : (
         <Table className={"table-responsive"}>

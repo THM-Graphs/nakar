@@ -1,11 +1,11 @@
-import { RoomContext } from "../../../pages/Room.tsx";
+import { CanvasContext } from "../../../pages/CanvasPage.tsx";
 import { ValueDisplay } from "../ValueDisplay.tsx";
 import { useBearStore } from "../../../state/useBearStore.ts";
 import { DynamicList } from "../../../shared/elements/DynamicList.tsx";
 import { relationshipActions } from "../../actions/groups/relationshipActions.ts";
 
 export function HistogramSectionRelationships(props: {
-  roomContext: RoomContext;
+  roomContext: CanvasContext;
 }) {
   const histogram = useBearStore(
     (s) => s.room.scenario.graph.elements.histogram,

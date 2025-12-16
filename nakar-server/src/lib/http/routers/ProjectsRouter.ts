@@ -1,23 +1,25 @@
 import { HTTPTools } from '../HTTPTools';
 import { Request, Router } from 'express';
-import {
-  SchemaProject,
-  SchemaProjectPreview,
-  SchemaProjects,
-} from '../../../../src-gen/schema';
+import { SchemaProject, SchemaProjects } from '../../../../src-gen/schema';
 import { SchemaFactoryService } from '../../schema/SchemaFactoryService';
-import { NotFound } from 'http-errors';
+import { NotFound, Unauthorized } from 'http-errors';
 import { LoggerService } from '../../logger/LoggerService';
 import { Result } from '@strapi/types/dist/modules/documents/result';
 import { DatabaseService } from '../../database/DatabaseService';
+import { ActionsRouter } from './ActionsRouter';
+import { NotesRouter } from './NotesRouter';
 
 export class ProjectsRouter {
+  private readonly _notesRouter: NotesRouter;
+
   public constructor(
     private readonly _httpTools: HTTPTools,
     private readonly _schemaFactory: SchemaFactoryService,
     private readonly _logger: LoggerService,
     private readonly _database: DatabaseService,
-  ) {}
+  ) {
+    this._notesRouter = new NotesRouter(_httpTools, _database, _logger);
+  }
 
   public register(): Router {
     const router: Router = Router();
@@ -33,6 +35,7 @@ export class ProjectsRouter {
       this._httpTools.handleMiddleware(this._assertProject.bind(this)),
     );
     router.get('/:id', this._httpTools.handle(this._getProject.bind(this)));
+    router.use('/:id/note', this._notesRouter.register());
 
     return router;
   }
@@ -89,11 +92,8 @@ export class ProjectsRouter {
         myProjects.map(
           async (
             project: Result<'api::v2-project.v2-project'>,
-          ): Promise<SchemaProjectPreview> => {
-            return await this._schemaFactory.createSchemaProjectPreview(
-              project,
-              req.nakar.user,
-            );
+          ): Promise<SchemaProject> => {
+            return await this._schemaFactory.createSchemaProject(project);
           },
         ),
       ),
@@ -101,11 +101,8 @@ export class ProjectsRouter {
         collaborationProjects.map(
           async (
             project: Result<'api::v2-project.v2-project'>,
-          ): Promise<SchemaProjectPreview> => {
-            return await this._schemaFactory.createSchemaProjectPreview(
-              project,
-              req.nakar.user,
-            );
+          ): Promise<SchemaProject> => {
+            return await this._schemaFactory.createSchemaProject(project);
           },
         ),
       ),

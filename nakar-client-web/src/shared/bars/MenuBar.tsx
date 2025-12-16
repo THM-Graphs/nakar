@@ -8,7 +8,7 @@ import { AppContext } from "../../state/AppContext.ts";
 import { ActionDropdownItem } from "../../room/actions/ActionDropdownItem.tsx";
 import { useBearStore } from "../../state/useBearStore.ts";
 import { Edge, Node } from "../../../src-gen";
-import { RoomContext } from "../../pages/Room.tsx";
+import { CanvasContext } from "../../pages/CanvasPage.tsx";
 import { CreateScenarioAction } from "../../room/actions/CreateScenarioAction.ts";
 import { CreateScenarioGroupAction } from "../../room/actions/CreateScenarioGroupAction.ts";
 import { SaveSVGAction } from "../../room/actions/SaveSVGAction.ts";
@@ -19,8 +19,6 @@ import { UndoAction } from "../../room/actions/UndoAction.ts";
 import { RedoAction } from "../../room/actions/RedoAction.ts";
 import { SelectAllAction } from "../../room/actions/SelectAllAction.ts";
 import { DeselectAction } from "../../room/actions/DeselectAction.ts";
-import { EditRoomAction } from "../../room/actions/EditRoomAction.ts";
-import { EditScenarioAction } from "../../room/actions/EditScenarioAction.ts";
 import { RerunScenarioAction } from "../../room/actions/RerunScenarioAction.ts";
 import { ConnectResultNodesAction } from "../../room/actions/ConnectResultNodesAction.ts";
 import { RemoveDanglingNodesAction } from "../../room/actions/RemoveDanglingNodesAction.ts";
@@ -37,7 +35,7 @@ import { relationshipActions } from "../../room/actions/groups/relationshipActio
 
 export function MenuBar(props: {
   context: AppContext;
-  roomContext: RoomContext;
+  roomContext: CanvasContext;
 }) {
   const graphElements = useBearStore((s) => s.room.scenario.graph.elements);
   const setElements = useBearStore((s) => s.room.panels.inspector.setElements);
@@ -133,14 +131,6 @@ export function MenuBar(props: {
           params={{ elements, deselectElements }}
         ></ActionDropdownItem>
         <Dropdown.Divider></Dropdown.Divider>
-        <ActionDropdownItem
-          action={EditRoomAction.shared}
-          params={{ roomContext: props.roomContext }}
-        ></ActionDropdownItem>
-        <ActionDropdownItem
-          action={EditScenarioAction.shared}
-          params={{ scenario: scenario?.current ?? null }}
-        ></ActionDropdownItem>
       </DropdownButton>
       <DropdownButton title={"Scenario"}>
         <ActionDropdownItem

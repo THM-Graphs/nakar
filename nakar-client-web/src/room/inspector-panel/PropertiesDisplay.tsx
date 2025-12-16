@@ -1,5 +1,5 @@
 import { GraphProperty } from "../../../src-gen";
-import { RoomContext } from "../../pages/Room.tsx";
+import { CanvasContext } from "../../pages/CanvasPage.tsx";
 import { PropertyDisplay } from "./PropertyDisplay.tsx";
 import { DynamicList } from "../../shared/elements/DynamicList.tsx";
 
@@ -7,7 +7,7 @@ export function PropertiesDisplay(props: {
   title: string;
   elementId: string;
   properties: GraphProperty[];
-  roomContext: RoomContext;
+  roomContext: CanvasContext;
   className?: string;
 }) {
   return (

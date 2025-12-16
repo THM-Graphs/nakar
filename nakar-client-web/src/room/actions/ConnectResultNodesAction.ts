@@ -1,12 +1,12 @@
 import { Action } from "./Action.ts";
 import { SelectedCanvasTab } from "../../state/SelectedCanvasTab.ts";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
-import { postRoomActionConnectResultNodes, Scenario } from "../../../src-gen";
-import { RoomContext } from "../../pages/Room.tsx";
+import { postCanvasActionConnectResultNodes, Scenario } from "../../../src-gen";
+import { CanvasContext } from "../../pages/CanvasPage.tsx";
 
 export type ConnectResultNodesActionParams = {
   selectedTab: SelectedCanvasTab;
-  roomContext: RoomContext;
+  roomContext: CanvasContext;
   scenario: Scenario | null;
 };
 
@@ -16,8 +16,8 @@ export class ConnectResultNodesAction extends Action<ConnectResultNodesActionPar
 
   protected async action(input: ConnectResultNodesActionParams): Promise<void> {
     resultOrThrow(
-      await postRoomActionConnectResultNodes({
-        path: { id: input.roomContext.initialRoomData.id },
+      await postCanvasActionConnectResultNodes({
+        path: { id: input.roomContext.initialCanvasData.id },
       }),
     );
   }

@@ -1,5 +1,5 @@
 import { Action } from "./Action.ts";
-import { postRoomActionExpandNode } from "../../../src-gen";
+import { postCanvasActionExpandNode } from "../../../src-gen";
 import { NodesActionParams } from "./NodesActionParams.ts";
 
 export class ExpandNodeAction extends Action<NodesActionParams> {
@@ -7,9 +7,9 @@ export class ExpandNodeAction extends Action<NodesActionParams> {
 
   protected async action(input: NodesActionParams): Promise<void> {
     for (const node of input.nodes) {
-      await postRoomActionExpandNode({
+      await postCanvasActionExpandNode({
         path: {
-          id: input.roomContext.initialRoomData.id,
+          id: input.roomContext.initialCanvasData.id,
         },
         body: {
           nodeId: node.id,

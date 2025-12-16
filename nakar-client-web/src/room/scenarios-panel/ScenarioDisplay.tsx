@@ -1,10 +1,10 @@
-import { postRoomActionLoadScenario, Scenario } from "../../../src-gen";
+import { postCanvasActionLoadScenario, Scenario } from "../../../src-gen";
 import { ScenarioCard } from "./ScenarioCard.tsx";
 import { Collapsable } from "../../shared/elements/Collapsable.tsx";
 import { useBearStore } from "../../state/useBearStore.ts";
 import { useCallback } from "react";
 import { AppContext } from "../../state/AppContext.ts";
-import { RoomContext } from "../../pages/Room.tsx";
+import { CanvasContext } from "../../pages/CanvasPage.tsx";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
 import { ScenarioTitleAndBadges } from "./ScenarioTitleAndBadges.tsx";
 
@@ -12,7 +12,7 @@ export function ScenarioDisplay(props: {
   scenario: Scenario;
   hidden?: boolean;
   context: AppContext;
-  roomContext: RoomContext;
+  roomContext: CanvasContext;
 }) {
   const showRunScenarioModal = useBearStore(
     (s) => s.room.scenario.runScenarioModal.open,
@@ -28,11 +28,12 @@ export function ScenarioDisplay(props: {
       (async () => {
         try {
           await resultOrThrow(
-            await postRoomActionLoadScenario({
-              path: { id: props.roomContext.initialRoomData.id },
+            await postCanvasActionLoadScenario({
+              path: { id: props.roomContext.initialCanvasData.id },
               body: {
                 scenarioId: props.scenario.id,
                 arguments: [],
+                additive: false, // TODO
               },
             }),
           );

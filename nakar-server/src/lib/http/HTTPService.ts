@@ -7,34 +7,31 @@ import type { DatabaseService } from '../database/DatabaseService';
 import cors from 'cors';
 import type { ProfilerService } from '../profiler/ProfilerService';
 import type { ApplicationService } from '../application/ApplicationService';
-import type { RoomService } from '../room/RoomService';
-import type { GetRoomDBDTO } from '../database/dto/GetRoomDBDTO';
-import type { GetDatabaseDBDTO } from '../database/dto/GetDatabaseDBDTO';
+import type { CanvasService } from '../room/CanvasService';
 import type { Neo4jService } from '../neo4j/Neo4jService';
 import type { MediaService } from '../media/MediaService';
-import type { GetTemplateDBDTO } from '../database/dto/GetTemplateDBDTO';
-import type { GetNoteDBDTO } from '../database/dto/GetNoteDBDTO';
 import { HTTPTools } from './HTTPTools';
 import { AuthenticationRouter } from './routers/AuthenticationRouter';
 import { RoomRouter } from './routers/RoomRouter';
-import { RoomTemplateRouter } from './routers/RoomTemplateRouter';
 import { SystemRouter } from './routers/SystemRouter';
 import { DatabaseRouter } from './routers/DatabaseRouter';
 import { SchemaFactoryService } from '../schema/SchemaFactoryService';
 import { ProjectsRouter } from './routers/ProjectsRouter';
 import { Result } from '@strapi/types/dist/modules/documents/result';
+import { CanvasRouter } from './routers/CanvasRouter';
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace Express {
     export interface Request {
       nakar: {
-        room: GetRoomDBDTO;
-        note: GetNoteDBDTO;
-        roomTemplate: GetTemplateDBDTO;
-        database: GetDatabaseDBDTO;
+        room: Result<'api::v2-room.v2-room'>;
+        note: Result<'api::v2-note.v2-note'>;
+        database: Result<'api::v2-database-connection.v2-database-connection'>;
+        possibleUser: Result<'plugin::users-permissions.user'> | null;
         user: Result<'plugin::users-permissions.user'>;
         project: Result<'api::v2-project.v2-project'>;
+        canvas: Result<'api::v2-canvas.v2-canvas'>;
       };
     }
   }
@@ -48,10 +45,10 @@ export class HTTPService implements ApplicationService {
 
   private readonly _authenticationRouter: AuthenticationRouter;
   private readonly _roomRouter: RoomRouter;
-  private readonly _roomTemplateRouter: RoomTemplateRouter;
   private readonly _systemRouter: SystemRouter;
   private readonly _databaseRouter: DatabaseRouter;
   private readonly _projectsRouter: ProjectsRouter;
+  private readonly _canvasRouter: CanvasRouter;
 
   public constructor(
     private readonly _config: ConfigService,
@@ -61,7 +58,7 @@ export class HTTPService implements ApplicationService {
     neo4jService: Neo4jService,
     media: MediaService,
     schemaFactory: SchemaFactoryService,
-    roomService: RoomService,
+    roomService: CanvasService,
   ) {
     this._app = express();
     this._server = http.createServer(this._app);
@@ -82,11 +79,6 @@ export class HTTPService implements ApplicationService {
       _logger,
       roomService,
     );
-    this._roomTemplateRouter = new RoomTemplateRouter(
-      this._httpTools,
-      databaseService,
-      schemaFactory,
-    );
     this._systemRouter = new SystemRouter(this._httpTools, _config);
     this._databaseRouter = new DatabaseRouter(
       this._httpTools,
@@ -103,6 +95,12 @@ export class HTTPService implements ApplicationService {
       schemaFactory,
       _logger,
       databaseService,
+    );
+    this._canvasRouter = new CanvasRouter(
+      this._httpTools,
+      databaseService,
+      schemaFactory,
+      roomService,
     );
 
     this._setupRoutes();
@@ -167,11 +165,12 @@ export class HTTPService implements ApplicationService {
       }),
     );
     this._app.use(cors());
+    this._app.use(this._httpTools.handleMiddleware(this._httpTools.findUser));
     this._app.use('/auth', this._authenticationRouter.register());
+    this._app.use('/project', this._projectsRouter.register());
     this._app.use('/room', this._roomRouter.register());
-    this._app.use('/room-template', this._roomTemplateRouter.register());
+    this._app.use('/canvas', this._canvasRouter.register());
     this._app.use('/system', this._systemRouter.register());
     this._app.use('/database', this._databaseRouter.register());
-    this._app.use('/project', this._projectsRouter.register());
   }
 }

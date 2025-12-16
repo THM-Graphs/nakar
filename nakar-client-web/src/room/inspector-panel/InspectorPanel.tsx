@@ -4,7 +4,7 @@ import { NodeDetails } from "./NodeDetails.tsx";
 import { EdgeDetails } from "./EdgeDetails.tsx";
 import { useBearStore } from "../../state/useBearStore.ts";
 import { AppContext } from "../../state/AppContext.ts";
-import { RoomContext } from "../../pages/Room.tsx";
+import { CanvasContext } from "../../pages/CanvasPage.tsx";
 import { Collapsable } from "../../shared/elements/Collapsable.tsx";
 import { Edge, Node } from "../../../src-gen";
 import { DynamicList } from "../../shared/elements/DynamicList.tsx";
@@ -21,7 +21,7 @@ import { useColorSchema } from "../color/useColorSchema.ts";
 
 export function InspectorPanel(props: {
   context: AppContext;
-  roomContext: RoomContext;
+  roomContext: CanvasContext;
 }) {
   const inspector = useBearStore((s) => s.room.panels.inspector);
   const rightPanel = useBearStore((s) => s.room.panels.right);
@@ -146,7 +146,7 @@ function EmptyInspector() {
 
 function InspectorForType(props: {
   element: Node | Edge;
-  roomContext: RoomContext;
+  roomContext: CanvasContext;
   context: AppContext;
 }) {
   if ("title" in props.element) {
@@ -169,7 +169,7 @@ function InspectorForType(props: {
 
 function InspectorPanelForMultiType(props: {
   element: Node | Edge;
-  roomContext: RoomContext;
+  roomContext: CanvasContext;
   context: AppContext;
 }) {
   const title =

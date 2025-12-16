@@ -1,7 +1,7 @@
 import { Node } from "../../../src-gen";
 import { DetailPane } from "./DetailPane.tsx";
 import { AppContext } from "../../state/AppContext.ts";
-import { RoomContext } from "../../pages/Room.tsx";
+import { CanvasContext } from "../../pages/CanvasPage.tsx";
 import { Stack } from "react-bootstrap";
 import { Label } from "../labels/Label.tsx";
 import { DynamicList } from "../../shared/elements/DynamicList.tsx";
@@ -14,7 +14,7 @@ import { NoteDisplay } from "../notes-panel/NoteDisplay.tsx";
 export function NodeDetails(props: {
   node: Node;
   context: AppContext;
-  roomContext: RoomContext;
+  roomContext: CanvasContext;
 }) {
   return (
     <DetailPane

@@ -52,14 +52,14 @@ export interface paths {
         readonly patch?: never;
         readonly trace?: never;
     };
-    readonly "/room/{id}/scenarios": {
+    readonly "/canvas/{id}": {
         readonly parameters: {
             readonly query?: never;
             readonly header?: never;
             readonly path?: never;
             readonly cookie?: never;
         };
-        readonly get: operations["getScenarios"];
+        readonly get: operations["getCanvas"];
         readonly put?: never;
         readonly post?: never;
         readonly delete?: never;
@@ -77,7 +77,7 @@ export interface paths {
         };
         readonly get: operations["getRooms"];
         readonly put?: never;
-        readonly post: operations["createRoom"];
+        readonly post?: never;
         readonly delete?: never;
         readonly options?: never;
         readonly head?: never;
@@ -100,14 +100,14 @@ export interface paths {
         readonly patch?: never;
         readonly trace?: never;
     };
-    readonly "/room-template": {
+    readonly "/room/{id}/scenarios": {
         readonly parameters: {
             readonly query?: never;
             readonly header?: never;
             readonly path?: never;
             readonly cookie?: never;
         };
-        readonly get: operations["getRoomTemplates"];
+        readonly get: operations["getRoomScenarios"];
         readonly put?: never;
         readonly post?: never;
         readonly delete?: never;
@@ -116,87 +116,7 @@ export interface paths {
         readonly patch?: never;
         readonly trace?: never;
     };
-    readonly "/room-template/{id}": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
-        };
-        readonly get: operations["getRoomTemplate"];
-        readonly put?: never;
-        readonly post?: never;
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
-    };
-    readonly "/room/{id}/graph": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
-        };
-        readonly get: operations["getRoomGraph"];
-        readonly put?: never;
-        readonly post?: never;
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
-    };
-    readonly "/room/{id}/graph/elements": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
-        };
-        readonly get: operations["getRoomGraphElements"];
-        readonly put?: never;
-        readonly post?: never;
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
-    };
-    readonly "/room/{id}/graph/meta-data": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
-        };
-        readonly get: operations["getRoomGraphMetaData"];
-        readonly put?: never;
-        readonly post?: never;
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
-    };
-    readonly "/room/{id}/graph/table": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
-        };
-        readonly get: operations["getRoomGraphTable"];
-        readonly put?: never;
-        readonly post?: never;
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
-    };
-    readonly "/room/{id}/note": {
+    readonly "/project/{id}/note": {
         readonly parameters: {
             readonly query?: never;
             readonly header?: never;
@@ -212,7 +132,7 @@ export interface paths {
         readonly patch?: never;
         readonly trace?: never;
     };
-    readonly "/room/{id}/note/{noteId}": {
+    readonly "/project/{id}/note/{noteId}": {
         readonly parameters: {
             readonly query?: never;
             readonly header?: never;
@@ -228,71 +148,71 @@ export interface paths {
         readonly patch?: never;
         readonly trace?: never;
     };
-    readonly "/room/{id}/actions/load-scenario": {
+    readonly "/canvas/{id}/graph": {
         readonly parameters: {
             readonly query?: never;
             readonly header?: never;
             readonly path?: never;
             readonly cookie?: never;
         };
-        readonly get?: never;
+        readonly get: operations["getGraph"];
         readonly put?: never;
-        readonly post: operations["postRoomActionLoadScenario"];
+        readonly post?: never;
         readonly delete?: never;
         readonly options?: never;
         readonly head?: never;
         readonly patch?: never;
         readonly trace?: never;
     };
-    readonly "/room/{id}/actions/reload-scenario": {
+    readonly "/canvas/{id}/graph/elements": {
         readonly parameters: {
             readonly query?: never;
             readonly header?: never;
             readonly path?: never;
             readonly cookie?: never;
         };
-        readonly get?: never;
+        readonly get: operations["getGraphElements"];
         readonly put?: never;
-        readonly post: operations["postRoomActionReloadScenario"];
+        readonly post?: never;
         readonly delete?: never;
         readonly options?: never;
         readonly head?: never;
         readonly patch?: never;
         readonly trace?: never;
     };
-    readonly "/room/{id}/actions/expand-node": {
+    readonly "/canvas/{id}/graph/meta-data": {
         readonly parameters: {
             readonly query?: never;
             readonly header?: never;
             readonly path?: never;
             readonly cookie?: never;
         };
-        readonly get?: never;
+        readonly get: operations["getGraphMetaData"];
         readonly put?: never;
-        readonly post: operations["postRoomActionExpandNode"];
+        readonly post?: never;
         readonly delete?: never;
         readonly options?: never;
         readonly head?: never;
         readonly patch?: never;
         readonly trace?: never;
     };
-    readonly "/room/{id}/actions/expand-node-preview": {
+    readonly "/canvas/{id}/graph/table": {
         readonly parameters: {
             readonly query?: never;
             readonly header?: never;
             readonly path?: never;
             readonly cookie?: never;
         };
-        readonly get?: never;
+        readonly get: operations["getGraphTable"];
         readonly put?: never;
-        readonly post: operations["postRoomActionExpandNodePreview"];
+        readonly post?: never;
         readonly delete?: never;
         readonly options?: never;
         readonly head?: never;
         readonly patch?: never;
         readonly trace?: never;
     };
-    readonly "/room/{id}/actions/delete-elements": {
+    readonly "/canvas/{id}/actions/load-scenario": {
         readonly parameters: {
             readonly query?: never;
             readonly header?: never;
@@ -301,14 +221,14 @@ export interface paths {
         };
         readonly get?: never;
         readonly put?: never;
-        readonly post: operations["postRoomActionDeleteElements"];
+        readonly post: operations["postCanvasActionLoadScenario"];
         readonly delete?: never;
         readonly options?: never;
         readonly head?: never;
         readonly patch?: never;
         readonly trace?: never;
     };
-    readonly "/room/{id}/actions/relayout": {
+    readonly "/canvas/{id}/actions/reload-scenario": {
         readonly parameters: {
             readonly query?: never;
             readonly header?: never;
@@ -317,14 +237,14 @@ export interface paths {
         };
         readonly get?: never;
         readonly put?: never;
-        readonly post: operations["postRoomActionRelayout"];
+        readonly post: operations["postCanvasActionReloadScenario"];
         readonly delete?: never;
         readonly options?: never;
         readonly head?: never;
         readonly patch?: never;
         readonly trace?: never;
     };
-    readonly "/room/{id}/actions/unlock-nodes": {
+    readonly "/canvas/{id}/actions/expand-node": {
         readonly parameters: {
             readonly query?: never;
             readonly header?: never;
@@ -333,14 +253,14 @@ export interface paths {
         };
         readonly get?: never;
         readonly put?: never;
-        readonly post: operations["postRoomActionUnlockNodes"];
+        readonly post: operations["postCanvasActionExpandNode"];
         readonly delete?: never;
         readonly options?: never;
         readonly head?: never;
         readonly patch?: never;
         readonly trace?: never;
     };
-    readonly "/room/{id}/actions/focus-nodes": {
+    readonly "/canvas/{id}/actions/expand-node-preview": {
         readonly parameters: {
             readonly query?: never;
             readonly header?: never;
@@ -349,14 +269,14 @@ export interface paths {
         };
         readonly get?: never;
         readonly put?: never;
-        readonly post: operations["postRoomActionFocusNodes"];
+        readonly post: operations["postCanvasActionExpandNodePreview"];
         readonly delete?: never;
         readonly options?: never;
         readonly head?: never;
         readonly patch?: never;
         readonly trace?: never;
     };
-    readonly "/room/{id}/actions/undo": {
+    readonly "/canvas/{id}/actions/delete-elements": {
         readonly parameters: {
             readonly query?: never;
             readonly header?: never;
@@ -365,14 +285,14 @@ export interface paths {
         };
         readonly get?: never;
         readonly put?: never;
-        readonly post: operations["postRoomActionUndo"];
+        readonly post: operations["postCanvasActionDeleteElements"];
         readonly delete?: never;
         readonly options?: never;
         readonly head?: never;
         readonly patch?: never;
         readonly trace?: never;
     };
-    readonly "/room/{id}/actions/redo": {
+    readonly "/canvas/{id}/actions/relayout": {
         readonly parameters: {
             readonly query?: never;
             readonly header?: never;
@@ -381,14 +301,14 @@ export interface paths {
         };
         readonly get?: never;
         readonly put?: never;
-        readonly post: operations["postRoomActionRedo"];
+        readonly post: operations["postCanvasActionRelayout"];
         readonly delete?: never;
         readonly options?: never;
         readonly head?: never;
         readonly patch?: never;
         readonly trace?: never;
     };
-    readonly "/room/{id}/actions/run-query": {
+    readonly "/canvas/{id}/actions/unlock-nodes": {
         readonly parameters: {
             readonly query?: never;
             readonly header?: never;
@@ -397,14 +317,14 @@ export interface paths {
         };
         readonly get?: never;
         readonly put?: never;
-        readonly post: operations["postRoomActionRunQuery"];
+        readonly post: operations["postCanvasActionUnlockNodes"];
         readonly delete?: never;
         readonly options?: never;
         readonly head?: never;
         readonly patch?: never;
         readonly trace?: never;
     };
-    readonly "/room/{id}/actions/connect-result-nodes": {
+    readonly "/canvas/{id}/actions/focus-nodes": {
         readonly parameters: {
             readonly query?: never;
             readonly header?: never;
@@ -413,14 +333,14 @@ export interface paths {
         };
         readonly get?: never;
         readonly put?: never;
-        readonly post: operations["postRoomActionConnectResultNodes"];
+        readonly post: operations["postCanvasActionFocusNodes"];
         readonly delete?: never;
         readonly options?: never;
         readonly head?: never;
         readonly patch?: never;
         readonly trace?: never;
     };
-    readonly "/room/{id}/actions/unlock-all-nodes": {
+    readonly "/canvas/{id}/actions/undo": {
         readonly parameters: {
             readonly query?: never;
             readonly header?: never;
@@ -429,14 +349,14 @@ export interface paths {
         };
         readonly get?: never;
         readonly put?: never;
-        readonly post: operations["postRoomActionUnlockAllNodes"];
+        readonly post: operations["postCanvasActionUndo"];
         readonly delete?: never;
         readonly options?: never;
         readonly head?: never;
         readonly patch?: never;
         readonly trace?: never;
     };
-    readonly "/room/{id}/actions/remove-dangling-nodes": {
+    readonly "/canvas/{id}/actions/redo": {
         readonly parameters: {
             readonly query?: never;
             readonly header?: never;
@@ -445,14 +365,14 @@ export interface paths {
         };
         readonly get?: never;
         readonly put?: never;
-        readonly post: operations["postRoomActionRemoveDanglingNodes"];
+        readonly post: operations["postCanvasActionRedo"];
         readonly delete?: never;
         readonly options?: never;
         readonly head?: never;
         readonly patch?: never;
         readonly trace?: never;
     };
-    readonly "/room/{id}/actions/compress-relationships": {
+    readonly "/canvas/{id}/actions/run-query": {
         readonly parameters: {
             readonly query?: never;
             readonly header?: never;
@@ -461,14 +381,14 @@ export interface paths {
         };
         readonly get?: never;
         readonly put?: never;
-        readonly post: operations["postRoomActionCompressRelationships"];
+        readonly post: operations["postCanvasActionRunQuery"];
         readonly delete?: never;
         readonly options?: never;
         readonly head?: never;
         readonly patch?: never;
         readonly trace?: never;
     };
-    readonly "/room/{id}/actions/compress-nodes": {
+    readonly "/canvas/{id}/actions/connect-result-nodes": {
         readonly parameters: {
             readonly query?: never;
             readonly header?: never;
@@ -477,14 +397,14 @@ export interface paths {
         };
         readonly get?: never;
         readonly put?: never;
-        readonly post: operations["postRoomActionCompressNodes"];
+        readonly post: operations["postCanvasActionConnectResultNodes"];
         readonly delete?: never;
         readonly options?: never;
         readonly head?: never;
         readonly patch?: never;
         readonly trace?: never;
     };
-    readonly "/room/{id}/actions/layout-label": {
+    readonly "/canvas/{id}/actions/unlock-all-nodes": {
         readonly parameters: {
             readonly query?: never;
             readonly header?: never;
@@ -493,14 +413,14 @@ export interface paths {
         };
         readonly get?: never;
         readonly put?: never;
-        readonly post: operations["postRoomActionLayoutLabel"];
+        readonly post: operations["postCanvasActionUnlockAllNodes"];
         readonly delete?: never;
         readonly options?: never;
         readonly head?: never;
         readonly patch?: never;
         readonly trace?: never;
     };
-    readonly "/room/{id}/actions/show-shortest-path": {
+    readonly "/canvas/{id}/actions/remove-dangling-nodes": {
         readonly parameters: {
             readonly query?: never;
             readonly header?: never;
@@ -509,14 +429,14 @@ export interface paths {
         };
         readonly get?: never;
         readonly put?: never;
-        readonly post: operations["postRoomActionShowShortestPath"];
+        readonly post: operations["postCanvasActionRemoveDanglingNodes"];
         readonly delete?: never;
         readonly options?: never;
         readonly head?: never;
         readonly patch?: never;
         readonly trace?: never;
     };
-    readonly "/room/{id}/actions/load-node": {
+    readonly "/canvas/{id}/actions/compress-relationships": {
         readonly parameters: {
             readonly query?: never;
             readonly header?: never;
@@ -525,7 +445,71 @@ export interface paths {
         };
         readonly get?: never;
         readonly put?: never;
-        readonly post: operations["postRoomActionLoadNode"];
+        readonly post: operations["postCanvasActionCompressRelationships"];
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/canvas/{id}/actions/compress-nodes": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        readonly put?: never;
+        readonly post: operations["postCanvasActionCompressNodes"];
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/canvas/{id}/actions/layout-label": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        readonly put?: never;
+        readonly post: operations["postCanvasActionLayoutLabel"];
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/canvas/{id}/actions/show-shortest-path": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        readonly put?: never;
+        readonly post: operations["postCanvasActionShowShortestPath"];
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/canvas/{id}/actions/load-node": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        readonly put?: never;
+        readonly post: operations["postCanvasActionLoadNode"];
         readonly delete?: never;
         readonly options?: never;
         readonly head?: never;
@@ -635,7 +619,7 @@ export interface components {
         readonly GetScenariosResult: {
             readonly scenarioGroups: readonly components["schemas"]["ScenarioGroup"][];
             readonly parameterizedScenarios: readonly components["schemas"]["ScenarioGroup"][];
-            readonly referencedDatabases: readonly components["schemas"]["Database"][];
+            readonly referencedDatabases: readonly components["schemas"]["DatabaseConnection"][];
         };
         /** @enum {integer} */
         readonly PresetColorIndex: 0 | 1 | 2 | 3 | 4 | 5;
@@ -795,44 +779,13 @@ export interface components {
             readonly metaData: components["schemas"]["GraphMetaData"];
             readonly table: components["schemas"]["GraphTable"];
         };
-        readonly Room: {
-            readonly id: string;
-            readonly title: string | null;
-            readonly editUrl: string | null;
-            readonly template: {
-                readonly id: string;
-                readonly title: string | null;
-                readonly editUrl: string | null;
-            } | null;
-        };
         readonly Rooms: {
             readonly rooms: readonly components["schemas"]["Room"][];
-        };
-        readonly RoomTemplate: {
-            readonly id: string;
-            readonly title: string | null;
-            readonly editUrl: string | null;
-        };
-        readonly RoomTemplates: {
-            readonly roomTemplates: readonly components["schemas"]["RoomTemplate"][];
-        };
-        readonly Database: {
-            readonly id: string;
-            readonly title: string | null;
-            readonly url: string | null;
-            readonly browserUrl: string | null;
-            readonly editUrl: string | null;
-        };
-        readonly ScenarioGroup: {
-            readonly id: string;
-            readonly title: string | null;
-            readonly editUrl: string | null;
-            readonly scenarios: readonly components["schemas"]["Scenario"][];
         };
         readonly ScenarioQuery: {
             readonly query: string;
             readonly database: {
-                readonly current: components["schemas"]["Database"];
+                readonly current: components["schemas"]["DatabaseConnection"];
             } | null;
         };
         readonly Scenario: {
@@ -840,18 +793,15 @@ export interface components {
             readonly title: string | null;
             readonly queries: readonly components["schemas"]["ScenarioQuery"][];
             readonly description: string | null;
-            /** Format: uri */
-            readonly coverUrl: string | null;
-            readonly editUrl: string | null;
             readonly parameters: readonly components["schemas"]["ScenarioParameter"][];
-            readonly additive: boolean;
+            readonly additive?: boolean;
         };
         readonly ScenarioParameter: {
             readonly identifier: string;
             readonly title: string;
             readonly defaultValue: string | null;
             /** @enum {string} */
-            readonly dataType: "json" | "startDateTime" | "endDateTime";
+            readonly dataType: "string" | "number" | "json" | "startDateTime" | "endDateTime";
         };
         readonly ScenarioArgument: {
             readonly identifier: string;
@@ -906,7 +856,9 @@ export interface components {
             readonly id: string;
             readonly content: string;
             readonly nodes: readonly components["schemas"]["NodePreview"][];
-            readonly author: string | null;
+            readonly author: {
+                readonly current: components["schemas"]["User"];
+            } | null;
             /** Format: date-time */
             readonly dateTime: string;
             readonly color: {
@@ -924,72 +876,61 @@ export interface components {
             readonly radius: number;
         };
         readonly Projects: {
-            readonly myProjects: readonly components["schemas"]["ProjectPreview"][];
-            readonly collaborationProjects: readonly components["schemas"]["ProjectPreview"][];
+            readonly myProjects: readonly components["schemas"]["Project"][];
+            readonly collaborationProjects: readonly components["schemas"]["Project"][];
         };
         readonly Project: {
             readonly id: string;
             readonly title: string;
             readonly owner: {
-                readonly current: components["schemas"]["UserPreview"];
+                readonly current: components["schemas"]["User"];
             } | null;
-            readonly collaborators: readonly components["schemas"]["UserPreview"][];
-            readonly databases: readonly components["schemas"]["DatabaseConnectionPreview"][];
-            readonly scenarioGroups: readonly components["schemas"]["ScenarioGroupPreview"][];
-            readonly rooms: readonly components["schemas"]["RoomPreview"][];
-        };
-        readonly ProjectPreview: {
-            readonly id: string;
-            readonly title: string;
-            readonly owner: {
-                readonly current: components["schemas"]["UserPreview"];
-            } | null;
-            readonly collaborators: readonly components["schemas"]["UserPreview"][];
-            readonly databases: readonly components["schemas"]["DatabaseConnectionPreview"][];
+            readonly collaborators: readonly components["schemas"]["User"][];
+            readonly databases: readonly components["schemas"]["DatabaseConnection"][];
+            readonly scenarioGroups: readonly components["schemas"]["ScenarioGroup"][];
+            readonly rooms: readonly components["schemas"]["Room"][];
         };
         /** @enum {string} */
         readonly ProjectRole: "owner" | "collaborator" | "none";
-        readonly UserPreview: {
+        readonly User: {
             readonly id: string;
             readonly displayName: string;
         };
-        readonly DatabaseConnectionPreview: {
+        readonly DatabaseConnection: {
             readonly id: string;
             readonly title: string;
             readonly browserUrl: string;
             readonly connectionUrl: string;
         };
-        readonly RoomPreview: {
+        readonly Room: {
             readonly id: string;
             readonly title: string;
             readonly visibility: components["schemas"]["RoomVisibility"];
-            readonly canvases: readonly components["schemas"]["CanvasPreview"][];
+            readonly canvases: readonly components["schemas"]["Canvas"][];
+            readonly projectTitle: string;
         };
         /** @enum {string} */
         readonly RoomVisibility: "private" | "public" | "unlisted";
-        readonly ScenarioGroupPreview: {
+        readonly ScenarioGroup: {
             readonly id: string;
             readonly title: string;
-            readonly scenarios: readonly components["schemas"]["ScenarioPreview"][];
+            readonly scenarios: readonly components["schemas"]["Scenario"][];
         };
-        readonly ScenarioPreview: {
+        readonly Canvas: {
             readonly id: string;
             readonly title: string;
-        };
-        readonly CanvasPreview: {
-            readonly id: string;
-            readonly title: string;
-        };
-        readonly WSClientToServerMessage: components["schemas"]["WSActionJoinRoom"] | components["schemas"]["WSActionLeaveRoom"] | components["schemas"]["WSActionGrabNode"] | components["schemas"]["WSActionMoveNodes"] | components["schemas"]["WSActionUngrabNode"];
-        readonly WSServerToClientMessage: components["schemas"]["WSEventNodesMoved"] | components["schemas"]["WSEventRoomChanged"] | components["schemas"]["WSEventNotification"] | components["schemas"]["WSEventGraphElementsChanged"] | components["schemas"]["WSEventGraphMetaDataChanged"] | components["schemas"]["WSEventGraphTableChanged"] | components["schemas"]["WSEventProgress"] | components["schemas"]["WSEventClearProgress"] | components["schemas"]["WSEventSetNodeLocks"] | components["schemas"]["WSEventKick"];
-        readonly WSActionJoinRoom: {
-            /** @enum {string} */
-            readonly type: "WSActionJoinRoom";
             readonly roomId: string;
         };
-        readonly WSActionLeaveRoom: {
+        readonly WSClientToServerMessage: components["schemas"]["WSActionJoinCanvas"] | components["schemas"]["WSActionLeaveCanvas"] | components["schemas"]["WSActionGrabNode"] | components["schemas"]["WSActionMoveNodes"] | components["schemas"]["WSActionUngrabNode"];
+        readonly WSServerToClientMessage: components["schemas"]["WSEventNodesMoved"] | components["schemas"]["WSEventCanvasChanged"] | components["schemas"]["WSEventNotification"] | components["schemas"]["WSEventGraphElementsChanged"] | components["schemas"]["WSEventGraphMetaDataChanged"] | components["schemas"]["WSEventGraphTableChanged"] | components["schemas"]["WSEventProgress"] | components["schemas"]["WSEventClearProgress"] | components["schemas"]["WSEventSetNodeLocks"] | components["schemas"]["WSEventKick"];
+        readonly WSActionJoinCanvas: {
             /** @enum {string} */
-            readonly type: "WSActionLeaveRoom";
+            readonly type: "WSActionJoinCanvas";
+            readonly canvasId: string;
+        };
+        readonly WSActionLeaveCanvas: {
+            /** @enum {string} */
+            readonly type: "WSActionLeaveCanvas";
         };
         readonly WSActionMoveNodes: {
             /** @enum {string} */
@@ -1021,10 +962,10 @@ export interface components {
             readonly type: "WSEventGraphTableChanged";
             readonly table: components["schemas"]["GraphTable"];
         };
-        readonly WSEventRoomChanged: {
+        readonly WSEventCanvasChanged: {
             /** @enum {string} */
-            readonly type: "WSEventRoomChanged";
-            readonly roomId: string | null;
+            readonly type: "WSEventCanvasChanged";
+            readonly canvasId: string | null;
         };
         readonly WSEventNodesMoved: {
             /** @enum {string} */
@@ -1088,12 +1029,7 @@ export type SchemaGraphMetaData = components['schemas']['GraphMetaData'];
 export type SchemaGraphElements = components['schemas']['GraphElements'];
 export type SchemaGraphTable = components['schemas']['GraphTable'];
 export type SchemaGraph = components['schemas']['Graph'];
-export type SchemaRoom = components['schemas']['Room'];
 export type SchemaRooms = components['schemas']['Rooms'];
-export type SchemaRoomTemplate = components['schemas']['RoomTemplate'];
-export type SchemaRoomTemplates = components['schemas']['RoomTemplates'];
-export type SchemaDatabase = components['schemas']['Database'];
-export type SchemaScenarioGroup = components['schemas']['ScenarioGroup'];
 export type SchemaScenarioQuery = components['schemas']['ScenarioQuery'];
 export type SchemaScenario = components['schemas']['Scenario'];
 export type SchemaScenarioParameter = components['schemas']['ScenarioParameter'];
@@ -1111,26 +1047,24 @@ export type SchemaLayoutSpecificationForceDirected = components['schemas']['Layo
 export type SchemaLayoutSpecificationCircle = components['schemas']['LayoutSpecificationCircle'];
 export type SchemaProjects = components['schemas']['Projects'];
 export type SchemaProject = components['schemas']['Project'];
-export type SchemaProjectPreview = components['schemas']['ProjectPreview'];
 export type SchemaProjectRole = components['schemas']['ProjectRole'];
-export type SchemaUserPreview = components['schemas']['UserPreview'];
-export type SchemaDatabaseConnectionPreview = components['schemas']['DatabaseConnectionPreview'];
-export type SchemaRoomPreview = components['schemas']['RoomPreview'];
+export type SchemaUser = components['schemas']['User'];
+export type SchemaDatabaseConnection = components['schemas']['DatabaseConnection'];
+export type SchemaRoom = components['schemas']['Room'];
 export type SchemaRoomVisibility = components['schemas']['RoomVisibility'];
-export type SchemaScenarioGroupPreview = components['schemas']['ScenarioGroupPreview'];
-export type SchemaScenarioPreview = components['schemas']['ScenarioPreview'];
-export type SchemaCanvasPreview = components['schemas']['CanvasPreview'];
+export type SchemaScenarioGroup = components['schemas']['ScenarioGroup'];
+export type SchemaCanvas = components['schemas']['Canvas'];
 export type SchemaWsClientToServerMessage = components['schemas']['WSClientToServerMessage'];
 export type SchemaWsServerToClientMessage = components['schemas']['WSServerToClientMessage'];
-export type SchemaWsActionJoinRoom = components['schemas']['WSActionJoinRoom'];
-export type SchemaWsActionLeaveRoom = components['schemas']['WSActionLeaveRoom'];
+export type SchemaWsActionJoinCanvas = components['schemas']['WSActionJoinCanvas'];
+export type SchemaWsActionLeaveCanvas = components['schemas']['WSActionLeaveCanvas'];
 export type SchemaWsActionMoveNodes = components['schemas']['WSActionMoveNodes'];
 export type SchemaWsActionGrabNode = components['schemas']['WSActionGrabNode'];
 export type SchemaWsActionUngrabNode = components['schemas']['WSActionUngrabNode'];
 export type SchemaWsEventGraphMetaDataChanged = components['schemas']['WSEventGraphMetaDataChanged'];
 export type SchemaWsEventGraphElementsChanged = components['schemas']['WSEventGraphElementsChanged'];
 export type SchemaWsEventGraphTableChanged = components['schemas']['WSEventGraphTableChanged'];
-export type SchemaWsEventRoomChanged = components['schemas']['WSEventRoomChanged'];
+export type SchemaWsEventCanvasChanged = components['schemas']['WSEventCanvasChanged'];
 export type SchemaWsEventNodesMoved = components['schemas']['WSEventNodesMoved'];
 export type SchemaWsEventNotification = components['schemas']['WSEventNotification'];
 export type SchemaWsEventProgress = components['schemas']['WSEventProgress'];
@@ -1231,13 +1165,11 @@ export interface operations {
             };
         };
     };
-    readonly getScenarios: {
+    readonly getCanvas: {
         readonly parameters: {
             readonly query?: never;
             readonly header?: never;
-            readonly path: {
-                readonly id: string;
-            };
+            readonly path?: never;
             readonly cookie?: never;
         };
         readonly requestBody?: never;
@@ -1248,7 +1180,7 @@ export interface operations {
                     readonly [name: string]: unknown;
                 };
                 content: {
-                    readonly "application/json": components["schemas"]["GetScenariosResult"];
+                    readonly "application/json": components["schemas"]["Canvas"];
                 };
             };
         };
@@ -1269,32 +1201,6 @@ export interface operations {
                 };
                 content: {
                     readonly "application/json": components["schemas"]["Rooms"];
-                };
-            };
-        };
-    };
-    readonly createRoom: {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
-        };
-        readonly requestBody: {
-            readonly content: {
-                readonly "application/json": {
-                    readonly templateId: string;
-                };
-            };
-        };
-        readonly responses: {
-            /** @description OK */
-            readonly 200: {
-                headers: {
-                    readonly [name: string]: unknown;
-                };
-                content: {
-                    readonly "application/json": components["schemas"]["Room"];
                 };
             };
         };
@@ -1321,27 +1227,7 @@ export interface operations {
             };
         };
     };
-    readonly getRoomTemplates: {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
-        };
-        readonly requestBody?: never;
-        readonly responses: {
-            /** @description OK */
-            readonly 200: {
-                headers: {
-                    readonly [name: string]: unknown;
-                };
-                content: {
-                    readonly "application/json": components["schemas"]["RoomTemplates"];
-                };
-            };
-        };
-    };
-    readonly getRoomTemplate: {
+    readonly getRoomScenarios: {
         readonly parameters: {
             readonly query?: never;
             readonly header?: never;
@@ -1358,95 +1244,7 @@ export interface operations {
                     readonly [name: string]: unknown;
                 };
                 content: {
-                    readonly "application/json": components["schemas"]["RoomTemplate"];
-                };
-            };
-        };
-    };
-    readonly getRoomGraph: {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path: {
-                readonly id: string;
-            };
-            readonly cookie?: never;
-        };
-        readonly requestBody?: never;
-        readonly responses: {
-            /** @description OK */
-            readonly 200: {
-                headers: {
-                    readonly [name: string]: unknown;
-                };
-                content: {
-                    readonly "application/json": components["schemas"]["Graph"];
-                };
-            };
-        };
-    };
-    readonly getRoomGraphElements: {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path: {
-                readonly id: string;
-            };
-            readonly cookie?: never;
-        };
-        readonly requestBody?: never;
-        readonly responses: {
-            /** @description OK */
-            readonly 200: {
-                headers: {
-                    readonly [name: string]: unknown;
-                };
-                content: {
-                    readonly "application/json": components["schemas"]["GraphElements"];
-                };
-            };
-        };
-    };
-    readonly getRoomGraphMetaData: {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path: {
-                readonly id: string;
-            };
-            readonly cookie?: never;
-        };
-        readonly requestBody?: never;
-        readonly responses: {
-            /** @description OK */
-            readonly 200: {
-                headers: {
-                    readonly [name: string]: unknown;
-                };
-                content: {
-                    readonly "application/json": components["schemas"]["GraphMetaData"];
-                };
-            };
-        };
-    };
-    readonly getRoomGraphTable: {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path: {
-                readonly id: string;
-            };
-            readonly cookie?: never;
-        };
-        readonly requestBody?: never;
-        readonly responses: {
-            /** @description OK */
-            readonly 200: {
-                headers: {
-                    readonly [name: string]: unknown;
-                };
-                content: {
-                    readonly "application/json": components["schemas"]["GraphTable"];
+                    readonly "application/json": components["schemas"]["GetScenariosResult"];
                 };
             };
         };
@@ -1533,7 +1331,95 @@ export interface operations {
             };
         };
     };
-    readonly postRoomActionLoadScenario: {
+    readonly getGraph: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path: {
+                readonly id: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            /** @description OK */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["Graph"];
+                };
+            };
+        };
+    };
+    readonly getGraphElements: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path: {
+                readonly id: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            /** @description OK */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["GraphElements"];
+                };
+            };
+        };
+    };
+    readonly getGraphMetaData: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path: {
+                readonly id: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            /** @description OK */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["GraphMetaData"];
+                };
+            };
+        };
+    };
+    readonly getGraphTable: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path: {
+                readonly id: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            /** @description OK */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["GraphTable"];
+                };
+            };
+        };
+    };
+    readonly postCanvasActionLoadScenario: {
         readonly parameters: {
             readonly query?: never;
             readonly header?: never;
@@ -1546,6 +1432,7 @@ export interface operations {
             readonly content: {
                 readonly "application/json": {
                     readonly scenarioId: string;
+                    readonly additive: boolean;
                     readonly arguments: readonly components["schemas"]["ScenarioArgument"][];
                 };
             };
@@ -1560,7 +1447,7 @@ export interface operations {
             };
         };
     };
-    readonly postRoomActionReloadScenario: {
+    readonly postCanvasActionReloadScenario: {
         readonly parameters: {
             readonly query?: never;
             readonly header?: never;
@@ -1580,7 +1467,7 @@ export interface operations {
             };
         };
     };
-    readonly postRoomActionExpandNode: {
+    readonly postCanvasActionExpandNode: {
         readonly parameters: {
             readonly query?: never;
             readonly header?: never;
@@ -1610,7 +1497,7 @@ export interface operations {
             };
         };
     };
-    readonly postRoomActionExpandNodePreview: {
+    readonly postCanvasActionExpandNodePreview: {
         readonly parameters: {
             readonly query?: never;
             readonly header?: never;
@@ -1641,7 +1528,7 @@ export interface operations {
             };
         };
     };
-    readonly postRoomActionDeleteElements: {
+    readonly postCanvasActionDeleteElements: {
         readonly parameters: {
             readonly query?: never;
             readonly header?: never;
@@ -1670,7 +1557,7 @@ export interface operations {
             };
         };
     };
-    readonly postRoomActionRelayout: {
+    readonly postCanvasActionRelayout: {
         readonly parameters: {
             readonly query?: never;
             readonly header?: never;
@@ -1690,7 +1577,7 @@ export interface operations {
             };
         };
     };
-    readonly postRoomActionUnlockNodes: {
+    readonly postCanvasActionUnlockNodes: {
         readonly parameters: {
             readonly query?: never;
             readonly header?: never;
@@ -1716,7 +1603,7 @@ export interface operations {
             };
         };
     };
-    readonly postRoomActionFocusNodes: {
+    readonly postCanvasActionFocusNodes: {
         readonly parameters: {
             readonly query?: never;
             readonly header?: never;
@@ -1742,7 +1629,7 @@ export interface operations {
             };
         };
     };
-    readonly postRoomActionUndo: {
+    readonly postCanvasActionUndo: {
         readonly parameters: {
             readonly query?: never;
             readonly header?: never;
@@ -1762,7 +1649,7 @@ export interface operations {
             };
         };
     };
-    readonly postRoomActionRedo: {
+    readonly postCanvasActionRedo: {
         readonly parameters: {
             readonly query?: never;
             readonly header?: never;
@@ -1782,7 +1669,7 @@ export interface operations {
             };
         };
     };
-    readonly postRoomActionRunQuery: {
+    readonly postCanvasActionRunQuery: {
         readonly parameters: {
             readonly query?: never;
             readonly header?: never;
@@ -1810,7 +1697,7 @@ export interface operations {
             };
         };
     };
-    readonly postRoomActionConnectResultNodes: {
+    readonly postCanvasActionConnectResultNodes: {
         readonly parameters: {
             readonly query?: never;
             readonly header?: never;
@@ -1830,7 +1717,7 @@ export interface operations {
             };
         };
     };
-    readonly postRoomActionUnlockAllNodes: {
+    readonly postCanvasActionUnlockAllNodes: {
         readonly parameters: {
             readonly query?: never;
             readonly header?: never;
@@ -1850,7 +1737,7 @@ export interface operations {
             };
         };
     };
-    readonly postRoomActionRemoveDanglingNodes: {
+    readonly postCanvasActionRemoveDanglingNodes: {
         readonly parameters: {
             readonly query?: never;
             readonly header?: never;
@@ -1870,7 +1757,7 @@ export interface operations {
             };
         };
     };
-    readonly postRoomActionCompressRelationships: {
+    readonly postCanvasActionCompressRelationships: {
         readonly parameters: {
             readonly query?: never;
             readonly header?: never;
@@ -1890,7 +1777,7 @@ export interface operations {
             };
         };
     };
-    readonly postRoomActionCompressNodes: {
+    readonly postCanvasActionCompressNodes: {
         readonly parameters: {
             readonly query?: never;
             readonly header?: never;
@@ -1916,7 +1803,7 @@ export interface operations {
             };
         };
     };
-    readonly postRoomActionLayoutLabel: {
+    readonly postCanvasActionLayoutLabel: {
         readonly parameters: {
             readonly query?: never;
             readonly header?: never;
@@ -1943,7 +1830,7 @@ export interface operations {
             };
         };
     };
-    readonly postRoomActionShowShortestPath: {
+    readonly postCanvasActionShowShortestPath: {
         readonly parameters: {
             readonly query?: never;
             readonly header?: never;
@@ -1969,7 +1856,7 @@ export interface operations {
             };
         };
     };
-    readonly postRoomActionLoadNode: {
+    readonly postCanvasActionLoadNode: {
         readonly parameters: {
             readonly query?: never;
             readonly header?: never;

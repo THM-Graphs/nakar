@@ -5,27 +5,25 @@ import {
   getProjects,
   getRoom,
   getRooms,
-  getRoomTemplates,
   Projects,
   Room as RoomSchema,
   Rooms,
-  RoomTemplates,
 } from "../../src-gen";
-import { resultOrThrow } from "../shared/data/resultOrThrow.ts";
 import { AppContext } from "../state/AppContext.ts";
 import { useBearStore } from "../state/useBearStore.ts";
-import { RoomTemplateList } from "../start/RoomTemplateList.tsx";
 import { match, P } from "ts-pattern";
 import { loadableFromResult } from "../shared/data/loadableFromResult.ts";
 import { Loadable } from "../shared/data/Loadable.ts";
 import { CMSNavbar } from "../cms/CMSNavbar.tsx";
 import { CMSFooter } from "../cms/CMSFooter.tsx";
 import { ProjectList } from "../start/ProjectList.tsx";
+import { RoomCard } from "../cms/RoomCard.tsx";
+import { resultOrThrow } from "../shared/data/resultOrThrow.ts";
+import { ProjectCard } from "../cms/ProjectCard.tsx";
 
 type StartPageLoaderData = {
   recentRooms: RoomSchema[];
-  templates: RoomTemplates;
-  rooms: Loadable<Rooms>;
+  rooms: Rooms;
   projects: Loadable<Projects>;
 };
 
@@ -44,12 +42,10 @@ export async function StartLoader(): Promise<StartPageLoaderData> {
         }
       });
   }
-  const templates: RoomTemplates = resultOrThrow(await getRoomTemplates());
-  const rooms: Loadable<Rooms> = loadableFromResult(await getRooms());
+  const rooms: Rooms = resultOrThrow(await getRooms());
   const projects: Loadable<Projects> = loadableFromResult(await getProjects());
   return {
     recentRooms: recentRooms,
-    templates: templates,
     rooms: rooms,
     projects: projects,
   };
@@ -63,58 +59,63 @@ export function Start(props: { context: AppContext }) {
   return (
     <Stack
       style={{ height: "100%", width: "100%" }}
-      className={"justify-content-start"}
+      className={"justify-content-start bg-body-tertiary"}
     >
       <CMSNavbar context={props.context} backUrl={null}></CMSNavbar>
       <div className={"overflow-auto mb-auto p-5"}>
         <Container>
-          <p className={"text-muted mb-5"}>
-            Enter a room or create one using the given templates.
-          </p>
-          <Stack
-            direction={"horizontal"}
-            className={"flex-wrap align-items-top"}
-            gap={5}
-          >
-            <RoomList
-              title={"Recent Rooms"}
-              rooms={loaderData.recentRooms}
-              context={props.context}
-              onDelete={async (room: RoomSchema) => {
-                if (
-                  confirm(
-                    "Remove room from recents list? You will only be able to access the room using its link.",
-                  )
-                ) {
-                  removeMyRoom(room.id);
-                  await navigate(".");
-                }
-              }}
-            ></RoomList>
-            <RoomTemplateList
-              roomTemplates={loaderData.templates}
-              context={props.context}
-            ></RoomTemplateList>
-            {loaderData.projects.type == "data" && (
-              <>
-                <ProjectList
-                  rooms={loaderData.projects.data.myProjects}
-                  context={props.context}
-                  title={"My Projects"}
-                ></ProjectList>
-                <ProjectList
-                  rooms={loaderData.projects.data.collaborationProjects}
-                  context={props.context}
-                  title={"Collaboration Projects"}
-                ></ProjectList>
-              </>
+          <Stack gap={5}>
+            <p className={"text-muted"}>
+              Enter a public room or log in and create your own projects.
+            </p>
+
+            {loaderData.recentRooms.length > 0 && (
+              <Stack>
+                <h5>Recent Rooms</h5>
+                <Stack direction={"vertical"} gap={3} className={"flex-wrap"}>
+                  {loaderData.recentRooms.map((r) => (
+                    <RoomCard
+                      key={r.id}
+                      room={r}
+                      showProjectTitle={true}
+                    ></RoomCard>
+                  ))}
+                </Stack>
+              </Stack>
             )}
 
-            {loaderData.rooms.type === "data" && (
-              <RoomList
-                rooms={loaderData.rooms.data.rooms}
-                context={props.context}
-              ></RoomList>
+            <Stack>
+              <h5>Public Rooms</h5>
+              <Stack direction={"vertical"} gap={3} className={"flex-wrap"}>
+                {loaderData.rooms.rooms.map((r) => (
+                  <RoomCard
+                    key={r.id}
+                    room={r}
+                    showProjectTitle={true}
+                  ></RoomCard>
+                ))}
+              </Stack>
+            </Stack>
+
+            {loaderData.projects.type == "data" && (
+              <>
+                <Stack>
+                  <h5>My Projects</h5>
+                  <Stack direction={"vertical"} gap={3} className={"flex-wrap"}>
+                    {loaderData.projects.data.myProjects.map((r) => (
+                      <ProjectCard key={r.id} project={r}></ProjectCard>
+                    ))}
+                  </Stack>
+                </Stack>
+                <Stack>
+                  <h5>Invited Projects</h5>
+                  <Stack direction={"vertical"} gap={3} className={"flex-wrap"}>
+                    {loaderData.projects.data.collaborationProjects.map((r) => (
+                      <ProjectCard key={r.id} project={r}></ProjectCard>
+                    ))}
+                  </Stack>
+                </Stack>
+              </>
             )}
           </Stack>
         </Container>

@@ -2,9 +2,9 @@ import { HTTPTools } from '../HTTPTools';
 import { DatabaseService } from '../../database/DatabaseService';
 import { LoggerService } from '../../logger/LoggerService';
 import { type Request, Router } from 'express';
-import { GetRoomDBDTO } from '../../database/dto/GetRoomDBDTO';
 import { operations } from '../../../../src-gen/schema';
-import { GetNoteDBDTO } from '../../database/dto/GetNoteDBDTO';
+import { Result } from '@strapi/types/dist/modules/documents/result';
+import { NotFound } from 'http-errors';
 
 export class NotesRouter {
   public constructor(
@@ -41,9 +41,14 @@ export class NotesRouter {
 
   private async _assertNote(req: Request): Promise<void> {
     const noteId: string = this._httpTools.getPathParameter(req, 'id');
-    const note: GetNoteDBDTO = await this._databaseService.getNote({
-      id: noteId,
-    });
+    const note: Result<'api::v2-note.v2-note'> | null =
+      await this._databaseService.getNote({
+        id: noteId,
+      });
+    if (note == null) {
+      throw new NotFound();
+    }
+
     req.nakar = {
       ...req.nakar,
       note: note,
@@ -51,8 +56,6 @@ export class NotesRouter {
   }
 
   private async _postNote(req: Request): Promise<void> {
-    const room: GetRoomDBDTO = req.nakar.room;
-
     type Body =
       operations['postNote']['requestBody']['content']['application/json'];
 
@@ -62,28 +65,21 @@ export class NotesRouter {
     this._logger.debug(this, JSON.stringify(requestBody));
     await this._databaseService.addNote({
       content: requestBody.content,
-      room: room,
-      nodeIds: requestBody.nodeIds,
+      project: req.nakar.project,
+      nodes: [...requestBody.nodeIds],
       author: null,
-      color: requestBody.color?.color ?? null,
     });
   }
 
   private async _deleteNote(req: Request): Promise<void> {
-    const room: GetRoomDBDTO = req.nakar.room;
-    const note: GetNoteDBDTO = req.nakar.note;
-
     this._logger.debug(
       this,
-      `Will delete note ${note.id} in room ${room.documentId}`,
+      `Will delete note ${req.nakar.note.id} in room ${req.nakar.room.documentId}`,
     );
-    await this._databaseService.removeNote({ id: note.id });
+    await this._databaseService.removeNote(req.nakar.note);
   }
 
   private async _putNote(req: Request): Promise<void> {
-    const room: GetRoomDBDTO = req.nakar.room;
-    const note: GetNoteDBDTO = req.nakar.note;
-
     type Body =
       operations['putNote']['requestBody']['content']['application/json'];
 
@@ -92,12 +88,11 @@ export class NotesRouter {
 
     this._logger.debug(
       this,
-      `Will update note ${note.id} in room ${room.documentId} with ${JSON.stringify(requestBody)}`,
+      `Will update note ${req.nakar.note.id} in project ${req.nakar.project.documentId} with ${JSON.stringify(requestBody)}`,
     );
-    await this._databaseService.updateNote(note.id, {
-      nodeIds: requestBody.nodeIds,
+    await this._databaseService.updateNote(req.nakar.note, {
+      nodes: [...requestBody.nodeIds],
       content: requestBody.content,
-      color: requestBody.color?.color ?? null,
     });
   }
 }

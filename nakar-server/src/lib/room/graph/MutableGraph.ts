@@ -7,8 +7,6 @@ import { v4 as uuidv4 } from 'uuid';
 import type { LoggerService } from '../../logger/LoggerService';
 import { MutableNodeIndex } from './MutableNodeIndex';
 import { MutableEdgeIndex } from './MutableEdgeIndex';
-import type { GetScenarioDBDTO } from '../../database/dto/GetScenarioDBDTO';
-import type { FinalGraphDisplayConfiguration } from '../scenario-pipeline/display-configuration/FinalGraphDisplayConfiguration';
 import type { PhysicalGraph } from '../../physics/physical-graph/PhysicalGraph';
 import type { PhysicalNode } from '../../physics/physical-graph/PhysicalNode';
 import type { PhysicalEdge } from '../../physics/physical-graph/PhysicalEdge';
@@ -16,6 +14,7 @@ import type { Range } from '../../tools/Range';
 import { SSet } from '../../tools/Set';
 import type { ProfilerService } from '../../profiler/ProfilerService';
 import type { ProfilerTask } from '../../profiler/ProfilerTask';
+import { Result } from '@strapi/types/dist/modules/documents/result';
 
 export class MutableGraph {
   // eslint-disable-next-line @typescript-eslint/typedef
@@ -127,8 +126,7 @@ export class MutableGraph {
   }
 
   public resetFromInitialScenario(
-    scenario: GetScenarioDBDTO,
-    displayConfig: FinalGraphDisplayConfiguration,
+    scenario: Result<'api::v2-scenario.v2-scenario'>,
     scenarioArguments: SMap<string, string>,
   ): void {
     this.metaData = new MutableGraphMetaData({
@@ -181,21 +179,16 @@ export class MutableGraph {
     return edgesRemoved;
   }
 
-  public toPhysicalGraph(
-    config: FinalGraphDisplayConfiguration,
-  ): PhysicalGraph {
+  public toPhysicalGraph(): PhysicalGraph {
     const task: ProfilerTask = this._profiler.profile(this, 'toPhysicalGraph');
 
     const nodes: Record<string, PhysicalNode> = {};
     const edges: Record<string, PhysicalEdge> = {};
-    const degreeRange: Range | null = config.growNodesBasedOnDegree
-      ? this.nodes.getNodeDegreeRange(this)
-      : null;
 
     for (const node of this.nodes.nodes) {
       nodes[node.id] = {
         id: node.id,
-        radius: node.radius(this, config, degreeRange),
+        radius: MutableNode.defaultRadius, // TODO
         position: { x: node.position.x, y: node.position.y },
         locked: node.locked,
         velocityX: 0,

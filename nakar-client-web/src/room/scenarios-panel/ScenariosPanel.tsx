@@ -1,16 +1,16 @@
 import { Panel } from "../../shared/elements/Panel.tsx";
 import { AppContext } from "../../state/AppContext.ts";
 import { useBearStore } from "../../state/useBearStore.ts";
-import { RoomContext } from "../../pages/Room.tsx";
+import { CanvasContext } from "../../pages/CanvasPage.tsx";
 import { NavbarButton } from "../../shared/elements/NavbarButton.tsx";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
-import { getScenarios } from "../../../src-gen";
 import { useState } from "react";
 import { ScenarioGroupList } from "./ScenarioGroupList.tsx";
+import { getRoomScenarios } from "../../../src-gen";
 
 export function ScenariosPanel(props: {
   context: AppContext;
-  roomContext: RoomContext;
+  roomContext: CanvasContext;
 }) {
   const leftPanel = useBearStore((s) => s.room.panels.left);
   const hide = useBearStore((s) => s.room.panels.scenarios.hide);
@@ -37,8 +37,8 @@ export function ScenariosPanel(props: {
             try {
               setReloading(true);
               const scenarios = resultOrThrow(
-                await getScenarios({
-                  path: { id: props.roomContext.initialRoomData.id },
+                await getRoomScenarios({
+                  path: { id: props.roomContext.initialCanvasData.roomId },
                 }),
               );
               setScenarios(scenarios);

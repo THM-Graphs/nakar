@@ -25,7 +25,7 @@ export class RoomWorkerPhysicsService implements ApplicationService {
     private readonly _logger: LoggerService,
   ) {
     this._physics = new PhysicsSimulation(data.graph, this._logger);
-    this._roomId = data.roomId;
+    this._roomId = data.canvasId;
 
     if (parentPort == null) {
       throw new Error('No parent port.');

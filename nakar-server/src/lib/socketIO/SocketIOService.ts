@@ -6,15 +6,15 @@ import type {
   SchemaGraphTable,
   SchemaPhysicalNode,
   SchemaWsActionGrabNode,
-  SchemaWsActionJoinRoom,
+  SchemaWsActionJoinCanvas,
   SchemaWsActionMoveNodes,
   SchemaWsActionUngrabNode,
   SchemaWsClientToServerMessage,
+  SchemaWsEventCanvasChanged,
   SchemaWsEventClearProgress,
   SchemaWsEventKick,
   SchemaWsEventNotification,
   SchemaWsEventProgress,
-  SchemaWsEventRoomChanged,
   SchemaWsEventSetNodeLocks,
   SchemaWsServerToClientMessage,
 } from '../../../src-gen/schema';
@@ -23,31 +23,30 @@ import type { ServerToClientEvents } from './ServerToClientEvents';
 import type { ClientToServerEvents } from './ClientToServerEvents';
 import { WSClient } from './WSClient';
 import { SSet } from '../tools/Set';
-import type { RoomService } from '../room/RoomService';
+import type { CanvasService } from '../room/CanvasService';
 import type { DatabaseService } from '../database/DatabaseService';
-import type { GetRoomDBDTO } from '../database/dto/GetRoomDBDTO';
 import type { LoggerService } from '../logger/LoggerService';
 import type http from 'http';
 import type { ApplicationService } from '../application/ApplicationService';
 import type { Subscription } from 'rxjs';
 import type { HTTPService } from '../http/HTTPService';
-import type { RoomServiceEvent } from '../room/events/RoomServiceEvent';
-import type { RoomServiceEventGraphMetaDataChanged } from '../room/events/RoomServiceEventGraphMetaDataChanged';
-import type { RoomServiceEventRoomPhysicsUpdated } from '../room/events/RoomServiceEventRoomPhysicsUpdated';
-import type { RoomServiceEventNodeLocksUpdated } from '../room/events/RoomServiceEventNodeLocksUpdated';
-import type { RoomServiceEventProgressChanged } from '../room/events/RoomServiceEventProgressChanged';
-import type { RoomServiceEventProgressCleared } from '../room/events/RoomServiceEventProgressCleared';
-import type { RoomServiceEventGraphElementsChanged } from '../room/events/RoomServiceEventGraphElementsChanged';
-import type { RoomServiceEventGraphTableChanged } from '../room/events/RoomServiceEventGraphTableChanged';
-import type { RoomServiceEventKick } from '../room/events/RoomServiceEventKick';
-import type { RoomServiceEventNotAllNodesLoaded } from '../room/events/RoomServiceEventNotAllNodesLoaded';
+import type { CanvasEvent } from '../room/events/CanvasEvent';
+import type { CanvasEventGraphMetaDataChanged } from '../room/events/CanvasEventGraphMetaDataChanged';
+import type { CanvasEventRoomPhysicsUpdated } from '../room/events/CanvasEventRoomPhysicsUpdated';
+import type { CanvasEventNodeLocksUpdated } from '../room/events/CanvasEventNodeLocksUpdated';
+import type { CanvasEventProgressChanged } from '../room/events/CanvasEventProgressChanged';
+import type { CanvasEventProgressCleared } from '../room/events/CanvasEventProgressCleared';
+import type { CanvasEventGraphElementsChanged } from '../room/events/CanvasEventGraphElementsChanged';
+import type { CanvasEventGraphTableChanged } from '../room/events/CanvasEventGraphTableChanged';
+import type { CanvasEventEventKick } from '../room/events/CanvasEventEventKick';
+import type { CanvasEventNotAllNodesLoaded } from '../room/events/CanvasEventNotAllNodesLoaded';
 import type { ProfilerTask } from '../profiler/ProfilerTask';
 import type { ProfilerService } from '../profiler/ProfilerService';
-import type { GetNotesDBDTO } from '../database/dto/GetNotesDBDTO';
 import type { MutableGraph } from '../room/graph/MutableGraph';
-import type { FinalGraphDisplayConfiguration } from '../room/scenario-pipeline/display-configuration/FinalGraphDisplayConfiguration';
 import { SchemaFactoryService } from '../schema/SchemaFactoryService';
-import { RoomServiceEventError } from '../room/events/RoomServiceEventError';
+import { CanvasEventError } from '../room/events/CanvasEventError';
+import { Result } from '@strapi/types/dist/modules/documents/result';
+import { IndexedNoteCollection } from '../database/IndexedNoteCollection';
 
 export type Server = UntypedServer<ClientToServerEvents, ServerToClientEvents>;
 export type Socket = UntypedSocket<ClientToServerEvents, ServerToClientEvents>;
@@ -58,7 +57,7 @@ export class SocketIOService implements ApplicationService {
   private _isShuttingDownFlag: boolean;
 
   public constructor(
-    private readonly _roomService: RoomService,
+    private readonly _canvasService: CanvasService,
     private readonly _databaseService: DatabaseService,
     private readonly _httpService: HTTPService,
     private readonly _logger: LoggerService,
@@ -92,7 +91,7 @@ export class SocketIOService implements ApplicationService {
     );
 
     this._registerWebsocketEvents(io);
-    this._registerRoomServiceEvents();
+    this._registerCanvasEvents();
     this._registerDatabaseServiceEvents();
   }
 
@@ -176,11 +175,11 @@ export class SocketIOService implements ApplicationService {
     const clientSubscriptions: Subscription[] = [
       wsClient.onRoomChanged$.subscribe(
         (roomChange: [string | null, string | null]): void => {
-          const oldRoomId: string | null = roomChange[0];
-          const newRoomId: string | null = roomChange[1];
+          const oldCanvasId: string | null = roomChange[0];
+          const newCanvasId: string | null = roomChange[1];
 
-          if (oldRoomId != null && newRoomId == null) {
-            this.sendToRoom(oldRoomId, {
+          if (oldCanvasId != null && newCanvasId == null) {
+            this.sendToRoom(oldCanvasId, {
               type: 'WSEventNotification',
               notification: {
                 message: `User ${wsClient.id} left.`,
@@ -189,19 +188,34 @@ export class SocketIOService implements ApplicationService {
               },
             } satisfies SchemaWsEventNotification);
 
-            if (this._userCountOfRoom(oldRoomId) === 0) {
+            if (this._userCountOfRoom(oldCanvasId) === 0) {
               if (!this._isShuttingDownFlag) {
                 // Do not close rooms if service is shutting down,
                 // because we cannot wait for the rooms to close.
                 // Room closing will be done by the RoomService.
-                this._roomService
-                  .destroyRoom(oldRoomId)
+                this._databaseService
+                  .getCanvas(oldCanvasId)
+                  .then(
+                    async (
+                      oldCanvas: Result<'api::v2-canvas.v2-canvas'> | null,
+                    ): Promise<void> => {
+                      if (oldCanvas == null) {
+                        this._logger.warn(
+                          this,
+                          'Cannot find canvas to shut down.',
+                        );
+                        await Promise.resolve(); return;
+                      } else {
+                        await this._canvasService.destroyCanvas(oldCanvas); return;
+                      }
+                    },
+                  )
                   .catch((error: unknown): void => {
                     this._logger.error(this, error);
                   });
               }
             }
-          } else if (newRoomId != null && newRoomId !== oldRoomId) {
+          } else if (newCanvasId != null && newCanvasId !== oldCanvasId) {
             wsClient.broadcastToRoom({
               type: 'WSEventNotification',
               notification: {
@@ -210,17 +224,26 @@ export class SocketIOService implements ApplicationService {
                 date: new Date().toISOString(),
               },
             });
-            this._roomService
-              .startRoom(newRoomId)
+            this._databaseService
+              .getCanvas(newCanvasId)
+              .then(
+                async (
+                  canvas: Result<'api::v2-canvas.v2-canvas'> | null,
+                ): Promise<void> => {
+                  if (canvas != null) {
+                    await this._canvasService.startCanvas(canvas);
+                  }
+                },
+              )
               .catch((error: unknown): void => {
                 this._logger.error(this, error);
               });
           }
 
           wsClient.send({
-            type: 'WSEventRoomChanged',
-            roomId: newRoomId,
-          } satisfies SchemaWsEventRoomChanged);
+            type: 'WSEventCanvasChanged',
+            canvasId: newCanvasId,
+          } satisfies SchemaWsEventCanvasChanged);
         },
       ),
       wsClient.onMessage$.subscribe(
@@ -236,55 +259,56 @@ export class SocketIOService implements ApplicationService {
               await match(clientToServerMessage)
                 .returnType<void | Promise<void>>()
                 .with(
-                  { type: 'WSActionJoinRoom' },
-                  async (m: SchemaWsActionJoinRoom): Promise<void> => {
-                    const roomId: string = m.roomId;
-
-                    const room: GetRoomDBDTO | null =
-                      await this._databaseService.getRoom(roomId);
-                    if (room == null) {
+                  { type: 'WSActionJoinCanvas' },
+                  async (m: SchemaWsActionJoinCanvas): Promise<void> => {
+                    const canvas: Result<'api::v2-canvas.v2-canvas'> | null =
+                      await this._databaseService.getCanvas(m.canvasId);
+                    if (canvas == null) {
                       throw new Error(
-                        `Room ${roomId} not found. Socket tried to join.`,
+                        `Canvas ${m.canvasId} not found. Socket tried to join.`,
                       );
                     }
 
-                    await wsClient.join(roomId);
+                    await wsClient.join(canvas.documentId);
                   },
                 )
                 .with(
-                  { type: 'WSActionLeaveRoom' },
+                  { type: 'WSActionLeaveCanvas' },
                   async (): Promise<void> => {
                     await wsClient.leaveRoom({ silent: false });
                   },
                 )
                 .with(
                   { type: 'WSActionGrabNode' },
-                  (m: SchemaWsActionGrabNode): void => {
-                    const roomId: string = this._assertRoom(wsClient);
-                    this._roomService.getRoom(roomId).grabNode({
-                      nodeId: m.nodeId,
-                      userId: wsClient.id,
-                    });
+                  async (m: SchemaWsActionGrabNode): Promise<void> => {
+                    this._canvasService
+                      .getCanvas(await this._assertRoom(wsClient))
+                      .grabNode({
+                        nodeId: m.nodeId,
+                        userId: wsClient.id,
+                      });
                   },
                 )
                 .with(
                   { type: 'WSActionMoveNodes' },
-                  (m: SchemaWsActionMoveNodes): void => {
-                    const roomId: string = this._assertRoom(wsClient);
-                    this._roomService.getRoom(roomId).moveNodes({
-                      nodes: m.nodes,
-                      userId: wsClient.id,
-                    });
+                  async (m: SchemaWsActionMoveNodes): Promise<void> => {
+                    this._canvasService
+                      .getCanvas(await this._assertRoom(wsClient))
+                      .moveNodes({
+                        nodes: m.nodes,
+                        userId: wsClient.id,
+                      });
                   },
                 )
                 .with(
                   { type: 'WSActionUngrabNode' },
-                  (m: SchemaWsActionUngrabNode): void => {
-                    const roomId: string = this._assertRoom(wsClient);
-                    this._roomService.getRoom(roomId).ungrabNode({
-                      node: m.node,
-                      userId: wsClient.id,
-                    });
+                  async (m: SchemaWsActionUngrabNode): Promise<void> => {
+                    this._canvasService
+                      .getCanvas(await this._assertRoom(wsClient))
+                      .ungrabNode({
+                        node: m.node,
+                        userId: wsClient.id,
+                      });
                   },
                 )
                 .exhaustive();
@@ -317,74 +341,78 @@ export class SocketIOService implements ApplicationService {
     ];
   }
 
-  private _registerRoomServiceEvents(): void {
-    this._roomService.onEvent$.subscribe((event: RoomServiceEvent): void => {
-      if (event.type !== 'RoomServiceEventRoomPhysicsUpdated') {
+  private _registerCanvasEvents(): void {
+    this._canvasService.onEvent$.subscribe((event: CanvasEvent): void => {
+      if (event.type !== 'CanvasEventRoomPhysicsUpdated') {
         this._logger.debug(
           this,
-          `Did receive from room service (room ${event.roomId}): ${event.type}`,
+          `Did receive from room service (room ${event.canvasId}): ${event.type}`,
         );
       }
       Promise.resolve(
         match(event)
           .returnType<void | Promise<void>>()
           .with(
-            { type: 'RoomServiceEventGraphTableChanged' },
-            (message: RoomServiceEventGraphTableChanged): void => {
+            { type: 'CanvasEventGraphTableChanged' },
+            (message: CanvasEventGraphTableChanged): void => {
               const table: SchemaGraphTable =
                 this._schemaFactory.createSchemaTable(message.table);
-              this.sendToRoom(message.roomId, {
+              this.sendToRoom(message.canvasId, {
                 table: table,
                 type: 'WSEventGraphTableChanged',
               });
             },
           )
           .with(
-            { type: 'RoomServiceEventGraphMetaDataChanged' },
-            async (
-              message: RoomServiceEventGraphMetaDataChanged,
-            ): Promise<void> => {
+            { type: 'CanvasEventGraphMetaDataChanged' },
+            async (message: CanvasEventGraphMetaDataChanged): Promise<void> => {
               const metaData: SchemaGraphMetaData =
                 await this._schemaFactory.createSchemaGraphMetaData(
                   message.graph,
                   message.undoInfo,
                 );
-              this.sendToRoom(message.roomId, {
+              this.sendToRoom(message.canvasId, {
                 metaData: metaData,
                 type: 'WSEventGraphMetaDataChanged',
               });
             },
           )
           .with(
-            { type: 'RoomServiceEventGraphElementsChanged' },
-            (message: RoomServiceEventGraphElementsChanged): void => {
+            { type: 'CanvasEventGraphElementsChanged' },
+            (message: CanvasEventGraphElementsChanged): void => {
               (async (): Promise<void> => {
-                const room: GetRoomDBDTO | null =
-                  await this._databaseService.getRoom(message.roomId);
-                if (room == null) {
+                const canvas: Result<'api::v2-canvas.v2-canvas'> | null =
+                  await this._databaseService.getCanvas(message.canvasId);
+                if (canvas == null) {
                   this._logger.error(
                     this,
-                    'Cannot handle RoomServiceEventGraphElementsChanged. Room not found.',
+                    'Cannot handle CanvasEventGraphElementsChanged. Canvas not found.',
                   );
                   return;
                 }
-                const notes: GetNotesDBDTO =
+                const project: Result<'api::v2-project.v2-project'> | null =
+                  await this._databaseService.getProjectOfCanvas(canvas);
+
+                if (project == null) {
+                  this._logger.error(
+                    this,
+                    'Cannot handle CanvasEventGraphElementsChanged. Project not found.',
+                  );
+                  return;
+                }
+
+                const notes: IndexedNoteCollection =
                   await this._databaseService.getNotes({
-                    room: room,
+                    project: project,
                     graph: message.graph,
                   });
-                const config: FinalGraphDisplayConfiguration =
-                  await this._databaseService.getGraphDisplayConfiguration(
-                    message.graph.metaData.scenarioId,
-                    room.documentId,
-                  );
+
                 const graphElements: SchemaGraphElements =
                   await this._schemaFactory.createSchemaGraphElements(
                     message.graph,
                     notes,
-                    config,
                   );
-                this.sendToRoom(message.roomId, {
+                this.sendToRoom(message.canvasId, {
                   elements: graphElements,
                   type: 'WSEventGraphElementsChanged',
                 });
@@ -394,10 +422,10 @@ export class SocketIOService implements ApplicationService {
             },
           )
           .with(
-            { type: 'RoomServiceEventRoomPhysicsUpdated' },
-            (message: RoomServiceEventRoomPhysicsUpdated): void => {
+            { type: 'CanvasEventRoomPhysicsUpdated' },
+            (message: CanvasEventRoomPhysicsUpdated): void => {
               for (const socket of this.sockets) {
-                if (socket.room !== message.roomId) {
+                if (socket.room !== message.canvasId) {
                   continue;
                 }
 
@@ -427,8 +455,8 @@ export class SocketIOService implements ApplicationService {
             },
           )
           .with(
-            { type: 'RoomServiceEventNodeLocksUpdated' },
-            (message: RoomServiceEventNodeLocksUpdated): void => {
+            { type: 'CanvasEventNodeLocksUpdated' },
+            (message: CanvasEventNodeLocksUpdated): void => {
               const locks: { id: string; locked: boolean }[] = [];
               for (const lock of message.locks.entries()) {
                 locks.push({
@@ -436,16 +464,16 @@ export class SocketIOService implements ApplicationService {
                   locked: lock[1],
                 });
               }
-              this.sendToRoom(message.roomId, {
+              this.sendToRoom(message.canvasId, {
                 type: 'WSEventSetNodeLocks',
                 locks: locks,
               } satisfies SchemaWsEventSetNodeLocks);
             },
           )
           .with(
-            { type: 'RoomServiceEventProgressChanged' },
-            (message: RoomServiceEventProgressChanged): void => {
-              this.sendToRoom(message.roomId, {
+            { type: 'CanvasEventProgressChanged' },
+            (message: CanvasEventProgressChanged): void => {
+              this.sendToRoom(message.canvasId, {
                 type: 'WSEventProgress',
                 message: message.message,
                 progress: message.progress,
@@ -453,25 +481,25 @@ export class SocketIOService implements ApplicationService {
             },
           )
           .with(
-            { type: 'RoomServiceEventProgressCleared' },
-            (message: RoomServiceEventProgressCleared): void => {
-              this.sendToRoom(message.roomId, {
+            { type: 'CanvasEventProgressCleared' },
+            (message: CanvasEventProgressCleared): void => {
+              this.sendToRoom(message.canvasId, {
                 type: 'WSEventClearProgress',
               } satisfies SchemaWsEventClearProgress);
             },
           )
           .with(
-            { type: 'RoomServiceEventKick' },
-            (message: RoomServiceEventKick): void => {
-              this.sendToRoom(message.roomId, {
+            { type: 'CanvasEventKick' },
+            (message: CanvasEventEventKick): void => {
+              this.sendToRoom(message.canvasId, {
                 type: 'WSEventKick',
               } satisfies SchemaWsEventKick);
             },
           )
           .with(
-            { type: 'RoomServiceEventNotAllNodesLoaded' },
-            (message: RoomServiceEventNotAllNodesLoaded): void => {
-              this.sendToRoom(message.roomId, {
+            { type: 'CanvasEventNotAllNodesLoaded' },
+            (message: CanvasEventNotAllNodesLoaded): void => {
+              this.sendToRoom(message.canvasId, {
                 type: 'WSEventNotification',
                 notification: {
                   message: `Not all graph elements loaded. Did load ${message.loadedCount.toString()} elements.`,
@@ -482,9 +510,9 @@ export class SocketIOService implements ApplicationService {
             },
           )
           .with(
-            { type: 'RoomServiceEventError' },
-            (message: RoomServiceEventError): void => {
-              this.handleRoomError(message.roomId, message.error);
+            { type: 'CanvasEventError' },
+            (message: CanvasEventError): void => {
+              this.handleRoomError(message.canvasId, message.error);
             },
           )
           .exhaustive(),
@@ -500,40 +528,41 @@ export class SocketIOService implements ApplicationService {
 
   private _registerDatabaseServiceEvents(): void {
     this._databaseService.onNoteChanges$.subscribe(
-      (message: { roomId: string }): void => {
+      (message: { projectId: string }): void => {
         (async (): Promise<void> => {
-          const room: GetRoomDBDTO | null = await this._databaseService.getRoom(
-            message.roomId,
-          );
-          if (room == null) {
+          const project: Result<'api::v2-project.v2-project'> | null =
+            await this._databaseService.getProject(message.projectId);
+          if (project == null) {
             this._logger.error(
               this,
-              'Cannot handle Note Change. Room not found.',
+              'Cannot handle note change. Project not found.',
             );
             return;
           }
-          const graph: MutableGraph = this._roomService.getGraph(
-            message.roomId,
-          );
-          const notes: GetNotesDBDTO = await this._databaseService.getNotes({
-            room: room,
-            graph: graph,
-          });
-          const config: FinalGraphDisplayConfiguration =
-            await this._databaseService.getGraphDisplayConfiguration(
-              graph.metaData.scenarioId,
-              room.documentId,
-            );
-          const graphElements: SchemaGraphElements =
-            await this._schemaFactory.createSchemaGraphElements(
-              graph,
-              notes,
-              config,
-            );
-          this.sendToRoom(message.roomId, {
-            elements: graphElements,
-            type: 'WSEventGraphElementsChanged',
-          });
+          const rooms: Result<'api::v2-room.v2-room'>[] =
+            await this._databaseService.getRoomsOfProject(project);
+          for (const room of rooms) {
+            const canvases: Result<'api::v2-canvas.v2-canvas'>[] =
+              await this._databaseService.getCanvasesOfRoom(room);
+            for (const canvas of canvases) {
+              const graph: MutableGraph = this._canvasService.getGraph(canvas);
+              const notes: IndexedNoteCollection =
+                await this._databaseService.getNotes({
+                  project: project,
+                  graph: graph,
+                });
+
+              const graphElements: SchemaGraphElements =
+                await this._schemaFactory.createSchemaGraphElements(
+                  graph,
+                  notes,
+                );
+              this.sendToRoom(canvas.documentId, {
+                elements: graphElements,
+                type: 'WSEventGraphElementsChanged',
+              });
+            }
+          }
         })().catch((error: unknown): void => {
           this._logger.error(this, error);
         });
@@ -541,11 +570,20 @@ export class SocketIOService implements ApplicationService {
     );
   }
 
-  private _assertRoom(client: WSClient): string {
+  private async _assertRoom(
+    client: WSClient,
+  ): Promise<Result<'api::v2-canvas.v2-canvas'>> {
     if (client.room == null) {
       throw new Error(`Client ${client.id} is in no room.`);
     }
-    return client.room;
+    const canvas: Result<'api::v2-canvas.v2-canvas'> | null =
+      await this._databaseService.getCanvas(client.room);
+    if (canvas == null) {
+      throw new Error(
+        `Cannot find canvas ${client.room} of client ${client.id}`,
+      );
+    }
+    return canvas;
   }
 
   private _userCountOfRoom(roomId: string): number {

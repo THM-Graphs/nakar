@@ -4,7 +4,7 @@ import { GraphProperty } from "../../../src-gen";
 import { PropertiesDisplay } from "./PropertiesDisplay.tsx";
 import { NavbarButton } from "../../shared/elements/NavbarButton.tsx";
 import { ReactNode, useState } from "react";
-import { RoomContext } from "../../pages/Room.tsx";
+import { CanvasContext } from "../../pages/CanvasPage.tsx";
 import { PropertyMenu } from "../properties/PropertyMenu.tsx";
 import clsx from "clsx";
 import { Collapsable } from "../../shared/elements/Collapsable.tsx";
@@ -16,7 +16,7 @@ export function DetailPane(props: {
   actions: DetailPaneAction[];
   properties: GraphProperty[];
   otherProperties: GraphProperty[];
-  roomContext: RoomContext;
+  roomContext: CanvasContext;
   elementId: string;
   children?: ReactNode;
 }) {

@@ -3,7 +3,7 @@ import { DataTable } from "../data-table/DataTable.tsx";
 import { CanvasToolbar } from "./CanvasToolbar.tsx";
 import { useBearStore } from "../../state/useBearStore.ts";
 import { AppContext } from "../../state/AppContext.ts";
-import { RoomContext } from "../../pages/Room.tsx";
+import { CanvasContext } from "../../pages/CanvasPage.tsx";
 import { Stack } from "react-bootstrap";
 import { ActionNavbarButton } from "../actions/ActionNavbarButton.tsx";
 import { ZoomToFitAction } from "../actions/ZoomToFitAction.ts";
@@ -21,7 +21,7 @@ import { CanvasBottomToolBar } from "./CanvasBottomToolBar.tsx";
 
 export function Canvas(props: {
   context: AppContext;
-  roomContext: RoomContext;
+  roomContext: CanvasContext;
 }) {
   const tabs = useBearStore((s) => s.room.canvas.tabs);
   const rendererEvents = useBearStore((s) => s.room.ui.rendererEvents);

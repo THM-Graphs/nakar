@@ -1,6 +1,6 @@
-import { RoomContext } from "../../pages/Room.tsx";
+import { CanvasContext } from "../../pages/CanvasPage.tsx";
 
 export type LabelActionParams = {
   labels: string[];
-  roomContext: RoomContext;
+  roomContext: CanvasContext;
 };

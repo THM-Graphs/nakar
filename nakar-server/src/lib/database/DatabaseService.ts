@@ -1,59 +1,45 @@
-import type { GetDatabaseDBDTO } from './dto/GetDatabaseDBDTO';
-import type { GetRoomDBDTO } from './dto/GetRoomDBDTO';
-import type { GetScenarioDBDTO } from './dto/GetScenarioDBDTO';
-import type { GetScenarioGroupDBDTO } from './dto/GetScenarioGroupDBDTO';
 import { MutableGraph } from '../room/graph/MutableGraph';
 import type { Result } from '@strapi/types/dist/modules/documents';
 import type { LoggerService } from '../logger/LoggerService';
 import type { ApplicationService } from '../application/ApplicationService';
-import type { GetMediaDBDTO } from './dto/GetMediaDBDTO';
 import z from 'zod';
-import { DatabaseDTOFactory } from './DatabaseDTOFactory';
-import type { Input } from '@strapi/types/dist/modules/documents/params/data';
-import type { FinalGraphDisplayConfiguration } from '../room/scenario-pipeline/display-configuration/FinalGraphDisplayConfiguration';
-import { MergableGraphDisplayConfiguration } from '../room/scenario-pipeline/display-configuration/MergableGraphDisplayConfiguration';
 import type { Observable } from 'rxjs';
 import { Subject } from 'rxjs';
-import type { GetParameterizedScenariosDBDTO } from './dto/GetParameterizedScenariosDBDTO';
 import type { MediaService } from '../media/MediaService';
 import type { ProfilerTask } from '../profiler/ProfilerTask';
 import type { ProfilerService } from '../profiler/ProfilerService';
-import type { CreateNoteDBDTO } from './dto/CreateNoteDBDTO';
-import type { GetNoteDBDTO } from './dto/GetNoteDBDTO';
 import { SSet } from '../tools/Set';
-import type { GetNotesDBDTO } from './dto/GetNotesDBDTO';
 import { SMap } from '../tools/Map';
-import type { UpdateNoteDBDTO } from './dto/UpdateNoteDBDTO';
-import type { GetColorDBDTO } from './dto/GetColorDBDTO';
-import type { GetTemplateDBDTO } from './dto/GetTemplateDBDTO';
+import { IndexedNoteCollection } from './IndexedNoteCollection';
 
 export class DatabaseService implements ApplicationService {
-  private readonly _databaseDtoFactory: DatabaseDTOFactory;
-
-  private readonly _onRoomAdded: Subject<GetRoomDBDTO>;
-  private readonly _onRoomDeleted: Subject<GetRoomDBDTO>;
-  private readonly _onNoteChanges: Subject<{ roomId: string }>;
+  private readonly _onCanvasAdded: Subject<Result<'api::v2-canvas.v2-canvas'>>;
+  private readonly _onCanvasDeleted: Subject<
+    Result<'api::v2-canvas.v2-canvas'>
+  >;
+  private readonly _onNoteChanges: Subject<{ projectId: string }>;
 
   public constructor(
     private readonly _logger: LoggerService,
     private readonly _media: MediaService,
     private readonly _profiler: ProfilerService,
   ) {
-    this._databaseDtoFactory = new DatabaseDTOFactory();
-    this._onRoomAdded = new Subject();
-    this._onRoomDeleted = new Subject();
+    this._onCanvasAdded = new Subject();
+    this._onCanvasDeleted = new Subject();
     this._onNoteChanges = new Subject();
   }
 
-  public get onRoomAdded$(): Observable<GetRoomDBDTO> {
-    return this._onRoomAdded.asObservable();
+  public get onCanvasAdded$(): Observable<Result<'api::v2-canvas.v2-canvas'>> {
+    return this._onCanvasAdded.asObservable();
   }
 
-  public get onRoomDeleted$(): Observable<GetRoomDBDTO> {
-    return this._onRoomDeleted.asObservable();
+  public get onCanvasDeleted$(): Observable<
+    Result<'api::v2-canvas.v2-canvas'>
+  > {
+    return this._onCanvasDeleted.asObservable();
   }
 
-  public get onNoteChanges$(): Observable<{ roomId: string }> {
+  public get onNoteChanges$(): Observable<{ projectId: string }> {
     return this._onNoteChanges.asObservable();
   }
 
@@ -68,38 +54,42 @@ export class DatabaseService implements ApplicationService {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let result: any = null;
 
-      if (context.uid === 'api::room.room') {
+      if (context.uid === 'api::v2-canvas.v2-canvas') {
         if (context.action === 'publish') {
           result = await next();
 
           const id: string = context.params.documentId;
-          const room: GetRoomDBDTO | null = await this.getRoom(id);
-          if (room !== null) {
-            this._onRoomAdded.next(room);
+          const canvas: Result<'api::v2-canvas.v2-canvas'> | null =
+            await this.getCanvas(id);
+          if (canvas !== null) {
+            this._onCanvasAdded.next(canvas);
           } else {
-            this._logger.error(this, `Newly created room ${id} not found.`);
+            this._logger.error(this, `Newly created canvas ${id} not found.`);
           }
         } else if (context.action === 'delete') {
           const id: string = context.params.documentId;
-          const room: GetRoomDBDTO | null = await this.getRoom(id);
+          const canvas: Result<'api::v2-canvas.v2-canvas'> | null =
+            await this.getCanvas(id);
 
           result = await next();
 
-          if (room !== null) {
-            this._onRoomDeleted.next(room);
+          if (canvas !== null) {
+            this._onCanvasDeleted.next(canvas);
           } else {
-            this._logger.error(this, `Newly deleted room ${id} not found.`);
+            this._logger.error(this, `Newly deleted canvas ${id} not found.`);
           }
         } else if (context.action === 'create') {
           result = await next();
 
           // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-          const id: string = (result as Result<'api::room.room'>).documentId;
-          const room: GetRoomDBDTO | null = await this.getRoom(id);
-          if (room !== null) {
-            this._onRoomAdded.next(room);
+          const id: string = (result as Result<'api::v2-canvas.v2-canvas'>)
+            .documentId;
+          const canvas: Result<'api::v2-canvas.v2-canvas'> | null =
+            await this.getCanvas(id);
+          if (canvas !== null) {
+            this._onCanvasAdded.next(canvas);
           } else {
-            this._logger.error(this, `Newly created room ${id} not found.`);
+            this._logger.error(this, `Newly created canvas ${id} not found.`);
           }
         } else {
           result = await next();
@@ -107,46 +97,61 @@ export class DatabaseService implements ApplicationService {
       } else if (context.uid === 'api::note.note') {
         if (context.action === 'delete') {
           const id: string = context.params.documentId;
-          const note: GetNoteDBDTO = await this.getNote({ id: id });
-          const roomId: string | null = note.roomId;
+          const note: Result<'api::v2-note.v2-note'> | null =
+            await this.getNote({
+              id: id,
+            });
+          const project: Result<'api::v2-project.v2-project'> | null = note
+            ? await this.getProjectOfNote(note)
+            : null;
 
           result = await next();
 
-          if (roomId != null) {
-            this._onNoteChanges.next({ roomId: roomId });
+          if (project != null) {
+            this._onNoteChanges.next({ projectId: project.documentId });
           }
         } else if (context.action === 'update') {
           result = await next();
 
           const id: string = context.params.documentId;
-          const note: GetNoteDBDTO = await this.getNote({ id: id });
-          const roomId: string | null = note.roomId;
-          if (roomId != null) {
-            this._onNoteChanges.next({ roomId: roomId });
+          const note: Result<'api::v2-note.v2-note'> | null =
+            await this.getNote({
+              id: id,
+            });
+          const project: Result<'api::v2-project.v2-project'> | null = note
+            ? await this.getProjectOfNote(note)
+            : null;
+          if (project != null) {
+            this._onNoteChanges.next({ projectId: project.documentId });
           }
         } else if (context.action === 'create') {
           result = await next();
 
           // eslint-disable-next-line @typescript-eslint/typedef
           const dataSchema = z.object({
-            room: z.object({ documentId: z.string() }).nullable(),
+            project: z.object({ documentId: z.string() }).nullable(),
           });
           const data: z.infer<typeof dataSchema> = dataSchema.parse(
             context.params.data,
           );
 
-          const roomId: string | null = data.room?.documentId ?? null;
-          if (roomId != null) {
-            this._onNoteChanges.next({ roomId: roomId });
+          const projectId: string | null = data.project?.documentId ?? null;
+          if (projectId != null) {
+            this._onNoteChanges.next({ projectId: projectId });
           }
         } else if (context.action === 'publish') {
           result = await next();
 
           const id: string = context.params.documentId;
-          const note: GetNoteDBDTO = await this.getNote({ id: id });
-          const roomId: string | null = note.roomId;
-          if (roomId != null) {
-            this._onNoteChanges.next({ roomId: roomId });
+          const note: Result<'api::v2-note.v2-note'> | null =
+            await this.getNote({
+              id: id,
+            });
+          const project: Result<'api::v2-project.v2-project'> | null = note
+            ? await this.getProjectOfNote(note)
+            : null;
+          if (project != null) {
+            this._onNoteChanges.next({ projectId: project.documentId });
           }
         } else {
           result = await next();
@@ -165,86 +170,64 @@ export class DatabaseService implements ApplicationService {
     /* */
   }
 
-  public async getDatabases(): Promise<GetDatabaseDBDTO[]> {
-    return (
-      await strapi.documents('api::database.database').findMany({
-        status: 'published',
-        sort: 'title:asc',
-      })
-    ).map(
-      (database: Result<'api::database.database'>): GetDatabaseDBDTO =>
-        this._databaseDtoFactory.createGetDatabaseDTOFromStrapi(database),
-    );
-  }
-
   public async getDatabase(
     databaseId: string,
-  ): Promise<GetDatabaseDBDTO | null> {
-    const rawDatabase: Result<'api::database.database'> | null = await strapi
-      .documents('api::database.database')
+  ): Promise<Result<'api::v2-database-connection.v2-database-connection'> | null> {
+    return await strapi
+      .documents('api::v2-database-connection.v2-database-connection')
       .findOne({
         status: 'published',
         documentId: databaseId,
       });
-    if (rawDatabase == null) {
-      return null;
-    }
-    return this._databaseDtoFactory.createGetDatabaseDTOFromStrapi(rawDatabase);
   }
 
-  public async getRoom(roomId: string): Promise<GetRoomDBDTO | null> {
-    const rawRoom: Result<'api::room.room'> | null = await strapi
-      .documents('api::room.room')
-      .findOne({
-        status: 'published',
-        documentId: roomId,
-        populate: { graph: {}, template: {} },
-      });
-    if (rawRoom == null) {
-      return null;
-    }
-    return this._databaseDtoFactory.createGetRoomDTOFromStrapi(rawRoom);
+  public async getRoom(
+    roomId: string,
+  ): Promise<Result<'api::v2-room.v2-room'> | null> {
+    return await strapi.documents('api::v2-room.v2-room').findOne({
+      status: 'published',
+      documentId: roomId,
+    });
   }
 
-  public async getRooms(): Promise<GetRoomDBDTO[]> {
+  public async getPublicRooms(): Promise<Result<'api::v2-room.v2-room'>[]> {
     return (
-      await strapi.documents('api::room.room').findMany({
+      await strapi.documents('api::v2-room.v2-room').findMany({
         status: 'published',
         sort: 'title:asc',
-        populate: {
-          graph: {},
-          template: {},
+        filter: {
+          visibility: {
+            $eq: 'public',
+          },
         },
       })
-    ).map(
-      (room: Result<'api::room.room'>): GetRoomDBDTO =>
-        this._databaseDtoFactory.createGetRoomDTOFromStrapi(room),
+    ).filter(
+      (r: Result<'api::v2-room.v2-room'>): boolean => r.visibility === 'public',
     );
   }
 
-  public async getScenarioOfRoom(
-    room: GetRoomDBDTO,
-  ): Promise<GetScenarioDBDTO | null> {
-    const graph: MutableGraph = await this.getGraph(room.documentId);
+  public async getScenarioOfCanvas(
+    canvas: Result<'api::v2-canvas.v2-canvas'>,
+  ): Promise<Result<'api::v2-scenario.v2-scenario'> | null> {
+    const graph: MutableGraph = await this.getMutableGraph(canvas);
     const scenarioId: string | null = graph.metaData.scenarioId;
     if (scenarioId == null) {
       return null;
     }
-    const scenario: GetScenarioDBDTO | null =
+    const scenario: Result<'api::v2-scenario.v2-scenario'> | null =
       await this.getScenario(scenarioId);
     return scenario;
   }
 
-  public async getGraph(roomId: string): Promise<MutableGraph> {
-    const room: GetRoomDBDTO | null = await this.getRoom(roomId);
-    if (room == null) {
-      throw new Error(`Unable to load graph. Room ${roomId} not found.`);
-    }
+  public async getMutableGraph(
+    canvas: Result<'api::v2-canvas.v2-canvas'>,
+  ): Promise<MutableGraph> {
+    const graphFile: Result<'plugin::upload.file'> | null =
+      await this.getGrapFileOfCanvas(canvas);
 
     try {
-      const graphJson: string = await this._media.getStringPayloadOfMediaFile(
-        room.graph,
-      );
+      const graphJson: string =
+        await this._media.getStringPayloadOfMediaFile(graphFile);
       const graph: MutableGraph = MutableGraph.fromUnknownOrEmpty(
         JSON.parse(graphJson),
         this._logger,
@@ -252,358 +235,264 @@ export class DatabaseService implements ApplicationService {
       );
       return graph;
     } catch (error) {
-      this._logger.error(this, `Unable to parse graph from Room:`);
+      this._logger.error(this, `Unable to parse graph from canvas:`);
       this._logger.error(this, error);
       return MutableGraph.empty(this._logger, this._profiler);
     }
   }
 
-  public async getRoomTemplates(): Promise<GetTemplateDBDTO[]> {
-    return (
-      await strapi.documents('api::room-template.room-template').findMany({
-        status: 'published',
-        sort: 'title:asc',
-      })
-    ).map(
-      (room: Result<'api::room-template.room-template'>): GetTemplateDBDTO =>
-        this._databaseDtoFactory.createGetRoomTemplateDTOFromStrapi(room),
-    );
-  }
-
-  public async getRoomTemplate(
-    roomTemplateId: string,
-  ): Promise<GetTemplateDBDTO | null> {
-    const rawRoomTemplate: Result<'api::room-template.room-template'> | null =
-      await strapi.documents('api::room-template.room-template').findOne({
-        status: 'published',
-        documentId: roomTemplateId,
-      });
-    if (rawRoomTemplate == null) {
-      return null;
-    }
-    return this._databaseDtoFactory.createGetRoomTemplateDTOFromStrapi(
-      rawRoomTemplate,
-    );
-  }
-
-  public async createRoom(template: GetTemplateDBDTO): Promise<GetRoomDBDTO> {
-    const room: Result<'api::room.room'> = await strapi
-      .documents('api::room.room')
-      .create({
-        status: 'published',
-        data: {
-          title: `${template.title} (${new Date().toISOString()})`,
-          template: template.documentId,
-        },
-      });
-    const result: GetRoomDBDTO =
-      this._databaseDtoFactory.createGetRoomDTOFromStrapi(room);
-    return result;
-  }
-
   public async getScenario(
     scenarioId: string,
-  ): Promise<GetScenarioDBDTO | null> {
-    const result: Result<'api::scenario.scenario'> | null = await strapi
-      .documents('api::scenario.scenario')
-      .findOne({
-        status: 'published',
-        documentId: scenarioId,
-        populate: {
-          cover: {},
-          scenarioGroup: {},
-          queries: {
-            populate: {
-              database: {},
-            },
-          },
-          parameters: {},
-        },
-      });
-    if (result == null) {
-      return null;
-    }
-    return this._databaseDtoFactory.createGetScenarioDTOFromStrapi(result);
+  ): Promise<Result<'api::v2-scenario.v2-scenario'> | null> {
+    return await strapi.documents('api::v2-scenario.v2-scenario').findOne({
+      status: 'published',
+      documentId: scenarioId,
+    });
   }
 
-  public async getGraphDisplayConfiguration(
-    scenarioId: string | null,
-    roomId: string,
-  ): Promise<FinalGraphDisplayConfiguration> {
-    // eslint-disable-next-line @typescript-eslint/typedef
-    const populate = {
-      graphDisplayConfiguration: {
-        populate: {
-          nodeDisplayConfigurations: {},
-          mergeNodeConfigurations: {
-            populate: {
-              originalDatabase: {},
-              mergeDatabase: {},
-            },
-          },
-        },
-      },
-    };
-    const scenario: Result<
-      'api::scenario.scenario',
-      {
-        populate: ['scenarioGroup', 'graphDisplayConfiguration'];
-      }
-    > | null =
-      scenarioId != null
-        ? await strapi.documents('api::scenario.scenario').findOne({
-            status: 'published',
-            documentId: scenarioId,
-            populate: {
-              ...populate,
-              scenarioGroup: {
-                populate: {
-                  ...populate,
-                  room_templates: {
-                    populate: {
-                      ...populate,
-                    },
-                  },
-                },
-              },
-            },
-          })
-        : null;
-    const room: Result<
-      'api::room.room',
-      {
-        populate: ['template'];
-      }
-    > | null = await strapi.documents('api::room.room').findOne({
-      status: 'published',
-      documentId: roomId,
-      populate: {
-        template: {
-          populate: {
-            ...populate,
-          },
-        },
-      },
+  public async getScenariosOfGroup(
+    scenarioGroup: Result<'api::v2-scenario-group.v2-scenario-group'>,
+  ): Promise<Result<'api::v2-scenario.v2-scenario'>[]> {
+    const populatedScenarioGroup: Result<
+      'api::v2-scenario-group.v2-scenario-group',
+      { populate: ['scenarios'] }
+    > | null = await strapi
+      .documents('api::v2-scenario-group.v2-scenario-group')
+      .findOne({
+        documentId: scenarioGroup.documentId,
+        populate: ['scenarios'],
+      });
+
+    if (populatedScenarioGroup == null) {
+      throw new Error(`Scenario group ${scenarioGroup.documentId} not found.`);
+    }
+
+    return populatedScenarioGroup.scenarios ?? [];
+  }
+
+  public async getScenarioGroupsOfProject(
+    project: Result<'api::v2-project.v2-project'>,
+  ): Promise<Result<'api::v2-scenario-group.v2-scenario-group'>[]> {
+    const populatedProject: Result<
+      'api::v2-project.v2-project',
+      { populate: ['scenarioGroups'] }
+    > | null = await strapi.documents('api::v2-project.v2-project').findOne({
+      documentId: project.documentId,
+      populate: ['scenarioGroups'],
     });
 
-    const displayConfiguration: FinalGraphDisplayConfiguration =
-      MergableGraphDisplayConfiguration.createFromDb(
-        this._databaseDtoFactory.createGraphDisplayConfigurationDTOFromStrapi(
-          room?.template?.graphDisplayConfiguration,
-        ),
-        this._logger,
-      )
-        .byMerging(
-          MergableGraphDisplayConfiguration.createFromDb(
-            this._databaseDtoFactory.createGraphDisplayConfigurationDTOFromStrapi(
-              scenario?.scenarioGroup?.graphDisplayConfiguration,
-            ),
-            this._logger,
-          ),
-        )
-        .byMerging(
-          MergableGraphDisplayConfiguration.createFromDb(
-            this._databaseDtoFactory.createGraphDisplayConfigurationDTOFromStrapi(
-              scenario?.graphDisplayConfiguration,
-            ),
-            this._logger,
-          ),
-        )
-        .finalize();
-    return displayConfiguration;
+    if (populatedProject == null) {
+      throw new Error(`Project ${project.documentId} not found.`);
+    }
+
+    return populatedProject.scenarioGroups ?? [];
   }
 
-  public async getScenarios(
-    scenarioGroupId: string,
-  ): Promise<GetScenarioDBDTO[]> {
-    return (
-      await strapi.documents('api::scenario.scenario').findMany({
-        status: 'published',
-        sort: 'title:asc',
-        populate: {
-          cover: {},
-          scenarioGroup: {},
-          parameters: {},
-          queries: {
-            populate: {
-              database: {},
-            },
-          },
-        },
-        filters: {
-          scenarioGroup: {
-            documentId: {
-              $eq: scenarioGroupId,
-            },
-          },
-        },
-      })
-    ).map(
-      (scenario: Result<'api::scenario.scenario'>): GetScenarioDBDTO =>
-        this._databaseDtoFactory.createGetScenarioDTOFromStrapi(scenario),
-    );
+  public async getScenarioGroupsOfRoom(
+    room: Result<'api::v2-room.v2-room'>,
+  ): Promise<Result<'api::v2-scenario-group.v2-scenario-group'>[]> {
+    const project: Result<'api::v2-project.v2-project'> | null =
+      await this.getProjectOfRoom(room);
+    if (project == null) {
+      throw new Error(`Project of room ${room.documentId} not found.`);
+    }
+    return await this.getScenarioGroupsOfProject(project);
   }
 
-  public async getScenarioGroups(
-    roomId: string,
-  ): Promise<GetScenarioGroupDBDTO[]> {
-    return (
-      await strapi.documents('api::scenario-group.scenario-group').findMany({
-        status: 'published',
-        sort: 'title:asc',
-        populate: {},
-        filters: {
-          room_templates: {
-            rooms: {
-              documentId: {
-                $eq: roomId,
-              },
-            },
-          },
-        },
-      })
-    ).map(
-      (
-        scenarioGroup: Result<'api::scenario-group.scenario-group'>,
-      ): GetScenarioGroupDBDTO =>
-        this._databaseDtoFactory.createGetScenarioGroupDTOFromStrapi(
-          scenarioGroup,
-        ),
-    );
-  }
-
-  public async setRoomGraph(
-    roomId: string,
+  public async setMutableGraphOfCanvas(
+    canvas: Result<'api::v2-canvas.v2-canvas'>,
     graph: z.infer<typeof MutableGraph.schema>,
   ): Promise<void> {
-    const room: GetRoomDBDTO | null = await this.getRoom(roomId);
-    if (room == null) {
-      throw new Error(`Unable to save graph: Room ${roomId} not found.`);
+    const populatedCanvas: Result<
+      'api::v2-canvas.v2-canvas',
+      { populate: ['graph'] }
+    > | null = await strapi
+      .documents('api::v2-canvas.v2-canvas')
+      .findOne({ documentId: canvas.documentId });
+
+    if (populatedCanvas == null) {
+      throw new Error(
+        `Unable to save graph: Canvas ${canvas.documentId} not found.`,
+      );
     }
-    const oldGraphJson: GetMediaDBDTO | null = room.graph;
-    if (oldGraphJson != null) {
-      await this._media.deleteFile(oldGraphJson);
+    const oldGraphFile: Result<'plugin::upload.file'> | null =
+      await this.getGrapFileOfCanvas(canvas);
+    if (oldGraphFile != null) {
+      await this._media.deleteFile(oldGraphFile);
     }
 
     const graphJson: string = JSON.stringify(graph);
-    const mediaDBDTO: GetMediaDBDTO = await this._media.saveStringFile(
-      graphJson,
-      room.title,
-    );
-    await strapi.documents('api::room.room').update({
-      documentId: roomId,
+    const newGraphFile: Result<'plugin::upload.file'> =
+      await this._media.saveStringFile(
+        graphJson,
+        populatedCanvas.title ?? null,
+      );
+    await strapi.documents('api::v2-canvas.v2-canvas').update({
+      documentId: canvas.documentId,
       data: {
         graph: {
-          id: mediaDBDTO.id,
+          id: newGraphFile.id,
         },
       },
       status: 'published',
     });
-    this._logger.debug(this, `Did save graph of room ${roomId} in db.`);
-  }
-
-  public async roomExists(roomId: string): Promise<boolean> {
-    const room: Result<'api::room.room'> | null = await strapi
-      .documents('api::room.room')
-      .findOne({ documentId: roomId });
-    return room != null;
+    this._logger.debug(
+      this,
+      `Did save graph of canvas ${canvas.documentId} in db.`,
+    );
   }
 
   public async getParameterizedScenarios(
-    roomId: string,
-  ): Promise<GetParameterizedScenariosDBDTO> {
-    const result: GetParameterizedScenariosDBDTO = {
-      groups: [],
-    };
-    const scenarioGroups: GetScenarioGroupDBDTO[] =
-      await this.getScenarioGroups(roomId);
+    project: Result<'api::v2-project.v2-project'>,
+  ): Promise<Result<'api::v2-scenario.v2-scenario'>[]> {
+    const result: Result<'api::v2-scenario.v2-scenario'>[] = [];
+    const scenarioGroups: Result<'api::v2-scenario-group.v2-scenario-group'>[] =
+      await this.getScenarioGroupsOfProject(project);
     for (const scenarioGroup of scenarioGroups) {
-      const scenarios: GetScenarioDBDTO[] = await this.getScenarios(
-        scenarioGroup.documentId,
-      );
-      const parametrizedScenarios: GetScenarioDBDTO[] = scenarios.filter(
-        (s: GetScenarioDBDTO): boolean => s.parameters.length > 0,
-      );
-      if (parametrizedScenarios.length > 0) {
-        result.groups.push({
-          ...scenarioGroup,
-          parameterizedScenarios: parametrizedScenarios,
-        });
+      const scenarios: Result<'api::v2-scenario.v2-scenario'>[] =
+        await this.getScenariosOfGroup(scenarioGroup);
+      for (const scenario of scenarios) {
+        const parameters: Result<'api::v2-query-parameter.v2-query-parameter'>[] =
+          await this.getParametersOfScenario(scenario);
+        if (parameters.length > 0) {
+          result.push(scenario);
+        }
       }
     }
     return result;
   }
 
-  public async addNote(params: CreateNoteDBDTO): Promise<void> {
-    const color: GetColorDBDTO | null =
-      this._databaseDtoFactory.createGetColorDBDTOFromSchema(params.color);
-    await strapi.documents('api::note.note').create({
-      data: {
-        content: params.content,
-        room: {
-          documentId: params.room.documentId,
-        },
-        color:
-          this._databaseDtoFactory.createColorComponent(color) ?? undefined,
-        author: params.author ?? undefined,
-        elementIds: JSON.stringify(params.nodeIds),
-      },
-      status: 'published',
+  public async getParametersOfScenario(
+    scenario: Result<'api::v2-scenario.v2-scenario'>,
+  ): Promise<Result<'api::v2-query-parameter.v2-query-parameter'>[]> {
+    const populatedScenario: Result<
+      'api::v2-scenario.v2-scenario',
+      { populate: ['queryParameters'] }
+    > | null = await strapi.documents('api::v2-scenario.v2-scenario').findOne({
+      documentId: scenario.documentId,
+      populate: ['queryParameters'],
     });
+    if (populatedScenario == null) {
+      throw new Error(`Scenario ${scenario.documentId} not found.`);
+    }
+    return populatedScenario.queryParameters ?? [];
+  }
+
+  public async getQueriesOfScenario(
+    scenario: Result<'api::v2-scenario.v2-scenario'>,
+  ): Promise<Result<'api::v2-query.v2-query'>[]> {
+    const populatedScenario: Result<
+      'api::v2-scenario.v2-scenario',
+      { populate: ['queries'] }
+    > | null = await strapi.documents('api::v2-scenario.v2-scenario').findOne({
+      documentId: scenario.documentId,
+      populate: ['queries'],
+    });
+    if (populatedScenario == null) {
+      throw new Error(`Scenario ${scenario.documentId} not found.`);
+    }
+    return populatedScenario.queries ?? [];
+  }
+
+  public async getDatabaseConnectionOfQuery(
+    query: Result<'api::v2-query.v2-query'>,
+  ): Promise<Result<'api::v2-database-connection.v2-database-connection'> | null> {
+    const populatedQuery: Result<
+      'api::v2-query.v2-query',
+      { populate: ['database'] }
+    > | null = await strapi.documents('api::v2-query.v2-query').findOne({
+      documentId: query.documentId,
+      populate: ['database'],
+    });
+    if (populatedQuery == null) {
+      throw new Error(`Query ${query.documentId} not found.`);
+    }
+    return populatedQuery.database ?? null;
+  }
+
+  public async addNote(params: {
+    project: Result<'api::v2-project.v2-project'>;
+    author: string | null;
+    nodes: string[];
+    content: string;
+  }): Promise<void> {
+    const newNote: Result<'api::v2-note.v2-note'> = await strapi
+      .documents('api::v2-note.v2-note')
+      .create({
+        data: {
+          content: params.content,
+          project: {
+            documentId: params.project.documentId,
+          },
+          author: params.author ?? undefined,
+        },
+        status: 'published',
+      });
+    for (const node of params.nodes) {
+      await strapi
+        .documents('api::v2-node-reference.v2-node-reference')
+        .create({
+          data: {
+            nodeId: node,
+            note: {
+              documentId: newNote.documentId,
+            },
+          },
+          status: 'published',
+        });
+    }
   }
 
   public async updateNote(
-    noteId: string,
-    params: UpdateNoteDBDTO,
+    note: Result<'api::v2-note.v2-note'>,
+    params: {
+      nodes: string[];
+      content: string;
+    },
   ): Promise<void> {
-    const color: GetColorDBDTO | null =
-      this._databaseDtoFactory.createGetColorDBDTOFromSchema(params.color);
-    const colorComp: Input<'graph.color'> | null =
-      this._databaseDtoFactory.createColorComponent(color);
-    await strapi.documents('api::note.note').update({
-      data: {
-        content: params.content,
-        elementIds: JSON.stringify(params.nodeIds),
-        color: colorComp ?? {},
-      },
-      documentId: noteId,
-      status: 'published',
-    });
+    // TODO
   }
 
   public async getNotes(params: {
-    room: GetRoomDBDTO;
+    project: Result<'api::v2-project.v2-project'>;
     graph: MutableGraph;
-  }): Promise<GetNotesDBDTO> {
-    const results: Result<'api::note.note'>[] = await strapi
-      .documents('api::note.note')
-      .findMany({
-        status: 'published',
-        sort: [{ createdAt: 'desc' }],
-        populate: {
-          room: {},
-          color: {},
-        },
-        filters: {
-          room: {
-            documentId: params.room.documentId,
-          },
-        },
-      });
+  }): Promise<IndexedNoteCollection> {
+    const populatedProject: Result<
+      'api::v2-project.v2-project',
+      { populate: ['notes'] }
+    > | null = await strapi.documents('api::v2-project.v2-project').findOne({
+      documentId: params.project.documentId,
+      status: 'published',
+      populate: ['notes'],
+    });
+    if (populatedProject == null) {
+      throw new Error(`Cannot find project ${params.project.documentId}`);
+    }
 
-    const result: GetNotesDBDTO = { notes: new SSet(), byNodeId: new SMap() };
-    for (const rawNote of results) {
-      const note: GetNoteDBDTO =
-        this._databaseDtoFactory.createGetNoteDBDTO(rawNote);
+    const results: Result<'api::v2-note.v2-note'>[] =
+      populatedProject.notes ?? [];
+
+    const result: IndexedNoteCollection = {
+      notes: new SSet(),
+      byNodeId: new SMap(),
+    };
+    for (const note of results) {
       let foundMatch: boolean = false;
+      const referencedNodes: string[] = (
+        await this.getReferencedNodesOfNote(note)
+      ).map(
+        (node: Result<'api::v2-node-reference.v2-node-reference'>): string =>
+          node.nodeId ?? '',
+      );
       for (const nodeId of params.graph.nodes.keys) {
-        if (note.nodeIds.has(nodeId)) {
+        if (referencedNodes.includes(nodeId)) {
           foundMatch = true; // indicates if note has at least one node id in common with params.nodeIds
           result.byNodeId.set(
             nodeId,
-            (result.byNodeId.get(nodeId) ?? new SSet<GetNoteDBDTO>()).byAdding(
-              note,
-            ),
+            (
+              result.byNodeId.get(nodeId) ??
+              new SSet<Result<'api::v2-note.v2-note'>>()
+            ).byAdding(note),
           );
         }
       }
@@ -615,146 +504,203 @@ export class DatabaseService implements ApplicationService {
     return result;
   }
 
-  public async getNote(params: { id: string }): Promise<GetNoteDBDTO> {
-    const result: Result<
-      'api::note.note',
-      { populate: ['room', 'color'] }
-    > | null = await strapi.documents('api::note.note').findOne({
+  public async getReferencedNodesOfNote(
+    note: Result<'api::v2-note.v2-note'>,
+  ): Promise<Result<'api::v2-node-reference.v2-node-reference'>[]> {
+    const populatedNote: Result<
+      'api::v2-note.v2-note',
+      { populate: ['nodes'] }
+    > | null = await strapi.documents('api::v2-note.v2-note').findOne({
+      documentId: note.documentId,
       status: 'published',
-      populate: {
-        room: {},
-      },
-      documentId: params.id,
+      populate: ['nodes'],
     });
-
-    if (result == null) {
-      throw new Error(`Note not found.`);
+    if (populatedNote == null) {
+      throw new Error(`Cannot find note ${note.documentId}`);
     }
-
-    const note: GetNoteDBDTO =
-      this._databaseDtoFactory.createGetNoteDBDTO(result);
-    return note;
+    return populatedNote.nodes ?? [];
   }
 
-  public async removeNote(params: { id: string }): Promise<void> {
-    await strapi.documents('api::note.note').delete({ documentId: params.id });
+  public async getAuthorOfNote(
+    note: Result<'api::v2-note.v2-note'>,
+  ): Promise<Result<'plugin::users-permissions.user'> | null> {
+    const populatedNote: Result<
+      'api::v2-note.v2-note',
+      { populate: ['author'] }
+    > | null = await strapi.documents('api::v2-note.v2-note').findOne({
+      documentId: note.documentId,
+      status: 'published',
+      populate: ['author'],
+    });
+    if (populatedNote == null) {
+      throw new Error(`Cannot find note ${note.documentId}`);
+    }
+    return populatedNote.author ?? null;
+  }
+
+  public async getNote(params: {
+    id: string;
+  }): Promise<Result<'api::v2-note.v2-note'> | null> {
+    const result: Result<'api::v2-note.v2-note'> | null = await strapi
+      .documents('api::v2-note.v2-note')
+      .findOne({
+        status: 'published',
+        documentId: params.id,
+      });
+
+    return result;
+  }
+
+  public async removeNote(note: Result<'api::v2-note.v2-note'>): Promise<void> {
+    await strapi
+      .documents('api::note.note')
+      .delete({ documentId: note.documentId });
+  }
+
+  public async getProjectOfNote(
+    note: Result<'api::v2-note.v2-note'>,
+  ): Promise<Result<'api::v2-project.v2-project'> | null> {
+    const populatedNote: Result<
+      'api::v2-note.v2-note',
+      { populate: ['project'] }
+    > | null = await strapi.documents('api::v2-note.v2-note').findOne({
+      status: 'published',
+      populate: ['project'],
+      documentId: note.documentId,
+    });
+
+    if (populatedNote == null) {
+      throw new Error('Note not found.');
+    }
+
+    return populatedNote.project ?? null;
   }
 
   public async getOwnerOfProject(
     project: Result<'api::v2-project.v2-project'>,
   ): Promise<Result<'plugin::users-permissions.user'> | null> {
-    return (
-      (
-        await strapi
-          .documents('api::v2-project.v2-project')
-          .findOne({ documentId: project.documentId, populate: ['owner'] })
-      )?.owner ?? null
-    );
+    const populatedProject: Result<
+      'api::v2-project.v2-project',
+      { populate: ['owner'] }
+    > | null = await strapi
+      .documents('api::v2-project.v2-project')
+      .findOne({ documentId: project.documentId, populate: ['owner'] });
+
+    if (populatedProject == null) {
+      throw new Error(`Project not found: ${project.documentId}`);
+    }
+
+    return populatedProject.owner ?? null;
   }
 
   public async getCollaboratorsOfProject(
     project: Result<'api::v2-project.v2-project'>,
   ): Promise<Result<'plugin::users-permissions.user'>[]> {
-    return (
-      (
-        await strapi.documents('api::v2-project.v2-project').findOne({
-          documentId: project.documentId,
-          populate: ['collaborators'],
-        })
-      )?.collaborators ?? []
-    );
-  }
+    const populatedProject: Result<
+      'api::v2-project.v2-project',
+      { populate: ['collaborators'] }
+    > | null = await strapi
+      .documents('api::v2-project.v2-project')
+      .findOne({ documentId: project.documentId, populate: ['collaborators'] });
 
-  public async getScenarioGroupsOfProject(
-    project: Result<'api::v2-project.v2-project'>,
-  ): Promise<Result<'api::v2-scenario-group.v2-scenario-group'>[]> {
-    return (
-      (
-        await strapi.documents('api::v2-project.v2-project').findOne({
-          documentId: project.documentId,
-          populate: ['scenarioGroups'],
-        })
-      )?.scenarioGroups ?? []
-    );
+    if (populatedProject == null) {
+      throw new Error(`Project not found: ${project.documentId}`);
+    }
+
+    return populatedProject.collaborators ?? [];
   }
 
   public async getRoomsOfProject(
     project: Result<'api::v2-project.v2-project'>,
   ): Promise<Result<'api::v2-room.v2-room'>[]> {
-    return (
-      (
-        await strapi.documents('api::v2-project.v2-project').findOne({
-          documentId: project.documentId,
-          populate: ['rooms'],
-        })
-      )?.rooms ?? []
-    );
+    const populatedProject: Result<
+      'api::v2-project.v2-project',
+      { populate: ['rooms'] }
+    > | null = await strapi
+      .documents('api::v2-project.v2-project')
+      .findOne({ documentId: project.documentId, populate: ['rooms'] });
+
+    if (populatedProject == null) {
+      throw new Error(`Project not found: ${project.documentId}`);
+    }
+
+    return populatedProject.rooms ?? [];
   }
 
   public async getDatabaseConnectionsOfProject(
     project: Result<'api::v2-project.v2-project'>,
   ): Promise<Result<'plugin::users-permissions.user'>[]> {
-    return (
-      (
-        await strapi.documents('api::v2-project.v2-project').findOne({
-          documentId: project.documentId,
-          populate: ['databaseConnections'],
-        })
-      )?.databaseConnections ?? []
-    );
+    const populatedProject: Result<
+      'api::v2-project.v2-project',
+      { populate: ['databaseConnections'] }
+    > | null = await strapi.documents('api::v2-project.v2-project').findOne({
+      documentId: project.documentId,
+      populate: ['databaseConnections'],
+    });
+
+    if (populatedProject == null) {
+      throw new Error(`Project not found: ${project.documentId}`);
+    }
+
+    return populatedProject.databaseConnections ?? [];
   }
 
   public async getProjectsOfUser(
     user: Result<'plugin::users-permissions.user'>,
   ): Promise<Result<'api::v2-project.v2-project'>[]> {
-    return (
-      (
-        await strapi.documents('plugin::users-permissions.user').findOne({
-          documentId: user.documentId,
-          populate: ['projects'],
-        })
-      )?.projects ?? []
-    );
+    const populatedUser: Result<
+      'plugin::users-permissions.user',
+      { populate: ['projects'] }
+    > | null = await strapi
+      .documents('plugin::users-permissions.user')
+      .findOne({
+        documentId: user.documentId,
+        populate: ['projects'],
+      });
+
+    if (populatedUser == null) {
+      throw new Error(`User not found: ${user.documentId}`);
+    }
+
+    return populatedUser.projects ?? [];
   }
 
   public async getCollaborationProjectsOfUser(
     user: Result<'plugin::users-permissions.user'>,
   ): Promise<Result<'api::v2-project.v2-project'>[]> {
-    return (
-      (
-        await strapi.documents('plugin::users-permissions.user').findOne({
-          documentId: user.documentId,
-          populate: ['projectCollaborations'],
-        })
-      )?.projectCollaborations ?? []
-    );
-  }
+    const populatedUser: Result<
+      'plugin::users-permissions.user',
+      { populate: ['projectCollaborations'] }
+    > | null = await strapi
+      .documents('plugin::users-permissions.user')
+      .findOne({
+        documentId: user.documentId,
+        populate: ['projectCollaborations'],
+      });
 
-  public async getScenariosOfScenarioGroup(
-    scenarioGroup: Result<'api::v2-scenario-group.v2-scenario-group'>,
-  ): Promise<Result<'api::v2-scenario.v2-scenario'>[]> {
-    return (
-      (
-        await strapi
-          .documents('api::v2-scenario-group.v2-scenario-group')
-          .findOne({
-            documentId: scenarioGroup.documentId,
-            populate: ['scenarios'],
-          })
-      )?.scenarios ?? []
-    );
+    if (populatedUser == null) {
+      throw new Error(`User not found: ${user.documentId}`);
+    }
+
+    return populatedUser.projectCollaborations ?? [];
   }
 
   public async getCanvasesOfRoom(
     room: Result<'api::v2-room.v2-room'>,
   ): Promise<Result<'api::v2-canvas.v2-canvas'>[]> {
+    const populatedRoom: Result<
+      'api::v2-room.v2-room',
+      { populate: ['canvases'] }
+    > | null = await strapi.documents('api::v2-room.v2-room').findOne({
+      documentId: room.documentId,
+      populate: ['canvases'],
+    });
+
+    if (populatedRoom == null) {
+      throw new Error(`Room not found: ${room.documentId}`);
+    }
     const canvases: Result<'api::v2-canvas.v2-canvas'>[] =
-      (
-        await strapi.documents('api::v2-room.v2-room').findOne({
-          documentId: room.documentId,
-          populate: ['canvases'],
-        })
-      )?.canvases ?? [];
+      populatedRoom.canvases ?? [];
 
     if (canvases.length > 0) {
       return canvases;
@@ -767,5 +713,96 @@ export class DatabaseService implements ApplicationService {
         });
       return [newCanvas];
     }
+  }
+
+  public async getProjectOfRoom(
+    room: Result<'api::v2-room.v2-room'>,
+  ): Promise<Result<'api::v2-project.v2-project'> | null> {
+    const populatedRoom: Result<
+      'api::v2-room.v2-room',
+      { populate: ['project'] }
+    > | null = await strapi.documents('api::v2-room.v2-room').findOne({
+      documentId: room.documentId,
+      populate: ['project'],
+    });
+
+    if (populatedRoom == null) {
+      throw new Error(`Room not found: ${room.documentId}`);
+    }
+
+    return populatedRoom.project ?? null;
+  }
+
+  public async getCanvas(
+    id: string,
+  ): Promise<Result<'api::v2-canvas.v2-canvas'> | null> {
+    return await strapi
+      .documents('api::v2-canvas.v2-canvas')
+      .findOne({ documentId: id, status: 'published' });
+  }
+
+  public async getProjectOfCanvas(
+    canvas: Result<'api::v2-canvas.v2-canvas'>,
+  ): Promise<Result<'api::v2-project.v2-project'> | null> {
+    const populatedCanvas: Result<
+      'api::v2-canvas.v2-canvas',
+      { populate: { room: { populate: ['project'] } } }
+    > | null = await strapi.documents('api::v2-canvas.v2-canvas').findOne({
+      documentId: canvas.documentId,
+      status: 'published',
+      populate: { room: { populate: ['project'] } },
+    });
+
+    if (populatedCanvas == null) {
+      throw new Error(`Cannot find canvas ${canvas.documentId}.`);
+    }
+
+    return populatedCanvas.room?.project ?? null;
+  }
+
+  public async getRoomOfCanvas(
+    canvas: Result<'api::v2-canvas.v2-canvas'>,
+  ): Promise<Result<'api::v2-room.v2-room'> | null> {
+    const populatedCanvas: Result<
+      'api::v2-canvas.v2-canvas',
+      { populate: ['room'] }
+    > | null = await strapi.documents('api::v2-canvas.v2-canvas').findOne({
+      documentId: canvas.documentId,
+      status: 'published',
+      populate: ['room'],
+    });
+
+    if (populatedCanvas == null) {
+      throw new Error(`Cannot find canvas ${canvas.documentId}.`);
+    }
+
+    return populatedCanvas.room ?? null;
+  }
+
+  public async getGrapFileOfCanvas(
+    canvas: Result<'api::v2-canvas.v2-canvas'>,
+  ): Promise<Result<'plugin::upload.file'> | null> {
+    const populatedCanvas:
+      | (Result<'api::v2-canvas.v2-canvas', { populate: ['graph'] }> & {
+          graph?: Result<'plugin::upload.file'> | null;
+        })
+      | null = await strapi
+      .documents('api::v2-canvas.v2-canvas')
+      .findOne({ documentId: canvas.documentId, populate: ['graph'] });
+
+    if (populatedCanvas == null) {
+      throw new Error(`Canvas ${canvas.documentId} not found.`);
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+    return populatedCanvas.graph ?? null;
+  }
+
+  public async getProject(
+    projectId: string,
+  ): Promise<Result<'api::v2-project.v2-project'> | null> {
+    return await strapi
+      .documents('api::v2-project.v2-project')
+      .findOne({ documentId: projectId, status: 'published' });
   }
 }

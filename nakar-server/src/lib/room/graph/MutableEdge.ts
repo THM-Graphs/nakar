@@ -3,7 +3,6 @@ import { z } from 'zod';
 import { SSet } from '../../tools/Set';
 import type { MutableGraph } from './MutableGraph';
 import { SMap } from '../../tools/Map';
-import type { FinalGraphDisplayConfiguration } from '../scenario-pipeline/display-configuration/FinalGraphDisplayConfiguration';
 import { Range } from '../../tools/Range';
 import { MutableGraphElementCreationAction } from './MutableGraphElementCreationAction';
 
@@ -91,25 +90,8 @@ export class MutableEdge {
     });
   }
 
-  public getWidth(
-    edgeWidthRange: Range | null,
-    config: FinalGraphDisplayConfiguration,
-  ): number {
-    if (edgeWidthRange == null) {
-      return MutableEdge.defaultWidth;
-    }
-
-    const toRange: Range = new Range({
-      floor: MutableEdge.defaultWidth,
-      ceiling:
-        MutableEdge.defaultWidth * config.compressRelationshipsWidthFactor,
-    });
-
-    return edgeWidthRange.scaleValue(
-      toRange,
-      this.representationCount,
-      config.scaleType,
-    );
+  public getWidth(edgeWidthRange: Range | null): number {
+    return MutableEdge.defaultWidth; // TODO
   }
 
   public isParallelTo(other: MutableEdge): boolean {

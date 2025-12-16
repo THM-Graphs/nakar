@@ -10,9 +10,9 @@ import { useBearStore } from "../../state/useBearStore.ts";
 import { SearchForm } from "./SearchForm.tsx";
 import { SearchResultDisplay } from "./SearchResultDisplay.tsx";
 import { SearchCapabilitiesDisplay } from "./SearchCapabilitiesDisplay.tsx";
-import { RoomContext } from "../../pages/Room.tsx";
+import { CanvasContext } from "../../pages/CanvasPage.tsx";
 
-export function SearchPanel(props: { roomContext: RoomContext }) {
+export function SearchPanel(props: { roomContext: CanvasContext }) {
   const [selectedDatabaseId, setSelectedDatabaseId] = useState<string | null>(
     null,
   );
@@ -44,7 +44,7 @@ export function SearchPanel(props: { roomContext: RoomContext }) {
           path: { id: selectedDatabaseId ?? "" },
           body: {
             searchTerm: searchTerm,
-            roomId: props.roomContext.initialRoomData.id,
+            roomId: props.roomContext.initialCanvasData.id,
           },
         }),
       );

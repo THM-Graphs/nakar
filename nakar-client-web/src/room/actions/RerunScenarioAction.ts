@@ -1,10 +1,10 @@
 import { Action } from "./Action.ts";
-import { RoomContext } from "../../pages/Room.tsx";
+import { CanvasContext } from "../../pages/CanvasPage.tsx";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
-import { postRoomActionReloadScenario, Scenario } from "../../../src-gen";
+import { postCanvasActionReloadScenario, Scenario } from "../../../src-gen";
 
 export type RerunScenarioActionParams = {
-  roomContext: RoomContext;
+  roomContext: CanvasContext;
   scenario: Scenario | null;
 };
 
@@ -13,8 +13,8 @@ export class RerunScenarioAction extends Action<RerunScenarioActionParams> {
 
   protected async action(input: RerunScenarioActionParams): Promise<void> {
     resultOrThrow(
-      await postRoomActionReloadScenario({
-        path: { id: input.roomContext.initialRoomData.id },
+      await postCanvasActionReloadScenario({
+        path: { id: input.roomContext.initialCanvasData.id },
       }),
     );
   }

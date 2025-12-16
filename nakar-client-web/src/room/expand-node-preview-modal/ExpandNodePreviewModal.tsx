@@ -2,13 +2,13 @@ import { Modal, Spinner, Stack } from "react-bootstrap";
 import { Panel } from "../../shared/elements/Panel.tsx";
 import { NavbarButton } from "../../shared/elements/NavbarButton.tsx";
 import { useBearStore } from "../../state/useBearStore.ts";
-import { postRoomActionExpandNode } from "../../../src-gen";
+import { postCanvasActionExpandNode } from "../../../src-gen";
 import { useEffect, useState } from "react";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
-import { RoomContext } from "../../pages/Room.tsx";
+import { CanvasContext } from "../../pages/CanvasPage.tsx";
 import { SelectableTableData } from "./SelectableTableData.tsx";
 
-export function ExpandNodePreviewModal(props: { roomContext: RoomContext }) {
+export function ExpandNodePreviewModal(props: { roomContext: CanvasContext }) {
   const data = useBearStore((s) => s.room.scenario.expandNodePreview.data);
   const close = useBearStore((s) => s.room.scenario.expandNodePreview.close);
   const clean = useBearStore((s) => s.room.scenario.expandNodePreview.clean);
@@ -106,9 +106,9 @@ export function ExpandNodePreviewModal(props: { roomContext: RoomContext }) {
                   }
                   close();
                   resultOrThrow(
-                    await postRoomActionExpandNode({
+                    await postCanvasActionExpandNode({
                       path: {
-                        id: props.roomContext.initialRoomData.id,
+                        id: props.roomContext.initialCanvasData.id,
                       },
                       body: {
                         nodeId: data.nodeId,

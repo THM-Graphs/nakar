@@ -2,18 +2,18 @@ import { GraphDataToggle } from "../data-table/GraphDataToggle.tsx";
 import { Stack } from "react-bootstrap";
 import { useBearStore } from "../../state/useBearStore.ts";
 import { AppContext } from "../../state/AppContext.ts";
-import { RoomContext } from "../../pages/Room.tsx";
+import { CanvasContext } from "../../pages/CanvasPage.tsx";
 import { DropdownButton } from "../../shared/elements/DropdownButton.tsx";
 import { ActionDropdownItem } from "../actions/ActionDropdownItem.tsx";
 import { ActionNavbarButton } from "../actions/ActionNavbarButton.tsx";
 import { UndoAction } from "../actions/UndoAction.ts";
 import { RedoAction } from "../actions/RedoAction.ts";
-import { EditScenarioAction } from "../actions/EditScenarioAction.ts";
 import { RerunScenarioAction } from "../actions/RerunScenarioAction.ts";
+import { CanvasTabs } from "../canvas-tabs/CanvasTabs.tsx";
 
 export function CanvasToolbar(props: {
   context: AppContext;
-  roomContext: RoomContext;
+  roomContext: CanvasContext;
 }) {
   const undoAction = useBearStore(
     (s) => s.room.scenario.graph.metaData.undoAction,
@@ -53,6 +53,8 @@ export function CanvasToolbar(props: {
         <GraphDataToggle></GraphDataToggle>
       </Stack>
 
+      <CanvasTabs canvasContext={props.roomContext}></CanvasTabs>
+
       {scenario && (
         <>
           <Stack direction={"horizontal"} className={" ps-1"}>
@@ -68,10 +70,6 @@ export function CanvasToolbar(props: {
                   roomContext: props.roomContext,
                   scenario: scenario.current,
                 }}
-              ></ActionDropdownItem>
-              <ActionDropdownItem
-                action={EditScenarioAction.shared}
-                params={{ scenario: scenario.current }}
               ></ActionDropdownItem>
             </DropdownButton>
           </Stack>

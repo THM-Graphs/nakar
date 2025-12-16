@@ -1,7 +1,7 @@
 import { Action } from "./Action.ts";
 import { LabelActionParams } from "./LabelActionParams.ts";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
-import { postRoomActionCompressNodes } from "../../../src-gen";
+import { postCanvasActionCompressNodes } from "../../../src-gen";
 import { match } from "ts-pattern";
 
 export class CompressLabelsAction extends Action<LabelActionParams> {
@@ -14,9 +14,9 @@ export class CompressLabelsAction extends Action<LabelActionParams> {
     }
     const label = input.labels[0];
     resultOrThrow(
-      await postRoomActionCompressNodes({
+      await postCanvasActionCompressNodes({
         path: {
-          id: input.roomContext.initialRoomData.id,
+          id: input.roomContext.initialCanvasData.id,
         },
         body: {
           label: label,

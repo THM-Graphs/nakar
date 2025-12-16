@@ -12,12 +12,11 @@ servers:
 tags:
   - name: Authentication
   - name: Project
-  - name: Room
-  - name: Scenarios
-  - name: Graph
   - name: Notes
+  - name: Room
+  - name: Canvas
+  - name: Graph
   - name: Actions
-  - name: Room Template
   - name: System
   - name: Database
 
@@ -101,24 +100,18 @@ paths:
               schema:
                 $ref: "#/components/schemas/Project"
 
-  /room/{id}/scenarios:
+  /canvas/{id}:
     get:
       tags:
-        - Scenarios
-      operationId: getScenarios
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
+        - Canvas
+      operationId: getCanvas
       responses:
         "200":
           description: "OK"
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/GetScenariosResult"
+                $ref: "#/components/schemas/Canvas"
 
   /room:
     get:
@@ -132,28 +125,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Rooms"
-    post:
-      tags:
-        - Room
-      operationId: createRoom
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                templateId:
-                  type: string
-              required:
-                - templateId
-      responses:
-        "200":
-          description: "OK"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Room"
 
   /room/{id}:
     get:
@@ -174,24 +145,11 @@ paths:
               schema:
                 $ref: "#/components/schemas/Room"
 
-  /room-template:
+  /room/{id}/scenarios:
     get:
       tags:
-        - Room Template
-      operationId: getRoomTemplates
-      responses:
-        "200":
-          description: "OK"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/RoomTemplates"
-
-  /room-template/{id}:
-    get:
-      tags:
-        - Room Template
-      operationId: getRoomTemplate
+        - Room
+      operationId: getRoomScenarios
       parameters:
         - name: id
           in: path
@@ -204,85 +162,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/RoomTemplate"
+                $ref: "#/components/schemas/GetScenariosResult"
 
-  /room/{id}/graph:
-    get:
-      tags:
-        - Graph
-      operationId: getRoomGraph
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        "200":
-          description: "OK"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Graph"
-
-  /room/{id}/graph/elements:
-    get:
-      tags:
-        - Graph
-      operationId: getRoomGraphElements
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        "200":
-          description: "OK"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/GraphElements"
-
-  /room/{id}/graph/meta-data:
-    get:
-      tags:
-        - Graph
-      operationId: getRoomGraphMetaData
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        "200":
-          description: "OK"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/GraphMetaData"
-
-  /room/{id}/graph/table:
-    get:
-      tags:
-        - Graph
-      operationId: getRoomGraphTable
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        "200":
-          description: "OK"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/GraphTable"
-
-  /room/{id}/note:
+  /project/{id}/note:
     post:
       tags:
         - Notes
@@ -322,7 +204,7 @@ paths:
         "200":
           description: "OK"
 
-  /room/{id}/note/{noteId}:
+  /project/{id}/note/{noteId}:
     delete:
       tags:
         - Notes
@@ -385,11 +267,87 @@ paths:
         "200":
           description: "OK"
 
-  /room/{id}/actions/load-scenario:
+  /canvas/{id}/graph:
+    get:
+      tags:
+        - Graph
+      operationId: getGraph
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Graph"
+
+  /canvas/{id}/graph/elements:
+    get:
+      tags:
+        - Graph
+      operationId: getGraphElements
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GraphElements"
+
+  /canvas/{id}/graph/meta-data:
+    get:
+      tags:
+        - Graph
+      operationId: getGraphMetaData
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GraphMetaData"
+
+  /canvas/{id}/graph/table:
+    get:
+      tags:
+        - Graph
+      operationId: getGraphTable
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GraphTable"
+
+  /canvas/{id}/actions/load-scenario:
     post:
       tags:
         - Actions
-      operationId: postRoomActionLoadScenario
+      operationId: postCanvasActionLoadScenario
       parameters:
         - name: id
           in: path
@@ -405,6 +363,8 @@ paths:
               properties:
                 scenarioId:
                   type: string
+                additive:
+                  type: boolean
                 arguments:
                   type: array
                   items:
@@ -412,15 +372,16 @@ paths:
               required:
                 - scenarioId
                 - arguments
+                - additive
       responses:
         "200":
           description: "OK"
 
-  /room/{id}/actions/reload-scenario:
+  /canvas/{id}/actions/reload-scenario:
     post:
       tags:
         - Actions
-      operationId: postRoomActionReloadScenario
+      operationId: postCanvasActionReloadScenario
       parameters:
         - name: id
           in: path
@@ -431,11 +392,11 @@ paths:
         "200":
           description: "OK"
 
-  /room/{id}/actions/expand-node:
+  /canvas/{id}/actions/expand-node:
     post:
       tags:
         - Actions
-      operationId: postRoomActionExpandNode
+      operationId: postCanvasActionExpandNode
       parameters:
         - name: id
           in: path
@@ -473,11 +434,11 @@ paths:
         "200":
           description: "OK"
 
-  /room/{id}/actions/expand-node-preview:
+  /canvas/{id}/actions/expand-node-preview:
     post:
       tags:
         - Actions
-      operationId: postRoomActionExpandNodePreview
+      operationId: postCanvasActionExpandNodePreview
       parameters:
         - name: id
           in: path
@@ -516,11 +477,11 @@ paths:
                   - relationships
                   - labels
 
-  /room/{id}/actions/delete-elements:
+  /canvas/{id}/actions/delete-elements:
     post:
       tags:
         - Actions
-      operationId: postRoomActionDeleteElements
+      operationId: postCanvasActionDeleteElements
       parameters:
         - name: id
           in: path
@@ -559,11 +520,11 @@ paths:
         "200":
           description: "OK"
 
-  /room/{id}/actions/relayout:
+  /canvas/{id}/actions/relayout:
     post:
       tags:
         - Actions
-      operationId: postRoomActionRelayout
+      operationId: postCanvasActionRelayout
       parameters:
         - name: id
           in: path
@@ -574,39 +535,11 @@ paths:
         "200":
           description: "OK"
 
-  /room/{id}/actions/unlock-nodes:
+  /canvas/{id}/actions/unlock-nodes:
     post:
       tags:
         - Actions
-      operationId: postRoomActionUnlockNodes
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                nodes:
-                  type: array
-                  items:
-                    type: string
-              required:
-                - nodes
-      responses:
-        "200":
-          description: "OK"
-
-  /room/{id}/actions/focus-nodes:
-    post:
-      tags:
-        - Actions
-      operationId: postRoomActionFocusNodes
+      operationId: postCanvasActionUnlockNodes
       parameters:
         - name: id
           in: path
@@ -630,11 +563,39 @@ paths:
         "200":
           description: "OK"
 
-  /room/{id}/actions/undo:
+  /canvas/{id}/actions/focus-nodes:
     post:
       tags:
         - Actions
-      operationId: postRoomActionUndo
+      operationId: postCanvasActionFocusNodes
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nodes:
+                  type: array
+                  items:
+                    type: string
+              required:
+                - nodes
+      responses:
+        "200":
+          description: "OK"
+
+  /canvas/{id}/actions/undo:
+    post:
+      tags:
+        - Actions
+      operationId: postCanvasActionUndo
       parameters:
         - name: id
           in: path
@@ -645,11 +606,11 @@ paths:
         "200":
           description: "OK"
 
-  /room/{id}/actions/redo:
+  /canvas/{id}/actions/redo:
     post:
       tags:
         - Actions
-      operationId: postRoomActionRedo
+      operationId: postCanvasActionRedo
       parameters:
         - name: id
           in: path
@@ -660,11 +621,11 @@ paths:
         "200":
           description: "OK"
 
-  /room/{id}/actions/run-query:
+  /canvas/{id}/actions/run-query:
     post:
       tags:
         - Actions
-      operationId: postRoomActionRunQuery
+      operationId: postCanvasActionRunQuery
       security:
         - bearerAuth: []
       parameters:
@@ -694,11 +655,11 @@ paths:
         "200":
           description: "OK"
 
-  /room/{id}/actions/connect-result-nodes:
+  /canvas/{id}/actions/connect-result-nodes:
     post:
       tags:
         - Actions
-      operationId: postRoomActionConnectResultNodes
+      operationId: postCanvasActionConnectResultNodes
       parameters:
         - name: id
           in: path
@@ -709,11 +670,11 @@ paths:
         "200":
           description: "OK"
 
-  /room/{id}/actions/unlock-all-nodes:
+  /canvas/{id}/actions/unlock-all-nodes:
     post:
       tags:
         - Actions
-      operationId: postRoomActionUnlockAllNodes
+      operationId: postCanvasActionUnlockAllNodes
       parameters:
         - name: id
           in: path
@@ -724,11 +685,11 @@ paths:
         "200":
           description: "OK"
 
-  /room/{id}/actions/remove-dangling-nodes:
+  /canvas/{id}/actions/remove-dangling-nodes:
     post:
       tags:
         - Actions
-      operationId: postRoomActionRemoveDanglingNodes
+      operationId: postCanvasActionRemoveDanglingNodes
       parameters:
         - name: id
           in: path
@@ -739,11 +700,11 @@ paths:
         "200":
           description: "OK"
 
-  /room/{id}/actions/compress-relationships:
+  /canvas/{id}/actions/compress-relationships:
     post:
       tags:
         - Actions
-      operationId: postRoomActionCompressRelationships
+      operationId: postCanvasActionCompressRelationships
       parameters:
         - name: id
           in: path
@@ -754,11 +715,11 @@ paths:
         "200":
           description: "OK"
 
-  /room/{id}/actions/compress-nodes:
+  /canvas/{id}/actions/compress-nodes:
     post:
       tags:
         - Actions
-      operationId: postRoomActionCompressNodes
+      operationId: postCanvasActionCompressNodes
       parameters:
         - name: id
           in: path
@@ -780,11 +741,11 @@ paths:
         "200":
           description: "OK"
 
-  /room/{id}/actions/layout-label:
+  /canvas/{id}/actions/layout-label:
     post:
       tags:
         - Actions
-      operationId: postRoomActionLayoutLabel
+      operationId: postCanvasActionLayoutLabel
       parameters:
         - name: id
           in: path
@@ -809,11 +770,11 @@ paths:
         "200":
           description: "OK"
 
-  /room/{id}/actions/show-shortest-path:
+  /canvas/{id}/actions/show-shortest-path:
     post:
       tags:
         - Actions
-      operationId: postRoomActionShowShortestPath
+      operationId: postCanvasActionShowShortestPath
       parameters:
         - name: id
           in: path
@@ -837,11 +798,11 @@ paths:
         "200":
           description: "OK"
 
-  /room/{id}/actions/load-node:
+  /canvas/{id}/actions/load-node:
     post:
       tags:
         - Actions
-      operationId: postRoomActionLoadNode
+      operationId: postCanvasActionLoadNode
       parameters:
         - name: id
           in: path
@@ -1007,7 +968,7 @@ components:
         referencedDatabases:
           type: array
           items:
-            $ref: "#/components/schemas/Database"
+            $ref: "#/components/schemas/DatabaseConnection"
       required:
         - scenarioGroups
         - parameterizedScenarios
@@ -1511,40 +1472,6 @@ components:
         - metaData
         - table
 
-    Room:
-      type: object
-      properties:
-        id:
-          type: string
-        title:
-          type: string
-          nullable: true
-        editUrl:
-          type: string
-          nullable: true
-        template:
-          type: object
-          nullable: true
-          properties:
-            id:
-              type: string
-            title:
-              type: string
-              nullable: true
-            editUrl:
-              type: string
-              nullable: true
-          required:
-            - id
-            - title
-            - editUrl
-      required:
-        - id
-        - title
-        - scenario
-        - editUrl
-        - template
-
     Rooms:
       type: object
       properties:
@@ -1554,77 +1481,6 @@ components:
             $ref: "#/components/schemas/Room"
       required:
         - rooms
-
-    RoomTemplate:
-      type: object
-      properties:
-        id:
-          type: string
-        title:
-          type: string
-          nullable: true
-        editUrl:
-          type: string
-          nullable: true
-      required:
-        - id
-        - title
-        - editUrl
-
-    RoomTemplates:
-      type: object
-      properties:
-        roomTemplates:
-          type: array
-          items:
-            $ref: "#/components/schemas/RoomTemplate"
-      required:
-        - roomTemplates
-
-    Database:
-      type: object
-      properties:
-        id:
-          type: string
-        title:
-          type: string
-          nullable: true
-        url:
-          type: string
-          nullable: true
-        browserUrl:
-          type: string
-          nullable: true
-        editUrl:
-          type: string
-          nullable: true
-      required:
-        - id
-        - title
-        - url
-        - browserUrl
-        - editUrl
-
-    ScenarioGroup:
-      type: object
-      properties:
-        id:
-          type: string
-        title:
-          type: string
-          nullable: true
-        editUrl:
-          type: string
-          nullable: true
-        scenarios:
-          type: array
-          items:
-            $ref: "#/components/schemas/Scenario"
-      required:
-        - id
-        - title
-        - editUrl
-        - scenarios
 
     ScenarioQuery:
       type: object
@@ -1636,7 +1492,7 @@ components:
           nullable: true
           properties:
             current:
-              $ref: "#/components/schemas/Database"
+              $ref: "#/components/schemas/DatabaseConnection"
           required:
             - current
       required:
@@ -1658,13 +1514,6 @@ components:
         description:
           type: string
           nullable: true
-        coverUrl:
-          type: string
-          format: uri
-          nullable: true
-        editUrl:
-          type: string
-          nullable: true
         parameters:
           type: array
           items:
@@ -1676,11 +1525,8 @@ components:
         - title
         - query
         - description
-        - coverUrl
-        - editUrl
         - parameters
         - queries
-        - additive
 
     ScenarioParameter:
       type: object
@@ -1694,7 +1540,7 @@ components:
           nullable: true
         dataType:
           type: string
-          enum: ["json", "startDateTime", "endDateTime"]
+          enum: ["string", "number", "json", "startDateTime", "endDateTime"]
       required:
         - identifier
         - title
@@ -1855,8 +1701,13 @@ components:
           items:
             $ref: "#/components/schemas/NodePreview"
         author:
-          type: string
+          type: object
           nullable: true
+          properties:
+            current:
+              $ref: "#/components/schemas/User"
+          required:
+            - current
         dateTime:
           type: string
           format: date-time
@@ -1908,11 +1759,11 @@ components:
         myProjects:
           type: array
           items:
-            $ref: "#/components/schemas/ProjectPreview"
+            $ref: "#/components/schemas/Project"
         collaborationProjects:
           type: array
           items:
-            $ref: "#/components/schemas/ProjectPreview"
+            $ref: "#/components/schemas/Project"
       required:
         - myProjects
         - collaborationProjects
@@ -1929,25 +1780,25 @@ components:
           nullable: true
           properties:
             current:
-              $ref: "#/components/schemas/UserPreview"
+              $ref: "#/components/schemas/User"
           required:
             - current
         collaborators:
           type: array
           items:
-            $ref: "#/components/schemas/UserPreview"
+            $ref: "#/components/schemas/User"
         databases:
           type: array
           items:
-            $ref: "#/components/schemas/DatabaseConnectionPreview"
+            $ref: "#/components/schemas/DatabaseConnection"
         scenarioGroups:
           type: array
           items:
-            $ref: "#/components/schemas/ScenarioGroupPreview"
+            $ref: "#/components/schemas/ScenarioGroup"
         rooms:
           type: array
           items:
-            $ref: "#/components/schemas/RoomPreview"
+            $ref: "#/components/schemas/Room"
       required:
         - id
         - title
@@ -1957,42 +1808,11 @@ components:
         - scenarioGroups
         - rooms
 
-    ProjectPreview:
-      type: object
-      properties:
-        id:
-          type: string
-        title:
-          type: string
-        owner:
-          type: object
-          nullable: true
-          properties:
-            current:
-              $ref: "#/components/schemas/UserPreview"
-          required:
-            - current
-        collaborators:
-          type: array
-          items:
-            $ref: "#/components/schemas/UserPreview"
-        databases:
-          type: array
-          items:
-            $ref: "#/components/schemas/DatabaseConnectionPreview"
-      required:
-        - id
-        - title
-        - role
-        - owner
-        - collaborators
-        - databases
-
     ProjectRole:
       type: string
       enum: [ "owner", "collaborator", "none" ]
 
-    UserPreview:
+    User:
       type: object
       properties:
         id:
@@ -2003,7 +1823,7 @@ components:
         - id
         - displayName
 
-    DatabaseConnectionPreview:
+    DatabaseConnection:
       type: object
       properties:
         id:
@@ -2020,7 +1840,7 @@ components:
         - browserUrl
         - connectionUrl
 
-    RoomPreview:
+    Room:
       type: object
       properties:
         id:
@@ -2032,18 +1852,21 @@ components:
         canvases:
           type: array
           items:
-            $ref: "#/components/schemas/CanvasPreview"
+            $ref: "#/components/schemas/Canvas"
+        projectTitle:
+          type: string
       required:
         - id
         - title
         - visibility
         - canvases
+        - projectTitle
 
     RoomVisibility:
       type: string
       enum: ["private", "public", "unlisted"]
 
-    ScenarioGroupPreview:
+    ScenarioGroup:
       type: object
       properties:
         id:
@@ -2053,38 +1876,30 @@ components:
         scenarios:
           type: array
           items:
-            $ref: "#/components/schemas/ScenarioPreview"
+            $ref: "#/components/schemas/Scenario"
       required:
         - id
         - title
         - scenarios
 
-    ScenarioPreview:
+    Canvas:
       type: object
       properties:
         id:
           type: string
         title:
           type: string
-      required:
-        - id
-        - title
-
-    CanvasPreview:
-      type: object
-      properties:
-        id:
-          type: string
-        title:
+        roomId:
           type: string
       required:
         - id
         - title
+        - roomId
 
     WSClientToServerMessage:
       oneOf:
-        - $ref: "#/components/schemas/WSActionJoinRoom"
-        - $ref: "#/components/schemas/WSActionLeaveRoom"
+        - $ref: "#/components/schemas/WSActionJoinCanvas"
+        - $ref: "#/components/schemas/WSActionLeaveCanvas"
         - $ref: "#/components/schemas/WSActionGrabNode"
         - $ref: "#/components/schemas/WSActionMoveNodes"
         - $ref: "#/components/schemas/WSActionUngrabNode"
@@ -2092,7 +1907,7 @@ components:
     WSServerToClientMessage:
       oneOf:
         - $ref: "#/components/schemas/WSEventNodesMoved"
-        - $ref: "#/components/schemas/WSEventRoomChanged"
+        - $ref: "#/components/schemas/WSEventCanvasChanged"
         - $ref: "#/components/schemas/WSEventNotification"
         - $ref: "#/components/schemas/WSEventGraphElementsChanged"
         - $ref: "#/components/schemas/WSEventGraphMetaDataChanged"
@@ -2102,24 +1917,24 @@ components:
         - $ref: "#/components/schemas/WSEventSetNodeLocks"
         - $ref: "#/components/schemas/WSEventKick"
 
-    WSActionJoinRoom:
+    WSActionJoinCanvas:
       type: object
       properties:
         type:
           type: string
-          enum: ["WSActionJoinRoom"]
-        roomId:
+          enum: ["WSActionJoinCanvas"]
+        canvasId:
           type: string
       required:
         - type
-        - roomId
+        - canvasId
 
-    WSActionLeaveRoom:
+    WSActionLeaveCanvas:
       type: object
       properties:
         type:
           type: string
-          enum: ["WSActionLeaveRoom"]
+          enum: ["WSActionLeaveCanvas"]
       required:
         - type
 
@@ -2197,18 +2012,18 @@ components:
         - type
         - table
 
-    WSEventRoomChanged:
+    WSEventCanvasChanged:
       type: object
       properties:
         type:
           type: string
-          enum: ["WSEventRoomChanged"]
-        roomId:
+          enum: ["WSEventCanvasChanged"]
+        canvasId:
           type: string
           nullable: true
       required:
         - type
-        - roomId
+        - canvasId
 
     WSEventNodesMoved:
       type: object

@@ -1,4 +1,4 @@
-import { RoomContext } from "../../pages/Room.tsx";
+import { CanvasContext } from "../../pages/CanvasPage.tsx";
 import { useBearStore } from "../../state/useBearStore.ts";
 import { Panel } from "../../shared/elements/Panel.tsx";
 import { Stack } from "react-bootstrap";
@@ -11,7 +11,7 @@ import { AppContext } from "../../state/AppContext.ts";
 
 export function NotesPanel(props: {
   context: AppContext;
-  roomContext: RoomContext;
+  roomContext: CanvasContext;
 }) {
   const leftPanel = useBearStore((s) => s.room.panels.left);
   const notesPanel = useBearStore((s) => s.room.panels.notes);

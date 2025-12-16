@@ -1,10 +1,10 @@
 import { PropertyGroup } from "../PropertyGroup.tsx";
 import { useBearStore } from "../../../state/useBearStore.ts";
-import { RoomContext } from "../../../pages/Room.tsx";
+import { CanvasContext } from "../../../pages/CanvasPage.tsx";
 import { DynamicList } from "../../../shared/elements/DynamicList.tsx";
 
 export function HistogramSectionNodeProperties(props: {
-  roomContext: RoomContext;
+  roomContext: CanvasContext;
 }) {
   const histogram = useBearStore(
     (s) => s.room.scenario.graph.elements.histogram,

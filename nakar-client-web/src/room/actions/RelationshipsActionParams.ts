@@ -1,7 +1,7 @@
 import { Edge } from "../../../src-gen";
-import { RoomContext } from "../../pages/Room.tsx";
+import { CanvasContext } from "../../pages/CanvasPage.tsx";
 
 export type RelationshipsActionParams = {
   edges: Edge[];
-  roomContext: RoomContext;
+  roomContext: CanvasContext;
 };

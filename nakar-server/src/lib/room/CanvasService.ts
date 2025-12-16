@@ -1,0 +1,132 @@
+import type { DatabaseService } from '../database/DatabaseService';
+import type { Observable } from 'rxjs';
+import { Subject } from 'rxjs';
+import { MutableGraph } from './graph/MutableGraph';
+import type { LoggerService } from '../logger/LoggerService';
+import type { ProfilerService } from '../profiler/ProfilerService';
+import type { ApplicationService } from '../application/ApplicationService';
+import installHandlebarHelpers from 'handlebars-helpers';
+import { SMap } from '../tools/Map';
+import type { Neo4jService } from '../neo4j/Neo4jService';
+import type { CanvasEvent } from './events/CanvasEvent';
+import type { CanvasEventEventKick } from './events/CanvasEventEventKick';
+import type { ProfilerTask } from '../profiler/ProfilerTask';
+import type { MediaService } from '../media/MediaService';
+import { LiveCanvas } from './LiveCanvas';
+import { Result } from '@strapi/types/dist/modules/documents/result';
+
+export class CanvasService implements ApplicationService {
+  private readonly _liveCanvases: SMap<string, LiveCanvas>;
+  private readonly _onEvent: Subject<CanvasEvent>;
+
+  public constructor(
+    private readonly _database: DatabaseService,
+    private readonly _logger: LoggerService,
+    private readonly _profiler: ProfilerService,
+    private readonly _neo4j: Neo4jService,
+    private readonly _media: MediaService,
+  ) {
+    this._liveCanvases = new SMap();
+    this._onEvent = new Subject();
+  }
+
+  public get onEvent$(): Observable<CanvasEvent> {
+    return this._onEvent.asObservable();
+  }
+
+  public bootstrap(): void {
+    installHandlebarHelpers();
+
+    this._database.onCanvasDeleted$.subscribe(
+      (canvas: Result<'api::v2-canvas.v2-canvas'>): void => {
+        this.destroyCanvas(canvas).catch((error: unknown): void => {
+          this._logger.error(this, error);
+        });
+      },
+    );
+  }
+
+  public async destroy(): Promise<void> {
+    for (const canvas of this._liveCanvases.values()) {
+      this._logger.log(this, `Stopping live canvas ${canvas.canvasId}...`);
+      await canvas.destroy();
+    }
+  }
+
+  public getGraph(canvas: Result<'api::v2-canvas.v2-canvas'>): MutableGraph {
+    const liveCanvas: LiveCanvas = this.getCanvas(canvas);
+    const graph: MutableGraph = liveCanvas.getGraph();
+    return graph;
+  }
+
+  public getCanvas(canvas: Result<'api::v2-canvas.v2-canvas'>): LiveCanvas {
+    const liveCanvas: LiveCanvas | undefined = this._liveCanvases.get(
+      canvas.documentId,
+    );
+    if (liveCanvas == null) {
+      throw new Error(`Canvas ${canvas.documentId} is not alive yet.`);
+    }
+    return liveCanvas;
+  }
+
+  public async startCanvas(
+    canvas: Result<'api::v2-canvas.v2-canvas'>,
+  ): Promise<void> {
+    if (this._liveCanvases.has(canvas.documentId)) {
+      return;
+    }
+
+    const task: ProfilerTask = this._profiler.profile(
+      this,
+      `Init canvas ${canvas.title ?? canvas.documentId}`,
+    );
+    const liveCanvas: LiveCanvas = new LiveCanvas(
+      canvas.documentId,
+      this._logger,
+      this._media,
+      this._profiler,
+      this._database,
+      this._neo4j,
+    );
+    await liveCanvas.bootstrap();
+    liveCanvas.addSubscription(
+      liveCanvas.onEvent$.subscribe((event: CanvasEvent): void => {
+        this._onEvent.next(event);
+      }),
+    );
+
+    if (this._liveCanvases.has(canvas.documentId)) {
+      this._logger.warn(
+        this,
+        'Race condition detected while creating live canvas.',
+      );
+      await liveCanvas.destroy();
+    } else {
+      this._liveCanvases.set(canvas.documentId, liveCanvas);
+    }
+    task.finish();
+  }
+
+  public async destroyCanvas(
+    canvas: Result<'api::v2-canvas.v2-canvas'>,
+  ): Promise<void> {
+    this._logger.debug(this, `Will destroy canvas ${canvas.documentId}.`);
+
+    const liveCanvas: LiveCanvas | undefined = this._liveCanvases.get(
+      canvas.documentId,
+    );
+
+    if (liveCanvas == null) {
+      return;
+    }
+
+    this._liveCanvases.delete(canvas.documentId);
+
+    this._onEvent.next({
+      type: 'CanvasEventKick',
+      canvasId: canvas.documentId,
+    } satisfies CanvasEventEventKick);
+
+    await liveCanvas.destroy();
+  }
+}

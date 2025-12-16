@@ -35,7 +35,7 @@ export async function ProjectLoader(
 export function Project(props: { context: AppContext }) {
   const projectContext: ProjectContext = useLoaderData();
   return (
-    <Stack className={"justify-content-between h-100 bg-body-secondary"}>
+    <Stack className={"justify-content-between h-100 bg-body-tertiary"}>
       <CMSNavbar context={props.context} backUrl={".."}></CMSNavbar>
       <div className={"flex-grow-1 overflow-y-scroll"}>
         <Container className={"pb-5 pt-5"}>

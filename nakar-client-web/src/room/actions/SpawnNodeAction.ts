@@ -1,21 +1,21 @@
 import { Action } from "./Action.ts";
-import { postRoomActionLoadNode } from "../../../src-gen";
-import { RoomContext } from "../../pages/Room.tsx";
+import { postCanvasActionLoadNode } from "../../../src-gen";
+import { CanvasContext } from "../../pages/CanvasPage.tsx";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
 import { useBearStore } from "../../state/useBearStore.ts";
 
 export type SpawnNodeActionParams = {
   nodeId: string;
   databaseId: string;
-  roomContext: RoomContext;
+  roomContext: CanvasContext;
 };
 export class SpawnNodeAction extends Action<SpawnNodeActionParams> {
   public static shared: SpawnNodeAction = new SpawnNodeAction();
 
   protected async action(input: SpawnNodeActionParams): Promise<void> {
     resultOrThrow(
-      await postRoomActionLoadNode({
-        path: { id: input.roomContext.initialRoomData.id },
+      await postCanvasActionLoadNode({
+        path: { id: input.roomContext.initialCanvasData.id },
         body: { nodeId: input.nodeId, databaseId: input.databaseId },
       }),
     );

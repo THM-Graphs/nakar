@@ -12,10 +12,10 @@ import { useBearStore } from "../../state/useBearStore.ts";
 import { Edge, Node } from "../../../src-gen";
 import { nodeActions } from "../actions/groups/nodeActions.ts";
 import { ActionDropdownItem } from "../actions/ActionDropdownItem.tsx";
-import { RoomContext } from "../../pages/Room.tsx";
+import { CanvasContext } from "../../pages/CanvasPage.tsx";
 import { relationshipActions } from "../actions/groups/relationshipActions.ts";
 
-export function CanvasContextMenu(props: { roomContext: RoomContext }) {
+export function CanvasContextMenu(props: { roomContext: CanvasContext }) {
   const onShowNodeContextMenu = useBearStore(
     (s) => s.room.ui.rendererEvents.onShowNodeContextMenu,
   );

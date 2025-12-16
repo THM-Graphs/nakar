@@ -1,10 +1,6 @@
 import { ApplicationService } from '../application/ApplicationService';
-import { GetScenarioParameterDBDTO } from '../database/dto/GetScenarioParameterDBDTO';
-import { GetDatabaseDBDTO } from '../database/dto/GetDatabaseDBDTO';
 import {
   SchemaColor,
-  SchemaDatabase,
-  SchemaDatabaseConnectionPreview,
   SchemaEdge,
   SchemaEdgePreview,
   SchemaGraph,
@@ -18,47 +14,35 @@ import {
   SchemaNodePreview,
   SchemaNote,
   SchemaProject,
-  SchemaProjectPreview,
-  SchemaCanvasPreview,
   SchemaRoom,
-  SchemaRoomPreview,
-  SchemaRoomTemplate,
   SchemaScenario,
   SchemaScenarioArgument,
   SchemaScenarioGroup,
-  SchemaScenarioGroupPreview,
   SchemaScenarioParameter,
-  SchemaScenarioPreview,
   SchemaScenarioQuery,
-  SchemaUserPreview,
+  SchemaCanvas,
+  SchemaDatabaseConnection,
+  SchemaUser,
 } from '../../../src-gen/schema';
-import { GetRoomDBDTO } from '../database/dto/GetRoomDBDTO';
-import { GetScenarioDBDTO } from '../database/dto/GetScenarioDBDTO';
-import { GetTemplateDBDTO } from '../database/dto/GetTemplateDBDTO';
-import { GetScenarioQueryDBDTO } from '../database/dto/GetScenarioQueryDBDTO';
-import { GetScenarioGroupDBDTO } from '../database/dto/GetScenarioGroupDBDTO';
 import { ConfigService } from '../config/ConfigService';
 import { MediaService } from '../media/MediaService';
 import { MutableGraph } from '../room/graph/MutableGraph';
-import { GetNotesDBDTO } from '../database/dto/GetNotesDBDTO';
-import { FinalGraphDisplayConfiguration } from '../room/scenario-pipeline/display-configuration/FinalGraphDisplayConfiguration';
 import { ProfilerTask } from '../profiler/ProfilerTask';
 import { Range } from '../tools/Range';
 import { MutableNode } from '../room/graph/MutableNode';
 import { MutableEdge } from '../room/graph/MutableEdge';
 import { MutableGraphLabel } from '../room/graph/MutableGraphLabel';
-import { GetNoteDBDTO } from '../database/dto/GetNoteDBDTO';
 import { SMap } from '../tools/Map';
 import { MutableGraphMetaData } from '../room/graph/MutableGraphMetaData';
 import { MutableGraphColor } from '../room/graph/MutableGraphColor';
 import { SSet } from '../tools/Set';
 import { MutablePropertyCollection } from '../room/graph/MutablePropertyCollection';
-import { MutableGraphColorFactory } from '../room/graph/MutableGraphColorFactory';
 import { ProfilerService } from '../profiler/ProfilerService';
 import { DatabaseService } from '../database/DatabaseService';
 import { DatabaseReferenceCache } from './DatabaseReferenceCache';
 import { UndoWrapperInfo } from '../undo/UndoWrapperInfo';
 import { Result } from '@strapi/types/dist/modules/documents/result';
+import { IndexedNoteCollection } from '../database/IndexedNoteCollection';
 
 export class SchemaFactoryService implements ApplicationService {
   public constructor(
@@ -76,96 +60,110 @@ export class SchemaFactoryService implements ApplicationService {
     /* */
   }
 
-  public createSchemaDatabase(databaseDBDTO: GetDatabaseDBDTO): SchemaDatabase {
+  public createSchemaDatabase(
+    databaseDBDTO: Result<'api::v2-database-connection.v2-database-connection'>,
+  ): SchemaDatabaseConnection {
     return {
       id: databaseDBDTO.documentId,
-      title: databaseDBDTO.title,
-      url: databaseDBDTO.url,
-      browserUrl: databaseDBDTO.browserUrl,
-      editUrl: this._getDatabaseEditUrl(databaseDBDTO),
+      title: databaseDBDTO.title ?? '',
+      connectionUrl: databaseDBDTO.connectionUrl ?? '',
+      browserUrl: databaseDBDTO.browserUrl ?? '',
     };
   }
 
-  public createSchemaRoom(room: GetRoomDBDTO): SchemaRoom {
+  public async createSchemaRoom(
+    room: Result<'api::v2-room.v2-room'>,
+  ): Promise<SchemaRoom> {
+    const project: Result<'api::v2-project.v2-project'> | null =
+      await this._database.getProjectOfRoom(room);
     return {
       id: room.documentId,
-      title: room.title,
-      editUrl: this._getRoomEditUrl(room),
-      template: room.template
-        ? this.createSchemaRoomTemplate(room.template)
-        : null,
+      title: room.title ?? '',
+      visibility: room.visibility ?? 'private',
+      canvases: await Promise.all(
+        (await this._database.getCanvasesOfRoom(room)).map(
+          async (
+            c: Result<'api::v2-canvas.v2-canvas'>,
+          ): Promise<SchemaCanvas> => {
+            return await this.createSchemaCanvasPreview(c);
+          },
+        ),
+      ),
+      projectTitle: project?.title ?? '',
     };
   }
 
-  public createSchemaRoomTemplate(
-    roomTemplate: GetTemplateDBDTO,
-  ): SchemaRoomTemplate {
-    return {
-      id: roomTemplate.documentId,
-      title: roomTemplate.title,
-      editUrl: this._getTemplateEditUrl(roomTemplate),
-    };
-  }
-
-  public createSchemaScenario(scenario: GetScenarioDBDTO): SchemaScenario {
+  public async createSchemaScenario(
+    scenario: Result<'api::v2-scenario.v2-scenario'>,
+  ): Promise<SchemaScenario> {
     return {
       id: scenario.documentId,
-      title: scenario.title,
-      queries: scenario.queries.map(
-        (q: GetScenarioQueryDBDTO): SchemaScenarioQuery => ({
-          query: q.query,
-          database: q.database
-            ? {
-                current: this.createSchemaDatabase(q.database),
-              }
-            : null,
-        }),
+      title: scenario.title ?? '',
+      queries: await Promise.all(
+        (await this._database.getQueriesOfScenario(scenario)).map(
+          async (
+            q: Result<'api::v2-query.v2-query'>,
+          ): Promise<SchemaScenarioQuery> => {
+            const database: Result<'api::v2-database-connection.v2-database-connection'> | null =
+              await this._database.getDatabaseConnectionOfQuery(q);
+            return {
+              query: q.query ?? '',
+              database: database
+                ? {
+                    current: this.createSchemaDatabase(database),
+                  }
+                : null,
+            };
+          },
+        ),
       ),
-      description: scenario.description,
-      coverUrl: scenario.cover
-        ? this._media.getPublicUrlOfMedia(scenario.cover)
-        : null,
-      editUrl: this._getScenarioEditUrl(scenario),
-      parameters: scenario.parameters.map(
-        (parameter: GetScenarioParameterDBDTO): SchemaScenarioParameter =>
+      description: scenario.description ?? '',
+      parameters: (await this._database.getParametersOfScenario(scenario)).map(
+        (
+          parameter: Result<'api::v2-query-parameter.v2-query-parameter'>,
+        ): SchemaScenarioParameter =>
           this.createSchemaScenarioParameter(parameter),
       ),
-      additive: scenario.additive,
     };
   }
 
   public createSchemaScenarioParameter(
-    scenarioParameter: GetScenarioParameterDBDTO,
+    scenarioParameter: Result<'api::v2-query-parameter.v2-query-parameter'>,
   ): SchemaScenarioParameter {
     return {
-      identifier: scenarioParameter.identifier,
-      title: scenarioParameter.title,
-      defaultValue: scenarioParameter.defaultValue,
-      dataType: scenarioParameter.dataType,
+      identifier: scenarioParameter.identifier ?? '',
+      title: scenarioParameter.title ?? '',
+      defaultValue: scenarioParameter.defaultValue ?? '',
+      dataType: scenarioParameter.dataType ?? 'string',
     };
   }
 
-  public createSchemaScenarioGroup(
-    scenarioGroup: GetScenarioGroupDBDTO,
-    scenarios: SchemaScenario[],
-  ): SchemaScenarioGroup {
+  public async createSchemaScenarioGroup(
+    scenarioGroup: Result<'api::v2-scenario-group.v2-scenario-group'>,
+  ): Promise<SchemaScenarioGroup> {
     return {
       id: scenarioGroup.documentId,
-      title: scenarioGroup.title,
-      editUrl: this._getScenarioGroupEditUrl(scenarioGroup),
-      scenarios: scenarios,
+      title: scenarioGroup.title ?? '',
+      scenarios: await Promise.all(
+        (await this._database.getScenariosOfGroup(scenarioGroup)).map(
+          async (
+            scenario: Result<'api::v2-scenario.v2-scenario'>,
+          ): Promise<SchemaScenario> => {
+            return await this.createSchemaScenario(scenario);
+          },
+        ),
+      ),
     };
   }
 
   public async createSchemaGraph(
     graph: MutableGraph,
-    notes: GetNotesDBDTO,
-    config: FinalGraphDisplayConfiguration,
+    notes: IndexedNoteCollection,
     undoWrapperInfo: UndoWrapperInfo | null,
   ): Promise<SchemaGraph> {
     const t: ProfilerTask = this._profiler.profile(this, 'createSchemaGraph');
     const schemaGraph: SchemaGraph = {
-      elements: await this.createSchemaGraphElements(graph, notes, config),
+      elements: await this.createSchemaGraphElements(graph, notes),
       metaData: await this.createSchemaGraphMetaData(graph, undoWrapperInfo),
       table: this.createSchemaTable(graph.tableData),
     };
@@ -175,17 +173,12 @@ export class SchemaFactoryService implements ApplicationService {
 
   public async createSchemaGraphElements(
     graph: MutableGraph,
-    notes: GetNotesDBDTO,
-    config: FinalGraphDisplayConfiguration,
+    notes: IndexedNoteCollection,
   ): Promise<SchemaGraphElements> {
     const t: ProfilerTask = this._profiler.profile(
       this,
       'createSchemaGraphElements',
     );
-    const degreeRange: Range | null = config.growNodesBasedOnDegree
-      ? graph.nodes.getNodeDegreeRange(graph)
-      : null;
-    const widthRange: Range | null = graph.edges.getEdgeDegreeRange();
     const databaseCache: DatabaseReferenceCache = new DatabaseReferenceCache(
       this._database,
     );
@@ -193,25 +186,11 @@ export class SchemaFactoryService implements ApplicationService {
     const result: SchemaGraphElements = {
       nodes: await graph.nodes.nodes.asyncFlatMap(
         async (node: MutableNode): Promise<SchemaNode> =>
-          await this._createSchemaNode(
-            node,
-            graph,
-            config,
-            degreeRange,
-            notes,
-            databaseCache,
-          ),
+          await this._createSchemaNode(node, graph, notes, databaseCache),
       ),
       edges: await graph.edges.edges.asyncFlatMap(
         async (edge: MutableEdge): Promise<SchemaEdge> =>
-          await this._createSchemaEdge(
-            edge,
-            graph,
-            config,
-            widthRange,
-            notes,
-            databaseCache,
-          ),
+          await this._createSchemaEdge(edge, graph, notes, databaseCache),
       ),
       labels: await graph.metaData
         .getLabels(graph.nodes)
@@ -222,13 +201,15 @@ export class SchemaFactoryService implements ApplicationService {
           ): Promise<SchemaGraphLabel> =>
             await this._createSchemaGraphLabel(id, label, databaseCache),
         ),
-      histogram: this._createSchemaHistogram(graph, config, notes),
-      notes: notes.notes
-        .toArray()
-        .map(
-          (note: GetNoteDBDTO): SchemaNote =>
-            this._createSchemaNote(note, graph, config, notes),
-        ),
+      histogram: this._createSchemaHistogram(graph, notes),
+      notes: await Promise.all(
+        notes.notes
+          .toArray()
+          .map(
+            async (note: Result<'api::v2-note.v2-note'>): Promise<SchemaNote> =>
+              await this._createSchemaNote(note, graph),
+          ),
+      ),
     };
     t.finish();
     return result;
@@ -257,13 +238,13 @@ export class SchemaFactoryService implements ApplicationService {
       'createSchemaGraphMetaData',
     );
     const metaData: MutableGraphMetaData = graph.metaData;
-    const scenario: GetScenarioDBDTO | null =
+    const scenario: Result<'api::v2-scenario.v2-scenario'> | null =
       metaData.scenarioId != null
         ? await this._database.getScenario(metaData.scenarioId)
         : null;
     const result: SchemaGraphMetaData = {
       scenario: scenario
-        ? { current: this.createSchemaScenario(scenario) }
+        ? { current: await this.createSchemaScenario(scenario) }
         : null,
       pipelineSummary: metaData.pipelineSummary.map(
         (entry: [string, number]): { step: string; durationMs: number } => {
@@ -291,39 +272,6 @@ export class SchemaFactoryService implements ApplicationService {
     return result;
   }
 
-  public async createSchemaProjectPreview(
-    project: Result<'api::v2-project.v2-project'>,
-    currentUser: Result<'plugin::users-permissions.user'>,
-  ): Promise<SchemaProjectPreview> {
-    const owner: Result<'plugin::users-permissions.user'> | null =
-      await this._database.getOwnerOfProject(project);
-    const collaborators: Result<'plugin::users-permissions.user'>[] =
-      await this._database.getCollaboratorsOfProject(project);
-    const databaseConnections: Result<'api::v2-database-connection.v2-database-connection'>[] =
-      await this._database.getDatabaseConnectionsOfProject(project);
-
-    return {
-      id: project.documentId,
-      title: project.title ?? '',
-      owner: owner
-        ? {
-            current: this.createSchemaUserPreview(owner),
-          }
-        : null,
-      collaborators: collaborators.map(
-        (
-          collaborator: Result<'plugin::users-permissions.user'>,
-        ): SchemaUserPreview => this.createSchemaUserPreview(collaborator),
-      ),
-      databases: databaseConnections.map(
-        (
-          database: Result<'api::v2-database-connection.v2-database-connection'>,
-        ): SchemaDatabaseConnectionPreview =>
-          this.createwSchemaDatabaseConnectionPreview(database),
-      ),
-    };
-  }
-
   public async createSchemaProject(
     project: Result<'api::v2-project.v2-project'>,
   ): Promise<SchemaProject> {
@@ -347,109 +295,58 @@ export class SchemaFactoryService implements ApplicationService {
           }
         : null,
       collaborators: collaborators.map(
-        (
-          collaborator: Result<'plugin::users-permissions.user'>,
-        ): SchemaUserPreview => this.createSchemaUserPreview(collaborator),
+        (collaborator: Result<'plugin::users-permissions.user'>): SchemaUser =>
+          this.createSchemaUserPreview(collaborator),
       ),
       databases: databaseConnections.map(
         (
           database: Result<'api::v2-database-connection.v2-database-connection'>,
-        ): SchemaDatabaseConnectionPreview =>
-          this.createwSchemaDatabaseConnectionPreview(database),
+        ): SchemaDatabaseConnection => this.createSchemaDatabase(database),
       ),
       scenarioGroups: await Promise.all(
         scenarioGroups.map(
           async (
             sg: Result<'api::v2-scenario-group.v2-scenario-group'>,
-          ): Promise<SchemaScenarioGroupPreview> =>
-            await this.createSchemaScenarioGroupPreview(sg),
+          ): Promise<SchemaScenarioGroup> =>
+            await this.createSchemaScenarioGroup(sg),
         ),
       ),
       rooms: await Promise.all(
         rooms.map(
-          async (
-            room: Result<'api::v2-room.v2-room'>,
-          ): Promise<SchemaRoomPreview> =>
-            await this.createSchemaRoomPreview(room),
+          async (room: Result<'api::v2-room.v2-room'>): Promise<SchemaRoom> =>
+            await this.createSchemaRoom(room),
         ),
       ),
     };
   }
 
-  public async createSchemaRoomPreview(
-    room: Result<'api::v2-room.v2-room'>,
-  ): Promise<SchemaRoomPreview> {
-    const canvases: Result<'api::v2-canvas.v2-canvas'>[] =
-      await this._database.getCanvasesOfRoom(room);
-    return {
-      id: room.documentId,
-      title: room.title ?? '',
-      visibility: room.visibility ?? 'private',
-      canvases: canvases.map(
-        (c: Result<'api::v2-canvas.v2-canvas'>): SchemaCanvasPreview =>
-          this.createSchemaCanvasPreview(c),
-      ),
-    };
-  }
-
-  public createSchemaCanvasPreview(
+  public async createSchemaCanvasPreview(
     canvas: Result<'api::v2-canvas.v2-canvas'>,
-  ): SchemaCanvasPreview {
+  ): Promise<SchemaCanvas> {
+    const room: Result<'api::v2-room.v2-room'> | null =
+      await this._database.getRoomOfCanvas(canvas);
+    if (room == null) {
+      throw new Error('Room not found.');
+    }
     return {
       id: canvas.documentId,
       title: canvas.title ?? '',
-    };
-  }
-
-  public async createSchemaScenarioGroupPreview(
-    scenarioGroup: Result<'api::v2-scenario-group.v2-scenario-group'>,
-  ): Promise<SchemaScenarioGroupPreview> {
-    const scenarios: Result<'api::v2-scenario.v2-scenario'>[] =
-      await this._database.getScenariosOfScenarioGroup(scenarioGroup);
-
-    return {
-      id: scenarioGroup.documentId,
-      title: scenarioGroup.title ?? '',
-      scenarios: scenarios.map(
-        (s: Result<'api::v2-scenario.v2-scenario'>): SchemaScenarioPreview =>
-          this.createSchemaScenarioPreview(s),
-      ),
-    };
-  }
-
-  public createSchemaScenarioPreview(
-    scenario: Result<'api::v2-scenario.v2-scenario'>,
-  ): SchemaScenarioPreview {
-    return {
-      id: scenario.documentId,
-      title: scenario.title ?? '',
+      roomId: room.documentId,
     };
   }
 
   public createSchemaUserPreview(
     user: Result<'plugin::users-permissions.user'>,
-  ): SchemaUserPreview {
+  ): SchemaUser {
     return {
       id: user.documentId,
       displayName: user.username ?? user.email ?? user.documentId,
     };
   }
 
-  public createwSchemaDatabaseConnectionPreview(
-    databaseConnection: Result<'api::v2-database-connection.v2-database-connection'>,
-  ): SchemaDatabaseConnectionPreview {
-    return {
-      id: databaseConnection.documentId,
-      title: databaseConnection.title ?? '',
-      connectionUrl: databaseConnection.connectionUrl ?? '',
-      browserUrl: databaseConnection.browserUrl ?? '',
-    };
-  }
-
   private _createSchemaHistogram(
     graph: MutableGraph,
-    config: FinalGraphDisplayConfiguration,
-    notes: GetNotesDBDTO,
+    notes: IndexedNoteCollection,
   ): SchemaHistogram {
     const t: ProfilerTask = this._profiler.profile(
       this,
@@ -595,19 +492,13 @@ export class SchemaFactoryService implements ApplicationService {
       nodes: graph.nodes.nodes
         .toArray()
         .map((node: MutableNode): NodeHistogramEntry => {
-          const customColor: MutableGraphColor | null = node.customColor(
-            graph,
-            config,
-            notes,
-          );
           return {
             id: node.id,
-            title: node.title(graph, config),
+            title: node.id, // TODO
             labels: node.labels.toArray(),
             degree: node.degree(graph),
             percentage: degreeCount > 0 ? node.degree(graph) / degreeCount : 0,
-            customColor:
-              customColor != null ? { color: customColor.toDto() } : null,
+            customColor: null, // TODO
           };
         })
         .sort((a: NodeHistogramEntry, b: NodeHistogramEntry): number => {
@@ -625,9 +516,7 @@ export class SchemaFactoryService implements ApplicationService {
   private async _createSchemaNode(
     node: MutableNode,
     graph: MutableGraph,
-    config: FinalGraphDisplayConfiguration,
-    range: Range | null,
-    notes: GetNotesDBDTO,
+    notes: IndexedNoteCollection,
     databaseCache: DatabaseReferenceCache,
   ): Promise<SchemaNode> {
     const incomingEdges: MutableEdge[] = graph.edges.getByEndNodeId(node.id);
@@ -653,25 +542,20 @@ export class SchemaFactoryService implements ApplicationService {
     });
     const sort = (a: SchemaEdgePreview, b: SchemaEdgePreview): number =>
       b.count - a.count;
-    const customColor: MutableGraphColor | null = node.customColor(
-      graph,
-      config,
-      notes,
-    );
 
     return {
       id: node.id,
-      title: node.title(graph, config),
+      title: node.id, // TODO
       labels: node.labels.toArray(),
       nativeLabels: node.nativeLabels.toArray(),
       properties: this._createSchemaGraphProperties(node.properties),
-      radius: node.radius(graph, config, range),
+      radius: MutableNode.defaultRadius, // TODO
       position: node.position,
       inDegree: node.inDegree(graph),
       outDegree: node.outDegree(graph),
       degree: node.degree(graph),
       namesInQuery: node.namesInQuery.toArray(),
-      customColor: customColor != null ? { color: customColor.toDto() } : null,
+      customColor: null, // TODO
       source:
         (await databaseCache.getDatabase(node.source))?.title ?? node.source,
       locked: node.locked,
@@ -688,29 +572,25 @@ export class SchemaFactoryService implements ApplicationService {
         .map(createEdgePreview)
         .sort(sort),
       creationReason: node.creationAction,
-      notes: (notes.byNodeId.get(node.id) ?? new SSet())
-        .toArray()
-        .map(
-          (note: GetNoteDBDTO): SchemaNote =>
-            this._createSchemaNote(note, graph, config, notes),
-        ),
+      notes: await Promise.all(
+        (notes.byNodeId.get(node.id) ?? new SSet())
+          .toArray()
+          .map(
+            async (note: Result<'api::v2-note.v2-note'>): Promise<SchemaNote> =>
+              await this._createSchemaNote(note, graph),
+          ),
+      ),
     };
   }
 
   private async _createSchemaEdge(
     edge: MutableEdge,
     graph: MutableGraph,
-    config: FinalGraphDisplayConfiguration,
-    range: Range | null,
-    notes: GetNotesDBDTO,
+    notes: IndexedNoteCollection,
     databaseCcache: DatabaseReferenceCache,
   ): Promise<SchemaEdge> {
     const sourceNode: MutableNode | null = graph.nodes.get(edge.startNodeId);
     const targetNode: MutableNode | null = graph.nodes.get(edge.endNodeId);
-    const sourceNodeColor: SchemaColor | null =
-      sourceNode?.customColor(graph, config, notes)?.toDto() ?? null;
-    const targetNodeColor: SchemaColor | null =
-      targetNode?.customColor(graph, config, notes)?.toDto() ?? null;
     return {
       id: edge.id,
       startNodeId: edge.startNodeId,
@@ -720,7 +600,7 @@ export class SchemaFactoryService implements ApplicationService {
       parallelCount: edge.parallelCount(graph),
       parallelIndex: edge.parallelIndex(graph),
       isCluster: edge.isCluster,
-      width: edge.getWidth(range, config),
+      width: MutableEdge.defaultWidth, // TODO
       properties: this._createSchemaGraphProperties(edge.properties),
       namesInQuery: edge.namesInQuery.toArray(),
       source:
@@ -728,17 +608,15 @@ export class SchemaFactoryService implements ApplicationService {
       clusterSize: edge.compressed.size,
       sourceNode: {
         id: sourceNode?.id ?? '',
-        title: sourceNode?.title(graph, config) ?? '',
+        title: sourceNode?.id ?? '', // TODO
         labels: sourceNode?.labels.toArray() ?? [],
-        customColor:
-          sourceNodeColor != null ? { color: sourceNodeColor } : null,
+        customColor: null, // TODO
       },
       targetNode: {
         id: targetNode?.id ?? '',
-        title: targetNode?.title(graph, config) ?? '',
+        title: targetNode?.id ?? '', // TODO
         labels: targetNode?.labels.toArray() ?? [],
-        customColor:
-          targetNodeColor != null ? { color: targetNodeColor } : null,
+        customColor: null, // TODO
       },
       creationReason: edge.creationAction,
     };
@@ -778,78 +656,35 @@ export class SchemaFactoryService implements ApplicationService {
     };
   }
 
-  private _createSchemaNote(
-    note: GetNoteDBDTO,
+  private async _createSchemaNote(
+    note: Result<'api::v2-note.v2-note'>,
     graph: MutableGraph,
-    config: FinalGraphDisplayConfiguration,
-    notes: GetNotesDBDTO,
-  ): SchemaNote {
-    const mutableColor: MutableGraphColor | null =
-      MutableGraphColorFactory.fromDB(note.color);
-    const color: SchemaColor | null = mutableColor?.toDto() ?? null;
+  ): Promise<SchemaNote> {
+    const nodes: Result<'api::v2-node-reference.v2-node-reference'>[] =
+      await this._database.getReferencedNodesOfNote(note);
+    const author: Result<'plugin::users-permissions.user'> | null =
+      await this._database.getAuthorOfNote(note);
     return {
-      id: note.id,
-      content: note.content,
-      dateTime: note.updatedAt?.toISOString() ?? note.createdAt.toISOString(),
-      author: note.author,
-      nodes: note.nodeIds
-        .map((nodeId: string): SchemaNodePreview => {
-          const node: MutableNode | null = graph.nodes.get(nodeId);
-          const customColor: SchemaColor | null =
-            node?.customColor(graph, config, notes)?.toDto() ?? null;
+      id: note.documentId,
+      content: note.content ?? '',
+      dateTime: note.updatedAt?.toString() ?? '',
+      author: author ? { current: this.createSchemaUserPreview(author) } : null,
+      nodes: nodes.map(
+        (
+          nodeReference: Result<'api::v2-node-reference.v2-node-reference'>,
+        ): SchemaNodePreview => {
+          const node: MutableNode | null = graph.nodes.get(
+            nodeReference.nodeId ?? '',
+          );
           return {
-            id: nodeId,
-            title: node?.title(graph, config) ?? nodeId,
+            id: nodeReference.nodeId ?? '',
+            title: nodeReference.nodeId ?? '', // TODO
             labels: node?.labels.toArray() ?? [],
-            customColor: customColor != null ? { color: customColor } : null,
+            customColor: null, // TODO
           };
-        })
-        .toArray(),
-      color: color ? { color: color } : null,
+        },
+      ),
+      color: null, // TODO
     };
-  }
-
-  private _getDatabaseEditUrl(database: GetDatabaseDBDTO): string {
-    const host: string | null = this._configService.publicURL ?? '';
-    const url: string = `${host}/admin/content-manager/collection-types/api::database.database/${database.documentId}`;
-    return url;
-  }
-
-  private _getScenarioGroupEditUrl(
-    scenarioGroup: GetScenarioGroupDBDTO,
-  ): string | null {
-    const host: string | null = this._configService.publicURL;
-    if (host == null) {
-      return null;
-    }
-    const url: string = `${host}/admin/content-manager/collection-types/api::scenario-group.scenario-group/${scenarioGroup.documentId}`;
-    return url;
-  }
-
-  private _getScenarioEditUrl(scenario: GetScenarioDBDTO): string | null {
-    const host: string | null = this._configService.publicURL;
-    if (host == null) {
-      return null;
-    }
-    const url: string = `${host}/admin/content-manager/collection-types/api::scenario.scenario/${scenario.documentId}`;
-    return url;
-  }
-
-  private _getRoomEditUrl(room: GetRoomDBDTO): string | null {
-    const host: string | null = this._configService.publicURL;
-    if (host == null) {
-      return null;
-    }
-    const url: string = `${host}/admin/content-manager/collection-types/api::room.room/${room.documentId}`;
-    return url;
-  }
-
-  private _getTemplateEditUrl(template: GetTemplateDBDTO): string | null {
-    const host: string | null = this._configService.publicURL;
-    if (host == null) {
-      return null;
-    }
-    const url: string = `${host}/admin/content-manager/collection-types/api::room-template.room-template/${template.documentId}`;
-    return url;
   }
 }

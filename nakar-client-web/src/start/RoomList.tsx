@@ -28,9 +28,7 @@ export function RoomList(props: {
         data={props.rooms ?? []}
         entityNamePlural={props.title ?? "Rooms"}
         collapsable={true}
-        filter={(exp, r) =>
-          (r.title ?? r.id).toLowerCase().includes(exp.toLowerCase())
-        }
+        filter={(exp, r) => r.title.toLowerCase().includes(exp.toLowerCase())}
         render={(list) => (
           <>
             {list.map((room: Room) => (

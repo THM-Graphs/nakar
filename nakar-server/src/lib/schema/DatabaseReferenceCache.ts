@@ -1,9 +1,12 @@
 import { SMap } from '../tools/Map';
-import type { GetDatabaseDBDTO } from '../database/dto/GetDatabaseDBDTO';
 import { DatabaseService } from '../database/DatabaseService';
+import { Result } from '@strapi/types/dist/modules/documents/result';
 
 export class DatabaseReferenceCache {
-  private readonly _databaseCache: SMap<string, GetDatabaseDBDTO>;
+  private readonly _databaseCache: SMap<
+    string,
+    Result<'api::v2-database-connection.v2-database-connection'>
+  >;
 
   public constructor(private readonly _database: DatabaseService) {
     this._databaseCache = new SMap();
@@ -11,14 +14,15 @@ export class DatabaseReferenceCache {
 
   public async getDatabase(
     databaseId: string,
-  ): Promise<GetDatabaseDBDTO | null> {
-    const foundDatabase: GetDatabaseDBDTO | undefined =
-      this._databaseCache.get(databaseId);
+  ): Promise<Result<'api::v2-database-connection.v2-database-connection'> | null> {
+    const foundDatabase:
+      | Result<'api::v2-database-connection.v2-database-connection'>
+      | undefined = this._databaseCache.get(databaseId);
     if (foundDatabase != null) {
       return foundDatabase;
     }
 
-    const db: GetDatabaseDBDTO | null =
+    const db: Result<'api::v2-database-connection.v2-database-connection'> | null =
       await this._database.getDatabase(databaseId);
     if (db == null) {
       return null;

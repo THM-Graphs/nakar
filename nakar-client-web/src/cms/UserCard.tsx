@@ -1,8 +1,8 @@
-import { ProjectRole, UserPreview } from "../../src-gen";
+import { ProjectRole, User } from "../../src-gen";
 import { RoleDisplay } from "./RoleDisplay.tsx";
 import { CMSCard } from "./CMSCard.tsx";
 
-export function UserCard(props: { user: UserPreview; role: ProjectRole }) {
+export function UserCard(props: { user: User; role: ProjectRole }) {
   return (
     <CMSCard
       width={300}

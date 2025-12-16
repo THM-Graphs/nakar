@@ -3,12 +3,12 @@ import { useBearStore } from "../../state/useBearStore.ts";
 import { AppContext } from "../../state/AppContext.ts";
 import { match } from "ts-pattern";
 import { D3Renderer } from "../d3/D3Renderer.ts";
-import { RoomContext } from "../../pages/Room.tsx";
+import { CanvasContext } from "../../pages/CanvasPage.tsx";
 import { CanvasContextMenu } from "./CanvasContextMenu.tsx";
 
 export function GraphRendererD3(props: {
   context: AppContext;
-  roomContext: RoomContext;
+  roomContext: CanvasContext;
 }) {
   const websocketsManager = props.context.webSocketsManager;
   const svgRef = createRef<SVGSVGElement>();

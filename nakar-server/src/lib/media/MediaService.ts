@@ -1,6 +1,5 @@
 import type { ApplicationService } from '../application/ApplicationService';
 import type { LoggerService } from '../logger/LoggerService';
-import type { GetMediaDBDTO } from '../database/dto/GetMediaDBDTO';
 import { FileStream } from '../fs/FileStream';
 import type { ConfigService } from '../config/ConfigService';
 import path from 'path';
@@ -8,6 +7,7 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import { v4 } from 'uuid';
 import sanitize from 'sanitize-filename';
+import { Result } from '@strapi/types/dist/modules/documents/result';
 
 export class MediaService implements ApplicationService {
   public constructor(
@@ -25,7 +25,7 @@ export class MediaService implements ApplicationService {
 
   public getFileStream(
     targetFileNameWithoutExtension: string,
-    media: GetMediaDBDTO,
+    media: Result<'plugin::upload.file'>,
   ): FileStream | null {
     if (media.hash == null) {
       this._logger.warn(this, `Hash of media ${media.documentId} is null.`);
@@ -46,7 +46,9 @@ export class MediaService implements ApplicationService {
     );
   }
 
-  public getPublicUrlOfMedia(media: GetMediaDBDTO): string | null {
+  public getPublicUrlOfMedia(
+    media: Result<'plugin::upload.file'>,
+  ): string | null {
     if (media.url == null) {
       return null;
     }
@@ -58,7 +60,7 @@ export class MediaService implements ApplicationService {
   }
 
   public async getStringPayloadOfMediaFile(
-    reference: GetMediaDBDTO | null,
+    reference: Result<'plugin::upload.file'> | null,
   ): Promise<string> {
     if (reference == null) {
       throw new Error('Cannot read stringpayload: No media reference given.');
@@ -79,12 +81,12 @@ export class MediaService implements ApplicationService {
   public async saveStringFile(
     payload: string,
     name: string | null,
-  ): Promise<GetMediaDBDTO> {
+  ): Promise<Result<'plugin::upload.file'>> {
     try {
       const filePath: string = path.join(os.tmpdir(), 'f.txt');
       await fs.writeFile(filePath, payload, { encoding: 'utf-8' });
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment,@typescript-eslint/no-unsafe-call
-      const result: GetMediaDBDTO[] = await strapi
+      const result: Result<'plugin::upload.file'>[] = await strapi
         .plugin('upload')
         .service('upload')
         ['upload']({
@@ -104,9 +106,11 @@ export class MediaService implements ApplicationService {
     }
   }
 
-  public async deleteFile(reference: GetMediaDBDTO): Promise<GetMediaDBDTO> {
+  public async deleteFile(
+    reference: Result<'plugin::upload.file'>,
+  ): Promise<Result<'plugin::upload.file'>> {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment,@typescript-eslint/no-unsafe-call
-    const result: GetMediaDBDTO[] = await strapi
+    const result: Result<'plugin::upload.file'>[] = await strapi
       .plugin('upload')
       .service('file')
       ['deleteByIds']([reference.id]);

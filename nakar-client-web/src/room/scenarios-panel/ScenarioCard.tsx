@@ -3,8 +3,6 @@ import { ScenarioIcon } from "./ScenarioIcon.tsx";
 import { QueryDisplay } from "./QueryDisplay.tsx";
 import { Scenario } from "../../../src-gen";
 import { ScenarioCardSection } from "./ScenarioCardSection.tsx";
-import { ActionNavbarButton } from "../actions/ActionNavbarButton.tsx";
-import { EditScenarioAction } from "../actions/EditScenarioAction.ts";
 
 export function ScenarioCard(props: {
   hidden?: boolean;
@@ -16,15 +14,6 @@ export function ScenarioCard(props: {
       className={"rounded-0 border-start-0 border-end-0 position-relative"}
       hidden={props.hidden}
     >
-      {props.scenario.editUrl && (
-        <ActionNavbarButton
-          action={EditScenarioAction.shared}
-          params={{ scenario: props.scenario }}
-          className={"align-self-end position-absolute"}
-          hideTitle={true}
-          tooltipPlacement={"bottom"}
-        ></ActionNavbarButton>
-      )}
       <Card.Body>
         <Stack gap={2}>
           <Stack className={""}>

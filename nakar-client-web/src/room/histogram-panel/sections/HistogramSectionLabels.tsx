@@ -1,5 +1,5 @@
 import { ValueDisplay } from "../ValueDisplay.tsx";
-import { RoomContext } from "../../../pages/Room.tsx";
+import { CanvasContext } from "../../../pages/CanvasPage.tsx";
 import { useBearStore } from "../../../state/useBearStore.ts";
 import { DynamicList } from "../../../shared/elements/DynamicList.tsx";
 import { labelActions } from "../../actions/groups/labelActions.ts";
@@ -7,7 +7,7 @@ import { getBackgroundColorOfLabel } from "../../color/getBackgroundColor.ts";
 import { useColorSchema } from "../../color/useColorSchema.ts";
 import { SelectAllNodesOfLabel } from "../../actions/SelectAllNodesOfLabel.ts";
 
-export function HistogramSectionLabels(props: { roomContext: RoomContext }) {
+export function HistogramSectionLabels(props: { roomContext: CanvasContext }) {
   const labels = useBearStore((s) => s.room.scenario.graph.elements.labels);
   const histogram = useBearStore(
     (s) => s.room.scenario.graph.elements.histogram,

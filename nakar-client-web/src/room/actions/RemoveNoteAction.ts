@@ -1,11 +1,11 @@
 import { deleteNote } from "../../../src-gen";
 import { Action } from "./Action.ts";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
-import { RoomContext } from "../../pages/Room.tsx";
+import { CanvasContext } from "../../pages/CanvasPage.tsx";
 
 export type RemoveNoteActionParams = {
   noteId: string;
-  roomContext: RoomContext;
+  roomContext: CanvasContext;
 };
 export class RemoveNoteAction extends Action<RemoveNoteActionParams> {
   public static shared: RemoveNoteAction = new RemoveNoteAction();
@@ -14,7 +14,7 @@ export class RemoveNoteAction extends Action<RemoveNoteActionParams> {
     await resultOrThrow(
       await deleteNote({
         path: {
-          id: input.roomContext.initialRoomData.id,
+          id: input.roomContext.initialCanvasData.id,
           noteId: input.noteId,
         },
       }),

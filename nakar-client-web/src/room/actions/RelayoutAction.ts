@@ -1,11 +1,11 @@
 import { Action } from "./Action.ts";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
-import { Node, postRoomActionRelayout } from "../../../src-gen";
-import { RoomContext } from "../../pages/Room.tsx";
+import { Node, postCanvasActionRelayout } from "../../../src-gen";
+import { CanvasContext } from "../../pages/CanvasPage.tsx";
 import { SelectedCanvasTab } from "../../state/SelectedCanvasTab.ts";
 
 export type RelayoutActionParams = {
-  roomContext: RoomContext;
+  roomContext: CanvasContext;
   nodes: Node[];
   selectedTab: SelectedCanvasTab;
 };
@@ -14,8 +14,8 @@ export class RelayoutAction extends Action<RelayoutActionParams> {
 
   protected async action(input: RelayoutActionParams): Promise<void> {
     resultOrThrow(
-      await postRoomActionRelayout({
-        path: { id: input.roomContext.initialRoomData.id },
+      await postCanvasActionRelayout({
+        path: { id: input.roomContext.initialCanvasData.id },
       }),
     );
   }

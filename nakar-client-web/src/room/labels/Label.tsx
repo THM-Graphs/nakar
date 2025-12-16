@@ -8,7 +8,7 @@ import { useColorSchema } from "../color/useColorSchema.ts";
 import { DropdownButton } from "../../shared/elements/DropdownButton.tsx";
 import { labelActions } from "../actions/groups/labelActions.ts";
 import { ActionDropdownItem } from "../actions/ActionDropdownItem.tsx";
-import { RoomContext } from "../../pages/Room.tsx";
+import { CanvasContext } from "../../pages/CanvasPage.tsx";
 
 export function Label(props: {
   label: string;
@@ -17,7 +17,7 @@ export function Label(props: {
   showSources: boolean;
   onClick?: () => void;
   className?: string;
-  roomContext: RoomContext;
+  roomContext: CanvasContext;
   hideLabelMenu?: boolean;
 }) {
   const labels = useBearStore((s) => s.room.scenario.graph.elements.labels);

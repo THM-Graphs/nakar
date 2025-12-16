@@ -3,19 +3,11 @@ import { MutablePropertyCollection } from './MutablePropertyCollection';
 import { z } from 'zod';
 import { SSet } from '../../tools/Set';
 import type { MutableEdge } from './MutableEdge';
-import type { FinalNodeDisplayConfiguration } from '../scenario-pipeline/display-configuration/FinalNodeDisplayConfiguration';
-import { NodeDisplayConfigurationContext } from '../scenario-pipeline/display-configuration/NodeDisplayConfigurationContext';
 import type { LoggerService } from '../../logger/LoggerService';
 import type { MutableGraph } from './MutableGraph';
 import { Color } from '../../tools/Color';
-import type { FinalGraphDisplayConfiguration } from '../scenario-pipeline/display-configuration/FinalGraphDisplayConfiguration';
 import { Range } from '../../tools/Range';
 import { MutableGraphElementCreationAction } from './MutableGraphElementCreationAction';
-import type { GetNotesDBDTO } from '../../database/dto/GetNotesDBDTO';
-import type { GetNoteDBDTO } from '../../database/dto/GetNoteDBDTO';
-import type { MutableGraphColor } from './MutableGraphColor';
-import { MutableGraphColorFactory } from './MutableGraphColorFactory';
-import { MutableGraphColorCustom } from './MutableGraphColorCustom';
 
 export class MutableNode {
   public static readonly defaultRadius: number = 40;
@@ -152,84 +144,6 @@ export class MutableNode {
     return outRelsCount;
   }
 
-  public displayConfiguration(
-    displayConfiguration: FinalGraphDisplayConfiguration,
-  ): FinalNodeDisplayConfiguration | null {
-    for (const label of this.labels) {
-      const foundNodeDisplayCOnfiguration:
-        | FinalNodeDisplayConfiguration
-        | undefined = displayConfiguration.nodeDisplayConfigurations.get(label);
-      if (foundNodeDisplayCOnfiguration != null) {
-        return foundNodeDisplayCOnfiguration;
-      }
-    }
-    return null;
-  }
-
-  public displayConfigurationContext(
-    graph: MutableGraph,
-  ): NodeDisplayConfigurationContext {
-    return NodeDisplayConfigurationContext.create(this, graph);
-  }
-
-  public customColor(
-    graph: MutableGraph,
-    config: FinalGraphDisplayConfiguration,
-    notes: GetNotesDBDTO,
-  ): MutableGraphColor | null {
-    // Try to get color config from first note
-    const firstNote: GetNoteDBDTO | null = this._firstNote(notes);
-    if (firstNote?.color != null) {
-      return MutableGraphColorFactory.fromDB(firstNote.color);
-    }
-
-    // Try get from custom graph display config
-    const customBg: string | null = this._customBackgroundColorFromConfig(
-      graph,
-      config,
-    );
-    const customTextColor: string | null = this._customTitleColorFromConfig(
-      graph,
-      config,
-    );
-    if (customBg != null || customTextColor != null) {
-      return new MutableGraphColorCustom({
-        backgroundColor: customBg ?? '#ffffff',
-        textColor: customTextColor ?? '#000000',
-      });
-    }
-
-    return null;
-  }
-
-  public title(
-    graph: MutableGraph,
-    config: FinalGraphDisplayConfiguration,
-  ): string {
-    return (
-      this._customTitle(graph, config) ??
-      this.properties.getStringValueOfProperty('label') ??
-      this.properties.getStringValueOfProperty('name') ??
-      this.properties.getStringValueOfProperty('title') ??
-      this.properties.getStringValueOfProperty('type') ??
-      this.properties.getStringValueOfProperty('id') ??
-      this.properties.getStringValueOfProperty('slug') ??
-      this.properties.firstStringValue() ??
-      this.labels.toArray().join(', ')
-    );
-  }
-
-  public radius(
-    graph: MutableGraph,
-    config: FinalGraphDisplayConfiguration,
-    degreeRange: Range | null,
-  ): number {
-    return (
-      (this._customRadius(graph, config) ?? MutableNode.defaultRadius) *
-      this._customRadiusFactor(graph, config, degreeRange)
-    );
-  }
-
   public copy(): MutableNode {
     return new MutableNode(
       {
@@ -247,140 +161,5 @@ export class MutableNode {
       },
       this._logger,
     );
-  }
-
-  private _customTitle(
-    graph: MutableGraph,
-    config: FinalGraphDisplayConfiguration,
-  ): string | null {
-    const nodeConfig: FinalNodeDisplayConfiguration | null =
-      this.displayConfiguration(config);
-    if (nodeConfig == null) {
-      return null;
-    }
-    if (nodeConfig.displayTextTemplate == null) {
-      return null;
-    }
-
-    const newValue: string = NodeDisplayConfigurationContext.create(
-      this,
-      graph,
-    ).applyToTemplate(nodeConfig.displayTextTemplate);
-    if (newValue.trim().length === 0) {
-      return null;
-    }
-
-    return newValue;
-  }
-
-  private _customRadius(
-    graph: MutableGraph,
-    config: FinalGraphDisplayConfiguration,
-  ): number | null {
-    const nodeConfig: FinalNodeDisplayConfiguration | null =
-      this.displayConfiguration(config);
-    if (nodeConfig == null) {
-      return null;
-    }
-    if (nodeConfig.radiusTemplate == null) {
-      return null;
-    }
-
-    const newValue: string = NodeDisplayConfigurationContext.create(
-      this,
-      graph,
-    ).applyToTemplate(nodeConfig.radiusTemplate);
-    if (newValue.trim().length === 0) {
-      return null;
-    }
-
-    const newRadius: number = parseFloat(newValue);
-    if (isNaN(newRadius)) {
-      this._logger.warn(
-        this,
-        `Unable to parse node radius config: "${newRadius.toString()}" for node ${this.id}`,
-      );
-      return null;
-    }
-
-    return newRadius;
-  }
-
-  private _customRadiusFactor(
-    graph: MutableGraph,
-    config: FinalGraphDisplayConfiguration,
-    degreeRange: Range | null,
-  ): number {
-    if (!config.growNodesBasedOnDegree) {
-      return 1;
-    }
-
-    if (config.growNodesBasedOnDegreeFactor < 1) {
-      return 1;
-    }
-
-    if (degreeRange == null) {
-      return 1;
-    }
-
-    const toRange: Range = new Range({
-      floor: 1,
-      ceiling: config.growNodesBasedOnDegreeFactor,
-    });
-
-    return degreeRange.scaleValue(
-      toRange,
-      this.degree(graph),
-      config.scaleType,
-    );
-  }
-
-  private _customBackgroundColorFromConfig(
-    graph: MutableGraph,
-    config: FinalGraphDisplayConfiguration,
-  ): string | null {
-    const nodeConfig: FinalNodeDisplayConfiguration | null =
-      this.displayConfiguration(config);
-    if (nodeConfig == null) {
-      return null;
-    }
-
-    if (nodeConfig.backgroundColorTemplate == null) {
-      return null;
-    }
-
-    const newValue: string = this.displayConfigurationContext(
-      graph,
-    ).applyToTemplate(nodeConfig.backgroundColorTemplate);
-
-    if (newValue.trim().length === 0) {
-      return null;
-    }
-    return newValue;
-  }
-
-  private _customTitleColorFromConfig(
-    graph: MutableGraph,
-    config: FinalGraphDisplayConfiguration,
-  ): string | null {
-    const backgroundColor: string | null =
-      this._customBackgroundColorFromConfig(graph, config);
-    if (backgroundColor == null) {
-      return null;
-    }
-    if (Color.isLightColor(backgroundColor)) {
-      return '#000000';
-    } else {
-      return '#ffffff';
-    }
-  }
-
-  private _firstNote(notes: GetNotesDBDTO): GetNoteDBDTO | null {
-    const allNotes: GetNoteDBDTO[] = (
-      notes.byNodeId.get(this.id) ?? new SSet<GetNoteDBDTO>()
-    ).toArray();
-    const firstNote: GetNoteDBDTO | null =
-      allNotes.length > 0 ? allNotes[0] : null;
-    return firstNote;
   }
 }

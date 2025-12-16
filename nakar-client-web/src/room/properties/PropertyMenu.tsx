@@ -1,6 +1,6 @@
 import { Dropdown, Stack } from "react-bootstrap";
 import { useBearStore } from "../../state/useBearStore.ts";
-import { RoomContext } from "../../pages/Room.tsx";
+import { CanvasContext } from "../../pages/CanvasPage.tsx";
 import { PropertyMenuScenarioGroupEntry } from "./PropertyMenuScenarioGroupEntry.tsx";
 import { useClipboard } from "../../shared/clipboard/useClipboard.ts";
 import { DropdownButton } from "../../shared/elements/DropdownButton.tsx";
@@ -8,7 +8,7 @@ import { DetailPaneAction } from "../inspector-panel/DetailPaneAction.ts";
 
 export function PropertyMenu(props: {
   value: unknown;
-  roomContext: RoomContext;
+  roomContext: CanvasContext;
   buttonSize?: "sm";
   customActions?: DetailPaneAction[];
 }) {

@@ -1,4 +1,4 @@
-import { ProjectPreview } from "../../src-gen";
+import { Project } from "../../src-gen";
 import { Stack } from "react-bootstrap";
 import { AppContext } from "../state/AppContext.ts";
 import { DynamicList } from "../shared/elements/DynamicList.tsx";
@@ -8,7 +8,7 @@ import { ProjectDisplay } from "./ProjectDisplay.tsx";
 
 export function ProjectList(props: {
   title?: string;
-  rooms: ProjectPreview[] | null;
+  rooms: Project[] | null;
   context: AppContext;
   className?: string;
   style?: CSSProperties;
@@ -30,7 +30,7 @@ export function ProjectList(props: {
         filter={(exp, r) => r.title.toLowerCase().includes(exp.toLowerCase())}
         render={(list) => (
           <>
-            {list.map((project: ProjectPreview) => (
+            {list.map((project: Project) => (
               <ProjectDisplay
                 key={project.id}
                 project={project}

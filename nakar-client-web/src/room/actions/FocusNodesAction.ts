@@ -1,4 +1,4 @@
-import { postRoomActionFocusNodes } from "../../../src-gen";
+import { postCanvasActionFocusNodes } from "../../../src-gen";
 import { Action } from "./Action.ts";
 import { match } from "ts-pattern";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
@@ -9,9 +9,9 @@ export class FocusNodesAction extends Action<NodesActionParams> {
 
   protected async action(input: NodesActionParams): Promise<void> {
     await resultOrThrow(
-      await postRoomActionFocusNodes({
+      await postCanvasActionFocusNodes({
         path: {
-          id: input.roomContext.initialRoomData.id,
+          id: input.roomContext.initialCanvasData.id,
         },
         body: { nodes: input.nodes.map((n) => n.id) },
       }),

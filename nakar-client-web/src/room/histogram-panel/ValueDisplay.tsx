@@ -2,7 +2,7 @@ import clsx from "clsx";
 import { Stack } from "react-bootstrap";
 import { NavbarButton } from "../../shared/elements/NavbarButton.tsx";
 import { PropertyMenu } from "../properties/PropertyMenu.tsx";
-import { RoomContext } from "../../pages/Room.tsx";
+import { CanvasContext } from "../../pages/CanvasPage.tsx";
 import { NodeLabelColors } from "../labels/NodeLabelColors.tsx";
 import { DetailPaneAction } from "../inspector-panel/DetailPaneAction.ts";
 
@@ -13,7 +13,7 @@ export function ValueDisplay(props: {
   percentage: number | null;
   nodeColors?: string[];
   onSelect?: () => void | Promise<void>;
-  roomContext: RoomContext;
+  roomContext: CanvasContext;
   customActions?: DetailPaneAction[];
 }) {
   return (

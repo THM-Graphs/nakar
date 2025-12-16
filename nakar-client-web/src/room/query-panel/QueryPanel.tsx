@@ -1,4 +1,4 @@
-import { RoomContext } from "../../pages/Room.tsx";
+import { CanvasContext } from "../../pages/CanvasPage.tsx";
 import { useBearStore } from "../../state/useBearStore.ts";
 import { Panel } from "../../shared/elements/Panel.tsx";
 import { Dropdown, Form, Spinner, Stack } from "react-bootstrap";
@@ -6,10 +6,10 @@ import { NavbarButton } from "../../shared/elements/NavbarButton.tsx";
 import { Collapsable } from "../../shared/elements/Collapsable.tsx";
 import { useEffect, useState } from "react";
 import {
-  Database,
+  DatabaseConnection,
   DatabaseStats,
   getDatabaseStats,
-  postRoomActionRunQuery,
+  postCanvasActionRunQuery,
 } from "../../../src-gen";
 import { Loadable } from "../../shared/data/Loadable.ts";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
@@ -21,7 +21,7 @@ import { DropdownButton } from "../../shared/elements/DropdownButton.tsx";
 import { DatabaseSelect } from "../database/DatabaseSelect.tsx";
 
 // TODO: Split into parts to prevent layout shift on login
-export function QueryPanel(props: { roomContext: RoomContext }) {
+export function QueryPanel(props: { roomContext: CanvasContext }) {
   const query = useBearStore((s) => s.room.panels.query);
   const leftPanel = useBearStore((s) => s.room.panels.left);
   const referencedDatabases = useBearStore(
@@ -35,7 +35,7 @@ export function QueryPanel(props: { roomContext: RoomContext }) {
   );
   const [replace, setReplace] = useState(false);
 
-  const referencedDatabase: Database | null =
+  const referencedDatabase: DatabaseConnection | null =
     referencedDatabases.find((d) => d.id === selectedDatabaseId) ?? null;
 
   const [stats, setStats] = useState<Loadable<DatabaseStats | null>>({
@@ -90,22 +90,11 @@ export function QueryPanel(props: { roomContext: RoomContext }) {
           ></DatabaseSelect>
           {referencedDatabase && (
             <>
-              {referencedDatabase.editUrl != null && (
+              {referencedDatabase.browserUrl.length > 0 && (
                 <NavbarButton
                   className={"flex-grow-1 border-bottom"}
                   onClick={() => {
-                    window.open(referencedDatabase.editUrl ?? undefined);
-                  }}
-                >
-                  <i className={"bi bi-pencil-fill"}></i>
-                  <span className={"ellipsis small"}>Edit</span>
-                </NavbarButton>
-              )}
-              {referencedDatabase.browserUrl != null && (
-                <NavbarButton
-                  className={"flex-grow-1 border-bottom"}
-                  onClick={() => {
-                    window.open(referencedDatabase.browserUrl ?? undefined);
+                    window.open(referencedDatabase.browserUrl);
                   }}
                 >
                   <i className={"bi bi-box-arrow-up-right"}></i>
@@ -179,8 +168,8 @@ export function QueryPanel(props: { roomContext: RoomContext }) {
                   className={"justify-content-end"}
                   onClick={async () => {
                     resultOrThrow(
-                      await postRoomActionRunQuery({
-                        path: { id: props.roomContext.initialRoomData.id },
+                      await postCanvasActionRunQuery({
+                        path: { id: props.roomContext.initialCanvasData.id },
                         body: {
                           databaseId: selectedDatabaseId ?? "",
                           query: query.queryText,

@@ -1,110 +1,83 @@
 import { HTTPTools } from '../HTTPTools';
 import { type Request, Router } from 'express';
-import type {
-  operations,
-  SchemaRoom,
-  SchemaRooms,
-} from '../../../../src-gen/schema';
-import { GetRoomDBDTO } from '../../database/dto/GetRoomDBDTO';
+import type { SchemaRoom, SchemaRooms } from '../../../../src-gen/schema';
 import { DatabaseService } from '../../database/DatabaseService';
-import type { GetTemplateDBDTO } from '../../database/dto/GetTemplateDBDTO';
 import { NotFound } from 'http-errors';
 import { ScenariosRouter } from './ScenariosRouter';
 import { GraphRouter } from './GraphRouter';
-import { RoomService } from '../../room/RoomService';
+import { CanvasService } from '../../room/CanvasService';
 import { LoggerService } from '../../logger/LoggerService';
 import { NotesRouter } from './NotesRouter';
 import { ActionsRouter } from './ActionsRouter';
 import { SchemaFactoryService } from '../../schema/SchemaFactoryService';
+import { Result } from '@strapi/types/dist/modules/documents/result';
 
 export class RoomRouter {
   private readonly _scenariosRouter: ScenariosRouter;
-  private readonly _graphRouter: GraphRouter;
-  private readonly _notesRouter: NotesRouter;
-  private readonly _actionsRouter: ActionsRouter;
 
   public constructor(
     private readonly _httpTools: HTTPTools,
     private readonly _databaseService: DatabaseService,
     private readonly _schemaFactory: SchemaFactoryService,
     logger: LoggerService,
-    roomService: RoomService,
+    roomService: CanvasService,
   ) {
     this._scenariosRouter = new ScenariosRouter(
       _httpTools,
       _databaseService,
       _schemaFactory,
     );
-    this._graphRouter = new GraphRouter(
-      _httpTools,
-      _databaseService,
-      _schemaFactory,
-    );
-    this._notesRouter = new NotesRouter(_httpTools, _databaseService, logger);
-    this._actionsRouter = new ActionsRouter(_httpTools, roomService);
   }
 
   public register(): Router {
     const router: Router = Router();
 
-    router.get(
-      '/',
-      this._httpTools.assertLoggedIn,
-      this._httpTools.handle(this._getRooms.bind(this)),
-    );
-    router.post('/', this._httpTools.handle(this._postRoom.bind(this)));
+    router.get('/', this._httpTools.handle(this._getRooms.bind(this)));
     router.use(
       '/:id',
       this._httpTools.handleMiddleware(this._assertRoom.bind(this)),
     );
     router.get('/:id', this._httpTools.handle(this._getRoom.bind(this)));
     router.use('/:id/scenarios', this._scenariosRouter.register());
-    router.use('/:id/graph', this._graphRouter.register());
-    router.use('/:id/note', this._notesRouter.register());
-    router.use('/:id/actions', this._actionsRouter.register());
 
     return router;
   }
 
   private async _assertRoom(req: Request): Promise<void> {
     const id: string = this._httpTools.getPathParameter(req, 'id');
-    const room: GetRoomDBDTO | null = await this._databaseService.getRoom(id);
+    const room: Result<'api::v2-room.v2-room'> | null =
+      await this._databaseService.getRoom(id);
     if (room == null) {
       throw new NotFound('Room not found.');
+    }
+    const project: Result<'api::v2-project.v2-project'> | null =
+      await this._databaseService.getProjectOfRoom(room);
+    if (project == null) {
+      throw new NotFound('Project not found.');
     }
     req.nakar = {
       ...req.nakar,
       room: room,
+      project: project,
     };
   }
 
   private async _getRooms(): Promise<SchemaRooms> {
-    const dbResult: GetRoomDBDTO[] = await this._databaseService.getRooms();
+    const dbResult: Result<'api::v2-room.v2-room'>[] =
+      await this._databaseService.getPublicRooms();
     return {
-      rooms: dbResult.map((room: GetRoomDBDTO): SchemaRoom => {
-        return this._schemaFactory.createSchemaRoom(room);
-      }),
+      rooms: await Promise.all(
+        dbResult.map(
+          async (room: Result<'api::v2-room.v2-room'>): Promise<SchemaRoom> => {
+            return await this._schemaFactory.createSchemaRoom(room);
+          },
+        ),
+      ),
     };
   }
 
-  private async _postRoom(req: Request): Promise<SchemaRoom> {
-    type Body =
-      operations['createRoom']['requestBody']['content']['application/json'];
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-    const body: Body = req.body as Body;
-    const template: GetTemplateDBDTO | null =
-      await this._databaseService.getRoomTemplate(body.templateId);
-    if (template == null) {
-      throw new NotFound(`Template ${body.templateId} not found.`);
-    }
-
-    const room: GetRoomDBDTO = await this._databaseService.createRoom(template);
-    const result: SchemaRoom = this._schemaFactory.createSchemaRoom(room);
-    return result;
-  }
-
-  private _getRoom(req: Request): SchemaRoom {
-    const dbResult: GetRoomDBDTO = req.nakar.room;
-    return this._schemaFactory.createSchemaRoom(dbResult);
+  private async _getRoom(req: Request): Promise<SchemaRoom> {
+    const dbResult: Result<'api::v2-room.v2-room'> = req.nakar.room;
+    return await this._schemaFactory.createSchemaRoom(dbResult);
   }
 }

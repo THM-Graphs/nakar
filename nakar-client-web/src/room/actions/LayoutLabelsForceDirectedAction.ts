@@ -1,7 +1,7 @@
 import { Action } from "./Action.ts";
 import { LabelActionParams } from "./LabelActionParams.ts";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
-import { postRoomActionLayoutLabel } from "../../../src-gen";
+import { postCanvasActionLayoutLabel } from "../../../src-gen";
 import { match } from "ts-pattern";
 
 export class LayoutLabelsForceDirectedAction extends Action<LabelActionParams> {
@@ -15,9 +15,9 @@ export class LayoutLabelsForceDirectedAction extends Action<LabelActionParams> {
     }
     const label = input.labels[0];
     resultOrThrow(
-      await postRoomActionLayoutLabel({
+      await postCanvasActionLayoutLabel({
         path: {
-          id: input.roomContext.initialRoomData.id,
+          id: input.roomContext.initialCanvasData.id,
         },
         body: {
           label: label,

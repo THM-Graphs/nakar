@@ -5,12 +5,12 @@ import { Alert, Stack } from "react-bootstrap";
 import { Loadable } from "../../shared/data/Loadable.ts";
 import { Node } from "../../../src-gen";
 import { DynamicList } from "../../shared/elements/DynamicList.tsx";
-import { RoomContext } from "../../pages/Room.tsx";
+import { CanvasContext } from "../../pages/CanvasPage.tsx";
 import { SearchResultEntry } from "./SearchResultEntry.tsx";
 
 export function SearchResultDisplay(props: {
   result: Loadable<Node[] | null>;
-  roomContext: RoomContext;
+  roomContext: CanvasContext;
   databaseId: string;
 }) {
   return (

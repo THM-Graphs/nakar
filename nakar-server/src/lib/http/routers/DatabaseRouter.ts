@@ -11,21 +11,17 @@ import type {
   SchemaDatabaseStats,
   SchemaGraph,
 } from '../../../../src-gen/schema';
-import { GetDatabaseDBDTO } from '../../database/dto/GetDatabaseDBDTO';
 import { NotFound } from 'http-errors';
 import { Neo4jDatabaseInfo } from '../../neo4j/Neo4jDatabaseInfo';
 import { Neo4jService } from '../../neo4j/Neo4jService';
-import { GetRoomDBDTO } from '../../database/dto/GetRoomDBDTO';
-import { GetScenarioDBDTO } from '../../database/dto/GetScenarioDBDTO';
-import { FinalGraphDisplayConfiguration } from '../../room/scenario-pipeline/display-configuration/FinalGraphDisplayConfiguration';
 import { Neo4jNode } from '../../neo4j/Neo4jNode';
 import { MutableGraph } from '../../room/graph/MutableGraph';
 import { MutableGraphElementCreationAction } from '../../room/graph/MutableGraphElementCreationAction';
 import { SSet } from '../../tools/Set';
-import { GetNoteDBDTO } from '../../database/dto/GetNoteDBDTO';
 import { SMap } from '../../tools/Map';
 import { Neo4jSearchCapabilities } from '../../neo4j/Neo4jSearchCapabilities';
 import { SchemaFactoryService } from '../../schema/SchemaFactoryService';
+import { Result } from '@strapi/types/dist/modules/documents/result';
 
 export class DatabaseRouter {
   public constructor(
@@ -61,7 +57,7 @@ export class DatabaseRouter {
 
   private async _assertDatabase(req: Request): Promise<void> {
     const databaseId: string = this._httpTools.getPathParameter(req, 'id');
-    const database: GetDatabaseDBDTO | null =
+    const database: Result<'api::v2-database-connection.v2-database-connection'> | null =
       await this._databaseService.getDatabase(databaseId);
     if (database == null) {
       throw new NotFound(`Database ${databaseId} not found.`);
@@ -73,7 +69,8 @@ export class DatabaseRouter {
   }
 
   private async _getStats(req: Request): Promise<SchemaDatabaseStats> {
-    const database: GetDatabaseDBDTO = req.nakar.database;
+    const database: Result<'api::v2-database-connection.v2-database-connection'> =
+      req.nakar.database;
     const credentials: Neo4jDatabaseInfo = Neo4jDatabaseInfo.parse(database);
     const stats: SchemaDatabaseStats = await this._neo4jService.getStats({
       credentials: credentials,
@@ -87,7 +84,8 @@ export class DatabaseRouter {
   ): Promise<
     operations['postDatabaseSearch']['responses']['200']['content']['application/json']
   > {
-    const database: GetDatabaseDBDTO = req.nakar.database;
+    const database: Result<'api::v2-database-connection.v2-database-connection'> =
+      req.nakar.database;
     const credentials: Neo4jDatabaseInfo = Neo4jDatabaseInfo.parse(database);
 
     type Body =
@@ -95,19 +93,6 @@ export class DatabaseRouter {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
     const body: Body = req.body as Body;
     const searchTerm: string = body.searchTerm;
-    const room: GetRoomDBDTO | null = await this._databaseService.getRoom(
-      body.roomId,
-    );
-    if (room == null) {
-      throw new NotFound('Room not found.');
-    }
-    const scenario: GetScenarioDBDTO | null =
-      await this._databaseService.getScenarioOfRoom(room);
-    const config: FinalGraphDisplayConfiguration =
-      await this._databaseService.getGraphDisplayConfiguration(
-        scenario?.documentId ?? null,
-        room.documentId,
-      );
 
     const result: Neo4jNode[] = await this._neo4jService.search({
       searchTerm: searchTerm,
@@ -119,18 +104,16 @@ export class DatabaseRouter {
       this._profiler,
     );
     for (const node of result) {
-      graph.nodes.addNeo4jNode(
-        node,
-        MutableGraphElementCreationAction.search,
-        config,
-      );
+      graph.nodes.addNeo4jNode(node, MutableGraphElementCreationAction.search);
     }
 
     const schemaGraph: SchemaGraph =
       await this._schemaFactory.createSchemaGraph(
         graph,
-        { notes: new SSet<GetNoteDBDTO>(), byNodeId: new SMap() },
-        config,
+        {
+          notes: new SSet<Result<'api::v2-note.v2-note'>>(),
+          byNodeId: new SMap(),
+        },
         null,
       );
 
@@ -144,7 +127,8 @@ export class DatabaseRouter {
   ): Promise<
     operations['getDatabaseSearchCapabilities']['responses']['200']['content']['application/json']
   > {
-    const database: GetDatabaseDBDTO = req.nakar.database;
+    const database: Result<'api::v2-database-connection.v2-database-connection'> =
+      req.nakar.database;
     const credentials: Neo4jDatabaseInfo = Neo4jDatabaseInfo.parse(database);
 
     const capabilities: Neo4jSearchCapabilities =

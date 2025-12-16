@@ -1,5 +1,5 @@
 import { Action } from "./Action.ts";
-import { postRoomActionExpandNodePreview } from "../../../src-gen";
+import { postCanvasActionExpandNodePreview } from "../../../src-gen";
 import { useBearStore } from "../../state/useBearStore.ts";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
 import { NodesActionParams } from "./NodesActionParams.ts";
@@ -14,9 +14,9 @@ export class ExpandNodePreviewAction extends Action<NodesActionParams> {
     const node = input.nodes[0];
     useBearStore.getState().room.scenario.expandNodePreview.open(null);
     const result = resultOrThrow(
-      await postRoomActionExpandNodePreview({
+      await postCanvasActionExpandNodePreview({
         path: {
-          id: input.roomContext.initialRoomData.id,
+          id: input.roomContext.initialCanvasData.id,
         },
         body: { nodeId: node.id },
       }),

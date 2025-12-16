@@ -20,14 +20,15 @@ export class HTTPTools {
     private readonly _database: DatabaseService,
   ) {}
 
-  public readonly assertLoggedIn: RequestHandler = async (
+  public readonly findUser: (req: Request) => Promise<void> = async (
     req: Request,
-    res: Response,
-    next: NextFunction,
   ): Promise<void> => {
+    req.nakar = {
+      ...req.nakar,
+    };
+
     const jwt: string | null = this.getJWT(req);
     if (jwt == null) {
-      this.handleHTTPError(res, new Unauthorized());
       return;
     }
     const result: undici.Response = await undici.fetch(
@@ -40,7 +41,6 @@ export class HTTPTools {
       },
     );
     if (!result.ok) {
-      this.handleHTTPError(res, new Unauthorized());
       return;
     }
     const userId: string =
@@ -52,15 +52,30 @@ export class HTTPTools {
       .findOne({ documentId: userId });
 
     if (user == null) {
-      this.handleHTTPError(res, new Unauthorized());
       return;
     }
 
     req.nakar = {
       ...req.nakar,
-      user: user,
+      possibleUser: user,
     };
-    next();
+  };
+
+  public readonly assertLoggedIn: RequestHandler = (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): void => {
+    if (req.nakar.possibleUser == null) {
+      this.handleHTTPError(res, new Unauthorized());
+      return;
+    } else {
+      req.nakar = {
+        ...req.nakar,
+        user: req.nakar.possibleUser,
+      };
+      next();
+    }
   };
 
   public handle<T>(

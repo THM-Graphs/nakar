@@ -4,6 +4,7 @@ import { Stack } from "react-bootstrap";
 import { NavbarButton } from "../shared/elements/NavbarButton.tsx";
 import { ScenarioIcon } from "../room/scenarios-panel/ScenarioIcon.tsx";
 import { ClipboardButton } from "../shared/elements/ClipboardButton.tsx";
+import { RoomVisibilityDisplay } from "../cms/RoomVisibilityDisplay.tsx";
 
 export function RoomDisplay(props: {
   room: Room;
@@ -23,24 +24,17 @@ export function RoomDisplay(props: {
         >
           <ScenarioIcon scenario={null} size={50}></ScenarioIcon>
           <Stack className={"flex-shrink-1 ms-2"}>
+            <span className={"text-break text-wrap text-muted"}>
+              {props.room.projectTitle}
+            </span>
             <span className={"text-break text-wrap"}>{props.room.title}</span>
-            {props.room.template && (
-              <span className={"text-muted small"}>
-                Template: {props.room.template.title ?? props.room.template.id}
-              </span>
-            )}
+            <span className={"text-break text-wrap text-muted"}>
+              <RoomVisibilityDisplay
+                visibility={props.room.visibility}
+              ></RoomVisibilityDisplay>
+            </span>
           </Stack>
         </NavbarButton>
-
-        {props.room.editUrl && (
-          <NavbarButton
-            icon={"pencil-fill"}
-            onClick={() => {
-              window.open(props.room.editUrl ?? undefined, "_blank");
-            }}
-            className={"flex-grow-0 flex-shrink-0"}
-          ></NavbarButton>
-        )}
 
         <ClipboardButton text={roomUrl}></ClipboardButton>
 
