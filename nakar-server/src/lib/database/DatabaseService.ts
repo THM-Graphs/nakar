@@ -195,7 +195,8 @@ export class DatabaseService implements ApplicationService {
       await strapi.documents('api::v2-room.v2-room').findMany({
         status: 'published',
         sort: 'title:asc',
-        filter: {
+        filters: {
+          // TODO ???
           visibility: {
             $eq: 'public',
           },
