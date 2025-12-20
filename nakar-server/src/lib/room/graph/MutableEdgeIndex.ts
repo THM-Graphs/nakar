@@ -234,9 +234,9 @@ export class MutableEdgeIndex {
     return result;
   }
 
-  public getEdgeDegreeRange(): Range | null {
+  public getEdgeDegreeRange(): Range {
     if (this.edges.size === 0) {
-      return null;
+      return Range.one();
     }
     const representationCounts: number[] = this.edges
       .map((edge: MutableEdge): number => edge.representationCount)

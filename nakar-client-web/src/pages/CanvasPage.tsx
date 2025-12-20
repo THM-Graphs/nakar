@@ -45,6 +45,8 @@ import { AuthButton } from "../shared/auth/AuthButton.tsx";
 import { SearchPanel } from "../room/search-panel/SearchPanel.tsx";
 import { SearchPanelButton } from "../room/search-panel/SearchPanelButton.tsx";
 import { Canvas } from "../room/canvas/Canvas.tsx";
+import { VisualizationPanelButton } from "../room/visualization-panel/VisualizationPanelButton.tsx";
+import { VisualizationPanel } from "../room/visualization-panel/VisualizationPanel.tsx";
 
 export type CanvasContext = {
   initialCanvasData: SchemaCanvas;
@@ -101,10 +103,21 @@ export function CanvasPage(props: { context: AppContext }) {
   );
   const pushNotification = useBearStore((s) => s.room.ui.pushNotification);
   const navigate = useNavigate();
+  const setVisualizationData = useBearStore(
+    (s) => s.room.panels.visualization.setData,
+  );
 
   useEffect(() => {
     setScenarios(roomContext.initialScenariosData);
     setGraph(roomContext.initialGraphData);
+    setVisualizationData({
+      compressRelationshipsWidthFactor:
+        roomContext.initialCanvasData.compressRelationshipsWidthFactor,
+      growNodesBasedOnDegree:
+        roomContext.initialCanvasData.growNodesBasedOnDegree,
+      growNodesBasedOnDegreeFactor:
+        roomContext.initialCanvasData.growNodesBasedOnDegreeFactor,
+    });
   }, [roomContext]);
 
   useEffect(() => {
@@ -228,9 +241,11 @@ export function CanvasPage(props: { context: AppContext }) {
               roomContext={roomContext}
             ></InspectorPanel>
             <HistogramPanel roomContext={roomContext}></HistogramPanel>
+            <VisualizationPanel roomContext={roomContext}></VisualizationPanel>
             <Stack className={"flex-grow-0 bg-body-tertiary border-start z-1"}>
               <InspectorPanelButton></InspectorPanelButton>
               <HistogramPanelButton></HistogramPanelButton>
+              <VisualizationPanelButton></VisualizationPanelButton>
             </Stack>
             <ToastStack></ToastStack>
             <RunScenarioModal roomContext={roomContext}></RunScenarioModal>

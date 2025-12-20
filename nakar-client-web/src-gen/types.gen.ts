@@ -4,6 +4,9 @@ export type Canvas = {
     id: string;
     title: string;
     roomId: string;
+    compressRelationshipsWidthFactor: number;
+    growNodesBasedOnDegree: boolean;
+    growNodesBasedOnDegreeFactor: number;
 };
 
 export type Color = PresetColor | CustomColor;
@@ -487,13 +490,40 @@ export type GetProjectsResponse = (Projects);
 
 export type GetProjectsError = unknown;
 
+export type GetProjectData = {
+    path: {
+        id: string;
+    };
+};
+
 export type GetProjectResponse = (Project);
 
 export type GetProjectError = unknown;
 
+export type GetCanvasData = {
+    path: {
+        id: string;
+    };
+};
+
 export type GetCanvasResponse = (Canvas);
 
 export type GetCanvasError = unknown;
+
+export type SetCanvasDataData = {
+    body: {
+        compressRelationshipsWidthFactor: (number) | null;
+        growNodesBasedOnDegree: (boolean) | null;
+        growNodesBasedOnDegreeFactor: (number) | null;
+    };
+    path: {
+        id: string;
+    };
+};
+
+export type SetCanvasDataResponse = (unknown);
+
+export type SetCanvasDataError = unknown;
 
 export type GetRoomsResponse = (Rooms);
 
@@ -857,7 +887,7 @@ export type PostDatabaseSearchData = {
 };
 
 export type PostDatabaseSearchResponse = ({
-    nodes: Array<Node>;
+    nodes: Array<NodePreview>;
 });
 
 export type PostDatabaseSearchError = unknown;

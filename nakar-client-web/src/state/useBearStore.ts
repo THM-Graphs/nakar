@@ -576,6 +576,52 @@ export const useBearStore = create<BearState>()(
                     });
                   },
                 },
+                visualization: {
+                  show: () => {
+                    set((s) => {
+                      s.room.panels.right = "visualization";
+                    });
+                  },
+                  hide: () => {
+                    set((s) => {
+                      s.room.panels.right = null;
+                    });
+                  },
+                  setData: (newValue: {
+                    compressRelationshipsWidthFactor: number;
+                    growNodesBasedOnDegree: boolean;
+                    growNodesBasedOnDegreeFactor: number;
+                  }) => {
+                    set((s) => {
+                      s.room.panels.visualization.data = newValue;
+                    });
+                  },
+                  setCompressRelationshipsWidthFactor: (newValue: number) => {
+                    set((s) => {
+                      if (s.room.panels.visualization.data != null) {
+                        s.room.panels.visualization.data.compressRelationshipsWidthFactor =
+                          newValue;
+                      }
+                    });
+                  },
+                  setGrowNodesBasedOnDegree: (newValue: boolean) => {
+                    set((s) => {
+                      if (s.room.panels.visualization.data != null) {
+                        s.room.panels.visualization.data.growNodesBasedOnDegree =
+                          newValue;
+                      }
+                    });
+                  },
+                  setGrowNodesBasedOnDegreeFactor: (newValue: number) => {
+                    set((s) => {
+                      if (s.room.panels.visualization.data != null) {
+                        s.room.panels.visualization.data.growNodesBasedOnDegreeFactor =
+                          newValue;
+                      }
+                    });
+                  },
+                  data: null,
+                },
               },
               canvas: {
                 tabs: {
@@ -649,9 +695,10 @@ export const useBearStore = create<BearState>()(
             .with("search", () => "search")
             .otherwise(() => null);
           state.room.panels.right = match(storage.rightPanel)
-            .returnType<"histogram" | "inspector" | null>()
+            .returnType<"histogram" | "inspector" | "visualization" | null>()
             .with("histogram", () => "histogram")
             .with("inspector", () => "inspector")
+            .with("visualization", () => "visualization")
             .otherwise(() => null);
           state.room.canvas.colorSchemaSlug =
             storage.colorSchema ?? ColorSchema.default().slug;

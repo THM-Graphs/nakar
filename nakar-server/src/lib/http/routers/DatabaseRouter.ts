@@ -10,6 +10,7 @@ import type {
   SchemaDatabaseSearchCapabilitiesEntry,
   SchemaDatabaseStats,
   SchemaGraph,
+  SchemaNodePreview,
 } from '../../../../src-gen/schema';
 import { NotFound } from 'http-errors';
 import { Neo4jDatabaseInfo } from '../../neo4j/Neo4jDatabaseInfo';
@@ -22,6 +23,7 @@ import { SMap } from '../../tools/Map';
 import { Neo4jSearchCapabilities } from '../../neo4j/Neo4jSearchCapabilities';
 import { SchemaFactoryService } from '../../schema/SchemaFactoryService';
 import { Result } from '@strapi/types/dist/modules/documents/result';
+import { MutableNode } from '../../room/graph/MutableNode';
 
 export class DatabaseRouter {
   public constructor(
@@ -107,18 +109,17 @@ export class DatabaseRouter {
       graph.nodes.addNeo4jNode(node, MutableGraphElementCreationAction.search);
     }
 
-    const schemaGraph: SchemaGraph =
-      await this._schemaFactory.createSchemaGraph(
-        graph,
-        {
-          notes: new SSet<Result<'api::v2-note.v2-note'>>(),
-          byNodeId: new SMap(),
-        },
-        null,
-      );
-
     return {
-      nodes: schemaGraph.elements.nodes,
+      nodes: graph.nodes.nodes
+        .toArray()
+        .map((node: MutableNode): SchemaNodePreview => {
+          return {
+            id: node.id,
+            title: node.getTitle(),
+            labels: node.labels.toArray(),
+            customColor: null, // TODO
+          } satisfies SchemaNodePreview;
+        }),
     };
   }
 

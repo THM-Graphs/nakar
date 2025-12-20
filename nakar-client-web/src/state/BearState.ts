@@ -138,7 +138,7 @@ export interface BearState {
     };
     panels: {
       left: "scenarios" | "query" | "notes" | "search" | null;
-      right: "histogram" | "inspector" | null;
+      right: "histogram" | "inspector" | "visualization" | null;
       inspector: {
         show: () => void;
         hide: () => void;
@@ -186,6 +186,23 @@ export interface BearState {
         show: () => void;
         hide: () => void;
         setSearchTerm: (queryText: string) => void;
+      };
+      visualization: {
+        show: () => void;
+        hide: () => void;
+        setCompressRelationshipsWidthFactor: (newValue: number) => void;
+        setGrowNodesBasedOnDegree: (newValue: boolean) => void;
+        setGrowNodesBasedOnDegreeFactor: (newValue: number) => void;
+        setData: (newValue: {
+          compressRelationshipsWidthFactor: number;
+          growNodesBasedOnDegree: boolean;
+          growNodesBasedOnDegreeFactor: number;
+        }) => void;
+        data: {
+          compressRelationshipsWidthFactor: number;
+          growNodesBasedOnDegree: boolean;
+          growNodesBasedOnDegreeFactor: number;
+        } | null;
       };
     };
     canvas: {

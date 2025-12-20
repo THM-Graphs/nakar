@@ -202,13 +202,13 @@ export class MutableNodeIndex {
     );
   }
 
-  public getNodeDegreeRange(graph: MutableGraph): Range | null {
+  public getNodeDegreeRange(graph: MutableGraph): Range {
     const degrees: number[] = this.nodes
       .map((node: MutableNode): number => node.degree(graph))
       .toArray();
 
     if (degrees.length === 0) {
-      return null;
+      return Range.one();
     }
 
     const range: Range = new Range({

@@ -24,16 +24,20 @@ export class Range {
     return Math.max(min, Math.min(max, value));
   }
 
+  public static one(): Range {
+    return new Range({ floor: 1, ceiling: 1 });
+  }
+
   public scaleValue(to: Range, value: number, scaleType: ScaleType): number {
     const scaler = (i: number): number => {
       if (i === 0) {
         return 0;
       }
       return match(scaleType)
-        .with(ScaleType.linear, (): number => i)
-        .with(ScaleType.logN, (): number => Math.log(i))
-        .with(ScaleType.log2, (): number => Math.log2(i))
-        .with(ScaleType.log10, (): number => Math.log10(i))
+        .with('linear', (): number => i)
+        .with('logn', (): number => Math.log(i))
+        .with('log2', (): number => Math.log2(i))
+        .with('log10', (): number => Math.log10(i))
         .exhaustive();
     };
 

@@ -92,6 +92,12 @@ paths:
       tags:
         - Project
       operationId: getProject
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
       responses:
         "200":
           description: "OK"
@@ -105,6 +111,12 @@ paths:
       tags:
         - Canvas
       operationId: getCanvas
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
       responses:
         "200":
           description: "OK"
@@ -112,6 +124,39 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Canvas"
+    put:
+      tags:
+        - Canvas
+      operationId: setCanvasData
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "OK"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                compressRelationshipsWidthFactor:
+                  type: number
+                  nullable: true
+                growNodesBasedOnDegree:
+                  type: boolean
+                  nullable: true
+                growNodesBasedOnDegreeFactor:
+                  type: number
+                  nullable: true
+              required:
+                - compressRelationshipsWidthFactor
+                - growNodesBasedOnDegree
+                - growNodesBasedOnDegreeFactor
 
   /room:
     get:
@@ -852,7 +897,7 @@ paths:
                   nodes:
                     type: array
                     items:
-                      $ref: "#/components/schemas/Node"
+                      $ref: "#/components/schemas/NodePreview"
                 required:
                   - nodes
 
@@ -1861,10 +1906,19 @@ components:
           type: string
         roomId:
           type: string
+        compressRelationshipsWidthFactor:
+          type: number
+        growNodesBasedOnDegree:
+          type: boolean
+        growNodesBasedOnDegreeFactor:
+          type: number
       required:
         - id
         - title
         - roomId
+        - compressRelationshipsWidthFactor
+        - growNodesBasedOnDegree
+        - growNodesBasedOnDegreeFactor
 
     WSClientToServerMessage:
       oneOf:

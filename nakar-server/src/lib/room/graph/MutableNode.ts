@@ -6,9 +6,14 @@ import type { MutableEdge } from './MutableEdge';
 import type { LoggerService } from '../../logger/LoggerService';
 import type { MutableGraph } from './MutableGraph';
 import { MutableGraphElementCreationAction } from './MutableGraphElementCreationAction';
+import { Range } from '../../tools/Range';
+import { Result } from '@strapi/types/dist/modules/documents/result';
+import { ScaleType } from '../../tools/ScaleType';
 
 export class MutableNode {
   public static readonly defaultRadius: number = 40;
+  public static readonly defaultGrowNodesBasedOnDegreeFactor: number = 2;
+  public static readonly defaultScaleType: ScaleType = 'linear';
 
   // eslint-disable-next-line @typescript-eslint/typedef
   public static readonly schema = z.object({
@@ -107,8 +112,32 @@ export class MutableNode {
     );
   }
 
-  public getRadius(): number {
-    return MutableNode.defaultRadius; // TODO
+  public getRadius(
+    canvas: Result<'api::v2-canvas.v2-canvas'>,
+    degreeRange: Range,
+    graph: MutableGraph,
+  ): number {
+    if (
+      canvas.growNodesBasedOnDegree == null ||
+      !canvas.growNodesBasedOnDegree
+    ) {
+      return MutableNode.defaultRadius;
+    }
+
+    const toRange: Range = new Range({
+      floor: 1,
+      ceiling:
+        canvas.growNodesBasedOnDegreeFactor ??
+        MutableNode.defaultGrowNodesBasedOnDegreeFactor,
+    });
+
+    return (
+      degreeRange.scaleValue(
+        toRange,
+        this.degree(graph),
+        canvas.scaleType ?? MutableNode.defaultScaleType,
+      ) * MutableNode.defaultRadius
+    );
   }
 
   public toPlain(): z.infer<typeof MutableNode.schema> {

@@ -8,6 +8,8 @@ import { LoggerService } from '../logger/LoggerService';
 import { WTAction } from '../room-worker/worker-events/WTAction';
 import { Observable, Subject } from 'rxjs';
 import type { WTPhysicalNode } from '../room-worker/worker-events/WTPhysicalNode';
+import { Result } from '@strapi/types/dist/modules/documents/result';
+import { DatabaseService } from '../database/DatabaseService';
 
 export class PhysicsWorker {
   private _worker: Worker | null;
@@ -16,6 +18,7 @@ export class PhysicsWorker {
   public constructor(
     private readonly _canvasId: string,
     private readonly _logger: LoggerService,
+    private readonly _database: DatabaseService,
   ) {
     this._worker = null;
     this._onWTEvent = new Subject();
@@ -26,7 +29,9 @@ export class PhysicsWorker {
   }
 
   public async bootstrap(graph: MutableGraph): Promise<void> {
-    const physicalGraph: PhysicalGraph = graph.toPhysicalGraph();
+    const physicalGraph: PhysicalGraph = graph.toPhysicalGraph(
+      await this._getCanvas(),
+    );
     const workerData: RoomWorkerData = {
       canvasId: this._canvasId,
       graph: physicalGraph,
@@ -125,5 +130,14 @@ export class PhysicsWorker {
       return;
     }
     worker.postMessage(action);
+  }
+
+  private async _getCanvas(): Promise<Result<'api::v2-canvas.v2-canvas'>> {
+    const canvas: Result<'api::v2-canvas.v2-canvas'> | null =
+      await this._database.getCanvas(this._canvasId);
+    if (canvas == null) {
+      throw new Error('Canvas not found.');
+    }
+    return canvas;
   }
 }

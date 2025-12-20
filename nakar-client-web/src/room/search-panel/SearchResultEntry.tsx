@@ -1,5 +1,5 @@
 import { Stack } from "react-bootstrap";
-import { Node } from "../../../src-gen";
+import { NodePreview } from "../../../src-gen";
 import { Label } from "../labels/Label.tsx";
 import { CanvasContext } from "../../pages/CanvasPage.tsx";
 import { ClipboardButton } from "../../shared/elements/ClipboardButton.tsx";
@@ -7,7 +7,7 @@ import { ActionNavbarButton } from "../actions/ActionNavbarButton.tsx";
 import { SpawnNodeAction } from "../actions/SpawnNodeAction.ts";
 
 export function SearchResultEntry(props: {
-  node: Node;
+  node: NodePreview;
   roomContext: CanvasContext;
   databaseId: string;
 }) {

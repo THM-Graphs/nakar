@@ -18,6 +18,9 @@ export class DatabaseService implements ApplicationService {
     Result<'api::v2-canvas.v2-canvas'>
   >;
   private readonly _onNoteChanges: Subject<{ projectId: string }>;
+  private readonly _onVisualizationSettingsChanged: Subject<{
+    canvas: Result<'api::v2-canvas.v2-canvas'>;
+  }>;
 
   public constructor(
     private readonly _logger: LoggerService,
@@ -27,6 +30,7 @@ export class DatabaseService implements ApplicationService {
     this._onCanvasAdded = new Subject();
     this._onCanvasDeleted = new Subject();
     this._onNoteChanges = new Subject();
+    this._onVisualizationSettingsChanged = new Subject();
   }
 
   public get onCanvasAdded$(): Observable<Result<'api::v2-canvas.v2-canvas'>> {
@@ -41,6 +45,12 @@ export class DatabaseService implements ApplicationService {
 
   public get onNoteChanges$(): Observable<{ projectId: string }> {
     return this._onNoteChanges.asObservable();
+  }
+
+  public get onVisualizationSettingsChanged$(): Observable<{
+    canvas: Result<'api::v2-canvas.v2-canvas'>;
+  }> {
+    return this._onVisualizationSettingsChanged.asObservable();
   }
 
   public bootstrap(): void {
@@ -891,6 +901,63 @@ export class DatabaseService implements ApplicationService {
           })
       )?.rightDatabase ?? null
     );
+  }
+
+  public async setCanvasCompressRelationshipsWidthFactor(
+    canvas: Result<'api::v2-canvas.v2-canvas'>,
+    compressRelationshipsWidthFactor: number,
+  ): Promise<void> {
+    const updatedCanvas: Result<'api::v2-canvas.v2-canvas'> | null =
+      await strapi.documents('api::v2-canvas.v2-canvas').update({
+        documentId: canvas.documentId,
+        data: {
+          compressRelationshipsWidthFactor: compressRelationshipsWidthFactor,
+        },
+        status: 'published',
+      });
+    if (updatedCanvas) {
+      this._onVisualizationSettingsChanged.next({ canvas: updatedCanvas });
+    } else {
+      throw new Error('Canvas not found.');
+    }
+  }
+
+  public async setGrowNodesBasedOnDegree(
+    canvas: Result<'api::v2-canvas.v2-canvas'>,
+    growNodesBasedOnDegree: boolean,
+  ): Promise<void> {
+    const updatedCanvas: Result<'api::v2-canvas.v2-canvas'> | null =
+      await strapi.documents('api::v2-canvas.v2-canvas').update({
+        documentId: canvas.documentId,
+        data: {
+          growNodesBasedOnDegree: growNodesBasedOnDegree,
+        },
+        status: 'published',
+      });
+    if (updatedCanvas) {
+      this._onVisualizationSettingsChanged.next({ canvas: updatedCanvas });
+    } else {
+      throw new Error('Canvas not found.');
+    }
+  }
+
+  public async setGrowNodesBasedOnDegreeFactor(
+    canvas: Result<'api::v2-canvas.v2-canvas'>,
+    growNodesBasedOnDegreeFactor: number,
+  ): Promise<void> {
+    const updatedCanvas: Result<'api::v2-canvas.v2-canvas'> | null =
+      await strapi.documents('api::v2-canvas.v2-canvas').update({
+        documentId: canvas.documentId,
+        data: {
+          growNodesBasedOnDegreeFactor: growNodesBasedOnDegreeFactor,
+        },
+        status: 'published',
+      });
+    if (updatedCanvas) {
+      this._onVisualizationSettingsChanged.next({ canvas: updatedCanvas });
+    } else {
+      throw new Error('Canvas not found.');
+    }
   }
 
   private _sortByTitle(

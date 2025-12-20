@@ -57,6 +57,12 @@ export function MenuBar(props: {
   const hideInspector = useBearStore((s) => s.room.panels.inspector.hide);
   const showHistogram = useBearStore((s) => s.room.panels.histogram.show);
   const hideHistogram = useBearStore((s) => s.room.panels.histogram.hide);
+  const showVisualization = useBearStore(
+    (s) => s.room.panels.visualization.show,
+  );
+  const hideVisualization = useBearStore(
+    (s) => s.room.panels.visualization.hide,
+  );
   const selectedEdges = elements.reduce<Edge[]>((akku, next) => {
     const foundEdge = graphElements.edges.find((e) => e.id === next);
     if (foundEdge) {
@@ -329,6 +335,19 @@ export function MenuBar(props: {
           }}
         >
           <i className={"bi bi-bar-chart me-1"}></i> Histogram
+        </Dropdown.Item>
+        <Dropdown.Item
+          className={"small"}
+          active={rightPanel === "visualization"}
+          onClick={() => {
+            if (rightPanel == "visualization") {
+              hideVisualization();
+            } else {
+              showVisualization();
+            }
+          }}
+        >
+          <i className={"bi bi-eye me-1"}></i> Visualization
         </Dropdown.Item>
         <Dropdown.Divider></Dropdown.Divider>
         <Dropdown.Header className={"small"}>Canvas Tabs</Dropdown.Header>

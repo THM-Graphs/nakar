@@ -60,7 +60,7 @@ export interface paths {
             readonly cookie?: never;
         };
         readonly get: operations["getCanvas"];
-        readonly put?: never;
+        readonly put: operations["setCanvasData"];
         readonly post?: never;
         readonly delete?: never;
         readonly options?: never;
@@ -920,6 +920,9 @@ export interface components {
             readonly id: string;
             readonly title: string;
             readonly roomId: string;
+            readonly compressRelationshipsWidthFactor: number;
+            readonly growNodesBasedOnDegree: boolean;
+            readonly growNodesBasedOnDegreeFactor: number;
         };
         readonly WSClientToServerMessage: components["schemas"]["WSActionJoinCanvas"] | components["schemas"]["WSActionLeaveCanvas"] | components["schemas"]["WSActionGrabNode"] | components["schemas"]["WSActionMoveNodes"] | components["schemas"]["WSActionUngrabNode"];
         readonly WSServerToClientMessage: components["schemas"]["WSEventNodesMoved"] | components["schemas"]["WSEventCanvasChanged"] | components["schemas"]["WSEventNotification"] | components["schemas"]["WSEventGraphElementsChanged"] | components["schemas"]["WSEventGraphMetaDataChanged"] | components["schemas"]["WSEventGraphTableChanged"] | components["schemas"]["WSEventProgress"] | components["schemas"]["WSEventClearProgress"] | components["schemas"]["WSEventSetNodeLocks"] | components["schemas"]["WSEventKick"];
@@ -1149,7 +1152,9 @@ export interface operations {
         readonly parameters: {
             readonly query?: never;
             readonly header?: never;
-            readonly path?: never;
+            readonly path: {
+                readonly id: string;
+            };
             readonly cookie?: never;
         };
         readonly requestBody?: never;
@@ -1169,7 +1174,9 @@ export interface operations {
         readonly parameters: {
             readonly query?: never;
             readonly header?: never;
-            readonly path?: never;
+            readonly path: {
+                readonly id: string;
+            };
             readonly cookie?: never;
         };
         readonly requestBody?: never;
@@ -1182,6 +1189,34 @@ export interface operations {
                 content: {
                     readonly "application/json": components["schemas"]["Canvas"];
                 };
+            };
+        };
+    };
+    readonly setCanvasData: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path: {
+                readonly id: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": {
+                    readonly compressRelationshipsWidthFactor: number | null;
+                    readonly growNodesBasedOnDegree: boolean | null;
+                    readonly growNodesBasedOnDegreeFactor: number | null;
+                };
+            };
+        };
+        readonly responses: {
+            /** @description OK */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -1922,7 +1957,7 @@ export interface operations {
                 };
                 content: {
                     readonly "application/json": {
-                        readonly nodes: readonly components["schemas"]["Node"][];
+                        readonly nodes: readonly components["schemas"]["NodePreview"][];
                     };
                 };
             };

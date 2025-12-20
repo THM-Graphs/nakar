@@ -74,7 +74,7 @@ export class LiveCanvas implements ApplicationService {
     );
     this._onEvent = new Subject();
     this._subscriptions = new SSet();
-    this._physicsWorker = new PhysicsWorker(_canvasId, _logger);
+    this._physicsWorker = new PhysicsWorker(_canvasId, _logger, _database);
     this._queue = new TaskQueue(this._logger);
     this._state = new BehaviorSubject<LiveCanvasState>(LiveCanvasState.created);
     this._stateSubscription = this._state.subscribe(
@@ -105,9 +105,9 @@ export class LiveCanvas implements ApplicationService {
 
   public async bootstrap(): Promise<void> {
     this._state.next(LiveCanvasState.starting);
-    const graph: MutableGraph = await this._loadGraph();
-    this._graph.reset(graph);
-    await this._physicsWorker.bootstrap(graph);
+    const initialGraph: MutableGraph = await this._loadGraph();
+    this._graph.reset(initialGraph);
+    await this._physicsWorker.bootstrap(initialGraph);
     this._subscriptions.add(
       this._physicsWorker.onWTEvent$.subscribe((message: WTEvent): void => {
         match(message)
@@ -147,6 +147,31 @@ export class LiveCanvas implements ApplicationService {
       this._queue.onError$.subscribe((error: unknown): void => {
         this._handleError(error);
       }),
+    );
+    this._subscriptions.add(
+      this._database.onVisualizationSettingsChanged$.subscribe(
+        (params: { canvas: Result<'api::v2-canvas.v2-canvas'> }): void => {
+          if (params.canvas.documentId !== this._canvasId) {
+            return;
+          }
+          (async (): Promise<void> => {
+            const graph: MutableGraph = this.getGraph();
+            this._onEvent.next({
+              type: 'CanvasEventGraphElementsChanged',
+              graph: graph,
+              canvasId: this.canvasId,
+              nodesAdded: 0,
+              edgesAdded: 0,
+            } satisfies CanvasEventGraphElementsChanged);
+            this._physicsWorker.setGraph(
+              graph.toPhysicalGraph(await this._getCanvas()),
+            );
+            this._physicsWorker.triggerPhysics({ amount: 'short' });
+          })().catch((error: unknown): void => {
+            this._logger.error(this, error);
+          });
+        },
+      ),
     );
     this._state.next(LiveCanvasState.started);
   }
@@ -485,7 +510,9 @@ export class LiveCanvas implements ApplicationService {
           table: newGraph.tableData,
           canvasId: this.canvasId,
         } satisfies CanvasEventGraphTableChanged);
-        this._physicsWorker.setGraph(newGraph.toPhysicalGraph());
+        this._physicsWorker.setGraph(
+          newGraph.toPhysicalGraph(await this._getCanvas()),
+        );
         this._physicsWorker.triggerPhysics({ amount: 'long' });
 
         await this.saveGraph();
@@ -589,7 +616,9 @@ export class LiveCanvas implements ApplicationService {
           },
         );
 
-        this._physicsWorker.setGraph(newGraph.toPhysicalGraph());
+        this._physicsWorker.setGraph(
+          newGraph.toPhysicalGraph(await this._getCanvas()),
+        );
         this._physicsWorker.triggerPhysics({
           amount: 'short',
         });
@@ -642,7 +671,7 @@ export class LiveCanvas implements ApplicationService {
 
   public focusNodes(params: { nodeIds: readonly string[] }): void {
     this._queue.addTask(
-      new TaskQueueTask('Focus nodes', (): void => {
+      new TaskQueueTask('Focus nodes', async (): Promise<void> => {
         const result: ExpandNodesResult = {
           nodesAddedCount: 0,
           edgeAddedCount: 0,
@@ -662,7 +691,9 @@ export class LiveCanvas implements ApplicationService {
         });
 
         const graph: MutableGraph = this.getGraph();
-        this._physicsWorker.setGraph(graph.toPhysicalGraph());
+        this._physicsWorker.setGraph(
+          graph.toPhysicalGraph(await this._getCanvas()),
+        );
         this._onEvent.next({
           type: 'CanvasEventGraphElementsChanged',
           graph: graph,
@@ -742,7 +773,9 @@ export class LiveCanvas implements ApplicationService {
           },
         );
 
-        this._physicsWorker.setGraph(newGraph.toPhysicalGraph());
+        this._physicsWorker.setGraph(
+          newGraph.toPhysicalGraph(await this._getCanvas()),
+        );
         this._physicsWorker.triggerPhysics({
           amount: 'short',
         });
@@ -770,7 +803,9 @@ export class LiveCanvas implements ApplicationService {
         const graph: MutableGraph = this.getGraph();
 
         await this.saveGraph();
-        this._physicsWorker.setGraph(graph.toPhysicalGraph());
+        this._physicsWorker.setGraph(
+          graph.toPhysicalGraph(await this._getCanvas()),
+        );
         this._onEvent.next({
           type: 'CanvasEventGraphMetaDataChanged',
           graph: graph,
@@ -800,7 +835,9 @@ export class LiveCanvas implements ApplicationService {
         const graph: MutableGraph = this.getGraph();
 
         await this.saveGraph();
-        this._physicsWorker.setGraph(graph.toPhysicalGraph());
+        this._physicsWorker.setGraph(
+          graph.toPhysicalGraph(await this._getCanvas()),
+        );
         this._onEvent.next({
           type: 'CanvasEventGraphMetaDataChanged',
           graph: graph,
@@ -880,7 +917,9 @@ export class LiveCanvas implements ApplicationService {
           },
         );
 
-        this._physicsWorker.setGraph(newGraph.toPhysicalGraph());
+        this._physicsWorker.setGraph(
+          newGraph.toPhysicalGraph(await this._getCanvas()),
+        );
         this._physicsWorker.triggerPhysics({
           amount: 'long',
         });
@@ -961,7 +1000,9 @@ export class LiveCanvas implements ApplicationService {
           },
         );
 
-        this._physicsWorker.setGraph(newGraph.toPhysicalGraph());
+        this._physicsWorker.setGraph(
+          newGraph.toPhysicalGraph(await this._getCanvas()),
+        );
         this._physicsWorker.triggerPhysics({
           amount: 'short',
         });
@@ -1050,7 +1091,9 @@ export class LiveCanvas implements ApplicationService {
           },
         );
 
-        this._physicsWorker.setGraph(newGraph.toPhysicalGraph());
+        this._physicsWorker.setGraph(
+          newGraph.toPhysicalGraph(await this._getCanvas()),
+        );
         this._physicsWorker.triggerPhysics({
           amount: 'short',
         });
@@ -1077,7 +1120,9 @@ export class LiveCanvas implements ApplicationService {
             },
           );
 
-          this._physicsWorker.setGraph(newGraph.toPhysicalGraph());
+          this._physicsWorker.setGraph(
+            newGraph.toPhysicalGraph(await this._getCanvas()),
+          );
           this._onEvent.next({
             type: 'CanvasEventGraphElementsChanged',
             graph: newGraph,
@@ -1100,7 +1145,9 @@ export class LiveCanvas implements ApplicationService {
           },
         );
 
-        this._physicsWorker.setGraph(newGraph.toPhysicalGraph());
+        this._physicsWorker.setGraph(
+          newGraph.toPhysicalGraph(await this._getCanvas()),
+        );
         this._physicsWorker.triggerPhysics({
           amount: 'short',
         });
@@ -1139,7 +1186,9 @@ export class LiveCanvas implements ApplicationService {
           locks: lockChanges,
         } satisfies CanvasEvent);
 
-        this._physicsWorker.setGraph(newGraph.toPhysicalGraph());
+        this._physicsWorker.setGraph(
+          newGraph.toPhysicalGraph(await this._getCanvas()),
+        );
         this._physicsWorker.triggerPhysics({
           amount: 'long',
         });
@@ -1246,7 +1295,9 @@ export class LiveCanvas implements ApplicationService {
           );
 
           this._postProcessGraph(newGraph);
-          this._physicsWorker.setGraph(newGraph.toPhysicalGraph());
+          this._physicsWorker.setGraph(
+            newGraph.toPhysicalGraph(await this._getCanvas()),
+          );
           this._physicsWorker.triggerPhysics({
             amount: 'long',
           });
@@ -1303,7 +1354,9 @@ export class LiveCanvas implements ApplicationService {
           },
         );
 
-        this._physicsWorker.setGraph(newGraph.toPhysicalGraph());
+        this._physicsWorker.setGraph(
+          newGraph.toPhysicalGraph(await this._getCanvas()),
+        );
         this._physicsWorker.triggerPhysics({
           amount: 'long',
         });
@@ -1768,5 +1821,14 @@ export class LiveCanvas implements ApplicationService {
       canvasId: this.canvasId,
       error: error,
     });
+  }
+
+  private async _getCanvas(): Promise<Result<'api::v2-canvas.v2-canvas'>> {
+    const canvas: Result<'api::v2-canvas.v2-canvas'> | null =
+      await this._database.getCanvas(this._canvasId);
+    if (canvas == null) {
+      throw new Error('Canvas not found.');
+    }
+    return canvas;
   }
 }

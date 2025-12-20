@@ -41,6 +41,7 @@ import { DatabaseReferenceCache } from './DatabaseReferenceCache';
 import { UndoWrapperInfo } from '../undo/UndoWrapperInfo';
 import { Result } from '@strapi/types/dist/modules/documents/result';
 import { IndexedNoteCollection } from '../database/IndexedNoteCollection';
+import { Range } from '../tools/Range';
 
 export class SchemaFactoryService implements ApplicationService {
   public constructor(
@@ -158,10 +159,11 @@ export class SchemaFactoryService implements ApplicationService {
     graph: MutableGraph,
     notes: IndexedNoteCollection,
     undoWrapperInfo: UndoWrapperInfo | null,
+    canvas: Result<'api::v2-canvas.v2-canvas'>,
   ): Promise<SchemaGraph> {
     const t: ProfilerTask = this._profiler.profile(this, 'createSchemaGraph');
     const schemaGraph: SchemaGraph = {
-      elements: await this.createSchemaGraphElements(graph, notes),
+      elements: await this.createSchemaGraphElements(graph, notes, canvas),
       metaData: await this.createSchemaGraphMetaData(graph, undoWrapperInfo),
       table: this.createSchemaTable(graph.tableData),
     };
@@ -172,6 +174,7 @@ export class SchemaFactoryService implements ApplicationService {
   public async createSchemaGraphElements(
     graph: MutableGraph,
     notes: IndexedNoteCollection,
+    canvas: Result<'api::v2-canvas.v2-canvas'>,
   ): Promise<SchemaGraphElements> {
     const t: ProfilerTask = this._profiler.profile(
       this,
@@ -180,15 +183,30 @@ export class SchemaFactoryService implements ApplicationService {
     const databaseCache: DatabaseReferenceCache = new DatabaseReferenceCache(
       this._database,
     );
+    const widthRange: Range = graph.edges.getEdgeDegreeRange();
+    const degreeRange: Range = graph.nodes.getNodeDegreeRange(graph);
 
     const result: SchemaGraphElements = {
       nodes: await graph.nodes.nodes.asyncFlatMap(
         async (node: MutableNode): Promise<SchemaNode> =>
-          await this._createSchemaNode(node, graph, notes, databaseCache),
+          await this._createSchemaNode(
+            node,
+            graph,
+            notes,
+            databaseCache,
+            canvas,
+            degreeRange,
+          ),
       ),
       edges: await graph.edges.edges.asyncFlatMap(
         async (edge: MutableEdge): Promise<SchemaEdge> =>
-          await this._createSchemaEdge(edge, graph, notes, databaseCache),
+          await this._createSchemaEdge(
+            edge,
+            graph,
+            databaseCache,
+            canvas,
+            widthRange,
+          ),
       ),
       labels: await graph.metaData
         .getLabels(graph.nodes)
@@ -330,6 +348,13 @@ export class SchemaFactoryService implements ApplicationService {
       id: canvas.documentId,
       title: canvas.title ?? '',
       roomId: room.documentId,
+      compressRelationshipsWidthFactor:
+        canvas.compressRelationshipsWidthFactor ??
+        MutableEdge.defaultCompressRelationshipsWidthFactor,
+      growNodesBasedOnDegree: canvas.growNodesBasedOnDegree ?? false,
+      growNodesBasedOnDegreeFactor:
+        canvas.growNodesBasedOnDegreeFactor ??
+        MutableNode.defaultGrowNodesBasedOnDegreeFactor,
     };
   }
 
@@ -516,6 +541,8 @@ export class SchemaFactoryService implements ApplicationService {
     graph: MutableGraph,
     notes: IndexedNoteCollection,
     databaseCache: DatabaseReferenceCache,
+    canvas: Result<'api::v2-canvas.v2-canvas'>,
+    degreeRange: Range,
   ): Promise<SchemaNode> {
     const incomingEdges: MutableEdge[] = graph.edges.getByEndNodeId(node.id);
     const outgoingEdges: MutableEdge[] = graph.edges.getByStartNodeId(node.id);
@@ -547,7 +574,7 @@ export class SchemaFactoryService implements ApplicationService {
       labels: node.labels.toArray(),
       nativeLabels: node.labels.toArray(),
       properties: this._createSchemaGraphProperties(node.properties),
-      radius: node.getRadius(),
+      radius: node.getRadius(canvas, degreeRange, graph),
       position: node.position,
       inDegree: node.inDegree(graph),
       outDegree: node.outDegree(graph),
@@ -584,8 +611,9 @@ export class SchemaFactoryService implements ApplicationService {
   private async _createSchemaEdge(
     edge: MutableEdge,
     graph: MutableGraph,
-    notes: IndexedNoteCollection,
     databaseCcache: DatabaseReferenceCache,
+    canvas: Result<'api::v2-canvas.v2-canvas'>,
+    edgeWidthRange: Range,
   ): Promise<SchemaEdge> {
     const sourceNode: MutableNode | null = graph.nodes.get(edge.startNodeId);
     const targetNode: MutableNode | null = graph.nodes.get(edge.endNodeId);
@@ -598,7 +626,7 @@ export class SchemaFactoryService implements ApplicationService {
       parallelCount: edge.parallelCount(graph),
       parallelIndex: edge.parallelIndex(graph),
       isCluster: edge.isCluster,
-      width: MutableEdge.defaultWidth, // TODO
+      width: edge.getWidth(edgeWidthRange, canvas),
       properties: this._createSchemaGraphProperties(edge.properties),
       namesInQuery: edge.namesInQuery.toArray(),
       source:

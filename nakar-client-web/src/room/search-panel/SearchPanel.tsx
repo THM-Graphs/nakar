@@ -2,7 +2,7 @@ import { Stack } from "react-bootstrap";
 import { Panel } from "../../shared/elements/Panel.tsx";
 import { useState } from "react";
 import { DatabaseSelect } from "../database/DatabaseSelect.tsx";
-import { Node, postDatabaseSearch } from "../../../src-gen";
+import { NodePreview, postDatabaseSearch } from "../../../src-gen";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
 import { Loadable } from "../../shared/data/Loadable.ts";
 import { handleError } from "../../shared/error/handleError.ts";
@@ -21,7 +21,7 @@ export function SearchPanel(props: { roomContext: CanvasContext }) {
   const leftPanel = useBearStore((s) => s.room.panels.left);
   const hide = useBearStore((s) => s.room.panels.search.hide);
 
-  const [result, setResult] = useState<Loadable<Node[] | null>>({
+  const [result, setResult] = useState<Loadable<NodePreview[] | null>>({
     type: "data",
     data: null,
   });

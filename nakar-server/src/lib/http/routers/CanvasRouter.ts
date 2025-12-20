@@ -7,7 +7,8 @@ import { Result } from '@strapi/types/dist/modules/documents/result';
 import { NotFound } from 'http-errors';
 import { ActionsRouter } from './ActionsRouter';
 import { CanvasService } from '../../room/CanvasService';
-import { SchemaCanvas } from '../../../../src-gen/schema';
+import { operations, SchemaCanvas } from '../../../../src-gen/schema';
+import { Range } from '../../tools/Range';
 
 export class CanvasRouter {
   private readonly _graphRouter: GraphRouter;
@@ -36,7 +37,8 @@ export class CanvasRouter {
     );
     router.use('/:id/graph', this._graphRouter.register());
     router.use('/:id/actions', this._actionsRouter.register());
-    router.use('/:id', this._httpTools.handle(this._getCanvas.bind(this)));
+    router.get('/:id', this._httpTools.handle(this._getCanvas.bind(this)));
+    router.put('/:id', this._httpTools.handle(this._updateCanvas.bind(this)));
 
     return router;
   }
@@ -71,5 +73,30 @@ export class CanvasRouter {
     return await this._schemaFactory.createSchemaCanvasPreview(
       req.nakar.canvas,
     );
+  }
+
+  private async _updateCanvas(req: Request): Promise<void> {
+    type Body =
+      operations['setCanvasData']['requestBody']['content']['application/json'];
+    const body: Body = req.body as Body;
+
+    if (body.compressRelationshipsWidthFactor != null) {
+      await this._databaseService.setCanvasCompressRelationshipsWidthFactor(
+        req.nakar.canvas,
+        Range.clamp(body.compressRelationshipsWidthFactor, 1, 1000),
+      );
+    }
+    if (body.growNodesBasedOnDegree != null) {
+      await this._databaseService.setGrowNodesBasedOnDegree(
+        req.nakar.canvas,
+        body.growNodesBasedOnDegree,
+      );
+    }
+    if (body.growNodesBasedOnDegreeFactor != null) {
+      await this._databaseService.setGrowNodesBasedOnDegreeFactor(
+        req.nakar.canvas,
+        body.growNodesBasedOnDegreeFactor,
+      );
+    }
   }
 }

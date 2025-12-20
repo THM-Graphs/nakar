@@ -52,6 +52,7 @@ export class GraphRouter {
       graph,
       notes,
       null,
+      req.nakar.canvas,
     );
     return result;
   }
@@ -66,7 +67,11 @@ export class GraphRouter {
     });
 
     const result: SchemaGraphElements =
-      await this._schemaFactory.createSchemaGraphElements(graph, notes);
+      await this._schemaFactory.createSchemaGraphElements(
+        graph,
+        notes,
+        req.nakar.canvas,
+      );
     return result;
   }
 

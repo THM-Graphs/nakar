@@ -413,6 +413,7 @@ export class SocketIOService implements ApplicationService {
                   await this._schemaFactory.createSchemaGraphElements(
                     message.graph,
                     notes,
+                    canvas,
                   );
                 this.sendToRoom(message.canvasId, {
                   elements: graphElements,
@@ -558,6 +559,7 @@ export class SocketIOService implements ApplicationService {
                 await this._schemaFactory.createSchemaGraphElements(
                   graph,
                   notes,
+                  canvas,
                 );
               this.sendToRoom(canvas.documentId, {
                 elements: graphElements,

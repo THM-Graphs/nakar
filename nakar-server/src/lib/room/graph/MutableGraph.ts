@@ -14,6 +14,7 @@ import { SSet } from '../../tools/Set';
 import type { ProfilerService } from '../../profiler/ProfilerService';
 import type { ProfilerTask } from '../../profiler/ProfilerTask';
 import { Result } from '@strapi/types/dist/modules/documents/result';
+import { Range } from '../../tools/Range';
 
 export class MutableGraph {
   // eslint-disable-next-line @typescript-eslint/typedef
@@ -178,16 +179,19 @@ export class MutableGraph {
     return edgesRemoved;
   }
 
-  public toPhysicalGraph(): PhysicalGraph {
+  public toPhysicalGraph(
+    canvas: Result<'api::v2-canvas.v2-canvas'>,
+  ): PhysicalGraph {
     const task: ProfilerTask = this._profiler.profile(this, 'toPhysicalGraph');
 
     const nodes: Record<string, PhysicalNode> = {};
     const edges: Record<string, PhysicalEdge> = {};
+    const degreeRange: Range = this.nodes.getNodeDegreeRange(this);
 
     for (const node of this.nodes.nodes) {
       nodes[node.id] = {
         id: node.id,
-        radius: node.getRadius(),
+        radius: node.getRadius(canvas, degreeRange, this),
         position: { x: node.position.x, y: node.position.y },
         locked: node.locked,
         velocityX: 0,
