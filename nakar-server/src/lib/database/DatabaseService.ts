@@ -268,7 +268,11 @@ export class DatabaseService implements ApplicationService {
       throw new Error(`Scenario group ${scenarioGroup.documentId} not found.`);
     }
 
-    return populatedScenarioGroup.scenarios ?? [];
+    return (
+      populatedScenarioGroup.scenarios?.toSorted(
+        this._sortByTitle.bind(this),
+      ) ?? []
+    );
   }
 
   public async getScenarioGroupsOfProject(
@@ -286,7 +290,10 @@ export class DatabaseService implements ApplicationService {
       throw new Error(`Project ${project.documentId} not found.`);
     }
 
-    return populatedProject.scenarioGroups ?? [];
+    return (
+      populatedProject.scenarioGroups?.toSorted(this._sortByTitle.bind(this)) ??
+      []
+    );
   }
 
   public async getScenarioGroupsOfRoom(
@@ -464,7 +471,7 @@ export class DatabaseService implements ApplicationService {
     > | null = await strapi.documents('api::v2-project.v2-project').findOne({
       documentId: params.project.documentId,
       status: 'published',
-      populate: ['notes'],
+      populate: ['notes'], // TODO: SORT
     });
     if (populatedProject == null) {
       throw new Error(`Cannot find project ${params.project.documentId}`);
@@ -514,7 +521,7 @@ export class DatabaseService implements ApplicationService {
     > | null = await strapi.documents('api::v2-note.v2-note').findOne({
       documentId: note.documentId,
       status: 'published',
-      populate: ['nodes'],
+      populate: ['nodes'], // TODO: SORT
     });
     if (populatedNote == null) {
       throw new Error(`Cannot find note ${note.documentId}`);
@@ -601,7 +608,7 @@ export class DatabaseService implements ApplicationService {
       'api::v2-project.v2-project',
       { populate: ['collaborators'] }
     > | null = await strapi
-      .documents('api::v2-project.v2-project')
+      .documents('api::v2-project.v2-project') // TODO: SORT
       .findOne({ documentId: project.documentId, populate: ['collaborators'] });
 
     if (populatedProject == null) {
@@ -636,7 +643,7 @@ export class DatabaseService implements ApplicationService {
       { populate: ['databaseConnections'] }
     > | null = await strapi.documents('api::v2-project.v2-project').findOne({
       documentId: project.documentId,
-      populate: ['databaseConnections'],
+      populate: ['databaseConnections'], // TODO: SORT
     });
 
     if (populatedProject == null) {
@@ -656,7 +663,7 @@ export class DatabaseService implements ApplicationService {
       .documents('plugin::users-permissions.user')
       .findOne({
         documentId: user.documentId,
-        populate: ['projects'],
+        populate: ['projects'], // TODO: SORT
       });
 
     if (populatedUser == null) {
@@ -676,7 +683,7 @@ export class DatabaseService implements ApplicationService {
       .documents('plugin::users-permissions.user')
       .findOne({
         documentId: user.documentId,
-        populate: ['projectCollaborations'],
+        populate: ['projectCollaborations'], // TODO: SORT
       });
 
     if (populatedUser == null) {
@@ -694,7 +701,7 @@ export class DatabaseService implements ApplicationService {
       { populate: ['canvases'] }
     > | null = await strapi.documents('api::v2-room.v2-room').findOne({
       documentId: room.documentId,
-      populate: ['canvases'],
+      populate: ['canvases'], // TODO: SORT
     });
 
     if (populatedRoom == null) {
@@ -805,5 +812,12 @@ export class DatabaseService implements ApplicationService {
     return await strapi
       .documents('api::v2-project.v2-project')
       .findOne({ documentId: projectId, status: 'published' });
+  }
+
+  private _sortByTitle(
+    a: { title?: string | null | undefined },
+    b: { title?: string | null | undefined },
+  ): number {
+    return (a.title ?? '').localeCompare(b.title ?? '');
   }
 }

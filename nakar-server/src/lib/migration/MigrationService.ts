@@ -274,7 +274,7 @@ export class MigrationService implements ApplicationService {
             identifier: parameter.identifier ?? undefined,
             title: parameter.title ?? undefined,
             defaultValue: parameter.defaultValue ?? undefined,
-            dataType: parameter.dataType ?? undefined,
+            dataType: parameter.dataType ?? 'json',
           },
           status: 'published',
         });
