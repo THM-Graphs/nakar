@@ -36,6 +36,12 @@
     "customColorIndex": {
       "type": "boolean",
       "default": false
+    },
+    "canvas": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::v2-canvas.v2-canvas",
+      "inversedBy": "nodeSettings"
     }
   }
 }

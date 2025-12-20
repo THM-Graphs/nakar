@@ -14,9 +14,9 @@
     "nodeId": {
       "type": "string"
     },
-    "notes": {
+    "note": {
       "type": "relation",
-      "relation": "manyToMany",
+      "relation": "manyToOne",
       "target": "api::v2-note.v2-note",
       "inversedBy": "nodes"
     }

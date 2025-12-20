@@ -107,8 +107,7 @@ export class MutableNodeIndex {
     const mutableNode: MutableNode = new MutableNode(
       {
         id: node.node.elementId,
-        labels: new SSet(node.node.labels), // TODO treatNameInQueryAsLabel
-        nativeLabels: new SSet<string>(node.node.labels),
+        labels: new SSet<string>(node.node.labels),
         properties: MutablePropertyCollection.fromRecord(node.node.properties),
         position: MutablePosition.default(),
         namesInQuery: node.keys,

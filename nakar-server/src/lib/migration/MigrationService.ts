@@ -112,7 +112,11 @@ export class MigrationService implements ApplicationService {
       await this._createScenarioGroup(project, oldScenarioGroup, databaseCache);
     }
 
-    await this._createCommonProperties(roomTemplate, databaseCache);
+    await this._createCommonProperties(
+      roomTemplate,
+      databaseCache,
+      project.documentId,
+    );
   }
 
   private async _createScenarioGroup(
@@ -339,6 +343,7 @@ export class MigrationService implements ApplicationService {
       }
     >,
     databaseCache: SMap<string, string>,
+    projectId: string,
   ): Promise<void> {
     const mergeNodeConfigurationsFromRoomTemplates: Result<
       'graph.merge-node-configuration',
@@ -362,7 +367,11 @@ export class MigrationService implements ApplicationService {
       )?.graphDisplayConfiguration?.mergeNodeConfigurations ?? [];
 
     for (const mergeNodeConfig of mergeNodeConfigurationsFromRoomTemplates) {
-      await this._handleMergeNodeConfig(mergeNodeConfig, databaseCache);
+      await this._handleMergeNodeConfig(
+        mergeNodeConfig,
+        databaseCache,
+        projectId,
+      );
     }
 
     const scenarios: Result<
@@ -394,7 +403,11 @@ export class MigrationService implements ApplicationService {
     for (const scenario of scenarios) {
       for (const mergeNodeConfig of scenario.graphDisplayConfiguration
         ?.mergeNodeConfigurations ?? [])
-        await this._handleMergeNodeConfig(mergeNodeConfig, databaseCache);
+        await this._handleMergeNodeConfig(
+          mergeNodeConfig,
+          databaseCache,
+          projectId,
+        );
     }
   }
 
@@ -406,6 +419,7 @@ export class MigrationService implements ApplicationService {
       }
     >,
     databaseCache: SMap<string, string>,
+    projectId: string,
   ): Promise<void> {
     const leftDatabaseId: string | null =
       mergeNodeConfig.originalDatabase != null
@@ -430,8 +444,9 @@ export class MigrationService implements ApplicationService {
             leftProperty: mergeNodeConfig.originalProperties ?? undefined,
             leftDatabase: leftDatabaseId,
             rightLabel: mergeNodeConfig.mergeLabel ?? undefined,
-            rightProperty: mergeNodeConfig.originalProperties ?? undefined,
+            rightProperty: mergeNodeConfig.mergeProperties ?? undefined,
             rightDatabase: rightDatabaseId,
+            project: projectId,
           },
           status: 'published',
         });

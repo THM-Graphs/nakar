@@ -74,7 +74,7 @@ export class LiveCanvas implements ApplicationService {
     );
     this._onEvent = new Subject();
     this._subscriptions = new SSet();
-    this._physicsWorker = new PhysicsWorker(_canvasId, _database, _logger);
+    this._physicsWorker = new PhysicsWorker(_canvasId, _logger);
     this._queue = new TaskQueue(this._logger);
     this._state = new BehaviorSubject<LiveCanvasState>(LiveCanvasState.created);
     this._stateSubscription = this._state.subscribe(
@@ -379,46 +379,93 @@ export class LiveCanvas implements ApplicationService {
             }
 
             positionsCache.applyToGraph(graph);
-            this._postProcessGraph(graph);
-
-            if (!params.additive) {
-              const task: ProfilerTask = this._profiler.profile(
-                this,
-                'Run Post-Scenario Actions',
-              );
-
-              // TODO: Load post scenario actions
-              // if (displayConfiguration.connectResultNodes) {
-              //   this.connectResultNodes();
-              // }
-              // for (const nodeConfigEntry of displayConfiguration.nodeDisplayConfigurations) {
-              //   const targetLabel: string = nodeConfigEntry[0];
-              //   const nodeConfig: FinalNodeDisplayConfiguration =
-              //     nodeConfigEntry[1];
-              //   if (!nodeConfig.compress) {
-              //     continue;
-              //   }
-              //   this.compressNodes({ label: targetLabel });
-              // }
-              //
-              // if (displayConfiguration.compressRelationships) {
-              //   this.compressRelationships();
-              // }
-              //
-              // // Apply layout algorithm
-              // for (const entry of displayConfiguration.nodeDisplayConfigurations.entries()) {
-              //   const targetLabel: string = entry[0];
-              //   const nodeDisplayConfig: FinalNodeDisplayConfiguration =
-              //     entry[1];
-              //   this.layoutLabel({
-              //     layoutSpecification: nodeDisplayConfig.layoutSpecification,
-              //     label: targetLabel,
-              //   });
-              // }
-              task.finish();
-            }
           },
         );
+
+        if (!params.additive) {
+          const task: ProfilerTask = this._profiler.profile(
+            this,
+            'Run Post-Scenario Actions',
+          );
+
+          const postScenarioActions: Result<'api::v2-post-scenario-action.v2-post-scenario-action'>[] =
+            await this._database.getPostScenarioActionsOfScenario(scenario);
+
+          for (const action of postScenarioActions) {
+            await match(action)
+              .returnType<Promise<void> | void>()
+              .with({ type: P.nullish }, (): void => {
+                return;
+              })
+              .with({ type: 'connectResultNodes' }, (): void => {
+                this.connectResultNodes();
+              })
+              .with(
+                { type: 'compressNodes' },
+                (
+                  data: Result<'api::v2-post-scenario-action.v2-post-scenario-action'>,
+                ): void => {
+                  const label: string | null = data.label ?? null;
+                  if (label != null) {
+                    this.compressNodes({ label: label });
+                  }
+                },
+              )
+              .with({ type: 'compressRelationships' }, (): void => {
+                this.compressRelationships();
+              })
+              .with(
+                { type: 'layout' },
+                (
+                  data: Result<'api::v2-post-scenario-action.v2-post-scenario-action'>,
+                ): void => {
+                  const label: string | null = data.label ?? null;
+                  if (label == null) {
+                    return;
+                  }
+                  match(data.layoutAlgorithm)
+                    .with('circle', (): void => {
+                      const radius: number | null = data.circleRadius ?? null;
+                      if (radius == null) {
+                        return;
+                      }
+                      this.layoutLabel({
+                        layoutSpecification: {
+                          type: 'LayoutSpecificationCircle',
+                          radius: radius,
+                        },
+                        label: label,
+                      });
+                    })
+                    .with('forceDirected', (): void => {
+                      this.layoutLabel({
+                        layoutSpecification: {
+                          type: 'LayoutSpecificationForceDirected',
+                        },
+                        label: label,
+                      });
+                    })
+                    .with(P.nullish, (): void => {
+                      return;
+                    })
+                    .exhaustive();
+                },
+              )
+              .otherwise(
+                (
+                  d: Result<'api::v2-post-scenario-action.v2-post-scenario-action'>,
+                ): void => {
+                  this._logger.warn(
+                    this,
+                    `Unable to handle post action type ${d.type}`,
+                  );
+                },
+              );
+          }
+          task.finish();
+        }
+
+        this._postProcessGraph(newGraph);
 
         this._onEvent.next({
           type: 'CanvasEventGraphMetaDataChanged',
@@ -595,7 +642,7 @@ export class LiveCanvas implements ApplicationService {
 
   public focusNodes(params: { nodeIds: readonly string[] }): void {
     this._queue.addTask(
-      new TaskQueueTask('Focus nodes', async (): Promise<void> => {
+      new TaskQueueTask('Focus nodes', (): void => {
         const result: ExpandNodesResult = {
           nodesAddedCount: 0,
           edgeAddedCount: 0,
@@ -864,7 +911,6 @@ export class LiveCanvas implements ApplicationService {
     this._queue.addTask(
       new TaskQueueTask('Connecting result nodes', async (): Promise<void> => {
         const oldGraph: MutableGraph = this.getGraph();
-        const scenarioId: string | null = oldGraph.metaData.scenarioId;
 
         const egdesToAdd: Neo4jRelationship[] = [];
         for (const source of oldGraph.nodes.getSources()) {
@@ -1376,115 +1422,136 @@ export class LiveCanvas implements ApplicationService {
     );
   }
 
-  private _mergeNodes(graph: MutableGraph): void {
-    // TODO: Load merge config
-    // for (const mergeConfig of []) {
-    //   this._logger.log(
-    //     this,
-    //     `Will check nodes for merging ${mergeConfig.originalLabel} with ${mergeConfig.mergeLabel}`,
-    //   );
-    //   const originalNodes: SSet<MutableNode> = graph.nodes.getBySource(
-    //     mergeConfig.originalDatabaseId,
-    //   );
-    //   const mergeNodes: SSet<MutableNode> = graph.nodes.getBySource(
-    //     mergeConfig.mergeDatabaseId,
-    //   );
-    //
-    //   for (const originalNode of originalNodes) {
-    //     for (const mergeNode of mergeNodes) {
-    //       const shouldMerge: boolean = this._shouldMergeNodes(
-    //         graph,
-    //         originalNode,
-    //         mergeNode,
-    //         mergeConfig,
-    //       );
-    //       if (shouldMerge) {
-    //         graph.edges.add(
-    //           new MutableEdge({
-    //             id: v4(),
-    //             compressed: new SSet(),
-    //             startNodeId: originalNode.id,
-    //             endNodeId: mergeNode.id,
-    //             source: originalNode.source,
-    //             type: 'MERGED_WITH',
-    //             properties: new MutablePropertyCollection({
-    //               properties: new SMap([['merge', mergeConfig]]),
-    //             }),
-    //             namesInQuery: new SSet(),
-    //             creationAction: MutableGraphElementCreationAction.merge,
-    //           }),
-    //         );
-    //         graph.edges.add(
-    //           new MutableEdge({
-    //             id: v4(),
-    //             compressed: new SSet(),
-    //             startNodeId: mergeNode.id,
-    //             endNodeId: originalNode.id,
-    //             source: mergeNode.source,
-    //             type: 'MERGED_WITH',
-    //             properties: new MutablePropertyCollection({
-    //               properties: new SMap([['merge', mergeConfig]]),
-    //             }),
-    //             namesInQuery: new SSet(),
-    //             creationAction: MutableGraphElementCreationAction.merge,
-    //           }),
-    //         );
-    //         this._logger.log(
-    //           this,
-    //           `Did merge ${originalNode.id} with ${mergeNode.id}`,
-    //         );
-    //       }
-    //     }
-    //   }
-    // }
+  private async _mergeNodes(graph: MutableGraph): Promise<void> {
+    const canvas: Result<'api::v2-canvas.v2-canvas'> | null =
+      await this._database.getCanvas(this.canvasId);
+    if (canvas == null) {
+      throw new Error('Canvas not found.');
+    }
+    const configs: Result<'api::v2-common-property.v2-common-property'>[] =
+      await this._database.getCommonPropertyConfigsOfCanvas(canvas);
+
+    for (const mergeConfig of configs) {
+      this._logger.log(
+        this,
+        `Will check nodes for merging ${mergeConfig.leftLabel} with ${mergeConfig.rightLabel}`,
+      );
+      const leftDatabase: Result<'api::v2-database-connection.v2-database-connection'> | null =
+        await this._database.getLeftDatabaseOfCommonProperty(mergeConfig);
+      if (leftDatabase == null) {
+        continue;
+      }
+      const rightDatabase: Result<'api::v2-database-connection.v2-database-connection'> | null =
+        await this._database.getRightDatabaseOfCommonProperty(mergeConfig);
+      if (rightDatabase == null) {
+        continue;
+      }
+
+      const originalNodes: SSet<MutableNode> = graph.nodes.getBySource(
+        leftDatabase.documentId,
+      );
+      const mergeNodes: SSet<MutableNode> = graph.nodes.getBySource(
+        rightDatabase.documentId,
+      );
+
+      for (const originalNode of originalNodes) {
+        for (const mergeNode of mergeNodes) {
+          const shouldMerge: boolean = this._shouldMergeNodes(
+            graph,
+            originalNode,
+            mergeNode,
+            mergeConfig,
+          );
+          if (shouldMerge) {
+            graph.edges.add(
+              new MutableEdge({
+                id: v4(),
+                compressed: new SSet(),
+                startNodeId: originalNode.id,
+                endNodeId: mergeNode.id,
+                source: originalNode.source,
+                type: 'MERGED_WITH',
+                properties: new MutablePropertyCollection({
+                  properties: new SMap([['merge', mergeConfig]]),
+                }),
+                namesInQuery: new SSet(),
+                creationAction: MutableGraphElementCreationAction.merge,
+              }),
+            );
+            graph.edges.add(
+              new MutableEdge({
+                id: v4(),
+                compressed: new SSet(),
+                startNodeId: mergeNode.id,
+                endNodeId: originalNode.id,
+                source: mergeNode.source,
+                type: 'MERGED_WITH',
+                properties: new MutablePropertyCollection({
+                  properties: new SMap([['merge', mergeConfig]]),
+                }),
+                namesInQuery: new SSet(),
+                creationAction: MutableGraphElementCreationAction.merge,
+              }),
+            );
+            this._logger.log(
+              this,
+              `Did merge ${originalNode.id} with ${mergeNode.id}`,
+            );
+          }
+        }
+      }
+    }
   }
 
-  // private _shouldMergeNodes(
-  //   graph: MutableGraph,
-  //   originalNode: MutableNode,
-  //   mergeNode: MutableNode,
-  //   config: MergeNodeConfiguration,
-  // ): boolean {
-  //   if (
-  //     graph.edges.getByStartAndEndNodeId(originalNode.id, mergeNode.id).length >
-  //     0
-  //   ) {
-  //     return false;
-  //   }
-  //
-  //   if (config.mergeProperties.length !== config.originalProperties.length) {
-  //     return false;
-  //   }
-  //
-  //   if (
-  //     !originalNode.labels.has(config.originalLabel) ||
-  //     !mergeNode.labels.has(config.mergeLabel)
-  //   ) {
-  //     return false;
-  //   }
-  //
-  //   for (let i: number = 0; i < config.originalProperties.length; i += 1) {
-  //     const originalValue: unknown = originalNode.properties.properties.get(
-  //       config.originalProperties[i],
-  //     );
-  //     if (originalValue == null) {
-  //       return false;
-  //     }
-  //
-  //     const mergeValue: unknown = mergeNode.properties.properties.get(
-  //       config.mergeProperties[i],
-  //     );
-  //     if (mergeValue == null) {
-  //       return false;
-  //     }
-  //
-  //     if (originalValue !== mergeValue) {
-  //       return false;
-  //     }
-  //   }
-  //
-  //   return true;
-  // }
+  private _shouldMergeNodes(
+    graph: MutableGraph,
+    leftNode: MutableNode,
+    rightNode: MutableNode,
+    config: Result<'api::v2-common-property.v2-common-property'>,
+  ): boolean {
+    if (
+      graph.edges.getByStartAndEndNodeId(leftNode.id, rightNode.id).length > 0
+    ) {
+      // Already connected
+      return false;
+    }
+
+    if (
+      config.leftLabel == null ||
+      config.rightLabel == null ||
+      config.leftProperty == null ||
+      config.rightProperty == null
+    ) {
+      return false;
+    }
+
+    if (
+      !leftNode.labels.has(config.leftLabel) ||
+      !rightNode.labels.has(config.rightLabel)
+    ) {
+      return false;
+    }
+
+    const leftValue: unknown = leftNode.properties.properties.get(
+      config.leftProperty,
+    );
+    if (leftValue == null) {
+      return false;
+    }
+
+    const rightValue: unknown = rightNode.properties.properties.get(
+      config.rightProperty,
+    );
+    if (rightValue == null) {
+      return false;
+    }
+
+    if (leftValue !== rightValue) {
+      return false;
+    }
+
+    return true;
+  }
 
   private _transaction(
     title: string,
@@ -1512,13 +1579,13 @@ export class LiveCanvas implements ApplicationService {
     return newGraph;
   }
 
-  private _postProcessGraph(graph: MutableGraph): void {
+  private async _postProcessGraph(graph: MutableGraph): Promise<void> {
     const task: ProfilerTask = this._profiler.profile(
       this,
       'Post Process Graph',
     );
     graph.removeDanglingEdges();
-    this._mergeNodes(graph);
+    await this._mergeNodes(graph);
     task.finish();
   }
 
@@ -1552,11 +1619,6 @@ export class LiveCanvas implements ApplicationService {
           labels: clusterBuddies.reduce(
             (akku: SSet<string>, next: MutableNode): SSet<string> =>
               akku.byMerging(next.labels),
-            new SSet<string>(),
-          ),
-          nativeLabels: clusterBuddies.reduce(
-            (akku: SSet<string>, next: MutableNode): SSet<string> =>
-              akku.byMerging(next.nativeLabels),
             new SSet<string>(),
           ),
           source: node.source,

@@ -10,7 +10,6 @@ import { MutableEdgeIndex } from './MutableEdgeIndex';
 import type { PhysicalGraph } from '../../physics/physical-graph/PhysicalGraph';
 import type { PhysicalNode } from '../../physics/physical-graph/PhysicalNode';
 import type { PhysicalEdge } from '../../physics/physical-graph/PhysicalEdge';
-import type { Range } from '../../tools/Range';
 import { SSet } from '../../tools/Set';
 import type { ProfilerService } from '../../profiler/ProfilerService';
 import type { ProfilerTask } from '../../profiler/ProfilerTask';
@@ -188,7 +187,7 @@ export class MutableGraph {
     for (const node of this.nodes.nodes) {
       nodes[node.id] = {
         id: node.id,
-        radius: MutableNode.defaultRadius, // TODO
+        radius: node.getRadius(),
         position: { x: node.position.x, y: node.position.y },
         locked: node.locked,
         velocityX: 0,
@@ -220,15 +219,10 @@ export class MutableGraph {
     physicalGraph: PhysicalGraph,
     logger: LoggerService,
   ): void {
-    // TODO: Check graph version
     for (const node of Object.values(physicalGraph.nodes)) {
       const foundNode: MutableNode | null = this.nodes.get(node.id);
       if (foundNode == null) {
         // This can happen, if the graphs are out of sync for a short period of time.
-        logger.warn(
-          this,
-          `Unable to apply physical node position to mutable node. ID: ${node.id}. Position: ${JSON.stringify(node.position)}`,
-        );
         continue;
       }
       if (foundNode.locked) {

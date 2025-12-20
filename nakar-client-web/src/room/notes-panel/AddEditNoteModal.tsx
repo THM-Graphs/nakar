@@ -5,10 +5,10 @@ import { Panel } from "../../shared/elements/Panel.tsx";
 import { NavbarButton } from "../../shared/elements/NavbarButton.tsx";
 import { NodePreviewDisplay } from "../inspector-panel/NodePreviewDisplay.tsx";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
-import { postNote, putNote } from "../../../src-gen";
 import clsx from "clsx";
 import { ColorPicker } from "../../shared/elements/ColorPicker.tsx";
 import { Collapsable } from "../../shared/elements/Collapsable.tsx";
+import { postNote, putNote } from "../../../src-gen";
 
 type AddEditNoteModalMode = "create" | "update";
 
@@ -45,7 +45,7 @@ export function AddEditNoteModal(props: { roomContext: CanvasContext }) {
             body: {
               nodeIds: nodes.map((node) => node.id),
               content: content,
-              color: color ? { color: color } : null,
+              canvasId: props.roomContext.initialCanvasData.id,
             },
           }),
         );
@@ -53,13 +53,10 @@ export function AddEditNoteModal(props: { roomContext: CanvasContext }) {
         await resultOrThrow(
           await putNote({
             path: {
-              id: props.roomContext.initialCanvasData.id,
-              noteId: noteId,
+              id: noteId,
             },
             body: {
-              nodeIds: nodes.map((node) => node.id),
               content: content,
-              color: color ? { color: color } : null,
             },
           }),
         );

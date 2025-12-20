@@ -10,14 +10,12 @@ import { LoggerService } from '../logger/LoggerService';
 import * as undici from 'undici';
 import { ConfigService } from '../config/ConfigService';
 import { Result } from '@strapi/types/dist/modules/documents/result';
-import { DatabaseService } from '../database/DatabaseService';
 
 export class HTTPTools {
   public constructor(
     private readonly _profiler: ProfilerService,
     private readonly _logger: LoggerService,
     private readonly _config: ConfigService,
-    private readonly _database: DatabaseService,
   ) {}
 
   public readonly findUser: (req: Request) => Promise<void> = async (
@@ -82,7 +80,10 @@ export class HTTPTools {
     handler: (req: Request) => Promise<T> | T,
   ): (req: Request, res: Response) => void {
     return (req: Request, res: Response): void => {
-      const task: ProfilerTask = this._profiler.profile(this, req.originalUrl);
+      const task: ProfilerTask = this._profiler.profile(
+        this,
+        `${req.method} ${req.originalUrl}`,
+      );
       Promise.resolve(handler(req))
         .then((result: T): void => {
           res.status(200);
@@ -104,6 +105,10 @@ export class HTTPTools {
         })
         .catch((unknownError: unknown): void => {
           task.finish();
+          this._logger.error(
+            this,
+            `Error while handling route ${req.method} ${req.originalUrl}`,
+          );
           this._logger.error(this, unknownError);
           this.handleUnknownError(res, unknownError);
         });
@@ -119,6 +124,10 @@ export class HTTPTools {
           next();
         })
         .catch((unknownError: unknown): void => {
+          this._logger.error(
+            this,
+            `Error while handling middleware ${req.method} ${req.originalUrl}`,
+          );
           this._logger.error(this, unknownError);
           this.handleUnknownError(res, unknownError);
         });

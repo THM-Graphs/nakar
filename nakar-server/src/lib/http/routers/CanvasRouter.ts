@@ -1,5 +1,4 @@
 import { HTTPTools } from '../HTTPTools';
-import { ConfigService } from '../../config/ConfigService';
 import { Request, Router } from 'express';
 import { GraphRouter } from './GraphRouter';
 import { DatabaseService } from '../../database/DatabaseService';
@@ -18,14 +17,14 @@ export class CanvasRouter {
     private readonly _httpTools: HTTPTools,
     private readonly _databaseService: DatabaseService,
     private readonly _schemaFactory: SchemaFactoryService,
-    private readonly _canvasService: CanvasService,
+    canvasService: CanvasService,
   ) {
     this._graphRouter = new GraphRouter(
       _httpTools,
       _databaseService,
       _schemaFactory,
     );
-    this._actionsRouter = new ActionsRouter(_httpTools, _canvasService);
+    this._actionsRouter = new ActionsRouter(_httpTools, canvasService);
   }
 
   public register(): Router {

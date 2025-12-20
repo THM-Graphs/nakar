@@ -2,15 +2,15 @@ import { Stack } from "react-bootstrap";
 import { AppNavbar } from "../shared/bars/AppNavbar.tsx";
 import { useEffect } from "react";
 import {
-  GetScenariosResult,
-  Graph,
   Canvas as SchemaCanvas,
   getCanvas,
-  getRoomScenarios,
   getGraph,
-  WSActionLeaveCanvas,
-  Room as SchemaRoom,
   getRoom,
+  getRoomScenarios,
+  GetScenariosResult,
+  Graph,
+  Room as SchemaRoom,
+  WSActionLeaveCanvas,
 } from "../../src-gen";
 import { LoaderFunctionArgs, useLoaderData, useNavigate } from "react-router";
 import { resultOrThrow } from "../shared/data/resultOrThrow.ts";
@@ -45,7 +45,6 @@ import { AuthButton } from "../shared/auth/AuthButton.tsx";
 import { SearchPanel } from "../room/search-panel/SearchPanel.tsx";
 import { SearchPanelButton } from "../room/search-panel/SearchPanelButton.tsx";
 import { Canvas } from "../room/canvas/Canvas.tsx";
-import { CanvasTabs } from "../room/canvas-tabs/CanvasTabs.tsx";
 
 export type CanvasContext = {
   initialCanvasData: SchemaCanvas;

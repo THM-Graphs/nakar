@@ -5,8 +5,6 @@ import { SSet } from '../../tools/Set';
 import type { MutableEdge } from './MutableEdge';
 import type { LoggerService } from '../../logger/LoggerService';
 import type { MutableGraph } from './MutableGraph';
-import { Color } from '../../tools/Color';
-import { Range } from '../../tools/Range';
 import { MutableGraphElementCreationAction } from './MutableGraphElementCreationAction';
 
 export class MutableNode {
@@ -16,7 +14,6 @@ export class MutableNode {
   public static readonly schema = z.object({
     id: z.string(),
     labels: z.array(z.string()),
-    nativeLabels: z.array(z.string()),
     properties: MutablePropertyCollection.schema,
     position: MutablePosition.schema,
     namesInQuery: z.array(z.string()),
@@ -28,7 +25,6 @@ export class MutableNode {
 
   public readonly id: string;
   public labels: SSet<string>;
-  public nativeLabels: SSet<string>;
   public properties: MutablePropertyCollection;
   public position: MutablePosition;
   public namesInQuery: SSet<string>;
@@ -42,7 +38,6 @@ export class MutableNode {
     data: {
       id: string;
       labels: SSet<string>;
-      nativeLabels: SSet<string>;
       properties: MutablePropertyCollection;
       position: MutablePosition;
       namesInQuery: SSet<string>;
@@ -56,7 +51,6 @@ export class MutableNode {
   ) {
     this.id = data.id;
     this.labels = data.labels;
-    this.nativeLabels = data.nativeLabels;
     this.properties = data.properties;
     this.position = data.position;
     this.namesInQuery = data.namesInQuery;
@@ -87,7 +81,6 @@ export class MutableNode {
       {
         id: data.id,
         labels: new SSet(data.labels),
-        nativeLabels: new SSet(data.nativeLabels),
         properties: MutablePropertyCollection.fromPlain(data.properties),
         position: MutablePosition.fromPlain(data.position),
         namesInQuery: new SSet(data.namesInQuery),
@@ -101,11 +94,27 @@ export class MutableNode {
     );
   }
 
+  public getTitle(): string {
+    return (
+      this.properties.getStringValueOfProperty('label') ??
+      this.properties.getStringValueOfProperty('name') ??
+      this.properties.getStringValueOfProperty('title') ??
+      this.properties.getStringValueOfProperty('type') ??
+      this.properties.getStringValueOfProperty('id') ??
+      this.properties.getStringValueOfProperty('slug') ??
+      this.properties.firstStringValue() ??
+      this.labels.toArray().join(', ')
+    );
+  }
+
+  public getRadius(): number {
+    return MutableNode.defaultRadius; // TODO
+  }
+
   public toPlain(): z.infer<typeof MutableNode.schema> {
     return {
       id: this.id,
       labels: this.labels.toArray(),
-      nativeLabels: this.nativeLabels.toArray(),
       properties: this.properties.toPlain(),
       position: this.position,
       namesInQuery: this.namesInQuery.toArray(),
@@ -149,7 +158,6 @@ export class MutableNode {
       {
         id: this.id,
         labels: this.labels.copy(),
-        nativeLabels: this.nativeLabels.copy(),
         properties: this.properties.copy(),
         position: this.position.copy(),
         namesInQuery: this.namesInQuery.copy(),

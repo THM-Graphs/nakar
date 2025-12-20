@@ -1,6 +1,5 @@
 import { Container, Stack } from "react-bootstrap";
-import { RoomList } from "../start/RoomList.tsx";
-import { useLoaderData, useNavigate } from "react-router";
+import { useLoaderData } from "react-router";
 import {
   getProjects,
   getRoom,
@@ -16,7 +15,6 @@ import { loadableFromResult } from "../shared/data/loadableFromResult.ts";
 import { Loadable } from "../shared/data/Loadable.ts";
 import { CMSNavbar } from "../cms/CMSNavbar.tsx";
 import { CMSFooter } from "../cms/CMSFooter.tsx";
-import { ProjectList } from "../start/ProjectList.tsx";
 import { RoomCard } from "../cms/RoomCard.tsx";
 import { resultOrThrow } from "../shared/data/resultOrThrow.ts";
 import { ProjectCard } from "../cms/ProjectCard.tsx";
@@ -53,8 +51,6 @@ export async function StartLoader(): Promise<StartPageLoaderData> {
 
 export function Start(props: { context: AppContext }) {
   const loaderData: StartPageLoaderData = useLoaderData();
-  const removeMyRoom = useBearStore((s) => s.start.removeRoom);
-  const navigate = useNavigate();
 
   return (
     <Stack

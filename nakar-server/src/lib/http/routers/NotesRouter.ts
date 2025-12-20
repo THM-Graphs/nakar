@@ -62,20 +62,28 @@ export class NotesRouter {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
     const requestBody: Body = req.body as Body;
 
+    const canvas: Result<'api::v2-canvas.v2-canvas'> | null =
+      await this._databaseService.getCanvas(requestBody.canvasId);
+    if (canvas == null) {
+      throw new NotFound();
+    }
+    const project: Result<'api::v2-project.v2-project'> | null =
+      await this._databaseService.getProjectOfCanvas(canvas);
+    if (project == null) {
+      throw new NotFound();
+    }
+
     this._logger.debug(this, JSON.stringify(requestBody));
     await this._databaseService.addNote({
       content: requestBody.content,
-      project: req.nakar.project,
+      project: project,
       nodes: [...requestBody.nodeIds],
       author: null,
     });
   }
 
   private async _deleteNote(req: Request): Promise<void> {
-    this._logger.debug(
-      this,
-      `Will delete note ${req.nakar.note.id} in room ${req.nakar.room.documentId}`,
-    );
+    this._logger.debug(this, `Will delete note ${req.nakar.note.id}.`);
     await this._databaseService.removeNote(req.nakar.note);
   }
 
@@ -88,10 +96,9 @@ export class NotesRouter {
 
     this._logger.debug(
       this,
-      `Will update note ${req.nakar.note.id} in project ${req.nakar.project.documentId} with ${JSON.stringify(requestBody)}`,
+      `Will update note ${req.nakar.note.id} with ${JSON.stringify(requestBody)}`,
     );
     await this._databaseService.updateNote(req.nakar.note, {
-      nodes: [...requestBody.nodeIds],
       content: requestBody.content,
     });
   }

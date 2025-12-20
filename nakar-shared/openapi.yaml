@@ -164,7 +164,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/GetScenariosResult"
 
-  /project/{id}/note:
+  /note:
     post:
       tags:
         - Notes
@@ -188,34 +188,23 @@ paths:
                     type: string
                 content:
                   type: string
-                color:
-                  type: object
-                  nullable: true
-                  properties:
-                    color:
-                      $ref: "#/components/schemas/Color"
-                  required:
-                    - color
+                canvasId:
+                  type: string
               required:
                 - nodeIds
                 - content
-                - color
+                - canvasId
       responses:
         "200":
           description: "OK"
 
-  /project/{id}/note/{noteId}:
+  /note/{id}:
     delete:
       tags:
         - Notes
       operationId: deleteNote
       parameters:
         - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: noteId
           in: path
           required: true
           schema:
@@ -233,11 +222,6 @@ paths:
           required: true
           schema:
             type: string
-        - name: noteId
-          in: path
-          required: true
-          schema:
-            type: string
       requestBody:
         required: true
         content:
@@ -245,24 +229,10 @@ paths:
             schema:
               type: object
               properties:
-                nodeIds:
-                  type: array
-                  items:
-                    type: string
                 content:
                   type: string
-                color:
-                  type: object
-                  nullable: true
-                  properties:
-                    color:
-                      $ref: "#/components/schemas/Color"
-                  required:
-                    - color
               required:
-                - nodeIds
                 - content
-                - color
       responses:
         "200":
           description: "OK"

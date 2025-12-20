@@ -9,7 +9,6 @@ import type {
 } from '../../../../src-gen/schema';
 import { MutableGraph } from '../../room/graph/MutableGraph';
 import { SchemaFactoryService } from '../../schema/SchemaFactoryService';
-import { Result } from '@strapi/types/dist/modules/documents/result';
 import { IndexedNoteCollection } from '../../database/IndexedNoteCollection';
 
 export class GraphRouter {

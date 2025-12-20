@@ -4,11 +4,8 @@ import type { SchemaRoom, SchemaRooms } from '../../../../src-gen/schema';
 import { DatabaseService } from '../../database/DatabaseService';
 import { NotFound } from 'http-errors';
 import { ScenariosRouter } from './ScenariosRouter';
-import { GraphRouter } from './GraphRouter';
 import { CanvasService } from '../../room/CanvasService';
 import { LoggerService } from '../../logger/LoggerService';
-import { NotesRouter } from './NotesRouter';
-import { ActionsRouter } from './ActionsRouter';
 import { SchemaFactoryService } from '../../schema/SchemaFactoryService';
 import { Result } from '@strapi/types/dist/modules/documents/result';
 
@@ -19,8 +16,6 @@ export class RoomRouter {
     private readonly _httpTools: HTTPTools,
     private readonly _databaseService: DatabaseService,
     private readonly _schemaFactory: SchemaFactoryService,
-    logger: LoggerService,
-    roomService: CanvasService,
   ) {
     this._scenariosRouter = new ScenariosRouter(
       _httpTools,

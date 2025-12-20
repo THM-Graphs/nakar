@@ -4,7 +4,6 @@ import type { WTEvent } from '../room-worker/worker-events/WTEvent';
 import { PhysicalGraph } from '../physics/physical-graph/PhysicalGraph';
 import { RoomWorkerData } from '../room-worker/RoomWorkerData';
 import path from 'path';
-import { DatabaseService } from '../database/DatabaseService';
 import { LoggerService } from '../logger/LoggerService';
 import { WTAction } from '../room-worker/worker-events/WTAction';
 import { Observable, Subject } from 'rxjs';
@@ -16,7 +15,6 @@ export class PhysicsWorker {
 
   public constructor(
     private readonly _canvasId: string,
-    private readonly _database: DatabaseService,
     private readonly _logger: LoggerService,
   ) {
     this._worker = null;

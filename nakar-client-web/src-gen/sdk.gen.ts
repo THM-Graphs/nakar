@@ -64,21 +64,21 @@ export const getRoomScenarios = <ThrowOnError extends boolean = false>(options: 
 export const postNote = <ThrowOnError extends boolean = false>(options: OptionsLegacyParser<PostNoteData, ThrowOnError>) => {
     return (options?.client ?? client).post<PostNoteResponse, PostNoteError, ThrowOnError>({
         ...options,
-        url: '/project/{id}/note'
+        url: '/note'
     });
 };
 
 export const deleteNote = <ThrowOnError extends boolean = false>(options: OptionsLegacyParser<DeleteNoteData, ThrowOnError>) => {
     return (options?.client ?? client).delete<DeleteNoteResponse, DeleteNoteError, ThrowOnError>({
         ...options,
-        url: '/project/{id}/note/{noteId}'
+        url: '/note/{id}'
     });
 };
 
 export const putNote = <ThrowOnError extends boolean = false>(options: OptionsLegacyParser<PutNoteData, ThrowOnError>) => {
     return (options?.client ?? client).put<PutNoteResponse, PutNoteError, ThrowOnError>({
         ...options,
-        url: '/project/{id}/note/{noteId}'
+        url: '/note/{id}'
     });
 };
 

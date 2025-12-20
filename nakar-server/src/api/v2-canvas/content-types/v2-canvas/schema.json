@@ -53,6 +53,12 @@
     "treatNameInQueryAsLabel": {
       "type": "boolean",
       "default": false
+    },
+    "nodeSettings": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::v2-canvas-label-setting.v2-canvas-label-setting",
+      "mappedBy": "canvas"
     }
   }
 }

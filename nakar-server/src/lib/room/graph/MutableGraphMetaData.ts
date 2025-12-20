@@ -14,7 +14,7 @@ export class MutableGraphMetaData {
   });
 
   public scenarioId: string | null;
-  public pipelineSummary: [string, number][];
+  public pipelineSummary: [string, number][]; // TODO: REMOVE
   public arguments: SMap<string, string>;
 
   public constructor(data: {
@@ -54,6 +54,7 @@ export class MutableGraphMetaData {
   }
 
   public getLabels(nodes: MutableNodeIndex): SMap<string, MutableGraphLabel> {
+    // TODO: Use index and save color in DB
     const labels: SMap<string, MutableGraphLabel> = new SMap<
       string,
       MutableGraphLabel

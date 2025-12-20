@@ -1,6 +1,8 @@
 import { ApplicationService } from '../application/ApplicationService';
 import {
+  SchemaCanvas,
   SchemaColor,
+  SchemaDatabaseConnection,
   SchemaEdge,
   SchemaEdgePreview,
   SchemaGraph,
@@ -20,21 +22,17 @@ import {
   SchemaScenarioGroup,
   SchemaScenarioParameter,
   SchemaScenarioQuery,
-  SchemaCanvas,
-  SchemaDatabaseConnection,
   SchemaUser,
 } from '../../../src-gen/schema';
 import { ConfigService } from '../config/ConfigService';
 import { MediaService } from '../media/MediaService';
 import { MutableGraph } from '../room/graph/MutableGraph';
 import { ProfilerTask } from '../profiler/ProfilerTask';
-import { Range } from '../tools/Range';
 import { MutableNode } from '../room/graph/MutableNode';
 import { MutableEdge } from '../room/graph/MutableEdge';
 import { MutableGraphLabel } from '../room/graph/MutableGraphLabel';
 import { SMap } from '../tools/Map';
 import { MutableGraphMetaData } from '../room/graph/MutableGraphMetaData';
-import { MutableGraphColor } from '../room/graph/MutableGraphColor';
 import { SSet } from '../tools/Set';
 import { MutablePropertyCollection } from '../room/graph/MutablePropertyCollection';
 import { ProfilerService } from '../profiler/ProfilerService';
@@ -494,7 +492,7 @@ export class SchemaFactoryService implements ApplicationService {
         .map((node: MutableNode): NodeHistogramEntry => {
           return {
             id: node.id,
-            title: node.id, // TODO
+            title: node.getTitle(),
             labels: node.labels.toArray(),
             degree: node.degree(graph),
             percentage: degreeCount > 0 ? node.degree(graph) / degreeCount : 0,
@@ -545,11 +543,11 @@ export class SchemaFactoryService implements ApplicationService {
 
     return {
       id: node.id,
-      title: node.id, // TODO
+      title: node.getTitle(),
       labels: node.labels.toArray(),
-      nativeLabels: node.nativeLabels.toArray(),
+      nativeLabels: node.labels.toArray(),
       properties: this._createSchemaGraphProperties(node.properties),
-      radius: MutableNode.defaultRadius, // TODO
+      radius: node.getRadius(),
       position: node.position,
       inDegree: node.inDegree(graph),
       outDegree: node.outDegree(graph),
@@ -608,13 +606,13 @@ export class SchemaFactoryService implements ApplicationService {
       clusterSize: edge.compressed.size,
       sourceNode: {
         id: sourceNode?.id ?? '',
-        title: sourceNode?.id ?? '', // TODO
+        title: sourceNode?.getTitle() ?? '',
         labels: sourceNode?.labels.toArray() ?? [],
         customColor: null, // TODO
       },
       targetNode: {
         id: targetNode?.id ?? '',
-        title: targetNode?.id ?? '', // TODO
+        title: targetNode?.getTitle() ?? '',
         labels: targetNode?.labels.toArray() ?? [],
         customColor: null, // TODO
       },
@@ -678,7 +676,7 @@ export class SchemaFactoryService implements ApplicationService {
           );
           return {
             id: nodeReference.nodeId ?? '',
-            title: nodeReference.nodeId ?? '', // TODO
+            title: node?.getTitle() ?? '',
             labels: node?.labels.toArray() ?? [],
             customColor: null, // TODO
           };

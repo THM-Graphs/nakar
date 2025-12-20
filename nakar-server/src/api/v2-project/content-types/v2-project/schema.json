@@ -10,6 +10,7 @@
   "options": {
     "draftAndPublish": true
   },
+  "pluginOptions": {},
   "attributes": {
     "title": {
       "type": "string"
@@ -48,6 +49,12 @@
       "type": "relation",
       "relation": "oneToMany",
       "target": "api::v2-scenario-group.v2-scenario-group",
+      "mappedBy": "project"
+    },
+    "commonProperties": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::v2-common-property.v2-common-property",
       "mappedBy": "project"
     }
   }

@@ -116,7 +116,7 @@ export interface paths {
         readonly patch?: never;
         readonly trace?: never;
     };
-    readonly "/project/{id}/note": {
+    readonly "/note": {
         readonly parameters: {
             readonly query?: never;
             readonly header?: never;
@@ -132,7 +132,7 @@ export interface paths {
         readonly patch?: never;
         readonly trace?: never;
     };
-    readonly "/project/{id}/note/{noteId}": {
+    readonly "/note/{id}": {
         readonly parameters: {
             readonly query?: never;
             readonly header?: never;
@@ -1263,9 +1263,7 @@ export interface operations {
                 readonly "application/json": {
                     readonly nodeIds: readonly string[];
                     readonly content: string;
-                    readonly color: {
-                        readonly color: components["schemas"]["Color"];
-                    } | null;
+                    readonly canvasId: string;
                 };
             };
         };
@@ -1285,18 +1283,13 @@ export interface operations {
             readonly header?: never;
             readonly path: {
                 readonly id: string;
-                readonly noteId: string;
             };
             readonly cookie?: never;
         };
         readonly requestBody: {
             readonly content: {
                 readonly "application/json": {
-                    readonly nodeIds: readonly string[];
                     readonly content: string;
-                    readonly color: {
-                        readonly color: components["schemas"]["Color"];
-                    } | null;
                 };
             };
         };
@@ -1316,7 +1309,6 @@ export interface operations {
             readonly header?: never;
             readonly path: {
                 readonly id: string;
-                readonly noteId: string;
             };
             readonly cookie?: never;
         };

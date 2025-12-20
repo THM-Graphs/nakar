@@ -523,9 +523,7 @@ export type PostNoteData = {
     body: {
         nodeIds: Array<(string)>;
         content: string;
-        color: {
-            color: Color;
-        } | null;
+        canvasId: string;
     };
     path: {
         id: string;
@@ -539,7 +537,6 @@ export type PostNoteError = unknown;
 export type DeleteNoteData = {
     path: {
         id: string;
-        noteId: string;
     };
 };
 
@@ -549,15 +546,10 @@ export type DeleteNoteError = unknown;
 
 export type PutNoteData = {
     body: {
-        nodeIds: Array<(string)>;
         content: string;
-        color: {
-            color: Color;
-        } | null;
     };
     path: {
         id: string;
-        noteId: string;
     };
 };
 

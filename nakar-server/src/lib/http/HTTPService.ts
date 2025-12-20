@@ -19,6 +19,7 @@ import { SchemaFactoryService } from '../schema/SchemaFactoryService';
 import { ProjectsRouter } from './routers/ProjectsRouter';
 import { Result } from '@strapi/types/dist/modules/documents/result';
 import { CanvasRouter } from './routers/CanvasRouter';
+import { NotesRouter } from './routers/NotesRouter';
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -48,6 +49,7 @@ export class HTTPService implements ApplicationService {
   private readonly _systemRouter: SystemRouter;
   private readonly _databaseRouter: DatabaseRouter;
   private readonly _projectsRouter: ProjectsRouter;
+  private readonly _notesRouter: NotesRouter;
   private readonly _canvasRouter: CanvasRouter;
 
   public constructor(
@@ -62,12 +64,7 @@ export class HTTPService implements ApplicationService {
   ) {
     this._app = express();
     this._server = http.createServer(this._app);
-    this._httpTools = new HTTPTools(
-      profiler,
-      _logger,
-      _config,
-      databaseService,
-    );
+    this._httpTools = new HTTPTools(profiler, _logger, _config);
     this._authenticationRouter = new AuthenticationRouter(
       this._httpTools,
       _config,
@@ -76,8 +73,6 @@ export class HTTPService implements ApplicationService {
       this._httpTools,
       databaseService,
       schemaFactory,
-      _logger,
-      roomService,
     );
     this._systemRouter = new SystemRouter(this._httpTools, _config);
     this._databaseRouter = new DatabaseRouter(
@@ -101,6 +96,11 @@ export class HTTPService implements ApplicationService {
       databaseService,
       schemaFactory,
       roomService,
+    );
+    this._notesRouter = new NotesRouter(
+      this._httpTools,
+      databaseService,
+      _logger,
     );
 
     this._setupRoutes();
@@ -168,6 +168,7 @@ export class HTTPService implements ApplicationService {
     this._app.use(this._httpTools.handleMiddleware(this._httpTools.findUser));
     this._app.use('/auth', this._authenticationRouter.register());
     this._app.use('/project', this._projectsRouter.register());
+    this._app.use('/note', this._notesRouter.register());
     this._app.use('/room', this._roomRouter.register());
     this._app.use('/canvas', this._canvasRouter.register());
     this._app.use('/system', this._systemRouter.register());

@@ -29,9 +29,9 @@
     },
     "nodes": {
       "type": "relation",
-      "relation": "manyToMany",
+      "relation": "oneToMany",
       "target": "api::v2-node-reference.v2-node-reference",
-      "mappedBy": "notes"
+      "mappedBy": "note"
     }
   }
 }

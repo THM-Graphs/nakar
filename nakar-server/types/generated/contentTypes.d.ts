@@ -658,6 +658,7 @@ export interface ApiV2CanvasLabelSettingV2CanvasLabelSetting
     draftAndPublish: true;
   };
   attributes: {
+    canvas: Schema.Attribute.Relation<'manyToOne', 'api::v2-canvas.v2-canvas'>;
     colorIndex: Schema.Attribute.Enumeration<
       ['color0', 'color1', 'color2', 'color3', 'color4', 'color5']
     >;
@@ -710,6 +711,10 @@ export interface ApiV2CanvasV2Canvas extends Struct.CollectionTypeSchema {
       'api::v2-canvas.v2-canvas'
     > &
       Schema.Attribute.Private;
+    nodeSettings: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::v2-canvas-label-setting.v2-canvas-label-setting'
+    >;
     publishedAt: Schema.Attribute.DateTime;
     room: Schema.Attribute.Relation<'manyToOne', 'api::v2-room.v2-room'>;
     scaleType: Schema.Attribute.Enumeration<
@@ -752,6 +757,10 @@ export interface ApiV2CommonPropertyV2CommonProperty
       'api::v2-common-property.v2-common-property'
     > &
       Schema.Attribute.Private;
+    project: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::v2-project.v2-project'
+    >;
     publishedAt: Schema.Attribute.DateTime;
     rightDatabase: Schema.Attribute.Relation<
       'manyToOne',
@@ -878,7 +887,7 @@ export interface ApiV2NodeReferenceV2NodeReference
     > &
       Schema.Attribute.Private;
     nodeId: Schema.Attribute.String;
-    notes: Schema.Attribute.Relation<'manyToMany', 'api::v2-note.v2-note'>;
+    note: Schema.Attribute.Relation<'manyToOne', 'api::v2-note.v2-note'>;
     publishedAt: Schema.Attribute.DateTime;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
@@ -947,7 +956,7 @@ export interface ApiV2NoteV2Note extends Struct.CollectionTypeSchema {
     > &
       Schema.Attribute.Private;
     nodes: Schema.Attribute.Relation<
-      'manyToMany',
+      'oneToMany',
       'api::v2-node-reference.v2-node-reference'
     >;
     project: Schema.Attribute.Relation<
@@ -1014,6 +1023,10 @@ export interface ApiV2ProjectV2Project extends Struct.CollectionTypeSchema {
     collaborators: Schema.Attribute.Relation<
       'manyToMany',
       'plugin::users-permissions.user'
+    >;
+    commonProperties: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::v2-common-property.v2-common-property'
     >;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &

@@ -94,7 +94,7 @@ export class DatabaseService implements ApplicationService {
         } else {
           result = await next();
         }
-      } else if (context.uid === 'api::note.note') {
+      } else if (context.uid === 'api::v2-note.v2-note') {
         if (context.action === 'delete') {
           const id: string = context.params.documentId;
           const note: Result<'api::v2-note.v2-note'> | null =
@@ -191,20 +191,15 @@ export class DatabaseService implements ApplicationService {
   }
 
   public async getPublicRooms(): Promise<Result<'api::v2-room.v2-room'>[]> {
-    return (
-      await strapi.documents('api::v2-room.v2-room').findMany({
-        status: 'published',
-        sort: 'title:asc',
-        filters: {
-          // TODO ???
-          visibility: {
-            $eq: 'public',
-          },
+    return await strapi.documents('api::v2-room.v2-room').findMany({
+      status: 'published',
+      sort: 'title:asc',
+      filters: {
+        visibility: {
+          $eq: 'public',
         },
-      })
-    ).filter(
-      (r: Result<'api::v2-room.v2-room'>): boolean => r.visibility === 'public',
-    );
+      },
+    });
   }
 
   public async getScenarioOfCanvas(
@@ -454,11 +449,14 @@ export class DatabaseService implements ApplicationService {
   public async updateNote(
     note: Result<'api::v2-note.v2-note'>,
     params: {
-      nodes: string[];
       content: string;
     },
   ): Promise<void> {
-    // TODO
+    await strapi.documents('api::v2-note.v2-note').update({
+      documentId: note.documentId,
+      data: { content: params.content },
+      status: 'published',
+    });
   }
 
   public async getNotes(params: {
@@ -560,8 +558,17 @@ export class DatabaseService implements ApplicationService {
   }
 
   public async removeNote(note: Result<'api::v2-note.v2-note'>): Promise<void> {
+    const nodeReferences: Result<'api::v2-node-reference.v2-node-reference'>[] =
+      await this.getReferencedNodesOfNote(note);
+
+    for (const nodeReference of nodeReferences) {
+      await strapi
+        .documents('api::v2-node-reference.v2-node-reference')
+        .delete({ documentId: nodeReference.documentId });
+    }
+
     await strapi
-      .documents('api::note.note')
+      .documents('api::v2-note.v2-note')
       .delete({ documentId: note.documentId });
   }
 
@@ -812,6 +819,78 @@ export class DatabaseService implements ApplicationService {
     return await strapi
       .documents('api::v2-project.v2-project')
       .findOne({ documentId: projectId, status: 'published' });
+  }
+
+  public async getPostScenarioActionsOfScenario(
+    scenario: Result<'api::v2-scenario.v2-scenario'>,
+  ): Promise<Result<'api::v2-post-scenario-action.v2-post-scenario-action'>[]> {
+    const populatedScenario: Result<
+      'api::v2-scenario.v2-scenario',
+      { populate: ['postActions'] }
+    > | null = await strapi.documents('api::v2-scenario.v2-scenario').findOne({
+      documentId: scenario.documentId,
+      populate: ['postActions'],
+    });
+
+    if (populatedScenario == null) {
+      throw new Error('Scenario not found.');
+    }
+
+    return populatedScenario.postActions ?? [];
+  }
+
+  public async getCommonPropertyConfigsOfCanvas(
+    canvas: Result<'api::v2-canvas.v2-canvas'>,
+  ): Promise<Result<'api::v2-common-property.v2-common-property'>[]> {
+    const project: Result<'api::v2-project.v2-project'> | null =
+      await this.getProjectOfCanvas(canvas);
+    if (project == null) {
+      throw new Error('Project not found.');
+    }
+
+    const populatedProject: Result<
+      'api::v2-project.v2-project',
+      { populate: ['commonProperties'] }
+    > | null = await strapi.documents('api::v2-project.v2-project').findOne({
+      documentId: project.documentId,
+      status: 'published',
+      populate: ['commonProperties'],
+    });
+    if (populatedProject == null) {
+      throw new Error('Project not found.');
+    }
+
+    return populatedProject.commonProperties ?? [];
+  }
+
+  public async getLeftDatabaseOfCommonProperty(
+    commonProperty: Result<'api::v2-common-property.v2-common-property'>,
+  ): Promise<Result<'api::v2-database-connection.v2-database-connection'> | null> {
+    return (
+      (
+        await strapi
+          .documents('api::v2-common-property.v2-common-property')
+          .findOne({
+            documentId: commonProperty.documentId,
+            populate: ['leftDatabase'],
+          })
+      )?.leftDatabase ?? null
+    );
+  }
+
+  public async getRightDatabaseOfCommonProperty(
+    commonProperty: Result<'api::v2-common-property.v2-common-property'>,
+  ): Promise<Result<'api::v2-database-connection.v2-database-connection'> | null> {
+    return (
+      (
+        await strapi
+          .documents('api::v2-common-property.v2-common-property')
+          .findOne({
+            documentId: commonProperty.documentId,
+            populate: ['rightDatabase'],
+          })
+      )?.rightDatabase ?? null
+    );
   }
 
   private _sortByTitle(

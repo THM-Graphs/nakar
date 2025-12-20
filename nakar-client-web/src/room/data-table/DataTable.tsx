@@ -1,10 +1,8 @@
 import { Stack, Table } from "react-bootstrap";
 import { useBearStore } from "../../state/useBearStore.ts";
-import { NavbarButton } from "../../shared/elements/NavbarButton.tsx";
 
 export function DataTable() {
   const tableData = useBearStore((s) => s.room.scenario.graph.table.data);
-  const scenario = useBearStore((s) => s.room.scenario.graph.metaData.scenario);
 
   return (
     <Stack

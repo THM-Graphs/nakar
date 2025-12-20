@@ -204,9 +204,11 @@ export class SocketIOService implements ApplicationService {
                           this,
                           'Cannot find canvas to shut down.',
                         );
-                        await Promise.resolve(); return;
+                        await Promise.resolve();
+                        return;
                       } else {
-                        await this._canvasService.destroyCanvas(oldCanvas); return;
+                        await this._canvasService.destroyCanvas(oldCanvas);
+                        return;
                       }
                     },
                   )
