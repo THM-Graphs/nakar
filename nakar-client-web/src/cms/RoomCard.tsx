@@ -7,9 +7,11 @@ import { Stack } from "react-bootstrap";
 export function RoomCard(props: {
   room: SchemaRoom;
   showProjectTitle?: boolean;
+  width?: number;
 }) {
   return (
     <CMSCard
+      width={props.width}
       title={
         <Stack>
           {props.showProjectTitle && (
@@ -26,19 +28,6 @@ export function RoomCard(props: {
         ></RoomVisibilityDisplay>
       }
       icon={"person-workspace"}
-      rightBodyPaddingStart={200}
-      rightBody={
-        <Stack>
-          <span className={"text-muted small"}>Canvases</span>
-          {props.room.canvases.map((c) => (
-            <Link to={`/canvas/${c.id}`} key={c.id}>
-              <span key={c.id} className={"small"}>
-                {c.title}
-              </span>
-            </Link>
-          ))}
-        </Stack>
-      }
     ></CMSCard>
   );
 }

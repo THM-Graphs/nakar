@@ -40,19 +40,20 @@ export class NotesRouter {
   }
 
   private async _assertNote(req: Request): Promise<void> {
-    const noteId: string = this._httpTools.getPathParameter(req, 'id');
-    const note: Result<'api::v2-note.v2-note'> | null =
-      await this._databaseService.getNote({
-        id: noteId,
-      });
-    if (note == null) {
+    try {
+      const noteId: string = this._httpTools.getPathParameter(req, 'id');
+      const note: Result<'api::v2-note.v2-note'> =
+        await this._databaseService.getNote({
+          id: noteId,
+        });
+
+      req.nakar = {
+        ...req.nakar,
+        note: note,
+      };
+    } catch {
       throw new NotFound();
     }
-
-    req.nakar = {
-      ...req.nakar,
-      note: note,
-    };
   }
 
   private async _postNote(req: Request): Promise<void> {
@@ -62,18 +63,14 @@ export class NotesRouter {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
     const requestBody: Body = req.body as Body;
 
-    const canvas: Result<'api::v2-canvas.v2-canvas'> | null =
+    const canvas: Result<'api::v2-canvas.v2-canvas'> =
       await this._databaseService.getCanvas(requestBody.canvasId);
-    if (canvas == null) {
-      throw new NotFound();
-    }
-    const project: Result<'api::v2-project.v2-project'> | null =
+
+    const project: Result<'api::v2-project.v2-project'> =
       await this._databaseService.getProjectOfCanvas(canvas);
-    if (project == null) {
-      throw new NotFound();
-    }
 
     this._logger.debug(this, JSON.stringify(requestBody));
+
     await this._databaseService.addNote({
       content: requestBody.content,
       project: project,

@@ -9,7 +9,6 @@ import { ActionNavbarButton } from "../actions/ActionNavbarButton.tsx";
 import { UndoAction } from "../actions/UndoAction.ts";
 import { RedoAction } from "../actions/RedoAction.ts";
 import { RerunScenarioAction } from "../actions/RerunScenarioAction.ts";
-import { CanvasTabs } from "../canvas-tabs/CanvasTabs.tsx";
 
 export function CanvasToolbar(props: {
   context: AppContext;
@@ -53,7 +52,7 @@ export function CanvasToolbar(props: {
         <GraphDataToggle></GraphDataToggle>
       </Stack>
 
-      <CanvasTabs canvasContext={props.roomContext}></CanvasTabs>
+      {/*<CanvasTabs canvasContext={props.roomContext}></CanvasTabs>*/}
 
       {scenario && (
         <>

@@ -4,7 +4,6 @@ import { GraphRouter } from './GraphRouter';
 import { DatabaseService } from '../../database/DatabaseService';
 import { SchemaFactoryService } from '../../schema/SchemaFactoryService';
 import { Result } from '@strapi/types/dist/modules/documents/result';
-import { NotFound } from 'http-errors';
 import { ActionsRouter } from './ActionsRouter';
 import { CanvasService } from '../../room/CanvasService';
 import { operations, SchemaCanvas } from '../../../../src-gen/schema';
@@ -45,21 +44,14 @@ export class CanvasRouter {
 
   private async _assertCanvas(req: Request): Promise<void> {
     const id: string = this._httpTools.getPathParameter(req, 'id');
-    const canvas: Result<'api::v2-canvas.v2-canvas'> | null =
+    const canvas: Result<'api::v2-canvas.v2-canvas'> =
       await this._databaseService.getCanvas(id);
-    if (canvas == null) {
-      throw new NotFound();
-    }
-    const room: Result<'api::v2-room.v2-room'> | null =
+
+    const room: Result<'api::v2-room.v2-room'> =
       await this._databaseService.getRoomOfCanvas(canvas);
-    if (room == null) {
-      throw new NotFound();
-    }
-    const project: Result<'api::v2-project.v2-project'> | null =
+
+    const project: Result<'api::v2-project.v2-project'> =
       await this._databaseService.getProjectOfRoom(room);
-    if (project == null) {
-      throw new NotFound();
-    }
 
     req.nakar = {
       ...req.nakar,
@@ -78,6 +70,7 @@ export class CanvasRouter {
   private async _updateCanvas(req: Request): Promise<void> {
     type Body =
       operations['setCanvasData']['requestBody']['content']['application/json'];
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
     const body: Body = req.body as Body;
 
     if (body.compressRelationshipsWidthFactor != null) {
@@ -95,7 +88,7 @@ export class CanvasRouter {
     if (body.growNodesBasedOnDegreeFactor != null) {
       await this._databaseService.setGrowNodesBasedOnDegreeFactor(
         req.nakar.canvas,
-        body.growNodesBasedOnDegreeFactor,
+        Range.clamp(body.growNodesBasedOnDegreeFactor, 1, 100),
       );
     }
   }

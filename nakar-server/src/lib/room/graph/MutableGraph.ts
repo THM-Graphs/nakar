@@ -219,10 +219,7 @@ export class MutableGraph {
     return result;
   }
 
-  public applyPhysicalGraph(
-    physicalGraph: PhysicalGraph,
-    logger: LoggerService,
-  ): void {
+  public applyPhysicalGraph(physicalGraph: PhysicalGraph): void {
     for (const node of Object.values(physicalGraph.nodes)) {
       const foundNode: MutableNode | null = this.nodes.get(node.id);
       if (foundNode == null) {

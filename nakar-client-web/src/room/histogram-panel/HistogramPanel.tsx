@@ -10,11 +10,9 @@ import { HistogramSectionRelationshipProperties } from "./sections/HistogramSect
 
 export function HistogramPanel(props: { roomContext: CanvasContext }) {
   const histogram = useBearStore((s) => s.room.panels.histogram);
-  const rightPanel = useBearStore((s) => s.room.panels.right);
 
   return (
     <Panel
-      hidden={rightPanel !== "histogram"}
       direction={"right"}
       title={"Histogram"}
       onClose={() => {

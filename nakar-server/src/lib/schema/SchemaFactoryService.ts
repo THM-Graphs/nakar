@@ -24,8 +24,6 @@ import {
   SchemaScenarioQuery,
   SchemaUser,
 } from '../../../src-gen/schema';
-import { ConfigService } from '../config/ConfigService';
-import { MediaService } from '../media/MediaService';
 import { MutableGraph } from '../room/graph/MutableGraph';
 import { ProfilerTask } from '../profiler/ProfilerTask';
 import { MutableNode } from '../room/graph/MutableNode';
@@ -45,8 +43,6 @@ import { Range } from '../tools/Range';
 
 export class SchemaFactoryService implements ApplicationService {
   public constructor(
-    private readonly _configService: ConfigService,
-    private readonly _media: MediaService,
     private readonly _profiler: ProfilerService,
     private readonly _database: DatabaseService,
   ) {}
@@ -88,7 +84,7 @@ export class SchemaFactoryService implements ApplicationService {
           },
         ),
       ),
-      projectTitle: project?.title ?? '',
+      projectTitle: project.title ?? '',
     };
   }
 
@@ -217,7 +213,7 @@ export class SchemaFactoryService implements ApplicationService {
           ): Promise<SchemaGraphLabel> =>
             await this._createSchemaGraphLabel(id, label, databaseCache),
         ),
-      histogram: this._createSchemaHistogram(graph, notes),
+      histogram: this._createSchemaHistogram(graph),
       notes: await Promise.all(
         notes.notes
           .toArray()
@@ -339,11 +335,9 @@ export class SchemaFactoryService implements ApplicationService {
   public async createSchemaCanvasPreview(
     canvas: Result<'api::v2-canvas.v2-canvas'>,
   ): Promise<SchemaCanvas> {
-    const room: Result<'api::v2-room.v2-room'> | null =
+    const room: Result<'api::v2-room.v2-room'> =
       await this._database.getRoomOfCanvas(canvas);
-    if (room == null) {
-      throw new Error('Room not found.');
-    }
+
     return {
       id: canvas.documentId,
       title: canvas.title ?? '',
@@ -367,10 +361,7 @@ export class SchemaFactoryService implements ApplicationService {
     };
   }
 
-  private _createSchemaHistogram(
-    graph: MutableGraph,
-    notes: IndexedNoteCollection,
-  ): SchemaHistogram {
+  private _createSchemaHistogram(graph: MutableGraph): SchemaHistogram {
     const t: ProfilerTask = this._profiler.profile(
       this,
       '_createSchemaHistogram',

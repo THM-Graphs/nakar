@@ -24,7 +24,6 @@ export function InspectorPanel(props: {
   roomContext: CanvasContext;
 }) {
   const inspector = useBearStore((s) => s.room.panels.inspector);
-  const rightPanel = useBearStore((s) => s.room.panels.right);
   const graphElements = useBearStore((s) => s.room.scenario.graph.elements);
   const elements = inspector.element.reduce<(Node | Edge)[]>((akku, next) => {
     const foundElement =
@@ -39,7 +38,6 @@ export function InspectorPanel(props: {
   return (
     <Panel
       direction={"right"}
-      hidden={rightPanel !== "inspector"}
       onClose={() => {
         inspector.hide();
       }}

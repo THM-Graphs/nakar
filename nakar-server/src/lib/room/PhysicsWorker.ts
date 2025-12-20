@@ -133,11 +133,9 @@ export class PhysicsWorker {
   }
 
   private async _getCanvas(): Promise<Result<'api::v2-canvas.v2-canvas'>> {
-    const canvas: Result<'api::v2-canvas.v2-canvas'> | null =
+    const canvas: Result<'api::v2-canvas.v2-canvas'> =
       await this._database.getCanvas(this._canvasId);
-    if (canvas == null) {
-      throw new Error('Canvas not found.');
-    }
+
     return canvas;
   }
 }

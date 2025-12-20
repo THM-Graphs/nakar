@@ -69,71 +69,49 @@ export class DatabaseService implements ApplicationService {
           result = await next();
 
           const id: string = context.params.documentId;
-          const canvas: Result<'api::v2-canvas.v2-canvas'> | null =
+          const canvas: Result<'api::v2-canvas.v2-canvas'> =
             await this.getCanvas(id);
-          if (canvas !== null) {
-            this._onCanvasAdded.next(canvas);
-          } else {
-            this._logger.error(this, `Newly created canvas ${id} not found.`);
-          }
+          this._onCanvasAdded.next(canvas);
         } else if (context.action === 'delete') {
           const id: string = context.params.documentId;
-          const canvas: Result<'api::v2-canvas.v2-canvas'> | null =
+          const canvas: Result<'api::v2-canvas.v2-canvas'> =
             await this.getCanvas(id);
-
           result = await next();
-
-          if (canvas !== null) {
-            this._onCanvasDeleted.next(canvas);
-          } else {
-            this._logger.error(this, `Newly deleted canvas ${id} not found.`);
-          }
+          this._onCanvasDeleted.next(canvas);
         } else if (context.action === 'create') {
           result = await next();
 
           // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
           const id: string = (result as Result<'api::v2-canvas.v2-canvas'>)
             .documentId;
-          const canvas: Result<'api::v2-canvas.v2-canvas'> | null =
+          const canvas: Result<'api::v2-canvas.v2-canvas'> =
             await this.getCanvas(id);
-          if (canvas !== null) {
-            this._onCanvasAdded.next(canvas);
-          } else {
-            this._logger.error(this, `Newly created canvas ${id} not found.`);
-          }
+          this._onCanvasAdded.next(canvas);
         } else {
           result = await next();
         }
       } else if (context.uid === 'api::v2-note.v2-note') {
         if (context.action === 'delete') {
           const id: string = context.params.documentId;
-          const note: Result<'api::v2-note.v2-note'> | null =
-            await this.getNote({
-              id: id,
-            });
-          const project: Result<'api::v2-project.v2-project'> | null = note
-            ? await this.getProjectOfNote(note)
-            : null;
+          const note: Result<'api::v2-note.v2-note'> = await this.getNote({
+            id: id,
+          });
+          const project: Result<'api::v2-project.v2-project'> | null =
+            await this.getProjectOfNote(note);
 
           result = await next();
 
-          if (project != null) {
-            this._onNoteChanges.next({ projectId: project.documentId });
-          }
+          this._onNoteChanges.next({ projectId: project.documentId });
         } else if (context.action === 'update') {
           result = await next();
 
           const id: string = context.params.documentId;
-          const note: Result<'api::v2-note.v2-note'> | null =
-            await this.getNote({
-              id: id,
-            });
-          const project: Result<'api::v2-project.v2-project'> | null = note
-            ? await this.getProjectOfNote(note)
-            : null;
-          if (project != null) {
-            this._onNoteChanges.next({ projectId: project.documentId });
-          }
+          const note: Result<'api::v2-note.v2-note'> = await this.getNote({
+            id: id,
+          });
+          const project: Result<'api::v2-project.v2-project'> =
+            await this.getProjectOfNote(note);
+          this._onNoteChanges.next({ projectId: project.documentId });
         } else if (context.action === 'create') {
           result = await next();
 
@@ -153,16 +131,12 @@ export class DatabaseService implements ApplicationService {
           result = await next();
 
           const id: string = context.params.documentId;
-          const note: Result<'api::v2-note.v2-note'> | null =
-            await this.getNote({
-              id: id,
-            });
-          const project: Result<'api::v2-project.v2-project'> | null = note
-            ? await this.getProjectOfNote(note)
-            : null;
-          if (project != null) {
-            this._onNoteChanges.next({ projectId: project.documentId });
-          }
+          const note: Result<'api::v2-note.v2-note'> = await this.getNote({
+            id: id,
+          });
+          const project: Result<'api::v2-project.v2-project'> =
+            await this.getProjectOfNote(note);
+          this._onNoteChanges.next({ projectId: project.documentId });
         } else {
           result = await next();
         }
@@ -182,22 +156,33 @@ export class DatabaseService implements ApplicationService {
 
   public async getDatabase(
     databaseId: string,
-  ): Promise<Result<'api::v2-database-connection.v2-database-connection'> | null> {
-    return await strapi
-      .documents('api::v2-database-connection.v2-database-connection')
-      .findOne({
-        status: 'published',
-        documentId: databaseId,
-      });
+  ): Promise<Result<'api::v2-database-connection.v2-database-connection'>> {
+    const database: Result<'api::v2-database-connection.v2-database-connection'> | null =
+      await strapi
+        .documents('api::v2-database-connection.v2-database-connection')
+        .findOne({
+          status: 'published',
+          documentId: databaseId,
+        });
+    if (database == null) {
+      throw new Error(`Database Connection ${databaseId} not found.`);
+    }
+    return database;
   }
 
   public async getRoom(
     roomId: string,
-  ): Promise<Result<'api::v2-room.v2-room'> | null> {
-    return await strapi.documents('api::v2-room.v2-room').findOne({
-      status: 'published',
-      documentId: roomId,
-    });
+  ): Promise<Result<'api::v2-room.v2-room'>> {
+    const room: Result<'api::v2-room.v2-room'> | null = await strapi
+      .documents('api::v2-room.v2-room')
+      .findOne({
+        status: 'published',
+        documentId: roomId,
+      });
+    if (room == null) {
+      throw new Error(`Room ${roomId} not found.`);
+    }
+    return room;
   }
 
   public async getPublicRooms(): Promise<Result<'api::v2-room.v2-room'>[]> {
@@ -214,13 +199,13 @@ export class DatabaseService implements ApplicationService {
 
   public async getScenarioOfCanvas(
     canvas: Result<'api::v2-canvas.v2-canvas'>,
-  ): Promise<Result<'api::v2-scenario.v2-scenario'> | null> {
+  ): Promise<Result<'api::v2-scenario.v2-scenario'>> {
     const graph: MutableGraph = await this.getMutableGraph(canvas);
     const scenarioId: string | null = graph.metaData.scenarioId;
     if (scenarioId == null) {
-      return null;
+      throw new Error(`Scenario of canvas ${canvas.documentId} not found.`);
     }
-    const scenario: Result<'api::v2-scenario.v2-scenario'> | null =
+    const scenario: Result<'api::v2-scenario.v2-scenario'> =
       await this.getScenario(scenarioId);
     return scenario;
   }
@@ -249,11 +234,17 @@ export class DatabaseService implements ApplicationService {
 
   public async getScenario(
     scenarioId: string,
-  ): Promise<Result<'api::v2-scenario.v2-scenario'> | null> {
-    return await strapi.documents('api::v2-scenario.v2-scenario').findOne({
-      status: 'published',
-      documentId: scenarioId,
-    });
+  ): Promise<Result<'api::v2-scenario.v2-scenario'>> {
+    const scenario: Result<'api::v2-scenario.v2-scenario'> | null = await strapi
+      .documents('api::v2-scenario.v2-scenario')
+      .findOne({
+        status: 'published',
+        documentId: scenarioId,
+      });
+    if (scenario == null) {
+      throw new Error(`Scenario ${scenarioId} not found.`);
+    }
+    return scenario;
   }
 
   public async getScenariosOfGroup(
@@ -304,11 +295,8 @@ export class DatabaseService implements ApplicationService {
   public async getScenarioGroupsOfRoom(
     room: Result<'api::v2-room.v2-room'>,
   ): Promise<Result<'api::v2-scenario-group.v2-scenario-group'>[]> {
-    const project: Result<'api::v2-project.v2-project'> | null =
+    const project: Result<'api::v2-project.v2-project'> =
       await this.getProjectOfRoom(room);
-    if (project == null) {
-      throw new Error(`Project of room ${room.documentId} not found.`);
-    }
     return await this.getScenarioGroupsOfProject(project);
   }
 
@@ -556,14 +544,16 @@ export class DatabaseService implements ApplicationService {
 
   public async getNote(params: {
     id: string;
-  }): Promise<Result<'api::v2-note.v2-note'> | null> {
+  }): Promise<Result<'api::v2-note.v2-note'>> {
     const result: Result<'api::v2-note.v2-note'> | null = await strapi
       .documents('api::v2-note.v2-note')
       .findOne({
         status: 'published',
         documentId: params.id,
       });
-
+    if (result == null) {
+      throw new Error(`Note ${params.id} not found.`);
+    }
     return result;
   }
 
@@ -584,7 +574,7 @@ export class DatabaseService implements ApplicationService {
 
   public async getProjectOfNote(
     note: Result<'api::v2-note.v2-note'>,
-  ): Promise<Result<'api::v2-project.v2-project'> | null> {
+  ): Promise<Result<'api::v2-project.v2-project'>> {
     const populatedNote: Result<
       'api::v2-note.v2-note',
       { populate: ['project'] }
@@ -598,7 +588,13 @@ export class DatabaseService implements ApplicationService {
       throw new Error('Note not found.');
     }
 
-    return populatedNote.project ?? null;
+    const project: Result<'api::v2-project.v2-project'> | null =
+      populatedNote.project ?? null;
+
+    if (project == null) {
+      throw new Error(`Project of note ${note.documentId} not found.`);
+    }
+    return project;
   }
 
   public async getOwnerOfProject(
@@ -742,7 +738,7 @@ export class DatabaseService implements ApplicationService {
 
   public async getProjectOfRoom(
     room: Result<'api::v2-room.v2-room'>,
-  ): Promise<Result<'api::v2-project.v2-project'> | null> {
+  ): Promise<Result<'api::v2-project.v2-project'>> {
     const populatedRoom: Result<
       'api::v2-room.v2-room',
       { populate: ['project'] }
@@ -755,20 +751,28 @@ export class DatabaseService implements ApplicationService {
       throw new Error(`Room not found: ${room.documentId}`);
     }
 
-    return populatedRoom.project ?? null;
+    if (populatedRoom.project == null) {
+      throw new Error(`Project of room ${room.documentId} not found.`);
+    }
+
+    return populatedRoom.project;
   }
 
   public async getCanvas(
     id: string,
-  ): Promise<Result<'api::v2-canvas.v2-canvas'> | null> {
-    return await strapi
+  ): Promise<Result<'api::v2-canvas.v2-canvas'>> {
+    const result: Result<'api::v2-canvas.v2-canvas'> | null = await strapi
       .documents('api::v2-canvas.v2-canvas')
       .findOne({ documentId: id, status: 'published' });
+    if (result == null) {
+      throw new Error(`Canvas ${id} not found.`);
+    }
+    return result;
   }
 
   public async getProjectOfCanvas(
     canvas: Result<'api::v2-canvas.v2-canvas'>,
-  ): Promise<Result<'api::v2-project.v2-project'> | null> {
+  ): Promise<Result<'api::v2-project.v2-project'>> {
     const populatedCanvas: Result<
       'api::v2-canvas.v2-canvas',
       { populate: { room: { populate: ['project'] } } }
@@ -781,13 +785,17 @@ export class DatabaseService implements ApplicationService {
     if (populatedCanvas == null) {
       throw new Error(`Cannot find canvas ${canvas.documentId}.`);
     }
-
-    return populatedCanvas.room?.project ?? null;
+    const project: Result<'api::v2-project.v2-project'> | null =
+      populatedCanvas.room?.project ?? null;
+    if (project == null) {
+      throw new Error(`Project of canvas ${canvas.documentId} not found.`);
+    }
+    return project;
   }
 
   public async getRoomOfCanvas(
     canvas: Result<'api::v2-canvas.v2-canvas'>,
-  ): Promise<Result<'api::v2-room.v2-room'> | null> {
+  ): Promise<Result<'api::v2-room.v2-room'>> {
     const populatedCanvas: Result<
       'api::v2-canvas.v2-canvas',
       { populate: ['room'] }
@@ -801,7 +809,12 @@ export class DatabaseService implements ApplicationService {
       throw new Error(`Cannot find canvas ${canvas.documentId}.`);
     }
 
-    return populatedCanvas.room ?? null;
+    const room: Result<'api::v2-room.v2-room'> | null =
+      populatedCanvas.room ?? null;
+    if (room == null) {
+      throw new Error(`Room of canvas ${canvas.documentId} not found.`);
+    }
+    return room;
   }
 
   public async getGrapFileOfCanvas(
@@ -825,10 +838,14 @@ export class DatabaseService implements ApplicationService {
 
   public async getProject(
     projectId: string,
-  ): Promise<Result<'api::v2-project.v2-project'> | null> {
-    return await strapi
+  ): Promise<Result<'api::v2-project.v2-project'>> {
+    const project: Result<'api::v2-project.v2-project'> | null = await strapi
       .documents('api::v2-project.v2-project')
       .findOne({ documentId: projectId, status: 'published' });
+    if (project == null) {
+      throw new Error(`Project ${projectId} not found.`);
+    }
+    return project;
   }
 
   public async getPostScenarioActionsOfScenario(
@@ -852,11 +869,8 @@ export class DatabaseService implements ApplicationService {
   public async getCommonPropertyConfigsOfCanvas(
     canvas: Result<'api::v2-canvas.v2-canvas'>,
   ): Promise<Result<'api::v2-common-property.v2-common-property'>[]> {
-    const project: Result<'api::v2-project.v2-project'> | null =
+    const project: Result<'api::v2-project.v2-project'> =
       await this.getProjectOfCanvas(canvas);
-    if (project == null) {
-      throw new Error('Project not found.');
-    }
 
     const populatedProject: Result<
       'api::v2-project.v2-project',

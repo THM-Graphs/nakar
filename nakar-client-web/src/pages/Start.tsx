@@ -68,9 +68,10 @@ export function Start(props: { context: AppContext }) {
             {loaderData.recentRooms.length > 0 && (
               <Stack>
                 <h5>Recent Rooms</h5>
-                <Stack direction={"vertical"} gap={3} className={"flex-wrap"}>
+                <Stack direction={"horizontal"} gap={3} className={"flex-wrap"}>
                   {loaderData.recentRooms.map((r) => (
                     <RoomCard
+                      width={300}
                       key={r.id}
                       room={r}
                       showProjectTitle={true}
@@ -90,6 +91,9 @@ export function Start(props: { context: AppContext }) {
                     showProjectTitle={true}
                   ></RoomCard>
                 ))}
+                {loaderData.rooms.rooms.length === 0 && (
+                  <span className={"small text-muted"}>None</span>
+                )}
               </Stack>
             </Stack>
 
@@ -101,6 +105,9 @@ export function Start(props: { context: AppContext }) {
                     {loaderData.projects.data.myProjects.map((r) => (
                       <ProjectCard key={r.id} project={r}></ProjectCard>
                     ))}
+                    {loaderData.projects.data.myProjects.length === 0 && (
+                      <span className={"small text-muted"}>None</span>
+                    )}
                   </Stack>
                 </Stack>
                 <Stack>
@@ -109,6 +116,8 @@ export function Start(props: { context: AppContext }) {
                     {loaderData.projects.data.collaborationProjects.map((r) => (
                       <ProjectCard key={r.id} project={r}></ProjectCard>
                     ))}
+                    {loaderData.projects.data.collaborationProjects.length ===
+                      0 && <span className={"small text-muted"}>None</span>}
                   </Stack>
                 </Stack>
               </>

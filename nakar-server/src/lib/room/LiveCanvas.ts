@@ -95,10 +95,6 @@ export class LiveCanvas implements ApplicationService {
     return this._canvasId;
   }
 
-  public get state$(): Observable<LiveCanvasState> {
-    return this._state.asObservable();
-  }
-
   public addSubscription(subscription: Subscription): void {
     this._subscriptions.add(subscription);
   }
@@ -297,9 +293,6 @@ export class LiveCanvas implements ApplicationService {
       new TaskQueueTask('Loading scenario', async (): Promise<void> => {
         const scenario: Result<'api::v2-scenario.v2-scenario'> | null =
           await this._database.getScenario(params.scenarioId);
-        if (scenario == null) {
-          throw new NotFound('Scenario not found.');
-        }
 
         const queries: Result<'api::v2-query.v2-query'>[] =
           await this._database.getQueriesOfScenario(scenario);
@@ -490,7 +483,7 @@ export class LiveCanvas implements ApplicationService {
           task.finish();
         }
 
-        this._postProcessGraph(newGraph);
+        await this._postProcessGraph(newGraph);
 
         this._onEvent.next({
           type: 'CanvasEventGraphMetaDataChanged',
@@ -541,13 +534,8 @@ export class LiveCanvas implements ApplicationService {
           throw new Error(`Cannot find node ${params.nodeId} to expand.`);
         }
 
-        const database: Result<'api::v2-database-connection.v2-database-connection'> | null =
+        const database: Result<'api::v2-database-connection.v2-database-connection'> =
           await this._database.getDatabase(node.source);
-        if (database == null) {
-          throw new Error(
-            `Cannot find database ${node.source} to run expand node query on.`,
-          );
-        }
 
         const neo4jDatabaseInfo: Neo4jDatabaseInfo =
           Neo4jDatabaseInfo.parse(database);
@@ -611,10 +599,10 @@ export class LiveCanvas implements ApplicationService {
               this,
               `Expand node result for ${params.nodeId}: ${expandResult.nodes.size.toString()} nodes and ${expandResult.relationships.size.toString()} relationships.`,
             );
-
-            this._postProcessGraph(graph);
           },
         );
+
+        await this._postProcessGraph(newGraph);
 
         this._physicsWorker.setGraph(
           newGraph.toPhysicalGraph(await this._getCanvas()),
@@ -650,13 +638,8 @@ export class LiveCanvas implements ApplicationService {
       throw new Error(`Cannot find node ${params.nodeId} to expand preview.`);
     }
 
-    const database: Result<'api::v2-database-connection.v2-database-connection'> | null =
+    const database: Result<'api::v2-database-connection.v2-database-connection'> =
       await this._database.getDatabase(node.source);
-    if (database == null) {
-      throw new Error(
-        `Cannot find database ${node.source} to run expand node preview query on.`,
-      );
-    }
 
     const neo4jDatabaseInfo: Neo4jDatabaseInfo =
       Neo4jDatabaseInfo.parse(database);
@@ -867,13 +850,9 @@ export class LiveCanvas implements ApplicationService {
   }): void {
     this._queue.addTask(
       new TaskQueueTask('Running query', async (): Promise<void> => {
-        const scenarioId: string | null = this.getGraph().metaData.scenarioId;
-
-        const database: Result<'api::v2-database-connection.v2-database-connection'> | null =
+        const database: Result<'api::v2-database-connection.v2-database-connection'> =
           await this._database.getDatabase(params.databaseId);
-        if (database == null) {
-          throw NotFound(`Database ${params.databaseId} not found.`);
-        }
+
         const credentials: Neo4jDatabaseInfo =
           Neo4jDatabaseInfo.parse(database);
 
@@ -912,10 +891,10 @@ export class LiveCanvas implements ApplicationService {
               graphElements.relationships,
               MutableGraphElementCreationAction.query,
             );
-
-            this._postProcessGraph(graph);
           },
         );
+
+        await this._postProcessGraph(newGraph);
 
         this._physicsWorker.setGraph(
           newGraph.toPhysicalGraph(await this._getCanvas()),
@@ -960,15 +939,9 @@ export class LiveCanvas implements ApplicationService {
             continue;
           }
 
-          const db: Result<'api::v2-database-connection.v2-database-connection'> | null =
+          const db: Result<'api::v2-database-connection.v2-database-connection'> =
             await this._database.getDatabase(source);
-          if (db == null) {
-            this._logger.error(
-              this,
-              `Unable to connect result nodes: Source ${source} not found.`,
-            );
-            continue;
-          }
+
           const credentials: Neo4jDatabaseInfo = Neo4jDatabaseInfo.parse(db);
 
           this._logger.log(
@@ -1211,11 +1184,6 @@ export class LiveCanvas implements ApplicationService {
             throw new Error(`Cannot find scenario in room ${this.canvasId}`);
           }
 
-          const scenario: Result<'api::v2-scenario.v2-scenario'> | null =
-            await this._database.getScenario(scenarioId);
-          if (scenario == null) {
-            throw new Error(`Cannot find scenario ${scenarioId}`);
-          }
           const results: Neo4jGraphElements[] = [];
 
           /* create unique pairs */
@@ -1252,13 +1220,9 @@ export class LiveCanvas implements ApplicationService {
               );
 
               const source: string = nodeA.source;
-              const dbDocument: Result<'api::v2-database-connection.v2-database-connection'> | null =
+              const dbDocument: Result<'api::v2-database-connection.v2-database-connection'> =
                 await this._database.getDatabase(source);
-              if (dbDocument == null) {
-                throw new Error(
-                  `Unable to get database info from node ${idA}.`,
-                );
-              }
+
               const dbInfo: Neo4jDatabaseInfo =
                 Neo4jDatabaseInfo.parse(dbDocument);
               // 'MATCH p = SHORTEST 1 (a)-[]-+(b) WHERE elementId(a) = $elementIdA AND elementId(b) = $elementIdB RETURN p';
@@ -1294,7 +1258,8 @@ export class LiveCanvas implements ApplicationService {
             },
           );
 
-          this._postProcessGraph(newGraph);
+          await this._postProcessGraph(newGraph);
+
           this._physicsWorker.setGraph(
             newGraph.toPhysicalGraph(await this._getCanvas()),
           );
@@ -1323,14 +1288,9 @@ export class LiveCanvas implements ApplicationService {
   public loadNode(params: { nodeId: string; databaseId: string }): void {
     this._queue.addTask(
       new TaskQueueTask('Loading node', async (): Promise<void> => {
-        const oldGraph: MutableGraph = this.getGraph();
-        const scenarioId: string | null = oldGraph.metaData.scenarioId;
-
-        const dbDocument: Result<'api::v2-database-connection.v2-database-connection'> | null =
+        const dbDocument: Result<'api::v2-database-connection.v2-database-connection'> =
           await this._database.getDatabase(params.databaseId);
-        if (dbDocument == null) {
-          throw new Error(`Unable to get database ${params.databaseId}.`);
-        }
+
         const dbInfo: Neo4jDatabaseInfo = Neo4jDatabaseInfo.parse(dbDocument);
 
         const result: Neo4jGraphElements = await this._neo4j.executeQuery(
@@ -1350,9 +1310,10 @@ export class LiveCanvas implements ApplicationService {
               result.nodes.toValueArray()[0],
               MutableGraphElementCreationAction.search,
             );
-            this._postProcessGraph(graph);
           },
         );
+
+        await this._postProcessGraph(newGraph);
 
         this._physicsWorker.setGraph(
           newGraph.toPhysicalGraph(await this._getCanvas()),
@@ -1382,15 +1343,8 @@ export class LiveCanvas implements ApplicationService {
     const task: ProfilerTask = this._profiler.profile(this, 'Save Graph');
     const graph: MutableGraph = this.getGraph();
 
-    const canvas: Result<'api::v2-canvas.v2-canvas'> | null =
+    const canvas: Result<'api::v2-canvas.v2-canvas'> =
       await this._database.getCanvas(this.canvasId);
-    if (canvas == null) {
-      this._logger.error(
-        this,
-        `Canvas ${this.canvasId} not found for saving graph.`,
-      );
-      return;
-    }
 
     await this._database.setMutableGraphOfCanvas(canvas, graph.toPlain());
     task.finish();
@@ -1403,7 +1357,7 @@ export class LiveCanvas implements ApplicationService {
   }
   private _handleWTEventPhysicsUpdate(event: WTEventPhysicsUpdate): void {
     const graph: MutableGraph = this.getGraph();
-    graph.applyPhysicalGraph(event.graph, this._logger);
+    graph.applyPhysicalGraph(event.graph);
     this._onEvent.next({
       type: 'CanvasEventRoomPhysicsUpdated',
       graph: graph,
@@ -1478,9 +1432,7 @@ export class LiveCanvas implements ApplicationService {
   private async _mergeNodes(graph: MutableGraph): Promise<void> {
     const canvas: Result<'api::v2-canvas.v2-canvas'> | null =
       await this._database.getCanvas(this.canvasId);
-    if (canvas == null) {
-      throw new Error('Canvas not found.');
-    }
+
     const configs: Result<'api::v2-common-property.v2-common-property'>[] =
       await this._database.getCommonPropertyConfigsOfCanvas(canvas);
 
@@ -1777,13 +1729,9 @@ export class LiveCanvas implements ApplicationService {
   }
 
   private async _loadGraph(): Promise<MutableGraph> {
-    const canvas: Result<'api::v2-canvas.v2-canvas'> | null =
+    const canvas: Result<'api::v2-canvas.v2-canvas'> =
       await this._database.getCanvas(this._canvasId);
-    if (canvas == null) {
-      throw new Error(
-        `Unable to load graph. Canvas ${this._canvasId} not found.`,
-      );
-    }
+
     this._logger.debug(
       this,
       `Will load graph of canvas ${canvas.documentId} ('${canvas.title ?? ''}') into memory.`,
@@ -1824,11 +1772,8 @@ export class LiveCanvas implements ApplicationService {
   }
 
   private async _getCanvas(): Promise<Result<'api::v2-canvas.v2-canvas'>> {
-    const canvas: Result<'api::v2-canvas.v2-canvas'> | null =
+    const canvas: Result<'api::v2-canvas.v2-canvas'> =
       await this._database.getCanvas(this._canvasId);
-    if (canvas == null) {
-      throw new Error('Canvas not found.');
-    }
     return canvas;
   }
 }

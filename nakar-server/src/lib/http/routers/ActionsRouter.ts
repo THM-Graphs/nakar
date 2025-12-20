@@ -51,6 +51,7 @@ export class ActionsRouter {
     router.post('/redo', this._httpTools.handle(this._redo.bind(this)));
     router.post(
       '/run-query',
+      this._httpTools.assertLoggedIn,
       this._httpTools.handle(this._runQuery.bind(this)),
     );
     router.post(

@@ -23,7 +23,6 @@ import { DatabaseSelect } from "../database/DatabaseSelect.tsx";
 // TODO: Split into parts to prevent layout shift on login
 export function QueryPanel(props: { roomContext: CanvasContext }) {
   const query = useBearStore((s) => s.room.panels.query);
-  const leftPanel = useBearStore((s) => s.room.panels.left);
   const referencedDatabases = useBearStore(
     (s) => s.room.panels.scenarios.scenarios.referencedDatabases,
   );
@@ -72,7 +71,6 @@ export function QueryPanel(props: { roomContext: CanvasContext }) {
 
   return (
     <Panel
-      hidden={leftPanel !== "query"}
       direction={"left"}
       title={"Query"}
       onClose={() => {

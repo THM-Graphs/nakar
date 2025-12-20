@@ -13,7 +13,6 @@ export function NotesPanel(props: {
   context: AppContext;
   roomContext: CanvasContext;
 }) {
-  const leftPanel = useBearStore((s) => s.room.panels.left);
   const notesPanel = useBearStore((s) => s.room.panels.notes);
   const graphElements = useBearStore((s) => s.room.scenario.graph.elements);
   const elements = useBearStore((s) => s.room.panels.inspector.element);
@@ -29,7 +28,6 @@ export function NotesPanel(props: {
 
   return (
     <Panel
-      hidden={leftPanel !== "notes"}
       direction={"left"}
       title={"Notes"}
       onClose={() => {

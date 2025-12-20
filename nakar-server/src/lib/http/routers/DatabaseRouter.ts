@@ -1,27 +1,21 @@
 import { HTTPTools } from '../HTTPTools';
 import { DatabaseService } from '../../database/DatabaseService';
 import { LoggerService } from '../../logger/LoggerService';
-import { ConfigService } from '../../config/ConfigService';
-import { MediaService } from '../../media/MediaService';
 import { ProfilerService } from '../../profiler/ProfilerService';
 import { type Request, Router } from 'express';
 import type {
   operations,
   SchemaDatabaseSearchCapabilitiesEntry,
   SchemaDatabaseStats,
-  SchemaGraph,
   SchemaNodePreview,
 } from '../../../../src-gen/schema';
-import { NotFound } from 'http-errors';
 import { Neo4jDatabaseInfo } from '../../neo4j/Neo4jDatabaseInfo';
 import { Neo4jService } from '../../neo4j/Neo4jService';
 import { Neo4jNode } from '../../neo4j/Neo4jNode';
 import { MutableGraph } from '../../room/graph/MutableGraph';
 import { MutableGraphElementCreationAction } from '../../room/graph/MutableGraphElementCreationAction';
 import { SSet } from '../../tools/Set';
-import { SMap } from '../../tools/Map';
 import { Neo4jSearchCapabilities } from '../../neo4j/Neo4jSearchCapabilities';
-import { SchemaFactoryService } from '../../schema/SchemaFactoryService';
 import { Result } from '@strapi/types/dist/modules/documents/result';
 import { MutableNode } from '../../room/graph/MutableNode';
 
@@ -32,9 +26,6 @@ export class DatabaseRouter {
     private readonly _neo4jService: Neo4jService,
     private readonly _logger: LoggerService,
     private readonly _profiler: ProfilerService,
-    config: ConfigService,
-    media: MediaService,
-    private readonly _schemaFactory: SchemaFactoryService,
   ) {}
 
   public register(): Router {
@@ -59,11 +50,8 @@ export class DatabaseRouter {
 
   private async _assertDatabase(req: Request): Promise<void> {
     const databaseId: string = this._httpTools.getPathParameter(req, 'id');
-    const database: Result<'api::v2-database-connection.v2-database-connection'> | null =
+    const database: Result<'api::v2-database-connection.v2-database-connection'> =
       await this._databaseService.getDatabase(databaseId);
-    if (database == null) {
-      throw new NotFound(`Database ${databaseId} not found.`);
-    }
     req.nakar = {
       ...req.nakar,
       database: database,

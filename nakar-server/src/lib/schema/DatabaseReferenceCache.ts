@@ -22,11 +22,9 @@ export class DatabaseReferenceCache {
       return foundDatabase;
     }
 
-    const db: Result<'api::v2-database-connection.v2-database-connection'> | null =
+    const db: Result<'api::v2-database-connection.v2-database-connection'> =
       await this._database.getDatabase(databaseId);
-    if (db == null) {
-      return null;
-    }
+
     this._databaseCache.set(databaseId, db);
     return db;
   }

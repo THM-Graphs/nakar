@@ -4,8 +4,6 @@ import type { SchemaRoom, SchemaRooms } from '../../../../src-gen/schema';
 import { DatabaseService } from '../../database/DatabaseService';
 import { NotFound } from 'http-errors';
 import { ScenariosRouter } from './ScenariosRouter';
-import { CanvasService } from '../../room/CanvasService';
-import { LoggerService } from '../../logger/LoggerService';
 import { SchemaFactoryService } from '../../schema/SchemaFactoryService';
 import { Result } from '@strapi/types/dist/modules/documents/result';
 
@@ -39,22 +37,22 @@ export class RoomRouter {
   }
 
   private async _assertRoom(req: Request): Promise<void> {
-    const id: string = this._httpTools.getPathParameter(req, 'id');
-    const room: Result<'api::v2-room.v2-room'> | null =
-      await this._databaseService.getRoom(id);
-    if (room == null) {
-      throw new NotFound('Room not found.');
+    try {
+      const id: string = this._httpTools.getPathParameter(req, 'id');
+      const room: Result<'api::v2-room.v2-room'> | null =
+        await this._databaseService.getRoom(id);
+
+      const project: Result<'api::v2-project.v2-project'> | null =
+        await this._databaseService.getProjectOfRoom(room);
+
+      req.nakar = {
+        ...req.nakar,
+        room: room,
+        project: project,
+      };
+    } catch {
+      throw new NotFound();
     }
-    const project: Result<'api::v2-project.v2-project'> | null =
-      await this._databaseService.getProjectOfRoom(room);
-    if (project == null) {
-      throw new NotFound('Project not found.');
-    }
-    req.nakar = {
-      ...req.nakar,
-      room: room,
-      project: project,
-    };
   }
 
   private async _getRooms(): Promise<SchemaRooms> {

@@ -81,9 +81,6 @@ export class HTTPService implements ApplicationService {
       neo4jService,
       _logger,
       profiler,
-      _config,
-      media,
-      schemaFactory,
     );
     this._projectsRouter = new ProjectsRouter(
       this._httpTools,

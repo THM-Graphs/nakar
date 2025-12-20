@@ -18,7 +18,6 @@ export function SearchPanel(props: { roomContext: CanvasContext }) {
   );
 
   const searchTerm = useBearStore((s) => s.room.panels.search.searchTerm);
-  const leftPanel = useBearStore((s) => s.room.panels.left);
   const hide = useBearStore((s) => s.room.panels.search.hide);
 
   const [result, setResult] = useState<Loadable<NodePreview[] | null>>({
@@ -55,12 +54,7 @@ export function SearchPanel(props: { roomContext: CanvasContext }) {
   };
 
   return (
-    <Panel
-      title={"Search"}
-      onClose={hide}
-      direction={"left"}
-      hidden={leftPanel != "search"}
-    >
+    <Panel title={"Search"} onClose={hide} direction={"left"}>
       <Stack gap={3}>
         <DatabaseSelect
           database={selectedDatabaseId}

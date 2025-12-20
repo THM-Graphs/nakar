@@ -8,7 +8,6 @@ import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
 import { NumberInput } from "../../shared/elements/NumberInput.tsx";
 
 export function VisualizationPanel(props: { roomContext: CanvasContext }) {
-  const rightPanel = useBearStore((s) => s.room.panels.right);
   const visualization = useBearStore((s) => s.room.panels.visualization);
   const setCompressRelationshipsWidthFactor = useBearStore(
     (s) => s.room.panels.visualization.setCompressRelationshipsWidthFactor,
@@ -25,7 +24,6 @@ export function VisualizationPanel(props: { roomContext: CanvasContext }) {
 
   return (
     <Panel
-      hidden={rightPanel !== "visualization"}
       direction={"right"}
       title={"Visualization"}
       onClose={() => {
@@ -64,26 +62,27 @@ export function VisualizationPanel(props: { roomContext: CanvasContext }) {
                       .catch(pushErrorNotification);
                   }}
                 ></Form.Check>
-                <NumberInput
-                  disabled={!visualization.data.growNodesBasedOnDegree}
-                  value={visualization.data.growNodesBasedOnDegreeFactor}
-                  onChange={(newValue: number) => {
-                    setGrowNodesBasedOnDegreeFactor(newValue);
+                {visualization.data.growNodesBasedOnDegree && (
+                  <NumberInput
+                    value={visualization.data.growNodesBasedOnDegreeFactor}
+                    onChange={(newValue: number) => {
+                      setGrowNodesBasedOnDegreeFactor(newValue);
 
-                    setCanvasData({
-                      path: {
-                        id: props.roomContext.initialCanvasData.id,
-                      },
-                      body: {
-                        compressRelationshipsWidthFactor: null,
-                        growNodesBasedOnDegree: null,
-                        growNodesBasedOnDegreeFactor: newValue,
-                      },
-                    })
-                      .then((res) => resultOrThrow(res))
-                      .catch(pushErrorNotification);
-                  }}
-                ></NumberInput>
+                      setCanvasData({
+                        path: {
+                          id: props.roomContext.initialCanvasData.id,
+                        },
+                        body: {
+                          compressRelationshipsWidthFactor: null,
+                          growNodesBasedOnDegree: null,
+                          growNodesBasedOnDegreeFactor: newValue,
+                        },
+                      })
+                        .then((res) => resultOrThrow(res))
+                        .catch(pushErrorNotification);
+                    }}
+                  ></NumberInput>
+                )}
                 <Form.Text className={"small text-muted"}>
                   The higher the degree of a node, the larger it is displayed.
                 </Form.Text>

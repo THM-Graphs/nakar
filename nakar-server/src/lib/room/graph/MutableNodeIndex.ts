@@ -248,13 +248,4 @@ export class MutableNodeIndex {
       this._propertyHistogram.delete(key);
     }
   }
-
-  private _nameInQueryCanBeTreatedAsLabel(
-    creationAction: MutableGraphElementCreationAction,
-  ): boolean {
-    return [
-      MutableGraphElementCreationAction.loadScenario,
-      MutableGraphElementCreationAction.query,
-    ].includes(creationAction);
-  }
 }

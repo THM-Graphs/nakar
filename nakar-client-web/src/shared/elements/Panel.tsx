@@ -8,7 +8,7 @@ export function Panel(props: {
   children: ReactNode;
   onClose: () => void;
   direction: "left" | "right" | "center" | "none";
-  hidden: boolean;
+  hidden?: boolean;
   toolbar?: ReactNode;
   fullWidth?: boolean;
   className?: string;

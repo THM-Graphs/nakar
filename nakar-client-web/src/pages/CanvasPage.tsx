@@ -106,6 +106,8 @@ export function CanvasPage(props: { context: AppContext }) {
   const setVisualizationData = useBearStore(
     (s) => s.room.panels.visualization.setData,
   );
+  const leftPanel = useBearStore((s) => s.room.panels.left);
+  const rightPanel = useBearStore((s) => s.room.panels.right);
 
   useEffect(() => {
     setScenarios(roomContext.initialScenariosData);
@@ -225,23 +227,39 @@ export function CanvasPage(props: { context: AppContext }) {
               <NotesPanelButton></NotesPanelButton>
               <SearchPanelButton></SearchPanelButton>
             </Stack>
-            <ScenariosPanel
-              context={props.context}
-              roomContext={roomContext}
-            ></ScenariosPanel>
-            <QueryPanel roomContext={roomContext}></QueryPanel>
-            <NotesPanel
-              roomContext={roomContext}
-              context={props.context}
-            ></NotesPanel>
-            <SearchPanel roomContext={roomContext}></SearchPanel>
+            {leftPanel === "scenarios" && (
+              <ScenariosPanel
+                context={props.context}
+                roomContext={roomContext}
+              ></ScenariosPanel>
+            )}
+            {leftPanel === "query" && (
+              <QueryPanel roomContext={roomContext}></QueryPanel>
+            )}
+            {leftPanel === "notes" && (
+              <NotesPanel
+                roomContext={roomContext}
+                context={props.context}
+              ></NotesPanel>
+            )}
+            {leftPanel === "search" && (
+              <SearchPanel roomContext={roomContext}></SearchPanel>
+            )}
             <Canvas context={props.context} roomContext={roomContext}></Canvas>
-            <InspectorPanel
-              context={props.context}
-              roomContext={roomContext}
-            ></InspectorPanel>
-            <HistogramPanel roomContext={roomContext}></HistogramPanel>
-            <VisualizationPanel roomContext={roomContext}></VisualizationPanel>
+            {rightPanel === "inspector" && (
+              <InspectorPanel
+                context={props.context}
+                roomContext={roomContext}
+              ></InspectorPanel>
+            )}
+            {rightPanel === "histogram" && (
+              <HistogramPanel roomContext={roomContext}></HistogramPanel>
+            )}
+            {rightPanel === "visualization" && (
+              <VisualizationPanel
+                roomContext={roomContext}
+              ></VisualizationPanel>
+            )}
             <Stack className={"flex-grow-0 bg-body-tertiary border-start z-1"}>
               <InspectorPanelButton></InspectorPanelButton>
               <HistogramPanelButton></HistogramPanelButton>

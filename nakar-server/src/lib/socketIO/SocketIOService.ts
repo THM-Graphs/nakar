@@ -263,13 +263,8 @@ export class SocketIOService implements ApplicationService {
                 .with(
                   { type: 'WSActionJoinCanvas' },
                   async (m: SchemaWsActionJoinCanvas): Promise<void> => {
-                    const canvas: Result<'api::v2-canvas.v2-canvas'> | null =
+                    const canvas: Result<'api::v2-canvas.v2-canvas'> =
                       await this._databaseService.getCanvas(m.canvasId);
-                    if (canvas == null) {
-                      throw new Error(
-                        `Canvas ${m.canvasId} not found. Socket tried to join.`,
-                      );
-                    }
 
                     await wsClient.join(canvas.documentId);
                   },
@@ -284,7 +279,7 @@ export class SocketIOService implements ApplicationService {
                   { type: 'WSActionGrabNode' },
                   async (m: SchemaWsActionGrabNode): Promise<void> => {
                     this._canvasService
-                      .getCanvas(await this._assertRoom(wsClient))
+                      .getCanvas(await this._assertCanvas(wsClient))
                       .grabNode({
                         nodeId: m.nodeId,
                         userId: wsClient.id,
@@ -295,7 +290,7 @@ export class SocketIOService implements ApplicationService {
                   { type: 'WSActionMoveNodes' },
                   async (m: SchemaWsActionMoveNodes): Promise<void> => {
                     this._canvasService
-                      .getCanvas(await this._assertRoom(wsClient))
+                      .getCanvas(await this._assertCanvas(wsClient))
                       .moveNodes({
                         nodes: m.nodes,
                         userId: wsClient.id,
@@ -306,7 +301,7 @@ export class SocketIOService implements ApplicationService {
                   { type: 'WSActionUngrabNode' },
                   async (m: SchemaWsActionUngrabNode): Promise<void> => {
                     this._canvasService
-                      .getCanvas(await this._assertRoom(wsClient))
+                      .getCanvas(await this._assertCanvas(wsClient))
                       .ungrabNode({
                         node: m.node,
                         userId: wsClient.id,
@@ -383,25 +378,11 @@ export class SocketIOService implements ApplicationService {
             { type: 'CanvasEventGraphElementsChanged' },
             (message: CanvasEventGraphElementsChanged): void => {
               (async (): Promise<void> => {
-                const canvas: Result<'api::v2-canvas.v2-canvas'> | null =
+                const canvas: Result<'api::v2-canvas.v2-canvas'> =
                   await this._databaseService.getCanvas(message.canvasId);
-                if (canvas == null) {
-                  this._logger.error(
-                    this,
-                    'Cannot handle CanvasEventGraphElementsChanged. Canvas not found.',
-                  );
-                  return;
-                }
-                const project: Result<'api::v2-project.v2-project'> | null =
-                  await this._databaseService.getProjectOfCanvas(canvas);
 
-                if (project == null) {
-                  this._logger.error(
-                    this,
-                    'Cannot handle CanvasEventGraphElementsChanged. Project not found.',
-                  );
-                  return;
-                }
+                const project: Result<'api::v2-project.v2-project'> =
+                  await this._databaseService.getProjectOfCanvas(canvas);
 
                 const notes: IndexedNoteCollection =
                   await this._databaseService.getNotes({
@@ -533,15 +514,9 @@ export class SocketIOService implements ApplicationService {
     this._databaseService.onNoteChanges$.subscribe(
       (message: { projectId: string }): void => {
         (async (): Promise<void> => {
-          const project: Result<'api::v2-project.v2-project'> | null =
+          const project: Result<'api::v2-project.v2-project'> =
             await this._databaseService.getProject(message.projectId);
-          if (project == null) {
-            this._logger.error(
-              this,
-              'Cannot handle note change. Project not found.',
-            );
-            return;
-          }
+
           const rooms: Result<'api::v2-room.v2-room'>[] =
             await this._databaseService.getRoomsOfProject(project);
           for (const room of rooms) {
@@ -574,19 +549,15 @@ export class SocketIOService implements ApplicationService {
     );
   }
 
-  private async _assertRoom(
+  private async _assertCanvas(
     client: WSClient,
   ): Promise<Result<'api::v2-canvas.v2-canvas'>> {
     if (client.room == null) {
       throw new Error(`Client ${client.id} is in no room.`);
     }
-    const canvas: Result<'api::v2-canvas.v2-canvas'> | null =
+    const canvas: Result<'api::v2-canvas.v2-canvas'> =
       await this._databaseService.getCanvas(client.room);
-    if (canvas == null) {
-      throw new Error(
-        `Cannot find canvas ${client.room} of client ${client.id}`,
-      );
-    }
+
     return canvas;
   }
 
