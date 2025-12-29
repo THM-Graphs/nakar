@@ -22,7 +22,7 @@ import { match, P } from 'ts-pattern';
 import type { ServerToClientEvents } from './ServerToClientEvents';
 import type { ClientToServerEvents } from './ClientToServerEvents';
 import { WSClient } from './WSClient';
-import { SSet } from '../tools/Set';
+import { SSet } from '../set/Set';
 import type { CanvasService } from '../room/CanvasService';
 import type { DatabaseService } from '../database/DatabaseService';
 import type http from 'http';

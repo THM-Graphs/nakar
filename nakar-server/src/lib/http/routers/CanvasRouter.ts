@@ -7,7 +7,7 @@ import { Result } from '@strapi/types/dist/modules/documents/result';
 import { ActionsRouter } from './ActionsRouter';
 import { CanvasService } from '../../room/CanvasService';
 import { operations, SchemaCanvas } from '../../../../src-gen/schema';
-import { Range } from '../../tools/Range';
+import { Range } from '../../range/Range';
 
 export class CanvasRouter {
   private readonly _graphRouter: GraphRouter;

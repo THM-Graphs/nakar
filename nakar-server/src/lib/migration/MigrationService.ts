@@ -2,7 +2,7 @@
 import { ApplicationService } from '../application/ApplicationService';
 import type { UID } from '@strapi/types';
 import { Result } from '@strapi/types/dist/modules/documents';
-import { SMap } from '../tools/Map';
+import { SMap } from '../map/Map';
 import { Logger } from '@strapi/logger';
 import { createChildLogger } from '../logger/createChildLogger';
 

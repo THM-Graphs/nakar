@@ -1,8 +1,8 @@
 import { MutableGraphLabel } from './MutableGraphLabel';
 import { z } from 'zod';
-import { SMap } from '../../tools/Map';
+import { SMap } from '../../map/Map';
 import { MutableGraphColorPreset } from './MutableGraphColorPreset';
-import { SSet } from '../../tools/Set';
+import { SSet } from '../../set/Set';
 import type { MutableNodeIndex } from './MutableNodeIndex';
 
 export class MutableGraphMetaData {

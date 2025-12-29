@@ -1,10 +1,10 @@
 import { CMSCard } from "./CMSCard.tsx";
 import { Stack } from "react-bootstrap";
 import { Link } from "react-router";
-import { Project } from "../../src-gen";
+import { StartPageProject } from "../../src-gen";
 import { StringListDisplay } from "./StringListDisplay.tsx";
 
-export function ProjectCard(props: { project: Project }) {
+export function ProjectCard(props: { project: StartPageProject }) {
   return (
     <CMSCard
       title={

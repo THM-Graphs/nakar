@@ -1,9 +1,9 @@
 import { TaskQueueTask } from './TaskQueueTask';
 import { Observable, Subject } from 'rxjs';
 import { TaskQueueState } from './TaskQueueState';
-import { enqueueEventLoop } from '../tools/enqueueEventLoop';
 import { Logger } from '@strapi/logger';
 import { createChildLogger } from '../logger/createChildLogger';
+import { enqueueEventLoop } from '../event-loop/enqueueEventLoop';
 
 export class TaskQueue {
   private readonly _logger: Logger = createChildLogger(this);

@@ -1,11 +1,11 @@
 import type { ApplicationService } from '../application/ApplicationService';
-import { ClassHelper } from '../tools/ClassHelper';
 import type { RoomWorkerData } from './RoomWorkerData';
 import { parentPort, workerData } from 'node:worker_threads';
 import { RoomWorkerPhysicsService } from './RoomWorkerPhysicsService';
 import { createChildLogger } from '../logger/createChildLogger';
 import { Logger } from '@strapi/logger';
 import { Profiler } from 'winston';
+import { getClassName } from '../class/getClassName';
 
 export class RoomWorker implements ApplicationService {
   private readonly _logger: Logger = createChildLogger(this);
@@ -28,7 +28,7 @@ export class RoomWorker implements ApplicationService {
       const task: Profiler = this._logger.startTimer();
       await service.bootstrap();
       task.done({
-        message: `Bootstrap Service ${ClassHelper.getName(service)}`,
+        message: `Bootstrap Service ${getClassName(service)}`,
       });
     }
   }
@@ -39,7 +39,7 @@ export class RoomWorker implements ApplicationService {
       const task: Profiler = this._logger.startTimer();
       await service.destroy();
       task.done({
-        message: `Destroy Service ${ClassHelper.getName(service)}`,
+        message: `Destroy Service ${getClassName(service)}`,
       });
     }
   }

@@ -8,13 +8,13 @@ import type {
 } from 'neo4j-driver';
 import neo4j, { auth, driver as createDriver } from 'neo4j-driver';
 import type { Neo4jGraphElements } from './Neo4jGraphElements';
-import { SSet } from '../tools/Set';
+import { SSet } from '../set/Set';
 import { Neo4jGraphElementsFactory } from './Neo4jGraphElementsFactory';
 import type { SessionConfig } from 'neo4j-driver-core/types/driver';
 import type { ApplicationService } from '../application/ApplicationService';
 import { ExpandNodePreview } from './expand-node-preview/ExpandNodePreview';
 import { ExpandNodePreviewEntry } from './expand-node-preview/ExpandNodePreviewEntry';
-import { SMap } from '../tools/Map';
+import { SMap } from '../map/Map';
 import type { SchemaDatabaseStats } from '../../../src-gen/schema';
 import { Neo4jLimitConfig } from './Neo4jLimitConfig';
 import { Neo4jSearchCapabilities } from './Neo4jSearchCapabilities';

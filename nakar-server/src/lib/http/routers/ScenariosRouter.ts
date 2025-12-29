@@ -6,7 +6,7 @@ import type {
   SchemaScenario,
   SchemaScenarioGroup,
 } from '../../../../src-gen/schema';
-import { SMap } from '../../tools/Map';
+import { SMap } from '../../map/Map';
 import { DatabaseService } from '../../database/DatabaseService';
 import { SchemaFactoryService } from '../../schema/SchemaFactoryService';
 import { Result } from '@strapi/types/dist/modules/documents/result';

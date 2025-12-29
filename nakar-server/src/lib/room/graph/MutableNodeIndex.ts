@@ -1,10 +1,10 @@
-import { SMap } from '../../tools/Map';
+import { SMap } from '../../map/Map';
 import { MutableNode } from './MutableNode';
-import { SSet } from '../../tools/Set';
+import { SSet } from '../../set/Set';
 import type { Neo4jNode } from '../../neo4j/Neo4jNode';
 import { MutablePosition } from './MutablePosition';
 import { MutablePropertyCollection } from './MutablePropertyCollection';
-import { Range } from '../../tools/Range';
+import { Range } from '../../range/Range';
 import type { MutableGraph } from './MutableGraph';
 import { PhysicsSimulation } from '../../physics/PhysicsSimulation';
 import { MutableGraphElementCreationAction } from './MutableGraphElementCreationAction';

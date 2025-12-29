@@ -4,11 +4,10 @@ import { Subject } from 'rxjs';
 import { MutableGraph } from './graph/MutableGraph';
 import type { ApplicationService } from '../application/ApplicationService';
 import installHandlebarHelpers from 'handlebars-helpers';
-import { SMap } from '../tools/Map';
+import { SMap } from '../map/Map';
 import type { Neo4jService } from '../neo4j/Neo4jService';
 import type { CanvasEvent } from './events/CanvasEvent';
 import type { CanvasEventEventKick } from './events/CanvasEventEventKick';
-import type { MediaService } from '../media/MediaService';
 import { LiveCanvas } from './LiveCanvas';
 import { Result } from '@strapi/types/dist/modules/documents/result';
 import { createChildLogger } from '../logger/createChildLogger';
@@ -23,7 +22,6 @@ export class CanvasService implements ApplicationService {
   public constructor(
     private readonly _database: DatabaseService,
     private readonly _neo4j: Neo4jService,
-    private readonly _media: MediaService,
   ) {
     this._liveCanvases = new SMap();
     this._onEvent = new Subject();
@@ -78,7 +76,6 @@ export class CanvasService implements ApplicationService {
     const task: Profiler = this._logger.startTimer();
     const liveCanvas: LiveCanvas = new LiveCanvas(
       canvas.documentId,
-      this._media,
       this._database,
       this._neo4j,
     );

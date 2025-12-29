@@ -20,6 +20,22 @@ export interface paths {
         readonly patch?: never;
         readonly trace?: never;
     };
+    readonly "/start-page": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get: operations["getStartPage"];
+        readonly put?: never;
+        readonly post?: never;
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
     readonly "/project": {
         readonly parameters: {
             readonly query?: never;
@@ -924,6 +940,27 @@ export interface components {
             readonly growNodesBasedOnDegree: boolean;
             readonly growNodesBasedOnDegreeFactor: number;
         };
+        readonly StartPage: {
+            readonly myProjects: readonly components["schemas"]["StartPageProject"][];
+            readonly collaborationProjects: readonly components["schemas"]["StartPageProject"][];
+            readonly recentRooms: readonly components["schemas"]["StartPageRoom"][];
+            readonly publicRooms: readonly components["schemas"]["StartPageRoom"][];
+        };
+        readonly StartPageProject: {
+            readonly id: string;
+            readonly title: string;
+            readonly owner: {
+                readonly current: components["schemas"]["User"];
+            } | null;
+            readonly collaborators: readonly components["schemas"]["User"][];
+            readonly databases: readonly components["schemas"]["DatabaseConnection"][];
+        };
+        readonly StartPageRoom: {
+            readonly id: string;
+            readonly title: string;
+            readonly visibility: components["schemas"]["RoomVisibility"];
+            readonly projectTitle: string;
+        };
         readonly WSClientToServerMessage: components["schemas"]["WSActionJoinCanvas"] | components["schemas"]["WSActionLeaveCanvas"] | components["schemas"]["WSActionGrabNode"] | components["schemas"]["WSActionMoveNodes"] | components["schemas"]["WSActionUngrabNode"];
         readonly WSServerToClientMessage: components["schemas"]["WSEventNodesMoved"] | components["schemas"]["WSEventCanvasChanged"] | components["schemas"]["WSEventNotification"] | components["schemas"]["WSEventGraphElementsChanged"] | components["schemas"]["WSEventGraphMetaDataChanged"] | components["schemas"]["WSEventGraphTableChanged"] | components["schemas"]["WSEventProgress"] | components["schemas"]["WSEventClearProgress"] | components["schemas"]["WSEventSetNodeLocks"] | components["schemas"]["WSEventKick"];
         readonly WSActionJoinCanvas: {
@@ -1057,6 +1094,9 @@ export type SchemaRoom = components['schemas']['Room'];
 export type SchemaRoomVisibility = components['schemas']['RoomVisibility'];
 export type SchemaScenarioGroup = components['schemas']['ScenarioGroup'];
 export type SchemaCanvas = components['schemas']['Canvas'];
+export type SchemaStartPage = components['schemas']['StartPage'];
+export type SchemaStartPageProject = components['schemas']['StartPageProject'];
+export type SchemaStartPageRoom = components['schemas']['StartPageRoom'];
 export type SchemaWsClientToServerMessage = components['schemas']['WSClientToServerMessage'];
 export type SchemaWsServerToClientMessage = components['schemas']['WSServerToClientMessage'];
 export type SchemaWsActionJoinCanvas = components['schemas']['WSActionJoinCanvas'];
@@ -1124,6 +1164,28 @@ export interface operations {
                         readonly jwt: string;
                         readonly username: string;
                     };
+                };
+            };
+        };
+    };
+    readonly getStartPage: {
+        readonly parameters: {
+            readonly query: {
+                readonly recentRoomIds: readonly string[];
+            };
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            /** @description OK */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["StartPage"];
                 };
             };
         };

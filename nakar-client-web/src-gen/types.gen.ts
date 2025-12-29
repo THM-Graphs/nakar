@@ -345,6 +345,30 @@ export type ScenarioQuery = {
     } | null;
 };
 
+export type StartPage = {
+    myProjects: Array<StartPageProject>;
+    collaborationProjects: Array<StartPageProject>;
+    recentRooms: Array<StartPageRoom>;
+    publicRooms: Array<StartPageRoom>;
+};
+
+export type StartPageProject = {
+    id: string;
+    title: string;
+    owner: {
+        current: User;
+    } | null;
+    collaborators: Array<User>;
+    databases: Array<DatabaseConnection>;
+};
+
+export type StartPageRoom = {
+    id: string;
+    title: string;
+    visibility: RoomVisibility;
+    projectTitle: string;
+};
+
 export type User = {
     id: string;
     displayName: string;
@@ -485,6 +509,16 @@ export type GetAuthResponse = ({
 });
 
 export type GetAuthError = unknown;
+
+export type GetStartPageData = {
+    query: {
+        recentRoomIds: Array<(string)>;
+    };
+};
+
+export type GetStartPageResponse = (StartPage);
+
+export type GetStartPageError = unknown;
 
 export type GetProjectsResponse = (Projects);
 

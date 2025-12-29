@@ -12,7 +12,7 @@ import { Neo4jService } from '../../neo4j/Neo4jService';
 import { Neo4jNode } from '../../neo4j/Neo4jNode';
 import { MutableGraph } from '../../room/graph/MutableGraph';
 import { MutableGraphElementCreationAction } from '../../room/graph/MutableGraphElementCreationAction';
-import { SSet } from '../../tools/Set';
+import { SSet } from '../../set/Set';
 import { Neo4jSearchCapabilities } from '../../neo4j/Neo4jSearchCapabilities';
 import { Result } from '@strapi/types/dist/modules/documents/result';
 import { MutableNode } from '../../room/graph/MutableNode';

@@ -22,22 +22,24 @@ import {
   SchemaScenarioGroup,
   SchemaScenarioParameter,
   SchemaScenarioQuery,
+  SchemaStartPageProject,
+  SchemaStartPageRoom,
   SchemaUser,
 } from '../../../src-gen/schema';
 import { MutableGraph } from '../room/graph/MutableGraph';
 import { MutableNode } from '../room/graph/MutableNode';
 import { MutableEdge } from '../room/graph/MutableEdge';
 import { MutableGraphLabel } from '../room/graph/MutableGraphLabel';
-import { SMap } from '../tools/Map';
+import { SMap } from '../map/Map';
 import { MutableGraphMetaData } from '../room/graph/MutableGraphMetaData';
-import { SSet } from '../tools/Set';
+import { SSet } from '../set/Set';
 import { MutablePropertyCollection } from '../room/graph/MutablePropertyCollection';
 import { DatabaseService } from '../database/DatabaseService';
 import { DatabaseReferenceCache } from './DatabaseReferenceCache';
 import { UndoWrapperInfo } from '../undo/UndoWrapperInfo';
 import { Result } from '@strapi/types/dist/modules/documents/result';
 import { IndexedNoteCollection } from '../database/IndexedNoteCollection';
-import { Range } from '../tools/Range';
+import { Range } from '../range/Range';
 import { Logger } from '@strapi/logger';
 import { createChildLogger } from '../logger/createChildLogger';
 import { Profiler } from 'winston';
@@ -85,6 +87,20 @@ export class SchemaFactoryService implements ApplicationService {
         ),
       ),
       projectTitle: project.title ?? '',
+    };
+  }
+
+  public createSchemaStartPageRoom(
+    room: Result<
+      'api::v2-room.v2-room',
+      { populate: { project: { populate: [] } } }
+    >,
+  ): SchemaStartPageRoom {
+    return {
+      id: room.documentId,
+      title: room.title ?? '',
+      visibility: room.visibility ?? 'private',
+      projectTitle: room.project?.title ?? '',
     };
   }
 
@@ -330,6 +346,43 @@ export class SchemaFactoryService implements ApplicationService {
           async (room: Result<'api::v2-room.v2-room'>): Promise<SchemaRoom> =>
             await this.createSchemaRoom(room),
         ),
+      ),
+    };
+  }
+
+  public createSchemaStartPageProject(
+    input: Result<
+      'api::v2-project.v2-project',
+      {
+        populate: {
+          owner: { populate: [] };
+          collaborators: { populate: [] };
+          databaseConnections: { populate: [] };
+        };
+      }
+    >,
+  ): SchemaStartPageProject {
+    return {
+      id: input.documentId,
+      title: input.title ?? '',
+      owner: input.owner
+        ? {
+            current: this.createSchemaUserPreview(input.owner),
+          }
+        : null,
+      collaborators: (input.collaborators ?? []).map(
+        (
+          collaborator: Result<'plugin::users-permissions.user'>,
+        ): SchemaUser => {
+          return this.createSchemaUserPreview(collaborator);
+        },
+      ),
+      databases: (input.databaseConnections ?? []).map(
+        (
+          database: Result<'api::v2-database-connection.v2-database-connection'>,
+        ): SchemaDatabaseConnection => {
+          return this.createSchemaDatabase(database);
+        },
       ),
     };
   }

@@ -2,10 +2,10 @@ import { HTTPTools } from '../HTTPTools';
 import { CanvasService } from '../../room/CanvasService';
 import { type Request, Router } from 'express';
 import { operations, SchemaScenarioArgument } from '../../../../src-gen/schema';
-import { SMap } from '../../tools/Map';
+import { SMap } from '../../map/Map';
 import { MutableGraph } from '../../room/graph/MutableGraph';
 import { NotFound } from 'http-errors';
-import { SSet } from '../../tools/Set';
+import { SSet } from '../../set/Set';
 import { ExpandNodePreview } from '../../neo4j/expand-node-preview/ExpandNodePreview';
 import { LiveCanvas } from '../../room/LiveCanvas';
 

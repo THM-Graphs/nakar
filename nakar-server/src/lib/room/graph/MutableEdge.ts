@@ -1,12 +1,12 @@
 import { MutablePropertyCollection } from './MutablePropertyCollection';
 import { z } from 'zod';
-import { SSet } from '../../tools/Set';
+import { SSet } from '../../set/Set';
 import type { MutableGraph } from './MutableGraph';
-import { SMap } from '../../tools/Map';
-import { Range } from '../../tools/Range';
+import { SMap } from '../../map/Map';
+import { Range } from '../../range/Range';
 import { MutableGraphElementCreationAction } from './MutableGraphElementCreationAction';
 import { Result } from '@strapi/types/dist/modules/documents/result';
-import { ScaleType } from '../../tools/ScaleType';
+import { ScaleType } from '../../physics/ScaleType';
 
 export class MutableEdge {
   public static readonly defaultWidth: number = 2;

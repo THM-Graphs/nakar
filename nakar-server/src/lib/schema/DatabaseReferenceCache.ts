@@ -1,4 +1,4 @@
-import { SMap } from '../tools/Map';
+import { SMap } from '../map/Map';
 import { DatabaseService } from '../database/DatabaseService';
 import { Result } from '@strapi/types/dist/modules/documents/result';
 

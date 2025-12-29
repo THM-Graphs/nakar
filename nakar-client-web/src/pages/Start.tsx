@@ -1,56 +1,24 @@
 import { Container, Stack } from "react-bootstrap";
 import { useLoaderData } from "react-router";
-import {
-  getProjects,
-  getRoom,
-  getRooms,
-  Projects,
-  Room as RoomSchema,
-  Rooms,
-} from "../../src-gen";
+import { getStartPage, StartPage as StartPageData } from "../../src-gen";
 import { AppContext } from "../state/AppContext.ts";
-import { useBearStore } from "../state/useBearStore.ts";
-import { match, P } from "ts-pattern";
-import { loadableFromResult } from "../shared/data/loadableFromResult.ts";
-import { Loadable } from "../shared/data/Loadable.ts";
 import { CMSNavbar } from "../cms/CMSNavbar.tsx";
 import { CMSFooter } from "../cms/CMSFooter.tsx";
 import { RoomCard } from "../cms/RoomCard.tsx";
 import { resultOrThrow } from "../shared/data/resultOrThrow.ts";
 import { ProjectCard } from "../cms/ProjectCard.tsx";
+import { useBearStore } from "../state/useBearStore.ts";
 
-type StartPageLoaderData = {
-  recentRooms: RoomSchema[];
-  rooms: Rooms;
-  projects: Loadable<Projects>;
-};
-
-export async function StartLoader(): Promise<StartPageLoaderData> {
-  const myRooms = useBearStore.getState().start.myRooms;
-  const recentRooms: RoomSchema[] = [];
-  for (const roomId of myRooms) {
-    const result = await getRoom({ path: { id: roomId } });
-    match(result)
-      .with({ data: P.nonNullable }, (r) => {
-        recentRooms.push(r.data);
-      })
-      .otherwise((error) => {
-        if (error.response.status === 404) {
-          useBearStore.getState().start.removeRoom(roomId);
-        }
-      });
-  }
-  const rooms: Rooms = resultOrThrow(await getRooms());
-  const projects: Loadable<Projects> = loadableFromResult(await getProjects());
-  return {
-    recentRooms: recentRooms,
-    rooms: rooms,
-    projects: projects,
-  };
+export async function StartLoader(): Promise<StartPageData> {
+  return resultOrThrow(
+    await getStartPage({
+      query: { recentRoomIds: useBearStore.getState().start.myRooms },
+    }),
+  );
 }
 
 export function Start(props: { context: AppContext }) {
-  const loaderData: StartPageLoaderData = useLoaderData();
+  const loaderData: StartPageData = useLoaderData();
 
   return (
     <Stack
@@ -84,44 +52,41 @@ export function Start(props: { context: AppContext }) {
             <Stack>
               <h5>Public Rooms</h5>
               <Stack direction={"vertical"} gap={3} className={"flex-wrap"}>
-                {loaderData.rooms.rooms.map((r) => (
+                {loaderData.publicRooms.map((r) => (
                   <RoomCard
                     key={r.id}
                     room={r}
                     showProjectTitle={true}
                   ></RoomCard>
                 ))}
-                {loaderData.rooms.rooms.length === 0 && (
+                {loaderData.publicRooms.length === 0 && (
                   <span className={"small text-muted"}>None</span>
                 )}
               </Stack>
             </Stack>
 
-            {loaderData.projects.type == "data" && (
-              <>
-                <Stack>
-                  <h5>My Projects</h5>
-                  <Stack direction={"vertical"} gap={3} className={"flex-wrap"}>
-                    {loaderData.projects.data.myProjects.map((r) => (
-                      <ProjectCard key={r.id} project={r}></ProjectCard>
-                    ))}
-                    {loaderData.projects.data.myProjects.length === 0 && (
-                      <span className={"small text-muted"}>None</span>
-                    )}
-                  </Stack>
-                </Stack>
-                <Stack>
-                  <h5>Invited Projects</h5>
-                  <Stack direction={"vertical"} gap={3} className={"flex-wrap"}>
-                    {loaderData.projects.data.collaborationProjects.map((r) => (
-                      <ProjectCard key={r.id} project={r}></ProjectCard>
-                    ))}
-                    {loaderData.projects.data.collaborationProjects.length ===
-                      0 && <span className={"small text-muted"}>None</span>}
-                  </Stack>
-                </Stack>
-              </>
-            )}
+            <Stack>
+              <h5>My Projects</h5>
+              <Stack direction={"vertical"} gap={3} className={"flex-wrap"}>
+                {loaderData.myProjects.map((r) => (
+                  <ProjectCard key={r.id} project={r}></ProjectCard>
+                ))}
+                {loaderData.myProjects.length === 0 && (
+                  <span className={"small text-muted"}>None</span>
+                )}
+              </Stack>
+            </Stack>
+            <Stack>
+              <h5>Invited Projects</h5>
+              <Stack direction={"vertical"} gap={3} className={"flex-wrap"}>
+                {loaderData.collaborationProjects.map((r) => (
+                  <ProjectCard key={r.id} project={r}></ProjectCard>
+                ))}
+                {loaderData.collaborationProjects.length === 0 && (
+                  <span className={"small text-muted"}>None</span>
+                )}
+              </Stack>
+            </Stack>
           </Stack>
         </Container>
       </div>

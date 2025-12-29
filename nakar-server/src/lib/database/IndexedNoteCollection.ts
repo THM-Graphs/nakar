@@ -1,6 +1,6 @@
-import { SSet } from '../tools/Set';
+import { SSet } from '../set/Set';
 import type { Result } from '@strapi/types/dist/modules/documents';
-import { SMap } from '../tools/Map';
+import { SMap } from '../map/Map';
 
 export interface IndexedNoteCollection {
   notes: SSet<Result<'api::v2-note.v2-note'>>;

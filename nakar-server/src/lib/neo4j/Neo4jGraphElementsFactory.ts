@@ -5,7 +5,7 @@ import type {
   Relationship,
 } from 'neo4j-driver';
 import { isInt, isNode, isPath, isRelationship } from 'neo4j-driver';
-import { SMap } from '../tools/Map';
+import { SMap } from '../map/Map';
 import { Neo4jNode } from './Neo4jNode';
 import { Neo4jRelationship } from './Neo4jRelationship';
 import { match, P } from 'ts-pattern';

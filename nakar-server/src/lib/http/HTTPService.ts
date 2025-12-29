@@ -6,7 +6,6 @@ import cors from 'cors';
 import type { ApplicationService } from '../application/ApplicationService';
 import type { CanvasService } from '../room/CanvasService';
 import type { Neo4jService } from '../neo4j/Neo4jService';
-import type { MediaService } from '../media/MediaService';
 import { HTTPTools } from './HTTPTools';
 import { AuthenticationRouter } from './routers/AuthenticationRouter';
 import { RoomRouter } from './routers/RoomRouter';
@@ -21,6 +20,7 @@ import { Logger } from '@strapi/logger';
 import { createChildLogger } from '../logger/createChildLogger';
 import { getConfig } from '../config/getConfig';
 import { SanitizedConfig } from '../config/SanitizedConfig';
+import { StartPageRouter } from './routers/StartPageRouter';
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -54,11 +54,11 @@ export class HTTPService implements ApplicationService {
   private readonly _projectsRouter: ProjectsRouter;
   private readonly _notesRouter: NotesRouter;
   private readonly _canvasRouter: CanvasRouter;
+  private readonly _startPageRouter: StartPageRouter;
 
   public constructor(
     databaseService: DatabaseService,
     neo4jService: Neo4jService,
-    media: MediaService,
     schemaFactory: SchemaFactoryService,
     roomService: CanvasService,
   ) {
@@ -89,6 +89,11 @@ export class HTTPService implements ApplicationService {
       roomService,
     );
     this._notesRouter = new NotesRouter(this._httpTools, databaseService);
+    this._startPageRouter = new StartPageRouter(
+      this._httpTools,
+      databaseService,
+      schemaFactory,
+    );
 
     this._setupRoutes();
   }
@@ -160,5 +165,6 @@ export class HTTPService implements ApplicationService {
     this._app.use('/canvas', this._canvasRouter.register());
     this._app.use('/system', this._systemRouter.register());
     this._app.use('/database', this._databaseRouter.register());
+    this._app.use('/start-page', this._startPageRouter.register());
   }
 }

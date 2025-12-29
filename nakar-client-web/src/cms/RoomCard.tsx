@@ -1,11 +1,11 @@
-import { Room as SchemaRoom } from "../../src-gen";
+import { StartPageRoom } from "../../src-gen";
 import { CMSCard } from "./CMSCard.tsx";
 import { RoomVisibilityDisplay } from "./RoomVisibilityDisplay.tsx";
 import { Link } from "react-router";
 import { Stack } from "react-bootstrap";
 
 export function RoomCard(props: {
-  room: SchemaRoom;
+  room: StartPageRoom;
   showProjectTitle?: boolean;
   width?: number;
 }) {

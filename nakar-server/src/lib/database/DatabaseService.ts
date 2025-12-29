@@ -4,13 +4,17 @@ import type { ApplicationService } from '../application/ApplicationService';
 import z from 'zod';
 import type { Observable } from 'rxjs';
 import { Subject } from 'rxjs';
-import type { MediaService } from '../media/MediaService';
-import { SSet } from '../tools/Set';
-import { SMap } from '../tools/Map';
+import { SSet } from '../set/Set';
+import { SMap } from '../map/Map';
 import { IndexedNoteCollection } from './IndexedNoteCollection';
 import { Logger } from '@strapi/logger';
 import { createChildLogger } from '../logger/createChildLogger';
 import { Profiler } from 'winston';
+import {
+  deleteFile,
+  getStringPayloadOfMediaFile,
+  saveStringFile,
+} from '../media/media';
 
 export class DatabaseService implements ApplicationService {
   private readonly _logger: Logger = createChildLogger(this);
@@ -23,7 +27,7 @@ export class DatabaseService implements ApplicationService {
     canvas: Result<'api::v2-canvas.v2-canvas'>;
   }>;
 
-  public constructor(private readonly _media: MediaService) {
+  public constructor() {
     this._onCanvasAdded = new Subject();
     this._onCanvasDeleted = new Subject();
     this._onNoteChanges = new Subject();
@@ -213,8 +217,7 @@ export class DatabaseService implements ApplicationService {
       await this.getGrapFileOfCanvas(canvas);
 
     try {
-      const graphJson: string =
-        await this._media.getStringPayloadOfMediaFile(graphFile);
+      const graphJson: string = await getStringPayloadOfMediaFile(graphFile);
       const graph: MutableGraph = MutableGraph.fromUnknownOrEmpty(
         JSON.parse(graphJson),
       );
@@ -313,15 +316,14 @@ export class DatabaseService implements ApplicationService {
     const oldGraphFile: Result<'plugin::upload.file'> | null =
       await this.getGrapFileOfCanvas(canvas);
     if (oldGraphFile != null) {
-      await this._media.deleteFile(oldGraphFile);
+      await deleteFile(oldGraphFile);
     }
 
     const graphJson: string = JSON.stringify(graph);
-    const newGraphFile: Result<'plugin::upload.file'> =
-      await this._media.saveStringFile(
-        graphJson,
-        populatedCanvas.title ?? null,
-      );
+    const newGraphFile: Result<'plugin::upload.file'> = await saveStringFile(
+      graphJson,
+      populatedCanvas.title ?? null,
+    );
     await strapi.documents('api::v2-canvas.v2-canvas').update({
       documentId: canvas.documentId,
       data: {

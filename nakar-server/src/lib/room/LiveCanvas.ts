@@ -1,9 +1,8 @@
 import { ApplicationService } from '../application/ApplicationService';
-import { SMap } from '../tools/Map';
+import { SMap } from '../map/Map';
 import { MutableGraph } from './graph/MutableGraph';
 import { BehaviorSubject, Observable, Subject, Subscription } from 'rxjs';
 import type { CanvasEvent } from './events/CanvasEvent';
-import { MediaService } from '../media/MediaService';
 import { DatabaseService } from '../database/DatabaseService';
 import type { WTEvent } from '../room-worker/worker-events/WTEvent';
 import { match, P } from 'ts-pattern';
@@ -20,7 +19,7 @@ import { MutableGraphElementCreationAction } from './graph/MutableGraphElementCr
 import { CanvasEventGraphMetaDataChanged } from './events/CanvasEventGraphMetaDataChanged';
 import { CanvasEventGraphElementsChanged } from './events/CanvasEventGraphElementsChanged';
 import { CanvasEventGraphTableChanged } from './events/CanvasEventGraphTableChanged';
-import { SSet } from '../tools/Set';
+import { SSet } from '../set/Set';
 import { ExpandNodesResult } from './ExpandNodesResult';
 import { PhysicsSimulation } from '../physics/PhysicsSimulation';
 import { ExpandNodePreview } from '../neo4j/expand-node-preview/ExpandNodePreview';
@@ -35,7 +34,7 @@ import { v4 } from 'uuid';
 import { MutablePropertyCollection } from './graph/MutablePropertyCollection';
 import { MutablePosition } from './graph/MutablePosition';
 import { Neo4jService } from '../neo4j/Neo4jService';
-import { circularWeightedSpread } from '../tools/circleLayoutAlgorithms/circularWeightedSpread';
+import { circularWeightedSpread } from '../physics/circle-layout-algorithms/circularWeightedSpread';
 import { PhysicsWorker } from './PhysicsWorker';
 import { TaskQueue } from '../task-queue/TaskQueue';
 import { TaskQueueState } from '../task-queue/TaskQueueState';
@@ -47,6 +46,7 @@ import { Result } from '@strapi/types/dist/modules/documents/result';
 import { Logger } from '@strapi/logger';
 import { createChildLogger } from '../logger/createChildLogger';
 import { Profiler } from 'winston';
+import { getStringPayloadOfMediaFile } from '../media/media';
 
 export class LiveCanvas implements ApplicationService {
   private readonly _logger: Logger = createChildLogger(this);
@@ -61,7 +61,6 @@ export class LiveCanvas implements ApplicationService {
 
   public constructor(
     private readonly _canvasId: string,
-    private readonly _media: MediaService,
     private readonly _database: DatabaseService,
     private readonly _neo4j: Neo4jService,
   ) {
@@ -1713,8 +1712,7 @@ export class LiveCanvas implements ApplicationService {
     try {
       const canvasGraph: Result<'plugin::upload.file'> | null =
         await this._database.getGrapFileOfCanvas(canvas);
-      const graphJson: string =
-        await this._media.getStringPayloadOfMediaFile(canvasGraph);
+      const graphJson: string = await getStringPayloadOfMediaFile(canvasGraph);
       const graph: MutableGraph = MutableGraph.fromUnknownOrEmpty(
         JSON.parse(graphJson),
       );

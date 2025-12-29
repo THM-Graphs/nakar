@@ -1,4 +1,4 @@
-import type { SMap } from '../../tools/Map';
+import type { SMap } from '../../map/Map';
 
 export interface CanvasEventNodeLocksUpdated {
   type: 'CanvasEventNodeLocksUpdated';

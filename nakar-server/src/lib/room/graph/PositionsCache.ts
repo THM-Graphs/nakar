@@ -1,4 +1,4 @@
-import { SMap } from '../../tools/Map';
+import { SMap } from '../../map/Map';
 import type { MutablePosition } from './MutablePosition';
 import type { MutableGraph } from './MutableGraph';
 

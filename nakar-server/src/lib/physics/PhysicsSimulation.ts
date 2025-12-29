@@ -5,12 +5,12 @@ import type { PhysicsSimulationRunOptions } from './PhysicsSimulationRunOptions'
 import type { PhysicalGraph } from './physical-graph/PhysicalGraph';
 import type { PhysicalNode } from './physical-graph/PhysicalNode';
 import type { PhysicalEdge } from './physical-graph/PhysicalEdge';
-import { Range } from '../tools/Range';
+import { Range } from '../range/Range';
 import type { MutableNode } from '../room/graph/MutableNode';
 import { PhysicsSimulationEventSlowTick } from './PhysicsSimulationEventSlowTick';
-import { enqueueEventLoop } from '../tools/enqueueEventLoop';
 import { Logger } from '@strapi/logger';
 import { createChildLogger } from '../logger/createChildLogger';
+import { enqueueEventLoop } from '../event-loop/enqueueEventLoop';
 
 export class PhysicsSimulation {
   public static readonly maximumVelocity: number = 2000;

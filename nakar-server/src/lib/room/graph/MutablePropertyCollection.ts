@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { SMap } from '../../tools/Map';
+import { SMap } from '../../map/Map';
 
 export class MutablePropertyCollection {
   // eslint-disable-next-line @typescript-eslint/typedef
