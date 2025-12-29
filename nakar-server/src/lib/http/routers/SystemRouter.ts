@@ -1,15 +1,12 @@
 import { HTTPTools } from '../HTTPTools';
-import { ConfigService } from '../../config/ConfigService';
 import { Router } from 'express';
 import type { SchemaVersion } from '../../../../src-gen/schema';
 import { FileStream } from '../../fs/FileStream';
 import { NotImplemented } from 'http-errors';
+import { getConfig } from '../../config/getConfig';
 
 export class SystemRouter {
-  public constructor(
-    private readonly _httpTools: HTTPTools,
-    private readonly _config: ConfigService,
-  ) {}
+  public constructor(private readonly _httpTools: HTTPTools) {}
 
   public register(): Router {
     const router: Router = Router();
@@ -31,7 +28,7 @@ export class SystemRouter {
 
   private _getVersion(): SchemaVersion {
     return {
-      version: this._config.version,
+      version: getConfig().version,
     };
   }
 

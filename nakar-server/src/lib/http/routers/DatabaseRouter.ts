@@ -1,7 +1,5 @@
 import { HTTPTools } from '../HTTPTools';
 import { DatabaseService } from '../../database/DatabaseService';
-import { LoggerService } from '../../logger/LoggerService';
-import { ProfilerService } from '../../profiler/ProfilerService';
 import { type Request, Router } from 'express';
 import type {
   operations,
@@ -24,8 +22,6 @@ export class DatabaseRouter {
     private readonly _httpTools: HTTPTools,
     private readonly _databaseService: DatabaseService,
     private readonly _neo4jService: Neo4jService,
-    private readonly _logger: LoggerService,
-    private readonly _profiler: ProfilerService,
   ) {}
 
   public register(): Router {
@@ -89,10 +85,7 @@ export class DatabaseRouter {
       credentials: credentials,
     });
 
-    const graph: MutableGraph = MutableGraph.empty(
-      this._logger,
-      this._profiler,
-    );
+    const graph: MutableGraph = MutableGraph.empty();
     for (const node of result) {
       graph.nodes.addNeo4jNode(node, MutableGraphElementCreationAction.search);
     }

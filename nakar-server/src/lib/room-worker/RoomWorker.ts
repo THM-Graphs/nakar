@@ -1,52 +1,46 @@
-import { LoggerService } from '../logger/LoggerService';
 import type { ApplicationService } from '../application/ApplicationService';
 import { ClassHelper } from '../tools/ClassHelper';
 import type { RoomWorkerData } from './RoomWorkerData';
 import { parentPort, workerData } from 'node:worker_threads';
-import { ProfilerService } from '../profiler/ProfilerService';
 import { RoomWorkerPhysicsService } from './RoomWorkerPhysicsService';
-import type { ProfilerTask } from '../profiler/ProfilerTask';
+import { createChildLogger } from '../logger/createChildLogger';
+import { Logger } from '@strapi/logger';
+import { Profiler } from 'winston';
 
 export class RoomWorker implements ApplicationService {
-  private readonly _logger: LoggerService;
-  private readonly _profiler: ProfilerService;
+  private readonly _logger: Logger = createChildLogger(this);
   private readonly _roomInstance: RoomWorkerPhysicsService;
 
   private readonly _services: ApplicationService[];
 
   public constructor() {
-    this._logger = new LoggerService();
-    this._profiler = new ProfilerService(this._logger);
     this._roomInstance = new RoomWorkerPhysicsService(
       // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
       workerData as RoomWorkerData,
-      this._logger,
     );
 
-    this._services = [this._logger, this._profiler, this._roomInstance];
+    this._services = [this._roomInstance];
   }
 
   public async bootstrap(): Promise<void> {
-    this._logger.debug(this, 'Will bootstrap services...');
+    this._logger.debug('Will bootstrap services...');
     for (const service of this._services) {
-      const task: ProfilerTask = this._profiler.profile(
-        this,
-        `Bootstrap Service ${ClassHelper.getName(service)}`,
-      );
+      const task: Profiler = this._logger.startTimer();
       await service.bootstrap();
-      task.finish();
+      task.done({
+        message: `Bootstrap Service ${ClassHelper.getName(service)}`,
+      });
     }
   }
 
   public async destroy(): Promise<void> {
-    this._logger.debug(this, 'Will destroy services...');
+    this._logger.debug('Will destroy services...');
     for (const service of this._services.toReversed()) {
-      const task: ProfilerTask = this._profiler.profile(
-        this,
-        `Destroy Service ${ClassHelper.getName(service)}`,
-      );
+      const task: Profiler = this._logger.startTimer();
       await service.destroy();
-      task.finish();
+      task.done({
+        message: `Destroy Service ${ClassHelper.getName(service)}`,
+      });
     }
   }
 }

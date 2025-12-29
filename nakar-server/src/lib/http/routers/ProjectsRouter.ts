@@ -3,15 +3,17 @@ import { Request, Router } from 'express';
 import { SchemaProject, SchemaProjects } from '../../../../src-gen/schema';
 import { SchemaFactoryService } from '../../schema/SchemaFactoryService';
 import { NotFound } from 'http-errors';
-import { LoggerService } from '../../logger/LoggerService';
 import { Result } from '@strapi/types/dist/modules/documents/result';
 import { DatabaseService } from '../../database/DatabaseService';
+import { createChildLogger } from '../../logger/createChildLogger';
+import { Logger } from '@strapi/logger';
 
 export class ProjectsRouter {
+  private readonly _logger: Logger = createChildLogger(this);
+
   public constructor(
     private readonly _httpTools: HTTPTools,
     private readonly _schemaFactory: SchemaFactoryService,
-    private readonly _logger: LoggerService,
     private readonly _database: DatabaseService,
   ) {}
 
@@ -68,7 +70,7 @@ export class ProjectsRouter {
         project: project,
       };
     } catch (error) {
-      this._logger.error(this, error);
+      this._logger.error(error);
       throw new NotFound();
     }
   }

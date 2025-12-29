@@ -1,11 +1,8 @@
 import http from 'http';
 import type { Application } from 'express';
 import express from 'express';
-import type { ConfigService } from '../config/ConfigService';
-import type { LoggerService } from '../logger/LoggerService';
 import type { DatabaseService } from '../database/DatabaseService';
 import cors from 'cors';
-import type { ProfilerService } from '../profiler/ProfilerService';
 import type { ApplicationService } from '../application/ApplicationService';
 import type { CanvasService } from '../room/CanvasService';
 import type { Neo4jService } from '../neo4j/Neo4jService';
@@ -20,6 +17,10 @@ import { ProjectsRouter } from './routers/ProjectsRouter';
 import { Result } from '@strapi/types/dist/modules/documents/result';
 import { CanvasRouter } from './routers/CanvasRouter';
 import { NotesRouter } from './routers/NotesRouter';
+import { Logger } from '@strapi/logger';
+import { createChildLogger } from '../logger/createChildLogger';
+import { getConfig } from '../config/getConfig';
+import { SanitizedConfig } from '../config/SanitizedConfig';
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -39,6 +40,8 @@ declare global {
 }
 
 export class HTTPService implements ApplicationService {
+  private readonly _logger: Logger = createChildLogger(this);
+
   private readonly _app: Application;
   private readonly _server: http.Server;
 
@@ -53,10 +56,7 @@ export class HTTPService implements ApplicationService {
   private readonly _canvasRouter: CanvasRouter;
 
   public constructor(
-    private readonly _config: ConfigService,
-    private readonly _logger: LoggerService,
     databaseService: DatabaseService,
-    profiler: ProfilerService,
     neo4jService: Neo4jService,
     media: MediaService,
     schemaFactory: SchemaFactoryService,
@@ -64,28 +64,22 @@ export class HTTPService implements ApplicationService {
   ) {
     this._app = express();
     this._server = http.createServer(this._app);
-    this._httpTools = new HTTPTools(profiler, _logger, _config);
-    this._authenticationRouter = new AuthenticationRouter(
-      this._httpTools,
-      _config,
-    );
+    this._httpTools = new HTTPTools();
+    this._authenticationRouter = new AuthenticationRouter(this._httpTools);
     this._roomRouter = new RoomRouter(
       this._httpTools,
       databaseService,
       schemaFactory,
     );
-    this._systemRouter = new SystemRouter(this._httpTools, _config);
+    this._systemRouter = new SystemRouter(this._httpTools);
     this._databaseRouter = new DatabaseRouter(
       this._httpTools,
       databaseService,
       neo4jService,
-      _logger,
-      profiler,
     );
     this._projectsRouter = new ProjectsRouter(
       this._httpTools,
       schemaFactory,
-      _logger,
       databaseService,
     );
     this._canvasRouter = new CanvasRouter(
@@ -94,30 +88,25 @@ export class HTTPService implements ApplicationService {
       schemaFactory,
       roomService,
     );
-    this._notesRouter = new NotesRouter(
-      this._httpTools,
-      databaseService,
-      _logger,
-    );
+    this._notesRouter = new NotesRouter(this._httpTools, databaseService);
 
     this._setupRoutes();
   }
 
   public async bootstrap(): Promise<void> {
     this._server.on('close', (): void => {
-      this._logger.debug(this, 'Server will close.');
+      this._logger.debug('Server will close.');
     });
     this._server.on('error', (error: Error): void => {
-      this._logger.error(this, `Server error: ${error.message}`);
+      this._logger.error(`Server error: ${error.message}`);
     });
     this._server.on('listening', (): void => {
-      this._logger.log(
-        this,
+      this._logger.info(
         `Server started: ${JSON.stringify(this._server.address())}`,
       );
     });
     this._server.on('upgrade', (message: http.IncomingMessage): void => {
-      this._logger.debug(this, `Server upgrade: ${message.url ?? '-'}`);
+      this._logger.debug(`Server upgrade: ${message.url ?? '-'}`);
     });
 
     await new Promise<void>(
@@ -128,16 +117,17 @@ export class HTTPService implements ApplicationService {
         this._server.once('listening', (): void => {
           resolve();
         });
-        this._server.listen(this._config.port + 1, this._config.host);
+        const config: SanitizedConfig = getConfig();
+        this._server.listen(config.port + 1, config.host);
       },
     );
   }
 
   public async destroy(): Promise<void> {
-    this._logger.log(this, 'Closing http server...');
+    this._logger.info('Closing http server...');
     await new Promise<void>(
       (resolve: () => void, reject: (error: Error) => void): void => {
-        this._logger.log(this, `Will close all http connections...`);
+        this._logger.info(`Will close all http connections...`);
         this._server.closeAllConnections();
         this._server.close((error?: Error): void => {
           if (error) {
@@ -148,7 +138,7 @@ export class HTTPService implements ApplicationService {
         });
       },
     );
-    this._logger.log(this, 'HTTP Server did close.');
+    this._logger.info('HTTP Server did close.');
   }
 
   public getServerInstance(): http.Server {

@@ -3,9 +3,7 @@ import { SMap } from '../tools/Map';
 import { MutableGraph } from './graph/MutableGraph';
 import { BehaviorSubject, Observable, Subject, Subscription } from 'rxjs';
 import type { CanvasEvent } from './events/CanvasEvent';
-import { LoggerService } from '../logger/LoggerService';
 import { MediaService } from '../media/MediaService';
-import { ProfilerService } from '../profiler/ProfilerService';
 import { DatabaseService } from '../database/DatabaseService';
 import type { WTEvent } from '../room-worker/worker-events/WTEvent';
 import { match, P } from 'ts-pattern';
@@ -19,7 +17,6 @@ import { Neo4jGraphElements } from '../neo4j/Neo4jGraphElements';
 import { Neo4jLimitConfig } from '../neo4j/Neo4jLimitConfig';
 import { CanvasEventNotAllNodesLoaded } from './events/CanvasEventNotAllNodesLoaded';
 import { MutableGraphElementCreationAction } from './graph/MutableGraphElementCreationAction';
-import { ProfilerTask } from '../profiler/ProfilerTask';
 import { CanvasEventGraphMetaDataChanged } from './events/CanvasEventGraphMetaDataChanged';
 import { CanvasEventGraphElementsChanged } from './events/CanvasEventGraphElementsChanged';
 import { CanvasEventGraphTableChanged } from './events/CanvasEventGraphTableChanged';
@@ -47,8 +44,13 @@ import { UndoWrapper } from '../undo/UndoWrapper';
 import { Neo4jRelationship } from '../neo4j/Neo4jRelationship';
 import { LiveCanvasState } from './LiveCanvasState';
 import { Result } from '@strapi/types/dist/modules/documents/result';
+import { Logger } from '@strapi/logger';
+import { createChildLogger } from '../logger/createChildLogger';
+import { Profiler } from 'winston';
 
 export class LiveCanvas implements ApplicationService {
+  private readonly _logger: Logger = createChildLogger(this);
+
   private readonly _physicsWorker: PhysicsWorker;
   private readonly _graph: UndoWrapper<MutableGraph | null>;
   private readonly _onEvent: Subject<CanvasEvent>;
@@ -59,9 +61,7 @@ export class LiveCanvas implements ApplicationService {
 
   public constructor(
     private readonly _canvasId: string,
-    private readonly _logger: LoggerService,
     private readonly _media: MediaService,
-    private readonly _profiler: ProfilerService,
     private readonly _database: DatabaseService,
     private readonly _neo4j: Neo4jService,
   ) {
@@ -74,13 +74,12 @@ export class LiveCanvas implements ApplicationService {
     );
     this._onEvent = new Subject();
     this._subscriptions = new SSet();
-    this._physicsWorker = new PhysicsWorker(_canvasId, _logger, _database);
-    this._queue = new TaskQueue(this._logger);
+    this._physicsWorker = new PhysicsWorker(_canvasId, _database);
+    this._queue = new TaskQueue();
     this._state = new BehaviorSubject<LiveCanvasState>(LiveCanvasState.created);
     this._stateSubscription = this._state.subscribe(
       (newState: LiveCanvasState): void => {
         this._logger.debug(
-          this,
           `State of canvas ${this.canvasId} changed to ${newState}`,
         );
       },
@@ -164,7 +163,7 @@ export class LiveCanvas implements ApplicationService {
             );
             this._physicsWorker.triggerPhysics({ amount: 'short' });
           })().catch((error: unknown): void => {
-            this._logger.error(this, error);
+            this._logger.error(error);
           });
         },
       ),
@@ -175,7 +174,6 @@ export class LiveCanvas implements ApplicationService {
   public async destroy(): Promise<void> {
     if (this._state.value !== LiveCanvasState.started) {
       this._logger.warn(
-        this,
         `Warning: Wanting to stop live canvas ${this.canvasId}, but state is ${this._state.value}. Abort stopping.`,
       );
       return;
@@ -221,14 +219,12 @@ export class LiveCanvas implements ApplicationService {
       const node: MutableNode | null = graph.nodes.get(physialNode.id);
       if (node == null) {
         this._logger.error(
-          this,
           `Unable to move node: Node ${physialNode.id} not found.`,
         );
         continue;
       }
       if (!node.grabs.has(params.userId)) {
         this._logger.error(
-          this,
           `Unable to move node ${node.id}. User ${params.userId} did not grab it.`,
         );
         continue;
@@ -309,7 +305,6 @@ export class LiveCanvas implements ApplicationService {
         for (const query of queries) {
           if (query.query == null) {
             this._logger.warn(
-              this,
               `Scenario ${scenario.title ?? '?'} has an empty query. Will skip query`,
             );
             continue;
@@ -401,10 +396,7 @@ export class LiveCanvas implements ApplicationService {
         );
 
         if (!params.additive) {
-          const task: ProfilerTask = this._profiler.profile(
-            this,
-            'Run Post-Scenario Actions',
-          );
+          const task: Profiler = this._logger.startTimer();
 
           const postScenarioActions: Result<'api::v2-post-scenario-action.v2-post-scenario-action'>[] =
             await this._database.getPostScenarioActionsOfScenario(scenario);
@@ -474,13 +466,14 @@ export class LiveCanvas implements ApplicationService {
                   d: Result<'api::v2-post-scenario-action.v2-post-scenario-action'>,
                 ): void => {
                   this._logger.warn(
-                    this,
                     `Unable to handle post action type ${d.type}`,
                   );
                 },
               );
           }
-          task.finish();
+          task.done({
+            message: 'Run Post-Scenario Actions',
+          });
         }
 
         await this._postProcessGraph(newGraph);
@@ -596,7 +589,6 @@ export class LiveCanvas implements ApplicationService {
             }
 
             this._logger.debug(
-              this,
               `Expand node result for ${params.nodeId}: ${expandResult.nodes.size.toString()} nodes and ${expandResult.relationships.size.toString()} relationships.`,
             );
           },
@@ -729,7 +721,7 @@ export class LiveCanvas implements ApplicationService {
                 edgesToDelete.add(edge);
               }
 
-              this._logger.debug(this, `Did delete node ${node.id}`);
+              this._logger.debug(`Did delete node ${node.id}`);
             }
 
             for (const edgeId of params.edgeIds) {
@@ -879,7 +871,7 @@ export class LiveCanvas implements ApplicationService {
           'Run query',
           (graph: MutableGraph): void => {
             if (params.replace) {
-              graph.nodes = new MutableNodeIndex([], this._logger);
+              graph.nodes = new MutableNodeIndex([]);
               graph.edges = new MutableEdgeIndex([]);
               graph.tableData = graphElements.tableData;
             }
@@ -944,8 +936,7 @@ export class LiveCanvas implements ApplicationService {
 
           const credentials: Neo4jDatabaseInfo = Neo4jDatabaseInfo.parse(db);
 
-          this._logger.log(
-            this,
+          this._logger.info(
             `Will run connect result nodes on ${nodesToConnect.size.toString()} on database ${db.title ?? db.documentId}.`,
           );
           const result: Neo4jGraphElements =
@@ -996,10 +987,7 @@ export class LiveCanvas implements ApplicationService {
       for (const nodeId of params.nodeIds) {
         const node: MutableNode | null = graph.nodes.get(nodeId);
         if (node == null) {
-          this._logger.warn(
-            this,
-            `Unable to unlock node ${nodeId}. Node not found.`,
-          );
+          this._logger.warn(`Unable to unlock node ${nodeId}. Node not found.`);
           continue;
         }
         if (node.locked) {
@@ -1175,7 +1163,6 @@ export class LiveCanvas implements ApplicationService {
         'Calculating shortest path',
         async (): Promise<void> => {
           this._logger.debug(
-            this,
             `Will calculate shortest path of nodes: ${JSON.stringify(params.nodeIds)}`,
           );
           const oldGraph: MutableGraph = this.getGraph();
@@ -1208,14 +1195,12 @@ export class LiveCanvas implements ApplicationService {
 
               if (nodeA.source !== nodeB.source) {
                 this._logger.warn(
-                  this,
                   `Cannot calculate shortest path between ${idA} and ${idB}: Sources are not equal: Node A: ${nodeA.source}, Node B: ${nodeB.source}`,
                 );
                 continue;
               }
 
               this._logger.debug(
-                this,
                 `Will calculate shortest path between ${idA} and ${idB}`,
               );
 
@@ -1340,19 +1325,21 @@ export class LiveCanvas implements ApplicationService {
   }
 
   public async saveGraph(): Promise<void> {
-    const task: ProfilerTask = this._profiler.profile(this, 'Save Graph');
+    const task: Profiler = this._logger.startTimer();
     const graph: MutableGraph = this.getGraph();
 
     const canvas: Result<'api::v2-canvas.v2-canvas'> =
       await this._database.getCanvas(this.canvasId);
 
     await this._database.setMutableGraphOfCanvas(canvas, graph.toPlain());
-    task.finish();
+    task.done({
+      message: 'Save Graph',
+    });
   }
 
   public saveGraphAsync(): void {
     this.saveGraph().catch((error: unknown): void => {
-      this._logger.error(this, error);
+      this._logger.error(error);
     });
   }
   private _handleWTEventPhysicsUpdate(event: WTEventPhysicsUpdate): void {
@@ -1368,7 +1355,6 @@ export class LiveCanvas implements ApplicationService {
 
   private _handleWTEventPhysicsStopped(): void {
     this._logger.debug(
-      this,
       `Save graph of canvas ${this.canvasId}, because the physics simulation stopped.`,
     );
     this.saveGraphAsync();
@@ -1423,8 +1409,7 @@ export class LiveCanvas implements ApplicationService {
       }
     }
 
-    this._logger.log(
-      this,
+    this._logger.info(
       `Did compress ${compressedCount.toString()} relationships.`,
     );
   }
@@ -1437,8 +1422,7 @@ export class LiveCanvas implements ApplicationService {
       await this._database.getCommonPropertyConfigsOfCanvas(canvas);
 
     for (const mergeConfig of configs) {
-      this._logger.log(
-        this,
+      this._logger.info(
         `Will check nodes for merging ${mergeConfig.leftLabel} with ${mergeConfig.rightLabel}`,
       );
       const leftDatabase: Result<'api::v2-database-connection.v2-database-connection'> | null =
@@ -1498,8 +1482,7 @@ export class LiveCanvas implements ApplicationService {
                 creationAction: MutableGraphElementCreationAction.merge,
               }),
             );
-            this._logger.log(
-              this,
+            this._logger.info(
               `Did merge ${originalNode.id} with ${mergeNode.id}`,
             );
           }
@@ -1585,20 +1568,16 @@ export class LiveCanvas implements ApplicationService {
   }
 
   private async _postProcessGraph(graph: MutableGraph): Promise<void> {
-    const task: ProfilerTask = this._profiler.profile(
-      this,
-      'Post Process Graph',
-    );
+    const task: Profiler = this._logger.startTimer();
     graph.removeDanglingEdges();
     await this._mergeNodes(graph);
-    task.finish();
+    task.done({
+      message: 'Post Process Graph',
+    });
   }
 
   private _compressNodes(graph: MutableGraph, targetLabel: string): void {
-    this._logger.debug(
-      this,
-      `Will check nodes of ${targetLabel} for compressing`,
-    );
+    this._logger.debug(`Will check nodes of ${targetLabel} for compressing`);
     let compressCount: number = 0;
     for (const node of graph.nodes.getByLabel(targetLabel)) {
       const clusterBuddies: SSet<MutableNode> = graph.getClusterBuddiesOfNode(
@@ -1609,36 +1588,32 @@ export class LiveCanvas implements ApplicationService {
         continue;
       }
       this._logger.debug(
-        this,
         `Will compress ${node.id} because it is part of a cluster with ${clusterBuddies.size.toString()} cluster buddies.`,
       );
-      const newNode: MutableNode = new MutableNode(
-        {
-          id: v4(),
-          position: MutablePosition.average(
-            clusterBuddies
-              .toArray()
-              .map((n: MutableNode): MutablePosition => n.position),
-          ),
-          grabs: new SSet(),
-          labels: clusterBuddies.reduce(
-            (akku: SSet<string>, next: MutableNode): SSet<string> =>
-              akku.byMerging(next.labels),
-            new SSet<string>(),
-          ),
-          source: node.source,
-          locked: node.locked,
-          properties: MutablePropertyCollection.empty(),
-          namesInQuery: clusterBuddies.reduce(
-            (akku: SSet<string>, next: MutableNode): SSet<string> =>
-              akku.byMerging(next.namesInQuery),
-            new SSet<string>(),
-          ),
-          compressed: clusterBuddies.map((n: MutableNode): string => n.id),
-          creationAction: MutableGraphElementCreationAction.compress,
-        },
-        this._logger,
-      );
+      const newNode: MutableNode = new MutableNode({
+        id: v4(),
+        position: MutablePosition.average(
+          clusterBuddies
+            .toArray()
+            .map((n: MutableNode): MutablePosition => n.position),
+        ),
+        grabs: new SSet(),
+        labels: clusterBuddies.reduce(
+          (akku: SSet<string>, next: MutableNode): SSet<string> =>
+            akku.byMerging(next.labels),
+          new SSet<string>(),
+        ),
+        source: node.source,
+        locked: node.locked,
+        properties: MutablePropertyCollection.empty(),
+        namesInQuery: clusterBuddies.reduce(
+          (akku: SSet<string>, next: MutableNode): SSet<string> =>
+            akku.byMerging(next.namesInQuery),
+          new SSet<string>(),
+        ),
+        compressed: clusterBuddies.map((n: MutableNode): string => n.id),
+        creationAction: MutableGraphElementCreationAction.compress,
+      });
       graph.nodes.add(newNode);
       for (const sibling of clusterBuddies) {
         for (const outgoingEdge of graph.edges.getByStartNodeId(sibling.id)) {
@@ -1653,13 +1628,12 @@ export class LiveCanvas implements ApplicationService {
         }
         const removed: boolean = graph.nodes.remove(sibling);
         if (!removed) {
-          this._logger.warn(this, `Unable to remove ${sibling.id}`);
+          this._logger.warn(`Unable to remove ${sibling.id}`);
         }
         compressCount += 1;
       }
     }
-    this._logger.log(
-      this,
+    this._logger.info(
       `Did compress ${compressCount.toString()} nodes of label ${targetLabel}.`,
     );
   }
@@ -1733,7 +1707,6 @@ export class LiveCanvas implements ApplicationService {
       await this._database.getCanvas(this._canvasId);
 
     this._logger.debug(
-      this,
       `Will load graph of canvas ${canvas.documentId} ('${canvas.title ?? ''}') into memory.`,
     );
 
@@ -1744,22 +1717,18 @@ export class LiveCanvas implements ApplicationService {
         await this._media.getStringPayloadOfMediaFile(canvasGraph);
       const graph: MutableGraph = MutableGraph.fromUnknownOrEmpty(
         JSON.parse(graphJson),
-        this._logger,
-        this._profiler,
       );
       this._logger.debug(
-        this,
         `Did load ${graph.size.toString()} graph elements into canvas ${canvas.documentId} ('${canvas.title ?? ''}').`,
       );
       return graph;
     } catch (error) {
-      this._logger.error(this, `Unable to load graph from canvas:`);
-      this._logger.error(this, error);
+      this._logger.error(`Unable to load graph from canvas:`);
+      this._logger.error(error);
       this._logger.debug(
-        this,
         `Will init canvas ${canvas.documentId} with empty graph.`,
       );
-      return MutableGraph.empty(this._logger, this._profiler);
+      return MutableGraph.empty();
     }
   }
 

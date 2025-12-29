@@ -9,7 +9,6 @@ import type {
 import neo4j, { auth, driver as createDriver } from 'neo4j-driver';
 import type { Neo4jGraphElements } from './Neo4jGraphElements';
 import { SSet } from '../tools/Set';
-import type { LoggerService } from '../logger/LoggerService';
 import { Neo4jGraphElementsFactory } from './Neo4jGraphElementsFactory';
 import type { SessionConfig } from 'neo4j-driver-core/types/driver';
 import type { ApplicationService } from '../application/ApplicationService';
@@ -20,9 +19,11 @@ import type { SchemaDatabaseStats } from '../../../src-gen/schema';
 import { Neo4jLimitConfig } from './Neo4jLimitConfig';
 import { Neo4jSearchCapabilities } from './Neo4jSearchCapabilities';
 import type { Neo4jNode } from './Neo4jNode';
+import { Logger } from '@strapi/logger';
+import { createChildLogger } from '../logger/createChildLogger';
 
 export class Neo4jService implements ApplicationService {
-  public constructor(private readonly _logger: LoggerService) {}
+  private readonly _logger: Logger = createChildLogger(this);
 
   public bootstrap(): void | Promise<void> {
     /* */
@@ -43,7 +44,6 @@ export class Neo4jService implements ApplicationService {
       auth.basic(databaseInfo.username, databaseInfo.password),
     );
     this._logger.debug(
-      this,
       `Did create driver: ${JSON.stringify(await driver.getServerInfo())}`,
     );
     try {
@@ -52,18 +52,14 @@ export class Neo4jService implements ApplicationService {
         database: databaseInfo.database ?? undefined,
       };
       const session: Session = driver.session(sessionConfig);
-      this._logger.debug(
-        this,
-        `Did open session: ${JSON.stringify(sessionConfig)}`,
-      );
+      this._logger.debug(`Did open session: ${JSON.stringify(sessionConfig)}`);
       try {
         this._logger.debug(
-          this,
           `Will run query: ${query} with data: ${JSON.stringify(parameters).length.toString()} bytes`,
         );
 
         const neo4jGraphElementsFactory: Neo4jGraphElementsFactory =
-          new Neo4jGraphElementsFactory(this._logger, limitConfig);
+          new Neo4jGraphElementsFactory(limitConfig);
         await new Promise<void>(
           (resolve: () => void, reject: (error: Error) => void): void => {
             session
@@ -84,7 +80,7 @@ export class Neo4jService implements ApplicationService {
                   }
                 },
                 onCompleted: (result: ResultSummary): void => {
-                  this._logger.debug(this, JSON.stringify(result));
+                  this._logger.debug(JSON.stringify(result));
                   resolve();
                 },
                 onError: (error: Error): void => {
@@ -97,19 +93,18 @@ export class Neo4jService implements ApplicationService {
         const result: Neo4jGraphElements =
           neo4jGraphElementsFactory.getResult();
         this._logger.debug(
-          this,
           `Did receive ${result.size.toString()} graph elements.`,
         );
 
         return result;
       } catch (error) {
         await session.close();
-        this._logger.error(this, error);
+        this._logger.error(error);
         throw error;
       }
     } catch (error) {
       await driver.close();
-      this._logger.error(this, error);
+      this._logger.error(error);
       throw error;
     }
   }
@@ -119,8 +114,7 @@ export class Neo4jService implements ApplicationService {
     nodeIds: SSet<string>,
   ): Promise<Neo4jGraphElements> {
     const nodesIds: string[] = [...nodeIds.values()];
-    this._logger.log(
-      this,
+    this._logger.info(
       `Will load connecting relationships of ${nodesIds.length.toString()} nodes in ${databaseInfo.url}`,
     );
     const additional: Neo4jGraphElements = await this.executeQuery(
@@ -299,7 +293,7 @@ ORDER BY lcount DESC, label ASC`,
     credentials: Neo4jDatabaseInfo,
     label: string,
   ): Promise<number> {
-    this._logger.debug(this, `Will query label count of label ${label}`);
+    this._logger.debug(`Will query label count of label ${label}`);
     const result: Neo4jGraphElements = await this.executeQuery(
       credentials,
       `MATCH (n:\`${label}\`) RETURN count(n) as count;`,
@@ -316,10 +310,7 @@ ORDER BY lcount DESC, label ASC`,
     credentials: Neo4jDatabaseInfo,
     relType: string,
   ): Promise<number> {
-    this._logger.debug(
-      this,
-      `Will query rel type count of rel type ${relType}`,
-    );
+    this._logger.debug(`Will query rel type count of rel type ${relType}`);
     const result: Neo4jGraphElements = await this.executeQuery(
       credentials,
       `MATCH ()-[r:\`${relType}\`]-() RETURN count(r) as count`,
@@ -465,7 +456,7 @@ ORDER BY lcount DESC, label ASC`,
   private async _getNodesCount(
     credentials: Neo4jDatabaseInfo,
   ): Promise<number> {
-    this._logger.debug(this, `Will query nodes count.`);
+    this._logger.debug(`Will query nodes count.`);
     const result: Neo4jGraphElements = await this.executeQuery(
       credentials,
       'MATCH (n) RETURN count(n) AS nodeCount',
@@ -481,7 +472,7 @@ ORDER BY lcount DESC, label ASC`,
   private async _getRelationshipsCount(
     credentials: Neo4jDatabaseInfo,
   ): Promise<number> {
-    this._logger.debug(this, `Will query rels count.`);
+    this._logger.debug(`Will query rels count.`);
     const result: Neo4jGraphElements = await this.executeQuery(
       credentials,
       'MATCH ()-[r]->() RETURN count(r) AS relationshipCount',

@@ -1,19 +1,17 @@
 import type { ApplicationService } from '../application/ApplicationService';
-import type { LoggerService } from '../logger/LoggerService';
 import { FileStream } from '../fs/FileStream';
-import type { ConfigService } from '../config/ConfigService';
 import path from 'path';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import { v4 } from 'uuid';
 import sanitize from 'sanitize-filename';
 import { Result } from '@strapi/types/dist/modules/documents/result';
+import { Logger } from '@strapi/logger';
+import { createChildLogger } from '../logger/createChildLogger';
+import { getConfig } from '../config/getConfig';
 
 export class MediaService implements ApplicationService {
-  public constructor(
-    private readonly _logger: LoggerService,
-    private readonly _configService: ConfigService,
-  ) {}
+  private readonly _logger: Logger = createChildLogger(this);
 
   public bootstrap(): void | Promise<void> {
     /* */
@@ -28,14 +26,11 @@ export class MediaService implements ApplicationService {
     media: Result<'plugin::upload.file'>,
   ): FileStream | null {
     if (media.hash == null) {
-      this._logger.warn(this, `Hash of media ${media.documentId} is null.`);
+      this._logger.warn(`Hash of media ${media.documentId} is null.`);
       return null;
     }
     if (media.ext == null) {
-      this._logger.warn(
-        this,
-        `File extension of media ${media.documentId} is null.`,
-      );
+      this._logger.warn(`File extension of media ${media.documentId} is null.`);
       return null;
     }
     const filePath: string = `${strapi.dirs.static.public}/uploads/${media.hash}${media.ext}`;
@@ -52,7 +47,7 @@ export class MediaService implements ApplicationService {
     if (media.url == null) {
       return null;
     }
-    const host: string | null = this._configService.publicURL;
+    const host: string | null = getConfig().publicUrl;
     if (host == null) {
       return null;
     }
@@ -101,7 +96,7 @@ export class MediaService implements ApplicationService {
       await fs.rm(filePath);
       return result[0];
     } catch (error) {
-      this._logger.error(this, error);
+      this._logger.error(error);
       throw error;
     }
   }

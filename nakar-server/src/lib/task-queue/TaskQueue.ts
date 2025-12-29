@@ -1,16 +1,18 @@
 import { TaskQueueTask } from './TaskQueueTask';
-import { LoggerService } from '../logger/LoggerService';
 import { Observable, Subject } from 'rxjs';
 import { TaskQueueState } from './TaskQueueState';
 import { enqueueEventLoop } from '../tools/enqueueEventLoop';
+import { Logger } from '@strapi/logger';
+import { createChildLogger } from '../logger/createChildLogger';
 
 export class TaskQueue {
+  private readonly _logger: Logger = createChildLogger(this);
   private _queue: TaskQueueTask[];
   private _currentTask: TaskQueueTask | null;
   private readonly _onUpdate: Subject<TaskQueueState>;
   private readonly _onError: Subject<unknown>;
 
-  public constructor(private readonly _logger: LoggerService) {
+  public constructor() {
     this._queue = [];
     this._currentTask = null;
     this._onUpdate = new Subject();
@@ -49,19 +51,15 @@ export class TaskQueue {
       this._queue.splice(0, 1);
       this._currentTask = newTask;
 
-      this._logger.log(this, `Will start task: ${newTask.title}.`);
+      this._logger.info(`Will start task: ${newTask.title}.`);
       this._propagateUpdate();
 
       try {
         await enqueueEventLoop();
         await newTask.action();
-        this._logger.log(
-          this,
-          `Task ${newTask.title} did finish successfully.`,
-        );
+        this._logger.info(`Task ${newTask.title} did finish successfully.`);
       } catch (error) {
-        this._logger.log(
-          this,
+        this._logger.info(
           `Task ${newTask.title} did error: ${JSON.stringify(error)}`,
         );
         this._onError.next(error);

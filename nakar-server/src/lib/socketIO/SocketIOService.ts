@@ -25,7 +25,6 @@ import { WSClient } from './WSClient';
 import { SSet } from '../tools/Set';
 import type { CanvasService } from '../room/CanvasService';
 import type { DatabaseService } from '../database/DatabaseService';
-import type { LoggerService } from '../logger/LoggerService';
 import type http from 'http';
 import type { ApplicationService } from '../application/ApplicationService';
 import type { Subscription } from 'rxjs';
@@ -40,18 +39,19 @@ import type { CanvasEventGraphElementsChanged } from '../room/events/CanvasEvent
 import type { CanvasEventGraphTableChanged } from '../room/events/CanvasEventGraphTableChanged';
 import type { CanvasEventEventKick } from '../room/events/CanvasEventEventKick';
 import type { CanvasEventNotAllNodesLoaded } from '../room/events/CanvasEventNotAllNodesLoaded';
-import type { ProfilerTask } from '../profiler/ProfilerTask';
-import type { ProfilerService } from '../profiler/ProfilerService';
 import type { MutableGraph } from '../room/graph/MutableGraph';
 import { SchemaFactoryService } from '../schema/SchemaFactoryService';
 import { CanvasEventError } from '../room/events/CanvasEventError';
 import { Result } from '@strapi/types/dist/modules/documents/result';
 import { IndexedNoteCollection } from '../database/IndexedNoteCollection';
+import { Logger } from '@strapi/logger';
+import { createChildLogger } from '../logger/createChildLogger';
 
 export type Server = UntypedServer<ClientToServerEvents, ServerToClientEvents>;
 export type Socket = UntypedSocket<ClientToServerEvents, ServerToClientEvents>;
 
 export class SocketIOService implements ApplicationService {
+  private readonly _logger: Logger = createChildLogger(this);
   private readonly _sockets: SSet<WSClient>;
   private _io: UntypedServer | null;
   private _isShuttingDownFlag: boolean;
@@ -60,8 +60,6 @@ export class SocketIOService implements ApplicationService {
     private readonly _canvasService: CanvasService,
     private readonly _databaseService: DatabaseService,
     private readonly _httpService: HTTPService,
-    private readonly _logger: LoggerService,
-    private readonly _profiler: ProfilerService,
     private readonly _schemaFactory: SchemaFactoryService,
   ) {
     this._sockets = new SSet();
@@ -85,8 +83,7 @@ export class SocketIOService implements ApplicationService {
     });
     this._io = io;
 
-    this._logger.log(
-      this,
+    this._logger.info(
       `Did register socket.io server on ${JSON.stringify(httpServer.address())}. Path: ${this._io.path()}`,
     );
 
@@ -111,7 +108,7 @@ export class SocketIOService implements ApplicationService {
     } satisfies SchemaWsEventNotification);
 
     for (const client of this.sockets) {
-      this._logger.log(this, `Will disconnect ws client: ${client.id}`);
+      this._logger.info(`Will disconnect ws client: ${client.id}`);
       client.native.disconnect(true);
     }
   }
@@ -121,7 +118,7 @@ export class SocketIOService implements ApplicationService {
     message: SchemaWsServerToClientMessage,
   ): void {
     if (this._io == null) {
-      this._logger.warn(this, 'IO is not defined!');
+      this._logger.warn('IO is not defined!');
       return;
     }
     this._io.to(roomId).emit('message', message);
@@ -136,7 +133,6 @@ export class SocketIOService implements ApplicationService {
     );
     if (user == null) {
       this._logger.error(
-        this,
         `Unable to send ${message.type} to user ${userId}. User does not exist.`,
       );
       return;
@@ -164,9 +160,9 @@ export class SocketIOService implements ApplicationService {
 
   private _registerWebsocketEvents(io: UntypedServer): void {
     io.on('connection', (s: Socket): void => {
-      const wsClient: WSClient = new WSClient(s, io, this._logger);
+      const wsClient: WSClient = new WSClient(s, io);
       this._sockets.add(wsClient);
-      this._logger.debug(this, `New socket ${wsClient.id} connection.`);
+      this._logger.debug(`New socket ${wsClient.id} connection.`);
       this._registerWebsocketClientEvents(wsClient);
     });
   }
@@ -200,10 +196,7 @@ export class SocketIOService implements ApplicationService {
                       oldCanvas: Result<'api::v2-canvas.v2-canvas'> | null,
                     ): Promise<void> => {
                       if (oldCanvas == null) {
-                        this._logger.warn(
-                          this,
-                          'Cannot find canvas to shut down.',
-                        );
+                        this._logger.warn('Cannot find canvas to shut down.');
                         await Promise.resolve();
                         return;
                       } else {
@@ -213,7 +206,7 @@ export class SocketIOService implements ApplicationService {
                     },
                   )
                   .catch((error: unknown): void => {
-                    this._logger.error(this, error);
+                    this._logger.error(error);
                   });
               }
             }
@@ -238,7 +231,7 @@ export class SocketIOService implements ApplicationService {
                 },
               )
               .catch((error: unknown): void => {
-                this._logger.error(this, error);
+                this._logger.error(error);
               });
           }
 
@@ -254,7 +247,6 @@ export class SocketIOService implements ApplicationService {
             try {
               if (clientToServerMessage.type !== 'WSActionMoveNodes') {
                 this._logger.debug(
-                  this,
                   `Did receive from client ${wsClient.id}: ${clientToServerMessage.type}`,
                 );
               }
@@ -311,22 +303,18 @@ export class SocketIOService implements ApplicationService {
                 .exhaustive();
             } catch (error: unknown) {
               this._logger.error(
-                this,
                 `Error handeling WS message: ${JSON.stringify(clientToServerMessage)}`,
               );
-              this._logger.error(this, error);
+              this._logger.error(error);
               wsClient.send(this.createErrorNotification(error));
             }
           })().catch((error: unknown): void => {
-            this._logger.error(this, error);
+            this._logger.error(error);
           });
         },
       ),
       wsClient.onDisconnect$.subscribe((reason: DisconnectReason): void => {
-        this._logger.debug(
-          this,
-          `Socket ${wsClient.id} disconnected: ${reason}`,
-        );
+        this._logger.debug(`Socket ${wsClient.id} disconnected: ${reason}`);
         this._sockets.delete(wsClient);
         setTimeout((): void => {
           // Workaround to receive leave room event
@@ -342,7 +330,6 @@ export class SocketIOService implements ApplicationService {
     this._canvasService.onEvent$.subscribe((event: CanvasEvent): void => {
       if (event.type !== 'CanvasEventRoomPhysicsUpdated') {
         this._logger.debug(
-          this,
           `Did receive from room service (room ${event.canvasId}): ${event.type}`,
         );
       }
@@ -401,7 +388,7 @@ export class SocketIOService implements ApplicationService {
                   type: 'WSEventGraphElementsChanged',
                 });
               })().catch((error: unknown): void => {
-                this._logger.error(this, error);
+                this._logger.error(error);
               });
             },
           )
@@ -413,11 +400,7 @@ export class SocketIOService implements ApplicationService {
                   continue;
                 }
 
-                const task: ProfilerTask = this._profiler.profile(
-                  this,
-                  `Filter node grabs for client ${socket.id} in room ${socket.room}`,
-                  true,
-                );
+                // const task: Profiler = this._logger.startTimer();
                 const nodesToSend: SchemaPhysicalNode[] = [];
                 for (const node of message.graph.nodes.nodes) {
                   if (!node.grabs.has(socket.id)) {
@@ -427,7 +410,9 @@ export class SocketIOService implements ApplicationService {
                     });
                   }
                 }
-                task.finish();
+                // task.done({
+                //   message: `Filter node grabs for client ${socket.id} in room ${socket.room}`,
+                // });
 
                 socket.send({
                   type: 'WSEventNodesMoved',
@@ -502,10 +487,9 @@ export class SocketIOService implements ApplicationService {
           .exhaustive(),
       ).catch((error: unknown): void => {
         this._logger.error(
-          this,
           `Error handling room service event: ${JSON.stringify(event)}`,
         );
-        this._logger.error(this, error);
+        this._logger.error(error);
       });
     });
   }
@@ -543,7 +527,7 @@ export class SocketIOService implements ApplicationService {
             }
           }
         })().catch((error: unknown): void => {
-          this._logger.error(this, error);
+          this._logger.error(error);
         });
       },
     );

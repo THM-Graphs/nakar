@@ -2,15 +2,12 @@ import { type Request, Router } from 'express';
 import { HTTPTools } from '../HTTPTools';
 import type { operations } from '../../../../src-gen/schema';
 import * as undici from 'undici';
-import { ConfigService } from '../../config/ConfigService';
 import z from 'zod';
 import { Unauthorized } from 'http-errors';
+import { getConfig } from '../../config/getConfig';
 
 export class AuthenticationRouter {
-  public constructor(
-    private readonly _httpTools: HTTPTools,
-    private readonly _config: ConfigService,
-  ) {}
+  public constructor(private readonly _httpTools: HTTPTools) {}
 
   public register(): Router {
     const router: Router = Router();
@@ -36,7 +33,7 @@ export class AuthenticationRouter {
     const body: Body = req.body as Body;
 
     const result: undici.Response = await undici.fetch(
-      `http://localhost:${this._config.port}/api/auth/local`,
+      `http://localhost:${getConfig().port}/api/auth/local`,
       {
         method: 'POST',
         body: JSON.stringify({
@@ -89,7 +86,7 @@ export class AuthenticationRouter {
     }
 
     const result: undici.Response = await undici.fetch(
-      `http://localhost:${this._config.port}/api/users/me`,
+      `http://localhost:${getConfig().port}/api/users/me`,
       {
         method: 'GET',
         headers: {

@@ -1,5 +1,4 @@
 import type { ApplicationService } from '../application/ApplicationService';
-import type { LoggerService } from '../logger/LoggerService';
 import type { MessagePort } from 'node:worker_threads';
 import { parentPort } from 'node:worker_threads';
 import { PhysicsSimulation } from '../physics/PhysicsSimulation';
@@ -14,17 +13,18 @@ import type { PhysicalNode } from '../physics/physical-graph/PhysicalNode';
 import type { WTActionTriggerPhysics } from './worker-events/WTActionTriggerPhysics';
 import type { WTActionSetLocks } from './worker-events/WTActionSetLocks';
 import { PhysicsSimulationEventSlowTick } from '../physics/PhysicsSimulationEventSlowTick';
+import { Logger } from '@strapi/logger';
+import { createChildLogger } from '../logger/createChildLogger';
 
 export class RoomWorkerPhysicsService implements ApplicationService {
+  private readonly _logger: Logger = createChildLogger(this);
+
   private readonly _roomId: string;
   private readonly _parentPort: MessagePort;
   private readonly _physics: PhysicsSimulation;
 
-  public constructor(
-    data: RoomWorkerData,
-    private readonly _logger: LoggerService,
-  ) {
-    this._physics = new PhysicsSimulation(data.graph, this._logger);
+  public constructor(data: RoomWorkerData) {
+    this._physics = new PhysicsSimulation(data.graph);
     this._roomId = data.canvasId;
 
     if (parentPort == null) {
@@ -37,10 +37,7 @@ export class RoomWorkerPhysicsService implements ApplicationService {
   }
 
   public bootstrap(): void {
-    this._logger.debug(
-      this,
-      `Did receive worker data: roomId: ${this._roomId}.`,
-    );
+    this._logger.debug(`Did receive worker data: roomId: ${this._roomId}.`);
   }
 
   public destroy(): void {
@@ -51,10 +48,7 @@ export class RoomWorkerPhysicsService implements ApplicationService {
   private _registerParentPortMessages(): void {
     this._parentPort.on('message', (message: WTAction): void => {
       if (message.type !== 'WTActionMoveNodes') {
-        this._logger.debug(
-          this,
-          `Did receive from parent port: ${message.type}`,
-        );
+        this._logger.debug(`Did receive from parent port: ${message.type}`);
       }
       match(message)
         .with(
@@ -74,7 +68,6 @@ export class RoomWorkerPhysicsService implements ApplicationService {
               ] as PhysicalNode | null;
               if (foundNode == null) {
                 this._logger.error(
-                  this,
                   `Client did send moved node, but the node cannot be found in the room. Room: ${this._roomId}, Node: ${movedNode.id}`,
                 );
                 continue;
@@ -111,7 +104,6 @@ export class RoomWorkerPhysicsService implements ApplicationService {
               ] as PhysicalNode | null;
               if (node == null) {
                 this._logger.warn(
-                  this,
                   `Unable to apply lock to node ${nodeId}. Node does not exist.`,
                 );
                 continue;

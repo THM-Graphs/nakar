@@ -1,22 +1,22 @@
 /* eslint-disable @typescript-eslint/no-empty-object-type */
 import { ApplicationService } from '../application/ApplicationService';
-import { LoggerService } from '../logger/LoggerService';
 import type { UID } from '@strapi/types';
 import { Result } from '@strapi/types/dist/modules/documents';
 import { SMap } from '../tools/Map';
+import { Logger } from '@strapi/logger';
+import { createChildLogger } from '../logger/createChildLogger';
 
 export class MigrationService implements ApplicationService {
   private readonly _active: boolean = false;
-
-  public constructor(private readonly _logger: LoggerService) {}
+  private readonly _logger: Logger = createChildLogger(this);
 
   public async bootstrap(): Promise<void> {
     if (this._active) {
-      this._logger.warn(this, 'Will check database for migration to v2.');
+      this._logger.warn('Will check database for migration to v2.');
       await this._deleteAllData();
       await this._createProjects();
     } else {
-      this._logger.warn(this, 'Not active. Will do nothing.');
+      this._logger.warn('Not active. Will do nothing.');
     }
   }
 
@@ -25,7 +25,7 @@ export class MigrationService implements ApplicationService {
   }
 
   private async _deleteAllData(): Promise<void> {
-    this._logger.warn(this, 'Will delete all v2 data.');
+    this._logger.warn('Will delete all v2 data.');
     const contentTypes: UID.ContentType[] = [
       'api::v2-canvas.v2-canvas',
       'api::v2-common-property.v2-common-property',
@@ -44,7 +44,7 @@ export class MigrationService implements ApplicationService {
     ];
 
     for (const contentType of contentTypes) {
-      this._logger.warn(this, `Will delete ${contentType}`);
+      this._logger.warn(`Will delete ${contentType}`);
       for (const document of await strapi.documents(contentType).findMany()) {
         await strapi
           .documents(contentType)
@@ -54,7 +54,7 @@ export class MigrationService implements ApplicationService {
   }
 
   private async _createProjects(): Promise<void> {
-    this._logger.warn(this, 'Will create projects');
+    this._logger.warn('Will create projects');
     for (const roomTemplate of await strapi
       .documents('api::room-template.room-template')
       .findMany()) {
@@ -451,8 +451,8 @@ export class MigrationService implements ApplicationService {
           status: 'published',
         });
     } catch (error: unknown) {
-      this._logger.error(this, 'Error creating a common property entry.');
-      this._logger.error(this, error);
+      this._logger.error('Error creating a common property entry.');
+      this._logger.error(error);
     }
   }
 }

@@ -7,7 +7,6 @@ import { MutablePropertyCollection } from './MutablePropertyCollection';
 import { Range } from '../../tools/Range';
 import type { MutableGraph } from './MutableGraph';
 import { PhysicsSimulation } from '../../physics/PhysicsSimulation';
-import type { LoggerService } from '../../logger/LoggerService';
 import { MutableGraphElementCreationAction } from './MutableGraphElementCreationAction';
 
 export class MutableNodeIndex {
@@ -25,10 +24,7 @@ export class MutableNodeIndex {
 
   private readonly _compressed: SSet<string>;
 
-  public constructor(
-    nodes: MutableNode[],
-    private readonly _logger: LoggerService,
-  ) {
+  public constructor(nodes: MutableNode[]) {
     this._byId = new SMap();
     this._byLabel = new SMap();
     this._labelHistogram = new SMap();
@@ -104,21 +100,18 @@ export class MutableNodeIndex {
     node: Neo4jNode,
     creationAction: MutableGraphElementCreationAction,
   ): MutableNode | null {
-    const mutableNode: MutableNode = new MutableNode(
-      {
-        id: node.node.elementId,
-        labels: new SSet<string>(node.node.labels),
-        properties: MutablePropertyCollection.fromRecord(node.node.properties),
-        position: MutablePosition.default(),
-        namesInQuery: node.keys,
-        locked: false,
-        grabs: new SSet(),
-        source: node.source.nakarId,
-        compressed: new SSet(),
-        creationAction: creationAction,
-      },
-      this._logger,
-    );
+    const mutableNode: MutableNode = new MutableNode({
+      id: node.node.elementId,
+      labels: new SSet<string>(node.node.labels),
+      properties: MutablePropertyCollection.fromRecord(node.node.properties),
+      position: MutablePosition.default(),
+      namesInQuery: node.keys,
+      locked: false,
+      grabs: new SSet(),
+      source: node.source.nakarId,
+      compressed: new SSet(),
+      creationAction: creationAction,
+    });
     PhysicsSimulation.jiggle(mutableNode);
 
     const insertResult: boolean = this.add(mutableNode);
@@ -198,7 +191,6 @@ export class MutableNodeIndex {
   public copy(): MutableNodeIndex {
     return new MutableNodeIndex(
       this.nodes.toArray().map((n: MutableNode): MutableNode => n.copy()),
-      this._logger,
     );
   }
 

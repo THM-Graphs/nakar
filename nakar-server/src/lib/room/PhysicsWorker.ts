@@ -4,20 +4,22 @@ import type { WTEvent } from '../room-worker/worker-events/WTEvent';
 import { PhysicalGraph } from '../physics/physical-graph/PhysicalGraph';
 import { RoomWorkerData } from '../room-worker/RoomWorkerData';
 import path from 'path';
-import { LoggerService } from '../logger/LoggerService';
 import { WTAction } from '../room-worker/worker-events/WTAction';
 import { Observable, Subject } from 'rxjs';
 import type { WTPhysicalNode } from '../room-worker/worker-events/WTPhysicalNode';
 import { Result } from '@strapi/types/dist/modules/documents/result';
 import { DatabaseService } from '../database/DatabaseService';
+import { Logger } from '@strapi/logger';
+import { createChildLogger } from '../logger/createChildLogger';
 
 export class PhysicsWorker {
+  private readonly _logger: Logger = createChildLogger(this);
+
   private _worker: Worker | null;
   private readonly _onWTEvent: Subject<WTEvent>;
 
   public constructor(
     private readonly _canvasId: string,
-    private readonly _logger: LoggerService,
     private readonly _database: DatabaseService,
   ) {
     this._worker = null;
@@ -48,13 +50,11 @@ export class PhysicsWorker {
     });
     worker.on('messageerror', (error: Error): void => {
       this._logger.error(
-        this,
         `Worker ${worker.threadId.toString()} messageerror: ${error.message}`,
       );
     });
     worker.on('exit', (exitCode: number): void => {
       this._logger.error(
-        this,
         `Worker ${worker.threadId.toString()} (Canvas ${this._canvasId}) exit code: ${exitCode.toString()}`,
       );
       this._worker = null;
@@ -64,15 +64,11 @@ export class PhysicsWorker {
     await new Promise<void>(
       (resolve: () => void, reject: (error: Error) => void): void => {
         worker.on('online', (): void => {
-          this._logger.debug(
-            this,
-            `Worker ${worker.threadId.toString()} online`,
-          );
+          this._logger.debug(`Worker ${worker.threadId.toString()} online`);
           resolve();
         });
         worker.on('error', (error: Error): void => {
           this._logger.error(
-            this,
             `Worker ${worker.threadId.toString()} error: ${error.message}`,
           );
           reject(error);
@@ -124,7 +120,6 @@ export class PhysicsWorker {
     const worker: Worker | null = this._worker;
     if (worker == null) {
       this._logger.error(
-        this,
         `Cannot send ${action.type} to worker of canvas ${this._canvasId}. It does not exist.`,
       );
       return;

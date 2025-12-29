@@ -8,19 +8,18 @@ import { isInt, isNode, isPath, isRelationship } from 'neo4j-driver';
 import { SMap } from '../tools/Map';
 import { Neo4jNode } from './Neo4jNode';
 import { Neo4jRelationship } from './Neo4jRelationship';
-import type { LoggerService } from '../logger/LoggerService';
 import { match, P } from 'ts-pattern';
 import { Neo4jGraphElements } from './Neo4jGraphElements';
 import type { Neo4jDatabaseInfo } from './Neo4jDatabaseInfo';
 import type { Neo4jLimitConfig } from './Neo4jLimitConfig';
+import { Logger } from '@strapi/logger';
+import { createChildLogger } from '../logger/createChildLogger';
 
 export class Neo4jGraphElementsFactory {
   private readonly _result: Neo4jGraphElements;
+  private readonly _logger: Logger = createChildLogger(this);
 
-  public constructor(
-    private readonly _logger: LoggerService,
-    private readonly _limit: Neo4jLimitConfig,
-  ) {
+  public constructor(private readonly _limit: Neo4jLimitConfig) {
     this._result = new Neo4jGraphElements({
       nodes: new SMap(),
       relationships: new SMap(),
@@ -141,17 +140,15 @@ export class Neo4jGraphElementsFactory {
   private _checkLimit(): void {
     if (this._result.size >= this._limit.getLimit()) {
       this._result.limitReached = true;
-      this._logger.warn(this, 'Neo4j Result limit reached.');
-      this._logger.warn(this, `  nodes: ${this._result.nodes.size.toFixed()}`);
+      this._logger.warn('Neo4j Result limit reached.');
+      this._logger.warn(`  nodes: ${this._result.nodes.size.toFixed()}`);
       this._logger.warn(
-        this,
         `  relationships: ${this._result.relationships.size.toFixed()}`,
       );
       this._logger.warn(
-        this,
         `  tableData: ${this._result.tableData.length.toFixed()}`,
       );
-      this._logger.warn(this, `    sum: ${this._result.size.toFixed()}`);
+      this._logger.warn(`    sum: ${this._result.size.toFixed()}`);
     }
   }
 }

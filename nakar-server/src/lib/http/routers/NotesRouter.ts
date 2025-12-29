@@ -1,16 +1,18 @@
 import { HTTPTools } from '../HTTPTools';
 import { DatabaseService } from '../../database/DatabaseService';
-import { LoggerService } from '../../logger/LoggerService';
 import { type Request, Router } from 'express';
 import { operations } from '../../../../src-gen/schema';
 import { Result } from '@strapi/types/dist/modules/documents/result';
 import { NotFound } from 'http-errors';
+import { Logger } from '@strapi/logger';
+import { createChildLogger } from '../../logger/createChildLogger';
 
 export class NotesRouter {
+  private readonly _logger: Logger = createChildLogger(this);
+
   public constructor(
     private readonly _httpTools: HTTPTools,
     private readonly _databaseService: DatabaseService,
-    private readonly _logger: LoggerService,
   ) {}
 
   public register(): Router {
@@ -69,7 +71,7 @@ export class NotesRouter {
     const project: Result<'api::v2-project.v2-project'> =
       await this._databaseService.getProjectOfCanvas(canvas);
 
-    this._logger.debug(this, JSON.stringify(requestBody));
+    this._logger.debug(JSON.stringify(requestBody));
 
     await this._databaseService.addNote({
       content: requestBody.content,
@@ -80,7 +82,7 @@ export class NotesRouter {
   }
 
   private async _deleteNote(req: Request): Promise<void> {
-    this._logger.debug(this, `Will delete note ${req.nakar.note.id}.`);
+    this._logger.debug(`Will delete note ${req.nakar.note.id}.`);
     await this._databaseService.removeNote(req.nakar.note);
   }
 
@@ -92,7 +94,6 @@ export class NotesRouter {
     const requestBody: Body = req.body as Body;
 
     this._logger.debug(
-      this,
       `Will update note ${req.nakar.note.id} with ${JSON.stringify(requestBody)}`,
     );
     await this._databaseService.updateNote(req.nakar.note, {

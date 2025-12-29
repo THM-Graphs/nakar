@@ -4,17 +4,17 @@ import { MutableGraphMetaData } from './MutableGraphMetaData';
 import { z } from 'zod';
 import { SMap } from '../../tools/Map';
 import { v4 as uuidv4 } from 'uuid';
-import type { LoggerService } from '../../logger/LoggerService';
 import { MutableNodeIndex } from './MutableNodeIndex';
 import { MutableEdgeIndex } from './MutableEdgeIndex';
 import type { PhysicalGraph } from '../../physics/physical-graph/PhysicalGraph';
 import type { PhysicalNode } from '../../physics/physical-graph/PhysicalNode';
 import type { PhysicalEdge } from '../../physics/physical-graph/PhysicalEdge';
 import { SSet } from '../../tools/Set';
-import type { ProfilerService } from '../../profiler/ProfilerService';
-import type { ProfilerTask } from '../../profiler/ProfilerTask';
 import { Result } from '@strapi/types/dist/modules/documents/result';
 import { Range } from '../../tools/Range';
+import { Logger } from '@strapi/logger';
+import { createChildLogger } from '../../logger/createChildLogger';
+import { Profiler } from 'winston';
 
 export class MutableGraph {
   // eslint-disable-next-line @typescript-eslint/typedef
@@ -32,17 +32,15 @@ export class MutableGraph {
   public metaData: MutableGraphMetaData;
   public tableData: SMap<string, unknown>[];
 
-  public constructor(
-    data: {
-      id: string;
-      nodes: MutableNodeIndex;
-      edges: MutableEdgeIndex;
-      metaData: MutableGraphMetaData;
-      tableData: SMap<string, unknown>[];
-    },
-    private readonly _logger: LoggerService,
-    private readonly _profiler: ProfilerService,
-  ) {
+  private readonly _logger: Logger = createChildLogger(this);
+
+  public constructor(data: {
+    id: string;
+    nodes: MutableNodeIndex;
+    edges: MutableEdgeIndex;
+    metaData: MutableGraphMetaData;
+    tableData: SMap<string, unknown>[];
+  }) {
     this.id = data.id;
     this.nodes = data.nodes;
     this.edges = data.edges;
@@ -54,74 +52,52 @@ export class MutableGraph {
     return this.nodes.size + this.edges.size;
   }
 
-  public static empty(
-    logger: LoggerService,
-    profiler: ProfilerService,
-  ): MutableGraph {
-    return new MutableGraph(
-      {
-        id: uuidv4(),
-        nodes: new MutableNodeIndex([], logger),
-        edges: new MutableEdgeIndex([]),
-        metaData: MutableGraphMetaData.empty(),
-        tableData: [],
-      },
-      logger,
-      profiler,
-    );
+  public static empty(): MutableGraph {
+    return new MutableGraph({
+      id: uuidv4(),
+      nodes: new MutableNodeIndex([]),
+      edges: new MutableEdgeIndex([]),
+      metaData: MutableGraphMetaData.empty(),
+      tableData: [],
+    });
   }
 
   public static fromPlain(
     data: z.infer<typeof MutableGraph.schema>,
-    logger: LoggerService,
-    profiler: ProfilerService,
   ): MutableGraph {
-    return new MutableGraph(
-      {
-        id: data.id,
-        nodes: new MutableNodeIndex(
-          data.nodes.map(
-            (n: z.infer<typeof MutableNode.schema>): MutableNode =>
-              MutableNode.fromPlain(n, logger),
-          ),
-          logger,
+    return new MutableGraph({
+      id: data.id,
+      nodes: new MutableNodeIndex(
+        data.nodes.map(
+          (n: z.infer<typeof MutableNode.schema>): MutableNode =>
+            MutableNode.fromPlain(n),
         ),
-        edges: new MutableEdgeIndex(
-          data.edges.map(
-            (e: z.infer<typeof MutableEdge.schema>): MutableEdge =>
-              MutableEdge.fromPlain(e),
-          ),
+      ),
+      edges: new MutableEdgeIndex(
+        data.edges.map(
+          (e: z.infer<typeof MutableEdge.schema>): MutableEdge =>
+            MutableEdge.fromPlain(e),
         ),
-        metaData: MutableGraphMetaData.fromPlain(data.metaData),
-        tableData: data.tableData.map(
-          (td: Record<string, unknown>): SMap<string, unknown> =>
-            SMap.fromRecord(td),
-        ),
-      },
-      logger,
-      profiler,
-    );
+      ),
+      metaData: MutableGraphMetaData.fromPlain(data.metaData),
+      tableData: data.tableData.map(
+        (td: Record<string, unknown>): SMap<string, unknown> =>
+          SMap.fromRecord(td),
+      ),
+    });
   }
 
-  public static fromUnknown(
-    input: unknown,
-    logger: LoggerService,
-    profiler: ProfilerService,
-  ): MutableGraph {
+  public static fromUnknown(input: unknown): MutableGraph {
     const data: z.infer<typeof MutableGraph.schema> =
       MutableGraph.schema.parse(input);
-    return MutableGraph.fromPlain(data, logger, profiler);
+    return MutableGraph.fromPlain(data);
   }
 
-  public static fromUnknownOrEmpty(
-    input: unknown,
-    logger: LoggerService,
-    profiler: ProfilerService,
-  ): MutableGraph {
+  public static fromUnknownOrEmpty(input: unknown): MutableGraph {
     try {
-      return MutableGraph.fromUnknown(input, logger, profiler);
+      return MutableGraph.fromUnknown(input);
     } catch {
-      return MutableGraph.empty(logger, profiler);
+      return MutableGraph.empty();
     }
   }
 
@@ -134,7 +110,7 @@ export class MutableGraph {
       pipelineSummary: [],
       arguments: scenarioArguments,
     });
-    this.nodes = new MutableNodeIndex([], this._logger);
+    this.nodes = new MutableNodeIndex([]);
     this.edges = new MutableEdgeIndex([]);
     this.tableData = [];
   }
@@ -156,17 +132,13 @@ export class MutableGraph {
   }
 
   public removeDanglingEdges(): number {
-    const task: ProfilerTask = this._profiler.profile(
-      this,
-      'removeDanglingEdges',
-    );
+    const task: Profiler = this._logger.startTimer();
     let edgesRemoved: number = 0;
     for (const edge of this.edges.edges) {
       const isDangling: boolean = edge.isDangling(this);
 
       if (isDangling) {
         this._logger.debug(
-          this,
           `Relationship ${edge.type} (${edge.startNodeId} -> ${edge.endNodeId}) is dangling and will be removed.`,
         );
         const didRemove: boolean = this.edges.remove(edge);
@@ -175,14 +147,16 @@ export class MutableGraph {
         }
       }
     }
-    task.finish();
+    task.done({
+      message: 'removeDanglingEdges',
+    });
     return edgesRemoved;
   }
 
   public toPhysicalGraph(
     canvas: Result<'api::v2-canvas.v2-canvas'>,
   ): PhysicalGraph {
-    const task: ProfilerTask = this._profiler.profile(this, 'toPhysicalGraph');
+    const task: Profiler = this._logger.startTimer();
 
     const nodes: Record<string, PhysicalNode> = {};
     const edges: Record<string, PhysicalEdge> = {};
@@ -215,7 +189,9 @@ export class MutableGraph {
       edges: edges,
     };
 
-    task.finish();
+    task.done({
+      message: 'toPhysicalGraph',
+    });
     return result;
   }
 
@@ -235,21 +211,19 @@ export class MutableGraph {
   }
 
   public copy(): MutableGraph {
-    const task: ProfilerTask = this._profiler.profile(this, 'copy');
-    const copy: MutableGraph = new MutableGraph(
-      {
-        id: uuidv4(),
-        nodes: this.nodes.copy(),
-        edges: this.edges.copy(),
-        metaData: this.metaData.copy(),
-        tableData: this.tableData.map(
-          (e: SMap<string, unknown>): SMap<string, unknown> => e.copy(),
-        ),
-      },
-      this._logger,
-      this._profiler,
-    );
-    task.finish();
+    const task: Profiler = this._logger.startTimer();
+    const copy: MutableGraph = new MutableGraph({
+      id: uuidv4(),
+      nodes: this.nodes.copy(),
+      edges: this.edges.copy(),
+      metaData: this.metaData.copy(),
+      tableData: this.tableData.map(
+        (e: SMap<string, unknown>): SMap<string, unknown> => e.copy(),
+      ),
+    });
+    task.done({
+      message: 'copy',
+    });
     return copy;
   }
 

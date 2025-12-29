@@ -1,7 +1,6 @@
 import type { Observable } from 'rxjs';
 import { Subject } from 'rxjs';
 import { CombinationCache } from './CombinationCache';
-import type { LoggerService } from '../logger/LoggerService';
 import type { PhysicsSimulationRunOptions } from './PhysicsSimulationRunOptions';
 import type { PhysicalGraph } from './physical-graph/PhysicalGraph';
 import type { PhysicalNode } from './physical-graph/PhysicalNode';
@@ -10,6 +9,8 @@ import { Range } from '../tools/Range';
 import type { MutableNode } from '../room/graph/MutableNode';
 import { PhysicsSimulationEventSlowTick } from './PhysicsSimulationEventSlowTick';
 import { enqueueEventLoop } from '../tools/enqueueEventLoop';
+import { Logger } from '@strapi/logger';
+import { createChildLogger } from '../logger/createChildLogger';
 
 export class PhysicsSimulation {
   public static readonly maximumVelocity: number = 2000;
@@ -19,16 +20,15 @@ export class PhysicsSimulation {
   public static readonly frictionFactor: number = 0.4;
   public static readonly targetPhysicsTickDuration: number = 15;
 
+  private readonly _logger: Logger = createChildLogger(this);
+
   private _graph: PhysicalGraph;
   private _running: boolean;
   private readonly _onSlowTick$: Subject<PhysicsSimulationEventSlowTick>;
   private readonly _onStopped$: Subject<void>;
   private _targetDate: number;
 
-  public constructor(
-    graph: PhysicalGraph,
-    private readonly _logger: LoggerService,
-  ) {
+  public constructor(graph: PhysicalGraph) {
     this._graph = graph;
     this._running = false;
     this._onSlowTick$ = new Subject();
@@ -72,7 +72,7 @@ export class PhysicsSimulation {
 
   public runIndefinitely(): void {
     this.run({ maxMs: null }).catch((error: unknown): void => {
-      this._logger.error(this, error);
+      this._logger.error(error);
     });
   }
 
@@ -91,7 +91,6 @@ export class PhysicsSimulation {
       return;
     } else {
       this._logger.debug(
-        this,
         `Will start physics simulation: ${JSON.stringify(options)}`,
       );
       this._running = true;
@@ -148,7 +147,7 @@ export class PhysicsSimulation {
     this._running = false;
     this._targetDate = Number.MIN_SAFE_INTEGER;
     this._onStopped$.next();
-    this._logger.debug(this, `Physics Simulation stopped.`);
+    this._logger.debug(`Physics Simulation stopped.`);
   }
 
   private _tick(): void {

@@ -6,9 +6,12 @@ import type {
 import type { Observable } from 'rxjs';
 import { BehaviorSubject, distinctUntilChanged, Subject } from 'rxjs';
 import type { DisconnectReason } from 'socket.io';
-import type { LoggerService } from '../logger/LoggerService';
+import { Logger } from '@strapi/logger';
+import { createChildLogger } from '../logger/createChildLogger';
 
 export class WSClient {
+  private readonly _logger: Logger = createChildLogger(this);
+
   private readonly _socket: Socket;
   private readonly _server: Server;
 
@@ -16,11 +19,7 @@ export class WSClient {
   private readonly _onMessage: Subject<SchemaWsClientToServerMessage>;
   private readonly _onDisconnect: Subject<DisconnectReason>;
 
-  public constructor(
-    socket: Socket,
-    server: Server,
-    private readonly _logger: LoggerService,
-  ) {
+  public constructor(socket: Socket, server: Server) {
     this._socket = socket;
     this._server = server;
 
@@ -39,7 +38,7 @@ export class WSClient {
           // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
           this._onMessage.next(parsedMessage as SchemaWsClientToServerMessage);
         } catch (error) {
-          this._logger.error(this, error);
+          this._logger.error(error);
         }
       })
       .on('disconnecting', (reason: DisconnectReason): void => {
@@ -80,21 +79,19 @@ export class WSClient {
   public async join(roomId: string): Promise<void> {
     if (this.room === roomId) {
       this._logger.warn(
-        this,
         `Client ${this.id} wants to join a room, that they are already in: ${roomId}`,
       );
       return;
     }
     if (this.room != null) {
       this._logger.debug(
-        this,
         `Socket ${this.id} will have to leave room ${this.room} to join ${roomId}`,
       );
       await this._socket.leave(this.room);
     }
 
     await this._socket.join(roomId);
-    this._logger.debug(this, `Socket ${this.id} entered room ${roomId}`);
+    this._logger.debug(`Socket ${this.id} entered room ${roomId}`);
     this._room.next([this.room, roomId]);
   }
 
@@ -103,7 +100,6 @@ export class WSClient {
     if (roomId == null) {
       if (!params.silent) {
         this._logger.warn(
-          this,
           `Client ${this.id} wants to leave a room, but i currently in no room.`,
         );
       }
@@ -111,14 +107,13 @@ export class WSClient {
     }
 
     await this._socket.leave(roomId);
-    this._logger.debug(this, `Socket ${this.id} left room ${roomId}`);
+    this._logger.debug(`Socket ${this.id} left room ${roomId}`);
     this._room.next([roomId, null]);
   }
 
   public sendToRoom(message: SchemaWsServerToClientMessage): void {
     if (this.room == null) {
       this._logger.error(
-        this,
         `Cannot send message, because websocket is in no room: ${JSON.stringify(message)}`,
       );
       return;
@@ -129,7 +124,6 @@ export class WSClient {
   public broadcastToRoom(message: SchemaWsServerToClientMessage): void {
     if (this.room == null) {
       this._logger.error(
-        this,
         `Cannot send message, because websocket is in no room: ${JSON.stringify(message)}`,
       );
       return;

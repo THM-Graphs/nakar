@@ -3,7 +3,6 @@ import { MutablePropertyCollection } from './MutablePropertyCollection';
 import { z } from 'zod';
 import { SSet } from '../../tools/Set';
 import type { MutableEdge } from './MutableEdge';
-import type { LoggerService } from '../../logger/LoggerService';
 import type { MutableGraph } from './MutableGraph';
 import { MutableGraphElementCreationAction } from './MutableGraphElementCreationAction';
 import { Range } from '../../tools/Range';
@@ -39,21 +38,18 @@ export class MutableNode {
   public compressed: SSet<string>;
   public creationAction: MutableGraphElementCreationAction;
 
-  public constructor(
-    data: {
-      id: string;
-      labels: SSet<string>;
-      properties: MutablePropertyCollection;
-      position: MutablePosition;
-      namesInQuery: SSet<string>;
-      locked: boolean;
-      grabs: SSet<string>;
-      source: string;
-      compressed: SSet<string>;
-      creationAction: MutableGraphElementCreationAction;
-    },
-    private readonly _logger: LoggerService,
-  ) {
+  public constructor(data: {
+    id: string;
+    labels: SSet<string>;
+    properties: MutablePropertyCollection;
+    position: MutablePosition;
+    namesInQuery: SSet<string>;
+    locked: boolean;
+    grabs: SSet<string>;
+    source: string;
+    compressed: SSet<string>;
+    creationAction: MutableGraphElementCreationAction;
+  }) {
     this.id = data.id;
     this.labels = data.labels;
     this.properties = data.properties;
@@ -78,25 +74,19 @@ export class MutableNode {
     return this.compressed.size > 0;
   }
 
-  public static fromPlain(
-    data: z.infer<typeof this.schema>,
-    logger: LoggerService,
-  ): MutableNode {
-    return new MutableNode(
-      {
-        id: data.id,
-        labels: new SSet(data.labels),
-        properties: MutablePropertyCollection.fromPlain(data.properties),
-        position: MutablePosition.fromPlain(data.position),
-        namesInQuery: new SSet(data.namesInQuery),
-        locked: data.locked,
-        grabs: new SSet(),
-        source: data.source,
-        compressed: new SSet(data.compressed),
-        creationAction: data.creationAction,
-      },
-      logger,
-    );
+  public static fromPlain(data: z.infer<typeof this.schema>): MutableNode {
+    return new MutableNode({
+      id: data.id,
+      labels: new SSet(data.labels),
+      properties: MutablePropertyCollection.fromPlain(data.properties),
+      position: MutablePosition.fromPlain(data.position),
+      namesInQuery: new SSet(data.namesInQuery),
+      locked: data.locked,
+      grabs: new SSet(),
+      source: data.source,
+      compressed: new SSet(data.compressed),
+      creationAction: data.creationAction,
+    });
   }
 
   public getTitle(): string {
@@ -183,20 +173,17 @@ export class MutableNode {
   }
 
   public copy(): MutableNode {
-    return new MutableNode(
-      {
-        id: this.id,
-        labels: this.labels.copy(),
-        properties: this.properties.copy(),
-        position: this.position.copy(),
-        namesInQuery: this.namesInQuery.copy(),
-        locked: this.locked,
-        grabs: this.grabs.copy(),
-        source: this.source,
-        compressed: this.compressed.copy(),
-        creationAction: this.creationAction,
-      },
-      this._logger,
-    );
+    return new MutableNode({
+      id: this.id,
+      labels: this.labels.copy(),
+      properties: this.properties.copy(),
+      position: this.position.copy(),
+      namesInQuery: this.namesInQuery.copy(),
+      locked: this.locked,
+      grabs: this.grabs.copy(),
+      source: this.source,
+      compressed: this.compressed.copy(),
+      creationAction: this.creationAction,
+    });
   }
 }

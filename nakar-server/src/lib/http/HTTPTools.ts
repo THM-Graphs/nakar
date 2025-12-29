@@ -1,22 +1,18 @@
 import type { NextFunction, Request, RequestHandler, Response } from 'express';
-import type { ProfilerTask } from '../profiler/ProfilerTask';
 import { FileStream } from '../fs/FileStream';
 import fs from 'node:fs';
 import { match, P } from 'ts-pattern';
 import { HttpError, InternalServerError, Unauthorized } from 'http-errors';
 import z from 'zod';
-import { ProfilerService } from '../profiler/ProfilerService';
-import { LoggerService } from '../logger/LoggerService';
 import * as undici from 'undici';
-import { ConfigService } from '../config/ConfigService';
 import { Result } from '@strapi/types/dist/modules/documents/result';
+import { Logger } from '@strapi/logger';
+import { createChildLogger } from '../logger/createChildLogger';
+import { getConfig } from '../config/getConfig';
+import { Profiler } from 'winston';
 
 export class HTTPTools {
-  public constructor(
-    private readonly _profiler: ProfilerService,
-    private readonly _logger: LoggerService,
-    private readonly _config: ConfigService,
-  ) {}
+  private readonly _logger: Logger = createChildLogger(this);
 
   public readonly findUser: (req: Request) => Promise<void> = async (
     req: Request,
@@ -30,7 +26,7 @@ export class HTTPTools {
       return;
     }
     const result: undici.Response = await undici.fetch(
-      `http://localhost:${this._config.port}/api/users/me`,
+      `http://localhost:${getConfig().port}/api/users/me`,
       {
         method: 'GET',
         headers: {
@@ -80,10 +76,7 @@ export class HTTPTools {
     handler: (req: Request) => Promise<T> | T,
   ): (req: Request, res: Response) => void {
     return (req: Request, res: Response): void => {
-      const task: ProfilerTask = this._profiler.profile(
-        this,
-        `${req.method} ${req.originalUrl}`,
-      );
+      const task: Profiler = this._logger.startTimer();
       Promise.resolve(handler(req))
         .then((result: T): void => {
           res.status(200);
@@ -101,16 +94,19 @@ export class HTTPTools {
               res.json(result);
             }
           }
-          task.finish();
+          task.done({
+            message: `${req.method} ${req.originalUrl}`,
+          });
         })
         .catch((unknownError: unknown): void => {
-          task.finish();
           this._logger.error(
-            this,
             `Error while handling route ${req.method} ${req.originalUrl}`,
           );
-          this._logger.error(this, unknownError);
+          this._logger.error(unknownError);
           this.handleUnknownError(res, unknownError);
+          task.done({
+            message: `${req.method} ${req.originalUrl}`,
+          });
         });
     };
   }
@@ -125,10 +121,9 @@ export class HTTPTools {
         })
         .catch((unknownError: unknown): void => {
           this._logger.error(
-            this,
             `Error while handling middleware ${req.method} ${req.originalUrl}`,
           );
-          this._logger.error(this, unknownError);
+          this._logger.error(unknownError);
           this.handleUnknownError(res, unknownError);
         });
     };

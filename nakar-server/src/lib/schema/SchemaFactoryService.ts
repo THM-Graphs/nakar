@@ -25,7 +25,6 @@ import {
   SchemaUser,
 } from '../../../src-gen/schema';
 import { MutableGraph } from '../room/graph/MutableGraph';
-import { ProfilerTask } from '../profiler/ProfilerTask';
 import { MutableNode } from '../room/graph/MutableNode';
 import { MutableEdge } from '../room/graph/MutableEdge';
 import { MutableGraphLabel } from '../room/graph/MutableGraphLabel';
@@ -33,19 +32,20 @@ import { SMap } from '../tools/Map';
 import { MutableGraphMetaData } from '../room/graph/MutableGraphMetaData';
 import { SSet } from '../tools/Set';
 import { MutablePropertyCollection } from '../room/graph/MutablePropertyCollection';
-import { ProfilerService } from '../profiler/ProfilerService';
 import { DatabaseService } from '../database/DatabaseService';
 import { DatabaseReferenceCache } from './DatabaseReferenceCache';
 import { UndoWrapperInfo } from '../undo/UndoWrapperInfo';
 import { Result } from '@strapi/types/dist/modules/documents/result';
 import { IndexedNoteCollection } from '../database/IndexedNoteCollection';
 import { Range } from '../tools/Range';
+import { Logger } from '@strapi/logger';
+import { createChildLogger } from '../logger/createChildLogger';
+import { Profiler } from 'winston';
 
 export class SchemaFactoryService implements ApplicationService {
-  public constructor(
-    private readonly _profiler: ProfilerService,
-    private readonly _database: DatabaseService,
-  ) {}
+  private readonly _logger: Logger = createChildLogger(this);
+
+  public constructor(private readonly _database: DatabaseService) {}
 
   public bootstrap(): void {
     /* */
@@ -157,13 +157,15 @@ export class SchemaFactoryService implements ApplicationService {
     undoWrapperInfo: UndoWrapperInfo | null,
     canvas: Result<'api::v2-canvas.v2-canvas'>,
   ): Promise<SchemaGraph> {
-    const t: ProfilerTask = this._profiler.profile(this, 'createSchemaGraph');
+    const t: Profiler = this._logger.startTimer();
     const schemaGraph: SchemaGraph = {
       elements: await this.createSchemaGraphElements(graph, notes, canvas),
       metaData: await this.createSchemaGraphMetaData(graph, undoWrapperInfo),
       table: this.createSchemaTable(graph.tableData),
     };
-    t.finish();
+    t.done({
+      message: 'createSchemaGraph',
+    });
     return schemaGraph;
   }
 
@@ -172,10 +174,7 @@ export class SchemaFactoryService implements ApplicationService {
     notes: IndexedNoteCollection,
     canvas: Result<'api::v2-canvas.v2-canvas'>,
   ): Promise<SchemaGraphElements> {
-    const t: ProfilerTask = this._profiler.profile(
-      this,
-      'createSchemaGraphElements',
-    );
+    const t: Profiler = this._logger.startTimer();
     const databaseCache: DatabaseReferenceCache = new DatabaseReferenceCache(
       this._database,
     );
@@ -223,21 +222,25 @@ export class SchemaFactoryService implements ApplicationService {
           ),
       ),
     };
-    t.finish();
+    t.done({
+      message: 'createSchemaGraphElements',
+    });
     return result;
   }
 
   public createSchemaTable(
     tableData: SMap<string, unknown>[],
   ): SchemaGraphTable {
-    const t: ProfilerTask = this._profiler.profile(this, 'createSchemaTable');
+    const t: Profiler = this._logger.startTimer();
     const result: SchemaGraphTable = {
       data: tableData.map(
         (entry: SMap<string, unknown>): Record<string, unknown> =>
           entry.toRecord(),
       ),
     };
-    t.finish();
+    t.done({
+      message: 'createSchemaTable',
+    });
     return result;
   }
 
@@ -245,10 +248,7 @@ export class SchemaFactoryService implements ApplicationService {
     graph: MutableGraph,
     undoWrapperInfo: UndoWrapperInfo | null,
   ): Promise<SchemaGraphMetaData> {
-    const t: ProfilerTask = this._profiler.profile(
-      this,
-      'createSchemaGraphMetaData',
-    );
+    const t: Profiler = this._logger.startTimer();
     const metaData: MutableGraphMetaData = graph.metaData;
     const scenario: Result<'api::v2-scenario.v2-scenario'> | null =
       metaData.scenarioId != null
@@ -280,7 +280,9 @@ export class SchemaFactoryService implements ApplicationService {
       undoAction: undoWrapperInfo?.undoAction ?? null,
       redoAction: undoWrapperInfo?.redoAction ?? null,
     };
-    t.finish();
+    t.done({
+      message: 'createSchemaGraphMetaData',
+    });
     return result;
   }
 
@@ -362,10 +364,7 @@ export class SchemaFactoryService implements ApplicationService {
   }
 
   private _createSchemaHistogram(graph: MutableGraph): SchemaHistogram {
-    const t: ProfilerTask = this._profiler.profile(
-      this,
-      '_createSchemaHistogram',
-    );
+    const t: Profiler = this._logger.startTimer();
     interface NodeHistogramEntry {
       id: string;
       title: string;
@@ -523,7 +522,9 @@ export class SchemaFactoryService implements ApplicationService {
           }
         }),
     } satisfies SchemaHistogram;
-    t.finish();
+    t.done({
+      message: '_createSchemaHistogram',
+    });
     return result;
   }
 

@@ -1,18 +1,19 @@
 import { MutableGraph } from '../room/graph/MutableGraph';
 import type { Result } from '@strapi/types/dist/modules/documents';
-import type { LoggerService } from '../logger/LoggerService';
 import type { ApplicationService } from '../application/ApplicationService';
 import z from 'zod';
 import type { Observable } from 'rxjs';
 import { Subject } from 'rxjs';
 import type { MediaService } from '../media/MediaService';
-import type { ProfilerTask } from '../profiler/ProfilerTask';
-import type { ProfilerService } from '../profiler/ProfilerService';
 import { SSet } from '../tools/Set';
 import { SMap } from '../tools/Map';
 import { IndexedNoteCollection } from './IndexedNoteCollection';
+import { Logger } from '@strapi/logger';
+import { createChildLogger } from '../logger/createChildLogger';
+import { Profiler } from 'winston';
 
 export class DatabaseService implements ApplicationService {
+  private readonly _logger: Logger = createChildLogger(this);
   private readonly _onCanvasAdded: Subject<Result<'api::v2-canvas.v2-canvas'>>;
   private readonly _onCanvasDeleted: Subject<
     Result<'api::v2-canvas.v2-canvas'>
@@ -22,11 +23,7 @@ export class DatabaseService implements ApplicationService {
     canvas: Result<'api::v2-canvas.v2-canvas'>;
   }>;
 
-  public constructor(
-    private readonly _logger: LoggerService,
-    private readonly _media: MediaService,
-    private readonly _profiler: ProfilerService,
-  ) {
+  public constructor(private readonly _media: MediaService) {
     this._onCanvasAdded = new Subject();
     this._onCanvasDeleted = new Subject();
     this._onNoteChanges = new Subject();
@@ -56,10 +53,7 @@ export class DatabaseService implements ApplicationService {
   public bootstrap(): void {
     // eslint-disable-next-line @typescript-eslint/typedef,@typescript-eslint/explicit-function-return-type
     strapi.documents.use(async (context, next) => {
-      const task: ProfilerTask = this._profiler.profile(
-        this,
-        `${context.uid} ${context.action}`,
-      );
+      const task: Profiler = this._logger.startTimer();
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let result: any = null;
@@ -144,7 +138,9 @@ export class DatabaseService implements ApplicationService {
         result = await next();
       }
 
-      task.finish();
+      task.done({
+        message: `${context.uid} ${context.action}`,
+      });
       // eslint-disable-next-line @typescript-eslint/no-unsafe-return
       return result;
     });
@@ -221,14 +217,12 @@ export class DatabaseService implements ApplicationService {
         await this._media.getStringPayloadOfMediaFile(graphFile);
       const graph: MutableGraph = MutableGraph.fromUnknownOrEmpty(
         JSON.parse(graphJson),
-        this._logger,
-        this._profiler,
       );
       return graph;
     } catch (error) {
-      this._logger.error(this, `Unable to parse graph from canvas:`);
-      this._logger.error(this, error);
-      return MutableGraph.empty(this._logger, this._profiler);
+      this._logger.error(`Unable to parse graph from canvas:`);
+      this._logger.error(error);
+      return MutableGraph.empty();
     }
   }
 
@@ -337,10 +331,7 @@ export class DatabaseService implements ApplicationService {
       },
       status: 'published',
     });
-    this._logger.debug(
-      this,
-      `Did save graph of canvas ${canvas.documentId} in db.`,
-    );
+    this._logger.debug(`Did save graph of canvas ${canvas.documentId} in db.`);
   }
 
   public async getParameterizedScenarios(
