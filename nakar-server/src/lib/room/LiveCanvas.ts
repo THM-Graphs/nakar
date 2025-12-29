@@ -47,6 +47,7 @@ import { Logger } from '@strapi/logger';
 import { createChildLogger } from '../logger/createChildLogger';
 import { Profiler } from 'winston';
 import { getStringPayloadOfMediaFile } from '../media/media';
+import { UndoWrapperInfo } from '../undo/UndoWrapperInfo';
 
 export class LiveCanvas implements ApplicationService {
   private readonly _logger: Logger = createChildLogger(this);
@@ -58,6 +59,7 @@ export class LiveCanvas implements ApplicationService {
   private readonly _queue: TaskQueue;
   private readonly _state: BehaviorSubject<LiveCanvasState>;
   private readonly _stateSubscription: Subscription;
+  private _shutdownTimeout: NodeJS.Timeout | null;
 
   public constructor(
     private readonly _canvasId: string,
@@ -83,6 +85,7 @@ export class LiveCanvas implements ApplicationService {
         );
       },
     );
+    this._shutdownTimeout = null;
   }
 
   public get onEvent$(): Observable<CanvasEvent> {
@@ -95,6 +98,31 @@ export class LiveCanvas implements ApplicationService {
 
   public addSubscription(subscription: Subscription): void {
     this._subscriptions.add(subscription);
+  }
+
+  public getUndoInfo(): UndoWrapperInfo {
+    return this._graph.info;
+  }
+
+  public scheduleShutdown(): void {
+    this._logger.debug(`Will mark canvas ${this._canvasId} for shutdown.`);
+
+    if (this._shutdownTimeout != null) {
+      clearTimeout(this._shutdownTimeout);
+    }
+    this._shutdownTimeout = setTimeout((): void => {
+      this._onEvent.next({
+        type: 'CanvasEventShouldShutDown',
+        canvasId: this._canvasId,
+      });
+    }, 10_000);
+  }
+
+  public cancelShutdown(): void {
+    if (this._shutdownTimeout != null) {
+      clearTimeout(this._shutdownTimeout);
+      this._logger.debug(`Did cancel canvas shutdown ${this._canvasId}.`);
+    }
   }
 
   public async bootstrap(): Promise<void> {

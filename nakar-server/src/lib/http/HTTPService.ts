@@ -21,6 +21,8 @@ import { createChildLogger } from '../logger/createChildLogger';
 import { getConfig } from '../config/getConfig';
 import { SanitizedConfig } from '../config/SanitizedConfig';
 import { StartPageRouter } from './routers/StartPageRouter';
+import { ProjectPageRouter } from './routers/ProjectPageRouter';
+import { CanvasPageRouter } from './routers/CanvasPageRouter';
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -55,12 +57,14 @@ export class HTTPService implements ApplicationService {
   private readonly _notesRouter: NotesRouter;
   private readonly _canvasRouter: CanvasRouter;
   private readonly _startPageRouter: StartPageRouter;
+  private readonly _projectPageRouter: ProjectPageRouter;
+  private readonly _canvasPageRouter: CanvasPageRouter;
 
   public constructor(
     databaseService: DatabaseService,
     neo4jService: Neo4jService,
     schemaFactory: SchemaFactoryService,
-    roomService: CanvasService,
+    canvasService: CanvasService,
   ) {
     this._app = express();
     this._server = http.createServer(this._app);
@@ -86,13 +90,24 @@ export class HTTPService implements ApplicationService {
       this._httpTools,
       databaseService,
       schemaFactory,
-      roomService,
+      canvasService,
     );
     this._notesRouter = new NotesRouter(this._httpTools, databaseService);
     this._startPageRouter = new StartPageRouter(
       this._httpTools,
-      databaseService,
       schemaFactory,
+      databaseService,
+    );
+    this._projectPageRouter = new ProjectPageRouter(
+      this._httpTools,
+      schemaFactory,
+      databaseService,
+    );
+    this._canvasPageRouter = new CanvasPageRouter(
+      this._httpTools,
+      schemaFactory,
+      databaseService,
+      canvasService,
     );
 
     this._setupRoutes();
@@ -166,5 +181,7 @@ export class HTTPService implements ApplicationService {
     this._app.use('/system', this._systemRouter.register());
     this._app.use('/database', this._databaseRouter.register());
     this._app.use('/start-page', this._startPageRouter.register());
+    this._app.use('/project-page', this._projectPageRouter.register());
+    this._app.use('/canvas-page', this._canvasPageRouter.register());
   }
 }

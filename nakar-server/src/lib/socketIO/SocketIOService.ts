@@ -46,6 +46,7 @@ import { Result } from '@strapi/types/dist/modules/documents/result';
 import { IndexedNoteCollection } from '../database/IndexedNoteCollection';
 import { Logger } from '@strapi/logger';
 import { createChildLogger } from '../logger/createChildLogger';
+import { LiveCanvas } from '../room/LiveCanvas';
 
 export type Server = UntypedServer<ClientToServerEvents, ServerToClientEvents>;
 export type Socket = UntypedSocket<ClientToServerEvents, ServerToClientEvents>;
@@ -192,16 +193,13 @@ export class SocketIOService implements ApplicationService {
                 this._databaseService
                   .getCanvas(oldCanvasId)
                   .then(
-                    async (
+                    (
                       oldCanvas: Result<'api::v2-canvas.v2-canvas'> | null,
-                    ): Promise<void> => {
+                    ): void => {
                       if (oldCanvas == null) {
                         this._logger.warn('Cannot find canvas to shut down.');
-                        await Promise.resolve();
-                        return;
                       } else {
-                        await this._canvasService.destroyCanvas(oldCanvas);
-                        return;
+                        this._canvasService.scheduleCanvasShutdown(oldCanvas);
                       }
                     },
                   )
@@ -269,41 +267,35 @@ export class SocketIOService implements ApplicationService {
                 )
                 .with(
                   { type: 'WSActionGrabNode' },
-                  async (m: SchemaWsActionGrabNode): Promise<void> => {
-                    this._canvasService
-                      .getCanvas(await this._assertCanvas(wsClient))
-                      .grabNode({
-                        nodeId: m.nodeId,
-                        userId: wsClient.id,
-                      });
+                  (m: SchemaWsActionGrabNode): void => {
+                    this._assertLiveCanvas(wsClient).grabNode({
+                      nodeId: m.nodeId,
+                      userId: wsClient.id,
+                    });
                   },
                 )
                 .with(
                   { type: 'WSActionMoveNodes' },
-                  async (m: SchemaWsActionMoveNodes): Promise<void> => {
-                    this._canvasService
-                      .getCanvas(await this._assertCanvas(wsClient))
-                      .moveNodes({
-                        nodes: m.nodes,
-                        userId: wsClient.id,
-                      });
+                  (m: SchemaWsActionMoveNodes): void => {
+                    this._assertLiveCanvas(wsClient).moveNodes({
+                      nodes: m.nodes,
+                      userId: wsClient.id,
+                    });
                   },
                 )
                 .with(
                   { type: 'WSActionUngrabNode' },
-                  async (m: SchemaWsActionUngrabNode): Promise<void> => {
-                    this._canvasService
-                      .getCanvas(await this._assertCanvas(wsClient))
-                      .ungrabNode({
-                        node: m.node,
-                        userId: wsClient.id,
-                      });
+                  (m: SchemaWsActionUngrabNode): void => {
+                    this._assertLiveCanvas(wsClient).ungrabNode({
+                      node: m.node,
+                      userId: wsClient.id,
+                    });
                   },
                 )
                 .exhaustive();
             } catch (error: unknown) {
               this._logger.error(
-                `Error handeling WS message: ${JSON.stringify(clientToServerMessage)}`,
+                `Error handling WS message: ${JSON.stringify(clientToServerMessage)}`,
               );
               this._logger.error(error);
               wsClient.send(this.createErrorNotification(error));
@@ -484,6 +476,9 @@ export class SocketIOService implements ApplicationService {
               this.handleRoomError(message.canvasId, message.error);
             },
           )
+          .with({ type: 'CanvasEventShouldShutDown' }, (): void => {
+            /* Will be handled by CanvasService */
+          })
           .exhaustive(),
       ).catch((error: unknown): void => {
         this._logger.error(
@@ -533,14 +528,11 @@ export class SocketIOService implements ApplicationService {
     );
   }
 
-  private async _assertCanvas(
-    client: WSClient,
-  ): Promise<Result<'api::v2-canvas.v2-canvas'>> {
+  private _assertLiveCanvas(client: WSClient): LiveCanvas {
     if (client.room == null) {
       throw new Error(`Client ${client.id} is in no room.`);
     }
-    const canvas: Result<'api::v2-canvas.v2-canvas'> =
-      await this._databaseService.getCanvas(client.room);
+    const canvas: LiveCanvas = this._canvasService.getCanvasWithId(client.room);
 
     return canvas;
   }

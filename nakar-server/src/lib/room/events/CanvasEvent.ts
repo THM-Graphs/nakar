@@ -8,6 +8,7 @@ import type { CanvasEventGraphTableChanged } from './CanvasEventGraphTableChange
 import type { CanvasEventEventKick } from './CanvasEventEventKick';
 import type { CanvasEventNotAllNodesLoaded } from './CanvasEventNotAllNodesLoaded';
 import { CanvasEventError } from './CanvasEventError';
+import { CanvasEventShouldShutDown } from './CanvasEventShouldShutDown';
 
 export type CanvasEvent =
   | CanvasEventError
@@ -19,4 +20,5 @@ export type CanvasEvent =
   | CanvasEventProgressChanged
   | CanvasEventProgressCleared
   | CanvasEventEventKick
-  | CanvasEventNotAllNodesLoaded;
+  | CanvasEventNotAllNodesLoaded
+  | CanvasEventShouldShutDown;

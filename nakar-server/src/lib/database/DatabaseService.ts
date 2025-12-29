@@ -188,7 +188,6 @@ export class DatabaseService implements ApplicationService {
   public async getPublicRooms(): Promise<Result<'api::v2-room.v2-room'>[]> {
     return await strapi.documents('api::v2-room.v2-room').findMany({
       status: 'published',
-      sort: 'title:asc',
       filters: {
         visibility: {
           $eq: 'public',
@@ -751,12 +750,23 @@ export class DatabaseService implements ApplicationService {
     return populatedRoom.project;
   }
 
-  public async getCanvas(
+  public async getCanvasOrNull(
     id: string,
-  ): Promise<Result<'api::v2-canvas.v2-canvas'>> {
+  ): Promise<Result<'api::v2-canvas.v2-canvas'> | null> {
     const result: Result<'api::v2-canvas.v2-canvas'> | null = await strapi
       .documents('api::v2-canvas.v2-canvas')
       .findOne({ documentId: id, status: 'published' });
+    if (result == null) {
+      return null;
+    }
+    return result;
+  }
+
+  public async getCanvas(
+    id: string,
+  ): Promise<Result<'api::v2-canvas.v2-canvas'>> {
+    const result: Result<'api::v2-canvas.v2-canvas'> | null =
+      await this.getCanvasOrNull(id);
     if (result == null) {
       throw new Error(`Canvas ${id} not found.`);
     }
@@ -829,12 +839,23 @@ export class DatabaseService implements ApplicationService {
     return populatedCanvas.graph ?? null;
   }
 
-  public async getProject(
+  public async getProjectOrNull(
     projectId: string,
-  ): Promise<Result<'api::v2-project.v2-project'>> {
+  ): Promise<Result<'api::v2-project.v2-project'> | null> {
     const project: Result<'api::v2-project.v2-project'> | null = await strapi
       .documents('api::v2-project.v2-project')
       .findOne({ documentId: projectId, status: 'published' });
+    if (project == null) {
+      return null;
+    }
+    return project;
+  }
+
+  public async getProject(
+    projectId: string,
+  ): Promise<Result<'api::v2-project.v2-project'>> {
+    const project: Result<'api::v2-project.v2-project'> | null =
+      await this.getProjectOrNull(projectId);
     if (project == null) {
       throw new Error(`Project ${projectId} not found.`);
     }

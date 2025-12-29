@@ -12,6 +12,8 @@ servers:
 tags:
   - name: Authentication
   - name: Start Page
+  - name: Project Page
+  - name: Canvas Page
   - name: Project
   - name: Notes
   - name: Room
@@ -96,24 +98,11 @@ paths:
               schema:
                 $ref: "#/components/schemas/StartPage"
 
-  /project:
+  /project-page/{id}:
     get:
       tags:
-        - Project
-      operationId: getProjects
-      responses:
-        "200":
-          description: "OK"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Projects"
-
-  /project/{id}:
-    get:
-      tags:
-        - Project
-      operationId: getProject
+        - Project Page
+      operationId: getProjectPage
       parameters:
         - name: id
           in: path
@@ -126,7 +115,26 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Project"
+                $ref: "#/components/schemas/ProjectPage"
+
+  /canvas-page/{id}:
+    get:
+      tags:
+        - Canvas Page
+      operationId: getCanvasPage
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CanvasPage"
 
   /canvas/{id}:
     get:
@@ -179,19 +187,6 @@ paths:
                 - compressRelationshipsWidthFactor
                 - growNodesBasedOnDegree
                 - growNodesBasedOnDegreeFactor
-
-  /room:
-    get:
-      tags:
-        - Room
-      operationId: getRooms
-      responses:
-        "200":
-          description: "OK"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Rooms"
 
   /room/{id}:
     get:
@@ -322,63 +317,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Graph"
-
-  /canvas/{id}/graph/elements:
-    get:
-      tags:
-        - Graph
-      operationId: getGraphElements
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        "200":
-          description: "OK"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/GraphElements"
-
-  /canvas/{id}/graph/meta-data:
-    get:
-      tags:
-        - Graph
-      operationId: getGraphMetaData
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        "200":
-          description: "OK"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/GraphMetaData"
-
-  /canvas/{id}/graph/table:
-    get:
-      tags:
-        - Graph
-      operationId: getGraphTable
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        "200":
-          description: "OK"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/GraphTable"
 
   /canvas/{id}/actions/load-scenario:
     post:
@@ -954,35 +892,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Version"
-
-  /system/backup:
-    get:
-      tags:
-        - System
-      operationId: getBackup
-      responses:
-        "200":
-          description: "OK"
-
-  /system/import:
-    post:
-      tags:
-        - System
-      operationId: postImport
-      requestBody:
-        required: true
-        content:
-          multipart/form-data:
-            schema:
-              type: object
-              properties:
-                file:
-                  type: string
-                  format: binary
-                  description: The file to upload.
-      responses:
-        "200":
-          description: "OK"
 
 components:
   securitySchemes:
@@ -2013,6 +1922,63 @@ components:
         - title
         - visibility
         - projectTitle
+
+    ProjectPage:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        owner:
+          type: object
+          nullable: true
+          properties:
+            current:
+              $ref: "#/components/schemas/User"
+          required:
+            - current
+        collaborators:
+          type: array
+          items:
+            $ref: "#/components/schemas/User"
+        databases:
+          type: array
+          items:
+            $ref: "#/components/schemas/DatabaseConnection"
+        scenarioGroups:
+          type: array
+          items:
+            $ref: "#/components/schemas/ScenarioGroup"
+        rooms:
+          type: array
+          items:
+            $ref: "#/components/schemas/Room"
+      required:
+        - id
+        - title
+        - owner
+        - collaborators
+        - databases
+        - scenarioGroups
+        - rooms
+
+    CanvasPage:
+      type: object
+      properties:
+        canvas:
+          $ref: "#/components/schemas/Canvas"
+        scenarios:
+          $ref: "#/components/schemas/GetScenariosResult"
+        graph:
+          $ref: "#/components/schemas/Graph"
+        room:
+          $ref: "#/components/schemas/Room"
+      required:
+        - canvas
+        - scenarios
+        - graph
+        - room
 
     WSClientToServerMessage:
       oneOf:

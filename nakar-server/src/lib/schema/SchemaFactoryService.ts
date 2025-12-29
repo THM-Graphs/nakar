@@ -5,6 +5,7 @@ import {
   SchemaDatabaseConnection,
   SchemaEdge,
   SchemaEdgePreview,
+  SchemaGetScenariosResult,
   SchemaGraph,
   SchemaGraphElements,
   SchemaGraphLabel,
@@ -90,17 +91,87 @@ export class SchemaFactoryService implements ApplicationService {
     };
   }
 
-  public createSchemaStartPageRoom(
-    room: Result<
-      'api::v2-room.v2-room',
-      { populate: { project: { populate: [] } } }
-    >,
-  ): SchemaStartPageRoom {
+  public async createSchemaStartPageRoom(
+    room: Result<'api::v2-room.v2-room'>,
+  ): Promise<SchemaStartPageRoom> {
+    const project: Result<'api::v2-project.v2-project'> =
+      await this._database.getProjectOfRoom(room);
     return {
       id: room.documentId,
       title: room.title ?? '',
       visibility: room.visibility ?? 'private',
-      projectTitle: room.project?.title ?? '',
+      projectTitle: project.title ?? '',
+    };
+  }
+
+  public async createGetScenariosResult(
+    room: Result<'api::v2-room.v2-room'>,
+  ): Promise<SchemaGetScenariosResult> {
+    const project: Result<'api::v2-project.v2-project'> =
+      await this._database.getProjectOfRoom(room);
+    const scenarioGroups: Result<'api::v2-scenario-group.v2-scenario-group'>[] =
+      await this._database.getScenarioGroupsOfRoom(room);
+    const scenarioGroupSchemas: SchemaScenarioGroup[] = await Promise.all(
+      scenarioGroups.map(
+        async (
+          scenarioGroup: Result<'api::v2-scenario-group.v2-scenario-group'>,
+        ): Promise<SchemaScenarioGroup> => {
+          return await this.createSchemaScenarioGroup(scenarioGroup);
+        },
+      ),
+    );
+
+    const parameterizedSceanrios: Result<'api::v2-scenario.v2-scenario'>[] =
+      await this._database.getParameterizedScenarios(project);
+
+    const referencedDatabases: SMap<
+      string,
+      Result<'api::v2-database-connection.v2-database-connection'>
+    > = new SMap<
+      string,
+      Result<'api::v2-database-connection.v2-database-connection'>
+    >();
+    for (const scenarioGroup of scenarioGroups) {
+      const scenarios: Result<'api::v2-scenario.v2-scenario'>[] =
+        await this._database.getScenariosOfGroup(scenarioGroup);
+      for (const scenario of scenarios) {
+        const queries: Result<'api::v2-query.v2-query'>[] =
+          await this._database.getQueriesOfScenario(scenario);
+        for (const query of queries) {
+          const database: Result<'api::v2-database-connection.v2-database-connection'> | null =
+            await this._database.getDatabaseConnectionOfQuery(query);
+          if (database != null) {
+            referencedDatabases.set(database.documentId, database);
+          }
+        }
+      }
+    }
+
+    return {
+      scenarioGroups: scenarioGroupSchemas,
+      parameterizedScenarios: [
+        {
+          id: '0',
+          title: 'Scenarios', // TODO
+          scenarios: await Promise.all(
+            parameterizedSceanrios.map(
+              async (
+                ps: Result<'api::v2-scenario.v2-scenario'>,
+              ): Promise<SchemaScenario> => {
+                return await this.createSchemaScenario(ps);
+              },
+            ),
+          ),
+        },
+      ],
+      referencedDatabases: referencedDatabases
+        .toValueArray()
+        .map(
+          (
+            referencedDatabase: Result<'api::v2-database-connection.v2-database-connection'>,
+          ): SchemaDatabaseConnection =>
+            this.createSchemaDatabase(referencedDatabase),
+        ),
     };
   }
 
@@ -350,34 +421,79 @@ export class SchemaFactoryService implements ApplicationService {
     };
   }
 
-  public createSchemaStartPageProject(
-    input: Result<
-      'api::v2-project.v2-project',
-      {
-        populate: {
-          owner: { populate: [] };
-          collaborators: { populate: [] };
-          databaseConnections: { populate: [] };
-        };
-      }
-    >,
-  ): SchemaStartPageProject {
+  public async createSchemaProjectPage(
+    project: Result<'api::v2-project.v2-project'>,
+  ): Promise<SchemaProject> {
+    const owner: Result<'plugin::users-permissions.user'> | null =
+      await this._database.getOwnerOfProject(project);
+    const collaborators: Result<'plugin::users-permissions.user'>[] =
+      await this._database.getCollaboratorsOfProject(project);
+    const databaseConnections: Result<'api::v2-database-connection.v2-database-connection'>[] =
+      await this._database.getDatabaseConnectionsOfProject(project);
+    const scenarioGroups: Result<'api::v2-scenario-group.v2-scenario-group'>[] =
+      await this._database.getScenarioGroupsOfProject(project);
+    const rooms: Result<'api::v2-room.v2-room'>[] =
+      await this._database.getRoomsOfProject(project);
+
+    return {
+      id: project.documentId,
+      title: project.title ?? '',
+      owner: owner
+        ? {
+            current: this.createSchemaUserPreview(owner),
+          }
+        : null,
+      collaborators: collaborators.map(
+        (collaborator: Result<'plugin::users-permissions.user'>): SchemaUser =>
+          this.createSchemaUserPreview(collaborator),
+      ),
+      databases: databaseConnections.map(
+        (
+          database: Result<'api::v2-database-connection.v2-database-connection'>,
+        ): SchemaDatabaseConnection => this.createSchemaDatabase(database),
+      ),
+      scenarioGroups: await Promise.all(
+        scenarioGroups.map(
+          async (
+            sg: Result<'api::v2-scenario-group.v2-scenario-group'>,
+          ): Promise<SchemaScenarioGroup> =>
+            await this.createSchemaScenarioGroup(sg),
+        ),
+      ),
+      rooms: await Promise.all(
+        rooms.map(
+          async (room: Result<'api::v2-room.v2-room'>): Promise<SchemaRoom> =>
+            await this.createSchemaRoom(room),
+        ),
+      ),
+    };
+  }
+
+  public async createSchemaStartPageProject(
+    input: Result<'api::v2-project.v2-project'>,
+  ): Promise<SchemaStartPageProject> {
+    const owner: Result<'plugin::users-permissions.user'> | null =
+      await this._database.getOwnerOfProject(input);
+    const collaborators: Result<'plugin::users-permissions.user'>[] =
+      await this._database.getCollaboratorsOfProject(input);
+    const databaseConnections: Result<'api::v2-database-connection.v2-database-connection'>[] =
+      await this._database.getDatabaseConnectionsOfProject(input);
     return {
       id: input.documentId,
       title: input.title ?? '',
-      owner: input.owner
+      owner: owner
         ? {
-            current: this.createSchemaUserPreview(input.owner),
+            current: this.createSchemaUserPreview(owner),
           }
         : null,
-      collaborators: (input.collaborators ?? []).map(
+      collaborators: collaborators.map(
         (
           collaborator: Result<'plugin::users-permissions.user'>,
         ): SchemaUser => {
           return this.createSchemaUserPreview(collaborator);
         },
       ),
-      databases: (input.databaseConnections ?? []).map(
+      databases: databaseConnections.map(
         (
           database: Result<'api::v2-database-connection.v2-database-connection'>,
         ): SchemaDatabaseConnection => {

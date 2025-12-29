@@ -36,7 +36,7 @@ export class CanvasService implements ApplicationService {
 
     this._database.onCanvasDeleted$.subscribe(
       (canvas: Result<'api::v2-canvas.v2-canvas'>): void => {
-        this.destroyCanvas(canvas).catch((error: unknown): void => {
+        this._destroyCanvas(canvas).catch((error: unknown): void => {
           this._logger.error(error);
         });
       },
@@ -57,11 +57,14 @@ export class CanvasService implements ApplicationService {
   }
 
   public getCanvas(canvas: Result<'api::v2-canvas.v2-canvas'>): LiveCanvas {
-    const liveCanvas: LiveCanvas | undefined = this._liveCanvases.get(
-      canvas.documentId,
-    );
+    return this.getCanvasWithId(canvas.documentId);
+  }
+
+  public getCanvasWithId(roomId: string): LiveCanvas {
+    const liveCanvas: LiveCanvas | null =
+      this._liveCanvases.get(roomId) ?? null;
     if (liveCanvas == null) {
-      throw new Error(`Canvas ${canvas.documentId} is not alive yet.`);
+      throw new Error(`Canvas ${roomId} is not alive yet.`);
     }
     return liveCanvas;
   }
@@ -69,7 +72,10 @@ export class CanvasService implements ApplicationService {
   public async startCanvas(
     canvas: Result<'api::v2-canvas.v2-canvas'>,
   ): Promise<void> {
-    if (this._liveCanvases.has(canvas.documentId)) {
+    const exitsingCanvas: LiveCanvas | null =
+      this._liveCanvases.get(canvas.documentId) ?? null;
+    if (exitsingCanvas != null) {
+      exitsingCanvas.cancelShutdown();
       return;
     }
 
@@ -82,7 +88,13 @@ export class CanvasService implements ApplicationService {
     await liveCanvas.bootstrap();
     liveCanvas.addSubscription(
       liveCanvas.onEvent$.subscribe((event: CanvasEvent): void => {
-        this._onEvent.next(event);
+        if (event.type === 'CanvasEventShouldShutDown') {
+          this._destroyCanvas(canvas).catch((error: unknown): void => {
+            this._logger.error(error);
+          });
+        } else {
+          this._onEvent.next(event);
+        }
       }),
     );
 
@@ -97,11 +109,24 @@ export class CanvasService implements ApplicationService {
     });
   }
 
-  public async destroyCanvas(
+  public scheduleCanvasShutdown(
+    canvas: Result<'api::v2-canvas.v2-canvas'>,
+  ): void {
+    const liveCanvas: LiveCanvas | undefined = this._liveCanvases.get(
+      canvas.documentId,
+    );
+
+    if (liveCanvas == null) {
+      return;
+    }
+
+    liveCanvas.scheduleShutdown();
+  }
+
+  private async _destroyCanvas(
     canvas: Result<'api::v2-canvas.v2-canvas'>,
   ): Promise<void> {
     this._logger.debug(`Will destroy canvas ${canvas.documentId}.`);
-
     const liveCanvas: LiveCanvas | undefined = this._liveCanvases.get(
       canvas.documentId,
     );

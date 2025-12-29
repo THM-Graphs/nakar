@@ -9,6 +9,13 @@ export type Canvas = {
     growNodesBasedOnDegreeFactor: number;
 };
 
+export type CanvasPage = {
+    canvas: Canvas;
+    scenarios: GetScenariosResult;
+    graph: Graph;
+    room: Room;
+};
+
 export type Color = PresetColor | CustomColor;
 
 export type CreationReason = 'loadScenario' | 'expand' | 'query' | 'merge' | 'compress' | 'connectResultNodes' | 'search';
@@ -288,6 +295,18 @@ export type Project = {
     rooms: Array<Room>;
 };
 
+export type ProjectPage = {
+    id: string;
+    title: string;
+    owner: {
+        current: User;
+    } | null;
+    collaborators: Array<User>;
+    databases: Array<DatabaseConnection>;
+    scenarioGroups: Array<ScenarioGroup>;
+    rooms: Array<Room>;
+};
+
 export type ProjectRole = 'owner' | 'collaborator' | 'none';
 
 export type Projects = {
@@ -520,19 +539,25 @@ export type GetStartPageResponse = (StartPage);
 
 export type GetStartPageError = unknown;
 
-export type GetProjectsResponse = (Projects);
-
-export type GetProjectsError = unknown;
-
-export type GetProjectData = {
+export type GetProjectPageData = {
     path: {
         id: string;
     };
 };
 
-export type GetProjectResponse = (Project);
+export type GetProjectPageResponse = (ProjectPage);
 
-export type GetProjectError = unknown;
+export type GetProjectPageError = unknown;
+
+export type GetCanvasPageData = {
+    path: {
+        id: string;
+    };
+};
+
+export type GetCanvasPageResponse = (CanvasPage);
+
+export type GetCanvasPageError = unknown;
 
 export type GetCanvasData = {
     path: {
@@ -558,10 +583,6 @@ export type SetCanvasDataData = {
 export type SetCanvasDataResponse = (unknown);
 
 export type SetCanvasDataError = unknown;
-
-export type GetRoomsResponse = (Rooms);
-
-export type GetRoomsError = unknown;
 
 export type GetRoomData = {
     path: {
@@ -630,36 +651,6 @@ export type GetGraphData = {
 export type GetGraphResponse = (Graph);
 
 export type GetGraphError = unknown;
-
-export type GetGraphElementsData = {
-    path: {
-        id: string;
-    };
-};
-
-export type GetGraphElementsResponse = (GraphElements);
-
-export type GetGraphElementsError = unknown;
-
-export type GetGraphMetaDataData = {
-    path: {
-        id: string;
-    };
-};
-
-export type GetGraphMetaDataResponse = (GraphMetaData);
-
-export type GetGraphMetaDataError = unknown;
-
-export type GetGraphTableData = {
-    path: {
-        id: string;
-    };
-};
-
-export type GetGraphTableResponse = (GraphTable);
-
-export type GetGraphTableError = unknown;
 
 export type PostCanvasActionLoadScenarioData = {
     body: {
@@ -939,20 +930,3 @@ export type GetDatabaseSearchCapabilitiesError = unknown;
 export type GetVersionResponse = (Version);
 
 export type GetVersionError = unknown;
-
-export type GetBackupResponse = (unknown);
-
-export type GetBackupError = unknown;
-
-export type PostImportData = {
-    body: {
-        /**
-         * The file to upload.
-         */
-        file?: (Blob | File);
-    };
-};
-
-export type PostImportResponse = (unknown);
-
-export type PostImportError = unknown;

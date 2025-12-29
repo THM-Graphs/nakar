@@ -2,15 +2,13 @@ import { Stack } from "react-bootstrap";
 import { AppNavbar } from "../shared/bars/AppNavbar.tsx";
 import { useEffect } from "react";
 import {
+  CanvasPage as SchemaCanvasPage,
   Canvas as SchemaCanvas,
-  getCanvas,
-  getGraph,
-  getRoom,
-  getRoomScenarios,
   GetScenariosResult,
   Graph,
   Room as SchemaRoom,
   WSActionLeaveCanvas,
+  getCanvasPage,
 } from "../../src-gen";
 import { LoaderFunctionArgs, useLoaderData, useNavigate } from "react-router";
 import { resultOrThrow } from "../shared/data/resultOrThrow.ts";
@@ -64,21 +62,15 @@ export async function CanvasLoader(
     throw new Error("No canvas id provided.");
   }
 
-  const canvas: SchemaCanvas = resultOrThrow(
-    await getCanvas({ path: { id: canvasId } }),
+  const data: SchemaCanvasPage = resultOrThrow(
+    await getCanvasPage({ path: { id: canvasId } }),
   );
-
-  const scenarios: GetScenariosResult = resultOrThrow(
-    await getRoomScenarios({ path: { id: canvas.roomId } }),
-  );
-  const graph = resultOrThrow(await getGraph({ path: { id: canvasId } }));
-  const room = resultOrThrow(await getRoom({ path: { id: canvas.roomId } }));
 
   return {
-    initialCanvasData: canvas,
-    initialScenariosData: scenarios,
-    initialGraphData: graph,
-    initialRoomData: room,
+    initialCanvasData: data.canvas,
+    initialScenariosData: data.scenarios,
+    initialGraphData: data.graph,
+    initialRoomData: data.room,
   };
 }
 

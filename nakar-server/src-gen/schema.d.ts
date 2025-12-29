@@ -36,14 +36,14 @@ export interface paths {
         readonly patch?: never;
         readonly trace?: never;
     };
-    readonly "/project": {
+    readonly "/project-page/{id}": {
         readonly parameters: {
             readonly query?: never;
             readonly header?: never;
             readonly path?: never;
             readonly cookie?: never;
         };
-        readonly get: operations["getProjects"];
+        readonly get: operations["getProjectPage"];
         readonly put?: never;
         readonly post?: never;
         readonly delete?: never;
@@ -52,14 +52,14 @@ export interface paths {
         readonly patch?: never;
         readonly trace?: never;
     };
-    readonly "/project/{id}": {
+    readonly "/canvas-page/{id}": {
         readonly parameters: {
             readonly query?: never;
             readonly header?: never;
             readonly path?: never;
             readonly cookie?: never;
         };
-        readonly get: operations["getProject"];
+        readonly get: operations["getCanvasPage"];
         readonly put?: never;
         readonly post?: never;
         readonly delete?: never;
@@ -77,22 +77,6 @@ export interface paths {
         };
         readonly get: operations["getCanvas"];
         readonly put: operations["setCanvasData"];
-        readonly post?: never;
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
-    };
-    readonly "/room": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
-        };
-        readonly get: operations["getRooms"];
-        readonly put?: never;
         readonly post?: never;
         readonly delete?: never;
         readonly options?: never;
@@ -172,54 +156,6 @@ export interface paths {
             readonly cookie?: never;
         };
         readonly get: operations["getGraph"];
-        readonly put?: never;
-        readonly post?: never;
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
-    };
-    readonly "/canvas/{id}/graph/elements": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
-        };
-        readonly get: operations["getGraphElements"];
-        readonly put?: never;
-        readonly post?: never;
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
-    };
-    readonly "/canvas/{id}/graph/meta-data": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
-        };
-        readonly get: operations["getGraphMetaData"];
-        readonly put?: never;
-        readonly post?: never;
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
-    };
-    readonly "/canvas/{id}/graph/table": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
-        };
-        readonly get: operations["getGraphTable"];
         readonly put?: never;
         readonly post?: never;
         readonly delete?: never;
@@ -596,38 +532,6 @@ export interface paths {
         readonly patch?: never;
         readonly trace?: never;
     };
-    readonly "/system/backup": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
-        };
-        readonly get: operations["getBackup"];
-        readonly put?: never;
-        readonly post?: never;
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
-    };
-    readonly "/system/import": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
-        };
-        readonly get?: never;
-        readonly put?: never;
-        readonly post: operations["postImport"];
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
-    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -961,6 +865,23 @@ export interface components {
             readonly visibility: components["schemas"]["RoomVisibility"];
             readonly projectTitle: string;
         };
+        readonly ProjectPage: {
+            readonly id: string;
+            readonly title: string;
+            readonly owner: {
+                readonly current: components["schemas"]["User"];
+            } | null;
+            readonly collaborators: readonly components["schemas"]["User"][];
+            readonly databases: readonly components["schemas"]["DatabaseConnection"][];
+            readonly scenarioGroups: readonly components["schemas"]["ScenarioGroup"][];
+            readonly rooms: readonly components["schemas"]["Room"][];
+        };
+        readonly CanvasPage: {
+            readonly canvas: components["schemas"]["Canvas"];
+            readonly scenarios: components["schemas"]["GetScenariosResult"];
+            readonly graph: components["schemas"]["Graph"];
+            readonly room: components["schemas"]["Room"];
+        };
         readonly WSClientToServerMessage: components["schemas"]["WSActionJoinCanvas"] | components["schemas"]["WSActionLeaveCanvas"] | components["schemas"]["WSActionGrabNode"] | components["schemas"]["WSActionMoveNodes"] | components["schemas"]["WSActionUngrabNode"];
         readonly WSServerToClientMessage: components["schemas"]["WSEventNodesMoved"] | components["schemas"]["WSEventCanvasChanged"] | components["schemas"]["WSEventNotification"] | components["schemas"]["WSEventGraphElementsChanged"] | components["schemas"]["WSEventGraphMetaDataChanged"] | components["schemas"]["WSEventGraphTableChanged"] | components["schemas"]["WSEventProgress"] | components["schemas"]["WSEventClearProgress"] | components["schemas"]["WSEventSetNodeLocks"] | components["schemas"]["WSEventKick"];
         readonly WSActionJoinCanvas: {
@@ -1097,6 +1018,8 @@ export type SchemaCanvas = components['schemas']['Canvas'];
 export type SchemaStartPage = components['schemas']['StartPage'];
 export type SchemaStartPageProject = components['schemas']['StartPageProject'];
 export type SchemaStartPageRoom = components['schemas']['StartPageRoom'];
+export type SchemaProjectPage = components['schemas']['ProjectPage'];
+export type SchemaCanvasPage = components['schemas']['CanvasPage'];
 export type SchemaWsClientToServerMessage = components['schemas']['WSClientToServerMessage'];
 export type SchemaWsServerToClientMessage = components['schemas']['WSServerToClientMessage'];
 export type SchemaWsActionJoinCanvas = components['schemas']['WSActionJoinCanvas'];
@@ -1190,27 +1113,7 @@ export interface operations {
             };
         };
     };
-    readonly getProjects: {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
-        };
-        readonly requestBody?: never;
-        readonly responses: {
-            /** @description OK */
-            readonly 200: {
-                headers: {
-                    readonly [name: string]: unknown;
-                };
-                content: {
-                    readonly "application/json": components["schemas"]["Projects"];
-                };
-            };
-        };
-    };
-    readonly getProject: {
+    readonly getProjectPage: {
         readonly parameters: {
             readonly query?: never;
             readonly header?: never;
@@ -1227,7 +1130,29 @@ export interface operations {
                     readonly [name: string]: unknown;
                 };
                 content: {
-                    readonly "application/json": components["schemas"]["Project"];
+                    readonly "application/json": components["schemas"]["ProjectPage"];
+                };
+            };
+        };
+    };
+    readonly getCanvasPage: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path: {
+                readonly id: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            /** @description OK */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["CanvasPage"];
                 };
             };
         };
@@ -1279,26 +1204,6 @@ export interface operations {
                     readonly [name: string]: unknown;
                 };
                 content?: never;
-            };
-        };
-    };
-    readonly getRooms: {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
-        };
-        readonly requestBody?: never;
-        readonly responses: {
-            /** @description OK */
-            readonly 200: {
-                headers: {
-                    readonly [name: string]: unknown;
-                };
-                content: {
-                    readonly "application/json": components["schemas"]["Rooms"];
-                };
             };
         };
     };
@@ -1438,72 +1343,6 @@ export interface operations {
                 };
                 content: {
                     readonly "application/json": components["schemas"]["Graph"];
-                };
-            };
-        };
-    };
-    readonly getGraphElements: {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path: {
-                readonly id: string;
-            };
-            readonly cookie?: never;
-        };
-        readonly requestBody?: never;
-        readonly responses: {
-            /** @description OK */
-            readonly 200: {
-                headers: {
-                    readonly [name: string]: unknown;
-                };
-                content: {
-                    readonly "application/json": components["schemas"]["GraphElements"];
-                };
-            };
-        };
-    };
-    readonly getGraphMetaData: {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path: {
-                readonly id: string;
-            };
-            readonly cookie?: never;
-        };
-        readonly requestBody?: never;
-        readonly responses: {
-            /** @description OK */
-            readonly 200: {
-                headers: {
-                    readonly [name: string]: unknown;
-                };
-                content: {
-                    readonly "application/json": components["schemas"]["GraphMetaData"];
-                };
-            };
-        };
-    };
-    readonly getGraphTable: {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path: {
-                readonly id: string;
-            };
-            readonly cookie?: never;
-        };
-        readonly requestBody?: never;
-        readonly responses: {
-            /** @description OK */
-            readonly 200: {
-                headers: {
-                    readonly [name: string]: unknown;
-                };
-                content: {
-                    readonly "application/json": components["schemas"]["GraphTable"];
                 };
             };
         };
@@ -2064,52 +1903,6 @@ export interface operations {
                 content: {
                     readonly "application/json": components["schemas"]["Version"];
                 };
-            };
-        };
-    };
-    readonly getBackup: {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
-        };
-        readonly requestBody?: never;
-        readonly responses: {
-            /** @description OK */
-            readonly 200: {
-                headers: {
-                    readonly [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    readonly postImport: {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
-        };
-        readonly requestBody: {
-            readonly content: {
-                readonly "multipart/form-data": {
-                    /**
-                     * Format: binary
-                     * @description The file to upload.
-                     */
-                    readonly file?: string;
-                };
-            };
-        };
-        readonly responses: {
-            /** @description OK */
-            readonly 200: {
-                headers: {
-                    readonly [name: string]: unknown;
-                };
-                content?: never;
             };
         };
     };

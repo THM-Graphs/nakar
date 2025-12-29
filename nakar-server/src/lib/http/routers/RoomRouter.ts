@@ -15,11 +15,7 @@ export class RoomRouter {
     private readonly _databaseService: DatabaseService,
     private readonly _schemaFactory: SchemaFactoryService,
   ) {
-    this._scenariosRouter = new ScenariosRouter(
-      _httpTools,
-      _databaseService,
-      _schemaFactory,
-    );
+    this._scenariosRouter = new ScenariosRouter(_httpTools, _schemaFactory);
   }
 
   public register(): Router {
