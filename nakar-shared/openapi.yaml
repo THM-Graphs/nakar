@@ -14,7 +14,6 @@ tags:
   - name: Start Page
   - name: Project Page
   - name: Canvas Page
-  - name: Project
   - name: Notes
   - name: Room
   - name: Canvas
@@ -137,23 +136,6 @@ paths:
                 $ref: "#/components/schemas/CanvasPage"
 
   /canvas/{id}:
-    get:
-      tags:
-        - Canvas
-      operationId: getCanvas
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        "200":
-          description: "OK"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Canvas"
     put:
       tags:
         - Canvas

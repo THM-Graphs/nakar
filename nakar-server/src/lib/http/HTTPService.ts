@@ -12,7 +12,6 @@ import { RoomRouter } from './routers/RoomRouter';
 import { SystemRouter } from './routers/SystemRouter';
 import { DatabaseRouter } from './routers/DatabaseRouter';
 import { SchemaFactoryService } from '../schema/SchemaFactoryService';
-import { ProjectsRouter } from './routers/ProjectsRouter';
 import { Result } from '@strapi/types/dist/modules/documents/result';
 import { CanvasRouter } from './routers/CanvasRouter';
 import { NotesRouter } from './routers/NotesRouter';
@@ -33,7 +32,6 @@ declare global {
         note: Result<'api::v2-note.v2-note'>;
         database: Result<'api::v2-database-connection.v2-database-connection'>;
         possibleUser: Result<'plugin::users-permissions.user'> | null;
-        user: Result<'plugin::users-permissions.user'>;
         project: Result<'api::v2-project.v2-project'>;
         canvas: Result<'api::v2-canvas.v2-canvas'>;
       };
@@ -53,7 +51,6 @@ export class HTTPService implements ApplicationService {
   private readonly _roomRouter: RoomRouter;
   private readonly _systemRouter: SystemRouter;
   private readonly _databaseRouter: DatabaseRouter;
-  private readonly _projectsRouter: ProjectsRouter;
   private readonly _notesRouter: NotesRouter;
   private readonly _canvasRouter: CanvasRouter;
   private readonly _startPageRouter: StartPageRouter;
@@ -80,11 +77,6 @@ export class HTTPService implements ApplicationService {
       this._httpTools,
       databaseService,
       neo4jService,
-    );
-    this._projectsRouter = new ProjectsRouter(
-      this._httpTools,
-      schemaFactory,
-      databaseService,
     );
     this._canvasRouter = new CanvasRouter(
       this._httpTools,
@@ -174,7 +166,6 @@ export class HTTPService implements ApplicationService {
     this._app.use(cors());
     this._app.use(this._httpTools.handleMiddleware(this._httpTools.findUser));
     this._app.use('/auth', this._authenticationRouter.register());
-    this._app.use('/project', this._projectsRouter.register());
     this._app.use('/note', this._notesRouter.register());
     this._app.use('/room', this._roomRouter.register());
     this._app.use('/canvas', this._canvasRouter.register());

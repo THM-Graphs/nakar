@@ -1,6 +1,6 @@
 import { HTTPTools } from '../HTTPTools';
 import { type Request, Router } from 'express';
-import type { SchemaRoom, SchemaRooms } from '../../../../src-gen/schema';
+import type { SchemaRoom } from '../../../../src-gen/schema';
 import { DatabaseService } from '../../database/DatabaseService';
 import { NotFound } from 'http-errors';
 import { ScenariosRouter } from './ScenariosRouter';
@@ -21,7 +21,6 @@ export class RoomRouter {
   public register(): Router {
     const router: Router = Router();
 
-    router.get('/', this._httpTools.handle(this._getRooms.bind(this)));
     router.use(
       '/:id',
       this._httpTools.handleMiddleware(this._assertRoom.bind(this)),
@@ -49,20 +48,6 @@ export class RoomRouter {
     } catch {
       throw new NotFound();
     }
-  }
-
-  private async _getRooms(): Promise<SchemaRooms> {
-    const dbResult: Result<'api::v2-room.v2-room'>[] =
-      await this._databaseService.getPublicRooms();
-    return {
-      rooms: await Promise.all(
-        dbResult.map(
-          async (room: Result<'api::v2-room.v2-room'>): Promise<SchemaRoom> => {
-            return await this._schemaFactory.createSchemaRoom(room);
-          },
-        ),
-      ),
-    };
   }
 
   private async _getRoom(req: Request): Promise<SchemaRoom> {

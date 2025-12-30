@@ -75,7 +75,7 @@ export interface paths {
             readonly path?: never;
             readonly cookie?: never;
         };
-        readonly get: operations["getCanvas"];
+        readonly get?: never;
         readonly put: operations["setCanvasData"];
         readonly post?: never;
         readonly delete?: never;
@@ -1153,28 +1153,6 @@ export interface operations {
                 };
                 content: {
                     readonly "application/json": components["schemas"]["CanvasPage"];
-                };
-            };
-        };
-    };
-    readonly getCanvas: {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path: {
-                readonly id: string;
-            };
-            readonly cookie?: never;
-        };
-        readonly requestBody?: never;
-        readonly responses: {
-            /** @description OK */
-            readonly 200: {
-                headers: {
-                    readonly [name: string]: unknown;
-                };
-                content: {
-                    readonly "application/json": components["schemas"]["Canvas"];
                 };
             };
         };

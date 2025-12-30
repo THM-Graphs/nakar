@@ -6,8 +6,10 @@ import { SchemaFactoryService } from '../../schema/SchemaFactoryService';
 import { Result } from '@strapi/types/dist/modules/documents/result';
 import { ActionsRouter } from './ActionsRouter';
 import { CanvasService } from '../../room/CanvasService';
-import { operations, SchemaCanvas } from '../../../../src-gen/schema';
+import { operations } from '../../../../src-gen/schema';
 import { Range } from '../../range/Range';
+import { userCanSeeRoom } from '../../policies/userCanSeeRoom';
+import { NotFound } from 'http-errors';
 
 export class CanvasRouter {
   private readonly _graphRouter: GraphRouter;
@@ -16,13 +18,13 @@ export class CanvasRouter {
   public constructor(
     private readonly _httpTools: HTTPTools,
     private readonly _databaseService: DatabaseService,
-    private readonly _schemaFactory: SchemaFactoryService,
+    schemaFactory: SchemaFactoryService,
     canvasService: CanvasService,
   ) {
     this._graphRouter = new GraphRouter(
       _httpTools,
       _databaseService,
-      _schemaFactory,
+      schemaFactory,
     );
     this._actionsRouter = new ActionsRouter(_httpTools, canvasService);
   }
@@ -36,7 +38,6 @@ export class CanvasRouter {
     );
     router.use('/:id/graph', this._graphRouter.register());
     router.use('/:id/actions', this._actionsRouter.register());
-    router.get('/:id', this._httpTools.handle(this._getCanvas.bind(this)));
     router.put('/:id', this._httpTools.handle(this._updateCanvas.bind(this)));
 
     return router;
@@ -50,6 +51,15 @@ export class CanvasRouter {
     const room: Result<'api::v2-room.v2-room'> =
       await this._databaseService.getRoomOfCanvas(canvas);
 
+    const allowed: boolean = await userCanSeeRoom(
+      req.nakar.possibleUser,
+      room,
+      this._databaseService,
+    );
+    if (!allowed) {
+      throw new NotFound();
+    }
+
     const project: Result<'api::v2-project.v2-project'> =
       await this._databaseService.getProjectOfRoom(room);
 
@@ -59,12 +69,6 @@ export class CanvasRouter {
       room: room,
       canvas: canvas,
     };
-  }
-
-  private async _getCanvas(req: Request): Promise<SchemaCanvas> {
-    return await this._schemaFactory.createSchemaCanvasPreview(
-      req.nakar.canvas,
-    );
   }
 
   private async _updateCanvas(req: Request): Promise<void> {

@@ -64,10 +64,6 @@ export class HTTPTools {
       this.handleHTTPError(res, new Unauthorized());
       return;
     } else {
-      req.nakar = {
-        ...req.nakar,
-        user: req.nakar.possibleUser,
-      };
       next();
     }
   };

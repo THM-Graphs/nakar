@@ -75,46 +75,14 @@ export class AuthenticationRouter {
     };
   }
 
-  private async _getAuth(
+  private _getAuth(
     req: Request,
-  ): Promise<
-    operations['getAuth']['responses']['200']['content']['application/json']
-  > {
-    const jwt: string | null = this._httpTools.getJWT(req);
-    if (jwt == null) {
+  ): operations['getAuth']['responses']['200']['content']['application/json'] {
+    if (req.nakar.possibleUser == null) {
       throw new Unauthorized();
     }
-
-    const result: undici.Response = await undici.fetch(
-      `http://localhost:${getConfig().port}/api/users/me`,
-      {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${jwt}`,
-        },
-      },
-    );
-    const json: unknown = await result.json();
-    // eslint-disable-next-line @typescript-eslint/typedef
-    const responseType = z.object({
-      documentId: z.string().optional(),
-      username: z.string().optional(),
-      error: z
-        .object({
-          status: z.number(),
-          name: z.string(),
-          message: z.string(),
-        })
-        .optional(),
-    });
-    const response: z.infer<typeof responseType> = responseType.parse(json);
-
-    if (response.username == null) {
-      throw new Unauthorized();
-    }
-
     return {
-      username: response.username,
+      username: req.nakar.possibleUser.username ?? '',
     };
   }
 }

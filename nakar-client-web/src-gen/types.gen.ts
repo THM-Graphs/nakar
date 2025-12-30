@@ -559,16 +559,6 @@ export type GetCanvasPageResponse = (CanvasPage);
 
 export type GetCanvasPageError = unknown;
 
-export type GetCanvasData = {
-    path: {
-        id: string;
-    };
-};
-
-export type GetCanvasResponse = (Canvas);
-
-export type GetCanvasError = unknown;
-
 export type SetCanvasDataData = {
     body: {
         compressRelationshipsWidthFactor: (number) | null;
