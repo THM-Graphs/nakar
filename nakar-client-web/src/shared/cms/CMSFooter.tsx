@@ -1,7 +1,7 @@
 import { Stack } from "react-bootstrap";
-import { AuthButton } from "../shared/auth/AuthButton.tsx";
-import { SocketStateDisplay } from "../shared/socket/SocketStateDisplay.tsx";
-import { StatusBar } from "../shared/bars/StatusBar.tsx";
+import { AuthButton } from "../auth/AuthButton.tsx";
+import { SocketStateDisplay } from "../socket/SocketStateDisplay.tsx";
+import { StatusBar } from "../bars/StatusBar.tsx";
 
 export function CMSFooter() {
   return (

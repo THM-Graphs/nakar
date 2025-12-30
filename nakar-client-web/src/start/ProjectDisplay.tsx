@@ -3,7 +3,7 @@ import { Stack } from "react-bootstrap";
 import { NavbarButton } from "../shared/elements/NavbarButton.tsx";
 import { ScenarioIcon } from "../room/scenarios-panel/ScenarioIcon.tsx";
 import { Project } from "../../src-gen";
-import { StringListDisplay } from "../cms/StringListDisplay.tsx";
+import { StringListDisplay } from "../shared/cms/StringListDisplay.tsx";
 
 export function ProjectDisplay(props: { project: Project }) {
   const navigate = useNavigate();

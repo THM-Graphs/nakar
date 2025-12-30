@@ -1,17 +1,17 @@
-import { CMSNavbar } from "../cms/CMSNavbar.tsx";
+import { CMSNavbar } from "../shared/cms/CMSNavbar.tsx";
 import { AppContext } from "../state/AppContext.ts";
 import { Container, Stack } from "react-bootstrap";
-import { CMSFooter } from "../cms/CMSFooter.tsx";
+import { CMSFooter } from "../shared/cms/CMSFooter.tsx";
 import { LoaderFunctionArgs, useLoaderData } from "react-router";
 import { resultOrThrow } from "../shared/data/resultOrThrow.ts";
 import {
   getProjectPage,
   ProjectPage as SchemaProjectPage,
 } from "../../src-gen";
-import { UserCard } from "../cms/UserCard.tsx";
-import { RoomCard } from "../cms/RoomCard.tsx";
-import { DatabaseConnectionCard } from "../cms/DatabaseConnectionCard.tsx";
-import { ScenarioGroupCard } from "../cms/ScenarioGroupCard.tsx";
+import { UserCard } from "../shared/cms/UserCard.tsx";
+import { RoomCard } from "../shared/cms/RoomCard.tsx";
+import { DatabaseConnectionCard } from "../shared/cms/DatabaseConnectionCard.tsx";
+import { ScenarioGroupCard } from "../shared/cms/ScenarioGroupCard.tsx";
 
 export async function ProjectLoader(
   args: LoaderFunctionArgs,

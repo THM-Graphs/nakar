@@ -1,4 +1,4 @@
-import { DatabaseConnection } from "../../src-gen";
+import { DatabaseConnection } from "../../../src-gen";
 import { CMSCard } from "./CMSCard.tsx";
 import { Link } from "react-router";
 

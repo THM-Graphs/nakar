@@ -1,4 +1,4 @@
-import { RoomVisibility } from "../../src-gen";
+import { RoomVisibility } from "../../../src-gen";
 import { match } from "ts-pattern";
 
 export function RoomVisibilityDisplay(props: { visibility: RoomVisibility }) {

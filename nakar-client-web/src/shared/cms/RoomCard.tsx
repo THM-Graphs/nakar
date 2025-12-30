@@ -1,4 +1,4 @@
-import { StartPageRoom } from "../../src-gen";
+import { StartPageRoom } from "../../../src-gen";
 import { CMSCard } from "./CMSCard.tsx";
 import { RoomVisibilityDisplay } from "./RoomVisibilityDisplay.tsx";
 import { Link } from "react-router";

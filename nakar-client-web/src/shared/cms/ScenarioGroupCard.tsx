@@ -1,4 +1,4 @@
-import { ScenarioGroup } from "../../src-gen";
+import { ScenarioGroup } from "../../../src-gen";
 import { CMSCard } from "./CMSCard.tsx";
 import { Stack } from "react-bootstrap";
 

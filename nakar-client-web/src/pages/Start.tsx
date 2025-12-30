@@ -2,11 +2,11 @@ import { Container, Stack } from "react-bootstrap";
 import { useLoaderData } from "react-router";
 import { getStartPage, StartPage as StartPageData } from "../../src-gen";
 import { AppContext } from "../state/AppContext.ts";
-import { CMSNavbar } from "../cms/CMSNavbar.tsx";
-import { CMSFooter } from "../cms/CMSFooter.tsx";
-import { RoomCard } from "../cms/RoomCard.tsx";
+import { CMSNavbar } from "../shared/cms/CMSNavbar.tsx";
+import { CMSFooter } from "../shared/cms/CMSFooter.tsx";
+import { RoomCard } from "../shared/cms/RoomCard.tsx";
 import { resultOrThrow } from "../shared/data/resultOrThrow.ts";
-import { ProjectCard } from "../cms/ProjectCard.tsx";
+import { ProjectCard } from "../shared/cms/ProjectCard.tsx";
 import { useBearStore } from "../state/useBearStore.ts";
 
 export async function StartLoader(): Promise<StartPageData> {

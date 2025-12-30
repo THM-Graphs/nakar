@@ -1,8 +1,8 @@
-import { AppNavbar } from "../shared/bars/AppNavbar.tsx";
-import { NavbarLogo } from "../shared/bars/NavbarLogo.tsx";
-import { InfoDropdown } from "../shared/bars/InfoDropdown.tsx";
-import { AppContext } from "../state/AppContext.ts";
-import { NavbarButton } from "../shared/elements/NavbarButton.tsx";
+import { AppNavbar } from "../bars/AppNavbar.tsx";
+import { NavbarLogo } from "../bars/NavbarLogo.tsx";
+import { InfoDropdown } from "../bars/InfoDropdown.tsx";
+import { AppContext } from "../../state/AppContext.ts";
+import { NavbarButton } from "../elements/NavbarButton.tsx";
 import { useNavigate } from "react-router";
 
 export function CMSNavbar(props: {

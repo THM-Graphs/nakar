@@ -1,4 +1,4 @@
-import { ProjectRole } from "../../src-gen";
+import { ProjectRole } from "../../../src-gen";
 import { match } from "ts-pattern";
 
 export function RoleDisplay(role: ProjectRole) {

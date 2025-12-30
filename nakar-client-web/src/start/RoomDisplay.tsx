@@ -4,7 +4,7 @@ import { Stack } from "react-bootstrap";
 import { NavbarButton } from "../shared/elements/NavbarButton.tsx";
 import { ScenarioIcon } from "../room/scenarios-panel/ScenarioIcon.tsx";
 import { ClipboardButton } from "../shared/elements/ClipboardButton.tsx";
-import { RoomVisibilityDisplay } from "../cms/RoomVisibilityDisplay.tsx";
+import { RoomVisibilityDisplay } from "../shared/cms/RoomVisibilityDisplay.tsx";
 
 export function RoomDisplay(props: {
   room: Room;

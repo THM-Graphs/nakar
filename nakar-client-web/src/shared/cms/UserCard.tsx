@@ -1,4 +1,4 @@
-import { ProjectRole, User } from "../../src-gen";
+import { ProjectRole, User } from "../../../src-gen";
 import { RoleDisplay } from "./RoleDisplay.tsx";
 import { CMSCard } from "./CMSCard.tsx";
 
