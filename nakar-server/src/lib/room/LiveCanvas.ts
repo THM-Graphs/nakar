@@ -48,6 +48,7 @@ import { createChildLogger } from '../logger/createChildLogger';
 import { Profiler } from 'winston';
 import { getStringPayloadOfMediaFile } from '../media/media';
 import { UndoWrapperInfo } from '../undo/UndoWrapperInfo';
+import { PhysicalGraph } from '../physics/physical-graph/PhysicalGraph';
 
 export class LiveCanvas implements ApplicationService {
   private readonly _logger: Logger = createChildLogger(this);
@@ -75,7 +76,7 @@ export class LiveCanvas implements ApplicationService {
     );
     this._onEvent = new Subject();
     this._subscriptions = new SSet();
-    this._physicsWorker = new PhysicsWorker(_canvasId, _database);
+    this._physicsWorker = new PhysicsWorker(_canvasId);
     this._queue = new TaskQueue();
     this._state = new BehaviorSubject<LiveCanvasState>(LiveCanvasState.created);
     this._stateSubscription = this._state.subscribe(
@@ -129,7 +130,10 @@ export class LiveCanvas implements ApplicationService {
     this._state.next(LiveCanvasState.starting);
     const initialGraph: MutableGraph = await this._loadGraph();
     this._graph.reset(initialGraph);
-    await this._physicsWorker.bootstrap(initialGraph);
+    const physicalGraph: PhysicalGraph = initialGraph.toPhysicalGraph(
+      await this._getCanvas(),
+    );
+    await this._physicsWorker.bootstrap(physicalGraph);
     this._subscriptions.add(
       this._physicsWorker.onWTEvent$.subscribe((message: WTEvent): void => {
         match(message)

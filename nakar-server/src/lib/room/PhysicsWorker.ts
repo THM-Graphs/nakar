@@ -1,4 +1,3 @@
-import { MutableGraph } from './graph/MutableGraph';
 import { Worker } from 'node:worker_threads';
 import type { WTEvent } from '../room-worker/worker-events/WTEvent';
 import { PhysicalGraph } from '../physics/physical-graph/PhysicalGraph';
@@ -7,8 +6,6 @@ import path from 'path';
 import { WTAction } from '../room-worker/worker-events/WTAction';
 import { Observable, Subject } from 'rxjs';
 import type { WTPhysicalNode } from '../room-worker/worker-events/WTPhysicalNode';
-import { Result } from '@strapi/types/dist/modules/documents/result';
-import { DatabaseService } from '../database/DatabaseService';
 import { Logger } from '@strapi/logger';
 import { createChildLogger } from '../logger/createChildLogger';
 
@@ -18,10 +15,7 @@ export class PhysicsWorker {
   private _worker: Worker | null;
   private readonly _onWTEvent: Subject<WTEvent>;
 
-  public constructor(
-    private readonly _canvasId: string,
-    private readonly _database: DatabaseService,
-  ) {
+  public constructor(private readonly _canvasId: string) {
     this._worker = null;
     this._onWTEvent = new Subject();
   }
@@ -30,10 +24,7 @@ export class PhysicsWorker {
     return this._onWTEvent.asObservable();
   }
 
-  public async bootstrap(graph: MutableGraph): Promise<void> {
-    const physicalGraph: PhysicalGraph = graph.toPhysicalGraph(
-      await this._getCanvas(),
-    );
+  public async bootstrap(physicalGraph: PhysicalGraph): Promise<void> {
     const workerData: RoomWorkerData = {
       canvasId: this._canvasId,
       graph: physicalGraph,
@@ -81,7 +72,6 @@ export class PhysicsWorker {
 
   public async destroy(): Promise<void> {
     await this._worker?.terminate();
-    this._worker?.removeAllListeners();
   }
 
   public setLocks(locks: Record<string, boolean>): void {
@@ -125,12 +115,5 @@ export class PhysicsWorker {
       return;
     }
     worker.postMessage(action);
-  }
-
-  private async _getCanvas(): Promise<Result<'api::v2-canvas.v2-canvas'>> {
-    const canvas: Result<'api::v2-canvas.v2-canvas'> =
-      await this._database.getCanvas(this._canvasId);
-
-    return canvas;
   }
 }

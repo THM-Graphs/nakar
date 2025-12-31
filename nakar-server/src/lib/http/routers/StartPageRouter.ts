@@ -106,18 +106,14 @@ export class StartPageRouter {
       ).toSorted((a: SchemaStartPageRoom, b: SchemaStartPageRoom): number =>
         a.projectTitle.localeCompare(b.projectTitle),
       ),
-      recentRooms: (
-        await Promise.all(
-          recentRooms.map(
-            async (
-              room: Result<'api::v2-room.v2-room'>,
-            ): Promise<SchemaStartPageRoom> => {
-              return await this._schemaFactory.createSchemaStartPageRoom(room);
-            },
-          ),
-        )
-      ).toSorted((a: SchemaStartPageRoom, b: SchemaStartPageRoom): number =>
-        a.projectTitle.localeCompare(b.projectTitle),
+      recentRooms: await Promise.all(
+        recentRooms.map(
+          async (
+            room: Result<'api::v2-room.v2-room'>,
+          ): Promise<SchemaStartPageRoom> => {
+            return await this._schemaFactory.createSchemaStartPageRoom(room);
+          },
+        ),
       ),
     };
   }
