@@ -3,13 +3,14 @@ import { Result } from '@strapi/types/dist/modules/documents/result';
 import { ScaleType } from '../../physics/ScaleType';
 import { Range } from '../../range/Range';
 
-export class CanvasViewSettings {
+export class LiveCanvasViewSettings {
   public static readonly defaultGrowNodesBasedOnDegreeFactor: number = 2;
   public static readonly defaultCompressRelationshipsWidthFactor: number = 10;
 
   private readonly _compressRelationshipsWidthFactor: number;
   private readonly _growNodesBasedOnDegree: boolean;
   private readonly _growNodesBasedOnDegreeFactor: number;
+  private readonly _scaleType: ScaleType;
 
   public constructor(params: {
     compressRelationshipsWidthFactor: number;
@@ -27,6 +28,7 @@ export class CanvasViewSettings {
       1,
       1000,
     );
+    this._scaleType = 'linear';
   }
 
   public get compressRelationshipsWidthFactor(): number {
@@ -42,27 +44,27 @@ export class CanvasViewSettings {
   }
 
   public get scaleType(): ScaleType {
-    return 'linear';
+    return this._scaleType;
   }
 
   public static fromDB(
     canvas: Result<'api::v2-canvas.v2-canvas'>,
-  ): CanvasViewSettings {
-    return new CanvasViewSettings({
+  ): LiveCanvasViewSettings {
+    return new LiveCanvasViewSettings({
       compressRelationshipsWidthFactor:
         canvas.compressRelationshipsWidthFactor ??
-        CanvasViewSettings.defaultCompressRelationshipsWidthFactor,
+        LiveCanvasViewSettings.defaultCompressRelationshipsWidthFactor,
       growNodesBasedOnDegree: canvas.growNodesBasedOnDegree ?? false,
       growNodesBasedOnDegreeFactor:
         canvas.growNodesBasedOnDegreeFactor ??
-        CanvasViewSettings.defaultGrowNodesBasedOnDegreeFactor,
+        LiveCanvasViewSettings.defaultGrowNodesBasedOnDegreeFactor,
     });
   }
 
   public static fromSchema(
     input: SchemaCanvasViewSettings,
-  ): CanvasViewSettings {
-    return new CanvasViewSettings({
+  ): LiveCanvasViewSettings {
+    return new LiveCanvasViewSettings({
       compressRelationshipsWidthFactor: input.compressRelationshipsWidthFactor,
       growNodesBasedOnDegree: input.growNodesBasedOnDegree,
       growNodesBasedOnDegreeFactor: input.growNodesBasedOnDegreeFactor,

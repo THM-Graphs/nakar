@@ -127,10 +127,6 @@ export type GraphMetaData = {
     scenario?: {
         current: Scenario;
     } | null;
-    pipelineSummary: Array<{
-        step: string;
-        durationMs: number;
-    }>;
     arguments: Array<ScenarioArgument>;
     undoAction: (string) | null;
     redoAction: (string) | null;

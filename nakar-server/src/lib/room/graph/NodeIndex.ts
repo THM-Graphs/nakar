@@ -1,18 +1,18 @@
 import { SMap } from '../../map/Map';
-import { MutableNode } from './MutableNode';
+import { LiveCanvasNode } from './LiveCanvasNode';
 import { SSet } from '../../set/Set';
 import type { Neo4jNode } from '../../neo4j/Neo4jNode';
-import { MutablePosition } from './MutablePosition';
-import { MutablePropertyCollection } from './MutablePropertyCollection';
+import { LiveCanvasPosition } from './LiveCanvasPosition';
+import { LiveCanvasPropertyCollection } from './LiveCanvasPropertyCollection';
 import { Range } from '../../range/Range';
-import type { MutableGraph } from './MutableGraph';
+import type { LiveCanvasData } from './LiveCanvasData';
 import { PhysicsSimulation } from '../../physics/PhysicsSimulation';
-import { MutableGraphElementCreationAction } from './MutableGraphElementCreationAction';
+import { ElementCreationReason } from './ElementCreationReason';
 
-export class MutableNodeIndex {
-  private readonly _byId: SMap<string, MutableNode>;
+export class NodeIndex {
+  private readonly _byId: SMap<string, LiveCanvasNode>;
 
-  private readonly _byLabel: SMap<string, SSet<MutableNode>>;
+  private readonly _byLabel: SMap<string, SSet<LiveCanvasNode>>;
 
   /* Maps label => count */
   private readonly _labelHistogram: SMap<string, number>;
@@ -20,11 +20,11 @@ export class MutableNodeIndex {
   /* Maps key => value => count */
   private readonly _propertyHistogram: SMap<string, SMap<string, number>>;
 
-  private readonly _bySource: SMap<string, SSet<MutableNode>>;
+  private readonly _bySource: SMap<string, SSet<LiveCanvasNode>>;
 
   private readonly _compressed: SSet<string>;
 
-  public constructor(nodes: MutableNode[]) {
+  public constructor(nodes: LiveCanvasNode[]) {
     this._byId = new SMap();
     this._byLabel = new SMap();
     this._labelHistogram = new SMap();
@@ -37,7 +37,7 @@ export class MutableNodeIndex {
     }
   }
 
-  public get nodes(): SSet<MutableNode> {
+  public get nodes(): SSet<LiveCanvasNode> {
     return new SSet(this._byId.values());
   }
 
@@ -57,7 +57,13 @@ export class MutableNodeIndex {
     return this._propertyHistogram;
   }
 
-  public add(node: MutableNode): boolean {
+  public reset(): void {
+    for (const node of this.nodes) {
+      this.remove(node);
+    }
+  }
+
+  public add(node: LiveCanvasNode): boolean {
     if (this._byId.has(node.id)) {
       return false;
     }
@@ -89,7 +95,7 @@ export class MutableNodeIndex {
 
   public addNeo4jNodes(
     nodes: SMap<string, Neo4jNode>,
-    creationAction: MutableGraphElementCreationAction,
+    creationAction: ElementCreationReason,
   ): void {
     for (const node of nodes) {
       this.addNeo4jNode(node[1], creationAction);
@@ -98,13 +104,13 @@ export class MutableNodeIndex {
 
   public addNeo4jNode(
     node: Neo4jNode,
-    creationAction: MutableGraphElementCreationAction,
-  ): MutableNode | null {
-    const mutableNode: MutableNode = new MutableNode({
+    creationAction: ElementCreationReason,
+  ): LiveCanvasNode | null {
+    const mutableNode: LiveCanvasNode = new LiveCanvasNode({
       id: node.node.elementId,
       labels: new SSet<string>(node.node.labels),
-      properties: MutablePropertyCollection.fromRecord(node.node.properties),
-      position: MutablePosition.default(),
+      properties: LiveCanvasPropertyCollection.fromRecord(node.node.properties),
+      position: LiveCanvasPosition.default(),
       namesInQuery: node.keys,
       locked: false,
       grabs: new SSet(),
@@ -122,9 +128,9 @@ export class MutableNodeIndex {
     }
   }
 
-  public remove(nodeReference: string | MutableNode): boolean {
-    const node: MutableNode | undefined =
-      nodeReference instanceof MutableNode
+  public remove(nodeReference: string | LiveCanvasNode): boolean {
+    const node: LiveCanvasNode | undefined =
+      nodeReference instanceof LiveCanvasNode
         ? nodeReference
         : this._byId.get(nodeReference);
     if (node == null) {
@@ -155,19 +161,19 @@ export class MutableNodeIndex {
     return this._byId.has(id);
   }
 
-  public has(node: MutableNode | string): boolean {
+  public has(node: LiveCanvasNode | string): boolean {
     return this._byId.has(typeof node === 'string' ? node : node.id);
   }
 
-  public get(id: string): MutableNode | null {
+  public get(id: string): LiveCanvasNode | null {
     return this._byId.get(id) ?? null;
   }
 
-  public getByLabel(label: string): SSet<MutableNode> {
+  public getByLabel(label: string): SSet<LiveCanvasNode> {
     return this._byLabel.get(label) ?? new SSet();
   }
 
-  public getBySource(source: string): SSet<MutableNode> {
+  public getBySource(source: string): SSet<LiveCanvasNode> {
     return this._bySource.get(source) ?? new SSet();
   }
 
@@ -176,7 +182,7 @@ export class MutableNodeIndex {
       (
         akku: SSet<string>,
         key: string,
-        value: SSet<MutableNode>,
+        value: SSet<LiveCanvasNode>,
       ): SSet<string> => {
         if (value.size === 0) {
           return akku;
@@ -188,15 +194,15 @@ export class MutableNodeIndex {
     );
   }
 
-  public copy(): MutableNodeIndex {
-    return new MutableNodeIndex(
-      this.nodes.toArray().map((n: MutableNode): MutableNode => n.copy()),
+  public copy(): NodeIndex {
+    return new NodeIndex(
+      this.nodes.toArray().map((n: LiveCanvasNode): LiveCanvasNode => n.copy()),
     );
   }
 
-  public getNodeDegreeRange(graph: MutableGraph): Range {
+  public getNodeDegreeRange(graph: LiveCanvasData): Range {
     const degrees: number[] = this.nodes
-      .map((node: MutableNode): number => node.degree(graph))
+      .map((node: LiveCanvasNode): number => node.degree(graph))
       .toArray();
 
     if (degrees.length === 0) {

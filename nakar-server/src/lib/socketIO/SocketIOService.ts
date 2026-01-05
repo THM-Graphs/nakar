@@ -39,7 +39,7 @@ import type { CanvasEventGraphElementsChanged } from '../room/events/CanvasEvent
 import type { CanvasEventGraphTableChanged } from '../room/events/CanvasEventGraphTableChanged';
 import type { CanvasEventEventKick } from '../room/events/CanvasEventEventKick';
 import type { CanvasEventNotAllNodesLoaded } from '../room/events/CanvasEventNotAllNodesLoaded';
-import type { MutableGraph } from '../room/graph/MutableGraph';
+import type { LiveCanvasData } from '../room/graph/LiveCanvasData';
 import { SchemaFactoryService } from '../schema/SchemaFactoryService';
 import { CanvasEventError } from '../room/events/CanvasEventError';
 import { Result } from '@strapi/types/dist/modules/documents/result';
@@ -47,7 +47,7 @@ import { IndexedNoteCollection } from '../database/IndexedNoteCollection';
 import { Logger } from '@strapi/logger';
 import { createChildLogger } from '../logger/createChildLogger';
 import { LiveCanvas } from '../room/LiveCanvas';
-import { CanvasViewSettings } from '../room/graph/CanvasViewSettings';
+import { LiveCanvasViewSettings } from '../room/graph/LiveCanvasViewSettings';
 
 export type Server = UntypedServer<ClientToServerEvents, ServerToClientEvents>;
 export type Socket = UntypedSocket<ClientToServerEvents, ServerToClientEvents>;
@@ -374,7 +374,7 @@ export class SocketIOService implements ApplicationService {
                   await this._schemaFactory.createSchemaGraphElements(
                     message.graph,
                     notes,
-                    CanvasViewSettings.fromDB(canvas),
+                    LiveCanvasViewSettings.fromDB(canvas),
                   );
                 this.sendToRoom(message.canvasId, {
                   elements: graphElements,
@@ -503,7 +503,8 @@ export class SocketIOService implements ApplicationService {
             const canvases: Result<'api::v2-canvas.v2-canvas'>[] =
               await this._databaseService.getCanvasesOfRoom(room);
             for (const canvas of canvases) {
-              const graph: MutableGraph = this._canvasService.getGraph(canvas);
+              const graph: LiveCanvasData =
+                this._canvasService.getGraph(canvas);
               const notes: IndexedNoteCollection =
                 await this._databaseService.getNotes({
                   project: project,
@@ -514,7 +515,7 @@ export class SocketIOService implements ApplicationService {
                 await this._schemaFactory.createSchemaGraphElements(
                   graph,
                   notes,
-                  CanvasViewSettings.fromDB(canvas),
+                  LiveCanvasViewSettings.fromDB(canvas),
                 );
               this.sendToRoom(canvas.documentId, {
                 elements: graphElements,

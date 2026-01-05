@@ -55,6 +55,13 @@ export class UndoWrapper<T> {
     return newData;
   }
 
+  public snapshot(actionTitle: string): void {
+    const copy: T = this._onCopy(this._current);
+    this._undoStack.push({ element: this._current, actionTitle: actionTitle });
+    this._redoStack.clear();
+    this._current = copy;
+  }
+
   public undo(): T {
     const newCurrent: UndoWrapperStackEntry<T> = this._undoStack.pop();
     this._redoStack.push({

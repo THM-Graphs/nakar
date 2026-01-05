@@ -217,7 +217,6 @@ export const useBearStore = create<BearState>()(
                     data: [],
                   },
                   metaData: {
-                    pipelineSummary: [],
                     scenario: null,
                     arguments: [],
                     undoAction: null,
@@ -245,7 +244,6 @@ export const useBearStore = create<BearState>()(
                           arguments: [],
                           undoAction: null,
                           redoAction: null,
-                          pipelineSummary: [],
                           scenario: null,
                         },
                         table: {

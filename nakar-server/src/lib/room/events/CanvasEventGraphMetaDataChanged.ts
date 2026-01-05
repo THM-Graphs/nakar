@@ -1,9 +1,9 @@
-import type { MutableGraph } from '../graph/MutableGraph';
+import type { LiveCanvasData } from '../graph/LiveCanvasData';
 import { UndoWrapperInfo } from '../../undo/UndoWrapperInfo';
 
 export interface CanvasEventGraphMetaDataChanged {
   type: 'CanvasEventGraphMetaDataChanged';
   canvasId: string;
-  graph: MutableGraph;
+  graph: LiveCanvasData;
   undoInfo: UndoWrapperInfo;
 }

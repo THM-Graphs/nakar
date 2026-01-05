@@ -9,7 +9,7 @@ import { userCanSeeRoom } from '../../policies/userCanSeeRoom';
 import { CanvasService } from '../../room/CanvasService';
 import { IndexedNoteCollection } from '../../database/IndexedNoteCollection';
 import { LiveCanvas } from '../../room/LiveCanvas';
-import { CanvasViewSettings } from '../../room/graph/CanvasViewSettings';
+import { LiveCanvasViewSettings } from '../../room/graph/LiveCanvasViewSettings';
 
 export class CanvasPageRouter {
   public constructor(
@@ -64,7 +64,7 @@ export class CanvasPageRouter {
         liveCanvas.getGraph(),
         notes,
         liveCanvas.getUndoInfo(),
-        CanvasViewSettings.fromDB(canvas),
+        LiveCanvasViewSettings.fromDB(canvas),
       ),
       scenarios: await this._schemaFactory.createGetScenariosResult(room),
     };

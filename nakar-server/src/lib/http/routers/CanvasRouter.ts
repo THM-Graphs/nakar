@@ -9,7 +9,7 @@ import { CanvasService } from '../../room/CanvasService';
 import { operations, SchemaCanvas } from '../../../../src-gen/schema';
 import { userCanSeeRoom } from '../../policies/userCanSeeRoom';
 import { NotFound } from 'http-errors';
-import { CanvasViewSettings } from '../../room/graph/CanvasViewSettings';
+import { LiveCanvasViewSettings } from '../../room/graph/LiveCanvasViewSettings';
 
 export class CanvasRouter {
   private readonly _graphRouter: GraphRouter;
@@ -77,9 +77,8 @@ export class CanvasRouter {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
     const body: Body = req.body as Body;
 
-    const viewSettings: CanvasViewSettings = CanvasViewSettings.fromSchema(
-      body.viewSettings,
-    );
+    const viewSettings: LiveCanvasViewSettings =
+      LiveCanvasViewSettings.fromSchema(body.viewSettings);
 
     await this._databaseService.setCanvasViewSettings(
       req.nakar.canvas,

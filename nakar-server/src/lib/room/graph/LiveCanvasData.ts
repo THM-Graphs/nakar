@@ -1,11 +1,11 @@
-import { MutableNode } from './MutableNode';
-import { MutableEdge } from './MutableEdge';
-import { MutableGraphMetaData } from './MutableGraphMetaData';
+import { LiveCanvasNode } from './LiveCanvasNode';
+import { LiveCanvasEdge } from './LiveCanvasEdge';
+import { LiveCanvasMetaData } from './LiveCanvasMetaData';
 import { z } from 'zod';
 import { SMap } from '../../map/Map';
 import { v4 as uuidv4 } from 'uuid';
-import { MutableNodeIndex } from './MutableNodeIndex';
-import { MutableEdgeIndex } from './MutableEdgeIndex';
+import { NodeIndex } from './NodeIndex';
+import { EdgeIndex } from './EdgeIndex';
 import type { PhysicalGraph } from '../../physics/physical-graph/PhysicalGraph';
 import type { PhysicalNode } from '../../physics/physical-graph/PhysicalNode';
 import type { PhysicalEdge } from '../../physics/physical-graph/PhysicalEdge';
@@ -15,72 +15,81 @@ import { Range } from '../../range/Range';
 import { Logger } from '@strapi/logger';
 import { createChildLogger } from '../../logger/createChildLogger';
 import { Profiler } from 'winston';
-import { CanvasViewSettings } from './CanvasViewSettings';
+import { LiveCanvasViewSettings } from './LiveCanvasViewSettings';
 
-export class MutableGraph {
+export class LiveCanvasData {
   // eslint-disable-next-line @typescript-eslint/typedef
   public static readonly schema = z.object({
     id: z.string(),
-    nodes: z.array(MutableNode.schema),
-    edges: z.array(MutableEdge.schema),
-    metaData: MutableGraphMetaData.schema,
+    nodes: z.array(LiveCanvasNode.schema),
+    edges: z.array(LiveCanvasEdge.schema),
+    metaData: LiveCanvasMetaData.schema,
     tableData: z.array(z.record(z.unknown())),
   });
 
   public readonly id: string;
-  public nodes: MutableNodeIndex;
-  public edges: MutableEdgeIndex;
-  public metaData: MutableGraphMetaData;
-  public tableData: SMap<string, unknown>[];
+  public readonly nodes: NodeIndex;
+  public readonly edges: EdgeIndex;
+  public readonly metaData: LiveCanvasMetaData;
+
+  private _tableData: SMap<string, unknown>[];
 
   private readonly _logger: Logger = createChildLogger(this);
 
   public constructor(data: {
     id: string;
-    nodes: MutableNodeIndex;
-    edges: MutableEdgeIndex;
-    metaData: MutableGraphMetaData;
+    nodes: NodeIndex;
+    edges: EdgeIndex;
+    metaData: LiveCanvasMetaData;
     tableData: SMap<string, unknown>[];
   }) {
     this.id = data.id;
     this.nodes = data.nodes;
     this.edges = data.edges;
     this.metaData = data.metaData;
-    this.tableData = data.tableData;
+    this._tableData = data.tableData;
   }
 
   public get size(): number {
     return this.nodes.size + this.edges.size;
   }
 
-  public static empty(): MutableGraph {
-    return new MutableGraph({
+  public get tableData(): SMap<string, unknown>[] {
+    return this._tableData;
+  }
+
+  public set tableData(newData: SMap<string, unknown>[]) {
+    this._tableData = newData;
+  }
+
+  public static empty(): LiveCanvasData {
+    return new LiveCanvasData({
       id: uuidv4(),
-      nodes: new MutableNodeIndex([]),
-      edges: new MutableEdgeIndex([]),
-      metaData: MutableGraphMetaData.empty(),
+      nodes: new NodeIndex([]),
+      edges: new EdgeIndex([]),
+      metaData: LiveCanvasMetaData.empty(),
       tableData: [],
     });
   }
 
   public static fromPlain(
-    data: z.infer<typeof MutableGraph.schema>,
-  ): MutableGraph {
-    return new MutableGraph({
+    data: z.infer<typeof LiveCanvasData.schema>,
+  ): LiveCanvasData {
+    return new LiveCanvasData({
       id: data.id,
-      nodes: new MutableNodeIndex(
+      nodes: new NodeIndex(
         data.nodes.map(
-          (n: z.infer<typeof MutableNode.schema>): MutableNode =>
-            MutableNode.fromPlain(n),
+          (n: z.infer<typeof LiveCanvasNode.schema>): LiveCanvasNode =>
+            LiveCanvasNode.fromPlain(n),
         ),
       ),
-      edges: new MutableEdgeIndex(
+      edges: new EdgeIndex(
         data.edges.map(
-          (e: z.infer<typeof MutableEdge.schema>): MutableEdge =>
-            MutableEdge.fromPlain(e),
+          (e: z.infer<typeof LiveCanvasEdge.schema>): LiveCanvasEdge =>
+            LiveCanvasEdge.fromPlain(e),
         ),
       ),
-      metaData: MutableGraphMetaData.fromPlain(data.metaData),
+      metaData: LiveCanvasMetaData.fromPlain(data.metaData),
       tableData: data.tableData.map(
         (td: Record<string, unknown>): SMap<string, unknown> =>
           SMap.fromRecord(td),
@@ -88,17 +97,17 @@ export class MutableGraph {
     });
   }
 
-  public static fromUnknown(input: unknown): MutableGraph {
-    const data: z.infer<typeof MutableGraph.schema> =
-      MutableGraph.schema.parse(input);
-    return MutableGraph.fromPlain(data);
+  public static fromUnknown(input: unknown): LiveCanvasData {
+    const data: z.infer<typeof LiveCanvasData.schema> =
+      LiveCanvasData.schema.parse(input);
+    return LiveCanvasData.fromPlain(data);
   }
 
-  public static fromUnknownOrEmpty(input: unknown): MutableGraph {
+  public static fromUnknownOrEmpty(input: unknown): LiveCanvasData {
     try {
-      return MutableGraph.fromUnknown(input);
+      return LiveCanvasData.fromUnknown(input);
     } catch {
-      return MutableGraph.empty();
+      return LiveCanvasData.empty();
     }
   }
 
@@ -106,27 +115,25 @@ export class MutableGraph {
     scenario: Result<'api::v2-scenario.v2-scenario'>,
     scenarioArguments: SMap<string, string>,
   ): void {
-    this.metaData = new MutableGraphMetaData({
-      scenarioId: scenario.documentId,
-      pipelineSummary: [],
-      arguments: scenarioArguments,
-    });
-    this.nodes = new MutableNodeIndex([]);
-    this.edges = new MutableEdgeIndex([]);
-    this.tableData = [];
+    this.metaData.reset(scenario.documentId, scenarioArguments);
+    this.nodes.reset();
+    this.edges.reset();
+    this._tableData = [];
   }
 
-  public toPlain(): z.infer<typeof MutableGraph.schema> {
+  public toPlain(): z.infer<typeof LiveCanvasData.schema> {
     return {
       id: this.id,
       nodes: this.nodes.nodes.flatMap(
-        (n: MutableNode): z.infer<typeof MutableNode.schema> => n.toPlain(),
+        (n: LiveCanvasNode): z.infer<typeof LiveCanvasNode.schema> =>
+          n.toPlain(),
       ),
       edges: this.edges.edges.flatMap(
-        (e: MutableEdge): z.infer<typeof MutableEdge.schema> => e.toPlain(),
+        (e: LiveCanvasEdge): z.infer<typeof LiveCanvasEdge.schema> =>
+          e.toPlain(),
       ),
       metaData: this.metaData.toPlain(),
-      tableData: this.tableData.map(
+      tableData: this._tableData.map(
         (td: SMap<string, unknown>): Record<string, unknown> => td.toRecord(),
       ),
     };
@@ -154,7 +161,7 @@ export class MutableGraph {
     return edgesRemoved;
   }
 
-  public toPhysicalGraph(viewSettings: CanvasViewSettings): PhysicalGraph {
+  public toPhysicalGraph(viewSettings: LiveCanvasViewSettings): PhysicalGraph {
     const task: Profiler = this._logger.startTimer();
 
     const nodes: Record<string, PhysicalNode> = {};
@@ -196,7 +203,7 @@ export class MutableGraph {
 
   public applyPhysicalGraph(physicalGraph: PhysicalGraph): void {
     for (const node of Object.values(physicalGraph.nodes)) {
-      const foundNode: MutableNode | null = this.nodes.get(node.id);
+      const foundNode: LiveCanvasNode | null = this.nodes.get(node.id);
       if (foundNode == null) {
         // This can happen, if the graphs are out of sync for a short period of time.
         continue;
@@ -209,14 +216,14 @@ export class MutableGraph {
     }
   }
 
-  public copy(): MutableGraph {
+  public copy(): LiveCanvasData {
     const task: Profiler = this._logger.startTimer();
-    const copy: MutableGraph = new MutableGraph({
+    const copy: LiveCanvasData = new LiveCanvasData({
       id: uuidv4(),
       nodes: this.nodes.copy(),
       edges: this.edges.copy(),
       metaData: this.metaData.copy(),
-      tableData: this.tableData.map(
+      tableData: this._tableData.map(
         (e: SMap<string, unknown>): SMap<string, unknown> => e.copy(),
       ),
     });
@@ -226,10 +233,13 @@ export class MutableGraph {
     return copy;
   }
 
-  public getNeighborsOfNode(node: MutableNode): SSet<MutableNode> {
-    const result: SMap<string, MutableNode> = new SMap<string, MutableNode>();
+  public getNeighborsOfNode(node: LiveCanvasNode): SSet<LiveCanvasNode> {
+    const result: SMap<string, LiveCanvasNode> = new SMap<
+      string,
+      LiveCanvasNode
+    >();
     for (const outgoingEdge of this.edges.getByStartNodeId(node.id)) {
-      const outgoindNode: MutableNode | null = this.nodes.get(
+      const outgoindNode: LiveCanvasNode | null = this.nodes.get(
         outgoingEdge.endNodeId,
       );
       if (outgoindNode != null) {
@@ -237,7 +247,7 @@ export class MutableGraph {
       }
     }
     for (const incomingEdge of this.edges.getByEndNodeId(node.id)) {
-      const incomingNode: MutableNode | null = this.nodes.get(
+      const incomingNode: LiveCanvasNode | null = this.nodes.get(
         incomingEdge.startNodeId,
       );
       if (incomingNode != null) {
@@ -249,19 +259,22 @@ export class MutableGraph {
 
   /** This method will return siblings, but only if all siblings the exact same neighbors and have the same label */
   public getClusterBuddiesOfNode(
-    node: MutableNode,
+    node: LiveCanvasNode,
     label: string,
-  ): SSet<MutableNode> {
-    const neighbors: SSet<MutableNode> = this.getNeighborsOfNode(node);
+  ): SSet<LiveCanvasNode> {
+    const neighbors: SSet<LiveCanvasNode> = this.getNeighborsOfNode(node);
 
-    const clusterBuddies: SSet<MutableNode> = neighbors
+    const clusterBuddies: SSet<LiveCanvasNode> = neighbors
       .reduce(
-        (akku: SSet<MutableNode>, next: MutableNode): SSet<MutableNode> =>
+        (
+          akku: SSet<LiveCanvasNode>,
+          next: LiveCanvasNode,
+        ): SSet<LiveCanvasNode> =>
           akku.byMerging(this.getNeighborsOfNode(next)),
         new SSet(),
       )
       .filter(
-        (n: MutableNode): boolean =>
+        (n: LiveCanvasNode): boolean =>
           n.labels.has(label) &&
           n.compressed.size === 0 &&
           this.getNeighborsOfNode(n).isEqual(neighbors),

@@ -1,7 +1,7 @@
 import type { DatabaseService } from '../database/DatabaseService';
 import type { Observable } from 'rxjs';
 import { Subject } from 'rxjs';
-import { MutableGraph } from './graph/MutableGraph';
+import { LiveCanvasData } from './graph/LiveCanvasData';
 import type { ApplicationService } from '../application/ApplicationService';
 import installHandlebarHelpers from 'handlebars-helpers';
 import { SMap } from '../map/Map';
@@ -50,9 +50,9 @@ export class CanvasService implements ApplicationService {
     }
   }
 
-  public getGraph(canvas: Result<'api::v2-canvas.v2-canvas'>): MutableGraph {
+  public getGraph(canvas: Result<'api::v2-canvas.v2-canvas'>): LiveCanvasData {
     const liveCanvas: LiveCanvas = this.getCanvas(canvas);
-    const graph: MutableGraph = liveCanvas.getGraph();
+    const graph: LiveCanvasData = liveCanvas.getGraph();
     return graph;
   }
 

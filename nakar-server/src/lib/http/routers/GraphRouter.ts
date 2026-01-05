@@ -2,10 +2,10 @@ import { HTTPTools } from '../HTTPTools';
 import { DatabaseService } from '../../database/DatabaseService';
 import { type Request, Router } from 'express';
 import type { SchemaGraph } from '../../../../src-gen/schema';
-import { MutableGraph } from '../../room/graph/MutableGraph';
+import { LiveCanvasData } from '../../room/graph/LiveCanvasData';
 import { SchemaFactoryService } from '../../schema/SchemaFactoryService';
 import { IndexedNoteCollection } from '../../database/IndexedNoteCollection';
-import { CanvasViewSettings } from '../../room/graph/CanvasViewSettings';
+import { LiveCanvasViewSettings } from '../../room/graph/LiveCanvasViewSettings';
 
 export class GraphRouter {
   public constructor(
@@ -23,7 +23,7 @@ export class GraphRouter {
   }
 
   private async _getGraph(req: Request): Promise<SchemaGraph> {
-    const graph: MutableGraph = await this._databaseService.getMutableGraph(
+    const graph: LiveCanvasData = await this._databaseService.getMutableGraph(
       req.nakar.canvas,
     );
 
@@ -36,7 +36,7 @@ export class GraphRouter {
       graph,
       notes,
       null,
-      CanvasViewSettings.fromDB(req.nakar.canvas),
+      LiveCanvasViewSettings.fromDB(req.nakar.canvas),
     );
     return result;
   }

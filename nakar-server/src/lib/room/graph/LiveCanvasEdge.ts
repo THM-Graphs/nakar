@@ -1,13 +1,13 @@
-import { MutablePropertyCollection } from './MutablePropertyCollection';
+import { LiveCanvasPropertyCollection } from './LiveCanvasPropertyCollection';
 import { z } from 'zod';
 import { SSet } from '../../set/Set';
-import type { MutableGraph } from './MutableGraph';
+import type { LiveCanvasData } from './LiveCanvasData';
 import { SMap } from '../../map/Map';
 import { Range } from '../../range/Range';
-import { MutableGraphElementCreationAction } from './MutableGraphElementCreationAction';
-import { CanvasViewSettings } from './CanvasViewSettings';
+import { ElementCreationReason } from './ElementCreationReason';
+import { LiveCanvasViewSettings } from './LiveCanvasViewSettings';
 
-export class MutableEdge {
+export class LiveCanvasEdge {
   public static readonly defaultWidth: number = 2;
 
   // eslint-disable-next-line @typescript-eslint/typedef
@@ -17,21 +17,21 @@ export class MutableEdge {
     endNodeId: z.string(),
     type: z.string(),
     compressed: z.array(z.string()),
-    properties: MutablePropertyCollection.schema,
+    properties: LiveCanvasPropertyCollection.schema,
     namesInQuery: z.array(z.string()),
     source: z.string(),
-    creationAction: z.nativeEnum(MutableGraphElementCreationAction),
+    creationAction: z.nativeEnum(ElementCreationReason),
   });
 
   public readonly id: string;
-  public startNodeId: string;
-  public endNodeId: string;
-  public type: string;
-  public compressed: SSet<string>;
-  public properties: MutablePropertyCollection;
-  public namesInQuery: SSet<string>;
-  public source: string;
-  public creationAction: MutableGraphElementCreationAction;
+  public readonly startNodeId: string;
+  public readonly endNodeId: string;
+  public readonly type: string;
+  public readonly compressed: SSet<string>;
+  public readonly properties: LiveCanvasPropertyCollection;
+  public readonly namesInQuery: SSet<string>;
+  public readonly source: string;
+  public readonly creationAction: ElementCreationReason;
 
   public constructor(data: {
     id: string;
@@ -39,10 +39,10 @@ export class MutableEdge {
     endNodeId: string;
     type: string;
     compressed: SSet<string>;
-    properties: MutablePropertyCollection;
+    properties: LiveCanvasPropertyCollection;
     namesInQuery: SSet<string>;
     source: string;
-    creationAction: MutableGraphElementCreationAction;
+    creationAction: ElementCreationReason;
   }) {
     this.id = data.id;
     this.startNodeId = data.startNodeId;
@@ -76,15 +76,15 @@ export class MutableEdge {
   }
 
   public static fromPlain(
-    data: z.infer<typeof MutableEdge.schema>,
-  ): MutableEdge {
-    return new MutableEdge({
+    data: z.infer<typeof LiveCanvasEdge.schema>,
+  ): LiveCanvasEdge {
+    return new LiveCanvasEdge({
       id: data.id,
       startNodeId: data.startNodeId,
       endNodeId: data.endNodeId,
       type: data.type,
       compressed: new SSet(data.compressed),
-      properties: MutablePropertyCollection.fromPlain(data.properties),
+      properties: LiveCanvasPropertyCollection.fromPlain(data.properties),
       namesInQuery: new SSet(data.namesInQuery),
       source: data.source,
       creationAction: data.creationAction,
@@ -93,12 +93,12 @@ export class MutableEdge {
 
   public getWidth(
     edgeWidthRange: Range,
-    viewSettings: CanvasViewSettings,
+    viewSettings: LiveCanvasViewSettings,
   ): number {
     const toRange: Range = new Range({
-      floor: MutableEdge.defaultWidth,
+      floor: LiveCanvasEdge.defaultWidth,
       ceiling:
-        MutableEdge.defaultWidth *
+        LiveCanvasEdge.defaultWidth *
         viewSettings.compressRelationshipsWidthFactor,
     });
 
@@ -111,7 +111,7 @@ export class MutableEdge {
     return result;
   }
 
-  public isParallelTo(other: MutableEdge): boolean {
+  public isParallelTo(other: LiveCanvasEdge): boolean {
     return (
       (this.startNodeId === other.startNodeId &&
         this.endNodeId === other.endNodeId) ||
@@ -120,7 +120,7 @@ export class MutableEdge {
     );
   }
 
-  public toPlain(): z.infer<typeof MutableEdge.schema> {
+  public toPlain(): z.infer<typeof LiveCanvasEdge.schema> {
     return {
       id: this.id,
       startNodeId: this.startNodeId,
@@ -134,7 +134,7 @@ export class MutableEdge {
     };
   }
 
-  public parallelEdges(graph: MutableGraph): MutableEdge[] {
+  public parallelEdges(graph: LiveCanvasData): LiveCanvasEdge[] {
     // Betrachtung: Beziehungen von Knoten mit geringerer ID zu Knoten mit höherer ID.
     const correctNodeSorting: boolean =
       this.startNodeId.localeCompare(this.endNodeId) < 0;
@@ -146,7 +146,10 @@ export class MutableEdge {
       ? this.endNodeId
       : this.startNodeId;
 
-    const result: SMap<string, MutableEdge> = new SMap<string, MutableEdge>();
+    const result: SMap<string, LiveCanvasEdge> = new SMap<
+      string,
+      LiveCanvasEdge
+    >();
     for (const edge of graph.edges.getByStartAndEndNodeId(
       startNodeId,
       endNodeId,
@@ -163,15 +166,15 @@ export class MutableEdge {
     return result.toValueArray();
   }
 
-  public parallelCount(graph: MutableGraph): number {
-    const parallelEdges: MutableEdge[] = this.parallelEdges(graph);
+  public parallelCount(graph: LiveCanvasData): number {
+    const parallelEdges: LiveCanvasEdge[] = this.parallelEdges(graph);
 
     const parallelCount: number = parallelEdges.length;
     return parallelCount;
   }
 
-  public parallelIndex(graph: MutableGraph): number {
-    const parallelEdges: MutableEdge[] = this.parallelEdges(graph);
+  public parallelIndex(graph: LiveCanvasData): number {
+    const parallelEdges: LiveCanvasEdge[] = this.parallelEdges(graph);
 
     const selfIndex: number = parallelEdges.indexOf(this);
     const parallelCount: number = this.parallelCount(graph);
@@ -198,7 +201,7 @@ export class MutableEdge {
     }
   }
 
-  public isDangling(graph: MutableGraph): boolean {
+  public isDangling(graph: LiveCanvasData): boolean {
     const isDangling: boolean =
       !graph.nodes.hasById(this.startNodeId) ||
       !graph.nodes.hasById(this.endNodeId);
@@ -206,11 +209,39 @@ export class MutableEdge {
     return isDangling;
   }
 
-  public copy(): MutableEdge {
-    return new MutableEdge({
+  public copy(): LiveCanvasEdge {
+    return new LiveCanvasEdge({
       id: this.id,
       startNodeId: this.startNodeId,
       endNodeId: this.endNodeId,
+      type: this.type,
+      compressed: this.compressed.copy(),
+      properties: this.properties.copy(),
+      namesInQuery: this.namesInQuery.copy(),
+      source: this.source,
+      creationAction: this.creationAction,
+    });
+  }
+
+  public byChangingStartNodeId(newStartNodeId: string): LiveCanvasEdge {
+    return new LiveCanvasEdge({
+      id: this.id,
+      startNodeId: newStartNodeId,
+      endNodeId: this.endNodeId,
+      type: this.type,
+      compressed: this.compressed.copy(),
+      properties: this.properties.copy(),
+      namesInQuery: this.namesInQuery.copy(),
+      source: this.source,
+      creationAction: this.creationAction,
+    });
+  }
+
+  public byChangingEndNodeId(newEndNodeId: string): LiveCanvasEdge {
+    return new LiveCanvasEdge({
+      id: this.id,
+      startNodeId: this.startNodeId,
+      endNodeId: newEndNodeId,
       type: this.type,
       compressed: this.compressed.copy(),
       properties: this.properties.copy(),

@@ -1,10 +1,10 @@
-import { MutableGraphColor } from './MutableGraphColor';
+import { LiveCanvasColor } from './LiveCanvasColor';
 import type { SchemaCustomColor } from '../../../../src-gen/schema';
 import type z from 'zod';
 
-export class MutableGraphColorCustom extends MutableGraphColor {
-  public backgroundColor: string;
-  public textColor: string;
+export class LiveCanvasColorCustom extends LiveCanvasColor {
+  public readonly backgroundColor: string;
+  public readonly textColor: string;
 
   public constructor(data: { backgroundColor: string; textColor: string }) {
     super();
@@ -20,7 +20,7 @@ export class MutableGraphColorCustom extends MutableGraphColor {
     };
   }
 
-  public toPlain(): z.infer<typeof MutableGraphColor.schema> {
+  public toPlain(): z.infer<typeof LiveCanvasColor.schema> {
     return {
       type: 'custom',
       backgroundColor: this.backgroundColor,

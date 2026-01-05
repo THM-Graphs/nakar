@@ -1,21 +1,21 @@
 import { SMap } from '../../map/Map';
-import { MutableEdge } from './MutableEdge';
+import { LiveCanvasEdge } from './LiveCanvasEdge';
 import { SSet } from '../../set/Set';
 import type { Neo4jRelationship } from '../../neo4j/Neo4jRelationship';
-import { MutablePropertyCollection } from './MutablePropertyCollection';
+import { LiveCanvasPropertyCollection } from './LiveCanvasPropertyCollection';
 import { Range } from '../../range/Range';
-import type { MutableGraphElementCreationAction } from './MutableGraphElementCreationAction';
+import type { ElementCreationReason } from './ElementCreationReason';
 
-export class MutableEdgeIndex {
-  private readonly _byId: SMap<string, MutableEdge>;
+export class EdgeIndex {
+  private readonly _byId: SMap<string, LiveCanvasEdge>;
 
-  private readonly _byStartNodeId: SMap<string, SMap<string, MutableEdge>>;
-  private readonly _byEndNodeId: SMap<string, SMap<string, MutableEdge>>;
+  private readonly _byStartNodeId: SMap<string, SMap<string, LiveCanvasEdge>>;
+  private readonly _byEndNodeId: SMap<string, SMap<string, LiveCanvasEdge>>;
   private readonly _byStartAndEndNodeId: SMap<
     string,
-    SMap<string, SMap<string, MutableEdge>>
+    SMap<string, SMap<string, LiveCanvasEdge>>
   >;
-  private readonly _byType: SMap<string, SSet<MutableEdge>>;
+  private readonly _byType: SMap<string, SSet<LiveCanvasEdge>>;
 
   /* Maps type => count */
   private readonly _typeHistogram: SMap<string, number>;
@@ -25,7 +25,7 @@ export class MutableEdgeIndex {
 
   private readonly _compressed: SSet<string>;
 
-  public constructor(edges: MutableEdge[]) {
+  public constructor(edges: LiveCanvasEdge[]) {
     this._byId = new SMap();
     this._byType = new SMap();
     this._byStartNodeId = new SMap();
@@ -40,7 +40,7 @@ export class MutableEdgeIndex {
     }
   }
 
-  public get edges(): SSet<MutableEdge> {
+  public get edges(): SSet<LiveCanvasEdge> {
     return new SSet(this._byId.values());
   }
 
@@ -60,7 +60,13 @@ export class MutableEdgeIndex {
     return this._propertyHistogram;
   }
 
-  public add(edge: MutableEdge): boolean {
+  public reset(): void {
+    for (const edge of this.edges) {
+      this.remove(edge);
+    }
+  }
+
+  public add(edge: LiveCanvasEdge): boolean {
     if (this._byId.has(edge.id)) {
       return false;
     }
@@ -116,7 +122,7 @@ export class MutableEdgeIndex {
 
   public addNeo4jEdges(
     neo4jEdges: SMap<string, Neo4jRelationship>,
-    creationAction: MutableGraphElementCreationAction,
+    creationAction: ElementCreationReason,
   ): number {
     let result: number = 0;
     for (const relationship of neo4jEdges) {
@@ -133,15 +139,15 @@ export class MutableEdgeIndex {
 
   public addNeo4jEdge(
     relationship: Neo4jRelationship,
-    creationAction: MutableGraphElementCreationAction,
+    creationAction: ElementCreationReason,
   ): boolean {
-    const mutableEdge: MutableEdge = new MutableEdge({
+    const mutableEdge: LiveCanvasEdge = new LiveCanvasEdge({
       id: relationship.relationship.elementId,
       startNodeId: relationship.relationship.startNodeElementId,
       endNodeId: relationship.relationship.endNodeElementId,
       type: relationship.relationship.type,
       compressed: new SSet(),
-      properties: MutablePropertyCollection.fromRecord(
+      properties: LiveCanvasPropertyCollection.fromRecord(
         relationship.relationship.properties,
       ),
       namesInQuery: relationship.keys,
@@ -153,7 +159,7 @@ export class MutableEdgeIndex {
     return didAdd;
   }
 
-  public remove(edge: MutableEdge): boolean {
+  public remove(edge: LiveCanvasEdge): boolean {
     if (!this.has(edge.id)) {
       return false;
     }
@@ -180,11 +186,11 @@ export class MutableEdgeIndex {
     return true;
   }
 
-  public get(id: string): MutableEdge | null {
+  public get(id: string): LiveCanvasEdge | null {
     return this._byId.get(id) ?? null;
   }
 
-  public getByType(type: string): SSet<MutableEdge> {
+  public getByType(type: string): SSet<LiveCanvasEdge> {
     return this._byType.get(type) ?? new SSet();
   }
 
@@ -192,39 +198,39 @@ export class MutableEdgeIndex {
     return this._byId.has(id);
   }
 
-  public getByStartNodeId(startNodeId: string): MutableEdge[] {
+  public getByStartNodeId(startNodeId: string): LiveCanvasEdge[] {
     return (
       this._byStartNodeId
         .get(startNodeId)
         ?.toArray()
-        .map((v: [string, MutableEdge]): MutableEdge => v[1]) ?? []
+        .map((v: [string, LiveCanvasEdge]): LiveCanvasEdge => v[1]) ?? []
     );
   }
 
-  public getByEndNodeId(endNodeId: string): MutableEdge[] {
+  public getByEndNodeId(endNodeId: string): LiveCanvasEdge[] {
     return (
       this._byEndNodeId
         .get(endNodeId)
         ?.toArray()
-        .map((v: [string, MutableEdge]): MutableEdge => v[1]) ?? []
+        .map((v: [string, LiveCanvasEdge]): LiveCanvasEdge => v[1]) ?? []
     );
   }
 
   public getByStartAndEndNodeId(
     startNodeId: string,
     endNodeId: string,
-  ): MutableEdge[] {
+  ): LiveCanvasEdge[] {
     return (
       this._byStartAndEndNodeId
         .get(startNodeId)
         ?.get(endNodeId)
         ?.toArray()
-        .map((v: [string, MutableEdge]): MutableEdge => v[1]) ?? []
+        .map((v: [string, LiveCanvasEdge]): LiveCanvasEdge => v[1]) ?? []
     );
   }
 
-  public getByStartOrEndNodeId(nodeId: string): SSet<MutableEdge> {
-    const result: SSet<MutableEdge> = new SSet<MutableEdge>();
+  public getByStartOrEndNodeId(nodeId: string): SSet<LiveCanvasEdge> {
+    const result: SSet<LiveCanvasEdge> = new SSet<LiveCanvasEdge>();
     for (const startNodeEdge of this.getByStartNodeId(nodeId)) {
       result.add(startNodeEdge);
     }
@@ -239,7 +245,7 @@ export class MutableEdgeIndex {
       return Range.one();
     }
     const representationCounts: number[] = this.edges
-      .map((edge: MutableEdge): number => edge.representationCount)
+      .map((edge: LiveCanvasEdge): number => edge.representationCount)
       .toArray();
 
     const range: Range = new Range({
@@ -250,9 +256,9 @@ export class MutableEdgeIndex {
     return range;
   }
 
-  public copy(): MutableEdgeIndex {
-    return new MutableEdgeIndex(
-      this.edges.toArray().map((e: MutableEdge): MutableEdge => e.copy()),
+  public copy(): EdgeIndex {
+    return new EdgeIndex(
+      this.edges.toArray().map((e: LiveCanvasEdge): LiveCanvasEdge => e.copy()),
     );
   }
 

@@ -1,7 +1,7 @@
 import type { SchemaColor } from '../../../../src-gen/schema';
 import z from 'zod';
 
-export abstract class MutableGraphColor {
+export abstract class LiveCanvasColor {
   // eslint-disable-next-line @typescript-eslint/typedef
   public static readonly schemaCustom = z.object({
     type: z.literal('custom'),
@@ -24,10 +24,10 @@ export abstract class MutableGraphColor {
 
   // eslint-disable-next-line @typescript-eslint/typedef
   public static readonly schema = z.union([
-    MutableGraphColor.schemaCustom,
-    MutableGraphColor.schemaPreset,
+    LiveCanvasColor.schemaCustom,
+    LiveCanvasColor.schemaPreset,
   ]);
 
   public abstract toDto(): SchemaColor;
-  public abstract toPlain(): z.infer<typeof MutableGraphColor.schema>;
+  public abstract toPlain(): z.infer<typeof LiveCanvasColor.schema>;
 }

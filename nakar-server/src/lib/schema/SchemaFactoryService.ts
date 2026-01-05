@@ -27,14 +27,14 @@ import {
   SchemaStartPageRoom,
   SchemaUser,
 } from '../../../src-gen/schema';
-import { MutableGraph } from '../room/graph/MutableGraph';
-import { MutableNode } from '../room/graph/MutableNode';
-import { MutableEdge } from '../room/graph/MutableEdge';
-import { MutableGraphLabel } from '../room/graph/MutableGraphLabel';
+import { LiveCanvasData } from '../room/graph/LiveCanvasData';
+import { LiveCanvasNode } from '../room/graph/LiveCanvasNode';
+import { LiveCanvasEdge } from '../room/graph/LiveCanvasEdge';
+import { LiveCanvasLabel } from '../room/graph/LiveCanvasLabel';
 import { SMap } from '../map/Map';
-import { MutableGraphMetaData } from '../room/graph/MutableGraphMetaData';
+import { LiveCanvasMetaData } from '../room/graph/LiveCanvasMetaData';
 import { SSet } from '../set/Set';
-import { MutablePropertyCollection } from '../room/graph/MutablePropertyCollection';
+import { LiveCanvasPropertyCollection } from '../room/graph/LiveCanvasPropertyCollection';
 import { DatabaseService } from '../database/DatabaseService';
 import { DatabaseReferenceCache } from './DatabaseReferenceCache';
 import { UndoWrapperInfo } from '../undo/UndoWrapperInfo';
@@ -44,7 +44,7 @@ import { Range } from '../range/Range';
 import { Logger } from '@strapi/logger';
 import { createChildLogger } from '../logger/createChildLogger';
 import { Profiler } from 'winston';
-import { CanvasViewSettings } from '../room/graph/CanvasViewSettings';
+import { LiveCanvasViewSettings } from '../room/graph/LiveCanvasViewSettings';
 
 export class SchemaFactoryService implements ApplicationService {
   private readonly _logger: Logger = createChildLogger(this);
@@ -240,10 +240,10 @@ export class SchemaFactoryService implements ApplicationService {
   }
 
   public async createSchemaGraph(
-    graph: MutableGraph,
+    graph: LiveCanvasData,
     notes: IndexedNoteCollection,
     undoWrapperInfo: UndoWrapperInfo | null,
-    viewSettings: CanvasViewSettings,
+    viewSettings: LiveCanvasViewSettings,
   ): Promise<SchemaGraph> {
     const t: Profiler = this._logger.startTimer();
     const schemaGraph: SchemaGraph = {
@@ -262,9 +262,9 @@ export class SchemaFactoryService implements ApplicationService {
   }
 
   public async createSchemaGraphElements(
-    graph: MutableGraph,
+    graph: LiveCanvasData,
     notes: IndexedNoteCollection,
-    viewSettings: CanvasViewSettings,
+    viewSettings: LiveCanvasViewSettings,
   ): Promise<SchemaGraphElements> {
     const t: Profiler = this._logger.startTimer();
     const databaseCache: DatabaseReferenceCache = new DatabaseReferenceCache(
@@ -275,7 +275,7 @@ export class SchemaFactoryService implements ApplicationService {
 
     const result: SchemaGraphElements = {
       nodes: await graph.nodes.nodes.asyncFlatMap(
-        async (node: MutableNode): Promise<SchemaNode> =>
+        async (node: LiveCanvasNode): Promise<SchemaNode> =>
           await this._createSchemaNode(
             node,
             graph,
@@ -286,7 +286,7 @@ export class SchemaFactoryService implements ApplicationService {
           ),
       ),
       edges: await graph.edges.edges.asyncFlatMap(
-        async (edge: MutableEdge): Promise<SchemaEdge> =>
+        async (edge: LiveCanvasEdge): Promise<SchemaEdge> =>
           await this._createSchemaEdge(
             edge,
             graph,
@@ -300,7 +300,7 @@ export class SchemaFactoryService implements ApplicationService {
         .asyncFlatMap(
           async (
             id: string,
-            label: MutableGraphLabel,
+            label: LiveCanvasLabel,
           ): Promise<SchemaGraphLabel> =>
             await this._createSchemaGraphLabel(id, label, databaseCache),
         ),
@@ -337,11 +337,11 @@ export class SchemaFactoryService implements ApplicationService {
   }
 
   public async createSchemaGraphMetaData(
-    graph: MutableGraph,
+    graph: LiveCanvasData,
     undoWrapperInfo: UndoWrapperInfo | null,
   ): Promise<SchemaGraphMetaData> {
     const t: Profiler = this._logger.startTimer();
-    const metaData: MutableGraphMetaData = graph.metaData;
+    const metaData: LiveCanvasMetaData = graph.metaData;
     const scenario: Result<'api::v2-scenario.v2-scenario'> | null =
       metaData.scenarioId != null
         ? await this._database.getScenario(metaData.scenarioId)
@@ -350,14 +350,6 @@ export class SchemaFactoryService implements ApplicationService {
       scenario: scenario
         ? { current: await this.createSchemaScenario(scenario) }
         : null,
-      pipelineSummary: metaData.pipelineSummary.map(
-        (entry: [string, number]): { step: string; durationMs: number } => {
-          return {
-            step: entry[0],
-            durationMs: entry[1],
-          };
-        },
-      ),
       arguments: metaData.arguments.reduce<SchemaScenarioArgument[]>(
         (
           akku: SchemaScenarioArgument[],
@@ -518,7 +510,7 @@ export class SchemaFactoryService implements ApplicationService {
       id: canvas.documentId,
       title: canvas.title ?? '',
       roomId: room.documentId,
-      viewSettings: CanvasViewSettings.fromDB(canvas).toSchema(),
+      viewSettings: LiveCanvasViewSettings.fromDB(canvas).toSchema(),
     };
   }
 
@@ -531,7 +523,7 @@ export class SchemaFactoryService implements ApplicationService {
     };
   }
 
-  private _createSchemaHistogram(graph: MutableGraph): SchemaHistogram {
+  private _createSchemaHistogram(graph: LiveCanvasData): SchemaHistogram {
     const t: Profiler = this._logger.startTimer();
     interface NodeHistogramEntry {
       id: string;
@@ -557,7 +549,7 @@ export class SchemaFactoryService implements ApplicationService {
       0,
     );
     const degreeCount: number = graph.nodes.nodes.reduce(
-      (degree: number, node: MutableNode): number =>
+      (degree: number, node: LiveCanvasNode): number =>
         degree + node.degree(graph),
       0,
     );
@@ -672,7 +664,7 @@ export class SchemaFactoryService implements ApplicationService {
         ),
       nodes: graph.nodes.nodes
         .toArray()
-        .map((node: MutableNode): NodeHistogramEntry => {
+        .map((node: LiveCanvasNode): NodeHistogramEntry => {
           return {
             id: node.id,
             title: node.getTitle(),
@@ -697,18 +689,20 @@ export class SchemaFactoryService implements ApplicationService {
   }
 
   private async _createSchemaNode(
-    node: MutableNode,
-    graph: MutableGraph,
+    node: LiveCanvasNode,
+    graph: LiveCanvasData,
     notes: IndexedNoteCollection,
     databaseCache: DatabaseReferenceCache,
-    viewSettings: CanvasViewSettings,
+    viewSettings: LiveCanvasViewSettings,
     degreeRange: Range,
   ): Promise<SchemaNode> {
-    const incomingEdges: MutableEdge[] = graph.edges.getByEndNodeId(node.id);
-    const outgoingEdges: MutableEdge[] = graph.edges.getByStartNodeId(node.id);
+    const incomingEdges: LiveCanvasEdge[] = graph.edges.getByEndNodeId(node.id);
+    const outgoingEdges: LiveCanvasEdge[] = graph.edges.getByStartNodeId(
+      node.id,
+    );
     const squashToTypeMap = (
       akku: SMap<string, number>,
-      next: MutableEdge,
+      next: LiveCanvasEdge,
     ): SMap<string, number> =>
       akku.bySetting(
         next.type,
@@ -769,14 +763,14 @@ export class SchemaFactoryService implements ApplicationService {
   }
 
   private async _createSchemaEdge(
-    edge: MutableEdge,
-    graph: MutableGraph,
+    edge: LiveCanvasEdge,
+    graph: LiveCanvasData,
     databaseCcache: DatabaseReferenceCache,
-    viewSettings: CanvasViewSettings,
+    viewSettings: LiveCanvasViewSettings,
     edgeWidthRange: Range,
   ): Promise<SchemaEdge> {
-    const sourceNode: MutableNode | null = graph.nodes.get(edge.startNodeId);
-    const targetNode: MutableNode | null = graph.nodes.get(edge.endNodeId);
+    const sourceNode: LiveCanvasNode | null = graph.nodes.get(edge.startNodeId);
+    const targetNode: LiveCanvasNode | null = graph.nodes.get(edge.endNodeId);
     return {
       id: edge.id,
       startNodeId: edge.startNodeId,
@@ -809,7 +803,7 @@ export class SchemaFactoryService implements ApplicationService {
   }
 
   private _createSchemaGraphProperties(
-    mutableProperties: MutablePropertyCollection,
+    mutableProperties: LiveCanvasPropertyCollection,
   ): SchemaGraphProperty[] {
     return mutableProperties.properties
       .toArray()
@@ -827,7 +821,7 @@ export class SchemaFactoryService implements ApplicationService {
 
   private async _createSchemaGraphLabel(
     id: string,
-    label: MutableGraphLabel,
+    label: LiveCanvasLabel,
     databaseCache: DatabaseReferenceCache,
   ): Promise<SchemaGraphLabel> {
     return {
@@ -844,7 +838,7 @@ export class SchemaFactoryService implements ApplicationService {
 
   private async _createSchemaNote(
     note: Result<'api::v2-note.v2-note'>,
-    graph: MutableGraph,
+    graph: LiveCanvasData,
   ): Promise<SchemaNote> {
     const nodes: Result<'api::v2-node-reference.v2-node-reference'>[] =
       await this._database.getReferencedNodesOfNote(note);
@@ -859,7 +853,7 @@ export class SchemaFactoryService implements ApplicationService {
         (
           nodeReference: Result<'api::v2-node-reference.v2-node-reference'>,
         ): SchemaNodePreview => {
-          const node: MutableNode | null = graph.nodes.get(
+          const node: LiveCanvasNode | null = graph.nodes.get(
             nodeReference.nodeId ?? '',
           );
           return {

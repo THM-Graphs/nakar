@@ -1,4 +1,4 @@
-import { MutableGraph } from '../room/graph/MutableGraph';
+import { LiveCanvasData } from '../room/graph/LiveCanvasData';
 import type { Result } from '@strapi/types/dist/modules/documents';
 import type { ApplicationService } from '../application/ApplicationService';
 import z from 'zod';
@@ -15,7 +15,7 @@ import {
   getStringPayloadOfMediaFile,
   saveStringFile,
 } from '../media/media';
-import { CanvasViewSettings } from '../room/graph/CanvasViewSettings';
+import { LiveCanvasViewSettings } from '../room/graph/LiveCanvasViewSettings';
 
 export class DatabaseService implements ApplicationService {
   private readonly _logger: Logger = createChildLogger(this);
@@ -200,7 +200,7 @@ export class DatabaseService implements ApplicationService {
   public async getScenarioOfCanvas(
     canvas: Result<'api::v2-canvas.v2-canvas'>,
   ): Promise<Result<'api::v2-scenario.v2-scenario'>> {
-    const graph: MutableGraph = await this.getMutableGraph(canvas);
+    const graph: LiveCanvasData = await this.getMutableGraph(canvas);
     const scenarioId: string | null = graph.metaData.scenarioId;
     if (scenarioId == null) {
       throw new Error(`Scenario of canvas ${canvas.documentId} not found.`);
@@ -212,20 +212,20 @@ export class DatabaseService implements ApplicationService {
 
   public async getMutableGraph(
     canvas: Result<'api::v2-canvas.v2-canvas'>,
-  ): Promise<MutableGraph> {
+  ): Promise<LiveCanvasData> {
     const graphFile: Result<'plugin::upload.file'> | null =
       await this.getGrapFileOfCanvas(canvas);
 
     try {
       const graphJson: string = await getStringPayloadOfMediaFile(graphFile);
-      const graph: MutableGraph = MutableGraph.fromUnknownOrEmpty(
+      const graph: LiveCanvasData = LiveCanvasData.fromUnknownOrEmpty(
         JSON.parse(graphJson),
       );
       return graph;
     } catch (error) {
       this._logger.error(`Unable to parse graph from canvas:`);
       this._logger.error(error);
-      return MutableGraph.empty();
+      return LiveCanvasData.empty();
     }
   }
 
@@ -299,7 +299,7 @@ export class DatabaseService implements ApplicationService {
 
   public async setMutableGraphOfCanvas(
     canvas: Result<'api::v2-canvas.v2-canvas'>,
-    graph: z.infer<typeof MutableGraph.schema>,
+    graph: z.infer<typeof LiveCanvasData.schema>,
   ): Promise<void> {
     const populatedCanvas: Result<
       'api::v2-canvas.v2-canvas',
@@ -452,7 +452,7 @@ export class DatabaseService implements ApplicationService {
 
   public async getNotes(params: {
     project: Result<'api::v2-project.v2-project'>;
-    graph: MutableGraph;
+    graph: LiveCanvasData;
   }): Promise<IndexedNoteCollection> {
     const populatedProject: Result<
       'api::v2-project.v2-project',
@@ -934,7 +934,7 @@ export class DatabaseService implements ApplicationService {
 
   public async setCanvasViewSettings(
     canvas: Result<'api::v2-canvas.v2-canvas'>,
-    viewSettings: CanvasViewSettings,
+    viewSettings: LiveCanvasViewSettings,
   ): Promise<void> {
     const updatedCanvas: Result<'api::v2-canvas.v2-canvas'> | null =
       await strapi.documents('api::v2-canvas.v2-canvas').update({

@@ -1,9 +1,9 @@
-import type { MutableGraph } from '../graph/MutableGraph';
+import type { LiveCanvasData } from '../graph/LiveCanvasData';
 
 export interface CanvasEventGraphElementsChanged {
   type: 'CanvasEventGraphElementsChanged';
   canvasId: string;
-  graph: MutableGraph;
+  graph: LiveCanvasData;
   nodesAdded: number;
   edgesAdded: number;
 }

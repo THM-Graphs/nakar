@@ -3,7 +3,7 @@ import { CanvasService } from '../../room/CanvasService';
 import { type Request, Router } from 'express';
 import { operations, SchemaScenarioArgument } from '../../../../src-gen/schema';
 import { SMap } from '../../map/Map';
-import { MutableGraph } from '../../room/graph/MutableGraph';
+import { LiveCanvasData } from '../../room/graph/LiveCanvasData';
 import { NotFound } from 'http-errors';
 import { SSet } from '../../set/Set';
 import { ExpandNodePreview } from '../../neo4j/expand-node-preview/ExpandNodePreview';
@@ -118,7 +118,7 @@ export class ActionsRouter {
   private _reloadScenario(req: Request): void {
     const canvas: LiveCanvas = this._roomService.getCanvas(req.nakar.canvas);
 
-    const graph: MutableGraph = canvas.getGraph();
+    const graph: LiveCanvasData = canvas.getGraph();
     const scenarioId: string | null = graph.metaData.scenarioId;
     if (scenarioId == null) {
       throw new NotFound(

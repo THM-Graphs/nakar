@@ -1313,18 +1313,6 @@ components:
               $ref: "#/components/schemas/Scenario"
           required:
             - current
-        pipelineSummary:
-          type: array
-          items:
-            type: object
-            properties:
-              step:
-                type: string
-              durationMs:
-                type: number
-            required:
-              - step
-              - durationMs
         arguments:
           type: array
           items:
@@ -1337,7 +1325,6 @@ components:
           nullable: true
       required:
         - scenarioInfo
-        - pipelineSummary
         - arguments
         - undoAction
         - redoAction

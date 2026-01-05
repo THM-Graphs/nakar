@@ -1,4 +1,4 @@
-export enum MutableGraphElementCreationAction {
+export enum ElementCreationReason {
   loadScenario = 'loadScenario',
   expand = 'expand',
   query = 'query',

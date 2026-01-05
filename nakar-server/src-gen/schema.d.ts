@@ -674,10 +674,6 @@ export interface components {
             readonly scenario?: {
                 readonly current: components["schemas"]["Scenario"];
             } | null;
-            readonly pipelineSummary: readonly {
-                readonly step: string;
-                readonly durationMs: number;
-            }[];
             readonly arguments: readonly components["schemas"]["ScenarioArgument"][];
             readonly undoAction: string | null;
             readonly redoAction: string | null;

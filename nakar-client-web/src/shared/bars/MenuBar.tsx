@@ -136,7 +136,6 @@ export function MenuBar(props: {
           action={DeselectAction.shared}
           params={{ elements, deselectElements }}
         ></ActionDropdownItem>
-        <Dropdown.Divider></Dropdown.Divider>
       </DropdownButton>
       <DropdownButton title={"Scenario"}>
         <ActionDropdownItem

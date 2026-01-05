@@ -1,13 +1,13 @@
-import type { MutableGraphColor } from './MutableGraphColor';
+import type { LiveCanvasColor } from './LiveCanvasColor';
 import type { SSet } from '../../set/Set';
 
-export class MutableGraphLabel {
-  public color: MutableGraphColor;
-  public count: number;
-  public sources: SSet<string>;
+export class LiveCanvasLabel {
+  public readonly color: LiveCanvasColor;
+  public readonly count: number;
+  public readonly sources: SSet<string>;
 
   public constructor(data: {
-    color: MutableGraphColor;
+    color: LiveCanvasColor;
     count: number;
     sources: SSet<string>;
   }) {
@@ -16,8 +16,8 @@ export class MutableGraphLabel {
     this.sources = data.sources;
   }
 
-  public byIncrementingCount(source: string): MutableGraphLabel {
-    return new MutableGraphLabel({
+  public byIncrementingCount(source: string): LiveCanvasLabel {
+    return new LiveCanvasLabel({
       color: this.color,
       count: this.count + 1,
       sources: this.sources.byAdding(source),

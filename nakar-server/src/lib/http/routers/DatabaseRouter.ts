@@ -10,12 +10,12 @@ import type {
 import { Neo4jDatabaseInfo } from '../../neo4j/Neo4jDatabaseInfo';
 import { Neo4jService } from '../../neo4j/Neo4jService';
 import { Neo4jNode } from '../../neo4j/Neo4jNode';
-import { MutableGraph } from '../../room/graph/MutableGraph';
-import { MutableGraphElementCreationAction } from '../../room/graph/MutableGraphElementCreationAction';
+import { LiveCanvasData } from '../../room/graph/LiveCanvasData';
+import { ElementCreationReason } from '../../room/graph/ElementCreationReason';
 import { SSet } from '../../set/Set';
 import { Neo4jSearchCapabilities } from '../../neo4j/Neo4jSearchCapabilities';
 import { Result } from '@strapi/types/dist/modules/documents/result';
-import { MutableNode } from '../../room/graph/MutableNode';
+import { LiveCanvasNode } from '../../room/graph/LiveCanvasNode';
 
 export class DatabaseRouter {
   public constructor(
@@ -85,15 +85,15 @@ export class DatabaseRouter {
       credentials: credentials,
     });
 
-    const graph: MutableGraph = MutableGraph.empty();
+    const graph: LiveCanvasData = LiveCanvasData.empty();
     for (const node of result) {
-      graph.nodes.addNeo4jNode(node, MutableGraphElementCreationAction.search);
+      graph.nodes.addNeo4jNode(node, ElementCreationReason.search);
     }
 
     return {
       nodes: graph.nodes.nodes
         .toArray()
-        .map((node: MutableNode): SchemaNodePreview => {
+        .map((node: LiveCanvasNode): SchemaNodePreview => {
           return {
             id: node.id,
             title: node.getTitle(),

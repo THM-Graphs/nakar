@@ -1,9 +1,9 @@
-import type { MutableGraph } from '../graph/MutableGraph';
+import type { LiveCanvasData } from '../graph/LiveCanvasData';
 import type { SchemaPhysicsPerformance } from '../../../../src-gen/schema';
 
 export interface CanvasEventRoomPhysicsUpdated {
   type: 'CanvasEventRoomPhysicsUpdated';
   canvasId: string;
-  graph: MutableGraph;
+  graph: LiveCanvasData;
   performance: SchemaPhysicsPerformance;
 }

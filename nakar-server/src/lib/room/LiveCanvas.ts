@@ -1,6 +1,6 @@
 import { ApplicationService } from '../application/ApplicationService';
 import { SMap } from '../map/Map';
-import { MutableGraph } from './graph/MutableGraph';
+import { LiveCanvasData } from './graph/LiveCanvasData';
 import { BehaviorSubject, Observable, Subject, Subscription } from 'rxjs';
 import type { CanvasEvent } from './events/CanvasEvent';
 import { DatabaseService } from '../database/DatabaseService';
@@ -8,14 +8,14 @@ import type { WTEvent } from '../room-worker/worker-events/WTEvent';
 import { match, P } from 'ts-pattern';
 import type { WTEventPhysicsUpdate } from '../room-worker/worker-events/WTEventPhysicsUpdate';
 import { Neo4jDatabaseInfo } from '../neo4j/Neo4jDatabaseInfo';
-import { MutableNode } from './graph/MutableNode';
+import { LiveCanvasNode } from './graph/LiveCanvasNode';
 import { RSPhysicalNode } from './RSPhysicalNode';
 import { NotFound } from 'http-errors';
 import { PositionsCache } from './graph/PositionsCache';
 import { Neo4jGraphElements } from '../neo4j/Neo4jGraphElements';
 import { Neo4jLimitConfig } from '../neo4j/Neo4jLimitConfig';
 import { CanvasEventNotAllNodesLoaded } from './events/CanvasEventNotAllNodesLoaded';
-import { MutableGraphElementCreationAction } from './graph/MutableGraphElementCreationAction';
+import { ElementCreationReason } from './graph/ElementCreationReason';
 import { CanvasEventGraphMetaDataChanged } from './events/CanvasEventGraphMetaDataChanged';
 import { CanvasEventGraphElementsChanged } from './events/CanvasEventGraphElementsChanged';
 import { CanvasEventGraphTableChanged } from './events/CanvasEventGraphTableChanged';
@@ -23,16 +23,14 @@ import { SSet } from '../set/Set';
 import { ExpandNodesResult } from './ExpandNodesResult';
 import { PhysicsSimulation } from '../physics/PhysicsSimulation';
 import { ExpandNodePreview } from '../neo4j/expand-node-preview/ExpandNodePreview';
-import { MutableEdge } from './graph/MutableEdge';
-import { MutableNodeIndex } from './graph/MutableNodeIndex';
-import { MutableEdgeIndex } from './graph/MutableEdgeIndex';
+import { LiveCanvasEdge } from './graph/LiveCanvasEdge';
 import {
   SchemaLayoutSpecification,
   SchemaLayoutSpecificationCircle,
 } from '../../../src-gen/schema';
 import { v4 } from 'uuid';
-import { MutablePropertyCollection } from './graph/MutablePropertyCollection';
-import { MutablePosition } from './graph/MutablePosition';
+import { LiveCanvasPropertyCollection } from './graph/LiveCanvasPropertyCollection';
+import { LiveCanvasPosition } from './graph/LiveCanvasPosition';
 import { Neo4jService } from '../neo4j/Neo4jService';
 import { circularWeightedSpread } from '../physics/circle-layout-algorithms/circularWeightedSpread';
 import { PhysicsWorker } from './PhysicsWorker';
@@ -49,13 +47,13 @@ import { Profiler } from 'winston';
 import { getStringPayloadOfMediaFile } from '../media/media';
 import { UndoWrapperInfo } from '../undo/UndoWrapperInfo';
 import { PhysicalGraph } from '../physics/physical-graph/PhysicalGraph';
-import { CanvasViewSettings } from './graph/CanvasViewSettings';
+import { LiveCanvasViewSettings } from './graph/LiveCanvasViewSettings';
 
 export class LiveCanvas implements ApplicationService {
   private readonly _logger: Logger = createChildLogger(this);
 
   private readonly _physicsWorker: PhysicsWorker;
-  private readonly _graph: UndoWrapper<MutableGraph | null>;
+  private readonly _graph: UndoWrapper<LiveCanvasData>;
   private readonly _onEvent: Subject<CanvasEvent>;
   private readonly _subscriptions: SSet<Subscription>;
   private readonly _queue: TaskQueue;
@@ -68,10 +66,10 @@ export class LiveCanvas implements ApplicationService {
     private readonly _database: DatabaseService,
     private readonly _neo4j: Neo4jService,
   ) {
-    this._graph = new UndoWrapper<MutableGraph | null>(
-      null,
-      (graph: MutableGraph | null): MutableGraph | null => {
-        return graph?.copy() ?? null;
+    this._graph = new UndoWrapper<LiveCanvasData>(
+      LiveCanvasData.empty(),
+      (graph: LiveCanvasData): LiveCanvasData => {
+        return graph.copy();
       },
       { maximumStackSize: 10 },
     );
@@ -129,7 +127,7 @@ export class LiveCanvas implements ApplicationService {
 
   public async bootstrap(): Promise<void> {
     this._state.next(LiveCanvasState.starting);
-    const initialGraph: MutableGraph = await this._loadGraph();
+    const initialGraph: LiveCanvasData = await this._loadGraph();
     this._graph.reset(initialGraph);
     const physicalGraph: PhysicalGraph = initialGraph.toPhysicalGraph(
       await this._getCanvasViewSettings(),
@@ -182,18 +180,9 @@ export class LiveCanvas implements ApplicationService {
             return;
           }
           (async (): Promise<void> => {
-            const graph: MutableGraph = this.getGraph();
-            this._onEvent.next({
-              type: 'CanvasEventGraphElementsChanged',
-              graph: graph,
-              canvasId: this.canvasId,
-              nodesAdded: 0,
-              edgesAdded: 0,
-            } satisfies CanvasEventGraphElementsChanged);
-            this._physicsWorker.setGraph(
-              graph.toPhysicalGraph(await this._getCanvasViewSettings()),
-            );
+            await this._sendGraphToWorker();
             this._physicsWorker.triggerPhysics({ amount: 'short' });
+            this._triggerElementsChanged();
           })().catch((error: unknown): void => {
             this._logger.error(error);
           });
@@ -221,19 +210,14 @@ export class LiveCanvas implements ApplicationService {
     this._stateSubscription.unsubscribe();
   }
 
-  public getGraph(): MutableGraph {
-    if (this._graph.current == null) {
-      throw new Error(
-        `Cannot get graph of canvas ${this.canvasId}. Graph not found.`,
-      );
-    }
+  public getGraph(): LiveCanvasData {
     return this._graph.current;
   }
 
   public grabNode(params: { nodeId: string; userId: string }): void {
-    const graph: MutableGraph = this.getGraph();
+    const graph: LiveCanvasData = this.getGraph();
 
-    const node: MutableNode | null = graph.nodes.get(params.nodeId);
+    const node: LiveCanvasNode | null = graph.nodes.get(params.nodeId);
     if (node == null) {
       throw new Error(`Unable to grab node: Node ${params.nodeId} not found.`);
     }
@@ -245,10 +229,10 @@ export class LiveCanvas implements ApplicationService {
     nodes: readonly RSPhysicalNode[];
     userId: string;
   }): void {
-    const graph: MutableGraph = this.getGraph();
+    const graph: LiveCanvasData = this.getGraph();
     const nodesToSend: RSPhysicalNode[] = [];
     for (const physialNode of params.nodes) {
-      const node: MutableNode | null = graph.nodes.get(physialNode.id);
+      const node: LiveCanvasNode | null = graph.nodes.get(physialNode.id);
       if (node == null) {
         this._logger.error(
           `Unable to move node: Node ${physialNode.id} not found.`,
@@ -286,9 +270,9 @@ export class LiveCanvas implements ApplicationService {
   }
 
   public ungrabNode(params: { userId: string; node: RSPhysicalNode }): void {
-    const graph: MutableGraph = this.getGraph();
+    const graph: LiveCanvasData = this.getGraph();
 
-    const node: MutableNode | null = graph.nodes.get(params.node.id);
+    const node: LiveCanvasNode | null = graph.nodes.get(params.node.id);
     if (node == null) {
       throw new Error(`Unable to grab node: Node ${params.node.id} not found.`);
     }
@@ -401,31 +385,28 @@ export class LiveCanvas implements ApplicationService {
           }
         }
 
-        const newGraph: MutableGraph = this._transaction(
-          'Load scenario',
-          (graph: MutableGraph): void => {
-            const positionsCache: PositionsCache =
-              PositionsCache.fromGraph(graph);
+        const graph: LiveCanvasData = this._snapshot('Load scenario');
+        const positionsCache: PositionsCache = PositionsCache.fromGraph(graph);
 
-            if (!params.additive) {
-              graph.resetFromInitialScenario(scenario, params.arguments);
-            }
+        if (!params.additive) {
+          graph.resetFromInitialScenario(scenario, params.arguments);
+        }
 
-            graph.tableData = tableData;
-            for (const graphElements of graphElementsList) {
-              graph.nodes.addNeo4jNodes(
-                graphElements.nodes,
-                MutableGraphElementCreationAction.loadScenario,
-              );
-              graph.edges.addNeo4jEdges(
-                graphElements.relationships,
-                MutableGraphElementCreationAction.loadScenario,
-              );
-            }
+        graph.tableData = tableData;
+        for (const graphElements of graphElementsList) {
+          graph.nodes.addNeo4jNodes(
+            graphElements.nodes,
+            ElementCreationReason.loadScenario,
+          );
+          graph.edges.addNeo4jEdges(
+            graphElements.relationships,
+            ElementCreationReason.loadScenario,
+          );
+        }
 
-            positionsCache.applyToGraph(graph);
-          },
-        );
+        positionsCache.applyToGraph(graph);
+
+        await this._postProcessGraph();
 
         if (!params.additive) {
           const task: Profiler = this._logger.startTimer();
@@ -439,8 +420,8 @@ export class LiveCanvas implements ApplicationService {
               .with({ type: P.nullish }, (): void => {
                 return;
               })
-              .with({ type: 'connectResultNodes' }, (): void => {
-                this.connectResultNodes();
+              .with({ type: 'connectResultNodes' }, async (): Promise<void> => {
+                await this._connectResultNodes();
               })
               .with(
                 { type: 'compressNodes' },
@@ -449,12 +430,12 @@ export class LiveCanvas implements ApplicationService {
                 ): void => {
                   const label: string | null = data.label ?? null;
                   if (label != null) {
-                    this.compressNodes({ label: label });
+                    this._compressNodes(label);
                   }
                 },
               )
               .with({ type: 'compressRelationships' }, (): void => {
-                this.compressRelationships();
+                this._compressRelationships();
               })
               .with(
                 { type: 'layout' },
@@ -471,20 +452,14 @@ export class LiveCanvas implements ApplicationService {
                       if (radius == null) {
                         return;
                       }
-                      this.layoutLabel({
-                        layoutSpecification: {
-                          type: 'LayoutSpecificationCircle',
-                          radius: radius,
-                        },
-                        label: label,
+                      this._layout(label, {
+                        type: 'LayoutSpecificationCircle',
+                        radius: radius,
                       });
                     })
                     .with('forceDirected', (): void => {
-                      this.layoutLabel({
-                        layoutSpecification: {
-                          type: 'LayoutSpecificationForceDirected',
-                        },
-                        label: label,
+                      this._layout(label, {
+                        type: 'LayoutSpecificationForceDirected',
                       });
                     })
                     .with(P.nullish, (): void => {
@@ -508,30 +483,11 @@ export class LiveCanvas implements ApplicationService {
           });
         }
 
-        await this._postProcessGraph(newGraph);
-
-        this._onEvent.next({
-          type: 'CanvasEventGraphMetaDataChanged',
-          graph: newGraph,
-          canvasId: this.canvasId,
-          undoInfo: this._graph.info,
-        } satisfies CanvasEventGraphMetaDataChanged);
-        this._onEvent.next({
-          type: 'CanvasEventGraphElementsChanged',
-          graph: newGraph,
-          canvasId: this.canvasId,
-          nodesAdded: newGraph.nodes.size,
-          edgesAdded: newGraph.edges.size,
-        } satisfies CanvasEventGraphElementsChanged);
-        this._onEvent.next({
-          type: 'CanvasEventGraphTableChanged',
-          table: newGraph.tableData,
-          canvasId: this.canvasId,
-        } satisfies CanvasEventGraphTableChanged);
+        this._triggerMetaDataChanged();
+        this._triggerElementsChanged();
+        this._triggerTableChanged();
         await this._sendGraphToWorker();
         this._triggerPhysicsSimluation({ amount: 'long' });
-
-        await this.saveGraph();
       }),
     );
   }
@@ -545,14 +501,14 @@ export class LiveCanvas implements ApplicationService {
   }): void {
     this._queue.addTask(
       new TaskQueueTask('Expanding node', async (): Promise<void> => {
-        const oldGraph: MutableGraph = this.getGraph();
+        const oldGraph: LiveCanvasData = this.getGraph();
 
         const result: ExpandNodesResult = {
           nodesAddedCount: 0,
           edgeAddedCount: 0,
         };
 
-        const node: MutableNode | null = oldGraph.nodes.get(params.nodeId);
+        const node: LiveCanvasNode | null = oldGraph.nodes.get(params.nodeId);
         if (node == null) {
           throw new Error(`Cannot find node ${params.nodeId} to expand.`);
         }
@@ -572,7 +528,7 @@ export class LiveCanvas implements ApplicationService {
                 neighbors: oldGraph
                   .getNeighborsOfNode(node)
                   .toArray()
-                  .map((n: MutableNode): string => n.id),
+                  .map((n: LiveCanvasNode): string => n.id),
               },
               new Neo4jLimitConfig('default', 'graphElements'),
             )
@@ -582,59 +538,47 @@ export class LiveCanvas implements ApplicationService {
               params.limit,
             );
 
-        const newGraph: MutableGraph = this._transaction(
-          'Expand node',
-          (graph: MutableGraph): void => {
-            if (node.isCluster) {
-              graph.nodes.remove(node);
-              for (const edge of graph.edges.getByStartOrEndNodeId(node.id)) {
-                graph.edges.remove(edge);
-              }
-            }
+        const graph: LiveCanvasData = this._snapshot('Expand node');
 
-            for (const newNode of expandResult.nodes) {
-              if (!graph.nodes.hasById(newNode[0])) {
-                result.nodesAddedCount += 1;
+        if (node.isCluster) {
+          graph.nodes.remove(node);
+          for (const edge of graph.edges.getByStartOrEndNodeId(node.id)) {
+            graph.edges.remove(edge);
+          }
+        }
 
-                const insertedNode: MutableNode | null =
-                  graph.nodes.addNeo4jNode(
-                    newNode[1],
-                    MutableGraphElementCreationAction.expand,
-                  );
-                if (insertedNode != null) {
-                  insertedNode.position.x = node.position.x;
-                  insertedNode.position.y = node.position.y;
-                  PhysicsSimulation.jiggle(insertedNode);
-                }
-              }
-            }
-            for (const newEdge of expandResult.relationships) {
-              if (!graph.edges.has(newEdge[0])) {
-                result.edgeAddedCount += 1;
-                graph.edges.addNeo4jEdge(
-                  newEdge[1],
-                  MutableGraphElementCreationAction.expand,
-                );
-              }
-            }
+        for (const newNode of expandResult.nodes) {
+          if (!graph.nodes.hasById(newNode[0])) {
+            result.nodesAddedCount += 1;
 
-            this._logger.debug(
-              `Expand node result for ${params.nodeId}: ${expandResult.nodes.size.toString()} nodes and ${expandResult.relationships.size.toString()} relationships.`,
-            );
-          },
+            const insertedNode: LiveCanvasNode | null =
+              graph.nodes.addNeo4jNode(
+                newNode[1],
+                ElementCreationReason.expand,
+              );
+            if (insertedNode != null) {
+              insertedNode.position.x = node.position.x;
+              insertedNode.position.y = node.position.y;
+              PhysicsSimulation.jiggle(insertedNode);
+            }
+          }
+        }
+        for (const newEdge of expandResult.relationships) {
+          if (!graph.edges.has(newEdge[0])) {
+            result.edgeAddedCount += 1;
+            graph.edges.addNeo4jEdge(newEdge[1], ElementCreationReason.expand);
+          }
+        }
+
+        this._logger.debug(
+          `Expand node result for ${params.nodeId}: ${expandResult.nodes.size.toString()} nodes and ${expandResult.relationships.size.toString()} relationships.`,
         );
 
-        await this._postProcessGraph(newGraph);
+        await this._postProcessGraph();
 
         await this._sendGraphToWorker();
         this._triggerPhysicsSimluation({ amount: 'short' });
-        this._onEvent.next({
-          type: 'CanvasEventGraphElementsChanged',
-          graph: newGraph,
-          canvasId: this.canvasId,
-          nodesAdded: result.nodesAddedCount,
-          edgesAdded: result.edgeAddedCount,
-        } satisfies CanvasEventGraphElementsChanged);
+        this._triggerElementsChanged();
 
         if (expandResult.limitReached) {
           this._onEvent.next({
@@ -650,8 +594,8 @@ export class LiveCanvas implements ApplicationService {
   public async expandNodePreview(params: {
     nodeId: string;
   }): Promise<ExpandNodePreview> {
-    const graph: MutableGraph = this.getGraph();
-    const node: MutableNode | null = graph.nodes.get(params.nodeId);
+    const graph: LiveCanvasData = this.getGraph();
+    const node: LiveCanvasNode | null = graph.nodes.get(params.nodeId);
     if (node == null) {
       throw new Error(`Cannot find node ${params.nodeId} to expand preview.`);
     }
@@ -678,29 +622,22 @@ export class LiveCanvas implements ApplicationService {
           edgeAddedCount: 0,
         };
 
-        this._transaction('Focus nodes', (graph: MutableGraph): void => {
-          graph.nodes.nodes
-            .filter(
-              (node: MutableNode): boolean => !params.nodeIds.includes(node.id),
-            )
-            .forEach((node: MutableNode): void => {
-              graph.nodes.remove(node);
-              result.nodesAddedCount -= 1;
-            });
-          const edgesRemovedCount: number = graph.removeDanglingEdges();
-          result.edgeAddedCount -= edgesRemovedCount;
-        });
+        const graph: LiveCanvasData = this._snapshot('Focus nodes');
 
-        const graph: MutableGraph = this.getGraph();
+        graph.nodes.nodes
+          .filter(
+            (node: LiveCanvasNode): boolean =>
+              !params.nodeIds.includes(node.id),
+          )
+          .forEach((node: LiveCanvasNode): void => {
+            graph.nodes.remove(node);
+            result.nodesAddedCount -= 1;
+          });
+        const edgesRemovedCount: number = graph.removeDanglingEdges();
+        result.edgeAddedCount -= edgesRemovedCount;
 
         await this._sendGraphToWorker();
-        this._onEvent.next({
-          type: 'CanvasEventGraphElementsChanged',
-          graph: graph,
-          canvasId: this.canvasId,
-          nodesAdded: result.nodesAddedCount,
-          edgesAdded: result.edgeAddedCount,
-        } satisfies CanvasEventGraphElementsChanged);
+        this._triggerElementsChanged();
       }),
     );
   }
@@ -718,107 +655,80 @@ export class LiveCanvas implements ApplicationService {
           edgeAddedCount: 0,
         };
 
-        const nodesToDelete: SSet<MutableNode> = new SSet<MutableNode>();
-        const edgesToDelete: SSet<MutableEdge> = new SSet<MutableEdge>();
+        const nodesToDelete: SSet<LiveCanvasNode> = new SSet<LiveCanvasNode>();
+        const edgesToDelete: SSet<LiveCanvasEdge> = new SSet<LiveCanvasEdge>();
 
-        const newGraph: MutableGraph = this._transaction(
-          'Delete elements',
-          (graph: MutableGraph): void => {
-            for (const nodeId of params.nodeIds) {
-              const node: MutableNode | null = graph.nodes.get(nodeId);
-              if (node != null) {
-                nodesToDelete.add(node);
-              }
-            }
-            for (const label of params.labels) {
-              for (const node of graph.nodes.getByLabel(label)) {
-                nodesToDelete.add(node);
-              }
-            }
+        const graph: LiveCanvasData = this._snapshot('Delete elements');
 
-            for (const node of nodesToDelete) {
-              const didDelete: boolean = graph.nodes.remove(node);
-              if (didDelete) {
-                result.nodesAddedCount -= 1;
-              }
+        for (const nodeId of params.nodeIds) {
+          const node: LiveCanvasNode | null = graph.nodes.get(nodeId);
+          if (node != null) {
+            nodesToDelete.add(node);
+          }
+        }
+        for (const label of params.labels) {
+          for (const node of graph.nodes.getByLabel(label)) {
+            nodesToDelete.add(node);
+          }
+        }
 
-              for (const edge of graph.edges.getByStartOrEndNodeId(node.id)) {
-                edgesToDelete.add(edge);
-              }
+        for (const node of nodesToDelete) {
+          const didDelete: boolean = graph.nodes.remove(node);
+          if (didDelete) {
+            result.nodesAddedCount -= 1;
+          }
 
-              this._logger.debug(`Did delete node ${node.id}`);
-            }
+          for (const edge of graph.edges.getByStartOrEndNodeId(node.id)) {
+            edgesToDelete.add(edge);
+          }
 
-            for (const edgeId of params.edgeIds) {
-              const edge: MutableEdge | null = graph.edges.get(edgeId);
-              if (edge != null) {
-                edgesToDelete.add(edge);
-              }
-            }
+          this._logger.debug(`Did delete node ${node.id}`);
+        }
 
-            for (const edgeType of params.edgeTypes) {
-              const edges: SSet<MutableEdge> = graph.edges.getByType(edgeType);
-              for (const edge of edges) {
-                edgesToDelete.add(edge);
-              }
-            }
+        for (const edgeId of params.edgeIds) {
+          const edge: LiveCanvasEdge | null = graph.edges.get(edgeId);
+          if (edge != null) {
+            edgesToDelete.add(edge);
+          }
+        }
 
-            for (const edge of edgesToDelete) {
-              const didDelete: boolean = graph.edges.remove(edge);
-              if (didDelete) {
-                result.edgeAddedCount -= 1;
-              }
-            }
-            graph.removeDanglingEdges();
-          },
-        );
+        for (const edgeType of params.edgeTypes) {
+          const edges: SSet<LiveCanvasEdge> = graph.edges.getByType(edgeType);
+          for (const edge of edges) {
+            edgesToDelete.add(edge);
+          }
+        }
+
+        for (const edge of edgesToDelete) {
+          const didDelete: boolean = graph.edges.remove(edge);
+          if (didDelete) {
+            result.edgeAddedCount -= 1;
+          }
+        }
+        graph.removeDanglingEdges();
 
         await this._sendGraphToWorker();
         this._triggerPhysicsSimluation({ amount: 'short' });
-        this._onEvent.next({
-          type: 'CanvasEventGraphElementsChanged',
-          graph: newGraph,
-          canvasId: this.canvasId,
-          nodesAdded: result.nodesAddedCount,
-          edgesAdded: result.edgeAddedCount,
-        } satisfies CanvasEvent);
+        this._triggerElementsChanged();
       }),
     );
   }
 
   public relayout(): void {
-    this._physicsWorker.triggerPhysics({
-      amount: 'long',
-    });
+    this._triggerPhysicsSimluation({ amount: 'long' });
   }
 
   public undo(): void {
     this._queue.addTask(
       new TaskQueueTask('Undo', async (): Promise<void> => {
         this._graph.undo();
-        const graph: MutableGraph = this.getGraph();
 
         await this.saveGraph();
 
         await this._sendGraphToWorker();
-        this._onEvent.next({
-          type: 'CanvasEventGraphMetaDataChanged',
-          graph: graph,
-          canvasId: this.canvasId,
-          undoInfo: this._graph.info,
-        } satisfies CanvasEventGraphMetaDataChanged);
-        this._onEvent.next({
-          type: 'CanvasEventGraphElementsChanged',
-          graph: graph,
-          canvasId: this.canvasId,
-          nodesAdded: graph.nodes.size,
-          edgesAdded: graph.edges.size,
-        } satisfies CanvasEventGraphElementsChanged);
-        this._onEvent.next({
-          type: 'CanvasEventGraphTableChanged',
-          table: graph.tableData,
-          canvasId: this.canvasId,
-        } satisfies CanvasEventGraphTableChanged);
+        this._triggerMetaDataChanged();
+        this._triggerElementsChanged();
+        this._triggerTableChanged();
       }),
     );
   }
@@ -827,29 +737,13 @@ export class LiveCanvas implements ApplicationService {
     this._queue.addTask(
       new TaskQueueTask('Redo', async (): Promise<void> => {
         this._graph.redo();
-        const graph: MutableGraph = this.getGraph();
 
         await this.saveGraph();
 
         await this._sendGraphToWorker();
-        this._onEvent.next({
-          type: 'CanvasEventGraphMetaDataChanged',
-          graph: graph,
-          canvasId: this.canvasId,
-          undoInfo: this._graph.info,
-        } satisfies CanvasEventGraphMetaDataChanged);
-        this._onEvent.next({
-          type: 'CanvasEventGraphElementsChanged',
-          graph: graph,
-          canvasId: this.canvasId,
-          nodesAdded: graph.nodes.size,
-          edgesAdded: graph.edges.size,
-        } satisfies CanvasEventGraphElementsChanged);
-        this._onEvent.next({
-          type: 'CanvasEventGraphTableChanged',
-          table: graph.tableData,
-          canvasId: this.canvasId,
-        } satisfies CanvasEventGraphTableChanged);
+        this._triggerMetaDataChanged();
+        this._triggerElementsChanged();
+        this._triggerTableChanged();
       }),
     );
   }
@@ -886,48 +780,29 @@ export class LiveCanvas implements ApplicationService {
           } satisfies CanvasEventNotAllNodesLoaded);
         }
 
-        const newGraph: MutableGraph = this._transaction(
-          'Run query',
-          (graph: MutableGraph): void => {
-            if (params.replace) {
-              graph.nodes = new MutableNodeIndex([]);
-              graph.edges = new MutableEdgeIndex([]);
-              graph.tableData = graphElements.tableData;
-            }
-            graph.nodes.addNeo4jNodes(
-              graphElements.nodes,
-              MutableGraphElementCreationAction.query,
-            );
-            graph.edges.addNeo4jEdges(
-              graphElements.relationships,
-              MutableGraphElementCreationAction.query,
-            );
-          },
+        const graph: LiveCanvasData = this._snapshot('Run query');
+
+        if (params.replace) {
+          graph.nodes.reset();
+          graph.edges.reset();
+          graph.tableData = graphElements.tableData;
+        }
+        graph.nodes.addNeo4jNodes(
+          graphElements.nodes,
+          ElementCreationReason.query,
+        );
+        graph.edges.addNeo4jEdges(
+          graphElements.relationships,
+          ElementCreationReason.query,
         );
 
-        await this._postProcessGraph(newGraph);
+        await this._postProcessGraph();
 
         await this._sendGraphToWorker();
         this._triggerPhysicsSimluation({ amount: 'long' });
-        await this.saveGraph();
-        this._onEvent.next({
-          type: 'CanvasEventGraphMetaDataChanged',
-          graph: newGraph,
-          canvasId: this.canvasId,
-          undoInfo: this._graph.info,
-        } satisfies CanvasEventGraphMetaDataChanged);
-        this._onEvent.next({
-          type: 'CanvasEventGraphElementsChanged',
-          graph: newGraph,
-          canvasId: this.canvasId,
-          nodesAdded: newGraph.nodes.size,
-          edgesAdded: newGraph.edges.size,
-        } satisfies CanvasEventGraphElementsChanged);
-        this._onEvent.next({
-          type: 'CanvasEventGraphTableChanged',
-          table: newGraph.tableData,
-          canvasId: this.canvasId,
-        } satisfies CanvasEventGraphTableChanged);
+        this._triggerMetaDataChanged();
+        this._triggerElementsChanged();
+        this._triggerTableChanged();
       }),
     );
   }
@@ -935,78 +810,32 @@ export class LiveCanvas implements ApplicationService {
   public connectResultNodes(): void {
     this._queue.addTask(
       new TaskQueueTask('Connecting result nodes', async (): Promise<void> => {
-        const oldGraph: MutableGraph = this.getGraph();
+        const graph: LiveCanvasData = this._snapshot('Connect result nodes');
 
-        const egdesToAdd: Neo4jRelationship[] = [];
-        for (const source of oldGraph.nodes.getSources()) {
-          const nodesToConnect: SSet<string> = oldGraph.nodes
-            .getBySource(source)
-            .map((n: MutableNode): string => n.id);
-          if (nodesToConnect.size === 0) {
-            continue;
-          }
-
-          const db: Result<'api::v2-database-connection.v2-database-connection'> =
-            await this._database.getDatabase(source);
-
-          const credentials: Neo4jDatabaseInfo = Neo4jDatabaseInfo.parse(db);
-
-          this._logger.info(
-            `Will run connect result nodes on ${nodesToConnect.size.toString()} on database ${db.title ?? db.documentId}.`,
-          );
-          const result: Neo4jGraphElements =
-            await this._neo4j.loadConnectingRelationships(
-              credentials,
-              nodesToConnect,
-            );
-
-          egdesToAdd.push(...result.relationships.toValueArray());
-        }
-
-        let addedEdgesCount: number = 0;
-        const newGraph: MutableGraph = this._transaction(
-          'Connect result nodes',
-          (graph: MutableGraph): void => {
-            for (const edgeToAdd of egdesToAdd) {
-              const didAdd: boolean = graph.edges.addNeo4jEdge(
-                edgeToAdd,
-                MutableGraphElementCreationAction.connectResultNodes,
-              );
-              if (didAdd) {
-                addedEdgesCount += 1;
-              }
-            }
-          },
-        );
+        await this._connectResultNodes();
 
         await this._sendGraphToWorker();
         this._triggerPhysicsSimluation({ amount: 'short' });
-        this._onEvent.next({
-          type: 'CanvasEventGraphElementsChanged',
-          graph: newGraph,
-          canvasId: this.canvasId,
-          nodesAdded: 0,
-          edgesAdded: addedEdgesCount,
-        } satisfies CanvasEventGraphElementsChanged);
+        this._triggerElementsChanged();
       }),
     );
   }
 
   public unlockNodes(params: { nodeIds: readonly string[] }): void {
     const nodeLocksChanged: SMap<string, boolean> = new SMap<string, boolean>();
-    this._transaction('Unlock nodes', (graph: MutableGraph): void => {
-      for (const nodeId of params.nodeIds) {
-        const node: MutableNode | null = graph.nodes.get(nodeId);
-        if (node == null) {
-          this._logger.warn(`Unable to unlock node ${nodeId}. Node not found.`);
-          continue;
-        }
-        if (node.locked) {
-          node.locked = false;
-          nodeLocksChanged.set(node.id, node.locked);
-        }
+    const graph: LiveCanvasData = this._snapshot('Unlock nodes');
+
+    for (const nodeId of params.nodeIds) {
+      const node: LiveCanvasNode | null = graph.nodes.get(nodeId);
+      if (node == null) {
+        this._logger.warn(`Unable to unlock node ${nodeId}. Node not found.`);
+        continue;
       }
-    });
+      if (node.locked) {
+        node.locked = false;
+        nodeLocksChanged.set(node.id, node.locked);
+      }
+    }
 
     this._onEvent.next({
       type: 'CanvasEventNodeLocksUpdated',
@@ -1019,16 +848,15 @@ export class LiveCanvas implements ApplicationService {
 
   public unlockAllNodes(): void {
     const nodeLocksChanged: SMap<string, boolean> = new SMap<string, boolean>();
-    this._transaction('Unlock all nodes', (graph: MutableGraph): void => {
-      for (const node of graph.nodes.nodes) {
-        if (node.grabs.size === 0) {
-          if (node.locked) {
-            node.locked = false;
-            nodeLocksChanged.set(node.id, node.locked);
-          }
+    const graph: LiveCanvasData = this._snapshot('Unlock all nodes');
+    for (const node of graph.nodes.nodes) {
+      if (node.grabs.size === 0) {
+        if (node.locked) {
+          node.locked = false;
+          nodeLocksChanged.set(node.id, node.locked);
         }
       }
-    });
+    }
 
     this._onEvent.next({
       type: 'CanvasEventNodeLocksUpdated',
@@ -1043,31 +871,23 @@ export class LiveCanvas implements ApplicationService {
   public removeDanglingNodes(): void {
     this._queue.addTask(
       new TaskQueueTask('Removing dangling nodes', async (): Promise<void> => {
-        const oldGraph: MutableGraph = this.getGraph();
+        const oldGraph: LiveCanvasData = this.getGraph();
 
         const ids: readonly string[] = oldGraph.nodes.nodes
-          .filter((node: MutableNode): boolean => node.degree(oldGraph) === 0)
-          .map((node: MutableNode): string => node.id)
+          .filter(
+            (node: LiveCanvasNode): boolean => node.degree(oldGraph) === 0,
+          )
+          .map((node: LiveCanvasNode): string => node.id)
           .toArray();
 
-        const newGraph: MutableGraph = this._transaction(
-          'Remove dangling nodes',
-          (graph: MutableGraph): void => {
-            for (const id of ids) {
-              graph.nodes.remove(id);
-            }
-          },
-        );
+        const graph: LiveCanvasData = this._snapshot('Remove dangling nodes');
+        for (const id of ids) {
+          graph.nodes.remove(id);
+        }
 
         await this._sendGraphToWorker();
         this._triggerPhysicsSimluation({ amount: 'short' });
-        this._onEvent.next({
-          type: 'CanvasEventGraphElementsChanged',
-          graph: newGraph,
-          canvasId: this.canvasId,
-          nodesAdded: -ids.length,
-          edgesAdded: 0,
-        } satisfies CanvasEvent);
+        this._triggerElementsChanged();
       }),
     );
   }
@@ -1077,22 +897,11 @@ export class LiveCanvas implements ApplicationService {
       new TaskQueueTask(
         'Compressing relationships',
         async (): Promise<void> => {
-          const newGraph: MutableGraph = this._transaction(
-            'Compress relationships',
-            (graph: MutableGraph): void => {
-              this._compressRelationships(graph);
-            },
-          );
+          this._snapshot('Compress relationships');
+          this._compressRelationships();
 
           await this._sendGraphToWorker();
-
-          this._onEvent.next({
-            type: 'CanvasEventGraphElementsChanged',
-            graph: newGraph,
-            canvasId: this.canvasId,
-            nodesAdded: 0,
-            edgesAdded: 0,
-          } satisfies CanvasEvent);
+          this._triggerElementsChanged();
         },
       ),
     );
@@ -1101,22 +910,12 @@ export class LiveCanvas implements ApplicationService {
   public compressNodes(params: { label: string }): void {
     this._queue.addTask(
       new TaskQueueTask('Compressing nodes', async (): Promise<void> => {
-        const newGraph: MutableGraph = this._transaction(
-          'Compress nodes',
-          (graph: MutableGraph): void => {
-            this._compressNodes(graph, params.label);
-          },
-        );
+        this._snapshot('Compress nodes');
+        this._compressNodes(params.label);
 
         await this._sendGraphToWorker();
         this._triggerPhysicsSimluation({ amount: 'short' });
-        this._onEvent.next({
-          type: 'CanvasEventGraphElementsChanged',
-          graph: newGraph,
-          canvasId: this.canvasId,
-          nodesAdded: 0,
-          edgesAdded: 0,
-        } satisfies CanvasEvent);
+        this._triggerElementsChanged();
       }),
     );
   }
@@ -1128,16 +927,8 @@ export class LiveCanvas implements ApplicationService {
     this._queue.addTask(
       new TaskQueueTask('Layout label', async (): Promise<void> => {
         let lockChanges: SMap<string, boolean> = new SMap<string, boolean>();
-        const newGraph: MutableGraph = this._transaction(
-          'Layout label',
-          (graph: MutableGraph): void => {
-            lockChanges = this._layout(
-              graph,
-              params.label,
-              params.layoutSpecification,
-            );
-          },
-        );
+        this._snapshot('Layout label');
+        lockChanges = this._layout(params.label, params.layoutSpecification);
 
         this._onEvent.next({
           type: 'CanvasEventNodeLocksUpdated',
@@ -1159,7 +950,7 @@ export class LiveCanvas implements ApplicationService {
           this._logger.debug(
             `Will calculate shortest path of nodes: ${JSON.stringify(params.nodeIds)}`,
           );
-          const oldGraph: MutableGraph = this.getGraph();
+          const oldGraph: LiveCanvasData = this.getGraph();
           const scenarioId: string | null = oldGraph.metaData.scenarioId;
           if (scenarioId == null) {
             throw new Error(`Cannot find scenario in room ${this.canvasId}`);
@@ -1170,7 +961,7 @@ export class LiveCanvas implements ApplicationService {
           /* create unique pairs */
           for (let i: number = 0; i < params.nodeIds.length - 1; i += 1) {
             const idA: string = params.nodeIds[i];
-            const nodeA: MutableNode | null = oldGraph.nodes.get(idA);
+            const nodeA: LiveCanvasNode | null = oldGraph.nodes.get(idA);
             if (nodeA == null) {
               throw new Error(
                 `Unable to calculate shortest path: Node id ${idA} not found.`,
@@ -1180,7 +971,7 @@ export class LiveCanvas implements ApplicationService {
             for (let j: number = i + 1; j < params.nodeIds.length; j += 1) {
               const idB: string = params.nodeIds[j];
 
-              const nodeB: MutableNode | null = oldGraph.nodes.get(idB);
+              const nodeB: LiveCanvasNode | null = oldGraph.nodes.get(idB);
               if (nodeB == null) {
                 throw new Error(
                   `Unable to calculate shortest path: Node id ${idB} not found.`,
@@ -1221,42 +1012,24 @@ export class LiveCanvas implements ApplicationService {
             }
           }
 
-          const newGraph: MutableGraph = this._transaction(
-            'Show shortest path',
-            (graph: MutableGraph): void => {
-              for (const result of results) {
-                graph.nodes.addNeo4jNodes(
-                  result.nodes,
-                  MutableGraphElementCreationAction.expand,
-                );
-                graph.edges.addNeo4jEdges(
-                  result.relationships,
-                  MutableGraphElementCreationAction.expand,
-                );
-              }
-            },
-          );
+          const graph: LiveCanvasData = this._snapshot('Show shortest path');
+          for (const result of results) {
+            graph.nodes.addNeo4jNodes(
+              result.nodes,
+              ElementCreationReason.expand,
+            );
+            graph.edges.addNeo4jEdges(
+              result.relationships,
+              ElementCreationReason.expand,
+            );
+          }
 
-          await this._postProcessGraph(newGraph);
+          await this._postProcessGraph();
 
           await this._sendGraphToWorker();
           this._triggerPhysicsSimluation({ amount: 'long' });
-
-          await this.saveGraph();
-
-          this._onEvent.next({
-            type: 'CanvasEventGraphMetaDataChanged',
-            graph: newGraph,
-            canvasId: this.canvasId,
-            undoInfo: this._graph.info,
-          } satisfies CanvasEventGraphMetaDataChanged);
-          this._onEvent.next({
-            type: 'CanvasEventGraphElementsChanged',
-            graph: newGraph,
-            canvasId: this.canvasId,
-            nodesAdded: newGraph.nodes.size,
-            edgesAdded: newGraph.edges.size,
-          } satisfies CanvasEventGraphElementsChanged);
+          this._triggerMetaDataChanged();
+          this._triggerElementsChanged();
         },
       ),
     );
@@ -1280,43 +1053,25 @@ export class LiveCanvas implements ApplicationService {
           throw new Error(`Node ${params.nodeId} not found.`);
         }
 
-        const newGraph: MutableGraph = this._transaction(
-          'Load node',
-          (graph: MutableGraph): void => {
-            graph.nodes.addNeo4jNode(
-              result.nodes.toValueArray()[0],
-              MutableGraphElementCreationAction.search,
-            );
-          },
+        const graph: LiveCanvasData = this._snapshot('Load node');
+        graph.nodes.addNeo4jNode(
+          result.nodes.toValueArray()[0],
+          ElementCreationReason.search,
         );
 
-        await this._postProcessGraph(newGraph);
+        await this._postProcessGraph();
 
         await this._sendGraphToWorker();
         this._triggerPhysicsSimluation({ amount: 'long' });
-
-        await this.saveGraph();
-
-        this._onEvent.next({
-          type: 'CanvasEventGraphMetaDataChanged',
-          graph: newGraph,
-          canvasId: this.canvasId,
-          undoInfo: this._graph.info,
-        } satisfies CanvasEventGraphMetaDataChanged);
-        this._onEvent.next({
-          type: 'CanvasEventGraphElementsChanged',
-          graph: newGraph,
-          canvasId: this.canvasId,
-          nodesAdded: newGraph.nodes.size,
-          edgesAdded: newGraph.edges.size,
-        } satisfies CanvasEventGraphElementsChanged);
+        this._triggerMetaDataChanged();
+        this._triggerElementsChanged();
       }),
     );
   }
 
   public async saveGraph(): Promise<void> {
     const task: Profiler = this._logger.startTimer();
-    const graph: MutableGraph = this.getGraph();
+    const graph: LiveCanvasData = this.getGraph();
 
     const canvas: Result<'api::v2-canvas.v2-canvas'> =
       await this._database.getCanvas(this.canvasId);
@@ -1333,7 +1088,7 @@ export class LiveCanvas implements ApplicationService {
     });
   }
   private _handleWTEventPhysicsUpdate(event: WTEventPhysicsUpdate): void {
-    const graph: MutableGraph = this.getGraph();
+    const graph: LiveCanvasData = this.getGraph();
     graph.applyPhysicalGraph(event.graph);
     this._onEvent.next({
       type: 'CanvasEventRoomPhysicsUpdated',
@@ -1350,45 +1105,48 @@ export class LiveCanvas implements ApplicationService {
     this.saveGraphAsync();
   }
 
-  private _compressRelationships(graph: MutableGraph): void {
+  private _compressRelationships(): void {
     let compressedCount: number = 0;
+    const graph: LiveCanvasData = this.getGraph();
 
     for (const nodeA of graph.nodes.nodes) {
       for (const nodeB of graph.nodes.nodes) {
-        const edges: MutableEdge[] = graph.edges.getByStartAndEndNodeId(
+        const edges: LiveCanvasEdge[] = graph.edges.getByStartAndEndNodeId(
           nodeA.id,
           nodeB.id,
         );
-        const byType: SMap<string, MutableEdge[]> = edges.reduce(
+        const byType: SMap<string, LiveCanvasEdge[]> = edges.reduce(
           (
-            akku: SMap<string, MutableEdge[]>,
-            next: MutableEdge,
-          ): SMap<string, MutableEdge[]> =>
+            akku: SMap<string, LiveCanvasEdge[]>,
+            next: LiveCanvasEdge,
+          ): SMap<string, LiveCanvasEdge[]> =>
             akku.bySetting(next.type, [...(akku.get(next.type) ?? []), next]),
-          new SMap<string, MutableEdge[]>(),
+          new SMap<string, LiveCanvasEdge[]>(),
         );
         for (const edgesToCompress of byType.values()) {
           if (edgesToCompress.length <= 1) {
             continue;
           }
-          const newEdge: MutableEdge = new MutableEdge({
+          const newEdge: LiveCanvasEdge = new LiveCanvasEdge({
             id: v4(),
             namesInQuery: edgesToCompress.reduce(
-              (akku: SSet<string>, next: MutableEdge): SSet<string> =>
+              (akku: SSet<string>, next: LiveCanvasEdge): SSet<string> =>
                 akku.byMerging(next.namesInQuery),
               new SSet<string>(),
             ),
-            properties: MutablePropertyCollection.fromRecord({
-              compressed: edgesToCompress.map((e: MutableEdge): string => e.id),
+            properties: LiveCanvasPropertyCollection.fromRecord({
+              compressed: edgesToCompress.map(
+                (e: LiveCanvasEdge): string => e.id,
+              ),
             }),
             type: edgesToCompress[0].type,
             source: edgesToCompress[0].source,
             startNodeId: edgesToCompress[0].startNodeId,
             endNodeId: edgesToCompress[0].endNodeId,
             compressed: new SSet(
-              edgesToCompress.map((e: MutableEdge): string => e.id),
+              edgesToCompress.map((e: LiveCanvasEdge): string => e.id),
             ),
-            creationAction: MutableGraphElementCreationAction.compress,
+            creationAction: ElementCreationReason.compress,
           });
           compressedCount += edgesToCompress.length;
           for (const edgeToCompress of edgesToCompress) {
@@ -1404,12 +1162,55 @@ export class LiveCanvas implements ApplicationService {
     );
   }
 
-  private async _mergeNodes(graph: MutableGraph): Promise<void> {
+  private async _connectResultNodes(): Promise<void> {
+    const graph: LiveCanvasData = this.getGraph();
+
+    const egdesToAdd: Neo4jRelationship[] = [];
+    for (const source of graph.nodes.getSources()) {
+      const nodesToConnect: SSet<string> = graph.nodes
+        .getBySource(source)
+        .map((n: LiveCanvasNode): string => n.id);
+      if (nodesToConnect.size === 0) {
+        continue;
+      }
+
+      const db: Result<'api::v2-database-connection.v2-database-connection'> =
+        await this._database.getDatabase(source);
+
+      const credentials: Neo4jDatabaseInfo = Neo4jDatabaseInfo.parse(db);
+
+      this._logger.info(
+        `Will run connect result nodes on ${nodesToConnect.size.toString()} on database ${db.title ?? db.documentId}.`,
+      );
+      const result: Neo4jGraphElements =
+        await this._neo4j.loadConnectingRelationships(
+          credentials,
+          nodesToConnect,
+        );
+
+      egdesToAdd.push(...result.relationships.toValueArray());
+    }
+
+    let addedEdgesCount: number = 0;
+    for (const edgeToAdd of egdesToAdd) {
+      const didAdd: boolean = graph.edges.addNeo4jEdge(
+        edgeToAdd,
+        ElementCreationReason.connectResultNodes,
+      );
+      if (didAdd) {
+        addedEdgesCount += 1;
+      }
+    }
+  }
+
+  private async _mergeNodes(): Promise<void> {
     const canvas: Result<'api::v2-canvas.v2-canvas'> | null =
       await this._database.getCanvas(this.canvasId);
 
     const configs: Result<'api::v2-common-property.v2-common-property'>[] =
       await this._database.getCommonPropertyConfigsOfCanvas(canvas);
+
+    const graph: LiveCanvasData = this.getGraph();
 
     for (const mergeConfig of configs) {
       this._logger.info(
@@ -1426,10 +1227,10 @@ export class LiveCanvas implements ApplicationService {
         continue;
       }
 
-      const originalNodes: SSet<MutableNode> = graph.nodes.getBySource(
+      const originalNodes: SSet<LiveCanvasNode> = graph.nodes.getBySource(
         leftDatabase.documentId,
       );
-      const mergeNodes: SSet<MutableNode> = graph.nodes.getBySource(
+      const mergeNodes: SSet<LiveCanvasNode> = graph.nodes.getBySource(
         rightDatabase.documentId,
       );
 
@@ -1443,33 +1244,33 @@ export class LiveCanvas implements ApplicationService {
           );
           if (shouldMerge) {
             graph.edges.add(
-              new MutableEdge({
+              new LiveCanvasEdge({
                 id: v4(),
                 compressed: new SSet(),
                 startNodeId: originalNode.id,
                 endNodeId: mergeNode.id,
                 source: originalNode.source,
                 type: 'MERGED_WITH',
-                properties: new MutablePropertyCollection({
+                properties: new LiveCanvasPropertyCollection({
                   properties: new SMap([['merge', mergeConfig]]),
                 }),
                 namesInQuery: new SSet(),
-                creationAction: MutableGraphElementCreationAction.merge,
+                creationAction: ElementCreationReason.merge,
               }),
             );
             graph.edges.add(
-              new MutableEdge({
+              new LiveCanvasEdge({
                 id: v4(),
                 compressed: new SSet(),
                 startNodeId: mergeNode.id,
                 endNodeId: originalNode.id,
                 source: mergeNode.source,
                 type: 'MERGED_WITH',
-                properties: new MutablePropertyCollection({
+                properties: new LiveCanvasPropertyCollection({
                   properties: new SMap([['merge', mergeConfig]]),
                 }),
                 namesInQuery: new SSet(),
-                creationAction: MutableGraphElementCreationAction.merge,
+                creationAction: ElementCreationReason.merge,
               }),
             );
             this._logger.info(
@@ -1482,9 +1283,9 @@ export class LiveCanvas implements ApplicationService {
   }
 
   private _shouldMergeNodes(
-    graph: MutableGraph,
-    leftNode: MutableNode,
-    rightNode: MutableNode,
+    graph: LiveCanvasData,
+    leftNode: LiveCanvasNode,
+    rightNode: LiveCanvasNode,
     config: Result<'api::v2-common-property.v2-common-property'>,
   ): boolean {
     if (
@@ -1531,90 +1332,82 @@ export class LiveCanvas implements ApplicationService {
     return true;
   }
 
-  private _transaction(
-    title: string,
-    action: (g: MutableGraph) => void,
-  ): MutableGraph {
-    const newGraph: MutableGraph | null = this._graph.transaction(
-      title,
-      (graph: MutableGraph | null): MutableGraph | null => {
-        if (graph == null) {
-          throw new Error(`Cannot get graph in canvas ${this.canvasId}`);
-        }
-        action(graph);
-        return graph;
-      },
-    );
-    if (newGraph == null) {
-      throw new Error(`Cannot get graph in canvas ${this.canvasId}`);
-    }
+  private _snapshot(title: string): LiveCanvasData {
+    this._graph.snapshot(title);
+    const graph: LiveCanvasData = this.getGraph();
+
     this._onEvent.next({
       type: 'CanvasEventGraphMetaDataChanged',
-      graph: newGraph,
+      graph: graph,
       canvasId: this.canvasId,
       undoInfo: this._graph.info,
     } satisfies CanvasEventGraphMetaDataChanged);
-    return newGraph;
+
+    return graph;
   }
 
-  private async _postProcessGraph(graph: MutableGraph): Promise<void> {
+  private async _postProcessGraph(): Promise<void> {
     const task: Profiler = this._logger.startTimer();
+    const graph: LiveCanvasData = this.getGraph();
     graph.removeDanglingEdges();
-    await this._mergeNodes(graph);
+    await this._mergeNodes();
     task.done({
       message: 'Post Process Graph',
     });
   }
 
-  private _compressNodes(graph: MutableGraph, targetLabel: string): void {
+  private _compressNodes(targetLabel: string): void {
     this._logger.debug(`Will check nodes of ${targetLabel} for compressing`);
     let compressCount: number = 0;
+    const graph: LiveCanvasData = this.getGraph();
     for (const node of graph.nodes.getByLabel(targetLabel)) {
-      const clusterBuddies: SSet<MutableNode> = graph.getClusterBuddiesOfNode(
-        node,
-        targetLabel,
-      );
+      const clusterBuddies: SSet<LiveCanvasNode> =
+        graph.getClusterBuddiesOfNode(node, targetLabel);
       if (clusterBuddies.size <= 1) {
         continue;
       }
       this._logger.debug(
         `Will compress ${node.id} because it is part of a cluster with ${clusterBuddies.size.toString()} cluster buddies.`,
       );
-      const newNode: MutableNode = new MutableNode({
+      const newNode: LiveCanvasNode = new LiveCanvasNode({
         id: v4(),
-        position: MutablePosition.average(
+        position: LiveCanvasPosition.average(
           clusterBuddies
             .toArray()
-            .map((n: MutableNode): MutablePosition => n.position),
+            .map((n: LiveCanvasNode): LiveCanvasPosition => n.position),
         ),
         grabs: new SSet(),
         labels: clusterBuddies.reduce(
-          (akku: SSet<string>, next: MutableNode): SSet<string> =>
+          (akku: SSet<string>, next: LiveCanvasNode): SSet<string> =>
             akku.byMerging(next.labels),
           new SSet<string>(),
         ),
         source: node.source,
         locked: node.locked,
-        properties: MutablePropertyCollection.empty(),
+        properties: LiveCanvasPropertyCollection.empty(),
         namesInQuery: clusterBuddies.reduce(
-          (akku: SSet<string>, next: MutableNode): SSet<string> =>
+          (akku: SSet<string>, next: LiveCanvasNode): SSet<string> =>
             akku.byMerging(next.namesInQuery),
           new SSet<string>(),
         ),
-        compressed: clusterBuddies.map((n: MutableNode): string => n.id),
-        creationAction: MutableGraphElementCreationAction.compress,
+        compressed: clusterBuddies.map((n: LiveCanvasNode): string => n.id),
+        creationAction: ElementCreationReason.compress,
       });
       graph.nodes.add(newNode);
       for (const sibling of clusterBuddies) {
         for (const outgoingEdge of graph.edges.getByStartNodeId(sibling.id)) {
           graph.edges.remove(outgoingEdge);
-          outgoingEdge.startNodeId = newNode.id;
-          graph.edges.add(outgoingEdge);
+          const newEdge: LiveCanvasEdge = outgoingEdge.byChangingStartNodeId(
+            newNode.id,
+          );
+          graph.edges.add(newEdge);
         }
         for (const incomingEdge of graph.edges.getByEndNodeId(sibling.id)) {
           graph.edges.remove(incomingEdge);
-          incomingEdge.endNodeId = newNode.id;
-          graph.edges.add(incomingEdge);
+          const newEdge: LiveCanvasEdge = incomingEdge.byChangingEndNodeId(
+            newNode.id,
+          );
+          graph.edges.add(newEdge);
         }
         const removed: boolean = graph.nodes.remove(sibling);
         if (!removed) {
@@ -1629,11 +1422,11 @@ export class LiveCanvas implements ApplicationService {
   }
 
   private _layout(
-    graph: MutableGraph,
     targetLabel: string,
     layoutSpecification: SchemaLayoutSpecification,
   ): SMap<string, boolean> {
-    const nodesOfLabel: MutableNode[] = graph.nodes
+    const graph: LiveCanvasData = this.getGraph();
+    const nodesOfLabel: LiveCanvasNode[] = graph.nodes
       .getByLabel(targetLabel)
       .toArray();
     const lockChanges: SMap<string, boolean> = new SMap<string, boolean>();
@@ -1645,9 +1438,9 @@ export class LiveCanvas implements ApplicationService {
           if (nodesOfLabel.length < 2) {
             return;
           }
-          const sortedNodesToLayout: MutableNode[] = circularWeightedSpread(
+          const sortedNodesToLayout: LiveCanvasNode[] = circularWeightedSpread(
             nodesOfLabel,
-            (n: MutableNode): number => n.degree(graph),
+            (n: LiveCanvasNode): number => n.degree(graph),
           );
 
           const radius: number = l.radius;
@@ -1668,13 +1461,15 @@ export class LiveCanvas implements ApplicationService {
               continue;
             }
 
-            const neighbors: MutableNode[] = graph
+            const neighbors: LiveCanvasNode[] = graph
               .getNeighborsOfNode(node)
-              .filter((n: MutableNode): boolean => n.labels.has(targetLabel))
+              .filter((n: LiveCanvasNode): boolean => n.labels.has(targetLabel))
               .toArray();
             if (neighbors.length > 0) {
-              node.position = MutablePosition.average(
-                neighbors.map((n: MutableNode): MutablePosition => n.position),
+              node.position = LiveCanvasPosition.average(
+                neighbors.map(
+                  (n: LiveCanvasNode): LiveCanvasPosition => n.position,
+                ),
               );
               PhysicsSimulation.jiggle(node);
             }
@@ -1692,7 +1487,7 @@ export class LiveCanvas implements ApplicationService {
     return lockChanges;
   }
 
-  private async _loadGraph(): Promise<MutableGraph> {
+  private async _loadGraph(): Promise<LiveCanvasData> {
     const canvas: Result<'api::v2-canvas.v2-canvas'> =
       await this._database.getCanvas(this._canvasId);
 
@@ -1704,7 +1499,7 @@ export class LiveCanvas implements ApplicationService {
       const canvasGraph: Result<'plugin::upload.file'> | null =
         await this._database.getGrapFileOfCanvas(canvas);
       const graphJson: string = await getStringPayloadOfMediaFile(canvasGraph);
-      const graph: MutableGraph = MutableGraph.fromUnknownOrEmpty(
+      const graph: LiveCanvasData = LiveCanvasData.fromUnknownOrEmpty(
         JSON.parse(graphJson),
       );
       this._logger.debug(
@@ -1717,7 +1512,7 @@ export class LiveCanvas implements ApplicationService {
       this._logger.debug(
         `Will init canvas ${canvas.documentId} with empty graph.`,
       );
-      return MutableGraph.empty();
+      return LiveCanvasData.empty();
     }
   }
 
@@ -1729,8 +1524,8 @@ export class LiveCanvas implements ApplicationService {
     });
   }
 
-  private async _getCanvasViewSettings(): Promise<CanvasViewSettings> {
-    return CanvasViewSettings.fromDB(
+  private async _getCanvasViewSettings(): Promise<LiveCanvasViewSettings> {
+    return LiveCanvasViewSettings.fromDB(
       await this._database.getCanvas(this._canvasId),
     );
   }
@@ -1747,5 +1542,33 @@ export class LiveCanvas implements ApplicationService {
     this._physicsWorker.triggerPhysics({
       amount: params.amount,
     });
+  }
+
+  private _triggerMetaDataChanged(): void {
+    this._onEvent.next({
+      type: 'CanvasEventGraphMetaDataChanged',
+      graph: this.getGraph(),
+      canvasId: this.canvasId,
+      undoInfo: this._graph.info,
+    } satisfies CanvasEventGraphMetaDataChanged);
+  }
+
+  private _triggerElementsChanged(): void {
+    const graph: LiveCanvasData = this.getGraph();
+    this._onEvent.next({
+      type: 'CanvasEventGraphElementsChanged',
+      graph: graph,
+      canvasId: this.canvasId,
+      nodesAdded: graph.nodes.size,
+      edgesAdded: graph.edges.size,
+    } satisfies CanvasEventGraphElementsChanged);
+  }
+
+  private _triggerTableChanged(): void {
+    this._onEvent.next({
+      type: 'CanvasEventGraphTableChanged',
+      table: this.getGraph().tableData,
+      canvasId: this.canvasId,
+    } satisfies CanvasEventGraphTableChanged);
   }
 }
