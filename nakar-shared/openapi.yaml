@@ -149,6 +149,10 @@ paths:
       responses:
         "200":
           description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Canvas"
       requestBody:
         required: true
         content:
@@ -156,19 +160,10 @@ paths:
             schema:
               type: object
               properties:
-                compressRelationshipsWidthFactor:
-                  type: number
-                  nullable: true
-                growNodesBasedOnDegree:
-                  type: boolean
-                  nullable: true
-                growNodesBasedOnDegreeFactor:
-                  type: number
-                  nullable: true
+                viewSettings:
+                  $ref: "#/components/schemas/CanvasViewSettings"
               required:
-                - compressRelationshipsWidthFactor
-                - growNodesBasedOnDegree
-                - growNodesBasedOnDegreeFactor
+                - viewSettings
 
   /room/{id}:
     get:
@@ -1819,19 +1814,13 @@ components:
           type: string
         roomId:
           type: string
-        compressRelationshipsWidthFactor:
-          type: number
-        growNodesBasedOnDegree:
-          type: boolean
-        growNodesBasedOnDegreeFactor:
-          type: number
+        viewSettings:
+          $ref: "#/components/schemas/CanvasViewSettings"
       required:
         - id
         - title
         - roomId
-        - compressRelationshipsWidthFactor
-        - growNodesBasedOnDegree
-        - growNodesBasedOnDegreeFactor
+        - viewSettings
 
     StartPage:
       type: object
@@ -1961,6 +1950,20 @@ components:
         - scenarios
         - graph
         - room
+
+    CanvasViewSettings:
+      type: object
+      properties:
+        compressRelationshipsWidthFactor:
+          type: number
+        growNodesBasedOnDegree:
+          type: boolean
+        growNodesBasedOnDegreeFactor:
+          type: number
+      required:
+        - compressRelationshipsWidthFactor
+        - growNodesBasedOnDegree
+        - growNodesBasedOnDegreeFactor
 
     WSClientToServerMessage:
       oneOf:

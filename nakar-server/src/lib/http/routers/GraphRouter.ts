@@ -5,6 +5,7 @@ import type { SchemaGraph } from '../../../../src-gen/schema';
 import { MutableGraph } from '../../room/graph/MutableGraph';
 import { SchemaFactoryService } from '../../schema/SchemaFactoryService';
 import { IndexedNoteCollection } from '../../database/IndexedNoteCollection';
+import { CanvasViewSettings } from '../../room/graph/CanvasViewSettings';
 
 export class GraphRouter {
   public constructor(
@@ -35,7 +36,7 @@ export class GraphRouter {
       graph,
       notes,
       null,
-      req.nakar.canvas,
+      CanvasViewSettings.fromDB(req.nakar.canvas),
     );
     return result;
   }

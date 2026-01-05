@@ -47,6 +47,7 @@ import { IndexedNoteCollection } from '../database/IndexedNoteCollection';
 import { Logger } from '@strapi/logger';
 import { createChildLogger } from '../logger/createChildLogger';
 import { LiveCanvas } from '../room/LiveCanvas';
+import { CanvasViewSettings } from '../room/graph/CanvasViewSettings';
 
 export type Server = UntypedServer<ClientToServerEvents, ServerToClientEvents>;
 export type Socket = UntypedSocket<ClientToServerEvents, ServerToClientEvents>;
@@ -373,7 +374,7 @@ export class SocketIOService implements ApplicationService {
                   await this._schemaFactory.createSchemaGraphElements(
                     message.graph,
                     notes,
-                    canvas,
+                    CanvasViewSettings.fromDB(canvas),
                   );
                 this.sendToRoom(message.canvasId, {
                   elements: graphElements,
@@ -513,7 +514,7 @@ export class SocketIOService implements ApplicationService {
                 await this._schemaFactory.createSchemaGraphElements(
                   graph,
                   notes,
-                  canvas,
+                  CanvasViewSettings.fromDB(canvas),
                 );
               this.sendToRoom(canvas.documentId, {
                 elements: graphElements,

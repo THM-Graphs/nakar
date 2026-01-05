@@ -840,9 +840,7 @@ export interface components {
             readonly id: string;
             readonly title: string;
             readonly roomId: string;
-            readonly compressRelationshipsWidthFactor: number;
-            readonly growNodesBasedOnDegree: boolean;
-            readonly growNodesBasedOnDegreeFactor: number;
+            readonly viewSettings: components["schemas"]["CanvasViewSettings"];
         };
         readonly StartPage: {
             readonly myProjects: readonly components["schemas"]["StartPageProject"][];
@@ -881,6 +879,11 @@ export interface components {
             readonly scenarios: components["schemas"]["GetScenariosResult"];
             readonly graph: components["schemas"]["Graph"];
             readonly room: components["schemas"]["Room"];
+        };
+        readonly CanvasViewSettings: {
+            readonly compressRelationshipsWidthFactor: number;
+            readonly growNodesBasedOnDegree: boolean;
+            readonly growNodesBasedOnDegreeFactor: number;
         };
         readonly WSClientToServerMessage: components["schemas"]["WSActionJoinCanvas"] | components["schemas"]["WSActionLeaveCanvas"] | components["schemas"]["WSActionGrabNode"] | components["schemas"]["WSActionMoveNodes"] | components["schemas"]["WSActionUngrabNode"];
         readonly WSServerToClientMessage: components["schemas"]["WSEventNodesMoved"] | components["schemas"]["WSEventCanvasChanged"] | components["schemas"]["WSEventNotification"] | components["schemas"]["WSEventGraphElementsChanged"] | components["schemas"]["WSEventGraphMetaDataChanged"] | components["schemas"]["WSEventGraphTableChanged"] | components["schemas"]["WSEventProgress"] | components["schemas"]["WSEventClearProgress"] | components["schemas"]["WSEventSetNodeLocks"] | components["schemas"]["WSEventKick"];
@@ -1020,6 +1023,7 @@ export type SchemaStartPageProject = components['schemas']['StartPageProject'];
 export type SchemaStartPageRoom = components['schemas']['StartPageRoom'];
 export type SchemaProjectPage = components['schemas']['ProjectPage'];
 export type SchemaCanvasPage = components['schemas']['CanvasPage'];
+export type SchemaCanvasViewSettings = components['schemas']['CanvasViewSettings'];
 export type SchemaWsClientToServerMessage = components['schemas']['WSClientToServerMessage'];
 export type SchemaWsServerToClientMessage = components['schemas']['WSServerToClientMessage'];
 export type SchemaWsActionJoinCanvas = components['schemas']['WSActionJoinCanvas'];
@@ -1169,9 +1173,7 @@ export interface operations {
         readonly requestBody: {
             readonly content: {
                 readonly "application/json": {
-                    readonly compressRelationshipsWidthFactor: number | null;
-                    readonly growNodesBasedOnDegree: boolean | null;
-                    readonly growNodesBasedOnDegreeFactor: number | null;
+                    readonly viewSettings: components["schemas"]["CanvasViewSettings"];
                 };
             };
         };
@@ -1181,7 +1183,9 @@ export interface operations {
                 headers: {
                     readonly [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    readonly "application/json": components["schemas"]["Canvas"];
+                };
             };
         };
     };

@@ -15,6 +15,7 @@ import { Range } from '../../range/Range';
 import { Logger } from '@strapi/logger';
 import { createChildLogger } from '../../logger/createChildLogger';
 import { Profiler } from 'winston';
+import { CanvasViewSettings } from './CanvasViewSettings';
 
 export class MutableGraph {
   // eslint-disable-next-line @typescript-eslint/typedef
@@ -153,9 +154,7 @@ export class MutableGraph {
     return edgesRemoved;
   }
 
-  public toPhysicalGraph(
-    canvas: Result<'api::v2-canvas.v2-canvas'>,
-  ): PhysicalGraph {
+  public toPhysicalGraph(viewSettings: CanvasViewSettings): PhysicalGraph {
     const task: Profiler = this._logger.startTimer();
 
     const nodes: Record<string, PhysicalNode> = {};
@@ -165,7 +164,7 @@ export class MutableGraph {
     for (const node of this.nodes.nodes) {
       nodes[node.id] = {
         id: node.id,
-        radius: node.getRadius(canvas, degreeRange, this),
+        radius: node.getRadius(viewSettings, degreeRange, this),
         position: { x: node.position.x, y: node.position.y },
         locked: node.locked,
         velocityX: 0,

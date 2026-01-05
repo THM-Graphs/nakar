@@ -104,14 +104,7 @@ export function CanvasPage(props: { context: AppContext }) {
   useEffect(() => {
     setScenarios(roomContext.initialScenariosData);
     setGraph(roomContext.initialGraphData);
-    setVisualizationData({
-      compressRelationshipsWidthFactor:
-        roomContext.initialCanvasData.compressRelationshipsWidthFactor,
-      growNodesBasedOnDegree:
-        roomContext.initialCanvasData.growNodesBasedOnDegree,
-      growNodesBasedOnDegreeFactor:
-        roomContext.initialCanvasData.growNodesBasedOnDegreeFactor,
-    });
+    setVisualizationData(roomContext.initialCanvasData.viewSettings);
   }, [roomContext]);
 
   useEffect(() => {

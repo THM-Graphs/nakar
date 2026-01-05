@@ -44,6 +44,7 @@ import { Range } from '../range/Range';
 import { Logger } from '@strapi/logger';
 import { createChildLogger } from '../logger/createChildLogger';
 import { Profiler } from 'winston';
+import { CanvasViewSettings } from '../room/graph/CanvasViewSettings';
 
 export class SchemaFactoryService implements ApplicationService {
   private readonly _logger: Logger = createChildLogger(this);
@@ -242,11 +243,15 @@ export class SchemaFactoryService implements ApplicationService {
     graph: MutableGraph,
     notes: IndexedNoteCollection,
     undoWrapperInfo: UndoWrapperInfo | null,
-    canvas: Result<'api::v2-canvas.v2-canvas'>,
+    viewSettings: CanvasViewSettings,
   ): Promise<SchemaGraph> {
     const t: Profiler = this._logger.startTimer();
     const schemaGraph: SchemaGraph = {
-      elements: await this.createSchemaGraphElements(graph, notes, canvas),
+      elements: await this.createSchemaGraphElements(
+        graph,
+        notes,
+        viewSettings,
+      ),
       metaData: await this.createSchemaGraphMetaData(graph, undoWrapperInfo),
       table: this.createSchemaTable(graph.tableData),
     };
@@ -259,7 +264,7 @@ export class SchemaFactoryService implements ApplicationService {
   public async createSchemaGraphElements(
     graph: MutableGraph,
     notes: IndexedNoteCollection,
-    canvas: Result<'api::v2-canvas.v2-canvas'>,
+    viewSettings: CanvasViewSettings,
   ): Promise<SchemaGraphElements> {
     const t: Profiler = this._logger.startTimer();
     const databaseCache: DatabaseReferenceCache = new DatabaseReferenceCache(
@@ -276,7 +281,7 @@ export class SchemaFactoryService implements ApplicationService {
             graph,
             notes,
             databaseCache,
-            canvas,
+            viewSettings,
             degreeRange,
           ),
       ),
@@ -286,7 +291,7 @@ export class SchemaFactoryService implements ApplicationService {
             edge,
             graph,
             databaseCache,
-            canvas,
+            viewSettings,
             widthRange,
           ),
       ),
@@ -513,13 +518,7 @@ export class SchemaFactoryService implements ApplicationService {
       id: canvas.documentId,
       title: canvas.title ?? '',
       roomId: room.documentId,
-      compressRelationshipsWidthFactor:
-        canvas.compressRelationshipsWidthFactor ??
-        MutableEdge.defaultCompressRelationshipsWidthFactor,
-      growNodesBasedOnDegree: canvas.growNodesBasedOnDegree ?? false,
-      growNodesBasedOnDegreeFactor:
-        canvas.growNodesBasedOnDegreeFactor ??
-        MutableNode.defaultGrowNodesBasedOnDegreeFactor,
+      viewSettings: CanvasViewSettings.fromDB(canvas).toSchema(),
     };
   }
 
@@ -702,7 +701,7 @@ export class SchemaFactoryService implements ApplicationService {
     graph: MutableGraph,
     notes: IndexedNoteCollection,
     databaseCache: DatabaseReferenceCache,
-    canvas: Result<'api::v2-canvas.v2-canvas'>,
+    viewSettings: CanvasViewSettings,
     degreeRange: Range,
   ): Promise<SchemaNode> {
     const incomingEdges: MutableEdge[] = graph.edges.getByEndNodeId(node.id);
@@ -735,7 +734,7 @@ export class SchemaFactoryService implements ApplicationService {
       labels: node.labels.toArray(),
       nativeLabels: node.labels.toArray(),
       properties: this._createSchemaGraphProperties(node.properties),
-      radius: node.getRadius(canvas, degreeRange, graph),
+      radius: node.getRadius(viewSettings, degreeRange, graph),
       position: node.position,
       inDegree: node.inDegree(graph),
       outDegree: node.outDegree(graph),
@@ -773,7 +772,7 @@ export class SchemaFactoryService implements ApplicationService {
     edge: MutableEdge,
     graph: MutableGraph,
     databaseCcache: DatabaseReferenceCache,
-    canvas: Result<'api::v2-canvas.v2-canvas'>,
+    viewSettings: CanvasViewSettings,
     edgeWidthRange: Range,
   ): Promise<SchemaEdge> {
     const sourceNode: MutableNode | null = graph.nodes.get(edge.startNodeId);
@@ -787,7 +786,7 @@ export class SchemaFactoryService implements ApplicationService {
       parallelCount: edge.parallelCount(graph),
       parallelIndex: edge.parallelIndex(graph),
       isCluster: edge.isCluster,
-      width: edge.getWidth(edgeWidthRange, canvas),
+      width: edge.getWidth(edgeWidthRange, viewSettings),
       properties: this._createSchemaGraphProperties(edge.properties),
       namesInQuery: edge.namesInQuery.toArray(),
       source:

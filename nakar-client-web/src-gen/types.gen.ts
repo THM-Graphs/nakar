@@ -4,9 +4,7 @@ export type Canvas = {
     id: string;
     title: string;
     roomId: string;
-    compressRelationshipsWidthFactor: number;
-    growNodesBasedOnDegree: boolean;
-    growNodesBasedOnDegreeFactor: number;
+    viewSettings: CanvasViewSettings;
 };
 
 export type CanvasPage = {
@@ -14,6 +12,12 @@ export type CanvasPage = {
     scenarios: GetScenariosResult;
     graph: Graph;
     room: Room;
+};
+
+export type CanvasViewSettings = {
+    compressRelationshipsWidthFactor: number;
+    growNodesBasedOnDegree: boolean;
+    growNodesBasedOnDegreeFactor: number;
 };
 
 export type Color = PresetColor | CustomColor;
@@ -561,16 +565,14 @@ export type GetCanvasPageError = unknown;
 
 export type SetCanvasDataData = {
     body: {
-        compressRelationshipsWidthFactor: (number) | null;
-        growNodesBasedOnDegree: (boolean) | null;
-        growNodesBasedOnDegreeFactor: (number) | null;
+        viewSettings: CanvasViewSettings;
     };
     path: {
         id: string;
     };
 };
 
-export type SetCanvasDataResponse = (unknown);
+export type SetCanvasDataResponse = (Canvas);
 
 export type SetCanvasDataError = unknown;
 

@@ -5,13 +5,10 @@ import type { MutableGraph } from './MutableGraph';
 import { SMap } from '../../map/Map';
 import { Range } from '../../range/Range';
 import { MutableGraphElementCreationAction } from './MutableGraphElementCreationAction';
-import { Result } from '@strapi/types/dist/modules/documents/result';
-import { ScaleType } from '../../physics/ScaleType';
+import { CanvasViewSettings } from './CanvasViewSettings';
 
 export class MutableEdge {
   public static readonly defaultWidth: number = 2;
-  public static readonly defaultScaleType: ScaleType = 'linear';
-  public static readonly defaultCompressRelationshipsWidthFactor: number = 10;
 
   // eslint-disable-next-line @typescript-eslint/typedef
   public static readonly schema = z.object({
@@ -96,20 +93,19 @@ export class MutableEdge {
 
   public getWidth(
     edgeWidthRange: Range,
-    canvas: Result<'api::v2-canvas.v2-canvas'>,
+    viewSettings: CanvasViewSettings,
   ): number {
     const toRange: Range = new Range({
       floor: MutableEdge.defaultWidth,
       ceiling:
         MutableEdge.defaultWidth *
-        (canvas.compressRelationshipsWidthFactor ??
-          MutableEdge.defaultCompressRelationshipsWidthFactor),
+        viewSettings.compressRelationshipsWidthFactor,
     });
 
     const result: number = edgeWidthRange.scaleValue(
       toRange,
       this.representationCount,
-      canvas.scaleType ?? MutableEdge.defaultScaleType,
+      viewSettings.scaleType,
     );
 
     return result;

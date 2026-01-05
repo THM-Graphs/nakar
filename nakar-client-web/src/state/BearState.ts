@@ -1,4 +1,5 @@
 import {
+  CanvasViewSettings,
   Color,
   ExpandNodePreviewElement,
   GetScenariosResult,
@@ -193,16 +194,8 @@ export interface BearState {
         setCompressRelationshipsWidthFactor: (newValue: number) => void;
         setGrowNodesBasedOnDegree: (newValue: boolean) => void;
         setGrowNodesBasedOnDegreeFactor: (newValue: number) => void;
-        setData: (newValue: {
-          compressRelationshipsWidthFactor: number;
-          growNodesBasedOnDegree: boolean;
-          growNodesBasedOnDegreeFactor: number;
-        }) => void;
-        data: {
-          compressRelationshipsWidthFactor: number;
-          growNodesBasedOnDegree: boolean;
-          growNodesBasedOnDegreeFactor: number;
-        } | null;
+        setData: (newValue: CanvasViewSettings) => void;
+        data: CanvasViewSettings | null;
       };
     };
     canvas: {

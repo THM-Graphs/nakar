@@ -2,6 +2,7 @@ import { create } from "zustand/react";
 import { BearState } from "./BearState.ts";
 import { SocketState } from "../shared/ws/SocketState.ts";
 import {
+  CanvasViewSettings,
   Color,
   Node,
   NodePreview,
@@ -587,11 +588,7 @@ export const useBearStore = create<BearState>()(
                       s.room.panels.right = null;
                     });
                   },
-                  setData: (newValue: {
-                    compressRelationshipsWidthFactor: number;
-                    growNodesBasedOnDegree: boolean;
-                    growNodesBasedOnDegreeFactor: number;
-                  }) => {
+                  setData: (newValue: CanvasViewSettings) => {
                     set((s) => {
                       s.room.panels.visualization.data = newValue;
                     });

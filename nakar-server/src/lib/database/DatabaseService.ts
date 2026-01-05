@@ -15,6 +15,7 @@ import {
   getStringPayloadOfMediaFile,
   saveStringFile,
 } from '../media/media';
+import { CanvasViewSettings } from '../room/graph/CanvasViewSettings';
 
 export class DatabaseService implements ApplicationService {
   private readonly _logger: Logger = createChildLogger(this);
@@ -931,53 +932,19 @@ export class DatabaseService implements ApplicationService {
     );
   }
 
-  public async setCanvasCompressRelationshipsWidthFactor(
+  public async setCanvasViewSettings(
     canvas: Result<'api::v2-canvas.v2-canvas'>,
-    compressRelationshipsWidthFactor: number,
+    viewSettings: CanvasViewSettings,
   ): Promise<void> {
     const updatedCanvas: Result<'api::v2-canvas.v2-canvas'> | null =
       await strapi.documents('api::v2-canvas.v2-canvas').update({
         documentId: canvas.documentId,
         data: {
-          compressRelationshipsWidthFactor: compressRelationshipsWidthFactor,
-        },
-        status: 'published',
-      });
-    if (updatedCanvas) {
-      this._onVisualizationSettingsChanged.next({ canvas: updatedCanvas });
-    } else {
-      throw new Error('Canvas not found.');
-    }
-  }
-
-  public async setGrowNodesBasedOnDegree(
-    canvas: Result<'api::v2-canvas.v2-canvas'>,
-    growNodesBasedOnDegree: boolean,
-  ): Promise<void> {
-    const updatedCanvas: Result<'api::v2-canvas.v2-canvas'> | null =
-      await strapi.documents('api::v2-canvas.v2-canvas').update({
-        documentId: canvas.documentId,
-        data: {
-          growNodesBasedOnDegree: growNodesBasedOnDegree,
-        },
-        status: 'published',
-      });
-    if (updatedCanvas) {
-      this._onVisualizationSettingsChanged.next({ canvas: updatedCanvas });
-    } else {
-      throw new Error('Canvas not found.');
-    }
-  }
-
-  public async setGrowNodesBasedOnDegreeFactor(
-    canvas: Result<'api::v2-canvas.v2-canvas'>,
-    growNodesBasedOnDegreeFactor: number,
-  ): Promise<void> {
-    const updatedCanvas: Result<'api::v2-canvas.v2-canvas'> | null =
-      await strapi.documents('api::v2-canvas.v2-canvas').update({
-        documentId: canvas.documentId,
-        data: {
-          growNodesBasedOnDegreeFactor: growNodesBasedOnDegreeFactor,
+          compressRelationshipsWidthFactor:
+            viewSettings.compressRelationshipsWidthFactor,
+          growNodesBasedOnDegree: viewSettings.growNodesBasedOnDegree,
+          growNodesBasedOnDegreeFactor:
+            viewSettings.growNodesBasedOnDegreeFactor,
         },
         status: 'published',
       });
