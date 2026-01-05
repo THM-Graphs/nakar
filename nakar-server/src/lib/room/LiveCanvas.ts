@@ -48,6 +48,7 @@ import { getStringPayloadOfMediaFile } from '../media/media';
 import { UndoWrapperInfo } from '../undo/UndoWrapperInfo';
 import { PhysicalGraph } from '../physics/physical-graph/PhysicalGraph';
 import { LiveCanvasViewSettings } from './graph/LiveCanvasViewSettings';
+import { LiveCanvasChangeRecorder } from './graph/LiveCanvasChangeRecorder';
 
 export class LiveCanvas implements ApplicationService {
   private readonly _logger: Logger = createChildLogger(this);
@@ -231,6 +232,10 @@ export class LiveCanvas implements ApplicationService {
   }): void {
     const graph: LiveCanvasData = this.getGraph();
     const nodesToSend: RSPhysicalNode[] = [];
+
+    const changeRecorder: LiveCanvasChangeRecorder =
+      new LiveCanvasChangeRecorder();
+
     for (const physialNode of params.nodes) {
       const node: LiveCanvasNode | null = graph.nodes.get(physialNode.id);
       if (node == null) {
@@ -247,26 +252,17 @@ export class LiveCanvas implements ApplicationService {
       }
       node.position.x = physialNode.position.x;
       node.position.y = physialNode.position.y;
+      changeRecorder.didMoveNode(node);
 
       if (!node.locked) {
         node.locked = true;
-        this._physicsWorker.setLocks({
-          [node.id]: node.locked,
-        });
-        this._onEvent.next({
-          type: 'CanvasEventNodeLocksUpdated',
-          canvasId: this.canvasId,
-          locks: new SMap([[node.id, node.locked]]),
-        } satisfies CanvasEvent);
+        changeRecorder.didChangeNodeLock(node.id, true);
       }
 
       nodesToSend.push(physialNode);
     }
 
-    this._physicsWorker.moveNodes({
-      nodes: nodesToSend,
-      runShortPhysics: true,
-    });
+    this._handleChangeRecorder(changeRecorder);
   }
 
   public ungrabNode(params: { userId: string; node: RSPhysicalNode }): void {
@@ -385,14 +381,21 @@ export class LiveCanvas implements ApplicationService {
           }
         }
 
+        const changeRecorder: LiveCanvasChangeRecorder =
+          new LiveCanvasChangeRecorder();
         const graph: LiveCanvasData = this._snapshot('Load scenario');
+        changeRecorder.didCreateSnapshot();
+
         const positionsCache: PositionsCache = PositionsCache.fromGraph(graph);
 
         if (!params.additive) {
           graph.resetFromInitialScenario(scenario, params.arguments);
+          changeRecorder.didAddOrRemoveGraphElements();
+          changeRecorder.didAddOrRemoveTableData();
         }
 
         graph.tableData = tableData;
+        changeRecorder.didAddOrRemoveTableData();
         for (const graphElements of graphElementsList) {
           graph.nodes.addNeo4jNodes(
             graphElements.nodes,
@@ -403,10 +406,9 @@ export class LiveCanvas implements ApplicationService {
             ElementCreationReason.loadScenario,
           );
         }
+        changeRecorder.didAddOrRemoveGraphElements();
 
         positionsCache.applyToGraph(graph);
-
-        await this._postProcessGraph();
 
         if (!params.additive) {
           const task: Profiler = this._logger.startTimer();
@@ -421,7 +423,7 @@ export class LiveCanvas implements ApplicationService {
                 return;
               })
               .with({ type: 'connectResultNodes' }, async (): Promise<void> => {
-                await this._connectResultNodes();
+                await this._connectResultNodes(changeRecorder);
               })
               .with(
                 { type: 'compressNodes' },
@@ -430,12 +432,12 @@ export class LiveCanvas implements ApplicationService {
                 ): void => {
                   const label: string | null = data.label ?? null;
                   if (label != null) {
-                    this._compressNodes(label);
+                    this._compressNodes(label, changeRecorder);
                   }
                 },
               )
               .with({ type: 'compressRelationships' }, (): void => {
-                this._compressRelationships();
+                this._compressRelationships(changeRecorder);
               })
               .with(
                 { type: 'layout' },
@@ -452,15 +454,23 @@ export class LiveCanvas implements ApplicationService {
                       if (radius == null) {
                         return;
                       }
-                      this._layout(label, {
-                        type: 'LayoutSpecificationCircle',
-                        radius: radius,
-                      });
+                      this._layout(
+                        label,
+                        {
+                          type: 'LayoutSpecificationCircle',
+                          radius: radius,
+                        },
+                        changeRecorder,
+                      );
                     })
                     .with('forceDirected', (): void => {
-                      this._layout(label, {
-                        type: 'LayoutSpecificationForceDirected',
-                      });
+                      this._layout(
+                        label,
+                        {
+                          type: 'LayoutSpecificationForceDirected',
+                        },
+                        changeRecorder,
+                      );
                     })
                     .with(P.nullish, (): void => {
                       return;
@@ -538,10 +548,14 @@ export class LiveCanvas implements ApplicationService {
               params.limit,
             );
 
+        const changeRecorder: LiveCanvasChangeRecorder =
+          new LiveCanvasChangeRecorder();
         const graph: LiveCanvasData = this._snapshot('Expand node');
+        changeRecorder.didCreateSnapshot();
 
         if (node.isCluster) {
           graph.nodes.remove(node);
+          changeRecorder.didAddOrRemoveGraphElements();
           for (const edge of graph.edges.getByStartOrEndNodeId(node.id)) {
             graph.edges.remove(edge);
           }
@@ -560,6 +574,7 @@ export class LiveCanvas implements ApplicationService {
               insertedNode.position.x = node.position.x;
               insertedNode.position.y = node.position.y;
               PhysicsSimulation.jiggle(insertedNode);
+              changeRecorder.didAddOrRemoveGraphElements();
             }
           }
         }
@@ -567,6 +582,7 @@ export class LiveCanvas implements ApplicationService {
           if (!graph.edges.has(newEdge[0])) {
             result.edgeAddedCount += 1;
             graph.edges.addNeo4jEdge(newEdge[1], ElementCreationReason.expand);
+            changeRecorder.didAddOrRemoveGraphElements();
           }
         }
 
@@ -622,7 +638,10 @@ export class LiveCanvas implements ApplicationService {
           edgeAddedCount: 0,
         };
 
+        const changeRecorder: LiveCanvasChangeRecorder =
+          new LiveCanvasChangeRecorder();
         const graph: LiveCanvasData = this._snapshot('Focus nodes');
+        changeRecorder.didCreateSnapshot();
 
         graph.nodes.nodes
           .filter(
@@ -631,10 +650,14 @@ export class LiveCanvas implements ApplicationService {
           )
           .forEach((node: LiveCanvasNode): void => {
             graph.nodes.remove(node);
+            changeRecorder.didAddOrRemoveGraphElements();
             result.nodesAddedCount -= 1;
           });
         const edgesRemovedCount: number = graph.removeDanglingEdges();
         result.edgeAddedCount -= edgesRemovedCount;
+        if (edgesRemovedCount > 0) {
+          changeRecorder.didAddOrRemoveGraphElements();
+        }
 
         await this._sendGraphToWorker();
         this._triggerElementsChanged();
@@ -658,6 +681,8 @@ export class LiveCanvas implements ApplicationService {
         const nodesToDelete: SSet<LiveCanvasNode> = new SSet<LiveCanvasNode>();
         const edgesToDelete: SSet<LiveCanvasEdge> = new SSet<LiveCanvasEdge>();
 
+        const changeRecorder: LiveCanvasChangeRecorder =
+          new LiveCanvasChangeRecorder();
         const graph: LiveCanvasData = this._snapshot('Delete elements');
 
         for (const nodeId of params.nodeIds) {
@@ -675,6 +700,7 @@ export class LiveCanvas implements ApplicationService {
         for (const node of nodesToDelete) {
           const didDelete: boolean = graph.nodes.remove(node);
           if (didDelete) {
+            changeRecorder.didAddOrRemoveGraphElements();
             result.nodesAddedCount -= 1;
           }
 
@@ -702,6 +728,7 @@ export class LiveCanvas implements ApplicationService {
         for (const edge of edgesToDelete) {
           const didDelete: boolean = graph.edges.remove(edge);
           if (didDelete) {
+            changeRecorder.didAddOrRemoveGraphElements();
             result.edgeAddedCount -= 1;
           }
         }
@@ -721,7 +748,10 @@ export class LiveCanvas implements ApplicationService {
   public undo(): void {
     this._queue.addTask(
       new TaskQueueTask('Undo', async (): Promise<void> => {
+        const changeRecorder: LiveCanvasChangeRecorder =
+          new LiveCanvasChangeRecorder();
         this._graph.undo();
+        changeRecorder.didCreateSnapshot();
 
         await this.saveGraph();
 
@@ -736,7 +766,10 @@ export class LiveCanvas implements ApplicationService {
   public redo(): void {
     this._queue.addTask(
       new TaskQueueTask('Redo', async (): Promise<void> => {
+        const changeRecorder: LiveCanvasChangeRecorder =
+          new LiveCanvasChangeRecorder();
         this._graph.redo();
+        changeRecorder.didCreateSnapshot();
 
         await this.saveGraph();
 
@@ -780,12 +813,17 @@ export class LiveCanvas implements ApplicationService {
           } satisfies CanvasEventNotAllNodesLoaded);
         }
 
+        const changeRecorder: LiveCanvasChangeRecorder =
+          new LiveCanvasChangeRecorder();
         const graph: LiveCanvasData = this._snapshot('Run query');
+        changeRecorder.didCreateSnapshot();
 
         if (params.replace) {
           graph.nodes.reset();
           graph.edges.reset();
+          changeRecorder.didAddOrRemoveGraphElements();
           graph.tableData = graphElements.tableData;
+          changeRecorder.didAddOrRemoveTableData();
         }
         graph.nodes.addNeo4jNodes(
           graphElements.nodes,
@@ -795,6 +833,7 @@ export class LiveCanvas implements ApplicationService {
           graphElements.relationships,
           ElementCreationReason.query,
         );
+        changeRecorder.didAddOrRemoveGraphElements();
 
         await this._postProcessGraph();
 
@@ -810,9 +849,12 @@ export class LiveCanvas implements ApplicationService {
   public connectResultNodes(): void {
     this._queue.addTask(
       new TaskQueueTask('Connecting result nodes', async (): Promise<void> => {
+        const changeRecorder: LiveCanvasChangeRecorder =
+          new LiveCanvasChangeRecorder();
         const graph: LiveCanvasData = this._snapshot('Connect result nodes');
+        changeRecorder.didCreateSnapshot();
 
-        await this._connectResultNodes();
+        await this._connectResultNodes(changeRecorder);
 
         await this._sendGraphToWorker();
         this._triggerPhysicsSimluation({ amount: 'short' });
@@ -823,7 +865,10 @@ export class LiveCanvas implements ApplicationService {
 
   public unlockNodes(params: { nodeIds: readonly string[] }): void {
     const nodeLocksChanged: SMap<string, boolean> = new SMap<string, boolean>();
+    const changeRecorder: LiveCanvasChangeRecorder =
+      new LiveCanvasChangeRecorder();
     const graph: LiveCanvasData = this._snapshot('Unlock nodes');
+    changeRecorder.didCreateSnapshot();
 
     for (const nodeId of params.nodeIds) {
       const node: LiveCanvasNode | null = graph.nodes.get(nodeId);
@@ -834,6 +879,7 @@ export class LiveCanvas implements ApplicationService {
       if (node.locked) {
         node.locked = false;
         nodeLocksChanged.set(node.id, node.locked);
+        changeRecorder.didChangeNodeLock(node.id, node.locked);
       }
     }
 
@@ -848,12 +894,16 @@ export class LiveCanvas implements ApplicationService {
 
   public unlockAllNodes(): void {
     const nodeLocksChanged: SMap<string, boolean> = new SMap<string, boolean>();
+    const changeRecorder: LiveCanvasChangeRecorder =
+      new LiveCanvasChangeRecorder();
     const graph: LiveCanvasData = this._snapshot('Unlock all nodes');
+    changeRecorder.didCreateSnapshot();
     for (const node of graph.nodes.nodes) {
       if (node.grabs.size === 0) {
         if (node.locked) {
           node.locked = false;
           nodeLocksChanged.set(node.id, node.locked);
+          changeRecorder.didChangeNodeLock(node.id, node.locked);
         }
       }
     }
@@ -880,9 +930,13 @@ export class LiveCanvas implements ApplicationService {
           .map((node: LiveCanvasNode): string => node.id)
           .toArray();
 
+        const changeRecorder: LiveCanvasChangeRecorder =
+          new LiveCanvasChangeRecorder();
         const graph: LiveCanvasData = this._snapshot('Remove dangling nodes');
+        changeRecorder.didCreateSnapshot();
         for (const id of ids) {
           graph.nodes.remove(id);
+          changeRecorder.didAddOrRemoveGraphElements();
         }
 
         await this._sendGraphToWorker();
@@ -897,8 +951,11 @@ export class LiveCanvas implements ApplicationService {
       new TaskQueueTask(
         'Compressing relationships',
         async (): Promise<void> => {
+          const changeRecorder: LiveCanvasChangeRecorder =
+            new LiveCanvasChangeRecorder();
           this._snapshot('Compress relationships');
-          this._compressRelationships();
+          changeRecorder.didCreateSnapshot();
+          this._compressRelationships(changeRecorder);
 
           await this._sendGraphToWorker();
           this._triggerElementsChanged();
@@ -910,8 +967,11 @@ export class LiveCanvas implements ApplicationService {
   public compressNodes(params: { label: string }): void {
     this._queue.addTask(
       new TaskQueueTask('Compressing nodes', async (): Promise<void> => {
+        const changeRecorder: LiveCanvasChangeRecorder =
+          new LiveCanvasChangeRecorder();
         this._snapshot('Compress nodes');
-        this._compressNodes(params.label);
+        changeRecorder.didCreateSnapshot();
+        this._compressNodes(params.label, changeRecorder);
 
         await this._sendGraphToWorker();
         this._triggerPhysicsSimluation({ amount: 'short' });
@@ -926,14 +986,17 @@ export class LiveCanvas implements ApplicationService {
   }): void {
     this._queue.addTask(
       new TaskQueueTask('Layout label', async (): Promise<void> => {
-        let lockChanges: SMap<string, boolean> = new SMap<string, boolean>();
+        const lockChanges: SMap<string, boolean> = new SMap<string, boolean>();
+        const changeRecorder: LiveCanvasChangeRecorder =
+          new LiveCanvasChangeRecorder();
         this._snapshot('Layout label');
-        lockChanges = this._layout(params.label, params.layoutSpecification);
+        changeRecorder.didCreateSnapshot();
+        this._layout(params.label, params.layoutSpecification, changeRecorder);
 
         this._onEvent.next({
           type: 'CanvasEventNodeLocksUpdated',
           canvasId: this.canvasId,
-          locks: lockChanges,
+          locks: new SMap(), // TODO
         } satisfies CanvasEvent);
 
         await this._sendGraphToWorker();
@@ -1012,7 +1075,11 @@ export class LiveCanvas implements ApplicationService {
             }
           }
 
+          const changeRecorder: LiveCanvasChangeRecorder =
+            new LiveCanvasChangeRecorder();
           const graph: LiveCanvasData = this._snapshot('Show shortest path');
+          changeRecorder.didCreateSnapshot();
+
           for (const result of results) {
             graph.nodes.addNeo4jNodes(
               result.nodes,
@@ -1022,6 +1089,7 @@ export class LiveCanvas implements ApplicationService {
               result.relationships,
               ElementCreationReason.expand,
             );
+            changeRecorder.didAddOrRemoveGraphElements();
           }
 
           await this._postProcessGraph();
@@ -1053,11 +1121,16 @@ export class LiveCanvas implements ApplicationService {
           throw new Error(`Node ${params.nodeId} not found.`);
         }
 
+        const changeRecorder: LiveCanvasChangeRecorder =
+          new LiveCanvasChangeRecorder();
         const graph: LiveCanvasData = this._snapshot('Load node');
+        changeRecorder.didCreateSnapshot();
+
         graph.nodes.addNeo4jNode(
           result.nodes.toValueArray()[0],
           ElementCreationReason.search,
         );
+        changeRecorder.didAddOrRemoveGraphElements();
 
         await this._postProcessGraph();
 
@@ -1105,7 +1178,9 @@ export class LiveCanvas implements ApplicationService {
     this.saveGraphAsync();
   }
 
-  private _compressRelationships(): void {
+  private _compressRelationships(
+    changeRecorder: LiveCanvasChangeRecorder,
+  ): void {
     let compressedCount: number = 0;
     const graph: LiveCanvasData = this.getGraph();
 
@@ -1153,6 +1228,7 @@ export class LiveCanvas implements ApplicationService {
             graph.edges.remove(edgeToCompress);
           }
           graph.edges.add(newEdge);
+          changeRecorder.didAddOrRemoveGraphElements();
         }
       }
     }
@@ -1162,7 +1238,9 @@ export class LiveCanvas implements ApplicationService {
     );
   }
 
-  private async _connectResultNodes(): Promise<void> {
+  private async _connectResultNodes(
+    changeRecorder: LiveCanvasChangeRecorder,
+  ): Promise<void> {
     const graph: LiveCanvasData = this.getGraph();
 
     const egdesToAdd: Neo4jRelationship[] = [];
@@ -1200,6 +1278,10 @@ export class LiveCanvas implements ApplicationService {
       if (didAdd) {
         addedEdgesCount += 1;
       }
+    }
+
+    if (addedEdgesCount > 0) {
+      changeRecorder.didAddOrRemoveGraphElements();
     }
   }
 
@@ -1356,7 +1438,10 @@ export class LiveCanvas implements ApplicationService {
     });
   }
 
-  private _compressNodes(targetLabel: string): void {
+  private _compressNodes(
+    targetLabel: string,
+    changeRecorder: LiveCanvasChangeRecorder,
+  ): void {
     this._logger.debug(`Will check nodes of ${targetLabel} for compressing`);
     let compressCount: number = 0;
     const graph: LiveCanvasData = this.getGraph();
@@ -1394,6 +1479,7 @@ export class LiveCanvas implements ApplicationService {
         creationAction: ElementCreationReason.compress,
       });
       graph.nodes.add(newNode);
+      changeRecorder.didAddOrRemoveGraphElements();
       for (const sibling of clusterBuddies) {
         for (const outgoingEdge of graph.edges.getByStartNodeId(sibling.id)) {
           graph.edges.remove(outgoingEdge);
@@ -1424,12 +1510,12 @@ export class LiveCanvas implements ApplicationService {
   private _layout(
     targetLabel: string,
     layoutSpecification: SchemaLayoutSpecification,
-  ): SMap<string, boolean> {
+    changeRecorder: LiveCanvasChangeRecorder,
+  ): void {
     const graph: LiveCanvasData = this.getGraph();
     const nodesOfLabel: LiveCanvasNode[] = graph.nodes
       .getByLabel(targetLabel)
       .toArray();
-    const lockChanges: SMap<string, boolean> = new SMap<string, boolean>();
 
     match(layoutSpecification)
       .with(
@@ -1451,8 +1537,9 @@ export class LiveCanvas implements ApplicationService {
             const y: number = radius * Math.sin(degreeRad);
             sortedNodesToLayout[i].position.x = x;
             sortedNodesToLayout[i].position.y = y;
+            changeRecorder.didMoveNode(sortedNodesToLayout[i]);
             sortedNodesToLayout[i].locked = true;
-            lockChanges.set(sortedNodesToLayout[i].id, true);
+            changeRecorder.didChangeNodeLock(sortedNodesToLayout[i].id, true);
           }
 
           // Put other nodes between
@@ -1472,6 +1559,7 @@ export class LiveCanvas implements ApplicationService {
                 ),
               );
               PhysicsSimulation.jiggle(node);
+              changeRecorder.didMoveNode(node);
             }
           }
         },
@@ -1479,12 +1567,10 @@ export class LiveCanvas implements ApplicationService {
       .with({ type: 'LayoutSpecificationForceDirected' }, (): void => {
         for (const node of nodesOfLabel) {
           node.locked = false;
-          lockChanges.set(node.id, false);
+          changeRecorder.didChangeNodeLock(node.id, false);
         }
       })
       .exhaustive();
-
-    return lockChanges;
   }
 
   private async _loadGraph(): Promise<LiveCanvasData> {
@@ -1570,5 +1656,16 @@ export class LiveCanvas implements ApplicationService {
       table: this.getGraph().tableData,
       canvasId: this.canvasId,
     } satisfies CanvasEventGraphTableChanged);
+  }
+
+  private _handleChangeRecorder(
+    changeRecorder: LiveCanvasChangeRecorder,
+  ): void {
+    changeRecorder.handleChange(
+      this._physicsWorker,
+      this._onEvent,
+      this.canvasId,
+      this.getGraph(),
+    );
   }
 }
