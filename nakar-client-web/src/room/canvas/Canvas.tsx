@@ -18,6 +18,8 @@ import { RemoveDanglingNodesAction } from "../actions/RemoveDanglingNodesAction.
 import { CompressRelationshipsAction } from "../actions/CompressRelationshipsAction.ts";
 import { useState } from "react";
 import { CanvasBottomToolBar } from "./CanvasBottomToolBar.tsx";
+import { ProgressDisplay } from "../../shared/bars/ProgressDisplay.tsx";
+import { PerformanceDisplay } from "./PerformanceDisplay.tsx";
 
 export function Canvas(props: {
   context: AppContext;
@@ -38,6 +40,7 @@ export function Canvas(props: {
       className={"flex-grow-1 flex-shrink-1 align-items-stretch"}
       direction={"vertical"}
       style={{ height: "100%", width: "100px" }}
+      gap={3}
     >
       <CanvasToolbar
         context={props.context}
@@ -46,12 +49,12 @@ export function Canvas(props: {
       {tabs.selected == "graph" ? (
         <Stack className={"justify-content-between"}>
           <Stack direction={"horizontal"} className={"justify-content-between"}>
-            <Stack className={"z-1 flex-grow-0 align-self-start"}>
+            <Stack className={"z-1 flex-grow-0 align-self-start"} gap={3}>
               <Labels roomContext={props.roomContext}></Labels>
             </Stack>
             <Stack
               className={
-                "flex-grow-0 flex-shrink-1 justify-content-end flex-wrap z-1 bg-body"
+                "flex-grow-0 flex-shrink-1 justify-content-end flex-wrap z-1 bg-body border rounded"
               }
               direction={"vertical"}
               gap={2}
@@ -170,9 +173,12 @@ export function Canvas(props: {
           <CanvasBottomToolBar
             roomContext={props.roomContext}
           ></CanvasBottomToolBar>
+          <PerformanceDisplay></PerformanceDisplay>
         </Stack>
       ) : (
-        <DataTable></DataTable>
+        <>
+          <DataTable></DataTable>
+        </>
       )}
     </Stack>
   );

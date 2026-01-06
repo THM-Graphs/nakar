@@ -11,6 +11,10 @@ div#root {
   font-family: system-ui;
 }
 
+.rounded {
+  corner-shape: squircle;
+}
+
 /* Workaround for https://github.com/react-bootstrap/react-bootstrap/issues/3393#issuecomment-1375715749 */
 div[role="tooltip"] {
   position: fixed;
@@ -52,4 +56,19 @@ div[role="tooltip"] {
 .markdown th,
 .markdown td {
   border-collapse: collapse;
+}
+
+.bg-body,
+.bg-body-secondary,
+.bg-body-tertiary,
+.dropdown-menu {
+  backdrop-filter: blur(10px);
+  --bs-bg-opacity: 0.8;
+}
+
+.dropdown-menu {
+  background-color: rgba(
+    var(--bs-body-bg-rgb),
+    var(--bs-bg-opacity)
+  ) !important;
 }

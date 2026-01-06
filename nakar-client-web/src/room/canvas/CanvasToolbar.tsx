@@ -9,6 +9,7 @@ import { ActionNavbarButton } from "../actions/ActionNavbarButton.tsx";
 import { UndoAction } from "../actions/UndoAction.ts";
 import { RedoAction } from "../actions/RedoAction.ts";
 import { RerunScenarioAction } from "../actions/RerunScenarioAction.ts";
+import { ProgressDisplay } from "../../shared/bars/ProgressDisplay.tsx";
 
 export function CanvasToolbar(props: {
   context: AppContext;
@@ -26,8 +27,9 @@ export function CanvasToolbar(props: {
     <Stack
       direction={"horizontal"}
       className={
-        "flex-grow-0 bg-body flex-shrink-0 border-bottom align-items-center justify-content-between flex-wrap z-2"
+        "flex-grow-0 flex-shrink-0 align-items-center flex-wrap z-2 border rounded bg-body"
       }
+      gap={2}
     >
       <Stack direction={"horizontal"}>
         <ActionNavbarButton
@@ -51,6 +53,10 @@ export function CanvasToolbar(props: {
 
         <GraphDataToggle></GraphDataToggle>
       </Stack>
+
+      <ProgressDisplay></ProgressDisplay>
+
+      <div className="flex-grow-1"></div>
 
       {/*<CanvasTabs canvasContext={props.roomContext}></CanvasTabs>*/}
 

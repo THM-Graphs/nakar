@@ -8,7 +8,7 @@ export function Labels(props: { roomContext: CanvasContext }) {
 
   return (
     <Stack
-      className={"flex-wrap p-1 align-self-start bg-body"}
+      className={"flex-wrap align-self-start"}
       direction={"horizontal"}
       gap={1}
       style={{}}

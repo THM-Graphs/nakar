@@ -136,7 +136,7 @@ export function InspectorPanel(props: {
 
 function EmptyInspector() {
   return (
-    <span className={"text-muted small fst-italic align-self-center"}>
+    <span className={"text-muted small fst-italic align-self-center p-5"}>
       Inspector
     </span>
   );

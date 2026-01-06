@@ -45,6 +45,7 @@ import { SearchPanelButton } from "../room/search-panel/SearchPanelButton.tsx";
 import { Canvas } from "../room/canvas/Canvas.tsx";
 import { VisualizationPanelButton } from "../room/visualization-panel/VisualizationPanelButton.tsx";
 import { VisualizationPanel } from "../room/visualization-panel/VisualizationPanel.tsx";
+import { CanvasToolbar } from "../room/canvas/CanvasToolbar.tsx";
 
 export type CanvasContext = {
   initialCanvasData: SchemaCanvas;
@@ -180,35 +181,51 @@ export function CanvasPage(props: { context: AppContext }) {
   return (
     <>
       <Stack style={{ height: "100%" }} className={"position-relative"}>
-        <Stack>
-          <AppNavbar
-            left={
-              <>
-                <Stack direction={"horizontal"} gap={1}>
-                  <Stack direction={"horizontal"}>
-                    <ActionNavbarButton
-                      action={CloseRoomAction.shared}
-                      params={{ navigate }}
-                      hideTitle={true}
-                    ></ActionNavbarButton>
-                    <NavbarLogo></NavbarLogo>
+        <Stack gap={3} className={"pb-3"}>
+          <Stack className="flex-grow-0 flex-shrink-0">
+            <AppNavbar
+              left={
+                <>
+                  <Stack direction={"horizontal"} gap={1}>
+                    <Stack direction={"horizontal"}>
+                      <ActionNavbarButton
+                        action={CloseRoomAction.shared}
+                        params={{ navigate }}
+                        hideTitle={true}
+                        hideIcon={true}
+                      >
+                        <NavbarLogo></NavbarLogo>
+                      </ActionNavbarButton>
+                    </Stack>
+                    <MenuBar
+                      context={props.context}
+                      roomContext={roomContext}
+                    ></MenuBar>
                   </Stack>
-                  <MenuBar
-                    context={props.context}
-                    roomContext={roomContext}
-                  ></MenuBar>
-                </Stack>
-              </>
-            }
-            center={null}
-            right={null}
-          ></AppNavbar>
+                </>
+              }
+              center={null}
+              right={
+                <>
+                  <AuthButton></AuthButton>
+                  <SocketStateDisplay></SocketStateDisplay>
+                </>
+              }
+              className=""
+            ></AppNavbar>
+          </Stack>
           <Stack
             direction={"horizontal"}
-            className={"align-items-stretch flex-grow-1 position-relative"}
+            className={"align-items-start flex-grow-1 position-relative"}
             style={{ height: "100px" }}
+            gap={3}
           >
-            <Stack className={"bg-body-tertiary border-end flex-grow-0 z-1"}>
+            <Stack
+              direction={"vertical"}
+              className={
+                "bg-body-tertiary border border-start-0 flex-grow-0 flex-shrink-0 z-1 rounded-end align-self-start"
+              }
+            >
               <ScenariosPanelButton></ScenariosPanelButton>
               <QueryPanelButton></QueryPanelButton>
               <NotesPanelButton></NotesPanelButton>
@@ -247,7 +264,12 @@ export function CanvasPage(props: { context: AppContext }) {
                 roomContext={roomContext}
               ></VisualizationPanel>
             )}
-            <Stack className={"flex-grow-0 bg-body-tertiary border-start z-1"}>
+            <Stack
+              direction="vertical"
+              className={
+                "flex-grow-0 flex-shrink-0 bg-body-tertiary border border-end-0 z-1 align-self-start rounded-start"
+              }
+            >
               <InspectorPanelButton></InspectorPanelButton>
               <HistogramPanelButton></HistogramPanelButton>
               <VisualizationPanelButton></VisualizationPanelButton>
@@ -259,16 +281,7 @@ export function CanvasPage(props: { context: AppContext }) {
             ></ExpandNodePreviewModal>
             <AddEditNoteModal roomContext={roomContext}></AddEditNoteModal>
           </Stack>
-          <StatusBar
-            left={<ProgressDisplay></ProgressDisplay>}
-            right={
-              <>
-                <PerformanceDisplay></PerformanceDisplay>
-                <AuthButton></AuthButton>
-                <SocketStateDisplay></SocketStateDisplay>
-              </>
-            }
-          ></StatusBar>
+
           {socketState.type !== "connected" && (
             <ReconnectOverlay></ReconnectOverlay>
           )}

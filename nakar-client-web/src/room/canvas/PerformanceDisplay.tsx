@@ -16,25 +16,29 @@ export function PerformanceDisplay() {
   }
 
   return (
-    <Stack
-      direction={"horizontal"}
-      gap={2}
-      className={clsx(
-        "border-start pe-2 flex-grow-0 flex-shrink-0 small ps-2 bg-warning text-black",
-      )}
-    >
-      <span>
-        Load:{" "}
-        <span className={""}>{(performance.loadPercent * 100).toFixed()}%</span>
-      </span>
-      <span>
-        Tick Duration:{" "}
-        <span className={""}>{performance.tickDuration.toFixed()}ms</span>
-      </span>
-      <span>
-        Tick Count:{" "}
-        <span className={""}>{performance.tickCount.toFixed()}</span>
-      </span>
+    <Stack className="position-absolute z-2 bottom-0 start-0 end-0 pe-none">
+      <Stack
+        direction={"horizontal"}
+        gap={2}
+        className={clsx(
+          "ps-2 pe-2 pt-1 pb-1 small bg-warning text-black rounded align-self-center flex-shrink-0 pe-auto user-select-text",
+        )}
+      >
+        <span>
+          Load:{" "}
+          <span className={""}>
+            {(performance.loadPercent * 100).toFixed()}%
+          </span>
+        </span>
+        <span>
+          Tick Duration:{" "}
+          <span className={""}>{performance.tickDuration.toFixed()}ms</span>
+        </span>
+        <span>
+          Tick Count:{" "}
+          <span className={""}>{performance.tickCount.toFixed()}</span>
+        </span>
+      </Stack>
     </Stack>
   );
 }

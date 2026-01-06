@@ -12,7 +12,7 @@ export function DataTable() {
         width: "100%",
         overflow: "auto",
       }}
-      className={"bg-body z-1"}
+      className={"bg-body z-1 border rounded"}
     >
       {tableData.length === 0 ? (
         <Stack

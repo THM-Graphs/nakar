@@ -12,7 +12,7 @@ export function AppNavbar(props: {
     <Stack
       direction={"horizontal"}
       className={clsx(
-        "bg-body-tertiary border-bottom justify-content-between flex-grow-0 flex-shrink-0 z-3",
+        "justify-content-between flex-grow-0 flex-shrink-0 z-3 border-bottom bg-body-tertiary",
         props.className,
       )}
       style={{}}

@@ -83,8 +83,8 @@ export function SearchPanel(props: { roomContext: CanvasContext }) {
             ></SearchCapabilitiesDisplay>
           </>
         )}
-        <div className={"flex-grow-1"}></div>
       </Stack>
+      <div className={"flex-grow-1"}></div>
     </Panel>
   );
 }

@@ -17,10 +17,7 @@ export function Panel(props: {
     <Stack
       hidden={props.hidden}
       className={clsx(
-        "flex-shrink-0 flex-grow-0 bg-body-tertiary overflow-hidden z-1",
-        props.direction == "left" && "border-end",
-        props.direction == "right" && "border-start",
-        props.direction == "center" && "border-end border-start",
+        "flex-shrink-1 flex-grow-0 z-1 border rounded overflow-y-hidden bg-body-tertiary",
         props.className,
       )}
       style={{

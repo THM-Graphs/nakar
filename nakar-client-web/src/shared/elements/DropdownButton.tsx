@@ -71,7 +71,7 @@ export function DropdownButton(props: {
       >
         <Dropdown.Toggle as={CustomToggle}></Dropdown.Toggle>
         <Dropdown.Menu
-          className={clsx("rounded-0", props.menuClassName)}
+          className={clsx("bg-body rounded", props.menuClassName)}
           style={{ ...props.menuStyle, zIndex: "1050" }}
         >
           {props.children}

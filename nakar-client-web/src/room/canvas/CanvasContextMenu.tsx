@@ -149,7 +149,7 @@ export function CanvasContextMenu(props: { roomContext: CanvasContext }) {
       }}
     >
       <Dropdown.Toggle as={CustomToggle} ref={dropdownEl}></Dropdown.Toggle>
-      <Dropdown.Menu className={"rounded-0"}>
+      <Dropdown.Menu className={"rounded"}>
         {selectedNodes &&
           nodeActions.map((action) => (
             <ActionDropdownItem

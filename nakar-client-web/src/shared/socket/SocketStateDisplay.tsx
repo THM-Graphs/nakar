@@ -16,12 +16,9 @@ export function SocketStateDisplay() {
     >
       <Stack
         className={clsx(
-          "text-white justify-content-center align-items-center flex-grow-0 flex-shrink-0",
-          backgroundColorForState(socketState),
+          "justify-content-center align-items-center flex-grow-0 flex-shrink-0 ps-2 pe-2",
+          colorForState(socketState),
         )}
-        style={{
-          width: "40px",
-        }}
       >
         <i
           className={clsx(
@@ -35,12 +32,12 @@ export function SocketStateDisplay() {
   );
 }
 
-function backgroundColorForState(socketState: SocketState): string {
+function colorForState(socketState: SocketState): string {
   return match(socketState)
-    .with({ type: "connected" }, () => "bg-success")
-    .with({ type: "connecting" }, () => "bg-warning")
-    .with({ type: "connect_error" }, () => "bg-danger")
-    .with({ type: "disconnect" }, () => "bg-danger")
+    .with({ type: "connected" }, () => "text-success-emphasis")
+    .with({ type: "connecting" }, () => "text-warning-emphasis")
+    .with({ type: "connect_error" }, () => "text-danger-emphasis")
+    .with({ type: "disconnect" }, () => "text-danger-emphasis")
     .exhaustive();
 }
 

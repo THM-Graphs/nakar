@@ -20,17 +20,13 @@ export function ProgressDisplay() {
     return null;
   }
   return (
-    <Stack
-      className={"border-end ps-1 pe-2 flex-grow-0 flex-shrink-0"}
-      direction={"horizontal"}
-    >
+    <Stack direction={"horizontal"}>
       {progress.progress ? (
         <ProgressBar
           now={progress.progress}
           max={1}
           animated={true}
           label={`${(progress.progress * 100).toFixed(0)}%`}
-          style={{ width: "200px" }}
           className={"me-2"}
         />
       ) : (
@@ -41,12 +37,7 @@ export function ProgressDisplay() {
           size={"sm"}
         />
       )}
-      <span
-        className={"small text-muted ellipsis"}
-        style={{
-          width: "200px",
-        }}
-      >
+      <span className={"small text-muted ellipsis"}>
         {progress.message + dots}
       </span>
     </Stack>
