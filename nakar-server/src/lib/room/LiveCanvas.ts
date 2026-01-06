@@ -49,6 +49,8 @@ import { UndoWrapperInfo } from '../undo/UndoWrapperInfo';
 import { PhysicalGraph } from '../physics/physical-graph/PhysicalGraph';
 import { LiveCanvasViewSettings } from './graph/LiveCanvasViewSettings';
 import { LiveCanvasChangeRecorder } from './graph/LiveCanvasChangeRecorder';
+import { ApiV2PostScenarioActionV2PostScenarioAction } from '../../../types/generated/contentTypes';
+import { TupleTypes } from '../schema/TupleTypes';
 
 export class LiveCanvas implements ApplicationService {
   private readonly _logger: Logger = createChildLogger(this);
@@ -419,6 +421,28 @@ export class LiveCanvas implements ApplicationService {
           const postScenarioActions: Result<'api::v2-post-scenario-action.v2-post-scenario-action'>[] =
             await this._database.getPostScenarioActionsOfScenario(scenario);
 
+          type PostActionType = TupleTypes<
+            ApiV2PostScenarioActionV2PostScenarioAction['attributes']['type']['enum']
+          >;
+          const categoryOrder: string[] = [
+            'connectResultNodes',
+            'compressNodes',
+            'compressRelationships',
+            'layout',
+          ] satisfies PostActionType[];
+
+          postScenarioActions.sort(
+            (
+              a: Result<'api::v2-post-scenario-action.v2-post-scenario-action'>,
+              b: Result<'api::v2-post-scenario-action.v2-post-scenario-action'>,
+            ): number => {
+              return (
+                categoryOrder.indexOf(a.type ?? '') -
+                categoryOrder.indexOf(b.type ?? '')
+              );
+            },
+          );
+
           for (const action of postScenarioActions) {
             await match(action)
               .returnType<Promise<void> | void>()
@@ -495,6 +519,8 @@ export class LiveCanvas implements ApplicationService {
             message: 'Run Post-Scenario Actions',
           });
         }
+
+        await this._postProcessGraph(changeRecorder);
 
         this._handleChangeRecorder(changeRecorder);
         this._triggerPhysicsSimluation({ amount: 'long' });
