@@ -26,7 +26,7 @@ export class RedoAction extends Action<RedoActionParams> {
   }
 
   icon(): string {
-    return "arrow-right";
+    return "arrow-90deg-right";
   }
 
   slug(): string {

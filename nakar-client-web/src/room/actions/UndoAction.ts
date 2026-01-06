@@ -26,7 +26,7 @@ export class UndoAction extends Action<UndoActionParams> {
   }
 
   icon(): string {
-    return "arrow-left";
+    return "arrow-90deg-left";
   }
 
   slug(): string {

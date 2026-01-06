@@ -124,10 +124,9 @@ export function ExpandNodePreviewModal(props: { roomContext: CanvasContext }) {
                 }}
                 disabled={sum === 0 || data == null}
                 className={"ps-1 pe-1 justify-content-center border-start"}
-              >
-                <i className={"bi bi-zoom-in btn p-0"}></i>
-                <span className={"small"}>Expand</span>
-              </NavbarButton>
+                icon="zoom-in"
+                title="Expand"
+              ></NavbarButton>
             </Stack>
           </Stack>
         </Stack>

@@ -32,7 +32,6 @@ export function QueryPanel(props: { roomContext: CanvasContext }) {
   const [selectedDatabaseId, setSelectedDatabaseId] = useState<string | null>(
     null,
   );
-  const [replace, setReplace] = useState(false);
 
   const referencedDatabase: DatabaseConnection | null =
     referencedDatabases.find((d) => d.id === selectedDatabaseId) ?? null;
@@ -125,19 +124,6 @@ export function QueryPanel(props: { roomContext: CanvasContext }) {
                 direction={"horizontal"}
                 className={"justify-content-between align-items-center"}
               >
-                <Stack className={"align-self-center"}>
-                  <Form.Check
-                    className={"m-0 ms-1"}
-                    id={"replace"}
-                    checked={replace}
-                    onChange={(event) => {
-                      setReplace(event.target.checked);
-                    }}
-                    label={
-                      <span className={"small text-muted"}>Replace Graph</span>
-                    }
-                  ></Form.Check>
-                </Stack>
                 <DropdownButton title={"Presets"} icon={"chevron-down"}>
                   {[
                     {
@@ -162,28 +148,44 @@ export function QueryPanel(props: { roomContext: CanvasContext }) {
                     </Dropdown.Item>
                   ))}
                 </DropdownButton>
-                <NavbarButton
-                  className={"justify-content-end"}
-                  onClick={async () => {
-                    resultOrThrow(
-                      await postCanvasActionRunQuery({
-                        path: { id: props.roomContext.initialCanvasData.id },
-                        body: {
-                          databaseId: selectedDatabaseId ?? "",
-                          query: query.queryText,
-                          replace: replace,
-                        },
-                      }),
-                    );
-                  }}
-                >
-                  <i
-                    className={
-                      "bi bi-play-circle-fill btn btn-link btn-sm p-0 m-0"
-                    }
-                  ></i>
-                  <span className={"small"}>Run</span>
-                </NavbarButton>
+                <Stack direction="horizontal">
+                  <NavbarButton
+                    className={"justify-content-end"}
+                    title="Run"
+                    icon="play-circle-fill"
+                    variant="primary"
+                    onClick={async () => {
+                      resultOrThrow(
+                        await postCanvasActionRunQuery({
+                          path: { id: props.roomContext.initialCanvasData.id },
+                          body: {
+                            databaseId: selectedDatabaseId ?? "",
+                            query: query.queryText,
+                            replace: true,
+                          },
+                        }),
+                      );
+                    }}
+                  ></NavbarButton>
+                  <NavbarButton
+                    className={"justify-content-end"}
+                    title="Add"
+                    icon="plus-circle-fill"
+                    variant="primary"
+                    onClick={async () => {
+                      resultOrThrow(
+                        await postCanvasActionRunQuery({
+                          path: { id: props.roomContext.initialCanvasData.id },
+                          body: {
+                            databaseId: selectedDatabaseId ?? "",
+                            query: query.queryText,
+                            replace: false,
+                          },
+                        }),
+                      );
+                    }}
+                  ></NavbarButton>
+                </Stack>
               </Stack>
             </Collapsable>
           </>

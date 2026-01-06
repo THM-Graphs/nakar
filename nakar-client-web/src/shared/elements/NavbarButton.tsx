@@ -34,6 +34,7 @@ export const NavbarButton = forwardRef<
     tooltipPlacement?: Placement;
     hidden?: boolean;
     buttonType?: "submit" | "button";
+    variant?: "primary" | "normal";
   }
 >((props, ref) => {
   const [loading, setLoading] = useState<boolean>(false);
@@ -86,6 +87,7 @@ export const NavbarButton = forwardRef<
           gap={2}
           direction={"horizontal"}
           className={clsx(
+            "vertical-align-baseline",
             props.size == "sm" && "ps-1 pe-1 pt-0 pb-0",
             props.size == null && "ps-2 pe-2 pt-1 pb-1",
             props.size == "big" && "ps-3 pe-3 pt-2 pb-2 fs-5",
@@ -99,7 +101,11 @@ export const NavbarButton = forwardRef<
           ) : (
             props.icon && (
               <i
-                className={clsx("bi", `bi-${props.icon} flex-shrink-0 small`)}
+                className={clsx(
+                  "bi",
+                  `bi-${props.icon} flex-shrink-0 small`,
+                  props.variant === "primary" ? "text-primary" : "",
+                )}
               ></i>
             )
           )}

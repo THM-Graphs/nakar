@@ -7,6 +7,7 @@ import { NavbarButton } from "../../shared/elements/NavbarButton.tsx";
 import { ScenarioIcon } from "../scenarios-panel/ScenarioIcon.tsx";
 import { ArgumentDisplay } from "./ArgumentDisplay.tsx";
 import { postCanvasActionLoadScenario } from "../../../src-gen";
+import { ScnearioPlayButton } from "../scenarios-panel/ScenarioPlayButton.tsx";
 
 export function RunScenarioModal(props: { roomContext: CanvasContext }) {
   const pushErrorNotification = useBearStore(
@@ -102,9 +103,12 @@ export function RunScenarioModal(props: { roomContext: CanvasContext }) {
                 onClick={handleRun}
                 className={"ps-1 pe-1 justify-content-center border-start"}
               >
-                <i
-                  className={"bi bi-play-circle-fill btn btn-link p-0 btn-sm"}
-                ></i>
+                <ScnearioPlayButton
+                  onClick={(event) => {
+                    event.stopPropagation();
+                  }}
+                  icon={additive ? "plus-circle-fill" : "play-circle-fill"}
+                ></ScnearioPlayButton>
                 <span className={"small"}>
                   {additive ? "Add Scenario" : "Run Scenario"}
                 </span>

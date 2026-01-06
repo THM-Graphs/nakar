@@ -1,6 +1,8 @@
 import { Button, OverlayTrigger, Stack, Tooltip } from "react-bootstrap";
 import clsx from "clsx";
 import { Scenario, ScenarioArgument } from "../../../src-gen";
+import { NavbarButton } from "../../shared/elements/NavbarButton";
+import { ScnearioPlayButton } from "./ScenarioPlayButton";
 
 export function ScenarioTitleAndBadges(props: {
   scenario: Scenario;
@@ -12,31 +14,25 @@ export function ScenarioTitleAndBadges(props: {
   return (
     <Stack
       direction={"horizontal"}
-      className={clsx("align-items-baseline", props.className)}
+      className={clsx("", props.className)}
       gap={1}
     >
-      <Button
-        variant={"link"}
-        size={"sm"}
-        onClick={(event) => {
-          event.stopPropagation();
-          props.onRun?.(false, props.arguments ?? []);
-        }}
-        className={"p-0"}
-      >
-        <i className={clsx("bi bi-play-circle-fill")}></i>
-      </Button>
-      <Button
-        variant={"link"}
-        size={"sm"}
-        onClick={(event) => {
-          event.stopPropagation();
-          props.onRun?.(true, props.arguments ?? []);
-        }}
-        className={"p-0"}
-      >
-        <i className={clsx("bi bi-plus-circle-fill")}></i>
-      </Button>
+      <Stack direction="horizontal" className="align-self-baseline">
+        <ScnearioPlayButton
+          onClick={(event) => {
+            event.stopPropagation();
+            props.onRun?.(false, props.arguments ?? []);
+          }}
+          icon="play-circle-fill"
+        ></ScnearioPlayButton>
+        <ScnearioPlayButton
+          onClick={(event) => {
+            event.stopPropagation();
+            props.onRun?.(true, props.arguments ?? []);
+          }}
+          icon="plus-circle-fill"
+        ></ScnearioPlayButton>
+      </Stack>
       <Stack gap={1} className={"flex-wrap"} direction={"horizontal"}>
         <span className={"pe-1 small text-wrap align-self-baseline"}>
           {title}
