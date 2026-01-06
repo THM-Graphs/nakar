@@ -152,8 +152,7 @@ export function QueryPanel(props: { roomContext: CanvasContext }) {
                   <NavbarButton
                     className={"justify-content-end"}
                     title="Run"
-                    icon="play-circle-fill"
-                    variant="primary"
+                    icon="play-fill"
                     onClick={async () => {
                       resultOrThrow(
                         await postCanvasActionRunQuery({
@@ -170,8 +169,7 @@ export function QueryPanel(props: { roomContext: CanvasContext }) {
                   <NavbarButton
                     className={"justify-content-end"}
                     title="Add"
-                    icon="plus-circle-fill"
-                    variant="primary"
+                    icon="plus-lg"
                     onClick={async () => {
                       resultOrThrow(
                         await postCanvasActionRunQuery({
