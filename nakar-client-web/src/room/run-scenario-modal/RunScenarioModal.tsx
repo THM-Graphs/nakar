@@ -22,6 +22,9 @@ export function RunScenarioModal(props: { roomContext: CanvasContext }) {
   const scenarioArguments = useBearStore(
     (s) => s.room.scenario.runScenarioModal.arguments,
   );
+  const additive = useBearStore(
+    (s) => s.room.scenario.runScenarioModal.additive,
+  );
 
   const handleClose = () => {
     close();
@@ -39,7 +42,7 @@ export function RunScenarioModal(props: { roomContext: CanvasContext }) {
           body: {
             scenarioId: scenario.id,
             arguments: scenarioArguments,
-            additive: false, // TODO
+            additive: additive,
           },
         }),
       );
@@ -57,7 +60,7 @@ export function RunScenarioModal(props: { roomContext: CanvasContext }) {
       {scenario && (
         <>
           <Panel
-            title={"Run Scenario"}
+            title={additive ? "Add Scenario" : "Run Scenario"}
             onClose={handleClose}
             direction={"none"}
             hidden={false}
@@ -102,7 +105,9 @@ export function RunScenarioModal(props: { roomContext: CanvasContext }) {
                 <i
                   className={"bi bi-play-circle-fill btn btn-link p-0 btn-sm"}
                 ></i>
-                <span className={"small"}>Run</span>
+                <span className={"small"}>
+                  {additive ? "Add Scenario" : "Run Scenario"}
+                </span>
               </NavbarButton>
             </Stack>
           </Panel>

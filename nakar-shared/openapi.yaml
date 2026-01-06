@@ -1431,8 +1431,6 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/ScenarioParameter"
-        additive:
-          type: boolean
       required:
         - id
         - title

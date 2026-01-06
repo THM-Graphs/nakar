@@ -1,12 +1,12 @@
 import { Button, OverlayTrigger, Stack, Tooltip } from "react-bootstrap";
 import clsx from "clsx";
-import { Scenario } from "../../../src-gen";
-import { MouseEvent } from "react";
+import { Scenario, ScenarioArgument } from "../../../src-gen";
 
 export function ScenarioTitleAndBadges(props: {
   scenario: Scenario;
-  onRun?: (event: MouseEvent) => void;
+  onRun?: (additive: boolean, scenarioArguments: ScenarioArgument[]) => void;
   className?: string;
+  arguments?: ScenarioArgument[];
 }) {
   const title: string = props.scenario.title ?? "untitled";
   return (
@@ -19,19 +19,24 @@ export function ScenarioTitleAndBadges(props: {
         variant={"link"}
         size={"sm"}
         onClick={(event) => {
-          props.onRun?.(event);
+          event.stopPropagation();
+          props.onRun?.(false, props.arguments ?? []);
         }}
         className={"p-0"}
       >
         <i className={clsx("bi bi-play-circle-fill")}></i>
       </Button>
-      {props.scenario.additive && (
-        <OverlayTrigger
-          overlay={<Tooltip>This scenario adds elements to the graph.</Tooltip>}
-        >
-          <i className={"bi bi-plus-square small"}></i>
-        </OverlayTrigger>
-      )}
+      <Button
+        variant={"link"}
+        size={"sm"}
+        onClick={(event) => {
+          event.stopPropagation();
+          props.onRun?.(true, props.arguments ?? []);
+        }}
+        className={"p-0"}
+      >
+        <i className={clsx("bi bi-plus-circle-fill")}></i>
+      </Button>
       <Stack gap={1} className={"flex-wrap"} direction={"horizontal"}>
         <span className={"pe-1 small text-wrap align-self-baseline"}>
           {title}

@@ -1,4 +1,8 @@
-import { postCanvasActionLoadScenario, Scenario } from "../../../src-gen";
+import {
+  postCanvasActionLoadScenario,
+  Scenario,
+  ScenarioArgument,
+} from "../../../src-gen";
 import { ScenarioCard } from "./ScenarioCard.tsx";
 import { Collapsable } from "../../shared/elements/Collapsable.tsx";
 import { useBearStore } from "../../state/useBearStore.ts";
@@ -21,28 +25,31 @@ export function ScenarioDisplay(props: {
     (s) => s.room.ui.pushErrorNotification,
   );
 
-  const runScenario = useCallback(() => {
-    if (props.scenario.parameters.length > 0) {
-      showRunScenarioModal(props.scenario, null);
-    } else {
-      (async () => {
-        try {
-          await resultOrThrow(
-            await postCanvasActionLoadScenario({
-              path: { id: props.roomContext.initialCanvasData.id },
-              body: {
-                scenarioId: props.scenario.id,
-                arguments: [],
-                additive: false, // TODO
-              },
-            }),
-          );
-        } catch (error) {
-          pushErrorNotification(error);
-        }
-      })().catch(pushErrorNotification);
-    }
-  }, [props.scenario]);
+  const runScenario = useCallback(
+    (additive: boolean, sceanriosArguments: ScenarioArgument[]) => {
+      if (props.scenario.parameters.length > 0) {
+        showRunScenarioModal(props.scenario, sceanriosArguments, additive);
+      } else {
+        (async () => {
+          try {
+            await resultOrThrow(
+              await postCanvasActionLoadScenario({
+                path: { id: props.roomContext.initialCanvasData.id },
+                body: {
+                  scenarioId: props.scenario.id,
+                  arguments: [],
+                  additive: additive,
+                },
+              }),
+            );
+          } catch (error) {
+            pushErrorNotification(error);
+          }
+        })().catch(pushErrorNotification);
+      }
+    },
+    [props.scenario],
+  );
 
   return (
     <Collapsable
@@ -51,15 +58,14 @@ export function ScenarioDisplay(props: {
       title={
         <ScenarioTitleAndBadges
           scenario={props.scenario}
-          onRun={(event) => {
-            event.stopPropagation();
-            runScenario();
+          onRun={(additive, sceanriosArguments) => {
+            runScenario(additive, sceanriosArguments);
           }}
         ></ScenarioTitleAndBadges>
       }
     >
       <ScenarioCard
-        onScenarioSelected={runScenario}
+        onScenarioSelected={(scenario, additive) => runScenario(additive, [])}
         scenario={props.scenario}
       ></ScenarioCard>
     </Collapsable>

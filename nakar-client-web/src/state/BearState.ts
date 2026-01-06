@@ -100,8 +100,13 @@ export interface BearState {
         shown: boolean;
         scenario: Scenario | null;
         arguments: ScenarioArgument[];
+        additive: boolean;
         setArgumentValue: (identifier: string, value: string) => void;
-        open: (scenario: Scenario, firstArgument: string | null) => void;
+        open: (
+          scenario: Scenario,
+          scenarioArguments: ScenarioArgument[],
+          additive: boolean,
+        ) => void;
         close: () => void;
         clean: () => void;
       };

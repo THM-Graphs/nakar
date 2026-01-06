@@ -286,6 +286,7 @@ export const useBearStore = create<BearState>()(
                 },
                 runScenarioModal: {
                   shown: false,
+                  additive: false,
                   scenario: null,
                   arguments: [],
                   setArgumentValue: (identifier, value) => {
@@ -305,17 +306,20 @@ export const useBearStore = create<BearState>()(
                         );
                     });
                   },
-                  open: (scenario, firstArgument) => {
+                  open: (scenario, scenarioArguments, additive: boolean) => {
                     set((s) => {
                       s.room.scenario.runScenarioModal.shown = true;
                       s.room.scenario.runScenarioModal.scenario = scenario;
+                      s.room.scenario.runScenarioModal.additive = additive;
                       for (const parameter of scenario.parameters) {
+                        const providedArgument = scenarioArguments.find(
+                          (a) => a.identifier === parameter.identifier,
+                        );
                         s.room.scenario.runScenarioModal.arguments.push({
                           identifier: parameter.identifier,
-                          value:
-                            scenario.parameters[0] === parameter
-                              ? (firstArgument ?? parameter.defaultValue ?? "")
-                              : (parameter.defaultValue ?? ""),
+                          value: providedArgument
+                            ? providedArgument.value
+                            : (parameter.defaultValue ?? ""),
                         });
                       }
                     });

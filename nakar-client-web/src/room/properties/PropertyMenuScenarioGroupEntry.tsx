@@ -16,44 +16,15 @@ export function PropertyMenuScenarioGroupEntry(props: {
     (s) => s.room.ui.pushErrorNotification,
   );
 
+  const showRunScenarioModal = useBearStore(
+    (s) => s.room.scenario.runScenarioModal.open,
+  );
+
   return (
     <>
       {scenarioGroup.scenarios.map((scenario) => {
         return (
-          <Dropdown.Item
-            key={scenario.id}
-            onClick={() => {
-              // showRunScenarioModal(
-              //   scenariosAndGroup[1],
-              //   typeof props.value === "string"
-              //     ? props.value
-              //     : JSON.stringify(props.value),
-              // );
-              (async () => {
-                try {
-                  await resultOrThrow(
-                    await postCanvasActionLoadScenario({
-                      path: {
-                        id: props.roomContext.initialCanvasData.id,
-                      },
-                      body: {
-                        scenarioId: scenario.id,
-                        arguments: [
-                          {
-                            identifier: scenario.parameters[0].identifier,
-                            value: JSON.stringify(props.value),
-                          },
-                        ],
-                        additive: false, // TODO
-                      },
-                    }),
-                  );
-                } catch (error) {
-                  pushErrorNotification(error);
-                }
-              })().catch(pushErrorNotification);
-            }}
-          >
+          <Dropdown.Item key={scenario.id}>
             <Stack
               gap={0}
               direction={"vertical"}
@@ -62,6 +33,15 @@ export function PropertyMenuScenarioGroupEntry(props: {
               <span className={"small text-muted"}>{scenarioGroup.title}</span>
               <ScenarioTitleAndBadges
                 scenario={scenario}
+                arguments={[
+                  {
+                    identifier: scenario.parameters[0].identifier,
+                    value: JSON.stringify(props.value),
+                  },
+                ]}
+                onRun={(additive, scenarioArguments) => {
+                  showRunScenarioModal(scenario, scenarioArguments, additive);
+                }}
               ></ScenarioTitleAndBadges>
             </Stack>
           </Dropdown.Item>

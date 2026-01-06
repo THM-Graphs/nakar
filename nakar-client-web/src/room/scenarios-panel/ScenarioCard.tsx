@@ -7,7 +7,7 @@ import { ScenarioCardSection } from "./ScenarioCardSection.tsx";
 export function ScenarioCard(props: {
   hidden?: boolean;
   scenario: Scenario;
-  onScenarioSelected: (scenario: Scenario) => void;
+  onScenarioSelected: (scenario: Scenario, additive: boolean) => void;
 }) {
   return (
     <Stack
@@ -24,12 +24,23 @@ export function ScenarioCard(props: {
         <Button
           size={"sm"}
           onClick={() => {
-            props.onScenarioSelected(props.scenario);
+            props.onScenarioSelected(props.scenario, false);
           }}
         >
           <Stack direction={"horizontal"} gap={1}>
             <i className={"bi bi-play-circle"}></i>
             <span>Run Scenario</span>
+          </Stack>
+        </Button>
+        <Button
+          size={"sm"}
+          onClick={() => {
+            props.onScenarioSelected(props.scenario, false);
+          }}
+        >
+          <Stack direction={"horizontal"} gap={1}>
+            <i className={"bi bi-plus-circle"}></i>
+            <span>Add Scenario</span>
           </Stack>
         </Button>
 
@@ -76,14 +87,6 @@ export function ScenarioCard(props: {
           ) : (
             <span className={"text-muted small fst-italic"}>None</span>
           )}
-        </ScenarioCardSection>
-
-        <ScenarioCardSection title={"Additive"}>
-          <Card.Text>
-            <span className={"small fst-italic"}>
-              {props.scenario.additive ? "Yes" : "No"}
-            </span>
-          </Card.Text>
         </ScenarioCardSection>
       </Stack>
     </Stack>

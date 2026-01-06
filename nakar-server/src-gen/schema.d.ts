@@ -710,7 +710,6 @@ export interface components {
             readonly queries: readonly components["schemas"]["ScenarioQuery"][];
             readonly description: string | null;
             readonly parameters: readonly components["schemas"]["ScenarioParameter"][];
-            readonly additive?: boolean;
         };
         readonly ScenarioParameter: {
             readonly identifier: string;
