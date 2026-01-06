@@ -127,7 +127,7 @@ export function CanvasBottomToolBar(props: { roomContext: CanvasContext }) {
 
   return (
     <Stack
-      className={"border-top flex-grow-0 bg-body z-2"}
+      className={"border flex-grow-0 bg-body z-2 rounded bg-body-tertiary"}
       direction={"horizontal"}
     >
       <Stack className={"align-items-start flex-grow-1"}>

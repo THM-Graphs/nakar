@@ -263,7 +263,7 @@ export function NumericSpanSelect(props: {
             style={{ height: height }}
           >
             <div
-              className={"bg-body-tertiary flex-grow-0 position-absolute"}
+              className={"bg-body flex-grow-0 position-absolute"}
               style={{
                 height: height,
                 left: 0,
@@ -271,7 +271,9 @@ export function NumericSpanSelect(props: {
               }}
             ></div>
             <div
-              className={"bg-body-secondary flex-grow-0 position-absolute"}
+              className={
+                "bg-body-secondary flex-grow-0 position-absolute border-start border-end"
+              }
               ref={leftHandle}
               style={{
                 width: `${handleWidth.toString()}px`,
@@ -291,7 +293,9 @@ export function NumericSpanSelect(props: {
               ref={middleHandle}
             ></div>
             <div
-              className={"bg-body-secondary position-absolute"}
+              className={
+                "bg-body-secondary position-absolute border-start border-end"
+              }
               ref={rightHandle}
               style={{
                 width: `${handleWidth.toString()}px`,
@@ -301,7 +305,7 @@ export function NumericSpanSelect(props: {
               }}
             ></div>
             <div
-              className={"bg-body-tertiary position-absolute"}
+              className={"bg-body position-absolute"}
               style={{
                 height: height,
                 right: 0,
