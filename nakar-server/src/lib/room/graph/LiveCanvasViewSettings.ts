@@ -5,6 +5,7 @@ import { Range } from '../../range/Range';
 
 export class LiveCanvasViewSettings {
   public static readonly defaultGrowNodesBasedOnDegreeFactor: number = 2;
+  public static readonly defaultGrowNodesBasedOnDegree: boolean = false;
   public static readonly defaultCompressRelationshipsWidthFactor: number = 10;
 
   private readonly _compressRelationshipsWidthFactor: number;
@@ -54,7 +55,9 @@ export class LiveCanvasViewSettings {
       compressRelationshipsWidthFactor:
         canvas.compressRelationshipsWidthFactor ??
         LiveCanvasViewSettings.defaultCompressRelationshipsWidthFactor,
-      growNodesBasedOnDegree: canvas.growNodesBasedOnDegree ?? false,
+      growNodesBasedOnDegree:
+        canvas.growNodesBasedOnDegree ??
+        LiveCanvasViewSettings.defaultGrowNodesBasedOnDegree,
       growNodesBasedOnDegreeFactor:
         canvas.growNodesBasedOnDegreeFactor ??
         LiveCanvasViewSettings.defaultGrowNodesBasedOnDegreeFactor,
@@ -68,6 +71,17 @@ export class LiveCanvasViewSettings {
       compressRelationshipsWidthFactor: input.compressRelationshipsWidthFactor,
       growNodesBasedOnDegree: input.growNodesBasedOnDegree,
       growNodesBasedOnDegreeFactor: input.growNodesBasedOnDegreeFactor,
+    });
+  }
+
+  public static defaultViewSettings(): LiveCanvasViewSettings {
+    return new LiveCanvasViewSettings({
+      compressRelationshipsWidthFactor:
+        LiveCanvasViewSettings.defaultCompressRelationshipsWidthFactor,
+      growNodesBasedOnDegree:
+        LiveCanvasViewSettings.defaultGrowNodesBasedOnDegree,
+      growNodesBasedOnDegreeFactor:
+        LiveCanvasViewSettings.defaultGrowNodesBasedOnDegreeFactor,
     });
   }
 

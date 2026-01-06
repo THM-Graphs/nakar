@@ -7,34 +7,42 @@ import { CanvasEvent } from '../events/CanvasEvent';
 import { LiveCanvasData } from './LiveCanvasData';
 import { PhysicalNode } from '../../physics/physical-graph/PhysicalNode';
 import { RSPhysicalNode } from '../RSPhysicalNode';
+import { UndoWrapperInfo } from '../../undo/UndoWrapperInfo';
+import { CanvasEventGraphMetaDataChanged } from '../events/CanvasEventGraphMetaDataChanged';
+import { CanvasEventGraphElementsChanged } from '../events/CanvasEventGraphElementsChanged';
+import { CanvasEventGraphTableChanged } from '../events/CanvasEventGraphTableChanged';
+import { LiveCanvasViewSettings } from './LiveCanvasViewSettings';
 
 export class LiveCanvasChangeRecorder {
-  private _didChangeMetaData: boolean;
-  private _didChangeGraphElements: boolean;
-  private _didChangeTableData: boolean;
-  private readonly _lockChanges: SMap<string, boolean> = new SMap<string, boolean>();
+  private _shouldSendMetaDataChangedToUser: boolean;
+  private _shouldSendGraphElementsToUserAndWorker: boolean;
+  private _shouldSendTableDataToUser: boolean;
+  private readonly _lockChanges: SMap<string, boolean> = new SMap<
+    string,
+    boolean
+  >();
   private readonly _movedNodes: SSet<LiveCanvasNode>;
 
   public constructor() {
-    this._didChangeMetaData = false;
-    this._didChangeGraphElements = false;
-    this._didChangeTableData = false;
+    this._shouldSendMetaDataChangedToUser = false;
+    this._shouldSendGraphElementsToUserAndWorker = false;
+    this._shouldSendTableDataToUser = false;
     this._lockChanges = new SMap();
     this._movedNodes = new SSet();
   }
 
   public didCreateSnapshot(): void {
-    this._didChangeMetaData = true;
-    this._didChangeGraphElements = true;
-    this._didChangeTableData = true;
+    this._shouldSendMetaDataChangedToUser = true;
+    this._shouldSendGraphElementsToUserAndWorker = true;
+    this._shouldSendTableDataToUser = true;
   }
 
   public didAddOrRemoveGraphElements(): void {
-    this._didChangeGraphElements = true;
+    this._shouldSendGraphElementsToUserAndWorker = true;
   }
 
   public didAddOrRemoveTableData(): void {
-    this._didChangeTableData = true;
+    this._shouldSendTableDataToUser = true;
   }
 
   public didMoveNode(nodeId: LiveCanvasNode): void {
@@ -45,12 +53,41 @@ export class LiveCanvasChangeRecorder {
     this._lockChanges.set(nodeId, locked);
   }
 
+  public didChangeViewSettings(): void {
+    this._shouldSendGraphElementsToUserAndWorker = true;
+  }
+
   public handleChange(
     physicsWorker: PhysicsWorker,
     onEvent: Subject<CanvasEvent>,
     canvasId: string,
     graph: LiveCanvasData,
+    undoInfo: UndoWrapperInfo,
+    viewSettings: LiveCanvasViewSettings,
   ): void {
+    if (this._shouldSendMetaDataChangedToUser) {
+      onEvent.next({
+        type: 'CanvasEventGraphMetaDataChanged',
+        graph: graph,
+        canvasId: canvasId,
+        undoInfo: undoInfo,
+      } satisfies CanvasEventGraphMetaDataChanged);
+    }
+    if (this._shouldSendGraphElementsToUserAndWorker) {
+      physicsWorker.setGraph(graph.toPhysicalGraph(viewSettings));
+      onEvent.next({
+        type: 'CanvasEventGraphElementsChanged',
+        graph: graph,
+        canvasId: canvasId,
+      } satisfies CanvasEventGraphElementsChanged);
+    }
+    if (this._shouldSendTableDataToUser) {
+      onEvent.next({
+        type: 'CanvasEventGraphTableChanged',
+        table: graph.tableData,
+        canvasId: canvasId,
+      } satisfies CanvasEventGraphTableChanged);
+    }
     if (this._lockChanges.size > 0) {
       physicsWorker.setLocks(this._lockChanges.toRecord());
       onEvent.next({
