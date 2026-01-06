@@ -966,15 +966,16 @@ components:
 
     CreationReason:
       type: string
-      enum: [
-        "loadScenario",
-        "expand",
-        "query",
-        "merge",
-        "compress",
-        "connectResultNodes",
-        "search"
-      ]
+      enum:
+        [
+          "loadScenario",
+          "expand",
+          "query",
+          "merge",
+          "compress",
+          "connectResultNodes",
+          "search",
+        ]
 
     Node:
       type: object
@@ -1364,7 +1365,7 @@ components:
           type: array
           items:
             type: object
-            additionalProperties: { }
+            additionalProperties: {}
       required:
         - data
 
@@ -1720,7 +1721,7 @@ components:
 
     ProjectRole:
       type: string
-      enum: [ "owner", "collaborator", "none" ]
+      enum: ["owner", "collaborator", "none"]
 
     User:
       type: object
@@ -1928,14 +1929,11 @@ components:
           $ref: "#/components/schemas/Canvas"
         scenarios:
           $ref: "#/components/schemas/GetScenariosResult"
-        graph:
-          $ref: "#/components/schemas/Graph"
         room:
           $ref: "#/components/schemas/Room"
       required:
         - canvas
         - scenarios
-        - graph
         - room
 
     CanvasViewSettings:
@@ -1968,6 +1966,7 @@ components:
         - $ref: "#/components/schemas/WSEventGraphElementsChanged"
         - $ref: "#/components/schemas/WSEventGraphMetaDataChanged"
         - $ref: "#/components/schemas/WSEventGraphTableChanged"
+        - $ref: "#/components/schemas/WSEventCanvasDataReady"
         - $ref: "#/components/schemas/WSEventProgress"
         - $ref: "#/components/schemas/WSEventClearProgress"
         - $ref: "#/components/schemas/WSEventSetNodeLocks"
@@ -2066,6 +2065,24 @@ components:
           $ref: "#/components/schemas/GraphTable"
       required:
         - type
+        - table
+
+    WSEventCanvasDataReady:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: ["WSEventCanvasDataReady"]
+        metaData:
+          $ref: "#/components/schemas/GraphMetaData"
+        elements:
+          $ref: "#/components/schemas/GraphElements"
+        table:
+          $ref: "#/components/schemas/GraphTable"
+      required:
+        - type
+        - metaData
+        - elements
         - table
 
     WSEventCanvasChanged:

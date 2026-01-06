@@ -69,14 +69,14 @@ export class CanvasService implements ApplicationService {
     return liveCanvas;
   }
 
-  public async startCanvas(
+  public getOrStartCanvas(
     canvas: Result<'api::v2-canvas.v2-canvas'>,
-  ): Promise<void> {
+  ): LiveCanvas {
     const exitsingCanvas: LiveCanvas | null =
       this._liveCanvases.get(canvas.documentId) ?? null;
     if (exitsingCanvas != null) {
       exitsingCanvas.cancelShutdown();
-      return;
+      return exitsingCanvas;
     }
 
     const task: Profiler = this._logger.startTimer();
@@ -85,7 +85,9 @@ export class CanvasService implements ApplicationService {
       this._database,
       this._neo4j,
     );
-    await liveCanvas.bootstrap();
+
+    this._liveCanvases.set(canvas.documentId, liveCanvas);
+
     liveCanvas.addSubscription(
       liveCanvas.onEvent$.subscribe((event: CanvasEvent): void => {
         if (event.type === 'CanvasEventShouldShutDown') {
@@ -98,15 +100,13 @@ export class CanvasService implements ApplicationService {
       }),
     );
 
-    if (this._liveCanvases.has(canvas.documentId)) {
-      this._logger.warn('Race condition detected while creating live canvas.');
-      await liveCanvas.destroy();
-    } else {
-      this._liveCanvases.set(canvas.documentId, liveCanvas);
-    }
+    liveCanvas.bootstrap();
+
     task.done({
       message: `Init canvas ${canvas.title ?? canvas.documentId}`,
     });
+
+    return liveCanvas;
   }
 
   public scheduleCanvasShutdown(

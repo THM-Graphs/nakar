@@ -105,12 +105,11 @@ export class D3Renderer {
   public constructor(
     theme: Theme,
     svgElement: SVGSVGElement,
-    initialGraphElements: GraphElements,
     hideLabels: boolean,
     colorSchema: string,
   ) {
     console.log(`Did create instance of graph renderer. theme: ${theme}`);
-    this.graphState = D3RendererState.fromWsData(initialGraphElements);
+    this.graphState = D3RendererState.empty();
     this.theme = theme;
     this.svgElement = svgElement;
     this.hideLabels = hideLabels;
@@ -530,10 +529,10 @@ export class D3Renderer {
         return `
         font-weight: bolder;
         color: ${color};
-        display: flex; 
-        align-items: center; 
+        display: flex;
+        align-items: center;
         justify-content: center;
-        width: ${(d.radius * 2).toString()}px; 
+        width: ${(d.radius * 2).toString()}px;
         height: ${(d.radius * 2).toString()}px;
         text-align: center;
         font-size: ${(d.radius / 5 + 3).toString()}px;

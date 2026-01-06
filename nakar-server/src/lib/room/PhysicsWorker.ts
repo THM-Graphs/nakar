@@ -24,10 +24,9 @@ export class PhysicsWorker {
     return this._onWTEvent.asObservable();
   }
 
-  public async bootstrap(physicalGraph: PhysicalGraph): Promise<void> {
+  public async bootstrap(): Promise<void> {
     const workerData: RoomWorkerData = {
       canvasId: this._canvasId,
-      graph: physicalGraph,
     };
     const worker: Worker = new Worker(
       path.join(__dirname, '..', 'room-worker', 'RoomWorker.js'),

@@ -49,7 +49,6 @@ import { VisualizationPanel } from "../room/visualization-panel/VisualizationPan
 export type CanvasContext = {
   initialCanvasData: SchemaCanvas;
   initialScenariosData: GetScenariosResult;
-  initialGraphData: Graph;
   initialRoomData: SchemaRoom;
 };
 
@@ -69,7 +68,6 @@ export async function CanvasLoader(
   return {
     initialCanvasData: data.canvas,
     initialScenariosData: data.scenarios,
-    initialGraphData: data.graph,
     initialRoomData: data.room,
   };
 }
@@ -103,7 +101,6 @@ export function CanvasPage(props: { context: AppContext }) {
 
   useEffect(() => {
     setScenarios(roomContext.initialScenariosData);
-    setGraph(roomContext.initialGraphData);
     setVisualizationData(roomContext.initialCanvasData.viewSettings);
   }, [roomContext]);
 
@@ -156,6 +153,11 @@ export function CanvasPage(props: { context: AppContext }) {
           })
           .with({ type: "WSEventKick" }, () => {
             void navigate("/");
+          })
+          .with({ type: "WSEventCanvasDataReady" }, (event) => {
+            setGraphMetaData(event.metaData);
+            setGraphElements(event.elements);
+            setGraphTable(event.table);
           })
           .exhaustive();
       }),

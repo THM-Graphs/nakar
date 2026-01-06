@@ -28,7 +28,6 @@ export function GraphRendererD3(props: {
     const _graphRenderer = new D3Renderer(
       theme,
       svgRef.current,
-      props.roomContext.initialGraphData.elements,
       hideLabels,
       colorSchemaSlug,
     );
@@ -44,6 +43,9 @@ export function GraphRendererD3(props: {
             _graphRenderer.updateLocks(event);
           })
           .with({ type: "WSEventGraphElementsChanged" }, (event) => {
+            _graphRenderer.loadGraphContent(event.elements);
+          })
+          .with({ type: "WSEventCanvasDataReady" }, (event) => {
             _graphRenderer.loadGraphContent(event.elements);
           });
       }),

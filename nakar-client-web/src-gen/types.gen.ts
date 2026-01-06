@@ -10,7 +10,6 @@ export type Canvas = {
 export type CanvasPage = {
     canvas: Canvas;
     scenarios: GetScenariosResult;
-    graph: Graph;
     room: Room;
 };
 
@@ -440,38 +439,47 @@ export type WSEventCanvasChanged = {
 
 export type type10 = 'WSEventCanvasChanged';
 
+export type WSEventCanvasDataReady = {
+    type: 'WSEventCanvasDataReady';
+    metaData: GraphMetaData;
+    elements: GraphElements;
+    table: GraphTable;
+};
+
+export type type11 = 'WSEventCanvasDataReady';
+
 export type WSEventClearProgress = {
     type: 'WSEventClearProgress';
 };
 
-export type type11 = 'WSEventClearProgress';
+export type type12 = 'WSEventClearProgress';
 
 export type WSEventGraphElementsChanged = {
     type: 'WSEventGraphElementsChanged';
     elements: GraphElements;
 };
 
-export type type12 = 'WSEventGraphElementsChanged';
+export type type13 = 'WSEventGraphElementsChanged';
 
 export type WSEventGraphMetaDataChanged = {
     type: 'WSEventGraphMetaDataChanged';
     metaData: GraphMetaData;
 };
 
-export type type13 = 'WSEventGraphMetaDataChanged';
+export type type14 = 'WSEventGraphMetaDataChanged';
 
 export type WSEventGraphTableChanged = {
     type: 'WSEventGraphTableChanged';
     table: GraphTable;
 };
 
-export type type14 = 'WSEventGraphTableChanged';
+export type type15 = 'WSEventGraphTableChanged';
 
 export type WSEventKick = {
     type: 'WSEventKick';
 };
 
-export type type15 = 'WSEventKick';
+export type type16 = 'WSEventKick';
 
 export type WSEventNodesMoved = {
     type: 'WSEventNodesMoved';
@@ -480,14 +488,14 @@ export type WSEventNodesMoved = {
     performance: PhysicsPerformance;
 };
 
-export type type16 = 'WSEventNodesMoved';
+export type type17 = 'WSEventNodesMoved';
 
 export type WSEventNotification = {
     type: 'WSEventNotification';
     notification: Notification;
 };
 
-export type type17 = 'WSEventNotification';
+export type type18 = 'WSEventNotification';
 
 export type WSEventProgress = {
     type: 'WSEventProgress';
@@ -495,7 +503,7 @@ export type WSEventProgress = {
     message: string;
 };
 
-export type type18 = 'WSEventProgress';
+export type type19 = 'WSEventProgress';
 
 export type WSEventSetNodeLocks = {
     type: 'WSEventSetNodeLocks';
@@ -505,9 +513,9 @@ export type WSEventSetNodeLocks = {
     }>;
 };
 
-export type type19 = 'WSEventSetNodeLocks';
+export type type20 = 'WSEventSetNodeLocks';
 
-export type WSServerToClientMessage = WSEventNodesMoved | WSEventCanvasChanged | WSEventNotification | WSEventGraphElementsChanged | WSEventGraphMetaDataChanged | WSEventGraphTableChanged | WSEventProgress | WSEventClearProgress | WSEventSetNodeLocks | WSEventKick;
+export type WSServerToClientMessage = WSEventNodesMoved | WSEventCanvasChanged | WSEventNotification | WSEventGraphElementsChanged | WSEventGraphMetaDataChanged | WSEventGraphTableChanged | WSEventCanvasDataReady | WSEventProgress | WSEventClearProgress | WSEventSetNodeLocks | WSEventKick;
 
 export type PostAuthData = {
     body: {

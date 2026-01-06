@@ -24,7 +24,7 @@ export class RoomWorkerPhysicsService implements ApplicationService {
   private readonly _physics: PhysicsSimulation;
 
   public constructor(data: RoomWorkerData) {
-    this._physics = new PhysicsSimulation(data.graph);
+    this._physics = new PhysicsSimulation({ nodes: {}, edges: {} });
     this._roomId = data.canvasId;
 
     if (parentPort == null) {

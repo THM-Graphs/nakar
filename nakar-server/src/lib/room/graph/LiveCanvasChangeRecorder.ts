@@ -41,6 +41,12 @@ export class LiveCanvasChangeRecorder {
     this._shouldSendGraphElementsToUserAndWorker = true;
   }
 
+  public didLoadGraph(): void {
+    this._shouldSendMetaDataChangedToUser = true;
+    this._shouldSendGraphElementsToUserAndWorker = true;
+    this._shouldSendTableDataToUser = true;
+  }
+
   public didAddOrRemoveTableData(): void {
     this._shouldSendTableDataToUser = true;
   }

@@ -6,17 +6,12 @@ import { Result } from '@strapi/types/dist/modules/documents/result';
 import { NotFound } from 'http-errors';
 import { DatabaseService } from '../../database/DatabaseService';
 import { userCanSeeRoom } from '../../policies/userCanSeeRoom';
-import { CanvasService } from '../../room/CanvasService';
-import { IndexedNoteCollection } from '../../database/IndexedNoteCollection';
-import { LiveCanvas } from '../../room/LiveCanvas';
-import { LiveCanvasViewSettings } from '../../room/graph/LiveCanvasViewSettings';
 
 export class CanvasPageRouter {
   public constructor(
     private readonly _httpTools: HTTPTools,
     private readonly _schemaFactory: SchemaFactoryService,
     private readonly _database: DatabaseService,
-    private readonly _canvasService: CanvasService,
   ) {}
 
   public register(): Router {
@@ -46,26 +41,9 @@ export class CanvasPageRouter {
       throw new NotFound();
     }
 
-    const project: Result<'api::v2-project.v2-project'> =
-      await this._database.getProjectOfRoom(room);
-
-    await this._canvasService.startCanvas(canvas);
-
-    const liveCanvas: LiveCanvas = this._canvasService.getCanvas(canvas);
-    const notes: IndexedNoteCollection = await this._database.getNotes({
-      project: project,
-      graph: liveCanvas.getGraph(),
-    });
-
     return {
       canvas: await this._schemaFactory.createSchemaCanvasPreview(canvas),
       room: await this._schemaFactory.createSchemaRoom(room),
-      graph: await this._schemaFactory.createSchemaGraph(
-        liveCanvas.getGraph(),
-        notes,
-        liveCanvas.getUndoInfo(),
-        LiveCanvasViewSettings.fromDB(canvas),
-      ),
       scenarios: await this._schemaFactory.createGetScenariosResult(room),
     };
   }

@@ -11,6 +11,7 @@ import type {
   SchemaWsActionUngrabNode,
   SchemaWsClientToServerMessage,
   SchemaWsEventCanvasChanged,
+  SchemaWsEventCanvasDataReady,
   SchemaWsEventClearProgress,
   SchemaWsEventKick,
   SchemaWsEventNotification,
@@ -225,7 +226,38 @@ export class SocketIOService implements ApplicationService {
                   canvas: Result<'api::v2-canvas.v2-canvas'> | null,
                 ): Promise<void> => {
                   if (canvas != null) {
-                    await this._canvasService.startCanvas(canvas);
+                    const liveCanvas: LiveCanvas =
+                      this._canvasService.getOrStartCanvas(canvas);
+                    const graph: LiveCanvasData = liveCanvas.getGraph();
+                    const notes: IndexedNoteCollection =
+                      await this._databaseService.getNotes({
+                        project:
+                          await this._databaseService.getProjectOfCanvas(
+                            canvas,
+                          ),
+                        graph: graph,
+                      });
+                    wsClient.send({
+                      type: 'WSEventCanvasDataReady',
+                      table: this._schemaFactory.createSchemaTable(
+                        graph.tableData,
+                      ),
+                      elements:
+                        await this._schemaFactory.createSchemaGraphElements(
+                          graph,
+                          notes,
+                          liveCanvas.viewSettings,
+                        ),
+                      metaData:
+                        await this._schemaFactory.createSchemaGraphMetaData(
+                          graph,
+                          liveCanvas.undoInfo,
+                        ),
+                    } satisfies SchemaWsEventCanvasDataReady);
+                  } else {
+                    this._logger.error(
+                      'Client did manage to join canvas, but there is no canvas in DB.',
+                    );
                   }
                 },
               )

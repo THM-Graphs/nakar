@@ -873,7 +873,6 @@ export interface components {
         readonly CanvasPage: {
             readonly canvas: components["schemas"]["Canvas"];
             readonly scenarios: components["schemas"]["GetScenariosResult"];
-            readonly graph: components["schemas"]["Graph"];
             readonly room: components["schemas"]["Room"];
         };
         readonly CanvasViewSettings: {
@@ -882,7 +881,7 @@ export interface components {
             readonly growNodesBasedOnDegreeFactor: number;
         };
         readonly WSClientToServerMessage: components["schemas"]["WSActionJoinCanvas"] | components["schemas"]["WSActionLeaveCanvas"] | components["schemas"]["WSActionGrabNode"] | components["schemas"]["WSActionMoveNodes"] | components["schemas"]["WSActionUngrabNode"];
-        readonly WSServerToClientMessage: components["schemas"]["WSEventNodesMoved"] | components["schemas"]["WSEventCanvasChanged"] | components["schemas"]["WSEventNotification"] | components["schemas"]["WSEventGraphElementsChanged"] | components["schemas"]["WSEventGraphMetaDataChanged"] | components["schemas"]["WSEventGraphTableChanged"] | components["schemas"]["WSEventProgress"] | components["schemas"]["WSEventClearProgress"] | components["schemas"]["WSEventSetNodeLocks"] | components["schemas"]["WSEventKick"];
+        readonly WSServerToClientMessage: components["schemas"]["WSEventNodesMoved"] | components["schemas"]["WSEventCanvasChanged"] | components["schemas"]["WSEventNotification"] | components["schemas"]["WSEventGraphElementsChanged"] | components["schemas"]["WSEventGraphMetaDataChanged"] | components["schemas"]["WSEventGraphTableChanged"] | components["schemas"]["WSEventCanvasDataReady"] | components["schemas"]["WSEventProgress"] | components["schemas"]["WSEventClearProgress"] | components["schemas"]["WSEventSetNodeLocks"] | components["schemas"]["WSEventKick"];
         readonly WSActionJoinCanvas: {
             /** @enum {string} */
             readonly type: "WSActionJoinCanvas";
@@ -920,6 +919,13 @@ export interface components {
         readonly WSEventGraphTableChanged: {
             /** @enum {string} */
             readonly type: "WSEventGraphTableChanged";
+            readonly table: components["schemas"]["GraphTable"];
+        };
+        readonly WSEventCanvasDataReady: {
+            /** @enum {string} */
+            readonly type: "WSEventCanvasDataReady";
+            readonly metaData: components["schemas"]["GraphMetaData"];
+            readonly elements: components["schemas"]["GraphElements"];
             readonly table: components["schemas"]["GraphTable"];
         };
         readonly WSEventCanvasChanged: {
@@ -1030,6 +1036,7 @@ export type SchemaWsActionUngrabNode = components['schemas']['WSActionUngrabNode
 export type SchemaWsEventGraphMetaDataChanged = components['schemas']['WSEventGraphMetaDataChanged'];
 export type SchemaWsEventGraphElementsChanged = components['schemas']['WSEventGraphElementsChanged'];
 export type SchemaWsEventGraphTableChanged = components['schemas']['WSEventGraphTableChanged'];
+export type SchemaWsEventCanvasDataReady = components['schemas']['WSEventCanvasDataReady'];
 export type SchemaWsEventCanvasChanged = components['schemas']['WSEventCanvasChanged'];
 export type SchemaWsEventNodesMoved = components['schemas']['WSEventNodesMoved'];
 export type SchemaWsEventNotification = components['schemas']['WSEventNotification'];

@@ -58,8 +58,6 @@ export class LiveCanvas implements ApplicationService {
   private readonly _onEvent: Subject<CanvasEvent>;
   private readonly _subscriptions: SSet<Subscription>;
   private readonly _queue: TaskQueue;
-  private readonly _state: BehaviorSubject<LiveCanvasState>;
-  private readonly _stateSubscription: Subscription;
   private _shutdownTimeout: NodeJS.Timeout | null;
   private _viewSettings: LiveCanvasViewSettings;
 
@@ -79,63 +77,9 @@ export class LiveCanvas implements ApplicationService {
     this._subscriptions = new SSet();
     this._physicsWorker = new PhysicsWorker(_canvasId);
     this._queue = new TaskQueue();
-    this._state = new BehaviorSubject<LiveCanvasState>(LiveCanvasState.created);
-    this._stateSubscription = this._state.subscribe(
-      (newState: LiveCanvasState): void => {
-        this._logger.debug(
-          `State of canvas ${this.canvasId} changed to ${newState}`,
-        );
-      },
-    );
     this._shutdownTimeout = null;
     this._viewSettings = LiveCanvasViewSettings.defaultViewSettings();
-  }
 
-  public get onEvent$(): Observable<CanvasEvent> {
-    return this._onEvent.asObservable();
-  }
-
-  public get canvasId(): string {
-    return this._canvasId;
-  }
-
-  public addSubscription(subscription: Subscription): void {
-    this._subscriptions.add(subscription);
-  }
-
-  public getUndoInfo(): UndoWrapperInfo {
-    return this._graph.info;
-  }
-
-  public scheduleShutdown(): void {
-    this._logger.debug(`Will mark canvas ${this._canvasId} for shutdown.`);
-
-    if (this._shutdownTimeout != null) {
-      clearTimeout(this._shutdownTimeout);
-    }
-    this._shutdownTimeout = setTimeout((): void => {
-      this._onEvent.next({
-        type: 'CanvasEventShouldShutDown',
-        canvasId: this._canvasId,
-      });
-    }, 10_000);
-  }
-
-  public cancelShutdown(): void {
-    if (this._shutdownTimeout != null) {
-      clearTimeout(this._shutdownTimeout);
-      this._logger.debug(`Did cancel canvas shutdown ${this._canvasId}.`);
-    }
-  }
-
-  public async bootstrap(): Promise<void> {
-    this._state.next(LiveCanvasState.starting);
-    const initialGraph: LiveCanvasData = await this._loadGraph();
-    this._graph.reset(initialGraph);
-    const physicalGraph: PhysicalGraph = initialGraph.toPhysicalGraph(
-      this._getCanvasViewSettings(),
-    );
-    await this._physicsWorker.bootstrap(physicalGraph);
     this._subscriptions.add(
       this._physicsWorker.onWTEvent$.subscribe((message: WTEvent): void => {
         match(message)
@@ -195,25 +139,77 @@ export class LiveCanvas implements ApplicationService {
         },
       ),
     );
-    this._state.next(LiveCanvasState.started);
+  }
+
+  public get onEvent$(): Observable<CanvasEvent> {
+    return this._onEvent.asObservable();
+  }
+
+  public get canvasId(): string {
+    return this._canvasId;
+  }
+
+  public get viewSettings(): LiveCanvasViewSettings {
+    return this._viewSettings;
+  }
+
+  public get undoInfo(): UndoWrapperInfo {
+    return this._graph.info;
+  }
+
+  public addSubscription(subscription: Subscription): void {
+    this._subscriptions.add(subscription);
+  }
+
+  public scheduleShutdown(): void {
+    this._logger.debug(`Will mark canvas ${this._canvasId} for shutdown.`);
+
+    if (this._shutdownTimeout != null) {
+      clearTimeout(this._shutdownTimeout);
+    }
+    this._shutdownTimeout = setTimeout((): void => {
+      this._onEvent.next({
+        type: 'CanvasEventShouldShutDown',
+        canvasId: this._canvasId,
+      });
+    }, 10_000);
+  }
+
+  public cancelShutdown(): void {
+    if (this._shutdownTimeout != null) {
+      clearTimeout(this._shutdownTimeout);
+      this._logger.debug(`Did cancel canvas shutdown ${this._canvasId}.`);
+    }
+  }
+
+  public bootstrap(): void {
+    this._queue.addTask(
+      new TaskQueueTask('Loading canvas', async (): Promise<void> => {
+        const changeRecorder: LiveCanvasChangeRecorder =
+          new LiveCanvasChangeRecorder();
+        const initialGraph: LiveCanvasData = await this._loadGraph();
+        this._graph.reset(initialGraph);
+        changeRecorder.didLoadGraph();
+
+        const canvas: Result<'api::v2-canvas.v2-canvas'> =
+          await this._database.getCanvas(this._canvasId);
+        this._viewSettings = LiveCanvasViewSettings.fromDB(canvas);
+        changeRecorder.didChangeViewSettings();
+
+        await this._physicsWorker.bootstrap();
+
+        this._handleChangeRecorder(changeRecorder);
+      }),
+    );
   }
 
   public async destroy(): Promise<void> {
-    if (this._state.value !== LiveCanvasState.started) {
-      this._logger.warn(
-        `Warning: Wanting to stop live canvas ${this.canvasId}, but state is ${this._state.value}. Abort stopping.`,
-      );
-      return;
-    }
-    this._state.next(LiveCanvasState.stopping);
     for (const subscription of this._subscriptions) {
       subscription.unsubscribe();
     }
     await this._physicsWorker.destroy();
     this._queue.shutdown();
     await this.saveGraph();
-    this._state.next(LiveCanvasState.stopped);
-    this._stateSubscription.unsubscribe();
   }
 
   public getGraph(): LiveCanvasData {
@@ -1570,7 +1566,6 @@ export class LiveCanvas implements ApplicationService {
   private async _loadGraph(): Promise<LiveCanvasData> {
     const canvas: Result<'api::v2-canvas.v2-canvas'> =
       await this._database.getCanvas(this._canvasId);
-    this._viewSettings = LiveCanvasViewSettings.fromDB(canvas);
 
     this._logger.debug(
       `Will load graph of canvas ${canvas.documentId} ('${canvas.title ?? ''}') into memory.`,

@@ -99,7 +99,6 @@ export class HTTPService implements ApplicationService {
       this._httpTools,
       schemaFactory,
       databaseService,
-      canvasService,
     );
 
     this._setupRoutes();
