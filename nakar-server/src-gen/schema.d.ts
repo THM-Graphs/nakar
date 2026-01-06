@@ -1392,7 +1392,7 @@ export interface operations {
         readonly requestBody: {
             readonly content: {
                 readonly "application/json": {
-                    readonly nodeId: string;
+                    readonly nodeIds: readonly string[];
                     readonly limit: {
                         readonly labels: readonly string[];
                         readonly relationships: readonly string[];

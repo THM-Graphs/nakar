@@ -111,7 +111,7 @@ export function ExpandNodePreviewModal(props: { roomContext: CanvasContext }) {
                         id: props.roomContext.initialCanvasData.id,
                       },
                       body: {
-                        nodeId: data.nodeId,
+                        nodeIds: [data.nodeId],
                         limit: {
                           labels: [...data.selectedLabels.values()],
                           relationships: [

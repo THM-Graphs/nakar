@@ -503,110 +503,107 @@ export class LiveCanvas implements ApplicationService {
   }
 
   public expandNode(params: {
-    nodeId: string;
+    nodeIds: string[];
     limit: {
       labels: SSet<string>;
       relationships: SSet<string>;
     } | null;
   }): void {
-    this._queue.addTask(
-      new TaskQueueTask('Expanding node', async (): Promise<void> => {
-        const oldGraph: LiveCanvasData = this.getGraph();
+    for (const nodeId of params.nodeIds) {
+      this._queue.addTask(
+        new TaskQueueTask('Expanding node', async (): Promise<void> => {
+          const oldGraph: LiveCanvasData = this.getGraph();
 
-        const result: ExpandNodesResult = {
-          nodesAddedCount: 0,
-          edgeAddedCount: 0,
-        };
-
-        const node: LiveCanvasNode | null = oldGraph.nodes.get(params.nodeId);
-        if (node == null) {
-          throw new Error(`Cannot find node ${params.nodeId} to expand.`);
-        }
-
-        const database: Result<'api::v2-database-connection.v2-database-connection'> =
-          await this._database.getDatabase(node.source);
-
-        const neo4jDatabaseInfo: Neo4jDatabaseInfo =
-          Neo4jDatabaseInfo.parse(database);
-
-        const expandResult: Neo4jGraphElements = node.isCluster
-          ? await this._neo4j.executeQuery(
-              neo4jDatabaseInfo,
-              'MATCH (n) WHERE elementId(n) IN $nodeIds OPTIONAL MATCH (n)-[r]-(neighbor) WHERE elementId(neighbor) in $neighbors RETURN n, r',
-              {
-                nodeIds: node.compressed.toArray(),
-                neighbors: oldGraph
-                  .getNeighborsOfNode(node)
-                  .toArray()
-                  .map((n: LiveCanvasNode): string => n.id),
-              },
-              new Neo4jLimitConfig('default', 'graphElements'),
-            )
-          : await this._neo4j.expandNode(
-              neo4jDatabaseInfo,
-              new SSet<string>([params.nodeId]),
-              params.limit,
-            );
-
-        const changeRecorder: LiveCanvasChangeRecorder =
-          new LiveCanvasChangeRecorder();
-        const graph: LiveCanvasData = this._snapshot(
-          'Expand node',
-          changeRecorder,
-        );
-
-        if (node.isCluster) {
-          graph.nodes.remove(node);
-          changeRecorder.didAddOrRemoveGraphElements();
-          for (const edge of graph.edges.getByStartOrEndNodeId(node.id)) {
-            graph.edges.remove(edge);
+          const node: LiveCanvasNode | null = oldGraph.nodes.get(nodeId);
+          if (node == null) {
+            throw new Error(`Cannot find node ${nodeId} to expand.`);
           }
-        }
 
-        for (const newNode of expandResult.nodes) {
-          if (!graph.nodes.hasById(newNode[0])) {
-            result.nodesAddedCount += 1;
+          const database: Result<'api::v2-database-connection.v2-database-connection'> =
+            await this._database.getDatabase(node.source);
 
-            const insertedNode: LiveCanvasNode | null =
-              graph.nodes.addNeo4jNode(
-                newNode[1],
+          const neo4jDatabaseInfo: Neo4jDatabaseInfo =
+            Neo4jDatabaseInfo.parse(database);
+
+          const expandResult: Neo4jGraphElements = node.isCluster
+            ? await this._neo4j.executeQuery(
+                neo4jDatabaseInfo,
+                'MATCH (n) WHERE elementId(n) IN $nodeIds OPTIONAL MATCH (n)-[r]-(neighbor) WHERE elementId(neighbor) in $neighbors RETURN n, r',
+                {
+                  nodeIds: node.compressed.toArray(),
+                  neighbors: oldGraph
+                    .getNeighborsOfNode(node)
+                    .toArray()
+                    .map((n: LiveCanvasNode): string => n.id),
+                },
+                new Neo4jLimitConfig('default', 'graphElements'),
+              )
+            : await this._neo4j.expandNode(
+                neo4jDatabaseInfo,
+                new SSet<string>([nodeId]),
+                params.limit,
+              );
+
+          const changeRecorder: LiveCanvasChangeRecorder =
+            new LiveCanvasChangeRecorder();
+          const graph: LiveCanvasData = this._snapshot(
+            'Expand node',
+            changeRecorder,
+          );
+
+          if (node.isCluster) {
+            graph.nodes.remove(node);
+            changeRecorder.didAddOrRemoveGraphElements();
+            for (const edge of graph.edges.getByStartOrEndNodeId(node.id)) {
+              graph.edges.remove(edge);
+            }
+          }
+
+          for (const newNode of expandResult.nodes) {
+            if (!graph.nodes.hasById(newNode[0])) {
+              const insertedNode: LiveCanvasNode | null =
+                graph.nodes.addNeo4jNode(
+                  newNode[1],
+                  ElementCreationReason.expand,
+                );
+              if (insertedNode != null) {
+                insertedNode.position.x = node.position.x;
+                insertedNode.position.y = node.position.y;
+                PhysicsSimulation.jiggle(insertedNode);
+                changeRecorder.didAddOrRemoveGraphElements();
+              }
+            }
+          }
+          for (const newEdge of expandResult.relationships) {
+            if (!graph.edges.has(newEdge[0])) {
+              graph.edges.addNeo4jEdge(
+                newEdge[1],
                 ElementCreationReason.expand,
               );
-            if (insertedNode != null) {
-              insertedNode.position.x = node.position.x;
-              insertedNode.position.y = node.position.y;
-              PhysicsSimulation.jiggle(insertedNode);
               changeRecorder.didAddOrRemoveGraphElements();
             }
           }
-        }
-        for (const newEdge of expandResult.relationships) {
-          if (!graph.edges.has(newEdge[0])) {
-            result.edgeAddedCount += 1;
-            graph.edges.addNeo4jEdge(newEdge[1], ElementCreationReason.expand);
-            changeRecorder.didAddOrRemoveGraphElements();
+
+          this._logger.debug(
+            `Expand node result for ${nodeId}: ${expandResult.nodes.size.toString()} nodes and ${expandResult.relationships.size.toString()} relationships.`,
+          );
+
+          await this._postProcessGraph(changeRecorder);
+
+          this._handleChangeRecorder(changeRecorder);
+          this._triggerPhysicsSimluation({ amount: 'short' });
+
+          if (expandResult.limitReached) {
+            // TODO: Into change recoreder
+            this._onEvent.next({
+              type: 'CanvasEventNotAllNodesLoaded',
+              canvasId: this.canvasId,
+              loadedCount: expandResult.size,
+            } satisfies CanvasEventNotAllNodesLoaded);
           }
-        }
-
-        this._logger.debug(
-          `Expand node result for ${params.nodeId}: ${expandResult.nodes.size.toString()} nodes and ${expandResult.relationships.size.toString()} relationships.`,
-        );
-
-        await this._postProcessGraph(changeRecorder);
-
-        this._handleChangeRecorder(changeRecorder);
-        this._triggerPhysicsSimluation({ amount: 'short' });
-
-        if (expandResult.limitReached) {
-          // TODO: Into change recoreder
-          this._onEvent.next({
-            type: 'CanvasEventNotAllNodesLoaded',
-            canvasId: this.canvasId,
-            loadedCount: expandResult.size,
-          } satisfies CanvasEventNotAllNodesLoaded);
-        }
-      }),
-    );
+        }),
+      );
+    }
   }
 
   public async expandNodePreview(params: {

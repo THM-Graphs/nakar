@@ -6,17 +6,15 @@ export class ExpandNodeAction extends Action<NodesActionParams> {
   public static shared: ExpandNodeAction = new ExpandNodeAction();
 
   protected async action(input: NodesActionParams): Promise<void> {
-    for (const node of input.nodes) {
-      await postCanvasActionExpandNode({
-        path: {
-          id: input.roomContext.initialCanvasData.id,
-        },
-        body: {
-          nodeId: node.id,
-          limit: null,
-        },
-      });
-    }
+    await postCanvasActionExpandNode({
+      path: {
+        id: input.roomContext.initialCanvasData.id,
+      },
+      body: {
+        nodeIds: input.nodes.map((node) => node.id),
+        limit: null,
+      },
+    });
   }
 
   disabled(input: NodesActionParams): boolean {

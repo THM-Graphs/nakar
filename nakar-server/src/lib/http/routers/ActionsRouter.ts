@@ -138,7 +138,7 @@ export class ActionsRouter {
     const requestBody: Body = req.body as Body;
 
     this._roomService.getCanvas(req.nakar.canvas).expandNode({
-      nodeId: requestBody.nodeId,
+      nodeIds: [...requestBody.nodeIds],
       limit:
         requestBody.limit != null
           ? {

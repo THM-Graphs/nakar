@@ -675,7 +675,7 @@ export type PostCanvasActionReloadScenarioError = unknown;
 
 export type PostCanvasActionExpandNodeData = {
     body: {
-        nodeId: string;
+        nodeIds: Array<(string)>;
         limit: {
             labels: Array<(string)>;
             relationships: Array<(string)>;

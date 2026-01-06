@@ -362,8 +362,10 @@ paths:
             schema:
               type: object
               properties:
-                nodeId:
-                  type: string
+                nodeIds:
+                  type: array
+                  items:
+                    type: string
                 limit:
                   type: object
                   nullable: true
@@ -380,7 +382,7 @@ paths:
                     - labels
                     - relationships
               required:
-                - nodeId
+                - nodeIds
                 - limit
       responses:
         "200":
