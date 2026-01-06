@@ -9,6 +9,7 @@ import { NavbarButton } from "./NavbarButton.tsx";
 import { Dropdown, Stack } from "react-bootstrap";
 import clsx from "clsx";
 import { AlignType, Placement } from "react-bootstrap/types";
+import { createPortal } from "react-dom";
 
 export function DropdownButton(props: {
   icon?: string;
@@ -70,12 +71,15 @@ export function DropdownButton(props: {
         className={props.containerClassName}
       >
         <Dropdown.Toggle as={CustomToggle}></Dropdown.Toggle>
-        <Dropdown.Menu
-          className={clsx("bg-body rounded", props.menuClassName)}
-          style={{ ...props.menuStyle, zIndex: "1050" }}
-        >
-          {props.children}
-        </Dropdown.Menu>
+        {createPortal(
+          <Dropdown.Menu
+            className={clsx("bg-body rounded", props.menuClassName)}
+            style={{ ...props.menuStyle, zIndex: "1050" }}
+          >
+            {props.children}
+          </Dropdown.Menu>,
+          document.body,
+        )}
       </Dropdown>
     </>
   );
