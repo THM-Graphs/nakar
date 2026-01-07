@@ -109,7 +109,12 @@ export class MigrationService implements ApplicationService {
         populate: ['scenario_groups'],
       })
     )?.scenario_groups ?? []) {
-      await this._createScenarioGroup(project, oldScenarioGroup, databaseCache);
+      await this._createScenarioGroup(
+        project,
+        oldScenarioGroup,
+        roomTemplate,
+        databaseCache,
+      );
     }
 
     await this._createCommonProperties(
@@ -122,7 +127,7 @@ export class MigrationService implements ApplicationService {
   private async _createScenarioGroup(
     project: Result<'api::v2-project.v2-project'>,
     oldScenarioGroup: Result<'api::scenario-group.scenario-group'>,
-
+    oldRoomTemplate: Result<'api::room-template.room-template'>,
     databaseCache: SMap<string, string>,
   ): Promise<Result<'api::v2-scenario-group.v2-scenario-group'>> {
     const newScenarioGroup: Result<'api::v2-scenario-group.v2-scenario-group'> =
@@ -146,6 +151,7 @@ export class MigrationService implements ApplicationService {
         project,
         newScenarioGroup,
         oldScenario,
+        oldRoomTemplate,
         databaseCache,
       );
     }
@@ -157,6 +163,7 @@ export class MigrationService implements ApplicationService {
     project: Result<'api::v2-project.v2-project'>,
     scenarioGroup: Result<'api::v2-scenario-group.v2-scenario-group'>,
     oldScenario: Result<'api::scenario.scenario'>,
+    oldRoomTemplate: Result<'api::room-template.room-template'>,
     databaseCache: SMap<string, string>,
   ): Promise<void> {
     const fullScenario: Result<
@@ -180,6 +187,25 @@ export class MigrationService implements ApplicationService {
         },
       },
     });
+    const fullRoomTemplate: Result<
+      'api::room-template.room-template',
+      {
+        populate: {
+          graphDisplayConfiguration: {
+            populate: { nodeDisplayConfigurations: {} };
+          };
+        };
+      }
+    > | null = await strapi
+      .documents('api::room-template.room-template')
+      .findOne({
+        documentId: oldRoomTemplate.documentId,
+        populate: {
+          graphDisplayConfiguration: {
+            populate: { nodeDisplayConfigurations: {} },
+          },
+        },
+      });
     if (fullScenario == null) {
       return;
     }
@@ -194,7 +220,10 @@ export class MigrationService implements ApplicationService {
         },
       });
 
-    if (fullScenario.graphDisplayConfiguration?.connectResultNodes === 'true') {
+    if (
+      fullScenario.graphDisplayConfiguration?.connectResultNodes === 'true' ||
+      fullRoomTemplate?.graphDisplayConfiguration?.connectResultNodes === 'true'
+    ) {
       await strapi
         .documents('api::v2-post-scenario-action.v2-post-scenario-action')
         .create({
@@ -204,7 +233,10 @@ export class MigrationService implements ApplicationService {
     }
 
     if (
-      fullScenario.graphDisplayConfiguration?.compressRelationships === 'true'
+      fullScenario.graphDisplayConfiguration?.compressRelationships ===
+        'true' ||
+      fullRoomTemplate?.graphDisplayConfiguration?.compressRelationships ===
+        'true'
     ) {
       await strapi
         .documents('api::v2-post-scenario-action.v2-post-scenario-action')
@@ -217,8 +249,12 @@ export class MigrationService implements ApplicationService {
         });
     }
 
-    for (const nodeDisplayConfig of fullScenario.graphDisplayConfiguration
-      ?.nodeDisplayConfigurations ?? []) {
+    for (const nodeDisplayConfig of [
+      ...(fullScenario.graphDisplayConfiguration?.nodeDisplayConfigurations ??
+        []),
+      ...(fullRoomTemplate?.graphDisplayConfiguration
+        ?.nodeDisplayConfigurations ?? []),
+    ]) {
       if (nodeDisplayConfig.compress === 'true') {
         await strapi
           .documents('api::v2-post-scenario-action.v2-post-scenario-action')

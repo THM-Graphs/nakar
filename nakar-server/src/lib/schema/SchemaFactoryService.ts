@@ -45,6 +45,7 @@ import { Logger } from '@strapi/logger';
 import { createChildLogger } from '../logger/createChildLogger';
 import { Profiler } from 'winston';
 import { LiveCanvasViewSettings } from '../room/graph/LiveCanvasViewSettings';
+import { match, P } from 'ts-pattern';
 
 export class SchemaFactoryService implements ApplicationService {
   private readonly _logger: Logger = createChildLogger(this);
@@ -206,6 +207,48 @@ export class SchemaFactoryService implements ApplicationService {
           parameter: Result<'api::v2-query-parameter.v2-query-parameter'>,
         ): SchemaScenarioParameter =>
           this.createSchemaScenarioParameter(parameter),
+      ),
+      postActions: (
+        await this._database.getPostScenarioActionsOfScenario(scenario)
+      ).map(
+        (
+          action: Result<'api::v2-post-scenario-action.v2-post-scenario-action'>,
+        ): string =>
+          // ['connectResultNodes', 'compressRelationships', 'compressNodes', 'layout']
+          match(action.type)
+            .with('connectResultNodes', (): string => 'Connect Result Nodes')
+            .with(
+              'compressRelationships',
+              (): string => 'Compress Relationships',
+            )
+            .with('compressNodes', (): string =>
+              match(action.label)
+                .with(
+                  P.string,
+                  (label: string): string => `Compress ${label} Nodes`,
+                )
+                .with(P.nullish, (): string => `Compress Nodes`)
+                .exhaustive(),
+            )
+            .with('layout', (): string =>
+              match(action.layoutAlgorithm)
+                .with(
+                  'forceDirected',
+                  (): string =>
+                    `Layout ${action.label ?? 'None'} Force Directed`,
+                )
+                .with(
+                  'circle',
+                  (): string => `Layout ${action.label ?? 'None'} Circle`,
+                )
+                .with(
+                  P.nullish,
+                  (): string => `Layout ${action.label ?? 'None'}`,
+                )
+                .exhaustive(),
+            )
+            .with(P.nullish, (): string => 'Unknown Post Action')
+            .exhaustive(),
       ),
     };
   }

@@ -29,12 +29,10 @@
       ]
     },
     "growNodesBasedOnDegree": {
-      "type": "boolean",
-      "default": false
+      "type": "boolean"
     },
     "scaleType": {
       "type": "enumeration",
-      "default": "linear",
       "enum": [
         "linear",
         "log2",
@@ -43,16 +41,13 @@
       ]
     },
     "growNodesBasedOnDegreeFactor": {
-      "type": "decimal",
-      "default": 2
+      "type": "decimal"
     },
     "compressRelationshipsWidthFactor": {
-      "type": "decimal",
-      "default": 2
+      "type": "decimal"
     },
     "treatNameInQueryAsLabel": {
-      "type": "boolean",
-      "default": false
+      "type": "boolean"
     },
     "nodeSettings": {
       "type": "relation",

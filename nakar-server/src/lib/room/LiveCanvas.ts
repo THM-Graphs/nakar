@@ -44,8 +44,6 @@ import { getStringPayloadOfMediaFile } from '../media/media';
 import { UndoWrapperInfo } from '../undo/UndoWrapperInfo';
 import { LiveCanvasViewSettings } from './graph/LiveCanvasViewSettings';
 import { LiveCanvasChangeRecorder } from './graph/LiveCanvasChangeRecorder';
-import { ApiV2PostScenarioActionV2PostScenarioAction } from '../../../types/generated/contentTypes';
-import { TupleTypes } from '../schema/TupleTypes';
 import { DatabaseEventsService } from '../database/DatabaseEventsService';
 
 export class LiveCanvas implements ApplicationService {
@@ -417,28 +415,6 @@ export class LiveCanvas implements ApplicationService {
 
           const postScenarioActions: Result<'api::v2-post-scenario-action.v2-post-scenario-action'>[] =
             await this._database.getPostScenarioActionsOfScenario(scenario);
-
-          type PostActionType = TupleTypes<
-            ApiV2PostScenarioActionV2PostScenarioAction['attributes']['type']['enum']
-          >;
-          const categoryOrder: string[] = [
-            'connectResultNodes',
-            'compressNodes',
-            'compressRelationships',
-            'layout',
-          ] satisfies PostActionType[];
-
-          postScenarioActions.sort(
-            (
-              a: Result<'api::v2-post-scenario-action.v2-post-scenario-action'>,
-              b: Result<'api::v2-post-scenario-action.v2-post-scenario-action'>,
-            ): number => {
-              return (
-                categoryOrder.indexOf(a.type ?? '') -
-                categoryOrder.indexOf(b.type ?? '')
-              );
-            },
-          );
 
           for (const action of postScenarioActions) {
             await match(action)

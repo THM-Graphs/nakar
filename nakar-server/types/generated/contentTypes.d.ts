@@ -695,16 +695,13 @@ export interface ApiV2CanvasV2Canvas extends Struct.CollectionTypeSchema {
     draftAndPublish: true;
   };
   attributes: {
-    compressRelationshipsWidthFactor: Schema.Attribute.Decimal &
-      Schema.Attribute.DefaultTo<2>;
+    compressRelationshipsWidthFactor: Schema.Attribute.Decimal;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     graph: Schema.Attribute.Media<'files'>;
-    growNodesBasedOnDegree: Schema.Attribute.Boolean &
-      Schema.Attribute.DefaultTo<false>;
-    growNodesBasedOnDegreeFactor: Schema.Attribute.Decimal &
-      Schema.Attribute.DefaultTo<2>;
+    growNodesBasedOnDegree: Schema.Attribute.Boolean;
+    growNodesBasedOnDegreeFactor: Schema.Attribute.Decimal;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
       'oneToMany',
@@ -719,11 +716,9 @@ export interface ApiV2CanvasV2Canvas extends Struct.CollectionTypeSchema {
     room: Schema.Attribute.Relation<'manyToOne', 'api::v2-room.v2-room'>;
     scaleType: Schema.Attribute.Enumeration<
       ['linear', 'log2', 'logn', 'log10']
-    > &
-      Schema.Attribute.DefaultTo<'linear'>;
+    >;
     title: Schema.Attribute.String;
-    treatNameInQueryAsLabel: Schema.Attribute.Boolean &
-      Schema.Attribute.DefaultTo<false>;
+    treatNameInQueryAsLabel: Schema.Attribute.Boolean;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;

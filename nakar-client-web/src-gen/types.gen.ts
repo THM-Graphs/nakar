@@ -333,6 +333,7 @@ export type Scenario = {
     queries: Array<ScenarioQuery>;
     description: (string) | null;
     parameters: Array<ScenarioParameter>;
+    postActions: Array<(string)>;
 };
 
 export type ScenarioArgument = {

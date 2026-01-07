@@ -1431,6 +1431,10 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/ScenarioParameter"
+        postActions:
+          type: array
+          items:
+            type: string
       required:
         - id
         - title
@@ -1438,6 +1442,7 @@ components:
         - description
         - parameters
         - queries
+        - postActions
 
     ScenarioParameter:
       type: object

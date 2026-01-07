@@ -14,6 +14,8 @@ import {
 } from '../media/media';
 import { LiveCanvasViewSettings } from '../room/graph/LiveCanvasViewSettings';
 import type * as Params from '@strapi/types/dist/modules/documents/params/document-engine';
+import { ApiV2PostScenarioActionV2PostScenarioAction } from '../../../types/generated/contentTypes';
+import { TupleTypes } from '../schema/TupleTypes';
 
 export class DatabaseService implements ApplicationService {
   private readonly _logger: Logger = createChildLogger(this);
@@ -748,7 +750,32 @@ export class DatabaseService implements ApplicationService {
       throw new Error('Scenario not found.');
     }
 
-    return populatedScenario.postActions ?? [];
+    const postScenarioActions: Result<'api::v2-post-scenario-action.v2-post-scenario-action'>[] =
+      populatedScenario.postActions ?? [];
+
+    type PostActionType = TupleTypes<
+      ApiV2PostScenarioActionV2PostScenarioAction['attributes']['type']['enum']
+    >;
+    const categoryOrder: string[] = [
+      'connectResultNodes',
+      'compressNodes',
+      'compressRelationships',
+      'layout',
+    ] satisfies PostActionType[];
+
+    postScenarioActions.sort(
+      (
+        a: Result<'api::v2-post-scenario-action.v2-post-scenario-action'>,
+        b: Result<'api::v2-post-scenario-action.v2-post-scenario-action'>,
+      ): number => {
+        return (
+          categoryOrder.indexOf(a.type ?? '') -
+          categoryOrder.indexOf(b.type ?? '')
+        );
+      },
+    );
+
+    return postScenarioActions;
   }
 
   public async getCommonPropertyConfigsOfCanvas(

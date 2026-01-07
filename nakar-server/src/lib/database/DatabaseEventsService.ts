@@ -95,7 +95,7 @@ export class DatabaseEventsService implements ApplicationService {
         const task: Profiler = strapi.log.startTimer();
         const result: NextResult = await next();
         task.done({
-          message: `${context.uid} ${context.action}`,
+          message: `${context.action} ${context.uid}`,
         });
         return result;
       },
