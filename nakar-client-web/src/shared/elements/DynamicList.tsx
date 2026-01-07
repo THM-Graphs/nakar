@@ -26,7 +26,10 @@ export function DynamicList<T>(props: {
   const [filteredElements, setFilteredElements] = useState<readonly T[]>(
     props.data,
   );
-  const [elements, setElements] = useState<readonly T[]>(props.data);
+  const elements = filteredElements.slice(
+    0,
+    showAllElements ? props.data.length : previewLimit,
+  );
 
   useEffect(() => {
     setFilteredElements(() => {
@@ -38,16 +41,6 @@ export function DynamicList<T>(props: {
       return filtered;
     });
   }, [props.data, filterValue]);
-
-  useEffect(() => {
-    setElements(() => {
-      const sliced = filteredElements.slice(
-        0,
-        showAllElements ? props.data.length : previewLimit,
-      );
-      return sliced;
-    });
-  }, [filteredElements, showAllElements]);
 
   const list = (
     <Stack
