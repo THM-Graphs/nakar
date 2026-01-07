@@ -1,7 +1,7 @@
 import { ApplicationService } from '../application/ApplicationService';
 import { SMap } from '../map/Map';
 import { LiveCanvasData } from './graph/LiveCanvasData';
-import { BehaviorSubject, Observable, Subject, Subscription } from 'rxjs';
+import { Observable, Subject, Subscription } from 'rxjs';
 import type { CanvasEvent } from './events/CanvasEvent';
 import { DatabaseService } from '../database/DatabaseService';
 import type { WTEvent } from '../room-worker/worker-events/WTEvent';
@@ -16,9 +16,6 @@ import { Neo4jGraphElements } from '../neo4j/Neo4jGraphElements';
 import { Neo4jLimitConfig } from '../neo4j/Neo4jLimitConfig';
 import { CanvasEventNotAllNodesLoaded } from './events/CanvasEventNotAllNodesLoaded';
 import { ElementCreationReason } from './graph/ElementCreationReason';
-import { CanvasEventGraphMetaDataChanged } from './events/CanvasEventGraphMetaDataChanged';
-import { CanvasEventGraphElementsChanged } from './events/CanvasEventGraphElementsChanged';
-import { CanvasEventGraphTableChanged } from './events/CanvasEventGraphTableChanged';
 import { SSet } from '../set/Set';
 import { ExpandNodesResult } from './ExpandNodesResult';
 import { PhysicsSimulation } from '../physics/PhysicsSimulation';
@@ -39,18 +36,17 @@ import { TaskQueueState } from '../task-queue/TaskQueueState';
 import { TaskQueueTask } from '../task-queue/TaskQueueTask';
 import { UndoWrapper } from '../undo/UndoWrapper';
 import { Neo4jRelationship } from '../neo4j/Neo4jRelationship';
-import { LiveCanvasState } from './LiveCanvasState';
 import { Result } from '@strapi/types/dist/modules/documents/result';
 import { Logger } from '@strapi/logger';
 import { createChildLogger } from '../logger/createChildLogger';
 import { Profiler } from 'winston';
 import { getStringPayloadOfMediaFile } from '../media/media';
 import { UndoWrapperInfo } from '../undo/UndoWrapperInfo';
-import { PhysicalGraph } from '../physics/physical-graph/PhysicalGraph';
 import { LiveCanvasViewSettings } from './graph/LiveCanvasViewSettings';
 import { LiveCanvasChangeRecorder } from './graph/LiveCanvasChangeRecorder';
 import { ApiV2PostScenarioActionV2PostScenarioAction } from '../../../types/generated/contentTypes';
 import { TupleTypes } from '../schema/TupleTypes';
+import { DatabaseEventsService } from '../database/DatabaseEventsService';
 
 export class LiveCanvas implements ApplicationService {
   private readonly _logger: Logger = createChildLogger(this);
@@ -66,6 +62,7 @@ export class LiveCanvas implements ApplicationService {
   public constructor(
     private readonly _canvasId: string,
     private readonly _database: DatabaseService,
+    private readonly _databaseEvents: DatabaseEventsService,
     private readonly _neo4j: Neo4jService,
   ) {
     this._graph = new UndoWrapper<LiveCanvasData>(
@@ -123,15 +120,15 @@ export class LiveCanvas implements ApplicationService {
       }),
     );
     this._subscriptions.add(
-      this._database.onVisualizationSettingsChanged$.subscribe(
-        (params: { canvas: Result<'api::v2-canvas.v2-canvas'> }): void => {
+      this._databaseEvents.onVisualizationSettingsChanged$.subscribe(
+        (canvas: Result<'api::v2-canvas.v2-canvas'>): void => {
           try {
-            if (params.canvas.documentId !== this._canvasId) {
+            if (canvas.documentId !== this._canvasId) {
               return;
             }
             const changeRecorder: LiveCanvasChangeRecorder =
               new LiveCanvasChangeRecorder();
-            this._viewSettings = LiveCanvasViewSettings.fromDB(params.canvas);
+            this._viewSettings = LiveCanvasViewSettings.fromDB(canvas);
             changeRecorder.didChangeViewSettings();
             this._handleChangeRecorder(changeRecorder);
             this._physicsWorker.triggerPhysics({ amount: 'short' });

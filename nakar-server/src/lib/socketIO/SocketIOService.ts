@@ -49,6 +49,7 @@ import { Logger } from '@strapi/logger';
 import { createChildLogger } from '../logger/createChildLogger';
 import { LiveCanvas } from '../room/LiveCanvas';
 import { LiveCanvasViewSettings } from '../room/graph/LiveCanvasViewSettings';
+import { DatabaseEventsService } from '../database/DatabaseEventsService';
 
 export type Server = UntypedServer<ClientToServerEvents, ServerToClientEvents>;
 export type Socket = UntypedSocket<ClientToServerEvents, ServerToClientEvents>;
@@ -62,6 +63,7 @@ export class SocketIOService implements ApplicationService {
   public constructor(
     private readonly _canvasService: CanvasService,
     private readonly _databaseService: DatabaseService,
+    private readonly _databaseEventsService: DatabaseEventsService,
     private readonly _httpService: HTTPService,
     private readonly _schemaFactory: SchemaFactoryService,
   ) {
@@ -523,38 +525,33 @@ export class SocketIOService implements ApplicationService {
   }
 
   private _registerDatabaseServiceEvents(): void {
-    this._databaseService.onNoteChanges$.subscribe(
-      (message: { projectId: string }): void => {
+    this._databaseEventsService.onNoteChanges$.subscribe(
+      (canvas: Result<'api::v2-canvas.v2-canvas'>): void => {
         (async (): Promise<void> => {
-          const project: Result<'api::v2-project.v2-project'> =
-            await this._databaseService.getProject(message.projectId);
-
-          const rooms: Result<'api::v2-room.v2-room'>[] =
-            await this._databaseService.getRoomsOfProject(project);
-          for (const room of rooms) {
-            const canvases: Result<'api::v2-canvas.v2-canvas'>[] =
-              await this._databaseService.getCanvasesOfRoom(room);
-            for (const canvas of canvases) {
-              const graph: LiveCanvasData =
-                this._canvasService.getGraph(canvas);
-              const notes: IndexedNoteCollection =
-                await this._databaseService.getNotes({
-                  project: project,
-                  graph: graph,
-                });
-
-              const graphElements: SchemaGraphElements =
-                await this._schemaFactory.createSchemaGraphElements(
-                  graph,
-                  notes,
-                  LiveCanvasViewSettings.fromDB(canvas),
-                );
-              this.sendToRoom(canvas.documentId, {
-                elements: graphElements,
-                type: 'WSEventGraphElementsChanged',
-              });
-            }
+          const graph: LiveCanvasData | null =
+            this._canvasService.getGraphOrNull(canvas);
+          if (graph == null) {
+            // ok
+            return;
           }
+          const project: Result<'api::v2-project.v2-project'> =
+            await this._databaseService.getProjectOfCanvas(canvas);
+          const notes: IndexedNoteCollection =
+            await this._databaseService.getNotes({
+              project: project,
+              graph: graph,
+            });
+
+          const graphElements: SchemaGraphElements =
+            await this._schemaFactory.createSchemaGraphElements(
+              graph,
+              notes,
+              LiveCanvasViewSettings.fromDB(canvas),
+            );
+          this.sendToRoom(canvas.documentId, {
+            elements: graphElements,
+            type: 'WSEventGraphElementsChanged',
+          });
         })().catch((error: unknown): void => {
           this._logger.error(error);
         });

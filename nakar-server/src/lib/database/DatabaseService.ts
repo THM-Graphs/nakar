@@ -2,153 +2,24 @@ import { LiveCanvasData } from '../room/graph/LiveCanvasData';
 import type { Result } from '@strapi/types/dist/modules/documents';
 import type { ApplicationService } from '../application/ApplicationService';
 import z from 'zod';
-import type { Observable } from 'rxjs';
-import { Subject } from 'rxjs';
 import { SSet } from '../set/Set';
 import { SMap } from '../map/Map';
 import { IndexedNoteCollection } from './IndexedNoteCollection';
 import { Logger } from '@strapi/logger';
 import { createChildLogger } from '../logger/createChildLogger';
-import { Profiler } from 'winston';
 import {
   deleteFile,
   getStringPayloadOfMediaFile,
   saveStringFile,
 } from '../media/media';
 import { LiveCanvasViewSettings } from '../room/graph/LiveCanvasViewSettings';
+import type * as Params from '@strapi/types/dist/modules/documents/params/document-engine';
 
 export class DatabaseService implements ApplicationService {
   private readonly _logger: Logger = createChildLogger(this);
-  private readonly _onCanvasAdded: Subject<Result<'api::v2-canvas.v2-canvas'>>;
-  private readonly _onCanvasDeleted: Subject<
-    Result<'api::v2-canvas.v2-canvas'>
-  >;
-  private readonly _onNoteChanges: Subject<{ projectId: string }>;
-  private readonly _onVisualizationSettingsChanged: Subject<{
-    canvas: Result<'api::v2-canvas.v2-canvas'>;
-  }>;
-
-  public constructor() {
-    this._onCanvasAdded = new Subject();
-    this._onCanvasDeleted = new Subject();
-    this._onNoteChanges = new Subject();
-    this._onVisualizationSettingsChanged = new Subject();
-  }
-
-  public get onCanvasAdded$(): Observable<Result<'api::v2-canvas.v2-canvas'>> {
-    return this._onCanvasAdded.asObservable();
-  }
-
-  public get onCanvasDeleted$(): Observable<
-    Result<'api::v2-canvas.v2-canvas'>
-  > {
-    return this._onCanvasDeleted.asObservable();
-  }
-
-  public get onNoteChanges$(): Observable<{ projectId: string }> {
-    return this._onNoteChanges.asObservable();
-  }
-
-  public get onVisualizationSettingsChanged$(): Observable<{
-    canvas: Result<'api::v2-canvas.v2-canvas'>;
-  }> {
-    return this._onVisualizationSettingsChanged.asObservable();
-  }
 
   public bootstrap(): void {
-    // eslint-disable-next-line @typescript-eslint/typedef,@typescript-eslint/explicit-function-return-type
-    strapi.documents.use(async (context, next) => {
-      const task: Profiler = this._logger.startTimer();
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      let result: any = null;
-
-      if (context.uid === 'api::v2-canvas.v2-canvas') {
-        if (context.action === 'publish') {
-          result = await next();
-
-          const id: string = context.params.documentId;
-          const canvas: Result<'api::v2-canvas.v2-canvas'> =
-            await this.getCanvas(id);
-          this._onCanvasAdded.next(canvas);
-        } else if (context.action === 'delete') {
-          const id: string = context.params.documentId;
-          const canvas: Result<'api::v2-canvas.v2-canvas'> =
-            await this.getCanvas(id);
-          result = await next();
-          this._onCanvasDeleted.next(canvas);
-        } else if (context.action === 'create') {
-          result = await next();
-
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-          const id: string = (result as Result<'api::v2-canvas.v2-canvas'>)
-            .documentId;
-          const canvas: Result<'api::v2-canvas.v2-canvas'> =
-            await this.getCanvas(id);
-          this._onCanvasAdded.next(canvas);
-        } else {
-          result = await next();
-        }
-      } else if (context.uid === 'api::v2-note.v2-note') {
-        if (context.action === 'delete') {
-          const id: string = context.params.documentId;
-          const note: Result<'api::v2-note.v2-note'> = await this.getNote({
-            id: id,
-          });
-          const project: Result<'api::v2-project.v2-project'> | null =
-            await this.getProjectOfNote(note);
-
-          result = await next();
-
-          this._onNoteChanges.next({ projectId: project.documentId });
-        } else if (context.action === 'update') {
-          result = await next();
-
-          const id: string = context.params.documentId;
-          const note: Result<'api::v2-note.v2-note'> = await this.getNote({
-            id: id,
-          });
-          const project: Result<'api::v2-project.v2-project'> =
-            await this.getProjectOfNote(note);
-          this._onNoteChanges.next({ projectId: project.documentId });
-        } else if (context.action === 'create') {
-          result = await next();
-
-          // eslint-disable-next-line @typescript-eslint/typedef
-          const dataSchema = z.object({
-            project: z.object({ documentId: z.string() }).nullable(),
-          });
-          const data: z.infer<typeof dataSchema> = dataSchema.parse(
-            context.params.data,
-          );
-
-          const projectId: string | null = data.project?.documentId ?? null;
-          if (projectId != null) {
-            this._onNoteChanges.next({ projectId: projectId });
-          }
-        } else if (context.action === 'publish') {
-          result = await next();
-
-          const id: string = context.params.documentId;
-          const note: Result<'api::v2-note.v2-note'> = await this.getNote({
-            id: id,
-          });
-          const project: Result<'api::v2-project.v2-project'> =
-            await this.getProjectOfNote(note);
-          this._onNoteChanges.next({ projectId: project.documentId });
-        } else {
-          result = await next();
-        }
-      } else {
-        result = await next();
-      }
-
-      task.done({
-        message: `${context.uid} ${context.action}`,
-      });
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-      return result;
-    });
+    /* */
   }
 
   public destroy(): void | Promise<void> {
@@ -195,19 +66,6 @@ export class DatabaseService implements ApplicationService {
         },
       },
     });
-  }
-
-  public async getScenarioOfCanvas(
-    canvas: Result<'api::v2-canvas.v2-canvas'>,
-  ): Promise<Result<'api::v2-scenario.v2-scenario'>> {
-    const graph: LiveCanvasData = await this.getMutableGraph(canvas);
-    const scenarioId: string | null = graph.metaData.scenarioId;
-    if (scenarioId == null) {
-      throw new Error(`Scenario of canvas ${canvas.documentId} not found.`);
-    }
-    const scenario: Result<'api::v2-scenario.v2-scenario'> =
-      await this.getScenario(scenarioId);
-    return scenario;
   }
 
   public async getMutableGraph(
@@ -535,17 +393,15 @@ export class DatabaseService implements ApplicationService {
     return populatedNote.author ?? null;
   }
 
-  public async getNote(params: {
-    id: string;
-  }): Promise<Result<'api::v2-note.v2-note'>> {
+  public async getNote(id: string): Promise<Result<'api::v2-note.v2-note'>> {
     const result: Result<'api::v2-note.v2-note'> | null = await strapi
       .documents('api::v2-note.v2-note')
       .findOne({
         status: 'published',
-        documentId: params.id,
+        documentId: id,
       });
     if (result == null) {
-      throw new Error(`Note ${params.id} not found.`);
+      throw new Error(`Note ${id} not found.`);
     }
     return result;
   }
@@ -563,6 +419,20 @@ export class DatabaseService implements ApplicationService {
     await strapi
       .documents('api::v2-note.v2-note')
       .delete({ documentId: note.documentId });
+  }
+
+  public async getCanvasesOfNote(
+    note: Result<'api::v2-note.v2-note'>,
+  ): Promise<Result<'api::v2-canvas.v2-canvas'>[]> {
+    const project: Result<'api::v2-project.v2-project'> =
+      await this.getProjectOfNote(note);
+    const canvases: Result<'api::v2-canvas.v2-canvas'>[] = [];
+    for (const room of await this.getRoomsOfProject(project)) {
+      for (const canvas of await this.getCanvasesOfRoom(room)) {
+        canvases.push(canvas);
+      }
+    }
+    return canvases;
   }
 
   public async getProjectOfNote(
@@ -702,19 +572,19 @@ export class DatabaseService implements ApplicationService {
   public async getCanvasesOfRoom(
     room: Result<'api::v2-room.v2-room'>,
   ): Promise<Result<'api::v2-canvas.v2-canvas'>[]> {
-    const populatedRoom: Result<
-      'api::v2-room.v2-room',
-      { populate: ['canvases'] }
-    > | null = await strapi.documents('api::v2-room.v2-room').findOne({
-      documentId: room.documentId,
-      populate: ['canvases'], // TODO: SORT
-    });
-
-    if (populatedRoom == null) {
-      throw new Error(`Room not found: ${room.documentId}`);
-    }
-    const canvases: Result<'api::v2-canvas.v2-canvas'>[] =
-      populatedRoom.canvases ?? [];
+    const canvases: Result<'api::v2-canvas.v2-canvas'>[] = await strapi
+      .documents('api::v2-canvas.v2-canvas')
+      .findMany({
+        status: 'published',
+        populate: { room: { populate: [] } },
+        filters: {
+          room: {
+            documentId: {
+              $eq: room.documentId,
+            },
+          },
+        },
+      } satisfies Params.FindMany<'api::v2-canvas.v2-canvas'>);
 
     if (canvases.length > 0) {
       return canvases;
@@ -936,23 +806,16 @@ export class DatabaseService implements ApplicationService {
     canvas: Result<'api::v2-canvas.v2-canvas'>,
     viewSettings: LiveCanvasViewSettings,
   ): Promise<void> {
-    const updatedCanvas: Result<'api::v2-canvas.v2-canvas'> | null =
-      await strapi.documents('api::v2-canvas.v2-canvas').update({
-        documentId: canvas.documentId,
-        data: {
-          compressRelationshipsWidthFactor:
-            viewSettings.compressRelationshipsWidthFactor,
-          growNodesBasedOnDegree: viewSettings.growNodesBasedOnDegree,
-          growNodesBasedOnDegreeFactor:
-            viewSettings.growNodesBasedOnDegreeFactor,
-        },
-        status: 'published',
-      });
-    if (updatedCanvas) {
-      this._onVisualizationSettingsChanged.next({ canvas: updatedCanvas });
-    } else {
-      throw new Error('Canvas not found.');
-    }
+    await strapi.documents('api::v2-canvas.v2-canvas').update({
+      documentId: canvas.documentId,
+      data: {
+        compressRelationshipsWidthFactor:
+          viewSettings.compressRelationshipsWidthFactor,
+        growNodesBasedOnDegree: viewSettings.growNodesBasedOnDegree,
+        growNodesBasedOnDegreeFactor: viewSettings.growNodesBasedOnDegreeFactor,
+      },
+      status: 'published',
+    });
   }
 
   private _sortByTitle(

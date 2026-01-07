@@ -13,6 +13,7 @@ import { Result } from '@strapi/types/dist/modules/documents/result';
 import { createChildLogger } from '../logger/createChildLogger';
 import { Logger } from '@strapi/logger';
 import { Profiler } from 'winston';
+import { DatabaseEventsService } from '../database/DatabaseEventsService';
 
 export class CanvasService implements ApplicationService {
   private readonly _logger: Logger = createChildLogger(this);
@@ -21,6 +22,7 @@ export class CanvasService implements ApplicationService {
 
   public constructor(
     private readonly _database: DatabaseService,
+    private readonly _databaseEvents: DatabaseEventsService,
     private readonly _neo4j: Neo4jService,
   ) {
     this._liveCanvases = new SMap();
@@ -34,7 +36,7 @@ export class CanvasService implements ApplicationService {
   public bootstrap(): void {
     installHandlebarHelpers();
 
-    this._database.onCanvasDeleted$.subscribe(
+    this._databaseEvents.onCanvasDeleted$.subscribe(
       (canvas: Result<'api::v2-canvas.v2-canvas'>): void => {
         this._destroyCanvas(canvas).catch((error: unknown): void => {
           this._logger.error(error);
@@ -54,6 +56,12 @@ export class CanvasService implements ApplicationService {
     const liveCanvas: LiveCanvas = this.getCanvas(canvas);
     const graph: LiveCanvasData = liveCanvas.getGraph();
     return graph;
+  }
+
+  public getGraphOrNull(
+    canvas: Result<'api::v2-canvas.v2-canvas'>,
+  ): LiveCanvasData | null {
+    return this._liveCanvases.get(canvas.documentId)?.getGraph() ?? null;
   }
 
   public getCanvas(canvas: Result<'api::v2-canvas.v2-canvas'>): LiveCanvas {
@@ -83,6 +91,7 @@ export class CanvasService implements ApplicationService {
     const liveCanvas: LiveCanvas = new LiveCanvas(
       canvas.documentId,
       this._database,
+      this._databaseEvents,
       this._neo4j,
     );
 

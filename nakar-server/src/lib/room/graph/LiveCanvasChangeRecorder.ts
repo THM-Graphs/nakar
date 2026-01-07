@@ -5,7 +5,6 @@ import { PhysicsWorker } from '../PhysicsWorker';
 import { Subject } from 'rxjs';
 import { CanvasEvent } from '../events/CanvasEvent';
 import { LiveCanvasData } from './LiveCanvasData';
-import { PhysicalNode } from '../../physics/physical-graph/PhysicalNode';
 import { RSPhysicalNode } from '../RSPhysicalNode';
 import { UndoWrapperInfo } from '../../undo/UndoWrapperInfo';
 import { CanvasEventGraphMetaDataChanged } from '../events/CanvasEventGraphMetaDataChanged';

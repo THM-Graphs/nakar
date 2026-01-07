@@ -72,7 +72,7 @@ export class HTTPTools {
     handler: (req: Request) => Promise<T> | T,
   ): (req: Request, res: Response) => void {
     return (req: Request, res: Response): void => {
-      const task: Profiler = this._logger.startTimer();
+      const task: Profiler = strapi.log.startTimer();
       Promise.resolve(handler(req))
         .then((result: T): void => {
           res.status(200);
@@ -91,6 +91,7 @@ export class HTTPTools {
             }
           }
           task.done({
+            level: 'http',
             message: `${req.method} ${req.originalUrl}`,
           });
         })

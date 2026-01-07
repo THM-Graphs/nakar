@@ -45,9 +45,7 @@ export class NotesRouter {
     try {
       const noteId: string = this._httpTools.getPathParameter(req, 'id');
       const note: Result<'api::v2-note.v2-note'> =
-        await this._databaseService.getNote({
-          id: noteId,
-        });
+        await this._databaseService.getNote(noteId);
 
       req.nakar = {
         ...req.nakar,
