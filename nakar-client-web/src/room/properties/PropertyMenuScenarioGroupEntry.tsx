@@ -1,8 +1,7 @@
-import { postCanvasActionLoadScenario, ScenarioGroup } from "../../../src-gen";
+import { ScenarioGroup } from "../../../src-gen";
 import { CanvasContext } from "../../pages/CanvasPage.tsx";
 import { useBearStore } from "../../state/useBearStore.ts";
 import { Dropdown, Stack } from "react-bootstrap";
-import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
 import { ScenarioTitleAndBadges } from "../scenarios-panel/ScenarioTitleAndBadges.tsx";
 
 export function PropertyMenuScenarioGroupEntry(props: {
@@ -11,10 +10,6 @@ export function PropertyMenuScenarioGroupEntry(props: {
   value: unknown;
 }) {
   const scenarioGroup = props.scenarioGroup;
-
-  const pushErrorNotification = useBearStore(
-    (s) => s.room.ui.pushErrorNotification,
-  );
 
   const showRunScenarioModal = useBearStore(
     (s) => s.room.scenario.runScenarioModal.open,

@@ -1,7 +1,6 @@
-import { Button, OverlayTrigger, Stack, Tooltip } from "react-bootstrap";
+import { OverlayTrigger, Stack, Tooltip } from "react-bootstrap";
 import clsx from "clsx";
 import { Scenario, ScenarioArgument } from "../../../src-gen";
-import { NavbarButton } from "../../shared/elements/NavbarButton";
 import { ScnearioPlayButton } from "./ScenarioPlayButton";
 
 export function ScenarioTitleAndBadges(props: {

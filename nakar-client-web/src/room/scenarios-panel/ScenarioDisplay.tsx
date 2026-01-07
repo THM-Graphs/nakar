@@ -65,7 +65,9 @@ export function ScenarioDisplay(props: {
       }
     >
       <ScenarioCard
-        onScenarioSelected={(scenario, additive) => runScenario(additive, [])}
+        onScenarioSelected={(scenario, additive) => {
+          runScenario(additive, []);
+        }}
         scenario={props.scenario}
       ></ScenarioCard>
     </Collapsable>

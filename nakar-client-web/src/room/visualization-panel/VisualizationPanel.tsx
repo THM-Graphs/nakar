@@ -1,11 +1,8 @@
-import { Form, Stack } from "react-bootstrap";
 import { useBearStore } from "../../state/useBearStore.ts";
 import { Panel } from "../../shared/elements/Panel.tsx";
 import { CanvasContext } from "../../pages/CanvasPage.tsx";
-import { Collapsable } from "../../shared/elements/Collapsable.tsx";
 import { CanvasViewSettings, setCanvasData } from "../../../src-gen";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
-import { NumberInput } from "../../shared/elements/NumberInput.tsx";
 import { ViewSettingsEditor } from "./ViewSettingsEditor.tsx";
 import { Loading } from "../../shared/elements/Loading.tsx";
 

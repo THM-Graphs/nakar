@@ -2,20 +2,18 @@ import { Stack } from "react-bootstrap";
 import { AppNavbar } from "../shared/bars/AppNavbar.tsx";
 import { useEffect } from "react";
 import {
-  CanvasPage as SchemaCanvasPage,
   Canvas as SchemaCanvas,
+  CanvasPage as SchemaCanvasPage,
+  getCanvasPage,
   GetScenariosResult,
-  Graph,
   Room as SchemaRoom,
   WSActionLeaveCanvas,
-  getCanvasPage,
 } from "../../src-gen";
 import { LoaderFunctionArgs, useLoaderData, useNavigate } from "react-router";
 import { resultOrThrow } from "../shared/data/resultOrThrow.ts";
 import { ToastStack } from "../shared/bars/ToastStack.tsx";
 import { HistogramPanel } from "../room/histogram-panel/HistogramPanel.tsx";
 import { ScenariosPanelButton } from "../room/scenarios-panel/ScenariosPanelButton.tsx";
-import { ProgressDisplay } from "../shared/bars/ProgressDisplay.tsx";
 import { SocketStateDisplay } from "../shared/socket/SocketStateDisplay.tsx";
 import { ReconnectOverlay } from "../shared/socket/ReconnectOverlay.tsx";
 import { NavbarLogo } from "../shared/bars/NavbarLogo.tsx";
@@ -25,9 +23,7 @@ import { AppContext } from "../state/AppContext.ts";
 import { ScenariosPanel } from "../room/scenarios-panel/ScenariosPanel.tsx";
 import { InspectorPanelButton } from "../room/inspector-panel/InspectorPanelButton.tsx";
 import { HistogramPanelButton } from "../room/histogram-panel/HistogramPanelButton.tsx";
-import { StatusBar } from "../shared/bars/StatusBar.tsx";
 import { match } from "ts-pattern";
-import { PerformanceDisplay } from "../room/canvas/PerformanceDisplay.tsx";
 import { RunScenarioModal } from "../room/run-scenario-modal/RunScenarioModal.tsx";
 import { ExpandNodePreviewModal } from "../room/expand-node-preview-modal/ExpandNodePreviewModal.tsx";
 import { QueryPanel } from "../room/query-panel/QueryPanel.tsx";
@@ -45,7 +41,6 @@ import { SearchPanelButton } from "../room/search-panel/SearchPanelButton.tsx";
 import { Canvas } from "../room/canvas/Canvas.tsx";
 import { VisualizationPanelButton } from "../room/visualization-panel/VisualizationPanelButton.tsx";
 import { VisualizationPanel } from "../room/visualization-panel/VisualizationPanel.tsx";
-import { CanvasToolbar } from "../room/canvas/CanvasToolbar.tsx";
 
 export type CanvasContext = {
   initialCanvasData: SchemaCanvas;

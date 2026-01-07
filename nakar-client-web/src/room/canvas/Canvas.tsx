@@ -18,7 +18,6 @@ import { RemoveDanglingNodesAction } from "../actions/RemoveDanglingNodesAction.
 import { CompressRelationshipsAction } from "../actions/CompressRelationshipsAction.ts";
 import { useState } from "react";
 import { CanvasBottomToolBar } from "./CanvasBottomToolBar.tsx";
-import { ProgressDisplay } from "../../shared/bars/ProgressDisplay.tsx";
 import { PerformanceDisplay } from "./PerformanceDisplay.tsx";
 
 export function Canvas(props: {
