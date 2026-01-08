@@ -6,7 +6,6 @@ import { NavbarButton } from "../../shared/elements/NavbarButton.tsx";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
 import { useState } from "react";
 import { ScenarioGroupList } from "./ScenarioGroupList.tsx";
-import { getRoomScenarios } from "../../../src-gen";
 
 export function ScenariosPanel(props: {
   context: AppContext;
@@ -34,12 +33,7 @@ export function ScenariosPanel(props: {
           onClick={async (): Promise<void> => {
             try {
               setReloading(true);
-              const scenarios = resultOrThrow(
-                await getRoomScenarios({
-                  path: { id: props.roomContext.initialRoomData.id },
-                }),
-              );
-              setScenarios(scenarios);
+              // TODO: use ws event
             } catch (error: unknown) {
               pushErrorNotification(error);
             } finally {

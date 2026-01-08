@@ -1,7 +1,7 @@
-import { deleteNote } from "../../../src-gen";
 import { Action } from "./Action.ts";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
 import { CanvasContext } from "../../pages/CanvasPage.tsx";
+import { noteControllerDeleteNote } from "../../../src-gen-2";
 
 export type RemoveNoteActionParams = {
   noteId: string;
@@ -12,7 +12,7 @@ export class RemoveNoteAction extends Action<RemoveNoteActionParams> {
 
   protected async action(input: RemoveNoteActionParams): Promise<void> {
     await resultOrThrow(
-      await deleteNote({
+      await noteControllerDeleteNote({
         path: {
           id: input.noteId,
         },

@@ -8,7 +8,10 @@ import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
 import clsx from "clsx";
 import { ColorPicker } from "../../shared/elements/ColorPicker.tsx";
 import { Collapsable } from "../../shared/elements/Collapsable.tsx";
-import { postNote, putNote } from "../../../src-gen";
+import {
+  noteControllerPostNote,
+  noteControllerUpdateNote,
+} from "../../../src-gen-2";
 
 type AddEditNoteModalMode = "create" | "update";
 
@@ -40,7 +43,7 @@ export function AddEditNoteModal(props: { roomContext: CanvasContext }) {
     try {
       if (noteId == null) {
         await resultOrThrow(
-          await postNote({
+          await noteControllerPostNote({
             path: { id: props.roomContext.initialCanvasData.id },
             body: {
               nodeIds: nodes.map((node) => node.id),
@@ -51,7 +54,7 @@ export function AddEditNoteModal(props: { roomContext: CanvasContext }) {
         );
       } else {
         await resultOrThrow(
-          await putNote({
+          await noteControllerUpdateNote({
             path: {
               id: noteId,
             },

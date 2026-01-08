@@ -43,33 +43,6 @@ export type DatabaseConnection = {
     connectionUrl: string;
 };
 
-export type DatabaseSearchCapabilities = {
-    canExactMatchElementId: boolean;
-    canExactMatchLabel: boolean;
-    exactMatchNodeProperties: Array<DatabaseSearchCapabilitiesEntry>;
-    fuzzyMatchNodeProperties: Array<DatabaseSearchCapabilitiesEntry>;
-};
-
-export type DatabaseSearchCapabilitiesEntry = {
-    label: string;
-    property: string;
-};
-
-export type DatabaseStats = {
-    relTypeCount: number;
-    labelCount: number;
-    relCount: number;
-    labels: Array<{
-        label: string;
-        exploreQuery: string;
-    }>;
-    rels: Array<{
-        relType: string;
-        exploreQuery: string;
-    }>;
-    nodeCount: number;
-};
-
 export type Edge = {
     id: string;
     startNodeId: string;
@@ -373,10 +346,6 @@ export type User = {
     displayName: string;
 };
 
-export type Version = {
-    version: string;
-};
-
 export type WSActionGrabNode = {
     type: 'WSActionGrabNode';
     nodeId: string;
@@ -502,84 +471,6 @@ export type WSEventViewSettingsChanged = {
 export type type21 = 'WSEventViewSettingsChanged';
 
 export type WSServerToClientMessage = WSEventNodesMoved | WSEventCanvasChanged | WSEventNotification | WSEventGraphElementsChanged | WSEventGraphMetaDataChanged | WSEventGraphTableChanged | WSEventViewSettingsChanged | WSEventCanvasDataReady | WSEventProgress | WSEventClearProgress | WSEventSetNodeLocks | WSEventKick;
-
-export type GetProjectPageData = {
-    path: {
-        id: string;
-    };
-};
-
-export type GetProjectPageResponse = (ProjectPage);
-
-export type GetProjectPageError = unknown;
-
-export type GetCanvasPageData = {
-    path: {
-        id: string;
-    };
-};
-
-export type GetCanvasPageResponse = (CanvasPage);
-
-export type GetCanvasPageError = unknown;
-
-export type GetRoomData = {
-    path: {
-        id: string;
-    };
-};
-
-export type GetRoomResponse = (Room);
-
-export type GetRoomError = unknown;
-
-export type GetRoomScenariosData = {
-    path: {
-        id: string;
-    };
-};
-
-export type GetRoomScenariosResponse = (GetScenariosResult);
-
-export type GetRoomScenariosError = unknown;
-
-export type PostNoteData = {
-    body: {
-        nodeIds: Array<(string)>;
-        content: string;
-        canvasId: string;
-    };
-    path: {
-        id: string;
-    };
-};
-
-export type PostNoteResponse = (unknown);
-
-export type PostNoteError = unknown;
-
-export type DeleteNoteData = {
-    path: {
-        id: string;
-    };
-};
-
-export type DeleteNoteResponse = (unknown);
-
-export type DeleteNoteError = unknown;
-
-export type PutNoteData = {
-    body: {
-        content: string;
-    };
-    path: {
-        id: string;
-    };
-};
-
-export type PutNoteResponse = (unknown);
-
-export type PutNoteError = unknown;
 
 export type PostCanvasActionLoadScenarioData = {
     body: {
@@ -832,43 +723,3 @@ export type PostCanvasActionSetViewSettingsData = {
 export type PostCanvasActionSetViewSettingsResponse = (unknown);
 
 export type PostCanvasActionSetViewSettingsError = unknown;
-
-export type GetDatabaseStatsData = {
-    path: {
-        id: string;
-    };
-};
-
-export type GetDatabaseStatsResponse = (DatabaseStats);
-
-export type GetDatabaseStatsError = unknown;
-
-export type PostDatabaseSearchData = {
-    body: {
-        searchTerm: string;
-        roomId: string;
-    };
-    path: {
-        id: string;
-    };
-};
-
-export type PostDatabaseSearchResponse = ({
-    nodes: Array<NodePreview>;
-});
-
-export type PostDatabaseSearchError = unknown;
-
-export type GetDatabaseSearchCapabilitiesData = {
-    path: {
-        id: string;
-    };
-};
-
-export type GetDatabaseSearchCapabilitiesResponse = (DatabaseSearchCapabilities);
-
-export type GetDatabaseSearchCapabilitiesError = unknown;
-
-export type GetVersionResponse = (Version);
-
-export type GetVersionError = unknown;

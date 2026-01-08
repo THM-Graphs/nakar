@@ -1,14 +1,7 @@
 import { Stack } from "react-bootstrap";
 import { AppNavbar } from "../shared/bars/AppNavbar.tsx";
 import { useEffect } from "react";
-import {
-  Canvas as SchemaCanvas,
-  CanvasPage as SchemaCanvasPage,
-  getCanvasPage,
-  GetScenariosResult,
-  Room as SchemaRoom,
-  WSActionLeaveCanvas,
-} from "../../src-gen";
+import { WSActionLeaveCanvas } from "../../src-gen";
 import { LoaderFunctionArgs, useLoaderData, useNavigate } from "react-router";
 import { resultOrThrow } from "../shared/data/resultOrThrow.ts";
 import { ToastStack } from "../shared/bars/ToastStack.tsx";
@@ -41,11 +34,18 @@ import { SearchPanelButton } from "../room/search-panel/SearchPanelButton.tsx";
 import { Canvas } from "../room/canvas/Canvas.tsx";
 import { VisualizationPanelButton } from "../room/visualization-panel/VisualizationPanelButton.tsx";
 import { VisualizationPanel } from "../room/visualization-panel/VisualizationPanel.tsx";
+import {
+  CanvasDto,
+  canvasPageControllerGetCanvasPage,
+  CanvasPageDto,
+  RoomDto,
+  ScenarioCollectionDto,
+} from "../../src-gen-2";
 
 export type CanvasContext = {
-  initialCanvasData: SchemaCanvas;
-  initialScenariosData: GetScenariosResult;
-  initialRoomData: SchemaRoom;
+  initialCanvasData: CanvasDto;
+  initialScenariosData: ScenarioCollectionDto;
+  initialRoomData: RoomDto;
 };
 
 export async function CanvasLoader(
@@ -57,8 +57,8 @@ export async function CanvasLoader(
     throw new Error("No canvas id provided.");
   }
 
-  const data: SchemaCanvasPage = resultOrThrow(
-    await getCanvasPage({ path: { id: canvasId } }),
+  const data: CanvasPageDto = resultOrThrow(
+    await canvasPageControllerGetCanvasPage({ path: { id: canvasId } }),
   );
 
   return {

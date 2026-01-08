@@ -3,10 +3,13 @@ import { AppContext } from "../../state/AppContext.ts";
 import { match } from "ts-pattern";
 import { useCallback, useEffect, useState } from "react";
 import { Loadable } from "../data/Loadable.ts";
-import { getVersion } from "../../../src-gen";
 import { resultOrThrow } from "../data/resultOrThrow.ts";
 import { handleError } from "../error/handleError.ts";
 import { useBearStore } from "../../state/useBearStore.ts";
+import {
+  GetVersionResponseBodyDto,
+  systemControllerGetVersion,
+} from "../../../src-gen-2";
 
 export function ServerInfoDropdownEntry(props: { context: AppContext }) {
   const pushErrorNotification = useBearStore(
@@ -16,8 +19,9 @@ export function ServerInfoDropdownEntry(props: { context: AppContext }) {
   const reloadVersion = useCallback(() => {
     (async () => {
       try {
-        const result = await getVersion();
-        const data = resultOrThrow(result);
+        const data: GetVersionResponseBodyDto = resultOrThrow(
+          await systemControllerGetVersion(),
+        );
         setVersion({ type: "data", data: data.version });
       } catch (error) {
         setVersion({ type: "error", message: handleError(error) });

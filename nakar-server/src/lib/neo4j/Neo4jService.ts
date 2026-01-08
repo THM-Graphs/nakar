@@ -14,13 +14,15 @@ import { SessionConfig } from 'neo4j-driver-core/types/driver';
 import { ExpandNodePreview } from './expand-node-preview/ExpandNodePreview';
 import { ExpandNodePreviewEntry } from './expand-node-preview/ExpandNodePreviewEntry';
 import { SMap } from '../map/Map';
-import { SchemaDatabaseStats } from '../../../src-gen/schema';
 import { Neo4jLimitConfig } from './Neo4jLimitConfig';
 import { Neo4jSearchCapabilities } from './Neo4jSearchCapabilities';
 import { Neo4jNode } from './Neo4jNode';
 import { Logger } from '@strapi/logger';
 import { createChildLogger } from '../logger/createChildLogger';
 import { Injectable } from '@nestjs/common';
+import { GetDatabaseStatsResponseBodyDto } from '../http/routes/database-connection/dto/GetDatabaseStatsResponseBodyDto';
+import { DatabaseStatsRelationshipDto } from '../http/routes/database-connection/dto/DatabaseStatsRelationshipDto';
+import { DatabaseStatsLabelDto } from '../http/routes/database-connection/dto/DatabaseStatsLabelDto';
 
 @Injectable()
 export class Neo4jService {
@@ -208,7 +210,8 @@ ORDER BY lcount DESC, label ASC`,
 
   public async getStats(params: {
     credentials: Neo4jDatabaseInfo;
-  }): Promise<SchemaDatabaseStats> {
+  }): Promise<GetDatabaseStatsResponseBodyDto> {
+    // TODO: Create own result type
     return await this._fetchDbStats(params.credentials);
   }
 
@@ -408,33 +411,29 @@ ORDER BY lcount DESC, label ASC`,
 
   private async _fetchDbStats(
     credentials: Neo4jDatabaseInfo,
-  ): Promise<SchemaDatabaseStats> {
+  ): Promise<GetDatabaseStatsResponseBodyDto> {
     const labels: SSet<string> = await this._getLabels(credentials);
     const relTypes: SSet<string> =
       await this._getRelationshipTypes(credentials);
-    const stats: SchemaDatabaseStats = {
-      labelCount: labels.size,
-      labels: labels.flatMap(
-        (label: string): { label: string; exploreQuery: string } => ({
-          label: label,
-          exploreQuery: this._exploreQueryOfLabel(label),
-        }),
-      ),
-      relTypeCount: relTypes.size,
-      rels: relTypes.flatMap(
-        (
-          relType: string,
-        ): {
-          relType: string;
-          exploreQuery: string;
-        } => ({
-          relType: relType,
-          exploreQuery: this._exploreQueryOfRelationshipType(relType),
-        }),
-      ),
-      nodeCount: await this._getNodesCount(credentials),
-      relCount: await this._getRelationshipsCount(credentials),
-    };
+    const stats: GetDatabaseStatsResponseBodyDto =
+      new GetDatabaseStatsResponseBodyDto({
+        labelCount: labels.size,
+        labels: labels.flatMap(
+          (label: string): DatabaseStatsLabelDto => ({
+            label: label,
+            exploreQuery: this._exploreQueryOfLabel(label),
+          }),
+        ),
+        relTypeCount: relTypes.size,
+        rels: relTypes.flatMap(
+          (relType: string): DatabaseStatsRelationshipDto => ({
+            relType: relType,
+            exploreQuery: this._exploreQueryOfRelationshipType(relType),
+          }),
+        ),
+        nodeCount: await this._getNodesCount(credentials),
+        relCount: await this._getRelationshipsCount(credentials),
+      });
     return stats;
   }
 

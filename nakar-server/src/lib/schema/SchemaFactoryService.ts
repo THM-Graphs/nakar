@@ -4,7 +4,6 @@ import {
   SchemaDatabaseConnection,
   SchemaEdge,
   SchemaEdgePreview,
-  SchemaGetScenariosResult,
   SchemaGraph,
   SchemaGraphElements,
   SchemaGraphLabel,
@@ -15,12 +14,8 @@ import {
   SchemaNode,
   SchemaNodePreview,
   SchemaNote,
-  SchemaProject,
-  SchemaRoom,
   SchemaScenario,
   SchemaScenarioArgument,
-  SchemaScenarioGroup,
-  SchemaScenarioParameter,
   SchemaScenarioQuery,
   SchemaUser,
 } from '../../../src-gen/schema';
@@ -46,7 +41,15 @@ import { match, P } from 'ts-pattern';
 import { Injectable } from '@nestjs/common';
 import { StartPageProjectDto } from '../http/routes/start-page/dto/StartPageProjectDto';
 import { StartPageRoomDto } from '../http/routes/start-page/dto/StartPageRoomDto';
-import { RoomVisibilityDto } from '../http/routes/dto/RoomVisibilityDto';
+import { RoomVisibilityDto } from '../http/dto/RoomVisibilityDto';
+import { ProjectPageDto } from '../http/routes/project-page/dto/ProjectPageDto';
+import { ScenarioGroupDto } from '../http/dto/ScenarioGroupDto';
+import { ScenarioDto } from '../http/dto/ScenarioDto';
+import { ScenarioQueryDto } from '../http/dto/ScenarioQueryDto';
+import { ScenarioParameterDto } from '../http/dto/ScenarioParameterDto';
+import { ScenarioParameterDataTypeDto } from '../http/dto/ScenarioParameterDataTypeDto';
+import { RoomDto } from '../http/dto/RoomDto';
+import { ScenarioCollectionDto } from '../http/dto/ScenarioCollectionDto';
 
 @Injectable()
 export class SchemaFactoryService {
@@ -67,20 +70,28 @@ export class SchemaFactoryService {
 
   public async createSchemaRoom(
     room: Result<'api::v2-room.v2-room'>,
-  ): Promise<SchemaRoom> {
-    const project: Result<'api::v2-project.v2-project'> | null =
-      await this._database.getProjectOfRoom(room);
-    return {
+  ): Promise<RoomDto> {
+    return new RoomDto({
       id: room.documentId,
       title: room.title ?? '',
-      visibility: room.visibility ?? 'private',
+      visibility: this.createSchemaRoomVisibility(room),
       canvases: (await this._database.getCanvasesOfRoom(room)).map(
         (c: Result<'api::v2-canvas.v2-canvas'>): SchemaCanvas => {
           return this.createSchemaCanvasPreview(c);
         },
       ),
-      projectTitle: project.title ?? '',
-    };
+    });
+  }
+
+  public createSchemaRoomVisibility(
+    room: Result<'api::v2-room.v2-room'>,
+  ): RoomVisibilityDto {
+    return match(room.visibility)
+      .with('private', (): RoomVisibilityDto => RoomVisibilityDto.private)
+      .with('public', (): RoomVisibilityDto => RoomVisibilityDto.public)
+      .with('unlisted', (): RoomVisibilityDto => RoomVisibilityDto.unlisted)
+      .with(P.nullish, (): RoomVisibilityDto => RoomVisibilityDto.private)
+      .exhaustive();
   }
 
   public async createSchemaStartPageRoom(
@@ -91,28 +102,23 @@ export class SchemaFactoryService {
     return {
       id: room.documentId,
       title: room.title ?? '',
-      visibility: match(room.visibility)
-        .with('private', (): RoomVisibilityDto => RoomVisibilityDto.private)
-        .with('public', (): RoomVisibilityDto => RoomVisibilityDto.public)
-        .with('unlisted', (): RoomVisibilityDto => RoomVisibilityDto.unlisted)
-        .with(P.nullish, (): RoomVisibilityDto => RoomVisibilityDto.private)
-        .exhaustive(),
+      visibility: this.createSchemaRoomVisibility(room),
       projectTitle: project.title ?? '',
     };
   }
 
   public async createGetScenariosResult(
     room: Result<'api::v2-room.v2-room'>,
-  ): Promise<SchemaGetScenariosResult> {
+  ): Promise<ScenarioCollectionDto> {
     const project: Result<'api::v2-project.v2-project'> =
       await this._database.getProjectOfRoom(room);
     const scenarioGroups: Result<'api::v2-scenario-group.v2-scenario-group'>[] =
       await this._database.getScenarioGroupsOfRoom(room);
-    const scenarioGroupSchemas: SchemaScenarioGroup[] = await Promise.all(
+    const scenarioGroupSchemas: ScenarioGroupDto[] = await Promise.all(
       scenarioGroups.map(
         async (
           scenarioGroup: Result<'api::v2-scenario-group.v2-scenario-group'>,
-        ): Promise<SchemaScenarioGroup> => {
+        ): Promise<ScenarioGroupDto> => {
           return await this.createSchemaScenarioGroup(scenarioGroup);
         },
       ),
@@ -154,7 +160,7 @@ export class SchemaFactoryService {
             parameterizedSceanrios.map(
               async (
                 ps: Result<'api::v2-scenario.v2-scenario'>,
-              ): Promise<SchemaScenario> => {
+              ): Promise<ScenarioDto> => {
                 return await this.createSchemaScenario(ps);
               },
             ),
@@ -174,6 +180,78 @@ export class SchemaFactoryService {
 
   public async createSchemaScenario(
     scenario: Result<'api::v2-scenario.v2-scenario'>,
+  ): Promise<ScenarioDto> {
+    return new ScenarioDto({
+      id: scenario.documentId,
+      title: scenario.title ?? '',
+      queries: await Promise.all(
+        (await this._database.getQueriesOfScenario(scenario)).map(
+          async (
+            q: Result<'api::v2-query.v2-query'>,
+          ): Promise<ScenarioQueryDto> => {
+            const database: Result<'api::v2-database-connection.v2-database-connection'> | null =
+              await this._database.getDatabaseConnectionOfQuery(q);
+            return {
+              query: q.query ?? '',
+              database: database ? this.createSchemaDatabase(database) : null,
+            };
+          },
+        ),
+      ),
+      description: scenario.description ?? '',
+      parameters: (await this._database.getParametersOfScenario(scenario)).map(
+        (
+          parameter: Result<'api::v2-query-parameter.v2-query-parameter'>,
+        ): ScenarioParameterDto =>
+          this.createSchemaScenarioParameter(parameter),
+      ),
+      postActions: (
+        await this._database.getPostScenarioActionsOfScenario(scenario)
+      ).map(
+        (
+          action: Result<'api::v2-post-scenario-action.v2-post-scenario-action'>,
+        ): string =>
+          // ['connectResultNodes', 'compressRelationships', 'compressNodes', 'layout']
+          match(action.type)
+            .with('connectResultNodes', (): string => 'Connect Result Nodes')
+            .with(
+              'compressRelationships',
+              (): string => 'Compress Relationships',
+            )
+            .with('compressNodes', (): string =>
+              match(action.label)
+                .with(
+                  P.string,
+                  (label: string): string => `Compress ${label} Nodes`,
+                )
+                .with(P.nullish, (): string => `Compress Nodes`)
+                .exhaustive(),
+            )
+            .with('layout', (): string =>
+              match(action.layoutAlgorithm)
+                .with(
+                  'forceDirected',
+                  (): string =>
+                    `Layout ${action.label ?? 'None'} Force Directed`,
+                )
+                .with(
+                  'circle',
+                  (): string => `Layout ${action.label ?? 'None'} Circle`,
+                )
+                .with(
+                  P.nullish,
+                  (): string => `Layout ${action.label ?? 'None'}`,
+                )
+                .exhaustive(),
+            )
+            .with(P.nullish, (): string => 'Unknown Post Action')
+            .exhaustive(),
+      ),
+    });
+  }
+
+  public async createSchemaScenarioSchema(
+    scenario: Result<'api::v2-scenario.v2-scenario'>,
   ): Promise<SchemaScenario> {
     return {
       id: scenario.documentId,
@@ -188,9 +266,7 @@ export class SchemaFactoryService {
             return {
               query: q.query ?? '',
               database: database
-                ? {
-                    current: this.createSchemaDatabase(database),
-                  }
+                ? { current: this.createSchemaDatabase(database) }
                 : null,
             };
           },
@@ -200,7 +276,7 @@ export class SchemaFactoryService {
       parameters: (await this._database.getParametersOfScenario(scenario)).map(
         (
           parameter: Result<'api::v2-query-parameter.v2-query-parameter'>,
-        ): SchemaScenarioParameter =>
+        ): ScenarioParameterDto =>
           this.createSchemaScenarioParameter(parameter),
       ),
       postActions: (
@@ -250,31 +326,61 @@ export class SchemaFactoryService {
 
   public createSchemaScenarioParameter(
     scenarioParameter: Result<'api::v2-query-parameter.v2-query-parameter'>,
-  ): SchemaScenarioParameter {
-    return {
+  ): ScenarioParameterDto {
+    return new ScenarioParameterDto({
       identifier: scenarioParameter.identifier ?? '',
       title: scenarioParameter.title ?? '',
       defaultValue: scenarioParameter.defaultValue ?? '',
-      dataType: scenarioParameter.dataType ?? 'string',
-    };
+      dataType: match(scenarioParameter.dataType)
+        .with(
+          'string',
+          (): ScenarioParameterDataTypeDto =>
+            ScenarioParameterDataTypeDto.string,
+        )
+        .with(
+          'number',
+          (): ScenarioParameterDataTypeDto =>
+            ScenarioParameterDataTypeDto.number,
+        )
+        .with(
+          'json',
+          (): ScenarioParameterDataTypeDto => ScenarioParameterDataTypeDto.json,
+        )
+        .with(
+          'startDateTime',
+          (): ScenarioParameterDataTypeDto =>
+            ScenarioParameterDataTypeDto.startDateTime,
+        )
+        .with(
+          'endDateTime',
+          (): ScenarioParameterDataTypeDto =>
+            ScenarioParameterDataTypeDto.endDateTime,
+        )
+        .with(
+          P.nullish,
+          (): ScenarioParameterDataTypeDto =>
+            ScenarioParameterDataTypeDto.string,
+        )
+        .exhaustive(),
+    });
   }
 
   public async createSchemaScenarioGroup(
     scenarioGroup: Result<'api::v2-scenario-group.v2-scenario-group'>,
-  ): Promise<SchemaScenarioGroup> {
-    return {
+  ): Promise<ScenarioGroupDto> {
+    return new ScenarioGroupDto({
       id: scenarioGroup.documentId,
       title: scenarioGroup.title ?? '',
       scenarios: await Promise.all(
         (await this._database.getScenariosOfGroup(scenarioGroup)).map(
           async (
             scenario: Result<'api::v2-scenario.v2-scenario'>,
-          ): Promise<SchemaScenario> => {
+          ): Promise<ScenarioDto> => {
             return await this.createSchemaScenario(scenario);
           },
         ),
       ),
-    };
+    });
   }
 
   public async createSchemaGraph(
@@ -383,7 +489,7 @@ export class SchemaFactoryService {
         : null;
     const result: SchemaGraphMetaData = {
       scenario: scenario
-        ? { current: await this.createSchemaScenario(scenario) }
+        ? { current: await this.createSchemaScenarioSchema(scenario) }
         : null,
       arguments: metaData.arguments.reduce<SchemaScenarioArgument[]>(
         (
@@ -405,57 +511,9 @@ export class SchemaFactoryService {
     return result;
   }
 
-  public async createSchemaProject(
-    project: Result<'api::v2-project.v2-project'>,
-  ): Promise<SchemaProject> {
-    const owner: Result<'plugin::users-permissions.user'> | null =
-      await this._database.getOwnerOfProject(project);
-    const collaborators: Result<'plugin::users-permissions.user'>[] =
-      await this._database.getCollaboratorsOfProject(project);
-    const databaseConnections: Result<'api::v2-database-connection.v2-database-connection'>[] =
-      await this._database.getDatabaseConnectionsOfProject(project);
-    const scenarioGroups: Result<'api::v2-scenario-group.v2-scenario-group'>[] =
-      await this._database.getScenarioGroupsOfProject(project);
-    const rooms: Result<'api::v2-room.v2-room'>[] =
-      await this._database.getRoomsOfProject(project);
-
-    return {
-      id: project.documentId,
-      title: project.title ?? '',
-      owner: owner
-        ? {
-            current: this.createSchemaUserPreview(owner),
-          }
-        : null,
-      collaborators: collaborators.map(
-        (collaborator: Result<'plugin::users-permissions.user'>): SchemaUser =>
-          this.createSchemaUserPreview(collaborator),
-      ),
-      databases: databaseConnections.map(
-        (
-          database: Result<'api::v2-database-connection.v2-database-connection'>,
-        ): SchemaDatabaseConnection => this.createSchemaDatabase(database),
-      ),
-      scenarioGroups: await Promise.all(
-        scenarioGroups.map(
-          async (
-            sg: Result<'api::v2-scenario-group.v2-scenario-group'>,
-          ): Promise<SchemaScenarioGroup> =>
-            await this.createSchemaScenarioGroup(sg),
-        ),
-      ),
-      rooms: await Promise.all(
-        rooms.map(
-          async (room: Result<'api::v2-room.v2-room'>): Promise<SchemaRoom> =>
-            await this.createSchemaRoom(room),
-        ),
-      ),
-    };
-  }
-
   public async createSchemaProjectPage(
     project: Result<'api::v2-project.v2-project'>,
-  ): Promise<SchemaProject> {
+  ): Promise<ProjectPageDto> {
     const owner: Result<'plugin::users-permissions.user'> | null =
       await this._database.getOwnerOfProject(project);
     const collaborators: Result<'plugin::users-permissions.user'>[] =
@@ -467,14 +525,10 @@ export class SchemaFactoryService {
     const rooms: Result<'api::v2-room.v2-room'>[] =
       await this._database.getRoomsOfProject(project);
 
-    return {
+    return new ProjectPageDto({
       id: project.documentId,
       title: project.title ?? '',
-      owner: owner
-        ? {
-            current: this.createSchemaUserPreview(owner),
-          }
-        : null,
+      owner: owner ? this.createSchemaUserPreview(owner) : null,
       collaborators: collaborators.map(
         (collaborator: Result<'plugin::users-permissions.user'>): SchemaUser =>
           this.createSchemaUserPreview(collaborator),
@@ -488,17 +542,17 @@ export class SchemaFactoryService {
         scenarioGroups.map(
           async (
             sg: Result<'api::v2-scenario-group.v2-scenario-group'>,
-          ): Promise<SchemaScenarioGroup> =>
+          ): Promise<ScenarioGroupDto> =>
             await this.createSchemaScenarioGroup(sg),
         ),
       ),
       rooms: await Promise.all(
         rooms.map(
-          async (room: Result<'api::v2-room.v2-room'>): Promise<SchemaRoom> =>
+          async (room: Result<'api::v2-room.v2-room'>): Promise<RoomDto> =>
             await this.createSchemaRoom(room),
         ),
       ),
-    };
+    });
   }
 
   public async createSchemaStartPageProject(

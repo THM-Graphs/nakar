@@ -1,16 +1,13 @@
 import { useEffect } from "react";
 import { useBearStore } from "../state/useBearStore.ts";
 import { LoaderFunctionArgs, useLoaderData, useNavigate } from "react-router";
-import {
-  Canvas as SchemaCanvas,
-  getRoom,
-  Room as SchemaRoom,
-} from "../../src-gen";
+
 import { resultOrThrow } from "../shared/data/resultOrThrow.ts";
+import { CanvasDto, roomControllerGetRoom, RoomDto } from "../../src-gen-2";
 
 export type RoomContext = {
-  room: SchemaRoom;
-  canvas: SchemaCanvas;
+  room: RoomDto;
+  canvas: CanvasDto;
 };
 
 export async function RoomLoader(
@@ -20,8 +17,8 @@ export async function RoomLoader(
   if (roomId == null) {
     throw new Error("No room id given.");
   }
-  const room: SchemaRoom = resultOrThrow(
-    await getRoom({ path: { id: roomId } }),
+  const room: RoomDto = resultOrThrow(
+    await roomControllerGetRoom({ path: { id: roomId } }),
   );
 
   if (room.canvases.length === 0) {

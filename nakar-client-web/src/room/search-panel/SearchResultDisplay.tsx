@@ -3,13 +3,13 @@ import { ReactElement } from "react";
 import { Loading } from "../../shared/elements/Loading.tsx";
 import { Alert, Stack } from "react-bootstrap";
 import { Loadable } from "../../shared/data/Loadable.ts";
-import { NodePreview } from "../../../src-gen";
 import { DynamicList } from "../../shared/elements/DynamicList.tsx";
 import { CanvasContext } from "../../pages/CanvasPage.tsx";
 import { SearchResultEntry } from "./SearchResultEntry.tsx";
+import { NodePreviewDto } from "../../../src-gen-2";
 
 export function SearchResultDisplay(props: {
-  result: Loadable<NodePreview[] | null>;
+  result: Loadable<NodePreviewDto[] | null>;
   roomContext: CanvasContext;
   databaseId: string;
 }) {

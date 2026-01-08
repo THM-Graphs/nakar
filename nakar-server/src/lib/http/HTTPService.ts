@@ -6,19 +6,13 @@ import cors from 'cors';
 import { CanvasService } from '../room/CanvasService';
 import { Neo4jService } from '../neo4j/Neo4jService';
 import { HTTPTools } from './HTTPTools';
-import { RoomRouter } from './routers/RoomRouter';
-import { SystemRouter } from './routers/SystemRouter';
-import { DatabaseRouter } from './routers/DatabaseRouter';
 import { SchemaFactoryService } from '../schema/SchemaFactoryService';
 import { Result } from '@strapi/types/dist/modules/documents/result';
 import { CanvasRouter } from './routers/CanvasRouter';
-import { NotesRouter } from './routers/NotesRouter';
 import { Logger } from '@strapi/logger';
 import { createChildLogger } from '../logger/createChildLogger';
 import { getConfig } from '../config/getConfig';
 import { SanitizedConfig } from '../config/SanitizedConfig';
-import { ProjectPageRouter } from './routers/ProjectPageRouter';
-import { CanvasPageRouter } from './routers/CanvasPageRouter';
 import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 
 declare global {
@@ -46,13 +40,7 @@ export class HTTPService implements OnModuleInit, OnModuleDestroy {
 
   private readonly _httpTools: HTTPTools;
 
-  private readonly _roomRouter: RoomRouter;
-  private readonly _systemRouter: SystemRouter;
-  private readonly _databaseRouter: DatabaseRouter;
-  private readonly _notesRouter: NotesRouter;
   private readonly _canvasRouter: CanvasRouter;
-  private readonly _projectPageRouter: ProjectPageRouter;
-  private readonly _canvasPageRouter: CanvasPageRouter;
 
   public constructor(
     databaseService: DatabaseService,
@@ -63,32 +51,11 @@ export class HTTPService implements OnModuleInit, OnModuleDestroy {
     this._app = express();
     this._server = http.createServer(this._app);
     this._httpTools = new HTTPTools();
-    this._systemRouter = new SystemRouter(this._httpTools);
-    this._roomRouter = new RoomRouter(
-      this._httpTools,
-      databaseService,
-      schemaFactory,
-    );
-    this._databaseRouter = new DatabaseRouter(
-      this._httpTools,
-      databaseService,
-      neo4jService,
-    );
+
     this._canvasRouter = new CanvasRouter(
       this._httpTools,
       databaseService,
       canvasService,
-    );
-    this._notesRouter = new NotesRouter(this._httpTools, databaseService);
-    this._projectPageRouter = new ProjectPageRouter(
-      this._httpTools,
-      schemaFactory,
-      databaseService,
-    );
-    this._canvasPageRouter = new CanvasPageRouter(
-      this._httpTools,
-      schemaFactory,
-      databaseService,
     );
 
     this._setupRoutes();
@@ -154,12 +121,6 @@ export class HTTPService implements OnModuleInit, OnModuleDestroy {
     );
     this._app.use(cors());
     this._app.use(this._httpTools.handleMiddleware(this._httpTools.findUser));
-    this._app.use('/note', this._notesRouter.register());
-    this._app.use('/room', this._roomRouter.register());
     this._app.use('/canvas', this._canvasRouter.register());
-    this._app.use('/system', this._systemRouter.register());
-    this._app.use('/database', this._databaseRouter.register());
-    this._app.use('/project-page', this._projectPageRouter.register());
-    this._app.use('/canvas-page', this._canvasPageRouter.register());
   }
 }

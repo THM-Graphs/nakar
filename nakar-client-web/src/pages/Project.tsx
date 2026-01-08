@@ -4,33 +4,34 @@ import { Container, Stack } from "react-bootstrap";
 import { CMSFooter } from "../shared/cms/CMSFooter.tsx";
 import { LoaderFunctionArgs, useLoaderData } from "react-router";
 import { resultOrThrow } from "../shared/data/resultOrThrow.ts";
-import {
-  getProjectPage,
-  ProjectPage as SchemaProjectPage,
-} from "../../src-gen";
+import { ProjectPage as SchemaProjectPage } from "../../src-gen";
 import { UserCard } from "../shared/cms/UserCard.tsx";
 import { RoomCard } from "../shared/cms/RoomCard.tsx";
 import { DatabaseConnectionCard } from "../shared/cms/DatabaseConnectionCard.tsx";
 import { ScenarioGroupCard } from "../shared/cms/ScenarioGroupCard.tsx";
+import {
+  projectPageControllerGetProjectPage,
+  ProjectPageDto,
+} from "../../src-gen-2";
 
 export async function ProjectLoader(
   args: LoaderFunctionArgs,
-): Promise<SchemaProjectPage> {
+): Promise<ProjectPageDto> {
   const id: string | undefined = args.params["id"];
 
   if (id == null) {
     throw new Error("No room id provided.");
   }
 
-  const project: SchemaProjectPage = resultOrThrow(
-    await getProjectPage({ path: { id: id } }),
+  const project: ProjectPageDto = resultOrThrow(
+    await projectPageControllerGetProjectPage({ path: { id: id } }),
   );
 
   return project;
 }
 
 export function Project(props: { context: AppContext }) {
-  const projectContext: SchemaProjectPage = useLoaderData();
+  const projectContext: ProjectPageDto = useLoaderData();
   return (
     <Stack className={"justify-content-between h-100 bg-body-tertiary"}>
       <CMSNavbar context={props.context} backUrl={".."}></CMSNavbar>
@@ -41,9 +42,9 @@ export function Project(props: { context: AppContext }) {
             <Stack>
               <h5>Project Users</h5>
               <Stack direction={"horizontal"} gap={3} className={"flex-wrap"}>
-                {projectContext.owner?.current != null && (
+                {projectContext.owner != null && (
                   <UserCard
-                    user={projectContext.owner.current}
+                    user={projectContext.owner}
                     role={"owner"}
                   ></UserCard>
                 )}

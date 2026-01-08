@@ -1,8 +1,4 @@
 import { ReactNode, useEffect, useState } from "react";
-import {
-  DatabaseSearchCapabilities,
-  getDatabaseSearchCapabilities,
-} from "../../../src-gen";
 import { Loadable } from "../../shared/data/Loadable.ts";
 import { handleError } from "../../shared/error/handleError.ts";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
@@ -11,12 +7,16 @@ import { match, P } from "ts-pattern";
 import { SuccessIcon } from "./SuccessIcon.tsx";
 import { Collapsable } from "../../shared/elements/Collapsable.tsx";
 import { NavbarButton } from "../../shared/elements/NavbarButton.tsx";
+import {
+  databaseConnectionControllerGetSearchCapabilites,
+  GetSearchCapabilitiesResponseBodyDto,
+} from "../../../src-gen-2";
 
 export function SearchCapabilitiesDisplay(props: {
   databaseId: string | null;
 }) {
   const [capabalities, setCapabilities] = useState<
-    Loadable<DatabaseSearchCapabilities | null>
+    Loadable<GetSearchCapabilitiesResponseBodyDto | null>
   >({ type: "data", data: null });
 
   const load = async (): Promise<void> => {
@@ -26,7 +26,7 @@ export function SearchCapabilitiesDisplay(props: {
       try {
         setCapabilities({ type: "loading" });
         const capa = resultOrThrow(
-          await getDatabaseSearchCapabilities({
+          await databaseConnectionControllerGetSearchCapabilites({
             path: { id: props.databaseId },
           }),
         );

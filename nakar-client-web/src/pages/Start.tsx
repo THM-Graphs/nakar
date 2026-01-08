@@ -38,12 +38,7 @@ export function Start(props: { context: AppContext }) {
                 <h5>Recent Rooms</h5>
                 <Stack direction={"horizontal"} gap={3} className={"flex-wrap"}>
                   {loaderData.recentRooms.map((r) => (
-                    <RoomCard
-                      width={300}
-                      key={r.id}
-                      room={r}
-                      showProjectTitle={true}
-                    ></RoomCard>
+                    <RoomCard width={300} key={r.id} room={r}></RoomCard>
                   ))}
                 </Stack>
               </Stack>
@@ -53,11 +48,7 @@ export function Start(props: { context: AppContext }) {
               <h5>Public Rooms</h5>
               <Stack direction={"vertical"} gap={3} className={"flex-wrap"}>
                 {loaderData.publicRooms.map((r) => (
-                  <RoomCard
-                    key={r.id}
-                    room={r}
-                    showProjectTitle={true}
-                  ></RoomCard>
+                  <RoomCard key={r.id} room={r}></RoomCard>
                 ))}
                 {loaderData.publicRooms.length === 0 && (
                   <span className={"small text-muted"}>None</span>

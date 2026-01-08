@@ -2,11 +2,11 @@ import { CMSCard } from "./CMSCard.tsx";
 import { RoomVisibilityDisplay } from "./RoomVisibilityDisplay.tsx";
 import { Link } from "react-router";
 import { Stack } from "react-bootstrap";
-import { StartPageRoomDto } from "../../../src-gen-2";
+import { RoomDto, StartPageRoomDto } from "../../../src-gen-2";
+import { match, P } from "ts-pattern";
 
 export function RoomCard(props: {
-  room: StartPageRoomDto;
-  showProjectTitle?: boolean;
+  room: RoomDto | StartPageRoomDto;
   width?: number;
 }) {
   return (
@@ -14,11 +14,16 @@ export function RoomCard(props: {
       width={props.width}
       title={
         <Stack>
-          {props.showProjectTitle && (
-            <span className={"ellipsis user-select-text"}>
-              {props.room.projectTitle}
-            </span>
-          )}
+          {match(props.room)
+            .with(
+              { projectTitle: P.string },
+              (startPageRoom: StartPageRoomDto) => (
+                <span className={"ellipsis user-select-text"}>
+                  {startPageRoom.projectTitle}
+                </span>
+              ),
+            )
+            .otherwise(() => null)}
           <Link to={`/room/${props.room.id}`}>{props.room.title}</Link>
         </Stack>
       }

@@ -5,12 +5,7 @@ import { Dropdown, Spinner, Stack } from "react-bootstrap";
 import { NavbarButton } from "../../shared/elements/NavbarButton.tsx";
 import { Collapsable } from "../../shared/elements/Collapsable.tsx";
 import { useEffect, useState } from "react";
-import {
-  DatabaseConnection,
-  DatabaseStats,
-  getDatabaseStats,
-  postCanvasActionRunQuery,
-} from "../../../src-gen";
+import { DatabaseConnection, postCanvasActionRunQuery } from "../../../src-gen";
 import { Loadable } from "../../shared/data/Loadable.ts";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
 import { match } from "ts-pattern";
@@ -19,6 +14,10 @@ import { QueryPanelStatsDisplay } from "./QueryPanelStatsDisplay.tsx";
 import { DynamicList } from "../../shared/elements/DynamicList.tsx";
 import { DropdownButton } from "../../shared/elements/DropdownButton.tsx";
 import { DatabaseSelect } from "../database/DatabaseSelect.tsx";
+import {
+  databaseConnectionControllerGetStats,
+  GetDatabaseStatsResponseBodyDto,
+} from "../../../src-gen-2";
 
 // TODO: Split into parts to prevent layout shift on login
 export function QueryPanel(props: { roomContext: CanvasContext }) {
@@ -36,7 +35,9 @@ export function QueryPanel(props: { roomContext: CanvasContext }) {
   const referencedDatabase: DatabaseConnection | null =
     referencedDatabases.find((d) => d.id === selectedDatabaseId) ?? null;
 
-  const [stats, setStats] = useState<Loadable<DatabaseStats | null>>({
+  const [stats, setStats] = useState<
+    Loadable<GetDatabaseStatsResponseBodyDto | null>
+  >({
     type: "loading",
   });
 
@@ -48,7 +49,9 @@ export function QueryPanel(props: { roomContext: CanvasContext }) {
       } else {
         try {
           const result = resultOrThrow(
-            await getDatabaseStats({ path: { id: referencedDatabase.id } }),
+            await databaseConnectionControllerGetStats({
+              path: { id: referencedDatabase.id },
+            }),
           );
           setStats({ type: "data", data: result });
         } catch (error) {

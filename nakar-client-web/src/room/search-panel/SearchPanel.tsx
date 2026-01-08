@@ -2,7 +2,7 @@ import { Stack } from "react-bootstrap";
 import { Panel } from "../../shared/elements/Panel.tsx";
 import { useState } from "react";
 import { DatabaseSelect } from "../database/DatabaseSelect.tsx";
-import { NodePreview, postDatabaseSearch } from "../../../src-gen";
+import { NodePreview } from "../../../src-gen";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
 import { Loadable } from "../../shared/data/Loadable.ts";
 import { handleError } from "../../shared/error/handleError.ts";
@@ -11,6 +11,11 @@ import { SearchForm } from "./SearchForm.tsx";
 import { SearchResultDisplay } from "./SearchResultDisplay.tsx";
 import { SearchCapabilitiesDisplay } from "./SearchCapabilitiesDisplay.tsx";
 import { CanvasContext } from "../../pages/CanvasPage.tsx";
+import {
+  databaseConnectionControllerPerformSearch,
+  NodePreviewDto,
+  PostSearchResponseBodyDto,
+} from "../../../src-gen-2";
 
 export function SearchPanel(props: { roomContext: CanvasContext }) {
   const [selectedDatabaseId, setSelectedDatabaseId] = useState<string | null>(
@@ -20,7 +25,7 @@ export function SearchPanel(props: { roomContext: CanvasContext }) {
   const searchTerm = useBearStore((s) => s.room.panels.search.searchTerm);
   const hide = useBearStore((s) => s.room.panels.search.hide);
 
-  const [result, setResult] = useState<Loadable<NodePreview[] | null>>({
+  const [result, setResult] = useState<Loadable<NodePreviewDto[] | null>>({
     type: "data",
     data: null,
   });
@@ -38,12 +43,12 @@ export function SearchPanel(props: { roomContext: CanvasContext }) {
   const executeSearch = async (): Promise<void> => {
     setResult({ type: "loading" });
     try {
-      const postResult = resultOrThrow(
-        await postDatabaseSearch({
+      const postResult: PostSearchResponseBodyDto = resultOrThrow(
+        await databaseConnectionControllerPerformSearch({
           path: { id: selectedDatabaseId ?? "" },
           body: {
             searchTerm: searchTerm,
-            roomId: props.roomContext.initialCanvasData.id,
+            canvasId: props.roomContext.initialCanvasData.id,
           },
         }),
       );

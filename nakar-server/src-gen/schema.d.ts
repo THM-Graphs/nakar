@@ -4,102 +4,6 @@
  */
 
 export interface paths {
-    readonly "/project-page/{id}": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
-        };
-        readonly get: operations["getProjectPage"];
-        readonly put?: never;
-        readonly post?: never;
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
-    };
-    readonly "/canvas-page/{id}": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
-        };
-        readonly get: operations["getCanvasPage"];
-        readonly put?: never;
-        readonly post?: never;
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
-    };
-    readonly "/room/{id}": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
-        };
-        readonly get: operations["getRoom"];
-        readonly put?: never;
-        readonly post?: never;
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
-    };
-    readonly "/room/{id}/scenarios": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
-        };
-        readonly get: operations["getRoomScenarios"];
-        readonly put?: never;
-        readonly post?: never;
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
-    };
-    readonly "/note": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
-        };
-        readonly get?: never;
-        readonly put?: never;
-        readonly post: operations["postNote"];
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
-    };
-    readonly "/note/{id}": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
-        };
-        readonly get?: never;
-        readonly put: operations["putNote"];
-        readonly post?: never;
-        readonly delete: operations["deleteNote"];
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
-    };
     readonly "/canvas/{id}/actions/load-scenario": {
         readonly parameters: {
             readonly query?: never;
@@ -420,70 +324,6 @@ export interface paths {
         readonly patch?: never;
         readonly trace?: never;
     };
-    readonly "/database/{id}/stats": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
-        };
-        readonly get: operations["getDatabaseStats"];
-        readonly put?: never;
-        readonly post?: never;
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
-    };
-    readonly "/database/{id}/search": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
-        };
-        readonly get?: never;
-        readonly put?: never;
-        readonly post: operations["postDatabaseSearch"];
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
-    };
-    readonly "/database/{id}/search-capabilities": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
-        };
-        readonly get: operations["getDatabaseSearchCapabilities"];
-        readonly put?: never;
-        readonly post?: never;
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
-    };
-    readonly "/system/version": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
-        };
-        readonly get: operations["getVersion"];
-        readonly put?: never;
-        readonly post?: never;
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
-    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -675,9 +515,6 @@ export interface components {
             readonly identifier: string;
             readonly value: string;
         };
-        readonly Version: {
-            readonly version: string;
-        };
         readonly Notification: {
             readonly message: string;
             /** @enum {string} */
@@ -695,30 +532,6 @@ export interface components {
         readonly ExpandNodePreviewElement: {
             readonly identificator: string;
             readonly count: number;
-        };
-        readonly DatabaseStats: {
-            readonly relTypeCount: number;
-            readonly labelCount: number;
-            readonly relCount: number;
-            readonly labels: readonly {
-                readonly label: string;
-                readonly exploreQuery: string;
-            }[];
-            readonly rels: readonly {
-                readonly relType: string;
-                readonly exploreQuery: string;
-            }[];
-            readonly nodeCount: number;
-        };
-        readonly DatabaseSearchCapabilities: {
-            readonly canExactMatchElementId: boolean;
-            readonly canExactMatchLabel: boolean;
-            readonly exactMatchNodeProperties: readonly components["schemas"]["DatabaseSearchCapabilitiesEntry"][];
-            readonly fuzzyMatchNodeProperties: readonly components["schemas"]["DatabaseSearchCapabilitiesEntry"][];
-        };
-        readonly DatabaseSearchCapabilitiesEntry: {
-            readonly label: string;
-            readonly property: string;
         };
         readonly Note: {
             readonly id: string;
@@ -938,13 +751,9 @@ export type SchemaScenarioQuery = components['schemas']['ScenarioQuery'];
 export type SchemaScenario = components['schemas']['Scenario'];
 export type SchemaScenarioParameter = components['schemas']['ScenarioParameter'];
 export type SchemaScenarioArgument = components['schemas']['ScenarioArgument'];
-export type SchemaVersion = components['schemas']['Version'];
 export type SchemaNotification = components['schemas']['Notification'];
 export type SchemaPhysicsPerformance = components['schemas']['PhysicsPerformance'];
 export type SchemaExpandNodePreviewElement = components['schemas']['ExpandNodePreviewElement'];
-export type SchemaDatabaseStats = components['schemas']['DatabaseStats'];
-export type SchemaDatabaseSearchCapabilities = components['schemas']['DatabaseSearchCapabilities'];
-export type SchemaDatabaseSearchCapabilitiesEntry = components['schemas']['DatabaseSearchCapabilitiesEntry'];
 export type SchemaNote = components['schemas']['Note'];
 export type SchemaLayoutSpecification = components['schemas']['LayoutSpecification'];
 export type SchemaLayoutSpecificationForceDirected = components['schemas']['LayoutSpecificationForceDirected'];
@@ -983,168 +792,6 @@ export type SchemaWsEventSetNodeLocks = components['schemas']['WSEventSetNodeLoc
 export type SchemaWsEventKick = components['schemas']['WSEventKick'];
 export type $defs = Record<string, never>;
 export interface operations {
-    readonly getProjectPage: {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path: {
-                readonly id: string;
-            };
-            readonly cookie?: never;
-        };
-        readonly requestBody?: never;
-        readonly responses: {
-            /** @description OK */
-            readonly 200: {
-                headers: {
-                    readonly [name: string]: unknown;
-                };
-                content: {
-                    readonly "application/json": components["schemas"]["ProjectPage"];
-                };
-            };
-        };
-    };
-    readonly getCanvasPage: {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path: {
-                readonly id: string;
-            };
-            readonly cookie?: never;
-        };
-        readonly requestBody?: never;
-        readonly responses: {
-            /** @description OK */
-            readonly 200: {
-                headers: {
-                    readonly [name: string]: unknown;
-                };
-                content: {
-                    readonly "application/json": components["schemas"]["CanvasPage"];
-                };
-            };
-        };
-    };
-    readonly getRoom: {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path: {
-                readonly id: string;
-            };
-            readonly cookie?: never;
-        };
-        readonly requestBody?: never;
-        readonly responses: {
-            /** @description OK */
-            readonly 200: {
-                headers: {
-                    readonly [name: string]: unknown;
-                };
-                content: {
-                    readonly "application/json": components["schemas"]["Room"];
-                };
-            };
-        };
-    };
-    readonly getRoomScenarios: {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path: {
-                readonly id: string;
-            };
-            readonly cookie?: never;
-        };
-        readonly requestBody?: never;
-        readonly responses: {
-            /** @description OK */
-            readonly 200: {
-                headers: {
-                    readonly [name: string]: unknown;
-                };
-                content: {
-                    readonly "application/json": components["schemas"]["GetScenariosResult"];
-                };
-            };
-        };
-    };
-    readonly postNote: {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path: {
-                readonly id: string;
-            };
-            readonly cookie?: never;
-        };
-        readonly requestBody: {
-            readonly content: {
-                readonly "application/json": {
-                    readonly nodeIds: readonly string[];
-                    readonly content: string;
-                    readonly canvasId: string;
-                };
-            };
-        };
-        readonly responses: {
-            /** @description OK */
-            readonly 200: {
-                headers: {
-                    readonly [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    readonly putNote: {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path: {
-                readonly id: string;
-            };
-            readonly cookie?: never;
-        };
-        readonly requestBody: {
-            readonly content: {
-                readonly "application/json": {
-                    readonly content: string;
-                };
-            };
-        };
-        readonly responses: {
-            /** @description OK */
-            readonly 200: {
-                headers: {
-                    readonly [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    readonly deleteNote: {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path: {
-                readonly id: string;
-            };
-            readonly cookie?: never;
-        };
-        readonly requestBody?: never;
-        readonly responses: {
-            /** @description OK */
-            readonly 200: {
-                headers: {
-                    readonly [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
     readonly postCanvasActionLoadScenario: {
         readonly parameters: {
             readonly query?: never;
@@ -1632,101 +1279,6 @@ export interface operations {
                     readonly [name: string]: unknown;
                 };
                 content?: never;
-            };
-        };
-    };
-    readonly getDatabaseStats: {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path: {
-                readonly id: string;
-            };
-            readonly cookie?: never;
-        };
-        readonly requestBody?: never;
-        readonly responses: {
-            /** @description OK */
-            readonly 200: {
-                headers: {
-                    readonly [name: string]: unknown;
-                };
-                content: {
-                    readonly "application/json": components["schemas"]["DatabaseStats"];
-                };
-            };
-        };
-    };
-    readonly postDatabaseSearch: {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path: {
-                readonly id: string;
-            };
-            readonly cookie?: never;
-        };
-        readonly requestBody: {
-            readonly content: {
-                readonly "application/json": {
-                    readonly searchTerm: string;
-                    readonly roomId: string;
-                };
-            };
-        };
-        readonly responses: {
-            /** @description OK */
-            readonly 200: {
-                headers: {
-                    readonly [name: string]: unknown;
-                };
-                content: {
-                    readonly "application/json": {
-                        readonly nodes: readonly components["schemas"]["NodePreview"][];
-                    };
-                };
-            };
-        };
-    };
-    readonly getDatabaseSearchCapabilities: {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path: {
-                readonly id: string;
-            };
-            readonly cookie?: never;
-        };
-        readonly requestBody?: never;
-        readonly responses: {
-            /** @description OK */
-            readonly 200: {
-                headers: {
-                    readonly [name: string]: unknown;
-                };
-                content: {
-                    readonly "application/json": components["schemas"]["DatabaseSearchCapabilities"];
-                };
-            };
-        };
-    };
-    readonly getVersion: {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
-        };
-        readonly requestBody?: never;
-        readonly responses: {
-            /** @description OK */
-            readonly 200: {
-                headers: {
-                    readonly [name: string]: unknown;
-                };
-                content: {
-                    readonly "application/json": components["schemas"]["Version"];
-                };
             };
         };
     };
