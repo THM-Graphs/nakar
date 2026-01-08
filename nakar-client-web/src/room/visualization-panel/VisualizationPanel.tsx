@@ -48,7 +48,9 @@ export function VisualizationPanel(props: { roomContext: CanvasContext }) {
           }}
         ></ViewSettingsEditor>
       ) : (
-        <Loading></Loading>
+        <span className={"text-muted small fst-italic align-self-center p-5"}>
+          Visualization
+        </span>
       )}
     </Panel>
   );
