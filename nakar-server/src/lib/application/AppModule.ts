@@ -7,9 +7,11 @@ import { SchemaFactoryService } from '../schema/SchemaFactoryService';
 import { DatabaseEventsService } from '../database/DatabaseEventsService';
 import { DatabaseService } from '../database/DatabaseService';
 import { Neo4jService } from '../neo4j/Neo4jService';
+import { AuthController } from '../http/routes/auth/AuthController';
+import { StartPageController } from '../http/routes/start-page/StartPageController';
 
 @Module({
-  controllers: [],
+  controllers: [AuthController, StartPageController],
   providers: [
     DatabaseService,
     CanvasService,

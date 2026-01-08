@@ -1,37 +1,23 @@
-import { Request, Router } from 'express';
-import { HTTPTools } from '../HTTPTools';
-import { operations } from '../../../../src-gen/schema';
+import { Body, Controller, Get, Post } from '@nestjs/common';
+import { PostAuthRequestBodyDto } from './dto/PostAuthRequestBodyDto';
+import { PostAuthResponseBodyDto } from './dto/PostAuthResponseBodyDto';
+import { ApiBody, ApiResponse } from '@nestjs/swagger';
 import * as undici from 'undici';
-import z from 'zod';
+import { getConfig } from '../../../config/getConfig';
 import { Unauthorized } from 'http-errors';
-import { getConfig } from '../../config/getConfig';
+import z from 'zod';
+import { GetAuthResponseBodyDto } from './dto/GetAuthResponseBodyDto';
+import { User } from '../../decorators/User';
+import { Result } from '@strapi/types/dist/modules/documents/result';
 
-export class AuthenticationRouter {
-  public constructor(private readonly _httpTools: HTTPTools) {}
-
-  public register(): Router {
-    const router: Router = Router();
-
-    router.post('/', this._httpTools.handle(this._postAuth.bind(this)));
-    router.get(
-      '/',
-      this._httpTools.assertLoggedIn,
-      this._httpTools.handle(this._getAuth.bind(this)),
-    );
-
-    return router;
-  }
-
-  private async _postAuth(
-    req: Request,
-  ): Promise<
-    operations['postAuth']['responses']['200']['content']['application/json']
-  > {
-    type Body =
-      operations['postAuth']['requestBody']['content']['application/json'];
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-    const body: Body = req.body as Body;
-
+@Controller('/auth')
+export class AuthController {
+  @Post()
+  @ApiBody({ type: PostAuthRequestBodyDto })
+  @ApiResponse({ type: PostAuthResponseBodyDto })
+  public async postAuth(
+    @Body() body: PostAuthRequestBodyDto,
+  ): Promise<PostAuthResponseBodyDto> {
     const result: undici.Response = await undici.fetch(
       `http://localhost:${getConfig().port}/api/auth/local`,
       {
@@ -69,20 +55,22 @@ export class AuthenticationRouter {
       throw new Unauthorized();
     }
 
-    return {
+    return new PostAuthResponseBodyDto({
       username: response.user.username,
       jwt: response.jwt,
-    };
+    });
   }
 
-  private _getAuth(
-    req: Request,
-  ): operations['getAuth']['responses']['200']['content']['application/json'] {
-    if (req.nakar.possibleUser == null) {
+  @Get()
+  @ApiResponse({ type: GetAuthResponseBodyDto })
+  public getAuth(
+    @User() user: Result<'plugin::users-permissions.user'> | null,
+  ): GetAuthResponseBodyDto {
+    if (user == null) {
       throw new Unauthorized();
     }
     return {
-      username: req.nakar.possibleUser.username ?? '',
+      username: user.username ?? '',
     };
   }
 }

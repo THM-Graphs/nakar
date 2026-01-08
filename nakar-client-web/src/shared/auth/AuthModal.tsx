@@ -4,8 +4,8 @@ import { NavbarButton } from "../elements/NavbarButton.tsx";
 import { useBearStore } from "../../state/useBearStore.ts";
 import { useState } from "react";
 import { resultOrThrow } from "../data/resultOrThrow.ts";
-import { postAuth } from "../../../src-gen";
 import { Loading } from "../elements/Loading.tsx";
+import { authControllerPostAuth } from "../../../src-gen-2";
 
 export function AuthModal() {
   const shown = useBearStore((s) => s.global.auth.loginWindow.shown);
@@ -37,7 +37,9 @@ export function AuthModal() {
             (async () => {
               setLoading(true);
               const res = resultOrThrow(
-                await postAuth({ body: { username: username, password } }),
+                await authControllerPostAuth({
+                  body: { username: username, password },
+                }),
               );
               setJWT(res.jwt);
               location.reload();

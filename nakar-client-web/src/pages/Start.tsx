@@ -1,6 +1,5 @@
 import { Container, Stack } from "react-bootstrap";
 import { useLoaderData } from "react-router";
-import { getStartPage, StartPage as StartPageData } from "../../src-gen";
 import { AppContext } from "../state/AppContext.ts";
 import { CMSNavbar } from "../shared/cms/CMSNavbar.tsx";
 import { CMSFooter } from "../shared/cms/CMSFooter.tsx";
@@ -8,17 +7,18 @@ import { RoomCard } from "../shared/cms/RoomCard.tsx";
 import { resultOrThrow } from "../shared/data/resultOrThrow.ts";
 import { ProjectCard } from "../shared/cms/ProjectCard.tsx";
 import { useBearStore } from "../state/useBearStore.ts";
+import { startPageControllerGetStartPage, StartPageDto } from "../../src-gen-2";
 
-export async function StartLoader(): Promise<StartPageData> {
+export async function StartLoader(): Promise<StartPageDto> {
   return resultOrThrow(
-    await getStartPage({
+    await startPageControllerGetStartPage({
       query: { recentRoomIds: useBearStore.getState().start.myRooms },
     }),
   );
 }
 
 export function Start(props: { context: AppContext }) {
-  const loaderData: StartPageData = useLoaderData();
+  const loaderData: StartPageDto = useLoaderData();
 
   return (
     <Stack

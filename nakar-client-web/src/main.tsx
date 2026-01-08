@@ -6,6 +6,7 @@ import "./index.css";
 import { createBrowserRouter, RouterProvider } from "react-router";
 import { loadEnvOrDefault } from "./shared/env/env.ts";
 import { client } from "../src-gen";
+import { client as client2 } from "../src-gen-2";
 import { Start, StartLoader } from "./pages/Start.tsx";
 import { CanvasLoader, CanvasPage } from "./pages/CanvasPage.tsx";
 import { AppContext } from "./state/AppContext.ts";
@@ -22,6 +23,9 @@ async function bootstrap() {
   const env = await loadEnvOrDefault();
   client.setConfig({
     baseUrl: env.BACKEND_URL,
+  });
+  client2.setConfig({
+    baseUrl: "http://localhost:1339",
   });
 
   const context = new AppContext(env);
@@ -44,6 +48,11 @@ async function bootstrap() {
     (s) => s.global.auth.jwt,
     (jwt) => {
       client.setConfig({
+        headers: {
+          Authorization: jwt ? `Bearer ${jwt}` : null,
+        },
+      });
+      client2.setConfig({
         headers: {
           Authorization: jwt ? `Bearer ${jwt}` : null,
         },

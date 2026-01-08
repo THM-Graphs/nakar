@@ -3,8 +3,8 @@ import { useBearStore } from "../../state/useBearStore.ts";
 import { Dropdown } from "react-bootstrap";
 import { useEffect, useState } from "react";
 import { resultOrThrow } from "../data/resultOrThrow.ts";
-import { getAuth } from "../../../src-gen";
 import { Loading } from "../elements/Loading.tsx";
+import { authControllerGetAuth } from "../../../src-gen-2";
 
 export function AuthButton() {
   const jwt = useBearStore((s) => s.global.auth.jwt);
@@ -19,7 +19,7 @@ export function AuthButton() {
   useEffect(() => {
     (async () => {
       setLoading(true);
-      const res = resultOrThrow(await getAuth());
+      const res = resultOrThrow(await authControllerGetAuth());
       setUsername(res.username);
     })()
       .catch(() => {

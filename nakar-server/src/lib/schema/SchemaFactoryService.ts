@@ -22,8 +22,6 @@ import {
   SchemaScenarioGroup,
   SchemaScenarioParameter,
   SchemaScenarioQuery,
-  SchemaStartPageProject,
-  SchemaStartPageRoom,
   SchemaUser,
 } from '../../../src-gen/schema';
 import { LiveCanvasUndoableData } from '../room/data/LiveCanvasUndoableData';
@@ -46,6 +44,9 @@ import { Profiler } from 'winston';
 import { LiveCanvasViewSettings } from '../room/data/LiveCanvasViewSettings';
 import { match, P } from 'ts-pattern';
 import { Injectable } from '@nestjs/common';
+import { StartPageProjectDto } from '../http/routes/start-page/dto/StartPageProjectDto';
+import { StartPageRoomDto } from '../http/routes/start-page/dto/StartPageRoomDto';
+import { RoomVisibilityDto } from '../http/routes/dto/RoomVisibilityDto';
 
 @Injectable()
 export class SchemaFactoryService {
@@ -84,13 +85,18 @@ export class SchemaFactoryService {
 
   public async createSchemaStartPageRoom(
     room: Result<'api::v2-room.v2-room'>,
-  ): Promise<SchemaStartPageRoom> {
+  ): Promise<StartPageRoomDto> {
     const project: Result<'api::v2-project.v2-project'> =
       await this._database.getProjectOfRoom(room);
     return {
       id: room.documentId,
       title: room.title ?? '',
-      visibility: room.visibility ?? 'private',
+      visibility: match(room.visibility)
+        .with('private', (): RoomVisibilityDto => RoomVisibilityDto.private)
+        .with('public', (): RoomVisibilityDto => RoomVisibilityDto.public)
+        .with('unlisted', (): RoomVisibilityDto => RoomVisibilityDto.unlisted)
+        .with(P.nullish, (): RoomVisibilityDto => RoomVisibilityDto.private)
+        .exhaustive(),
       projectTitle: project.title ?? '',
     };
   }
@@ -497,7 +503,7 @@ export class SchemaFactoryService {
 
   public async createSchemaStartPageProject(
     input: Result<'api::v2-project.v2-project'>,
-  ): Promise<SchemaStartPageProject> {
+  ): Promise<StartPageProjectDto> {
     const owner: Result<'plugin::users-permissions.user'> | null =
       await this._database.getOwnerOfProject(input);
     const collaborators: Result<'plugin::users-permissions.user'>[] =
@@ -507,11 +513,7 @@ export class SchemaFactoryService {
     return {
       id: input.documentId,
       title: input.title ?? '',
-      owner: owner
-        ? {
-            current: this.createSchemaUserPreview(owner),
-          }
-        : null,
+      owner: owner ? this.createSchemaUserPreview(owner) : null,
       collaborators: collaborators.map(
         (
           collaborator: Result<'plugin::users-permissions.user'>,

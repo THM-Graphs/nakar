@@ -1,17 +1,17 @@
 import { CMSCard } from "./CMSCard.tsx";
 import { Stack } from "react-bootstrap";
 import { Link } from "react-router";
-import { StartPageProject } from "../../../src-gen";
+import { StartPageProjectDto } from "../../../src-gen-2";
 import { StringListDisplay } from "./StringListDisplay.tsx";
 
-export function ProjectCard(props: { project: StartPageProject }) {
+export function ProjectCard(props: { project: StartPageProjectDto }) {
   return (
     <CMSCard
       title={
         <Stack>
           <Link to={`/project/${props.project.id}`}>{props.project.title}</Link>
           <span className={"text-muted small user-select-text"}>
-            {props.project.owner?.current.displayName ?? (
+            {props.project.owner?.displayName ?? (
               <span className={"fst-italic"}>No owner</span>
             )}
           </span>

@@ -4,38 +4,6 @@
  */
 
 export interface paths {
-    readonly "/auth": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
-        };
-        readonly get: operations["getAuth"];
-        readonly put?: never;
-        readonly post: operations["postAuth"];
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
-    };
-    readonly "/start-page": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
-        };
-        readonly get: operations["getStartPage"];
-        readonly put?: never;
-        readonly post?: never;
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
-    };
     readonly "/project-page/{id}": {
         readonly parameters: {
             readonly query?: never;
@@ -826,27 +794,6 @@ export interface components {
             readonly table: components["schemas"]["GraphTable"];
             readonly viewSettings: components["schemas"]["CanvasViewSettings"];
         };
-        readonly StartPage: {
-            readonly myProjects: readonly components["schemas"]["StartPageProject"][];
-            readonly collaborationProjects: readonly components["schemas"]["StartPageProject"][];
-            readonly recentRooms: readonly components["schemas"]["StartPageRoom"][];
-            readonly publicRooms: readonly components["schemas"]["StartPageRoom"][];
-        };
-        readonly StartPageProject: {
-            readonly id: string;
-            readonly title: string;
-            readonly owner: {
-                readonly current: components["schemas"]["User"];
-            } | null;
-            readonly collaborators: readonly components["schemas"]["User"][];
-            readonly databases: readonly components["schemas"]["DatabaseConnection"][];
-        };
-        readonly StartPageRoom: {
-            readonly id: string;
-            readonly title: string;
-            readonly visibility: components["schemas"]["RoomVisibility"];
-            readonly projectTitle: string;
-        };
         readonly ProjectPage: {
             readonly id: string;
             readonly title: string;
@@ -1012,9 +959,6 @@ export type SchemaRoomVisibility = components['schemas']['RoomVisibility'];
 export type SchemaScenarioGroup = components['schemas']['ScenarioGroup'];
 export type SchemaCanvas = components['schemas']['Canvas'];
 export type SchemaCanvasData = components['schemas']['CanvasData'];
-export type SchemaStartPage = components['schemas']['StartPage'];
-export type SchemaStartPageProject = components['schemas']['StartPageProject'];
-export type SchemaStartPageRoom = components['schemas']['StartPageRoom'];
 export type SchemaProjectPage = components['schemas']['ProjectPage'];
 export type SchemaCanvasPage = components['schemas']['CanvasPage'];
 export type SchemaCanvasViewSettings = components['schemas']['CanvasViewSettings'];
@@ -1039,80 +983,6 @@ export type SchemaWsEventSetNodeLocks = components['schemas']['WSEventSetNodeLoc
 export type SchemaWsEventKick = components['schemas']['WSEventKick'];
 export type $defs = Record<string, never>;
 export interface operations {
-    readonly getAuth: {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
-        };
-        readonly requestBody?: never;
-        readonly responses: {
-            /** @description OK */
-            readonly 200: {
-                headers: {
-                    readonly [name: string]: unknown;
-                };
-                content: {
-                    readonly "application/json": {
-                        readonly username: string;
-                    };
-                };
-            };
-        };
-    };
-    readonly postAuth: {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
-        };
-        readonly requestBody: {
-            readonly content: {
-                readonly "application/json": {
-                    readonly username: string;
-                    readonly password: string;
-                };
-            };
-        };
-        readonly responses: {
-            /** @description OK */
-            readonly 200: {
-                headers: {
-                    readonly [name: string]: unknown;
-                };
-                content: {
-                    readonly "application/json": {
-                        readonly jwt: string;
-                        readonly username: string;
-                    };
-                };
-            };
-        };
-    };
-    readonly getStartPage: {
-        readonly parameters: {
-            readonly query: {
-                readonly recentRoomIds: readonly string[];
-            };
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
-        };
-        readonly requestBody?: never;
-        readonly responses: {
-            /** @description OK */
-            readonly 200: {
-                headers: {
-                    readonly [name: string]: unknown;
-                };
-                content: {
-                    readonly "application/json": components["schemas"]["StartPage"];
-                };
-            };
-        };
-    };
     readonly getProjectPage: {
         readonly parameters: {
             readonly query?: never;
