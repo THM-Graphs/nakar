@@ -4,7 +4,6 @@ import { Container, Stack } from "react-bootstrap";
 import { CMSFooter } from "../shared/cms/CMSFooter.tsx";
 import { LoaderFunctionArgs, useLoaderData } from "react-router";
 import { resultOrThrow } from "../shared/data/resultOrThrow.ts";
-import { ProjectPage as SchemaProjectPage } from "../../src-gen";
 import { UserCard } from "../shared/cms/UserCard.tsx";
 import { RoomCard } from "../shared/cms/RoomCard.tsx";
 import { DatabaseConnectionCard } from "../shared/cms/DatabaseConnectionCard.tsx";
@@ -24,7 +23,7 @@ export async function ProjectLoader(
   }
 
   const project: ProjectPageDto = resultOrThrow(
-    await projectPageControllerGetProjectPage({ path: { id: id } }),
+    await projectPageControllerGetProjectPage({ path: { projectId: id } }),
   );
 
   return project;

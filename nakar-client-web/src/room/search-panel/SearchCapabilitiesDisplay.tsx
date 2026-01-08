@@ -11,9 +11,11 @@ import {
   databaseConnectionControllerGetSearchCapabilites,
   GetSearchCapabilitiesResponseBodyDto,
 } from "../../../src-gen-2";
+import { CanvasContext } from "../../pages/CanvasPage.tsx";
 
 export function SearchCapabilitiesDisplay(props: {
   databaseId: string | null;
+  canvasContext: CanvasContext;
 }) {
   const [capabalities, setCapabilities] = useState<
     Loadable<GetSearchCapabilitiesResponseBodyDto | null>
@@ -27,7 +29,10 @@ export function SearchCapabilitiesDisplay(props: {
         setCapabilities({ type: "loading" });
         const capa = resultOrThrow(
           await databaseConnectionControllerGetSearchCapabilites({
-            path: { id: props.databaseId },
+            path: {
+              databaseId: props.databaseId,
+              roomId: props.canvasContext.initialRoomData.id,
+            },
           }),
         );
         setCapabilities({ type: "data", data: capa });

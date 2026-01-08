@@ -29,42 +29,42 @@ export const startPageControllerGetStartPage = <ThrowOnError extends boolean = f
 export const projectPageControllerGetProjectPage = <ThrowOnError extends boolean = false>(options: OptionsLegacyParser<ProjectPageControllerGetProjectPageData, ThrowOnError>) => {
     return (options?.client ?? client).get<ProjectPageControllerGetProjectPageResponse, ProjectPageControllerGetProjectPageError, ThrowOnError>({
         ...options,
-        url: '/project-page/{id}'
+        url: '/project-page/{projectId}'
     });
 };
 
 export const canvasPageControllerGetCanvasPage = <ThrowOnError extends boolean = false>(options: OptionsLegacyParser<CanvasPageControllerGetCanvasPageData, ThrowOnError>) => {
     return (options?.client ?? client).get<CanvasPageControllerGetCanvasPageResponse, CanvasPageControllerGetCanvasPageError, ThrowOnError>({
         ...options,
-        url: '/canvas-page/{id}'
+        url: '/canvas-page/{canvasId}'
     });
 };
 
 export const roomControllerGetRoom = <ThrowOnError extends boolean = false>(options: OptionsLegacyParser<RoomControllerGetRoomData, ThrowOnError>) => {
     return (options?.client ?? client).get<RoomControllerGetRoomResponse, RoomControllerGetRoomError, ThrowOnError>({
         ...options,
-        url: '/room/{id}'
+        url: '/room/{roomId}'
     });
 };
 
 export const noteControllerPostNote = <ThrowOnError extends boolean = false>(options: OptionsLegacyParser<NoteControllerPostNoteData, ThrowOnError>) => {
     return (options?.client ?? client).post<NoteControllerPostNoteResponse, NoteControllerPostNoteError, ThrowOnError>({
         ...options,
-        url: '/note'
+        url: '/room/{roomId}/note'
     });
 };
 
 export const noteControllerDeleteNote = <ThrowOnError extends boolean = false>(options: OptionsLegacyParser<NoteControllerDeleteNoteData, ThrowOnError>) => {
     return (options?.client ?? client).delete<NoteControllerDeleteNoteResponse, NoteControllerDeleteNoteError, ThrowOnError>({
         ...options,
-        url: '/note/{id}'
+        url: '/room/{roomId}/note/{noteId}'
     });
 };
 
 export const noteControllerUpdateNote = <ThrowOnError extends boolean = false>(options: OptionsLegacyParser<NoteControllerUpdateNoteData, ThrowOnError>) => {
     return (options?.client ?? client).put<NoteControllerUpdateNoteResponse, NoteControllerUpdateNoteError, ThrowOnError>({
         ...options,
-        url: '/note/{id}'
+        url: '/room/{roomId}/note/{noteId}'
     });
 };
 
@@ -78,20 +78,20 @@ export const systemControllerGetVersion = <ThrowOnError extends boolean = false>
 export const databaseConnectionControllerGetStats = <ThrowOnError extends boolean = false>(options: OptionsLegacyParser<DatabaseConnectionControllerGetStatsData, ThrowOnError>) => {
     return (options?.client ?? client).get<DatabaseConnectionControllerGetStatsResponse, DatabaseConnectionControllerGetStatsError, ThrowOnError>({
         ...options,
-        url: '/database-connection/{id}/stats'
+        url: '/room/{roomId}/database-connection/{databaseId}/stats'
     });
 };
 
 export const databaseConnectionControllerPerformSearch = <ThrowOnError extends boolean = false>(options: OptionsLegacyParser<DatabaseConnectionControllerPerformSearchData, ThrowOnError>) => {
     return (options?.client ?? client).post<DatabaseConnectionControllerPerformSearchResponse, DatabaseConnectionControllerPerformSearchError, ThrowOnError>({
         ...options,
-        url: '/database-connection/{id}/search'
+        url: '/room/{roomId}/database-connection/{databaseId}/search'
     });
 };
 
 export const databaseConnectionControllerGetSearchCapabilites = <ThrowOnError extends boolean = false>(options: OptionsLegacyParser<DatabaseConnectionControllerGetSearchCapabilitesData, ThrowOnError>) => {
     return (options?.client ?? client).get<DatabaseConnectionControllerGetSearchCapabilitesResponse, DatabaseConnectionControllerGetSearchCapabilitesError, ThrowOnError>({
         ...options,
-        url: '/database-connection/{id}/search-capabilities'
+        url: '/room/{roomId}/database-connection/{databaseId}/search-capabilities'
     });
 };

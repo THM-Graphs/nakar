@@ -14,14 +14,14 @@ export class ProjectPageController {
     private readonly _schemaFactory: SchemaFactoryService,
   ) {}
 
-  @Get(':id')
+  @Get(':projectId')
   @ApiResponse({ type: ProjectPageDto })
   @UseGuards(UserCanAccessProject)
   public async getProjectPage(
-    @Param('id') id: string,
+    @Param('projectId') projectId: string,
   ): Promise<ProjectPageDto> {
     const project: Result<'api::v2-project.v2-project'> | null =
-      await this._database.getProjectOrNull(id);
+      await this._database.getProjectOrNull(projectId);
 
     if (project == null) {
       throw new NotFound();

@@ -87,12 +87,10 @@ export type PostAuthResponseBodyDto = {
 export type PostNoteRequestBody = {
     nodeIds: Array<(string)>;
     content: string;
-    canvasId: string;
 };
 
 export type PostSearchRequestBodyDto = {
     searchTerm: string;
-    canvasId: string;
 };
 
 export type PostSearchResponseBodyDto = {
@@ -215,7 +213,7 @@ export type StartPageControllerGetStartPageError = unknown;
 
 export type ProjectPageControllerGetProjectPageData = {
     path: {
-        id: string;
+        projectId: string;
     };
 };
 
@@ -225,7 +223,7 @@ export type ProjectPageControllerGetProjectPageError = unknown;
 
 export type CanvasPageControllerGetCanvasPageData = {
     path: {
-        id: string;
+        canvasId: string;
     };
 };
 
@@ -235,7 +233,7 @@ export type CanvasPageControllerGetCanvasPageError = unknown;
 
 export type RoomControllerGetRoomData = {
     path: {
-        id: string;
+        roomId: string;
     };
 };
 
@@ -245,6 +243,9 @@ export type RoomControllerGetRoomError = unknown;
 
 export type NoteControllerPostNoteData = {
     body: PostNoteRequestBody;
+    path: {
+        roomId: string;
+    };
 };
 
 export type NoteControllerPostNoteResponse = (unknown);
@@ -253,7 +254,8 @@ export type NoteControllerPostNoteError = unknown;
 
 export type NoteControllerDeleteNoteData = {
     path: {
-        id: string;
+        noteId: string;
+        roomId: string;
     };
 };
 
@@ -264,7 +266,8 @@ export type NoteControllerDeleteNoteError = unknown;
 export type NoteControllerUpdateNoteData = {
     body: UpdateNoteRequestBodyDto;
     path: {
-        id: string;
+        noteId: string;
+        roomId: string;
     };
 };
 
@@ -278,7 +281,8 @@ export type SystemControllerGetVersionError = unknown;
 
 export type DatabaseConnectionControllerGetStatsData = {
     path: {
-        id: string;
+        databaseId: string;
+        roomId: string;
     };
 };
 
@@ -289,7 +293,8 @@ export type DatabaseConnectionControllerGetStatsError = unknown;
 export type DatabaseConnectionControllerPerformSearchData = {
     body: PostSearchRequestBodyDto;
     path: {
-        id: string;
+        databaseId: string;
+        roomId: string;
     };
 };
 
@@ -299,7 +304,8 @@ export type DatabaseConnectionControllerPerformSearchError = unknown;
 
 export type DatabaseConnectionControllerGetSearchCapabilitesData = {
     path: {
-        id: string;
+        databaseId: string;
+        roomId: string;
     };
 };
 

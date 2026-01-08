@@ -6,6 +6,7 @@ import { SanitizedConfig } from '../config/SanitizedConfig';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, OpenAPIObject, SwaggerModule } from '@nestjs/swagger';
 import cors from 'cors';
+import { RouteLogger } from '../http/interceptors/RouteLogger';
 
 let nestApp: NestExpressApplication | null = null;
 
@@ -17,6 +18,7 @@ export async function bootstrapNest(): Promise<void> {
     });
   nestApp = app;
 
+  app.useGlobalInterceptors(new RouteLogger());
   app.useGlobalPipes(
     new ValidationPipe({
       transform: true,

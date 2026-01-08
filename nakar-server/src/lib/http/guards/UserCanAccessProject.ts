@@ -20,7 +20,7 @@ export class UserCanAccessProject implements CanActivate {
     const user: Result<'plugin::users-permissions.user'> | null =
       await getUser(context);
 
-    const projectId: unknown = req.params['id'];
+    const projectId: unknown = req.params['projectId'];
     if (typeof projectId !== 'string') {
       throw new NotFoundException(`No project id provided.`);
     }

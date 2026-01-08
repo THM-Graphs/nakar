@@ -1,6 +1,14 @@
-import { Body, Controller, Get, HttpCode, Param, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  Param,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { GetDatabaseStatsResponseBodyDto } from './dto/GetDatabaseStatsResponseBodyDto';
-import { ApiResponse } from '@nestjs/swagger';
+import { ApiParam, ApiResponse } from '@nestjs/swagger';
 import { Result } from '@strapi/types/dist/modules/documents/result';
 import { Neo4jDatabaseInfo } from '../../../neo4j/Neo4jDatabaseInfo';
 import { DatabaseService } from '../../../database/DatabaseService';
@@ -16,8 +24,15 @@ import { GetSearchCapabilitiesResponseBodyDto } from './dto/GetSearchCapabilitie
 import { Neo4jSearchCapabilities } from '../../../neo4j/Neo4jSearchCapabilities';
 import { SSet } from '../../../set/Set';
 import { SearchCapabilitiesEntryDto } from './dto/SearchCapabilitiesEntryDto';
+import { UserCanAccessRoom } from '../../guards/UserCanAccessRoom';
+import { DatabaseBelongsToRoom } from '../../guards/DatabaseBelongsToRoom';
 
-@Controller('database-connection')
+@Controller('room/:roomId/database-connection')
+@ApiParam({
+  name: 'roomId',
+  required: true,
+  type: 'string',
+})
 export class DatabaseConnectionController {
   // TODO: Check if user can access db by putting this route behind room
 
@@ -26,13 +41,15 @@ export class DatabaseConnectionController {
     private readonly _neo4jService: Neo4jService,
   ) {}
 
-  @Get(':id/stats')
+  @Get(':databaseId/stats')
   @ApiResponse({ type: GetDatabaseStatsResponseBodyDto })
+  @UseGuards(UserCanAccessRoom)
+  @UseGuards(DatabaseBelongsToRoom)
   public async getStats(
-    @Param('id') id: string,
+    @Param('databaseId') databaseId: string,
   ): Promise<GetDatabaseStatsResponseBodyDto> {
     const database: Result<'api::v2-database-connection.v2-database-connection'> =
-      await this._database.getDatabase(id);
+      await this._database.getDatabase(databaseId);
     const credentials: Neo4jDatabaseInfo = Neo4jDatabaseInfo.parse(database);
     const stats: GetDatabaseStatsResponseBodyDto =
       await this._neo4jService.getStats({
@@ -42,15 +59,17 @@ export class DatabaseConnectionController {
     return stats;
   }
 
-  @Post(':id/search')
+  @Post(':databaseId/search')
   @HttpCode(200)
   @ApiResponse({ type: PostSearchResponseBodyDto })
+  @UseGuards(UserCanAccessRoom)
+  @UseGuards(DatabaseBelongsToRoom)
   public async performSearch(
-    @Param('id') id: string,
+    @Param('databaseId') databaseId: string,
     @Body() body: PostSearchRequestBodyDto,
   ): Promise<PostSearchResponseBodyDto> {
     const database: Result<'api::v2-database-connection.v2-database-connection'> =
-      await this._database.getDatabase(id);
+      await this._database.getDatabase(databaseId);
     const credentials: Neo4jDatabaseInfo = Neo4jDatabaseInfo.parse(database);
 
     const searchTerm: string = body.searchTerm;
@@ -79,13 +98,15 @@ export class DatabaseConnectionController {
     };
   }
 
-  @Get(':id/search-capabilities')
+  @Get(':databaseId/search-capabilities')
   @ApiResponse({ type: GetSearchCapabilitiesResponseBodyDto })
+  @UseGuards(UserCanAccessRoom)
+  @UseGuards(DatabaseBelongsToRoom)
   public async getSearchCapabilites(
-    @Param('id') id: string,
+    @Param('databaseId') databaseId: string,
   ): Promise<GetSearchCapabilitiesResponseBodyDto> {
     const database: Result<'api::v2-database-connection.v2-database-connection'> =
-      await this._database.getDatabase(id);
+      await this._database.getDatabase(databaseId);
     const credentials: Neo4jDatabaseInfo = Neo4jDatabaseInfo.parse(database);
 
     const capabilities: Neo4jSearchCapabilities =

@@ -45,10 +45,12 @@ export function SearchPanel(props: { roomContext: CanvasContext }) {
     try {
       const postResult: PostSearchResponseBodyDto = resultOrThrow(
         await databaseConnectionControllerPerformSearch({
-          path: { id: selectedDatabaseId ?? "" },
+          path: {
+            databaseId: selectedDatabaseId ?? "",
+            roomId: props.roomContext.initialRoomData.id,
+          },
           body: {
             searchTerm: searchTerm,
-            canvasId: props.roomContext.initialCanvasData.id,
           },
         }),
       );
@@ -85,6 +87,7 @@ export function SearchPanel(props: { roomContext: CanvasContext }) {
             ></SearchResultDisplay>
             <SearchCapabilitiesDisplay
               databaseId={selectedDatabaseId}
+              canvasContext={props.roomContext}
             ></SearchCapabilitiesDisplay>
           </>
         )}

@@ -9,8 +9,4 @@ export class PostNoteRequestBody {
   @ApiProperty()
   @IsString()
   public content!: string;
-
-  @ApiProperty()
-  @IsString()
-  public canvasId!: string;
 }

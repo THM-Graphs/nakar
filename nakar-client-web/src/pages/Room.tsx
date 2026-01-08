@@ -18,7 +18,7 @@ export async function RoomLoader(
     throw new Error("No room id given.");
   }
   const room: RoomDto = resultOrThrow(
-    await roomControllerGetRoom({ path: { id: roomId } }),
+    await roomControllerGetRoom({ path: { roomId: roomId } }),
   );
 
   if (room.canvases.length === 0) {

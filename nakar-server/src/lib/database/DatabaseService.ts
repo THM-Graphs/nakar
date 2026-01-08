@@ -37,6 +37,43 @@ export class DatabaseService {
     return database;
   }
 
+  public async getProjectOfDatabase(
+    database: Result<'api::v2-database-connection.v2-database-connection'>,
+  ): Promise<Result<'api::v2-project.v2-project'>> {
+    const databaseId: string = database.documentId;
+    const populatedDatabase: Result<
+      'api::v2-database-connection.v2-database-connection',
+      {
+        populate: {
+          project: {
+            populate: [];
+          };
+        };
+      }
+    > | null = await strapi
+      .documents('api::v2-database-connection.v2-database-connection')
+      .findOne({
+        status: 'published',
+        documentId: databaseId,
+        populate: {
+          project: {
+            populate: [],
+          },
+        },
+      });
+    if (populatedDatabase == null) {
+      throw new Error(`Database Connection ${databaseId} not found.`);
+    }
+    const project: Result<'api::v2-project.v2-project'> | null =
+      populatedDatabase.project ?? null;
+
+    if (project == null) {
+      throw new Error(`Project of database ${databaseId} not found.`);
+    }
+
+    return project;
+  }
+
   public async getRoom(
     roomId: string,
   ): Promise<Result<'api::v2-room.v2-room'>> {

@@ -14,12 +14,14 @@ export class CanvasPageController {
     private readonly _schemaFactory: SchemaFactoryService,
   ) {}
 
-  @Get(':id')
+  @Get(':canvasId')
   @ApiResponse({ type: CanvasPageDto })
   @UseGuards(UserCanAccessCanvas)
-  public async getCanvasPage(@Param('id') id: string): Promise<CanvasPageDto> {
+  public async getCanvasPage(
+    @Param('canvasId') canvasId: string,
+  ): Promise<CanvasPageDto> {
     const canvas: Result<'api::v2-canvas.v2-canvas'> | null =
-      await this._database.getCanvasOrNull(id);
+      await this._database.getCanvasOrNull(canvasId);
 
     if (canvas == null) {
       throw new NotFound();

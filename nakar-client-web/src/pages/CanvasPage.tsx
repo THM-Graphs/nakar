@@ -58,7 +58,7 @@ export async function CanvasLoader(
   }
 
   const data: CanvasPageDto = resultOrThrow(
-    await canvasPageControllerGetCanvasPage({ path: { id: canvasId } }),
+    await canvasPageControllerGetCanvasPage({ path: { canvasId: canvasId } }),
   );
 
   return {

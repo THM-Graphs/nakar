@@ -44,11 +44,10 @@ export function AddEditNoteModal(props: { roomContext: CanvasContext }) {
       if (noteId == null) {
         await resultOrThrow(
           await noteControllerPostNote({
-            path: { id: props.roomContext.initialCanvasData.id },
+            path: { roomId: props.roomContext.initialRoomData.id },
             body: {
               nodeIds: nodes.map((node) => node.id),
               content: content,
-              canvasId: props.roomContext.initialCanvasData.id,
             },
           }),
         );
@@ -56,7 +55,8 @@ export function AddEditNoteModal(props: { roomContext: CanvasContext }) {
         await resultOrThrow(
           await noteControllerUpdateNote({
             path: {
-              id: noteId,
+              noteId: noteId,
+              roomId: props.roomContext.initialRoomData.id,
             },
             body: {
               content: content,

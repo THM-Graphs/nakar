@@ -50,7 +50,10 @@ export function QueryPanel(props: { roomContext: CanvasContext }) {
         try {
           const result = resultOrThrow(
             await databaseConnectionControllerGetStats({
-              path: { id: referencedDatabase.id },
+              path: {
+                databaseId: referencedDatabase.id,
+                roomId: props.roomContext.initialRoomData.id,
+              },
             }),
           );
           setStats({ type: "data", data: result });

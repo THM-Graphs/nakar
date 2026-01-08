@@ -5,8 +5,4 @@ export class PostSearchRequestBodyDto {
   @ApiProperty()
   @IsString()
   public searchTerm!: string;
-
-  @ApiProperty()
-  @IsString()
-  public canvasId!: string;
 }

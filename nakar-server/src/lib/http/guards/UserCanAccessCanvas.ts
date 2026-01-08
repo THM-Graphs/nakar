@@ -20,7 +20,7 @@ export class UserCanAccessCanvas implements CanActivate {
     const user: Result<'plugin::users-permissions.user'> | null =
       await getUser(context);
 
-    const canvasId: unknown = req.params['id'];
+    const canvasId: unknown = req.params['canvasId'];
     if (typeof canvasId !== 'string') {
       throw new NotFoundException(`No canvas id provided.`);
     }
