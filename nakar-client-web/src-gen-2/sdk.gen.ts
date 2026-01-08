@@ -29,7 +29,7 @@ export const startPageControllerGetStartPage = <ThrowOnError extends boolean = f
 export const projectPageControllerGetProjectPage = <ThrowOnError extends boolean = false>(options: OptionsLegacyParser<ProjectPageControllerGetProjectPageData, ThrowOnError>) => {
     return (options?.client ?? client).get<ProjectPageControllerGetProjectPageResponse, ProjectPageControllerGetProjectPageError, ThrowOnError>({
         ...options,
-        url: '/project-page/id'
+        url: '/project-page/{id}'
     });
 };
 

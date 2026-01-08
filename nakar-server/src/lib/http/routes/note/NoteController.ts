@@ -18,13 +18,15 @@ import { UpdateNoteRequestBodyDto } from './dto/UpdateNoteRequestBodyDto';
 
 @Controller('note')
 export class NoteController {
+  // TODO: Check if user is allowed to access room
+
   private readonly _logger: Logger = createChildLogger(this);
 
   public constructor(private readonly _databaseService: DatabaseService) {}
 
   @Post()
   @ApiBody({ type: PostNoteRequestBody })
-  @UseGuards(new UserIsLoggedIn())
+  @UseGuards(UserIsLoggedIn)
   public async postNote(@Body() body: PostNoteRequestBody): Promise<void> {
     const canvas: Result<'api::v2-canvas.v2-canvas'> =
       await this._databaseService.getCanvas(body.canvasId);
@@ -43,7 +45,7 @@ export class NoteController {
   }
 
   @Delete(':id')
-  @UseGuards(new UserIsLoggedIn())
+  @UseGuards(UserIsLoggedIn)
   public async deleteNote(@Param('id') id: string): Promise<void> {
     this._logger.debug(`Will delete note ${id}.`);
     const note: Result<'api::v2-note.v2-note'> =
@@ -52,7 +54,7 @@ export class NoteController {
   }
 
   @Put(':id')
-  @UseGuards(new UserIsLoggedIn())
+  @UseGuards(UserIsLoggedIn)
   @ApiBody({ type: UpdateNoteRequestBodyDto })
   public async updateNote(
     @Param('id') id: string,

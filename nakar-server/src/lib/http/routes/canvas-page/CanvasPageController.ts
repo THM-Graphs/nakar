@@ -1,12 +1,11 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import { Controller, Get, Param, UseGuards } from '@nestjs/common';
 import { CanvasPageDto } from './dto/CanvasPageDto';
 import { ApiResponse } from '@nestjs/swagger';
 import { Result } from '@strapi/types/dist/modules/documents/result';
 import { NotFound } from 'http-errors';
-import { userCanSeeRoom } from '../../../policies/userCanSeeRoom';
-import { User } from '../../decorators/User';
 import { DatabaseService } from '../../../database/DatabaseService';
 import { SchemaFactoryService } from '../../../schema/SchemaFactoryService';
+import { UserCanAccessCanvas } from '../../guards/UserCanAccessCanvas';
 
 @Controller('canvas-page')
 export class CanvasPageController {
@@ -17,10 +16,8 @@ export class CanvasPageController {
 
   @Get(':id')
   @ApiResponse({ type: CanvasPageDto })
-  public async getCanvasPage(
-    @Param('id') id: string,
-    @User() user: Result<'plugin::users-permissions.user'> | null,
-  ): Promise<CanvasPageDto> {
+  @UseGuards(UserCanAccessCanvas)
+  public async getCanvasPage(@Param('id') id: string): Promise<CanvasPageDto> {
     const canvas: Result<'api::v2-canvas.v2-canvas'> | null =
       await this._database.getCanvasOrNull(id);
 
@@ -30,11 +27,6 @@ export class CanvasPageController {
 
     const room: Result<'api::v2-room.v2-room'> =
       await this._database.getRoomOfCanvas(canvas);
-
-    const allowed: boolean = await userCanSeeRoom(user, room, this._database);
-    if (!allowed) {
-      throw new NotFound();
-    }
 
     return new CanvasPageDto({
       canvas: this._schemaFactory.createSchemaCanvasPreview(canvas),

@@ -1,11 +1,10 @@
-import { Controller, Get, NotFoundException, Param } from '@nestjs/common';
+import { Controller, Get, Param, UseGuards } from '@nestjs/common';
 import { Result } from '@strapi/types/dist/modules/documents/result';
-import { User } from '../../decorators/User';
 import { DatabaseService } from '../../../database/DatabaseService';
-import { userCanSeeRoom } from '../../../policies/userCanSeeRoom';
 import { SchemaFactoryService } from '../../../schema/SchemaFactoryService';
 import { RoomDto } from '../../dto/RoomDto';
 import { ApiResponse } from '@nestjs/swagger';
+import { UserCanAccessRoom } from '../../guards/UserCanAccessRoom';
 
 @Controller('room')
 export class RoomController {
@@ -16,22 +15,10 @@ export class RoomController {
 
   @Get(':id')
   @ApiResponse({ type: RoomDto })
-  public async getRoom(
-    @Param('id') id: string,
-    @User() user: Result<'plugin::users-permissions.user'> | null,
-  ): Promise<RoomDto> {
+  @UseGuards(UserCanAccessRoom)
+  public async getRoom(@Param('id') id: string): Promise<RoomDto> {
     const room: Result<'api::v2-room.v2-room'> | null =
       await this._databaseService.getRoom(id);
-
-    const allowed: boolean = await userCanSeeRoom(
-      user,
-      room,
-      this._databaseService,
-    );
-
-    if (!allowed) {
-      throw new NotFoundException();
-    }
 
     return await this._schemaFactory.createSchemaRoom(room);
   }
