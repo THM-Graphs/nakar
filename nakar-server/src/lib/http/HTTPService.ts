@@ -81,7 +81,6 @@ export class HTTPService implements ApplicationService {
     this._canvasRouter = new CanvasRouter(
       this._httpTools,
       databaseService,
-      schemaFactory,
       canvasService,
     );
     this._notesRouter = new NotesRouter(this._httpTools, databaseService);

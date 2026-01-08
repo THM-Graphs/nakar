@@ -44,7 +44,6 @@ import { getStringPayloadOfMediaFile } from '../media/media';
 import { UndoWrapperInfo } from '../undo/UndoWrapperInfo';
 import { LiveCanvasViewSettings } from './graph/LiveCanvasViewSettings';
 import { LiveCanvasChangeRecorder } from './graph/LiveCanvasChangeRecorder';
-import { DatabaseEventsService } from '../database/DatabaseEventsService';
 
 export class LiveCanvas implements ApplicationService {
   private readonly _logger: Logger = createChildLogger(this);
@@ -60,7 +59,6 @@ export class LiveCanvas implements ApplicationService {
   public constructor(
     private readonly _canvasId: string,
     private readonly _database: DatabaseService,
-    private readonly _databaseEvents: DatabaseEventsService,
     private readonly _neo4j: Neo4jService,
   ) {
     this._graph = new UndoWrapper<LiveCanvasData>(
@@ -117,25 +115,6 @@ export class LiveCanvas implements ApplicationService {
         this._handleError(error);
       }),
     );
-    this._subscriptions.add(
-      this._databaseEvents.onVisualizationSettingsChanged$.subscribe(
-        (canvas: Result<'api::v2-canvas.v2-canvas'>): void => {
-          try {
-            if (canvas.documentId !== this._canvasId) {
-              return;
-            }
-            const changeRecorder: LiveCanvasChangeRecorder =
-              new LiveCanvasChangeRecorder();
-            this._viewSettings = LiveCanvasViewSettings.fromDB(canvas);
-            changeRecorder.didChangeViewSettings();
-            this._handleChangeRecorder(changeRecorder);
-            this._physicsWorker.triggerPhysics({ amount: 'short' });
-          } catch (error: unknown) {
-            this._logger.error(error);
-          }
-        },
-      ),
-    );
   }
 
   public get onEvent$(): Observable<CanvasEvent> {
@@ -146,12 +125,12 @@ export class LiveCanvas implements ApplicationService {
     return this._canvasId;
   }
 
-  public get viewSettings(): LiveCanvasViewSettings {
-    return this._viewSettings;
-  }
-
   public get undoInfo(): UndoWrapperInfo {
     return this._graph.info;
+  }
+
+  public get viewSettings(): LiveCanvasViewSettings {
+    return this._viewSettings;
   }
 
   public addSubscription(subscription: Subscription): void {
@@ -1124,6 +1103,16 @@ export class LiveCanvas implements ApplicationService {
     );
   }
 
+  public setViewSettings(newViewSettings: LiveCanvasViewSettings): void {
+    const changeRecorder: LiveCanvasChangeRecorder =
+      new LiveCanvasChangeRecorder();
+    this._viewSettings = newViewSettings;
+    changeRecorder.didChangeViewSettings();
+
+    this._handleChangeRecorder(changeRecorder);
+    this._physicsWorker.triggerPhysics({ amount: 'short' });
+  }
+
   public async saveGraph(): Promise<void> {
     const task: Profiler = this._logger.startTimer();
     const graph: LiveCanvasData = this.getGraph();
@@ -1132,6 +1121,7 @@ export class LiveCanvas implements ApplicationService {
       await this._database.getCanvas(this.canvasId);
 
     await this._database.setMutableGraphOfCanvas(canvas, graph.toPlain());
+    await this._database.setCanvasViewSettings(canvas, this._viewSettings);
     task.done({
       message: 'Save Graph',
     });
@@ -1596,10 +1586,6 @@ export class LiveCanvas implements ApplicationService {
     });
   }
 
-  private _getCanvasViewSettings(): LiveCanvasViewSettings {
-    return this._viewSettings;
-  }
-
   private _triggerPhysicsSimluation(params: {
     amount: 'short' | 'long';
   }): void {
@@ -1617,7 +1603,7 @@ export class LiveCanvas implements ApplicationService {
       this.canvasId,
       this.getGraph(),
       this._graph.info,
-      this._getCanvasViewSettings(),
+      this.viewSettings,
     );
   }
 }

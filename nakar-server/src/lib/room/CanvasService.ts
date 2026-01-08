@@ -68,9 +68,20 @@ export class CanvasService implements ApplicationService {
     return this.getCanvasWithId(canvas.documentId);
   }
 
-  public getCanvasWithId(roomId: string): LiveCanvas {
+  public getCanvasOrNull(
+    canvas: Result<'api::v2-canvas.v2-canvas'>,
+  ): LiveCanvas | null {
+    return this.getCanvasWithIdOrNull(canvas.documentId);
+  }
+
+  public getCanvasWithIdOrNull(roomId: string): LiveCanvas | null {
     const liveCanvas: LiveCanvas | null =
       this._liveCanvases.get(roomId) ?? null;
+    return liveCanvas;
+  }
+
+  public getCanvasWithId(roomId: string): LiveCanvas {
+    const liveCanvas: LiveCanvas | null = this.getCanvasWithIdOrNull(roomId);
     if (liveCanvas == null) {
       throw new Error(`Canvas ${roomId} is not alive yet.`);
     }
@@ -91,7 +102,6 @@ export class CanvasService implements ApplicationService {
     const liveCanvas: LiveCanvas = new LiveCanvas(
       canvas.documentId,
       this._database,
-      this._databaseEvents,
       this._neo4j,
     );
 

@@ -9,6 +9,7 @@ import type { CanvasEventEventKick } from './CanvasEventEventKick';
 import type { CanvasEventNotAllNodesLoaded } from './CanvasEventNotAllNodesLoaded';
 import { CanvasEventError } from './CanvasEventError';
 import { CanvasEventShouldShutDown } from './CanvasEventShouldShutDown';
+import { CanvasEventViewSettingsChanged } from './CanvasEventViewSettingsChanged';
 
 export type CanvasEvent =
   | CanvasEventError
@@ -21,4 +22,5 @@ export type CanvasEvent =
   | CanvasEventProgressCleared
   | CanvasEventEventKick
   | CanvasEventNotAllNodesLoaded
-  | CanvasEventShouldShutDown;
+  | CanvasEventShouldShutDown
+  | CanvasEventViewSettingsChanged;

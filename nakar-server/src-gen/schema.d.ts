@@ -68,22 +68,6 @@ export interface paths {
         readonly patch?: never;
         readonly trace?: never;
     };
-    readonly "/canvas/{id}": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
-        };
-        readonly get?: never;
-        readonly put: operations["setCanvasData"];
-        readonly post?: never;
-        readonly delete?: never;
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
-    };
     readonly "/room/{id}": {
         readonly parameters: {
             readonly query?: never;
@@ -143,22 +127,6 @@ export interface paths {
         readonly put: operations["putNote"];
         readonly post?: never;
         readonly delete: operations["deleteNote"];
-        readonly options?: never;
-        readonly head?: never;
-        readonly patch?: never;
-        readonly trace?: never;
-    };
-    readonly "/canvas/{id}/graph": {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path?: never;
-            readonly cookie?: never;
-        };
-        readonly get: operations["getGraph"];
-        readonly put?: never;
-        readonly post?: never;
-        readonly delete?: never;
         readonly options?: never;
         readonly head?: never;
         readonly patch?: never;
@@ -462,6 +430,22 @@ export interface paths {
         readonly get?: never;
         readonly put?: never;
         readonly post: operations["postCanvasActionLoadNode"];
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/canvas/{id}/actions/set-view-settings": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        readonly put?: never;
+        readonly post: operations["postCanvasActionSetViewSettings"];
         readonly delete?: never;
         readonly options?: never;
         readonly head?: never;
@@ -835,7 +819,11 @@ export interface components {
         readonly Canvas: {
             readonly id: string;
             readonly title: string;
-            readonly roomId: string;
+        };
+        readonly CanvasData: {
+            readonly metaData: components["schemas"]["GraphMetaData"];
+            readonly elements: components["schemas"]["GraphElements"];
+            readonly table: components["schemas"]["GraphTable"];
             readonly viewSettings: components["schemas"]["CanvasViewSettings"];
         };
         readonly StartPage: {
@@ -881,7 +869,7 @@ export interface components {
             readonly growNodesBasedOnDegreeFactor: number;
         };
         readonly WSClientToServerMessage: components["schemas"]["WSActionJoinCanvas"] | components["schemas"]["WSActionLeaveCanvas"] | components["schemas"]["WSActionGrabNode"] | components["schemas"]["WSActionMoveNodes"] | components["schemas"]["WSActionUngrabNode"];
-        readonly WSServerToClientMessage: components["schemas"]["WSEventNodesMoved"] | components["schemas"]["WSEventCanvasChanged"] | components["schemas"]["WSEventNotification"] | components["schemas"]["WSEventGraphElementsChanged"] | components["schemas"]["WSEventGraphMetaDataChanged"] | components["schemas"]["WSEventGraphTableChanged"] | components["schemas"]["WSEventCanvasDataReady"] | components["schemas"]["WSEventProgress"] | components["schemas"]["WSEventClearProgress"] | components["schemas"]["WSEventSetNodeLocks"] | components["schemas"]["WSEventKick"];
+        readonly WSServerToClientMessage: components["schemas"]["WSEventNodesMoved"] | components["schemas"]["WSEventCanvasChanged"] | components["schemas"]["WSEventNotification"] | components["schemas"]["WSEventGraphElementsChanged"] | components["schemas"]["WSEventGraphMetaDataChanged"] | components["schemas"]["WSEventGraphTableChanged"] | components["schemas"]["WSEventViewSettingsChanged"] | components["schemas"]["WSEventCanvasDataReady"] | components["schemas"]["WSEventProgress"] | components["schemas"]["WSEventClearProgress"] | components["schemas"]["WSEventSetNodeLocks"] | components["schemas"]["WSEventKick"];
         readonly WSActionJoinCanvas: {
             /** @enum {string} */
             readonly type: "WSActionJoinCanvas";
@@ -921,12 +909,15 @@ export interface components {
             readonly type: "WSEventGraphTableChanged";
             readonly table: components["schemas"]["GraphTable"];
         };
+        readonly WSEventViewSettingsChanged: {
+            /** @enum {string} */
+            readonly type: "WSEventViewSettingsChanged";
+            readonly viewSettings: components["schemas"]["CanvasViewSettings"];
+        };
         readonly WSEventCanvasDataReady: {
             /** @enum {string} */
             readonly type: "WSEventCanvasDataReady";
-            readonly metaData: components["schemas"]["GraphMetaData"];
-            readonly elements: components["schemas"]["GraphElements"];
-            readonly table: components["schemas"]["GraphTable"];
+            readonly data: components["schemas"]["CanvasData"];
         };
         readonly WSEventCanvasChanged: {
             /** @enum {string} */
@@ -1020,6 +1011,7 @@ export type SchemaRoom = components['schemas']['Room'];
 export type SchemaRoomVisibility = components['schemas']['RoomVisibility'];
 export type SchemaScenarioGroup = components['schemas']['ScenarioGroup'];
 export type SchemaCanvas = components['schemas']['Canvas'];
+export type SchemaCanvasData = components['schemas']['CanvasData'];
 export type SchemaStartPage = components['schemas']['StartPage'];
 export type SchemaStartPageProject = components['schemas']['StartPageProject'];
 export type SchemaStartPageRoom = components['schemas']['StartPageRoom'];
@@ -1036,6 +1028,7 @@ export type SchemaWsActionUngrabNode = components['schemas']['WSActionUngrabNode
 export type SchemaWsEventGraphMetaDataChanged = components['schemas']['WSEventGraphMetaDataChanged'];
 export type SchemaWsEventGraphElementsChanged = components['schemas']['WSEventGraphElementsChanged'];
 export type SchemaWsEventGraphTableChanged = components['schemas']['WSEventGraphTableChanged'];
+export type SchemaWsEventViewSettingsChanged = components['schemas']['WSEventViewSettingsChanged'];
 export type SchemaWsEventCanvasDataReady = components['schemas']['WSEventCanvasDataReady'];
 export type SchemaWsEventCanvasChanged = components['schemas']['WSEventCanvasChanged'];
 export type SchemaWsEventNodesMoved = components['schemas']['WSEventNodesMoved'];
@@ -1164,34 +1157,6 @@ export interface operations {
             };
         };
     };
-    readonly setCanvasData: {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path: {
-                readonly id: string;
-            };
-            readonly cookie?: never;
-        };
-        readonly requestBody: {
-            readonly content: {
-                readonly "application/json": {
-                    readonly viewSettings: components["schemas"]["CanvasViewSettings"];
-                };
-            };
-        };
-        readonly responses: {
-            /** @description OK */
-            readonly 200: {
-                headers: {
-                    readonly [name: string]: unknown;
-                };
-                content: {
-                    readonly "application/json": components["schemas"]["Canvas"];
-                };
-            };
-        };
-    };
     readonly getRoom: {
         readonly parameters: {
             readonly query?: never;
@@ -1307,28 +1272,6 @@ export interface operations {
                     readonly [name: string]: unknown;
                 };
                 content?: never;
-            };
-        };
-    };
-    readonly getGraph: {
-        readonly parameters: {
-            readonly query?: never;
-            readonly header?: never;
-            readonly path: {
-                readonly id: string;
-            };
-            readonly cookie?: never;
-        };
-        readonly requestBody?: never;
-        readonly responses: {
-            /** @description OK */
-            readonly 200: {
-                headers: {
-                    readonly [name: string]: unknown;
-                };
-                content: {
-                    readonly "application/json": components["schemas"]["Graph"];
-                };
             };
         };
     };
@@ -1783,6 +1726,32 @@ export interface operations {
                 readonly "application/json": {
                     readonly nodeId: string;
                     readonly databaseId: string;
+                };
+            };
+        };
+        readonly responses: {
+            /** @description OK */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly postCanvasActionSetViewSettings: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path: {
+                readonly id: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": {
+                    readonly viewSettings: components["schemas"]["CanvasViewSettings"];
                 };
             };
         };

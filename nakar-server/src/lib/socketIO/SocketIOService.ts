@@ -17,6 +17,7 @@ import type {
   SchemaWsEventNotification,
   SchemaWsEventProgress,
   SchemaWsEventSetNodeLocks,
+  SchemaWsEventViewSettingsChanged,
   SchemaWsServerToClientMessage,
 } from '../../../src-gen/schema';
 import { match, P } from 'ts-pattern';
@@ -48,8 +49,8 @@ import { IndexedNoteCollection } from '../database/IndexedNoteCollection';
 import { Logger } from '@strapi/logger';
 import { createChildLogger } from '../logger/createChildLogger';
 import { LiveCanvas } from '../room/LiveCanvas';
-import { LiveCanvasViewSettings } from '../room/graph/LiveCanvasViewSettings';
 import { DatabaseEventsService } from '../database/DatabaseEventsService';
+import { CanvasEventViewSettingsChanged } from '../room/events/CanvasEventViewSettingsChanged';
 
 export type Server = UntypedServer<ClientToServerEvents, ServerToClientEvents>;
 export type Socket = UntypedSocket<ClientToServerEvents, ServerToClientEvents>;
@@ -241,20 +242,23 @@ export class SocketIOService implements ApplicationService {
                       });
                     wsClient.send({
                       type: 'WSEventCanvasDataReady',
-                      table: this._schemaFactory.createSchemaTable(
-                        graph.tableData,
-                      ),
-                      elements:
-                        await this._schemaFactory.createSchemaGraphElements(
-                          graph,
-                          notes,
-                          liveCanvas.viewSettings,
+                      data: {
+                        table: this._schemaFactory.createSchemaTable(
+                          graph.tableData,
                         ),
-                      metaData:
-                        await this._schemaFactory.createSchemaGraphMetaData(
-                          graph,
-                          liveCanvas.undoInfo,
-                        ),
+                        elements:
+                          await this._schemaFactory.createSchemaGraphElements(
+                            graph,
+                            notes,
+                            liveCanvas.viewSettings,
+                          ),
+                        metaData:
+                          await this._schemaFactory.createSchemaGraphMetaData(
+                            graph,
+                            liveCanvas.undoInfo,
+                          ),
+                        viewSettings: liveCanvas.viewSettings.toSchema(),
+                      },
                     } satisfies SchemaWsEventCanvasDataReady);
                   } else {
                     this._logger.error(
@@ -392,6 +396,9 @@ export class SocketIOService implements ApplicationService {
             { type: 'CanvasEventGraphElementsChanged' },
             (message: CanvasEventGraphElementsChanged): void => {
               (async (): Promise<void> => {
+                const liveCanvas: LiveCanvas =
+                  this._canvasService.getCanvasWithId(message.canvasId);
+
                 const canvas: Result<'api::v2-canvas.v2-canvas'> =
                   await this._databaseService.getCanvas(message.canvasId);
 
@@ -408,7 +415,7 @@ export class SocketIOService implements ApplicationService {
                   await this._schemaFactory.createSchemaGraphElements(
                     message.graph,
                     notes,
-                    LiveCanvasViewSettings.fromDB(canvas),
+                    liveCanvas.viewSettings,
                   );
                 this.sendToRoom(message.canvasId, {
                   elements: graphElements,
@@ -514,6 +521,15 @@ export class SocketIOService implements ApplicationService {
           .with({ type: 'CanvasEventShouldShutDown' }, (): void => {
             /* Will be handled by CanvasService */
           })
+          .with(
+            { type: 'CanvasEventViewSettingsChanged' },
+            (message: CanvasEventViewSettingsChanged): void => {
+              this.sendToRoom(message.canvasId, {
+                type: 'WSEventViewSettingsChanged',
+                viewSettings: message.viewSettings.toSchema(),
+              } satisfies SchemaWsEventViewSettingsChanged);
+            },
+          )
           .exhaustive(),
       ).catch((error: unknown): void => {
         this._logger.error(
@@ -528,12 +544,15 @@ export class SocketIOService implements ApplicationService {
     this._databaseEventsService.onNoteChanges$.subscribe(
       (canvas: Result<'api::v2-canvas.v2-canvas'>): void => {
         (async (): Promise<void> => {
-          const graph: LiveCanvasData | null =
-            this._canvasService.getGraphOrNull(canvas);
-          if (graph == null) {
+          const liveCanvas: LiveCanvas | null =
+            this._canvasService.getCanvasOrNull(canvas);
+          if (liveCanvas == null) {
             // ok
             return;
           }
+
+          const graph: LiveCanvasData = liveCanvas.getGraph();
+
           const project: Result<'api::v2-project.v2-project'> =
             await this._databaseService.getProjectOfCanvas(canvas);
           const notes: IndexedNoteCollection =
@@ -546,7 +565,7 @@ export class SocketIOService implements ApplicationService {
             await this._schemaFactory.createSchemaGraphElements(
               graph,
               notes,
-              LiveCanvasViewSettings.fromDB(canvas),
+              liveCanvas.viewSettings,
             );
           this.sendToRoom(canvas.documentId, {
             elements: graphElements,

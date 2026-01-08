@@ -87,17 +87,16 @@ export function CanvasPage(props: { context: AppContext }) {
   const setScenarios = useBearStore(
     (s) => s.room.panels.scenarios.setScenarios,
   );
-  const pushNotification = useBearStore((s) => s.room.ui.pushNotification);
-  const navigate = useNavigate();
   const setVisualizationData = useBearStore(
     (s) => s.room.panels.visualization.setData,
   );
+  const pushNotification = useBearStore((s) => s.room.ui.pushNotification);
+  const navigate = useNavigate();
   const leftPanel = useBearStore((s) => s.room.panels.left);
   const rightPanel = useBearStore((s) => s.room.panels.right);
 
   useEffect(() => {
     setScenarios(roomContext.initialScenariosData);
-    setVisualizationData(roomContext.initialCanvasData.viewSettings);
   }, [roomContext]);
 
   useEffect(() => {
@@ -151,9 +150,13 @@ export function CanvasPage(props: { context: AppContext }) {
             void navigate("/");
           })
           .with({ type: "WSEventCanvasDataReady" }, (event) => {
-            setGraphMetaData(event.metaData);
-            setGraphElements(event.elements);
-            setGraphTable(event.table);
+            setGraphMetaData(event.data.metaData);
+            setGraphElements(event.data.elements);
+            setGraphTable(event.data.table);
+            setVisualizationData(event.data.viewSettings);
+          })
+          .with({ type: "WSEventViewSettingsChanged" }, (event) => {
+            setVisualizationData(event.viewSettings);
           })
           .exhaustive();
       }),

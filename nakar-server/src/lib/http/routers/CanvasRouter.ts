@@ -1,31 +1,20 @@
 import { HTTPTools } from '../HTTPTools';
 import { Request, Router } from 'express';
-import { GraphRouter } from './GraphRouter';
 import { DatabaseService } from '../../database/DatabaseService';
-import { SchemaFactoryService } from '../../schema/SchemaFactoryService';
 import { Result } from '@strapi/types/dist/modules/documents/result';
 import { ActionsRouter } from './ActionsRouter';
 import { CanvasService } from '../../room/CanvasService';
-import { operations, SchemaCanvas } from '../../../../src-gen/schema';
 import { userCanSeeRoom } from '../../policies/userCanSeeRoom';
 import { NotFound } from 'http-errors';
-import { LiveCanvasViewSettings } from '../../room/graph/LiveCanvasViewSettings';
 
 export class CanvasRouter {
-  private readonly _graphRouter: GraphRouter;
   private readonly _actionsRouter: ActionsRouter;
 
   public constructor(
     private readonly _httpTools: HTTPTools,
     private readonly _databaseService: DatabaseService,
-    private readonly _schemaFactory: SchemaFactoryService,
     canvasService: CanvasService,
   ) {
-    this._graphRouter = new GraphRouter(
-      _httpTools,
-      _databaseService,
-      _schemaFactory,
-    );
     this._actionsRouter = new ActionsRouter(_httpTools, canvasService);
   }
 
@@ -36,9 +25,7 @@ export class CanvasRouter {
       '/:id',
       this._httpTools.handleMiddleware(this._assertCanvas.bind(this)),
     );
-    router.use('/:id/graph', this._graphRouter.register());
     router.use('/:id/actions', this._actionsRouter.register());
-    router.put('/:id', this._httpTools.handle(this._updateCanvas.bind(this)));
 
     return router;
   }
@@ -69,25 +56,5 @@ export class CanvasRouter {
       room: room,
       canvas: canvas,
     };
-  }
-
-  private async _updateCanvas(req: Request): Promise<SchemaCanvas> {
-    type Body =
-      operations['setCanvasData']['requestBody']['content']['application/json'];
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-    const body: Body = req.body as Body;
-
-    const viewSettings: LiveCanvasViewSettings =
-      LiveCanvasViewSettings.fromSchema(body.viewSettings);
-
-    await this._databaseService.setCanvasViewSettings(
-      req.nakar.canvas,
-      viewSettings,
-    );
-
-    const canvas: Result<'api::v2-canvas.v2-canvas'> =
-      await this._databaseService.getCanvas(req.nakar.canvas.documentId);
-
-    return await this._schemaFactory.createSchemaCanvasPreview(canvas);
   }
 }

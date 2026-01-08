@@ -8,6 +8,7 @@ import { NotFound } from 'http-errors';
 import { SSet } from '../../set/Set';
 import { ExpandNodePreview } from '../../neo4j/expand-node-preview/ExpandNodePreview';
 import { LiveCanvas } from '../../room/LiveCanvas';
+import { LiveCanvasViewSettings } from '../../room/graph/LiveCanvasViewSettings';
 
 export class ActionsRouter {
   public constructor(
@@ -85,6 +86,10 @@ export class ActionsRouter {
     router.post(
       '/load-node',
       this._httpTools.handle(this._loadNode.bind(this)),
+    );
+    router.post(
+      '/set-view-settings',
+      this._httpTools.handle(this._setViewSettings.bind(this)),
     );
 
     return router;
@@ -289,5 +294,17 @@ export class ActionsRouter {
       nodeId: requestBody.nodeId,
       databaseId: requestBody.databaseId,
     });
+  }
+
+  private _setViewSettings(req: Request): void {
+    type Body =
+      operations['postCanvasActionSetViewSettings']['requestBody']['content']['application/json'];
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+    const body: Body = req.body as Body;
+
+    const viewSettings: LiveCanvasViewSettings =
+      LiveCanvasViewSettings.fromSchema(body.viewSettings);
+
+    this._roomService.getCanvas(req.nakar.canvas).setViewSettings(viewSettings);
   }
 }

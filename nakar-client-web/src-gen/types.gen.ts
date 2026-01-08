@@ -3,7 +3,12 @@
 export type Canvas = {
     id: string;
     title: string;
-    roomId: string;
+};
+
+export type CanvasData = {
+    metaData: GraphMetaData;
+    elements: GraphElements;
+    table: GraphTable;
     viewSettings: CanvasViewSettings;
 };
 
@@ -441,9 +446,7 @@ export type type10 = 'WSEventCanvasChanged';
 
 export type WSEventCanvasDataReady = {
     type: 'WSEventCanvasDataReady';
-    metaData: GraphMetaData;
-    elements: GraphElements;
-    table: GraphTable;
+    data: CanvasData;
 };
 
 export type type11 = 'WSEventCanvasDataReady';
@@ -515,7 +518,14 @@ export type WSEventSetNodeLocks = {
 
 export type type20 = 'WSEventSetNodeLocks';
 
-export type WSServerToClientMessage = WSEventNodesMoved | WSEventCanvasChanged | WSEventNotification | WSEventGraphElementsChanged | WSEventGraphMetaDataChanged | WSEventGraphTableChanged | WSEventCanvasDataReady | WSEventProgress | WSEventClearProgress | WSEventSetNodeLocks | WSEventKick;
+export type WSEventViewSettingsChanged = {
+    type: 'WSEventViewSettingsChanged';
+    viewSettings: CanvasViewSettings;
+};
+
+export type type21 = 'WSEventViewSettingsChanged';
+
+export type WSServerToClientMessage = WSEventNodesMoved | WSEventCanvasChanged | WSEventNotification | WSEventGraphElementsChanged | WSEventGraphMetaDataChanged | WSEventGraphTableChanged | WSEventViewSettingsChanged | WSEventCanvasDataReady | WSEventProgress | WSEventClearProgress | WSEventSetNodeLocks | WSEventKick;
 
 export type PostAuthData = {
     body: {
@@ -566,19 +576,6 @@ export type GetCanvasPageData = {
 export type GetCanvasPageResponse = (CanvasPage);
 
 export type GetCanvasPageError = unknown;
-
-export type SetCanvasDataData = {
-    body: {
-        viewSettings: CanvasViewSettings;
-    };
-    path: {
-        id: string;
-    };
-};
-
-export type SetCanvasDataResponse = (Canvas);
-
-export type SetCanvasDataError = unknown;
 
 export type GetRoomData = {
     path: {
@@ -637,16 +634,6 @@ export type PutNoteData = {
 export type PutNoteResponse = (unknown);
 
 export type PutNoteError = unknown;
-
-export type GetGraphData = {
-    path: {
-        id: string;
-    };
-};
-
-export type GetGraphResponse = (Graph);
-
-export type GetGraphError = unknown;
 
 export type PostCanvasActionLoadScenarioData = {
     body: {
@@ -886,6 +873,19 @@ export type PostCanvasActionLoadNodeData = {
 export type PostCanvasActionLoadNodeResponse = (unknown);
 
 export type PostCanvasActionLoadNodeError = unknown;
+
+export type PostCanvasActionSetViewSettingsData = {
+    body: {
+        viewSettings: CanvasViewSettings;
+    };
+    path: {
+        id: string;
+    };
+};
+
+export type PostCanvasActionSetViewSettingsResponse = (unknown);
+
+export type PostCanvasActionSetViewSettingsError = unknown;
 
 export type GetDatabaseStatsData = {
     path: {

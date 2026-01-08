@@ -11,11 +11,13 @@ import { CanvasEventGraphMetaDataChanged } from '../events/CanvasEventGraphMetaD
 import { CanvasEventGraphElementsChanged } from '../events/CanvasEventGraphElementsChanged';
 import { CanvasEventGraphTableChanged } from '../events/CanvasEventGraphTableChanged';
 import { LiveCanvasViewSettings } from './LiveCanvasViewSettings';
+import { CanvasEventViewSettingsChanged } from '../events/CanvasEventViewSettingsChanged';
 
 export class LiveCanvasChangeRecorder {
   private _shouldSendMetaDataChangedToUser: boolean;
   private _shouldSendGraphElementsToUserAndWorker: boolean;
   private _shouldSendTableDataToUser: boolean;
+  private _shouldSendViewSettingsToUser: boolean;
   private readonly _lockChanges: SMap<string, boolean> = new SMap<
     string,
     boolean
@@ -26,6 +28,7 @@ export class LiveCanvasChangeRecorder {
     this._shouldSendMetaDataChangedToUser = false;
     this._shouldSendGraphElementsToUserAndWorker = false;
     this._shouldSendTableDataToUser = false;
+    this._shouldSendViewSettingsToUser = false;
     this._lockChanges = new SMap();
     this._movedNodes = new SSet();
   }
@@ -60,6 +63,7 @@ export class LiveCanvasChangeRecorder {
 
   public didChangeViewSettings(): void {
     this._shouldSendGraphElementsToUserAndWorker = true;
+    this._shouldSendViewSettingsToUser = true;
   }
 
   public handleChange(
@@ -92,6 +96,13 @@ export class LiveCanvasChangeRecorder {
         table: graph.tableData,
         canvasId: canvasId,
       } satisfies CanvasEventGraphTableChanged);
+    }
+    if (this._shouldSendViewSettingsToUser) {
+      onEvent.next({
+        type: 'CanvasEventViewSettingsChanged',
+        canvasId: canvasId,
+        viewSettings: viewSettings,
+      } satisfies CanvasEventViewSettingsChanged);
     }
     if (this._lockChanges.size > 0) {
       physicsWorker.setLocks(this._lockChanges.toRecord());

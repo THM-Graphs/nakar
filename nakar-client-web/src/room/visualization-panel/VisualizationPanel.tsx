@@ -1,7 +1,10 @@
 import { useBearStore } from "../../state/useBearStore.ts";
 import { Panel } from "../../shared/elements/Panel.tsx";
 import { CanvasContext } from "../../pages/CanvasPage.tsx";
-import { CanvasViewSettings, setCanvasData } from "../../../src-gen";
+import {
+  CanvasViewSettings,
+  postCanvasActionSetViewSettings,
+} from "../../../src-gen";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
 import { ViewSettingsEditor } from "./ViewSettingsEditor.tsx";
 import { Loading } from "../../shared/elements/Loading.tsx";
@@ -30,7 +33,7 @@ export function VisualizationPanel(props: { roomContext: CanvasContext }) {
           onChange={(newSettings: CanvasViewSettings) => {
             setData(newSettings);
 
-            setCanvasData({
+            postCanvasActionSetViewSettings({
               path: {
                 id: props.roomContext.initialCanvasData.id,
               },
@@ -39,7 +42,7 @@ export function VisualizationPanel(props: { roomContext: CanvasContext }) {
               },
             })
               .then((res) => {
-                setData(resultOrThrow(res).viewSettings);
+                return resultOrThrow(res);
               })
               .catch(pushErrorNotification);
           }}

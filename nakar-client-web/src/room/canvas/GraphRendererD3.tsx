@@ -46,7 +46,7 @@ export function GraphRendererD3(props: {
             _graphRenderer.loadGraphContent(event.elements);
           })
           .with({ type: "WSEventCanvasDataReady" }, (event) => {
-            _graphRenderer.loadGraphContent(event.elements);
+            _graphRenderer.loadGraphContent(event.data.elements);
           });
       }),
       _graphRenderer.onGrabNode.subscribe((n) => {

@@ -8,7 +8,6 @@ import { Profiler } from 'winston';
 import { match, P } from 'ts-pattern';
 import { Context } from '@strapi/types/dist/modules/documents/middleware';
 import { ServiceInstance } from '@strapi/types/dist/modules/documents/service-instance';
-import { Input } from '@strapi/types/dist/modules/documents/params/data';
 
 export class DatabaseEventsService implements ApplicationService {
   private readonly _logger: Logger = createChildLogger(this);
@@ -17,16 +16,12 @@ export class DatabaseEventsService implements ApplicationService {
     Result<'api::v2-canvas.v2-canvas'>
   >;
   private readonly _onNoteChanges: Subject<Result<'api::v2-canvas.v2-canvas'>>;
-  private readonly _onVisualizationSettingsChanged: Subject<
-    Result<'api::v2-canvas.v2-canvas'>
-  >;
 
   private readonly _subscriptsion: Subscription[];
 
   public constructor(private readonly _databaseService: DatabaseService) {
     this._onCanvasDeleted = new Subject();
     this._onNoteChanges = new Subject();
-    this._onVisualizationSettingsChanged = new Subject();
 
     this._subscriptsion = [
       this.onCanvasDeleted$.subscribe(
@@ -37,13 +32,6 @@ export class DatabaseEventsService implements ApplicationService {
       this.onNoteChanges$.subscribe(
         (canvas: Result<'api::v2-canvas.v2-canvas'>): void => {
           this._logger.debug(`onNoteChanges$: ${canvas.documentId}`);
-        },
-      ),
-      this.onVisualizationSettingsChanged$.subscribe(
-        (canvas: Result<'api::v2-canvas.v2-canvas'>): void => {
-          this._logger.debug(
-            `onVisualizationSettingsChanged$: ${canvas.documentId}`,
-          );
         },
       ),
     ];
@@ -57,12 +45,6 @@ export class DatabaseEventsService implements ApplicationService {
 
   public get onNoteChanges$(): Observable<Result<'api::v2-canvas.v2-canvas'>> {
     return this._onNoteChanges.asObservable();
-  }
-
-  public get onVisualizationSettingsChanged$(): Observable<
-    Result<'api::v2-canvas.v2-canvas'>
-  > {
-    return this._onVisualizationSettingsChanged.asObservable();
   }
 
   public bootstrap(): void {
@@ -212,53 +194,6 @@ export class DatabaseEventsService implements ApplicationService {
                     this._onNoteChanges.next(canvas);
                   });
                 }
-                return result;
-              },
-            )
-            .otherwise(async (): Promise<NextResult> => {
-              return await next();
-            });
-        } else {
-          return await next();
-        }
-      },
-    );
-
-    // _onVisualizationSettingsChanged
-    strapi.documents.use(
-      async (
-        context: Context,
-        next: NextFunction,
-      ): Promise<MiddlewareReturnType> => {
-        if (context.uid === 'api::v2-canvas.v2-canvas') {
-          return await match(context)
-            .returnType<Promise<NextResult>>()
-            .with(
-              {
-                action: 'update',
-                params: {
-                  data: P.when(
-                    (
-                      d: Partial<Input<'api::v2-canvas.v2-canvas'>> | undefined,
-                    ): boolean =>
-                      d?.compressRelationshipsWidthFactor != null ||
-                      d?.growNodesBasedOnDegree != null ||
-                      d?.growNodesBasedOnDegreeFactor != null,
-                  ),
-                },
-              },
-              async (): Promise<NextResult> => {
-                const result: NextResult = await next();
-
-                const canvas: Result<'api::v2-canvas.v2-canvas'> =
-                  await this._databaseService.getCanvas(
-                    getDocumentIdFromResult(result),
-                  );
-
-                setImmediate((): void => {
-                  this._onVisualizationSettingsChanged.next(canvas);
-                });
-
                 return result;
               },
             )

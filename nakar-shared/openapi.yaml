@@ -135,36 +135,6 @@ paths:
               schema:
                 $ref: "#/components/schemas/CanvasPage"
 
-  /canvas/{id}:
-    put:
-      tags:
-        - Canvas
-      operationId: setCanvasData
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        "200":
-          description: "OK"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Canvas"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                viewSettings:
-                  $ref: "#/components/schemas/CanvasViewSettings"
-              required:
-                - viewSettings
-
   /room/{id}:
     get:
       tags:
@@ -275,25 +245,6 @@ paths:
       responses:
         "200":
           description: "OK"
-
-  /canvas/{id}/graph:
-    get:
-      tags:
-        - Graph
-      operationId: getGraph
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        "200":
-          description: "OK"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Graph"
 
   /canvas/{id}/actions/load-scenario:
     post:
@@ -780,6 +731,32 @@ paths:
       responses:
         "200":
           description: "OK"
+
+  /canvas/{id}/actions/set-view-settings:
+    post:
+      tags:
+        - Actions
+      operationId: postCanvasActionSetViewSettings
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "OK"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                viewSettings:
+                  $ref: "#/components/schemas/CanvasViewSettings"
+              required:
+                - viewSettings
 
   /database/{id}/stats:
     get:
@@ -1805,14 +1782,25 @@ components:
           type: string
         title:
           type: string
-        roomId:
-          type: string
-        viewSettings:
-          $ref: "#/components/schemas/CanvasViewSettings"
       required:
         - id
         - title
-        - roomId
+
+    CanvasData:
+      type: object
+      properties:
+        metaData:
+          $ref: "#/components/schemas/GraphMetaData"
+        elements:
+          $ref: "#/components/schemas/GraphElements"
+        table:
+          $ref: "#/components/schemas/GraphTable"
+        viewSettings:
+          $ref: "#/components/schemas/CanvasViewSettings"
+      required:
+        - metaData
+        - elements
+        - table
         - viewSettings
 
     StartPage:
@@ -1971,6 +1959,7 @@ components:
         - $ref: "#/components/schemas/WSEventGraphElementsChanged"
         - $ref: "#/components/schemas/WSEventGraphMetaDataChanged"
         - $ref: "#/components/schemas/WSEventGraphTableChanged"
+        - $ref: "#/components/schemas/WSEventViewSettingsChanged"
         - $ref: "#/components/schemas/WSEventCanvasDataReady"
         - $ref: "#/components/schemas/WSEventProgress"
         - $ref: "#/components/schemas/WSEventClearProgress"
@@ -2072,23 +2061,29 @@ components:
         - type
         - table
 
+    WSEventViewSettingsChanged:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: ["WSEventViewSettingsChanged"]
+        viewSettings:
+          $ref: "#/components/schemas/CanvasViewSettings"
+      required:
+        - type
+        - viewSettings
+
     WSEventCanvasDataReady:
       type: object
       properties:
         type:
           type: string
           enum: ["WSEventCanvasDataReady"]
-        metaData:
-          $ref: "#/components/schemas/GraphMetaData"
-        elements:
-          $ref: "#/components/schemas/GraphElements"
-        table:
-          $ref: "#/components/schemas/GraphTable"
+        data:
+          $ref: "#/components/schemas/CanvasData"
       required:
         - type
-        - metaData
-        - elements
-        - table
+        - data
 
     WSEventCanvasChanged:
       type: object

@@ -80,14 +80,10 @@ export class SchemaFactoryService implements ApplicationService {
       id: room.documentId,
       title: room.title ?? '',
       visibility: room.visibility ?? 'private',
-      canvases: await Promise.all(
-        (await this._database.getCanvasesOfRoom(room)).map(
-          async (
-            c: Result<'api::v2-canvas.v2-canvas'>,
-          ): Promise<SchemaCanvas> => {
-            return await this.createSchemaCanvasPreview(c);
-          },
-        ),
+      canvases: (await this._database.getCanvasesOfRoom(room)).map(
+        (c: Result<'api::v2-canvas.v2-canvas'>): SchemaCanvas => {
+          return this.createSchemaCanvasPreview(c);
+        },
       ),
       projectTitle: project.title ?? '',
     };
@@ -543,17 +539,12 @@ export class SchemaFactoryService implements ApplicationService {
     };
   }
 
-  public async createSchemaCanvasPreview(
+  public createSchemaCanvasPreview(
     canvas: Result<'api::v2-canvas.v2-canvas'>,
-  ): Promise<SchemaCanvas> {
-    const room: Result<'api::v2-room.v2-room'> =
-      await this._database.getRoomOfCanvas(canvas);
-
+  ): SchemaCanvas {
     return {
       id: canvas.documentId,
       title: canvas.title ?? '',
-      roomId: room.documentId,
-      viewSettings: LiveCanvasViewSettings.fromDB(canvas).toSchema(),
     };
   }
 

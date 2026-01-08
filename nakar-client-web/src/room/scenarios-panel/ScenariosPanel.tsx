@@ -36,7 +36,7 @@ export function ScenariosPanel(props: {
               setReloading(true);
               const scenarios = resultOrThrow(
                 await getRoomScenarios({
-                  path: { id: props.roomContext.initialCanvasData.roomId },
+                  path: { id: props.roomContext.initialRoomData.id },
                 }),
               );
               setScenarios(scenarios);
