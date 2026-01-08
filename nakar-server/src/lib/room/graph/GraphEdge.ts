@@ -1,7 +1,7 @@
 import { PropertyCollection } from './PropertyCollection';
 import { z } from 'zod';
 import { SSet } from '../../set/Set';
-import type { LiveCanvasUndoableData } from '../data/LiveCanvasUndoableData';
+import { LiveCanvasUndoableData } from '../data/LiveCanvasUndoableData';
 import { SMap } from '../../map/Map';
 import { Range } from '../../range/Range';
 import { ElementCreationReason } from './ElementCreationReason';

@@ -1,4 +1,4 @@
-import type { LiveCanvasUndoableData } from '../data/LiveCanvasUndoableData';
+import { LiveCanvasUndoableData } from '../data/LiveCanvasUndoableData';
 import { UndoWrapperInfo } from '../../undo/UndoWrapperInfo';
 import { LiveCanvas } from '../LiveCanvas';
 

@@ -19,7 +19,9 @@
     "useUnknownInCatchVariables": true,
     "outDir": "dist",
     "rootDir": ".",
-    "sourceMap": true
+    "sourceMap": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true
   },
   "include": [
     // Include root files

@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { SMap } from '../../map/Map';
 import { ElementColorPreset } from './color/ElementColorPreset';
 import { SSet } from '../../set/Set';
-import type { NodeIndex } from './NodeIndex';
+import { NodeIndex } from './NodeIndex';
 
 export class LiveCanvasMetaData {
   // eslint-disable-next-line @typescript-eslint/typedef

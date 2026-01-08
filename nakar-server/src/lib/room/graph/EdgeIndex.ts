@@ -1,10 +1,10 @@
 import { SMap } from '../../map/Map';
 import { GraphEdge } from './GraphEdge';
 import { SSet } from '../../set/Set';
-import type { Neo4jRelationship } from '../../neo4j/Neo4jRelationship';
+import { Neo4jRelationship } from '../../neo4j/Neo4jRelationship';
 import { PropertyCollection } from './PropertyCollection';
 import { Range } from '../../range/Range';
-import type { ElementCreationReason } from './ElementCreationReason';
+import { ElementCreationReason } from './ElementCreationReason';
 
 export class EdgeIndex {
   private readonly _byId: SMap<string, GraphEdge>;

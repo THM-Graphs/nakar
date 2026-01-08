@@ -1,12 +1,11 @@
-import { ApplicationService } from '../application/ApplicationService';
 import { SMap } from '../map/Map';
 import { LiveCanvasUndoableData } from './data/LiveCanvasUndoableData';
 import { Observable, Subject, Subscription } from 'rxjs';
-import type { CanvasEvent } from './events/CanvasEvent';
+import { CanvasEvent } from './events/CanvasEvent';
 import { DatabaseService } from '../database/DatabaseService';
-import type { WTEvent } from '../room-worker/worker-events/WTEvent';
+import { WTEvent } from '../room-worker/worker-events/WTEvent';
 import { match, P } from 'ts-pattern';
-import type { WTEventPhysicsUpdate } from '../room-worker/worker-events/WTEventPhysicsUpdate';
+import { WTEventPhysicsUpdate } from '../room-worker/worker-events/WTEventPhysicsUpdate';
 import { Neo4jDatabaseInfo } from '../neo4j/Neo4jDatabaseInfo';
 import { GraphNode } from './graph/GraphNode';
 import { NotFound } from 'http-errors';
@@ -44,7 +43,7 @@ import { LiveCanvasData } from './data/LiveCanvasData';
 import { NodePosition } from './graph/NodePosition';
 import { WTPhysicalNode } from '../room-worker/worker-events/WTPhysicalNode';
 
-export class LiveCanvas implements ApplicationService {
+export class LiveCanvas {
   private readonly _logger: Logger = createChildLogger(this);
   private readonly _physicsWorker: PhysicsWorker;
   private readonly _onEvent: Subject<CanvasEvent>;

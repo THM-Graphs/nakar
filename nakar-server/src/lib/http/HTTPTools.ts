@@ -1,4 +1,4 @@
-import type { NextFunction, Request, RequestHandler, Response } from 'express';
+import { NextFunction, Request, RequestHandler, Response } from 'express';
 import { FileStream } from '../fs/FileStream';
 import fs from 'node:fs';
 import { match, P } from 'ts-pattern';

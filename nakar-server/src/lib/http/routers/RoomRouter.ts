@@ -1,6 +1,6 @@
 import { HTTPTools } from '../HTTPTools';
-import { type Request, Router } from 'express';
-import type { SchemaRoom } from '../../../../src-gen/schema';
+import { Request, Router } from 'express';
+import { SchemaRoom } from '../../../../src-gen/schema';
 import { DatabaseService } from '../../database/DatabaseService';
 import { NotFound } from 'http-errors';
 import { ScenariosRouter } from './ScenariosRouter';

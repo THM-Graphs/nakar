@@ -1,6 +1,6 @@
 import { HTTPTools } from '../HTTPTools';
 import { Router } from 'express';
-import type { SchemaVersion } from '../../../../src-gen/schema';
+import { SchemaVersion } from '../../../../src-gen/schema';
 import { getConfig } from '../../config/getConfig';
 
 export class SystemRouter {

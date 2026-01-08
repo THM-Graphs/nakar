@@ -1,6 +1,6 @@
-import type { Node } from 'neo4j-driver';
+import { Node } from 'neo4j-driver';
 import { SSet } from '../set/Set';
-import type { Neo4jDatabaseInfo } from './Neo4jDatabaseInfo';
+import { Neo4jDatabaseInfo } from './Neo4jDatabaseInfo';
 
 export class Neo4jNode {
   public readonly node: Node;

@@ -1,6 +1,6 @@
-import { type Request, Router } from 'express';
+import { Request, Router } from 'express';
 import { HTTPTools } from '../HTTPTools';
-import type { operations } from '../../../../src-gen/schema';
+import { operations } from '../../../../src-gen/schema';
 import * as undici from 'undici';
 import z from 'zod';
 import { Unauthorized } from 'http-errors';

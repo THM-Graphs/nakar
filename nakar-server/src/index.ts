@@ -1,4 +1,4 @@
-import { NakarApplication } from './lib/application/NakarApplication';
+import { bootstrapNest, destroyNest } from './lib/application/main';
 
 export default {
   /**
@@ -16,10 +16,10 @@ export default {
    * run jobs, or perform some special logic.
    */
   async bootstrap(): Promise<void> {
-    await NakarApplication.shared.bootstrap();
+    await bootstrapNest();
   },
 
   async destroy(): Promise<void> {
-    await NakarApplication.shared.destroy();
+    await destroyNest();
   },
 };

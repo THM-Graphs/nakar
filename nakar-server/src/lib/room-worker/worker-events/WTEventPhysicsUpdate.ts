@@ -1,5 +1,5 @@
-import type { PhysicalGraph } from '../../physics/physical-graph/PhysicalGraph';
-import type { SchemaPhysicsPerformance } from '../../../../src-gen/schema';
+import { PhysicalGraph } from '../../physics/physical-graph/PhysicalGraph';
+import { SchemaPhysicsPerformance } from '../../../../src-gen/schema';
 
 export interface WTEventPhysicsUpdate {
   type: 'WTEventPhysicsUpdate';

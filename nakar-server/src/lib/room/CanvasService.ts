@@ -1,21 +1,22 @@
-import type { DatabaseService } from '../database/DatabaseService';
-import type { Observable } from 'rxjs';
+import { DatabaseService } from '../database/DatabaseService';
+import { DatabaseEventsService } from '../database/DatabaseEventsService';
+import { Neo4jService } from '../neo4j/Neo4jService';
+import { Observable } from 'rxjs';
 import { Subject } from 'rxjs';
 import { LiveCanvasUndoableData } from './data/LiveCanvasUndoableData';
-import type { ApplicationService } from '../application/ApplicationService';
 import installHandlebarHelpers from 'handlebars-helpers';
 import { SMap } from '../map/Map';
-import type { Neo4jService } from '../neo4j/Neo4jService';
-import type { CanvasEvent } from './events/CanvasEvent';
-import type { CanvasEventEventKick } from './events/CanvasEventEventKick';
+import { CanvasEvent } from './events/CanvasEvent';
+import { CanvasEventEventKick } from './events/CanvasEventEventKick';
 import { LiveCanvas } from './LiveCanvas';
 import { Result } from '@strapi/types/dist/modules/documents/result';
 import { createChildLogger } from '../logger/createChildLogger';
 import { Logger } from '@strapi/logger';
 import { Profiler } from 'winston';
-import { DatabaseEventsService } from '../database/DatabaseEventsService';
+import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 
-export class CanvasService implements ApplicationService {
+@Injectable()
+export class CanvasService implements OnModuleInit, OnModuleDestroy {
   private readonly _logger: Logger = createChildLogger(this);
   private readonly _liveCanvases: SMap<string, LiveCanvas>;
   private readonly _onEvent: Subject<CanvasEvent>;
@@ -33,7 +34,7 @@ export class CanvasService implements ApplicationService {
     return this._onEvent.asObservable();
   }
 
-  public bootstrap(): void {
+  public onModuleInit(): void {
     installHandlebarHelpers();
 
     this._databaseEvents.onCanvasDeleted$.subscribe(
@@ -45,7 +46,7 @@ export class CanvasService implements ApplicationService {
     );
   }
 
-  public async destroy(): Promise<void> {
+  public async onModuleDestroy(): Promise<void> {
     for (const canvas of this._liveCanvases.values()) {
       this._logger.info(`Stopping live canvas ${canvas.canvasId}...`);
       await canvas.destroy();

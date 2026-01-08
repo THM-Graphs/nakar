@@ -1,5 +1,5 @@
 import { SSet } from '../set/Set';
-import type { Result } from '@strapi/types/dist/modules/documents';
+import { Result } from '@strapi/types/dist/modules/documents';
 import { SMap } from '../map/Map';
 
 export interface IndexedNoteCollection {

@@ -1,6 +1,6 @@
 import { SMap } from '../../map/Map';
-import type { ElementPosition } from './ElementPosition';
-import type { LiveCanvasUndoableData } from '../data/LiveCanvasUndoableData';
+import { ElementPosition } from './ElementPosition';
+import { LiveCanvasUndoableData } from '../data/LiveCanvasUndoableData';
 
 interface Entry {
   position: ElementPosition;

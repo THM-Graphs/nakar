@@ -1,4 +1,4 @@
-import type {
+import {
   Node,
   Record as Neo4jRecord,
   RecordShape,
@@ -10,8 +10,8 @@ import { Neo4jNode } from './Neo4jNode';
 import { Neo4jRelationship } from './Neo4jRelationship';
 import { match, P } from 'ts-pattern';
 import { Neo4jGraphElements } from './Neo4jGraphElements';
-import type { Neo4jDatabaseInfo } from './Neo4jDatabaseInfo';
-import type { Neo4jLimitConfig } from './Neo4jLimitConfig';
+import { Neo4jDatabaseInfo } from './Neo4jDatabaseInfo';
+import { Neo4jLimitConfig } from './Neo4jLimitConfig';
 import { Logger } from '@strapi/logger';
 import { createChildLogger } from '../logger/createChildLogger';
 

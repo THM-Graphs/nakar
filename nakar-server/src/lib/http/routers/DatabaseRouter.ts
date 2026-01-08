@@ -1,7 +1,7 @@
 import { HTTPTools } from '../HTTPTools';
 import { DatabaseService } from '../../database/DatabaseService';
-import { type Request, Router } from 'express';
-import type {
+import { Request, Router } from 'express';
+import {
   operations,
   SchemaDatabaseSearchCapabilitiesEntry,
   SchemaDatabaseStats,

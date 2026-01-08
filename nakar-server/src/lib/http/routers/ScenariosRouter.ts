@@ -1,6 +1,6 @@
 import { HTTPTools } from '../HTTPTools';
-import { type Request, Router } from 'express';
-import type { SchemaGetScenariosResult } from '../../../../src-gen/schema';
+import { Request, Router } from 'express';
+import { SchemaGetScenariosResult } from '../../../../src-gen/schema';
 import { SchemaFactoryService } from '../../schema/SchemaFactoryService';
 
 export class ScenariosRouter {

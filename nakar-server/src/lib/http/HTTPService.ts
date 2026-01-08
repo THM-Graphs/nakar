@@ -1,11 +1,10 @@
 import http from 'http';
-import type { Application } from 'express';
+import { Application } from 'express';
 import express from 'express';
-import type { DatabaseService } from '../database/DatabaseService';
+import { DatabaseService } from '../database/DatabaseService';
 import cors from 'cors';
-import type { ApplicationService } from '../application/ApplicationService';
-import type { CanvasService } from '../room/CanvasService';
-import type { Neo4jService } from '../neo4j/Neo4jService';
+import { CanvasService } from '../room/CanvasService';
+import { Neo4jService } from '../neo4j/Neo4jService';
 import { HTTPTools } from './HTTPTools';
 import { AuthenticationRouter } from './routers/AuthenticationRouter';
 import { RoomRouter } from './routers/RoomRouter';
@@ -22,6 +21,7 @@ import { SanitizedConfig } from '../config/SanitizedConfig';
 import { StartPageRouter } from './routers/StartPageRouter';
 import { ProjectPageRouter } from './routers/ProjectPageRouter';
 import { CanvasPageRouter } from './routers/CanvasPageRouter';
+import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -39,7 +39,8 @@ declare global {
   }
 }
 
-export class HTTPService implements ApplicationService {
+@Injectable()
+export class HTTPService implements OnModuleInit, OnModuleDestroy {
   private readonly _logger: Logger = createChildLogger(this);
 
   private readonly _app: Application;
@@ -103,7 +104,7 @@ export class HTTPService implements ApplicationService {
     this._setupRoutes();
   }
 
-  public async bootstrap(): Promise<void> {
+  public async onModuleInit(): Promise<void> {
     this._server.on('close', (): void => {
       this._logger.debug('Server will close.');
     });
@@ -133,7 +134,7 @@ export class HTTPService implements ApplicationService {
     );
   }
 
-  public async destroy(): Promise<void> {
+  public async onModuleDestroy(): Promise<void> {
     this._logger.info('Closing http server...');
     await new Promise<void>(
       (resolve: () => void, reject: (error: Error) => void): void => {

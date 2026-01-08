@@ -1,5 +1,5 @@
-import type { PhysicalNode } from './PhysicalNode';
-import type { PhysicalEdge } from './PhysicalEdge';
+import { PhysicalNode } from './PhysicalNode';
+import { PhysicalEdge } from './PhysicalEdge';
 
 export interface PhysicalGraph {
   readonly nodes: Record<string, PhysicalNode>;

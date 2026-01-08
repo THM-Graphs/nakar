@@ -1,6 +1,5 @@
 import { LiveCanvasUndoableData } from '../room/data/LiveCanvasUndoableData';
-import type { Result } from '@strapi/types/dist/modules/documents';
-import type { ApplicationService } from '../application/ApplicationService';
+import { Result } from '@strapi/types/dist/modules/documents';
 import z from 'zod';
 import { SSet } from '../set/Set';
 import { SMap } from '../map/Map';
@@ -13,20 +12,14 @@ import {
   saveStringFile,
 } from '../media/media';
 import { LiveCanvasViewSettings } from '../room/data/LiveCanvasViewSettings';
-import type * as Params from '@strapi/types/dist/modules/documents/params/document-engine';
+import * as Params from '@strapi/types/dist/modules/documents/params/document-engine';
 import { ApiV2PostScenarioActionV2PostScenarioAction } from '../../../types/generated/contentTypes';
 import { TupleTypes } from '../schema/TupleTypes';
+import { Injectable } from '@nestjs/common';
 
-export class DatabaseService implements ApplicationService {
+@Injectable()
+export class DatabaseService {
   private readonly _logger: Logger = createChildLogger(this);
-
-  public bootstrap(): void {
-    /* */
-  }
-
-  public destroy(): void | Promise<void> {
-    /* */
-  }
 
   public async getDatabase(
     databaseId: string,

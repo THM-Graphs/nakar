@@ -1,4 +1,4 @@
-import type { PhysicalPosition } from './PhysicalPosition';
+import { PhysicalPosition } from './PhysicalPosition';
 
 export interface PhysicalNode {
   readonly id: string;

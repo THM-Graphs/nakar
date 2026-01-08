@@ -1,4 +1,3 @@
-import { ApplicationService } from '../application/ApplicationService';
 import {
   SchemaCanvas,
   SchemaColor,
@@ -46,19 +45,13 @@ import { createChildLogger } from '../logger/createChildLogger';
 import { Profiler } from 'winston';
 import { LiveCanvasViewSettings } from '../room/data/LiveCanvasViewSettings';
 import { match, P } from 'ts-pattern';
+import { Injectable } from '@nestjs/common';
 
-export class SchemaFactoryService implements ApplicationService {
+@Injectable()
+export class SchemaFactoryService {
   private readonly _logger: Logger = createChildLogger(this);
 
   public constructor(private readonly _database: DatabaseService) {}
-
-  public bootstrap(): void {
-    /* */
-  }
-
-  public destroy(): void {
-    /* */
-  }
 
   public createSchemaDatabase(
     databaseDBDTO: Result<'api::v2-database-connection.v2-database-connection'>,

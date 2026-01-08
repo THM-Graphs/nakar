@@ -1,4 +1,4 @@
-import type { SchemaColor } from '../../../../../src-gen/schema';
+import { SchemaColor } from '../../../../../src-gen/schema';
 import z from 'zod';
 
 export abstract class ElementColor {

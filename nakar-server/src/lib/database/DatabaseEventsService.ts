@@ -1,6 +1,5 @@
-import { ApplicationService } from '../application/ApplicationService';
 import { Observable, Subject, Subscription } from 'rxjs';
-import type { Result } from '@strapi/types/dist/modules/documents';
+import { Result } from '@strapi/types/dist/modules/documents';
 import { Logger } from '@strapi/logger';
 import { createChildLogger } from '../logger/createChildLogger';
 import { DatabaseService } from './DatabaseService';
@@ -8,8 +7,10 @@ import { Profiler } from 'winston';
 import { match, P } from 'ts-pattern';
 import { Context } from '@strapi/types/dist/modules/documents/middleware';
 import { ServiceInstance } from '@strapi/types/dist/modules/documents/service-instance';
+import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 
-export class DatabaseEventsService implements ApplicationService {
+@Injectable()
+export class DatabaseEventsService implements OnModuleInit, OnModuleDestroy {
   private readonly _logger: Logger = createChildLogger(this);
 
   private readonly _onCanvasDeleted: Subject<
@@ -47,7 +48,7 @@ export class DatabaseEventsService implements ApplicationService {
     return this._onNoteChanges.asObservable();
   }
 
-  public bootstrap(): void {
+  public onModuleInit(): void {
     type NextFunction = () => ReturnType<
       ServiceInstance[keyof ServiceInstance]
     >;
@@ -207,7 +208,7 @@ export class DatabaseEventsService implements ApplicationService {
     );
   }
 
-  public destroy(): void {
+  public onModuleDestroy(): void {
     for (const subscriptions of this._subscriptsion) {
       subscriptions.unsubscribe();
     }

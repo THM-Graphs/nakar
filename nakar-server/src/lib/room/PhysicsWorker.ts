@@ -1,5 +1,5 @@
 import { Worker } from 'node:worker_threads';
-import type { WTEvent } from '../room-worker/worker-events/WTEvent';
+import { WTEvent } from '../room-worker/worker-events/WTEvent';
 import { PhysicalGraph } from '../physics/physical-graph/PhysicalGraph';
 import { RoomWorkerData } from '../room-worker/RoomWorkerData';
 import path from 'path';

@@ -1,22 +1,21 @@
-import type { ApplicationService } from '../application/ApplicationService';
-import type { MessagePort } from 'node:worker_threads';
+import { MessagePort } from 'node:worker_threads';
 import { parentPort } from 'node:worker_threads';
 import { PhysicsSimulation } from '../physics/PhysicsSimulation';
-import type { RoomWorkerData } from './RoomWorkerData';
-import type { WTActionSetGraph } from './worker-events/WTActionSetGraph';
-import type { WTAction } from './worker-events/WTAction';
+import { RoomWorkerData } from './RoomWorkerData';
+import { WTActionSetGraph } from './worker-events/WTActionSetGraph';
+import { WTAction } from './worker-events/WTAction';
 import { match } from 'ts-pattern';
-import type { WTEvent } from './worker-events/WTEvent';
-import type { WTActionMoveNodes } from './worker-events/WTActionMoveNodes';
-import type { PhysicalGraph } from '../physics/physical-graph/PhysicalGraph';
-import type { PhysicalNode } from '../physics/physical-graph/PhysicalNode';
-import type { WTActionTriggerPhysics } from './worker-events/WTActionTriggerPhysics';
-import type { WTActionSetLocks } from './worker-events/WTActionSetLocks';
+import { WTEvent } from './worker-events/WTEvent';
+import { WTActionMoveNodes } from './worker-events/WTActionMoveNodes';
+import { PhysicalGraph } from '../physics/physical-graph/PhysicalGraph';
+import { PhysicalNode } from '../physics/physical-graph/PhysicalNode';
+import { WTActionTriggerPhysics } from './worker-events/WTActionTriggerPhysics';
+import { WTActionSetLocks } from './worker-events/WTActionSetLocks';
 import { PhysicsSimulationEventSlowTick } from '../physics/PhysicsSimulationEventSlowTick';
 import { Logger } from '@strapi/logger';
 import { createChildLogger } from '../logger/createChildLogger';
 
-export class RoomWorkerPhysicsService implements ApplicationService {
+export class RoomWorkerPhysicsService {
   private readonly _logger: Logger = createChildLogger(this);
 
   private readonly _roomId: string;

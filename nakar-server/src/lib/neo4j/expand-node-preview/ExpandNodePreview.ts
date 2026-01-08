@@ -1,4 +1,4 @@
-import type { ExpandNodePreviewEntry } from './ExpandNodePreviewEntry';
+import { ExpandNodePreviewEntry } from './ExpandNodePreviewEntry';
 
 export class ExpandNodePreview {
   public constructor(

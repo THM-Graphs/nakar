@@ -1,7 +1,7 @@
 import { ElementColor } from './ElementColor';
-import type { SchemaPresetColor } from '../../../../../src-gen/schema';
-import type { ElementColorPresetIndex } from './ElementColorPresetIndex';
-import type z from 'zod';
+import { SchemaPresetColor } from '../../../../../src-gen/schema';
+import { ElementColorPresetIndex } from './ElementColorPresetIndex';
+import z from 'zod';
 
 export class ElementColorPreset extends ElementColor {
   public readonly index: ElementColorPresetIndex;

@@ -1,11 +1,11 @@
 import { SMap } from '../../map/Map';
 import { GraphNode } from './GraphNode';
 import { SSet } from '../../set/Set';
-import type { Neo4jNode } from '../../neo4j/Neo4jNode';
+import { Neo4jNode } from '../../neo4j/Neo4jNode';
 import { ElementPosition } from './ElementPosition';
 import { PropertyCollection } from './PropertyCollection';
 import { Range } from '../../range/Range';
-import type { LiveCanvasUndoableData } from '../data/LiveCanvasUndoableData';
+import { LiveCanvasUndoableData } from '../data/LiveCanvasUndoableData';
 import { PhysicsSimulation } from '../../physics/PhysicsSimulation';
 import { ElementCreationReason } from './ElementCreationReason';
 

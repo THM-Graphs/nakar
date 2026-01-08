@@ -1,6 +1,6 @@
 import { ElementColor } from './ElementColor';
-import type { SchemaCustomColor } from '../../../../../src-gen/schema';
-import type z from 'zod';
+import { SchemaCustomColor } from '../../../../../src-gen/schema';
+import z from 'zod';
 
 export class ElementColorCustom extends ElementColor {
   public readonly backgroundColor: string;

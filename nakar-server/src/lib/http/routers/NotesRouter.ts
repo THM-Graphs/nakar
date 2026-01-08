@@ -1,6 +1,6 @@
 import { HTTPTools } from '../HTTPTools';
 import { DatabaseService } from '../../database/DatabaseService';
-import { type Request, Router } from 'express';
+import { Request, Router } from 'express';
 import { operations } from '../../../../src-gen/schema';
 import { Result } from '@strapi/types/dist/modules/documents/result';
 import { NotFound } from 'http-errors';

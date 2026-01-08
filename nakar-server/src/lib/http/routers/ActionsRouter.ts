@@ -1,6 +1,6 @@
 import { HTTPTools } from '../HTTPTools';
 import { CanvasService } from '../../room/CanvasService';
-import { type Request, Router } from 'express';
+import { Request, Router } from 'express';
 import { operations, SchemaScenarioArgument } from '../../../../src-gen/schema';
 import { SMap } from '../../map/Map';
 import { LiveCanvasUndoableData } from '../../room/data/LiveCanvasUndoableData';

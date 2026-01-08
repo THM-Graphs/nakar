@@ -1,6 +1,6 @@
-import type { DisconnectReason, Socket as UntypedSocket } from 'socket.io';
+import { DisconnectReason, Socket as UntypedSocket } from 'socket.io';
 import { Server as UntypedServer } from 'socket.io';
-import type {
+import {
   SchemaGraphElements,
   SchemaGraphMetaData,
   SchemaGraphTable,
@@ -21,27 +21,26 @@ import type {
   SchemaWsServerToClientMessage,
 } from '../../../src-gen/schema';
 import { match, P } from 'ts-pattern';
-import type { ServerToClientEvents } from './ServerToClientEvents';
-import type { ClientToServerEvents } from './ClientToServerEvents';
+import { ServerToClientEvents } from './ServerToClientEvents';
+import { ClientToServerEvents } from './ClientToServerEvents';
 import { WSClient } from './WSClient';
 import { SSet } from '../set/Set';
-import type { CanvasService } from '../room/CanvasService';
-import type { DatabaseService } from '../database/DatabaseService';
-import type http from 'http';
-import type { ApplicationService } from '../application/ApplicationService';
-import type { Subscription } from 'rxjs';
-import type { HTTPService } from '../http/HTTPService';
-import type { CanvasEvent } from '../room/events/CanvasEvent';
-import type { CanvasEventGraphMetaDataChanged } from '../room/events/CanvasEventGraphMetaDataChanged';
-import type { CanvasEventRoomPhysicsUpdated } from '../room/events/CanvasEventRoomPhysicsUpdated';
-import type { CanvasEventNodeLocksUpdated } from '../room/events/CanvasEventNodeLocksUpdated';
-import type { CanvasEventProgressChanged } from '../room/events/CanvasEventProgressChanged';
-import type { CanvasEventProgressCleared } from '../room/events/CanvasEventProgressCleared';
-import type { CanvasEventGraphElementsChanged } from '../room/events/CanvasEventGraphElementsChanged';
-import type { CanvasEventGraphTableChanged } from '../room/events/CanvasEventGraphTableChanged';
-import type { CanvasEventEventKick } from '../room/events/CanvasEventEventKick';
-import type { CanvasEventNotAllNodesLoaded } from '../room/events/CanvasEventNotAllNodesLoaded';
-import type { LiveCanvasUndoableData } from '../room/data/LiveCanvasUndoableData';
+import { CanvasService } from '../room/CanvasService';
+import { DatabaseService } from '../database/DatabaseService';
+import http from 'http';
+import { Subscription } from 'rxjs';
+import { HTTPService } from '../http/HTTPService';
+import { CanvasEvent } from '../room/events/CanvasEvent';
+import { CanvasEventGraphMetaDataChanged } from '../room/events/CanvasEventGraphMetaDataChanged';
+import { CanvasEventRoomPhysicsUpdated } from '../room/events/CanvasEventRoomPhysicsUpdated';
+import { CanvasEventNodeLocksUpdated } from '../room/events/CanvasEventNodeLocksUpdated';
+import { CanvasEventProgressChanged } from '../room/events/CanvasEventProgressChanged';
+import { CanvasEventProgressCleared } from '../room/events/CanvasEventProgressCleared';
+import { CanvasEventGraphElementsChanged } from '../room/events/CanvasEventGraphElementsChanged';
+import { CanvasEventGraphTableChanged } from '../room/events/CanvasEventGraphTableChanged';
+import { CanvasEventEventKick } from '../room/events/CanvasEventEventKick';
+import { CanvasEventNotAllNodesLoaded } from '../room/events/CanvasEventNotAllNodesLoaded';
+import { LiveCanvasUndoableData } from '../room/data/LiveCanvasUndoableData';
 import { SchemaFactoryService } from '../schema/SchemaFactoryService';
 import { CanvasEventError } from '../room/events/CanvasEventError';
 import { Result } from '@strapi/types/dist/modules/documents/result';
@@ -51,11 +50,13 @@ import { createChildLogger } from '../logger/createChildLogger';
 import { LiveCanvas } from '../room/LiveCanvas';
 import { DatabaseEventsService } from '../database/DatabaseEventsService';
 import { CanvasEventViewSettingsChanged } from '../room/events/CanvasEventViewSettingsChanged';
+import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 
 export type Server = UntypedServer<ClientToServerEvents, ServerToClientEvents>;
 export type Socket = UntypedSocket<ClientToServerEvents, ServerToClientEvents>;
 
-export class SocketIOService implements ApplicationService {
+@Injectable()
+export class SocketIOService implements OnModuleInit, OnModuleDestroy {
   private readonly _logger: Logger = createChildLogger(this);
   private readonly _sockets: SSet<WSClient>;
   private _io: UntypedServer | null;
@@ -77,7 +78,7 @@ export class SocketIOService implements ApplicationService {
     return this._sockets;
   }
 
-  public bootstrap(): void {
+  public onModuleInit(): void {
     const httpServer: http.Server = this._httpService.getServerInstance();
 
     const io: UntypedServer = new UntypedServer(httpServer, {
@@ -98,7 +99,7 @@ export class SocketIOService implements ApplicationService {
     this._registerDatabaseServiceEvents();
   }
 
-  public destroy(): void {
+  public onModuleDestroy(): void {
     this._isShuttingDownFlag = true;
     if (this._io == null) {
       return;

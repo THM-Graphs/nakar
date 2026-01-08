@@ -1,5 +1,5 @@
-import type { Neo4jDatabaseInfo } from './Neo4jDatabaseInfo';
-import type {
+import { Neo4jDatabaseInfo } from './Neo4jDatabaseInfo';
+import {
   Driver,
   Record as Neo4jRecord,
   RecordShape,
@@ -7,31 +7,24 @@ import type {
   Session,
 } from 'neo4j-driver';
 import neo4j, { auth, driver as createDriver } from 'neo4j-driver';
-import type { Neo4jGraphElements } from './Neo4jGraphElements';
+import { Neo4jGraphElements } from './Neo4jGraphElements';
 import { SSet } from '../set/Set';
 import { Neo4jGraphElementsFactory } from './Neo4jGraphElementsFactory';
-import type { SessionConfig } from 'neo4j-driver-core/types/driver';
-import type { ApplicationService } from '../application/ApplicationService';
+import { SessionConfig } from 'neo4j-driver-core/types/driver';
 import { ExpandNodePreview } from './expand-node-preview/ExpandNodePreview';
 import { ExpandNodePreviewEntry } from './expand-node-preview/ExpandNodePreviewEntry';
 import { SMap } from '../map/Map';
-import type { SchemaDatabaseStats } from '../../../src-gen/schema';
+import { SchemaDatabaseStats } from '../../../src-gen/schema';
 import { Neo4jLimitConfig } from './Neo4jLimitConfig';
 import { Neo4jSearchCapabilities } from './Neo4jSearchCapabilities';
-import type { Neo4jNode } from './Neo4jNode';
+import { Neo4jNode } from './Neo4jNode';
 import { Logger } from '@strapi/logger';
 import { createChildLogger } from '../logger/createChildLogger';
+import { Injectable } from '@nestjs/common';
 
-export class Neo4jService implements ApplicationService {
+@Injectable()
+export class Neo4jService {
   private readonly _logger: Logger = createChildLogger(this);
-
-  public bootstrap(): void | Promise<void> {
-    /* */
-  }
-
-  public destroy(): void | Promise<void> {
-    /* */
-  }
 
   public async executeQuery(
     databaseInfo: Neo4jDatabaseInfo,

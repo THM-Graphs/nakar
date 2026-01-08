@@ -1,4 +1,4 @@
-import type { WTPhysicalNode } from './WTPhysicalNode';
+import { WTPhysicalNode } from './WTPhysicalNode';
 
 export interface WTActionMoveNodes {
   type: 'WTActionMoveNodes';

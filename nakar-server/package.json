@@ -21,6 +21,9 @@
     "pre-commit": "npm run lint:fix && npm run format:fix"
   },
   "dependencies": {
+    "@nestjs/common": "^11.1.11",
+    "@nestjs/core": "^11.1.11",
+    "@nestjs/platform-express": "^11.1.11",
     "@strapi/plugin-users-permissions": "5.31.3",
     "@strapi/strapi": "5.31.3",
     "better-sqlite3": "12.4.1",
@@ -35,6 +38,7 @@
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
     "react-router-dom": "^6.0.0",
+    "reflect-metadata": "^0.2.2",
     "rxjs": "^7.0.0",
     "sanitize-filename": "^1.0.0",
     "socket.io": "^4.8.1",

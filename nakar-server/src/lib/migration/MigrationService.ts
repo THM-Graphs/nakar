@@ -1,16 +1,17 @@
 /* eslint-disable @typescript-eslint/no-empty-object-type */
-import { ApplicationService } from '../application/ApplicationService';
-import type { UID } from '@strapi/types';
+import { UID } from '@strapi/types';
 import { Result } from '@strapi/types/dist/modules/documents';
 import { SMap } from '../map/Map';
 import { Logger } from '@strapi/logger';
 import { createChildLogger } from '../logger/createChildLogger';
+import { Injectable, OnModuleInit } from '@nestjs/common';
 
-export class MigrationService implements ApplicationService {
+@Injectable()
+export class MigrationService implements OnModuleInit {
   private readonly _active: boolean = false;
   private readonly _logger: Logger = createChildLogger(this);
 
-  public async bootstrap(): Promise<void> {
+  public async onModuleInit(): Promise<void> {
     if (this._active) {
       this._logger.warn('Will check database for migration to v2.');
       await this._deleteAllData();
@@ -18,10 +19,6 @@ export class MigrationService implements ApplicationService {
     } else {
       this._logger.warn('Not active. Will do nothing.');
     }
-  }
-
-  public destroy(): Promise<void> | void {
-    /* */
   }
 
   private async _deleteAllData(): Promise<void> {

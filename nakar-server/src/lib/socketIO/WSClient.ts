@@ -1,11 +1,11 @@
-import type { Server, Socket } from './SocketIOService';
-import type {
+import { Server, Socket } from './SocketIOService';
+import {
   SchemaWsClientToServerMessage,
   SchemaWsServerToClientMessage,
 } from '../../../src-gen/schema';
-import type { Observable } from 'rxjs';
+import { Observable } from 'rxjs';
 import { BehaviorSubject, distinctUntilChanged, Subject } from 'rxjs';
-import type { DisconnectReason } from 'socket.io';
+import { DisconnectReason } from 'socket.io';
 import { Logger } from '@strapi/logger';
 import { createChildLogger } from '../logger/createChildLogger';
 
