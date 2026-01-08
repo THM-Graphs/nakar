@@ -1,4 +1,4 @@
-import { LiveCanvasData } from '../room/graph/LiveCanvasData';
+import { LiveCanvasUndoableData } from '../room/data/LiveCanvasUndoableData';
 import type { Result } from '@strapi/types/dist/modules/documents';
 import type { ApplicationService } from '../application/ApplicationService';
 import z from 'zod';
@@ -12,7 +12,7 @@ import {
   getStringPayloadOfMediaFile,
   saveStringFile,
 } from '../media/media';
-import { LiveCanvasViewSettings } from '../room/graph/LiveCanvasViewSettings';
+import { LiveCanvasViewSettings } from '../room/data/LiveCanvasViewSettings';
 import type * as Params from '@strapi/types/dist/modules/documents/params/document-engine';
 import { ApiV2PostScenarioActionV2PostScenarioAction } from '../../../types/generated/contentTypes';
 import { TupleTypes } from '../schema/TupleTypes';
@@ -72,20 +72,19 @@ export class DatabaseService implements ApplicationService {
 
   public async getMutableGraph(
     canvas: Result<'api::v2-canvas.v2-canvas'>,
-  ): Promise<LiveCanvasData> {
+  ): Promise<LiveCanvasUndoableData> {
     const graphFile: Result<'plugin::upload.file'> | null =
       await this.getGrapFileOfCanvas(canvas);
 
     try {
       const graphJson: string = await getStringPayloadOfMediaFile(graphFile);
-      const graph: LiveCanvasData = LiveCanvasData.fromUnknownOrEmpty(
-        JSON.parse(graphJson),
-      );
+      const graph: LiveCanvasUndoableData =
+        LiveCanvasUndoableData.fromUnknownOrEmpty(JSON.parse(graphJson));
       return graph;
     } catch (error) {
       this._logger.error(`Unable to parse graph from canvas:`);
       this._logger.error(error);
-      return LiveCanvasData.empty();
+      return LiveCanvasUndoableData.empty();
     }
   }
 
@@ -159,7 +158,7 @@ export class DatabaseService implements ApplicationService {
 
   public async setMutableGraphOfCanvas(
     canvas: Result<'api::v2-canvas.v2-canvas'>,
-    graph: z.infer<typeof LiveCanvasData.schema>,
+    graph: z.infer<typeof LiveCanvasUndoableData.schema>,
   ): Promise<void> {
     const populatedCanvas: Result<
       'api::v2-canvas.v2-canvas',
@@ -312,7 +311,7 @@ export class DatabaseService implements ApplicationService {
 
   public async getNotes(params: {
     project: Result<'api::v2-project.v2-project'>;
-    graph: LiveCanvasData;
+    graph: LiveCanvasUndoableData;
   }): Promise<IndexedNoteCollection> {
     const populatedProject: Result<
       'api::v2-project.v2-project',

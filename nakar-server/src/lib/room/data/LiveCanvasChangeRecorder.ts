@@ -1,17 +1,15 @@
 import { SMap } from '../../map/Map';
-import { LiveCanvasNode } from './LiveCanvasNode';
+import { LiveCanvasNode } from '../graph/LiveCanvasNode';
 import { SSet } from '../../set/Set';
 import { PhysicsWorker } from '../PhysicsWorker';
 import { Subject } from 'rxjs';
 import { CanvasEvent } from '../events/CanvasEvent';
-import { LiveCanvasData } from './LiveCanvasData';
 import { RSPhysicalNode } from '../RSPhysicalNode';
-import { UndoWrapperInfo } from '../../undo/UndoWrapperInfo';
 import { CanvasEventGraphMetaDataChanged } from '../events/CanvasEventGraphMetaDataChanged';
 import { CanvasEventGraphElementsChanged } from '../events/CanvasEventGraphElementsChanged';
 import { CanvasEventGraphTableChanged } from '../events/CanvasEventGraphTableChanged';
-import { LiveCanvasViewSettings } from './LiveCanvasViewSettings';
 import { CanvasEventViewSettingsChanged } from '../events/CanvasEventViewSettingsChanged';
+import { LiveCanvasData } from './LiveCanvasData';
 
 export class LiveCanvasChangeRecorder {
   private _shouldSendMetaDataChangedToUser: boolean;
@@ -70,30 +68,30 @@ export class LiveCanvasChangeRecorder {
     physicsWorker: PhysicsWorker,
     onEvent: Subject<CanvasEvent>,
     canvasId: string,
-    graph: LiveCanvasData,
-    undoInfo: UndoWrapperInfo,
-    viewSettings: LiveCanvasViewSettings,
+    data: LiveCanvasData,
   ): void {
     if (this._shouldSendMetaDataChangedToUser) {
       onEvent.next({
         type: 'CanvasEventGraphMetaDataChanged',
-        graph: graph,
+        graph: data.undoableData.current,
         canvasId: canvasId,
-        undoInfo: undoInfo,
+        undoInfo: data.undoableData.info,
       } satisfies CanvasEventGraphMetaDataChanged);
     }
     if (this._shouldSendGraphElementsToUserAndWorker) {
-      physicsWorker.setGraph(graph.toPhysicalGraph(viewSettings));
+      physicsWorker.setGraph(
+        data.undoableData.current.toPhysicalGraph(data.viewSettings),
+      );
       onEvent.next({
         type: 'CanvasEventGraphElementsChanged',
-        graph: graph,
+        graph: data.undoableData.current,
         canvasId: canvasId,
       } satisfies CanvasEventGraphElementsChanged);
     }
     if (this._shouldSendTableDataToUser) {
       onEvent.next({
         type: 'CanvasEventGraphTableChanged',
-        table: graph.tableData,
+        table: data.undoableData.current.tableData,
         canvasId: canvasId,
       } satisfies CanvasEventGraphTableChanged);
     }
@@ -101,7 +99,7 @@ export class LiveCanvasChangeRecorder {
       onEvent.next({
         type: 'CanvasEventViewSettingsChanged',
         canvasId: canvasId,
-        viewSettings: viewSettings,
+        viewSettings: data.viewSettings,
       } satisfies CanvasEventViewSettingsChanged);
     }
     if (this._lockChanges.size > 0) {

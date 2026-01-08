@@ -3,10 +3,10 @@ import { LiveCanvasPropertyCollection } from './LiveCanvasPropertyCollection';
 import { z } from 'zod';
 import { SSet } from '../../set/Set';
 import { LiveCanvasEdge } from './LiveCanvasEdge';
-import { LiveCanvasData } from './LiveCanvasData';
+import { LiveCanvasUndoableData } from '../data/LiveCanvasUndoableData';
 import { ElementCreationReason } from './ElementCreationReason';
 import { Range } from '../../range/Range';
-import { LiveCanvasViewSettings } from './LiveCanvasViewSettings';
+import { LiveCanvasViewSettings } from '../data/LiveCanvasViewSettings';
 
 export class LiveCanvasNode {
   public static readonly defaultRadius: number = 40;
@@ -119,7 +119,7 @@ export class LiveCanvasNode {
   public getRadius(
     viewSettings: LiveCanvasViewSettings,
     degreeRange: Range,
-    graph: LiveCanvasData,
+    graph: LiveCanvasUndoableData,
   ): number {
     if (!viewSettings.growNodesBasedOnDegree) {
       return LiveCanvasNode.defaultRadius;
@@ -153,11 +153,11 @@ export class LiveCanvasNode {
     };
   }
 
-  public degree(graph: LiveCanvasData): number {
+  public degree(graph: LiveCanvasUndoableData): number {
     return this.inDegree(graph) + this.outDegree(graph);
   }
 
-  public inDegree(graph: LiveCanvasData): number {
+  public inDegree(graph: LiveCanvasUndoableData): number {
     const inRelsCount: number = graph.edges
       .getByEndNodeId(this.id)
       .reduce(
@@ -169,7 +169,7 @@ export class LiveCanvasNode {
     return inRelsCount;
   }
 
-  public outDegree(graph: LiveCanvasData): number {
+  public outDegree(graph: LiveCanvasUndoableData): number {
     const outRelsCount: number = graph.edges
       .getByStartNodeId(this.id)
       .reduce(

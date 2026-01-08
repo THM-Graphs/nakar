@@ -41,7 +41,7 @@ import type { CanvasEventGraphElementsChanged } from '../room/events/CanvasEvent
 import type { CanvasEventGraphTableChanged } from '../room/events/CanvasEventGraphTableChanged';
 import type { CanvasEventEventKick } from '../room/events/CanvasEventEventKick';
 import type { CanvasEventNotAllNodesLoaded } from '../room/events/CanvasEventNotAllNodesLoaded';
-import type { LiveCanvasData } from '../room/graph/LiveCanvasData';
+import type { LiveCanvasUndoableData } from '../room/data/LiveCanvasUndoableData';
 import { SchemaFactoryService } from '../schema/SchemaFactoryService';
 import { CanvasEventError } from '../room/events/CanvasEventError';
 import { Result } from '@strapi/types/dist/modules/documents/result';
@@ -231,7 +231,7 @@ export class SocketIOService implements ApplicationService {
                   if (canvas != null) {
                     const liveCanvas: LiveCanvas =
                       this._canvasService.getOrStartCanvas(canvas);
-                    const graph: LiveCanvasData = liveCanvas.getGraph();
+                    const graph: LiveCanvasUndoableData = liveCanvas.getGraph();
                     const notes: IndexedNoteCollection =
                       await this._databaseService.getNotes({
                         project:
@@ -250,14 +250,14 @@ export class SocketIOService implements ApplicationService {
                           await this._schemaFactory.createSchemaGraphElements(
                             graph,
                             notes,
-                            liveCanvas.viewSettings,
+                            liveCanvas.data.viewSettings,
                           ),
                         metaData:
                           await this._schemaFactory.createSchemaGraphMetaData(
                             graph,
-                            liveCanvas.undoInfo,
+                            liveCanvas.data.undoableData.info,
                           ),
-                        viewSettings: liveCanvas.viewSettings.toSchema(),
+                        viewSettings: liveCanvas.data.viewSettings.toSchema(),
                       },
                     } satisfies SchemaWsEventCanvasDataReady);
                   } else {
@@ -415,7 +415,7 @@ export class SocketIOService implements ApplicationService {
                   await this._schemaFactory.createSchemaGraphElements(
                     message.graph,
                     notes,
-                    liveCanvas.viewSettings,
+                    liveCanvas.data.viewSettings,
                   );
                 this.sendToRoom(message.canvasId, {
                   elements: graphElements,
@@ -551,7 +551,7 @@ export class SocketIOService implements ApplicationService {
             return;
           }
 
-          const graph: LiveCanvasData = liveCanvas.getGraph();
+          const graph: LiveCanvasUndoableData = liveCanvas.getGraph();
 
           const project: Result<'api::v2-project.v2-project'> =
             await this._databaseService.getProjectOfCanvas(canvas);
@@ -565,7 +565,7 @@ export class SocketIOService implements ApplicationService {
             await this._schemaFactory.createSchemaGraphElements(
               graph,
               notes,
-              liveCanvas.viewSettings,
+              liveCanvas.data.viewSettings,
             );
           this.sendToRoom(canvas.documentId, {
             elements: graphElements,

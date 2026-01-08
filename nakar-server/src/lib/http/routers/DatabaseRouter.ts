@@ -10,7 +10,7 @@ import type {
 import { Neo4jDatabaseInfo } from '../../neo4j/Neo4jDatabaseInfo';
 import { Neo4jService } from '../../neo4j/Neo4jService';
 import { Neo4jNode } from '../../neo4j/Neo4jNode';
-import { LiveCanvasData } from '../../room/graph/LiveCanvasData';
+import { LiveCanvasUndoableData } from '../../room/data/LiveCanvasUndoableData';
 import { ElementCreationReason } from '../../room/graph/ElementCreationReason';
 import { SSet } from '../../set/Set';
 import { Neo4jSearchCapabilities } from '../../neo4j/Neo4jSearchCapabilities';
@@ -85,7 +85,7 @@ export class DatabaseRouter {
       credentials: credentials,
     });
 
-    const graph: LiveCanvasData = LiveCanvasData.empty();
+    const graph: LiveCanvasUndoableData = LiveCanvasUndoableData.empty();
     for (const node of result) {
       graph.nodes.addNeo4jNode(node, ElementCreationReason.search);
     }

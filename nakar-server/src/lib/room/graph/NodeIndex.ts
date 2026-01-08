@@ -5,7 +5,7 @@ import type { Neo4jNode } from '../../neo4j/Neo4jNode';
 import { LiveCanvasPosition } from './LiveCanvasPosition';
 import { LiveCanvasPropertyCollection } from './LiveCanvasPropertyCollection';
 import { Range } from '../../range/Range';
-import type { LiveCanvasData } from './LiveCanvasData';
+import type { LiveCanvasUndoableData } from '../data/LiveCanvasUndoableData';
 import { PhysicsSimulation } from '../../physics/PhysicsSimulation';
 import { ElementCreationReason } from './ElementCreationReason';
 
@@ -200,7 +200,7 @@ export class NodeIndex {
     );
   }
 
-  public getNodeDegreeRange(graph: LiveCanvasData): Range {
+  public getNodeDegreeRange(graph: LiveCanvasUndoableData): Range {
     const degrees: number[] = this.nodes
       .map((node: LiveCanvasNode): number => node.degree(graph))
       .toArray();

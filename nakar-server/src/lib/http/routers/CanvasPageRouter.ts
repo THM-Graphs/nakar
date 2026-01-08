@@ -42,7 +42,7 @@ export class CanvasPageRouter {
     }
 
     return {
-      canvas: await this._schemaFactory.createSchemaCanvasPreview(canvas),
+      canvas: this._schemaFactory.createSchemaCanvasPreview(canvas),
       room: await this._schemaFactory.createSchemaRoom(room),
       scenarios: await this._schemaFactory.createGetScenariosResult(room),
     };

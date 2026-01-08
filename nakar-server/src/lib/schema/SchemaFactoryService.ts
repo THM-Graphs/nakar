@@ -27,7 +27,7 @@ import {
   SchemaStartPageRoom,
   SchemaUser,
 } from '../../../src-gen/schema';
-import { LiveCanvasData } from '../room/graph/LiveCanvasData';
+import { LiveCanvasUndoableData } from '../room/data/LiveCanvasUndoableData';
 import { LiveCanvasNode } from '../room/graph/LiveCanvasNode';
 import { LiveCanvasEdge } from '../room/graph/LiveCanvasEdge';
 import { LiveCanvasLabel } from '../room/graph/LiveCanvasLabel';
@@ -44,7 +44,7 @@ import { Range } from '../range/Range';
 import { Logger } from '@strapi/logger';
 import { createChildLogger } from '../logger/createChildLogger';
 import { Profiler } from 'winston';
-import { LiveCanvasViewSettings } from '../room/graph/LiveCanvasViewSettings';
+import { LiveCanvasViewSettings } from '../room/data/LiveCanvasViewSettings';
 import { match, P } from 'ts-pattern';
 
 export class SchemaFactoryService implements ApplicationService {
@@ -279,7 +279,7 @@ export class SchemaFactoryService implements ApplicationService {
   }
 
   public async createSchemaGraph(
-    graph: LiveCanvasData,
+    graph: LiveCanvasUndoableData,
     notes: IndexedNoteCollection,
     undoWrapperInfo: UndoWrapperInfo | null,
     viewSettings: LiveCanvasViewSettings,
@@ -301,7 +301,7 @@ export class SchemaFactoryService implements ApplicationService {
   }
 
   public async createSchemaGraphElements(
-    graph: LiveCanvasData,
+    graph: LiveCanvasUndoableData,
     notes: IndexedNoteCollection,
     viewSettings: LiveCanvasViewSettings,
   ): Promise<SchemaGraphElements> {
@@ -376,7 +376,7 @@ export class SchemaFactoryService implements ApplicationService {
   }
 
   public async createSchemaGraphMetaData(
-    graph: LiveCanvasData,
+    graph: LiveCanvasUndoableData,
     undoWrapperInfo: UndoWrapperInfo | null,
   ): Promise<SchemaGraphMetaData> {
     const t: Profiler = this._logger.startTimer();
@@ -557,7 +557,9 @@ export class SchemaFactoryService implements ApplicationService {
     };
   }
 
-  private _createSchemaHistogram(graph: LiveCanvasData): SchemaHistogram {
+  private _createSchemaHistogram(
+    graph: LiveCanvasUndoableData,
+  ): SchemaHistogram {
     const t: Profiler = this._logger.startTimer();
     interface NodeHistogramEntry {
       id: string;
@@ -724,7 +726,7 @@ export class SchemaFactoryService implements ApplicationService {
 
   private async _createSchemaNode(
     node: LiveCanvasNode,
-    graph: LiveCanvasData,
+    graph: LiveCanvasUndoableData,
     notes: IndexedNoteCollection,
     databaseCache: DatabaseReferenceCache,
     viewSettings: LiveCanvasViewSettings,
@@ -798,7 +800,7 @@ export class SchemaFactoryService implements ApplicationService {
 
   private async _createSchemaEdge(
     edge: LiveCanvasEdge,
-    graph: LiveCanvasData,
+    graph: LiveCanvasUndoableData,
     databaseCcache: DatabaseReferenceCache,
     viewSettings: LiveCanvasViewSettings,
     edgeWidthRange: Range,
@@ -872,7 +874,7 @@ export class SchemaFactoryService implements ApplicationService {
 
   private async _createSchemaNote(
     note: Result<'api::v2-note.v2-note'>,
-    graph: LiveCanvasData,
+    graph: LiveCanvasUndoableData,
   ): Promise<SchemaNote> {
     const nodes: Result<'api::v2-node-reference.v2-node-reference'>[] =
       await this._database.getReferencedNodesOfNote(note);

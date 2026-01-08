@@ -1,6 +1,6 @@
 import { ApplicationService } from '../application/ApplicationService';
 import { SMap } from '../map/Map';
-import { LiveCanvasData } from './graph/LiveCanvasData';
+import { LiveCanvasUndoableData } from './data/LiveCanvasUndoableData';
 import { Observable, Subject, Subscription } from 'rxjs';
 import type { CanvasEvent } from './events/CanvasEvent';
 import { DatabaseService } from '../database/DatabaseService';
@@ -34,46 +34,35 @@ import { PhysicsWorker } from './PhysicsWorker';
 import { TaskQueue } from '../task-queue/TaskQueue';
 import { TaskQueueState } from '../task-queue/TaskQueueState';
 import { TaskQueueTask } from '../task-queue/TaskQueueTask';
-import { UndoWrapper } from '../undo/UndoWrapper';
 import { Neo4jRelationship } from '../neo4j/Neo4jRelationship';
 import { Result } from '@strapi/types/dist/modules/documents/result';
 import { Logger } from '@strapi/logger';
 import { createChildLogger } from '../logger/createChildLogger';
 import { Profiler } from 'winston';
-import { getStringPayloadOfMediaFile } from '../media/media';
-import { UndoWrapperInfo } from '../undo/UndoWrapperInfo';
-import { LiveCanvasViewSettings } from './graph/LiveCanvasViewSettings';
-import { LiveCanvasChangeRecorder } from './graph/LiveCanvasChangeRecorder';
+import { LiveCanvasViewSettings } from './data/LiveCanvasViewSettings';
+import { LiveCanvasChangeRecorder } from './data/LiveCanvasChangeRecorder';
+import { LiveCanvasData } from './data/LiveCanvasData';
 
 export class LiveCanvas implements ApplicationService {
   private readonly _logger: Logger = createChildLogger(this);
-
   private readonly _physicsWorker: PhysicsWorker;
-  private readonly _graph: UndoWrapper<LiveCanvasData>;
   private readonly _onEvent: Subject<CanvasEvent>;
   private readonly _subscriptions: SSet<Subscription>;
   private readonly _queue: TaskQueue;
   private _shutdownTimeout: NodeJS.Timeout | null;
-  private _viewSettings: LiveCanvasViewSettings;
+  private readonly _data: LiveCanvasData;
 
   public constructor(
     private readonly _canvasId: string,
     private readonly _database: DatabaseService,
     private readonly _neo4j: Neo4jService,
   ) {
-    this._graph = new UndoWrapper<LiveCanvasData>(
-      LiveCanvasData.empty(),
-      (graph: LiveCanvasData): LiveCanvasData => {
-        return graph.copy();
-      },
-      { maximumStackSize: 10 },
-    );
     this._onEvent = new Subject();
     this._subscriptions = new SSet();
     this._physicsWorker = new PhysicsWorker(_canvasId);
     this._queue = new TaskQueue();
     this._shutdownTimeout = null;
-    this._viewSettings = LiveCanvasViewSettings.defaultViewSettings();
+    this._data = new LiveCanvasData(this._database);
 
     this._subscriptions.add(
       this._physicsWorker.onWTEvent$.subscribe((message: WTEvent): void => {
@@ -125,12 +114,8 @@ export class LiveCanvas implements ApplicationService {
     return this._canvasId;
   }
 
-  public get undoInfo(): UndoWrapperInfo {
-    return this._graph.info;
-  }
-
-  public get viewSettings(): LiveCanvasViewSettings {
-    return this._viewSettings;
+  public get data(): LiveCanvasData {
+    return this._data;
   }
 
   public addSubscription(subscription: Subscription): void {
@@ -163,13 +148,11 @@ export class LiveCanvas implements ApplicationService {
       new TaskQueueTask('Loading canvas', async (): Promise<void> => {
         const changeRecorder: LiveCanvasChangeRecorder =
           new LiveCanvasChangeRecorder();
-        const initialGraph: LiveCanvasData = await this._loadGraph();
-        this._graph.reset(initialGraph);
-        changeRecorder.didLoadGraph();
 
         const canvas: Result<'api::v2-canvas.v2-canvas'> =
           await this._database.getCanvas(this._canvasId);
-        this._viewSettings = LiveCanvasViewSettings.fromDB(canvas);
+        await this._data.loadFromDb(canvas);
+        changeRecorder.didLoadGraph();
         changeRecorder.didChangeViewSettings();
 
         await this._physicsWorker.bootstrap();
@@ -188,12 +171,12 @@ export class LiveCanvas implements ApplicationService {
     await this.saveGraph();
   }
 
-  public getGraph(): LiveCanvasData {
-    return this._graph.current;
+  public getGraph(): LiveCanvasUndoableData {
+    return this.data.undoableData.current;
   }
 
   public grabNode(params: { nodeId: string; userId: string }): void {
-    const graph: LiveCanvasData = this.getGraph();
+    const graph: LiveCanvasUndoableData = this.getGraph();
 
     const node: LiveCanvasNode | null = graph.nodes.get(params.nodeId);
     if (node == null) {
@@ -207,7 +190,7 @@ export class LiveCanvas implements ApplicationService {
     nodes: readonly RSPhysicalNode[];
     userId: string;
   }): void {
-    const graph: LiveCanvasData = this.getGraph();
+    const graph: LiveCanvasUndoableData = this.getGraph();
     const nodesToSend: RSPhysicalNode[] = [];
 
     const changeRecorder: LiveCanvasChangeRecorder =
@@ -243,7 +226,7 @@ export class LiveCanvas implements ApplicationService {
   }
 
   public ungrabNode(params: { userId: string; node: RSPhysicalNode }): void {
-    const graph: LiveCanvasData = this.getGraph();
+    const graph: LiveCanvasUndoableData = this.getGraph();
 
     const node: LiveCanvasNode | null = graph.nodes.get(params.node.id);
     if (node == null) {
@@ -360,7 +343,7 @@ export class LiveCanvas implements ApplicationService {
 
         const changeRecorder: LiveCanvasChangeRecorder =
           new LiveCanvasChangeRecorder();
-        const graph: LiveCanvasData = this._snapshot(
+        const graph: LiveCanvasUndoableData = this._snapshot(
           'Load scenario',
           changeRecorder,
         );
@@ -490,7 +473,7 @@ export class LiveCanvas implements ApplicationService {
     for (const nodeId of params.nodeIds) {
       this._queue.addTask(
         new TaskQueueTask('Expanding node', async (): Promise<void> => {
-          const oldGraph: LiveCanvasData = this.getGraph();
+          const oldGraph: LiveCanvasUndoableData = this.getGraph();
 
           const node: LiveCanvasNode | null = oldGraph.nodes.get(nodeId);
           if (node == null) {
@@ -524,7 +507,7 @@ export class LiveCanvas implements ApplicationService {
 
           const changeRecorder: LiveCanvasChangeRecorder =
             new LiveCanvasChangeRecorder();
-          const graph: LiveCanvasData = this._snapshot(
+          const graph: LiveCanvasUndoableData = this._snapshot(
             'Expand node',
             changeRecorder,
           );
@@ -587,7 +570,7 @@ export class LiveCanvas implements ApplicationService {
   public async expandNodePreview(params: {
     nodeId: string;
   }): Promise<ExpandNodePreview> {
-    const graph: LiveCanvasData = this.getGraph();
+    const graph: LiveCanvasUndoableData = this.getGraph();
     const node: LiveCanvasNode | null = graph.nodes.get(params.nodeId);
     if (node == null) {
       throw new Error(`Cannot find node ${params.nodeId} to expand preview.`);
@@ -617,7 +600,7 @@ export class LiveCanvas implements ApplicationService {
 
         const changeRecorder: LiveCanvasChangeRecorder =
           new LiveCanvasChangeRecorder();
-        const graph: LiveCanvasData = this._snapshot(
+        const graph: LiveCanvasUndoableData = this._snapshot(
           'Focus nodes',
           changeRecorder,
         );
@@ -661,7 +644,7 @@ export class LiveCanvas implements ApplicationService {
 
         const changeRecorder: LiveCanvasChangeRecorder =
           new LiveCanvasChangeRecorder();
-        const graph: LiveCanvasData = this._snapshot(
+        const graph: LiveCanvasUndoableData = this._snapshot(
           'Delete elements',
           changeRecorder,
         );
@@ -733,7 +716,7 @@ export class LiveCanvas implements ApplicationService {
       new TaskQueueTask('Undo', async (): Promise<void> => {
         const changeRecorder: LiveCanvasChangeRecorder =
           new LiveCanvasChangeRecorder();
-        this._graph.undo();
+        this.data.undoableData.undo();
         changeRecorder.didCreateSnapshot();
 
         await this.saveGraph();
@@ -747,7 +730,7 @@ export class LiveCanvas implements ApplicationService {
       new TaskQueueTask('Redo', async (): Promise<void> => {
         const changeRecorder: LiveCanvasChangeRecorder =
           new LiveCanvasChangeRecorder();
-        this._graph.redo();
+        this.data.undoableData.redo();
         changeRecorder.didCreateSnapshot();
 
         await this.saveGraph();
@@ -790,7 +773,7 @@ export class LiveCanvas implements ApplicationService {
 
         const changeRecorder: LiveCanvasChangeRecorder =
           new LiveCanvasChangeRecorder();
-        const graph: LiveCanvasData = this._snapshot(
+        const graph: LiveCanvasUndoableData = this._snapshot(
           'Run query',
           changeRecorder,
         );
@@ -840,7 +823,7 @@ export class LiveCanvas implements ApplicationService {
       new TaskQueueTask('Unlocking nodes', (): void => {
         const changeRecorder: LiveCanvasChangeRecorder =
           new LiveCanvasChangeRecorder();
-        const graph: LiveCanvasData = this._snapshot(
+        const graph: LiveCanvasUndoableData = this._snapshot(
           'Unlock nodes',
           changeRecorder,
         );
@@ -870,7 +853,7 @@ export class LiveCanvas implements ApplicationService {
       new TaskQueueTask('Unlocking all nodes', (): void => {
         const changeRecorder: LiveCanvasChangeRecorder =
           new LiveCanvasChangeRecorder();
-        const graph: LiveCanvasData = this._snapshot(
+        const graph: LiveCanvasUndoableData = this._snapshot(
           'Unlock all nodes',
           changeRecorder,
         );
@@ -893,7 +876,7 @@ export class LiveCanvas implements ApplicationService {
   public removeDanglingNodes(): void {
     this._queue.addTask(
       new TaskQueueTask('Removing dangling nodes', (): void => {
-        const oldGraph: LiveCanvasData = this.getGraph();
+        const oldGraph: LiveCanvasUndoableData = this.getGraph();
 
         const ids: readonly string[] = oldGraph.nodes.nodes
           .filter(
@@ -904,7 +887,7 @@ export class LiveCanvas implements ApplicationService {
 
         const changeRecorder: LiveCanvasChangeRecorder =
           new LiveCanvasChangeRecorder();
-        const graph: LiveCanvasData = this._snapshot(
+        const graph: LiveCanvasUndoableData = this._snapshot(
           'Remove dangling nodes',
           changeRecorder,
         );
@@ -974,7 +957,7 @@ export class LiveCanvas implements ApplicationService {
           this._logger.debug(
             `Will calculate shortest path of nodes: ${JSON.stringify(params.nodeIds)}`,
           );
-          const oldGraph: LiveCanvasData = this.getGraph();
+          const oldGraph: LiveCanvasUndoableData = this.getGraph();
           const scenarioId: string | null = oldGraph.metaData.scenarioId;
           if (scenarioId == null) {
             throw new Error(`Cannot find scenario in room ${this.canvasId}`);
@@ -1038,7 +1021,7 @@ export class LiveCanvas implements ApplicationService {
 
           const changeRecorder: LiveCanvasChangeRecorder =
             new LiveCanvasChangeRecorder();
-          const graph: LiveCanvasData = this._snapshot(
+          const graph: LiveCanvasUndoableData = this._snapshot(
             'Show shortest path',
             changeRecorder,
           );
@@ -1084,7 +1067,7 @@ export class LiveCanvas implements ApplicationService {
 
         const changeRecorder: LiveCanvasChangeRecorder =
           new LiveCanvasChangeRecorder();
-        const graph: LiveCanvasData = this._snapshot(
+        const graph: LiveCanvasUndoableData = this._snapshot(
           'Load node',
           changeRecorder,
         );
@@ -1106,7 +1089,7 @@ export class LiveCanvas implements ApplicationService {
   public setViewSettings(newViewSettings: LiveCanvasViewSettings): void {
     const changeRecorder: LiveCanvasChangeRecorder =
       new LiveCanvasChangeRecorder();
-    this._viewSettings = newViewSettings;
+    this.data.viewSettings = newViewSettings;
     changeRecorder.didChangeViewSettings();
 
     this._handleChangeRecorder(changeRecorder);
@@ -1115,13 +1098,12 @@ export class LiveCanvas implements ApplicationService {
 
   public async saveGraph(): Promise<void> {
     const task: Profiler = this._logger.startTimer();
-    const graph: LiveCanvasData = this.getGraph();
 
     const canvas: Result<'api::v2-canvas.v2-canvas'> =
       await this._database.getCanvas(this.canvasId);
 
-    await this._database.setMutableGraphOfCanvas(canvas, graph.toPlain());
-    await this._database.setCanvasViewSettings(canvas, this._viewSettings);
+    await this._data.saveToDb(canvas);
+
     task.done({
       message: 'Save Graph',
     });
@@ -1133,7 +1115,7 @@ export class LiveCanvas implements ApplicationService {
     });
   }
   private _handleWTEventPhysicsUpdate(event: WTEventPhysicsUpdate): void {
-    const graph: LiveCanvasData = this.getGraph();
+    const graph: LiveCanvasUndoableData = this.getGraph();
     graph.applyPhysicalGraph(event.graph);
     this._onEvent.next({
       type: 'CanvasEventRoomPhysicsUpdated',
@@ -1154,7 +1136,7 @@ export class LiveCanvas implements ApplicationService {
     changeRecorder: LiveCanvasChangeRecorder,
   ): void {
     let compressedCount: number = 0;
-    const graph: LiveCanvasData = this.getGraph();
+    const graph: LiveCanvasUndoableData = this.getGraph();
 
     for (const nodeA of graph.nodes.nodes) {
       for (const nodeB of graph.nodes.nodes) {
@@ -1213,7 +1195,7 @@ export class LiveCanvas implements ApplicationService {
   private async _connectResultNodes(
     changeRecorder: LiveCanvasChangeRecorder,
   ): Promise<void> {
-    const graph: LiveCanvasData = this.getGraph();
+    const graph: LiveCanvasUndoableData = this.getGraph();
 
     const egdesToAdd: Neo4jRelationship[] = [];
     for (const source of graph.nodes.getSources()) {
@@ -1266,7 +1248,7 @@ export class LiveCanvas implements ApplicationService {
     const configs: Result<'api::v2-common-property.v2-common-property'>[] =
       await this._database.getCommonPropertyConfigsOfCanvas(canvas);
 
-    const graph: LiveCanvasData = this.getGraph();
+    const graph: LiveCanvasUndoableData = this.getGraph();
 
     for (const mergeConfig of configs) {
       this._logger.info(
@@ -1340,7 +1322,7 @@ export class LiveCanvas implements ApplicationService {
   }
 
   private _shouldMergeNodes(
-    graph: LiveCanvasData,
+    graph: LiveCanvasUndoableData,
     leftNode: LiveCanvasNode,
     rightNode: LiveCanvasNode,
     config: Result<'api::v2-common-property.v2-common-property'>,
@@ -1392,10 +1374,10 @@ export class LiveCanvas implements ApplicationService {
   private _snapshot(
     title: string,
     changeRecorder: LiveCanvasChangeRecorder,
-  ): LiveCanvasData {
-    this._graph.snapshot(title);
+  ): LiveCanvasUndoableData {
+    this.data.undoableData.snapshot(title);
     changeRecorder.didCreateSnapshot();
-    const graph: LiveCanvasData = this.getGraph();
+    const graph: LiveCanvasUndoableData = this.getGraph();
     return graph;
   }
 
@@ -1403,7 +1385,7 @@ export class LiveCanvas implements ApplicationService {
     changeRecorder: LiveCanvasChangeRecorder,
   ): Promise<void> {
     const task: Profiler = this._logger.startTimer();
-    const graph: LiveCanvasData = this.getGraph();
+    const graph: LiveCanvasUndoableData = this.getGraph();
     const removedEdges: number = graph.removeDanglingEdges();
     if (removedEdges > 0) {
       changeRecorder.didAddOrRemoveGraphElements();
@@ -1420,7 +1402,7 @@ export class LiveCanvas implements ApplicationService {
   ): void {
     this._logger.debug(`Will check nodes of ${targetLabel} for compressing`);
     let compressCount: number = 0;
-    const graph: LiveCanvasData = this.getGraph();
+    const graph: LiveCanvasUndoableData = this.getGraph();
     for (const node of graph.nodes.getByLabel(targetLabel)) {
       const clusterBuddies: SSet<LiveCanvasNode> =
         graph.getClusterBuddiesOfNode(node, targetLabel);
@@ -1488,7 +1470,7 @@ export class LiveCanvas implements ApplicationService {
     layoutSpecification: SchemaLayoutSpecification,
     changeRecorder: LiveCanvasChangeRecorder,
   ): void {
-    const graph: LiveCanvasData = this.getGraph();
+    const graph: LiveCanvasUndoableData = this.getGraph();
     const nodesOfLabel: LiveCanvasNode[] = graph.nodes
       .getByLabel(targetLabel)
       .toArray();
@@ -1549,35 +1531,6 @@ export class LiveCanvas implements ApplicationService {
       .exhaustive();
   }
 
-  private async _loadGraph(): Promise<LiveCanvasData> {
-    const canvas: Result<'api::v2-canvas.v2-canvas'> =
-      await this._database.getCanvas(this._canvasId);
-
-    this._logger.debug(
-      `Will load graph of canvas ${canvas.documentId} ('${canvas.title ?? ''}') into memory.`,
-    );
-
-    try {
-      const canvasGraph: Result<'plugin::upload.file'> | null =
-        await this._database.getGrapFileOfCanvas(canvas);
-      const graphJson: string = await getStringPayloadOfMediaFile(canvasGraph);
-      const graph: LiveCanvasData = LiveCanvasData.fromUnknownOrEmpty(
-        JSON.parse(graphJson),
-      );
-      this._logger.debug(
-        `Did load ${graph.size.toString()} graph elements into canvas ${canvas.documentId} ('${canvas.title ?? ''}').`,
-      );
-      return graph;
-    } catch (error) {
-      this._logger.error(`Unable to load graph from canvas:`);
-      this._logger.error(error);
-      this._logger.debug(
-        `Will init canvas ${canvas.documentId} with empty graph.`,
-      );
-      return LiveCanvasData.empty();
-    }
-  }
-
   private _handleError(error: unknown): void {
     this._onEvent.next({
       type: 'CanvasEventError',
@@ -1601,9 +1554,7 @@ export class LiveCanvas implements ApplicationService {
       this._physicsWorker,
       this._onEvent,
       this.canvasId,
-      this.getGraph(),
-      this._graph.info,
-      this.viewSettings,
+      this.data,
     );
   }
 }

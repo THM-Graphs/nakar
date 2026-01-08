@@ -1,11 +1,11 @@
-import { LiveCanvasNode } from './LiveCanvasNode';
-import { LiveCanvasEdge } from './LiveCanvasEdge';
-import { LiveCanvasMetaData } from './LiveCanvasMetaData';
+import { LiveCanvasNode } from '../graph/LiveCanvasNode';
+import { LiveCanvasEdge } from '../graph/LiveCanvasEdge';
+import { LiveCanvasMetaData } from '../graph/LiveCanvasMetaData';
 import { z } from 'zod';
 import { SMap } from '../../map/Map';
 import { v4 as uuidv4 } from 'uuid';
-import { NodeIndex } from './NodeIndex';
-import { EdgeIndex } from './EdgeIndex';
+import { NodeIndex } from '../graph/NodeIndex';
+import { EdgeIndex } from '../graph/EdgeIndex';
 import type { PhysicalGraph } from '../../physics/physical-graph/PhysicalGraph';
 import type { PhysicalNode } from '../../physics/physical-graph/PhysicalNode';
 import type { PhysicalEdge } from '../../physics/physical-graph/PhysicalEdge';
@@ -17,7 +17,7 @@ import { createChildLogger } from '../../logger/createChildLogger';
 import { Profiler } from 'winston';
 import { LiveCanvasViewSettings } from './LiveCanvasViewSettings';
 
-export class LiveCanvasData {
+export class LiveCanvasUndoableData {
   // eslint-disable-next-line @typescript-eslint/typedef
   public static readonly schema = z.object({
     id: z.string(),
@@ -62,8 +62,8 @@ export class LiveCanvasData {
     this._tableData = newData;
   }
 
-  public static empty(): LiveCanvasData {
-    return new LiveCanvasData({
+  public static empty(): LiveCanvasUndoableData {
+    return new LiveCanvasUndoableData({
       id: uuidv4(),
       nodes: new NodeIndex([]),
       edges: new EdgeIndex([]),
@@ -73,9 +73,9 @@ export class LiveCanvasData {
   }
 
   public static fromPlain(
-    data: z.infer<typeof LiveCanvasData.schema>,
-  ): LiveCanvasData {
-    return new LiveCanvasData({
+    data: z.infer<typeof LiveCanvasUndoableData.schema>,
+  ): LiveCanvasUndoableData {
+    return new LiveCanvasUndoableData({
       id: data.id,
       nodes: new NodeIndex(
         data.nodes.map(
@@ -97,17 +97,17 @@ export class LiveCanvasData {
     });
   }
 
-  public static fromUnknown(input: unknown): LiveCanvasData {
-    const data: z.infer<typeof LiveCanvasData.schema> =
-      LiveCanvasData.schema.parse(input);
-    return LiveCanvasData.fromPlain(data);
+  public static fromUnknown(input: unknown): LiveCanvasUndoableData {
+    const data: z.infer<typeof LiveCanvasUndoableData.schema> =
+      LiveCanvasUndoableData.schema.parse(input);
+    return LiveCanvasUndoableData.fromPlain(data);
   }
 
-  public static fromUnknownOrEmpty(input: unknown): LiveCanvasData {
+  public static fromUnknownOrEmpty(input: unknown): LiveCanvasUndoableData {
     try {
-      return LiveCanvasData.fromUnknown(input);
+      return LiveCanvasUndoableData.fromUnknown(input);
     } catch {
-      return LiveCanvasData.empty();
+      return LiveCanvasUndoableData.empty();
     }
   }
 
@@ -121,7 +121,7 @@ export class LiveCanvasData {
     this._tableData = [];
   }
 
-  public toPlain(): z.infer<typeof LiveCanvasData.schema> {
+  public toPlain(): z.infer<typeof LiveCanvasUndoableData.schema> {
     return {
       id: this.id,
       nodes: this.nodes.nodes.flatMap(
@@ -216,9 +216,9 @@ export class LiveCanvasData {
     }
   }
 
-  public copy(): LiveCanvasData {
+  public copy(): LiveCanvasUndoableData {
     const task: Profiler = this._logger.startTimer();
-    const copy: LiveCanvasData = new LiveCanvasData({
+    const copy: LiveCanvasUndoableData = new LiveCanvasUndoableData({
       id: uuidv4(),
       nodes: this.nodes.copy(),
       edges: this.edges.copy(),

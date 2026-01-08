@@ -1,11 +1,11 @@
 import { LiveCanvasPropertyCollection } from './LiveCanvasPropertyCollection';
 import { z } from 'zod';
 import { SSet } from '../../set/Set';
-import type { LiveCanvasData } from './LiveCanvasData';
+import type { LiveCanvasUndoableData } from '../data/LiveCanvasUndoableData';
 import { SMap } from '../../map/Map';
 import { Range } from '../../range/Range';
 import { ElementCreationReason } from './ElementCreationReason';
-import { LiveCanvasViewSettings } from './LiveCanvasViewSettings';
+import { LiveCanvasViewSettings } from '../data/LiveCanvasViewSettings';
 
 export class LiveCanvasEdge {
   public static readonly defaultWidth: number = 2;
@@ -134,7 +134,7 @@ export class LiveCanvasEdge {
     };
   }
 
-  public parallelEdges(graph: LiveCanvasData): LiveCanvasEdge[] {
+  public parallelEdges(graph: LiveCanvasUndoableData): LiveCanvasEdge[] {
     // Betrachtung: Beziehungen von Knoten mit geringerer ID zu Knoten mit höherer ID.
     const correctNodeSorting: boolean =
       this.startNodeId.localeCompare(this.endNodeId) < 0;
@@ -166,14 +166,14 @@ export class LiveCanvasEdge {
     return result.toValueArray();
   }
 
-  public parallelCount(graph: LiveCanvasData): number {
+  public parallelCount(graph: LiveCanvasUndoableData): number {
     const parallelEdges: LiveCanvasEdge[] = this.parallelEdges(graph);
 
     const parallelCount: number = parallelEdges.length;
     return parallelCount;
   }
 
-  public parallelIndex(graph: LiveCanvasData): number {
+  public parallelIndex(graph: LiveCanvasUndoableData): number {
     const parallelEdges: LiveCanvasEdge[] = this.parallelEdges(graph);
 
     const selfIndex: number = parallelEdges.indexOf(this);
@@ -201,7 +201,7 @@ export class LiveCanvasEdge {
     }
   }
 
-  public isDangling(graph: LiveCanvasData): boolean {
+  public isDangling(graph: LiveCanvasUndoableData): boolean {
     const isDangling: boolean =
       !graph.nodes.hasById(this.startNodeId) ||
       !graph.nodes.hasById(this.endNodeId);

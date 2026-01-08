@@ -1,4 +1,4 @@
-import { LiveCanvasViewSettings } from '../graph/LiveCanvasViewSettings';
+import { LiveCanvasViewSettings } from '../data/LiveCanvasViewSettings';
 
 export interface CanvasEventViewSettingsChanged {
   type: 'CanvasEventViewSettingsChanged';

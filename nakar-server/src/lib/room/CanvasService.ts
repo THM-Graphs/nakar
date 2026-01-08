@@ -1,7 +1,7 @@
 import type { DatabaseService } from '../database/DatabaseService';
 import type { Observable } from 'rxjs';
 import { Subject } from 'rxjs';
-import { LiveCanvasData } from './graph/LiveCanvasData';
+import { LiveCanvasUndoableData } from './data/LiveCanvasUndoableData';
 import type { ApplicationService } from '../application/ApplicationService';
 import installHandlebarHelpers from 'handlebars-helpers';
 import { SMap } from '../map/Map';
@@ -52,15 +52,17 @@ export class CanvasService implements ApplicationService {
     }
   }
 
-  public getGraph(canvas: Result<'api::v2-canvas.v2-canvas'>): LiveCanvasData {
+  public getGraph(
+    canvas: Result<'api::v2-canvas.v2-canvas'>,
+  ): LiveCanvasUndoableData {
     const liveCanvas: LiveCanvas = this.getCanvas(canvas);
-    const graph: LiveCanvasData = liveCanvas.getGraph();
+    const graph: LiveCanvasUndoableData = liveCanvas.getGraph();
     return graph;
   }
 
   public getGraphOrNull(
     canvas: Result<'api::v2-canvas.v2-canvas'>,
-  ): LiveCanvasData | null {
+  ): LiveCanvasUndoableData | null {
     return this._liveCanvases.get(canvas.documentId)?.getGraph() ?? null;
   }
 
