@@ -8,8 +8,7 @@ import type { WTEvent } from '../room-worker/worker-events/WTEvent';
 import { match, P } from 'ts-pattern';
 import type { WTEventPhysicsUpdate } from '../room-worker/worker-events/WTEventPhysicsUpdate';
 import { Neo4jDatabaseInfo } from '../neo4j/Neo4jDatabaseInfo';
-import { LiveCanvasNode } from './graph/LiveCanvasNode';
-import { RSPhysicalNode } from './RSPhysicalNode';
+import { GraphNode } from './graph/GraphNode';
 import { NotFound } from 'http-errors';
 import { PositionsCache } from './graph/PositionsCache';
 import { Neo4jGraphElements } from '../neo4j/Neo4jGraphElements';
@@ -17,17 +16,17 @@ import { Neo4jLimitConfig } from '../neo4j/Neo4jLimitConfig';
 import { CanvasEventNotAllNodesLoaded } from './events/CanvasEventNotAllNodesLoaded';
 import { ElementCreationReason } from './graph/ElementCreationReason';
 import { SSet } from '../set/Set';
-import { ExpandNodesResult } from './ExpandNodesResult';
 import { PhysicsSimulation } from '../physics/PhysicsSimulation';
 import { ExpandNodePreview } from '../neo4j/expand-node-preview/ExpandNodePreview';
-import { LiveCanvasEdge } from './graph/LiveCanvasEdge';
+import { GraphEdge } from './graph/GraphEdge';
 import {
   SchemaLayoutSpecification,
   SchemaLayoutSpecificationCircle,
+  SchemaPhysicalNode,
 } from '../../../src-gen/schema';
 import { v4 } from 'uuid';
-import { LiveCanvasPropertyCollection } from './graph/LiveCanvasPropertyCollection';
-import { LiveCanvasPosition } from './graph/LiveCanvasPosition';
+import { PropertyCollection } from './graph/PropertyCollection';
+import { ElementPosition } from './graph/ElementPosition';
 import { Neo4jService } from '../neo4j/Neo4jService';
 import { circularWeightedSpread } from '../physics/circle-layout-algorithms/circularWeightedSpread';
 import { PhysicsWorker } from './PhysicsWorker';
@@ -42,6 +41,8 @@ import { Profiler } from 'winston';
 import { LiveCanvasViewSettings } from './data/LiveCanvasViewSettings';
 import { LiveCanvasChangeRecorder } from './data/LiveCanvasChangeRecorder';
 import { LiveCanvasData } from './data/LiveCanvasData';
+import { NodePosition } from './graph/NodePosition';
+import { WTPhysicalNode } from '../room-worker/worker-events/WTPhysicalNode';
 
 export class LiveCanvas implements ApplicationService {
   private readonly _logger: Logger = createChildLogger(this);
@@ -84,12 +85,12 @@ export class LiveCanvas implements ApplicationService {
         if (state.active == null) {
           this._onEvent.next({
             type: 'CanvasEventProgressCleared',
-            canvasId: this.canvasId,
+            canvas: this,
           } satisfies CanvasEvent);
         } else {
           this._onEvent.next({
             type: 'CanvasEventProgressChanged',
-            canvasId: this.canvasId,
+            canvas: this,
             progress: null,
             message:
               state.pending.length > 0
@@ -131,7 +132,7 @@ export class LiveCanvas implements ApplicationService {
     this._shutdownTimeout = setTimeout((): void => {
       this._onEvent.next({
         type: 'CanvasEventShouldShutDown',
-        canvasId: this._canvasId,
+        canvas: this,
       });
     }, 10_000);
   }
@@ -178,7 +179,7 @@ export class LiveCanvas implements ApplicationService {
   public grabNode(params: { nodeId: string; userId: string }): void {
     const graph: LiveCanvasUndoableData = this.getGraph();
 
-    const node: LiveCanvasNode | null = graph.nodes.get(params.nodeId);
+    const node: GraphNode | null = graph.nodes.get(params.nodeId);
     if (node == null) {
       throw new Error(`Unable to grab node: Node ${params.nodeId} not found.`);
     }
@@ -187,17 +188,17 @@ export class LiveCanvas implements ApplicationService {
   }
 
   public moveNodes(params: {
-    nodes: readonly RSPhysicalNode[];
+    nodes: readonly NodePosition[];
     userId: string;
   }): void {
     const graph: LiveCanvasUndoableData = this.getGraph();
-    const nodesToSend: RSPhysicalNode[] = [];
+    const nodesToSend: WTPhysicalNode[] = [];
 
     const changeRecorder: LiveCanvasChangeRecorder =
       new LiveCanvasChangeRecorder();
 
     for (const physialNode of params.nodes) {
-      const node: LiveCanvasNode | null = graph.nodes.get(physialNode.id);
+      const node: GraphNode | null = graph.nodes.get(physialNode.id);
       if (node == null) {
         this._logger.error(
           `Unable to move node: Node ${physialNode.id} not found.`,
@@ -225,10 +226,13 @@ export class LiveCanvas implements ApplicationService {
     this._handleChangeRecorder(changeRecorder);
   }
 
-  public ungrabNode(params: { userId: string; node: RSPhysicalNode }): void {
+  public ungrabNode(params: {
+    userId: string;
+    node: SchemaPhysicalNode;
+  }): void {
     const graph: LiveCanvasUndoableData = this.getGraph();
 
-    const node: LiveCanvasNode | null = graph.nodes.get(params.node.id);
+    const node: GraphNode | null = graph.nodes.get(params.node.id);
     if (node == null) {
       throw new Error(`Unable to grab node: Node ${params.node.id} not found.`);
     }
@@ -329,7 +333,7 @@ export class LiveCanvas implements ApplicationService {
           if (graphElements.limitReached) {
             this._onEvent.next({
               type: 'CanvasEventNotAllNodesLoaded',
-              canvasId: this.canvasId,
+              canvas: this,
               loadedCount: graphElements.size,
             } satisfies CanvasEventNotAllNodesLoaded);
           }
@@ -475,7 +479,7 @@ export class LiveCanvas implements ApplicationService {
         new TaskQueueTask('Expanding node', async (): Promise<void> => {
           const oldGraph: LiveCanvasUndoableData = this.getGraph();
 
-          const node: LiveCanvasNode | null = oldGraph.nodes.get(nodeId);
+          const node: GraphNode | null = oldGraph.nodes.get(nodeId);
           if (node == null) {
             throw new Error(`Cannot find node ${nodeId} to expand.`);
           }
@@ -495,7 +499,7 @@ export class LiveCanvas implements ApplicationService {
                   neighbors: oldGraph
                     .getNeighborsOfNode(node)
                     .toArray()
-                    .map((n: LiveCanvasNode): string => n.id),
+                    .map((n: GraphNode): string => n.id),
                 },
                 new Neo4jLimitConfig('default', 'graphElements'),
               )
@@ -522,11 +526,10 @@ export class LiveCanvas implements ApplicationService {
 
           for (const newNode of expandResult.nodes) {
             if (!graph.nodes.hasById(newNode[0])) {
-              const insertedNode: LiveCanvasNode | null =
-                graph.nodes.addNeo4jNode(
-                  newNode[1],
-                  ElementCreationReason.expand,
-                );
+              const insertedNode: GraphNode | null = graph.nodes.addNeo4jNode(
+                newNode[1],
+                ElementCreationReason.expand,
+              );
               if (insertedNode != null) {
                 insertedNode.position.x = node.position.x;
                 insertedNode.position.y = node.position.y;
@@ -558,7 +561,7 @@ export class LiveCanvas implements ApplicationService {
             // TODO: Into change recoreder
             this._onEvent.next({
               type: 'CanvasEventNotAllNodesLoaded',
-              canvasId: this.canvasId,
+              canvas: this,
               loadedCount: expandResult.size,
             } satisfies CanvasEventNotAllNodesLoaded);
           }
@@ -571,7 +574,7 @@ export class LiveCanvas implements ApplicationService {
     nodeId: string;
   }): Promise<ExpandNodePreview> {
     const graph: LiveCanvasUndoableData = this.getGraph();
-    const node: LiveCanvasNode | null = graph.nodes.get(params.nodeId);
+    const node: GraphNode | null = graph.nodes.get(params.nodeId);
     if (node == null) {
       throw new Error(`Cannot find node ${params.nodeId} to expand preview.`);
     }
@@ -593,11 +596,6 @@ export class LiveCanvas implements ApplicationService {
   public focusNodes(params: { nodeIds: readonly string[] }): void {
     this._queue.addTask(
       new TaskQueueTask('Focus nodes', (): void => {
-        const result: ExpandNodesResult = {
-          nodesAddedCount: 0,
-          edgeAddedCount: 0,
-        };
-
         const changeRecorder: LiveCanvasChangeRecorder =
           new LiveCanvasChangeRecorder();
         const graph: LiveCanvasUndoableData = this._snapshot(
@@ -607,16 +605,13 @@ export class LiveCanvas implements ApplicationService {
 
         graph.nodes.nodes
           .filter(
-            (node: LiveCanvasNode): boolean =>
-              !params.nodeIds.includes(node.id),
+            (node: GraphNode): boolean => !params.nodeIds.includes(node.id),
           )
-          .forEach((node: LiveCanvasNode): void => {
+          .forEach((node: GraphNode): void => {
             graph.nodes.remove(node);
             changeRecorder.didAddOrRemoveGraphElements();
-            result.nodesAddedCount -= 1;
           });
         const edgesRemovedCount: number = graph.removeDanglingEdges();
-        result.edgeAddedCount -= edgesRemovedCount;
         if (edgesRemovedCount > 0) {
           changeRecorder.didAddOrRemoveGraphElements();
         }
@@ -634,13 +629,8 @@ export class LiveCanvas implements ApplicationService {
   }): void {
     this._queue.addTask(
       new TaskQueueTask('Deleting nodes', (): void => {
-        const result: ExpandNodesResult = {
-          nodesAddedCount: 0,
-          edgeAddedCount: 0,
-        };
-
-        const nodesToDelete: SSet<LiveCanvasNode> = new SSet<LiveCanvasNode>();
-        const edgesToDelete: SSet<LiveCanvasEdge> = new SSet<LiveCanvasEdge>();
+        const nodesToDelete: SSet<GraphNode> = new SSet<GraphNode>();
+        const edgesToDelete: SSet<GraphEdge> = new SSet<GraphEdge>();
 
         const changeRecorder: LiveCanvasChangeRecorder =
           new LiveCanvasChangeRecorder();
@@ -650,7 +640,7 @@ export class LiveCanvas implements ApplicationService {
         );
 
         for (const nodeId of params.nodeIds) {
-          const node: LiveCanvasNode | null = graph.nodes.get(nodeId);
+          const node: GraphNode | null = graph.nodes.get(nodeId);
           if (node != null) {
             nodesToDelete.add(node);
           }
@@ -665,7 +655,6 @@ export class LiveCanvas implements ApplicationService {
           const didDelete: boolean = graph.nodes.remove(node);
           if (didDelete) {
             changeRecorder.didAddOrRemoveGraphElements();
-            result.nodesAddedCount -= 1;
           }
 
           for (const edge of graph.edges.getByStartOrEndNodeId(node.id)) {
@@ -676,14 +665,14 @@ export class LiveCanvas implements ApplicationService {
         }
 
         for (const edgeId of params.edgeIds) {
-          const edge: LiveCanvasEdge | null = graph.edges.get(edgeId);
+          const edge: GraphEdge | null = graph.edges.get(edgeId);
           if (edge != null) {
             edgesToDelete.add(edge);
           }
         }
 
         for (const edgeType of params.edgeTypes) {
-          const edges: SSet<LiveCanvasEdge> = graph.edges.getByType(edgeType);
+          const edges: SSet<GraphEdge> = graph.edges.getByType(edgeType);
           for (const edge of edges) {
             edgesToDelete.add(edge);
           }
@@ -693,7 +682,6 @@ export class LiveCanvas implements ApplicationService {
           const didDelete: boolean = graph.edges.remove(edge);
           if (didDelete) {
             changeRecorder.didAddOrRemoveGraphElements();
-            result.edgeAddedCount -= 1;
           }
         }
         const removedEdges: number = graph.removeDanglingEdges();
@@ -766,7 +754,7 @@ export class LiveCanvas implements ApplicationService {
         if (graphElements.limitReached) {
           this._onEvent.next({
             type: 'CanvasEventNotAllNodesLoaded',
-            canvasId: this.canvasId,
+            canvas: this,
             loadedCount: graphElements.size,
           } satisfies CanvasEventNotAllNodesLoaded);
         }
@@ -829,7 +817,7 @@ export class LiveCanvas implements ApplicationService {
         );
 
         for (const nodeId of params.nodeIds) {
-          const node: LiveCanvasNode | null = graph.nodes.get(nodeId);
+          const node: GraphNode | null = graph.nodes.get(nodeId);
           if (node == null) {
             this._logger.warn(
               `Unable to unlock node ${nodeId}. Node not found.`,
@@ -879,10 +867,8 @@ export class LiveCanvas implements ApplicationService {
         const oldGraph: LiveCanvasUndoableData = this.getGraph();
 
         const ids: readonly string[] = oldGraph.nodes.nodes
-          .filter(
-            (node: LiveCanvasNode): boolean => node.degree(oldGraph) === 0,
-          )
-          .map((node: LiveCanvasNode): string => node.id)
+          .filter((node: GraphNode): boolean => node.degree(oldGraph) === 0)
+          .map((node: GraphNode): string => node.id)
           .toArray();
 
         const changeRecorder: LiveCanvasChangeRecorder =
@@ -968,7 +954,7 @@ export class LiveCanvas implements ApplicationService {
           /* create unique pairs */
           for (let i: number = 0; i < params.nodeIds.length - 1; i += 1) {
             const idA: string = params.nodeIds[i];
-            const nodeA: LiveCanvasNode | null = oldGraph.nodes.get(idA);
+            const nodeA: GraphNode | null = oldGraph.nodes.get(idA);
             if (nodeA == null) {
               throw new Error(
                 `Unable to calculate shortest path: Node id ${idA} not found.`,
@@ -978,7 +964,7 @@ export class LiveCanvas implements ApplicationService {
             for (let j: number = i + 1; j < params.nodeIds.length; j += 1) {
               const idB: string = params.nodeIds[j];
 
-              const nodeB: LiveCanvasNode | null = oldGraph.nodes.get(idB);
+              const nodeB: GraphNode | null = oldGraph.nodes.get(idB);
               if (nodeB == null) {
                 throw new Error(
                   `Unable to calculate shortest path: Node id ${idB} not found.`,
@@ -1120,7 +1106,7 @@ export class LiveCanvas implements ApplicationService {
     this._onEvent.next({
       type: 'CanvasEventRoomPhysicsUpdated',
       graph: graph,
-      canvasId: this.canvasId,
+      canvas: this,
       performance: event.performance,
     } satisfies CanvasEvent);
   }
@@ -1140,40 +1126,38 @@ export class LiveCanvas implements ApplicationService {
 
     for (const nodeA of graph.nodes.nodes) {
       for (const nodeB of graph.nodes.nodes) {
-        const edges: LiveCanvasEdge[] = graph.edges.getByStartAndEndNodeId(
+        const edges: GraphEdge[] = graph.edges.getByStartAndEndNodeId(
           nodeA.id,
           nodeB.id,
         );
-        const byType: SMap<string, LiveCanvasEdge[]> = edges.reduce(
+        const byType: SMap<string, GraphEdge[]> = edges.reduce(
           (
-            akku: SMap<string, LiveCanvasEdge[]>,
-            next: LiveCanvasEdge,
-          ): SMap<string, LiveCanvasEdge[]> =>
+            akku: SMap<string, GraphEdge[]>,
+            next: GraphEdge,
+          ): SMap<string, GraphEdge[]> =>
             akku.bySetting(next.type, [...(akku.get(next.type) ?? []), next]),
-          new SMap<string, LiveCanvasEdge[]>(),
+          new SMap<string, GraphEdge[]>(),
         );
         for (const edgesToCompress of byType.values()) {
           if (edgesToCompress.length <= 1) {
             continue;
           }
-          const newEdge: LiveCanvasEdge = new LiveCanvasEdge({
+          const newEdge: GraphEdge = new GraphEdge({
             id: v4(),
             namesInQuery: edgesToCompress.reduce(
-              (akku: SSet<string>, next: LiveCanvasEdge): SSet<string> =>
+              (akku: SSet<string>, next: GraphEdge): SSet<string> =>
                 akku.byMerging(next.namesInQuery),
               new SSet<string>(),
             ),
-            properties: LiveCanvasPropertyCollection.fromRecord({
-              compressed: edgesToCompress.map(
-                (e: LiveCanvasEdge): string => e.id,
-              ),
+            properties: PropertyCollection.fromRecord({
+              compressed: edgesToCompress.map((e: GraphEdge): string => e.id),
             }),
             type: edgesToCompress[0].type,
             source: edgesToCompress[0].source,
             startNodeId: edgesToCompress[0].startNodeId,
             endNodeId: edgesToCompress[0].endNodeId,
             compressed: new SSet(
-              edgesToCompress.map((e: LiveCanvasEdge): string => e.id),
+              edgesToCompress.map((e: GraphEdge): string => e.id),
             ),
             creationAction: ElementCreationReason.compress,
           });
@@ -1201,7 +1185,7 @@ export class LiveCanvas implements ApplicationService {
     for (const source of graph.nodes.getSources()) {
       const nodesToConnect: SSet<string> = graph.nodes
         .getBySource(source)
-        .map((n: LiveCanvasNode): string => n.id);
+        .map((n: GraphNode): string => n.id);
       if (nodesToConnect.size === 0) {
         continue;
       }
@@ -1265,10 +1249,10 @@ export class LiveCanvas implements ApplicationService {
         continue;
       }
 
-      const originalNodes: SSet<LiveCanvasNode> = graph.nodes.getBySource(
+      const originalNodes: SSet<GraphNode> = graph.nodes.getBySource(
         leftDatabase.documentId,
       );
-      const mergeNodes: SSet<LiveCanvasNode> = graph.nodes.getBySource(
+      const mergeNodes: SSet<GraphNode> = graph.nodes.getBySource(
         rightDatabase.documentId,
       );
 
@@ -1282,14 +1266,14 @@ export class LiveCanvas implements ApplicationService {
           );
           if (shouldMerge) {
             graph.edges.add(
-              new LiveCanvasEdge({
+              new GraphEdge({
                 id: v4(),
                 compressed: new SSet(),
                 startNodeId: originalNode.id,
                 endNodeId: mergeNode.id,
                 source: originalNode.source,
                 type: 'MERGED_WITH',
-                properties: new LiveCanvasPropertyCollection({
+                properties: new PropertyCollection({
                   properties: new SMap([['merge', mergeConfig]]),
                 }),
                 namesInQuery: new SSet(),
@@ -1297,14 +1281,14 @@ export class LiveCanvas implements ApplicationService {
               }),
             );
             graph.edges.add(
-              new LiveCanvasEdge({
+              new GraphEdge({
                 id: v4(),
                 compressed: new SSet(),
                 startNodeId: mergeNode.id,
                 endNodeId: originalNode.id,
                 source: mergeNode.source,
                 type: 'MERGED_WITH',
-                properties: new LiveCanvasPropertyCollection({
+                properties: new PropertyCollection({
                   properties: new SMap([['merge', mergeConfig]]),
                 }),
                 namesInQuery: new SSet(),
@@ -1323,8 +1307,8 @@ export class LiveCanvas implements ApplicationService {
 
   private _shouldMergeNodes(
     graph: LiveCanvasUndoableData,
-    leftNode: LiveCanvasNode,
-    rightNode: LiveCanvasNode,
+    leftNode: GraphNode,
+    rightNode: GraphNode,
     config: Result<'api::v2-common-property.v2-common-property'>,
   ): boolean {
     if (
@@ -1404,36 +1388,38 @@ export class LiveCanvas implements ApplicationService {
     let compressCount: number = 0;
     const graph: LiveCanvasUndoableData = this.getGraph();
     for (const node of graph.nodes.getByLabel(targetLabel)) {
-      const clusterBuddies: SSet<LiveCanvasNode> =
-        graph.getClusterBuddiesOfNode(node, targetLabel);
+      const clusterBuddies: SSet<GraphNode> = graph.getClusterBuddiesOfNode(
+        node,
+        targetLabel,
+      );
       if (clusterBuddies.size <= 1) {
         continue;
       }
       this._logger.debug(
         `Will compress ${node.id} because it is part of a cluster with ${clusterBuddies.size.toString()} cluster buddies.`,
       );
-      const newNode: LiveCanvasNode = new LiveCanvasNode({
+      const newNode: GraphNode = new GraphNode({
         id: v4(),
-        position: LiveCanvasPosition.average(
+        position: ElementPosition.average(
           clusterBuddies
             .toArray()
-            .map((n: LiveCanvasNode): LiveCanvasPosition => n.position),
+            .map((n: GraphNode): ElementPosition => n.position),
         ),
         grabs: new SSet(),
         labels: clusterBuddies.reduce(
-          (akku: SSet<string>, next: LiveCanvasNode): SSet<string> =>
+          (akku: SSet<string>, next: GraphNode): SSet<string> =>
             akku.byMerging(next.labels),
           new SSet<string>(),
         ),
         source: node.source,
         locked: node.locked,
-        properties: LiveCanvasPropertyCollection.empty(),
+        properties: PropertyCollection.empty(),
         namesInQuery: clusterBuddies.reduce(
-          (akku: SSet<string>, next: LiveCanvasNode): SSet<string> =>
+          (akku: SSet<string>, next: GraphNode): SSet<string> =>
             akku.byMerging(next.namesInQuery),
           new SSet<string>(),
         ),
-        compressed: clusterBuddies.map((n: LiveCanvasNode): string => n.id),
+        compressed: clusterBuddies.map((n: GraphNode): string => n.id),
         creationAction: ElementCreationReason.compress,
       });
       graph.nodes.add(newNode);
@@ -1441,14 +1427,14 @@ export class LiveCanvas implements ApplicationService {
       for (const sibling of clusterBuddies) {
         for (const outgoingEdge of graph.edges.getByStartNodeId(sibling.id)) {
           graph.edges.remove(outgoingEdge);
-          const newEdge: LiveCanvasEdge = outgoingEdge.byChangingStartNodeId(
+          const newEdge: GraphEdge = outgoingEdge.byChangingStartNodeId(
             newNode.id,
           );
           graph.edges.add(newEdge);
         }
         for (const incomingEdge of graph.edges.getByEndNodeId(sibling.id)) {
           graph.edges.remove(incomingEdge);
-          const newEdge: LiveCanvasEdge = incomingEdge.byChangingEndNodeId(
+          const newEdge: GraphEdge = incomingEdge.byChangingEndNodeId(
             newNode.id,
           );
           graph.edges.add(newEdge);
@@ -1471,7 +1457,7 @@ export class LiveCanvas implements ApplicationService {
     changeRecorder: LiveCanvasChangeRecorder,
   ): void {
     const graph: LiveCanvasUndoableData = this.getGraph();
-    const nodesOfLabel: LiveCanvasNode[] = graph.nodes
+    const nodesOfLabel: GraphNode[] = graph.nodes
       .getByLabel(targetLabel)
       .toArray();
 
@@ -1482,9 +1468,9 @@ export class LiveCanvas implements ApplicationService {
           if (nodesOfLabel.length < 2) {
             return;
           }
-          const sortedNodesToLayout: LiveCanvasNode[] = circularWeightedSpread(
+          const sortedNodesToLayout: GraphNode[] = circularWeightedSpread(
             nodesOfLabel,
-            (n: LiveCanvasNode): number => n.degree(graph),
+            (n: GraphNode): number => n.degree(graph),
           );
 
           const radius: number = l.radius;
@@ -1506,15 +1492,13 @@ export class LiveCanvas implements ApplicationService {
               continue;
             }
 
-            const neighbors: LiveCanvasNode[] = graph
+            const neighbors: GraphNode[] = graph
               .getNeighborsOfNode(node)
-              .filter((n: LiveCanvasNode): boolean => n.labels.has(targetLabel))
+              .filter((n: GraphNode): boolean => n.labels.has(targetLabel))
               .toArray();
             if (neighbors.length > 0) {
-              node.position = LiveCanvasPosition.average(
-                neighbors.map(
-                  (n: LiveCanvasNode): LiveCanvasPosition => n.position,
-                ),
+              node.position = ElementPosition.average(
+                neighbors.map((n: GraphNode): ElementPosition => n.position),
               );
               PhysicsSimulation.jiggle(node);
               changeRecorder.didMoveNode(node);
@@ -1534,7 +1518,7 @@ export class LiveCanvas implements ApplicationService {
   private _handleError(error: unknown): void {
     this._onEvent.next({
       type: 'CanvasEventError',
-      canvasId: this.canvasId,
+      canvas: this,
       error: error,
     });
   }
@@ -1550,11 +1534,6 @@ export class LiveCanvas implements ApplicationService {
   private _handleChangeRecorder(
     changeRecorder: LiveCanvasChangeRecorder,
   ): void {
-    changeRecorder.handleChange(
-      this._physicsWorker,
-      this._onEvent,
-      this.canvasId,
-      this.data,
-    );
+    changeRecorder.handleChange(this._physicsWorker, this._onEvent, this);
   }
 }

@@ -1,4 +1,4 @@
-import { LiveCanvasPropertyCollection } from './LiveCanvasPropertyCollection';
+import { PropertyCollection } from './PropertyCollection';
 import { z } from 'zod';
 import { SSet } from '../../set/Set';
 import type { LiveCanvasUndoableData } from '../data/LiveCanvasUndoableData';
@@ -7,7 +7,7 @@ import { Range } from '../../range/Range';
 import { ElementCreationReason } from './ElementCreationReason';
 import { LiveCanvasViewSettings } from '../data/LiveCanvasViewSettings';
 
-export class LiveCanvasEdge {
+export class GraphEdge {
   public static readonly defaultWidth: number = 2;
 
   // eslint-disable-next-line @typescript-eslint/typedef
@@ -17,7 +17,7 @@ export class LiveCanvasEdge {
     endNodeId: z.string(),
     type: z.string(),
     compressed: z.array(z.string()),
-    properties: LiveCanvasPropertyCollection.schema,
+    properties: PropertyCollection.schema,
     namesInQuery: z.array(z.string()),
     source: z.string(),
     creationAction: z.nativeEnum(ElementCreationReason),
@@ -28,7 +28,7 @@ export class LiveCanvasEdge {
   public readonly endNodeId: string;
   public readonly type: string;
   public readonly compressed: SSet<string>;
-  public readonly properties: LiveCanvasPropertyCollection;
+  public readonly properties: PropertyCollection;
   public readonly namesInQuery: SSet<string>;
   public readonly source: string;
   public readonly creationAction: ElementCreationReason;
@@ -39,7 +39,7 @@ export class LiveCanvasEdge {
     endNodeId: string;
     type: string;
     compressed: SSet<string>;
-    properties: LiveCanvasPropertyCollection;
+    properties: PropertyCollection;
     namesInQuery: SSet<string>;
     source: string;
     creationAction: ElementCreationReason;
@@ -75,16 +75,14 @@ export class LiveCanvasEdge {
     }
   }
 
-  public static fromPlain(
-    data: z.infer<typeof LiveCanvasEdge.schema>,
-  ): LiveCanvasEdge {
-    return new LiveCanvasEdge({
+  public static fromPlain(data: z.infer<typeof GraphEdge.schema>): GraphEdge {
+    return new GraphEdge({
       id: data.id,
       startNodeId: data.startNodeId,
       endNodeId: data.endNodeId,
       type: data.type,
       compressed: new SSet(data.compressed),
-      properties: LiveCanvasPropertyCollection.fromPlain(data.properties),
+      properties: PropertyCollection.fromPlain(data.properties),
       namesInQuery: new SSet(data.namesInQuery),
       source: data.source,
       creationAction: data.creationAction,
@@ -96,10 +94,9 @@ export class LiveCanvasEdge {
     viewSettings: LiveCanvasViewSettings,
   ): number {
     const toRange: Range = new Range({
-      floor: LiveCanvasEdge.defaultWidth,
+      floor: GraphEdge.defaultWidth,
       ceiling:
-        LiveCanvasEdge.defaultWidth *
-        viewSettings.compressRelationshipsWidthFactor,
+        GraphEdge.defaultWidth * viewSettings.compressRelationshipsWidthFactor,
     });
 
     const result: number = edgeWidthRange.scaleValue(
@@ -111,7 +108,7 @@ export class LiveCanvasEdge {
     return result;
   }
 
-  public isParallelTo(other: LiveCanvasEdge): boolean {
+  public isParallelTo(other: GraphEdge): boolean {
     return (
       (this.startNodeId === other.startNodeId &&
         this.endNodeId === other.endNodeId) ||
@@ -120,7 +117,7 @@ export class LiveCanvasEdge {
     );
   }
 
-  public toPlain(): z.infer<typeof LiveCanvasEdge.schema> {
+  public toPlain(): z.infer<typeof GraphEdge.schema> {
     return {
       id: this.id,
       startNodeId: this.startNodeId,
@@ -134,7 +131,7 @@ export class LiveCanvasEdge {
     };
   }
 
-  public parallelEdges(graph: LiveCanvasUndoableData): LiveCanvasEdge[] {
+  public parallelEdges(graph: LiveCanvasUndoableData): GraphEdge[] {
     // Betrachtung: Beziehungen von Knoten mit geringerer ID zu Knoten mit höherer ID.
     const correctNodeSorting: boolean =
       this.startNodeId.localeCompare(this.endNodeId) < 0;
@@ -146,10 +143,7 @@ export class LiveCanvasEdge {
       ? this.endNodeId
       : this.startNodeId;
 
-    const result: SMap<string, LiveCanvasEdge> = new SMap<
-      string,
-      LiveCanvasEdge
-    >();
+    const result: SMap<string, GraphEdge> = new SMap<string, GraphEdge>();
     for (const edge of graph.edges.getByStartAndEndNodeId(
       startNodeId,
       endNodeId,
@@ -167,14 +161,14 @@ export class LiveCanvasEdge {
   }
 
   public parallelCount(graph: LiveCanvasUndoableData): number {
-    const parallelEdges: LiveCanvasEdge[] = this.parallelEdges(graph);
+    const parallelEdges: GraphEdge[] = this.parallelEdges(graph);
 
     const parallelCount: number = parallelEdges.length;
     return parallelCount;
   }
 
   public parallelIndex(graph: LiveCanvasUndoableData): number {
-    const parallelEdges: LiveCanvasEdge[] = this.parallelEdges(graph);
+    const parallelEdges: GraphEdge[] = this.parallelEdges(graph);
 
     const selfIndex: number = parallelEdges.indexOf(this);
     const parallelCount: number = this.parallelCount(graph);
@@ -209,8 +203,8 @@ export class LiveCanvasEdge {
     return isDangling;
   }
 
-  public copy(): LiveCanvasEdge {
-    return new LiveCanvasEdge({
+  public copy(): GraphEdge {
+    return new GraphEdge({
       id: this.id,
       startNodeId: this.startNodeId,
       endNodeId: this.endNodeId,
@@ -223,8 +217,8 @@ export class LiveCanvasEdge {
     });
   }
 
-  public byChangingStartNodeId(newStartNodeId: string): LiveCanvasEdge {
-    return new LiveCanvasEdge({
+  public byChangingStartNodeId(newStartNodeId: string): GraphEdge {
+    return new GraphEdge({
       id: this.id,
       startNodeId: newStartNodeId,
       endNodeId: this.endNodeId,
@@ -237,8 +231,8 @@ export class LiveCanvasEdge {
     });
   }
 
-  public byChangingEndNodeId(newEndNodeId: string): LiveCanvasEdge {
-    return new LiveCanvasEdge({
+  public byChangingEndNodeId(newEndNodeId: string): GraphEdge {
+    return new GraphEdge({
       id: this.id,
       startNodeId: this.startNodeId,
       endNodeId: newEndNodeId,

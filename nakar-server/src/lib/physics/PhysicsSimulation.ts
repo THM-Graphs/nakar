@@ -6,7 +6,7 @@ import type { PhysicalGraph } from './physical-graph/PhysicalGraph';
 import type { PhysicalNode } from './physical-graph/PhysicalNode';
 import type { PhysicalEdge } from './physical-graph/PhysicalEdge';
 import { Range } from '../range/Range';
-import type { LiveCanvasNode } from '../room/graph/LiveCanvasNode';
+import type { GraphNode } from '../room/graph/GraphNode';
 import { PhysicsSimulationEventSlowTick } from './PhysicsSimulationEventSlowTick';
 import { Logger } from '@strapi/logger';
 import { createChildLogger } from '../logger/createChildLogger';
@@ -56,7 +56,7 @@ export class PhysicsSimulation {
     return (1 / PhysicsSimulation.FPS) * 1000;
   }
 
-  public static jiggle(node: PhysicalNode | LiveCanvasNode): void {
+  public static jiggle(node: PhysicalNode | GraphNode): void {
     const radians: number = Math.random() * Math.PI * 2;
     node.position.x += Math.cos(radians) * 10;
     node.position.y += Math.sin(radians) * 10;

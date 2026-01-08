@@ -1,7 +1,7 @@
-import { LiveCanvasLabel } from './LiveCanvasLabel';
+import { GraphLabel } from './GraphLabel';
 import { z } from 'zod';
 import { SMap } from '../../map/Map';
-import { LiveCanvasColorPreset } from './LiveCanvasColorPreset';
+import { ElementColorPreset } from './color/ElementColorPreset';
 import { SSet } from '../../set/Set';
 import type { NodeIndex } from './NodeIndex';
 
@@ -54,23 +54,20 @@ export class LiveCanvasMetaData {
     };
   }
 
-  public getLabels(nodes: NodeIndex): SMap<string, LiveCanvasLabel> {
+  public getLabels(nodes: NodeIndex): SMap<string, GraphLabel> {
     // TODO: Use index and save color in DB
-    const labels: SMap<string, LiveCanvasLabel> = new SMap<
-      string,
-      LiveCanvasLabel
-    >();
+    const labels: SMap<string, GraphLabel> = new SMap<string, GraphLabel>();
     for (const node of nodes.nodes) {
       for (const label of node.labels) {
-        const foundEntry: LiveCanvasLabel | undefined = labels.get(label);
+        const foundEntry: GraphLabel | undefined = labels.get(label);
 
         if (!foundEntry) {
-          const newColor: LiveCanvasColorPreset = LiveCanvasColorPreset.create({
+          const newColor: ElementColorPreset = ElementColorPreset.create({
             index: labels.size,
           });
           labels.set(
             label,
-            new LiveCanvasLabel({
+            new GraphLabel({
               color: newColor,
               count: 1,
               sources: new SSet([node.source]),

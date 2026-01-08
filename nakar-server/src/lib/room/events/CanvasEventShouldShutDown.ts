@@ -1,4 +1,6 @@
+import { LiveCanvas } from '../LiveCanvas';
+
 export interface CanvasEventShouldShutDown {
   type: 'CanvasEventShouldShutDown';
-  canvasId: string;
+  canvas: LiveCanvas;
 }

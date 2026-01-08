@@ -361,7 +361,7 @@ export class SocketIOService implements ApplicationService {
     this._canvasService.onEvent$.subscribe((event: CanvasEvent): void => {
       if (event.type !== 'CanvasEventRoomPhysicsUpdated') {
         this._logger.debug(
-          `Did receive from room service (room ${event.canvasId}): ${event.type}`,
+          `Did receive from canvas (canvas ${event.canvas.canvasId}): ${event.type}`,
         );
       }
       Promise.resolve(
@@ -372,7 +372,7 @@ export class SocketIOService implements ApplicationService {
             (message: CanvasEventGraphTableChanged): void => {
               const table: SchemaGraphTable =
                 this._schemaFactory.createSchemaTable(message.table);
-              this.sendToRoom(message.canvasId, {
+              this.sendToRoom(message.canvas.canvasId, {
                 table: table,
                 type: 'WSEventGraphTableChanged',
               });
@@ -386,7 +386,7 @@ export class SocketIOService implements ApplicationService {
                   message.graph,
                   message.undoInfo,
                 );
-              this.sendToRoom(message.canvasId, {
+              this.sendToRoom(message.canvas.canvasId, {
                 metaData: metaData,
                 type: 'WSEventGraphMetaDataChanged',
               });
@@ -396,11 +396,10 @@ export class SocketIOService implements ApplicationService {
             { type: 'CanvasEventGraphElementsChanged' },
             (message: CanvasEventGraphElementsChanged): void => {
               (async (): Promise<void> => {
-                const liveCanvas: LiveCanvas =
-                  this._canvasService.getCanvasWithId(message.canvasId);
-
                 const canvas: Result<'api::v2-canvas.v2-canvas'> =
-                  await this._databaseService.getCanvas(message.canvasId);
+                  await this._databaseService.getCanvas(
+                    message.canvas.canvasId,
+                  );
 
                 const project: Result<'api::v2-project.v2-project'> =
                   await this._databaseService.getProjectOfCanvas(canvas);
@@ -415,9 +414,9 @@ export class SocketIOService implements ApplicationService {
                   await this._schemaFactory.createSchemaGraphElements(
                     message.graph,
                     notes,
-                    liveCanvas.data.viewSettings,
+                    message.canvas.data.viewSettings,
                   );
-                this.sendToRoom(message.canvasId, {
+                this.sendToRoom(message.canvas.canvasId, {
                   elements: graphElements,
                   type: 'WSEventGraphElementsChanged',
                 });
@@ -430,7 +429,7 @@ export class SocketIOService implements ApplicationService {
             { type: 'CanvasEventRoomPhysicsUpdated' },
             (message: CanvasEventRoomPhysicsUpdated): void => {
               for (const socket of this.sockets) {
-                if (socket.room !== message.canvasId) {
+                if (socket.room !== message.canvas.canvasId) {
                   continue;
                 }
 
@@ -467,7 +466,7 @@ export class SocketIOService implements ApplicationService {
                   locked: lock[1],
                 });
               }
-              this.sendToRoom(message.canvasId, {
+              this.sendToRoom(message.canvas.canvasId, {
                 type: 'WSEventSetNodeLocks',
                 locks: locks,
               } satisfies SchemaWsEventSetNodeLocks);
@@ -476,7 +475,7 @@ export class SocketIOService implements ApplicationService {
           .with(
             { type: 'CanvasEventProgressChanged' },
             (message: CanvasEventProgressChanged): void => {
-              this.sendToRoom(message.canvasId, {
+              this.sendToRoom(message.canvas.canvasId, {
                 type: 'WSEventProgress',
                 message: message.message,
                 progress: message.progress,
@@ -486,7 +485,7 @@ export class SocketIOService implements ApplicationService {
           .with(
             { type: 'CanvasEventProgressCleared' },
             (message: CanvasEventProgressCleared): void => {
-              this.sendToRoom(message.canvasId, {
+              this.sendToRoom(message.canvas.canvasId, {
                 type: 'WSEventClearProgress',
               } satisfies SchemaWsEventClearProgress);
             },
@@ -494,7 +493,7 @@ export class SocketIOService implements ApplicationService {
           .with(
             { type: 'CanvasEventKick' },
             (message: CanvasEventEventKick): void => {
-              this.sendToRoom(message.canvasId, {
+              this.sendToRoom(message.canvas.canvasId, {
                 type: 'WSEventKick',
               } satisfies SchemaWsEventKick);
             },
@@ -502,7 +501,7 @@ export class SocketIOService implements ApplicationService {
           .with(
             { type: 'CanvasEventNotAllNodesLoaded' },
             (message: CanvasEventNotAllNodesLoaded): void => {
-              this.sendToRoom(message.canvasId, {
+              this.sendToRoom(message.canvas.canvasId, {
                 type: 'WSEventNotification',
                 notification: {
                   message: `Not all graph elements loaded. Did load ${message.loadedCount.toString()} elements.`,
@@ -515,7 +514,7 @@ export class SocketIOService implements ApplicationService {
           .with(
             { type: 'CanvasEventError' },
             (message: CanvasEventError): void => {
-              this.handleRoomError(message.canvasId, message.error);
+              this.handleRoomError(message.canvas.canvasId, message.error);
             },
           )
           .with({ type: 'CanvasEventShouldShutDown' }, (): void => {
@@ -524,7 +523,7 @@ export class SocketIOService implements ApplicationService {
           .with(
             { type: 'CanvasEventViewSettingsChanged' },
             (message: CanvasEventViewSettingsChanged): void => {
-              this.sendToRoom(message.canvasId, {
+              this.sendToRoom(message.canvas.canvasId, {
                 type: 'WSEventViewSettingsChanged',
                 viewSettings: message.viewSettings.toSchema(),
               } satisfies SchemaWsEventViewSettingsChanged);

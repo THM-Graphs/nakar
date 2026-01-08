@@ -1,5 +1,7 @@
+import { LiveCanvas } from '../LiveCanvas';
+
 export interface CanvasEventError {
   type: 'CanvasEventError';
-  canvasId: string;
+  canvas: LiveCanvas;
   error: unknown;
 }

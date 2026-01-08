@@ -1,22 +1,22 @@
-import { LiveCanvasPosition } from './LiveCanvasPosition';
-import { LiveCanvasPropertyCollection } from './LiveCanvasPropertyCollection';
+import { ElementPosition } from './ElementPosition';
+import { PropertyCollection } from './PropertyCollection';
 import { z } from 'zod';
 import { SSet } from '../../set/Set';
-import { LiveCanvasEdge } from './LiveCanvasEdge';
+import { GraphEdge } from './GraphEdge';
 import { LiveCanvasUndoableData } from '../data/LiveCanvasUndoableData';
 import { ElementCreationReason } from './ElementCreationReason';
 import { Range } from '../../range/Range';
 import { LiveCanvasViewSettings } from '../data/LiveCanvasViewSettings';
 
-export class LiveCanvasNode {
+export class GraphNode {
   public static readonly defaultRadius: number = 40;
 
   // eslint-disable-next-line @typescript-eslint/typedef
   public static readonly schema = z.object({
     id: z.string(),
     labels: z.array(z.string()),
-    properties: LiveCanvasPropertyCollection.schema,
-    position: LiveCanvasPosition.schema,
+    properties: PropertyCollection.schema,
+    position: ElementPosition.schema,
     namesInQuery: z.array(z.string()),
     locked: z.boolean(),
     source: z.string(),
@@ -26,7 +26,7 @@ export class LiveCanvasNode {
 
   public readonly id: string;
   public readonly labels: SSet<string>;
-  public readonly properties: LiveCanvasPropertyCollection;
+  public readonly properties: PropertyCollection;
   public readonly namesInQuery: SSet<string>;
   public readonly grabs: SSet<string>;
   public readonly source: string;
@@ -34,13 +34,13 @@ export class LiveCanvasNode {
   public readonly creationAction: ElementCreationReason;
 
   private _locked: boolean;
-  private _position: LiveCanvasPosition;
+  private _position: ElementPosition;
 
   public constructor(data: {
     id: string;
     labels: SSet<string>;
-    properties: LiveCanvasPropertyCollection;
-    position: LiveCanvasPosition;
+    properties: PropertyCollection;
+    position: ElementPosition;
     namesInQuery: SSet<string>;
     locked: boolean;
     grabs: SSet<string>;
@@ -64,7 +64,7 @@ export class LiveCanvasNode {
     return this._locked;
   }
 
-  public get position(): LiveCanvasPosition {
+  public get position(): ElementPosition {
     return this._position;
   }
 
@@ -84,16 +84,16 @@ export class LiveCanvasNode {
     this._locked = newValue;
   }
 
-  public set position(value: LiveCanvasPosition) {
+  public set position(value: ElementPosition) {
     this._position = value;
   }
 
-  public static fromPlain(data: z.infer<typeof this.schema>): LiveCanvasNode {
-    return new LiveCanvasNode({
+  public static fromPlain(data: z.infer<typeof this.schema>): GraphNode {
+    return new GraphNode({
       id: data.id,
       labels: new SSet(data.labels),
-      properties: LiveCanvasPropertyCollection.fromPlain(data.properties),
-      position: LiveCanvasPosition.fromPlain(data.position),
+      properties: PropertyCollection.fromPlain(data.properties),
+      position: ElementPosition.fromPlain(data.position),
       namesInQuery: new SSet(data.namesInQuery),
       locked: data.locked,
       grabs: new SSet(),
@@ -122,7 +122,7 @@ export class LiveCanvasNode {
     graph: LiveCanvasUndoableData,
   ): number {
     if (!viewSettings.growNodesBasedOnDegree) {
-      return LiveCanvasNode.defaultRadius;
+      return GraphNode.defaultRadius;
     }
 
     const toRange: Range = new Range({
@@ -135,11 +135,11 @@ export class LiveCanvasNode {
         toRange,
         this.degree(graph),
         viewSettings.scaleType,
-      ) * LiveCanvasNode.defaultRadius
+      ) * GraphNode.defaultRadius
     );
   }
 
-  public toPlain(): z.infer<typeof LiveCanvasNode.schema> {
+  public toPlain(): z.infer<typeof GraphNode.schema> {
     return {
       id: this.id,
       labels: this.labels.toArray(),
@@ -161,7 +161,7 @@ export class LiveCanvasNode {
     const inRelsCount: number = graph.edges
       .getByEndNodeId(this.id)
       .reduce(
-        (count: number, rel: LiveCanvasEdge): number =>
+        (count: number, rel: GraphEdge): number =>
           count + rel.representationCount,
         0,
       );
@@ -173,7 +173,7 @@ export class LiveCanvasNode {
     const outRelsCount: number = graph.edges
       .getByStartNodeId(this.id)
       .reduce(
-        (count: number, rel: LiveCanvasEdge): number =>
+        (count: number, rel: GraphEdge): number =>
           count + rel.representationCount,
         0,
       );
@@ -181,8 +181,8 @@ export class LiveCanvasNode {
     return outRelsCount;
   }
 
-  public copy(): LiveCanvasNode {
-    return new LiveCanvasNode({
+  public copy(): GraphNode {
+    return new GraphNode({
       id: this.id,
       labels: this.labels.copy(),
       properties: this.properties.copy(),

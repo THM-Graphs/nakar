@@ -15,7 +15,7 @@ import { ElementCreationReason } from '../../room/graph/ElementCreationReason';
 import { SSet } from '../../set/Set';
 import { Neo4jSearchCapabilities } from '../../neo4j/Neo4jSearchCapabilities';
 import { Result } from '@strapi/types/dist/modules/documents/result';
-import { LiveCanvasNode } from '../../room/graph/LiveCanvasNode';
+import { GraphNode } from '../../room/graph/GraphNode';
 
 export class DatabaseRouter {
   public constructor(
@@ -93,7 +93,7 @@ export class DatabaseRouter {
     return {
       nodes: graph.nodes.nodes
         .toArray()
-        .map((node: LiveCanvasNode): SchemaNodePreview => {
+        .map((node: GraphNode): SchemaNodePreview => {
           return {
             id: node.id,
             title: node.getTitle(),

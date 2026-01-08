@@ -1,21 +1,21 @@
 import { SMap } from '../../map/Map';
-import { LiveCanvasEdge } from './LiveCanvasEdge';
+import { GraphEdge } from './GraphEdge';
 import { SSet } from '../../set/Set';
 import type { Neo4jRelationship } from '../../neo4j/Neo4jRelationship';
-import { LiveCanvasPropertyCollection } from './LiveCanvasPropertyCollection';
+import { PropertyCollection } from './PropertyCollection';
 import { Range } from '../../range/Range';
 import type { ElementCreationReason } from './ElementCreationReason';
 
 export class EdgeIndex {
-  private readonly _byId: SMap<string, LiveCanvasEdge>;
+  private readonly _byId: SMap<string, GraphEdge>;
 
-  private readonly _byStartNodeId: SMap<string, SMap<string, LiveCanvasEdge>>;
-  private readonly _byEndNodeId: SMap<string, SMap<string, LiveCanvasEdge>>;
+  private readonly _byStartNodeId: SMap<string, SMap<string, GraphEdge>>;
+  private readonly _byEndNodeId: SMap<string, SMap<string, GraphEdge>>;
   private readonly _byStartAndEndNodeId: SMap<
     string,
-    SMap<string, SMap<string, LiveCanvasEdge>>
+    SMap<string, SMap<string, GraphEdge>>
   >;
-  private readonly _byType: SMap<string, SSet<LiveCanvasEdge>>;
+  private readonly _byType: SMap<string, SSet<GraphEdge>>;
 
   /* Maps type => count */
   private readonly _typeHistogram: SMap<string, number>;
@@ -25,7 +25,7 @@ export class EdgeIndex {
 
   private readonly _compressed: SSet<string>;
 
-  public constructor(edges: LiveCanvasEdge[]) {
+  public constructor(edges: GraphEdge[]) {
     this._byId = new SMap();
     this._byType = new SMap();
     this._byStartNodeId = new SMap();
@@ -40,7 +40,7 @@ export class EdgeIndex {
     }
   }
 
-  public get edges(): SSet<LiveCanvasEdge> {
+  public get edges(): SSet<GraphEdge> {
     return new SSet(this._byId.values());
   }
 
@@ -66,7 +66,7 @@ export class EdgeIndex {
     }
   }
 
-  public add(edge: LiveCanvasEdge): boolean {
+  public add(edge: GraphEdge): boolean {
     if (this._byId.has(edge.id)) {
       return false;
     }
@@ -141,13 +141,13 @@ export class EdgeIndex {
     relationship: Neo4jRelationship,
     creationAction: ElementCreationReason,
   ): boolean {
-    const mutableEdge: LiveCanvasEdge = new LiveCanvasEdge({
+    const mutableEdge: GraphEdge = new GraphEdge({
       id: relationship.relationship.elementId,
       startNodeId: relationship.relationship.startNodeElementId,
       endNodeId: relationship.relationship.endNodeElementId,
       type: relationship.relationship.type,
       compressed: new SSet(),
-      properties: LiveCanvasPropertyCollection.fromRecord(
+      properties: PropertyCollection.fromRecord(
         relationship.relationship.properties,
       ),
       namesInQuery: relationship.keys,
@@ -159,7 +159,7 @@ export class EdgeIndex {
     return didAdd;
   }
 
-  public remove(edge: LiveCanvasEdge): boolean {
+  public remove(edge: GraphEdge): boolean {
     if (!this.has(edge.id)) {
       return false;
     }
@@ -186,11 +186,11 @@ export class EdgeIndex {
     return true;
   }
 
-  public get(id: string): LiveCanvasEdge | null {
+  public get(id: string): GraphEdge | null {
     return this._byId.get(id) ?? null;
   }
 
-  public getByType(type: string): SSet<LiveCanvasEdge> {
+  public getByType(type: string): SSet<GraphEdge> {
     return this._byType.get(type) ?? new SSet();
   }
 
@@ -198,39 +198,39 @@ export class EdgeIndex {
     return this._byId.has(id);
   }
 
-  public getByStartNodeId(startNodeId: string): LiveCanvasEdge[] {
+  public getByStartNodeId(startNodeId: string): GraphEdge[] {
     return (
       this._byStartNodeId
         .get(startNodeId)
         ?.toArray()
-        .map((v: [string, LiveCanvasEdge]): LiveCanvasEdge => v[1]) ?? []
+        .map((v: [string, GraphEdge]): GraphEdge => v[1]) ?? []
     );
   }
 
-  public getByEndNodeId(endNodeId: string): LiveCanvasEdge[] {
+  public getByEndNodeId(endNodeId: string): GraphEdge[] {
     return (
       this._byEndNodeId
         .get(endNodeId)
         ?.toArray()
-        .map((v: [string, LiveCanvasEdge]): LiveCanvasEdge => v[1]) ?? []
+        .map((v: [string, GraphEdge]): GraphEdge => v[1]) ?? []
     );
   }
 
   public getByStartAndEndNodeId(
     startNodeId: string,
     endNodeId: string,
-  ): LiveCanvasEdge[] {
+  ): GraphEdge[] {
     return (
       this._byStartAndEndNodeId
         .get(startNodeId)
         ?.get(endNodeId)
         ?.toArray()
-        .map((v: [string, LiveCanvasEdge]): LiveCanvasEdge => v[1]) ?? []
+        .map((v: [string, GraphEdge]): GraphEdge => v[1]) ?? []
     );
   }
 
-  public getByStartOrEndNodeId(nodeId: string): SSet<LiveCanvasEdge> {
-    const result: SSet<LiveCanvasEdge> = new SSet<LiveCanvasEdge>();
+  public getByStartOrEndNodeId(nodeId: string): SSet<GraphEdge> {
+    const result: SSet<GraphEdge> = new SSet<GraphEdge>();
     for (const startNodeEdge of this.getByStartNodeId(nodeId)) {
       result.add(startNodeEdge);
     }
@@ -245,7 +245,7 @@ export class EdgeIndex {
       return Range.one();
     }
     const representationCounts: number[] = this.edges
-      .map((edge: LiveCanvasEdge): number => edge.representationCount)
+      .map((edge: GraphEdge): number => edge.representationCount)
       .toArray();
 
     const range: Range = new Range({
@@ -258,7 +258,7 @@ export class EdgeIndex {
 
   public copy(): EdgeIndex {
     return new EdgeIndex(
-      this.edges.toArray().map((e: LiveCanvasEdge): LiveCanvasEdge => e.copy()),
+      this.edges.toArray().map((e: GraphEdge): GraphEdge => e.copy()),
     );
   }
 

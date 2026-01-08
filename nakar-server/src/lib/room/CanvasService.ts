@@ -156,13 +156,12 @@ export class CanvasService implements ApplicationService {
       return;
     }
 
-    this._liveCanvases.delete(canvas.documentId);
-
     this._onEvent.next({
       type: 'CanvasEventKick',
-      canvasId: canvas.documentId,
+      canvas: liveCanvas,
     } satisfies CanvasEventEventKick);
 
+    this._liveCanvases.delete(canvas.documentId);
     await liveCanvas.destroy();
   }
 }

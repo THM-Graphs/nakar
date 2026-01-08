@@ -1,13 +1,13 @@
-import type { LiveCanvasColor } from './LiveCanvasColor';
+import type { ElementColor } from './color/ElementColor';
 import type { SSet } from '../../set/Set';
 
-export class LiveCanvasLabel {
-  public readonly color: LiveCanvasColor;
+export class GraphLabel {
+  public readonly color: ElementColor;
   public readonly count: number;
   public readonly sources: SSet<string>;
 
   public constructor(data: {
-    color: LiveCanvasColor;
+    color: ElementColor;
     count: number;
     sources: SSet<string>;
   }) {
@@ -16,8 +16,8 @@ export class LiveCanvasLabel {
     this.sources = data.sources;
   }
 
-  public byIncrementingCount(source: string): LiveCanvasLabel {
-    return new LiveCanvasLabel({
+  public byIncrementingCount(source: string): GraphLabel {
+    return new GraphLabel({
       color: this.color,
       count: this.count + 1,
       sources: this.sources.byAdding(source),

@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { SMap } from '../../map/Map';
 
-export class LiveCanvasPropertyCollection {
+export class PropertyCollection {
   // eslint-disable-next-line @typescript-eslint/typedef
   public static readonly schema = z.object({
     properties: z.record(z.unknown()),
@@ -13,22 +13,20 @@ export class LiveCanvasPropertyCollection {
     this.properties = data.properties;
   }
 
-  public static empty(): LiveCanvasPropertyCollection {
-    return new LiveCanvasPropertyCollection({ properties: new SMap() });
+  public static empty(): PropertyCollection {
+    return new PropertyCollection({ properties: new SMap() });
   }
 
   public static fromPlain(
     data: z.infer<typeof this.schema>,
-  ): LiveCanvasPropertyCollection {
-    return new LiveCanvasPropertyCollection({
+  ): PropertyCollection {
+    return new PropertyCollection({
       properties: SMap.fromRecord(data.properties),
     });
   }
 
-  public static fromRecord(
-    data: Record<string, unknown>,
-  ): LiveCanvasPropertyCollection {
-    return new LiveCanvasPropertyCollection({
+  public static fromRecord(data: Record<string, unknown>): PropertyCollection {
+    return new PropertyCollection({
       properties: SMap.fromRecord(data),
     });
   }
@@ -50,14 +48,14 @@ export class LiveCanvasPropertyCollection {
     return null;
   }
 
-  public toPlain(): z.infer<typeof LiveCanvasPropertyCollection.schema> {
+  public toPlain(): z.infer<typeof PropertyCollection.schema> {
     return {
       properties: this.properties.toRecord(),
     };
   }
 
-  public copy(): LiveCanvasPropertyCollection {
-    return new LiveCanvasPropertyCollection({
+  public copy(): PropertyCollection {
+    return new PropertyCollection({
       properties: this.properties.copy(),
     });
   }

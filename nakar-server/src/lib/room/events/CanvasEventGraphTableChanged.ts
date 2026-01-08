@@ -1,7 +1,8 @@
 import type { SMap } from '../../map/Map';
+import { LiveCanvas } from '../LiveCanvas';
 
 export interface CanvasEventGraphTableChanged {
   type: 'CanvasEventGraphTableChanged';
-  canvasId: string;
+  canvas: LiveCanvas;
   table: SMap<string, unknown>[];
 }

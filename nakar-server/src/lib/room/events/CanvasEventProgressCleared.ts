@@ -1,4 +1,6 @@
+import { LiveCanvas } from '../LiveCanvas';
+
 export interface CanvasEventProgressCleared {
   type: 'CanvasEventProgressCleared';
-  canvasId: string;
+  canvas: LiveCanvas;
 }

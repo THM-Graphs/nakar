@@ -1,7 +1,8 @@
 import type { SMap } from '../../map/Map';
+import { LiveCanvas } from '../LiveCanvas';
 
 export interface CanvasEventNodeLocksUpdated {
   type: 'CanvasEventNodeLocksUpdated';
-  canvasId: string;
+  canvas: LiveCanvas;
   locks: SMap<string, boolean>;
 }

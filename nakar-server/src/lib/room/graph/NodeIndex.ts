@@ -1,18 +1,18 @@
 import { SMap } from '../../map/Map';
-import { LiveCanvasNode } from './LiveCanvasNode';
+import { GraphNode } from './GraphNode';
 import { SSet } from '../../set/Set';
 import type { Neo4jNode } from '../../neo4j/Neo4jNode';
-import { LiveCanvasPosition } from './LiveCanvasPosition';
-import { LiveCanvasPropertyCollection } from './LiveCanvasPropertyCollection';
+import { ElementPosition } from './ElementPosition';
+import { PropertyCollection } from './PropertyCollection';
 import { Range } from '../../range/Range';
 import type { LiveCanvasUndoableData } from '../data/LiveCanvasUndoableData';
 import { PhysicsSimulation } from '../../physics/PhysicsSimulation';
 import { ElementCreationReason } from './ElementCreationReason';
 
 export class NodeIndex {
-  private readonly _byId: SMap<string, LiveCanvasNode>;
+  private readonly _byId: SMap<string, GraphNode>;
 
-  private readonly _byLabel: SMap<string, SSet<LiveCanvasNode>>;
+  private readonly _byLabel: SMap<string, SSet<GraphNode>>;
 
   /* Maps label => count */
   private readonly _labelHistogram: SMap<string, number>;
@@ -20,11 +20,11 @@ export class NodeIndex {
   /* Maps key => value => count */
   private readonly _propertyHistogram: SMap<string, SMap<string, number>>;
 
-  private readonly _bySource: SMap<string, SSet<LiveCanvasNode>>;
+  private readonly _bySource: SMap<string, SSet<GraphNode>>;
 
   private readonly _compressed: SSet<string>;
 
-  public constructor(nodes: LiveCanvasNode[]) {
+  public constructor(nodes: GraphNode[]) {
     this._byId = new SMap();
     this._byLabel = new SMap();
     this._labelHistogram = new SMap();
@@ -37,7 +37,7 @@ export class NodeIndex {
     }
   }
 
-  public get nodes(): SSet<LiveCanvasNode> {
+  public get nodes(): SSet<GraphNode> {
     return new SSet(this._byId.values());
   }
 
@@ -63,7 +63,7 @@ export class NodeIndex {
     }
   }
 
-  public add(node: LiveCanvasNode): boolean {
+  public add(node: GraphNode): boolean {
     if (this._byId.has(node.id)) {
       return false;
     }
@@ -105,12 +105,12 @@ export class NodeIndex {
   public addNeo4jNode(
     node: Neo4jNode,
     creationAction: ElementCreationReason,
-  ): LiveCanvasNode | null {
-    const mutableNode: LiveCanvasNode = new LiveCanvasNode({
+  ): GraphNode | null {
+    const mutableNode: GraphNode = new GraphNode({
       id: node.node.elementId,
       labels: new SSet<string>(node.node.labels),
-      properties: LiveCanvasPropertyCollection.fromRecord(node.node.properties),
-      position: LiveCanvasPosition.default(),
+      properties: PropertyCollection.fromRecord(node.node.properties),
+      position: ElementPosition.default(),
       namesInQuery: node.keys,
       locked: false,
       grabs: new SSet(),
@@ -128,9 +128,9 @@ export class NodeIndex {
     }
   }
 
-  public remove(nodeReference: string | LiveCanvasNode): boolean {
-    const node: LiveCanvasNode | undefined =
-      nodeReference instanceof LiveCanvasNode
+  public remove(nodeReference: string | GraphNode): boolean {
+    const node: GraphNode | undefined =
+      nodeReference instanceof GraphNode
         ? nodeReference
         : this._byId.get(nodeReference);
     if (node == null) {
@@ -161,19 +161,19 @@ export class NodeIndex {
     return this._byId.has(id);
   }
 
-  public has(node: LiveCanvasNode | string): boolean {
+  public has(node: GraphNode | string): boolean {
     return this._byId.has(typeof node === 'string' ? node : node.id);
   }
 
-  public get(id: string): LiveCanvasNode | null {
+  public get(id: string): GraphNode | null {
     return this._byId.get(id) ?? null;
   }
 
-  public getByLabel(label: string): SSet<LiveCanvasNode> {
+  public getByLabel(label: string): SSet<GraphNode> {
     return this._byLabel.get(label) ?? new SSet();
   }
 
-  public getBySource(source: string): SSet<LiveCanvasNode> {
+  public getBySource(source: string): SSet<GraphNode> {
     return this._bySource.get(source) ?? new SSet();
   }
 
@@ -182,7 +182,7 @@ export class NodeIndex {
       (
         akku: SSet<string>,
         key: string,
-        value: SSet<LiveCanvasNode>,
+        value: SSet<GraphNode>,
       ): SSet<string> => {
         if (value.size === 0) {
           return akku;
@@ -196,13 +196,13 @@ export class NodeIndex {
 
   public copy(): NodeIndex {
     return new NodeIndex(
-      this.nodes.toArray().map((n: LiveCanvasNode): LiveCanvasNode => n.copy()),
+      this.nodes.toArray().map((n: GraphNode): GraphNode => n.copy()),
     );
   }
 
   public getNodeDegreeRange(graph: LiveCanvasUndoableData): Range {
     const degrees: number[] = this.nodes
-      .map((node: LiveCanvasNode): number => node.degree(graph))
+      .map((node: GraphNode): number => node.degree(graph))
       .toArray();
 
     if (degrees.length === 0) {

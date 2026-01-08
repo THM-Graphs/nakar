@@ -5,9 +5,9 @@ import { RoomWorkerData } from '../room-worker/RoomWorkerData';
 import path from 'path';
 import { WTAction } from '../room-worker/worker-events/WTAction';
 import { Observable, Subject } from 'rxjs';
-import type { WTPhysicalNode } from '../room-worker/worker-events/WTPhysicalNode';
 import { Logger } from '@strapi/logger';
 import { createChildLogger } from '../logger/createChildLogger';
+import { WTPhysicalNode } from '../room-worker/worker-events/WTPhysicalNode';
 
 export class PhysicsWorker {
   private readonly _logger: Logger = createChildLogger(this);

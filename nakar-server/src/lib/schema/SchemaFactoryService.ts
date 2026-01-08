@@ -28,13 +28,13 @@ import {
   SchemaUser,
 } from '../../../src-gen/schema';
 import { LiveCanvasUndoableData } from '../room/data/LiveCanvasUndoableData';
-import { LiveCanvasNode } from '../room/graph/LiveCanvasNode';
-import { LiveCanvasEdge } from '../room/graph/LiveCanvasEdge';
-import { LiveCanvasLabel } from '../room/graph/LiveCanvasLabel';
+import { GraphNode } from '../room/graph/GraphNode';
+import { GraphEdge } from '../room/graph/GraphEdge';
+import { GraphLabel } from '../room/graph/GraphLabel';
 import { SMap } from '../map/Map';
 import { LiveCanvasMetaData } from '../room/graph/LiveCanvasMetaData';
 import { SSet } from '../set/Set';
-import { LiveCanvasPropertyCollection } from '../room/graph/LiveCanvasPropertyCollection';
+import { PropertyCollection } from '../room/graph/PropertyCollection';
 import { DatabaseService } from '../database/DatabaseService';
 import { DatabaseReferenceCache } from './DatabaseReferenceCache';
 import { UndoWrapperInfo } from '../undo/UndoWrapperInfo';
@@ -314,7 +314,7 @@ export class SchemaFactoryService implements ApplicationService {
 
     const result: SchemaGraphElements = {
       nodes: await graph.nodes.nodes.asyncFlatMap(
-        async (node: LiveCanvasNode): Promise<SchemaNode> =>
+        async (node: GraphNode): Promise<SchemaNode> =>
           await this._createSchemaNode(
             node,
             graph,
@@ -325,7 +325,7 @@ export class SchemaFactoryService implements ApplicationService {
           ),
       ),
       edges: await graph.edges.edges.asyncFlatMap(
-        async (edge: LiveCanvasEdge): Promise<SchemaEdge> =>
+        async (edge: GraphEdge): Promise<SchemaEdge> =>
           await this._createSchemaEdge(
             edge,
             graph,
@@ -337,10 +337,7 @@ export class SchemaFactoryService implements ApplicationService {
       labels: await graph.metaData
         .getLabels(graph.nodes)
         .asyncFlatMap(
-          async (
-            id: string,
-            label: LiveCanvasLabel,
-          ): Promise<SchemaGraphLabel> =>
+          async (id: string, label: GraphLabel): Promise<SchemaGraphLabel> =>
             await this._createSchemaGraphLabel(id, label, databaseCache),
         ),
       histogram: this._createSchemaHistogram(graph),
@@ -585,8 +582,7 @@ export class SchemaFactoryService implements ApplicationService {
       0,
     );
     const degreeCount: number = graph.nodes.nodes.reduce(
-      (degree: number, node: LiveCanvasNode): number =>
-        degree + node.degree(graph),
+      (degree: number, node: GraphNode): number => degree + node.degree(graph),
       0,
     );
     const result: SchemaHistogram = {
@@ -700,7 +696,7 @@ export class SchemaFactoryService implements ApplicationService {
         ),
       nodes: graph.nodes.nodes
         .toArray()
-        .map((node: LiveCanvasNode): NodeHistogramEntry => {
+        .map((node: GraphNode): NodeHistogramEntry => {
           return {
             id: node.id,
             title: node.getTitle(),
@@ -725,20 +721,18 @@ export class SchemaFactoryService implements ApplicationService {
   }
 
   private async _createSchemaNode(
-    node: LiveCanvasNode,
+    node: GraphNode,
     graph: LiveCanvasUndoableData,
     notes: IndexedNoteCollection,
     databaseCache: DatabaseReferenceCache,
     viewSettings: LiveCanvasViewSettings,
     degreeRange: Range,
   ): Promise<SchemaNode> {
-    const incomingEdges: LiveCanvasEdge[] = graph.edges.getByEndNodeId(node.id);
-    const outgoingEdges: LiveCanvasEdge[] = graph.edges.getByStartNodeId(
-      node.id,
-    );
+    const incomingEdges: GraphEdge[] = graph.edges.getByEndNodeId(node.id);
+    const outgoingEdges: GraphEdge[] = graph.edges.getByStartNodeId(node.id);
     const squashToTypeMap = (
       akku: SMap<string, number>,
-      next: LiveCanvasEdge,
+      next: GraphEdge,
     ): SMap<string, number> =>
       akku.bySetting(
         next.type,
@@ -799,14 +793,14 @@ export class SchemaFactoryService implements ApplicationService {
   }
 
   private async _createSchemaEdge(
-    edge: LiveCanvasEdge,
+    edge: GraphEdge,
     graph: LiveCanvasUndoableData,
     databaseCcache: DatabaseReferenceCache,
     viewSettings: LiveCanvasViewSettings,
     edgeWidthRange: Range,
   ): Promise<SchemaEdge> {
-    const sourceNode: LiveCanvasNode | null = graph.nodes.get(edge.startNodeId);
-    const targetNode: LiveCanvasNode | null = graph.nodes.get(edge.endNodeId);
+    const sourceNode: GraphNode | null = graph.nodes.get(edge.startNodeId);
+    const targetNode: GraphNode | null = graph.nodes.get(edge.endNodeId);
     return {
       id: edge.id,
       startNodeId: edge.startNodeId,
@@ -839,7 +833,7 @@ export class SchemaFactoryService implements ApplicationService {
   }
 
   private _createSchemaGraphProperties(
-    mutableProperties: LiveCanvasPropertyCollection,
+    mutableProperties: PropertyCollection,
   ): SchemaGraphProperty[] {
     return mutableProperties.properties
       .toArray()
@@ -857,7 +851,7 @@ export class SchemaFactoryService implements ApplicationService {
 
   private async _createSchemaGraphLabel(
     id: string,
-    label: LiveCanvasLabel,
+    label: GraphLabel,
     databaseCache: DatabaseReferenceCache,
   ): Promise<SchemaGraphLabel> {
     return {
@@ -889,7 +883,7 @@ export class SchemaFactoryService implements ApplicationService {
         (
           nodeReference: Result<'api::v2-node-reference.v2-node-reference'>,
         ): SchemaNodePreview => {
-          const node: LiveCanvasNode | null = graph.nodes.get(
+          const node: GraphNode | null = graph.nodes.get(
             nodeReference.nodeId ?? '',
           );
           return {

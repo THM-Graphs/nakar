@@ -1,7 +1,8 @@
 import { LiveCanvasViewSettings } from '../data/LiveCanvasViewSettings';
+import { LiveCanvas } from '../LiveCanvas';
 
 export interface CanvasEventViewSettingsChanged {
   type: 'CanvasEventViewSettingsChanged';
-  canvasId: string;
+  canvas: LiveCanvas;
   viewSettings: LiveCanvasViewSettings;
 }

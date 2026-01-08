@@ -1,7 +1,7 @@
-import type { SchemaColor } from '../../../../src-gen/schema';
+import type { SchemaColor } from '../../../../../src-gen/schema';
 import z from 'zod';
 
-export abstract class LiveCanvasColor {
+export abstract class ElementColor {
   // eslint-disable-next-line @typescript-eslint/typedef
   public static readonly schemaCustom = z.object({
     type: z.literal('custom'),
@@ -24,10 +24,10 @@ export abstract class LiveCanvasColor {
 
   // eslint-disable-next-line @typescript-eslint/typedef
   public static readonly schema = z.union([
-    LiveCanvasColor.schemaCustom,
-    LiveCanvasColor.schemaPreset,
+    ElementColor.schemaCustom,
+    ElementColor.schemaPreset,
   ]);
 
   public abstract toDto(): SchemaColor;
-  public abstract toPlain(): z.infer<typeof LiveCanvasColor.schema>;
+  public abstract toPlain(): z.infer<typeof ElementColor.schema>;
 }

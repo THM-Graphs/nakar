@@ -1,15 +1,15 @@
 import { SMap } from '../../map/Map';
-import { LiveCanvasNode } from '../graph/LiveCanvasNode';
+import { GraphNode } from '../graph/GraphNode';
 import { SSet } from '../../set/Set';
 import { PhysicsWorker } from '../PhysicsWorker';
 import { Subject } from 'rxjs';
 import { CanvasEvent } from '../events/CanvasEvent';
-import { RSPhysicalNode } from '../RSPhysicalNode';
 import { CanvasEventGraphMetaDataChanged } from '../events/CanvasEventGraphMetaDataChanged';
 import { CanvasEventGraphElementsChanged } from '../events/CanvasEventGraphElementsChanged';
 import { CanvasEventGraphTableChanged } from '../events/CanvasEventGraphTableChanged';
 import { CanvasEventViewSettingsChanged } from '../events/CanvasEventViewSettingsChanged';
-import { LiveCanvasData } from './LiveCanvasData';
+import { SchemaPhysicalNode } from '../../../../src-gen/schema';
+import { LiveCanvas } from '../LiveCanvas';
 
 export class LiveCanvasChangeRecorder {
   private _shouldSendMetaDataChangedToUser: boolean;
@@ -20,7 +20,7 @@ export class LiveCanvasChangeRecorder {
     string,
     boolean
   >();
-  private readonly _movedNodes: SSet<LiveCanvasNode>;
+  private readonly _movedNodes: SSet<GraphNode>;
 
   public constructor() {
     this._shouldSendMetaDataChangedToUser = false;
@@ -51,7 +51,7 @@ export class LiveCanvasChangeRecorder {
     this._shouldSendTableDataToUser = true;
   }
 
-  public didMoveNode(nodeId: LiveCanvasNode): void {
+  public didMoveNode(nodeId: GraphNode): void {
     this._movedNodes.add(nodeId);
   }
 
@@ -67,46 +67,47 @@ export class LiveCanvasChangeRecorder {
   public handleChange(
     physicsWorker: PhysicsWorker,
     onEvent: Subject<CanvasEvent>,
-    canvasId: string,
-    data: LiveCanvasData,
+    canvas: LiveCanvas,
   ): void {
     if (this._shouldSendMetaDataChangedToUser) {
       onEvent.next({
         type: 'CanvasEventGraphMetaDataChanged',
-        graph: data.undoableData.current,
-        canvasId: canvasId,
-        undoInfo: data.undoableData.info,
+        graph: canvas.data.undoableData.current,
+        canvas: canvas,
+        undoInfo: canvas.data.undoableData.info,
       } satisfies CanvasEventGraphMetaDataChanged);
     }
     if (this._shouldSendGraphElementsToUserAndWorker) {
       physicsWorker.setGraph(
-        data.undoableData.current.toPhysicalGraph(data.viewSettings),
+        canvas.data.undoableData.current.toPhysicalGraph(
+          canvas.data.viewSettings,
+        ),
       );
       onEvent.next({
         type: 'CanvasEventGraphElementsChanged',
-        graph: data.undoableData.current,
-        canvasId: canvasId,
+        graph: canvas.data.undoableData.current,
+        canvas: canvas,
       } satisfies CanvasEventGraphElementsChanged);
     }
     if (this._shouldSendTableDataToUser) {
       onEvent.next({
         type: 'CanvasEventGraphTableChanged',
-        table: data.undoableData.current.tableData,
-        canvasId: canvasId,
+        table: canvas.data.undoableData.current.tableData,
+        canvas: canvas,
       } satisfies CanvasEventGraphTableChanged);
     }
     if (this._shouldSendViewSettingsToUser) {
       onEvent.next({
         type: 'CanvasEventViewSettingsChanged',
-        canvasId: canvasId,
-        viewSettings: data.viewSettings,
+        canvas: canvas,
+        viewSettings: canvas.data.viewSettings,
       } satisfies CanvasEventViewSettingsChanged);
     }
     if (this._lockChanges.size > 0) {
       physicsWorker.setLocks(this._lockChanges.toRecord());
       onEvent.next({
         type: 'CanvasEventNodeLocksUpdated',
-        canvasId: canvasId,
+        canvas: canvas,
         locks: this._lockChanges,
       } satisfies CanvasEvent);
     }
@@ -114,7 +115,7 @@ export class LiveCanvasChangeRecorder {
       physicsWorker.moveNodes({
         nodes: this._movedNodes
           .toArray()
-          .map((n: LiveCanvasNode): RSPhysicalNode => {
+          .map((n: GraphNode): SchemaPhysicalNode => {
             return {
               id: n.id,
               position: {

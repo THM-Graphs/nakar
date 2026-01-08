@@ -1,8 +1,8 @@
-import { LiveCanvasColor } from './LiveCanvasColor';
-import type { SchemaCustomColor } from '../../../../src-gen/schema';
+import { ElementColor } from './ElementColor';
+import type { SchemaCustomColor } from '../../../../../src-gen/schema';
 import type z from 'zod';
 
-export class LiveCanvasColorCustom extends LiveCanvasColor {
+export class ElementColorCustom extends ElementColor {
   public readonly backgroundColor: string;
   public readonly textColor: string;
 
@@ -20,7 +20,7 @@ export class LiveCanvasColorCustom extends LiveCanvasColor {
     };
   }
 
-  public toPlain(): z.infer<typeof LiveCanvasColor.schema> {
+  public toPlain(): z.infer<typeof ElementColor.schema> {
     return {
       type: 'custom',
       backgroundColor: this.backgroundColor,

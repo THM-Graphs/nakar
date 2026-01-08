@@ -1,5 +1,7 @@
+import { LiveCanvas } from '../LiveCanvas';
+
 export interface CanvasEventNotAllNodesLoaded {
   type: 'CanvasEventNotAllNodesLoaded';
-  canvasId: string;
+  canvas: LiveCanvas;
   loadedCount: number;
 }

@@ -1,5 +1,5 @@
-import { LiveCanvasNode } from '../graph/LiveCanvasNode';
-import { LiveCanvasEdge } from '../graph/LiveCanvasEdge';
+import { GraphNode } from '../graph/GraphNode';
+import { GraphEdge } from '../graph/GraphEdge';
 import { LiveCanvasMetaData } from '../graph/LiveCanvasMetaData';
 import { z } from 'zod';
 import { SMap } from '../../map/Map';
@@ -21,8 +21,8 @@ export class LiveCanvasUndoableData {
   // eslint-disable-next-line @typescript-eslint/typedef
   public static readonly schema = z.object({
     id: z.string(),
-    nodes: z.array(LiveCanvasNode.schema),
-    edges: z.array(LiveCanvasEdge.schema),
+    nodes: z.array(GraphNode.schema),
+    edges: z.array(GraphEdge.schema),
     metaData: LiveCanvasMetaData.schema,
     tableData: z.array(z.record(z.unknown())),
   });
@@ -79,14 +79,14 @@ export class LiveCanvasUndoableData {
       id: data.id,
       nodes: new NodeIndex(
         data.nodes.map(
-          (n: z.infer<typeof LiveCanvasNode.schema>): LiveCanvasNode =>
-            LiveCanvasNode.fromPlain(n),
+          (n: z.infer<typeof GraphNode.schema>): GraphNode =>
+            GraphNode.fromPlain(n),
         ),
       ),
       edges: new EdgeIndex(
         data.edges.map(
-          (e: z.infer<typeof LiveCanvasEdge.schema>): LiveCanvasEdge =>
-            LiveCanvasEdge.fromPlain(e),
+          (e: z.infer<typeof GraphEdge.schema>): GraphEdge =>
+            GraphEdge.fromPlain(e),
         ),
       ),
       metaData: LiveCanvasMetaData.fromPlain(data.metaData),
@@ -125,12 +125,10 @@ export class LiveCanvasUndoableData {
     return {
       id: this.id,
       nodes: this.nodes.nodes.flatMap(
-        (n: LiveCanvasNode): z.infer<typeof LiveCanvasNode.schema> =>
-          n.toPlain(),
+        (n: GraphNode): z.infer<typeof GraphNode.schema> => n.toPlain(),
       ),
       edges: this.edges.edges.flatMap(
-        (e: LiveCanvasEdge): z.infer<typeof LiveCanvasEdge.schema> =>
-          e.toPlain(),
+        (e: GraphEdge): z.infer<typeof GraphEdge.schema> => e.toPlain(),
       ),
       metaData: this.metaData.toPlain(),
       tableData: this._tableData.map(
@@ -203,7 +201,7 @@ export class LiveCanvasUndoableData {
 
   public applyPhysicalGraph(physicalGraph: PhysicalGraph): void {
     for (const node of Object.values(physicalGraph.nodes)) {
-      const foundNode: LiveCanvasNode | null = this.nodes.get(node.id);
+      const foundNode: GraphNode | null = this.nodes.get(node.id);
       if (foundNode == null) {
         // This can happen, if the graphs are out of sync for a short period of time.
         continue;
@@ -233,13 +231,10 @@ export class LiveCanvasUndoableData {
     return copy;
   }
 
-  public getNeighborsOfNode(node: LiveCanvasNode): SSet<LiveCanvasNode> {
-    const result: SMap<string, LiveCanvasNode> = new SMap<
-      string,
-      LiveCanvasNode
-    >();
+  public getNeighborsOfNode(node: GraphNode): SSet<GraphNode> {
+    const result: SMap<string, GraphNode> = new SMap<string, GraphNode>();
     for (const outgoingEdge of this.edges.getByStartNodeId(node.id)) {
-      const outgoindNode: LiveCanvasNode | null = this.nodes.get(
+      const outgoindNode: GraphNode | null = this.nodes.get(
         outgoingEdge.endNodeId,
       );
       if (outgoindNode != null) {
@@ -247,7 +242,7 @@ export class LiveCanvasUndoableData {
       }
     }
     for (const incomingEdge of this.edges.getByEndNodeId(node.id)) {
-      const incomingNode: LiveCanvasNode | null = this.nodes.get(
+      const incomingNode: GraphNode | null = this.nodes.get(
         incomingEdge.startNodeId,
       );
       if (incomingNode != null) {
@@ -259,22 +254,19 @@ export class LiveCanvasUndoableData {
 
   /** This method will return siblings, but only if all siblings the exact same neighbors and have the same label */
   public getClusterBuddiesOfNode(
-    node: LiveCanvasNode,
+    node: GraphNode,
     label: string,
-  ): SSet<LiveCanvasNode> {
-    const neighbors: SSet<LiveCanvasNode> = this.getNeighborsOfNode(node);
+  ): SSet<GraphNode> {
+    const neighbors: SSet<GraphNode> = this.getNeighborsOfNode(node);
 
-    const clusterBuddies: SSet<LiveCanvasNode> = neighbors
+    const clusterBuddies: SSet<GraphNode> = neighbors
       .reduce(
-        (
-          akku: SSet<LiveCanvasNode>,
-          next: LiveCanvasNode,
-        ): SSet<LiveCanvasNode> =>
+        (akku: SSet<GraphNode>, next: GraphNode): SSet<GraphNode> =>
           akku.byMerging(this.getNeighborsOfNode(next)),
         new SSet(),
       )
       .filter(
-        (n: LiveCanvasNode): boolean =>
+        (n: GraphNode): boolean =>
           n.labels.has(label) &&
           n.compressed.size === 0 &&
           this.getNeighborsOfNode(n).isEqual(neighbors),
