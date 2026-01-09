@@ -1,8 +1,6 @@
 import {
-  CanvasViewSettings,
   Color,
   ExpandNodePreviewElement,
-  GetScenariosResult,
   Graph,
   GraphElements,
   GraphMetaData,
@@ -12,8 +10,6 @@ import {
   Note,
   Notification,
   PhysicsPerformance,
-  Scenario,
-  ScenarioArgument,
   WSEventProgress,
 } from "../../src-gen";
 import { SocketState } from "../shared/ws/SocketState.ts";
@@ -22,6 +18,12 @@ import { UserTheme } from "../shared/theme/UserTheme.ts";
 import { Theme } from "../shared/theme/Theme.ts";
 import { SelectedCanvasTab } from "./SelectedCanvasTab.ts";
 import { ZoomTransform } from "d3";
+import {
+  LiveCanvasViewSettingsDto,
+  ScenarioArgumentDto,
+  ScenarioCollectionDto,
+  ScenarioDto,
+} from "../../src-gen-2";
 
 export interface BearState {
   global: {
@@ -98,13 +100,13 @@ export interface BearState {
       setLocks: (locks: { id: string; locked: boolean }[]) => void;
       runScenarioModal: {
         shown: boolean;
-        scenario: Scenario | null;
-        arguments: ScenarioArgument[];
+        scenario: ScenarioDto | null;
+        arguments: ScenarioArgumentDto[];
         additive: boolean;
         setArgumentValue: (identifier: string, value: string) => void;
         open: (
-          scenario: Scenario,
-          scenarioArguments: ScenarioArgument[],
+          scenario: ScenarioDto,
+          scenarioArguments: ScenarioArgumentDto[],
           additive: boolean,
         ) => void;
         close: () => void;
@@ -159,8 +161,8 @@ export interface BearState {
         hide: () => void;
       };
       scenarios: {
-        scenarios: GetScenariosResult;
-        setScenarios: (scenarios: GetScenariosResult) => void;
+        scenarios: ScenarioCollectionDto;
+        setScenarios: (scenarios: ScenarioCollectionDto) => void;
         show: () => void;
         hide: () => void;
       };
@@ -199,8 +201,8 @@ export interface BearState {
         setCompressRelationshipsWidthFactor: (newValue: number) => void;
         setGrowNodesBasedOnDegree: (newValue: boolean) => void;
         setGrowNodesBasedOnDegreeFactor: (newValue: number) => void;
-        setData: (newValue: CanvasViewSettings) => void;
-        data: CanvasViewSettings | null;
+        setData: (newValue: LiveCanvasViewSettingsDto) => void;
+        data: LiveCanvasViewSettingsDto | null;
       };
     };
     canvas: {

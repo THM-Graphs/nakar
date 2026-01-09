@@ -5,7 +5,7 @@ import { Dropdown, Spinner, Stack } from "react-bootstrap";
 import { NavbarButton } from "../../shared/elements/NavbarButton.tsx";
 import { Collapsable } from "../../shared/elements/Collapsable.tsx";
 import { useEffect, useState } from "react";
-import { DatabaseConnection, postCanvasActionRunQuery } from "../../../src-gen";
+import { DatabaseConnection } from "../../../src-gen";
 import { Loadable } from "../../shared/data/Loadable.ts";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
 import { match } from "ts-pattern";
@@ -15,6 +15,7 @@ import { DynamicList } from "../../shared/elements/DynamicList.tsx";
 import { DropdownButton } from "../../shared/elements/DropdownButton.tsx";
 import { DatabaseSelect } from "../database/DatabaseSelect.tsx";
 import {
+  actionControllerRunQuery,
   databaseConnectionControllerGetStats,
   GetDatabaseStatsResponseBodyDto,
 } from "../../../src-gen-2";
@@ -161,8 +162,10 @@ export function QueryPanel(props: { roomContext: CanvasContext }) {
                     icon="play-fill"
                     onClick={async () => {
                       resultOrThrow(
-                        await postCanvasActionRunQuery({
-                          path: { id: props.roomContext.initialCanvasData.id },
+                        await actionControllerRunQuery({
+                          path: {
+                            canvasId: props.roomContext.initialCanvasData.id,
+                          },
                           body: {
                             databaseId: selectedDatabaseId ?? "",
                             query: query.queryText,
@@ -178,8 +181,10 @@ export function QueryPanel(props: { roomContext: CanvasContext }) {
                     icon="plus-lg"
                     onClick={async () => {
                       resultOrThrow(
-                        await postCanvasActionRunQuery({
-                          path: { id: props.roomContext.initialCanvasData.id },
+                        await actionControllerRunQuery({
+                          path: {
+                            canvasId: props.roomContext.initialCanvasData.id,
+                          },
                           body: {
                             databaseId: selectedDatabaseId ?? "",
                             query: query.queryText,

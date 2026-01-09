@@ -1,8 +1,8 @@
 import { Action } from "./Action.ts";
-import { postCanvasActionExpandNodePreview } from "../../../src-gen";
 import { useBearStore } from "../../state/useBearStore.ts";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
 import { NodesActionParams } from "./NodesActionParams.ts";
+import { databaseConnectionControllerExpandNodePreview } from "../../../src-gen-2";
 
 export class ExpandNodePreviewAction extends Action<NodesActionParams> {
   public static shared: ExpandNodePreviewAction = new ExpandNodePreviewAction();
@@ -14,20 +14,19 @@ export class ExpandNodePreviewAction extends Action<NodesActionParams> {
     const node = input.nodes[0];
     useBearStore.getState().room.scenario.expandNodePreview.open(null);
     const result = resultOrThrow(
-      await postCanvasActionExpandNodePreview({
+      await databaseConnectionControllerExpandNodePreview({
         path: {
-          id: input.roomContext.initialCanvasData.id,
+          roomId: input.roomContext.initialRoomData.id,
+          databaseId: node.sourceId,
         },
-        body: { nodeId: node.id },
+        query: { nodeId: node.id },
       }),
     );
-    if (result != null) {
-      useBearStore.getState().room.scenario.expandNodePreview.open({
-        relationships: result.relationships,
-        labels: result.labels,
-        nodeId: node.id,
-      });
-    }
+    useBearStore.getState().room.scenario.expandNodePreview.open({
+      relationships: result.relationships,
+      labels: result.labels,
+      nodeId: node.id,
+    });
   }
 
   disabled(input: NodesActionParams): boolean {

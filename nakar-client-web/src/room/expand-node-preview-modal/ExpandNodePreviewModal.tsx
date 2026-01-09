@@ -2,11 +2,11 @@ import { Modal, Spinner, Stack } from "react-bootstrap";
 import { Panel } from "../../shared/elements/Panel.tsx";
 import { NavbarButton } from "../../shared/elements/NavbarButton.tsx";
 import { useBearStore } from "../../state/useBearStore.ts";
-import { postCanvasActionExpandNode } from "../../../src-gen";
 import { useEffect, useState } from "react";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
 import { CanvasContext } from "../../pages/CanvasPage.tsx";
 import { SelectableTableData } from "./SelectableTableData.tsx";
+import { actionControllerExpandNode } from "../../../src-gen-2";
 
 export function ExpandNodePreviewModal(props: { roomContext: CanvasContext }) {
   const data = useBearStore((s) => s.room.scenario.expandNodePreview.data);
@@ -106,9 +106,9 @@ export function ExpandNodePreviewModal(props: { roomContext: CanvasContext }) {
                   }
                   close();
                   resultOrThrow(
-                    await postCanvasActionExpandNode({
+                    await actionControllerExpandNode({
                       path: {
-                        id: props.roomContext.initialCanvasData.id,
+                        canvasId: props.roomContext.initialCanvasData.id,
                       },
                       body: {
                         nodeIds: [data.nodeId],

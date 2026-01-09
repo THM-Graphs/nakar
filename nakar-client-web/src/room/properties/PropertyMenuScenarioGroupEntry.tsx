@@ -1,11 +1,11 @@
-import { ScenarioGroup } from "../../../src-gen";
 import { CanvasContext } from "../../pages/CanvasPage.tsx";
 import { useBearStore } from "../../state/useBearStore.ts";
 import { Dropdown, Stack } from "react-bootstrap";
 import { ScenarioTitleAndBadges } from "../scenarios-panel/ScenarioTitleAndBadges.tsx";
+import { ScenarioGroupDto } from "../../../src-gen-2";
 
 export function PropertyMenuScenarioGroupEntry(props: {
-  scenarioGroup: ScenarioGroup;
+  scenarioGroup: ScenarioGroupDto;
   roomContext: CanvasContext;
   value: unknown;
 }) {

@@ -1,11 +1,9 @@
 import { Action } from "./Action.ts";
 import { SelectedCanvasTab } from "../../state/SelectedCanvasTab.ts";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
-import {
-  postCanvasActionCompressRelationships,
-  Scenario,
-} from "../../../src-gen";
+import { Scenario } from "../../../src-gen";
 import { CanvasContext } from "../../pages/CanvasPage.tsx";
+import { actionControllerCompressRelationships } from "../../../src-gen-2";
 
 export type CompressRelationshipsActionParams = {
   selectedTab: SelectedCanvasTab;
@@ -21,8 +19,8 @@ export class CompressRelationshipsAction extends Action<CompressRelationshipsAct
     input: CompressRelationshipsActionParams,
   ): Promise<void> {
     resultOrThrow(
-      await postCanvasActionCompressRelationships({
-        path: { id: input.roomContext.initialCanvasData.id },
+      await actionControllerCompressRelationships({
+        path: { canvasId: input.roomContext.initialCanvasData.id },
       }),
     );
   }

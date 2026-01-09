@@ -1,7 +1,8 @@
 import { Action } from "./Action.ts";
 import { CanvasContext } from "../../pages/CanvasPage.tsx";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
-import { postCanvasActionReloadScenario, Scenario } from "../../../src-gen";
+import { Scenario } from "../../../src-gen";
+import { actionControllerReloadScenario } from "../../../src-gen-2";
 
 export type RerunScenarioActionParams = {
   roomContext: CanvasContext;
@@ -13,8 +14,8 @@ export class RerunScenarioAction extends Action<RerunScenarioActionParams> {
 
   protected async action(input: RerunScenarioActionParams): Promise<void> {
     resultOrThrow(
-      await postCanvasActionReloadScenario({
-        path: { id: input.roomContext.initialCanvasData.id },
+      await actionControllerReloadScenario({
+        path: { canvasId: input.roomContext.initialCanvasData.id },
       }),
     );
   }

@@ -1,17 +1,17 @@
 import { Action } from "./Action.ts";
 import { LabelActionParams } from "./LabelActionParams.ts";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
-import { postCanvasActionDeleteElements } from "../../../src-gen";
 import { match } from "ts-pattern";
+import { actionControllerDeleteElements } from "../../../src-gen-2";
 
 export class RemoveLabelAction extends Action<LabelActionParams> {
   public static shared: RemoveLabelAction = new RemoveLabelAction();
 
   protected async action(input: LabelActionParams): Promise<void> {
     resultOrThrow(
-      await postCanvasActionDeleteElements({
+      await actionControllerDeleteElements({
         path: {
-          id: input.roomContext.initialCanvasData.id,
+          canvasId: input.roomContext.initialCanvasData.id,
         },
         body: {
           nodes: [],

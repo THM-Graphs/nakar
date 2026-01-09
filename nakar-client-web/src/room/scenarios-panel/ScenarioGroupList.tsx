@@ -1,11 +1,11 @@
-import { ScenarioGroup } from "../../../src-gen";
 import { ScenarioGroupDisplay } from "./ScenarioGroupDisplay.tsx";
 import { Stack } from "react-bootstrap";
 import { AppContext } from "../../state/AppContext.ts";
 import { CanvasContext } from "../../pages/CanvasPage.tsx";
+import { ScenarioGroupDto } from "../../../src-gen-2";
 
 export function ScenarioGroupList(props: {
-  scenarioGroups: ScenarioGroup[];
+  scenarioGroups: ScenarioGroupDto[];
   context: AppContext;
   roomContext: CanvasContext;
 }) {
@@ -18,7 +18,7 @@ export function ScenarioGroupList(props: {
           empty
         </span>
       )}
-      {props.scenarioGroups.map((scenarioGroup: ScenarioGroup) => (
+      {props.scenarioGroups.map((scenarioGroup: ScenarioGroupDto) => (
         <ScenarioGroupDisplay
           context={props.context}
           key={scenarioGroup.id}

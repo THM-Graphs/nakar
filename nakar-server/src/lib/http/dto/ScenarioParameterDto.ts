@@ -8,7 +8,7 @@ export class ScenarioParameterDto {
   @ApiProperty()
   public title: string;
 
-  @ApiProperty({ nullable: true })
+  @ApiProperty({ nullable: true, type: 'string' })
   public defaultValue: string | null;
 
   @ApiProperty({ enum: ScenarioParameterDataTypeDto })

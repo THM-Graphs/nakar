@@ -1,13 +1,13 @@
 import { OverlayTrigger, Stack, Tooltip } from "react-bootstrap";
 import clsx from "clsx";
-import { Scenario, ScenarioArgument } from "../../../src-gen";
 import { ScnearioPlayButton } from "./ScenarioPlayButton";
+import { ScenarioArgumentDto, ScenarioDto } from "../../../src-gen-2";
 
 export function ScenarioTitleAndBadges(props: {
-  scenario: Scenario;
-  onRun?: (additive: boolean, scenarioArguments: ScenarioArgument[]) => void;
+  scenario: ScenarioDto;
+  onRun?: (additive: boolean, scenarioArguments: ScenarioArgumentDto[]) => void;
   className?: string;
-  arguments?: ScenarioArgument[];
+  arguments?: ScenarioArgumentDto[];
 }) {
   const title: string = props.scenario.title ?? "untitled";
   return (

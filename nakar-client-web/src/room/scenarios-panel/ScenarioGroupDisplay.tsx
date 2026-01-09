@@ -1,12 +1,12 @@
-import { Scenario, ScenarioGroup } from "../../../src-gen";
 import { Stack } from "react-bootstrap";
 import { AppContext } from "../../state/AppContext.ts";
 import { CanvasContext } from "../../pages/CanvasPage.tsx";
 import { DynamicList } from "../../shared/elements/DynamicList.tsx";
 import { ScenarioDisplay } from "./ScenarioDisplay.tsx";
+import { ScenarioDto, ScenarioGroupDto } from "../../../src-gen-2";
 
 export function ScenarioGroupDisplay(props: {
-  scenarioGroup: ScenarioGroup;
+  scenarioGroup: ScenarioGroupDto;
   hidden?: boolean;
   context: AppContext;
   roomContext: CanvasContext;
@@ -26,7 +26,7 @@ export function ScenarioGroupDisplay(props: {
           <Stack direction={"horizontal"} className={"align-items-stretch"}>
             <Stack>
               <Stack className={"flex-grow-0"}>
-                {list.map((scenario: Scenario) => (
+                {list.map((scenario: ScenarioDto) => (
                   <ScenarioDisplay
                     key={scenario.id}
                     scenario={scenario}

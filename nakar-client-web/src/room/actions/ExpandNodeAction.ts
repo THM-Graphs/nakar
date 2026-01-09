@@ -1,14 +1,14 @@
 import { Action } from "./Action.ts";
-import { postCanvasActionExpandNode } from "../../../src-gen";
 import { NodesActionParams } from "./NodesActionParams.ts";
+import { actionControllerExpandNode } from "../../../src-gen-2";
 
 export class ExpandNodeAction extends Action<NodesActionParams> {
   public static shared: ExpandNodeAction = new ExpandNodeAction();
 
   protected async action(input: NodesActionParams): Promise<void> {
-    await postCanvasActionExpandNode({
+    await actionControllerExpandNode({
       path: {
-        id: input.roomContext.initialCanvasData.id,
+        canvasId: input.roomContext.initialCanvasData.id,
       },
       body: {
         nodeIds: input.nodes.map((node) => node.id),

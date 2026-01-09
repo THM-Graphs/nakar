@@ -1,8 +1,8 @@
 import { Action } from "./Action.ts";
-import { postCanvasActionLoadNode } from "../../../src-gen";
 import { CanvasContext } from "../../pages/CanvasPage.tsx";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
 import { useBearStore } from "../../state/useBearStore.ts";
+import { actionControllerLoadNode } from "../../../src-gen-2";
 
 export type SpawnNodeActionParams = {
   nodeId: string;
@@ -14,8 +14,8 @@ export class SpawnNodeAction extends Action<SpawnNodeActionParams> {
 
   protected async action(input: SpawnNodeActionParams): Promise<void> {
     resultOrThrow(
-      await postCanvasActionLoadNode({
-        path: { id: input.roomContext.initialCanvasData.id },
+      await actionControllerLoadNode({
+        path: { canvasId: input.roomContext.initialCanvasData.id },
         body: { nodeId: input.nodeId, databaseId: input.databaseId },
       }),
     );

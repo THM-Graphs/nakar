@@ -1,11 +1,9 @@
 import { Action } from "./Action.ts";
 import { SelectedCanvasTab } from "../../state/SelectedCanvasTab.ts";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
-import {
-  postCanvasActionRemoveDanglingNodes,
-  Scenario,
-} from "../../../src-gen";
+import { Scenario } from "../../../src-gen";
 import { CanvasContext } from "../../pages/CanvasPage.tsx";
+import { actionControllerRemoveDanglingNodes } from "../../../src-gen-2";
 
 export type RemoveDanglingNodesActionParams = {
   selectedTab: SelectedCanvasTab;
@@ -21,8 +19,8 @@ export class RemoveDanglingNodesAction extends Action<RemoveDanglingNodesActionP
     input: RemoveDanglingNodesActionParams,
   ): Promise<void> {
     resultOrThrow(
-      await postCanvasActionRemoveDanglingNodes({
-        path: { id: input.roomContext.initialCanvasData.id },
+      await actionControllerRemoveDanglingNodes({
+        path: { canvasId: input.roomContext.initialCanvasData.id },
       }),
     );
   }

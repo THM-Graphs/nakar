@@ -2,9 +2,6 @@ import { Panel } from "../../shared/elements/Panel.tsx";
 import { AppContext } from "../../state/AppContext.ts";
 import { useBearStore } from "../../state/useBearStore.ts";
 import { CanvasContext } from "../../pages/CanvasPage.tsx";
-import { NavbarButton } from "../../shared/elements/NavbarButton.tsx";
-import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
-import { useState } from "react";
 import { ScenarioGroupList } from "./ScenarioGroupList.tsx";
 
 export function ScenariosPanel(props: {
@@ -12,38 +9,10 @@ export function ScenariosPanel(props: {
   roomContext: CanvasContext;
 }) {
   const hide = useBearStore((s) => s.room.panels.scenarios.hide);
-  const setScenarios = useBearStore(
-    (s) => s.room.panels.scenarios.setScenarios,
-  );
   const scenarios = useBearStore((s) => s.room.panels.scenarios.scenarios);
-  const pushErrorNotification = useBearStore(
-    (s) => s.room.ui.pushErrorNotification,
-  );
-  const [reloading, setReloading] = useState<boolean>(false);
 
   return (
-    <Panel
-      direction={"left"}
-      onClose={hide}
-      title={"Scenarios"}
-      toolbar={
-        <NavbarButton
-          icon={"arrow-clockwise"}
-          disabled={reloading}
-          onClick={async (): Promise<void> => {
-            try {
-              setReloading(true);
-              // TODO: use ws event
-            } catch (error: unknown) {
-              pushErrorNotification(error);
-            } finally {
-              setReloading(false);
-            }
-          }}
-          className={""}
-        ></NavbarButton>
-      }
-    >
+    <Panel direction={"left"} onClose={hide} title={"Scenarios"}>
       <ScenarioGroupList
         scenarioGroups={scenarios.scenarioGroups}
         context={props.context}

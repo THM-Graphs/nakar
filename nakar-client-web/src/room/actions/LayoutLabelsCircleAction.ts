@@ -1,8 +1,8 @@
 import { Action } from "./Action.ts";
 import { LabelActionParams } from "./LabelActionParams.ts";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
-import { postCanvasActionLayoutLabel } from "../../../src-gen";
 import { match } from "ts-pattern";
+import { actionControllerLayoutLabel } from "../../../src-gen-2";
 
 export class LayoutLabelsCircleAction extends Action<LabelActionParams> {
   public static shared: LayoutLabelsCircleAction =
@@ -23,14 +23,14 @@ export class LayoutLabelsCircleAction extends Action<LabelActionParams> {
       throw new Error(`Unable to create a number from ${distanceString}`);
     }
     resultOrThrow(
-      await postCanvasActionLayoutLabel({
+      await actionControllerLayoutLabel({
         path: {
-          id: input.roomContext.initialCanvasData.id,
+          canvasId: input.roomContext.initialCanvasData.id,
         },
         body: {
           label: label,
           layoutSpecification: {
-            type: "LayoutSpecificationCircle",
+            type: "LayoutSpecificationCircleDto",
             radius: n,
           },
         },

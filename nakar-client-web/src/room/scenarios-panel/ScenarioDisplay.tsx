@@ -1,8 +1,3 @@
-import {
-  postCanvasActionLoadScenario,
-  Scenario,
-  ScenarioArgument,
-} from "../../../src-gen";
 import { ScenarioCard } from "./ScenarioCard.tsx";
 import { Collapsable } from "../../shared/elements/Collapsable.tsx";
 import { useBearStore } from "../../state/useBearStore.ts";
@@ -11,9 +6,14 @@ import { AppContext } from "../../state/AppContext.ts";
 import { CanvasContext } from "../../pages/CanvasPage.tsx";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
 import { ScenarioTitleAndBadges } from "./ScenarioTitleAndBadges.tsx";
+import {
+  actionControllerLoadScenario,
+  ScenarioArgumentDto,
+  ScenarioDto,
+} from "../../../src-gen-2";
 
 export function ScenarioDisplay(props: {
-  scenario: Scenario;
+  scenario: ScenarioDto;
   hidden?: boolean;
   context: AppContext;
   roomContext: CanvasContext;
@@ -26,15 +26,15 @@ export function ScenarioDisplay(props: {
   );
 
   const runScenario = useCallback(
-    (additive: boolean, sceanriosArguments: ScenarioArgument[]) => {
+    (additive: boolean, sceanriosArguments: ScenarioArgumentDto[]) => {
       if (props.scenario.parameters.length > 0) {
         showRunScenarioModal(props.scenario, sceanriosArguments, additive);
       } else {
         (async () => {
           try {
             await resultOrThrow(
-              await postCanvasActionLoadScenario({
-                path: { id: props.roomContext.initialCanvasData.id },
+              await actionControllerLoadScenario({
+                path: { canvasId: props.roomContext.initialCanvasData.id },
                 body: {
                   scenarioId: props.scenario.id,
                   arguments: [],

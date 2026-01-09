@@ -5,7 +5,6 @@ import "bootstrap-icons/font/bootstrap-icons.css";
 import "./index.css";
 import { createBrowserRouter, RouterProvider } from "react-router";
 import { loadEnvOrDefault } from "./shared/env/env.ts";
-import { client } from "../src-gen";
 import { client as client2 } from "../src-gen-2";
 import { Start, StartLoader } from "./pages/Start.tsx";
 import { CanvasLoader, CanvasPage } from "./pages/CanvasPage.tsx";
@@ -21,11 +20,8 @@ async function bootstrap() {
   bootstrapTheme();
 
   const env = await loadEnvOrDefault();
-  client.setConfig({
-    baseUrl: env.BACKEND_URL,
-  });
   client2.setConfig({
-    baseUrl: "http://localhost:1339",
+    baseUrl: env.BACKEND_URL,
   });
 
   const context = new AppContext(env);
@@ -47,11 +43,6 @@ async function bootstrap() {
   useBearStore.subscribe(
     (s) => s.global.auth.jwt,
     (jwt) => {
-      client.setConfig({
-        headers: {
-          Authorization: jwt ? `Bearer ${jwt}` : null,
-        },
-      });
       client2.setConfig({
         headers: {
           Authorization: jwt ? `Bearer ${jwt}` : null,

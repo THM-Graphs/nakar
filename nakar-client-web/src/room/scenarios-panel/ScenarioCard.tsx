@@ -1,13 +1,13 @@
 import { Button, Card, Stack } from "react-bootstrap";
 import { ScenarioIcon } from "./ScenarioIcon.tsx";
 import { QueryDisplay } from "./QueryDisplay.tsx";
-import { Scenario } from "../../../src-gen";
 import { ScenarioCardSection } from "./ScenarioCardSection.tsx";
+import { ScenarioDto } from "../../../src-gen-2";
 
 export function ScenarioCard(props: {
   hidden?: boolean;
-  scenario: Scenario;
-  onScenarioSelected: (scenario: Scenario, additive: boolean) => void;
+  scenario: ScenarioDto;
+  onScenarioSelected: (scenario: ScenarioDto, additive: boolean) => void;
 }) {
   return (
     <Stack
@@ -63,7 +63,7 @@ export function ScenarioCard(props: {
           {props.scenario.queries.map((q) => (
             <QueryDisplay
               query={q}
-              key={q.query + (q.database?.current.id ?? "")}
+              key={q.query + (q.database?.id ?? "")}
             ></QueryDisplay>
           ))}
         </ScenarioCardSection>

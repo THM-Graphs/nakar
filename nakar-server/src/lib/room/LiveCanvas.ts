@@ -16,13 +16,8 @@ import { CanvasEventNotAllNodesLoaded } from './events/CanvasEventNotAllNodesLoa
 import { ElementCreationReason } from './graph/ElementCreationReason';
 import { SSet } from '../set/Set';
 import { PhysicsSimulation } from '../physics/PhysicsSimulation';
-import { ExpandNodePreview } from '../neo4j/expand-node-preview/ExpandNodePreview';
 import { GraphEdge } from './graph/GraphEdge';
-import {
-  SchemaLayoutSpecification,
-  SchemaLayoutSpecificationCircle,
-  SchemaPhysicalNode,
-} from '../../../src-gen/schema';
+import { SchemaPhysicalNode } from '../../../src-gen/schema';
 import { v4 } from 'uuid';
 import { PropertyCollection } from './graph/PropertyCollection';
 import { ElementPosition } from './graph/ElementPosition';
@@ -42,6 +37,8 @@ import { LiveCanvasChangeRecorder } from './data/LiveCanvasChangeRecorder';
 import { LiveCanvasData } from './data/LiveCanvasData';
 import { NodePosition } from './graph/NodePosition';
 import { WTPhysicalNode } from '../room-worker/worker-events/WTPhysicalNode';
+import { LayoutSpecificationDto } from '../http/routes/action/dto/LayoutSpecificationDto';
+import { LayoutSpecificationCircleDto } from '../http/routes/action/dto/LayoutSpecificationCircleDto';
 
 export class LiveCanvas {
   private readonly _logger: Logger = createChildLogger(this);
@@ -246,10 +243,15 @@ export class LiveCanvas {
     node.grabs.delete(params.userId);
   }
 
-  public reloadScenario(params: { scenarioId: string }): void {
-    const args: SMap<string, string> = this.getGraph().metaData.arguments;
+  public reloadScenario(): void {
+    const graph: LiveCanvasUndoableData = this.getGraph();
+    const scenarioId: string | null = graph.metaData.scenarioId;
+    if (scenarioId == null) {
+      throw new NotFound(`Scenario of canvas ${this.canvasId} not found.`);
+    }
+    const args: SMap<string, string> = graph.metaData.arguments;
     this.loadScenario({
-      scenarioId: params.scenarioId,
+      scenarioId: scenarioId,
       arguments: args,
       additive: false,
     });
@@ -422,7 +424,7 @@ export class LiveCanvas {
                       this._layout(
                         label,
                         {
-                          type: 'LayoutSpecificationCircle',
+                          type: 'LayoutSpecificationCircleDto',
                           radius: radius,
                         },
                         changeRecorder,
@@ -432,7 +434,7 @@ export class LiveCanvas {
                       this._layout(
                         label,
                         {
-                          type: 'LayoutSpecificationForceDirected',
+                          type: 'LayoutSpecificationForceDirectedDto',
                         },
                         changeRecorder,
                       );
@@ -567,29 +569,6 @@ export class LiveCanvas {
         }),
       );
     }
-  }
-
-  public async expandNodePreview(params: {
-    nodeId: string;
-  }): Promise<ExpandNodePreview> {
-    const graph: LiveCanvasUndoableData = this.getGraph();
-    const node: GraphNode | null = graph.nodes.get(params.nodeId);
-    if (node == null) {
-      throw new Error(`Cannot find node ${params.nodeId} to expand preview.`);
-    }
-
-    const database: Result<'api::v2-database-connection.v2-database-connection'> =
-      await this._database.getDatabase(node.source);
-
-    const neo4jDatabaseInfo: Neo4jDatabaseInfo =
-      Neo4jDatabaseInfo.parse(database);
-
-    const expandNodePreview: ExpandNodePreview =
-      await this._neo4j.expandNodePreview(
-        neo4jDatabaseInfo,
-        new SSet<string>([params.nodeId]),
-      );
-    return expandNodePreview;
   }
 
   public focusNodes(params: { nodeIds: readonly string[] }): void {
@@ -918,7 +897,7 @@ export class LiveCanvas {
 
   public layoutLabel(params: {
     label: string;
-    layoutSpecification: SchemaLayoutSpecification;
+    layoutSpecification: LayoutSpecificationDto;
   }): void {
     this._queue.addTask(
       new TaskQueueTask('Layout label', (): void => {
@@ -1452,7 +1431,7 @@ export class LiveCanvas {
 
   private _layout(
     targetLabel: string,
-    layoutSpecification: SchemaLayoutSpecification,
+    layoutSpecification: LayoutSpecificationDto,
     changeRecorder: LiveCanvasChangeRecorder,
   ): void {
     const graph: LiveCanvasUndoableData = this.getGraph();
@@ -1462,8 +1441,8 @@ export class LiveCanvas {
 
     match(layoutSpecification)
       .with(
-        { type: 'LayoutSpecificationCircle' },
-        (l: SchemaLayoutSpecificationCircle): void => {
+        { type: 'LayoutSpecificationCircleDto' },
+        (l: LayoutSpecificationCircleDto): void => {
           if (nodesOfLabel.length < 2) {
             return;
           }
@@ -1505,7 +1484,7 @@ export class LiveCanvas {
           }
         },
       )
-      .with({ type: 'LayoutSpecificationForceDirected' }, (): void => {
+      .with({ type: 'LayoutSpecificationForceDirectedDto' }, (): void => {
         for (const node of nodesOfLabel) {
           node.locked = false;
           changeRecorder.didChangeNodeLock(node.id, false);

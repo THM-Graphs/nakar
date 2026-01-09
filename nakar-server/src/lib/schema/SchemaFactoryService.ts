@@ -816,6 +816,7 @@ export class SchemaFactoryService {
       customColor: null, // TODO
       source:
         (await databaseCache.getDatabase(node.source))?.title ?? node.source,
+      sourceId: node.source,
       locked: node.locked,
       isCluster: node.isCluster,
       clusterSize: node.compressed.size,

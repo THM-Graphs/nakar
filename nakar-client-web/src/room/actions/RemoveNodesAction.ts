@@ -1,17 +1,17 @@
-import { postCanvasActionDeleteElements } from "../../../src-gen";
 import { Action } from "./Action.ts";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
 import { match } from "ts-pattern";
 import { NodesActionParams } from "./NodesActionParams.ts";
+import { actionControllerDeleteElements } from "../../../src-gen-2";
 
 export class RemoveNodesAction extends Action<NodesActionParams> {
   public static shared: RemoveNodesAction = new RemoveNodesAction();
 
   protected async action(input: NodesActionParams): Promise<void> {
     await resultOrThrow(
-      await postCanvasActionDeleteElements({
+      await actionControllerDeleteElements({
         path: {
-          id: input.roomContext.initialCanvasData.id,
+          canvasId: input.roomContext.initialCanvasData.id,
         },
         body: {
           nodes: input.nodes.map((n) => n.id),

@@ -6,8 +6,8 @@ import { Panel } from "../../shared/elements/Panel.tsx";
 import { NavbarButton } from "../../shared/elements/NavbarButton.tsx";
 import { ScenarioIcon } from "../scenarios-panel/ScenarioIcon.tsx";
 import { ArgumentDisplay } from "./ArgumentDisplay.tsx";
-import { postCanvasActionLoadScenario } from "../../../src-gen";
 import { ScnearioPlayButton } from "../scenarios-panel/ScenarioPlayButton.tsx";
+import { actionControllerLoadScenario } from "../../../src-gen-2";
 
 export function RunScenarioModal(props: { roomContext: CanvasContext }) {
   const pushErrorNotification = useBearStore(
@@ -38,8 +38,8 @@ export function RunScenarioModal(props: { roomContext: CanvasContext }) {
     handleClose();
     try {
       await resultOrThrow(
-        await postCanvasActionLoadScenario({
-          path: { id: props.roomContext.initialCanvasData.id },
+        await actionControllerLoadScenario({
+          path: { canvasId: props.roomContext.initialCanvasData.id },
           body: {
             scenarioId: scenario.id,
             arguments: scenarioArguments,

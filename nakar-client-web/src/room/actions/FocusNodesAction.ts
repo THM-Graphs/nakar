@@ -1,17 +1,17 @@
-import { postCanvasActionFocusNodes } from "../../../src-gen";
 import { Action } from "./Action.ts";
 import { match } from "ts-pattern";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
 import { NodesActionParams } from "./NodesActionParams.ts";
+import { actionControllerFocusNodes } from "../../../src-gen-2";
 
 export class FocusNodesAction extends Action<NodesActionParams> {
   public static shared: FocusNodesAction = new FocusNodesAction();
 
   protected async action(input: NodesActionParams): Promise<void> {
     await resultOrThrow(
-      await postCanvasActionFocusNodes({
+      await actionControllerFocusNodes({
         path: {
-          id: input.roomContext.initialCanvasData.id,
+          canvasId: input.roomContext.initialCanvasData.id,
         },
         body: { nodes: input.nodes.map((n) => n.id) },
       }),

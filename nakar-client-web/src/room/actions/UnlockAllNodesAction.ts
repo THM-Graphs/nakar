@@ -1,8 +1,9 @@
 import { Action } from "./Action.ts";
 import { CanvasContext } from "../../pages/CanvasPage.tsx";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
-import { Node, postCanvasActionUnlockAllNodes } from "../../../src-gen";
+import { Node } from "../../../src-gen";
 import { SelectedCanvasTab } from "../../state/SelectedCanvasTab.ts";
+import { actionControllerUnlockAllNodes } from "../../../src-gen-2";
 
 export type UnlockAllNodesActionParams = {
   nodes: Node[];
@@ -15,8 +16,8 @@ export class UnlockAllNodesAction extends Action<UnlockAllNodesActionParams> {
 
   protected async action(input: UnlockAllNodesActionParams): Promise<void> {
     resultOrThrow(
-      await postCanvasActionUnlockAllNodes({
-        path: { id: input.roomContext.initialCanvasData.id },
+      await actionControllerUnlockAllNodes({
+        path: { canvasId: input.roomContext.initialCanvasData.id },
       }),
     );
   }

@@ -1,7 +1,7 @@
 import { Action } from "./Action.ts";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
 import { CanvasContext } from "../../pages/CanvasPage.tsx";
-import { postCanvasActionRedo } from "../../../src-gen";
+import { actionControllerRedo } from "../../../src-gen-2";
 
 export type RedoActionParams = {
   roomContext: CanvasContext;
@@ -13,9 +13,9 @@ export class RedoAction extends Action<RedoActionParams> {
 
   protected async action(input: RedoActionParams): Promise<void> {
     resultOrThrow(
-      await postCanvasActionRedo({
+      await actionControllerRedo({
         path: {
-          id: input.roomContext.initialCanvasData.id,
+          canvasId: input.roomContext.initialCanvasData.id,
         },
       }),
     );

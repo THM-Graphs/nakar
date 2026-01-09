@@ -2,7 +2,6 @@ import { Stack } from "react-bootstrap";
 import { Panel } from "../../shared/elements/Panel.tsx";
 import { useState } from "react";
 import { DatabaseSelect } from "../database/DatabaseSelect.tsx";
-import { NodePreview } from "../../../src-gen";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
 import { Loadable } from "../../shared/data/Loadable.ts";
 import { handleError } from "../../shared/error/handleError.ts";

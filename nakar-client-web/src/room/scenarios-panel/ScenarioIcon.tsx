@@ -1,7 +1,7 @@
-import { Scenario } from "../../../src-gen";
+import { ScenarioDto } from "../../../src-gen-2";
 
 export function ScenarioIcon(props: {
-  scenario: Scenario | null;
+  scenario: ScenarioDto | null;
   size?: number;
 }) {
   const size = props.size ?? 20;

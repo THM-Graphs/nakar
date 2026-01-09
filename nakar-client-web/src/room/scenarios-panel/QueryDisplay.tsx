@@ -1,25 +1,25 @@
 import { Stack } from "react-bootstrap";
 import { ClipboardButton } from "../../shared/elements/ClipboardButton.tsx";
-import { ScenarioQuery } from "../../../src-gen";
 import { NavbarButton } from "../../shared/elements/NavbarButton.tsx";
+import { ScenarioQueryDto } from "../../../src-gen-2";
 
-export function QueryDisplay(props: { query: ScenarioQuery }) {
+export function QueryDisplay(props: { query: ScenarioQueryDto }) {
   return (
     <Stack gap={0}>
       <Stack direction={"horizontal"} className={"justify-content-start"}>
-        {props.query.database?.current != null && (
+        {props.query.database != null && (
           <span className={"small text-muted"}>
-            {props.query.database.current.title}
+            {props.query.database.title}
           </span>
         )}
-        {props.query.database?.current.browserUrl && (
+        {props.query.database?.browserUrl && (
           <NavbarButton
             size={"sm"}
             icon={"box-arrow-up-right"}
             className={"border-start-0 border-end-0 flex-grow-0"}
             onClick={() => {
-              if (props.query.database?.current.browserUrl) {
-                window.open(props.query.database.current.browserUrl, "_blank");
+              if (props.query.database?.browserUrl) {
+                window.open(props.query.database.browserUrl, "_blank");
               }
             }}
           ></NavbarButton>

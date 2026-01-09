@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { MigrationService } from '../migration/MigrationService';
 import { CanvasService } from '../room/CanvasService';
-import { HTTPService } from '../http/HTTPService';
 import { SchemaFactoryService } from '../schema/SchemaFactoryService';
 import { DatabaseEventsService } from '../database/DatabaseEventsService';
 import { DatabaseService } from '../database/DatabaseService';
@@ -15,6 +14,7 @@ import { NoteController } from '../http/routes/note/NoteController';
 import { SystemController } from '../http/routes/system/SystemController';
 import { DatabaseConnectionController } from '../http/routes/database-connection/DatabaseConnectionController';
 import { WebSocketManager } from '../socketIO/WebSocketManager';
+import { ActionController } from '../http/routes/action/ActionController';
 
 @Module({
   controllers: [
@@ -26,12 +26,12 @@ import { WebSocketManager } from '../socketIO/WebSocketManager';
     NoteController,
     SystemController,
     DatabaseConnectionController,
+    ActionController,
   ],
   providers: [
     DatabaseService,
     CanvasService,
     MigrationService,
-    HTTPService,
     SchemaFactoryService,
     DatabaseEventsService,
     Neo4jService,

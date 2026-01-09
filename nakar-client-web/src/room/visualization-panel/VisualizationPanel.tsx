@@ -1,13 +1,12 @@
 import { useBearStore } from "../../state/useBearStore.ts";
 import { Panel } from "../../shared/elements/Panel.tsx";
 import { CanvasContext } from "../../pages/CanvasPage.tsx";
-import {
-  CanvasViewSettings,
-  postCanvasActionSetViewSettings,
-} from "../../../src-gen";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
 import { ViewSettingsEditor } from "./ViewSettingsEditor.tsx";
-import { Loading } from "../../shared/elements/Loading.tsx";
+import {
+  actionControllerSetViewSettings,
+  LiveCanvasViewSettingsDto,
+} from "../../../src-gen-2";
 
 export function VisualizationPanel(props: { roomContext: CanvasContext }) {
   const hide = useBearStore((s) => s.room.panels.visualization.hide);
@@ -30,16 +29,14 @@ export function VisualizationPanel(props: { roomContext: CanvasContext }) {
       {visualizationData ? (
         <ViewSettingsEditor
           viewSettings={visualizationData}
-          onChange={(newSettings: CanvasViewSettings) => {
+          onChange={(newSettings: LiveCanvasViewSettingsDto) => {
             setData(newSettings);
 
-            postCanvasActionSetViewSettings({
+            actionControllerSetViewSettings({
               path: {
-                id: props.roomContext.initialCanvasData.id,
+                canvasId: props.roomContext.initialCanvasData.id,
               },
-              body: {
-                viewSettings: newSettings,
-              },
+              body: newSettings,
             })
               .then((res) => {
                 return resultOrThrow(res);

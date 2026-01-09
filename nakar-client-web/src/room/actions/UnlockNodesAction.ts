@@ -1,16 +1,16 @@
 import { Action } from "./Action.ts";
-import { postCanvasActionUnlockNodes } from "../../../src-gen";
 import { match } from "ts-pattern";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
 import { NodesActionParams } from "./NodesActionParams.ts";
+import { actionControllerUnlockNodes } from "../../../src-gen-2";
 
 export class UnlockNodesAction extends Action<NodesActionParams> {
   public static shared: UnlockNodesAction = new UnlockNodesAction();
 
   protected async action(input: NodesActionParams): Promise<void> {
     await resultOrThrow(
-      await postCanvasActionUnlockNodes({
-        path: { id: input.roomContext.initialCanvasData.id },
+      await actionControllerUnlockNodes({
+        path: { canvasId: input.roomContext.initialCanvasData.id },
         body: {
           nodes: input.nodes.map((n) => n.id),
         },
