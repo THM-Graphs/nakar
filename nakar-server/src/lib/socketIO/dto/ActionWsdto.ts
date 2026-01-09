@@ -8,6 +8,7 @@ import { ApiExtraModels, ApiProperty, refs } from '@nestjs/swagger';
 import { IsDefined, ValidateNested } from 'class-validator';
 import { Type, TypeHelpOptions } from 'class-transformer';
 import { match } from 'ts-pattern';
+import { BadRequestException } from '@nestjs/common';
 
 // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
 const actions: Function[] = [
@@ -32,7 +33,9 @@ export class ActionWsdto {
       .with({ type: 'GrabNodeWsdto' }, () => GrabNodeWsdto)
       .with({ type: 'MoveNodesWsdto' }, () => MoveNodesWsdto)
       .with({ type: 'UngrabNodeWsdto' }, () => UngrabNodeWsdto)
-      .otherwise(() => JoinCanvasWsdto),
+      .otherwise(() => {
+        throw new BadRequestException();
+      }),
   )
   public action!:
     | JoinCanvasWsdto
