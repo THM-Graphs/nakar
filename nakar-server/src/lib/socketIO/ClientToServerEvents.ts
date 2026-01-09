@@ -1,5 +1,5 @@
 import { ActionWsdto } from './dto/ActionWsdto';
 
 export interface ClientToServerEvents {
-  message(message: ActionWsdto['action']): void;
+  message(message: ActionWsdto): void;
 }
