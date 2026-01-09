@@ -51,27 +51,29 @@ export function GraphRendererD3(props: {
       }),
       _graphRenderer.onGrabNode.subscribe((n) => {
         websocketsManager.sendMessage({
-          type: "WSActionGrabNode",
+          type: "GrabNodeWsdto",
           nodeId: n.id,
         });
       }),
       _graphRenderer.onNodesMoved.subscribe((n) => {
         websocketsManager.sendMessage({
-          type: "WSActionMoveNodes",
+          type: "MoveNodesWsdto",
           nodes: [
             {
               id: n.id,
-              position: { x: n.x, y: n.y },
+              positionX: n.x,
+              positionY: n.y,
             },
           ],
         });
       }),
       _graphRenderer.onUngrabNode.subscribe((n) => {
         websocketsManager.sendMessage({
-          type: "WSActionUngrabNode",
+          type: "UngrabNodeWsdto",
           node: {
             id: n.id,
-            position: { x: n.x, y: n.y },
+            positionX: n.x,
+            positionY: n.y,
           },
         });
       }),

@@ -2,12 +2,10 @@ import { io, Socket as UntypedSocket } from "socket.io-client";
 import { Env } from "../env/env.ts";
 import { ClientToServerEvents } from "./ClientToServerEvents.ts";
 import { ServerToClientEvents } from "./ServerToClientEvents.ts";
-import {
-  WSClientToServerMessage,
-  WSServerToClientMessage,
-} from "../../../src-gen";
+import { WSServerToClientMessage } from "../../../src-gen";
 import { BehaviorSubject, Observable, Subject } from "rxjs";
 import { SocketState } from "./SocketState.ts";
+import { ActionWsdto } from "../../../src-gen-2";
 
 export type Socket = UntypedSocket<ServerToClientEvents, ClientToServerEvents>;
 
@@ -43,8 +41,8 @@ export class WebSocketsManager {
     });
   }
 
-  public sendMessage(message: WSClientToServerMessage): void {
-    this.socket.emit("message", message);
+  public sendMessage(message: ActionWsdto["action"]): void {
+    this.socket.emit("message", { action: message } satisfies ActionWsdto);
   }
 
   public get socketState(): SocketState {

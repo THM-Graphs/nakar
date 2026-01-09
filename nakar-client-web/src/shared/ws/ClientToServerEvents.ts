@@ -1,5 +1,5 @@
-import { WSClientToServerMessage } from "../../../src-gen";
+import { ActionWsdto } from "../../../src-gen-2";
 
 export interface ClientToServerEvents {
-  message: (message: WSClientToServerMessage) => void;
+  message: (message: ActionWsdto) => void;
 }

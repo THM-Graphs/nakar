@@ -12,11 +12,6 @@ import {
   SchemaGraphMetaData,
   SchemaGraphTable,
   SchemaPhysicalNode,
-  SchemaWsActionGrabNode,
-  SchemaWsActionJoinCanvas,
-  SchemaWsActionMoveNodes,
-  SchemaWsActionUngrabNode,
-  SchemaWsClientToServerMessage,
   SchemaWsEventCanvasDataReady,
   SchemaWsEventClearProgress,
   SchemaWsEventKick,
@@ -28,7 +23,13 @@ import {
 } from '../../../src-gen/schema';
 import { Logger } from '@strapi/logger';
 import { createChildLogger } from '../logger/createChildLogger';
-import { OnModuleDestroy } from '@nestjs/common';
+import {
+  BadRequestException,
+  OnModuleDestroy,
+  UseFilters,
+  UsePipes,
+  ValidationPipe,
+} from '@nestjs/common';
 import { SMap } from '../map/Map';
 import { match, P } from 'ts-pattern';
 import { Result } from '@strapi/types/dist/modules/documents/result';
@@ -54,6 +55,15 @@ import { DatabaseEventsService } from '../database/DatabaseEventsService';
 import { ServerToClientEvents } from './ServerToClientEvents';
 import { ClientToServerEvents } from './ClientToServerEvents';
 import { Socket as UntypedSocket, Server as UntypedServer } from 'socket.io';
+import { ActionWsdto } from './dto/ActionWsdto';
+import { JoinCanvasWsdto } from './dto/actions/JoinCanvasWsdto';
+import { GrabNodeWsdto } from './dto/actions/GrabNodeWsdto';
+import { UngrabNodeWsdto } from './dto/actions/UngrabNodeWsdto';
+import { MoveNodesWsdto } from './dto/actions/MoveNodesWsdto';
+import { PhysicalNodeWsdto } from './dto/types/PhysicalNodeWsdto';
+import { NodePosition } from '../room/graph/NodePosition';
+import { validationPipelineOptions } from '../application/validationPipelineOptions';
+import { WsValidationFilter } from './WsValidationFilter';
 
 export type Server = UntypedServer<ClientToServerEvents, ServerToClientEvents>;
 export type Socket = UntypedSocket<ClientToServerEvents, ServerToClientEvents>;
@@ -86,6 +96,26 @@ export class WebSocketManager
     this._registerDatabaseServiceEvents();
   }
 
+  public static createErrorNotification(
+    error: unknown,
+  ): SchemaWsEventNotification {
+    const errorMessage: string = match(error)
+      .with(
+        P.instanceOf(BadRequestException),
+        (e: BadRequestException): string => JSON.stringify(e.getResponse()),
+      )
+      .with(P.instanceOf(Error), (e: Error): string => e.message)
+      .otherwise((e: unknown): string => JSON.stringify(e));
+    return {
+      type: 'WSEventNotification',
+      notification: {
+        severity: 'error',
+        message: errorMessage,
+        date: new Date().toISOString(),
+      },
+    };
+  }
+
   public handleConnection(client: Socket): void {
     this._logger.debug(`Client connected: ${client.id}`);
 
@@ -113,21 +143,23 @@ export class WebSocketManager
 
   // eslint-disable-next-line @typescript-eslint/member-ordering
   @SubscribeMessage('message')
+  @UsePipes(new ValidationPipe(validationPipelineOptions))
+  @UseFilters(WsValidationFilter)
   public async handleEvent(
-    @MessageBody() clientToServerMessage: SchemaWsClientToServerMessage,
+    @MessageBody() message: ActionWsdto,
     @ConnectedSocket() wsClient: Socket,
   ): Promise<void> {
     try {
-      if (clientToServerMessage.type !== 'WSActionMoveNodes') {
+      if (message.action.type !== 'MoveNodesWsdto') {
         this._logger.debug(
-          `Did receive from client ${wsClient.id}: ${clientToServerMessage.type}`,
+          `Did receive from client ${wsClient.id}: ${message.action.type}`,
         );
       }
-      await match(clientToServerMessage)
+      await match(message.action)
         .returnType<void | Promise<void>>()
         .with(
-          { type: 'WSActionJoinCanvas' },
-          async (m: SchemaWsActionJoinCanvas): Promise<void> => {
+          { type: 'JoinCanvasWsdto' },
+          async (m: JoinCanvasWsdto): Promise<void> => {
             const oldRoom: string | null = this._rooms.get(wsClient.id) ?? null;
             if (oldRoom != null) {
               this._handleClientLeftRoom(wsClient, oldRoom);
@@ -175,46 +207,46 @@ export class WebSocketManager
             } satisfies SchemaWsEventCanvasDataReady);
           },
         )
-        .with({ type: 'WSActionLeaveCanvas' }, (): void => {
+        .with({ type: 'LeaveCanvasWsdto' }, (): void => {
           const oldRoom: string | null = this._rooms.get(wsClient.id) ?? null;
           if (oldRoom != null) {
             this._handleClientLeftRoom(wsClient, oldRoom);
           }
         })
-        .with(
-          { type: 'WSActionGrabNode' },
-          (m: SchemaWsActionGrabNode): void => {
-            this._assertLiveCanvas(wsClient).grabNode({
-              nodeId: m.nodeId,
-              userId: wsClient.id,
-            });
-          },
-        )
-        .with(
-          { type: 'WSActionMoveNodes' },
-          (m: SchemaWsActionMoveNodes): void => {
-            this._assertLiveCanvas(wsClient).moveNodes({
-              nodes: m.nodes,
-              userId: wsClient.id,
-            });
-          },
-        )
-        .with(
-          { type: 'WSActionUngrabNode' },
-          (m: SchemaWsActionUngrabNode): void => {
-            this._assertLiveCanvas(wsClient).ungrabNode({
-              node: m.node,
-              userId: wsClient.id,
-            });
-          },
-        )
+        .with({ type: 'GrabNodeWsdto' }, (m: GrabNodeWsdto): void => {
+          this._assertLiveCanvas(wsClient).grabNode({
+            nodeId: m.nodeId,
+            userId: wsClient.id,
+          });
+        })
+        .with({ type: 'MoveNodesWsdto' }, (m: MoveNodesWsdto): void => {
+          this._assertLiveCanvas(wsClient).moveNodes({
+            nodes: m.nodes.map(
+              (p: PhysicalNodeWsdto): NodePosition =>
+                ({
+                  id: p.id,
+                  position: { x: p.positionX, y: p.positionY },
+                }) satisfies NodePosition,
+            ),
+            userId: wsClient.id,
+          });
+        })
+        .with({ type: 'UngrabNodeWsdto' }, (m: UngrabNodeWsdto): void => {
+          this._assertLiveCanvas(wsClient).ungrabNode({
+            node: {
+              id: m.node.id,
+              position: { x: m.node.positionX, y: m.node.positionY },
+            } satisfies NodePosition,
+            userId: wsClient.id,
+          });
+        })
         .exhaustive();
     } catch (error: unknown) {
       this._logger.error(
-        `Error handling WS message: ${JSON.stringify(clientToServerMessage)}`,
+        `Error handling WS message: ${JSON.stringify(message)}`,
       );
       this._logger.error(error);
-      wsClient.send(this.createErrorNotification(error));
+      wsClient.send(WebSocketManager.createErrorNotification(error));
     }
   }
 
@@ -232,20 +264,6 @@ export class WebSocketManager
       }
       socket.emit('message', message);
     }
-  }
-
-  public createErrorNotification(error: unknown): SchemaWsEventNotification {
-    const errorMessage: string = match(error)
-      .with(P.instanceOf(Error), (e: Error): string => e.message)
-      .otherwise((e: unknown): string => JSON.stringify(e));
-    return {
-      type: 'WSEventNotification',
-      notification: {
-        severity: 'error',
-        message: errorMessage,
-        date: new Date().toISOString(),
-      },
-    };
   }
 
   private _assertLiveCanvas(client: Socket): LiveCanvas {
@@ -458,7 +476,7 @@ export class WebSocketManager
             (message: CanvasEventError): void => {
               this.sendToRoom(
                 message.canvas.canvasId,
-                this.createErrorNotification(message.error),
+                WebSocketManager.createErrorNotification(message.error),
               );
             },
           )

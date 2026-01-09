@@ -7,6 +7,8 @@ import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, OpenAPIObject, SwaggerModule } from '@nestjs/swagger';
 import cors from 'cors';
 import { RouteLogger } from '../http/interceptors/RouteLogger';
+import { ActionWsdto } from '../socketIO/dto/ActionWsdto';
+import { validationPipelineOptions } from './validationPipelineOptions';
 
 let nestApp: NestExpressApplication | null = null;
 
@@ -19,14 +21,7 @@ export async function bootstrapNest(): Promise<void> {
   nestApp = app;
 
   app.useGlobalInterceptors(new RouteLogger());
-  app.useGlobalPipes(
-    new ValidationPipe({
-      transform: true,
-      forbidNonWhitelisted: true,
-      forbidUnknownValues: true,
-      disableErrorMessages: false,
-    }),
-  );
+  app.useGlobalPipes(new ValidationPipe(validationPipelineOptions));
   app.use(cors());
 
   SwaggerModule.setup(
@@ -35,7 +30,12 @@ export async function bootstrapNest(): Promise<void> {
     (): OpenAPIObject =>
       SwaggerModule.createDocument(
         app,
-        new DocumentBuilder().setTitle('NAKAR').setVersion('1.0.0').build(),
+        new DocumentBuilder()
+          .setTitle('NAKAR')
+          .setVersion('1.0.0')
+          .addBearerAuth({ type: 'apiKey' })
+          .build(),
+        { extraModels: [ActionWsdto] },
       ),
     { raw: ['yaml'], explorer: true, yamlDocumentUrl: '/api.yaml' },
   );

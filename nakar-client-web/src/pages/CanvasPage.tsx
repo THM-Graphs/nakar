@@ -102,7 +102,7 @@ export function CanvasPage(props: { context: AppContext }) {
   useEffect(() => {
     if (socketState.type === "connected") {
       webSockets.sendMessage({
-        type: "WSActionJoinCanvas",
+        type: "JoinCanvasWsdto",
         canvasId: roomContext.initialCanvasData.id,
       });
       clearProgress();
@@ -164,8 +164,8 @@ export function CanvasPage(props: { context: AppContext }) {
 
     return () => {
       webSockets.sendMessage({
-        type: "WSActionLeaveCanvas",
-      } satisfies WSActionLeaveCanvas);
+        type: "LeaveCanvasWsdto",
+      });
 
       subscriptions.forEach((s) => {
         s.unsubscribe();

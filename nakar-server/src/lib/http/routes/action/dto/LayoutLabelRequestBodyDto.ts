@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
-import { ApiExtraModels, ApiProperty, getSchemaPath } from '@nestjs/swagger';
+import { ApiExtraModels, ApiProperty, refs } from '@nestjs/swagger';
 import { IsString, ValidateNested } from 'class-validator';
 import { Type, TypeHelpOptions } from 'class-transformer';
 import { LayoutSpecificationCircleDto } from './LayoutSpecificationCircleDto';
@@ -17,10 +17,10 @@ export class LayoutLabelRequestBodyDto {
   public label!: string;
 
   @ApiProperty({
-    oneOf: [
-      { $ref: getSchemaPath(LayoutSpecificationCircleDto) },
-      { $ref: getSchemaPath(LayoutSpecificationForceDirectedDto) },
-    ],
+    oneOf: refs(
+      LayoutSpecificationCircleDto,
+      LayoutSpecificationForceDirectedDto,
+    ),
   })
   @ValidateNested()
   @Type((options: TypeHelpOptions | undefined) =>

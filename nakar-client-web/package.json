@@ -8,7 +8,7 @@
     "build": "tsc -b && vite build",
     "build:docker": "docker buildx build -f Dockerfile -t ghcr.io/thm-graphs/nakar/client-web:dev .",
     "build:docker:mutliarch": "docker buildx build --platform linux/amd64,linux/arm64 -f Dockerfile -t ghcr.io/thm-graphs/nakar/client-web:dev .",
-    "build:api": "npx openapi-ts --input http://127.0.0.1:1339/api.yaml --output ./src-gen-2 --client @hey-api/client-fetch",
+    "build:api": "npx openapi-ts --input http://127.0.0.1:1338/api.yaml --output ./src-gen-2 --client @hey-api/client-fetch",
     "lint": "eslint .",
     "lint:fix": "eslint --fix .",
     "format": "prettier . --check",
