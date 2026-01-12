@@ -11,28 +11,41 @@ export function GraphDataToggle() {
     graphElements.edges.length + graphElements.nodes.length;
 
   return (
-    <Stack direction={"horizontal"}>
+    <Stack
+      direction={"vertical"}
+      className={"bg-body-tertiary border border-end-0 z-1 rounded-start"}
+    >
       <NavbarButton
+        size={"big"}
         icon={"bounding-box-circles"}
-        title={"Graph"}
         selected={tabs.selected === "graph"}
         onClick={tabs.selectGraph}
-        className={""}
+        className={"position-relative"}
       >
-        {graphElementsCount > 0 && (
-          <span className={"text-muted small"}>{graphElementsCount}</span>
-        )}
+        <Stack
+          className={
+            "text-muted position-absolute bottom-0 start-0 end-0 align-items-center"
+          }
+          style={{ fontSize: "8pt" }}
+        >
+          <span>{graphElementsCount}</span>
+        </Stack>
       </NavbarButton>
       <NavbarButton
+        size={"big"}
         icon={"table"}
-        title={"Data"}
         selected={tabs.selected === "data"}
         onClick={tabs.selectData}
-        className={"border-end"}
+        className={"position-relative"}
       >
-        {tableData.length > 0 && (
-          <span className={"text-muted small"}>{tableData.length}</span>
-        )}
+        <Stack
+          className={
+            "text-muted position-absolute bottom-0 start-0 end-0 align-items-center"
+          }
+          style={{ fontSize: "8pt" }}
+        >
+          <span>{tableData.length}</span>
+        </Stack>
       </NavbarButton>
     </Stack>
   );

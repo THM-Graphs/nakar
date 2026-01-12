@@ -41,6 +41,8 @@ import {
   RoomDto,
   ScenarioCollectionDto,
 } from "../../src-gen-2";
+import { CanvasToolbar } from "../room/canvas/CanvasToolbar.tsx";
+import { GraphDataToggle } from "../room/data-table/GraphDataToggle.tsx";
 
 export type CanvasContext = {
   initialCanvasData: CanvasDto;
@@ -179,7 +181,7 @@ export function CanvasPage(props: { context: AppContext }) {
   return (
     <>
       <Stack style={{ height: "100%" }} className={"position-relative"}>
-        <Stack gap={3} className={"pb-3"}>
+        <Stack gap={1} className={"pb-3"}>
           <Stack className="flex-grow-0 flex-shrink-0">
             <AppNavbar
               left={
@@ -211,12 +213,17 @@ export function CanvasPage(props: { context: AppContext }) {
               }
               className=""
             ></AppNavbar>
+            <CanvasToolbar
+              context={props.context}
+              roomContext={roomContext}
+              className={"border-bottom bg-body-tertiary"}
+            ></CanvasToolbar>
           </Stack>
           <Stack
             direction={"horizontal"}
             className={"align-items-start flex-grow-1 position-relative"}
             style={{ height: "100px" }}
-            gap={3}
+            gap={1}
           >
             <Stack
               direction={"vertical"}
@@ -267,18 +274,24 @@ export function CanvasPage(props: { context: AppContext }) {
               ></VisualizationPanel>
             )}
             <Stack
-              direction="vertical"
-              className={
-                "flex-grow-0 flex-shrink-0 bg-body-tertiary border border-end-0 z-1 align-self-start rounded-start"
-              }
+              className={"align-self-start flex-grow-0 flex-shrink-0"}
+              gap={1}
             >
-              <InspectorPanelButton
-                className={"rounded-top-start"}
-              ></InspectorPanelButton>
-              <HistogramPanelButton></HistogramPanelButton>
-              <VisualizationPanelButton
-                className={"rounded-bottom-start"}
-              ></VisualizationPanelButton>
+              <GraphDataToggle></GraphDataToggle>
+              <Stack
+                direction="vertical"
+                className={
+                  "bg-body-tertiary border border-end-0 z-1 rounded-start"
+                }
+              >
+                <InspectorPanelButton
+                  className={"rounded-top-start"}
+                ></InspectorPanelButton>
+                <HistogramPanelButton></HistogramPanelButton>
+                <VisualizationPanelButton
+                  className={"rounded-bottom-start"}
+                ></VisualizationPanelButton>
+              </Stack>
             </Stack>
             <ToastStack></ToastStack>
             <RunScenarioModal roomContext={roomContext}></RunScenarioModal>

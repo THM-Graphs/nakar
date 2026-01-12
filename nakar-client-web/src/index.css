@@ -22,7 +22,7 @@ div#root {
 .rounded-bottom-end,
 .modal-content,
 .badge {
-  --bs-border-radius: 10px;
+  --bs-border-radius: 15px;
   corner-shape: squircle;
 }
 
