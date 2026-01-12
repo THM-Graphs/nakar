@@ -224,10 +224,14 @@ export function CanvasPage(props: { context: AppContext }) {
                 "bg-body-tertiary border border-start-0 flex-grow-0 flex-shrink-0 z-1 rounded-end align-self-start"
               }
             >
-              <ScenariosPanelButton></ScenariosPanelButton>
+              <ScenariosPanelButton
+                className={"rounded-top-end"}
+              ></ScenariosPanelButton>
               <QueryPanelButton></QueryPanelButton>
               <NotesPanelButton></NotesPanelButton>
-              <SearchPanelButton></SearchPanelButton>
+              <SearchPanelButton
+                className={"rounded-bottom-end"}
+              ></SearchPanelButton>
             </Stack>
             {leftPanel === "scenarios" && (
               <ScenariosPanel
@@ -268,9 +272,13 @@ export function CanvasPage(props: { context: AppContext }) {
                 "flex-grow-0 flex-shrink-0 bg-body-tertiary border border-end-0 z-1 align-self-start rounded-start"
               }
             >
-              <InspectorPanelButton></InspectorPanelButton>
+              <InspectorPanelButton
+                className={"rounded-top-start"}
+              ></InspectorPanelButton>
               <HistogramPanelButton></HistogramPanelButton>
-              <VisualizationPanelButton></VisualizationPanelButton>
+              <VisualizationPanelButton
+                className={"rounded-bottom-start"}
+              ></VisualizationPanelButton>
             </Stack>
             <ToastStack></ToastStack>
             <RunScenarioModal roomContext={roomContext}></RunScenarioModal>

@@ -82,6 +82,7 @@ export function AddEditNoteModal(props: { roomContext: CanvasContext }) {
         direction={"none"}
         hidden={false}
         fullWidth={true}
+        className={"rounded-0"}
       >
         <Stack className={"mb-5"} gap={0}>
           <Stack className={"p-2 flex-wrap"} direction={"horizontal"}>

@@ -1,7 +1,8 @@
 import { useBearStore } from "../../state/useBearStore.ts";
 import { NavbarButton } from "../../shared/elements/NavbarButton.tsx";
+import clsx from "clsx";
 
-export function VisualizationPanelButton() {
+export function VisualizationPanelButton(props: { className?: string }) {
   const rightPanel = useBearStore((s) => s.room.panels.right);
   const show = useBearStore((s) => s.room.panels.visualization.show);
   const hide = useBearStore((s) => s.room.panels.visualization.hide);
@@ -11,7 +12,7 @@ export function VisualizationPanelButton() {
       icon={"eye"}
       selected={rightPanel === "visualization"}
       size={"big"}
-      className={"align-self-start flex-grow-0"}
+      className={clsx(props.className)}
       onToggle={(selected) => {
         if (selected) {
           show();

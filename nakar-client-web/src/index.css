@@ -11,8 +11,39 @@ div#root {
   font-family: system-ui;
 }
 
-.rounded {
+.rounded,
+.rounded-end,
+.rounded-start,
+.rounded-top,
+.rounded-bottom,
+.rounded-top-end,
+.rounded-top-start,
+.rounded-bottom-start,
+.rounded-bottom-end,
+.modal-content,
+.badge {
+  --bs-border-radius: 10px;
   corner-shape: squircle;
+}
+
+.modal-content {
+  border-radius: var(--bs-border-radius) !important;
+}
+
+.rounded-top-end {
+  border-top-right-radius: var(--bs-border-radius) !important;
+}
+
+.rounded-top-start {
+  border-top-left-radius: var(--bs-border-radius) !important;
+}
+
+.rounded-bottom-start {
+  border-bottom-left-radius: var(--bs-border-radius) !important;
+}
+
+.rounded-bottom-end {
+  border-bottom-right-radius: var(--bs-border-radius) !important;
 }
 
 /* Workaround for https://github.com/react-bootstrap/react-bootstrap/issues/3393#issuecomment-1375715749 */

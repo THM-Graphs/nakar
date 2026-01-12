@@ -68,7 +68,10 @@ export function CanvasToolbar(props: {
                 {scenario.current.title}
               </span>
             </span>
-            <DropdownButton icon={"three-dots-vertical"}>
+            <DropdownButton
+              icon={"three-dots-vertical"}
+              buttonClassName={"rounded-end"}
+            >
               <ActionDropdownItem
                 action={RerunScenarioAction.shared}
                 params={{

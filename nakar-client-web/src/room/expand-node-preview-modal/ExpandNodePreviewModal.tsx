@@ -54,6 +54,7 @@ export function ExpandNodePreviewModal(props: { roomContext: CanvasContext }) {
         direction={"none"}
         hidden={false}
         fullWidth={true}
+        className={"rounded-0"}
       >
         <Stack
           style={{

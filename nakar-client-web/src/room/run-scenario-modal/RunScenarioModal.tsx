@@ -66,6 +66,7 @@ export function RunScenarioModal(props: { roomContext: CanvasContext }) {
             direction={"none"}
             hidden={false}
             fullWidth={true}
+            className={"rounded-0"}
           >
             <Stack className={"pb-3 pt-3"} gap={3}>
               <Stack direction={"horizontal"} gap={2} className={"ps-3 pe-3"}>

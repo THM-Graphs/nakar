@@ -1,7 +1,8 @@
 import { useBearStore } from "../../state/useBearStore.ts";
 import { NavbarButton } from "../../shared/elements/NavbarButton.tsx";
+import clsx from "clsx";
 
-export function SearchPanelButton() {
+export function SearchPanelButton(props: { className?: string }) {
   const leftPanel = useBearStore((s) => s.room.panels.left);
   const show = useBearStore((s) => s.room.panels.search.show);
   const hide = useBearStore((s) => s.room.panels.search.hide);
@@ -11,7 +12,7 @@ export function SearchPanelButton() {
       icon={"search"}
       selected={leftPanel === "search"}
       size={"big"}
-      className={"align-self-start flex-grow-0"}
+      className={clsx("align-self-start flex-grow-0", props.className)}
       onToggle={(selected) => {
         if (selected) {
           show();

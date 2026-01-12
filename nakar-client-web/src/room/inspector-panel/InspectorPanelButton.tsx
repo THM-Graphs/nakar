@@ -1,7 +1,8 @@
 import { NavbarButton } from "../../shared/elements/NavbarButton.tsx";
 import { useBearStore } from "../../state/useBearStore.ts";
+import clsx from "clsx";
 
-export function InspectorPanelButton() {
+export function InspectorPanelButton(props: { className?: string }) {
   const rightPanels = useBearStore((s) => s.room.panels.right);
   const show = useBearStore((s) => s.room.panels.inspector.show);
   const hide = useBearStore((s) => s.room.panels.inspector.hide);
@@ -18,6 +19,7 @@ export function InspectorPanelButton() {
         }
       }}
       icon={"info-circle"}
+      className={clsx(props.className)}
     ></NavbarButton>
   );
 }

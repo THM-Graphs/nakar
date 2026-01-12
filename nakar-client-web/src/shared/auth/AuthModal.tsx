@@ -30,6 +30,7 @@ export function AuthModal() {
         direction={"none"}
         hidden={false}
         fullWidth={true}
+        className={"rounded-0"}
       >
         <Form
           onSubmit={(e) => {

@@ -43,7 +43,7 @@ export function NodePreviewDisplay(props: {
   return (
     <span
       className={clsx(
-        "badge text-center text-wrap text-break",
+        "badge text-wrap text-break",
         props.className,
         props.disableClick ? "" : "pointer",
       )}
