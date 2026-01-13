@@ -1,4 +1,4 @@
-import { RoomVisibilityDto } from '../../../dto/RoomVisibilityDto';
+import { RoomVisibilityDto } from '../../../../schema/dtos/RoomVisibilityDto';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class StartPageRoomDto {

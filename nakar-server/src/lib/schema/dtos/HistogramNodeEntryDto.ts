@@ -1,4 +1,4 @@
-import { ColorDto } from '../../../http/dto/ColorDto';
+import { ColorDto } from './ColorDto';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class HistogramNodeEntryDto {

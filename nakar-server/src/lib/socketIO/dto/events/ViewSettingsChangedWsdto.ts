@@ -1,4 +1,4 @@
-import { LiveCanvasViewSettingsDto } from '../../../http/dto/LiveCanvasViewSettingsDto';
+import { LiveCanvasViewSettingsDto } from '../../../schema/dtos/LiveCanvasViewSettingsDto';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class ViewSettingsChangedWsdto {

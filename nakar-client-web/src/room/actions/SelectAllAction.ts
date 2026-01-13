@@ -1,9 +1,9 @@
 import { Action } from "./Action.ts";
 import { SelectedCanvasTab } from "../../state/SelectedCanvasTab.ts";
-import { GraphElementsDto } from "../../../src-gen";
+import { LiveCanvasGraphElementsDto } from "../../../src-gen";
 
 export type SelectAllActionParams = {
-  graphElements: GraphElementsDto;
+  graphElements: LiveCanvasGraphElementsDto;
   setElements: (ids: string[]) => void;
   selectedTab: SelectedCanvasTab;
 };

@@ -2,7 +2,7 @@ import { Controller, Get, Param, UseGuards } from '@nestjs/common';
 import { Result } from '@strapi/types/dist/modules/documents/result';
 import { DatabaseService } from '../../../database/DatabaseService';
 import { SchemaFactoryService } from '../../../schema/SchemaFactoryService';
-import { RoomDto } from '../../dto/RoomDto';
+import { RoomDto } from '../../../schema/dtos/RoomDto';
 import { ApiResponse } from '@nestjs/swagger';
 import { UserCanAccessRoom } from '../../guards/UserCanAccessRoom';
 

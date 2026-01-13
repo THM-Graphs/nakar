@@ -5,7 +5,7 @@ import { LabelDto } from './LabelDto';
 import { HistogramDto } from './HistogramDto';
 import { ApiProperty } from '@nestjs/swagger';
 
-export class GraphElementsDto {
+export class LiveCanvasGraphElementsDto {
   @ApiProperty({ type: [NodeDto] })
   public nodes: NodeDto[];
 

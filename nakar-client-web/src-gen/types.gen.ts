@@ -11,16 +11,9 @@ export type CanvasChangedWsdto = {
 
 export type type = 'CanvasChangedWsdto';
 
-export type CanvasDataDto = {
-    metaData: GraphMetaDataDto;
-    elements: GraphElementsDto;
-    table: TableDataDto;
-    viewSettings: LiveCanvasViewSettingsDto;
-};
-
 export type CanvasDataReadyWsdto = {
     type: 'CanvasDataReadyWsdto';
-    data: CanvasDataDto;
+    data: LiveCanvasDataDto;
 };
 
 export type type2 = 'CanvasDataReadyWsdto';
@@ -181,36 +174,21 @@ export type type6 = 'GrabNodeWsdto';
 
 export type GraphElementsChangedWsdto = {
     type: 'GraphElementsChangedWsdto';
-    elements: GraphElementsDto;
+    elements: LiveCanvasGraphElementsDto;
 };
 
 export type type7 = 'GraphElementsChangedWsdto';
 
-export type GraphElementsDto = {
-    nodes: Array<NodeDto>;
-    edges: Array<EdgeDto>;
-    labels: Array<LabelDto>;
-    histogram: HistogramDto;
-    notes: Array<NoteDto>;
-};
-
 export type GraphMetaDataChangedWsdto = {
     type: 'GraphMetaDataChangedWsdto';
-    metaData: GraphMetaDataDto;
+    metaData: LiveCanvasMetaDataDto;
 };
 
 export type type8 = 'GraphMetaDataChangedWsdto';
 
-export type GraphMetaDataDto = {
-    scenario: ((ScenarioDto) | null);
-    arguments: Array<ScenarioArgumentDto>;
-    undoAction: (string) | null;
-    redoAction: (string) | null;
-};
-
 export type GraphTableDataChangedWsdto = {
     type: 'GraphTableDataChangedWsdto';
-    table: TableDataDto;
+    table: LiveCanvasTableDataDto;
 };
 
 export type type9 = 'GraphTableDataChangedWsdto';
@@ -286,6 +264,34 @@ export type LeaveCanvasWsdto = {
 };
 
 export type type14 = 'LeaveCanvasWsdto';
+
+export type LiveCanvasDataDto = {
+    metaData: LiveCanvasMetaDataDto;
+    elements: LiveCanvasGraphElementsDto;
+    table: LiveCanvasTableDataDto;
+    viewSettings: LiveCanvasViewSettingsDto;
+};
+
+export type LiveCanvasGraphElementsDto = {
+    nodes: Array<NodeDto>;
+    edges: Array<EdgeDto>;
+    labels: Array<LabelDto>;
+    histogram: HistogramDto;
+    notes: Array<NoteDto>;
+};
+
+export type LiveCanvasMetaDataDto = {
+    scenario: ((ScenarioDto) | null);
+    arguments: Array<ScenarioArgumentDto>;
+    undoAction: (string) | null;
+    redoAction: (string) | null;
+};
+
+export type LiveCanvasTableDataDto = {
+    data: Array<{
+        [key: string]: unknown;
+    }>;
+};
 
 export type LiveCanvasViewSettingsDto = {
     compressRelationshipsWidthFactor: number;
@@ -533,12 +539,6 @@ export type StartPageRoomDto = {
     title: string;
     visibility: 'private' | 'public' | 'unlisted';
     projectTitle: string;
-};
-
-export type TableDataDto = {
-    data: Array<{
-        [key: string]: unknown;
-    }>;
 };
 
 export type UngrabNodeWsdto = {

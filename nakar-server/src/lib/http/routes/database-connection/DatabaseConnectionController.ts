@@ -20,7 +20,7 @@ import { Neo4jNode } from '../../../neo4j/Neo4jNode';
 import { LiveCanvasUndoableData } from '../../../room/data/LiveCanvasUndoableData';
 import { ElementCreationReason } from '../../../room/graph/ElementCreationReason';
 import { GraphNode } from '../../../room/graph/GraphNode';
-import { NodePreviewDto } from '../../dto/NodePreviewDto';
+import { NodePreviewDto } from '../../../schema/dtos/NodePreviewDto';
 import { GetSearchCapabilitiesResponseBodyDto } from './dto/GetSearchCapabilitiesResponseBodyDto';
 import { Neo4jSearchCapabilities } from '../../../neo4j/Neo4jSearchCapabilities';
 import { SSet } from '../../../set/Set';

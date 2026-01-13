@@ -2,7 +2,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsArray, IsString, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
-import { PhysicalNodeDto } from '../types/PhysicalNodeDto';
+import { PhysicalNodeDto } from '../../../schema/dtos/PhysicalNodeDto';
 
 export class MoveNodesWsdto {
   @ApiProperty({ enum: ['MoveNodesWsdto'] })

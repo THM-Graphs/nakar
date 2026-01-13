@@ -1,6 +1,6 @@
-import { CanvasDto } from '../../../dto/CanvasDto';
-import { RoomDto } from '../../../dto/RoomDto';
-import { ScenarioCollectionDto } from '../../../dto/ScenarioCollectionDto';
+import { CanvasDto } from '../../../../schema/dtos/CanvasDto';
+import { RoomDto } from '../../../../schema/dtos/RoomDto';
+import { ScenarioCollectionDto } from '../../../../schema/dtos/ScenarioCollectionDto';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CanvasPageDto {

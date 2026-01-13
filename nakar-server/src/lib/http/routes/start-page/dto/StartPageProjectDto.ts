@@ -1,5 +1,5 @@
-import { UserPreviewDto } from '../../../dto/UserPreviewDto';
-import { DatabaseConnectionDto } from '../../../dto/DatabaseConnectionDto';
+import { UserPreviewDto } from '../../../../schema/dtos/UserPreviewDto';
+import { DatabaseConnectionDto } from '../../../../schema/dtos/DatabaseConnectionDto';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class StartPageProjectDto {

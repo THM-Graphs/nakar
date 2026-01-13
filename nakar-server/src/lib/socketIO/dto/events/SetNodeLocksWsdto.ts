@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { NodeLockCollectionEntryDto } from '../types/NodeLockCollectionEntryDto';
+import { NodeLockCollectionEntryDto } from '../../../schema/dtos/NodeLockCollectionEntryDto';
 
 export class SetNodeLocksWsdto {
   @ApiProperty({ enum: ['SetNodeLocksWsdto'] })

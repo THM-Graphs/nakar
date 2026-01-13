@@ -1,5 +1,5 @@
-import { PhysicalNodeDto } from '../types/PhysicalNodeDto';
-import { PhysicsPerformanceDto } from '../types/PhysicsPerformanceDto';
+import { PhysicalNodeDto } from '../../../schema/dtos/PhysicalNodeDto';
+import { PhysicsPerformanceDto } from '../../../schema/dtos/PhysicsPerformanceDto';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class NodesMovedWsdto {

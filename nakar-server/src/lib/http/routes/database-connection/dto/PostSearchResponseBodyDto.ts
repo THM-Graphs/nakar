@@ -1,4 +1,4 @@
-import { NodePreviewDto } from '../../../dto/NodePreviewDto';
+import { NodePreviewDto } from '../../../../schema/dtos/NodePreviewDto';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class PostSearchResponseBodyDto {

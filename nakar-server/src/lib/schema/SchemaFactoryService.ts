@@ -20,32 +20,32 @@ import { match, P } from 'ts-pattern';
 import { Injectable } from '@nestjs/common';
 import { StartPageProjectDto } from '../http/routes/start-page/dto/StartPageProjectDto';
 import { StartPageRoomDto } from '../http/routes/start-page/dto/StartPageRoomDto';
-import { RoomVisibilityDto } from '../http/dto/RoomVisibilityDto';
+import { RoomVisibilityDto } from './dtos/RoomVisibilityDto';
 import { ProjectPageDto } from '../http/routes/project-page/dto/ProjectPageDto';
-import { ScenarioGroupDto } from '../http/dto/ScenarioGroupDto';
-import { ScenarioDto } from '../http/dto/ScenarioDto';
-import { ScenarioQueryDto } from '../http/dto/ScenarioQueryDto';
-import { ScenarioParameterDto } from '../http/dto/ScenarioParameterDto';
-import { ScenarioParameterDataTypeDto } from '../http/dto/ScenarioParameterDataTypeDto';
-import { RoomDto } from '../http/dto/RoomDto';
-import { ScenarioCollectionDto } from '../http/dto/ScenarioCollectionDto';
-import { DatabaseConnectionDto } from '../http/dto/DatabaseConnectionDto';
-import { CanvasDto } from '../http/dto/CanvasDto';
-import { GraphElementsDto } from '../socketIO/dto/types/GraphElementsDto';
-import { NodeDto } from '../socketIO/dto/types/NodeDto';
-import { EdgeDto } from '../socketIO/dto/types/EdgeDto';
-import { LabelDto } from '../socketIO/dto/types/LabelDto';
-import { NoteDto } from '../socketIO/dto/types/NoteDto';
-import { TableDataDto } from '../socketIO/dto/types/TableDataDto';
-import { GraphMetaDataDto } from '../socketIO/dto/types/GraphMetaDataDto';
+import { ScenarioGroupDto } from './dtos/ScenarioGroupDto';
+import { ScenarioDto } from './dtos/ScenarioDto';
+import { ScenarioQueryDto } from './dtos/ScenarioQueryDto';
+import { ScenarioParameterDto } from './dtos/ScenarioParameterDto';
+import { ScenarioParameterDataTypeDto } from './dtos/ScenarioParameterDataTypeDto';
+import { RoomDto } from './dtos/RoomDto';
+import { ScenarioCollectionDto } from './dtos/ScenarioCollectionDto';
+import { DatabaseConnectionDto } from './dtos/DatabaseConnectionDto';
+import { CanvasDto } from './dtos/CanvasDto';
+import { LiveCanvasGraphElementsDto } from './dtos/LiveCanvasGraphElementsDto';
+import { NodeDto } from './dtos/NodeDto';
+import { EdgeDto } from './dtos/EdgeDto';
+import { LabelDto } from './dtos/LabelDto';
+import { NoteDto } from './dtos/NoteDto';
+import { LiveCanvasTableDataDto } from './dtos/LiveCanvasTableDataDto';
+import { LiveCanvasMetaDataDto } from './dtos/LiveCanvasMetaDataDto';
 import { ScenarioArgumentDto } from '../http/routes/action/dto/ScenarioArgumentDto';
-import { UserPreviewDto } from '../http/dto/UserPreviewDto';
-import { HistogramDto } from '../socketIO/dto/types/HistogramDto';
-import { EdgePreviewDto } from '../socketIO/dto/types/EdgePreviewDto';
-import { HistogramValueEntryDto } from '../socketIO/dto/types/HistogramValueEntryDto';
-import { HistogramNodeEntryDto } from '../socketIO/dto/types/HistogramNodeEntryDto';
-import { NodePreviewDto } from '../socketIO/dto/types/NodePreviewDto';
-import { CreationReasonDto } from '../socketIO/dto/types/CreationReasonDto';
+import { UserPreviewDto } from './dtos/UserPreviewDto';
+import { HistogramDto } from './dtos/HistogramDto';
+import { EdgePreviewDto } from './dtos/EdgePreviewDto';
+import { HistogramValueEntryDto } from './dtos/HistogramValueEntryDto';
+import { HistogramNodeEntryDto } from './dtos/HistogramNodeEntryDto';
+import { NodePreviewDto } from './dtos/NodePreviewDto';
+import { CreationReasonDto } from './dtos/CreationReasonDto';
 import { ElementCreationReason } from '../room/graph/ElementCreationReason';
 
 @Injectable()
@@ -382,7 +382,7 @@ export class SchemaFactoryService {
     graph: LiveCanvasUndoableData,
     notes: IndexedNoteCollection,
     viewSettings: LiveCanvasViewSettings,
-  ): Promise<GraphElementsDto> {
+  ): Promise<LiveCanvasGraphElementsDto> {
     const t: Profiler = this._logger.startTimer();
     const databaseCache: DatabaseReferenceCache = new DatabaseReferenceCache(
       this._database,
@@ -390,7 +390,7 @@ export class SchemaFactoryService {
     const widthRange: Range = graph.edges.getEdgeDegreeRange();
     const degreeRange: Range = graph.nodes.getNodeDegreeRange(graph);
 
-    const result: GraphElementsDto = {
+    const result: LiveCanvasGraphElementsDto = {
       nodes: await graph.nodes.nodes.asyncFlatMap(
         async (node: GraphNode): Promise<NodeDto> =>
           await this._createSchemaNode(
@@ -434,9 +434,11 @@ export class SchemaFactoryService {
     return result;
   }
 
-  public createSchemaTable(tableData: SMap<string, unknown>[]): TableDataDto {
+  public createSchemaTable(
+    tableData: SMap<string, unknown>[],
+  ): LiveCanvasTableDataDto {
     const t: Profiler = this._logger.startTimer();
-    const result: TableDataDto = {
+    const result: LiveCanvasTableDataDto = {
       data: tableData.map(
         (entry: SMap<string, unknown>): Record<string, unknown> =>
           entry.toRecord(),
@@ -451,14 +453,14 @@ export class SchemaFactoryService {
   public async createSchemaGraphMetaData(
     graph: LiveCanvasUndoableData,
     undoWrapperInfo: UndoWrapperInfo | null,
-  ): Promise<GraphMetaDataDto> {
+  ): Promise<LiveCanvasMetaDataDto> {
     const t: Profiler = this._logger.startTimer();
     const metaData: LiveCanvasMetaData = graph.metaData;
     const scenario: Result<'api::v2-scenario.v2-scenario'> | null =
       metaData.scenarioId != null
         ? await this._database.getScenario(metaData.scenarioId)
         : null;
-    const result: GraphMetaDataDto = {
+    const result: LiveCanvasMetaDataDto = {
       scenario: scenario
         ? await this.createSchemaScenarioSchema(scenario)
         : null,

@@ -15,7 +15,7 @@ import { ColorSchema } from "../color/ColorSchema.ts";
 import { Theme } from "../../shared/theme/Theme.ts";
 import { isMultiSelectKey } from "../../shared/dom/isMultiSelectKey.ts";
 import {
-  GraphElementsDto,
+  LiveCanvasGraphElementsDto,
   NodesMovedWsdto,
   SetNodeLocksWsdto,
 } from "../../../src-gen";
@@ -197,7 +197,7 @@ export class D3Renderer {
     return this.$onUngrabNode.asObservable();
   }
 
-  public loadGraphContent(graphElements: GraphElementsDto) {
+  public loadGraphContent(graphElements: LiveCanvasGraphElementsDto) {
     this.graphState = D3RendererState.fromWsData(graphElements);
     this.renderSvgElements();
   }

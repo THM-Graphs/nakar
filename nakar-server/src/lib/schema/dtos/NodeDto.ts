@@ -1,5 +1,5 @@
 import { PositionDto } from './PositionDto';
-import { ColorDto } from '../../../http/dto/ColorDto';
+import { ColorDto } from './ColorDto';
 import { EdgePreviewDto } from './EdgePreviewDto';
 import { CreationReasonDto } from './CreationReasonDto';
 import { NoteDto } from './NoteDto';

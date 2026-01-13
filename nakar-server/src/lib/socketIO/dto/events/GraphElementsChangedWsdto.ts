@@ -1,16 +1,16 @@
-import { GraphElementsDto } from '../types/GraphElementsDto';
+import { LiveCanvasGraphElementsDto } from '../../../schema/dtos/LiveCanvasGraphElementsDto';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class GraphElementsChangedWsdto {
   @ApiProperty({ enum: ['GraphElementsChangedWsdto'] })
   public type: 'GraphElementsChangedWsdto';
 
-  @ApiProperty({ type: GraphElementsDto })
-  public elements: GraphElementsDto;
+  @ApiProperty({ type: LiveCanvasGraphElementsDto })
+  public elements: LiveCanvasGraphElementsDto;
 
   public constructor(data: {
     type: 'GraphElementsChangedWsdto';
-    elements: GraphElementsDto;
+    elements: LiveCanvasGraphElementsDto;
   }) {
     this.type = data.type;
     this.elements = data.elements;

@@ -1,6 +1,6 @@
 import { D3Link } from "./D3Link.ts";
 import { D3Node } from "./D3Node.ts";
-import { EdgeDto, GraphElementsDto, NodeDto } from "../../../src-gen";
+import { EdgeDto, LiveCanvasGraphElementsDto, NodeDto } from "../../../src-gen";
 
 export class D3RendererState {
   private _nodeByIdCache: Record<string, D3Node | null>;
@@ -8,7 +8,7 @@ export class D3RendererState {
   public constructor(
     public readonly links: D3Link[],
     public readonly nodes: D3Node[],
-    public readonly originalGraphElements: GraphElementsDto | null,
+    public readonly originalGraphElements: LiveCanvasGraphElementsDto | null,
   ) {
     this._nodeByIdCache = nodes.reduce<Record<string, D3Node | null>>(
       (cache, node) => {
@@ -25,7 +25,9 @@ export class D3RendererState {
     return new D3RendererState([], [], null);
   }
 
-  public static fromWsData(graphElements: GraphElementsDto): D3RendererState {
+  public static fromWsData(
+    graphElements: LiveCanvasGraphElementsDto,
+  ): D3RendererState {
     const nodes = graphElements.nodes.map((node: NodeDto): D3Node => {
       return {
         id: node.id,

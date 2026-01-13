@@ -22,7 +22,7 @@ import { CompressNodesRequestBodyDto } from './dto/CompressNodesRequestBodyDto';
 import { LayoutLabelRequestBodyDto } from './dto/LayoutLabelRequestBodyDto';
 import { ShowShortestPathRequestBodyDto } from './dto/ShowShortestPathRequestBodyDto';
 import { LoadNodeRequestBodyDto } from './dto/LoadNodeRequestBodyDto';
-import { LiveCanvasViewSettingsDto } from '../../dto/LiveCanvasViewSettingsDto';
+import { LiveCanvasViewSettingsDto } from '../../../schema/dtos/LiveCanvasViewSettingsDto';
 import { LiveCanvasViewSettings } from '../../../room/data/LiveCanvasViewSettings';
 
 @Controller('canvas/:canvasId/actions')

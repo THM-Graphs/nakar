@@ -1,5 +1,5 @@
 import z from 'zod';
-import { ColorDto } from '../../../http/dto/ColorDto';
+import { ColorDto } from '../../../schema/dtos/ColorDto';
 
 export abstract class ElementColor {
   // eslint-disable-next-line @typescript-eslint/typedef

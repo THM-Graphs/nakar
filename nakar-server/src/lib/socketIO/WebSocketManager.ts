@@ -46,16 +46,16 @@ import { JoinCanvasWsdto } from './dto/actions/JoinCanvasWsdto';
 import { GrabNodeWsdto } from './dto/actions/GrabNodeWsdto';
 import { UngrabNodeWsdto } from './dto/actions/UngrabNodeWsdto';
 import { MoveNodesWsdto } from './dto/actions/MoveNodesWsdto';
-import { PhysicalNodeDto } from './dto/types/PhysicalNodeDto';
+import { PhysicalNodeDto } from '../schema/dtos/PhysicalNodeDto';
 import { NodePosition } from '../room/graph/NodePosition';
 import { validationPipelineOptions } from '../application/validationPipelineOptions';
 import { WsValidationFilter } from './WsValidationFilter';
 import { NotificationWsdto } from './dto/events/NotificationWsdto';
 import { CanvasDataReadyWsdto } from './dto/events/CanvasDataReadyWsdto';
 import { EventWsdto } from './dto/EventWsdto';
-import { TableDataDto } from './dto/types/TableDataDto';
-import { GraphMetaDataDto } from './dto/types/GraphMetaDataDto';
-import { GraphElementsDto } from './dto/types/GraphElementsDto';
+import { LiveCanvasTableDataDto } from '../schema/dtos/LiveCanvasTableDataDto';
+import { LiveCanvasMetaDataDto } from '../schema/dtos/LiveCanvasMetaDataDto';
+import { LiveCanvasGraphElementsDto } from '../schema/dtos/LiveCanvasGraphElementsDto';
 
 export type Server = UntypedServer<ClientToServerEvents, ServerToClientEvents>;
 export type Socket = UntypedSocket<ClientToServerEvents, ServerToClientEvents>;
@@ -321,9 +321,8 @@ export class WebSocketManager
           .with(
             { type: 'CanvasEventGraphTableChanged' },
             (message: CanvasEventGraphTableChanged): void => {
-              const table: TableDataDto = this._schemaFactory.createSchemaTable(
-                message.table,
-              );
+              const table: LiveCanvasTableDataDto =
+                this._schemaFactory.createSchemaTable(message.table);
               this.sendToRoom(message.canvas.canvasId, {
                 table: table,
                 type: 'GraphTableDataChangedWsdto',
@@ -333,7 +332,7 @@ export class WebSocketManager
           .with(
             { type: 'CanvasEventGraphMetaDataChanged' },
             async (message: CanvasEventGraphMetaDataChanged): Promise<void> => {
-              const metaData: GraphMetaDataDto =
+              const metaData: LiveCanvasMetaDataDto =
                 await this._schemaFactory.createSchemaGraphMetaData(
                   message.graph,
                   message.undoInfo,
@@ -362,7 +361,7 @@ export class WebSocketManager
                     graph: message.graph,
                   });
 
-                const graphElements: GraphElementsDto =
+                const graphElements: LiveCanvasGraphElementsDto =
                   await this._schemaFactory.createSchemaGraphElements(
                     message.graph,
                     notes,
@@ -520,7 +519,7 @@ export class WebSocketManager
               graph: graph,
             });
 
-          const graphElements: GraphElementsDto =
+          const graphElements: LiveCanvasGraphElementsDto =
             await this._schemaFactory.createSchemaGraphElements(
               graph,
               notes,

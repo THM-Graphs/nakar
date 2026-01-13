@@ -38,7 +38,7 @@ import { NodePosition } from './graph/NodePosition';
 import { WTPhysicalNode } from '../room-worker/worker-events/WTPhysicalNode';
 import { LayoutSpecificationDto } from '../http/routes/action/dto/LayoutSpecificationDto';
 import { LayoutSpecificationCircleDto } from '../http/routes/action/dto/LayoutSpecificationCircleDto';
-import { PhysicalNodeDto } from '../socketIO/dto/types/PhysicalNodeDto';
+import { PhysicalNodeDto } from '../schema/dtos/PhysicalNodeDto';
 
 export class LiveCanvas {
   private readonly _logger: Logger = createChildLogger(this);

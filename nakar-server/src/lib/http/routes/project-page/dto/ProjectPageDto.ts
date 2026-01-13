@@ -1,7 +1,7 @@
-import { UserPreviewDto } from '../../../dto/UserPreviewDto';
-import { DatabaseConnectionDto } from '../../../dto/DatabaseConnectionDto';
-import { ScenarioGroupDto } from '../../../dto/ScenarioGroupDto';
-import { RoomDto } from '../../../dto/RoomDto';
+import { UserPreviewDto } from '../../../../schema/dtos/UserPreviewDto';
+import { DatabaseConnectionDto } from '../../../../schema/dtos/DatabaseConnectionDto';
+import { ScenarioGroupDto } from '../../../../schema/dtos/ScenarioGroupDto';
+import { RoomDto } from '../../../../schema/dtos/RoomDto';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class ProjectPageDto {

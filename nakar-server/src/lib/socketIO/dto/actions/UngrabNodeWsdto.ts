@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
 import { ApiProperty } from '@nestjs/swagger';
 import { IsString, ValidateNested } from 'class-validator';
-import { PhysicalNodeDto } from '../types/PhysicalNodeDto';
+import { PhysicalNodeDto } from '../../../schema/dtos/PhysicalNodeDto';
 import { Type } from 'class-transformer';
 
 export class UngrabNodeWsdto {

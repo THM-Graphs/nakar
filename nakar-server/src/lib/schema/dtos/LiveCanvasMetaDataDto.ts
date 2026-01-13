@@ -1,8 +1,8 @@
-import { ScenarioDto } from '../../../http/dto/ScenarioDto';
-import { ScenarioArgumentDto } from '../../../http/routes/action/dto/ScenarioArgumentDto';
+import { ScenarioDto } from './ScenarioDto';
+import { ScenarioArgumentDto } from '../../http/routes/action/dto/ScenarioArgumentDto';
 import { ApiProperty } from '@nestjs/swagger';
 
-export class GraphMetaDataDto {
+export class LiveCanvasMetaDataDto {
   @ApiProperty({ type: ScenarioDto, nullable: true })
   public scenario: ScenarioDto | null;
 

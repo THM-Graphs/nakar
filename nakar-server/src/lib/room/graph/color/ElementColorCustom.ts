@@ -1,6 +1,6 @@
 import { ElementColor } from './ElementColor';
 import z from 'zod';
-import { ColorDto } from '../../../http/dto/ColorDto';
+import { ColorDto } from '../../../schema/dtos/ColorDto';
 
 export class ElementColorCustom extends ElementColor {
   public readonly backgroundColor: string;

@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { NotificationDataDto } from '../types/NotificationDataDto';
+import { NotificationDataDto } from '../../../schema/dtos/NotificationDataDto';
 
 export class NotificationWsdto {
   @ApiProperty({ enum: ['NotificationWsdto'] })

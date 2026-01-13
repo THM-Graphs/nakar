@@ -1,7 +1,7 @@
 import { Result } from '@strapi/types/dist/modules/documents/result';
 import { ScaleType } from '../../physics/ScaleType';
 import { Range } from '../../range/Range';
-import { LiveCanvasViewSettingsDto } from '../../http/dto/LiveCanvasViewSettingsDto';
+import { LiveCanvasViewSettingsDto } from '../../schema/dtos/LiveCanvasViewSettingsDto';
 
 export class LiveCanvasViewSettings {
   public static readonly defaultGrowNodesBasedOnDegreeFactor: number = 2;

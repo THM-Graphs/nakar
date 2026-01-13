@@ -9,7 +9,7 @@ import { CanvasEventGraphElementsChanged } from '../events/CanvasEventGraphEleme
 import { CanvasEventGraphTableChanged } from '../events/CanvasEventGraphTableChanged';
 import { CanvasEventViewSettingsChanged } from '../events/CanvasEventViewSettingsChanged';
 import { LiveCanvas } from '../LiveCanvas';
-import { PhysicalNodeDto } from '../../socketIO/dto/types/PhysicalNodeDto';
+import { PhysicalNodeDto } from '../../schema/dtos/PhysicalNodeDto';
 
 export class LiveCanvasChangeRecorder {
   private _shouldSendMetaDataChangedToUser: boolean;

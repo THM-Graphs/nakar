@@ -5,11 +5,12 @@ import { Theme } from "../shared/theme/Theme.ts";
 import { SelectedCanvasTab } from "./SelectedCanvasTab.ts";
 import { ZoomTransform } from "d3";
 import {
-  CanvasDataDto,
   ColorDto,
   ExpandNodePreviewEntryDto,
-  GraphElementsDto,
-  GraphMetaDataDto,
+  LiveCanvasDataDto,
+  LiveCanvasGraphElementsDto,
+  LiveCanvasMetaDataDto,
+  LiveCanvasTableDataDto,
   LiveCanvasViewSettingsDto,
   NodeDto,
   NodePreviewDto,
@@ -20,7 +21,6 @@ import {
   ScenarioArgumentDto,
   ScenarioCollectionDto,
   ScenarioDto,
-  TableDataDto,
 } from "../../src-gen";
 
 export interface BearState {
@@ -90,11 +90,11 @@ export interface BearState {
       };
     };
     scenario: {
-      graph: CanvasDataDto;
-      setGraph: (g: CanvasDataDto | null) => void;
-      setGraphElements: (g: GraphElementsDto) => void;
-      setGraphMetaData: (g: GraphMetaDataDto) => void;
-      setGraphTable: (g: TableDataDto) => void;
+      graph: LiveCanvasDataDto;
+      setGraph: (g: LiveCanvasDataDto | null) => void;
+      setGraphElements: (g: LiveCanvasGraphElementsDto) => void;
+      setGraphMetaData: (g: LiveCanvasMetaDataDto) => void;
+      setGraphTable: (g: LiveCanvasTableDataDto) => void;
       setLocks: (locks: { id: string; locked: boolean }[]) => void;
       runScenarioModal: {
         shown: boolean;
