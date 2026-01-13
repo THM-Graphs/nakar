@@ -1,4 +1,4 @@
-import { LiveCanvasUndoableData } from '../room/data/LiveCanvasUndoableData';
+import { LiveCanvasUndoableData } from '../live-canvas/data/LiveCanvasUndoableData';
 import { Result } from '@strapi/types/dist/modules/documents';
 import z from 'zod';
 import { SSet } from '../set/Set';
@@ -11,7 +11,7 @@ import {
   getStringPayloadOfMediaFile,
   saveStringFile,
 } from '../media/media';
-import { LiveCanvasViewSettings } from '../room/data/LiveCanvasViewSettings';
+import { LiveCanvasViewSettings } from '../live-canvas/data/LiveCanvasViewSettings';
 import * as Params from '@strapi/types/dist/modules/documents/params/document-engine';
 import { ApiV2PostScenarioActionV2PostScenarioAction } from '../../../types/generated/contentTypes';
 import { TupleTypes } from '../schema/TupleTypes';

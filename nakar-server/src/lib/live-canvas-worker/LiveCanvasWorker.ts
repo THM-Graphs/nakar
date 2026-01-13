@@ -1,14 +1,14 @@
-import { RoomWorkerData } from './RoomWorkerData';
+import { LiveCanvasWorkerData } from './LiveCanvasWorkerData';
 import { parentPort, workerData } from 'node:worker_threads';
-import { RoomWorkerPhysicsService } from './RoomWorkerPhysicsService';
+import { LiveCanvasWorkerPhysicsService } from './LiveCanvasWorkerPhysicsService';
 
-export class RoomWorker {
-  private readonly _roomInstance: RoomWorkerPhysicsService;
+export class LiveCanvasWorker {
+  private readonly _roomInstance: LiveCanvasWorkerPhysicsService;
 
   public constructor() {
-    this._roomInstance = new RoomWorkerPhysicsService(
+    this._roomInstance = new LiveCanvasWorkerPhysicsService(
       // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-      workerData as RoomWorkerData,
+      workerData as LiveCanvasWorkerData,
     );
   }
 
@@ -21,7 +21,7 @@ export class RoomWorker {
   }
 }
 
-const roomWorker: RoomWorker = new RoomWorker();
+const roomWorker: LiveCanvasWorker = new LiveCanvasWorker();
 roomWorker.bootstrap();
 
 // TODO: does not work

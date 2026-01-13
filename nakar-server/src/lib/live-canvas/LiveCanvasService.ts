@@ -1,8 +1,7 @@
 import { DatabaseService } from '../database/DatabaseService';
 import { DatabaseEventsService } from '../database/DatabaseEventsService';
 import { Neo4jService } from '../neo4j/Neo4jService';
-import { Observable } from 'rxjs';
-import { Subject } from 'rxjs';
+import { Observable, Subject } from 'rxjs';
 import { LiveCanvasUndoableData } from './data/LiveCanvasUndoableData';
 import installHandlebarHelpers from 'handlebars-helpers';
 import { SMap } from '../map/Map';
@@ -16,7 +15,7 @@ import { Profiler } from 'winston';
 import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 
 @Injectable()
-export class CanvasService implements OnModuleInit, OnModuleDestroy {
+export class LiveCanvasService implements OnModuleInit, OnModuleDestroy {
   private readonly _logger: Logger = createChildLogger(this);
   private readonly _liveCanvases: SMap<string, LiveCanvas>;
   private readonly _onEvent: Subject<CanvasEvent>;

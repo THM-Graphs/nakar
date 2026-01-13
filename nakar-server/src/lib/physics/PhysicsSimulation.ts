@@ -1,12 +1,11 @@
-import { Observable } from 'rxjs';
-import { Subject } from 'rxjs';
+import { Observable, Subject } from 'rxjs';
 import { CombinationCache } from './CombinationCache';
 import { PhysicsSimulationRunOptions } from './PhysicsSimulationRunOptions';
 import { PhysicalGraph } from './physical-graph/PhysicalGraph';
 import { PhysicalNode } from './physical-graph/PhysicalNode';
 import { PhysicalEdge } from './physical-graph/PhysicalEdge';
 import { Range } from '../range/Range';
-import { GraphNode } from '../room/graph/GraphNode';
+import { GraphNode } from '../live-canvas/graph/GraphNode';
 import { PhysicsSimulationEventSlowTick } from './PhysicsSimulationEventSlowTick';
 import { Logger } from '@strapi/logger';
 import { createChildLogger } from '../logger/createChildLogger';

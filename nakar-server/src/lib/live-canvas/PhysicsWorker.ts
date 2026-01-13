@@ -1,13 +1,13 @@
 import { Worker } from 'node:worker_threads';
-import { WTEvent } from '../room-worker/worker-events/WTEvent';
+import { WTEvent } from '../live-canvas-worker/worker-events/WTEvent';
 import { PhysicalGraph } from '../physics/physical-graph/PhysicalGraph';
-import { RoomWorkerData } from '../room-worker/RoomWorkerData';
+import { LiveCanvasWorkerData } from '../live-canvas-worker/LiveCanvasWorkerData';
 import path from 'path';
-import { WTAction } from '../room-worker/worker-events/WTAction';
+import { WTAction } from '../live-canvas-worker/worker-events/WTAction';
 import { Observable, Subject } from 'rxjs';
 import { Logger } from '@strapi/logger';
 import { createChildLogger } from '../logger/createChildLogger';
-import { WTPhysicalNode } from '../room-worker/worker-events/WTPhysicalNode';
+import { WTPhysicalNode } from '../live-canvas-worker/worker-events/WTPhysicalNode';
 
 export class PhysicsWorker {
   private readonly _logger: Logger = createChildLogger(this);
@@ -25,11 +25,11 @@ export class PhysicsWorker {
   }
 
   public async bootstrap(): Promise<void> {
-    const workerData: RoomWorkerData = {
+    const workerData: LiveCanvasWorkerData = {
       canvasId: this._canvasId,
     };
     const worker: Worker = new Worker(
-      path.join(__dirname, '..', 'room-worker', 'RoomWorker.js'),
+      path.join(__dirname, '..', 'live-canvas-worker', 'LiveCanvasWorker.js'),
       {
         workerData: workerData,
       },

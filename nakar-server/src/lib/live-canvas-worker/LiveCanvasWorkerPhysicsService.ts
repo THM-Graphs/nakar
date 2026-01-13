@@ -1,7 +1,6 @@
-import { MessagePort } from 'node:worker_threads';
-import { parentPort } from 'node:worker_threads';
+import { MessagePort, parentPort } from 'node:worker_threads';
 import { PhysicsSimulation } from '../physics/PhysicsSimulation';
-import { RoomWorkerData } from './RoomWorkerData';
+import { LiveCanvasWorkerData } from './LiveCanvasWorkerData';
 import { WTActionSetGraph } from './worker-events/WTActionSetGraph';
 import { WTAction } from './worker-events/WTAction';
 import { match } from 'ts-pattern';
@@ -15,16 +14,16 @@ import { PhysicsSimulationEventSlowTick } from '../physics/PhysicsSimulationEven
 import { Logger } from '@strapi/logger';
 import { createChildLogger } from '../logger/createChildLogger';
 
-export class RoomWorkerPhysicsService {
+export class LiveCanvasWorkerPhysicsService {
   private readonly _logger: Logger = createChildLogger(this);
 
-  private readonly _roomId: string;
+  private readonly _canvasId: string;
   private readonly _parentPort: MessagePort;
   private readonly _physics: PhysicsSimulation;
 
-  public constructor(data: RoomWorkerData) {
+  public constructor(data: LiveCanvasWorkerData) {
     this._physics = new PhysicsSimulation({ nodes: {}, edges: {} });
-    this._roomId = data.canvasId;
+    this._canvasId = data.canvasId;
 
     if (parentPort == null) {
       throw new Error('No parent port.');
@@ -36,7 +35,7 @@ export class RoomWorkerPhysicsService {
   }
 
   public bootstrap(): void {
-    this._logger.debug(`Did receive worker data: roomId: ${this._roomId}.`);
+    this._logger.debug(`Did receive worker data: roomId: ${this._canvasId}.`);
   }
 
   public destroy(): void {
@@ -67,7 +66,7 @@ export class RoomWorkerPhysicsService {
               ] as PhysicalNode | null;
               if (foundNode == null) {
                 this._logger.error(
-                  `Client did send moved node, but the node cannot be found in the room. Room: ${this._roomId}, Node: ${movedNode.id}`,
+                  `Client did send moved node, but the node cannot be found in the room. Room: ${this._canvasId}, Node: ${movedNode.id}`,
                 );
                 continue;
               }

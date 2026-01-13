@@ -10,7 +10,6 @@ import { ApiBody, ApiParam } from '@nestjs/swagger';
 import { LoadScenarioRequestBodyDto } from './dto/LoadScenarioRequestBodyDto';
 import { UserCanAccessCanvas } from '../../guards/UserCanAccessCanvas';
 import { SMap } from '../../../map/Map';
-import { CanvasService } from '../../../room/CanvasService';
 import { ExpandNodeRequestBodyDto } from './dto/ExpandNodeRequestBodyDto';
 import { SSet } from '../../../set/Set';
 import { DeleteElementsRequestBodyDto } from './dto/DeleteElementsRequestBodyDto';
@@ -23,7 +22,8 @@ import { LayoutLabelRequestBodyDto } from './dto/LayoutLabelRequestBodyDto';
 import { ShowShortestPathRequestBodyDto } from './dto/ShowShortestPathRequestBodyDto';
 import { LoadNodeRequestBodyDto } from './dto/LoadNodeRequestBodyDto';
 import { LiveCanvasViewSettingsDto } from '../../../schema/dtos/LiveCanvasViewSettingsDto';
-import { LiveCanvasViewSettings } from '../../../room/data/LiveCanvasViewSettings';
+import { LiveCanvasViewSettings } from '../../../live-canvas/data/LiveCanvasViewSettings';
+import { LiveCanvasService } from '../../../live-canvas/LiveCanvasService';
 
 @Controller('canvas/:canvasId/actions')
 @ApiParam({
@@ -33,7 +33,7 @@ import { LiveCanvasViewSettings } from '../../../room/data/LiveCanvasViewSetting
 })
 @UseGuards(UserCanAccessCanvas)
 export class ActionController {
-  public constructor(private readonly _roomService: CanvasService) {}
+  public constructor(private readonly _canvasService: LiveCanvasService) {}
 
   @Post('load-scenario')
   @HttpCode(200)
@@ -55,7 +55,7 @@ export class ActionController {
       new SMap<string, string>(),
     );
 
-    this._roomService.getCanvasWithId(canvasId).loadScenario({
+    this._canvasService.getCanvasWithId(canvasId).loadScenario({
       scenarioId: scenarioId,
       arguments: scenarioArgs,
       additive: body.additive,
@@ -65,7 +65,7 @@ export class ActionController {
   @Post('reload-scenario')
   @HttpCode(200)
   public reloadScenario(@Param('canvasId') canvasId: string): void {
-    this._roomService.getCanvasWithId(canvasId).reloadScenario();
+    this._canvasService.getCanvasWithId(canvasId).reloadScenario();
   }
 
   @Post('expand-node')
@@ -75,7 +75,7 @@ export class ActionController {
     @Body() body: ExpandNodeRequestBodyDto,
     @Param('canvasId') canvasId: string,
   ): void {
-    this._roomService.getCanvasWithId(canvasId).expandNode({
+    this._canvasService.getCanvasWithId(canvasId).expandNode({
       nodeIds: body.nodeIds,
       limit:
         body.limit != null
@@ -93,7 +93,7 @@ export class ActionController {
     @Param('canvasId') canvasId: string,
     @Body() body: DeleteElementsRequestBodyDto,
   ): void {
-    this._roomService.getCanvasWithId(canvasId).deleteElements({
+    this._canvasService.getCanvasWithId(canvasId).deleteElements({
       nodeIds: body.nodes,
       labels: body.labels,
       edgeIds: body.edges,
@@ -104,7 +104,7 @@ export class ActionController {
   @Post('relayout')
   @HttpCode(200)
   public relayout(@Param('canvasId') canvasId: string): void {
-    this._roomService.getCanvasWithId(canvasId).relayout();
+    this._canvasService.getCanvasWithId(canvasId).relayout();
   }
 
   @Post('unlock-nodes')
@@ -113,7 +113,7 @@ export class ActionController {
     @Param('canvasId') canvasId: string,
     @Body() body: UnlockNodesRequestBodyDto,
   ): void {
-    this._roomService
+    this._canvasService
       .getCanvasWithId(canvasId)
       .unlockNodes({ nodeIds: body.nodes });
   }
@@ -124,7 +124,7 @@ export class ActionController {
     @Param('canvasId') canvasId: string,
     @Body() body: FocusNodesRequestBodyDto,
   ): void {
-    this._roomService
+    this._canvasService
       .getCanvasWithId(canvasId)
       .focusNodes({ nodeIds: body.nodes });
   }
@@ -132,13 +132,13 @@ export class ActionController {
   @Post('undo')
   @HttpCode(200)
   public undo(@Param('canvasId') canvasId: string): void {
-    this._roomService.getCanvasWithId(canvasId).undo();
+    this._canvasService.getCanvasWithId(canvasId).undo();
   }
 
   @Post('redo')
   @HttpCode(200)
   public redo(@Param('canvasId') canvasId: string): void {
-    this._roomService.getCanvasWithId(canvasId).redo();
+    this._canvasService.getCanvasWithId(canvasId).redo();
   }
 
   @Post('run-query')
@@ -147,7 +147,7 @@ export class ActionController {
     @Param('canvasId') canvasId: string,
     @Body() body: RunQueryRequestBodyDto,
   ): void {
-    this._roomService.getCanvasWithId(canvasId).runQuery({
+    this._canvasService.getCanvasWithId(canvasId).runQuery({
       query: body.query,
       databaseId: body.databaseId,
       replace: body.replace,
@@ -157,25 +157,25 @@ export class ActionController {
   @Post('connect-result-nodes')
   @HttpCode(200)
   public connectResultNodes(@Param('canvasId') canvasId: string): void {
-    this._roomService.getCanvasWithId(canvasId).connectResultNodes();
+    this._canvasService.getCanvasWithId(canvasId).connectResultNodes();
   }
 
   @Post('unlock-all-nodes')
   @HttpCode(200)
   public unlockAllNodes(@Param('canvasId') canvasId: string): void {
-    this._roomService.getCanvasWithId(canvasId).unlockAllNodes();
+    this._canvasService.getCanvasWithId(canvasId).unlockAllNodes();
   }
 
   @Post('remove-dangling-nodes')
   @HttpCode(200)
   public removeDanglingNodes(@Param('canvasId') canvasId: string): void {
-    this._roomService.getCanvasWithId(canvasId).removeDanglingNodes();
+    this._canvasService.getCanvasWithId(canvasId).removeDanglingNodes();
   }
 
   @Post('compress-relationships')
   @HttpCode(200)
   public compressRelationships(@Param('canvasId') canvasId: string): void {
-    this._roomService.getCanvasWithId(canvasId).compressRelationships();
+    this._canvasService.getCanvasWithId(canvasId).compressRelationships();
   }
 
   @Post('compress-nodes')
@@ -184,7 +184,7 @@ export class ActionController {
     @Param('canvasId') canvasId: string,
     @Body() body: CompressNodesRequestBodyDto,
   ): void {
-    this._roomService
+    this._canvasService
       .getCanvasWithId(canvasId)
       .compressNodes({ label: body.label });
   }
@@ -195,7 +195,7 @@ export class ActionController {
     @Param('canvasId') canvasId: string,
     @Body() body: LayoutLabelRequestBodyDto,
   ): void {
-    this._roomService.getCanvasWithId(canvasId).layoutLabel({
+    this._canvasService.getCanvasWithId(canvasId).layoutLabel({
       label: body.label,
       layoutSpecification: body.layoutSpecification,
     });
@@ -207,7 +207,7 @@ export class ActionController {
     @Param('canvasId') canvasId: string,
     @Body() body: ShowShortestPathRequestBodyDto,
   ): void {
-    this._roomService.getCanvasWithId(canvasId).showShortestPath({
+    this._canvasService.getCanvasWithId(canvasId).showShortestPath({
       nodeIds: body.nodeIds,
     });
   }
@@ -218,7 +218,7 @@ export class ActionController {
     @Param('canvasId') canvasId: string,
     @Body() body: LoadNodeRequestBodyDto,
   ): void {
-    this._roomService.getCanvasWithId(canvasId).loadNode({
+    this._canvasService.getCanvasWithId(canvasId).loadNode({
       nodeId: body.nodeId,
       databaseId: body.databaseId,
     });
@@ -230,7 +230,7 @@ export class ActionController {
     @Param('canvasId') canvasId: string,
     @Body() body: LiveCanvasViewSettingsDto,
   ): void {
-    this._roomService
+    this._canvasService
       .getCanvasWithId(canvasId)
       .setViewSettings(LiveCanvasViewSettings.fromSchema(body));
   }

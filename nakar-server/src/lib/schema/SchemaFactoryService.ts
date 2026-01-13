@@ -1,11 +1,11 @@
-import { LiveCanvasUndoableData } from '../room/data/LiveCanvasUndoableData';
-import { GraphNode } from '../room/graph/GraphNode';
-import { GraphEdge } from '../room/graph/GraphEdge';
-import { GraphLabel } from '../room/graph/GraphLabel';
+import { LiveCanvasUndoableData } from '../live-canvas/data/LiveCanvasUndoableData';
+import { GraphNode } from '../live-canvas/graph/GraphNode';
+import { GraphEdge } from '../live-canvas/graph/GraphEdge';
+import { GraphLabel } from '../live-canvas/graph/GraphLabel';
 import { SMap } from '../map/Map';
-import { LiveCanvasMetaData } from '../room/graph/LiveCanvasMetaData';
+import { LiveCanvasMetaData } from '../live-canvas/graph/LiveCanvasMetaData';
 import { SSet } from '../set/Set';
-import { PropertyCollection } from '../room/graph/PropertyCollection';
+import { PropertyCollection } from '../live-canvas/graph/PropertyCollection';
 import { DatabaseService } from '../database/DatabaseService';
 import { DatabaseReferenceCache } from './DatabaseReferenceCache';
 import { UndoWrapperInfo } from '../undo/UndoWrapperInfo';
@@ -15,7 +15,7 @@ import { Range } from '../range/Range';
 import { Logger } from '@strapi/logger';
 import { createChildLogger } from '../logger/createChildLogger';
 import { Profiler } from 'winston';
-import { LiveCanvasViewSettings } from '../room/data/LiveCanvasViewSettings';
+import { LiveCanvasViewSettings } from '../live-canvas/data/LiveCanvasViewSettings';
 import { match, P } from 'ts-pattern';
 import { Injectable } from '@nestjs/common';
 import { StartPageProjectDto } from '../http/routes/start-page/dto/StartPageProjectDto';
@@ -46,7 +46,7 @@ import { HistogramValueEntryDto } from './dtos/HistogramValueEntryDto';
 import { HistogramNodeEntryDto } from './dtos/HistogramNodeEntryDto';
 import { NodePreviewDto } from './dtos/NodePreviewDto';
 import { CreationReasonDto } from './dtos/CreationReasonDto';
-import { ElementCreationReason } from '../room/graph/ElementCreationReason';
+import { ElementCreationReason } from '../live-canvas/graph/ElementCreationReason';
 
 @Injectable()
 export class SchemaFactoryService {

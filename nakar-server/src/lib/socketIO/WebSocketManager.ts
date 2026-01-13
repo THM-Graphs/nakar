@@ -20,23 +20,22 @@ import { SMap } from '../map/Map';
 import { match, P } from 'ts-pattern';
 import { Result } from '@strapi/types/dist/modules/documents/result';
 import { DatabaseService } from '../database/DatabaseService';
-import { LiveCanvas } from '../room/LiveCanvas';
-import { CanvasService } from '../room/CanvasService';
-import { LiveCanvasUndoableData } from '../room/data/LiveCanvasUndoableData';
+import { LiveCanvas } from '../live-canvas/LiveCanvas';
+import { LiveCanvasUndoableData } from '../live-canvas/data/LiveCanvasUndoableData';
 import { IndexedNoteCollection } from '../database/IndexedNoteCollection';
 import { SchemaFactoryService } from '../schema/SchemaFactoryService';
-import { CanvasEvent } from '../room/events/CanvasEvent';
-import { CanvasEventGraphTableChanged } from '../room/events/CanvasEventGraphTableChanged';
-import { CanvasEventGraphMetaDataChanged } from '../room/events/CanvasEventGraphMetaDataChanged';
-import { CanvasEventGraphElementsChanged } from '../room/events/CanvasEventGraphElementsChanged';
-import { CanvasEventRoomPhysicsUpdated } from '../room/events/CanvasEventRoomPhysicsUpdated';
-import { CanvasEventNodeLocksUpdated } from '../room/events/CanvasEventNodeLocksUpdated';
-import { CanvasEventProgressChanged } from '../room/events/CanvasEventProgressChanged';
-import { CanvasEventProgressCleared } from '../room/events/CanvasEventProgressCleared';
-import { CanvasEventEventKick } from '../room/events/CanvasEventEventKick';
-import { CanvasEventNotAllNodesLoaded } from '../room/events/CanvasEventNotAllNodesLoaded';
-import { CanvasEventError } from '../room/events/CanvasEventError';
-import { CanvasEventViewSettingsChanged } from '../room/events/CanvasEventViewSettingsChanged';
+import { CanvasEvent } from '../live-canvas/events/CanvasEvent';
+import { CanvasEventGraphTableChanged } from '../live-canvas/events/CanvasEventGraphTableChanged';
+import { CanvasEventGraphMetaDataChanged } from '../live-canvas/events/CanvasEventGraphMetaDataChanged';
+import { CanvasEventGraphElementsChanged } from '../live-canvas/events/CanvasEventGraphElementsChanged';
+import { CanvasEventRoomPhysicsUpdated } from '../live-canvas/events/CanvasEventRoomPhysicsUpdated';
+import { CanvasEventNodeLocksUpdated } from '../live-canvas/events/CanvasEventNodeLocksUpdated';
+import { CanvasEventProgressChanged } from '../live-canvas/events/CanvasEventProgressChanged';
+import { CanvasEventProgressCleared } from '../live-canvas/events/CanvasEventProgressCleared';
+import { CanvasEventEventKick } from '../live-canvas/events/CanvasEventEventKick';
+import { CanvasEventNotAllNodesLoaded } from '../live-canvas/events/CanvasEventNotAllNodesLoaded';
+import { CanvasEventError } from '../live-canvas/events/CanvasEventError';
+import { CanvasEventViewSettingsChanged } from '../live-canvas/events/CanvasEventViewSettingsChanged';
 import { DatabaseEventsService } from '../database/DatabaseEventsService';
 import { ServerToClientEvents } from './ServerToClientEvents';
 import { ClientToServerEvents } from './ClientToServerEvents';
@@ -47,7 +46,7 @@ import { GrabNodeWsdto } from './dto/actions/GrabNodeWsdto';
 import { UngrabNodeWsdto } from './dto/actions/UngrabNodeWsdto';
 import { MoveNodesWsdto } from './dto/actions/MoveNodesWsdto';
 import { PhysicalNodeDto } from '../schema/dtos/PhysicalNodeDto';
-import { NodePosition } from '../room/graph/NodePosition';
+import { NodePosition } from '../live-canvas/graph/NodePosition';
 import { validationPipelineOptions } from '../application/validationPipelineOptions';
 import { WsValidationFilter } from './WsValidationFilter';
 import { NotificationWsdto } from './dto/events/NotificationWsdto';
@@ -56,6 +55,7 @@ import { EventWsdto } from './dto/EventWsdto';
 import { LiveCanvasTableDataDto } from '../schema/dtos/LiveCanvasTableDataDto';
 import { LiveCanvasMetaDataDto } from '../schema/dtos/LiveCanvasMetaDataDto';
 import { LiveCanvasGraphElementsDto } from '../schema/dtos/LiveCanvasGraphElementsDto';
+import { LiveCanvasService } from '../live-canvas/LiveCanvasService';
 
 export type Server = UntypedServer<ClientToServerEvents, ServerToClientEvents>;
 export type Socket = UntypedSocket<ClientToServerEvents, ServerToClientEvents>;
@@ -79,7 +79,7 @@ export class WebSocketManager
 
   public constructor(
     private readonly _databaseService: DatabaseService,
-    private readonly _canvasService: CanvasService,
+    private readonly _canvasService: LiveCanvasService,
     private readonly _schemaFactory: SchemaFactoryService,
     private readonly _databaseEventsService: DatabaseEventsService,
   ) {
