@@ -33,6 +33,9 @@ export class LiveCanvasChangeRecorder {
 
   public didCreateSnapshot(): void {
     this._shouldSendMetaDataChangedToUser = true;
+  }
+  public didLoadSnapshot(): void {
+    this._shouldSendMetaDataChangedToUser = true;
     this._shouldSendGraphElementsToUserAndWorker = true;
     this._shouldSendTableDataToUser = true;
   }

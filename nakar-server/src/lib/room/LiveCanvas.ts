@@ -680,7 +680,7 @@ export class LiveCanvas {
         const changeRecorder: LiveCanvasChangeRecorder =
           new LiveCanvasChangeRecorder();
         this.data.undoableData.undo();
-        changeRecorder.didCreateSnapshot();
+        changeRecorder.didLoadSnapshot();
 
         await this.saveGraph();
         this._handleChangeRecorder(changeRecorder);
@@ -694,7 +694,7 @@ export class LiveCanvas {
         const changeRecorder: LiveCanvasChangeRecorder =
           new LiveCanvasChangeRecorder();
         this.data.undoableData.redo();
-        changeRecorder.didCreateSnapshot();
+        changeRecorder.didLoadSnapshot();
 
         await this.saveGraph();
         this._handleChangeRecorder(changeRecorder);
