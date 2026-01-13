@@ -5,7 +5,7 @@ export class LabelDto {
   @ApiProperty()
   public label: string;
 
-  @ApiProperty({ type: () => ColorDto })
+  @ApiProperty({ type: ColorDto })
   public color: ColorDto;
 
   @ApiProperty()

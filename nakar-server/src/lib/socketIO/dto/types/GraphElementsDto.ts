@@ -15,7 +15,7 @@ export class GraphElementsDto {
   @ApiProperty({ type: [LabelDto] })
   public labels: LabelDto[];
 
-  @ApiProperty({ type: () => HistogramDto })
+  @ApiProperty({ type: HistogramDto })
   public histogram: HistogramDto;
 
   @ApiProperty({ type: [NoteDto] })

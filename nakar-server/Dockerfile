@@ -8,7 +8,6 @@ COPY config ./config
 COPY database ./database
 COPY public/robots.txt ./public/robots.txt
 COPY src ./src
-COPY src-gen ./src-gen
 COPY types ./types
 COPY babel.config.js ./
 COPY tsconfig.json ./

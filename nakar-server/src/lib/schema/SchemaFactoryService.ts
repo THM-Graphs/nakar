@@ -840,17 +840,32 @@ export class SchemaFactoryService {
     return match(input)
       .with(
         ElementCreationReason.loadScenario,
-        () => CreationReasonDto.loadScenario,
+        (): CreationReasonDto => CreationReasonDto.loadScenario,
       )
-      .with(ElementCreationReason.expand, () => CreationReasonDto.expand)
-      .with(ElementCreationReason.query, () => CreationReasonDto.query)
-      .with(ElementCreationReason.merge, () => CreationReasonDto.merge)
-      .with(ElementCreationReason.compress, () => CreationReasonDto.compress)
+      .with(
+        ElementCreationReason.expand,
+        (): CreationReasonDto => CreationReasonDto.expand,
+      )
+      .with(
+        ElementCreationReason.query,
+        (): CreationReasonDto => CreationReasonDto.query,
+      )
+      .with(
+        ElementCreationReason.merge,
+        (): CreationReasonDto => CreationReasonDto.merge,
+      )
+      .with(
+        ElementCreationReason.compress,
+        (): CreationReasonDto => CreationReasonDto.compress,
+      )
       .with(
         ElementCreationReason.connectResultNodes,
-        () => CreationReasonDto.connectResultNodes,
+        (): CreationReasonDto => CreationReasonDto.connectResultNodes,
       )
-      .with(ElementCreationReason.search, () => CreationReasonDto.search)
+      .with(
+        ElementCreationReason.search,
+        (): CreationReasonDto => CreationReasonDto.search,
+      )
       .exhaustive();
   }
 
