@@ -1,9 +1,9 @@
-import { DatabaseConnection } from "../../../src-gen";
 import { CMSCard } from "./CMSCard.tsx";
 import { Link } from "react-router";
+import { DatabaseConnectionDto } from "../../../src-gen";
 
 export function DatabaseConnectionCard(props: {
-  databaseConnection: DatabaseConnection;
+  databaseConnection: DatabaseConnectionDto;
 }) {
   return (
     <CMSCard

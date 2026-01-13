@@ -1,6 +1,6 @@
 import { CMSCard } from "./CMSCard.tsx";
 import { Stack } from "react-bootstrap";
-import { ScenarioDto, ScenarioGroupDto } from "../../../src-gen-2";
+import { ScenarioDto, ScenarioGroupDto } from "../../../src-gen";
 
 export function ScenarioGroupCard(props: { scenarioGroup: ScenarioGroupDto }) {
   return (

@@ -1,12 +1,13 @@
-import { Color } from "../../../src-gen";
 import { Form, Stack } from "react-bootstrap";
 import { useColorSchema } from "../../room/color/useColorSchema.ts";
 import { useBearStore } from "../../state/useBearStore.ts";
+import { ColorDto, ColorPresetDto } from "../../../src-gen";
+import { match } from "ts-pattern";
+import { ReactNode } from "react";
 
-export type ColorIndex = 0 | 2 | 1 | 3 | 4 | 5;
 export function ColorPicker(props: {
-  color: Color | null;
-  onColorChange: (newColor: Color | null) => void;
+  color: ColorDto | null;
+  onColorChange: (newColor: ColorDto | null) => void;
 }) {
   const colorSchema = useColorSchema();
   const getTheme = useBearStore((s) => s.global.theme.getTheme);
@@ -38,7 +39,7 @@ export function ColorPicker(props: {
                 <div
                   style={{
                     backgroundColor: colorSchema.getBackgroundColor(
-                      index as ColorIndex,
+                      index as ColorPresetDto["index"],
                     ),
                     width: "20px",
                     height: "20px",
@@ -58,8 +59,10 @@ export function ColorPicker(props: {
                 const checked = e.target.checked;
                 if (checked) {
                   props.onColorChange({
-                    type: "PresetColor",
-                    index: index as ColorIndex,
+                    color: {
+                      type: "ColorPresetDto",
+                      index: index as ColorPresetDto["index"],
+                    },
                   });
                 }
               }}
@@ -77,56 +80,68 @@ export function ColorPicker(props: {
             const checked = e.target.checked;
             if (checked) {
               props.onColorChange({
-                type: "CustomColor",
-                backgroundColor: "#ffffff",
-                textColor: "#000000",
+                color: {
+                  type: "ColorCustomDto",
+                  backgroundColor: "#ffffff",
+                  textColor: "#000000",
+                },
               });
             }
           }}
         />
 
-        {color != null &&
-          "backgroundColor" in color &&
-          "textColor" in color && (
-            <Stack style={{ marginLeft: "20px" }}>
-              <Stack direction={"horizontal"} gap={2}>
-                <Form.Control
-                  type="color"
-                  id="bg_color"
-                  defaultValue="#000000"
-                  title="Background Color"
-                  className={"align-self-center"}
-                  onChange={(e) => {
-                    props.onColorChange({
-                      type: "CustomColor",
-                      backgroundColor: e.target.value,
-                      textColor: color.textColor,
-                    });
-                  }}
-                  value={color.backgroundColor}
-                />
-                <span className={"text-muted"}>Background Color</span>
+        {match(color?.color)
+          .returnType<ReactNode>()
+          .with(
+            {
+              type: "ColorCustomDto",
+            },
+            (customColor): ReactNode => (
+              <Stack style={{ marginLeft: "20px" }}>
+                <Stack direction={"horizontal"} gap={2}>
+                  <Form.Control
+                    type="color"
+                    id="bg_color"
+                    defaultValue="#000000"
+                    title="Background Color"
+                    className={"align-self-center"}
+                    onChange={(e) => {
+                      props.onColorChange({
+                        color: {
+                          type: "ColorCustomDto",
+                          backgroundColor: e.target.value,
+                          textColor: customColor.textColor,
+                        },
+                      });
+                    }}
+                    value={customColor.backgroundColor}
+                  />
+                  <span className={"text-muted"}>Background Color</span>
+                </Stack>
+                <Stack direction={"horizontal"} gap={2}>
+                  <Form.Control
+                    type="color"
+                    id="text_color"
+                    defaultValue="#ffffff"
+                    title="Text Color"
+                    className={"align-self-center"}
+                    onChange={(e) => {
+                      props.onColorChange({
+                        color: {
+                          type: "ColorCustomDto",
+                          backgroundColor: customColor.backgroundColor,
+                          textColor: e.target.value,
+                        },
+                      });
+                    }}
+                    value={customColor.textColor}
+                  />
+                  <span className={"text-muted"}>Text Color</span>
+                </Stack>
               </Stack>
-              <Stack direction={"horizontal"} gap={2}>
-                <Form.Control
-                  type="color"
-                  id="text_color"
-                  defaultValue="#ffffff"
-                  title="Text Color"
-                  className={"align-self-center"}
-                  onChange={(e) => {
-                    props.onColorChange({
-                      type: "CustomColor",
-                      backgroundColor: color.backgroundColor,
-                      textColor: e.target.value,
-                    });
-                  }}
-                  value={color.textColor}
-                />
-                <span className={"text-muted"}>Text Color</span>
-              </Stack>
-            </Stack>
-          )}
+            ),
+          )
+          .otherwise(() => null)}
       </Form>
     </Stack>
   );

@@ -2,7 +2,7 @@ import { Button, Card, Stack } from "react-bootstrap";
 import { ScenarioIcon } from "./ScenarioIcon.tsx";
 import { QueryDisplay } from "./QueryDisplay.tsx";
 import { ScenarioCardSection } from "./ScenarioCardSection.tsx";
-import { ScenarioDto } from "../../../src-gen-2";
+import { ScenarioDto } from "../../../src-gen";
 
 export function ScenarioCard(props: {
   hidden?: boolean;

@@ -2,12 +2,11 @@ import { Action } from "./Action.ts";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
 import { CanvasContext } from "../../pages/CanvasPage.tsx";
 import { SelectedCanvasTab } from "../../state/SelectedCanvasTab.ts";
-import { actionControllerRelayout } from "../../../src-gen-2";
-import { Node } from "../../../src-gen";
+import { actionControllerRelayout, NodeDto } from "../../../src-gen";
 
 export type RelayoutActionParams = {
   roomContext: CanvasContext;
-  nodes: Node[];
+  nodes: NodeDto[];
   selectedTab: SelectedCanvasTab;
 };
 export class RelayoutAction extends Action<RelayoutActionParams> {

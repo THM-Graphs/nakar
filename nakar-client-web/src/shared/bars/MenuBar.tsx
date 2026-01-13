@@ -7,7 +7,6 @@ import { ServerInfoDropdownEntry } from "./ServerInfoDropdownEntry.tsx";
 import { AppContext } from "../../state/AppContext.ts";
 import { ActionDropdownItem } from "../../room/actions/ActionDropdownItem.tsx";
 import { useBearStore } from "../../state/useBearStore.ts";
-import { Edge, Node } from "../../../src-gen";
 import { CanvasContext } from "../../pages/CanvasPage.tsx";
 import { CreateScenarioAction } from "../../room/actions/CreateScenarioAction.ts";
 import { CreateScenarioGroupAction } from "../../room/actions/CreateScenarioGroupAction.ts";
@@ -32,6 +31,7 @@ import { ZoomOutAction } from "../../room/actions/ZoomOutAction.ts";
 import { HideLabelsAction } from "../../room/actions/HideLabelsAction.ts";
 import { nodeActions } from "../../room/actions/groups/nodeActions.ts";
 import { relationshipActions } from "../../room/actions/groups/relationshipActions.ts";
+import { EdgeDto, NodeDto } from "../../../src-gen";
 
 export function MenuBar(props: {
   context: AppContext;
@@ -63,7 +63,7 @@ export function MenuBar(props: {
   const hideVisualization = useBearStore(
     (s) => s.room.panels.visualization.hide,
   );
-  const selectedEdges = elements.reduce<Edge[]>((akku, next) => {
+  const selectedEdges = elements.reduce<EdgeDto[]>((akku, next) => {
     const foundEdge = graphElements.edges.find((e) => e.id === next);
     if (foundEdge) {
       return [...akku, foundEdge];
@@ -71,7 +71,7 @@ export function MenuBar(props: {
       return akku;
     }
   }, []);
-  const selectedNodes = elements.reduce<Node[]>((akku, next) => {
+  const selectedNodes = elements.reduce<NodeDto[]>((akku, next) => {
     const foundNode = graphElements.nodes.find((e) => e.id === next);
     if (foundNode) {
       return [...akku, foundNode];
@@ -142,7 +142,7 @@ export function MenuBar(props: {
           action={RerunScenarioAction.shared}
           params={{
             roomContext: props.roomContext,
-            scenario: scenario?.current ?? null,
+            scenario: scenario,
           }}
         ></ActionDropdownItem>
       </DropdownButton>
@@ -168,7 +168,7 @@ export function MenuBar(props: {
           action={ConnectResultNodesAction.shared}
           params={{
             selectedTab,
-            scenario: scenario?.current ?? null,
+            scenario: scenario,
             roomContext: props.roomContext,
           }}
         ></ActionDropdownItem>
@@ -176,7 +176,7 @@ export function MenuBar(props: {
           action={RemoveDanglingNodesAction.shared}
           params={{
             selectedTab,
-            scenario: scenario?.current ?? null,
+            scenario: scenario,
             roomContext: props.roomContext,
           }}
         ></ActionDropdownItem>
@@ -184,7 +184,7 @@ export function MenuBar(props: {
           action={CompressRelationshipsAction.shared}
           params={{
             selectedTab,
-            scenario: scenario?.current ?? null,
+            scenario: scenario,
             roomContext: props.roomContext,
           }}
         ></ActionDropdownItem>

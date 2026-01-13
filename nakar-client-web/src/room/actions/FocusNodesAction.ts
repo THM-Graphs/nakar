@@ -2,7 +2,7 @@ import { Action } from "./Action.ts";
 import { match } from "ts-pattern";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
 import { NodesActionParams } from "./NodesActionParams.ts";
-import { actionControllerFocusNodes } from "../../../src-gen-2";
+import { actionControllerFocusNodes } from "../../../src-gen";
 
 export class FocusNodesAction extends Action<NodesActionParams> {
   public static shared: FocusNodesAction = new FocusNodesAction();

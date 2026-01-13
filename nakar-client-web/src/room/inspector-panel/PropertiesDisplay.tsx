@@ -1,12 +1,13 @@
-import { GraphProperty } from "../../../src-gen";
 import { CanvasContext } from "../../pages/CanvasPage.tsx";
 import { PropertyDisplay } from "./PropertyDisplay.tsx";
 import { DynamicList } from "../../shared/elements/DynamicList.tsx";
 
+export type PropertyEntry = { slug: string; value: unknown };
+
 export function PropertiesDisplay(props: {
   title: string;
   elementId: string;
-  properties: GraphProperty[];
+  properties: PropertyEntry[];
   roomContext: CanvasContext;
   className?: string;
 }) {

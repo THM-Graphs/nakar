@@ -3,7 +3,7 @@ import { AppContext } from "../../state/AppContext.ts";
 import { CanvasContext } from "../../pages/CanvasPage.tsx";
 import { DynamicList } from "../../shared/elements/DynamicList.tsx";
 import { ScenarioDisplay } from "./ScenarioDisplay.tsx";
-import { ScenarioDto, ScenarioGroupDto } from "../../../src-gen-2";
+import { ScenarioDto, ScenarioGroupDto } from "../../../src-gen";
 
 export function ScenarioGroupDisplay(props: {
   scenarioGroup: ScenarioGroupDto;

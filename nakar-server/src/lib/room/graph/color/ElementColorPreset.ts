@@ -1,7 +1,7 @@
 import { ElementColor } from './ElementColor';
-import { SchemaPresetColor } from '../../../../../src-gen/schema';
 import { ElementColorPresetIndex } from './ElementColorPresetIndex';
 import z from 'zod';
+import { ColorDto } from '../../../http/dto/ColorDto';
 
 export class ElementColorPreset extends ElementColor {
   public readonly index: ElementColorPresetIndex;
@@ -18,10 +18,12 @@ export class ElementColorPreset extends ElementColor {
     });
   }
 
-  public toDto(): SchemaPresetColor {
+  public toDto(): ColorDto {
     return {
-      index: this.index,
-      type: 'PresetColor',
+      color: {
+        index: this.index,
+        type: 'ColorPresetDto',
+      },
     };
   }
 

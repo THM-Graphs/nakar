@@ -1,4 +1,4 @@
-import { ScenarioDto } from "../../../src-gen-2";
+import { ScenarioDto } from "../../../src-gen";
 
 export function ScenarioIcon(props: {
   scenario: ScenarioDto | null;

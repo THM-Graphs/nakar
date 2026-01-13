@@ -6,7 +6,6 @@ import { useBearStore } from "../../state/useBearStore.ts";
 import { AppContext } from "../../state/AppContext.ts";
 import { CanvasContext } from "../../pages/CanvasPage.tsx";
 import { Collapsable } from "../../shared/elements/Collapsable.tsx";
-import { Edge, Node } from "../../../src-gen";
 import { DynamicList } from "../../shared/elements/DynamicList.tsx";
 import { Stack } from "react-bootstrap";
 import { NodeLabelColors } from "../labels/NodeLabelColors.tsx";
@@ -18,6 +17,7 @@ import {
   getBackgroundColorOfLabel,
 } from "../color/getBackgroundColor.ts";
 import { useColorSchema } from "../color/useColorSchema.ts";
+import { EdgeDto, NodeDto } from "../../../src-gen";
 
 export function InspectorPanel(props: {
   context: AppContext;
@@ -25,16 +25,19 @@ export function InspectorPanel(props: {
 }) {
   const inspector = useBearStore((s) => s.room.panels.inspector);
   const graphElements = useBearStore((s) => s.room.scenario.graph.elements);
-  const elements = inspector.element.reduce<(Node | Edge)[]>((akku, next) => {
-    const foundElement =
-      graphElements.nodes.find((n) => n.id === next) ??
-      graphElements.edges.find((e) => e.id === next);
-    if (foundElement) {
-      return [...akku, foundElement];
-    } else {
-      return akku;
-    }
-  }, []);
+  const elements = inspector.element.reduce<(NodeDto | EdgeDto)[]>(
+    (akku, next) => {
+      const foundElement =
+        graphElements.nodes.find((n) => n.id === next) ??
+        graphElements.edges.find((e) => e.id === next);
+      if (foundElement) {
+        return [...akku, foundElement];
+      } else {
+        return akku;
+      }
+    },
+    [],
+  );
   return (
     <Panel
       direction={"right"}
@@ -56,11 +59,11 @@ export function InspectorPanel(props: {
           );
         })
         .otherwise(() => {
-          const nodes: Node[] = elements.reduce<Node[]>(
+          const nodes: NodeDto[] = elements.reduce<NodeDto[]>(
             (akku, next) => ("labels" in next ? [...akku, next] : akku),
             [],
           );
-          const edges: Edge[] = elements.reduce<Edge[]>(
+          const edges: EdgeDto[] = elements.reduce<EdgeDto[]>(
             (akku, next) => ("startNodeId" in next ? [...akku, next] : akku),
             [],
           );
@@ -143,7 +146,7 @@ function EmptyInspector() {
 }
 
 function InspectorForType(props: {
-  element: Node | Edge;
+  element: NodeDto | EdgeDto;
   roomContext: CanvasContext;
   context: AppContext;
 }) {
@@ -166,7 +169,7 @@ function InspectorForType(props: {
 }
 
 function InspectorPanelForMultiType(props: {
-  element: Node | Edge;
+  element: NodeDto | EdgeDto;
   roomContext: CanvasContext;
   context: AppContext;
 }) {
@@ -187,7 +190,7 @@ function InspectorPanelForMultiType(props: {
                 props.element.customColor
                   ? [
                       getBackgroundColorOfColor(
-                        props.element.customColor.color,
+                        props.element.customColor,
                         colorSchema,
                       ),
                     ]

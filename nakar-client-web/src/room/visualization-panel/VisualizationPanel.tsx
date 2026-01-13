@@ -6,12 +6,12 @@ import { ViewSettingsEditor } from "./ViewSettingsEditor.tsx";
 import {
   actionControllerSetViewSettings,
   LiveCanvasViewSettingsDto,
-} from "../../../src-gen-2";
+} from "../../../src-gen";
 
 export function VisualizationPanel(props: { roomContext: CanvasContext }) {
   const hide = useBearStore((s) => s.room.panels.visualization.hide);
   const visualizationData = useBearStore(
-    (s) => s.room.panels.visualization.data,
+    (s) => s.room.scenario.graph.viewSettings,
   );
   const setData = useBearStore((s) => s.room.panels.visualization.setData);
   const pushErrorNotification = useBearStore(
@@ -26,29 +26,23 @@ export function VisualizationPanel(props: { roomContext: CanvasContext }) {
         hide();
       }}
     >
-      {visualizationData ? (
-        <ViewSettingsEditor
-          viewSettings={visualizationData}
-          onChange={(newSettings: LiveCanvasViewSettingsDto) => {
-            setData(newSettings);
+      <ViewSettingsEditor
+        viewSettings={visualizationData}
+        onChange={(newSettings: LiveCanvasViewSettingsDto) => {
+          setData(newSettings);
 
-            actionControllerSetViewSettings({
-              path: {
-                canvasId: props.roomContext.initialCanvasData.id,
-              },
-              body: newSettings,
+          actionControllerSetViewSettings({
+            path: {
+              canvasId: props.roomContext.initialCanvasData.id,
+            },
+            body: newSettings,
+          })
+            .then((res) => {
+              return resultOrThrow(res);
             })
-              .then((res) => {
-                return resultOrThrow(res);
-              })
-              .catch(pushErrorNotification);
-          }}
-        ></ViewSettingsEditor>
-      ) : (
-        <span className={"text-muted small fst-italic align-self-center p-5"}>
-          Visualization
-        </span>
-      )}
+            .catch(pushErrorNotification);
+        }}
+      ></ViewSettingsEditor>
     </Panel>
   );
 }

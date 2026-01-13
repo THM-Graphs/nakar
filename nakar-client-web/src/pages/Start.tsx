@@ -7,7 +7,7 @@ import { RoomCard } from "../shared/cms/RoomCard.tsx";
 import { resultOrThrow } from "../shared/data/resultOrThrow.ts";
 import { ProjectCard } from "../shared/cms/ProjectCard.tsx";
 import { useBearStore } from "../state/useBearStore.ts";
-import { startPageControllerGetStartPage, StartPageDto } from "../../src-gen-2";
+import { startPageControllerGetStartPage, StartPageDto } from "../../src-gen";
 
 export async function StartLoader(): Promise<StartPageDto> {
   return resultOrThrow(

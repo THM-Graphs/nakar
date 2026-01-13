@@ -1,4 +1,3 @@
-import { GraphProperty } from "../../../src-gen";
 import { CanvasContext } from "../../pages/CanvasPage.tsx";
 import { useState } from "react";
 import { Stack } from "react-bootstrap";
@@ -6,9 +5,10 @@ import clsx from "clsx";
 import { ClipboardButton } from "../../shared/elements/ClipboardButton.tsx";
 import { NavbarButton } from "../../shared/elements/NavbarButton.tsx";
 import { PropertyMenu } from "../properties/PropertyMenu.tsx";
+import { PropertyEntry } from "./PropertiesDisplay.tsx";
 
 export function PropertyDisplay(props: {
-  property: GraphProperty;
+  property: PropertyEntry;
   roomContext: CanvasContext;
   index: number;
 }) {

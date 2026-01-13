@@ -1,6 +1,6 @@
 import { Action } from "./Action.ts";
 import { NodesActionParams } from "./NodesActionParams.ts";
-import { actionControllerExpandNode } from "../../../src-gen-2";
+import { actionControllerExpandNode } from "../../../src-gen";
 
 export class ExpandNodeAction extends Action<NodesActionParams> {
   public static shared: ExpandNodeAction = new ExpandNodeAction();

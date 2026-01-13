@@ -5,7 +5,6 @@ import { Dropdown, Spinner, Stack } from "react-bootstrap";
 import { NavbarButton } from "../../shared/elements/NavbarButton.tsx";
 import { Collapsable } from "../../shared/elements/Collapsable.tsx";
 import { useEffect, useState } from "react";
-import { DatabaseConnection } from "../../../src-gen";
 import { Loadable } from "../../shared/data/Loadable.ts";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
 import { match } from "ts-pattern";
@@ -17,8 +16,9 @@ import { DatabaseSelect } from "../database/DatabaseSelect.tsx";
 import {
   actionControllerRunQuery,
   databaseConnectionControllerGetStats,
+  DatabaseConnectionDto,
   GetDatabaseStatsResponseBodyDto,
-} from "../../../src-gen-2";
+} from "../../../src-gen";
 
 // TODO: Split into parts to prevent layout shift on login
 export function QueryPanel(props: { roomContext: CanvasContext }) {
@@ -33,7 +33,7 @@ export function QueryPanel(props: { roomContext: CanvasContext }) {
     null,
   );
 
-  const referencedDatabase: DatabaseConnection | null =
+  const referencedDatabase: DatabaseConnectionDto | null =
     referencedDatabases.find((d) => d.id === selectedDatabaseId) ?? null;
 
   const [stats, setStats] = useState<

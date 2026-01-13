@@ -1,7 +1,7 @@
 import { Stack } from "react-bootstrap";
 import { ClipboardButton } from "../../shared/elements/ClipboardButton.tsx";
 import { NavbarButton } from "../../shared/elements/NavbarButton.tsx";
-import { ScenarioQueryDto } from "../../../src-gen-2";
+import { ScenarioQueryDto } from "../../../src-gen";
 
 export function QueryDisplay(props: { query: ScenarioQueryDto }) {
   return (

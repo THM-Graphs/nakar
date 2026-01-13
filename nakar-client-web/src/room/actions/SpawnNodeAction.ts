@@ -2,7 +2,7 @@ import { Action } from "./Action.ts";
 import { CanvasContext } from "../../pages/CanvasPage.tsx";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
 import { useBearStore } from "../../state/useBearStore.ts";
-import { actionControllerLoadNode } from "../../../src-gen-2";
+import { actionControllerLoadNode } from "../../../src-gen";
 
 export type SpawnNodeActionParams = {
   nodeId: string;

@@ -5,7 +5,7 @@ import { useBearStore } from "../../state/useBearStore.ts";
 import { useState } from "react";
 import { resultOrThrow } from "../data/resultOrThrow.ts";
 import { Loading } from "../elements/Loading.tsx";
-import { authControllerPostAuth } from "../../../src-gen-2";
+import { authControllerPostAuth } from "../../../src-gen";
 
 export function AuthModal() {
   const shown = useBearStore((s) => s.global.auth.loginWindow.shown);

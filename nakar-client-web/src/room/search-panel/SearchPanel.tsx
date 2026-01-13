@@ -14,7 +14,7 @@ import {
   databaseConnectionControllerPerformSearch,
   NodePreviewDto,
   PostSearchResponseBodyDto,
-} from "../../../src-gen-2";
+} from "../../../src-gen";
 
 export function SearchPanel(props: { roomContext: CanvasContext }) {
   const [selectedDatabaseId, setSelectedDatabaseId] = useState<string | null>(

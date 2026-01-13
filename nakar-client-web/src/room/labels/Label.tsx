@@ -1,4 +1,3 @@
-import { GraphLabel } from "../../../src-gen";
 import { getBackgroundColorOfLabel } from "../color/getBackgroundColor.ts";
 import { getTextColor } from "../color/getTextColor.ts";
 import { Stack } from "react-bootstrap";
@@ -9,6 +8,7 @@ import { DropdownButton } from "../../shared/elements/DropdownButton.tsx";
 import { labelActions } from "../actions/groups/labelActions.ts";
 import { ActionDropdownItem } from "../actions/ActionDropdownItem.tsx";
 import { CanvasContext } from "../../pages/CanvasPage.tsx";
+import { LabelDto } from "../../../src-gen";
 
 export function Label(props: {
   label: string;
@@ -21,7 +21,7 @@ export function Label(props: {
   hideLabelMenu?: boolean;
 }) {
   const labels = useBearStore((s) => s.room.scenario.graph.elements.labels);
-  const label: GraphLabel | null =
+  const label: LabelDto | null =
     labels.find((l) => l.label === props.label) ?? null;
   const showLabelMenu: boolean =
     !(props.hideLabelMenu ?? false) && label != null;
@@ -93,7 +93,7 @@ export function Label(props: {
   );
 }
 
-function multipleSources(graphLabels: GraphLabel[]): boolean {
+function multipleSources(graphLabels: LabelDto[]): boolean {
   const allSources: Set<string> = new Set();
   for (const graphlabel of graphLabels) {
     for (const source of graphlabel.sources) {

@@ -1,13 +1,15 @@
 import { Stack } from "react-bootstrap";
 import { useBearStore } from "../../state/useBearStore.ts";
 import { useEffect, useState } from "react";
-import { ScenarioArgument } from "../../../src-gen";
 import { DateTool } from "../../shared/data/DateTool.ts";
 import { NavbarButton } from "../../shared/elements/NavbarButton.tsx";
 import { DateTimeSpanSelect } from "../../shared/date-time-span-select/DateTimeSpanSelect.tsx";
 import { CanvasContext } from "../../pages/CanvasPage.tsx";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
-import { actionControllerLoadScenario } from "../../../src-gen-2";
+import {
+  actionControllerLoadScenario,
+  ScenarioArgumentDto,
+} from "../../../src-gen";
 
 export function CanvasBottomToolBar(props: { roomContext: CanvasContext }) {
   const metaData = useBearStore((s) => s.room.scenario.graph.metaData);
@@ -16,7 +18,7 @@ export function CanvasBottomToolBar(props: { roomContext: CanvasContext }) {
   );
 
   const currentArguments = metaData.arguments;
-  const parameters = metaData.scenario?.current.parameters ?? [];
+  const parameters = metaData.scenario?.parameters ?? [];
 
   const startDateParameters = parameters.filter(
     (p) => p.dataType === "startDateTime",
@@ -68,14 +70,14 @@ export function CanvasBottomToolBar(props: { roomContext: CanvasContext }) {
 
   const rerunScenario = (params: { startDate: string; endDate: string }) => {
     (async (): Promise<void> => {
-      const scenario = metaData.scenario?.current;
+      const scenario = metaData.scenario;
       if (scenario == null) {
         throw new Error(
           "Unable to run scenario: There is no scenario in this room.",
         );
       }
 
-      const newArguments: ScenarioArgument[] = [];
+      const newArguments: ScenarioArgumentDto[] = [];
       for (const oldArgument of metaData.arguments) {
         if (oldArgument.identifier === startDateParameter?.identifier) {
           newArguments.push({

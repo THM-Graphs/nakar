@@ -1,17 +1,3 @@
-import {
-  Color,
-  ExpandNodePreviewElement,
-  Graph,
-  GraphElements,
-  GraphMetaData,
-  GraphTable,
-  Node,
-  NodePreview,
-  Note,
-  Notification,
-  PhysicsPerformance,
-  WSEventProgress,
-} from "../../src-gen";
 import { SocketState } from "../shared/ws/SocketState.ts";
 import { Subject } from "rxjs";
 import { UserTheme } from "../shared/theme/UserTheme.ts";
@@ -19,11 +5,23 @@ import { Theme } from "../shared/theme/Theme.ts";
 import { SelectedCanvasTab } from "./SelectedCanvasTab.ts";
 import { ZoomTransform } from "d3";
 import {
+  CanvasDataDto,
+  ColorDto,
+  ExpandNodePreviewEntryDto,
+  GraphElementsDto,
+  GraphMetaDataDto,
   LiveCanvasViewSettingsDto,
+  NodeDto,
+  NodePreviewDto,
+  NoteDto,
+  NotificationDataDto,
+  PhysicsPerformanceDto,
+  ProgressWsdto,
   ScenarioArgumentDto,
   ScenarioCollectionDto,
   ScenarioDto,
-} from "../../src-gen-2";
+  TableDataDto,
+} from "../../src-gen";
 
 export interface BearState {
   global: {
@@ -57,22 +55,22 @@ export interface BearState {
   };
   room: {
     ui: {
-      progress: WSEventProgress | null;
-      setProgress: (progress: WSEventProgress) => void;
+      progress: ProgressWsdto | null;
+      setProgress: (progress: ProgressWsdto) => void;
       clearProgress: () => void;
-      performance: PhysicsPerformance | null;
-      setPerformance: (performance: PhysicsPerformance | null) => void;
+      performance: PhysicsPerformanceDto | null;
+      setPerformance: (performance: PhysicsPerformanceDto | null) => void;
       clearPerformance: () => void;
       notifications: Array<
         {
           id: string;
           date: Date;
-        } & Omit<Notification, "date">
+        } & Omit<NotificationDataDto, "date">
       >;
       pushNotification: (
         notification: {
           date: Date;
-        } & Omit<Notification, "date">,
+        } & Omit<NotificationDataDto, "date">,
       ) => void;
       pushErrorNotification: (error: unknown) => void;
       removeNotification: (id: string) => void;
@@ -92,11 +90,11 @@ export interface BearState {
       };
     };
     scenario: {
-      graph: Graph;
-      setGraph: (g: Graph | null) => void;
-      setGraphElements: (g: GraphElements) => void;
-      setGraphMetaData: (g: GraphMetaData) => void;
-      setGraphTable: (g: GraphTable) => void;
+      graph: CanvasDataDto;
+      setGraph: (g: CanvasDataDto | null) => void;
+      setGraphElements: (g: GraphElementsDto) => void;
+      setGraphMetaData: (g: GraphMetaDataDto) => void;
+      setGraphTable: (g: TableDataDto) => void;
       setLocks: (locks: { id: string; locked: boolean }[]) => void;
       runScenarioModal: {
         shown: boolean;
@@ -115,27 +113,27 @@ export interface BearState {
       expandNodePreview: {
         shown: boolean;
         data: {
-          relationships: ExpandNodePreviewElement[];
-          labels: ExpandNodePreviewElement[];
+          relationships: ExpandNodePreviewEntryDto[];
+          labels: ExpandNodePreviewEntryDto[];
           nodeId: string;
           selectedRelationships: Set<string>;
           selectedLabels: Set<string>;
         } | null;
         open: (
           data: {
-            relationships: ExpandNodePreviewElement[];
-            labels: ExpandNodePreviewElement[];
+            relationships: ExpandNodePreviewEntryDto[];
+            labels: ExpandNodePreviewEntryDto[];
             nodeId: string;
           } | null,
         ) => void;
         close: () => void;
         clean: () => void;
         setSelectedRelationships: (
-          element: ExpandNodePreviewElement,
+          element: ExpandNodePreviewEntryDto,
           selected: boolean,
         ) => void;
         setSelectedLabel: (
-          element: ExpandNodePreviewElement,
+          element: ExpandNodePreviewEntryDto,
           selected: boolean,
         ) => void;
       };
@@ -177,16 +175,16 @@ export interface BearState {
         hide: () => void;
         addNoteModal: {
           shown: boolean;
-          showForCreate: (nodes: Node[]) => void;
-          showForUpdate: (note: Note) => void;
+          showForCreate: (nodes: NodeDto[]) => void;
+          showForUpdate: (note: NoteDto) => void;
           close: () => void;
           clean: () => void;
           noteId: string | null;
-          nodes: NodePreview[];
+          nodes: NodePreviewDto[];
           content: string;
           setContent: (c: string) => void;
-          color: Color | null;
-          setColor: (c: Color | null) => void;
+          color: ColorDto | null;
+          setColor: (c: ColorDto | null) => void;
         };
       };
       search: {
@@ -202,7 +200,6 @@ export interface BearState {
         setGrowNodesBasedOnDegree: (newValue: boolean) => void;
         setGrowNodesBasedOnDegreeFactor: (newValue: number) => void;
         setData: (newValue: LiveCanvasViewSettingsDto) => void;
-        data: LiveCanvasViewSettingsDto | null;
       };
     };
     canvas: {

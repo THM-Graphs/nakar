@@ -1,7 +1,7 @@
-import { SchemaCanvasViewSettings } from '../../../../src-gen/schema';
 import { Result } from '@strapi/types/dist/modules/documents/result';
 import { ScaleType } from '../../physics/ScaleType';
 import { Range } from '../../range/Range';
+import { LiveCanvasViewSettingsDto } from '../../http/dto/LiveCanvasViewSettingsDto';
 
 export class LiveCanvasViewSettings {
   public static readonly defaultGrowNodesBasedOnDegreeFactor: number = 2;
@@ -65,7 +65,7 @@ export class LiveCanvasViewSettings {
   }
 
   public static fromSchema(
-    input: SchemaCanvasViewSettings,
+    input: LiveCanvasViewSettingsDto,
   ): LiveCanvasViewSettings {
     return new LiveCanvasViewSettings({
       compressRelationshipsWidthFactor: input.compressRelationshipsWidthFactor,
@@ -85,7 +85,7 @@ export class LiveCanvasViewSettings {
     });
   }
 
-  public toSchema(): SchemaCanvasViewSettings {
+  public toSchema(): LiveCanvasViewSettingsDto {
     return {
       compressRelationshipsWidthFactor: this._compressRelationshipsWidthFactor,
       growNodesBasedOnDegree: this._growNodesBasedOnDegree,

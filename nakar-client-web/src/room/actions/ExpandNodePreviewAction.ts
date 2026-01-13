@@ -2,7 +2,7 @@ import { Action } from "./Action.ts";
 import { useBearStore } from "../../state/useBearStore.ts";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
 import { NodesActionParams } from "./NodesActionParams.ts";
-import { databaseConnectionControllerExpandNodePreview } from "../../../src-gen-2";
+import { databaseConnectionControllerExpandNodePreview } from "../../../src-gen";
 
 export class ExpandNodePreviewAction extends Action<NodesActionParams> {
   public static shared: ExpandNodePreviewAction = new ExpandNodePreviewAction();

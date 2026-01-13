@@ -5,7 +5,7 @@ import "bootstrap-icons/font/bootstrap-icons.css";
 import "./index.css";
 import { createBrowserRouter, RouterProvider } from "react-router";
 import { loadEnvOrDefault } from "./shared/env/env.ts";
-import { client as client2 } from "../src-gen-2";
+import { client as client2 } from "../src-gen";
 import { Start, StartLoader } from "./pages/Start.tsx";
 import { CanvasLoader, CanvasPage } from "./pages/CanvasPage.tsx";
 import { AppContext } from "./state/AppContext.ts";

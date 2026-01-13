@@ -1,7 +1,6 @@
 import { Stack } from "react-bootstrap";
 import { AppNavbar } from "../shared/bars/AppNavbar.tsx";
 import { useEffect } from "react";
-import { WSActionLeaveCanvas } from "../../src-gen";
 import { LoaderFunctionArgs, useLoaderData, useNavigate } from "react-router";
 import { resultOrThrow } from "../shared/data/resultOrThrow.ts";
 import { ToastStack } from "../shared/bars/ToastStack.tsx";
@@ -38,9 +37,10 @@ import {
   CanvasDto,
   canvasPageControllerGetCanvasPage,
   CanvasPageDto,
+  EventWsdto,
   RoomDto,
   ScenarioCollectionDto,
-} from "../../src-gen-2";
+} from "../../src-gen";
 import { CanvasToolbar } from "../room/canvas/CanvasToolbar.tsx";
 import { GraphDataToggle } from "../room/data-table/GraphDataToggle.tsx";
 
@@ -72,7 +72,6 @@ export async function CanvasLoader(
 
 export function CanvasPage(props: { context: AppContext }) {
   const roomContext: CanvasContext = useLoaderData();
-  const setGraph = useBearStore((s) => s.room.scenario.setGraph);
   const setGraphElements = useBearStore(
     (s) => s.room.scenario.setGraphElements,
   );
@@ -114,30 +113,30 @@ export function CanvasPage(props: { context: AppContext }) {
 
   useEffect(() => {
     const subscriptions = [
-      webSockets.onMessage$.subscribe((message) => {
-        match(message)
-          .with({ type: "WSEventGraphMetaDataChanged" }, (event) => {
+      webSockets.onMessage$.subscribe((message: EventWsdto) => {
+        match(message.event)
+          .with({ type: "GraphMetaDataChangedWsdto" }, (event) => {
             setGraphMetaData(event.metaData);
           })
-          .with({ type: "WSEventGraphElementsChanged" }, (e) => {
+          .with({ type: "GraphElementsChangedWsdto" }, (e) => {
             setGraphElements(e.elements);
           })
-          .with({ type: "WSEventGraphTableChanged" }, (e) => {
+          .with({ type: "GraphTableDataChangedWsdto" }, (e) => {
             setGraphTable(e.table);
           })
-          .with({ type: "WSEventCanvasChanged" }, () => {
+          .with({ type: "CanvasChangedWsdto" }, () => {
             /* */
           })
-          .with({ type: "WSEventProgress" }, (event) => {
+          .with({ type: "ProgressWsdto" }, (event) => {
             setProgress(event);
           })
-          .with({ type: "WSEventClearProgress" }, () => {
+          .with({ type: "ClearProgressWsdto" }, () => {
             clearProgress();
           })
-          .with({ type: "WSEventNodesMoved" }, (event) => {
+          .with({ type: "NodesMovedWsdto" }, (event) => {
             setPerformance(event.performance);
           })
-          .with({ type: "WSEventNotification" }, (event) => {
+          .with({ type: "NotificationWsdto" }, (event) => {
             const notification = event.notification;
             pushNotification({
               message: notification.message,
@@ -145,19 +144,19 @@ export function CanvasPage(props: { context: AppContext }) {
               severity: notification.severity,
             });
           })
-          .with({ type: "WSEventSetNodeLocks" }, () => {
+          .with({ type: "SetNodeLocksWsdto" }, () => {
             /* */
           })
-          .with({ type: "WSEventKick" }, () => {
+          .with({ type: "KickWsdto" }, () => {
             void navigate("/");
           })
-          .with({ type: "WSEventCanvasDataReady" }, (event) => {
+          .with({ type: "CanvasDataReadyWsdto" }, (event) => {
             setGraphMetaData(event.data.metaData);
             setGraphElements(event.data.elements);
             setGraphTable(event.data.table);
             setVisualizationData(event.data.viewSettings);
           })
-          .with({ type: "WSEventViewSettingsChanged" }, (event) => {
+          .with({ type: "ViewSettingsChangedWsdto" }, (event) => {
             setVisualizationData(event.viewSettings);
           })
           .exhaustive();
@@ -172,7 +171,6 @@ export function CanvasPage(props: { context: AppContext }) {
       subscriptions.forEach((s) => {
         s.unsubscribe();
       });
-      setGraph(null);
       setPerformance(null);
       clearProgress();
     };

@@ -1,7 +1,7 @@
 import { Action } from "./Action.ts";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
 import { NodesActionParams } from "./NodesActionParams.ts";
-import { actionControllerShowShortestPath } from "../../../src-gen-2";
+import { actionControllerShowShortestPath } from "../../../src-gen";
 
 export class ShowShortestPathAction extends Action<NodesActionParams> {
   public static shared: ShowShortestPathAction = new ShowShortestPathAction();

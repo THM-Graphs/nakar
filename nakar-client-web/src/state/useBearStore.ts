@@ -2,15 +2,6 @@ import { create } from "zustand/react";
 import { BearState } from "./BearState.ts";
 import { SocketState } from "../shared/ws/SocketState.ts";
 import {
-  CanvasViewSettings,
-  Color,
-  Node,
-  NodePreview,
-  Note,
-  PhysicsPerformance,
-  WSEventProgress,
-} from "../../src-gen";
-import {
   devtools,
   persist,
   PersistOptions,
@@ -28,6 +19,13 @@ import { loadSystemTheme } from "../shared/theme/ThemeManager.ts";
 import { PersistStorage } from "./PersistStorage.ts";
 import { SelectedCanvasTab } from "./SelectedCanvasTab.ts";
 import { ZoomTransform } from "d3";
+import {
+  ColorDto,
+  LiveCanvasViewSettingsDto,
+  NodeLockCollectionEntryDto,
+  NodePreviewDto,
+  NoteDto,
+} from "../../src-gen";
 
 enableMapSet();
 
@@ -118,7 +116,7 @@ export const useBearStore = create<BearState>()(
             room: {
               ui: {
                 progress: null,
-                setProgress: (p: WSEventProgress) => {
+                setProgress: (p) => {
                   set((s) => {
                     s.room.ui.progress = p;
                   });
@@ -129,7 +127,7 @@ export const useBearStore = create<BearState>()(
                   });
                 },
                 performance: null,
-                setPerformance: (performance: PhysicsPerformance | null) => {
+                setPerformance: (performance) => {
                   set((s) => {
                     s.room.ui.performance = performance;
                   });
@@ -222,6 +220,11 @@ export const useBearStore = create<BearState>()(
                     undoAction: null,
                     redoAction: null,
                   },
+                  viewSettings: {
+                    compressRelationshipsWidthFactor: 0,
+                    growNodesBasedOnDegree: false,
+                    growNodesBasedOnDegreeFactor: 0,
+                  },
                 },
                 setGraph: (graph) => {
                   set((s) => {
@@ -249,6 +252,11 @@ export const useBearStore = create<BearState>()(
                         table: {
                           data: [],
                         },
+                        viewSettings: {
+                          compressRelationshipsWidthFactor: 0,
+                          growNodesBasedOnDegree: false,
+                          growNodesBasedOnDegreeFactor: 0,
+                        },
                       };
                     } else {
                       s.room.scenario.graph = graph;
@@ -270,7 +278,7 @@ export const useBearStore = create<BearState>()(
                     s.room.scenario.graph.elements = graphElements;
                   });
                 },
-                setLocks: (locks: { id: string; locked: boolean }[]) => {
+                setLocks: (locks: NodeLockCollectionEntryDto[]) => {
                   set((s) => {
                     for (const node of locks) {
                       const localNode =
@@ -505,7 +513,7 @@ export const useBearStore = create<BearState>()(
                   },
                   addNoteModal: {
                     shown: false,
-                    showForCreate: (nodes: Node[]) => {
+                    showForCreate: (nodes) => {
                       set((s) => {
                         s.room.panels.notes.addNoteModal.shown = true;
                         s.room.panels.notes.addNoteModal.nodes = nodes.map(
@@ -515,12 +523,12 @@ export const useBearStore = create<BearState>()(
                               title: n.title,
                               labels: n.labels,
                               customColor: null,
-                            }) satisfies NodePreview,
+                            }) satisfies NodePreviewDto,
                         );
                         s.room.panels.notes.addNoteModal.noteId = null;
                       });
                     },
-                    showForUpdate: (note: Note) => {
+                    showForUpdate: (note: NoteDto) => {
                       set((s) => {
                         s.room.panels.notes.addNoteModal.shown = true;
                         s.room.panels.notes.addNoteModal.nodes = [
@@ -529,7 +537,7 @@ export const useBearStore = create<BearState>()(
                         s.room.panels.notes.addNoteModal.noteId = note.id;
                         s.room.panels.notes.addNoteModal.content = note.content;
                         s.room.panels.notes.addNoteModal.color =
-                          note.color?.color ?? null;
+                          note.color ?? null;
                       });
                     },
                     close: () => {
@@ -554,7 +562,7 @@ export const useBearStore = create<BearState>()(
                       });
                     },
                     color: null,
-                    setColor: (c: Color | null) => {
+                    setColor: (c: ColorDto | null) => {
                       set((s) => {
                         s.room.panels.notes.addNoteModal.color = c;
                       });
@@ -590,36 +598,29 @@ export const useBearStore = create<BearState>()(
                       s.room.panels.right = null;
                     });
                   },
-                  setData: (newValue: CanvasViewSettings) => {
+                  setData: (newValue: LiveCanvasViewSettingsDto) => {
                     set((s) => {
-                      s.room.panels.visualization.data = newValue;
+                      s.room.scenario.graph.viewSettings = newValue;
                     });
                   },
                   setCompressRelationshipsWidthFactor: (newValue: number) => {
                     set((s) => {
-                      if (s.room.panels.visualization.data != null) {
-                        s.room.panels.visualization.data.compressRelationshipsWidthFactor =
-                          newValue;
-                      }
+                      s.room.scenario.graph.viewSettings.compressRelationshipsWidthFactor =
+                        newValue;
                     });
                   },
                   setGrowNodesBasedOnDegree: (newValue: boolean) => {
                     set((s) => {
-                      if (s.room.panels.visualization.data != null) {
-                        s.room.panels.visualization.data.growNodesBasedOnDegree =
-                          newValue;
-                      }
+                      s.room.scenario.graph.viewSettings.growNodesBasedOnDegree =
+                        newValue;
                     });
                   },
                   setGrowNodesBasedOnDegreeFactor: (newValue: number) => {
                     set((s) => {
-                      if (s.room.panels.visualization.data != null) {
-                        s.room.panels.visualization.data.growNodesBasedOnDegreeFactor =
-                          newValue;
-                      }
+                      s.room.scenario.graph.viewSettings.growNodesBasedOnDegreeFactor =
+                        newValue;
                     });
                   },
-                  data: null,
                 },
               },
               canvas: {

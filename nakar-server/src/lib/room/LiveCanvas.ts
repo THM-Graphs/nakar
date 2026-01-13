@@ -17,7 +17,6 @@ import { ElementCreationReason } from './graph/ElementCreationReason';
 import { SSet } from '../set/Set';
 import { PhysicsSimulation } from '../physics/PhysicsSimulation';
 import { GraphEdge } from './graph/GraphEdge';
-import { SchemaPhysicalNode } from '../../../src-gen/schema';
 import { v4 } from 'uuid';
 import { PropertyCollection } from './graph/PropertyCollection';
 import { ElementPosition } from './graph/ElementPosition';
@@ -39,6 +38,7 @@ import { NodePosition } from './graph/NodePosition';
 import { WTPhysicalNode } from '../room-worker/worker-events/WTPhysicalNode';
 import { LayoutSpecificationDto } from '../http/routes/action/dto/LayoutSpecificationDto';
 import { LayoutSpecificationCircleDto } from '../http/routes/action/dto/LayoutSpecificationCircleDto';
+import { PhysicalNodeDto } from '../socketIO/dto/types/PhysicalNodeDto';
 
 export class LiveCanvas {
   private readonly _logger: Logger = createChildLogger(this);
@@ -222,10 +222,7 @@ export class LiveCanvas {
     this._handleChangeRecorder(changeRecorder);
   }
 
-  public ungrabNode(params: {
-    userId: string;
-    node: SchemaPhysicalNode;
-  }): void {
+  public ungrabNode(params: { userId: string; node: PhysicalNodeDto }): void {
     const graph: LiveCanvasUndoableData = this.getGraph();
 
     const node: GraphNode | null = graph.nodes.get(params.node.id);

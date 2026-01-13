@@ -1,6 +1,6 @@
 import { D3Link } from "./D3Link.ts";
 import { D3Node } from "./D3Node.ts";
-import { Edge, GraphElements, Node } from "../../../src-gen";
+import { EdgeDto, GraphElementsDto, NodeDto } from "../../../src-gen";
 
 export class D3RendererState {
   private _nodeByIdCache: Record<string, D3Node | null>;
@@ -8,7 +8,7 @@ export class D3RendererState {
   public constructor(
     public readonly links: D3Link[],
     public readonly nodes: D3Node[],
-    public readonly originalGraphElements: GraphElements | null,
+    public readonly originalGraphElements: GraphElementsDto | null,
   ) {
     this._nodeByIdCache = nodes.reduce<Record<string, D3Node | null>>(
       (cache, node) => {
@@ -25,8 +25,8 @@ export class D3RendererState {
     return new D3RendererState([], [], null);
   }
 
-  public static fromWsData(graphElements: GraphElements): D3RendererState {
-    const nodes = graphElements.nodes.map((node: Node): D3Node => {
+  public static fromWsData(graphElements: GraphElementsDto): D3RendererState {
+    const nodes = graphElements.nodes.map((node: NodeDto): D3Node => {
       return {
         id: node.id,
         x: node.position.x,
@@ -36,7 +36,7 @@ export class D3RendererState {
         tx: node.position.x,
         ty: node.position.y,
         locked: node.locked,
-        customColor: node.customColor?.color ?? null,
+        customColor: node.customColor,
         labels: node.labels,
         radius: node.radius,
         title: node.title,
@@ -44,7 +44,7 @@ export class D3RendererState {
         notesCount: node.notes.length,
       };
     });
-    const links = graphElements.edges.reduce((acc: D3Link[], edge: Edge) => {
+    const links = graphElements.edges.reduce((acc: D3Link[], edge: EdgeDto) => {
       const sourceNode = nodes.find((n) => n.id === edge.startNodeId);
       const targetNode = nodes.find((n) => n.id === edge.endNodeId);
 

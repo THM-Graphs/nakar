@@ -4,7 +4,7 @@ import { Dropdown } from "react-bootstrap";
 import { useEffect, useState } from "react";
 import { resultOrThrow } from "../data/resultOrThrow.ts";
 import { Loading } from "../elements/Loading.tsx";
-import { authControllerGetAuth } from "../../../src-gen-2";
+import { authControllerGetAuth } from "../../../src-gen";
 
 export function AuthButton() {
   const jwt = useBearStore((s) => s.global.auth.jwt);

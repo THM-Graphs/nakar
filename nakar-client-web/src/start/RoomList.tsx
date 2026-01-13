@@ -1,18 +1,18 @@
-import { Room } from "../../src-gen";
-import { RoomDisplay } from "./RoomDisplay.tsx";
+import { StartPageRoomDisplay } from "./StartPageRoomDisplay.tsx";
 import { Stack } from "react-bootstrap";
 import { AppContext } from "../state/AppContext.ts";
 import { DynamicList } from "../shared/elements/DynamicList.tsx";
 import clsx from "clsx";
 import { CSSProperties } from "react";
+import { StartPageRoomDto } from "../../src-gen";
 
 export function RoomList(props: {
   title?: string;
-  rooms: Room[] | null;
+  rooms: StartPageRoomDto[] | null;
   context: AppContext;
   className?: string;
   style?: CSSProperties;
-  onDelete?: (room: Room) => void | Promise<void>;
+  onDelete?: (room: StartPageRoomDto) => void | Promise<void>;
 }) {
   return (
     <Stack
@@ -31,12 +31,12 @@ export function RoomList(props: {
         filter={(exp, r) => r.title.toLowerCase().includes(exp.toLowerCase())}
         render={(list) => (
           <>
-            {list.map((room: Room) => (
-              <RoomDisplay
+            {list.map((room) => (
+              <StartPageRoomDisplay
                 key={room.id}
                 room={room}
                 onDelete={props.onDelete}
-              ></RoomDisplay>
+              ></StartPageRoomDisplay>
             ))}
           </>
         )}

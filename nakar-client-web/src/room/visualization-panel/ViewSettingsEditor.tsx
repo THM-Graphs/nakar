@@ -1,11 +1,11 @@
-import { CanvasViewSettings } from "../../../src-gen";
 import { Collapsable } from "../../shared/elements/Collapsable.tsx";
 import { Form, Stack } from "react-bootstrap";
 import { NumberInput } from "../../shared/elements/NumberInput.tsx";
+import { LiveCanvasViewSettingsDto } from "../../../src-gen";
 
 export function ViewSettingsEditor(props: {
-  viewSettings: CanvasViewSettings;
-  onChange: (newSettings: CanvasViewSettings) => void;
+  viewSettings: LiveCanvasViewSettingsDto;
+  onChange: (newSettings: LiveCanvasViewSettingsDto) => void;
 }) {
   const visualizationData = props.viewSettings;
   return (

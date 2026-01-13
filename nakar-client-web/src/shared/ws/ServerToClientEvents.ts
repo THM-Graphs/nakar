@@ -1,5 +1,5 @@
-import { WSServerToClientMessage } from "../../../src-gen";
+import { EventWsdto } from "../../../src-gen";
 
 export interface ServerToClientEvents {
-  message: (message: WSServerToClientMessage) => void;
+  message: (message: EventWsdto) => void;
 }

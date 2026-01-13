@@ -9,11 +9,11 @@ import {
 } from "react";
 import { Dropdown } from "react-bootstrap";
 import { useBearStore } from "../../state/useBearStore.ts";
-import { Edge, Node } from "../../../src-gen";
 import { nodeActions } from "../actions/groups/nodeActions.ts";
 import { ActionDropdownItem } from "../actions/ActionDropdownItem.tsx";
 import { CanvasContext } from "../../pages/CanvasPage.tsx";
 import { relationshipActions } from "../actions/groups/relationshipActions.ts";
+import { EdgeDto, NodeDto } from "../../../src-gen";
 
 export function CanvasContextMenu(props: { roomContext: CanvasContext }) {
   const onShowNodeContextMenu = useBearStore(
@@ -24,8 +24,8 @@ export function CanvasContextMenu(props: { roomContext: CanvasContext }) {
   );
   const [posX, setPosX] = useState(0);
   const [posY, setPosY] = useState(0);
-  const [selectedNodes, setSelectedNodes] = useState<Node[] | null>(null);
-  const [selectedEdges, setSelectedEdges] = useState<Edge[] | null>(null);
+  const [selectedNodes, setSelectedNodes] = useState<NodeDto[] | null>(null);
+  const [selectedEdges, setSelectedEdges] = useState<EdgeDto[] | null>(null);
   const nodes = useBearStore((s) => s.room.scenario.graph.elements.nodes);
   const edges = useBearStore((s) => s.room.scenario.graph.elements.edges);
   const selectedElements: string[] = useBearStore(
@@ -50,17 +50,16 @@ export function CanvasContextMenu(props: { roomContext: CanvasContext }) {
       onShowNodeContextMenu.subscribe(
         (params: { nodeId: string; position: [number, number] }) => {
           if (selectedElements.includes(params.nodeId)) {
-            const newSelectedNodes: Node[] = selectedElements.reduce<Node[]>(
-              (akku, next) => {
-                const foundNodes = nodes.find((n) => n.id === next);
-                if (foundNodes == null) {
-                  return akku;
-                } else {
-                  return [...akku, foundNodes];
-                }
-              },
-              [],
-            );
+            const newSelectedNodes: NodeDto[] = selectedElements.reduce<
+              NodeDto[]
+            >((akku, next) => {
+              const foundNodes = nodes.find((n) => n.id === next);
+              if (foundNodes == null) {
+                return akku;
+              } else {
+                return [...akku, foundNodes];
+              }
+            }, []);
             setSelectedNodes(newSelectedNodes);
           } else {
             const selectedNode = nodes.find((n) => n.id === params.nodeId);
@@ -77,7 +76,7 @@ export function CanvasContextMenu(props: { roomContext: CanvasContext }) {
       onShowEdgeContextMenu.subscribe(
         (params: { edgeId: string; position: [number, number] }) => {
           if (selectedElements.includes(params.edgeId)) {
-            const foundEdges: Edge[] = selectedElements.reduce<Edge[]>(
+            const foundEdges: EdgeDto[] = selectedElements.reduce<EdgeDto[]>(
               (akku, next) => {
                 const edge = edges.find((e) => e.id === next);
                 if (edge == null) {

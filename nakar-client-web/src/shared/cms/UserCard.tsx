@@ -1,8 +1,8 @@
-import { ProjectRole, User } from "../../../src-gen";
 import { RoleDisplay } from "./RoleDisplay.tsx";
 import { CMSCard } from "./CMSCard.tsx";
+import { UserPreviewDto } from "../../../src-gen";
 
-export function UserCard(props: { user: User; role: ProjectRole }) {
+export function UserCard(props: { user: UserPreviewDto; role: UserCardRole }) {
   return (
     <CMSCard
       width={300}
@@ -14,3 +14,5 @@ export function UserCard(props: { user: User; role: ProjectRole }) {
     ></CMSCard>
   );
 }
+
+export type UserCardRole = "owner" | "collaborator" | "none";

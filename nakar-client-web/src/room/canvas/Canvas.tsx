@@ -1,6 +1,5 @@
 import { Labels } from "../labels/Labels.tsx";
 import { DataTable } from "../data-table/DataTable.tsx";
-import { CanvasToolbar } from "./CanvasToolbar.tsx";
 import { useBearStore } from "../../state/useBearStore.ts";
 import { AppContext } from "../../state/AppContext.ts";
 import { CanvasContext } from "../../pages/CanvasPage.tsx";
@@ -24,7 +23,7 @@ export function Canvas(props: {
       {tabs.selected == "graph" ? (
         <Stack className={"justify-content-between"}>
           <Stack direction={"horizontal"} className={"justify-content-between"}>
-            <Stack className={"z-1 flex-grow-0"} gap={3}>
+            <Stack className={"z-1 flex-grow-0"} gap={1}>
               <Labels roomContext={props.roomContext}></Labels>
               <ProgressDisplay></ProgressDisplay>
             </Stack>

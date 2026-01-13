@@ -1,7 +1,7 @@
 import { Action } from "./Action.ts";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
 import { CanvasContext } from "../../pages/CanvasPage.tsx";
-import { noteControllerDeleteNote } from "../../../src-gen-2";
+import { noteControllerDeleteNote } from "../../../src-gen";
 
 export type RemoveNoteActionParams = {
   noteId: string;

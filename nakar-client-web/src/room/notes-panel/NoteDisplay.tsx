@@ -1,4 +1,3 @@
-import { Note } from "../../../src-gen";
 import { Stack } from "react-bootstrap";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -9,11 +8,15 @@ import { RemoveNoteAction } from "../actions/RemoveNoteAction.ts";
 import { CanvasContext } from "../../pages/CanvasPage.tsx";
 import { DynamicList } from "../../shared/elements/DynamicList.tsx";
 import { EditNoteAction } from "../actions/EditNoteAction.ts";
+import { NoteDto } from "../../../src-gen";
 
-export function NoteDisplay(props: { note: Note; roomContext: CanvasContext }) {
+export function NoteDisplay(props: {
+  note: NoteDto;
+  roomContext: CanvasContext;
+}) {
   const note = props.note;
 
-  const dateDisplay = (note: Note): string => {
+  const dateDisplay = (note: NoteDto): string => {
     const stringToUse = note.dateTime;
     return new Date(stringToUse).toLocaleString();
   };
@@ -28,7 +31,7 @@ export function NoteDisplay(props: { note: Note; roomContext: CanvasContext }) {
               note.author == null && "fst-italic",
             )}
           >
-            {note.author?.current.displayName ?? "Anonymous"}
+            {note.author?.displayName ?? "Anonymous"}
           </span>
           <span className={"small text-muted user-select-text"}>
             {dateDisplay(note)}

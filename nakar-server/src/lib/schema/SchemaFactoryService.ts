@@ -1,24 +1,3 @@
-import {
-  SchemaCanvas,
-  SchemaColor,
-  SchemaDatabaseConnection,
-  SchemaEdge,
-  SchemaEdgePreview,
-  SchemaGraph,
-  SchemaGraphElements,
-  SchemaGraphLabel,
-  SchemaGraphMetaData,
-  SchemaGraphProperty,
-  SchemaGraphTable,
-  SchemaHistogram,
-  SchemaNode,
-  SchemaNodePreview,
-  SchemaNote,
-  SchemaScenario,
-  SchemaScenarioArgument,
-  SchemaScenarioQuery,
-  SchemaUser,
-} from '../../../src-gen/schema';
 import { LiveCanvasUndoableData } from '../room/data/LiveCanvasUndoableData';
 import { GraphNode } from '../room/graph/GraphNode';
 import { GraphEdge } from '../room/graph/GraphEdge';
@@ -50,6 +29,24 @@ import { ScenarioParameterDto } from '../http/dto/ScenarioParameterDto';
 import { ScenarioParameterDataTypeDto } from '../http/dto/ScenarioParameterDataTypeDto';
 import { RoomDto } from '../http/dto/RoomDto';
 import { ScenarioCollectionDto } from '../http/dto/ScenarioCollectionDto';
+import { DatabaseConnectionDto } from '../http/dto/DatabaseConnectionDto';
+import { CanvasDto } from '../http/dto/CanvasDto';
+import { GraphElementsDto } from '../socketIO/dto/types/GraphElementsDto';
+import { NodeDto } from '../socketIO/dto/types/NodeDto';
+import { EdgeDto } from '../socketIO/dto/types/EdgeDto';
+import { LabelDto } from '../socketIO/dto/types/LabelDto';
+import { NoteDto } from '../socketIO/dto/types/NoteDto';
+import { TableDataDto } from '../socketIO/dto/types/TableDataDto';
+import { GraphMetaDataDto } from '../socketIO/dto/types/GraphMetaDataDto';
+import { ScenarioArgumentDto } from '../http/routes/action/dto/ScenarioArgumentDto';
+import { UserPreviewDto } from '../http/dto/UserPreviewDto';
+import { HistogramDto } from '../socketIO/dto/types/HistogramDto';
+import { EdgePreviewDto } from '../socketIO/dto/types/EdgePreviewDto';
+import { HistogramValueEntryDto } from '../socketIO/dto/types/HistogramValueEntryDto';
+import { HistogramNodeEntryDto } from '../socketIO/dto/types/HistogramNodeEntryDto';
+import { NodePreviewDto } from '../socketIO/dto/types/NodePreviewDto';
+import { CreationReasonDto } from '../socketIO/dto/types/CreationReasonDto';
+import { ElementCreationReason } from '../room/graph/ElementCreationReason';
 
 @Injectable()
 export class SchemaFactoryService {
@@ -59,7 +56,7 @@ export class SchemaFactoryService {
 
   public createSchemaDatabase(
     databaseDBDTO: Result<'api::v2-database-connection.v2-database-connection'>,
-  ): SchemaDatabaseConnection {
+  ): DatabaseConnectionDto {
     return {
       id: databaseDBDTO.documentId,
       title: databaseDBDTO.title ?? '',
@@ -76,7 +73,7 @@ export class SchemaFactoryService {
       title: room.title ?? '',
       visibility: this.createSchemaRoomVisibility(room),
       canvases: (await this._database.getCanvasesOfRoom(room)).map(
-        (c: Result<'api::v2-canvas.v2-canvas'>): SchemaCanvas => {
+        (c: Result<'api::v2-canvas.v2-canvas'>): CanvasDto => {
           return this.createSchemaCanvasPreview(c);
         },
       ),
@@ -172,7 +169,7 @@ export class SchemaFactoryService {
         .map(
           (
             referencedDatabase: Result<'api::v2-database-connection.v2-database-connection'>,
-          ): SchemaDatabaseConnection =>
+          ): DatabaseConnectionDto =>
             this.createSchemaDatabase(referencedDatabase),
         ),
     };
@@ -252,7 +249,7 @@ export class SchemaFactoryService {
 
   public async createSchemaScenarioSchema(
     scenario: Result<'api::v2-scenario.v2-scenario'>,
-  ): Promise<SchemaScenario> {
+  ): Promise<ScenarioDto> {
     return {
       id: scenario.documentId,
       title: scenario.title ?? '',
@@ -260,14 +257,12 @@ export class SchemaFactoryService {
         (await this._database.getQueriesOfScenario(scenario)).map(
           async (
             q: Result<'api::v2-query.v2-query'>,
-          ): Promise<SchemaScenarioQuery> => {
+          ): Promise<ScenarioQueryDto> => {
             const database: Result<'api::v2-database-connection.v2-database-connection'> | null =
               await this._database.getDatabaseConnectionOfQuery(q);
             return {
               query: q.query ?? '',
-              database: database
-                ? { current: this.createSchemaDatabase(database) }
-                : null,
+              database: database ? this.createSchemaDatabase(database) : null,
             };
           },
         ),
@@ -383,33 +378,11 @@ export class SchemaFactoryService {
     });
   }
 
-  public async createSchemaGraph(
-    graph: LiveCanvasUndoableData,
-    notes: IndexedNoteCollection,
-    undoWrapperInfo: UndoWrapperInfo | null,
-    viewSettings: LiveCanvasViewSettings,
-  ): Promise<SchemaGraph> {
-    const t: Profiler = this._logger.startTimer();
-    const schemaGraph: SchemaGraph = {
-      elements: await this.createSchemaGraphElements(
-        graph,
-        notes,
-        viewSettings,
-      ),
-      metaData: await this.createSchemaGraphMetaData(graph, undoWrapperInfo),
-      table: this.createSchemaTable(graph.tableData),
-    };
-    t.done({
-      message: 'createSchemaGraph',
-    });
-    return schemaGraph;
-  }
-
   public async createSchemaGraphElements(
     graph: LiveCanvasUndoableData,
     notes: IndexedNoteCollection,
     viewSettings: LiveCanvasViewSettings,
-  ): Promise<SchemaGraphElements> {
+  ): Promise<GraphElementsDto> {
     const t: Profiler = this._logger.startTimer();
     const databaseCache: DatabaseReferenceCache = new DatabaseReferenceCache(
       this._database,
@@ -417,9 +390,9 @@ export class SchemaFactoryService {
     const widthRange: Range = graph.edges.getEdgeDegreeRange();
     const degreeRange: Range = graph.nodes.getNodeDegreeRange(graph);
 
-    const result: SchemaGraphElements = {
+    const result: GraphElementsDto = {
       nodes: await graph.nodes.nodes.asyncFlatMap(
-        async (node: GraphNode): Promise<SchemaNode> =>
+        async (node: GraphNode): Promise<NodeDto> =>
           await this._createSchemaNode(
             node,
             graph,
@@ -430,7 +403,7 @@ export class SchemaFactoryService {
           ),
       ),
       edges: await graph.edges.edges.asyncFlatMap(
-        async (edge: GraphEdge): Promise<SchemaEdge> =>
+        async (edge: GraphEdge): Promise<EdgeDto> =>
           await this._createSchemaEdge(
             edge,
             graph,
@@ -442,7 +415,7 @@ export class SchemaFactoryService {
       labels: await graph.metaData
         .getLabels(graph.nodes)
         .asyncFlatMap(
-          async (id: string, label: GraphLabel): Promise<SchemaGraphLabel> =>
+          async (id: string, label: GraphLabel): Promise<LabelDto> =>
             await this._createSchemaGraphLabel(id, label, databaseCache),
         ),
       histogram: this._createSchemaHistogram(graph),
@@ -450,7 +423,7 @@ export class SchemaFactoryService {
         notes.notes
           .toArray()
           .map(
-            async (note: Result<'api::v2-note.v2-note'>): Promise<SchemaNote> =>
+            async (note: Result<'api::v2-note.v2-note'>): Promise<NoteDto> =>
               await this._createSchemaNote(note, graph),
           ),
       ),
@@ -461,11 +434,9 @@ export class SchemaFactoryService {
     return result;
   }
 
-  public createSchemaTable(
-    tableData: SMap<string, unknown>[],
-  ): SchemaGraphTable {
+  public createSchemaTable(tableData: SMap<string, unknown>[]): TableDataDto {
     const t: Profiler = this._logger.startTimer();
-    const result: SchemaGraphTable = {
+    const result: TableDataDto = {
       data: tableData.map(
         (entry: SMap<string, unknown>): Record<string, unknown> =>
           entry.toRecord(),
@@ -480,23 +451,23 @@ export class SchemaFactoryService {
   public async createSchemaGraphMetaData(
     graph: LiveCanvasUndoableData,
     undoWrapperInfo: UndoWrapperInfo | null,
-  ): Promise<SchemaGraphMetaData> {
+  ): Promise<GraphMetaDataDto> {
     const t: Profiler = this._logger.startTimer();
     const metaData: LiveCanvasMetaData = graph.metaData;
     const scenario: Result<'api::v2-scenario.v2-scenario'> | null =
       metaData.scenarioId != null
         ? await this._database.getScenario(metaData.scenarioId)
         : null;
-    const result: SchemaGraphMetaData = {
+    const result: GraphMetaDataDto = {
       scenario: scenario
-        ? { current: await this.createSchemaScenarioSchema(scenario) }
+        ? await this.createSchemaScenarioSchema(scenario)
         : null,
-      arguments: metaData.arguments.reduce<SchemaScenarioArgument[]>(
+      arguments: metaData.arguments.reduce<ScenarioArgumentDto[]>(
         (
-          akku: SchemaScenarioArgument[],
+          akku: ScenarioArgumentDto[],
           key: string,
           value: string,
-        ): SchemaScenarioArgument[] => [
+        ): ScenarioArgumentDto[] => [
           ...akku,
           { identifier: key, value: value },
         ],
@@ -530,13 +501,14 @@ export class SchemaFactoryService {
       title: project.title ?? '',
       owner: owner ? this.createSchemaUserPreview(owner) : null,
       collaborators: collaborators.map(
-        (collaborator: Result<'plugin::users-permissions.user'>): SchemaUser =>
-          this.createSchemaUserPreview(collaborator),
+        (
+          collaborator: Result<'plugin::users-permissions.user'>,
+        ): UserPreviewDto => this.createSchemaUserPreview(collaborator),
       ),
       databases: databaseConnections.map(
         (
           database: Result<'api::v2-database-connection.v2-database-connection'>,
-        ): SchemaDatabaseConnection => this.createSchemaDatabase(database),
+        ): DatabaseConnectionDto => this.createSchemaDatabase(database),
       ),
       scenarioGroups: await Promise.all(
         scenarioGroups.map(
@@ -571,14 +543,14 @@ export class SchemaFactoryService {
       collaborators: collaborators.map(
         (
           collaborator: Result<'plugin::users-permissions.user'>,
-        ): SchemaUser => {
+        ): UserPreviewDto => {
           return this.createSchemaUserPreview(collaborator);
         },
       ),
       databases: databaseConnections.map(
         (
           database: Result<'api::v2-database-connection.v2-database-connection'>,
-        ): SchemaDatabaseConnection => {
+        ): DatabaseConnectionDto => {
           return this.createSchemaDatabase(database);
         },
       ),
@@ -587,7 +559,7 @@ export class SchemaFactoryService {
 
   public createSchemaCanvasPreview(
     canvas: Result<'api::v2-canvas.v2-canvas'>,
-  ): SchemaCanvas {
+  ): CanvasDto {
     return {
       id: canvas.documentId,
       title: canvas.title ?? '',
@@ -596,31 +568,15 @@ export class SchemaFactoryService {
 
   public createSchemaUserPreview(
     user: Result<'plugin::users-permissions.user'>,
-  ): SchemaUser {
+  ): UserPreviewDto {
     return {
       id: user.documentId,
       displayName: user.username ?? user.email ?? user.documentId,
     };
   }
 
-  private _createSchemaHistogram(
-    graph: LiveCanvasUndoableData,
-  ): SchemaHistogram {
+  private _createSchemaHistogram(graph: LiveCanvasUndoableData): HistogramDto {
     const t: Profiler = this._logger.startTimer();
-    interface NodeHistogramEntry {
-      id: string;
-      title: string;
-      labels: string[];
-      degree: number;
-      percentage: number;
-      customColor: { color: SchemaColor } | null;
-    }
-
-    interface HistogramPropertyEntry {
-      value: string;
-      count: number;
-      percentage: number;
-    }
 
     const labelCountHistogram: number = graph.nodes.labelHistogram.reduce(
       (akku: number, key: string, value: number): number => akku + value,
@@ -634,17 +590,15 @@ export class SchemaFactoryService {
       (degree: number, node: GraphNode): number => degree + node.degree(graph),
       0,
     );
-    const result: SchemaHistogram = {
+    const result: HistogramDto = {
       nodeLabels: graph.nodes.labelHistogram
         .toArray()
         .toSorted(
           (a: [string, number], b: [string, number]): number => b[1] - a[1],
         )
         .map(
-          (
-            entry: [string, number],
-          ): { label: string; count: number; percentage: number } => ({
-            label: entry[0],
+          (entry: [string, number]): HistogramValueEntryDto => ({
+            value: entry[0],
             count: entry[1],
             percentage: entry[1] / labelCountHistogram,
           }),
@@ -662,7 +616,7 @@ export class SchemaFactoryService {
             entry: [string, SMap<string, number>],
           ): {
             key: string;
-            values: HistogramPropertyEntry[];
+            values: HistogramValueEntryDto[];
           } => {
             const count: number = entry[1].reduce(
               (akku: number, key: string, value: number): number =>
@@ -680,7 +634,7 @@ export class SchemaFactoryService {
                 .map(
                   (
                     propertyEntry: [string, number],
-                  ): HistogramPropertyEntry => ({
+                  ): HistogramValueEntryDto => ({
                     value: propertyEntry[0],
                     count: propertyEntry[1],
                     percentage: propertyEntry[1] / count,
@@ -695,10 +649,8 @@ export class SchemaFactoryService {
           (a: [string, number], b: [string, number]): number => b[1] - a[1],
         )
         .map(
-          (
-            entry: [string, number],
-          ): { type: string; count: number; percentage: number } => ({
-            type: entry[0],
+          (entry: [string, number]): HistogramValueEntryDto => ({
+            value: entry[0],
             count: entry[1],
             percentage: entry[1] / typeCountHistogram,
           }),
@@ -716,7 +668,7 @@ export class SchemaFactoryService {
             entry: [string, SMap<string, number>],
           ): {
             key: string;
-            values: HistogramPropertyEntry[];
+            values: HistogramValueEntryDto[];
           } => {
             const count: number = entry[1].reduce(
               (akku: number, key: string, value: number): number =>
@@ -734,7 +686,7 @@ export class SchemaFactoryService {
                 .map(
                   (
                     propertyEntry: [string, number],
-                  ): HistogramPropertyEntry => ({
+                  ): HistogramValueEntryDto => ({
                     value: propertyEntry[0],
                     count: propertyEntry[1],
                     percentage: propertyEntry[1] / count,
@@ -745,7 +697,7 @@ export class SchemaFactoryService {
         ),
       nodes: graph.nodes.nodes
         .toArray()
-        .map((node: GraphNode): NodeHistogramEntry => {
+        .map((node: GraphNode): HistogramNodeEntryDto => {
           return {
             id: node.id,
             title: node.getTitle(),
@@ -755,14 +707,14 @@ export class SchemaFactoryService {
             customColor: null, // TODO
           };
         })
-        .sort((a: NodeHistogramEntry, b: NodeHistogramEntry): number => {
+        .sort((a: HistogramNodeEntryDto, b: HistogramNodeEntryDto): number => {
           if (a.degree !== b.degree) {
             return b.degree - a.degree;
           } else {
             return a.title.localeCompare(b.title);
           }
         }),
-    } satisfies SchemaHistogram;
+    } satisfies HistogramDto;
     t.done({
       message: '_createSchemaHistogram',
     });
@@ -776,7 +728,7 @@ export class SchemaFactoryService {
     databaseCache: DatabaseReferenceCache,
     viewSettings: LiveCanvasViewSettings,
     degreeRange: Range,
-  ): Promise<SchemaNode> {
+  ): Promise<NodeDto> {
     const incomingEdges: GraphEdge[] = graph.edges.getByEndNodeId(node.id);
     const outgoingEdges: GraphEdge[] = graph.edges.getByStartNodeId(node.id);
     const squashToTypeMap = (
@@ -791,14 +743,14 @@ export class SchemaFactoryService {
       entry: [string, number],
       index: number,
       self: [string, number][],
-    ): SchemaEdgePreview => ({
+    ): EdgePreviewDto => ({
       type: entry[0],
       count: entry[1],
       percentage:
         entry[1] /
         self.reduce((a: number, n: [string, number]): number => a + n[1], 0),
     });
-    const sort = (a: SchemaEdgePreview, b: SchemaEdgePreview): number =>
+    const sort = (a: EdgePreviewDto, b: EdgePreviewDto): number =>
       b.count - a.count;
 
     return {
@@ -830,12 +782,12 @@ export class SchemaFactoryService {
         .toArray()
         .map(createEdgePreview)
         .sort(sort),
-      creationReason: node.creationAction,
+      creationReason: this._createSchemaCreationReason(node.creationAction),
       notes: await Promise.all(
         (notes.byNodeId.get(node.id) ?? new SSet())
           .toArray()
           .map(
-            async (note: Result<'api::v2-note.v2-note'>): Promise<SchemaNote> =>
+            async (note: Result<'api::v2-note.v2-note'>): Promise<NoteDto> =>
               await this._createSchemaNote(note, graph),
           ),
       ),
@@ -848,7 +800,7 @@ export class SchemaFactoryService {
     databaseCcache: DatabaseReferenceCache,
     viewSettings: LiveCanvasViewSettings,
     edgeWidthRange: Range,
-  ): Promise<SchemaEdge> {
+  ): Promise<EdgeDto> {
     const sourceNode: GraphNode | null = graph.nodes.get(edge.startNodeId);
     const targetNode: GraphNode | null = graph.nodes.get(edge.endNodeId);
     return {
@@ -878,32 +830,41 @@ export class SchemaFactoryService {
         labels: targetNode?.labels.toArray() ?? [],
         customColor: null, // TODO
       },
-      creationReason: edge.creationAction,
+      creationReason: this._createSchemaCreationReason(edge.creationAction),
     };
+  }
+
+  private _createSchemaCreationReason(
+    input: ElementCreationReason,
+  ): CreationReasonDto {
+    return match(input)
+      .with(
+        ElementCreationReason.loadScenario,
+        () => CreationReasonDto.loadScenario,
+      )
+      .with(ElementCreationReason.expand, () => CreationReasonDto.expand)
+      .with(ElementCreationReason.query, () => CreationReasonDto.query)
+      .with(ElementCreationReason.merge, () => CreationReasonDto.merge)
+      .with(ElementCreationReason.compress, () => CreationReasonDto.compress)
+      .with(
+        ElementCreationReason.connectResultNodes,
+        () => CreationReasonDto.connectResultNodes,
+      )
+      .with(ElementCreationReason.search, () => CreationReasonDto.search)
+      .exhaustive();
   }
 
   private _createSchemaGraphProperties(
     mutableProperties: PropertyCollection,
-  ): SchemaGraphProperty[] {
-    return mutableProperties.properties
-      .toArray()
-      .sort(
-        (propertyA: [string, unknown], propertyB: [string, unknown]): number =>
-          propertyA[0].localeCompare(propertyB[0]),
-      )
-      .map(
-        ([key, value]: [string, unknown]): SchemaGraphProperty => ({
-          slug: key,
-          value: value,
-        }),
-      );
+  ): Record<string, unknown> {
+    return mutableProperties.properties.toRecord();
   }
 
   private async _createSchemaGraphLabel(
     id: string,
     label: GraphLabel,
     databaseCache: DatabaseReferenceCache,
-  ): Promise<SchemaGraphLabel> {
+  ): Promise<LabelDto> {
     return {
       label: id,
       count: label.count,
@@ -919,7 +880,7 @@ export class SchemaFactoryService {
   private async _createSchemaNote(
     note: Result<'api::v2-note.v2-note'>,
     graph: LiveCanvasUndoableData,
-  ): Promise<SchemaNote> {
+  ): Promise<NoteDto> {
     const nodes: Result<'api::v2-node-reference.v2-node-reference'>[] =
       await this._database.getReferencedNodesOfNote(note);
     const author: Result<'plugin::users-permissions.user'> | null =
@@ -928,11 +889,11 @@ export class SchemaFactoryService {
       id: note.documentId,
       content: note.content ?? '',
       dateTime: note.updatedAt?.toString() ?? '',
-      author: author ? { current: this.createSchemaUserPreview(author) } : null,
+      author: author ? this.createSchemaUserPreview(author) : null,
       nodes: nodes.map(
         (
           nodeReference: Result<'api::v2-node-reference.v2-node-reference'>,
-        ): SchemaNodePreview => {
+        ): NodePreviewDto => {
           const node: GraphNode | null = graph.nodes.get(
             nodeReference.nodeId ?? '',
           );

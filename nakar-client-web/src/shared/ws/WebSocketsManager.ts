@@ -2,10 +2,9 @@ import { io, Socket as UntypedSocket } from "socket.io-client";
 import { Env } from "../env/env.ts";
 import { ClientToServerEvents } from "./ClientToServerEvents.ts";
 import { ServerToClientEvents } from "./ServerToClientEvents.ts";
-import { WSServerToClientMessage } from "../../../src-gen";
 import { BehaviorSubject, Observable, Subject } from "rxjs";
 import { SocketState } from "./SocketState.ts";
-import { ActionWsdto } from "../../../src-gen-2";
+import { ActionWsdto, EventWsdto } from "../../../src-gen";
 
 export type Socket = UntypedSocket<ServerToClientEvents, ClientToServerEvents>;
 
@@ -13,7 +12,7 @@ export class WebSocketsManager {
   private readonly socket: Socket;
   private readonly _socketState: BehaviorSubject<SocketState>;
 
-  private readonly onMessage: Subject<WSServerToClientMessage>;
+  private readonly onMessage: Subject<EventWsdto>;
 
   public constructor(env: Env) {
     this.socket = io(env.BACKEND_SOCKET_URL);
@@ -53,7 +52,7 @@ export class WebSocketsManager {
     return this._socketState.asObservable();
   }
 
-  public get onMessage$(): Observable<WSServerToClientMessage> {
+  public get onMessage$(): Observable<EventWsdto> {
     return this.onMessage.asObservable();
   }
 }

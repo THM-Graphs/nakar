@@ -9,7 +9,7 @@ import { useBearStore } from "../../state/useBearStore.ts";
 import {
   GetVersionResponseBodyDto,
   systemControllerGetVersion,
-} from "../../../src-gen-2";
+} from "../../../src-gen";
 
 export function ServerInfoDropdownEntry(props: { context: AppContext }) {
   const pushErrorNotification = useBearStore(

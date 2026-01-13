@@ -1,14 +1,14 @@
-import { ExpandNodePreviewElement } from "../../../src-gen";
 import { FormCheck, Stack } from "react-bootstrap";
 import { DynamicList } from "../../shared/elements/DynamicList.tsx";
 import clsx from "clsx";
 import { numberFormat } from "../../shared/data/numberFormat.ts";
+import { ExpandNodePreviewEntryDto } from "../../../src-gen";
 
 export function SelectableTableData(props: {
   title: string;
-  data: ExpandNodePreviewElement[];
+  data: ExpandNodePreviewEntryDto[];
   onSelectionChange: (
-    element: ExpandNodePreviewElement,
+    element: ExpandNodePreviewEntryDto,
     selected: boolean,
   ) => void;
   selections: Set<string>;
@@ -58,7 +58,7 @@ export function SelectableTableData(props: {
               <span className={"me-2"}>Count</span>
             </Stack>
           </Stack>
-          {list.map((element: ExpandNodePreviewElement, index) => {
+          {list.map((element: ExpandNodePreviewEntryDto, index) => {
             return (
               <Stack
                 key={element.identificator}

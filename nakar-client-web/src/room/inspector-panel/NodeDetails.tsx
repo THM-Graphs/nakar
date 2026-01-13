@@ -1,4 +1,3 @@
-import { Node } from "../../../src-gen";
 import { DetailPane } from "./DetailPane.tsx";
 import { AppContext } from "../../state/AppContext.ts";
 import { CanvasContext } from "../../pages/CanvasPage.tsx";
@@ -10,12 +9,21 @@ import { nodeActions } from "../actions/groups/nodeActions.ts";
 import { ActionNavbarButton } from "../actions/ActionNavbarButton.tsx";
 import { AddNoteAction } from "../actions/AddNoteAction.ts";
 import { NoteDisplay } from "../notes-panel/NoteDisplay.tsx";
+import { NodeDto } from "../../../src-gen";
+import { PropertyEntry } from "./PropertiesDisplay.tsx";
 
 export function NodeDetails(props: {
-  node: Node;
+  node: NodeDto;
   context: AppContext;
   roomContext: CanvasContext;
 }) {
+  const properties: PropertyEntry[] = Object.entries(
+    props.node.properties satisfies Record<string, unknown>,
+  ).map(([key, value]) => ({
+    slug: key,
+    value: value,
+  }));
+
   return (
     <DetailPane
       actions={nodeActions.map((a) =>
@@ -70,7 +78,7 @@ export function NodeDetails(props: {
           value: props.node.creationReason,
         },
       ]}
-      properties={props.node.properties}
+      properties={properties}
       title={props.node.title}
       subTitleElements={
         <Stack

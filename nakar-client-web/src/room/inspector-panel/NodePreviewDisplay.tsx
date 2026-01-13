@@ -3,13 +3,13 @@ import { getBackgroundColorOfNode } from "../color/getBackgroundColor.ts";
 import { getTextColor } from "../color/getTextColor.ts";
 import clsx from "clsx";
 import { useColorSchema } from "../color/useColorSchema.ts";
-import { NodePreview } from "../../../src-gen";
 import { isMultiSelectKey } from "../../shared/dom/isMultiSelectKey.ts";
 import { MouseEvent } from "react";
+import { NodePreviewDto } from "../../../src-gen";
 
 const maxTitleLength: number = 20;
 export function NodePreviewDisplay(props: {
-  node: NodePreview;
+  node: NodePreviewDto;
   className?: string;
   disableClick?: boolean;
 }) {
@@ -26,7 +26,7 @@ export function NodePreviewDisplay(props: {
     graphLabels,
   );
   const fgColor = getTextColor(
-    props.node.customColor?.color ?? graphLabel?.color ?? null,
+    props.node.customColor ?? graphLabel?.color ?? null,
     colorSchema,
   );
   const setDetailElement = useBearStore(

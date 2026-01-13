@@ -34,18 +34,18 @@ export function GraphRendererD3(props: {
 
     const subs: { unsubscribe: () => void }[] = [
       websocketsManager.onMessage$.subscribe((message) => {
-        match(message)
-          .with({ type: "WSEventNodesMoved" }, (event) => {
+        match(message.event)
+          .with({ type: "NodesMovedWsdto" }, (event) => {
             _graphRenderer.updateNodePositions(event);
           })
-          .with({ type: "WSEventSetNodeLocks" }, (event) => {
+          .with({ type: "SetNodeLocksWsdto" }, (event) => {
             setLocks(event.locks);
             _graphRenderer.updateLocks(event);
           })
-          .with({ type: "WSEventGraphElementsChanged" }, (event) => {
+          .with({ type: "GraphElementsChangedWsdto" }, (event) => {
             _graphRenderer.loadGraphContent(event.elements);
           })
-          .with({ type: "WSEventCanvasDataReady" }, (event) => {
+          .with({ type: "CanvasDataReadyWsdto" }, (event) => {
             _graphRenderer.loadGraphContent(event.data.elements);
           });
       }),
@@ -61,8 +61,10 @@ export function GraphRendererD3(props: {
           nodes: [
             {
               id: n.id,
-              positionX: n.x,
-              positionY: n.y,
+              position: {
+                x: n.x,
+                y: n.y,
+              },
             },
           ],
         });
@@ -72,8 +74,10 @@ export function GraphRendererD3(props: {
           type: "UngrabNodeWsdto",
           node: {
             id: n.id,
-            positionX: n.x,
-            positionY: n.y,
+            position: {
+              x: n.x,
+              y: n.y,
+            },
           },
         });
       }),

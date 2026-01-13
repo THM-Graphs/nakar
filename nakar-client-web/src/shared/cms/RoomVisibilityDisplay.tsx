@@ -1,7 +1,9 @@
-import { RoomVisibility } from "../../../src-gen";
 import { match } from "ts-pattern";
+import { StartPageRoomDto } from "../../../src-gen";
 
-export function RoomVisibilityDisplay(props: { visibility: RoomVisibility }) {
+export function RoomVisibilityDisplay(props: {
+  visibility: StartPageRoomDto["visibility"];
+}) {
   return match(props.visibility)
     .with("private", () => (
       <>

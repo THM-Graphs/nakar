@@ -1,7 +1,7 @@
-import { Node } from "../../../src-gen";
 import { CanvasContext } from "../../pages/CanvasPage.tsx";
+import { NodeDto } from "../../../src-gen";
 
 export type NodesActionParams = {
-  nodes: Node[];
+  nodes: NodeDto[];
   roomContext: CanvasContext;
 };

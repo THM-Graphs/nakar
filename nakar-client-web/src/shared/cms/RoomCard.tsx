@@ -2,7 +2,7 @@ import { CMSCard } from "./CMSCard.tsx";
 import { RoomVisibilityDisplay } from "./RoomVisibilityDisplay.tsx";
 import { Link } from "react-router";
 import { Stack } from "react-bootstrap";
-import { RoomDto, StartPageRoomDto } from "../../../src-gen-2";
+import { RoomDto, StartPageRoomDto } from "../../../src-gen";
 import { match, P } from "ts-pattern";
 
 export function RoomCard(props: {

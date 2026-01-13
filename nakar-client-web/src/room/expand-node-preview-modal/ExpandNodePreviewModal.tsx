@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
 import { CanvasContext } from "../../pages/CanvasPage.tsx";
 import { SelectableTableData } from "./SelectableTableData.tsx";
-import { actionControllerExpandNode } from "../../../src-gen-2";
+import { actionControllerExpandNode } from "../../../src-gen";
 
 export function ExpandNodePreviewModal(props: { roomContext: CanvasContext }) {
   const data = useBearStore((s) => s.room.scenario.expandNodePreview.data);

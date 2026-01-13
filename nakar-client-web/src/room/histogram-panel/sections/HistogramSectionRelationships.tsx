@@ -17,20 +17,20 @@ export function HistogramSectionRelationships(props: {
       className={"border-top"}
       data={histogram.edgeTypes}
       entityNamePlural={"Relationship Types"}
-      filter={(exp, rt) => rt.type.toLowerCase().includes(exp.toLowerCase())}
+      filter={(exp, rt) => rt.value.toLowerCase().includes(exp.toLowerCase())}
       render={(list) => (
         <>
           {list.map((entry) => (
             <ValueDisplay
-              label={entry.type}
+              label={entry.value}
               value={entry.count}
               roomContext={props.roomContext}
               percentage={entry.percentage}
-              key={entry.type}
+              key={entry.value}
               customActions={relationshipActions.map((action) =>
                 action.detailPaneAction(() => {
                   return {
-                    edges: edges.filter((e) => e.type === entry.type),
+                    edges: edges.filter((e) => e.type === entry.value),
                     roomContext: props.roomContext,
                   };
                 }),

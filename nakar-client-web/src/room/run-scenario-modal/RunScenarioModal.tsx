@@ -7,7 +7,7 @@ import { NavbarButton } from "../../shared/elements/NavbarButton.tsx";
 import { ScenarioIcon } from "../scenarios-panel/ScenarioIcon.tsx";
 import { ArgumentDisplay } from "./ArgumentDisplay.tsx";
 import { ScnearioPlayButton } from "../scenarios-panel/ScenarioPlayButton.tsx";
-import { actionControllerLoadScenario } from "../../../src-gen-2";
+import { actionControllerLoadScenario } from "../../../src-gen";
 
 export function RunScenarioModal(props: { roomContext: CanvasContext }) {
   const pushErrorNotification = useBearStore(

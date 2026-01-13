@@ -1,8 +1,8 @@
 import { Action } from "./Action.ts";
 import { useBearStore } from "../../state/useBearStore.ts";
-import { Note } from "../../../src-gen";
+import { NoteDto } from "../../../src-gen";
 
-type EditNoteActionParams = { note: Note };
+type EditNoteActionParams = { note: NoteDto };
 export class EditNoteAction extends Action<EditNoteActionParams> {
   public static shared: EditNoteAction = new EditNoteAction();
 

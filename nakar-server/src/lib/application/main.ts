@@ -9,6 +9,7 @@ import cors from 'cors';
 import { RouteLogger } from '../http/interceptors/RouteLogger';
 import { ActionWsdto } from '../socketIO/dto/ActionWsdto';
 import { validationPipelineOptions } from './validationPipelineOptions';
+import { EventWsdto } from '../socketIO/dto/EventWsdto';
 
 let nestApp: NestExpressApplication | null = null;
 
@@ -35,7 +36,7 @@ export async function bootstrapNest(): Promise<void> {
           .setVersion('1.0.0')
           .addBearerAuth({ type: 'apiKey' })
           .build(),
-        { extraModels: [ActionWsdto] },
+        { extraModels: [ActionWsdto, EventWsdto] },
       ),
     { raw: ['yaml'], explorer: true, yamlDocumentUrl: '/api.yaml' },
   );

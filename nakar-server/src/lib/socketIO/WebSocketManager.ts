@@ -7,20 +7,6 @@ import {
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets';
-import {
-  SchemaGraphElements,
-  SchemaGraphMetaData,
-  SchemaGraphTable,
-  SchemaPhysicalNode,
-  SchemaWsEventCanvasDataReady,
-  SchemaWsEventClearProgress,
-  SchemaWsEventKick,
-  SchemaWsEventNotification,
-  SchemaWsEventProgress,
-  SchemaWsEventSetNodeLocks,
-  SchemaWsEventViewSettingsChanged,
-  SchemaWsServerToClientMessage,
-} from '../../../src-gen/schema';
 import { Logger } from '@strapi/logger';
 import { createChildLogger } from '../logger/createChildLogger';
 import {
@@ -54,16 +40,22 @@ import { CanvasEventViewSettingsChanged } from '../room/events/CanvasEventViewSe
 import { DatabaseEventsService } from '../database/DatabaseEventsService';
 import { ServerToClientEvents } from './ServerToClientEvents';
 import { ClientToServerEvents } from './ClientToServerEvents';
-import { Socket as UntypedSocket, Server as UntypedServer } from 'socket.io';
+import { Server as UntypedServer, Socket as UntypedSocket } from 'socket.io';
 import { ActionWsdto } from './dto/ActionWsdto';
 import { JoinCanvasWsdto } from './dto/actions/JoinCanvasWsdto';
 import { GrabNodeWsdto } from './dto/actions/GrabNodeWsdto';
 import { UngrabNodeWsdto } from './dto/actions/UngrabNodeWsdto';
 import { MoveNodesWsdto } from './dto/actions/MoveNodesWsdto';
-import { PhysicalNodeWsdto } from './dto/types/PhysicalNodeWsdto';
+import { PhysicalNodeDto } from './dto/types/PhysicalNodeDto';
 import { NodePosition } from '../room/graph/NodePosition';
 import { validationPipelineOptions } from '../application/validationPipelineOptions';
 import { WsValidationFilter } from './WsValidationFilter';
+import { NotificationWsdto } from './dto/events/NotificationWsdto';
+import { CanvasDataReadyWsdto } from './dto/events/CanvasDataReadyWsdto';
+import { EventWsdto } from './dto/EventWsdto';
+import { TableDataDto } from './dto/types/TableDataDto';
+import { GraphMetaDataDto } from './dto/types/GraphMetaDataDto';
+import { GraphElementsDto } from './dto/types/GraphElementsDto';
 
 export type Server = UntypedServer<ClientToServerEvents, ServerToClientEvents>;
 export type Socket = UntypedSocket<ClientToServerEvents, ServerToClientEvents>;
@@ -96,9 +88,7 @@ export class WebSocketManager
     this._registerDatabaseServiceEvents();
   }
 
-  public static createErrorNotification(
-    error: unknown,
-  ): SchemaWsEventNotification {
+  public static createErrorNotification(error: unknown): NotificationWsdto {
     const errorMessage: string = match(error)
       .with(
         P.instanceOf(BadRequestException),
@@ -107,7 +97,7 @@ export class WebSocketManager
       .with(P.instanceOf(Error), (e: Error): string => e.message)
       .otherwise((e: unknown): string => JSON.stringify(e));
     return {
-      type: 'WSEventNotification',
+      type: 'NotificationWsdto',
       notification: {
         severity: 'error',
         message: errorMessage,
@@ -132,13 +122,15 @@ export class WebSocketManager
 
   public onModuleDestroy(): void {
     this._server.emit('message', {
-      type: 'WSEventNotification',
-      notification: {
-        severity: 'error',
-        message: 'The Server did shut down.',
-        date: new Date().toISOString(),
-      },
-    } satisfies SchemaWsEventNotification);
+      event: {
+        type: 'NotificationWsdto',
+        notification: {
+          severity: 'error',
+          message: 'The Server did shut down.',
+          date: new Date().toISOString(),
+        },
+      } satisfies NotificationWsdto,
+    });
   }
 
   // eslint-disable-next-line @typescript-eslint/member-ordering
@@ -173,7 +165,7 @@ export class WebSocketManager
             const newCanvasId: string = canvas.documentId;
 
             this.sendToRoom(newCanvasId, {
-              type: 'WSEventNotification',
+              type: 'NotificationWsdto',
               notification: {
                 message: `User ${wsClient.id} joined.`,
                 severity: 'message',
@@ -190,21 +182,23 @@ export class WebSocketManager
               });
 
             wsClient.send({
-              type: 'WSEventCanvasDataReady',
-              data: {
-                table: this._schemaFactory.createSchemaTable(graph.tableData),
-                elements: await this._schemaFactory.createSchemaGraphElements(
-                  graph,
-                  notes,
-                  liveCanvas.data.viewSettings,
-                ),
-                metaData: await this._schemaFactory.createSchemaGraphMetaData(
-                  graph,
-                  liveCanvas.data.undoableData.info,
-                ),
-                viewSettings: liveCanvas.data.viewSettings.toSchema(),
-              },
-            } satisfies SchemaWsEventCanvasDataReady);
+              event: {
+                type: 'CanvasDataReadyWsdto',
+                data: {
+                  table: this._schemaFactory.createSchemaTable(graph.tableData),
+                  elements: await this._schemaFactory.createSchemaGraphElements(
+                    graph,
+                    notes,
+                    liveCanvas.data.viewSettings,
+                  ),
+                  metaData: await this._schemaFactory.createSchemaGraphMetaData(
+                    graph,
+                    liveCanvas.data.undoableData.info,
+                  ),
+                  viewSettings: liveCanvas.data.viewSettings.toSchema(),
+                },
+              } satisfies CanvasDataReadyWsdto,
+            });
           },
         )
         .with({ type: 'LeaveCanvasWsdto' }, (): void => {
@@ -222,10 +216,10 @@ export class WebSocketManager
         .with({ type: 'MoveNodesWsdto' }, (m: MoveNodesWsdto): void => {
           this._assertLiveCanvas(wsClient).moveNodes({
             nodes: m.nodes.map(
-              (p: PhysicalNodeWsdto): NodePosition =>
+              (p: PhysicalNodeDto): NodePosition =>
                 ({
                   id: p.id,
-                  position: { x: p.positionX, y: p.positionY },
+                  position: p.position,
                 }) satisfies NodePosition,
             ),
             userId: wsClient.id,
@@ -235,7 +229,7 @@ export class WebSocketManager
           this._assertLiveCanvas(wsClient).ungrabNode({
             node: {
               id: m.node.id,
-              position: { x: m.node.positionX, y: m.node.positionY },
+              position: m.node.position,
             } satisfies NodePosition,
             userId: wsClient.id,
           });
@@ -246,14 +240,11 @@ export class WebSocketManager
         `Error handling WS message: ${JSON.stringify(message)}`,
       );
       this._logger.error(error);
-      wsClient.send(WebSocketManager.createErrorNotification(error));
+      wsClient.send({ event: WebSocketManager.createErrorNotification(error) });
     }
   }
 
-  public sendToRoom(
-    roomId: string,
-    message: SchemaWsServerToClientMessage,
-  ): void {
+  public sendToRoom(roomId: string, message: EventWsdto['event']): void {
     for (const socket of this._server.sockets.sockets.values()) {
       const room: string | null = this._rooms.get(socket.id) ?? null;
       if (room == null) {
@@ -262,7 +253,7 @@ export class WebSocketManager
       if (room !== roomId) {
         continue;
       }
-      socket.emit('message', message);
+      socket.emit('message', { event: message });
     }
   }
 
@@ -293,13 +284,13 @@ export class WebSocketManager
     this._rooms.delete(wsClient.id);
 
     this.sendToRoom(oldCanvasId, {
-      type: 'WSEventNotification',
+      type: 'NotificationWsdto',
       notification: {
         message: `User ${wsClient.id} left.`,
         date: new Date().toISOString(),
         severity: 'message',
       },
-    } satisfies SchemaWsEventNotification);
+    });
 
     if (this._userCountOfRoom(oldCanvasId) === 0) {
       this._databaseService
@@ -330,25 +321,26 @@ export class WebSocketManager
           .with(
             { type: 'CanvasEventGraphTableChanged' },
             (message: CanvasEventGraphTableChanged): void => {
-              const table: SchemaGraphTable =
-                this._schemaFactory.createSchemaTable(message.table);
+              const table: TableDataDto = this._schemaFactory.createSchemaTable(
+                message.table,
+              );
               this.sendToRoom(message.canvas.canvasId, {
                 table: table,
-                type: 'WSEventGraphTableChanged',
+                type: 'GraphTableDataChangedWsdto',
               });
             },
           )
           .with(
             { type: 'CanvasEventGraphMetaDataChanged' },
             async (message: CanvasEventGraphMetaDataChanged): Promise<void> => {
-              const metaData: SchemaGraphMetaData =
+              const metaData: GraphMetaDataDto =
                 await this._schemaFactory.createSchemaGraphMetaData(
                   message.graph,
                   message.undoInfo,
                 );
               this.sendToRoom(message.canvas.canvasId, {
                 metaData: metaData,
-                type: 'WSEventGraphMetaDataChanged',
+                type: 'GraphMetaDataChangedWsdto',
               });
             },
           )
@@ -370,7 +362,7 @@ export class WebSocketManager
                     graph: message.graph,
                   });
 
-                const graphElements: SchemaGraphElements =
+                const graphElements: GraphElementsDto =
                   await this._schemaFactory.createSchemaGraphElements(
                     message.graph,
                     notes,
@@ -378,7 +370,7 @@ export class WebSocketManager
                   );
                 this.sendToRoom(message.canvas.canvasId, {
                   elements: graphElements,
-                  type: 'WSEventGraphElementsChanged',
+                  type: 'GraphElementsChangedWsdto',
                 });
               })().catch((error: unknown): void => {
                 this._logger.error(error);
@@ -394,12 +386,15 @@ export class WebSocketManager
                 }
 
                 // const task: Profiler = this._logger.startTimer();
-                const nodesToSend: SchemaPhysicalNode[] = [];
+                const nodesToSend: PhysicalNodeDto[] = [];
                 for (const node of message.graph.nodes.nodes) {
                   if (!node.grabs.has(socket.id)) {
                     nodesToSend.push({
                       id: node.id,
-                      position: { x: node.position.x, y: node.position.y },
+                      position: {
+                        x: node.position.x,
+                        y: node.position.y,
+                      },
                     });
                   }
                 }
@@ -408,10 +403,12 @@ export class WebSocketManager
                 // });
 
                 socket.send({
-                  type: 'WSEventNodesMoved',
-                  nodes: nodesToSend,
-                  date: new Date().toISOString(),
-                  performance: message.performance,
+                  event: {
+                    type: 'NodesMovedWsdto',
+                    nodes: nodesToSend,
+                    date: new Date().toISOString(),
+                    performance: message.performance,
+                  },
                 });
               }
             },
@@ -427,48 +424,48 @@ export class WebSocketManager
                 });
               }
               this.sendToRoom(message.canvas.canvasId, {
-                type: 'WSEventSetNodeLocks',
+                type: 'SetNodeLocksWsdto',
                 locks: locks,
-              } satisfies SchemaWsEventSetNodeLocks);
+              });
             },
           )
           .with(
             { type: 'CanvasEventProgressChanged' },
             (message: CanvasEventProgressChanged): void => {
               this.sendToRoom(message.canvas.canvasId, {
-                type: 'WSEventProgress',
+                type: 'ProgressWsdto',
                 message: message.message,
                 progress: message.progress,
-              } satisfies SchemaWsEventProgress);
+              });
             },
           )
           .with(
             { type: 'CanvasEventProgressCleared' },
             (message: CanvasEventProgressCleared): void => {
               this.sendToRoom(message.canvas.canvasId, {
-                type: 'WSEventClearProgress',
-              } satisfies SchemaWsEventClearProgress);
+                type: 'ClearProgressWsdto',
+              });
             },
           )
           .with(
             { type: 'CanvasEventKick' },
             (message: CanvasEventEventKick): void => {
               this.sendToRoom(message.canvas.canvasId, {
-                type: 'WSEventKick',
-              } satisfies SchemaWsEventKick);
+                type: 'KickWsdto',
+              });
             },
           )
           .with(
             { type: 'CanvasEventNotAllNodesLoaded' },
             (message: CanvasEventNotAllNodesLoaded): void => {
               this.sendToRoom(message.canvas.canvasId, {
-                type: 'WSEventNotification',
+                type: 'NotificationWsdto',
                 notification: {
                   message: `Not all graph elements loaded. Did load ${message.loadedCount.toString()} elements.`,
                   date: new Date().toISOString(),
                   severity: 'warning',
                 },
-              } satisfies SchemaWsEventNotification);
+              });
             },
           )
           .with(
@@ -487,9 +484,9 @@ export class WebSocketManager
             { type: 'CanvasEventViewSettingsChanged' },
             (message: CanvasEventViewSettingsChanged): void => {
               this.sendToRoom(message.canvas.canvasId, {
-                type: 'WSEventViewSettingsChanged',
+                type: 'ViewSettingsChangedWsdto',
                 viewSettings: message.viewSettings.toSchema(),
-              } satisfies SchemaWsEventViewSettingsChanged);
+              });
             },
           )
           .exhaustive(),
@@ -523,7 +520,7 @@ export class WebSocketManager
               graph: graph,
             });
 
-          const graphElements: SchemaGraphElements =
+          const graphElements: GraphElementsDto =
             await this._schemaFactory.createSchemaGraphElements(
               graph,
               notes,
@@ -531,7 +528,7 @@ export class WebSocketManager
             );
           this.sendToRoom(canvas.documentId, {
             elements: graphElements,
-            type: 'WSEventGraphElementsChanged',
+            type: 'GraphElementsChangedWsdto',
           });
         })().catch((error: unknown): void => {
           this._logger.error(error);

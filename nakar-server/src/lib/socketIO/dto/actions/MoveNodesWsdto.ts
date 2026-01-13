@@ -2,16 +2,16 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsArray, IsString, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
-import { PhysicalNodeWsdto } from '../types/PhysicalNodeWsdto';
+import { PhysicalNodeDto } from '../types/PhysicalNodeDto';
 
 export class MoveNodesWsdto {
   @ApiProperty({ enum: ['MoveNodesWsdto'] })
   @IsString()
   public type!: 'MoveNodesWsdto';
 
-  @ApiProperty({ type: PhysicalNodeWsdto, isArray: true })
+  @ApiProperty({ type: PhysicalNodeDto, isArray: true })
   @ValidateNested()
-  @Type(() => PhysicalNodeWsdto)
+  @Type(() => PhysicalNodeDto)
   @IsArray()
-  public nodes!: PhysicalNodeWsdto[];
+  public nodes!: PhysicalNodeDto[];
 }

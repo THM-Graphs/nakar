@@ -10,7 +10,7 @@ import {
   actionControllerLoadScenario,
   ScenarioArgumentDto,
   ScenarioDto,
-} from "../../../src-gen-2";
+} from "../../../src-gen";
 
 export function ScenarioDisplay(props: {
   scenario: ScenarioDto;

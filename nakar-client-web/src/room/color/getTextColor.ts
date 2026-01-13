@@ -1,12 +1,12 @@
 import { match, P } from "ts-pattern";
-import { Color } from "../../../src-gen";
 import { ColorSchema } from "./ColorSchema.ts";
+import { ColorDto } from "../../../src-gen";
 
 export function getTextColor(
-  color: Color | null,
+  color: ColorDto | null,
   colorSchema: ColorSchema,
 ): string {
-  return match(color)
+  return match(color?.color)
     .with(P.nullish, () => "#fff")
     .with({ index: P.number }, (color): string => {
       return colorSchema.getTextColor(color.index);

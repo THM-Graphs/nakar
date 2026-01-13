@@ -1,7 +1,7 @@
 import { PhysicalGraph } from './physical-graph/PhysicalGraph';
-import { SchemaPhysicsPerformance } from '../../../src-gen/schema';
+import { PhysicsPerformanceDto } from '../socketIO/dto/types/PhysicsPerformanceDto';
 
 export interface PhysicsSimulationEventSlowTick {
   graph: PhysicalGraph;
-  performance: SchemaPhysicsPerformance;
+  performance: PhysicsPerformanceDto;
 }

@@ -2,7 +2,7 @@ import { Action } from "./Action.ts";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
 import { match } from "ts-pattern";
 import { NodesActionParams } from "./NodesActionParams.ts";
-import { actionControllerDeleteElements } from "../../../src-gen-2";
+import { actionControllerDeleteElements } from "../../../src-gen";
 
 export class RemoveNodesAction extends Action<NodesActionParams> {
   public static shared: RemoveNodesAction = new RemoveNodesAction();

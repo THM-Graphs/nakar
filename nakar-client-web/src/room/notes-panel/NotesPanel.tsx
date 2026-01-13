@@ -4,10 +4,10 @@ import { Panel } from "../../shared/elements/Panel.tsx";
 import { Stack } from "react-bootstrap";
 import { ActionNavbarButton } from "../actions/ActionNavbarButton.tsx";
 import { AddNoteAction } from "../actions/AddNoteAction.ts";
-import { Node } from "../../../src-gen";
 import { DynamicList } from "../../shared/elements/DynamicList.tsx";
 import { NoteDisplay } from "./NoteDisplay.tsx";
 import { AppContext } from "../../state/AppContext.ts";
+import { NodeDto, NoteDto } from "../../../src-gen";
 
 export function NotesPanel(props: {
   context: AppContext;
@@ -16,7 +16,7 @@ export function NotesPanel(props: {
   const notesPanel = useBearStore((s) => s.room.panels.notes);
   const graphElements = useBearStore((s) => s.room.scenario.graph.elements);
   const elements = useBearStore((s) => s.room.panels.inspector.element);
-  const selectedNodes = elements.reduce<Node[]>((akku, next) => {
+  const selectedNodes = elements.reduce<NodeDto[]>((akku, next) => {
     const foundNode = graphElements.nodes.find((e) => e.id === next);
     if (foundNode) {
       return [...akku, foundNode];
@@ -24,7 +24,9 @@ export function NotesPanel(props: {
       return akku;
     }
   }, []);
-  const notes = useBearStore((s) => s.room.scenario.graph.elements.notes);
+  const notes: NoteDto[] = useBearStore(
+    (s) => s.room.scenario.graph.elements.notes,
+  );
 
   return (
     <Panel

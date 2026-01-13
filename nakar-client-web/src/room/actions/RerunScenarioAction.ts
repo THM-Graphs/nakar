@@ -1,12 +1,11 @@
 import { Action } from "./Action.ts";
 import { CanvasContext } from "../../pages/CanvasPage.tsx";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
-import { Scenario } from "../../../src-gen";
-import { actionControllerReloadScenario } from "../../../src-gen-2";
+import { actionControllerReloadScenario, ScenarioDto } from "../../../src-gen";
 
 export type RerunScenarioActionParams = {
   roomContext: CanvasContext;
-  scenario: Scenario | null;
+  scenario: ScenarioDto | null;
 };
 
 export class RerunScenarioAction extends Action<RerunScenarioActionParams> {

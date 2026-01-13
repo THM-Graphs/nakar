@@ -1,14 +1,14 @@
-import { Project } from "../../src-gen";
 import { Stack } from "react-bootstrap";
 import { AppContext } from "../state/AppContext.ts";
 import { DynamicList } from "../shared/elements/DynamicList.tsx";
 import clsx from "clsx";
 import { CSSProperties } from "react";
 import { ProjectDisplay } from "./ProjectDisplay.tsx";
+import { StartPageProjectDto } from "../../src-gen";
 
 export function ProjectList(props: {
   title?: string;
-  rooms: Project[] | null;
+  rooms: StartPageProjectDto[] | null;
   context: AppContext;
   className?: string;
   style?: CSSProperties;
@@ -30,7 +30,7 @@ export function ProjectList(props: {
         filter={(exp, r) => r.title.toLowerCase().includes(exp.toLowerCase())}
         render={(list) => (
           <>
-            {list.map((project: Project) => (
+            {list.map((project) => (
               <ProjectDisplay
                 key={project.id}
                 project={project}

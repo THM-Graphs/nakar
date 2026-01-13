@@ -4,7 +4,7 @@ import { CanvasContext } from "../../pages/CanvasPage.tsx";
 import { ClipboardButton } from "../../shared/elements/ClipboardButton.tsx";
 import { ActionNavbarButton } from "../actions/ActionNavbarButton.tsx";
 import { SpawnNodeAction } from "../actions/SpawnNodeAction.ts";
-import { NodePreviewDto } from "../../../src-gen-2";
+import { NodePreviewDto } from "../../../src-gen";
 
 export function SearchResultEntry(props: {
   node: NodePreviewDto;

@@ -2,7 +2,7 @@ import { Action } from "./Action.ts";
 import { LabelActionParams } from "./LabelActionParams.ts";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
 import { match } from "ts-pattern";
-import { actionControllerDeleteElements } from "../../../src-gen-2";
+import { actionControllerDeleteElements } from "../../../src-gen";
 
 export class RemoveLabelAction extends Action<LabelActionParams> {
   public static shared: RemoveLabelAction = new RemoveLabelAction();

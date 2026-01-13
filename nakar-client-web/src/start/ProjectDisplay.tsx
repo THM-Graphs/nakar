@@ -2,10 +2,10 @@ import { useNavigate } from "react-router";
 import { Stack } from "react-bootstrap";
 import { NavbarButton } from "../shared/elements/NavbarButton.tsx";
 import { ScenarioIcon } from "../room/scenarios-panel/ScenarioIcon.tsx";
-import { Project } from "../../src-gen";
+import { StartPageProjectDto } from "../../src-gen";
 import { StringListDisplay } from "../shared/cms/StringListDisplay.tsx";
 
-export function ProjectDisplay(props: { project: Project }) {
+export function ProjectDisplay(props: { project: StartPageProjectDto }) {
   const navigate = useNavigate();
   const roomUrl = `/project/${props.project.id}`;
 
@@ -31,7 +31,7 @@ export function ProjectDisplay(props: { project: Project }) {
             </span>
             <span className={"text-muted small"}>
               Owner:{" "}
-              {props.project.owner?.current.displayName ?? (
+              {props.project.owner?.displayName ?? (
                 <span className={"fst-italic"}>None</span>
               )}
             </span>

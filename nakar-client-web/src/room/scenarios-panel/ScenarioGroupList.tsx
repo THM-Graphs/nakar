@@ -2,7 +2,7 @@ import { ScenarioGroupDisplay } from "./ScenarioGroupDisplay.tsx";
 import { Stack } from "react-bootstrap";
 import { AppContext } from "../../state/AppContext.ts";
 import { CanvasContext } from "../../pages/CanvasPage.tsx";
-import { ScenarioGroupDto } from "../../../src-gen-2";
+import { ScenarioGroupDto } from "../../../src-gen";
 
 export function ScenarioGroupList(props: {
   scenarioGroups: ScenarioGroupDto[];

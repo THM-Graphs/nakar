@@ -1,7 +1,6 @@
 import { Stack } from "react-bootstrap";
 import { DetailPaneAction } from "./DetailPaneAction.ts";
-import { GraphProperty } from "../../../src-gen";
-import { PropertiesDisplay } from "./PropertiesDisplay.tsx";
+import { PropertiesDisplay, PropertyEntry } from "./PropertiesDisplay.tsx";
 import { NavbarButton } from "../../shared/elements/NavbarButton.tsx";
 import { ReactNode, useState } from "react";
 import { CanvasContext } from "../../pages/CanvasPage.tsx";
@@ -14,8 +13,8 @@ export function DetailPane(props: {
   title: string;
   subTitleElements?: ReactNode;
   actions: DetailPaneAction[];
-  properties: GraphProperty[];
-  otherProperties: GraphProperty[];
+  properties: PropertyEntry[];
+  otherProperties: PropertyEntry[];
   roomContext: CanvasContext;
   elementId: string;
   children?: ReactNode;

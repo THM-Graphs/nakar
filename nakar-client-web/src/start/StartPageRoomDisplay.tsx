@@ -1,14 +1,14 @@
-import { Room } from "../../src-gen";
 import { useNavigate } from "react-router";
 import { Stack } from "react-bootstrap";
 import { NavbarButton } from "../shared/elements/NavbarButton.tsx";
 import { ScenarioIcon } from "../room/scenarios-panel/ScenarioIcon.tsx";
 import { ClipboardButton } from "../shared/elements/ClipboardButton.tsx";
 import { RoomVisibilityDisplay } from "../shared/cms/RoomVisibilityDisplay.tsx";
+import { StartPageRoomDto } from "../../src-gen";
 
-export function RoomDisplay(props: {
-  room: Room;
-  onDelete?: (room: Room) => void | Promise<void>;
+export function StartPageRoomDisplay(props: {
+  room: StartPageRoomDto;
+  onDelete?: (room: StartPageRoomDto) => void | Promise<void>;
 }) {
   const navigate = useNavigate();
   const roomUrl = `/room/${props.room.id}`;

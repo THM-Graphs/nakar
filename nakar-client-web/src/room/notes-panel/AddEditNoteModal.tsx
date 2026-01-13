@@ -11,7 +11,7 @@ import { Collapsable } from "../../shared/elements/Collapsable.tsx";
 import {
   noteControllerPostNote,
   noteControllerUpdateNote,
-} from "../../../src-gen-2";
+} from "../../../src-gen";
 
 type AddEditNoteModalMode = "create" | "update";
 

@@ -1,8 +1,8 @@
 import { PhysicalGraph } from '../../physics/physical-graph/PhysicalGraph';
-import { SchemaPhysicsPerformance } from '../../../../src-gen/schema';
+import { PhysicsPerformanceDto } from '../../socketIO/dto/types/PhysicsPerformanceDto';
 
 export interface WTEventPhysicsUpdate {
   type: 'WTEventPhysicsUpdate';
   graph: PhysicalGraph;
-  performance: SchemaPhysicsPerformance;
+  performance: PhysicsPerformanceDto;
 }

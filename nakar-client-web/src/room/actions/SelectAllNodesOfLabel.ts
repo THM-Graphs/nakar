@@ -1,7 +1,7 @@
 import { Action } from "./Action.ts";
 import { useBearStore } from "../../state/useBearStore.ts";
 import { LabelActionParams } from "./LabelActionParams.ts";
-import { Node } from "../../../src-gen";
+import { NodeDto } from "../../../src-gen";
 
 export class SelectAllNodesOfLabel extends Action<LabelActionParams> {
   public static shared: SelectAllNodesOfLabel = new SelectAllNodesOfLabel();
@@ -38,7 +38,7 @@ export class SelectAllNodesOfLabel extends Action<LabelActionParams> {
     return `Select All Nodes`;
   }
 
-  private _nodeLabelsIncludeLabels(node: Node, labels: string[]): boolean {
+  private _nodeLabelsIncludeLabels(node: NodeDto, labels: string[]): boolean {
     for (const nodeLabel of node.labels) {
       for (const label of labels) {
         if (label === nodeLabel) {

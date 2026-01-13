@@ -3,12 +3,12 @@ import { CanvasContext } from "../../../pages/CanvasPage.tsx";
 import { useBearStore } from "../../../state/useBearStore.ts";
 import { DynamicList } from "../../../shared/elements/DynamicList.tsx";
 import { nodeActions } from "../../actions/groups/nodeActions.ts";
-import { GraphLabel } from "../../../../src-gen";
 import {
   getBackgroundColorOfLabel,
   getBackgroundColorOfOptionalColor,
 } from "../../color/getBackgroundColor.ts";
 import { useColorSchema } from "../../color/useColorSchema.ts";
+import { LabelDto } from "../../../../src-gen";
 
 export function HistogramSectionNodes(props: { roomContext: CanvasContext }) {
   const histogram = useBearStore(
@@ -32,13 +32,13 @@ export function HistogramSectionNodes(props: { roomContext: CanvasContext }) {
         <>
           {list.map((nodeEntry) => {
             const labelColors = nodeEntry.labels.map((l) => {
-              const label: GraphLabel | null =
+              const label: LabelDto | null =
                 graphLabels.find((gl) => gl.label === l) ?? null;
               return getBackgroundColorOfLabel(label, colorSchema);
             });
             const customColor: string | null =
               getBackgroundColorOfOptionalColor(
-                nodeEntry.customColor?.color ?? null,
+                nodeEntry.customColor,
                 colorSchema,
               );
             return (

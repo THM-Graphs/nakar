@@ -3,7 +3,7 @@ import { useBearStore } from "../state/useBearStore.ts";
 import { LoaderFunctionArgs, useLoaderData, useNavigate } from "react-router";
 
 import { resultOrThrow } from "../shared/data/resultOrThrow.ts";
-import { CanvasDto, roomControllerGetRoom, RoomDto } from "../../src-gen-2";
+import { CanvasDto, roomControllerGetRoom, RoomDto } from "../../src-gen";
 
 export type RoomContext = {
   room: RoomDto;

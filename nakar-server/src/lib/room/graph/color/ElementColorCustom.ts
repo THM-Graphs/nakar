@@ -1,6 +1,6 @@
 import { ElementColor } from './ElementColor';
-import { SchemaCustomColor } from '../../../../../src-gen/schema';
 import z from 'zod';
+import { ColorDto } from '../../../http/dto/ColorDto';
 
 export class ElementColorCustom extends ElementColor {
   public readonly backgroundColor: string;
@@ -12,11 +12,13 @@ export class ElementColorCustom extends ElementColor {
     this.textColor = data.textColor;
   }
 
-  public toDto(): SchemaCustomColor {
+  public toDto(): ColorDto {
     return {
-      backgroundColor: this.backgroundColor,
-      textColor: this.textColor,
-      type: 'CustomColor',
+      color: {
+        backgroundColor: this.backgroundColor,
+        textColor: this.textColor,
+        type: 'ColorCustomDto',
+      },
     };
   }
 

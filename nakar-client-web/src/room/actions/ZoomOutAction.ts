@@ -1,10 +1,10 @@
-import { Node } from "../../../src-gen";
 import { BehaviorSubject } from "rxjs";
 import { Action } from "./Action.ts";
 import { SelectedCanvasTab } from "../../state/SelectedCanvasTab.ts";
+import { NodeDto } from "../../../src-gen";
 
 export type ZoomOutActionParams = {
-  nodes: Node[];
+  nodes: NodeDto[];
   onZoomOut: BehaviorSubject<void>;
   selectedTab: SelectedCanvasTab;
 };

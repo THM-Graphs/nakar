@@ -1,5 +1,5 @@
-import { SchemaColor } from '../../../../../src-gen/schema';
 import z from 'zod';
+import { ColorDto } from '../../../http/dto/ColorDto';
 
 export abstract class ElementColor {
   // eslint-disable-next-line @typescript-eslint/typedef
@@ -28,6 +28,6 @@ export abstract class ElementColor {
     ElementColor.schemaPreset,
   ]);
 
-  public abstract toDto(): SchemaColor;
+  public abstract toDto(): ColorDto;
   public abstract toPlain(): z.infer<typeof ElementColor.schema>;
 }

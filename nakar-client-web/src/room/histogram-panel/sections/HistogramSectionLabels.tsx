@@ -18,18 +18,18 @@ export function HistogramSectionLabels(props: { roomContext: CanvasContext }) {
     <DynamicList
       data={histogram.nodeLabels}
       entityNamePlural={"Labels"}
-      filter={(exp, l) => l.label.toLowerCase().includes(exp.toLowerCase())}
+      filter={(exp, l) => l.value.toLowerCase().includes(exp.toLowerCase())}
       render={(list) => (
         <>
           {list.map((entry) => {
             const label = labels.find(
-              (graphLabel) => graphLabel.label === entry.label,
+              (graphLabel) => graphLabel.label === entry.value,
             );
 
             return (
               <ValueDisplay
                 roomContext={props.roomContext}
-                label={entry.label}
+                label={entry.value}
                 subLabel={
                   label && label.sources.length > 0
                     ? label.sources.join(", ")
@@ -37,19 +37,19 @@ export function HistogramSectionLabels(props: { roomContext: CanvasContext }) {
                 }
                 onSelect={() => {
                   SelectAllNodesOfLabel.shared.runAsync({
-                    labels: [entry.label],
+                    labels: [entry.value],
                     roomContext: props.roomContext,
                   });
                 }}
                 value={entry.count}
                 percentage={entry.percentage}
-                key={entry.label}
+                key={entry.value}
                 nodeColors={
                   label ? [getBackgroundColorOfLabel(label, colorSchema)] : []
                 }
                 customActions={labelActions.map((action) =>
                   action.detailPaneAction(() => ({
-                    labels: [entry.label],
+                    labels: [entry.value],
                     roomContext: props.roomContext,
                   })),
                 )}

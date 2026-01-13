@@ -6,6 +6,8 @@ export class WsValidationFilter implements ExceptionFilter {
   public catch(exception: unknown, host: ArgumentsHost): void {
     const client: Socket = host.switchToWs().getClient();
 
-    client.emit('message', WebSocketManager.createErrorNotification(exception));
+    client.emit('message', {
+      event: WebSocketManager.createErrorNotification(exception),
+    });
   }
 }

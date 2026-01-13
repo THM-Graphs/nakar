@@ -11,7 +11,7 @@ import { ScenarioGroupCard } from "../shared/cms/ScenarioGroupCard.tsx";
 import {
   projectPageControllerGetProjectPage,
   ProjectPageDto,
-} from "../../src-gen-2";
+} from "../../src-gen";
 
 export async function ProjectLoader(
   args: LoaderFunctionArgs,

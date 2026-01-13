@@ -1,10 +1,5 @@
 import { D3Link } from "./D3Link.ts";
 import { D3Node } from "./D3Node.ts";
-import {
-  GraphElements,
-  WSEventNodesMoved,
-  WSEventSetNodeLocks,
-} from "../../../src-gen";
 import * as d3 from "d3";
 import { ZoomBehavior, ZoomTransform } from "d3";
 import {
@@ -19,6 +14,11 @@ import { useBearStore } from "../../state/useBearStore.ts";
 import { ColorSchema } from "../color/ColorSchema.ts";
 import { Theme } from "../../shared/theme/Theme.ts";
 import { isMultiSelectKey } from "../../shared/dom/isMultiSelectKey.ts";
+import {
+  GraphElementsDto,
+  NodesMovedWsdto,
+  SetNodeLocksWsdto,
+} from "../../../src-gen";
 
 const inputFps = 16;
 const outputFps = 32;
@@ -197,12 +197,12 @@ export class D3Renderer {
     return this.$onUngrabNode.asObservable();
   }
 
-  public loadGraphContent(graphElements: GraphElements) {
+  public loadGraphContent(graphElements: GraphElementsDto) {
     this.graphState = D3RendererState.fromWsData(graphElements);
     this.renderSvgElements();
   }
 
-  public updateNodePositions(wsEvent: WSEventNodesMoved) {
+  public updateNodePositions(wsEvent: NodesMovedWsdto) {
     for (const node of wsEvent.nodes) {
       const localNode = this.graphState.getNodeById(node.id);
       if (localNode == null) {
@@ -214,7 +214,7 @@ export class D3Renderer {
     this.smoothedPositionDirty = true;
   }
 
-  public updateLocks(wsEvent: WSEventSetNodeLocks) {
+  public updateLocks(wsEvent: SetNodeLocksWsdto) {
     for (const node of wsEvent.locks) {
       const localNode = this.graphState.nodes.find((n) => n.id === node.id);
       if (localNode == null) {

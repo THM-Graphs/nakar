@@ -2,7 +2,7 @@ import { Action } from "./Action.ts";
 import { LabelActionParams } from "./LabelActionParams.ts";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
 import { match } from "ts-pattern";
-import { actionControllerLayoutLabel } from "../../../src-gen-2";
+import { actionControllerLayoutLabel } from "../../../src-gen";
 
 export class LayoutLabelsCircleAction extends Action<LabelActionParams> {
   public static shared: LayoutLabelsCircleAction =

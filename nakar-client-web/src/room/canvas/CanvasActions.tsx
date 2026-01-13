@@ -19,7 +19,7 @@ import { UndoAction } from "../actions/UndoAction.ts";
 import { RedoAction } from "../actions/RedoAction.ts";
 import { RerunScenarioAction } from "../actions/RerunScenarioAction.ts";
 import { ExpandNodePreviewAction } from "../actions/ExpandNodePreviewAction.ts";
-import { Node } from "../../../src-gen";
+import { NodeDto } from "../../../src-gen";
 import { ExpandNodeAction } from "../actions/ExpandNodeAction.ts";
 import { RemoveNodesAction } from "../actions/RemoveNodesAction.ts";
 import { FocusNodesAction } from "../actions/FocusNodesAction.ts";
@@ -42,7 +42,7 @@ export function CanvasActions(props: {
   const redoAction = useBearStore(
     (s) => s.room.scenario.graph.metaData.redoAction,
   );
-  const selectedNodes = element.reduce<Node[]>((akku, next) => {
+  const selectedNodes = element.reduce<NodeDto[]>((akku, next) => {
     const foundNode = nodes.find((e) => e.id === next);
     if (foundNode) {
       return [...akku, foundNode];
@@ -136,7 +136,7 @@ export function CanvasActions(props: {
           action={RerunScenarioAction.shared}
           params={{
             roomContext: props.roomContext,
-            scenario: scenario?.current ?? null,
+            scenario: scenario,
           }}
         ></CanvasActionsAction>
       </CanvasActionsGroup>
@@ -182,7 +182,7 @@ export function CanvasActions(props: {
           action={ConnectResultNodesAction.shared}
           params={{
             roomContext: props.roomContext,
-            scenario: scenario?.current ?? null,
+            scenario: scenario,
             selectedTab,
           }}
         ></CanvasActionsAction>
@@ -190,7 +190,7 @@ export function CanvasActions(props: {
           action={RemoveDanglingNodesAction.shared}
           params={{
             roomContext: props.roomContext,
-            scenario: scenario?.current ?? null,
+            scenario: scenario,
             selectedTab,
           }}
         ></CanvasActionsAction>
@@ -198,7 +198,7 @@ export function CanvasActions(props: {
           action={CompressRelationshipsAction.shared}
           params={{
             roomContext: props.roomContext,
-            scenario: scenario?.current ?? null,
+            scenario: scenario,
             selectedTab,
           }}
         ></CanvasActionsAction>
