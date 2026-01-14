@@ -15,6 +15,7 @@ import { DatabaseConnectionController } from '../http/routes/database-connection
 import { WebSocketManager } from '../socketIO/WebSocketManager';
 import { ActionController } from '../http/routes/action/ActionController';
 import { LiveCanvasService } from '../live-canvas/LiveCanvasService';
+import { AuthService } from '../auth/AuthService';
 
 @Module({
   controllers: [
@@ -36,6 +37,7 @@ import { LiveCanvasService } from '../live-canvas/LiveCanvasService';
     DatabaseEventsService,
     Neo4jService,
     WebSocketManager,
+    AuthService,
   ],
 })
 export class AppModule {}

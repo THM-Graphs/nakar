@@ -6,12 +6,14 @@ import {
   SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
+  WsException,
 } from '@nestjs/websockets';
 import { Logger } from '@strapi/logger';
 import { createChildLogger } from '../logger/createChildLogger';
 import {
   BadRequestException,
   OnModuleDestroy,
+  OnModuleInit,
   UseFilters,
   UsePipes,
   ValidationPipe,
@@ -41,7 +43,6 @@ import { ServerToClientEvents } from './ServerToClientEvents';
 import { ClientToServerEvents } from './ClientToServerEvents';
 import { Server as UntypedServer, Socket as UntypedSocket } from 'socket.io';
 import { ActionWsdto } from './dto/ActionWsdto';
-import { JoinCanvasWsdto } from './dto/actions/JoinCanvasWsdto';
 import { GrabNodeWsdto } from './dto/actions/GrabNodeWsdto';
 import { UngrabNodeWsdto } from './dto/actions/UngrabNodeWsdto';
 import { MoveNodesWsdto } from './dto/actions/MoveNodesWsdto';
@@ -56,6 +57,12 @@ import { LiveCanvasTableDataDto } from '../schema/dtos/LiveCanvasTableDataDto';
 import { LiveCanvasMetaDataDto } from '../schema/dtos/LiveCanvasMetaDataDto';
 import { LiveCanvasGraphElementsDto } from '../schema/dtos/LiveCanvasGraphElementsDto';
 import { LiveCanvasService } from '../live-canvas/LiveCanvasService';
+import { AuthWsdto } from './dto/AuthWsdto';
+import { plainToClass } from 'class-transformer';
+import { validateOrReject } from 'class-validator';
+import { validatorOptions } from '../application/validatorOptions';
+import { AuthService } from '../auth/AuthService';
+import { userCanSeeCanvas } from '../policies/userCanSeeCanvas';
 
 export type Server = UntypedServer<ClientToServerEvents, ServerToClientEvents>;
 export type Socket = UntypedSocket<ClientToServerEvents, ServerToClientEvents>;
@@ -67,7 +74,11 @@ export type Socket = UntypedSocket<ClientToServerEvents, ServerToClientEvents>;
   serveClient: false,
 })
 export class WebSocketManager
-  implements OnGatewayConnection, OnGatewayDisconnect, OnModuleDestroy
+  implements
+    OnGatewayConnection,
+    OnGatewayDisconnect,
+    OnModuleDestroy,
+    OnModuleInit
 {
   private readonly _logger: Logger = createChildLogger(this);
   private readonly _rooms: SMap<string, string>;
@@ -82,6 +93,7 @@ export class WebSocketManager
     private readonly _canvasService: LiveCanvasService,
     private readonly _schemaFactory: SchemaFactoryService,
     private readonly _databaseEventsService: DatabaseEventsService,
+    private readonly _authService: AuthService,
   ) {
     this._rooms = new SMap();
     this._registerCanvasEvents();
@@ -106,10 +118,89 @@ export class WebSocketManager
     };
   }
 
-  public handleConnection(client: Socket): void {
-    this._logger.debug(`Client connected: ${client.id}`);
+  public onModuleInit(): void {
+    this._server.use((socket: Socket, next: (error?: Error) => void): void => {
+      (async (): Promise<void> => {
+        const auth: AuthWsdto = plainToClass(AuthWsdto, socket.handshake.auth);
+        await validateOrReject(auth, validatorOptions);
+        const user: Result<'plugin::users-permissions.user'> | null =
+          await this._authService.getUserByJWT(auth.jwt);
+        if (user == null) {
+          throw new WsException('User not found.');
+        }
+        const canvas: Result<'api::v2-canvas.v2-canvas'> =
+          await this._databaseService.getCanvas(auth.canvasId);
 
-    // TODO: Check permissions
+        const allowed: boolean = await userCanSeeCanvas(
+          user,
+          canvas,
+          this._databaseService,
+        );
+        if (!allowed) {
+          throw new WsException(
+            `Canvas ${auth.canvasId} not allowed for user ${user.documentId}`,
+          );
+        }
+        this._logger.debug(
+          `Client ${socket.id} is allowed to access canvas ${auth.canvasId}.`,
+        );
+      })()
+        .then((): void => {
+          next();
+        })
+        .catch((error: unknown): void => {
+          this._logger.warn(
+            `Socket connection not allowed: ${JSON.stringify(error)}`,
+          );
+          next(new WsException('Forbidden'));
+        });
+    });
+  }
+
+  public async handleConnection(wsClient: Socket): Promise<void> {
+    this._logger.debug(`Client connected: ${wsClient.id}`);
+    const auth: AuthWsdto = plainToClass(AuthWsdto, wsClient.handshake.auth);
+
+    const canvas: Result<'api::v2-canvas.v2-canvas'> =
+      await this._databaseService.getCanvas(auth.canvasId);
+
+    this._rooms.set(wsClient.id, canvas.documentId);
+
+    const newCanvasId: string = canvas.documentId;
+
+    this.sendToRoom(newCanvasId, {
+      type: 'NotificationWsdto',
+      notification: {
+        message: `User ${wsClient.id} joined.`,
+        severity: 'message',
+        date: new Date().toISOString(),
+      },
+    });
+    const liveCanvas: LiveCanvas = this._canvasService.getOrStartCanvas(canvas);
+    const graph: LiveCanvasUndoableData = liveCanvas.getGraph();
+    const notes: IndexedNoteCollection = await this._databaseService.getNotes({
+      project: await this._databaseService.getProjectOfCanvas(canvas),
+      graph: graph,
+    });
+
+    wsClient.send({
+      event: {
+        type: 'CanvasDataReadyWsdto',
+        data: {
+          table: this._schemaFactory.createSchemaTable(graph.tableData),
+          elements: await this._schemaFactory.createSchemaGraphElements(
+            graph,
+            notes,
+            liveCanvas.data.viewSettings,
+          ),
+          metaData: await this._schemaFactory.createSchemaGraphMetaData(
+            graph,
+            liveCanvas.data.undoableData.info,
+          ),
+          viewSettings: liveCanvas.data.viewSettings.toSchema(),
+        },
+      } satisfies CanvasDataReadyWsdto,
+    });
   }
 
   public handleDisconnect(wsClient: Socket): void {
@@ -149,64 +240,6 @@ export class WebSocketManager
       }
       await match(message.action)
         .returnType<void | Promise<void>>()
-        .with(
-          { type: 'JoinCanvasWsdto' },
-          async (m: JoinCanvasWsdto): Promise<void> => {
-            const oldRoom: string | null = this._rooms.get(wsClient.id) ?? null;
-            if (oldRoom != null) {
-              this._handleClientLeftRoom(wsClient, oldRoom);
-            }
-
-            const canvas: Result<'api::v2-canvas.v2-canvas'> =
-              await this._databaseService.getCanvas(m.canvasId);
-
-            this._rooms.set(wsClient.id, canvas.documentId);
-
-            const newCanvasId: string = canvas.documentId;
-
-            this.sendToRoom(newCanvasId, {
-              type: 'NotificationWsdto',
-              notification: {
-                message: `User ${wsClient.id} joined.`,
-                severity: 'message',
-                date: new Date().toISOString(),
-              },
-            });
-            const liveCanvas: LiveCanvas =
-              this._canvasService.getOrStartCanvas(canvas);
-            const graph: LiveCanvasUndoableData = liveCanvas.getGraph();
-            const notes: IndexedNoteCollection =
-              await this._databaseService.getNotes({
-                project: await this._databaseService.getProjectOfCanvas(canvas),
-                graph: graph,
-              });
-
-            wsClient.send({
-              event: {
-                type: 'CanvasDataReadyWsdto',
-                data: {
-                  table: this._schemaFactory.createSchemaTable(graph.tableData),
-                  elements: await this._schemaFactory.createSchemaGraphElements(
-                    graph,
-                    notes,
-                    liveCanvas.data.viewSettings,
-                  ),
-                  metaData: await this._schemaFactory.createSchemaGraphMetaData(
-                    graph,
-                    liveCanvas.data.undoableData.info,
-                  ),
-                  viewSettings: liveCanvas.data.viewSettings.toSchema(),
-                },
-              } satisfies CanvasDataReadyWsdto,
-            });
-          },
-        )
-        .with({ type: 'LeaveCanvasWsdto' }, (): void => {
-          const oldRoom: string | null = this._rooms.get(wsClient.id) ?? null;
-          if (oldRoom != null) {
-            this._handleClientLeftRoom(wsClient, oldRoom);
-          }
-        })
         .with({ type: 'GrabNodeWsdto' }, (m: GrabNodeWsdto): void => {
           this._assertLiveCanvas(wsClient).grabNode({
             nodeId: m.nodeId,

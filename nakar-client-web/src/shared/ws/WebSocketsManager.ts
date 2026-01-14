@@ -3,7 +3,7 @@ import { Env } from "../env/env.ts";
 import { ClientToServerEvents } from "./ClientToServerEvents.ts";
 import { ServerToClientEvents } from "./ServerToClientEvents.ts";
 import { Observable, Subject } from "rxjs";
-import { ActionWsdto, EventWsdto } from "../../../src-gen";
+import { ActionWsdto, AuthWsdto, EventWsdto } from "../../../src-gen";
 import { useBearStore } from "../../state/useBearStore.ts";
 
 export type Socket = UntypedSocket<ServerToClientEvents, ClientToServerEvents>;
@@ -20,15 +20,16 @@ export class WebSocketsManager {
   }
 
   public connect(canvasId: string): void {
-    this.socket = io(this._env.BACKEND_SOCKET_URL);
+    this.socket = io(this._env.BACKEND_SOCKET_URL, {
+      auth: {
+        jwt: useBearStore.getState().global.auth.jwt ?? "",
+        canvasId: canvasId,
+      } satisfies AuthWsdto,
+    });
     console.log(`Did connect WS to ${this._env.BACKEND_SOCKET_URL}`);
 
     this.socket.on("connect", () => {
       useBearStore.getState().room.websockets.setState({ type: "connected" });
-      this.sendMessage({
-        type: "JoinCanvasWsdto",
-        canvasId: canvasId,
-      });
     });
     this.socket.on("connect_error", (error: Error) => {
       useBearStore
@@ -51,9 +52,6 @@ export class WebSocketsManager {
       console.error("Socket not connected. Cannot send message");
       return;
     }
-    this.sendMessage({
-      type: "LeaveCanvasWsdto",
-    });
     this.socket.disconnect();
     this.socket = null;
     console.log("Did destroy websockets manager");

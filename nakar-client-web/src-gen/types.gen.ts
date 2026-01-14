@@ -4,6 +4,11 @@ export type ActionWsdto = {
     action: (JoinCanvasWsdto | LeaveCanvasWsdto | GrabNodeWsdto | MoveNodesWsdto | UngrabNodeWsdto);
 };
 
+export type AuthWsdto = {
+    jwt: string;
+    canvasId: string;
+};
+
 export type CanvasChangedWsdto = {
     type: 'CanvasChangedWsdto';
     canvasId: Array<(string)>;

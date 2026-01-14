@@ -874,6 +874,15 @@ export class DatabaseService {
     });
   }
 
+  public async getUser(
+    userId: string,
+  ): Promise<Result<'plugin::users-permissions.user'> | null> {
+    const user: Result<'plugin::users-permissions.user'> | null = await strapi
+      .documents('plugin::users-permissions.user')
+      .findOne({ documentId: userId });
+    return user;
+  }
+
   private _sortByTitle(
     a: { title?: string | null | undefined },
     b: { title?: string | null | undefined },
