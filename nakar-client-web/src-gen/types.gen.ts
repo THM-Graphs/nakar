@@ -582,7 +582,7 @@ export type AuthControllerGetAuthError = unknown;
 
 export type StartPageControllerGetStartPageData = {
     query: {
-        recentRoomIds: Array<(string)>;
+        recentRoomIds: (string) | null;
     };
 };
 

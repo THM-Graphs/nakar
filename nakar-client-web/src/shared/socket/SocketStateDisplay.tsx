@@ -38,6 +38,7 @@ function colorForState(socketState: SocketState): string {
     .with({ type: "connecting" }, () => "text-warning-emphasis")
     .with({ type: "connect_error" }, () => "text-danger-emphasis")
     .with({ type: "disconnect" }, () => "text-danger-emphasis")
+    .with({ type: "disconnected" }, () => "text-danger-emphasis")
     .exhaustive();
 }
 
@@ -47,5 +48,6 @@ function iconForState(socketState: SocketState): string {
     .with({ type: "connecting" }, () => "bi-wifi-off")
     .with({ type: "connect_error" }, () => "bi-wifi-off")
     .with({ type: "disconnect" }, () => "bi-wifi-off")
+    .with({ type: "disconnected" }, () => "bi-wifi-off")
     .exhaustive();
 }

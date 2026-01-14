@@ -97,15 +97,18 @@ export function CanvasPage(props: { context: AppContext }) {
   const rightPanel = useBearStore((s) => s.room.panels.right);
 
   useEffect(() => {
+    webSockets.connect(roomContext.initialCanvasData.id);
+    return () => {
+      webSockets.disconnect();
+    };
+  }, [roomContext.initialCanvasData.id]);
+
+  useEffect(() => {
     setScenarios(roomContext.initialScenariosData);
   }, [roomContext]);
 
   useEffect(() => {
     if (socketState.type === "connected") {
-      webSockets.sendMessage({
-        type: "JoinCanvasWsdto",
-        canvasId: roomContext.initialCanvasData.id,
-      });
       clearProgress();
       clearPerformance();
     }
@@ -164,17 +167,13 @@ export function CanvasPage(props: { context: AppContext }) {
     ];
 
     return () => {
-      webSockets.sendMessage({
-        type: "LeaveCanvasWsdto",
-      });
-
       subscriptions.forEach((s) => {
         s.unsubscribe();
       });
       setPerformance(null);
       clearProgress();
     };
-  }, []);
+  }, [webSockets]);
 
   return (
     <>

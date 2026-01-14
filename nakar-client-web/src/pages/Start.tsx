@@ -12,7 +12,7 @@ import { startPageControllerGetStartPage, StartPageDto } from "../../src-gen";
 export async function StartLoader(): Promise<StartPageDto> {
   return resultOrThrow(
     await startPageControllerGetStartPage({
-      query: { recentRoomIds: useBearStore.getState().start.myRooms },
+      query: { recentRoomIds: useBearStore.getState().start.myRooms.join(",") },
     }),
   );
 }
