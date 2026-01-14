@@ -29,7 +29,7 @@ export class StartPageController {
     @Query() query: GetStartPageRequestQueryDto,
   ): Promise<StartPageDto> {
     const recentRooms: Result<'api::v2-room.v2-room'>[] = [];
-    for (const recentRoomId of query.recentRoomIds ?? []) {
+    for (const recentRoomId of query.recentRoomIds?.split(',') ?? []) {
       try {
         const room: Result<'api::v2-room.v2-room'> =
           await this._database.getRoom(recentRoomId);

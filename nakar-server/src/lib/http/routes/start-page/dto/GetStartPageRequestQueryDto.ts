@@ -2,8 +2,8 @@ import { IsOptional, IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class GetStartPageRequestQueryDto {
-  @IsString({ each: true })
+  @IsString()
   @IsOptional()
   @ApiProperty({ type: 'string', nullable: true })
-  public recentRoomIds!: string[] | null;
+  public recentRoomIds!: string | null;
 }
