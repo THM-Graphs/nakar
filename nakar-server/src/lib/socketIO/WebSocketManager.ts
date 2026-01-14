@@ -125,9 +125,7 @@ export class WebSocketManager
         await validateOrReject(auth, validatorOptions);
         const user: Result<'plugin::users-permissions.user'> | null =
           await this._authService.getUserByJWT(auth.jwt);
-        if (user == null) {
-          throw new WsException('User not found.');
-        }
+
         const canvas: Result<'api::v2-canvas.v2-canvas'> =
           await this._databaseService.getCanvas(auth.canvasId);
 
@@ -138,11 +136,11 @@ export class WebSocketManager
         );
         if (!allowed) {
           throw new WsException(
-            `Canvas ${auth.canvasId} not allowed for user ${user.documentId}`,
+            `Canvas ${auth.canvasId} not allowed for user ${user?.documentId}`,
           );
         }
         this._logger.debug(
-          `Client ${socket.id} is allowed to access canvas ${auth.canvasId}.`,
+          `Client ${socket.id} (user ${user?.documentId}) is allowed to access canvas ${auth.canvasId}.`,
         );
       })()
         .then((): void => {
