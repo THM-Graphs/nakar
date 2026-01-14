@@ -325,7 +325,7 @@ export class WebSocketManager
                 this._schemaFactory.createSchemaTable(message.table);
               this.sendToRoom(message.canvas.canvasId, {
                 table: table,
-                type: 'GraphTableDataChangedWsdto',
+                type: 'CanvasTableDataChangedWsdto',
               });
             },
           )
@@ -339,7 +339,7 @@ export class WebSocketManager
                 );
               this.sendToRoom(message.canvas.canvasId, {
                 metaData: metaData,
-                type: 'GraphMetaDataChangedWsdto',
+                type: 'CanvasMetaDataChangedWsdto',
               });
             },
           )
@@ -369,7 +369,7 @@ export class WebSocketManager
                   );
                 this.sendToRoom(message.canvas.canvasId, {
                   elements: graphElements,
-                  type: 'GraphElementsChangedWsdto',
+                  type: 'CanvasElementsChangedWsdto',
                 });
               })().catch((error: unknown): void => {
                 this._logger.error(error);
@@ -483,7 +483,7 @@ export class WebSocketManager
             { type: 'CanvasEventViewSettingsChanged' },
             (message: CanvasEventViewSettingsChanged): void => {
               this.sendToRoom(message.canvas.canvasId, {
-                type: 'ViewSettingsChangedWsdto',
+                type: 'CanvasViewSettingsChangedWsdto',
                 viewSettings: message.viewSettings.toSchema(),
               });
             },
@@ -527,7 +527,7 @@ export class WebSocketManager
             );
           this.sendToRoom(canvas.documentId, {
             elements: graphElements,
-            type: 'GraphElementsChangedWsdto',
+            type: 'CanvasElementsChangedWsdto',
           });
         })().catch((error: unknown): void => {
           this._logger.error(error);

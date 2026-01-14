@@ -1,15 +1,15 @@
 import { LiveCanvasViewSettingsDto } from '../../../schema/dtos/LiveCanvasViewSettingsDto';
 import { ApiProperty } from '@nestjs/swagger';
 
-export class ViewSettingsChangedWsdto {
-  @ApiProperty({ enum: ['ViewSettingsChangedWsdto'] })
-  public type: 'ViewSettingsChangedWsdto';
+export class CanvasViewSettingsChangedWsdto {
+  @ApiProperty({ enum: ['CanvasViewSettingsChangedWsdto'] })
+  public type: 'CanvasViewSettingsChangedWsdto';
 
   @ApiProperty({ type: LiveCanvasViewSettingsDto })
   public viewSettings: LiveCanvasViewSettingsDto;
 
   public constructor(data: {
-    type: 'ViewSettingsChangedWsdto';
+    type: 'CanvasViewSettingsChangedWsdto';
     viewSettings: LiveCanvasViewSettingsDto;
   }) {
     this.type = data.type;

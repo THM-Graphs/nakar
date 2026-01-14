@@ -115,13 +115,13 @@ export function CanvasPage(props: { context: AppContext }) {
     const subscriptions = [
       webSockets.onMessage$.subscribe((message: EventWsdto) => {
         match(message.event)
-          .with({ type: "GraphMetaDataChangedWsdto" }, (event) => {
+          .with({ type: "CanvasMetaDataChangedWsdto" }, (event) => {
             setGraphMetaData(event.metaData);
           })
-          .with({ type: "GraphElementsChangedWsdto" }, (e) => {
+          .with({ type: "CanvasElementsChangedWsdto" }, (e) => {
             setGraphElements(e.elements);
           })
-          .with({ type: "GraphTableDataChangedWsdto" }, (e) => {
+          .with({ type: "CanvasTableDataChangedWsdto" }, (e) => {
             setGraphTable(e.table);
           })
           .with({ type: "CanvasChangedWsdto" }, () => {
@@ -156,7 +156,7 @@ export function CanvasPage(props: { context: AppContext }) {
             setGraphTable(event.data.table);
             setVisualizationData(event.data.viewSettings);
           })
-          .with({ type: "ViewSettingsChangedWsdto" }, (event) => {
+          .with({ type: "CanvasViewSettingsChangedWsdto" }, (event) => {
             setVisualizationData(event.viewSettings);
           })
           .exhaustive();

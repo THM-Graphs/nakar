@@ -8,39 +8,50 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 
 @Injectable()
 export class MigrationService implements OnModuleInit {
-  private readonly _active: boolean = false;
+  private readonly _shouldDeleteAllData: boolean = false;
   private readonly _logger: Logger = createChildLogger(this);
 
+  private readonly _contentTypes: UID.ContentType[] = [
+    'api::v2-canvas.v2-canvas',
+    'api::v2-common-property.v2-common-property',
+    'api::v2-database-connection.v2-database-connection',
+    'api::v2-link-property.v2-link-property',
+    'api::v2-node-reference.v2-node-reference',
+    'api::v2-node-title-property.v2-node-title-property',
+    'api::v2-note.v2-note',
+    'api::v2-post-scenario-action.v2-post-scenario-action',
+    'api::v2-project.v2-project',
+    'api::v2-query.v2-query',
+    'api::v2-query-parameter.v2-query-parameter',
+    'api::v2-room.v2-room',
+    'api::v2-scenario.v2-scenario',
+    'api::v2-scenario-group.v2-scenario-group',
+  ];
+
   public async onModuleInit(): Promise<void> {
-    if (this._active) {
-      this._logger.warn('Will check database for migration to v2.');
+    if (this._shouldDeleteAllData) {
       await this._deleteAllData();
-      await this._createProjects();
-    } else {
-      this._logger.warn('Not active. Will do nothing.');
     }
+    this._logger.warn('Will check database for migration to v2.');
+    const shouldRunMigration: boolean = await this._shouldRunMigration();
+    if (shouldRunMigration) {
+      await this._createProjects();
+    }
+  }
+
+  private async _shouldRunMigration(): Promise<boolean> {
+    let sum: number = 0;
+    for (const contentType of this._contentTypes) {
+      const count: number = await strapi.documents(contentType).count({});
+      sum += count;
+    }
+    return sum === 0;
   }
 
   private async _deleteAllData(): Promise<void> {
     this._logger.warn('Will delete all v2 data.');
-    const contentTypes: UID.ContentType[] = [
-      'api::v2-canvas.v2-canvas',
-      'api::v2-common-property.v2-common-property',
-      'api::v2-database-connection.v2-database-connection',
-      'api::v2-link-property.v2-link-property',
-      'api::v2-node-reference.v2-node-reference',
-      'api::v2-node-title-property.v2-node-title-property',
-      'api::v2-note.v2-note',
-      'api::v2-post-scenario-action.v2-post-scenario-action',
-      'api::v2-project.v2-project',
-      'api::v2-query.v2-query',
-      'api::v2-query-parameter.v2-query-parameter',
-      'api::v2-room.v2-room',
-      'api::v2-scenario.v2-scenario',
-      'api::v2-scenario-group.v2-scenario-group',
-    ];
 
-    for (const contentType of contentTypes) {
+    for (const contentType of this._contentTypes) {
       this._logger.warn(`Will delete ${contentType}`);
       for (const document of await strapi.documents(contentType).findMany()) {
         await strapi

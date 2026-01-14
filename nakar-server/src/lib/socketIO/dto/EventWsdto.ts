@@ -7,30 +7,30 @@ import { BadRequestException } from '@nestjs/common';
 import { CanvasChangedWsdto } from './events/CanvasChangedWsdto';
 import { CanvasDataReadyWsdto } from './events/CanvasDataReadyWsdto';
 import { ClearProgressWsdto } from './events/ClearProgressWsdto';
-import { GraphElementsChangedWsdto } from './events/GraphElementsChangedWsdto';
-import { GraphMetaDataChangedWsdto } from './events/GraphMetaDataChangedWsdto';
-import { GraphTableDataChangedWsdto } from './events/GraphTableDataChangedWsdto';
+import { CanvasElementsChangedWsdto } from './events/CanvasElementsChangedWsdto';
+import { CanvasMetaDataChangedWsdto } from './events/CanvasMetaDataChangedWsdto';
+import { CanvasTableDataChangedWsdto } from './events/CanvasTableDataChangedWsdto';
 import { KickWsdto } from './events/KickWsdto';
 import { NodesMovedWsdto } from './events/NodesMovedWsdto';
 import { NotificationWsdto } from './events/NotificationWsdto';
 import { ProgressWsdto } from './events/ProgressWsdto';
 import { SetNodeLocksWsdto } from './events/SetNodeLocksWsdto';
-import { ViewSettingsChangedWsdto } from './events/ViewSettingsChangedWsdto';
+import { CanvasViewSettingsChangedWsdto } from './events/CanvasViewSettingsChangedWsdto';
 
 // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
 const events: Function[] = [
   CanvasChangedWsdto,
   CanvasDataReadyWsdto,
   ClearProgressWsdto,
-  GraphElementsChangedWsdto,
-  GraphMetaDataChangedWsdto,
-  GraphTableDataChangedWsdto,
+  CanvasElementsChangedWsdto,
+  CanvasMetaDataChangedWsdto,
+  CanvasTableDataChangedWsdto,
   KickWsdto,
   NodesMovedWsdto,
   NotificationWsdto,
   ProgressWsdto,
   SetNodeLocksWsdto,
-  ViewSettingsChangedWsdto,
+  CanvasViewSettingsChangedWsdto,
 ];
 
 @ApiExtraModels(...events)
@@ -47,15 +47,15 @@ export class EventWsdto {
       .with({ type: 'ClearProgressWsdto' }, () => ClearProgressWsdto)
       .with(
         { type: 'GraphElementsChangedWsdto' },
-        () => GraphElementsChangedWsdto,
+        () => CanvasElementsChangedWsdto,
       )
       .with(
         { type: 'GraphMetaDataChangedWsdto' },
-        () => GraphMetaDataChangedWsdto,
+        () => CanvasMetaDataChangedWsdto,
       )
       .with(
         { type: 'GraphTableDataChangedWsdto' },
-        () => GraphTableDataChangedWsdto,
+        () => CanvasTableDataChangedWsdto,
       )
       .with({ type: 'KickWsdto' }, () => KickWsdto)
       .with({ type: 'NodesMovedWsdto' }, () => NodesMovedWsdto)
@@ -64,7 +64,7 @@ export class EventWsdto {
       .with({ type: 'SetNodeLocksWsdto' }, () => SetNodeLocksWsdto)
       .with(
         { type: 'ViewSettingsChangedWsdto' },
-        () => ViewSettingsChangedWsdto,
+        () => CanvasViewSettingsChangedWsdto,
       )
       .otherwise(() => {
         throw new BadRequestException();
@@ -74,13 +74,13 @@ export class EventWsdto {
     | CanvasChangedWsdto
     | CanvasDataReadyWsdto
     | ClearProgressWsdto
-    | GraphElementsChangedWsdto
-    | GraphMetaDataChangedWsdto
-    | GraphTableDataChangedWsdto
+    | CanvasElementsChangedWsdto
+    | CanvasMetaDataChangedWsdto
+    | CanvasTableDataChangedWsdto
     | KickWsdto
     | NodesMovedWsdto
     | NotificationWsdto
     | ProgressWsdto
     | SetNodeLocksWsdto
-    | ViewSettingsChangedWsdto;
+    | CanvasViewSettingsChangedWsdto;
 }

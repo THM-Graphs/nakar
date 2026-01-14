@@ -42,7 +42,7 @@ export function GraphRendererD3(props: {
             setLocks(event.locks);
             _graphRenderer.updateLocks(event);
           })
-          .with({ type: "GraphElementsChangedWsdto" }, (event) => {
+          .with({ type: "CanvasElementsChangedWsdto" }, (event) => {
             _graphRenderer.loadGraphContent(event.elements);
           })
           .with({ type: "CanvasDataReadyWsdto" }, (event) => {
