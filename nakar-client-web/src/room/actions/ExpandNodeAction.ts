@@ -29,18 +29,7 @@ export class ExpandNodeAction extends Action<NodesActionParams> {
     return "full-expand-nodes";
   }
 
-  title(input: NodesActionParams): string {
-    if (input.nodes.length === 1) {
-      const node = input.nodes[0];
-      if (node.isCluster) {
-        return "Expand Cluster";
-      } else {
-        return "Expand Node";
-      }
-    } else if (input.nodes.length > 0) {
-      return `Expand ${input.nodes.length.toFixed()} Nodes`;
-    } else {
-      return `Expand Nodes`;
-    }
+  title(): string {
+    return "Expand Node";
   }
 }

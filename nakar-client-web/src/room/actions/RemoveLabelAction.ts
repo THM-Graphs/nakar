@@ -1,7 +1,6 @@
 import { Action } from "./Action.ts";
 import { LabelActionParams } from "./LabelActionParams.ts";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
-import { match } from "ts-pattern";
 import { actionControllerDeleteElements } from "../../../src-gen";
 
 export class RemoveLabelAction extends Action<LabelActionParams> {
@@ -35,10 +34,7 @@ export class RemoveLabelAction extends Action<LabelActionParams> {
     return "remove-label";
   }
 
-  title(input: LabelActionParams): string {
-    return match(input.labels.length)
-      .with(0, () => "Remove Labels")
-      .with(1, () => "Remove Label")
-      .otherwise((l) => `Remove ${l.toString()} Labels`);
+  title(): string {
+    return "Remove Label";
   }
 }

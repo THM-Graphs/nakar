@@ -1,6 +1,5 @@
 import { Action } from "./Action.ts";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
-import { match } from "ts-pattern";
 import { RelationshipsActionParams } from "./RelationshipsActionParams.ts";
 import { actionControllerDeleteElements } from "../../../src-gen";
 
@@ -36,10 +35,7 @@ export class RemoveRelationshipsAction extends Action<RelationshipsActionParams>
     return "remove-edges";
   }
 
-  title(input: RelationshipsActionParams): string {
-    return match(input.edges.length)
-      .with(0, () => "Remove Relationships")
-      .with(1, () => "Remove Relationship")
-      .otherwise((l) => `Remove ${l.toString()} Relationships`);
+  title(): string {
+    return "Remove Relationship";
   }
 }

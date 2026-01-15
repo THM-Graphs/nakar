@@ -1,5 +1,4 @@
 import { Action } from "./Action.ts";
-import { match } from "ts-pattern";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
 import { NodesActionParams } from "./NodesActionParams.ts";
 import { actionControllerFocusNodes } from "../../../src-gen";
@@ -30,10 +29,7 @@ export class FocusNodesAction extends Action<NodesActionParams> {
     return "focus-nodes";
   }
 
-  title(input: NodesActionParams): string {
-    return match(input.nodes.length)
-      .with(0, () => "Focus Nodes")
-      .with(1, () => "Focus Node")
-      .otherwise((l) => `Focus ${l.toString()} Nodes`);
+  title(): string {
+    return "Focus Node";
   }
 }

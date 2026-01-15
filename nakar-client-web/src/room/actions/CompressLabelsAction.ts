@@ -1,7 +1,6 @@
 import { Action } from "./Action.ts";
 import { LabelActionParams } from "./LabelActionParams.ts";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
-import { match } from "ts-pattern";
 import { actionControllerCompressNodes } from "../../../src-gen";
 
 export class CompressLabelsAction extends Action<LabelActionParams> {
@@ -37,10 +36,7 @@ export class CompressLabelsAction extends Action<LabelActionParams> {
     return "compress-label";
   }
 
-  title(input: LabelActionParams): string {
-    return match(input.labels.length)
-      .with(0, () => "Compress Labels")
-      .with(1, () => "Compress Label")
-      .otherwise((l) => `Compress ${l.toString()} Labels`);
+  title(): string {
+    return "Compress Label";
   }
 }

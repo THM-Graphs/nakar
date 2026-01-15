@@ -33,11 +33,7 @@ export class UndoAction extends Action<UndoActionParams> {
     return "undo";
   }
 
-  title(params: UndoActionParams): string {
-    if (params.undoAction == null) {
-      return "Undo";
-    } else {
-      return `Undo '${params.undoAction}'`;
-    }
+  title(): string {
+    return "Undo";
   }
 }

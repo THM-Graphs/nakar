@@ -33,11 +33,7 @@ export class RedoAction extends Action<RedoActionParams> {
     return "redo";
   }
 
-  title(params: RedoActionParams): string {
-    if (params.redoAction == null) {
-      return "Redo";
-    } else {
-      return `Redo '${params.redoAction}'`;
-    }
+  title(): string {
+    return "Redo";
   }
 }

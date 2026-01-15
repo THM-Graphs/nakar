@@ -1,5 +1,4 @@
 import { Action } from "./Action.ts";
-import { match } from "ts-pattern";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
 import { NodesActionParams } from "./NodesActionParams.ts";
 import { actionControllerUnlockNodes } from "../../../src-gen";
@@ -32,10 +31,7 @@ export class UnlockNodesAction extends Action<NodesActionParams> {
     return "unlock-nodes";
   }
 
-  title(input: NodesActionParams): string {
-    return match(input.nodes.length)
-      .with(0, () => "Unlock Nodes")
-      .with(1, () => "Unlock Node")
-      .otherwise((l) => `Unlock ${l.toString()} Nodes`);
+  title(): string {
+    return "Unlock Node";
   }
 }

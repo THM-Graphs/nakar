@@ -1,7 +1,6 @@
 import { Action } from "./Action.ts";
 import { LabelActionParams } from "./LabelActionParams.ts";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
-import { match } from "ts-pattern";
 import { actionControllerLayoutLabel } from "../../../src-gen";
 
 export class LayoutLabelsCircleAction extends Action<LabelActionParams> {
@@ -50,10 +49,7 @@ export class LayoutLabelsCircleAction extends Action<LabelActionParams> {
     return "layout-labels-circle";
   }
 
-  title(input: LabelActionParams): string {
-    return match(input.labels.length)
-      .with(0, () => "Layout Labels Circle")
-      .with(1, () => "Layout Label Circle")
-      .otherwise((l) => `Layout ${l.toString()} Labels Circle`);
+  title(): string {
+    return "Layout Label Circle";
   }
 }
