@@ -6,12 +6,13 @@ import { Result } from '@strapi/types/dist/modules/documents/result';
 import { userCanSeeRoom } from '../../../policies/userCanSeeRoom';
 
 import { DatabaseService } from '../../../database/DatabaseService';
-import { User } from '../../decorators/User';
 import { Logger } from '@strapi/logger';
 import { createChildLogger } from '../../../logger/createChildLogger';
 import { SchemaFactoryService } from '../../../schema/SchemaFactoryService';
 import { StartPageProjectDto } from './dto/StartPageProjectDto';
 import { StartPageRoomDto } from './dto/StartPageRoomDto';
+import { JWT } from '../../decorators/JWT';
+import { AuthService } from '../../../auth/AuthService';
 
 @Controller('start-page')
 export class StartPageController {
@@ -20,14 +21,17 @@ export class StartPageController {
   public constructor(
     private readonly _database: DatabaseService,
     private readonly _schemaFactory: SchemaFactoryService,
+    private readonly _authService: AuthService,
   ) {}
 
   @Get()
   @ApiResponse({ type: StartPageDto })
   public async getStartPage(
-    @User() user: Result<'plugin::users-permissions.user'> | null,
+    @JWT() jwt: string | null,
     @Query() query: GetStartPageRequestQueryDto,
   ): Promise<StartPageDto> {
+    const user: Result<'plugin::users-permissions.user'> | null =
+      await this._authService.getUserByJWT(jwt);
     const recentRooms: Result<'api::v2-room.v2-room'>[] = [];
     for (const recentRoomId of query.recentRoomIds?.split(',') ?? []) {
       try {

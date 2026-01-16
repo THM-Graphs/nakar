@@ -4,21 +4,24 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { getUser } from '../tools/getUser';
 import { Result } from '@strapi/types/dist/modules/documents/result';
 import { Request } from 'express';
 import { DatabaseService } from '../../database/DatabaseService';
 import { userCanSeeProject } from '../../policies/userCanSeeProject';
+import { AuthService } from '../../auth/AuthService';
 
 @Injectable()
 export class UserCanAccessProject implements CanActivate {
-  public constructor(private readonly _databaseService: DatabaseService) {}
+  public constructor(
+    private readonly _databaseService: DatabaseService,
+    private readonly _authService: AuthService,
+  ) {}
 
   public async canActivate(context: ExecutionContext): Promise<boolean> {
     const req: Request = context.switchToHttp().getRequest();
 
     const user: Result<'plugin::users-permissions.user'> | null =
-      await getUser(context);
+      await this._authService.getUserFromRequest(req);
 
     const projectId: unknown = req.params['projectId'];
     if (typeof projectId !== 'string') {
