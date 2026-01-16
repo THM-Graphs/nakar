@@ -79,6 +79,11 @@ export class LiveCanvasChangeRecorder {
     this._shouldSendViewSettingsToUser = true;
   }
 
+  public didChangeNotes(): void {
+    this._shouldSendGraphElementsToUserAndWorker = true;
+    this._shouldSendNotesToUser = true;
+  }
+
   public handleChange(
     physicsWorker: PhysicsWorker,
     onEvent: Subject<CanvasEvent>,

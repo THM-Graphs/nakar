@@ -105,6 +105,7 @@ export class LiveCanvasService implements OnModuleInit, OnModuleDestroy {
       canvas.documentId,
       this._database,
       this._neo4j,
+      this._databaseEvents,
     );
 
     this._liveCanvases.set(canvas.documentId, liveCanvas);

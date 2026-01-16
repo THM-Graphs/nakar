@@ -23,7 +23,6 @@ import { match, P } from 'ts-pattern';
 import { Result } from '@strapi/types/dist/modules/documents/result';
 import { DatabaseService } from '../database/DatabaseService';
 import { LiveCanvas } from '../live-canvas/LiveCanvas';
-import { LiveCanvasUndoableData } from '../live-canvas/data/LiveCanvasUndoableData';
 import { IndexedNoteCollection } from '../database/IndexedNoteCollection';
 import { SchemaFactoryService } from '../schema/SchemaFactoryService';
 import { CanvasEvent } from '../live-canvas/events/CanvasEvent';
@@ -38,7 +37,6 @@ import { CanvasEventEventKick } from '../live-canvas/events/CanvasEventEventKick
 import { CanvasEventNotAllNodesLoaded } from '../live-canvas/events/CanvasEventNotAllNodesLoaded';
 import { CanvasEventError } from '../live-canvas/events/CanvasEventError';
 import { CanvasEventViewSettingsChanged } from '../live-canvas/events/CanvasEventViewSettingsChanged';
-import { DatabaseEventsService } from '../database/DatabaseEventsService';
 import { ServerToClientEvents } from './ServerToClientEvents';
 import { ClientToServerEvents } from './ClientToServerEvents';
 import { Server as UntypedServer, Socket as UntypedSocket } from 'socket.io';
@@ -66,7 +64,6 @@ import { userCanSeeCanvas } from '../policies/userCanSeeCanvas';
 import { CanvasEventHistogramChanged } from '../live-canvas/events/CanvasEventHistogramChanged';
 import { CanvasEventNotesChanged } from '../live-canvas/events/CanvasEventNotesChanged';
 import { NoteDto } from '../schema/dtos/NoteDto';
-import { CanvasElementsChangedWsdto } from './dto/events/CanvasElementsChangedWsdto';
 
 export type Server = UntypedServer<ClientToServerEvents, ServerToClientEvents>;
 export type Socket = UntypedSocket<ClientToServerEvents, ServerToClientEvents>;
@@ -96,12 +93,10 @@ export class WebSocketManager
     private readonly _databaseService: DatabaseService,
     private readonly _canvasService: LiveCanvasService,
     private readonly _schemaFactory: SchemaFactoryService,
-    private readonly _databaseEventsService: DatabaseEventsService,
     private readonly _authService: AuthService,
   ) {
     this._rooms = new SMap();
     this._registerCanvasEvents();
-    this._registerDatabaseServiceEvents();
   }
 
   public static createErrorNotification(error: unknown): NotificationWsdto {
@@ -558,53 +553,5 @@ export class WebSocketManager
         this._logger.error(error);
       });
     });
-  }
-
-  private _registerDatabaseServiceEvents(): void {
-    this._databaseEventsService.onNoteChanges$.subscribe(
-      (canvas: Result<'api::v2-canvas.v2-canvas'>): void => {
-        (async (): Promise<void> => {
-          // TODO: Move to live canvas
-          const liveCanvas: LiveCanvas | null =
-            this._canvasService.getCanvasOrNull(canvas);
-          if (liveCanvas == null) {
-            // ok
-            return;
-          }
-
-          const graph: LiveCanvasUndoableData = liveCanvas.getGraph();
-
-          const project: Result<'api::v2-project.v2-project'> =
-            await this._databaseService.getProjectOfCanvas(canvas);
-          const notes: IndexedNoteCollection =
-            await this._databaseService.getNotes({
-              project: project,
-              graph: graph,
-            });
-
-          this.sendToRoom(canvas.documentId, {
-            notes: await Promise.all(
-              notes.notes
-                .toArray()
-                .map(
-                  async (n: Result<'api::v2-note.v2-note'>): Promise<NoteDto> =>
-                    await this._schemaFactory.createSchemaNote(n, graph),
-                ),
-            ),
-            type: 'CanvasNotesChangedWsdto',
-          });
-          this.sendToRoom(canvas.documentId, {
-            type: 'CanvasElementsChangedWsdto',
-            elements: await this._schemaFactory.createSchemaGraphElements(
-              graph,
-              notes,
-              liveCanvas.data.viewSettings,
-            ),
-          } satisfies CanvasElementsChangedWsdto);
-        })().catch((error: unknown): void => {
-          this._logger.error(error);
-        });
-      },
-    );
   }
 }

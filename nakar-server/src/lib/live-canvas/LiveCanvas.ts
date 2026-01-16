@@ -39,6 +39,7 @@ import { WTPhysicalNode } from '../live-canvas-worker/worker-events/WTPhysicalNo
 import { LayoutSpecificationDto } from '../http/routes/action/dto/LayoutSpecificationDto';
 import { LayoutSpecificationCircleDto } from '../http/routes/action/dto/LayoutSpecificationCircleDto';
 import { PhysicalNodeDto } from '../schema/dtos/PhysicalNodeDto';
+import { DatabaseEventsService } from '../database/DatabaseEventsService';
 
 export class LiveCanvas {
   private readonly _logger: Logger = createChildLogger(this);
@@ -53,6 +54,7 @@ export class LiveCanvas {
     private readonly _canvasId: string,
     private readonly _database: DatabaseService,
     private readonly _neo4j: Neo4jService,
+    private readonly _databaseEventsService: DatabaseEventsService,
   ) {
     this._onEvent = new Subject();
     this._subscriptions = new SSet();
@@ -100,6 +102,18 @@ export class LiveCanvas {
       this._queue.onError$.subscribe((error: unknown): void => {
         this._handleError(error);
       }),
+    );
+    this._subscriptions.add(
+      this._databaseEventsService.onNoteChanges$.subscribe(
+        (canvas: Result<'api::v2-canvas.v2-canvas'>): void => {
+          if (canvas.documentId === this.canvasId) {
+            const changeRecorder: LiveCanvasChangeRecorder =
+              new LiveCanvasChangeRecorder();
+            changeRecorder.didChangeNotes();
+            this._handleChangeRecorder(changeRecorder);
+          }
+        },
+      ),
     );
   }
 
