@@ -72,6 +72,7 @@ export async function CanvasLoader(
 
 export function CanvasPage(props: { context: AppContext }) {
   const roomContext: CanvasContext = useLoaderData();
+  const setGraph = useBearStore((s) => s.room.scenario.setGraph);
   const setGraphElements = useBearStore(
     (s) => s.room.scenario.setGraphElements,
   );
@@ -91,6 +92,8 @@ export function CanvasPage(props: { context: AppContext }) {
   const setVisualizationData = useBearStore(
     (s) => s.room.panels.visualization.setData,
   );
+  const setHistogram = useBearStore((s) => s.room.scenario.setHistogram);
+  const setNotes = useBearStore((s) => s.room.scenario.setNotes);
   const pushNotification = useBearStore((s) => s.room.ui.pushNotification);
   const navigate = useNavigate();
   const leftPanel = useBearStore((s) => s.room.panels.left);
@@ -154,13 +157,16 @@ export function CanvasPage(props: { context: AppContext }) {
             void navigate("/");
           })
           .with({ type: "CanvasDataReadyWsdto" }, (event) => {
-            setGraphMetaData(event.data.metaData);
-            setGraphElements(event.data.elements);
-            setGraphTable(event.data.table);
-            setVisualizationData(event.data.viewSettings);
+            setGraph(event.data);
           })
           .with({ type: "CanvasViewSettingsChangedWsdto" }, (event) => {
             setVisualizationData(event.viewSettings);
+          })
+          .with({ type: "CanvasHistogramChangedWsdto" }, (event) => {
+            setHistogram(event.histogram);
+          })
+          .with({ type: "CanvasNotesChangedWsdto" }, (event) => {
+            setNotes(event.notes);
           })
           .exhaustive();
       }),

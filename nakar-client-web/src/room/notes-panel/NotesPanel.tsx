@@ -24,9 +24,7 @@ export function NotesPanel(props: {
       return akku;
     }
   }, []);
-  const notes: NoteDto[] = useBearStore(
-    (s) => s.room.scenario.graph.elements.notes,
-  );
+  const notes: NoteDto[] = useBearStore((s) => s.room.scenario.graph.notes);
 
   return (
     <Panel

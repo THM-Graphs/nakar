@@ -10,12 +10,16 @@ import { CanvasEventGraphTableChanged } from '../events/CanvasEventGraphTableCha
 import { CanvasEventViewSettingsChanged } from '../events/CanvasEventViewSettingsChanged';
 import { LiveCanvas } from '../LiveCanvas';
 import { PhysicalNodeDto } from '../../schema/dtos/PhysicalNodeDto';
+import { CanvasEventHistogramChanged } from '../events/CanvasEventHistogramChanged';
+import { CanvasEventNotesChanged } from '../events/CanvasEventNotesChanged';
 
 export class LiveCanvasChangeRecorder {
   private _shouldSendMetaDataChangedToUser: boolean;
   private _shouldSendGraphElementsToUserAndWorker: boolean;
   private _shouldSendTableDataToUser: boolean;
   private _shouldSendViewSettingsToUser: boolean;
+  private _shouldSendHistogramToUser: boolean;
+  private _shouldSendNotesToUser: boolean;
   private readonly _lockChanges: SMap<string, boolean> = new SMap<
     string,
     boolean
@@ -27,6 +31,8 @@ export class LiveCanvasChangeRecorder {
     this._shouldSendGraphElementsToUserAndWorker = false;
     this._shouldSendTableDataToUser = false;
     this._shouldSendViewSettingsToUser = false;
+    this._shouldSendHistogramToUser = false;
+    this._shouldSendNotesToUser = false;
     this._lockChanges = new SMap();
     this._movedNodes = new SSet();
   }
@@ -38,16 +44,22 @@ export class LiveCanvasChangeRecorder {
     this._shouldSendMetaDataChangedToUser = true;
     this._shouldSendGraphElementsToUserAndWorker = true;
     this._shouldSendTableDataToUser = true;
+    this._shouldSendHistogramToUser = true;
+    this._shouldSendNotesToUser = true;
   }
 
   public didAddOrRemoveGraphElements(): void {
     this._shouldSendGraphElementsToUserAndWorker = true;
+    this._shouldSendHistogramToUser = true;
+    this._shouldSendNotesToUser = true;
   }
 
   public didLoadGraph(): void {
     this._shouldSendMetaDataChangedToUser = true;
     this._shouldSendGraphElementsToUserAndWorker = true;
     this._shouldSendTableDataToUser = true;
+    this._shouldSendHistogramToUser = true;
+    this._shouldSendNotesToUser = true;
   }
 
   public didAddOrRemoveTableData(): void {
@@ -91,6 +103,18 @@ export class LiveCanvasChangeRecorder {
         graph: canvas.data.undoableData.current,
         canvas: canvas,
       } satisfies CanvasEventGraphElementsChanged);
+    }
+    if (this._shouldSendHistogramToUser) {
+      onEvent.next({
+        type: 'CanvasEventHistogramChanged',
+        canvas: canvas,
+      } satisfies CanvasEventHistogramChanged);
+    }
+    if (this._shouldSendNotesToUser) {
+      onEvent.next({
+        type: 'CanvasEventNotesChanged',
+        canvas: canvas,
+      } satisfies CanvasEventNotesChanged);
     }
     if (this._shouldSendTableDataToUser) {
       onEvent.next({

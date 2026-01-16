@@ -9,9 +9,7 @@ import { SelectAllNodesOfLabel } from "../../actions/SelectAllNodesOfLabel.ts";
 
 export function HistogramSectionLabels(props: { roomContext: CanvasContext }) {
   const labels = useBearStore((s) => s.room.scenario.graph.elements.labels);
-  const histogram = useBearStore(
-    (s) => s.room.scenario.graph.elements.histogram,
-  );
+  const histogram = useBearStore((s) => s.room.scenario.graph.histogram);
   const colorSchema = useColorSchema();
 
   return (

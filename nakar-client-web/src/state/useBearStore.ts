@@ -202,18 +202,18 @@ export const useBearStore = create<BearState>()(
                     nodes: [],
                     edges: [],
                     labels: [],
-                    histogram: {
-                      nodeLabels: [],
-                      edgeTypes: [],
-                      edgeProperties: [],
-                      nodeProperties: [],
-                      nodes: [],
-                    },
-                    notes: [],
                   },
                   table: {
                     data: [],
                   },
+                  histogram: {
+                    nodeLabels: [],
+                    edgeTypes: [],
+                    edgeProperties: [],
+                    nodeProperties: [],
+                    nodes: [],
+                  },
+                  notes: [],
                   metaData: {
                     scenario: null,
                     arguments: [],
@@ -233,21 +233,21 @@ export const useBearStore = create<BearState>()(
                         elements: {
                           nodes: [],
                           labels: [],
-                          notes: [],
                           edges: [],
-                          histogram: {
-                            edgeProperties: [],
-                            edgeTypes: [],
-                            nodeLabels: [],
-                            nodeProperties: [],
-                            nodes: [],
-                          },
                         },
                         metaData: {
                           arguments: [],
                           undoAction: null,
                           redoAction: null,
                           scenario: null,
+                        },
+                        notes: [],
+                        histogram: {
+                          edgeProperties: [],
+                          edgeTypes: [],
+                          nodeLabels: [],
+                          nodeProperties: [],
+                          nodes: [],
                         },
                         table: {
                           data: [],
@@ -276,6 +276,16 @@ export const useBearStore = create<BearState>()(
                 setGraphElements: (graphElements) => {
                   set((s) => {
                     s.room.scenario.graph.elements = graphElements;
+                  });
+                },
+                setHistogram: (histogram) => {
+                  set((s) => {
+                    s.room.scenario.graph.histogram = histogram;
+                  });
+                },
+                setNotes: (notes) => {
+                  set((s) => {
+                    s.room.scenario.graph.notes = notes;
                   });
                 },
                 setLocks: (locks: NodeLockCollectionEntryDto[]) => {

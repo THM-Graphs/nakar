@@ -6,9 +6,7 @@ import { DynamicList } from "../../../shared/elements/DynamicList.tsx";
 export function HistogramSectionNodeProperties(props: {
   roomContext: CanvasContext;
 }) {
-  const histogram = useBearStore(
-    (s) => s.room.scenario.graph.elements.histogram,
-  );
+  const histogram = useBearStore((s) => s.room.scenario.graph.histogram);
 
   return (
     <DynamicList

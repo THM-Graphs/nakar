@@ -40,13 +40,15 @@ import { LiveCanvasTableDataDto } from './dtos/LiveCanvasTableDataDto';
 import { LiveCanvasMetaDataDto } from './dtos/LiveCanvasMetaDataDto';
 import { ScenarioArgumentDto } from '../http/routes/action/dto/ScenarioArgumentDto';
 import { UserPreviewDto } from './dtos/UserPreviewDto';
-import { HistogramDto } from './dtos/HistogramDto';
 import { EdgePreviewDto } from './dtos/EdgePreviewDto';
-import { HistogramValueEntryDto } from './dtos/HistogramValueEntryDto';
-import { HistogramNodeEntryDto } from './dtos/HistogramNodeEntryDto';
 import { NodePreviewDto } from './dtos/NodePreviewDto';
 import { CreationReasonDto } from './dtos/CreationReasonDto';
 import { ElementCreationReason } from '../live-canvas/graph/ElementCreationReason';
+import { LiveCanvasDataDto } from './dtos/LiveCanvasDataDto';
+import { LiveCanvas } from '../live-canvas/LiveCanvas';
+import { HistogramDto } from './dtos/HistogramDto';
+import { HistogramValueEntryDto } from './dtos/HistogramValueEntryDto';
+import { HistogramNodeEntryDto } from './dtos/HistogramNodeEntryDto';
 
 @Injectable()
 export class SchemaFactoryService {
@@ -418,15 +420,6 @@ export class SchemaFactoryService {
           async (id: string, label: GraphLabel): Promise<LabelDto> =>
             await this._createSchemaGraphLabel(id, label, databaseCache),
         ),
-      histogram: this._createSchemaHistogram(graph),
-      notes: await Promise.all(
-        notes.notes
-          .toArray()
-          .map(
-            async (note: Result<'api::v2-note.v2-note'>): Promise<NoteDto> =>
-              await this._createSchemaNote(note, graph),
-          ),
-      ),
     };
     t.done({
       message: 'createSchemaGraphElements',
@@ -448,6 +441,41 @@ export class SchemaFactoryService {
       message: 'createSchemaTable',
     });
     return result;
+  }
+
+  public async createSchemaLiveCanvasData(
+    liveCanvas: LiveCanvas,
+  ): Promise<LiveCanvasDataDto> {
+    const graph: LiveCanvasUndoableData = liveCanvas.getGraph();
+    const canvas: Result<'api::v2-canvas.v2-canvas'> =
+      await this._database.getCanvas(liveCanvas.canvasId);
+    const notes: IndexedNoteCollection = await this._database.getNotes({
+      project: await this._database.getProjectOfCanvas(canvas),
+      graph: graph,
+    });
+
+    return new LiveCanvasDataDto({
+      table: this.createSchemaTable(graph.tableData),
+      elements: await this.createSchemaGraphElements(
+        graph,
+        notes,
+        liveCanvas.data.viewSettings,
+      ),
+      metaData: await this.createSchemaGraphMetaData(
+        graph,
+        liveCanvas.data.undoableData.info,
+      ),
+      viewSettings: liveCanvas.data.viewSettings.toSchema(),
+      histogram: this.createSchemaHistogram(graph),
+      notes: await Promise.all(
+        notes.notes
+          .toArray()
+          .map(
+            async (note: Result<'api::v2-note.v2-note'>): Promise<NoteDto> =>
+              await this.createSchemaNote(note, graph),
+          ),
+      ),
+    });
   }
 
   public async createSchemaGraphMetaData(
@@ -577,7 +605,7 @@ export class SchemaFactoryService {
     };
   }
 
-  private _createSchemaHistogram(graph: LiveCanvasUndoableData): HistogramDto {
+  public createSchemaHistogram(graph: LiveCanvasUndoableData): HistogramDto {
     const t: Profiler = this._logger.startTimer();
 
     const labelCountHistogram: number = graph.nodes.labelHistogram.reduce(
@@ -723,6 +751,38 @@ export class SchemaFactoryService {
     return result;
   }
 
+  public async createSchemaNote(
+    note: Result<'api::v2-note.v2-note'>,
+    graph: LiveCanvasUndoableData,
+  ): Promise<NoteDto> {
+    const nodes: Result<'api::v2-node-reference.v2-node-reference'>[] =
+      await this._database.getReferencedNodesOfNote(note);
+    const author: Result<'plugin::users-permissions.user'> | null =
+      await this._database.getAuthorOfNote(note);
+    return {
+      id: note.documentId,
+      content: note.content ?? '',
+      dateTime: note.updatedAt?.toString() ?? '',
+      author: author ? this.createSchemaUserPreview(author) : null,
+      nodes: nodes.map(
+        (
+          nodeReference: Result<'api::v2-node-reference.v2-node-reference'>,
+        ): NodePreviewDto => {
+          const node: GraphNode | null = graph.nodes.get(
+            nodeReference.nodeId ?? '',
+          );
+          return {
+            id: nodeReference.nodeId ?? '',
+            title: node?.getTitle() ?? '',
+            labels: node?.labels.toArray() ?? [],
+            customColor: null, // TODO
+          };
+        },
+      ),
+      color: null, // TODO
+    };
+  }
+
   private async _createSchemaNode(
     node: GraphNode,
     graph: LiveCanvasUndoableData,
@@ -790,7 +850,7 @@ export class SchemaFactoryService {
           .toArray()
           .map(
             async (note: Result<'api::v2-note.v2-note'>): Promise<NoteDto> =>
-              await this._createSchemaNote(note, graph),
+              await this.createSchemaNote(note, graph),
           ),
       ),
     };
@@ -891,38 +951,6 @@ export class SchemaFactoryService {
           return (await databaseCache.getDatabase(sourceId))?.title ?? sourceId;
         },
       ),
-    };
-  }
-
-  private async _createSchemaNote(
-    note: Result<'api::v2-note.v2-note'>,
-    graph: LiveCanvasUndoableData,
-  ): Promise<NoteDto> {
-    const nodes: Result<'api::v2-node-reference.v2-node-reference'>[] =
-      await this._database.getReferencedNodesOfNote(note);
-    const author: Result<'plugin::users-permissions.user'> | null =
-      await this._database.getAuthorOfNote(note);
-    return {
-      id: note.documentId,
-      content: note.content ?? '',
-      dateTime: note.updatedAt?.toString() ?? '',
-      author: author ? this.createSchemaUserPreview(author) : null,
-      nodes: nodes.map(
-        (
-          nodeReference: Result<'api::v2-node-reference.v2-node-reference'>,
-        ): NodePreviewDto => {
-          const node: GraphNode | null = graph.nodes.get(
-            nodeReference.nodeId ?? '',
-          );
-          return {
-            id: nodeReference.nodeId ?? '',
-            title: node?.getTitle() ?? '',
-            labels: node?.labels.toArray() ?? [],
-            customColor: null, // TODO
-          };
-        },
-      ),
-      color: null, // TODO
     };
   }
 }

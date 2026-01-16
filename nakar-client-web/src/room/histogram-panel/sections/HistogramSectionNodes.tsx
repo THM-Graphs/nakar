@@ -11,9 +11,7 @@ import { useColorSchema } from "../../color/useColorSchema.ts";
 import { LabelDto } from "../../../../src-gen";
 
 export function HistogramSectionNodes(props: { roomContext: CanvasContext }) {
-  const histogram = useBearStore(
-    (s) => s.room.scenario.graph.elements.histogram,
-  );
+  const histogram = useBearStore((s) => s.room.scenario.graph.histogram);
   const setElement = useBearStore((s) => s.room.panels.inspector.setElement);
   const onCenter = useBearStore((s) => s.room.ui.rendererEvents.onCenter);
   const nodes = useBearStore((s) => s.room.scenario.graph.elements.nodes);

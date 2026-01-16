@@ -63,6 +63,10 @@ import { validateOrReject } from 'class-validator';
 import { validatorOptions } from '../application/validatorOptions';
 import { AuthService } from '../auth/AuthService';
 import { userCanSeeCanvas } from '../policies/userCanSeeCanvas';
+import { CanvasEventHistogramChanged } from '../live-canvas/events/CanvasEventHistogramChanged';
+import { CanvasEventNotesChanged } from '../live-canvas/events/CanvasEventNotesChanged';
+import { NoteDto } from '../schema/dtos/NoteDto';
+import { CanvasElementsChangedWsdto } from './dto/events/CanvasElementsChangedWsdto';
 
 export type Server = UntypedServer<ClientToServerEvents, ServerToClientEvents>;
 export type Socket = UntypedSocket<ClientToServerEvents, ServerToClientEvents>;
@@ -175,28 +179,11 @@ export class WebSocketManager
       },
     });
     const liveCanvas: LiveCanvas = this._canvasService.getOrStartCanvas(canvas);
-    const graph: LiveCanvasUndoableData = liveCanvas.getGraph();
-    const notes: IndexedNoteCollection = await this._databaseService.getNotes({
-      project: await this._databaseService.getProjectOfCanvas(canvas),
-      graph: graph,
-    });
 
     wsClient.send({
       event: {
         type: 'CanvasDataReadyWsdto',
-        data: {
-          table: this._schemaFactory.createSchemaTable(graph.tableData),
-          elements: await this._schemaFactory.createSchemaGraphElements(
-            graph,
-            notes,
-            liveCanvas.data.viewSettings,
-          ),
-          metaData: await this._schemaFactory.createSchemaGraphMetaData(
-            graph,
-            liveCanvas.data.undoableData.info,
-          ),
-          viewSettings: liveCanvas.data.viewSettings.toSchema(),
-        },
+        data: await this._schemaFactory.createSchemaLiveCanvasData(liveCanvas),
       } satisfies CanvasDataReadyWsdto,
     });
   }
@@ -408,6 +395,50 @@ export class WebSocketManager
             },
           )
           .with(
+            { type: 'CanvasEventHistogramChanged' },
+            (message: CanvasEventHistogramChanged): void => {
+              this.sendToRoom(message.canvas.canvasId, {
+                histogram: this._schemaFactory.createSchemaHistogram(
+                  message.canvas.getGraph(),
+                ),
+                type: 'CanvasHistogramChangedWsdto',
+              });
+            },
+          )
+          .with(
+            { type: 'CanvasEventNotesChanged' },
+            async (message: CanvasEventNotesChanged): Promise<void> => {
+              const canvas: Result<'api::v2-canvas.v2-canvas'> =
+                await this._databaseService.getCanvas(message.canvas.canvasId);
+
+              const project: Result<'api::v2-project.v2-project'> =
+                await this._databaseService.getProjectOfCanvas(canvas);
+
+              const notes: IndexedNoteCollection =
+                await this._databaseService.getNotes({
+                  project: project,
+                  graph: message.canvas.getGraph(),
+                });
+
+              this.sendToRoom(message.canvas.canvasId, {
+                type: 'CanvasNotesChangedWsdto',
+                notes: await Promise.all(
+                  notes.notes
+                    .toArray()
+                    .map(
+                      async (
+                        note: Result<'api::v2-note.v2-note'>,
+                      ): Promise<NoteDto> =>
+                        await this._schemaFactory.createSchemaNote(
+                          note,
+                          message.canvas.getGraph(),
+                        ),
+                    ),
+                ),
+              });
+            },
+          )
+          .with(
             { type: 'CanvasEventRoomPhysicsUpdated' },
             (message: CanvasEventRoomPhysicsUpdated): void => {
               for (const socket of this._server.sockets.sockets.values()) {
@@ -533,6 +564,7 @@ export class WebSocketManager
     this._databaseEventsService.onNoteChanges$.subscribe(
       (canvas: Result<'api::v2-canvas.v2-canvas'>): void => {
         (async (): Promise<void> => {
+          // TODO: Move to live canvas
           const liveCanvas: LiveCanvas | null =
             this._canvasService.getCanvasOrNull(canvas);
           if (liveCanvas == null) {
@@ -550,16 +582,25 @@ export class WebSocketManager
               graph: graph,
             });
 
-          const graphElements: LiveCanvasGraphElementsDto =
-            await this._schemaFactory.createSchemaGraphElements(
+          this.sendToRoom(canvas.documentId, {
+            notes: await Promise.all(
+              notes.notes
+                .toArray()
+                .map(
+                  async (n: Result<'api::v2-note.v2-note'>): Promise<NoteDto> =>
+                    await this._schemaFactory.createSchemaNote(n, graph),
+                ),
+            ),
+            type: 'CanvasNotesChangedWsdto',
+          });
+          this.sendToRoom(canvas.documentId, {
+            type: 'CanvasElementsChangedWsdto',
+            elements: await this._schemaFactory.createSchemaGraphElements(
               graph,
               notes,
               liveCanvas.data.viewSettings,
-            );
-          this.sendToRoom(canvas.documentId, {
-            elements: graphElements,
-            type: 'CanvasElementsChangedWsdto',
-          });
+            ),
+          } satisfies CanvasElementsChangedWsdto);
         })().catch((error: unknown): void => {
           this._logger.error(error);
         });

@@ -16,6 +16,8 @@ import { NotificationWsdto } from './events/NotificationWsdto';
 import { ProgressWsdto } from './events/ProgressWsdto';
 import { SetNodeLocksWsdto } from './events/SetNodeLocksWsdto';
 import { CanvasViewSettingsChangedWsdto } from './events/CanvasViewSettingsChangedWsdto';
+import { CanvasHistogramChangedWsdto } from './events/CanvasHistogramChangedWsdto';
+import { CanvasNotesChangedWsdto } from './events/CanvasNotesChangedWsdto';
 
 // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
 const events: Function[] = [
@@ -25,6 +27,8 @@ const events: Function[] = [
   CanvasElementsChangedWsdto,
   CanvasMetaDataChangedWsdto,
   CanvasTableDataChangedWsdto,
+  CanvasHistogramChangedWsdto,
+  CanvasNotesChangedWsdto,
   KickWsdto,
   NodesMovedWsdto,
   NotificationWsdto,
@@ -57,6 +61,11 @@ export class EventWsdto {
         { type: 'GraphTableDataChangedWsdto' },
         () => CanvasTableDataChangedWsdto,
       )
+      .with(
+        { type: 'CanvasHistogramChangedWsdto' },
+        () => CanvasHistogramChangedWsdto,
+      )
+      .with({ type: 'CanvasNotesChangedWsdto' }, () => CanvasNotesChangedWsdto)
       .with({ type: 'KickWsdto' }, () => KickWsdto)
       .with({ type: 'NodesMovedWsdto' }, () => NodesMovedWsdto)
       .with({ type: 'NotificationWsdto' }, () => NotificationWsdto)
@@ -77,6 +86,8 @@ export class EventWsdto {
     | CanvasElementsChangedWsdto
     | CanvasMetaDataChangedWsdto
     | CanvasTableDataChangedWsdto
+    | CanvasHistogramChangedWsdto
+    | CanvasNotesChangedWsdto
     | KickWsdto
     | NodesMovedWsdto
     | NotificationWsdto

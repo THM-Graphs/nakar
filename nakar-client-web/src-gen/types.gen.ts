@@ -35,12 +35,26 @@ export type CanvasElementsChangedWsdto = {
 
 export type type3 = 'CanvasElementsChangedWsdto';
 
+export type CanvasHistogramChangedWsdto = {
+    type: 'CanvasHistogramChangedWsdto';
+    histogram: HistogramDto;
+};
+
+export type type4 = 'CanvasHistogramChangedWsdto';
+
 export type CanvasMetaDataChangedWsdto = {
     type: 'CanvasMetaDataChangedWsdto';
     metaData: LiveCanvasMetaDataDto;
 };
 
-export type type4 = 'CanvasMetaDataChangedWsdto';
+export type type5 = 'CanvasMetaDataChangedWsdto';
+
+export type CanvasNotesChangedWsdto = {
+    type: 'CanvasNotesChangedWsdto';
+    notes: Array<NoteDto>;
+};
+
+export type type6 = 'CanvasNotesChangedWsdto';
 
 export type CanvasPageDto = {
     canvas: CanvasDto;
@@ -53,20 +67,20 @@ export type CanvasTableDataChangedWsdto = {
     table: LiveCanvasTableDataDto;
 };
 
-export type type5 = 'CanvasTableDataChangedWsdto';
+export type type7 = 'CanvasTableDataChangedWsdto';
 
 export type CanvasViewSettingsChangedWsdto = {
     type: 'CanvasViewSettingsChangedWsdto';
     viewSettings: LiveCanvasViewSettingsDto;
 };
 
-export type type6 = 'CanvasViewSettingsChangedWsdto';
+export type type8 = 'CanvasViewSettingsChangedWsdto';
 
 export type ClearProgressWsdto = {
     type: 'ClearProgressWsdto';
 };
 
-export type type7 = 'ClearProgressWsdto';
+export type type9 = 'ClearProgressWsdto';
 
 export type ColorCustomDto = {
     type: 'ColorCustomDto';
@@ -74,7 +88,7 @@ export type ColorCustomDto = {
     textColor: string;
 };
 
-export type type8 = 'ColorCustomDto';
+export type type10 = 'ColorCustomDto';
 
 export type ColorDto = {
     color: (ColorPresetDto | ColorCustomDto);
@@ -85,7 +99,7 @@ export type ColorPresetDto = {
     index: 0 | 1 | 2 | 3 | 4 | 5;
 };
 
-export type type9 = 'ColorPresetDto';
+export type type11 = 'ColorPresetDto';
 
 export type index = 0 | 1 | 2 | 3 | 4 | 5;
 
@@ -147,7 +161,7 @@ export type EdgePreviewDto = {
 };
 
 export type EventWsdto = {
-    event: (CanvasChangedWsdto | CanvasDataReadyWsdto | ClearProgressWsdto | CanvasElementsChangedWsdto | CanvasMetaDataChangedWsdto | CanvasTableDataChangedWsdto | KickWsdto | NodesMovedWsdto | NotificationWsdto | ProgressWsdto | SetNodeLocksWsdto | CanvasViewSettingsChangedWsdto);
+    event: (CanvasChangedWsdto | CanvasDataReadyWsdto | ClearProgressWsdto | CanvasElementsChangedWsdto | CanvasMetaDataChangedWsdto | CanvasTableDataChangedWsdto | CanvasHistogramChangedWsdto | CanvasNotesChangedWsdto | KickWsdto | NodesMovedWsdto | NotificationWsdto | ProgressWsdto | SetNodeLocksWsdto | CanvasViewSettingsChangedWsdto);
 };
 
 export type ExpandNodeLimitDto = {
@@ -203,7 +217,7 @@ export type GrabNodeWsdto = {
     nodeId: string;
 };
 
-export type type10 = 'GrabNodeWsdto';
+export type type12 = 'GrabNodeWsdto';
 
 export type HistogramDto = {
     nodeLabels: Array<HistogramValueEntryDto>;
@@ -237,7 +251,7 @@ export type KickWsdto = {
     type: 'KickWsdto';
 };
 
-export type type11 = 'KickWsdto';
+export type type13 = 'KickWsdto';
 
 export type LabelDto = {
     label: string;
@@ -256,27 +270,27 @@ export type LayoutSpecificationCircleDto = {
     radius: number;
 };
 
-export type type12 = 'LayoutSpecificationCircleDto';
+export type type14 = 'LayoutSpecificationCircleDto';
 
 export type LayoutSpecificationForceDirectedDto = {
     type: 'LayoutSpecificationForceDirectedDto';
 };
 
-export type type13 = 'LayoutSpecificationForceDirectedDto';
+export type type15 = 'LayoutSpecificationForceDirectedDto';
 
 export type LiveCanvasDataDto = {
     metaData: LiveCanvasMetaDataDto;
     elements: LiveCanvasGraphElementsDto;
     table: LiveCanvasTableDataDto;
     viewSettings: LiveCanvasViewSettingsDto;
+    histogram: HistogramDto;
+    notes: Array<NoteDto>;
 };
 
 export type LiveCanvasGraphElementsDto = {
     nodes: Array<NodeDto>;
     edges: Array<EdgeDto>;
     labels: Array<LabelDto>;
-    histogram: HistogramDto;
-    notes: Array<NoteDto>;
 };
 
 export type LiveCanvasMetaDataDto = {
@@ -314,7 +328,7 @@ export type MoveNodesWsdto = {
     nodes: Array<PhysicalNodeDto>;
 };
 
-export type type14 = 'MoveNodesWsdto';
+export type type16 = 'MoveNodesWsdto';
 
 export type NodeDto = {
     id: string;
@@ -361,7 +375,7 @@ export type NodesMovedWsdto = {
     performance: PhysicsPerformanceDto;
 };
 
-export type type15 = 'NodesMovedWsdto';
+export type type17 = 'NodesMovedWsdto';
 
 export type NoteDto = {
     id: string;
@@ -385,7 +399,7 @@ export type NotificationWsdto = {
     notification: NotificationDataDto;
 };
 
-export type type16 = 'NotificationWsdto';
+export type type18 = 'NotificationWsdto';
 
 export type PhysicalNodeDto = {
     id: string;
@@ -435,7 +449,7 @@ export type ProgressWsdto = {
     message: string;
 };
 
-export type type17 = 'ProgressWsdto';
+export type type19 = 'ProgressWsdto';
 
 export type ProjectPageDto = {
     id: string;
@@ -512,7 +526,7 @@ export type SetNodeLocksWsdto = {
     locks: Array<NodeLockCollectionEntryDto>;
 };
 
-export type type18 = 'SetNodeLocksWsdto';
+export type type20 = 'SetNodeLocksWsdto';
 
 export type ShowShortestPathRequestBodyDto = {
     nodeIds: Array<(string)>;
@@ -545,7 +559,7 @@ export type UngrabNodeWsdto = {
     node: PhysicalNodeDto;
 };
 
-export type type19 = 'UngrabNodeWsdto';
+export type type21 = 'UngrabNodeWsdto';
 
 export type UnlockNodesRequestBodyDto = {
     nodes: Array<(string)>;

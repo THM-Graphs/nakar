@@ -10,6 +10,8 @@ import { CanvasEventNotAllNodesLoaded } from './CanvasEventNotAllNodesLoaded';
 import { CanvasEventError } from './CanvasEventError';
 import { CanvasEventShouldShutDown } from './CanvasEventShouldShutDown';
 import { CanvasEventViewSettingsChanged } from './CanvasEventViewSettingsChanged';
+import { CanvasEventHistogramChanged } from './CanvasEventHistogramChanged';
+import { CanvasEventNotesChanged } from './CanvasEventNotesChanged';
 
 export type CanvasEvent =
   | CanvasEventError
@@ -23,4 +25,6 @@ export type CanvasEvent =
   | CanvasEventEventKick
   | CanvasEventNotAllNodesLoaded
   | CanvasEventShouldShutDown
-  | CanvasEventViewSettingsChanged;
+  | CanvasEventViewSettingsChanged
+  | CanvasEventHistogramChanged
+  | CanvasEventNotesChanged;

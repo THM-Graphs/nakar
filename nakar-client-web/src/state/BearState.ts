@@ -7,6 +7,7 @@ import { ZoomTransform } from "d3";
 import {
   ColorDto,
   ExpandNodePreviewEntryDto,
+  HistogramDto,
   LiveCanvasDataDto,
   LiveCanvasGraphElementsDto,
   LiveCanvasMetaDataDto,
@@ -95,6 +96,8 @@ export interface BearState {
       setGraphElements: (g: LiveCanvasGraphElementsDto) => void;
       setGraphMetaData: (g: LiveCanvasMetaDataDto) => void;
       setGraphTable: (g: LiveCanvasTableDataDto) => void;
+      setHistogram: (g: HistogramDto) => void;
+      setNotes: (g: NoteDto[]) => void;
       setLocks: (locks: { id: string; locked: boolean }[]) => void;
       runScenarioModal: {
         shown: boolean;

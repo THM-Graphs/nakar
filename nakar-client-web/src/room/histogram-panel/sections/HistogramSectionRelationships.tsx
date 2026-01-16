@@ -7,9 +7,7 @@ import { relationshipActions } from "../../actions/groups/relationshipActions.ts
 export function HistogramSectionRelationships(props: {
   roomContext: CanvasContext;
 }) {
-  const histogram = useBearStore(
-    (s) => s.room.scenario.graph.elements.histogram,
-  );
+  const histogram = useBearStore((s) => s.room.scenario.graph.histogram);
   const edges = useBearStore((s) => s.room.scenario.graph.elements.edges);
 
   return (
