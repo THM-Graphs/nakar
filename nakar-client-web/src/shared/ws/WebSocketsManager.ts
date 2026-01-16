@@ -26,7 +26,6 @@ export class WebSocketsManager {
         canvasId: canvasId,
       } satisfies AuthWsdto,
     });
-    console.log(`Did connect WS to ${this._env.BACKEND_SOCKET_URL}`);
 
     this.socket.on("connect", () => {
       useBearStore.getState().room.websockets.setState({ type: "connected" });
@@ -54,7 +53,6 @@ export class WebSocketsManager {
     }
     this.socket.disconnect();
     this.socket = null;
-    console.log("Did destroy websockets manager");
   }
 
   public sendMessage(message: ActionWsdto["action"]): void {

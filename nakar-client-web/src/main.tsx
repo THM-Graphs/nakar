@@ -48,7 +48,6 @@ async function bootstrap() {
           Authorization: jwt ? `Bearer ${jwt}` : null,
         },
       });
-      console.log("Did update auth token on client.");
     },
     { fireImmediately: true },
   );

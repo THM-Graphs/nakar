@@ -105,7 +105,6 @@ export function CanvasBottomToolBar(props: { roomContext: CanvasContext }) {
             },
           }),
         );
-        console.log("Will run");
       } catch (error) {
         pushErrorNotification(error);
       }

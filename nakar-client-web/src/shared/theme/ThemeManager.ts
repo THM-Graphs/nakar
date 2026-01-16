@@ -8,7 +8,6 @@ export function loadSystemTheme(): Theme {
 }
 
 export function applyTheme(theme: Theme): void {
-  console.log(`Will apply theme to html: ${theme}`);
   document.documentElement.setAttribute("data-bs-theme", theme);
 }
 

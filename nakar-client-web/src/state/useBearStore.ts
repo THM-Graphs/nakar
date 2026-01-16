@@ -722,12 +722,9 @@ export const useBearStore = create<BearState>()(
           return state;
         },
         onRehydrateStorage: () => {
-          console.log("hydration starts");
           return (state, error) => {
             if (error) {
-              console.log("an error happened during hydration", error);
-            } else {
-              console.log("hydration finished");
+              console.error("an error happened during hydration", error);
             }
           };
         },

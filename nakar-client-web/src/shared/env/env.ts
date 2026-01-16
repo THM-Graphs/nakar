@@ -34,11 +34,9 @@ async function loadEnv(): Promise<Env> {
 export async function loadEnvOrDefault(): Promise<Env> {
   try {
     const env = await loadEnv();
-    console.log(`Will use env: ${JSON.stringify(env)}`);
     return env;
   } catch (error) {
     console.error(`Error loading .env file: ${JSON.stringify(error)}`);
-    console.log(`Will use default env: ${JSON.stringify(defaultEnv)}`);
     return defaultEnv;
   }
 }

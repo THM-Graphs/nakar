@@ -108,7 +108,6 @@ export class D3Renderer {
     hideLabels: boolean,
     colorSchema: string,
   ) {
-    console.log(`Did create instance of graph renderer. theme: ${theme}`);
     this.graphState = D3RendererState.empty();
     this.theme = theme;
     this.svgElement = svgElement;
