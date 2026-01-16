@@ -14,6 +14,7 @@ import {
   LiveCanvasTableDataDto,
   LiveCanvasViewSettingsDto,
   NodeDto,
+  NodeLockCollectionEntryDto,
   NodePreviewDto,
   NoteDto,
   NotificationDataDto,
@@ -98,7 +99,7 @@ export interface BearState {
       setGraphTable: (g: LiveCanvasTableDataDto) => void;
       setHistogram: (g: HistogramDto) => void;
       setNotes: (g: NoteDto[]) => void;
-      setLocks: (locks: { id: string; locked: boolean }[]) => void;
+      setLocks: (locks: NodeLockCollectionEntryDto[]) => void;
       runScenarioModal: {
         shown: boolean;
         scenario: ScenarioDto | null;
