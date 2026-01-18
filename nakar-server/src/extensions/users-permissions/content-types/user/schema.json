@@ -66,19 +66,19 @@
       "inversedBy": "users",
       "configurable": false
     },
-    "projects2": {
+    "projects": {
       "type": "relation",
       "relation": "oneToMany",
       "target": "api::project.project",
       "mappedBy": "owner"
     },
-    "projectCollaborations2": {
+    "projectCollaborations": {
       "type": "relation",
       "relation": "manyToMany",
       "target": "api::project.project",
-      "mappedBy": "collaborators"
+      "inversedBy": "collaborators"
     },
-    "notes2": {
+    "notes": {
       "type": "relation",
       "relation": "oneToMany",
       "target": "api::note.note",

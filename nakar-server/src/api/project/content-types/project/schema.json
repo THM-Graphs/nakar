@@ -19,13 +19,13 @@
       "type": "relation",
       "relation": "manyToOne",
       "target": "plugin::users-permissions.user",
-      "inversedBy": "projects2"
+      "inversedBy": "projects"
     },
     "collaborators": {
       "type": "relation",
       "relation": "manyToMany",
       "target": "plugin::users-permissions.user",
-      "inversedBy": "projectCollaborations2"
+      "mappedBy": "projectCollaborations"
     },
     "databaseConnections": {
       "type": "relation",

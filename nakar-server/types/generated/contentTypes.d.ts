@@ -1471,17 +1471,17 @@ export interface PluginUsersPermissionsUser
       'plugin::users-permissions.user'
     > &
       Schema.Attribute.Private;
-    notes2: Schema.Attribute.Relation<'oneToMany', 'api::note.note'>;
+    notes: Schema.Attribute.Relation<'oneToMany', 'api::note.note'>;
     password: Schema.Attribute.Password &
       Schema.Attribute.Private &
       Schema.Attribute.SetMinMaxLength<{
         minLength: 6;
       }>;
-    projectCollaborations2: Schema.Attribute.Relation<
+    projectCollaborations: Schema.Attribute.Relation<
       'manyToMany',
       'api::project.project'
     >;
-    projects2: Schema.Attribute.Relation<'oneToMany', 'api::project.project'>;
+    projects: Schema.Attribute.Relation<'oneToMany', 'api::project.project'>;
     provider: Schema.Attribute.String;
     publishedAt: Schema.Attribute.DateTime;
     resetPasswordToken: Schema.Attribute.String & Schema.Attribute.Private;

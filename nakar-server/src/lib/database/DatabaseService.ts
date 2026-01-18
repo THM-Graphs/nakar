@@ -560,19 +560,19 @@ export class DatabaseService {
   ): Promise<Result<'api::project.project'>[]> {
     const populatedUser: Result<
       'plugin::users-permissions.user',
-      { populate: ['projects2'] }
+      { populate: ['projects'] }
     > | null = await strapi
       .documents('plugin::users-permissions.user')
       .findOne({
         documentId: user.documentId,
-        populate: ['projects2'], // TODO: SORT
+        populate: ['projects'], // TODO: SORT
       });
 
     if (populatedUser == null) {
       throw new Error(`User not found: ${user.documentId}`);
     }
 
-    return populatedUser.projects2 ?? [];
+    return populatedUser.projects ?? [];
   }
 
   public async getCollaborationProjectsOfUser(
@@ -580,19 +580,19 @@ export class DatabaseService {
   ): Promise<Result<'api::project.project'>[]> {
     const populatedUser: Result<
       'plugin::users-permissions.user',
-      { populate: ['projectCollaborations2'] }
+      { populate: ['projectCollaborations'] }
     > | null = await strapi
       .documents('plugin::users-permissions.user')
       .findOne({
         documentId: user.documentId,
-        populate: ['projectCollaborations2'], // TODO: SORT
+        populate: ['projectCollaborations'], // TODO: SORT
       });
 
     if (populatedUser == null) {
       throw new Error(`User not found: ${user.documentId}`);
     }
 
-    return populatedUser.projectCollaborations2 ?? [];
+    return populatedUser.projectCollaborations ?? [];
   }
 
   public async getCanvasesOfRoom(
