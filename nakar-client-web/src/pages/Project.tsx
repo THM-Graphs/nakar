@@ -8,10 +8,7 @@ import { UserCard } from "../shared/cms/UserCard.tsx";
 import { RoomCard } from "../shared/cms/RoomCard.tsx";
 import { DatabaseConnectionCard } from "../shared/cms/DatabaseConnectionCard.tsx";
 import { ScenarioGroupCard } from "../shared/cms/ScenarioGroupCard.tsx";
-import {
-  projectPageControllerGetProjectPage,
-  ProjectPageDto,
-} from "../../src-gen";
+import { projectControllerGetProject, ProjectPageDto } from "../../src-gen";
 
 export async function ProjectLoader(
   args: LoaderFunctionArgs,
@@ -23,7 +20,7 @@ export async function ProjectLoader(
   }
 
   const project: ProjectPageDto = resultOrThrow(
-    await projectPageControllerGetProjectPage({ path: { projectId: id } }),
+    await projectControllerGetProject({ path: { projectId: id } }),
   );
 
   return project;

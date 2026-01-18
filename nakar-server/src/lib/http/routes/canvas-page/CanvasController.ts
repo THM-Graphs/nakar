@@ -7,8 +7,8 @@ import { DatabaseService } from '../../../database/DatabaseService';
 import { SchemaFactoryService } from '../../../schema/SchemaFactoryService';
 import { UserCanAccessCanvas } from '../../guards/UserCanAccessCanvas';
 
-@Controller('canvas-page')
-export class CanvasPageController {
+@Controller('canvas')
+export class CanvasController {
   public constructor(
     private readonly _database: DatabaseService,
     private readonly _schemaFactory: SchemaFactoryService,
@@ -17,7 +17,7 @@ export class CanvasPageController {
   @Get(':canvasId')
   @ApiResponse({ type: CanvasPageDto })
   @UseGuards(UserCanAccessCanvas)
-  public async getCanvasPage(
+  public async getCanvas(
     @Param('canvasId') canvasId: string,
   ): Promise<CanvasPageDto> {
     const canvas: Result<'api::canvas.canvas'> | null =

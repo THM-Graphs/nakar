@@ -5,8 +5,8 @@ import { DatabaseService } from '../database/DatabaseService';
 import { Neo4jService } from '../neo4j/Neo4jService';
 import { AuthController } from '../http/routes/auth/AuthController';
 import { StartController } from '../http/routes/start/StartController';
-import { ProjectPageController } from '../http/routes/project-page/ProjectPageController';
-import { CanvasPageController } from '../http/routes/canvas-page/CanvasPageController';
+import { ProjectController } from '../http/routes/project-page/ProjectController';
+import { CanvasController } from '../http/routes/canvas-page/CanvasController';
 import { RoomController } from '../http/routes/room/RoomController';
 import { NoteController } from '../http/routes/note/NoteController';
 import { SystemController } from '../http/routes/system/SystemController';
@@ -21,8 +21,8 @@ import { RedirectController } from '../http/routes/redirect/RedirectController';
   controllers: [
     AuthController,
     StartController,
-    ProjectPageController,
-    CanvasPageController,
+    ProjectController,
+    CanvasController,
     RoomController,
     NoteController,
     SystemController,

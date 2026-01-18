@@ -600,25 +600,25 @@ export type StartControllerGetStartResponse = (StartPageDto);
 
 export type StartControllerGetStartError = unknown;
 
-export type ProjectPageControllerGetProjectPageData = {
+export type ProjectControllerGetProjectData = {
     path: {
         projectId: string;
     };
 };
 
-export type ProjectPageControllerGetProjectPageResponse = (ProjectPageDto);
+export type ProjectControllerGetProjectResponse = (ProjectPageDto);
 
-export type ProjectPageControllerGetProjectPageError = unknown;
+export type ProjectControllerGetProjectError = unknown;
 
-export type CanvasPageControllerGetCanvasPageData = {
+export type CanvasControllerGetCanvasData = {
     path: {
         canvasId: string;
     };
 };
 
-export type CanvasPageControllerGetCanvasPageResponse = (CanvasPageDto);
+export type CanvasControllerGetCanvasResponse = (CanvasPageDto);
 
-export type CanvasPageControllerGetCanvasPageError = unknown;
+export type CanvasControllerGetCanvasError = unknown;
 
 export type RoomControllerGetRoomData = {
     path: {

@@ -7,8 +7,8 @@ import { DatabaseService } from '../../../database/DatabaseService';
 import { SchemaFactoryService } from '../../../schema/SchemaFactoryService';
 import { UserCanAccessProject } from '../../guards/UserCanAccessProject';
 
-@Controller('project-page')
-export class ProjectPageController {
+@Controller('project')
+export class ProjectController {
   public constructor(
     private readonly _database: DatabaseService,
     private readonly _schemaFactory: SchemaFactoryService,
@@ -17,7 +17,7 @@ export class ProjectPageController {
   @Get(':projectId')
   @ApiResponse({ type: ProjectPageDto })
   @UseGuards(UserCanAccessProject)
-  public async getProjectPage(
+  public async getProject(
     @Param('projectId') projectId: string,
   ): Promise<ProjectPageDto> {
     const project: Result<'api::project.project'> | null =

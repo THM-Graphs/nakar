@@ -34,8 +34,8 @@ import { Canvas } from "../room/canvas/Canvas.tsx";
 import { VisualizationPanelButton } from "../room/visualization-panel/VisualizationPanelButton.tsx";
 import { VisualizationPanel } from "../room/visualization-panel/VisualizationPanel.tsx";
 import {
+  canvasControllerGetCanvas,
   CanvasDto,
-  canvasPageControllerGetCanvasPage,
   CanvasPageDto,
   EventWsdto,
   RoomDto,
@@ -60,7 +60,7 @@ export async function CanvasLoader(
   }
 
   const data: CanvasPageDto = resultOrThrow(
-    await canvasPageControllerGetCanvasPage({ path: { canvasId: canvasId } }),
+    await canvasControllerGetCanvas({ path: { canvasId: canvasId } }),
   );
 
   return {
