@@ -5,6 +5,7 @@ import { Result } from '@strapi/types/dist/modules/documents/result';
 import { Logger } from '@strapi/logger';
 import { createChildLogger } from '../../../logger/createChildLogger';
 import { ApiResponse } from '@nestjs/swagger';
+import { FindMany } from '@strapi/types/dist/modules/documents/params/document-engine';
 
 @Controller('redirect')
 export class RedirectController {
@@ -22,7 +23,7 @@ export class RedirectController {
         filters: {
           sourceUrl: query.url,
         },
-      });
+      } satisfies FindMany<'api::redirect.redirect'>);
 
     if (foundRedirects.length === 0) {
       throw new NotFoundException();

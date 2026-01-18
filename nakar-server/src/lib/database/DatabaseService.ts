@@ -12,10 +12,10 @@ import {
   saveStringFile,
 } from '../media/media';
 import { LiveCanvasViewSettings } from '../live-canvas/data/LiveCanvasViewSettings';
-import * as Params from '@strapi/types/dist/modules/documents/params/document-engine';
 import { TupleTypes } from '../schema/TupleTypes';
 import { Injectable } from '@nestjs/common';
 import { ApiPostScenarioActionPostScenarioAction } from '../../../types/generated/contentTypes';
+import { FindMany } from '@strapi/types/dist/modules/documents/params/document-engine';
 
 @Injectable()
 export class DatabaseService {
@@ -95,7 +95,7 @@ export class DatabaseService {
           $eq: 'public',
         },
       },
-    });
+    } satisfies FindMany<'api::room.room'>);
   }
 
   public async getMutableGraph(
@@ -610,7 +610,7 @@ export class DatabaseService {
             },
           },
         },
-      } satisfies Params.FindMany<'api::canvas.canvas'>);
+      } satisfies FindMany<'api::canvas.canvas'>);
 
     if (canvases.length > 0) {
       return canvases;
