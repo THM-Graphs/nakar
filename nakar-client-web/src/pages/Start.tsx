@@ -1,5 +1,5 @@
 import { Container, Stack } from "react-bootstrap";
-import { useLoaderData } from "react-router";
+import { useLoaderData, useNavigate } from "react-router";
 import { AppContext } from "../state/AppContext.ts";
 import { CMSNavbar } from "../shared/cms/CMSNavbar.tsx";
 import { CMSFooter } from "../shared/cms/CMSFooter.tsx";
@@ -8,6 +8,8 @@ import { resultOrThrow } from "../shared/data/resultOrThrow.ts";
 import { ProjectCard } from "../shared/cms/ProjectCard.tsx";
 import { useBearStore } from "../state/useBearStore.ts";
 import { startControllerGetStart, StartPageDto } from "../../src-gen";
+import { NavbarButton } from "../shared/elements/NavbarButton.tsx";
+import { CMSCreateButton } from "../shared/cms/CMSCreateButton.tsx";
 
 export async function StartLoader(): Promise<StartPageDto> {
   return resultOrThrow(
@@ -19,6 +21,7 @@ export async function StartLoader(): Promise<StartPageDto> {
 
 export function Start(props: { context: AppContext }) {
   const loaderData: StartPageDto = useLoaderData();
+  const navigate = useNavigate();
 
   return (
     <Stack
@@ -59,6 +62,13 @@ export function Start(props: { context: AppContext }) {
             <Stack>
               <h5>My Projects</h5>
               <Stack direction={"vertical"} gap={3} className={"flex-wrap"}>
+                <CMSCreateButton
+                  title={"Create Project"}
+                  icon={"plus-lg"}
+                  onClick={async () => {
+                    await navigate("/project/add");
+                  }}
+                ></CMSCreateButton>
                 {loaderData.myProjects.map((r) => (
                   <ProjectCard key={r.id} project={r}></ProjectCard>
                 ))}

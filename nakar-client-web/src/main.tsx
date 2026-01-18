@@ -15,6 +15,7 @@ import { AuthModal } from "./shared/auth/AuthModal.tsx";
 import { ErrorComp } from "./pages/Error.tsx";
 import { Project, ProjectLoader } from "./pages/Project.tsx";
 import { Room, RoomLoader } from "./pages/Room.tsx";
+import { AddEditProject } from "./pages/AddEditProject.tsx";
 
 async function bootstrap() {
   bootstrapTheme();
@@ -68,6 +69,10 @@ async function bootstrap() {
           path: "/canvas/:id",
           element: <CanvasPage context={context}></CanvasPage>,
           loader: CanvasLoader,
+        },
+        {
+          path: "/project/add",
+          element: <AddEditProject context={context}></AddEditProject>,
         },
         {
           path: "/project/:id",

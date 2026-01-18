@@ -11,40 +11,36 @@ export function CMSCard(props: {
   rightBodyPaddingStart?: number;
 }) {
   return (
-    <Card
-      className={clsx("shadow-sm")}
+    <Stack
+      className={clsx("shadow-sm border shadow bg-body rounded p-3")}
       style={{ width: props.width ? `${props.width.toString()}px` : undefined }}
     >
-      <Card.Body>
-        <Stack direction={"horizontal"} className={"align-items-start"} gap={2}>
-          <Stack
-            gap={1}
-            className={clsx(
-              "position-relative flex-shrink-1 ellipsis flex-grow-0",
-            )}
-            style={{
-              width:
-                props.rightBody && props.rightBodyPaddingStart
-                  ? `${props.rightBodyPaddingStart.toString()}px`
-                  : undefined,
-            }}
-          >
-            <span className={"fw-bold ellipsis"}>{props.title}</span>
-            {props.subtitle && (
-              <span className={"text-muted small ellipsis"}>
-                {props.subtitle}
-              </span>
-            )}
-          </Stack>
-          {props.rightBody && (
-            <div className={"border-start ps-2 ms-2"}>{props.rightBody}</div>
+      <Stack direction={"horizontal"} className={"align-items-start"} gap={2}>
+        <Stack
+          gap={1}
+          className={clsx(
+            "position-relative flex-shrink-1 ellipsis flex-grow-0",
           )}
-          <div className={"flex-grow-1"}></div>
-          {props.icon && (
-            <i className={`bi bi-${props.icon} flex-shrink-0`}></i>
+          style={{
+            width:
+              props.rightBody && props.rightBodyPaddingStart
+                ? `${props.rightBodyPaddingStart.toString()}px`
+                : undefined,
+          }}
+        >
+          <span className={"fw-bold ellipsis"}>{props.title}</span>
+          {props.subtitle && (
+            <span className={"text-muted small ellipsis"}>
+              {props.subtitle}
+            </span>
           )}
         </Stack>
-      </Card.Body>
-    </Card>
+        {props.rightBody && (
+          <div className={"border-start ps-2 ms-2"}>{props.rightBody}</div>
+        )}
+        <div className={"flex-grow-1"}></div>
+        {props.icon && <i className={`bi bi-${props.icon} flex-shrink-0`}></i>}
+      </Stack>
+    </Stack>
   );
 }

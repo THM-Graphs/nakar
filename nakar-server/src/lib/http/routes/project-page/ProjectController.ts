@@ -1,4 +1,4 @@
-import { Controller, Get, Param, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
 import { ProjectPageDto } from './dto/ProjectPageDto';
 import { ApiResponse } from '@nestjs/swagger';
 import { Result } from '@strapi/types/dist/modules/documents/result';
@@ -6,6 +6,8 @@ import { NotFound } from 'http-errors';
 import { DatabaseService } from '../../../database/DatabaseService';
 import { SchemaFactoryService } from '../../../schema/SchemaFactoryService';
 import { UserCanAccessProject } from '../../guards/UserCanAccessProject';
+import { UserIsLoggedIn } from '../../guards/UserIsLoggedIn';
+import { CreateProjectRequestBodyDto } from './dto/CreateProjectRequestBodyDto';
 
 @Controller('project')
 export class ProjectController {
@@ -28,5 +30,14 @@ export class ProjectController {
     }
 
     return await this._schemaFactory.createSchemaProjectPage(project);
+  }
+
+  @Post()
+  @ApiResponse({ type: ProjectPageDto })
+  @UseGuards(UserIsLoggedIn)
+  public async createProject(
+    @Body() body: CreateProjectRequestBodyDto,
+  ): Promise<void> {
+    // TODO
   }
 }
