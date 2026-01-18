@@ -17,7 +17,7 @@ export class RoomController {
   @ApiResponse({ type: RoomDto })
   @UseGuards(UserCanAccessRoom)
   public async getRoom(@Param('roomId') roomId: string): Promise<RoomDto> {
-    const room: Result<'api::v2-room.v2-room'> | null =
+    const room: Result<'api::room.room'> | null =
       await this._databaseService.getRoom(roomId);
 
     return await this._schemaFactory.createSchemaRoom(room);

@@ -10,30 +10,30 @@
   "options": {
     "draftAndPublish": true
   },
-  "pluginOptions": {},
   "attributes": {
     "title": {
       "type": "string"
     },
-    "graph": {
-      "type": "media",
-      "multiple": false,
-      "required": false,
-      "allowedTypes": [
-        "files"
-      ]
+    "visibility": {
+      "type": "enumeration",
+      "enum": [
+        "private",
+        "unlisted",
+        "public"
+      ],
+      "default": "private"
     },
-    "notes": {
-      "type": "relation",
-      "relation": "oneToMany",
-      "target": "api::note.note",
-      "mappedBy": "room"
-    },
-    "template": {
+    "project": {
       "type": "relation",
       "relation": "manyToOne",
-      "target": "api::room-template.room-template",
+      "target": "api::project.project",
       "inversedBy": "rooms"
+    },
+    "canvases": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::canvas.canvas",
+      "mappedBy": "room"
     }
   }
 }

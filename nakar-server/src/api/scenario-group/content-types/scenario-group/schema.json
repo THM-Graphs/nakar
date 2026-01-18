@@ -10,27 +10,21 @@
   "options": {
     "draftAndPublish": true
   },
-  "pluginOptions": {},
   "attributes": {
     "title": {
       "type": "string"
+    },
+    "project": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::project.project",
+      "inversedBy": "scenarioGroups"
     },
     "scenarios": {
       "type": "relation",
       "relation": "oneToMany",
       "target": "api::scenario.scenario",
-      "mappedBy": "scenarioGroup"
-    },
-    "graphDisplayConfiguration": {
-      "type": "component",
-      "repeatable": false,
-      "component": "graph.graph-display-configuration"
-    },
-    "room_templates": {
-      "type": "relation",
-      "relation": "manyToMany",
-      "target": "api::room-template.room-template",
-      "mappedBy": "scenario_groups"
+      "mappedBy": "group"
     }
   }
 }

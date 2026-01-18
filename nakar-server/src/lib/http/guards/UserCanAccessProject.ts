@@ -28,7 +28,7 @@ export class UserCanAccessProject implements CanActivate {
       throw new NotFoundException(`No project id provided.`);
     }
 
-    const project: Result<'api::v2-project.v2-project'> =
+    const project: Result<'api::project.project'> =
       await this._databaseService.getProject(projectId);
 
     const allowed: boolean = await userCanSeeProject(

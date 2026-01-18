@@ -20,14 +20,14 @@ export class CanvasPageController {
   public async getCanvasPage(
     @Param('canvasId') canvasId: string,
   ): Promise<CanvasPageDto> {
-    const canvas: Result<'api::v2-canvas.v2-canvas'> | null =
+    const canvas: Result<'api::canvas.canvas'> | null =
       await this._database.getCanvasOrNull(canvasId);
 
     if (canvas == null) {
       throw new NotFound();
     }
 
-    const room: Result<'api::v2-room.v2-room'> =
+    const room: Result<'api::room.room'> =
       await this._database.getRoomOfCanvas(canvas);
 
     return new CanvasPageDto({

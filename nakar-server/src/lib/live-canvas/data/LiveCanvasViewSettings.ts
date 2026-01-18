@@ -49,7 +49,7 @@ export class LiveCanvasViewSettings {
   }
 
   public static fromDB(
-    canvas: Result<'api::v2-canvas.v2-canvas'>,
+    canvas: Result<'api::canvas.canvas'>,
   ): LiveCanvasViewSettings {
     return new LiveCanvasViewSettings({
       compressRelationshipsWidthFactor:

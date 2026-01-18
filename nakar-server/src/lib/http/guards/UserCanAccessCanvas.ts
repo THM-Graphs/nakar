@@ -28,7 +28,7 @@ export class UserCanAccessCanvas implements CanActivate {
       throw new NotFoundException(`No canvas id provided.`);
     }
 
-    const canvas: Result<'api::v2-canvas.v2-canvas'> =
+    const canvas: Result<'api::canvas.canvas'> =
       await this._databaseService.getCanvas(canvasId);
 
     const allowed: boolean = await userCanSeeCanvas(

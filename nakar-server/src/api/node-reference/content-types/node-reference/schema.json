@@ -1,0 +1,24 @@
+{
+  "kind": "collectionType",
+  "collectionName": "node_references",
+  "info": {
+    "singularName": "node-reference",
+    "pluralName": "node-references",
+    "displayName": "Node Reference"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "nodeId": {
+      "type": "string"
+    },
+    "note": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::note.note",
+      "inversedBy": "nodes"
+    }
+  }
+}

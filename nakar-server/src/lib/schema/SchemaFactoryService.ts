@@ -57,7 +57,7 @@ export class SchemaFactoryService {
   public constructor(private readonly _database: DatabaseService) {}
 
   public createSchemaDatabase(
-    databaseDBDTO: Result<'api::v2-database-connection.v2-database-connection'>,
+    databaseDBDTO: Result<'api::database-connection.database-connection'>,
   ): DatabaseConnectionDto {
     return {
       id: databaseDBDTO.documentId,
@@ -68,14 +68,14 @@ export class SchemaFactoryService {
   }
 
   public async createSchemaRoom(
-    room: Result<'api::v2-room.v2-room'>,
+    room: Result<'api::room.room'>,
   ): Promise<RoomDto> {
     return new RoomDto({
       id: room.documentId,
       title: room.title ?? '',
       visibility: this.createSchemaRoomVisibility(room),
       canvases: (await this._database.getCanvasesOfRoom(room)).map(
-        (c: Result<'api::v2-canvas.v2-canvas'>): CanvasDto => {
+        (c: Result<'api::canvas.canvas'>): CanvasDto => {
           return this.createSchemaCanvasPreview(c);
         },
       ),
@@ -83,7 +83,7 @@ export class SchemaFactoryService {
   }
 
   public createSchemaRoomVisibility(
-    room: Result<'api::v2-room.v2-room'>,
+    room: Result<'api::room.room'>,
   ): RoomVisibilityDto {
     return match(room.visibility)
       .with('private', (): RoomVisibilityDto => RoomVisibilityDto.private)
@@ -94,9 +94,9 @@ export class SchemaFactoryService {
   }
 
   public async createSchemaStartPageRoom(
-    room: Result<'api::v2-room.v2-room'>,
+    room: Result<'api::room.room'>,
   ): Promise<StartPageRoomDto> {
-    const project: Result<'api::v2-project.v2-project'> =
+    const project: Result<'api::project.project'> =
       await this._database.getProjectOfRoom(room);
     return {
       id: room.documentId,
@@ -107,40 +107,40 @@ export class SchemaFactoryService {
   }
 
   public async createGetScenariosResult(
-    room: Result<'api::v2-room.v2-room'>,
+    room: Result<'api::room.room'>,
   ): Promise<ScenarioCollectionDto> {
-    const project: Result<'api::v2-project.v2-project'> =
+    const project: Result<'api::project.project'> =
       await this._database.getProjectOfRoom(room);
-    const scenarioGroups: Result<'api::v2-scenario-group.v2-scenario-group'>[] =
+    const scenarioGroups: Result<'api::scenario-group.scenario-group'>[] =
       await this._database.getScenarioGroupsOfRoom(room);
     const scenarioGroupSchemas: ScenarioGroupDto[] = await Promise.all(
       scenarioGroups.map(
         async (
-          scenarioGroup: Result<'api::v2-scenario-group.v2-scenario-group'>,
+          scenarioGroup: Result<'api::scenario-group.scenario-group'>,
         ): Promise<ScenarioGroupDto> => {
           return await this.createSchemaScenarioGroup(scenarioGroup);
         },
       ),
     );
 
-    const parameterizedSceanrios: Result<'api::v2-scenario.v2-scenario'>[] =
+    const parameterizedSceanrios: Result<'api::scenario.scenario'>[] =
       await this._database.getParameterizedScenarios(project);
 
     const referencedDatabases: SMap<
       string,
-      Result<'api::v2-database-connection.v2-database-connection'>
+      Result<'api::database-connection.database-connection'>
     > = new SMap<
       string,
-      Result<'api::v2-database-connection.v2-database-connection'>
+      Result<'api::database-connection.database-connection'>
     >();
     for (const scenarioGroup of scenarioGroups) {
-      const scenarios: Result<'api::v2-scenario.v2-scenario'>[] =
+      const scenarios: Result<'api::scenario.scenario'>[] =
         await this._database.getScenariosOfGroup(scenarioGroup);
       for (const scenario of scenarios) {
-        const queries: Result<'api::v2-query.v2-query'>[] =
+        const queries: Result<'api::query.query'>[] =
           await this._database.getQueriesOfScenario(scenario);
         for (const query of queries) {
-          const database: Result<'api::v2-database-connection.v2-database-connection'> | null =
+          const database: Result<'api::database-connection.database-connection'> | null =
             await this._database.getDatabaseConnectionOfQuery(query);
           if (database != null) {
             referencedDatabases.set(database.documentId, database);
@@ -158,7 +158,7 @@ export class SchemaFactoryService {
           scenarios: await Promise.all(
             parameterizedSceanrios.map(
               async (
-                ps: Result<'api::v2-scenario.v2-scenario'>,
+                ps: Result<'api::scenario.scenario'>,
               ): Promise<ScenarioDto> => {
                 return await this.createSchemaScenario(ps);
               },
@@ -170,7 +170,7 @@ export class SchemaFactoryService {
         .toValueArray()
         .map(
           (
-            referencedDatabase: Result<'api::v2-database-connection.v2-database-connection'>,
+            referencedDatabase: Result<'api::database-connection.database-connection'>,
           ): DatabaseConnectionDto =>
             this.createSchemaDatabase(referencedDatabase),
         ),
@@ -178,17 +178,15 @@ export class SchemaFactoryService {
   }
 
   public async createSchemaScenario(
-    scenario: Result<'api::v2-scenario.v2-scenario'>,
+    scenario: Result<'api::scenario.scenario'>,
   ): Promise<ScenarioDto> {
     return new ScenarioDto({
       id: scenario.documentId,
       title: scenario.title ?? '',
       queries: await Promise.all(
         (await this._database.getQueriesOfScenario(scenario)).map(
-          async (
-            q: Result<'api::v2-query.v2-query'>,
-          ): Promise<ScenarioQueryDto> => {
-            const database: Result<'api::v2-database-connection.v2-database-connection'> | null =
+          async (q: Result<'api::query.query'>): Promise<ScenarioQueryDto> => {
+            const database: Result<'api::database-connection.database-connection'> | null =
               await this._database.getDatabaseConnectionOfQuery(q);
             return {
               query: q.query ?? '',
@@ -200,7 +198,7 @@ export class SchemaFactoryService {
       description: scenario.description ?? '',
       parameters: (await this._database.getParametersOfScenario(scenario)).map(
         (
-          parameter: Result<'api::v2-query-parameter.v2-query-parameter'>,
+          parameter: Result<'api::query-parameter.query-parameter'>,
         ): ScenarioParameterDto =>
           this.createSchemaScenarioParameter(parameter),
       ),
@@ -208,7 +206,7 @@ export class SchemaFactoryService {
         await this._database.getPostScenarioActionsOfScenario(scenario)
       ).map(
         (
-          action: Result<'api::v2-post-scenario-action.v2-post-scenario-action'>,
+          action: Result<'api::post-scenario-action.post-scenario-action'>,
         ): string =>
           // ['connectResultNodes', 'compressRelationships', 'compressNodes', 'layout']
           match(action.type)
@@ -250,17 +248,15 @@ export class SchemaFactoryService {
   }
 
   public async createSchemaScenarioSchema(
-    scenario: Result<'api::v2-scenario.v2-scenario'>,
+    scenario: Result<'api::scenario.scenario'>,
   ): Promise<ScenarioDto> {
     return {
       id: scenario.documentId,
       title: scenario.title ?? '',
       queries: await Promise.all(
         (await this._database.getQueriesOfScenario(scenario)).map(
-          async (
-            q: Result<'api::v2-query.v2-query'>,
-          ): Promise<ScenarioQueryDto> => {
-            const database: Result<'api::v2-database-connection.v2-database-connection'> | null =
+          async (q: Result<'api::query.query'>): Promise<ScenarioQueryDto> => {
+            const database: Result<'api::database-connection.database-connection'> | null =
               await this._database.getDatabaseConnectionOfQuery(q);
             return {
               query: q.query ?? '',
@@ -272,7 +268,7 @@ export class SchemaFactoryService {
       description: scenario.description ?? '',
       parameters: (await this._database.getParametersOfScenario(scenario)).map(
         (
-          parameter: Result<'api::v2-query-parameter.v2-query-parameter'>,
+          parameter: Result<'api::query-parameter.query-parameter'>,
         ): ScenarioParameterDto =>
           this.createSchemaScenarioParameter(parameter),
       ),
@@ -280,7 +276,7 @@ export class SchemaFactoryService {
         await this._database.getPostScenarioActionsOfScenario(scenario)
       ).map(
         (
-          action: Result<'api::v2-post-scenario-action.v2-post-scenario-action'>,
+          action: Result<'api::post-scenario-action.post-scenario-action'>,
         ): string =>
           // ['connectResultNodes', 'compressRelationships', 'compressNodes', 'layout']
           match(action.type)
@@ -322,7 +318,7 @@ export class SchemaFactoryService {
   }
 
   public createSchemaScenarioParameter(
-    scenarioParameter: Result<'api::v2-query-parameter.v2-query-parameter'>,
+    scenarioParameter: Result<'api::query-parameter.query-parameter'>,
   ): ScenarioParameterDto {
     return new ScenarioParameterDto({
       identifier: scenarioParameter.identifier ?? '',
@@ -363,7 +359,7 @@ export class SchemaFactoryService {
   }
 
   public async createSchemaScenarioGroup(
-    scenarioGroup: Result<'api::v2-scenario-group.v2-scenario-group'>,
+    scenarioGroup: Result<'api::scenario-group.scenario-group'>,
   ): Promise<ScenarioGroupDto> {
     return new ScenarioGroupDto({
       id: scenarioGroup.documentId,
@@ -371,7 +367,7 @@ export class SchemaFactoryService {
       scenarios: await Promise.all(
         (await this._database.getScenariosOfGroup(scenarioGroup)).map(
           async (
-            scenario: Result<'api::v2-scenario.v2-scenario'>,
+            scenario: Result<'api::scenario.scenario'>,
           ): Promise<ScenarioDto> => {
             return await this.createSchemaScenario(scenario);
           },
@@ -447,8 +443,9 @@ export class SchemaFactoryService {
     liveCanvas: LiveCanvas,
   ): Promise<LiveCanvasDataDto> {
     const graph: LiveCanvasUndoableData = liveCanvas.getGraph();
-    const canvas: Result<'api::v2-canvas.v2-canvas'> =
-      await this._database.getCanvas(liveCanvas.canvasId);
+    const canvas: Result<'api::canvas.canvas'> = await this._database.getCanvas(
+      liveCanvas.canvasId,
+    );
     const notes: IndexedNoteCollection = await this._database.getNotes({
       project: await this._database.getProjectOfCanvas(canvas),
       graph: graph,
@@ -471,7 +468,7 @@ export class SchemaFactoryService {
         notes.notes
           .toArray()
           .map(
-            async (note: Result<'api::v2-note.v2-note'>): Promise<NoteDto> =>
+            async (note: Result<'api::note.note'>): Promise<NoteDto> =>
               await this.createSchemaNote(note, graph),
           ),
       ),
@@ -484,7 +481,7 @@ export class SchemaFactoryService {
   ): Promise<LiveCanvasMetaDataDto> {
     const t: Profiler = this._logger.startTimer();
     const metaData: LiveCanvasMetaData = graph.metaData;
-    const scenario: Result<'api::v2-scenario.v2-scenario'> | null =
+    const scenario: Result<'api::scenario.scenario'> | null =
       metaData.scenarioId != null
         ? await this._database.getScenario(metaData.scenarioId)
         : null;
@@ -513,17 +510,17 @@ export class SchemaFactoryService {
   }
 
   public async createSchemaProjectPage(
-    project: Result<'api::v2-project.v2-project'>,
+    project: Result<'api::project.project'>,
   ): Promise<ProjectPageDto> {
     const owner: Result<'plugin::users-permissions.user'> | null =
       await this._database.getOwnerOfProject(project);
     const collaborators: Result<'plugin::users-permissions.user'>[] =
       await this._database.getCollaboratorsOfProject(project);
-    const databaseConnections: Result<'api::v2-database-connection.v2-database-connection'>[] =
+    const databaseConnections: Result<'api::database-connection.database-connection'>[] =
       await this._database.getDatabaseConnectionsOfProject(project);
-    const scenarioGroups: Result<'api::v2-scenario-group.v2-scenario-group'>[] =
+    const scenarioGroups: Result<'api::scenario-group.scenario-group'>[] =
       await this._database.getScenarioGroupsOfProject(project);
-    const rooms: Result<'api::v2-room.v2-room'>[] =
+    const rooms: Result<'api::room.room'>[] =
       await this._database.getRoomsOfProject(project);
 
     return new ProjectPageDto({
@@ -537,20 +534,20 @@ export class SchemaFactoryService {
       ),
       databases: databaseConnections.map(
         (
-          database: Result<'api::v2-database-connection.v2-database-connection'>,
+          database: Result<'api::database-connection.database-connection'>,
         ): DatabaseConnectionDto => this.createSchemaDatabase(database),
       ),
       scenarioGroups: await Promise.all(
         scenarioGroups.map(
           async (
-            sg: Result<'api::v2-scenario-group.v2-scenario-group'>,
+            sg: Result<'api::scenario-group.scenario-group'>,
           ): Promise<ScenarioGroupDto> =>
             await this.createSchemaScenarioGroup(sg),
         ),
       ),
       rooms: await Promise.all(
         rooms.map(
-          async (room: Result<'api::v2-room.v2-room'>): Promise<RoomDto> =>
+          async (room: Result<'api::room.room'>): Promise<RoomDto> =>
             await this.createSchemaRoom(room),
         ),
       ),
@@ -558,13 +555,13 @@ export class SchemaFactoryService {
   }
 
   public async createSchemaStartPageProject(
-    input: Result<'api::v2-project.v2-project'>,
+    input: Result<'api::project.project'>,
   ): Promise<StartPageProjectDto> {
     const owner: Result<'plugin::users-permissions.user'> | null =
       await this._database.getOwnerOfProject(input);
     const collaborators: Result<'plugin::users-permissions.user'>[] =
       await this._database.getCollaboratorsOfProject(input);
-    const databaseConnections: Result<'api::v2-database-connection.v2-database-connection'>[] =
+    const databaseConnections: Result<'api::database-connection.database-connection'>[] =
       await this._database.getDatabaseConnectionsOfProject(input);
     return {
       id: input.documentId,
@@ -579,7 +576,7 @@ export class SchemaFactoryService {
       ),
       databases: databaseConnections.map(
         (
-          database: Result<'api::v2-database-connection.v2-database-connection'>,
+          database: Result<'api::database-connection.database-connection'>,
         ): DatabaseConnectionDto => {
           return this.createSchemaDatabase(database);
         },
@@ -588,7 +585,7 @@ export class SchemaFactoryService {
   }
 
   public createSchemaCanvasPreview(
-    canvas: Result<'api::v2-canvas.v2-canvas'>,
+    canvas: Result<'api::canvas.canvas'>,
   ): CanvasDto {
     return {
       id: canvas.documentId,
@@ -752,10 +749,10 @@ export class SchemaFactoryService {
   }
 
   public async createSchemaNote(
-    note: Result<'api::v2-note.v2-note'>,
+    note: Result<'api::note.note'>,
     graph: LiveCanvasUndoableData,
   ): Promise<NoteDto> {
-    const nodes: Result<'api::v2-node-reference.v2-node-reference'>[] =
+    const nodes: Result<'api::node-reference.node-reference'>[] =
       await this._database.getReferencedNodesOfNote(note);
     const author: Result<'plugin::users-permissions.user'> | null =
       await this._database.getAuthorOfNote(note);
@@ -766,7 +763,7 @@ export class SchemaFactoryService {
       author: author ? this.createSchemaUserPreview(author) : null,
       nodes: nodes.map(
         (
-          nodeReference: Result<'api::v2-node-reference.v2-node-reference'>,
+          nodeReference: Result<'api::node-reference.node-reference'>,
         ): NodePreviewDto => {
           const node: GraphNode | null = graph.nodes.get(
             nodeReference.nodeId ?? '',
@@ -849,7 +846,7 @@ export class SchemaFactoryService {
         (notes.byNodeId.get(node.id) ?? new SSet())
           .toArray()
           .map(
-            async (note: Result<'api::v2-note.v2-note'>): Promise<NoteDto> =>
+            async (note: Result<'api::note.note'>): Promise<NoteDto> =>
               await this.createSchemaNote(note, graph),
           ),
       ),

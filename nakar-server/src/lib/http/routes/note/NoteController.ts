@@ -39,9 +39,9 @@ export class NoteController {
     @Body() body: PostNoteRequestBody,
     @Param('roomId') roomId: string,
   ): Promise<void> {
-    const room: Result<'api::v2-room.v2-room'> =
+    const room: Result<'api::room.room'> =
       await this._databaseService.getRoom(roomId);
-    const project: Result<'api::v2-project.v2-project'> =
+    const project: Result<'api::project.project'> =
       await this._databaseService.getProjectOfRoom(room);
 
     this._logger.debug(JSON.stringify(body));
@@ -60,7 +60,7 @@ export class NoteController {
   @UseGuards(NoteBelongsToRoom)
   public async deleteNote(@Param('noteId') noteId: string): Promise<void> {
     this._logger.debug(`Will delete note ${noteId}.`);
-    const note: Result<'api::v2-note.v2-note'> =
+    const note: Result<'api::note.note'> =
       await this._databaseService.getNote(noteId);
     await this._databaseService.removeNote(note);
   }
@@ -74,7 +74,7 @@ export class NoteController {
     @Param('noteId') noteId: string,
     @Body() body: UpdateNoteRequestBodyDto,
   ): Promise<void> {
-    const note: Result<'api::v2-note.v2-note'> =
+    const note: Result<'api::note.note'> =
       await this._databaseService.getNote(noteId);
     this._logger.debug(
       `Will update note ${note.id} with ${JSON.stringify(body)}`,

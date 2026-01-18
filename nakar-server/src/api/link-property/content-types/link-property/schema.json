@@ -1,0 +1,30 @@
+{
+  "kind": "collectionType",
+  "collectionName": "link_properties",
+  "info": {
+    "singularName": "link-property",
+    "pluralName": "link-properties",
+    "displayName": "Link Property"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "database": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::database-connection.database-connection",
+      "inversedBy": "linkProperties"
+    },
+    "label": {
+      "type": "string"
+    },
+    "property": {
+      "type": "string"
+    },
+    "url": {
+      "type": "string"
+    }
+  }
+}

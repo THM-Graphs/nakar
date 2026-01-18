@@ -1,0 +1,43 @@
+{
+  "kind": "collectionType",
+  "collectionName": "post_scenario_actions",
+  "info": {
+    "singularName": "post-scenario-action",
+    "pluralName": "post-scenario-actions",
+    "displayName": "Post Scenario Action"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "type": {
+      "type": "enumeration",
+      "enum": [
+        "connectResultNodes",
+        "compressRelationships",
+        "compressNodes",
+        "layout"
+      ]
+    },
+    "scenario": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::scenario.scenario",
+      "inversedBy": "postActions"
+    },
+    "label": {
+      "type": "string"
+    },
+    "circleRadius": {
+      "type": "decimal"
+    },
+    "layoutAlgorithm": {
+      "type": "enumeration",
+      "enum": [
+        "forceDirected",
+        "circle"
+      ]
+    }
+  }
+}

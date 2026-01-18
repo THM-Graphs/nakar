@@ -5,7 +5,7 @@ import { Result } from '@strapi/types/dist/modules/documents/result';
 export class DatabaseReferenceCache {
   private readonly _databaseCache: SMap<
     string,
-    Result<'api::v2-database-connection.v2-database-connection'>
+    Result<'api::database-connection.database-connection'>
   >;
 
   public constructor(private readonly _database: DatabaseService) {
@@ -14,15 +14,15 @@ export class DatabaseReferenceCache {
 
   public async getDatabase(
     databaseId: string,
-  ): Promise<Result<'api::v2-database-connection.v2-database-connection'> | null> {
+  ): Promise<Result<'api::database-connection.database-connection'> | null> {
     const foundDatabase:
-      | Result<'api::v2-database-connection.v2-database-connection'>
+      | Result<'api::database-connection.database-connection'>
       | undefined = this._databaseCache.get(databaseId);
     if (foundDatabase != null) {
       return foundDatabase;
     }
 
-    const db: Result<'api::v2-database-connection.v2-database-connection'> =
+    const db: Result<'api::database-connection.database-connection'> =
       await this._database.getDatabase(databaseId);
 
     this._databaseCache.set(databaseId, db);

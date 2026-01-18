@@ -20,7 +20,7 @@ export class ProjectPageController {
   public async getProjectPage(
     @Param('projectId') projectId: string,
   ): Promise<ProjectPageDto> {
-    const project: Result<'api::v2-project.v2-project'> | null =
+    const project: Result<'api::project.project'> | null =
       await this._database.getProjectOrNull(projectId);
 
     if (project == null) {

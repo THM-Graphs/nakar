@@ -105,7 +105,7 @@ export class LiveCanvas {
     );
     this._subscriptions.add(
       this._databaseEventsService.onNoteChanges$.subscribe(
-        (canvas: Result<'api::v2-canvas.v2-canvas'>): void => {
+        (canvas: Result<'api::canvas.canvas'>): void => {
           if (canvas.documentId === this.canvasId) {
             const changeRecorder: LiveCanvasChangeRecorder =
               new LiveCanvasChangeRecorder();
@@ -160,7 +160,7 @@ export class LiveCanvas {
         const changeRecorder: LiveCanvasChangeRecorder =
           new LiveCanvasChangeRecorder();
 
-        const canvas: Result<'api::v2-canvas.v2-canvas'> =
+        const canvas: Result<'api::canvas.canvas'> =
           await this._database.getCanvas(this._canvasId);
         await this._data.loadFromDb(canvas);
         changeRecorder.didLoadGraph();
@@ -275,16 +275,16 @@ export class LiveCanvas {
   }): void {
     this._queue.addTask(
       new TaskQueueTask('Loading scenario', async (): Promise<void> => {
-        const scenario: Result<'api::v2-scenario.v2-scenario'> | null =
+        const scenario: Result<'api::scenario.scenario'> | null =
           await this._database.getScenario(params.scenarioId);
 
-        const queries: Result<'api::v2-query.v2-query'>[] =
+        const queries: Result<'api::query.query'>[] =
           await this._database.getQueriesOfScenario(scenario);
         if (queries.length === 0) {
           throw new NotFound('The scenario has no queries.');
         }
 
-        const parameters: Result<'api::v2-query-parameter.v2-query-parameter'>[] =
+        const parameters: Result<'api::query-parameter.query-parameter'>[] =
           await this._database.getParametersOfScenario(scenario);
 
         const tableData: SMap<string, unknown>[] = [];
@@ -298,7 +298,7 @@ export class LiveCanvas {
             continue;
           }
 
-          const database: Result<'api::v2-database-connection.v2-database-connection'> | null =
+          const database: Result<'api::database-connection.database-connection'> | null =
             await this._database.getDatabaseConnectionOfQuery(query);
           if (database == null) {
             throw new Error(
@@ -311,10 +311,10 @@ export class LiveCanvas {
 
           const argsForNeo4j: Record<string, unknown> = params.arguments
             .map((value: string, identifier: string): unknown => {
-              const parameter: Result<'api::v2-query-parameter.v2-query-parameter'> | null =
+              const parameter: Result<'api::query-parameter.query-parameter'> | null =
                 parameters.find(
                   (
-                    p: Result<'api::v2-query-parameter.v2-query-parameter'>,
+                    p: Result<'api::query-parameter.query-parameter'>,
                   ): boolean => p.identifier === identifier,
                 ) ?? null;
               if (parameter == null) {
@@ -391,7 +391,7 @@ export class LiveCanvas {
         if (!params.additive) {
           const task: Profiler = this._logger.startTimer();
 
-          const postScenarioActions: Result<'api::v2-post-scenario-action.v2-post-scenario-action'>[] =
+          const postScenarioActions: Result<'api::post-scenario-action.post-scenario-action'>[] =
             await this._database.getPostScenarioActionsOfScenario(scenario);
 
           for (const action of postScenarioActions) {
@@ -406,7 +406,7 @@ export class LiveCanvas {
               .with(
                 { type: 'compressNodes' },
                 (
-                  data: Result<'api::v2-post-scenario-action.v2-post-scenario-action'>,
+                  data: Result<'api::post-scenario-action.post-scenario-action'>,
                 ): void => {
                   const label: string | null = data.label ?? null;
                   if (label != null) {
@@ -420,7 +420,7 @@ export class LiveCanvas {
               .with(
                 { type: 'layout' },
                 (
-                  data: Result<'api::v2-post-scenario-action.v2-post-scenario-action'>,
+                  data: Result<'api::post-scenario-action.post-scenario-action'>,
                 ): void => {
                   const label: string | null = data.label ?? null;
                   if (label == null) {
@@ -458,7 +458,7 @@ export class LiveCanvas {
               )
               .otherwise(
                 (
-                  d: Result<'api::v2-post-scenario-action.v2-post-scenario-action'>,
+                  d: Result<'api::post-scenario-action.post-scenario-action'>,
                 ): void => {
                   this._logger.warn(
                     `Unable to handle post action type ${d.type}`,
@@ -496,7 +496,7 @@ export class LiveCanvas {
             throw new Error(`Cannot find node ${nodeId} to expand.`);
           }
 
-          const database: Result<'api::v2-database-connection.v2-database-connection'> =
+          const database: Result<'api::database-connection.database-connection'> =
             await this._database.getDatabase(node.source);
 
           const neo4jDatabaseInfo: Neo4jDatabaseInfo =
@@ -723,7 +723,7 @@ export class LiveCanvas {
   }): void {
     this._queue.addTask(
       new TaskQueueTask('Running query', async (): Promise<void> => {
-        const database: Result<'api::v2-database-connection.v2-database-connection'> =
+        const database: Result<'api::database-connection.database-connection'> =
           await this._database.getDatabase(params.databaseId);
 
         const credentials: Neo4jDatabaseInfo =
@@ -972,7 +972,7 @@ export class LiveCanvas {
               );
 
               const source: string = nodeA.source;
-              const dbDocument: Result<'api::v2-database-connection.v2-database-connection'> =
+              const dbDocument: Result<'api::database-connection.database-connection'> =
                 await this._database.getDatabase(source);
 
               const dbInfo: Neo4jDatabaseInfo =
@@ -1025,7 +1025,7 @@ export class LiveCanvas {
   public loadNode(params: { nodeId: string; databaseId: string }): void {
     this._queue.addTask(
       new TaskQueueTask('Loading node', async (): Promise<void> => {
-        const dbDocument: Result<'api::v2-database-connection.v2-database-connection'> =
+        const dbDocument: Result<'api::database-connection.database-connection'> =
           await this._database.getDatabase(params.databaseId);
 
         const dbInfo: Neo4jDatabaseInfo = Neo4jDatabaseInfo.parse(dbDocument);
@@ -1074,8 +1074,9 @@ export class LiveCanvas {
   public async saveGraph(): Promise<void> {
     const task: Profiler = this._logger.startTimer();
 
-    const canvas: Result<'api::v2-canvas.v2-canvas'> =
-      await this._database.getCanvas(this.canvasId);
+    const canvas: Result<'api::canvas.canvas'> = await this._database.getCanvas(
+      this.canvasId,
+    );
 
     await this._data.saveToDb(canvas);
 
@@ -1179,7 +1180,7 @@ export class LiveCanvas {
         continue;
       }
 
-      const db: Result<'api::v2-database-connection.v2-database-connection'> =
+      const db: Result<'api::database-connection.database-connection'> =
         await this._database.getDatabase(source);
 
       const credentials: Neo4jDatabaseInfo = Neo4jDatabaseInfo.parse(db);
@@ -1215,10 +1216,10 @@ export class LiveCanvas {
   private async _mergeNodes(
     changeRecorder: LiveCanvasChangeRecorder,
   ): Promise<void> {
-    const canvas: Result<'api::v2-canvas.v2-canvas'> | null =
+    const canvas: Result<'api::canvas.canvas'> | null =
       await this._database.getCanvas(this.canvasId);
 
-    const configs: Result<'api::v2-common-property.v2-common-property'>[] =
+    const configs: Result<'api::common-property.common-property'>[] =
       await this._database.getCommonPropertyConfigsOfCanvas(canvas);
 
     const graph: LiveCanvasUndoableData = this.getGraph();
@@ -1227,12 +1228,12 @@ export class LiveCanvas {
       this._logger.info(
         `Will check nodes for merging ${mergeConfig.leftLabel} with ${mergeConfig.rightLabel}`,
       );
-      const leftDatabase: Result<'api::v2-database-connection.v2-database-connection'> | null =
+      const leftDatabase: Result<'api::database-connection.database-connection'> | null =
         await this._database.getLeftDatabaseOfCommonProperty(mergeConfig);
       if (leftDatabase == null) {
         continue;
       }
-      const rightDatabase: Result<'api::v2-database-connection.v2-database-connection'> | null =
+      const rightDatabase: Result<'api::database-connection.database-connection'> | null =
         await this._database.getRightDatabaseOfCommonProperty(mergeConfig);
       if (rightDatabase == null) {
         continue;
@@ -1298,7 +1299,7 @@ export class LiveCanvas {
     graph: LiveCanvasUndoableData,
     leftNode: GraphNode,
     rightNode: GraphNode,
-    config: Result<'api::v2-common-property.v2-common-property'>,
+    config: Result<'api::common-property.common-property'>,
   ): boolean {
     if (
       graph.edges.getByStartAndEndNodeId(leftNode.id, rightNode.id).length > 0

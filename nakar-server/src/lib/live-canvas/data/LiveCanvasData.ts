@@ -36,18 +36,14 @@ export class LiveCanvasData {
     this._viewSettings = newValue;
   }
 
-  public async loadFromDb(
-    canvas: Result<'api::v2-canvas.v2-canvas'>,
-  ): Promise<void> {
+  public async loadFromDb(canvas: Result<'api::canvas.canvas'>): Promise<void> {
     const undoableData: LiveCanvasUndoableData =
       await this._loadUndoableData(canvas);
     this._undoableData.reset(undoableData);
     this._viewSettings = LiveCanvasViewSettings.fromDB(canvas);
   }
 
-  public async saveToDb(
-    canvas: Result<'api::v2-canvas.v2-canvas'>,
-  ): Promise<void> {
+  public async saveToDb(canvas: Result<'api::canvas.canvas'>): Promise<void> {
     await this._database.setMutableGraphOfCanvas(
       canvas,
       this._undoableData.current.toPlain(),
@@ -56,7 +52,7 @@ export class LiveCanvasData {
   }
 
   private async _loadUndoableData(
-    canvas: Result<'api::v2-canvas.v2-canvas'>,
+    canvas: Result<'api::canvas.canvas'>,
   ): Promise<LiveCanvasUndoableData> {
     try {
       const canvasGraph: Result<'plugin::upload.file'> | null =

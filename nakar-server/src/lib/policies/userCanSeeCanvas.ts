@@ -6,13 +6,12 @@ import { userCanSeeProject } from './userCanSeeProject';
 
 export async function userCanSeeCanvas(
   user: Result<'plugin::users-permissions.user'> | null,
-  canvas: Result<'api::v2-canvas.v2-canvas'>,
+  canvas: Result<'api::canvas.canvas'>,
   database: DatabaseService,
 ): Promise<boolean> {
   const logger: Logger = createChildLogger('userCanSeeRoom');
 
-  const room: Result<'api::v2-room.v2-room'> =
-    await database.getRoomOfCanvas(canvas);
+  const room: Result<'api::room.room'> = await database.getRoomOfCanvas(canvas);
 
   if (room.visibility === 'public') {
     return true;
@@ -21,7 +20,7 @@ export async function userCanSeeCanvas(
     return true;
   }
 
-  const project: Result<'api::v2-project.v2-project'> =
+  const project: Result<'api::project.project'> =
     await database.getProjectOfRoom(room);
   if (await userCanSeeProject(user, project, database)) {
     return true;

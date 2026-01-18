@@ -5,7 +5,7 @@ import { createChildLogger } from '../logger/createChildLogger';
 
 export async function userCanSeeProject(
   user: Result<'plugin::users-permissions.user'> | null,
-  project: Result<'api::v2-project.v2-project'>,
+  project: Result<'api::project.project'>,
   database: DatabaseService,
 ): Promise<boolean> {
   const logger: Logger = createChildLogger('userCanSeeProject');

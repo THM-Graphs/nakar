@@ -430,37 +430,275 @@ export interface AdminUser extends Struct.CollectionTypeSchema {
   };
 }
 
-export interface ApiDatabaseDatabase extends Struct.CollectionTypeSchema {
-  collectionName: 'databases';
+export interface ApiCanvasLabelSettingCanvasLabelSetting
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'canvas_label_settings';
+  info: {
+    displayName: 'Canvas Node Setting';
+    pluralName: 'canvas-label-settings';
+    singularName: 'canvas-label-setting';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    canvas: Schema.Attribute.Relation<'manyToOne', 'api::canvas.canvas'>;
+    colorIndex: Schema.Attribute.Enumeration<
+      ['color0', 'color1', 'color2', 'color3', 'color4', 'color5']
+    >;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    customColorIndex: Schema.Attribute.Boolean &
+      Schema.Attribute.DefaultTo<false>;
+    customRadius: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
+    label: Schema.Attribute.String;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::canvas-label-setting.canvas-label-setting'
+    > &
+      Schema.Attribute.Private;
+    publishedAt: Schema.Attribute.DateTime;
+    radius: Schema.Attribute.Decimal;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiCanvasCanvas extends Struct.CollectionTypeSchema {
+  collectionName: 'canvases';
   info: {
     description: '';
-    displayName: 'Database';
-    pluralName: 'databases';
-    singularName: 'database';
+    displayName: 'Canvas';
+    pluralName: 'canvases';
+    singularName: 'canvas';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    compressRelationshipsWidthFactor: Schema.Attribute.Decimal;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    graph: Schema.Attribute.Media<'files'>;
+    growNodesBasedOnDegree: Schema.Attribute.Boolean;
+    growNodesBasedOnDegreeFactor: Schema.Attribute.Decimal;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::canvas.canvas'
+    > &
+      Schema.Attribute.Private;
+    nodeSettings: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::canvas-label-setting.canvas-label-setting'
+    >;
+    publishedAt: Schema.Attribute.DateTime;
+    room: Schema.Attribute.Relation<'manyToOne', 'api::room.room'>;
+    scaleType: Schema.Attribute.Enumeration<
+      ['linear', 'log2', 'logn', 'log10']
+    >;
+    title: Schema.Attribute.String;
+    treatNameInQueryAsLabel: Schema.Attribute.Boolean;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiCommonPropertyCommonProperty
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'common_properties';
+  info: {
+    displayName: 'Common Property';
+    pluralName: 'common-properties';
+    singularName: 'common-property';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    leftDatabase: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::database-connection.database-connection'
+    >;
+    leftLabel: Schema.Attribute.String;
+    leftProperty: Schema.Attribute.String;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::common-property.common-property'
+    > &
+      Schema.Attribute.Private;
+    project: Schema.Attribute.Relation<'manyToOne', 'api::project.project'>;
+    publishedAt: Schema.Attribute.DateTime;
+    rightDatabase: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::database-connection.database-connection'
+    >;
+    rightLabel: Schema.Attribute.String;
+    rightProperty: Schema.Attribute.String;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiDatabaseConnectionDatabaseConnection
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'database_connections';
+  info: {
+    description: '';
+    displayName: 'Database Connection';
+    pluralName: 'database-connections';
+    singularName: 'database-connection';
   };
   options: {
     draftAndPublish: true;
   };
   attributes: {
     browserUrl: Schema.Attribute.String;
+    commonPropertiesLeft: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::common-property.common-property'
+    >;
+    commonPropertiesRight: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::common-property.common-property'
+    >;
+    connectionUrl: Schema.Attribute.String;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     database: Schema.Attribute.String;
+    linkProperties: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::link-property.link-property'
+    >;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
       'oneToMany',
-      'api::database.database'
+      'api::database-connection.database-connection'
     > &
       Schema.Attribute.Private;
+    nodeTitleProperties: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::node-title-property.node-title-property'
+    >;
     password: Schema.Attribute.String;
+    project: Schema.Attribute.Relation<'manyToOne', 'api::project.project'>;
     publishedAt: Schema.Attribute.DateTime;
+    queries: Schema.Attribute.Relation<'oneToMany', 'api::query.query'>;
     title: Schema.Attribute.String;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
-    url: Schema.Attribute.String;
     username: Schema.Attribute.String;
+  };
+}
+
+export interface ApiLinkPropertyLinkProperty
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'link_properties';
+  info: {
+    displayName: 'Link Property';
+    pluralName: 'link-properties';
+    singularName: 'link-property';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    database: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::database-connection.database-connection'
+    >;
+    label: Schema.Attribute.String;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::link-property.link-property'
+    > &
+      Schema.Attribute.Private;
+    property: Schema.Attribute.String;
+    publishedAt: Schema.Attribute.DateTime;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    url: Schema.Attribute.String;
+  };
+}
+
+export interface ApiNodeReferenceNodeReference
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'node_references';
+  info: {
+    displayName: 'Node Reference';
+    pluralName: 'node-references';
+    singularName: 'node-reference';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::node-reference.node-reference'
+    > &
+      Schema.Attribute.Private;
+    nodeId: Schema.Attribute.String;
+    note: Schema.Attribute.Relation<'manyToOne', 'api::note.note'>;
+    publishedAt: Schema.Attribute.DateTime;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiNodeTitlePropertyNodeTitleProperty
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'node_title_properties';
+  info: {
+    displayName: 'Node Title Property';
+    pluralName: 'node-title-properties';
+    singularName: 'node-title-property';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    database: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::database-connection.database-connection'
+    >;
+    label: Schema.Attribute.String;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::node-title-property.node-title-property'
+    > &
+      Schema.Attribute.Private;
+    property: Schema.Attribute.String;
+    publishedAt: Schema.Attribute.DateTime;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
   };
 }
 
@@ -476,32 +714,122 @@ export interface ApiNoteNote extends Struct.CollectionTypeSchema {
     draftAndPublish: true;
   };
   attributes: {
-    author: Schema.Attribute.String;
-    color: Schema.Attribute.Component<'graph.color', false>;
-    content: Schema.Attribute.RichText;
+    author: Schema.Attribute.Relation<
+      'manyToOne',
+      'plugin::users-permissions.user'
+    >;
+    content: Schema.Attribute.Text;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
-    elementIds: Schema.Attribute.Text;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<'oneToMany', 'api::note.note'> &
       Schema.Attribute.Private;
+    nodes: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::node-reference.node-reference'
+    >;
+    project: Schema.Attribute.Relation<'manyToOne', 'api::project.project'>;
     publishedAt: Schema.Attribute.DateTime;
-    room: Schema.Attribute.Relation<'manyToOne', 'api::room.room'>;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
   };
 }
 
-export interface ApiRoomTemplateRoomTemplate
+export interface ApiPostScenarioActionPostScenarioAction
   extends Struct.CollectionTypeSchema {
-  collectionName: 'room_templates';
+  collectionName: 'post_scenario_actions';
+  info: {
+    displayName: 'Post Scenario Action';
+    pluralName: 'post-scenario-actions';
+    singularName: 'post-scenario-action';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    circleRadius: Schema.Attribute.Decimal;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    label: Schema.Attribute.String;
+    layoutAlgorithm: Schema.Attribute.Enumeration<['forceDirected', 'circle']>;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::post-scenario-action.post-scenario-action'
+    > &
+      Schema.Attribute.Private;
+    publishedAt: Schema.Attribute.DateTime;
+    scenario: Schema.Attribute.Relation<'manyToOne', 'api::scenario.scenario'>;
+    type: Schema.Attribute.Enumeration<
+      ['connectResultNodes', 'compressRelationships', 'compressNodes', 'layout']
+    >;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiProjectProject extends Struct.CollectionTypeSchema {
+  collectionName: 'projects';
   info: {
     description: '';
-    displayName: 'Room Template';
-    pluralName: 'room-templates';
-    singularName: 'room-template';
+    displayName: 'Project';
+    pluralName: 'projects';
+    singularName: 'project';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    collaborators: Schema.Attribute.Relation<
+      'manyToMany',
+      'plugin::users-permissions.user'
+    >;
+    commonProperties: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::common-property.common-property'
+    >;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    databaseConnections: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::database-connection.database-connection'
+    >;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::project.project'
+    > &
+      Schema.Attribute.Private;
+    notes: Schema.Attribute.Relation<'oneToMany', 'api::note.note'>;
+    owner: Schema.Attribute.Relation<
+      'manyToOne',
+      'plugin::users-permissions.user'
+    >;
+    publishedAt: Schema.Attribute.DateTime;
+    rooms: Schema.Attribute.Relation<'oneToMany', 'api::room.room'>;
+    scenarioGroups: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::scenario-group.scenario-group'
+    >;
+    title: Schema.Attribute.String;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiQueryParameterQueryParameter
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'query_parameters';
+  info: {
+    displayName: 'Query Parameter';
+    pluralName: 'query-parameters';
+    singularName: 'query-parameter';
   };
   options: {
     draftAndPublish: true;
@@ -510,23 +838,52 @@ export interface ApiRoomTemplateRoomTemplate
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
-    graphDisplayConfiguration: Schema.Attribute.Component<
-      'graph.graph-display-configuration',
-      false
-    >;
+    dataType: Schema.Attribute.Enumeration<
+      ['string', 'number', 'json', 'startDateTime', 'endDateTime']
+    > &
+      Schema.Attribute.DefaultTo<'string'>;
+    defaultValue: Schema.Attribute.String;
+    identifier: Schema.Attribute.String;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
       'oneToMany',
-      'api::room-template.room-template'
+      'api::query-parameter.query-parameter'
     > &
       Schema.Attribute.Private;
     publishedAt: Schema.Attribute.DateTime;
-    rooms: Schema.Attribute.Relation<'oneToMany', 'api::room.room'>;
-    scenario_groups: Schema.Attribute.Relation<
-      'manyToMany',
-      'api::scenario-group.scenario-group'
-    >;
+    scenario: Schema.Attribute.Relation<'manyToOne', 'api::scenario.scenario'>;
     title: Schema.Attribute.String;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiQueryQuery extends Struct.CollectionTypeSchema {
+  collectionName: 'queries';
+  info: {
+    displayName: 'Query';
+    pluralName: 'queries';
+    singularName: 'query';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    database: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::database-connection.database-connection'
+    >;
+    isTableQuery: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<'oneToMany', 'api::query.query'> &
+      Schema.Attribute.Private;
+    publishedAt: Schema.Attribute.DateTime;
+    query: Schema.Attribute.String;
+    scenario: Schema.Attribute.Relation<'manyToOne', 'api::scenario.scenario'>;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -545,23 +902,23 @@ export interface ApiRoomRoom extends Struct.CollectionTypeSchema {
     draftAndPublish: true;
   };
   attributes: {
+    canvases: Schema.Attribute.Relation<'oneToMany', 'api::canvas.canvas'>;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
-    graph: Schema.Attribute.Media<'files'>;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<'oneToMany', 'api::room.room'> &
       Schema.Attribute.Private;
-    notes: Schema.Attribute.Relation<'oneToMany', 'api::note.note'>;
+    project: Schema.Attribute.Relation<'manyToOne', 'api::project.project'>;
     publishedAt: Schema.Attribute.DateTime;
-    template: Schema.Attribute.Relation<
-      'manyToOne',
-      'api::room-template.room-template'
-    >;
     title: Schema.Attribute.String;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    visibility: Schema.Attribute.Enumeration<
+      ['private', 'unlisted', 'public']
+    > &
+      Schema.Attribute.DefaultTo<'private'>;
   };
 }
 
@@ -581,21 +938,14 @@ export interface ApiScenarioGroupScenarioGroup
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
-    graphDisplayConfiguration: Schema.Attribute.Component<
-      'graph.graph-display-configuration',
-      false
-    >;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
       'oneToMany',
       'api::scenario-group.scenario-group'
     > &
       Schema.Attribute.Private;
+    project: Schema.Attribute.Relation<'manyToOne', 'api::project.project'>;
     publishedAt: Schema.Attribute.DateTime;
-    room_templates: Schema.Attribute.Relation<
-      'manyToMany',
-      'api::room-template.room-template'
-    >;
     scenarios: Schema.Attribute.Relation<'oneToMany', 'api::scenario.scenario'>;
     title: Schema.Attribute.String;
     updatedAt: Schema.Attribute.DateTime;
@@ -616,15 +966,13 @@ export interface ApiScenarioScenario extends Struct.CollectionTypeSchema {
     draftAndPublish: true;
   };
   attributes: {
-    additive: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
-    cover: Schema.Attribute.Media<'files' | 'images'>;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     description: Schema.Attribute.Text;
-    graphDisplayConfiguration: Schema.Attribute.Component<
-      'graph.graph-display-configuration',
-      false
+    group: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::scenario-group.scenario-group'
     >;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
@@ -632,12 +980,15 @@ export interface ApiScenarioScenario extends Struct.CollectionTypeSchema {
       'api::scenario.scenario'
     > &
       Schema.Attribute.Private;
-    parameters: Schema.Attribute.Component<'graph.parameter', true>;
+    postActions: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::post-scenario-action.post-scenario-action'
+    >;
     publishedAt: Schema.Attribute.DateTime;
-    queries: Schema.Attribute.Component<'graph.query', true>;
-    scenarioGroup: Schema.Attribute.Relation<
-      'manyToOne',
-      'api::scenario-group.scenario-group'
+    queries: Schema.Attribute.Relation<'oneToMany', 'api::query.query'>;
+    queryParameters: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::query-parameter.query-parameter'
     >;
     title: Schema.Attribute.String;
     updatedAt: Schema.Attribute.DateTime;
@@ -1728,6 +2079,7 @@ export interface PluginUsersPermissionsUser
     > &
       Schema.Attribute.Private;
     notes: Schema.Attribute.Relation<'oneToMany', 'api::v2-note.v2-note'>;
+    notes2: Schema.Attribute.Relation<'oneToMany', 'api::note.note'>;
     password: Schema.Attribute.Password &
       Schema.Attribute.Private &
       Schema.Attribute.SetMinMaxLength<{
@@ -1737,10 +2089,15 @@ export interface PluginUsersPermissionsUser
       'manyToMany',
       'api::v2-project.v2-project'
     >;
+    projectCollaborations2: Schema.Attribute.Relation<
+      'manyToMany',
+      'api::project.project'
+    >;
     projects: Schema.Attribute.Relation<
       'oneToMany',
       'api::v2-project.v2-project'
     >;
+    projects2: Schema.Attribute.Relation<'oneToMany', 'api::project.project'>;
     provider: Schema.Attribute.String;
     publishedAt: Schema.Attribute.DateTime;
     resetPasswordToken: Schema.Attribute.String & Schema.Attribute.Private;
@@ -1771,9 +2128,18 @@ declare module '@strapi/strapi' {
       'admin::transfer-token': AdminTransferToken;
       'admin::transfer-token-permission': AdminTransferTokenPermission;
       'admin::user': AdminUser;
-      'api::database.database': ApiDatabaseDatabase;
+      'api::canvas-label-setting.canvas-label-setting': ApiCanvasLabelSettingCanvasLabelSetting;
+      'api::canvas.canvas': ApiCanvasCanvas;
+      'api::common-property.common-property': ApiCommonPropertyCommonProperty;
+      'api::database-connection.database-connection': ApiDatabaseConnectionDatabaseConnection;
+      'api::link-property.link-property': ApiLinkPropertyLinkProperty;
+      'api::node-reference.node-reference': ApiNodeReferenceNodeReference;
+      'api::node-title-property.node-title-property': ApiNodeTitlePropertyNodeTitleProperty;
       'api::note.note': ApiNoteNote;
-      'api::room-template.room-template': ApiRoomTemplateRoomTemplate;
+      'api::post-scenario-action.post-scenario-action': ApiPostScenarioActionPostScenarioAction;
+      'api::project.project': ApiProjectProject;
+      'api::query-parameter.query-parameter': ApiQueryParameterQueryParameter;
+      'api::query.query': ApiQueryQuery;
       'api::room.room': ApiRoomRoom;
       'api::scenario-group.scenario-group': ApiScenarioGroupScenarioGroup;
       'api::scenario.scenario': ApiScenarioScenario;

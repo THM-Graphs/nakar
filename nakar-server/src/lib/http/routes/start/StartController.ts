@@ -32,10 +32,10 @@ export class StartController {
   ): Promise<StartPageDto> {
     const user: Result<'plugin::users-permissions.user'> | null =
       await this._authService.getUserByJWT(jwt);
-    const recentRooms: Result<'api::v2-room.v2-room'>[] = [];
+    const recentRooms: Result<'api::room.room'>[] = [];
     for (const recentRoomId of query.recentRoomIds?.split(',') ?? []) {
       try {
-        const room: Result<'api::v2-room.v2-room'> =
+        const room: Result<'api::room.room'> =
           await this._database.getRoom(recentRoomId);
         const allowed: boolean = await userCanSeeRoom(
           user,
@@ -50,15 +50,15 @@ export class StartController {
       }
     }
 
-    const myProjects: Result<'api::v2-project.v2-project'>[] = user
+    const myProjects: Result<'api::project.project'>[] = user
       ? await this._database.getProjectsOfUser(user)
       : [];
 
-    const collaborationProjects: Result<'api::v2-project.v2-project'>[] = user
+    const collaborationProjects: Result<'api::project.project'>[] = user
       ? await this._database.getCollaborationProjectsOfUser(user)
       : [];
 
-    const publicRooms: Result<'api::v2-room.v2-room'>[] =
+    const publicRooms: Result<'api::room.room'>[] =
       await this._database.getPublicRooms();
 
     return new StartPageDto({
@@ -66,7 +66,7 @@ export class StartController {
         await Promise.all(
           myProjects.map(
             async (
-              project: Result<'api::v2-project.v2-project'>,
+              project: Result<'api::project.project'>,
             ): Promise<StartPageProjectDto> =>
               await this._schemaFactory.createSchemaStartPageProject(project),
           ),
@@ -78,7 +78,7 @@ export class StartController {
         await Promise.all(
           collaborationProjects.map(
             async (
-              project: Result<'api::v2-project.v2-project'>,
+              project: Result<'api::project.project'>,
             ): Promise<StartPageProjectDto> =>
               await this._schemaFactory.createSchemaStartPageProject(project),
           ),
@@ -90,7 +90,7 @@ export class StartController {
         await Promise.all(
           publicRooms.map(
             async (
-              room: Result<'api::v2-room.v2-room'>,
+              room: Result<'api::room.room'>,
             ): Promise<StartPageRoomDto> => {
               return await this._schemaFactory.createSchemaStartPageRoom(room);
             },
@@ -101,9 +101,7 @@ export class StartController {
       ),
       recentRooms: await Promise.all(
         recentRooms.map(
-          async (
-            room: Result<'api::v2-room.v2-room'>,
-          ): Promise<StartPageRoomDto> => {
+          async (room: Result<'api::room.room'>): Promise<StartPageRoomDto> => {
             return await this._schemaFactory.createSchemaStartPageRoom(room);
           },
         ),

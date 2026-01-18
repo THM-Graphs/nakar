@@ -10,26 +10,28 @@
   "options": {
     "draftAndPublish": true
   },
+  "pluginOptions": {},
   "attributes": {
     "content": {
-      "type": "richtext"
+      "type": "text"
     },
-    "room": {
+    "project": {
       "type": "relation",
       "relation": "manyToOne",
-      "target": "api::room.room",
+      "target": "api::project.project",
       "inversedBy": "notes"
     },
     "author": {
-      "type": "string"
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user",
+      "inversedBy": "notes2"
     },
-    "elementIds": {
-      "type": "text"
-    },
-    "color": {
-      "type": "component",
-      "repeatable": false,
-      "component": "graph.color"
+    "nodes": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::node-reference.node-reference",
+      "mappedBy": "note"
     }
   }
 }

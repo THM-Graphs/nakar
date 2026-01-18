@@ -1,0 +1,27 @@
+{
+  "kind": "collectionType",
+  "collectionName": "node_title_properties",
+  "info": {
+    "singularName": "node-title-property",
+    "pluralName": "node-title-properties",
+    "displayName": "Node Title Property"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "database": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::database-connection.database-connection",
+      "inversedBy": "nodeTitleProperties"
+    },
+    "label": {
+      "type": "string"
+    },
+    "property": {
+      "type": "string"
+    }
+  }
+}

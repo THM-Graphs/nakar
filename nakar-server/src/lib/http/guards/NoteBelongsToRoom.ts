@@ -19,19 +19,19 @@ export class NoteBelongsToRoom implements CanActivate {
     if (typeof noteId !== 'string') {
       throw new NotFoundException(`No note id provided.`);
     }
-    const note: Result<'api::v2-note.v2-note'> =
+    const note: Result<'api::note.note'> =
       await this._databaseService.getNote(noteId);
 
     const roomId: unknown = req.params['roomId'];
     if (typeof roomId !== 'string') {
       throw new NotFoundException(`No room id provided.`);
     }
-    const room: Result<'api::v2-room.v2-room'> =
+    const room: Result<'api::room.room'> =
       await this._databaseService.getRoom(roomId);
 
-    const projectOfNote: Result<'api::v2-project.v2-project'> =
+    const projectOfNote: Result<'api::project.project'> =
       await this._databaseService.getProjectOfNote(note);
-    const projectOfRoom: Result<'api::v2-project.v2-project'> =
+    const projectOfRoom: Result<'api::project.project'> =
       await this._databaseService.getProjectOfRoom(room);
 
     const isOkay: boolean =

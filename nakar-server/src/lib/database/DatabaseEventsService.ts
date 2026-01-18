@@ -13,10 +13,8 @@ import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 export class DatabaseEventsService implements OnModuleInit, OnModuleDestroy {
   private readonly _logger: Logger = createChildLogger(this);
 
-  private readonly _onCanvasDeleted: Subject<
-    Result<'api::v2-canvas.v2-canvas'>
-  >;
-  private readonly _onNoteChanges: Subject<Result<'api::v2-canvas.v2-canvas'>>;
+  private readonly _onCanvasDeleted: Subject<Result<'api::canvas.canvas'>>;
+  private readonly _onNoteChanges: Subject<Result<'api::canvas.canvas'>>;
 
   private readonly _subscriptsion: Subscription[];
 
@@ -26,25 +24,23 @@ export class DatabaseEventsService implements OnModuleInit, OnModuleDestroy {
 
     this._subscriptsion = [
       this.onCanvasDeleted$.subscribe(
-        (canvas: Result<'api::v2-canvas.v2-canvas'>): void => {
+        (canvas: Result<'api::canvas.canvas'>): void => {
           this._logger.debug(`onCanvasDeleted$: ${canvas.documentId}`);
         },
       ),
       this.onNoteChanges$.subscribe(
-        (canvas: Result<'api::v2-canvas.v2-canvas'>): void => {
+        (canvas: Result<'api::canvas.canvas'>): void => {
           this._logger.debug(`onNoteChanges$: ${canvas.documentId}`);
         },
       ),
     ];
   }
 
-  public get onCanvasDeleted$(): Observable<
-    Result<'api::v2-canvas.v2-canvas'>
-  > {
+  public get onCanvasDeleted$(): Observable<Result<'api::canvas.canvas'>> {
     return this._onCanvasDeleted.asObservable();
   }
 
-  public get onNoteChanges$(): Observable<Result<'api::v2-canvas.v2-canvas'>> {
+  public get onNoteChanges$(): Observable<Result<'api::canvas.canvas'>> {
     return this._onNoteChanges.asObservable();
   }
 
@@ -90,9 +86,9 @@ export class DatabaseEventsService implements OnModuleInit, OnModuleDestroy {
         context: Context,
         next: NextFunction,
       ): Promise<MiddlewareReturnType> => {
-        if (context.uid === 'api::v2-canvas.v2-canvas') {
+        if (context.uid === 'api::canvas.canvas') {
           if (context.action === 'delete' || context.action === 'unpublish') {
-            const canvas: Result<'api::v2-canvas.v2-canvas'> =
+            const canvas: Result<'api::canvas.canvas'> =
               await this._databaseService.getCanvas(context.params.documentId);
             setImmediate((): void => {
               this._onCanvasDeleted.next(canvas);
@@ -110,16 +106,16 @@ export class DatabaseEventsService implements OnModuleInit, OnModuleDestroy {
         context: Context,
         next: NextFunction,
       ): Promise<MiddlewareReturnType> => {
-        if (context.uid === 'api::v2-note.v2-note') {
+        if (context.uid === 'api::note.note') {
           return await match(context)
             .returnType<Promise<NextResult>>()
             .with(
               { action: 'publish', params: { documentId: P.select() } },
               async (documentId: string): Promise<NextResult> => {
                 const result: NextResult = await next();
-                const note: Result<'api::v2-note.v2-note'> =
+                const note: Result<'api::note.note'> =
                   await this._databaseService.getNote(documentId);
-                const canvases: Result<'api::v2-canvas.v2-canvas'>[] =
+                const canvases: Result<'api::canvas.canvas'>[] =
                   await this._databaseService.getCanvasesOfNote(note);
                 for (const canvas of canvases) {
                   setImmediate((): void => {
@@ -132,9 +128,9 @@ export class DatabaseEventsService implements OnModuleInit, OnModuleDestroy {
             .with(
               { action: 'unpublish', params: { documentId: P.select() } },
               async (documentId: string): Promise<NextResult> => {
-                const note: Result<'api::v2-note.v2-note'> =
+                const note: Result<'api::note.note'> =
                   await this._databaseService.getNote(documentId);
-                const canvases: Result<'api::v2-canvas.v2-canvas'>[] =
+                const canvases: Result<'api::canvas.canvas'>[] =
                   await this._databaseService.getCanvasesOfNote(note);
                 const result: NextResult = await next();
                 for (const canvas of canvases) {
@@ -149,11 +145,11 @@ export class DatabaseEventsService implements OnModuleInit, OnModuleDestroy {
               { action: 'create', params: { status: 'published' } },
               async (): Promise<NextResult> => {
                 const result: NextResult = await next();
-                const note: Result<'api::v2-note.v2-note'> =
+                const note: Result<'api::note.note'> =
                   await this._databaseService.getNote(
                     getDocumentIdFromResult(result),
                   );
-                const canvases: Result<'api::v2-canvas.v2-canvas'>[] =
+                const canvases: Result<'api::canvas.canvas'>[] =
                   await this._databaseService.getCanvasesOfNote(note);
                 for (const canvas of canvases) {
                   setImmediate((): void => {
@@ -170,9 +166,9 @@ export class DatabaseEventsService implements OnModuleInit, OnModuleDestroy {
               },
               async (documentId: string): Promise<NextResult> => {
                 const result: NextResult = await next();
-                const note: Result<'api::v2-note.v2-note'> =
+                const note: Result<'api::note.note'> =
                   await this._databaseService.getNote(documentId);
-                const canvases: Result<'api::v2-canvas.v2-canvas'>[] =
+                const canvases: Result<'api::canvas.canvas'>[] =
                   await this._databaseService.getCanvasesOfNote(note);
                 for (const canvas of canvases) {
                   setImmediate((): void => {
@@ -185,9 +181,9 @@ export class DatabaseEventsService implements OnModuleInit, OnModuleDestroy {
             .with(
               { action: 'delete', params: { documentId: P.select() } },
               async (documentId: string): Promise<NextResult> => {
-                const note: Result<'api::v2-note.v2-note'> =
+                const note: Result<'api::note.note'> =
                   await this._databaseService.getNote(documentId);
-                const canvases: Result<'api::v2-canvas.v2-canvas'>[] =
+                const canvases: Result<'api::canvas.canvas'>[] =
                   await this._databaseService.getCanvasesOfNote(note);
                 const result: NextResult = await next();
                 for (const canvas of canvases) {

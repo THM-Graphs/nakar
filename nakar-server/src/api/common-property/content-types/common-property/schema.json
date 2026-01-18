@@ -1,0 +1,45 @@
+{
+  "kind": "collectionType",
+  "collectionName": "common_properties",
+  "info": {
+    "singularName": "common-property",
+    "pluralName": "common-properties",
+    "displayName": "Common Property"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "leftLabel": {
+      "type": "string"
+    },
+    "leftProperty": {
+      "type": "string"
+    },
+    "rightLabel": {
+      "type": "string"
+    },
+    "rightProperty": {
+      "type": "string"
+    },
+    "leftDatabase": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::database-connection.database-connection",
+      "inversedBy": "commonPropertiesLeft"
+    },
+    "rightDatabase": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::database-connection.database-connection",
+      "inversedBy": "commonPropertiesRight"
+    },
+    "project": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::project.project",
+      "inversedBy": "commonProperties"
+    }
+  }
+}

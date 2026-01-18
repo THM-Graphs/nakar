@@ -28,7 +28,7 @@ export class UserCanAccessRoom implements CanActivate {
       throw new NotFoundException(`No room id provided.`);
     }
 
-    const room: Result<'api::v2-room.v2-room'> =
+    const room: Result<'api::room.room'> =
       await this._databaseService.getRoom(roomId);
 
     const allowed: boolean = await userCanSeeRoom(

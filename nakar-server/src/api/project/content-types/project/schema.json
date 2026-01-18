@@ -1,0 +1,61 @@
+{
+  "kind": "collectionType",
+  "collectionName": "projects",
+  "info": {
+    "singularName": "project",
+    "pluralName": "projects",
+    "displayName": "Project",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "title": {
+      "type": "string"
+    },
+    "owner": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user",
+      "inversedBy": "projects2"
+    },
+    "collaborators": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "plugin::users-permissions.user",
+      "inversedBy": "projectCollaborations2"
+    },
+    "databaseConnections": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::database-connection.database-connection",
+      "mappedBy": "project"
+    },
+    "rooms": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::room.room",
+      "mappedBy": "project"
+    },
+    "notes": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::note.note",
+      "mappedBy": "project"
+    },
+    "scenarioGroups": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::scenario-group.scenario-group",
+      "mappedBy": "project"
+    },
+    "commonProperties": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::common-property.common-property",
+      "mappedBy": "project"
+    }
+  }
+}

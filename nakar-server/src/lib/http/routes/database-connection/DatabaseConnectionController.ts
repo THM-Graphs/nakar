@@ -54,7 +54,7 @@ export class DatabaseConnectionController {
   public async getStats(
     @Param('databaseId') databaseId: string,
   ): Promise<GetDatabaseStatsResponseBodyDto> {
-    const database: Result<'api::v2-database-connection.v2-database-connection'> =
+    const database: Result<'api::database-connection.database-connection'> =
       await this._database.getDatabase(databaseId);
     const credentials: Neo4jDatabaseInfo = Neo4jDatabaseInfo.parse(database);
     const stats: GetDatabaseStatsResponseBodyDto =
@@ -74,7 +74,7 @@ export class DatabaseConnectionController {
     @Param('databaseId') databaseId: string,
     @Body() body: PostSearchRequestBodyDto,
   ): Promise<PostSearchResponseBodyDto> {
-    const database: Result<'api::v2-database-connection.v2-database-connection'> =
+    const database: Result<'api::database-connection.database-connection'> =
       await this._database.getDatabase(databaseId);
     const credentials: Neo4jDatabaseInfo = Neo4jDatabaseInfo.parse(database);
 
@@ -111,7 +111,7 @@ export class DatabaseConnectionController {
   public async getSearchCapabilites(
     @Param('databaseId') databaseId: string,
   ): Promise<GetSearchCapabilitiesResponseBodyDto> {
-    const database: Result<'api::v2-database-connection.v2-database-connection'> =
+    const database: Result<'api::database-connection.database-connection'> =
       await this._database.getDatabase(databaseId);
     const credentials: Neo4jDatabaseInfo = Neo4jDatabaseInfo.parse(database);
 
@@ -178,7 +178,7 @@ export class DatabaseConnectionController {
     @Query() query: ExpandNodePreviewRequestQueryDto,
     @Param('databaseId') databaseId: string,
   ): Promise<ExpandNodePreviewResponseBodyDto> {
-    const database: Result<'api::v2-database-connection.v2-database-connection'> =
+    const database: Result<'api::database-connection.database-connection'> =
       await this._database.getDatabase(databaseId);
 
     const neo4jDatabaseInfo: Neo4jDatabaseInfo =

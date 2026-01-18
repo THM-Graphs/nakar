@@ -112,7 +112,7 @@ export class LiveCanvasUndoableData {
   }
 
   public resetFromInitialScenario(
-    scenario: Result<'api::v2-scenario.v2-scenario'>,
+    scenario: Result<'api::scenario.scenario'>,
     scenarioArguments: SMap<string, string>,
   ): void {
     this.metaData.reset(scenario.documentId, scenarioArguments);

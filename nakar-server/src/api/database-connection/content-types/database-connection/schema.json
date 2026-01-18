@@ -1,0 +1,70 @@
+{
+  "kind": "collectionType",
+  "collectionName": "database_connections",
+  "info": {
+    "singularName": "database-connection",
+    "pluralName": "database-connections",
+    "displayName": "Database Connection",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "title": {
+      "type": "string"
+    },
+    "project": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::project.project",
+      "inversedBy": "databaseConnections"
+    },
+    "username": {
+      "type": "string"
+    },
+    "password": {
+      "type": "string"
+    },
+    "database": {
+      "type": "string"
+    },
+    "connectionUrl": {
+      "type": "string"
+    },
+    "browserUrl": {
+      "type": "string"
+    },
+    "commonPropertiesLeft": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::common-property.common-property",
+      "mappedBy": "leftDatabase"
+    },
+    "commonPropertiesRight": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::common-property.common-property",
+      "mappedBy": "rightDatabase"
+    },
+    "linkProperties": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::link-property.link-property",
+      "mappedBy": "database"
+    },
+    "nodeTitleProperties": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::node-title-property.node-title-property",
+      "mappedBy": "database"
+    },
+    "queries": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::query.query",
+      "mappedBy": "database"
+    }
+  }
+}

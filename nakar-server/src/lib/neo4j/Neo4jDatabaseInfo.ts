@@ -22,7 +22,7 @@ export class Neo4jDatabaseInfo {
   }
 
   public static parse(
-    database: Result<'api::v2-database-connection.v2-database-connection'>,
+    database: Result<'api::database-connection.database-connection'>,
   ): Neo4jDatabaseInfo {
     if (database.connectionUrl == null) {
       throw new Error('db url not found');

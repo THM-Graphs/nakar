@@ -6,7 +6,7 @@ import { userCanSeeProject } from './userCanSeeProject';
 
 export async function userCanSeeRoom(
   user: Result<'plugin::users-permissions.user'> | null,
-  room: Result<'api::v2-room.v2-room'>,
+  room: Result<'api::room.room'>,
   database: DatabaseService,
 ): Promise<boolean> {
   const logger: Logger = createChildLogger('userCanSeeRoom');
@@ -18,7 +18,7 @@ export async function userCanSeeRoom(
     return true;
   }
 
-  const project: Result<'api::v2-project.v2-project'> =
+  const project: Result<'api::project.project'> =
     await database.getProjectOfRoom(room);
   if (await userCanSeeProject(user, project, database)) {
     return true;

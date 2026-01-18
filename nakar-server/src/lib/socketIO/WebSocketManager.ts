@@ -125,7 +125,7 @@ export class WebSocketManager
         const user: Result<'plugin::users-permissions.user'> | null =
           await this._authService.getUserByJWT(auth.jwt);
 
-        const canvas: Result<'api::v2-canvas.v2-canvas'> =
+        const canvas: Result<'api::canvas.canvas'> =
           await this._databaseService.getCanvas(auth.canvasId);
 
         const allowed: boolean = await userCanSeeCanvas(
@@ -158,7 +158,7 @@ export class WebSocketManager
     this._logger.debug(`Client connected: ${wsClient.id}`);
     const auth: AuthWsdto = plainToClass(AuthWsdto, wsClient.handshake.auth);
 
-    const canvas: Result<'api::v2-canvas.v2-canvas'> =
+    const canvas: Result<'api::canvas.canvas'> =
       await this._databaseService.getCanvas(auth.canvasId);
 
     this._rooms.set(wsClient.id, canvas.documentId);
@@ -308,7 +308,7 @@ export class WebSocketManager
     if (this._userCountOfRoom(oldCanvasId) === 0) {
       this._databaseService
         .getCanvas(oldCanvasId)
-        .then((oldCanvas: Result<'api::v2-canvas.v2-canvas'> | null): void => {
+        .then((oldCanvas: Result<'api::canvas.canvas'> | null): void => {
           if (oldCanvas == null) {
             this._logger.warn('Cannot find canvas to shut down.');
           } else {
@@ -360,12 +360,12 @@ export class WebSocketManager
             { type: 'CanvasEventGraphElementsChanged' },
             (message: CanvasEventGraphElementsChanged): void => {
               (async (): Promise<void> => {
-                const canvas: Result<'api::v2-canvas.v2-canvas'> =
+                const canvas: Result<'api::canvas.canvas'> =
                   await this._databaseService.getCanvas(
                     message.canvas.canvasId,
                   );
 
-                const project: Result<'api::v2-project.v2-project'> =
+                const project: Result<'api::project.project'> =
                   await this._databaseService.getProjectOfCanvas(canvas);
 
                 const notes: IndexedNoteCollection =
@@ -403,10 +403,10 @@ export class WebSocketManager
           .with(
             { type: 'CanvasEventNotesChanged' },
             async (message: CanvasEventNotesChanged): Promise<void> => {
-              const canvas: Result<'api::v2-canvas.v2-canvas'> =
+              const canvas: Result<'api::canvas.canvas'> =
                 await this._databaseService.getCanvas(message.canvas.canvasId);
 
-              const project: Result<'api::v2-project.v2-project'> =
+              const project: Result<'api::project.project'> =
                 await this._databaseService.getProjectOfCanvas(canvas);
 
               const notes: IndexedNoteCollection =
@@ -422,7 +422,7 @@ export class WebSocketManager
                     .toArray()
                     .map(
                       async (
-                        note: Result<'api::v2-note.v2-note'>,
+                        note: Result<'api::note.note'>,
                       ): Promise<NoteDto> =>
                         await this._schemaFactory.createSchemaNote(
                           note,

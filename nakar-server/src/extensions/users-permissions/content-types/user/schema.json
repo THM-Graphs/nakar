@@ -82,6 +82,24 @@
       "relation": "oneToMany",
       "target": "api::v2-note.v2-note",
       "mappedBy": "author"
+    },
+    "projects2": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::project.project",
+      "mappedBy": "owner"
+    },
+    "projectCollaborations2": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::project.project",
+      "mappedBy": "collaborators"
+    },
+    "notes2": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::note.note",
+      "mappedBy": "author"
     }
   }
 }

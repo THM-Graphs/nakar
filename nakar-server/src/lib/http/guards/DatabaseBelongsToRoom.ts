@@ -19,19 +19,19 @@ export class DatabaseBelongsToRoom implements CanActivate {
     if (typeof databaseId !== 'string') {
       throw new NotFoundException(`No database connection id provided.`);
     }
-    const database: Result<'api::v2-database-connection.v2-database-connection'> =
+    const database: Result<'api::database-connection.database-connection'> =
       await this._databaseService.getDatabase(databaseId);
 
     const roomId: unknown = req.params['roomId'];
     if (typeof roomId !== 'string') {
       throw new NotFoundException(`No room id provided.`);
     }
-    const room: Result<'api::v2-room.v2-room'> =
+    const room: Result<'api::room.room'> =
       await this._databaseService.getRoom(roomId);
 
-    const projectOfDatabase: Result<'api::v2-project.v2-project'> =
+    const projectOfDatabase: Result<'api::project.project'> =
       await this._databaseService.getProjectOfDatabase(database);
-    const projectOfRoom: Result<'api::v2-project.v2-project'> =
+    const projectOfRoom: Result<'api::project.project'> =
       await this._databaseService.getProjectOfRoom(room);
 
     const isOkay: boolean =

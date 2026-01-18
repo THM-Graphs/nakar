@@ -15,42 +15,32 @@
     "title": {
       "type": "string"
     },
-    "cover": {
-      "type": "media",
-      "multiple": false,
-      "required": false,
-      "allowedTypes": [
-        "files",
-        "images"
-      ]
-    },
     "description": {
       "type": "text"
     },
-    "scenarioGroup": {
+    "group": {
       "type": "relation",
       "relation": "manyToOne",
       "target": "api::scenario-group.scenario-group",
       "inversedBy": "scenarios"
     },
-    "graphDisplayConfiguration": {
-      "type": "component",
-      "repeatable": false,
-      "component": "graph.graph-display-configuration"
-    },
-    "parameters": {
-      "type": "component",
-      "repeatable": true,
-      "component": "graph.parameter"
+    "postActions": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::post-scenario-action.post-scenario-action",
+      "mappedBy": "scenario"
     },
     "queries": {
-      "type": "component",
-      "repeatable": true,
-      "component": "graph.query"
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::query.query",
+      "mappedBy": "scenario"
     },
-    "additive": {
-      "type": "boolean",
-      "default": false
+    "queryParameters": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::query-parameter.query-parameter",
+      "mappedBy": "scenario"
     }
   }
 }

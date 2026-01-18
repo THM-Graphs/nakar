@@ -1,0 +1,41 @@
+{
+  "kind": "collectionType",
+  "collectionName": "query_parameters",
+  "info": {
+    "singularName": "query-parameter",
+    "pluralName": "query-parameters",
+    "displayName": "Query Parameter"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "identifier": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "defaultValue": {
+      "type": "string"
+    },
+    "dataType": {
+      "type": "enumeration",
+      "default": "string",
+      "enum": [
+        "string",
+        "number",
+        "json",
+        "startDateTime",
+        "endDateTime"
+      ]
+    },
+    "scenario": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::scenario.scenario",
+      "inversedBy": "queryParameters"
+    }
+  }
+}

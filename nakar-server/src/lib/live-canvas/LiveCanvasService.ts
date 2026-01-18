@@ -37,7 +37,7 @@ export class LiveCanvasService implements OnModuleInit, OnModuleDestroy {
     installHandlebarHelpers();
 
     this._databaseEvents.onCanvasDeleted$.subscribe(
-      (canvas: Result<'api::v2-canvas.v2-canvas'>): void => {
+      (canvas: Result<'api::canvas.canvas'>): void => {
         this._destroyCanvas(canvas).catch((error: unknown): void => {
           this._logger.error(error);
         });
@@ -53,7 +53,7 @@ export class LiveCanvasService implements OnModuleInit, OnModuleDestroy {
   }
 
   public getGraph(
-    canvas: Result<'api::v2-canvas.v2-canvas'>,
+    canvas: Result<'api::canvas.canvas'>,
   ): LiveCanvasUndoableData {
     const liveCanvas: LiveCanvas = this.getCanvas(canvas);
     const graph: LiveCanvasUndoableData = liveCanvas.getGraph();
@@ -61,17 +61,17 @@ export class LiveCanvasService implements OnModuleInit, OnModuleDestroy {
   }
 
   public getGraphOrNull(
-    canvas: Result<'api::v2-canvas.v2-canvas'>,
+    canvas: Result<'api::canvas.canvas'>,
   ): LiveCanvasUndoableData | null {
     return this._liveCanvases.get(canvas.documentId)?.getGraph() ?? null;
   }
 
-  public getCanvas(canvas: Result<'api::v2-canvas.v2-canvas'>): LiveCanvas {
+  public getCanvas(canvas: Result<'api::canvas.canvas'>): LiveCanvas {
     return this.getCanvasWithId(canvas.documentId);
   }
 
   public getCanvasOrNull(
-    canvas: Result<'api::v2-canvas.v2-canvas'>,
+    canvas: Result<'api::canvas.canvas'>,
   ): LiveCanvas | null {
     return this.getCanvasWithIdOrNull(canvas.documentId);
   }
@@ -90,9 +90,7 @@ export class LiveCanvasService implements OnModuleInit, OnModuleDestroy {
     return liveCanvas;
   }
 
-  public getOrStartCanvas(
-    canvas: Result<'api::v2-canvas.v2-canvas'>,
-  ): LiveCanvas {
+  public getOrStartCanvas(canvas: Result<'api::canvas.canvas'>): LiveCanvas {
     const exitsingCanvas: LiveCanvas | null =
       this._liveCanvases.get(canvas.documentId) ?? null;
     if (exitsingCanvas != null) {
@@ -131,9 +129,7 @@ export class LiveCanvasService implements OnModuleInit, OnModuleDestroy {
     return liveCanvas;
   }
 
-  public scheduleCanvasShutdown(
-    canvas: Result<'api::v2-canvas.v2-canvas'>,
-  ): void {
+  public scheduleCanvasShutdown(canvas: Result<'api::canvas.canvas'>): void {
     const liveCanvas: LiveCanvas | undefined = this._liveCanvases.get(
       canvas.documentId,
     );
@@ -146,7 +142,7 @@ export class LiveCanvasService implements OnModuleInit, OnModuleDestroy {
   }
 
   private async _destroyCanvas(
-    canvas: Result<'api::v2-canvas.v2-canvas'>,
+    canvas: Result<'api::canvas.canvas'>,
   ): Promise<void> {
     this._logger.debug(`Will destroy canvas ${canvas.documentId}.`);
     const liveCanvas: LiveCanvas | undefined = this._liveCanvases.get(
