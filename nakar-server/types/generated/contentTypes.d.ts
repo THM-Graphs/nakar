@@ -882,7 +882,7 @@ export interface ApiQueryQuery extends Struct.CollectionTypeSchema {
     localizations: Schema.Attribute.Relation<'oneToMany', 'api::query.query'> &
       Schema.Attribute.Private;
     publishedAt: Schema.Attribute.DateTime;
-    query: Schema.Attribute.String;
+    query: Schema.Attribute.Text;
     scenario: Schema.Attribute.Relation<'manyToOne', 'api::scenario.scenario'>;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
