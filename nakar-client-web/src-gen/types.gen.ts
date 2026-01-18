@@ -586,15 +586,15 @@ export type AuthControllerGetAuthResponse = (GetAuthResponseBodyDto);
 
 export type AuthControllerGetAuthError = unknown;
 
-export type StartPageControllerGetStartPageData = {
+export type StartControllerGetStartData = {
     query: {
         recentRoomIds: (string) | null;
     };
 };
 
-export type StartPageControllerGetStartPageResponse = (StartPageDto);
+export type StartControllerGetStartResponse = (StartPageDto);
 
-export type StartPageControllerGetStartPageError = unknown;
+export type StartControllerGetStartError = unknown;
 
 export type ProjectPageControllerGetProjectPageData = {
     path: {

@@ -22,12 +22,13 @@ export async function bootstrapNest(): Promise<void> {
     });
   nestApp = app;
 
+  app.setGlobalPrefix('api');
   app.useGlobalInterceptors(new RouteLogger());
   app.useGlobalPipes(new ValidationPipe(validationPipelineOptions));
   app.use(cors());
 
   SwaggerModule.setup(
-    '/',
+    '/api/docs',
     app,
     (): OpenAPIObject =>
       SwaggerModule.createDocument(
@@ -41,9 +42,8 @@ export async function bootstrapNest(): Promise<void> {
       ),
     { raw: ['yaml'], explorer: true, yamlDocumentUrl: '/api.yaml' },
   );
-
   await app.listen(config.port + 1, config.host);
-  strapi.log.http(await app.getUrl());
+  strapi.log.http(`${await app.getUrl()}/api/docs`);
 }
 
 export async function destroyNest(): Promise<void> {

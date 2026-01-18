@@ -14,8 +14,8 @@ import { StartPageRoomDto } from './dto/StartPageRoomDto';
 import { JWT } from '../../decorators/JWT';
 import { AuthService } from '../../../auth/AuthService';
 
-@Controller('start-page')
-export class StartPageController {
+@Controller('/')
+export class StartController {
   private readonly _logger: Logger = createChildLogger(this);
 
   public constructor(
@@ -26,7 +26,7 @@ export class StartPageController {
 
   @Get()
   @ApiResponse({ type: StartPageDto })
-  public async getStartPage(
+  public async getStart(
     @JWT() jwt: string | null,
     @Query() query: GetStartPageRequestQueryDto,
   ): Promise<StartPageDto> {

@@ -7,11 +7,11 @@ import { RoomCard } from "../shared/cms/RoomCard.tsx";
 import { resultOrThrow } from "../shared/data/resultOrThrow.ts";
 import { ProjectCard } from "../shared/cms/ProjectCard.tsx";
 import { useBearStore } from "../state/useBearStore.ts";
-import { startPageControllerGetStartPage, StartPageDto } from "../../src-gen";
+import { startControllerGetStart, StartPageDto } from "../../src-gen";
 
 export async function StartLoader(): Promise<StartPageDto> {
   return resultOrThrow(
-    await startPageControllerGetStartPage({
+    await startControllerGetStart({
       query: { recentRoomIds: useBearStore.getState().start.myRooms.join(",") },
     }),
   );
