@@ -16,6 +16,7 @@ import { WebSocketManager } from '../socketIO/WebSocketManager';
 import { ActionController } from '../http/routes/action/ActionController';
 import { LiveCanvasService } from '../live-canvas/LiveCanvasService';
 import { AuthService } from '../auth/AuthService';
+import { RedirectController } from '../http/routes/redirect/RedirectController';
 
 @Module({
   controllers: [
@@ -28,6 +29,7 @@ import { AuthService } from '../auth/AuthService';
     SystemController,
     DatabaseConnectionController,
     ActionController,
+    RedirectController,
   ],
   providers: [
     DatabaseService,

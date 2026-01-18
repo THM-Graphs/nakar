@@ -5,7 +5,7 @@ import "bootstrap-icons/font/bootstrap-icons.css";
 import "./index.css";
 import { createBrowserRouter, RouterProvider } from "react-router";
 import { loadEnvOrDefault } from "./shared/env/env.ts";
-import { client as client2 } from "../src-gen";
+import { client as client2, redirectControllerGetUrl } from "../src-gen";
 import { Start, StartLoader } from "./pages/Start.tsx";
 import { CanvasLoader, CanvasPage } from "./pages/CanvasPage.tsx";
 import { AppContext } from "./state/AppContext.ts";
@@ -23,6 +23,8 @@ async function bootstrap() {
   client2.setConfig({
     baseUrl: env.BACKEND_URL,
   });
+
+  handleRedirect();
 
   const context = new AppContext(env);
 
@@ -89,3 +91,23 @@ async function bootstrap() {
 }
 
 bootstrap().catch(console.error);
+
+function handleRedirect(): void {
+  // Feature for handling outdated urls
+  const path: string = window.location.pathname;
+  if (path === "/") {
+    return;
+  } else {
+    const href = window.location.href;
+    console.log(`Will try to find redirect for ${href}`);
+    redirectControllerGetUrl({ query: { url: href } })
+      .then((result) => {
+        if (result.data != null) {
+          window.location.href = result.data.url;
+        }
+      })
+      .catch(() => {
+        /* */
+      });
+  }
+}

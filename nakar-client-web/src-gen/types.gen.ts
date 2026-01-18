@@ -208,6 +208,10 @@ export type GetSearchCapabilitiesResponseBodyDto = {
     fuzzyMatchNodeProperties: Array<SearchCapabilitiesEntryDto>;
 };
 
+export type GetUrlResponseBodyDto = {
+    url: string;
+};
+
 export type GetVersionResponseBodyDto = {
     version: string;
 };
@@ -912,3 +916,13 @@ export type ActionControllerSetViewSettingsData = {
 export type ActionControllerSetViewSettingsResponse = (unknown);
 
 export type ActionControllerSetViewSettingsError = unknown;
+
+export type RedirectControllerGetUrlData = {
+    query: {
+        url: string;
+    };
+};
+
+export type RedirectControllerGetUrlResponse = (GetUrlResponseBodyDto);
+
+export type RedirectControllerGetUrlError = unknown;
