@@ -1,5 +1,4 @@
 import { Module } from '@nestjs/common';
-import { MigrationService } from '../migration/MigrationService';
 import { SchemaFactoryService } from '../schema/SchemaFactoryService';
 import { DatabaseEventsService } from '../database/DatabaseEventsService';
 import { DatabaseService } from '../database/DatabaseService';
@@ -34,7 +33,6 @@ import { RedirectController } from '../http/routes/redirect/RedirectController';
   providers: [
     DatabaseService,
     LiveCanvasService,
-    MigrationService,
     SchemaFactoryService,
     DatabaseEventsService,
     Neo4jService,
