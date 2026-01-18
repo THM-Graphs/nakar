@@ -293,7 +293,7 @@ export class DatabaseService {
 
   public async addNote(params: {
     project: Result<'api::project.project'>;
-    author: string | null;
+    author: Result<'plugin::users-permissions.user'> | null;
     nodes: string[];
     content: string;
   }): Promise<void> {
@@ -305,7 +305,7 @@ export class DatabaseService {
           project: {
             documentId: params.project.documentId,
           },
-          author: params.author ?? undefined,
+          author: params.author?.documentId ?? undefined,
         },
         status: 'published',
       });

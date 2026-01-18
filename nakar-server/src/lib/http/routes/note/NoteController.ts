@@ -17,6 +17,8 @@ import { UserIsLoggedIn } from '../../guards/UserIsLoggedIn';
 import { UpdateNoteRequestBodyDto } from './dto/UpdateNoteRequestBodyDto';
 import { UserCanAccessRoom } from '../../guards/UserCanAccessRoom';
 import { NoteBelongsToRoom } from '../../guards/NoteBelongsToRoom';
+import { JWT } from '../../decorators/JWT';
+import { AuthService } from '../../../auth/AuthService';
 
 @Controller('room/:roomId/note')
 @ApiParam({
@@ -29,7 +31,10 @@ export class NoteController {
 
   private readonly _logger: Logger = createChildLogger(this);
 
-  public constructor(private readonly _databaseService: DatabaseService) {}
+  public constructor(
+    private readonly _databaseService: DatabaseService,
+    private readonly _authService: AuthService,
+  ) {}
 
   @Post()
   @ApiBody({ type: PostNoteRequestBody })
@@ -38,11 +43,14 @@ export class NoteController {
   public async postNote(
     @Body() body: PostNoteRequestBody,
     @Param('roomId') roomId: string,
+    @JWT() jwt: string | null,
   ): Promise<void> {
     const room: Result<'api::room.room'> =
       await this._databaseService.getRoom(roomId);
     const project: Result<'api::project.project'> =
       await this._databaseService.getProjectOfRoom(room);
+    const user: Result<'plugin::users-permissions.user'> | null =
+      await this._authService.getUserByJWT(jwt);
 
     this._logger.debug(JSON.stringify(body));
 
@@ -50,7 +58,7 @@ export class NoteController {
       content: body.content,
       project: project,
       nodes: [...body.nodeIds],
-      author: null,
+      author: user,
     });
   }
 
