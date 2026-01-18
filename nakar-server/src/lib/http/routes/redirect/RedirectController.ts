@@ -19,7 +19,7 @@ export class RedirectController {
       .documents('api::redirect.redirect')
       .findMany({
         status: 'published',
-        filter: {
+        filters: {
           sourceUrl: query.url,
         },
       });
