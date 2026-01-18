@@ -21,17 +21,17 @@
       "target": "api::project.project",
       "inversedBy": "notes"
     },
-    "author": {
-      "type": "relation",
-      "relation": "manyToOne",
-      "target": "plugin::users-permissions.user",
-      "inversedBy": "notes"
-    },
     "nodes": {
       "type": "relation",
       "relation": "oneToMany",
       "target": "api::node-reference.node-reference",
       "mappedBy": "note"
+    },
+    "author": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user",
+      "inversedBy": "notes"
     }
   }
 }
