@@ -8,7 +8,6 @@ import { resultOrThrow } from "../shared/data/resultOrThrow.ts";
 import { ProjectCard } from "../shared/cms/ProjectCard.tsx";
 import { useBearStore } from "../state/useBearStore.ts";
 import { startControllerGetStart, StartPageDto } from "../../src-gen";
-import { NavbarButton } from "../shared/elements/NavbarButton.tsx";
 import { CMSCreateButton } from "../shared/cms/CMSCreateButton.tsx";
 
 export async function StartLoader(): Promise<StartPageDto> {
