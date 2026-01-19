@@ -9,11 +9,11 @@ export function ViewSettingsEditor(props: {
 }) {
   const visualizationData = props.viewSettings;
   return (
-    <Stack className={"mb-5 flex-grow-0 flex-shrink-1 mb-auto pb-5"} gap={5}>
+    <Stack gap={5}>
       <Collapsable
         title={<span className={"small"}>General</span>}
         initialState={false}
-        className={"border-bottom"}
+        className={""}
       >
         <Stack className={"pt-2 pb-2 border-top"} gap={2}>
           <Stack className={"ps-2 pe-2 pb-2 border-bottom"}>

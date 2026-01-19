@@ -250,16 +250,20 @@ export function CanvasPage() {
                 className={"rounded-bottom-end"}
               ></SearchPanelButton>
             </Stack>
-            {leftPanel === "scenarios" && <ScenariosPanel></ScenariosPanel>}
-            {leftPanel === "query" && <QueryPanel></QueryPanel>}
-            {leftPanel === "notes" && <NotesPanel></NotesPanel>}
-            {leftPanel === "search" && <SearchPanel></SearchPanel>}
+            <Stack className={"flex-grow-0 flex-shrink-0"}>
+              {leftPanel === "scenarios" && <ScenariosPanel></ScenariosPanel>}
+              {leftPanel === "query" && <QueryPanel></QueryPanel>}
+              {leftPanel === "notes" && <NotesPanel></NotesPanel>}
+              {leftPanel === "search" && <SearchPanel></SearchPanel>}
+            </Stack>
             <Canvas></Canvas>
-            {rightPanel === "inspector" && <InspectorPanel></InspectorPanel>}
-            {rightPanel === "histogram" && <HistogramPanel></HistogramPanel>}
-            {rightPanel === "visualization" && (
-              <VisualizationPanel></VisualizationPanel>
-            )}
+            <Stack className={"flex-grow-0 flex-shrink-0"}>
+              {rightPanel === "inspector" && <InspectorPanel></InspectorPanel>}
+              {rightPanel === "histogram" && <HistogramPanel></HistogramPanel>}
+              {rightPanel === "visualization" && (
+                <VisualizationPanel></VisualizationPanel>
+              )}
+            </Stack>
             <Stack
               className={"align-self-start flex-grow-0 flex-shrink-0"}
               gap={1}
