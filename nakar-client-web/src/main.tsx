@@ -75,6 +75,11 @@ async function bootstrap() {
           element: <AddEditProject context={context}></AddEditProject>,
         },
         {
+          path: "/project/:id/edit",
+          element: <AddEditProject context={context}></AddEditProject>,
+          loader: ProjectLoader,
+        },
+        {
           path: "/project/:id",
           element: <Project context={context}></Project>,
           loader: ProjectLoader,

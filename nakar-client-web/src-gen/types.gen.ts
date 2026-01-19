@@ -107,6 +107,10 @@ export type CompressNodesRequestBodyDto = {
     label: string;
 };
 
+export type CreateProjectRequestBodyDto = {
+    title: string;
+};
+
 export type DatabaseConnectionDto = {
     id: string;
     title: string;
@@ -573,6 +577,10 @@ export type UpdateNoteRequestBodyDto = {
     content: string;
 };
 
+export type UpdateProjectRequestBodyDto = {
+    title: string;
+};
+
 export type UserPreviewDto = {
     id: string;
     displayName: string;
@@ -609,6 +617,25 @@ export type ProjectControllerGetProjectData = {
 export type ProjectControllerGetProjectResponse = (ProjectPageDto);
 
 export type ProjectControllerGetProjectError = unknown;
+
+export type ProjectControllerUpdateProjectData = {
+    body: UpdateProjectRequestBodyDto;
+    path: {
+        projectId: string;
+    };
+};
+
+export type ProjectControllerUpdateProjectResponse = (ProjectPageDto);
+
+export type ProjectControllerUpdateProjectError = unknown;
+
+export type ProjectControllerCreateProjectData = {
+    body: CreateProjectRequestBodyDto;
+};
+
+export type ProjectControllerCreateProjectResponse = (ProjectPageDto);
+
+export type ProjectControllerCreateProjectError = unknown;
 
 export type CanvasControllerGetCanvasData = {
     path: {

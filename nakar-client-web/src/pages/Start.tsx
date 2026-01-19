@@ -8,7 +8,9 @@ import { resultOrThrow } from "../shared/data/resultOrThrow.ts";
 import { ProjectCard } from "../shared/cms/ProjectCard.tsx";
 import { useBearStore } from "../state/useBearStore.ts";
 import { startControllerGetStart, StartPageDto } from "../../src-gen";
-import { CMSCreateButton } from "../shared/cms/CMSCreateButton.tsx";
+import { CMSButton } from "../shared/cms/CMSButton.tsx";
+import { CMSEmptyHint } from "../shared/cms/CMSEmptyHint.tsx";
+import { useIsLoggedIn } from "../state/useIsLoggedIn.ts";
 
 export async function StartLoader(): Promise<StartPageDto> {
   return resultOrThrow(
@@ -21,6 +23,7 @@ export async function StartLoader(): Promise<StartPageDto> {
 export function Start(props: { context: AppContext }) {
   const loaderData: StartPageDto = useLoaderData();
   const navigate = useNavigate();
+  const isLoggedIn: boolean = useIsLoggedIn();
 
   return (
     <Stack
@@ -61,19 +64,18 @@ export function Start(props: { context: AppContext }) {
             <Stack>
               <h5>My Projects</h5>
               <Stack direction={"vertical"} gap={3} className={"flex-wrap"}>
-                <CMSCreateButton
+                <CMSButton
+                  disabled={!isLoggedIn}
                   title={"Create Project"}
                   icon={"plus-lg"}
                   onClick={async () => {
                     await navigate("/project/add");
                   }}
-                ></CMSCreateButton>
+                ></CMSButton>
                 {loaderData.myProjects.map((r) => (
                   <ProjectCard key={r.id} project={r}></ProjectCard>
                 ))}
-                {loaderData.myProjects.length === 0 && (
-                  <span className={"small text-muted"}>None</span>
-                )}
+                <CMSEmptyHint list={loaderData.myProjects}></CMSEmptyHint>
               </Stack>
             </Stack>
             <Stack>
@@ -82,9 +84,9 @@ export function Start(props: { context: AppContext }) {
                 {loaderData.collaborationProjects.map((r) => (
                   <ProjectCard key={r.id} project={r}></ProjectCard>
                 ))}
-                {loaderData.collaborationProjects.length === 0 && (
-                  <span className={"small text-muted"}>None</span>
-                )}
+                <CMSEmptyHint
+                  list={loaderData.collaborationProjects}
+                ></CMSEmptyHint>
               </Stack>
             </Stack>
           </Stack>

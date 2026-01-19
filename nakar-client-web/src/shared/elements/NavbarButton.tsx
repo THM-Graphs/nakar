@@ -54,6 +54,7 @@ export const NavbarButton = forwardRef<
         ref={ref}
         variant={"light"}
         type={props.buttonType}
+        disabled={disabled}
         onClick={(event: MouseEvent) => {
           (async () => {
             if (disabled) {
