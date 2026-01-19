@@ -1,5 +1,4 @@
 import { CMSNavbar } from "../shared/cms/CMSNavbar.tsx";
-import { AppContext } from "../state/AppContext.ts";
 import { Container, Stack } from "react-bootstrap";
 import { CMSFooter } from "../shared/cms/CMSFooter.tsx";
 import { LoaderFunctionArgs, useLoaderData, useNavigate } from "react-router";
@@ -28,13 +27,13 @@ export async function ProjectLoader(
   return project;
 }
 
-export function Project(props: { context: AppContext }) {
+export function Project() {
   const projectContext: ProjectPageDto = useLoaderData();
   const navigate = useNavigate();
 
   return (
     <Stack className={"justify-content-between h-100 bg-body-tertiary"}>
-      <CMSNavbar context={props.context} backUrl={".."}></CMSNavbar>
+      <CMSNavbar backUrl={".."}></CMSNavbar>
       <div className={"flex-grow-1 overflow-y-scroll"}>
         <Container className={"pb-5 pt-5"}>
           <Stack gap={5}>

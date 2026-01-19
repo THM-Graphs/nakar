@@ -5,10 +5,10 @@ import "bootstrap-icons/font/bootstrap-icons.css";
 import "./index.css";
 import { createBrowserRouter, RouterProvider } from "react-router";
 import { loadEnvOrDefault } from "./shared/env/env.ts";
-import { client as client2, redirectControllerGetUrl } from "../src-gen";
+import { client as client, redirectControllerGetUrl } from "../src-gen";
 import { Start, StartLoader } from "./pages/Start.tsx";
 import { CanvasLoader, CanvasPage } from "./pages/CanvasPage.tsx";
-import { AppContext } from "./state/AppContext.ts";
+import { AppContext, AppContextData } from "./state/AppContextData.ts";
 import { applyTheme, bootstrapTheme } from "./shared/theme/ThemeManager.ts";
 import { useBearStore } from "./state/useBearStore.ts";
 import { AuthModal } from "./shared/auth/AuthModal.tsx";
@@ -21,13 +21,13 @@ async function bootstrap() {
   bootstrapTheme();
 
   const env = await loadEnvOrDefault();
-  client2.setConfig({
+  client.setConfig({
     baseUrl: env.BACKEND_URL,
   });
 
   handleRedirect();
 
-  const context = new AppContext(env);
+  const context = new AppContextData(env);
 
   const getTheme = useBearStore.getState().global.theme.getTheme;
   useBearStore.subscribe(
@@ -46,7 +46,7 @@ async function bootstrap() {
   useBearStore.subscribe(
     (s) => s.global.auth.jwt,
     (jwt) => {
-      client2.setConfig({
+      client.setConfig({
         headers: {
           Authorization: jwt ? `Bearer ${jwt}` : null,
         },
@@ -62,26 +62,26 @@ async function bootstrap() {
       children: [
         {
           index: true,
-          element: <Start context={context}></Start>,
+          element: <Start></Start>,
           loader: StartLoader,
         },
         {
           path: "/canvas/:id",
-          element: <CanvasPage context={context}></CanvasPage>,
+          element: <CanvasPage></CanvasPage>,
           loader: CanvasLoader,
         },
         {
           path: "/project/add",
-          element: <AddEditProject context={context}></AddEditProject>,
+          element: <AddEditProject></AddEditProject>,
         },
         {
           path: "/project/:id/edit",
-          element: <AddEditProject context={context}></AddEditProject>,
+          element: <AddEditProject></AddEditProject>,
           loader: ProjectLoader,
         },
         {
           path: "/project/:id",
-          element: <Project context={context}></Project>,
+          element: <Project></Project>,
           loader: ProjectLoader,
         },
         {
@@ -94,8 +94,10 @@ async function bootstrap() {
   ]);
   createRoot(document.getElementById("root") as HTMLElement).render(
     <StrictMode>
-      <RouterProvider router={router} />
-      <AuthModal></AuthModal>
+      <AppContext.Provider value={context}>
+        <RouterProvider router={router} />
+        <AuthModal></AuthModal>
+      </AppContext.Provider>
     </StrictMode>,
   );
 }

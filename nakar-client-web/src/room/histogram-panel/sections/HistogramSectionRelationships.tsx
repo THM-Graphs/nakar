@@ -1,12 +1,11 @@
-import { CanvasContext } from "../../../pages/CanvasPage.tsx";
 import { ValueDisplay } from "../ValueDisplay.tsx";
 import { useBearStore } from "../../../state/useBearStore.ts";
 import { DynamicList } from "../../../shared/elements/DynamicList.tsx";
 import { relationshipActions } from "../../actions/groups/relationshipActions.ts";
+import { useCanvasContext } from "../../../pages/CanvasPage.tsx";
 
-export function HistogramSectionRelationships(props: {
-  roomContext: CanvasContext;
-}) {
+export function HistogramSectionRelationships() {
+  const roomContext = useCanvasContext();
   const histogram = useBearStore((s) => s.room.scenario.graph.histogram);
   const edges = useBearStore((s) => s.room.scenario.graph.elements.edges);
 
@@ -22,14 +21,13 @@ export function HistogramSectionRelationships(props: {
             <ValueDisplay
               label={entry.value}
               value={entry.count}
-              roomContext={props.roomContext}
               percentage={entry.percentage}
               key={entry.value}
               customActions={relationshipActions.map((action) =>
                 action.detailPaneAction(() => {
                   return {
                     edges: edges.filter((e) => e.type === entry.value),
-                    roomContext: props.roomContext,
+                    roomContext: roomContext,
                   };
                 }),
               )}

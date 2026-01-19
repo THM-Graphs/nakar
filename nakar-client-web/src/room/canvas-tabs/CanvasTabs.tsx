@@ -1,10 +1,10 @@
-import { CanvasContext } from "../../pages/CanvasPage.tsx";
+import { CanvasContextData } from "../../pages/CanvasPage.tsx";
 import { Stack } from "react-bootstrap";
 import { NavbarButton } from "../../shared/elements/NavbarButton.tsx";
 import { useNavigate } from "react-router";
 import clsx from "clsx";
 
-export function CanvasTabs(props: { canvasContext: CanvasContext }) {
+export function CanvasTabs(props: { canvasContext: CanvasContextData }) {
   const navigate = useNavigate();
 
   return (

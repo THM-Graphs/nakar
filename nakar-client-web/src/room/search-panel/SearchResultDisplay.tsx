@@ -4,13 +4,13 @@ import { Loading } from "../../shared/elements/Loading.tsx";
 import { Alert, Stack } from "react-bootstrap";
 import { Loadable } from "../../shared/data/Loadable.ts";
 import { DynamicList } from "../../shared/elements/DynamicList.tsx";
-import { CanvasContext } from "../../pages/CanvasPage.tsx";
+import { CanvasContextData } from "../../pages/CanvasPage.tsx";
 import { SearchResultEntry } from "./SearchResultEntry.tsx";
 import { NodePreviewDto } from "../../../src-gen";
 
 export function SearchResultDisplay(props: {
   result: Loadable<NodePreviewDto[] | null>;
-  roomContext: CanvasContext;
+  roomContext: CanvasContextData;
   databaseId: string;
 }) {
   return (

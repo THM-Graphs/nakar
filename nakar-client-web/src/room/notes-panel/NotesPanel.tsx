@@ -1,4 +1,4 @@
-import { CanvasContext } from "../../pages/CanvasPage.tsx";
+import { useCanvasContext } from "../../pages/CanvasPage.tsx";
 import { useBearStore } from "../../state/useBearStore.ts";
 import { Panel } from "../../shared/elements/Panel.tsx";
 import { Stack } from "react-bootstrap";
@@ -6,14 +6,11 @@ import { ActionNavbarButton } from "../actions/ActionNavbarButton.tsx";
 import { AddNoteAction } from "../actions/AddNoteAction.ts";
 import { DynamicList } from "../../shared/elements/DynamicList.tsx";
 import { NoteDisplay } from "./NoteDisplay.tsx";
-import { AppContext } from "../../state/AppContext.ts";
 import { NodeDto, NoteDto } from "../../../src-gen";
 import { useIsLoggedIn } from "../../state/useIsLoggedIn.ts";
 
-export function NotesPanel(props: {
-  context: AppContext;
-  roomContext: CanvasContext;
-}) {
+export function NotesPanel() {
+  const roomContext = useCanvasContext();
   const notesPanel = useBearStore((s) => s.room.panels.notes);
   const graphElements = useBearStore((s) => s.room.scenario.graph.elements);
   const elements = useBearStore((s) => s.room.panels.inspector.element);
@@ -41,7 +38,7 @@ export function NotesPanel(props: {
           action={AddNoteAction.shared}
           params={{
             nodes: selectedNodes,
-            roomContext: props.roomContext,
+            roomContext: roomContext,
             isLoggedIn,
           }}
         ></ActionNavbarButton>
@@ -50,11 +47,7 @@ export function NotesPanel(props: {
           render={(notes) => (
             <Stack gap={3}>
               {notes.map((note) => (
-                <NoteDisplay
-                  note={note}
-                  key={note.id}
-                  roomContext={props.roomContext}
-                ></NoteDisplay>
+                <NoteDisplay note={note} key={note.id}></NoteDisplay>
               ))}
             </Stack>
           )}

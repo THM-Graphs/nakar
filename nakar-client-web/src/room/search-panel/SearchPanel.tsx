@@ -9,14 +9,15 @@ import { useBearStore } from "../../state/useBearStore.ts";
 import { SearchForm } from "./SearchForm.tsx";
 import { SearchResultDisplay } from "./SearchResultDisplay.tsx";
 import { SearchCapabilitiesDisplay } from "./SearchCapabilitiesDisplay.tsx";
-import { CanvasContext } from "../../pages/CanvasPage.tsx";
 import {
   databaseConnectionControllerPerformSearch,
   NodePreviewDto,
   PostSearchResponseBodyDto,
 } from "../../../src-gen";
+import { useCanvasContext } from "../../pages/CanvasPage.tsx";
 
-export function SearchPanel(props: { roomContext: CanvasContext }) {
+export function SearchPanel() {
+  const roomContext = useCanvasContext();
   const [selectedDatabaseId, setSelectedDatabaseId] = useState<string | null>(
     null,
   );
@@ -46,7 +47,7 @@ export function SearchPanel(props: { roomContext: CanvasContext }) {
         await databaseConnectionControllerPerformSearch({
           path: {
             databaseId: selectedDatabaseId ?? "",
-            roomId: props.roomContext.initialRoomData.id,
+            roomId: roomContext.initialRoomData.id,
           },
           body: {
             searchTerm: searchTerm,
@@ -81,12 +82,12 @@ export function SearchPanel(props: { roomContext: CanvasContext }) {
             ></SearchForm>
             <SearchResultDisplay
               result={result}
-              roomContext={props.roomContext}
+              roomContext={roomContext}
               databaseId={selectedDatabaseId}
             ></SearchResultDisplay>
             <SearchCapabilitiesDisplay
               databaseId={selectedDatabaseId}
-              canvasContext={props.roomContext}
+              canvasContext={roomContext}
             ></SearchCapabilitiesDisplay>
           </>
         )}

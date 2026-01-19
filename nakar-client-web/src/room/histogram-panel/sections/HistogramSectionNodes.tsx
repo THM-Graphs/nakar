@@ -1,5 +1,5 @@
 import { ValueDisplay } from "../ValueDisplay.tsx";
-import { CanvasContext } from "../../../pages/CanvasPage.tsx";
+import { useCanvasContext } from "../../../pages/CanvasPage.tsx";
 import { useBearStore } from "../../../state/useBearStore.ts";
 import { DynamicList } from "../../../shared/elements/DynamicList.tsx";
 import { nodeActions } from "../../actions/groups/nodeActions.ts";
@@ -11,7 +11,8 @@ import { useColorSchema } from "../../color/useColorSchema.ts";
 import { LabelDto } from "../../../../src-gen";
 import { useIsLoggedIn } from "../../../state/useIsLoggedIn.ts";
 
-export function HistogramSectionNodes(props: { roomContext: CanvasContext }) {
+export function HistogramSectionNodes() {
+  const roomContext = useCanvasContext();
   const histogram = useBearStore((s) => s.room.scenario.graph.histogram);
   const setElement = useBearStore((s) => s.room.panels.inspector.setElement);
   const onCenter = useBearStore((s) => s.room.ui.rendererEvents.onCenter);
@@ -44,7 +45,6 @@ export function HistogramSectionNodes(props: { roomContext: CanvasContext }) {
             return (
               <ValueDisplay
                 key={nodeEntry.id}
-                roomContext={props.roomContext}
                 value={nodeEntry.degree}
                 percentage={nodeEntry.percentage}
                 label={nodeEntry.title}
@@ -59,7 +59,7 @@ export function HistogramSectionNodes(props: { roomContext: CanvasContext }) {
                     const node = nodes.find((n) => n.id === nodeEntry.id);
                     return {
                       nodes: node ? [node] : [],
-                      roomContext: props.roomContext,
+                      roomContext: roomContext,
                       isLoggedIn: isLoggedIn,
                     };
                   }),

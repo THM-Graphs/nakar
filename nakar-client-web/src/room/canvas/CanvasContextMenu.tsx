@@ -11,12 +11,13 @@ import { Dropdown } from "react-bootstrap";
 import { useBearStore } from "../../state/useBearStore.ts";
 import { nodeActions } from "../actions/groups/nodeActions.ts";
 import { ActionDropdownItem } from "../actions/ActionDropdownItem.tsx";
-import { CanvasContext } from "../../pages/CanvasPage.tsx";
 import { relationshipActions } from "../actions/groups/relationshipActions.ts";
 import { EdgeDto, NodeDto } from "../../../src-gen";
 import { useIsLoggedIn } from "../../state/useIsLoggedIn.ts";
+import { useCanvasContext } from "../../pages/CanvasPage.tsx";
 
-export function CanvasContextMenu(props: { roomContext: CanvasContext }) {
+export function CanvasContextMenu() {
+  const roomContext = useCanvasContext();
   const onShowNodeContextMenu = useBearStore(
     (s) => s.room.ui.rendererEvents.onShowNodeContextMenu,
   );
@@ -158,7 +159,7 @@ export function CanvasContextMenu(props: { roomContext: CanvasContext }) {
               action={action}
               params={{
                 nodes: selectedNodes,
-                roomContext: props.roomContext,
+                roomContext: roomContext,
                 isLoggedIn: isLoggedIn,
               }}
             ></ActionDropdownItem>
@@ -170,7 +171,7 @@ export function CanvasContextMenu(props: { roomContext: CanvasContext }) {
               action={action}
               params={{
                 edges: selectedEdges,
-                roomContext: props.roomContext,
+                roomContext: roomContext,
               }}
             ></ActionDropdownItem>
           ))}

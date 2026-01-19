@@ -1,11 +1,8 @@
 import { PropertyGroup } from "../PropertyGroup.tsx";
 import { useBearStore } from "../../../state/useBearStore.ts";
-import { CanvasContext } from "../../../pages/CanvasPage.tsx";
 import { DynamicList } from "../../../shared/elements/DynamicList.tsx";
 
-export function HistogramSectionRelationshipProperties(props: {
-  roomContext: CanvasContext;
-}) {
+export function HistogramSectionRelationshipProperties() {
   const histogram = useBearStore((s) => s.room.scenario.graph.histogram);
 
   return (
@@ -18,7 +15,6 @@ export function HistogramSectionRelationshipProperties(props: {
         <>
           {list.map((propertyEntry) => (
             <PropertyGroup
-              roomContext={props.roomContext}
               propertyEntry={propertyEntry}
               key={propertyEntry.key}
             ></PropertyGroup>

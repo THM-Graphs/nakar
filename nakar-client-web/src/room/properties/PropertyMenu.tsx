@@ -1,6 +1,5 @@
 import { Dropdown, Stack } from "react-bootstrap";
 import { useBearStore } from "../../state/useBearStore.ts";
-import { CanvasContext } from "../../pages/CanvasPage.tsx";
 import { PropertyMenuScenarioGroupEntry } from "./PropertyMenuScenarioGroupEntry.tsx";
 import { useClipboard } from "../../shared/clipboard/useClipboard.ts";
 import { DropdownButton } from "../../shared/elements/DropdownButton.tsx";
@@ -8,7 +7,6 @@ import { DetailPaneAction } from "../inspector-panel/DetailPaneAction.ts";
 
 export function PropertyMenu(props: {
   value: unknown;
-  roomContext: CanvasContext;
   buttonSize?: "sm";
   customActions?: DetailPaneAction[];
 }) {
@@ -78,7 +76,6 @@ export function PropertyMenu(props: {
             {parameterizedScenarios.map((scenarioGroup) => (
               <PropertyMenuScenarioGroupEntry
                 scenarioGroup={scenarioGroup}
-                roomContext={props.roomContext}
                 value={props.value}
                 key={scenarioGroup.id}
               ></PropertyMenuScenarioGroupEntry>

@@ -1,26 +1,24 @@
 import { Dropdown, Stack } from "react-bootstrap";
 import { ThemeDropdownEntries } from "./ThemeDropdownEntry.tsx";
-import { AppContext } from "../../state/AppContext.ts";
+import { useAppContext } from "../../state/AppContextData.ts";
 import { DropdownButton } from "../elements/DropdownButton.tsx";
 import { ClientInfoDropdownEntry } from "./ClientInfoDropdownEntry.tsx";
 import { ServerInfoDropdownEntry } from "./ServerInfoDropdownEntry.tsx";
 
-export function InfoDropdown(props: { context: AppContext }) {
+export function InfoDropdown() {
+  const context = useAppContext();
+
   return (
     <>
       <DropdownButton icon={"gear-fill"}>
         <Dropdown.Header>Theme</Dropdown.Header>
         <ThemeDropdownEntries></ThemeDropdownEntries>
         <Dropdown.Divider></Dropdown.Divider>
-        <ClientInfoDropdownEntry
-          context={props.context}
-        ></ClientInfoDropdownEntry>
-        <ServerInfoDropdownEntry
-          context={props.context}
-        ></ServerInfoDropdownEntry>
+        <ClientInfoDropdownEntry></ClientInfoDropdownEntry>
+        <ServerInfoDropdownEntry></ServerInfoDropdownEntry>
 
         <Dropdown.Item
-          href={props.context.env.BACKEND_URL + "/system/backup"}
+          href={context.env.BACKEND_URL + "/system/backup"}
           target={"_blank"}
           className={"small"}
         >

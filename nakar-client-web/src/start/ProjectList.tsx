@@ -1,5 +1,5 @@
 import { Stack } from "react-bootstrap";
-import { AppContext } from "../state/AppContext.ts";
+import { AppContextData } from "../state/AppContextData.ts";
 import { DynamicList } from "../shared/elements/DynamicList.tsx";
 import clsx from "clsx";
 import { CSSProperties } from "react";
@@ -9,7 +9,7 @@ import { StartPageProjectDto } from "../../src-gen";
 export function ProjectList(props: {
   title?: string;
   rooms: StartPageProjectDto[] | null;
-  context: AppContext;
+  context: AppContextData;
   className?: string;
   style?: CSSProperties;
 }) {

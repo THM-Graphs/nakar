@@ -1,10 +1,10 @@
 import { Action } from "./Action.ts";
-import { CanvasContext } from "../../pages/CanvasPage.tsx";
+import { CanvasContextData } from "../../pages/CanvasPage.tsx";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
 import { actionControllerReloadScenario, ScenarioDto } from "../../../src-gen";
 
 export type RerunScenarioActionParams = {
-  roomContext: CanvasContext;
+  roomContext: CanvasContextData;
   scenario: ScenarioDto | null;
 };
 

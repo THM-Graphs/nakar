@@ -4,14 +4,15 @@ import { useEffect, useState } from "react";
 import { DateTool } from "../../shared/data/DateTool.ts";
 import { NavbarButton } from "../../shared/elements/NavbarButton.tsx";
 import { DateTimeSpanSelect } from "../../shared/date-time-span-select/DateTimeSpanSelect.tsx";
-import { CanvasContext } from "../../pages/CanvasPage.tsx";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
 import {
   actionControllerLoadScenario,
   ScenarioArgumentDto,
 } from "../../../src-gen";
+import { useCanvasContext } from "../../pages/CanvasPage.tsx";
 
-export function CanvasBottomToolBar(props: { roomContext: CanvasContext }) {
+export function CanvasBottomToolBar() {
+  const roomContext = useCanvasContext();
   const metaData = useBearStore((s) => s.room.scenario.graph.metaData);
   const pushErrorNotification = useBearStore(
     (s) => s.room.ui.pushErrorNotification,
@@ -97,7 +98,7 @@ export function CanvasBottomToolBar(props: { roomContext: CanvasContext }) {
       try {
         await resultOrThrow(
           await actionControllerLoadScenario({
-            path: { canvasId: props.roomContext.initialCanvasData.id },
+            path: { canvasId: roomContext.initialCanvasData.id },
             body: {
               scenarioId: scenario.id,
               arguments: newArguments,

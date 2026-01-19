@@ -1,6 +1,6 @@
 import { Stack } from "react-bootstrap";
 import { Label } from "../labels/Label.tsx";
-import { CanvasContext } from "../../pages/CanvasPage.tsx";
+import { CanvasContextData } from "../../pages/CanvasPage.tsx";
 import { ClipboardButton } from "../../shared/elements/ClipboardButton.tsx";
 import { ActionNavbarButton } from "../actions/ActionNavbarButton.tsx";
 import { SpawnNodeAction } from "../actions/SpawnNodeAction.ts";
@@ -8,7 +8,7 @@ import { NodePreviewDto } from "../../../src-gen";
 
 export function SearchResultEntry(props: {
   node: NodePreviewDto;
-  roomContext: CanvasContext;
+  roomContext: CanvasContextData;
   databaseId: string;
 }) {
   return (
@@ -20,7 +20,6 @@ export function SearchResultEntry(props: {
               label={label}
               showAmount={false}
               showSources={false}
-              roomContext={props.roomContext}
               key={label}
               className={"z-2"}
             ></Label>

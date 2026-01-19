@@ -1,11 +1,11 @@
 import { Action } from "./Action.ts";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
-import { CanvasContext } from "../../pages/CanvasPage.tsx";
+import { CanvasContextData } from "../../pages/CanvasPage.tsx";
 import { noteControllerDeleteNote } from "../../../src-gen";
 
 export type RemoveNoteActionParams = {
   noteId: string;
-  roomContext: CanvasContext;
+  roomContext: CanvasContextData;
   isLoggedIn: boolean;
 };
 export class RemoveNoteAction extends Action<RemoveNoteActionParams> {

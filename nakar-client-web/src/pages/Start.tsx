@@ -1,6 +1,5 @@
 import { Container, Stack } from "react-bootstrap";
 import { useLoaderData, useNavigate } from "react-router";
-import { AppContext } from "../state/AppContext.ts";
 import { CMSNavbar } from "../shared/cms/CMSNavbar.tsx";
 import { CMSFooter } from "../shared/cms/CMSFooter.tsx";
 import { RoomCard } from "../shared/cms/RoomCard.tsx";
@@ -20,7 +19,7 @@ export async function StartLoader(): Promise<StartPageDto> {
   );
 }
 
-export function Start(props: { context: AppContext }) {
+export function Start() {
   const loaderData: StartPageDto = useLoaderData();
   const navigate = useNavigate();
   const isLoggedIn: boolean = useIsLoggedIn();
@@ -30,7 +29,7 @@ export function Start(props: { context: AppContext }) {
       style={{ height: "100%", width: "100%" }}
       className={"justify-content-start bg-body-tertiary"}
     >
-      <CMSNavbar context={props.context} backUrl={null}></CMSNavbar>
+      <CMSNavbar backUrl={null}></CMSNavbar>
       <div className={"overflow-auto mb-auto p-5"}>
         <Container>
           <Stack gap={5}>

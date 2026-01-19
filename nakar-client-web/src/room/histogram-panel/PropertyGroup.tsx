@@ -1,7 +1,6 @@
 import { Stack } from "react-bootstrap";
 import { Collapsable } from "../../shared/elements/Collapsable.tsx";
 import { ValueDisplay } from "./ValueDisplay.tsx";
-import { CanvasContext } from "../../pages/CanvasPage.tsx";
 import { DynamicList } from "../../shared/elements/DynamicList.tsx";
 
 export function PropertyGroup(props: {
@@ -13,7 +12,6 @@ export function PropertyGroup(props: {
       percentage: number;
     }>;
   };
-  roomContext: CanvasContext;
 }) {
   return (
     <Stack key={props.propertyEntry.key} className={""}>
@@ -41,7 +39,6 @@ export function PropertyGroup(props: {
                   value={valueEntry.count}
                   percentage={valueEntry.percentage}
                   key={valueEntry.value}
-                  roomContext={props.roomContext}
                 ></ValueDisplay>
               ))}
             </>

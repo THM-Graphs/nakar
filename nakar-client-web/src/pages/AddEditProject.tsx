@@ -1,6 +1,5 @@
 import { Button, Container, Form, Stack } from "react-bootstrap";
 import { CMSNavbar } from "../shared/cms/CMSNavbar.tsx";
-import { AppContext } from "../state/AppContext.ts";
 import { CMSFooter } from "../shared/cms/CMSFooter.tsx";
 import { match, P } from "ts-pattern";
 import { useState } from "react";
@@ -32,7 +31,7 @@ export async function AddEditProjectLoader(
   return project;
 }
 
-export function AddEditProject(props: { context: AppContext }) {
+export function AddEditProject() {
   const project: ProjectPageDto | null = useLoaderData();
 
   const [title, setTitle] = useState<string>(
@@ -48,7 +47,6 @@ export function AddEditProject(props: { context: AppContext }) {
       className={"justify-content-start bg-body-tertiary"}
     >
       <CMSNavbar
-        context={props.context}
         backUrl={match(project)
           .with(P.nullish, () => "/")
           .otherwise((p) => `/project/${p.id}`)}

@@ -1,4 +1,3 @@
-import { CanvasContext } from "../../pages/CanvasPage.tsx";
 import { useState } from "react";
 import { Stack } from "react-bootstrap";
 import clsx from "clsx";
@@ -9,7 +8,6 @@ import { PropertyEntry } from "./PropertiesDisplay.tsx";
 
 export function PropertyDisplay(props: {
   property: PropertyEntry;
-  roomContext: CanvasContext;
   index: number;
 }) {
   const property = props.property;
@@ -70,10 +68,7 @@ export function PropertyDisplay(props: {
           : stringValue}
       </span>
       <div className={"me-auto"}></div>
-      <PropertyMenu
-        value={property.value}
-        roomContext={props.roomContext}
-      ></PropertyMenu>
+      <PropertyMenu value={property.value}></PropertyMenu>
     </Stack>
   );
 }

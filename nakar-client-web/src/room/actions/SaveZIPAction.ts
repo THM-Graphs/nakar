@@ -1,7 +1,7 @@
 import { Action } from "./Action.ts";
-import { AppContext } from "../../state/AppContext.ts";
+import { AppContextData } from "../../state/AppContextData.ts";
 
-export type SaveZIPActionParams = { context: AppContext };
+export type SaveZIPActionParams = { context: AppContextData };
 
 export class SaveZIPAction extends Action<SaveZIPActionParams> {
   public static shared: SaveZIPAction = new SaveZIPAction();

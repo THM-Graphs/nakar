@@ -5,16 +5,14 @@ import { NodePreviewDisplay } from "../inspector-panel/NodePreviewDisplay.tsx";
 import clsx from "clsx";
 import { ActionNavbarButton } from "../actions/ActionNavbarButton.tsx";
 import { RemoveNoteAction } from "../actions/RemoveNoteAction.ts";
-import { CanvasContext } from "../../pages/CanvasPage.tsx";
+import { useCanvasContext } from "../../pages/CanvasPage.tsx";
 import { DynamicList } from "../../shared/elements/DynamicList.tsx";
 import { EditNoteAction } from "../actions/EditNoteAction.ts";
 import { NoteDto } from "../../../src-gen";
 import { useIsLoggedIn } from "../../state/useIsLoggedIn.ts";
 
-export function NoteDisplay(props: {
-  note: NoteDto;
-  roomContext: CanvasContext;
-}) {
+export function NoteDisplay(props: { note: NoteDto }) {
+  const roomContext = useCanvasContext();
   const note = props.note;
   const isLoggedIn = useIsLoggedIn();
 
@@ -94,7 +92,7 @@ export function NoteDisplay(props: {
           action={RemoveNoteAction.shared}
           params={{
             noteId: props.note.id,
-            roomContext: props.roomContext,
+            roomContext: roomContext,
             isLoggedIn: isLoggedIn,
           }}
           hideTitle={true}

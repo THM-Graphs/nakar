@@ -1,12 +1,12 @@
 import { Action } from "./Action.ts";
-import { CanvasContext } from "../../pages/CanvasPage.tsx";
+import { CanvasContextData } from "../../pages/CanvasPage.tsx";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
 import { SelectedCanvasTab } from "../../state/SelectedCanvasTab.ts";
 import { actionControllerUnlockAllNodes, NodeDto } from "../../../src-gen";
 
 export type UnlockAllNodesActionParams = {
   nodes: NodeDto[];
-  roomContext: CanvasContext;
+  roomContext: CanvasContextData;
   selectedTab: SelectedCanvasTab;
 };
 

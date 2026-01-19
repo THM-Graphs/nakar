@@ -1,17 +1,12 @@
 import { Labels } from "../labels/Labels.tsx";
 import { DataTable } from "../data-table/DataTable.tsx";
 import { useBearStore } from "../../state/useBearStore.ts";
-import { AppContext } from "../../state/AppContext.ts";
-import { CanvasContext } from "../../pages/CanvasPage.tsx";
 import { Stack } from "react-bootstrap";
 import { CanvasBottomToolBar } from "./CanvasBottomToolBar.tsx";
 import { PerformanceDisplay } from "./PerformanceDisplay.tsx";
 import { ProgressDisplay } from "../../shared/bars/ProgressDisplay.tsx";
 
-export function Canvas(props: {
-  context: AppContext;
-  roomContext: CanvasContext;
-}) {
+export function Canvas() {
   const tabs = useBearStore((s) => s.room.canvas.tabs);
 
   return (
@@ -24,13 +19,11 @@ export function Canvas(props: {
         <Stack className={"justify-content-between"}>
           <Stack direction={"horizontal"} className={"justify-content-between"}>
             <Stack className={"z-1 flex-grow-0"} gap={1}>
-              <Labels roomContext={props.roomContext}></Labels>
+              <Labels></Labels>
               <ProgressDisplay></ProgressDisplay>
             </Stack>
           </Stack>
-          <CanvasBottomToolBar
-            roomContext={props.roomContext}
-          ></CanvasBottomToolBar>
+          <CanvasBottomToolBar></CanvasBottomToolBar>
           <PerformanceDisplay></PerformanceDisplay>
         </Stack>
       ) : (

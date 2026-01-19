@@ -1,6 +1,6 @@
 import { Stack } from "react-bootstrap";
 import { AppNavbar } from "../shared/bars/AppNavbar.tsx";
-import { useEffect } from "react";
+import { Context, createContext, useContext, useEffect } from "react";
 import { LoaderFunctionArgs, useLoaderData, useNavigate } from "react-router";
 import { resultOrThrow } from "../shared/data/resultOrThrow.ts";
 import { ToastStack } from "../shared/bars/ToastStack.tsx";
@@ -11,7 +11,6 @@ import { ReconnectOverlay } from "../shared/socket/ReconnectOverlay.tsx";
 import { NavbarLogo } from "../shared/bars/NavbarLogo.tsx";
 import { InspectorPanel } from "../room/inspector-panel/InspectorPanel.tsx";
 import { useBearStore } from "../state/useBearStore.ts";
-import { AppContext } from "../state/AppContext.ts";
 import { ScenariosPanel } from "../room/scenarios-panel/ScenariosPanel.tsx";
 import { InspectorPanelButton } from "../room/inspector-panel/InspectorPanelButton.tsx";
 import { HistogramPanelButton } from "../room/histogram-panel/HistogramPanelButton.tsx";
@@ -43,8 +42,20 @@ import {
 } from "../../src-gen";
 import { CanvasToolbar } from "../room/canvas/CanvasToolbar.tsx";
 import { GraphDataToggle } from "../room/data-table/GraphDataToggle.tsx";
+import { useAppContext } from "../state/AppContextData.ts";
 
-export type CanvasContext = {
+const CanvasContext: Context<CanvasContextData | null> =
+  createContext<CanvasContextData | null>(null);
+
+export function useCanvasContext(): CanvasContextData {
+  const canvasContext = useContext(CanvasContext);
+  if (canvasContext == null) {
+    throw new Error("Context Provider Error.");
+  }
+  return canvasContext;
+}
+
+export type CanvasContextData = {
   initialCanvasData: CanvasDto;
   initialScenariosData: ScenarioCollectionDto;
   initialRoomData: RoomDto;
@@ -52,7 +63,7 @@ export type CanvasContext = {
 
 export async function CanvasLoader(
   args: LoaderFunctionArgs,
-): Promise<CanvasContext> {
+): Promise<CanvasContextData> {
   const canvasId = args.params["id"];
 
   if (canvasId == null) {
@@ -70,8 +81,9 @@ export async function CanvasLoader(
   };
 }
 
-export function CanvasPage(props: { context: AppContext }) {
-  const roomContext: CanvasContext = useLoaderData();
+export function CanvasPage() {
+  const context = useAppContext();
+  const canvasContext: CanvasContextData = useLoaderData();
   const setGraph = useBearStore((s) => s.room.scenario.setGraph);
   const setGraphElements = useBearStore(
     (s) => s.room.scenario.setGraphElements,
@@ -84,7 +96,7 @@ export function CanvasPage(props: { context: AppContext }) {
   const setProgress = useBearStore((s) => s.room.ui.setProgress);
   const clearProgress = useBearStore((s) => s.room.ui.clearProgress);
   const clearPerformance = useBearStore((s) => s.room.ui.clearPerformance);
-  const webSockets = props.context.webSocketsManager;
+  const webSockets = context.webSocketsManager;
   const setPerformance = useBearStore((s) => s.room.ui.setPerformance);
   const setScenarios = useBearStore(
     (s) => s.room.panels.scenarios.setScenarios,
@@ -100,15 +112,15 @@ export function CanvasPage(props: { context: AppContext }) {
   const rightPanel = useBearStore((s) => s.room.panels.right);
 
   useEffect(() => {
-    webSockets.connect(roomContext.initialCanvasData.id);
+    webSockets.connect(canvasContext.initialCanvasData.id);
     return () => {
       webSockets.disconnect();
     };
-  }, [roomContext.initialCanvasData.id]);
+  }, [canvasContext.initialCanvasData.id]);
 
   useEffect(() => {
-    setScenarios(roomContext.initialScenariosData);
-  }, [roomContext]);
+    setScenarios(canvasContext.initialScenariosData);
+  }, [canvasContext]);
 
   useEffect(() => {
     if (socketState.type === "connected") {
@@ -182,7 +194,7 @@ export function CanvasPage(props: { context: AppContext }) {
   }, [webSockets]);
 
   return (
-    <>
+    <CanvasContext.Provider value={canvasContext}>
       <Stack style={{ height: "100%" }} className={"position-relative"}>
         <Stack gap={1} className={"pb-3"}>
           <Stack className="flex-grow-0 flex-shrink-0">
@@ -200,10 +212,7 @@ export function CanvasPage(props: { context: AppContext }) {
                         <NavbarLogo></NavbarLogo>
                       </ActionNavbarButton>
                     </Stack>
-                    <MenuBar
-                      context={props.context}
-                      roomContext={roomContext}
-                    ></MenuBar>
+                    <MenuBar></MenuBar>
                   </Stack>
                 </>
               }
@@ -217,8 +226,6 @@ export function CanvasPage(props: { context: AppContext }) {
               className=""
             ></AppNavbar>
             <CanvasToolbar
-              context={props.context}
-              roomContext={roomContext}
               className={"border-bottom bg-body-tertiary"}
             ></CanvasToolbar>
           </Stack>
@@ -243,38 +250,15 @@ export function CanvasPage(props: { context: AppContext }) {
                 className={"rounded-bottom-end"}
               ></SearchPanelButton>
             </Stack>
-            {leftPanel === "scenarios" && (
-              <ScenariosPanel
-                context={props.context}
-                roomContext={roomContext}
-              ></ScenariosPanel>
-            )}
-            {leftPanel === "query" && (
-              <QueryPanel roomContext={roomContext}></QueryPanel>
-            )}
-            {leftPanel === "notes" && (
-              <NotesPanel
-                roomContext={roomContext}
-                context={props.context}
-              ></NotesPanel>
-            )}
-            {leftPanel === "search" && (
-              <SearchPanel roomContext={roomContext}></SearchPanel>
-            )}
-            <Canvas context={props.context} roomContext={roomContext}></Canvas>
-            {rightPanel === "inspector" && (
-              <InspectorPanel
-                context={props.context}
-                roomContext={roomContext}
-              ></InspectorPanel>
-            )}
-            {rightPanel === "histogram" && (
-              <HistogramPanel roomContext={roomContext}></HistogramPanel>
-            )}
+            {leftPanel === "scenarios" && <ScenariosPanel></ScenariosPanel>}
+            {leftPanel === "query" && <QueryPanel></QueryPanel>}
+            {leftPanel === "notes" && <NotesPanel></NotesPanel>}
+            {leftPanel === "search" && <SearchPanel></SearchPanel>}
+            <Canvas></Canvas>
+            {rightPanel === "inspector" && <InspectorPanel></InspectorPanel>}
+            {rightPanel === "histogram" && <HistogramPanel></HistogramPanel>}
             {rightPanel === "visualization" && (
-              <VisualizationPanel
-                roomContext={roomContext}
-              ></VisualizationPanel>
+              <VisualizationPanel></VisualizationPanel>
             )}
             <Stack
               className={"align-self-start flex-grow-0 flex-shrink-0"}
@@ -302,17 +286,12 @@ export function CanvasPage(props: { context: AppContext }) {
             <ReconnectOverlay></ReconnectOverlay>
           )}
         </Stack>
-        <GraphRendererD3
-          context={props.context}
-          roomContext={roomContext}
-        ></GraphRendererD3>
+        <GraphRendererD3></GraphRendererD3>
         <ToastStack></ToastStack>
-        <RunScenarioModal roomContext={roomContext}></RunScenarioModal>
-        <ExpandNodePreviewModal
-          roomContext={roomContext}
-        ></ExpandNodePreviewModal>
-        <AddEditNoteModal roomContext={roomContext}></AddEditNoteModal>
+        <RunScenarioModal></RunScenarioModal>
+        <ExpandNodePreviewModal></ExpandNodePreviewModal>
+        <AddEditNoteModal></AddEditNoteModal>
       </Stack>
-    </>
+    </CanvasContext.Provider>
   );
 }

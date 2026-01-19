@@ -1,7 +1,7 @@
 import { useBearStore } from "../../state/useBearStore.ts";
 import { Modal, Stack } from "react-bootstrap";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
-import { CanvasContext } from "../../pages/CanvasPage.tsx";
+import { useCanvasContext } from "../../pages/CanvasPage.tsx";
 import { Panel } from "../../shared/elements/Panel.tsx";
 import { NavbarButton } from "../../shared/elements/NavbarButton.tsx";
 import { ScenarioIcon } from "../scenarios-panel/ScenarioIcon.tsx";
@@ -9,7 +9,8 @@ import { ArgumentDisplay } from "./ArgumentDisplay.tsx";
 import { ScnearioPlayButton } from "../scenarios-panel/ScenarioPlayButton.tsx";
 import { actionControllerLoadScenario } from "../../../src-gen";
 
-export function RunScenarioModal(props: { roomContext: CanvasContext }) {
+export function RunScenarioModal() {
+  const roomContext = useCanvasContext();
   const pushErrorNotification = useBearStore(
     (s) => s.room.ui.pushErrorNotification,
   );
@@ -39,7 +40,7 @@ export function RunScenarioModal(props: { roomContext: CanvasContext }) {
     try {
       await resultOrThrow(
         await actionControllerLoadScenario({
-          path: { canvasId: props.roomContext.initialCanvasData.id },
+          path: { canvasId: roomContext.initialCanvasData.id },
           body: {
             scenarioId: scenario.id,
             arguments: scenarioArguments,

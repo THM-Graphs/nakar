@@ -1,13 +1,9 @@
 import { ScenarioGroupDisplay } from "./ScenarioGroupDisplay.tsx";
 import { Stack } from "react-bootstrap";
-import { AppContext } from "../../state/AppContext.ts";
-import { CanvasContext } from "../../pages/CanvasPage.tsx";
 import { ScenarioGroupDto } from "../../../src-gen";
 
 export function ScenarioGroupList(props: {
   scenarioGroups: ScenarioGroupDto[];
-  context: AppContext;
-  roomContext: CanvasContext;
 }) {
   return (
     <Stack className={"flex-grow-0 pb-5"}>
@@ -20,10 +16,8 @@ export function ScenarioGroupList(props: {
       )}
       {props.scenarioGroups.map((scenarioGroup: ScenarioGroupDto) => (
         <ScenarioGroupDisplay
-          context={props.context}
           key={scenarioGroup.id}
           scenarioGroup={scenarioGroup}
-          roomContext={props.roomContext}
         ></ScenarioGroupDisplay>
       ))}
     </Stack>

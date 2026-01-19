@@ -2,7 +2,6 @@ import clsx from "clsx";
 import { Stack } from "react-bootstrap";
 import { NavbarButton } from "../../shared/elements/NavbarButton.tsx";
 import { PropertyMenu } from "../properties/PropertyMenu.tsx";
-import { CanvasContext } from "../../pages/CanvasPage.tsx";
 import { NodeLabelColors } from "../labels/NodeLabelColors.tsx";
 import { DetailPaneAction } from "../inspector-panel/DetailPaneAction.ts";
 
@@ -13,7 +12,6 @@ export function ValueDisplay(props: {
   percentage: number | null;
   nodeColors?: string[];
   onSelect?: () => void | Promise<void>;
-  roomContext: CanvasContext;
   customActions?: DetailPaneAction[];
 }) {
   return (
@@ -65,7 +63,6 @@ export function ValueDisplay(props: {
             )}
           </span>
           <PropertyMenu
-            roomContext={props.roomContext}
             value={props.label}
             buttonSize={"sm"}
             customActions={props.customActions}

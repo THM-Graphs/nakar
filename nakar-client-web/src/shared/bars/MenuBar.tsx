@@ -4,10 +4,9 @@ import { ThemeDropdownEntries } from "./ThemeDropdownEntry.tsx";
 import { ColorSchemaDropdownEntries } from "./ColorSchemaDropdownEntries.tsx";
 import { ClientInfoDropdownEntry } from "./ClientInfoDropdownEntry.tsx";
 import { ServerInfoDropdownEntry } from "./ServerInfoDropdownEntry.tsx";
-import { AppContext } from "../../state/AppContext.ts";
 import { ActionDropdownItem } from "../../room/actions/ActionDropdownItem.tsx";
 import { useBearStore } from "../../state/useBearStore.ts";
-import { CanvasContext } from "../../pages/CanvasPage.tsx";
+import { useCanvasContext } from "../../pages/CanvasPage.tsx";
 import { CreateScenarioAction } from "../../room/actions/CreateScenarioAction.ts";
 import { CreateScenarioGroupAction } from "../../room/actions/CreateScenarioGroupAction.ts";
 import { SaveSVGAction } from "../../room/actions/SaveSVGAction.ts";
@@ -33,11 +32,11 @@ import { nodeActions } from "../../room/actions/groups/nodeActions.ts";
 import { relationshipActions } from "../../room/actions/groups/relationshipActions.ts";
 import { EdgeDto, NodeDto } from "../../../src-gen";
 import { useIsLoggedIn } from "../../state/useIsLoggedIn.ts";
+import { useAppContext } from "../../state/AppContextData.ts";
 
-export function MenuBar(props: {
-  context: AppContext;
-  roomContext: CanvasContext;
-}) {
+export function MenuBar() {
+  const context = useAppContext();
+  const roomContext = useCanvasContext();
   const graphElements = useBearStore((s) => s.room.scenario.graph.elements);
   const setElements = useBearStore((s) => s.room.panels.inspector.setElements);
   const elements = useBearStore((s) => s.room.panels.inspector.element);
@@ -102,17 +101,17 @@ export function MenuBar(props: {
         <ActionDropdownItem
           action={CreateScenarioAction.shared}
           params={{
-            roomContext: props.roomContext,
+            roomContext: roomContext,
           }}
         ></ActionDropdownItem>
         <ActionDropdownItem
           action={CreateScenarioGroupAction.shared}
-          params={{ roomContext: props.roomContext }}
+          params={{ roomContext: roomContext }}
         ></ActionDropdownItem>
         <Dropdown.Divider></Dropdown.Divider>
         <ActionDropdownItem
           action={SaveZIPAction.shared}
-          params={{ context: props.context }}
+          params={{ context: context }}
         ></ActionDropdownItem>
         <Dropdown.Divider></Dropdown.Divider>
         <ActionDropdownItem
@@ -123,11 +122,11 @@ export function MenuBar(props: {
       <DropdownButton title={"Edit"}>
         <ActionDropdownItem
           action={UndoAction.shared}
-          params={{ roomContext: props.roomContext, undoAction }}
+          params={{ roomContext: roomContext, undoAction }}
         ></ActionDropdownItem>
         <ActionDropdownItem
           action={RedoAction.shared}
-          params={{ roomContext: props.roomContext, redoAction }}
+          params={{ roomContext: roomContext, redoAction }}
         ></ActionDropdownItem>
         <Dropdown.Divider></Dropdown.Divider>
         <ActionDropdownItem
@@ -143,7 +142,7 @@ export function MenuBar(props: {
         <ActionDropdownItem
           action={RerunScenarioAction.shared}
           params={{
-            roomContext: props.roomContext,
+            roomContext: roomContext,
             scenario: scenario,
           }}
         ></ActionDropdownItem>
@@ -154,7 +153,7 @@ export function MenuBar(props: {
           params={{
             selectedTab,
             nodes: graphElements.nodes,
-            roomContext: props.roomContext,
+            roomContext: roomContext,
           }}
         ></ActionDropdownItem>
         <ActionDropdownItem
@@ -162,7 +161,7 @@ export function MenuBar(props: {
           params={{
             selectedTab,
             nodes: graphElements.nodes,
-            roomContext: props.roomContext,
+            roomContext: roomContext,
           }}
         ></ActionDropdownItem>
         <Dropdown.Divider></Dropdown.Divider>
@@ -171,7 +170,7 @@ export function MenuBar(props: {
           params={{
             selectedTab,
             scenario: scenario,
-            roomContext: props.roomContext,
+            roomContext: roomContext,
           }}
         ></ActionDropdownItem>
         <ActionDropdownItem
@@ -179,7 +178,7 @@ export function MenuBar(props: {
           params={{
             selectedTab,
             scenario: scenario,
-            roomContext: props.roomContext,
+            roomContext: roomContext,
           }}
         ></ActionDropdownItem>
         <ActionDropdownItem
@@ -187,7 +186,7 @@ export function MenuBar(props: {
           params={{
             selectedTab,
             scenario: scenario,
-            roomContext: props.roomContext,
+            roomContext: roomContext,
           }}
         ></ActionDropdownItem>
         <Dropdown.Divider></Dropdown.Divider>
@@ -204,7 +203,7 @@ export function MenuBar(props: {
             key={action.slug()}
             action={action}
             params={{
-              roomContext: props.roomContext,
+              roomContext: roomContext,
               nodes: selectedNodes,
               isLoggedIn: isLoggedIn,
             }}
@@ -216,7 +215,7 @@ export function MenuBar(props: {
           <ActionDropdownItem
             key={action.slug()}
             action={action}
-            params={{ roomContext: props.roomContext, edges: selectedEdges }}
+            params={{ roomContext: roomContext, edges: selectedEdges }}
           ></ActionDropdownItem>
         ))}
       </DropdownButton>
@@ -383,12 +382,8 @@ export function MenuBar(props: {
         )}
       </DropdownButton>
       <DropdownButton title={"Help"}>
-        <ClientInfoDropdownEntry
-          context={props.context}
-        ></ClientInfoDropdownEntry>
-        <ServerInfoDropdownEntry
-          context={props.context}
-        ></ServerInfoDropdownEntry>
+        <ClientInfoDropdownEntry></ClientInfoDropdownEntry>
+        <ServerInfoDropdownEntry></ServerInfoDropdownEntry>
       </DropdownButton>
     </Stack>
   );

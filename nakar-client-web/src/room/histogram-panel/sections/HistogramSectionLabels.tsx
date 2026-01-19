@@ -1,5 +1,5 @@
 import { ValueDisplay } from "../ValueDisplay.tsx";
-import { CanvasContext } from "../../../pages/CanvasPage.tsx";
+import { useCanvasContext } from "../../../pages/CanvasPage.tsx";
 import { useBearStore } from "../../../state/useBearStore.ts";
 import { DynamicList } from "../../../shared/elements/DynamicList.tsx";
 import { labelActions } from "../../actions/groups/labelActions.ts";
@@ -7,7 +7,8 @@ import { getBackgroundColorOfLabel } from "../../color/getBackgroundColor.ts";
 import { useColorSchema } from "../../color/useColorSchema.ts";
 import { SelectAllNodesOfLabel } from "../../actions/SelectAllNodesOfLabel.ts";
 
-export function HistogramSectionLabels(props: { roomContext: CanvasContext }) {
+export function HistogramSectionLabels() {
+  const roomContext = useCanvasContext();
   const labels = useBearStore((s) => s.room.scenario.graph.elements.labels);
   const histogram = useBearStore((s) => s.room.scenario.graph.histogram);
   const colorSchema = useColorSchema();
@@ -26,7 +27,6 @@ export function HistogramSectionLabels(props: { roomContext: CanvasContext }) {
 
             return (
               <ValueDisplay
-                roomContext={props.roomContext}
                 label={entry.value}
                 subLabel={
                   label && label.sources.length > 0
@@ -36,7 +36,7 @@ export function HistogramSectionLabels(props: { roomContext: CanvasContext }) {
                 onSelect={() => {
                   SelectAllNodesOfLabel.shared.runAsync({
                     labels: [entry.value],
-                    roomContext: props.roomContext,
+                    roomContext: roomContext,
                   });
                 }}
                 value={entry.count}
@@ -48,7 +48,7 @@ export function HistogramSectionLabels(props: { roomContext: CanvasContext }) {
                 customActions={labelActions.map((action) =>
                   action.detailPaneAction(() => ({
                     labels: [entry.value],
-                    roomContext: props.roomContext,
+                    roomContext: roomContext,
                   })),
                 )}
               ></ValueDisplay>

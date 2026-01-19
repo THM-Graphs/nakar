@@ -6,8 +6,7 @@ import { HideLabelsAction } from "../actions/HideLabelsAction.ts";
 import { ZoomInAction } from "../actions/ZoomInAction.ts";
 import { ZoomOutAction } from "../actions/ZoomOutAction.ts";
 import { RelayoutAction } from "../actions/RelayoutAction.ts";
-import { AppContext } from "../../state/AppContext.ts";
-import { CanvasContext } from "../../pages/CanvasPage.tsx";
+import { useCanvasContext } from "../../pages/CanvasPage.tsx";
 import { UnlockAllNodesAction } from "../actions/UnlockAllNodesAction.ts";
 import { ConnectResultNodesAction } from "../actions/ConnectResultNodesAction.ts";
 import { RemoveDanglingNodesAction } from "../actions/RemoveDanglingNodesAction.ts";
@@ -26,10 +25,8 @@ import { FocusNodesAction } from "../actions/FocusNodesAction.ts";
 import { ShowShortestPathAction } from "../actions/ShowShortestPathAction.ts";
 import { useIsLoggedIn } from "../../state/useIsLoggedIn.ts";
 
-export function CanvasActions(props: {
-  context: AppContext;
-  roomContext: CanvasContext;
-}) {
+export function CanvasActions() {
+  const roomContext = useCanvasContext();
   const rendererEvents = useBearStore((s) => s.room.ui.rendererEvents);
   const element = useBearStore((s) => s.room.panels.inspector.element);
   const nodes = useBearStore((s) => s.room.scenario.graph.elements.nodes);
@@ -59,7 +56,7 @@ export function CanvasActions(props: {
         <ActionNavbarButton
           action={UndoAction.shared}
           params={{
-            roomContext: props.roomContext,
+            roomContext: roomContext,
             undoAction: undoAction,
           }}
           hideTitle={true}
@@ -68,7 +65,7 @@ export function CanvasActions(props: {
         <ActionNavbarButton
           action={RedoAction.shared}
           params={{
-            roomContext: props.roomContext,
+            roomContext: roomContext,
             redoAction,
           }}
           hideTitle={true}
@@ -121,7 +118,7 @@ export function CanvasActions(props: {
         <CanvasActionsAction
           action={RelayoutAction.shared}
           params={{
-            roomContext: props.roomContext,
+            roomContext: roomContext,
             nodes,
             selectedTab,
           }}
@@ -129,7 +126,7 @@ export function CanvasActions(props: {
         <CanvasActionsAction
           action={UnlockAllNodesAction.shared}
           params={{
-            roomContext: props.roomContext,
+            roomContext: roomContext,
             nodes,
             selectedTab,
           }}
@@ -137,7 +134,7 @@ export function CanvasActions(props: {
         <CanvasActionsAction
           action={RerunScenarioAction.shared}
           params={{
-            roomContext: props.roomContext,
+            roomContext: roomContext,
             scenario: scenario,
           }}
         ></CanvasActionsAction>
@@ -147,7 +144,7 @@ export function CanvasActions(props: {
           action={ExpandNodePreviewAction.shared}
           params={{
             nodes: selectedNodes,
-            roomContext: props.roomContext,
+            roomContext: roomContext,
             isLoggedIn: isLoggedIn,
           }}
         ></CanvasActionsAction>
@@ -155,7 +152,7 @@ export function CanvasActions(props: {
           action={ExpandNodeAction.shared}
           params={{
             nodes: selectedNodes,
-            roomContext: props.roomContext,
+            roomContext: roomContext,
             isLoggedIn: isLoggedIn,
           }}
         ></CanvasActionsAction>
@@ -163,7 +160,7 @@ export function CanvasActions(props: {
           action={RemoveNodesAction.shared}
           params={{
             nodes: selectedNodes,
-            roomContext: props.roomContext,
+            roomContext: roomContext,
             isLoggedIn: isLoggedIn,
           }}
         ></CanvasActionsAction>
@@ -171,7 +168,7 @@ export function CanvasActions(props: {
           action={FocusNodesAction.shared}
           params={{
             nodes: selectedNodes,
-            roomContext: props.roomContext,
+            roomContext: roomContext,
             isLoggedIn: isLoggedIn,
           }}
         ></CanvasActionsAction>
@@ -179,7 +176,7 @@ export function CanvasActions(props: {
           action={ShowShortestPathAction.shared}
           params={{
             nodes: selectedNodes,
-            roomContext: props.roomContext,
+            roomContext: roomContext,
             isLoggedIn: isLoggedIn,
           }}
         ></CanvasActionsAction>
@@ -188,7 +185,7 @@ export function CanvasActions(props: {
         <CanvasActionsAction
           action={ConnectResultNodesAction.shared}
           params={{
-            roomContext: props.roomContext,
+            roomContext: roomContext,
             scenario: scenario,
             selectedTab,
           }}
@@ -196,7 +193,7 @@ export function CanvasActions(props: {
         <CanvasActionsAction
           action={RemoveDanglingNodesAction.shared}
           params={{
-            roomContext: props.roomContext,
+            roomContext: roomContext,
             scenario: scenario,
             selectedTab,
           }}
@@ -204,7 +201,7 @@ export function CanvasActions(props: {
         <CanvasActionsAction
           action={CompressRelationshipsAction.shared}
           params={{
-            roomContext: props.roomContext,
+            roomContext: roomContext,
             scenario: scenario,
             selectedTab,
           }}

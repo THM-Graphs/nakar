@@ -1,14 +1,10 @@
 import { AppNavbar } from "../bars/AppNavbar.tsx";
 import { NavbarLogo } from "../bars/NavbarLogo.tsx";
 import { InfoDropdown } from "../bars/InfoDropdown.tsx";
-import { AppContext } from "../../state/AppContext.ts";
 import { NavbarButton } from "../elements/NavbarButton.tsx";
 import { useNavigate } from "react-router";
 
-export function CMSNavbar(props: {
-  context: AppContext;
-  backUrl: string | null;
-}) {
+export function CMSNavbar(props: { backUrl: string | null }) {
   const navigate = useNavigate();
   return (
     <AppNavbar
@@ -25,7 +21,7 @@ export function CMSNavbar(props: {
         </>
       }
       center={<NavbarLogo></NavbarLogo>}
-      right={<InfoDropdown context={props.context}></InfoDropdown>}
+      right={<InfoDropdown></InfoDropdown>}
     ></AppNavbar>
   );
 }

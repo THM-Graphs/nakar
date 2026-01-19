@@ -1,6 +1,4 @@
 import { Stack } from "react-bootstrap";
-import { AppContext } from "../../state/AppContext.ts";
-import { CanvasContext } from "../../pages/CanvasPage.tsx";
 import { DynamicList } from "../../shared/elements/DynamicList.tsx";
 import { ScenarioDisplay } from "./ScenarioDisplay.tsx";
 import { ScenarioDto, ScenarioGroupDto } from "../../../src-gen";
@@ -8,8 +6,6 @@ import { ScenarioDto, ScenarioGroupDto } from "../../../src-gen";
 export function ScenarioGroupDisplay(props: {
   scenarioGroup: ScenarioGroupDto;
   hidden?: boolean;
-  context: AppContext;
-  roomContext: CanvasContext;
 }) {
   return (
     <DynamicList
@@ -30,8 +26,6 @@ export function ScenarioGroupDisplay(props: {
                   <ScenarioDisplay
                     key={scenario.id}
                     scenario={scenario}
-                    context={props.context}
-                    roomContext={props.roomContext}
                   ></ScenarioDisplay>
                 ))}
               </Stack>

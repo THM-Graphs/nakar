@@ -1,4 +1,4 @@
-import { CanvasContext } from "../../pages/CanvasPage.tsx";
+import { useCanvasContext } from "../../pages/CanvasPage.tsx";
 import { useBearStore } from "../../state/useBearStore.ts";
 import { Panel } from "../../shared/elements/Panel.tsx";
 import { Dropdown, Spinner, Stack } from "react-bootstrap";
@@ -22,7 +22,8 @@ import {
 import { useIsLoggedIn } from "../../state/useIsLoggedIn.ts";
 
 // TODO: Split into parts to prevent layout shift on login
-export function QueryPanel(props: { roomContext: CanvasContext }) {
+export function QueryPanel() {
+  const roomContext = useCanvasContext();
   const query = useBearStore((s) => s.room.panels.query);
   const referencedDatabases = useBearStore(
     (s) => s.room.panels.scenarios.scenarios.referencedDatabases,
@@ -53,7 +54,7 @@ export function QueryPanel(props: { roomContext: CanvasContext }) {
             await databaseConnectionControllerGetStats({
               path: {
                 databaseId: referencedDatabase.id,
-                roomId: props.roomContext.initialRoomData.id,
+                roomId: roomContext.initialRoomData.id,
               },
             }),
           );
@@ -165,7 +166,7 @@ export function QueryPanel(props: { roomContext: CanvasContext }) {
                       resultOrThrow(
                         await actionControllerRunQuery({
                           path: {
-                            canvasId: props.roomContext.initialCanvasData.id,
+                            canvasId: roomContext.initialCanvasData.id,
                           },
                           body: {
                             databaseId: selectedDatabaseId ?? "",
@@ -185,7 +186,7 @@ export function QueryPanel(props: { roomContext: CanvasContext }) {
                       resultOrThrow(
                         await actionControllerRunQuery({
                           path: {
-                            canvasId: props.roomContext.initialCanvasData.id,
+                            canvasId: roomContext.initialCanvasData.id,
                           },
                           body: {
                             databaseId: selectedDatabaseId ?? "",
@@ -231,7 +232,6 @@ export function QueryPanel(props: { roomContext: CanvasContext }) {
                             onClick={() => {
                               query.setQueryText(entry.exploreQuery);
                             }}
-                            roomContext={props.roomContext}
                           ></Label>
                         ))}
                       </Stack>
@@ -262,7 +262,6 @@ export function QueryPanel(props: { roomContext: CanvasContext }) {
                             onClick={() => {
                               query.setQueryText(entry.exploreQuery);
                             }}
-                            roomContext={props.roomContext}
                             hideLabelMenu={true}
                           ></Label>
                         ))}

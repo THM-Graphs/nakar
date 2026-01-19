@@ -1,16 +1,13 @@
 import { createRef, useEffect } from "react";
 import { useBearStore } from "../../state/useBearStore.ts";
-import { AppContext } from "../../state/AppContext.ts";
+import { useAppContext } from "../../state/AppContextData.ts";
 import { match } from "ts-pattern";
 import { D3Renderer } from "../d3/D3Renderer.ts";
-import { CanvasContext } from "../../pages/CanvasPage.tsx";
 import { CanvasContextMenu } from "./CanvasContextMenu.tsx";
 
-export function GraphRendererD3(props: {
-  context: AppContext;
-  roomContext: CanvasContext;
-}) {
-  const websocketsManager = props.context.webSocketsManager;
+export function GraphRendererD3() {
+  const context = useAppContext();
+  const websocketsManager = context.webSocketsManager;
   const svgRef = createRef<SVGSVGElement>();
   const getTheme = useBearStore((s) => s.global.theme.getTheme);
   const inspector = useBearStore((s) => s.room.panels.inspector);
@@ -197,7 +194,7 @@ export function GraphRendererD3(props: {
       >
         <g></g>
       </svg>
-      <CanvasContextMenu roomContext={props.roomContext}></CanvasContextMenu>
+      <CanvasContextMenu></CanvasContextMenu>
     </>
   );
 }

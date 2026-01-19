@@ -1,5 +1,4 @@
 import { useBearStore } from "../../state/useBearStore.ts";
-import { CanvasContext } from "../../pages/CanvasPage.tsx";
 import { Modal, Stack } from "react-bootstrap";
 import { Panel } from "../../shared/elements/Panel.tsx";
 import { NavbarButton } from "../../shared/elements/NavbarButton.tsx";
@@ -12,10 +11,12 @@ import {
   noteControllerPostNote,
   noteControllerUpdateNote,
 } from "../../../src-gen";
+import { useCanvasContext } from "../../pages/CanvasPage.tsx";
 
 type AddEditNoteModalMode = "create" | "update";
 
-export function AddEditNoteModal(props: { roomContext: CanvasContext }) {
+export function AddEditNoteModal() {
+  const roomContext = useCanvasContext();
   const pushErrorNotification = useBearStore(
     (s) => s.room.ui.pushErrorNotification,
   );
@@ -44,7 +45,7 @@ export function AddEditNoteModal(props: { roomContext: CanvasContext }) {
       if (noteId == null) {
         await resultOrThrow(
           await noteControllerPostNote({
-            path: { roomId: props.roomContext.initialRoomData.id },
+            path: { roomId: roomContext.initialRoomData.id },
             body: {
               nodeIds: nodes.map((node) => node.id),
               content: content,
@@ -56,7 +57,7 @@ export function AddEditNoteModal(props: { roomContext: CanvasContext }) {
           await noteControllerUpdateNote({
             path: {
               noteId: noteId,
-              roomId: props.roomContext.initialRoomData.id,
+              roomId: roomContext.initialRoomData.id,
             },
             body: {
               content: content,

@@ -1,6 +1,6 @@
 import { StartPageRoomDisplay } from "./StartPageRoomDisplay.tsx";
 import { Stack } from "react-bootstrap";
-import { AppContext } from "../state/AppContext.ts";
+import { AppContextData } from "../state/AppContextData.ts";
 import { DynamicList } from "../shared/elements/DynamicList.tsx";
 import clsx from "clsx";
 import { CSSProperties } from "react";
@@ -9,7 +9,7 @@ import { StartPageRoomDto } from "../../src-gen";
 export function RoomList(props: {
   title?: string;
   rooms: StartPageRoomDto[] | null;
-  context: AppContext;
+  context: AppContextData;
   className?: string;
   style?: CSSProperties;
   onDelete?: (room: StartPageRoomDto) => void | Promise<void>;

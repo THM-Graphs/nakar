@@ -7,7 +7,7 @@ import { useColorSchema } from "../color/useColorSchema.ts";
 import { DropdownButton } from "../../shared/elements/DropdownButton.tsx";
 import { labelActions } from "../actions/groups/labelActions.ts";
 import { ActionDropdownItem } from "../actions/ActionDropdownItem.tsx";
-import { CanvasContext } from "../../pages/CanvasPage.tsx";
+import { useCanvasContext } from "../../pages/CanvasPage.tsx";
 import { LabelDto } from "../../../src-gen";
 
 export function Label(props: {
@@ -17,9 +17,9 @@ export function Label(props: {
   showSources: boolean;
   onClick?: () => void;
   className?: string;
-  roomContext: CanvasContext;
   hideLabelMenu?: boolean;
 }) {
+  const roomContext = useCanvasContext();
   const labels = useBearStore((s) => s.room.scenario.graph.elements.labels);
   const label: LabelDto | null =
     labels.find((l) => l.label === props.label) ?? null;
@@ -82,7 +82,7 @@ export function Label(props: {
               key={action.slug()}
               action={action}
               params={{
-                roomContext: props.roomContext,
+                roomContext: roomContext,
                 labels: [props.label],
               }}
             ></ActionDropdownItem>

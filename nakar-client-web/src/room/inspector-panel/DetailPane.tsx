@@ -3,7 +3,6 @@ import { DetailPaneAction } from "./DetailPaneAction.ts";
 import { PropertiesDisplay, PropertyEntry } from "./PropertiesDisplay.tsx";
 import { NavbarButton } from "../../shared/elements/NavbarButton.tsx";
 import { ReactNode, useState } from "react";
-import { CanvasContext } from "../../pages/CanvasPage.tsx";
 import { PropertyMenu } from "../properties/PropertyMenu.tsx";
 import clsx from "clsx";
 import { Collapsable } from "../../shared/elements/Collapsable.tsx";
@@ -15,7 +14,6 @@ export function DetailPane(props: {
   actions: DetailPaneAction[];
   properties: PropertyEntry[];
   otherProperties: PropertyEntry[];
-  roomContext: CanvasContext;
   elementId: string;
   children?: ReactNode;
 }) {
@@ -62,10 +60,7 @@ export function DetailPane(props: {
                   : props.title}
               </span>
             </Stack>
-            <PropertyMenu
-              roomContext={props.roomContext}
-              value={props.title}
-            ></PropertyMenu>
+            <PropertyMenu value={props.title}></PropertyMenu>
           </Stack>
         )}
         <Stack direction={"horizontal"} className={"justify-content-between"}>
@@ -75,10 +70,7 @@ export function DetailPane(props: {
               {props.elementId}
             </span>
           </Stack>
-          <PropertyMenu
-            roomContext={props.roomContext}
-            value={props.elementId}
-          ></PropertyMenu>
+          <PropertyMenu value={props.elementId}></PropertyMenu>
         </Stack>
         {props.subTitleElements}
       </Stack>
@@ -110,7 +102,6 @@ export function DetailPane(props: {
         title={"Properties"}
         className={"border-top flex-grow-0"}
         properties={props.properties}
-        roomContext={props.roomContext}
         elementId={props.elementId}
       ></PropertiesDisplay>
 
@@ -118,7 +109,6 @@ export function DetailPane(props: {
         title={"Other Properties"}
         className={"border-top flex-grow-0"}
         properties={props.otherProperties}
-        roomContext={props.roomContext}
         elementId={props.elementId}
       ></PropertiesDisplay>
       {props.children}

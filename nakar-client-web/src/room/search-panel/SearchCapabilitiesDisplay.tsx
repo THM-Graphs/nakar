@@ -11,11 +11,11 @@ import {
   databaseConnectionControllerGetSearchCapabilites,
   GetSearchCapabilitiesResponseBodyDto,
 } from "../../../src-gen";
-import { CanvasContext } from "../../pages/CanvasPage.tsx";
+import { CanvasContextData } from "../../pages/CanvasPage.tsx";
 
 export function SearchCapabilitiesDisplay(props: {
   databaseId: string | null;
-  canvasContext: CanvasContext;
+  canvasContext: CanvasContextData;
 }) {
   const [capabalities, setCapabilities] = useState<
     Loadable<GetSearchCapabilitiesResponseBodyDto | null>

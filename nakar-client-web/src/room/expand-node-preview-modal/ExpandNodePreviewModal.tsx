@@ -4,11 +4,12 @@ import { NavbarButton } from "../../shared/elements/NavbarButton.tsx";
 import { useBearStore } from "../../state/useBearStore.ts";
 import { useEffect, useState } from "react";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
-import { CanvasContext } from "../../pages/CanvasPage.tsx";
 import { SelectableTableData } from "./SelectableTableData.tsx";
 import { actionControllerExpandNode } from "../../../src-gen";
+import { useCanvasContext } from "../../pages/CanvasPage.tsx";
 
-export function ExpandNodePreviewModal(props: { roomContext: CanvasContext }) {
+export function ExpandNodePreviewModal() {
+  const roomContext = useCanvasContext();
   const data = useBearStore((s) => s.room.scenario.expandNodePreview.data);
   const close = useBearStore((s) => s.room.scenario.expandNodePreview.close);
   const clean = useBearStore((s) => s.room.scenario.expandNodePreview.clean);
@@ -109,7 +110,7 @@ export function ExpandNodePreviewModal(props: { roomContext: CanvasContext }) {
                   resultOrThrow(
                     await actionControllerExpandNode({
                       path: {
-                        canvasId: props.roomContext.initialCanvasData.id,
+                        canvasId: roomContext.initialCanvasData.id,
                       },
                       body: {
                         nodeIds: [data.nodeId],

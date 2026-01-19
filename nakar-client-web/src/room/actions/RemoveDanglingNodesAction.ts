@@ -1,7 +1,7 @@
 import { Action } from "./Action.ts";
 import { SelectedCanvasTab } from "../../state/SelectedCanvasTab.ts";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
-import { CanvasContext } from "../../pages/CanvasPage.tsx";
+import { CanvasContextData } from "../../pages/CanvasPage.tsx";
 import {
   actionControllerRemoveDanglingNodes,
   ScenarioDto,
@@ -9,7 +9,7 @@ import {
 
 export type RemoveDanglingNodesActionParams = {
   selectedTab: SelectedCanvasTab;
-  roomContext: CanvasContext;
+  roomContext: CanvasContextData;
   scenario: ScenarioDto | null;
 };
 

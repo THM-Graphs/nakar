@@ -2,8 +2,7 @@ import { ScenarioCard } from "./ScenarioCard.tsx";
 import { Collapsable } from "../../shared/elements/Collapsable.tsx";
 import { useBearStore } from "../../state/useBearStore.ts";
 import { useCallback } from "react";
-import { AppContext } from "../../state/AppContext.ts";
-import { CanvasContext } from "../../pages/CanvasPage.tsx";
+import { useCanvasContext } from "../../pages/CanvasPage.tsx";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
 import { ScenarioTitleAndBadges } from "./ScenarioTitleAndBadges.tsx";
 import {
@@ -15,9 +14,8 @@ import {
 export function ScenarioDisplay(props: {
   scenario: ScenarioDto;
   hidden?: boolean;
-  context: AppContext;
-  roomContext: CanvasContext;
 }) {
+  const roomContext = useCanvasContext();
   const showRunScenarioModal = useBearStore(
     (s) => s.room.scenario.runScenarioModal.open,
   );
@@ -34,7 +32,7 @@ export function ScenarioDisplay(props: {
           try {
             await resultOrThrow(
               await actionControllerLoadScenario({
-                path: { canvasId: props.roomContext.initialCanvasData.id },
+                path: { canvasId: roomContext.initialCanvasData.id },
                 body: {
                   scenarioId: props.scenario.id,
                   arguments: [],

@@ -1,15 +1,13 @@
 import { DetailPane } from "./DetailPane.tsx";
-import { CanvasContext } from "../../pages/CanvasPage.tsx";
+import { useCanvasContext } from "../../pages/CanvasPage.tsx";
 import { Stack } from "react-bootstrap";
 import { NodePreviewDisplay } from "./NodePreviewDisplay.tsx";
 import { relationshipActions } from "../actions/groups/relationshipActions.ts";
 import { EdgeDto } from "../../../src-gen";
 import { PropertyEntry } from "./PropertiesDisplay.tsx";
 
-export function EdgeDetails(props: {
-  edge: EdgeDto;
-  roomContext: CanvasContext;
-}) {
+export function EdgeDetails(props: { edge: EdgeDto }) {
+  const roomContext = useCanvasContext();
   const properties: PropertyEntry[] = Object.entries(
     props.edge.properties satisfies Record<string, unknown>,
   ).map(([key, value]) => ({
@@ -22,7 +20,7 @@ export function EdgeDetails(props: {
       actions={relationshipActions.map((a) =>
         a.detailPaneAction(() => ({
           edges: [props.edge],
-          roomContext: props.roomContext,
+          roomContext: roomContext,
         })),
       )}
       otherProperties={[
@@ -81,7 +79,6 @@ export function EdgeDetails(props: {
       ]}
       properties={properties}
       title={props.edge.type}
-      roomContext={props.roomContext}
       elementId={props.edge.id}
       subTitleElements={
         <Stack

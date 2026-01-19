@@ -1,5 +1,5 @@
 import { Dropdown, Stack } from "react-bootstrap";
-import { AppContext } from "../../state/AppContext.ts";
+import { useAppContext } from "../../state/AppContextData.ts";
 import { match } from "ts-pattern";
 import { useCallback, useEffect, useState } from "react";
 import { Loadable } from "../data/Loadable.ts";
@@ -11,7 +11,8 @@ import {
   systemControllerGetVersion,
 } from "../../../src-gen";
 
-export function ServerInfoDropdownEntry(props: { context: AppContext }) {
+export function ServerInfoDropdownEntry() {
+  const context = useAppContext();
   const pushErrorNotification = useBearStore(
     (s) => s.room.ui.pushErrorNotification,
   );
@@ -45,13 +46,13 @@ export function ServerInfoDropdownEntry(props: { context: AppContext }) {
         )
       </Dropdown.Item>
       <Dropdown.Item
-        href={props.context.env.BACKEND_URL}
+        href={context.env.BACKEND_URL}
         target={"_blank"}
         className={"small"}
       >
         <Stack gap={2} direction={"horizontal"}>
           <i className="bi bi-box-arrow-up-right"></i>
-          <span className="">{props.context.env.BACKEND_URL}</span>
+          <span className="">{context.env.BACKEND_URL}</span>
         </Stack>
       </Dropdown.Item>
     </>

@@ -3,8 +3,7 @@ import { Panel } from "../../shared/elements/Panel.tsx";
 import { NodeDetails } from "./NodeDetails.tsx";
 import { EdgeDetails } from "./EdgeDetails.tsx";
 import { useBearStore } from "../../state/useBearStore.ts";
-import { AppContext } from "../../state/AppContext.ts";
-import { CanvasContext } from "../../pages/CanvasPage.tsx";
+import { useCanvasContext } from "../../pages/CanvasPage.tsx";
 import { Collapsable } from "../../shared/elements/Collapsable.tsx";
 import { DynamicList } from "../../shared/elements/DynamicList.tsx";
 import { Stack } from "react-bootstrap";
@@ -20,10 +19,8 @@ import { useColorSchema } from "../color/useColorSchema.ts";
 import { EdgeDto, NodeDto } from "../../../src-gen";
 import { useIsLoggedIn } from "../../state/useIsLoggedIn.ts";
 
-export function InspectorPanel(props: {
-  context: AppContext;
-  roomContext: CanvasContext;
-}) {
+export function InspectorPanel() {
+  const roomContext = useCanvasContext();
   const inspector = useBearStore((s) => s.room.panels.inspector);
   const graphElements = useBearStore((s) => s.room.scenario.graph.elements);
   const elements = inspector.element.reduce<(NodeDto | EdgeDto)[]>(
@@ -53,13 +50,7 @@ export function InspectorPanel(props: {
         .with(0, () => <EmptyInspector></EmptyInspector>)
         .with(1, () => {
           const firstElement = elements[0];
-          return (
-            <InspectorForType
-              element={firstElement}
-              roomContext={props.roomContext}
-              context={props.context}
-            ></InspectorForType>
-          );
+          return <InspectorForType element={firstElement}></InspectorForType>;
         })
         .otherwise(() => {
           const nodes: NodeDto[] = elements.reduce<NodeDto[]>(
@@ -80,7 +71,7 @@ export function InspectorPanel(props: {
                       key={action.slug()}
                       params={{
                         nodes: nodes,
-                        roomContext: props.roomContext,
+                        roomContext: roomContext,
                         isLoggedIn: isLoggedIn,
                       }}
                     ></ActionNavbarButton>
@@ -92,8 +83,6 @@ export function InspectorPanel(props: {
                         {list.map((element) => (
                           <InspectorPanelForMultiType
                             element={element}
-                            roomContext={props.roomContext}
-                            context={props.context}
                             key={element.id}
                           ></InspectorPanelForMultiType>
                         ))}
@@ -111,7 +100,7 @@ export function InspectorPanel(props: {
                       key={action.slug()}
                       params={{
                         edges: edges,
-                        roomContext: props.roomContext,
+                        roomContext: roomContext,
                       }}
                     ></ActionNavbarButton>
                   ))}
@@ -122,8 +111,6 @@ export function InspectorPanel(props: {
                         {list.map((element) => (
                           <InspectorPanelForMultiType
                             element={element}
-                            roomContext={props.roomContext}
-                            context={props.context}
                             key={element.id}
                           ></InspectorPanelForMultiType>
                         ))}
@@ -149,34 +136,15 @@ function EmptyInspector() {
   );
 }
 
-function InspectorForType(props: {
-  element: NodeDto | EdgeDto;
-  roomContext: CanvasContext;
-  context: AppContext;
-}) {
+function InspectorForType(props: { element: NodeDto | EdgeDto }) {
   if ("title" in props.element) {
-    return (
-      <NodeDetails
-        context={props.context}
-        node={props.element}
-        roomContext={props.roomContext}
-      ></NodeDetails>
-    );
+    return <NodeDetails node={props.element}></NodeDetails>;
   } else {
-    return (
-      <EdgeDetails
-        edge={props.element}
-        roomContext={props.roomContext}
-      ></EdgeDetails>
-    );
+    return <EdgeDetails edge={props.element}></EdgeDetails>;
   }
 }
 
-function InspectorPanelForMultiType(props: {
-  element: NodeDto | EdgeDto;
-  roomContext: CanvasContext;
-  context: AppContext;
-}) {
+function InspectorPanelForMultiType(props: { element: NodeDto | EdgeDto }) {
   const title =
     "title" in props.element ? props.element.title : props.element.type;
   const colorSchema = useColorSchema();
@@ -211,11 +179,7 @@ function InspectorPanelForMultiType(props: {
       }
       className={"flex-grow-0"}
     >
-      <InspectorForType
-        element={props.element}
-        roomContext={props.roomContext}
-        context={props.context}
-      ></InspectorForType>
+      <InspectorForType element={props.element}></InspectorForType>
     </Collapsable>
   );
 }

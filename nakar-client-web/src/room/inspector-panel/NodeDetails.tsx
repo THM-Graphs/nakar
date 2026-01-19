@@ -1,6 +1,5 @@
 import { DetailPane } from "./DetailPane.tsx";
-import { AppContext } from "../../state/AppContext.ts";
-import { CanvasContext } from "../../pages/CanvasPage.tsx";
+import { useCanvasContext } from "../../pages/CanvasPage.tsx";
 import { Stack } from "react-bootstrap";
 import { Label } from "../labels/Label.tsx";
 import { DynamicList } from "../../shared/elements/DynamicList.tsx";
@@ -13,11 +12,8 @@ import { NodeDto } from "../../../src-gen";
 import { PropertyEntry } from "./PropertiesDisplay.tsx";
 import { useIsLoggedIn } from "../../state/useIsLoggedIn.ts";
 
-export function NodeDetails(props: {
-  node: NodeDto;
-  context: AppContext;
-  roomContext: CanvasContext;
-}) {
+export function NodeDetails(props: { node: NodeDto }) {
+  const roomContext = useCanvasContext();
   const properties: PropertyEntry[] = Object.entries(
     props.node.properties satisfies Record<string, unknown>,
   ).map(([key, value]) => ({
@@ -31,7 +27,7 @@ export function NodeDetails(props: {
       actions={nodeActions.map((a) =>
         a.detailPaneAction(() => ({
           nodes: [props.node],
-          roomContext: props.roomContext,
+          roomContext: roomContext,
           isLoggedIn: isLoggedIn,
         })),
       )}
@@ -96,13 +92,11 @@ export function NodeDetails(props: {
                 label={label}
                 showAmount={false}
                 showSources={true}
-                roomContext={props.roomContext}
               ></Label>
             );
           })}
         </Stack>
       }
-      roomContext={props.roomContext}
       elementId={props.node.id}
     >
       <DynamicList
@@ -117,7 +111,6 @@ export function NodeDetails(props: {
                 key={entry.type}
                 value={entry.count}
                 label={entry.type}
-                roomContext={props.roomContext}
                 percentage={entry.percentage}
               ></ValueDisplay>
             ))}
@@ -136,7 +129,6 @@ export function NodeDetails(props: {
                 key={entry.type}
                 value={entry.count}
                 label={entry.type}
-                roomContext={props.roomContext}
                 percentage={entry.percentage}
               ></ValueDisplay>
             ))}
@@ -153,17 +145,13 @@ export function NodeDetails(props: {
                 action={AddNoteAction.shared}
                 params={{
                   nodes: [props.node],
-                  roomContext: props.roomContext,
+                  roomContext: roomContext,
                   isLoggedIn,
                 }}
               ></ActionNavbarButton>
               <Stack gap={3}>
                 {notes.map((note) => (
-                  <NoteDisplay
-                    note={note}
-                    key={note.id}
-                    roomContext={props.roomContext}
-                  ></NoteDisplay>
+                  <NoteDisplay note={note} key={note.id}></NoteDisplay>
                 ))}
               </Stack>
             </Stack>

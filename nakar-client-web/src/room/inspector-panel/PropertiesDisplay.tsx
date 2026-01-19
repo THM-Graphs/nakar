@@ -1,4 +1,3 @@
-import { CanvasContext } from "../../pages/CanvasPage.tsx";
 import { PropertyDisplay } from "./PropertyDisplay.tsx";
 import { DynamicList } from "../../shared/elements/DynamicList.tsx";
 
@@ -8,7 +7,6 @@ export function PropertiesDisplay(props: {
   title: string;
   elementId: string;
   properties: PropertyEntry[];
-  roomContext: CanvasContext;
   className?: string;
 }) {
   return (
@@ -25,7 +23,6 @@ export function PropertiesDisplay(props: {
               key={property.slug}
               index={index}
               property={property}
-              roomContext={props.roomContext}
             ></PropertyDisplay>
           ))}
         </>
