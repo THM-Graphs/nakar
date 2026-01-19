@@ -9,12 +9,14 @@ import { CanvasContext } from "../../pages/CanvasPage.tsx";
 import { DynamicList } from "../../shared/elements/DynamicList.tsx";
 import { EditNoteAction } from "../actions/EditNoteAction.ts";
 import { NoteDto } from "../../../src-gen";
+import { useIsLoggedIn } from "../../state/useIsLoggedIn.ts";
 
 export function NoteDisplay(props: {
   note: NoteDto;
   roomContext: CanvasContext;
 }) {
   const note = props.note;
+  const isLoggedIn = useIsLoggedIn();
 
   const dateDisplay = (note: NoteDto): string => {
     const stringToUse = note.dateTime;
@@ -85,12 +87,16 @@ export function NoteDisplay(props: {
       >
         <ActionNavbarButton
           action={EditNoteAction.shared}
-          params={{ note: props.note }}
+          params={{ note: props.note, isLoggedIn: isLoggedIn }}
           hideTitle={true}
         ></ActionNavbarButton>
         <ActionNavbarButton
           action={RemoveNoteAction.shared}
-          params={{ noteId: props.note.id, roomContext: props.roomContext }}
+          params={{
+            noteId: props.note.id,
+            roomContext: props.roomContext,
+            isLoggedIn: isLoggedIn,
+          }}
           hideTitle={true}
         ></ActionNavbarButton>
       </Stack>

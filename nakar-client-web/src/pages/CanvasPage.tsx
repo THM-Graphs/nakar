@@ -296,12 +296,6 @@ export function CanvasPage(props: { context: AppContext }) {
                 ></VisualizationPanelButton>
               </Stack>
             </Stack>
-            <ToastStack></ToastStack>
-            <RunScenarioModal roomContext={roomContext}></RunScenarioModal>
-            <ExpandNodePreviewModal
-              roomContext={roomContext}
-            ></ExpandNodePreviewModal>
-            <AddEditNoteModal roomContext={roomContext}></AddEditNoteModal>
           </Stack>
 
           {socketState.type !== "connected" && (
@@ -312,6 +306,12 @@ export function CanvasPage(props: { context: AppContext }) {
           context={props.context}
           roomContext={roomContext}
         ></GraphRendererD3>
+        <ToastStack></ToastStack>
+        <RunScenarioModal roomContext={roomContext}></RunScenarioModal>
+        <ExpandNodePreviewModal
+          roomContext={roomContext}
+        ></ExpandNodePreviewModal>
+        <AddEditNoteModal roomContext={roomContext}></AddEditNoteModal>
       </Stack>
     </>
   );

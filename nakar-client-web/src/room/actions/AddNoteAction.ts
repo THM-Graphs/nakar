@@ -12,7 +12,7 @@ export class AddNoteAction extends Action<NodesActionParams> {
   }
 
   disabled(input: NodesActionParams): boolean {
-    return input.nodes.length === 0;
+    return input.nodes.length === 0 || !input.isLoggedIn;
   }
 
   icon(): string | null {

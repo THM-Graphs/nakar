@@ -2,7 +2,7 @@ import { Action } from "./Action.ts";
 import { useBearStore } from "../../state/useBearStore.ts";
 import { NoteDto } from "../../../src-gen";
 
-type EditNoteActionParams = { note: NoteDto };
+type EditNoteActionParams = { note: NoteDto; isLoggedIn: boolean };
 export class EditNoteAction extends Action<EditNoteActionParams> {
   public static shared: EditNoteAction = new EditNoteAction();
 
@@ -12,8 +12,8 @@ export class EditNoteAction extends Action<EditNoteActionParams> {
       .room.panels.notes.addNoteModal.showForUpdate(input.note);
   }
 
-  disabled(): boolean {
-    return false;
+  disabled(input: EditNoteActionParams): boolean {
+    return !input.isLoggedIn;
   }
 
   icon(): string | null {

@@ -14,6 +14,7 @@ import { ActionDropdownItem } from "../actions/ActionDropdownItem.tsx";
 import { CanvasContext } from "../../pages/CanvasPage.tsx";
 import { relationshipActions } from "../actions/groups/relationshipActions.ts";
 import { EdgeDto, NodeDto } from "../../../src-gen";
+import { useIsLoggedIn } from "../../state/useIsLoggedIn.ts";
 
 export function CanvasContextMenu(props: { roomContext: CanvasContext }) {
   const onShowNodeContextMenu = useBearStore(
@@ -32,6 +33,7 @@ export function CanvasContextMenu(props: { roomContext: CanvasContext }) {
     (s) => s.room.panels.inspector.element,
   );
   const dropdownEl = useRef<HTMLDivElement | null>(null);
+  const isLoggedIn = useIsLoggedIn();
 
   useEffect(() => {
     if (selectedNodes != null) {
@@ -154,7 +156,11 @@ export function CanvasContextMenu(props: { roomContext: CanvasContext }) {
             <ActionDropdownItem
               key={action.slug()}
               action={action}
-              params={{ nodes: selectedNodes, roomContext: props.roomContext }}
+              params={{
+                nodes: selectedNodes,
+                roomContext: props.roomContext,
+                isLoggedIn: isLoggedIn,
+              }}
             ></ActionDropdownItem>
           ))}
         {selectedEdges &&
@@ -162,7 +168,10 @@ export function CanvasContextMenu(props: { roomContext: CanvasContext }) {
             <ActionDropdownItem
               key={action.slug()}
               action={action}
-              params={{ edges: selectedEdges, roomContext: props.roomContext }}
+              params={{
+                edges: selectedEdges,
+                roomContext: props.roomContext,
+              }}
             ></ActionDropdownItem>
           ))}
       </Dropdown.Menu>

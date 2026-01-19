@@ -19,6 +19,7 @@ import {
   DatabaseConnectionDto,
   GetDatabaseStatsResponseBodyDto,
 } from "../../../src-gen";
+import { useIsLoggedIn } from "../../state/useIsLoggedIn.ts";
 
 // TODO: Split into parts to prevent layout shift on login
 export function QueryPanel(props: { roomContext: CanvasContext }) {
@@ -32,15 +33,14 @@ export function QueryPanel(props: { roomContext: CanvasContext }) {
   const [selectedDatabaseId, setSelectedDatabaseId] = useState<string | null>(
     null,
   );
-
   const referencedDatabase: DatabaseConnectionDto | null =
     referencedDatabases.find((d) => d.id === selectedDatabaseId) ?? null;
-
   const [stats, setStats] = useState<
     Loadable<GetDatabaseStatsResponseBodyDto | null>
   >({
     type: "loading",
   });
+  const isLoggedIn = useIsLoggedIn();
 
   const reload = () => {
     (async () => {
@@ -158,6 +158,7 @@ export function QueryPanel(props: { roomContext: CanvasContext }) {
                 <Stack direction="horizontal">
                   <NavbarButton
                     className={"justify-content-end"}
+                    disabled={!isLoggedIn}
                     title="Run"
                     icon="play-fill"
                     onClick={async () => {
@@ -178,6 +179,7 @@ export function QueryPanel(props: { roomContext: CanvasContext }) {
                   <NavbarButton
                     className={"justify-content-end"}
                     title="Add"
+                    disabled={!isLoggedIn}
                     icon="plus-lg"
                     onClick={async () => {
                       resultOrThrow(

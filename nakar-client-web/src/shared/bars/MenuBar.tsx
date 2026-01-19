@@ -32,6 +32,7 @@ import { HideLabelsAction } from "../../room/actions/HideLabelsAction.ts";
 import { nodeActions } from "../../room/actions/groups/nodeActions.ts";
 import { relationshipActions } from "../../room/actions/groups/relationshipActions.ts";
 import { EdgeDto, NodeDto } from "../../../src-gen";
+import { useIsLoggedIn } from "../../state/useIsLoggedIn.ts";
 
 export function MenuBar(props: {
   context: AppContext;
@@ -93,6 +94,7 @@ export function MenuBar(props: {
   const rendererEvents = useBearStore((s) => s.room.ui.rendererEvents);
   const hideLabels = useBearStore((s) => s.room.canvas.hideLabels);
   const setHideLabels = useBearStore((s) => s.room.canvas.setHideLabels);
+  const isLoggedIn = useIsLoggedIn();
 
   return (
     <Stack direction={"horizontal"}>
@@ -201,7 +203,11 @@ export function MenuBar(props: {
           <ActionDropdownItem
             key={action.slug()}
             action={action}
-            params={{ roomContext: props.roomContext, nodes: selectedNodes }}
+            params={{
+              roomContext: props.roomContext,
+              nodes: selectedNodes,
+              isLoggedIn: isLoggedIn,
+            }}
           ></ActionDropdownItem>
         ))}
       </DropdownButton>

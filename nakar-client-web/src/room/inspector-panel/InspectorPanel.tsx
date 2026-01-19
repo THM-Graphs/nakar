@@ -18,6 +18,7 @@ import {
 } from "../color/getBackgroundColor.ts";
 import { useColorSchema } from "../color/useColorSchema.ts";
 import { EdgeDto, NodeDto } from "../../../src-gen";
+import { useIsLoggedIn } from "../../state/useIsLoggedIn.ts";
 
 export function InspectorPanel(props: {
   context: AppContext;
@@ -38,6 +39,8 @@ export function InspectorPanel(props: {
     },
     [],
   );
+  const isLoggedIn = useIsLoggedIn();
+
   return (
     <Panel
       direction={"right"}
@@ -78,6 +81,7 @@ export function InspectorPanel(props: {
                       params={{
                         nodes: nodes,
                         roomContext: props.roomContext,
+                        isLoggedIn: isLoggedIn,
                       }}
                     ></ActionNavbarButton>
                   ))}

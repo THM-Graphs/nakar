@@ -24,6 +24,7 @@ import { LoadNodeRequestBodyDto } from './dto/LoadNodeRequestBodyDto';
 import { LiveCanvasViewSettingsDto } from '../../../schema/dtos/LiveCanvasViewSettingsDto';
 import { LiveCanvasViewSettings } from '../../../live-canvas/data/LiveCanvasViewSettings';
 import { LiveCanvasService } from '../../../live-canvas/LiveCanvasService';
+import { UserIsLoggedIn } from '../../guards/UserIsLoggedIn';
 
 @Controller('canvas/:canvasId/actions')
 @ApiParam({
@@ -143,6 +144,7 @@ export class ActionController {
 
   @Post('run-query')
   @HttpCode(200)
+  @UseGuards(UserIsLoggedIn)
   public runQuery(
     @Param('canvasId') canvasId: string,
     @Body() body: RunQueryRequestBodyDto,

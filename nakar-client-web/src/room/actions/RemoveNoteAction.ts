@@ -6,6 +6,7 @@ import { noteControllerDeleteNote } from "../../../src-gen";
 export type RemoveNoteActionParams = {
   noteId: string;
   roomContext: CanvasContext;
+  isLoggedIn: boolean;
 };
 export class RemoveNoteAction extends Action<RemoveNoteActionParams> {
   public static shared: RemoveNoteAction = new RemoveNoteAction();
@@ -21,8 +22,8 @@ export class RemoveNoteAction extends Action<RemoveNoteActionParams> {
     );
   }
 
-  disabled(): boolean {
-    return false;
+  disabled(input: RemoveNoteActionParams): boolean {
+    return !input.isLoggedIn;
   }
 
   icon(): string | null {

@@ -4,4 +4,5 @@ import { NodeDto } from "../../../src-gen";
 export type NodesActionParams = {
   nodes: NodeDto[];
   roomContext: CanvasContext;
+  isLoggedIn: boolean;
 };

@@ -8,7 +8,7 @@ export function ToastStack() {
   const removeNotification = useBearStore((s) => s.room.ui.removeNotification);
 
   return (
-    <ToastContainer className="position-absolute bottom-0 p-2 mb-1">
+    <ToastContainer className="position-absolute bottom-0 p-2">
       {notifications.map((notification) => (
         <Toast
           key={notification.id}

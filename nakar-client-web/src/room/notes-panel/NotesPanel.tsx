@@ -8,6 +8,7 @@ import { DynamicList } from "../../shared/elements/DynamicList.tsx";
 import { NoteDisplay } from "./NoteDisplay.tsx";
 import { AppContext } from "../../state/AppContext.ts";
 import { NodeDto, NoteDto } from "../../../src-gen";
+import { useIsLoggedIn } from "../../state/useIsLoggedIn.ts";
 
 export function NotesPanel(props: {
   context: AppContext;
@@ -25,6 +26,7 @@ export function NotesPanel(props: {
     }
   }, []);
   const notes: NoteDto[] = useBearStore((s) => s.room.scenario.graph.notes);
+  const isLoggedIn: boolean = useIsLoggedIn();
 
   return (
     <Panel
@@ -37,7 +39,11 @@ export function NotesPanel(props: {
       <Stack className={"pb-5"} gap={0}>
         <ActionNavbarButton
           action={AddNoteAction.shared}
-          params={{ nodes: selectedNodes, roomContext: props.roomContext }}
+          params={{
+            nodes: selectedNodes,
+            roomContext: props.roomContext,
+            isLoggedIn,
+          }}
         ></ActionNavbarButton>
         <DynamicList
           data={notes}

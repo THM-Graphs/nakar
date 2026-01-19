@@ -9,6 +9,7 @@ import {
 } from "../../color/getBackgroundColor.ts";
 import { useColorSchema } from "../../color/useColorSchema.ts";
 import { LabelDto } from "../../../../src-gen";
+import { useIsLoggedIn } from "../../../state/useIsLoggedIn.ts";
 
 export function HistogramSectionNodes(props: { roomContext: CanvasContext }) {
   const histogram = useBearStore((s) => s.room.scenario.graph.histogram);
@@ -19,6 +20,7 @@ export function HistogramSectionNodes(props: { roomContext: CanvasContext }) {
     (s) => s.room.scenario.graph.elements.labels,
   );
   const colorSchema = useColorSchema();
+  const isLoggedIn = useIsLoggedIn();
 
   return (
     <DynamicList
@@ -58,6 +60,7 @@ export function HistogramSectionNodes(props: { roomContext: CanvasContext }) {
                     return {
                       nodes: node ? [node] : [],
                       roomContext: props.roomContext,
+                      isLoggedIn: isLoggedIn,
                     };
                   }),
                 )}

@@ -24,6 +24,7 @@ import { ExpandNodeAction } from "../actions/ExpandNodeAction.ts";
 import { RemoveNodesAction } from "../actions/RemoveNodesAction.ts";
 import { FocusNodesAction } from "../actions/FocusNodesAction.ts";
 import { ShowShortestPathAction } from "../actions/ShowShortestPathAction.ts";
+import { useIsLoggedIn } from "../../state/useIsLoggedIn.ts";
 
 export function CanvasActions(props: {
   context: AppContext;
@@ -50,6 +51,7 @@ export function CanvasActions(props: {
       return akku;
     }
   }, []);
+  const isLoggedIn = useIsLoggedIn();
 
   return (
     <Stack direction={"horizontal"} className={""}>
@@ -146,6 +148,7 @@ export function CanvasActions(props: {
           params={{
             nodes: selectedNodes,
             roomContext: props.roomContext,
+            isLoggedIn: isLoggedIn,
           }}
         ></CanvasActionsAction>
         <CanvasActionsAction
@@ -153,6 +156,7 @@ export function CanvasActions(props: {
           params={{
             nodes: selectedNodes,
             roomContext: props.roomContext,
+            isLoggedIn: isLoggedIn,
           }}
         ></CanvasActionsAction>
         <CanvasActionsAction
@@ -160,6 +164,7 @@ export function CanvasActions(props: {
           params={{
             nodes: selectedNodes,
             roomContext: props.roomContext,
+            isLoggedIn: isLoggedIn,
           }}
         ></CanvasActionsAction>
         <CanvasActionsAction
@@ -167,6 +172,7 @@ export function CanvasActions(props: {
           params={{
             nodes: selectedNodes,
             roomContext: props.roomContext,
+            isLoggedIn: isLoggedIn,
           }}
         ></CanvasActionsAction>
         <CanvasActionsAction
@@ -174,6 +180,7 @@ export function CanvasActions(props: {
           params={{
             nodes: selectedNodes,
             roomContext: props.roomContext,
+            isLoggedIn: isLoggedIn,
           }}
         ></CanvasActionsAction>
       </CanvasActionsGroup>

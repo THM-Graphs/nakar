@@ -11,6 +11,7 @@ import { AddNoteAction } from "../actions/AddNoteAction.ts";
 import { NoteDisplay } from "../notes-panel/NoteDisplay.tsx";
 import { NodeDto } from "../../../src-gen";
 import { PropertyEntry } from "./PropertiesDisplay.tsx";
+import { useIsLoggedIn } from "../../state/useIsLoggedIn.ts";
 
 export function NodeDetails(props: {
   node: NodeDto;
@@ -23,6 +24,7 @@ export function NodeDetails(props: {
     slug: key,
     value: value,
   }));
+  const isLoggedIn = useIsLoggedIn();
 
   return (
     <DetailPane
@@ -30,6 +32,7 @@ export function NodeDetails(props: {
         a.detailPaneAction(() => ({
           nodes: [props.node],
           roomContext: props.roomContext,
+          isLoggedIn: isLoggedIn,
         })),
       )}
       otherProperties={[
@@ -148,7 +151,11 @@ export function NodeDetails(props: {
             <Stack>
               <ActionNavbarButton
                 action={AddNoteAction.shared}
-                params={{ nodes: [props.node], roomContext: props.roomContext }}
+                params={{
+                  nodes: [props.node],
+                  roomContext: props.roomContext,
+                  isLoggedIn,
+                }}
               ></ActionNavbarButton>
               <Stack gap={3}>
                 {notes.map((note) => (
