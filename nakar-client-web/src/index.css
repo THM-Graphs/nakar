@@ -11,21 +11,6 @@ div#root {
   font-family: system-ui;
 }
 
-.rounded,
-.rounded-end,
-.rounded-start,
-.rounded-top,
-.rounded-bottom,
-.rounded-top-end,
-.rounded-top-start,
-.rounded-bottom-start,
-.rounded-bottom-end,
-.modal-content,
-.badge {
-  --bs-border-radius: 15px;
-  corner-shape: squircle;
-}
-
 .modal-content {
   border-radius: var(--bs-border-radius) !important;
 }

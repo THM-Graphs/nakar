@@ -11,9 +11,8 @@ export function RoomCard(props: {
   width?: number;
 }) {
   return (
-    <CMSCard>
+    <CMSCard width={props.width} className={"flex-grow-1 flex-shrink-1"}>
       <CMSCardContent
-        width={props.width}
         title={
           <Stack>
             {match(props.room)

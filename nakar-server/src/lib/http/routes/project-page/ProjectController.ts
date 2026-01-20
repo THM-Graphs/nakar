@@ -2,7 +2,7 @@ import {
   Body,
   Controller,
   Get,
-  NotAcceptableException,
+  NotFoundException,
   Param,
   Post,
   Put,
@@ -91,7 +91,7 @@ export class ProjectController {
       } satisfies Update<'api::project.project'> & { status: 'published' });
 
     if (project == null) {
-      throw new NotAcceptableException();
+      throw new NotFoundException();
     }
 
     return await this._schemaFactory.createSchemaProjectPage(project);

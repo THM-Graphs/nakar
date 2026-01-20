@@ -40,9 +40,13 @@ export function Start() {
             {loaderData.recentRooms.length > 0 && (
               <Stack>
                 <h5>Recent Rooms</h5>
-                <Stack direction={"horizontal"} gap={3} className={"flex-wrap"}>
+                <Stack
+                  direction={"horizontal"}
+                  gap={3}
+                  className={"justify-content-start"}
+                >
                   {loaderData.recentRooms.map((r) => (
-                    <RoomCard width={300} key={r.id} room={r}></RoomCard>
+                    <RoomCard width={100} key={r.id} room={r}></RoomCard>
                   ))}
                 </Stack>
               </Stack>
