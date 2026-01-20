@@ -1,11 +1,10 @@
-import { CMSCard } from "./CMSCard.tsx";
-import { Stack } from "react-bootstrap";
+import { Card, Stack } from "react-bootstrap";
 import { ScenarioDto, ScenarioGroupDto } from "../../../src-gen";
 import { CMSCardContent } from "./CMSCardContent.tsx";
 
 export function ScenarioGroupCard(props: { scenarioGroup: ScenarioGroupDto }) {
   return (
-    <CMSCard>
+    <Card>
       <CMSCardContent
         title={
           <span className={"user-select-text"}>
@@ -29,6 +28,6 @@ export function ScenarioGroupCard(props: { scenarioGroup: ScenarioGroupDto }) {
           </Stack>
         }
       ></CMSCardContent>
-    </CMSCard>
+    </Card>
   );
 }

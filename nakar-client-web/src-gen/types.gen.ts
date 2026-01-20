@@ -629,6 +629,16 @@ export type ProjectControllerUpdateProjectResponse = (ProjectPageDto);
 
 export type ProjectControllerUpdateProjectError = unknown;
 
+export type ProjectControllerDeleteProjectData = {
+    path: {
+        projectId: string;
+    };
+};
+
+export type ProjectControllerDeleteProjectResponse = (unknown);
+
+export type ProjectControllerDeleteProjectError = unknown;
+
 export type ProjectControllerCreateProjectData = {
     body: CreateProjectRequestBodyDto;
 };

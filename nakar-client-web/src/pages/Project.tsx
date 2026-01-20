@@ -1,7 +1,6 @@
 import { CMSNavbar } from "../shared/cms/CMSNavbar.tsx";
-import { Container, Stack } from "react-bootstrap";
-import { CMSFooter } from "../shared/cms/CMSFooter.tsx";
-import { LoaderFunctionArgs, useLoaderData, useNavigate } from "react-router";
+import { Button, Container, Stack } from "react-bootstrap";
+import { Link, LoaderFunctionArgs, useLoaderData } from "react-router";
 import { resultOrThrow } from "../shared/data/resultOrThrow.ts";
 import { UserCard } from "../shared/cms/UserCard.tsx";
 import { RoomCard } from "../shared/cms/RoomCard.tsx";
@@ -9,7 +8,6 @@ import { DatabaseConnectionCard } from "../shared/cms/DatabaseConnectionCard.tsx
 import { ScenarioGroupCard } from "../shared/cms/ScenarioGroupCard.tsx";
 import { projectControllerGetProject, ProjectPageDto } from "../../src-gen";
 import { CMSEmptyHint } from "../shared/cms/CMSEmptyHint.tsx";
-import { CMSButton } from "../shared/cms/CMSButton.tsx";
 
 export async function ProjectLoader(
   args: LoaderFunctionArgs,
@@ -29,22 +27,32 @@ export async function ProjectLoader(
 
 export function Project() {
   const projectContext: ProjectPageDto = useLoaderData();
-  const navigate = useNavigate();
 
   return (
     <Stack className={"justify-content-between h-100 bg-body-tertiary"}>
-      <CMSNavbar backUrl={".."}></CMSNavbar>
+      <CMSNavbar
+        breadcrumbContext={[
+          { title: "Home", url: "/" },
+          { title: projectContext.title, url: "./" },
+        ]}
+      ></CMSNavbar>
       <div className={"flex-grow-1 overflow-y-scroll"}>
         <Container className={"pb-5 pt-5"}>
           <Stack gap={5}>
-            <h1 className={"user-select-text"}>{projectContext.title}</h1>
-            <CMSButton
-              title={"Edit Project"}
-              icon={"pen"}
-              onClick={async () => {
-                await navigate(`/project/${projectContext.id}/edit`);
-              }}
-            ></CMSButton>
+            <Stack
+              direction={"horizontal"}
+              className={"justify-content-between"}
+            >
+              <h1 className={"user-select-text"}>{projectContext.title}</h1>
+              <Link to={`/project/${projectContext.id}/edit`}>
+                <Button size={"sm"}>
+                  <Stack direction={"horizontal"} gap={2}>
+                    <i className={"bi bi-pen"}></i>
+                    <span>Edit Project</span>
+                  </Stack>
+                </Button>
+              </Link>
+            </Stack>
             <Stack>
               <h5>Project Users</h5>
               <Stack direction={"horizontal"} gap={3} className={"flex-wrap"}>
@@ -101,7 +109,6 @@ export function Project() {
           </Stack>
         </Container>
       </div>
-      <CMSFooter></CMSFooter>
     </Stack>
   );
 }

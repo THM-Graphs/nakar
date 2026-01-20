@@ -1,5 +1,4 @@
-import { CMSCard } from "./CMSCard.tsx";
-import { Stack } from "react-bootstrap";
+import { Alert } from "react-bootstrap";
 import { handleError } from "../error/handleError.ts";
 
 export function CMSErrorCard(props: { error: unknown }) {
@@ -8,10 +7,10 @@ export function CMSErrorCard(props: { error: unknown }) {
   }
 
   return (
-    <CMSCard className={"bg-danger-subtle"}>
-      <Stack className={"p-3"}>
-        <span className={"text-muted small"}>{handleError(props.error)}</span>
-      </Stack>
-    </CMSCard>
+    <Alert variant={"danger"}>
+      <span className={"small user-select-text"}>
+        {handleError(props.error)}
+      </span>
+    </Alert>
   );
 }

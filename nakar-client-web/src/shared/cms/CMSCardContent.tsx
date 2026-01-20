@@ -15,7 +15,7 @@ export function CMSCardContent(props: {
       className={"p-3 justify-content-between"}
       gap={2}
     >
-      <Stack direction={"horizontal"} className={"align-self-start"}>
+      <Stack direction={"horizontal"} className={"align-self-start ellipsis"}>
         <Stack
           gap={1}
           className={clsx(

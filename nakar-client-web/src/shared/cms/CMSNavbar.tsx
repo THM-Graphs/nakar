@@ -1,27 +1,93 @@
-import { AppNavbar } from "../bars/AppNavbar.tsx";
 import { NavbarLogo } from "../bars/NavbarLogo.tsx";
-import { InfoDropdown } from "../bars/InfoDropdown.tsx";
-import { NavbarButton } from "../elements/NavbarButton.tsx";
-import { useNavigate } from "react-router";
+import {
+  Breadcrumb,
+  Container,
+  Dropdown,
+  Navbar,
+  NavDropdown,
+  Stack,
+} from "react-bootstrap";
+import { ThemeDropdownEntries } from "../bars/ThemeDropdownEntry.tsx";
+import { ClientInfoDropdownEntry } from "../bars/ClientInfoDropdownEntry.tsx";
+import { ServerInfoDropdownEntry } from "../bars/ServerInfoDropdownEntry.tsx";
+import { useAppContext } from "../../state/AppContextData.ts";
+import { useBearStore } from "../../state/useBearStore.ts";
+import { match, P } from "ts-pattern";
 
-export function CMSNavbar(props: { backUrl: string | null }) {
-  const navigate = useNavigate();
+export function CMSNavbar(props: {
+  breadcrumbContext: { title: string; url: string }[];
+}) {
+  const context = useAppContext();
+  const username = useBearStore((s) => s.global.auth.username);
+  const showLoginWindow = useBearStore((s) => s.global.auth.loginWindow.show);
+
   return (
-    <AppNavbar
-      left={
-        <>
-          {props.backUrl != null && (
-            <NavbarButton
-              icon={"chevron-left"}
-              onClick={async () => {
-                await navigate(props.backUrl ?? "..");
-              }}
-            ></NavbarButton>
+    <Navbar className={"bg-body border-bottom shadow-sm z-1"}>
+      <Container>
+        <Stack
+          direction={"horizontal"}
+          className={"align-items-center"}
+          gap={3}
+        >
+          <Navbar.Brand href={"/"}>
+            <NavbarLogo></NavbarLogo>
+          </Navbar.Brand>
+          {props.breadcrumbContext.length > 0 && (
+            <Breadcrumb>
+              {props.breadcrumbContext.map((entry) => (
+                <Breadcrumb.Item href={entry.url} key={entry.url + entry.url}>
+                  {entry.title}
+                </Breadcrumb.Item>
+              ))}
+            </Breadcrumb>
           )}
-        </>
-      }
-      center={<NavbarLogo></NavbarLogo>}
-      right={<InfoDropdown></InfoDropdown>}
-    ></AppNavbar>
+        </Stack>
+
+        <Stack direction={"horizontal"} gap={5}>
+          <NavDropdown
+            align={"end"}
+            title={match(username)
+              .with(P.nullish, () => <i className={"bi bi-person"}></i>)
+              .with(P.string, (user) => (
+                <>
+                  <i className={"bi bi-person-fill me-1"}></i>
+                  <span className={"small"}>{user}</span>
+                </>
+              ))
+              .exhaustive()}
+          >
+            {username ? (
+              <NavDropdown.Item>
+                <span className={"small"}>Logout</span>
+              </NavDropdown.Item>
+            ) : (
+              <NavDropdown.Item onClick={showLoginWindow}>
+                <span className={"small"}>Login</span>
+              </NavDropdown.Item>
+            )}
+          </NavDropdown>
+          <NavDropdown
+            title={<i className={"bi bi-gear-fill"}></i>}
+            align={"end"}
+          >
+            <Dropdown.Header>Theme</Dropdown.Header>
+            <ThemeDropdownEntries></ThemeDropdownEntries>
+            <Dropdown.Divider></Dropdown.Divider>
+            <ClientInfoDropdownEntry></ClientInfoDropdownEntry>
+            <ServerInfoDropdownEntry></ServerInfoDropdownEntry>
+            <Dropdown.Item
+              href={context.env.BACKEND_URL + "/system/backup"}
+              target={"_blank"}
+              className={"small"}
+            >
+              <Stack gap={2} direction={"horizontal"}>
+                <i className="bi bi-download"></i>
+                <span>Download Backup (.tar.gz)</span>
+              </Stack>
+            </Dropdown.Item>
+          </NavDropdown>
+        </Stack>
+      </Container>
+    </Navbar>
   );
 }

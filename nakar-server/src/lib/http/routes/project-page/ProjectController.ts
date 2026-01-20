@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   NotFoundException,
   Param,
@@ -22,7 +23,11 @@ import { JWT } from '../../decorators/JWT';
 import { AuthService } from '../../../auth/AuthService';
 import { Input } from '@strapi/types/dist/modules/documents/params/data';
 import { UpdateProjectRequestBodyDto } from './dto/UpdateProjectRequestBodyDto';
-import { Update } from '@strapi/types/dist/modules/documents/params/document-engine';
+import {
+  Delete as DeleteParams,
+  Update,
+} from '@strapi/types/dist/modules/documents/params/document-engine';
+import { Delete as DeleteResult } from '@strapi/types/dist/modules/documents/result/document-engine';
 
 @Controller('project')
 export class ProjectController {
@@ -95,5 +100,20 @@ export class ProjectController {
     }
 
     return await this._schemaFactory.createSchemaProjectPage(project);
+  }
+
+  @Delete(':projectId')
+  @UseGuards(UserCanAccessProject)
+  public async deleteProject(
+    @Param('projectId') projectId: string,
+  ): Promise<void> {
+    const result: Awaited<DeleteResult<'api::project.project'>> = await strapi
+      .documents('api::project.project')
+      .delete({
+        documentId: projectId,
+      } satisfies DeleteParams<'api::project.project'>);
+    if (result.entries.length === 0) {
+      throw new NotFoundException();
+    }
   }
 }

@@ -9,6 +9,8 @@ div#root {
   user-select: none;
 
   font-family: system-ui;
+  --bs-alert-margin-bottom: 0 !important;
+  --bs-breadcrumb-margin-bottom: 0 !important;
 }
 
 .modal-content {
@@ -76,15 +78,7 @@ div[role="tooltip"] {
 
 .bg-body,
 .bg-body-secondary,
-.bg-body-tertiary,
-.dropdown-menu {
+.bg-body-tertiary {
   backdrop-filter: blur(10px);
   --bs-bg-opacity: 0.8;
-}
-
-.dropdown-menu {
-  background-color: rgba(
-    var(--bs-body-bg-rgb),
-    var(--bs-bg-opacity)
-  ) !important;
 }

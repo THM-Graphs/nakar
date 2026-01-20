@@ -1,5 +1,4 @@
-import { CMSCard } from "./CMSCard.tsx";
-import { Stack } from "react-bootstrap";
+import { Card, Stack } from "react-bootstrap";
 import { Link } from "react-router";
 import { StartPageProjectDto } from "../../../src-gen";
 import { StringListDisplay } from "./StringListDisplay.tsx";
@@ -7,11 +6,11 @@ import { CMSCardContent } from "./CMSCardContent.tsx";
 
 export function ProjectCard(props: { project: StartPageProjectDto }) {
   return (
-    <CMSCard>
+    <Card>
       <CMSCardContent
         title={
           <Stack>
-            <Link to={`/project/${props.project.id}`}>
+            <Link to={`/project/${props.project.id}`} className={"ellipsis"}>
               {props.project.title}
             </Link>
             <span className={"text-muted small user-select-text"}>
@@ -41,6 +40,6 @@ export function ProjectCard(props: { project: StartPageProjectDto }) {
           </Stack>
         }
       ></CMSCardContent>
-    </CMSCard>
+    </Card>
   );
 }

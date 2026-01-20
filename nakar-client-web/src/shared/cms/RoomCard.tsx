@@ -1,20 +1,20 @@
-import { CMSCard } from "./CMSCard.tsx";
 import { RoomVisibilityDisplay } from "./RoomVisibilityDisplay.tsx";
 import { Link } from "react-router";
-import { Stack } from "react-bootstrap";
+import { Card, Stack } from "react-bootstrap";
 import { RoomDto, StartPageRoomDto } from "../../../src-gen";
 import { match, P } from "ts-pattern";
 import { CMSCardContent } from "./CMSCardContent.tsx";
+import { CSSProperties } from "react";
 
 export function RoomCard(props: {
   room: RoomDto | StartPageRoomDto;
-  width?: number;
+  style?: CSSProperties;
 }) {
   return (
-    <CMSCard width={props.width} className={"flex-grow-1 flex-shrink-1"}>
+    <Card style={{ ...props.style }} className={""}>
       <CMSCardContent
         title={
-          <Stack>
+          <Stack className={"ellipsis"}>
             {match(props.room)
               .with(
                 { projectTitle: P.string },
@@ -25,7 +25,9 @@ export function RoomCard(props: {
                 ),
               )
               .otherwise(() => null)}
-            <Link to={`/room/${props.room.id}`}>{props.room.title}</Link>
+            <Link to={`/room/${props.room.id}`} className={"ellipsis"}>
+              {props.room.title}
+            </Link>
           </Stack>
         }
         subtitle={
@@ -35,6 +37,6 @@ export function RoomCard(props: {
         }
         icon={"person-workspace"}
       ></CMSCardContent>
-    </CMSCard>
+    </Card>
   );
 }

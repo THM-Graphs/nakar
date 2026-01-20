@@ -1,10 +1,8 @@
 import { DropdownButton } from "../elements/DropdownButton.tsx";
 import { useBearStore } from "../../state/useBearStore.ts";
 import { Dropdown } from "react-bootstrap";
-import { useEffect, useState } from "react";
-import { resultOrThrow } from "../data/resultOrThrow.ts";
+import { useState } from "react";
 import { Loading } from "../elements/Loading.tsx";
-import { authControllerGetAuth } from "../../../src-gen";
 
 export function AuthButton() {
   const jwt = useBearStore((s) => s.global.auth.jwt);
@@ -14,21 +12,6 @@ export function AuthButton() {
   const showLoginWindow = useBearStore((s) => s.global.auth.loginWindow.show);
 
   const [loading, setLoading] = useState(false);
-
-  // TODO: Move this to AppContext
-  useEffect(() => {
-    (async () => {
-      setLoading(true);
-      const res = resultOrThrow(await authControllerGetAuth());
-      setUsername(res.username);
-    })()
-      .catch(() => {
-        setUsername(null);
-      })
-      .finally(() => {
-        setLoading(false);
-      });
-  }, [jwt]);
 
   return (
     <DropdownButton

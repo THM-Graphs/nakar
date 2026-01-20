@@ -1,15 +1,14 @@
-import { CMSCard } from "./CMSCard.tsx";
 import { Link } from "react-router";
 import { DatabaseConnectionDto } from "../../../src-gen";
 import { CMSCardContent } from "./CMSCardContent.tsx";
+import { Card } from "react-bootstrap";
 
 export function DatabaseConnectionCard(props: {
   databaseConnection: DatabaseConnectionDto;
 }) {
   return (
-    <CMSCard>
+    <Card style={{ width: "400px" }}>
       <CMSCardContent
-        width={400}
         title={
           <Link to={props.databaseConnection.browserUrl}>
             {props.databaseConnection.title}
@@ -22,6 +21,6 @@ export function DatabaseConnectionCard(props: {
         }
         icon={"database"}
       ></CMSCardContent>
-    </CMSCard>
+    </Card>
   );
 }

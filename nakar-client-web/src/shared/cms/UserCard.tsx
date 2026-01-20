@@ -1,20 +1,19 @@
 import { RoleDisplay } from "./RoleDisplay.tsx";
-import { CMSCard } from "./CMSCard.tsx";
 import { UserPreviewDto } from "../../../src-gen";
 import { CMSCardContent } from "./CMSCardContent.tsx";
+import { Card } from "react-bootstrap";
 
 export function UserCard(props: { user: UserPreviewDto; role: UserCardRole }) {
   return (
-    <CMSCard>
+    <Card style={{ width: "300px" }}>
       <CMSCardContent
-        width={300}
         title={
           <span className={"user-select-text"}>{props.user.displayName}</span>
         }
         subtitle={RoleDisplay(props.role)}
         icon={"person-circle"}
       ></CMSCardContent>
-    </CMSCard>
+    </Card>
   );
 }
 

@@ -1,13 +1,11 @@
-import { Container, Stack } from "react-bootstrap";
-import { useLoaderData, useNavigate } from "react-router";
+import { Button, Container, Stack } from "react-bootstrap";
+import { Link, useLoaderData } from "react-router";
 import { CMSNavbar } from "../shared/cms/CMSNavbar.tsx";
-import { CMSFooter } from "../shared/cms/CMSFooter.tsx";
 import { RoomCard } from "../shared/cms/RoomCard.tsx";
 import { resultOrThrow } from "../shared/data/resultOrThrow.ts";
 import { ProjectCard } from "../shared/cms/ProjectCard.tsx";
 import { useBearStore } from "../state/useBearStore.ts";
 import { startControllerGetStart, StartPageDto } from "../../src-gen";
-import { CMSButton } from "../shared/cms/CMSButton.tsx";
 import { CMSEmptyHint } from "../shared/cms/CMSEmptyHint.tsx";
 import { useIsLoggedIn } from "../state/useIsLoggedIn.ts";
 
@@ -21,7 +19,6 @@ export async function StartLoader(): Promise<StartPageDto> {
 
 export function Start() {
   const loaderData: StartPageDto = useLoaderData();
-  const navigate = useNavigate();
   const isLoggedIn: boolean = useIsLoggedIn();
 
   return (
@@ -29,7 +26,7 @@ export function Start() {
       style={{ height: "100%", width: "100%" }}
       className={"justify-content-start bg-body-tertiary"}
     >
-      <CMSNavbar backUrl={null}></CMSNavbar>
+      <CMSNavbar breadcrumbContext={[{ title: "Home", url: "/" }]}></CMSNavbar>
       <div className={"overflow-auto mb-auto p-5"}>
         <Container>
           <Stack gap={5}>
@@ -46,7 +43,11 @@ export function Start() {
                   className={"justify-content-start"}
                 >
                   {loaderData.recentRooms.map((r) => (
-                    <RoomCard width={100} key={r.id} room={r}></RoomCard>
+                    <RoomCard
+                      style={{ width: "280px" }}
+                      key={r.id}
+                      room={r}
+                    ></RoomCard>
                   ))}
                 </Stack>
               </Stack>
@@ -67,14 +68,16 @@ export function Start() {
             <Stack>
               <h5>My Projects</h5>
               <Stack direction={"vertical"} gap={3} className={"flex-wrap"}>
-                <CMSButton
-                  disabled={!isLoggedIn}
-                  title={"Create Project"}
-                  icon={"plus-lg"}
-                  onClick={async () => {
-                    await navigate("/project/add");
-                  }}
-                ></CMSButton>
+                {isLoggedIn && (
+                  <Link to={"/project/add"}>
+                    <Button size={"sm"}>
+                      <Stack direction={"horizontal"} gap={1}>
+                        <i className={"bi bi-plus-lg"}></i>
+                        <span>Create Project</span>
+                      </Stack>
+                    </Button>
+                  </Link>
+                )}
                 {loaderData.myProjects.map((r) => (
                   <ProjectCard key={r.id} project={r}></ProjectCard>
                 ))}
@@ -95,7 +98,6 @@ export function Start() {
           </Stack>
         </Container>
       </div>
-      <CMSFooter></CMSFooter>
     </Stack>
   );
 }

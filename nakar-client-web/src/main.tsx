@@ -5,7 +5,11 @@ import "bootstrap-icons/font/bootstrap-icons.css";
 import "./index.css";
 import { createBrowserRouter, RouterProvider } from "react-router";
 import { loadEnvOrDefault } from "./shared/env/env.ts";
-import { client as client, redirectControllerGetUrl } from "../src-gen";
+import {
+  authControllerGetAuth,
+  client as client,
+  redirectControllerGetUrl,
+} from "../src-gen";
 import { Start, StartLoader } from "./pages/Start.tsx";
 import { CanvasLoader, CanvasPage } from "./pages/CanvasPage.tsx";
 import { AppContext, AppContextData } from "./state/AppContextData.ts";
@@ -16,6 +20,7 @@ import { ErrorComp } from "./pages/Error.tsx";
 import { Project, ProjectLoader } from "./pages/Project.tsx";
 import { Room, RoomLoader } from "./pages/Room.tsx";
 import { AddEditProject } from "./pages/AddEditProject.tsx";
+import { resultOrThrow } from "./shared/data/resultOrThrow.ts";
 
 async function bootstrap() {
   bootstrapTheme();
@@ -50,6 +55,13 @@ async function bootstrap() {
         headers: {
           Authorization: jwt ? `Bearer ${jwt}` : null,
         },
+      });
+
+      (async () => {
+        const res = resultOrThrow(await authControllerGetAuth());
+        useBearStore.getState().global.auth.setUsername(res.username);
+      })().catch(() => {
+        useBearStore.getState().global.auth.setUsername(null);
       });
     },
     { fireImmediately: true },
