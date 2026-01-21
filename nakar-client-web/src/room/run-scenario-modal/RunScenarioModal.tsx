@@ -6,7 +6,6 @@ import { Panel } from "../../shared/elements/Panel.tsx";
 import { NavbarButton } from "../../shared/elements/NavbarButton.tsx";
 import { ScenarioIcon } from "../scenarios-panel/ScenarioIcon.tsx";
 import { ArgumentDisplay } from "./ArgumentDisplay.tsx";
-import { ScnearioPlayButton } from "../scenarios-panel/ScenarioPlayButton.tsx";
 import { actionControllerLoadScenario } from "../../../src-gen";
 
 export function RunScenarioModal() {
@@ -104,17 +103,9 @@ export function RunScenarioModal() {
               <NavbarButton
                 onClick={handleRun}
                 className={"ps-1 pe-1 justify-content-center border-start"}
-              >
-                <ScnearioPlayButton
-                  onClick={(event) => {
-                    event.stopPropagation();
-                  }}
-                  icon={additive ? "plus-circle-fill" : "play-circle-fill"}
-                ></ScnearioPlayButton>
-                <span className={"small"}>
-                  {additive ? "Add Scenario" : "Run Scenario"}
-                </span>
-              </NavbarButton>
+                title={additive ? "Add Scenario" : "Run Scenario"}
+                icon={additive ? "plus-circle-fill" : "play-circle-fill"}
+              ></NavbarButton>
             </Stack>
           </Panel>
         </>

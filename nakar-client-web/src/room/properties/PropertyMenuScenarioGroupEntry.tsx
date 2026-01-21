@@ -17,13 +17,12 @@ export function PropertyMenuScenarioGroupEntry(props: {
     <>
       {scenarioGroup.scenarios.map((scenario) => {
         return (
-          <Dropdown.Item key={scenario.id}>
+          <Dropdown.ItemText key={scenario.id}>
             <Stack
               gap={0}
               direction={"vertical"}
               className={"justify-content-between"}
             >
-              <span className={"small text-muted"}>{scenarioGroup.title}</span>
               <ScenarioTitleAndBadges
                 scenario={scenario}
                 arguments={[
@@ -37,7 +36,7 @@ export function PropertyMenuScenarioGroupEntry(props: {
                 }}
               ></ScenarioTitleAndBadges>
             </Stack>
-          </Dropdown.Item>
+          </Dropdown.ItemText>
         );
       })}
     </>

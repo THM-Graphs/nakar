@@ -43,7 +43,7 @@ export function Label(props: {
   const color = label ? getTextColor(label.color, colorSchema) : "#fff";
 
   return (
-    <Stack direction={"horizontal"} className={"align-items-start"}>
+    <Stack direction={"horizontal"} className={"align-items-start shadow-sm"}>
       <Stack
         gap={1}
         direction={"horizontal"}
