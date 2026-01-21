@@ -19,8 +19,9 @@ import { AuthModal } from "./shared/auth/AuthModal.tsx";
 import { ErrorComp } from "./pages/Error.tsx";
 import { Project, ProjectLoader } from "./pages/Project.tsx";
 import { Room, RoomLoader } from "./pages/Room.tsx";
-import { AddEditProject } from "./pages/AddEditProject.tsx";
 import { resultOrThrow } from "./shared/data/resultOrThrow.ts";
+import { EditProject, EditProjectLoader } from "./pages/EditProject.tsx";
+import { AddProject } from "./pages/AddProject.tsx";
 
 async function bootstrap() {
   bootstrapTheme();
@@ -84,12 +85,12 @@ async function bootstrap() {
         },
         {
           path: "/project/add",
-          element: <AddEditProject></AddEditProject>,
+          element: <AddProject></AddProject>,
         },
         {
           path: "/project/:id/edit",
-          element: <AddEditProject></AddEditProject>,
-          loader: ProjectLoader,
+          element: <EditProject></EditProject>,
+          loader: EditProjectLoader,
         },
         {
           path: "/project/:id",

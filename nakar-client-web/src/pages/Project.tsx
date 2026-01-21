@@ -1,6 +1,6 @@
 import { CMSNavbar } from "../shared/cms/CMSNavbar.tsx";
-import { Button, Container, Stack } from "react-bootstrap";
-import { Link, LoaderFunctionArgs, useLoaderData } from "react-router";
+import { Container, Stack } from "react-bootstrap";
+import { LoaderFunctionArgs, useLoaderData } from "react-router";
 import { resultOrThrow } from "../shared/data/resultOrThrow.ts";
 import { UserCard } from "../shared/cms/UserCard.tsx";
 import { RoomCard } from "../shared/cms/RoomCard.tsx";
@@ -8,6 +8,8 @@ import { DatabaseConnectionCard } from "../shared/cms/DatabaseConnectionCard.tsx
 import { ScenarioGroupCard } from "../shared/cms/ScenarioGroupCard.tsx";
 import { projectControllerGetProject, ProjectPageDto } from "../../src-gen";
 import { CMSEmptyHint } from "../shared/cms/CMSEmptyHint.tsx";
+import { CMSHeader } from "../shared/cms/CMSHeader.tsx";
+import { CMSButton } from "../shared/cms/CMSButton.tsx";
 
 export async function ProjectLoader(
   args: LoaderFunctionArgs,
@@ -29,7 +31,7 @@ export function Project() {
   const projectContext: ProjectPageDto = useLoaderData();
 
   return (
-    <Stack className={"justify-content-between h-100 bg-body-tertiary"}>
+    <Stack className={""}>
       <CMSNavbar
         breadcrumbContext={[
           { title: "Home", url: "/" },
@@ -43,15 +45,15 @@ export function Project() {
               direction={"horizontal"}
               className={"justify-content-between"}
             >
-              <h1 className={"user-select-text"}>{projectContext.title}</h1>
-              <Link to={`/project/${projectContext.id}/edit`}>
-                <Button size={"sm"}>
-                  <Stack direction={"horizontal"} gap={2}>
-                    <i className={"bi bi-pen"}></i>
-                    <span>Edit Project</span>
-                  </Stack>
-                </Button>
-              </Link>
+              <CMSHeader
+                title={projectContext.title}
+                className={"user-select-text"}
+              ></CMSHeader>
+              <CMSButton
+                title={"Edit Project"}
+                icon={"pen"}
+                link={`/project/${projectContext.id}/edit`}
+              ></CMSButton>
             </Stack>
             <Stack>
               <h5>Project Users</h5>

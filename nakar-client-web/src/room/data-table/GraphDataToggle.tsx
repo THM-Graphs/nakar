@@ -1,8 +1,9 @@
 import { Stack } from "react-bootstrap";
 import { NavbarButton } from "../../shared/elements/NavbarButton.tsx";
 import { useBearStore } from "../../state/useBearStore.ts";
+import clsx from "clsx";
 
-export function GraphDataToggle() {
+export function GraphDataToggle(props: { className?: string }) {
   const tabs = useBearStore((s) => s.room.canvas.tabs);
   const tableData = useBearStore((s) => s.room.scenario.graph.table.data);
   const graphElements = useBearStore((s) => s.room.scenario.graph.elements);
@@ -13,7 +14,10 @@ export function GraphDataToggle() {
   return (
     <Stack
       direction={"vertical"}
-      className={"bg-body-tertiary border border-end-0 z-1 rounded-start"}
+      className={clsx(
+        "bg-body-tertiary border border-end-0 z-1 rounded-start",
+        props.className,
+      )}
     >
       <NavbarButton
         size={"big"}

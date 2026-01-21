@@ -107,9 +107,8 @@ export class ProjectController {
   public async deleteProject(
     @Param('projectId') projectId: string,
   ): Promise<void> {
-    const result: Awaited<DeleteResult<'api::project.project'>> = await strapi
-      .documents('api::project.project')
-      .delete({
+    const result: Awaited<DeleteResult<'api::project.project', never>> =
+      await strapi.documents('api::project.project').delete({
         documentId: projectId,
       } satisfies DeleteParams<'api::project.project'>);
     if (result.entries.length === 0) {

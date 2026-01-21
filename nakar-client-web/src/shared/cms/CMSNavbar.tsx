@@ -22,7 +22,7 @@ export function CMSNavbar(props: {
   const showLoginWindow = useBearStore((s) => s.global.auth.loginWindow.show);
 
   return (
-    <Navbar className={"bg-body border-bottom shadow-sm z-1"}>
+    <Navbar className={"bg-body border-bottom shadow-sm z-1 sticky-top"}>
       <Container>
         <Stack
           direction={"horizontal"}
@@ -35,7 +35,11 @@ export function CMSNavbar(props: {
           {props.breadcrumbContext.length > 0 && (
             <Breadcrumb>
               {props.breadcrumbContext.map((entry) => (
-                <Breadcrumb.Item href={entry.url} key={entry.url + entry.url}>
+                <Breadcrumb.Item
+                  className={"small"}
+                  href={entry.url}
+                  key={entry.url + entry.url}
+                >
                   {entry.title}
                 </Breadcrumb.Item>
               ))}
@@ -57,7 +61,11 @@ export function CMSNavbar(props: {
               .exhaustive()}
           >
             {username ? (
-              <NavDropdown.Item>
+              <NavDropdown.Item
+                onClick={() => {
+                  context.logout();
+                }}
+              >
                 <span className={"small"}>Logout</span>
               </NavDropdown.Item>
             ) : (

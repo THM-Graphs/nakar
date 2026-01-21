@@ -1,24 +1,17 @@
 import { DropdownButton } from "../elements/DropdownButton.tsx";
 import { useBearStore } from "../../state/useBearStore.ts";
 import { Dropdown } from "react-bootstrap";
-import { useState } from "react";
-import { Loading } from "../elements/Loading.tsx";
+import { useAppContext } from "../../state/AppContextData.ts";
 
 export function AuthButton() {
-  const jwt = useBearStore((s) => s.global.auth.jwt);
-  const setJWT = useBearStore((s) => s.global.auth.setJWT);
+  const context = useAppContext();
   const username = useBearStore((s) => s.global.auth.username);
-  const setUsername = useBearStore((s) => s.global.auth.setUsername);
   const showLoginWindow = useBearStore((s) => s.global.auth.loginWindow.show);
-
-  const [loading, setLoading] = useState(false);
 
   return (
     <DropdownButton
       title={
-        loading ? (
-          <Loading size={"sm"}></Loading>
-        ) : username ? (
+        username ? (
           <span>
             <i className={"bi bi-person-fill"}></i> {username}
           </span>
@@ -33,8 +26,7 @@ export function AuthButton() {
         <Dropdown.Item
           className={"small"}
           onClick={() => {
-            setJWT(null);
-            location.reload();
+            context.logout();
           }}
         >
           <i className={"bi bi-person me-2"}></i>

@@ -195,7 +195,7 @@ export function CanvasPage() {
 
   return (
     <CanvasContext.Provider value={canvasContext}>
-      <Stack style={{ height: "100%" }} className={"position-relative"}>
+      <Stack style={{ height: "100%" }} className={"position-relative bg-body"}>
         <Stack gap={1} className={"pb-3"}>
           <Stack className="flex-grow-0 flex-shrink-0">
             <AppNavbar
@@ -226,7 +226,7 @@ export function CanvasPage() {
               className=""
             ></AppNavbar>
             <CanvasToolbar
-              className={"border-bottom bg-body-tertiary"}
+              className={"border-bottom bg-body-tertiary shadow-sm"}
             ></CanvasToolbar>
           </Stack>
           <Stack
@@ -238,7 +238,7 @@ export function CanvasPage() {
             <Stack
               direction={"vertical"}
               className={
-                "bg-body-tertiary border border-start-0 flex-grow-0 flex-shrink-0 z-1 rounded-end align-self-start"
+                "bg-body-tertiary border border-start-0 flex-grow-0 flex-shrink-0 z-1 rounded-end align-self-start shadow-sm"
               }
             >
               <ScenariosPanelButton
@@ -268,11 +268,11 @@ export function CanvasPage() {
               className={"align-self-start flex-grow-0 flex-shrink-0"}
               gap={1}
             >
-              <GraphDataToggle></GraphDataToggle>
+              <GraphDataToggle className={"shadow-sm"}></GraphDataToggle>
               <Stack
                 direction="vertical"
                 className={
-                  "bg-body-tertiary border border-end-0 z-1 rounded-start"
+                  "bg-body-tertiary border border-end-0 z-1 rounded-start shadow-sm"
                 }
               >
                 <InspectorPanelButton

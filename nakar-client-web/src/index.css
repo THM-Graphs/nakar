@@ -4,6 +4,10 @@ div#root {
   height: 100%;
 }
 
+body {
+  background-color: var(--bs-tertiary-bg);
+}
+
 * {
   /* Prevent SVG elements to show text cursor */
   user-select: none;
@@ -11,10 +15,6 @@ div#root {
   font-family: system-ui;
   --bs-alert-margin-bottom: 0 !important;
   --bs-breadcrumb-margin-bottom: 0 !important;
-}
-
-.modal-content {
-  border-radius: var(--bs-border-radius) !important;
 }
 
 .rounded-top-end {
@@ -61,11 +61,6 @@ div[role="tooltip"] {
   text-overflow: ellipsis;
 }
 
-.modal-content {
-  border-radius: 0;
-  border: 0;
-}
-
 .markdown img {
   width: 100%;
 }
@@ -81,4 +76,9 @@ div[role="tooltip"] {
 .bg-body-tertiary {
   backdrop-filter: blur(10px);
   --bs-bg-opacity: 0.8;
+}
+
+.card,
+.dropdown-menu {
+  box-shadow: var(--bs-box-shadow-sm) !important;
 }

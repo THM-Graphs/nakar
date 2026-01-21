@@ -1,5 +1,5 @@
-import { Button, Container, Stack } from "react-bootstrap";
-import { Link, useLoaderData } from "react-router";
+import { Container, Stack } from "react-bootstrap";
+import { useLoaderData } from "react-router";
 import { CMSNavbar } from "../shared/cms/CMSNavbar.tsx";
 import { RoomCard } from "../shared/cms/RoomCard.tsx";
 import { resultOrThrow } from "../shared/data/resultOrThrow.ts";
@@ -8,6 +8,7 @@ import { useBearStore } from "../state/useBearStore.ts";
 import { startControllerGetStart, StartPageDto } from "../../src-gen";
 import { CMSEmptyHint } from "../shared/cms/CMSEmptyHint.tsx";
 import { useIsLoggedIn } from "../state/useIsLoggedIn.ts";
+import { CMSButton } from "../shared/cms/CMSButton.tsx";
 
 export async function StartLoader(): Promise<StartPageDto> {
   return resultOrThrow(
@@ -22,10 +23,7 @@ export function Start() {
   const isLoggedIn: boolean = useIsLoggedIn();
 
   return (
-    <Stack
-      style={{ height: "100%", width: "100%" }}
-      className={"justify-content-start bg-body-tertiary"}
-    >
+    <Stack className={""}>
       <CMSNavbar breadcrumbContext={[{ title: "Home", url: "/" }]}></CMSNavbar>
       <div className={"overflow-auto mb-auto p-5"}>
         <Container>
@@ -69,14 +67,11 @@ export function Start() {
               <h5>My Projects</h5>
               <Stack direction={"vertical"} gap={3} className={"flex-wrap"}>
                 {isLoggedIn && (
-                  <Link to={"/project/add"}>
-                    <Button size={"sm"}>
-                      <Stack direction={"horizontal"} gap={1}>
-                        <i className={"bi bi-plus-lg"}></i>
-                        <span>Create Project</span>
-                      </Stack>
-                    </Button>
-                  </Link>
+                  <CMSButton
+                    link={"/project/add"}
+                    title={"Create Project"}
+                    icon={"plus-lg"}
+                  ></CMSButton>
                 )}
                 {loaderData.myProjects.map((r) => (
                   <ProjectCard key={r.id} project={r}></ProjectCard>
