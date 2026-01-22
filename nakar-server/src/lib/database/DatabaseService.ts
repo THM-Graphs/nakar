@@ -15,7 +15,13 @@ import { LiveCanvasViewSettings } from '../live-canvas/data/LiveCanvasViewSettin
 import { TupleTypes } from '../schema/TupleTypes';
 import { Injectable } from '@nestjs/common';
 import { ApiPostScenarioActionPostScenarioAction } from '../../../types/generated/contentTypes';
-import { FindMany } from '@strapi/types/dist/modules/documents/params/document-engine';
+import {
+  Create,
+  Delete,
+  FindMany,
+  Update,
+} from '@strapi/types/dist/modules/documents/params/document-engine';
+import { LiveCanvasLabelViewSettings } from '../live-canvas/data/LiveCanvasLabelViewSettings';
 
 @Injectable()
 export class DatabaseService {
@@ -668,6 +674,23 @@ export class DatabaseService {
     return result;
   }
 
+  public async getCanvasLabelViewSettings(
+    canvas: Result<'api::canvas.canvas'>,
+  ): Promise<Result<'api::canvas-label-setting.canvas-label-setting'>[]> {
+    const result: Result<
+      'api::canvas.canvas',
+      { populate: { nodeSettings: { populate: [] } } }
+    > | null = await strapi.documents('api::canvas.canvas').findOne({
+      documentId: canvas.documentId,
+      status: 'published',
+      populate: { nodeSettings: { populate: [] } },
+    });
+    if (result == null) {
+      return [];
+    }
+    return result.nodeSettings ?? [];
+  }
+
   public async getProjectOfCanvas(
     canvas: Result<'api::canvas.canvas'>,
   ): Promise<Result<'api::project.project'>> {
@@ -853,13 +876,61 @@ export class DatabaseService {
     await strapi.documents('api::canvas.canvas').update({
       documentId: canvas.documentId,
       data: {
-        compressRelationshipsWidthFactor:
-          viewSettings.compressRelationshipsWidthFactor,
-        growNodesBasedOnDegree: viewSettings.growNodesBasedOnDegree,
-        growNodesBasedOnDegreeFactor: viewSettings.growNodesBasedOnDegreeFactor,
+        ...viewSettings.toDBData(),
       },
       status: 'published',
     });
+
+    for (const entry of viewSettings.labelSettings) {
+      const label: string = entry[0];
+      const labelSetting: LiveCanvasLabelViewSettings = entry[1];
+
+      const existingEntries: Result<'api::canvas-label-setting.canvas-label-setting'>[] =
+        await strapi
+          .documents('api::canvas-label-setting.canvas-label-setting')
+          .findMany({
+            filters: {
+              label: label,
+              canvas: { documentId: canvas.documentId },
+            },
+          } satisfies FindMany<'api::canvas-label-setting.canvas-label-setting'>);
+      // Delete duplicates
+      if (existingEntries.length > 1) {
+        for (let i: number = 1; i < existingEntries.length; i += 1) {
+          await strapi
+            .documents('api::canvas-label-setting.canvas-label-setting')
+            .delete({
+              documentId: existingEntries[i].documentId,
+            } satisfies Delete<'api::canvas-label-setting.canvas-label-setting'>);
+        }
+      }
+      if (existingEntries.length === 0) {
+        await strapi
+          .documents('api::canvas-label-setting.canvas-label-setting')
+          .create({
+            data: {
+              label: label,
+              canvas: canvas.documentId,
+              ...labelSetting.dbData(),
+            },
+            status: 'published',
+          } satisfies Create<'api::canvas-label-setting.canvas-label-setting'>);
+      } else {
+        await strapi
+          .documents('api::canvas-label-setting.canvas-label-setting')
+          .update({
+            documentId: existingEntries[0].documentId,
+            data: {
+              label: label,
+              canvas: canvas.documentId,
+              ...labelSetting.dbData(),
+            },
+            status: 'published',
+          } satisfies Update<'api::canvas-label-setting.canvas-label-setting'> & {
+            status: 'published';
+          });
+      }
+    }
   }
 
   public async getUser(

@@ -541,7 +541,9 @@ export class WebSocketManager
             (message: CanvasEventViewSettingsChanged): void => {
               this.sendToRoom(message.canvas.canvasId, {
                 type: 'CanvasViewSettingsChangedWsdto',
-                viewSettings: message.viewSettings.toSchema(),
+                viewSettings: message.viewSettings.toSchema(
+                  message.canvas.labels,
+                ),
               });
             },
           )

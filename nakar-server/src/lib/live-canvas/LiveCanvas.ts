@@ -117,6 +117,10 @@ export class LiveCanvas {
     );
   }
 
+  public get labels(): string[] {
+    return this.getGraph().nodes.labelHistogram.toKeyArray();
+  }
+
   public get onEvent$(): Observable<CanvasEvent> {
     return this._onEvent.asObservable();
   }
@@ -162,7 +166,9 @@ export class LiveCanvas {
 
         const canvas: Result<'api::canvas.canvas'> =
           await this._database.getCanvas(this._canvasId);
-        await this._data.loadFromDb(canvas);
+        const labelSettings: Result<'api::canvas-label-setting.canvas-label-setting'>[] =
+          await this._database.getCanvasLabelViewSettings(canvas);
+        await this._data.loadFromDb(canvas, labelSettings);
         changeRecorder.didLoadGraph();
         changeRecorder.didChangeViewSettings();
 

@@ -224,6 +224,7 @@ export const useBearStore = create<BearState>()(
                     compressRelationshipsWidthFactor: 0,
                     growNodesBasedOnDegree: false,
                     growNodesBasedOnDegreeFactor: 0,
+                    labelSettings: [],
                   },
                 },
                 setGraph: (graph) => {
@@ -256,6 +257,7 @@ export const useBearStore = create<BearState>()(
                           compressRelationshipsWidthFactor: 0,
                           growNodesBasedOnDegree: false,
                           growNodesBasedOnDegreeFactor: 0,
+                          labelSettings: [],
                         },
                       };
                     } else {

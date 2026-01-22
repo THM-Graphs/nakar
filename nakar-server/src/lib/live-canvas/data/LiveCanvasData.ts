@@ -36,11 +36,17 @@ export class LiveCanvasData {
     this._viewSettings = newValue;
   }
 
-  public async loadFromDb(canvas: Result<'api::canvas.canvas'>): Promise<void> {
+  public async loadFromDb(
+    canvas: Result<'api::canvas.canvas'>,
+    canvasLabelViewSettings: Result<'api::canvas-label-setting.canvas-label-setting'>[],
+  ): Promise<void> {
     const undoableData: LiveCanvasUndoableData =
       await this._loadUndoableData(canvas);
     this._undoableData.reset(undoableData);
-    this._viewSettings = LiveCanvasViewSettings.fromDB(canvas);
+    this._viewSettings = LiveCanvasViewSettings.fromDB(
+      canvas,
+      canvasLabelViewSettings,
+    );
   }
 
   public async saveToDb(canvas: Result<'api::canvas.canvas'>): Promise<void> {

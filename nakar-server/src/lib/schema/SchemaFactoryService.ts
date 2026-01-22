@@ -462,7 +462,7 @@ export class SchemaFactoryService {
         graph,
         liveCanvas.data.undoableData.info,
       ),
-      viewSettings: liveCanvas.data.viewSettings.toSchema(),
+      viewSettings: liveCanvas.data.viewSettings.toSchema(liveCanvas.labels),
       histogram: this.createSchemaHistogram(graph),
       notes: await Promise.all(
         notes.notes
@@ -824,7 +824,7 @@ export class SchemaFactoryService {
       outDegree: node.outDegree(graph),
       degree: node.degree(graph),
       namesInQuery: node.namesInQuery.toArray(),
-      customColor: null, // TODO
+      customColor: node.getCustomColor(viewSettings)?.toDto() ?? null,
       source:
         (await databaseCache.getDatabase(node.source))?.title ?? node.source,
       sourceId: node.source,

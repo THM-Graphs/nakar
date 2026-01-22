@@ -7,6 +7,10 @@ import { LiveCanvasUndoableData } from '../data/LiveCanvasUndoableData';
 import { ElementCreationReason } from './ElementCreationReason';
 import { Range } from '../../range/Range';
 import { LiveCanvasViewSettings } from '../data/LiveCanvasViewSettings';
+import { LiveCanvasLabelViewSettings } from '../data/LiveCanvasLabelViewSettings';
+import { ElementColor } from './color/ElementColor';
+import { match, P } from 'ts-pattern';
+import { ElementColorPreset } from './color/ElementColorPreset';
 
 export class GraphNode {
   public static readonly defaultRadius: number = 40;
@@ -68,6 +72,12 @@ export class GraphNode {
     return this._position;
   }
 
+  public get primaryLabel(): string {
+    return this.labels
+      .toArray()
+      .toSorted((a: string, b: string): number => a.localeCompare(b))[0];
+  }
+
   public get representationCount(): number {
     if (this.compressed.size === 0) {
       return 1;
@@ -121,8 +131,11 @@ export class GraphNode {
     degreeRange: Range,
     graph: LiveCanvasUndoableData,
   ): number {
+    const labelViewSettings: LiveCanvasLabelViewSettings =
+      viewSettings.getLabelSettings(this.primaryLabel);
+
     if (!viewSettings.growNodesBasedOnDegree) {
-      return GraphNode.defaultRadius;
+      return labelViewSettings.getComputedRadius();
     }
 
     const toRange: Range = new Range({
@@ -135,8 +148,25 @@ export class GraphNode {
         toRange,
         this.degree(graph),
         viewSettings.scaleType,
-      ) * GraphNode.defaultRadius
+      ) * labelViewSettings.getComputedRadius()
     );
+  }
+
+  public getCustomColor(
+    viewSettings: LiveCanvasViewSettings,
+  ): ElementColor | null {
+    const labelViewSettings: LiveCanvasLabelViewSettings =
+      viewSettings.getLabelSettings(this.primaryLabel);
+
+    return match(labelViewSettings.getComputedColorIndex())
+      .with(P.nullish, (): null => null)
+      .with(0, (): ElementColor => new ElementColorPreset({ index: 0 }))
+      .with(1, (): ElementColor => new ElementColorPreset({ index: 1 }))
+      .with(2, (): ElementColor => new ElementColorPreset({ index: 2 }))
+      .with(3, (): ElementColor => new ElementColorPreset({ index: 3 }))
+      .with(4, (): ElementColor => new ElementColorPreset({ index: 4 }))
+      .with(5, (): ElementColor => new ElementColorPreset({ index: 5 }))
+      .exhaustive();
   }
 
   public toPlain(): z.infer<typeof GraphNode.schema> {

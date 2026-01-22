@@ -15,6 +15,7 @@ export function NumberInput(props: {
   value: number;
   onChange: (value: number) => void;
   disabled?: boolean;
+  className?: string;
 }) {
   const [value, setValue] = useState<string>(props.value.toString());
 
@@ -23,7 +24,7 @@ export function NumberInput(props: {
   }, [props.value]);
 
   return (
-    <Stack direction={"horizontal"}>
+    <Stack direction={"horizontal"} className={props.className}>
       <Form.Control
         className={"small"}
         type="number"

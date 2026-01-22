@@ -1,5 +1,8 @@
+/* eslint-disable @typescript-eslint/no-unsafe-function-type */
 import { ApiProperty } from '@nestjs/swagger';
-import { IsBoolean, IsNumber } from 'class-validator';
+import { IsArray, IsBoolean, IsNumber, ValidateNested } from 'class-validator';
+import { Type } from 'class-transformer';
+import { LiveCanvasLabelViewSettingsDto } from './LiveCanvasLabelViewSettingsDto';
 
 export class LiveCanvasViewSettingsDto {
   @ApiProperty({ type: Number })
@@ -13,4 +16,10 @@ export class LiveCanvasViewSettingsDto {
   @ApiProperty({ type: Number })
   @IsNumber()
   public growNodesBasedOnDegreeFactor!: number;
+
+  @ApiProperty({ type: LiveCanvasLabelViewSettingsDto, isArray: true })
+  @ValidateNested()
+  @IsArray()
+  @Type((): Function => LiveCanvasLabelViewSettingsDto)
+  public labelSettings!: LiveCanvasLabelViewSettingsDto[];
 }

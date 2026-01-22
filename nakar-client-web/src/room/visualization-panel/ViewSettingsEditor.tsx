@@ -1,7 +1,10 @@
-import { Collapsable } from "../../shared/elements/Collapsable.tsx";
 import { Form, Stack } from "react-bootstrap";
 import { NumberInput } from "../../shared/elements/NumberInput.tsx";
-import { LiveCanvasViewSettingsDto } from "../../../src-gen";
+import {
+  LiveCanvasLabelViewSettingsDto,
+  LiveCanvasViewSettingsDto,
+} from "../../../src-gen";
+import { LabelViewSettingsEditor } from "./LabelViewSettingsEditor.tsx";
 
 export function ViewSettingsEditor(props: {
   viewSettings: LiveCanvasViewSettingsDto;
@@ -9,61 +12,67 @@ export function ViewSettingsEditor(props: {
 }) {
   const visualizationData = props.viewSettings;
   return (
-    <Stack gap={5}>
-      <Collapsable
-        title={<span className={"small"}>General</span>}
-        initialState={false}
-        className={""}
-      >
-        <Stack className={"pt-2 pb-2 border-top"} gap={2}>
-          <Stack className={"ps-2 pe-2 pb-2 border-bottom"}>
-            <Form.Check
-              id={"growNodesBasedOnDegree"}
-              label={
-                <span className={"small"}>Grow Nodes Based On Degree</span>
-              }
-              checked={visualizationData.growNodesBasedOnDegree}
-              onChange={(e) => {
-                props.onChange({
-                  ...props.viewSettings,
-                  growNodesBasedOnDegree: e.target.checked,
-                });
-              }}
-            ></Form.Check>
-            {visualizationData.growNodesBasedOnDegree && (
-              <NumberInput
-                value={visualizationData.growNodesBasedOnDegreeFactor}
-                onChange={(newValue: number) => {
-                  props.onChange({
-                    ...props.viewSettings,
-                    growNodesBasedOnDegreeFactor: newValue,
-                  });
-                }}
-              ></NumberInput>
-            )}
-            <Form.Text className={"small text-muted"}>
-              The higher the degree of a node, the larger it is displayed.
-            </Form.Text>
-          </Stack>
-          <Stack className={"ps-2 pe-2"}>
-            <Form.Label className={"small"}>
-              Relationship Cluster Size
-            </Form.Label>
-            <NumberInput
-              value={visualizationData.compressRelationshipsWidthFactor}
-              onChange={(newValue: number) => {
-                props.onChange({
-                  ...props.viewSettings,
-                  compressRelationshipsWidthFactor: newValue,
-                });
-              }}
-            ></NumberInput>
-            <Form.Text className={"small text-muted"}>
-              The lines of a relationship that is a cluster become thicker.
-            </Form.Text>
-          </Stack>
-        </Stack>
-      </Collapsable>
+    <Stack>
+      <Stack className={"p-2 border-bottom"} gap={0}>
+        <Form.Check
+          className={"flex-grow-0"}
+          label={<span className={"small"}>Grow Nodes Based On Degree</span>}
+          id={"growNodesBasedOnDegree"}
+          checked={visualizationData.growNodesBasedOnDegree}
+          onChange={(e) => {
+            props.onChange({
+              ...props.viewSettings,
+              growNodesBasedOnDegree: e.target.checked,
+            });
+          }}
+        ></Form.Check>
+        <NumberInput
+          className={"flex-grow-1"}
+          disabled={!visualizationData.growNodesBasedOnDegree}
+          value={visualizationData.growNodesBasedOnDegreeFactor}
+          onChange={(newValue: number) => {
+            props.onChange({
+              ...props.viewSettings,
+              growNodesBasedOnDegreeFactor: newValue,
+            });
+          }}
+        ></NumberInput>
+        <span className={"small text-muted"}>
+          The higher the degree of a node, the larger it is displayed.
+        </span>
+      </Stack>
+      <Stack className={"p-2"}>
+        <span className={"small"}>Relationship Cluster Size</span>
+        <NumberInput
+          value={visualizationData.compressRelationshipsWidthFactor}
+          onChange={(newValue: number) => {
+            props.onChange({
+              ...props.viewSettings,
+              compressRelationshipsWidthFactor: newValue,
+            });
+          }}
+        ></NumberInput>
+        <span className={"small text-muted"}>
+          The lines of a relationship that is a cluster become thicker.
+        </span>
+      </Stack>
+      {props.viewSettings.labelSettings.map(
+        (labelViewSettings: LiveCanvasLabelViewSettingsDto) => (
+          <LabelViewSettingsEditor
+            key={labelViewSettings.label}
+            value={labelViewSettings}
+            onChange={(newValue: LiveCanvasLabelViewSettingsDto) => {
+              const newViewSettings = {
+                ...props.viewSettings,
+                labelSettings: props.viewSettings.labelSettings.map((ls) =>
+                  ls.label === newValue.label ? newValue : ls,
+                ),
+              };
+              props.onChange(newViewSettings);
+            }}
+          ></LabelViewSettingsEditor>
+        ),
+      )}
     </Stack>
   );
 }

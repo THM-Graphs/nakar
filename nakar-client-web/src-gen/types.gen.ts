@@ -301,6 +301,16 @@ export type LiveCanvasGraphElementsDto = {
     labels: Array<LabelDto>;
 };
 
+export type LiveCanvasLabelViewSettingsDto = {
+    label: string;
+    radius: number;
+    customRadius: boolean;
+    colorIndex: 0 | 1 | 2 | 3 | 4 | 5;
+    customColorIndex: boolean;
+};
+
+export type colorIndex = 0 | 1 | 2 | 3 | 4 | 5;
+
 export type LiveCanvasMetaDataDto = {
     scenario: ((ScenarioDto) | null);
     arguments: Array<ScenarioArgumentDto>;
@@ -318,6 +328,7 @@ export type LiveCanvasViewSettingsDto = {
     compressRelationshipsWidthFactor: number;
     growNodesBasedOnDegree: boolean;
     growNodesBasedOnDegreeFactor: number;
+    labelSettings: Array<LiveCanvasLabelViewSettingsDto>;
 };
 
 export type LoadNodeRequestBodyDto = {
