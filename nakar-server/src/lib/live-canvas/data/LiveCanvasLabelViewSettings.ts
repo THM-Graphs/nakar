@@ -78,6 +78,27 @@ export class LiveCanvasLabelViewSettings {
     });
   }
 
+  public static getLeastOftenColorIndex(
+    indexes: LiveCanvasLabelViewSettings['colorIndex'][],
+  ): LiveCanvasLabelViewSettings['colorIndex'] {
+    const colorCounts: [0, 0, 0, 0, 0, 0] = [0, 0, 0, 0, 0, 0];
+    for (const index of indexes) {
+      colorCounts[index] += 1;
+    }
+
+    let smallestIndex: number = 0;
+    let smallesCount: number = colorCounts[0];
+    for (let i: number = 1; i < colorCounts.length; i += 1) {
+      if (colorCounts[i] < smallesCount) {
+        smallestIndex = i;
+        smallesCount = colorCounts[i];
+      }
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+    return smallestIndex as LiveCanvasLabelViewSettings['colorIndex'];
+  }
+
   public dbData(): Input<'api::canvas-label-setting.canvas-label-setting'> {
     return {
       radius: this._radius,
@@ -103,26 +124,5 @@ export class LiveCanvasLabelViewSettings {
     } else {
       return GraphNode.defaultRadius;
     }
-  }
-
-  public static getLeastOftenColorIndex(
-    indexes: LiveCanvasLabelViewSettings['colorIndex'][],
-  ): LiveCanvasLabelViewSettings['colorIndex'] {
-    const colorCounts: [0, 0, 0, 0, 0, 0] = [0, 0, 0, 0, 0, 0];
-    for (const index of indexes) {
-      colorCounts[index] += 1;
-    }
-
-    let smallestIndex: number = 0;
-    let smallesCount: number = colorCounts[0];
-    for (let i: number = 1; i < colorCounts.length; i += 1) {
-      if (colorCounts[i] < smallesCount) {
-        smallestIndex = i;
-        smallesCount = colorCounts[i];
-      }
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-    return smallestIndex as LiveCanvasLabelViewSettings['colorIndex'];
   }
 }

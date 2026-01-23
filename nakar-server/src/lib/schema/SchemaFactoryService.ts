@@ -391,7 +391,7 @@ export class SchemaFactoryService {
     const widthRange: Range = graph.edges.getEdgeDegreeRange();
     const degreeRange: Range = graph.nodes.getNodeDegreeRange(graph);
 
-    const labelIndex = this._createLabelIndex(canvas);
+    const labelIndex: SMap<string, LabelDto> = this._createLabelIndex(canvas);
 
     const result: LiveCanvasGraphElementsDto = {
       nodes: await graph.nodes.nodes.asyncFlatMap(
@@ -415,17 +415,15 @@ export class SchemaFactoryService {
             widthRange,
           ),
       ),
-      labels: await Promise.all(
-        graph.nodes.labelHistogram
-          .toKeyArray()
-          .map(async (label: string): Promise<LabelDto> => {
-            const l: LabelDto | null = labelIndex.get(label) ?? null;
-            if (l == null) {
-              throw new Error('Unable to find Label');
-            }
-            return l;
-          }),
-      ),
+      labels: graph.nodes.labelHistogram
+        .toKeyArray()
+        .map((label: string): LabelDto => {
+          const l: LabelDto | null = labelIndex.get(label) ?? null;
+          if (l == null) {
+            throw new Error('Unable to find Label');
+          }
+          return l;
+        }),
     };
     t.done({
       message: 'createSchemaGraphElements',
