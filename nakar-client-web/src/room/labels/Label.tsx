@@ -1,6 +1,6 @@
 import { getBackgroundColorOfLabel } from "../color/getBackgroundColor.ts";
 import { getTextColor } from "../color/getTextColor.ts";
-import { Stack } from "react-bootstrap";
+import { Dropdown, Stack } from "react-bootstrap";
 import { useBearStore } from "../../state/useBearStore.ts";
 import clsx from "clsx";
 import { useColorSchema } from "../color/useColorSchema.ts";
@@ -9,6 +9,7 @@ import { labelActions } from "../actions/groups/labelActions.ts";
 import { ActionDropdownItem } from "../actions/ActionDropdownItem.tsx";
 import { useCanvasContext } from "../../pages/CanvasPage.tsx";
 import { LabelDto } from "../../../src-gen";
+import { LabelViewSettingsEditor } from "../visualization-panel/LabelViewSettingsEditor.tsx";
 
 export function Label(props: {
   label: string;
@@ -87,6 +88,16 @@ export function Label(props: {
               }}
             ></ActionDropdownItem>
           ))}
+          <Dropdown.Divider></Dropdown.Divider>
+          <Dropdown.ItemText
+            onClick={(e) => {
+              e.stopPropagation();
+            }}
+          >
+            <LabelViewSettingsEditor
+              label={props.label}
+            ></LabelViewSettingsEditor>
+          </Dropdown.ItemText>
         </DropdownButton>
       )}
     </Stack>

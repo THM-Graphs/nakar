@@ -1,16 +1,15 @@
 import { Form, Stack } from "react-bootstrap";
 import { useColorSchema } from "../../room/color/useColorSchema.ts";
-import { useBearStore } from "../../state/useBearStore.ts";
 import { ColorDto, ColorPresetDto } from "../../../src-gen";
-import { match } from "ts-pattern";
+import { match, P } from "ts-pattern";
 import { ReactNode } from "react";
 
 export function ColorPicker(props: {
   color: ColorDto | null;
   onColorChange: (newColor: ColorDto | null) => void;
+  disableCustom?: boolean;
 }) {
   const colorSchema = useColorSchema();
-  const getTheme = useBearStore((s) => s.global.theme.getTheme);
   const color = props.color;
 
   return (
@@ -19,8 +18,7 @@ export function ColorPicker(props: {
         <Form.Check
           type={"radio"}
           name={"color"}
-          id={`color_none`}
-          label={<span className={"text-muted"}>None</span>}
+          label={<span className={"text-muted small"}>None</span>}
           checked={props.color == null}
           onChange={(e) => {
             const checked = e.target.checked;
@@ -34,7 +32,6 @@ export function ColorPicker(props: {
             <Form.Check
               type={"radio"}
               name={"color"}
-              id={`color_${index.toString()}`}
               label={
                 <div
                   style={{
@@ -43,18 +40,16 @@ export function ColorPicker(props: {
                     ),
                     width: "20px",
                     height: "20px",
-                    marginTop: "1px",
-                    border: `1px solid ${getTheme() == "dark" ? "#ffffff" : "#000000"}`,
                   }}
-                  className={"rounded-circle"}
+                  className={"rounded shadow-sm"}
                 ></div>
               }
               key={index}
-              checked={
-                props.color != null &&
-                "index" in props.color &&
-                props.color.index === index
-              }
+              checked={match(props.color?.color)
+                .with(P.nullish, () => false)
+                .with({ type: "ColorCustomDto" }, () => false)
+                .with({ type: "ColorPresetDto" }, (px) => px.index === index)
+                .exhaustive()}
               onChange={(e) => {
                 const checked = e.target.checked;
                 if (checked) {
@@ -70,25 +65,27 @@ export function ColorPicker(props: {
           ))}
         </Stack>
 
-        <Form.Check
-          type={"radio"}
-          name={"color"}
-          id={`color_custom`}
-          label={<span className={"text-muted"}>Custom</span>}
-          checked={props.color != null && "backgroundColor" in props.color}
-          onChange={(e) => {
-            const checked = e.target.checked;
-            if (checked) {
-              props.onColorChange({
-                color: {
-                  type: "ColorCustomDto",
-                  backgroundColor: "#ffffff",
-                  textColor: "#000000",
-                },
-              });
-            }
-          }}
-        />
+        {props.disableCustom != true && (
+          <Form.Check
+            type={"radio"}
+            name={"color"}
+            id={`color_custom`}
+            label={<span className={"text-muted"}>Custom</span>}
+            checked={props.color != null && "backgroundColor" in props.color}
+            onChange={(e) => {
+              const checked = e.target.checked;
+              if (checked) {
+                props.onColorChange({
+                  color: {
+                    type: "ColorCustomDto",
+                    backgroundColor: "#ffffff",
+                    textColor: "#000000",
+                  },
+                });
+              }
+            }}
+          />
+        )}
 
         {match(color?.color)
           .returnType<ReactNode>()

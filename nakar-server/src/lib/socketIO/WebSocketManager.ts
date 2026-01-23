@@ -376,6 +376,7 @@ export class WebSocketManager
 
                 const graphElements: LiveCanvasGraphElementsDto =
                   await this._schemaFactory.createSchemaGraphElements(
+                    message.canvas,
                     message.graph,
                     notes,
                     message.canvas.data.viewSettings,
@@ -542,7 +543,7 @@ export class WebSocketManager
               this.sendToRoom(message.canvas.canvasId, {
                 type: 'CanvasViewSettingsChangedWsdto',
                 viewSettings: message.viewSettings.toSchema(
-                  message.canvas.labels,
+                  message.canvas.labels.toArray(),
                 ),
               });
             },

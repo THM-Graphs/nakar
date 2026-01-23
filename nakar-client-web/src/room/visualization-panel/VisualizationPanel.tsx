@@ -29,6 +29,7 @@ export function VisualizationPanel() {
     >
       <ViewSettingsEditor
         viewSettings={visualizationData}
+        className={"pb-5"}
         onChange={(newSettings: LiveCanvasViewSettingsDto) => {
           setData(newSettings);
 

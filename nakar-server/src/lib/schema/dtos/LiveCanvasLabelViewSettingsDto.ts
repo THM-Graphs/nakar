@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-function-type */
 import { ApiProperty } from '@nestjs/swagger';
-import { IsBoolean, IsEnum, IsNumber, IsString } from 'class-validator';
+import { IsBoolean, IsEnum, IsNumber, IsString, Min } from 'class-validator';
 import { Type } from 'class-transformer';
 import { LiveCanvasLabelViewSettingsColorIndexDto } from './LiveCanvasLabelViewSettingsColorIndexDto';
 
@@ -11,6 +11,7 @@ export class LiveCanvasLabelViewSettingsDto {
 
   @ApiProperty({ type: Number })
   @IsNumber()
+  @Min(5)
   public radius!: number;
 
   @ApiProperty({ type: Boolean })

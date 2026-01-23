@@ -117,8 +117,8 @@ export class LiveCanvas {
     );
   }
 
-  public get labels(): string[] {
-    return this.getGraph().nodes.labelHistogram.toKeyArray();
+  public get labels(): SSet<string> {
+    return new SSet(this.getGraph().nodes.labelHistogram.keys());
   }
 
   public get onEvent$(): Observable<CanvasEvent> {

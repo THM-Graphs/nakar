@@ -25,6 +25,7 @@ import { LiveCanvasViewSettingsDto } from '../../../schema/dtos/LiveCanvasViewSe
 import { LiveCanvasViewSettings } from '../../../live-canvas/data/LiveCanvasViewSettings';
 import { LiveCanvasService } from '../../../live-canvas/LiveCanvasService';
 import { UserIsLoggedIn } from '../../guards/UserIsLoggedIn';
+import { LiveCanvas } from '../../../live-canvas/LiveCanvas';
 
 @Controller('canvas/:canvasId/actions')
 @ApiParam({
@@ -232,8 +233,9 @@ export class ActionController {
     @Param('canvasId') canvasId: string,
     @Body() body: LiveCanvasViewSettingsDto,
   ): void {
-    this._canvasService
-      .getCanvasWithId(canvasId)
-      .setViewSettings(LiveCanvasViewSettings.fromSchema(body));
+    const canvas: LiveCanvas = this._canvasService.getCanvasWithId(canvasId);
+    const viewSettings: LiveCanvasViewSettings =
+      LiveCanvasViewSettings.fromSchema(body, canvas.labels);
+    canvas.setViewSettings(viewSettings);
   }
 }

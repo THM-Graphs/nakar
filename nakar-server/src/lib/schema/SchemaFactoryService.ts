@@ -1,7 +1,6 @@
 import { LiveCanvasUndoableData } from '../live-canvas/data/LiveCanvasUndoableData';
 import { GraphNode } from '../live-canvas/graph/GraphNode';
 import { GraphEdge } from '../live-canvas/graph/GraphEdge';
-import { GraphLabel } from '../live-canvas/graph/GraphLabel';
 import { SMap } from '../map/Map';
 import { LiveCanvasMetaData } from '../live-canvas/graph/LiveCanvasMetaData';
 import { SSet } from '../set/Set';
@@ -49,6 +48,9 @@ import { LiveCanvas } from '../live-canvas/LiveCanvas';
 import { HistogramDto } from './dtos/HistogramDto';
 import { HistogramValueEntryDto } from './dtos/HistogramValueEntryDto';
 import { HistogramNodeEntryDto } from './dtos/HistogramNodeEntryDto';
+import { ColorPresetDto } from './dtos/ColorPresetDto';
+import { ColorDto } from './dtos/ColorDto';
+import { LiveCanvasLabelViewSettings } from '../live-canvas/data/LiveCanvasLabelViewSettings';
 
 @Injectable()
 export class SchemaFactoryService {
@@ -377,6 +379,7 @@ export class SchemaFactoryService {
   }
 
   public async createSchemaGraphElements(
+    canvas: LiveCanvas,
     graph: LiveCanvasUndoableData,
     notes: IndexedNoteCollection,
     viewSettings: LiveCanvasViewSettings,
@@ -387,6 +390,8 @@ export class SchemaFactoryService {
     );
     const widthRange: Range = graph.edges.getEdgeDegreeRange();
     const degreeRange: Range = graph.nodes.getNodeDegreeRange(graph);
+
+    const labelIndex = this._createLabelIndex(canvas);
 
     const result: LiveCanvasGraphElementsDto = {
       nodes: await graph.nodes.nodes.asyncFlatMap(
@@ -410,12 +415,17 @@ export class SchemaFactoryService {
             widthRange,
           ),
       ),
-      labels: await graph.metaData
-        .getLabels(graph.nodes)
-        .asyncFlatMap(
-          async (id: string, label: GraphLabel): Promise<LabelDto> =>
-            await this._createSchemaGraphLabel(id, label, databaseCache),
-        ),
+      labels: await Promise.all(
+        graph.nodes.labelHistogram
+          .toKeyArray()
+          .map(async (label: string): Promise<LabelDto> => {
+            const l: LabelDto | null = labelIndex.get(label) ?? null;
+            if (l == null) {
+              throw new Error('Unable to find Label');
+            }
+            return l;
+          }),
+      ),
     };
     t.done({
       message: 'createSchemaGraphElements',
@@ -454,6 +464,7 @@ export class SchemaFactoryService {
     return new LiveCanvasDataDto({
       table: this.createSchemaTable(graph.tableData),
       elements: await this.createSchemaGraphElements(
+        liveCanvas,
         graph,
         notes,
         liveCanvas.data.viewSettings,
@@ -462,7 +473,9 @@ export class SchemaFactoryService {
         graph,
         liveCanvas.data.undoableData.info,
       ),
-      viewSettings: liveCanvas.data.viewSettings.toSchema(liveCanvas.labels),
+      viewSettings: liveCanvas.data.viewSettings.toSchema(
+        liveCanvas.labels.toArray(),
+      ),
       histogram: this.createSchemaHistogram(graph),
       notes: await Promise.all(
         notes.notes
@@ -824,7 +837,7 @@ export class SchemaFactoryService {
       outDegree: node.outDegree(graph),
       degree: node.degree(graph),
       namesInQuery: node.namesInQuery.toArray(),
-      customColor: node.getCustomColor(viewSettings)?.toDto() ?? null,
+      customColor: node.getCustomColor()?.toDto() ?? null,
       source:
         (await databaseCache.getDatabase(node.source))?.title ?? node.source,
       sourceId: node.source,
@@ -934,20 +947,30 @@ export class SchemaFactoryService {
     return mutableProperties.properties.toRecord();
   }
 
-  private async _createSchemaGraphLabel(
-    id: string,
-    label: GraphLabel,
-    databaseCache: DatabaseReferenceCache,
-  ): Promise<LabelDto> {
-    return {
-      label: id,
-      count: label.count,
-      color: label.color.toDto(),
-      sources: await label.sources.asyncFlatMap(
-        async (sourceId: string): Promise<string> => {
-          return (await databaseCache.getDatabase(sourceId))?.title ?? sourceId;
-        },
-      ),
-    };
+  private _createLabelIndex(liveCanvas: LiveCanvas): SMap<string, LabelDto> {
+    const labels: SMap<string, LabelDto> = new SMap<string, LabelDto>();
+    const colorIndexes: LiveCanvasLabelViewSettings['colorIndex'][] = [];
+    for (const label of liveCanvas
+      .getGraph()
+      .nodes.labelHistogram.toKeyArray()) {
+      const labelViewSettings: LiveCanvasLabelViewSettings =
+        liveCanvas.data.viewSettings.getLabelSettings(label);
+      const colorIndex: LiveCanvasLabelViewSettings['colorIndex'] =
+        labelViewSettings.customColorIndex
+          ? labelViewSettings.colorIndex
+          : LiveCanvasLabelViewSettings.getLeastOftenColorIndex(colorIndexes);
+      colorIndexes.push(colorIndex);
+      labels.set(label, {
+        label: label,
+        count: liveCanvas.getGraph().nodes.labelHistogram.get(label) ?? 0,
+        sources: [], // TODO
+        color: new ColorDto({
+          color: new ColorPresetDto({
+            index: colorIndex,
+          }),
+        }),
+      } satisfies LabelDto);
+    }
+    return labels;
   }
 }

@@ -6,6 +6,7 @@ import { LiveCanvasLabelViewSettings } from './LiveCanvasLabelViewSettings';
 import { SMap } from '../../map/Map';
 import { Input } from '@strapi/types/dist/modules/documents/params/data';
 import { LiveCanvasLabelViewSettingsDto } from '../../schema/dtos/LiveCanvasLabelViewSettingsDto';
+import { SSet } from '../../set/Set';
 
 export class LiveCanvasViewSettings {
   public static readonly defaultGrowNodesBasedOnDegreeFactor: number = 2;
@@ -94,25 +95,29 @@ export class LiveCanvasViewSettings {
 
   public static fromSchema(
     input: LiveCanvasViewSettingsDto,
+    labels: SSet<string>,
   ): LiveCanvasViewSettings {
     return new LiveCanvasViewSettings({
       compressRelationshipsWidthFactor: input.compressRelationshipsWidthFactor,
       growNodesBasedOnDegree: input.growNodesBasedOnDegree,
       growNodesBasedOnDegreeFactor: input.growNodesBasedOnDegreeFactor,
-      labelSettings: input.labelSettings.reduce<
-        SMap<string, LiveCanvasLabelViewSettings>
-      >(
-        (
-          akku: SMap<string, LiveCanvasLabelViewSettings>,
-          next: LiveCanvasLabelViewSettingsDto,
-        ): SMap<string, LiveCanvasLabelViewSettings> => {
-          return akku.bySetting(
-            next.label,
-            LiveCanvasLabelViewSettings.fromSchema(next),
-          );
-        },
-        new SMap(),
-      ),
+      labelSettings: input.labelSettings
+        .filter((labelSetting: LiveCanvasLabelViewSettingsDto): boolean =>
+          // Do not accept label settings of labels that don't exist.
+          labels.has(labelSetting.label),
+        )
+        .reduce<SMap<string, LiveCanvasLabelViewSettings>>(
+          (
+            akku: SMap<string, LiveCanvasLabelViewSettings>,
+            next: LiveCanvasLabelViewSettingsDto,
+          ): SMap<string, LiveCanvasLabelViewSettings> => {
+            return akku.bySetting(
+              next.label,
+              LiveCanvasLabelViewSettings.fromSchema(next),
+            );
+          },
+          new SMap(),
+        ),
     });
   }
 

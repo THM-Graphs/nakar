@@ -9,8 +9,6 @@ import { Range } from '../../range/Range';
 import { LiveCanvasViewSettings } from '../data/LiveCanvasViewSettings';
 import { LiveCanvasLabelViewSettings } from '../data/LiveCanvasLabelViewSettings';
 import { ElementColor } from './color/ElementColor';
-import { match, P } from 'ts-pattern';
-import { ElementColorPreset } from './color/ElementColorPreset';
 
 export class GraphNode {
   public static readonly defaultRadius: number = 40;
@@ -152,21 +150,9 @@ export class GraphNode {
     );
   }
 
-  public getCustomColor(
-    viewSettings: LiveCanvasViewSettings,
-  ): ElementColor | null {
-    const labelViewSettings: LiveCanvasLabelViewSettings =
-      viewSettings.getLabelSettings(this.primaryLabel);
-
-    return match(labelViewSettings.getComputedColorIndex())
-      .with(P.nullish, (): null => null)
-      .with(0, (): ElementColor => new ElementColorPreset({ index: 0 }))
-      .with(1, (): ElementColor => new ElementColorPreset({ index: 1 }))
-      .with(2, (): ElementColor => new ElementColorPreset({ index: 2 }))
-      .with(3, (): ElementColor => new ElementColorPreset({ index: 3 }))
-      .with(4, (): ElementColor => new ElementColorPreset({ index: 4 }))
-      .with(5, (): ElementColor => new ElementColorPreset({ index: 5 }))
-      .exhaustive();
+  public getCustomColor(): ElementColor | null {
+    // Will implement for single node color
+    return null;
   }
 
   public toPlain(): z.infer<typeof GraphNode.schema> {

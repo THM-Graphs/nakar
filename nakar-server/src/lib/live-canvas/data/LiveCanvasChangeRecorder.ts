@@ -52,6 +52,7 @@ export class LiveCanvasChangeRecorder {
     this._shouldSendGraphElementsToUserAndWorker = true;
     this._shouldSendHistogramToUser = true;
     this._shouldSendNotesToUser = true;
+    this._shouldSendViewSettingsToUser = true;
   }
 
   public didLoadGraph(): void {

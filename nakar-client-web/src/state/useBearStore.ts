@@ -8,7 +8,7 @@ import {
   subscribeWithSelector,
 } from "zustand/middleware";
 import { v4 } from "uuid";
-import { match, P } from "ts-pattern";
+import { match } from "ts-pattern";
 import { enableMapSet } from "immer";
 import { Subject } from "rxjs";
 import { immer } from "zustand/middleware/immer";
@@ -26,6 +26,7 @@ import {
   NodePreviewDto,
   NoteDto,
 } from "../../src-gen";
+import { handleError } from "../shared/error/handleError.ts";
 
 enableMapSet();
 
@@ -158,10 +159,7 @@ export const useBearStore = create<BearState>()(
                 },
                 pushErrorNotification: (error: unknown) => {
                   useBearStore.getState().room.ui.pushNotification({
-                    message: match(error)
-                      .with(P.string, (e) => e)
-                      .with(P.instanceOf(Error), (e) => e.message)
-                      .otherwise(() => JSON.stringify(error)),
+                    message: handleError(error),
                     date: new Date(),
                     severity: "error",
                   });
