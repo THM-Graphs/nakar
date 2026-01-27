@@ -20,6 +20,8 @@ export function NumberInput(props: {
   min?: number;
 }) {
   const [value, setValue] = useState<string>(props.value.toString());
+  const [sliderValue, setSliderValue] = useState<number>(props.value);
+
   const valueIsValid: boolean = useMemo(() => {
     const number: number = Number(value);
     if (isNaN(number)) {
@@ -80,6 +82,17 @@ export function NumberInput(props: {
           }}
         ></NavbarButton>
       </Stack>
+      <Form.Range
+        value={sliderValue}
+        onChange={(e) => {
+          setSliderValue(Number(e.target.value));
+          setValue(e.target.value);
+          console.log(e.target.value);
+        }}
+        onMouseUp={() => {
+          props.onChange(sliderValue);
+        }}
+      />
     </Stack>
   );
 }
