@@ -64,7 +64,7 @@ export function ViewSettingsEditor(props: {
       </Stack>
       {props.viewSettings.labelSettings.map(
         (labelViewSettings: LiveCanvasLabelViewSettingsDto) => (
-          <Stack className={"border-top p-2"}>
+          <Stack className={"border-top p-2"} key={labelViewSettings.label}>
             <Stack className={"pb-2"}>
               <Label
                 label={labelViewSettings.label}
