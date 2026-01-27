@@ -385,13 +385,16 @@ export class SchemaFactoryService {
     viewSettings: LiveCanvasViewSettings,
   ): Promise<LiveCanvasGraphElementsDto> {
     const t: Profiler = this._logger.startTimer();
+    const widthRange: Range = graph.edges.getEdgeDegreeRange();
+    const degreeRange: Range = graph.nodes.getNodeDegreeRange(graph);
     const databaseCache: DatabaseReferenceCache = new DatabaseReferenceCache(
       this._database,
     );
-    const widthRange: Range = graph.edges.getEdgeDegreeRange();
-    const degreeRange: Range = graph.nodes.getNodeDegreeRange(graph);
 
-    const labelIndex: SMap<string, LabelDto> = this._createLabelIndex(canvas);
+    const labelIndex: SMap<string, LabelDto> = await this._createLabelIndex(
+      canvas,
+      databaseCache,
+    );
 
     const result: LiveCanvasGraphElementsDto = {
       nodes: await graph.nodes.nodes.asyncFlatMap(
@@ -415,8 +418,8 @@ export class SchemaFactoryService {
             widthRange,
           ),
       ),
-      labels: graph.nodes.labelHistogram
-        .toKeyArray()
+      labels: graph.nodes.labelIndex.labels
+        .toArray()
         .map((label: string): LabelDto => {
           const l: LabelDto | null = labelIndex.get(label) ?? null;
           if (l == null) {
@@ -616,7 +619,7 @@ export class SchemaFactoryService {
   public createSchemaHistogram(graph: LiveCanvasUndoableData): HistogramDto {
     const t: Profiler = this._logger.startTimer();
 
-    const labelCountHistogram: number = graph.nodes.labelHistogram.reduce(
+    const labelCountHistogram: number = graph.nodes.labelIndex.histogram.reduce(
       (akku: number, key: string, value: number): number => akku + value,
       0,
     );
@@ -629,7 +632,7 @@ export class SchemaFactoryService {
       0,
     );
     const result: HistogramDto = {
-      nodeLabels: graph.nodes.labelHistogram
+      nodeLabels: graph.nodes.labelIndex.histogram
         .toArray()
         .toSorted(
           (a: [string, number], b: [string, number]): number => b[1] - a[1],
@@ -945,12 +948,13 @@ export class SchemaFactoryService {
     return mutableProperties.properties.toRecord();
   }
 
-  private _createLabelIndex(liveCanvas: LiveCanvas): SMap<string, LabelDto> {
+  private async _createLabelIndex(
+    liveCanvas: LiveCanvas,
+    databaseCache: DatabaseReferenceCache,
+  ): Promise<SMap<string, LabelDto>> {
     const labels: SMap<string, LabelDto> = new SMap<string, LabelDto>();
     const colorIndexes: LiveCanvasLabelViewSettings['colorIndex'][] = [];
-    for (const label of liveCanvas
-      .getGraph()
-      .nodes.labelHistogram.toKeyArray()) {
+    for (const label of liveCanvas.getGraph().nodes.labelIndex.labels) {
       const labelViewSettings: LiveCanvasLabelViewSettings =
         liveCanvas.data.viewSettings.getLabelSettings(label);
       const colorIndex: LiveCanvasLabelViewSettings['colorIndex'] =
@@ -960,8 +964,18 @@ export class SchemaFactoryService {
       colorIndexes.push(colorIndex);
       labels.set(label, {
         label: label,
-        count: liveCanvas.getGraph().nodes.labelHistogram.get(label) ?? 0,
-        sources: [], // TODO
+        count: liveCanvas.getGraph().nodes.labelIndex.labelCount(label),
+        sources: await Promise.all(
+          liveCanvas
+            .getGraph()
+            .nodes.labelIndex.sources(label)
+            .toArray()
+            .map(async (sourceId: string): Promise<string> => {
+              return (
+                (await databaseCache.getDatabase(sourceId))?.title ?? sourceId
+              );
+            }),
+        ),
         color: new ColorDto({
           color: new ColorPresetDto({
             index: colorIndex,

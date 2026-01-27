@@ -8,6 +8,7 @@ import { Range } from '../../range/Range';
 import { LiveCanvasUndoableData } from '../data/LiveCanvasUndoableData';
 import { PhysicsSimulation } from '../../physics/PhysicsSimulation';
 import { ElementCreationReason } from './ElementCreationReason';
+import { LabelIndex } from './LabelIndex';
 
 export class NodeIndex {
   private readonly _byId: SMap<string, GraphNode>;
@@ -15,7 +16,7 @@ export class NodeIndex {
   private readonly _byLabel: SMap<string, SSet<GraphNode>>;
 
   /* Maps label => count */
-  private readonly _labelHistogram: SMap<string, number>;
+  private readonly _labelIndex: LabelIndex;
 
   /* Maps key => value => count */
   private readonly _propertyHistogram: SMap<string, SMap<string, number>>;
@@ -27,7 +28,7 @@ export class NodeIndex {
   public constructor(nodes: GraphNode[]) {
     this._byId = new SMap();
     this._byLabel = new SMap();
-    this._labelHistogram = new SMap();
+    this._labelIndex = new LabelIndex();
     this._propertyHistogram = new SMap();
     this._bySource = new SMap();
     this._compressed = new SSet();
@@ -49,8 +50,8 @@ export class NodeIndex {
     return new SSet<string>(this._byId.keys());
   }
 
-  public get labelHistogram(): SMap<string, number> {
-    return this._labelHistogram;
+  public get labelIndex(): LabelIndex {
+    return this._labelIndex;
   }
 
   public get propertyHistogram(): SMap<string, SMap<string, number>> {
@@ -72,7 +73,7 @@ export class NodeIndex {
     }
     this._byId.set(node.id, node);
     for (const label of node.labels) {
-      this._addToLabelHistogram(label, 1);
+      this._labelIndex.add(label, node.source);
     }
     for (const property of node.properties.properties) {
       this._addToPropertyHistogram(property[0], property[1], 1);
@@ -142,7 +143,7 @@ export class NodeIndex {
       this._byLabel.get(label)?.delete(node);
     }
     for (const label of node.labels) {
-      this._addToLabelHistogram(label, -1);
+      this._labelIndex.remove(label);
     }
 
     for (const propertyEntry of node.properties.properties) {
@@ -214,16 +215,6 @@ export class NodeIndex {
       ceiling: Math.max(...degrees),
     });
     return range;
-  }
-
-  private _addToLabelHistogram(label: string, delta: 1 | -1): void {
-    this._labelHistogram.set(
-      label,
-      (this._labelHistogram.get(label) ?? 0) + delta,
-    );
-    if (this._labelHistogram.get(label) === 0) {
-      this._labelHistogram.delete(label);
-    }
   }
 
   private _addToPropertyHistogram(
