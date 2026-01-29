@@ -169,8 +169,6 @@ export class WebSocketManager
 
     this._rooms.set(wsClient.id, canvas.documentId);
 
-    const newCanvasId: string = canvas.documentId;
-
     const liveCanvas: LiveCanvas = this._canvasService.getOrStartCanvas(canvas);
 
     liveCanvas.addUser({

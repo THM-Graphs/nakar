@@ -10,6 +10,6 @@ export class PhysicalNodeDto {
 
   @ApiProperty({ type: PositionDto })
   @ValidateNested()
-  @Type((): Function => PositionDto)
+  @Type((): typeof PositionDto => PositionDto)
   public position!: PositionDto;
 }
