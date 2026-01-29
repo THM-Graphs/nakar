@@ -12,6 +12,9 @@ import { CanvasEventShouldShutDown } from './CanvasEventShouldShutDown';
 import { CanvasEventViewSettingsChanged } from './CanvasEventViewSettingsChanged';
 import { CanvasEventHistogramChanged } from './CanvasEventHistogramChanged';
 import { CanvasEventNotesChanged } from './CanvasEventNotesChanged';
+import { CanvasEventUserJoined } from './CanvasEventUserJoined';
+import { CanvasEventUserLeft } from './CanvasEventUserLeft';
+import { CanvasEventCursorChanged } from './CanvasEventCursorChanged';
 
 export type CanvasEvent =
   | CanvasEventError
@@ -27,4 +30,7 @@ export type CanvasEvent =
   | CanvasEventShouldShutDown
   | CanvasEventViewSettingsChanged
   | CanvasEventHistogramChanged
-  | CanvasEventNotesChanged;
+  | CanvasEventNotesChanged
+  | CanvasEventUserJoined
+  | CanvasEventUserLeft
+  | CanvasEventCursorChanged;

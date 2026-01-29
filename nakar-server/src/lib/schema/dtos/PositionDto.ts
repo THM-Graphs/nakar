@@ -1,14 +1,19 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { IsNumber } from 'class-validator';
 
 export class PositionDto {
   @ApiProperty()
-  public x: number;
+  @IsNumber()
+  public x!: number;
 
   @ApiProperty()
-  public y: number;
+  @IsNumber()
+  public y!: number;
 
-  public constructor(data: { x: number; y: number }) {
-    this.x = data.x;
-    this.y = data.y;
+  public constructor(data?: { x: number; y: number }) {
+    if (data) {
+      this.x = data.x;
+      this.y = data.y;
+    }
   }
 }

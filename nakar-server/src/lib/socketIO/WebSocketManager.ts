@@ -64,6 +64,11 @@ import { userCanSeeCanvas } from '../policies/userCanSeeCanvas';
 import { CanvasEventHistogramChanged } from '../live-canvas/events/CanvasEventHistogramChanged';
 import { CanvasEventNotesChanged } from '../live-canvas/events/CanvasEventNotesChanged';
 import { NoteDto } from '../schema/dtos/NoteDto';
+import { MoveCursorWsdto } from './dto/actions/MoveCursorWsdto';
+import { CanvasEventUserJoined } from '../live-canvas/events/CanvasEventUserJoined';
+import { CanvasEventUserLeft } from '../live-canvas/events/CanvasEventUserLeft';
+import { CanvasEventCursorChanged } from '../live-canvas/events/CanvasEventCursorChanged';
+import { CursorMovedWsdto } from './dto/events/CursorMovedWsdto';
 
 export type Server = UntypedServer<ClientToServerEvents, ServerToClientEvents>;
 export type Socket = UntypedSocket<ClientToServerEvents, ServerToClientEvents>;
@@ -157,7 +162,8 @@ export class WebSocketManager
   public async handleConnection(wsClient: Socket): Promise<void> {
     this._logger.debug(`Client connected: ${wsClient.id}`);
     const auth: AuthWsdto = plainToClass(AuthWsdto, wsClient.handshake.auth);
-
+    const user: Result<'plugin::users-permissions.user'> | null =
+      await this._authService.getUserByJWT(auth.jwt);
     const canvas: Result<'api::canvas.canvas'> =
       await this._databaseService.getCanvas(auth.canvasId);
 
@@ -165,15 +171,13 @@ export class WebSocketManager
 
     const newCanvasId: string = canvas.documentId;
 
-    this.sendToRoom(newCanvasId, {
-      type: 'NotificationWsdto',
-      notification: {
-        message: `User ${wsClient.id} joined.`,
-        severity: 'message',
-        date: new Date().toISOString(),
-      },
-    });
     const liveCanvas: LiveCanvas = this._canvasService.getOrStartCanvas(canvas);
+
+    liveCanvas.addUser({
+      socketId: wsClient.id,
+      username: user?.username ?? wsClient.id,
+      databaseId: user?.documentId ?? null,
+    });
 
     wsClient.send({
       event: {
@@ -187,6 +191,7 @@ export class WebSocketManager
     this._logger.debug(`Client disconnected: ${wsClient.id}`);
     const oldRoom: string | null = this._rooms.get(wsClient.id) ?? null;
     if (oldRoom != null) {
+      this._assertLiveCanvas(wsClient).removeUser(wsClient.id);
       this._handleClientLeftRoom(wsClient, oldRoom);
     }
   }
@@ -247,6 +252,13 @@ export class WebSocketManager
             userId: wsClient.id,
           });
         })
+        .with({ type: 'MoveCursorWsdto' }, (m: MoveCursorWsdto): void => {
+          const canvas: LiveCanvas = this._assertLiveCanvas(wsClient);
+          canvas.setCursorPosition({
+            socketId: wsClient.id,
+            position: [m.position.x, m.position.y],
+          });
+        })
         .exhaustive();
     } catch (error: unknown) {
       this._logger.error(
@@ -296,15 +308,6 @@ export class WebSocketManager
   private _handleClientLeftRoom(wsClient: Socket, oldCanvasId: string): void {
     this._rooms.delete(wsClient.id);
 
-    this.sendToRoom(oldCanvasId, {
-      type: 'NotificationWsdto',
-      notification: {
-        message: `User ${wsClient.id} left.`,
-        date: new Date().toISOString(),
-        severity: 'message',
-      },
-    });
-
     if (this._userCountOfRoom(oldCanvasId) === 0) {
       this._databaseService
         .getCanvas(oldCanvasId)
@@ -323,7 +326,10 @@ export class WebSocketManager
 
   private _registerCanvasEvents(): void {
     this._canvasService.onEvent$.subscribe((event: CanvasEvent): void => {
-      if (event.type !== 'CanvasEventRoomPhysicsUpdated') {
+      if (
+        event.type !== 'CanvasEventRoomPhysicsUpdated' &&
+        event.type !== 'CanvasEventCursorChanged'
+      ) {
         this._logger.debug(
           `Did receive from canvas (canvas ${event.canvas.canvasId}): ${event.type}`,
         );
@@ -546,6 +552,50 @@ export class WebSocketManager
                   message.canvas.labels.toArray(),
                 ),
               });
+            },
+          )
+          .with(
+            { type: 'CanvasEventUserJoined' },
+            (message: CanvasEventUserJoined): void => {
+              this.sendToRoom(message.canvas.canvasId, {
+                type: 'NotificationWsdto',
+                notification: {
+                  message: `User ${message.user.username} joined.`,
+                  severity: 'message',
+                  date: new Date().toISOString(),
+                },
+              });
+            },
+          )
+          .with(
+            { type: 'CanvasEventUserLeft' },
+            (message: CanvasEventUserLeft): void => {
+              this.sendToRoom(message.canvas.canvasId, {
+                type: 'NotificationWsdto',
+                notification: {
+                  message: `User ${message.user.username} left.`,
+                  severity: 'message',
+                  date: new Date().toISOString(),
+                },
+              });
+            },
+          )
+          .with(
+            { type: 'CanvasEventCursorChanged' },
+            (message: CanvasEventCursorChanged): void => {
+              const position: [number, number] | null =
+                message.user.canvasPosition;
+              if (position != null) {
+                this.sendToRoom(message.canvas.canvasId, {
+                  type: 'CursorMovedWsdto',
+                  username: message.user.username,
+                  position: {
+                    x: position[0],
+                    y: position[1],
+                  },
+                  socketId: message.user.socketId,
+                } satisfies CursorMovedWsdto);
+              }
             },
           )
           .exhaustive(),

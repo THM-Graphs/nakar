@@ -181,6 +181,9 @@ export function CanvasPage() {
           .with({ type: "CanvasNotesChangedWsdto" }, (event) => {
             setNotes(event.notes);
           })
+          .with({ type: "CursorMovedWsdto" }, () => {
+            /* */
+          })
           .exhaustive();
       }),
     ];

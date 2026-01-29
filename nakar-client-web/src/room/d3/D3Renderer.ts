@@ -47,6 +47,7 @@ export class D3Renderer {
     edge: D3Link;
     position: [number, number];
   }>;
+  private $onCursorMoved: Subject<[number, number]>;
 
   private calculator: D3Calculator;
 
@@ -124,6 +125,7 @@ export class D3Renderer {
     this.$onUngrabNode = new Subject<D3Node>();
     this.$onShowNodeContextMenu = new Subject();
     this.$onShowEdgeContextMenu = new Subject();
+    this.$onCursorMoved = new Subject();
 
     this.calculator = new D3Calculator();
 
@@ -187,6 +189,16 @@ export class D3Renderer {
     wir das im drag-end event machen.
     */
     return this.$onNodeMoved
+      .asObservable()
+      .pipe(throttleTime(1000 / outputFps));
+    // return this.$onNodeMoved.asObservable();
+  }
+
+  public get onCursorMoved(): Observable<[number, number]> {
+    /*
+    throttleTime gibt immer das erste Element aus dem Zeitfenster zurück.
+    */
+    return this.$onCursorMoved
       .asObservable()
       .pipe(throttleTime(1000 / outputFps));
     // return this.$onNodeMoved.asObservable();
@@ -808,6 +820,10 @@ export class D3Renderer {
   public setTheme(theme: Theme) {
     this.theme = theme;
     this.renderSvgElements();
+  }
+
+  public setCursor(position: [number, number]): void {
+    this.$onCursorMoved.next(position);
   }
 
   private smoothDamp(

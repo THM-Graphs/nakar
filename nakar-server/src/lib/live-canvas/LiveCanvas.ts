@@ -40,6 +40,10 @@ import { LayoutSpecificationDto } from '../http/routes/action/dto/LayoutSpecific
 import { LayoutSpecificationCircleDto } from '../http/routes/action/dto/LayoutSpecificationCircleDto';
 import { PhysicalNodeDto } from '../schema/dtos/PhysicalNodeDto';
 import { DatabaseEventsService } from '../database/DatabaseEventsService';
+import { LiveCanvasUser } from './data/LiveCanvasUser';
+import { CanvasEventUserJoined } from './events/CanvasEventUserJoined';
+import { CanvasEventUserLeft } from './events/CanvasEventUserLeft';
+import { CanvasEventCursorChanged } from './events/CanvasEventCursorChanged';
 
 export class LiveCanvas {
   private readonly _logger: Logger = createChildLogger(this);
@@ -1096,6 +1100,67 @@ export class LiveCanvas {
       this._logger.error(error);
     });
   }
+
+  public addUser(data: {
+    socketId: string;
+    username: string;
+    databaseId: string | null;
+  }): void {
+    for (const user of this.data.users) {
+      if (user.socketId === data.socketId) {
+        return;
+      }
+    }
+
+    const newLiveCanvasUser: LiveCanvasUser = new LiveCanvasUser({
+      databaseId: data.databaseId,
+      socketId: data.socketId,
+      username: data.username,
+      canvasPosition: null,
+    });
+    this.data.users.push(newLiveCanvasUser);
+
+    this._onEvent.next({
+      canvas: this,
+      type: 'CanvasEventUserJoined',
+      user: newLiveCanvasUser,
+    } satisfies CanvasEventUserJoined);
+  }
+
+  public removeUser(socketId: string): void {
+    const index: number = this.data.users.findIndex(
+      (item: LiveCanvasUser): boolean => item.socketId === socketId,
+    );
+
+    if (index !== -1) {
+      const user: LiveCanvasUser = this.data.users[index];
+      this._onEvent.next({
+        canvas: this,
+        type: 'CanvasEventUserLeft',
+        user: user,
+      } satisfies CanvasEventUserLeft);
+
+      this.data.users.splice(index, 1);
+    }
+  }
+
+  public setCursorPosition(data: {
+    socketId: string;
+    position: [number, number];
+  }): void {
+    for (const user of this.data.users) {
+      if (user.socketId === data.socketId) {
+        user.canvasPosition = data.position;
+
+        this._onEvent.next({
+          canvas: this,
+          type: 'CanvasEventCursorChanged',
+          user: user,
+        } satisfies CanvasEventCursorChanged);
+      }
+    }
+  }
+
   private _handleWTEventPhysicsUpdate(event: WTEventPhysicsUpdate): void {
     const graph: LiveCanvasUndoableData = this.getGraph();
     graph.applyPhysicalGraph(event.graph);

@@ -6,12 +6,14 @@ import { getStringPayloadOfMediaFile } from '../../media/media';
 import { DatabaseService } from '../../database/DatabaseService';
 import { Logger } from '@strapi/logger';
 import { createChildLogger } from '../../logger/createChildLogger';
+import { LiveCanvasUser } from './LiveCanvasUser';
 
 export class LiveCanvasData {
   private readonly _logger: Logger = createChildLogger(this);
 
   private readonly _undoableData: UndoWrapper<LiveCanvasUndoableData>;
   private _viewSettings: LiveCanvasViewSettings;
+  private readonly _users: LiveCanvasUser[];
 
   public constructor(private readonly _database: DatabaseService) {
     this._undoableData = new UndoWrapper<LiveCanvasUndoableData>(
@@ -22,6 +24,7 @@ export class LiveCanvasData {
       { maximumStackSize: 10 },
     );
     this._viewSettings = LiveCanvasViewSettings.defaultViewSettings();
+    this._users = [];
   }
 
   public get undoableData(): UndoWrapper<LiveCanvasUndoableData> {
@@ -30,6 +33,10 @@ export class LiveCanvasData {
 
   public get viewSettings(): LiveCanvasViewSettings {
     return this._viewSettings;
+  }
+
+  public get users(): LiveCanvasUser[] {
+    return this._users;
   }
 
   public set viewSettings(newValue: LiveCanvasViewSettings) {

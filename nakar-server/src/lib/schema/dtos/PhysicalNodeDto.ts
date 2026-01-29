@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString } from 'class-validator';
+import { IsString, ValidateNested } from 'class-validator';
 import { PositionDto } from './PositionDto';
+import { Type } from 'class-transformer';
 
 export class PhysicalNodeDto {
   @ApiProperty()
@@ -8,5 +9,7 @@ export class PhysicalNodeDto {
   public id!: string;
 
   @ApiProperty({ type: PositionDto })
+  @ValidateNested()
+  @Type((): Function => PositionDto)
   public position!: PositionDto;
 }
