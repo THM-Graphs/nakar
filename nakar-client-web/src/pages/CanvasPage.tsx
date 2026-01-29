@@ -43,6 +43,7 @@ import {
 import { CanvasToolbar } from "../room/canvas/CanvasToolbar.tsx";
 import { GraphDataToggle } from "../room/data-table/GraphDataToggle.tsx";
 import { useAppContext } from "../state/AppContextData.ts";
+import { Router } from "../routing/Router.ts";
 
 const CanvasContext: Context<CanvasContextData | null> =
   createContext<CanvasContextData | null>(null);
@@ -166,7 +167,7 @@ export function CanvasPage() {
             /* */
           })
           .with({ type: "KickWsdto" }, () => {
-            void navigate("/");
+            void navigate(Router.getHomeUrl());
           })
           .with({ type: "CanvasDataReadyWsdto" }, (event) => {
             setGraph(event.data);

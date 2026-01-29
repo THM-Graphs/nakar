@@ -4,6 +4,7 @@ import { LoaderFunctionArgs, useLoaderData, useNavigate } from "react-router";
 
 import { resultOrThrow } from "../shared/data/resultOrThrow.ts";
 import { CanvasDto, roomControllerGetRoom, RoomDto } from "../../src-gen";
+import { Router } from "../routing/Router.ts";
 
 export type RoomContext = {
   room: RoomDto;
@@ -38,7 +39,9 @@ export function Room() {
 
   useEffect(() => {
     addMyRoom(roomContext.room.id);
-    void navigate(`/canvas/${roomContext.canvas.id}`, { replace: true });
+    void navigate(Router.getCanvasUrl(roomContext.canvas.id), {
+      replace: true,
+    });
   }, [roomContext.room.id]);
 
   return null;

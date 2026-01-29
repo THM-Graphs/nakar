@@ -8,6 +8,7 @@ import { CMSErrorCard } from "../shared/cms/CMSErrorCard.tsx";
 import { CMSHeader } from "../shared/cms/CMSHeader.tsx";
 import { CMSButton } from "../shared/cms/CMSButton.tsx";
 import { CMSEditTextCard } from "../shared/cms/CMSEditTextCard.tsx";
+import { Router } from "../routing/Router.ts";
 
 export function AddProject() {
   const [title, setTitle] = useState<string>("Untitled Project");
@@ -40,7 +41,7 @@ export function AddProject() {
                 })
                   .then(resultOrThrow)
                   .then((result) => {
-                    return navigate(`/project/${result.id}`);
+                    return navigate(Router.getProjectPath(result.id));
                   })
                   .catch((error: unknown) => {
                     setError(error);

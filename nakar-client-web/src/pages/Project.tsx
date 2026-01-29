@@ -10,6 +10,7 @@ import { projectControllerGetProject, ProjectPageDto } from "../../src-gen";
 import { CMSEmptyHint } from "../shared/cms/CMSEmptyHint.tsx";
 import { CMSHeader } from "../shared/cms/CMSHeader.tsx";
 import { CMSButton } from "../shared/cms/CMSButton.tsx";
+import { Router } from "../routing/Router.ts";
 
 export async function ProjectLoader(
   args: LoaderFunctionArgs,
@@ -34,8 +35,11 @@ export function Project() {
     <Stack className={""}>
       <CMSNavbar
         breadcrumbContext={[
-          { title: "Home", url: "/" },
-          { title: projectContext.title, url: "./" },
+          { title: "Home", url: Router.getHomeUrl() },
+          {
+            title: projectContext.title,
+            url: Router.getProjectPath(projectContext.id),
+          },
         ]}
       ></CMSNavbar>
       <div className={"flex-grow-1 overflow-y-scroll"}>
@@ -52,7 +56,7 @@ export function Project() {
               <CMSButton
                 title={"Edit Project"}
                 icon={"pen"}
-                link={`/project/${projectContext.id}/edit`}
+                link={Router.getProjectEditPath(projectContext.id)}
               ></CMSButton>
             </Stack>
             <Stack>

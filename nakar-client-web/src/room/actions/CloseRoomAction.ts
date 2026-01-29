@@ -1,12 +1,13 @@
 import { Action } from "./Action.ts";
 import { NavigateFunction } from "react-router";
+import { Router } from "../../routing/Router.ts";
 
 export type CloseRoomActionParams = { navigate: NavigateFunction };
 export class CloseRoomAction extends Action<CloseRoomActionParams> {
   public static shared: CloseRoomAction = new CloseRoomAction();
 
   protected async action(params: CloseRoomActionParams): Promise<void> {
-    await params.navigate("/");
+    await params.navigate(Router.getHomeUrl());
   }
 
   disabled(): boolean {

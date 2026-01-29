@@ -13,6 +13,7 @@ import { CMSErrorCard } from "../shared/cms/CMSErrorCard.tsx";
 import { CMSHeader } from "../shared/cms/CMSHeader.tsx";
 import { CMSButton } from "../shared/cms/CMSButton.tsx";
 import { CMSEditTextCard } from "../shared/cms/CMSEditTextCard.tsx";
+import { Router } from "../routing/Router.ts";
 
 export async function EditProjectLoader(
   args: LoaderFunctionArgs,
@@ -42,9 +43,9 @@ export function EditProject() {
     <Stack className={""}>
       <CMSNavbar
         breadcrumbContext={[
-          { title: "Home", url: "/" },
-          { title: project.title, url: `/project/${project.id}` },
-          { title: "Edit", url: "#" },
+          { title: "Home", url: Router.getHomeUrl() },
+          { title: project.title, url: Router.getProjectPath(project.id) },
+          { title: "Edit", url: Router.getProjectEditPath(project.id) },
         ]}
       ></CMSNavbar>
       <div className={"overflow-auto mb-auto pt-5 pb-5"}>
@@ -65,7 +66,7 @@ export function EditProject() {
                 })
                   .then(resultOrThrow)
                   .then((result) => {
-                    return navigate(`/project/${result.id}`);
+                    return navigate(Router.getProjectPath(result.id));
                   })
                   .catch((error: unknown) => {
                     setError(error);
@@ -122,7 +123,7 @@ export function EditProject() {
                       })
                         .then(resultOrThrow)
                         .then(() => {
-                          return navigate("/");
+                          return navigate(Router.getHomeUrl());
                         })
                         .catch((error: unknown) => {
                           setError(error);

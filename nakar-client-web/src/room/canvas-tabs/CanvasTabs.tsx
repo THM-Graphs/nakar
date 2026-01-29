@@ -3,6 +3,7 @@ import { Stack } from "react-bootstrap";
 import { NavbarButton } from "../../shared/elements/NavbarButton.tsx";
 import { useNavigate } from "react-router";
 import clsx from "clsx";
+import { Router } from "../../routing/Router.ts";
 
 export function CanvasTabs(props: { canvasContext: CanvasContextData }) {
   const navigate = useNavigate();
@@ -20,7 +21,7 @@ export function CanvasTabs(props: { canvasContext: CanvasContextData }) {
           key={canvas.id}
           title={<span className={"ellipsis"}>{canvas.title}</span>}
           onClick={async () => {
-            await navigate(`/canvas/${canvas.id}`);
+            await navigate(Router.getCanvasUrl(canvas.id));
           }}
         ></NavbarButton>
       ))}
