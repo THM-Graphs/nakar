@@ -5,6 +5,7 @@ import { RoomDto, StartPageRoomDto } from "../../../src-gen";
 import { match, P } from "ts-pattern";
 import { CMSCardContent } from "./CMSCardContent.tsx";
 import { CSSProperties } from "react";
+import { Router } from "../../routing/Router.ts";
 
 export function RoomCard(props: {
   room: RoomDto | StartPageRoomDto;
@@ -25,7 +26,7 @@ export function RoomCard(props: {
                 ),
               )
               .otherwise(() => null)}
-            <Link to={`/room/${props.room.id}`} className={"ellipsis"}>
+            <Link to={Router.getRoomUrl(props.room.id)} className={"ellipsis"}>
               {props.room.title}
             </Link>
           </Stack>
