@@ -216,7 +216,10 @@ export class WebSocketManager
     @ConnectedSocket() wsClient: Socket,
   ): Promise<void> {
     try {
-      if (message.action.type !== 'MoveNodesWsdto') {
+      if (
+        message.action.type !== 'MoveNodesWsdto' &&
+        message.action.type !== 'MoveCursorWsdto'
+      ) {
         this._logger.debug(
           `Did receive from client ${wsClient.id}: ${message.action.type}`,
         );

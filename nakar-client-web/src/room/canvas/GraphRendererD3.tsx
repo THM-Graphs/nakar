@@ -45,8 +45,8 @@ export function GraphRendererD3() {
           .with({ type: "CanvasDataReadyWsdto" }, (event) => {
             _graphRenderer.loadGraphContent(event.data.elements);
           })
-          .with({ type: "CursorMovedWsdto" }, (event) => {
-            console.log(event);
+          .with({ type: "CursorMovedWsdto" }, () => {
+            // TODO
           });
       }),
       _graphRenderer.onGrabNode.subscribe((n) => {
