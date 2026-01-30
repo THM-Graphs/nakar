@@ -27,7 +27,7 @@ export class GraphNode {
   });
 
   public readonly id: string;
-  public readonly labels: SSet<string>;
+  private readonly _labels: SSet<string>;
   public readonly properties: PropertyCollection;
   public readonly namesInQuery: SSet<string>;
   public readonly grabs: SSet<string>;
@@ -51,7 +51,7 @@ export class GraphNode {
     creationAction: ElementCreationReason;
   }) {
     this.id = data.id;
-    this.labels = data.labels;
+    this._labels = data.labels;
     this.properties = data.properties;
     this._position = data.position;
     this.namesInQuery = data.namesInQuery;
@@ -70,10 +70,10 @@ export class GraphNode {
     return this._position;
   }
 
-  public get primaryLabel(): string {
-    return this.labels
+  public get labels(): string[] {
+    return this._labels
       .toArray()
-      .toSorted((a: string, b: string): number => a.localeCompare(b))[0];
+      .toSorted((a: string, b: string): number => a.localeCompare(b));
   }
 
   public get representationCount(): number {
@@ -158,7 +158,7 @@ export class GraphNode {
   public toPlain(): z.infer<typeof GraphNode.schema> {
     return {
       id: this.id,
-      labels: this.labels.toArray(),
+      labels: this.labels,
       properties: this.properties.toPlain(),
       position: this._position,
       namesInQuery: this.namesInQuery.toArray(),
