@@ -6,6 +6,7 @@ import { handleError } from "../error/handleError.ts";
 import { useBearStore } from "../../state/useBearStore.ts";
 import { useState } from "react";
 import { CMSButton } from "../cms/CMSButton.tsx";
+import { useNavigate } from "react-router";
 
 export function AuthModalContent() {
   const hide = useBearStore((s) => s.global.auth.loginWindow.hide);
@@ -20,6 +21,7 @@ export function AuthModalContent() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const setJWT = useBearStore((s) => s.global.auth.setJWT);
+  const navigate = useNavigate();
 
   return (
     <>
@@ -35,7 +37,7 @@ export function AuthModalContent() {
               }),
             );
             setJWT(res.jwt);
-            location.reload();
+            await navigate(0);
           })()
             .catch((e: unknown) => {
               setError(

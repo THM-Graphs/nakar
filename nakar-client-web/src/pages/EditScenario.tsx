@@ -5,9 +5,7 @@ import { CMSNavbar } from "../shared/cms/CMSNavbar.tsx";
 import { CMSHeader } from "../shared/cms/CMSHeader.tsx";
 import { CMSErrorCard } from "../shared/cms/CMSErrorCard.tsx";
 import {
-  CreateScenarioQueryEntryDto,
   DatabaseConnectionDto,
-  projectControllerDeleteProject,
   projectControllerGetProject,
   ProjectPageDto,
   scenarioControllerDeleteScenario,
@@ -118,119 +116,110 @@ export function EditScenario() {
       ></CMSNavbar>
       <div className={"overflow-auto mb-auto pt-5 pb-5"}>
         <Container>
-          <Stack gap={3}>
-            <CMSHeader title={"Edit Scenario"}></CMSHeader>
-            <CMSErrorCard error={error}></CMSErrorCard>
-            <Form
-              onSubmit={(event) => {
-                event.preventDefault();
-                setLoading(true);
-                setError(null);
-                scenarioControllerUpdateScenario({
-                  body: {
-                    title: scenario.title,
-                    queries: scenario.queries.map(
-                      (query: QueryEntry): UpdateScenarioQueryEntryDto => {
-                        return {
-                          id: query.id,
-                          query: query.query,
-                          databaseId: query.databaseId,
-                          isTableQuery: query.isTableData,
-                        };
-                      },
-                    ),
-                  },
-                  path: {
-                    scenarioId: loaderData.scenario.id,
-                    projectId: loaderData.project.id,
-                    scenarioGroupId: loaderData.scenarioGroup.id,
-                  },
+          <Form
+            onSubmit={(event) => {
+              event.preventDefault();
+              setLoading(true);
+              setError(null);
+              scenarioControllerUpdateScenario({
+                body: {
+                  title: scenario.title,
+                  queries: scenario.queries.map(
+                    (query: QueryEntry): UpdateScenarioQueryEntryDto => {
+                      return {
+                        id: query.id,
+                        query: query.query,
+                        databaseId: query.databaseId,
+                        isTableQuery: query.isTableData,
+                      };
+                    },
+                  ),
+                },
+                path: {
+                  scenarioId: loaderData.scenario.id,
+                  projectId: loaderData.project.id,
+                  scenarioGroupId: loaderData.scenarioGroup.id,
+                },
+              })
+                .catch((error: unknown) => {
+                  setError(error);
                 })
-                  .then(resultOrThrow)
-                  .then((result) => {
-                    return navigate(
-                      Router.getProjectPath(loaderData.project.id),
-                    );
-                  })
-                  .catch((error: unknown) => {
-                    setError(error);
-                  })
-                  .finally(() => {
-                    setLoading(false);
-                  });
-              }}
-            >
-              <Stack gap={3}>
-                <ScenarioEditor
-                  value={scenario}
-                  onChange={setScenario}
-                  databases={loaderData.databases}
-                ></ScenarioEditor>
+                .finally(() => {
+                  setLoading(false);
+                });
+            }}
+          >
+            <Stack gap={5}>
+              <CMSHeader title={"Edit Scenario"}></CMSHeader>
+              <CMSErrorCard error={error}></CMSErrorCard>
 
-                <hr></hr>
+              <ScenarioEditor
+                value={scenario}
+                onChange={setScenario}
+                databases={loaderData.databases}
+              ></ScenarioEditor>
 
-                <Stack
-                  direction={"horizontal"}
-                  gap={3}
-                  className={"justify-content-between"}
-                >
-                  <Stack direction={"horizontal"} gap={2}>
-                    <CMSButton
-                      title={"Save"}
-                      icon={"floppy"}
-                      type={"submit"}
-                    ></CMSButton>
-                    <CMSButton
-                      title={"Cancel"}
-                      link={Router.getProjectPath(loaderData.project.id)}
-                      variant={"secondary"}
-                    ></CMSButton>
-                    {loading && (
-                      <Spinner variant={"primary"} size={"sm"}></Spinner>
-                    )}
-                  </Stack>
+              <Stack
+                direction={"horizontal"}
+                gap={3}
+                className={"justify-content-between"}
+              >
+                <Stack direction={"horizontal"} gap={2}>
                   <CMSButton
-                    title={"Delete Scenario"}
-                    icon={"trash"}
-                    variant={"danger"}
-                    onClick={(e) => {
-                      e.preventDefault();
-
-                      if (
-                        !confirm(
-                          `Delete Scenario ${loaderData.scenario.title ?? "untitled"}?`,
-                        )
-                      ) {
-                        return;
-                      }
-
-                      setLoading(true);
-                      setError(null);
-                      scenarioControllerDeleteScenario({
-                        path: {
-                          projectId: loaderData.project.id,
-                          scenarioGroupId: loaderData.scenarioGroup.id,
-                          scenarioId: loaderData.scenario.id,
-                        },
-                      })
-                        .then(resultOrThrow)
-                        .then(() => {
-                          return navigate(
-                            Router.getProjectPath(loaderData.project.id),
-                          );
-                        })
-                        .catch((error: unknown) => {
-                          setError(error);
-                        })
-                        .finally(() => {
-                          setLoading(false);
-                        });
-                    }}
+                    title={"Save"}
+                    icon={"floppy"}
+                    type={"submit"}
                   ></CMSButton>
+                  <CMSButton
+                    title={"Cancel"}
+                    link={Router.getProjectPath(loaderData.project.id)}
+                    variant={"secondary"}
+                  ></CMSButton>
+                  {loading && (
+                    <Spinner variant={"primary"} size={"sm"}></Spinner>
+                  )}
                 </Stack>
+                <CMSButton
+                  title={"Delete Scenario"}
+                  icon={"trash"}
+                  variant={"danger"}
+                  onClick={(e) => {
+                    e.preventDefault();
+
+                    if (
+                      !confirm(
+                        `Delete Scenario ${loaderData.scenario.title ?? "untitled"}?`,
+                      )
+                    ) {
+                      return;
+                    }
+
+                    setLoading(true);
+                    setError(null);
+                    scenarioControllerDeleteScenario({
+                      path: {
+                        projectId: loaderData.project.id,
+                        scenarioGroupId: loaderData.scenarioGroup.id,
+                        scenarioId: loaderData.scenario.id,
+                      },
+                    })
+                      .then(resultOrThrow)
+                      .then(() => {
+                        return navigate(
+                          Router.getProjectPath(loaderData.project.id),
+                        );
+                      })
+                      .catch((error: unknown) => {
+                        setError(error);
+                      })
+                      .finally(() => {
+                        setLoading(false);
+                      });
+                  }}
+                ></CMSButton>
               </Stack>
-            </Form>
-          </Stack>
+            </Stack>
+          </Form>
         </Container>
       </div>
     </Stack>

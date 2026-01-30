@@ -1,6 +1,7 @@
-import { ReactNode } from "react";
+import { ReactNode, useState } from "react";
 import { Stack } from "react-bootstrap";
 import clsx from "clsx";
+import { CMSButton } from "./CMSButton.tsx";
 
 export function CMSCardContent(props: {
   title: ReactNode;
@@ -8,12 +9,21 @@ export function CMSCardContent(props: {
   icon?: string;
   rightBody?: ReactNode;
   rightBodyPaddingStart?: number;
+  onRemove?: () => void;
 }) {
+  const [isHover, setIsHover] = useState<boolean>(false);
+
   return (
     <Stack
       direction={"horizontal"}
       className={"p-3 justify-content-between"}
       gap={2}
+      onMouseEnter={() => {
+        setIsHover(true);
+      }}
+      onMouseLeave={() => {
+        setIsHover(false);
+      }}
     >
       <Stack direction={"horizontal"} className={"align-self-start ellipsis"}>
         <Stack
@@ -40,7 +50,18 @@ export function CMSCardContent(props: {
         )}
       </Stack>
       <Stack direction={"horizontal"} className={"align-self-start"}>
-        {props.icon && <i className={`bi bi-${props.icon} flex-shrink-0`}></i>}
+        {isHover && props.onRemove != null ? (
+          <CMSButton
+            variant={"icon"}
+            icon={"x-lg"}
+            className={"p-0"}
+            onClick={() => {
+              props.onRemove?.();
+            }}
+          ></CMSButton>
+        ) : (
+          props.icon && <i className={`bi bi-${props.icon} flex-shrink-0`}></i>
+        )}
       </Stack>
     </Stack>
   );

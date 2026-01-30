@@ -10,10 +10,12 @@ import { Router } from "../../routing/Router.ts";
 export function RoomCard(props: {
   room: RoomDto | StartPageRoomDto;
   style?: CSSProperties;
+  onRemove?: () => void;
 }) {
   return (
     <Card style={{ ...props.style }} className={""}>
       <CMSCardContent
+        onRemove={props.onRemove}
         title={
           <Stack className={"ellipsis"}>
             {match(props.room)

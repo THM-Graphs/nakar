@@ -350,15 +350,13 @@ export class SchemaFactoryService {
             widthRange,
           ),
       ),
-      labels: graph.nodes.labelIndex.labels
-        .toArray()
-        .map((label: string): LabelDto => {
-          const l: LabelDto | null = labelIndex.get(label) ?? null;
-          if (l == null) {
-            throw new Error('Unable to find Label');
-          }
-          return l;
-        }),
+      labels: graph.nodes.labelIndex.labels.map((label: string): LabelDto => {
+        const l: LabelDto | null = labelIndex.get(label) ?? null;
+        if (l == null) {
+          throw new Error('Unable to find Label');
+        }
+        return l;
+      }),
     };
     t.done({
       message: 'createSchemaGraphElements',
@@ -406,9 +404,7 @@ export class SchemaFactoryService {
         graph,
         liveCanvas.data.undoableData.info,
       ),
-      viewSettings: liveCanvas.data.viewSettings.toSchema(
-        liveCanvas.labels.toArray(),
-      ),
+      viewSettings: liveCanvas.data.viewSettings.toSchema(liveCanvas.labels),
       histogram: this.createSchemaHistogram(graph),
       notes: await Promise.all(
         notes.notes

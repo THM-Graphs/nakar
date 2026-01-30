@@ -13,6 +13,7 @@ import { ServerInfoDropdownEntry } from "../bars/ServerInfoDropdownEntry.tsx";
 import { useAppContext } from "../../state/AppContextData.ts";
 import { useBearStore } from "../../state/useBearStore.ts";
 import { match, P } from "ts-pattern";
+import { useNavigate } from "react-router";
 
 export function CMSNavbar(props: {
   breadcrumbContext: { title: string; url: string }[];
@@ -20,6 +21,7 @@ export function CMSNavbar(props: {
   const context = useAppContext();
   const username = useBearStore((s) => s.global.auth.username);
   const showLoginWindow = useBearStore((s) => s.global.auth.loginWindow.show);
+  const navigate = useNavigate();
 
   return (
     <Navbar className={"bg-body border-bottom shadow-sm z-1 sticky-top"}>
@@ -38,7 +40,11 @@ export function CMSNavbar(props: {
                 <Breadcrumb.Item
                   className={"small"}
                   href={entry.url}
-                  key={entry.url + entry.url}
+                  key={entry.url + entry.title}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    void navigate((e.target as HTMLAnchorElement).href);
+                  }}
                 >
                   {entry.title}
                 </Breadcrumb.Item>
@@ -63,7 +69,7 @@ export function CMSNavbar(props: {
             {username ? (
               <NavDropdown.Item
                 onClick={() => {
-                  context.logout();
+                  context.logout(navigate);
                 }}
               >
                 <span className={"small"}>Logout</span>

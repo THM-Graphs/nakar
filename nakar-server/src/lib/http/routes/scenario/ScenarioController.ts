@@ -3,9 +3,7 @@ import {
   Body,
   Controller,
   Delete,
-  ForbiddenException,
   NotFoundException,
-  NotImplementedException,
   Param,
   Post,
   Put,
@@ -150,7 +148,7 @@ export class ScenarioController {
     }
 
     for (const newQuery of body.queries) {
-      const queryData = {
+      const queryData: Input<'api::query.query'> = {
         query: newQuery.query,
         isTableQuery: newQuery.isTableQuery,
         database: newQuery.databaseId === '' ? null : newQuery.databaseId,

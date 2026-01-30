@@ -1,5 +1,4 @@
 import { useEffect } from "react";
-import { useBearStore } from "../state/useBearStore.ts";
 import { LoaderFunctionArgs, useLoaderData, useNavigate } from "react-router";
 
 import { resultOrThrow } from "../shared/data/resultOrThrow.ts";
@@ -33,12 +32,10 @@ export async function RoomLoader(
 }
 
 export function Room() {
-  const addMyRoom = useBearStore((s) => s.start.addRoom);
   const roomContext: RoomContext = useLoaderData();
   const navigate = useNavigate();
 
   useEffect(() => {
-    addMyRoom(roomContext.room.id);
     void navigate(Router.getCanvasUrl(roomContext.canvas.id), {
       replace: true,
     });

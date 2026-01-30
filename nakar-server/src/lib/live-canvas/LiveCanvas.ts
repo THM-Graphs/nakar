@@ -121,7 +121,7 @@ export class LiveCanvas {
     );
   }
 
-  public get labels(): SSet<string> {
+  public get labels(): string[] {
     return this.getGraph().nodes.labelIndex.labels;
   }
 

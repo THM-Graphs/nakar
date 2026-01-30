@@ -1,4 +1,4 @@
-import { Button, Card, Stack } from "react-bootstrap";
+import { Card, Stack } from "react-bootstrap";
 import { ScenarioIcon } from "./ScenarioIcon.tsx";
 import { QueryDisplay } from "./QueryDisplay.tsx";
 import { ScenarioCardSection } from "./ScenarioCardSection.tsx";

@@ -14,8 +14,10 @@ export class LabelIndex {
     return this._labelHistogram;
   }
 
-  public get labels(): SSet<string> {
-    return new SSet(this._labelHistogram.keys());
+  public get labels(): string[] {
+    return [...this._labelHistogram.keys()].toSorted(
+      (a: string, b: string): number => a.localeCompare(b),
+    );
   }
 
   public labelCount(label: string): number {
@@ -44,8 +46,7 @@ export class LabelIndex {
   }
 
   private _cleanup(): void {
-    const labels: SSet<string> = this.labels;
-    for (const label of labels) {
+    for (const label of this._labelHistogram.keys()) {
       if (this._labelHistogram.get(label) === 0) {
         this._labelHistogram.delete(label);
         this._sources.delete(label);

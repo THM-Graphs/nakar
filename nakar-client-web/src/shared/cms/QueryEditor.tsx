@@ -3,6 +3,8 @@ import clsx from "clsx";
 import { DatabaseConnectionDto } from "../../../src-gen";
 import { CypherEditor } from "@neo4j-cypher/react-codemirror";
 import { useBearStore } from "../../state/useBearStore.ts";
+import { CMSButton } from "./CMSButton.tsx";
+import { MouseEventHandler } from "react";
 
 export type QueryEntry = {
   id: string;
@@ -15,8 +17,10 @@ export function QueryEditor(props: {
   value: QueryEntry;
   onChange: (newEntry: QueryEntry) => void;
   databases: DatabaseConnectionDto[];
+  onDelete?: MouseEventHandler<HTMLButtonElement>;
 }) {
   const getTheme = useBearStore((s) => s.global.theme.getTheme);
+
   return (
     <Card className={"p-3 gap-3 flex-grow-1"}>
       <Stack
@@ -25,8 +29,8 @@ export function QueryEditor(props: {
         className={"justify-content-between"}
       >
         <Form.Group>
-          <Form.Label>Database</Form.Label>
           <FormSelect
+            size={"sm"}
             className={clsx(
               props.value.databaseId === "" && "bg-danger-subtle",
             )}
@@ -45,21 +49,14 @@ export function QueryEditor(props: {
             ))}
           </FormSelect>
         </Form.Group>
-        <Form.Group className={""}>
-          <Form.Check
-            type="switch"
-            label="Query produces table data?"
-            id={`istabledata_${props.value.id}`}
-            checked={props.value.isTableData}
-            onChange={(e) => {
-              props.onChange({ ...props.value, isTableData: e.target.checked });
-            }}
-          />
-          <Form.Text className="text-muted">
-            Activate this option, if your query result should be displayed as
-            table data.
-          </Form.Text>
-        </Form.Group>
+        {props.onDelete != null && (
+          <CMSButton
+            className={"align-self-start"}
+            icon={"trash"}
+            onClick={props.onDelete}
+            variant={"danger"}
+          ></CMSButton>
+        )}
       </Stack>
       <Form.Group>
         <Form.Label>Query</Form.Label>
@@ -75,6 +72,17 @@ export function QueryEditor(props: {
           theme={getTheme()}
           className={"border"}
         ></CypherEditor>
+      </Form.Group>
+      <Form.Group className={""}>
+        <Form.Check
+          type="switch"
+          label={<span className={"small"}>Query produces table data.</span>}
+          id={`istabledata_${props.value.id}`}
+          checked={props.value.isTableData}
+          onChange={(e) => {
+            props.onChange({ ...props.value, isTableData: e.target.checked });
+          }}
+        />
       </Form.Group>
     </Card>
   );

@@ -1,12 +1,13 @@
 import { Neo4jDatabaseInfo } from './Neo4jDatabaseInfo';
-import {
+import neo4j, {
+  auth,
   Driver,
+  driver as createDriver,
   Record as Neo4jRecord,
   RecordShape,
   ResultSummary,
   Session,
 } from 'neo4j-driver';
-import neo4j, { auth, driver as createDriver } from 'neo4j-driver';
 import { Neo4jGraphElements } from './Neo4jGraphElements';
 import { SSet } from '../set/Set';
 import { Neo4jGraphElementsFactory } from './Neo4jGraphElementsFactory';

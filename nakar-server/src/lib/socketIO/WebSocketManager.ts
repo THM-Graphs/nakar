@@ -550,7 +550,7 @@ export class WebSocketManager
               this.sendToRoom(message.canvas.canvasId, {
                 type: 'CanvasViewSettingsChangedWsdto',
                 viewSettings: message.viewSettings.toSchema(
-                  message.canvas.labels.toArray(),
+                  message.canvas.labels,
                 ),
               });
             },

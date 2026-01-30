@@ -9,6 +9,7 @@ import { startControllerGetStart, StartPageDto } from "../../src-gen";
 import { CMSEmptyHint } from "../shared/cms/CMSEmptyHint.tsx";
 import { useIsLoggedIn } from "../state/useIsLoggedIn.ts";
 import { CMSButton } from "../shared/cms/CMSButton.tsx";
+import { useState } from "react";
 
 export async function StartLoader(): Promise<StartPageDto> {
   return resultOrThrow(
@@ -20,7 +21,9 @@ export async function StartLoader(): Promise<StartPageDto> {
 
 export function Start() {
   const loaderData: StartPageDto = useLoaderData();
+  const [recentRooms, setRecentRooms] = useState(loaderData.recentRooms);
   const isLoggedIn: boolean = useIsLoggedIn();
+  const removeRoom = useBearStore((s) => s.start.removeRoom);
 
   return (
     <Stack className={""}>
@@ -32,19 +35,27 @@ export function Start() {
               Enter a public room or log in and create your own projects.
             </p>
 
-            {loaderData.recentRooms.length > 0 && (
+            {recentRooms.length > 0 && (
               <Stack>
                 <h5>Recent Rooms</h5>
                 <Stack
                   direction={"horizontal"}
                   gap={3}
-                  className={"justify-content-start"}
+                  className={"justify-content-start flex-wrap"}
                 >
-                  {loaderData.recentRooms.map((r) => (
+                  {recentRooms.map((r) => (
                     <RoomCard
                       style={{ width: "280px" }}
                       key={r.id}
                       room={r}
+                      onRemove={() => {
+                        removeRoom(r.id);
+                        setRecentRooms((oldRecentRooms) => {
+                          return oldRecentRooms.filter(
+                            (oldRecentRoom) => oldRecentRoom.id !== r.id,
+                          );
+                        });
+                      }}
                     ></RoomCard>
                   ))}
                 </Stack>

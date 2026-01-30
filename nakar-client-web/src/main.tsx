@@ -3,7 +3,7 @@ import { createRoot } from "react-dom/client";
 import "bootstrap/dist/css/bootstrap.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import "./index.css";
-import { createBrowserRouter, RouterProvider } from "react-router";
+import { createBrowserRouter, Outlet, RouterProvider } from "react-router";
 import { loadEnvOrDefault } from "./shared/env/env.ts";
 import {
   authControllerGetAuth,
@@ -74,6 +74,12 @@ async function bootstrap() {
     {
       path: "/",
       errorElement: <ErrorComp></ErrorComp>,
+      element: (
+        <>
+          <Outlet />
+          <AuthModal></AuthModal>
+        </>
+      ),
       children: [
         {
           index: true,
@@ -120,8 +126,7 @@ async function bootstrap() {
   createRoot(document.getElementById("root") as HTMLElement).render(
     <StrictMode>
       <AppContext.Provider value={context}>
-        <RouterProvider router={router} />
-        <AuthModal></AuthModal>
+        <RouterProvider router={router}></RouterProvider>
       </AppContext.Provider>
     </StrictMode>,
   );

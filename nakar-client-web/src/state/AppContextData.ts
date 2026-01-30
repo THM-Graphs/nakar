@@ -2,6 +2,7 @@ import { Env } from "../shared/env/env.ts";
 import { WebSocketsManager } from "../shared/ws/WebSocketsManager.ts";
 import { createContext, useContext } from "react";
 import { useBearStore } from "./useBearStore.ts";
+import { NavigateFunction } from "react-router";
 
 export const AppContext = createContext<AppContextData | null>(null);
 
@@ -22,8 +23,8 @@ export class AppContextData {
     this.webSocketsManager = new WebSocketsManager(env);
   }
 
-  public logout(): void {
+  public logout(navigate: NavigateFunction): void {
     useBearStore.getState().global.auth.setJWT(null);
-    location.reload();
+    void navigate(0);
   }
 }

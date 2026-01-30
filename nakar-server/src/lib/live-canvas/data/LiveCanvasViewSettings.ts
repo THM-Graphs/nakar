@@ -6,7 +6,6 @@ import { LiveCanvasLabelViewSettings } from './LiveCanvasLabelViewSettings';
 import { SMap } from '../../map/Map';
 import { Input } from '@strapi/types/dist/modules/documents/params/data';
 import { LiveCanvasLabelViewSettingsDto } from '../../schema/dtos/LiveCanvasLabelViewSettingsDto';
-import { SSet } from '../../set/Set';
 
 export class LiveCanvasViewSettings {
   public static readonly defaultGrowNodesBasedOnDegreeFactor: number = 2;
@@ -95,7 +94,7 @@ export class LiveCanvasViewSettings {
 
   public static fromSchema(
     input: LiveCanvasViewSettingsDto,
-    labels: SSet<string>,
+    labels: string[],
   ): LiveCanvasViewSettings {
     return new LiveCanvasViewSettings({
       compressRelationshipsWidthFactor: input.compressRelationshipsWidthFactor,
@@ -104,7 +103,7 @@ export class LiveCanvasViewSettings {
       labelSettings: input.labelSettings
         .filter((labelSetting: LiveCanvasLabelViewSettingsDto): boolean =>
           // Do not accept label settings of labels that don't exist.
-          labels.has(labelSetting.label),
+          labels.includes(labelSetting.label),
         )
         .reduce<SMap<string, LiveCanvasLabelViewSettings>>(
           (

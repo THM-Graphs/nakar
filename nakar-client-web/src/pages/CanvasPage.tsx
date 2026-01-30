@@ -76,6 +76,8 @@ export async function CanvasLoader(
     await canvasControllerGetCanvas({ path: { canvasId: canvasId } }),
   );
 
+  useBearStore.getState().start.addRoom(data.room.id);
+
   return {
     initialCanvasData: data.canvas,
     initialScenariosData: data.scenarios,

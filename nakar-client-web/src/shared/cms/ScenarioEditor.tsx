@@ -1,10 +1,10 @@
 import { CMSEditTextCard } from "./CMSEditTextCard.tsx";
 import { QueryEditor, QueryEntry } from "./QueryEditor.tsx";
-import { Stack } from "react-bootstrap";
-import { CMSButton } from "./CMSButton.tsx";
+import { Card, Stack } from "react-bootstrap";
 import { DatabaseConnectionDto } from "../../../src-gen";
 import { useCallback } from "react";
 import { v4 } from "uuid";
+import { NavbarButton } from "../elements/NavbarButton.tsx";
 
 export type ScenarioData = {
   title: string;
@@ -41,60 +41,57 @@ export function ScenarioEditor(props: {
 
   return (
     <Stack gap={3}>
-      <CMSEditTextCard
-        title={"Scenario Title"}
-        value={props.value.title}
-        onChange={(e) => {
-          props.onChange({ ...props.value, title: e });
-        }}
-        subtitle={"This title will be shown in the left scenario side bar."}
-      ></CMSEditTextCard>
+      <Stack>
+        <h5>Scenario</h5>
+        <CMSEditTextCard
+          title={"Scenario Title"}
+          value={props.value.title}
+          onChange={(e) => {
+            props.onChange({ ...props.value, title: e });
+          }}
+          subtitle={"This title will be shown in the left scenario side bar."}
+        ></CMSEditTextCard>
+      </Stack>
 
-      <hr></hr>
+      <Stack>
+        <h5>Queries</h5>
+        <Stack gap={3}>
+          {props.value.queries.map((queryEntry: QueryEntry) => (
+            <QueryEditor
+              key={queryEntry.id}
+              value={queryEntry}
+              onChange={(newQuery: QueryEntry): void => {
+                props.onChange({
+                  ...props.value,
+                  queries: props.value.queries.map(
+                    (query: QueryEntry): QueryEntry =>
+                      query.id === newQuery.id ? newQuery : query,
+                  ),
+                });
+              }}
+              databases={props.databases}
+              onDelete={(e) => {
+                e.preventDefault();
+                if (queryEntry.query === "" || confirm("Remove query?")) {
+                  removeQuery(queryEntry.id);
+                }
+              }}
+            ></QueryEditor>
+          ))}
 
-      <h5>Queries</h5>
-
-      {props.value.queries.map((queryEntry: QueryEntry) => (
-        <Stack
-          key={queryEntry.id}
-          direction={"horizontal"}
-          gap={3}
-          className={"align-items-start"}
-        >
-          <QueryEditor
-            value={queryEntry}
-            onChange={(newQuery: QueryEntry): void => {
-              props.onChange({
-                ...props.value,
-                queries: props.value.queries.map(
-                  (query: QueryEntry): QueryEntry =>
-                    query.id === newQuery.id ? newQuery : query,
-                ),
-              });
-            }}
-            databases={props.databases}
-          ></QueryEditor>
-          <CMSButton
-            icon={"trash"}
-            variant={"danger"}
-            onClick={(e) => {
-              e.preventDefault();
-              if (queryEntry.query === "" || confirm("Remove query?")) {
-                removeQuery(queryEntry.id);
-              }
-            }}
-          ></CMSButton>
+          <Card>
+            <NavbarButton
+              className={"align-self-stretch pt-1 pb-1"}
+              icon={"plus-lg"}
+              title={"Add Query"}
+              onClick={(e) => {
+                e.preventDefault();
+                addQuery();
+              }}
+            ></NavbarButton>
+          </Card>
         </Stack>
-      ))}
-
-      <CMSButton
-        className={"align-self-start"}
-        icon={"plus-lg"}
-        onClick={(e) => {
-          e.preventDefault();
-          addQuery();
-        }}
-      ></CMSButton>
+      </Stack>
     </Stack>
   );
 }

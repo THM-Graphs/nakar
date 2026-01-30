@@ -4,15 +4,10 @@ div#root {
   height: 100%;
 }
 
-body {
-  background-color: var(--bs-tertiary-bg);
-}
-
 * {
   /* Prevent SVG elements to show text cursor */
   user-select: none;
 
-  font-family: system-ui;
   --bs-alert-margin-bottom: 0 !important;
   --bs-breadcrumb-margin-bottom: 0 !important;
 }
@@ -69,13 +64,6 @@ div[role="tooltip"] {
 .markdown th,
 .markdown td {
   border-collapse: collapse;
-}
-
-.bg-body,
-.bg-body-secondary,
-.bg-body-tertiary {
-  backdrop-filter: blur(10px);
-  --bs-bg-opacity: 0.8;
 }
 
 .card,
