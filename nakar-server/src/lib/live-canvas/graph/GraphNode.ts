@@ -27,7 +27,6 @@ export class GraphNode {
   });
 
   public readonly id: string;
-  private readonly _labels: SSet<string>;
   public readonly properties: PropertyCollection;
   public readonly namesInQuery: SSet<string>;
   public readonly grabs: SSet<string>;
@@ -37,6 +36,7 @@ export class GraphNode {
 
   private _locked: boolean;
   private _position: ElementPosition;
+  private readonly _labels: SSet<string>;
 
   public constructor(data: {
     id: string;
@@ -120,7 +120,7 @@ export class GraphNode {
       this.properties.getStringValueOfProperty('id') ??
       this.properties.getStringValueOfProperty('slug') ??
       this.properties.firstStringValue() ??
-      this.labels.toArray().join(', ')
+      this.labels.join(', ')
     );
   }
 
@@ -129,25 +129,31 @@ export class GraphNode {
     degreeRange: Range,
     graph: LiveCanvasUndoableData,
   ): number {
-    const labelViewSettings: LiveCanvasLabelViewSettings =
-      viewSettings.getLabelSettings(this.primaryLabel);
-
-    if (!viewSettings.growNodesBasedOnDegree) {
-      return labelViewSettings.getComputedRadius();
+    let radius: number = GraphNode.defaultRadius;
+    for (const label of this.labels) {
+      const labelViewSettings: LiveCanvasLabelViewSettings =
+        viewSettings.getLabelSettings(label);
+      if (labelViewSettings.customRadius) {
+        radius = labelViewSettings.radius;
+      }
     }
 
-    const toRange: Range = new Range({
-      floor: 1,
-      ceiling: viewSettings.growNodesBasedOnDegreeFactor,
-    });
+    if (viewSettings.growNodesBasedOnDegree) {
+      const toRange: Range = new Range({
+        floor: 1,
+        ceiling: viewSettings.growNodesBasedOnDegreeFactor,
+      });
 
-    return (
-      degreeRange.scaleValue(
-        toRange,
-        this.degree(graph),
-        viewSettings.scaleType,
-      ) * labelViewSettings.getComputedRadius()
-    );
+      return (
+        degreeRange.scaleValue(
+          toRange,
+          this.degree(graph),
+          viewSettings.scaleType,
+        ) * radius
+      );
+    } else {
+      return radius;
+    }
   }
 
   public getCustomColor(): ElementColor | null {
@@ -200,7 +206,7 @@ export class GraphNode {
   public copy(): GraphNode {
     return new GraphNode({
       id: this.id,
-      labels: this.labels.copy(),
+      labels: new SSet(this.labels),
       properties: this.properties.copy(),
       position: this._position.copy(),
       namesInQuery: this.namesInQuery.copy(),

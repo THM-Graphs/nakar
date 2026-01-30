@@ -97,7 +97,7 @@ export class DatabaseConnectionController {
           return {
             id: node.id,
             title: node.getTitle(),
-            labels: node.labels.toArray(),
+            labels: node.labels,
             customColor: null, // TODO
           } satisfies NodePreviewDto;
         }),

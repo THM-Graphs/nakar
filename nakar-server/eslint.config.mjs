@@ -106,6 +106,7 @@ export default defineConfig([
         'error',
         { prefer: 'no-type-imports', disallowTypeAnnotations: true },
       ],
+      '@typescript-eslint/prefer-destructuring': 'off',
     },
   },
 ]);

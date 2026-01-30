@@ -742,7 +742,7 @@ export class SchemaFactoryService {
           return {
             id: node.id,
             title: node.getTitle(),
-            labels: node.labels.toArray(),
+            labels: node.labels,
             degree: node.degree(graph),
             percentage: degreeCount > 0 ? node.degree(graph) / degreeCount : 0,
             customColor: null, // TODO
@@ -785,7 +785,7 @@ export class SchemaFactoryService {
           return {
             id: nodeReference.nodeId ?? '',
             title: node?.getTitle() ?? '',
-            labels: node?.labels.toArray() ?? [],
+            labels: node?.labels ?? [],
             customColor: null, // TODO
           };
         },
@@ -829,8 +829,8 @@ export class SchemaFactoryService {
     return {
       id: node.id,
       title: node.getTitle(),
-      labels: node.labels.toArray(),
-      nativeLabels: node.labels.toArray(),
+      labels: node.labels,
+      nativeLabels: node.labels,
       properties: this._createSchemaGraphProperties(node.properties),
       radius: node.getRadius(viewSettings, degreeRange, graph),
       position: node.position,
@@ -894,13 +894,13 @@ export class SchemaFactoryService {
       sourceNode: {
         id: sourceNode?.id ?? '',
         title: sourceNode?.getTitle() ?? '',
-        labels: sourceNode?.labels.toArray() ?? [],
+        labels: sourceNode?.labels ?? [],
         customColor: null, // TODO
       },
       targetNode: {
         id: targetNode?.id ?? '',
         title: targetNode?.getTitle() ?? '',
-        labels: targetNode?.labels.toArray() ?? [],
+        labels: targetNode?.labels ?? [],
         customColor: null, // TODO
       },
       creationReason: this._createSchemaCreationReason(edge.creationAction),

@@ -1389,8 +1389,8 @@ export class LiveCanvas {
     }
 
     if (
-      !leftNode.labels.has(config.leftLabel) ||
-      !rightNode.labels.has(config.rightLabel)
+      !leftNode.labels.includes(config.leftLabel) ||
+      !rightNode.labels.includes(config.rightLabel)
     ) {
       return false;
     }
@@ -1469,7 +1469,7 @@ export class LiveCanvas {
         grabs: new SSet(),
         labels: clusterBuddies.reduce(
           (akku: SSet<string>, next: GraphNode): SSet<string> =>
-            akku.byMerging(next.labels),
+            akku.byMerging(new SSet(next.labels)),
           new SSet<string>(),
         ),
         source: node.source,
@@ -1549,13 +1549,13 @@ export class LiveCanvas {
 
           // Put other nodes between
           for (const node of graph.nodes.nodes) {
-            if (node.labels.has(targetLabel) || node.locked) {
+            if (node.labels.includes(targetLabel) || node.locked) {
               continue;
             }
 
             const neighbors: GraphNode[] = graph
               .getNeighborsOfNode(node)
-              .filter((n: GraphNode): boolean => n.labels.has(targetLabel))
+              .filter((n: GraphNode): boolean => n.labels.includes(targetLabel))
               .toArray();
             if (neighbors.length > 0) {
               node.position = ElementPosition.average(

@@ -117,12 +117,4 @@ export class LiveCanvasLabelViewSettings {
       customColorIndex: this._customColorIndex,
     };
   }
-
-  public getComputedRadius(): number {
-    if (this._customRadius) {
-      return this._radius;
-    } else {
-      return GraphNode.defaultRadius;
-    }
-  }
 }
