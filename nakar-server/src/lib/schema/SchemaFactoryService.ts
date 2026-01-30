@@ -191,8 +191,10 @@ export class SchemaFactoryService {
             const database: Result<'api::database-connection.database-connection'> | null =
               await this._database.getDatabaseConnectionOfQuery(q);
             return {
+              id: q.documentId,
               query: q.query ?? '',
               database: database ? this.createSchemaDatabase(database) : null,
+              isTableQuery: q.isTableQuery ?? false,
             };
           },
         ),
@@ -247,76 +249,6 @@ export class SchemaFactoryService {
             .exhaustive(),
       ),
     });
-  }
-
-  public async createSchemaScenarioSchema(
-    scenario: Result<'api::scenario.scenario'>,
-  ): Promise<ScenarioDto> {
-    return {
-      id: scenario.documentId,
-      title: scenario.title ?? '',
-      queries: await Promise.all(
-        (await this._database.getQueriesOfScenario(scenario)).map(
-          async (q: Result<'api::query.query'>): Promise<ScenarioQueryDto> => {
-            const database: Result<'api::database-connection.database-connection'> | null =
-              await this._database.getDatabaseConnectionOfQuery(q);
-            return {
-              query: q.query ?? '',
-              database: database ? this.createSchemaDatabase(database) : null,
-            };
-          },
-        ),
-      ),
-      description: scenario.description ?? '',
-      parameters: (await this._database.getParametersOfScenario(scenario)).map(
-        (
-          parameter: Result<'api::query-parameter.query-parameter'>,
-        ): ScenarioParameterDto =>
-          this.createSchemaScenarioParameter(parameter),
-      ),
-      postActions: (
-        await this._database.getPostScenarioActionsOfScenario(scenario)
-      ).map(
-        (
-          action: Result<'api::post-scenario-action.post-scenario-action'>,
-        ): string =>
-          // ['connectResultNodes', 'compressRelationships', 'compressNodes', 'layout']
-          match(action.type)
-            .with('connectResultNodes', (): string => 'Connect Result Nodes')
-            .with(
-              'compressRelationships',
-              (): string => 'Compress Relationships',
-            )
-            .with('compressNodes', (): string =>
-              match(action.label)
-                .with(
-                  P.string,
-                  (label: string): string => `Compress ${label} Nodes`,
-                )
-                .with(P.nullish, (): string => `Compress Nodes`)
-                .exhaustive(),
-            )
-            .with('layout', (): string =>
-              match(action.layoutAlgorithm)
-                .with(
-                  'forceDirected',
-                  (): string =>
-                    `Layout ${action.label ?? 'None'} Force Directed`,
-                )
-                .with(
-                  'circle',
-                  (): string => `Layout ${action.label ?? 'None'} Circle`,
-                )
-                .with(
-                  P.nullish,
-                  (): string => `Layout ${action.label ?? 'None'}`,
-                )
-                .exhaustive(),
-            )
-            .with(P.nullish, (): string => 'Unknown Post Action')
-            .exhaustive(),
-      ),
-    };
   }
 
   public createSchemaScenarioParameter(
@@ -500,9 +432,7 @@ export class SchemaFactoryService {
         ? await this._database.getScenario(metaData.scenarioId)
         : null;
     const result: LiveCanvasMetaDataDto = {
-      scenario: scenario
-        ? await this.createSchemaScenarioSchema(scenario)
-        : null,
+      scenario: scenario ? await this.createSchemaScenario(scenario) : null,
       arguments: metaData.arguments.reduce<ScenarioArgumentDto[]>(
         (
           akku: ScenarioArgumentDto[],

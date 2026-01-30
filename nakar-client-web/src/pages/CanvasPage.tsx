@@ -60,6 +60,7 @@ export type CanvasContextData = {
   initialCanvasData: CanvasDto;
   initialScenariosData: ScenarioCollectionDto;
   initialRoomData: RoomDto;
+  projectId: string;
 };
 
 export async function CanvasLoader(
@@ -79,6 +80,7 @@ export async function CanvasLoader(
     initialCanvasData: data.canvas,
     initialScenariosData: data.scenarios,
     initialRoomData: data.room,
+    projectId: data.projectId,
   };
 }
 

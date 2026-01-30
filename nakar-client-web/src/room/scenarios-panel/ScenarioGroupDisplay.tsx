@@ -24,6 +24,7 @@ export function ScenarioGroupDisplay(props: {
               <Stack className={"flex-grow-0"}>
                 {list.map((scenario: ScenarioDto) => (
                   <ScenarioDisplay
+                    scenarioGroup={props.scenarioGroup}
                     key={scenario.id}
                     scenario={scenario}
                   ></ScenarioDisplay>

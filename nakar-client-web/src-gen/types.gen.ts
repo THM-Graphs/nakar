@@ -60,6 +60,7 @@ export type CanvasPageDto = {
     canvas: CanvasDto;
     scenarios: ScenarioCollectionDto;
     room: RoomDto;
+    projectId: string;
 };
 
 export type CanvasTableDataChangedWsdto = {
@@ -111,10 +112,22 @@ export type CreateProjectRequestBodyDto = {
     title: string;
 };
 
+export type CreateScenarioQueryEntryDto = {
+    query: string;
+    databaseId: (string) | null;
+    isTableQuery: boolean;
+};
+
+export type CreateScenarioRequestBodyDto = {
+    title: string;
+    queries: Array<CreateScenarioQueryEntryDto>;
+};
+
 export type CursorMovedWsdto = {
     type: 'CursorMovedWsdto';
     position: PositionDto;
     username: string;
+    socketId: string;
 };
 
 export type type12 = 'CursorMovedWsdto';
@@ -546,8 +559,10 @@ export type ScenarioParameterDto = {
 export type dataType = 'string' | 'number' | 'json' | 'startDateTime' | 'endDateTime';
 
 export type ScenarioQueryDto = {
+    id: string;
     query: string;
     database: ((DatabaseConnectionDto) | null);
+    isTableQuery: boolean;
 };
 
 export type SearchCapabilitiesEntryDto = {
@@ -605,6 +620,18 @@ export type UpdateNoteRequestBodyDto = {
 
 export type UpdateProjectRequestBodyDto = {
     title: string;
+};
+
+export type UpdateScenarioQueryEntryDto = {
+    id: string;
+    query: string;
+    databaseId: (string) | null;
+    isTableQuery: boolean;
+};
+
+export type UpdateScenarioRequestBodyDto = {
+    title: string;
+    queries: Array<UpdateScenarioQueryEntryDto>;
 };
 
 export type UserPreviewDto = {
@@ -672,6 +699,43 @@ export type ProjectControllerCreateProjectData = {
 export type ProjectControllerCreateProjectResponse = (ProjectPageDto);
 
 export type ProjectControllerCreateProjectError = unknown;
+
+export type ScenarioControllerCreateScenarioData = {
+    body: CreateScenarioRequestBodyDto;
+    path: {
+        projectId: string;
+        scenarioGroupId: string;
+    };
+};
+
+export type ScenarioControllerCreateScenarioResponse = (ScenarioDto);
+
+export type ScenarioControllerCreateScenarioError = unknown;
+
+export type ScenarioControllerDeleteScenarioData = {
+    path: {
+        projectId: string;
+        scenarioGroupId: string;
+        scenarioId: string;
+    };
+};
+
+export type ScenarioControllerDeleteScenarioResponse = (unknown);
+
+export type ScenarioControllerDeleteScenarioError = unknown;
+
+export type ScenarioControllerUpdateScenarioData = {
+    body: UpdateScenarioRequestBodyDto;
+    path: {
+        projectId: string;
+        scenarioGroupId: string;
+        scenarioId: string;
+    };
+};
+
+export type ScenarioControllerUpdateScenarioResponse = (ScenarioDto);
+
+export type ScenarioControllerUpdateScenarioError = unknown;
 
 export type CanvasControllerGetCanvasData = {
     path: {

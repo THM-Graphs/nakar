@@ -105,6 +105,7 @@ export function Project() {
                   <ScenarioGroupCard
                     key={r.id}
                     scenarioGroup={r}
+                    project={projectContext}
                   ></ScenarioGroupCard>
                 ))}
                 <CMSEmptyHint

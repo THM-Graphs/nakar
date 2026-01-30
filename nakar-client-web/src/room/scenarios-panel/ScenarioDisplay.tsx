@@ -9,9 +9,11 @@ import {
   actionControllerLoadScenario,
   ScenarioArgumentDto,
   ScenarioDto,
+  ScenarioGroupDto,
 } from "../../../src-gen";
 
 export function ScenarioDisplay(props: {
+  scenarioGroup: ScenarioGroupDto;
   scenario: ScenarioDto;
   hidden?: boolean;
 }) {
@@ -63,6 +65,7 @@ export function ScenarioDisplay(props: {
       }
     >
       <ScenarioCard
+        scenarioGroup={props.scenarioGroup}
         onScenarioSelected={(scenario, additive) => {
           runScenario(additive, []);
         }}

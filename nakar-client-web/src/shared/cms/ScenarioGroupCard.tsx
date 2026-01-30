@@ -1,8 +1,17 @@
 import { Card, Stack } from "react-bootstrap";
-import { ScenarioDto, ScenarioGroupDto } from "../../../src-gen";
+import {
+  ProjectPageDto,
+  ScenarioDto,
+  ScenarioGroupDto,
+} from "../../../src-gen";
 import { CMSCardContent } from "./CMSCardContent.tsx";
+import { Link } from "react-router";
+import { Router } from "../../routing/Router.ts";
 
-export function ScenarioGroupCard(props: { scenarioGroup: ScenarioGroupDto }) {
+export function ScenarioGroupCard(props: {
+  scenarioGroup: ScenarioGroupDto;
+  project: ProjectPageDto;
+}) {
   return (
     <Card>
       <CMSCardContent
@@ -18,13 +27,30 @@ export function ScenarioGroupCard(props: { scenarioGroup: ScenarioGroupDto }) {
           <Stack>
             <span className={"text-muted small"}>Scenarios</span>
             {props.scenarioGroup.scenarios.map((scenario: ScenarioDto) => (
-              <span
-                className={"muted small user-select-text"}
+              <Link
+                to={Router.getEditScenarioPath(
+                  props.project.id,
+                  props.scenarioGroup.id,
+                  scenario.id,
+                )}
                 key={scenario.id}
               >
-                {scenario.title}
-              </span>
+                <span className={"muted small user-select-text"}>
+                  {scenario.title}
+                </span>
+              </Link>
             ))}
+            <Link
+              to={Router.getAddScenarioPath(
+                props.project.id,
+                props.scenarioGroup.id,
+              )}
+            >
+              <Stack className={"small"} direction={"horizontal"} gap={1}>
+                <i className={"bi bi-plus-lg"}></i>
+                <span>Add Scenario</span>
+              </Stack>
+            </Link>
           </Stack>
         }
       ></CMSCardContent>

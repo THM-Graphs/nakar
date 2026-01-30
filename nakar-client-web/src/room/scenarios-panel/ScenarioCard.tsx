@@ -2,47 +2,57 @@ import { Button, Card, Stack } from "react-bootstrap";
 import { ScenarioIcon } from "./ScenarioIcon.tsx";
 import { QueryDisplay } from "./QueryDisplay.tsx";
 import { ScenarioCardSection } from "./ScenarioCardSection.tsx";
-import { ScenarioDto } from "../../../src-gen";
+import { ScenarioDto, ScenarioGroupDto } from "../../../src-gen";
+import { Link } from "react-router";
+import { useCanvasContext } from "../../pages/CanvasPage.tsx";
+import { Router } from "../../routing/Router.ts";
+import { CMSButton } from "../../shared/cms/CMSButton.tsx";
 
 export function ScenarioCard(props: {
   hidden?: boolean;
+  scenarioGroup: ScenarioGroupDto;
   scenario: ScenarioDto;
   onScenarioSelected: (scenario: ScenarioDto, additive: boolean) => void;
 }) {
+  const canvasContext = useCanvasContext();
   return (
     <Stack
       className={"p-3 position-relative border-top border-bottom"}
       hidden={props.hidden}
     >
       <Stack gap={2}>
-        <Card.Title>
-          <Stack direction={"horizontal"} gap={2}>
-            <ScenarioIcon size={40} scenario={props.scenario}></ScenarioIcon>
-            <span className={"user-select-text"}>{props.scenario.title}</span>
+        <Stack direction={"horizontal"} gap={2}>
+          <ScenarioIcon size={40} scenario={props.scenario}></ScenarioIcon>
+          <Stack gap={0}>
+            <Card.Title>
+              <span className={"user-select-text"}>{props.scenario.title}</span>
+            </Card.Title>
+            <Link
+              to={Router.getEditScenarioPath(
+                canvasContext.projectId,
+                props.scenarioGroup.id,
+                props.scenario.id,
+              )}
+              target={"_blank"}
+            >
+              <span className={"small"}>Edit</span>
+            </Link>
           </Stack>
-        </Card.Title>
-        <Button
-          size={"sm"}
+        </Stack>
+        <CMSButton
+          icon={"play-circle"}
+          title={"Run Scenario"}
           onClick={() => {
             props.onScenarioSelected(props.scenario, false);
           }}
-        >
-          <Stack direction={"horizontal"} gap={1}>
-            <i className={"bi bi-play-circle"}></i>
-            <span>Run Scenario</span>
-          </Stack>
-        </Button>
-        <Button
-          size={"sm"}
+        ></CMSButton>
+        <CMSButton
+          title={"Add Scenario"}
+          icon={"plus-circle"}
           onClick={() => {
             props.onScenarioSelected(props.scenario, false);
           }}
-        >
-          <Stack direction={"horizontal"} gap={1}>
-            <i className={"bi bi-plus-circle"}></i>
-            <span>Add Scenario</span>
-          </Stack>
-        </Button>
+        ></CMSButton>
 
         <ScenarioCardSection title={"Description"}>
           {props.scenario.description ? (

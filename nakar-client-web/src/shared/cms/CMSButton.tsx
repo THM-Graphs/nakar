@@ -2,6 +2,7 @@ import { Button, Stack } from "react-bootstrap";
 import { Link } from "react-router";
 import { ButtonVariant } from "react-bootstrap/esm/types";
 import { MouseEventHandler } from "react";
+import clsx from "clsx";
 
 export function CMSButton(props: {
   title?: string;
@@ -10,6 +11,7 @@ export function CMSButton(props: {
   link?: string;
   variant?: ButtonVariant;
   onClick?: MouseEventHandler<HTMLButtonElement> | undefined;
+  className?: string;
 }) {
   const button = (
     <Button
@@ -17,7 +19,7 @@ export function CMSButton(props: {
       type={props.type}
       variant={props.variant}
       onClick={props.onClick}
-      className={"shadow-sm"}
+      className={clsx("shadow-sm", props.className)}
     >
       <Stack direction={"horizontal"} gap={2}>
         {props.icon && <i className={`bi bi-${props.icon}`}></i>}

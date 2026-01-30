@@ -74,8 +74,10 @@ export function AddProject() {
                       link={"/"}
                       variant={"secondary"}
                     ></CMSButton>
+                    {loading && (
+                      <Spinner variant={"primary"} size={"sm"}></Spinner>
+                    )}
                   </Stack>
-                  {loading && <Spinner variant={"primary"}></Spinner>}
                 </Stack>
               </Stack>
             </Form>

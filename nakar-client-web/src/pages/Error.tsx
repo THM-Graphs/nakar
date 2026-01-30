@@ -1,8 +1,8 @@
 import { Stack } from "react-bootstrap";
-import { NavbarButton } from "../shared/elements/NavbarButton.tsx";
 import { useNavigate, useRouteError } from "react-router";
 import { handleError } from "../shared/error/handleError.ts";
 import { Router } from "../routing/Router.ts";
+import { CMSButton } from "../shared/cms/CMSButton.tsx";
 
 export function ErrorComp() {
   const navigate = useNavigate();
@@ -11,18 +11,18 @@ export function ErrorComp() {
   return (
     <Stack
       className={"justify-content-center align-items-center h-100"}
-      gap={2}
+      gap={3}
     >
       <span className={"small text-muted"}>Something went wrong:</span>
       <span className={"small text-muted font-monospace user-select-text"}>
         {handleError(error)}
       </span>
-      <NavbarButton
+      <CMSButton
         title={"Back to start"}
-        onClick={async () => {
-          await navigate(Router.getHomeUrl());
+        onClick={() => {
+          void navigate(Router.getHomeUrl());
         }}
-      ></NavbarButton>
+      ></CMSButton>
     </Stack>
   );
 }

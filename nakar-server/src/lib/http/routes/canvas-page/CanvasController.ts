@@ -30,10 +30,14 @@ export class CanvasController {
     const room: Result<'api::room.room'> =
       await this._database.getRoomOfCanvas(canvas);
 
+    const project: Result<'api::project.project'> =
+      await this._database.getProjectOfRoom(room);
+
     return new CanvasPageDto({
       canvas: this._schemaFactory.createSchemaCanvasPreview(canvas),
       room: await this._schemaFactory.createSchemaRoom(room),
       scenarios: await this._schemaFactory.createGetScenariosResult(room),
+      projectId: project.documentId,
     });
   }
 }
