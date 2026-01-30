@@ -217,6 +217,7 @@ export const useBearStore = create<BearState>()(
                     arguments: [],
                     undoAction: null,
                     redoAction: null,
+                    users: [],
                   },
                   viewSettings: {
                     compressRelationshipsWidthFactor: 0,
@@ -239,6 +240,7 @@ export const useBearStore = create<BearState>()(
                           undoAction: null,
                           redoAction: null,
                           scenario: null,
+                          users: [],
                         },
                         notes: [],
                         histogram: {

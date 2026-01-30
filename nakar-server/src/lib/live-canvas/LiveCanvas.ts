@@ -1106,6 +1106,9 @@ export class LiveCanvas {
     username: string;
     databaseId: string | null;
   }): void {
+    const changeRecorder: LiveCanvasChangeRecorder =
+      new LiveCanvasChangeRecorder();
+
     for (const user of this.data.users) {
       if (user.socketId === data.socketId) {
         return;
@@ -1119,15 +1122,20 @@ export class LiveCanvas {
       canvasPosition: null,
     });
     this.data.users.push(newLiveCanvasUser);
+    changeRecorder.didChangeUsers();
 
     this._onEvent.next({
       canvas: this,
       type: 'CanvasEventUserJoined',
       user: newLiveCanvasUser,
     } satisfies CanvasEventUserJoined);
+    this._handleChangeRecorder(changeRecorder);
   }
 
   public removeUser(socketId: string): void {
+    const changeRecorder: LiveCanvasChangeRecorder =
+      new LiveCanvasChangeRecorder();
+
     const index: number = this.data.users.findIndex(
       (item: LiveCanvasUser): boolean => item.socketId === socketId,
     );
@@ -1141,7 +1149,10 @@ export class LiveCanvas {
       } satisfies CanvasEventUserLeft);
 
       this.data.users.splice(index, 1);
+      changeRecorder.didChangeUsers();
     }
+
+    this._handleChangeRecorder(changeRecorder);
   }
 
   public setCursorPosition(data: {

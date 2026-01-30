@@ -326,6 +326,7 @@ export type LiveCanvasMetaDataDto = {
     arguments: Array<ScenarioArgumentDto>;
     undoAction: (string) | null;
     redoAction: (string) | null;
+    users: Array<UserPreviewDto>;
 };
 
 export type LiveCanvasTableDataDto = {

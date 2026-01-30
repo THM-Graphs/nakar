@@ -354,6 +354,7 @@ export class WebSocketManager
             async (message: CanvasEventGraphMetaDataChanged): Promise<void> => {
               const metaData: LiveCanvasMetaDataDto =
                 await this._schemaFactory.createSchemaGraphMetaData(
+                  message.canvas,
                   message.graph,
                   message.undoInfo,
                 );

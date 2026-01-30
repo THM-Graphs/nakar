@@ -51,6 +51,7 @@ import { HistogramNodeEntryDto } from './dtos/HistogramNodeEntryDto';
 import { ColorPresetDto } from './dtos/ColorPresetDto';
 import { ColorDto } from './dtos/ColorDto';
 import { LiveCanvasLabelViewSettings } from '../live-canvas/data/LiveCanvasLabelViewSettings';
+import { LiveCanvasUser } from '../live-canvas/data/LiveCanvasUser';
 
 @Injectable()
 export class SchemaFactoryService {
@@ -401,6 +402,7 @@ export class SchemaFactoryService {
         liveCanvas.data.viewSettings,
       ),
       metaData: await this.createSchemaGraphMetaData(
+        liveCanvas,
         graph,
         liveCanvas.data.undoableData.info,
       ),
@@ -418,6 +420,7 @@ export class SchemaFactoryService {
   }
 
   public async createSchemaGraphMetaData(
+    canvas: LiveCanvas,
     graph: LiveCanvasUndoableData,
     undoWrapperInfo: UndoWrapperInfo | null,
   ): Promise<LiveCanvasMetaDataDto> {
@@ -442,6 +445,12 @@ export class SchemaFactoryService {
       ),
       undoAction: undoWrapperInfo?.undoAction ?? null,
       redoAction: undoWrapperInfo?.redoAction ?? null,
+      users: canvas.data.users.map((user: LiveCanvasUser): UserPreviewDto => {
+        return {
+          id: user.socketId,
+          displayName: user.username,
+        };
+      }),
     };
     t.done({
       message: 'createSchemaGraphMetaData',
