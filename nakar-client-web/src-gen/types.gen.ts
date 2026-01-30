@@ -112,17 +112,6 @@ export type CreateProjectRequestBodyDto = {
     title: string;
 };
 
-export type CreateScenarioQueryEntryDto = {
-    query: string;
-    databaseId: (string) | null;
-    isTableQuery: boolean;
-};
-
-export type CreateScenarioRequestBodyDto = {
-    title: string;
-    queries: Array<CreateScenarioQueryEntryDto>;
-};
-
 export type CursorMovedWsdto = {
     type: 'CursorMovedWsdto';
     position: PositionDto;
@@ -622,6 +611,10 @@ export type UpdateProjectRequestBodyDto = {
     title: string;
 };
 
+export type UpdateScenarioGroupRequestBodyDto = {
+    title: string;
+};
+
 export type UpdateScenarioQueryEntryDto = {
     id: string;
     query: string;
@@ -700,8 +693,40 @@ export type ProjectControllerCreateProjectResponse = (ProjectPageDto);
 
 export type ProjectControllerCreateProjectError = unknown;
 
+export type ScenarioGroupControllerCreateScenarioGroupData = {
+    path: {
+        projectId: string;
+    };
+};
+
+export type ScenarioGroupControllerCreateScenarioGroupResponse = (ScenarioGroupDto);
+
+export type ScenarioGroupControllerCreateScenarioGroupError = unknown;
+
+export type ScenarioGroupControllerDeleteScenarioGroupData = {
+    path: {
+        projectId: string;
+        scenarioGroupId: string;
+    };
+};
+
+export type ScenarioGroupControllerDeleteScenarioGroupResponse = (unknown);
+
+export type ScenarioGroupControllerDeleteScenarioGroupError = unknown;
+
+export type ScenarioGroupControllerUpdateScenarioGroupData = {
+    body: UpdateScenarioGroupRequestBodyDto;
+    path: {
+        projectId: string;
+        scenarioGroupId: string;
+    };
+};
+
+export type ScenarioGroupControllerUpdateScenarioGroupResponse = (UpdateScenarioGroupRequestBodyDto);
+
+export type ScenarioGroupControllerUpdateScenarioGroupError = unknown;
+
 export type ScenarioControllerCreateScenarioData = {
-    body: CreateScenarioRequestBodyDto;
     path: {
         projectId: string;
         scenarioGroupId: string;

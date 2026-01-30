@@ -22,8 +22,11 @@ import { Room, RoomLoader } from "./pages/Room.tsx";
 import { resultOrThrow } from "./shared/data/resultOrThrow.ts";
 import { EditProject, EditProjectLoader } from "./pages/EditProject.tsx";
 import { AddProject } from "./pages/AddProject.tsx";
-import { AddScenario, AddScenarioLoader } from "./pages/AddScenario.tsx";
 import { EditScenario, EditScenarioLoader } from "./pages/EditScenario.tsx";
+import {
+  EditScenarioGroup,
+  EditScenarioGroupLoader,
+} from "./pages/EditScenarioGroup.tsx";
 
 async function bootstrap() {
   bootstrapTheme();
@@ -106,9 +109,9 @@ async function bootstrap() {
           loader: ProjectLoader,
         },
         {
-          path: "/project/:projectId/scenario-group/:scenarioGroupId/scenario/add",
-          element: <AddScenario></AddScenario>,
-          loader: AddScenarioLoader,
+          path: "/project/:projectId/scenario-group/:scenarioGroupId/edit",
+          element: <EditScenarioGroup></EditScenarioGroup>,
+          loader: EditScenarioGroupLoader,
         },
         {
           path: "/project/:projectId/scenario-group/:scenarioGroupId/scenario/:scenarioId/edit",

@@ -1,16 +1,21 @@
 import { CMSNavbar } from "../shared/cms/CMSNavbar.tsx";
-import { Container, Stack } from "react-bootstrap";
-import { LoaderFunctionArgs, useLoaderData } from "react-router";
+import { Card, Container, Stack } from "react-bootstrap";
+import { LoaderFunctionArgs, useLoaderData, useNavigate } from "react-router";
 import { resultOrThrow } from "../shared/data/resultOrThrow.ts";
 import { UserCard } from "../shared/cms/UserCard.tsx";
 import { RoomCard } from "../shared/cms/RoomCard.tsx";
 import { DatabaseConnectionCard } from "../shared/cms/DatabaseConnectionCard.tsx";
 import { ScenarioGroupCard } from "../shared/cms/ScenarioGroupCard.tsx";
-import { projectControllerGetProject, ProjectPageDto } from "../../src-gen";
+import {
+  projectControllerGetProject,
+  ProjectPageDto,
+  scenarioGroupControllerCreateScenarioGroup,
+} from "../../src-gen";
 import { CMSEmptyHint } from "../shared/cms/CMSEmptyHint.tsx";
 import { CMSHeader } from "../shared/cms/CMSHeader.tsx";
 import { CMSButton } from "../shared/cms/CMSButton.tsx";
 import { Router } from "../routing/Router.ts";
+import { NavbarButton } from "../shared/elements/NavbarButton.tsx";
 
 export async function ProjectLoader(
   args: LoaderFunctionArgs,
@@ -30,6 +35,7 @@ export async function ProjectLoader(
 
 export function Project() {
   const projectContext: ProjectPageDto = useLoaderData();
+  const navigate = useNavigate();
 
   return (
     <Stack className={""}>
@@ -111,6 +117,21 @@ export function Project() {
                 <CMSEmptyHint
                   list={projectContext.scenarioGroups}
                 ></CMSEmptyHint>
+                <Card>
+                  <NavbarButton
+                    icon={"plus-lg"}
+                    title={"Add Scenario Group"}
+                    className={"p-1"}
+                    onClick={() => {
+                      scenarioGroupControllerCreateScenarioGroup({
+                        path: { projectId: projectContext.id },
+                      })
+                        .then(resultOrThrow)
+                        .then(() => navigate(0))
+                        .catch(console.error);
+                    }}
+                  ></NavbarButton>
+                </Card>
               </Stack>
             </Stack>
           </Stack>

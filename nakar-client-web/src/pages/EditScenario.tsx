@@ -97,6 +97,13 @@ export function EditScenario() {
             url: Router.getProjectPath(loaderData.project.id),
           },
           {
+            title: loaderData.scenarioGroup.title,
+            url: Router.getEditScenarioGroupPath(
+              loaderData.project.id,
+              loaderData.scenarioGroup.id,
+            ),
+          },
+          {
             title: loaderData.scenario.title ?? loaderData.scenario.id,
             url: Router.getEditScenarioPath(
               loaderData.project.id,
@@ -141,6 +148,9 @@ export function EditScenario() {
                   scenarioGroupId: loaderData.scenarioGroup.id,
                 },
               })
+                .then(() => {
+                  return navigate(Router.getProjectPath(loaderData.project.id));
+                })
                 .catch((error: unknown) => {
                   setError(error);
                 })

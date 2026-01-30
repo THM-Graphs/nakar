@@ -11,12 +11,10 @@ import {
 } from '@nestjs/common';
 import { ApiParam, ApiResponse } from '@nestjs/swagger';
 import { ScenarioDto } from '../../../schema/dtos/ScenarioDto';
-import { CreateScenarioRequestBodyDto } from './dto/CreateScenarioRequestBodyDto';
 import { UserCanAccessProject } from '../../guards/UserCanAccessProject';
 import { DatabaseService } from '../../../database/DatabaseService';
 import { ScenarioGroupBelongsToProject } from '../../guards/ScenarioGroupBelongsToProject';
 import { Result } from '@strapi/types/dist/modules/documents/result';
-import { CreateScenarioQueryEntryDto } from './dto/CreateScenarioQueryEntryDto';
 import { Input } from '@strapi/types/dist/modules/documents/params/data';
 import { SchemaFactoryService } from '../../../schema/SchemaFactoryService';
 import { ScenarioBelongsToScenarioGroup } from '../../guards/ScenarioBelongsToScenarioGroup';
@@ -46,60 +44,17 @@ export class ScenarioController {
   @Post()
   @ApiResponse({ type: ScenarioDto })
   public async createScenario(
-    @Param('projectId') projectId: string,
     @Param('scenarioGroupId') scenarioGroupId: string,
-    @Body() body: CreateScenarioRequestBodyDto,
   ): Promise<ScenarioDto> {
-    // Check if databases belongs to project
-    for (const query of body.queries) {
-      if (query.databaseId == null) {
-        // is okay
-        continue;
-      }
-      const database: Result<
-        'api::database-connection.database-connection',
-        { populate: { project: { populate: [] } } }
-      > | null = await strapi
-        .documents('api::database-connection.database-connection')
-        .findOne({
-          documentId: query.databaseId,
-          populate: { project: { populate: [] } },
-        });
-
-      if (database?.project?.documentId !== projectId) {
-        throw new BadRequestException(
-          `Database ${query.databaseId} not found in project ${projectId}`,
-        );
-      }
-    }
-
     const scenario: Result<'api::scenario.scenario'> = await strapi
       .documents('api::scenario.scenario')
       .create({
         status: 'published',
         data: {
-          title: body.title,
+          title: 'Untitled Scenario',
           group: scenarioGroupId,
         } satisfies Input<'api::scenario.scenario'>,
       });
-
-    await Promise.all(
-      body.queries.map(
-        async (
-          query: CreateScenarioQueryEntryDto,
-        ): Promise<Result<'api::query.query'>> => {
-          return await strapi.documents('api::query.query').create({
-            status: 'published',
-            data: {
-              query: query.query,
-              isTableQuery: query.isTableQuery,
-              database: query.databaseId,
-              scenario: scenario.documentId,
-            } satisfies Input<'api::query.query'>,
-          });
-        },
-      ),
-    );
 
     return await this._schemaFactory.createSchemaScenario(scenario);
   }

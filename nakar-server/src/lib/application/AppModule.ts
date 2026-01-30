@@ -17,12 +17,14 @@ import { LiveCanvasService } from '../live-canvas/LiveCanvasService';
 import { AuthService } from '../auth/AuthService';
 import { RedirectController } from '../http/routes/redirect/RedirectController';
 import { ScenarioController } from '../http/routes/scenario/ScenarioController';
+import { ScenarioGroupController } from '../http/routes/scenario-group/ScenarioGroupController';
 
 @Module({
   controllers: [
     AuthController,
     StartController,
     ProjectController,
+    ScenarioGroupController,
     ScenarioController,
     CanvasController,
     RoomController,

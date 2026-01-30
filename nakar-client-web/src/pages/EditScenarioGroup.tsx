@@ -5,28 +5,25 @@ import { CMSNavbar } from "../shared/cms/CMSNavbar.tsx";
 import { CMSHeader } from "../shared/cms/CMSHeader.tsx";
 import { CMSErrorCard } from "../shared/cms/CMSErrorCard.tsx";
 import {
-  CreateScenarioQueryEntryDto,
-  DatabaseConnectionDto,
   projectControllerGetProject,
   ProjectPageDto,
-  scenarioControllerCreateScenario,
+  scenarioGroupControllerDeleteScenarioGroup,
+  scenarioGroupControllerUpdateScenarioGroup,
   ScenarioGroupDto,
 } from "../../src-gen";
 import { resultOrThrow } from "../shared/data/resultOrThrow.ts";
 import { Router } from "../routing/Router.ts";
 import { CMSButton } from "../shared/cms/CMSButton.tsx";
-import { ScenarioData, ScenarioEditor } from "../shared/cms/ScenarioEditor.tsx";
-import { QueryEntry } from "../shared/cms/QueryEditor.tsx";
+import { CMSEditTextCard } from "../shared/cms/CMSEditTextCard.tsx";
 
-type AddScenarioLoaderData = {
+type EditScenarioGroupLoaderData = {
   project: ProjectPageDto;
   scenarioGroup: ScenarioGroupDto;
-  databases: DatabaseConnectionDto[];
 };
 
-export async function AddScenarioLoader(
+export async function EditScenarioGroupLoader(
   args: LoaderFunctionArgs,
-): Promise<AddScenarioLoaderData> {
+): Promise<EditScenarioGroupLoaderData> {
   const projectId = args.params["projectId"];
   if (projectId == null) {
     throw new Error("Project not found.");
@@ -50,16 +47,12 @@ export async function AddScenarioLoader(
   return {
     project: project,
     scenarioGroup: scenarioGroup,
-    databases: project.databases,
   };
 }
 
-export function AddScenario() {
-  const loaderData: AddScenarioLoaderData = useLoaderData();
-  const [scenario, setScenario] = useState<ScenarioData>({
-    title: "Untitled Scenario",
-    queries: [],
-  });
+export function EditScenarioGroup() {
+  const loaderData: EditScenarioGroupLoaderData = useLoaderData();
+  const [title, setTitle] = useState(loaderData.scenarioGroup.title);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<unknown>(null);
   const navigate = useNavigate();
@@ -68,14 +61,24 @@ export function AddScenario() {
     <Stack className={""}>
       <CMSNavbar
         breadcrumbContext={[
-          { title: "Home", url: "/" },
+          { title: "Home", url: Router.getHomeUrl() },
           {
             title: loaderData.project.title,
             url: Router.getProjectPath(loaderData.project.id),
           },
           {
-            title: "Create Scenario",
-            url: "#",
+            title: loaderData.scenarioGroup.title,
+            url: Router.getEditScenarioGroupPath(
+              loaderData.project.id,
+              loaderData.scenarioGroup.id,
+            ),
+          },
+          {
+            title: "Edit",
+            url: Router.getEditScenarioGroupPath(
+              loaderData.project.id,
+              loaderData.scenarioGroup.id,
+            ),
           },
         ]}
       ></CMSNavbar>
@@ -86,33 +89,17 @@ export function AddScenario() {
               event.preventDefault();
               setLoading(true);
               setError(null);
-              scenarioControllerCreateScenario({
+              scenarioGroupControllerUpdateScenarioGroup({
                 body: {
-                  title: scenario.title,
-                  queries: scenario.queries.map(
-                    (query: QueryEntry): CreateScenarioQueryEntryDto => {
-                      return {
-                        query: query.query,
-                        databaseId: query.databaseId,
-                        isTableQuery: query.isTableData,
-                      };
-                    },
-                  ),
+                  title: title,
                 },
                 path: {
                   projectId: loaderData.project.id,
                   scenarioGroupId: loaderData.scenarioGroup.id,
                 },
               })
-                .then(resultOrThrow)
-                .then((result) => {
-                  return navigate(
-                    Router.getEditScenarioPath(
-                      loaderData.project.id,
-                      loaderData.scenarioGroup.id,
-                      result.id,
-                    ),
-                  );
+                .then(() => {
+                  return navigate(Router.getProjectPath(loaderData.project.id));
                 })
                 .catch((error: unknown) => {
                   setError(error);
@@ -123,13 +110,16 @@ export function AddScenario() {
             }}
           >
             <Stack gap={5}>
-              <CMSHeader title={"Create Scenario"}></CMSHeader>
+              <CMSHeader
+                title={`Edit ${loaderData.scenarioGroup.title}`}
+              ></CMSHeader>
               <CMSErrorCard error={error}></CMSErrorCard>
-              <ScenarioEditor
-                value={scenario}
-                onChange={setScenario}
-                databases={loaderData.databases}
-              ></ScenarioEditor>
+
+              <CMSEditTextCard
+                title={"Scenario Group Title"}
+                value={title}
+                onChange={setTitle}
+              ></CMSEditTextCard>
 
               <Stack
                 direction={"horizontal"}
@@ -138,8 +128,8 @@ export function AddScenario() {
               >
                 <Stack direction={"horizontal"} gap={2}>
                   <CMSButton
-                    title={"Create Scenario"}
-                    icon={"plus-lg"}
+                    title={"Save"}
+                    icon={"floppy"}
                     type={"submit"}
                   ></CMSButton>
                   <CMSButton
@@ -151,6 +141,43 @@ export function AddScenario() {
                     <Spinner variant={"primary"} size={"sm"}></Spinner>
                   )}
                 </Stack>
+                <CMSButton
+                  title={"Delete Scenario Group"}
+                  icon={"trash"}
+                  variant={"danger"}
+                  onClick={(e) => {
+                    e.preventDefault();
+
+                    if (
+                      !confirm(
+                        `Delete Scenario ${loaderData.scenarioGroup.title}?`,
+                      )
+                    ) {
+                      return;
+                    }
+
+                    setLoading(true);
+                    setError(null);
+                    scenarioGroupControllerDeleteScenarioGroup({
+                      path: {
+                        projectId: loaderData.project.id,
+                        scenarioGroupId: loaderData.scenarioGroup.id,
+                      },
+                    })
+                      .then(resultOrThrow)
+                      .then(() => {
+                        return navigate(
+                          Router.getProjectPath(loaderData.project.id),
+                        );
+                      })
+                      .catch((error: unknown) => {
+                        setError(error);
+                      })
+                      .finally(() => {
+                        setLoading(false);
+                      });
+                  }}
+                ></CMSButton>
               </Stack>
             </Stack>
           </Form>

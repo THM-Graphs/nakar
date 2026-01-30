@@ -66,7 +66,7 @@ export function EditProject() {
                 })
                   .then(resultOrThrow)
                   .then((result) => {
-                    return navigate(Router.getProjectPath(result.id));
+                    return navigate(Router.getProjectEditPath(result.id));
                   })
                   .catch((error: unknown) => {
                     setError(error);
