@@ -115,7 +115,6 @@ export type CreateProjectRequestBodyDto = {
 export type CursorMovedWsdto = {
     type: 'CursorMovedWsdto';
     position: PositionDto;
-    username: string;
     socketId: string;
 };
 
@@ -630,7 +629,7 @@ export type UpdateScenarioRequestBodyDto = {
 
 export type UserPreviewDto = {
     id: string;
-    displayName: string;
+    displayName: (string) | null;
 };
 
 export type AuthControllerPostAuthData = {

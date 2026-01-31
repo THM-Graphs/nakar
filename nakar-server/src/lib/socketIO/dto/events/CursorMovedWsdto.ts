@@ -9,19 +9,11 @@ export class CursorMovedWsdto {
   public position: PositionDto;
 
   @ApiProperty()
-  public username: string;
-
-  @ApiProperty()
   public socketId: string;
 
-  public constructor(data: {
-    position: PositionDto;
-    username: string;
-    socketId: string;
-  }) {
+  public constructor(data: { position: PositionDto; socketId: string }) {
     this.type = 'CursorMovedWsdto';
     this.position = data.position;
-    this.username = data.username;
     this.socketId = data.socketId;
   }
 }

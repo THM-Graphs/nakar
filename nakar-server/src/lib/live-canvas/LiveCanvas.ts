@@ -1103,7 +1103,7 @@ export class LiveCanvas {
 
   public addUser(data: {
     socketId: string;
-    username: string;
+    username: string | null;
     databaseId: string | null;
   }): void {
     const changeRecorder: LiveCanvasChangeRecorder =

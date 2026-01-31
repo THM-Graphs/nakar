@@ -9,7 +9,6 @@ import {
 } from '@nestjs/common';
 import { ApiParam, ApiResponse } from '@nestjs/swagger';
 import { UserCanAccessProject } from '../../guards/UserCanAccessProject';
-import { DatabaseService } from '../../../database/DatabaseService';
 import { Result } from '@strapi/types/dist/modules/documents/result';
 import { Input } from '@strapi/types/dist/modules/documents/params/data';
 import { SchemaFactoryService } from '../../../schema/SchemaFactoryService';
@@ -25,10 +24,7 @@ import { ScenarioGroupBelongsToProject } from '../../guards/ScenarioGroupBelongs
 })
 @UseGuards(UserCanAccessProject)
 export class ScenarioGroupController {
-  public constructor(
-    private readonly _databaseService: DatabaseService,
-    private readonly _schemaFactory: SchemaFactoryService,
-  ) {}
+  public constructor(private readonly _schemaFactory: SchemaFactoryService) {}
 
   @Post()
   @ApiResponse({ type: ScenarioGroupDto })

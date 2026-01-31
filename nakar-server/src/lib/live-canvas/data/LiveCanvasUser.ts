@@ -1,13 +1,13 @@
 export class LiveCanvasUser {
   private readonly _databaseId: string | null;
   private readonly _socketId: string;
-  private readonly _username: string;
+  private readonly _username: string | null;
   private _canvasPosition: [number, number] | null;
 
   public constructor(data: {
     databaseId: string | null;
     socketId: string;
-    username: string;
+    username: string | null;
     canvasPosition: [number, number] | null;
   }) {
     this._databaseId = data.databaseId;
@@ -24,7 +24,7 @@ export class LiveCanvasUser {
     return this._socketId;
   }
 
-  public get username(): string {
+  public get username(): string | null {
     return this._username;
   }
 

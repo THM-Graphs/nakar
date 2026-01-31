@@ -2,7 +2,6 @@ import { NodeDto } from './NodeDto';
 import { EdgeDto } from './EdgeDto';
 import { LabelDto } from './LabelDto';
 import { ApiProperty } from '@nestjs/swagger';
-import { UserPreviewDto } from './UserPreviewDto';
 
 export class LiveCanvasGraphElementsDto {
   @ApiProperty({ type: [NodeDto] })

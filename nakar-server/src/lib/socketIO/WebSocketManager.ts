@@ -87,6 +87,8 @@ export class WebSocketManager
     OnModuleInit
 {
   private readonly _logger: Logger = createChildLogger(this);
+
+  /* Socket ID => Canvas ID */
   private readonly _rooms: SMap<string, string>;
 
   // eslint-disable-next-line @typescript-eslint/member-ordering
@@ -173,7 +175,7 @@ export class WebSocketManager
 
     liveCanvas.addUser({
       socketId: wsClient.id,
-      username: user?.username ?? wsClient.id,
+      username: user?.username ?? null,
       databaseId: user?.documentId ?? null,
     });
 
@@ -562,7 +564,7 @@ export class WebSocketManager
               this.sendToRoom(message.canvas.canvasId, {
                 type: 'NotificationWsdto',
                 notification: {
-                  message: `User ${message.user.username} joined.`,
+                  message: `${message.user.username ?? 'A user'} joined.`,
                   severity: 'message',
                   date: new Date().toISOString(),
                 },
@@ -575,7 +577,7 @@ export class WebSocketManager
               this.sendToRoom(message.canvas.canvasId, {
                 type: 'NotificationWsdto',
                 notification: {
-                  message: `User ${message.user.username} left.`,
+                  message: `${message.user.username ?? 'A user'} left.`,
                   severity: 'message',
                   date: new Date().toISOString(),
                 },
@@ -588,15 +590,25 @@ export class WebSocketManager
               const position: [number, number] | null =
                 message.user.canvasPosition;
               if (position != null) {
-                this.sendToRoom(message.canvas.canvasId, {
-                  type: 'CursorMovedWsdto',
-                  username: message.user.username,
-                  position: {
-                    x: position[0],
-                    y: position[1],
-                  },
-                  socketId: message.user.socketId,
-                } satisfies CursorMovedWsdto);
+                for (const socket of this._server.sockets.sockets.values()) {
+                  const room: string | null =
+                    this._rooms.get(socket.id) ?? null;
+                  if (
+                    room === message.canvas.canvasId &&
+                    message.user.socketId !== socket.id
+                  ) {
+                    socket.emit('message', {
+                      event: {
+                        type: 'CursorMovedWsdto',
+                        position: {
+                          x: position[0],
+                          y: position[1],
+                        },
+                        socketId: message.user.socketId,
+                      } satisfies CursorMovedWsdto,
+                    });
+                  }
+                }
               }
             },
           )

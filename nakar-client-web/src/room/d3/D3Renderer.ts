@@ -17,15 +17,18 @@ import { isMultiSelectKey } from "../../shared/dom/isMultiSelectKey.ts";
 import {
   LiveCanvasGraphElementsDto,
   NodesMovedWsdto,
+  PositionDto,
   SetNodeLocksWsdto,
+  UserPreviewDto,
 } from "../../../src-gen";
+import { D3UserCursor } from "./D3UserCursor.ts";
 
 const inputFps = 16;
 const outputFps = 32;
 const baseStrokeWidth: number = 3;
 
 export class D3Renderer {
-  private graphState: D3RendererState;
+  private readonly graphState: D3RendererState;
   private theme: Theme;
   public colorSchema: ColorSchema;
   private readonly svgElement: SVGSVGElement;
@@ -82,12 +85,6 @@ export class D3Renderer {
     SVGElement,
     null
   > | null;
-  private nodeCircle: d3.Selection<
-    SVGCircleElement,
-    D3Node,
-    SVGElement,
-    null
-  > | null;
   private linkLabelSelection: d3.Selection<
     SVGGElement,
     D3Link,
@@ -100,6 +97,12 @@ export class D3Renderer {
     SVGGElement,
     null
   > | null;
+  private userCursorSelection: d3.Selection<
+    SVGGElement,
+    D3UserCursor,
+    SVGElement,
+    null
+  > | null;
 
   private smoothedPositionDirty: boolean;
 
@@ -109,7 +112,7 @@ export class D3Renderer {
     hideLabels: boolean,
     colorSchema: string,
   ) {
-    this.graphState = D3RendererState.empty();
+    this.graphState = new D3RendererState();
     this.theme = theme;
     this.svgElement = svgElement;
     this.hideLabels = hideLabels;
@@ -135,9 +138,9 @@ export class D3Renderer {
     this.nodeSelection = null;
     this.linkLabelSelection = null;
     this.linkPathSelection = null;
-    this.nodeCircle = null;
     this.nodeLockedOverlay = null;
     this.nodeSelectedOverlay = null;
+    this.userCursorSelection = null;
 
     this.smoothedPositionDirty = true;
 
@@ -209,8 +212,32 @@ export class D3Renderer {
   }
 
   public loadGraphContent(graphElements: LiveCanvasGraphElementsDto) {
-    this.graphState = D3RendererState.fromWsData(graphElements);
+    this.graphState.loadGraphElements(graphElements);
     this.renderSvgElements();
+  }
+
+  public loadUserCursors(users: UserPreviewDto[]): void {
+    this.graphState.loadUserCursors(users);
+    this.renderSvgElements();
+  }
+
+  public setUserCursorPosition(id: string, position: PositionDto): void {
+    const userCusor = this.graphState.userCursors.find((c) => c.id === id);
+    if (userCusor) {
+      userCusor.tx = position.x;
+      userCusor.ty = position.y;
+
+      if (userCusor.hidden) {
+        userCusor.hidden = false;
+        userCusor.x = position.x;
+        userCusor.y = position.y;
+        userCusor.vx = 0;
+        userCusor.vy = 0;
+        this.renderSvgElements();
+      }
+
+      this.smoothedPositionDirty = true;
+    }
   }
 
   public updateNodePositions(wsEvent: NodesMovedWsdto) {
@@ -253,6 +280,11 @@ export class D3Renderer {
       this.$onDeselectAll.next();
     });
 
+    svg.on("mousemove", (e: MouseEvent) => {
+      const pos = d3.pointer(e);
+      this.setCursor(pos);
+    });
+
     this.zoomContainer
       .append("defs")
       .append("marker")
@@ -271,6 +303,7 @@ export class D3Renderer {
       .zoom<SVGSVGElement, null>()
       .on("zoom", (event: d3.D3ZoomEvent<SVGSVGElement, null>) => {
         this.zoomContainer?.attr("transform", event.transform.toString());
+        this.applyPositionsToSVG();
         useBearStore.getState().room.canvas.setZoomTransform(event.transform);
       });
     svg.call(zoomBehaviour);
@@ -447,7 +480,7 @@ export class D3Renderer {
         });
       });
 
-    this.nodeCircle = this.nodeSelection
+    this.nodeSelection
       .append("circle")
       .attr("r", (d) => d.radius)
       .attr("fill", (d) => {
@@ -617,6 +650,10 @@ export class D3Renderer {
             d.vy = 0;
             this.smoothedPositionDirty = true;
             this.$onNodeMoved.next(d);
+
+            // Send mouse position, because the mouse move event
+            // will not trigger on node drag
+            this.$onCursorMoved.next([event.x, event.y]);
           },
         )
         .on(
@@ -626,6 +663,40 @@ export class D3Renderer {
           },
         ),
     );
+
+    this.userCursorSelection = this.zoomContainer
+      .append("g")
+      .attr("class", "user-cursors")
+      .selectAll(".user-cursors")
+      .data(d3RendererState.userCursors)
+      .enter()
+      .append("g");
+
+    const userCursorDiv = this.userCursorSelection
+      .append("foreignObject")
+      .attr("x", 0)
+      .attr("y", 0)
+      .attr("width", (d) => d.username.length * 20)
+      .attr("height", 50)
+      .attr("pointer-events", "none")
+      .attr("hidden", (d) => (d.hidden ? "true" : null))
+      .append("xhtml:div")
+      .attr("xmlns", "http://www.w3.org/1999/xhtml")
+      .attr("class", "w-100 h-100 hstack justify-content-start")
+      .append("xhtml:div")
+      .attr("xmlns", "http://www.w3.org/1999/xhtml")
+      .attr(
+        "class",
+        "border small rounded ps-1 pe-1 bg-body gap-1 ellipsis hstack align-items-baseline align-self-start",
+      );
+
+    userCursorDiv
+      .append("xhtml:i")
+      .attr("class", "bi bi-arrow-up-left flex-shrink-0 flex-grow-0");
+    userCursorDiv
+      .append("xhtml:span")
+      .attr("class", "ellipsis flex-shrink-1 flex-grow-1")
+      .text((d) => d.username);
 
     this.applyPropertiesToSVG();
     this._updateShowLabels();
@@ -662,6 +733,27 @@ export class D3Renderer {
         this.smoothedPositionDirty = true;
       }
     }
+    for (const userCursor of this.graphState.userCursors) {
+      [userCursor.x, userCursor.vx] = this.smoothDamp(
+        userCursor.x,
+        userCursor.tx,
+        userCursor.vx,
+        smoothTime,
+        maxSpeed,
+        deltaTime,
+      );
+      [userCursor.y, userCursor.vy] = this.smoothDamp(
+        userCursor.y,
+        userCursor.ty,
+        userCursor.vy,
+        smoothTime,
+        maxSpeed,
+        deltaTime,
+      );
+      if (userCursor.vx !== 0 || userCursor.vy !== 0) {
+        this.smoothedPositionDirty = true;
+      }
+    }
     this.applyPositionsToSVG();
 
     if (deltaTime > (1 / 60) * 1000 * 1.1) {
@@ -692,6 +784,11 @@ export class D3Renderer {
     this.nodeSelection?.attr(
       "transform",
       (d: D3Node) => `translate(${d.x.toString()}, ${d.y.toString()})`,
+    );
+    this.userCursorSelection?.attr(
+      "transform",
+      (d: D3UserCursor) =>
+        `translate(${d.x.toString()}, ${d.y.toString()}) scale(${(1 / this.getZoom()).toString()})`,
     );
   }
 
@@ -822,8 +919,12 @@ export class D3Renderer {
     this.renderSvgElements();
   }
 
-  public setCursor(position: [number, number]): void {
-    this.$onCursorMoved.next(position);
+  public setCursor(positionRelativeToSVGElement: [number, number]): void {
+    const translation = this.getZoomTransform();
+
+    const x = (positionRelativeToSVGElement[0] - translation.x) / translation.k;
+    const y = (positionRelativeToSVGElement[1] - translation.y) / translation.k;
+    this.$onCursorMoved.next([x, y]);
   }
 
   private smoothDamp(
@@ -882,11 +983,7 @@ export class D3Renderer {
 
   private _getTitleColorOfNode(d: D3Node): string {
     return getTextColor(
-      d.customColor ??
-        this.graphState.originalGraphElements?.labels.find(
-          (l) => l.label === d.labels[0],
-        )?.color ??
-        null,
+      d.customColor ?? this.graphState.labels.get(d.labels[0])?.color ?? null,
       this.colorSchema,
     );
   }
@@ -898,9 +995,7 @@ export class D3Renderer {
       const colors: (string | null)[] = d.labels.map(
         (dlabel: string): string | null => {
           return getBackgroundColorOfLabel(
-            this.graphState.originalGraphElements?.labels.find(
-              (l) => l.label === dlabel,
-            ) ?? null,
+            this.graphState.labels.get(dlabel) ?? null,
             this.colorSchema,
           );
         },

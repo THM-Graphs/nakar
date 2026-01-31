@@ -34,7 +34,9 @@ export function ProjectCard(props: { project: StartPageProjectDto }) {
             <span className={"text-muted small user-select-text"}>
               Collaborators:{" "}
               <StringListDisplay
-                input={props.project.collaborators.map((c) => c.displayName)}
+                input={props.project.collaborators.map(
+                  (c) => c.displayName ?? "Guest",
+                )}
               ></StringListDisplay>
             </span>
           </Stack>

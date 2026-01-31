@@ -1,54 +1,55 @@
 import { D3Link } from "./D3Link.ts";
 import { D3Node } from "./D3Node.ts";
-import { EdgeDto, LiveCanvasGraphElementsDto, NodeDto } from "../../../src-gen";
+import {
+  EdgeDto,
+  LabelDto,
+  LiveCanvasGraphElementsDto,
+  NodeDto,
+  UserPreviewDto,
+} from "../../../src-gen";
+import { D3UserCursor } from "./D3UserCursor.ts";
 
 export class D3RendererState {
-  private _nodeByIdCache: Record<string, D3Node | null>;
+  private _links: D3Link[];
+  private _nodes: Map<string, D3Node>;
+  private _labels: Map<string, LabelDto>;
+  private _userCursors: D3UserCursor[];
 
-  public constructor(
-    public readonly links: D3Link[],
-    public readonly nodes: D3Node[],
-    public readonly originalGraphElements: LiveCanvasGraphElementsDto | null,
-  ) {
-    this._nodeByIdCache = nodes.reduce<Record<string, D3Node | null>>(
-      (cache, node) => {
+  public constructor() {
+    this._links = [];
+    this._nodes = new Map();
+    this._labels = new Map();
+    this._userCursors = [];
+  }
+
+  public getNodeById(id: string): D3Node | null {
+    return this._nodes.get(id) ?? null;
+  }
+
+  public loadGraphElements(graphElements: LiveCanvasGraphElementsDto): void {
+    const nodes = graphElements.nodes
+      .map((node: NodeDto): D3Node => {
         return {
-          ...cache,
-          [node.id]: node,
+          id: node.id,
+          x: node.position.x,
+          y: node.position.y,
+          vx: 0,
+          vy: 0,
+          tx: node.position.x,
+          ty: node.position.y,
+          locked: node.locked,
+          customColor: node.customColor,
+          labels: node.labels,
+          radius: node.radius,
+          title: node.title,
+          clusterSize: node.clusterSize,
+          notesCount: node.notes.length,
         };
-      },
-      {},
-    );
-  }
-
-  public static empty(): D3RendererState {
-    return new D3RendererState([], [], null);
-  }
-
-  public static fromWsData(
-    graphElements: LiveCanvasGraphElementsDto,
-  ): D3RendererState {
-    const nodes = graphElements.nodes.map((node: NodeDto): D3Node => {
-      return {
-        id: node.id,
-        x: node.position.x,
-        y: node.position.y,
-        vx: 0,
-        vy: 0,
-        tx: node.position.x,
-        ty: node.position.y,
-        locked: node.locked,
-        customColor: node.customColor,
-        labels: node.labels,
-        radius: node.radius,
-        title: node.title,
-        clusterSize: node.clusterSize,
-        notesCount: node.notes.length,
-      };
-    });
+      })
+      .reduce((map, node) => map.set(node.id, node), new Map<string, D3Node>());
     const links = graphElements.edges.reduce((acc: D3Link[], edge: EdgeDto) => {
-      const sourceNode = nodes.find((n) => n.id === edge.startNodeId);
-      const targetNode = nodes.find((n) => n.id === edge.endNodeId);
+      const sourceNode = nodes.get(edge.startNodeId);
+      const targetNode = nodes.get(edge.endNodeId);
 
       if (sourceNode && targetNode) {
         acc.push({
@@ -66,10 +67,43 @@ export class D3RendererState {
       return acc;
     }, []);
 
-    return new D3RendererState(links, nodes, graphElements);
+    this._nodes = nodes;
+    this._links = links;
+    this._labels = graphElements.labels.reduce(
+      (map, label) => map.set(label.label, label),
+      new Map<string, LabelDto>(),
+    );
   }
 
-  public getNodeById(id: string): D3Node | null {
-    return this._nodeByIdCache[id];
+  public loadUserCursors(users: UserPreviewDto[]): void {
+    this._userCursors = users.map((user) => {
+      return {
+        username: user.displayName ?? user.id,
+        x: 0,
+        y: 0,
+        id: user.id,
+        vy: 0,
+        vx: 0,
+        tx: 0,
+        ty: 0,
+        hidden: true,
+      } satisfies D3UserCursor;
+    });
+  }
+
+  public get nodes(): D3Node[] {
+    return [...this._nodes.values()];
+  }
+
+  public get links(): D3Link[] {
+    return this._links;
+  }
+
+  public get labels(): Map<string, LabelDto> {
+    return this._labels;
+  }
+
+  public get userCursors(): D3UserCursor[] {
+    return this._userCursors;
   }
 }

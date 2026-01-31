@@ -1,7 +1,7 @@
 import { Labels } from "../labels/Labels.tsx";
 import { DataTable } from "../data-table/DataTable.tsx";
 import { useBearStore } from "../../state/useBearStore.ts";
-import { Badge, Stack } from "react-bootstrap";
+import { Stack } from "react-bootstrap";
 import { CanvasBottomToolBar } from "./CanvasBottomToolBar.tsx";
 import { PerformanceDisplay } from "./PerformanceDisplay.tsx";
 import { ProgressDisplay } from "../../shared/bars/ProgressDisplay.tsx";
@@ -23,10 +23,21 @@ export function Canvas() {
               <Labels></Labels>
               <ProgressDisplay></ProgressDisplay>
             </Stack>
-            <Stack direction={"horizontal"} gap={1}>
-              <span className={"small text-muted"}>Users: </span>
+            <Stack direction={"vertical"} gap={1} className={"flex-grow-0"}>
               {users.map((user) => (
-                <Badge key={user.id}>{user.displayName}</Badge>
+                <Stack
+                  className={"small"}
+                  key={user.id}
+                  direction={"horizontal"}
+                  gap={1}
+                >
+                  <i className={"bi bi-person"} />
+                  {user.displayName ? (
+                    <span>{user.displayName}</span>
+                  ) : (
+                    <span className={""}>Guest ({user.id})</span>
+                  )}
+                </Stack>
               ))}
             </Stack>
           </Stack>

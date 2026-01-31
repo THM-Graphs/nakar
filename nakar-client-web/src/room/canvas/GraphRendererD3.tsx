@@ -45,8 +45,11 @@ export function GraphRendererD3() {
           .with({ type: "CanvasDataReadyWsdto" }, (event) => {
             _graphRenderer.loadGraphContent(event.data.elements);
           })
-          .with({ type: "CursorMovedWsdto" }, () => {
-            // TODO
+          .with({ type: "CanvasMetaDataChangedWsdto" }, (event) => {
+            _graphRenderer.loadUserCursors(event.metaData.users);
+          })
+          .with({ type: "CursorMovedWsdto" }, (m) => {
+            _graphRenderer.setUserCursorPosition(m.socketId, m.position);
           });
       }),
       _graphRenderer.onGrabNode.subscribe((n) => {
@@ -186,18 +189,12 @@ export function GraphRendererD3() {
     };
     let animationFrame: number = requestAnimationFrame(onAnimationTick);
 
-    function mousemove(e: MouseEvent) {
-      _graphRenderer.setCursor([e.clientX, e.clientY]);
-    }
-    svgRef.current.addEventListener("mousemove", mousemove);
-
     return () => {
       for (const s of subs) {
         s.unsubscribe();
       }
       animationActive = false;
       cancelAnimationFrame(animationFrame);
-      svgRef.current?.removeEventListener("mousemove", mousemove);
     };
   }, [websocketsManager, svgRef.current]);
 
