@@ -7,6 +7,8 @@ import { Link } from "react-router";
 import { useCanvasContext } from "../../pages/CanvasPage.tsx";
 import { Router } from "../../routing/Router.ts";
 import { CMSButton } from "../../shared/cms/CMSButton.tsx";
+import { useBearStore } from "../../state/useBearStore.ts";
+import { useIsLoggedIn } from "../../state/useIsLoggedIn.ts";
 
 export function ScenarioCard(props: {
   hidden?: boolean;
@@ -15,6 +17,8 @@ export function ScenarioCard(props: {
   onScenarioSelected: (scenario: ScenarioDto, additive: boolean) => void;
 }) {
   const canvasContext = useCanvasContext();
+  const isLoggedIn: boolean = useIsLoggedIn();
+
   return (
     <Stack
       className={"p-3 position-relative border-top border-bottom"}
@@ -23,20 +27,22 @@ export function ScenarioCard(props: {
       <Stack gap={2}>
         <Stack direction={"horizontal"} gap={2}>
           <ScenarioIcon size={40} scenario={props.scenario}></ScenarioIcon>
-          <Stack gap={0}>
+          <Stack gap={0} className={"justify-content-center"}>
             <Card.Title>
               <span className={"user-select-text"}>{props.scenario.title}</span>
             </Card.Title>
-            <Link
-              to={Router.getEditScenarioPath(
-                canvasContext.projectId,
-                props.scenarioGroup.id,
-                props.scenario.id,
-              )}
-              target={"_blank"}
-            >
-              <span className={"small"}>Edit</span>
-            </Link>
+            {isLoggedIn && (
+              <Link
+                to={Router.getEditScenarioPath(
+                  canvasContext.projectId,
+                  props.scenarioGroup.id,
+                  props.scenario.id,
+                )}
+                target={"_blank"}
+              >
+                <span className={"small"}>Edit</span>
+              </Link>
+            )}
           </Stack>
         </Stack>
         <CMSButton

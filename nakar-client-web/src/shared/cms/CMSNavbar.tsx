@@ -14,6 +14,7 @@ import { useAppContext } from "../../state/AppContextData.ts";
 import { useBearStore } from "../../state/useBearStore.ts";
 import { match, P } from "ts-pattern";
 import { useNavigate } from "react-router";
+import { useIsLoggedIn } from "../../state/useIsLoggedIn.ts";
 
 export function CMSNavbar(props: {
   breadcrumbContext: { title: string; url: string }[];
@@ -22,6 +23,7 @@ export function CMSNavbar(props: {
   const username = useBearStore((s) => s.global.auth.username);
   const showLoginWindow = useBearStore((s) => s.global.auth.loginWindow.show);
   const navigate = useNavigate();
+  const isLoggedIn = useIsLoggedIn();
 
   return (
     <Navbar className={"bg-body border-bottom shadow-sm z-1 sticky-top"}>
@@ -56,17 +58,17 @@ export function CMSNavbar(props: {
         <Stack direction={"horizontal"} gap={5}>
           <NavDropdown
             align={"end"}
-            title={match(username)
-              .with(P.nullish, () => <i className={"bi bi-person"}></i>)
-              .with(P.string, (user) => (
+            title={match(isLoggedIn)
+              .with(false, () => <i className={"bi bi-person"}></i>)
+              .with(true, () => (
                 <>
                   <i className={"bi bi-person-fill me-1"}></i>
-                  <span className={"small"}>{user}</span>
+                  <span className={"small"}>{username}</span>
                 </>
               ))
               .exhaustive()}
           >
-            {username ? (
+            {isLoggedIn ? (
               <NavDropdown.Item
                 onClick={() => {
                   context.logout(navigate);

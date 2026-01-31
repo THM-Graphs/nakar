@@ -3,9 +3,11 @@ import { useBearStore } from "../../state/useBearStore.ts";
 import { Dropdown } from "react-bootstrap";
 import { useAppContext } from "../../state/AppContextData.ts";
 import { useNavigate } from "react-router";
+import { useIsLoggedIn } from "../../state/useIsLoggedIn.ts";
 
 export function AuthButton() {
   const context = useAppContext();
+  const isLoggedIn = useIsLoggedIn();
   const username = useBearStore((s) => s.global.auth.username);
   const showLoginWindow = useBearStore((s) => s.global.auth.loginWindow.show);
   const navigate = useNavigate();
@@ -14,7 +16,7 @@ export function AuthButton() {
     <>
       <DropdownButton
         title={
-          username ? (
+          isLoggedIn ? (
             <span>
               <i className={"bi bi-person-fill"}></i> {username}
             </span>
@@ -25,7 +27,7 @@ export function AuthButton() {
           )
         }
       >
-        {username && (
+        {isLoggedIn && (
           <Dropdown.Item
             className={"small"}
             onClick={() => {
@@ -36,7 +38,7 @@ export function AuthButton() {
             Logout
           </Dropdown.Item>
         )}
-        {!username && (
+        {!isLoggedIn && (
           <Dropdown.Item
             className={"small"}
             onClick={() => {
