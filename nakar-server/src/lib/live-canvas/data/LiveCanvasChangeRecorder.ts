@@ -9,9 +9,9 @@ import { CanvasEventGraphElementsChanged } from '../events/CanvasEventGraphEleme
 import { CanvasEventGraphTableChanged } from '../events/CanvasEventGraphTableChanged';
 import { CanvasEventViewSettingsChanged } from '../events/CanvasEventViewSettingsChanged';
 import { LiveCanvas } from '../LiveCanvas';
-import { PhysicalNodeDto } from '../../schema/dtos/PhysicalNodeDto';
 import { CanvasEventHistogramChanged } from '../events/CanvasEventHistogramChanged';
 import { CanvasEventNotesChanged } from '../events/CanvasEventNotesChanged';
+import { WTPhysicalNode } from '../../live-canvas-worker/worker-events/WTPhysicalNode';
 
 export class LiveCanvasChangeRecorder {
   private _shouldSendMetaDataChangedToUser: boolean;
@@ -152,7 +152,7 @@ export class LiveCanvasChangeRecorder {
       physicsWorker.moveNodes({
         nodes: this._movedNodes
           .toArray()
-          .map((n: GraphNode): PhysicalNodeDto => {
+          .map((n: GraphNode): WTPhysicalNode => {
             return {
               id: n.id,
               position: {
