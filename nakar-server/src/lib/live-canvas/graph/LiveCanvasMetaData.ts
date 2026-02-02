@@ -1,9 +1,5 @@
-import { GraphLabel } from './GraphLabel';
 import { z } from 'zod';
 import { SMap } from '../../map/Map';
-import { ElementColorPreset } from './color/ElementColorPreset';
-import { SSet } from '../../set/Set';
-import { NodeIndex } from './NodeIndex';
 
 export class LiveCanvasMetaData {
   // eslint-disable-next-line @typescript-eslint/typedef
@@ -52,33 +48,6 @@ export class LiveCanvasMetaData {
       scenarioId: this._scenarioId,
       arguments: this._arguments.toRecord(),
     };
-  }
-
-  public getLabels(nodes: NodeIndex): SMap<string, GraphLabel> {
-    // TODO: Use index and save color in DB
-    const labels: SMap<string, GraphLabel> = new SMap<string, GraphLabel>();
-    for (const node of nodes.nodes) {
-      for (const label of node.labels) {
-        const foundEntry: GraphLabel | undefined = labels.get(label);
-
-        if (!foundEntry) {
-          const newColor: ElementColorPreset = ElementColorPreset.create({
-            index: labels.size,
-          });
-          labels.set(
-            label,
-            new GraphLabel({
-              color: newColor,
-              count: 1,
-              sources: new SSet([node.source]),
-            }),
-          );
-        } else {
-          labels.set(label, foundEntry.byIncrementingCount(node.source));
-        }
-      }
-    }
-    return labels;
   }
 
   public copy(): LiveCanvasMetaData {
