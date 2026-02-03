@@ -189,9 +189,9 @@ export class WebSocketManager
 
   public handleDisconnect(wsClient: Socket): void {
     this._logger.debug(`Client disconnected: ${wsClient.id}`);
+    this._assertLiveCanvas(wsClient)?.removeUser(wsClient.id);
     const oldRoom: string | null = this._rooms.get(wsClient.id) ?? null;
     if (oldRoom != null) {
-      this._assertLiveCanvas(wsClient).removeUser(wsClient.id);
       this._handleClientLeftRoom(wsClient, oldRoom);
     }
   }
@@ -229,13 +229,13 @@ export class WebSocketManager
       await match(message.action)
         .returnType<void | Promise<void>>()
         .with({ type: 'GrabNodeWsdto' }, (m: GrabNodeWsdto): void => {
-          this._assertLiveCanvas(wsClient).grabNode({
+          this._assertLiveCanvas(wsClient)?.grabNode({
             nodeId: m.nodeId,
             userId: wsClient.id,
           });
         })
         .with({ type: 'MoveNodesWsdto' }, (m: MoveNodesWsdto): void => {
-          this._assertLiveCanvas(wsClient).moveNodes({
+          this._assertLiveCanvas(wsClient)?.moveNodes({
             nodes: m.nodes.map(
               (p: PhysicalNodeDto): NodePosition =>
                 ({
@@ -247,7 +247,7 @@ export class WebSocketManager
           });
         })
         .with({ type: 'UngrabNodeWsdto' }, (m: UngrabNodeWsdto): void => {
-          this._assertLiveCanvas(wsClient).ungrabNode({
+          this._assertLiveCanvas(wsClient)?.ungrabNode({
             node: {
               id: m.node.id,
               position: m.node.position,
@@ -256,8 +256,7 @@ export class WebSocketManager
           });
         })
         .with({ type: 'MoveCursorWsdto' }, (m: MoveCursorWsdto): void => {
-          const canvas: LiveCanvas = this._assertLiveCanvas(wsClient);
-          canvas.setCursorPosition({
+          this._assertLiveCanvas(wsClient)?.setCursorPosition({
             socketId: wsClient.id,
             position: [m.position.x, m.position.y],
           });
@@ -285,10 +284,10 @@ export class WebSocketManager
     }
   }
 
-  private _assertLiveCanvas(client: Socket): LiveCanvas {
+  private _assertLiveCanvas(client: Socket): LiveCanvas | null {
     const roomId: string | null = this._rooms.get(client.id) ?? null;
     if (roomId == null) {
-      throw new Error(`Client ${client.id} is in no room.`);
+      return null;
     }
     const canvas: LiveCanvas = this._canvasService.getCanvasWithId(roomId);
 
