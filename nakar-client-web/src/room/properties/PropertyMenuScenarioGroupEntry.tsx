@@ -1,7 +1,5 @@
-import { useBearStore } from "../../state/useBearStore.ts";
-import { Dropdown, Stack } from "react-bootstrap";
-import { ScenarioTitleAndBadges } from "../scenarios-panel/ScenarioTitleAndBadges.tsx";
 import { ScenarioGroupDto } from "../../../src-gen";
+import { PropertyMenuScenarioEntry } from "./PropertyMenuScenarioEntry.tsx";
 
 export function PropertyMenuScenarioGroupEntry(props: {
   scenarioGroup: ScenarioGroupDto;
@@ -9,34 +7,15 @@ export function PropertyMenuScenarioGroupEntry(props: {
 }) {
   const scenarioGroup = props.scenarioGroup;
 
-  const showRunScenarioModal = useBearStore(
-    (s) => s.room.scenario.runScenarioModal.open,
-  );
-
   return (
     <>
       {scenarioGroup.scenarios.map((scenario) => {
         return (
-          <Dropdown.ItemText key={scenario.id}>
-            <Stack
-              gap={0}
-              direction={"vertical"}
-              className={"justify-content-between"}
-            >
-              <ScenarioTitleAndBadges
-                scenario={scenario}
-                arguments={[
-                  {
-                    identifier: scenario.parameters[0].identifier,
-                    value: JSON.stringify(props.value),
-                  },
-                ]}
-                onRun={(additive, scenarioArguments) => {
-                  showRunScenarioModal(scenario, scenarioArguments, additive);
-                }}
-              ></ScenarioTitleAndBadges>
-            </Stack>
-          </Dropdown.ItemText>
+          <PropertyMenuScenarioEntry
+            scenario={scenario}
+            argumentValue={props.value}
+            key={scenario.id}
+          ></PropertyMenuScenarioEntry>
         );
       })}
     </>

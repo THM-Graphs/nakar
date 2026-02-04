@@ -1,0 +1,48 @@
+import { Dropdown, Stack } from "react-bootstrap";
+import { ScenarioTitleAndBadges } from "../scenarios-panel/ScenarioTitleAndBadges.tsx";
+import { ScenarioDto, ScenarioParameterDto } from "../../../src-gen";
+import { useBearStore } from "../../state/useBearStore.ts";
+import { convertToTargetTypeStringRepresentation } from "../../shared/data/convertToTargetTypeStringRepresentation.ts";
+
+export function PropertyMenuScenarioEntry(props: {
+  scenario: ScenarioDto;
+  argumentValue: unknown;
+}) {
+  const showRunScenarioModal = useBearStore(
+    (s) => s.room.scenario.runScenarioModal.open,
+  );
+
+  if (props.scenario.parameters.length === 0) {
+    return null;
+  }
+  const parameter: ScenarioParameterDto = props.scenario.parameters[0];
+
+  // Evaluate the argument value for the run scenario modal window
+  const argumentValue: string = convertToTargetTypeStringRepresentation(
+    props.argumentValue,
+    parameter.dataType,
+  );
+
+  return (
+    <Dropdown.ItemText key={props.scenario.id}>
+      <Stack
+        gap={0}
+        direction={"vertical"}
+        className={"justify-content-between"}
+      >
+        <ScenarioTitleAndBadges
+          scenario={props.scenario}
+          arguments={[
+            {
+              identifier: parameter.identifier,
+              value: argumentValue,
+            },
+          ]}
+          onRun={(additive, scenarioArguments) => {
+            showRunScenarioModal(props.scenario, scenarioArguments, additive);
+          }}
+        ></ScenarioTitleAndBadges>
+      </Stack>
+    </Dropdown.ItemText>
+  );
+}
