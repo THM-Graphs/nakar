@@ -7,7 +7,6 @@ import { Link } from "react-router";
 import { useCanvasContext } from "../../pages/CanvasPage.tsx";
 import { Router } from "../../routing/Router.ts";
 import { CMSButton } from "../../shared/cms/CMSButton.tsx";
-import { useBearStore } from "../../state/useBearStore.ts";
 import { useIsLoggedIn } from "../../state/useIsLoggedIn.ts";
 
 export function ScenarioCard(props: {
