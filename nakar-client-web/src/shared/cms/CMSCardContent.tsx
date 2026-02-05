@@ -46,7 +46,9 @@ export function CMSCardContent(props: {
           )}
         </Stack>
         {props.rightBody && (
-          <div className={"border-start ps-2 ms-2"}>{props.rightBody}</div>
+          <div className={"border-start ps-2 ms-2 align-self-stretch"}>
+            {props.rightBody}
+          </div>
         )}
       </Stack>
       <Stack direction={"horizontal"} className={"align-self-start"}>

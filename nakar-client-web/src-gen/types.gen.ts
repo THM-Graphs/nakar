@@ -112,6 +112,10 @@ export type CreateProjectRequestBodyDto = {
     title: string;
 };
 
+export type CreateRoomRequestBodyDto = {
+    projectId: string;
+};
+
 export type CursorMovedWsdto = {
     type: 'CursorMovedWsdto';
     position: PositionDto;
@@ -543,6 +547,7 @@ export type ScenarioParameterDto = {
     title: string;
     defaultValue: (string) | null;
     dataType: 'string' | 'number' | 'json' | 'startDateTime' | 'endDateTime';
+    allowedLabels: Array<(string)>;
 };
 
 export type dataType = 'string' | 'number' | 'json' | 'startDateTime' | 'endDateTime';
@@ -781,6 +786,14 @@ export type RoomControllerGetRoomData = {
 export type RoomControllerGetRoomResponse = (RoomDto);
 
 export type RoomControllerGetRoomError = unknown;
+
+export type RoomControllerCreateRoomData = {
+    body: CreateRoomRequestBodyDto;
+};
+
+export type RoomControllerCreateRoomResponse = (RoomDto);
+
+export type RoomControllerCreateRoomError = unknown;
 
 export type NoteControllerPostNoteData = {
     body: PostNoteRequestBody;

@@ -10,6 +10,7 @@ import { CMSEmptyHint } from "../shared/cms/CMSEmptyHint.tsx";
 import { useIsLoggedIn } from "../state/useIsLoggedIn.ts";
 import { CMSButton } from "../shared/cms/CMSButton.tsx";
 import { useState } from "react";
+import { PublicRoomCard } from "../shared/cms/PublicRoomCard.tsx";
 
 export async function StartLoader(): Promise<StartPageDto> {
   return resultOrThrow(
@@ -44,8 +45,8 @@ export function Start() {
                   className={"justify-content-start flex-wrap"}
                 >
                   {recentRooms.map((r) => (
-                    <RoomCard
-                      style={{ width: "280px" }}
+                    <PublicRoomCard
+                      style={{ width: "380px" }}
                       key={r.id}
                       room={r}
                       onRemove={() => {
@@ -56,7 +57,7 @@ export function Start() {
                           );
                         });
                       }}
-                    ></RoomCard>
+                    ></PublicRoomCard>
                   ))}
                 </Stack>
               </Stack>
@@ -66,7 +67,7 @@ export function Start() {
               <h5>Public Rooms</h5>
               <Stack direction={"vertical"} gap={3} className={"flex-wrap"}>
                 {loaderData.publicRooms.map((r) => (
-                  <RoomCard key={r.id} room={r}></RoomCard>
+                  <PublicRoomCard key={r.id} room={r}></PublicRoomCard>
                 ))}
                 {loaderData.publicRooms.length === 0 && (
                   <span className={"small text-muted"}>None</span>

@@ -7,7 +7,7 @@ import {
 import { Result } from '@strapi/types/dist/modules/documents/result';
 import { Request } from 'express';
 import { DatabaseService } from '../../database/DatabaseService';
-import { userCanSeeCanvas } from '../../policies/userCanSeeCanvas';
+import { userCanSeeAndJoinCanvas } from '../../policies/userCanSeeAndJoinCanvas';
 import { AuthService } from '../../auth/AuthService';
 
 @Injectable()
@@ -31,7 +31,7 @@ export class UserCanAccessCanvas implements CanActivate {
     const canvas: Result<'api::canvas.canvas'> =
       await this._databaseService.getCanvas(canvasId);
 
-    const allowed: boolean = await userCanSeeCanvas(
+    const allowed: boolean = await userCanSeeAndJoinCanvas(
       user,
       canvas,
       this._databaseService,

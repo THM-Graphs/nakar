@@ -22,6 +22,10 @@ export class Router {
     return `/room/${roomId}`;
   }
 
+  public static getRoomEditUrl(projectId: string, roomId: string): string {
+    return `/project/${projectId}/room/${roomId}/edit`;
+  }
+
   public static getEditScenarioPath(
     projectId: string,
     scenarioGroupId: string,

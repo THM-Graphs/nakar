@@ -28,6 +28,7 @@ import {
   EditScenarioGroupLoader,
 } from "./pages/EditScenarioGroup.tsx";
 import { ScrollToTopWrapper } from "./routing/ScrollToTopWrapper.ts";
+import { EditRoom, EditRoomLoader } from "./pages/EditRoom.tsx";
 
 async function bootstrap() {
   bootstrapTheme();
@@ -120,6 +121,11 @@ async function bootstrap() {
           path: "/project/:projectId/scenario-group/:scenarioGroupId/scenario/:scenarioId/edit",
           element: <EditScenario></EditScenario>,
           loader: EditScenarioLoader,
+        },
+        {
+          path: "/project/:projectId/room/:roomId/edit",
+          element: <EditRoom></EditRoom>,
+          loader: EditRoomLoader,
         },
         {
           path: "/room/:id",

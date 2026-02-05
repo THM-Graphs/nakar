@@ -3,7 +3,7 @@ import { StartPageDto } from './dto/StartPageDto';
 import { ApiResponse } from '@nestjs/swagger';
 import { GetStartPageRequestQueryDto } from './dto/GetStartPageRequestQueryDto';
 import { Result } from '@strapi/types/dist/modules/documents/result';
-import { userCanSeeRoom } from '../../../policies/userCanSeeRoom';
+import { userCanSeeAndJoinRoom } from '../../../policies/userCanSeeAndJoinRoom';
 
 import { DatabaseService } from '../../../database/DatabaseService';
 import { Logger } from '@strapi/logger';
@@ -37,7 +37,7 @@ export class StartController {
       try {
         const room: Result<'api::room.room'> =
           await this._database.getRoom(recentRoomId);
-        const allowed: boolean = await userCanSeeRoom(
+        const allowed: boolean = await userCanSeeAndJoinRoom(
           user,
           room,
           this._database,

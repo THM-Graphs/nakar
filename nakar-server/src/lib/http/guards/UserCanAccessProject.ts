@@ -7,7 +7,7 @@ import {
 import { Result } from '@strapi/types/dist/modules/documents/result';
 import { Request } from 'express';
 import { DatabaseService } from '../../database/DatabaseService';
-import { userCanSeeProject } from '../../policies/userCanSeeProject';
+import { userCanSeeAndEditProject } from '../../policies/userCanSeeAndEditProject';
 import { AuthService } from '../../auth/AuthService';
 
 @Injectable()
@@ -35,7 +35,7 @@ export class UserCanAccessProject implements CanActivate {
       throw new NotFoundException();
     }
 
-    const allowed: boolean = await userCanSeeProject(
+    const allowed: boolean = await userCanSeeAndEditProject(
       user,
       project,
       this._databaseService,

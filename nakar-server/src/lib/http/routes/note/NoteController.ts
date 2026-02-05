@@ -21,14 +21,13 @@ import { JWT } from '../../decorators/JWT';
 import { AuthService } from '../../../auth/AuthService';
 
 @Controller('room/:roomId/note')
+@UseGuards(UserCanAccessRoom)
 @ApiParam({
   name: 'roomId',
   required: true,
   type: 'string',
 })
 export class NoteController {
-  // TODO: Check if user is allowed to access room
-
   private readonly _logger: Logger = createChildLogger(this);
 
   public constructor(
@@ -39,7 +38,6 @@ export class NoteController {
   @Post()
   @ApiBody({ type: PostNoteRequestBody })
   @UseGuards(UserIsLoggedIn)
-  @UseGuards(UserCanAccessRoom)
   public async postNote(
     @Body() body: PostNoteRequestBody,
     @Param('roomId') roomId: string,
@@ -64,7 +62,6 @@ export class NoteController {
 
   @Delete(':noteId')
   @UseGuards(UserIsLoggedIn)
-  @UseGuards(UserCanAccessRoom)
   @UseGuards(NoteBelongsToRoom)
   public async deleteNote(@Param('noteId') noteId: string): Promise<void> {
     this._logger.debug(`Will delete note ${noteId}.`);
@@ -76,7 +73,6 @@ export class NoteController {
   @Put(':noteId')
   @UseGuards(UserIsLoggedIn)
   @ApiBody({ type: UpdateNoteRequestBodyDto })
-  @UseGuards(UserCanAccessRoom)
   @UseGuards(NoteBelongsToRoom)
   public async updateNote(
     @Param('noteId') noteId: string,

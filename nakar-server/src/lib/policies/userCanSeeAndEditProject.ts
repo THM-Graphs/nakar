@@ -3,7 +3,7 @@ import { DatabaseService } from '../database/DatabaseService';
 import { Logger } from '@strapi/logger';
 import { createChildLogger } from '../logger/createChildLogger';
 
-export async function userCanSeeProject(
+export async function userCanSeeAndEditProject(
   user: Result<'plugin::users-permissions.user'> | null,
   project: Result<'api::project.project'>,
   database: DatabaseService,

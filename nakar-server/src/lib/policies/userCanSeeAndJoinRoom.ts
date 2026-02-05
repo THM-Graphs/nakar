@@ -2,9 +2,9 @@ import { Result } from '@strapi/types/dist/modules/documents/result';
 import { DatabaseService } from '../database/DatabaseService';
 import { Logger } from '@strapi/logger';
 import { createChildLogger } from '../logger/createChildLogger';
-import { userCanSeeProject } from './userCanSeeProject';
+import { userCanSeeAndEditProject } from './userCanSeeAndEditProject';
 
-export async function userCanSeeRoom(
+export async function userCanSeeAndJoinRoom(
   user: Result<'plugin::users-permissions.user'> | null,
   room: Result<'api::room.room'>,
   database: DatabaseService,
@@ -20,7 +20,7 @@ export async function userCanSeeRoom(
 
   const project: Result<'api::project.project'> =
     await database.getProjectOfRoom(room);
-  if (await userCanSeeProject(user, project, database)) {
+  if (await userCanSeeAndEditProject(user, project, database)) {
     return true;
   }
 

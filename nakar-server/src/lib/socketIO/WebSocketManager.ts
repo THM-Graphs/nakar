@@ -60,7 +60,7 @@ import { plainToClass } from 'class-transformer';
 import { validateOrReject } from 'class-validator';
 import { validatorOptions } from '../application/validatorOptions';
 import { AuthService } from '../auth/AuthService';
-import { userCanSeeCanvas } from '../policies/userCanSeeCanvas';
+import { userCanSeeAndJoinCanvas } from '../policies/userCanSeeAndJoinCanvas';
 import { CanvasEventHistogramChanged } from '../live-canvas/events/CanvasEventHistogramChanged';
 import { CanvasEventNotesChanged } from '../live-canvas/events/CanvasEventNotesChanged';
 import { NoteDto } from '../schema/dtos/NoteDto';
@@ -135,7 +135,7 @@ export class WebSocketManager
         const canvas: Result<'api::canvas.canvas'> =
           await this._databaseService.getCanvas(auth.canvasId);
 
-        const allowed: boolean = await userCanSeeCanvas(
+        const allowed: boolean = await userCanSeeAndJoinCanvas(
           user,
           canvas,
           this._databaseService,

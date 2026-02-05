@@ -7,9 +7,8 @@ import { CMSCardContent } from "./CMSCardContent.tsx";
 import { CSSProperties } from "react";
 import { Router } from "../../routing/Router.ts";
 
-export function RoomCard(props: {
-  room: RoomDto;
-  project: ProjectPageDto;
+export function PublicRoomCard(props: {
+  room: StartPageRoomDto;
   style?: CSSProperties;
   onRemove?: () => void;
 }) {
@@ -19,6 +18,9 @@ export function RoomCard(props: {
         onRemove={props.onRemove}
         title={
           <Stack className={"ellipsis"}>
+            <span className={"ellipsis user-select-text"}>
+              {props.room.projectTitle}
+            </span>
             <Link to={Router.getRoomUrl(props.room.id)} className={"ellipsis"}>
               {props.room.title}
             </Link>
@@ -28,12 +30,6 @@ export function RoomCard(props: {
           <RoomVisibilityDisplay
             visibility={props.room.visibility}
           ></RoomVisibilityDisplay>
-        }
-        rightBodyPaddingStart={400}
-        rightBody={
-          <Link to={Router.getRoomEditUrl(props.project.id, props.room.id)}>
-            Edit
-          </Link>
         }
         icon={"person-workspace"}
       ></CMSCardContent>

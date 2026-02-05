@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { Result } from '@strapi/types/dist/modules/documents/result';
 import { DatabaseService } from '../../database/DatabaseService';
-import { userCanSeeRoom } from '../../policies/userCanSeeRoom';
+import { userCanSeeAndJoinRoom } from '../../policies/userCanSeeAndJoinRoom';
 import { AuthService } from '../../auth/AuthService';
 import { Request } from 'express';
 
@@ -31,7 +31,7 @@ export class UserCanAccessRoom implements CanActivate {
     const room: Result<'api::room.room'> =
       await this._databaseService.getRoom(roomId);
 
-    const allowed: boolean = await userCanSeeRoom(
+    const allowed: boolean = await userCanSeeAndJoinRoom(
       user,
       room,
       this._databaseService,

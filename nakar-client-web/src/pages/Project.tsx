@@ -9,6 +9,7 @@ import { ScenarioGroupCard } from "../shared/cms/ScenarioGroupCard.tsx";
 import {
   projectControllerGetProject,
   ProjectPageDto,
+  roomControllerCreateRoom,
   scenarioGroupControllerCreateScenarioGroup,
 } from "../../src-gen";
 import { CMSEmptyHint } from "../shared/cms/CMSEmptyHint.tsx";
@@ -87,9 +88,28 @@ export function Project() {
               <h5>Rooms</h5>
               <Stack direction={"vertical"} gap={3} className={"flex-wrap"}>
                 {projectContext.rooms.map((r) => (
-                  <RoomCard key={r.id} room={r}></RoomCard>
+                  <RoomCard
+                    key={r.id}
+                    room={r}
+                    project={projectContext}
+                  ></RoomCard>
                 ))}
                 <CMSEmptyHint list={projectContext.rooms}></CMSEmptyHint>
+                <Card>
+                  <NavbarButton
+                    icon={"plus-lg"}
+                    title={"Create Room"}
+                    className={"p-1"}
+                    onClick={() => {
+                      roomControllerCreateRoom({
+                        body: { projectId: projectContext.id },
+                      })
+                        .then(resultOrThrow)
+                        .then(() => navigate(0))
+                        .catch(console.error);
+                    }}
+                  ></NavbarButton>
+                </Card>
               </Stack>
             </Stack>
             <Stack>
