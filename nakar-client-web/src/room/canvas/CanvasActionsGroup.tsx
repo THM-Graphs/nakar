@@ -12,7 +12,7 @@ export function CanvasActionsGroup(props: {
     <Stack
       direction={"vertical"}
       className={clsx(
-        "align-self-stretch border-end",
+        "align-self-stretch border-end justify-content-end",
         props.fillWidth
           ? "flex-shrink-0 flex-grow-0"
           : "flex-shrink-1 flex-grow-1",

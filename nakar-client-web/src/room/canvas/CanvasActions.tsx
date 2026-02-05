@@ -27,12 +27,9 @@ import { useIsLoggedIn } from "../../state/useIsLoggedIn.ts";
 
 export function CanvasActions() {
   const roomContext = useCanvasContext();
-  const rendererEvents = useBearStore((s) => s.room.ui.rendererEvents);
   const element = useBearStore((s) => s.room.panels.inspector.element);
   const nodes = useBearStore((s) => s.room.scenario.graph.elements.nodes);
   const selectedTab = useBearStore((s) => s.room.canvas.tabs.selected);
-  const hideLabels = useBearStore((s) => s.room.canvas.hideLabels);
-  const setHideLabels = useBearStore((s) => s.room.canvas.setHideLabels);
   const scenario = useBearStore((s) => s.room.scenario.graph.metaData.scenario);
   const undoAction = useBearStore(
     (s) => s.room.scenario.graph.metaData.undoAction,
@@ -52,7 +49,7 @@ export function CanvasActions() {
 
   return (
     <Stack direction={"horizontal"} className={""}>
-      <CanvasActionsGroup title={"Start"} fillWidth={true}>
+      <CanvasActionsGroup title={""} fillWidth={true}>
         <ActionNavbarButton
           action={UndoAction.shared}
           params={{
@@ -71,48 +68,6 @@ export function CanvasActions() {
           hideTitle={true}
           tooltipPlacement={"bottom"}
         ></ActionNavbarButton>
-      </CanvasActionsGroup>
-      <CanvasActionsGroup title={"Canvas"}>
-        <Stack direction={"horizontal"}>
-          <CanvasActionsAction
-            action={ZoomInAction.shared}
-            params={{
-              onZoomIn: rendererEvents.onZoomIn,
-              nodes: nodes,
-              selectedTab,
-            }}
-            variant={"sm"}
-          ></CanvasActionsAction>
-          <CanvasActionsAction
-            action={ZoomToFitAction.shared}
-            params={{
-              onZoomOutOverview: rendererEvents.onZoomOutOverview,
-              nodes: nodes,
-              selectedTab,
-            }}
-            variant={"sm"}
-          ></CanvasActionsAction>
-          <CanvasActionsAction
-            action={ZoomOutAction.shared}
-            params={{
-              onZoomOut: rendererEvents.onZoomOut,
-              nodes: nodes,
-              selectedTab,
-            }}
-            variant={"sm"}
-          ></CanvasActionsAction>
-        </Stack>
-        <CanvasActionsAction
-          action={PanToElementAction.shared}
-          params={{
-            selectedElements: element,
-            onCenter: rendererEvents.onCenter,
-          }}
-        ></CanvasActionsAction>
-        <CanvasActionsAction
-          action={HideLabelsAction.shared}
-          params={{ hideLabels, setHideLabels, selectedTab }}
-        ></CanvasActionsAction>
       </CanvasActionsGroup>
       <CanvasActionsGroup title={"Layout"}>
         <CanvasActionsAction

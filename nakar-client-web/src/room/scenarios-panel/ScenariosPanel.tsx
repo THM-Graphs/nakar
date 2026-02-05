@@ -11,7 +11,6 @@ export function ScenariosPanel() {
       <ScenarioGroupList
         scenarioGroups={scenarios.scenarioGroups}
       ></ScenarioGroupList>
-      <div className={"flex-grow-1"}></div>
     </Panel>
   );
 }

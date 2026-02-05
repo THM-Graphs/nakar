@@ -2,6 +2,7 @@ import { Action } from "./Action.ts";
 import { NavbarButton } from "../../shared/elements/NavbarButton.tsx";
 import { CSSProperties, ReactNode } from "react";
 import { Placement } from "react-bootstrap/types";
+import clsx from "clsx";
 
 export function ActionNavbarButton<T>(props: {
   action: Action<T>;
@@ -22,8 +23,10 @@ export function ActionNavbarButton<T>(props: {
       disabled={props.action.disabled(props.params)}
       onClick={() => props.action.run(props.params)}
       key={props.action.slug()}
-      className={props.className}
-      style={props.style}
+      className={clsx(props.className)}
+      style={{
+        ...props.style,
+      }}
       size={props.size}
       icon={
         props.hideIcon

@@ -1,6 +1,5 @@
 import { Stack, Table } from "react-bootstrap";
 import { useBearStore } from "../../state/useBearStore.ts";
-import { ProgressDisplay } from "../../shared/bars/ProgressDisplay.tsx";
 import { NavbarButton } from "../../shared/elements/NavbarButton.tsx";
 
 export function DataTable() {
@@ -19,7 +18,7 @@ export function DataTable() {
     >
       <NavbarButton
         icon={"x-lg"}
-        className={"align-self-end"}
+        className={"align-self-end sticky-top"}
         onClick={() => {
           selectGraph();
         }}
@@ -34,7 +33,7 @@ export function DataTable() {
         </Stack>
       ) : (
         <>
-          <Stack className={"position-relative"}>
+          <Stack className={"position-relative overflow-auto"}>
             <Table className={"table-responsive"}>
               <thead>
                 <tr className={"sticky-top"}>
@@ -64,7 +63,6 @@ export function DataTable() {
           </Stack>
         </>
       )}
-      <ProgressDisplay></ProgressDisplay>
     </Stack>
   );
 }

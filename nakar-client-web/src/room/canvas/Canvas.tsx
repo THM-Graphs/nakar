@@ -4,7 +4,9 @@ import { useBearStore } from "../../state/useBearStore.ts";
 import { Stack } from "react-bootstrap";
 import { CanvasBottomToolBar } from "./CanvasBottomToolBar.tsx";
 import { PerformanceDisplay } from "./PerformanceDisplay.tsx";
-import { ProgressDisplay } from "../../shared/bars/ProgressDisplay.tsx";
+import { ProgressDisplay } from "./ProgressDisplay.tsx";
+import { CanvasBottomFloatingToolbar } from "./CanvasBottomFloatingToolbar.tsx";
+import { CanvasControls } from "./CanvasControls.tsx";
 
 export function Canvas() {
   const tabs = useBearStore((s) => s.room.canvas.tabs);
@@ -19,9 +21,11 @@ export function Canvas() {
       {tabs.selected == "graph" ? (
         <Stack className={"justify-content-between"}>
           <Stack direction={"horizontal"} className={"justify-content-between"}>
-            <Stack className={"z-1 flex-grow-0"} gap={1}>
-              <Labels></Labels>
-              <ProgressDisplay></ProgressDisplay>
+            <Stack className={"flex-grow-0"} gap={1}>
+              <Labels className={"z-1"}></Labels>
+              <CanvasControls
+                className={"align-self-start z-1"}
+              ></CanvasControls>
             </Stack>
             <Stack direction={"vertical"} gap={1} className={"flex-grow-0"}>
               {users.map((user) => (
@@ -42,13 +46,16 @@ export function Canvas() {
             </Stack>
           </Stack>
           <CanvasBottomToolBar></CanvasBottomToolBar>
-          <PerformanceDisplay></PerformanceDisplay>
         </Stack>
       ) : (
         <>
           <DataTable></DataTable>
         </>
       )}
+      <CanvasBottomFloatingToolbar>
+        <ProgressDisplay></ProgressDisplay>
+        <PerformanceDisplay></PerformanceDisplay>
+      </CanvasBottomFloatingToolbar>
     </Stack>
   );
 }
