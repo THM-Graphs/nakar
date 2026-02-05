@@ -48,7 +48,7 @@ export function EditProject() {
           { title: "Edit", url: Router.getProjectEditPath(project.id) },
         ]}
       ></CMSNavbar>
-      <div className={"overflow-auto mb-auto pt-5 pb-5"}>
+      <div className={"mb-auto pt-5 pb-5"}>
         <Container>
           <Stack gap={3}>
             <CMSHeader title={`Edit ${project.title}`}></CMSHeader>

@@ -27,6 +27,7 @@ import {
   EditScenarioGroup,
   EditScenarioGroupLoader,
 } from "./pages/EditScenarioGroup.tsx";
+import { ScrollToTopWrapper } from "./routing/ScrollToTopWrapper.ts";
 
 async function bootstrap() {
   bootstrapTheme();
@@ -79,7 +80,9 @@ async function bootstrap() {
       errorElement: <ErrorComp></ErrorComp>,
       element: (
         <>
-          <Outlet />
+          <ScrollToTopWrapper>
+            <Outlet />
+          </ScrollToTopWrapper>
           <AuthModal></AuthModal>
         </>
       ),

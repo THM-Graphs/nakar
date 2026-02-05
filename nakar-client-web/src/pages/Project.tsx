@@ -48,7 +48,7 @@ export function Project() {
           },
         ]}
       ></CMSNavbar>
-      <div className={"flex-grow-1 overflow-y-scroll"}>
+      <div className={"flex-grow-1"}>
         <Container className={"pb-5 pt-5"}>
           <Stack gap={5}>
             <Stack
