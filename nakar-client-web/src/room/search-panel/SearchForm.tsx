@@ -34,15 +34,17 @@ export function SearchForm(props: {
             setSearchTerm(e.target.value);
           }}
         ></Form.Control>
-        <NavbarButton
-          icon={"x-lg"}
-          onClick={() => {
-            setSearchTerm("");
-            textInput.current?.focus();
-          }}
-          buttonType={"button"}
-          className={"align-self-stretch"}
-        ></NavbarButton>
+        {searchTerm.length > 0 && (
+          <NavbarButton
+            icon={"x-lg"}
+            onClick={() => {
+              setSearchTerm("");
+              textInput.current?.focus();
+            }}
+            buttonType={"button"}
+            className={"align-self-stretch"}
+          ></NavbarButton>
+        )}
         <NavbarButton
           icon={"search"}
           buttonType={"submit"}
