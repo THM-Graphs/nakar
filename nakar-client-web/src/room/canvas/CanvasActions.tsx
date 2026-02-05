@@ -1,10 +1,5 @@
 import { useBearStore } from "../../state/useBearStore.ts";
 import { Stack } from "react-bootstrap";
-import { PanToElementAction } from "../actions/PanToElementAction.ts";
-import { ZoomToFitAction } from "../actions/ZoomToFitAction.ts";
-import { HideLabelsAction } from "../actions/HideLabelsAction.ts";
-import { ZoomInAction } from "../actions/ZoomInAction.ts";
-import { ZoomOutAction } from "../actions/ZoomOutAction.ts";
 import { RelayoutAction } from "../actions/RelayoutAction.ts";
 import { useCanvasContext } from "../../pages/CanvasPage.tsx";
 import { UnlockAllNodesAction } from "../actions/UnlockAllNodesAction.ts";

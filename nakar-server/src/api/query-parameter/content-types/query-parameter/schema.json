@@ -36,6 +36,9 @@
       "relation": "manyToOne",
       "target": "api::scenario.scenario",
       "inversedBy": "queryParameters"
+    },
+    "allowedLabels": {
+      "type": "string"
     }
   }
 }

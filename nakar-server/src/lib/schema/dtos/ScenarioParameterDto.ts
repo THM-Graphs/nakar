@@ -14,15 +14,20 @@ export class ScenarioParameterDto {
   @ApiProperty({ enum: ScenarioParameterDataTypeDto })
   public dataType: ScenarioParameterDataTypeDto;
 
+  @ApiProperty({ type: String, isArray: true })
+  public allowedLabels: string[];
+
   public constructor(data: {
     identifier: string;
     title: string;
     defaultValue: string | null;
     dataType: ScenarioParameterDataTypeDto;
+    allowedLabels: string[];
   }) {
     this.identifier = data.identifier;
     this.title = data.title;
     this.defaultValue = data.defaultValue;
     this.dataType = data.dataType;
+    this.allowedLabels = data.allowedLabels;
   }
 }

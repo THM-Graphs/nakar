@@ -8,6 +8,7 @@ export function ScenarioTitleAndBadges(props: {
   onRun?: (additive: boolean, scenarioArguments: ScenarioArgumentDto[]) => void;
   className?: string;
   arguments?: ScenarioArgumentDto[];
+  hideParameters?: boolean;
 }) {
   const title: string = props.scenario.title ?? "untitled";
   return (
@@ -36,24 +37,25 @@ export function ScenarioTitleAndBadges(props: {
         <span className={"pe-1 small text-wrap align-self-baseline"}>
           {title}
         </span>
-        {props.scenario.parameters.map((p) => (
-          <OverlayTrigger
-            overlay={<Tooltip>This scenario requires arguments.</Tooltip>}
-            key={p.identifier}
-          >
-            <Stack
-              direction={"horizontal"}
-              gap={1}
-              className={
-                "bg-body-tertiary rounded-pill ps-2 pe-2 align-items-baseline align-self-baseline border"
-              }
-              style={{ fontSize: "12px" }}
+        {props.hideParameters !== true &&
+          props.scenario.parameters.map((p) => (
+            <OverlayTrigger
+              overlay={<Tooltip>This scenario requires arguments.</Tooltip>}
+              key={p.identifier}
             >
-              <i className={"bi bi-code-square small text-mutedd"}></i>{" "}
-              <span className={""}>{p.title}</span>
-            </Stack>
-          </OverlayTrigger>
-        ))}
+              <Stack
+                direction={"horizontal"}
+                gap={1}
+                className={
+                  "bg-body-tertiary rounded-pill ps-2 pe-2 align-items-baseline align-self-baseline border"
+                }
+                style={{ fontSize: "12px" }}
+              >
+                <i className={"bi bi-code-square small text-mutedd"}></i>{" "}
+                <span className={""}>{p.title}</span>
+              </Stack>
+            </OverlayTrigger>
+          ))}
       </Stack>
     </Stack>
   );

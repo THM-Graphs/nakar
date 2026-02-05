@@ -112,8 +112,6 @@ export class SchemaFactoryService {
   public async createGetScenariosResult(
     room: Result<'api::room.room'>,
   ): Promise<ScenarioCollectionDto> {
-    const project: Result<'api::project.project'> =
-      await this._database.getProjectOfRoom(room);
     const scenarioGroups: Result<'api::scenario-group.scenario-group'>[] =
       await this._database.getScenarioGroupsOfRoom(room);
     const scenarioGroupSchemas: ScenarioGroupDto[] = await Promise.all(
@@ -125,9 +123,6 @@ export class SchemaFactoryService {
         },
       ),
     );
-
-    const parameterizedSceanrios: Result<'api::scenario.scenario'>[] =
-      await this._database.getParameterizedScenarios(project);
 
     const referencedDatabases: SMap<
       string,
@@ -154,21 +149,6 @@ export class SchemaFactoryService {
 
     return {
       scenarioGroups: scenarioGroupSchemas,
-      parameterizedScenarios: [
-        {
-          id: '0',
-          title: 'Scenarios', // TODO
-          scenarios: await Promise.all(
-            parameterizedSceanrios.map(
-              async (
-                ps: Result<'api::scenario.scenario'>,
-              ): Promise<ScenarioDto> => {
-                return await this.createSchemaScenario(ps);
-              },
-            ),
-          ),
-        },
-      ],
       referencedDatabases: referencedDatabases
         .toValueArray()
         .map(
@@ -290,6 +270,10 @@ export class SchemaFactoryService {
             ScenarioParameterDataTypeDto.string,
         )
         .exhaustive(),
+      allowedLabels:
+        scenarioParameter.allowedLabels
+          ?.split(',')
+          .map((al: string): string => al.trim()) ?? [],
     });
   }
 
@@ -316,6 +300,7 @@ export class SchemaFactoryService {
     graph: LiveCanvasUndoableData,
     notes: IndexedNoteCollection,
     viewSettings: LiveCanvasViewSettings,
+    project: Result<'api::project.project'>,
   ): Promise<LiveCanvasGraphElementsDto> {
     const t: Profiler = this._logger.startTimer();
     const widthRange: Range = graph.edges.getEdgeDegreeRange();
@@ -328,6 +313,15 @@ export class SchemaFactoryService {
       canvas,
       databaseCache,
     );
+    const scenarioGroups: ScenarioGroupDto[] = await Promise.all(
+      (await this._database.getScenarioGroupsOfProject(project)).map(
+        async (
+          dbScenarioGroup: Result<'api::scenario-group.scenario-group'>,
+        ): Promise<ScenarioGroupDto> => {
+          return await this.createSchemaScenarioGroup(dbScenarioGroup);
+        },
+      ),
+    );
 
     const result: LiveCanvasGraphElementsDto = {
       nodes: await graph.nodes.nodes.asyncFlatMap(
@@ -336,6 +330,7 @@ export class SchemaFactoryService {
             node,
             graph,
             notes,
+            scenarioGroups,
             databaseCache,
             viewSettings,
             degreeRange,
@@ -388,8 +383,10 @@ export class SchemaFactoryService {
     const canvas: Result<'api::canvas.canvas'> = await this._database.getCanvas(
       liveCanvas.canvasId,
     );
+    const project: Result<'api::project.project'> =
+      await this._database.getProjectOfCanvas(canvas);
     const notes: IndexedNoteCollection = await this._database.getNotes({
-      project: await this._database.getProjectOfCanvas(canvas),
+      project: project,
       liveCanvas: liveCanvas,
     });
 
@@ -400,6 +397,7 @@ export class SchemaFactoryService {
         graph,
         notes,
         liveCanvas.data.viewSettings,
+        project,
       ),
       metaData: await this.createSchemaGraphMetaData(
         liveCanvas,
@@ -733,6 +731,7 @@ export class SchemaFactoryService {
     node: GraphNode,
     graph: LiveCanvasUndoableData,
     notes: IndexedNoteCollection,
+    scenarioGroups: ScenarioGroupDto[],
     databaseCache: DatabaseReferenceCache,
     viewSettings: LiveCanvasViewSettings,
     degreeRange: Range,
@@ -799,7 +798,46 @@ export class SchemaFactoryService {
               await this.createSchemaNote(note, graph),
           ),
       ),
+      parameterizedScenarios: this._getParameterizedScenariosForNode(
+        node,
+        scenarioGroups,
+      ),
     };
+  }
+
+  private _getParameterizedScenariosForNode(
+    node: GraphNode,
+    scenarioGroups: ScenarioGroupDto[],
+  ): ScenarioGroupDto[] {
+    const filtered: ScenarioGroupDto[] = scenarioGroups
+      .map(
+        (sceanrioGroup: ScenarioGroupDto): ScenarioGroupDto =>
+          new ScenarioGroupDto({
+            id: sceanrioGroup.id,
+            title: sceanrioGroup.title,
+            scenarios: sceanrioGroup.scenarios.filter(
+              (scenario: ScenarioDto): boolean => {
+                for (const parameter of scenario.parameters) {
+                  if (
+                    node.properties.properties
+                      .toKeyArray()
+                      .includes(parameter.identifier) &&
+                    (parameter.allowedLabels.length === 0 ||
+                      new SSet(parameter.allowedLabels).intersection(
+                        new SSet(node.labels),
+                      ).size > 0)
+                  ) {
+                    return true;
+                  }
+                }
+                return false;
+              },
+            ),
+          }),
+      )
+      .filter((sg: ScenarioGroupDto): boolean => sg.scenarios.length > 0);
+
+    return filtered;
   }
 
   private async _createSchemaEdge(

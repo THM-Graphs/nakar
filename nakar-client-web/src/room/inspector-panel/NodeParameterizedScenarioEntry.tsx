@@ -1,12 +1,12 @@
 import { Dropdown, Stack } from "react-bootstrap";
 import { ScenarioTitleAndBadges } from "../scenarios-panel/ScenarioTitleAndBadges.tsx";
-import { ScenarioDto, ScenarioParameterDto } from "../../../src-gen";
+import { NodeDto, ScenarioDto, ScenarioParameterDto } from "../../../src-gen";
 import { useBearStore } from "../../state/useBearStore.ts";
 import { convertToTargetTypeStringRepresentation } from "../../shared/data/convertToTargetTypeStringRepresentation.ts";
 
-export function PropertyMenuScenarioEntry(props: {
+export function NodeParameterizedScenarioEntry(props: {
   scenario: ScenarioDto;
-  argumentValue: unknown;
+  node: NodeDto;
 }) {
   const showRunScenarioModal = useBearStore(
     (s) => s.room.scenario.runScenarioModal.open,
@@ -19,7 +19,7 @@ export function PropertyMenuScenarioEntry(props: {
 
   // Evaluate the argument value for the run scenario modal window
   const argumentValue: string = convertToTargetTypeStringRepresentation(
-    props.argumentValue,
+    props.node.properties[parameter.identifier],
     parameter.dataType,
   );
 
@@ -41,6 +41,7 @@ export function PropertyMenuScenarioEntry(props: {
           onRun={(additive, scenarioArguments) => {
             showRunScenarioModal(props.scenario, scenarioArguments, additive);
           }}
+          hideParameters={true}
         ></ScenarioTitleAndBadges>
       </Stack>
     </Dropdown.ItemText>

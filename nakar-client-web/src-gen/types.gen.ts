@@ -390,6 +390,7 @@ export type NodeDto = {
     outgoingEdges: Array<EdgePreviewDto>;
     creationReason: 'loadScenario' | 'expand' | 'query' | 'merge' | 'compress' | 'connectResultNodes' | 'search';
     notes: Array<NoteDto>;
+    parameterizedScenarios: Array<ScenarioGroupDto>;
 };
 
 export type NodeLockCollectionEntryDto = {
@@ -519,7 +520,6 @@ export type ScenarioArgumentDto = {
 
 export type ScenarioCollectionDto = {
     scenarioGroups: Array<ScenarioGroupDto>;
-    parameterizedScenarios: Array<ScenarioGroupDto>;
     referencedDatabases: Array<DatabaseConnectionDto>;
 };
 

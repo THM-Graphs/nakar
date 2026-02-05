@@ -4,6 +4,7 @@ import { EdgePreviewDto } from './EdgePreviewDto';
 import { CreationReasonDto } from './CreationReasonDto';
 import { NoteDto } from './NoteDto';
 import { ApiProperty } from '@nestjs/swagger';
+import { ScenarioGroupDto } from './ScenarioGroupDto';
 
 export class NodeDto {
   @ApiProperty()
@@ -72,6 +73,9 @@ export class NodeDto {
   @ApiProperty({ type: [NoteDto] })
   public notes: NoteDto[];
 
+  @ApiProperty({ isArray: true, type: ScenarioGroupDto })
+  public parameterizedScenarios: ScenarioGroupDto[];
+
   public constructor(data: {
     id: string;
     title: string;
@@ -94,6 +98,7 @@ export class NodeDto {
     outgoingEdges: EdgePreviewDto[];
     creationReason: CreationReasonDto;
     notes: NoteDto[];
+    parameterizedScenarios: ScenarioGroupDto[];
   }) {
     this.id = data.id;
     this.title = data.title;
@@ -116,5 +121,6 @@ export class NodeDto {
     this.outgoingEdges = data.outgoingEdges;
     this.creationReason = data.creationReason;
     this.notes = data.notes;
+    this.parameterizedScenarios = data.parameterizedScenarios;
   }
 }

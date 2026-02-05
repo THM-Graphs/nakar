@@ -12,6 +12,7 @@ export function DetailPane(props: {
   title: string;
   subTitleElements?: ReactNode;
   actions: DetailPaneAction[];
+  subActions?: ReactNode;
   properties: PropertyEntry[];
   otherProperties: PropertyEntry[];
   elementId: string;
@@ -97,6 +98,8 @@ export function DetailPane(props: {
           </Stack>
         )}
       </Collapsable>
+
+      {props.subActions}
 
       <PropertiesDisplay
         title={"Properties"}

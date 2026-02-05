@@ -1,6 +1,7 @@
 import {
   ForwardedRef,
   forwardRef,
+  Fragment,
   MouseEventHandler,
   ReactNode,
   useEffect,
@@ -15,6 +16,7 @@ import { relationshipActions } from "../actions/groups/relationshipActions.ts";
 import { EdgeDto, NodeDto } from "../../../src-gen";
 import { useIsLoggedIn } from "../../state/useIsLoggedIn.ts";
 import { useCanvasContext } from "../../pages/CanvasPage.tsx";
+import { NodeParameterizedScenarioEntry } from "../inspector-panel/NodeParameterizedScenarioEntry.tsx";
 
 export function CanvasContextMenu() {
   const roomContext = useCanvasContext();
@@ -26,6 +28,7 @@ export function CanvasContextMenu() {
   );
   const [posX, setPosX] = useState(0);
   const [posY, setPosY] = useState(0);
+  const [nodeOrigin, setNodeOrigin] = useState<NodeDto | null>(null);
   const [selectedNodes, setSelectedNodes] = useState<NodeDto[] | null>(null);
   const [selectedEdges, setSelectedEdges] = useState<EdgeDto[] | null>(null);
   const nodes = useBearStore((s) => s.room.scenario.graph.elements.nodes);
@@ -45,6 +48,7 @@ export function CanvasContextMenu() {
   useEffect(() => {
     if (selectedEdges != null) {
       setSelectedNodes(null);
+      setNodeOrigin(null);
     }
   }, [selectedEdges]);
 
@@ -52,6 +56,12 @@ export function CanvasContextMenu() {
     const subs = [
       onShowNodeContextMenu.subscribe(
         (params: { nodeId: string; position: [number, number] }) => {
+          const selectedNode = nodes.find((n) => n.id === params.nodeId);
+          if (selectedNode == null) {
+            return;
+          }
+          setNodeOrigin(selectedNode);
+
           if (selectedElements.includes(params.nodeId)) {
             const newSelectedNodes: NodeDto[] = selectedElements.reduce<
               NodeDto[]
@@ -65,12 +75,9 @@ export function CanvasContextMenu() {
             }, []);
             setSelectedNodes(newSelectedNodes);
           } else {
-            const selectedNode = nodes.find((n) => n.id === params.nodeId);
-            if (selectedNode == null) {
-              return;
-            }
             setSelectedNodes([selectedNode]);
           }
+
           setPosX(params.position[0]);
           setPosY(params.position[1]);
           dropdownEl.current?.click();
@@ -175,6 +182,27 @@ export function CanvasContextMenu() {
               }}
             ></ActionDropdownItem>
           ))}
+        {nodeOrigin && nodeOrigin.parameterizedScenarios.length > 0 && (
+          <>
+            {nodeOrigin.parameterizedScenarios.map((scenarioGroup) => (
+              <Fragment key={scenarioGroup.id}>
+                <Dropdown.Divider></Dropdown.Divider>
+                <Dropdown.ItemText className={"small"}>
+                  {scenarioGroup.title}
+                </Dropdown.ItemText>
+                {scenarioGroup.scenarios.map((scenario) => {
+                  return (
+                    <NodeParameterizedScenarioEntry
+                      scenario={scenario}
+                      node={nodeOrigin}
+                      key={scenario.id}
+                    ></NodeParameterizedScenarioEntry>
+                  );
+                })}
+              </Fragment>
+            ))}
+          </>
+        )}
       </Dropdown.Menu>
     </Dropdown>
   );

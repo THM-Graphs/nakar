@@ -389,6 +389,7 @@ export class WebSocketManager
                     message.graph,
                     notes,
                     message.canvas.data.viewSettings,
+                    project,
                   );
                 this.sendToRoom(message.canvas.canvasId, {
                   elements: graphElements,

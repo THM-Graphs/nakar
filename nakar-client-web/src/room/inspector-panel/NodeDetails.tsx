@@ -11,6 +11,8 @@ import { NoteDisplay } from "../notes-panel/NoteDisplay.tsx";
 import { NodeDto } from "../../../src-gen";
 import { PropertyEntry } from "./PropertiesDisplay.tsx";
 import { useIsLoggedIn } from "../../state/useIsLoggedIn.ts";
+import { ParameterizedScenarioGroupEntry } from "./ParameterizedScenarioGroupEntry.tsx";
+import { Collapsable } from "../../shared/elements/Collapsable.tsx";
 
 export function NodeDetails(props: { node: NodeDto }) {
   const roomContext = useCanvasContext();
@@ -31,6 +33,25 @@ export function NodeDetails(props: { node: NodeDto }) {
           isLoggedIn: isLoggedIn,
         })),
       )}
+      subActions={
+        <>
+          {props.node.parameterizedScenarios.length > 0 && (
+            <Collapsable
+              title={<span className={"small fw-bold"}>Scenarios</span>}
+              className={"border-bottom border-top"}
+              initialState={false}
+            >
+              {props.node.parameterizedScenarios.map((scenarioGroup) => (
+                <ParameterizedScenarioGroupEntry
+                  scenarioGroup={scenarioGroup}
+                  node={props.node}
+                  key={scenarioGroup.id}
+                ></ParameterizedScenarioGroupEntry>
+              ))}
+            </Collapsable>
+          )}
+        </>
+      }
       otherProperties={[
         {
           slug: "ID",

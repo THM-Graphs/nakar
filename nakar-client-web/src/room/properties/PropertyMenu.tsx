@@ -1,6 +1,5 @@
 import { Dropdown, Stack } from "react-bootstrap";
 import { useBearStore } from "../../state/useBearStore.ts";
-import { PropertyMenuScenarioGroupEntry } from "./PropertyMenuScenarioGroupEntry.tsx";
 import { useClipboard } from "../../shared/clipboard/useClipboard.ts";
 import { DropdownButton } from "../../shared/elements/DropdownButton.tsx";
 import { DetailPaneAction } from "../inspector-panel/DetailPaneAction.ts";
@@ -11,9 +10,6 @@ export function PropertyMenu(props: {
   customActions?: DetailPaneAction[];
 }) {
   const [isClipboardEnabled, setClipboard] = useClipboard();
-  const parameterizedScenarios = useBearStore(
-    (s) => s.room.panels.scenarios.scenarios.parameterizedScenarios,
-  );
   const pushErrorNotification = useBearStore(
     (s) => s.room.ui.pushErrorNotification,
   );
@@ -26,7 +22,7 @@ export function PropertyMenu(props: {
         containerClassName={"align-self-baseline"}
         menuStyle={{ width: "350px" }}
         align={"end"}
-        drop={"start"}
+        drop={"end"}
       >
         <Dropdown.Item
           className={"small"}
@@ -68,19 +64,6 @@ export function PropertyMenu(props: {
                   <span className={"small"}>{action.title}</span>
                 </Stack>
               </Dropdown.Item>
-            ))}
-          </>
-        )}
-        {parameterizedScenarios.length > 0 && (
-          <>
-            <Dropdown.Divider></Dropdown.Divider>
-            <Dropdown.Header>Run Scenario</Dropdown.Header>
-            {parameterizedScenarios.map((scenarioGroup) => (
-              <PropertyMenuScenarioGroupEntry
-                scenarioGroup={scenarioGroup}
-                value={props.value}
-                key={scenarioGroup.id}
-              ></PropertyMenuScenarioGroupEntry>
             ))}
           </>
         )}

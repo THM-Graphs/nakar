@@ -236,26 +236,6 @@ export class DatabaseService {
     );
   }
 
-  public async getParameterizedScenarios(
-    project: Result<'api::project.project'>,
-  ): Promise<Result<'api::scenario.scenario'>[]> {
-    const result: Result<'api::scenario.scenario'>[] = [];
-    const scenarioGroups: Result<'api::scenario-group.scenario-group'>[] =
-      await this.getScenarioGroupsOfProject(project);
-    for (const scenarioGroup of scenarioGroups) {
-      const scenarios: Result<'api::scenario.scenario'>[] =
-        await this.getScenariosOfGroup(scenarioGroup);
-      for (const scenario of scenarios) {
-        const parameters: Result<'api::query-parameter.query-parameter'>[] =
-          await this.getParametersOfScenario(scenario);
-        if (parameters.length > 0) {
-          result.push(scenario);
-        }
-      }
-    }
-    return result;
-  }
-
   public async getParametersOfScenario(
     scenario: Result<'api::scenario.scenario'>,
   ): Promise<Result<'api::query-parameter.query-parameter'>[]> {
