@@ -44,6 +44,7 @@ import { CanvasToolbar } from "../room/canvas/CanvasToolbar.tsx";
 import { GraphDataToggle } from "../room/data-table/GraphDataToggle.tsx";
 import { useAppContext } from "../state/AppContextData.ts";
 import { Router } from "../routing/Router.ts";
+import { usePageTitle } from "../routing/usePageTitle.ts";
 
 const CanvasContext: Context<CanvasContextData | null> =
   createContext<CanvasContextData | null>(null);
@@ -200,6 +201,8 @@ export function CanvasPage() {
       clearProgress();
     };
   }, [webSockets]);
+
+  usePageTitle(canvasContext.initialRoomData.title);
 
   return (
     <CanvasContext.Provider value={canvasContext}>
