@@ -10,5 +10,9 @@ export function handleError(error: unknown): string {
       { error: { message: P.string, status: P.number } },
       (error) => `${error.error.message} (${error.error.status.toString()})`,
     )
+    .with(
+      { data: P.string, status: P.number },
+      (error) => `${error.data} (${error.status.toString()})`,
+    )
     .otherwise((v) => JSON.stringify(v));
 }
