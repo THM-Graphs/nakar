@@ -54,7 +54,7 @@ export async function getStringPayloadOfMediaFile(
   return buffer;
 }
 
-export async function saveStringFile(
+export async function saveJSONFile(
   payload: string,
   name: string | null,
 ): Promise<Result<'plugin::upload.file'>> {
@@ -68,7 +68,7 @@ export async function saveStringFile(
       data: {},
       files: {
         filepath: filePath,
-        originalFilename: `Graph Json ${sanitize(name ?? v4())}`,
+        originalFilename: sanitize(name ?? v4()),
         mimetype: 'application/json',
         size: payload.length,
       },

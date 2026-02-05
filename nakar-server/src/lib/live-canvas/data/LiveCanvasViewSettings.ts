@@ -1,16 +1,24 @@
-import { Result } from '@strapi/types/dist/modules/documents/result';
 import { ScaleType } from '../../physics/ScaleType';
 import { Range } from '../../range/Range';
 import { LiveCanvasViewSettingsDto } from '../../schema/dtos/LiveCanvasViewSettingsDto';
 import { LiveCanvasLabelViewSettings } from './LiveCanvasLabelViewSettings';
 import { SMap } from '../../map/Map';
-import { Input } from '@strapi/types/dist/modules/documents/params/data';
 import { LiveCanvasLabelViewSettingsDto } from '../../schema/dtos/LiveCanvasLabelViewSettingsDto';
+import z from 'zod';
 
 export class LiveCanvasViewSettings {
   public static readonly defaultGrowNodesBasedOnDegreeFactor: number = 2;
   public static readonly defaultGrowNodesBasedOnDegree: boolean = false;
   public static readonly defaultCompressRelationshipsWidthFactor: number = 10;
+
+  // eslint-disable-next-line @typescript-eslint/typedef
+  public static readonly schema = z.object({
+    compressRelationshipsWidthFactor: z.number(),
+    growNodesBasedOnDegree: z.boolean(),
+    growNodesBasedOnDegreeFactor: z.number(),
+    scaleType: z.enum(['linear', 'log2', 'logn', 'log10']),
+    labelSettings: z.record(z.string(), LiveCanvasLabelViewSettings.schema),
+  });
 
   private readonly _compressRelationshipsWidthFactor: number;
   private readonly _growNodesBasedOnDegree: boolean;
@@ -22,6 +30,7 @@ export class LiveCanvasViewSettings {
     compressRelationshipsWidthFactor: number;
     growNodesBasedOnDegree: boolean;
     growNodesBasedOnDegreeFactor: number;
+    scaleType: ScaleType;
     labelSettings: SMap<string, LiveCanvasLabelViewSettings>;
   }) {
     this._compressRelationshipsWidthFactor = Range.clamp(
@@ -35,7 +44,7 @@ export class LiveCanvasViewSettings {
       1,
       1000,
     );
-    this._scaleType = 'linear';
+    this._scaleType = params.scaleType;
     this._labelSettings = params.labelSettings;
   }
 
@@ -59,35 +68,19 @@ export class LiveCanvasViewSettings {
     return this._labelSettings;
   }
 
-  public static fromDB(
-    canvas: Result<'api::canvas.canvas'>,
-    canvasLabelViewSettings: Result<'api::canvas-label-setting.canvas-label-setting'>[],
+  public static fromPlain(
+    data: z.infer<typeof LiveCanvasViewSettings.schema>,
   ): LiveCanvasViewSettings {
     return new LiveCanvasViewSettings({
-      compressRelationshipsWidthFactor:
-        canvas.compressRelationshipsWidthFactor ??
-        LiveCanvasViewSettings.defaultCompressRelationshipsWidthFactor,
-      growNodesBasedOnDegree:
-        canvas.growNodesBasedOnDegree ??
-        LiveCanvasViewSettings.defaultGrowNodesBasedOnDegree,
-      growNodesBasedOnDegreeFactor:
-        canvas.growNodesBasedOnDegreeFactor ??
-        LiveCanvasViewSettings.defaultGrowNodesBasedOnDegreeFactor,
-      labelSettings: canvasLabelViewSettings.reduce(
+      compressRelationshipsWidthFactor: data.compressRelationshipsWidthFactor,
+      growNodesBasedOnDegree: data.growNodesBasedOnDegree,
+      growNodesBasedOnDegreeFactor: data.growNodesBasedOnDegreeFactor,
+      scaleType: data.scaleType,
+      labelSettings: SMap.fromRecord(data.labelSettings).map(
         (
-          akku: SMap<string, LiveCanvasLabelViewSettings>,
-          next: Result<'api::canvas-label-setting.canvas-label-setting'>,
-        ): SMap<string, LiveCanvasLabelViewSettings> => {
-          const label: string | null = next.label ?? null;
-          if (label == null) {
-            return akku;
-          }
-          return akku.bySetting(
-            label,
-            LiveCanvasLabelViewSettings.fromDb(next),
-          );
-        },
-        new SMap(),
+          labelSetting: z.infer<typeof LiveCanvasLabelViewSettings.schema>,
+        ): LiveCanvasLabelViewSettings =>
+          LiveCanvasLabelViewSettings.fromPlain(labelSetting),
       ),
     });
   }
@@ -100,6 +93,7 @@ export class LiveCanvasViewSettings {
       compressRelationshipsWidthFactor: input.compressRelationshipsWidthFactor,
       growNodesBasedOnDegree: input.growNodesBasedOnDegree,
       growNodesBasedOnDegreeFactor: input.growNodesBasedOnDegreeFactor,
+      scaleType: 'linear',
       labelSettings: input.labelSettings
         .filter((labelSetting: LiveCanvasLabelViewSettingsDto): boolean =>
           // Do not accept label settings of labels that don't exist.
@@ -129,6 +123,7 @@ export class LiveCanvasViewSettings {
       growNodesBasedOnDegreeFactor:
         LiveCanvasViewSettings.defaultGrowNodesBasedOnDegreeFactor,
       labelSettings: new SMap(),
+      scaleType: 'linear',
     });
   }
 
@@ -160,11 +155,20 @@ export class LiveCanvasViewSettings {
     };
   }
 
-  public toDBData(): Input<'api::canvas.canvas'> {
+  public toPlain(): z.infer<typeof LiveCanvasViewSettings.schema> {
     return {
       compressRelationshipsWidthFactor: this.compressRelationshipsWidthFactor,
       growNodesBasedOnDegree: this.growNodesBasedOnDegree,
       growNodesBasedOnDegreeFactor: this.growNodesBasedOnDegreeFactor,
+      scaleType: this.scaleType,
+      labelSettings: this.labelSettings
+        .map(
+          (
+            labelSetting: LiveCanvasLabelViewSettings,
+          ): z.infer<typeof LiveCanvasLabelViewSettings.schema> =>
+            labelSetting.toPlain(),
+        )
+        .toRecord(),
     };
   }
 

@@ -1,4 +1,3 @@
-import { LiveCanvasUndoableData } from '../live-canvas/data/LiveCanvasUndoableData';
 import { Result } from '@strapi/types/dist/modules/documents';
 import z from 'zod';
 import { SSet } from '../set/Set';
@@ -9,19 +8,14 @@ import { createChildLogger } from '../logger/createChildLogger';
 import {
   deleteFile,
   getStringPayloadOfMediaFile,
-  saveStringFile,
+  saveJSONFile,
 } from '../media/media';
-import { LiveCanvasViewSettings } from '../live-canvas/data/LiveCanvasViewSettings';
 import { TupleTypes } from '../schema/TupleTypes';
 import { Injectable } from '@nestjs/common';
 import { ApiPostScenarioActionPostScenarioAction } from '../../../types/generated/contentTypes';
-import {
-  Create,
-  Delete,
-  FindMany,
-  Update,
-} from '@strapi/types/dist/modules/documents/params/document-engine';
-import { LiveCanvasLabelViewSettings } from '../live-canvas/data/LiveCanvasLabelViewSettings';
+import { FindMany } from '@strapi/types/dist/modules/documents/params/document-engine';
+import { LiveCanvasData } from '../live-canvas/data/LiveCanvasData';
+import { LiveCanvas } from '../live-canvas/LiveCanvas';
 
 @Injectable()
 export class DatabaseService {
@@ -104,21 +98,22 @@ export class DatabaseService {
     } satisfies FindMany<'api::room.room'>);
   }
 
-  public async getMutableGraph(
+  public async getLiveCanvasData(
     canvas: Result<'api::canvas.canvas'>,
-  ): Promise<LiveCanvasUndoableData> {
-    const graphFile: Result<'plugin::upload.file'> | null =
-      await this.getGrapFileOfCanvas(canvas);
+  ): Promise<z.infer<typeof LiveCanvasData.schema> | null> {
+    const liveCanvasDataFile: Result<'plugin::upload.file'> | null =
+      await this.getLiveCanvasDataFile(canvas);
 
     try {
-      const graphJson: string = await getStringPayloadOfMediaFile(graphFile);
-      const graph: LiveCanvasUndoableData =
-        LiveCanvasUndoableData.fromUnknownOrEmpty(JSON.parse(graphJson));
-      return graph;
+      const json: string =
+        await getStringPayloadOfMediaFile(liveCanvasDataFile);
+      const liveCanvasData: z.infer<typeof LiveCanvasData.schema> =
+        LiveCanvasData.schema.parse(JSON.parse(json));
+      return liveCanvasData;
     } catch (error) {
-      this._logger.error(`Unable to parse graph from canvas:`);
+      this._logger.error(`Unable to parse live canvas data from canvas:`);
       this._logger.error(error);
-      return LiveCanvasUndoableData.empty();
+      return null;
     }
   }
 
@@ -190,43 +185,55 @@ export class DatabaseService {
     return await this.getScenarioGroupsOfProject(project);
   }
 
-  public async setMutableGraphOfCanvas(
+  public async setLiveCanvasData(
     canvas: Result<'api::canvas.canvas'>,
-    graph: z.infer<typeof LiveCanvasUndoableData.schema>,
+    liveCanvasData: z.infer<typeof LiveCanvasData.schema>,
   ): Promise<void> {
     const populatedCanvas: Result<
       'api::canvas.canvas',
-      { populate: ['graph'] }
+      { populate: ['liveCanvasData'] }
     > | null = await strapi
       .documents('api::canvas.canvas')
       .findOne({ documentId: canvas.documentId });
 
     if (populatedCanvas == null) {
       throw new Error(
-        `Unable to save graph: Canvas ${canvas.documentId} not found.`,
+        `Unable to save liveCanvasData: Canvas ${canvas.documentId} not found.`,
       );
     }
-    const oldGraphFile: Result<'plugin::upload.file'> | null =
-      await this.getGrapFileOfCanvas(canvas);
-    if (oldGraphFile != null) {
-      await deleteFile(oldGraphFile);
+
+    const room: Result<'api::room.room'> =
+      await this.getRoomOfCanvas(populatedCanvas);
+    const project: Result<'api::project.project'> =
+      await this.getProjectOfRoom(room);
+
+    const oldliveCanvasDataFile: Result<'plugin::upload.file'> | null =
+      await this.getLiveCanvasDataFile(canvas);
+    if (oldliveCanvasDataFile != null) {
+      this._logger.debug(
+        `Will delete old canvas data file: ${oldliveCanvasDataFile.documentId}`,
+      );
+      await deleteFile(oldliveCanvasDataFile);
     }
 
-    const graphJson: string = JSON.stringify(graph);
-    const newGraphFile: Result<'plugin::upload.file'> = await saveStringFile(
-      graphJson,
-      populatedCanvas.title ?? null,
-    );
+    const liveCanvasJson: string = JSON.stringify(liveCanvasData);
+    const newLiveCanvasDataFile: Result<'plugin::upload.file'> =
+      await saveJSONFile(
+        liveCanvasJson,
+        `Live Canvas Data - ${project.title ?? 'untitled project'} - ${room.title ?? 'untitled room'} - ${populatedCanvas.title ?? 'untitled canvas'}`,
+      );
     await strapi.documents('api::canvas.canvas').update({
       documentId: canvas.documentId,
       data: {
-        graph: {
-          id: newGraphFile.id,
+        liveCanvasData: {
+          id: newLiveCanvasDataFile.id,
         },
       },
       status: 'published',
     });
-    this._logger.debug(`Did save graph of canvas ${canvas.documentId} in db.`);
+    this._logger.debug(
+      `Did save live canvas data of canvas ${canvas.documentId} in db.`,
+    );
   }
 
   public async getParameterizedScenarios(
@@ -343,7 +350,7 @@ export class DatabaseService {
 
   public async getNotes(params: {
     project: Result<'api::project.project'>;
-    graph: LiveCanvasUndoableData;
+    liveCanvas: LiveCanvas;
   }): Promise<IndexedNoteCollection> {
     const populatedProject: Result<
       'api::project.project',
@@ -371,7 +378,7 @@ export class DatabaseService {
         (node: Result<'api::node-reference.node-reference'>): string =>
           node.nodeId ?? '',
       );
-      for (const nodeId of params.graph.nodes.keys) {
+      for (const nodeId of params.liveCanvas.getGraph().nodes.keys) {
         if (referencedNodes.includes(nodeId)) {
           foundMatch = true; // indicates if note has at least one node id in common with params.nodeIds
           result.byNodeId.set(
@@ -674,23 +681,6 @@ export class DatabaseService {
     return result;
   }
 
-  public async getCanvasLabelViewSettings(
-    canvas: Result<'api::canvas.canvas'>,
-  ): Promise<Result<'api::canvas-label-setting.canvas-label-setting'>[]> {
-    const result: Result<
-      'api::canvas.canvas',
-      { populate: { nodeSettings: { populate: [] } } }
-    > | null = await strapi.documents('api::canvas.canvas').findOne({
-      documentId: canvas.documentId,
-      status: 'published',
-      populate: { nodeSettings: { populate: [] } },
-    });
-    if (result == null) {
-      return [];
-    }
-    return result.nodeSettings ?? [];
-  }
-
   public async getProjectOfCanvas(
     canvas: Result<'api::canvas.canvas'>,
   ): Promise<Result<'api::project.project'>> {
@@ -737,23 +727,23 @@ export class DatabaseService {
     return room;
   }
 
-  public async getGrapFileOfCanvas(
+  public async getLiveCanvasDataFile(
     canvas: Result<'api::canvas.canvas'>,
   ): Promise<Result<'plugin::upload.file'> | null> {
     const populatedCanvas:
-      | (Result<'api::canvas.canvas', { populate: ['graph'] }> & {
-          graph?: Result<'plugin::upload.file'> | null;
+      | (Result<'api::canvas.canvas', { populate: ['liveCanvasData'] }> & {
+          liveCanvasData?: Result<'plugin::upload.file'> | null;
         })
       | null = await strapi
       .documents('api::canvas.canvas')
-      .findOne({ documentId: canvas.documentId, populate: ['graph'] });
+      .findOne({ documentId: canvas.documentId, populate: ['liveCanvasData'] });
 
     if (populatedCanvas == null) {
       throw new Error(`Canvas ${canvas.documentId} not found.`);
     }
 
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-    return populatedCanvas.graph ?? null;
+    return populatedCanvas.liveCanvasData ?? null;
   }
 
   public async getProjectOrNull(
@@ -867,70 +857,6 @@ export class DatabaseService {
         })
       )?.rightDatabase ?? null
     );
-  }
-
-  public async setCanvasViewSettings(
-    canvas: Result<'api::canvas.canvas'>,
-    viewSettings: LiveCanvasViewSettings,
-  ): Promise<void> {
-    await strapi.documents('api::canvas.canvas').update({
-      documentId: canvas.documentId,
-      data: {
-        ...viewSettings.toDBData(),
-      },
-      status: 'published',
-    });
-
-    for (const entry of viewSettings.labelSettings) {
-      const label: string = entry[0];
-      const labelSetting: LiveCanvasLabelViewSettings = entry[1];
-
-      const existingEntries: Result<'api::canvas-label-setting.canvas-label-setting'>[] =
-        await strapi
-          .documents('api::canvas-label-setting.canvas-label-setting')
-          .findMany({
-            filters: {
-              label: label,
-              canvas: { documentId: canvas.documentId },
-            },
-          } satisfies FindMany<'api::canvas-label-setting.canvas-label-setting'>);
-      // Delete duplicates
-      if (existingEntries.length > 1) {
-        for (let i: number = 1; i < existingEntries.length; i += 1) {
-          await strapi
-            .documents('api::canvas-label-setting.canvas-label-setting')
-            .delete({
-              documentId: existingEntries[i].documentId,
-            } satisfies Delete<'api::canvas-label-setting.canvas-label-setting'>);
-        }
-      }
-      if (existingEntries.length === 0) {
-        await strapi
-          .documents('api::canvas-label-setting.canvas-label-setting')
-          .create({
-            data: {
-              label: label,
-              canvas: canvas.documentId,
-              ...labelSetting.dbData(),
-            },
-            status: 'published',
-          } satisfies Create<'api::canvas-label-setting.canvas-label-setting'>);
-      } else {
-        await strapi
-          .documents('api::canvas-label-setting.canvas-label-setting')
-          .update({
-            documentId: existingEntries[0].documentId,
-            data: {
-              label: label,
-              canvas: canvas.documentId,
-              ...labelSetting.dbData(),
-            },
-            status: 'published',
-          } satisfies Update<'api::canvas-label-setting.canvas-label-setting'> & {
-            status: 'published';
-          });
-      }
-    }
   }
 
   public async getUser(

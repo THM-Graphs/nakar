@@ -380,7 +380,7 @@ export class WebSocketManager
                 const notes: IndexedNoteCollection =
                   await this._databaseService.getNotes({
                     project: project,
-                    graph: message.graph,
+                    liveCanvas: message.canvas,
                   });
 
                 const graphElements: LiveCanvasGraphElementsDto =
@@ -422,7 +422,7 @@ export class WebSocketManager
               const notes: IndexedNoteCollection =
                 await this._databaseService.getNotes({
                   project: project,
-                  graph: message.canvas.getGraph(),
+                  liveCanvas: message.canvas,
                 });
 
               this.sendToRoom(message.canvas.canvasId, {

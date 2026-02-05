@@ -1,10 +1,17 @@
 import { GraphNode } from '../graph/GraphNode';
-import { Result } from '@strapi/types/dist/modules/documents/result';
-import { match, P } from 'ts-pattern';
-import { Input } from '@strapi/types/dist/modules/documents/params/data';
+import { match } from 'ts-pattern';
 import { LiveCanvasLabelViewSettingsDto } from '../../schema/dtos/LiveCanvasLabelViewSettingsDto';
+import z from 'zod';
 
 export class LiveCanvasLabelViewSettings {
+  // eslint-disable-next-line @typescript-eslint/typedef
+  public static readonly schema = z.object({
+    radius: z.number(),
+    customRadius: z.boolean(),
+    colorIndex: z.enum(['0', '1', '2', '3', '4', '5']),
+    customColorIndex: z.boolean(),
+  });
+
   private readonly _radius: number;
   private readonly _customRadius: boolean;
   private readonly _colorIndex: LiveCanvasLabelViewSettings['colorIndex'];
@@ -38,6 +45,24 @@ export class LiveCanvasLabelViewSettings {
     return this._customColorIndex;
   }
 
+  public static fromPlain(
+    data: z.infer<typeof LiveCanvasLabelViewSettings.schema>,
+  ): LiveCanvasLabelViewSettings {
+    return new LiveCanvasLabelViewSettings({
+      radius: data.radius,
+      customRadius: data.customRadius,
+      colorIndex: match(data.colorIndex)
+        .with('0', (): LiveCanvasLabelViewSettings['colorIndex'] => 0)
+        .with('1', (): LiveCanvasLabelViewSettings['colorIndex'] => 1)
+        .with('2', (): LiveCanvasLabelViewSettings['colorIndex'] => 2)
+        .with('3', (): LiveCanvasLabelViewSettings['colorIndex'] => 3)
+        .with('4', (): LiveCanvasLabelViewSettings['colorIndex'] => 4)
+        .with('5', (): LiveCanvasLabelViewSettings['colorIndex'] => 5)
+        .exhaustive(),
+      customColorIndex: data.customColorIndex,
+    });
+  }
+
   public static default(): LiveCanvasLabelViewSettings {
     return new LiveCanvasLabelViewSettings({
       radius: GraphNode.defaultRadius,
@@ -55,26 +80,6 @@ export class LiveCanvasLabelViewSettings {
       customRadius: input.customRadius,
       colorIndex: input.colorIndex,
       customColorIndex: input.customColorIndex,
-    });
-  }
-
-  public static fromDb(
-    db: Result<'api::canvas-label-setting.canvas-label-setting'>,
-  ): LiveCanvasLabelViewSettings {
-    return new LiveCanvasLabelViewSettings({
-      radius: db.radius ?? GraphNode.defaultRadius,
-      customRadius: db.customRadius ?? false,
-      colorIndex: match(db.colorIndex)
-        .returnType<LiveCanvasLabelViewSettings['colorIndex']>()
-        .with('color0', (): 0 => 0)
-        .with('color1', (): 1 => 1)
-        .with('color2', (): 2 => 2)
-        .with('color3', (): 3 => 3)
-        .with('color4', (): 4 => 4)
-        .with('color5', (): 5 => 5)
-        .with(P.nullish, (): 0 => 0)
-        .exhaustive(),
-      customColorIndex: db.customColorIndex ?? false,
     });
   }
 
@@ -99,22 +104,49 @@ export class LiveCanvasLabelViewSettings {
     return smallestIndex as LiveCanvasLabelViewSettings['colorIndex'];
   }
 
-  public dbData(): Input<'api::canvas-label-setting.canvas-label-setting'> {
+  public toPlain(): z.infer<typeof LiveCanvasLabelViewSettings.schema> {
     return {
-      radius: this._radius,
-      customRadius: this._customRadius,
-      colorIndex: match(this._colorIndex)
-        .returnType<
-          Input<'api::canvas-label-setting.canvas-label-setting'>['colorIndex']
-        >()
-        .with(0, (): 'color0' => 'color0')
-        .with(1, (): 'color1' => 'color1')
-        .with(2, (): 'color2' => 'color2')
-        .with(3, (): 'color3' => 'color3')
-        .with(4, (): 'color4' => 'color4')
-        .with(5, (): 'color5' => 'color5')
+      radius: this.radius,
+      customRadius: this.customRadius,
+      colorIndex: match(this.colorIndex)
+        .with(
+          0,
+          (): z.infer<
+            typeof LiveCanvasLabelViewSettings.schema
+          >['colorIndex'] => '0',
+        )
+        .with(
+          1,
+          (): z.infer<
+            typeof LiveCanvasLabelViewSettings.schema
+          >['colorIndex'] => '1',
+        )
+        .with(
+          2,
+          (): z.infer<
+            typeof LiveCanvasLabelViewSettings.schema
+          >['colorIndex'] => '2',
+        )
+        .with(
+          3,
+          (): z.infer<
+            typeof LiveCanvasLabelViewSettings.schema
+          >['colorIndex'] => '3',
+        )
+        .with(
+          4,
+          (): z.infer<
+            typeof LiveCanvasLabelViewSettings.schema
+          >['colorIndex'] => '4',
+        )
+        .with(
+          5,
+          (): z.infer<
+            typeof LiveCanvasLabelViewSettings.schema
+          >['colorIndex'] => '5',
+        )
         .exhaustive(),
-      customColorIndex: this._customColorIndex,
+      customColorIndex: this.customColorIndex,
     };
   }
 }

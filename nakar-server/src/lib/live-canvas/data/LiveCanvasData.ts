@@ -1,29 +1,32 @@
 import { LiveCanvasUndoableData } from './LiveCanvasUndoableData';
 import { UndoWrapper } from '../../undo/UndoWrapper';
 import { LiveCanvasViewSettings } from './LiveCanvasViewSettings';
-import { Result } from '@strapi/types/dist/modules/documents/result';
-import { getStringPayloadOfMediaFile } from '../../media/media';
-import { DatabaseService } from '../../database/DatabaseService';
-import { Logger } from '@strapi/logger';
-import { createChildLogger } from '../../logger/createChildLogger';
 import { LiveCanvasUser } from './LiveCanvasUser';
+import z from 'zod';
 
 export class LiveCanvasData {
-  private readonly _logger: Logger = createChildLogger(this);
+  // eslint-disable-next-line @typescript-eslint/typedef
+  public static readonly schema = z.object({
+    undoableData: LiveCanvasUndoableData.schema,
+    viewSettings: LiveCanvasViewSettings.schema,
+  });
 
   private readonly _undoableData: UndoWrapper<LiveCanvasUndoableData>;
   private _viewSettings: LiveCanvasViewSettings;
   private readonly _users: LiveCanvasUser[];
 
-  public constructor(private readonly _database: DatabaseService) {
+  public constructor(data: {
+    undoableData: LiveCanvasUndoableData;
+    viewSettings: LiveCanvasViewSettings;
+  }) {
     this._undoableData = new UndoWrapper<LiveCanvasUndoableData>(
-      LiveCanvasUndoableData.empty(),
-      (data: LiveCanvasUndoableData): LiveCanvasUndoableData => {
-        return data.copy();
+      data.undoableData,
+      (dataToCopy: LiveCanvasUndoableData): LiveCanvasUndoableData => {
+        return dataToCopy.copy();
       },
       { maximumStackSize: 10 },
     );
-    this._viewSettings = LiveCanvasViewSettings.defaultViewSettings();
+    this._viewSettings = data.viewSettings;
     this._users = [];
   }
 
@@ -43,47 +46,26 @@ export class LiveCanvasData {
     this._viewSettings = newValue;
   }
 
-  public async loadFromDb(
-    canvas: Result<'api::canvas.canvas'>,
-    canvasLabelViewSettings: Result<'api::canvas-label-setting.canvas-label-setting'>[],
-  ): Promise<void> {
-    const undoableData: LiveCanvasUndoableData =
-      await this._loadUndoableData(canvas);
-    this._undoableData.reset(undoableData);
-    this._viewSettings = LiveCanvasViewSettings.fromDB(
-      canvas,
-      canvasLabelViewSettings,
-    );
+  public static empty(): LiveCanvasData {
+    return new LiveCanvasData({
+      undoableData: LiveCanvasUndoableData.empty(),
+      viewSettings: LiveCanvasViewSettings.defaultViewSettings(),
+    });
   }
 
-  public async saveToDb(canvas: Result<'api::canvas.canvas'>): Promise<void> {
-    await this._database.setMutableGraphOfCanvas(
-      canvas,
-      this._undoableData.current.toPlain(),
-    );
-    await this._database.setCanvasViewSettings(canvas, this._viewSettings);
+  public static fromPlain(
+    data: z.infer<typeof LiveCanvasData.schema>,
+  ): LiveCanvasData {
+    return new LiveCanvasData({
+      undoableData: LiveCanvasUndoableData.fromPlain(data.undoableData),
+      viewSettings: LiveCanvasViewSettings.fromPlain(data.viewSettings),
+    });
   }
 
-  private async _loadUndoableData(
-    canvas: Result<'api::canvas.canvas'>,
-  ): Promise<LiveCanvasUndoableData> {
-    try {
-      const canvasGraph: Result<'plugin::upload.file'> | null =
-        await this._database.getGrapFileOfCanvas(canvas);
-      const graphJson: string = await getStringPayloadOfMediaFile(canvasGraph);
-      const graph: LiveCanvasUndoableData =
-        LiveCanvasUndoableData.fromUnknownOrEmpty(JSON.parse(graphJson));
-      this._logger.debug(
-        `Did load ${graph.size.toString()} graph elements into canvas ${canvas.documentId} ('${canvas.title ?? ''}').`,
-      );
-      return graph;
-    } catch (error) {
-      this._logger.error(`Unable to load graph from canvas:`);
-      this._logger.error(error);
-      this._logger.debug(
-        `Will init canvas ${canvas.documentId} with empty graph.`,
-      );
-      return LiveCanvasUndoableData.empty();
-    }
+  public toPlain(): z.infer<typeof LiveCanvasData.schema> {
+    return {
+      undoableData: this._undoableData.current.toPlain(),
+      viewSettings: this._viewSettings.toPlain(),
+    };
   }
 }

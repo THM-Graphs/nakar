@@ -430,43 +430,6 @@ export interface AdminUser extends Struct.CollectionTypeSchema {
   };
 }
 
-export interface ApiCanvasLabelSettingCanvasLabelSetting
-  extends Struct.CollectionTypeSchema {
-  collectionName: 'canvas_label_settings';
-  info: {
-    displayName: 'Canvas Node Setting';
-    pluralName: 'canvas-label-settings';
-    singularName: 'canvas-label-setting';
-  };
-  options: {
-    draftAndPublish: true;
-  };
-  attributes: {
-    canvas: Schema.Attribute.Relation<'manyToOne', 'api::canvas.canvas'>;
-    colorIndex: Schema.Attribute.Enumeration<
-      ['color0', 'color1', 'color2', 'color3', 'color4', 'color5']
-    >;
-    createdAt: Schema.Attribute.DateTime;
-    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-    customColorIndex: Schema.Attribute.Boolean &
-      Schema.Attribute.DefaultTo<false>;
-    customRadius: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
-    label: Schema.Attribute.String;
-    locale: Schema.Attribute.String & Schema.Attribute.Private;
-    localizations: Schema.Attribute.Relation<
-      'oneToMany',
-      'api::canvas-label-setting.canvas-label-setting'
-    > &
-      Schema.Attribute.Private;
-    publishedAt: Schema.Attribute.DateTime;
-    radius: Schema.Attribute.Decimal;
-    updatedAt: Schema.Attribute.DateTime;
-    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-  };
-}
-
 export interface ApiCanvasCanvas extends Struct.CollectionTypeSchema {
   collectionName: 'canvases';
   info: {
@@ -479,30 +442,19 @@ export interface ApiCanvasCanvas extends Struct.CollectionTypeSchema {
     draftAndPublish: true;
   };
   attributes: {
-    compressRelationshipsWidthFactor: Schema.Attribute.Decimal;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
-    graph: Schema.Attribute.Media<'files'>;
-    growNodesBasedOnDegree: Schema.Attribute.Boolean;
-    growNodesBasedOnDegreeFactor: Schema.Attribute.Decimal;
+    liveCanvasData: Schema.Attribute.Media<'files'>;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
       'oneToMany',
       'api::canvas.canvas'
     > &
       Schema.Attribute.Private;
-    nodeSettings: Schema.Attribute.Relation<
-      'oneToMany',
-      'api::canvas-label-setting.canvas-label-setting'
-    >;
     publishedAt: Schema.Attribute.DateTime;
     room: Schema.Attribute.Relation<'manyToOne', 'api::room.room'>;
-    scaleType: Schema.Attribute.Enumeration<
-      ['linear', 'log2', 'logn', 'log10']
-    >;
     title: Schema.Attribute.String;
-    treatNameInQueryAsLabel: Schema.Attribute.Boolean;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -1541,7 +1493,6 @@ declare module '@strapi/strapi' {
       'admin::transfer-token': AdminTransferToken;
       'admin::transfer-token-permission': AdminTransferTokenPermission;
       'admin::user': AdminUser;
-      'api::canvas-label-setting.canvas-label-setting': ApiCanvasLabelSettingCanvasLabelSetting;
       'api::canvas.canvas': ApiCanvasCanvas;
       'api::common-property.common-property': ApiCommonPropertyCommonProperty;
       'api::database-connection.database-connection': ApiDatabaseConnectionDatabaseConnection;

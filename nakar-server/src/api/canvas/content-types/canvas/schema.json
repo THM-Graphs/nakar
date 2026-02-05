@@ -21,39 +21,12 @@
       "target": "api::room.room",
       "inversedBy": "canvases"
     },
-    "graph": {
+    "liveCanvasData": {
       "type": "media",
       "multiple": false,
       "allowedTypes": [
         "files"
       ]
-    },
-    "growNodesBasedOnDegree": {
-      "type": "boolean"
-    },
-    "scaleType": {
-      "type": "enumeration",
-      "enum": [
-        "linear",
-        "log2",
-        "logn",
-        "log10"
-      ]
-    },
-    "growNodesBasedOnDegreeFactor": {
-      "type": "decimal"
-    },
-    "compressRelationshipsWidthFactor": {
-      "type": "decimal"
-    },
-    "treatNameInQueryAsLabel": {
-      "type": "boolean"
-    },
-    "nodeSettings": {
-      "type": "relation",
-      "relation": "oneToMany",
-      "target": "api::canvas-label-setting.canvas-label-setting",
-      "mappedBy": "canvas"
     }
   }
 }

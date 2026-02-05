@@ -390,7 +390,7 @@ export class SchemaFactoryService {
     );
     const notes: IndexedNoteCollection = await this._database.getNotes({
       project: await this._database.getProjectOfCanvas(canvas),
-      graph: graph,
+      liveCanvas: liveCanvas,
     });
 
     return new LiveCanvasDataDto({

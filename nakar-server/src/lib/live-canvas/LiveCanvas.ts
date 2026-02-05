@@ -44,6 +44,7 @@ import { LiveCanvasUser } from './data/LiveCanvasUser';
 import { CanvasEventUserJoined } from './events/CanvasEventUserJoined';
 import { CanvasEventUserLeft } from './events/CanvasEventUserLeft';
 import { CanvasEventCursorChanged } from './events/CanvasEventCursorChanged';
+import z from 'zod';
 
 export class LiveCanvas {
   private readonly _logger: Logger = createChildLogger(this);
@@ -52,7 +53,7 @@ export class LiveCanvas {
   private readonly _subscriptions: SSet<Subscription>;
   private readonly _queue: TaskQueue;
   private _shutdownTimeout: NodeJS.Timeout | null;
-  private readonly _data: LiveCanvasData;
+  private _data: LiveCanvasData;
 
   public constructor(
     private readonly _canvasId: string,
@@ -65,7 +66,7 @@ export class LiveCanvas {
     this._physicsWorker = new PhysicsWorker(_canvasId);
     this._queue = new TaskQueue();
     this._shutdownTimeout = null;
-    this._data = new LiveCanvasData(this._database);
+    this._data = LiveCanvasData.empty();
 
     this._subscriptions.add(
       this._physicsWorker.onWTEvent$.subscribe((message: WTEvent): void => {
@@ -170,11 +171,15 @@ export class LiveCanvas {
 
         const canvas: Result<'api::canvas.canvas'> =
           await this._database.getCanvas(this._canvasId);
-        const labelSettings: Result<'api::canvas-label-setting.canvas-label-setting'>[] =
-          await this._database.getCanvasLabelViewSettings(canvas);
-        await this._data.loadFromDb(canvas, labelSettings);
-        changeRecorder.didLoadGraph();
-        changeRecorder.didChangeViewSettings();
+
+        const data: z.infer<typeof LiveCanvasData.schema> | null =
+          await this._database.getLiveCanvasData(canvas);
+
+        if (data != null) {
+          this._data = LiveCanvasData.fromPlain(data);
+          changeRecorder.didLoadGraph();
+          changeRecorder.didChangeViewSettings();
+        }
 
         await this._physicsWorker.bootstrap();
 
@@ -1088,7 +1093,7 @@ export class LiveCanvas {
       this.canvasId,
     );
 
-    await this._data.saveToDb(canvas);
+    await this._database.setLiveCanvasData(canvas, this._data.toPlain());
 
     task.done({
       message: 'Save Graph',
@@ -1184,10 +1189,7 @@ export class LiveCanvas {
   }
 
   private _handleWTEventPhysicsStopped(): void {
-    this._logger.debug(
-      `Save graph of canvas ${this.canvasId}, because the physics simulation stopped.`,
-    );
-    this.saveGraphAsync();
+    // We used to save the live canvas data, but this should only be done on shutdown
   }
 
   private _compressRelationships(
