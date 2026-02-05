@@ -25,6 +25,8 @@ export function PropertyMenu(props: {
         buttonSize={props.buttonSize ?? undefined}
         containerClassName={"align-self-baseline"}
         menuStyle={{ width: "350px" }}
+        align={"end"}
+        drop={"start"}
       >
         <Dropdown.Item
           className={"small"}

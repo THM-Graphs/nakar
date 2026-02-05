@@ -10,6 +10,7 @@ import { Dropdown, Stack } from "react-bootstrap";
 import clsx from "clsx";
 import { AlignType, Placement } from "react-bootstrap/types";
 import { createPortal } from "react-dom";
+import { DropDirection } from "react-bootstrap/esm/DropdownContext";
 
 export function DropdownButton(props: {
   icon?: string;
@@ -23,6 +24,7 @@ export function DropdownButton(props: {
   children: ReactNode;
   buttonChildren?: ReactNode;
   align?: AlignType;
+  drop?: DropDirection;
   tooltip?: string;
   tooltipPlacement?: Placement;
   hidden?: boolean;
@@ -68,6 +70,7 @@ export function DropdownButton(props: {
       <Dropdown
         autoClose={true}
         align={props.align}
+        drop={props.drop}
         className={props.containerClassName}
       >
         <Dropdown.Toggle as={CustomToggle}></Dropdown.Toggle>
