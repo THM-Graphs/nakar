@@ -241,6 +241,7 @@ export class SchemaFactoryService {
     scenarioParameter: Result<'api::query-parameter.query-parameter'>,
   ): ScenarioParameterDto {
     return new ScenarioParameterDto({
+      id: scenarioParameter.documentId,
       identifier: scenarioParameter.identifier ?? '',
       title: scenarioParameter.title ?? '',
       defaultValue: scenarioParameter.defaultValue ?? '',

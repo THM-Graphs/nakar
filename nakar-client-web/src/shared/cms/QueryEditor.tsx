@@ -1,21 +1,17 @@
 import { Card, Form, FormSelect, Stack } from "react-bootstrap";
 import clsx from "clsx";
-import { DatabaseConnectionDto } from "../../../src-gen";
+import {
+  DatabaseConnectionDto,
+  UpdateScenarioQueryEntryDto,
+} from "../../../src-gen";
 import { CypherEditor } from "@neo4j-cypher/react-codemirror";
 import { useBearStore } from "../../state/useBearStore.ts";
 import { CMSButton } from "./CMSButton.tsx";
 import { MouseEventHandler } from "react";
 
-export type QueryEntry = {
-  id: string;
-  query: string;
-  databaseId: string;
-  isTableData: boolean;
-};
-
 export function QueryEditor(props: {
-  value: QueryEntry;
-  onChange: (newEntry: QueryEntry) => void;
+  value: UpdateScenarioQueryEntryDto;
+  onChange: (newEntry: UpdateScenarioQueryEntryDto) => void;
   databases: DatabaseConnectionDto[];
   onDelete?: MouseEventHandler<HTMLButtonElement>;
 }) {
@@ -34,7 +30,7 @@ export function QueryEditor(props: {
             className={clsx(
               props.value.databaseId === "" && "bg-danger-subtle",
             )}
-            value={props.value.databaseId}
+            value={props.value.databaseId ?? ""}
             onChange={(e) => {
               props.onChange({ ...props.value, databaseId: e.target.value });
             }}
@@ -78,9 +74,9 @@ export function QueryEditor(props: {
           type="switch"
           label={<span className={"small"}>Query produces table data.</span>}
           id={`istabledata_${props.value.id}`}
-          checked={props.value.isTableData}
+          checked={props.value.isTableQuery}
           onChange={(e) => {
-            props.onChange({ ...props.value, isTableData: e.target.checked });
+            props.onChange({ ...props.value, isTableQuery: e.target.checked });
           }}
         />
       </Form.Group>

@@ -19,7 +19,6 @@ import { resultOrThrow } from "../shared/data/resultOrThrow.ts";
 import { Router } from "../routing/Router.ts";
 import { CMSButton } from "../shared/cms/CMSButton.tsx";
 import { ScenarioData, ScenarioEditor } from "../shared/cms/ScenarioEditor.tsx";
-import { QueryEntry } from "../shared/cms/QueryEditor.tsx";
 
 type EditScenarioLoaderData = {
   project: ProjectPageDto;
@@ -73,12 +72,12 @@ export function EditScenario() {
   const [scenario, setScenario] = useState<ScenarioData>({
     title: loaderData.scenario.title ?? "",
     queries: loaderData.scenario.queries.map(
-      (query: ScenarioQueryDto): QueryEntry => {
+      (query: ScenarioQueryDto): UpdateScenarioQueryEntryDto => {
         return {
           id: query.id,
           query: query.query,
           databaseId: query.database?.id ?? "",
-          isTableData: query.isTableQuery,
+          isTableQuery: query.isTableQuery,
         };
       },
     ),
@@ -131,16 +130,7 @@ export function EditScenario() {
               scenarioControllerUpdateScenario({
                 body: {
                   title: scenario.title,
-                  queries: scenario.queries.map(
-                    (query: QueryEntry): UpdateScenarioQueryEntryDto => {
-                      return {
-                        id: query.id,
-                        query: query.query,
-                        databaseId: query.databaseId,
-                        isTableQuery: query.isTableData,
-                      };
-                    },
-                  ),
+                  queries: scenario.queries,
                 },
                 path: {
                   scenarioId: loaderData.scenario.id,

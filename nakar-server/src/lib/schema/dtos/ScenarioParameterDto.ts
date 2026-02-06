@@ -3,6 +3,9 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class ScenarioParameterDto {
   @ApiProperty()
+  public id: string;
+
+  @ApiProperty()
   public identifier: string;
 
   @ApiProperty()
@@ -18,12 +21,14 @@ export class ScenarioParameterDto {
   public allowedLabels: string[];
 
   public constructor(data: {
+    id: string;
     identifier: string;
     title: string;
     defaultValue: string | null;
     dataType: ScenarioParameterDataTypeDto;
     allowedLabels: string[];
   }) {
+    this.id = data.id;
     this.identifier = data.identifier;
     this.title = data.title;
     this.defaultValue = data.defaultValue;

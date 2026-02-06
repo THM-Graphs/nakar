@@ -1,14 +1,17 @@
 import { CMSEditTextCard } from "./CMSEditTextCard.tsx";
-import { QueryEditor, QueryEntry } from "./QueryEditor.tsx";
+import { QueryEditor } from "./QueryEditor.tsx";
 import { Card, Stack } from "react-bootstrap";
-import { DatabaseConnectionDto } from "../../../src-gen";
+import {
+  DatabaseConnectionDto,
+  UpdateScenarioQueryEntryDto,
+} from "../../../src-gen";
 import { useCallback } from "react";
 import { v4 } from "uuid";
 import { NavbarButton } from "../elements/NavbarButton.tsx";
 
 export type ScenarioData = {
   title: string;
-  queries: QueryEntry[];
+  queries: UpdateScenarioQueryEntryDto[];
 };
 
 export function ScenarioEditor(props: {
@@ -17,11 +20,11 @@ export function ScenarioEditor(props: {
   databases: DatabaseConnectionDto[];
 }) {
   const addQuery = useCallback(() => {
-    const newQuery: QueryEntry = {
+    const newQuery: UpdateScenarioQueryEntryDto = {
       id: v4(),
       query: "",
       databaseId: props.databases.length > 0 ? props.databases[0].id : "",
-      isTableData: false,
+      isTableQuery: false,
     };
     props.onChange({
       ...props.value,
@@ -56,28 +59,32 @@ export function ScenarioEditor(props: {
       <Stack>
         <h5>Queries</h5>
         <Stack gap={3}>
-          {props.value.queries.map((queryEntry: QueryEntry) => (
-            <QueryEditor
-              key={queryEntry.id}
-              value={queryEntry}
-              onChange={(newQuery: QueryEntry): void => {
-                props.onChange({
-                  ...props.value,
-                  queries: props.value.queries.map(
-                    (query: QueryEntry): QueryEntry =>
-                      query.id === newQuery.id ? newQuery : query,
-                  ),
-                });
-              }}
-              databases={props.databases}
-              onDelete={(e) => {
-                e.preventDefault();
-                if (queryEntry.query === "" || confirm("Remove query?")) {
-                  removeQuery(queryEntry.id);
-                }
-              }}
-            ></QueryEditor>
-          ))}
+          {props.value.queries.map(
+            (queryEntry: UpdateScenarioQueryEntryDto) => (
+              <QueryEditor
+                key={queryEntry.id}
+                value={queryEntry}
+                onChange={(newQuery: UpdateScenarioQueryEntryDto): void => {
+                  props.onChange({
+                    ...props.value,
+                    queries: props.value.queries.map(
+                      (
+                        query: UpdateScenarioQueryEntryDto,
+                      ): UpdateScenarioQueryEntryDto =>
+                        query.id === newQuery.id ? newQuery : query,
+                    ),
+                  });
+                }}
+                databases={props.databases}
+                onDelete={(e) => {
+                  e.preventDefault();
+                  if (queryEntry.query === "" || confirm("Remove query?")) {
+                    removeQuery(queryEntry.id);
+                  }
+                }}
+              ></QueryEditor>
+            ),
+          )}
 
           <Card>
             <NavbarButton

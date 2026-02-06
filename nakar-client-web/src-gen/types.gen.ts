@@ -540,6 +540,7 @@ export type ScenarioGroupDto = {
 };
 
 export type ScenarioParameterDto = {
+    id: string;
     identifier: string;
     title: string;
     defaultValue: (string) | null;
@@ -630,9 +631,18 @@ export type UpdateScenarioQueryEntryDto = {
     isTableQuery: boolean;
 };
 
+export type UpdateScenarioQueryParameterEntryDto = {
+    id: string;
+    identifier: string;
+    title: string;
+    defaultValue: string;
+    dataType: 'string' | 'number' | 'json' | 'startDateTime' | 'endDateTime';
+};
+
 export type UpdateScenarioRequestBodyDto = {
     title: string;
     queries: Array<UpdateScenarioQueryEntryDto>;
+    parameters: Array<UpdateScenarioQueryParameterEntryDto>;
 };
 
 export type UserPreviewDto = {
