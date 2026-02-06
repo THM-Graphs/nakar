@@ -25,32 +25,35 @@ import { GetSearchCapabilitiesResponseBodyDto } from './dto/GetSearchCapabilitie
 import { Neo4jSearchCapabilities } from '../../../neo4j/Neo4jSearchCapabilities';
 import { SSet } from '../../../set/Set';
 import { SearchCapabilitiesEntryDto } from './dto/SearchCapabilitiesEntryDto';
-import { UserCanAccessRoom } from '../../guards/UserCanAccessRoom';
-import { DatabaseBelongsToRoom } from '../../guards/DatabaseBelongsToRoom';
+import { DatabaseBelongsToCanvas } from '../../guards/DatabaseBelongsToCanvas';
 import { ExpandNodePreview } from '../../../neo4j/expand-node-preview/ExpandNodePreview';
 import { ExpandNodePreviewRequestQueryDto } from './dto/ExpandNodePreviewRequestQueryDto';
 import { ExpandNodePreviewResponseBodyDto } from './dto/ExpandNodePreviewResponseBodyDto';
 import { ExpandNodePreviewEntryDto } from './dto/ExpandNodePreviewEntryDto';
 import { ExpandNodePreviewEntry } from '../../../neo4j/expand-node-preview/ExpandNodePreviewEntry';
+import { UserCanAccessCanvas } from '../../guards/UserCanAccessCanvas';
 
-@Controller('room/:roomId/database-connection')
+@Controller('canvas/:canvasId/database-connection/:databaseId')
 @ApiParam({
-  name: 'roomId',
+  name: 'canvasId',
   required: true,
   type: 'string',
 })
-export class DatabaseConnectionController {
-  // TODO: Check if user can access db by putting this route behind room
-
+@ApiParam({
+  name: 'databaseId',
+  required: true,
+  type: 'string',
+})
+@UseGuards(UserCanAccessCanvas)
+@UseGuards(DatabaseBelongsToCanvas)
+export class CanvasDatabaseConnectionController {
   public constructor(
     private readonly _database: DatabaseService,
     private readonly _neo4jService: Neo4jService,
   ) {}
 
-  @Get(':databaseId/stats')
+  @Get('stats')
   @ApiResponse({ type: GetDatabaseStatsResponseBodyDto })
-  @UseGuards(UserCanAccessRoom)
-  @UseGuards(DatabaseBelongsToRoom)
   public async getStats(
     @Param('databaseId') databaseId: string,
   ): Promise<GetDatabaseStatsResponseBodyDto> {
@@ -65,11 +68,10 @@ export class DatabaseConnectionController {
     return stats;
   }
 
-  @Post(':databaseId/search')
+  @Post('search')
   @HttpCode(200)
   @ApiResponse({ type: PostSearchResponseBodyDto })
-  @UseGuards(UserCanAccessRoom)
-  @UseGuards(DatabaseBelongsToRoom)
+  @UseGuards(DatabaseBelongsToCanvas)
   public async performSearch(
     @Param('databaseId') databaseId: string,
     @Body() body: PostSearchRequestBodyDto,
@@ -104,10 +106,8 @@ export class DatabaseConnectionController {
     };
   }
 
-  @Get(':databaseId/search-capabilities')
+  @Get('search-capabilities')
   @ApiResponse({ type: GetSearchCapabilitiesResponseBodyDto })
-  @UseGuards(UserCanAccessRoom)
-  @UseGuards(DatabaseBelongsToRoom)
   public async getSearchCapabilites(
     @Param('databaseId') databaseId: string,
   ): Promise<GetSearchCapabilitiesResponseBodyDto> {
@@ -170,9 +170,7 @@ export class DatabaseConnectionController {
     });
   }
 
-  @Get(':databaseId/expand-node-preview')
-  @UseGuards(UserCanAccessRoom)
-  @UseGuards(DatabaseBelongsToRoom)
+  @Get('expand-node-preview')
   @ApiResponse({ type: ExpandNodePreviewResponseBodyDto })
   public async expandNodePreview(
     @Query() query: ExpandNodePreviewRequestQueryDto,

@@ -10,7 +10,7 @@ import { SearchForm } from "./SearchForm.tsx";
 import { SearchResultDisplay } from "./SearchResultDisplay.tsx";
 import { SearchCapabilitiesDisplay } from "./SearchCapabilitiesDisplay.tsx";
 import {
-  databaseConnectionControllerPerformSearch,
+  canvasDatabaseConnectionControllerPerformSearch,
   NodePreviewDto,
   PostSearchResponseBodyDto,
 } from "../../../src-gen";
@@ -44,10 +44,10 @@ export function SearchPanel() {
     setResult({ type: "loading" });
     try {
       const postResult: PostSearchResponseBodyDto = resultOrThrow(
-        await databaseConnectionControllerPerformSearch({
+        await canvasDatabaseConnectionControllerPerformSearch({
           path: {
             databaseId: selectedDatabaseId ?? "",
-            roomId: roomContext.initialRoomData.id,
+            canvasId: roomContext.initialCanvasData.id,
           },
           body: {
             searchTerm: searchTerm,

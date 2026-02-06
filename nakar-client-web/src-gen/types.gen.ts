@@ -112,10 +112,6 @@ export type CreateProjectRequestBodyDto = {
     title: string;
 };
 
-export type CreateRoomRequestBodyDto = {
-    projectId: string;
-};
-
 export type CursorMovedWsdto = {
     type: 'CursorMovedWsdto';
     position: PositionDto;
@@ -507,6 +503,7 @@ export type RoomDto = {
     title: string;
     visibility: 'private' | 'public' | 'unlisted';
     canvases: Array<CanvasDto>;
+    joinCanvasId: string;
 };
 
 export type visibility = 'private' | 'public' | 'unlisted';
@@ -595,6 +592,7 @@ export type StartPageRoomDto = {
     title: string;
     visibility: 'private' | 'public' | 'unlisted';
     projectTitle: string;
+    joinCanvasId: string;
 };
 
 export type UngrabNodeWsdto = {
@@ -772,18 +770,9 @@ export type ScenarioControllerUpdateScenarioResponse = (ScenarioDto);
 
 export type ScenarioControllerUpdateScenarioError = unknown;
 
-export type CanvasControllerGetCanvasData = {
-    path: {
-        canvasId: string;
-    };
-};
-
-export type CanvasControllerGetCanvasResponse = (CanvasPageDto);
-
-export type CanvasControllerGetCanvasError = unknown;
-
 export type RoomControllerGetRoomData = {
     path: {
+        projectId: string;
         roomId: string;
     };
 };
@@ -795,6 +784,7 @@ export type RoomControllerGetRoomError = unknown;
 export type RoomControllerUpdateRoomData = {
     body: UpdateRoomRequestBodyDto;
     path: {
+        projectId: string;
         roomId: string;
     };
 };
@@ -805,6 +795,7 @@ export type RoomControllerUpdateRoomError = unknown;
 
 export type RoomControllerDeleteRoomData = {
     path: {
+        projectId: string;
         roomId: string;
     };
 };
@@ -814,98 +805,106 @@ export type RoomControllerDeleteRoomResponse = (unknown);
 export type RoomControllerDeleteRoomError = unknown;
 
 export type RoomControllerCreateRoomData = {
-    body: CreateRoomRequestBodyDto;
+    path: {
+        projectId: string;
+    };
 };
 
 export type RoomControllerCreateRoomResponse = (RoomDto);
 
 export type RoomControllerCreateRoomError = unknown;
 
-export type NoteControllerPostNoteData = {
+export type CanvasControllerGetCanvasData = {
+    path: {
+        canvasId: string;
+    };
+};
+
+export type CanvasControllerGetCanvasResponse = (CanvasPageDto);
+
+export type CanvasControllerGetCanvasError = unknown;
+
+export type CanvasNoteControllerPostNoteData = {
     body: PostNoteRequestBody;
     path: {
-        roomId: string;
+        canvasId: string;
     };
 };
 
-export type NoteControllerPostNoteResponse = (unknown);
+export type CanvasNoteControllerPostNoteResponse = (unknown);
 
-export type NoteControllerPostNoteError = unknown;
+export type CanvasNoteControllerPostNoteError = unknown;
 
-export type NoteControllerDeleteNoteData = {
+export type CanvasNoteControllerDeleteNoteData = {
     path: {
+        canvasId: string;
         noteId: string;
-        roomId: string;
     };
 };
 
-export type NoteControllerDeleteNoteResponse = (unknown);
+export type CanvasNoteControllerDeleteNoteResponse = (unknown);
 
-export type NoteControllerDeleteNoteError = unknown;
+export type CanvasNoteControllerDeleteNoteError = unknown;
 
-export type NoteControllerUpdateNoteData = {
+export type CanvasNoteControllerUpdateNoteData = {
     body: UpdateNoteRequestBodyDto;
     path: {
+        canvasId: string;
         noteId: string;
-        roomId: string;
     };
 };
 
-export type NoteControllerUpdateNoteResponse = (unknown);
+export type CanvasNoteControllerUpdateNoteResponse = (unknown);
 
-export type NoteControllerUpdateNoteError = unknown;
+export type CanvasNoteControllerUpdateNoteError = unknown;
 
-export type SystemControllerGetVersionResponse = (GetVersionResponseBodyDto);
-
-export type SystemControllerGetVersionError = unknown;
-
-export type DatabaseConnectionControllerGetStatsData = {
+export type CanvasDatabaseConnectionControllerGetStatsData = {
     path: {
+        canvasId: string;
         databaseId: string;
-        roomId: string;
     };
 };
 
-export type DatabaseConnectionControllerGetStatsResponse = (GetDatabaseStatsResponseBodyDto);
+export type CanvasDatabaseConnectionControllerGetStatsResponse = (GetDatabaseStatsResponseBodyDto);
 
-export type DatabaseConnectionControllerGetStatsError = unknown;
+export type CanvasDatabaseConnectionControllerGetStatsError = unknown;
 
-export type DatabaseConnectionControllerPerformSearchData = {
+export type CanvasDatabaseConnectionControllerPerformSearchData = {
     body: PostSearchRequestBodyDto;
     path: {
+        canvasId: string;
         databaseId: string;
-        roomId: string;
     };
 };
 
-export type DatabaseConnectionControllerPerformSearchResponse = (PostSearchResponseBodyDto);
+export type CanvasDatabaseConnectionControllerPerformSearchResponse = (PostSearchResponseBodyDto);
 
-export type DatabaseConnectionControllerPerformSearchError = unknown;
+export type CanvasDatabaseConnectionControllerPerformSearchError = unknown;
 
-export type DatabaseConnectionControllerGetSearchCapabilitesData = {
+export type CanvasDatabaseConnectionControllerGetSearchCapabilitesData = {
     path: {
+        canvasId: string;
         databaseId: string;
-        roomId: string;
     };
 };
 
-export type DatabaseConnectionControllerGetSearchCapabilitesResponse = (GetSearchCapabilitiesResponseBodyDto);
+export type CanvasDatabaseConnectionControllerGetSearchCapabilitesResponse = (GetSearchCapabilitiesResponseBodyDto);
 
-export type DatabaseConnectionControllerGetSearchCapabilitesError = unknown;
+export type CanvasDatabaseConnectionControllerGetSearchCapabilitesError = unknown;
 
-export type DatabaseConnectionControllerExpandNodePreviewData = {
+export type CanvasDatabaseConnectionControllerExpandNodePreviewData = {
     path: {
+        canvasId: string;
         databaseId: string;
-        roomId: string;
     };
     query: {
         nodeId: string;
     };
 };
 
-export type DatabaseConnectionControllerExpandNodePreviewResponse = (ExpandNodePreviewResponseBodyDto);
+export type CanvasDatabaseConnectionControllerExpandNodePreviewResponse = (ExpandNodePreviewResponseBodyDto);
 
-export type DatabaseConnectionControllerExpandNodePreviewError = unknown;
+export type CanvasDatabaseConnectionControllerExpandNodePreviewError = unknown;
 
 export type ActionControllerLoadScenarioData = {
     body: LoadScenarioRequestBodyDto;
@@ -1107,6 +1106,10 @@ export type ActionControllerSetViewSettingsData = {
 export type ActionControllerSetViewSettingsResponse = (unknown);
 
 export type ActionControllerSetViewSettingsError = unknown;
+
+export type SystemControllerGetVersionResponse = (GetVersionResponseBodyDto);
+
+export type SystemControllerGetVersionError = unknown;
 
 export type RedirectControllerGetUrlData = {
     query: {

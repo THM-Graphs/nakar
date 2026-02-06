@@ -1,7 +1,7 @@
 import { Action } from "./Action.ts";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
 import { CanvasContextData } from "../../pages/CanvasPage.tsx";
-import { noteControllerDeleteNote } from "../../../src-gen";
+import { canvasNoteControllerDeleteNote } from "../../../src-gen";
 
 export type RemoveNoteActionParams = {
   noteId: string;
@@ -13,10 +13,10 @@ export class RemoveNoteAction extends Action<RemoveNoteActionParams> {
 
   protected async action(input: RemoveNoteActionParams): Promise<void> {
     await resultOrThrow(
-      await noteControllerDeleteNote({
+      await canvasNoteControllerDeleteNote({
         path: {
           noteId: input.noteId,
-          roomId: input.roomContext.initialRoomData.id,
+          canvasId: input.roomContext.initialCanvasData.id,
         },
       }),
     );

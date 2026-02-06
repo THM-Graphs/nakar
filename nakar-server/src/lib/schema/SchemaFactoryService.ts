@@ -20,7 +20,6 @@ import { Injectable } from '@nestjs/common';
 import { StartPageProjectDto } from '../http/routes/start/dto/StartPageProjectDto';
 import { StartPageRoomDto } from '../http/routes/start/dto/StartPageRoomDto';
 import { RoomVisibilityDto } from './dtos/RoomVisibilityDto';
-import { ProjectPageDto } from '../http/routes/project-page/dto/ProjectPageDto';
 import { ScenarioGroupDto } from './dtos/ScenarioGroupDto';
 import { ScenarioDto } from './dtos/ScenarioDto';
 import { ScenarioQueryDto } from './dtos/ScenarioQueryDto';
@@ -37,7 +36,6 @@ import { LabelDto } from './dtos/LabelDto';
 import { NoteDto } from './dtos/NoteDto';
 import { LiveCanvasTableDataDto } from './dtos/LiveCanvasTableDataDto';
 import { LiveCanvasMetaDataDto } from './dtos/LiveCanvasMetaDataDto';
-import { ScenarioArgumentDto } from '../http/routes/action/dto/ScenarioArgumentDto';
 import { UserPreviewDto } from './dtos/UserPreviewDto';
 import { EdgePreviewDto } from './dtos/EdgePreviewDto';
 import { NodePreviewDto } from './dtos/NodePreviewDto';
@@ -52,6 +50,8 @@ import { ColorPresetDto } from './dtos/ColorPresetDto';
 import { ColorDto } from './dtos/ColorDto';
 import { LiveCanvasLabelViewSettings } from '../live-canvas/data/LiveCanvasLabelViewSettings';
 import { LiveCanvasUser } from '../live-canvas/data/LiveCanvasUser';
+import { ScenarioArgumentDto } from '../http/routes/canvas-action/dto/ScenarioArgumentDto';
+import { ProjectPageDto } from '../http/routes/project/dto/ProjectPageDto';
 
 @Injectable()
 export class SchemaFactoryService {
@@ -73,15 +73,17 @@ export class SchemaFactoryService {
   public async createSchemaRoom(
     room: Result<'api::room.room'>,
   ): Promise<RoomDto> {
+    const canvases: CanvasDto[] = (
+      await this._database.getCanvasesOfRoom(room)
+    ).map((c: Result<'api::canvas.canvas'>): CanvasDto => {
+      return this.createSchemaCanvasPreview(c);
+    });
     return new RoomDto({
       id: room.documentId,
       title: room.title ?? '',
       visibility: this.createSchemaRoomVisibility(room),
-      canvases: (await this._database.getCanvasesOfRoom(room)).map(
-        (c: Result<'api::canvas.canvas'>): CanvasDto => {
-          return this.createSchemaCanvasPreview(c);
-        },
-      ),
+      canvases: canvases,
+      joinCanvasId: canvases[0].id,
     });
   }
 
@@ -101,11 +103,14 @@ export class SchemaFactoryService {
   ): Promise<StartPageRoomDto> {
     const project: Result<'api::project.project'> =
       await this._database.getProjectOfRoom(room);
+    const canvases: Result<'api::canvas.canvas'>[] =
+      await this._database.getCanvasesOfRoom(room);
     return {
       id: room.documentId,
       title: room.title ?? '',
       visibility: this.createSchemaRoomVisibility(room),
       projectTitle: project.title ?? '',
+      joinCanvasId: canvases[0].documentId,
     };
   }
 

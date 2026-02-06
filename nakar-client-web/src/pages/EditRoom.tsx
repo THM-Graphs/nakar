@@ -37,7 +37,9 @@ export async function EditRoomLoader(
   }
 
   const room: RoomDto = resultOrThrow(
-    await roomControllerGetRoom({ path: { roomId: roomId } }),
+    await roomControllerGetRoom({
+      path: { roomId: roomId, projectId: projectId },
+    }),
   );
   const project: ProjectPageDto = resultOrThrow(
     await projectControllerGetProject({ path: { projectId: projectId } }),
@@ -89,14 +91,14 @@ export function EditRoom() {
                 setLoading(true);
                 setError(null);
                 roomControllerUpdateRoom({
-                  path: { roomId: room.id },
+                  path: { roomId: room.id, projectId: project.id },
                   body: {
                     title: title,
                     visibility: visibility,
                   },
                 })
                   .then(resultOrThrow)
-                  .then((result) => {
+                  .then(() => {
                     return navigate(Router.getProjectPath(project.id));
                   })
                   .catch((error: unknown) => {
@@ -154,7 +156,7 @@ export function EditRoom() {
                       setLoading(true);
                       setError(null);
                       roomControllerDeleteRoom({
-                        path: { roomId: room.id },
+                        path: { roomId: room.id, projectId: project.id },
                       })
                         .then(resultOrThrow)
                         .then(() => {

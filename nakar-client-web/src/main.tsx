@@ -18,7 +18,6 @@ import { useBearStore } from "./state/useBearStore.ts";
 import { AuthModal } from "./shared/auth/AuthModal.tsx";
 import { ErrorComp } from "./pages/Error.tsx";
 import { Project, ProjectLoader } from "./pages/Project.tsx";
-import { Room, RoomLoader } from "./pages/Room.tsx";
 import { resultOrThrow } from "./shared/data/resultOrThrow.ts";
 import { EditProject, EditProjectLoader } from "./pages/EditProject.tsx";
 import { AddProject } from "./pages/AddProject.tsx";
@@ -126,11 +125,6 @@ async function bootstrap() {
           path: "/project/:projectId/room/:roomId/edit",
           element: <EditRoom></EditRoom>,
           loader: EditRoomLoader,
-        },
-        {
-          path: "/room/:id",
-          element: <Room></Room>,
-          loader: RoomLoader,
         },
       ],
     },

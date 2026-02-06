@@ -15,7 +15,7 @@ import { DropdownButton } from "../../shared/elements/DropdownButton.tsx";
 import { DatabaseSelect } from "../database/DatabaseSelect.tsx";
 import {
   actionControllerRunQuery,
-  databaseConnectionControllerGetStats,
+  canvasDatabaseConnectionControllerGetStats,
   DatabaseConnectionDto,
   GetDatabaseStatsResponseBodyDto,
 } from "../../../src-gen";
@@ -51,10 +51,10 @@ export function QueryPanel() {
       } else {
         try {
           const result = resultOrThrow(
-            await databaseConnectionControllerGetStats({
+            await canvasDatabaseConnectionControllerGetStats({
               path: {
                 databaseId: referencedDatabase.id,
-                roomId: roomContext.initialRoomData.id,
+                canvasId: roomContext.initialCanvasData.id,
               },
             }),
           );

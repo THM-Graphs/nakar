@@ -9,7 +9,7 @@ import { Request } from 'express';
 import { DatabaseService } from '../../database/DatabaseService';
 
 @Injectable()
-export class DatabaseBelongsToRoom implements CanActivate {
+export class DatabaseBelongsToCanvas implements CanActivate {
   public constructor(private readonly _databaseService: DatabaseService) {}
 
   public async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -22,20 +22,20 @@ export class DatabaseBelongsToRoom implements CanActivate {
     const database: Result<'api::database-connection.database-connection'> =
       await this._databaseService.getDatabase(databaseId);
 
-    const roomId: unknown = req.params['roomId'];
-    if (typeof roomId !== 'string') {
-      throw new NotFoundException(`No room id provided.`);
+    const canvasId: unknown = req.params['canvasId'];
+    if (typeof canvasId !== 'string') {
+      throw new NotFoundException(`No canvas id provided.`);
     }
-    const room: Result<'api::room.room'> =
-      await this._databaseService.getRoom(roomId);
+    const canvas: Result<'api::canvas.canvas'> =
+      await this._databaseService.getCanvas(canvasId);
 
     const projectOfDatabase: Result<'api::project.project'> =
       await this._databaseService.getProjectOfDatabase(database);
-    const projectOfRoom: Result<'api::project.project'> =
-      await this._databaseService.getProjectOfRoom(room);
+    const projectOfCanvas: Result<'api::project.project'> =
+      await this._databaseService.getProjectOfCanvas(canvas);
 
     const isOkay: boolean =
-      projectOfDatabase.documentId === projectOfRoom.documentId;
+      projectOfDatabase.documentId === projectOfCanvas.documentId;
 
     return isOkay;
   }

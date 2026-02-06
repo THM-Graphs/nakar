@@ -9,7 +9,7 @@ import { Request } from 'express';
 import { DatabaseService } from '../../database/DatabaseService';
 
 @Injectable()
-export class NoteBelongsToRoom implements CanActivate {
+export class NoteBelongsToCanvas implements CanActivate {
   public constructor(private readonly _databaseService: DatabaseService) {}
 
   public async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -22,17 +22,17 @@ export class NoteBelongsToRoom implements CanActivate {
     const note: Result<'api::note.note'> =
       await this._databaseService.getNote(noteId);
 
-    const roomId: unknown = req.params['roomId'];
-    if (typeof roomId !== 'string') {
-      throw new NotFoundException(`No room id provided.`);
+    const canvasId: unknown = req.params['canvasId'];
+    if (typeof canvasId !== 'string') {
+      throw new NotFoundException(`No canvas id provided.`);
     }
-    const room: Result<'api::room.room'> =
-      await this._databaseService.getRoom(roomId);
+    const canvas: Result<'api::canvas.canvas'> =
+      await this._databaseService.getCanvas(canvasId);
 
     const projectOfNote: Result<'api::project.project'> =
       await this._databaseService.getProjectOfNote(note);
     const projectOfRoom: Result<'api::project.project'> =
-      await this._databaseService.getProjectOfRoom(room);
+      await this._databaseService.getProjectOfCanvas(canvas);
 
     const isOkay: boolean =
       projectOfNote.documentId === projectOfRoom.documentId;

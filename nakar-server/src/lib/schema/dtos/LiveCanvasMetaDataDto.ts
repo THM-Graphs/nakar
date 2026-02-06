@@ -1,7 +1,7 @@
 import { ScenarioDto } from './ScenarioDto';
-import { ScenarioArgumentDto } from '../../http/routes/action/dto/ScenarioArgumentDto';
 import { ApiProperty } from '@nestjs/swagger';
 import { UserPreviewDto } from './UserPreviewDto';
+import { ScenarioArgumentDto } from '../../http/routes/canvas-action/dto/ScenarioArgumentDto';
 
 export class LiveCanvasMetaDataDto {
   @ApiProperty({ type: ScenarioDto, nullable: true })

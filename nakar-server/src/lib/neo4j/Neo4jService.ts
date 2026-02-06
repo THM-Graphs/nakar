@@ -21,9 +21,9 @@ import { Neo4jNode } from './Neo4jNode';
 import { Logger } from '@strapi/logger';
 import { createChildLogger } from '../logger/createChildLogger';
 import { Injectable } from '@nestjs/common';
-import { GetDatabaseStatsResponseBodyDto } from '../http/routes/database-connection/dto/GetDatabaseStatsResponseBodyDto';
-import { DatabaseStatsRelationshipDto } from '../http/routes/database-connection/dto/DatabaseStatsRelationshipDto';
-import { DatabaseStatsLabelDto } from '../http/routes/database-connection/dto/DatabaseStatsLabelDto';
+import { GetDatabaseStatsResponseBodyDto } from '../http/routes/canvas-database-connection/dto/GetDatabaseStatsResponseBodyDto';
+import { DatabaseStatsRelationshipDto } from '../http/routes/canvas-database-connection/dto/DatabaseStatsRelationshipDto';
+import { DatabaseStatsLabelDto } from '../http/routes/canvas-database-connection/dto/DatabaseStatsLabelDto';
 
 @Injectable()
 export class Neo4jService {

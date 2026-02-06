@@ -18,10 +18,6 @@ export class Router {
     return `/canvas/${canvasId}`;
   }
 
-  public static getRoomUrl(roomId: string): string {
-    return `/room/${roomId}`;
-  }
-
   public static getRoomEditUrl(projectId: string, roomId: string): string {
     return `/project/${projectId}/room/${roomId}/edit`;
   }

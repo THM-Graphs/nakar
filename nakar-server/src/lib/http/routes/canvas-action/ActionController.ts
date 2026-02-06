@@ -27,7 +27,7 @@ import { LiveCanvasService } from '../../../live-canvas/LiveCanvasService';
 import { UserIsLoggedIn } from '../../guards/UserIsLoggedIn';
 import { LiveCanvas } from '../../../live-canvas/LiveCanvas';
 
-@Controller('canvas/:canvasId/actions')
+@Controller('canvas/:canvasId/action')
 @ApiParam({
   name: 'canvasId',
   required: true,

@@ -102,7 +102,7 @@ export function Project() {
                     className={"p-1"}
                     onClick={() => {
                       roomControllerCreateRoom({
-                        body: { projectId: projectContext.id },
+                        path: { projectId: projectContext.id },
                       })
                         .then(resultOrThrow)
                         .then(() => navigate(0))

@@ -15,19 +15,19 @@ import { Logger } from '@strapi/logger';
 import { createChildLogger } from '../../../logger/createChildLogger';
 import { UserIsLoggedIn } from '../../guards/UserIsLoggedIn';
 import { UpdateNoteRequestBodyDto } from './dto/UpdateNoteRequestBodyDto';
-import { UserCanAccessRoom } from '../../guards/UserCanAccessRoom';
-import { NoteBelongsToRoom } from '../../guards/NoteBelongsToRoom';
 import { JWT } from '../../decorators/JWT';
 import { AuthService } from '../../../auth/AuthService';
+import { UserCanAccessCanvas } from '../../guards/UserCanAccessCanvas';
+import { NoteBelongsToCanvas } from '../../guards/NoteBelongsToCanvas';
 
-@Controller('room/:roomId/note')
-@UseGuards(UserCanAccessRoom)
+@Controller('canvas/:canvasId/note')
+@UseGuards(UserCanAccessCanvas)
 @ApiParam({
-  name: 'roomId',
+  name: 'canvasId',
   required: true,
   type: 'string',
 })
-export class NoteController {
+export class CanvasNoteController {
   private readonly _logger: Logger = createChildLogger(this);
 
   public constructor(
@@ -40,13 +40,13 @@ export class NoteController {
   @UseGuards(UserIsLoggedIn)
   public async postNote(
     @Body() body: PostNoteRequestBody,
-    @Param('roomId') roomId: string,
+    @Param('canvasId') canvasId: string,
     @JWT() jwt: string | null,
   ): Promise<void> {
-    const room: Result<'api::room.room'> =
-      await this._databaseService.getRoom(roomId);
+    const canvas: Result<'api::canvas.canvas'> =
+      await this._databaseService.getCanvas(canvasId);
     const project: Result<'api::project.project'> =
-      await this._databaseService.getProjectOfRoom(room);
+      await this._databaseService.getProjectOfCanvas(canvas);
     const user: Result<'plugin::users-permissions.user'> | null =
       await this._authService.getUserByJWT(jwt);
 
@@ -62,7 +62,7 @@ export class NoteController {
 
   @Delete(':noteId')
   @UseGuards(UserIsLoggedIn)
-  @UseGuards(NoteBelongsToRoom)
+  @UseGuards(NoteBelongsToCanvas)
   public async deleteNote(@Param('noteId') noteId: string): Promise<void> {
     this._logger.debug(`Will delete note ${noteId}.`);
     const note: Result<'api::note.note'> =
@@ -73,7 +73,7 @@ export class NoteController {
   @Put(':noteId')
   @UseGuards(UserIsLoggedIn)
   @ApiBody({ type: UpdateNoteRequestBodyDto })
-  @UseGuards(NoteBelongsToRoom)
+  @UseGuards(NoteBelongsToCanvas)
   public async updateNote(
     @Param('noteId') noteId: string,
     @Body() body: UpdateNoteRequestBodyDto,

@@ -1,7 +1,6 @@
 import { Container, Stack } from "react-bootstrap";
 import { useLoaderData } from "react-router";
 import { CMSNavbar } from "../shared/cms/CMSNavbar.tsx";
-import { RoomCard } from "../shared/cms/RoomCard.tsx";
 import { resultOrThrow } from "../shared/data/resultOrThrow.ts";
 import { ProjectCard } from "../shared/cms/ProjectCard.tsx";
 import { useBearStore } from "../state/useBearStore.ts";

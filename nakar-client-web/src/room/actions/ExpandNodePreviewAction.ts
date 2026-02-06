@@ -2,7 +2,7 @@ import { Action } from "./Action.ts";
 import { useBearStore } from "../../state/useBearStore.ts";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
 import { NodesActionParams } from "./NodesActionParams.ts";
-import { databaseConnectionControllerExpandNodePreview } from "../../../src-gen";
+import { canvasDatabaseConnectionControllerExpandNodePreview } from "../../../src-gen";
 
 export class ExpandNodePreviewAction extends Action<NodesActionParams> {
   public static shared: ExpandNodePreviewAction = new ExpandNodePreviewAction();
@@ -14,9 +14,9 @@ export class ExpandNodePreviewAction extends Action<NodesActionParams> {
     const node = input.nodes[0];
     useBearStore.getState().room.scenario.expandNodePreview.open(null);
     const result = resultOrThrow(
-      await databaseConnectionControllerExpandNodePreview({
+      await canvasDatabaseConnectionControllerExpandNodePreview({
         path: {
-          roomId: input.roomContext.initialRoomData.id,
+          canvasId: input.roomContext.initialCanvasData.id,
           databaseId: node.sourceId,
         },
         query: { nodeId: node.id },
