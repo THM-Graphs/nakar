@@ -2,6 +2,7 @@ import { RoomDto } from "../../../src-gen";
 import { Card, Stack } from "react-bootstrap";
 import { RoomVisibilityDisplay } from "./RoomVisibilityDisplay.tsx";
 import { Fragment } from "react";
+import clsx from "clsx";
 
 export function RoomVisibilityEditor(props: {
   value: RoomDto["visibility"];
@@ -32,9 +33,12 @@ export function RoomVisibilityEditor(props: {
               <Stack
                 direction={"horizontal"}
                 gap={3}
-                className={
-                  "bg-body-tertiary bg-body-secondary-hover rounded ps-3 pe-3 pt-2 pb-2 border pointer"
-                }
+                className={clsx(
+                  "rounded ps-3 pe-3 pt-2 pb-2 pointer border",
+                  visibility[0] === props.value
+                    ? "bg-body-secondary bg-body-hover"
+                    : "bg-body-tertiary bg-body-secondary-hover",
+                )}
                 style={{ maxWidth: "500px" }}
                 onClick={() => {
                   props.onChange(visibility[0]);

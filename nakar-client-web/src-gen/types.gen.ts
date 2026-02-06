@@ -616,6 +616,11 @@ export type UpdateProjectRequestBodyDto = {
     title: string;
 };
 
+export type UpdateRoomRequestBodyDto = {
+    title: string;
+    visibility: 'private' | 'public' | 'unlisted';
+};
+
 export type UpdateScenarioGroupRequestBodyDto = {
     title: string;
 };
@@ -786,6 +791,27 @@ export type RoomControllerGetRoomData = {
 export type RoomControllerGetRoomResponse = (RoomDto);
 
 export type RoomControllerGetRoomError = unknown;
+
+export type RoomControllerUpdateRoomData = {
+    body: UpdateRoomRequestBodyDto;
+    path: {
+        roomId: string;
+    };
+};
+
+export type RoomControllerUpdateRoomResponse = (RoomDto);
+
+export type RoomControllerUpdateRoomError = unknown;
+
+export type RoomControllerDeleteRoomData = {
+    path: {
+        roomId: string;
+    };
+};
+
+export type RoomControllerDeleteRoomResponse = (unknown);
+
+export type RoomControllerDeleteRoomError = unknown;
 
 export type RoomControllerCreateRoomData = {
     body: CreateRoomRequestBodyDto;

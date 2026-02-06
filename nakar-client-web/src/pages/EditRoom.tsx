@@ -4,7 +4,9 @@ import { useState } from "react";
 import {
   projectControllerGetProject,
   ProjectPageDto,
+  roomControllerDeleteRoom,
   roomControllerGetRoom,
+  roomControllerUpdateRoom,
   RoomDto,
 } from "../../src-gen";
 import { resultOrThrow } from "../shared/data/resultOrThrow.ts";
@@ -86,22 +88,23 @@ export function EditRoom() {
                 event.preventDefault();
                 setLoading(true);
                 setError(null);
-                // updateRoom({
-                //   path: { roomId: room.id },
-                //   body: {
-                //     title: title,
-                //   },
-                // })
-                //   .then(resultOrThrow)
-                //   .then((result) => {
-                //     return navigate(Router.getRoomEditUrl(result.id));
-                //   })
-                //   .catch((error: unknown) => {
-                //     setError(error);
-                //   })
-                //   .finally(() => {
-                //     setLoading(false);
-                //   });
+                roomControllerUpdateRoom({
+                  path: { roomId: room.id },
+                  body: {
+                    title: title,
+                    visibility: visibility,
+                  },
+                })
+                  .then(resultOrThrow)
+                  .then((result) => {
+                    return navigate(Router.getProjectPath(project.id));
+                  })
+                  .catch((error: unknown) => {
+                    setError(error);
+                  })
+                  .finally(() => {
+                    setLoading(false);
+                  });
               }}
             >
               <Stack gap={3}>
@@ -150,19 +153,19 @@ export function EditRoom() {
 
                       setLoading(true);
                       setError(null);
-                      // deleteRoom({
-                      //   path: { projectId: room.id },
-                      // })
-                      //   .then(resultOrThrow)
-                      //   .then(() => {
-                      //     return navigate(Router.getHomeUrl());
-                      //   })
-                      //   .catch((error: unknown) => {
-                      //     setError(error);
-                      //   })
-                      //   .finally(() => {
-                      //     setLoading(false);
-                      //   });
+                      roomControllerDeleteRoom({
+                        path: { roomId: room.id },
+                      })
+                        .then(resultOrThrow)
+                        .then(() => {
+                          return navigate(Router.getProjectPath(project.id));
+                        })
+                        .catch((error: unknown) => {
+                          setError(error);
+                        })
+                        .finally(() => {
+                          setLoading(false);
+                        });
                     }}
                   ></CMSButton>
                 </Stack>
