@@ -5,7 +5,7 @@ import { SocketState } from "../ws/SocketState.ts";
 import { displayStringForState } from "../ws/displayStringForState.ts";
 import { useBearStore } from "../../state/useBearStore.ts";
 
-export function SocketStateDisplay() {
+export function SocketStateDisplay(props: { className?: string }) {
   const socketState = useBearStore((s) => s.room.websockets.state);
 
   return (
@@ -18,6 +18,7 @@ export function SocketStateDisplay() {
         className={clsx(
           "justify-content-center align-items-center flex-grow-0 flex-shrink-0 ps-2 pe-2",
           colorForState(socketState),
+          props.className,
         )}
       >
         <i

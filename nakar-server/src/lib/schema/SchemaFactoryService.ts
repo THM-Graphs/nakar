@@ -67,6 +67,7 @@ export class SchemaFactoryService {
       title: databaseDBDTO.title ?? '',
       connectionUrl: databaseDBDTO.connectionUrl ?? '',
       browserUrl: databaseDBDTO.browserUrl ?? '',
+      database: databaseDBDTO.database ?? '',
     };
   }
 

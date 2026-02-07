@@ -45,6 +45,7 @@ import { GraphDataToggle } from "../room/data-table/GraphDataToggle.tsx";
 import { useAppContext } from "../state/AppContextData.ts";
 import { Router } from "../routing/Router.ts";
 import { usePageTitle } from "../routing/usePageTitle.ts";
+import { NavbarButton } from "../shared/elements/NavbarButton.tsx";
 
 const CanvasContext: Context<CanvasContextData | null> =
   createContext<CanvasContextData | null>(null);
@@ -212,7 +213,7 @@ export function CanvasPage() {
             <AppNavbar
               left={
                 <>
-                  <Stack direction={"horizontal"} gap={1}>
+                  <Stack>
                     <Stack direction={"horizontal"}>
                       <ActionNavbarButton
                         action={CloseRoomAction.shared}
@@ -222,6 +223,15 @@ export function CanvasPage() {
                       >
                         <NavbarLogo></NavbarLogo>
                       </ActionNavbarButton>
+                      <NavbarButton
+                        title={canvasContext.initialRoomData.title}
+                        onClick={async () => {
+                          await navigate(
+                            Router.getProjectPath(canvasContext.projectId),
+                          );
+                        }}
+                      ></NavbarButton>
+                      <SocketStateDisplay></SocketStateDisplay>
                     </Stack>
                     <MenuBar></MenuBar>
                   </Stack>
@@ -231,7 +241,6 @@ export function CanvasPage() {
               right={
                 <>
                   <AuthButton></AuthButton>
-                  <SocketStateDisplay></SocketStateDisplay>
                 </>
               }
               className=""

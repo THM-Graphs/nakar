@@ -13,15 +13,20 @@ export class DatabaseConnectionDto {
   @ApiProperty()
   public connectionUrl: string;
 
+  @ApiProperty()
+  public database: string;
+
   public constructor(data: {
     id: string;
     title: string;
     browserUrl: string;
     connectionUrl: string;
+    database: string;
   }) {
     this.id = data.id;
     this.title = data.title;
     this.browserUrl = data.browserUrl;
     this.connectionUrl = data.connectionUrl;
+    this.database = data.database;
   }
 }

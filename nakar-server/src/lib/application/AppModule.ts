@@ -18,6 +18,7 @@ import { CanvasController } from '../http/routes/canvas/CanvasController';
 import { CanvasDatabaseConnectionController } from '../http/routes/canvas-database-connection/CanvasDatabaseConnectionController';
 import { CanvasNoteController } from '../http/routes/canvas-note/CanvasNoteController';
 import { ActionController } from '../http/routes/canvas-action/ActionController';
+import { DatabaseConnectionController } from '../http/routes/database-connection/DatabaseConnectionController';
 
 @Module({
   controllers: [
@@ -27,6 +28,7 @@ import { ActionController } from '../http/routes/canvas-action/ActionController'
     ScenarioGroupController,
     ScenarioController,
     RoomController,
+    DatabaseConnectionController,
     CanvasController,
     CanvasNoteController,
     CanvasDatabaseConnectionController,

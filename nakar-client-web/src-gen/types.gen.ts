@@ -125,6 +125,7 @@ export type DatabaseConnectionDto = {
     title: string;
     browserUrl: string;
     connectionUrl: string;
+    database: string;
 };
 
 export type DatabaseStatsLabelDto = {
@@ -596,6 +597,19 @@ export type StartPageRoomDto = {
     joinCanvasId: string;
 };
 
+export type TestDatabaseConnectionRequestBodyDto = {
+    id: (string) | null;
+    username: (string) | null;
+    password: (string) | null;
+    database: (string) | null;
+    connectionUrl: string;
+};
+
+export type TestDatabaseConnectionResponseBodyDto = {
+    success: boolean;
+    message: string;
+};
+
 export type UngrabNodeWsdto = {
     type: 'UngrabNodeWsdto';
     node: PhysicalNodeDto;
@@ -605,6 +619,16 @@ export type type23 = 'UngrabNodeWsdto';
 
 export type UnlockNodesRequestBodyDto = {
     nodes: Array<(string)>;
+};
+
+export type UpdateDatabaseConnectionRequestBodyDto = {
+    title: string;
+    username: (string) | null;
+    password: (string) | null;
+    database: string;
+    connectionUrl: string;
+    browserUrl: string;
+    credentialStoreConsent: boolean;
 };
 
 export type UpdateNoteRequestBodyDto = {
@@ -824,6 +848,61 @@ export type RoomControllerCreateRoomData = {
 export type RoomControllerCreateRoomResponse = (RoomDto);
 
 export type RoomControllerCreateRoomError = unknown;
+
+export type DatabaseConnectionControllerCreateDatabaseConnectionData = {
+    path: {
+        projectId: string;
+    };
+};
+
+export type DatabaseConnectionControllerCreateDatabaseConnectionResponse = (DatabaseConnectionDto);
+
+export type DatabaseConnectionControllerCreateDatabaseConnectionError = unknown;
+
+export type DatabaseConnectionControllerTestDatabaseConnectionData = {
+    body: TestDatabaseConnectionRequestBodyDto;
+    path: {
+        projectId: string;
+    };
+};
+
+export type DatabaseConnectionControllerTestDatabaseConnectionResponse = (TestDatabaseConnectionResponseBodyDto);
+
+export type DatabaseConnectionControllerTestDatabaseConnectionError = unknown;
+
+export type DatabaseConnectionControllerDeleteDatabaseConnectionData = {
+    path: {
+        databaseConnectionId: string;
+        projectId: string;
+    };
+};
+
+export type DatabaseConnectionControllerDeleteDatabaseConnectionResponse = (unknown);
+
+export type DatabaseConnectionControllerDeleteDatabaseConnectionError = unknown;
+
+export type DatabaseConnectionControllerGetDatabaseConnectionData = {
+    path: {
+        databaseConnectionId: string;
+        projectId: string;
+    };
+};
+
+export type DatabaseConnectionControllerGetDatabaseConnectionResponse = (DatabaseConnectionDto);
+
+export type DatabaseConnectionControllerGetDatabaseConnectionError = unknown;
+
+export type DatabaseConnectionControllerUpdateDatabaseConnectionData = {
+    body: UpdateDatabaseConnectionRequestBodyDto;
+    path: {
+        databaseConnectionId: string;
+        projectId: string;
+    };
+};
+
+export type DatabaseConnectionControllerUpdateDatabaseConnectionResponse = (DatabaseConnectionDto);
+
+export type DatabaseConnectionControllerUpdateDatabaseConnectionError = unknown;
 
 export type CanvasControllerGetCanvasData = {
     path: {

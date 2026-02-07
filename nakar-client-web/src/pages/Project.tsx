@@ -119,6 +119,7 @@ export function Project() {
                   <DatabaseConnectionCard
                     key={r.id}
                     databaseConnection={r}
+                    project={projectContext}
                   ></DatabaseConnectionCard>
                 ))}
                 <CMSEmptyHint list={projectContext.databases}></CMSEmptyHint>

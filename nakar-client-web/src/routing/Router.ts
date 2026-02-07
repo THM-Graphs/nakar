@@ -36,4 +36,11 @@ export class Router {
   ): string {
     return `/project/${projectId}/scenario-group/${scenarioGroupId}/edit`;
   }
+
+  public static getDatabaseConnectionEditUrl(
+    projectId: string,
+    databaseId: string,
+  ): string {
+    return `/project/${projectId}/database-connection/${databaseId}/edit`;
+  }
 }

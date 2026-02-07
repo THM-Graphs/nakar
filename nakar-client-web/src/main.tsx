@@ -28,6 +28,10 @@ import {
 } from "./pages/EditScenarioGroup.tsx";
 import { ScrollToTopWrapper } from "./routing/ScrollToTopWrapper.ts";
 import { EditRoom, EditRoomLoader } from "./pages/EditRoom.tsx";
+import {
+  EditDatabaseConnection,
+  EditDatabaseConnectionLoader,
+} from "./pages/EditDatabaseConnection.tsx";
 
 async function bootstrap() {
   bootstrapTheme();
@@ -120,6 +124,11 @@ async function bootstrap() {
           path: "/project/:projectId/scenario-group/:scenarioGroupId/scenario/:scenarioId/edit",
           element: <EditScenario></EditScenario>,
           loader: EditScenarioLoader,
+        },
+        {
+          path: "/project/:projectId/database-connection/:databaseConnectionId/edit",
+          element: <EditDatabaseConnection></EditDatabaseConnection>,
+          loader: EditDatabaseConnectionLoader,
         },
         {
           path: "/project/:projectId/room/:roomId/edit",
