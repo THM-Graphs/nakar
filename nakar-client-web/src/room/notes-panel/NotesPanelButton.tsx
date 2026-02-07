@@ -10,7 +10,6 @@ export function NotesPanelButton() {
     <NavbarButton
       icon={"sticky"}
       selected={leftPanel === "notes"}
-      size={"big"}
       className={"align-self-start flex-grow-0"}
       onToggle={(selected) => {
         if (selected) {

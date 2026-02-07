@@ -11,7 +11,6 @@ export function SearchPanelButton(props: { className?: string }) {
     <NavbarButton
       icon={"search"}
       selected={leftPanel === "search"}
-      size={"big"}
       className={clsx("align-self-start flex-grow-0", props.className)}
       onToggle={(selected) => {
         if (selected) {

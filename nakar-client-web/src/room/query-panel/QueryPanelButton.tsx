@@ -10,7 +10,6 @@ export function QueryPanelButton() {
     <NavbarButton
       icon={"play-circle"}
       selected={leftPanel === "query"}
-      size={"big"}
       className={"align-self-start flex-grow-0"}
       onToggle={(selected) => {
         if (selected) {

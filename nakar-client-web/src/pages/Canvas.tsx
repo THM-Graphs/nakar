@@ -44,6 +44,7 @@ import { useAppContext } from "../state/AppContextData.ts";
 import { Router } from "../routing/Router.ts";
 import { usePageTitle } from "../routing/usePageTitle.ts";
 import { NavbarButton } from "../shared/elements/NavbarButton.tsx";
+import { CanvasToolbar } from "../room/canvas/CanvasToolbar.tsx";
 
 const CanvasContext: Context<CanvasContextData | null> =
   createContext<CanvasContextData | null>(null);
@@ -210,7 +211,7 @@ export function Canvas() {
   return (
     <CanvasContext.Provider value={canvasContext}>
       <Stack style={{ height: "100%" }} className={"position-relative bg-body"}>
-        <Stack gap={1} className={"pb-3"}>
+        <Stack gap={3} className={"pb-3"}>
           <Stack className="flex-grow-0 flex-shrink-0">
             <AppNavbar
               left={
@@ -254,25 +255,44 @@ export function Canvas() {
           </Stack>
           <Stack
             direction={"horizontal"}
-            className={"align-items-start flex-grow-1 position-relative"}
-            style={{ height: "100px" }}
-            gap={1}
+            className={"ps-3 pe-3 flex-shrink-1"}
+            gap={3}
           >
             <Stack
-              direction={"vertical"}
+              direction={"horizontal"}
               className={
-                "bg-body-tertiary border border-start-0 flex-grow-0 flex-shrink-0 z-1 rounded-end align-self-start shadow-sm"
+                "bg-body-tertiary border flex-grow-0 flex-shrink-0 z-1 shadow-sm rounded align-self-start"
               }
             >
-              <ScenariosPanelButton
-                className={"rounded-top-end"}
-              ></ScenariosPanelButton>
+              <ScenariosPanelButton></ScenariosPanelButton>
               <QueryPanelButton></QueryPanelButton>
               <NotesPanelButton></NotesPanelButton>
-              <SearchPanelButton
-                className={"rounded-bottom-end"}
-              ></SearchPanelButton>
+              <SearchPanelButton></SearchPanelButton>
             </Stack>
+            <CanvasToolbar
+              className={
+                "border bg-body-tertiary shadow-sm rounded flex-grow-0 flex-shrink-1"
+              }
+            ></CanvasToolbar>
+            <Stack
+              direction="horizontal"
+              className={
+                "bg-body-tertiary border z-1 rounded shadow-sm flex-grow-0 flex-shrink-0 align-self-start"
+              }
+            >
+              <InspectorPanelButton></InspectorPanelButton>
+              <HistogramPanelButton></HistogramPanelButton>
+              <VisualizationPanelButton></VisualizationPanelButton>
+            </Stack>
+          </Stack>
+          <Stack
+            direction={"horizontal"}
+            className={
+              "align-items-start flex-grow-1 position-relative ps-3 pe-3"
+            }
+            style={{ height: "100px" }}
+            gap={3}
+          >
             {leftPanel != null && (
               <Stack className={"flex-grow-0 flex-shrink-0"}>
                 {leftPanel === "scenarios" && <ScenariosPanel></ScenariosPanel>}
@@ -295,25 +315,6 @@ export function Canvas() {
                 )}
               </Stack>
             )}
-            <Stack
-              className={"align-self-start flex-grow-0 flex-shrink-0"}
-              gap={1}
-            >
-              <Stack
-                direction="vertical"
-                className={
-                  "bg-body-tertiary border border-end-0 z-1 rounded-start shadow-sm"
-                }
-              >
-                <InspectorPanelButton
-                  className={"rounded-top-start"}
-                ></InspectorPanelButton>
-                <HistogramPanelButton></HistogramPanelButton>
-                <VisualizationPanelButton
-                  className={"rounded-bottom-start"}
-                ></VisualizationPanelButton>
-              </Stack>
-            </Stack>
           </Stack>
 
           {socketState.type !== "connected" && (

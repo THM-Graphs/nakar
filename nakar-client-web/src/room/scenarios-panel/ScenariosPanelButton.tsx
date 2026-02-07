@@ -9,7 +9,6 @@ export function ScenariosPanelButton(props: { className?: string }) {
 
   return (
     <NavbarButton
-      size={"big"}
       icon={"easel"}
       selected={leftPanel === "scenarios"}
       className={clsx("align-self-start flex-grow-0", props.className)}

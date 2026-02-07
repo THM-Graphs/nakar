@@ -88,7 +88,7 @@ export const NavbarButton = forwardRef<
           gap={2}
           direction={"horizontal"}
           className={clsx(
-            "vertical-align-baseline",
+            "align-items-center",
             props.size == "sm" && "ps-1 pe-1 pt-0 pb-0",
             props.size == null && "ps-2 pe-2 pt-1 pb-1",
             props.size == "big" && "ps-3 pe-3 pt-2 pb-2 fs-5",
@@ -96,9 +96,11 @@ export const NavbarButton = forwardRef<
           style={{ opacity: disabled ? 0.3 : 1 }}
         >
           {loading ? (
-            <Spinner animation="border" role="status" size={"sm"}>
-              <span className="visually-hidden">Loading…</span>
-            </Spinner>
+            <div style={{ width: "14px", height: "21px" }}>
+              <Spinner animation="border" role="status" size={"sm"}>
+                <span className="visually-hidden">Loading…</span>
+              </Spinner>
+            </div>
           ) : (
             props.icon && (
               <i

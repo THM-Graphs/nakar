@@ -7,7 +7,6 @@ import { PerformanceDisplay } from "./PerformanceDisplay.tsx";
 import { ProgressDisplay } from "./ProgressDisplay.tsx";
 import { CanvasBottomFloatingToolbar } from "./CanvasBottomFloatingToolbar.tsx";
 import { CanvasControls } from "./CanvasControls.tsx";
-import { CanvasToolbar } from "./CanvasToolbar.tsx";
 
 export function CanvasSurface() {
   const tabs = useBearStore((s) => s.room.canvas.tabs);
@@ -17,15 +16,12 @@ export function CanvasSurface() {
     <Stack
       className={"flex-grow-1 flex-shrink-1 align-items-stretch overflow-auto"}
       direction={"vertical"}
-      gap={1}
+      gap={3}
     >
-      <CanvasToolbar
-        className={"border bg-body-tertiary shadow-sm rounded flex-grow-0"}
-      ></CanvasToolbar>
       {tabs.selected == "graph" ? (
         <Stack className={"justify-content-between"}>
           <Stack direction={"horizontal"} className={"justify-content-between"}>
-            <Stack className={"flex-grow-0"} gap={1}>
+            <Stack className={"flex-grow-0"} gap={3}>
               <Labels className={"z-1"}></Labels>
               <CanvasControls
                 className={"align-self-start z-1"}

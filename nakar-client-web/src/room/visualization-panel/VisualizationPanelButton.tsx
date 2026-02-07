@@ -11,7 +11,6 @@ export function VisualizationPanelButton(props: { className?: string }) {
     <NavbarButton
       icon={"eye"}
       selected={rightPanel === "visualization"}
-      size={"big"}
       className={clsx(props.className)}
       onToggle={(selected) => {
         if (selected) {

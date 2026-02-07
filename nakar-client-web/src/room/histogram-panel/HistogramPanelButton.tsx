@@ -9,7 +9,6 @@ export function HistogramPanelButton() {
   return (
     <NavbarButton
       selected={rightPanels === "histogram"}
-      size={"big"}
       onToggle={(selected) => {
         if (selected) {
           show();
