@@ -7,7 +7,7 @@ import { useColorSchema } from "../color/useColorSchema.ts";
 import { DropdownButton } from "../../shared/elements/DropdownButton.tsx";
 import { labelActions } from "../actions/groups/labelActions.ts";
 import { ActionDropdownItem } from "../actions/ActionDropdownItem.tsx";
-import { useCanvasContext } from "../../pages/CanvasPage.tsx";
+import { useCanvasContext } from "../../pages/Canvas.tsx";
 import { LabelDto } from "../../../src-gen";
 import { LabelViewSettingsEditor } from "../visualization-panel/LabelViewSettingsEditor.tsx";
 

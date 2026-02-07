@@ -1,5 +1,5 @@
 import { DetailPane } from "./DetailPane.tsx";
-import { useCanvasContext } from "../../pages/CanvasPage.tsx";
+import { useCanvasContext } from "../../pages/Canvas.tsx";
 import { Stack } from "react-bootstrap";
 import { Label } from "../labels/Label.tsx";
 import { DynamicList } from "../../shared/elements/DynamicList.tsx";

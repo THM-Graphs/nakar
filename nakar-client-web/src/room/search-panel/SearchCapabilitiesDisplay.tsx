@@ -11,10 +11,7 @@ import {
   canvasDatabaseConnectionControllerGetSearchCapabilites,
   GetSearchCapabilitiesResponseBodyDto,
 } from "../../../src-gen";
-import {
-  CanvasContextData,
-  useCanvasContext,
-} from "../../pages/CanvasPage.tsx";
+import { CanvasContextData, useCanvasContext } from "../../pages/Canvas.tsx";
 
 export function SearchCapabilitiesDisplay(props: {
   databaseId: string | null;

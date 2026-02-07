@@ -6,7 +6,7 @@ import {
   actionControllerSetViewSettings,
   LiveCanvasViewSettingsDto,
 } from "../../../src-gen";
-import { useCanvasContext } from "../../pages/CanvasPage.tsx";
+import { useCanvasContext } from "../../pages/Canvas.tsx";
 
 export function VisualizationPanel() {
   const roomContext = useCanvasContext();

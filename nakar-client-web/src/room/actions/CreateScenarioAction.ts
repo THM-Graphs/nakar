@@ -1,5 +1,5 @@
 import { Action } from "./Action.ts";
-import { CanvasContextData } from "../../pages/CanvasPage.tsx";
+import { CanvasContextData } from "../../pages/Canvas.tsx";
 
 export type CreateScenarioActionParams = { roomContext: CanvasContextData };
 

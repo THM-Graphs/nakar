@@ -28,7 +28,7 @@ export class RemoveLabelAction extends Action<LabelActionParams> {
   }
 
   icon(): string | null {
-    return "eye-slash";
+    return "trash";
   }
 
   slug(): string {

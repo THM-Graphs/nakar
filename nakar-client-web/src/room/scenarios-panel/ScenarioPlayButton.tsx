@@ -8,7 +8,6 @@ export function ScnearioPlayButton(props: {
   return (
     <Button
       variant={"link"}
-      size={"sm"}
       onClick={(event) => {
         event.stopPropagation();
         props.onClick(event);

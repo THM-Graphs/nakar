@@ -1,5 +1,5 @@
 import { DetailPane } from "./DetailPane.tsx";
-import { useCanvasContext } from "../../pages/CanvasPage.tsx";
+import { useCanvasContext } from "../../pages/Canvas.tsx";
 import { Stack } from "react-bootstrap";
 import { NodePreviewDisplay } from "./NodePreviewDisplay.tsx";
 import { relationshipActions } from "../actions/groups/relationshipActions.ts";

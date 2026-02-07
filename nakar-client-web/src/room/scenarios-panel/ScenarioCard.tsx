@@ -4,7 +4,7 @@ import { QueryDisplay } from "./QueryDisplay.tsx";
 import { ScenarioCardSection } from "./ScenarioCardSection.tsx";
 import { ScenarioDto, ScenarioGroupDto } from "../../../src-gen";
 import { Link } from "react-router";
-import { useCanvasContext } from "../../pages/CanvasPage.tsx";
+import { useCanvasContext } from "../../pages/Canvas.tsx";
 import { Router } from "../../routing/Router.ts";
 import { CMSButton } from "../../shared/cms/CMSButton.tsx";
 import { useIsLoggedIn } from "../../state/useIsLoggedIn.ts";

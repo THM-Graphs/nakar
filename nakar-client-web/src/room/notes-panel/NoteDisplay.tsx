@@ -5,7 +5,7 @@ import { NodePreviewDisplay } from "../inspector-panel/NodePreviewDisplay.tsx";
 import clsx from "clsx";
 import { ActionNavbarButton } from "../actions/ActionNavbarButton.tsx";
 import { RemoveNoteAction } from "../actions/RemoveNoteAction.ts";
-import { useCanvasContext } from "../../pages/CanvasPage.tsx";
+import { useCanvasContext } from "../../pages/Canvas.tsx";
 import { DynamicList } from "../../shared/elements/DynamicList.tsx";
 import { EditNoteAction } from "../actions/EditNoteAction.ts";
 import { NoteDto } from "../../../src-gen";

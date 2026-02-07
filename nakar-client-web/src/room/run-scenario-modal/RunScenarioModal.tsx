@@ -1,7 +1,7 @@
 import { useBearStore } from "../../state/useBearStore.ts";
 import { Modal, Stack } from "react-bootstrap";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
-import { useCanvasContext } from "../../pages/CanvasPage.tsx";
+import { useCanvasContext } from "../../pages/Canvas.tsx";
 import { Panel } from "../../shared/elements/Panel.tsx";
 import { NavbarButton } from "../../shared/elements/NavbarButton.tsx";
 import { ScenarioIcon } from "../scenarios-panel/ScenarioIcon.tsx";

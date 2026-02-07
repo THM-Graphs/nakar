@@ -3,7 +3,7 @@ import { Panel } from "../../shared/elements/Panel.tsx";
 import { NodeDetails } from "./NodeDetails.tsx";
 import { EdgeDetails } from "./EdgeDetails.tsx";
 import { useBearStore } from "../../state/useBearStore.ts";
-import { useCanvasContext } from "../../pages/CanvasPage.tsx";
+import { useCanvasContext } from "../../pages/Canvas.tsx";
 import { Collapsable } from "../../shared/elements/Collapsable.tsx";
 import { DynamicList } from "../../shared/elements/DynamicList.tsx";
 import { Stack } from "react-bootstrap";

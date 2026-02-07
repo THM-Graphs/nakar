@@ -9,6 +9,11 @@ export function ProgressDisplay() {
   const progress: ProgressWsdto | null = useBearStore(
     (s) => s.room.ui.progress,
   );
+  // const progress: ProgressWsdto | null = {
+  //   progress: null,
+  //   message: "Loading...",
+  //   type: "ProgressWsdto",
+  // };
 
   useEffect(() => {
     const timeout = setInterval(() => {

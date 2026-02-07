@@ -1,4 +1,4 @@
-import { CanvasContextData } from "../../pages/CanvasPage.tsx";
+import { CanvasContextData } from "../../pages/Canvas.tsx";
 import { NodeDto } from "../../../src-gen";
 
 export type NodesActionParams = {

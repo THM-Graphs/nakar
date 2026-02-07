@@ -1,6 +1,6 @@
 import { Action } from "./Action.ts";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
-import { CanvasContextData } from "../../pages/CanvasPage.tsx";
+import { CanvasContextData } from "../../pages/Canvas.tsx";
 import { actionControllerUndo } from "../../../src-gen";
 
 export type UndoActionParams = {

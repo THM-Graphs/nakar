@@ -1,6 +1,6 @@
 import { Stack } from "react-bootstrap";
 import { Label } from "../labels/Label.tsx";
-import { CanvasContextData } from "../../pages/CanvasPage.tsx";
+import { CanvasContextData } from "../../pages/Canvas.tsx";
 import { ClipboardButton } from "../../shared/elements/ClipboardButton.tsx";
 import { ActionNavbarButton } from "../actions/ActionNavbarButton.tsx";
 import { SpawnNodeAction } from "../actions/SpawnNodeAction.ts";

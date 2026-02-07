@@ -15,7 +15,7 @@ import { ActionDropdownItem } from "../actions/ActionDropdownItem.tsx";
 import { relationshipActions } from "../actions/groups/relationshipActions.ts";
 import { EdgeDto, NodeDto } from "../../../src-gen";
 import { useIsLoggedIn } from "../../state/useIsLoggedIn.ts";
-import { useCanvasContext } from "../../pages/CanvasPage.tsx";
+import { useCanvasContext } from "../../pages/Canvas.tsx";
 import { NodeParameterizedScenarioEntry } from "../inspector-panel/NodeParameterizedScenarioEntry.tsx";
 
 export function CanvasContextMenu() {

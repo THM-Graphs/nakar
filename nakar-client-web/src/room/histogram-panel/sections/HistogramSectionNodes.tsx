@@ -1,5 +1,5 @@
 import { ValueDisplay } from "../ValueDisplay.tsx";
-import { useCanvasContext } from "../../../pages/CanvasPage.tsx";
+import { useCanvasContext } from "../../../pages/Canvas.tsx";
 import { useBearStore } from "../../../state/useBearStore.ts";
 import { DynamicList } from "../../../shared/elements/DynamicList.tsx";
 import { nodeActions } from "../../actions/groups/nodeActions.ts";

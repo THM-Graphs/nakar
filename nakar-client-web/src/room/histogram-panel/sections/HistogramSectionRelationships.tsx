@@ -2,7 +2,7 @@ import { ValueDisplay } from "../ValueDisplay.tsx";
 import { useBearStore } from "../../../state/useBearStore.ts";
 import { DynamicList } from "../../../shared/elements/DynamicList.tsx";
 import { relationshipActions } from "../../actions/groups/relationshipActions.ts";
-import { useCanvasContext } from "../../../pages/CanvasPage.tsx";
+import { useCanvasContext } from "../../../pages/Canvas.tsx";
 
 export function HistogramSectionRelationships() {
   const roomContext = useCanvasContext();

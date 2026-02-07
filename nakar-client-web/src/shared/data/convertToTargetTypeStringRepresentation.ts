@@ -17,5 +17,5 @@ export function convertToTargetTypeStringRepresentation(
         .with(P.boolean, (s) => (s ? "1" : "0"))
         .otherwise((s) => JSON.stringify(s)),
     )
-    .otherwise((s) => JSON.stringify(s));
+    .otherwise(() => JSON.stringify(argumentValue));
 }

@@ -26,6 +26,7 @@ export function CanvasControls(props: { className?: string }) {
         }}
         hideTitle={true}
         className={"mb-3"}
+        tooltipPlacement={"right"}
       ></ActionNavbarButton>
       <ActionNavbarButton
         action={ZoomInAction.shared}
@@ -35,6 +36,7 @@ export function CanvasControls(props: { className?: string }) {
           selectedTab,
         }}
         hideTitle={true}
+        tooltipPlacement={"right"}
       ></ActionNavbarButton>
       <ActionNavbarButton
         action={ZoomToFitAction.shared}
@@ -44,6 +46,7 @@ export function CanvasControls(props: { className?: string }) {
           selectedTab,
         }}
         hideTitle={true}
+        tooltipPlacement={"right"}
       ></ActionNavbarButton>
       <ActionNavbarButton
         action={ZoomOutAction.shared}
@@ -54,11 +57,13 @@ export function CanvasControls(props: { className?: string }) {
         }}
         hideTitle={true}
         className={"mb-3"}
+        tooltipPlacement={"right"}
       ></ActionNavbarButton>
       <ActionNavbarButton
         action={HideLabelsAction.shared}
         params={{ hideLabels, setHideLabels, selectedTab }}
         hideTitle={true}
+        tooltipPlacement={"right"}
       ></ActionNavbarButton>
     </Stack>
   );

@@ -14,7 +14,7 @@ import {
   NodePreviewDto,
   PostSearchResponseBodyDto,
 } from "../../../src-gen";
-import { useCanvasContext } from "../../pages/CanvasPage.tsx";
+import { useCanvasContext } from "../../pages/Canvas.tsx";
 
 export function SearchPanel() {
   const roomContext = useCanvasContext();

@@ -1,14 +1,13 @@
 import { useBearStore } from "../../state/useBearStore.ts";
 import { Stack } from "react-bootstrap";
 import { RelayoutAction } from "../actions/RelayoutAction.ts";
-import { useCanvasContext } from "../../pages/CanvasPage.tsx";
+import { useCanvasContext } from "../../pages/Canvas.tsx";
 import { UnlockAllNodesAction } from "../actions/UnlockAllNodesAction.ts";
 import { ConnectResultNodesAction } from "../actions/ConnectResultNodesAction.ts";
 import { RemoveDanglingNodesAction } from "../actions/RemoveDanglingNodesAction.ts";
 import { CompressRelationshipsAction } from "../actions/CompressRelationshipsAction.ts";
 import { CanvasActionsGroup } from "./CanvasActionsGroup.tsx";
 import { CanvasActionsAction } from "./CanvasActionsAction.tsx";
-import { ActionNavbarButton } from "../actions/ActionNavbarButton.tsx";
 import { UndoAction } from "../actions/UndoAction.ts";
 import { RedoAction } from "../actions/RedoAction.ts";
 import { RerunScenarioAction } from "../actions/RerunScenarioAction.ts";
@@ -43,26 +42,22 @@ export function CanvasActions() {
   const isLoggedIn = useIsLoggedIn();
 
   return (
-    <Stack direction={"horizontal"} className={""}>
-      <CanvasActionsGroup title={""} fillWidth={true}>
-        <ActionNavbarButton
+    <Stack direction={"horizontal"} className={"justify-content-start"}>
+      <CanvasActionsGroup title={""} className={"flex-shrink-0"}>
+        <CanvasActionsAction
           action={UndoAction.shared}
           params={{
             roomContext: roomContext,
             undoAction: undoAction,
           }}
-          hideTitle={true}
-          tooltipPlacement={"bottom"}
-        ></ActionNavbarButton>
-        <ActionNavbarButton
+        ></CanvasActionsAction>
+        <CanvasActionsAction
           action={RedoAction.shared}
           params={{
             roomContext: roomContext,
             redoAction,
           }}
-          hideTitle={true}
-          tooltipPlacement={"bottom"}
-        ></ActionNavbarButton>
+        ></CanvasActionsAction>
       </CanvasActionsGroup>
       <CanvasActionsGroup title={"Layout"}>
         <CanvasActionsAction

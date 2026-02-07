@@ -13,7 +13,7 @@ export function ScenarioQueryParameterBadge(props: {
         direction={"horizontal"}
         gap={1}
         className={
-          "bg-body-tertiary rounded-pill ps-2 pe-2 align-items-baseline align-self-baseline border"
+          "bg-body-tertiary rounded-pill ps-2 pe-2 align-items-baseline align-self-center border"
         }
         style={{ fontSize: "12px" }}
       >

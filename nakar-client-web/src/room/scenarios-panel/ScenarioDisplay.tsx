@@ -2,7 +2,7 @@ import { ScenarioCard } from "./ScenarioCard.tsx";
 import { Collapsable } from "../../shared/elements/Collapsable.tsx";
 import { useBearStore } from "../../state/useBearStore.ts";
 import { useCallback } from "react";
-import { useCanvasContext } from "../../pages/CanvasPage.tsx";
+import { useCanvasContext } from "../../pages/Canvas.tsx";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
 import { ScenarioTitleAndBadges } from "./ScenarioTitleAndBadges.tsx";
 import {

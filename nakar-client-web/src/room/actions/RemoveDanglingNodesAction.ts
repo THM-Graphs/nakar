@@ -1,7 +1,7 @@
 import { Action } from "./Action.ts";
 import { SelectedCanvasTab } from "../../state/SelectedCanvasTab.ts";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
-import { CanvasContextData } from "../../pages/CanvasPage.tsx";
+import { CanvasContextData } from "../../pages/Canvas.tsx";
 import {
   actionControllerRemoveDanglingNodes,
   ScenarioDto,
@@ -35,7 +35,7 @@ export class RemoveDanglingNodesAction extends Action<RemoveDanglingNodesActionP
   }
 
   icon(): string | null {
-    return "eye-slash";
+    return "slash-circle";
   }
 
   slug(): string {

@@ -6,7 +6,7 @@ import { ClientInfoDropdownEntry } from "./ClientInfoDropdownEntry.tsx";
 import { ServerInfoDropdownEntry } from "./ServerInfoDropdownEntry.tsx";
 import { ActionDropdownItem } from "../../room/actions/ActionDropdownItem.tsx";
 import { useBearStore } from "../../state/useBearStore.ts";
-import { useCanvasContext } from "../../pages/CanvasPage.tsx";
+import { useCanvasContext } from "../../pages/Canvas.tsx";
 import { CreateScenarioAction } from "../../room/actions/CreateScenarioAction.ts";
 import { CreateScenarioGroupAction } from "../../room/actions/CreateScenarioGroupAction.ts";
 import { SaveSVGAction } from "../../room/actions/SaveSVGAction.ts";

@@ -35,7 +35,7 @@ export class ExpandNodePreviewAction extends Action<NodesActionParams> {
   }
 
   icon(): string | null {
-    return "zoom-in";
+    return "search";
   }
 
   slug(): string {

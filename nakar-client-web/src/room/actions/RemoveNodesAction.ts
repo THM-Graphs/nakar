@@ -28,7 +28,7 @@ export class RemoveNodesAction extends Action<NodesActionParams> {
   }
 
   icon(): string | null {
-    return "eye-slash";
+    return "trash";
   }
 
   slug(): string {

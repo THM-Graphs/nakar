@@ -4,7 +4,7 @@ import { Loading } from "../../shared/elements/Loading.tsx";
 import { Alert, Stack } from "react-bootstrap";
 import { Loadable } from "../../shared/data/Loadable.ts";
 import { DynamicList } from "../../shared/elements/DynamicList.tsx";
-import { CanvasContextData } from "../../pages/CanvasPage.tsx";
+import { CanvasContextData } from "../../pages/Canvas.tsx";
 import { SearchResultEntry } from "./SearchResultEntry.tsx";
 import { NodePreviewDto } from "../../../src-gen";
 

@@ -16,9 +16,9 @@ export function ScenarioTitleAndBadges(props: {
     <Stack
       direction={"horizontal"}
       className={clsx("", props.className)}
-      gap={1}
+      gap={2}
     >
-      <Stack direction="horizontal" className="align-self-baseline">
+      <Stack direction="horizontal" className="align-self-baseline" gap={1}>
         <ScnearioPlayButton
           onClick={(event) => {
             event.stopPropagation();
@@ -34,8 +34,12 @@ export function ScenarioTitleAndBadges(props: {
           icon="plus-circle-fill"
         ></ScnearioPlayButton>
       </Stack>
-      <Stack gap={1} className={"flex-wrap"} direction={"horizontal"}>
-        <span className={"pe-1 small text-wrap align-self-baseline"}>
+      <Stack
+        gap={1}
+        className={"flex-wrap align-self-center"}
+        direction={"horizontal"}
+      >
+        <span className={"pe-1 small text-wrap align-self-center"}>
           {title}
         </span>
         {props.hideParameters !== true &&

@@ -9,7 +9,7 @@ import {
   actionControllerLoadScenario,
   ScenarioArgumentDto,
 } from "../../../src-gen";
-import { useCanvasContext } from "../../pages/CanvasPage.tsx";
+import { useCanvasContext } from "../../pages/Canvas.tsx";
 
 export function CanvasBottomToolBar() {
   const roomContext = useCanvasContext();

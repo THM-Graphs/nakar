@@ -43,7 +43,7 @@ export class LayoutLabelsCircleAction extends Action<LabelActionParams> {
   }
 
   icon(): string | null {
-    return "1-circle";
+    return "circle";
   }
 
   slug(): string {

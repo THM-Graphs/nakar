@@ -6,24 +6,22 @@ export function CanvasActionsGroup(props: {
   children?: ReactNode;
   title: string;
   className?: string;
-  fillWidth?: boolean;
 }) {
   return (
     <Stack
-      direction={"vertical"}
+      direction={"horizontal"}
       className={clsx(
-        "align-self-stretch border-end justify-content-end",
-        props.fillWidth
-          ? "flex-shrink-0 flex-grow-0"
-          : "flex-shrink-1 flex-grow-1",
+        "align-self-stretch border-end justify-content-end flex-shrink-1 flex-grow-0",
         props.className,
       )}
     >
-      <span
-        className={"text-muted small fst-italic ps-1 pe-1 align-self-center"}
-      >
-        {props.title}
-      </span>
+      {props.title.length > 0 && (
+        <span
+          className={"text-muted small fst-italic ps-2 pe-2 align-self-center"}
+        >
+          {props.title}
+        </span>
+      )}
       <Stack
         direction={"horizontal"}
         className={"flex-wrap justify-content-start"}

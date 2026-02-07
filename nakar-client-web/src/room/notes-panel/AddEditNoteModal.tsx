@@ -7,7 +7,7 @@ import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
 import clsx from "clsx";
 import { ColorPicker } from "../../shared/elements/ColorPicker.tsx";
 import { Collapsable } from "../../shared/elements/Collapsable.tsx";
-import { useCanvasContext } from "../../pages/CanvasPage.tsx";
+import { useCanvasContext } from "../../pages/Canvas.tsx";
 import {
   canvasNoteControllerPostNote,
   canvasNoteControllerUpdateNote,

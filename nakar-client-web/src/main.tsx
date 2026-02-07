@@ -11,7 +11,7 @@ import {
   redirectControllerGetUrl,
 } from "../src-gen";
 import { Start, StartLoader } from "./pages/Start.tsx";
-import { CanvasLoader, CanvasPage } from "./pages/CanvasPage.tsx";
+import { Canvas, CanvasLoader } from "./pages/Canvas.tsx";
 import { AppContext, AppContextData } from "./state/AppContextData.ts";
 import { applyTheme, bootstrapTheme } from "./shared/theme/ThemeManager.ts";
 import { useBearStore } from "./state/useBearStore.ts";
@@ -104,7 +104,7 @@ async function bootstrap() {
         },
         {
           path: "room/:roomId/canvas/:canvasId",
-          element: <CanvasPage></CanvasPage>,
+          element: <Canvas></Canvas>,
           loader: CanvasLoader,
         },
         {

@@ -29,7 +29,7 @@ import { AddEditNoteModal } from "../room/notes-panel/AddEditNoteModal.tsx";
 import { AuthButton } from "../shared/auth/AuthButton.tsx";
 import { SearchPanel } from "../room/search-panel/SearchPanel.tsx";
 import { SearchPanelButton } from "../room/search-panel/SearchPanelButton.tsx";
-import { Canvas } from "../room/canvas/Canvas.tsx";
+import { CanvasSurface } from "../room/canvas/CanvasSurface.tsx";
 import { VisualizationPanelButton } from "../room/visualization-panel/VisualizationPanelButton.tsx";
 import { VisualizationPanel } from "../room/visualization-panel/VisualizationPanel.tsx";
 import {
@@ -40,7 +40,6 @@ import {
   RoomDto,
   ScenarioCollectionDto,
 } from "../../src-gen";
-import { CanvasToolbar } from "../room/canvas/CanvasToolbar.tsx";
 import { GraphDataToggle } from "../room/data-table/GraphDataToggle.tsx";
 import { useAppContext } from "../state/AppContextData.ts";
 import { Router } from "../routing/Router.ts";
@@ -92,7 +91,7 @@ export async function CanvasLoader(
   };
 }
 
-export function CanvasPage() {
+export function Canvas() {
   const context = useAppContext();
   const canvasContext: CanvasContextData = useLoaderData();
   const setGraph = useBearStore((s) => s.room.scenario.setGraph);
@@ -217,28 +216,29 @@ export function CanvasPage() {
             <AppNavbar
               left={
                 <>
-                  <Stack>
-                    <Stack direction={"horizontal"}>
-                      <ActionNavbarButton
-                        action={CloseRoomAction.shared}
-                        params={{ navigate }}
-                        hideTitle={true}
-                        hideIcon={true}
-                      >
-                        <NavbarLogo></NavbarLogo>
-                      </ActionNavbarButton>
-                      <NavbarButton
-                        title={canvasContext.initialRoomData.title}
-                        onClick={async () => {
-                          await navigate(
-                            Router.getProjectPath(
-                              canvasContext.initialRoomData.projectId,
-                            ),
-                          );
-                        }}
-                      ></NavbarButton>
-                      <SocketStateDisplay></SocketStateDisplay>
-                    </Stack>
+                  <Stack direction={"horizontal"}>
+                    <ActionNavbarButton
+                      action={CloseRoomAction.shared}
+                      params={{ navigate }}
+                      hideTitle={true}
+                      hideIcon={true}
+                    >
+                      <NavbarLogo></NavbarLogo>
+                    </ActionNavbarButton>
+                    <NavbarButton
+                      title={
+                        <span className={"fw-bold"}>
+                          {canvasContext.initialRoomData.title}
+                        </span>
+                      }
+                      onClick={async () => {
+                        await navigate(
+                          Router.getProjectPath(
+                            canvasContext.initialRoomData.projectId,
+                          ),
+                        );
+                      }}
+                    ></NavbarButton>
                     <MenuBar></MenuBar>
                   </Stack>
                 </>
@@ -247,13 +247,11 @@ export function CanvasPage() {
               right={
                 <>
                   <AuthButton></AuthButton>
+                  <SocketStateDisplay></SocketStateDisplay>
                 </>
               }
               className=""
             ></AppNavbar>
-            <CanvasToolbar
-              className={"border-bottom bg-body-tertiary shadow-sm"}
-            ></CanvasToolbar>
           </Stack>
           <Stack
             direction={"horizontal"}
@@ -276,20 +274,28 @@ export function CanvasPage() {
                 className={"rounded-bottom-end"}
               ></SearchPanelButton>
             </Stack>
-            <Stack className={"flex-grow-0 flex-shrink-0"}>
-              {leftPanel === "scenarios" && <ScenariosPanel></ScenariosPanel>}
-              {leftPanel === "query" && <QueryPanel></QueryPanel>}
-              {leftPanel === "notes" && <NotesPanel></NotesPanel>}
-              {leftPanel === "search" && <SearchPanel></SearchPanel>}
-            </Stack>
-            <Canvas></Canvas>
-            <Stack className={"flex-grow-0 flex-shrink-0"}>
-              {rightPanel === "inspector" && <InspectorPanel></InspectorPanel>}
-              {rightPanel === "histogram" && <HistogramPanel></HistogramPanel>}
-              {rightPanel === "visualization" && (
-                <VisualizationPanel></VisualizationPanel>
-              )}
-            </Stack>
+            {leftPanel != null && (
+              <Stack className={"flex-grow-0 flex-shrink-0"}>
+                {leftPanel === "scenarios" && <ScenariosPanel></ScenariosPanel>}
+                {leftPanel === "query" && <QueryPanel></QueryPanel>}
+                {leftPanel === "notes" && <NotesPanel></NotesPanel>}
+                {leftPanel === "search" && <SearchPanel></SearchPanel>}
+              </Stack>
+            )}
+            <CanvasSurface></CanvasSurface>
+            {rightPanel != null && (
+              <Stack className={"flex-grow-0 flex-shrink-0"}>
+                {rightPanel === "inspector" && (
+                  <InspectorPanel></InspectorPanel>
+                )}
+                {rightPanel === "histogram" && (
+                  <HistogramPanel></HistogramPanel>
+                )}
+                {rightPanel === "visualization" && (
+                  <VisualizationPanel></VisualizationPanel>
+                )}
+              </Stack>
+            )}
             <Stack
               className={"align-self-start flex-grow-0 flex-shrink-0"}
               gap={1}

@@ -1,4 +1,4 @@
-import { CanvasContextData } from "../../pages/CanvasPage.tsx";
+import { CanvasContextData } from "../../pages/Canvas.tsx";
 import { EdgeDto } from "../../../src-gen";
 
 export type RelationshipsActionParams = {

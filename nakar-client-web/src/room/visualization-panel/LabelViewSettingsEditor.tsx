@@ -8,7 +8,7 @@ import {
   LiveCanvasLabelViewSettingsDto,
 } from "../../../src-gen";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
-import { useCanvasContext } from "../../pages/CanvasPage.tsx";
+import { useCanvasContext } from "../../pages/Canvas.tsx";
 
 export function LabelViewSettingsEditor(props: {
   label: string;

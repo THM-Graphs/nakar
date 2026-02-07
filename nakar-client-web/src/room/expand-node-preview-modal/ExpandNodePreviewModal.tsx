@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
 import { SelectableTableData } from "./SelectableTableData.tsx";
 import { actionControllerExpandNode } from "../../../src-gen";
-import { useCanvasContext } from "../../pages/CanvasPage.tsx";
+import { useCanvasContext } from "../../pages/Canvas.tsx";
 
 export function ExpandNodePreviewModal() {
   const roomContext = useCanvasContext();

@@ -1,7 +1,7 @@
 import { Action } from "./Action.ts";
 import { SelectedCanvasTab } from "../../state/SelectedCanvasTab.ts";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
-import { CanvasContextData } from "../../pages/CanvasPage.tsx";
+import { CanvasContextData } from "../../pages/Canvas.tsx";
 import {
   actionControllerConnectResultNodes,
   ScenarioDto,
@@ -33,7 +33,7 @@ export class ConnectResultNodesAction extends Action<ConnectResultNodesActionPar
   }
 
   icon(): string | null {
-    return "intersect";
+    return "link-45deg";
   }
 
   slug(): string {
