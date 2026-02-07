@@ -12,45 +12,33 @@ export function GraphDataToggle(props: { className?: string }) {
     graphElements.edges.length + graphElements.nodes.length;
 
   return (
-    <Stack
-      direction={"vertical"}
-      className={clsx(
-        "bg-body-tertiary border border-end-0 z-1 rounded-start",
-        props.className,
-      )}
-    >
+    <Stack direction={"horizontal"} className={clsx("", props.className)}>
       <NavbarButton
-        size={"big"}
         icon={"bounding-box-circles"}
         selected={tabs.selected === "graph"}
         onClick={tabs.selectGraph}
         className={"position-relative"}
-      >
-        <Stack
-          className={
-            "text-muted position-absolute bottom-0 start-0 end-0 align-items-center"
-          }
-          style={{ fontSize: "8pt" }}
-        >
-          <span>{graphElementsCount}</span>
-        </Stack>
-      </NavbarButton>
+        title={
+          <span>
+            Graph{" "}
+            <span className={"text-muted"}>
+              {graphElementsCount.toString()}
+            </span>
+          </span>
+        }
+      ></NavbarButton>
       <NavbarButton
-        size={"big"}
         icon={"table"}
         selected={tabs.selected === "data"}
         onClick={tabs.selectData}
         className={"position-relative"}
-      >
-        <Stack
-          className={
-            "text-muted position-absolute bottom-0 start-0 end-0 align-items-center"
-          }
-          style={{ fontSize: "8pt" }}
-        >
-          <span>{tableData.length}</span>
-        </Stack>
-      </NavbarButton>
+        title={
+          <span>
+            Table{" "}
+            <span className={"text-muted"}>{tableData.length.toString()}</span>
+          </span>
+        }
+      ></NavbarButton>
     </Stack>
   );
 }

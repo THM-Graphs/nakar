@@ -18,6 +18,7 @@ import { RemoveNodesAction } from "../actions/RemoveNodesAction.ts";
 import { FocusNodesAction } from "../actions/FocusNodesAction.ts";
 import { ShowShortestPathAction } from "../actions/ShowShortestPathAction.ts";
 import { useIsLoggedIn } from "../../state/useIsLoggedIn.ts";
+import { GraphDataToggle } from "../data-table/GraphDataToggle.tsx";
 
 export function CanvasActions() {
   const roomContext = useCanvasContext();
@@ -42,116 +43,119 @@ export function CanvasActions() {
   const isLoggedIn = useIsLoggedIn();
 
   return (
-    <Stack direction={"horizontal"} className={"justify-content-start"}>
-      <CanvasActionsGroup title={""} className={"flex-shrink-0"}>
-        <CanvasActionsAction
-          action={UndoAction.shared}
-          params={{
-            roomContext: roomContext,
-            undoAction: undoAction,
-          }}
-        ></CanvasActionsAction>
-        <CanvasActionsAction
-          action={RedoAction.shared}
-          params={{
-            roomContext: roomContext,
-            redoAction,
-          }}
-        ></CanvasActionsAction>
-      </CanvasActionsGroup>
-      <CanvasActionsGroup title={"Layout"}>
-        <CanvasActionsAction
-          action={RelayoutAction.shared}
-          params={{
-            roomContext: roomContext,
-            nodes,
-            selectedTab,
-          }}
-        ></CanvasActionsAction>
-        <CanvasActionsAction
-          action={UnlockAllNodesAction.shared}
-          params={{
-            roomContext: roomContext,
-            nodes,
-            selectedTab,
-          }}
-        ></CanvasActionsAction>
-        <CanvasActionsAction
-          action={RerunScenarioAction.shared}
-          params={{
-            roomContext: roomContext,
-            scenario: scenario,
-          }}
-        ></CanvasActionsAction>
-      </CanvasActionsGroup>
-      <CanvasActionsGroup title={"Navigation"}>
-        <CanvasActionsAction
-          action={ExpandNodePreviewAction.shared}
-          params={{
-            nodes: selectedNodes,
-            roomContext: roomContext,
-            isLoggedIn: isLoggedIn,
-          }}
-        ></CanvasActionsAction>
-        <CanvasActionsAction
-          action={ExpandNodeAction.shared}
-          params={{
-            nodes: selectedNodes,
-            roomContext: roomContext,
-            isLoggedIn: isLoggedIn,
-          }}
-        ></CanvasActionsAction>
-        <CanvasActionsAction
-          action={RemoveNodesAction.shared}
-          params={{
-            nodes: selectedNodes,
-            roomContext: roomContext,
-            isLoggedIn: isLoggedIn,
-          }}
-        ></CanvasActionsAction>
-        <CanvasActionsAction
-          action={FocusNodesAction.shared}
-          params={{
-            nodes: selectedNodes,
-            roomContext: roomContext,
-            isLoggedIn: isLoggedIn,
-          }}
-        ></CanvasActionsAction>
-        <CanvasActionsAction
-          action={ShowShortestPathAction.shared}
-          params={{
-            nodes: selectedNodes,
-            roomContext: roomContext,
-            isLoggedIn: isLoggedIn,
-          }}
-        ></CanvasActionsAction>
-      </CanvasActionsGroup>
-      <CanvasActionsGroup title={"Actions"} className={"border-end-0"}>
-        <CanvasActionsAction
-          action={ConnectResultNodesAction.shared}
-          params={{
-            roomContext: roomContext,
-            scenario: scenario,
-            selectedTab,
-          }}
-        ></CanvasActionsAction>
-        <CanvasActionsAction
-          action={RemoveDanglingNodesAction.shared}
-          params={{
-            roomContext: roomContext,
-            scenario: scenario,
-            selectedTab,
-          }}
-        ></CanvasActionsAction>
-        <CanvasActionsAction
-          action={CompressRelationshipsAction.shared}
-          params={{
-            roomContext: roomContext,
-            scenario: scenario,
-            selectedTab,
-          }}
-        ></CanvasActionsAction>
-      </CanvasActionsGroup>
+    <Stack direction={"horizontal"} className={"justify-content-between"}>
+      <Stack direction={"horizontal"}>
+        <CanvasActionsGroup title={""} className={"flex-shrink-0"}>
+          <CanvasActionsAction
+            action={UndoAction.shared}
+            params={{
+              roomContext: roomContext,
+              undoAction: undoAction,
+            }}
+          ></CanvasActionsAction>
+          <CanvasActionsAction
+            action={RedoAction.shared}
+            params={{
+              roomContext: roomContext,
+              redoAction,
+            }}
+          ></CanvasActionsAction>
+        </CanvasActionsGroup>
+        <CanvasActionsGroup title={"Layout"}>
+          <CanvasActionsAction
+            action={RelayoutAction.shared}
+            params={{
+              roomContext: roomContext,
+              nodes,
+              selectedTab,
+            }}
+          ></CanvasActionsAction>
+          <CanvasActionsAction
+            action={UnlockAllNodesAction.shared}
+            params={{
+              roomContext: roomContext,
+              nodes,
+              selectedTab,
+            }}
+          ></CanvasActionsAction>
+          <CanvasActionsAction
+            action={RerunScenarioAction.shared}
+            params={{
+              roomContext: roomContext,
+              scenario: scenario,
+            }}
+          ></CanvasActionsAction>
+        </CanvasActionsGroup>
+        <CanvasActionsGroup title={"Navigation"}>
+          <CanvasActionsAction
+            action={ExpandNodePreviewAction.shared}
+            params={{
+              nodes: selectedNodes,
+              roomContext: roomContext,
+              isLoggedIn: isLoggedIn,
+            }}
+          ></CanvasActionsAction>
+          <CanvasActionsAction
+            action={ExpandNodeAction.shared}
+            params={{
+              nodes: selectedNodes,
+              roomContext: roomContext,
+              isLoggedIn: isLoggedIn,
+            }}
+          ></CanvasActionsAction>
+          <CanvasActionsAction
+            action={RemoveNodesAction.shared}
+            params={{
+              nodes: selectedNodes,
+              roomContext: roomContext,
+              isLoggedIn: isLoggedIn,
+            }}
+          ></CanvasActionsAction>
+          <CanvasActionsAction
+            action={FocusNodesAction.shared}
+            params={{
+              nodes: selectedNodes,
+              roomContext: roomContext,
+              isLoggedIn: isLoggedIn,
+            }}
+          ></CanvasActionsAction>
+          <CanvasActionsAction
+            action={ShowShortestPathAction.shared}
+            params={{
+              nodes: selectedNodes,
+              roomContext: roomContext,
+              isLoggedIn: isLoggedIn,
+            }}
+          ></CanvasActionsAction>
+        </CanvasActionsGroup>
+        <CanvasActionsGroup title={"Actions"}>
+          <CanvasActionsAction
+            action={ConnectResultNodesAction.shared}
+            params={{
+              roomContext: roomContext,
+              scenario: scenario,
+              selectedTab,
+            }}
+          ></CanvasActionsAction>
+          <CanvasActionsAction
+            action={RemoveDanglingNodesAction.shared}
+            params={{
+              roomContext: roomContext,
+              scenario: scenario,
+              selectedTab,
+            }}
+          ></CanvasActionsAction>
+          <CanvasActionsAction
+            action={CompressRelationshipsAction.shared}
+            params={{
+              roomContext: roomContext,
+              scenario: scenario,
+              selectedTab,
+            }}
+          ></CanvasActionsAction>
+        </CanvasActionsGroup>
+      </Stack>
+      <GraphDataToggle></GraphDataToggle>
     </Stack>
   );
 }

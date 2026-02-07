@@ -9,12 +9,13 @@ export function DataTable() {
   return (
     <Stack
       style={{
-        flexGrow: "1",
         height: "100%",
         width: "100%",
         overflow: "auto",
       }}
-      className={"bg-body z-1 border rounded"}
+      className={
+        "bg-body z-1 border rounded overflow-auto flex-grow-0 flex-shrink-1"
+      }
     >
       <NavbarButton
         icon={"x-lg"}

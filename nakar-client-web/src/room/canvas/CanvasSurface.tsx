@@ -15,7 +15,7 @@ export function CanvasSurface() {
 
   return (
     <Stack
-      className={"flex-grow-1 flex-shrink-1 align-items-stretch"}
+      className={"flex-grow-1 flex-shrink-1 align-items-stretch overflow-auto"}
       direction={"vertical"}
       gap={1}
     >

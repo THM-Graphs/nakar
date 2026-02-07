@@ -40,7 +40,6 @@ import {
   RoomDto,
   ScenarioCollectionDto,
 } from "../../src-gen";
-import { GraphDataToggle } from "../room/data-table/GraphDataToggle.tsx";
 import { useAppContext } from "../state/AppContextData.ts";
 import { Router } from "../routing/Router.ts";
 import { usePageTitle } from "../routing/usePageTitle.ts";
@@ -300,7 +299,6 @@ export function Canvas() {
               className={"align-self-start flex-grow-0 flex-shrink-0"}
               gap={1}
             >
-              <GraphDataToggle className={"shadow-sm"}></GraphDataToggle>
               <Stack
                 direction="vertical"
                 className={
