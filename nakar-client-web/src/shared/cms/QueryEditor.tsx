@@ -1,4 +1,11 @@
-import { Card, Form, FormSelect, Stack } from "react-bootstrap";
+import {
+  Card,
+  Form,
+  FormSelect,
+  OverlayTrigger,
+  Stack,
+  Tooltip,
+} from "react-bootstrap";
 import clsx from "clsx";
 import {
   DatabaseConnectionDto,
@@ -25,6 +32,16 @@ export function QueryEditor(props: {
         className={"justify-content-between"}
       >
         <Form.Group>
+          <Form.Label>
+            Database{" "}
+            <OverlayTrigger
+              overlay={
+                <Tooltip>Select a database to run this query on.</Tooltip>
+              }
+            >
+              <i className={"bi bi-info-circle"}></i>
+            </OverlayTrigger>
+          </Form.Label>
           <FormSelect
             size={"sm"}
             className={clsx(
@@ -55,7 +72,12 @@ export function QueryEditor(props: {
         )}
       </Stack>
       <Form.Group>
-        <Form.Label>Query</Form.Label>
+        <Form.Label>
+          Query{" "}
+          <OverlayTrigger overlay={<Tooltip>Cypher Query</Tooltip>}>
+            <i className={"bi bi-info-circle"}></i>
+          </OverlayTrigger>
+        </Form.Label>
         <CypherEditor
           placeholder={"MATCH (n) RETURN n;"}
           lineWrap={true}
@@ -72,7 +94,21 @@ export function QueryEditor(props: {
       <Form.Group className={""}>
         <Form.Check
           type="switch"
-          label={<span className={"small"}>Query produces table data.</span>}
+          label={
+            <span className={""}>
+              Query produces table data{" "}
+              <OverlayTrigger
+                overlay={
+                  <Tooltip>
+                    Turn this option on if your query produces table structured
+                    data. The result will be displayed as table data.
+                  </Tooltip>
+                }
+              >
+                <i className={"bi bi-info-circle"}></i>
+              </OverlayTrigger>
+            </span>
+          }
           id={`istabledata_${props.value.id}`}
           checked={props.value.isTableQuery}
           onChange={(e) => {

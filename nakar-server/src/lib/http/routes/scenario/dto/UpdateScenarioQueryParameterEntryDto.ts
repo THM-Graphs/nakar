@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEnum, IsString } from 'class-validator';
+import { IsEnum, IsString, MinLength } from 'class-validator';
 import { ScenarioParameterDataTypeDto } from '../../../../schema/dtos/ScenarioParameterDataTypeDto';
 
 export class UpdateScenarioQueryParameterEntryDto {
@@ -9,10 +9,12 @@ export class UpdateScenarioQueryParameterEntryDto {
 
   @ApiProperty()
   @IsString()
+  @MinLength(1)
   public identifier!: string;
 
   @ApiProperty()
   @IsString()
+  @MinLength(1)
   public title!: string;
 
   @ApiProperty()

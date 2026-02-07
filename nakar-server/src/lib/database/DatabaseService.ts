@@ -16,6 +16,9 @@ import { ApiPostScenarioActionPostScenarioAction } from '../../../types/generate
 import { FindMany } from '@strapi/types/dist/modules/documents/params/document-engine';
 import { LiveCanvasData } from '../live-canvas/data/LiveCanvasData';
 import { LiveCanvas } from '../live-canvas/LiveCanvas';
+import { UpdateScenarioQueryEntryDto } from '../http/routes/scenario/dto/UpdateScenarioQueryEntryDto';
+import { Input } from '@strapi/types/dist/modules/documents/params/data';
+import { UpdateScenarioQueryParameterEntryDto } from '../http/routes/scenario/dto/UpdateScenarioQueryParameterEntryDto';
 
 @Injectable()
 export class DatabaseService {
@@ -846,6 +849,93 @@ export class DatabaseService {
       .documents('plugin::users-permissions.user')
       .findOne({ documentId: userId });
     return user;
+  }
+
+  public async upsertScenarioQueries(
+    scenario: Result<'api::scenario.scenario'>,
+    queries: UpdateScenarioQueryEntryDto[],
+  ): Promise<void> {
+    const newQueryIds: SSet<string> = new SSet<string>(
+      queries.map((q: UpdateScenarioQueryEntryDto): string => q.id),
+    );
+    const existingQueries: Result<'api::query.query'>[] =
+      await this.getQueriesOfScenario(scenario);
+    for (const existingQuery of existingQueries) {
+      if (newQueryIds.has(existingQuery.documentId)) {
+        // Okay, stay
+      } else {
+        // Delete query
+        await strapi
+          .documents('api::query.query')
+          .delete({ documentId: existingQuery.documentId });
+      }
+    }
+
+    for (const newQuery of queries) {
+      const queryData: Input<'api::query.query'> = {
+        query: newQuery.query,
+        isTableQuery: newQuery.isTableQuery,
+        database: newQuery.databaseId === '' ? null : newQuery.databaseId,
+        scenario: scenario.documentId,
+      };
+
+      const updatedQuery: Result<'api::query.query'> | null = await strapi
+        .documents('api::query.query')
+        .update({
+          documentId: newQuery.id,
+          data: queryData,
+          status: 'published',
+        });
+      if (updatedQuery == null) {
+        await strapi
+          .documents('api::query.query')
+          .create({ data: queryData, status: 'published' });
+      }
+    }
+  }
+
+  public async upsertScenarioQueryParameters(
+    scenario: Result<'api::scenario.scenario'>,
+    parameters: UpdateScenarioQueryParameterEntryDto[],
+  ): Promise<void> {
+    const newQueryParameterIds: SSet<string> = new SSet<string>(
+      parameters.map((q: UpdateScenarioQueryParameterEntryDto): string => q.id),
+    );
+    const existingQueryParameters: Result<'api::query-parameter.query-parameter'>[] =
+      await this.getParametersOfScenario(scenario);
+    for (const existingQueryParameter of existingQueryParameters) {
+      if (newQueryParameterIds.has(existingQueryParameter.documentId)) {
+        // Okay, stay
+      } else {
+        // Delete query
+        await strapi
+          .documents('api::query-parameter.query-parameter')
+          .delete({ documentId: existingQueryParameter.documentId });
+      }
+    }
+
+    for (const newParameter of parameters) {
+      const parameterData: Input<'api::query-parameter.query-parameter'> = {
+        title: newParameter.title,
+        dataType: newParameter.dataType,
+        identifier: newParameter.identifier,
+        defaultValue: newParameter.defaultValue,
+        allowedLabels: newParameter.allowedLabels,
+        scenario: scenario.documentId,
+      };
+
+      const updatedQuery: Result<'api::query-parameter.query-parameter'> | null =
+        await strapi.documents('api::query-parameter.query-parameter').update({
+          documentId: newParameter.id,
+          data: parameterData,
+          status: 'published',
+        });
+      if (updatedQuery == null) {
+        await strapi
+          .documents('api::query-parameter.query-parameter')
+          .create({ data: parameterData, status: 'published' });
+      }
+    }
   }
 
   private _sortByTitle(

@@ -1,13 +1,4 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  NotFoundException,
-  Param,
-  Post,
-  Put,
-  UseGuards,
-} from '@nestjs/common';
+import { Body, Controller, Delete, NotFoundException, Param, Post, Put, UseGuards, } from '@nestjs/common';
 import { ApiParam, ApiResponse } from '@nestjs/swagger';
 import { ScenarioDto } from '../../../schema/dtos/ScenarioDto';
 import { UserCanAccessProject } from '../../guards/UserCanAccessProject';
@@ -18,8 +9,6 @@ import { Input } from '@strapi/types/dist/modules/documents/params/data';
 import { SchemaFactoryService } from '../../../schema/SchemaFactoryService';
 import { ScenarioBelongsToScenarioGroup } from '../../guards/ScenarioBelongsToScenarioGroup';
 import { UpdateScenarioRequestBodyDto } from './dto/UpdateScenarioRequestBodyDto';
-import { UpdateScenarioQueryEntryDto } from './dto/UpdateScenarioQueryEntryDto';
-import { SSet } from '../../../set/Set';
 
 @Controller('/project/:projectId/scenario-group/:scenarioGroupId/scenario')
 @ApiParam({
@@ -85,43 +74,14 @@ export class ScenarioController {
       throw new NotFoundException();
     }
 
-    const newQueryIds: SSet<string> = new SSet<string>(
-      body.queries.map((q: UpdateScenarioQueryEntryDto): string => q.id),
+    await this._databaseService.upsertScenarioQueries(
+      updatedScenario,
+      body.queries,
     );
-    const existingQueries: Result<'api::query.query'>[] =
-      await this._databaseService.getQueriesOfScenario(updatedScenario);
-    for (const existingQuery of existingQueries) {
-      if (newQueryIds.has(existingQuery.documentId)) {
-        // Okay, stay
-      } else {
-        // Delete query
-        await strapi
-          .documents('api::query.query')
-          .delete({ documentId: existingQuery.documentId });
-      }
-    }
-
-    for (const newQuery of body.queries) {
-      const queryData: Input<'api::query.query'> = {
-        query: newQuery.query,
-        isTableQuery: newQuery.isTableQuery,
-        database: newQuery.databaseId === '' ? null : newQuery.databaseId,
-        scenario: scenarioId,
-      };
-
-      const updatedQuery: Result<'api::query.query'> | null = await strapi
-        .documents('api::query.query')
-        .update({
-          documentId: newQuery.id,
-          data: queryData,
-          status: 'published',
-        });
-      if (updatedQuery == null) {
-        await strapi
-          .documents('api::query.query')
-          .create({ data: queryData, status: 'published' });
-      }
-    }
+    await this._databaseService.upsertScenarioQueryParameters(
+      updatedScenario,
+      body.parameters,
+    );
 
     return await this._schemaFactory.createSchemaScenario(updatedScenario);
   }
