@@ -28,6 +28,7 @@ import { Router } from "../routing/Router.ts";
 import { CMSEditPageForm } from "../shared/cms/CMSEditPageForm.tsx";
 import { CMSButton } from "../shared/cms/CMSButton.tsx";
 import { handleError } from "../shared/error/handleError.ts";
+import clsx from "clsx";
 
 type EditDatabaseConnectionLoaderData = {
   project: ProjectPageDto;
@@ -331,7 +332,13 @@ export function EditDatabaseConnection() {
 
                 {(databaseConnection.username != null ||
                   databaseConnection.password != null) && (
-                  <Card className={"p-3"}>
+                  <Card
+                    className={clsx(
+                      "p-3",
+                      !databaseConnection.credentialStoreConsent &&
+                        "bg-danger-subtle",
+                    )}
+                  >
                     <Form.Group>
                       <Form.Check
                         id={"consent"}
@@ -346,14 +353,16 @@ export function EditDatabaseConnection() {
                         label={
                           <Stack>
                             <span>
-                              I consent to my database credentials being stored
-                              on the server using server-side encryption for
-                              application functionality.{" "}
+                              I agree that the database login credentials I
+                              provide will be stored in encrypted form on the
+                              server for the purpose of enabling access to the
+                              database. I also confirm that the information
+                              stored in the provided database consists
+                              exclusively of{" "}
+                              <strong>publicly accessible research data</strong>{" "}
+                              and does not contain any personal, confidential,
+                              or otherwise sensitive data.{" "}
                               <span className={"text-danger"}>*</span>
-                            </span>
-                            <span className={"text-muted"}>
-                              The server only connects to databases using READ
-                              mode.
                             </span>
                           </Stack>
                         }
