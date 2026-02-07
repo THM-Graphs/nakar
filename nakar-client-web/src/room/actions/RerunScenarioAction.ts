@@ -14,7 +14,10 @@ export class RerunScenarioAction extends Action<RerunScenarioActionParams> {
   protected async action(input: RerunScenarioActionParams): Promise<void> {
     resultOrThrow(
       await actionControllerReloadScenario({
-        path: { canvasId: input.roomContext.initialCanvasData.id },
+        path: {
+          roomId: input.roomContext.initialRoomData.id,
+          canvasId: input.roomContext.initialCanvasData.id,
+        },
       }),
     );
   }

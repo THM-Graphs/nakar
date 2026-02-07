@@ -28,5 +28,11 @@ export function CMSButton(props: {
     </Button>
   );
 
-  return props.link ? <Link to={props.link}>{button}</Link> : button;
+  return props.link ? (
+    <Link to={props.link} className={clsx(props.className)}>
+      {button}
+    </Link>
+  ) : (
+    button
+  );
 }

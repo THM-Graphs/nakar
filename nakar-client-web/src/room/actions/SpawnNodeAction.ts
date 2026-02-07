@@ -15,7 +15,10 @@ export class SpawnNodeAction extends Action<SpawnNodeActionParams> {
   protected async action(input: SpawnNodeActionParams): Promise<void> {
     resultOrThrow(
       await actionControllerLoadNode({
-        path: { canvasId: input.roomContext.initialCanvasData.id },
+        path: {
+          roomId: input.roomContext.initialRoomData.id,
+          canvasId: input.roomContext.initialCanvasData.id,
+        },
         body: { nodeId: input.nodeId, databaseId: input.databaseId },
       }),
     );

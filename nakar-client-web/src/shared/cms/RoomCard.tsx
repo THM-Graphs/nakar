@@ -25,7 +25,7 @@ export function RoomCard(props: {
           >
             <Stack className={"ellipsis flex-grow-0"}>
               <Link
-                to={Router.getCanvasUrl(props.room.joinCanvasId)}
+                to={Router.getRoomUrl(props.room.id)}
                 className={"ellipsis"}
               >
                 {props.room.title}
@@ -52,11 +52,11 @@ export function RoomCard(props: {
             props.room.visibility === "unlisted" ? (
               <span className={"small"}>
                 Public URL:{" "}
-                <Link to={Router.getCanvasUrl(props.room.joinCanvasId)}>
-                  {Router.getCanvasUrl(props.room.joinCanvasId)}
+                <Link to={Router.getRoomUrl(props.room.id)}>
+                  {Router.getRoomUrl(props.room.id)}
                 </Link>
                 <ClipboardButton
-                  text={Router.getCanvasUrl(props.room.joinCanvasId)}
+                  text={Router.getRoomUrl(props.room.id)}
                 ></ClipboardButton>
               </span>
             ) : (

@@ -31,9 +31,10 @@ import { ExpandNodePreviewRequestQueryDto } from './dto/ExpandNodePreviewRequest
 import { ExpandNodePreviewResponseBodyDto } from './dto/ExpandNodePreviewResponseBodyDto';
 import { ExpandNodePreviewEntryDto } from './dto/ExpandNodePreviewEntryDto';
 import { ExpandNodePreviewEntry } from '../../../neo4j/expand-node-preview/ExpandNodePreviewEntry';
-import { UserCanAccessCanvas } from '../../guards/UserCanAccessCanvas';
+import { UserCanAccessRoom } from '../../guards/UserCanAccessRoom';
+import { CanvasBelongsToRoom } from '../../guards/CanvasBelongsToRoom';
 
-@Controller('canvas/:canvasId/database-connection/:databaseId')
+@Controller('room/:roomId/canvas/:canvasId/database-connection/:databaseId')
 @ApiParam({
   name: 'canvasId',
   required: true,
@@ -44,8 +45,14 @@ import { UserCanAccessCanvas } from '../../guards/UserCanAccessCanvas';
   required: true,
   type: 'string',
 })
-@UseGuards(UserCanAccessCanvas)
+@ApiParam({
+  name: 'roomId',
+  required: true,
+  type: 'string',
+})
 @UseGuards(DatabaseBelongsToCanvas)
+@UseGuards(UserCanAccessRoom)
+@UseGuards(CanvasBelongsToRoom)
 export class CanvasDatabaseConnectionController {
   public constructor(
     private readonly _database: DatabaseService,

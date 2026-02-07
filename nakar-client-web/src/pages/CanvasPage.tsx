@@ -33,10 +33,10 @@ import { Canvas } from "../room/canvas/Canvas.tsx";
 import { VisualizationPanelButton } from "../room/visualization-panel/VisualizationPanelButton.tsx";
 import { VisualizationPanel } from "../room/visualization-panel/VisualizationPanel.tsx";
 import {
-  canvasControllerGetCanvas,
   CanvasDto,
   CanvasPageDto,
   EventWsdto,
+  publicCanvasControllerGetCanvas,
   RoomDto,
   ScenarioCollectionDto,
 } from "../../src-gen";
@@ -62,20 +62,25 @@ export type CanvasContextData = {
   initialCanvasData: CanvasDto;
   initialScenariosData: ScenarioCollectionDto;
   initialRoomData: RoomDto;
-  projectId: string;
 };
 
 export async function CanvasLoader(
   args: LoaderFunctionArgs,
 ): Promise<CanvasContextData> {
-  const canvasId = args.params["id"];
+  const canvasId = args.params["canvasId"];
+  const roomId = args.params["roomId"];
 
   if (canvasId == null) {
     throw new Error("No canvas id provided.");
   }
+  if (roomId == null) {
+    throw new Error("No room id provided.");
+  }
 
   const data: CanvasPageDto = resultOrThrow(
-    await canvasControllerGetCanvas({ path: { canvasId: canvasId } }),
+    await publicCanvasControllerGetCanvas({
+      path: { canvasId: canvasId, roomId: roomId },
+    }),
   );
 
   useBearStore.getState().start.addRoom(data.room.id);
@@ -84,7 +89,6 @@ export async function CanvasLoader(
     initialCanvasData: data.canvas,
     initialScenariosData: data.scenarios,
     initialRoomData: data.room,
-    projectId: data.projectId,
   };
 }
 
@@ -227,7 +231,9 @@ export function CanvasPage() {
                         title={canvasContext.initialRoomData.title}
                         onClick={async () => {
                           await navigate(
-                            Router.getProjectPath(canvasContext.projectId),
+                            Router.getProjectPath(
+                              canvasContext.initialRoomData.projectId,
+                            ),
                           );
                         }}
                       ></NavbarButton>

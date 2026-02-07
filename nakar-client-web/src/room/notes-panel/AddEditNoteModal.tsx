@@ -45,7 +45,10 @@ export function AddEditNoteModal() {
       if (noteId == null) {
         await resultOrThrow(
           await canvasNoteControllerPostNote({
-            path: { canvasId: roomContext.initialCanvasData.id },
+            path: {
+              roomId: roomContext.initialRoomData.id,
+              canvasId: roomContext.initialCanvasData.id,
+            },
             body: {
               nodeIds: nodes.map((node) => node.id),
               content: content,
@@ -56,6 +59,7 @@ export function AddEditNoteModal() {
         await resultOrThrow(
           await canvasNoteControllerUpdateNote({
             path: {
+              roomId: roomContext.initialRoomData.id,
               noteId: noteId,
               canvasId: roomContext.initialCanvasData.id,
             },

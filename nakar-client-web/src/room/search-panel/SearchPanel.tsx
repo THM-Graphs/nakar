@@ -46,6 +46,7 @@ export function SearchPanel() {
       const postResult: PostSearchResponseBodyDto = resultOrThrow(
         await canvasDatabaseConnectionControllerPerformSearch({
           path: {
+            roomId: roomContext.initialRoomData.id,
             databaseId: selectedDatabaseId ?? "",
             canvasId: roomContext.initialCanvasData.id,
           },

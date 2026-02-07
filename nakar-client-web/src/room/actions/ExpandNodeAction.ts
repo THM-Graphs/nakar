@@ -8,6 +8,7 @@ export class ExpandNodeAction extends Action<NodesActionParams> {
   protected async action(input: NodesActionParams): Promise<void> {
     await actionControllerExpandNode({
       path: {
+        roomId: input.roomContext.initialRoomData.id,
         canvasId: input.roomContext.initialCanvasData.id,
       },
       body: {

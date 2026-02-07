@@ -15,6 +15,7 @@ export class RedoAction extends Action<RedoActionParams> {
     resultOrThrow(
       await actionControllerRedo({
         path: {
+          roomId: input.roomContext.initialRoomData.id,
           canvasId: input.roomContext.initialCanvasData.id,
         },
       }),

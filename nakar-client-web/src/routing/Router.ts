@@ -14,12 +14,16 @@ export class Router {
     return `${window.location.origin}/project/${projectId}/edit`;
   }
 
-  public static getCanvasUrl(canvasId: string): string {
-    return `${window.location.origin}/canvas/${canvasId}`;
+  public static getCanvasUrl(roomId: string, canvasId: string): string {
+    return `${window.location.origin}/room/${roomId}/canvas/${canvasId}`;
   }
 
   public static getRoomEditUrl(projectId: string, roomId: string): string {
     return `${window.location.origin}/project/${projectId}/room/${roomId}/edit`;
+  }
+
+  public static getRoomUrl(roomId: string): string {
+    return `${window.location.origin}/room/${roomId}`;
   }
 
   public static getEditScenarioPath(

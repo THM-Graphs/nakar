@@ -22,7 +22,10 @@ export class RemoveDanglingNodesAction extends Action<RemoveDanglingNodesActionP
   ): Promise<void> {
     resultOrThrow(
       await actionControllerRemoveDanglingNodes({
-        path: { canvasId: input.roomContext.initialCanvasData.id },
+        path: {
+          roomId: input.roomContext.initialRoomData.id,
+          canvasId: input.roomContext.initialCanvasData.id,
+        },
       }),
     );
   }

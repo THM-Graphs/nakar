@@ -32,6 +32,7 @@ import {
   EditDatabaseConnection,
   EditDatabaseConnectionLoader,
 } from "./pages/EditDatabaseConnection.tsx";
+import { Room, RoomLoader } from "./pages/Room.tsx";
 
 async function bootstrap() {
   bootstrapTheme();
@@ -97,7 +98,12 @@ async function bootstrap() {
           loader: StartLoader,
         },
         {
-          path: "/canvas/:id",
+          path: "room/:roomId",
+          element: <Room></Room>,
+          loader: RoomLoader,
+        },
+        {
+          path: "room/:roomId/canvas/:canvasId",
           element: <CanvasPage></CanvasPage>,
           loader: CanvasLoader,
         },

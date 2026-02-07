@@ -1,22 +1,34 @@
 import { Controller, Get, Param, UseGuards } from '@nestjs/common';
-import { CanvasPageDto } from './dto/CanvasPageDto';
-import { ApiResponse } from '@nestjs/swagger';
+import { ApiParam, ApiResponse } from '@nestjs/swagger';
 import { Result } from '@strapi/types/dist/modules/documents/result';
-import { NotFound } from 'http-errors';
 import { DatabaseService } from '../../../database/DatabaseService';
 import { SchemaFactoryService } from '../../../schema/SchemaFactoryService';
-import { UserCanAccessCanvas } from '../../guards/UserCanAccessCanvas';
+import { UserCanAccessRoom } from '../../guards/UserCanAccessRoom';
+import { CanvasBelongsToRoom } from '../../guards/CanvasBelongsToRoom';
+import { NotFound } from 'http-errors';
+import { CanvasPageDto } from './dto/CanvasPageDto';
 
-@Controller('canvas')
-export class CanvasController {
+@Controller('room/:roomId/canvas/:canvasId')
+@UseGuards(UserCanAccessRoom)
+@UseGuards(CanvasBelongsToRoom)
+@ApiParam({
+  name: 'roomId',
+  required: true,
+  type: 'string',
+})
+@ApiParam({
+  name: 'canvasId',
+  required: true,
+  type: 'string',
+})
+export class PublicCanvasController {
   public constructor(
     private readonly _database: DatabaseService,
     private readonly _schemaFactory: SchemaFactoryService,
   ) {}
 
-  @Get(':canvasId')
+  @Get()
   @ApiResponse({ type: CanvasPageDto })
-  @UseGuards(UserCanAccessCanvas)
   public async getCanvas(
     @Param('canvasId') canvasId: string,
   ): Promise<CanvasPageDto> {
@@ -30,14 +42,10 @@ export class CanvasController {
     const room: Result<'api::room.room'> =
       await this._database.getRoomOfCanvas(canvas);
 
-    const project: Result<'api::project.project'> =
-      await this._database.getProjectOfRoom(room);
-
     return new CanvasPageDto({
       canvas: this._schemaFactory.createSchemaCanvasPreview(canvas),
       room: await this._schemaFactory.createSchemaRoom(room),
       scenarios: await this._schemaFactory.createGetScenariosResult(room),
-      projectId: project.documentId,
     });
   }
 }

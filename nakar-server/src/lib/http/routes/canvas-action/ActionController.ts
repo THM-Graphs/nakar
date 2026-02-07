@@ -8,7 +8,6 @@ import {
 } from '@nestjs/common';
 import { ApiBody, ApiParam } from '@nestjs/swagger';
 import { LoadScenarioRequestBodyDto } from './dto/LoadScenarioRequestBodyDto';
-import { UserCanAccessCanvas } from '../../guards/UserCanAccessCanvas';
 import { SMap } from '../../../map/Map';
 import { ExpandNodeRequestBodyDto } from './dto/ExpandNodeRequestBodyDto';
 import { SSet } from '../../../set/Set';
@@ -26,14 +25,22 @@ import { LiveCanvasViewSettings } from '../../../live-canvas/data/LiveCanvasView
 import { LiveCanvasService } from '../../../live-canvas/LiveCanvasService';
 import { UserIsLoggedIn } from '../../guards/UserIsLoggedIn';
 import { LiveCanvas } from '../../../live-canvas/LiveCanvas';
+import { UserCanAccessRoom } from '../../guards/UserCanAccessRoom';
+import { CanvasBelongsToRoom } from '../../guards/CanvasBelongsToRoom';
 
-@Controller('canvas/:canvasId/action')
+@Controller('room/:roomId/canvas/:canvasId/action')
 @ApiParam({
   name: 'canvasId',
   required: true,
   type: 'string',
 })
-@UseGuards(UserCanAccessCanvas)
+@ApiParam({
+  name: 'roomId',
+  required: true,
+  type: 'string',
+})
+@UseGuards(UserCanAccessRoom)
+@UseGuards(CanvasBelongsToRoom)
 export class ActionController {
   public constructor(private readonly _canvasService: LiveCanvasService) {}
 

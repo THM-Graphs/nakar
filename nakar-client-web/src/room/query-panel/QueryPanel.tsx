@@ -53,6 +53,7 @@ export function QueryPanel() {
           const result = resultOrThrow(
             await canvasDatabaseConnectionControllerGetStats({
               path: {
+                roomId: roomContext.initialRoomData.id,
                 databaseId: referencedDatabase.id,
                 canvasId: roomContext.initialCanvasData.id,
               },
@@ -166,6 +167,7 @@ export function QueryPanel() {
                       resultOrThrow(
                         await actionControllerRunQuery({
                           path: {
+                            roomId: roomContext.initialRoomData.id,
                             canvasId: roomContext.initialCanvasData.id,
                           },
                           body: {
@@ -186,6 +188,7 @@ export function QueryPanel() {
                       resultOrThrow(
                         await actionControllerRunQuery({
                           path: {
+                            roomId: roomContext.initialRoomData.id,
                             canvasId: roomContext.initialCanvasData.id,
                           },
                           body: {

@@ -15,6 +15,7 @@ export class UndoAction extends Action<UndoActionParams> {
     resultOrThrow(
       await actionControllerUndo({
         path: {
+          roomId: input.roomContext.initialRoomData.id,
           canvasId: input.roomContext.initialCanvasData.id,
         },
       }),

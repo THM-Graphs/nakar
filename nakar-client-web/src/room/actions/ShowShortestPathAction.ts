@@ -9,7 +9,10 @@ export class ShowShortestPathAction extends Action<NodesActionParams> {
   protected async action(input: NodesActionParams): Promise<void> {
     await resultOrThrow(
       await actionControllerShowShortestPath({
-        path: { canvasId: input.roomContext.initialCanvasData.id },
+        path: {
+          roomId: input.roomContext.initialRoomData.id,
+          canvasId: input.roomContext.initialCanvasData.id,
+        },
         body: {
           nodeIds: input.nodes.map((n) => n.id),
         },

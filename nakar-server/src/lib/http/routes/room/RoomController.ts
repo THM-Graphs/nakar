@@ -21,6 +21,7 @@ import { AuthService } from '../../../auth/AuthService';
 import { Input } from '@strapi/types/dist/modules/documents/params/data';
 import { UpdateRoomRequestBodyDto } from './dto/UpdateRoomRequestBodyDto';
 import { UserCanAccessProject } from '../../guards/UserCanAccessProject';
+import { RoomBelongsToProject } from '../../guards/RoomBelongsToProject';
 
 @Controller('project/:projectId/room')
 @UseGuards(UserCanAccessProject)
@@ -38,6 +39,7 @@ export class RoomController {
 
   @Get(':roomId')
   @ApiResponse({ type: RoomDto })
+  @UseGuards(RoomBelongsToProject)
   public async getRoom(@Param('roomId') roomId: string): Promise<RoomDto> {
     const room: Result<'api::room.room'> | null =
       await this._databaseService.getRoom(roomId);
@@ -80,6 +82,7 @@ export class RoomController {
   @Put(':roomId')
   @ApiResponse({ type: RoomDto })
   @ApiBody({ type: UpdateRoomRequestBodyDto })
+  @UseGuards(RoomBelongsToProject)
   public async updateRoom(
     @Body() body: UpdateRoomRequestBodyDto,
     @Param('roomId') roomId: string,
@@ -103,6 +106,7 @@ export class RoomController {
   }
 
   @Delete(':roomId')
+  @UseGuards(RoomBelongsToProject)
   public async deleteRoom(@Param('roomId') roomId: string): Promise<void> {
     await strapi.documents('api::room.room').delete({
       documentId: roomId,

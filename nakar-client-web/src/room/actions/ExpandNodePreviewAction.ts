@@ -16,6 +16,7 @@ export class ExpandNodePreviewAction extends Action<NodesActionParams> {
     const result = resultOrThrow(
       await canvasDatabaseConnectionControllerExpandNodePreview({
         path: {
+          roomId: input.roomContext.initialRoomData.id,
           canvasId: input.roomContext.initialCanvasData.id,
           databaseId: node.sourceId,
         },

@@ -79,6 +79,7 @@ export function Start() {
               <Stack direction={"vertical"} gap={3} className={"flex-wrap"}>
                 {isLoggedIn && (
                   <CMSButton
+                    className={"align-self-start"}
                     link={"/project/add"}
                     title={"Create Project"}
                     icon={"plus-lg"}

@@ -15,6 +15,7 @@ export class RemoveNoteAction extends Action<RemoveNoteActionParams> {
     await resultOrThrow(
       await canvasNoteControllerDeleteNote({
         path: {
+          roomId: input.roomContext.initialRoomData.id,
           noteId: input.noteId,
           canvasId: input.roomContext.initialCanvasData.id,
         },

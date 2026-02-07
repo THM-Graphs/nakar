@@ -35,6 +35,7 @@ export function VisualizationPanel() {
 
           actionControllerSetViewSettings({
             path: {
+              roomId: roomContext.initialRoomData.id,
               canvasId: roomContext.initialCanvasData.id,
             },
             body: newSettings,

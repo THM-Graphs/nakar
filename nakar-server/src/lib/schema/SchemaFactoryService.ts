@@ -79,12 +79,16 @@ export class SchemaFactoryService {
     ).map((c: Result<'api::canvas.canvas'>): CanvasDto => {
       return this.createSchemaCanvasPreview(c);
     });
+    const project: Result<'api::project.project'> =
+      await this._database.getProjectOfRoom(room);
+
     return new RoomDto({
       id: room.documentId,
       title: room.title ?? '',
       visibility: this.createSchemaRoomVisibility(room),
       canvases: canvases,
       joinCanvasId: canvases[0].id,
+      projectId: project.documentId,
     });
   }
 

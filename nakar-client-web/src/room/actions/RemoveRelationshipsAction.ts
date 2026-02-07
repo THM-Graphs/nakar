@@ -11,6 +11,7 @@ export class RemoveRelationshipsAction extends Action<RelationshipsActionParams>
     await resultOrThrow(
       await actionControllerDeleteElements({
         path: {
+          roomId: input.roomContext.initialRoomData.id,
           canvasId: input.roomContext.initialCanvasData.id,
         },
         body: {

@@ -22,7 +22,10 @@ export class CompressRelationshipsAction extends Action<CompressRelationshipsAct
   ): Promise<void> {
     resultOrThrow(
       await actionControllerCompressRelationships({
-        path: { canvasId: input.roomContext.initialCanvasData.id },
+        path: {
+          roomId: input.roomContext.initialRoomData.id,
+          canvasId: input.roomContext.initialCanvasData.id,
+        },
       }),
     );
   }

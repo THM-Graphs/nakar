@@ -16,7 +16,10 @@ export class UnlockAllNodesAction extends Action<UnlockAllNodesActionParams> {
   protected async action(input: UnlockAllNodesActionParams): Promise<void> {
     resultOrThrow(
       await actionControllerUnlockAllNodes({
-        path: { canvasId: input.roomContext.initialCanvasData.id },
+        path: {
+          roomId: input.roomContext.initialRoomData.id,
+          canvasId: input.roomContext.initialCanvasData.id,
+        },
       }),
     );
   }

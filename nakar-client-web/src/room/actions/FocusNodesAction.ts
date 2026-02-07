@@ -10,6 +10,7 @@ export class FocusNodesAction extends Action<NodesActionParams> {
     await resultOrThrow(
       await actionControllerFocusNodes({
         path: {
+          roomId: input.roomContext.initialRoomData.id,
           canvasId: input.roomContext.initialCanvasData.id,
         },
         body: { nodes: input.nodes.map((n) => n.id) },

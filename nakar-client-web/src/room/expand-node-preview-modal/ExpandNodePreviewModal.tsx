@@ -110,6 +110,7 @@ export function ExpandNodePreviewModal() {
                   resultOrThrow(
                     await actionControllerExpandNode({
                       path: {
+                        roomId: roomContext.initialRoomData.id,
                         canvasId: roomContext.initialCanvasData.id,
                       },
                       body: {

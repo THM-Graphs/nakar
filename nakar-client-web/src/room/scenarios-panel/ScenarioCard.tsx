@@ -33,7 +33,7 @@ export function ScenarioCard(props: {
             {isLoggedIn && (
               <Link
                 to={Router.getEditScenarioPath(
-                  canvasContext.projectId,
+                  canvasContext.initialRoomData.projectId,
                   props.scenarioGroup.id,
                   props.scenario.id,
                 )}

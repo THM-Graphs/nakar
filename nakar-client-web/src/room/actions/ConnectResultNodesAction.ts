@@ -20,7 +20,10 @@ export class ConnectResultNodesAction extends Action<ConnectResultNodesActionPar
   protected async action(input: ConnectResultNodesActionParams): Promise<void> {
     resultOrThrow(
       await actionControllerConnectResultNodes({
-        path: { canvasId: input.roomContext.initialCanvasData.id },
+        path: {
+          roomId: input.roomContext.initialRoomData.id,
+          canvasId: input.roomContext.initialCanvasData.id,
+        },
       }),
     );
   }

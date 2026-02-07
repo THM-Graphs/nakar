@@ -34,7 +34,10 @@ export function ScenarioDisplay(props: {
           try {
             await resultOrThrow(
               await actionControllerLoadScenario({
-                path: { canvasId: roomContext.initialCanvasData.id },
+                path: {
+                  roomId: roomContext.initialRoomData.id,
+                  canvasId: roomContext.initialCanvasData.id,
+                },
                 body: {
                   scenarioId: props.scenario.id,
                   arguments: [],

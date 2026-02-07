@@ -15,7 +15,10 @@ export class RelayoutAction extends Action<RelayoutActionParams> {
   protected async action(input: RelayoutActionParams): Promise<void> {
     resultOrThrow(
       await actionControllerRelayout({
-        path: { canvasId: input.roomContext.initialCanvasData.id },
+        path: {
+          roomId: input.roomContext.initialRoomData.id,
+          canvasId: input.roomContext.initialCanvasData.id,
+        },
       }),
     );
   }

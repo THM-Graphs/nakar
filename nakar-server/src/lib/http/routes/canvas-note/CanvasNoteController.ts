@@ -17,16 +17,23 @@ import { UserIsLoggedIn } from '../../guards/UserIsLoggedIn';
 import { UpdateNoteRequestBodyDto } from './dto/UpdateNoteRequestBodyDto';
 import { JWT } from '../../decorators/JWT';
 import { AuthService } from '../../../auth/AuthService';
-import { UserCanAccessCanvas } from '../../guards/UserCanAccessCanvas';
 import { NoteBelongsToCanvas } from '../../guards/NoteBelongsToCanvas';
+import { UserCanAccessRoom } from '../../guards/UserCanAccessRoom';
+import { CanvasBelongsToRoom } from '../../guards/CanvasBelongsToRoom';
 
-@Controller('canvas/:canvasId/note')
-@UseGuards(UserCanAccessCanvas)
+@Controller('room/:roomId/canvas/:canvasId/note')
 @ApiParam({
   name: 'canvasId',
   required: true,
   type: 'string',
 })
+@ApiParam({
+  name: 'roomId',
+  required: true,
+  type: 'string',
+})
+@UseGuards(UserCanAccessRoom)
+@UseGuards(CanvasBelongsToRoom)
 export class CanvasNoteController {
   private readonly _logger: Logger = createChildLogger(this);
 

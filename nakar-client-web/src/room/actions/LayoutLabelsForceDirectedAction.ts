@@ -16,6 +16,7 @@ export class LayoutLabelsForceDirectedAction extends Action<LabelActionParams> {
     resultOrThrow(
       await actionControllerLayoutLabel({
         path: {
+          roomId: input.roomContext.initialRoomData.id,
           canvasId: input.roomContext.initialCanvasData.id,
         },
         body: {

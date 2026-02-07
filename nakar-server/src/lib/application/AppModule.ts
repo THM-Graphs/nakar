@@ -14,11 +14,12 @@ import { RedirectController } from '../http/routes/redirect/RedirectController';
 import { ScenarioController } from '../http/routes/scenario/ScenarioController';
 import { ScenarioGroupController } from '../http/routes/scenario-group/ScenarioGroupController';
 import { ProjectController } from '../http/routes/project/ProjectController';
-import { CanvasController } from '../http/routes/canvas/CanvasController';
 import { CanvasDatabaseConnectionController } from '../http/routes/canvas-database-connection/CanvasDatabaseConnectionController';
 import { CanvasNoteController } from '../http/routes/canvas-note/CanvasNoteController';
 import { ActionController } from '../http/routes/canvas-action/ActionController';
 import { DatabaseConnectionController } from '../http/routes/database-connection/DatabaseConnectionController';
+import { PublicRoomController } from '../http/routes/public-room/PublicRoomController';
+import { PublicCanvasController } from '../http/routes/public-canvas/PublicCanvasController';
 
 @Module({
   controllers: [
@@ -29,7 +30,8 @@ import { DatabaseConnectionController } from '../http/routes/database-connection
     ScenarioController,
     RoomController,
     DatabaseConnectionController,
-    CanvasController,
+    PublicRoomController,
+    PublicCanvasController,
     CanvasNoteController,
     CanvasDatabaseConnectionController,
     ActionController,

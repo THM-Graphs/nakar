@@ -13,18 +13,13 @@ export class CanvasPageDto {
   @ApiProperty({ type: RoomDto })
   public room: RoomDto;
 
-  @ApiProperty({ type: String })
-  public projectId: string;
-
   public constructor(data: {
     canvas: CanvasDto;
     scenarios: ScenarioCollectionDto;
     room: RoomDto;
-    projectId: string;
   }) {
     this.canvas = data.canvas;
     this.scenarios = data.scenarios;
     this.room = data.room;
-    this.projectId = data.projectId;
   }
 }

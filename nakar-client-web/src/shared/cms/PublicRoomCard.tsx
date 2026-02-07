@@ -20,10 +20,7 @@ export function PublicRoomCard(props: {
             <span className={"ellipsis user-select-text"}>
               {props.room.projectTitle}
             </span>
-            <Link
-              to={Router.getCanvasUrl(props.room.joinCanvasId)}
-              className={"ellipsis"}
-            >
+            <Link to={Router.getRoomUrl(props.room.id)} className={"ellipsis"}>
               {props.room.title}
             </Link>
           </Stack>

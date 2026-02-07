@@ -60,7 +60,6 @@ export type CanvasPageDto = {
     canvas: CanvasDto;
     scenarios: ScenarioCollectionDto;
     room: RoomDto;
-    projectId: string;
 };
 
 export type CanvasTableDataChangedWsdto = {
@@ -505,6 +504,7 @@ export type RoomDto = {
     visibility: 'private' | 'public' | 'unlisted';
     canvases: Array<CanvasDto>;
     joinCanvasId: string;
+    projectId: string;
 };
 
 export type visibility = 'private' | 'public' | 'unlisted';
@@ -904,20 +904,32 @@ export type DatabaseConnectionControllerUpdateDatabaseConnectionResponse = (Data
 
 export type DatabaseConnectionControllerUpdateDatabaseConnectionError = unknown;
 
-export type CanvasControllerGetCanvasData = {
+export type PublicRoomControllerGetRoomData = {
     path: {
-        canvasId: string;
+        roomId: string;
     };
 };
 
-export type CanvasControllerGetCanvasResponse = (CanvasPageDto);
+export type PublicRoomControllerGetRoomResponse = (RoomDto);
 
-export type CanvasControllerGetCanvasError = unknown;
+export type PublicRoomControllerGetRoomError = unknown;
+
+export type PublicCanvasControllerGetCanvasData = {
+    path: {
+        canvasId: string;
+        roomId: string;
+    };
+};
+
+export type PublicCanvasControllerGetCanvasResponse = (CanvasPageDto);
+
+export type PublicCanvasControllerGetCanvasError = unknown;
 
 export type CanvasNoteControllerPostNoteData = {
     body: PostNoteRequestBody;
     path: {
         canvasId: string;
+        roomId: string;
     };
 };
 
@@ -929,6 +941,7 @@ export type CanvasNoteControllerDeleteNoteData = {
     path: {
         canvasId: string;
         noteId: string;
+        roomId: string;
     };
 };
 
@@ -941,6 +954,7 @@ export type CanvasNoteControllerUpdateNoteData = {
     path: {
         canvasId: string;
         noteId: string;
+        roomId: string;
     };
 };
 
@@ -952,6 +966,7 @@ export type CanvasDatabaseConnectionControllerGetStatsData = {
     path: {
         canvasId: string;
         databaseId: string;
+        roomId: string;
     };
 };
 
@@ -964,6 +979,7 @@ export type CanvasDatabaseConnectionControllerPerformSearchData = {
     path: {
         canvasId: string;
         databaseId: string;
+        roomId: string;
     };
 };
 
@@ -975,6 +991,7 @@ export type CanvasDatabaseConnectionControllerGetSearchCapabilitesData = {
     path: {
         canvasId: string;
         databaseId: string;
+        roomId: string;
     };
 };
 
@@ -986,6 +1003,7 @@ export type CanvasDatabaseConnectionControllerExpandNodePreviewData = {
     path: {
         canvasId: string;
         databaseId: string;
+        roomId: string;
     };
     query: {
         nodeId: string;
@@ -1000,6 +1018,7 @@ export type ActionControllerLoadScenarioData = {
     body: LoadScenarioRequestBodyDto;
     path: {
         canvasId: string;
+        roomId: string;
     };
 };
 
@@ -1010,6 +1029,7 @@ export type ActionControllerLoadScenarioError = unknown;
 export type ActionControllerReloadScenarioData = {
     path: {
         canvasId: string;
+        roomId: string;
     };
 };
 
@@ -1021,6 +1041,7 @@ export type ActionControllerExpandNodeData = {
     body: ExpandNodeRequestBodyDto;
     path: {
         canvasId: string;
+        roomId: string;
     };
 };
 
@@ -1032,6 +1053,7 @@ export type ActionControllerDeleteElementsData = {
     body: DeleteElementsRequestBodyDto;
     path: {
         canvasId: string;
+        roomId: string;
     };
 };
 
@@ -1042,6 +1064,7 @@ export type ActionControllerDeleteElementsError = unknown;
 export type ActionControllerRelayoutData = {
     path: {
         canvasId: string;
+        roomId: string;
     };
 };
 
@@ -1053,6 +1076,7 @@ export type ActionControllerUnlockNodesData = {
     body: UnlockNodesRequestBodyDto;
     path: {
         canvasId: string;
+        roomId: string;
     };
 };
 
@@ -1064,6 +1088,7 @@ export type ActionControllerFocusNodesData = {
     body: FocusNodesRequestBodyDto;
     path: {
         canvasId: string;
+        roomId: string;
     };
 };
 
@@ -1074,6 +1099,7 @@ export type ActionControllerFocusNodesError = unknown;
 export type ActionControllerUndoData = {
     path: {
         canvasId: string;
+        roomId: string;
     };
 };
 
@@ -1084,6 +1110,7 @@ export type ActionControllerUndoError = unknown;
 export type ActionControllerRedoData = {
     path: {
         canvasId: string;
+        roomId: string;
     };
 };
 
@@ -1095,6 +1122,7 @@ export type ActionControllerRunQueryData = {
     body: RunQueryRequestBodyDto;
     path: {
         canvasId: string;
+        roomId: string;
     };
 };
 
@@ -1105,6 +1133,7 @@ export type ActionControllerRunQueryError = unknown;
 export type ActionControllerConnectResultNodesData = {
     path: {
         canvasId: string;
+        roomId: string;
     };
 };
 
@@ -1115,6 +1144,7 @@ export type ActionControllerConnectResultNodesError = unknown;
 export type ActionControllerUnlockAllNodesData = {
     path: {
         canvasId: string;
+        roomId: string;
     };
 };
 
@@ -1125,6 +1155,7 @@ export type ActionControllerUnlockAllNodesError = unknown;
 export type ActionControllerRemoveDanglingNodesData = {
     path: {
         canvasId: string;
+        roomId: string;
     };
 };
 
@@ -1135,6 +1166,7 @@ export type ActionControllerRemoveDanglingNodesError = unknown;
 export type ActionControllerCompressRelationshipsData = {
     path: {
         canvasId: string;
+        roomId: string;
     };
 };
 
@@ -1146,6 +1178,7 @@ export type ActionControllerCompressNodesData = {
     body: CompressNodesRequestBodyDto;
     path: {
         canvasId: string;
+        roomId: string;
     };
 };
 
@@ -1157,6 +1190,7 @@ export type ActionControllerLayoutLabelData = {
     body: LayoutLabelRequestBodyDto;
     path: {
         canvasId: string;
+        roomId: string;
     };
 };
 
@@ -1168,6 +1202,7 @@ export type ActionControllerShowShortestPathData = {
     body: ShowShortestPathRequestBodyDto;
     path: {
         canvasId: string;
+        roomId: string;
     };
 };
 
@@ -1179,6 +1214,7 @@ export type ActionControllerLoadNodeData = {
     body: LoadNodeRequestBodyDto;
     path: {
         canvasId: string;
+        roomId: string;
     };
 };
 
@@ -1190,6 +1226,7 @@ export type ActionControllerSetViewSettingsData = {
     body: LiveCanvasViewSettingsDto;
     path: {
         canvasId: string;
+        roomId: string;
     };
 };
 

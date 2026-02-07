@@ -18,17 +18,22 @@ export class RoomDto {
   @ApiProperty()
   public joinCanvasId: string;
 
+  @ApiProperty({ type: String })
+  public projectId: string;
+
   public constructor(data: {
     id: string;
     title: string;
     visibility: RoomVisibilityDto;
     canvases: CanvasDto[];
     joinCanvasId: string;
+    projectId: string;
   }) {
     this.id = data.id;
     this.title = data.title;
     this.visibility = data.visibility;
     this.canvases = data.canvases;
     this.joinCanvasId = data.joinCanvasId;
+    this.projectId = data.projectId;
   }
 }

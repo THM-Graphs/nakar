@@ -7,11 +7,11 @@ import {
 import { Result } from '@strapi/types/dist/modules/documents/result';
 import { Request } from 'express';
 import { DatabaseService } from '../../database/DatabaseService';
-import { userCanSeeAndJoinCanvas } from '../../policies/userCanSeeAndJoinCanvas';
 import { AuthService } from '../../auth/AuthService';
+import { userCanSeeAndJoinRoom } from '../../policies/userCanSeeAndJoinRoom';
 
 @Injectable()
-export class UserCanAccessCanvas implements CanActivate {
+export class UserCanAccessRoom implements CanActivate {
   public constructor(
     private readonly _databaseService: DatabaseService,
     private readonly _authService: AuthService,
@@ -23,17 +23,17 @@ export class UserCanAccessCanvas implements CanActivate {
     const user: Result<'plugin::users-permissions.user'> | null =
       await this._authService.getUserFromRequest(req);
 
-    const canvasId: unknown = req.params['canvasId'];
-    if (typeof canvasId !== 'string') {
-      throw new NotFoundException(`No canvas id provided.`);
+    const roomId: unknown = req.params['roomId'];
+    if (typeof roomId !== 'string') {
+      throw new NotFoundException(`No room id provided.`);
     }
 
-    const canvas: Result<'api::canvas.canvas'> =
-      await this._databaseService.getCanvas(canvasId);
+    const room: Result<'api::room.room'> =
+      await this._databaseService.getRoom(roomId);
 
-    const allowed: boolean = await userCanSeeAndJoinCanvas(
+    const allowed: boolean = await userCanSeeAndJoinRoom(
       user,
-      canvas,
+      room,
       this._databaseService,
     );
 
