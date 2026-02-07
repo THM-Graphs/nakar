@@ -61,10 +61,17 @@ export function ScenarioCard(props: {
             ) : (
               <span className={"fst-italic"}>No description</span>
             )}
-            <span>
+            <span className={"ellipsis"}>
               Actions:{" "}
               {props.scenario.postActions.length > 0 ? (
-                props.scenario.postActions.join(", ")
+                <OverlayTrigger
+                  delay={{ show: 1000, hide: 0 }}
+                  overlay={
+                    <Tooltip>{props.scenario.postActions.join(", ")}</Tooltip>
+                  }
+                >
+                  <span>{props.scenario.postActions.join(", ")}</span>
+                </OverlayTrigger>
               ) : (
                 <span className={"fst-italic"}>None</span>
               )}

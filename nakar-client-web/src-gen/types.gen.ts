@@ -593,7 +593,6 @@ export type StartPageRoomDto = {
     id: string;
     title: string;
     visibility: 'private' | 'public' | 'unlisted';
-    projectTitle: string;
     joinCanvasId: string;
 };
 

@@ -12,22 +12,17 @@ export class StartPageRoomDto {
   public visibility: RoomVisibilityDto;
 
   @ApiProperty()
-  public projectTitle: string;
-
-  @ApiProperty()
   public joinCanvasId: string;
 
   public constructor(data: {
     id: string;
     title: string;
     visibility: RoomVisibilityDto;
-    projectTitle: string;
     joinCanvasId: string;
   }) {
     this.id = data.id;
     this.title = data.title;
     this.visibility = data.visibility;
-    this.projectTitle = data.projectTitle;
     this.joinCanvasId = data.joinCanvasId;
   }
 }

@@ -97,7 +97,7 @@ export class StartController {
           ),
         )
       ).toSorted((a: StartPageRoomDto, b: StartPageRoomDto): number =>
-        a.projectTitle.localeCompare(b.projectTitle),
+        a.title.localeCompare(b.title),
       ),
       recentRooms: await Promise.all(
         recentRooms.map(

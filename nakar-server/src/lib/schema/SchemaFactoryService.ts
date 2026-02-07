@@ -106,15 +106,12 @@ export class SchemaFactoryService {
   public async createSchemaStartPageRoom(
     room: Result<'api::room.room'>,
   ): Promise<StartPageRoomDto> {
-    const project: Result<'api::project.project'> =
-      await this._database.getProjectOfRoom(room);
     const canvases: Result<'api::canvas.canvas'>[] =
       await this._database.getCanvasesOfRoom(room);
     return {
       id: room.documentId,
       title: room.title ?? '',
       visibility: this.createSchemaRoomVisibility(room),
-      projectTitle: project.title ?? '',
       joinCanvasId: canvases[0].documentId,
     };
   }

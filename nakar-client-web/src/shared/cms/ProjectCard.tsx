@@ -22,7 +22,7 @@ export function ProjectCard(props: { project: StartPageProjectDto }) {
         }
         subtitle={null}
         icon={"journal-text"}
-        rightBodyPaddingStart={200}
+        rightBodyPaddingStart={400}
         rightBody={
           <Stack>
             <span className={"text-muted small user-select-text"}>
