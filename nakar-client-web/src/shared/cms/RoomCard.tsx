@@ -5,6 +5,7 @@ import { ProjectPageDto, RoomDto } from "../../../src-gen";
 import { CMSCardContent } from "./CMSCardContent.tsx";
 import { CSSProperties } from "react";
 import { Router } from "../../routing/Router.ts";
+import { ClipboardButton } from "../elements/ClipboardButton.tsx";
 
 export function RoomCard(props: {
   room: RoomDto;
@@ -17,12 +18,24 @@ export function RoomCard(props: {
       <CMSCardContent
         onRemove={props.onRemove}
         title={
-          <Stack className={"ellipsis"}>
+          <Stack
+            direction={"horizontal"}
+            gap={3}
+            className={"justify-content-start"}
+          >
+            <Stack className={"ellipsis flex-grow-0"}>
+              <Link
+                to={Router.getCanvasUrl(props.room.joinCanvasId)}
+                className={"ellipsis"}
+              >
+                {props.room.title}
+              </Link>
+            </Stack>
             <Link
-              to={Router.getCanvasUrl(props.room.joinCanvasId)}
-              className={"ellipsis"}
+              to={Router.getRoomEditUrl(props.project.id, props.room.id)}
+              className={"small"}
             >
-              {props.room.title}
+              <i className={"bi bi-pen"}></i>
             </Link>
           </Stack>
         }
@@ -31,16 +44,28 @@ export function RoomCard(props: {
             visibility={props.room.visibility}
           ></RoomVisibilityDisplay>
         }
-        rightBodyPaddingStart={400}
-        rightBody={
-          <Link
-            to={Router.getRoomEditUrl(props.project.id, props.room.id)}
-            className={"small"}
-          >
-            Edit
-          </Link>
-        }
         icon={"person-workspace"}
+        rightBodyPaddingStart={300}
+        rightBody={
+          <Stack>
+            {props.room.visibility === "public" ||
+            props.room.visibility === "unlisted" ? (
+              <span className={"small"}>
+                Public URL:{" "}
+                <Link to={Router.getCanvasUrl(props.room.joinCanvasId)}>
+                  {Router.getCanvasUrl(props.room.joinCanvasId)}
+                </Link>
+                <ClipboardButton
+                  text={Router.getCanvasUrl(props.room.joinCanvasId)}
+                ></ClipboardButton>
+              </span>
+            ) : (
+              <span className={"small text-muted fst-italic"}>
+                No Public URL
+              </span>
+            )}
+          </Stack>
+        }
       ></CMSCardContent>
     </Card>
   );

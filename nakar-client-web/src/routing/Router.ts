@@ -3,23 +3,23 @@ export class Router {
   public static createRouter() {}
 
   public static getProjectPath(projectId: string): string {
-    return `/project/${projectId}`;
+    return `${window.location.origin}/project/${projectId}`;
   }
 
   public static getHomeUrl(): string {
-    return "/";
+    return `${window.location.origin}/`;
   }
 
   public static getProjectEditPath(projectId: string): string {
-    return `/project/${projectId}/edit`;
+    return `${window.location.origin}/project/${projectId}/edit`;
   }
 
   public static getCanvasUrl(canvasId: string): string {
-    return `/canvas/${canvasId}`;
+    return `${window.location.origin}/canvas/${canvasId}`;
   }
 
   public static getRoomEditUrl(projectId: string, roomId: string): string {
-    return `/project/${projectId}/room/${roomId}/edit`;
+    return `${window.location.origin}/project/${projectId}/room/${roomId}/edit`;
   }
 
   public static getEditScenarioPath(
@@ -27,20 +27,20 @@ export class Router {
     scenarioGroupId: string,
     scenarioId: string,
   ): string {
-    return `/project/${projectId}/scenario-group/${scenarioGroupId}/scenario/${scenarioId}/edit`;
+    return `${window.location.origin}/project/${projectId}/scenario-group/${scenarioGroupId}/scenario/${scenarioId}/edit`;
   }
 
   public static getEditScenarioGroupPath(
     projectId: string,
     scenarioGroupId: string,
   ): string {
-    return `/project/${projectId}/scenario-group/${scenarioGroupId}/edit`;
+    return `${window.location.origin}/project/${projectId}/scenario-group/${scenarioGroupId}/edit`;
   }
 
   public static getDatabaseConnectionEditUrl(
     projectId: string,
     databaseId: string,
   ): string {
-    return `/project/${projectId}/database-connection/${databaseId}/edit`;
+    return `${window.location.origin}/project/${projectId}/database-connection/${databaseId}/edit`;
   }
 }

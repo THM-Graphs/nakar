@@ -7,6 +7,7 @@ import { RoomCard } from "../shared/cms/RoomCard.tsx";
 import { DatabaseConnectionCard } from "../shared/cms/DatabaseConnectionCard.tsx";
 import { ScenarioGroupCard } from "../shared/cms/ScenarioGroupCard.tsx";
 import {
+  databaseConnectionControllerCreateDatabaseConnection,
   projectControllerGetProject,
   ProjectPageDto,
   roomControllerCreateRoom,
@@ -114,37 +115,24 @@ export function Project() {
             </Stack>
             <Stack>
               <h5>Database Connections</h5>
-              <Stack direction={"horizontal"} gap={3} className={"flex-wrap"}>
-                {projectContext.databases.map((r) => (
-                  <DatabaseConnectionCard
-                    key={r.id}
-                    databaseConnection={r}
-                    project={projectContext}
-                  ></DatabaseConnectionCard>
-                ))}
+              <Stack gap={3}>
+                <Stack direction={"horizontal"} gap={3} className={"flex-wrap"}>
+                  {projectContext.databases.map((r) => (
+                    <DatabaseConnectionCard
+                      key={r.id}
+                      databaseConnection={r}
+                      project={projectContext}
+                    ></DatabaseConnectionCard>
+                  ))}
+                </Stack>
                 <CMSEmptyHint list={projectContext.databases}></CMSEmptyHint>
-              </Stack>
-            </Stack>
-            <Stack>
-              <h5>Scenarios</h5>
-              <Stack direction={"vertical"} gap={3} className={"flex-wrap"}>
-                {projectContext.scenarioGroups.map((r) => (
-                  <ScenarioGroupCard
-                    key={r.id}
-                    scenarioGroup={r}
-                    project={projectContext}
-                  ></ScenarioGroupCard>
-                ))}
-                <CMSEmptyHint
-                  list={projectContext.scenarioGroups}
-                ></CMSEmptyHint>
-                <Card>
+                <Card className={"align-self-start"}>
                   <NavbarButton
                     icon={"plus-lg"}
-                    title={"Add Scenario Group"}
+                    title={"Add Database Connection"}
                     className={"p-1"}
                     onClick={() => {
-                      scenarioGroupControllerCreateScenarioGroup({
+                      databaseConnectionControllerCreateDatabaseConnection({
                         path: { projectId: projectContext.id },
                       })
                         .then(resultOrThrow)
@@ -154,6 +142,40 @@ export function Project() {
                   ></NavbarButton>
                 </Card>
               </Stack>
+            </Stack>
+            <Stack gap={3}>
+              <Stack gap={5}>
+                {projectContext.scenarioGroups.map((r) => (
+                  <ScenarioGroupCard
+                    key={r.id}
+                    scenarioGroup={r}
+                    project={projectContext}
+                  ></ScenarioGroupCard>
+                ))}
+              </Stack>
+              <CMSEmptyHint list={projectContext.scenarioGroups}></CMSEmptyHint>
+              <Card>
+                <NavbarButton
+                  icon={"plus-lg"}
+                  title={"Add Scenario Group"}
+                  className={"p-1"}
+                  onClick={() => {
+                    scenarioGroupControllerCreateScenarioGroup({
+                      path: { projectId: projectContext.id },
+                    })
+                      .then(resultOrThrow)
+                      .then((r) =>
+                        navigate(
+                          Router.getEditScenarioGroupPath(
+                            projectContext.id,
+                            r.id,
+                          ),
+                        ),
+                      )
+                      .catch(console.error);
+                  }}
+                ></NavbarButton>
+              </Card>
             </Stack>
           </Stack>
         </Container>
