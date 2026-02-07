@@ -54,7 +54,7 @@ export function AuthModalContent() {
             });
         }}
       >
-        <Stack gap={2} className={"p-2"}>
+        <Stack gap={3} className={"p-3"}>
           <Form.Group controlId={"email"}>
             <Form.Label className={"small"}>
               Username / Email address
