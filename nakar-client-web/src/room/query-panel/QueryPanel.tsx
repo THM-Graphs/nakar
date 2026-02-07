@@ -20,6 +20,7 @@ import {
   GetDatabaseStatsResponseBodyDto,
 } from "../../../src-gen";
 import { useIsLoggedIn } from "../../state/useIsLoggedIn.ts";
+import { CypherEditor } from "@neo4j-cypher/react-codemirror";
 
 // TODO: Split into parts to prevent layout shift on login
 export function QueryPanel() {
@@ -42,6 +43,7 @@ export function QueryPanel() {
     type: "loading",
   });
   const isLoggedIn = useIsLoggedIn();
+  const getTheme = useBearStore((s) => s.global.theme.getTheme);
 
   const reload = () => {
     (async () => {
@@ -76,6 +78,22 @@ export function QueryPanel() {
       query.setQueryText("");
     };
   }, []);
+
+  const onRun = () => {
+    actionControllerRunQuery({
+      path: {
+        roomId: roomContext.initialRoomData.id,
+        canvasId: roomContext.initialCanvasData.id,
+      },
+      body: {
+        databaseId: selectedDatabaseId ?? "",
+        query: query.queryText,
+        replace: true,
+      },
+    })
+      .then(resultOrThrow)
+      .catch(pushErrorNotification);
+  };
 
   return (
     <Panel
@@ -117,18 +135,19 @@ export function QueryPanel() {
               initialState={false}
               title={<span className={"fw-bold small"}>Query</span>}
             >
-              <textarea
-                placeholder={"MATCH p=()-[]-() RETURN p LIMIT 500"}
-                className={"border-0  font-monospace border-top border-bottom"}
-                style={{
-                  height: "200px",
-                  fontSize: "12px",
-                }}
+              <CypherEditor
+                placeholder={"MATCH (n) RETURN n;"}
+                lineWrap={true}
+                overrideThemeBackgroundColor={true}
+                lint={true}
                 value={query.queryText}
-                onChange={(event) => {
-                  query.setQueryText(event.target.value);
+                onChange={(e) => {
+                  query.setQueryText(e);
                 }}
-              ></textarea>
+                theme={getTheme()}
+                className={"border-top border-bottom"}
+                onExecute={onRun}
+              ></CypherEditor>
               <Stack
                 direction={"horizontal"}
                 className={"justify-content-between align-items-center"}
@@ -163,20 +182,8 @@ export function QueryPanel() {
                     disabled={!isLoggedIn}
                     title="Run"
                     icon="play-fill"
-                    onClick={async () => {
-                      resultOrThrow(
-                        await actionControllerRunQuery({
-                          path: {
-                            roomId: roomContext.initialRoomData.id,
-                            canvasId: roomContext.initialCanvasData.id,
-                          },
-                          body: {
-                            databaseId: selectedDatabaseId ?? "",
-                            query: query.queryText,
-                            replace: true,
-                          },
-                        }),
-                      );
+                    onClick={() => {
+                      onRun();
                     }}
                   ></NavbarButton>
                   <NavbarButton
