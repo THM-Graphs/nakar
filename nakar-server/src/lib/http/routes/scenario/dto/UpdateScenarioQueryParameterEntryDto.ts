@@ -22,4 +22,8 @@ export class UpdateScenarioQueryParameterEntryDto {
   @ApiProperty({ enum: ScenarioParameterDataTypeDto })
   @IsEnum(ScenarioParameterDataTypeDto)
   public dataType!: ScenarioParameterDataTypeDto;
+
+  @ApiProperty()
+  @IsString()
+  public allowedLabels!: string;
 }

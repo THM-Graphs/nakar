@@ -12,13 +12,16 @@ import {
   scenarioControllerUpdateScenario,
   ScenarioDto,
   ScenarioGroupDto,
+  ScenarioParameterDto,
   ScenarioQueryDto,
   UpdateScenarioQueryEntryDto,
+  UpdateScenarioQueryParameterEntryDto,
+  UpdateScenarioRequestBodyDto,
 } from "../../src-gen";
 import { resultOrThrow } from "../shared/data/resultOrThrow.ts";
 import { Router } from "../routing/Router.ts";
 import { CMSButton } from "../shared/cms/CMSButton.tsx";
-import { ScenarioData, ScenarioEditor } from "../shared/cms/ScenarioEditor.tsx";
+import { ScenarioEditor } from "../shared/cms/ScenarioEditor.tsx";
 
 type EditScenarioLoaderData = {
   project: ProjectPageDto;
@@ -69,7 +72,7 @@ export async function EditScenarioLoader(
 
 export function EditScenario() {
   const loaderData: EditScenarioLoaderData = useLoaderData();
-  const [scenario, setScenario] = useState<ScenarioData>({
+  const [scenario, setScenario] = useState<UpdateScenarioRequestBodyDto>({
     title: loaderData.scenario.title ?? "",
     queries: loaderData.scenario.queries.map(
       (query: ScenarioQueryDto): UpdateScenarioQueryEntryDto => {
@@ -80,6 +83,15 @@ export function EditScenario() {
           isTableQuery: query.isTableQuery,
         };
       },
+    ),
+    parameters: loaderData.scenario.parameters.map(
+      (
+        parameter: ScenarioParameterDto,
+      ): UpdateScenarioQueryParameterEntryDto => ({
+        ...parameter,
+        defaultValue: parameter.defaultValue ?? "",
+        allowedLabels: parameter.allowedLabels.join(", "),
+      }),
     ),
   });
   const [loading, setLoading] = useState(false);
@@ -131,6 +143,7 @@ export function EditScenario() {
                 body: {
                   title: scenario.title,
                   queries: scenario.queries,
+                  parameters: scenario.parameters,
                 },
                 path: {
                   scenarioId: loaderData.scenario.id,

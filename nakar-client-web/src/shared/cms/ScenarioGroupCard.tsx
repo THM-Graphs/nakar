@@ -9,8 +9,9 @@ import { CMSCardContent } from "./CMSCardContent.tsx";
 import { Link, useNavigate } from "react-router";
 import { Router } from "../../routing/Router.ts";
 import { resultOrThrow } from "../data/resultOrThrow.ts";
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { handleError } from "../error/handleError.ts";
+import { ScenarioQueryParameterBadge } from "../../room/scenarios-panel/ScenarioQueryParameterBadge.tsx";
 
 export function ScenarioGroupCard(props: {
   scenarioGroup: ScenarioGroupDto;
@@ -41,18 +42,31 @@ export function ScenarioGroupCard(props: {
           <Stack>
             <span className={"text-muted small"}>Scenarios</span>
             {props.scenarioGroup.scenarios.map((scenario: ScenarioDto) => (
-              <Link
-                to={Router.getEditScenarioPath(
-                  props.project.id,
-                  props.scenarioGroup.id,
-                  scenario.id,
-                )}
-                key={scenario.id}
-              >
-                <span className={"muted small user-select-text"}>
-                  {scenario.title}
-                </span>
-              </Link>
+              <Fragment key={scenario.id}>
+                <Stack
+                  direction={"horizontal"}
+                  gap={1}
+                  className={"align-items-baseline"}
+                >
+                  <Link
+                    to={Router.getEditScenarioPath(
+                      props.project.id,
+                      props.scenarioGroup.id,
+                      scenario.id,
+                    )}
+                  >
+                    <span className={"muted small user-select-text"}>
+                      {scenario.title}
+                    </span>
+                  </Link>
+                  {scenario.parameters.map((parameter) => (
+                    <ScenarioQueryParameterBadge
+                      parameter={parameter}
+                      key={parameter.id}
+                    ></ScenarioQueryParameterBadge>
+                  ))}
+                </Stack>
+              </Fragment>
             ))}
             <Button
               variant={"icon"}

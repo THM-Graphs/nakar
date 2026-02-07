@@ -4,19 +4,17 @@ import { Card, Stack } from "react-bootstrap";
 import {
   DatabaseConnectionDto,
   UpdateScenarioQueryEntryDto,
+  UpdateScenarioQueryParameterEntryDto,
+  UpdateScenarioRequestBodyDto,
 } from "../../../src-gen";
 import { useCallback } from "react";
 import { v4 } from "uuid";
 import { NavbarButton } from "../elements/NavbarButton.tsx";
-
-export type ScenarioData = {
-  title: string;
-  queries: UpdateScenarioQueryEntryDto[];
-};
+import { QueryParameterEditor } from "./QueryParameterEditor.tsx";
 
 export function ScenarioEditor(props: {
-  value: ScenarioData;
-  onChange: (newData: ScenarioData) => void;
+  value: UpdateScenarioRequestBodyDto;
+  onChange: (newData: UpdateScenarioRequestBodyDto) => void;
   databases: DatabaseConnectionDto[];
 }) {
   const addQuery = useCallback(() => {
@@ -37,6 +35,33 @@ export function ScenarioEditor(props: {
       props.onChange({
         ...props.value,
         queries: props.value.queries.filter((q) => q.id !== queryId),
+      });
+    },
+    [props.value, props.onChange],
+  );
+
+  const addQueryParameter = useCallback(() => {
+    const newQueryParameter: UpdateScenarioQueryParameterEntryDto = {
+      id: v4(),
+      identifier: "",
+      title: "",
+      dataType: "string",
+      defaultValue: "",
+      allowedLabels: "",
+    };
+    props.onChange({
+      ...props.value,
+      parameters: [...props.value.parameters, newQueryParameter],
+    });
+  }, [props.value, props.onChange]);
+
+  const removeQueryParameter = useCallback(
+    (queryParameterId: string) => {
+      props.onChange({
+        ...props.value,
+        parameters: props.value.parameters.filter(
+          (p) => p.id !== queryParameterId,
+        ),
       });
     },
     [props.value, props.onChange],
@@ -94,6 +119,54 @@ export function ScenarioEditor(props: {
               onClick={(e) => {
                 e.preventDefault();
                 addQuery();
+              }}
+            ></NavbarButton>
+          </Card>
+        </Stack>
+      </Stack>
+
+      <Stack>
+        <h5>Query Parameters</h5>
+        <Stack gap={3}>
+          {props.value.parameters.map(
+            (parameter: UpdateScenarioQueryParameterEntryDto) => (
+              <QueryParameterEditor
+                key={parameter.id}
+                value={parameter}
+                onChange={(
+                  newParameter: UpdateScenarioQueryParameterEntryDto,
+                ): void => {
+                  props.onChange({
+                    ...props.value,
+                    parameters: props.value.parameters.map(
+                      (
+                        p: UpdateScenarioQueryParameterEntryDto,
+                      ): UpdateScenarioQueryParameterEntryDto =>
+                        p.id === newParameter.id ? newParameter : p,
+                    ),
+                  });
+                }}
+                onDelete={(e) => {
+                  e.preventDefault();
+                  if (
+                    parameter.identifier === "" ||
+                    confirm("Remove query parameter?")
+                  ) {
+                    removeQueryParameter(parameter.id);
+                  }
+                }}
+              ></QueryParameterEditor>
+            ),
+          )}
+
+          <Card>
+            <NavbarButton
+              className={"align-self-stretch pt-1 pb-1"}
+              icon={"plus-lg"}
+              title={"Add Query Parameter"}
+              onClick={(e) => {
+                e.preventDefault();
+                addQueryParameter();
               }}
             ></NavbarButton>
           </Card>
