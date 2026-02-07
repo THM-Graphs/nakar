@@ -1,4 +1,4 @@
-import { OverlayTrigger, Stack, Tooltip } from "react-bootstrap";
+import { Stack } from "react-bootstrap";
 import clsx from "clsx";
 import { ScnearioPlayButton } from "./ScenarioPlayButton";
 import { ScenarioArgumentDto, ScenarioDto } from "../../../src-gen";

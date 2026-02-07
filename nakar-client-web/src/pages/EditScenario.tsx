@@ -1,9 +1,7 @@
-import { useCallback, useState } from "react";
-import { LoaderFunctionArgs, useLoaderData, useNavigate } from "react-router";
-import { Container, Form, Spinner, Stack } from "react-bootstrap";
+import { useState } from "react";
+import { LoaderFunctionArgs, useLoaderData } from "react-router";
+import { Container, Stack } from "react-bootstrap";
 import { CMSNavbar } from "../shared/cms/CMSNavbar.tsx";
-import { CMSHeader } from "../shared/cms/CMSHeader.tsx";
-import { CMSErrorCard } from "../shared/cms/CMSErrorCard.tsx";
 import {
   DatabaseConnectionDto,
   projectControllerGetProject,
@@ -20,7 +18,6 @@ import {
 } from "../../src-gen";
 import { resultOrThrow } from "../shared/data/resultOrThrow.ts";
 import { Router } from "../routing/Router.ts";
-import { CMSButton } from "../shared/cms/CMSButton.tsx";
 import { ScenarioEditor } from "../shared/cms/ScenarioEditor.tsx";
 import { CMSEditPageForm } from "../shared/cms/CMSEditPageForm.tsx";
 
@@ -95,34 +92,6 @@ export function EditScenario() {
       }),
     ),
   });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<unknown>(null);
-  const navigate = useNavigate();
-  const saveAndHandleError = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      await scenarioControllerUpdateScenario({
-        body: {
-          title: scenario.title,
-          queries: scenario.queries,
-          parameters: scenario.parameters,
-        },
-        path: {
-          scenarioId: loaderData.scenario.id,
-          projectId: loaderData.project.id,
-          scenarioGroupId: loaderData.scenarioGroup.id,
-        },
-      });
-    } catch (error: unknown) {
-      setError(error);
-    } finally {
-      setLoading(false);
-    }
-  };
-  const closeAfterSave = async () => {
-    await navigate(Router.getProjectPath(loaderData.project.id));
-  };
 
   return (
     <Stack className={""}>
@@ -187,6 +156,7 @@ export function EditScenario() {
               resultOrThrow(result);
             }}
             closeUrl={Router.getProjectPath(loaderData.project.id)}
+            afterDeleteUrl={Router.getProjectPath(loaderData.project.id)}
             entityTitleSingular={"Scenario"}
           >
             <ScenarioEditor

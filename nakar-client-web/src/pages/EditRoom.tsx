@@ -1,4 +1,4 @@
-import { Container, Form, Spinner, Stack } from "react-bootstrap";
+import { Container, Stack } from "react-bootstrap";
 import { CMSNavbar } from "../shared/cms/CMSNavbar.tsx";
 import { useState } from "react";
 import {
@@ -10,13 +10,11 @@ import {
   RoomDto,
 } from "../../src-gen";
 import { resultOrThrow } from "../shared/data/resultOrThrow.ts";
-import { LoaderFunctionArgs, useLoaderData, useNavigate } from "react-router";
-import { CMSErrorCard } from "../shared/cms/CMSErrorCard.tsx";
-import { CMSHeader } from "../shared/cms/CMSHeader.tsx";
-import { CMSButton } from "../shared/cms/CMSButton.tsx";
+import { LoaderFunctionArgs, useLoaderData } from "react-router";
 import { CMSEditTextCard } from "../shared/cms/CMSEditTextCard.tsx";
 import { Router } from "../routing/Router.ts";
 import { RoomVisibilityEditor } from "../shared/cms/RoomVisibilityEditor.tsx";
+import { CMSEditPageForm } from "../shared/cms/CMSEditPageForm.tsx";
 
 type EditRoomLoaderData = {
   room: RoomDto;
@@ -60,9 +58,6 @@ export function EditRoom() {
   const [visibility, setVisibility] = useState<RoomDto["visibility"]>(
     room.visibility,
   );
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<unknown>(null);
-  const navigate = useNavigate();
 
   return (
     <Stack className={""}>
@@ -82,98 +77,38 @@ export function EditRoom() {
       ></CMSNavbar>
       <div className={"mb-auto pt-5 pb-5"}>
         <Container>
-          <Stack gap={3}>
-            <CMSHeader title={`Edit ${room.title}`}></CMSHeader>
-            <CMSErrorCard error={error}></CMSErrorCard>
-            <Form
-              onSubmit={(event) => {
-                event.preventDefault();
-                setLoading(true);
-                setError(null);
-                roomControllerUpdateRoom({
-                  path: { roomId: room.id, projectId: project.id },
-                  body: {
-                    title: title,
-                    visibility: visibility,
-                  },
-                })
-                  .then(resultOrThrow)
-                  .then(() => {
-                    return navigate(Router.getProjectPath(project.id));
-                  })
-                  .catch((error: unknown) => {
-                    setError(error);
-                  })
-                  .finally(() => {
-                    setLoading(false);
-                  });
-              }}
-            >
-              <Stack gap={3}>
-                <CMSEditTextCard
-                  title={"Room Title"}
-                  value={title}
-                  onChange={setTitle}
-                  subtitle={"This title will be shown on your start page."}
-                ></CMSEditTextCard>
-                <RoomVisibilityEditor
-                  value={visibility}
-                  onChange={setVisibility}
-                ></RoomVisibilityEditor>
-                <Stack
-                  direction={"horizontal"}
-                  gap={3}
-                  className={"justify-content-between"}
-                >
-                  <Stack direction={"horizontal"} gap={2}>
-                    <CMSButton
-                      title={"Save"}
-                      icon={"floppy"}
-                      type={"submit"}
-                    ></CMSButton>
-
-                    <CMSButton
-                      link={Router.getProjectPath(project.id)}
-                      title={"Cancel"}
-                      variant={"secondary"}
-                    ></CMSButton>
-
-                    {loading && (
-                      <Spinner variant={"primary"} size={"sm"}></Spinner>
-                    )}
-                  </Stack>
-                  <CMSButton
-                    title={"Delete Room"}
-                    icon={"trash"}
-                    variant={"danger"}
-                    onClick={(e) => {
-                      e.preventDefault();
-
-                      if (!confirm(`Delete Room ${room.title}?`)) {
-                        return;
-                      }
-
-                      setLoading(true);
-                      setError(null);
-                      roomControllerDeleteRoom({
-                        path: { roomId: room.id, projectId: project.id },
-                      })
-                        .then(resultOrThrow)
-                        .then(() => {
-                          return navigate(Router.getProjectPath(project.id));
-                        })
-                        .catch((error: unknown) => {
-                          setError(error);
-                        })
-                        .finally(() => {
-                          setLoading(false);
-                        });
-                    }}
-                  ></CMSButton>
-                </Stack>
-              </Stack>
-            </Form>
-          </Stack>
+          <CMSEditPageForm
+            onSave={async () => {
+              await roomControllerUpdateRoom({
+                path: { roomId: room.id, projectId: project.id },
+                body: {
+                  title: title,
+                  visibility: visibility,
+                },
+              }).then(resultOrThrow);
+            }}
+            onDelete={async () => {
+              await roomControllerDeleteRoom({
+                path: { roomId: room.id, projectId: project.id },
+              }).then(resultOrThrow);
+            }}
+            closeUrl={Router.getProjectPath(project.id)}
+            afterDeleteUrl={Router.getProjectPath(project.id)}
+            entityTitleSingular={"Room"}
+          >
+            <Stack gap={3}>
+              <CMSEditTextCard
+                title={"Room Title"}
+                value={title}
+                onChange={setTitle}
+                subtitle={"This title will be shown on your start page."}
+              ></CMSEditTextCard>
+              <RoomVisibilityEditor
+                value={visibility}
+                onChange={setVisibility}
+              ></RoomVisibilityEditor>
+            </Stack>
+          </CMSEditPageForm>
         </Container>
       </div>
     </Stack>

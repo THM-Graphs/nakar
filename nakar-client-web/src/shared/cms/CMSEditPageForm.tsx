@@ -9,6 +9,7 @@ export function CMSEditPageForm(props: {
   onSave: () => Promise<void>;
   onDelete: () => Promise<void>;
   closeUrl: string;
+  afterDeleteUrl: string;
   entityTitleSingular: string;
   children?: ReactNode;
 }) {
@@ -98,9 +99,9 @@ export function CMSEditPageForm(props: {
                 setLoading(true);
                 setError(null);
                 props
-                  .onSave()
+                  .onDelete()
                   .then(() => {
-                    return navigate(props.closeUrl);
+                    return navigate(props.afterDeleteUrl);
                   })
                   .catch((error: unknown) => {
                     setError(handleError(error));

@@ -33,7 +33,10 @@ export function RoomCard(props: {
         }
         rightBodyPaddingStart={400}
         rightBody={
-          <Link to={Router.getRoomEditUrl(props.project.id, props.room.id)}>
+          <Link
+            to={Router.getRoomEditUrl(props.project.id, props.room.id)}
+            className={"small"}
+          >
             Edit
           </Link>
         }

@@ -1,9 +1,7 @@
 import { useState } from "react";
-import { LoaderFunctionArgs, useLoaderData, useNavigate } from "react-router";
-import { Container, Form, Spinner, Stack } from "react-bootstrap";
+import { LoaderFunctionArgs, useLoaderData } from "react-router";
+import { Container, Stack } from "react-bootstrap";
 import { CMSNavbar } from "../shared/cms/CMSNavbar.tsx";
-import { CMSHeader } from "../shared/cms/CMSHeader.tsx";
-import { CMSErrorCard } from "../shared/cms/CMSErrorCard.tsx";
 import {
   projectControllerGetProject,
   ProjectPageDto,
@@ -13,8 +11,8 @@ import {
 } from "../../src-gen";
 import { resultOrThrow } from "../shared/data/resultOrThrow.ts";
 import { Router } from "../routing/Router.ts";
-import { CMSButton } from "../shared/cms/CMSButton.tsx";
 import { CMSEditTextCard } from "../shared/cms/CMSEditTextCard.tsx";
+import { CMSEditPageForm } from "../shared/cms/CMSEditPageForm.tsx";
 
 type EditScenarioGroupLoaderData = {
   project: ProjectPageDto;
@@ -53,9 +51,6 @@ export async function EditScenarioGroupLoader(
 export function EditScenarioGroup() {
   const loaderData: EditScenarioGroupLoaderData = useLoaderData();
   const [title, setTitle] = useState(loaderData.scenarioGroup.title);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<unknown>(null);
-  const navigate = useNavigate();
 
   return (
     <Stack className={""}>
@@ -84,12 +79,9 @@ export function EditScenarioGroup() {
       ></CMSNavbar>
       <div className={"overflow-auto mb-auto pt-5 pb-5"}>
         <Container>
-          <Form
-            onSubmit={(event) => {
-              event.preventDefault();
-              setLoading(true);
-              setError(null);
-              scenarioGroupControllerUpdateScenarioGroup({
+          <CMSEditPageForm
+            onSave={async () => {
+              await scenarioGroupControllerUpdateScenarioGroup({
                 body: {
                   title: title,
                 },
@@ -97,90 +89,26 @@ export function EditScenarioGroup() {
                   projectId: loaderData.project.id,
                   scenarioGroupId: loaderData.scenarioGroup.id,
                 },
-              })
-                .then(() => {
-                  return navigate(Router.getProjectPath(loaderData.project.id));
-                })
-                .catch((error: unknown) => {
-                  setError(error);
-                })
-                .finally(() => {
-                  setLoading(false);
-                });
+              }).then(resultOrThrow);
             }}
+            onDelete={async () => {
+              await scenarioGroupControllerDeleteScenarioGroup({
+                path: {
+                  projectId: loaderData.project.id,
+                  scenarioGroupId: loaderData.scenarioGroup.id,
+                },
+              }).then(resultOrThrow);
+            }}
+            closeUrl={Router.getProjectPath(loaderData.project.id)}
+            afterDeleteUrl={Router.getProjectPath(loaderData.project.id)}
+            entityTitleSingular={"Scenario Group"}
           >
-            <Stack gap={5}>
-              <CMSHeader
-                title={`Edit ${loaderData.scenarioGroup.title}`}
-              ></CMSHeader>
-              <CMSErrorCard error={error}></CMSErrorCard>
-
-              <CMSEditTextCard
-                title={"Scenario Group Title"}
-                value={title}
-                onChange={setTitle}
-              ></CMSEditTextCard>
-
-              <Stack
-                direction={"horizontal"}
-                gap={3}
-                className={"justify-content-between"}
-              >
-                <Stack direction={"horizontal"} gap={2}>
-                  <CMSButton
-                    title={"Save"}
-                    icon={"floppy"}
-                    type={"submit"}
-                  ></CMSButton>
-                  <CMSButton
-                    title={"Cancel"}
-                    link={Router.getProjectPath(loaderData.project.id)}
-                    variant={"secondary"}
-                  ></CMSButton>
-                  {loading && (
-                    <Spinner variant={"primary"} size={"sm"}></Spinner>
-                  )}
-                </Stack>
-                <CMSButton
-                  title={"Delete Scenario Group"}
-                  icon={"trash"}
-                  variant={"danger"}
-                  onClick={(e) => {
-                    e.preventDefault();
-
-                    if (
-                      !confirm(
-                        `Delete Scenario ${loaderData.scenarioGroup.title}?`,
-                      )
-                    ) {
-                      return;
-                    }
-
-                    setLoading(true);
-                    setError(null);
-                    scenarioGroupControllerDeleteScenarioGroup({
-                      path: {
-                        projectId: loaderData.project.id,
-                        scenarioGroupId: loaderData.scenarioGroup.id,
-                      },
-                    })
-                      .then(resultOrThrow)
-                      .then(() => {
-                        return navigate(
-                          Router.getProjectPath(loaderData.project.id),
-                        );
-                      })
-                      .catch((error: unknown) => {
-                        setError(error);
-                      })
-                      .finally(() => {
-                        setLoading(false);
-                      });
-                  }}
-                ></CMSButton>
-              </Stack>
-            </Stack>
-          </Form>
+            <CMSEditTextCard
+              title={"Scenario Group Title"}
+              value={title}
+              onChange={setTitle}
+            ></CMSEditTextCard>
+          </CMSEditPageForm>
         </Container>
       </div>
     </Stack>
