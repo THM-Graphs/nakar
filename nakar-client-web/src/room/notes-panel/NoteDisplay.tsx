@@ -1,6 +1,4 @@
 import { Stack } from "react-bootstrap";
-import Markdown from "react-markdown";
-import remarkGfm from "remark-gfm";
 import { NodePreviewDisplay } from "../inspector-panel/NodePreviewDisplay.tsx";
 import clsx from "clsx";
 import { ActionNavbarButton } from "../actions/ActionNavbarButton.tsx";
@@ -10,6 +8,7 @@ import { DynamicList } from "../../shared/elements/DynamicList.tsx";
 import { EditNoteAction } from "../actions/EditNoteAction.ts";
 import { NoteDto } from "../../../src-gen";
 import { useIsLoggedIn } from "../../state/useIsLoggedIn.ts";
+import MDEditor from "@uiw/react-md-editor";
 
 export function NoteDisplay(props: { note: NoteDto }) {
   const roomContext = useCanvasContext();
@@ -64,19 +63,7 @@ export function NoteDisplay(props: { note: NoteDto }) {
             "font-monospace user-select-text small markdown text-break"
           }
         >
-          <Markdown
-            remarkPlugins={[remarkGfm]}
-            components={{
-              h1: "h4",
-              h2: "h5",
-              h3: "h6",
-              h4: "h6",
-              h5: "h6",
-              h6: "h6",
-            }}
-          >
-            {note.content}
-          </Markdown>
+          <MDEditor.Markdown source={note.content} style={{ width: "100%" }} />
         </span>
       </Stack>
       <Stack

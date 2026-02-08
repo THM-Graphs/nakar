@@ -76,7 +76,10 @@ export class ScenarioController {
     const updatedScenario: Result<'api::scenario.scenario'> | null =
       await strapi.documents('api::scenario.scenario').update({
         documentId: scenarioId,
-        data: { title: body.title } satisfies Input<'api::scenario.scenario'>,
+        data: {
+          title: body.title,
+          description: body.description,
+        } satisfies Input<'api::scenario.scenario'>,
       });
 
     if (updatedScenario == null) {

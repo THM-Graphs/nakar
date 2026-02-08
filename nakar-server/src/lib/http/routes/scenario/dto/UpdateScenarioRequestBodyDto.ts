@@ -10,6 +10,10 @@ export class UpdateScenarioRequestBodyDto {
   @IsString()
   public title!: string;
 
+  @ApiProperty()
+  @IsString()
+  public description!: string;
+
   @ApiProperty({ type: UpdateScenarioQueryEntryDto, isArray: true })
   @ValidateNested()
   @IsArray()

@@ -4,14 +4,12 @@ import { Panel } from "../../shared/elements/Panel.tsx";
 import { NavbarButton } from "../../shared/elements/NavbarButton.tsx";
 import { NodePreviewDisplay } from "../inspector-panel/NodePreviewDisplay.tsx";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
-import clsx from "clsx";
-import { ColorPicker } from "../../shared/elements/ColorPicker.tsx";
-import { Collapsable } from "../../shared/elements/Collapsable.tsx";
 import { useCanvasContext } from "../../pages/Canvas.tsx";
 import {
   canvasNoteControllerPostNote,
   canvasNoteControllerUpdateNote,
 } from "../../../src-gen";
+import MDEditor from "@uiw/react-md-editor";
 
 type AddEditNoteModalMode = "create" | "update";
 
@@ -27,10 +25,6 @@ export function AddEditNoteModal() {
   const noteId = useBearStore((s) => s.room.panels.notes.addNoteModal.noteId);
   const nodes = useBearStore((s) => s.room.panels.notes.addNoteModal.nodes);
   const content = useBearStore((s) => s.room.panels.notes.addNoteModal.content);
-  const color = useBearStore((s) => s.room.panels.notes.addNoteModal.color);
-  const setColor = useBearStore(
-    (s) => s.room.panels.notes.addNoteModal.setColor,
-  );
   const setContent = useBearStore(
     (s) => s.room.panels.notes.addNoteModal.setContent,
   );
@@ -87,9 +81,8 @@ export function AddEditNoteModal() {
         direction={"none"}
         hidden={false}
         fullWidth={true}
-        className={"rounded-0"}
       >
-        <Stack className={"mb-5"} gap={0}>
+        <Stack gap={0}>
           <Stack className={"p-2 flex-wrap"} direction={"horizontal"}>
             {nodes.map((node) => (
               <NodePreviewDisplay
@@ -100,27 +93,12 @@ export function AddEditNoteModal() {
               ></NodePreviewDisplay>
             ))}
           </Stack>
-          <textarea
-            className={clsx(
-              "border-0 small p-2",
-              nodes.length > 0 && "border-top",
-            )}
-            placeholder={"# Markdown"}
-            style={{
-              height: "150px",
-            }}
+          <MDEditor
             value={content}
             onChange={(e) => {
-              setContent(e.target.value);
+              setContent(e ?? "");
             }}
-          ></textarea>
-          <Collapsable
-            title={"Color"}
-            initialState={color == null}
-            className={"small border-top border-bottom"}
-          >
-            <ColorPicker color={color} onColorChange={setColor}></ColorPicker>
-          </Collapsable>
+          />
         </Stack>
         <Stack
           direction={"horizontal"}

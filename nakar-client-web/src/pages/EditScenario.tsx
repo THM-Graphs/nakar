@@ -72,6 +72,7 @@ export function EditScenario() {
   const loaderData: EditScenarioLoaderData = useLoaderData();
   const [scenario, setScenario] = useState<UpdateScenarioRequestBodyDto>({
     title: loaderData.scenario.title ?? "",
+    description: loaderData.scenario.description ?? "",
     queries: loaderData.scenario.queries.map(
       (query: ScenarioQueryDto): UpdateScenarioQueryEntryDto => {
         return {

@@ -56,14 +56,12 @@ div[role="tooltip"] {
   text-overflow: ellipsis;
 }
 
-.markdown img {
-  width: 100%;
+.wmde-markdown {
+  --color-canvas-default: rgba(0, 0, 0, 0) !important;
+  word-break: break-word !important;
 }
-
-.markdown table,
-.markdown th,
-.markdown td {
-  border-collapse: collapse;
+.wmde-markdown * {
+  user-select: text;
 }
 
 .card,

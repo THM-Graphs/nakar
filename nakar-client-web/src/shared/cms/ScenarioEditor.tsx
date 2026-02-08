@@ -1,5 +1,4 @@
-import { CMSEditTextCard } from "./CMSEditTextCard.tsx";
-import { Stack } from "react-bootstrap";
+import { Card, Form, Stack } from "react-bootstrap";
 import {
   DatabaseConnectionDto,
   UpdateScenarioPostActionEntryDto,
@@ -9,6 +8,7 @@ import {
 import { QueryParametersEditor } from "./QueryParametersEditor.tsx";
 import { QueriesEditor } from "./QueriesEditor.tsx";
 import { PostScenarioActionsEditor } from "./PostScenarioActionsEditor.tsx";
+import MDEditor from "@uiw/react-md-editor";
 
 export function ScenarioEditor(props: {
   value: UpdateScenarioRequestBodyDto;
@@ -19,13 +19,31 @@ export function ScenarioEditor(props: {
     <Stack gap={5}>
       <Stack>
         <h5>Scenario</h5>
-        <CMSEditTextCard
-          title={"Title"}
-          value={props.value.title}
-          onChange={(e) => {
-            props.onChange({ ...props.value, title: e });
-          }}
-        ></CMSEditTextCard>
+        <Card className={"p-3 gap-3"}>
+          <Form.Group className="">
+            <Form.Label>Title</Form.Label>
+            <Form.Control
+              type="text"
+              placeholder={"Title"}
+              value={props.value.title}
+              onChange={(e) => {
+                props.onChange({ ...props.value, title: e.target.value });
+              }}
+            />
+          </Form.Group>
+          <Form.Group>
+            <Form.Label>Description</Form.Label>
+            <MDEditor
+              value={props.value.description}
+              onChange={(e) => {
+                props.onChange({
+                  ...props.value,
+                  description: e ?? "",
+                });
+              }}
+            />
+          </Form.Group>
+        </Card>
       </Stack>
 
       <Stack>

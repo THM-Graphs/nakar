@@ -8,6 +8,7 @@ import { useCanvasContext } from "../../pages/Canvas.tsx";
 import { Router } from "../../routing/Router.ts";
 import { CMSButton } from "../../shared/cms/CMSButton.tsx";
 import { useIsLoggedIn } from "../../state/useIsLoggedIn.ts";
+import MDEditor from "@uiw/react-md-editor";
 
 export function ScenarioCard(props: {
   hidden?: boolean;
@@ -61,14 +62,10 @@ export function ScenarioCard(props: {
 
         <ScenarioCardSection title={"Description"}>
           {props.scenario.description ? (
-            <Card.Text>
-              <span
-                className={"small user-select-text"}
-                style={{ whiteSpace: "pre-line" }}
-              >
-                {props.scenario.description}
-              </span>
-            </Card.Text>
+            <MDEditor.Markdown
+              source={props.scenario.description}
+              style={{ width: "100%" }}
+            />
           ) : (
             <span className={"text-muted small fst-italic"}>None</span>
           )}

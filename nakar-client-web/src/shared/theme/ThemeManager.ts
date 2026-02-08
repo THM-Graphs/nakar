@@ -8,7 +8,11 @@ export function loadSystemTheme(): Theme {
 }
 
 export function applyTheme(theme: Theme): void {
+  // Bootstrap
   document.documentElement.setAttribute("data-bs-theme", theme);
+
+  // https://github.com/uiwjs/react-md-editor?tab=readme-ov-file#support-dark-modenight-mode
+  document.documentElement.setAttribute("data-color-mode", theme);
 }
 
 export function bootstrapTheme(): void {

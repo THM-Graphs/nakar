@@ -690,6 +690,7 @@ export type UpdateScenarioQueryParameterEntryDto = {
 
 export type UpdateScenarioRequestBodyDto = {
     title: string;
+    description: string;
     queries: Array<UpdateScenarioQueryEntryDto>;
     parameters: Array<UpdateScenarioQueryParameterEntryDto>;
     postScenarioActions: Array<UpdateScenarioPostActionEntryDto>;
