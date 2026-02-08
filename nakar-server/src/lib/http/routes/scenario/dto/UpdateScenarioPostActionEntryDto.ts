@@ -1,13 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import {
-  IsBoolean,
-  IsEnum,
-  IsNotEmpty,
-  IsNumber,
-  IsOptional,
-  IsString,
-  MinLength,
-} from 'class-validator';
+import { IsEnum, IsNotEmpty, IsNumber, IsString } from 'class-validator';
 import { UpdateScenarioPostActionTypeDto } from './UpdateScenarioPostActionTypeDto';
 import { UpdateScenarioPostActionLayoutAlgorithmDto } from './UpdateScenarioPostActionLayoutAlgorithmDto';
 

@@ -13,18 +13,13 @@ import {
 import { TupleTypes } from '../schema/TupleTypes';
 import { Injectable } from '@nestjs/common';
 import { ApiPostScenarioActionPostScenarioAction } from '../../../types/generated/contentTypes';
-import {
-  FindMany,
-  Update,
-} from '@strapi/types/dist/modules/documents/params/document-engine';
+import { FindMany } from '@strapi/types/dist/modules/documents/params/document-engine';
 import { LiveCanvasData } from '../live-canvas/data/LiveCanvasData';
 import { LiveCanvas } from '../live-canvas/LiveCanvas';
 import { UpdateScenarioQueryEntryDto } from '../http/routes/scenario/dto/UpdateScenarioQueryEntryDto';
 import { Input } from '@strapi/types/dist/modules/documents/params/data';
 import { UpdateScenarioQueryParameterEntryDto } from '../http/routes/scenario/dto/UpdateScenarioQueryParameterEntryDto';
 import { UpdateScenarioPostActionEntryDto } from '../http/routes/scenario/dto/UpdateScenarioPostActionEntryDto';
-import { match } from 'ts-pattern';
-import { ScenarioPostActionTypeDto } from '../schema/dtos/ScenarioPostActionTypeDto';
 
 @Injectable()
 export class DatabaseService {
