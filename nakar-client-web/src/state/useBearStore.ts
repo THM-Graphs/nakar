@@ -459,6 +459,14 @@ export const useBearStore = create<BearState>()(
                       s.room.panels.inspector.element = [];
                     });
                   },
+                  tab: "knowledgeCard",
+                  setTab: (
+                    newTab: BearState["room"]["panels"]["inspector"]["tab"],
+                  ) => {
+                    set((s) => {
+                      s.room.panels.inspector.tab = newTab;
+                    });
+                  },
                 },
                 histogram: {
                   show: () => {

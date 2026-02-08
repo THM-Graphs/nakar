@@ -17,7 +17,12 @@ export function CanvasControls(props: { className?: string }) {
   const selectedTab = useBearStore((s) => s.room.canvas.tabs.selected);
 
   return (
-    <Stack className={clsx("align-items-start", props.className)}>
+    <Stack
+      className={clsx(
+        "align-items-start bg-body-tertiary rounded border",
+        props.className,
+      )}
+    >
       <ActionNavbarButton
         action={PanToElementAction.shared}
         params={{
@@ -25,7 +30,7 @@ export function CanvasControls(props: { className?: string }) {
           onCenter: rendererEvents.onCenter,
         }}
         hideTitle={true}
-        className={"mb-3"}
+        className={"mb-3 rounded-top"}
         tooltipPlacement={"right"}
       ></ActionNavbarButton>
       <ActionNavbarButton
@@ -64,6 +69,7 @@ export function CanvasControls(props: { className?: string }) {
         params={{ hideLabels, setHideLabels, selectedTab }}
         hideTitle={true}
         tooltipPlacement={"right"}
+        className={"rounded-bottom"}
       ></ActionNavbarButton>
     </Stack>
   );

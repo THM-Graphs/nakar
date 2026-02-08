@@ -52,7 +52,7 @@ export function DynamicList<T>(props: {
       {useFilter && (
         <Stack
           direction={"horizontal"}
-          className={"bg-body border-top border-bottom ps-2"}
+          className={"bg-body border-bottom ps-2"}
         >
           <i className={"bi bi-filter"}></i>
           <Form.Control

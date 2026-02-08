@@ -157,6 +157,8 @@ export interface BearState {
         setElements: (i: string[]) => void;
         appendElement: (i: string) => void;
         deselectElements: () => void;
+        tab: "knowledgeCard" | "inspector";
+        setTab: (newTab: "knowledgeCard" | "inspector") => void;
       };
       histogram: {
         show: () => void;
