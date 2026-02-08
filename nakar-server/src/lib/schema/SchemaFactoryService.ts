@@ -281,7 +281,8 @@ export class SchemaFactoryService {
       allowedLabels:
         scenarioParameter.allowedLabels
           ?.split(',')
-          .map((al: string): string => al.trim()) ?? [],
+          .map((al: string): string => al.trim())
+          .filter((al: string): boolean => al.length > 0) ?? [],
     });
   }
 
