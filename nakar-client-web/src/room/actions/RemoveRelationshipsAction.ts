@@ -29,7 +29,7 @@ export class RemoveRelationshipsAction extends Action<RelationshipsActionParams>
   }
 
   icon(): string | null {
-    return "eye-slash";
+    return "trash";
   }
 
   slug(): string {
