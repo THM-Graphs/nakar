@@ -3,6 +3,7 @@ import { IsArray, IsString, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 import { UpdateScenarioQueryEntryDto } from './UpdateScenarioQueryEntryDto';
 import { UpdateScenarioQueryParameterEntryDto } from './UpdateScenarioQueryParameterEntryDto';
+import { UpdateScenarioPostActionEntryDto } from './UpdateScenarioPostActionEntryDto';
 
 export class UpdateScenarioRequestBodyDto {
   @ApiProperty()
@@ -23,4 +24,13 @@ export class UpdateScenarioRequestBodyDto {
       UpdateScenarioQueryParameterEntryDto,
   )
   public parameters!: UpdateScenarioQueryParameterEntryDto[];
+
+  @ApiProperty({ type: UpdateScenarioPostActionEntryDto, isArray: true })
+  @ValidateNested()
+  @IsArray()
+  @Type(
+    (): typeof UpdateScenarioPostActionEntryDto =>
+      UpdateScenarioPostActionEntryDto,
+  )
+  public postScenarioActions!: UpdateScenarioPostActionEntryDto[];
 }

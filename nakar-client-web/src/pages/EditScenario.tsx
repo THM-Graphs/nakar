@@ -91,6 +91,12 @@ export function EditScenario() {
         allowedLabels: parameter.allowedLabels.join(", "),
       }),
     ),
+    postScenarioActions: loaderData.scenario.postScenarioActions.map((psa) => ({
+      ...psa,
+      type: psa.type === "none" ? "connectResultNodes" : psa.type,
+      layoutAlgorithm:
+        psa.layoutAlgorithm === "none" ? "circle" : psa.layoutAlgorithm,
+    })),
   });
 
   return (
@@ -132,11 +138,7 @@ export function EditScenario() {
           <CMSEditPageForm
             onSave={async () => {
               const result = await scenarioControllerUpdateScenario({
-                body: {
-                  title: scenario.title,
-                  queries: scenario.queries,
-                  parameters: scenario.parameters,
-                },
+                body: scenario,
                 path: {
                   scenarioId: loaderData.scenario.id,
                   projectId: loaderData.project.id,

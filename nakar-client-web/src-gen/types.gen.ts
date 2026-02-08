@@ -531,7 +531,8 @@ export type ScenarioDto = {
     queries: Array<ScenarioQueryDto>;
     description: (string) | null;
     parameters: Array<ScenarioParameterDto>;
-    postActions: Array<(string)>;
+    postScenarioActions: Array<ScenarioPostActionDto>;
+    postActionsDescription: Array<(string)>;
 };
 
 export type ScenarioGroupDto = {
@@ -551,6 +552,18 @@ export type ScenarioParameterDto = {
 
 export type dataType = 'string' | 'number' | 'json' | 'startDateTime' | 'endDateTime';
 
+export type ScenarioPostActionDto = {
+    id: string;
+    type: 'connectResultNodes' | 'compressRelationships' | 'compressNodes' | 'layout' | 'none';
+    label: string;
+    circleRadius: number;
+    layoutAlgorithm: 'forceDirected' | 'circle' | 'none';
+};
+
+export type type22 = 'connectResultNodes' | 'compressRelationships' | 'compressNodes' | 'layout' | 'none';
+
+export type layoutAlgorithm = 'forceDirected' | 'circle' | 'none';
+
 export type ScenarioQueryDto = {
     id: string;
     query: string;
@@ -568,7 +581,7 @@ export type SetNodeLocksWsdto = {
     locks: Array<NodeLockCollectionEntryDto>;
 };
 
-export type type22 = 'SetNodeLocksWsdto';
+export type type23 = 'SetNodeLocksWsdto';
 
 export type ShowShortestPathRequestBodyDto = {
     nodeIds: Array<(string)>;
@@ -614,7 +627,7 @@ export type UngrabNodeWsdto = {
     node: PhysicalNodeDto;
 };
 
-export type type23 = 'UngrabNodeWsdto';
+export type type24 = 'UngrabNodeWsdto';
 
 export type UnlockNodesRequestBodyDto = {
     nodes: Array<(string)>;
@@ -647,6 +660,18 @@ export type UpdateScenarioGroupRequestBodyDto = {
     title: string;
 };
 
+export type UpdateScenarioPostActionEntryDto = {
+    id: string;
+    type: 'connectResultNodes' | 'compressRelationships' | 'compressNodes' | 'layout';
+    label: string;
+    circleRadius: number;
+    layoutAlgorithm: 'forceDirected' | 'circle';
+};
+
+export type type25 = 'connectResultNodes' | 'compressRelationships' | 'compressNodes' | 'layout';
+
+export type layoutAlgorithm2 = 'forceDirected' | 'circle';
+
 export type UpdateScenarioQueryEntryDto = {
     id: string;
     query: string;
@@ -667,6 +692,7 @@ export type UpdateScenarioRequestBodyDto = {
     title: string;
     queries: Array<UpdateScenarioQueryEntryDto>;
     parameters: Array<UpdateScenarioQueryParameterEntryDto>;
+    postScenarioActions: Array<UpdateScenarioPostActionEntryDto>;
 };
 
 export type UserPreviewDto = {

@@ -105,13 +105,15 @@ export function ScenarioCard(props: {
         </ScenarioCardSection>
 
         <ScenarioCardSection title={"Post Actions"}>
-          {props.scenario.postActions.length > 0 ? (
+          {props.scenario.postActionsDescription.length > 0 ? (
             <ul className={"mb-0"}>
-              {props.scenario.postActions.map((postAction: string) => (
-                <li key={postAction} className={"small"}>
-                  {postAction}
-                </li>
-              ))}
+              {props.scenario.postActionsDescription.map(
+                (postAction: string) => (
+                  <li key={postAction} className={"small"}>
+                    {postAction}
+                  </li>
+                ),
+              )}
             </ul>
           ) : (
             <span className={"text-muted small fst-italic"}>None</span>

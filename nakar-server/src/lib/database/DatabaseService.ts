@@ -13,12 +13,18 @@ import {
 import { TupleTypes } from '../schema/TupleTypes';
 import { Injectable } from '@nestjs/common';
 import { ApiPostScenarioActionPostScenarioAction } from '../../../types/generated/contentTypes';
-import { FindMany } from '@strapi/types/dist/modules/documents/params/document-engine';
+import {
+  FindMany,
+  Update,
+} from '@strapi/types/dist/modules/documents/params/document-engine';
 import { LiveCanvasData } from '../live-canvas/data/LiveCanvasData';
 import { LiveCanvas } from '../live-canvas/LiveCanvas';
 import { UpdateScenarioQueryEntryDto } from '../http/routes/scenario/dto/UpdateScenarioQueryEntryDto';
 import { Input } from '@strapi/types/dist/modules/documents/params/data';
 import { UpdateScenarioQueryParameterEntryDto } from '../http/routes/scenario/dto/UpdateScenarioQueryParameterEntryDto';
+import { UpdateScenarioPostActionEntryDto } from '../http/routes/scenario/dto/UpdateScenarioPostActionEntryDto';
+import { match } from 'ts-pattern';
+import { ScenarioPostActionTypeDto } from '../schema/dtos/ScenarioPostActionTypeDto';
 
 @Injectable()
 export class DatabaseService {
@@ -934,6 +940,54 @@ export class DatabaseService {
         await strapi
           .documents('api::query-parameter.query-parameter')
           .create({ data: parameterData, status: 'published' });
+      }
+    }
+  }
+
+  public async upsertPostScenarioActions(
+    scenario: Result<'api::scenario.scenario'>,
+    postScenarioActions: UpdateScenarioPostActionEntryDto[],
+  ): Promise<void> {
+    const newIds: SSet<string> = new SSet<string>(
+      postScenarioActions.map(
+        (q: UpdateScenarioPostActionEntryDto): string => q.id,
+      ),
+    );
+    const existingDocuments: Result<'api::post-scenario-action.post-scenario-action'>[] =
+      await this.getPostScenarioActionsOfScenario(scenario);
+    for (const existingDocument of existingDocuments) {
+      if (newIds.has(existingDocument.documentId)) {
+        // Okay, stay
+      } else {
+        // Delete document
+        await strapi
+          .documents('api::post-scenario-action.post-scenario-action')
+          .delete({ documentId: existingDocument.documentId });
+      }
+    }
+
+    for (const newDocument of postScenarioActions) {
+      const documentData: Input<'api::post-scenario-action.post-scenario-action'> =
+        {
+          type: newDocument.type,
+          label: newDocument.label,
+          circleRadius: newDocument.circleRadius,
+          layoutAlgorithm: newDocument.layoutAlgorithm,
+          scenario: scenario.documentId,
+        };
+
+      const updatedDocument: Result<'api::post-scenario-action.post-scenario-action'> | null =
+        await strapi
+          .documents('api::post-scenario-action.post-scenario-action')
+          .update({
+            documentId: newDocument.id,
+            data: documentData,
+            status: 'published',
+          });
+      if (updatedDocument == null) {
+        await strapi
+          .documents('api::post-scenario-action.post-scenario-action')
+          .create({ data: documentData, status: 'published' });
       }
     }
   }

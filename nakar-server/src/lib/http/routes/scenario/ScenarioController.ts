@@ -91,6 +91,10 @@ export class ScenarioController {
       updatedScenario,
       body.parameters,
     );
+    await this._databaseService.upsertPostScenarioActions(
+      updatedScenario,
+      body.postScenarioActions,
+    );
 
     return await this._schemaFactory.createSchemaScenario(updatedScenario);
   }

@@ -52,6 +52,9 @@ import { LiveCanvasLabelViewSettings } from '../live-canvas/data/LiveCanvasLabel
 import { LiveCanvasUser } from '../live-canvas/data/LiveCanvasUser';
 import { ScenarioArgumentDto } from '../http/routes/canvas-action/dto/ScenarioArgumentDto';
 import { ProjectPageDto } from '../http/routes/project/dto/ProjectPageDto';
+import { ScenarioPostActionDto } from './dtos/ScenarioPostActionDto';
+import { ScenarioPostActionTypeDto } from './dtos/ScenarioPostActionTypeDto';
+import { ScenarioPostActionLayoutAlgorithmDto } from './dtos/ScenarioPostActionLayoutAlgorithmDto';
 
 @Injectable()
 export class SchemaFactoryService {
@@ -170,6 +173,22 @@ export class SchemaFactoryService {
   public async createSchemaScenario(
     scenario: Result<'api::scenario.scenario'>,
   ): Promise<ScenarioDto> {
+    const postScenarioActions: ScenarioPostActionDto[] = (
+      await this._database.getPostScenarioActionsOfScenario(scenario)
+    ).map(
+      (
+        postScenarioAction: Result<'api::post-scenario-action.post-scenario-action'>,
+      ): ScenarioPostActionDto => ({
+        id: postScenarioAction.documentId,
+        label: postScenarioAction.label ?? '',
+        type: this._createSchemaScenarioPostActionType(postScenarioAction.type),
+        layoutAlgorithm: this._createSchemaScenarioPostActionLayoutAlgorithm(
+          postScenarioAction.layoutAlgorithm,
+        ),
+        circleRadius: postScenarioAction.circleRadius ?? 2000,
+      }),
+    );
+
     return new ScenarioDto({
       id: scenario.documentId,
       title: scenario.title ?? '',
@@ -194,46 +213,39 @@ export class SchemaFactoryService {
         ): ScenarioParameterDto =>
           this.createSchemaScenarioParameter(parameter),
       ),
-      postActions: (
-        await this._database.getPostScenarioActionsOfScenario(scenario)
-      ).map(
-        (
-          action: Result<'api::post-scenario-action.post-scenario-action'>,
-        ): string =>
-          // ['connectResultNodes', 'compressRelationships', 'compressNodes', 'layout']
+      postScenarioActions: postScenarioActions,
+      postActionsDescription: postScenarioActions.map(
+        (action: ScenarioPostActionDto): string =>
           match(action.type)
-            .with('connectResultNodes', (): string => 'Connect Result Nodes')
             .with(
-              'compressRelationships',
+              ScenarioPostActionTypeDto.connectResultNodes,
+              (): string => 'Connect Result Nodes',
+            )
+            .with(
+              ScenarioPostActionTypeDto.compressRelationships,
               (): string => 'Compress Relationships',
             )
-            .with('compressNodes', (): string =>
-              match(action.label)
-                .with(
-                  P.string,
-                  (label: string): string => `Compress ${label} Nodes`,
-                )
-                .with(P.nullish, (): string => `Compress Nodes`)
-                .exhaustive(),
+            .with(
+              ScenarioPostActionTypeDto.compressNodes,
+              (): string => `Compress ${action.label} Nodes`,
             )
-            .with('layout', (): string =>
+            .with(ScenarioPostActionTypeDto.layout, (): string =>
               match(action.layoutAlgorithm)
                 .with(
-                  'forceDirected',
-                  (): string =>
-                    `Layout ${action.label ?? 'None'} Force Directed`,
+                  ScenarioPostActionLayoutAlgorithmDto.forceDirected,
+                  (): string => `Layout ${action.label} Force Directed`,
                 )
                 .with(
-                  'circle',
-                  (): string => `Layout ${action.label ?? 'None'} Circle`,
+                  ScenarioPostActionLayoutAlgorithmDto.circle,
+                  (): string => `Layout ${action.label} Circle`,
                 )
                 .with(
-                  P.nullish,
-                  (): string => `Layout ${action.label ?? 'None'}`,
+                  ScenarioPostActionLayoutAlgorithmDto.none,
+                  (): string => `None`,
                 )
                 .exhaustive(),
             )
-            .with(P.nullish, (): string => 'Unknown Post Action')
+            .with(ScenarioPostActionTypeDto.none, (): string => `None`)
             .exhaustive(),
       ),
     });
@@ -966,5 +978,59 @@ export class SchemaFactoryService {
       } satisfies LabelDto);
     }
     return labels;
+  }
+
+  private _createSchemaScenarioPostActionType(
+    postScenarioActionType: Result<'api::post-scenario-action.post-scenario-action'>['type'],
+  ): ScenarioPostActionTypeDto {
+    return match(postScenarioActionType)
+      .returnType<ScenarioPostActionTypeDto>()
+      .with(
+        'connectResultNodes',
+        (): ScenarioPostActionTypeDto =>
+          ScenarioPostActionTypeDto.connectResultNodes,
+      )
+      .with(
+        'layout',
+        (): ScenarioPostActionTypeDto => ScenarioPostActionTypeDto.layout,
+      )
+      .with(
+        'compressRelationships',
+        (): ScenarioPostActionTypeDto =>
+          ScenarioPostActionTypeDto.compressRelationships,
+      )
+      .with(
+        'compressNodes',
+        (): ScenarioPostActionTypeDto =>
+          ScenarioPostActionTypeDto.compressNodes,
+      )
+      .with(
+        P.nullish,
+        (): ScenarioPostActionTypeDto => ScenarioPostActionTypeDto.none,
+      )
+      .exhaustive();
+  }
+
+  private _createSchemaScenarioPostActionLayoutAlgorithm(
+    layoutAlgorithm: Result<'api::post-scenario-action.post-scenario-action'>['layoutAlgorithm'],
+  ): ScenarioPostActionLayoutAlgorithmDto {
+    return match(layoutAlgorithm)
+      .returnType<ScenarioPostActionLayoutAlgorithmDto>()
+      .with(
+        'circle',
+        (): ScenarioPostActionLayoutAlgorithmDto =>
+          ScenarioPostActionLayoutAlgorithmDto.circle,
+      )
+      .with(
+        'forceDirected',
+        (): ScenarioPostActionLayoutAlgorithmDto =>
+          ScenarioPostActionLayoutAlgorithmDto.forceDirected,
+      )
+      .with(
+        P.nullish,
+        (): ScenarioPostActionLayoutAlgorithmDto =>
+          ScenarioPostActionLayoutAlgorithmDto.none,
+      )
+      .exhaustive();
   }
 }

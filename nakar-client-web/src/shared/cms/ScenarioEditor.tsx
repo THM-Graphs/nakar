@@ -2,11 +2,13 @@ import { CMSEditTextCard } from "./CMSEditTextCard.tsx";
 import { Stack } from "react-bootstrap";
 import {
   DatabaseConnectionDto,
+  UpdateScenarioPostActionEntryDto,
   UpdateScenarioQueryParameterEntryDto,
   UpdateScenarioRequestBodyDto,
 } from "../../../src-gen";
 import { QueryParametersEditor } from "./QueryParametersEditor.tsx";
 import { QueriesEditor } from "./QueriesEditor.tsx";
+import { PostScenarioActionsEditor } from "./PostScenarioActionsEditor.tsx";
 
 export function ScenarioEditor(props: {
   value: UpdateScenarioRequestBodyDto;
@@ -14,7 +16,7 @@ export function ScenarioEditor(props: {
   databases: DatabaseConnectionDto[];
 }) {
   return (
-    <Stack gap={3}>
+    <Stack gap={5}>
       <Stack>
         <h5>Scenario</h5>
         <CMSEditTextCard
@@ -45,6 +47,21 @@ export function ScenarioEditor(props: {
             props.onChange({ ...props.value, parameters: parameters });
           }}
         ></QueryParametersEditor>
+      </Stack>
+
+      <Stack>
+        <h5>Post Scenario Actions</h5>
+        <PostScenarioActionsEditor
+          value={props.value.postScenarioActions}
+          onChange={(
+            postScenarioActions: UpdateScenarioPostActionEntryDto[],
+          ) => {
+            props.onChange({
+              ...props.value,
+              postScenarioActions: postScenarioActions,
+            });
+          }}
+        ></PostScenarioActionsEditor>
       </Stack>
     </Stack>
   );

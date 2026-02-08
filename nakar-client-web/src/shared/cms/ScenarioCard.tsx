@@ -63,14 +63,18 @@ export function ScenarioCard(props: {
             )}
             <span className={"ellipsis"}>
               Actions:{" "}
-              {props.scenario.postActions.length > 0 ? (
+              {props.scenario.postActionsDescription.length > 0 ? (
                 <OverlayTrigger
                   delay={{ show: 1000, hide: 0 }}
                   overlay={
-                    <Tooltip>{props.scenario.postActions.join(", ")}</Tooltip>
+                    <Tooltip>
+                      {props.scenario.postActionsDescription.join(", ")}
+                    </Tooltip>
                   }
                 >
-                  <span>{props.scenario.postActions.join(", ")}</span>
+                  <span>
+                    {props.scenario.postActionsDescription.join(", ")}
+                  </span>
                 </OverlayTrigger>
               ) : (
                 <span className={"fst-italic"}>None</span>

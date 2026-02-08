@@ -1,6 +1,7 @@
 import { ScenarioQueryDto } from './ScenarioQueryDto';
 import { ScenarioParameterDto } from './ScenarioParameterDto';
 import { ApiProperty } from '@nestjs/swagger';
+import { ScenarioPostActionDto } from './ScenarioPostActionDto';
 
 export class ScenarioDto {
   @ApiProperty()
@@ -18,8 +19,11 @@ export class ScenarioDto {
   @ApiProperty({ isArray: true, type: ScenarioParameterDto })
   public parameters: ScenarioParameterDto[];
 
+  @ApiProperty({ isArray: true, type: ScenarioPostActionDto })
+  public postScenarioActions: ScenarioPostActionDto[];
+
   @ApiProperty({ isArray: true, type: 'string' })
-  public postActions: string[];
+  public postActionsDescription: string[];
 
   public constructor(data: {
     id: string;
@@ -27,13 +31,15 @@ export class ScenarioDto {
     queries: ScenarioQueryDto[];
     description: string | null;
     parameters: ScenarioParameterDto[];
-    postActions: string[];
+    postScenarioActions: ScenarioPostActionDto[];
+    postActionsDescription: string[];
   }) {
     this.id = data.id;
     this.title = data.title;
     this.queries = data.queries;
     this.description = data.description;
     this.parameters = data.parameters;
-    this.postActions = data.postActions;
+    this.postScenarioActions = data.postScenarioActions;
+    this.postActionsDescription = data.postActionsDescription;
   }
 }
