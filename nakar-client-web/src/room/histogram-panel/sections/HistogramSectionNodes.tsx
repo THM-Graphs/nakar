@@ -48,7 +48,6 @@ export function HistogramSectionNodes() {
                 value={nodeEntry.degree}
                 percentage={nodeEntry.percentage}
                 label={nodeEntry.title}
-                subLabel={nodeEntry.id}
                 nodeColors={customColor != null ? [customColor] : labelColors}
                 onSelect={() => {
                   setElement(nodeEntry.id);

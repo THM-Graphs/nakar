@@ -6,12 +6,22 @@ import { labelActions } from "../../actions/groups/labelActions.ts";
 import { getBackgroundColorOfLabel } from "../../color/getBackgroundColor.ts";
 import { useColorSchema } from "../../color/useColorSchema.ts";
 import { SelectAllNodesOfLabel } from "../../actions/SelectAllNodesOfLabel.ts";
+import { useMemo } from "react";
 
 export function HistogramSectionLabels() {
   const roomContext = useCanvasContext();
   const labels = useBearStore((s) => s.room.scenario.graph.elements.labels);
   const histogram = useBearStore((s) => s.room.scenario.graph.histogram);
   const colorSchema = useColorSchema();
+
+  const multipleSources = useMemo(() => {
+    return (
+      labels
+        .flatMap((label) => label.sources)
+        .reduce((sources, source) => sources.add(source), new Set<string>())
+        .size > 1
+    );
+  }, [labels]);
 
   return (
     <DynamicList
@@ -29,7 +39,7 @@ export function HistogramSectionLabels() {
               <ValueDisplay
                 label={entry.value}
                 subLabel={
-                  label && label.sources.length > 0
+                  label && multipleSources
                     ? label.sources.join(", ")
                     : undefined
                 }

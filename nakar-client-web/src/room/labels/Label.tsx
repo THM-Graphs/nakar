@@ -10,6 +10,7 @@ import { ActionDropdownItem } from "../actions/ActionDropdownItem.tsx";
 import { useCanvasContext } from "../../pages/Canvas.tsx";
 import { LabelDto } from "../../../src-gen";
 import { LabelViewSettingsEditor } from "../visualization-panel/LabelViewSettingsEditor.tsx";
+import { useMemo } from "react";
 
 export function Label(props: {
   label: string;
@@ -28,20 +29,17 @@ export function Label(props: {
     !(props.hideLabelMenu ?? false) && label != null;
   const colorSchema = useColorSchema();
 
-  const text: string = (() => {
-    let buffer: string = "";
-    if (multipleSources(labels) && props.showSources) {
-      buffer += `[${(label?.sources ?? []).join(", ")}] `;
-    }
-    buffer += props.label;
-    if (props.showAmount && (props.customAmount || label)) {
-      buffer += ` (${(props.customAmount ?? label?.count ?? 0).toString()})`;
-    }
-    return buffer;
-  })();
-
   const bgColor = getBackgroundColorOfLabel(label, colorSchema);
   const color = label ? getTextColor(label.color, colorSchema) : "#fff";
+
+  const multipleSources = useMemo(() => {
+    return (
+      labels
+        .flatMap((label) => label.sources)
+        .reduce((sources, source) => sources.add(source), new Set<string>())
+        .size > 1
+    );
+  }, [labels]);
 
   return (
     <Stack direction={"horizontal"} className={"align-items-start"}>
@@ -61,7 +59,15 @@ export function Label(props: {
           fontSize: "12px",
         }}
       >
-        <span className={"text-start user-select-text"}>{text}</span>
+        <span className={"text-start user-select-text"}>{props.label}</span>
+        {props.showAmount && (props.customAmount || label) && (
+          <span>({(props.customAmount ?? label?.count ?? 0).toString()})</span>
+        )}
+        {multipleSources && props.showSources && (
+          <span className={"user-select-text fst-italic"}>
+            {(label?.sources ?? []).join(", ")}
+          </span>
+        )}
       </Stack>
       {showLabelMenu && (
         <DropdownButton
@@ -102,15 +108,4 @@ export function Label(props: {
       )}
     </Stack>
   );
-}
-
-function multipleSources(graphLabels: LabelDto[]): boolean {
-  const allSources: Set<string> = new Set();
-  for (const graphlabel of graphLabels) {
-    for (const source of graphlabel.sources) {
-      allSources.add(source);
-    }
-  }
-
-  return allSources.size > 1;
 }

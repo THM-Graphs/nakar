@@ -49,7 +49,7 @@ export function ValueDisplay(props: {
           >
             {props.label}
             {props.subLabel && (
-              <span className={"text-muted"}> ({props.subLabel})</span>
+              <span className={"text-muted fst-italic"}> {props.subLabel}</span>
             )}
           </span>
         </Stack>

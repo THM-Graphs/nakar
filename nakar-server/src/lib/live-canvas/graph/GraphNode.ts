@@ -112,6 +112,9 @@ export class GraphNode {
   }
 
   public getTitle(): string {
+    if (this.isCluster) {
+      return `${this.labels.join(', ')} Cluster`;
+    }
     return (
       this.properties.getStringValueOfProperty('label') ??
       this.properties.getStringValueOfProperty('name') ??
