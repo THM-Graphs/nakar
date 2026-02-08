@@ -1,8 +1,16 @@
 import { Dropdown, Stack } from "react-bootstrap";
 import { ScenarioTitleAndBadges } from "../scenarios-panel/ScenarioTitleAndBadges.tsx";
-import { NodeDto, ScenarioDto, ScenarioParameterDto } from "../../../src-gen";
+import {
+  actionControllerLoadScenario,
+  NodeDto,
+  ScenarioArgumentDto,
+  ScenarioDto,
+  ScenarioParameterDto,
+} from "../../../src-gen";
 import { useBearStore } from "../../state/useBearStore.ts";
 import { convertToTargetTypeStringRepresentation } from "../../shared/data/convertToTargetTypeStringRepresentation.ts";
+import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
+import { useCanvasContext } from "../../pages/Canvas.tsx";
 
 export function NodeParameterizedScenarioEntry(props: {
   scenario: ScenarioDto;
@@ -10,6 +18,10 @@ export function NodeParameterizedScenarioEntry(props: {
 }) {
   const showRunScenarioModal = useBearStore(
     (s) => s.room.scenario.runScenarioModal.open,
+  );
+  const roomContext = useCanvasContext();
+  const pushErrorNotification = useBearStore(
+    (s) => s.room.ui.pushErrorNotification,
   );
 
   if (props.scenario.parameters.length === 0) {
@@ -22,6 +34,29 @@ export function NodeParameterizedScenarioEntry(props: {
     props.node.properties[parameter.identifier],
     parameter.dataType,
   );
+
+  const handleRunOnSingleParameter = async (
+    scenarioArguments: ScenarioArgumentDto[],
+    additive: boolean,
+  ) => {
+    try {
+      await resultOrThrow(
+        await actionControllerLoadScenario({
+          path: {
+            roomId: roomContext.initialRoomData.id,
+            canvasId: roomContext.initialCanvasData.id,
+          },
+          body: {
+            scenarioId: props.scenario.id,
+            arguments: scenarioArguments,
+            additive: additive,
+          },
+        }),
+      );
+    } catch (error) {
+      pushErrorNotification(error);
+    }
+  };
 
   return (
     <Dropdown.ItemText key={props.scenario.id}>
@@ -39,9 +74,13 @@ export function NodeParameterizedScenarioEntry(props: {
             },
           ]}
           onRun={(additive, scenarioArguments) => {
-            showRunScenarioModal(props.scenario, scenarioArguments, additive);
+            if (props.scenario.parameters.length === 1) {
+              void handleRunOnSingleParameter(scenarioArguments, additive);
+            } else {
+              showRunScenarioModal(props.scenario, scenarioArguments, additive);
+            }
           }}
-          hideParameters={true}
+          hideParameters={false}
         ></ScenarioTitleAndBadges>
       </Stack>
     </Dropdown.ItemText>

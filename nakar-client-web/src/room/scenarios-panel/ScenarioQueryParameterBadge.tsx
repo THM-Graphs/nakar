@@ -6,7 +6,14 @@ export function ScenarioQueryParameterBadge(props: {
 }) {
   return (
     <OverlayTrigger
-      overlay={<Tooltip>This scenario requires arguments.</Tooltip>}
+      overlay={
+        <Tooltip>
+          This scenario requires arguments:{" "}
+          <span className={"font-monospace"}>
+            ${props.parameter.identifier}
+          </span>
+        </Tooltip>
+      }
       key={props.parameter.identifier}
     >
       <Stack
