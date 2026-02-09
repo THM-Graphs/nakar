@@ -20,7 +20,7 @@ cp ".env.example" ".env"
 
 #### 3: Start the live server:
 
-With hot-reloading:
+With hot-reloading and content-type builder:
 
 ```shell
 npm run develop
@@ -46,10 +46,12 @@ Tip: Use the following login data for the admin account:
 #### 5: Enable the API endpoints to be accessible without authentication
 
 1. Go to http://localhost:1337/admin/settings/users-permissions/roles
-1. Open up "Public"
-1. Open up "Frontend"
-1. Check "Select all"
-1. Click "Save"
+2. Select "Public"
+3. Disable everything
+4. Enable User-permissions -> Auth -> Callback
+5. Go back and select "Authenticated"
+6. Disable everything
+7. Enable User-permissions -> User -> me
 
 #### 6: Import data
 
@@ -63,7 +65,5 @@ Tip: Use the following login data for the admin account:
 If you want to commit any changes, you should run the following commands beforehand:
 
 ```shell
-npm run build
-npm run lint:fix
-npm run audit
+npm run pre-commit
 ```
