@@ -31,7 +31,5 @@ Visit the displayed URL.
 If you want to commit any changes, you should run the following commands beforehand:
 
 ```shell
-npm run build
-npm run lint:fix
-npm run audit
+npm run pre-commit
 ```
