@@ -15,18 +15,15 @@ export class LiveCanvasData {
   private _viewSettings: LiveCanvasViewSettings;
   private readonly _users: LiveCanvasUser[];
 
-  public constructor(data: {
-    undoableData: LiveCanvasUndoableData;
-    viewSettings: LiveCanvasViewSettings;
-  }) {
+  public constructor() {
     this._undoableData = new UndoWrapper<LiveCanvasUndoableData>(
-      data.undoableData,
+      LiveCanvasUndoableData.empty(),
       (dataToCopy: LiveCanvasUndoableData): LiveCanvasUndoableData => {
         return dataToCopy.copy();
       },
       { maximumStackSize: 10 },
     );
-    this._viewSettings = data.viewSettings;
+    this._viewSettings = LiveCanvasViewSettings.defaultViewSettings();
     this._users = [];
   }
 
@@ -46,20 +43,11 @@ export class LiveCanvasData {
     this._viewSettings = newValue;
   }
 
-  public static empty(): LiveCanvasData {
-    return new LiveCanvasData({
-      undoableData: LiveCanvasUndoableData.empty(),
-      viewSettings: LiveCanvasViewSettings.defaultViewSettings(),
-    });
-  }
-
-  public static fromPlain(
-    data: z.infer<typeof LiveCanvasData.schema>,
-  ): LiveCanvasData {
-    return new LiveCanvasData({
-      undoableData: LiveCanvasUndoableData.fromPlain(data.undoableData),
-      viewSettings: LiveCanvasViewSettings.fromPlain(data.viewSettings),
-    });
+  public loadFromPlain(data: z.infer<typeof LiveCanvasData.schema>): void {
+    this.undoableData.reset(
+      LiveCanvasUndoableData.fromPlain(data.undoableData),
+    );
+    this.viewSettings = LiveCanvasViewSettings.fromPlain(data.viewSettings);
   }
 
   public toPlain(): z.infer<typeof LiveCanvasData.schema> {

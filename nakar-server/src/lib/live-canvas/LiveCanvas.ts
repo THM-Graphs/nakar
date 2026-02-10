@@ -53,7 +53,7 @@ export class LiveCanvas {
   private readonly _subscriptions: SSet<Subscription>;
   private readonly _queue: TaskQueue;
   private _shutdownTimeout: NodeJS.Timeout | null;
-  private _data: LiveCanvasData;
+  private readonly _data: LiveCanvasData;
 
   public constructor(
     private readonly _canvasId: string,
@@ -66,7 +66,7 @@ export class LiveCanvas {
     this._physicsWorker = new PhysicsWorker(_canvasId);
     this._queue = new TaskQueue();
     this._shutdownTimeout = null;
-    this._data = LiveCanvasData.empty();
+    this._data = new LiveCanvasData();
 
     this._subscriptions.add(
       this._physicsWorker.onWTEvent$.subscribe((message: WTEvent): void => {
@@ -172,16 +172,16 @@ export class LiveCanvas {
         const canvas: Result<'api::canvas.canvas'> =
           await this._database.getCanvas(this._canvasId);
 
+        await this._physicsWorker.bootstrap();
+
         const data: z.infer<typeof LiveCanvasData.schema> | null =
           await this._database.getLiveCanvasData(canvas);
 
         if (data != null) {
-          this._data = LiveCanvasData.fromPlain(data);
+          this._data.loadFromPlain(data);
           changeRecorder.didLoadGraph();
           changeRecorder.didChangeViewSettings();
         }
-
-        await this._physicsWorker.bootstrap();
 
         this._handleChangeRecorder(changeRecorder);
       }),

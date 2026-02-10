@@ -169,10 +169,9 @@ export class WebSocketManager
     const canvas: Result<'api::canvas.canvas'> =
       await this._databaseService.getCanvas(auth.canvasId);
 
-    this._rooms.set(wsClient.id, canvas.documentId);
-
     const liveCanvas: LiveCanvas = this._canvasService.getOrStartCanvas(canvas);
 
+    this._rooms.set(wsClient.id, canvas.documentId);
     liveCanvas.addUser({
       socketId: wsClient.id,
       username: user?.username ?? null,
