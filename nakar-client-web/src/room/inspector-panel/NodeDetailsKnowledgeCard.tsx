@@ -3,7 +3,6 @@ import { NodeDto } from "../../../src-gen";
 import { NodeDetailsKnowledgeCardHeader } from "./NodeDetailsKnowledgeCardHeader.tsx";
 import { NodeDetailsKnowledgeCardScenarios } from "./NodeDetailsKnowledgeCardScenarios.tsx";
 import { NodeDetailsKnowledgeCardProperties } from "./NodeDetailsKnowledgeCardProperties.tsx";
-import { NodeDetailsKnowledgeCardRelationships } from "./NodeDetailsKnowledgeCardRelationships.tsx";
 
 export function NodeDetailsKnowledgeCard(props: { node: NodeDto }) {
   return (
@@ -17,9 +16,6 @@ export function NodeDetailsKnowledgeCard(props: { node: NodeDto }) {
       <NodeDetailsKnowledgeCardProperties
         node={props.node}
       ></NodeDetailsKnowledgeCardProperties>
-      <NodeDetailsKnowledgeCardRelationships
-        node={props.node}
-      ></NodeDetailsKnowledgeCardRelationships>
     </Stack>
   );
 }
