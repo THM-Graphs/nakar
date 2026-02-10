@@ -138,7 +138,7 @@ export function QueryPanel() {
               <CypherEditor
                 placeholder={"MATCH (n) RETURN n;"}
                 lineWrap={true}
-                overrideThemeBackgroundColor={true}
+                overrideThemeBackgroundColor={false}
                 lint={true}
                 value={query.queryText}
                 onChange={(e) => {

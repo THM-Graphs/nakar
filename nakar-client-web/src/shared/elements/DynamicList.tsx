@@ -57,7 +57,7 @@ export function DynamicList<T>(props: {
           <i className={"bi bi-filter"}></i>
           <Form.Control
             size={"sm"}
-            className={"border-0 pt-0 pb-0"}
+            className={"border-0 border-top pt-0 pb-0"}
             value={filterValue}
             onChange={(event) => {
               setFilterValue(event.target.value);
