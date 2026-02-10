@@ -13,14 +13,14 @@ export function CanvasSurface() {
   const users = useBearStore((s) => s.room.scenario.graph.metaData.users);
 
   return (
-    <Stack
-      className={"flex-grow-1 flex-shrink-1 align-items-stretch overflow-auto"}
-      direction={"vertical"}
-      gap={3}
-    >
+    <>
       {tabs.selected == "graph" ? (
         <Stack className={"justify-content-between"}>
-          <Stack direction={"horizontal"} className={"justify-content-between"}>
+          <Stack
+            direction={"horizontal"}
+            className={"justify-content-between"}
+            gap={3}
+          >
             <Stack className={"flex-grow-0"} gap={3}>
               <Labels className={"z-1"}></Labels>
               <CanvasControls
@@ -30,7 +30,9 @@ export function CanvasSurface() {
             <Stack direction={"vertical"} gap={1} className={"flex-grow-0"}>
               {users.map((user) => (
                 <Stack
-                  className={"small"}
+                  className={
+                    "small z-1 rounded bg-body-tertiary shadow-sm border ps-2 pe-2"
+                  }
                   key={user.id}
                   direction={"horizontal"}
                   gap={1}
@@ -56,6 +58,6 @@ export function CanvasSurface() {
         <ProgressDisplay></ProgressDisplay>
         <PerformanceDisplay></PerformanceDisplay>
       </CanvasBottomFloatingToolbar>
-    </Stack>
+    </>
   );
 }

@@ -8,13 +8,9 @@ export function DataTable() {
 
   return (
     <Stack
-      style={{
-        height: "100%",
-        width: "100%",
-        overflow: "auto",
-      }}
+      direction={"vertical"}
       className={
-        "bg-body z-1 border rounded overflow-auto flex-grow-0 flex-shrink-1"
+        "bg-body z-1 border rounded h-100 w-100 shadow-sm overflow-auto"
       }
     >
       <NavbarButton
@@ -33,36 +29,32 @@ export function DataTable() {
           </p>
         </Stack>
       ) : (
-        <>
-          <Stack className={"position-relative overflow-auto"}>
-            <Table className={"table-responsive"}>
-              <thead>
-                <tr className={"sticky-top"}>
-                  {Object.keys(tableData[0]).map((key) => (
-                    <th key={key} className={"user-select-text border-bottom"}>
-                      {key}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {tableData.map((row, index) => (
-                  <tr key={index}>
-                    {Object.entries(row).map(([key, value]) => (
-                      <td
-                        key={key}
-                        style={{ fontSize: "10px", lineHeight: "1.5em" }}
-                        className={"font-monospace user-select-text"}
-                      >
-                        {JSON.stringify(value)}
-                      </td>
-                    ))}
-                  </tr>
+        <Table responsive={true} className={"rounded"}>
+          <thead>
+            <tr className={"sticky-top"}>
+              {Object.keys(tableData[0]).map((key) => (
+                <th key={key} className={"user-select-text border-bottom"}>
+                  {key}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {tableData.map((row, index) => (
+              <tr key={index}>
+                {Object.entries(row).map(([key, value]) => (
+                  <td
+                    key={key}
+                    style={{ fontSize: "10px", lineHeight: "1.5em" }}
+                    className={"font-monospace user-select-text"}
+                  >
+                    {JSON.stringify(value)}
+                  </td>
                 ))}
-              </tbody>
-            </Table>
-          </Stack>
-        </>
+              </tr>
+            ))}
+          </tbody>
+        </Table>
       )}
     </Stack>
   );

@@ -250,7 +250,7 @@ export function Canvas() {
                   <SocketStateDisplay></SocketStateDisplay>
                 </>
               }
-              className=""
+              className="shadow-sm"
             ></AppNavbar>
           </Stack>
           <Stack

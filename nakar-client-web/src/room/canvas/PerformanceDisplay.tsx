@@ -20,7 +20,7 @@ export function PerformanceDisplay() {
       direction={"horizontal"}
       gap={2}
       className={clsx(
-        "ps-2 pe-2 pt-1 pb-1 small bg-warning text-black rounded align-self-center flex-shrink-0 pe-auto user-select-text",
+        "ps-2 pe-2 pt-1 pb-1 small bg-warning text-black rounded align-self-center flex-shrink-0 pe-auto user-select-text shadow-sm",
       )}
     >
       <span>

@@ -42,33 +42,33 @@ export function Label(props: {
   }, [labels]);
 
   return (
-    <Stack direction={"horizontal"} className={"align-items-start"}>
-      <Stack
-        gap={1}
-        direction={"horizontal"}
-        onClick={props.onClick}
-        className={clsx(
-          "badge rounded-0 ps-2 rounded-start flex-grow-0 flex-shrink-1 text-wrap text-break",
-          props.onClick && "pointer",
-          props.className,
-          !showLabelMenu && "pe-2 rounded-end",
-        )}
-        style={{
-          backgroundColor: bgColor,
-          color: color,
-          fontSize: "12px",
-        }}
-      >
-        <span className={"text-start user-select-text"}>{props.label}</span>
-        {props.showAmount && (props.customAmount || label) && (
-          <span>({(props.customAmount ?? label?.count ?? 0).toString()})</span>
-        )}
-        {multipleSources && props.showSources && (
-          <span className={"user-select-text fst-italic"}>
-            {(label?.sources ?? []).join(", ")}
-          </span>
-        )}
-      </Stack>
+    <Stack
+      gap={1}
+      direction={"horizontal"}
+      onClick={props.onClick}
+      className={clsx(
+        "ps-2 rounded flex-grow-0 flex-shrink-1 text-wrap text-break shadow-sm align-self-start fw-bold",
+        props.onClick && "pointer",
+        props.className,
+        !showLabelMenu && "pe-2 rounded-end",
+      )}
+      style={{
+        backgroundColor: bgColor,
+        color: color,
+        fontSize: "12px",
+        paddingTop: showLabelMenu ? "0px" : "1px",
+        paddingBottom: showLabelMenu ? "0px" : "1px",
+      }}
+    >
+      <span className={"text-start user-select-text"}>{props.label}</span>
+      {props.showAmount && (props.customAmount || label) && (
+        <span>({(props.customAmount ?? label?.count ?? 0).toString()})</span>
+      )}
+      {multipleSources && props.showSources && (
+        <span className={"user-select-text fst-italic"}>
+          {(label?.sources ?? []).join(", ")}
+        </span>
+      )}
       {showLabelMenu && (
         <DropdownButton
           buttonSize={"sm"}

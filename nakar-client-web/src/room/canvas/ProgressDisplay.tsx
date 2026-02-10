@@ -33,7 +33,7 @@ export function ProgressDisplay() {
       direction={"horizontal"}
       gap={2}
       className={clsx(
-        "ps-2 pe-2 pt-1 pb-1 bg-body-tertiary rounded border align-self-center flex-shrink-0 user-select-text",
+        "ps-2 pe-2 pt-1 pb-1 bg-body-tertiary rounded border align-self-center flex-shrink-0 user-select-text shadow-sm",
       )}
       style={{ width: "300px" }}
     >
