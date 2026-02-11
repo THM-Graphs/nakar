@@ -11,15 +11,10 @@ export class SelectAllNodesOfLabel extends Action<LabelActionParams> {
     const nodesOfLabel = nodes.filter((n) =>
       this._nodeLabelsIncludeLabels(n, input.labels),
     );
-    const deselectElements =
-      useBearStore.getState().room.panels.inspector.deselectElements;
-    const appendElement =
-      useBearStore.getState().room.panels.inspector.appendElement;
+    const setElements =
+      useBearStore.getState().room.panels.inspector.setElements;
 
-    deselectElements();
-    for (const node of nodesOfLabel) {
-      appendElement(node.id);
-    }
+    setElements(nodesOfLabel.map((n) => n.id));
   }
 
   disabled(): boolean {
