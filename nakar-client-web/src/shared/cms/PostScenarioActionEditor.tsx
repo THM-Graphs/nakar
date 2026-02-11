@@ -66,30 +66,33 @@ export function PostScenarioActionEditor(props: {
               </Form.Group>
             </Col>
             <Col>
-              {props.value.type !== "compressRelationships" && (
-                <Form.Group className="" controlId="label">
-                  <Form.Label>
-                    Label{" "}
-                    <OverlayTrigger
-                      overlay={<Tooltip>Label to apply the action to.</Tooltip>}
-                    >
-                      <i className={"bi bi-info-circle"}></i>
-                    </OverlayTrigger>
-                  </Form.Label>
-                  <Form.Control
-                    type="text"
-                    placeholder="Person"
-                    className={"font-monospace"}
-                    value={props.value.label}
-                    onChange={(e) => {
-                      props.onChange({
-                        ...props.value,
-                        label: e.target.value,
-                      });
-                    }}
-                  />
-                </Form.Group>
-              )}
+              {props.value.type !== "compressRelationships" &&
+                props.value.type !== "connectResultNodes" && (
+                  <Form.Group className="" controlId="label">
+                    <Form.Label>
+                      Label{" "}
+                      <OverlayTrigger
+                        overlay={
+                          <Tooltip>Label to apply the action to.</Tooltip>
+                        }
+                      >
+                        <i className={"bi bi-info-circle"}></i>
+                      </OverlayTrigger>
+                    </Form.Label>
+                    <Form.Control
+                      type="text"
+                      placeholder="Person"
+                      className={"font-monospace"}
+                      value={props.value.label}
+                      onChange={(e) => {
+                        props.onChange({
+                          ...props.value,
+                          label: e.target.value,
+                        });
+                      }}
+                    />
+                  </Form.Group>
+                )}
             </Col>
           </Row>
           {props.value.type === "layout" && (
