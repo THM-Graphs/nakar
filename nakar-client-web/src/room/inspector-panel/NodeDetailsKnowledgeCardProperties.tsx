@@ -90,7 +90,7 @@ export function NodeDetailsKnowledgeCardProperties(props: { node: NodeDto }) {
     return [...properties, ...incomingEdges, ...outgoingEdges].sort((a, b) =>
       a.title.localeCompare(b.title),
     );
-  }, [incomingEdges, outgoingEdges]);
+  }, [incomingEdges, outgoingEdges, properties]);
 
   return (
     <>
