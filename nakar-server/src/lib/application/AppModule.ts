@@ -20,6 +20,7 @@ import { ActionController } from '../http/routes/canvas-action/ActionController'
 import { DatabaseConnectionController } from '../http/routes/database-connection/DatabaseConnectionController';
 import { PublicRoomController } from '../http/routes/public-room/PublicRoomController';
 import { PublicCanvasController } from '../http/routes/public-canvas/PublicCanvasController';
+import { CommonPropertiesController } from '../http/routes/common-properties/CommonPropertiesController';
 
 @Module({
   controllers: [
@@ -30,6 +31,7 @@ import { PublicCanvasController } from '../http/routes/public-canvas/PublicCanva
     ScenarioController,
     RoomController,
     DatabaseConnectionController,
+    CommonPropertiesController,
     PublicRoomController,
     PublicCanvasController,
     CanvasNoteController,

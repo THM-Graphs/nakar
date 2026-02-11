@@ -47,4 +47,11 @@ export class Router {
   ): string {
     return `${window.location.origin}/project/${projectId}/database-connection/${databaseId}/edit`;
   }
+
+  public static getCommonPropertyEditUrl(
+    projectId: string,
+    commonPropertyId: string,
+  ): string {
+    return `${window.location.origin}/project/${projectId}/common-property/${commonPropertyId}/edit`;
+  }
 }

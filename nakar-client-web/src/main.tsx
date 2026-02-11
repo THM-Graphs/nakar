@@ -33,6 +33,10 @@ import {
   EditDatabaseConnectionLoader,
 } from "./pages/EditDatabaseConnection.tsx";
 import { Room, RoomLoader } from "./pages/Room.tsx";
+import {
+  EditCommonProperty,
+  EditCommonPropertyLoader,
+} from "./pages/EditCommonProperty.tsx";
 
 async function bootstrap() {
   bootstrapTheme();
@@ -140,6 +144,11 @@ async function bootstrap() {
           path: "/project/:projectId/room/:roomId/edit",
           element: <EditRoom></EditRoom>,
           loader: EditRoomLoader,
+        },
+        {
+          path: "/project/:projectId/common-property/:commonPropertyId/edit",
+          element: <EditCommonProperty></EditCommonProperty>,
+          loader: EditCommonPropertyLoader,
         },
       ],
     },

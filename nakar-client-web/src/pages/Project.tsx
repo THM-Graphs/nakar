@@ -7,6 +7,7 @@ import { RoomCard } from "../shared/cms/RoomCard.tsx";
 import { DatabaseConnectionCard } from "../shared/cms/DatabaseConnectionCard.tsx";
 import { ScenarioGroupCard } from "../shared/cms/ScenarioGroupCard.tsx";
 import {
+  commonPropertiesControllerCreateCommonProperty,
   databaseConnectionControllerCreateDatabaseConnection,
   projectControllerGetProject,
   ProjectPageDto,
@@ -18,6 +19,7 @@ import { CMSHeader } from "../shared/cms/CMSHeader.tsx";
 import { CMSButton } from "../shared/cms/CMSButton.tsx";
 import { Router } from "../routing/Router.ts";
 import { NavbarButton } from "../shared/elements/NavbarButton.tsx";
+import CommonPropertyCard from "../shared/cms/CommonPropertyCard.tsx";
 
 export async function ProjectLoader(
   args: LoaderFunctionArgs,
@@ -176,6 +178,45 @@ export function Project() {
                   }}
                 ></NavbarButton>
               </Card>
+            </Stack>
+            <Stack>
+              <h5>Common Properties</h5>
+              <Stack gap={3}>
+                <Stack direction={"horizontal"} gap={3} className={"flex-wrap"}>
+                  {projectContext.commonProperties.map((r) => (
+                    <CommonPropertyCard
+                      key={r.id}
+                      commonProperty={r}
+                      project={projectContext}
+                    ></CommonPropertyCard>
+                  ))}
+                </Stack>
+                <CMSEmptyHint
+                  list={projectContext.commonProperties}
+                ></CMSEmptyHint>
+                <Card className={"align-self-start"}>
+                  <NavbarButton
+                    icon={"plus-lg"}
+                    title={"Add Common Property"}
+                    className={"p-1"}
+                    onClick={() => {
+                      commonPropertiesControllerCreateCommonProperty({
+                        path: { projectId: projectContext.id },
+                      })
+                        .then(resultOrThrow)
+                        .then((cp) =>
+                          navigate(
+                            Router.getCommonPropertyEditUrl(
+                              projectContext.id,
+                              cp.id,
+                            ),
+                          ),
+                        )
+                        .catch(console.error);
+                    }}
+                  ></NavbarButton>
+                </Card>
+              </Stack>
             </Stack>
           </Stack>
         </Container>

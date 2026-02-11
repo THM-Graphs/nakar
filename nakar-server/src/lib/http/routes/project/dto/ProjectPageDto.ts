@@ -3,6 +3,7 @@ import { DatabaseConnectionDto } from '../../../../schema/dtos/DatabaseConnectio
 import { ScenarioGroupDto } from '../../../../schema/dtos/ScenarioGroupDto';
 import { RoomDto } from '../../../../schema/dtos/RoomDto';
 import { ApiProperty } from '@nestjs/swagger';
+import { CommonPropertyDto } from '../../../../schema/dtos/CommonPropertyDto';
 
 export class ProjectPageDto {
   @ApiProperty()
@@ -26,6 +27,9 @@ export class ProjectPageDto {
   @ApiProperty({ isArray: true, type: RoomDto })
   public rooms: RoomDto[];
 
+  @ApiProperty({ isArray: true, type: CommonPropertyDto })
+  public commonProperties: CommonPropertyDto[];
+
   public constructor(data: {
     id: string;
     title: string;
@@ -34,6 +38,7 @@ export class ProjectPageDto {
     databases: DatabaseConnectionDto[];
     scenarioGroups: ScenarioGroupDto[];
     rooms: RoomDto[];
+    commonProperties: CommonPropertyDto[];
   }) {
     this.id = data.id;
     this.title = data.title;
@@ -42,5 +47,6 @@ export class ProjectPageDto {
     this.databases = data.databases;
     this.scenarioGroups = data.scenarioGroups;
     this.rooms = data.rooms;
+    this.commonProperties = data.commonProperties;
   }
 }

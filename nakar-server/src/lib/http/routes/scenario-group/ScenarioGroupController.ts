@@ -54,7 +54,6 @@ export class ScenarioGroupController {
   }
 
   @Put(':scenarioGroupId')
-  @ApiResponse({ type: UpdateScenarioGroupRequestBodyDto })
   @UseGuards(ScenarioGroupBelongsToProject)
   public async updateScenarioGroup(
     @Param('scenarioGroupId') scenarioGroupId: string,

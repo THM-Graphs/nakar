@@ -55,6 +55,7 @@ import { ProjectPageDto } from '../http/routes/project/dto/ProjectPageDto';
 import { ScenarioPostActionDto } from './dtos/ScenarioPostActionDto';
 import { ScenarioPostActionTypeDto } from './dtos/ScenarioPostActionTypeDto';
 import { ScenarioPostActionLayoutAlgorithmDto } from './dtos/ScenarioPostActionLayoutAlgorithmDto';
+import { CommonPropertyDto } from './dtos/CommonPropertyDto';
 
 @Injectable()
 export class SchemaFactoryService {
@@ -466,6 +467,8 @@ export class SchemaFactoryService {
       await this._database.getScenarioGroupsOfProject(project);
     const rooms: Result<'api::room.room'>[] =
       await this._database.getRoomsOfProject(project);
+    const commonProperties: Result<'api::common-property.common-property'>[] =
+      await this._database.getCommonPropertiesOfProject(project);
 
     return new ProjectPageDto({
       id: project.documentId,
@@ -493,6 +496,14 @@ export class SchemaFactoryService {
         rooms.map(
           async (room: Result<'api::room.room'>): Promise<RoomDto> =>
             await this.createSchemaRoom(room),
+        ),
+      ),
+      commonProperties: await Promise.all(
+        commonProperties.map(
+          async (
+            commonProperty: Result<'api::common-property.common-property'>,
+          ): Promise<CommonPropertyDto> =>
+            await this.createSchemaCommonProperty(commonProperty),
         ),
       ),
     });
@@ -722,6 +733,28 @@ export class SchemaFactoryService {
       ),
       color: null, // TODO
     };
+  }
+
+  public async createSchemaCommonProperty(
+    commonProperty: Result<'api::common-property.common-property'>,
+  ): Promise<CommonPropertyDto> {
+    const leftDatabase: Result<'api::database-connection.database-connection'> | null =
+      await this._database.getLeftDatabaseOfCommonProperty(commonProperty);
+    const rightDatabase: Result<'api::database-connection.database-connection'> | null =
+      await this._database.getRightDatabaseOfCommonProperty(commonProperty);
+    return new CommonPropertyDto({
+      id: commonProperty.documentId,
+      leftLabel: commonProperty.leftLabel ?? '',
+      leftProperty: commonProperty.leftProperty ?? '',
+      rightLabel: commonProperty.rightLabel ?? '',
+      rightProperty: commonProperty.rightProperty ?? '',
+      leftDatabase: leftDatabase
+        ? this.createSchemaDatabase(leftDatabase)
+        : null,
+      rightDatabase: rightDatabase
+        ? this.createSchemaDatabase(rightDatabase)
+        : null,
+    });
   }
 
   private async _createSchemaNode(

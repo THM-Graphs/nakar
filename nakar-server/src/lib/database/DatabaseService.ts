@@ -534,6 +534,24 @@ export class DatabaseService {
     return populatedProject.rooms ?? [];
   }
 
+  public async getCommonPropertiesOfProject(
+    project: Result<'api::project.project'>,
+  ): Promise<Result<'api::common-property.common-property'>[]> {
+    const populatedProject: Result<
+      'api::project.project',
+      { populate: ['commonProperties'] }
+    > | null = await strapi.documents('api::project.project').findOne({
+      documentId: project.documentId,
+      populate: ['commonProperties'],
+    });
+
+    if (populatedProject == null) {
+      throw new Error(`Project not found: ${project.documentId}`);
+    }
+
+    return populatedProject.commonProperties ?? [];
+  }
+
   public async getDatabaseConnectionsOfProject(
     project: Result<'api::project.project'>,
   ): Promise<Result<'plugin::users-permissions.user'>[]> {

@@ -103,6 +103,16 @@ export type type11 = 'ColorPresetDto';
 
 export type index = 0 | 1 | 2 | 3 | 4 | 5;
 
+export type CommonPropertyDto = {
+    id: string;
+    leftLabel: string;
+    leftProperty: string;
+    rightLabel: string;
+    rightProperty: string;
+    leftDatabase: ((DatabaseConnectionDto) | null);
+    rightDatabase: ((DatabaseConnectionDto) | null);
+};
+
 export type CompressNodesRequestBodyDto = {
     label: string;
 };
@@ -496,6 +506,7 @@ export type ProjectPageDto = {
     databases: Array<DatabaseConnectionDto>;
     scenarioGroups: Array<ScenarioGroupDto>;
     rooms: Array<RoomDto>;
+    commonProperties: Array<CommonPropertyDto>;
 };
 
 export type RoomDto = {
@@ -631,6 +642,15 @@ export type type24 = 'UngrabNodeWsdto';
 
 export type UnlockNodesRequestBodyDto = {
     nodes: Array<(string)>;
+};
+
+export type UpdateCommonPropertyRequestBodyDto = {
+    leftLabel: string;
+    leftProperty: string;
+    rightLabel: string;
+    rightProperty: string;
+    leftDatabaseId: string;
+    rightDatabaseId: string;
 };
 
 export type UpdateDatabaseConnectionRequestBodyDto = {
@@ -791,7 +811,7 @@ export type ScenarioGroupControllerUpdateScenarioGroupData = {
     };
 };
 
-export type ScenarioGroupControllerUpdateScenarioGroupResponse = (UpdateScenarioGroupRequestBodyDto);
+export type ScenarioGroupControllerUpdateScenarioGroupResponse = (unknown);
 
 export type ScenarioGroupControllerUpdateScenarioGroupError = unknown;
 
@@ -929,6 +949,39 @@ export type DatabaseConnectionControllerUpdateDatabaseConnectionData = {
 export type DatabaseConnectionControllerUpdateDatabaseConnectionResponse = (DatabaseConnectionDto);
 
 export type DatabaseConnectionControllerUpdateDatabaseConnectionError = unknown;
+
+export type CommonPropertiesControllerCreateCommonPropertyData = {
+    path: {
+        projectId: string;
+    };
+};
+
+export type CommonPropertiesControllerCreateCommonPropertyResponse = (CommonPropertyDto);
+
+export type CommonPropertiesControllerCreateCommonPropertyError = unknown;
+
+export type CommonPropertiesControllerDeleteCommonPropertyData = {
+    path: {
+        commonPropertyId: string;
+        projectId: string;
+    };
+};
+
+export type CommonPropertiesControllerDeleteCommonPropertyResponse = (unknown);
+
+export type CommonPropertiesControllerDeleteCommonPropertyError = unknown;
+
+export type CommonPropertiesControllerUpdateCommonPropertyData = {
+    body: UpdateCommonPropertyRequestBodyDto;
+    path: {
+        commonPropertyId: string;
+        projectId: string;
+    };
+};
+
+export type CommonPropertiesControllerUpdateCommonPropertyResponse = (unknown);
+
+export type CommonPropertiesControllerUpdateCommonPropertyError = unknown;
 
 export type PublicRoomControllerGetRoomData = {
     path: {
