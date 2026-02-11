@@ -705,7 +705,7 @@ export type UpdateScenarioQueryParameterEntryDto = {
     title: string;
     defaultValue: string;
     dataType: 'string' | 'number' | 'json' | 'startDateTime' | 'endDateTime';
-    allowedLabels: string;
+    allowedLabels: Array<(string)>;
 };
 
 export type UpdateScenarioRequestBodyDto = {

@@ -5,11 +5,7 @@ import { SMap } from '../map/Map';
 import { IndexedNoteCollection } from './IndexedNoteCollection';
 import { Logger } from '@strapi/logger';
 import { createChildLogger } from '../logger/createChildLogger';
-import {
-  deleteFile,
-  getStringPayloadOfMediaFile,
-  saveJSONFile,
-} from '../media/media';
+import { deleteFile, getStringPayloadOfMediaFile, saveJSONFile, } from '../media/media';
 import { TupleTypes } from '../schema/TupleTypes';
 import { Injectable } from '@nestjs/common';
 import { ApiPostScenarioActionPostScenarioAction } from '../../../types/generated/contentTypes';
@@ -935,11 +931,15 @@ export class DatabaseService {
 
     for (const newParameter of parameters) {
       const parameterData: Input<'api::query-parameter.query-parameter'> = {
-        title: newParameter.title,
+        title: newParameter.title.trim(),
         dataType: newParameter.dataType,
-        identifier: newParameter.identifier,
-        defaultValue: newParameter.defaultValue,
-        allowedLabels: newParameter.allowedLabels,
+        identifier: newParameter.identifier.trim(),
+        defaultValue: newParameter.defaultValue.trim(),
+        allowedLabels: newParameter.allowedLabels
+          .map((al: string): string => {
+            return al.trim();
+          })
+          .join(','),
         scenario: scenario.documentId,
       };
 

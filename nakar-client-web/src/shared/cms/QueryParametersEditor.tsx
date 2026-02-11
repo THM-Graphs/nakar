@@ -16,7 +16,7 @@ export function QueryParametersEditor(props: {
       title: "",
       dataType: "string",
       defaultValue: "",
-      allowedLabels: "",
+      allowedLabels: [],
     };
     props.onChange([...props.value, newQueryParameter]);
   }, [props.value, props.onChange]);

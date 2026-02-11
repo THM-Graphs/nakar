@@ -10,6 +10,7 @@ import {
 import { MouseEventHandler } from "react";
 import { UpdateScenarioQueryParameterEntryDto } from "../../../src-gen";
 import { CMSButton } from "./CMSButton.tsx";
+import { StringListEditor } from "./StringListEditor.tsx";
 
 export function QueryParameterEditor(props: {
   value: UpdateScenarioQueryParameterEntryDto;
@@ -116,22 +117,19 @@ export function QueryParameterEditor(props: {
                   <OverlayTrigger
                     overlay={
                       <Tooltip>
-                        This is the title of the parameter to be shown in the
-                        scenario panel.
+                        List of labels for which this parameter is allowed.
                       </Tooltip>
                     }
                   >
                     <i className={"bi bi-info-circle"}></i>
                   </OverlayTrigger>
                 </Form.Label>
-                <Form.Control
-                  type="text"
-                  placeholder="Person, Entity"
+                <StringListEditor
                   value={props.value.allowedLabels}
                   onChange={(e) => {
                     props.onChange({
                       ...props.value,
-                      allowedLabels: e.target.value,
+                      allowedLabels: e,
                     });
                   }}
                 />

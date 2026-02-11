@@ -89,7 +89,7 @@ export function EditScenario() {
       ): UpdateScenarioQueryParameterEntryDto => ({
         ...parameter,
         defaultValue: parameter.defaultValue ?? "",
-        allowedLabels: parameter.allowedLabels.join(", "),
+        allowedLabels: parameter.allowedLabels,
       }),
     ),
     postScenarioActions: loaderData.scenario.postScenarioActions.map((psa) => ({
