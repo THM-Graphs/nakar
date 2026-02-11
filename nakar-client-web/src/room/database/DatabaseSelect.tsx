@@ -1,15 +1,13 @@
-import { useBearStore } from "../../state/useBearStore.ts";
 import { Form } from "react-bootstrap";
 import { useEffect } from "react";
+import { useCanvasContext } from "../../pages/Canvas.tsx";
 
 export function DatabaseSelect(props: {
   database: string | null;
   onChange: (databaseId: string | null) => void;
 }) {
-  const referencedDatabases = useBearStore(
-    (s) => s.room.panels.scenarios.scenarios.referencedDatabases,
-  );
-
+  const canvasContext = useCanvasContext();
+  const referencedDatabases = canvasContext.initialRoomData.databases;
   useEffect(() => {
     if (referencedDatabases.length > 0 && props.database == null) {
       props.onChange(referencedDatabases[0].id);

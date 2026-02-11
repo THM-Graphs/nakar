@@ -1,6 +1,6 @@
 import { NodeDetailsKnowledgeCardEntry } from "./NodeDetailsKnowledgeCardEntry.ts";
-import { Fragment, ReactNode } from "react";
-import { Link } from "react-router";
+import { Fragment } from "react";
+import { NodeDetailsKnowledgeCardEntryValueDisplay } from "./NodeDetailsKnowledgeCardEntryValueDisplay.tsx";
 
 export function NodeDetailsKnowledgeCardEntryDisplay(props: {
   entry: NodeDetailsKnowledgeCardEntry;
@@ -12,21 +12,15 @@ export function NodeDetailsKnowledgeCardEntryDisplay(props: {
         <ul>
           {props.entry.values.length > 0 && (
             <>
-              {props.entry.values.map((value) => (
-                <Fragment key={value.id}>
-                  <li key={value.title} className={""}>
-                    <LinkWrapper onClick={value.onClick ?? null}>
-                      {value.title.trim().length === 0 ? (
-                        <span className={"text-muted fst-italic"}>
-                          Empty Text
-                        </span>
-                      ) : (
-                        <span>{value.title}</span>
-                      )}
-                    </LinkWrapper>
-                  </li>
-                </Fragment>
-              ))}
+              {props.entry.values.map(
+                (value: NodeDetailsKnowledgeCardEntry["values"][0]) => (
+                  <Fragment key={value.id}>
+                    <NodeDetailsKnowledgeCardEntryValueDisplay
+                      value={value}
+                    ></NodeDetailsKnowledgeCardEntryValueDisplay>
+                  </Fragment>
+                ),
+              )}
             </>
           )}
           {props.entry.values.length === 0 && (
@@ -38,25 +32,4 @@ export function NodeDetailsKnowledgeCardEntryDisplay(props: {
       </span>
     </span>
   );
-}
-
-function LinkWrapper(props: {
-  onClick: (() => void) | null;
-  children: ReactNode;
-}) {
-  if (props.onClick == null) {
-    return props.children;
-  } else {
-    return (
-      <Link
-        to={""}
-        onClick={(e) => {
-          e.preventDefault();
-          props.onClick?.();
-        }}
-      >
-        {props.children}
-      </Link>
-    );
-  }
 }

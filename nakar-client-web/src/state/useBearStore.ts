@@ -483,7 +483,6 @@ export const useBearStore = create<BearState>()(
                 scenarios: {
                   scenarios: {
                     scenarioGroups: [],
-                    referencedDatabases: [],
                   },
                   setScenarios: (scenarios) => {
                     set((s) => {

@@ -2,11 +2,12 @@ import { Stack } from "react-bootstrap";
 import { DetailPaneAction } from "./DetailPaneAction.ts";
 import { PropertiesDisplay, PropertyEntry } from "./PropertiesDisplay.tsx";
 import { NavbarButton } from "../../shared/elements/NavbarButton.tsx";
-import { ReactNode, useState } from "react";
+import { ReactNode } from "react";
 import { PropertyMenu } from "../properties/PropertyMenu.tsx";
 import clsx from "clsx";
 import { Collapsable } from "../../shared/elements/Collapsable.tsx";
 import { ClipboardButton } from "../../shared/elements/ClipboardButton.tsx";
+import { ShortendText } from "../../shared/elements/ShortendText.tsx";
 
 export function DetailPane(props: {
   title: string;
@@ -18,10 +19,6 @@ export function DetailPane(props: {
   elementId: string;
   children?: ReactNode;
 }) {
-  const [showFullTitle, setShowFullTitle] = useState(false);
-
-  const titleLengthLimit = 100;
-
   return (
     <Stack className={"pb-5 pt-1"} gap={5}>
       <Stack className={"flex-grow-0 flex-shrink-1"}>
@@ -32,34 +29,11 @@ export function DetailPane(props: {
           >
             <Stack className={"flex-grow-0"}>
               <ClipboardButton text={props.title}></ClipboardButton>
-              {props.title.length > titleLengthLimit && !showFullTitle && (
-                <NavbarButton
-                  icon={"chevron-right"}
-                  className={"align-self-baseline"}
-                  onClick={() => {
-                    setShowFullTitle(true);
-                  }}
-                ></NavbarButton>
-              )}
-              {props.title.length > titleLengthLimit && showFullTitle && (
-                <NavbarButton
-                  className={"align-self-baseline"}
-                  icon={"chevron-down"}
-                  onClick={() => {
-                    setShowFullTitle(false);
-                  }}
-                ></NavbarButton>
-              )}
             </Stack>
             <Stack>
-              <span
-                style={{ overflowWrap: "anywhere", userSelect: "text" }}
-                className={"fs-5 fw-bold align-self-baseline"}
-              >
-                {props.title.length > titleLengthLimit && !showFullTitle
-                  ? props.title.substring(0, titleLengthLimit) + "…"
-                  : props.title}
-              </span>
+              <h5 className={"user-select-text"}>
+                <ShortendText text={props.title}></ShortendText>
+              </h5>
             </Stack>
             <PropertyMenu value={props.title}></PropertyMenu>
           </Stack>

@@ -84,6 +84,8 @@ export class SchemaFactoryService {
     });
     const project: Result<'api::project.project'> =
       await this._database.getProjectOfRoom(room);
+    const databases: Result<'api::database-connection.database-connection'>[] =
+      await this._database.getDatabaseConnectionsOfProject(project);
 
     return new RoomDto({
       id: room.documentId,
@@ -92,6 +94,11 @@ export class SchemaFactoryService {
       canvases: canvases,
       joinCanvasId: canvases[0].id,
       projectId: project.documentId,
+      databases: databases.map(
+        (
+          database: Result<'api::database-connection.database-connection'>,
+        ): DatabaseConnectionDto => this.createSchemaDatabase(database),
+      ),
     });
   }
 
@@ -134,39 +141,8 @@ export class SchemaFactoryService {
       ),
     );
 
-    const referencedDatabases: SMap<
-      string,
-      Result<'api::database-connection.database-connection'>
-    > = new SMap<
-      string,
-      Result<'api::database-connection.database-connection'>
-    >();
-    for (const scenarioGroup of scenarioGroups) {
-      const scenarios: Result<'api::scenario.scenario'>[] =
-        await this._database.getScenariosOfGroup(scenarioGroup);
-      for (const scenario of scenarios) {
-        const queries: Result<'api::query.query'>[] =
-          await this._database.getQueriesOfScenario(scenario);
-        for (const query of queries) {
-          const database: Result<'api::database-connection.database-connection'> | null =
-            await this._database.getDatabaseConnectionOfQuery(query);
-          if (database != null) {
-            referencedDatabases.set(database.documentId, database);
-          }
-        }
-      }
-    }
-
     return {
       scenarioGroups: scenarioGroupSchemas,
-      referencedDatabases: referencedDatabases
-        .toValueArray()
-        .map(
-          (
-            referencedDatabase: Result<'api::database-connection.database-connection'>,
-          ): DatabaseConnectionDto =>
-            this.createSchemaDatabase(referencedDatabase),
-        ),
     };
   }
 

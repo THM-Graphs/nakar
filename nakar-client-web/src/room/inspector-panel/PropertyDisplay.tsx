@@ -1,18 +1,15 @@
-import { useState } from "react";
 import { Stack } from "react-bootstrap";
 import clsx from "clsx";
 import { ClipboardButton } from "../../shared/elements/ClipboardButton.tsx";
-import { NavbarButton } from "../../shared/elements/NavbarButton.tsx";
 import { PropertyMenu } from "../properties/PropertyMenu.tsx";
 import { PropertyEntry } from "./PropertiesDisplay.tsx";
+import { ShortendText } from "../../shared/elements/ShortendText.tsx";
 
 export function PropertyDisplay(props: {
   property: PropertyEntry;
   index: number;
 }) {
   const property = props.property;
-  const [showFullValue, setShowFullValue] = useState(false);
-  const valueLengthLimit = 100;
   const stringValue =
     typeof property.value === "string"
       ? property.value
@@ -40,32 +37,12 @@ export function PropertyDisplay(props: {
         className={clsx("p-1 align-self-baseline")}
         text={stringValue}
       ></ClipboardButton>
-      {stringValue.length > valueLengthLimit && !showFullValue && (
-        <NavbarButton
-          icon={"chevron-right"}
-          className={"align-self-baseline"}
-          onClick={() => {
-            setShowFullValue(true);
-          }}
-        ></NavbarButton>
-      )}
-      {stringValue.length > valueLengthLimit && showFullValue && (
-        <NavbarButton
-          icon={"chevron-down"}
-          className={"align-self-baseline"}
-          onClick={() => {
-            setShowFullValue(false);
-          }}
-        ></NavbarButton>
-      )}
       <span
         className={
           "user-select-text pe-2 text-break text-wrap small align-self-baseline"
         }
       >
-        {stringValue.length > valueLengthLimit && !showFullValue
-          ? stringValue.substring(0, valueLengthLimit) + "…"
-          : stringValue}
+        <ShortendText text={stringValue}></ShortendText>
       </span>
       <div className={"me-auto"}></div>
       <PropertyMenu value={property.value}></PropertyMenu>

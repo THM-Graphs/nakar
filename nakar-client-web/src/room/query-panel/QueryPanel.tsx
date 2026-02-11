@@ -26,9 +26,7 @@ import { CypherEditor } from "@neo4j-cypher/react-codemirror";
 export function QueryPanel() {
   const roomContext = useCanvasContext();
   const query = useBearStore((s) => s.room.panels.query);
-  const referencedDatabases = useBearStore(
-    (s) => s.room.panels.scenarios.scenarios.referencedDatabases,
-  );
+  const referencedDatabases = roomContext.initialRoomData.databases;
   const pushErrorNotification = useBearStore(
     (s) => s.room.ui.pushErrorNotification,
   );

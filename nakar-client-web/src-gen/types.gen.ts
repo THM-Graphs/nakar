@@ -505,6 +505,7 @@ export type RoomDto = {
     canvases: Array<CanvasDto>;
     joinCanvasId: string;
     projectId: string;
+    databases: Array<DatabaseConnectionDto>;
 };
 
 export type visibility = 'private' | 'public' | 'unlisted';
@@ -522,7 +523,6 @@ export type ScenarioArgumentDto = {
 
 export type ScenarioCollectionDto = {
     scenarioGroups: Array<ScenarioGroupDto>;
-    referencedDatabases: Array<DatabaseConnectionDto>;
 };
 
 export type ScenarioDto = {
