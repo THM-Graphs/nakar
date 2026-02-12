@@ -52,12 +52,12 @@ export function DynamicList<T>(props: {
       {useFilter && (
         <Stack
           direction={"horizontal"}
-          className={"bg-body border-bottom ps-2"}
+          className={"bg-body border-bottom ps-2 border-top"}
         >
           <i className={"bi bi-filter"}></i>
           <Form.Control
             size={"sm"}
-            className={"border-0 border-top pt-0 pb-0"}
+            className={"border-0 pt-0 pb-0"}
             value={filterValue}
             onChange={(event) => {
               setFilterValue(event.target.value);

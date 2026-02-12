@@ -8,18 +8,20 @@ import { NodeDetailsKnowledgeCardCoverImage } from "./NodeDetailsKnowledgeCardCo
 export function NodeDetailsKnowledgeCard(props: { node: NodeDto }) {
   return (
     <Stack className={"pb-5"}>
-      <NodeDetailsKnowledgeCardHeader
-        node={props.node}
-      ></NodeDetailsKnowledgeCardHeader>
       <NodeDetailsKnowledgeCardCoverImage
         node={props.node}
       ></NodeDetailsKnowledgeCardCoverImage>
-      <NodeDetailsKnowledgeCardScenarios
+      <NodeDetailsKnowledgeCardHeader
         node={props.node}
-      ></NodeDetailsKnowledgeCardScenarios>
-      <NodeDetailsKnowledgeCardProperties
-        node={props.node}
-      ></NodeDetailsKnowledgeCardProperties>
+      ></NodeDetailsKnowledgeCardHeader>
+      <Stack gap={3}>
+        <NodeDetailsKnowledgeCardScenarios
+          node={props.node}
+        ></NodeDetailsKnowledgeCardScenarios>
+        <NodeDetailsKnowledgeCardProperties
+          node={props.node}
+        ></NodeDetailsKnowledgeCardProperties>
+      </Stack>
     </Stack>
   );
 }

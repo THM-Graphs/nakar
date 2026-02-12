@@ -23,7 +23,7 @@ export class ExpandNodeAction extends Action<NodesActionParams> {
   }
 
   icon(): string | null {
-    return "zoom-in";
+    return "plus-lg";
   }
 
   slug(): string {

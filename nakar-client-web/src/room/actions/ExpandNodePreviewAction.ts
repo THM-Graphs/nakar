@@ -43,6 +43,6 @@ export class ExpandNodePreviewAction extends Action<NodesActionParams> {
   }
 
   title(): string {
-    return "Expand Node (Preview)";
+    return "Expand Preview";
   }
 }

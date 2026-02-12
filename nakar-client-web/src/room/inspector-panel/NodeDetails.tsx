@@ -48,15 +48,15 @@ export function NodeDetails(props: { node: NodeDto }) {
               {props.node.parameterizedScenarios.length > 0 && (
                 <Collapsable
                   title={<span className={"small fw-bold"}>Scenarios</span>}
-                  className={"border-bottom border-top"}
+                  className={"border-top"}
                   initialState={false}
                 >
                   {props.node.parameterizedScenarios.map((scenarioGroup) => (
                     <ParameterizedScenarioGroupEntry
-                      className={"ps-1 pe-2"}
                       scenarioGroup={scenarioGroup}
                       node={props.node}
                       key={scenarioGroup.id}
+                      className={"pt-2"}
                     ></ParameterizedScenarioGroupEntry>
                   ))}
                 </Collapsable>

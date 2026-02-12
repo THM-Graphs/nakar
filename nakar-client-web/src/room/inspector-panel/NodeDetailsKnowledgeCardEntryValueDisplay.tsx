@@ -12,7 +12,10 @@ export function NodeDetailsKnowledgeCardEntryValueDisplay(props: {
     <li className={""}>
       {props.entry.type === "incomingRelationship" && (
         <>
-          <span>{props.node.title}</span>
+          <ShortendText
+            text={props.node.title}
+            render={(t) => <span>{t}</span>}
+          ></ShortendText>
           <i className={"bi bi-arrow-left ms-1"}></i>
           <span>{props.entry.title}</span>
           <i className={"bi bi-arrow-left me-1"}></i>

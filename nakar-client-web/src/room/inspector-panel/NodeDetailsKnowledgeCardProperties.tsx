@@ -107,7 +107,7 @@ export function NodeDetailsKnowledgeCardProperties(props: { node: NodeDto }) {
             collapsable={false}
             render={(data) => (
               <>
-                <Stack gap={0} className={"ps-2 pe-2 pt-2"}>
+                <Stack gap={0} className={"ps-2 pe-2"}>
                   {data.map((property) => (
                     <Fragment key={property.title}>
                       <NodeDetailsKnowledgeCardEntryDisplay

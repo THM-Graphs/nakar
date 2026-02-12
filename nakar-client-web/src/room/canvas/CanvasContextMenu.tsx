@@ -16,7 +16,7 @@ import { relationshipActions } from "../actions/groups/relationshipActions.ts";
 import { EdgeDto, NodeDto } from "../../../src-gen";
 import { useIsLoggedIn } from "../../state/useIsLoggedIn.ts";
 import { useCanvasContext } from "../../pages/Canvas.tsx";
-import { NodeParameterizedScenarioEntry } from "../inspector-panel/NodeParameterizedScenarioEntry.tsx";
+import { RunScenarioAction } from "../actions/RunScenarioAction.ts";
 
 export function CanvasContextMenu() {
   const roomContext = useCanvasContext();
@@ -38,6 +38,9 @@ export function CanvasContextMenu() {
   );
   const dropdownEl = useRef<HTMLDivElement | null>(null);
   const isLoggedIn = useIsLoggedIn();
+  const showRunScenarioModal = useBearStore(
+    (s) => s.room.scenario.runScenarioModal.open,
+  );
 
   useEffect(() => {
     if (selectedNodes != null) {
@@ -187,16 +190,22 @@ export function CanvasContextMenu() {
             {nodeOrigin.parameterizedScenarios.map((scenarioGroup) => (
               <Fragment key={scenarioGroup.id}>
                 <Dropdown.Divider></Dropdown.Divider>
-                <Dropdown.ItemText className={"small"}>
+                <Dropdown.ItemText className={"small text-muted"}>
                   {scenarioGroup.title}
                 </Dropdown.ItemText>
                 {scenarioGroup.scenarios.map((scenario) => {
                   return (
-                    <NodeParameterizedScenarioEntry
-                      scenario={scenario}
-                      node={nodeOrigin}
-                      key={scenario.id}
-                    ></NodeParameterizedScenarioEntry>
+                    <Fragment key={scenario.id}>
+                      <ActionDropdownItem
+                        action={RunScenarioAction.shared}
+                        params={{
+                          roomContext: roomContext,
+                          scenario: scenario,
+                          showRunScenarioModal: showRunScenarioModal,
+                          node: nodeOrigin,
+                        }}
+                      ></ActionDropdownItem>
+                    </Fragment>
                   );
                 })}
               </Fragment>

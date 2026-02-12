@@ -11,7 +11,6 @@ export function NodeDetailsKnowledgeCardScenarios(props: { node: NodeDto }) {
               scenarioGroup={scenarioGroup}
               node={props.node}
               key={scenarioGroup.id}
-              className={"p-2 border-bottom"}
             ></ParameterizedScenarioGroupEntry>
           ))}
         </>

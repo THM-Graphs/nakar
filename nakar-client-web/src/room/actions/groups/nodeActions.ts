@@ -9,8 +9,8 @@ import { ShowShortestPathAction } from "../ShowShortestPathAction.ts";
 import { ExpandNodeAction } from "../ExpandNodeAction.ts";
 
 export const nodeActions: Action<NodesActionParams>[] = [
-  ExpandNodePreviewAction.shared,
   ExpandNodeAction.shared,
+  ExpandNodePreviewAction.shared,
   RemoveNodesAction.shared,
   FocusNodesAction.shared,
   UnlockNodesAction.shared,

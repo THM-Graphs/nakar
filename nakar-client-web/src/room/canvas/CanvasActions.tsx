@@ -86,7 +86,7 @@ export function CanvasActions() {
       </CanvasActionsGroup>
       <CanvasActionsGroup title={"Navigation"}>
         <CanvasActionsAction
-          action={ExpandNodePreviewAction.shared}
+          action={ExpandNodeAction.shared}
           params={{
             nodes: selectedNodes,
             roomContext: roomContext,
@@ -94,7 +94,7 @@ export function CanvasActions() {
           }}
         ></CanvasActionsAction>
         <CanvasActionsAction
-          action={ExpandNodeAction.shared}
+          action={ExpandNodePreviewAction.shared}
           params={{
             nodes: selectedNodes,
             roomContext: roomContext,
