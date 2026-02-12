@@ -133,8 +133,11 @@ export function NodeConfigurationEditor(props: {
                 />
                 <Form.Text className={"small text-muted"}>
                   Use the placeholder{" "}
-                  <code className={"user-select-text code"}>{"{{value}}"}</code>{" "}
-                  to reference the source property's value.
+                  <code className={"user-select-text code"}>
+                    {"{{{value}}}"}
+                  </code>{" "}
+                  to insert the source property’s value. The value will be
+                  URL-encoded automatically.
                 </Form.Text>
               </Form.Group>
             </Col>

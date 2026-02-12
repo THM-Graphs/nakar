@@ -239,7 +239,7 @@ export class GraphNode {
       const template: HandlebarsTemplateDelegate = Handlebars.compile(
         nodeConfig.linkTemplate,
       );
-      const link: string = template({ value: value });
+      const link: string = template({ value: encodeURIComponent(value) });
 
       try {
         return new URL(link);
@@ -278,7 +278,7 @@ export class GraphNode {
       const template: HandlebarsTemplateDelegate = Handlebars.compile(
         nodeConfig.linkTemplate,
       );
-      const link: string = template({ value: value });
+      const link: string = template({ value: encodeURIComponent(value) });
 
       try {
         return new URL(link);

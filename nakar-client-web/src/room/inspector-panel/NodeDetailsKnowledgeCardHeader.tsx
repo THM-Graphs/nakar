@@ -18,13 +18,19 @@ export function NodeDetailsKnowledgeCardHeader(props: { node: NodeDto }) {
             {props.node.labels.join(", ")}
           </span>
           <span className={"fs-5 user-select-text text-break fw-bold"}>
-            <ShortendText text={props.node.title}></ShortendText>
+            <ShortendText
+              text={props.node.title}
+              render={(t) => (
+                <>
+                  {props.node.url != null ? (
+                    <Link to={props.node.url}>{t}</Link>
+                  ) : (
+                    <>{t}</>
+                  )}
+                </>
+              )}
+            ></ShortendText>
           </span>
-          {props.node.url != null && (
-            <Link to={props.node.url} target={"_blank"}>
-              {props.node.url}
-            </Link>
-          )}
         </Stack>
       </Stack>
     </>
