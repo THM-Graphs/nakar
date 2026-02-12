@@ -1,7 +1,12 @@
 import { Stack } from "react-bootstrap";
 import { AppNavbar } from "../shared/bars/AppNavbar.tsx";
 import { Context, createContext, useContext, useEffect } from "react";
-import { LoaderFunctionArgs, useLoaderData, useNavigate } from "react-router";
+import {
+  Link,
+  LoaderFunctionArgs,
+  useLoaderData,
+  useNavigate,
+} from "react-router";
 import { resultOrThrow } from "../shared/data/resultOrThrow.ts";
 import { ToastStack } from "../shared/bars/ToastStack.tsx";
 import { HistogramPanel } from "../room/histogram-panel/HistogramPanel.tsx";
@@ -21,8 +26,6 @@ import { QueryPanel } from "../room/query-panel/QueryPanel.tsx";
 import { QueryPanelButton } from "../room/query-panel/QueryPanelButton.tsx";
 import { GraphRendererD3 } from "../room/canvas/GraphRendererD3.tsx";
 import { MenuBar } from "../shared/bars/MenuBar.tsx";
-import { ActionNavbarButton } from "../room/actions/ActionNavbarButton.tsx";
-import { CloseRoomAction } from "../room/actions/CloseRoomAction.ts";
 import { NotesPanel } from "../room/notes-panel/NotesPanel.tsx";
 import { NotesPanelButton } from "../room/notes-panel/NotesPanelButton.tsx";
 import { AddEditNoteModal } from "../room/notes-panel/AddEditNoteModal.tsx";
@@ -43,7 +46,6 @@ import {
 import { useAppContext } from "../state/AppContextData.ts";
 import { Router } from "../routing/Router.ts";
 import { usePageTitle } from "../routing/usePageTitle.ts";
-import { NavbarButton } from "../shared/elements/NavbarButton.tsx";
 import { CanvasToolbar } from "../room/canvas/CanvasToolbar.tsx";
 
 const CanvasContext: Context<CanvasContextData | null> =
@@ -217,28 +219,24 @@ export function Canvas() {
               left={
                 <>
                   <Stack direction={"horizontal"}>
-                    <ActionNavbarButton
-                      action={CloseRoomAction.shared}
-                      params={{ navigate }}
-                      hideTitle={true}
-                      hideIcon={true}
+                    <Link
+                      to={Router.getProjectPath(
+                        canvasContext.initialRoomData.projectId,
+                      )}
+                      className={"align-self-center p-1 text-body"}
                     >
                       <NavbarLogo></NavbarLogo>
-                    </ActionNavbarButton>
-                    <NavbarButton
-                      title={
-                        <span className={"fw-bold"}>
-                          {canvasContext.initialRoomData.title}
-                        </span>
+                    </Link>
+                    <Link
+                      to={Router.getProjectPath(
+                        canvasContext.initialRoomData.projectId,
+                      )}
+                      className={
+                        "align-self-center p-1 text-body fw-bold small"
                       }
-                      onClick={async () => {
-                        await navigate(
-                          Router.getProjectPath(
-                            canvasContext.initialRoomData.projectId,
-                          ),
-                        );
-                      }}
-                    ></NavbarButton>
+                    >
+                      {canvasContext.initialRoomData.title}
+                    </Link>
                     <MenuBar></MenuBar>
                   </Stack>
                 </>

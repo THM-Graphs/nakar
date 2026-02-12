@@ -12,6 +12,14 @@ div#root {
   --bs-breadcrumb-margin-bottom: 0 !important;
 }
 
+a {
+  text-decoration: none;
+  text-underline-offset: 0.125em;
+}
+a:hover {
+  text-decoration: underline;
+}
+
 .rounded-top-end {
   border-top-right-radius: var(--bs-border-radius) !important;
 }
