@@ -23,7 +23,9 @@ export function NodeDetailsKnowledgeCardHeader(props: { node: NodeDto }) {
               render={(t) => (
                 <>
                   {props.node.url != null ? (
-                    <Link to={props.node.url}>{t}</Link>
+                    <Link to={props.node.url} target={"_blank"}>
+                      {t}
+                    </Link>
                   ) : (
                     <>{t}</>
                   )}
