@@ -19,16 +19,10 @@ export function NodeDetailsKnowledgeCardCoverImage(props: { node: NodeDto }) {
   return (
     <>
       {url != null && (
-        <Stack className={"border-bottom position-relative bg-body p-2"}>
+        <Stack className={"border-bottom position-relative bg-white"}>
           <Link to={url.toString()} target={"_blank"}>
             <Image fluid={true} src={url.toString()}></Image>
           </Link>
-          <span className={"small text-break"}>
-            Source: <i className={"bi bi-box-arrow-up-right"}></i>{" "}
-            <Link to={url.toString()} target={"_blank"}>
-              {url.toString()}
-            </Link>
-          </span>
         </Stack>
       )}
     </>
