@@ -79,6 +79,9 @@ export class NodeDto {
   @ApiProperty({ type: String, nullable: true })
   public coverImageUrl: string | null;
 
+  @ApiProperty({ type: String, nullable: true })
+  public url: string | null;
+
   public constructor(data: {
     id: string;
     title: string;
@@ -103,6 +106,7 @@ export class NodeDto {
     notes: NoteDto[];
     parameterizedScenarios: ScenarioGroupDto[];
     coverImageUrl: string | null;
+    url: string | null;
   }) {
     this.id = data.id;
     this.title = data.title;
@@ -127,5 +131,6 @@ export class NodeDto {
     this.notes = data.notes;
     this.parameterizedScenarios = data.parameterizedScenarios;
     this.coverImageUrl = data.coverImageUrl;
+    this.url = data.url;
   }
 }

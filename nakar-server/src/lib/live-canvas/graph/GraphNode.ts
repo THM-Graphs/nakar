@@ -252,6 +252,45 @@ export class GraphNode {
     return null;
   }
 
+  public async getUrl(
+    databaseCache: DatabaseReferenceCache,
+  ): Promise<URL | null> {
+    const nodeConfigs: Result<'api::node-configuration.node-configuration'>[] =
+      await databaseCache.getNodeConfigurations(this.source);
+    for (const nodeConfig of nodeConfigs) {
+      if (
+        nodeConfig.label == null ||
+        nodeConfig.linkTemplate == null ||
+        nodeConfig.property == null ||
+        nodeConfig.type !== 'link'
+      ) {
+        continue;
+      }
+      if (!this._labels.has(nodeConfig.label)) {
+        continue;
+      }
+      const value: string | null = this.properties.getStringValueOfProperty(
+        nodeConfig.property,
+      );
+      if (value == null) {
+        continue;
+      }
+      const template: HandlebarsTemplateDelegate = Handlebars.compile(
+        nodeConfig.linkTemplate,
+      );
+      const link: string = template({ value: value });
+
+      try {
+        return new URL(link);
+      } catch (error: unknown) {
+        this._logger.warn(
+          `Cannot create url of string '${link}': ${JSON.stringify(error)}`,
+        );
+      }
+    }
+    return null;
+  }
+
   public copy(): GraphNode {
     return new GraphNode({
       id: this.id,

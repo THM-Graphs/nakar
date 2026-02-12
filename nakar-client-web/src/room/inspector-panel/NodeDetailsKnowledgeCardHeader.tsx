@@ -1,6 +1,7 @@
 import { NodeDto } from "../../../src-gen";
 import { Stack } from "react-bootstrap";
 import { ShortendText } from "../../shared/elements/ShortendText.tsx";
+import { Link } from "react-router";
 
 export function NodeDetailsKnowledgeCardHeader(props: { node: NodeDto }) {
   return (
@@ -13,12 +14,17 @@ export function NodeDetailsKnowledgeCardHeader(props: { node: NodeDto }) {
         gap={2}
       >
         <Stack>
-          <h5 className={"user-select-text text-break"}>
-            <ShortendText text={props.node.title}></ShortendText>
-          </h5>
           <span className={"text-muted small user-select-text"}>
             {props.node.labels.join(", ")}
           </span>
+          <span className={"fs-5 user-select-text text-break fw-bold"}>
+            <ShortendText text={props.node.title}></ShortendText>
+          </span>
+          {props.node.url != null && (
+            <Link to={props.node.url} target={"_blank"}>
+              {props.node.url}
+            </Link>
+          )}
         </Stack>
       </Stack>
     </>

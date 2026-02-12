@@ -875,6 +875,7 @@ export class SchemaFactoryService {
       ),
       coverImageUrl:
         (await node.getCoverImageUrl(databaseCache))?.toString() ?? null,
+      url: (await node.getUrl(databaseCache))?.toString() ?? null,
     };
   }
 

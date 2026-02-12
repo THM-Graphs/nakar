@@ -413,6 +413,7 @@ export type NodeDto = {
     notes: Array<NoteDto>;
     parameterizedScenarios: Array<ScenarioGroupDto>;
     coverImageUrl: (string) | null;
+    url: (string) | null;
 };
 
 export type NodeLockCollectionEntryDto = {

@@ -109,6 +109,10 @@ export function NodeDetails(props: { node: NodeDto }) {
               value: props.node.creationReason,
             },
             {
+              slug: "URL",
+              value: props.node.url,
+            },
+            {
               slug: "Cover Image URL",
               value: props.node.coverImageUrl,
             },
