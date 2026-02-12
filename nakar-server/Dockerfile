@@ -1,27 +1,28 @@
-FROM node:22 AS builder
+FROM node:20-alpine AS builder
 WORKDIR /app
 
 COPY package.json package-lock.json ./
-RUN npm install
+RUN npm ci
 
 COPY config ./config
 COPY database ./database
-COPY public/robots.txt ./public/robots.txt
 COPY src ./src
 COPY types ./types
 COPY babel.config.js ./
 COPY tsconfig.json ./
 
-RUN npm run build
+RUN NODE_ENV=production npm run build
 
-FROM node:22
+FROM node:20-alpine AS production
 WORKDIR /app
-ENV NODE_ENV=production
 
-COPY --from=builder /app/dist ./
-COPY public/robots.txt ./public/robots.txt
-COPY favicon.ico package.json package-lock.json ./
+COPY package.json package-lock.json ./
 RUN npm ci --omit=dev
+
+COPY public/robots.txt ./public/robots.txt
+COPY favicon.ico ./
+# Unpack dist folder so strapi will find src dir to run
+COPY --from=builder /app/dist ./
 
 EXPOSE 80
 EXPOSE 81
@@ -32,5 +33,7 @@ HEALTHCHECK \
     --start-period=120s \
     --start-interval=5s \
     CMD curl -f http://localhost/_health || exit 1
+
+ENV NODE_ENV=production
 
 CMD ["node", "node_modules/@strapi/strapi/bin/strapi.js", "start"]

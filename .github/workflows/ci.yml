@@ -14,26 +14,30 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '22'
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: ./nakar-server/package-lock.json
       - name: Install
         run: |
           cd nakar-server
           npm ci
-      - name: Build
-        run: |
-          cd nakar-server
-          npm run build
-          docker buildx ls
-          npm run build:docker
       - name: Analysis
         run: |
           cd nakar-server
           npm run lint
           npm run format
+      - name: Build
+        run: |
+          cd nakar-server
+          npm run build
+      - name: Build Docker
+        uses: docker/build-push-action@v5
+        with:
+          context: ./nakar-server
+          push: false
+          tags: ghcr.io/thm-graphs/nakar/server:dev
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
   ci-client-web:
     runs-on: ubuntu-latest
@@ -43,37 +47,44 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '22'
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: ./nakar-client-web/package-lock.json
       - name: Install
         run: |
           cd nakar-client-web
           npm ci
-      - name: Build
-        run: |
-          cd nakar-client-web
-          npm run build
-          docker buildx ls
-          npm run build:docker
       - name: Analysis
         run: |
           cd nakar-client-web
           npm run lint
           npm run format
+      - name: Build
+        run: |
+          cd nakar-client-web
+          npm run build
+      - name: Build Docker
+        uses: docker/build-push-action@v5
+        with:
+          context: ./nakar-client-web
+          push: false
+          tags: ghcr.io/thm-graphs/nakar/client-web:dev
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
   ci-nakar-db-pole:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
-      - name: Build
-        run: |
-          cd nakar-db-pole
-          docker buildx ls
-          npm run build:docker
+      - name: Build Docker
+        uses: docker/build-push-action@v5
+        with:
+          context: ./nakar-db-pole
+          push: false
+          tags: ghcr.io/thm-graphs/nakar/db-pole:dev
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
   ci-nakar-db-examples:
     runs-on: ubuntu-latest
@@ -85,6 +96,14 @@ jobs:
           cd nakar-db-examples
           docker buildx ls
           npm run build:docker
+      - name: Build Docker
+        uses: docker/build-push-action@v5
+        with:
+          context: ./nakar-db-examples
+          push: false
+          tags: ghcr.io/thm-graphs/nakar/db-examples:dev
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
   # ci-client-vision:
   #   runs-on: macos-latest
