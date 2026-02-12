@@ -1,9 +1,3 @@
-html,
-body,
-div#root {
-  height: 100%;
-}
-
 * {
   /* Prevent SVG elements to show text cursor */
   user-select: none;

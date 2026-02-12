@@ -46,7 +46,7 @@ async function bootstrap() {
     baseUrl: env.BACKEND_URL,
   });
 
-  handleRedirect();
+  await handleRedirect();
 
   const context = new AppContextData(env);
 
@@ -153,6 +153,7 @@ async function bootstrap() {
       ],
     },
   ]);
+
   createRoot(document.getElementById("root") as HTMLElement).render(
     <StrictMode>
       <AppContext.Provider value={context}>
@@ -164,7 +165,7 @@ async function bootstrap() {
 
 bootstrap().catch(console.error);
 
-function handleRedirect(): void {
+async function handleRedirect(): Promise<void> {
   // Feature for handling outdated urls
   const path: string = window.location.pathname;
   if (path === "/") {
@@ -172,14 +173,9 @@ function handleRedirect(): void {
   } else {
     const href = window.location.href;
     console.log(`Will try to find redirect for ${href}`);
-    redirectControllerGetUrl({ query: { url: href } })
-      .then((result) => {
-        if (result.data != null) {
-          window.location.href = result.data.url;
-        }
-      })
-      .catch(() => {
-        /* */
-      });
+    const result = await redirectControllerGetUrl({ query: { url: href } });
+    if (result.data != null) {
+      window.location.href = result.data.url;
+    }
   }
 }
