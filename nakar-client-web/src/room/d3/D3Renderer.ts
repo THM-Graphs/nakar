@@ -494,8 +494,8 @@ export class D3Renderer {
       .attr("stroke-width", (d) => {
         return `${this._getStrokeWidth(d).toFixed()}px`;
       })
-      .attr("stroke", () => {
-        return this.theme == "dark" ? "#fff" : "#000";
+      .attr("stroke", (d) => {
+        return this._getTitleColorOfNode(d);
       });
 
     this.nodeSelection
@@ -522,7 +522,7 @@ export class D3Renderer {
       .attr("r", (n) => n.radius - this._getStrokeWidth(n) / 2)
       .attr("class", () => `hover`)
       .style("opacity", 0)
-      .attr("fill", () => "#000000");
+      .attr("fill", (d) => this._getTitleColorOfNode(d));
 
     this.nodeSelection
       .append("circle")
@@ -559,8 +559,8 @@ export class D3Renderer {
           this._getStrokeWidth(n) * 2,
       )
       .attr("fill", () => "rgba(0, 0, 0, 0)")
-      .attr("stroke", () => {
-        return this.theme == "dark" ? "#fff" : "#000";
+      .attr("stroke", (d) => {
+        return this._getTitleColorOfNode(d);
       })
       .attr("stroke-width", (n) => this._getStrokeWidth(n) * 4)
       .attr("stroke-dasharray", (n) => n.radius * 0.1);
@@ -626,8 +626,8 @@ export class D3Renderer {
         (d) => `
           position: absolute;
           top: 0;
-          background: #000000;
-          color: white;
+          background: ${this._getTitleColorOfNode(d)};
+          color: ${this._getBgColorsOfNode(d)[0]};
           padding: 0px ${(d.radius / 10).toFixed()}px;
           border-radius: ${(d.radius / 10).toFixed()}px;
         `,
@@ -645,8 +645,8 @@ export class D3Renderer {
         (d) => `
           position: absolute;
           bottom: 0;
-          background: #000000;
-          color: white;
+          background: ${this._getTitleColorOfNode(d)};
+          color: ${this._getBgColorsOfNode(d)[0]};
           padding: 0px ${(d.radius / 10).toFixed()}px;
           border-radius: ${(d.radius / 10).toFixed()}px;
         `,
