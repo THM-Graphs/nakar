@@ -692,6 +692,7 @@ export const useBearStore = create<BearState>()(
           canvasTransformY: s.room.canvas.zoomTransform.y,
           jwt: s.global.auth.jwt,
           myRooms: s.start.myRooms,
+          inspectorTab: s.room.panels.inspector.tab,
         }),
         merge: (rawStorage: unknown, state: BearState): BearState => {
           const storage: PersistStorage = rawStorage as PersistStorage;
@@ -727,6 +728,10 @@ export const useBearStore = create<BearState>()(
           );
           state.global.auth.jwt = storage.jwt;
           state.start.myRooms = storage.myRooms ?? [];
+          state.room.panels.inspector.tab = match(storage.inspectorTab)
+            .returnType<BearState["room"]["panels"]["inspector"]["tab"]>()
+            .with("knowledgeCard", () => "knowledgeCard")
+            .otherwise(() => "inspector");
           return state;
         },
         onRehydrateStorage: () => {

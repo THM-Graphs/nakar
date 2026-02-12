@@ -9,7 +9,7 @@ export function NodeDetailsKnowledgeCardHeader(props: { node: NodeDto }) {
         <h5 className={"user-select-text text-break"}>
           <ShortendText text={props.node.title}></ShortendText>
         </h5>
-        <span className={"text-muted small"}>
+        <span className={"text-muted small user-select-text"}>
           {props.node.labels.join(", ")}
         </span>
       </Stack>
