@@ -9,6 +9,11 @@ import { Range } from '../../range/Range';
 import { LiveCanvasViewSettings } from '../data/LiveCanvasViewSettings';
 import { LiveCanvasLabelViewSettings } from '../data/LiveCanvasLabelViewSettings';
 import { ElementColor } from './color/ElementColor';
+import { DatabaseReferenceCache } from '../../schema/DatabaseReferenceCache';
+import { Result } from '@strapi/types/dist/modules/documents/result';
+import Handlebars from 'handlebars';
+import { Logger } from '@strapi/logger';
+import { createChildLogger } from '../../logger/createChildLogger';
 
 export class GraphNode {
   public static readonly defaultRadius: number = 40;
@@ -37,6 +42,8 @@ export class GraphNode {
   private _locked: boolean;
   private _position: ElementPosition;
   private readonly _labels: SSet<string>;
+
+  private readonly _logger: Logger = createChildLogger(this);
 
   public constructor(data: {
     id: string;
@@ -204,6 +211,45 @@ export class GraphNode {
       );
 
     return outRelsCount;
+  }
+
+  public async getCoverImageUrl(
+    databaseCache: DatabaseReferenceCache,
+  ): Promise<URL | null> {
+    const nodeConfigs: Result<'api::node-configuration.node-configuration'>[] =
+      await databaseCache.getNodeConfigurations(this.source);
+    for (const nodeConfig of nodeConfigs) {
+      if (
+        nodeConfig.label == null ||
+        nodeConfig.linkTemplate == null ||
+        nodeConfig.property == null ||
+        nodeConfig.type !== 'image'
+      ) {
+        continue;
+      }
+      if (!this._labels.has(nodeConfig.label)) {
+        continue;
+      }
+      const value: string | null = this.properties.getStringValueOfProperty(
+        nodeConfig.property,
+      );
+      if (value == null) {
+        continue;
+      }
+      const template: HandlebarsTemplateDelegate = Handlebars.compile(
+        nodeConfig.linkTemplate,
+      );
+      const link: string = template({ value: value });
+
+      try {
+        return new URL(link);
+      } catch (error: unknown) {
+        this._logger.warn(
+          `Cannot create url of string '${link}': ${JSON.stringify(error)}`,
+        );
+      }
+    }
+    return null;
   }
 
   public copy(): GraphNode {

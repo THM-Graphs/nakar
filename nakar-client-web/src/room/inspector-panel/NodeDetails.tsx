@@ -108,6 +108,10 @@ export function NodeDetails(props: { node: NodeDto }) {
               slug: "Creation Reason",
               value: props.node.creationReason,
             },
+            {
+              slug: "Cover Image URL",
+              value: props.node.coverImageUrl,
+            },
           ]}
           properties={properties}
           title={props.node.title}

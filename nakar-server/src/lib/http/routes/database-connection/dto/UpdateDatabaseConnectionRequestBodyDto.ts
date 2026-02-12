@@ -1,5 +1,14 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsBoolean, IsOptional, IsString, MinLength } from 'class-validator';
+import {
+  IsArray,
+  IsBoolean,
+  IsOptional,
+  IsString,
+  MinLength,
+  ValidateNested,
+} from 'class-validator';
+import { UpdateNodeConfigurationRequestBodyDto } from './UpdateNodeConfigurationRequestBodyDto';
+import { Type } from 'class-transformer';
 
 export class UpdateDatabaseConnectionRequestBodyDto {
   @ApiProperty()
@@ -33,4 +42,13 @@ export class UpdateDatabaseConnectionRequestBodyDto {
   @ApiProperty()
   @IsBoolean()
   public credentialStoreConsent!: boolean;
+
+  @ApiProperty({ type: UpdateNodeConfigurationRequestBodyDto, isArray: true })
+  @ValidateNested({ each: true })
+  @Type(
+    (): typeof UpdateNodeConfigurationRequestBodyDto =>
+      UpdateNodeConfigurationRequestBodyDto,
+  )
+  @IsArray()
+  public nodeConfigurations!: UpdateNodeConfigurationRequestBodyDto[];
 }

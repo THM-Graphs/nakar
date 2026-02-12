@@ -15,4 +15,5 @@ export type D3Node = {
   customColor: ColorDto | null;
   clusterSize: number;
   notesCount: number;
+  coverImageUrl: URL | null;
 };

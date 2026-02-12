@@ -48,22 +48,16 @@
       "target": "api::common-property.common-property",
       "mappedBy": "rightDatabase"
     },
-    "linkProperties": {
-      "type": "relation",
-      "relation": "oneToMany",
-      "target": "api::link-property.link-property",
-      "mappedBy": "database"
-    },
-    "nodeTitleProperties": {
-      "type": "relation",
-      "relation": "oneToMany",
-      "target": "api::node-title-property.node-title-property",
-      "mappedBy": "database"
-    },
     "queries": {
       "type": "relation",
       "relation": "oneToMany",
       "target": "api::query.query",
+      "mappedBy": "database"
+    },
+    "nodeConfigurations": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::node-configuration.node-configuration",
       "mappedBy": "database"
     }
   }

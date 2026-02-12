@@ -25,6 +25,7 @@ import { Neo4jService } from '../../../neo4j/Neo4jService';
 import { GetDatabaseStatsResponseBodyDto } from '../canvas-database-connection/dto/GetDatabaseStatsResponseBodyDto';
 import { match, P } from 'ts-pattern';
 import { Neo4jError } from 'neo4j-driver';
+import { DatabaseService } from '../../../database/DatabaseService';
 
 @Controller('/project/:projectId/database-connection')
 @ApiParam({
@@ -37,6 +38,7 @@ export class DatabaseConnectionController {
   public constructor(
     private readonly _schemaFactory: SchemaFactoryService,
     private readonly _neo4jService: Neo4jService,
+    private readonly _database: DatabaseService,
   ) {}
 
   @Post()
@@ -55,7 +57,7 @@ export class DatabaseConnectionController {
           } satisfies Input<'api::database-connection.database-connection'>,
         });
 
-    return this._schemaFactory.createSchemaDatabase(databaseConnection);
+    return await this._schemaFactory.createSchemaDatabase(databaseConnection);
   }
 
   @Post('test')
@@ -135,7 +137,7 @@ export class DatabaseConnectionController {
       throw new NotFoundException();
     }
 
-    return this._schemaFactory.createSchemaDatabase(databaseConnection);
+    return await this._schemaFactory.createSchemaDatabase(databaseConnection);
   }
 
   @Put(':databaseConnectionId')
@@ -171,6 +173,11 @@ export class DatabaseConnectionController {
       throw new NotFoundException();
     }
 
-    return this._schemaFactory.createSchemaDatabase(databaseConnection);
+    await this._database.upsertNodeConfigurations(
+      databaseConnection,
+      body.nodeConfigurations,
+    );
+
+    return await this._schemaFactory.createSchemaDatabase(databaseConnection);
   }
 }

@@ -5,7 +5,11 @@ import { SMap } from '../map/Map';
 import { IndexedNoteCollection } from './IndexedNoteCollection';
 import { Logger } from '@strapi/logger';
 import { createChildLogger } from '../logger/createChildLogger';
-import { deleteFile, getStringPayloadOfMediaFile, saveJSONFile, } from '../media/media';
+import {
+  deleteFile,
+  getStringPayloadOfMediaFile,
+  saveJSONFile,
+} from '../media/media';
 import { TupleTypes } from '../schema/TupleTypes';
 import { Injectable } from '@nestjs/common';
 import { ApiPostScenarioActionPostScenarioAction } from '../../../types/generated/contentTypes';
@@ -16,6 +20,7 @@ import { UpdateScenarioQueryEntryDto } from '../http/routes/scenario/dto/UpdateS
 import { Input } from '@strapi/types/dist/modules/documents/params/data';
 import { UpdateScenarioQueryParameterEntryDto } from '../http/routes/scenario/dto/UpdateScenarioQueryParameterEntryDto';
 import { UpdateScenarioPostActionEntryDto } from '../http/routes/scenario/dto/UpdateScenarioPostActionEntryDto';
+import { UpdateNodeConfigurationRequestBodyDto } from '../http/routes/database-connection/dto/UpdateNodeConfigurationRequestBodyDto';
 
 @Injectable()
 export class DatabaseService {
@@ -72,6 +77,38 @@ export class DatabaseService {
     }
 
     return project;
+  }
+
+  public async getNodeConfigurationsOfDatabase(
+    database: Result<'api::database-connection.database-connection'>,
+  ): Promise<Result<'api::node-configuration.node-configuration'>[]> {
+    const populatedDatabase: Result<
+      'api::database-connection.database-connection',
+      {
+        populate: {
+          nodeConfigurations: {
+            populate: [];
+          };
+        };
+      }
+    > | null = await strapi
+      .documents('api::database-connection.database-connection')
+      .findOne({
+        status: 'published',
+        documentId: database.documentId,
+        populate: {
+          nodeConfigurations: {
+            populate: [],
+          },
+        },
+      });
+    if (populatedDatabase == null) {
+      throw new Error(`Database Connection ${database.documentId} not found.`);
+    }
+    const nodeConfigurations: Result<'api::node-configuration.node-configuration'>[] =
+      populatedDatabase.nodeConfigurations ?? [];
+
+    return nodeConfigurations;
   }
 
   public async getRoom(roomId: string): Promise<Result<'api::room.room'>> {
@@ -953,6 +990,54 @@ export class DatabaseService {
         await strapi
           .documents('api::query-parameter.query-parameter')
           .create({ data: parameterData, status: 'published' });
+      }
+    }
+  }
+
+  public async upsertNodeConfigurations(
+    databaseConnection: Result<'api::database-connection.database-connection'>,
+    nodeConfigurations: UpdateNodeConfigurationRequestBodyDto[],
+  ): Promise<void> {
+    const newIds: SSet<string> = new SSet<string>(
+      nodeConfigurations.map(
+        (q: UpdateNodeConfigurationRequestBodyDto): string => q.id,
+      ),
+    );
+    const existingDocuments: Result<'api::node-configuration.node-configuration'>[] =
+      await this.getNodeConfigurationsOfDatabase(databaseConnection);
+    for (const existingDocument of existingDocuments) {
+      if (newIds.has(existingDocument.documentId)) {
+        // Okay, stay
+      } else {
+        // Delete document
+        await strapi
+          .documents('api::node-configuration.node-configuration')
+          .delete({ documentId: existingDocument.documentId });
+      }
+    }
+
+    for (const newDocument of nodeConfigurations) {
+      const documentData: Input<'api::node-configuration.node-configuration'> =
+        {
+          type: newDocument.type,
+          label: newDocument.label,
+          property: newDocument.property,
+          linkTemplate: newDocument.linkTemplate,
+          database: databaseConnection.documentId,
+        };
+
+      const updatedDocument: Result<'api::node-configuration.node-configuration'> | null =
+        await strapi
+          .documents('api::node-configuration.node-configuration')
+          .update({
+            documentId: newDocument.id,
+            data: documentData,
+            status: 'published',
+          });
+      if (updatedDocument == null) {
+        await strapi
+          .documents('api::node-configuration.node-configuration')
+          .create({ data: documentData, status: 'published' });
       }
     }
   }

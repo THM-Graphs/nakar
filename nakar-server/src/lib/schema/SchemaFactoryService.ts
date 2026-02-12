@@ -56,6 +56,8 @@ import { ScenarioPostActionDto } from './dtos/ScenarioPostActionDto';
 import { ScenarioPostActionTypeDto } from './dtos/ScenarioPostActionTypeDto';
 import { ScenarioPostActionLayoutAlgorithmDto } from './dtos/ScenarioPostActionLayoutAlgorithmDto';
 import { CommonPropertyDto } from './dtos/CommonPropertyDto';
+import { NodeConfigurationDto } from './dtos/NodeConfigurationDto';
+import { NodeConfigurationTypeDto } from './dtos/NodeConfigurationTypeDto';
 
 @Injectable()
 export class SchemaFactoryService {
@@ -63,15 +65,43 @@ export class SchemaFactoryService {
 
   public constructor(private readonly _database: DatabaseService) {}
 
-  public createSchemaDatabase(
+  public async createSchemaDatabase(
     databaseDBDTO: Result<'api::database-connection.database-connection'>,
-  ): DatabaseConnectionDto {
+  ): Promise<DatabaseConnectionDto> {
+    const nodeConfigurations: Result<'api::node-configuration.node-configuration'>[] =
+      await this._database.getNodeConfigurationsOfDatabase(databaseDBDTO);
     return {
       id: databaseDBDTO.documentId,
       title: databaseDBDTO.title ?? '',
       connectionUrl: databaseDBDTO.connectionUrl ?? '',
       browserUrl: databaseDBDTO.browserUrl ?? '',
       database: databaseDBDTO.database ?? '',
+      nodeConfigurations: nodeConfigurations.map(
+        (
+          nodeConfiguration: Result<'api::node-configuration.node-configuration'>,
+        ): NodeConfigurationDto =>
+          new NodeConfigurationDto({
+            id: nodeConfiguration.documentId,
+            type: match(nodeConfiguration.type)
+              .returnType<NodeConfigurationTypeDto>()
+              .with(
+                'link',
+                (): NodeConfigurationTypeDto => NodeConfigurationTypeDto.link,
+              )
+              .with(
+                'image',
+                (): NodeConfigurationTypeDto => NodeConfigurationTypeDto.image,
+              )
+              .with(
+                P.nullish,
+                (): NodeConfigurationTypeDto => NodeConfigurationTypeDto.link,
+              )
+              .exhaustive(),
+            label: nodeConfiguration.label ?? '',
+            property: nodeConfiguration.property ?? '',
+            linkTemplate: nodeConfiguration.linkTemplate ?? '',
+          }),
+      ),
     };
   }
 
@@ -95,10 +125,13 @@ export class SchemaFactoryService {
       canvases: canvases,
       joinCanvasId: canvases[0].id,
       projectId: project.documentId,
-      databases: databases.map(
-        (
-          database: Result<'api::database-connection.database-connection'>,
-        ): DatabaseConnectionDto => this.createSchemaDatabase(database),
+      databases: await Promise.all(
+        databases.map(
+          async (
+            database: Result<'api::database-connection.database-connection'>,
+          ): Promise<DatabaseConnectionDto> =>
+            await this.createSchemaDatabase(database),
+        ),
       ),
     });
   }
@@ -177,7 +210,9 @@ export class SchemaFactoryService {
             return {
               id: q.documentId,
               query: q.query ?? '',
-              database: database ? this.createSchemaDatabase(database) : null,
+              database: database
+                ? await this.createSchemaDatabase(database)
+                : null,
               isTableQuery: q.isTableQuery ?? false,
             };
           },
@@ -479,10 +514,14 @@ export class SchemaFactoryService {
           collaborator: Result<'plugin::users-permissions.user'>,
         ): UserPreviewDto => this.createSchemaUserPreview(collaborator),
       ),
-      databases: databaseConnections.map(
-        (
-          database: Result<'api::database-connection.database-connection'>,
-        ): DatabaseConnectionDto => this.createSchemaDatabase(database),
+      databases: await Promise.all(
+        databaseConnections.map(
+          async (
+            database: Result<'api::database-connection.database-connection'>,
+          ): Promise<DatabaseConnectionDto> => {
+            return await this.createSchemaDatabase(database);
+          },
+        ),
       ),
       scenarioGroups: await Promise.all(
         scenarioGroups.map(
@@ -529,12 +568,14 @@ export class SchemaFactoryService {
           return this.createSchemaUserPreview(collaborator);
         },
       ),
-      databases: databaseConnections.map(
-        (
-          database: Result<'api::database-connection.database-connection'>,
-        ): DatabaseConnectionDto => {
-          return this.createSchemaDatabase(database);
-        },
+      databases: await Promise.all(
+        databaseConnections.map(
+          async (
+            database: Result<'api::database-connection.database-connection'>,
+          ): Promise<DatabaseConnectionDto> => {
+            return await this.createSchemaDatabase(database);
+          },
+        ),
       ),
     };
   }
@@ -749,10 +790,10 @@ export class SchemaFactoryService {
       rightLabel: commonProperty.rightLabel ?? '',
       rightProperty: commonProperty.rightProperty ?? '',
       leftDatabase: leftDatabase
-        ? this.createSchemaDatabase(leftDatabase)
+        ? await this.createSchemaDatabase(leftDatabase)
         : null,
       rightDatabase: rightDatabase
-        ? this.createSchemaDatabase(rightDatabase)
+        ? await this.createSchemaDatabase(rightDatabase)
         : null,
     });
   }
@@ -832,6 +873,8 @@ export class SchemaFactoryService {
         node,
         scenarioGroups,
       ),
+      coverImageUrl:
+        (await node.getCoverImageUrl(databaseCache))?.toString() ?? null,
     };
   }
 

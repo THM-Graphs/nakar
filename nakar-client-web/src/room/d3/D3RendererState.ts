@@ -44,6 +44,16 @@ export class D3RendererState {
           title: node.title,
           clusterSize: node.clusterSize,
           notesCount: node.notes.length,
+          coverImageUrl: (() => {
+            if (node.coverImageUrl == null) {
+              return null;
+            }
+            try {
+              return new URL(node.coverImageUrl);
+            } catch {
+              return null;
+            }
+          })(),
         };
       })
       .reduce((map, node) => map.set(node.id, node), new Map<string, D3Node>());

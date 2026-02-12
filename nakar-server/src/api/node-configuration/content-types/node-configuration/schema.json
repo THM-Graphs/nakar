@@ -1,10 +1,10 @@
 {
   "kind": "collectionType",
-  "collectionName": "node_title_properties",
+  "collectionName": "node_configurations",
   "info": {
-    "singularName": "node-title-property",
-    "pluralName": "node-title-properties",
-    "displayName": "Node Title Property"
+    "singularName": "node-configuration",
+    "pluralName": "node-configurations",
+    "displayName": "Node Configuration"
   },
   "options": {
     "draftAndPublish": true
@@ -15,13 +15,23 @@
       "type": "relation",
       "relation": "manyToOne",
       "target": "api::database-connection.database-connection",
-      "inversedBy": "nodeTitleProperties"
+      "inversedBy": "nodeConfigurations"
     },
     "label": {
       "type": "string"
     },
     "property": {
       "type": "string"
+    },
+    "linkTemplate": {
+      "type": "string"
+    },
+    "type": {
+      "type": "enumeration",
+      "enum": [
+        "link",
+        "image"
+      ]
     }
   }
 }

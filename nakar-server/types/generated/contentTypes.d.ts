@@ -529,19 +529,15 @@ export interface ApiDatabaseConnectionDatabaseConnection
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     database: Schema.Attribute.String;
-    linkProperties: Schema.Attribute.Relation<
-      'oneToMany',
-      'api::link-property.link-property'
-    >;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
       'oneToMany',
       'api::database-connection.database-connection'
     > &
       Schema.Attribute.Private;
-    nodeTitleProperties: Schema.Attribute.Relation<
+    nodeConfigurations: Schema.Attribute.Relation<
       'oneToMany',
-      'api::node-title-property.node-title-property'
+      'api::node-configuration.node-configuration'
     >;
     password: Schema.Attribute.String;
     project: Schema.Attribute.Relation<'manyToOne', 'api::project.project'>;
@@ -555,13 +551,13 @@ export interface ApiDatabaseConnectionDatabaseConnection
   };
 }
 
-export interface ApiLinkPropertyLinkProperty
+export interface ApiNodeConfigurationNodeConfiguration
   extends Struct.CollectionTypeSchema {
-  collectionName: 'link_properties';
+  collectionName: 'node_configurations';
   info: {
-    displayName: 'Link Property';
-    pluralName: 'link-properties';
-    singularName: 'link-property';
+    displayName: 'Node Configuration';
+    pluralName: 'node-configurations';
+    singularName: 'node-configuration';
   };
   options: {
     draftAndPublish: true;
@@ -575,18 +571,19 @@ export interface ApiLinkPropertyLinkProperty
       'api::database-connection.database-connection'
     >;
     label: Schema.Attribute.String;
+    linkTemplate: Schema.Attribute.String;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
       'oneToMany',
-      'api::link-property.link-property'
+      'api::node-configuration.node-configuration'
     > &
       Schema.Attribute.Private;
     property: Schema.Attribute.String;
     publishedAt: Schema.Attribute.DateTime;
+    type: Schema.Attribute.Enumeration<['link', 'image']>;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
-    url: Schema.Attribute.String;
   };
 }
 
@@ -613,40 +610,6 @@ export interface ApiNodeReferenceNodeReference
       Schema.Attribute.Private;
     nodeId: Schema.Attribute.String;
     note: Schema.Attribute.Relation<'manyToOne', 'api::note.note'>;
-    publishedAt: Schema.Attribute.DateTime;
-    updatedAt: Schema.Attribute.DateTime;
-    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-  };
-}
-
-export interface ApiNodeTitlePropertyNodeTitleProperty
-  extends Struct.CollectionTypeSchema {
-  collectionName: 'node_title_properties';
-  info: {
-    displayName: 'Node Title Property';
-    pluralName: 'node-title-properties';
-    singularName: 'node-title-property';
-  };
-  options: {
-    draftAndPublish: true;
-  };
-  attributes: {
-    createdAt: Schema.Attribute.DateTime;
-    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-    database: Schema.Attribute.Relation<
-      'manyToOne',
-      'api::database-connection.database-connection'
-    >;
-    label: Schema.Attribute.String;
-    locale: Schema.Attribute.String & Schema.Attribute.Private;
-    localizations: Schema.Attribute.Relation<
-      'oneToMany',
-      'api::node-title-property.node-title-property'
-    > &
-      Schema.Attribute.Private;
-    property: Schema.Attribute.String;
     publishedAt: Schema.Attribute.DateTime;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
@@ -1497,9 +1460,8 @@ declare module '@strapi/strapi' {
       'api::canvas.canvas': ApiCanvasCanvas;
       'api::common-property.common-property': ApiCommonPropertyCommonProperty;
       'api::database-connection.database-connection': ApiDatabaseConnectionDatabaseConnection;
-      'api::link-property.link-property': ApiLinkPropertyLinkProperty;
+      'api::node-configuration.node-configuration': ApiNodeConfigurationNodeConfiguration;
       'api::node-reference.node-reference': ApiNodeReferenceNodeReference;
-      'api::node-title-property.node-title-property': ApiNodeTitlePropertyNodeTitleProperty;
       'api::note.note': ApiNoteNote;
       'api::post-scenario-action.post-scenario-action': ApiPostScenarioActionPostScenarioAction;
       'api::project.project': ApiProjectProject;

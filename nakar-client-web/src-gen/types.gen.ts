@@ -135,6 +135,7 @@ export type DatabaseConnectionDto = {
     browserUrl: string;
     connectionUrl: string;
     database: string;
+    nodeConfigurations: Array<NodeConfigurationDto>;
 };
 
 export type DatabaseStatsLabelDto = {
@@ -376,6 +377,16 @@ export type MoveNodesWsdto = {
 
 export type type18 = 'MoveNodesWsdto';
 
+export type NodeConfigurationDto = {
+    id: string;
+    type: 'link' | 'image';
+    label: string;
+    property: string;
+    linkTemplate: string;
+};
+
+export type type19 = 'link' | 'image';
+
 export type NodeDto = {
     id: string;
     title: string;
@@ -401,6 +412,7 @@ export type NodeDto = {
     creationReason: 'loadScenario' | 'expand' | 'query' | 'merge' | 'compress' | 'connectResultNodes' | 'search';
     notes: Array<NoteDto>;
     parameterizedScenarios: Array<ScenarioGroupDto>;
+    coverImageUrl: (string) | null;
 };
 
 export type NodeLockCollectionEntryDto = {
@@ -422,7 +434,7 @@ export type NodesMovedWsdto = {
     performance: PhysicsPerformanceDto;
 };
 
-export type type19 = 'NodesMovedWsdto';
+export type type20 = 'NodesMovedWsdto';
 
 export type NoteDto = {
     id: string;
@@ -446,7 +458,7 @@ export type NotificationWsdto = {
     notification: NotificationDataDto;
 };
 
-export type type20 = 'NotificationWsdto';
+export type type21 = 'NotificationWsdto';
 
 export type PhysicalNodeDto = {
     id: string;
@@ -496,7 +508,7 @@ export type ProgressWsdto = {
     message: string;
 };
 
-export type type21 = 'ProgressWsdto';
+export type type22 = 'ProgressWsdto';
 
 export type ProjectPageDto = {
     id: string;
@@ -571,7 +583,7 @@ export type ScenarioPostActionDto = {
     layoutAlgorithm: 'forceDirected' | 'circle' | 'none';
 };
 
-export type type22 = 'connectResultNodes' | 'compressRelationships' | 'compressNodes' | 'layout' | 'none';
+export type type23 = 'connectResultNodes' | 'compressRelationships' | 'compressNodes' | 'layout' | 'none';
 
 export type layoutAlgorithm = 'forceDirected' | 'circle' | 'none';
 
@@ -592,7 +604,7 @@ export type SetNodeLocksWsdto = {
     locks: Array<NodeLockCollectionEntryDto>;
 };
 
-export type type23 = 'SetNodeLocksWsdto';
+export type type24 = 'SetNodeLocksWsdto';
 
 export type ShowShortestPathRequestBodyDto = {
     nodeIds: Array<(string)>;
@@ -638,7 +650,7 @@ export type UngrabNodeWsdto = {
     node: PhysicalNodeDto;
 };
 
-export type type24 = 'UngrabNodeWsdto';
+export type type25 = 'UngrabNodeWsdto';
 
 export type UnlockNodesRequestBodyDto = {
     nodes: Array<(string)>;
@@ -661,6 +673,15 @@ export type UpdateDatabaseConnectionRequestBodyDto = {
     connectionUrl: string;
     browserUrl: string;
     credentialStoreConsent: boolean;
+    nodeConfigurations: Array<UpdateNodeConfigurationRequestBodyDto>;
+};
+
+export type UpdateNodeConfigurationRequestBodyDto = {
+    id: string;
+    type: 'link' | 'image';
+    label: string;
+    property: string;
+    linkTemplate: string;
 };
 
 export type UpdateNoteRequestBodyDto = {
@@ -688,7 +709,7 @@ export type UpdateScenarioPostActionEntryDto = {
     layoutAlgorithm: 'forceDirected' | 'circle';
 };
 
-export type type25 = 'connectResultNodes' | 'compressRelationships' | 'compressNodes' | 'layout';
+export type type26 = 'connectResultNodes' | 'compressRelationships' | 'compressNodes' | 'layout';
 
 export type layoutAlgorithm2 = 'forceDirected' | 'circle';
 

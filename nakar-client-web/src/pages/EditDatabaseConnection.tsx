@@ -1,34 +1,20 @@
 import { useState } from "react";
 import { LoaderFunctionArgs, useLoaderData } from "react-router";
-import {
-  Alert,
-  Button,
-  Card,
-  Col,
-  Container,
-  Form,
-  Row,
-  Spinner,
-  Stack,
-} from "react-bootstrap";
+import { Container, Stack } from "react-bootstrap";
 import { CMSNavbar } from "../shared/cms/CMSNavbar.tsx";
 import {
   databaseConnectionControllerDeleteDatabaseConnection,
   databaseConnectionControllerGetDatabaseConnection,
-  databaseConnectionControllerTestDatabaseConnection,
   databaseConnectionControllerUpdateDatabaseConnection,
   DatabaseConnectionDto,
   projectControllerGetProject,
   ProjectPageDto,
-  TestDatabaseConnectionResponseBodyDto,
   UpdateDatabaseConnectionRequestBodyDto,
 } from "../../src-gen";
 import { resultOrThrow } from "../shared/data/resultOrThrow.ts";
 import { Router } from "../routing/Router.ts";
 import { CMSEditPageForm } from "../shared/cms/CMSEditPageForm.tsx";
-import { CMSButton } from "../shared/cms/CMSButton.tsx";
-import { handleError } from "../shared/error/handleError.ts";
-import clsx from "clsx";
+import { DatabaseConnectionEditor } from "../shared/cms/DatabaseConnectionEditor.tsx";
 
 type EditDatabaseConnectionLoaderData = {
   project: ProjectPageDto;
@@ -75,9 +61,6 @@ export function EditDatabaseConnection() {
       password: null,
       credentialStoreConsent: false,
     });
-  const [testResult, setTestResult] =
-    useState<TestDatabaseConnectionResponseBodyDto | null>(null);
-  const [testResultLoading, setTestResultLoading] = useState<boolean>(false);
 
   return (
     <Stack className={""}>
@@ -128,250 +111,12 @@ export function EditDatabaseConnection() {
             afterDeleteUrl={Router.getProjectPath(loaderData.project.id)}
             entityTitleSingular={"Database Connection"}
           >
-            <Card className={"p-3"}>
-              <Stack gap={3}>
-                <Row>
-                  <Col>
-                    <Form.Group>
-                      <Form.Label>
-                        Title <span className={"text-danger"}>*</span>
-                      </Form.Label>
-                      <Form.Control
-                        placeholder={"My Database"}
-                        value={databaseConnection.title}
-                        onChange={(e) => {
-                          setDatabaseConnection((d) => ({
-                            ...d,
-                            title: e.target.value,
-                          }));
-                        }}
-                      ></Form.Control>
-                    </Form.Group>
-                  </Col>
-                  <Col>
-                    <Form.Group>
-                      <Form.Label>Browser URL</Form.Label>
-                      <Form.Control
-                        placeholder={
-                          "Example: https://my-database.com:7473/browser/"
-                        }
-                        value={databaseConnection.browserUrl}
-                        onChange={(e) => {
-                          setDatabaseConnection((d) => ({
-                            ...d,
-                            browserUrl: e.target.value,
-                          }));
-                        }}
-                      ></Form.Control>
-                    </Form.Group>
-                  </Col>
-                </Row>
-              </Stack>
-            </Card>
-
-            <Stack>
-              <h5>Credentials</h5>
-              <Stack gap={1}>
-                <Card className={"p-3"}>
-                  <Stack gap={3}>
-                    <Row>
-                      <Col>
-                        <Form.Group>
-                          <Form.Label>
-                            Connection URL{" "}
-                            <span className={"text-danger"}>*</span>
-                          </Form.Label>
-                          <Form.Control
-                            placeholder={
-                              "Example: neo4j+s://my-database.com:7687"
-                            }
-                            value={databaseConnection.connectionUrl}
-                            onChange={(e) => {
-                              setDatabaseConnection((d) => ({
-                                ...d,
-                                connectionUrl: e.target.value,
-                              }));
-                            }}
-                          ></Form.Control>
-                        </Form.Group>
-                      </Col>
-                    </Row>
-                    <Row>
-                      <Col>
-                        <Form.Group>
-                          <Form.Label>Username</Form.Label>
-                          <Stack
-                            direction={"horizontal"}
-                            gap={0}
-                            className={"position-relative"}
-                          >
-                            <Form.Control
-                              placeholder={"Leave empty if unchanged"}
-                              value={databaseConnection.username ?? ""}
-                              autoComplete={"off"}
-                              onChange={(e) => {
-                                setDatabaseConnection((d) => ({
-                                  ...d,
-                                  username: e.target.value,
-                                }));
-                              }}
-                            ></Form.Control>
-                            {databaseConnection.username != null && (
-                              <Button
-                                onClick={() => {
-                                  setDatabaseConnection((db) => ({
-                                    ...db,
-                                    username: null,
-                                  }));
-                                }}
-                                className={"bi bi-x-lg position-absolute end-0"}
-                                variant={"icon"}
-                              ></Button>
-                            )}
-                          </Stack>
-                        </Form.Group>
-                      </Col>
-                      <Col>
-                        <Form.Group>
-                          <Form.Label>Password</Form.Label>
-                          <Stack className={"position-relative"}>
-                            <Form.Control
-                              placeholder={"Leave empty if unchanged"}
-                              type={"password"}
-                              autoComplete={"new-password"}
-                              value={databaseConnection.password ?? ""}
-                              onChange={(e) => {
-                                setDatabaseConnection((d) => ({
-                                  ...d,
-                                  password: e.target.value,
-                                }));
-                              }}
-                            ></Form.Control>
-                            {databaseConnection.password != null && (
-                              <Button
-                                onClick={() => {
-                                  setDatabaseConnection((db) => ({
-                                    ...db,
-                                    password: null,
-                                  }));
-                                }}
-                                className={"bi bi-x-lg position-absolute end-0"}
-                                variant={"icon"}
-                              ></Button>
-                            )}
-                          </Stack>
-                        </Form.Group>
-                      </Col>
-                      <Col>
-                        <Form.Group>
-                          <Form.Label>Database Name</Form.Label>
-                          <Form.Control
-                            placeholder={"Example: neo4j"}
-                            value={databaseConnection.database}
-                            onChange={(e) => {
-                              setDatabaseConnection((d) => ({
-                                ...d,
-                                database: e.target.value,
-                              }));
-                            }}
-                          ></Form.Control>
-                        </Form.Group>
-                      </Col>
-                    </Row>
-                    <Stack direction={"horizontal"} gap={3}>
-                      <CMSButton
-                        icon={"database-check"}
-                        title={"Test Connection"}
-                        className={"align-self-start"}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          setTestResult(null);
-                          setTestResultLoading(true);
-                          databaseConnectionControllerTestDatabaseConnection({
-                            path: { projectId: loaderData.project.id },
-                            body: {
-                              id: loaderData.databaseConnection.id,
-                              username: databaseConnection.username,
-                              password: databaseConnection.password,
-                              database: databaseConnection.database,
-                              connectionUrl: databaseConnection.connectionUrl,
-                            },
-                          })
-                            .then(resultOrThrow)
-                            .then((result) => {
-                              setTestResult(result);
-                            })
-                            .catch((error: unknown) => {
-                              setTestResult({
-                                success: false,
-                                message: handleError(error),
-                              });
-                            })
-                            .finally(() => {
-                              setTestResultLoading(false);
-                            });
-                        }}
-                      ></CMSButton>
-                      {testResultLoading && (
-                        <Spinner size={"sm"} variant={"primary"}></Spinner>
-                      )}
-                    </Stack>
-                    {testResult && (
-                      <Alert
-                        variant={testResult.success ? "success" : "danger"}
-                        dismissible
-                        onClose={() => {
-                          setTestResult(null);
-                        }}
-                      >
-                        {testResult.message}
-                      </Alert>
-                    )}
-                  </Stack>
-                </Card>
-
-                {(databaseConnection.username != null ||
-                  databaseConnection.password != null) && (
-                  <Card
-                    className={clsx(
-                      "p-3",
-                      !databaseConnection.credentialStoreConsent &&
-                        "bg-danger-subtle",
-                    )}
-                  >
-                    <Form.Group>
-                      <Form.Check
-                        id={"consent"}
-                        className={"d-flex align-items-center gap-3"}
-                        checked={databaseConnection.credentialStoreConsent}
-                        onChange={(e) => {
-                          setDatabaseConnection((db) => ({
-                            ...db,
-                            credentialStoreConsent: e.target.checked,
-                          }));
-                        }}
-                        label={
-                          <Stack>
-                            <span>
-                              I agree that the database login credentials I
-                              provide will be stored in encrypted form on the
-                              server for the purpose of enabling access to the
-                              database. I also confirm that the information
-                              stored in the provided database consists
-                              exclusively of{" "}
-                              <strong>publicly accessible research data</strong>{" "}
-                              and does not contain any personal, confidential,
-                              or otherwise sensitive data.{" "}
-                              <span className={"text-danger"}>*</span>
-                            </span>
-                          </Stack>
-                        }
-                      ></Form.Check>
-                    </Form.Group>
-                  </Card>
-                )}
-              </Stack>
-            </Stack>
+            <DatabaseConnectionEditor
+              value={databaseConnection}
+              onChange={setDatabaseConnection}
+              project={loaderData.project}
+              initialDatabase={loaderData.databaseConnection}
+            ></DatabaseConnectionEditor>
           </CMSEditPageForm>
         </Container>
       </div>

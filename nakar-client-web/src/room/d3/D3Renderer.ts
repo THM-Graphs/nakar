@@ -499,6 +499,25 @@ export class D3Renderer {
       });
 
     this.nodeSelection
+      .append("defs")
+      .append("clipPath")
+      .attr("id", (d) => `circleclip-${d.id}`)
+      .append("circle")
+      .attr("cx", 0)
+      .attr("cy", 0)
+      .attr("r", (d) => d.radius - this._getStrokeWidth(d) * 1.5);
+
+    this.nodeSelection
+      .append("image")
+      .attr("x", (d) => -d.radius + this._getStrokeWidth(d) * 1.5)
+      .attr("y", (d) => -d.radius + this._getStrokeWidth(d) * 1.5)
+      .attr("width", (d) => d.radius * 2 - this._getStrokeWidth(d) * 3)
+      .attr("height", (d) => d.radius * 2 - this._getStrokeWidth(d) * 3)
+      .attr("href", (d) => d.coverImageUrl?.toString() ?? "")
+      .attr("preserveAspectRatio", "xMidYMid slice")
+      .attr("clip-path", (d) => `url(#circleclip-${d.id})`);
+
+    this.nodeSelection
       .append("circle")
       .attr("r", (n) => n.radius - this._getStrokeWidth(n) / 2)
       .attr("class", () => `hover`)
@@ -587,6 +606,9 @@ export class D3Renderer {
       .attr("height", (d) => d.radius * 2);
 
     foreignObjectNode.append("xhtml:span").text((d) => {
+      if (d.coverImageUrl != null) {
+        return "";
+      }
       const titleCut = 50;
       const fullTitle = d.title;
       if (fullTitle.length > titleCut) {
