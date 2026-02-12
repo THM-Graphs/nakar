@@ -948,10 +948,6 @@ export class LiveCanvas {
             `Will calculate shortest path of nodes: ${JSON.stringify(params.nodeIds)}`,
           );
           const oldGraph: LiveCanvasUndoableData = this.getGraph();
-          const scenarioId: string | null = oldGraph.metaData.scenarioId;
-          if (scenarioId == null) {
-            throw new Error(`Cannot find scenario in room ${this.canvasId}`);
-          }
 
           const results: Neo4jGraphElements[] = [];
 

@@ -459,7 +459,7 @@ export class SchemaFactoryService {
     const metaData: LiveCanvasMetaData = graph.metaData;
     const scenario: Result<'api::scenario.scenario'> | null =
       metaData.scenarioId != null
-        ? await this._database.getScenario(metaData.scenarioId)
+        ? await this._database.getScenarioOrNull(metaData.scenarioId)
         : null;
     const result: LiveCanvasMetaDataDto = {
       scenario: scenario ? await this.createSchemaScenario(scenario) : null,

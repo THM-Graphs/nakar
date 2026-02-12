@@ -613,9 +613,7 @@ export class WebSocketManager
           )
           .exhaustive(),
       ).catch((error: unknown): void => {
-        this._logger.error(
-          `Error handling room service event: ${JSON.stringify(event)}`,
-        );
+        this._logger.error(`Error handling room service event: ${event.type}`);
         this._logger.error(error);
       });
     });

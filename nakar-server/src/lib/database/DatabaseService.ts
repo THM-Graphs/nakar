@@ -157,15 +157,23 @@ export class DatabaseService {
   public async getScenario(
     scenarioId: string,
   ): Promise<Result<'api::scenario.scenario'>> {
+    const scenario: Result<'api::scenario.scenario'> | null =
+      await this.getScenarioOrNull(scenarioId);
+    if (scenario == null) {
+      throw new Error(`Scenario ${scenarioId} not found.`);
+    }
+    return scenario;
+  }
+
+  public async getScenarioOrNull(
+    scenarioId: string,
+  ): Promise<Result<'api::scenario.scenario'> | null> {
     const scenario: Result<'api::scenario.scenario'> | null = await strapi
       .documents('api::scenario.scenario')
       .findOne({
         status: 'published',
         documentId: scenarioId,
       });
-    if (scenario == null) {
-      throw new Error(`Scenario ${scenarioId} not found.`);
-    }
     return scenario;
   }
 
