@@ -25,6 +25,7 @@ export function NodeDetailsKnowledgeCardProperties(props: { node: NodeDto }) {
       props.node.properties satisfies Record<string, unknown>,
     ).map((property) => ({
       title: property[0],
+      type: "property",
       values: unknownToStringList(property[1]).map((t) => ({
         id: t,
         title: t,
@@ -41,7 +42,11 @@ export function NodeDetailsKnowledgeCardProperties(props: { node: NodeDto }) {
 
         let entry = acc.find((e) => e.title === edge.type);
         if (!entry) {
-          entry = { title: edge.type, values: [] };
+          entry = {
+            title: edge.type,
+            values: [],
+            type: "property",
+          };
           acc.push(entry);
         }
 
@@ -67,7 +72,11 @@ export function NodeDetailsKnowledgeCardProperties(props: { node: NodeDto }) {
 
         let entry = acc.find((e) => e.title === edge.type);
         if (!entry) {
-          entry = { title: edge.type, values: [] };
+          entry = {
+            title: edge.type,
+            values: [],
+            type: "incomingRelationship",
+          };
           acc.push(entry);
         }
 
@@ -79,11 +88,7 @@ export function NodeDetailsKnowledgeCardProperties(props: { node: NodeDto }) {
           id: edge.id,
         });
         return acc;
-      }, [])
-      .map((entry) => ({
-        ...entry,
-        title: entry.title + " of",
-      }));
+      }, []);
   }, [elements, props.node]);
 
   const allProperties = useMemo(() => {
@@ -106,6 +111,7 @@ export function NodeDetailsKnowledgeCardProperties(props: { node: NodeDto }) {
                   {data.map((property) => (
                     <Fragment key={property.title}>
                       <NodeDetailsKnowledgeCardEntryDisplay
+                        node={props.node}
                         entry={property}
                       ></NodeDetailsKnowledgeCardEntryDisplay>
                     </Fragment>
