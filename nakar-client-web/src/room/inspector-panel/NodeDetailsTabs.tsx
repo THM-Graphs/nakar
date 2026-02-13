@@ -11,8 +11,8 @@ export function NodeDetailsTabs() {
       <NavbarButton
         title={"Knowledge Card"}
         className={clsx(
-          "flex-grow-1 border-end",
-          tab === "knowledgeCard" && "bg-body-secondary",
+          "flex-grow-1 border-end bg-body-secondary",
+          tab === "knowledgeCard" && "bg-body-tertiary",
         )}
         onClick={() => {
           setTab("knowledgeCard");
@@ -21,8 +21,8 @@ export function NodeDetailsTabs() {
       <NavbarButton
         title={"Inspector"}
         className={clsx(
-          "flex-grow-1",
-          tab === "inspector" && "bg-body-secondary",
+          "flex-grow-1 bg-body-secondary",
+          tab === "inspector" && "bg-body-tertiary",
         )}
         onClick={() => {
           setTab("inspector");
