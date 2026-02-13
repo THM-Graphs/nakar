@@ -2,7 +2,10 @@ import { D3Link } from "./D3Link.ts";
 import { D3Node } from "./D3Node.ts";
 import * as d3 from "d3";
 import { ZoomBehavior, ZoomTransform } from "d3";
-import { getBackgroundColorOfColor, getBackgroundColorOfLabel, } from "../color/getBackgroundColor.ts";
+import {
+  getBackgroundColorOfColor,
+  getBackgroundColorOfLabel,
+} from "../color/getBackgroundColor.ts";
 import { getTextColor } from "../color/getTextColor.ts";
 import { Observable, Subject, throttleTime } from "rxjs";
 import { D3RendererState } from "./D3RendererState.ts";
@@ -491,7 +494,7 @@ export class D3Renderer {
       .attr("stroke-width", (d) => {
         return `${this._getStrokeWidth(d).toFixed()}px`;
       })
-      .attr("stroke", (d) => {
+      .attr("stroke", () => {
         return this.theme === "dark" ? "#fff" : "#000";
       });
 
