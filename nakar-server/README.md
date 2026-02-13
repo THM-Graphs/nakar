@@ -60,6 +60,10 @@ Tip: Use the following login data for the admin account:
 1. Run `npm run import`.
 1. Check imported data here: http://localhost:1337/admin/content-manager
 
+#### 7. API Documentation
+
+Visit: http://localhost:1338/api/docs for OpenAPI documentation.
+
 ### Before commit
 
 If you want to commit any changes, you should run the following commands beforehand:
