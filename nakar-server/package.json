@@ -19,7 +19,7 @@
     "export": "strapi export --no-compress --no-encrypt -f export",
     "import": "strapi import -f export.tar",
     "version": "echo $npm_package_version",
-    "pre-commit": "npm run lint:fix && npm run format:fix"
+    "pre-commit": "tsc && npm run lint:fix && npm run format:fix"
   },
   "dependencies": {
     "@nestjs/common": "^11.1.11",

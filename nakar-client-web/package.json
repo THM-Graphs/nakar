@@ -15,7 +15,7 @@
     "format:fix": "prettier . --write",
     "audit": "npm audit",
     "version": "echo $npm_package_version",
-    "pre-commit": "npm run lint:fix && npm run format:fix"
+    "pre-commit": "tsc -b && npm run lint:fix && npm run format:fix"
   },
   "dependencies": {
     "@hey-api/client-fetch": "^0.5.7",
