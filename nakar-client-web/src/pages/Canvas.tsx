@@ -220,9 +220,7 @@ export function Canvas() {
                 <>
                   <Stack direction={"horizontal"}>
                     <Link
-                      to={Router.getProjectPath(
-                        canvasContext.initialRoomData.projectId,
-                      )}
+                      to={Router.getHomeUrl()}
                       className={"align-self-center p-1 text-body"}
                     >
                       <NavbarLogo></NavbarLogo>
