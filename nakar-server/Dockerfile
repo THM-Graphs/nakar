@@ -32,7 +32,7 @@ HEALTHCHECK \
     --timeout=5s \
     --start-period=120s \
     --start-interval=5s \
-    CMD curl -f http://localhost/_health || exit 1
+    CMD wget -O - -S http://127.0.0.1:80/_health
 
 ENV NODE_ENV=production
 

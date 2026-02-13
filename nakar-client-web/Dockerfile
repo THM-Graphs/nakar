@@ -29,6 +29,6 @@ HEALTHCHECK \
     --timeout=5s \
     --start-period=60s \
     --start-interval=5s \
-    CMD curl -f http://localhost/ || exit 1
+    CMD wget -O - -S http://127.0.0.1:80/
 
 EXPOSE 80
