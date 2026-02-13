@@ -6,11 +6,12 @@
   --bs-breadcrumb-margin-bottom: 0 !important;
 }
 
-a {
+a:not(.dropdown-item) {
   text-decoration: none;
   text-underline-offset: 0.125em;
 }
-a:hover {
+
+a:not(.dropdown-item):hover {
   text-decoration: underline;
 }
 
