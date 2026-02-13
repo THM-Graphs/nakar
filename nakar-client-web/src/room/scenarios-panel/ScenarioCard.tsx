@@ -21,7 +21,7 @@ export function ScenarioCard(props: {
 
   return (
     <Stack
-      className={"p-3 position-relative border-top border-bottom"}
+      className={"p-3 position-relative border-top border-bottom bg-body"}
       hidden={props.hidden}
     >
       <Stack gap={2}>
@@ -39,8 +39,9 @@ export function ScenarioCard(props: {
                   props.scenario.id,
                 )}
                 target={"_blank"}
+                className={"align-self-start small"}
               >
-                <span className={"small"}>Edit</span>
+                Edit
               </Link>
             )}
           </Stack>
