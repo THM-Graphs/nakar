@@ -6,7 +6,7 @@ import { RunScenarioAction } from "../actions/RunScenarioAction.ts";
 
 export function NodeParameterizedScenarioEntry(props: {
   scenario: ScenarioDto;
-  node: NodeDto;
+  nodes: NodeDto[];
 }) {
   const showRunScenarioModal = useBearStore(
     (s) => s.room.scenario.runScenarioModal.open,
@@ -19,7 +19,7 @@ export function NodeParameterizedScenarioEntry(props: {
       params={{
         roomContext: roomContext,
         scenario: props.scenario,
-        node: props.node,
+        nodes: props.nodes,
         showRunScenarioModal: showRunScenarioModal,
       }}
       className={"align-self-stretch w-100"}

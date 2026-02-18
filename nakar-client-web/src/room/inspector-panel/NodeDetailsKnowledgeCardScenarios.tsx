@@ -9,7 +9,7 @@ export function NodeDetailsKnowledgeCardScenarios(props: { node: NodeDto }) {
           {props.node.parameterizedScenarios.map((scenarioGroup) => (
             <ParameterizedScenarioGroupEntry
               scenarioGroup={scenarioGroup}
-              node={props.node}
+              nodes={[props.node]}
               key={scenarioGroup.id}
             ></ParameterizedScenarioGroupEntry>
           ))}

@@ -5,7 +5,7 @@ import { Fragment } from "react";
 
 export function ParameterizedScenarioGroupEntry(props: {
   scenarioGroup: ScenarioGroupDto;
-  node: NodeDto;
+  nodes: NodeDto[];
   className?: string;
 }) {
   const scenarioGroup = props.scenarioGroup;
@@ -26,7 +26,7 @@ export function ParameterizedScenarioGroupEntry(props: {
               >
                 <NodeParameterizedScenarioEntry
                   scenario={scenario}
-                  node={props.node}
+                  nodes={props.nodes}
                 ></NodeParameterizedScenarioEntry>
               </ListGroupItem>
             </Fragment>

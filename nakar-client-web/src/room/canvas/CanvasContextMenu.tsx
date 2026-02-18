@@ -202,7 +202,7 @@ export function CanvasContextMenu() {
                           roomContext: roomContext,
                           scenario: scenario,
                           showRunScenarioModal: showRunScenarioModal,
-                          node: nodeOrigin,
+                          nodes: [nodeOrigin],
                         }}
                       ></ActionDropdownItem>
                     </Fragment>

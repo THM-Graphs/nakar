@@ -14,7 +14,7 @@ import { BearState } from "../../state/BearState.ts";
 export type RunScenarioActionParams = {
   roomContext: CanvasContextData;
   scenario: ScenarioDto;
-  node: NodeDto;
+  nodes: NodeDto[];
   showRunScenarioModal: BearState["room"]["scenario"]["runScenarioModal"]["open"];
 };
 
@@ -25,35 +25,43 @@ export class RunScenarioAction extends Action<RunScenarioActionParams> {
     if (props.scenario.parameters.length === 0) {
       return;
     }
-    const parameter: ScenarioParameterDto = props.scenario.parameters[0];
 
-    const argumentValue: string = convertToTargetTypeStringRepresentation(
-      props.node.properties[parameter.identifier],
-      parameter.dataType,
-    );
-    const sceanrioArguments: ScenarioArgumentDto[] = [
-      {
-        identifier: parameter.identifier,
-        value: argumentValue,
-      },
-    ];
+    for (const node of props.nodes) {
+      const sceanrioArguments: ScenarioArgumentDto[] =
+        props.scenario.parameters.map(
+          (parameter: ScenarioParameterDto): ScenarioArgumentDto => {
+            const nodeParameterValue = node.properties[parameter.identifier];
+            const valueToUse: string =
+              (nodeParameterValue != null
+                ? convertToTargetTypeStringRepresentation(
+                    nodeParameterValue,
+                    parameter.dataType,
+                  )
+                : parameter.defaultValue) ?? "";
+            return {
+              identifier: parameter.identifier,
+              value: valueToUse,
+            } satisfies ScenarioArgumentDto;
+          },
+        );
 
-    if (props.scenario.parameters.length === 1) {
-      await resultOrThrow(
-        await actionControllerLoadScenario({
-          path: {
-            roomId: props.roomContext.initialRoomData.id,
-            canvasId: props.roomContext.initialCanvasData.id,
-          },
-          body: {
-            scenarioId: props.scenario.id,
-            arguments: sceanrioArguments,
-            additive: true,
-          },
-        }),
-      );
-    } else {
-      props.showRunScenarioModal(props.scenario, sceanrioArguments, true);
+      if (props.scenario.parameters.length === 1 || props.nodes.length > 1) {
+        await resultOrThrow(
+          await actionControllerLoadScenario({
+            path: {
+              roomId: props.roomContext.initialRoomData.id,
+              canvasId: props.roomContext.initialCanvasData.id,
+            },
+            body: {
+              scenarioId: props.scenario.id,
+              arguments: sceanrioArguments,
+              additive: true,
+            },
+          }),
+        );
+      } else {
+        props.showRunScenarioModal(props.scenario, sceanrioArguments, true);
+      }
     }
   }
 

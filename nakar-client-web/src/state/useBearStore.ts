@@ -328,6 +328,7 @@ export const useBearStore = create<BearState>()(
                       s.room.scenario.runScenarioModal.shown = true;
                       s.room.scenario.runScenarioModal.scenario = scenario;
                       s.room.scenario.runScenarioModal.additive = additive;
+                      s.room.scenario.runScenarioModal.arguments = [];
                       for (const parameter of scenario.parameters) {
                         const providedArgument = scenarioArguments.find(
                           (a) => a.identifier === parameter.identifier,

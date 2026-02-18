@@ -54,7 +54,7 @@ export function NodeDetails(props: { node: NodeDto }) {
                   {props.node.parameterizedScenarios.map((scenarioGroup) => (
                     <ParameterizedScenarioGroupEntry
                       scenarioGroup={scenarioGroup}
-                      node={props.node}
+                      nodes={[props.node]}
                       key={scenarioGroup.id}
                       className={"pt-2"}
                     ></ParameterizedScenarioGroupEntry>
