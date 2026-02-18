@@ -4,18 +4,18 @@ import { useAppContext } from "../../state/AppContextData.ts";
 import { match } from "ts-pattern";
 import { D3Renderer } from "../d3/D3Renderer.ts";
 import { CanvasContextMenu } from "./CanvasContextMenu.tsx";
+import { useTheme } from "../../shared/theme/useTheme.ts";
 
 export function GraphRendererD3() {
   const context = useAppContext();
   const websocketsManager = context.webSocketsManager;
   const svgRef = createRef<SVGSVGElement>();
-  const getTheme = useBearStore((s) => s.global.theme.getTheme);
+  const theme = useTheme();
   const inspector = useBearStore((s) => s.room.panels.inspector);
   const setLocks = useBearStore((s) => s.room.scenario.setLocks);
   const events = useBearStore((s) => s.room.ui.rendererEvents);
   const hideLabels = useBearStore((s) => s.room.canvas.hideLabels);
   const colorSchemaSlug = useBearStore((s) => s.room.canvas.colorSchemaSlug);
-  const theme = getTheme();
 
   useEffect(() => {
     if (svgRef.current == null) {
@@ -134,17 +134,9 @@ export function GraphRendererD3() {
       }),
       {
         unsubscribe: useBearStore.subscribe(
-          (s) => s.global.theme.user,
-          () => {
-            _graphRenderer.setTheme(getTheme());
-          },
-        ),
-      },
-      {
-        unsubscribe: useBearStore.subscribe(
-          (s) => s.global.theme.system,
-          () => {
-            _graphRenderer.setTheme(getTheme());
+          (s) => s.global.theme,
+          (t) => {
+            _graphRenderer.setTheme(t.user ?? t.system);
           },
         ),
       },

@@ -91,9 +91,6 @@ export const useBearStore = create<BearState>()(
                     s.global.theme.system = systemTheme;
                   });
                 },
-                getTheme: (): Theme => {
-                  return get().global.theme.user ?? get().global.theme.system;
-                },
               },
             },
             start: {

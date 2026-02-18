@@ -21,6 +21,7 @@ import {
 } from "../../../src-gen";
 import { useIsLoggedIn } from "../../state/useIsLoggedIn.ts";
 import { CypherEditor } from "@neo4j-cypher/react-codemirror";
+import { useTheme } from "../../shared/theme/useTheme.ts";
 
 // TODO: Split into parts to prevent layout shift on login
 export function QueryPanel() {
@@ -41,7 +42,7 @@ export function QueryPanel() {
     type: "loading",
   });
   const isLoggedIn = useIsLoggedIn();
-  const getTheme = useBearStore((s) => s.global.theme.getTheme);
+  const theme = useTheme();
 
   const reload = () => {
     (async () => {
@@ -142,7 +143,7 @@ export function QueryPanel() {
                 onChange={(e) => {
                   query.setQueryText(e);
                 }}
-                theme={getTheme()}
+                theme={theme}
                 className={"border-top border-bottom"}
                 onExecute={onRun}
               ></CypherEditor>

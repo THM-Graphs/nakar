@@ -50,19 +50,13 @@ async function bootstrap() {
 
   const context = new AppContextData(env);
 
-  const getTheme = useBearStore.getState().global.theme.getTheme;
   useBearStore.subscribe(
-    (s) => s.global.theme.user,
-    () => {
-      applyTheme(getTheme());
+    (s) => s.global.theme,
+    (s) => {
+      applyTheme(s.user ?? s.system);
     },
   );
-  useBearStore.subscribe(
-    (s) => s.global.theme.system,
-    () => {
-      applyTheme(getTheme());
-    },
-  );
+
 
   useBearStore.subscribe(
     (s) => s.global.auth.jwt,

@@ -2,6 +2,7 @@ import { Form, Stack } from "react-bootstrap";
 import { LiveCanvasLabelViewSettingsDto } from "../../../src-gen";
 import { useColorSchema } from "../color/useColorSchema.ts";
 import clsx from "clsx";
+import { useTheme } from "../../shared/theme/useTheme.ts";
 
 export function LabelViewSettingsColorEditor(props: {
   customColorIndex: boolean;
@@ -13,6 +14,8 @@ export function LabelViewSettingsColorEditor(props: {
   label: string;
 }) {
   const colorSchema = useColorSchema();
+  const theme = useTheme();
+
   return (
     <Stack direction={"horizontal"} gap={1} className={"align-items-center"}>
       <Form.Check
@@ -34,11 +37,12 @@ export function LabelViewSettingsColorEditor(props: {
               width: "20px",
               height: "20px",
               backgroundColor: colorSchema.getBackgroundColor(index),
+              borderStyle: "solid",
+              borderColor: theme === "light" ? "#000" : "#fff",
             }}
             className={clsx(
               "rounded flex-shrink-0 flex-grow-0 pointer align-self-center",
-              props.colorIndex == index &&
-                "border border-2 border-dark shadow-sm",
+              props.colorIndex == index ? "border-2" : "border-0",
             )}
             onClick={() => {
               props.setColorIndex(index);

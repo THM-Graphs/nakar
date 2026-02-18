@@ -47,7 +47,6 @@ export interface BearState {
       system: Theme;
       setUserTheme: (theme: UserTheme) => void;
       setSystemTheme: (theme: Theme) => void;
-      getTheme: () => Theme;
     };
   };
   start: {

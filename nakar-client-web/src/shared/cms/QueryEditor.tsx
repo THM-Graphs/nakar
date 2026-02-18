@@ -12,9 +12,9 @@ import {
   UpdateScenarioQueryEntryDto,
 } from "../../../src-gen";
 import { CypherEditor } from "@neo4j-cypher/react-codemirror";
-import { useBearStore } from "../../state/useBearStore.ts";
 import { CMSButton } from "./CMSButton.tsx";
 import { MouseEventHandler } from "react";
+import { useTheme } from "../theme/useTheme.ts";
 
 export function QueryEditor(props: {
   value: UpdateScenarioQueryEntryDto;
@@ -22,7 +22,7 @@ export function QueryEditor(props: {
   databases: DatabaseConnectionDto[];
   onDelete?: MouseEventHandler<HTMLButtonElement>;
 }) {
-  const getTheme = useBearStore((s) => s.global.theme.getTheme);
+  const theme = useTheme();
 
   return (
     <Card className={"p-3 gap-3 flex-grow-1"}>
@@ -87,7 +87,7 @@ export function QueryEditor(props: {
           onChange={(e) => {
             props.onChange({ ...props.value, query: e });
           }}
-          theme={getTheme()}
+          theme={theme}
           className={"border"}
         ></CypherEditor>
       </Form.Group>
