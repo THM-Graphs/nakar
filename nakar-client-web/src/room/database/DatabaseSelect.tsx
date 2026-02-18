@@ -1,4 +1,4 @@
-import { Form, Stack } from "react-bootstrap";
+import { Form } from "react-bootstrap";
 import { useEffect } from "react";
 import { useCanvasContext } from "../../pages/Canvas.tsx";
 
