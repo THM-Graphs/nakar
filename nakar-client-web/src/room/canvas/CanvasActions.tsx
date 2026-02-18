@@ -50,6 +50,7 @@ export function CanvasActions() {
             roomContext: roomContext,
             undoAction: undoAction,
           }}
+          className={"rounded-start"}
         ></CanvasActionsAction>
         <CanvasActionsAction
           action={RedoAction.shared}

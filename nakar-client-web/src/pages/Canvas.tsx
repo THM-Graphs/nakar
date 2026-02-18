@@ -260,10 +260,12 @@ export function Canvas() {
                 "bg-body-tertiary border flex-grow-0 flex-shrink-0 z-1 shadow-sm rounded align-self-start"
               }
             >
-              <ScenariosPanelButton></ScenariosPanelButton>
+              <ScenariosPanelButton
+                className={"rounded-start"}
+              ></ScenariosPanelButton>
               <QueryPanelButton></QueryPanelButton>
               <NotesPanelButton></NotesPanelButton>
-              <SearchPanelButton></SearchPanelButton>
+              <SearchPanelButton className={"rounded-end"}></SearchPanelButton>
             </Stack>
             <CanvasToolbar
               className={
@@ -276,9 +278,13 @@ export function Canvas() {
                 "bg-body-tertiary border z-1 rounded shadow-sm flex-grow-0 flex-shrink-0 align-self-start"
               }
             >
-              <InspectorPanelButton></InspectorPanelButton>
+              <InspectorPanelButton
+                className={"rounded-start"}
+              ></InspectorPanelButton>
               <HistogramPanelButton></HistogramPanelButton>
-              <VisualizationPanelButton></VisualizationPanelButton>
+              <VisualizationPanelButton
+                className={"rounded-end"}
+              ></VisualizationPanelButton>
             </Stack>
           </Stack>
           <Stack

@@ -109,7 +109,7 @@ export function NodeDetailsKnowledgeCardProperties(props: { node: NodeDto }) {
               <>
                 <Stack gap={0} className={"ps-2 pe-2"}>
                   {data.map((property) => (
-                    <Fragment key={property.title}>
+                    <Fragment key={property.title + property.type}>
                       <NodeDetailsKnowledgeCardEntryDisplay
                         node={props.node}
                         entry={property}

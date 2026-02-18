@@ -32,8 +32,7 @@ export function NotesPanel() {
       onClose={() => {
         notesPanel.hide();
       }}
-    >
-      <Stack className={"pb-5"} gap={0}>
+      toolbar={
         <ActionNavbarButton
           action={AddNoteAction.shared}
           params={{
@@ -42,6 +41,9 @@ export function NotesPanel() {
             isLoggedIn,
           }}
         ></ActionNavbarButton>
+      }
+    >
+      <Stack className={""} gap={0}>
         <DynamicList
           data={notes}
           render={(notes) => (
@@ -52,6 +54,7 @@ export function NotesPanel() {
             </Stack>
           )}
           entityNamePlural={"Notes"}
+          className={""}
         ></DynamicList>
       </Stack>
     </Panel>

@@ -1,4 +1,4 @@
-import { Form } from "react-bootstrap";
+import { Form, Stack } from "react-bootstrap";
 import { useEffect } from "react";
 import { useCanvasContext } from "../../pages/Canvas.tsx";
 
@@ -16,8 +16,8 @@ export function DatabaseSelect(props: {
 
   return (
     <Form.Select
-      className={"rounded-0 border-0 border-bottom"}
-      style={{ fontSize: "13px" }}
+      className={"rounded-0 border-0 bg-body-tertiary"}
+      style={{ fontSize: "13px", width: "150px" }}
       value={props.database ?? ""}
       onChange={(event) => {
         if (event.target.value === "") {

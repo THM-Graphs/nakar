@@ -50,9 +50,9 @@ export function SearchCapabilitiesDisplay(props: {
 
   return (
     <Collapsable
-      title={<span className={"fw-bold small"}>Search Capabilities</span>}
+      title={<span className={"fw-bold small"}>About search results</span>}
       className={"border-top flex-grow-0"}
-      initialState={false}
+      initialState={true}
     >
       {match(capabalities)
         .returnType<ReactNode | null>()
@@ -79,6 +79,13 @@ export function SearchCapabilitiesDisplay(props: {
         .with({ type: "data", data: P.nullish }, () => null)
         .with({ type: "data", data: P.nonNullable }, (e) => (
           <Stack className={"small p-2"}>
+            <span className={"mb-2 text-muted"}>
+              NAKAR uses <span className={"font-monospace"}>LOOKUP</span> and{" "}
+              <span className={"font-monospace"}>RANGE</span> indexes for
+              equality (<span className={"font-monospace"}>=</span>) matches and{" "}
+              <span className={"font-monospace"}>TEXT</span> indexes for{" "}
+              <span className={"font-monospace"}>CONTAINS</span> matches.
+            </span>
             <span>Equality Match:</span>
             <span>
               <SuccessIcon
@@ -130,13 +137,6 @@ export function SearchCapabilitiesDisplay(props: {
                 <span className={"fst-italic"}>None</span>
               </span>
             )}
-            <span className={"mt-2 text-muted"}>
-              NAKAR uses <span className={"font-monospace"}>LOOKUP</span> and{" "}
-              <span className={"font-monospace"}>RANGE</span> indexes for
-              equality (<span className={"font-monospace"}>=</span>) matches and{" "}
-              <span className={"font-monospace"}>TEXT</span> indexes for{" "}
-              <span className={"font-monospace"}>CONTAINS</span> matches.
-            </span>
           </Stack>
         ))
         .exhaustive()}

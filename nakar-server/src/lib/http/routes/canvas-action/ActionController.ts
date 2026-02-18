@@ -245,4 +245,11 @@ export class ActionController {
       LiveCanvasViewSettings.fromSchema(body, canvas.labels);
     canvas.setViewSettings(viewSettings);
   }
+
+  @Post('reset-view-settings')
+  @HttpCode(200)
+  public resetViewSettings(@Param('canvasId') canvasId: string): void {
+    const canvas: LiveCanvas = this._canvasService.getCanvasWithId(canvasId);
+    canvas.resetViewSettings();
+  }
 }

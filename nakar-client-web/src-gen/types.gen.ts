@@ -1334,6 +1334,17 @@ export type ActionControllerSetViewSettingsResponse = (unknown);
 
 export type ActionControllerSetViewSettingsError = unknown;
 
+export type ActionControllerResetViewSettingsData = {
+    path: {
+        canvasId: string;
+        roomId: string;
+    };
+};
+
+export type ActionControllerResetViewSettingsResponse = (unknown);
+
+export type ActionControllerResetViewSettingsError = unknown;
+
 export type SystemControllerGetVersionResponse = (GetVersionResponseBodyDto);
 
 export type SystemControllerGetVersionError = unknown;

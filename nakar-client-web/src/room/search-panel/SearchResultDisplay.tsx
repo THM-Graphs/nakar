@@ -18,13 +18,15 @@ export function SearchResultDisplay(props: {
       {match(props.result)
         .returnType<ReactElement | null>()
         .with({ type: "loading" }, () => (
-          <Loading className={"align-self-center"} size={"sm"}></Loading>
+          <Stack className={"p-3"}>
+            <Loading className={"align-self-center"} size={"sm"}></Loading>
+          </Stack>
         ))
         .with({ type: "data" }, (data) =>
           data.data != null ? (
             <DynamicList
               data={data.data}
-              entityNamePlural={"Nodes"}
+              entityNamePlural={"Search Results"}
               collapsable={true}
               className={"border-top"}
               render={(list) => (

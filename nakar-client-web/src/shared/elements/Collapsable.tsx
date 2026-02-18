@@ -28,7 +28,7 @@ export function Collapsable(props: {
       >
         <i
           className={clsx(
-            "bi me-1 ms-1",
+            "small bi me-1 ms-1",
             collapsed ? "bi-chevron-right" : "bi-chevron-down",
           )}
         ></i>

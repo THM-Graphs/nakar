@@ -33,6 +33,7 @@ import { relationshipActions } from "../../room/actions/groups/relationshipActio
 import { EdgeDto, NodeDto } from "../../../src-gen";
 import { useIsLoggedIn } from "../../state/useIsLoggedIn.ts";
 import { useAppContext } from "../../state/AppContextData.ts";
+import { ResetViewSettingsAction } from "../../room/actions/ResetViewSettingsAction.ts";
 
 export function MenuBar() {
   const context = useAppContext();
@@ -186,6 +187,13 @@ export function MenuBar() {
           params={{
             selectedTab,
             scenario: scenario,
+            roomContext: roomContext,
+          }}
+        ></ActionDropdownItem>
+        <Dropdown.Divider></Dropdown.Divider>
+        <ActionDropdownItem
+          action={ResetViewSettingsAction.shared}
+          params={{
             roomContext: roomContext,
           }}
         ></ActionDropdownItem>

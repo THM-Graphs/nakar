@@ -102,35 +102,33 @@ export function QueryPanel() {
         query.hide();
       }}
       toolbar={
-        <NavbarButton icon={"arrow-clockwise"} onClick={reload}></NavbarButton>
-      }
-    >
-      <Stack className={"pb-5"} gap={5}>
-        <Stack className={"flex-grow-0"}>
+        <Stack direction={"horizontal"}>
+          <NavbarButton
+            icon={"arrow-clockwise"}
+            onClick={reload}
+          ></NavbarButton>
           <DatabaseSelect
             database={selectedDatabaseId}
             onChange={setSelectedDatabaseId}
           ></DatabaseSelect>
-          {referencedDatabase && (
-            <>
-              {referencedDatabase.browserUrl.length > 0 && (
-                <NavbarButton
-                  className={"flex-grow-1 border-bottom"}
-                  onClick={() => {
-                    window.open(referencedDatabase.browserUrl);
-                  }}
-                >
-                  <i className={"bi bi-box-arrow-up-right"}></i>
-                  <span className={"small"}>Neo4j Browser</span>
-                </NavbarButton>
-              )}
-            </>
+          {referencedDatabase && referencedDatabase.browserUrl.length > 0 && (
+            <NavbarButton
+              className={""}
+              onClick={() => {
+                window.open(referencedDatabase.browserUrl);
+              }}
+            >
+              <i className={"bi bi-box-arrow-up-right small"}></i>
+            </NavbarButton>
           )}
         </Stack>
+      }
+    >
+      <Stack className={"pb-5"} gap={5}>
         {referencedDatabase && (
           <>
             <Collapsable
-              className={"flex-grow-0 border-bottom border-top"}
+              className={"flex-grow-0 border-bottom"}
               initialState={false}
               title={<span className={"fw-bold small"}>Query</span>}
             >

@@ -1173,6 +1173,15 @@ export class LiveCanvas {
     }
   }
 
+  public resetViewSettings(): void {
+    const changeRecorder: LiveCanvasChangeRecorder =
+      new LiveCanvasChangeRecorder();
+    this._data.viewSettings = LiveCanvasViewSettings.defaultViewSettings();
+    changeRecorder.didChangeViewSettings();
+    this._handleChangeRecorder(changeRecorder);
+    this._physicsWorker.triggerPhysics({ amount: 'short' });
+  }
+
   private _handleWTEventPhysicsUpdate(event: WTEventPhysicsUpdate): void {
     const graph: LiveCanvasUndoableData = this.getGraph();
     graph.applyPhysicalGraph(event.graph);

@@ -31,7 +31,7 @@ export function GraphDataToggle(props: { className?: string }) {
         icon={"table"}
         selected={tabs.selected === "data"}
         onClick={tabs.selectData}
-        className={"position-relative"}
+        className={"position-relative rounded-end"}
         title={
           <span>
             Table{" "}

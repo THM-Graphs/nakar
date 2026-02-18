@@ -7,6 +7,9 @@ import {
   LiveCanvasViewSettingsDto,
 } from "../../../src-gen";
 import { useCanvasContext } from "../../pages/Canvas.tsx";
+import { ActionNavbarButton } from "../actions/ActionNavbarButton.tsx";
+import { Stack } from "react-bootstrap";
+import { ResetViewSettingsAction } from "../actions/ResetViewSettingsAction.ts";
 
 export function VisualizationPanel() {
   const roomContext = useCanvasContext();
@@ -26,6 +29,15 @@ export function VisualizationPanel() {
       onClose={() => {
         hide();
       }}
+      toolbar={
+        <Stack direction={"horizontal"}>
+          <ActionNavbarButton
+            action={ResetViewSettingsAction.shared}
+            params={{ roomContext: roomContext }}
+            hideTitle={true}
+          ></ActionNavbarButton>
+        </Stack>
+      }
     >
       <ViewSettingsEditor
         viewSettings={visualizationData}

@@ -62,13 +62,18 @@ export function SearchPanel() {
   };
 
   return (
-    <Panel title={"Search"} onClose={hide} direction={"left"}>
-      <Stack gap={3}>
+    <Panel
+      title={"Search"}
+      onClose={hide}
+      direction={"left"}
+      toolbar={
         <DatabaseSelect
           database={selectedDatabaseId}
           onChange={setSelectedDatabaseId}
         ></DatabaseSelect>
-
+      }
+    >
+      <Stack gap={5}>
         {selectedDatabaseId == null && (
           <span className={"small text-muted p-3"}>
             Select a database to search.
@@ -77,8 +82,8 @@ export function SearchPanel() {
         {selectedDatabaseId != null && (
           <>
             <SearchForm
-              onSearch={() => {
-                void executeSearch();
+              onSearch={async () => {
+                await executeSearch();
               }}
             ></SearchForm>
             <SearchResultDisplay
