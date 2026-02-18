@@ -1,4 +1,3 @@
-import { GraphNode } from '../graph/GraphNode';
 import { match } from 'ts-pattern';
 import { LiveCanvasLabelViewSettingsDto } from '../../schema/dtos/LiveCanvasLabelViewSettingsDto';
 import z from 'zod';

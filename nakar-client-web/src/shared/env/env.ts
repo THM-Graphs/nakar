@@ -35,7 +35,7 @@ export async function loadEnvOrDefault(): Promise<Env> {
   try {
     const env = await loadEnv();
     return env;
-  } catch (error) {
+  } catch {
     return defaultEnv;
   }
 }

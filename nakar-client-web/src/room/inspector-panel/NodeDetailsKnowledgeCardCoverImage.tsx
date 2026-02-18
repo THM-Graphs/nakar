@@ -10,7 +10,7 @@ export function NodeDetailsKnowledgeCardCoverImage(props: { node: NodeDto }) {
     }
     try {
       return new URL(props.node.coverImageUrl);
-    } catch (e: unknown) {
+    } catch {
       return null;
     }
   }, [props.node.coverImageUrl]);
