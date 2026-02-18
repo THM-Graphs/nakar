@@ -48,7 +48,6 @@ export class WebSocketsManager {
 
   public disconnect(): void {
     if (this.socket == null) {
-      console.error("Socket not connected. Cannot send message");
       return;
     }
     this.socket.disconnect();
@@ -57,7 +56,6 @@ export class WebSocketsManager {
 
   public sendMessage(message: ActionWsdto["action"]): void {
     if (this.socket == null) {
-      console.error("Socket not connected. Cannot send message");
       return;
     }
     this.socket.emit("message", { action: message } satisfies ActionWsdto);

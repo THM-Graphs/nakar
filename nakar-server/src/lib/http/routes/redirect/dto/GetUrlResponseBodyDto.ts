@@ -1,10 +1,10 @@
 import { ApiProperty } from '@nestjs/swagger';
 
 export class GetUrlResponseBodyDto {
-  @ApiProperty()
-  public url: string;
+  @ApiProperty({ type: String, nullable: true })
+  public url: string | null;
 
-  public constructor(data: { url: string }) {
+  public constructor(data: { url: string | null }) {
     this.url = data.url;
   }
 }

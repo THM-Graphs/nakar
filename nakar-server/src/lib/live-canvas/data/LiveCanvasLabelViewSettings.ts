@@ -9,24 +9,20 @@ export class LiveCanvasLabelViewSettings {
     radius: z.number(),
     customRadius: z.boolean(),
     colorIndex: z.enum(['0', '1', '2', '3', '4', '5']),
-    customColorIndex: z.boolean(),
   });
 
   private readonly _radius: number;
   private readonly _customRadius: boolean;
   private readonly _colorIndex: LiveCanvasLabelViewSettings['colorIndex'];
-  private readonly _customColorIndex: boolean;
 
   public constructor(data: {
     radius: number;
     customRadius: boolean;
     colorIndex: LiveCanvasLabelViewSettings['colorIndex'];
-    customColorIndex: boolean;
   }) {
     this._radius = data.radius;
     this._customRadius = data.customRadius;
     this._colorIndex = data.colorIndex;
-    this._customColorIndex = data.customColorIndex;
   }
 
   public get radius(): number {
@@ -39,10 +35,6 @@ export class LiveCanvasLabelViewSettings {
 
   public get colorIndex(): 0 | 1 | 2 | 3 | 4 | 5 {
     return this._colorIndex;
-  }
-
-  public get customColorIndex(): boolean {
-    return this._customColorIndex;
   }
 
   public static fromPlain(
@@ -59,16 +51,6 @@ export class LiveCanvasLabelViewSettings {
         .with('4', (): LiveCanvasLabelViewSettings['colorIndex'] => 4)
         .with('5', (): LiveCanvasLabelViewSettings['colorIndex'] => 5)
         .exhaustive(),
-      customColorIndex: data.customColorIndex,
-    });
-  }
-
-  public static default(): LiveCanvasLabelViewSettings {
-    return new LiveCanvasLabelViewSettings({
-      radius: GraphNode.defaultRadius,
-      customRadius: false,
-      colorIndex: 0,
-      customColorIndex: false,
     });
   }
 
@@ -79,7 +61,6 @@ export class LiveCanvasLabelViewSettings {
       radius: input.radius,
       customRadius: input.customRadius,
       colorIndex: input.colorIndex,
-      customColorIndex: input.customColorIndex,
     });
   }
 
@@ -146,7 +127,6 @@ export class LiveCanvasLabelViewSettings {
           >['colorIndex'] => '5',
         )
         .exhaustive(),
-      customColorIndex: this.customColorIndex,
     };
   }
 }

@@ -37,6 +37,7 @@ import {
   EditCommonProperty,
   EditCommonPropertyLoader,
 } from "./pages/EditCommonProperty.tsx";
+import { LoadingPage } from "./pages/LoadingPage.tsx";
 
 async function bootstrap() {
   bootstrapTheme();
@@ -56,7 +57,6 @@ async function bootstrap() {
       applyTheme(s.user ?? s.system);
     },
   );
-
 
   useBearStore.subscribe(
     (s) => s.global.auth.jwt,
@@ -89,6 +89,7 @@ async function bootstrap() {
           <AuthModal></AuthModal>
         </>
       ),
+      HydrateFallback: LoadingPage,
       children: [
         {
           index: true,
@@ -157,7 +158,9 @@ async function bootstrap() {
   );
 }
 
-bootstrap().catch(console.error);
+document.addEventListener("DOMContentLoaded", () => {
+  bootstrap().catch(console.error);
+});
 
 async function handleRedirect(): Promise<void> {
   // Feature for handling outdated urls
@@ -166,9 +169,8 @@ async function handleRedirect(): Promise<void> {
     return;
   } else {
     const href = window.location.href;
-    console.log(`Will try to find redirect for ${href}`);
     const result = await redirectControllerGetUrl({ query: { url: href } });
-    if (result.data != null) {
+    if (result.data?.url != null) {
       window.location.href = result.data.url;
     }
   }

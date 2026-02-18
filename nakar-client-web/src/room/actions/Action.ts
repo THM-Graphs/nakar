@@ -13,10 +13,8 @@ export abstract class Action<I> {
   }
 
   public async run(input: I): Promise<void> {
-    console.debug(`Running action ${this.slug()}`);
     try {
       await this.action(input);
-      console.debug(`Finished action ${this.slug()}`);
     } catch (error) {
       useBearStore.getState().room.ui.pushErrorNotification(error);
     }

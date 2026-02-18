@@ -5,6 +5,7 @@ import { LiveCanvasLabelViewSettings } from './LiveCanvasLabelViewSettings';
 import { SMap } from '../../map/Map';
 import { LiveCanvasLabelViewSettingsDto } from '../../schema/dtos/LiveCanvasLabelViewSettingsDto';
 import z from 'zod';
+import { GraphNode } from '../graph/GraphNode';
 
 export class LiveCanvasViewSettings {
   public static readonly defaultGrowNodesBasedOnDegreeFactor: number = 2;
@@ -144,10 +145,9 @@ export class LiveCanvasViewSettings {
             {
               label: label,
               colorIndex: viewSetting.colorIndex,
-              customColorIndex: viewSetting.customColorIndex,
               customRadius: viewSetting.customRadius,
               radius: viewSetting.radius,
-            },
+            } satisfies LiveCanvasLabelViewSettingsDto,
           ];
         },
         [],
@@ -173,8 +173,26 @@ export class LiveCanvasViewSettings {
   }
 
   public getLabelSettings(label: string): LiveCanvasLabelViewSettings {
-    return (
-      this._labelSettings.get(label) ?? LiveCanvasLabelViewSettings.default()
-    );
+    const existing: LiveCanvasLabelViewSettings | null =
+      this._labelSettings.get(label) ?? null;
+    if (existing != null) {
+      return existing;
+    }
+    const newEntry: LiveCanvasLabelViewSettings =
+      new LiveCanvasLabelViewSettings({
+        radius: GraphNode.defaultRadius,
+        customRadius: false,
+        colorIndex: LiveCanvasLabelViewSettings.getLeastOftenColorIndex(
+          this._labelSettings
+            .toValueArray()
+            .map(
+              (
+                a: LiveCanvasLabelViewSettings,
+              ): LiveCanvasLabelViewSettings['colorIndex'] => a.colorIndex,
+            ),
+        ),
+      });
+    this._labelSettings.set(label, newEntry);
+    return newEntry;
   }
 }

@@ -1,4 +1,4 @@
-import { Controller, Get, NotFoundException, Query } from '@nestjs/common';
+import { Controller, Get, Query } from '@nestjs/common';
 import { GetUrlRequestQueryDto } from './dto/GetUrlRequestQueryDto';
 import { GetUrlResponseBodyDto } from './dto/GetUrlResponseBodyDto';
 import { Result } from '@strapi/types/dist/modules/documents/result';
@@ -26,7 +26,7 @@ export class RedirectController {
       } satisfies FindMany<'api::redirect.redirect'>);
 
     if (foundRedirects.length === 0) {
-      throw new NotFoundException();
+      return new GetUrlResponseBodyDto({ url: null });
     }
     if (foundRedirects.length > 1) {
       this._logger.warn(`Multiple redirect urls found for ${query.url}`);
@@ -34,7 +34,7 @@ export class RedirectController {
 
     const redirect: Result<'api::redirect.redirect'> = foundRedirects[0];
     if (redirect.targetUrl == null) {
-      throw new NotFoundException();
+      return new GetUrlResponseBodyDto({ url: null });
     }
 
     return new GetUrlResponseBodyDto({ url: redirect.targetUrl });

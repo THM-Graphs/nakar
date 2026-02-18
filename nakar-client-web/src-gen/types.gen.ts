@@ -233,7 +233,7 @@ export type GetSearchCapabilitiesResponseBodyDto = {
 };
 
 export type GetUrlResponseBodyDto = {
-    url: string;
+    url: (string) | null;
 };
 
 export type GetVersionResponseBodyDto = {
@@ -326,7 +326,6 @@ export type LiveCanvasLabelViewSettingsDto = {
     radius: number;
     customRadius: boolean;
     colorIndex: 0 | 1 | 2 | 3 | 4 | 5;
-    customColorIndex: boolean;
 };
 
 export type colorIndex = 0 | 1 | 2 | 3 | 4 | 5;

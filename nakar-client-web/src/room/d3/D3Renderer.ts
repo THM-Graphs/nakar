@@ -834,18 +834,15 @@ export class D3Renderer {
 
   public zoomOutOverview(): void {
     if (this.zoomBehaviour == null) {
-      console.warn("Zoom Behaviour is null");
       return;
     }
 
     const bounds = this.zoomContainer?.node()?.getBBox();
     if (bounds == null) {
-      console.error("Cannot get bounds.");
       return;
     }
     const parent = this.svgContainer?.node();
     if (parent == null) {
-      console.error("Parent is null");
       return;
     }
 
@@ -857,7 +854,6 @@ export class D3Renderer {
     const fullWidth = parent.clientWidth - leftInset - rightInset,
       fullHeight = parent.clientHeight - topInset - bottomInset;
     if (fullWidth < 10 || fullHeight < 10) {
-      console.warn("Unable to zoom to fit: Not enough window size");
       return;
     }
     const width = bounds.width,
@@ -870,17 +866,14 @@ export class D3Renderer {
     const translate = [-midX, -midY + (topInset - bottomInset) / 2 / scale];
 
     this.transform(translate[0], translate[1], scale);
-    console.trace("zoomFit", translate, scale);
   }
 
   public zoomTo(zoom: number): void {
     const svgContainerNode = this.svgContainer?.node();
     if (svgContainerNode == null) {
-      console.warn("SVG Container Node is null");
       return;
     }
     if (this.zoomBehaviour == null) {
-      console.warn("Zoom Behaviour is null");
       return;
     }
     this.svgContainer
@@ -896,11 +889,9 @@ export class D3Renderer {
   public transform(x: number, y: number, zoom: number): void {
     const svgContainerNode = this.svgContainer?.node();
     if (svgContainerNode == null) {
-      console.warn("SVG Container Node is null");
       return;
     }
     if (this.zoomBehaviour == null) {
-      console.warn("Zoom Behaviour is null");
       return;
     }
     const zoomTransform = new ZoomTransform(zoom, x * zoom, y * zoom);
@@ -915,7 +906,6 @@ export class D3Renderer {
   public getZoomTransform(): d3.ZoomTransform {
     const svgContainerNode = this.svgContainer?.node();
     if (svgContainerNode == null) {
-      console.warn("SVG Container Node is null");
       return new d3.ZoomTransform(1, 0, 0);
     }
     const node = svgContainerNode;

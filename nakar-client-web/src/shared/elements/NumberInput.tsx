@@ -87,7 +87,6 @@ export function NumberInput(props: {
         onChange={(e) => {
           setSliderValue(Number(e.target.value));
           setValue(e.target.value);
-          console.log(e.target.value);
         }}
         onMouseUp={() => {
           props.onChange(sliderValue);

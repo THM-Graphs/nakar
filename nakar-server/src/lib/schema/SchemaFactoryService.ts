@@ -1000,15 +1000,9 @@ export class SchemaFactoryService {
     databaseCache: DatabaseReferenceCache,
   ): Promise<SMap<string, LabelDto>> {
     const labels: SMap<string, LabelDto> = new SMap<string, LabelDto>();
-    const colorIndexes: LiveCanvasLabelViewSettings['colorIndex'][] = [];
     for (const label of liveCanvas.getGraph().nodes.labelIndex.labels) {
       const labelViewSettings: LiveCanvasLabelViewSettings =
         liveCanvas.data.viewSettings.getLabelSettings(label);
-      const colorIndex: LiveCanvasLabelViewSettings['colorIndex'] =
-        labelViewSettings.customColorIndex
-          ? labelViewSettings.colorIndex
-          : LiveCanvasLabelViewSettings.getLeastOftenColorIndex(colorIndexes);
-      colorIndexes.push(colorIndex);
       labels.set(label, {
         label: label,
         count: liveCanvas.getGraph().nodes.labelIndex.labelCount(label),
@@ -1025,7 +1019,7 @@ export class SchemaFactoryService {
         ),
         color: new ColorDto({
           color: new ColorPresetDto({
-            index: colorIndex,
+            index: labelViewSettings.colorIndex,
           }),
         }),
       } satisfies LabelDto);

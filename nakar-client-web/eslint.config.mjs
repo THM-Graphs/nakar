@@ -25,6 +25,7 @@ export default defineConfig([
 
     rules: {
       "react-hooks/exhaustive-deps": "off",
+      // "no-console": ["error"],
     },
   },
 ]);
