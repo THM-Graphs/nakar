@@ -18,7 +18,7 @@ export function ScenarioGroupList(props: {
         </span>
       )}
       {props.scenarioGroups.length > 0 && (
-        <Stack className={"flex-grow-0 pb-5"}>
+        <Stack className={"flex-grow-0"}>
           {props.scenarioGroups.map((scenarioGroup: ScenarioGroupDto) => (
             <Fragment key={scenarioGroup.id}>
               <ScenarioGroupDisplay

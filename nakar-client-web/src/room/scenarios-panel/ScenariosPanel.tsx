@@ -1,6 +1,7 @@
 import { Panel } from "../../shared/elements/Panel.tsx";
 import { useBearStore } from "../../state/useBearStore.ts";
 import { ScenarioGroupList } from "./ScenarioGroupList.tsx";
+import { Stack } from "react-bootstrap";
 
 export function ScenariosPanel() {
   const hide = useBearStore((s) => s.room.panels.scenarios.hide);
@@ -8,9 +9,11 @@ export function ScenariosPanel() {
 
   return (
     <Panel direction={"left"} onClose={hide} title={"Scenarios"}>
-      <ScenarioGroupList
-        scenarioGroups={scenarios.scenarioGroups}
-      ></ScenarioGroupList>
+      <Stack className={"pb-5 overflow-y-scroll"}>
+        <ScenarioGroupList
+          scenarioGroups={scenarios.scenarioGroups}
+        ></ScenarioGroupList>
+      </Stack>
     </Panel>
   );
 }
