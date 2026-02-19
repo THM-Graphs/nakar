@@ -19,6 +19,7 @@ function unknownToStringList(input: unknown): string[] {
 export function NodeDetailsKnowledgeCardProperties(props: { node: NodeDto }) {
   const elements = useBearStore((s) => s.room.scenario.graph.elements);
   const setElement = useBearStore((s) => s.room.panels.inspector.setElement);
+  const onCenter = useBearStore((s) => s.room.ui.rendererEvents.onCenter);
 
   const properties: NodeDetailsKnowledgeCardEntry[] = useMemo(() => {
     return Object.entries(
@@ -54,6 +55,7 @@ export function NodeDetailsKnowledgeCardProperties(props: { node: NodeDto }) {
           title: targetNode.title,
           onClick: () => {
             setElement(targetNode.id);
+            onCenter.next();
           },
           id: edge.id,
         });
@@ -84,6 +86,7 @@ export function NodeDetailsKnowledgeCardProperties(props: { node: NodeDto }) {
           title: targetNode.title,
           onClick: () => {
             setElement(targetNode.id);
+            onCenter.next();
           },
           id: edge.id,
         });
