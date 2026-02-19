@@ -15,9 +15,9 @@ export function NodeDetailsKnowledgeCard(props: { node: NodeDto }) {
         node={props.node}
       ></NodeDetailsKnowledgeCardHeader>
       <Stack gap={3}>
-        <NodeDetailsKnowledgeCardScenarios
-          node={props.node}
-        ></NodeDetailsKnowledgeCardScenarios>
+        {/*<NodeDetailsKnowledgeCardScenarios*/}
+        {/*  node={props.node}*/}
+        {/*></NodeDetailsKnowledgeCardScenarios>*/}
         <NodeDetailsKnowledgeCardProperties
           node={props.node}
         ></NodeDetailsKnowledgeCardProperties>

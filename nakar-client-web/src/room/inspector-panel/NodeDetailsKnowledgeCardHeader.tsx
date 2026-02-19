@@ -8,7 +8,7 @@ export function NodeDetailsKnowledgeCardHeader(props: { node: NodeDto }) {
     <>
       <Stack
         className={
-          "sticky-top bg-body-tertiary border-bottom p-2 align-items-center mb-2"
+          "sticky-top bg-body-tertiary border-bottom p-2 align-items-center"
         }
         direction={"horizontal"}
         gap={2}

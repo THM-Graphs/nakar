@@ -24,14 +24,23 @@ export function NodeDetailsKnowledgeCardProperties(props: { node: NodeDto }) {
   const properties: NodeDetailsKnowledgeCardEntry[] = useMemo(() => {
     return Object.entries(
       props.node.properties satisfies Record<string, unknown>,
-    ).map((property) => ({
-      title: property[0],
-      type: "property",
-      values: unknownToStringList(property[1]).map((t) => ({
-        id: t,
-        title: t,
-      })),
-    }));
+    )
+      .map(
+        (property): NodeDetailsKnowledgeCardEntry => ({
+          title: property[0],
+          type: "property",
+          values: unknownToStringList(property[1]).map((t) => ({
+            id: t,
+            title: t,
+          })),
+        }),
+      )
+      .sort(
+        (
+          a: NodeDetailsKnowledgeCardEntry,
+          b: NodeDetailsKnowledgeCardEntry,
+        ): number => a.title.localeCompare(b.title),
+      );
   }, [props.node.properties]);
 
   const outgoingEdges = useMemo((): NodeDetailsKnowledgeCardEntry[] => {
@@ -59,7 +68,13 @@ export function NodeDetailsKnowledgeCardProperties(props: { node: NodeDto }) {
           },
           id: edge.id,
         });
-        return acc;
+
+        return acc.sort(
+          (
+            a: NodeDetailsKnowledgeCardEntry,
+            b: NodeDetailsKnowledgeCardEntry,
+          ): number => a.title.localeCompare(b.title),
+        );
       }, []);
   }, [elements, props.node]);
 
@@ -90,14 +105,18 @@ export function NodeDetailsKnowledgeCardProperties(props: { node: NodeDto }) {
           },
           id: edge.id,
         });
-        return acc;
+
+        return acc.sort(
+          (
+            a: NodeDetailsKnowledgeCardEntry,
+            b: NodeDetailsKnowledgeCardEntry,
+          ): number => a.title.localeCompare(b.title),
+        );
       }, []);
   }, [elements, props.node]);
 
   const allProperties = useMemo(() => {
-    return [...properties, ...incomingEdges, ...outgoingEdges].sort((a, b) =>
-      a.title.localeCompare(b.title),
-    );
+    return [...properties, ...outgoingEdges, ...incomingEdges];
   }, [incomingEdges, outgoingEdges, properties]);
 
   return (
