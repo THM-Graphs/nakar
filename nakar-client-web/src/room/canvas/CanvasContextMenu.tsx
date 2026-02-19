@@ -5,6 +5,7 @@ import {
   MouseEventHandler,
   ReactNode,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
@@ -13,10 +14,11 @@ import { useBearStore } from "../../state/useBearStore.ts";
 import { nodeActions } from "../actions/groups/nodeActions.ts";
 import { ActionDropdownItem } from "../actions/ActionDropdownItem.tsx";
 import { relationshipActions } from "../actions/groups/relationshipActions.ts";
-import { EdgeDto, NodeDto } from "../../../src-gen";
+import { EdgeDto, NodeDto, ScenarioGroupDto } from "../../../src-gen";
 import { useIsLoggedIn } from "../../state/useIsLoggedIn.ts";
 import { useCanvasContext } from "../../pages/Canvas.tsx";
 import { RunScenarioAction } from "../actions/RunScenarioAction.ts";
+import { calculateIntersectionOfScenarioGroups } from "../scenarios-panel/calculateIntersectionOfScenarioGroups.ts";
 
 export function CanvasContextMenu() {
   const roomContext = useCanvasContext();
@@ -28,7 +30,6 @@ export function CanvasContextMenu() {
   );
   const [posX, setPosX] = useState(0);
   const [posY, setPosY] = useState(0);
-  const [nodeOrigin, setNodeOrigin] = useState<NodeDto | null>(null);
   const [selectedNodes, setSelectedNodes] = useState<NodeDto[] | null>(null);
   const [selectedEdges, setSelectedEdges] = useState<EdgeDto[] | null>(null);
   const nodes = useBearStore((s) => s.room.scenario.graph.elements.nodes);
@@ -51,7 +52,6 @@ export function CanvasContextMenu() {
   useEffect(() => {
     if (selectedEdges != null) {
       setSelectedNodes(null);
-      setNodeOrigin(null);
     }
   }, [selectedEdges]);
 
@@ -63,7 +63,6 @@ export function CanvasContextMenu() {
           if (selectedNode == null) {
             return;
           }
-          setNodeOrigin(selectedNode);
 
           if (selectedElements.includes(params.nodeId)) {
             const newSelectedNodes: NodeDto[] = selectedElements.reduce<
@@ -138,6 +137,15 @@ export function CanvasContextMenu() {
     };
   }, [dropdownEl]);
 
+  const commonNodeScenarios: ScenarioGroupDto[] = useMemo(() => {
+    if (selectedNodes == null) {
+      return [];
+    }
+    return calculateIntersectionOfScenarioGroups(
+      selectedNodes.map((n) => n.parameterizedScenarios),
+    );
+  }, [selectedNodes]);
+
   const CustomToggle = forwardRef(
     (
       {
@@ -185,9 +193,9 @@ export function CanvasContextMenu() {
               }}
             ></ActionDropdownItem>
           ))}
-        {nodeOrigin && nodeOrigin.parameterizedScenarios.length > 0 && (
+        {commonNodeScenarios.length > 0 && (
           <>
-            {nodeOrigin.parameterizedScenarios.map((scenarioGroup) => (
+            {commonNodeScenarios.map((scenarioGroup) => (
               <Fragment key={scenarioGroup.id}>
                 <Dropdown.Divider></Dropdown.Divider>
                 <Dropdown.ItemText className={"small text-muted"}>
@@ -202,7 +210,7 @@ export function CanvasContextMenu() {
                           roomContext: roomContext,
                           scenario: scenario,
                           showRunScenarioModal: showRunScenarioModal,
-                          nodes: [nodeOrigin],
+                          nodes: selectedNodes ?? [],
                         }}
                       ></ActionDropdownItem>
                     </Fragment>
