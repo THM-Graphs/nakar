@@ -35,9 +35,9 @@ export function NumericSpanSelect(props: {
   renderValue: (value: number) => ReactNode;
   className?: string;
 }) {
-  const height = "40px";
+  const height = "30px";
   const changeFactor = 0.2;
-  const handleWidth: number = 10;
+  const handleWidth: number = 8;
 
   const fullWidthElement: RefObject<HTMLSpanElement> =
     useRef<HTMLSpanElement>(null);
@@ -253,66 +253,64 @@ export function NumericSpanSelect(props: {
             setMinimum((m) => m + (maximum - m) * changeFactor);
           }}
         ></NavbarButton>
-        <Stack className={"border"}>
-          <Stack
-            direction={"horizontal"}
-            className={
-              "flex-grow-1 position-relative overflow-hidden rounded-start-2 rounded-end-2"
-            }
-            ref={fullWidthElement}
-            style={{ height: height }}
-          >
-            <div
-              className={"bg-body flex-grow-0 position-absolute"}
-              style={{
-                height: height,
-                left: 0,
-                right: `${(currentWidth - startValuePosition).toString()}px`,
-              }}
-            ></div>
-            <div
-              className={
-                "bg-body-secondary flex-grow-0 position-absolute border-start border-end"
-              }
-              ref={leftHandle}
-              style={{
-                width: `${handleWidth.toString()}px`,
-                height: height,
-                cursor: "col-resize",
-                left: `${startValuePosition.toString()}px`,
-              }}
-            ></div>
-            <div
-              style={{
-                height: height,
-                left: `${(startValuePosition + handleWidth).toString()}px`,
-                right: `${(currentWidth - endValuePosition).toString()}px`,
-                cursor: "grab",
-              }}
-              className={"position-absolute"}
-              ref={middleHandle}
-            ></div>
-            <div
-              className={
-                "bg-body-secondary position-absolute border-start border-end"
-              }
-              ref={rightHandle}
-              style={{
-                width: `${handleWidth.toString()}px`,
-                height: height,
-                cursor: "col-resize",
-                left: `${endValuePosition.toString()}px`,
-              }}
-            ></div>
-            <div
-              className={"bg-body position-absolute"}
-              style={{
-                height: height,
-                right: 0,
-                left: `${(endValuePosition + handleWidth).toString()}px`,
-              }}
-            ></div>
-          </Stack>
+        <Stack
+          direction={"horizontal"}
+          className={
+            "border border-2 border flex-grow-1 position-relative overflow-hidden rounded-start-2 rounded-end-2"
+          }
+          ref={fullWidthElement}
+          style={{
+            height: height,
+            background:
+              "repeating-linear-gradient(-45deg, rgba(var(--bs-secondary-rgb), 0.5), rgba(var(--bs-secondary-rgb), 0.5) 5px, rgb(var(--bs-body-bg-rgb)) 5px, rgb(var(--bs-body-bg-rgb)) 10px)",
+          }}
+        >
+          <div
+            className={"flex-grow-0 position-absolute"}
+            style={{
+              height: height,
+              left: 0,
+              right: `${(currentWidth - startValuePosition).toString()}px`,
+            }}
+          ></div>
+          <div
+            className={"bg-primary flex-grow-0 position-absolute"}
+            ref={leftHandle}
+            style={{
+              width: `${handleWidth.toString()}px`,
+              height: height,
+              cursor: "col-resize",
+              left: `${startValuePosition.toString()}px`,
+            }}
+          ></div>
+          <div
+            style={{
+              height: height,
+              left: `${(startValuePosition + handleWidth).toString()}px`,
+              right: `${(currentWidth - endValuePosition).toString()}px`,
+              cursor: "grab",
+            }}
+            className={"position-absolute bg-body"}
+            ref={middleHandle}
+          ></div>
+          <div
+            className={"bg-primary position-absolute"}
+            ref={rightHandle}
+            style={{
+              width: `${handleWidth.toString()}px`,
+              height: height,
+              cursor: "col-resize",
+              left: `${endValuePosition.toString()}px`,
+            }}
+          ></div>
+          <div
+            className={"position-absolute"}
+            style={{
+              height: height,
+              right: 0,
+              left: `${(endValuePosition + handleWidth).toString()}px`,
+            }}
+          ></div>
         </Stack>
         <NavbarButton
           icon={"dash-lg"}
