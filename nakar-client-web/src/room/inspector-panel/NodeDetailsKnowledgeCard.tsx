@@ -1,7 +1,6 @@
 import { Stack } from "react-bootstrap";
 import { NodeDto } from "../../../src-gen";
 import { NodeDetailsKnowledgeCardHeader } from "./NodeDetailsKnowledgeCardHeader.tsx";
-import { NodeDetailsKnowledgeCardScenarios } from "./NodeDetailsKnowledgeCardScenarios.tsx";
 import { NodeDetailsKnowledgeCardProperties } from "./NodeDetailsKnowledgeCardProperties.tsx";
 import { NodeDetailsKnowledgeCardCoverImage } from "./NodeDetailsKnowledgeCardCoverImage.tsx";
 
