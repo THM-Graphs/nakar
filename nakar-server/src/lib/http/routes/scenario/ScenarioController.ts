@@ -80,6 +80,7 @@ export class ScenarioController {
           title: body.title,
           description: body.description,
         } satisfies Input<'api::scenario.scenario'>,
+        status: 'published',
       });
 
     if (updatedScenario == null) {
