@@ -13,7 +13,7 @@ import { ServerInfoDropdownEntry } from "../bars/ServerInfoDropdownEntry.tsx";
 import { useAppContext } from "../../state/AppContextData.ts";
 import { useBearStore } from "../../state/useBearStore.ts";
 import { match } from "ts-pattern";
-import { useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { useIsLoggedIn } from "../../state/useIsLoggedIn.ts";
 import { usePageTitle } from "../../routing/usePageTitle.ts";
 
@@ -56,12 +56,9 @@ export function CMSNavbar(props: {
                 {props.breadcrumbContext.map((entry) => (
                   <Breadcrumb.Item
                     className={"small"}
-                    href={entry.url}
                     key={entry.url + entry.title}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      void navigate((e.target as HTMLAnchorElement).href);
-                    }}
+                    linkAs={Link}
+                    linkProps={{ to: entry.url }}
                   >
                     {entry.title}
                   </Breadcrumb.Item>
