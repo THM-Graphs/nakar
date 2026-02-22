@@ -169,6 +169,19 @@ export class WebSocketManager
     const canvas: Result<'api::canvas.canvas'> =
       await this._databaseService.getCanvas(auth.canvasId);
 
+    if (!this._server.sockets.sockets.has(wsClient.id)) {
+      // The client disconnected before checking credentials finished.
+      // Do not start or add to room.
+      this._logger.warn(
+        `Will cancel adding user ${user?.username ?? wsClient.id} to canvas ${canvas.documentId} after credential checks, because they disconnected.`,
+      );
+      return;
+    } else {
+      this._logger.debug(
+        `Will add user ${user?.username ?? wsClient.id} to canvas ${canvas.documentId}. Credential checks success.`,
+      );
+    }
+
     const liveCanvas: LiveCanvas = this._canvasService.getOrStartCanvas(canvas);
 
     this._rooms.set(wsClient.id, canvas.documentId);
