@@ -412,7 +412,6 @@ export class SchemaFactoryService {
   public async createSchemaLiveCanvasData(
     liveCanvas: LiveCanvas,
   ): Promise<LiveCanvasDataDto> {
-    const graph: LiveCanvasUndoableData = liveCanvas.getGraph();
     const canvas: Result<'api::canvas.canvas'> = await this._database.getCanvas(
       liveCanvas.canvasId,
     );
@@ -423,6 +422,7 @@ export class SchemaFactoryService {
       liveCanvas: liveCanvas,
     });
 
+    const graph: LiveCanvasUndoableData = liveCanvas.getGraph();
     return new LiveCanvasDataDto({
       table: this.createSchemaTable(graph.tableData),
       elements: await this.createSchemaGraphElements(
