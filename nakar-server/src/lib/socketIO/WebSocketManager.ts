@@ -225,10 +225,10 @@ export class WebSocketManager
   @SubscribeMessage('message')
   @UsePipes(new ValidationPipe(validationPipelineOptions))
   @UseFilters(WsValidationFilter)
-  public async handleEvent(
+  public handleEvent(
     @MessageBody() message: ActionWsdto,
     @ConnectedSocket() wsClient: Socket,
-  ): Promise<void> {
+  ): void {
     try {
       if (
         message.action.type !== 'MoveNodesWsdto' &&
@@ -238,8 +238,7 @@ export class WebSocketManager
           `Did receive from client ${wsClient.id}: ${message.action.type}`,
         );
       }
-      await match(message.action)
-        .returnType<void | Promise<void>>()
+      match(message.action)
         .with({ type: 'GrabNodeWsdto' }, (m: GrabNodeWsdto): void => {
           this._assertLiveCanvas(wsClient)?.grabNode({
             nodeId: m.nodeId,
@@ -348,9 +347,9 @@ export class WebSocketManager
           `Did receive from canvas (canvas ${event.canvas.canvasId}): ${event.type}`,
         );
       }
-      Promise.resolve(
+      try {
         match(event)
-          .returnType<void | Promise<void>>()
+          .returnType<void>()
           .with(
             { type: 'CanvasEventGraphTableChanged' },
             (message: CanvasEventGraphTableChanged): void => {
@@ -364,7 +363,7 @@ export class WebSocketManager
           )
           .with(
             { type: 'CanvasEventGraphMetaDataChanged' },
-            async (message: CanvasEventGraphMetaDataChanged): Promise<void> => {
+            (message: CanvasEventGraphMetaDataChanged): void => {
               const metaData: LiveCanvasMetaDataDto =
                 await this._schemaFactory.createSchemaGraphMetaData(
                   message.canvas,
@@ -380,35 +379,29 @@ export class WebSocketManager
           .with(
             { type: 'CanvasEventGraphElementsChanged' },
             (message: CanvasEventGraphElementsChanged): void => {
-              (async (): Promise<void> => {
-                const canvas: Result<'api::canvas.canvas'> =
-                  await this._databaseService.getCanvas(
-                    message.canvas.canvasId,
-                  );
+              const canvas: Result<'api::canvas.canvas'> =
+                await this._databaseService.getCanvas(message.canvas.canvasId);
 
-                const project: Result<'api::project.project'> =
-                  await this._databaseService.getProjectOfCanvas(canvas);
+              const project: Result<'api::project.project'> =
+                await this._databaseService.getProjectOfCanvas(canvas);
 
-                const notes: IndexedNoteCollection =
-                  await this._databaseService.getNotes({
-                    project: project,
-                    liveCanvas: message.canvas,
-                  });
-
-                const graphElements: LiveCanvasGraphElementsDto =
-                  await this._schemaFactory.createSchemaGraphElements(
-                    message.canvas,
-                    message.graph,
-                    notes,
-                    message.canvas.data.viewSettings,
-                    project,
-                  );
-                this.sendToRoom(message.canvas.canvasId, {
-                  elements: graphElements,
-                  type: 'CanvasElementsChangedWsdto',
+              const notes: IndexedNoteCollection =
+                await this._databaseService.getNotes({
+                  project: project,
+                  liveCanvas: message.canvas,
                 });
-              })().catch((error: unknown): void => {
-                this._logger.error(error);
+
+              const graphElements: LiveCanvasGraphElementsDto =
+                await this._schemaFactory.createSchemaGraphElements(
+                  message.canvas,
+                  message.graph,
+                  notes,
+                  message.canvas.data.viewSettings,
+                  project,
+                );
+              this.sendToRoom(message.canvas.canvasId, {
+                elements: graphElements,
+                type: 'CanvasElementsChangedWsdto',
               });
             },
           )
@@ -425,7 +418,7 @@ export class WebSocketManager
           )
           .with(
             { type: 'CanvasEventNotesChanged' },
-            async (message: CanvasEventNotesChanged): Promise<void> => {
+            (message: CanvasEventNotesChanged): void => {
               const canvas: Result<'api::canvas.canvas'> =
                 await this._databaseService.getCanvas(message.canvas.canvasId);
 
@@ -624,11 +617,11 @@ export class WebSocketManager
               }
             },
           )
-          .exhaustive(),
-      ).catch((error: unknown): void => {
+          .exhaustive();
+      } catch (error: unknown) {
         this._logger.error(`Error handling room service event: ${event.type}`);
         this._logger.error(error);
-      });
+      }
     });
   }
 }

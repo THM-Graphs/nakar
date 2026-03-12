@@ -1,11 +1,14 @@
-import { ScenarioDto } from './ScenarioDto';
 import { ApiProperty } from '@nestjs/swagger';
 import { UserPreviewDto } from './UserPreviewDto';
 import { ScenarioArgumentDto } from '../../http/routes/canvas-action/dto/ScenarioArgumentDto';
+import { ScenarioParameterDto } from './ScenarioParameterDto';
 
 export class LiveCanvasMetaDataDto {
-  @ApiProperty({ type: ScenarioDto, nullable: true })
-  public scenario: ScenarioDto | null;
+  @ApiProperty({ type: String, nullable: true })
+  public scenarioId: string | null;
+
+  @ApiProperty({ type: ScenarioParameterDto, isArray: true })
+  public parameters: ScenarioParameterDto[];
 
   @ApiProperty({ type: ScenarioArgumentDto, isArray: true })
   public arguments: ScenarioArgumentDto[];
@@ -20,13 +23,15 @@ export class LiveCanvasMetaDataDto {
   public users: UserPreviewDto[];
 
   public constructor(data: {
-    scenario: ScenarioDto | null;
+    scenarioId: string | null;
+    parameters: ScenarioParameterDto[];
     arguments: ScenarioArgumentDto[];
     undoAction: string | null;
     redoAction: string | null;
     users: UserPreviewDto[];
   }) {
-    this.scenario = data.scenario;
+    this.scenarioId = data.scenarioId;
+    this.parameters = data.parameters;
     this.arguments = data.arguments;
     this.undoAction = data.undoAction;
     this.redoAction = data.redoAction;

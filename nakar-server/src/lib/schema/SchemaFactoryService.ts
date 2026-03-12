@@ -23,7 +23,6 @@ import { RoomVisibilityDto } from './dtos/RoomVisibilityDto';
 import { ScenarioGroupDto } from './dtos/ScenarioGroupDto';
 import { ScenarioDto } from './dtos/ScenarioDto';
 import { ScenarioQueryDto } from './dtos/ScenarioQueryDto';
-import { ScenarioParameterDto } from './dtos/ScenarioParameterDto';
 import { ScenarioParameterDataTypeDto } from './dtos/ScenarioParameterDataTypeDto';
 import { RoomDto } from './dtos/RoomDto';
 import { ScenarioCollectionDto } from './dtos/ScenarioCollectionDto';
@@ -58,6 +57,8 @@ import { ScenarioPostActionLayoutAlgorithmDto } from './dtos/ScenarioPostActionL
 import { CommonPropertyDto } from './dtos/CommonPropertyDto';
 import { NodeConfigurationDto } from './dtos/NodeConfigurationDto';
 import { NodeConfigurationTypeDto } from './dtos/NodeConfigurationTypeDto';
+import { LiveCanvasParameter } from '../live-canvas/graph/LiveCanvasParameter';
+import { ScenarioParameterDto } from './dtos/ScenarioParameterDto';
 
 @Injectable()
 export class SchemaFactoryService {
@@ -450,19 +451,16 @@ export class SchemaFactoryService {
     });
   }
 
-  public async createSchemaGraphMetaData(
+  public createSchemaGraphMetaData(
     canvas: LiveCanvas,
     graph: LiveCanvasUndoableData,
     undoWrapperInfo: UndoWrapperInfo | null,
-  ): Promise<LiveCanvasMetaDataDto> {
+  ): LiveCanvasMetaDataDto {
     const t: Profiler = this._logger.startTimer();
     const metaData: LiveCanvasMetaData = graph.metaData;
-    const scenario: Result<'api::scenario.scenario'> | null =
-      metaData.scenarioId != null
-        ? await this._database.getScenarioOrNull(metaData.scenarioId)
-        : null;
+
     const result: LiveCanvasMetaDataDto = {
-      scenario: scenario ? await this.createSchemaScenario(scenario) : null,
+      scenarioId: metaData.scenarioId,
       arguments: metaData.arguments.reduce<ScenarioArgumentDto[]>(
         (
           akku: ScenarioArgumentDto[],
@@ -473,6 +471,16 @@ export class SchemaFactoryService {
           { identifier: key, value: value },
         ],
         [],
+      ),
+      parameters: metaData.parameters.map(
+        (liveCanvasParameter: LiveCanvasParameter): ScenarioParameterDto =>
+          ({
+            identifier: liveCanvasParameter.identifier,
+            title: liveCanvasParameter.title,
+            defaultValue: liveCanvasParameter.defaultValue,
+            dataType: liveCanvasParameter.dataType,
+            allowedLabels: liveCanvasParameter.allowedLabels,
+          }) satisfies ScenarioParameterDto,
       ),
       undoAction: undoWrapperInfo?.undoAction ?? null,
       redoAction: undoWrapperInfo?.redoAction ?? null,

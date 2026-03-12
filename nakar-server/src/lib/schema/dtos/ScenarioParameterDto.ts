@@ -1,5 +1,5 @@
-import { ScenarioParameterDataTypeDto } from './ScenarioParameterDataTypeDto';
 import { ApiProperty } from '@nestjs/swagger';
+import { LiveCanvasParameterDataType } from '../../live-canvas/graph/LiveCanvasParameterDataType';
 
 export class ScenarioParameterDto {
   @ApiProperty()
@@ -14,8 +14,8 @@ export class ScenarioParameterDto {
   @ApiProperty({ nullable: true, type: 'string' })
   public defaultValue: string | null;
 
-  @ApiProperty({ enum: ScenarioParameterDataTypeDto })
-  public dataType: ScenarioParameterDataTypeDto;
+  @ApiProperty({ enum: LiveCanvasParameterDataType })
+  public dataType: LiveCanvasParameterDataType;
 
   @ApiProperty({ type: String, isArray: true })
   public allowedLabels: string[];
@@ -25,7 +25,7 @@ export class ScenarioParameterDto {
     identifier: string;
     title: string;
     defaultValue: string | null;
-    dataType: ScenarioParameterDataTypeDto;
+    dataType: LiveCanvasParameterDataType;
     allowedLabels: string[];
   }) {
     this.id = data.id;

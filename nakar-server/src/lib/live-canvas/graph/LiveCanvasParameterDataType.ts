@@ -1,4 +1,4 @@
-export enum ScenarioParameterDataTypeDto {
+export enum LiveCanvasParameterDataType {
   string = 'string',
   number = 'number',
   json = 'json',
