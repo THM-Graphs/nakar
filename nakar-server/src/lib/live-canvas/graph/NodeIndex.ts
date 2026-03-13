@@ -9,8 +9,14 @@ import { LiveCanvasUndoableData } from '../data/LiveCanvasUndoableData';
 import { PhysicsSimulation } from '../../physics/PhysicsSimulation';
 import { ElementCreationReason } from './ElementCreationReason';
 import { LabelIndex } from './LabelIndex';
+import { DatabaseReferenceCache } from '../../schema/DatabaseReferenceCache';
+import { Result } from '@strapi/types/dist/modules/documents';
+import { Logger } from '@strapi/logger';
+import { createChildLogger } from '../../logger/createChildLogger';
 
 export class NodeIndex {
+  private readonly _logger: Logger = createChildLogger(this);
+
   private readonly _byId: SMap<string, GraphNode>;
 
   private readonly _byLabel: SMap<string, SSet<GraphNode>>;
@@ -73,7 +79,10 @@ export class NodeIndex {
     }
     this._byId.set(node.id, node);
     for (const label of node.labels) {
-      this._labelIndex.add(label, node.source);
+      this._labelIndex.add(label, {
+        id: node.sourceId,
+        title: node.sourceTitle,
+      });
     }
     for (const property of node.properties.properties) {
       this._addToPropertyHistogram(property[0], property[1], 1);
@@ -85,8 +94,8 @@ export class NodeIndex {
       );
     }
     this._bySource.set(
-      node.source,
-      (this._bySource.get(node.source) ?? new SSet()).byAdding(node),
+      node.sourceId,
+      (this._bySource.get(node.sourceId) ?? new SSet()).byAdding(node),
     );
     for (const compressed of node.compressed) {
       this._compressed.add(compressed);
@@ -94,19 +103,23 @@ export class NodeIndex {
     return true;
   }
 
-  public addNeo4jNodes(
+  public async addNeo4jNodes(
     nodes: SMap<string, Neo4jNode>,
     creationAction: ElementCreationReason,
-  ): void {
-    for (const node of nodes) {
-      this.addNeo4jNode(node[1], creationAction);
-    }
+    databaseCache: DatabaseReferenceCache,
+  ): Promise<void> {
+    await Promise.all(
+      nodes.toValueArray().map(async (node: Neo4jNode): Promise<void> => {
+        await this.addNeo4jNode(node, creationAction, databaseCache);
+      }),
+    );
   }
 
-  public addNeo4jNode(
+  public async addNeo4jNode(
     node: Neo4jNode,
     creationAction: ElementCreationReason,
-  ): GraphNode | null {
+    databaseCache: DatabaseReferenceCache,
+  ): Promise<GraphNode | null> {
     const mutableNode: GraphNode = new GraphNode({
       id: node.node.elementId,
       labels: new SSet<string>(node.node.labels),
@@ -115,9 +128,12 @@ export class NodeIndex {
       namesInQuery: node.keys,
       locked: false,
       grabs: new SSet(),
-      source: node.source.nakarId,
+      sourceId: node.source.nakarId,
+      sourceTitle: node.source.nakarTitle,
       compressed: new SSet(),
       creationAction: creationAction,
+      url: await this._getUrl(node, databaseCache),
+      coverImageUrl: await this._getCoverImageUrl(node, databaseCache),
     });
     PhysicsSimulation.jiggle(mutableNode);
 
@@ -150,7 +166,7 @@ export class NodeIndex {
       this._addToPropertyHistogram(propertyEntry[0], propertyEntry[1], -1);
     }
 
-    this._bySource.get(node.source)?.delete(node);
+    this._bySource.get(node.sourceId)?.delete(node);
     for (const compressed of node.compressed) {
       this._compressed.delete(compressed);
     }
@@ -236,5 +252,85 @@ export class NodeIndex {
     if (this._propertyHistogram.get(key)?.size === 0) {
       this._propertyHistogram.delete(key);
     }
+  }
+
+  private async _getCoverImageUrl(
+    node: Neo4jNode,
+    databaseCache: DatabaseReferenceCache,
+  ): Promise<URL | null> {
+    const nodeConfigs: Result<'api::node-configuration.node-configuration'>[] =
+      await databaseCache.getNodeConfigurations(node.source.nakarId);
+    for (const nodeConfig of nodeConfigs) {
+      if (
+        nodeConfig.label == null ||
+        nodeConfig.linkTemplate == null ||
+        nodeConfig.property == null ||
+        nodeConfig.type !== 'image'
+      ) {
+        continue;
+      }
+      if (!node.node.labels.includes(nodeConfig.label)) {
+        continue;
+      }
+      const propertyValue: unknown = node.node.properties[nodeConfig.property];
+      const value: string | null =
+        typeof propertyValue === 'string' ? propertyValue : null;
+      if (value == null) {
+        continue;
+      }
+      const template: HandlebarsTemplateDelegate = Handlebars.compile(
+        nodeConfig.linkTemplate,
+      );
+      const link: string = template({ value: encodeURIComponent(value) });
+
+      try {
+        return new URL(link);
+      } catch (error: unknown) {
+        this._logger.warn(
+          `Cannot create url of string '${link}': ${JSON.stringify(error)}`,
+        );
+      }
+    }
+    return null;
+  }
+
+  private async _getUrl(
+    node: Neo4jNode,
+    databaseCache: DatabaseReferenceCache,
+  ): Promise<URL | null> {
+    const nodeConfigs: Result<'api::node-configuration.node-configuration'>[] =
+      await databaseCache.getNodeConfigurations(node.source.nakarId);
+    for (const nodeConfig of nodeConfigs) {
+      if (
+        nodeConfig.label == null ||
+        nodeConfig.linkTemplate == null ||
+        nodeConfig.property == null ||
+        nodeConfig.type !== 'link'
+      ) {
+        continue;
+      }
+      if (!node.node.labels.includes(nodeConfig.label)) {
+        continue;
+      }
+      const propertyValue: unknown = node.node.properties[nodeConfig.property];
+      const value: string | null =
+        typeof propertyValue === 'string' ? propertyValue : null;
+      if (value == null) {
+        continue;
+      }
+      const template: HandlebarsTemplateDelegate = Handlebars.compile(
+        nodeConfig.linkTemplate,
+      );
+      const link: string = template({ value: encodeURIComponent(value) });
+
+      try {
+        return new URL(link);
+      } catch (error: unknown) {
+        this._logger.warn(
+          `Cannot create url of string '${link}': ${JSON.stringify(error)}`,
+        );
+      }
+    }
+    return null;
   }
 }

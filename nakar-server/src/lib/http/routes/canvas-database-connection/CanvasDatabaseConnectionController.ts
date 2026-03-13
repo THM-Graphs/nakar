@@ -33,6 +33,7 @@ import { ExpandNodePreviewEntryDto } from './dto/ExpandNodePreviewEntryDto';
 import { ExpandNodePreviewEntry } from '../../../neo4j/expand-node-preview/ExpandNodePreviewEntry';
 import { UserCanAccessRoom } from '../../guards/UserCanAccessRoom';
 import { CanvasBelongsToRoom } from '../../guards/CanvasBelongsToRoom';
+import { DatabaseReferenceCache } from '../../../schema/DatabaseReferenceCache';
 
 @Controller('room/:roomId/canvas/:canvasId/database-connection/:databaseId')
 @ApiParam({
@@ -95,9 +96,18 @@ export class CanvasDatabaseConnectionController {
     });
 
     const graph: LiveCanvasUndoableData = LiveCanvasUndoableData.empty();
-    for (const node of result) {
-      graph.nodes.addNeo4jNode(node, ElementCreationReason.search);
-    }
+    const databaseCache: DatabaseReferenceCache = new DatabaseReferenceCache(
+      this._database,
+    );
+    await Promise.all(
+      result.map(async (node: Neo4jNode): Promise<void> => {
+        await graph.nodes.addNeo4jNode(
+          node,
+          ElementCreationReason.search,
+          databaseCache,
+        );
+      }),
+    );
 
     return {
       nodes: graph.nodes.nodes
@@ -107,7 +117,6 @@ export class CanvasDatabaseConnectionController {
             id: node.id,
             title: node.getTitle(),
             labels: node.labels,
-            customColor: null, // TODO
           } satisfies NodePreviewDto;
         }),
     };

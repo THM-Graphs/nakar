@@ -19,7 +19,8 @@ export class GraphEdge {
     compressed: z.array(z.string()),
     properties: PropertyCollection.schema,
     namesInQuery: z.array(z.string()),
-    source: z.string(),
+    sourceId: z.string().nullable(),
+    sourceTitle: z.string().nullable(),
     creationAction: z.nativeEnum(ElementCreationReason),
   });
 
@@ -30,7 +31,8 @@ export class GraphEdge {
   public readonly compressed: SSet<string>;
   public readonly properties: PropertyCollection;
   public readonly namesInQuery: SSet<string>;
-  public readonly source: string;
+  public readonly sourceId: string | null;
+  public readonly sourceTitle: string | null;
   public readonly creationAction: ElementCreationReason;
 
   public constructor(data: {
@@ -41,7 +43,8 @@ export class GraphEdge {
     compressed: SSet<string>;
     properties: PropertyCollection;
     namesInQuery: SSet<string>;
-    source: string;
+    sourceId: string | null;
+    sourceTitle: string | null;
     creationAction: ElementCreationReason;
   }) {
     this.id = data.id;
@@ -51,7 +54,8 @@ export class GraphEdge {
     this.compressed = data.compressed;
     this.properties = data.properties;
     this.namesInQuery = data.namesInQuery;
-    this.source = data.source;
+    this.sourceId = data.sourceId;
+    this.sourceTitle = data.sourceTitle;
     this.creationAction = data.creationAction;
   }
 
@@ -84,7 +88,8 @@ export class GraphEdge {
       compressed: new SSet(data.compressed),
       properties: PropertyCollection.fromPlain(data.properties),
       namesInQuery: new SSet(data.namesInQuery),
-      source: data.source,
+      sourceId: data.sourceId,
+      sourceTitle: data.sourceTitle,
       creationAction: data.creationAction,
     });
   }
@@ -126,7 +131,8 @@ export class GraphEdge {
       compressed: this.compressed.toArray(),
       properties: this.properties.toPlain(),
       namesInQuery: this.namesInQuery.toArray(),
-      source: this.source,
+      sourceId: this.sourceId,
+      sourceTitle: this.sourceTitle,
       creationAction: this.creationAction,
     };
   }
@@ -212,7 +218,8 @@ export class GraphEdge {
       compressed: this.compressed.copy(),
       properties: this.properties.copy(),
       namesInQuery: this.namesInQuery.copy(),
-      source: this.source,
+      sourceId: this.sourceId,
+      sourceTitle: this.sourceTitle,
       creationAction: this.creationAction,
     });
   }
@@ -226,7 +233,8 @@ export class GraphEdge {
       compressed: this.compressed.copy(),
       properties: this.properties.copy(),
       namesInQuery: this.namesInQuery.copy(),
-      source: this.source,
+      sourceId: this.sourceId,
+      sourceTitle: this.sourceTitle,
       creationAction: this.creationAction,
     });
   }
@@ -240,7 +248,8 @@ export class GraphEdge {
       compressed: this.compressed.copy(),
       properties: this.properties.copy(),
       namesInQuery: this.namesInQuery.copy(),
-      source: this.source,
+      sourceId: this.sourceId,
+      sourceTitle: this.sourceTitle,
       creationAction: this.creationAction,
     });
   }

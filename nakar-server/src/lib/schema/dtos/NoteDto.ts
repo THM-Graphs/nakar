@@ -19,22 +19,17 @@ export class NoteDto {
   @ApiProperty()
   public dateTime: string;
 
-  @ApiProperty({ type: ColorDto, nullable: true })
-  public color: ColorDto | null;
-
   public constructor(data: {
     id: string;
     content: string;
     nodes: NodePreviewDto[];
     author: UserPreviewDto | null;
     dateTime: string;
-    color: ColorDto | null;
   }) {
     this.id = data.id;
     this.content = data.content;
     this.nodes = data.nodes;
     this.author = data.author;
     this.dateTime = data.dateTime;
-    this.color = data.color;
   }
 }

@@ -39,8 +39,11 @@ export class EdgeDto {
   @ApiProperty({ type: [String] })
   public namesInQuery: string[];
 
-  @ApiProperty()
-  public source: string;
+  @ApiProperty({ type: String, nullable: true })
+  public sourceId: string | null;
+
+  @ApiProperty({ type: String, nullable: true })
+  public sourceTitle: string | null;
 
   @ApiProperty()
   public clusterSize: number;
@@ -66,7 +69,8 @@ export class EdgeDto {
     width: number;
     properties: Record<string, unknown>;
     namesInQuery: string[];
-    source: string;
+    sourceId: string | null;
+    sourceTitle: string | null;
     clusterSize: number;
     sourceNode: NodePreviewDto;
     targetNode: NodePreviewDto;
@@ -83,7 +87,8 @@ export class EdgeDto {
     this.width = data.width;
     this.properties = data.properties;
     this.namesInQuery = data.namesInQuery;
-    this.source = data.source;
+    this.sourceId = data.sourceId;
+    this.sourceTitle = data.sourceTitle;
     this.clusterSize = data.clusterSize;
     this.sourceNode = data.sourceNode;
     this.targetNode = data.targetNode;

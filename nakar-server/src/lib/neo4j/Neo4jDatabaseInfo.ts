@@ -6,6 +6,7 @@ export class Neo4jDatabaseInfo {
   public readonly password: string;
   public readonly database: string | null;
   public readonly nakarId: string;
+  public readonly nakarTitle: string | null;
 
   public constructor(data: {
     url: string;
@@ -13,12 +14,14 @@ export class Neo4jDatabaseInfo {
     password: string;
     database: string | null;
     nakarId: string;
+    nakarTitle: string | null;
   }) {
     this.url = data.url;
     this.username = data.username;
     this.password = data.password;
     this.database = data.database;
     this.nakarId = data.nakarId;
+    this.nakarTitle = data.nakarTitle;
   }
 
   public static parse(
@@ -40,6 +43,7 @@ export class Neo4jDatabaseInfo {
       password: database.password,
       database: database.database ?? null,
       nakarId: database.documentId,
+      nakarTitle: database.title ?? null,
     });
   }
 }

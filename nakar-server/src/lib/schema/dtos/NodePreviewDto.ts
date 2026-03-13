@@ -1,4 +1,3 @@
-import { ColorDto } from './ColorDto';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class NodePreviewDto {
@@ -11,18 +10,9 @@ export class NodePreviewDto {
   @ApiProperty({ isArray: true, type: 'string' })
   public labels: string[];
 
-  @ApiProperty({ type: ColorDto, nullable: true })
-  public customColor: ColorDto | null;
-
-  public constructor(data: {
-    id: string;
-    titel: string;
-    labels: string[];
-    customColor: ColorDto;
-  }) {
+  public constructor(data: { id: string; title: string; labels: string[] }) {
     this.id = data.id;
-    this.title = data.titel;
+    this.title = data.title;
     this.labels = data.labels;
-    this.customColor = data.customColor;
   }
 }

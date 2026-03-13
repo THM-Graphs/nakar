@@ -9,11 +9,7 @@ import { Range } from '../../range/Range';
 import { LiveCanvasViewSettings } from '../data/LiveCanvasViewSettings';
 import { LiveCanvasLabelViewSettings } from '../data/LiveCanvasLabelViewSettings';
 import { ElementColor } from './color/ElementColor';
-import { DatabaseReferenceCache } from '../../schema/DatabaseReferenceCache';
-import { Result } from '@strapi/types/dist/modules/documents/result';
-import Handlebars from 'handlebars';
-import { Logger } from '@strapi/logger';
-import { createChildLogger } from '../../logger/createChildLogger';
+import { LiveCanvasNote } from '../data/LiveCanvasNote';
 
 export class GraphNode {
   public static readonly defaultRadius: number = 40;
@@ -26,24 +22,29 @@ export class GraphNode {
     position: ElementPosition.schema,
     namesInQuery: z.array(z.string()),
     locked: z.boolean(),
-    source: z.string(),
+    sourceId: z.string(),
+    sourceTitle: z.string().nullable(),
     compressed: z.array(z.string()),
     creationAction: z.nativeEnum(ElementCreationReason),
+    url: z.string().nullable(),
+    coverImageUrl: z.string().nullable(),
   });
 
   public readonly id: string;
   public readonly properties: PropertyCollection;
   public readonly namesInQuery: SSet<string>;
   public readonly grabs: SSet<string>;
-  public readonly source: string;
+  public readonly sourceId: string;
+  public readonly sourceTitle: string | null;
   public readonly compressed: SSet<string>;
   public readonly creationAction: ElementCreationReason;
+  public readonly url: URL | null;
+  public readonly coverImageUrl: URL | null;
 
   private _locked: boolean;
   private _position: ElementPosition;
   private readonly _labels: SSet<string>;
-
-  private readonly _logger: Logger = createChildLogger(this);
+  private readonly _noteReferences: SSet<string>;
 
   public constructor(data: {
     id: string;
@@ -53,9 +54,12 @@ export class GraphNode {
     namesInQuery: SSet<string>;
     locked: boolean;
     grabs: SSet<string>;
-    source: string;
+    sourceId: string;
+    sourceTitle: string | null;
     compressed: SSet<string>;
     creationAction: ElementCreationReason;
+    url: URL | null;
+    coverImageUrl: URL | null;
   }) {
     this.id = data.id;
     this._labels = data.labels;
@@ -64,9 +68,17 @@ export class GraphNode {
     this.namesInQuery = data.namesInQuery;
     this._locked = data.locked;
     this.grabs = data.grabs;
-    this.source = data.source;
+    this.sourceId = data.sourceId;
+    this.sourceTitle = data.sourceTitle;
     this.compressed = data.compressed;
     this.creationAction = data.creationAction;
+    this.url = data.url;
+    this.coverImageUrl = data.coverImageUrl;
+    this._noteReferences = new SSet();
+  }
+
+  public get noteIds(): string[] {
+    return this._noteReferences.toArray();
   }
 
   public get locked(): boolean {
@@ -112,9 +124,13 @@ export class GraphNode {
       namesInQuery: new SSet(data.namesInQuery),
       locked: data.locked,
       grabs: new SSet(),
-      source: data.source,
+      sourceId: data.sourceId,
+      sourceTitle: data.sourceTitle,
       compressed: new SSet(data.compressed),
       creationAction: data.creationAction,
+      url: data.url != null ? URL.parse(data.url) : null,
+      coverImageUrl:
+        data.coverImageUrl != null ? URL.parse(data.coverImageUrl) : null,
     });
   }
 
@@ -179,9 +195,12 @@ export class GraphNode {
       position: this._position,
       namesInQuery: this.namesInQuery.toArray(),
       locked: this._locked,
-      source: this.source,
+      sourceId: this.sourceId,
+      sourceTitle: this.sourceTitle,
       compressed: this.compressed.toArray(),
       creationAction: this.creationAction,
+      url: this.url?.href ?? null,
+      coverImageUrl: this.coverImageUrl?.href ?? null,
     };
   }
 
@@ -213,84 +232,6 @@ export class GraphNode {
     return outRelsCount;
   }
 
-  public async getCoverImageUrl(
-    databaseCache: DatabaseReferenceCache,
-  ): Promise<URL | null> {
-    const nodeConfigs: Result<'api::node-configuration.node-configuration'>[] =
-      await databaseCache.getNodeConfigurations(this.source);
-    for (const nodeConfig of nodeConfigs) {
-      if (
-        nodeConfig.label == null ||
-        nodeConfig.linkTemplate == null ||
-        nodeConfig.property == null ||
-        nodeConfig.type !== 'image'
-      ) {
-        continue;
-      }
-      if (!this._labels.has(nodeConfig.label)) {
-        continue;
-      }
-      const value: string | null = this.properties.getStringValueOfProperty(
-        nodeConfig.property,
-      );
-      if (value == null) {
-        continue;
-      }
-      const template: HandlebarsTemplateDelegate = Handlebars.compile(
-        nodeConfig.linkTemplate,
-      );
-      const link: string = template({ value: encodeURIComponent(value) });
-
-      try {
-        return new URL(link);
-      } catch (error: unknown) {
-        this._logger.warn(
-          `Cannot create url of string '${link}': ${JSON.stringify(error)}`,
-        );
-      }
-    }
-    return null;
-  }
-
-  public async getUrl(
-    databaseCache: DatabaseReferenceCache,
-  ): Promise<URL | null> {
-    const nodeConfigs: Result<'api::node-configuration.node-configuration'>[] =
-      await databaseCache.getNodeConfigurations(this.source);
-    for (const nodeConfig of nodeConfigs) {
-      if (
-        nodeConfig.label == null ||
-        nodeConfig.linkTemplate == null ||
-        nodeConfig.property == null ||
-        nodeConfig.type !== 'link'
-      ) {
-        continue;
-      }
-      if (!this._labels.has(nodeConfig.label)) {
-        continue;
-      }
-      const value: string | null = this.properties.getStringValueOfProperty(
-        nodeConfig.property,
-      );
-      if (value == null) {
-        continue;
-      }
-      const template: HandlebarsTemplateDelegate = Handlebars.compile(
-        nodeConfig.linkTemplate,
-      );
-      const link: string = template({ value: encodeURIComponent(value) });
-
-      try {
-        return new URL(link);
-      } catch (error: unknown) {
-        this._logger.warn(
-          `Cannot create url of string '${link}': ${JSON.stringify(error)}`,
-        );
-      }
-    }
-    return null;
-  }
-
   public copy(): GraphNode {
     return new GraphNode({
       id: this.id,
@@ -300,9 +241,16 @@ export class GraphNode {
       namesInQuery: this.namesInQuery.copy(),
       locked: this._locked,
       grabs: this.grabs.copy(),
-      source: this.source,
+      sourceId: this.sourceId,
+      sourceTitle: this.sourceTitle,
       compressed: this.compressed.copy(),
       creationAction: this.creationAction,
+      url: this.url,
+      coverImageUrl: this.coverImageUrl,
     });
+  }
+
+  public addNoteReference(note: LiveCanvasNote): void {
+    this._noteReferences.add(note.id);
   }
 }

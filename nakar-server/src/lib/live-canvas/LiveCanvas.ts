@@ -45,6 +45,9 @@ import { CanvasEventUserJoined } from './events/CanvasEventUserJoined';
 import { CanvasEventUserLeft } from './events/CanvasEventUserLeft';
 import { CanvasEventCursorChanged } from './events/CanvasEventCursorChanged';
 import z from 'zod';
+import { DatabaseReferenceCache } from '../schema/DatabaseReferenceCache';
+import { IndexedNoteCollection } from '../database/IndexedNoteCollection';
+import { LiveCanvasNote } from './data/LiveCanvasNote';
 
 export class LiveCanvas {
   private readonly _logger: Logger = createChildLogger(this);
@@ -382,17 +385,24 @@ export class LiveCanvas {
         const positionsCache: PositionsCache = PositionsCache.fromGraph(graph);
 
         if (!params.additive) {
-          graph.resetFromInitialScenario(scenario, params.arguments);
+          graph.resetFromInitialScenario(
+            scenario,
+            params.arguments,
+            parameters,
+          );
           changeRecorder.didAddOrRemoveGraphElements();
           changeRecorder.didAddOrRemoveTableData();
         }
 
         graph.tableData = tableData;
         changeRecorder.didAddOrRemoveTableData();
+        const databaseCache: DatabaseReferenceCache =
+          new DatabaseReferenceCache(this._database);
         for (const graphElements of graphElementsList) {
-          graph.nodes.addNeo4jNodes(
+          await graph.nodes.addNeo4jNodes(
             graphElements.nodes,
             ElementCreationReason.loadScenario,
+            databaseCache,
           );
           graph.edges.addNeo4jEdges(
             graphElements.relationships,
@@ -512,7 +522,7 @@ export class LiveCanvas {
           }
 
           const database: Result<'api::database-connection.database-connection'> =
-            await this._database.getDatabase(node.source);
+            await this._database.getDatabase(node.sourceId);
 
           const neo4jDatabaseInfo: Neo4jDatabaseInfo =
             Neo4jDatabaseInfo.parse(database);
@@ -551,12 +561,16 @@ export class LiveCanvas {
             }
           }
 
+          const databaseCache: DatabaseReferenceCache =
+            new DatabaseReferenceCache(this._database);
           for (const newNode of expandResult.nodes) {
             if (!graph.nodes.hasById(newNode[0])) {
-              const insertedNode: GraphNode | null = graph.nodes.addNeo4jNode(
-                newNode[1],
-                ElementCreationReason.expand,
-              );
+              const insertedNode: GraphNode | null =
+                await graph.nodes.addNeo4jNode(
+                  newNode[1],
+                  ElementCreationReason.expand,
+                  databaseCache,
+                );
               if (insertedNode != null) {
                 insertedNode.position.x = node.position.x;
                 insertedNode.position.y = node.position.y;
@@ -599,7 +613,7 @@ export class LiveCanvas {
 
   public focusNodes(params: { nodeIds: readonly string[] }): void {
     this._queue.addTask(
-      new TaskQueueTask('Focus nodes', (): void => {
+      new TaskQueueTask('Focus nodes', async (): Promise<void> => {
         const changeRecorder: LiveCanvasChangeRecorder =
           new LiveCanvasChangeRecorder();
         const graph: LiveCanvasUndoableData = this._snapshot(
@@ -620,6 +634,7 @@ export class LiveCanvas {
           changeRecorder.didAddOrRemoveGraphElements();
         }
 
+        await this._postProcessGraph(changeRecorder);
         this._handleChangeRecorder(changeRecorder);
       }),
     );
@@ -632,7 +647,7 @@ export class LiveCanvas {
     edgeTypes: readonly string[];
   }): void {
     this._queue.addTask(
-      new TaskQueueTask('Deleting nodes', (): void => {
+      new TaskQueueTask('Deleting nodes', async (): Promise<void> => {
         const nodesToDelete: SSet<GraphNode> = new SSet<GraphNode>();
         const edgesToDelete: SSet<GraphEdge> = new SSet<GraphEdge>();
 
@@ -693,6 +708,7 @@ export class LiveCanvas {
           changeRecorder.didAddOrRemoveGraphElements();
         }
 
+        await this._postProcessGraph(changeRecorder);
         this._handleChangeRecorder(changeRecorder);
         this._triggerPhysicsSimluation({ amount: 'short' });
       }),
@@ -777,9 +793,12 @@ export class LiveCanvas {
           graph.tableData = graphElements.tableData;
           changeRecorder.didAddOrRemoveTableData();
         }
-        graph.nodes.addNeo4jNodes(
+        const databaseCache: DatabaseReferenceCache =
+          new DatabaseReferenceCache(this._database);
+        await graph.nodes.addNeo4jNodes(
           graphElements.nodes,
           ElementCreationReason.query,
+          databaseCache,
         );
         graph.edges.addNeo4jEdges(
           graphElements.relationships,
@@ -804,6 +823,7 @@ export class LiveCanvas {
 
         await this._connectResultNodes(changeRecorder);
 
+        await this._postProcessGraph(changeRecorder);
         this._handleChangeRecorder(changeRecorder);
         this._triggerPhysicsSimluation({ amount: 'short' });
       }),
@@ -867,7 +887,7 @@ export class LiveCanvas {
 
   public removeDanglingNodes(): void {
     this._queue.addTask(
-      new TaskQueueTask('Removing dangling nodes', (): void => {
+      new TaskQueueTask('Removing dangling nodes', async (): Promise<void> => {
         const oldGraph: LiveCanvasUndoableData = this.getGraph();
 
         const ids: readonly string[] = oldGraph.nodes.nodes
@@ -887,6 +907,7 @@ export class LiveCanvas {
           changeRecorder.didAddOrRemoveGraphElements();
         }
 
+        await this._postProcessGraph(changeRecorder);
         this._handleChangeRecorder(changeRecorder);
         this._triggerPhysicsSimluation({ amount: 'short' });
       }),
@@ -895,26 +916,32 @@ export class LiveCanvas {
 
   public compressRelationships(): void {
     this._queue.addTask(
-      new TaskQueueTask('Compressing relationships', (): void => {
-        const changeRecorder: LiveCanvasChangeRecorder =
-          new LiveCanvasChangeRecorder();
-        this._snapshot('Compress relationships', changeRecorder);
+      new TaskQueueTask(
+        'Compressing relationships',
+        async (): Promise<void> => {
+          const changeRecorder: LiveCanvasChangeRecorder =
+            new LiveCanvasChangeRecorder();
+          this._snapshot('Compress relationships', changeRecorder);
 
-        this._compressRelationships(changeRecorder);
-        this._handleChangeRecorder(changeRecorder);
-      }),
+          this._compressRelationships(changeRecorder);
+
+          await this._postProcessGraph(changeRecorder);
+          this._handleChangeRecorder(changeRecorder);
+        },
+      ),
     );
   }
 
   public compressNodes(params: { label: string }): void {
     this._queue.addTask(
-      new TaskQueueTask('Compressing nodes', (): void => {
+      new TaskQueueTask('Compressing nodes', async (): Promise<void> => {
         const changeRecorder: LiveCanvasChangeRecorder =
           new LiveCanvasChangeRecorder();
         this._snapshot('Compress nodes', changeRecorder);
 
         this._compressNodes(params.label, changeRecorder);
 
+        await this._postProcessGraph(changeRecorder);
         this._handleChangeRecorder(changeRecorder);
         this._triggerPhysicsSimluation({ amount: 'short' });
       }),
@@ -971,9 +998,9 @@ export class LiveCanvas {
                 );
               }
 
-              if (nodeA.source !== nodeB.source) {
+              if (nodeA.sourceId !== nodeB.sourceId) {
                 this._logger.warn(
-                  `Cannot calculate shortest path between ${idA} and ${idB}: Sources are not equal: Node A: ${nodeA.source}, Node B: ${nodeB.source}`,
+                  `Cannot calculate shortest path between ${idA} and ${idB}: Sources are not equal: Node A: ${nodeA.sourceId}, Node B: ${nodeB.sourceId}`,
                 );
                 continue;
               }
@@ -982,7 +1009,7 @@ export class LiveCanvas {
                 `Will calculate shortest path between ${idA} and ${idB}`,
               );
 
-              const source: string = nodeA.source;
+              const source: string = nodeA.sourceId;
               const dbDocument: Result<'api::database-connection.database-connection'> =
                 await this._database.getDatabase(source);
 
@@ -1012,10 +1039,13 @@ export class LiveCanvas {
             changeRecorder,
           );
 
+          const databaseCache: DatabaseReferenceCache =
+            new DatabaseReferenceCache(this._database);
           for (const result of results) {
-            graph.nodes.addNeo4jNodes(
+            await graph.nodes.addNeo4jNodes(
               result.nodes,
               ElementCreationReason.expand,
+              databaseCache,
             );
             graph.edges.addNeo4jEdges(
               result.relationships,
@@ -1058,9 +1088,12 @@ export class LiveCanvas {
           changeRecorder,
         );
 
-        graph.nodes.addNeo4jNode(
+        const databaseCache: DatabaseReferenceCache =
+          new DatabaseReferenceCache(this._database);
+        await graph.nodes.addNeo4jNode(
           result.nodes.toValueArray()[0],
           ElementCreationReason.search,
+          databaseCache,
         );
         changeRecorder.didAddOrRemoveGraphElements();
 
@@ -1073,13 +1106,33 @@ export class LiveCanvas {
   }
 
   public setViewSettings(newViewSettings: LiveCanvasViewSettings): void {
-    const changeRecorder: LiveCanvasChangeRecorder =
-      new LiveCanvasChangeRecorder();
-    this.data.viewSettings = newViewSettings;
-    changeRecorder.didChangeViewSettings();
+    this._queue.addTask(
+      new TaskQueueTask('Setting view settings', async (): Promise<void> => {
+        const changeRecorder: LiveCanvasChangeRecorder =
+          new LiveCanvasChangeRecorder();
+        this.data.viewSettings = newViewSettings;
+        changeRecorder.didChangeViewSettings();
 
-    this._handleChangeRecorder(changeRecorder);
-    this._physicsWorker.triggerPhysics({ amount: 'short' });
+        await this._postProcessGraph(changeRecorder);
+        this._handleChangeRecorder(changeRecorder);
+        this._physicsWorker.triggerPhysics({ amount: 'short' });
+      }),
+    );
+  }
+
+  public resetViewSettings(): void {
+    this._queue.addTask(
+      new TaskQueueTask('Resetting view settings', async (): Promise<void> => {
+        const changeRecorder: LiveCanvasChangeRecorder =
+          new LiveCanvasChangeRecorder();
+        this._data.viewSettings = LiveCanvasViewSettings.defaultViewSettings();
+        changeRecorder.didChangeViewSettings();
+
+        await this._postProcessGraph(changeRecorder);
+        this._handleChangeRecorder(changeRecorder);
+        this._physicsWorker.triggerPhysics({ amount: 'short' });
+      }),
+    );
   }
 
   public async saveGraph(): Promise<void> {
@@ -1173,21 +1226,11 @@ export class LiveCanvas {
     }
   }
 
-  public resetViewSettings(): void {
-    const changeRecorder: LiveCanvasChangeRecorder =
-      new LiveCanvasChangeRecorder();
-    this._data.viewSettings = LiveCanvasViewSettings.defaultViewSettings();
-    changeRecorder.didChangeViewSettings();
-    this._handleChangeRecorder(changeRecorder);
-    this._physicsWorker.triggerPhysics({ amount: 'short' });
-  }
-
   private _handleWTEventPhysicsUpdate(event: WTEventPhysicsUpdate): void {
     const graph: LiveCanvasUndoableData = this.getGraph();
     graph.applyPhysicalGraph(event.graph);
     this._onEvent.next({
       type: 'CanvasEventRoomPhysicsUpdated',
-      graph: graph,
       canvas: this,
       performance: event.performance,
     } satisfies CanvasEvent);
@@ -1232,7 +1275,8 @@ export class LiveCanvas {
               compressed: edgesToCompress.map((e: GraphEdge): string => e.id),
             }),
             type: edgesToCompress[0].type,
-            source: edgesToCompress[0].source,
+            sourceId: edgesToCompress[0].sourceId,
+            sourceTitle: edgesToCompress[0].sourceTitle,
             startNodeId: edgesToCompress[0].startNodeId,
             endNodeId: edgesToCompress[0].endNodeId,
             compressed: new SSet(
@@ -1350,23 +1394,9 @@ export class LiveCanvas {
                 compressed: new SSet(),
                 startNodeId: originalNode.id,
                 endNodeId: mergeNode.id,
-                source: originalNode.source,
-                type: 'MERGED_WITH',
-                properties: new PropertyCollection({
-                  properties: new SMap([['merge', mergeConfig]]),
-                }),
-                namesInQuery: new SSet(),
-                creationAction: ElementCreationReason.merge,
-              }),
-            );
-            graph.edges.add(
-              new GraphEdge({
-                id: v4(),
-                compressed: new SSet(),
-                startNodeId: mergeNode.id,
-                endNodeId: originalNode.id,
-                source: mergeNode.source,
-                type: 'MERGED_WITH',
+                sourceId: originalNode.sourceId,
+                sourceTitle: originalNode.sourceTitle,
+                type: 'CONNECTED_TO',
                 properties: new PropertyCollection({
                   properties: new SMap([['merge', mergeConfig]]),
                 }),
@@ -1454,6 +1484,50 @@ export class LiveCanvas {
       changeRecorder.didAddOrRemoveGraphElements();
     }
     await this._mergeNodes(changeRecorder);
+
+    // Notes
+    const canvas: Result<'api::canvas.canvas'> = await this._database.getCanvas(
+      this.canvasId,
+    );
+    const project: Result<'api::project.project'> =
+      await this._database.getProjectOfCanvas(canvas);
+    const notes: IndexedNoteCollection = await this._database.getNotes({
+      project: project,
+      liveCanvas: this,
+    });
+    this.data.undoableData.current.notes = (
+      await Promise.all(
+        notes.notes
+          .toArray()
+          .map(
+            async (
+              dbNote: Result<'api::note.note'>,
+            ): Promise<LiveCanvasNote> => {
+              return await LiveCanvasNote.fromDb(dbNote, this._database, this);
+            },
+          ),
+      )
+    ).reduce(
+      (
+        akku: SMap<string, LiveCanvasNote>,
+        next: LiveCanvasNote,
+      ): SMap<string, LiveCanvasNote> => {
+        return akku.bySetting(next.id, next);
+      },
+      new SMap<string, LiveCanvasNote>(),
+    );
+    for (const note of this.data.undoableData.current.notes.toValueArray()) {
+      for (const nodeReference of note.nodes) {
+        const node: GraphNode | null = this.getGraph().nodes.get(
+          nodeReference.id,
+        );
+        if (node == null) {
+          continue;
+        }
+        node.addNoteReference(note);
+      }
+    }
+
     task.done({
       message: 'Post Process Graph',
     });
@@ -1490,7 +1564,8 @@ export class LiveCanvas {
             akku.byMerging(new SSet(next.labels)),
           new SSet<string>(),
         ),
-        source: node.source,
+        sourceId: node.sourceId,
+        sourceTitle: node.sourceTitle,
         locked: node.locked,
         properties: PropertyCollection.empty(),
         namesInQuery: clusterBuddies.reduce(
@@ -1500,6 +1575,8 @@ export class LiveCanvas {
         ),
         compressed: clusterBuddies.map((n: GraphNode): string => n.id),
         creationAction: ElementCreationReason.compress,
+        url: null,
+        coverImageUrl: null,
       });
       graph.nodes.add(newNode);
       changeRecorder.didAddOrRemoveGraphElements();

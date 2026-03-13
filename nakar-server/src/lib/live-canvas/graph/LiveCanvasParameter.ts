@@ -1,5 +1,7 @@
 import z from 'zod';
 import { LiveCanvasParameterDataType } from './LiveCanvasParameterDataType';
+import { Result } from '@strapi/types/dist/modules/documents/result';
+import { match, P } from 'ts-pattern';
 
 export class LiveCanvasParameter {
   // eslint-disable-next-line @typescript-eslint/typedef
@@ -35,6 +37,10 @@ export class LiveCanvasParameter {
     this._allowedLabels = data.allowedLabels;
   }
 
+  public get id(): string {
+    return this._id;
+  }
+
   public get identifier(): string {
     return this._identifier;
   }
@@ -59,6 +65,7 @@ export class LiveCanvasParameter {
     data: z.infer<typeof this.schema>,
   ): LiveCanvasParameter {
     return new LiveCanvasParameter({
+      id: data.id,
       identifier: data.identifier,
       title: data.title,
       defaultValue: data.defaultValue,
@@ -67,8 +74,53 @@ export class LiveCanvasParameter {
     });
   }
 
+  public static fromDb(
+    databaseEntry: Result<'api::query-parameter.query-parameter'>,
+  ): LiveCanvasParameter {
+    return new LiveCanvasParameter({
+      id: databaseEntry.documentId,
+      identifier: databaseEntry.identifier ?? '',
+      title: databaseEntry.title ?? '',
+      defaultValue: databaseEntry.defaultValue ?? null,
+      dataType: match(databaseEntry.dataType)
+        .with(
+          'string',
+          (): LiveCanvasParameterDataType => LiveCanvasParameterDataType.string,
+        )
+        .with(
+          'number',
+          (): LiveCanvasParameterDataType => LiveCanvasParameterDataType.number,
+        )
+        .with(
+          'json',
+          (): LiveCanvasParameterDataType => LiveCanvasParameterDataType.json,
+        )
+        .with(
+          'startDateTime',
+          (): LiveCanvasParameterDataType =>
+            LiveCanvasParameterDataType.startDateTime,
+        )
+        .with(
+          'endDateTime',
+          (): LiveCanvasParameterDataType =>
+            LiveCanvasParameterDataType.endDateTime,
+        )
+        .with(
+          P.nullish,
+          (): LiveCanvasParameterDataType => LiveCanvasParameterDataType.string,
+        )
+        .exhaustive(),
+      allowedLabels:
+        databaseEntry.allowedLabels
+          ?.split(',')
+          .map((al: string): string => al.trim())
+          .filter((al: string): boolean => al.length > 0) ?? [],
+    });
+  }
+
   public toPlain(): z.infer<typeof LiveCanvasParameter.schema> {
     return {
+      id: this._id,
       identifier: this._identifier,
       title: this._title,
       defaultValue: this._defaultValue,
@@ -79,6 +131,7 @@ export class LiveCanvasParameter {
 
   public copy(): LiveCanvasParameter {
     return new LiveCanvasParameter({
+      id: this._id,
       identifier: this._identifier,
       title: this._title,
       defaultValue: this._defaultValue,

@@ -23,7 +23,6 @@ import { match, P } from 'ts-pattern';
 import { Result } from '@strapi/types/dist/modules/documents/result';
 import { DatabaseService } from '../database/DatabaseService';
 import { LiveCanvas } from '../live-canvas/LiveCanvas';
-import { IndexedNoteCollection } from '../database/IndexedNoteCollection';
 import { SchemaFactoryService } from '../schema/SchemaFactoryService';
 import { CanvasEvent } from '../live-canvas/events/CanvasEvent';
 import { CanvasEventGraphTableChanged } from '../live-canvas/events/CanvasEventGraphTableChanged';
@@ -69,6 +68,7 @@ import { CanvasEventUserJoined } from '../live-canvas/events/CanvasEventUserJoin
 import { CanvasEventUserLeft } from '../live-canvas/events/CanvasEventUserLeft';
 import { CanvasEventCursorChanged } from '../live-canvas/events/CanvasEventCursorChanged';
 import { CursorMovedWsdto } from './dto/events/CursorMovedWsdto';
+import { LiveCanvasNote } from '../live-canvas/data/LiveCanvasNote';
 
 export type Server = UntypedServer<ClientToServerEvents, ServerToClientEvents>;
 export type Socket = UntypedSocket<ClientToServerEvents, ServerToClientEvents>;
@@ -349,12 +349,13 @@ export class WebSocketManager
       }
       try {
         match(event)
-          .returnType<void>()
           .with(
             { type: 'CanvasEventGraphTableChanged' },
             (message: CanvasEventGraphTableChanged): void => {
               const table: LiveCanvasTableDataDto =
-                this._schemaFactory.createSchemaTable(message.table);
+                this._schemaFactory.createSchemaTable(
+                  message.canvas.getGraph().tableData,
+                );
               this.sendToRoom(message.canvas.canvasId, {
                 table: table,
                 type: 'CanvasTableDataChangedWsdto',
@@ -365,11 +366,7 @@ export class WebSocketManager
             { type: 'CanvasEventGraphMetaDataChanged' },
             (message: CanvasEventGraphMetaDataChanged): void => {
               const metaData: LiveCanvasMetaDataDto =
-                await this._schemaFactory.createSchemaGraphMetaData(
-                  message.canvas,
-                  message.graph,
-                  message.undoInfo,
-                );
+                this._schemaFactory.createSchemaGraphMetaData(message.canvas);
               this.sendToRoom(message.canvas.canvasId, {
                 metaData: metaData,
                 type: 'CanvasMetaDataChangedWsdto',
@@ -379,26 +376,8 @@ export class WebSocketManager
           .with(
             { type: 'CanvasEventGraphElementsChanged' },
             (message: CanvasEventGraphElementsChanged): void => {
-              const canvas: Result<'api::canvas.canvas'> =
-                await this._databaseService.getCanvas(message.canvas.canvasId);
-
-              const project: Result<'api::project.project'> =
-                await this._databaseService.getProjectOfCanvas(canvas);
-
-              const notes: IndexedNoteCollection =
-                await this._databaseService.getNotes({
-                  project: project,
-                  liveCanvas: message.canvas,
-                });
-
               const graphElements: LiveCanvasGraphElementsDto =
-                await this._schemaFactory.createSchemaGraphElements(
-                  message.canvas,
-                  message.graph,
-                  notes,
-                  message.canvas.data.viewSettings,
-                  project,
-                );
+                this._schemaFactory.createSchemaGraphElements(message.canvas);
               this.sendToRoom(message.canvas.canvasId, {
                 elements: graphElements,
                 type: 'CanvasElementsChangedWsdto',
@@ -419,33 +398,15 @@ export class WebSocketManager
           .with(
             { type: 'CanvasEventNotesChanged' },
             (message: CanvasEventNotesChanged): void => {
-              const canvas: Result<'api::canvas.canvas'> =
-                await this._databaseService.getCanvas(message.canvas.canvasId);
-
-              const project: Result<'api::project.project'> =
-                await this._databaseService.getProjectOfCanvas(canvas);
-
-              const notes: IndexedNoteCollection =
-                await this._databaseService.getNotes({
-                  project: project,
-                  liveCanvas: message.canvas,
-                });
-
               this.sendToRoom(message.canvas.canvasId, {
                 type: 'CanvasNotesChangedWsdto',
-                notes: await Promise.all(
-                  notes.notes
-                    .toArray()
-                    .map(
-                      async (
-                        note: Result<'api::note.note'>,
-                      ): Promise<NoteDto> =>
-                        await this._schemaFactory.createSchemaNote(
-                          note,
-                          message.canvas.getGraph(),
-                        ),
-                    ),
-                ),
+                notes: message.canvas
+                  .getGraph()
+                  .notes.toValueArray()
+                  .map(
+                    (note: LiveCanvasNote): NoteDto =>
+                      this._schemaFactory.createSchemaNote(note),
+                  ),
               });
             },
           )
@@ -459,7 +420,7 @@ export class WebSocketManager
 
                 // const task: Profiler = this._logger.startTimer();
                 const nodesToSend: PhysicalNodeDto[] = [];
-                for (const node of message.graph.nodes.nodes) {
+                for (const node of message.canvas.getGraph().nodes.nodes) {
                   if (!node.grabs.has(socket.id)) {
                     nodesToSend.push({
                       id: node.id,
@@ -557,7 +518,7 @@ export class WebSocketManager
             (message: CanvasEventViewSettingsChanged): void => {
               this.sendToRoom(message.canvas.canvasId, {
                 type: 'CanvasViewSettingsChangedWsdto',
-                viewSettings: message.viewSettings.toSchema(
+                viewSettings: message.canvas.data.viewSettings.toSchema(
                   message.canvas.labels,
                 ),
               });

@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsArray, IsEnum, IsNotEmpty, IsString } from 'class-validator';
-import { ScenarioParameterDataTypeDto } from '../../../../schema/dtos/ScenarioParameterDataTypeDto';
+import { LiveCanvasParameterDataType } from '../../../../live-canvas/graph/LiveCanvasParameterDataType';
 
 export class UpdateScenarioQueryParameterEntryDto {
   @ApiProperty()
@@ -21,9 +21,9 @@ export class UpdateScenarioQueryParameterEntryDto {
   @IsString()
   public defaultValue!: string;
 
-  @ApiProperty({ enum: ScenarioParameterDataTypeDto })
-  @IsEnum(ScenarioParameterDataTypeDto)
-  public dataType!: ScenarioParameterDataTypeDto;
+  @ApiProperty({ enum: LiveCanvasParameterDataType })
+  @IsEnum(LiveCanvasParameterDataType)
+  public dataType!: LiveCanvasParameterDataType;
 
   @ApiProperty({ type: String, isArray: true })
   @IsString({ each: true })

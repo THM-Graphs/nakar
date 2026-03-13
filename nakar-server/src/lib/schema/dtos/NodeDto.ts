@@ -46,8 +46,8 @@ export class NodeDto {
   @ApiProperty({ type: ColorDto, nullable: true })
   public customColor: ColorDto | null;
 
-  @ApiProperty()
-  public source: string;
+  @ApiProperty({ type: String, nullable: true })
+  public source: string | null;
 
   @ApiProperty()
   public sourceId: string;
@@ -95,7 +95,7 @@ export class NodeDto {
     degree: number;
     namesInQuery: string[];
     customColor: ColorDto | null;
-    source: string;
+    source: string | null;
     sourceId: string;
     locked: boolean;
     isCluster: boolean;

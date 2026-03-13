@@ -97,9 +97,7 @@ export class LiveCanvasChangeRecorder {
     if (this._shouldSendMetaDataChangedToUser) {
       onEvent.next({
         type: 'CanvasEventGraphMetaDataChanged',
-        graph: canvas.data.undoableData.current,
         canvas: canvas,
-        undoInfo: canvas.data.undoableData.info,
       } satisfies CanvasEventGraphMetaDataChanged);
     }
     if (this._shouldSendGraphElementsToUserAndWorker) {
@@ -110,7 +108,6 @@ export class LiveCanvasChangeRecorder {
       );
       onEvent.next({
         type: 'CanvasEventGraphElementsChanged',
-        graph: canvas.data.undoableData.current,
         canvas: canvas,
       } satisfies CanvasEventGraphElementsChanged);
     }
@@ -129,7 +126,6 @@ export class LiveCanvasChangeRecorder {
     if (this._shouldSendTableDataToUser) {
       onEvent.next({
         type: 'CanvasEventGraphTableChanged',
-        table: canvas.data.undoableData.current.tableData,
         canvas: canvas,
       } satisfies CanvasEventGraphTableChanged);
     }
@@ -137,7 +133,6 @@ export class LiveCanvasChangeRecorder {
       onEvent.next({
         type: 'CanvasEventViewSettingsChanged',
         canvas: canvas,
-        viewSettings: canvas.data.viewSettings,
       } satisfies CanvasEventViewSettingsChanged);
     }
     if (this._lockChanges.size > 0) {

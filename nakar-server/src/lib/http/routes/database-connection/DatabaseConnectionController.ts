@@ -81,6 +81,7 @@ export class DatabaseConnectionController {
         password: body.password ?? existingDatabase?.password ?? '',
         database: body.database,
         nakarId: body.id ?? existingDatabase?.documentId ?? '',
+        nakarTitle: existingDatabase?.title ?? null,
       });
 
       const dbInfo: GetDatabaseStatsResponseBodyDto =

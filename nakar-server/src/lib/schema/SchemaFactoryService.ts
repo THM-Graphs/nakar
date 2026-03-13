@@ -7,9 +7,7 @@ import { SSet } from '../set/Set';
 import { PropertyCollection } from '../live-canvas/graph/PropertyCollection';
 import { DatabaseService } from '../database/DatabaseService';
 import { DatabaseReferenceCache } from './DatabaseReferenceCache';
-import { UndoWrapperInfo } from '../undo/UndoWrapperInfo';
 import { Result } from '@strapi/types/dist/modules/documents/result';
-import { IndexedNoteCollection } from '../database/IndexedNoteCollection';
 import { Range } from '../range/Range';
 import { Logger } from '@strapi/logger';
 import { createChildLogger } from '../logger/createChildLogger';
@@ -23,7 +21,6 @@ import { RoomVisibilityDto } from './dtos/RoomVisibilityDto';
 import { ScenarioGroupDto } from './dtos/ScenarioGroupDto';
 import { ScenarioDto } from './dtos/ScenarioDto';
 import { ScenarioQueryDto } from './dtos/ScenarioQueryDto';
-import { ScenarioParameterDataTypeDto } from './dtos/ScenarioParameterDataTypeDto';
 import { RoomDto } from './dtos/RoomDto';
 import { ScenarioCollectionDto } from './dtos/ScenarioCollectionDto';
 import { DatabaseConnectionDto } from './dtos/DatabaseConnectionDto';
@@ -59,6 +56,9 @@ import { NodeConfigurationDto } from './dtos/NodeConfigurationDto';
 import { NodeConfigurationTypeDto } from './dtos/NodeConfigurationTypeDto';
 import { LiveCanvasParameter } from '../live-canvas/graph/LiveCanvasParameter';
 import { ScenarioParameterDto } from './dtos/ScenarioParameterDto';
+import { LabelIndexLabelSource } from '../live-canvas/graph/LabelIndexLabelSource';
+import { LiveCanvasNote } from '../live-canvas/data/LiveCanvasNote';
+import { LiveCanvasNoteNodeReference } from '../live-canvas/data/LiveCanvasNoteNodeReference';
 
 @Injectable()
 export class SchemaFactoryService {
@@ -267,47 +267,15 @@ export class SchemaFactoryService {
   public createSchemaScenarioParameter(
     scenarioParameter: Result<'api::query-parameter.query-parameter'>,
   ): ScenarioParameterDto {
+    const native: LiveCanvasParameter =
+      LiveCanvasParameter.fromDb(scenarioParameter);
     return new ScenarioParameterDto({
-      id: scenarioParameter.documentId,
-      identifier: scenarioParameter.identifier ?? '',
-      title: scenarioParameter.title ?? '',
-      defaultValue: scenarioParameter.defaultValue ?? '',
-      dataType: match(scenarioParameter.dataType)
-        .with(
-          'string',
-          (): ScenarioParameterDataTypeDto =>
-            ScenarioParameterDataTypeDto.string,
-        )
-        .with(
-          'number',
-          (): ScenarioParameterDataTypeDto =>
-            ScenarioParameterDataTypeDto.number,
-        )
-        .with(
-          'json',
-          (): ScenarioParameterDataTypeDto => ScenarioParameterDataTypeDto.json,
-        )
-        .with(
-          'startDateTime',
-          (): ScenarioParameterDataTypeDto =>
-            ScenarioParameterDataTypeDto.startDateTime,
-        )
-        .with(
-          'endDateTime',
-          (): ScenarioParameterDataTypeDto =>
-            ScenarioParameterDataTypeDto.endDateTime,
-        )
-        .with(
-          P.nullish,
-          (): ScenarioParameterDataTypeDto =>
-            ScenarioParameterDataTypeDto.string,
-        )
-        .exhaustive(),
-      allowedLabels:
-        scenarioParameter.allowedLabels
-          ?.split(',')
-          .map((al: string): string => al.trim())
-          .filter((al: string): boolean => al.length > 0) ?? [],
+      id: native.id,
+      identifier: native.identifier,
+      title: native.title,
+      defaultValue: native.defaultValue ?? '',
+      dataType: native.dataType,
+      allowedLabels: native.allowedLabels,
     });
   }
 
@@ -329,54 +297,31 @@ export class SchemaFactoryService {
     });
   }
 
-  public async createSchemaGraphElements(
+  public createSchemaGraphElements(
     canvas: LiveCanvas,
-    graph: LiveCanvasUndoableData,
-    notes: IndexedNoteCollection,
-    viewSettings: LiveCanvasViewSettings,
-    project: Result<'api::project.project'>,
-  ): Promise<LiveCanvasGraphElementsDto> {
+  ): LiveCanvasGraphElementsDto {
     const t: Profiler = this._logger.startTimer();
+    const graph: LiveCanvasUndoableData = canvas.getGraph();
     const widthRange: Range = graph.edges.getEdgeDegreeRange();
     const degreeRange: Range = graph.nodes.getNodeDegreeRange(graph);
     const databaseCache: DatabaseReferenceCache = new DatabaseReferenceCache(
       this._database,
     );
 
-    const labelIndex: SMap<string, LabelDto> = await this._createLabelIndex(
-      canvas,
-      databaseCache,
-    );
-    const scenarioGroups: ScenarioGroupDto[] = await Promise.all(
-      (await this._database.getScenarioGroupsOfProject(project)).map(
-        async (
-          dbScenarioGroup: Result<'api::scenario-group.scenario-group'>,
-        ): Promise<ScenarioGroupDto> => {
-          return await this.createSchemaScenarioGroup(dbScenarioGroup);
-        },
-      ),
-    );
+    const labelIndex: SMap<string, LabelDto> = this._createLabelIndex(canvas);
 
     const result: LiveCanvasGraphElementsDto = {
-      nodes: await graph.nodes.nodes.asyncFlatMap(
-        async (node: GraphNode): Promise<NodeDto> =>
-          await this._createSchemaNode(
-            node,
-            graph,
-            notes,
-            scenarioGroups,
-            databaseCache,
-            viewSettings,
-            degreeRange,
-          ),
+      nodes: graph.nodes.nodes.flatMap(
+        (node: GraphNode): NodeDto =>
+          this._createSchemaNode(node, canvas, degreeRange),
       ),
-      edges: await graph.edges.edges.asyncFlatMap(
-        async (edge: GraphEdge): Promise<EdgeDto> =>
-          await this._createSchemaEdge(
+      edges: graph.edges.edges.flatMap(
+        (edge: GraphEdge): EdgeDto =>
+          this._createSchemaEdge(
             edge,
             graph,
             databaseCache,
-            viewSettings,
+            canvas.data.viewSettings,
             widthRange,
           ),
       ),
@@ -410,54 +355,23 @@ export class SchemaFactoryService {
     return result;
   }
 
-  public async createSchemaLiveCanvasData(
-    liveCanvas: LiveCanvas,
-  ): Promise<LiveCanvasDataDto> {
-    const canvas: Result<'api::canvas.canvas'> = await this._database.getCanvas(
-      liveCanvas.canvasId,
-    );
-    const project: Result<'api::project.project'> =
-      await this._database.getProjectOfCanvas(canvas);
-    const notes: IndexedNoteCollection = await this._database.getNotes({
-      project: project,
-      liveCanvas: liveCanvas,
-    });
-
+  public createSchemaLiveCanvasData(liveCanvas: LiveCanvas): LiveCanvasDataDto {
     const graph: LiveCanvasUndoableData = liveCanvas.getGraph();
     return new LiveCanvasDataDto({
       table: this.createSchemaTable(graph.tableData),
-      elements: await this.createSchemaGraphElements(
-        liveCanvas,
-        graph,
-        notes,
-        liveCanvas.data.viewSettings,
-        project,
-      ),
-      metaData: await this.createSchemaGraphMetaData(
-        liveCanvas,
-        graph,
-        liveCanvas.data.undoableData.info,
-      ),
+      elements: this.createSchemaGraphElements(liveCanvas),
+      metaData: this.createSchemaGraphMetaData(liveCanvas),
       viewSettings: liveCanvas.data.viewSettings.toSchema(liveCanvas.labels),
       histogram: this.createSchemaHistogram(graph),
-      notes: await Promise.all(
-        notes.notes
-          .toArray()
-          .map(
-            async (note: Result<'api::note.note'>): Promise<NoteDto> =>
-              await this.createSchemaNote(note, graph),
-          ),
-      ),
+      notes: liveCanvas.data.undoableData.current.notes
+        .toValueArray()
+        .map((note: LiveCanvasNote): NoteDto => this.createSchemaNote(note)),
     });
   }
 
-  public createSchemaGraphMetaData(
-    canvas: LiveCanvas,
-    graph: LiveCanvasUndoableData,
-    undoWrapperInfo: UndoWrapperInfo | null,
-  ): LiveCanvasMetaDataDto {
+  public createSchemaGraphMetaData(canvas: LiveCanvas): LiveCanvasMetaDataDto {
     const t: Profiler = this._logger.startTimer();
-    const metaData: LiveCanvasMetaData = graph.metaData;
+    const metaData: LiveCanvasMetaData = canvas.getGraph().metaData;
 
     const result: LiveCanvasMetaDataDto = {
       scenarioId: metaData.scenarioId,
@@ -475,6 +389,7 @@ export class SchemaFactoryService {
       parameters: metaData.parameters.map(
         (liveCanvasParameter: LiveCanvasParameter): ScenarioParameterDto =>
           ({
+            id: liveCanvasParameter.id,
             identifier: liveCanvasParameter.identifier,
             title: liveCanvasParameter.title,
             defaultValue: liveCanvasParameter.defaultValue,
@@ -482,8 +397,8 @@ export class SchemaFactoryService {
             allowedLabels: liveCanvasParameter.allowedLabels,
           }) satisfies ScenarioParameterDto,
       ),
-      undoAction: undoWrapperInfo?.undoAction ?? null,
-      redoAction: undoWrapperInfo?.redoAction ?? null,
+      undoAction: canvas.data.undoableData.info.undoAction ?? null,
+      redoAction: canvas.data.undoableData.info.redoAction ?? null,
       users: canvas.data.users.map((user: LiveCanvasUser): UserPreviewDto => {
         return {
           id: user.socketId,
@@ -752,35 +667,26 @@ export class SchemaFactoryService {
     return result;
   }
 
-  public async createSchemaNote(
-    note: Result<'api::note.note'>,
-    graph: LiveCanvasUndoableData,
-  ): Promise<NoteDto> {
-    const nodes: Result<'api::node-reference.node-reference'>[] =
-      await this._database.getReferencedNodesOfNote(note);
-    const author: Result<'plugin::users-permissions.user'> | null =
-      await this._database.getAuthorOfNote(note);
+  public createSchemaNote(note: LiveCanvasNote): NoteDto {
     return {
-      id: note.documentId,
-      content: note.content ?? '',
-      dateTime: note.updatedAt?.toString() ?? '',
-      author: author ? this.createSchemaUserPreview(author) : null,
-      nodes: nodes.map(
-        (
-          nodeReference: Result<'api::node-reference.node-reference'>,
-        ): NodePreviewDto => {
-          const node: GraphNode | null = graph.nodes.get(
-            nodeReference.nodeId ?? '',
-          );
-          return {
-            id: nodeReference.nodeId ?? '',
-            title: node?.getTitle() ?? '',
-            labels: node?.labels ?? [],
-            customColor: null, // TODO
-          };
+      id: note.id,
+      content: note.content,
+      dateTime: note.dateTime?.toString() ?? '',
+      author: note.author
+        ? new UserPreviewDto({
+            id: note.author.id,
+            displayName: note.author.username,
+          })
+        : null,
+      nodes: note.nodes.flatMap(
+        (nodeReference: LiveCanvasNoteNodeReference): NodePreviewDto => {
+          return new NodePreviewDto({
+            id: nodeReference.id,
+            title: nodeReference.title,
+            labels: nodeReference.labels,
+          });
         },
       ),
-      color: null, // TODO
     };
   }
 
@@ -806,15 +712,12 @@ export class SchemaFactoryService {
     });
   }
 
-  private async _createSchemaNode(
+  private _createSchemaNode(
     node: GraphNode,
-    graph: LiveCanvasUndoableData,
-    notes: IndexedNoteCollection,
-    scenarioGroups: ScenarioGroupDto[],
-    databaseCache: DatabaseReferenceCache,
-    viewSettings: LiveCanvasViewSettings,
+    canvas: LiveCanvas,
     degreeRange: Range,
-  ): Promise<NodeDto> {
+  ): NodeDto {
+    const graph: LiveCanvasUndoableData = canvas.getGraph();
     const incomingEdges: GraphEdge[] = graph.edges.getByEndNodeId(node.id);
     const outgoingEdges: GraphEdge[] = graph.edges.getByStartNodeId(node.id);
     const squashToTypeMap = (
@@ -845,16 +748,15 @@ export class SchemaFactoryService {
       labels: node.labels,
       nativeLabels: node.labels,
       properties: this._createSchemaGraphProperties(node.properties),
-      radius: node.getRadius(viewSettings, degreeRange, graph),
+      radius: node.getRadius(canvas.data.viewSettings, degreeRange, graph),
       position: node.position,
       inDegree: node.inDegree(graph),
       outDegree: node.outDegree(graph),
       degree: node.degree(graph),
       namesInQuery: node.namesInQuery.toArray(),
       customColor: node.getCustomColor()?.toDto() ?? null,
-      source:
-        (await databaseCache.getDatabase(node.source))?.title ?? node.source,
-      sourceId: node.source,
+      source: node.sourceTitle,
+      sourceId: node.sourceId,
       locked: node.locked,
       isCluster: node.isCluster,
       clusterSize: node.compressed.size,
@@ -869,28 +771,26 @@ export class SchemaFactoryService {
         .map(createEdgePreview)
         .sort(sort),
       creationReason: this._createSchemaCreationReason(node.creationAction),
-      notes: await Promise.all(
-        (notes.byNodeId.get(node.id) ?? new SSet())
-          .toArray()
-          .map(
-            async (note: Result<'api::note.note'>): Promise<NoteDto> =>
-              await this.createSchemaNote(note, graph),
-          ),
+      notes: node.noteIds.reduce(
+        (notes: NoteDto[], noteId: string): NoteDto[] => {
+          const note: LiveCanvasNote | undefined = graph.notes.get(noteId);
+          if (note == null) {
+            return notes;
+          }
+          return [...notes, this.createSchemaNote(note)];
+        },
+        [],
       ),
-      parameterizedScenarios: this._getParameterizedScenariosForNode(
-        node,
-        scenarioGroups,
-      ),
-      coverImageUrl:
-        (await node.getCoverImageUrl(databaseCache))?.toString() ?? null,
-      url: (await node.getUrl(databaseCache))?.toString() ?? null,
+      parameterizedScenarios: this._getParameterizedScenariosForNode(node),
+      coverImageUrl: node.coverImageUrl?.href ?? null,
+      url: node.url?.href ?? null,
     };
   }
 
   private _getParameterizedScenariosForNode(
     node: GraphNode,
-    scenarioGroups: ScenarioGroupDto[],
   ): ScenarioGroupDto[] {
+    // TODO: Move to post process live canvas
     const filtered: ScenarioGroupDto[] = scenarioGroups
       .map(
         (sceanrioGroup: ScenarioGroupDto): ScenarioGroupDto =>
@@ -922,13 +822,13 @@ export class SchemaFactoryService {
     return filtered;
   }
 
-  private async _createSchemaEdge(
+  private _createSchemaEdge(
     edge: GraphEdge,
     graph: LiveCanvasUndoableData,
     databaseCcache: DatabaseReferenceCache,
     viewSettings: LiveCanvasViewSettings,
     edgeWidthRange: Range,
-  ): Promise<EdgeDto> {
+  ): EdgeDto {
     const sourceNode: GraphNode | null = graph.nodes.get(edge.startNodeId);
     const targetNode: GraphNode | null = graph.nodes.get(edge.endNodeId);
     return {
@@ -943,20 +843,18 @@ export class SchemaFactoryService {
       width: edge.getWidth(edgeWidthRange, viewSettings),
       properties: this._createSchemaGraphProperties(edge.properties),
       namesInQuery: edge.namesInQuery.toArray(),
-      source:
-        (await databaseCcache.getDatabase(edge.source))?.title ?? edge.source,
+      sourceId: edge.sourceId,
+      sourceTitle: edge.sourceTitle,
       clusterSize: edge.compressed.size,
       sourceNode: {
         id: sourceNode?.id ?? '',
         title: sourceNode?.getTitle() ?? '',
         labels: sourceNode?.labels ?? [],
-        customColor: null, // TODO
       },
       targetNode: {
         id: targetNode?.id ?? '',
         title: targetNode?.getTitle() ?? '',
         labels: targetNode?.labels ?? [],
-        customColor: null, // TODO
       },
       creationReason: this._createSchemaCreationReason(edge.creationAction),
     };
@@ -1003,10 +901,7 @@ export class SchemaFactoryService {
     return mutableProperties.properties.toRecord();
   }
 
-  private async _createLabelIndex(
-    liveCanvas: LiveCanvas,
-    databaseCache: DatabaseReferenceCache,
-  ): Promise<SMap<string, LabelDto>> {
+  private _createLabelIndex(liveCanvas: LiveCanvas): SMap<string, LabelDto> {
     const labels: SMap<string, LabelDto> = new SMap<string, LabelDto>();
     for (const label of liveCanvas.getGraph().nodes.labelIndex.labels) {
       const labelViewSettings: LiveCanvasLabelViewSettings =
@@ -1014,17 +909,13 @@ export class SchemaFactoryService {
       labels.set(label, {
         label: label,
         count: liveCanvas.getGraph().nodes.labelIndex.labelCount(label),
-        sources: await Promise.all(
-          liveCanvas
-            .getGraph()
-            .nodes.labelIndex.sources(label)
-            .toArray()
-            .map(async (sourceId: string): Promise<string> => {
-              return (
-                (await databaseCache.getDatabase(sourceId))?.title ?? sourceId
-              );
-            }),
-        ),
+        sources: liveCanvas
+          .getGraph()
+          .nodes.labelIndex.sources(label)
+          .toArray()
+          .map((source: LabelIndexLabelSource): string => {
+            return source.title ?? source.id;
+          }),
         color: new ColorDto({
           color: new ColorPresetDto({
             index: labelViewSettings.colorIndex,

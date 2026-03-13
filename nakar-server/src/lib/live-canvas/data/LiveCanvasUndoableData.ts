@@ -16,6 +16,8 @@ import { Logger } from '@strapi/logger';
 import { createChildLogger } from '../../logger/createChildLogger';
 import { Profiler } from 'winston';
 import { LiveCanvasViewSettings } from './LiveCanvasViewSettings';
+import { LiveCanvasParameter } from '../graph/LiveCanvasParameter';
+import { LiveCanvasNote } from './LiveCanvasNote';
 
 export class LiveCanvasUndoableData {
   // eslint-disable-next-line @typescript-eslint/typedef
@@ -25,12 +27,14 @@ export class LiveCanvasUndoableData {
     edges: z.array(GraphEdge.schema),
     metaData: LiveCanvasMetaData.schema,
     tableData: z.array(z.record(z.unknown())),
+    notes: z.array(LiveCanvasNote.schema),
   });
 
   public readonly id: string;
   public readonly nodes: NodeIndex;
   public readonly edges: EdgeIndex;
   public readonly metaData: LiveCanvasMetaData;
+  public notes: SMap<string, LiveCanvasNote>;
 
   private _tableData: SMap<string, unknown>[];
 
@@ -42,12 +46,14 @@ export class LiveCanvasUndoableData {
     edges: EdgeIndex;
     metaData: LiveCanvasMetaData;
     tableData: SMap<string, unknown>[];
+    notes: SMap<string, LiveCanvasNote>;
   }) {
     this.id = data.id;
     this.nodes = data.nodes;
     this.edges = data.edges;
     this.metaData = data.metaData;
     this._tableData = data.tableData;
+    this.notes = data.notes;
   }
 
   public get size(): number {
@@ -69,6 +75,7 @@ export class LiveCanvasUndoableData {
       edges: new EdgeIndex([]),
       metaData: LiveCanvasMetaData.empty(),
       tableData: [],
+      notes: new SMap(),
     });
   }
 
@@ -94,6 +101,18 @@ export class LiveCanvasUndoableData {
         (td: Record<string, unknown>): SMap<string, unknown> =>
           SMap.fromRecord(td),
       ),
+      notes: data.notes
+        .map(
+          (n: z.infer<typeof LiveCanvasNote.schema>): LiveCanvasNote =>
+            LiveCanvasNote.fromPlain(n),
+        )
+        .reduce(
+          (
+            akku: SMap<string, LiveCanvasNote>,
+            next: LiveCanvasNote,
+          ): SMap<string, LiveCanvasNote> => akku.bySetting(next.id, next),
+          new SMap(),
+        ),
     });
   }
 
@@ -114,8 +133,17 @@ export class LiveCanvasUndoableData {
   public resetFromInitialScenario(
     scenario: Result<'api::scenario.scenario'>,
     scenarioArguments: SMap<string, string>,
+    parameters: Result<'api::query-parameter.query-parameter'>[],
   ): void {
-    this.metaData.reset(scenario.documentId, scenarioArguments);
+    this.metaData.reset(
+      scenario.documentId,
+      scenarioArguments,
+      parameters.map(
+        (
+          p: Result<'api::query-parameter.query-parameter'>,
+        ): LiveCanvasParameter => LiveCanvasParameter.fromDb(p),
+      ),
+    );
     this.nodes.reset();
     this.edges.reset();
     this._tableData = [];
@@ -134,6 +162,12 @@ export class LiveCanvasUndoableData {
       tableData: this._tableData.map(
         (td: SMap<string, unknown>): Record<string, unknown> => td.toRecord(),
       ),
+      notes: this.notes
+        .toValueArray()
+        .map(
+          (n: LiveCanvasNote): z.infer<typeof LiveCanvasNote.schema> =>
+            n.toPlain(),
+        ),
     };
   }
 
@@ -224,6 +258,7 @@ export class LiveCanvasUndoableData {
       tableData: this._tableData.map(
         (e: SMap<string, unknown>): SMap<string, unknown> => e.copy(),
       ),
+      notes: this.notes.map((n: LiveCanvasNote): LiveCanvasNote => n.copy()),
     });
     task.done({
       message: 'copy',

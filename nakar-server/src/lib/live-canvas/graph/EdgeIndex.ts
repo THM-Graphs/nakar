@@ -151,7 +151,8 @@ export class EdgeIndex {
         relationship.relationship.properties,
       ),
       namesInQuery: relationship.keys,
-      source: relationship.source.nakarId,
+      sourceId: relationship.source.nakarId,
+      sourceTitle: relationship.source.nakarTitle,
       creationAction: creationAction,
     });
 
