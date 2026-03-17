@@ -38,7 +38,7 @@ export class ReloadScenariosAction extends Action<ReloadScenariosActionParams> {
     return "reload-scenarios";
   }
 
-  title(p: ReloadScenariosActionParams): string {
+  title(): string {
     return "Reload Scenarios";
   }
 }
