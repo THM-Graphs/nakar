@@ -68,6 +68,8 @@ export type CanvasContextData = {
 export async function CanvasLoader(
   args: LoaderFunctionArgs,
 ): Promise<CanvasContextData> {
+  useBearStore.getState().room.scenario.setGraph(null);
+
   const canvasId = args.params["canvasId"];
   const roomId = args.params["roomId"];
 
@@ -124,15 +126,13 @@ export function Canvas() {
   const rightPanel = useBearStore((s) => s.room.panels.right);
 
   useEffect(() => {
+    setScenarios(canvasContext.initialScenariosData);
     webSockets.connect(canvasContext.initialCanvasData.id);
     return () => {
       webSockets.disconnect();
+      setGraph(null);
     };
   }, [canvasContext.initialCanvasData.id]);
-
-  useEffect(() => {
-    setScenarios(canvasContext.initialScenariosData);
-  }, [canvasContext]);
 
   useEffect(() => {
     if (socketState.type === "connected") {
