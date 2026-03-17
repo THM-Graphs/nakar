@@ -14,10 +14,18 @@ import { useBearStore } from "../../state/useBearStore.ts";
 import { nodeActions } from "../actions/groups/nodeActions.ts";
 import { ActionDropdownItem } from "../actions/ActionDropdownItem.tsx";
 import { relationshipActions } from "../actions/groups/relationshipActions.ts";
-import { EdgeDto, NodeDto, ScenarioGroupDto } from "../../../src-gen";
+import {
+  EdgeDto,
+  NodeDto,
+  NodeParameterizedScenarioDto,
+  NodeParameterizedScenarioGroupDto,
+} from "../../../src-gen";
 import { useIsLoggedIn } from "../../state/useIsLoggedIn.ts";
 import { useCanvasContext } from "../../pages/Canvas.tsx";
-import { RunScenarioAction } from "../actions/RunScenarioAction.ts";
+import {
+  RunScenarioAction,
+  RunScenarioActionParams,
+} from "../actions/RunScenarioAction.ts";
 import { calculateIntersectionOfScenarioGroups } from "../scenarios-panel/calculateIntersectionOfScenarioGroups.ts";
 
 export function CanvasContextMenu() {
@@ -41,6 +49,9 @@ export function CanvasContextMenu() {
   const isLoggedIn = useIsLoggedIn();
   const showRunScenarioModal = useBearStore(
     (s) => s.room.scenario.runScenarioModal.open,
+  );
+  const scenarioGroups = useBearStore(
+    (s) => s.room.panels.scenarios.scenarios.scenarioGroups,
   );
 
   useEffect(() => {
@@ -137,14 +148,15 @@ export function CanvasContextMenu() {
     };
   }, [dropdownEl]);
 
-  const commonNodeScenarios: ScenarioGroupDto[] = useMemo(() => {
-    if (selectedNodes == null) {
-      return [];
-    }
-    return calculateIntersectionOfScenarioGroups(
-      selectedNodes.map((n) => n.parameterizedScenarios),
-    );
-  }, [selectedNodes]);
+  const commonNodeScenarios: NodeParameterizedScenarioGroupDto[] =
+    useMemo(() => {
+      if (selectedNodes == null) {
+        return [];
+      }
+      return calculateIntersectionOfScenarioGroups(
+        selectedNodes.map((n) => n.parameterizedScenarios),
+      );
+    }, [selectedNodes]);
 
   const CustomToggle = forwardRef(
     (
@@ -195,29 +207,47 @@ export function CanvasContextMenu() {
           ))}
         {commonNodeScenarios.length > 0 && (
           <>
-            {commonNodeScenarios.map((scenarioGroup) => (
-              <Fragment key={scenarioGroup.id}>
-                <Dropdown.Divider></Dropdown.Divider>
-                <Dropdown.ItemText className={"small text-muted"}>
-                  {scenarioGroup.title}
-                </Dropdown.ItemText>
-                {scenarioGroup.scenarios.map((scenario) => {
-                  return (
-                    <Fragment key={scenario.id}>
-                      <ActionDropdownItem
-                        action={RunScenarioAction.shared}
-                        params={{
-                          roomContext: roomContext,
-                          scenario: scenario,
-                          showRunScenarioModal: showRunScenarioModal,
-                          nodes: selectedNodes ?? [],
-                        }}
-                      ></ActionDropdownItem>
-                    </Fragment>
-                  );
-                })}
-              </Fragment>
-            ))}
+            {commonNodeScenarios.map((parameterizedScenarioGroup) => {
+              const scenarioGroup = scenarioGroups.find(
+                (sg) => sg.id === parameterizedScenarioGroup.id,
+              );
+              if (scenarioGroup == null) {
+                return null;
+              }
+              return (
+                <Fragment key={scenarioGroup.id}>
+                  <Dropdown.Divider></Dropdown.Divider>
+                  <Dropdown.ItemText className={"small text-muted"}>
+                    {scenarioGroup.title}
+                  </Dropdown.ItemText>
+                  {parameterizedScenarioGroup.scenarios.map(
+                    (parameterizedScenario: NodeParameterizedScenarioDto) => {
+                      const scenario = scenarioGroup.scenarios.find(
+                        (s) => s.id === parameterizedScenario.id,
+                      );
+                      if (scenario == null) {
+                        return null;
+                      }
+                      return (
+                        <Fragment key={scenario.id}>
+                          <ActionDropdownItem
+                            action={RunScenarioAction.shared}
+                            params={
+                              {
+                                roomContext: roomContext,
+                                scenario: scenario,
+                                showRunScenarioModal: showRunScenarioModal,
+                                nodes: selectedNodes ?? [],
+                              } satisfies RunScenarioActionParams
+                            }
+                          ></ActionDropdownItem>
+                        </Fragment>
+                      );
+                    },
+                  )}
+                </Fragment>
+              );
+            })}
           </>
         )}
       </Dropdown.Menu>

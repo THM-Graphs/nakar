@@ -169,7 +169,8 @@ export type EdgeDto = {
         [key: string]: unknown;
     };
     namesInQuery: Array<(string)>;
-    source: string;
+    sourceId: (string) | null;
+    sourceTitle: (string) | null;
     clusterSize: number;
     sourceNode: NodePreviewDto;
     targetNode: NodePreviewDto;
@@ -331,7 +332,8 @@ export type LiveCanvasLabelViewSettingsDto = {
 export type colorIndex = 0 | 1 | 2 | 3 | 4 | 5;
 
 export type LiveCanvasMetaDataDto = {
-    scenario: ((ScenarioDto) | null);
+    scenarioId: (string) | null;
+    parameters: Array<ScenarioParameterDto>;
     arguments: Array<ScenarioArgumentDto>;
     undoAction: (string) | null;
     redoAction: (string) | null;
@@ -401,7 +403,7 @@ export type NodeDto = {
     degree: number;
     namesInQuery: Array<(string)>;
     customColor: ((ColorDto) | null);
-    source: string;
+    sourceTitle: (string) | null;
     sourceId: string;
     locked: boolean;
     isCluster: boolean;
@@ -410,7 +412,7 @@ export type NodeDto = {
     outgoingEdges: Array<EdgePreviewDto>;
     creationReason: 'loadScenario' | 'expand' | 'query' | 'merge' | 'compress' | 'connectResultNodes' | 'search';
     notes: Array<NoteDto>;
-    parameterizedScenarios: Array<ScenarioGroupDto>;
+    parameterizedScenarios: Array<NodeParameterizedScenarioGroupDto>;
     coverImageUrl: (string) | null;
     url: (string) | null;
 };
@@ -420,11 +422,19 @@ export type NodeLockCollectionEntryDto = {
     locked: boolean;
 };
 
+export type NodeParameterizedScenarioDto = {
+    id: string;
+};
+
+export type NodeParameterizedScenarioGroupDto = {
+    id: string;
+    scenarios: Array<NodeParameterizedScenarioDto>;
+};
+
 export type NodePreviewDto = {
     id: string;
     title: string;
     labels: Array<(string)>;
-    customColor: ((ColorDto) | null);
 };
 
 export type NodesMovedWsdto = {
@@ -442,7 +452,6 @@ export type NoteDto = {
     nodes: Array<NodePreviewDto>;
     author: ((UserPreviewDto) | null);
     dateTime: string;
-    color: ((ColorDto) | null);
 };
 
 export type NotificationDataDto = {

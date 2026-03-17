@@ -3,7 +3,6 @@ import { GraphNode } from '../live-canvas/graph/GraphNode';
 import { GraphEdge } from '../live-canvas/graph/GraphEdge';
 import { SMap } from '../map/Map';
 import { LiveCanvasMetaData } from '../live-canvas/graph/LiveCanvasMetaData';
-import { SSet } from '../set/Set';
 import { PropertyCollection } from '../live-canvas/graph/PropertyCollection';
 import { DatabaseService } from '../database/DatabaseService';
 import { DatabaseReferenceCache } from './DatabaseReferenceCache';
@@ -56,9 +55,12 @@ import { NodeConfigurationDto } from './dtos/NodeConfigurationDto';
 import { NodeConfigurationTypeDto } from './dtos/NodeConfigurationTypeDto';
 import { LiveCanvasParameter } from '../live-canvas/graph/LiveCanvasParameter';
 import { ScenarioParameterDto } from './dtos/ScenarioParameterDto';
-import { LabelIndexLabelSource } from '../live-canvas/graph/LabelIndexLabelSource';
 import { LiveCanvasNote } from '../live-canvas/data/LiveCanvasNote';
 import { LiveCanvasNoteNodeReference } from '../live-canvas/data/LiveCanvasNoteNodeReference';
+import { NodeParameterizedScenarioGroupDto } from './dtos/NodeParameterizedScenarioGroupDto';
+import { NodeParameterizedScenarioDto } from './dtos/NodeParameterizedScenarioDto';
+import { LiveCanvasScenario } from '../live-canvas/data/LiveCanvasScenario';
+import { LiveCanvasScenarioGroup } from '../live-canvas/data/LiveCanvasScenarioGroup';
 
 @Injectable()
 export class SchemaFactoryService {
@@ -755,7 +757,7 @@ export class SchemaFactoryService {
       degree: node.degree(graph),
       namesInQuery: node.namesInQuery.toArray(),
       customColor: node.getCustomColor()?.toDto() ?? null,
-      source: node.sourceTitle,
+      sourceTitle: node.sourceTitle,
       sourceId: node.sourceId,
       locked: node.locked,
       isCluster: node.isCluster,
@@ -781,45 +783,19 @@ export class SchemaFactoryService {
         },
         [],
       ),
-      parameterizedScenarios: this._getParameterizedScenariosForNode(node),
+      parameterizedScenarios: node.scenarioGroups.map(
+        (sg: LiveCanvasScenarioGroup): NodeParameterizedScenarioGroupDto =>
+          new NodeParameterizedScenarioGroupDto({
+            id: sg.id,
+            scenarios: sg.scenarios.map(
+              (s: LiveCanvasScenario): NodeParameterizedScenarioDto =>
+                new NodeParameterizedScenarioDto({ id: s.id }),
+            ),
+          }),
+      ),
       coverImageUrl: node.coverImageUrl?.href ?? null,
       url: node.url?.href ?? null,
     };
-  }
-
-  private _getParameterizedScenariosForNode(
-    node: GraphNode,
-  ): ScenarioGroupDto[] {
-    // TODO: Move to post process live canvas
-    const filtered: ScenarioGroupDto[] = scenarioGroups
-      .map(
-        (sceanrioGroup: ScenarioGroupDto): ScenarioGroupDto =>
-          new ScenarioGroupDto({
-            id: sceanrioGroup.id,
-            title: sceanrioGroup.title,
-            scenarios: sceanrioGroup.scenarios.filter(
-              (scenario: ScenarioDto): boolean => {
-                for (const parameter of scenario.parameters) {
-                  if (
-                    node.properties.properties
-                      .toKeyArray()
-                      .includes(parameter.identifier) &&
-                    (parameter.allowedLabels.length === 0 ||
-                      new SSet(parameter.allowedLabels).intersection(
-                        new SSet(node.labels),
-                      ).size > 0)
-                  ) {
-                    return true;
-                  }
-                }
-                return false;
-              },
-            ),
-          }),
-      )
-      .filter((sg: ScenarioGroupDto): boolean => sg.scenarios.length > 0);
-
-    return filtered;
   }
 
   private _createSchemaEdge(
@@ -913,8 +889,8 @@ export class SchemaFactoryService {
           .getGraph()
           .nodes.labelIndex.sources(label)
           .toArray()
-          .map((source: LabelIndexLabelSource): string => {
-            return source.title ?? source.id;
+          .map((entry: [string, string | null]): string => {
+            return entry[1] ?? entry[0];
           }),
         color: new ColorDto({
           color: new ColorPresetDto({

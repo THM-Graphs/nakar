@@ -13,6 +13,7 @@ import { DatabaseReferenceCache } from '../../schema/DatabaseReferenceCache';
 import { Result } from '@strapi/types/dist/modules/documents';
 import { Logger } from '@strapi/logger';
 import { createChildLogger } from '../../logger/createChildLogger';
+import Handlebars from 'handlebars';
 
 export class NodeIndex {
   private readonly _logger: Logger = createChildLogger(this);
@@ -79,10 +80,7 @@ export class NodeIndex {
     }
     this._byId.set(node.id, node);
     for (const label of node.labels) {
-      this._labelIndex.add(label, {
-        id: node.sourceId,
-        title: node.sourceTitle,
-      });
+      this._labelIndex.add(label, node.sourceId, node.sourceTitle);
     }
     for (const property of node.properties.properties) {
       this._addToPropertyHistogram(property[0], property[1], 1);
@@ -108,11 +106,9 @@ export class NodeIndex {
     creationAction: ElementCreationReason,
     databaseCache: DatabaseReferenceCache,
   ): Promise<void> {
-    await Promise.all(
-      nodes.toValueArray().map(async (node: Neo4jNode): Promise<void> => {
-        await this.addNeo4jNode(node, creationAction, databaseCache);
-      }),
-    );
+    for (const node of nodes.toValueArray()) {
+      await this.addNeo4jNode(node, creationAction, databaseCache);
+    }
   }
 
   public async addNeo4jNode(
@@ -134,6 +130,8 @@ export class NodeIndex {
       creationAction: creationAction,
       url: await this._getUrl(node, databaseCache),
       coverImageUrl: await this._getCoverImageUrl(node, databaseCache),
+      scenarioGroups: [],
+      noteReferences: new SSet(),
     });
     PhysicsSimulation.jiggle(mutableNode);
 

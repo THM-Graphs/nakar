@@ -2,15 +2,11 @@ import { Action } from "./Action.ts";
 import { SelectedCanvasTab } from "../../state/SelectedCanvasTab.ts";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
 import { CanvasContextData } from "../../pages/Canvas.tsx";
-import {
-  actionControllerConnectResultNodes,
-  ScenarioDto,
-} from "../../../src-gen";
+import { actionControllerConnectResultNodes } from "../../../src-gen";
 
 export type ConnectResultNodesActionParams = {
   selectedTab: SelectedCanvasTab;
   roomContext: CanvasContextData;
-  scenario: ScenarioDto | null;
 };
 
 export class ConnectResultNodesAction extends Action<ConnectResultNodesActionParams> {

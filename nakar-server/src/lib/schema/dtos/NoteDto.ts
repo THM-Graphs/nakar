@@ -1,5 +1,4 @@
 import { UserPreviewDto } from './UserPreviewDto';
-import { ColorDto } from './ColorDto';
 import { NodePreviewDto } from './NodePreviewDto';
 import { ApiProperty } from '@nestjs/swagger';
 

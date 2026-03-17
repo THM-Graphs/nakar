@@ -48,6 +48,11 @@ import z from 'zod';
 import { DatabaseReferenceCache } from '../schema/DatabaseReferenceCache';
 import { IndexedNoteCollection } from '../database/IndexedNoteCollection';
 import { LiveCanvasNote } from './data/LiveCanvasNote';
+import { ScenarioGroupDto } from '../schema/dtos/ScenarioGroupDto';
+import { ScenarioDto } from '../schema/dtos/ScenarioDto';
+import { LiveCanvasScenarioGroup } from './data/LiveCanvasScenarioGroup';
+import { SchemaFactoryService } from '../schema/SchemaFactoryService';
+import { LiveCanvasScenario } from './data/LiveCanvasScenario';
 
 export class LiveCanvas {
   private readonly _logger: Logger = createChildLogger(this);
@@ -63,6 +68,7 @@ export class LiveCanvas {
     private readonly _database: DatabaseService,
     private readonly _neo4j: Neo4jService,
     private readonly _databaseEventsService: DatabaseEventsService,
+    private readonly _schemaFactory: SchemaFactoryService,
   ) {
     this._onEvent = new Subject();
     this._subscriptions = new SSet();
@@ -115,10 +121,14 @@ export class LiveCanvas {
       this._databaseEventsService.onNoteChanges$.subscribe(
         (canvas: Result<'api::canvas.canvas'>): void => {
           if (canvas.documentId === this.canvasId) {
-            const changeRecorder: LiveCanvasChangeRecorder =
-              new LiveCanvasChangeRecorder();
-            changeRecorder.didChangeNotes();
-            this._handleChangeRecorder(changeRecorder);
+            this._loadNotes()
+              .then((): void => {
+                const changeRecorder: LiveCanvasChangeRecorder =
+                  new LiveCanvasChangeRecorder();
+                changeRecorder.didChangeNotes();
+                this._handleChangeRecorder(changeRecorder);
+              })
+              .catch(this._logger.error);
           }
         },
       ),
@@ -182,6 +192,7 @@ export class LiveCanvas {
 
         if (data != null) {
           this._data.loadFromPlain(data);
+          await this._postProcessGraph(changeRecorder);
           changeRecorder.didLoadGraph();
           changeRecorder.didChangeViewSettings();
         }
@@ -1478,14 +1489,81 @@ export class LiveCanvas {
     changeRecorder: LiveCanvasChangeRecorder,
   ): Promise<void> {
     const task: Profiler = this._logger.startTimer();
+    const canvas: Result<'api::canvas.canvas'> = await this._database.getCanvas(
+      this.canvasId,
+    );
+    const project: Result<'api::project.project'> =
+      await this._database.getProjectOfCanvas(canvas);
     const graph: LiveCanvasUndoableData = this.getGraph();
+
     const removedEdges: number = graph.removeDanglingEdges();
     if (removedEdges > 0) {
       changeRecorder.didAddOrRemoveGraphElements();
     }
+
     await this._mergeNodes(changeRecorder);
 
     // Notes
+    await this._loadNotes();
+
+    // Scenario Groups
+    const scenarioGroups: ScenarioGroupDto[] = await Promise.all(
+      (await this._database.getScenarioGroupsOfProject(project)).map(
+        async (
+          dbScenarioGroup: Result<'api::scenario-group.scenario-group'>,
+        ): Promise<ScenarioGroupDto> => {
+          return await this._schemaFactory.createSchemaScenarioGroup(
+            dbScenarioGroup,
+          );
+        },
+      ),
+    );
+    for (const node of this.getGraph().nodes.nodes) {
+      const filtered: LiveCanvasScenarioGroup[] = scenarioGroups
+        .map(
+          (sceanrioGroup: ScenarioGroupDto): LiveCanvasScenarioGroup =>
+            new LiveCanvasScenarioGroup({
+              id: sceanrioGroup.id,
+              title: sceanrioGroup.title,
+              scenarios: sceanrioGroup.scenarios
+                .filter((scenario: ScenarioDto): boolean => {
+                  for (const parameter of scenario.parameters) {
+                    if (
+                      node.properties.properties
+                        .toKeyArray()
+                        .includes(parameter.identifier) &&
+                      (parameter.allowedLabels.length === 0 ||
+                        new SSet(parameter.allowedLabels).intersection(
+                          new SSet(node.labels),
+                        ).size > 0)
+                    ) {
+                      return true;
+                    }
+                  }
+                  return false;
+                })
+                .map(
+                  (s: ScenarioDto): LiveCanvasScenario =>
+                    new LiveCanvasScenario({
+                      id: s.id,
+                      title: s.title,
+                    }),
+                ),
+            }),
+        )
+        .filter(
+          (sg: LiveCanvasScenarioGroup): boolean => sg.scenarios.length > 0,
+        );
+
+      node.scenarioGroups = filtered;
+    }
+
+    task.done({
+      message: 'Post Process Graph',
+    });
+  }
+
+  private async _loadNotes(): Promise<void> {
     const canvas: Result<'api::canvas.canvas'> = await this._database.getCanvas(
       this.canvasId,
     );
@@ -1527,10 +1605,6 @@ export class LiveCanvas {
         node.addNoteReference(note);
       }
     }
-
-    task.done({
-      message: 'Post Process Graph',
-    });
   }
 
   private _compressNodes(
@@ -1577,6 +1651,12 @@ export class LiveCanvas {
         creationAction: ElementCreationReason.compress,
         url: null,
         coverImageUrl: null,
+        noteReferences: new SSet(
+          clusterBuddies
+            .toArray()
+            .flatMap((n: GraphNode): string[] => n.noteIds),
+        ),
+        scenarioGroups: [],
       });
       graph.nodes.add(newNode);
       changeRecorder.didAddOrRemoveGraphElements();

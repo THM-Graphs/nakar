@@ -16,7 +16,11 @@ import {
   getBackgroundColorOfLabel,
 } from "../color/getBackgroundColor.ts";
 import { useColorSchema } from "../color/useColorSchema.ts";
-import { EdgeDto, NodeDto, ScenarioGroupDto } from "../../../src-gen";
+import {
+  EdgeDto,
+  NodeDto,
+  NodeParameterizedScenarioGroupDto,
+} from "../../../src-gen";
 import { useIsLoggedIn } from "../../state/useIsLoggedIn.ts";
 import { Fragment, useMemo } from "react";
 import { NodeParameterizedScenarioEntry } from "./NodeParameterizedScenarioEntry.tsx";
@@ -52,11 +56,15 @@ export function InspectorPanel() {
     );
   }, [elements]);
   const isLoggedIn = useIsLoggedIn();
-  const commonNodeScenarios: ScenarioGroupDto[] = useMemo(() => {
-    return calculateIntersectionOfScenarioGroups(
-      nodes.map((n) => n.parameterizedScenarios),
-    );
-  }, [nodes]);
+  const commonNodeScenarios: NodeParameterizedScenarioGroupDto[] =
+    useMemo(() => {
+      return calculateIntersectionOfScenarioGroups(
+        nodes.map((n) => n.parameterizedScenarios),
+      );
+    }, [nodes]);
+  const scenarioGroups = useBearStore(
+    (s) => s.room.panels.scenarios.scenarios.scenarioGroups,
+  );
 
   return (
     <Panel
@@ -99,25 +107,45 @@ export function InspectorPanel() {
                       ))}
                     </Stack>
                   </Collapsable>
-                  {commonNodeScenarios.map((sg) => (
-                    <Fragment key={sg.id}>
-                      <Collapsable
-                        initialState={false}
-                        title={
-                          <span className={"small fw-bold"}>{sg.title}</span>
-                        }
-                      >
-                        {sg.scenarios.map((s) => (
-                          <Fragment key={s.id}>
-                            <NodeParameterizedScenarioEntry
-                              scenario={s}
-                              nodes={nodes}
-                            ></NodeParameterizedScenarioEntry>
-                          </Fragment>
-                        ))}
-                      </Collapsable>
-                    </Fragment>
-                  ))}
+                  {commonNodeScenarios.map((parameterizedScenarioGroup) => {
+                    const scenarioGroup = scenarioGroups.find(
+                      (sg) => sg.id === parameterizedScenarioGroup.id,
+                    );
+                    if (scenarioGroup == null) {
+                      return null;
+                    }
+                    return (
+                      <Fragment key={parameterizedScenarioGroup.id}>
+                        <Collapsable
+                          initialState={false}
+                          title={
+                            <span className={"small fw-bold"}>
+                              {scenarioGroup.title}
+                            </span>
+                          }
+                        >
+                          {parameterizedScenarioGroup.scenarios.map(
+                            (parameterizedScenario) => {
+                              const scenario = scenarioGroup.scenarios.find(
+                                (s) => s.id === parameterizedScenario.id,
+                              );
+                              if (scenario == null) {
+                                return null;
+                              }
+                              return (
+                                <Fragment key={parameterizedScenario.id}>
+                                  <NodeParameterizedScenarioEntry
+                                    scenario={scenario}
+                                    nodes={nodes}
+                                  ></NodeParameterizedScenarioEntry>
+                                </Fragment>
+                              );
+                            },
+                          )}
+                        </Collapsable>
+                      </Fragment>
+                    );
+                  })}
                   <DynamicList
                     data={nodes}
                     render={(list) => (

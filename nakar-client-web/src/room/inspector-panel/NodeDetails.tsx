@@ -8,7 +8,7 @@ import { nodeActions } from "../actions/groups/nodeActions.ts";
 import { ActionNavbarButton } from "../actions/ActionNavbarButton.tsx";
 import { AddNoteAction } from "../actions/AddNoteAction.ts";
 import { NoteDisplay } from "../notes-panel/NoteDisplay.tsx";
-import { NodeDto } from "../../../src-gen";
+import { NodeDto, NodeParameterizedScenarioGroupDto } from "../../../src-gen";
 import { PropertyEntry } from "./PropertiesDisplay.tsx";
 import { useIsLoggedIn } from "../../state/useIsLoggedIn.ts";
 import { ParameterizedScenarioGroupEntry } from "./ParameterizedScenarioGroupEntry.tsx";
@@ -51,14 +51,16 @@ export function NodeDetails(props: { node: NodeDto }) {
                   className={"border-top"}
                   initialState={false}
                 >
-                  {props.node.parameterizedScenarios.map((scenarioGroup) => (
-                    <ParameterizedScenarioGroupEntry
-                      scenarioGroup={scenarioGroup}
-                      nodes={[props.node]}
-                      key={scenarioGroup.id}
-                      className={"pt-2"}
-                    ></ParameterizedScenarioGroupEntry>
-                  ))}
+                  {props.node.parameterizedScenarios.map(
+                    (scenarioGroup: NodeParameterizedScenarioGroupDto) => (
+                      <ParameterizedScenarioGroupEntry
+                        scenarioGroup={scenarioGroup}
+                        nodes={[props.node]}
+                        key={scenarioGroup.id}
+                        className={"pt-2"}
+                      ></ParameterizedScenarioGroupEntry>
+                    ),
+                  )}
                 </Collapsable>
               )}
             </>
@@ -78,7 +80,7 @@ export function NodeDetails(props: { node: NodeDto }) {
             },
             {
               slug: "Source",
-              value: props.node.source,
+              value: props.node.sourceTitle,
             },
             {
               slug: "Names in Query",

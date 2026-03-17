@@ -194,7 +194,7 @@ export class WebSocketManager
     wsClient.send({
       event: {
         type: 'CanvasDataReadyWsdto',
-        data: await this._schemaFactory.createSchemaLiveCanvasData(liveCanvas),
+        data: this._schemaFactory.createSchemaLiveCanvasData(liveCanvas),
       } satisfies CanvasDataReadyWsdto,
     });
   }

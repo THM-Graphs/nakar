@@ -1,10 +1,8 @@
 import { SMap } from '../../map/Map';
-import { SSet } from '../../set/Set';
-import { LabelIndexLabelSource } from './LabelIndexLabelSource';
 
 export class LabelIndex {
   private readonly _labelHistogram: SMap<string, number>;
-  private readonly _sources: SMap<string, SSet<LabelIndexLabelSource>>;
+  private readonly _sources: SMap<string, SMap<string, string | null>>;
 
   public constructor() {
     this._labelHistogram = new SMap();
@@ -25,15 +23,19 @@ export class LabelIndex {
     return this._labelHistogram.get(label) ?? 0;
   }
 
-  public sources(label: string): SSet<LabelIndexLabelSource> {
-    return this._sources.get(label) ?? new SSet();
+  public sources(label: string): SMap<string, string | null> {
+    return this._sources.get(label) ?? new SMap();
   }
 
-  public add(label: string, source: LabelIndexLabelSource): void {
+  public add(
+    label: string,
+    sourceId: string,
+    sourceTitle: string | null,
+  ): void {
     this._labelHistogram.set(label, (this._labelHistogram.get(label) ?? 0) + 1);
     this._sources.set(
       label,
-      (this._sources.get(label) ?? new SSet()).byAdding(source),
+      (this._sources.get(label) ?? new SMap()).bySetting(sourceId, sourceTitle),
     );
     this._cleanup();
   }

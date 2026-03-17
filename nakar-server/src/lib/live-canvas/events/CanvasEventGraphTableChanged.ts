@@ -1,4 +1,3 @@
-import { SMap } from '../../map/Map';
 import { LiveCanvas } from '../LiveCanvas';
 
 export interface CanvasEventGraphTableChanged {

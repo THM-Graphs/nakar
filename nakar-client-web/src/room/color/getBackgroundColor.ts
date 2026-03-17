@@ -25,7 +25,7 @@ export function getBackgroundColorOfNode(
   const firstLabel = node.labels[0];
   const graphLabel = graphLabels.find((l) => l.label === firstLabel);
   return getBackgroundColorOfColor(
-    node.customColor ?? graphLabel?.color ?? defaultColor,
+    graphLabel?.color ?? defaultColor,
     colorSchema,
   );
 }

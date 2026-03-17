@@ -1,4 +1,4 @@
-import { ScenarioGroupDto } from "../../../src-gen";
+import { NodeParameterizedScenarioGroupDto } from "../../../src-gen";
 
 /**
  * Calculates the intersection of multiple ScenarioGroupDto lists.
@@ -31,14 +31,14 @@ import { ScenarioGroupDto } from "../../../src-gen";
  * // Group1[S2], Group2[S3]
  */
 export function calculateIntersectionOfScenarioGroups(
-  scenarioGroups: ScenarioGroupDto[][],
-): ScenarioGroupDto[] {
+  scenarioGroups: NodeParameterizedScenarioGroupDto[][],
+): NodeParameterizedScenarioGroupDto[] {
   if (!scenarioGroups.length) {
     return [];
   }
 
   // 1️⃣ Gruppen-Schnittmenge bilden (nach id)
-  const baseGroups = new Map<string, ScenarioGroupDto>();
+  const baseGroups = new Map<string, NodeParameterizedScenarioGroupDto>();
 
   for (const group of scenarioGroups[0]) {
     baseGroups.set(group.id, {

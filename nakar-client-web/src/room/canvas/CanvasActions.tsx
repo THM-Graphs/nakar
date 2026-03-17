@@ -24,7 +24,6 @@ export function CanvasActions() {
   const element = useBearStore((s) => s.room.panels.inspector.element);
   const nodes = useBearStore((s) => s.room.scenario.graph.elements.nodes);
   const selectedTab = useBearStore((s) => s.room.canvas.tabs.selected);
-  const scenario = useBearStore((s) => s.room.scenario.graph.metaData.scenario);
   const undoAction = useBearStore(
     (s) => s.room.scenario.graph.metaData.undoAction,
   );
@@ -81,7 +80,6 @@ export function CanvasActions() {
           action={RerunScenarioAction.shared}
           params={{
             roomContext: roomContext,
-            scenario: scenario,
           }}
         ></CanvasActionsAction>
       </CanvasActionsGroup>
@@ -132,7 +130,6 @@ export function CanvasActions() {
           action={ConnectResultNodesAction.shared}
           params={{
             roomContext: roomContext,
-            scenario: scenario,
             selectedTab,
           }}
         ></CanvasActionsAction>
@@ -140,7 +137,6 @@ export function CanvasActions() {
           action={RemoveDanglingNodesAction.shared}
           params={{
             roomContext: roomContext,
-            scenario: scenario,
             selectedTab,
           }}
         ></CanvasActionsAction>
@@ -148,7 +144,6 @@ export function CanvasActions() {
           action={CompressRelationshipsAction.shared}
           params={{
             roomContext: roomContext,
-            scenario: scenario,
             selectedTab,
           }}
         ></CanvasActionsAction>

@@ -25,10 +25,7 @@ export function NodePreviewDisplay(props: {
     colorSchema,
     graphLabels,
   );
-  const fgColor = getTextColor(
-    props.node.customColor ?? graphLabel?.color ?? null,
-    colorSchema,
-  );
+  const fgColor = getTextColor(graphLabel?.color ?? null, colorSchema);
   const setDetailElement = useBearStore(
     (s) => s.room.panels.inspector.setElement,
   );

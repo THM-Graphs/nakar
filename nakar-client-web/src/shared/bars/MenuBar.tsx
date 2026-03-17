@@ -87,7 +87,6 @@ export function MenuBar() {
   const redoAction = useBearStore(
     (s) => s.room.scenario.graph.metaData.redoAction,
   );
-  const scenario = useBearStore((s) => s.room.scenario.graph.metaData.scenario);
   const selectedTab = useBearStore((s) => s.room.canvas.tabs.selected);
   const selectGraph = useBearStore((s) => s.room.canvas.tabs.selectGraph);
   const selectData = useBearStore((s) => s.room.canvas.tabs.selectData);
@@ -144,7 +143,6 @@ export function MenuBar() {
           action={RerunScenarioAction.shared}
           params={{
             roomContext: roomContext,
-            scenario: scenario,
           }}
         ></ActionDropdownItem>
       </DropdownButton>
@@ -170,7 +168,6 @@ export function MenuBar() {
           action={ConnectResultNodesAction.shared}
           params={{
             selectedTab,
-            scenario: scenario,
             roomContext: roomContext,
           }}
         ></ActionDropdownItem>
@@ -178,7 +175,6 @@ export function MenuBar() {
           action={RemoveDanglingNodesAction.shared}
           params={{
             selectedTab,
-            scenario: scenario,
             roomContext: roomContext,
           }}
         ></ActionDropdownItem>
@@ -186,7 +182,6 @@ export function MenuBar() {
           action={CompressRelationshipsAction.shared}
           params={{
             selectedTab,
-            scenario: scenario,
             roomContext: roomContext,
           }}
         ></ActionDropdownItem>

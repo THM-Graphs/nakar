@@ -1,4 +1,3 @@
-import { LiveCanvasUndoableData } from '../data/LiveCanvasUndoableData';
 import { LiveCanvas } from '../LiveCanvas';
 
 export interface CanvasEventGraphElementsChanged {

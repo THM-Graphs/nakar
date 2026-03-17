@@ -2,15 +2,11 @@ import { Action } from "./Action.ts";
 import { SelectedCanvasTab } from "../../state/SelectedCanvasTab.ts";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
 import { CanvasContextData } from "../../pages/Canvas.tsx";
-import {
-  actionControllerCompressRelationships,
-  ScenarioDto,
-} from "../../../src-gen";
+import { actionControllerCompressRelationships } from "../../../src-gen";
 
 export type CompressRelationshipsActionParams = {
   selectedTab: SelectedCanvasTab;
   roomContext: CanvasContextData;
-  scenario: ScenarioDto | null;
 };
 
 export class CompressRelationshipsAction extends Action<CompressRelationshipsActionParams> {

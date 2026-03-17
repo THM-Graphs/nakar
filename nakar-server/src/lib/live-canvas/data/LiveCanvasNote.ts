@@ -14,7 +14,7 @@ export class LiveCanvasNote {
     content: z.string(),
     nodes: z.array(LiveCanvasNoteNodeReference.schema),
     author: LiveCanvasNoteAuthor.schema.nullable(),
-    dateTime: z.date().nullable(),
+    dateTime: z.coerce.date().nullable(),
   });
 
   public readonly id: string;

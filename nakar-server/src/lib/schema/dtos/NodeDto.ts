@@ -4,7 +4,7 @@ import { EdgePreviewDto } from './EdgePreviewDto';
 import { CreationReasonDto } from './CreationReasonDto';
 import { NoteDto } from './NoteDto';
 import { ApiProperty } from '@nestjs/swagger';
-import { ScenarioGroupDto } from './ScenarioGroupDto';
+import { NodeParameterizedScenarioGroupDto } from './NodeParameterizedScenarioGroupDto';
 
 export class NodeDto {
   @ApiProperty()
@@ -47,7 +47,7 @@ export class NodeDto {
   public customColor: ColorDto | null;
 
   @ApiProperty({ type: String, nullable: true })
-  public source: string | null;
+  public sourceTitle: string | null;
 
   @ApiProperty()
   public sourceId: string;
@@ -73,8 +73,8 @@ export class NodeDto {
   @ApiProperty({ type: [NoteDto] })
   public notes: NoteDto[];
 
-  @ApiProperty({ isArray: true, type: ScenarioGroupDto })
-  public parameterizedScenarios: ScenarioGroupDto[];
+  @ApiProperty({ isArray: true, type: NodeParameterizedScenarioGroupDto })
+  public parameterizedScenarios: NodeParameterizedScenarioGroupDto[];
 
   @ApiProperty({ type: String, nullable: true })
   public coverImageUrl: string | null;
@@ -95,7 +95,7 @@ export class NodeDto {
     degree: number;
     namesInQuery: string[];
     customColor: ColorDto | null;
-    source: string | null;
+    sourceTitle: string | null;
     sourceId: string;
     locked: boolean;
     isCluster: boolean;
@@ -104,7 +104,7 @@ export class NodeDto {
     outgoingEdges: EdgePreviewDto[];
     creationReason: CreationReasonDto;
     notes: NoteDto[];
-    parameterizedScenarios: ScenarioGroupDto[];
+    parameterizedScenarios: NodeParameterizedScenarioGroupDto[];
     coverImageUrl: string | null;
     url: string | null;
   }) {
@@ -120,7 +120,7 @@ export class NodeDto {
     this.degree = data.degree;
     this.namesInQuery = data.namesInQuery;
     this.customColor = data.customColor;
-    this.source = data.source;
+    this.sourceTitle = data.sourceTitle;
     this.sourceId = data.sourceId;
     this.locked = data.locked;
     this.isCluster = data.isCluster;

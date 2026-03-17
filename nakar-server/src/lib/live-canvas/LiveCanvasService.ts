@@ -13,6 +13,7 @@ import { createChildLogger } from '../logger/createChildLogger';
 import { Logger } from '@strapi/logger';
 import { Profiler } from 'winston';
 import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import { SchemaFactoryService } from '../schema/SchemaFactoryService';
 
 @Injectable()
 export class LiveCanvasService implements OnModuleInit, OnModuleDestroy {
@@ -24,6 +25,7 @@ export class LiveCanvasService implements OnModuleInit, OnModuleDestroy {
     private readonly _database: DatabaseService,
     private readonly _databaseEvents: DatabaseEventsService,
     private readonly _neo4j: Neo4jService,
+    private readonly _schemaFactoryService: SchemaFactoryService,
   ) {
     this._liveCanvases = new SMap();
     this._onEvent = new Subject();
@@ -104,6 +106,7 @@ export class LiveCanvasService implements OnModuleInit, OnModuleDestroy {
       this._database,
       this._neo4j,
       this._databaseEvents,
+      this._schemaFactoryService,
     );
 
     this._liveCanvases.set(canvas.documentId, liveCanvas);

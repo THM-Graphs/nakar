@@ -10,6 +10,7 @@ import { LiveCanvasViewSettings } from '../data/LiveCanvasViewSettings';
 import { LiveCanvasLabelViewSettings } from '../data/LiveCanvasLabelViewSettings';
 import { ElementColor } from './color/ElementColor';
 import { LiveCanvasNote } from '../data/LiveCanvasNote';
+import { LiveCanvasScenarioGroup } from '../data/LiveCanvasScenarioGroup';
 
 export class GraphNode {
   public static readonly defaultRadius: number = 40;
@@ -28,6 +29,8 @@ export class GraphNode {
     creationAction: z.nativeEnum(ElementCreationReason),
     url: z.string().nullable(),
     coverImageUrl: z.string().nullable(),
+    noteReferences: z.array(z.string()),
+    scenarioGroups: z.array(LiveCanvasScenarioGroup.schema),
   });
 
   public readonly id: string;
@@ -40,6 +43,7 @@ export class GraphNode {
   public readonly creationAction: ElementCreationReason;
   public readonly url: URL | null;
   public readonly coverImageUrl: URL | null;
+  public scenarioGroups: LiveCanvasScenarioGroup[];
 
   private _locked: boolean;
   private _position: ElementPosition;
@@ -60,6 +64,8 @@ export class GraphNode {
     creationAction: ElementCreationReason;
     url: URL | null;
     coverImageUrl: URL | null;
+    noteReferences: SSet<string>;
+    scenarioGroups: LiveCanvasScenarioGroup[];
   }) {
     this.id = data.id;
     this._labels = data.labels;
@@ -74,7 +80,8 @@ export class GraphNode {
     this.creationAction = data.creationAction;
     this.url = data.url;
     this.coverImageUrl = data.coverImageUrl;
-    this._noteReferences = new SSet();
+    this._noteReferences = data.noteReferences;
+    this.scenarioGroups = data.scenarioGroups;
   }
 
   public get noteIds(): string[] {
@@ -131,6 +138,12 @@ export class GraphNode {
       url: data.url != null ? URL.parse(data.url) : null,
       coverImageUrl:
         data.coverImageUrl != null ? URL.parse(data.coverImageUrl) : null,
+      noteReferences: new SSet(data.noteReferences),
+      scenarioGroups: data.scenarioGroups.map(
+        (
+          sg: z.infer<typeof LiveCanvasScenarioGroup.schema>,
+        ): LiveCanvasScenarioGroup => LiveCanvasScenarioGroup.fromPlain(sg),
+      ),
     });
   }
 
@@ -201,6 +214,12 @@ export class GraphNode {
       creationAction: this.creationAction,
       url: this.url?.href ?? null,
       coverImageUrl: this.coverImageUrl?.href ?? null,
+      scenarioGroups: this.scenarioGroups.map(
+        (
+          sg: LiveCanvasScenarioGroup,
+        ): z.infer<typeof LiveCanvasScenarioGroup.schema> => sg.toPlain(),
+      ),
+      noteReferences: this._noteReferences.toArray(),
     };
   }
 
@@ -247,6 +266,10 @@ export class GraphNode {
       creationAction: this.creationAction,
       url: this.url,
       coverImageUrl: this.coverImageUrl,
+      scenarioGroups: this.scenarioGroups.map(
+        (sg: LiveCanvasScenarioGroup): LiveCanvasScenarioGroup => sg.copy(),
+      ),
+      noteReferences: this._noteReferences.copy(),
     });
   }
 

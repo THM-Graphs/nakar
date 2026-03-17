@@ -210,11 +210,12 @@ export const useBearStore = create<BearState>()(
                   },
                   notes: [],
                   metaData: {
-                    scenario: null,
+                    scenarioId: null,
                     arguments: [],
                     undoAction: null,
                     redoAction: null,
                     users: [],
+                    parameters: [],
                   },
                   viewSettings: {
                     compressRelationshipsWidthFactor: 0,
@@ -236,8 +237,9 @@ export const useBearStore = create<BearState>()(
                           arguments: [],
                           undoAction: null,
                           redoAction: null,
-                          scenario: null,
+                          scenarioId: null,
                           users: [],
+                          parameters: [],
                         },
                         notes: [],
                         histogram: {
@@ -538,7 +540,6 @@ export const useBearStore = create<BearState>()(
                               id: n.id,
                               title: n.title,
                               labels: n.labels,
-                              customColor: null,
                             }) satisfies NodePreviewDto,
                         );
                         s.room.panels.notes.addNoteModal.noteId = null;
@@ -552,8 +553,7 @@ export const useBearStore = create<BearState>()(
                         ];
                         s.room.panels.notes.addNoteModal.noteId = note.id;
                         s.room.panels.notes.addNoteModal.content = note.content;
-                        s.room.panels.notes.addNoteModal.color =
-                          note.color ?? null;
+                        s.room.panels.notes.addNoteModal.color = null;
                       });
                     },
                     close: () => {

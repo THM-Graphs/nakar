@@ -19,7 +19,7 @@ export function CanvasBottomToolBar() {
   );
 
   const currentArguments = metaData.arguments;
-  const parameters = metaData.scenario?.parameters ?? [];
+  const parameters = metaData.parameters;
 
   const startDateParameters = parameters.filter(
     (p) => p.dataType === "startDateTime",
@@ -71,8 +71,7 @@ export function CanvasBottomToolBar() {
 
   const rerunScenario = (params: { startDate: string; endDate: string }) => {
     (async (): Promise<void> => {
-      const scenario = metaData.scenario;
-      if (scenario == null) {
+      if (metaData.scenarioId == null) {
         throw new Error(
           "Unable to run scenario: There is no scenario in this room.",
         );
@@ -103,7 +102,7 @@ export function CanvasBottomToolBar() {
               canvasId: roomContext.initialCanvasData.id,
             },
             body: {
-              scenarioId: scenario.id,
+              scenarioId: metaData.scenarioId,
               arguments: newArguments,
               additive: false, // TODO
             },

@@ -30,7 +30,7 @@ export function EdgeDetails(props: { edge: EdgeDto }) {
         },
         {
           slug: "Source",
-          value: props.edge.source,
+          value: props.edge.sourceTitle,
         },
         {
           slug: "Names in Query",
