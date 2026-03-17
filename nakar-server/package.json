@@ -50,9 +50,9 @@
     "sanitize-filename": "^1.0.0",
     "socket.io": "^4.8.1",
     "styled-components": "^6.0.0",
-    "tar": "7.5.10",
+    "tar": "7.5.11",
     "ts-pattern": "^5.0.0",
-    "undici": "7.18.2",
+    "undici": "7.24.0",
     "uuid": "^11.0.0",
     "zod": "^3.0.0"
   },
