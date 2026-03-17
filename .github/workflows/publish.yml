@@ -16,7 +16,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: "22"
+          node-version: "24"
       - name: Set IMAGE_VERSION
         run: echo "IMAGE_VERSION=$(cd nakar-server && npm run --silent version)" >> $GITHUB_ENV
       - name: Set up Docker Buildx
@@ -48,7 +48,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: "22"
+          node-version: "24"
       - name: Set IMAGE_VERSION
         run: echo "IMAGE_VERSION=$(cd nakar-client-web && npm run --silent version)" >> $GITHUB_ENV
       - name: Set up Docker Buildx
@@ -80,7 +80,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: "22"
+          node-version: "24"
       - name: Set IMAGE_VERSION
         run: echo "IMAGE_VERSION=$(cd nakar-db-pole && npm run --silent version)" >> $GITHUB_ENV
       - name: Set up Docker Buildx
@@ -112,7 +112,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: "22"
+          node-version: "24"
       - name: Set IMAGE_VERSION
         run: echo "IMAGE_VERSION=$(cd nakar-db-examples && npm run --silent version)" >> $GITHUB_ENV
       - name: Set up Docker Buildx
