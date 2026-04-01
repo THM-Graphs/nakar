@@ -17,11 +17,7 @@ export default defineConfig([
     extends: [eslint.configs.recommended, tseslint.configs.all],
     languageOptions: {
       parserOptions: {
-        project: [
-          'tsconfig.json',
-          'test/tsconfig.json',
-          'tsconfig.configs.json',
-        ],
+        project: ['tsconfig.json', 'tsconfig.configs.json'],
       },
     },
     rules: {
