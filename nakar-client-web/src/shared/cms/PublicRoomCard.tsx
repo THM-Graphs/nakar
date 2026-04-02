@@ -28,6 +28,7 @@ export function PublicRoomCard(props: {
           ></RoomVisibilityDisplay>
         }
         icon={"person-workspace"}
+        users={props.room.activeUsers}
       ></CMSCardContent>
     </Card>
   );

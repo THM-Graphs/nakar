@@ -28,6 +28,9 @@ import {
   Update,
 } from '@strapi/types/dist/modules/documents/params/document-engine';
 import { Delete as DeleteResult } from '@strapi/types/dist/modules/documents/result/document-engine';
+import { LiveCanvasService } from '../../../live-canvas/LiveCanvasService';
+import { SMap } from '../../../map/Map';
+import { LiveCanvasUser } from '../../../live-canvas/data/LiveCanvasUser';
 
 @Controller('project')
 export class ProjectController {
@@ -35,6 +38,7 @@ export class ProjectController {
     private readonly _database: DatabaseService,
     private readonly _schemaFactory: SchemaFactoryService,
     private readonly _authService: AuthService,
+    private readonly _liveCanvasService: LiveCanvasService,
   ) {}
 
   @Get(':projectId')
@@ -50,7 +54,13 @@ export class ProjectController {
       throw new NotFound();
     }
 
-    return await this._schemaFactory.createSchemaProjectPage(project);
+    const activeUsers: SMap<string, LiveCanvasUser[]> =
+      await this._liveCanvasService.getActiveUsersOfProject(project);
+
+    return await this._schemaFactory.createSchemaProjectPage(
+      project,
+      activeUsers,
+    );
   }
 
   @Post()
@@ -75,7 +85,13 @@ export class ProjectController {
         } satisfies Input<'api::project.project'>,
       });
 
-    return await this._schemaFactory.createSchemaProjectPage(project);
+    const activeUsers: SMap<string, LiveCanvasUser[]> =
+      await this._liveCanvasService.getActiveUsersOfProject(project);
+
+    return await this._schemaFactory.createSchemaProjectPage(
+      project,
+      activeUsers,
+    );
   }
 
   @Put(':projectId')
@@ -99,7 +115,13 @@ export class ProjectController {
       throw new NotFoundException();
     }
 
-    return await this._schemaFactory.createSchemaProjectPage(project);
+    const activeUsers: SMap<string, LiveCanvasUser[]> =
+      await this._liveCanvasService.getActiveUsersOfProject(project);
+
+    return await this._schemaFactory.createSchemaProjectPage(
+      project,
+      activeUsers,
+    );
   }
 
   @Delete(':projectId')

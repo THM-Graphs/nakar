@@ -7,6 +7,8 @@ import { UserCanAccessRoom } from '../../guards/UserCanAccessRoom';
 import { CanvasBelongsToRoom } from '../../guards/CanvasBelongsToRoom';
 import { NotFound } from 'http-errors';
 import { CanvasPageDto } from './dto/CanvasPageDto';
+import { LiveCanvasUser } from '../../../live-canvas/data/LiveCanvasUser';
+import { LiveCanvasService } from '../../../live-canvas/LiveCanvasService';
 
 @Controller('room/:roomId/canvas/:canvasId')
 @UseGuards(UserCanAccessRoom)
@@ -25,6 +27,7 @@ export class PublicCanvasController {
   public constructor(
     private readonly _database: DatabaseService,
     private readonly _schemaFactory: SchemaFactoryService,
+    private readonly _liveCanvasService: LiveCanvasService,
   ) {}
 
   @Get()
@@ -41,10 +44,14 @@ export class PublicCanvasController {
 
     const room: Result<'api::room.room'> =
       await this._database.getRoomOfCanvas(canvas);
+    const canvases: Result<'api::canvas.canvas'>[] =
+      await this._database.getCanvasesOfRoom(room);
+    const activeUsers: LiveCanvasUser[] =
+      this._liveCanvasService.getActiveUsersOfCanvases(canvases);
 
     return new CanvasPageDto({
       canvas: this._schemaFactory.createSchemaCanvasPreview(canvas),
-      room: await this._schemaFactory.createSchemaRoom(room),
+      room: await this._schemaFactory.createSchemaRoom(room, activeUsers),
       scenarios: await this._schemaFactory.createGetScenariosResult(room),
     });
   }

@@ -538,6 +538,7 @@ export type RoomDto = {
     joinCanvasId: string;
     projectId: string;
     databases: Array<DatabaseConnectionDto>;
+    activeUsers: Array<UserPreviewDto>;
 };
 
 export type visibility = 'private' | 'public' | 'unlisted';
@@ -639,6 +640,7 @@ export type StartPageRoomDto = {
     title: string;
     visibility: 'private' | 'public' | 'unlisted';
     joinCanvasId: string;
+    activeUsers: Array<UserPreviewDto>;
 };
 
 export type TestDatabaseConnectionRequestBodyDto = {

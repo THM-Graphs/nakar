@@ -110,6 +110,7 @@ export class SchemaFactoryService {
 
   public async createSchemaRoom(
     room: Result<'api::room.room'>,
+    activeUsers: LiveCanvasUser[],
   ): Promise<RoomDto> {
     const canvases: CanvasDto[] = (
       await this._database.getCanvasesOfRoom(room)
@@ -136,6 +137,10 @@ export class SchemaFactoryService {
             await this.createSchemaDatabase(database),
         ),
       ),
+      activeUsers: activeUsers.map(
+        (activeUser: LiveCanvasUser): UserPreviewDto =>
+          this._createSchemaUserPreviewsFromLiveCanvasUser(activeUser),
+      ),
     });
   }
 
@@ -152,6 +157,7 @@ export class SchemaFactoryService {
 
   public async createSchemaStartPageRoom(
     room: Result<'api::room.room'>,
+    activeUsers: LiveCanvasUser[],
   ): Promise<StartPageRoomDto> {
     const canvases: Result<'api::canvas.canvas'>[] =
       await this._database.getCanvasesOfRoom(room);
@@ -160,6 +166,10 @@ export class SchemaFactoryService {
       title: room.title ?? '',
       visibility: this.createSchemaRoomVisibility(room),
       joinCanvasId: canvases[0].documentId,
+      activeUsers: activeUsers.map(
+        (activeUser: LiveCanvasUser): UserPreviewDto =>
+          this._createSchemaUserPreviewsFromLiveCanvasUser(activeUser),
+      ),
     };
   }
 
@@ -416,6 +426,7 @@ export class SchemaFactoryService {
 
   public async createSchemaProjectPage(
     project: Result<'api::project.project'>,
+    activeUsers: SMap<string, LiveCanvasUser[]>,
   ): Promise<ProjectPageDto> {
     const owner: Result<'plugin::users-permissions.user'> | null =
       await this._database.getOwnerOfProject(project);
@@ -459,7 +470,10 @@ export class SchemaFactoryService {
       rooms: await Promise.all(
         rooms.map(
           async (room: Result<'api::room.room'>): Promise<RoomDto> =>
-            await this.createSchemaRoom(room),
+            await this.createSchemaRoom(
+              room,
+              activeUsers.get(room.documentId) ?? [],
+            ),
         ),
       ),
       commonProperties: await Promise.all(
@@ -954,5 +968,14 @@ export class SchemaFactoryService {
           ScenarioPostActionLayoutAlgorithmDto.none,
       )
       .exhaustive();
+  }
+
+  private _createSchemaUserPreviewsFromLiveCanvasUser(
+    user: LiveCanvasUser,
+  ): UserPreviewDto {
+    return {
+      id: user.socketId,
+      displayName: user.username,
+    };
   }
 }

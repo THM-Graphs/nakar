@@ -14,6 +14,7 @@ import { Logger } from '@strapi/logger';
 import { Profiler } from 'winston';
 import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { SchemaFactoryService } from '../schema/SchemaFactoryService';
+import { LiveCanvasUser } from './data/LiveCanvasUser';
 
 @Injectable()
 export class LiveCanvasService implements OnModuleInit, OnModuleDestroy {
@@ -142,6 +143,44 @@ export class LiveCanvasService implements OnModuleInit, OnModuleDestroy {
     }
 
     liveCanvas.scheduleShutdown();
+  }
+
+  public getActiveUsersOfCanvases(
+    canvases: Result<'api::canvas.canvas'>[],
+  ): LiveCanvasUser[] {
+    const result: SMap<string, LiveCanvasUser> = new SMap<
+      string,
+      LiveCanvasUser
+    >();
+    for (const canvas of canvases) {
+      const liveCanvas: LiveCanvas | null = this.getCanvasOrNull(canvas);
+      if (liveCanvas == null) {
+        // ok
+        continue;
+      }
+      for (const user of liveCanvas.getActiveUsers()) {
+        result.set(user.socketId, user);
+      }
+    }
+
+    return result.toValueArray();
+  }
+
+  public async getActiveUsersOfProject(
+    project: Result<'api::project.project'>,
+  ): Promise<SMap<string, LiveCanvasUser[]>> {
+    const result: SMap<string, LiveCanvasUser[]> = new SMap<
+      string,
+      LiveCanvasUser[]
+    >();
+    const rooms: Result<'api::room.room'>[] =
+      await this._database.getRoomsOfProject(project);
+    for (const room of rooms) {
+      const canvases: Result<'api::canvas.canvas'>[] =
+        await this._database.getCanvasesOfRoom(room);
+      result.set(room.documentId, this.getActiveUsersOfCanvases(canvases));
+    }
+    return result;
   }
 
   private async _destroyCanvas(

@@ -22,6 +22,8 @@ import { Input } from '@strapi/types/dist/modules/documents/params/data';
 import { UpdateRoomRequestBodyDto } from './dto/UpdateRoomRequestBodyDto';
 import { UserCanAccessProject } from '../../guards/UserCanAccessProject';
 import { RoomBelongsToProject } from '../../guards/RoomBelongsToProject';
+import { LiveCanvasService } from '../../../live-canvas/LiveCanvasService';
+import { LiveCanvasUser } from '../../../live-canvas/data/LiveCanvasUser';
 
 @Controller('project/:projectId/room')
 @UseGuards(UserCanAccessProject)
@@ -35,6 +37,7 @@ export class RoomController {
     private readonly _databaseService: DatabaseService,
     private readonly _authService: AuthService,
     private readonly _schemaFactory: SchemaFactoryService,
+    private readonly _liveCanvasService: LiveCanvasService,
   ) {}
 
   @Get(':roomId')
@@ -43,8 +46,12 @@ export class RoomController {
   public async getRoom(@Param('roomId') roomId: string): Promise<RoomDto> {
     const room: Result<'api::room.room'> | null =
       await this._databaseService.getRoom(roomId);
+    const canvases: Result<'api::canvas.canvas'>[] =
+      await this._databaseService.getCanvasesOfRoom(room);
+    const activeUsers: LiveCanvasUser[] =
+      this._liveCanvasService.getActiveUsersOfCanvases(canvases);
 
-    return await this._schemaFactory.createSchemaRoom(room);
+    return await this._schemaFactory.createSchemaRoom(room, activeUsers);
   }
 
   @Post()
@@ -75,8 +82,12 @@ export class RoomController {
         } satisfies Input<'api::room.room'>,
         status: 'published',
       });
+    const canvases: Result<'api::canvas.canvas'>[] =
+      await this._databaseService.getCanvasesOfRoom(room);
+    const activeUsers: LiveCanvasUser[] =
+      this._liveCanvasService.getActiveUsersOfCanvases(canvases);
 
-    return await this._schemaFactory.createSchemaRoom(room);
+    return await this._schemaFactory.createSchemaRoom(room, activeUsers);
   }
 
   @Put(':roomId')
@@ -102,7 +113,12 @@ export class RoomController {
       throw new NotFoundException();
     }
 
-    return await this._schemaFactory.createSchemaRoom(room);
+    const canvases: Result<'api::canvas.canvas'>[] =
+      await this._databaseService.getCanvasesOfRoom(room);
+    const activeUsers: LiveCanvasUser[] =
+      this._liveCanvasService.getActiveUsersOfCanvases(canvases);
+
+    return await this._schemaFactory.createSchemaRoom(room, activeUsers);
   }
 
   @Delete(':roomId')

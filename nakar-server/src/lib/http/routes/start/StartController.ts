@@ -13,6 +13,8 @@ import { StartPageProjectDto } from './dto/StartPageProjectDto';
 import { StartPageRoomDto } from './dto/StartPageRoomDto';
 import { JWT } from '../../decorators/JWT';
 import { AuthService } from '../../../auth/AuthService';
+import { LiveCanvasUser } from '../../../live-canvas/data/LiveCanvasUser';
+import { LiveCanvasService } from '../../../live-canvas/LiveCanvasService';
 
 @Controller('/')
 export class StartController {
@@ -22,6 +24,7 @@ export class StartController {
     private readonly _database: DatabaseService,
     private readonly _schemaFactory: SchemaFactoryService,
     private readonly _authService: AuthService,
+    private readonly _liveCanvasService: LiveCanvasService,
   ) {}
 
   @Get()
@@ -92,7 +95,14 @@ export class StartController {
             async (
               room: Result<'api::room.room'>,
             ): Promise<StartPageRoomDto> => {
-              return await this._schemaFactory.createSchemaStartPageRoom(room);
+              const canvases: Result<'api::canvas.canvas'>[] =
+                await this._database.getCanvasesOfRoom(room);
+              const activeUsers: LiveCanvasUser[] =
+                this._liveCanvasService.getActiveUsersOfCanvases(canvases);
+              return await this._schemaFactory.createSchemaStartPageRoom(
+                room,
+                activeUsers,
+              );
             },
           ),
         )
@@ -102,7 +112,14 @@ export class StartController {
       recentRooms: await Promise.all(
         recentRooms.map(
           async (room: Result<'api::room.room'>): Promise<StartPageRoomDto> => {
-            return await this._schemaFactory.createSchemaStartPageRoom(room);
+            const canvases: Result<'api::canvas.canvas'>[] =
+              await this._database.getCanvasesOfRoom(room);
+            const activeUsers: LiveCanvasUser[] =
+              this._liveCanvasService.getActiveUsersOfCanvases(canvases);
+            return await this._schemaFactory.createSchemaStartPageRoom(
+              room,
+              activeUsers,
+            );
           },
         ),
       ),

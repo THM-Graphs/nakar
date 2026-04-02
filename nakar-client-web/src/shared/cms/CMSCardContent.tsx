@@ -1,7 +1,10 @@
-import { ReactNode, useState } from "react";
-import { Stack } from "react-bootstrap";
+import { Fragment, ReactNode, useState } from "react";
+import { OverlayTrigger, Stack, Tooltip } from "react-bootstrap";
 import clsx from "clsx";
 import { CMSButton } from "./CMSButton.tsx";
+import { UserPreviewDto } from "../../../src-gen";
+import { CMSUserCircle } from "./CMSUserCircle.tsx";
+import { CMSUserCircleCollection } from "./CMSUserCircleCollection.tsx";
 
 export function CMSCardContent(props: {
   title: ReactNode;
@@ -10,13 +13,14 @@ export function CMSCardContent(props: {
   rightBody?: ReactNode;
   rightBodyPaddingStart?: number;
   onRemove?: () => void;
+  users?: UserPreviewDto[];
 }) {
   const [isHover, setIsHover] = useState<boolean>(false);
 
   return (
     <Stack
       direction={"horizontal"}
-      className={"p-3 justify-content-between"}
+      className={"p-3 justify-content-between gap-1"}
       gap={2}
       onMouseEnter={() => {
         setIsHover(true);
@@ -51,7 +55,10 @@ export function CMSCardContent(props: {
           </div>
         )}
       </Stack>
-      <Stack direction={"horizontal"} className={"align-self-start"}>
+      <Stack direction={"horizontal"} className={"align-self-start gap-2"}>
+        <CMSUserCircleCollection
+          users={props.users ?? []}
+        ></CMSUserCircleCollection>
         {isHover && props.onRemove != null ? (
           <CMSButton
             variant={"icon"}

@@ -66,6 +66,7 @@ export function RoomCard(props: {
             )}
           </Stack>
         }
+        users={props.room.activeUsers}
       ></CMSCardContent>
     </Card>
   );

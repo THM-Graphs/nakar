@@ -215,6 +215,10 @@ export class LiveCanvas {
     return this.data.undoableData.current;
   }
 
+  public getActiveUsers(): LiveCanvasUser[] {
+    return this._data.users;
+  }
+
   public grabNode(params: { nodeId: string; userId: string }): void {
     const graph: LiveCanvasUndoableData = this.getGraph();
 

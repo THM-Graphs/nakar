@@ -2,6 +2,7 @@ import { RoomVisibilityDto } from './RoomVisibilityDto';
 import { CanvasDto } from './CanvasDto';
 import { ApiProperty } from '@nestjs/swagger';
 import { DatabaseConnectionDto } from './DatabaseConnectionDto';
+import { UserPreviewDto } from './UserPreviewDto';
 
 export class RoomDto {
   @ApiProperty()
@@ -25,6 +26,9 @@ export class RoomDto {
   @ApiProperty({ isArray: true, type: DatabaseConnectionDto })
   public databases: DatabaseConnectionDto[];
 
+  @ApiProperty({ type: UserPreviewDto, isArray: true })
+  public activeUsers: UserPreviewDto[];
+
   public constructor(data: {
     id: string;
     title: string;
@@ -33,6 +37,7 @@ export class RoomDto {
     joinCanvasId: string;
     projectId: string;
     databases: DatabaseConnectionDto[];
+    activeUsers: UserPreviewDto[];
   }) {
     this.id = data.id;
     this.title = data.title;
@@ -41,5 +46,6 @@ export class RoomDto {
     this.joinCanvasId = data.joinCanvasId;
     this.projectId = data.projectId;
     this.databases = data.databases;
+    this.activeUsers = data.activeUsers;
   }
 }
