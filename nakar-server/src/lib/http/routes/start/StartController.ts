@@ -15,6 +15,7 @@ import { JWT } from '../../decorators/JWT';
 import { AuthService } from '../../../auth/AuthService';
 import { LiveCanvasUser } from '../../../live-canvas/data/LiveCanvasUser';
 import { LiveCanvasService } from '../../../live-canvas/LiveCanvasService';
+import { SMap } from '../../../map/Map';
 
 @Controller('/')
 export class StartController {
@@ -70,8 +71,14 @@ export class StartController {
           myProjects.map(
             async (
               project: Result<'api::project.project'>,
-            ): Promise<StartPageProjectDto> =>
-              await this._schemaFactory.createSchemaStartPageProject(project),
+            ): Promise<StartPageProjectDto> => {
+              const activeUsers: SMap<string, LiveCanvasUser[]> =
+                await this._liveCanvasService.getActiveUsersOfProject(project);
+              return await this._schemaFactory.createSchemaStartPageProject(
+                project,
+                activeUsers.toValueArray().flat(),
+              );
+            },
           ),
         )
       ).toSorted((a: StartPageProjectDto, b: StartPageProjectDto): number =>
@@ -82,8 +89,14 @@ export class StartController {
           collaborationProjects.map(
             async (
               project: Result<'api::project.project'>,
-            ): Promise<StartPageProjectDto> =>
-              await this._schemaFactory.createSchemaStartPageProject(project),
+            ): Promise<StartPageProjectDto> => {
+              const activeUsers: SMap<string, LiveCanvasUser[]> =
+                await this._liveCanvasService.getActiveUsersOfProject(project);
+              return await this._schemaFactory.createSchemaStartPageProject(
+                project,
+                activeUsers.toValueArray().flat(),
+              );
+            },
           ),
         )
       ).toSorted((a: StartPageProjectDto, b: StartPageProjectDto): number =>

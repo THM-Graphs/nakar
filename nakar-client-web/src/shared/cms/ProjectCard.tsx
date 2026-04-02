@@ -41,6 +41,7 @@ export function ProjectCard(props: { project: StartPageProjectDto }) {
             </span>
           </Stack>
         }
+        users={props.project.activeUsers}
       ></CMSCardContent>
     </Card>
   );

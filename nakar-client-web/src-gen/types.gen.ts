@@ -633,6 +633,7 @@ export type StartPageProjectDto = {
     owner: ((UserPreviewDto) | null);
     collaborators: Array<UserPreviewDto>;
     databases: Array<DatabaseConnectionDto>;
+    activeUsers: Array<UserPreviewDto>;
 };
 
 export type StartPageRoomDto = {

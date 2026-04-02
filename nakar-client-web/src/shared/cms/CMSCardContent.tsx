@@ -1,9 +1,8 @@
-import { Fragment, ReactNode, useState } from "react";
-import { OverlayTrigger, Stack, Tooltip } from "react-bootstrap";
+import { ReactNode, useState } from "react";
+import { Stack } from "react-bootstrap";
 import clsx from "clsx";
 import { CMSButton } from "./CMSButton.tsx";
 import { UserPreviewDto } from "../../../src-gen";
-import { CMSUserCircle } from "./CMSUserCircle.tsx";
 import { CMSUserCircleCollection } from "./CMSUserCircleCollection.tsx";
 
 export function CMSCardContent(props: {
@@ -63,7 +62,7 @@ export function CMSCardContent(props: {
           <CMSButton
             variant={"icon"}
             icon={"x-lg"}
-            className={"p-0"}
+            className={"p-0 shadow-none"}
             onClick={() => {
               props.onRemove?.();
             }}

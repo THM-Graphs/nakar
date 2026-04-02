@@ -18,17 +18,22 @@ export class StartPageProjectDto {
   @ApiProperty({ isArray: true, type: DatabaseConnectionDto })
   public databases: DatabaseConnectionDto[];
 
+  @ApiProperty({ type: UserPreviewDto, isArray: true })
+  public activeUsers: UserPreviewDto[];
+
   public constructor(data: {
     id: string;
     title: string;
     owner: UserPreviewDto;
     collaborators: UserPreviewDto[];
     databases: DatabaseConnectionDto[];
+    activeUsers: UserPreviewDto[];
   }) {
     this.id = data.id;
     this.title = data.title;
     this.owner = data.owner;
     this.collaborators = data.collaborators;
     this.databases = data.databases;
+    this.activeUsers = data.activeUsers;
   }
 }

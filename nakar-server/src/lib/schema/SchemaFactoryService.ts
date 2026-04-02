@@ -139,7 +139,7 @@ export class SchemaFactoryService {
       ),
       activeUsers: activeUsers.map(
         (activeUser: LiveCanvasUser): UserPreviewDto =>
-          this._createSchemaUserPreviewsFromLiveCanvasUser(activeUser),
+          this._createSchemaUserPreviewFromLiveCanvasUser(activeUser),
       ),
     });
   }
@@ -168,7 +168,7 @@ export class SchemaFactoryService {
       joinCanvasId: canvases[0].documentId,
       activeUsers: activeUsers.map(
         (activeUser: LiveCanvasUser): UserPreviewDto =>
-          this._createSchemaUserPreviewsFromLiveCanvasUser(activeUser),
+          this._createSchemaUserPreviewFromLiveCanvasUser(activeUser),
       ),
     };
   }
@@ -489,6 +489,7 @@ export class SchemaFactoryService {
 
   public async createSchemaStartPageProject(
     input: Result<'api::project.project'>,
+    activeUsers: LiveCanvasUser[],
   ): Promise<StartPageProjectDto> {
     const owner: Result<'plugin::users-permissions.user'> | null =
       await this._database.getOwnerOfProject(input);
@@ -515,6 +516,10 @@ export class SchemaFactoryService {
             return await this.createSchemaDatabase(database);
           },
         ),
+      ),
+      activeUsers: activeUsers.map(
+        (activeUser: LiveCanvasUser): UserPreviewDto =>
+          this._createSchemaUserPreviewFromLiveCanvasUser(activeUser),
       ),
     };
   }
@@ -970,7 +975,7 @@ export class SchemaFactoryService {
       .exhaustive();
   }
 
-  private _createSchemaUserPreviewsFromLiveCanvasUser(
+  private _createSchemaUserPreviewFromLiveCanvasUser(
     user: LiveCanvasUser,
   ): UserPreviewDto {
     return {
