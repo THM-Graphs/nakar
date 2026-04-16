@@ -126,38 +126,40 @@ export class WebSocketManager
 
   public onModuleInit(): void {
     this._server.use((socket: Socket, next: (error?: Error) => void): void => {
-      (async (): Promise<void> => {
-        const auth: AuthWsdto = plainToClass(AuthWsdto, socket.handshake.auth);
-        await validateOrReject(auth, validatorOptions);
-        const user: Result<'plugin::users-permissions.user'> | null =
-          await this._authService.getUserByJWT(auth.jwt);
-
-        const canvas: Result<'api::canvas.canvas'> =
-          await this._databaseService.getCanvas(auth.canvasId);
-
-        const allowed: boolean = await userCanSeeAndJoinCanvas(
-          user,
-          canvas,
-          this._databaseService,
-        );
-        if (!allowed) {
-          throw new WsException(
-            `Canvas ${auth.canvasId} not allowed for user ${user?.documentId}`,
+      void (async (): Promise<void> => {
+        try {
+          const auth: AuthWsdto = plainToClass(
+            AuthWsdto,
+            socket.handshake.auth,
           );
-        }
-        this._logger.debug(
-          `Client ${socket.id} (user ${user?.documentId}) is allowed to access canvas ${auth.canvasId}.`,
-        );
-      })()
-        .then((): void => {
+          await validateOrReject(auth, validatorOptions);
+          const user: Result<'plugin::users-permissions.user'> | null =
+            await this._authService.getUserByJWT(auth.jwt);
+
+          const canvas: Result<'api::canvas.canvas'> =
+            await this._databaseService.getCanvas(auth.canvasId);
+
+          const allowed: boolean = await userCanSeeAndJoinCanvas(
+            user,
+            canvas,
+            this._databaseService,
+          );
+          if (!allowed) {
+            throw new WsException(
+              `Canvas ${auth.canvasId} not allowed for user ${user?.documentId}`,
+            );
+          }
+          this._logger.debug(
+            `Client ${socket.id} (user ${user?.documentId}) is allowed to access canvas ${auth.canvasId}.`,
+          );
           next();
-        })
-        .catch((error: unknown): void => {
+        } catch (error: unknown) {
           this._logger.warn(
             `Socket connection not allowed: ${JSON.stringify(error)}`,
           );
           next(new WsException('Forbidden'));
-        });
+        }
+      })();
     });
   }
 
