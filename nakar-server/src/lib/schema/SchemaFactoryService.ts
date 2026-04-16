@@ -346,7 +346,8 @@ export class SchemaFactoryService {
       }),
     };
     t.done({
-      message: 'createSchemaGraphElements',
+      level: 'debug',
+      message: 'Did run createSchemaGraphElements',
     });
     return result;
   }
@@ -362,7 +363,8 @@ export class SchemaFactoryService {
       ),
     };
     t.done({
-      message: 'createSchemaTable',
+      level: 'debug',
+      message: 'Did run createSchemaTable',
     });
     return result;
   }
@@ -419,7 +421,8 @@ export class SchemaFactoryService {
       }),
     };
     t.done({
-      message: 'createSchemaGraphMetaData',
+      level: 'debug',
+      message: 'Did run createSchemaGraphMetaData',
     });
     return result;
   }
@@ -683,7 +686,8 @@ export class SchemaFactoryService {
         }),
     } satisfies HistogramDto;
     t.done({
-      message: '_createSchemaHistogram',
+      level: 'debug',
+      message: 'Did run createSchemaHistogram',
     });
     return result;
   }

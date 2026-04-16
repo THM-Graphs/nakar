@@ -188,7 +188,8 @@ export class LiveCanvasUndoableData {
       }
     }
     task.done({
-      message: 'removeDanglingEdges',
+      level: 'debug',
+      message: 'Did remove dangling edges',
     });
     return edgesRemoved;
   }
@@ -228,7 +229,8 @@ export class LiveCanvasUndoableData {
     };
 
     task.done({
-      message: 'toPhysicalGraph',
+      level: 'debug',
+      message: 'Did create physical graph',
     });
     return result;
   }
@@ -261,7 +263,8 @@ export class LiveCanvasUndoableData {
       notes: this.notes.map((n: LiveCanvasNote): LiveCanvasNote => n.copy()),
     });
     task.done({
-      message: 'copy',
+      level: 'debug',
+      message: 'Did copy live canvas undoable data',
     });
     return copy;
   }

@@ -74,6 +74,7 @@ export class DatabaseEventsService implements OnModuleInit, OnModuleDestroy {
         const task: Profiler = strapi.log.startTimer();
         const result: NextResult = await next();
         task.done({
+          level: 'debug',
           message: `${context.action} ${context.uid}`,
         });
         return result;

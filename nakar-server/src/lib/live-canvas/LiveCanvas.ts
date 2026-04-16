@@ -507,7 +507,8 @@ export class LiveCanvas {
               );
           }
           task.done({
-            message: 'Run Post-Scenario Actions',
+            level: 'debug',
+            message: 'Did run Post-Scenario Actions',
           });
         }
 
@@ -1160,7 +1161,8 @@ export class LiveCanvas {
     await this._database.setLiveCanvasData(canvas, this._data.toPlain());
 
     task.done({
-      message: 'Save Graph',
+      level: 'debug',
+      message: 'Did save live canvas data',
     });
   }
 
@@ -1563,7 +1565,8 @@ export class LiveCanvas {
     }
 
     task.done({
-      message: 'Post Process Graph',
+      level: 'debug',
+      message: 'Did post process graph',
     });
   }
 

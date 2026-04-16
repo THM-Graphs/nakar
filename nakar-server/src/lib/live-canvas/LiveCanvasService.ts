@@ -127,7 +127,8 @@ export class LiveCanvasService implements OnModuleInit, OnModuleDestroy {
     liveCanvas.bootstrap();
 
     task.done({
-      message: `Init canvas ${canvas.title ?? canvas.documentId}`,
+      level: 'debug',
+      message: `Did init canvas ${canvas.title ?? canvas.documentId}`,
     });
 
     return liveCanvas;
