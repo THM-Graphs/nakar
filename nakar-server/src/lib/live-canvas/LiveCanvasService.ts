@@ -15,6 +15,7 @@ import { Profiler } from 'winston';
 import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { SchemaFactoryService } from '../schema/SchemaFactoryService';
 import { LiveCanvasUser } from './data/LiveCanvasUser';
+import { MonitoringService } from '../monitoring/MonitoringService';
 
 @Injectable()
 export class LiveCanvasService implements OnModuleInit, OnModuleDestroy {
@@ -27,6 +28,7 @@ export class LiveCanvasService implements OnModuleInit, OnModuleDestroy {
     private readonly _databaseEvents: DatabaseEventsService,
     private readonly _neo4j: Neo4jService,
     private readonly _schemaFactoryService: SchemaFactoryService,
+    private readonly _monitoringService: MonitoringService,
   ) {
     this._liveCanvases = new SMap();
     this._onEvent = new Subject();
@@ -108,6 +110,7 @@ export class LiveCanvasService implements OnModuleInit, OnModuleDestroy {
       this._neo4j,
       this._databaseEvents,
       this._schemaFactoryService,
+      this._monitoringService,
     );
 
     this._liveCanvases.set(canvas.documentId, liveCanvas);

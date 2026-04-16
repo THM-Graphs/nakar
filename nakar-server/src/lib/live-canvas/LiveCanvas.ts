@@ -53,6 +53,7 @@ import { ScenarioDto } from '../schema/dtos/ScenarioDto';
 import { LiveCanvasScenarioGroup } from './data/LiveCanvasScenarioGroup';
 import { SchemaFactoryService } from '../schema/SchemaFactoryService';
 import { LiveCanvasScenario } from './data/LiveCanvasScenario';
+import { MonitoringService } from '../monitoring/MonitoringService';
 
 export class LiveCanvas {
   private readonly _logger: Logger = createChildLogger(this);
@@ -69,6 +70,7 @@ export class LiveCanvas {
     private readonly _neo4j: Neo4jService,
     private readonly _databaseEventsService: DatabaseEventsService,
     private readonly _schemaFactory: SchemaFactoryService,
+    private readonly _monitoringService: MonitoringService,
   ) {
     this._onEvent = new Subject();
     this._subscriptions = new SSet();
@@ -1201,6 +1203,22 @@ export class LiveCanvas {
       user: newLiveCanvasUser,
     } satisfies CanvasEventUserJoined);
     this._handleChangeRecorder(changeRecorder);
+
+    this._monitoringService.pushEvent({
+      type: 'user_did_join_canvas',
+      metaData: {
+        username: newLiveCanvasUser.username,
+      },
+      userInfo: {
+        userId: newLiveCanvasUser.databaseId,
+        socketId: newLiveCanvasUser.socketId,
+      },
+      objectInfo: {
+        canvasId: this.canvasId,
+        roomId: null,
+        projectId: null,
+      },
+    });
   }
 
   public removeUser(socketId: string): void {
@@ -1221,6 +1239,22 @@ export class LiveCanvas {
 
       this.data.users.splice(index, 1);
       changeRecorder.didChangeUsers();
+
+      this._monitoringService.pushEvent({
+        type: 'user_did_leave_canvas',
+        metaData: {
+          username: user.username,
+        },
+        userInfo: {
+          userId: user.databaseId,
+          socketId: user.socketId,
+        },
+        objectInfo: {
+          canvasId: this.canvasId,
+          roomId: null,
+          projectId: null,
+        },
+      });
     }
 
     this._handleChangeRecorder(changeRecorder);

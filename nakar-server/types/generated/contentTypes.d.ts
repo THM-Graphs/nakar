@@ -551,6 +551,46 @@ export interface ApiDatabaseConnectionDatabaseConnection
   };
 }
 
+export interface ApiMonitoringEventMonitoringEvent
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'monitoring_events';
+  info: {
+    displayName: 'Monitoring Event';
+    pluralName: 'monitoring-events';
+    singularName: 'monitoring-event';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    canvasId: Schema.Attribute.String;
+    canvasTitle: Schema.Attribute.String;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    dateTime: Schema.Attribute.String;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::monitoring-event.monitoring-event'
+    > &
+      Schema.Attribute.Private;
+    metaData: Schema.Attribute.JSON;
+    projectId: Schema.Attribute.String;
+    projectTitle: Schema.Attribute.String;
+    publishedAt: Schema.Attribute.DateTime;
+    roomId: Schema.Attribute.String;
+    roomTitle: Schema.Attribute.String;
+    socketId: Schema.Attribute.String;
+    type: Schema.Attribute.String;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    userId: Schema.Attribute.String;
+    username: Schema.Attribute.String;
+  };
+}
+
 export interface ApiNodeConfigurationNodeConfiguration
   extends Struct.CollectionTypeSchema {
   collectionName: 'node_configurations';
@@ -1205,6 +1245,7 @@ export interface PluginUploadFile extends Struct.CollectionTypeSchema {
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     ext: Schema.Attribute.String;
+    focalPoint: Schema.Attribute.JSON;
     folder: Schema.Attribute.Relation<'manyToOne', 'plugin::upload.folder'> &
       Schema.Attribute.Private;
     folderPath: Schema.Attribute.String &
@@ -1460,6 +1501,7 @@ declare module '@strapi/strapi' {
       'api::canvas.canvas': ApiCanvasCanvas;
       'api::common-property.common-property': ApiCommonPropertyCommonProperty;
       'api::database-connection.database-connection': ApiDatabaseConnectionDatabaseConnection;
+      'api::monitoring-event.monitoring-event': ApiMonitoringEventMonitoringEvent;
       'api::node-configuration.node-configuration': ApiNodeConfigurationNodeConfiguration;
       'api::node-reference.node-reference': ApiNodeReferenceNodeReference;
       'api::note.note': ApiNoteNote;

@@ -21,6 +21,7 @@ import { DatabaseConnectionController } from '../http/routes/database-connection
 import { PublicRoomController } from '../http/routes/public-room/PublicRoomController';
 import { PublicCanvasController } from '../http/routes/public-canvas/PublicCanvasController';
 import { CommonPropertiesController } from '../http/routes/common-properties/CommonPropertiesController';
+import { MonitoringService } from '../monitoring/MonitoringService';
 
 @Module({
   controllers: [
@@ -48,6 +49,7 @@ import { CommonPropertiesController } from '../http/routes/common-properties/Com
     Neo4jService,
     WebSocketManager,
     AuthService,
+    MonitoringService,
   ],
 })
 export class AppModule {}

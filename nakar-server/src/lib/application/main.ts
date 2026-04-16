@@ -11,10 +11,11 @@ import { ActionWsdto } from '../socketIO/dto/ActionWsdto';
 import { validationPipelineOptions } from './validationPipelineOptions';
 import { EventWsdto } from '../socketIO/dto/EventWsdto';
 import { AuthWsdto } from '../socketIO/dto/AuthWsdto';
+import { MonitoringService } from '../monitoring/MonitoringService';
 
 let nestApp: NestExpressApplication | null = null;
 
-export async function bootstrapNest(): Promise<void> {
+export async function bootstrapNest(): Promise<NestExpressApplication> {
   const config: SanitizedConfig = getConfig();
   const app: NestExpressApplication =
     await NestFactory.create<NestExpressApplication>(AppModule, {
@@ -42,10 +43,30 @@ export async function bootstrapNest(): Promise<void> {
       ),
     { raw: ['yaml'], explorer: true, yamlDocumentUrl: '/api.yaml' },
   );
+
   await app.listen(config.port + 1, config.host);
+
   strapi.log.http(`${await app.getUrl()}/api/docs`);
+
+  const monitoringService: MonitoringService = app.get(MonitoringService);
+  monitoringService.pushEvent({
+    type: 'application_did_start',
+    userInfo: null,
+    objectInfo: null,
+    metaData: null,
+  });
+
+  return app;
 }
 
 export async function destroyNest(): Promise<void> {
+  const monitoringService: MonitoringService | null =
+    nestApp?.get(MonitoringService) ?? null;
+  monitoringService?.pushEvent({
+    type: 'application_will_shutdown',
+    userInfo: null,
+    objectInfo: null,
+    metaData: null,
+  });
   await nestApp?.close();
 }
