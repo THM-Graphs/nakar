@@ -23,4 +23,12 @@ export class LiveCanvasLabelViewSettingsDto {
   @IsEnum(LiveCanvasLabelViewSettingsColorIndexDto)
   @IsNumber()
   public colorIndex!: LiveCanvasLabelViewSettingsColorIndexDto;
+
+  @ApiProperty({ type: String })
+  @IsString()
+  public titleProperty!: number;
+
+  @ApiProperty({ type: Boolean })
+  @IsBoolean()
+  public customTit!: boolean;
 }

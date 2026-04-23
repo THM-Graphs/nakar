@@ -8,20 +8,28 @@ export class LiveCanvasLabelViewSettings {
     radius: z.number(),
     customRadius: z.boolean(),
     colorIndex: z.enum(['0', '1', '2', '3', '4', '5']),
+    titleProperty: z.string(),
+    customTitleProperty: z.boolean(),
   });
 
   private readonly _radius: number;
   private readonly _customRadius: boolean;
   private readonly _colorIndex: LiveCanvasLabelViewSettings['colorIndex'];
+  private readonly _titleProperty: string;
+  private readonly _customTitleProperty: boolean;
 
   public constructor(data: {
     radius: number;
     customRadius: boolean;
     colorIndex: LiveCanvasLabelViewSettings['colorIndex'];
+    titleProperty: string;
+    customTitleProperty: boolean;
   }) {
     this._radius = data.radius;
     this._customRadius = data.customRadius;
     this._colorIndex = data.colorIndex;
+    this._titleProperty = data.titleProperty;
+    this._customTitleProperty = data.customTitleProperty;
   }
 
   public get radius(): number {
@@ -34,6 +42,14 @@ export class LiveCanvasLabelViewSettings {
 
   public get colorIndex(): 0 | 1 | 2 | 3 | 4 | 5 {
     return this._colorIndex;
+  }
+
+  public get titleProperty(): string {
+    return this._titleProperty;
+  }
+
+  public get customTitleProperty(): boolean {
+    return this._customTitleProperty;
   }
 
   public static fromPlain(
@@ -50,6 +66,8 @@ export class LiveCanvasLabelViewSettings {
         .with('4', (): LiveCanvasLabelViewSettings['colorIndex'] => 4)
         .with('5', (): LiveCanvasLabelViewSettings['colorIndex'] => 5)
         .exhaustive(),
+      titleProperty: data.titleProperty,
+      customTitleProperty: data.customTitleProperty,
     });
   }
 

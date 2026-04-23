@@ -11,4 +11,3 @@ See https://www.thm.de/mni/forschung/institute-gruppen/ii/ii-projekte/nakar.html
 ## Architecture
 
 <img src="docs/architecture.svg">
-
