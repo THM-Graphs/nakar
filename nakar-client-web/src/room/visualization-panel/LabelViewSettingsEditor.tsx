@@ -1,6 +1,6 @@
 import { Form, Stack } from "react-bootstrap";
 import { NumberInput } from "../../shared/elements/NumberInput.tsx";
-import { LabelViewSettingsColorEditor } from "./LabelViewSettingsColorEditor.tsx";
+import { ViewSettingsColorEditor } from "./ViewSettingsColorEditor.tsx";
 import { useBearStore } from "../../state/useBearStore.ts";
 import { useCallback, useMemo } from "react";
 import {
@@ -60,8 +60,7 @@ export function LabelViewSettingsEditor(props: {
   }
   return (
     <Stack className={props.className}>
-      <LabelViewSettingsColorEditor
-        label={labelVisualization.label}
+      <ViewSettingsColorEditor
         colorIndex={labelVisualization.colorIndex}
         setColorIndex={(newValue) => {
           onChange({
@@ -69,7 +68,7 @@ export function LabelViewSettingsEditor(props: {
             colorIndex: newValue,
           });
         }}
-      ></LabelViewSettingsColorEditor>
+      ></ViewSettingsColorEditor>
       <Form.Check
         id={`customRadius${labelVisualization.label}`}
         label={<span className={"small"}>Size</span>}

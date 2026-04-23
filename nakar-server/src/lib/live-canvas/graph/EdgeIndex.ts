@@ -60,6 +60,12 @@ export class EdgeIndex {
     return this._propertyHistogram;
   }
 
+  public get edgeTypes(): string[] {
+    return this._byType
+      .toKeyArray()
+      .toSorted((a: string, b: string): number => a.localeCompare(b));
+  }
+
   public reset(): void {
     for (const edge of this.edges) {
       this.remove(edge);

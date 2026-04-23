@@ -6,7 +6,7 @@ import {
   getBackgroundColorOfColor,
   getBackgroundColorOfLabel,
 } from "../color/getBackgroundColor.ts";
-import { getTextColor } from "../color/getTextColor.ts";
+import { getTextColor, getTextColorOfEdge } from "../color/getTextColor.ts";
 import { Observable, Subject, throttleTime } from "rxjs";
 import { D3RendererState } from "./D3RendererState.ts";
 import { D3Calculator } from "./D3Calculator.ts";
@@ -353,14 +353,14 @@ export class D3Renderer {
         `;
       })
       .append("xhtml:span")
-      .attr("style", () => {
+      .attr("style", (e) => {
         return `
         pointer-events: auto;
         font-weight: bold;
-        color: ${this.theme == "dark" ? "#000" : "#fff"};
+        color: ${getTextColorOfEdge(e.customColor, this.colorSchema, this.theme)};
         font-size: 10px;
         cursor: pointer;
-        background-color: ${this.theme == "dark" ? "#fff" : "#000"};
+        background-color: ${this._getEdgeStrokeColor(e)};
         border-radius: 5px;
         padding: 0px 5px;
         `;
@@ -377,9 +377,9 @@ export class D3Renderer {
         const el = d3.select(e.currentTarget as SVGGElement);
         el.style("background-color", "#888");
       })
-      .on("mouseout", (e: MouseEvent) => {
+      .on("mouseout", (e: MouseEvent, d) => {
         const el = d3.select(e.currentTarget as SVGGElement);
-        el.style("background-color", this.theme == "dark" ? "#fff" : "#000");
+        el.style("background-color", this._getEdgeStrokeColor(d));
       })
       .on("click", (event: PointerEvent, edge: D3Link) => {
         if (isMultiSelectKey(event)) {
@@ -795,6 +795,11 @@ export class D3Renderer {
     );
 
     this.linkPathSelection?.attr("stroke", (d) => this._getEdgeStrokeColor(d));
+    this.linkLabelSelection
+      ?.select("foreignObject")
+      .select("div")
+      .select("span")
+      .style("background-color", (d) => this._getEdgeStrokeColor(d));
   }
 
   public applyPositionsToSVG() {
@@ -1027,11 +1032,17 @@ export class D3Renderer {
   }
 
   private _getEdgeStrokeColor(d: D3Link): string {
-    return this._edgeIsSelected(d)
-      ? "#ff00ff"
-      : this.theme == "dark"
-        ? "#ffffff"
-        : "#000000";
+    if (this._edgeIsSelected(d)) {
+      return "#ff00ff";
+    }
+    if (d.customColor != null) {
+      const colorToUse = getBackgroundColorOfColor(
+        d.customColor,
+        this.colorSchema,
+      );
+      return colorToUse;
+    }
+    return this.theme == "dark" ? "#ffffff" : "#000000";
   }
 
   private _getPositionOfSelectedElement(): [number, number] | null {

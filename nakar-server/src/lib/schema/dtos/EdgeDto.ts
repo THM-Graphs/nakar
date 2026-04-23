@@ -1,6 +1,7 @@
 import { NodePreviewDto } from './NodePreviewDto';
 import { CreationReasonDto } from './CreationReasonDto';
 import { ApiProperty } from '@nestjs/swagger';
+import { ColorDto } from './ColorDto';
 
 export class EdgeDto {
   @ApiProperty()
@@ -57,6 +58,9 @@ export class EdgeDto {
   @ApiProperty({ enum: CreationReasonDto })
   public creationReason: CreationReasonDto;
 
+  @ApiProperty({ type: ColorDto, nullable: true })
+  public customColor: ColorDto | null;
+
   public constructor(data: {
     id: string;
     startNodeId: string;
@@ -75,6 +79,7 @@ export class EdgeDto {
     sourceNode: NodePreviewDto;
     targetNode: NodePreviewDto;
     creationReason: CreationReasonDto;
+    customColor: ColorDto | null;
   }) {
     this.id = data.id;
     this.startNodeId = data.startNodeId;
@@ -93,5 +98,6 @@ export class EdgeDto {
     this.sourceNode = data.sourceNode;
     this.targetNode = data.targetNode;
     this.creationReason = data.creationReason;
+    this.customColor = data.customColor;
   }
 }

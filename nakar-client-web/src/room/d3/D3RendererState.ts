@@ -72,6 +72,7 @@ export class D3RendererState {
           parallelCount: edge.parallelCount,
           parallelIndex: edge.parallelIndex,
           width: edge.width,
+          customColor: edge.customColor,
         });
       }
       return acc;

@@ -242,7 +242,7 @@ export class ActionController {
   ): void {
     const canvas: LiveCanvas = this._canvasService.getCanvasWithId(canvasId);
     const viewSettings: LiveCanvasViewSettings =
-      LiveCanvasViewSettings.fromSchema(body, canvas.labels);
+      LiveCanvasViewSettings.fromSchema(body, canvas.labels, canvas.edgeTypes);
     canvas.setViewSettings(viewSettings);
   }
 

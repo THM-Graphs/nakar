@@ -1,11 +1,14 @@
 import { Form, Stack } from "react-bootstrap";
 import { NumberInput } from "../../shared/elements/NumberInput.tsx";
 import {
+  LiveCanvasEdgeViewSettingsDto,
   LiveCanvasLabelViewSettingsDto,
   LiveCanvasViewSettingsDto,
 } from "../../../src-gen";
 import { LabelViewSettingsEditor } from "./LabelViewSettingsEditor.tsx";
 import { Label } from "../labels/Label.tsx";
+import { Fragment } from "react";
+import { EdgeViewSettingsEditor } from "./EdgeViewSettingsEditor.tsx";
 
 export function ViewSettingsEditor(props: {
   viewSettings: LiveCanvasViewSettingsDto;
@@ -78,6 +81,24 @@ export function ViewSettingsEditor(props: {
               label={labelViewSettings.label}
             ></LabelViewSettingsEditor>
           </Stack>
+        ),
+      )}
+      {props.viewSettings.edgeSettings.map(
+        (edgeViewSettings: LiveCanvasEdgeViewSettingsDto) => (
+          <Fragment key={edgeViewSettings.edgeType}>
+            <Stack className={"border-top p-2"}>
+              <Stack className={"pb-2"}>
+                <Label
+                  label={edgeViewSettings.edgeType}
+                  showAmount={true}
+                  showSources={true}
+                ></Label>
+              </Stack>
+              <EdgeViewSettingsEditor
+                edgeType={edgeViewSettings.edgeType}
+              ></EdgeViewSettingsEditor>
+            </Stack>
+          </Fragment>
         ),
       )}
     </Stack>

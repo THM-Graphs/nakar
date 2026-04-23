@@ -6,19 +6,28 @@ import { SMap } from '../../map/Map';
 import { LiveCanvasLabelViewSettingsDto } from '../../schema/dtos/LiveCanvasLabelViewSettingsDto';
 import z from 'zod';
 import { GraphNode } from '../graph/GraphNode';
+import { LiveCanvasEdgeViewSettings } from './LiveCanvasEdgeViewSettings';
+import { LiveCanvasEdgeViewSettingsDto } from '../../schema/dtos/LiveCanvasEdgeViewSettingsDto';
+import { GraphEdge } from '../graph/GraphEdge';
 
 export class LiveCanvasViewSettings {
   public static readonly defaultGrowNodesBasedOnDegreeFactor: number = 2;
   public static readonly defaultGrowNodesBasedOnDegree: boolean = false;
   public static readonly defaultCompressRelationshipsWidthFactor: number = 10;
+  public static readonly defaultScaleType: ScaleType = 'linear';
 
   // eslint-disable-next-line @typescript-eslint/typedef
   public static readonly schema = z.object({
-    compressRelationshipsWidthFactor: z.number(),
-    growNodesBasedOnDegree: z.boolean(),
-    growNodesBasedOnDegreeFactor: z.number(),
-    scaleType: z.enum(['linear', 'log2', 'logn', 'log10']),
-    labelSettings: z.record(z.string(), LiveCanvasLabelViewSettings.schema),
+    compressRelationshipsWidthFactor: z.number().optional(),
+    growNodesBasedOnDegree: z.boolean().optional(),
+    growNodesBasedOnDegreeFactor: z.number().optional(),
+    scaleType: z.enum(['linear', 'log2', 'logn', 'log10']).optional(),
+    labelSettings: z
+      .record(z.string(), LiveCanvasLabelViewSettings.schema)
+      .optional(),
+    edgeSettings: z
+      .record(z.string(), LiveCanvasEdgeViewSettings.schema)
+      .optional(),
   });
 
   private readonly _compressRelationshipsWidthFactor: number;
@@ -26,6 +35,7 @@ export class LiveCanvasViewSettings {
   private readonly _growNodesBasedOnDegreeFactor: number;
   private readonly _scaleType: ScaleType;
   private readonly _labelSettings: SMap<string, LiveCanvasLabelViewSettings>;
+  private readonly _edgeSettings: SMap<string, LiveCanvasEdgeViewSettings>;
 
   public constructor(params: {
     compressRelationshipsWidthFactor: number;
@@ -33,6 +43,7 @@ export class LiveCanvasViewSettings {
     growNodesBasedOnDegreeFactor: number;
     scaleType: ScaleType;
     labelSettings: SMap<string, LiveCanvasLabelViewSettings>;
+    edgeSettings: SMap<string, LiveCanvasEdgeViewSettings>;
   }) {
     this._compressRelationshipsWidthFactor = Range.clamp(
       params.compressRelationshipsWidthFactor,
@@ -47,6 +58,7 @@ export class LiveCanvasViewSettings {
     );
     this._scaleType = params.scaleType;
     this._labelSettings = params.labelSettings;
+    this._edgeSettings = params.edgeSettings;
   }
 
   public get compressRelationshipsWidthFactor(): number {
@@ -69,19 +81,35 @@ export class LiveCanvasViewSettings {
     return this._labelSettings;
   }
 
+  public get edgeSettings(): SMap<string, LiveCanvasEdgeViewSettings> {
+    return this._edgeSettings;
+  }
+
   public static fromPlain(
     data: z.infer<typeof LiveCanvasViewSettings.schema>,
   ): LiveCanvasViewSettings {
     return new LiveCanvasViewSettings({
-      compressRelationshipsWidthFactor: data.compressRelationshipsWidthFactor,
-      growNodesBasedOnDegree: data.growNodesBasedOnDegree,
-      growNodesBasedOnDegreeFactor: data.growNodesBasedOnDegreeFactor,
-      scaleType: data.scaleType,
-      labelSettings: SMap.fromRecord(data.labelSettings).map(
+      compressRelationshipsWidthFactor:
+        data.compressRelationshipsWidthFactor ??
+        LiveCanvasViewSettings.defaultCompressRelationshipsWidthFactor,
+      growNodesBasedOnDegree:
+        data.growNodesBasedOnDegree ??
+        LiveCanvasViewSettings.defaultGrowNodesBasedOnDegree,
+      growNodesBasedOnDegreeFactor:
+        data.growNodesBasedOnDegreeFactor ??
+        LiveCanvasViewSettings.defaultGrowNodesBasedOnDegreeFactor,
+      scaleType: data.scaleType ?? LiveCanvasViewSettings.defaultScaleType,
+      labelSettings: SMap.fromRecord(data.labelSettings ?? {}).map(
         (
           labelSetting: z.infer<typeof LiveCanvasLabelViewSettings.schema>,
         ): LiveCanvasLabelViewSettings =>
           LiveCanvasLabelViewSettings.fromPlain(labelSetting),
+      ),
+      edgeSettings: SMap.fromRecord(data.edgeSettings ?? {}).map(
+        (
+          edgeSetting: z.infer<typeof LiveCanvasEdgeViewSettings.schema>,
+        ): LiveCanvasEdgeViewSettings =>
+          LiveCanvasEdgeViewSettings.fromPlain(edgeSetting),
       ),
     });
   }
@@ -89,6 +117,7 @@ export class LiveCanvasViewSettings {
   public static fromSchema(
     input: LiveCanvasViewSettingsDto,
     labels: string[],
+    edgeTypes: string[],
   ): LiveCanvasViewSettings {
     return new LiveCanvasViewSettings({
       compressRelationshipsWidthFactor: input.compressRelationshipsWidthFactor,
@@ -112,6 +141,23 @@ export class LiveCanvasViewSettings {
           },
           new SMap(),
         ),
+      edgeSettings: input.edgeSettings
+        .filter((edgeSetting: LiveCanvasEdgeViewSettingsDto): boolean =>
+          // Do not accept edge settings of edge types that don't exist.
+          edgeTypes.includes(edgeSetting.edgeType),
+        )
+        .reduce<SMap<string, LiveCanvasEdgeViewSettings>>(
+          (
+            akku: SMap<string, LiveCanvasEdgeViewSettings>,
+            next: LiveCanvasEdgeViewSettingsDto,
+          ): SMap<string, LiveCanvasEdgeViewSettings> => {
+            return akku.bySetting(
+              next.edgeType,
+              LiveCanvasEdgeViewSettings.fromSchema(next),
+            );
+          },
+          new SMap(),
+        ),
     });
   }
 
@@ -124,11 +170,15 @@ export class LiveCanvasViewSettings {
       growNodesBasedOnDegreeFactor:
         LiveCanvasViewSettings.defaultGrowNodesBasedOnDegreeFactor,
       labelSettings: new SMap(),
-      scaleType: 'linear',
+      edgeSettings: new SMap(),
+      scaleType: LiveCanvasViewSettings.defaultScaleType,
     });
   }
 
-  public toSchema(labels: string[]): LiveCanvasViewSettingsDto {
+  public toSchema(
+    labels: string[],
+    edgeTypes: string[],
+  ): LiveCanvasViewSettingsDto {
     return {
       compressRelationshipsWidthFactor: this._compressRelationshipsWidthFactor,
       growNodesBasedOnDegree: this._growNodesBasedOnDegree,
@@ -141,6 +191,17 @@ export class LiveCanvasViewSettings {
           const viewSetting: LiveCanvasLabelViewSettings =
             this.getLabelSettings(label);
           return [...akku, viewSetting.toSchema(label)];
+        },
+        [],
+      ),
+      edgeSettings: edgeTypes.reduce<LiveCanvasEdgeViewSettingsDto[]>(
+        (
+          akku: LiveCanvasEdgeViewSettingsDto[],
+          edgeType: string,
+        ): LiveCanvasEdgeViewSettingsDto[] => {
+          const viewSetting: LiveCanvasEdgeViewSettings =
+            this.getEdgeSettings(edgeType);
+          return [...akku, viewSetting.toSchema(edgeType)];
         },
         [],
       ),
@@ -158,6 +219,14 @@ export class LiveCanvasViewSettings {
           (
             labelSetting: LiveCanvasLabelViewSettings,
           ): z.infer<typeof LiveCanvasLabelViewSettings.schema> =>
+            labelSetting.toPlain(),
+        )
+        .toRecord(),
+      edgeSettings: this.edgeSettings
+        .map(
+          (
+            labelSetting: LiveCanvasEdgeViewSettings,
+          ): z.infer<typeof LiveCanvasEdgeViewSettings.schema> =>
             labelSetting.toPlain(),
         )
         .toRecord(),
@@ -187,6 +256,24 @@ export class LiveCanvasViewSettings {
         titleProperty: '',
       });
     this._labelSettings.set(label, newEntry);
+    return newEntry;
+  }
+
+  public getEdgeSettings(edgeType: string): LiveCanvasEdgeViewSettings {
+    const existing: LiveCanvasEdgeViewSettings | null =
+      this._edgeSettings.get(edgeType) ?? null;
+    if (existing != null) {
+      return existing;
+    }
+    const newEntry: LiveCanvasEdgeViewSettings = new LiveCanvasEdgeViewSettings(
+      {
+        width: GraphEdge.defaultWidth,
+        customWidth: false,
+        colorIndex: 0,
+        customColor: false,
+      },
+    );
+    this._edgeSettings.set(edgeType, newEntry);
     return newEntry;
   }
 }

@@ -3,6 +3,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IsArray, IsBoolean, IsNumber, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 import { LiveCanvasLabelViewSettingsDto } from './LiveCanvasLabelViewSettingsDto';
+import { LiveCanvasEdgeViewSettingsDto } from './LiveCanvasEdgeViewSettingsDto';
 
 export class LiveCanvasViewSettingsDto {
   @ApiProperty({ type: Number })
@@ -22,4 +23,10 @@ export class LiveCanvasViewSettingsDto {
   @IsArray()
   @Type((): Function => LiveCanvasLabelViewSettingsDto)
   public labelSettings!: LiveCanvasLabelViewSettingsDto[];
+
+  @ApiProperty({ type: LiveCanvasEdgeViewSettingsDto, isArray: true })
+  @ValidateNested()
+  @IsArray()
+  @Type((): Function => LiveCanvasEdgeViewSettingsDto)
+  public edgeSettings!: LiveCanvasEdgeViewSettingsDto[];
 }

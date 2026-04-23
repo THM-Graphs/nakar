@@ -4,12 +4,11 @@ import { useColorSchema } from "../color/useColorSchema.ts";
 import clsx from "clsx";
 import { useTheme } from "../../shared/theme/useTheme.ts";
 
-export function LabelViewSettingsColorEditor(props: {
+export function ViewSettingsColorEditor(props: {
   colorIndex: LiveCanvasLabelViewSettingsDto["colorIndex"];
   setColorIndex: (
     newValue: LiveCanvasLabelViewSettingsDto["colorIndex"],
   ) => void;
-  label: string;
 }) {
   const colorSchema = useColorSchema();
   const theme = useTheme();

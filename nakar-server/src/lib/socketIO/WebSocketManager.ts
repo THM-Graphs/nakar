@@ -522,6 +522,7 @@ export class WebSocketManager
                 type: 'CanvasViewSettingsChangedWsdto',
                 viewSettings: message.canvas.data.viewSettings.toSchema(
                   message.canvas.labels,
+                  message.canvas.edgeTypes,
                 ),
               });
             },

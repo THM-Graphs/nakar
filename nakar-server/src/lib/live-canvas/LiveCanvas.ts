@@ -141,6 +141,10 @@ export class LiveCanvas {
     return this.getGraph().nodes.labelIndex.labels;
   }
 
+  public get edgeTypes(): string[] {
+    return this.getGraph().edges.edgeTypes;
+  }
+
   public get onEvent$(): Observable<CanvasEvent> {
     return this._onEvent.asObservable();
   }

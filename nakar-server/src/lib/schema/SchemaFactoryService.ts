@@ -60,6 +60,7 @@ import { NodeParameterizedScenarioGroupDto } from './dtos/NodeParameterizedScena
 import { NodeParameterizedScenarioDto } from './dtos/NodeParameterizedScenarioDto';
 import { LiveCanvasScenario } from '../live-canvas/data/LiveCanvasScenario';
 import { LiveCanvasScenarioGroup } from '../live-canvas/data/LiveCanvasScenarioGroup';
+import { LiveCanvasEdgeViewSettings } from '../live-canvas/data/LiveCanvasEdgeViewSettings';
 
 @Injectable()
 export class SchemaFactoryService {
@@ -369,7 +370,10 @@ export class SchemaFactoryService {
       table: this.createSchemaTable(graph.tableData),
       elements: this.createSchemaGraphElements(liveCanvas),
       metaData: this.createSchemaGraphMetaData(liveCanvas),
-      viewSettings: liveCanvas.data.viewSettings.toSchema(liveCanvas.labels),
+      viewSettings: liveCanvas.data.viewSettings.toSchema(
+        liveCanvas.labels,
+        liveCanvas.edgeTypes,
+      ),
       histogram: this.createSchemaHistogram(liveCanvas),
       notes: liveCanvas.data.undoableData.current.notes
         .toValueArray()
@@ -824,6 +828,9 @@ export class SchemaFactoryService {
   ): EdgeDto {
     const sourceNode: GraphNode | null = graph.nodes.get(edge.startNodeId);
     const targetNode: GraphNode | null = graph.nodes.get(edge.endNodeId);
+    const edgeViewSettings: LiveCanvasEdgeViewSettings =
+      viewSettings.getEdgeSettings(edge.type);
+
     return {
       id: edge.id,
       startNodeId: edge.startNodeId,
@@ -850,6 +857,13 @@ export class SchemaFactoryService {
         labels: targetNode?.labels ?? [],
       },
       creationReason: this._createSchemaCreationReason(edge.creationAction),
+      customColor: edgeViewSettings.customColor
+        ? new ColorDto({
+            color: new ColorPresetDto({
+              index: edgeViewSettings.colorIndex,
+            }),
+          })
+        : null,
     };
   }
 

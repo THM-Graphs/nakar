@@ -175,6 +175,7 @@ export type EdgeDto = {
     sourceNode: NodePreviewDto;
     targetNode: NodePreviewDto;
     creationReason: 'loadScenario' | 'expand' | 'query' | 'merge' | 'compress' | 'connectResultNodes' | 'search';
+    customColor: ((ColorDto) | null);
 };
 
 export type creationReason = 'loadScenario' | 'expand' | 'query' | 'merge' | 'compress' | 'connectResultNodes' | 'search';
@@ -316,6 +317,16 @@ export type LiveCanvasDataDto = {
     notes: Array<NoteDto>;
 };
 
+export type LiveCanvasEdgeViewSettingsDto = {
+    edgeType: string;
+    width: number;
+    customWidth: boolean;
+    colorIndex: 0 | 1 | 2 | 3 | 4 | 5;
+    customColor: boolean;
+};
+
+export type colorIndex = 0 | 1 | 2 | 3 | 4 | 5;
+
 export type LiveCanvasGraphElementsDto = {
     nodes: Array<NodeDto>;
     edges: Array<EdgeDto>;
@@ -330,8 +341,6 @@ export type LiveCanvasLabelViewSettingsDto = {
     titleProperty: string;
     customTitleProperty: boolean;
 };
-
-export type colorIndex = 0 | 1 | 2 | 3 | 4 | 5;
 
 export type LiveCanvasMetaDataDto = {
     scenarioId: (string) | null;
@@ -353,6 +362,7 @@ export type LiveCanvasViewSettingsDto = {
     growNodesBasedOnDegree: boolean;
     growNodesBasedOnDegreeFactor: number;
     labelSettings: Array<LiveCanvasLabelViewSettingsDto>;
+    edgeSettings: Array<LiveCanvasEdgeViewSettingsDto>;
 };
 
 export type LoadNodeRequestBodyDto = {
