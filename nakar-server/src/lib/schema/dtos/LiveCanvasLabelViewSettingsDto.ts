@@ -26,9 +26,9 @@ export class LiveCanvasLabelViewSettingsDto {
 
   @ApiProperty({ type: String })
   @IsString()
-  public titleProperty!: number;
+  public titleProperty!: string;
 
   @ApiProperty({ type: Boolean })
   @IsBoolean()
-  public customTit!: boolean;
+  public customTitleProperty!: boolean;
 }

@@ -9,6 +9,7 @@ import {
 } from "../../../src-gen";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
 import { useCanvasContext } from "../../pages/Canvas.tsx";
+import { ApplyableStringInput } from "../../shared/elements/ApplyableStringInput.tsx";
 
 export function LabelViewSettingsEditor(props: {
   label: string;
@@ -23,6 +24,12 @@ export function LabelViewSettingsEditor(props: {
   const pushErrorNotification = useBearStore(
     (s) => s.room.ui.pushErrorNotification,
   );
+  const histogramProperties = useBearStore(
+    (s) => s.room.scenario.graph.histogram.nodeProperties,
+  );
+  const properties = useMemo(() => {
+    return histogramProperties.map((hp) => hp.key);
+  }, [histogramProperties]);
 
   const onChange = useCallback(
     (newValue: LiveCanvasLabelViewSettingsDto) => {
@@ -86,6 +93,31 @@ export function LabelViewSettingsEditor(props: {
           }}
           className={"mb-1"}
         ></NumberInput>
+      )}
+      <Form.Check
+        id={`customTitle${labelVisualization.label}`}
+        label={<span className={"small"}>Title Property</span>}
+        checked={labelVisualization.customTitleProperty}
+        onChange={(e) => {
+          onChange({
+            ...labelVisualization,
+            customTitleProperty: e.target.checked,
+          });
+        }}
+      ></Form.Check>
+      {labelVisualization.customTitleProperty && (
+        <ApplyableStringInput
+          suggestions={properties}
+          size={"sm"}
+          value={labelVisualization.titleProperty}
+          onChange={(value) => {
+            onChange({
+              ...labelVisualization,
+              titleProperty: value,
+            });
+          }}
+          className={"mb-1"}
+        ></ApplyableStringInput>
       )}
     </Stack>
   );

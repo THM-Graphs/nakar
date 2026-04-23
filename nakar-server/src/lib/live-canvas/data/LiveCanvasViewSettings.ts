@@ -140,15 +140,7 @@ export class LiveCanvasViewSettings {
         ): LiveCanvasLabelViewSettingsDto[] => {
           const viewSetting: LiveCanvasLabelViewSettings =
             this.getLabelSettings(label);
-          return [
-            ...akku,
-            {
-              label: label,
-              colorIndex: viewSetting.colorIndex,
-              customRadius: viewSetting.customRadius,
-              radius: viewSetting.radius,
-            } satisfies LiveCanvasLabelViewSettingsDto,
-          ];
+          return [...akku, viewSetting.toSchema(label)];
         },
         [],
       ),
@@ -191,6 +183,8 @@ export class LiveCanvasViewSettings {
               ): LiveCanvasLabelViewSettings['colorIndex'] => a.colorIndex,
             ),
         ),
+        customTitleProperty: false,
+        titleProperty: '',
       });
     this._labelSettings.set(label, newEntry);
     return newEntry;

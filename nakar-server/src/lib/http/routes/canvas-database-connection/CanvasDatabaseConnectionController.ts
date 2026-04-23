@@ -34,6 +34,8 @@ import { ExpandNodePreviewEntry } from '../../../neo4j/expand-node-preview/Expan
 import { UserCanAccessRoom } from '../../guards/UserCanAccessRoom';
 import { CanvasBelongsToRoom } from '../../guards/CanvasBelongsToRoom';
 import { DatabaseReferenceCache } from '../../../schema/DatabaseReferenceCache';
+import { LiveCanvasService } from '../../../live-canvas/LiveCanvasService';
+import { LiveCanvas } from '../../../live-canvas/LiveCanvas';
 
 @Controller('room/:roomId/canvas/:canvasId/database-connection/:databaseId')
 @ApiParam({
@@ -58,6 +60,7 @@ export class CanvasDatabaseConnectionController {
   public constructor(
     private readonly _database: DatabaseService,
     private readonly _neo4jService: Neo4jService,
+    private readonly _liveCanvasService: LiveCanvasService,
   ) {}
 
   @Get('stats')
@@ -82,8 +85,11 @@ export class CanvasDatabaseConnectionController {
   @UseGuards(DatabaseBelongsToCanvas)
   public async performSearch(
     @Param('databaseId') databaseId: string,
+    @Param('canvasId') canvasId: string,
     @Body() body: PostSearchRequestBodyDto,
   ): Promise<PostSearchResponseBodyDto> {
+    const liveCanvas: LiveCanvas =
+      this._liveCanvasService.getCanvasWithId(canvasId);
     const database: Result<'api::database-connection.database-connection'> =
       await this._database.getDatabase(databaseId);
     const credentials: Neo4jDatabaseInfo = Neo4jDatabaseInfo.parse(database);
@@ -115,7 +121,7 @@ export class CanvasDatabaseConnectionController {
         .map((node: GraphNode): NodePreviewDto => {
           return {
             id: node.id,
-            title: node.getTitle(),
+            title: node.getTitle(liveCanvas.data.viewSettings),
             labels: node.labels,
           } satisfies NodePreviewDto;
         }),

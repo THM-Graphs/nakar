@@ -141,6 +141,10 @@ export class DatabaseService {
     const liveCanvasDataFile: Result<'plugin::upload.file'> | null =
       await this.getLiveCanvasDataFile(canvas);
 
+    if (liveCanvasDataFile == null) {
+      return null;
+    }
+
     try {
       const json: string =
         await getStringPayloadOfMediaFile(liveCanvasDataFile);

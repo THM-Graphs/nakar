@@ -391,7 +391,7 @@ export class WebSocketManager
             (message: CanvasEventHistogramChanged): void => {
               this.sendToRoom(message.canvas.canvasId, {
                 histogram: this._schemaFactory.createSchemaHistogram(
-                  message.canvas.getGraph(),
+                  message.canvas,
                 ),
                 type: 'CanvasHistogramChangedWsdto',
               });

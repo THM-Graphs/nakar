@@ -147,10 +147,23 @@ export class GraphNode {
     });
   }
 
-  public getTitle(): string {
+  public getTitle(viewSettings: LiveCanvasViewSettings): string {
     if (this.isCluster) {
       return `${this.labels.join(', ')} Cluster`;
     }
+
+    for (const label of this.labels) {
+      const labelViewSettings: LiveCanvasLabelViewSettings =
+        viewSettings.getLabelSettings(label);
+      if (labelViewSettings.customTitleProperty) {
+        const propertyValue: string | null =
+          this.properties.getStringValueOfProperty(
+            labelViewSettings.titleProperty,
+          );
+        return propertyValue ?? '';
+      }
+    }
+
     return (
       this.properties.getStringValueOfProperty('label') ??
       this.properties.getStringValueOfProperty('name') ??

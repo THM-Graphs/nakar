@@ -5,7 +5,6 @@ import { SMap } from '../map/Map';
 import { LiveCanvasMetaData } from '../live-canvas/graph/LiveCanvasMetaData';
 import { PropertyCollection } from '../live-canvas/graph/PropertyCollection';
 import { DatabaseService } from '../database/DatabaseService';
-import { DatabaseReferenceCache } from './DatabaseReferenceCache';
 import { Result } from '@strapi/types/dist/modules/documents/result';
 import { Range } from '../range/Range';
 import { Logger } from '@strapi/logger';
@@ -316,10 +315,6 @@ export class SchemaFactoryService {
     const graph: LiveCanvasUndoableData = canvas.getGraph();
     const widthRange: Range = graph.edges.getEdgeDegreeRange();
     const degreeRange: Range = graph.nodes.getNodeDegreeRange(graph);
-    const databaseCache: DatabaseReferenceCache = new DatabaseReferenceCache(
-      this._database,
-    );
-
     const labelIndex: SMap<string, LabelDto> = this._createLabelIndex(canvas);
 
     const result: LiveCanvasGraphElementsDto = {
@@ -332,7 +327,6 @@ export class SchemaFactoryService {
           this._createSchemaEdge(
             edge,
             graph,
-            databaseCache,
             canvas.data.viewSettings,
             widthRange,
           ),
@@ -376,7 +370,7 @@ export class SchemaFactoryService {
       elements: this.createSchemaGraphElements(liveCanvas),
       metaData: this.createSchemaGraphMetaData(liveCanvas),
       viewSettings: liveCanvas.data.viewSettings.toSchema(liveCanvas.labels),
-      histogram: this.createSchemaHistogram(graph),
+      histogram: this.createSchemaHistogram(liveCanvas),
       notes: liveCanvas.data.undoableData.current.notes
         .toValueArray()
         .map((note: LiveCanvasNote): NoteDto => this.createSchemaNote(note)),
@@ -545,7 +539,8 @@ export class SchemaFactoryService {
     };
   }
 
-  public createSchemaHistogram(graph: LiveCanvasUndoableData): HistogramDto {
+  public createSchemaHistogram(canvas: LiveCanvas): HistogramDto {
+    const graph: LiveCanvasUndoableData = canvas.getGraph();
     const t: Profiler = this._logger.startTimer();
 
     const labelCountHistogram: number = graph.nodes.labelIndex.histogram.reduce(
@@ -670,7 +665,7 @@ export class SchemaFactoryService {
         .map((node: GraphNode): HistogramNodeEntryDto => {
           return {
             id: node.id,
-            title: node.getTitle(),
+            title: node.getTitle(canvas.data.viewSettings),
             labels: node.labels,
             degree: node.degree(graph),
             percentage: degreeCount > 0 ? node.degree(graph) / degreeCount : 0,
@@ -769,7 +764,7 @@ export class SchemaFactoryService {
 
     return {
       id: node.id,
-      title: node.getTitle(),
+      title: node.getTitle(canvas.data.viewSettings),
       labels: node.labels,
       nativeLabels: node.labels,
       properties: this._createSchemaGraphProperties(node.properties),
@@ -824,7 +819,6 @@ export class SchemaFactoryService {
   private _createSchemaEdge(
     edge: GraphEdge,
     graph: LiveCanvasUndoableData,
-    databaseCcache: DatabaseReferenceCache,
     viewSettings: LiveCanvasViewSettings,
     edgeWidthRange: Range,
   ): EdgeDto {
@@ -847,12 +841,12 @@ export class SchemaFactoryService {
       clusterSize: edge.compressed.size,
       sourceNode: {
         id: sourceNode?.id ?? '',
-        title: sourceNode?.getTitle() ?? '',
+        title: sourceNode?.getTitle(viewSettings) ?? '',
         labels: sourceNode?.labels ?? [],
       },
       targetNode: {
         id: targetNode?.id ?? '',
-        title: targetNode?.getTitle() ?? '',
+        title: targetNode?.getTitle(viewSettings) ?? '',
         labels: targetNode?.labels ?? [],
       },
       creationReason: this._createSchemaCreationReason(edge.creationAction),

@@ -327,6 +327,8 @@ export type LiveCanvasLabelViewSettingsDto = {
     radius: number;
     customRadius: boolean;
     colorIndex: 0 | 1 | 2 | 3 | 4 | 5;
+    titleProperty: string;
+    customTitleProperty: boolean;
 };
 
 export type colorIndex = 0 | 1 | 2 | 3 | 4 | 5;

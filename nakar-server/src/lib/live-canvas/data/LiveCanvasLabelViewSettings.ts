@@ -8,8 +8,8 @@ export class LiveCanvasLabelViewSettings {
     radius: z.number(),
     customRadius: z.boolean(),
     colorIndex: z.enum(['0', '1', '2', '3', '4', '5']),
-    titleProperty: z.string(),
-    customTitleProperty: z.boolean(),
+    titleProperty: z.string().optional(),
+    customTitleProperty: z.boolean().optional(),
   });
 
   private readonly _radius: number;
@@ -66,8 +66,8 @@ export class LiveCanvasLabelViewSettings {
         .with('4', (): LiveCanvasLabelViewSettings['colorIndex'] => 4)
         .with('5', (): LiveCanvasLabelViewSettings['colorIndex'] => 5)
         .exhaustive(),
-      titleProperty: data.titleProperty,
-      customTitleProperty: data.customTitleProperty,
+      titleProperty: data.titleProperty ?? '',
+      customTitleProperty: data.customTitleProperty ?? false,
     });
   }
 
@@ -78,6 +78,8 @@ export class LiveCanvasLabelViewSettings {
       radius: input.radius,
       customRadius: input.customRadius,
       colorIndex: input.colorIndex,
+      titleProperty: input.titleProperty,
+      customTitleProperty: input.customTitleProperty,
     });
   }
 
@@ -144,6 +146,19 @@ export class LiveCanvasLabelViewSettings {
           >['colorIndex'] => '5',
         )
         .exhaustive(),
+      titleProperty: this._titleProperty,
+      customTitleProperty: this._customTitleProperty,
     };
+  }
+
+  public toSchema(label: string): LiveCanvasLabelViewSettingsDto {
+    return {
+      label: label,
+      colorIndex: this._colorIndex,
+      customRadius: this._customRadius,
+      radius: this._radius,
+      titleProperty: this._titleProperty,
+      customTitleProperty: this._customTitleProperty,
+    } satisfies LiveCanvasLabelViewSettingsDto;
   }
 }

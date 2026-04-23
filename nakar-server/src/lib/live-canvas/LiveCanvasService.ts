@@ -81,16 +81,16 @@ export class LiveCanvasService implements OnModuleInit, OnModuleDestroy {
     return this.getCanvasWithIdOrNull(canvas.documentId);
   }
 
-  public getCanvasWithIdOrNull(roomId: string): LiveCanvas | null {
+  public getCanvasWithIdOrNull(canvasId: string): LiveCanvas | null {
     const liveCanvas: LiveCanvas | null =
-      this._liveCanvases.get(roomId) ?? null;
+      this._liveCanvases.get(canvasId) ?? null;
     return liveCanvas;
   }
 
-  public getCanvasWithId(roomId: string): LiveCanvas {
-    const liveCanvas: LiveCanvas | null = this.getCanvasWithIdOrNull(roomId);
+  public getCanvasWithId(canvasId: string): LiveCanvas {
+    const liveCanvas: LiveCanvas | null = this.getCanvasWithIdOrNull(canvasId);
     if (liveCanvas == null) {
-      throw new Error(`Canvas ${roomId} is not alive yet.`);
+      throw new Error(`Canvas ${canvasId} is not alive yet.`);
     }
     return liveCanvas;
   }

@@ -87,7 +87,7 @@ export class LiveCanvasNote {
           new LiveCanvasNoteNodeReference({
             id: node.id,
             labels: node.labels,
-            title: node.getTitle(),
+            title: node.getTitle(canvas.data.viewSettings),
           });
         return [...akku, nodeReference];
       },
