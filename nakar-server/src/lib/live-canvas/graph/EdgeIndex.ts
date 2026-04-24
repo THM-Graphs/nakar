@@ -173,12 +173,33 @@ export class EdgeIndex {
 
     this._byId.delete(edge.id);
     this._byType.get(edge.type)?.delete(edge);
+    if ((this._byType.get(edge.type)?.size ?? 0) === 0) {
+      this._byType.delete(edge.type);
+    }
+
     this._byStartNodeId.get(edge.startNodeId)?.delete(edge.id);
+    if ((this._byStartNodeId.get(edge.startNodeId)?.size ?? 0) === 0) {
+      this._byStartNodeId.delete(edge.startNodeId);
+    }
+
     this._byEndNodeId.get(edge.endNodeId)?.delete(edge.id);
+    if ((this._byEndNodeId.get(edge.endNodeId)?.size ?? 0) === 0) {
+      this._byEndNodeId.delete(edge.endNodeId);
+    }
+
     this._byStartAndEndNodeId
       .get(edge.startNodeId)
       ?.get(edge.endNodeId)
       ?.delete(edge.id);
+    if (
+      (this._byStartAndEndNodeId.get(edge.startNodeId)?.get(edge.endNodeId)
+        ?.size ?? 0) === 0
+    ) {
+      this._byStartAndEndNodeId.get(edge.startNodeId)?.delete(edge.endNodeId);
+    }
+    if ((this._byStartAndEndNodeId.get(edge.startNodeId)?.size ?? 0) === 0) {
+      this._byStartAndEndNodeId.delete(edge.startNodeId);
+    }
 
     this._addToTypeHistogram(edge.type, -edge.representationCount);
 

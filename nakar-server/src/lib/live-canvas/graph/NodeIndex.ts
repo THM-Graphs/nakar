@@ -155,6 +155,9 @@ export class NodeIndex {
     this._byId.delete(node.id);
     for (const label of node.labels) {
       this._byLabel.get(label)?.delete(node);
+      if ((this._byLabel.get(label)?.size ?? 0) === 0) {
+        this._byLabel.delete(label);
+      }
     }
     for (const label of node.labels) {
       this._labelIndex.remove(label);
@@ -165,6 +168,9 @@ export class NodeIndex {
     }
 
     this._bySource.get(node.sourceId)?.delete(node);
+    if ((this._bySource.get(node.sourceId)?.size ?? 0) === 0) {
+      this._bySource.delete(node.sourceId);
+    }
     for (const compressed of node.compressed) {
       this._compressed.delete(compressed);
     }
