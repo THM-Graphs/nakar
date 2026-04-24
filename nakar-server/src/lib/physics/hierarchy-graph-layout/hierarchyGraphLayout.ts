@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { SSet } from '../../set/Set';
 
 export interface LayoutNode {
@@ -148,7 +149,6 @@ export function hierarchyGraphLayout(
   }
 
   while (queue.length > 0) {
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const v: string = queue.shift()!;
 
     for (const w of graph.adj[v]) {
@@ -219,7 +219,7 @@ export function hierarchyGraphLayout(
       layers[l] = [];
     }
 
-    layers[l].push(id);
+    layers[l]!.push(id);
   }
 
   const sortedLayers: number[] = Object.keys(layers)
@@ -253,7 +253,7 @@ export function hierarchyGraphLayout(
     // downward
     for (let i: number = 1; i < sortedLayers.length; i++) {
       const l: number = sortedLayers[i];
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+
       const prev: string[] = layers[sortedLayers[i - 1]]!;
 
       layers[l]?.sort(
@@ -265,7 +265,7 @@ export function hierarchyGraphLayout(
     // upward
     for (let i: number = sortedLayers.length - 2; i >= 0; i--) {
       const l: number = sortedLayers[i];
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+
       const next: string[] = layers[sortedLayers[i + 1]]!;
 
       layers[l]?.sort(
@@ -279,7 +279,6 @@ export function hierarchyGraphLayout(
   // 8. Coordinates
   // ---------------------------
   for (const l of sortedLayers) {
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const ids: string[] = layers[l]!;
 
     ids.forEach((id: string, index: number): void => {
