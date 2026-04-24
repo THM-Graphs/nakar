@@ -213,7 +213,7 @@ export function Canvas() {
   return (
     <CanvasContext.Provider value={canvasContext}>
       <Stack style={{ height: "100%" }} className={"position-relative bg-body"}>
-        <Stack gap={3} className={"pb-3"}>
+        <Stack gap={0}>
           <Stack className="flex-grow-0 flex-shrink-0">
             <AppNavbar
               left={
@@ -246,55 +246,32 @@ export function Canvas() {
                   <SocketStateDisplay></SocketStateDisplay>
                 </>
               }
-              className="shadow-sm"
             ></AppNavbar>
           </Stack>
-          <Stack
-            direction={"horizontal"}
-            className={"ps-3 pe-3 flex-shrink-1"}
-            gap={3}
-          >
-            <Stack
-              direction={"horizontal"}
-              className={
-                "bg-body-tertiary border flex-grow-0 flex-shrink-0 z-1 shadow-sm rounded align-self-start"
-              }
-            >
-              <ScenariosPanelButton
-                className={"rounded-start"}
-              ></ScenariosPanelButton>
-              <QueryPanelButton></QueryPanelButton>
-              <NotesPanelButton></NotesPanelButton>
-              <SearchPanelButton className={"rounded-end"}></SearchPanelButton>
-            </Stack>
+          <Stack direction={"horizontal"} className={"flex-shrink-1"}>
             <CanvasToolbar
               className={
-                "border bg-body-tertiary shadow-sm rounded flex-grow-0 flex-shrink-1"
+                "border-bottom bg-body-tertiary flex-grow-0 flex-shrink-1"
               }
             ></CanvasToolbar>
-            <Stack
-              direction="horizontal"
-              className={
-                "bg-body-tertiary border z-1 rounded shadow-sm flex-grow-0 flex-shrink-0 align-self-start"
-              }
-            >
-              <InspectorPanelButton
-                className={"rounded-start"}
-              ></InspectorPanelButton>
-              <HistogramPanelButton></HistogramPanelButton>
-              <VisualizationPanelButton
-                className={"rounded-end"}
-              ></VisualizationPanelButton>
-            </Stack>
           </Stack>
           <Stack
             direction={"horizontal"}
-            className={
-              "align-items-start flex-grow-1 position-relative ps-3 pe-3"
-            }
+            className={"align-items-start flex-grow-1 position-relative"}
             style={{ height: "100px" }}
-            gap={3}
+            gap={0}
           >
+            <Stack
+              direction={"vertical"}
+              className={
+                "bg-body-tertiary flex-grow-0 flex-shrink-0 z-1 border-end"
+              }
+            >
+              <ScenariosPanelButton></ScenariosPanelButton>
+              <QueryPanelButton></QueryPanelButton>
+              <NotesPanelButton></NotesPanelButton>
+              <SearchPanelButton></SearchPanelButton>
+            </Stack>
             {leftPanel != null && (
               <Stack className={"flex-grow-0 flex-shrink-0"}>
                 {leftPanel === "scenarios" && <ScenariosPanel></ScenariosPanel>}
@@ -317,6 +294,16 @@ export function Canvas() {
                 )}
               </Stack>
             )}
+            <Stack
+              direction="vertical"
+              className={
+                "bg-body-tertiary border-start z-1 flex-grow-0 flex-shrink-0"
+              }
+            >
+              <InspectorPanelButton></InspectorPanelButton>
+              <HistogramPanelButton></HistogramPanelButton>
+              <VisualizationPanelButton></VisualizationPanelButton>
+            </Stack>
           </Stack>
 
           {socketState.type !== "connected" && (

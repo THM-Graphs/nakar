@@ -24,7 +24,7 @@ export function ScenariosPanel() {
         ></ActionNavbarButton>
       }
     >
-      <Stack className={"pb-5 overflow-y-scroll"}>
+      <Stack className={"pb-5"}>
         <ScenarioGroupList
           scenarioGroups={scenarios.scenarioGroups}
         ></ScenarioGroupList>

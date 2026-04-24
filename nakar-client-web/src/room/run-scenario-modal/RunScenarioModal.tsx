@@ -69,7 +69,6 @@ export function RunScenarioModal() {
             direction={"none"}
             hidden={false}
             fullWidth={true}
-            className={"rounded border"}
           >
             <Stack className={"pb-3 pt-3"} gap={3}>
               <Stack direction={"horizontal"} gap={2} className={"ps-3 pe-3"}>

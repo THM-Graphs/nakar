@@ -10,6 +10,7 @@ export function InspectorPanelButton(props: { className?: string }) {
   return (
     <NavbarButton
       selected={rightPanels === "inspector"}
+      size={"big"}
       onToggle={(selected) => {
         if (selected) {
           show();

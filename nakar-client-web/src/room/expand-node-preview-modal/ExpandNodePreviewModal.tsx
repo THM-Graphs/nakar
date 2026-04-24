@@ -55,7 +55,6 @@ export function ExpandNodePreviewModal() {
         direction={"none"}
         hidden={false}
         fullWidth={true}
-        className={"rounded border"}
       >
         <Stack
           style={{

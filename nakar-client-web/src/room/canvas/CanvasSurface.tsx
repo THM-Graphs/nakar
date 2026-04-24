@@ -15,7 +15,7 @@ export function CanvasSurface() {
   return (
     <>
       {tabs.selected == "graph" ? (
-        <Stack className={"justify-content-between"}>
+        <Stack className={"justify-content-between p-3"} gap={3}>
           <Stack
             direction={"horizontal"}
             className={"justify-content-between"}

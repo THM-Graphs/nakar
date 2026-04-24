@@ -9,9 +9,7 @@ export function DataTable() {
   return (
     <Stack
       direction={"vertical"}
-      className={
-        "bg-body z-1 border rounded h-100 w-100 shadow-sm overflow-auto"
-      }
+      className={"bg-body z-1 h-100 w-100 overflow-auto"}
     >
       <NavbarButton
         icon={"x-lg"}

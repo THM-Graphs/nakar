@@ -58,6 +58,7 @@ export function ScenarioDisplay(props: {
     <Collapsable
       inset={0}
       sticky={false}
+      collapsed={true}
       title={
         <ScenarioTitleAndBadges
           scenario={props.scenario}

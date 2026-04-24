@@ -4,6 +4,7 @@
 
   --bs-alert-margin-bottom: 0 !important;
   --bs-breadcrumb-margin-bottom: 0 !important;
+  --bs-modal-border-radius: 0 !important;
 }
 
 a:not(.dropdown-item) {

@@ -70,7 +70,7 @@ export function CanvasBottomToolBar() {
   }, [getInitialStartDate(), getInitialEndDate()]);
 
   const rerunScenario = (params: { startDate: string; endDate: string }) => {
-    (async (): Promise<void> => {
+    void (async (): Promise<void> => {
       if (metaData.scenarioId == null) {
         throw new Error(
           "Unable to run scenario: There is no scenario in this room.",
@@ -111,7 +111,7 @@ export function CanvasBottomToolBar() {
       } catch (error) {
         pushErrorNotification(error);
       }
-    })().catch(console.error);
+    })();
   };
 
   const reset = () => {
