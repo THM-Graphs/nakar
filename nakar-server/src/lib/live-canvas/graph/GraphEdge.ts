@@ -6,6 +6,7 @@ import { SMap } from '../../map/Map';
 import { Range } from '../../range/Range';
 import { ElementCreationReason } from './ElementCreationReason';
 import { LiveCanvasViewSettings } from '../data/LiveCanvasViewSettings';
+import { LiveCanvasEdgeViewSettings } from '../data/LiveCanvasEdgeViewSettings';
 
 export class GraphEdge {
   public static readonly defaultWidth: number = 2;
@@ -98,10 +99,15 @@ export class GraphEdge {
     edgeWidthRange: Range,
     viewSettings: LiveCanvasViewSettings,
   ): number {
+    const edgeViewSettings: LiveCanvasEdgeViewSettings =
+      viewSettings.getEdgeSettings(this.type);
+    const baseWidth: number = edgeViewSettings.customWidth
+      ? edgeViewSettings.width
+      : GraphEdge.defaultWidth;
+
     const toRange: Range = new Range({
-      floor: GraphEdge.defaultWidth,
-      ceiling:
-        GraphEdge.defaultWidth * viewSettings.compressRelationshipsWidthFactor,
+      floor: baseWidth,
+      ceiling: baseWidth * viewSettings.compressRelationshipsWidthFactor,
     });
 
     const result: number = edgeWidthRange.scaleValue(

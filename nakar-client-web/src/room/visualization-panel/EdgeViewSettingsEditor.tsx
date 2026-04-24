@@ -9,6 +9,7 @@ import {
 } from "../../../src-gen";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
 import { useCanvasContext } from "../../pages/Canvas.tsx";
+import { NumberInput } from "../../shared/elements/NumberInput.tsx";
 
 export function EdgeViewSettingsEditor(props: {
   edgeType: string;
@@ -76,6 +77,30 @@ export function EdgeViewSettingsEditor(props: {
             });
           }}
         ></ViewSettingsColorEditor>
+      )}
+      <Form.Check
+        id={`customWidth${edgeVisualization.edgeType}`}
+        label={<span className={"small"}>Width</span>}
+        checked={edgeVisualization.customWidth}
+        onChange={(e) => {
+          onChange({
+            ...edgeVisualization,
+            customWidth: e.target.checked,
+          });
+        }}
+      ></Form.Check>
+      {edgeVisualization.customWidth && (
+        <NumberInput
+          min={0}
+          value={edgeVisualization.width}
+          onChange={(newValue: number) => {
+            onChange({
+              ...edgeVisualization,
+              width: newValue,
+            });
+          }}
+          className={"mb-1"}
+        ></NumberInput>
       )}
     </Stack>
   );
