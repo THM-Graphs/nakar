@@ -77,7 +77,6 @@ export function ViewSettingsEditor(props: {
               ></Label>
             </Stack>
             <LabelViewSettingsEditor
-              key={labelViewSettings.label}
               label={labelViewSettings.label}
             ></LabelViewSettingsEditor>
           </Stack>

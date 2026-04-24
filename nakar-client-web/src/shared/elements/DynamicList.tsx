@@ -15,6 +15,7 @@ export function DynamicList<T>(props: {
   customTitle?: string;
   className?: string;
   sticky?: boolean;
+  collapsed?: boolean;
 }): ReactElement | null {
   const previewLimit = props.previewLimit ?? 10;
   const collapsable = props.collapsable ?? true;
@@ -128,7 +129,7 @@ export function DynamicList<T>(props: {
           </span>
         </Stack>
       }
-      initialState={false}
+      collapsed={props.collapsed}
     >
       <Stack className={"flex-shrink-1 flex-grow-1"}>{list}</Stack>
     </Collapsable>

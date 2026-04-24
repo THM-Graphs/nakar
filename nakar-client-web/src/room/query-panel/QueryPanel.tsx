@@ -129,7 +129,6 @@ export function QueryPanel() {
           <>
             <Collapsable
               className={"flex-grow-0 border-bottom"}
-              initialState={false}
               title={<span className={"fw-bold small"}>Query</span>}
             >
               <CypherEditor
@@ -277,7 +276,6 @@ export function QueryPanel() {
                   ></DynamicList>
                   <Collapsable
                     className={"flex-grow-0 border-bottom border-top"}
-                    initialState={false}
                     title={<span className={"fw-bold small"}>Stats</span>}
                   >
                     <QueryPanelStatsDisplay

@@ -49,7 +49,6 @@ export function NodeDetails(props: { node: NodeDto }) {
                 <Collapsable
                   title={<span className={"small fw-bold"}>Scenarios</span>}
                   className={"border-top"}
-                  initialState={false}
                 >
                   {props.node.parameterizedScenarios.map(
                     (scenarioGroup: NodeParameterizedScenarioGroupDto) => (
@@ -148,6 +147,7 @@ export function NodeDetails(props: { node: NodeDto }) {
             }
             entityNamePlural={"Incoming Edges"}
             className={"border-top"}
+            collapsed={true}
             render={(list) => (
               <>
                 {list.map((entry) => (
@@ -168,6 +168,7 @@ export function NodeDetails(props: { node: NodeDto }) {
             }
             entityNamePlural={"Outgoing Edges"}
             className={"border-top"}
+            collapsed={true}
             render={(list) => (
               <>
                 {list.map((entry) => (
@@ -185,6 +186,7 @@ export function NodeDetails(props: { node: NodeDto }) {
           <Stack className={"border-top"} gap={0}>
             <DynamicList
               data={props.node.notes}
+              collapsed={true}
               render={(notes) => (
                 <Stack>
                   <ActionNavbarButton

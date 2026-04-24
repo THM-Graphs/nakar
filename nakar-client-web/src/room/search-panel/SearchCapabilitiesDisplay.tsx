@@ -52,7 +52,6 @@ export function SearchCapabilitiesDisplay(props: {
     <Collapsable
       title={<span className={"fw-bold small"}>About search results</span>}
       className={"border-top flex-grow-0"}
-      initialState={true}
     >
       {match(capabalities)
         .returnType<ReactNode | null>()

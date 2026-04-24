@@ -5,6 +5,8 @@ import { NodePreviewDisplay } from "./NodePreviewDisplay.tsx";
 import { relationshipActions } from "../actions/groups/relationshipActions.ts";
 import { EdgeDto } from "../../../src-gen";
 import { PropertyEntry } from "./PropertiesDisplay.tsx";
+import { EdgeViewSettingsEditor } from "../visualization-panel/EdgeViewSettingsEditor.tsx";
+import { Collapsable } from "../../shared/elements/Collapsable.tsx";
 
 export function EdgeDetails(props: { edge: EdgeDto }) {
   const roomContext = useCanvasContext();
@@ -91,6 +93,18 @@ export function EdgeDetails(props: { edge: EdgeDto }) {
           <NodePreviewDisplay node={props.edge.targetNode}></NodePreviewDisplay>
         </Stack>
       }
-    ></DetailPane>
+    >
+      <Collapsable
+        title={<span className={"fw-bold small"}>Visualization</span>}
+        className={"border-top"}
+        collapsed={true}
+      >
+        <Stack className={"p-1"}>
+          <EdgeViewSettingsEditor
+            edgeType={props.edge.type}
+          ></EdgeViewSettingsEditor>
+        </Stack>
+      </Collapsable>
+    </DetailPane>
   );
 }

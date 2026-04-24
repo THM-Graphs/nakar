@@ -8,6 +8,7 @@ export function PropertiesDisplay(props: {
   elementId: string;
   properties: PropertyEntry[];
   className?: string;
+  collapsed?: boolean;
 }) {
   return (
     <DynamicList
@@ -16,6 +17,7 @@ export function PropertiesDisplay(props: {
       filter={(exp, e) => e.slug.toLowerCase().includes(exp.toLowerCase())}
       className={props.className}
       previewLimit={20}
+      collapsed={props.collapsed}
       render={(properties) => (
         <>
           {properties.map((property, index) => (

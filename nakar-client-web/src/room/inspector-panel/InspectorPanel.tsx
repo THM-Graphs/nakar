@@ -89,7 +89,6 @@ export function InspectorPanel() {
                     title={
                       <span className={"small fw-bold"}>Node Actions</span>
                     }
-                    initialState={false}
                   >
                     <Stack direction={"horizontal"} className={"flex-wrap"}>
                       {nodeActions.map((action) => (
@@ -117,7 +116,6 @@ export function InspectorPanel() {
                     return (
                       <Fragment key={parameterizedScenarioGroup.id}>
                         <Collapsable
-                          initialState={false}
                           title={
                             <span className={"small fw-bold"}>
                               {scenarioGroup.title}

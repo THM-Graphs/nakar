@@ -6,13 +6,11 @@ export function Collapsable(props: {
   title: ReactNode;
   children: ReactNode;
   inset?: number;
-  initialState?: boolean;
+  collapsed?: boolean;
   className?: string;
   sticky?: boolean;
 }): ReactElement {
-  const [collapsed, setCollapsed] = useState<boolean>(
-    props.initialState ?? true,
-  );
+  const [collapsed, setCollapsed] = useState<boolean>(props.collapsed ?? false);
   return (
     <Stack className={props.className}>
       <Stack
