@@ -9,6 +9,7 @@ import { LabelViewSettingsEditor } from "./LabelViewSettingsEditor.tsx";
 import { Label } from "../labels/Label.tsx";
 import { Fragment } from "react";
 import { EdgeViewSettingsEditor } from "./EdgeViewSettingsEditor.tsx";
+import clsx from "clsx";
 
 export function ViewSettingsEditor(props: {
   viewSettings: LiveCanvasViewSettingsDto;
@@ -17,7 +18,7 @@ export function ViewSettingsEditor(props: {
 }) {
   const visualizationData = props.viewSettings;
   return (
-    <Stack className={props.className}>
+    <Stack className={clsx("flex-grow-0", props.className)}>
       <Stack className={"p-2 border-bottom"} gap={0}>
         <Form.Check
           className={"flex-grow-0"}

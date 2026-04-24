@@ -39,25 +39,27 @@ export function VisualizationPanel() {
         </Stack>
       }
     >
-      <ViewSettingsEditor
-        viewSettings={visualizationData}
-        className={"pb-5"}
-        onChange={(newSettings: LiveCanvasViewSettingsDto) => {
-          setData(newSettings);
+      <Stack className={"pb-5"}>
+        <ViewSettingsEditor
+          viewSettings={visualizationData}
+          className={"pb-5"}
+          onChange={(newSettings: LiveCanvasViewSettingsDto) => {
+            setData(newSettings);
 
-          actionControllerSetViewSettings({
-            path: {
-              roomId: roomContext.initialRoomData.id,
-              canvasId: roomContext.initialCanvasData.id,
-            },
-            body: newSettings,
-          })
-            .then((res) => {
-              return resultOrThrow(res);
+            actionControllerSetViewSettings({
+              path: {
+                roomId: roomContext.initialRoomData.id,
+                canvasId: roomContext.initialCanvasData.id,
+              },
+              body: newSettings,
             })
-            .catch(pushErrorNotification);
-        }}
-      ></ViewSettingsEditor>
+              .then((res) => {
+                return resultOrThrow(res);
+              })
+              .catch(pushErrorNotification);
+          }}
+        ></ViewSettingsEditor>
+      </Stack>
     </Panel>
   );
 }
