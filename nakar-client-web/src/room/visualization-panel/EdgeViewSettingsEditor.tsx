@@ -10,6 +10,7 @@ import {
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
 import { useCanvasContext } from "../../pages/Canvas.tsx";
 import { NumberInput } from "../../shared/elements/NumberInput.tsx";
+import clsx from "clsx";
 
 export function EdgeViewSettingsEditor(props: {
   edgeType: string;
@@ -55,7 +56,7 @@ export function EdgeViewSettingsEditor(props: {
     return null;
   }
   return (
-    <Stack className={props.className}>
+    <Stack className={clsx("flex-grow-0", props.className)}>
       <Form.Check
         id={`customColor${edgeVisualization.edgeType}`}
         label={<span className={"small"}>Color</span>}
