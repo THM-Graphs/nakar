@@ -103,6 +103,12 @@ export class D3Renderer {
     SVGElement,
     null
   > | null;
+  private markersSelection: d3.Selection<
+    SVGMarkerElement,
+    D3Link,
+    SVGElement,
+    null
+  > | null;
 
   private smoothedPositionDirty: boolean;
 
@@ -141,6 +147,7 @@ export class D3Renderer {
     this.nodeLockedOverlay = null;
     this.nodeSelectedOverlay = null;
     this.userCursorSelection = null;
+    this.markersSelection = null;
 
     this.smoothedPositionDirty = true;
 
@@ -285,20 +292,6 @@ export class D3Renderer {
       this.setCursor(pos);
     });
 
-    this.zoomContainer
-      .append("defs")
-      .append("marker")
-      .attr("id", "arrow")
-      .attr("viewBox", "0 0 10 10")
-      .attr("refX", 10)
-      .attr("refY", 5)
-      .attr("markerWidth", 6)
-      .attr("markerHeight", 8)
-      .attr("orient", "auto")
-      .append("path")
-      .attr("d", "M 0 0 L 10 5 L 0 10 Z")
-      .attr("fill", () => (this.theme == "dark" ? "#fff" : "#000"));
-
     const zoomBehaviour: ZoomBehavior<SVGSVGElement, null> = d3
       .zoom<SVGSVGElement, null>()
       .on("zoom", (event: d3.D3ZoomEvent<SVGSVGElement, null>) => {
@@ -313,6 +306,24 @@ export class D3Renderer {
       useBearStore.getState().room.canvas.zoomTransform,
     );
 
+    this.markersSelection = this.zoomContainer
+      .append("defs")
+      .selectAll()
+      .data(d3RendererState.links)
+      .enter()
+      .append("marker")
+      .attr("id", (d) => `arrow_${d.id}`)
+      .attr("viewBox", "0 0 10 10")
+      .attr("refX", 10)
+      .attr("refY", 5)
+      .attr("markerWidth", 6)
+      .attr("markerHeight", 8)
+      .attr("orient", "auto");
+    this.markersSelection
+      .append("path")
+      .attr("d", "M 0 0 L 10 5 L 0 10 Z")
+      .attr("fill", (d) => this._getEdgeStrokeColor(d));
+
     this.linkPathSelection = this.zoomContainer
       .append("g")
       .attr("class", "links")
@@ -324,7 +335,7 @@ export class D3Renderer {
       .style("cursor", "pointer")
       .attr("fill", "none")
       .attr("stroke-width", (d) => d.width)
-      .attr("marker-end", "url(#arrow)");
+      .attr("marker-end", (d) => `url(#arrow_${d.id})`);
 
     this.linkLabelSelection = this.zoomContainer
       .append("g")
@@ -800,6 +811,10 @@ export class D3Renderer {
       .select("div")
       .select("span")
       .style("background-color", (d) => this._getEdgeStrokeColor(d));
+
+    this.markersSelection
+      ?.select("path")
+      .attr("fill", (d) => this._getEdgeStrokeColor(d));
   }
 
   public applyPositionsToSVG() {
@@ -994,7 +1009,7 @@ export class D3Renderer {
     } else {
       this.linkLabelSelection?.attr("hidden", null);
       this.nodeSelection?.select("foreignObject").attr("hidden", null);
-      this.linkPathSelection?.attr("marker-end", "url(#arrow)");
+      this.linkPathSelection?.attr("marker-end", (d) => `url(#arrow_${d.id})`);
     }
   }
 
