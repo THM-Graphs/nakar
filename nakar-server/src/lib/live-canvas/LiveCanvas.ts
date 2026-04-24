@@ -1132,7 +1132,8 @@ export class LiveCanvas {
       new TaskQueueTask('Setting view settings', async (): Promise<void> => {
         const changeRecorder: LiveCanvasChangeRecorder =
           new LiveCanvasChangeRecorder();
-        this.data.viewSettings = newViewSettings;
+        this.data.viewSettings =
+          this.data.viewSettings.byMergingWith(newViewSettings);
         changeRecorder.didChangeViewSettings();
 
         await this._postProcessGraph(changeRecorder);

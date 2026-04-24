@@ -101,4 +101,15 @@ export class SMap<K extends string | number | symbol, V> extends Map<K, V> {
     }
     return n;
   }
+
+  public byMergingAndOverwritingWith(other: SMap<K, V>): SMap<K, V> {
+    const n: SMap<K, V> = new SMap<K, V>();
+    for (const oldEntry of this.entries()) {
+      n.set(oldEntry[0], oldEntry[1]);
+    }
+    for (const newEntry of other.entries()) {
+      n.set(newEntry[0], newEntry[1]);
+    }
+    return n;
+  }
 }

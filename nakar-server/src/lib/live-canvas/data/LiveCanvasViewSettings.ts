@@ -175,6 +175,21 @@ export class LiveCanvasViewSettings {
     });
   }
 
+  public byMergingWith(other: LiveCanvasViewSettings): LiveCanvasViewSettings {
+    return new LiveCanvasViewSettings({
+      compressRelationshipsWidthFactor: other.compressRelationshipsWidthFactor,
+      growNodesBasedOnDegree: other.growNodesBasedOnDegree,
+      growNodesBasedOnDegreeFactor: other.growNodesBasedOnDegreeFactor,
+      scaleType: other.scaleType,
+      labelSettings: this.labelSettings.byMergingAndOverwritingWith(
+        other.labelSettings,
+      ),
+      edgeSettings: this.edgeSettings.byMergingAndOverwritingWith(
+        other.edgeSettings,
+      ),
+    });
+  }
+
   public toSchema(
     labels: string[],
     edgeTypes: string[],
