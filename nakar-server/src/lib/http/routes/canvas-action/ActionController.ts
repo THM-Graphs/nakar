@@ -17,7 +17,7 @@ import { UnlockNodesRequestBodyDto } from './dto/UnlockNodesRequestBodyDto';
 import { FocusNodesRequestBodyDto } from './dto/FocusNodesRequestBodyDto';
 import { RunQueryRequestBodyDto } from './dto/RunQueryRequestBodyDto';
 import { CompressNodesRequestBodyDto } from './dto/CompressNodesRequestBodyDto';
-import { LayoutLabelRequestBodyDto } from './dto/LayoutLabelRequestBodyDto';
+import { LayoutRequestBodyDto } from './dto/LayoutRequestBodyDto';
 import { ShowShortestPathRequestBodyDto } from './dto/ShowShortestPathRequestBodyDto';
 import { LoadNodeRequestBodyDto } from './dto/LoadNodeRequestBodyDto';
 import { LiveCanvasViewSettingsDto } from '../../../schema/dtos/LiveCanvasViewSettingsDto';
@@ -199,14 +199,13 @@ export class ActionController {
       .compressNodes({ label: body.label });
   }
 
-  @Post('layout-label')
+  @Post('layout')
   @HttpCode(200)
-  public layoutLabel(
+  public layout(
     @Param('canvasId') canvasId: string,
-    @Body() body: LayoutLabelRequestBodyDto,
+    @Body() body: LayoutRequestBodyDto,
   ): void {
-    this._canvasService.getCanvasWithId(canvasId).layoutLabel({
-      label: body.label,
+    this._canvasService.getCanvasWithId(canvasId).layout({
       layoutSpecification: body.layoutSpecification,
     });
   }

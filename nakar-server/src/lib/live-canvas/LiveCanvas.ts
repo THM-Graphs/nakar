@@ -54,6 +54,15 @@ import { LiveCanvasScenarioGroup } from './data/LiveCanvasScenarioGroup';
 import { SchemaFactoryService } from '../schema/SchemaFactoryService';
 import { LiveCanvasScenario } from './data/LiveCanvasScenario';
 import { MonitoringService } from '../monitoring/MonitoringService';
+import {
+  EdgeMap,
+  hierarchyGraphLayout,
+  LayoutNode,
+  NodeMap,
+} from '../physics/hierarchy-graph-layout/hierarchyGraphLayout';
+import { LayoutSpecificationHierarchyDto } from '../http/routes/canvas-action/dto/LayoutSpecificationHierarchyDto';
+import { Range } from '../range/Range';
+import { LayoutSpecificationForceDirectedDto } from '../http/routes/canvas-action/dto/LayoutSpecificationForceDirectedDto';
 
 export class LiveCanvas {
   private readonly _logger: Logger = createChildLogger(this);
@@ -479,19 +488,19 @@ export class LiveCanvas {
                         return;
                       }
                       this._layout(
-                        label,
                         {
                           type: 'LayoutSpecificationCircleDto',
                           radius: radius,
+                          label: label,
                         },
                         changeRecorder,
                       );
                     })
                     .with('forceDirected', (): void => {
                       this._layout(
-                        label,
                         {
                           type: 'LayoutSpecificationForceDirectedDto',
+                          label: label,
                         },
                         changeRecorder,
                       );
@@ -970,17 +979,14 @@ export class LiveCanvas {
     );
   }
 
-  public layoutLabel(params: {
-    label: string;
-    layoutSpecification: LayoutSpecificationDto;
-  }): void {
+  public layout(params: { layoutSpecification: LayoutSpecificationDto }): void {
     this._queue.addTask(
       new TaskQueueTask('Layout label', (): void => {
         const changeRecorder: LiveCanvasChangeRecorder =
           new LiveCanvasChangeRecorder();
         this._snapshot('Layout label', changeRecorder);
 
-        this._layout(params.label, params.layoutSpecification, changeRecorder);
+        this._layout(params.layoutSpecification, changeRecorder);
 
         this._handleChangeRecorder(changeRecorder);
         this._triggerPhysicsSimluation({ amount: 'long' });
@@ -1734,19 +1740,19 @@ export class LiveCanvas {
   }
 
   private _layout(
-    targetLabel: string,
     layoutSpecification: LayoutSpecificationDto,
     changeRecorder: LiveCanvasChangeRecorder,
   ): void {
     const graph: LiveCanvasUndoableData = this.getGraph();
-    const nodesOfLabel: GraphNode[] = graph.nodes
-      .getByLabel(targetLabel)
-      .toArray();
 
     match(layoutSpecification)
       .with(
         { type: 'LayoutSpecificationCircleDto' },
         (l: LayoutSpecificationCircleDto): void => {
+          const targetLabel: string = l.label;
+          const nodesOfLabel: GraphNode[] = graph.nodes
+            .getByLabel(targetLabel)
+            .toArray();
           if (nodesOfLabel.length < 2) {
             return;
           }
@@ -1788,12 +1794,65 @@ export class LiveCanvas {
           }
         },
       )
-      .with({ type: 'LayoutSpecificationForceDirectedDto' }, (): void => {
-        for (const node of nodesOfLabel) {
-          node.locked = false;
-          changeRecorder.didChangeNodeLock(node.id, false);
-        }
-      })
+      .with(
+        { type: 'LayoutSpecificationForceDirectedDto' },
+        (l: LayoutSpecificationForceDirectedDto): void => {
+          const targetLabel: string = l.label;
+          const nodesOfLabel: GraphNode[] = graph.nodes
+            .getByLabel(targetLabel)
+            .toArray();
+          for (const node of nodesOfLabel) {
+            node.locked = false;
+            changeRecorder.didChangeNodeLock(node.id, false);
+          }
+        },
+      )
+      .with(
+        { type: 'LayoutSpecificationHierarchyDto' },
+        (layout: LayoutSpecificationHierarchyDto): void => {
+          const degreeRange: Range = graph.nodes.getNodeDegreeRange(graph);
+          const nodeMap: NodeMap = {};
+          for (const node of graph.nodes.nodes) {
+            nodeMap[node.id] = {
+              posX: node.position.x,
+              posY: node.position.y,
+              radius: node.getRadius(
+                this.data.viewSettings,
+                degreeRange,
+                graph,
+              ),
+            };
+          }
+          const edgesMap: EdgeMap = {};
+          for (const edge of graph.edges.edges) {
+            edgesMap[edge.id] = {
+              startNodeId: edge.startNodeId,
+              endNodeId: edge.endNodeId,
+              edgeType: edge.type,
+            };
+          }
+          const targetEdgeType: string = layout.edgeType;
+
+          hierarchyGraphLayout(nodeMap, edgesMap, targetEdgeType);
+          for (const node of Object.entries(nodeMap) satisfies [
+            string,
+            LayoutNode,
+          ][]) {
+            const foundNode: GraphNode | null = graph.nodes.get(node[0]);
+            if (foundNode == null) {
+              continue;
+            }
+            if (foundNode.grabs.size > 0) {
+              continue;
+            }
+            foundNode.position.x = node[1].posX;
+            foundNode.position.y = node[1].posY;
+            changeRecorder.didMoveNode(foundNode);
+            foundNode.locked = true;
+            changeRecorder.didChangeNodeLock(foundNode.id, true);
+          }
+        },
+      )
       .exhaustive();
   }
 

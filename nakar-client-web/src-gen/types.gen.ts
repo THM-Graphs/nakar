@@ -290,23 +290,31 @@ export type LabelDto = {
     sources: Array<(string)>;
 };
 
-export type LayoutLabelRequestBodyDto = {
-    label: string;
-    layoutSpecification: (LayoutSpecificationCircleDto | LayoutSpecificationForceDirectedDto);
+export type LayoutRequestBodyDto = {
+    layoutSpecification: (LayoutSpecificationCircleDto | LayoutSpecificationForceDirectedDto | LayoutSpecificationHierarchyDto);
 };
 
 export type LayoutSpecificationCircleDto = {
     type: 'LayoutSpecificationCircleDto';
     radius: number;
+    label: string;
 };
 
 export type type15 = 'LayoutSpecificationCircleDto';
 
 export type LayoutSpecificationForceDirectedDto = {
     type: 'LayoutSpecificationForceDirectedDto';
+    label: string;
 };
 
 export type type16 = 'LayoutSpecificationForceDirectedDto';
+
+export type LayoutSpecificationHierarchyDto = {
+    type: 'LayoutSpecificationHierarchyDto';
+    edgeType: string;
+};
+
+export type type17 = 'LayoutSpecificationHierarchyDto';
 
 export type LiveCanvasDataDto = {
     metaData: LiveCanvasMetaDataDto;
@@ -381,14 +389,14 @@ export type MoveCursorWsdto = {
     position: PositionDto;
 };
 
-export type type17 = 'MoveCursorWsdto';
+export type type18 = 'MoveCursorWsdto';
 
 export type MoveNodesWsdto = {
     type: 'MoveNodesWsdto';
     nodes: Array<PhysicalNodeDto>;
 };
 
-export type type18 = 'MoveNodesWsdto';
+export type type19 = 'MoveNodesWsdto';
 
 export type NodeConfigurationDto = {
     id: string;
@@ -398,7 +406,7 @@ export type NodeConfigurationDto = {
     linkTemplate: string;
 };
 
-export type type19 = 'link' | 'image';
+export type type20 = 'link' | 'image';
 
 export type NodeDto = {
     id: string;
@@ -456,7 +464,7 @@ export type NodesMovedWsdto = {
     performance: PhysicsPerformanceDto;
 };
 
-export type type20 = 'NodesMovedWsdto';
+export type type21 = 'NodesMovedWsdto';
 
 export type NoteDto = {
     id: string;
@@ -479,7 +487,7 @@ export type NotificationWsdto = {
     notification: NotificationDataDto;
 };
 
-export type type21 = 'NotificationWsdto';
+export type type22 = 'NotificationWsdto';
 
 export type PhysicalNodeDto = {
     id: string;
@@ -529,7 +537,7 @@ export type ProgressWsdto = {
     message: string;
 };
 
-export type type22 = 'ProgressWsdto';
+export type type23 = 'ProgressWsdto';
 
 export type ProjectPageDto = {
     id: string;
@@ -605,7 +613,7 @@ export type ScenarioPostActionDto = {
     layoutAlgorithm: 'forceDirected' | 'circle' | 'none';
 };
 
-export type type23 = 'connectResultNodes' | 'compressRelationships' | 'compressNodes' | 'layout' | 'none';
+export type type24 = 'connectResultNodes' | 'compressRelationships' | 'compressNodes' | 'layout' | 'none';
 
 export type layoutAlgorithm = 'forceDirected' | 'circle' | 'none';
 
@@ -626,7 +634,7 @@ export type SetNodeLocksWsdto = {
     locks: Array<NodeLockCollectionEntryDto>;
 };
 
-export type type24 = 'SetNodeLocksWsdto';
+export type type25 = 'SetNodeLocksWsdto';
 
 export type ShowShortestPathRequestBodyDto = {
     nodeIds: Array<(string)>;
@@ -674,7 +682,7 @@ export type UngrabNodeWsdto = {
     node: PhysicalNodeDto;
 };
 
-export type type25 = 'UngrabNodeWsdto';
+export type type26 = 'UngrabNodeWsdto';
 
 export type UnlockNodesRequestBodyDto = {
     nodes: Array<(string)>;
@@ -733,7 +741,7 @@ export type UpdateScenarioPostActionEntryDto = {
     layoutAlgorithm: 'forceDirected' | 'circle';
 };
 
-export type type26 = 'connectResultNodes' | 'compressRelationships' | 'compressNodes' | 'layout';
+export type type27 = 'connectResultNodes' | 'compressRelationships' | 'compressNodes' | 'layout';
 
 export type layoutAlgorithm2 = 'forceDirected' | 'circle';
 
@@ -1310,17 +1318,17 @@ export type ActionControllerCompressNodesResponse = (unknown);
 
 export type ActionControllerCompressNodesError = unknown;
 
-export type ActionControllerLayoutLabelData = {
-    body: LayoutLabelRequestBodyDto;
+export type ActionControllerLayoutData = {
+    body: LayoutRequestBodyDto;
     path: {
         canvasId: string;
         roomId: string;
     };
 };
 
-export type ActionControllerLayoutLabelResponse = (unknown);
+export type ActionControllerLayoutResponse = (unknown);
 
-export type ActionControllerLayoutLabelError = unknown;
+export type ActionControllerLayoutError = unknown;
 
 export type ActionControllerShowShortestPathData = {
     body: ShowShortestPathRequestBodyDto;

@@ -1,7 +1,7 @@
 import { Action } from "./Action.ts";
 import { LabelActionParams } from "./LabelActionParams.ts";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
-import { actionControllerLayoutLabel } from "../../../src-gen";
+import { actionControllerLayout } from "../../../src-gen";
 
 export class LayoutLabelsForceDirectedAction extends Action<LabelActionParams> {
   public static shared: LayoutLabelsForceDirectedAction =
@@ -14,15 +14,15 @@ export class LayoutLabelsForceDirectedAction extends Action<LabelActionParams> {
     }
     const label = input.labels[0];
     resultOrThrow(
-      await actionControllerLayoutLabel({
+      await actionControllerLayout({
         path: {
           roomId: input.roomContext.initialRoomData.id,
           canvasId: input.roomContext.initialCanvasData.id,
         },
         body: {
-          label: label,
           layoutSpecification: {
             type: "LayoutSpecificationForceDirectedDto",
+            label: label,
           },
         },
       }),
