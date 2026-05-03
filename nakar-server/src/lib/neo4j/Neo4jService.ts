@@ -92,6 +92,9 @@ export class Neo4jService {
           `Did receive ${result.size.toString()} graph elements.`,
         );
 
+        await session.close();
+        await driver.close();
+
         return result;
       } catch (error) {
         await session.close();
