@@ -5,7 +5,7 @@ export class SMap<K extends string | number | symbol, V> extends Map<K, V> {
   ): SMap<K, V> {
     const map: SMap<K, V> = new SMap<K, V>();
     for (const key in record) {
-      map.set(key as K, record[key]);
+      map.set(key, record[key]);
     }
     return map;
   }

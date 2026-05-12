@@ -19,7 +19,7 @@ export async function userCanSeeAndEditProject(
 
   const owner: Result<'plugin::users-permissions.user'> | null =
     await database.getOwnerOfProject(project);
-  if (owner != null && owner.documentId === user.documentId) {
+  if (owner?.documentId === user.documentId) {
     return true;
   }
 

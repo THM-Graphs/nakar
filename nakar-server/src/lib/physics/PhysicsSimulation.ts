@@ -150,19 +150,30 @@ export class PhysicsSimulation {
   }
 
   private _tick(): void {
-    const nodes: PhysicalNode[] = Object.values(this._graph.nodes);
-    const edges: PhysicalEdge[] = Object.values(this._graph.edges);
+    const nodes: (PhysicalNode | null)[] = Object.values(this._graph.nodes);
+    const edges: (PhysicalEdge | null)[] = Object.values(this._graph.edges);
 
     for (let i: number = 0; i < nodes.length; i++) {
-      this._centerForce(nodes[i]);
+      const nodeA: PhysicalNode | null = nodes[i];
+      if (nodeA == null) {
+        continue;
+      }
+      this._centerForce(nodeA);
 
       for (let j: number = i + 1; j < nodes.length; j++) {
-        this._twoBodyForce(nodes[i], nodes[j]);
+        const nodeB: PhysicalNode | null = nodes[j];
+        if (nodeB == null) {
+          continue;
+        }
+        this._twoBodyForce(nodeA, nodeB);
       }
     }
 
     const handledNodeCombinations: CombinationCache = new CombinationCache();
     for (const edge of edges) {
+      if (edge == null) {
+        continue;
+      }
       if (edge.isLoop) {
         continue;
       }
@@ -172,16 +183,12 @@ export class PhysicsSimulation {
         continue;
       }
 
-      const nodeA: PhysicalNode | null = this._graph.nodes[
-        edge.startNodeId
-      ] as PhysicalNode | null;
+      const nodeA: PhysicalNode | null = this._graph.nodes[edge.startNodeId];
       if (nodeA == null) {
         continue;
       }
 
-      const nodeB: PhysicalNode | null = this._graph.nodes[
-        edge.endNodeId
-      ] as PhysicalNode | null;
+      const nodeB: PhysicalNode | null = this._graph.nodes[edge.endNodeId];
       if (nodeB == null) {
         continue;
       }
@@ -195,6 +202,9 @@ export class PhysicsSimulation {
 
     // Update positions
     for (const node of nodes) {
+      if (node == null) {
+        continue;
+      }
       this._applyVelocity(node);
     }
   }

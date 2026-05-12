@@ -61,9 +61,7 @@ export class LiveCanvasWorkerPhysicsService {
             const graph: PhysicalGraph = this._physics.getGraph();
 
             for (const movedNode of action.nodes) {
-              const foundNode: PhysicalNode | null = graph.nodes[
-                movedNode.id
-              ] as PhysicalNode | null;
+              const foundNode: PhysicalNode | null = graph.nodes[movedNode.id];
               if (foundNode == null) {
                 this._logger.error(
                   `Client did send moved node, but the node cannot be found in the room. Room: ${this._canvasId}, Node: ${movedNode.id}`,
@@ -97,9 +95,7 @@ export class LiveCanvasWorkerPhysicsService {
             for (const lock of Object.entries(action.locks)) {
               const nodeId: string = lock[0];
               const locked: boolean = lock[1];
-              const node: PhysicalNode | null = graph.nodes[
-                nodeId
-              ] as PhysicalNode | null;
+              const node: PhysicalNode | null = graph.nodes[nodeId];
               if (node == null) {
                 this._logger.warn(
                   `Unable to apply lock to node ${nodeId}. Node does not exist.`,

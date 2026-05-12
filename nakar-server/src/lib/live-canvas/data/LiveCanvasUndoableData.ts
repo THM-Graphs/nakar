@@ -237,6 +237,9 @@ export class LiveCanvasUndoableData {
 
   public applyPhysicalGraph(physicalGraph: PhysicalGraph): void {
     for (const node of Object.values(physicalGraph.nodes)) {
+      if (node == null) {
+        continue;
+      }
       const foundNode: GraphNode | null = this.nodes.get(node.id);
       if (foundNode == null) {
         // This can happen, if the graphs are out of sync for a short period of time.
