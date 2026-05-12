@@ -219,7 +219,7 @@ export function hierarchyGraphLayout(
       layers[l] = [];
     }
 
-    layers[l].push(id);
+    layers[l]!.push(id);
   }
 
   const sortedLayers: number[] = Object.keys(layers)
