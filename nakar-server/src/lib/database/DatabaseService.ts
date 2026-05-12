@@ -21,6 +21,7 @@ import { Input } from '@strapi/types/dist/modules/documents/params/data';
 import { UpdateScenarioQueryParameterEntryDto } from '../http/routes/scenario/dto/UpdateScenarioQueryParameterEntryDto';
 import { UpdateScenarioPostActionEntryDto } from '../http/routes/scenario/dto/UpdateScenarioPostActionEntryDto';
 import { UpdateNodeConfigurationRequestBodyDto } from '../http/routes/database-connection/dto/UpdateNodeConfigurationRequestBodyDto';
+import { match } from 'ts-pattern';
 
 @Injectable()
 export class DatabaseService {
@@ -816,7 +817,7 @@ export class DatabaseService {
     return project;
   }
 
-  public async getPostScenarioActionsOfScenario(
+  public async getOrderedPostScenarioActionsOfScenario(
     scenario: Result<'api::scenario.scenario'>,
   ): Promise<Result<'api::post-scenario-action.post-scenario-action'>[]> {
     const populatedScenario: Result<
@@ -841,6 +842,14 @@ export class DatabaseService {
       'connectResultNodes',
       'compressNodes',
       'compressRelationships',
+      'resetVisualization',
+      'setGrowNodesBasedOnDegree',
+      'setRelationshipClusterSize',
+      'setNodeColor',
+      'setNodeRadius',
+      'setNodeTitleProperty',
+      'setRelationshipColor',
+      'setRelationshipWidth',
       'layout',
     ] satisfies PostActionType[];
 
@@ -1064,7 +1073,7 @@ export class DatabaseService {
       ),
     );
     const existingDocuments: Result<'api::post-scenario-action.post-scenario-action'>[] =
-      await this.getPostScenarioActionsOfScenario(scenario);
+      await this.getOrderedPostScenarioActionsOfScenario(scenario);
     for (const existingDocument of existingDocuments) {
       if (newIds.has(existingDocument.documentId)) {
         // Okay, stay
@@ -1077,12 +1086,53 @@ export class DatabaseService {
     }
 
     for (const newDocument of postScenarioActions) {
+      const colorIndex:
+        | Input<'api::post-scenario-action.post-scenario-action'>['colorIndex']
+        | undefined = match(newDocument.color.index)
+        .with(
+          0,
+          (): Input<'api::post-scenario-action.post-scenario-action'>['colorIndex'] =>
+            'c0',
+        )
+        .with(
+          1,
+          (): Input<'api::post-scenario-action.post-scenario-action'>['colorIndex'] =>
+            'c1',
+        )
+        .with(
+          2,
+          (): Input<'api::post-scenario-action.post-scenario-action'>['colorIndex'] =>
+            'c2',
+        )
+        .with(
+          3,
+          (): Input<'api::post-scenario-action.post-scenario-action'>['colorIndex'] =>
+            'c3',
+        )
+        .with(
+          4,
+          (): Input<'api::post-scenario-action.post-scenario-action'>['colorIndex'] =>
+            'c4',
+        )
+        .with(
+          5,
+          (): Input<'api::post-scenario-action.post-scenario-action'>['colorIndex'] =>
+            'c5',
+        )
+        .exhaustive();
+
       const documentData: Input<'api::post-scenario-action.post-scenario-action'> =
         {
           type: newDocument.type,
           label: newDocument.label,
           circleRadius: newDocument.circleRadius,
           layoutAlgorithm: newDocument.layoutAlgorithm,
+          relationshipType: newDocument.relationshipType,
+          factor: newDocument.factor,
+          width: newDocument.width,
+          colorIndex: colorIndex,
+          radius: newDocument.radius,
+          property: newDocument.property,
           scenario: scenario.documentId,
         };
 

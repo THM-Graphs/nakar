@@ -30,7 +30,7 @@ export class UpdateScenarioRequestBodyDto {
   public parameters!: UpdateScenarioQueryParameterEntryDto[];
 
   @ApiProperty({ type: UpdateScenarioPostActionEntryDto, isArray: true })
-  @ValidateNested()
+  @ValidateNested({ each: true })
   @IsArray()
   @Type(
     (): typeof UpdateScenarioPostActionEntryDto =>

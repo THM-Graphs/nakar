@@ -74,6 +74,26 @@ export class LiveCanvasEdgeViewSettings {
     });
   }
 
+  public withCustomWidth(width: number): LiveCanvasEdgeViewSettings {
+    return new LiveCanvasEdgeViewSettings({
+      width: width,
+      customWidth: true,
+      colorIndex: this.colorIndex,
+      customColor: this.customColor,
+    });
+  }
+
+  public withCustomColorIndex(
+    colorIndex: LiveCanvasEdgeViewSettings['colorIndex'],
+  ): LiveCanvasEdgeViewSettings {
+    return new LiveCanvasEdgeViewSettings({
+      width: this.width,
+      customWidth: this.customWidth,
+      colorIndex: colorIndex,
+      customColor: true,
+    });
+  }
+
   public toPlain(): z.infer<typeof LiveCanvasEdgeViewSettings.schema> {
     return {
       width: this.width,

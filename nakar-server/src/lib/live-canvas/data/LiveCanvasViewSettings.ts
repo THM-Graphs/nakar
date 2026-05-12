@@ -190,6 +190,60 @@ export class LiveCanvasViewSettings {
     });
   }
 
+  public withGrowNodesBasedOnDegreeFactor(
+    factor: number,
+  ): LiveCanvasViewSettings {
+    return new LiveCanvasViewSettings({
+      compressRelationshipsWidthFactor: this.compressRelationshipsWidthFactor,
+      growNodesBasedOnDegree: true,
+      growNodesBasedOnDegreeFactor: factor,
+      scaleType: this.scaleType,
+      labelSettings: this.labelSettings,
+      edgeSettings: this.edgeSettings,
+    });
+  }
+
+  public withCompressRelationshipsWidthFactor(
+    factor: number,
+  ): LiveCanvasViewSettings {
+    return new LiveCanvasViewSettings({
+      compressRelationshipsWidthFactor: factor,
+      growNodesBasedOnDegree: this.growNodesBasedOnDegree,
+      growNodesBasedOnDegreeFactor: this.growNodesBasedOnDegreeFactor,
+      scaleType: this.scaleType,
+      labelSettings: this.labelSettings,
+      edgeSettings: this.edgeSettings,
+    });
+  }
+
+  public withLabelSettings(
+    label: string,
+    labelSettings: LiveCanvasLabelViewSettings,
+  ): LiveCanvasViewSettings {
+    return new LiveCanvasViewSettings({
+      compressRelationshipsWidthFactor: this.compressRelationshipsWidthFactor,
+      growNodesBasedOnDegree: this.growNodesBasedOnDegree,
+      growNodesBasedOnDegreeFactor: this.growNodesBasedOnDegreeFactor,
+      scaleType: this.scaleType,
+      labelSettings: this.labelSettings.bySetting(label, labelSettings),
+      edgeSettings: this.edgeSettings,
+    });
+  }
+
+  public withEdgeSettings(
+    edgeType: string,
+    edgeSettings: LiveCanvasEdgeViewSettings,
+  ): LiveCanvasViewSettings {
+    return new LiveCanvasViewSettings({
+      compressRelationshipsWidthFactor: this.compressRelationshipsWidthFactor,
+      growNodesBasedOnDegree: this.growNodesBasedOnDegree,
+      growNodesBasedOnDegreeFactor: this.growNodesBasedOnDegreeFactor,
+      scaleType: this.scaleType,
+      labelSettings: this.labelSettings,
+      edgeSettings: this.edgeSettings.bySetting(edgeType, edgeSettings),
+    });
+  }
+
   public toSchema(
     labels: string[],
     edgeTypes: string[],

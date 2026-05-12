@@ -63,6 +63,8 @@ import {
 import { LayoutSpecificationHierarchyDto } from '../http/routes/canvas-action/dto/LayoutSpecificationHierarchyDto';
 import { Range } from '../range/Range';
 import { LayoutSpecificationForceDirectedDto } from '../http/routes/canvas-action/dto/LayoutSpecificationForceDirectedDto';
+import { LiveCanvasLabelViewSettings } from './data/LiveCanvasLabelViewSettings';
+import { LiveCanvasEdgeViewSettings } from './data/LiveCanvasEdgeViewSettings';
 
 export class LiveCanvas {
   private readonly _logger: Logger = createChildLogger(this);
@@ -446,10 +448,12 @@ export class LiveCanvas {
         if (!params.additive) {
           const task: Profiler = this._logger.startTimer();
 
-          const postScenarioActions: Result<'api::post-scenario-action.post-scenario-action'>[] =
-            await this._database.getPostScenarioActionsOfScenario(scenario);
+          const orderedPostScenarioActions: Result<'api::post-scenario-action.post-scenario-action'>[] =
+            await this._database.getOrderedPostScenarioActionsOfScenario(
+              scenario,
+            );
 
-          for (const action of postScenarioActions) {
+          for (const action of orderedPostScenarioActions) {
             await match(action)
               .returnType<Promise<void> | void>()
               .with({ type: P.nullish }, (): void => {
@@ -472,6 +476,155 @@ export class LiveCanvas {
               .with({ type: 'compressRelationships' }, (): void => {
                 this._compressRelationships(changeRecorder);
               })
+              .with({ type: 'resetVisualization' }, (): void => {
+                this._setViewSettingsFromPostScenarioAction(
+                  LiveCanvasViewSettings.defaultViewSettings(),
+                  changeRecorder,
+                );
+              })
+              .with(
+                { type: 'setGrowNodesBasedOnDegree' },
+                (
+                  data: Result<'api::post-scenario-action.post-scenario-action'>,
+                ): void => {
+                  this._setViewSettingsFromPostScenarioAction(
+                    this.data.viewSettings.withGrowNodesBasedOnDegreeFactor(
+                      data.factor ??
+                        LiveCanvasViewSettings.defaultGrowNodesBasedOnDegreeFactor,
+                    ),
+                    changeRecorder,
+                  );
+                },
+              )
+              .with(
+                { type: 'setRelationshipClusterSize' },
+                (
+                  data: Result<'api::post-scenario-action.post-scenario-action'>,
+                ): void => {
+                  this._setViewSettingsFromPostScenarioAction(
+                    this.data.viewSettings.withCompressRelationshipsWidthFactor(
+                      data.factor ??
+                        LiveCanvasViewSettings.defaultCompressRelationshipsWidthFactor,
+                    ),
+                    changeRecorder,
+                  );
+                },
+              )
+              .with(
+                { type: 'setNodeColor' },
+                (
+                  data: Result<'api::post-scenario-action.post-scenario-action'>,
+                ): void => {
+                  const label: string | null = data.label ?? null;
+                  const colorIndex:
+                    | LiveCanvasLabelViewSettings['colorIndex']
+                    | null = this._createViewSettingsColorIndex(
+                    data.colorIndex,
+                  );
+                  if (label == null || colorIndex == null) {
+                    return;
+                  }
+                  this._setViewSettingsFromPostScenarioAction(
+                    this.data.viewSettings.withLabelSettings(
+                      label,
+                      this.data.viewSettings
+                        .getLabelSettings(label)
+                        .withColorIndex(colorIndex),
+                    ),
+                    changeRecorder,
+                  );
+                },
+              )
+              .with(
+                { type: 'setNodeRadius' },
+                (
+                  data: Result<'api::post-scenario-action.post-scenario-action'>,
+                ): void => {
+                  const label: string | null = data.label ?? null;
+                  const radius: number | null = data.radius ?? null;
+                  if (label == null || radius == null) {
+                    return;
+                  }
+                  this._setViewSettingsFromPostScenarioAction(
+                    this.data.viewSettings.withLabelSettings(
+                      label,
+                      this.data.viewSettings
+                        .getLabelSettings(label)
+                        .withCustomRadius(radius),
+                    ),
+                    changeRecorder,
+                  );
+                },
+              )
+              .with(
+                { type: 'setNodeTitleProperty' },
+                (
+                  data: Result<'api::post-scenario-action.post-scenario-action'>,
+                ): void => {
+                  const label: string | null = data.label ?? null;
+                  const property: string | null = data.property ?? null;
+                  if (label == null || property == null) {
+                    return;
+                  }
+                  this._setViewSettingsFromPostScenarioAction(
+                    this.data.viewSettings.withLabelSettings(
+                      label,
+                      this.data.viewSettings
+                        .getLabelSettings(label)
+                        .withCustomTitleProperty(property),
+                    ),
+                    changeRecorder,
+                  );
+                },
+              )
+              .with(
+                { type: 'setRelationshipColor' },
+                (
+                  data: Result<'api::post-scenario-action.post-scenario-action'>,
+                ): void => {
+                  const relationshipType: string | null =
+                    data.relationshipType ?? null;
+                  const colorIndex:
+                    | LiveCanvasEdgeViewSettings['colorIndex']
+                    | null = this._createViewSettingsColorIndex(
+                    data.colorIndex,
+                  );
+                  if (relationshipType == null || colorIndex == null) {
+                    return;
+                  }
+                  this._setViewSettingsFromPostScenarioAction(
+                    this.data.viewSettings.withEdgeSettings(
+                      relationshipType,
+                      this.data.viewSettings
+                        .getEdgeSettings(relationshipType)
+                        .withCustomColorIndex(colorIndex),
+                    ),
+                    changeRecorder,
+                  );
+                },
+              )
+              .with(
+                { type: 'setRelationshipWidth' },
+                (
+                  data: Result<'api::post-scenario-action.post-scenario-action'>,
+                ): void => {
+                  const relationshipType: string | null =
+                    data.relationshipType ?? null;
+                  const width: number | null = data.width ?? null;
+                  if (relationshipType == null || width == null) {
+                    return;
+                  }
+                  this._setViewSettingsFromPostScenarioAction(
+                    this.data.viewSettings.withEdgeSettings(
+                      relationshipType,
+                      this.data.viewSettings
+                        .getEdgeSettings(relationshipType)
+                        .withCustomWidth(width),
+                    ),
+                    changeRecorder,
+                  );
+                },
+              )
               .with(
                 { type: 'layout' },
                 (
@@ -1862,6 +2015,28 @@ export class LiveCanvas {
       canvas: this,
       error: error,
     });
+  }
+
+  private _setViewSettingsFromPostScenarioAction(
+    newViewSettings: LiveCanvasViewSettings,
+    changeRecorder: LiveCanvasChangeRecorder,
+  ): void {
+    this.data.viewSettings = newViewSettings;
+    changeRecorder.didChangeViewSettings();
+  }
+
+  private _createViewSettingsColorIndex(
+    colorIndex: Result<'api::post-scenario-action.post-scenario-action'>['colorIndex'],
+  ): LiveCanvasLabelViewSettings['colorIndex'] | null {
+    return match(colorIndex)
+      .with('c0', (): LiveCanvasLabelViewSettings['colorIndex'] => 0)
+      .with('c1', (): LiveCanvasLabelViewSettings['colorIndex'] => 1)
+      .with('c2', (): LiveCanvasLabelViewSettings['colorIndex'] => 2)
+      .with('c3', (): LiveCanvasLabelViewSettings['colorIndex'] => 3)
+      .with('c4', (): LiveCanvasLabelViewSettings['colorIndex'] => 4)
+      .with('c5', (): LiveCanvasLabelViewSettings['colorIndex'] => 5)
+      .with(P.nullish, (): null => null)
+      .exhaustive();
   }
 
   private _triggerPhysicsSimluation(params: {

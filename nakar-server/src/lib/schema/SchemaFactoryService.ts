@@ -41,6 +41,7 @@ import { HistogramDto } from './dtos/HistogramDto';
 import { HistogramValueEntryDto } from './dtos/HistogramValueEntryDto';
 import { HistogramNodeEntryDto } from './dtos/HistogramNodeEntryDto';
 import { ColorPresetDto } from './dtos/ColorPresetDto';
+import { ColorPresetIndexDto } from './dtos/ColorPresetIndexDto';
 import { ColorDto } from './dtos/ColorDto';
 import { LiveCanvasLabelViewSettings } from '../live-canvas/data/LiveCanvasLabelViewSettings';
 import { LiveCanvasUser } from '../live-canvas/data/LiveCanvasUser';
@@ -197,7 +198,7 @@ export class SchemaFactoryService {
     scenario: Result<'api::scenario.scenario'>,
   ): Promise<ScenarioDto> {
     const postScenarioActions: ScenarioPostActionDto[] = (
-      await this._database.getPostScenarioActionsOfScenario(scenario)
+      await this._database.getOrderedPostScenarioActionsOfScenario(scenario)
     ).map(
       (
         postScenarioAction: Result<'api::post-scenario-action.post-scenario-action'>,
@@ -209,6 +210,21 @@ export class SchemaFactoryService {
           postScenarioAction.layoutAlgorithm,
         ),
         circleRadius: postScenarioAction.circleRadius ?? 2000,
+        relationshipType: postScenarioAction.relationshipType ?? '',
+        factor: postScenarioAction.factor ?? 2,
+        width: postScenarioAction.width ?? GraphEdge.defaultWidth,
+        color: new ColorPresetDto({
+          index: match(postScenarioAction.colorIndex ?? 'c0')
+            .with('c0', (): ColorPresetIndexDto => ColorPresetIndexDto._0)
+            .with('c1', (): ColorPresetIndexDto => ColorPresetIndexDto._1)
+            .with('c2', (): ColorPresetIndexDto => ColorPresetIndexDto._2)
+            .with('c3', (): ColorPresetIndexDto => ColorPresetIndexDto._3)
+            .with('c4', (): ColorPresetIndexDto => ColorPresetIndexDto._4)
+            .with('c5', (): ColorPresetIndexDto => ColorPresetIndexDto._5)
+            .exhaustive(),
+        }),
+        radius: postScenarioAction.radius ?? GraphNode.defaultRadius,
+        property: postScenarioAction.property ?? '',
       }),
     );
 
@@ -240,38 +256,7 @@ export class SchemaFactoryService {
       ),
       postScenarioActions: postScenarioActions,
       postActionsDescription: postScenarioActions.map(
-        (action: ScenarioPostActionDto): string =>
-          match(action.type)
-            .with(
-              ScenarioPostActionTypeDto.connectResultNodes,
-              (): string => 'Connect Result Nodes',
-            )
-            .with(
-              ScenarioPostActionTypeDto.compressRelationships,
-              (): string => 'Compress Relationships',
-            )
-            .with(
-              ScenarioPostActionTypeDto.compressNodes,
-              (): string => `Compress ${action.label} Nodes`,
-            )
-            .with(ScenarioPostActionTypeDto.layout, (): string =>
-              match(action.layoutAlgorithm)
-                .with(
-                  ScenarioPostActionLayoutAlgorithmDto.forceDirected,
-                  (): string => `Layout ${action.label} Force Directed`,
-                )
-                .with(
-                  ScenarioPostActionLayoutAlgorithmDto.circle,
-                  (): string => `Layout ${action.label} Circle`,
-                )
-                .with(
-                  ScenarioPostActionLayoutAlgorithmDto.none,
-                  (): string => `None`,
-                )
-                .exhaustive(),
-            )
-            .with(ScenarioPostActionTypeDto.none, (): string => `None`)
-            .exhaustive(),
+        (action: ScenarioPostActionDto): string => action.type,
       ),
     });
   }
@@ -956,6 +941,45 @@ export class SchemaFactoryService {
         'compressNodes',
         (): ScenarioPostActionTypeDto =>
           ScenarioPostActionTypeDto.compressNodes,
+      )
+      .with(
+        'resetVisualization',
+        (): ScenarioPostActionTypeDto =>
+          ScenarioPostActionTypeDto.resetVisualization,
+      )
+      .with(
+        'setGrowNodesBasedOnDegree',
+        (): ScenarioPostActionTypeDto =>
+          ScenarioPostActionTypeDto.setGrowNodesBasedOnDegree,
+      )
+      .with(
+        'setRelationshipClusterSize',
+        (): ScenarioPostActionTypeDto =>
+          ScenarioPostActionTypeDto.setRelationshipClusterSize,
+      )
+      .with(
+        'setNodeColor',
+        (): ScenarioPostActionTypeDto => ScenarioPostActionTypeDto.setNodeColor,
+      )
+      .with(
+        'setNodeRadius',
+        (): ScenarioPostActionTypeDto =>
+          ScenarioPostActionTypeDto.setNodeRadius,
+      )
+      .with(
+        'setNodeTitleProperty',
+        (): ScenarioPostActionTypeDto =>
+          ScenarioPostActionTypeDto.setNodeTitleProperty,
+      )
+      .with(
+        'setRelationshipColor',
+        (): ScenarioPostActionTypeDto =>
+          ScenarioPostActionTypeDto.setRelationshipColor,
+      )
+      .with(
+        'setRelationshipWidth',
+        (): ScenarioPostActionTypeDto =>
+          ScenarioPostActionTypeDto.setRelationshipWidth,
       )
       .with(
         P.nullish,

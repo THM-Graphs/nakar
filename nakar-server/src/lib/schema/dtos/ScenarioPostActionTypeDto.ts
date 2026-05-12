@@ -1,7 +1,15 @@
 export enum ScenarioPostActionTypeDto {
+  none = 'none',
   connectResultNodes = 'connectResultNodes',
   compressRelationships = 'compressRelationships',
   compressNodes = 'compressNodes',
   layout = 'layout',
-  none = 'none',
+  resetVisualization = 'resetVisualization',
+  setGrowNodesBasedOnDegree = 'setGrowNodesBasedOnDegree',
+  setRelationshipClusterSize = 'setRelationshipClusterSize',
+  setNodeColor = 'setNodeColor',
+  setNodeRadius = 'setNodeRadius',
+  setNodeTitleProperty = 'setNodeTitleProperty',
+  setRelationshipColor = 'setRelationshipColor',
+  setRelationshipWidth = 'setRelationshipWidth',
 }

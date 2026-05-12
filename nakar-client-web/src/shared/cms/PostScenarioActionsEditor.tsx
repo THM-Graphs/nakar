@@ -1,6 +1,9 @@
 import { Card, Stack } from "react-bootstrap";
 import { useCallback } from "react";
-import { UpdateScenarioPostActionEntryDto } from "../../../src-gen";
+import {
+  ColorPresetDto,
+  UpdateScenarioPostActionEntryDto,
+} from "../../../src-gen";
 import { v4 } from "uuid";
 import { NavbarButton } from "../elements/NavbarButton.tsx";
 import { PostScenarioActionEditor } from "./PostScenarioActionEditor.tsx";
@@ -10,12 +13,22 @@ export function PostScenarioActionsEditor(props: {
   onChange: (newEntry: UpdateScenarioPostActionEntryDto[]) => void;
 }) {
   const addPostAction = useCallback(() => {
+    const defaultColor: ColorPresetDto = {
+      type: "ColorPresetDto",
+      index: 0,
+    };
     const newQueryParameter: UpdateScenarioPostActionEntryDto = {
       id: v4(),
       label: "",
       circleRadius: 2000,
       type: "connectResultNodes",
       layoutAlgorithm: "circle",
+      relationshipType: "",
+      factor: 2,
+      width: 2,
+      color: defaultColor,
+      radius: 40,
+      property: "",
     };
     props.onChange([...props.value, newQueryParameter]);
   }, [props.value, props.onChange]);

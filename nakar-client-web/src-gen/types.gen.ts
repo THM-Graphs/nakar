@@ -607,13 +607,19 @@ export type dataType = 'string' | 'number' | 'json' | 'startDateTime' | 'endDate
 
 export type ScenarioPostActionDto = {
     id: string;
-    type: 'connectResultNodes' | 'compressRelationships' | 'compressNodes' | 'layout' | 'none';
+    type: 'none' | 'connectResultNodes' | 'compressRelationships' | 'compressNodes' | 'layout' | 'resetVisualization' | 'setGrowNodesBasedOnDegree' | 'setRelationshipClusterSize' | 'setNodeColor' | 'setNodeRadius' | 'setNodeTitleProperty' | 'setRelationshipColor' | 'setRelationshipWidth';
     label: string;
     circleRadius: number;
     layoutAlgorithm: 'forceDirected' | 'circle' | 'none';
+    relationshipType: string;
+    factor: number;
+    width: number;
+    color: ColorPresetDto;
+    radius: number;
+    property: string;
 };
 
-export type type24 = 'connectResultNodes' | 'compressRelationships' | 'compressNodes' | 'layout' | 'none';
+export type type24 = 'none' | 'connectResultNodes' | 'compressRelationships' | 'compressNodes' | 'layout' | 'resetVisualization' | 'setGrowNodesBasedOnDegree' | 'setRelationshipClusterSize' | 'setNodeColor' | 'setNodeRadius' | 'setNodeTitleProperty' | 'setRelationshipColor' | 'setRelationshipWidth';
 
 export type layoutAlgorithm = 'forceDirected' | 'circle' | 'none';
 
@@ -735,13 +741,19 @@ export type UpdateScenarioGroupRequestBodyDto = {
 
 export type UpdateScenarioPostActionEntryDto = {
     id: string;
-    type: 'connectResultNodes' | 'compressRelationships' | 'compressNodes' | 'layout';
+    type: 'connectResultNodes' | 'compressRelationships' | 'compressNodes' | 'layout' | 'resetVisualization' | 'setGrowNodesBasedOnDegree' | 'setRelationshipClusterSize' | 'setNodeColor' | 'setNodeRadius' | 'setNodeTitleProperty' | 'setRelationshipColor' | 'setRelationshipWidth';
     label: string;
     circleRadius: number;
     layoutAlgorithm: 'forceDirected' | 'circle';
+    relationshipType: string;
+    factor: number;
+    width: number;
+    color: ColorPresetDto;
+    radius: number;
+    property: string;
 };
 
-export type type27 = 'connectResultNodes' | 'compressRelationships' | 'compressNodes' | 'layout';
+export type type27 = 'connectResultNodes' | 'compressRelationships' | 'compressNodes' | 'layout' | 'resetVisualization' | 'setGrowNodesBasedOnDegree' | 'setRelationshipClusterSize' | 'setNodeColor' | 'setNodeRadius' | 'setNodeTitleProperty' | 'setRelationshipColor' | 'setRelationshipWidth';
 
 export type layoutAlgorithm2 = 'forceDirected' | 'circle';
 

@@ -17,7 +17,15 @@
         "connectResultNodes",
         "compressRelationships",
         "compressNodes",
-        "layout"
+        "layout",
+        "resetVisualization",
+        "setGrowNodesBasedOnDegree",
+        "setRelationshipClusterSize",
+        "setNodeColor",
+        "setNodeRadius",
+        "setNodeTitleProperty",
+        "setRelationshipColor",
+        "setRelationshipWidth"
       ]
     },
     "scenario": {
@@ -29,8 +37,8 @@
     "label": {
       "type": "string"
     },
-    "circleRadius": {
-      "type": "decimal"
+    "relationshipType": {
+      "type": "string"
     },
     "layoutAlgorithm": {
       "type": "enumeration",
@@ -38,6 +46,32 @@
         "forceDirected",
         "circle"
       ]
+    },
+    "circleRadius": {
+      "type": "decimal"
+    },
+    "factor": {
+      "type": "decimal"
+    },
+    "width": {
+      "type": "decimal"
+    },
+    "colorIndex": {
+      "type": "enumeration",
+      "enum": [
+        "c0",
+        "c1",
+        "c2",
+        "c3",
+        "c4",
+        "c5"
+      ]
+    },
+    "radius": {
+      "type": "decimal"
+    },
+    "property": {
+      "type": "string"
     }
   }
 }

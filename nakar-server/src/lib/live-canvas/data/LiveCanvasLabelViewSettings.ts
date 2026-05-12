@@ -104,6 +104,40 @@ export class LiveCanvasLabelViewSettings {
     return smallestIndex as LiveCanvasLabelViewSettings['colorIndex'];
   }
 
+  public withColorIndex(
+    colorIndex: LiveCanvasLabelViewSettings['colorIndex'],
+  ): LiveCanvasLabelViewSettings {
+    return new LiveCanvasLabelViewSettings({
+      radius: this.radius,
+      customRadius: this.customRadius,
+      colorIndex: colorIndex,
+      titleProperty: this.titleProperty,
+      customTitleProperty: this.customTitleProperty,
+    });
+  }
+
+  public withCustomRadius(radius: number): LiveCanvasLabelViewSettings {
+    return new LiveCanvasLabelViewSettings({
+      radius: radius,
+      customRadius: true,
+      colorIndex: this.colorIndex,
+      titleProperty: this.titleProperty,
+      customTitleProperty: this.customTitleProperty,
+    });
+  }
+
+  public withCustomTitleProperty(
+    titleProperty: string,
+  ): LiveCanvasLabelViewSettings {
+    return new LiveCanvasLabelViewSettings({
+      radius: this.radius,
+      customRadius: this.customRadius,
+      colorIndex: this.colorIndex,
+      titleProperty: titleProperty,
+      customTitleProperty: true,
+    });
+  }
+
   public toPlain(): z.infer<typeof LiveCanvasLabelViewSettings.schema> {
     return {
       radius: this.radius,
