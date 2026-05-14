@@ -28,6 +28,10 @@ export class Range {
     return new Range({ floor: 1, ceiling: 1 });
   }
 
+  public clamp(value: number): number {
+    return Range.clamp(value, this.floor, this.ceiling);
+  }
+
   public scaleValue(to: Range, value: number, scaleType: ScaleType): number {
     const scaler = (i: number): number => {
       if (i === 0) {

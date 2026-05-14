@@ -15,7 +15,7 @@ import { Range } from '../../range/Range';
 import { Logger } from '@strapi/logger';
 import { createChildLogger } from '../../logger/createChildLogger';
 import { Profiler } from 'winston';
-import { LiveCanvasViewSettings } from './LiveCanvasViewSettings';
+import { LiveCanvasViewSettings } from '../view-settings/LiveCanvasViewSettings';
 import { LiveCanvasParameter } from '../graph/LiveCanvasParameter';
 import { LiveCanvasNote } from './LiveCanvasNote';
 

@@ -10,7 +10,7 @@ import { Range } from '../range/Range';
 import { Logger } from '@strapi/logger';
 import { createChildLogger } from '../logger/createChildLogger';
 import { Profiler } from 'winston';
-import { LiveCanvasViewSettings } from '../live-canvas/data/LiveCanvasViewSettings';
+import { LiveCanvasViewSettings } from '../live-canvas/view-settings/LiveCanvasViewSettings';
 import { match, P } from 'ts-pattern';
 import { Injectable } from '@nestjs/common';
 import { StartPageProjectDto } from '../http/routes/start/dto/StartPageProjectDto';
@@ -43,7 +43,6 @@ import { HistogramNodeEntryDto } from './dtos/HistogramNodeEntryDto';
 import { ColorPresetDto } from './dtos/ColorPresetDto';
 import { ColorPresetIndexDto } from './dtos/ColorPresetIndexDto';
 import { ColorDto } from './dtos/ColorDto';
-import { LiveCanvasLabelViewSettings } from '../live-canvas/data/LiveCanvasLabelViewSettings';
 import { LiveCanvasUser } from '../live-canvas/data/LiveCanvasUser';
 import { ScenarioArgumentDto } from '../http/routes/canvas-action/dto/ScenarioArgumentDto';
 import { ProjectPageDto } from '../http/routes/project/dto/ProjectPageDto';
@@ -61,7 +60,8 @@ import { NodeParameterizedScenarioGroupDto } from './dtos/NodeParameterizedScena
 import { NodeParameterizedScenarioDto } from './dtos/NodeParameterizedScenarioDto';
 import { LiveCanvasScenario } from '../live-canvas/data/LiveCanvasScenario';
 import { LiveCanvasScenarioGroup } from '../live-canvas/data/LiveCanvasScenarioGroup';
-import { LiveCanvasEdgeViewSettings } from '../live-canvas/data/LiveCanvasEdgeViewSettings';
+import { LiveCanvasEdgeViewSettingsState } from '../live-canvas/view-settings/LiveCanvasEdgeViewSettingsState';
+import { LiveCanvasLabelViewSettingsState } from '../live-canvas/view-settings/LiveCanvasLabelViewSettingsState';
 
 @Injectable()
 export class SchemaFactoryService {
@@ -813,7 +813,7 @@ export class SchemaFactoryService {
   ): EdgeDto {
     const sourceNode: GraphNode | null = graph.nodes.get(edge.startNodeId);
     const targetNode: GraphNode | null = graph.nodes.get(edge.endNodeId);
-    const edgeViewSettings: LiveCanvasEdgeViewSettings =
+    const edgeViewSettings: LiveCanvasEdgeViewSettingsState =
       viewSettings.getEdgeSettings(edge.type);
 
     return {
@@ -845,7 +845,7 @@ export class SchemaFactoryService {
       customColor: edgeViewSettings.customColor
         ? new ColorDto({
             color: new ColorPresetDto({
-              index: edgeViewSettings.colorIndex,
+              index: this._createColorPresetIndex(edgeViewSettings.colorIndex),
             }),
           })
         : null,
@@ -896,7 +896,7 @@ export class SchemaFactoryService {
   private _createLabelIndex(liveCanvas: LiveCanvas): SMap<string, LabelDto> {
     const labels: SMap<string, LabelDto> = new SMap<string, LabelDto>();
     for (const label of liveCanvas.getGraph().nodes.labelIndex.labels) {
-      const labelViewSettings: LiveCanvasLabelViewSettings =
+      const labelViewSettings: LiveCanvasLabelViewSettingsState =
         liveCanvas.data.viewSettings.getLabelSettings(label);
       labels.set(label, {
         label: label,
@@ -910,12 +910,24 @@ export class SchemaFactoryService {
           }),
         color: new ColorDto({
           color: new ColorPresetDto({
-            index: labelViewSettings.colorIndex,
+            index: this._createColorPresetIndex(labelViewSettings.colorIndex),
           }),
         }),
       } satisfies LabelDto);
     }
     return labels;
+  }
+
+  private _createColorPresetIndex(
+    colorIndex: LiveCanvasLabelViewSettingsState['colorIndex'],
+  ): ColorPresetIndexDto {
+    return match(colorIndex)
+      .with(1, (): ColorPresetIndexDto => ColorPresetIndexDto._1)
+      .with(2, (): ColorPresetIndexDto => ColorPresetIndexDto._2)
+      .with(3, (): ColorPresetIndexDto => ColorPresetIndexDto._3)
+      .with(4, (): ColorPresetIndexDto => ColorPresetIndexDto._4)
+      .with(5, (): ColorPresetIndexDto => ColorPresetIndexDto._5)
+      .otherwise((): ColorPresetIndexDto => ColorPresetIndexDto._0);
   }
 
   private _createSchemaScenarioPostActionType(

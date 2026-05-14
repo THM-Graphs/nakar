@@ -5,8 +5,8 @@ import { LiveCanvasUndoableData } from '../data/LiveCanvasUndoableData';
 import { SMap } from '../../map/Map';
 import { Range } from '../../range/Range';
 import { ElementCreationReason } from './ElementCreationReason';
-import { LiveCanvasViewSettings } from '../data/LiveCanvasViewSettings';
-import { LiveCanvasEdgeViewSettings } from '../data/LiveCanvasEdgeViewSettings';
+import { LiveCanvasViewSettings } from '../view-settings/LiveCanvasViewSettings';
+import { LiveCanvasEdgeViewSettingsState } from '../view-settings/LiveCanvasEdgeViewSettingsState';
 
 export class GraphEdge {
   public static readonly defaultWidth: number = 2;
@@ -99,7 +99,7 @@ export class GraphEdge {
     edgeWidthRange: Range,
     viewSettings: LiveCanvasViewSettings,
   ): number {
-    const edgeViewSettings: LiveCanvasEdgeViewSettings =
+    const edgeViewSettings: LiveCanvasEdgeViewSettingsState =
       viewSettings.getEdgeSettings(this.type);
     const baseWidth: number = edgeViewSettings.customWidth
       ? edgeViewSettings.width

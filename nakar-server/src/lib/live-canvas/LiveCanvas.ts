@@ -31,7 +31,7 @@ import { Result } from '@strapi/types/dist/modules/documents/result';
 import { Logger } from '@strapi/logger';
 import { createChildLogger } from '../logger/createChildLogger';
 import { Profiler } from 'winston';
-import { LiveCanvasViewSettings } from './data/LiveCanvasViewSettings';
+import { LiveCanvasViewSettings } from './view-settings/LiveCanvasViewSettings';
 import { LiveCanvasChangeRecorder } from './data/LiveCanvasChangeRecorder';
 import { LiveCanvasData } from './data/LiveCanvasData';
 import { NodePosition } from './graph/NodePosition';
@@ -63,8 +63,8 @@ import {
 import { LayoutSpecificationHierarchyDto } from '../http/routes/canvas-action/dto/LayoutSpecificationHierarchyDto';
 import { Range } from '../range/Range';
 import { LayoutSpecificationForceDirectedDto } from '../http/routes/canvas-action/dto/LayoutSpecificationForceDirectedDto';
-import { LiveCanvasLabelViewSettings } from './data/LiveCanvasLabelViewSettings';
-import { LiveCanvasEdgeViewSettings } from './data/LiveCanvasEdgeViewSettings';
+import { LiveCanvasViewSettingsColorIndex } from './view-settings/LiveCanvasViewSettingsColorIndex';
+import { LiveCanvasViewSettingsDefaultValues } from './view-settings/LiveCanvasViewSettingsDefaultValues';
 
 export class LiveCanvas {
   private readonly _logger: Logger = createChildLogger(this);
@@ -488,7 +488,8 @@ export class LiveCanvas {
                 ): void => {
                   this.data.viewSettings.setGrowNodesBasedOnDegreeFactor(
                     data.factor ??
-                      LiveCanvasViewSettings.defaultGrowNodesBasedOnDegreeFactor,
+                      new LiveCanvasViewSettingsDefaultValues()
+                        .growNodesBasedOnDegreeFactor,
                   );
                   changeRecorder.didChangeViewSettings();
                 },
@@ -500,7 +501,8 @@ export class LiveCanvas {
                 ): void => {
                   this.data.viewSettings.setCompressRelationshipsWidthFactor(
                     data.factor ??
-                      LiveCanvasViewSettings.defaultCompressRelationshipsWidthFactor,
+                      new LiveCanvasViewSettingsDefaultValues()
+                        .compressRelationshipsWidthFactor,
                   );
                   changeRecorder.didChangeViewSettings();
                 },
@@ -511,17 +513,12 @@ export class LiveCanvas {
                   data: Result<'api::post-scenario-action.post-scenario-action'>,
                 ): void => {
                   const label: string | null = data.label ?? null;
-                  const colorIndex:
-                    | LiveCanvasLabelViewSettings['colorIndex']
-                    | null = this._createViewSettingsColorIndex(
-                    data.colorIndex,
-                  );
+                  const colorIndex: LiveCanvasViewSettingsColorIndex | null =
+                    this._createViewSettingsColorIndex(data.colorIndex);
                   if (label == null || colorIndex == null) {
                     return;
                   }
-                  this.data.viewSettings
-                    .getLabelSettings(label)
-                    .setColorIndex(colorIndex);
+                  this.data.viewSettings.setLabelColorIndex(label, colorIndex);
                   changeRecorder.didChangeViewSettings();
                 },
               )
@@ -535,9 +532,7 @@ export class LiveCanvas {
                   if (label == null || radius == null) {
                     return;
                   }
-                  this.data.viewSettings
-                    .getLabelSettings(label)
-                    .setCustomRadius(radius);
+                  this.data.viewSettings.setCustomLabelRadius(label, radius);
                   changeRecorder.didChangeViewSettings();
                 },
               )
@@ -551,9 +546,10 @@ export class LiveCanvas {
                   if (label == null || property == null) {
                     return;
                   }
-                  this.data.viewSettings
-                    .getLabelSettings(label)
-                    .setCustomTitleProperty(property);
+                  this.data.viewSettings.setCustomLabelTitleProperty(
+                    label,
+                    property,
+                  );
                   changeRecorder.didChangeViewSettings();
                 },
               )
@@ -564,17 +560,15 @@ export class LiveCanvas {
                 ): void => {
                   const relationshipType: string | null =
                     data.relationshipType ?? null;
-                  const colorIndex:
-                    | LiveCanvasEdgeViewSettings['colorIndex']
-                    | null = this._createViewSettingsColorIndex(
-                    data.colorIndex,
-                  );
+                  const colorIndex: LiveCanvasViewSettingsColorIndex | null =
+                    this._createViewSettingsColorIndex(data.colorIndex);
                   if (relationshipType == null || colorIndex == null) {
                     return;
                   }
-                  this.data.viewSettings
-                    .getEdgeSettings(relationshipType)
-                    .setCustomColorIndex(colorIndex);
+                  this.data.viewSettings.setCustomEdgeColorIndex(
+                    relationshipType,
+                    colorIndex,
+                  );
                   changeRecorder.didChangeViewSettings();
                 },
               )
@@ -589,9 +583,10 @@ export class LiveCanvas {
                   if (relationshipType == null || width == null) {
                     return;
                   }
-                  this.data.viewSettings
-                    .getEdgeSettings(relationshipType)
-                    .setCustomWidth(width);
+                  this.data.viewSettings.setCustomEdgeWidth(
+                    relationshipType,
+                    width,
+                  );
                   changeRecorder.didChangeViewSettings();
                 },
               )
@@ -1988,14 +1983,14 @@ export class LiveCanvas {
 
   private _createViewSettingsColorIndex(
     colorIndex: Result<'api::post-scenario-action.post-scenario-action'>['colorIndex'],
-  ): LiveCanvasLabelViewSettings['colorIndex'] | null {
+  ): LiveCanvasViewSettingsColorIndex | null {
     return match(colorIndex)
-      .with('c0', (): LiveCanvasLabelViewSettings['colorIndex'] => 0)
-      .with('c1', (): LiveCanvasLabelViewSettings['colorIndex'] => 1)
-      .with('c2', (): LiveCanvasLabelViewSettings['colorIndex'] => 2)
-      .with('c3', (): LiveCanvasLabelViewSettings['colorIndex'] => 3)
-      .with('c4', (): LiveCanvasLabelViewSettings['colorIndex'] => 4)
-      .with('c5', (): LiveCanvasLabelViewSettings['colorIndex'] => 5)
+      .with('c0', (): LiveCanvasViewSettingsColorIndex => 0)
+      .with('c1', (): LiveCanvasViewSettingsColorIndex => 1)
+      .with('c2', (): LiveCanvasViewSettingsColorIndex => 2)
+      .with('c3', (): LiveCanvasViewSettingsColorIndex => 3)
+      .with('c4', (): LiveCanvasViewSettingsColorIndex => 4)
+      .with('c5', (): LiveCanvasViewSettingsColorIndex => 5)
       .with(P.nullish, (): null => null)
       .exhaustive();
   }

@@ -21,7 +21,7 @@ import { LayoutRequestBodyDto } from './dto/LayoutRequestBodyDto';
 import { ShowShortestPathRequestBodyDto } from './dto/ShowShortestPathRequestBodyDto';
 import { LoadNodeRequestBodyDto } from './dto/LoadNodeRequestBodyDto';
 import { LiveCanvasViewSettingsDto } from '../../../schema/dtos/LiveCanvasViewSettingsDto';
-import { LiveCanvasViewSettings } from '../../../live-canvas/data/LiveCanvasViewSettings';
+import { LiveCanvasViewSettings } from '../../../live-canvas/view-settings/LiveCanvasViewSettings';
 import { LiveCanvasService } from '../../../live-canvas/LiveCanvasService';
 import { UserIsLoggedIn } from '../../guards/UserIsLoggedIn';
 import { LiveCanvas } from '../../../live-canvas/LiveCanvas';

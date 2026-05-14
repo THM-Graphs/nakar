@@ -6,8 +6,8 @@ import { GraphEdge } from './GraphEdge';
 import { LiveCanvasUndoableData } from '../data/LiveCanvasUndoableData';
 import { ElementCreationReason } from './ElementCreationReason';
 import { Range } from '../../range/Range';
-import { LiveCanvasViewSettings } from '../data/LiveCanvasViewSettings';
-import { LiveCanvasLabelViewSettings } from '../data/LiveCanvasLabelViewSettings';
+import { LiveCanvasViewSettings } from '../view-settings/LiveCanvasViewSettings';
+import { LiveCanvasLabelViewSettingsState } from '../view-settings/LiveCanvasLabelViewSettingsState';
 import { ElementColor } from './color/ElementColor';
 import { LiveCanvasNote } from '../data/LiveCanvasNote';
 import { LiveCanvasScenarioGroup } from '../data/LiveCanvasScenarioGroup';
@@ -153,7 +153,7 @@ export class GraphNode {
     }
 
     for (const label of this.labels) {
-      const labelViewSettings: LiveCanvasLabelViewSettings =
+      const labelViewSettings: LiveCanvasLabelViewSettingsState =
         viewSettings.getLabelSettings(label);
       if (labelViewSettings.customTitleProperty) {
         const propertyValue: string | null =
@@ -183,7 +183,7 @@ export class GraphNode {
   ): number {
     let radius: number = GraphNode.defaultRadius;
     for (const label of this.labels) {
-      const labelViewSettings: LiveCanvasLabelViewSettings =
+      const labelViewSettings: LiveCanvasLabelViewSettingsState =
         viewSettings.getLabelSettings(label);
       if (labelViewSettings.customRadius) {
         radius = labelViewSettings.radius;
