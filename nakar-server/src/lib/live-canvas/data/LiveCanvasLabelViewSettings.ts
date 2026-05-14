@@ -12,11 +12,11 @@ export class LiveCanvasLabelViewSettings {
     customTitleProperty: z.boolean().optional(),
   });
 
-  private readonly _radius: number;
-  private readonly _customRadius: boolean;
-  private readonly _colorIndex: LiveCanvasLabelViewSettings['colorIndex'];
-  private readonly _titleProperty: string;
-  private readonly _customTitleProperty: boolean;
+  private _radius: number;
+  private _customRadius: boolean;
+  private _colorIndex: LiveCanvasLabelViewSettings['colorIndex'];
+  private _titleProperty: string;
+  private _customTitleProperty: boolean;
 
   public constructor(data: {
     radius: number;
@@ -104,38 +104,20 @@ export class LiveCanvasLabelViewSettings {
     return smallestIndex as LiveCanvasLabelViewSettings['colorIndex'];
   }
 
-  public withColorIndex(
+  public setColorIndex(
     colorIndex: LiveCanvasLabelViewSettings['colorIndex'],
-  ): LiveCanvasLabelViewSettings {
-    return new LiveCanvasLabelViewSettings({
-      radius: this.radius,
-      customRadius: this.customRadius,
-      colorIndex: colorIndex,
-      titleProperty: this.titleProperty,
-      customTitleProperty: this.customTitleProperty,
-    });
+  ): void {
+    this._colorIndex = colorIndex;
   }
 
-  public withCustomRadius(radius: number): LiveCanvasLabelViewSettings {
-    return new LiveCanvasLabelViewSettings({
-      radius: radius,
-      customRadius: true,
-      colorIndex: this.colorIndex,
-      titleProperty: this.titleProperty,
-      customTitleProperty: this.customTitleProperty,
-    });
+  public setCustomRadius(radius: number): void {
+    this._radius = radius;
+    this._customRadius = true;
   }
 
-  public withCustomTitleProperty(
-    titleProperty: string,
-  ): LiveCanvasLabelViewSettings {
-    return new LiveCanvasLabelViewSettings({
-      radius: this.radius,
-      customRadius: this.customRadius,
-      colorIndex: this.colorIndex,
-      titleProperty: titleProperty,
-      customTitleProperty: true,
-    });
+  public setCustomTitleProperty(titleProperty: string): void {
+    this._titleProperty = titleProperty;
+    this._customTitleProperty = true;
   }
 
   public toPlain(): z.infer<typeof LiveCanvasLabelViewSettings.schema> {

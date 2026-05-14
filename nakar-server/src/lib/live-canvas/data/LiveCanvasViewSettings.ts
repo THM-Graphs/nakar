@@ -15,6 +15,10 @@ export class LiveCanvasViewSettings {
   public static readonly defaultGrowNodesBasedOnDegree: boolean = false;
   public static readonly defaultCompressRelationshipsWidthFactor: number = 10;
   public static readonly defaultScaleType: ScaleType = 'linear';
+  public static readonly factorRange: Range = new Range({
+    floor: 1,
+    ceiling: 1000,
+  });
 
   // eslint-disable-next-line @typescript-eslint/typedef
   public static readonly schema = z.object({
@@ -30,10 +34,10 @@ export class LiveCanvasViewSettings {
       .optional(),
   });
 
-  private readonly _compressRelationshipsWidthFactor: number;
-  private readonly _growNodesBasedOnDegree: boolean;
-  private readonly _growNodesBasedOnDegreeFactor: number;
-  private readonly _scaleType: ScaleType;
+  private _compressRelationshipsWidthFactor: number;
+  private _growNodesBasedOnDegree: boolean;
+  private _growNodesBasedOnDegreeFactor: number;
+  private _scaleType: ScaleType;
   private readonly _labelSettings: SMap<string, LiveCanvasLabelViewSettings>;
   private readonly _edgeSettings: SMap<string, LiveCanvasEdgeViewSettings>;
 
@@ -47,14 +51,14 @@ export class LiveCanvasViewSettings {
   }) {
     this._compressRelationshipsWidthFactor = Range.clamp(
       params.compressRelationshipsWidthFactor,
-      1,
-      1000,
+      LiveCanvasViewSettings.factorRange.floor,
+      LiveCanvasViewSettings.factorRange.ceiling,
     );
     this._growNodesBasedOnDegree = params.growNodesBasedOnDegree;
     this._growNodesBasedOnDegreeFactor = Range.clamp(
       params.growNodesBasedOnDegreeFactor,
-      1,
-      1000,
+      LiveCanvasViewSettings.factorRange.floor,
+      LiveCanvasViewSettings.factorRange.ceiling,
     );
     this._scaleType = params.scaleType;
     this._labelSettings = params.labelSettings;
@@ -175,73 +179,35 @@ export class LiveCanvasViewSettings {
     });
   }
 
-  public byMergingWith(other: LiveCanvasViewSettings): LiveCanvasViewSettings {
-    return new LiveCanvasViewSettings({
-      compressRelationshipsWidthFactor: other.compressRelationshipsWidthFactor,
-      growNodesBasedOnDegree: other.growNodesBasedOnDegree,
-      growNodesBasedOnDegreeFactor: other.growNodesBasedOnDegreeFactor,
-      scaleType: other.scaleType,
-      labelSettings: this.labelSettings.byMergingAndOverwritingWith(
-        other.labelSettings,
-      ),
-      edgeSettings: this.edgeSettings.byMergingAndOverwritingWith(
-        other.edgeSettings,
-      ),
-    });
+  public mergeWith(other: LiveCanvasViewSettings): void {
+    this._compressRelationshipsWidthFactor =
+      other.compressRelationshipsWidthFactor;
+    this._growNodesBasedOnDegree = other.growNodesBasedOnDegree;
+    this._growNodesBasedOnDegreeFactor = other.growNodesBasedOnDegreeFactor;
+    this._scaleType = other.scaleType;
+    for (const [key, value] of other.labelSettings) {
+      this._labelSettings.set(key, value);
+    }
+    for (const [key, value] of other.edgeSettings) {
+      this._edgeSettings.set(key, value);
+    }
   }
 
-  public withGrowNodesBasedOnDegreeFactor(
-    factor: number,
-  ): LiveCanvasViewSettings {
-    return new LiveCanvasViewSettings({
-      compressRelationshipsWidthFactor: this.compressRelationshipsWidthFactor,
-      growNodesBasedOnDegree: true,
-      growNodesBasedOnDegreeFactor: factor,
-      scaleType: this.scaleType,
-      labelSettings: this.labelSettings,
-      edgeSettings: this.edgeSettings,
-    });
+  public setGrowNodesBasedOnDegreeFactor(factor: number): void {
+    this._growNodesBasedOnDegree = true;
+    this._growNodesBasedOnDegreeFactor = Range.clamp(
+      factor,
+      LiveCanvasViewSettings.factorRange.floor,
+      LiveCanvasViewSettings.factorRange.ceiling,
+    );
   }
 
-  public withCompressRelationshipsWidthFactor(
-    factor: number,
-  ): LiveCanvasViewSettings {
-    return new LiveCanvasViewSettings({
-      compressRelationshipsWidthFactor: factor,
-      growNodesBasedOnDegree: this.growNodesBasedOnDegree,
-      growNodesBasedOnDegreeFactor: this.growNodesBasedOnDegreeFactor,
-      scaleType: this.scaleType,
-      labelSettings: this.labelSettings,
-      edgeSettings: this.edgeSettings,
-    });
-  }
-
-  public withLabelSettings(
-    label: string,
-    labelSettings: LiveCanvasLabelViewSettings,
-  ): LiveCanvasViewSettings {
-    return new LiveCanvasViewSettings({
-      compressRelationshipsWidthFactor: this.compressRelationshipsWidthFactor,
-      growNodesBasedOnDegree: this.growNodesBasedOnDegree,
-      growNodesBasedOnDegreeFactor: this.growNodesBasedOnDegreeFactor,
-      scaleType: this.scaleType,
-      labelSettings: this.labelSettings.bySetting(label, labelSettings),
-      edgeSettings: this.edgeSettings,
-    });
-  }
-
-  public withEdgeSettings(
-    edgeType: string,
-    edgeSettings: LiveCanvasEdgeViewSettings,
-  ): LiveCanvasViewSettings {
-    return new LiveCanvasViewSettings({
-      compressRelationshipsWidthFactor: this.compressRelationshipsWidthFactor,
-      growNodesBasedOnDegree: this.growNodesBasedOnDegree,
-      growNodesBasedOnDegreeFactor: this.growNodesBasedOnDegreeFactor,
-      scaleType: this.scaleType,
-      labelSettings: this.labelSettings,
-      edgeSettings: this.edgeSettings.bySetting(edgeType, edgeSettings),
-    });
+  public setCompressRelationshipsWidthFactor(factor: number): void {
+    this._compressRelationshipsWidthFactor = Range.clamp(
+      factor,
+      LiveCanvasViewSettings.factorRange.floor,
+      LiveCanvasViewSettings.factorRange.ceiling,
+    );
   }
 
   public toSchema(

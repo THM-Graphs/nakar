@@ -12,10 +12,10 @@ export class LiveCanvasEdgeViewSettings {
     customColor: z.boolean().optional(),
   });
 
-  private readonly _width: number;
-  private readonly _customWidth: boolean;
-  private readonly _colorIndex: LiveCanvasEdgeViewSettings['colorIndex'];
-  private readonly _customColor: boolean;
+  private _width: number;
+  private _customWidth: boolean;
+  private _colorIndex: LiveCanvasEdgeViewSettings['colorIndex'];
+  private _customColor: boolean;
 
   public constructor(data: {
     width: number;
@@ -74,24 +74,16 @@ export class LiveCanvasEdgeViewSettings {
     });
   }
 
-  public withCustomWidth(width: number): LiveCanvasEdgeViewSettings {
-    return new LiveCanvasEdgeViewSettings({
-      width: width,
-      customWidth: true,
-      colorIndex: this.colorIndex,
-      customColor: this.customColor,
-    });
+  public setCustomWidth(width: number): void {
+    this._width = width;
+    this._customWidth = true;
   }
 
-  public withCustomColorIndex(
+  public setCustomColorIndex(
     colorIndex: LiveCanvasEdgeViewSettings['colorIndex'],
-  ): LiveCanvasEdgeViewSettings {
-    return new LiveCanvasEdgeViewSettings({
-      width: this.width,
-      customWidth: this.customWidth,
-      colorIndex: colorIndex,
-      customColor: true,
-    });
+  ): void {
+    this._colorIndex = colorIndex;
+    this._customColor = true;
   }
 
   public toPlain(): z.infer<typeof LiveCanvasEdgeViewSettings.schema> {

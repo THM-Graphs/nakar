@@ -477,23 +477,20 @@ export class LiveCanvas {
                 this._compressRelationships(changeRecorder);
               })
               .with({ type: 'resetVisualization' }, (): void => {
-                this._setViewSettingsFromPostScenarioAction(
-                  LiveCanvasViewSettings.defaultViewSettings(),
-                  changeRecorder,
-                );
+                this.data.viewSettings =
+                  LiveCanvasViewSettings.defaultViewSettings();
+                changeRecorder.didChangeViewSettings();
               })
               .with(
                 { type: 'setGrowNodesBasedOnDegree' },
                 (
                   data: Result<'api::post-scenario-action.post-scenario-action'>,
                 ): void => {
-                  this._setViewSettingsFromPostScenarioAction(
-                    this.data.viewSettings.withGrowNodesBasedOnDegreeFactor(
-                      data.factor ??
-                        LiveCanvasViewSettings.defaultGrowNodesBasedOnDegreeFactor,
-                    ),
-                    changeRecorder,
+                  this.data.viewSettings.setGrowNodesBasedOnDegreeFactor(
+                    data.factor ??
+                      LiveCanvasViewSettings.defaultGrowNodesBasedOnDegreeFactor,
                   );
+                  changeRecorder.didChangeViewSettings();
                 },
               )
               .with(
@@ -501,13 +498,11 @@ export class LiveCanvas {
                 (
                   data: Result<'api::post-scenario-action.post-scenario-action'>,
                 ): void => {
-                  this._setViewSettingsFromPostScenarioAction(
-                    this.data.viewSettings.withCompressRelationshipsWidthFactor(
-                      data.factor ??
-                        LiveCanvasViewSettings.defaultCompressRelationshipsWidthFactor,
-                    ),
-                    changeRecorder,
+                  this.data.viewSettings.setCompressRelationshipsWidthFactor(
+                    data.factor ??
+                      LiveCanvasViewSettings.defaultCompressRelationshipsWidthFactor,
                   );
+                  changeRecorder.didChangeViewSettings();
                 },
               )
               .with(
@@ -524,15 +519,10 @@ export class LiveCanvas {
                   if (label == null || colorIndex == null) {
                     return;
                   }
-                  this._setViewSettingsFromPostScenarioAction(
-                    this.data.viewSettings.withLabelSettings(
-                      label,
-                      this.data.viewSettings
-                        .getLabelSettings(label)
-                        .withColorIndex(colorIndex),
-                    ),
-                    changeRecorder,
-                  );
+                  this.data.viewSettings
+                    .getLabelSettings(label)
+                    .setColorIndex(colorIndex);
+                  changeRecorder.didChangeViewSettings();
                 },
               )
               .with(
@@ -545,15 +535,10 @@ export class LiveCanvas {
                   if (label == null || radius == null) {
                     return;
                   }
-                  this._setViewSettingsFromPostScenarioAction(
-                    this.data.viewSettings.withLabelSettings(
-                      label,
-                      this.data.viewSettings
-                        .getLabelSettings(label)
-                        .withCustomRadius(radius),
-                    ),
-                    changeRecorder,
-                  );
+                  this.data.viewSettings
+                    .getLabelSettings(label)
+                    .setCustomRadius(radius);
+                  changeRecorder.didChangeViewSettings();
                 },
               )
               .with(
@@ -566,15 +551,10 @@ export class LiveCanvas {
                   if (label == null || property == null) {
                     return;
                   }
-                  this._setViewSettingsFromPostScenarioAction(
-                    this.data.viewSettings.withLabelSettings(
-                      label,
-                      this.data.viewSettings
-                        .getLabelSettings(label)
-                        .withCustomTitleProperty(property),
-                    ),
-                    changeRecorder,
-                  );
+                  this.data.viewSettings
+                    .getLabelSettings(label)
+                    .setCustomTitleProperty(property);
+                  changeRecorder.didChangeViewSettings();
                 },
               )
               .with(
@@ -592,15 +572,10 @@ export class LiveCanvas {
                   if (relationshipType == null || colorIndex == null) {
                     return;
                   }
-                  this._setViewSettingsFromPostScenarioAction(
-                    this.data.viewSettings.withEdgeSettings(
-                      relationshipType,
-                      this.data.viewSettings
-                        .getEdgeSettings(relationshipType)
-                        .withCustomColorIndex(colorIndex),
-                    ),
-                    changeRecorder,
-                  );
+                  this.data.viewSettings
+                    .getEdgeSettings(relationshipType)
+                    .setCustomColorIndex(colorIndex);
+                  changeRecorder.didChangeViewSettings();
                 },
               )
               .with(
@@ -614,15 +589,10 @@ export class LiveCanvas {
                   if (relationshipType == null || width == null) {
                     return;
                   }
-                  this._setViewSettingsFromPostScenarioAction(
-                    this.data.viewSettings.withEdgeSettings(
-                      relationshipType,
-                      this.data.viewSettings
-                        .getEdgeSettings(relationshipType)
-                        .withCustomWidth(width),
-                    ),
-                    changeRecorder,
-                  );
+                  this.data.viewSettings
+                    .getEdgeSettings(relationshipType)
+                    .setCustomWidth(width);
+                  changeRecorder.didChangeViewSettings();
                 },
               )
               .with(
@@ -1291,8 +1261,7 @@ export class LiveCanvas {
       new TaskQueueTask('Setting view settings', async (): Promise<void> => {
         const changeRecorder: LiveCanvasChangeRecorder =
           new LiveCanvasChangeRecorder();
-        this.data.viewSettings =
-          this.data.viewSettings.byMergingWith(newViewSettings);
+        this.data.viewSettings.mergeWith(newViewSettings);
         changeRecorder.didChangeViewSettings();
 
         await this._postProcessGraph(changeRecorder);
@@ -2015,14 +1984,6 @@ export class LiveCanvas {
       canvas: this,
       error: error,
     });
-  }
-
-  private _setViewSettingsFromPostScenarioAction(
-    newViewSettings: LiveCanvasViewSettings,
-    changeRecorder: LiveCanvasChangeRecorder,
-  ): void {
-    this.data.viewSettings = newViewSettings;
-    changeRecorder.didChangeViewSettings();
   }
 
   private _createViewSettingsColorIndex(
