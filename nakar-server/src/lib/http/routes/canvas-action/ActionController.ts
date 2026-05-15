@@ -20,6 +20,7 @@ import { CompressNodesRequestBodyDto } from './dto/CompressNodesRequestBodyDto';
 import { LayoutRequestBodyDto } from './dto/LayoutRequestBodyDto';
 import { ShowShortestPathRequestBodyDto } from './dto/ShowShortestPathRequestBodyDto';
 import { LoadNodeRequestBodyDto } from './dto/LoadNodeRequestBodyDto';
+import { FlipCanvasRequestBodyDto } from './dto/FlipCanvasRequestBodyDto';
 import { LiveCanvasViewSettingsDto } from '../../../schema/dtos/LiveCanvasViewSettingsDto';
 import { LiveCanvasViewSettings } from '../../../live-canvas/view-settings/LiveCanvasViewSettings';
 import { LiveCanvasService } from '../../../live-canvas/LiveCanvasService';
@@ -174,6 +175,18 @@ export class ActionController {
   @HttpCode(200)
   public unlockAllNodes(@Param('canvasId') canvasId: string): void {
     this._canvasService.getCanvasWithId(canvasId).unlockAllNodes();
+  }
+
+  @Post('flip-canvas')
+  @HttpCode(200)
+  @ApiBody({ type: FlipCanvasRequestBodyDto })
+  public flipCanvas(
+    @Param('canvasId') canvasId: string,
+    @Body() body: FlipCanvasRequestBodyDto,
+  ): void {
+    this._canvasService.getCanvasWithId(canvasId).flipCanvas({
+      axis: body.axis,
+    });
   }
 
   @Post('remove-dangling-nodes')

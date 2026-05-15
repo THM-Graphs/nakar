@@ -210,6 +210,12 @@ export type ExpandNodeRequestBodyDto = {
     limit: ((ExpandNodeLimitDto) | null);
 };
 
+export type FlipCanvasRequestBodyDto = {
+    axis: 'x' | 'y';
+};
+
+export type axis = 'x' | 'y';
+
 export type FocusNodesRequestBodyDto = {
     nodes: Array<(string)>;
 };
@@ -739,6 +745,11 @@ export type UpdateScenarioGroupRequestBodyDto = {
     title: string;
 };
 
+export type UpdateScenarioPostActionColorPresetDto = {
+    type: 'ColorPresetDto';
+    index: 0 | 1 | 2 | 3 | 4 | 5;
+};
+
 export type UpdateScenarioPostActionEntryDto = {
     id: string;
     type: 'connectResultNodes' | 'compressRelationships' | 'compressNodes' | 'layout' | 'resetVisualization' | 'setGrowNodesBasedOnDegree' | 'setRelationshipClusterSize' | 'setNodeColor' | 'setNodeRadius' | 'setNodeTitleProperty' | 'setRelationshipColor' | 'setRelationshipWidth';
@@ -748,7 +759,7 @@ export type UpdateScenarioPostActionEntryDto = {
     relationshipType: string;
     factor: number;
     width: number;
-    color: ColorPresetDto;
+    color: UpdateScenarioPostActionColorPresetDto;
     radius: number;
     property: string;
 };
@@ -1295,6 +1306,18 @@ export type ActionControllerUnlockAllNodesData = {
 export type ActionControllerUnlockAllNodesResponse = (unknown);
 
 export type ActionControllerUnlockAllNodesError = unknown;
+
+export type ActionControllerFlipCanvasData = {
+    body: FlipCanvasRequestBodyDto;
+    path: {
+        canvasId: string;
+        roomId: string;
+    };
+};
+
+export type ActionControllerFlipCanvasResponse = (unknown);
+
+export type ActionControllerFlipCanvasError = unknown;
 
 export type ActionControllerRemoveDanglingNodesData = {
     path: {

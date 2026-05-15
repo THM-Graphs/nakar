@@ -3,6 +3,7 @@ import { Stack } from "react-bootstrap";
 import { RelayoutAction } from "../actions/RelayoutAction.ts";
 import { useCanvasContext } from "../../pages/Canvas.tsx";
 import { UnlockAllNodesAction } from "../actions/UnlockAllNodesAction.ts";
+import { FlipCanvasAction } from "../actions/FlipCanvasAction.ts";
 import { ConnectResultNodesAction } from "../actions/ConnectResultNodesAction.ts";
 import { RemoveDanglingNodesAction } from "../actions/RemoveDanglingNodesAction.ts";
 import { CompressRelationshipsAction } from "../actions/CompressRelationshipsAction.ts";
@@ -65,6 +66,24 @@ export function CanvasActions() {
           params={{
             roomContext: roomContext,
             nodes,
+            selectedTab,
+          }}
+        ></CanvasActionsAction>
+        <CanvasActionsAction
+          action={FlipCanvasAction.shared}
+          params={{
+            axis: "y",
+            roomContext: roomContext,
+            nodeCount: nodes.length,
+            selectedTab,
+          }}
+        ></CanvasActionsAction>
+        <CanvasActionsAction
+          action={FlipCanvasAction.shared}
+          params={{
+            axis: "x",
+            roomContext: roomContext,
+            nodeCount: nodes.length,
             selectedTab,
           }}
         ></CanvasActionsAction>

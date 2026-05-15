@@ -1034,6 +1034,30 @@ export class LiveCanvas {
     );
   }
 
+  public flipCanvas(params: { axis: 'x' | 'y' }): void {
+    this._queue.addTask(
+      new TaskQueueTask('Flipping canvas', (): void => {
+        const changeRecorder: LiveCanvasChangeRecorder =
+          new LiveCanvasChangeRecorder();
+        const graph: LiveCanvasUndoableData = this._snapshot(
+          'Flip canvas',
+          changeRecorder,
+        );
+
+        for (const node of graph.nodes.nodes) {
+          if (params.axis === 'x') {
+            node.position.y *= -1;
+          } else {
+            node.position.x *= -1;
+          }
+          changeRecorder.didMoveNode(node);
+        }
+
+        this._handleChangeRecorder(changeRecorder);
+      }),
+    );
+  }
+
   public removeDanglingNodes(): void {
     this._queue.addTask(
       new TaskQueueTask('Removing dangling nodes', async (): Promise<void> => {
