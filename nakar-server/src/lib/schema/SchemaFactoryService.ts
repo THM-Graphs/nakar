@@ -1016,6 +1016,11 @@ export class SchemaFactoryService {
           ScenarioPostActionLayoutAlgorithmDto.forceDirected,
       )
       .with(
+        'hierarchy',
+        (): ScenarioPostActionLayoutAlgorithmDto =>
+          ScenarioPostActionLayoutAlgorithmDto.hierarchy,
+      )
+      .with(
         P.nullish,
         (): ScenarioPostActionLayoutAlgorithmDto =>
           ScenarioPostActionLayoutAlgorithmDto.none,

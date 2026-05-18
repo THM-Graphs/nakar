@@ -591,14 +591,11 @@ export class LiveCanvas {
                 (
                   data: Result<'api::post-scenario-action.post-scenario-action'>,
                 ): void => {
-                  const label: string | null = data.label ?? null;
-                  if (label == null) {
-                    return;
-                  }
                   match(data.layoutAlgorithm)
                     .with('circle', (): void => {
+                      const label: string | null = data.label ?? null;
                       const radius: number | null = data.circleRadius ?? null;
-                      if (radius == null) {
+                      if (label == null || radius == null) {
                         return;
                       }
                       this._layout(
@@ -611,10 +608,28 @@ export class LiveCanvas {
                       );
                     })
                     .with('forceDirected', (): void => {
+                      const label: string | null = data.label ?? null;
+                      if (label == null) {
+                        return;
+                      }
                       this._layout(
                         {
                           type: 'LayoutSpecificationForceDirectedDto',
                           label: label,
+                        },
+                        changeRecorder,
+                      );
+                    })
+                    .with('hierarchy', (): void => {
+                      const relationshipType: string | null =
+                        data.relationshipType ?? null;
+                      if (relationshipType == null) {
+                        return;
+                      }
+                      this._layout(
+                        {
+                          type: 'LayoutSpecificationHierarchyDto',
+                          edgeType: relationshipType,
                         },
                         changeRecorder,
                       );

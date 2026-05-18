@@ -723,7 +723,9 @@ export interface ApiPostScenarioActionPostScenarioAction
       Schema.Attribute.Private;
     factor: Schema.Attribute.Decimal;
     label: Schema.Attribute.String;
-    layoutAlgorithm: Schema.Attribute.Enumeration<['forceDirected', 'circle']>;
+    layoutAlgorithm: Schema.Attribute.Enumeration<
+      ['forceDirected', 'circle', 'hierarchy']
+    >;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
       'oneToMany',

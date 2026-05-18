@@ -123,6 +123,8 @@ export function PostScenarioActionEditor(props: {
               </Form.Group>
             </Col>
             {(props.value.type === "compressNodes" ||
+              (props.value.type === "layout" &&
+                props.value.layoutAlgorithm !== "hierarchy") ||
               props.value.type === "setNodeColor" ||
               props.value.type === "setNodeRadius" ||
               props.value.type === "setNodeTitleProperty") && (
@@ -151,7 +153,9 @@ export function PostScenarioActionEditor(props: {
                 </Form.Group>
               </Col>
             )}
-            {(props.value.type === "setRelationshipColor" ||
+            {((props.value.type === "layout" &&
+              props.value.layoutAlgorithm === "hierarchy") ||
+              props.value.type === "setRelationshipColor" ||
               props.value.type === "setRelationshipWidth") && (
               <Col>
                 <Form.Group className="" controlId="relationshipType">
@@ -199,6 +203,13 @@ export function PostScenarioActionEditor(props: {
                         }
                       >
                         Force Directed
+                      </option>
+                      <option
+                        value={
+                          "hierarchy" satisfies UpdateScenarioPostActionEntryDto["layoutAlgorithm"]
+                        }
+                      >
+                        Hierarchy
                       </option>
                     </Form.Select>
                   </Form.Group>

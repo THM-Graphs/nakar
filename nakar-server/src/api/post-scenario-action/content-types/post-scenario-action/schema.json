@@ -44,7 +44,8 @@
       "type": "enumeration",
       "enum": [
         "forceDirected",
-        "circle"
+        "circle",
+        "hierarchy"
       ]
     },
     "circleRadius": {

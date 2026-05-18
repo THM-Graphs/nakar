@@ -616,7 +616,7 @@ export type ScenarioPostActionDto = {
     type: 'none' | 'connectResultNodes' | 'compressRelationships' | 'compressNodes' | 'layout' | 'resetVisualization' | 'setGrowNodesBasedOnDegree' | 'setRelationshipClusterSize' | 'setNodeColor' | 'setNodeRadius' | 'setNodeTitleProperty' | 'setRelationshipColor' | 'setRelationshipWidth';
     label: string;
     circleRadius: number;
-    layoutAlgorithm: 'forceDirected' | 'circle' | 'none';
+    layoutAlgorithm: 'forceDirected' | 'circle' | 'hierarchy' | 'none';
     relationshipType: string;
     factor: number;
     width: number;
@@ -627,7 +627,7 @@ export type ScenarioPostActionDto = {
 
 export type type24 = 'none' | 'connectResultNodes' | 'compressRelationships' | 'compressNodes' | 'layout' | 'resetVisualization' | 'setGrowNodesBasedOnDegree' | 'setRelationshipClusterSize' | 'setNodeColor' | 'setNodeRadius' | 'setNodeTitleProperty' | 'setRelationshipColor' | 'setRelationshipWidth';
 
-export type layoutAlgorithm = 'forceDirected' | 'circle' | 'none';
+export type layoutAlgorithm = 'forceDirected' | 'circle' | 'hierarchy' | 'none';
 
 export type ScenarioQueryDto = {
     id: string;
@@ -755,7 +755,7 @@ export type UpdateScenarioPostActionEntryDto = {
     type: 'connectResultNodes' | 'compressRelationships' | 'compressNodes' | 'layout' | 'resetVisualization' | 'setGrowNodesBasedOnDegree' | 'setRelationshipClusterSize' | 'setNodeColor' | 'setNodeRadius' | 'setNodeTitleProperty' | 'setRelationshipColor' | 'setRelationshipWidth';
     label: string;
     circleRadius: number;
-    layoutAlgorithm: 'forceDirected' | 'circle';
+    layoutAlgorithm: 'forceDirected' | 'circle' | 'hierarchy';
     relationshipType: string;
     factor: number;
     width: number;
@@ -766,7 +766,7 @@ export type UpdateScenarioPostActionEntryDto = {
 
 export type type27 = 'connectResultNodes' | 'compressRelationships' | 'compressNodes' | 'layout' | 'resetVisualization' | 'setGrowNodesBasedOnDegree' | 'setRelationshipClusterSize' | 'setNodeColor' | 'setNodeRadius' | 'setNodeTitleProperty' | 'setRelationshipColor' | 'setRelationshipWidth';
 
-export type layoutAlgorithm2 = 'forceDirected' | 'circle';
+export type layoutAlgorithm2 = 'forceDirected' | 'circle' | 'hierarchy';
 
 export type UpdateScenarioQueryEntryDto = {
     id: string;
