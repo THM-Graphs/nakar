@@ -30,11 +30,16 @@ import { ZoomInAction } from "../../room/actions/ZoomInAction.ts";
 import { ZoomOutAction } from "../../room/actions/ZoomOutAction.ts";
 import { HideLabelsAction } from "../../room/actions/HideLabelsAction.ts";
 import { nodeActions } from "../../room/actions/groups/nodeActions.ts";
+import { labelActions } from "../../room/actions/groups/labelActions.ts";
 import { relationshipActions } from "../../room/actions/groups/relationshipActions.ts";
+import { relationshipTypeActions } from "../../room/actions/groups/relationshipTypeActions.ts";
 import { EdgeDto, NodeDto } from "../../../src-gen";
 import { useIsLoggedIn } from "../../state/useIsLoggedIn.ts";
 import { useAppContext } from "../../state/AppContextData.ts";
 import { ResetViewSettingsAction } from "../../room/actions/ResetViewSettingsAction.ts";
+import { LabelActionParams } from "../../room/actions/LabelActionParams.ts";
+import { RelationshipTypeActionParams } from "../../room/actions/RelationshipTypeActionParams.ts";
+import { Fragment } from "react";
 
 export function MenuBar() {
   const context = useAppContext();
@@ -81,6 +86,10 @@ export function MenuBar() {
       return akku;
     }
   }, []);
+  const selectedRelationshipType: string | null =
+    selectedEdges.length === 1 ? selectedEdges[0].type : null;
+  const selectedNodeLabels: string[] =
+    selectedNodes.length === 1 ? selectedNodes[0].labels : [];
   const navigate = useNavigate();
   const undoAction = useBearStore(
     (s) => s.room.scenario.graph.metaData.undoAction,
@@ -231,6 +240,26 @@ export function MenuBar() {
             }}
           ></ActionDropdownItem>
         ))}
+        {selectedNodeLabels.map((label) => (
+          <Fragment key={label}>
+            <Dropdown.Divider></Dropdown.Divider>
+            <Dropdown.ItemText className={"small text-muted"}>
+              {label}
+            </Dropdown.ItemText>
+            {labelActions.map((action) => (
+              <ActionDropdownItem
+                key={action.slug()}
+                action={action}
+                params={
+                  {
+                    labels: [label],
+                    roomContext: roomContext,
+                  } satisfies LabelActionParams
+                }
+              ></ActionDropdownItem>
+            ))}
+          </Fragment>
+        ))}
       </DropdownButton>
       <DropdownButton title={"Relationship"}>
         {relationshipActions.map((action) => (
@@ -240,6 +269,26 @@ export function MenuBar() {
             params={{ roomContext: roomContext, edges: selectedEdges }}
           ></ActionDropdownItem>
         ))}
+        {selectedRelationshipType != null && (
+          <>
+            <Dropdown.Divider></Dropdown.Divider>
+            <Dropdown.ItemText className={"small text-muted"}>
+              {selectedRelationshipType}
+            </Dropdown.ItemText>
+            {relationshipTypeActions.map((action) => (
+              <ActionDropdownItem
+                key={action.slug()}
+                action={action}
+                params={
+                  {
+                    relationshipType: selectedRelationshipType,
+                    roomContext: roomContext,
+                  } satisfies RelationshipTypeActionParams
+                }
+              ></ActionDropdownItem>
+            ))}
+          </>
+        )}
       </DropdownButton>
       <DropdownButton title={"View"}>
         <Dropdown.Header>Canvas</Dropdown.Header>
