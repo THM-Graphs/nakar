@@ -69,7 +69,7 @@ export default ({ env }: { env: Env }): unknown => {
     connection: {
       client,
       ...connections[client],
-      acquireConnectionTimeout: env.int('DATABASE_CONNECTION_TIMEOUT', 1000000),
+      acquireConnectionTimeout: env.int('DATABASE_CONNECTION_TIMEOUT', 600000),
     },
   };
 };
