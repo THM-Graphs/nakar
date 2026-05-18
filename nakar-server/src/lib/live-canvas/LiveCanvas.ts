@@ -54,17 +54,13 @@ import { LiveCanvasScenarioGroup } from './data/LiveCanvasScenarioGroup';
 import { SchemaFactoryService } from '../schema/SchemaFactoryService';
 import { LiveCanvasScenario } from './data/LiveCanvasScenario';
 import { MonitoringService } from '../monitoring/MonitoringService';
-import {
-  EdgeMap,
-  hierarchyGraphLayout,
-  LayoutNode,
-  NodeMap,
-} from '../physics/hierarchy-graph-layout/hierarchyGraphLayout';
+import { hierarchyGraphLayout } from '../physics/hierarchy-graph-layout/hierarchyGraphLayout';
 import { LayoutSpecificationHierarchyDto } from '../http/routes/canvas-action/dto/LayoutSpecificationHierarchyDto';
-import { Range } from '../range/Range';
 import { LayoutSpecificationForceDirectedDto } from '../http/routes/canvas-action/dto/LayoutSpecificationForceDirectedDto';
 import { LiveCanvasViewSettingsColorIndex } from './view-settings/LiveCanvasViewSettingsColorIndex';
 import { LiveCanvasViewSettingsDefaultValues } from './view-settings/LiveCanvasViewSettingsDefaultValues';
+import { PhysicalGraph } from '../physics/physical-graph/PhysicalGraph';
+import { PhysicalNode } from '../physics/physical-graph/PhysicalNode';
 
 export class LiveCanvas {
   private readonly _logger: Logger = createChildLogger(this);
@@ -1951,34 +1947,20 @@ export class LiveCanvas {
       .with(
         { type: 'LayoutSpecificationHierarchyDto' },
         (layout: LayoutSpecificationHierarchyDto): void => {
-          const degreeRange: Range = graph.nodes.getNodeDegreeRange(graph);
-          const nodeMap: NodeMap = {};
-          for (const node of graph.nodes.nodes) {
-            nodeMap[node.id] = {
-              posX: node.position.x,
-              posY: node.position.y,
-              radius: node.getRadius(
-                this.data.viewSettings,
-                degreeRange,
-                graph,
-              ),
-            };
-          }
-          const edgesMap: EdgeMap = {};
-          for (const edge of graph.edges.edges) {
-            edgesMap[edge.id] = {
-              startNodeId: edge.startNodeId,
-              endNodeId: edge.endNodeId,
-              edgeType: edge.type,
-            };
-          }
+          const physicalGraph: PhysicalGraph =
+            this.data.undoableData.current.toPhysicalGraph(
+              this.data.viewSettings,
+            );
           const targetEdgeType: string = layout.edgeType;
 
-          hierarchyGraphLayout(nodeMap, edgesMap, targetEdgeType);
-          for (const node of Object.entries(nodeMap) satisfies [
+          hierarchyGraphLayout(physicalGraph, targetEdgeType);
+          for (const node of Object.entries(physicalGraph.nodes) satisfies [
             string,
-            LayoutNode,
+            PhysicalNode | null,
           ][]) {
+            if (node[1] == null) {
+              continue;
+            }
             const foundNode: GraphNode | null = graph.nodes.get(node[0]);
             if (foundNode == null) {
               continue;
@@ -1986,8 +1968,8 @@ export class LiveCanvas {
             if (foundNode.grabs.size > 0) {
               continue;
             }
-            foundNode.position.x = node[1].posX;
-            foundNode.position.y = node[1].posY;
+            foundNode.position.x = node[1].position.x;
+            foundNode.position.y = node[1].position.y;
             changeRecorder.didMoveNode(foundNode);
             foundNode.locked = true;
             changeRecorder.didChangeNodeLock(foundNode.id, true);

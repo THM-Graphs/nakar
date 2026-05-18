@@ -1,20 +1,10 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
+import { PhysicalEdge } from '../physical-graph/PhysicalEdge';
+import { PhysicalGraph } from '../physical-graph/PhysicalGraph';
+import { PhysicalNode } from '../physical-graph/PhysicalNode';
 import { SSet } from '../../set/Set';
 
-export interface LayoutNode {
-  posX: number;
-  posY: number;
-  radius: number;
-}
-
-export interface LayoutEdge {
-  edgeType: string;
-  startNodeId: string;
-  endNodeId: string;
-}
-
-export type NodeMap = Record<string, LayoutNode>;
-export type EdgeMap = Record<string, LayoutEdge>;
+type NodeMap = Record<string, PhysicalNode>;
 
 /** Adjacency list */
 type AdjacencyList = Record<string, string[]>;
@@ -178,8 +168,8 @@ function getHorizontalBounds(
   let maxX: number = -Infinity;
 
   for (const id of relevantIds) {
-    minX = Math.min(minX, layoutNodes[id].posX - layoutNodes[id].radius);
-    maxX = Math.max(maxX, layoutNodes[id].posX + layoutNodes[id].radius);
+    minX = Math.min(minX, layoutNodes[id].position.x - layoutNodes[id].radius);
+    maxX = Math.max(maxX, layoutNodes[id].position.x + layoutNodes[id].radius);
   }
 
   return { minX, maxX };
@@ -195,10 +185,10 @@ function getBoundingBox(ids: string[], layoutNodes: NodeMap): BoundingBox {
   let maxY: number = -Infinity;
 
   for (const id of relevantIds) {
-    minX = Math.min(minX, layoutNodes[id].posX - layoutNodes[id].radius);
-    maxX = Math.max(maxX, layoutNodes[id].posX + layoutNodes[id].radius);
-    minY = Math.min(minY, layoutNodes[id].posY - layoutNodes[id].radius);
-    maxY = Math.max(maxY, layoutNodes[id].posY + layoutNodes[id].radius);
+    minX = Math.min(minX, layoutNodes[id].position.x - layoutNodes[id].radius);
+    maxX = Math.max(maxX, layoutNodes[id].position.x + layoutNodes[id].radius);
+    minY = Math.min(minY, layoutNodes[id].position.y - layoutNodes[id].radius);
+    maxY = Math.max(maxY, layoutNodes[id].position.y + layoutNodes[id].radius);
   }
 
   return { minX, maxX, minY, maxY };
@@ -208,7 +198,13 @@ function cloneNodeMap(nodes: NodeMap, ids: string[]): NodeMap {
   const clonedNodes: NodeMap = {};
 
   for (const id of ids) {
-    clonedNodes[id] = { ...nodes[id] };
+    clonedNodes[id] = {
+      ...nodes[id],
+      position: {
+        x: nodes[id].position.x,
+        y: nodes[id].position.y,
+      },
+    };
   }
 
   return clonedNodes;
@@ -226,8 +222,8 @@ function shiftNodes(
   offsetY: number = 0,
 ): void {
   for (const id of ids) {
-    layoutNodes[id].posX += offsetX;
-    layoutNodes[id].posY += offsetY;
+    layoutNodes[id].position.x += offsetX;
+    layoutNodes[id].position.y += offsetY;
   }
 }
 
@@ -264,7 +260,7 @@ function positionLayerAroundTargets(
   }
 
   const positionedCenters: number[] = ids.map(
-    (id: string): number => targetPositions[id] ?? layoutNodes[id].posX,
+    (id: string): number => targetPositions[id] ?? layoutNodes[id].position.x,
   );
 
   for (let i: number = 1; i < ids.length; i++) {
@@ -276,7 +272,7 @@ function positionLayerAroundTargets(
   }
 
   ids.forEach((id: string, index: number): void => {
-    layoutNodes[id].posX = positionedCenters[index];
+    layoutNodes[id].position.x = positionedCenters[index];
   });
 
   const targetCenter: number = getTargetCenter(
@@ -301,7 +297,7 @@ function positionLayerNodes(
 
   if (visibleIds.length === 0) {
     ids.forEach((id: string): void => {
-      layoutNodes[id].posX = 0;
+      layoutNodes[id].position.x = 0;
     });
     return;
   }
@@ -311,7 +307,7 @@ function positionLayerNodes(
 
   for (const id of visibleIds) {
     const radius: number = layoutNodes[id].radius;
-    layoutNodes[id].posX = currentLeftEdge + radius;
+    layoutNodes[id].position.x = currentLeftEdge + radius;
     currentLeftEdge += radius * 2 + nodeSpacing;
   }
 
@@ -321,11 +317,11 @@ function positionLayerNodes(
   for (const id of ids) {
     if (!isDummyNodeId(id)) {
       lastVisibleNodeId = id;
-      fallbackPositions[id] = layoutNodes[id].posX;
+      fallbackPositions[id] = layoutNodes[id].position.x;
       continue;
     }
 
-    fallbackPositions[id] = layoutNodes[lastVisibleNodeId].posX;
+    fallbackPositions[id] = layoutNodes[lastVisibleNodeId].position.x;
   }
 
   positionLayerAroundTargets(ids, layoutNodes, nodeSpacing, fallbackPositions);
@@ -344,7 +340,7 @@ function getAverageAdjacentPosition(
 
   const totalPosition: number = adjacentNodeIds.reduce(
     (sum: number, adjacentNodeId: string): number =>
-      sum + layoutNodes[adjacentNodeId].posX,
+      sum + layoutNodes[adjacentNodeId].position.x,
     0,
   );
 
@@ -365,7 +361,7 @@ function relaxLayerPositions(
       adjacency,
       layoutNodes,
     );
-    targetPositions[id] = averagePosition ?? layoutNodes[id].posX;
+    targetPositions[id] = averagePosition ?? layoutNodes[id].position.x;
   }
 
   positionLayerAroundTargets(ids, layoutNodes, nodeSpacing, targetPositions);
@@ -383,7 +379,7 @@ function positionComponent(
     const ids: string[] = componentLayers[layerId] ?? [];
     positionLayerNodes(ids, layoutNodes, config.nodeSpacing);
     ids.forEach((id: string): void => {
-      layoutNodes[id].posY = layerId * config.layerSpacing;
+      layoutNodes[id].position.y = layerId * config.layerSpacing;
     });
   }
 
@@ -421,7 +417,7 @@ function positionComponent(
 
 function layoutHierarchyComponent(
   nodes: NodeMap,
-  edges: LayoutEdge[],
+  edges: PhysicalEdge[],
   config: LayoutConfig,
 ): void {
   const graph: Graph = {
@@ -550,9 +546,15 @@ function layoutHierarchyComponent(
         const dummyId: DummyNodeId = `__dummy_${dummyCounter++}`;
 
         newNodes[dummyId] = {
-          posX: 0,
-          posY: 0,
+          id: dummyId,
+          position: {
+            x: 0,
+            y: 0,
+          },
           radius: 0,
+          locked: false,
+          velocityX: 0,
+          velocityY: 0,
         };
         newLayer[dummyId] = newLayer[startNodeId] + i;
         newAdj[dummyId] = [];
@@ -669,14 +671,13 @@ function layoutHierarchyComponent(
   );
 
   for (const id in nodes) {
-    nodes[id].posX = newNodes[id].posX;
-    nodes[id].posY = newNodes[id].posY;
+    nodes[id].position.x = newNodes[id].position.x;
+    nodes[id].position.y = newNodes[id].position.y;
   }
 }
 
 export function hierarchyGraphLayout(
-  nodes: NodeMap,
-  edges: EdgeMap,
+  physicalGraph: PhysicalGraph,
   targetEdgeType: string,
 ): void {
   const config: LayoutConfig = {
@@ -687,9 +688,19 @@ export function hierarchyGraphLayout(
     positionSweeps: 8,
   };
 
-  const originalEdges: LayoutEdge[] = Object.values(edges).filter(
-    (e: LayoutEdge): boolean => e.edgeType === targetEdgeType,
+  const nodes: NodeMap = {};
+  const originalEdges: PhysicalEdge[] = Object.values(
+    physicalGraph.edges,
+  ).filter(
+    (edge: PhysicalEdge | null): edge is PhysicalEdge =>
+      edge?.edgeType === targetEdgeType,
   );
+  for (const [nodeId, node] of Object.entries(physicalGraph.nodes)) {
+    if (node == null) {
+      continue;
+    }
+    nodes[nodeId] = node;
+  }
   const graph: Graph = {
     adj: {},
     revAdj: {},
@@ -717,8 +728,8 @@ export function hierarchyGraphLayout(
     );
     const componentNodes: NodeMap = cloneNodeMap(nodes, componentNodeIds);
 
-    const componentEdges: LayoutEdge[] = originalEdges.filter(
-      (edge: LayoutEdge): boolean =>
+    const componentEdges: PhysicalEdge[] = originalEdges.filter(
+      (edge: PhysicalEdge): boolean =>
         componentNodeIdsSet.has(edge.startNodeId) &&
         componentNodeIdsSet.has(edge.endNodeId),
     );
@@ -765,8 +776,10 @@ export function hierarchyGraphLayout(
     for (const nodeId of componentLayout.nodeIds) {
       finalNodes[nodeId] = {
         ...componentLayout.nodes[nodeId],
-        posX: componentLayout.nodes[nodeId].posX + componentOffsetX,
-        posY: componentLayout.nodes[nodeId].posY + componentOffsetY,
+        position: {
+          x: componentLayout.nodes[nodeId].position.x + componentOffsetX,
+          y: componentLayout.nodes[nodeId].position.y + componentOffsetY,
+        },
       };
     }
 
@@ -777,9 +790,11 @@ export function hierarchyGraphLayout(
   const overallBounds: BoundingBox = getBoundingBox(overallNodeIds, finalNodes);
 
   for (const nodeId of overallNodeIds) {
-    nodes[nodeId].posX =
-      finalNodes[nodeId].posX - (overallBounds.minX + overallBounds.maxX) / 2;
-    nodes[nodeId].posY =
-      finalNodes[nodeId].posY - (overallBounds.minY + overallBounds.maxY) / 2;
+    nodes[nodeId].position.x =
+      finalNodes[nodeId].position.x -
+      (overallBounds.minX + overallBounds.maxX) / 2;
+    nodes[nodeId].position.y =
+      finalNodes[nodeId].position.y -
+      (overallBounds.minY + overallBounds.maxY) / 2;
   }
 }

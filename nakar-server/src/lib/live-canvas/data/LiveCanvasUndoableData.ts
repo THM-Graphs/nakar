@@ -217,6 +217,7 @@ export class LiveCanvasUndoableData {
         id: edge.id,
         startNodeId: edge.startNodeId,
         endNodeId: edge.endNodeId,
+        edgeType: edge.type,
         compressedCount: edge.representationCount,
         isLoop: edge.isLoop,
         title: edge.title,
