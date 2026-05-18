@@ -23,6 +23,10 @@ export class BoundingBox {
     return this.maxX - this.minX;
   }
 
+  public get height(): number {
+    return this.maxY - this.minY;
+  }
+
   public static fromNodes(nodeIds: string[], nodes: NodeMap): BoundingBox {
     const visibleNodeIds: string[] = nodeIds.filter(
       (nodeId: string): boolean => !HierarchyDummyNode.isId(nodeId),
