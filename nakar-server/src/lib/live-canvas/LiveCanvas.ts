@@ -54,7 +54,7 @@ import { LiveCanvasScenarioGroup } from './data/LiveCanvasScenarioGroup';
 import { SchemaFactoryService } from '../schema/SchemaFactoryService';
 import { LiveCanvasScenario } from './data/LiveCanvasScenario';
 import { MonitoringService } from '../monitoring/MonitoringService';
-import { hierarchyGraphLayout } from '../physics/hierarchy-graph-layout/hierarchyGraphLayout';
+import { HierarchyGraphLayoutEngine } from '../physics/hierarchy-graph-layout/HierarchyGraphLayoutEngine';
 import { LayoutSpecificationHierarchyDto } from '../http/routes/canvas-action/dto/LayoutSpecificationHierarchyDto';
 import { LayoutSpecificationForceDirectedDto } from '../http/routes/canvas-action/dto/LayoutSpecificationForceDirectedDto';
 import { LiveCanvasViewSettingsColorIndex } from './view-settings/LiveCanvasViewSettingsColorIndex';
@@ -1953,7 +1953,10 @@ export class LiveCanvas {
             );
           const targetEdgeType: string = layout.edgeType;
 
-          hierarchyGraphLayout(physicalGraph, targetEdgeType);
+          new HierarchyGraphLayoutEngine().layout(
+            physicalGraph,
+            targetEdgeType,
+          );
           for (const node of Object.entries(physicalGraph.nodes) satisfies [
             string,
             PhysicalNode | null,
