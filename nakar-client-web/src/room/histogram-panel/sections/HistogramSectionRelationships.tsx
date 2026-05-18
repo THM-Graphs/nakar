@@ -1,13 +1,13 @@
 import { ValueDisplay } from "../ValueDisplay.tsx";
 import { useBearStore } from "../../../state/useBearStore.ts";
 import { DynamicList } from "../../../shared/elements/DynamicList.tsx";
-import { relationshipActions } from "../../actions/groups/relationshipActions.ts";
+import { relationshipTypeActions } from "../../actions/groups/relationshipTypeActions.ts";
 import { useCanvasContext } from "../../../pages/Canvas.tsx";
+import { RelationshipTypeActionParams } from "../../actions/RelationshipTypeActionParams.ts";
 
 export function HistogramSectionRelationships() {
   const roomContext = useCanvasContext();
   const histogram = useBearStore((s) => s.room.scenario.graph.histogram);
-  const edges = useBearStore((s) => s.room.scenario.graph.elements.edges);
 
   return (
     <DynamicList
@@ -23,12 +23,12 @@ export function HistogramSectionRelationships() {
               value={entry.count}
               percentage={entry.percentage}
               key={entry.value}
-              customActions={relationshipActions.map((action) =>
+              customActions={relationshipTypeActions.map((action) =>
                 action.detailPaneAction(() => {
                   return {
-                    edges: edges.filter((e) => e.type === entry.value),
+                    relationshipType: entry.value,
                     roomContext: roomContext,
-                  };
+                  } satisfies RelationshipTypeActionParams;
                 }),
               )}
             ></ValueDisplay>
