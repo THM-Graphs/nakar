@@ -36,7 +36,9 @@ export class RemoveRelationshipsOfTypeAction extends Action<RelationshipTypeActi
     return "remove-relationships-of-type";
   }
 
-  title(): string {
-    return "Remove Relationship Types";
+  title(input: RelationshipTypeActionParams): string {
+    return input.relationshipTypes.length === 1
+      ? "Remove Relationship Type"
+      : "Remove Relationship Types";
   }
 }

@@ -33,7 +33,9 @@ export class FocusRelationshipTypeAction extends Action<RelationshipTypeActionPa
     return "focus-relationship-type";
   }
 
-  title(): string {
-    return "Focus Relationship Types";
+  title(input: RelationshipTypeActionParams): string {
+    return input.relationshipTypes.length === 1
+      ? "Focus Relationship Type"
+      : "Focus Relationship Types";
   }
 }
