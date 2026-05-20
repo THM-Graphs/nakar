@@ -27,7 +27,7 @@ export class RerunScenarioAction extends Action<RerunScenarioActionParams> {
   }
 
   icon(): string | null {
-    return "arrow-clockwise";
+    return "play-circle";
   }
 
   slug(): string {

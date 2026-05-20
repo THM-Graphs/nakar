@@ -18,6 +18,7 @@ import { RedoAction } from "../../room/actions/RedoAction.ts";
 import { SelectAllAction } from "../../room/actions/SelectAllAction.ts";
 import { DeselectAction } from "../../room/actions/DeselectAction.ts";
 import { RerunScenarioAction } from "../../room/actions/RerunScenarioAction.ts";
+import { ReloadScenariosAction } from "../../room/actions/ReloadScenariosAction.ts";
 import { ConnectResultNodesAction } from "../../room/actions/ConnectResultNodesAction.ts";
 import { RemoveDanglingNodesAction } from "../../room/actions/RemoveDanglingNodesAction.ts";
 import { CompressRelationshipsAction } from "../../room/actions/CompressRelationshipsAction.ts";
@@ -154,6 +155,12 @@ export function MenuBar() {
       <DropdownButton title={"Scenario"}>
         <ActionDropdownItem
           action={RerunScenarioAction.shared}
+          params={{
+            roomContext: roomContext,
+          }}
+        ></ActionDropdownItem>
+        <ActionDropdownItem
+          action={ReloadScenariosAction.shared}
           params={{
             roomContext: roomContext,
           }}
