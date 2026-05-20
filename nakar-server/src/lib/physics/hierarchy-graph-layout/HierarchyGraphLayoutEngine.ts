@@ -5,11 +5,18 @@ import {
   ElkNode,
 } from 'elkjs/lib/elk-api';
 import { LayoutOptions } from 'elkjs';
+import { SMap } from '../../map/Map';
+import { SSet } from '../../set/Set';
 import { PhysicalEdge } from '../physical-graph/PhysicalEdge';
 import { PhysicalGraph } from '../physical-graph/PhysicalGraph';
 import { PhysicalNode } from '../physical-graph/PhysicalNode';
 
 type NodeMap = Record<string, PhysicalNode>;
+
+interface OrderedHierarchyGraph {
+  readonly nodeIds: string[];
+  readonly edges: PhysicalEdge[];
+}
 
 interface ElkHierarchyGraph extends ElkNode {
   children: ElkNode[];
@@ -42,8 +49,13 @@ export class HierarchyGraphLayoutEngine {
       physicalGraph,
       targetEdgeType,
     );
+    const orderedGraph: OrderedHierarchyGraph = this._orderHierarchyGraph(
+      nodeIds,
+      nodes,
+      edges,
+    );
     const laidOutGraph: LaidOutElkHierarchyGraph = await this._elk.layout(
-      this._createGraph(nodeIds, nodes, edges),
+      this._createGraph(orderedGraph.nodeIds, nodes, orderedGraph.edges),
     );
 
     this._applyLayout(nodes, laidOutGraph);
@@ -109,6 +121,121 @@ export class HierarchyGraphLayoutEngine {
     };
   }
 
+  private _orderHierarchyGraph(
+    nodeIds: string[],
+    nodes: NodeMap,
+    edges: PhysicalEdge[],
+  ): OrderedHierarchyGraph {
+    const relevantEdges: PhysicalEdge[] = edges.filter(
+      (edge: PhysicalEdge): boolean =>
+        !edge.isLoop &&
+        edge.startNodeId in nodes &&
+        edge.endNodeId in nodes &&
+        edge.startNodeId !== edge.endNodeId,
+    );
+    const orderedNodeIds: string[] = this._orderNodeIds(
+      nodeIds,
+      nodes,
+      relevantEdges,
+    );
+    const nodeOrder: SMap<string, number> = new SMap<string, number>(
+      orderedNodeIds.map((nodeId: string, index: number): [string, number] => [
+        nodeId,
+        index,
+      ]),
+    );
+
+    return {
+      nodeIds: orderedNodeIds,
+      edges: [...relevantEdges].sort(
+        (left: PhysicalEdge, right: PhysicalEdge): number =>
+          (nodeOrder.get(left.startNodeId) ?? Number.MAX_SAFE_INTEGER) -
+            (nodeOrder.get(right.startNodeId) ?? Number.MAX_SAFE_INTEGER) ||
+          (nodeOrder.get(left.endNodeId) ?? Number.MAX_SAFE_INTEGER) -
+            (nodeOrder.get(right.endNodeId) ?? Number.MAX_SAFE_INTEGER) ||
+          left.id.localeCompare(right.id),
+      ),
+    };
+  }
+
+  private _orderNodeIds(
+    nodeIds: string[],
+    nodes: NodeMap,
+    edges: PhysicalEdge[],
+  ): string[] {
+    const childrenByParent: SMap<string, SSet<string>> = new SMap<
+      string,
+      SSet<string>
+    >();
+    const incomingEdgeCountByNode: SMap<string, number> = new SMap<
+      string,
+      number
+    >(nodeIds.map((nodeId: string): [string, number] => [nodeId, 0]));
+    const nodeComparator: (left: string, right: string) => number = (
+      left: string,
+      right: string,
+    ): number => this._compareNodes(left, right, nodes);
+
+    for (const edge of edges) {
+      const parentChildren: SSet<string> =
+        childrenByParent.get(edge.startNodeId) ?? new SSet<string>();
+
+      parentChildren.add(edge.endNodeId);
+      childrenByParent.set(edge.startNodeId, parentChildren);
+      incomingEdgeCountByNode.set(
+        edge.endNodeId,
+        (incomingEdgeCountByNode.get(edge.endNodeId) ?? 0) + 1,
+      );
+    }
+
+    const orderedRoots: string[] = [...nodeIds]
+      .filter(
+        (nodeId: string): boolean =>
+          (incomingEdgeCountByNode.get(nodeId) ?? 0) === 0,
+      )
+      .sort(nodeComparator);
+    const orderedNodeIds: string[] = [];
+    const visitedNodeIds: SSet<string> = new SSet<string>();
+
+    const visitNode = (nodeId: string): void => {
+      if (visitedNodeIds.has(nodeId)) {
+        return;
+      }
+
+      visitedNodeIds.add(nodeId);
+      orderedNodeIds.push(nodeId);
+
+      const children: string[] = [...(childrenByParent.get(nodeId) ?? [])].sort(
+        nodeComparator,
+      );
+
+      for (const childNodeId of children) {
+        visitNode(childNodeId);
+      }
+    };
+
+    for (const rootNodeId of orderedRoots) {
+      visitNode(rootNodeId);
+    }
+
+    for (const nodeId of [...nodeIds].sort(nodeComparator)) {
+      visitNode(nodeId);
+    }
+
+    return orderedNodeIds;
+  }
+
+  private _compareNodes(left: string, right: string, nodes: NodeMap): number {
+    const leftNode: PhysicalNode = nodes[left];
+    const rightNode: PhysicalNode = nodes[right];
+
+    return (
+      leftNode.position.x - rightNode.position.x ||
+      leftNode.position.y - rightNode.position.y ||
+      left.localeCompare(right)
+    );
+  }
+
   private _getMaximumNodeDiameter(nodeIds: string[], nodes: NodeMap): number {
     return nodeIds.reduce(
       (maximumDiameter: number, nodeId: string): number =>
@@ -125,8 +252,14 @@ export class HierarchyGraphLayoutEngine {
       'org.eclipse.elk.spacing.componentComponent': '250',
       'org.eclipse.elk.layered.spacing.nodeNodeBetweenLayers': '450',
       'org.eclipse.elk.layered.crossingMinimization.strategy': 'LAYER_SWEEP',
-      'org.eclipse.elk.layered.nodePlacement.strategy': 'NETWORK_SIMPLEX',
-      'org.eclipse.elk.layered.nodePlacement.favorStraightEdges': 'true',
+      'org.eclipse.elk.layered.considerModelOrder.strategy': 'NODES_AND_EDGES',
+      'org.eclipse.elk.layered.crossingMinimization.forceNodeModelOrder':
+        'true',
+      'org.eclipse.elk.layered.nodePlacement.strategy': 'BRANDES_KOEPF',
+      'org.eclipse.elk.layered.nodePlacement.favorStraightEdges': 'false',
+      'org.eclipse.elk.layered.nodePlacement.bk.fixedAlignment': 'BALANCED',
+      'org.eclipse.elk.layered.nodePlacement.bk.edgeStraightening':
+        'IMPROVE_STRAIGHTNESS',
       'org.eclipse.elk.separateConnectedComponents': 'true',
     };
   }
