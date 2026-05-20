@@ -221,7 +221,7 @@ export type FocusNodesRequestBodyDto = {
 };
 
 export type FocusRelationshipTypeRequestBodyDto = {
-    relationshipType: string;
+    relationshipTypes: Array<(string)>;
 };
 
 export type GetAuthResponseBodyDto = {

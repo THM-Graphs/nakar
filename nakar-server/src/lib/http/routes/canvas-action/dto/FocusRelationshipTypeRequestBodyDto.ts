@@ -1,8 +1,9 @@
-import { IsString } from 'class-validator';
+import { IsArray, IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class FocusRelationshipTypeRequestBodyDto {
-  @ApiProperty()
-  @IsString()
-  public relationshipType!: string;
+  @ApiProperty({ type: [String] })
+  @IsArray()
+  @IsString({ each: true })
+  public relationshipTypes!: string[];
 }

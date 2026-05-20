@@ -800,7 +800,9 @@ export class LiveCanvas {
     );
   }
 
-  public focusRelationshipType(params: { relationshipType: string }): void {
+  public focusRelationshipType(params: {
+    relationshipTypes: readonly string[];
+  }): void {
     this._queue.addTask(
       new TaskQueueTask('Focus relationship type', async (): Promise<void> => {
         const changeRecorder: LiveCanvasChangeRecorder =
@@ -812,7 +814,8 @@ export class LiveCanvas {
 
         graph.edges.edges
           .filter(
-            (edge: GraphEdge): boolean => edge.type !== params.relationshipType,
+            (edge: GraphEdge): boolean =>
+              !params.relationshipTypes.includes(edge.type),
           )
           .forEach((edge: GraphEdge): void => {
             graph.edges.remove(edge);

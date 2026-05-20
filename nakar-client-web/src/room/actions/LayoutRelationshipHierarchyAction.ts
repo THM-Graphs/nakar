@@ -17,7 +17,7 @@ export class LayoutRelationshipHierarchyAction extends Action<RelationshipTypeAc
         body: {
           layoutSpecification: {
             type: "LayoutSpecificationHierarchyDto",
-            edgeType: input.relationshipType,
+            edgeType: input.relationshipTypes[0],
           },
         },
       }),
@@ -25,7 +25,7 @@ export class LayoutRelationshipHierarchyAction extends Action<RelationshipTypeAc
   }
 
   disabled(input: RelationshipTypeActionParams): boolean {
-    return input.relationshipType.length === 0;
+    return input.relationshipTypes.length !== 1;
   }
 
   icon(): string | null {
@@ -37,6 +37,6 @@ export class LayoutRelationshipHierarchyAction extends Action<RelationshipTypeAc
   }
 
   title(): string {
-    return "Layout hierarchy";
+    return "Layout as hierarchy";
   }
 }

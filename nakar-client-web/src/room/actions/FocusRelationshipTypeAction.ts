@@ -15,14 +15,14 @@ export class FocusRelationshipTypeAction extends Action<RelationshipTypeActionPa
           canvasId: input.roomContext.initialCanvasData.id,
         },
         body: {
-          relationshipType: input.relationshipType,
+          relationshipTypes: input.relationshipTypes,
         },
       }),
     );
   }
 
   disabled(input: RelationshipTypeActionParams): boolean {
-    return input.relationshipType.length === 0;
+    return input.relationshipTypes.length === 0;
   }
 
   icon(): string | null {
@@ -34,6 +34,6 @@ export class FocusRelationshipTypeAction extends Action<RelationshipTypeActionPa
   }
 
   title(): string {
-    return "Focus Relationship Type";
+    return "Focus Relationship Types";
   }
 }

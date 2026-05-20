@@ -150,7 +150,7 @@ export class ActionController {
   ): void {
     this._canvasService
       .getCanvasWithId(canvasId)
-      .focusRelationshipType({ relationshipType: body.relationshipType });
+      .focusRelationshipType({ relationshipTypes: body.relationshipTypes });
   }
 
   @Post('undo')
