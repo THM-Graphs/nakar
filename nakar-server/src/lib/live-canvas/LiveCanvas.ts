@@ -800,6 +800,34 @@ export class LiveCanvas {
     );
   }
 
+  public focusRelationshipType(params: {
+    relationshipTypes: readonly string[];
+  }): void {
+    this._queue.addTask(
+      new TaskQueueTask('Focus relationship type', async (): Promise<void> => {
+        const changeRecorder: LiveCanvasChangeRecorder =
+          new LiveCanvasChangeRecorder();
+        const graph: LiveCanvasUndoableData = this._snapshot(
+          'Focus relationship type',
+          changeRecorder,
+        );
+
+        graph.edges.edges
+          .filter(
+            (edge: GraphEdge): boolean =>
+              !params.relationshipTypes.includes(edge.type),
+          )
+          .forEach((edge: GraphEdge): void => {
+            graph.edges.remove(edge);
+            changeRecorder.didAddOrRemoveGraphElements();
+          });
+
+        await this._postProcessGraph(changeRecorder);
+        this._handleChangeRecorder(changeRecorder);
+      }),
+    );
+  }
+
   public deleteElements(params: {
     nodeIds: readonly string[];
     labels: readonly string[];

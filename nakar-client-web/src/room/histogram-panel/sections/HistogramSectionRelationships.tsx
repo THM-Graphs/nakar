@@ -26,7 +26,7 @@ export function HistogramSectionRelationships() {
               customActions={relationshipTypeActions.map((action) =>
                 action.detailPaneAction(() => {
                   return {
-                    relationshipType: entry.value,
+                    relationshipTypes: [entry.value],
                     roomContext: roomContext,
                   } satisfies RelationshipTypeActionParams;
                 }),

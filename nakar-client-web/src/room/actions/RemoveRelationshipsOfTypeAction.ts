@@ -18,14 +18,14 @@ export class RemoveRelationshipsOfTypeAction extends Action<RelationshipTypeActi
           nodes: [],
           labels: [],
           edges: [],
-          edgeTypes: [input.relationshipType],
+          edgeTypes: input.relationshipTypes,
         },
       }),
     );
   }
 
   disabled(input: RelationshipTypeActionParams): boolean {
-    return input.relationshipType.length === 0;
+    return input.relationshipTypes.length === 0;
   }
 
   icon(): string | null {
@@ -37,6 +37,6 @@ export class RemoveRelationshipsOfTypeAction extends Action<RelationshipTypeActi
   }
 
   title(): string {
-    return "Remove Relationships";
+    return "Remove Relationship Types";
   }
 }

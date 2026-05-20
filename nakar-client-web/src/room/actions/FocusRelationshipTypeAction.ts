@@ -1,42 +1,39 @@
 import { Action } from "./Action.ts";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
 import { RelationshipTypeActionParams } from "./RelationshipTypeActionParams.ts";
-import { actionControllerLayout } from "../../../src-gen";
+import { actionControllerFocusRelationshipType } from "../../../src-gen";
 
-export class LayoutRelationshipHierarchyAction extends Action<RelationshipTypeActionParams> {
-  public static shared: LayoutRelationshipHierarchyAction =
-    new LayoutRelationshipHierarchyAction();
+export class FocusRelationshipTypeAction extends Action<RelationshipTypeActionParams> {
+  public static shared: FocusRelationshipTypeAction =
+    new FocusRelationshipTypeAction();
 
   protected async action(input: RelationshipTypeActionParams): Promise<void> {
     await resultOrThrow(
-      await actionControllerLayout({
+      await actionControllerFocusRelationshipType({
         path: {
           roomId: input.roomContext.initialRoomData.id,
           canvasId: input.roomContext.initialCanvasData.id,
         },
         body: {
-          layoutSpecification: {
-            type: "LayoutSpecificationHierarchyDto",
-            edgeType: input.relationshipTypes[0],
-          },
+          relationshipTypes: input.relationshipTypes,
         },
       }),
     );
   }
 
   disabled(input: RelationshipTypeActionParams): boolean {
-    return input.relationshipTypes.length !== 1;
+    return input.relationshipTypes.length === 0;
   }
 
   icon(): string | null {
-    return "diagram-3";
+    return "binoculars";
   }
 
   slug(): string {
-    return "layout-hierarchy";
+    return "focus-relationship-type";
   }
 
   title(): string {
-    return "Layout as hierarchy";
+    return "Focus Relationship Types";
   }
 }

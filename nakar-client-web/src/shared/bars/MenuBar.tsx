@@ -40,6 +40,7 @@ import { ResetViewSettingsAction } from "../../room/actions/ResetViewSettingsAct
 import { LabelActionParams } from "../../room/actions/LabelActionParams.ts";
 import { RelationshipTypeActionParams } from "../../room/actions/RelationshipTypeActionParams.ts";
 import { Fragment } from "react";
+import { getRelationshipTypesFromEdges } from "../../room/helper-functions/getRelationshipTypesFromEdges.ts";
 
 export function MenuBar() {
   const context = useAppContext();
@@ -86,8 +87,9 @@ export function MenuBar() {
       return akku;
     }
   }, []);
-  const selectedRelationshipType: string | null =
-    selectedEdges.length === 1 ? selectedEdges[0].type : null;
+  const selectedRelationshipTypes: string[] =
+    getRelationshipTypesFromEdges(selectedEdges);
+
   const selectedNodeLabels: string[] =
     selectedNodes.length === 1 ? selectedNodes[0].labels : [];
   const navigate = useNavigate();
@@ -269,11 +271,11 @@ export function MenuBar() {
             params={{ roomContext: roomContext, edges: selectedEdges }}
           ></ActionDropdownItem>
         ))}
-        {selectedRelationshipType != null && (
+        {selectedRelationshipTypes.length > 0 && (
           <>
             <Dropdown.Divider></Dropdown.Divider>
             <Dropdown.ItemText className={"small text-muted"}>
-              {selectedRelationshipType}
+              {selectedRelationshipTypes.join(", ")}
             </Dropdown.ItemText>
             {relationshipTypeActions.map((action) => (
               <ActionDropdownItem
@@ -281,7 +283,7 @@ export function MenuBar() {
                 action={action}
                 params={
                   {
-                    relationshipType: selectedRelationshipType,
+                    relationshipTypes: selectedRelationshipTypes,
                     roomContext: roomContext,
                   } satisfies RelationshipTypeActionParams
                 }

@@ -31,6 +31,7 @@ import {
 import { LabelActionParams } from "../actions/LabelActionParams.ts";
 import { RelationshipTypeActionParams } from "../actions/RelationshipTypeActionParams.ts";
 import { calculateIntersectionOfScenarioGroups } from "../scenarios-panel/calculateIntersectionOfScenarioGroups.ts";
+import { getRelationshipTypesFromEdges } from "../helper-functions/getRelationshipTypesFromEdges.ts";
 
 export function CanvasContextMenu() {
   const roomContext = useCanvasContext();
@@ -161,8 +162,10 @@ export function CanvasContextMenu() {
         selectedNodes.map((n) => n.parameterizedScenarios),
       );
     }, [selectedNodes]);
-  const selectedRelationshipType: string | null =
-    selectedEdges?.length === 1 ? selectedEdges[0].type : null;
+  const selectedRelationshipTypes: string[] = useMemo(
+    () => getRelationshipTypesFromEdges(selectedEdges ?? []),
+    [selectedEdges],
+  );
   const selectedNodeLabels: string[] =
     selectedNodes?.length === 1 ? selectedNodes[0].labels : [];
 
@@ -233,11 +236,12 @@ export function CanvasContextMenu() {
               }}
             ></ActionDropdownItem>
           ))}
-        {selectedRelationshipType != null && (
+
+        {selectedRelationshipTypes.length > 0 && (
           <>
             <Dropdown.Divider></Dropdown.Divider>
             <Dropdown.ItemText className={"small text-muted"}>
-              {selectedRelationshipType}
+              {selectedRelationshipTypes.join(", ")}
             </Dropdown.ItemText>
             {relationshipTypeActions.map((action) => (
               <ActionDropdownItem
@@ -245,7 +249,7 @@ export function CanvasContextMenu() {
                 action={action}
                 params={
                   {
-                    relationshipType: selectedRelationshipType,
+                    relationshipTypes: selectedRelationshipTypes,
                     roomContext: roomContext,
                   } satisfies RelationshipTypeActionParams
                 }
@@ -253,6 +257,7 @@ export function CanvasContextMenu() {
             ))}
           </>
         )}
+
         {commonNodeScenarios.length > 0 && (
           <>
             {commonNodeScenarios.map((parameterizedScenarioGroup) => {
