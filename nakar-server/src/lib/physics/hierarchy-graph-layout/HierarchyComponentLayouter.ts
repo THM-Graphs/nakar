@@ -13,6 +13,7 @@ import { HierarchyNodePlacement } from './HierarchyNodePlacement';
 
 type NodeMap = Record<string, PhysicalNode>;
 type LayerMap = Record<string, number>;
+type RelaxedLayerMap = Record<string, number>;
 
 interface DfsState {
   visited: Record<string, boolean>;
@@ -112,11 +113,11 @@ export class HierarchyComponentLayouter {
   ): LayerMap {
     const indegree: Record<string, number> = {};
     const topologicalOrder: string[] = [];
-    const layerMap: LayerMap = {};
+    const lowerBounds: LayerMap = {};
 
     for (const nodeId of nodeIds) {
       indegree[nodeId] = 0;
-      layerMap[nodeId] = 0;
+      lowerBounds[nodeId] = 0;
     }
 
     for (const startNodeId in graph.adj) {
@@ -138,7 +139,10 @@ export class HierarchyComponentLayouter {
       topologicalOrder.push(nodeId);
 
       for (const childId of graph.adj[nodeId]) {
-        layerMap[childId] = Math.max(layerMap[childId], layerMap[nodeId] + 1);
+        lowerBounds[childId] = Math.max(
+          lowerBounds[childId],
+          lowerBounds[nodeId] + 1,
+        );
         indegree[childId]--;
 
         if (indegree[childId] === 0) {
@@ -147,15 +151,158 @@ export class HierarchyComponentLayouter {
       }
     }
 
+    const upperBounds: LayerMap = this._buildUpperBounds(
+      topologicalOrder,
+      graph,
+      lowerBounds,
+    );
+    const relaxedLayerMap: RelaxedLayerMap = this._relaxLayers(
+      topologicalOrder,
+      graph,
+      lowerBounds,
+      upperBounds,
+    );
+
+    return this._roundRelaxedLayers(
+      topologicalOrder,
+      graph,
+      lowerBounds,
+      upperBounds,
+      relaxedLayerMap,
+    );
+  }
+
+  private _buildUpperBounds(
+    topologicalOrder: string[],
+    graph: HierarchyAdjacencyGraph,
+    lowerBounds: LayerMap,
+  ): LayerMap {
+    const distanceToSink: LayerMap = {};
+
+    for (const nodeId of topologicalOrder) {
+      distanceToSink[nodeId] = 0;
+    }
+
     for (let i: number = topologicalOrder.length - 1; i >= 0; i--) {
       const nodeId: string = topologicalOrder[i];
-      const children: string[] = graph.adj[nodeId];
 
-      if (children.length > 0) {
-        layerMap[nodeId] = Math.min(
-          ...children.map((childId: string): number => layerMap[childId] - 1),
-        );
+      if (graph.adj[nodeId].length === 0) {
+        continue;
       }
+
+      distanceToSink[nodeId] = Math.max(
+        ...graph.adj[nodeId].map(
+          (childNodeId: string): number => distanceToSink[childNodeId] + 1,
+        ),
+      );
+    }
+
+    let maximumLayer: number = 0;
+
+    for (const nodeId of topologicalOrder) {
+      maximumLayer = Math.max(
+        maximumLayer,
+        lowerBounds[nodeId] + distanceToSink[nodeId],
+      );
+    }
+
+    const upperBounds: LayerMap = {};
+
+    for (const nodeId of topologicalOrder) {
+      upperBounds[nodeId] = maximumLayer - distanceToSink[nodeId];
+    }
+
+    return upperBounds;
+  }
+
+  private _relaxLayers(
+    topologicalOrder: string[],
+    graph: HierarchyAdjacencyGraph,
+    lowerBounds: LayerMap,
+    upperBounds: LayerMap,
+  ): RelaxedLayerMap {
+    const relaxedLayerMap: RelaxedLayerMap = {};
+
+    for (const nodeId of topologicalOrder) {
+      relaxedLayerMap[nodeId] = (lowerBounds[nodeId] + upperBounds[nodeId]) / 2;
+    }
+
+    const maximumIterations: number = Math.max(topologicalOrder.length * 4, 16);
+
+    for (
+      let iteration: number = 0;
+      iteration < maximumIterations;
+      iteration++
+    ) {
+      let maximumChange: number = 0;
+
+      for (const nodeId of topologicalOrder) {
+        const targetLayers: number[] = [];
+
+        for (const predecessorNodeId of graph.revAdj[nodeId]) {
+          targetLayers.push(relaxedLayerMap[predecessorNodeId] + 1);
+        }
+
+        for (const childNodeId of graph.adj[nodeId]) {
+          targetLayers.push(relaxedLayerMap[childNodeId] - 1);
+        }
+
+        if (targetLayers.length === 0) {
+          continue;
+        }
+
+        const desiredLayer: number =
+          targetLayers.reduce(
+            (partialSum: number, targetLayer: number): number =>
+              partialSum + targetLayer,
+            0,
+          ) / targetLayers.length;
+        const nextLayer: number = Math.min(
+          upperBounds[nodeId],
+          Math.max(lowerBounds[nodeId], desiredLayer),
+        );
+
+        maximumChange = Math.max(
+          maximumChange,
+          Math.abs(nextLayer - relaxedLayerMap[nodeId]),
+        );
+        relaxedLayerMap[nodeId] = nextLayer;
+      }
+
+      if (maximumChange < 1e-6) {
+        break;
+      }
+    }
+
+    return relaxedLayerMap;
+  }
+
+  private _roundRelaxedLayers(
+    topologicalOrder: string[],
+    graph: HierarchyAdjacencyGraph,
+    lowerBounds: LayerMap,
+    upperBounds: LayerMap,
+    relaxedLayerMap: RelaxedLayerMap,
+  ): LayerMap {
+    const layerMap: LayerMap = {};
+
+    for (const nodeId of topologicalOrder) {
+      const predecessorNodeIds: string[] = graph.revAdj[nodeId];
+      const minimumLayer: number =
+        predecessorNodeIds.length === 0
+          ? lowerBounds[nodeId]
+          : Math.max(
+              lowerBounds[nodeId],
+              ...predecessorNodeIds.map(
+                (predecessorNodeId: string): number =>
+                  layerMap[predecessorNodeId] + 1,
+              ),
+            );
+
+      layerMap[nodeId] = Math.min(
+        upperBounds[nodeId],
+        Math.max(minimumLayer, Math.round(relaxedLayerMap[nodeId])),
+      );
     }
 
     return layerMap;

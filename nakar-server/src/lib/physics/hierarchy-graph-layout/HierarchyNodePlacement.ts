@@ -94,6 +94,8 @@ export class HierarchyNodePlacement {
       break;
     }
 
+    this._balanceLayerCenters(componentLayers, sortedLayerIds, layoutNodes);
+
     const componentBounds: BoundingBox = BoundingBox.fromNodes(
       componentNodeIds,
       layoutNodes,
@@ -322,6 +324,49 @@ export class HierarchyNodePlacement {
     return score;
   }
 
+  private _balanceLayerCenters(
+    componentLayers: Partial<Record<number, string[]>>,
+    sortedLayerIds: number[],
+    layoutNodes: NodeMap,
+  ): void {
+    const balanceSweeps: number = Math.max(
+      Math.floor(this._config.positionSweeps / 2),
+      2,
+    );
+
+    for (let sweep: number = 0; sweep < balanceSweeps; sweep++) {
+      for (
+        let layerIndex: number = 0;
+        layerIndex < sortedLayerIds.length;
+        layerIndex++
+      ) {
+        const layerId: number = sortedLayerIds[layerIndex];
+        const nodeIds: string[] = componentLayers[layerId] ?? [];
+        const desiredCenter: number | null = this._getDesiredLayerCenter(
+          layerIndex,
+          componentLayers,
+          sortedLayerIds,
+          layoutNodes,
+        );
+
+        if (desiredCenter == null) {
+          continue;
+        }
+
+        const currentCenter: number | null = this._getLayerCenter(
+          nodeIds,
+          layoutNodes,
+        );
+
+        if (currentCenter == null) {
+          continue;
+        }
+
+        this._shiftNodes(nodeIds, layoutNodes, desiredCenter - currentCenter);
+      }
+    }
+  }
+
   private _calculateLocalLayerScore(
     layerId: number,
     componentLayers: Partial<Record<number, string[]>>,
@@ -486,6 +531,62 @@ export class HierarchyNodePlacement {
     return ids.filter(
       (nodeId: string): boolean => !HierarchyDummyNode.isId(nodeId),
     );
+  }
+
+  private _getDesiredLayerCenter(
+    layerIndex: number,
+    componentLayers: Partial<Record<number, string[]>>,
+    sortedLayerIds: number[],
+    layoutNodes: NodeMap,
+  ): number | null {
+    const neighborCenters: number[] = [];
+
+    if (layerIndex > 0) {
+      const upperCenter: number | null = this._getLayerCenter(
+        componentLayers[sortedLayerIds[layerIndex - 1]] ?? [],
+        layoutNodes,
+      );
+
+      if (upperCenter != null) {
+        neighborCenters.push(upperCenter);
+      }
+    }
+
+    if (layerIndex < sortedLayerIds.length - 1) {
+      const lowerCenter: number | null = this._getLayerCenter(
+        componentLayers[sortedLayerIds[layerIndex + 1]] ?? [],
+        layoutNodes,
+      );
+
+      if (lowerCenter != null) {
+        neighborCenters.push(lowerCenter);
+      }
+    }
+
+    if (neighborCenters.length === 0) {
+      return null;
+    }
+
+    return (
+      neighborCenters.reduce(
+        (partialSum: number, neighborCenter: number): number =>
+          partialSum + neighborCenter,
+        0,
+      ) / neighborCenters.length
+    );
+  }
+
+  private _getLayerCenter(
+    nodeIds: string[],
+    layoutNodes: NodeMap,
+  ): number | null {
+    const visibleIds: string[] = this._getVisibleNodeIds(nodeIds);
+
+    if (visibleIds.length === 0) {
+      return null;
+    }
+
+    return BoundingBox.fromNodes(visibleIds, layoutNodes).centerX;
   }
 
   private _getLayerWidth(ids: string[], layoutNodes: NodeMap): number {
