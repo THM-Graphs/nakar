@@ -47,6 +47,7 @@ import { useAppContext } from "../state/AppContextData.ts";
 import { Router } from "../routing/Router.ts";
 import { usePageTitle } from "../routing/usePageTitle.ts";
 import { CanvasToolbar } from "../room/canvas/CanvasToolbar.tsx";
+import { CanvasShortcuts } from "../room/shortcuts/CanvasShortcuts.tsx";
 
 const CanvasContext: Context<CanvasContextData | null> =
   createContext<CanvasContextData | null>(null);
@@ -213,6 +214,7 @@ export function Canvas() {
   return (
     <CanvasContext.Provider value={canvasContext}>
       <Stack style={{ height: "100%" }} className={"position-relative bg-body"}>
+        <CanvasShortcuts></CanvasShortcuts>
         <Stack gap={0}>
           <Stack className="flex-grow-0 flex-shrink-0">
             <AppNavbar

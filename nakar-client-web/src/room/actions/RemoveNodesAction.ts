@@ -1,7 +1,8 @@
-import { Action } from "./Action.ts";
+import { Action, ActionShortcut } from "./Action.ts";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
 import { NodesActionParams } from "./NodesActionParams.ts";
 import { actionControllerDeleteElements } from "../../../src-gen";
+import { createAppShortcut } from "./createAppShortcut.ts";
 
 export class RemoveNodesAction extends Action<NodesActionParams> {
   public static shared: RemoveNodesAction = new RemoveNodesAction();
@@ -37,5 +38,9 @@ export class RemoveNodesAction extends Action<NodesActionParams> {
 
   title(): string {
     return "Remove Node";
+  }
+
+  shortcut(): ActionShortcut | null {
+    return createAppShortcut("Backspace");
   }
 }

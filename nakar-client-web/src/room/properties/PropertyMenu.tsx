@@ -3,6 +3,7 @@ import { useBearStore } from "../../state/useBearStore.ts";
 import { useClipboard } from "../../shared/clipboard/useClipboard.ts";
 import { DropdownButton } from "../../shared/elements/DropdownButton.tsx";
 import { DetailPaneAction } from "../inspector-panel/DetailPaneAction.ts";
+import { formatActionShortcut } from "../actions/actionShortcutLabel.ts";
 
 export function PropertyMenu(props: {
   value: unknown;
@@ -51,6 +52,7 @@ export function PropertyMenu(props: {
             <Dropdown.Divider></Dropdown.Divider>
             {props.customActions.map((action) => (
               <Dropdown.Item
+                className={"small"}
                 key={action.title}
                 disabled={action.disabled}
                 onClick={(): void => {
@@ -59,9 +61,26 @@ export function PropertyMenu(props: {
                   });
                 }}
               >
-                <Stack direction={"horizontal"} gap={2}>
-                  {action.icon && <i className={`bi bi-${action.icon}`}></i>}
-                  <span className={"small"}>{action.title}</span>
+                <Stack
+                  direction={"horizontal"}
+                  gap={2}
+                  className={"w-100 justify-content-between align-items-center"}
+                >
+                  <Stack
+                    direction={"horizontal"}
+                    gap={1}
+                    className={"align-items-center"}
+                  >
+                    {action.icon && (
+                      <i className={`bi bi-${action.icon} me-1`}></i>
+                    )}
+                    <span>{action.title}</span>
+                  </Stack>
+                  {action.shortcut && (
+                    <span className={"text-muted small text-nowrap"}>
+                      {formatActionShortcut(action.shortcut)}
+                    </span>
+                  )}
                 </Stack>
               </Dropdown.Item>
             ))}

@@ -1,6 +1,7 @@
-import { Action } from "./Action.ts";
+import { Action, ActionShortcut } from "./Action.ts";
 import { NodesActionParams } from "./NodesActionParams.ts";
 import { actionControllerExpandNode } from "../../../src-gen";
+import { createAppShortcut } from "./createAppShortcut.ts";
 
 export class ExpandNodeAction extends Action<NodesActionParams> {
   public static shared: ExpandNodeAction = new ExpandNodeAction();
@@ -32,5 +33,9 @@ export class ExpandNodeAction extends Action<NodesActionParams> {
 
   title(): string {
     return "Expand Node";
+  }
+
+  shortcut(): ActionShortcut | null {
+    return createAppShortcut("$mod+e");
   }
 }

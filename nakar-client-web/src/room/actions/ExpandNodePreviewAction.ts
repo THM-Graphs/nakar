@@ -1,8 +1,9 @@
-import { Action } from "./Action.ts";
+import { Action, ActionShortcut } from "./Action.ts";
 import { useBearStore } from "../../state/useBearStore.ts";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
 import { NodesActionParams } from "./NodesActionParams.ts";
 import { canvasDatabaseConnectionControllerExpandNodePreview } from "../../../src-gen";
+import { createAppShortcut } from "./createAppShortcut.ts";
 
 export class ExpandNodePreviewAction extends Action<NodesActionParams> {
   public static shared: ExpandNodePreviewAction = new ExpandNodePreviewAction();
@@ -44,5 +45,9 @@ export class ExpandNodePreviewAction extends Action<NodesActionParams> {
 
   title(): string {
     return "Expand Preview";
+  }
+
+  shortcut(): ActionShortcut | null {
+    return createAppShortcut("$mod+Alt+KeyE");
   }
 }

@@ -1,6 +1,7 @@
-import { Action } from "./Action.ts";
+import { Action, ActionShortcut } from "./Action.ts";
 import { SelectedCanvasTab } from "../../state/SelectedCanvasTab.ts";
 import { LiveCanvasGraphElementsDto } from "../../../src-gen";
+import { createAppShortcut } from "./createAppShortcut.ts";
 
 export type SelectAllActionParams = {
   graphElements: LiveCanvasGraphElementsDto;
@@ -32,5 +33,9 @@ export class SelectAllAction extends Action<SelectAllActionParams> {
 
   title(): string {
     return "Select All";
+  }
+
+  shortcut(): ActionShortcut | null {
+    return createAppShortcut("$mod+a");
   }
 }

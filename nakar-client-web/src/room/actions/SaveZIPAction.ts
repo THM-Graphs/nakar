@@ -1,5 +1,6 @@
-import { Action } from "./Action.ts";
+import { Action, ActionShortcut } from "./Action.ts";
 import { AppContextData } from "../../state/AppContextData.ts";
+import { createAppShortcut } from "./createAppShortcut.ts";
 
 export type SaveZIPActionParams = { context: AppContextData };
 
@@ -24,5 +25,9 @@ export class SaveZIPAction extends Action<SaveZIPActionParams> {
 
   title(): string {
     return "Export as ZIP";
+  }
+
+  shortcut(): ActionShortcut | null {
+    return createAppShortcut("$mod+Shift+s");
   }
 }

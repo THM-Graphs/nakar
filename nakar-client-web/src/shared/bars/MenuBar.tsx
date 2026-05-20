@@ -23,7 +23,8 @@ import { RemoveDanglingNodesAction } from "../../room/actions/RemoveDanglingNode
 import { CompressRelationshipsAction } from "../../room/actions/CompressRelationshipsAction.ts";
 import { RelayoutAction } from "../../room/actions/RelayoutAction.ts";
 import { UnlockAllNodesAction } from "../../room/actions/UnlockAllNodesAction.ts";
-import { FlipCanvasAction } from "../../room/actions/FlipCanvasAction.ts";
+import { FlipCanvasHorizontalAction } from "../../room/actions/FlipCanvasHorizontalAction.ts";
+import { FlipCanvasVerticalAction } from "../../room/actions/FlipCanvasVerticalAction.ts";
 import { ZoomToFitAction } from "../../room/actions/ZoomToFitAction.ts";
 import { PanToElementAction } from "../../room/actions/PanToElementAction.ts";
 import { ZoomInAction } from "../../room/actions/ZoomInAction.ts";
@@ -176,18 +177,16 @@ export function MenuBar() {
           }}
         ></ActionDropdownItem>
         <ActionDropdownItem
-          action={FlipCanvasAction.shared}
+          action={FlipCanvasHorizontalAction.shared}
           params={{
-            axis: "x",
             selectedTab,
             nodeCount: graphElements.nodes.length,
             roomContext: roomContext,
           }}
         ></ActionDropdownItem>
         <ActionDropdownItem
-          action={FlipCanvasAction.shared}
+          action={FlipCanvasVerticalAction.shared}
           params={{
-            axis: "y",
             selectedTab,
             nodeCount: graphElements.nodes.length,
             roomContext: roomContext,

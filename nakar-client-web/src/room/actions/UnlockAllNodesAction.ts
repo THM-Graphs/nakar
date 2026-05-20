@@ -1,8 +1,9 @@
-import { Action } from "./Action.ts";
+import { Action, ActionShortcut } from "./Action.ts";
 import { CanvasContextData } from "../../pages/Canvas.tsx";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
 import { SelectedCanvasTab } from "../../state/SelectedCanvasTab.ts";
 import { actionControllerUnlockAllNodes, NodeDto } from "../../../src-gen";
+import { createAppShortcut } from "./createAppShortcut.ts";
 
 export type UnlockAllNodesActionParams = {
   nodes: NodeDto[];
@@ -38,5 +39,9 @@ export class UnlockAllNodesAction extends Action<UnlockAllNodesActionParams> {
 
   title(): string {
     return "Unlock All Nodes";
+  }
+
+  shortcut(): ActionShortcut | null {
+    return createAppShortcut("$mod+Shift+u");
   }
 }

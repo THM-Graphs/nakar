@@ -1,7 +1,8 @@
-import { Action } from "./Action.ts";
+import { Action, ActionShortcut } from "./Action.ts";
 import { CanvasContextData } from "../../pages/Canvas.tsx";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
 import { actionControllerReloadScenario } from "../../../src-gen";
+import { createAppShortcut } from "./createAppShortcut.ts";
 
 export type RerunScenarioActionParams = {
   roomContext: CanvasContextData;
@@ -35,5 +36,9 @@ export class RerunScenarioAction extends Action<RerunScenarioActionParams> {
 
   title(): string {
     return "Rerun Scenario";
+  }
+
+  shortcut(): ActionShortcut | null {
+    return createAppShortcut("$mod+Enter");
   }
 }

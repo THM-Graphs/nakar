@@ -1,7 +1,8 @@
-import { Action } from "./Action.ts";
+import { Action, ActionShortcut } from "./Action.ts";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
 import { NodesActionParams } from "./NodesActionParams.ts";
 import { actionControllerShowShortestPath } from "../../../src-gen";
+import { createAppShortcut } from "./createAppShortcut.ts";
 
 export class ShowShortestPathAction extends Action<NodesActionParams> {
   public static shared: ShowShortestPathAction = new ShowShortestPathAction();
@@ -37,5 +38,9 @@ export class ShowShortestPathAction extends Action<NodesActionParams> {
 
   title(): string {
     return "Show Shortest Path";
+  }
+
+  shortcut(): ActionShortcut | null {
+    return createAppShortcut("$mod+Shift+p");
   }
 }

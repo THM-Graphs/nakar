@@ -1,7 +1,8 @@
-import { Action } from "./Action.ts";
+import { Action, ActionShortcut } from "./Action.ts";
 import * as d3 from "d3";
 import { saveAs } from "file-saver";
 import { SelectedCanvasTab } from "../../state/SelectedCanvasTab.ts";
+import { createAppShortcut } from "./createAppShortcut.ts";
 
 export type SaveSVGActionParams = {
   selectedTab: SelectedCanvasTab;
@@ -111,5 +112,9 @@ export class SaveSVGAction extends Action<SaveSVGActionParams> {
 
   title(): string {
     return "Save as SVG-File";
+  }
+
+  shortcut(): ActionShortcut | null {
+    return createAppShortcut("$mod+s");
   }
 }

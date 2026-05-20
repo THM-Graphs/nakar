@@ -1,7 +1,8 @@
-import { Action } from "./Action.ts";
+import { Action, ActionShortcut } from "./Action.ts";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
 import { CanvasContextData } from "../../pages/Canvas.tsx";
 import { actionControllerRedo } from "../../../src-gen";
+import { createAppShortcut } from "./createAppShortcut.ts";
 
 export type RedoActionParams = {
   roomContext: CanvasContextData;
@@ -36,5 +37,9 @@ export class RedoAction extends Action<RedoActionParams> {
 
   title(): string {
     return "Redo";
+  }
+
+  shortcut(): ActionShortcut | null {
+    return createAppShortcut("$mod+Shift+z");
   }
 }

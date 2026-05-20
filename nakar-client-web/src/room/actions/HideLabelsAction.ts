@@ -1,5 +1,6 @@
-import { Action } from "./Action.ts";
+import { Action, ActionShortcut } from "./Action.ts";
 import { SelectedCanvasTab } from "../../state/SelectedCanvasTab.ts";
+import { createAppShortcut } from "./createAppShortcut.ts";
 
 export type HideLabelsActionParams = {
   selectedTab: SelectedCanvasTab;
@@ -28,5 +29,9 @@ export class HideLabelsAction extends Action<HideLabelsActionParams> {
 
   title(input: HideLabelsActionParams): string {
     return input.hideLabels ? "Show Labels" : "Hide Labels";
+  }
+
+  shortcut(): ActionShortcut | null {
+    return createAppShortcut("$mod+Alt+KeyL");
   }
 }

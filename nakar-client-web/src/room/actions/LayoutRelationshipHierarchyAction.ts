@@ -1,7 +1,8 @@
-import { Action } from "./Action.ts";
+import { Action, ActionShortcut } from "./Action.ts";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
 import { RelationshipTypeActionParams } from "./RelationshipTypeActionParams.ts";
 import { actionControllerLayout } from "../../../src-gen";
+import { createAppShortcut } from "./createAppShortcut.ts";
 
 export class LayoutRelationshipHierarchyAction extends Action<RelationshipTypeActionParams> {
   public static shared: LayoutRelationshipHierarchyAction =
@@ -38,5 +39,9 @@ export class LayoutRelationshipHierarchyAction extends Action<RelationshipTypeAc
 
   title(): string {
     return "Layout as hierarchy";
+  }
+
+  shortcut(): ActionShortcut | null {
+    return createAppShortcut("$mod+Alt+KeyH");
   }
 }

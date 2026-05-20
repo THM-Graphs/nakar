@@ -1,7 +1,8 @@
-import { Action } from "./Action.ts";
+import { Action, ActionShortcut } from "./Action.ts";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
 import { CanvasContextData } from "../../pages/Canvas.tsx";
 import { actionControllerUndo } from "../../../src-gen";
+import { createAppShortcut } from "./createAppShortcut.ts";
 
 export type UndoActionParams = {
   roomContext: CanvasContextData;
@@ -36,5 +37,9 @@ export class UndoAction extends Action<UndoActionParams> {
 
   title(): string {
     return "Undo";
+  }
+
+  shortcut(): ActionShortcut | null {
+    return createAppShortcut("$mod+z");
   }
 }

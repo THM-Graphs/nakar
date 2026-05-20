@@ -3,6 +3,7 @@ import { NavbarButton } from "../../shared/elements/NavbarButton.tsx";
 import { CSSProperties, ReactNode } from "react";
 import { Placement } from "react-bootstrap/types";
 import clsx from "clsx";
+import { getActionShortcutLabel } from "./actionShortcutLabel.ts";
 
 export function ActionNavbarButton<T>(props: {
   action: Action<T>;
@@ -17,6 +18,10 @@ export function ActionNavbarButton<T>(props: {
   children?: ReactNode;
 }) {
   const title = props.customTitle ?? props.action.title(props.params);
+  const shortcutLabel = getActionShortcutLabel(props.action, props.params);
+  const tooltip = props.hideTitle
+    ? [title, shortcutLabel].filter(Boolean).join(" · ")
+    : undefined;
   return (
     <NavbarButton
       title={props.hideTitle ? undefined : title}
@@ -33,7 +38,7 @@ export function ActionNavbarButton<T>(props: {
           ? undefined
           : (props.action.icon(props.params) ?? undefined)
       }
-      tooltip={props.hideTitle ? title : undefined}
+      tooltip={tooltip}
       tooltipPlacement={props.tooltipPlacement}
     >
       {props.children}

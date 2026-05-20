@@ -1,6 +1,7 @@
-import { Action } from "./Action.ts";
+import { Action, ActionShortcut } from "./Action.ts";
 import { NodesActionParams } from "./NodesActionParams.ts";
 import { useBearStore } from "../../state/useBearStore.ts";
+import { createAppShortcut } from "./createAppShortcut.ts";
 
 export class AddNoteAction extends Action<NodesActionParams> {
   public static shared: AddNoteAction = new AddNoteAction();
@@ -25,5 +26,9 @@ export class AddNoteAction extends Action<NodesActionParams> {
 
   title(): string {
     return "Add Note";
+  }
+
+  shortcut(): ActionShortcut | null {
+    return createAppShortcut("$mod+Alt+KeyN");
   }
 }

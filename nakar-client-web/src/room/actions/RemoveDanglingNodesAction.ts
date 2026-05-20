@@ -1,8 +1,9 @@
-import { Action } from "./Action.ts";
+import { Action, ActionShortcut } from "./Action.ts";
 import { SelectedCanvasTab } from "../../state/SelectedCanvasTab.ts";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
 import { CanvasContextData } from "../../pages/Canvas.tsx";
 import { actionControllerRemoveDanglingNodes } from "../../../src-gen";
+import { createAppShortcut } from "./createAppShortcut.ts";
 
 export type RemoveDanglingNodesActionParams = {
   selectedTab: SelectedCanvasTab;
@@ -40,5 +41,9 @@ export class RemoveDanglingNodesAction extends Action<RemoveDanglingNodesActionP
 
   title(): string {
     return "Remove Dangling Nodes";
+  }
+
+  shortcut(): ActionShortcut | null {
+    return createAppShortcut("$mod+Shift+d");
   }
 }

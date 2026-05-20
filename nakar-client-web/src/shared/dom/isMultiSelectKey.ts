@@ -1,8 +1,5 @@
 import { MouseEvent } from "react";
-
-function isMacOS() {
-  return navigator.userAgent.toLowerCase().includes("mac");
-}
+import { isMacOS } from "./isMacOS.ts";
 
 export function isMultiSelectKey(event: PointerEvent | MouseEvent): boolean {
   return isMacOS() ? event.metaKey : event.ctrlKey;

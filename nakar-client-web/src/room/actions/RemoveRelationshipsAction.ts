@@ -1,7 +1,8 @@
-import { Action } from "./Action.ts";
+import { Action, ActionShortcut } from "./Action.ts";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
 import { RelationshipsActionParams } from "./RelationshipsActionParams.ts";
 import { actionControllerDeleteElements } from "../../../src-gen";
+import { createAppShortcut } from "./createAppShortcut.ts";
 
 export class RemoveRelationshipsAction extends Action<RelationshipsActionParams> {
   public static shared: RemoveRelationshipsAction =
@@ -38,5 +39,9 @@ export class RemoveRelationshipsAction extends Action<RelationshipsActionParams>
 
   title(): string {
     return "Remove Relationship";
+  }
+
+  shortcut(): ActionShortcut | null {
+    return createAppShortcut("Backspace");
   }
 }

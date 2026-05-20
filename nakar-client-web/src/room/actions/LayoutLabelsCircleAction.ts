@@ -1,7 +1,8 @@
-import { Action } from "./Action.ts";
+import { Action, ActionShortcut } from "./Action.ts";
 import { LabelActionParams } from "./LabelActionParams.ts";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
 import { actionControllerLayout } from "../../../src-gen";
+import { createAppShortcut } from "./createAppShortcut.ts";
 
 export class LayoutLabelsCircleAction extends Action<LabelActionParams> {
   public static shared: LayoutLabelsCircleAction =
@@ -52,5 +53,9 @@ export class LayoutLabelsCircleAction extends Action<LabelActionParams> {
 
   title(): string {
     return "Layout Label Circle";
+  }
+
+  shortcut(): ActionShortcut | null {
+    return createAppShortcut("$mod+Alt+KeyC");
   }
 }

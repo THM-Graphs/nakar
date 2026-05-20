@@ -1,7 +1,8 @@
-import { Action } from "./Action.ts";
+import { Action, ActionShortcut } from "./Action.ts";
 import { LabelActionParams } from "./LabelActionParams.ts";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
 import { actionControllerDeleteElements } from "../../../src-gen";
+import { createAppShortcut } from "./createAppShortcut.ts";
 
 export class RemoveLabelAction extends Action<LabelActionParams> {
   public static shared: RemoveLabelAction = new RemoveLabelAction();
@@ -37,5 +38,9 @@ export class RemoveLabelAction extends Action<LabelActionParams> {
 
   title(): string {
     return "Remove Label";
+  }
+
+  shortcut(): ActionShortcut | null {
+    return createAppShortcut("$mod+Backspace");
   }
 }

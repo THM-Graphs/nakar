@@ -1,7 +1,8 @@
-import { Action } from "./Action.ts";
+import { Action, ActionShortcut } from "./Action.ts";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
 import { NodesActionParams } from "./NodesActionParams.ts";
 import { actionControllerFocusNodes } from "../../../src-gen";
+import { createAppShortcut } from "./createAppShortcut.ts";
 
 export class FocusNodesAction extends Action<NodesActionParams> {
   public static shared: FocusNodesAction = new FocusNodesAction();
@@ -32,5 +33,9 @@ export class FocusNodesAction extends Action<NodesActionParams> {
 
   title(): string {
     return "Focus Node";
+  }
+
+  shortcut(): ActionShortcut | null {
+    return createAppShortcut("$mod+f");
   }
 }

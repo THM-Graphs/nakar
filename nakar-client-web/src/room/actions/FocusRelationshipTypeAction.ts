@@ -1,7 +1,8 @@
-import { Action } from "./Action.ts";
+import { Action, ActionShortcut } from "./Action.ts";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
 import { RelationshipTypeActionParams } from "./RelationshipTypeActionParams.ts";
 import { actionControllerFocusRelationshipType } from "../../../src-gen";
+import { createAppShortcut } from "./createAppShortcut.ts";
 
 export class FocusRelationshipTypeAction extends Action<RelationshipTypeActionParams> {
   public static shared: FocusRelationshipTypeAction =
@@ -37,5 +38,9 @@ export class FocusRelationshipTypeAction extends Action<RelationshipTypeActionPa
     return input.relationshipTypes.length === 1
       ? "Focus Relationship Type"
       : "Focus Relationship Types";
+  }
+
+  shortcut(): ActionShortcut | null {
+    return createAppShortcut("$mod+Alt+KeyT");
   }
 }

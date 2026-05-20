@@ -1,7 +1,8 @@
-import { Action } from "./Action.ts";
+import { Action, ActionShortcut } from "./Action.ts";
 import { useBearStore } from "../../state/useBearStore.ts";
 import { LabelActionParams } from "./LabelActionParams.ts";
 import { NodeDto } from "../../../src-gen";
+import { createAppShortcut } from "./createAppShortcut.ts";
 
 export class SelectAllNodesOfLabel extends Action<LabelActionParams> {
   public static shared: SelectAllNodesOfLabel = new SelectAllNodesOfLabel();
@@ -31,6 +32,10 @@ export class SelectAllNodesOfLabel extends Action<LabelActionParams> {
 
   title(): string {
     return `Select All Nodes`;
+  }
+
+  shortcut(): ActionShortcut | null {
+    return createAppShortcut("$mod+Alt+KeyA");
   }
 
   private _nodeLabelsIncludeLabels(node: NodeDto, labels: string[]): boolean {

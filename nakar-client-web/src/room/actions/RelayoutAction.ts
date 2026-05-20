@@ -1,8 +1,9 @@
-import { Action } from "./Action.ts";
+import { Action, ActionShortcut } from "./Action.ts";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
 import { CanvasContextData } from "../../pages/Canvas.tsx";
 import { SelectedCanvasTab } from "../../state/SelectedCanvasTab.ts";
 import { actionControllerRelayout, NodeDto } from "../../../src-gen";
+import { createAppShortcut } from "./createAppShortcut.ts";
 
 export type RelayoutActionParams = {
   roomContext: CanvasContextData;
@@ -37,5 +38,9 @@ export class RelayoutAction extends Action<RelayoutActionParams> {
 
   title(): string {
     return "Relayout";
+  }
+
+  shortcut(): ActionShortcut | null {
+    return createAppShortcut("$mod+Shift+l");
   }
 }

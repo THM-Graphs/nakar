@@ -1,7 +1,8 @@
-import { Action } from "./Action.ts";
+import { Action, ActionShortcut } from "./Action.ts";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
 import { NodesActionParams } from "./NodesActionParams.ts";
 import { actionControllerUnlockNodes } from "../../../src-gen";
+import { createAppShortcut } from "./createAppShortcut.ts";
 
 export class UnlockNodesAction extends Action<NodesActionParams> {
   public static shared: UnlockNodesAction = new UnlockNodesAction();
@@ -36,5 +37,9 @@ export class UnlockNodesAction extends Action<NodesActionParams> {
 
   title(): string {
     return "Unlock Node";
+  }
+
+  shortcut(): ActionShortcut | null {
+    return createAppShortcut("$mod+u");
   }
 }
