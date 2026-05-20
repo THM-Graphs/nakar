@@ -24,77 +24,52 @@ export class HierarchyNodePlacement {
     layoutNodes: NodeMap,
     graph: HierarchyAdjacencyGraph,
   ): void {
-    for (const layerId of sortedLayerIds) {
-      const nodeIds: string[] = componentLayers[layerId] ?? [];
-      this._positionLayerNodes(nodeIds, layoutNodes);
-      nodeIds.forEach((nodeId: string): void => {
-        layoutNodes[nodeId].position.y = layerId * this._config.layerSpacing;
-      });
+    if (sortedLayerIds.length === 0) {
+      return;
     }
 
     const componentNodeIds: string[] = sortedLayerIds.flatMap(
       (layerId: number): string[] => componentLayers[layerId] ?? [],
     );
-    const nodeLayerMap: Record<string, number> = this._buildNodeLayerMap(
-      componentLayers,
-      sortedLayerIds,
-    );
-    let bestScore: number = this._calculateLayoutScore(
-      componentLayers,
-      sortedLayerIds,
-      nodeLayerMap,
+    const columnMap: Record<string, number> = {};
+    const columnStep: number = this._getColumnStep(
+      componentNodeIds,
       layoutNodes,
-      graph,
     );
 
-    for (let iter: number = 0; iter < this._config.positionSweeps; iter++) {
-      const snapshot: Record<string, number> = this._createPositionSnapshot(
-        componentNodeIds,
-        layoutNodes,
-      );
-
-      this._optimizeNodeOrder(
-        componentLayers,
-        sortedLayerIds,
-        nodeLayerMap,
-        layoutNodes,
-        graph,
-      );
-
-      for (let i: number = 1; i < sortedLayerIds.length; i++) {
-        this._optimizeLayerPositions(
-          componentLayers[sortedLayerIds[i]] ?? [],
-          layoutNodes,
-          graph,
-        );
-      }
-
-      for (let i: number = sortedLayerIds.length - 2; i >= 0; i--) {
-        this._optimizeLayerPositions(
-          componentLayers[sortedLayerIds[i]] ?? [],
-          layoutNodes,
-          graph,
-        );
-      }
-
-      const score: number = this._calculateLayoutScore(
-        componentLayers,
-        sortedLayerIds,
-        nodeLayerMap,
-        layoutNodes,
-        graph,
-      );
-
-      if (score + 1e-6 < bestScore) {
-        bestScore = score;
-        continue;
-      }
-
-      this._restorePositionSnapshot(snapshot, layoutNodes);
-      break;
+    for (const layerId of sortedLayerIds) {
+      const nodeIds: string[] = componentLayers[layerId] ?? [];
+      nodeIds.forEach((nodeId: string): void => {
+        layoutNodes[nodeId].position.y = layerId * this._config.layerSpacing;
+      });
     }
 
-    this._balanceLayerCenters(componentLayers, sortedLayerIds, layoutNodes);
+    this._assignInitialLayerColumns(
+      componentLayers[sortedLayerIds[sortedLayerIds.length - 1]] ?? [],
+      columnMap,
+    );
+
+    for (let i: number = sortedLayerIds.length - 2; i >= 0; i--) {
+      this._assignLayerColumns(
+        componentLayers[sortedLayerIds[i]] ?? [],
+        componentLayers[sortedLayerIds[i + 1]] ?? [],
+        graph.adj,
+        columnMap,
+      );
+    }
+
+    for (let i: number = 1; i < sortedLayerIds.length; i++) {
+      this._realignLayerColumns(
+        componentLayers[sortedLayerIds[i]] ?? [],
+        componentLayers[sortedLayerIds[i - 1]] ?? [],
+        graph.revAdj,
+        columnMap,
+      );
+    }
+
+    for (const nodeId of componentNodeIds) {
+      layoutNodes[nodeId].position.x = columnMap[nodeId] * columnStep;
+    }
 
     const componentBounds: BoundingBox = BoundingBox.fromNodes(
       componentNodeIds,
@@ -103,100 +78,323 @@ export class HierarchyNodePlacement {
     this._shiftNodes(componentNodeIds, layoutNodes, -componentBounds.centerX);
   }
 
-  private _positionLayerNodes(ids: string[], layoutNodes: NodeMap): void {
-    const visibleIds: string[] = this._getVisibleNodeIds(ids);
-
-    if (visibleIds.length === 0) {
-      ids.forEach((nodeId: string): void => {
-        layoutNodes[nodeId].position.x = 0;
-      });
-      return;
-    }
-
-    const layerWidth: number = this._getLayerWidth(ids, layoutNodes);
-    let currentLeftEdge: number = -layerWidth / 2;
-
-    for (const nodeId of visibleIds) {
-      const radius: number = layoutNodes[nodeId].radius;
-      layoutNodes[nodeId].position.x = currentLeftEdge + radius;
-      currentLeftEdge += radius * 2 + this._config.nodeSpacing;
-    }
-
-    const fallbackPositions: Record<string, number> = {};
-    let lastVisibleNodeId: string = visibleIds[0];
-
-    for (const nodeId of ids) {
-      if (!HierarchyDummyNode.isId(nodeId)) {
-        lastVisibleNodeId = nodeId;
-        fallbackPositions[nodeId] = layoutNodes[nodeId].position.x;
-        continue;
-      }
-
-      fallbackPositions[nodeId] = layoutNodes[lastVisibleNodeId].position.x;
-    }
-
-    this._positionLayerAroundTargets(ids, layoutNodes, fallbackPositions);
-  }
-
-  private _optimizeLayerPositions(
+  private _assignInitialLayerColumns(
     ids: string[],
-    layoutNodes: NodeMap,
-    graph: HierarchyAdjacencyGraph,
-  ): void {
-    const targetPositions: Record<string, number> = {};
-
-    for (const nodeId of ids) {
-      const targetPosition: number | null = this._getMedianAdjacentPosition(
-        nodeId,
-        graph,
-        layoutNodes,
-      );
-      targetPositions[nodeId] =
-        targetPosition ?? layoutNodes[nodeId].position.x;
-    }
-
-    this._positionLayerAroundTargets(ids, layoutNodes, targetPositions);
-  }
-
-  private _positionLayerAroundTargets(
-    ids: string[],
-    layoutNodes: NodeMap,
-    targetPositions: Record<string, number>,
+    columnMap: Record<string, number>,
   ): void {
     if (ids.length === 0) {
       return;
     }
 
-    const offsets: number[] = [0];
+    const visibleIds: string[] = this._getVisibleNodeIds(ids);
 
-    for (let i: number = 1; i < ids.length; i++) {
-      offsets[i] =
-        offsets[i - 1] +
-        this._getMinimumNodeDistance(ids[i - 1], ids[i], layoutNodes);
+    if (visibleIds.length === 0) {
+      ids.forEach((nodeId: string): void => {
+        columnMap[nodeId] = 0;
+      });
+      return;
     }
 
-    const transformedTargets: number[] = ids.map(
-      (nodeId: string, index: number): number =>
-        (targetPositions[nodeId] ?? layoutNodes[nodeId].position.x) -
-        offsets[index],
+    let currentColumn: number = -(visibleIds.length - 1) / 2;
+
+    for (const nodeId of visibleIds) {
+      columnMap[nodeId] = currentColumn;
+      currentColumn += 1;
+    }
+
+    let lastVisibleNodeId: string = visibleIds[0];
+
+    for (const nodeId of ids) {
+      if (!HierarchyDummyNode.isId(nodeId)) {
+        lastVisibleNodeId = nodeId;
+        continue;
+      }
+
+      columnMap[nodeId] = columnMap[lastVisibleNodeId];
+    }
+  }
+
+  private _assignLayerColumns(
+    ids: string[],
+    referenceLayerIds: string[],
+    adjacency: Record<string, string[]>,
+    columnMap: Record<string, number>,
+  ): void {
+    if (ids.length === 0) {
+      return;
+    }
+
+    const targetColumns: number[] = [];
+    const referenceLayerSet: SSet<string> = new SSet<string>(referenceLayerIds);
+    const fallbackColumns: Record<string, number> =
+      this._buildFallbackColumns(ids);
+    const rawTargetColumns: Record<string, number> = {};
+
+    for (const nodeId of ids) {
+      const referenceColumn: number | null = this._getReferenceColumn(
+        nodeId,
+        adjacency,
+        referenceLayerSet,
+        columnMap,
+      );
+      rawTargetColumns[nodeId] = referenceColumn ?? fallbackColumns[nodeId];
+    }
+
+    const orderedNodeIds: string[] = [...ids].sort(
+      (leftNodeId: string, rightNodeId: string): number => {
+        const columnDelta: number =
+          rawTargetColumns[leftNodeId] - rawTargetColumns[rightNodeId];
+
+        if (Math.abs(columnDelta) > 1e-6) {
+          return columnDelta;
+        }
+
+        return fallbackColumns[leftNodeId] - fallbackColumns[rightNodeId];
+      },
     );
-    const fittedPositions: number[] =
+    const offsets: number[] = orderedNodeIds.map(
+      (nodeId: string, index: number): number => {
+        void nodeId;
+        return index;
+      },
+    );
+
+    for (const nodeId of orderedNodeIds) {
+      targetColumns.push(rawTargetColumns[nodeId]);
+    }
+
+    const transformedTargets: number[] = targetColumns.map(
+      (targetColumn: number, index: number): number =>
+        targetColumn - offsets[index],
+    );
+    const fittedColumns: number[] =
+      this._fitNonDecreasingSequence(transformedTargets);
+
+    orderedNodeIds.forEach((nodeId: string, index: number): void => {
+      columnMap[nodeId] = fittedColumns[index] + offsets[index];
+    });
+
+    this._shiftLayerColumnsToTargets(orderedNodeIds, targetColumns, columnMap);
+    this._centerSiblingGroups(
+      orderedNodeIds,
+      referenceLayerIds,
+      adjacency,
+      columnMap,
+    );
+  }
+
+  private _realignLayerColumns(
+    ids: string[],
+    referenceLayerIds: string[],
+    adjacency: Record<string, string[]>,
+    columnMap: Record<string, number>,
+  ): void {
+    if (ids.length === 0 || referenceLayerIds.length === 0) {
+      return;
+    }
+
+    const referenceLayerSet: SSet<string> = new SSet<string>(referenceLayerIds);
+    const currentColumns: Record<string, number> = {};
+
+    ids.forEach((nodeId: string): void => {
+      currentColumns[nodeId] = columnMap[nodeId] ?? 0;
+    });
+
+    const orderedNodeIds: string[] = [...ids].sort(
+      (leftNodeId: string, rightNodeId: string): number => {
+        const leftTarget: number =
+          this._getReferenceColumn(
+            leftNodeId,
+            adjacency,
+            referenceLayerSet,
+            columnMap,
+          ) ?? currentColumns[leftNodeId];
+        const rightTarget: number =
+          this._getReferenceColumn(
+            rightNodeId,
+            adjacency,
+            referenceLayerSet,
+            columnMap,
+          ) ?? currentColumns[rightNodeId];
+        const targetDelta: number = leftTarget - rightTarget;
+
+        if (Math.abs(targetDelta) > 1e-6) {
+          return targetDelta;
+        }
+
+        return currentColumns[leftNodeId] - currentColumns[rightNodeId];
+      },
+    );
+    const targetColumns: number[] = orderedNodeIds.map(
+      (nodeId: string): number =>
+        this._getReferenceColumn(
+          nodeId,
+          adjacency,
+          referenceLayerSet,
+          columnMap,
+        ) ?? currentColumns[nodeId],
+    );
+    const offsets: number[] = orderedNodeIds.map(
+      (nodeId: string, index: number): number => {
+        void nodeId;
+        return index;
+      },
+    );
+    const transformedTargets: number[] = targetColumns.map(
+      (targetColumn: number, index: number): number =>
+        targetColumn - offsets[index],
+    );
+    const fittedColumns: number[] =
+      this._fitNonDecreasingSequence(transformedTargets);
+
+    orderedNodeIds.forEach((nodeId: string, index: number): void => {
+      columnMap[nodeId] = fittedColumns[index] + offsets[index];
+    });
+
+    this._shiftLayerColumnsToTargets(orderedNodeIds, targetColumns, columnMap);
+    this._centerSiblingGroups(
+      orderedNodeIds,
+      referenceLayerIds,
+      adjacency,
+      columnMap,
+    );
+  }
+
+  private _centerSiblingGroups(
+    ids: string[],
+    referenceLayerIds: string[],
+    adjacency: Record<string, string[]>,
+    columnMap: Record<string, number>,
+  ): void {
+    if (ids.length < 2 || referenceLayerIds.length === 0) {
+      return;
+    }
+
+    const referenceLayerSet: SSet<string> = new SSet<string>(referenceLayerIds);
+    const groupMap: Record<string, string[]> = {};
+    const targetColumns: Record<string, number> = {};
+
+    ids.forEach((nodeId: string): void => {
+      targetColumns[nodeId] = columnMap[nodeId] ?? 0;
+      const signatureNodeIds: string[] = (adjacency[nodeId] ?? [])
+        .filter((adjacentNodeId: string): boolean =>
+          referenceLayerSet.has(adjacentNodeId),
+        )
+        .sort();
+
+      if (signatureNodeIds.length === 0) {
+        return;
+      }
+
+      const groupKey: string = signatureNodeIds.join('|');
+
+      if (!(groupKey in groupMap)) {
+        groupMap[groupKey] = [];
+      }
+
+      groupMap[groupKey].push(nodeId);
+    });
+
+    for (const [groupKey, groupNodeIds] of Object.entries(groupMap)) {
+      if (groupNodeIds.length < 2) {
+        continue;
+      }
+
+      const referenceNodeIds: string[] = groupKey.split('|');
+      const targetCenter: number =
+        referenceNodeIds.reduce(
+          (sum: number, referenceNodeId: string): number =>
+            sum + (columnMap[referenceNodeId] ?? 0),
+          0,
+        ) / referenceNodeIds.length;
+      const currentCenter: number =
+        groupNodeIds.reduce(
+          (sum: number, nodeId: string): number =>
+            sum + (columnMap[nodeId] ?? 0),
+          0,
+        ) / groupNodeIds.length;
+      const shift: number = targetCenter - currentCenter;
+
+      groupNodeIds.forEach((nodeId: string): void => {
+        targetColumns[nodeId] += shift;
+      });
+    }
+
+    const adjustedTargets: number[] = ids.map(
+      (nodeId: string): number => targetColumns[nodeId],
+    );
+    const offsets: number[] = ids.map(
+      (nodeId: string, index: number): number => {
+        void nodeId;
+        return index;
+      },
+    );
+    const transformedTargets: number[] = adjustedTargets.map(
+      (targetColumn: number, index: number): number =>
+        targetColumn - offsets[index],
+    );
+    const fittedColumns: number[] =
       this._fitNonDecreasingSequence(transformedTargets);
 
     ids.forEach((nodeId: string, index: number): void => {
-      layoutNodes[nodeId].position.x = fittedPositions[index] + offsets[index];
+      columnMap[nodeId] = fittedColumns[index] + offsets[index];
     });
+  }
 
-    const targetCenter: number = this._getTargetCenter(
-      ids,
-      targetPositions,
-      layoutNodes,
+  private _buildFallbackColumns(ids: string[]): Record<string, number> {
+    const fallbackColumns: Record<string, number> = {};
+    const visibleIds: string[] = this._getVisibleNodeIds(ids);
+
+    if (visibleIds.length === 0) {
+      ids.forEach((nodeId: string): void => {
+        fallbackColumns[nodeId] = 0;
+      });
+      return fallbackColumns;
+    }
+
+    let currentColumn: number = -(visibleIds.length - 1) / 2;
+
+    for (const nodeId of visibleIds) {
+      fallbackColumns[nodeId] = currentColumn;
+      currentColumn += 1;
+    }
+
+    let lastVisibleNodeId: string = visibleIds[0];
+
+    for (const nodeId of ids) {
+      if (!HierarchyDummyNode.isId(nodeId)) {
+        lastVisibleNodeId = nodeId;
+        continue;
+      }
+
+      fallbackColumns[nodeId] = fallbackColumns[lastVisibleNodeId];
+    }
+
+    return fallbackColumns;
+  }
+
+  private _getReferenceColumn(
+    nodeId: string,
+    adjacency: Record<string, string[]>,
+    referenceLayerSet: SSet<string>,
+    columnMap: Record<string, number>,
+  ): number | null {
+    const adjacentNodeIds: string[] = (adjacency[nodeId] ?? []).filter(
+      (adjacentNodeId: string): boolean =>
+        referenceLayerSet.has(adjacentNodeId),
     );
-    const horizontalBounds: BoundingBox = BoundingBox.fromNodes(
-      ids,
-      layoutNodes,
+
+    if (adjacentNodeIds.length === 0) {
+      return null;
+    }
+
+    return (
+      adjacentNodeIds.reduce(
+        (sum: number, adjacentNodeId: string): number =>
+          sum + (columnMap[adjacentNodeId] ?? 0),
+        0,
+      ) / adjacentNodeIds.length
     );
-    this._shiftNodes(ids, layoutNodes, targetCenter - horizontalBounds.centerX);
   }
 
   private _fitNonDecreasingSequence(values: number[]): number[] {
@@ -208,7 +406,7 @@ export class HierarchyNodePlacement {
         endIndex: index,
         sum: value,
         count: 1,
-        value: value,
+        value,
       });
 
       while (blocks.length > 1) {
@@ -242,390 +440,52 @@ export class HierarchyNodePlacement {
     return fittedValues;
   }
 
-  private _optimizeNodeOrder(
-    componentLayers: Partial<Record<number, string[]>>,
-    sortedLayerIds: number[],
-    nodeLayerMap: Record<string, number>,
-    layoutNodes: NodeMap,
-    graph: HierarchyAdjacencyGraph,
-  ): void {
-    for (let sweep: number = 0; sweep < this._config.orderSweeps; sweep++) {
-      let changed: boolean = false;
-
-      for (const layerId of sortedLayerIds) {
-        const layerNodeIds: string[] = componentLayers[layerId] ?? [];
-
-        for (let index: number = 0; index < layerNodeIds.length - 1; index++) {
-          const previousPositions: Record<string, number> =
-            this._createPositionSnapshot(layerNodeIds, layoutNodes);
-          const previousScore: number = this._calculateLocalLayerScore(
-            layerId,
-            componentLayers,
-            sortedLayerIds,
-            nodeLayerMap,
-            layoutNodes,
-            graph,
-          );
-
-          [layerNodeIds[index], layerNodeIds[index + 1]] = [
-            layerNodeIds[index + 1],
-            layerNodeIds[index],
-          ];
-
-          this._optimizeLayerPositions(layerNodeIds, layoutNodes, graph);
-
-          const nextScore: number = this._calculateLocalLayerScore(
-            layerId,
-            componentLayers,
-            sortedLayerIds,
-            nodeLayerMap,
-            layoutNodes,
-            graph,
-          );
-
-          if (nextScore + 1e-6 < previousScore) {
-            changed = true;
-            continue;
-          }
-
-          [layerNodeIds[index], layerNodeIds[index + 1]] = [
-            layerNodeIds[index + 1],
-            layerNodeIds[index],
-          ];
-          this._restorePositionSnapshot(previousPositions, layoutNodes);
-        }
-      }
-
-      if (!changed) {
-        break;
-      }
-    }
-  }
-
-  private _calculateLayoutScore(
-    componentLayers: Partial<Record<number, string[]>>,
-    sortedLayerIds: number[],
-    nodeLayerMap: Record<string, number>,
-    layoutNodes: NodeMap,
-    graph: HierarchyAdjacencyGraph,
-  ): number {
-    let score: number = 0;
-
-    for (let i: number = 0; i < sortedLayerIds.length - 1; i++) {
-      score += this._calculateLayerPairScore(
-        componentLayers[sortedLayerIds[i]] ?? [],
-        componentLayers[sortedLayerIds[i + 1]] ?? [],
-        nodeLayerMap,
-        layoutNodes,
-        graph,
-      );
-    }
-
-    return score;
-  }
-
-  private _balanceLayerCenters(
-    componentLayers: Partial<Record<number, string[]>>,
-    sortedLayerIds: number[],
-    layoutNodes: NodeMap,
-  ): void {
-    const balanceSweeps: number = Math.max(
-      Math.floor(this._config.positionSweeps / 2),
-      2,
-    );
-
-    for (let sweep: number = 0; sweep < balanceSweeps; sweep++) {
-      for (
-        let layerIndex: number = 0;
-        layerIndex < sortedLayerIds.length;
-        layerIndex++
-      ) {
-        const layerId: number = sortedLayerIds[layerIndex];
-        const nodeIds: string[] = componentLayers[layerId] ?? [];
-        const desiredCenter: number | null = this._getDesiredLayerCenter(
-          layerIndex,
-          componentLayers,
-          sortedLayerIds,
-          layoutNodes,
-        );
-
-        if (desiredCenter == null) {
-          continue;
-        }
-
-        const currentCenter: number | null = this._getLayerCenter(
-          nodeIds,
-          layoutNodes,
-        );
-
-        if (currentCenter == null) {
-          continue;
-        }
-
-        this._shiftNodes(nodeIds, layoutNodes, desiredCenter - currentCenter);
-      }
-    }
-  }
-
-  private _calculateLocalLayerScore(
-    layerId: number,
-    componentLayers: Partial<Record<number, string[]>>,
-    sortedLayerIds: number[],
-    nodeLayerMap: Record<string, number>,
-    layoutNodes: NodeMap,
-    graph: HierarchyAdjacencyGraph,
-  ): number {
-    const layerIndex: number = sortedLayerIds.indexOf(layerId);
-    let score: number = 0;
-
-    if (layerIndex > 0) {
-      score += this._calculateLayerPairScore(
-        componentLayers[sortedLayerIds[layerIndex - 1]] ?? [],
-        componentLayers[layerId] ?? [],
-        nodeLayerMap,
-        layoutNodes,
-        graph,
-      );
-    }
-
-    if (layerIndex < sortedLayerIds.length - 1) {
-      score += this._calculateLayerPairScore(
-        componentLayers[layerId] ?? [],
-        componentLayers[sortedLayerIds[layerIndex + 1]] ?? [],
-        nodeLayerMap,
-        layoutNodes,
-        graph,
-      );
-    }
-
-    return score;
-  }
-
-  private _calculateLayerPairScore(
-    upperLayerIds: string[],
-    lowerLayerIds: string[],
-    nodeLayerMap: Record<string, number>,
-    layoutNodes: NodeMap,
-    graph: HierarchyAdjacencyGraph,
-  ): number {
-    const lowerLayerSet: SSet<string> = new SSet<string>(lowerLayerIds);
-    const edges: { startNodeId: string; endNodeId: string }[] = [];
-
-    for (const startNodeId of upperLayerIds) {
-      for (const endNodeId of graph.adj[startNodeId] ?? []) {
-        if (
-          lowerLayerSet.has(endNodeId) &&
-          nodeLayerMap[endNodeId] === nodeLayerMap[startNodeId] + 1
-        ) {
-          edges.push({ startNodeId, endNodeId });
-        }
-      }
-    }
-
-    return (
-      this._countCrossings(edges, layoutNodes) * this._config.crossingWeight +
-      this._sumHorizontalEdgeLengths(edges, layoutNodes)
-    );
-  }
-
-  private _countCrossings(
-    edges: { startNodeId: string; endNodeId: string }[],
-    layoutNodes: NodeMap,
-  ): number {
-    let crossings: number = 0;
-
-    for (let i: number = 0; i < edges.length; i++) {
-      for (let j: number = i + 1; j < edges.length; j++) {
-        const firstEdge: { startNodeId: string; endNodeId: string } = edges[i];
-        const secondEdge: { startNodeId: string; endNodeId: string } = edges[j];
-        const startDelta: number =
-          layoutNodes[firstEdge.startNodeId].position.x -
-          layoutNodes[secondEdge.startNodeId].position.x;
-        const endDelta: number =
-          layoutNodes[firstEdge.endNodeId].position.x -
-          layoutNodes[secondEdge.endNodeId].position.x;
-
-        if (startDelta * endDelta < 0) {
-          crossings++;
-        }
-      }
-    }
-
-    return crossings;
-  }
-
-  private _sumHorizontalEdgeLengths(
-    edges: { startNodeId: string; endNodeId: string }[],
-    layoutNodes: NodeMap,
-  ): number {
-    return edges.reduce(
-      (sum: number, edge: { startNodeId: string; endNodeId: string }): number =>
-        sum +
-        Math.pow(
-          layoutNodes[edge.startNodeId].position.x -
-            layoutNodes[edge.endNodeId].position.x,
-          2,
-        ),
-      0,
-    );
-  }
-
-  private _getMedianAdjacentPosition(
-    nodeId: string,
-    graph: HierarchyAdjacencyGraph,
-    layoutNodes: NodeMap,
-  ): number | null {
-    const adjacentNodeIds: string[] = [
-      ...(graph.revAdj[nodeId] ?? []),
-      ...(graph.adj[nodeId] ?? []),
-    ];
-
-    if (adjacentNodeIds.length === 0) {
-      return null;
-    }
-
-    const positions: number[] = adjacentNodeIds
-      .map(
-        (adjacentNodeId: string): number =>
-          layoutNodes[adjacentNodeId].position.x,
-      )
-      .sort((left: number, right: number): number => left - right);
-    const middleIndex: number = Math.floor(positions.length / 2);
-
-    if (positions.length % 2 === 1) {
-      return positions[middleIndex];
-    }
-
-    return (positions[middleIndex - 1] + positions[middleIndex]) / 2;
-  }
-
-  private _getTargetCenter(
+  private _shiftLayerColumnsToTargets(
     ids: string[],
-    targetPositions: Record<string, number>,
-    layoutNodes: NodeMap,
-  ): number {
-    const visibleIds: string[] = this._getVisibleNodeIds(ids);
+    targetColumns: number[],
+    columnMap: Record<string, number>,
+  ): void {
+    if (ids.length === 0 || targetColumns.length === 0) {
+      return;
+    }
+
+    let totalOffset: number = 0;
+
+    ids.forEach((nodeId: string, index: number): void => {
+      totalOffset += targetColumns[index] - columnMap[nodeId];
+    });
+
+    const meanOffset: number = totalOffset / ids.length;
+
+    if (Math.abs(meanOffset) <= 1e-6) {
+      return;
+    }
+
+    ids.forEach((nodeId: string): void => {
+      columnMap[nodeId] += meanOffset;
+    });
+  }
+
+  private _getColumnStep(nodeIds: string[], layoutNodes: NodeMap): number {
+    const visibleIds: string[] = this._getVisibleNodeIds(nodeIds);
 
     if (visibleIds.length === 0) {
-      return 0;
+      return this._config.nodeSpacing;
     }
 
-    let minX: number = Infinity;
-    let maxX: number = -Infinity;
+    const maximumDiameter: number = visibleIds.reduce(
+      (maxDiameter: number, nodeId: string): number =>
+        Math.max(maxDiameter, layoutNodes[nodeId].radius * 2),
+      0,
+    );
 
-    for (const nodeId of visibleIds) {
-      minX = Math.min(
-        minX,
-        targetPositions[nodeId] - layoutNodes[nodeId].radius,
-      );
-      maxX = Math.max(
-        maxX,
-        targetPositions[nodeId] + layoutNodes[nodeId].radius,
-      );
-    }
-
-    return (minX + maxX) / 2;
+    return maximumDiameter + this._config.nodeSpacing;
   }
 
   private _getVisibleNodeIds(ids: string[]): string[] {
     return ids.filter(
       (nodeId: string): boolean => !HierarchyDummyNode.isId(nodeId),
     );
-  }
-
-  private _getDesiredLayerCenter(
-    layerIndex: number,
-    componentLayers: Partial<Record<number, string[]>>,
-    sortedLayerIds: number[],
-    layoutNodes: NodeMap,
-  ): number | null {
-    const neighborCenters: number[] = [];
-
-    if (layerIndex > 0) {
-      const upperCenter: number | null = this._getLayerCenter(
-        componentLayers[sortedLayerIds[layerIndex - 1]] ?? [],
-        layoutNodes,
-      );
-
-      if (upperCenter != null) {
-        neighborCenters.push(upperCenter);
-      }
-    }
-
-    if (layerIndex < sortedLayerIds.length - 1) {
-      const lowerCenter: number | null = this._getLayerCenter(
-        componentLayers[sortedLayerIds[layerIndex + 1]] ?? [],
-        layoutNodes,
-      );
-
-      if (lowerCenter != null) {
-        neighborCenters.push(lowerCenter);
-      }
-    }
-
-    if (neighborCenters.length === 0) {
-      return null;
-    }
-
-    return (
-      neighborCenters.reduce(
-        (partialSum: number, neighborCenter: number): number =>
-          partialSum + neighborCenter,
-        0,
-      ) / neighborCenters.length
-    );
-  }
-
-  private _getLayerCenter(
-    nodeIds: string[],
-    layoutNodes: NodeMap,
-  ): number | null {
-    const visibleIds: string[] = this._getVisibleNodeIds(nodeIds);
-
-    if (visibleIds.length === 0) {
-      return null;
-    }
-
-    return BoundingBox.fromNodes(visibleIds, layoutNodes).centerX;
-  }
-
-  private _getLayerWidth(ids: string[], layoutNodes: NodeMap): number {
-    const visibleIds: string[] = this._getVisibleNodeIds(ids);
-
-    if (visibleIds.length === 0) {
-      return 0;
-    }
-
-    return visibleIds.reduce(
-      (width: number, nodeId: string, index: number): number => {
-        const diameter: number = layoutNodes[nodeId].radius * 2;
-
-        if (index === 0) {
-          return diameter;
-        }
-
-        return width + this._config.nodeSpacing + diameter;
-      },
-      0,
-    );
-  }
-
-  private _getMinimumNodeDistance(
-    leftNodeId: string,
-    rightNodeId: string,
-    layoutNodes: NodeMap,
-  ): number {
-    const leftRadius: number = layoutNodes[leftNodeId].radius;
-    const rightRadius: number = layoutNodes[rightNodeId].radius;
-
-    if (
-      HierarchyDummyNode.isId(leftNodeId) ||
-      HierarchyDummyNode.isId(rightNodeId)
-    ) {
-      return leftRadius + rightRadius;
-    }
-
-    return leftRadius + rightRadius + this._config.nodeSpacing;
   }
 
   private _shiftNodes(
@@ -637,43 +497,6 @@ export class HierarchyNodePlacement {
     for (const nodeId of nodeIds) {
       nodes[nodeId].position.x += offsetX;
       nodes[nodeId].position.y += offsetY;
-    }
-  }
-
-  private _buildNodeLayerMap(
-    componentLayers: Partial<Record<number, string[]>>,
-    sortedLayerIds: number[],
-  ): Record<string, number> {
-    const nodeLayerMap: Record<string, number> = {};
-
-    for (const layerId of sortedLayerIds) {
-      for (const nodeId of componentLayers[layerId] ?? []) {
-        nodeLayerMap[nodeId] = layerId;
-      }
-    }
-
-    return nodeLayerMap;
-  }
-
-  private _createPositionSnapshot(
-    nodeIds: string[],
-    layoutNodes: NodeMap,
-  ): Record<string, number> {
-    const snapshot: Record<string, number> = {};
-
-    for (const nodeId of nodeIds) {
-      snapshot[nodeId] = layoutNodes[nodeId].position.x;
-    }
-
-    return snapshot;
-  }
-
-  private _restorePositionSnapshot(
-    snapshot: Record<string, number>,
-    layoutNodes: NodeMap,
-  ): void {
-    for (const [nodeId, positionX] of Object.entries(snapshot)) {
-      layoutNodes[nodeId].position.x = positionX;
     }
   }
 }
