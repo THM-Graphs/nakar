@@ -1,78 +1,53 @@
+import ElkConstructor from 'elkjs/lib/main';
+import {
+  ELK as ElkLayoutEngine,
+  ElkExtendedEdge,
+  ElkNode,
+} from 'elkjs/lib/elk-api';
+import { LayoutOptions } from 'elkjs';
 import { PhysicalEdge } from '../physical-graph/PhysicalEdge';
 import { PhysicalGraph } from '../physical-graph/PhysicalGraph';
 import { PhysicalNode } from '../physical-graph/PhysicalNode';
-import { SMap } from '../../map/Map';
-import { SSet } from '../../set/Set';
-import { BoundingBox } from './BoundingBox';
-import { HierarchyAdjacencyGraph } from './HierarchyAdjacencyGraph';
-import { HierarchyComponentLayouter } from './HierarchyComponentLayouter';
-import { HierarchyLayoutConfig } from './HierarchyLayoutConfig';
 
 type NodeMap = Record<string, PhysicalNode>;
 
-interface ComponentLayoutResult {
-  nodeIds: string[];
-  nodes: NodeMap;
-  bounds: BoundingBox;
-  originalCenterX: number;
+interface ElkHierarchyGraph extends ElkNode {
+  children: ElkNode[];
+  edges: ElkExtendedEdge[];
 }
 
-interface ComponentPlacement {
-  component: ComponentLayoutResult;
-  column: number;
-  row: number;
-}
+type LaidOutElkHierarchyGraph = Omit<ElkHierarchyGraph, 'children'> & {
+  children?: ElkNode[];
+};
 
 export class HierarchyGraphLayoutEngine {
-  private readonly _componentLayouter: HierarchyComponentLayouter;
+  private readonly _elk: ElkLayoutEngine;
 
-  public constructor(
-    private readonly _config: HierarchyLayoutConfig = HierarchyLayoutConfig.createDefault(),
-  ) {
-    this._componentLayouter = new HierarchyComponentLayouter(_config);
+  public constructor() {
+    this._elk = new ElkConstructor();
   }
 
-  public layout(physicalGraph: PhysicalGraph, targetEdgeType: string): void {
+  public async layout(
+    physicalGraph: PhysicalGraph,
+    targetEdgeType: string,
+  ): Promise<void> {
     const nodes: NodeMap = this._collectNodes(physicalGraph);
+    const nodeIds: string[] = Object.keys(nodes);
+
+    if (nodeIds.length === 0) {
+      return;
+    }
+
     const edges: PhysicalEdge[] = this._collectEdges(
       physicalGraph,
       targetEdgeType,
     );
-    const graph: HierarchyAdjacencyGraph =
-      HierarchyAdjacencyGraph.fromNodesAndEdges(nodes, edges);
-    const components: string[][] = graph.getWeaklyConnectedComponents();
-    const componentLayouts: ComponentLayoutResult[] = [];
+    const laidOutGraph: LaidOutElkHierarchyGraph = await this._elk.layout(
+      this._createGraph(nodeIds, nodes, edges),
+    );
 
-    for (const componentNodeIds of components) {
-      const componentNodeIdsSet: SSet<string> = new SSet<string>(
-        componentNodeIds,
-      );
-      const componentNodes: NodeMap = this._cloneNodeMap(
-        nodes,
-        componentNodeIds,
-      );
-      const componentEdges: PhysicalEdge[] = edges.filter(
-        (edge: PhysicalEdge): boolean =>
-          componentNodeIdsSet.has(edge.startNodeId) &&
-          componentNodeIdsSet.has(edge.endNodeId),
-      );
-
-      this._componentLayouter.layout(componentNodes, componentEdges);
-      componentLayouts.push({
-        nodeIds: componentNodeIds,
-        nodes: componentNodes,
-        bounds: BoundingBox.fromNodes(componentNodeIds, componentNodes),
-        originalCenterX: this._getOriginalCenterX(componentNodeIds, nodes),
-      });
-    }
-
-    const finalNodes: NodeMap = {};
-    this._placeComponentsInGrid(componentLayouts, finalNodes);
-
-    for (const [nodeId, finalNode] of Object.entries(finalNodes)) {
-      nodes[nodeId].position.x = finalNode.position.x;
-      nodes[nodeId].position.y = finalNode.position.y;
-    }
+    this._applyLayout(nodes, laidOutGraph);
+    this._centerBoundingBox(nodeIds, nodes);
   }
 
   private _collectNodes(physicalGraph: PhysicalGraph): NodeMap {
@@ -99,214 +74,99 @@ export class HierarchyGraphLayoutEngine {
     );
   }
 
-  private _cloneNodeMap(nodes: NodeMap, nodeIds: string[]): NodeMap {
-    const clonedNodes: NodeMap = {};
+  private _createGraph(
+    nodeIds: string[],
+    nodes: NodeMap,
+    edges: PhysicalEdge[],
+  ): ElkHierarchyGraph {
+    const layoutDiameter: number = this._getMaximumNodeDiameter(nodeIds, nodes);
+
+    return {
+      id: 'root',
+      layoutOptions: this._createElkLayoutOptions(),
+      children: nodeIds.map(
+        (nodeId: string): ElkNode => ({
+          id: nodeId,
+          width: layoutDiameter,
+          height: layoutDiameter,
+        }),
+      ),
+      edges: edges
+        .filter(
+          (edge: PhysicalEdge): boolean =>
+            !edge.isLoop &&
+            edge.startNodeId in nodes &&
+            edge.endNodeId in nodes &&
+            edge.startNodeId !== edge.endNodeId,
+        )
+        .map(
+          (edge: PhysicalEdge): ElkExtendedEdge => ({
+            id: edge.id,
+            sources: [edge.startNodeId],
+            targets: [edge.endNodeId],
+          }),
+        ),
+    };
+  }
+
+  private _getMaximumNodeDiameter(nodeIds: string[], nodes: NodeMap): number {
+    return nodeIds.reduce(
+      (maximumDiameter: number, nodeId: string): number =>
+        Math.max(maximumDiameter, nodes[nodeId].radius * 2),
+      0,
+    );
+  }
+
+  private _createElkLayoutOptions(): LayoutOptions {
+    return {
+      'org.eclipse.elk.algorithm': 'layered',
+      'org.eclipse.elk.direction': 'DOWN',
+      'org.eclipse.elk.spacing.nodeNode': '50',
+      'org.eclipse.elk.spacing.componentComponent': '250',
+      'org.eclipse.elk.layered.spacing.nodeNodeBetweenLayers': '450',
+      'org.eclipse.elk.layered.crossingMinimization.strategy': 'LAYER_SWEEP',
+      'org.eclipse.elk.layered.nodePlacement.strategy': 'NETWORK_SIMPLEX',
+      'org.eclipse.elk.layered.nodePlacement.favorStraightEdges': 'true',
+      'org.eclipse.elk.separateConnectedComponents': 'true',
+    };
+  }
+
+  private _applyLayout(nodes: NodeMap, graph: LaidOutElkHierarchyGraph): void {
+    for (const child of graph.children ?? []) {
+      const node: PhysicalNode = nodes[child.id];
+
+      node.position.x = (child.x ?? 0) + (child.width ?? 0) / 2;
+      node.position.y = (child.y ?? 0) + (child.height ?? 0) / 2;
+    }
+  }
+
+  private _centerBoundingBox(nodeIds: string[], nodes: NodeMap): void {
+    let minX: number = Infinity;
+    let maxX: number = -Infinity;
+    let minY: number = Infinity;
+    let maxY: number = -Infinity;
 
     for (const nodeId of nodeIds) {
-      clonedNodes[nodeId] = {
-        ...nodes[nodeId],
-        position: {
-          x: nodes[nodeId].position.x,
-          y: nodes[nodeId].position.y,
-        },
-      };
+      const node: PhysicalNode = nodes[nodeId];
+
+      minX = Math.min(minX, node.position.x - node.radius);
+      maxX = Math.max(maxX, node.position.x + node.radius);
+      minY = Math.min(minY, node.position.y - node.radius);
+      maxY = Math.max(maxY, node.position.y + node.radius);
     }
 
-    return clonedNodes;
-  }
+    const offsetX: number = (minX + maxX) / 2;
+    const offsetY: number = (minY + maxY) / 2;
 
-  private _getOriginalCenterX(nodeIds: string[], nodes: NodeMap): number {
-    return BoundingBox.fromNodes(nodeIds, nodes).centerX;
-  }
+    for (const nodeId of nodeIds) {
+      const node: PhysicalNode = nodes[nodeId];
 
-  private _placeComponentsInGrid(
-    componentLayouts: ComponentLayoutResult[],
-    finalNodes: NodeMap,
-  ): void {
-    if (componentLayouts.length === 0) {
-      return;
-    }
-
-    const sortedComponents: ComponentLayoutResult[] = [
-      ...componentLayouts,
-    ].sort(
-      (left: ComponentLayoutResult, right: ComponentLayoutResult): number =>
-        right.bounds.width * right.bounds.height -
-        left.bounds.width * left.bounds.height,
-    );
-    const placements: ComponentPlacement[] =
-      this._createGridPlacements(sortedComponents);
-    const columnWidths: SMap<number, number> =
-      this._calculateColumnWidths(placements);
-    const rowHeights: SMap<number, number> =
-      this._calculateRowHeights(placements);
-    const columnCenters: SMap<number, number> =
-      this._calculateAxisCenters(columnWidths);
-    const rowCenters: SMap<number, number> =
-      this._calculateAxisCenters(rowHeights);
-
-    for (const placement of placements) {
-      const centerX: number = columnCenters.get(placement.column) ?? 0;
-      const centerY: number = rowCenters.get(placement.row) ?? 0;
-      this._placeComponent(placement.component, centerX, centerY, finalNodes);
+      node.position.x = this._snapCoordinate(node.position.x - offsetX);
+      node.position.y = this._snapCoordinate(node.position.y - offsetY);
     }
   }
 
-  private _placeComponent(
-    componentLayout: ComponentLayoutResult,
-    centerX: number,
-    centerY: number,
-    finalNodes: NodeMap,
-  ): void {
-    const componentOffsetX: number = centerX - componentLayout.bounds.centerX;
-    const componentOffsetY: number = centerY - componentLayout.bounds.centerY;
-
-    for (const nodeId of componentLayout.nodeIds) {
-      finalNodes[nodeId] = {
-        ...componentLayout.nodes[nodeId],
-        position: {
-          x: componentLayout.nodes[nodeId].position.x + componentOffsetX,
-          y: componentLayout.nodes[nodeId].position.y + componentOffsetY,
-        },
-      };
-    }
-  }
-
-  private _createGridPlacements(
-    sortedComponents: ComponentLayoutResult[],
-  ): ComponentPlacement[] {
-    const placements: ComponentPlacement[] = [];
-
-    sortedComponents.forEach(
-      (component: ComponentLayoutResult, index: number): void => {
-        if (index === 0) {
-          placements.push({ component, column: 0, row: 0 });
-          return;
-        }
-
-        const slot: { column: number; row: number } = this._getSpiralSlot(
-          index - 1,
-        );
-        placements.push({
-          component,
-          column: slot.column,
-          row: slot.row,
-        });
-      },
-    );
-
-    return placements;
-  }
-
-  private _getSpiralSlot(index: number): { column: number; row: number } {
-    let column: number = 0;
-    let row: number = 0;
-    let directionIndex: number = 0;
-    let currentLegLength: number = 1;
-    let stepsTakenInLeg: number = 0;
-    let legsAtCurrentLength: number = 0;
-    const directions: { column: number; row: number }[] = [
-      { column: 1, row: 0 },
-      { column: 0, row: -1 },
-      { column: -1, row: 0 },
-      { column: 0, row: 1 },
-    ];
-
-    for (let step: number = 0; step <= index; step++) {
-      column += directions[directionIndex].column;
-      row += directions[directionIndex].row;
-      stepsTakenInLeg++;
-
-      if (stepsTakenInLeg === currentLegLength) {
-        stepsTakenInLeg = 0;
-        directionIndex = (directionIndex + 1) % directions.length;
-        legsAtCurrentLength++;
-
-        if (legsAtCurrentLength === 2) {
-          legsAtCurrentLength = 0;
-          currentLegLength++;
-        }
-      }
-    }
-
-    return { column, row };
-  }
-
-  private _calculateColumnWidths(
-    placements: ComponentPlacement[],
-  ): SMap<number, number> {
-    const widths: SMap<number, number> = new SMap<number, number>();
-
-    for (const placement of placements) {
-      widths.set(
-        placement.column,
-        Math.max(
-          widths.get(placement.column) ?? 0,
-          placement.component.bounds.width,
-        ),
-      );
-    }
-
-    return widths;
-  }
-
-  private _calculateRowHeights(
-    placements: ComponentPlacement[],
-  ): SMap<number, number> {
-    const heights: SMap<number, number> = new SMap<number, number>();
-
-    for (const placement of placements) {
-      heights.set(
-        placement.row,
-        Math.max(
-          heights.get(placement.row) ?? 0,
-          placement.component.bounds.height,
-        ),
-      );
-    }
-
-    return heights;
-  }
-
-  private _calculateAxisCenters(
-    sizes: SMap<number, number>,
-  ): SMap<number, number> {
-    const centers: SMap<number, number> = new SMap<number, number>();
-    const sortedIndices: number[] = [...sizes.keys()].sort(
-      (left: number, right: number): number => left - right,
-    );
-
-    centers.set(0, 0);
-
-    const maxPositiveIndex: number = Math.max(
-      0,
-      ...sortedIndices.filter((index: number): boolean => index > 0),
-    );
-    const minNegativeIndex: number = Math.min(
-      0,
-      ...sortedIndices.filter((index: number): boolean => index < 0),
-    );
-
-    for (let index: number = 1; index <= maxPositiveIndex; index++) {
-      centers.set(
-        index,
-        (centers.get(index - 1) ?? 0) +
-          (sizes.get(index - 1) ?? 0) / 2 +
-          this._config.componentSpacing +
-          (sizes.get(index) ?? 0) / 2,
-      );
-    }
-
-    for (let index: number = -1; index >= minNegativeIndex; index--) {
-      centers.set(
-        index,
-        (centers.get(index + 1) ?? 0) -
-          (sizes.get(index + 1) ?? 0) / 2 -
-          this._config.componentSpacing -
-          (sizes.get(index) ?? 0) / 2,
-      );
-    }
-
-    return centers;
+  private _snapCoordinate(value: number): number {
+    return Math.round(value);
   }
 }

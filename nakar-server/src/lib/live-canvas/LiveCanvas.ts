@@ -590,15 +590,16 @@ export class LiveCanvas {
                 { type: 'layout' },
                 (
                   data: Result<'api::post-scenario-action.post-scenario-action'>,
-                ): void => {
-                  match(data.layoutAlgorithm)
-                    .with('circle', (): void => {
+                ): Promise<void> | void => {
+                  return match(data.layoutAlgorithm)
+                    .returnType<Promise<void> | void>()
+                    .with('circle', (): Promise<void> | void => {
                       const label: string | null = data.label ?? null;
                       const radius: number | null = data.circleRadius ?? null;
                       if (label == null || radius == null) {
                         return;
                       }
-                      this._layout(
+                      return this._layout(
                         {
                           type: 'LayoutSpecificationCircleDto',
                           radius: radius,
@@ -607,12 +608,12 @@ export class LiveCanvas {
                         changeRecorder,
                       );
                     })
-                    .with('forceDirected', (): void => {
+                    .with('forceDirected', (): Promise<void> | void => {
                       const label: string | null = data.label ?? null;
                       if (label == null) {
                         return;
                       }
-                      this._layout(
+                      return this._layout(
                         {
                           type: 'LayoutSpecificationForceDirectedDto',
                           label: label,
@@ -620,13 +621,13 @@ export class LiveCanvas {
                         changeRecorder,
                       );
                     })
-                    .with('hierarchy', (): void => {
+                    .with('hierarchy', (): Promise<void> | void => {
                       const relationshipType: string | null =
                         data.relationshipType ?? null;
                       if (relationshipType == null) {
                         return;
                       }
-                      this._layout(
+                      return this._layout(
                         {
                           type: 'LayoutSpecificationHierarchyDto',
                           edgeType: relationshipType,
@@ -1162,12 +1163,12 @@ export class LiveCanvas {
 
   public layout(params: { layoutSpecification: LayoutSpecificationDto }): void {
     this._queue.addTask(
-      new TaskQueueTask('Layout label', (): void => {
+      new TaskQueueTask('Layout label', async (): Promise<void> => {
         const changeRecorder: LiveCanvasChangeRecorder =
           new LiveCanvasChangeRecorder();
         this._snapshot('Layout label', changeRecorder);
 
-        this._layout(params.layoutSpecification, changeRecorder);
+        await this._layout(params.layoutSpecification, changeRecorder);
 
         this._handleChangeRecorder(changeRecorder);
         this._triggerPhysicsSimluation({ amount: 'long' });
@@ -1919,13 +1920,14 @@ export class LiveCanvas {
     );
   }
 
-  private _layout(
+  private async _layout(
     layoutSpecification: LayoutSpecificationDto,
     changeRecorder: LiveCanvasChangeRecorder,
-  ): void {
+  ): Promise<void> {
     const graph: LiveCanvasUndoableData = this.getGraph();
 
-    match(layoutSpecification)
+    await match(layoutSpecification)
+      .returnType<Promise<void> | void>()
       .with(
         { type: 'LayoutSpecificationCircleDto' },
         (l: LayoutSpecificationCircleDto): void => {
@@ -1989,14 +1991,14 @@ export class LiveCanvas {
       )
       .with(
         { type: 'LayoutSpecificationHierarchyDto' },
-        (layout: LayoutSpecificationHierarchyDto): void => {
+        async (layout: LayoutSpecificationHierarchyDto): Promise<void> => {
           const physicalGraph: PhysicalGraph =
             this.data.undoableData.current.toPhysicalGraph(
               this.data.viewSettings,
             );
           const targetEdgeType: string = layout.edgeType;
 
-          new HierarchyGraphLayoutEngine().layout(
+          await new HierarchyGraphLayoutEngine().layout(
             physicalGraph,
             targetEdgeType,
           );
