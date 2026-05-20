@@ -250,17 +250,18 @@ export class HierarchyGraphLayoutEngine {
       'org.eclipse.elk.direction': 'DOWN',
       'org.eclipse.elk.spacing.nodeNode': '50',
       'org.eclipse.elk.spacing.componentComponent': '250',
-      'org.eclipse.elk.layered.spacing.nodeNodeBetweenLayers': '450',
-      'org.eclipse.elk.layered.crossingMinimization.strategy': 'LAYER_SWEEP',
+      'org.eclipse.elk.layered.spacing.nodeNodeBetweenLayers': '200',
+      'org.eclipse.elk.layered.crossingMinimization.strategy': 'NONE',
       'org.eclipse.elk.layered.considerModelOrder.strategy': 'NODES_AND_EDGES',
       'org.eclipse.elk.layered.crossingMinimization.forceNodeModelOrder':
         'true',
       'org.eclipse.elk.layered.nodePlacement.strategy': 'BRANDES_KOEPF',
       'org.eclipse.elk.layered.nodePlacement.favorStraightEdges': 'false',
       'org.eclipse.elk.layered.nodePlacement.bk.fixedAlignment': 'BALANCED',
-      'org.eclipse.elk.layered.nodePlacement.bk.edgeStraightening':
-        'IMPROVE_STRAIGHTNESS',
+      'org.eclipse.elk.layered.nodePlacement.bk.edgeStraightening': 'NONE',
       'org.eclipse.elk.separateConnectedComponents': 'true',
+      'org.eclipse.elk.layered.compaction.connectedComponents': 'true',
+      'org.eclipse.elk.thoroughness': '100',
     };
   }
 
