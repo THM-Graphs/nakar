@@ -15,6 +15,7 @@ import { DeleteElementsRequestBodyDto } from './dto/DeleteElementsRequestBodyDto
 import { ScenarioArgumentDto } from './dto/ScenarioArgumentDto';
 import { UnlockNodesRequestBodyDto } from './dto/UnlockNodesRequestBodyDto';
 import { FocusNodesRequestBodyDto } from './dto/FocusNodesRequestBodyDto';
+import { FocusRelationshipTypeRequestBodyDto } from './dto/FocusRelationshipTypeRequestBodyDto';
 import { RunQueryRequestBodyDto } from './dto/RunQueryRequestBodyDto';
 import { CompressNodesRequestBodyDto } from './dto/CompressNodesRequestBodyDto';
 import { LayoutRequestBodyDto } from './dto/LayoutRequestBodyDto';
@@ -130,6 +131,7 @@ export class ActionController {
 
   @Post('focus-nodes')
   @HttpCode(200)
+  @ApiBody({ type: FocusNodesRequestBodyDto })
   public focusNodes(
     @Param('canvasId') canvasId: string,
     @Body() body: FocusNodesRequestBodyDto,
@@ -137,6 +139,18 @@ export class ActionController {
     this._canvasService
       .getCanvasWithId(canvasId)
       .focusNodes({ nodeIds: body.nodes });
+  }
+
+  @Post('focus-relationship-type')
+  @HttpCode(200)
+  @ApiBody({ type: FocusRelationshipTypeRequestBodyDto })
+  public focusRelationshipType(
+    @Param('canvasId') canvasId: string,
+    @Body() body: FocusRelationshipTypeRequestBodyDto,
+  ): void {
+    this._canvasService
+      .getCanvasWithId(canvasId)
+      .focusRelationshipType({ relationshipType: body.relationshipType });
   }
 
   @Post('undo')

@@ -220,6 +220,10 @@ export type FocusNodesRequestBodyDto = {
     nodes: Array<(string)>;
 };
 
+export type FocusRelationshipTypeRequestBodyDto = {
+    relationshipType: string;
+};
+
 export type GetAuthResponseBodyDto = {
     username: string;
 };
@@ -1250,6 +1254,18 @@ export type ActionControllerFocusNodesData = {
 export type ActionControllerFocusNodesResponse = (unknown);
 
 export type ActionControllerFocusNodesError = unknown;
+
+export type ActionControllerFocusRelationshipTypeData = {
+    body: FocusRelationshipTypeRequestBodyDto;
+    path: {
+        canvasId: string;
+        roomId: string;
+    };
+};
+
+export type ActionControllerFocusRelationshipTypeResponse = (unknown);
+
+export type ActionControllerFocusRelationshipTypeError = unknown;
 
 export type ActionControllerUndoData = {
     path: {
