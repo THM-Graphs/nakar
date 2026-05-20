@@ -1,4 +1,4 @@
-export function CMSEmptyHint<T>(props: { list: T[] }) {
+export function CMSEmptyHint(props: { list: unknown[] }) {
   if (props.list.length > 0) {
     return null;
   } else {
