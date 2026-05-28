@@ -4,7 +4,7 @@ import {
   scenarioControllerCreateScenario,
   ScenarioDto,
   ScenarioGroupDto,
-} from "../../../src-gen";
+} from "api-client";
 import { Link, useNavigate } from "react-router";
 import { Router } from "../../routing/Router.ts";
 import { resultOrThrow } from "../data/resultOrThrow.ts";

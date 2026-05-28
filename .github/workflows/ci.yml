@@ -60,6 +60,11 @@ jobs:
           node-version: "24"
           cache: "npm"
           cache-dependency-path: ./nakar-client-web/package-lock.json
+      - name: Install api-client
+        run: |
+          cd nakar-client-web/packages/api-client
+          npm ci
+          npm run build
       - name: Install
         run: |
           cd nakar-client-web

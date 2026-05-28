@@ -1,6 +1,6 @@
 import { Action } from "./Action.ts";
 import { useBearStore } from "../../state/useBearStore.ts";
-import { NoteDto } from "../../../src-gen";
+import { NoteDto } from "api-client";
 
 type EditNoteActionParams = { note: NoteDto; isLoggedIn: boolean };
 export class EditNoteAction extends Action<EditNoteActionParams> {

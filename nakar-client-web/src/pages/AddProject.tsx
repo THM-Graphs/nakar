@@ -1,7 +1,7 @@
 import { Container, Form, Spinner, Stack } from "react-bootstrap";
 import { CMSNavbar } from "../shared/cms/CMSNavbar.tsx";
 import { useState } from "react";
-import { projectControllerCreateProject } from "../../src-gen";
+import { projectControllerCreateProject } from "api-client";
 import { resultOrThrow } from "../shared/data/resultOrThrow.ts";
 import { useNavigate } from "react-router";
 import { CMSErrorCard } from "../shared/cms/CMSErrorCard.tsx";

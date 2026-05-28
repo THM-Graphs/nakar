@@ -1,7 +1,7 @@
 import { Action, ActionShortcut } from "./Action.ts";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
 import { RelationshipTypeActionParams } from "./RelationshipTypeActionParams.ts";
-import { actionControllerFocusRelationshipType } from "../../../src-gen";
+import { actionControllerFocusRelationshipType } from "api-client";
 import { createAppShortcut } from "./createAppShortcut.ts";
 
 export class FocusRelationshipTypeAction extends Action<RelationshipTypeActionParams> {
@@ -9,7 +9,7 @@ export class FocusRelationshipTypeAction extends Action<RelationshipTypeActionPa
     new FocusRelationshipTypeAction();
 
   protected async action(input: RelationshipTypeActionParams): Promise<void> {
-    await resultOrThrow(
+    resultOrThrow(
       await actionControllerFocusRelationshipType({
         path: {
           roomId: input.roomContext.initialRoomData.id,

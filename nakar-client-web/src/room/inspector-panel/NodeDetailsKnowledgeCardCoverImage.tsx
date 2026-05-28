@@ -1,4 +1,4 @@
-import { NodeDto } from "../../../src-gen";
+import { NodeDto } from "api-client";
 import { Image, Stack } from "react-bootstrap";
 import { Link } from "react-router";
 import { useMemo } from "react";

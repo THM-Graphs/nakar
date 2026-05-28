@@ -16,7 +16,7 @@ import {
   ProjectPageDto,
   TestDatabaseConnectionResponseBodyDto,
   UpdateDatabaseConnectionRequestBodyDto,
-} from "../../../src-gen";
+} from "api-client";
 import { resultOrThrow } from "../data/resultOrThrow.ts";
 import clsx from "clsx";
 import { handleError } from "../error/handleError.ts";

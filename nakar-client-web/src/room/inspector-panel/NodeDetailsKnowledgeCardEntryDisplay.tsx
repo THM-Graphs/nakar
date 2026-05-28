@@ -1,7 +1,7 @@
 import { NodeDetailsKnowledgeCardEntry } from "./NodeDetailsKnowledgeCardEntry.ts";
 import { Fragment } from "react";
 import { NodeDetailsKnowledgeCardEntryValueDisplay } from "./NodeDetailsKnowledgeCardEntryValueDisplay.tsx";
-import { NodeDto } from "../../../src-gen";
+import { NodeDto } from "api-client";
 
 export function NodeDetailsKnowledgeCardEntryDisplay(props: {
   entry: NodeDetailsKnowledgeCardEntry;

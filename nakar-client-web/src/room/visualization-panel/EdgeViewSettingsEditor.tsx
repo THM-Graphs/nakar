@@ -6,7 +6,7 @@ import {
   actionControllerSetViewSettings,
   LiveCanvasEdgeViewSettingsDto,
   LiveCanvasViewSettingsDto,
-} from "../../../src-gen";
+} from "api-client";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
 import { useCanvasContext } from "../../pages/Canvas.tsx";
 import { NumberInput } from "../../shared/elements/NumberInput.tsx";

@@ -5,11 +5,7 @@ import "bootstrap-icons/font/bootstrap-icons.css";
 import "./index.css";
 import { createBrowserRouter, Outlet, RouterProvider } from "react-router";
 import { loadEnvOrDefault } from "./shared/env/env.ts";
-import {
-  authControllerGetAuth,
-  client as client,
-  redirectControllerGetUrl,
-} from "../src-gen";
+import { authControllerGetAuth, redirectControllerGetUrl } from "api-client";
 import { Start, StartLoader } from "./pages/Start.tsx";
 import { Canvas, CanvasLoader } from "./pages/Canvas.tsx";
 import { AppContext, AppContextData } from "./state/AppContextData.ts";
@@ -38,6 +34,7 @@ import {
   EditCommonPropertyLoader,
 } from "./pages/EditCommonProperty.tsx";
 import { LoadingPage } from "./pages/LoadingPage.tsx";
+import { client } from "api-client/client";
 
 async function bootstrap() {
   bootstrapTheme();

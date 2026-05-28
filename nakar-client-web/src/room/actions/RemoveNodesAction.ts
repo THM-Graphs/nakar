@@ -1,14 +1,14 @@
 import { Action, ActionShortcut } from "./Action.ts";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
 import { NodesActionParams } from "./NodesActionParams.ts";
-import { actionControllerDeleteElements } from "../../../src-gen";
+import { actionControllerDeleteElements } from "api-client";
 import { createAppShortcut } from "./createAppShortcut.ts";
 
 export class RemoveNodesAction extends Action<NodesActionParams> {
   public static shared: RemoveNodesAction = new RemoveNodesAction();
 
   protected async action(input: NodesActionParams): Promise<void> {
-    await resultOrThrow(
+    resultOrThrow(
       await actionControllerDeleteElements({
         path: {
           roomId: input.roomContext.initialRoomData.id,

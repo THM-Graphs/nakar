@@ -1,7 +1,7 @@
 import { Action, ActionShortcut } from "./Action.ts";
 import { LabelActionParams } from "./LabelActionParams.ts";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
-import { actionControllerCompressNodes } from "../../../src-gen";
+import { actionControllerCompressNodes } from "api-client";
 import { createAppShortcut } from "./createAppShortcut.ts";
 
 export class CompressLabelsAction extends Action<LabelActionParams> {

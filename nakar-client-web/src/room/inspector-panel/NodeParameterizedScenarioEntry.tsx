@@ -1,4 +1,4 @@
-import { NodeDto, ScenarioDto } from "../../../src-gen";
+import { NodeDto, ScenarioDto } from "api-client";
 import { useBearStore } from "../../state/useBearStore.ts";
 import { useCanvasContext } from "../../pages/Canvas.tsx";
 import { ActionNavbarButton } from "../actions/ActionNavbarButton.tsx";

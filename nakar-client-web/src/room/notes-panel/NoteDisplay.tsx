@@ -6,7 +6,7 @@ import { RemoveNoteAction } from "../actions/RemoveNoteAction.ts";
 import { useCanvasContext } from "../../pages/Canvas.tsx";
 import { DynamicList } from "../../shared/elements/DynamicList.tsx";
 import { EditNoteAction } from "../actions/EditNoteAction.ts";
-import { NoteDto } from "../../../src-gen";
+import { NoteDto } from "api-client";
 import { useIsLoggedIn } from "../../state/useIsLoggedIn.ts";
 import MDEditor from "@uiw/react-md-editor";
 

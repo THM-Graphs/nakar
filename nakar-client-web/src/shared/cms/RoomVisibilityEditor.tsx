@@ -1,4 +1,4 @@
-import { RoomDto } from "../../../src-gen";
+import { RoomDto } from "api-client";
 import { Card, Stack } from "react-bootstrap";
 import { RoomVisibilityDisplay } from "./RoomVisibilityDisplay.tsx";
 import { Fragment } from "react";

@@ -1,9 +1,5 @@
 import { Card, OverlayTrigger, Stack, Tooltip } from "react-bootstrap";
-import {
-  ProjectPageDto,
-  ScenarioDto,
-  ScenarioGroupDto,
-} from "../../../src-gen";
+import { ProjectPageDto, ScenarioDto, ScenarioGroupDto } from "api-client";
 import { CMSCardContent } from "./CMSCardContent.tsx";
 import { Link } from "react-router";
 import { Router } from "../../routing/Router.ts";

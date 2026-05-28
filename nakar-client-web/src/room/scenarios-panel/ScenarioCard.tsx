@@ -2,7 +2,7 @@ import { Card, Stack } from "react-bootstrap";
 import { ScenarioIcon } from "./ScenarioIcon.tsx";
 import { QueryDisplay } from "./QueryDisplay.tsx";
 import { ScenarioCardSection } from "./ScenarioCardSection.tsx";
-import { ScenarioDto, ScenarioGroupDto } from "../../../src-gen";
+import { ScenarioDto, ScenarioGroupDto } from "api-client";
 import { Link } from "react-router";
 import { useCanvasContext } from "../../pages/Canvas.tsx";
 import { Router } from "../../routing/Router.ts";

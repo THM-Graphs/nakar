@@ -1,4 +1,4 @@
-import { ColorDto } from "../../../src-gen";
+import { ColorDto } from "api-client";
 
 export type D3Node = {
   id: string;

@@ -42,7 +42,7 @@ import {
   publicCanvasControllerGetCanvas,
   RoomDto,
   ScenarioCollectionDto,
-} from "../../src-gen";
+} from "api-client";
 import { useAppContext } from "../state/AppContextData.ts";
 import { Router } from "../routing/Router.ts";
 import { usePageTitle } from "../routing/usePageTitle.ts";

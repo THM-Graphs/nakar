@@ -20,7 +20,7 @@ import {
   PositionDto,
   SetNodeLocksWsdto,
   UserPreviewDto,
-} from "../../../src-gen";
+} from "api-client";
 import { D3UserCursor } from "./D3UserCursor.ts";
 
 const inputFps = 16;

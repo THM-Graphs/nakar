@@ -10,7 +10,7 @@ import {
   projectControllerGetProject,
   ProjectPageDto,
   UpdateDatabaseConnectionRequestBodyDto,
-} from "../../src-gen";
+} from "api-client";
 import { resultOrThrow } from "../shared/data/resultOrThrow.ts";
 import { Router } from "../routing/Router.ts";
 import { CMSEditPageForm } from "../shared/cms/CMSEditPageForm.tsx";

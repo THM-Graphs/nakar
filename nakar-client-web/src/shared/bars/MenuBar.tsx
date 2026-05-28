@@ -35,7 +35,7 @@ import { nodeActions } from "../../room/actions/groups/nodeActions.ts";
 import { labelActions } from "../../room/actions/groups/labelActions.ts";
 import { relationshipActions } from "../../room/actions/groups/relationshipActions.ts";
 import { relationshipTypeActions } from "../../room/actions/groups/relationshipTypeActions.ts";
-import { EdgeDto, NodeDto } from "../../../src-gen";
+import { EdgeDto, NodeDto } from "api-client";
 import { useIsLoggedIn } from "../../state/useIsLoggedIn.ts";
 import { useAppContext } from "../../state/AppContextData.ts";
 import { ResetViewSettingsAction } from "../../room/actions/ResetViewSettingsAction.ts";

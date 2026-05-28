@@ -1,7 +1,7 @@
 import { Action } from "./Action.ts";
 import { BehaviorSubject } from "rxjs";
 import { SelectedCanvasTab } from "../../state/SelectedCanvasTab.ts";
-import { NodeDto } from "../../../src-gen";
+import { NodeDto } from "api-client";
 
 export type ZoomToFitActionParams = {
   onZoomOutOverview: BehaviorSubject<void>;

@@ -7,10 +7,7 @@ import {
   Tooltip,
 } from "react-bootstrap";
 import clsx from "clsx";
-import {
-  DatabaseConnectionDto,
-  UpdateScenarioQueryEntryDto,
-} from "../../../src-gen";
+import { DatabaseConnectionDto, UpdateScenarioQueryEntryDto } from "api-client";
 import { CypherEditor } from "@neo4j-cypher/react-codemirror";
 import { CMSButton } from "./CMSButton.tsx";
 import { MouseEventHandler } from "react";

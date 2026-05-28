@@ -1,4 +1,4 @@
-import { UpdateNodeConfigurationRequestBodyDto } from "../../../src-gen";
+import { UpdateNodeConfigurationRequestBodyDto } from "api-client";
 import { useCallback } from "react";
 import { v4 } from "uuid";
 import { Card, Stack } from "react-bootstrap";

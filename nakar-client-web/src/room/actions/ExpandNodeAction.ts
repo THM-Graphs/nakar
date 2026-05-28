@@ -1,6 +1,6 @@
 import { Action, ActionShortcut } from "./Action.ts";
 import { NodesActionParams } from "./NodesActionParams.ts";
-import { actionControllerExpandNode } from "../../../src-gen";
+import { actionControllerExpandNode } from "api-client";
 import { createAppShortcut } from "./createAppShortcut.ts";
 
 export class ExpandNodeAction extends Action<NodesActionParams> {

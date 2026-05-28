@@ -14,7 +14,7 @@ import { UndoAction } from "../actions/UndoAction.ts";
 import { RedoAction } from "../actions/RedoAction.ts";
 import { RerunScenarioAction } from "../actions/RerunScenarioAction.ts";
 import { ExpandNodePreviewAction } from "../actions/ExpandNodePreviewAction.ts";
-import { NodeDto } from "../../../src-gen";
+import { NodeDto } from "api-client";
 import { ExpandNodeAction } from "../actions/ExpandNodeAction.ts";
 import { RemoveNodesAction } from "../actions/RemoveNodesAction.ts";
 import { FocusNodesAction } from "../actions/FocusNodesAction.ts";

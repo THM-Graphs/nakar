@@ -23,7 +23,7 @@ import {
   ScenarioArgumentDto,
   ScenarioCollectionDto,
   ScenarioDto,
-} from "../../src-gen";
+} from "api-client";
 
 export interface BearState {
   global: {

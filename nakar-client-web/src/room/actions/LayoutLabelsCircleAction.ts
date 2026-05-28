@@ -1,7 +1,7 @@
 import { Action, ActionShortcut } from "./Action.ts";
 import { LabelActionParams } from "./LabelActionParams.ts";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
-import { actionControllerLayout } from "../../../src-gen";
+import { actionControllerLayout } from "api-client";
 import { createAppShortcut } from "./createAppShortcut.ts";
 
 export class LayoutLabelsCircleAction extends Action<LabelActionParams> {

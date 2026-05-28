@@ -1,9 +1,6 @@
 import { Action } from "./Action.ts";
 import { CanvasContextData } from "../../pages/Canvas.tsx";
-import {
-  CanvasPageDto,
-  publicCanvasControllerGetCanvas,
-} from "../../../src-gen";
+import { CanvasPageDto, publicCanvasControllerGetCanvas } from "api-client";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
 import { useBearStore } from "../../state/useBearStore.ts";
 

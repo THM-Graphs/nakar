@@ -1,5 +1,5 @@
 import { match, P } from "ts-pattern";
-import { ScenarioParameterDto } from "../../../src-gen";
+import { ScenarioParameterDto } from "api-client";
 
 export function convertToTargetTypeStringRepresentation(
   argumentValue: unknown,

@@ -1,14 +1,14 @@
 import { Action, ActionShortcut } from "./Action.ts";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
 import { NodesActionParams } from "./NodesActionParams.ts";
-import { actionControllerShowShortestPath } from "../../../src-gen";
+import { actionControllerShowShortestPath } from "api-client";
 import { createAppShortcut } from "./createAppShortcut.ts";
 
 export class ShowShortestPathAction extends Action<NodesActionParams> {
   public static shared: ShowShortestPathAction = new ShowShortestPathAction();
 
   protected async action(input: NodesActionParams): Promise<void> {
-    await resultOrThrow(
+    resultOrThrow(
       await actionControllerShowShortestPath({
         path: {
           roomId: input.roomContext.initialRoomData.id,

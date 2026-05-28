@@ -1,5 +1,5 @@
 import { Stack } from "react-bootstrap";
-import { LiveCanvasLabelViewSettingsDto } from "../../../src-gen";
+import { LiveCanvasLabelViewSettingsDto } from "api-client";
 import { useColorSchema } from "../color/useColorSchema.ts";
 import clsx from "clsx";
 import { useTheme } from "../../shared/theme/useTheme.ts";

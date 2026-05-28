@@ -19,7 +19,7 @@ import { RemoveDanglingNodesAction } from "../actions/RemoveDanglingNodesAction.
 import { CompressRelationshipsAction } from "../actions/CompressRelationshipsAction.ts";
 import { HideLabelsAction } from "../actions/HideLabelsAction.ts";
 import { Action, ActionShortcut } from "../actions/Action.ts";
-import { EdgeDto, NodeDto } from "../../../src-gen";
+import { EdgeDto, NodeDto } from "api-client";
 import { useIsLoggedIn } from "../../state/useIsLoggedIn.ts";
 import { getRelationshipTypesFromEdges } from "../helper-functions/getRelationshipTypesFromEdges.ts";
 import { nodeActions } from "../actions/groups/nodeActions.ts";

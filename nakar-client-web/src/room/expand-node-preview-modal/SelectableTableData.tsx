@@ -2,7 +2,7 @@ import { FormCheck, Stack } from "react-bootstrap";
 import { DynamicList } from "../../shared/elements/DynamicList.tsx";
 import clsx from "clsx";
 import { numberFormat } from "../../shared/data/numberFormat.ts";
-import { ExpandNodePreviewEntryDto } from "../../../src-gen";
+import { ExpandNodePreviewEntryDto } from "api-client";
 
 export function SelectableTableData(props: {
   title: string;

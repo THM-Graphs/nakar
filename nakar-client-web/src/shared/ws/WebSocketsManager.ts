@@ -3,7 +3,7 @@ import { Env } from "../env/env.ts";
 import { ClientToServerEvents } from "./ClientToServerEvents.ts";
 import { ServerToClientEvents } from "./ServerToClientEvents.ts";
 import { Observable, Subject } from "rxjs";
-import { ActionWsdto, AuthWsdto, EventWsdto } from "../../../src-gen";
+import { ActionWsdto, AuthWsdto, EventWsdto } from "api-client";
 import { useBearStore } from "../../state/useBearStore.ts";
 
 export type Socket = UntypedSocket<ServerToClientEvents, ClientToServerEvents>;

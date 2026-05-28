@@ -1,4 +1,4 @@
-import { UserPreviewDto } from "../../../src-gen";
+import { UserPreviewDto } from "api-client";
 import { OverlayTrigger, Stack, Tooltip } from "react-bootstrap";
 
 const size = 30;

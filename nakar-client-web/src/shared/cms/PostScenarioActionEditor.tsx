@@ -8,7 +8,7 @@ import {
   Tooltip,
 } from "react-bootstrap";
 import { MouseEventHandler } from "react";
-import { UpdateScenarioPostActionEntryDto } from "../../../src-gen";
+import { UpdateScenarioPostActionEntryDto } from "api-client";
 import { CMSButton } from "./CMSButton.tsx";
 import { ViewSettingsColorEditor } from "../../room/visualization-panel/ViewSettingsColorEditor.tsx";
 

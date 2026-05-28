@@ -2,7 +2,7 @@ import { Action, ActionShortcut } from "./Action.ts";
 import { CanvasContextData } from "../../pages/Canvas.tsx";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
 import { SelectedCanvasTab } from "../../state/SelectedCanvasTab.ts";
-import { actionControllerUnlockAllNodes, NodeDto } from "../../../src-gen";
+import { actionControllerUnlockAllNodes, NodeDto } from "api-client";
 import { createAppShortcut } from "./createAppShortcut.ts";
 
 export type UnlockAllNodesActionParams = {

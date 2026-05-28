@@ -2,7 +2,10 @@ import { Action, ActionShortcut } from "./Action.ts";
 import { useBearStore } from "../../state/useBearStore.ts";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
 import { NodesActionParams } from "./NodesActionParams.ts";
-import { canvasDatabaseConnectionControllerExpandNodePreview } from "../../../src-gen";
+import {
+  canvasDatabaseConnectionControllerExpandNodePreview,
+  NodeDto,
+} from "api-client";
 import { createAppShortcut } from "./createAppShortcut.ts";
 
 export class ExpandNodePreviewAction extends Action<NodesActionParams> {
@@ -12,7 +15,7 @@ export class ExpandNodePreviewAction extends Action<NodesActionParams> {
     if (input.nodes.length !== 1) {
       throw new Error("Unable to expand multiple nodes.");
     }
-    const node = input.nodes[0];
+    const node: NodeDto = input.nodes[0];
     useBearStore.getState().room.scenario.expandNodePreview.open(null);
     const result = resultOrThrow(
       await canvasDatabaseConnectionControllerExpandNodePreview({

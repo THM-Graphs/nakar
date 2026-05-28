@@ -1,14 +1,14 @@
 import { Action, ActionShortcut } from "./Action.ts";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
 import { NodesActionParams } from "./NodesActionParams.ts";
-import { actionControllerUnlockNodes } from "../../../src-gen";
+import { actionControllerUnlockNodes } from "api-client";
 import { createAppShortcut } from "./createAppShortcut.ts";
 
 export class UnlockNodesAction extends Action<NodesActionParams> {
   public static shared: UnlockNodesAction = new UnlockNodesAction();
 
   protected async action(input: NodesActionParams): Promise<void> {
-    await resultOrThrow(
+    resultOrThrow(
       await actionControllerUnlockNodes({
         path: {
           roomId: input.roomContext.initialRoomData.id,

@@ -2,7 +2,7 @@ import { Action, ActionShortcut } from "./Action.ts";
 import { SelectedCanvasTab } from "../../state/SelectedCanvasTab.ts";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
 import { CanvasContextData } from "../../pages/Canvas.tsx";
-import { actionControllerCompressRelationships } from "../../../src-gen";
+import { actionControllerCompressRelationships } from "api-client";
 import { createAppShortcut } from "./createAppShortcut.ts";
 
 export type CompressRelationshipsActionParams = {

@@ -1,4 +1,4 @@
-import { NodeDto } from "../../../src-gen";
+import { NodeDto } from "api-client";
 import { match, P } from "ts-pattern";
 import { Stack } from "react-bootstrap";
 import { Fragment, useMemo } from "react";

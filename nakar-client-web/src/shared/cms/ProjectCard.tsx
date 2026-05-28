@@ -1,6 +1,6 @@
 import { Card, Stack } from "react-bootstrap";
 import { Link } from "react-router";
-import { StartPageProjectDto } from "../../../src-gen";
+import { StartPageProjectDto } from "api-client";
 import { StringListDisplay } from "./StringListDisplay.tsx";
 import { CMSCardContent } from "./CMSCardContent.tsx";
 

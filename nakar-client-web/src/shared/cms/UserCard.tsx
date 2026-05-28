@@ -1,5 +1,5 @@
 import { RoleDisplay } from "./RoleDisplay.tsx";
-import { UserPreviewDto } from "../../../src-gen";
+import { UserPreviewDto } from "api-client";
 import { CMSCardContent } from "./CMSCardContent.tsx";
 import { Card } from "react-bootstrap";
 

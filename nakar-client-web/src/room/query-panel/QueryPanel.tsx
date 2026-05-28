@@ -18,7 +18,7 @@ import {
   canvasDatabaseConnectionControllerGetStats,
   DatabaseConnectionDto,
   GetDatabaseStatsResponseBodyDto,
-} from "../../../src-gen";
+} from "api-client";
 import { useIsLoggedIn } from "../../state/useIsLoggedIn.ts";
 import { CypherEditor } from "@neo4j-cypher/react-codemirror";
 import { useTheme } from "../../shared/theme/useTheme.ts";

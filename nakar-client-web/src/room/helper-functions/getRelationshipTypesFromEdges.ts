@@ -1,4 +1,4 @@
-import { EdgeDto } from "../../../src-gen";
+import { EdgeDto } from "api-client";
 
 export function getRelationshipTypesFromEdges(
   edges: readonly EdgeDto[],

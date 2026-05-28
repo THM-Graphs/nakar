@@ -1,6 +1,6 @@
 import { match, P } from "ts-pattern";
 import { ColorSchema } from "./ColorSchema.ts";
-import { ColorDto } from "../../../src-gen";
+import { ColorDto } from "api-client";
 import { Theme } from "../../shared/theme/Theme.ts";
 
 export function getTextColor(

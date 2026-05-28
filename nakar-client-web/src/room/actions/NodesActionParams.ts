@@ -1,5 +1,5 @@
 import { CanvasContextData } from "../../pages/Canvas.tsx";
-import { NodeDto } from "../../../src-gen";
+import { NodeDto } from "api-client";
 
 export type NodesActionParams = {
   nodes: NodeDto[];

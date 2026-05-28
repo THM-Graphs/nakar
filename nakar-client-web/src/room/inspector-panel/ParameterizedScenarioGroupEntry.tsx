@@ -1,4 +1,4 @@
-import { NodeDto, NodeParameterizedScenarioGroupDto } from "../../../src-gen";
+import { NodeDto, NodeParameterizedScenarioGroupDto } from "api-client";
 import { NodeParameterizedScenarioEntry } from "./NodeParameterizedScenarioEntry.tsx";
 import { ListGroup, ListGroupItem, Stack } from "react-bootstrap";
 import { Fragment } from "react";

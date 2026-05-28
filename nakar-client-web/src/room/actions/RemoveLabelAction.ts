@@ -1,7 +1,7 @@
 import { Action, ActionShortcut } from "./Action.ts";
 import { LabelActionParams } from "./LabelActionParams.ts";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
-import { actionControllerDeleteElements } from "../../../src-gen";
+import { actionControllerDeleteElements } from "api-client";
 import { createAppShortcut } from "./createAppShortcut.ts";
 
 export class RemoveLabelAction extends Action<LabelActionParams> {

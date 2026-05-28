@@ -10,7 +10,7 @@ import { NavbarButton } from "../../shared/elements/NavbarButton.tsx";
 import {
   canvasDatabaseConnectionControllerGetSearchCapabilites,
   GetSearchCapabilitiesResponseBodyDto,
-} from "../../../src-gen";
+} from "api-client";
 import { CanvasContextData, useCanvasContext } from "../../pages/Canvas.tsx";
 
 export function SearchCapabilitiesDisplay(props: {

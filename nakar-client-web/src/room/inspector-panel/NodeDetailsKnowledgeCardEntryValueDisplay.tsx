@@ -1,7 +1,7 @@
 import { LinkWrapper } from "../../shared/elements/LinkWrapper.tsx";
 import { NodeDetailsKnowledgeCardEntry } from "./NodeDetailsKnowledgeCardEntry.ts";
 import { ShortendText } from "../../shared/elements/ShortendText.tsx";
-import { NodeDto } from "../../../src-gen";
+import { NodeDto } from "api-client";
 
 export function NodeDetailsKnowledgeCardEntryValueDisplay(props: {
   value: NodeDetailsKnowledgeCardEntry["values"][0];

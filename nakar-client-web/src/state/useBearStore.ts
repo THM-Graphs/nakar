@@ -25,7 +25,7 @@ import {
   NodeLockCollectionEntryDto,
   NodePreviewDto,
   NoteDto,
-} from "../../src-gen";
+} from "api-client";
 import { handleError } from "../shared/error/handleError.ts";
 
 enableMapSet();

@@ -8,7 +8,7 @@ import { useCanvasContext } from "../../pages/Canvas.tsx";
 import {
   canvasNoteControllerPostNote,
   canvasNoteControllerUpdateNote,
-} from "../../../src-gen";
+} from "api-client";
 import MDEditor from "@uiw/react-md-editor";
 
 type AddEditNoteModalMode = "create" | "update";
@@ -37,7 +37,7 @@ export function AddEditNoteModal() {
   const handleAdd = async () => {
     try {
       if (noteId == null) {
-        await resultOrThrow(
+        resultOrThrow(
           await canvasNoteControllerPostNote({
             path: {
               roomId: roomContext.initialRoomData.id,
@@ -50,7 +50,7 @@ export function AddEditNoteModal() {
           }),
         );
       } else {
-        await resultOrThrow(
+        resultOrThrow(
           await canvasNoteControllerUpdateNote({
             path: {
               roomId: roomContext.initialRoomData.id,

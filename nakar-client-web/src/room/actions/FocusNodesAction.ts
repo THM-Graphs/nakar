@@ -1,14 +1,14 @@
 import { Action, ActionShortcut } from "./Action.ts";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
 import { NodesActionParams } from "./NodesActionParams.ts";
-import { actionControllerFocusNodes } from "../../../src-gen";
+import { actionControllerFocusNodes } from "api-client";
 import { createAppShortcut } from "./createAppShortcut.ts";
 
 export class FocusNodesAction extends Action<NodesActionParams> {
   public static shared: FocusNodesAction = new FocusNodesAction();
 
   protected async action(input: NodesActionParams): Promise<void> {
-    await resultOrThrow(
+    resultOrThrow(
       await actionControllerFocusNodes({
         path: {
           roomId: input.roomContext.initialRoomData.id,

@@ -1,5 +1,5 @@
 import { LoaderFunctionArgs, redirect } from "react-router";
-import { publicRoomControllerGetRoom, RoomDto } from "../../src-gen";
+import { publicRoomControllerGetRoom, RoomDto } from "api-client";
 import { resultOrThrow } from "../shared/data/resultOrThrow.ts";
 import { useBearStore } from "../state/useBearStore.ts";
 import { Router } from "../routing/Router.ts";

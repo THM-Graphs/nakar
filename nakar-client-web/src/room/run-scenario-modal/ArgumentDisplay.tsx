@@ -5,7 +5,7 @@ import { NavbarButton } from "../../shared/elements/NavbarButton.tsx";
 import clsx from "clsx";
 import { match } from "ts-pattern";
 import { DateTool } from "../../shared/data/DateTool.ts";
-import { ScenarioArgumentDto, ScenarioDto } from "../../../src-gen";
+import { ScenarioArgumentDto, ScenarioDto } from "api-client";
 
 export function ArgumentDisplay(props: {
   scenario: ScenarioDto;

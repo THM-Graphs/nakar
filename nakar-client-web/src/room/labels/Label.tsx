@@ -8,7 +8,7 @@ import { DropdownButton } from "../../shared/elements/DropdownButton.tsx";
 import { labelActions } from "../actions/groups/labelActions.ts";
 import { ActionDropdownItem } from "../actions/ActionDropdownItem.tsx";
 import { useCanvasContext } from "../../pages/Canvas.tsx";
-import { LabelDto } from "../../../src-gen";
+import { LabelDto } from "api-client";
 import { LabelViewSettingsEditor } from "../visualization-panel/LabelViewSettingsEditor.tsx";
 import { useMemo } from "react";
 

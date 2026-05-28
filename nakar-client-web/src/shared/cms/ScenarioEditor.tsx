@@ -4,7 +4,7 @@ import {
   UpdateScenarioPostActionEntryDto,
   UpdateScenarioQueryParameterEntryDto,
   UpdateScenarioRequestBodyDto,
-} from "../../../src-gen";
+} from "api-client";
 import { QueryParametersEditor } from "./QueryParametersEditor.tsx";
 import { QueriesEditor } from "./QueriesEditor.tsx";
 import { PostScenarioActionsEditor } from "./PostScenarioActionsEditor.tsx";

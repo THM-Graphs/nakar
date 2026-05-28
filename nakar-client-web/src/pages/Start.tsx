@@ -4,7 +4,7 @@ import { CMSNavbar } from "../shared/cms/CMSNavbar.tsx";
 import { resultOrThrow } from "../shared/data/resultOrThrow.ts";
 import { ProjectCard } from "../shared/cms/ProjectCard.tsx";
 import { useBearStore } from "../state/useBearStore.ts";
-import { startControllerGetStart, StartPageDto } from "../../src-gen";
+import { startControllerGetStart, StartPageDto } from "api-client";
 import { CMSEmptyHint } from "../shared/cms/CMSEmptyHint.tsx";
 import { useIsLoggedIn } from "../state/useIsLoggedIn.ts";
 import { CMSButton } from "../shared/cms/CMSButton.tsx";

@@ -1,5 +1,5 @@
 import { D3Node } from "./D3Node.ts";
-import { ColorDto } from "../../../src-gen";
+import { ColorDto } from "api-client";
 
 export type D3Link = {
   id: string;

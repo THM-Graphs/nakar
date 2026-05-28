@@ -20,7 +20,7 @@ import {
   EdgeDto,
   NodeDto,
   NodeParameterizedScenarioGroupDto,
-} from "../../../src-gen";
+} from "api-client";
 import { useIsLoggedIn } from "../../state/useIsLoggedIn.ts";
 import { Fragment, useMemo } from "react";
 import { NodeParameterizedScenarioEntry } from "./NodeParameterizedScenarioEntry.tsx";

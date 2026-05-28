@@ -1,4 +1,4 @@
-import { UserPreviewDto } from "../../../src-gen";
+import { UserPreviewDto } from "api-client";
 import { Stack } from "react-bootstrap";
 import { CMSUserCircle } from "./CMSUserCircle.tsx";
 

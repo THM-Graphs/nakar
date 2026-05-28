@@ -1,7 +1,7 @@
 import { Action, ActionShortcut } from "./Action.ts";
 import { useBearStore } from "../../state/useBearStore.ts";
 import { LabelActionParams } from "./LabelActionParams.ts";
-import { NodeDto } from "../../../src-gen";
+import { NodeDto } from "api-client";
 import { createAppShortcut } from "./createAppShortcut.ts";
 
 export class SelectAllNodesOfLabel extends Action<LabelActionParams> {

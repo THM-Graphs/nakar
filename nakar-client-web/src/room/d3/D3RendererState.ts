@@ -6,7 +6,7 @@ import {
   LiveCanvasGraphElementsDto,
   NodeDto,
   UserPreviewDto,
-} from "../../../src-gen";
+} from "api-client";
 import { D3UserCursor } from "./D3UserCursor.ts";
 
 export class D3RendererState {

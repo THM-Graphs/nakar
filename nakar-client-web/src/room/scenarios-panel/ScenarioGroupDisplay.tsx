@@ -1,7 +1,7 @@
 import { Stack } from "react-bootstrap";
 import { DynamicList } from "../../shared/elements/DynamicList.tsx";
 import { ScenarioDisplay } from "./ScenarioDisplay.tsx";
-import { ScenarioDto, ScenarioGroupDto } from "../../../src-gen";
+import { ScenarioDto, ScenarioGroupDto } from "api-client";
 
 export function ScenarioGroupDisplay(props: {
   scenarioGroup: ScenarioGroupDto;

@@ -13,7 +13,7 @@ import {
   canvasDatabaseConnectionControllerPerformSearch,
   NodePreviewDto,
   PostSearchResponseBodyDto,
-} from "../../../src-gen";
+} from "api-client";
 import { useCanvasContext } from "../../pages/Canvas.tsx";
 
 export function SearchPanel() {

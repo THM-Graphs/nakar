@@ -15,7 +15,7 @@ import {
   UpdateScenarioQueryEntryDto,
   UpdateScenarioQueryParameterEntryDto,
   UpdateScenarioRequestBodyDto,
-} from "../../src-gen";
+} from "api-client";
 import { resultOrThrow } from "../shared/data/resultOrThrow.ts";
 import { Router } from "../routing/Router.ts";
 import { ScenarioEditor } from "../shared/cms/ScenarioEditor.tsx";

@@ -13,7 +13,7 @@ import {
   ProjectPageDto,
   roomControllerCreateRoom,
   scenarioGroupControllerCreateScenarioGroup,
-} from "../../src-gen";
+} from "api-client";
 import { CMSEmptyHint } from "../shared/cms/CMSEmptyHint.tsx";
 import { CMSHeader } from "../shared/cms/CMSHeader.tsx";
 import { CMSButton } from "../shared/cms/CMSButton.tsx";

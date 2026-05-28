@@ -1,6 +1,6 @@
 import { Action, ActionShortcut } from "./Action.ts";
 import { SelectedCanvasTab } from "../../state/SelectedCanvasTab.ts";
-import { LiveCanvasGraphElementsDto } from "../../../src-gen";
+import { LiveCanvasGraphElementsDto } from "api-client";
 import { createAppShortcut } from "./createAppShortcut.ts";
 
 export type SelectAllActionParams = {

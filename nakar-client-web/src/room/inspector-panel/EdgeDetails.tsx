@@ -3,7 +3,7 @@ import { useCanvasContext } from "../../pages/Canvas.tsx";
 import { Stack } from "react-bootstrap";
 import { NodePreviewDisplay } from "./NodePreviewDisplay.tsx";
 import { relationshipActions } from "../actions/groups/relationshipActions.ts";
-import { EdgeDto } from "../../../src-gen";
+import { EdgeDto } from "api-client";
 import { PropertyEntry } from "./PropertiesDisplay.tsx";
 import { EdgeViewSettingsEditor } from "../visualization-panel/EdgeViewSettingsEditor.tsx";
 import { Collapsable } from "../../shared/elements/Collapsable.tsx";

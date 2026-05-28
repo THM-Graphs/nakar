@@ -6,7 +6,7 @@ import { Panel } from "../../shared/elements/Panel.tsx";
 import { NavbarButton } from "../../shared/elements/NavbarButton.tsx";
 import { ScenarioIcon } from "../scenarios-panel/ScenarioIcon.tsx";
 import { ArgumentDisplay } from "./ArgumentDisplay.tsx";
-import { actionControllerLoadScenario } from "../../../src-gen";
+import { actionControllerLoadScenario } from "api-client";
 
 export function RunScenarioModal() {
   const roomContext = useCanvasContext();
@@ -37,7 +37,7 @@ export function RunScenarioModal() {
     }
     handleClose();
     try {
-      await resultOrThrow(
+      resultOrThrow(
         await actionControllerLoadScenario({
           path: {
             roomId: roomContext.initialRoomData.id,

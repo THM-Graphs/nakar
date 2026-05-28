@@ -6,7 +6,7 @@ import { Loadable } from "../../shared/data/Loadable.ts";
 import { DynamicList } from "../../shared/elements/DynamicList.tsx";
 import { CanvasContextData } from "../../pages/Canvas.tsx";
 import { SearchResultEntry } from "./SearchResultEntry.tsx";
-import { NodePreviewDto } from "../../../src-gen";
+import { NodePreviewDto } from "api-client";
 
 export function SearchResultDisplay(props: {
   result: Loadable<NodePreviewDto[] | null>;

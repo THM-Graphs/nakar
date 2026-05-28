@@ -8,7 +8,7 @@ import {
   scenarioGroupControllerDeleteScenarioGroup,
   scenarioGroupControllerUpdateScenarioGroup,
   ScenarioGroupDto,
-} from "../../src-gen";
+} from "api-client";
 import { resultOrThrow } from "../shared/data/resultOrThrow.ts";
 import { Router } from "../routing/Router.ts";
 import { CMSEditTextCard } from "../shared/cms/CMSEditTextCard.tsx";

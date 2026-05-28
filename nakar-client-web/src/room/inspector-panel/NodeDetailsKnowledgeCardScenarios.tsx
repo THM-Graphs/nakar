@@ -1,4 +1,4 @@
-import { NodeDto } from "../../../src-gen";
+import { NodeDto } from "api-client";
 import { ParameterizedScenarioGroupEntry } from "./ParameterizedScenarioGroupEntry.tsx";
 
 export function NodeDetailsKnowledgeCardScenarios(props: { node: NodeDto }) {

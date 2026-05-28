@@ -1,6 +1,6 @@
 import { Card, Stack } from "react-bootstrap";
 import { useCallback } from "react";
-import { UpdateScenarioQueryParameterEntryDto } from "../../../src-gen";
+import { UpdateScenarioQueryParameterEntryDto } from "api-client";
 import { v4 } from "uuid";
 import { QueryParameterEditor } from "./QueryParameterEditor.tsx";
 import { NavbarButton } from "../elements/NavbarButton.tsx";

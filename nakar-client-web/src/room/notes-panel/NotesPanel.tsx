@@ -6,7 +6,7 @@ import { ActionNavbarButton } from "../actions/ActionNavbarButton.tsx";
 import { AddNoteAction } from "../actions/AddNoteAction.ts";
 import { DynamicList } from "../../shared/elements/DynamicList.tsx";
 import { NoteDisplay } from "./NoteDisplay.tsx";
-import { NodeDto, NoteDto } from "../../../src-gen";
+import { NodeDto, NoteDto } from "api-client";
 import { useIsLoggedIn } from "../../state/useIsLoggedIn.ts";
 
 export function NotesPanel() {

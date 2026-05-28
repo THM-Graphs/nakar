@@ -1,4 +1,4 @@
-import { NodeDto } from "../../../src-gen";
+import { NodeDto } from "api-client";
 import { Stack } from "react-bootstrap";
 import { ShortendText } from "../../shared/elements/ShortendText.tsx";
 import { Link } from "react-router";

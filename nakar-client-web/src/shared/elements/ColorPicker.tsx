@@ -1,6 +1,6 @@
 import { Form, Stack } from "react-bootstrap";
 import { useColorSchema } from "../../room/color/useColorSchema.ts";
-import { ColorDto, ColorPresetDto } from "../../../src-gen";
+import { ColorDto, ColorPresetDto } from "api-client";
 import { match, P } from "ts-pattern";
 import { ReactNode } from "react";
 

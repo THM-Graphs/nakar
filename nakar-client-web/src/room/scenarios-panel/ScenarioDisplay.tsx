@@ -10,7 +10,7 @@ import {
   ScenarioArgumentDto,
   ScenarioDto,
   ScenarioGroupDto,
-} from "../../../src-gen";
+} from "api-client";
 
 export function ScenarioDisplay(props: {
   scenarioGroup: ScenarioGroupDto;
@@ -32,7 +32,7 @@ export function ScenarioDisplay(props: {
       } else {
         (async () => {
           try {
-            await resultOrThrow(
+            resultOrThrow(
               await actionControllerLoadScenario({
                 path: {
                   roomId: roomContext.initialRoomData.id,

@@ -1,6 +1,6 @@
 import { Alert, Form, Modal, Spinner, Stack } from "react-bootstrap";
 import { resultOrThrow } from "../data/resultOrThrow.ts";
-import { authControllerPostAuth } from "../../../src-gen";
+import { authControllerPostAuth } from "api-client";
 import { match } from "ts-pattern";
 import { handleError } from "../error/handleError.ts";
 import { useBearStore } from "../../state/useBearStore.ts";

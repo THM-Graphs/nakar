@@ -1,9 +1,6 @@
 import { Card, Stack } from "react-bootstrap";
 import { useCallback } from "react";
-import {
-  ColorPresetDto,
-  UpdateScenarioPostActionEntryDto,
-} from "../../../src-gen";
+import { ColorPresetDto, UpdateScenarioPostActionEntryDto } from "api-client";
 import { v4 } from "uuid";
 import { NavbarButton } from "../elements/NavbarButton.tsx";
 import { PostScenarioActionEditor } from "./PostScenarioActionEditor.tsx";

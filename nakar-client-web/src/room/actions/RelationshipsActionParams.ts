@@ -1,5 +1,5 @@
 import { CanvasContextData } from "../../pages/Canvas.tsx";
-import { EdgeDto } from "../../../src-gen";
+import { EdgeDto } from "api-client";
 
 export type RelationshipsActionParams = {
   edges: EdgeDto[];

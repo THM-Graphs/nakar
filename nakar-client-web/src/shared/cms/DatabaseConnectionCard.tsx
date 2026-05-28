@@ -1,5 +1,5 @@
 import { Link } from "react-router";
-import { DatabaseConnectionDto, ProjectPageDto } from "../../../src-gen";
+import { DatabaseConnectionDto, ProjectPageDto } from "api-client";
 import { CMSCardContent } from "./CMSCardContent.tsx";
 import { Card, Stack } from "react-bootstrap";
 import { Router } from "../../routing/Router.ts";

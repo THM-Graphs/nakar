@@ -1,5 +1,5 @@
 import { Link } from "react-router";
-import { CommonPropertyDto, ProjectPageDto } from "../../../src-gen";
+import { CommonPropertyDto, ProjectPageDto } from "api-client";
 import { CMSCardContent } from "./CMSCardContent.tsx";
 import { Badge, Card, Stack } from "react-bootstrap";
 import { Router } from "../../routing/Router.ts";

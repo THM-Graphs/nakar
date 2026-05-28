@@ -1,5 +1,5 @@
 import { Action } from "./Action.ts";
-import { actionControllerResetViewSettings } from "../../../src-gen";
+import { actionControllerResetViewSettings } from "api-client";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
 import { CanvasContextData } from "../../pages/Canvas.tsx";
 

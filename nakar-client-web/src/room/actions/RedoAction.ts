@@ -1,7 +1,7 @@
 import { Action, ActionShortcut } from "./Action.ts";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
 import { CanvasContextData } from "../../pages/Canvas.tsx";
-import { actionControllerRedo } from "../../../src-gen";
+import { actionControllerRedo } from "api-client";
 import { createAppShortcut } from "./createAppShortcut.ts";
 
 export type RedoActionParams = {

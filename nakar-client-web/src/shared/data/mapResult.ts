@@ -14,7 +14,11 @@ export function mapResult<T, R>(
   if (result.error != null) {
     return onError(result.error);
   } else {
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    return onData(result.data!);
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      return onData(result.data!);
+    } catch (error: unknown) {
+      return onError(error);
+    }
   }
 }

@@ -1,6 +1,6 @@
 import { Action, ActionShortcut } from "./Action.ts";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
-import { actionControllerFlipCanvas } from "../../../src-gen";
+import { actionControllerFlipCanvas } from "api-client";
 import { FlipCanvasActionParams } from "./FlipCanvasActionParams.ts";
 import { createAppShortcut } from "./createAppShortcut.ts";
 

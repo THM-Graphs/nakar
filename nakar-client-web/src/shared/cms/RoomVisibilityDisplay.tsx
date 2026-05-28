@@ -1,5 +1,5 @@
 import { match } from "ts-pattern";
-import { StartPageRoomDto } from "../../../src-gen";
+import { StartPageRoomDto } from "api-client";
 
 export function RoomVisibilityDisplay(props: {
   visibility: StartPageRoomDto["visibility"];

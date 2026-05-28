@@ -2,7 +2,7 @@ import { Action, ActionShortcut } from "./Action.ts";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
 import { CanvasContextData } from "../../pages/Canvas.tsx";
 import { SelectedCanvasTab } from "../../state/SelectedCanvasTab.ts";
-import { actionControllerRelayout, NodeDto } from "../../../src-gen";
+import { actionControllerRelayout, NodeDto } from "api-client";
 import { createAppShortcut } from "./createAppShortcut.ts";
 
 export type RelayoutActionParams = {

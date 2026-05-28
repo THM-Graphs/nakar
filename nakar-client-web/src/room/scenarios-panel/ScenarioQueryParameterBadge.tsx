@@ -1,5 +1,5 @@
 import { OverlayTrigger, Stack, Tooltip } from "react-bootstrap";
-import { ScenarioParameterDto } from "../../../src-gen";
+import { ScenarioParameterDto } from "api-client";
 
 export function ScenarioQueryParameterBadge(props: {
   parameter: ScenarioParameterDto;

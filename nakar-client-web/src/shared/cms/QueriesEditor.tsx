@@ -1,8 +1,5 @@
 import { Card, Stack } from "react-bootstrap";
-import {
-  DatabaseConnectionDto,
-  UpdateScenarioQueryEntryDto,
-} from "../../../src-gen";
+import { DatabaseConnectionDto, UpdateScenarioQueryEntryDto } from "api-client";
 import { useCallback } from "react";
 import { NavbarButton } from "../elements/NavbarButton.tsx";
 import { v4 } from "uuid";

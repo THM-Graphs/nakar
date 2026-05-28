@@ -9,7 +9,7 @@ import { useBearStore } from "../../state/useBearStore.ts";
 import {
   GetVersionResponseBodyDto,
   systemControllerGetVersion,
-} from "../../../src-gen";
+} from "api-client";
 
 export function ServerInfoDropdownEntry() {
   const context = useAppContext();

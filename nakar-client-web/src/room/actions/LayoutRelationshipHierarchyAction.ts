@@ -1,7 +1,7 @@
 import { Action, ActionShortcut } from "./Action.ts";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
 import { RelationshipTypeActionParams } from "./RelationshipTypeActionParams.ts";
-import { actionControllerLayout } from "../../../src-gen";
+import { actionControllerLayout } from "api-client";
 import { createAppShortcut } from "./createAppShortcut.ts";
 
 export class LayoutRelationshipHierarchyAction extends Action<RelationshipTypeActionParams> {
@@ -9,7 +9,7 @@ export class LayoutRelationshipHierarchyAction extends Action<RelationshipTypeAc
     new LayoutRelationshipHierarchyAction();
 
   protected async action(input: RelationshipTypeActionParams): Promise<void> {
-    await resultOrThrow(
+    resultOrThrow(
       await actionControllerLayout({
         path: {
           roomId: input.roomContext.initialRoomData.id,

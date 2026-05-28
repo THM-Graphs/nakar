@@ -5,7 +5,7 @@ import { ViewSettingsEditor } from "./ViewSettingsEditor.tsx";
 import {
   actionControllerSetViewSettings,
   LiveCanvasViewSettingsDto,
-} from "../../../src-gen";
+} from "api-client";
 import { useCanvasContext } from "../../pages/Canvas.tsx";
 import { ActionNavbarButton } from "../actions/ActionNavbarButton.tsx";
 import { Stack } from "react-bootstrap";

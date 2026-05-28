@@ -1,7 +1,7 @@
 import { RoomVisibilityDisplay } from "./RoomVisibilityDisplay.tsx";
 import { Link } from "react-router";
 import { Card, Stack } from "react-bootstrap";
-import { ProjectPageDto, RoomDto } from "../../../src-gen";
+import { ProjectPageDto, RoomDto } from "api-client";
 import { CMSCardContent } from "./CMSCardContent.tsx";
 import { CSSProperties } from "react";
 import { Router } from "../../routing/Router.ts";

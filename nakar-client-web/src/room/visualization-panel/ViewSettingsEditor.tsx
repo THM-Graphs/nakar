@@ -4,7 +4,7 @@ import {
   LiveCanvasEdgeViewSettingsDto,
   LiveCanvasLabelViewSettingsDto,
   LiveCanvasViewSettingsDto,
-} from "../../../src-gen";
+} from "api-client";
 import { LabelViewSettingsEditor } from "./LabelViewSettingsEditor.tsx";
 import { Label } from "../labels/Label.tsx";
 import { Fragment } from "react";

@@ -5,7 +5,7 @@ import { useBearStore } from "../../state/useBearStore.ts";
 import { useEffect, useState } from "react";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
 import { SelectableTableData } from "./SelectableTableData.tsx";
-import { actionControllerExpandNode } from "../../../src-gen";
+import { actionControllerExpandNode } from "api-client";
 import { useCanvasContext } from "../../pages/Canvas.tsx";
 
 export function ExpandNodePreviewModal() {

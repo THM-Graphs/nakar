@@ -21,7 +21,7 @@ import {
   NodeDto,
   NodeParameterizedScenarioDto,
   NodeParameterizedScenarioGroupDto,
-} from "../../../src-gen";
+} from "api-client";
 import { useIsLoggedIn } from "../../state/useIsLoggedIn.ts";
 import { useCanvasContext } from "../../pages/Canvas.tsx";
 import {

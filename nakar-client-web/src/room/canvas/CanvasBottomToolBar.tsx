@@ -5,10 +5,7 @@ import { DateTool } from "../../shared/data/DateTool.ts";
 import { NavbarButton } from "../../shared/elements/NavbarButton.tsx";
 import { DateTimeSpanSelect } from "../../shared/date-time-span-select/DateTimeSpanSelect.tsx";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
-import {
-  actionControllerLoadScenario,
-  ScenarioArgumentDto,
-} from "../../../src-gen";
+import { actionControllerLoadScenario, ScenarioArgumentDto } from "api-client";
 import { useCanvasContext } from "../../pages/Canvas.tsx";
 
 export function CanvasBottomToolBar() {
@@ -95,7 +92,7 @@ export function CanvasBottomToolBar() {
       }
 
       try {
-        await resultOrThrow(
+        resultOrThrow(
           await actionControllerLoadScenario({
             path: {
               roomId: roomContext.initialRoomData.id,

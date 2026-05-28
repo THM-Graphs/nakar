@@ -8,7 +8,7 @@ import {
   Tooltip,
 } from "react-bootstrap";
 import { MouseEventHandler } from "react";
-import { UpdateScenarioQueryParameterEntryDto } from "../../../src-gen";
+import { UpdateScenarioQueryParameterEntryDto } from "api-client";
 import { CMSButton } from "./CMSButton.tsx";
 import { StringListEditor } from "./StringListEditor.tsx";
 

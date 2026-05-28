@@ -1,6 +1,6 @@
 import { ScenarioGroupDisplay } from "./ScenarioGroupDisplay.tsx";
 import { Stack } from "react-bootstrap";
-import { ScenarioGroupDto } from "../../../src-gen";
+import { ScenarioGroupDto } from "api-client";
 import { Fragment } from "react";
 
 export function ScenarioGroupList(props: {

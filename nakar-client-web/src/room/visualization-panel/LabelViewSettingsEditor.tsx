@@ -3,13 +3,13 @@ import { NumberInput } from "../../shared/elements/NumberInput.tsx";
 import { ViewSettingsColorEditor } from "./ViewSettingsColorEditor.tsx";
 import { useBearStore } from "../../state/useBearStore.ts";
 import { useCallback, useMemo } from "react";
-import {
-  actionControllerSetViewSettings,
-  LiveCanvasLabelViewSettingsDto,
-} from "../../../src-gen";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
 import { useCanvasContext } from "../../pages/Canvas.tsx";
 import { ApplyableStringInput } from "../../shared/elements/ApplyableStringInput.tsx";
+import {
+  actionControllerSetViewSettings,
+  LiveCanvasLabelViewSettingsDto,
+} from "api-client";
 
 export function LabelViewSettingsEditor(props: {
   label: string;

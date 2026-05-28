@@ -8,7 +8,7 @@ import {
   roomControllerGetRoom,
   roomControllerUpdateRoom,
   RoomDto,
-} from "../../src-gen";
+} from "api-client";
 import { resultOrThrow } from "../shared/data/resultOrThrow.ts";
 import { LoaderFunctionArgs, useLoaderData } from "react-router";
 import { CMSEditTextCard } from "../shared/cms/CMSEditTextCard.tsx";

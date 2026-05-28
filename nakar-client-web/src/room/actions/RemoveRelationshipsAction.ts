@@ -1,7 +1,7 @@
 import { Action, ActionShortcut } from "./Action.ts";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
 import { RelationshipsActionParams } from "./RelationshipsActionParams.ts";
-import { actionControllerDeleteElements } from "../../../src-gen";
+import { actionControllerDeleteElements } from "api-client";
 import { createAppShortcut } from "./createAppShortcut.ts";
 
 export class RemoveRelationshipsAction extends Action<RelationshipsActionParams> {
@@ -9,7 +9,7 @@ export class RemoveRelationshipsAction extends Action<RelationshipsActionParams>
     new RemoveRelationshipsAction();
 
   protected async action(input: RelationshipsActionParams): Promise<void> {
-    await resultOrThrow(
+    resultOrThrow(
       await actionControllerDeleteElements({
         path: {
           roomId: input.roomContext.initialRoomData.id,

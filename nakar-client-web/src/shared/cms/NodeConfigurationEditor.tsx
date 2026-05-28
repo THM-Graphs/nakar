@@ -8,7 +8,7 @@ import {
   Tooltip,
 } from "react-bootstrap";
 import { MouseEventHandler } from "react";
-import { UpdateNodeConfigurationRequestBodyDto } from "../../../src-gen";
+import { UpdateNodeConfigurationRequestBodyDto } from "api-client";
 import { CMSButton } from "./CMSButton.tsx";
 
 export function NodeConfigurationEditor(props: {

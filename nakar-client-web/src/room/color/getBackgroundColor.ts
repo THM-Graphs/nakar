@@ -1,6 +1,6 @@
 import { match, P } from "ts-pattern";
 import { ColorSchema } from "./ColorSchema.ts";
-import { ColorDto, LabelDto, NodePreviewDto } from "../../../src-gen";
+import { ColorDto, LabelDto, NodePreviewDto } from "api-client";
 
 const defaultColor: ColorDto = {
   color: {

@@ -1,4 +1,4 @@
-import { NodeParameterizedScenarioGroupDto } from "../../../src-gen";
+import { NodeParameterizedScenarioGroupDto } from "api-client";
 
 /**
  * Calculates the intersection of multiple ScenarioGroupDto lists.

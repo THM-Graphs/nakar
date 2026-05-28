@@ -8,7 +8,7 @@ import {
   getBackgroundColorOfOptionalColor,
 } from "../../color/getBackgroundColor.ts";
 import { useColorSchema } from "../../color/useColorSchema.ts";
-import { LabelDto } from "../../../../src-gen";
+import { LabelDto } from "api-client";
 import { useIsLoggedIn } from "../../../state/useIsLoggedIn.ts";
 
 export function HistogramSectionNodes() {

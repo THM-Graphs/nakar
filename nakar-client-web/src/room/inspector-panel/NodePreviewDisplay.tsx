@@ -5,7 +5,7 @@ import clsx from "clsx";
 import { useColorSchema } from "../color/useColorSchema.ts";
 import { isMultiSelectKey } from "../../shared/dom/isMultiSelectKey.ts";
 import { MouseEvent } from "react";
-import { NodePreviewDto } from "../../../src-gen";
+import { NodePreviewDto } from "api-client";
 
 const maxTitleLength: number = 20;
 export function NodePreviewDisplay(props: {

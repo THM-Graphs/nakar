@@ -1,8 +1,5 @@
 import { Card, Form, Stack } from "react-bootstrap";
-import {
-  ProjectPageDto,
-  UpdateCommonPropertyRequestBodyDto,
-} from "../../../src-gen";
+import { ProjectPageDto, UpdateCommonPropertyRequestBodyDto } from "api-client";
 import { Fragment } from "react";
 
 export function CommonPropertyEditor(props: {

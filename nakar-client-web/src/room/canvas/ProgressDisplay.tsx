@@ -1,7 +1,7 @@
 import { ProgressBar, Spinner, Stack } from "react-bootstrap";
 import { useEffect, useState } from "react";
 import { useBearStore } from "../../state/useBearStore.ts";
-import { ProgressWsdto } from "../../../src-gen";
+import { ProgressWsdto } from "api-client";
 import clsx from "clsx";
 
 export function ProgressDisplay() {

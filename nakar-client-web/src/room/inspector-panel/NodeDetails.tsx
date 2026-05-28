@@ -8,7 +8,7 @@ import { nodeActions } from "../actions/groups/nodeActions.ts";
 import { ActionNavbarButton } from "../actions/ActionNavbarButton.tsx";
 import { AddNoteAction } from "../actions/AddNoteAction.ts";
 import { NoteDisplay } from "../notes-panel/NoteDisplay.tsx";
-import { NodeDto, NodeParameterizedScenarioGroupDto } from "../../../src-gen";
+import { NodeDto, NodeParameterizedScenarioGroupDto } from "api-client";
 import { PropertyEntry } from "./PropertiesDisplay.tsx";
 import { useIsLoggedIn } from "../../state/useIsLoggedIn.ts";
 import { ParameterizedScenarioGroupEntry } from "./ParameterizedScenarioGroupEntry.tsx";

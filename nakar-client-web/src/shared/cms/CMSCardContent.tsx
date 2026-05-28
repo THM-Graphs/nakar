@@ -2,7 +2,7 @@ import { ReactNode, useState } from "react";
 import { Stack } from "react-bootstrap";
 import clsx from "clsx";
 import { CMSButton } from "./CMSButton.tsx";
-import { UserPreviewDto } from "../../../src-gen";
+import { UserPreviewDto } from "api-client";
 import { CMSUserCircleCollection } from "./CMSUserCircleCollection.tsx";
 
 export function CMSCardContent(props: {

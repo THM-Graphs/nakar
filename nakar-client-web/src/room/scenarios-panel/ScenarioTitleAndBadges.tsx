@@ -1,7 +1,7 @@
 import { Stack } from "react-bootstrap";
 import clsx from "clsx";
 import { ScnearioPlayButton } from "./ScenarioPlayButton";
-import { ScenarioArgumentDto, ScenarioDto } from "../../../src-gen";
+import { ScenarioArgumentDto, ScenarioDto } from "api-client";
 import { ScenarioQueryParameterBadge } from "./ScenarioQueryParameterBadge.tsx";
 
 export function ScenarioTitleAndBadges(props: {

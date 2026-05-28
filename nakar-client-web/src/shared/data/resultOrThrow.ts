@@ -10,11 +10,17 @@ export function resultOrThrow<T>(
         data: undefined;
         error: unknown;
       },
-): T {
+): NonNullable<T> {
   return mapResult(
     result,
-    (d) => d,
-    (error) => {
+    (d: T): NonNullable<T> => {
+      if (d == null) {
+        throw new Error("No data");
+      } else {
+        return d;
+      }
+    },
+    (error: unknown): never => {
       throw error;
     },
   );

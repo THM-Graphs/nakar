@@ -7,7 +7,7 @@ import {
   ScenarioArgumentDto,
   ScenarioDto,
   ScenarioParameterDto,
-} from "../../../src-gen";
+} from "api-client";
 import { convertToTargetTypeStringRepresentation } from "../../shared/data/convertToTargetTypeStringRepresentation.ts";
 import { BearState } from "../../state/BearState.ts";
 
@@ -46,7 +46,7 @@ export class RunScenarioAction extends Action<RunScenarioActionParams> {
         );
 
       if (props.scenario.parameters.length === 1 || props.nodes.length > 1) {
-        await resultOrThrow(
+        resultOrThrow(
           await actionControllerLoadScenario({
             path: {
               roomId: props.roomContext.initialRoomData.id,
