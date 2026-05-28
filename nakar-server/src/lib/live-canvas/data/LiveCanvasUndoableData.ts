@@ -26,7 +26,7 @@ export class LiveCanvasUndoableData {
     nodes: z.array(GraphNode.schema),
     edges: z.array(GraphEdge.schema),
     metaData: LiveCanvasMetaData.schema,
-    tableData: z.array(z.record(z.unknown())),
+    tableData: z.array(z.record(z.string(), z.unknown())),
     notes: z.array(LiveCanvasNote.schema),
   });
 

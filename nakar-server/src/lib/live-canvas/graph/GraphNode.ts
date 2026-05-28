@@ -26,7 +26,7 @@ export class GraphNode {
     sourceId: z.string(),
     sourceTitle: z.string().nullable(),
     compressed: z.array(z.string()),
-    creationAction: z.nativeEnum(ElementCreationReason),
+    creationAction: z.enum(ElementCreationReason),
     url: z.string().nullable(),
     coverImageUrl: z.string().nullable(),
     noteReferences: z.array(z.string()),

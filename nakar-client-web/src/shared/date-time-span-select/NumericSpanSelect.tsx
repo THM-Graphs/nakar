@@ -39,11 +39,14 @@ export function NumericSpanSelect(props: {
   const changeFactor = 0.2;
   const handleWidth: number = 8;
 
-  const fullWidthElement: RefObject<HTMLSpanElement> =
+  const fullWidthElement: RefObject<HTMLSpanElement | null> =
     useRef<HTMLSpanElement>(null);
-  const leftHandle: RefObject<HTMLDivElement> = useRef<HTMLDivElement>(null);
-  const rightHandle: RefObject<HTMLDivElement> = useRef<HTMLDivElement>(null);
-  const middleHandle: RefObject<HTMLDivElement> = useRef<HTMLDivElement>(null);
+  const leftHandle: RefObject<HTMLDivElement | null> =
+    useRef<HTMLDivElement>(null);
+  const rightHandle: RefObject<HTMLDivElement | null> =
+    useRef<HTMLDivElement>(null);
+  const middleHandle: RefObject<HTMLDivElement | null> =
+    useRef<HTMLDivElement>(null);
 
   const [currentWidth, setCurrentWidth] = useState(0);
 

@@ -4,7 +4,7 @@ import { SMap } from '../../map/Map';
 export class PropertyCollection {
   // eslint-disable-next-line @typescript-eslint/typedef
   public static readonly schema = z.object({
-    properties: z.record(z.unknown()),
+    properties: z.record(z.string(), z.unknown()),
   });
 
   public properties: SMap<string, unknown>;

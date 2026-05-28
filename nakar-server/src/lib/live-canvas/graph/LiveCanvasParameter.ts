@@ -10,7 +10,7 @@ export class LiveCanvasParameter {
     identifier: z.string(),
     title: z.string(),
     defaultValue: z.string().nullable(),
-    dataType: z.nativeEnum(LiveCanvasParameterDataType),
+    dataType: z.enum(LiveCanvasParameterDataType),
     allowedLabels: z.array(z.string()),
   });
 

@@ -22,7 +22,7 @@ export class GraphEdge {
     namesInQuery: z.array(z.string()),
     sourceId: z.string().nullable(),
     sourceTitle: z.string().nullable(),
-    creationAction: z.nativeEnum(ElementCreationReason),
+    creationAction: z.enum(ElementCreationReason),
   });
 
   public readonly id: string;
