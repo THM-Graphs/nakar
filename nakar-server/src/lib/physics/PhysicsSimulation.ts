@@ -239,7 +239,7 @@ export class PhysicsSimulation {
     if (magnitude > PhysicsSimulation.maximumVelocity) {
       node.velocityX =
         (node.velocityX / magnitude) * PhysicsSimulation.maximumVelocity;
-      node.velocityX =
+      node.velocityY =
         (node.velocityY / magnitude) * PhysicsSimulation.maximumVelocity;
     }
     node.position.x += node.velocityX * this._heat;
