@@ -20,7 +20,7 @@ export function SelectableTableData(props: {
     <DynamicList
       data={props.data}
       entityNamePlural={props.title}
-      className={"border-top"}
+      className={""}
       filter={(exp, d) =>
         d.identificator.toLowerCase().includes(exp.toLowerCase())
       }

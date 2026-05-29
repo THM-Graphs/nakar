@@ -61,12 +61,11 @@ export function ExpandNodePreviewModal() {
             maxHeight: `${(window.innerHeight - 150).toString()}px`,
           }}
           className={"overflow-y-auto"}
-          gap={5}
+          gap={0}
         >
           <Stack className={"pb-2 pt-2 bg-body-tertiary"} gap={3}>
             <span className={"small text-muted ps-3 pe-3"}>
-              Expanding this node will yield to many graph elements. Please
-              select all labels and relationships to load.
+              Select labels and relationships to load.
             </span>
           </Stack>
           {data ? (

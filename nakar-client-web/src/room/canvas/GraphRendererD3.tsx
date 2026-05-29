@@ -5,6 +5,10 @@ import { match } from "ts-pattern";
 import { D3Renderer } from "../d3/D3Renderer.ts";
 import { CanvasContextMenu } from "./CanvasContextMenu.tsx";
 import { useTheme } from "../../shared/theme/useTheme.ts";
+import { ExpandNodePreviewAction } from "../actions/ExpandNodePreviewAction.ts";
+import { useIsLoggedIn } from "../../state/useIsLoggedIn.ts";
+import { useCanvasContext } from "../../pages/Canvas.tsx";
+import { NodeDto } from "api-client";
 
 export function GraphRendererD3() {
   const context = useAppContext();
@@ -16,6 +20,8 @@ export function GraphRendererD3() {
   const events = useBearStore((s) => s.room.ui.rendererEvents);
   const hideLabels = useBearStore((s) => s.room.canvas.hideLabels);
   const colorSchemaSlug = useBearStore((s) => s.room.canvas.colorSchemaSlug);
+  const isLoggedIn = useIsLoggedIn();
+  const canvasContext = useCanvasContext();
 
   useEffect(() => {
     if (svgRef.current == null) {
@@ -86,6 +92,22 @@ export function GraphRendererD3() {
       }),
       _graphRenderer.onDisplayNodeData.subscribe((n) => {
         inspector.setElement(n.id);
+      }),
+      _graphRenderer.onDoubleClickNode.subscribe((n) => {
+        const node: NodeDto | null =
+          useBearStore
+            .getState()
+            .room.scenario.graph.elements.nodes.find(
+              (cnode) => cnode.id === n.id,
+            ) ?? null;
+        if (node == null) {
+          return;
+        }
+        ExpandNodePreviewAction.shared.runAsync({
+          isLoggedIn: isLoggedIn,
+          nodes: [node],
+          roomContext: canvasContext,
+        });
       }),
       _graphRenderer.onDisplayLinkData.subscribe((l) => {
         inspector.setElement(l.id);
@@ -188,7 +210,7 @@ export function GraphRendererD3() {
       animationActive = false;
       cancelAnimationFrame(animationFrame);
     };
-  }, [websocketsManager, svgRef.current]);
+  }, [websocketsManager, svgRef.current, isLoggedIn, canvasContext]);
 
   return (
     <>

@@ -36,6 +36,7 @@ export class D3Renderer {
 
   private $onDisplayLinkData: Subject<D3Link>;
   private $onDisplayNodeData: Subject<D3Node>;
+  private $onDoubleClickNode: Subject<D3Node>;
   private $onDisplayLinkDataWithModifier: Subject<D3Link>;
   private $onDisplayNodeDataWithModifier: Subject<D3Node>;
   private $onDeselectAll: Subject<void>;
@@ -126,6 +127,7 @@ export class D3Renderer {
 
     this.$onDisplayLinkData = new Subject();
     this.$onDisplayNodeData = new Subject();
+    this.$onDoubleClickNode = new Subject();
     this.$onDisplayLinkDataWithModifier = new Subject();
     this.$onDisplayNodeDataWithModifier = new Subject();
     this.$onDeselectAll = new Subject();
@@ -160,6 +162,10 @@ export class D3Renderer {
 
   public get onDisplayNodeData(): Observable<D3Node> {
     return this.$onDisplayNodeData.asObservable();
+  }
+
+  public get onDoubleClickNode(): Observable<D3Node> {
+    return this.$onDoubleClickNode.asObservable();
   }
 
   public get onDisplayLinkDataWithModifier(): Observable<D3Link> {
@@ -481,6 +487,10 @@ export class D3Renderer {
         } else {
           this.$onDisplayNodeData.next(node);
         }
+        event.stopPropagation();
+      })
+      .on("dblclick", (event: PointerEvent, node: D3Node) => {
+        this.$onDoubleClickNode.next(node);
         event.stopPropagation();
       })
       .on("contextmenu", (event: PointerEvent, node: D3Node) => {
