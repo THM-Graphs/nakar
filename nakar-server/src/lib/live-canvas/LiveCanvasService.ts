@@ -3,7 +3,6 @@ import { DatabaseEventsService } from '../database/DatabaseEventsService';
 import { Neo4jService } from '../neo4j/Neo4jService';
 import { Observable, Subject } from 'rxjs';
 import { LiveCanvasUndoableData } from './data/LiveCanvasUndoableData';
-import installHandlebarHelpers from 'handlebars-helpers';
 import { SMap } from '../map/Map';
 import { CanvasEvent } from './events/CanvasEvent';
 import { CanvasEventEventKick } from './events/CanvasEventEventKick';
@@ -39,8 +38,6 @@ export class LiveCanvasService implements OnModuleInit, OnModuleDestroy {
   }
 
   public onModuleInit(): void {
-    installHandlebarHelpers();
-
     this._databaseEvents.onCanvasDeleted$.subscribe(
       (canvas: Result<'api::canvas.canvas'>): void => {
         this._destroyCanvas(canvas).catch((error: unknown): void => {

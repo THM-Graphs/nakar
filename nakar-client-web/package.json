@@ -18,7 +18,6 @@
     "pre-commit": "tsc -b && npm run lint:fix && npm run format:fix"
   },
   "dependencies": {
-    "@hey-api/client-fetch": "^0.5.7",
     "@neo4j-cypher/react-codemirror": "^2.0.0-next.31",
     "@uiw/react-md-editor": "^4.0.11",
     "api-client": "file:./packages/api-client",
