@@ -40,7 +40,6 @@
     "express": "^5.0.0",
     "express-fileupload": "^1.5.1",
     "handlebars": "^4.7.9",
-    "handlebars-helpers": "^0.10.0",
     "http-errors": "^2.0.0",
     "mysql2": "^3.14.1",
     "neo4j-driver": "^6.0.1",
