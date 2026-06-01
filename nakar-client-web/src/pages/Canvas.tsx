@@ -6,6 +6,7 @@ import {
   LoaderFunctionArgs,
   useLoaderData,
   useNavigate,
+  useSearchParams,
 } from "react-router";
 import { resultOrThrow } from "../shared/data/resultOrThrow.ts";
 import { ToastStack } from "../shared/bars/ToastStack.tsx";
@@ -36,11 +37,13 @@ import { CanvasSurface } from "../room/canvas/CanvasSurface.tsx";
 import { VisualizationPanelButton } from "../room/visualization-panel/VisualizationPanelButton.tsx";
 import { VisualizationPanel } from "../room/visualization-panel/VisualizationPanel.tsx";
 import {
+  actionControllerLoadScenario,
   CanvasDto,
   CanvasPageDto,
   EventWsdto,
   publicCanvasControllerGetCanvas,
   RoomDto,
+  ScenarioArgumentDto,
   ScenarioCollectionDto,
 } from "api-client";
 import { useAppContext } from "../state/AppContextData.ts";
@@ -48,6 +51,8 @@ import { Router } from "../routing/Router.ts";
 import { usePageTitle } from "../routing/usePageTitle.ts";
 import { CanvasToolbar } from "../room/canvas/CanvasToolbar.tsx";
 import { CanvasShortcuts } from "../room/shortcuts/CanvasShortcuts.tsx";
+import qs, { ParsedQs } from "qs";
+import { z } from "zod";
 
 const CanvasContext: Context<CanvasContextData | null> =
   createContext<CanvasContextData | null>(null);
@@ -125,6 +130,10 @@ export function Canvas() {
   const navigate = useNavigate();
   const leftPanel = useBearStore((s) => s.room.panels.left);
   const rightPanel = useBearStore((s) => s.room.panels.right);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const pushErrorNotification = useBearStore(
+    (s) => s.room.ui.pushErrorNotification,
+  );
 
   useEffect(() => {
     setScenarios(canvasContext.initialScenariosData);
@@ -141,6 +150,67 @@ export function Canvas() {
       clearPerformance();
     }
   }, [socketState]);
+
+  useEffect(() => {
+    let cancelled: boolean = false;
+    try {
+      if (socketState.type !== "connected") {
+        return;
+      }
+
+      const rawSearchData: ParsedQs = qs.parse(searchParams.toString());
+      const searchDataSchema = z.object({
+        scenario: z
+          .object({
+            id: z.string(),
+            args: z.record(z.string(), z.string()).optional(),
+          })
+          .optional(),
+      });
+      const searchData: z.infer<typeof searchDataSchema> =
+        searchDataSchema.parse(rawSearchData);
+
+      if (searchData.scenario == null) {
+        return;
+      }
+
+      const scenarioArguments: ScenarioArgumentDto[] = [];
+      for (const entry of Object.entries(
+        searchData.scenario.args ?? {},
+      ) satisfies [string, unknown][]) {
+        const key: string = entry[0];
+        const value: string = entry[1];
+        scenarioArguments.push({
+          identifier: key,
+          value: value,
+        });
+      }
+
+      actionControllerLoadScenario({
+        path: {
+          canvasId: canvasContext.initialCanvasData.id,
+          roomId: canvasContext.initialRoomData.id,
+        },
+        body: {
+          additive: false,
+          arguments: scenarioArguments,
+          scenarioId: searchData.scenario.id,
+        },
+      })
+        .then(resultOrThrow)
+        .catch(pushErrorNotification)
+        .finally(() => {
+          if (!cancelled) {
+            setSearchParams(new URLSearchParams(), { replace: true });
+          }
+        });
+    } catch (error: unknown) {
+      pushErrorNotification(error);
+    }
+    return () => {
+      cancelled = true;
+    };
+  }, [searchParams, socketState, canvasContext]);
 
   useEffect(() => {
     const subscriptions = [

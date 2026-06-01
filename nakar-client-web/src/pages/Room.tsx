@@ -1,10 +1,10 @@
-import { LoaderFunctionArgs, redirect } from "react-router";
+import { LoaderFunctionArgs, replace } from "react-router";
 import { publicRoomControllerGetRoom, RoomDto } from "api-client";
 import { resultOrThrow } from "../shared/data/resultOrThrow.ts";
 import { useBearStore } from "../state/useBearStore.ts";
 import { Router } from "../routing/Router.ts";
 
-export async function RoomLoader(args: LoaderFunctionArgs): Promise<void> {
+export async function RoomLoader(args: LoaderFunctionArgs): Promise<Response> {
   const roomId = args.params["roomId"];
 
   if (roomId == null) {
@@ -17,8 +17,10 @@ export async function RoomLoader(args: LoaderFunctionArgs): Promise<void> {
 
   useBearStore.getState().start.addRoom(room.id);
 
-  // eslint-disable-next-line @typescript-eslint/only-throw-error
-  throw redirect(Router.getCanvasUrl(room.id, room.joinCanvasId));
+  const url: URL = new URL(Router.getCanvasUrl(room.id, room.joinCanvasId));
+  url.search = window.location.search;
+
+  return replace(url.toString());
 }
 
 export function Room() {
