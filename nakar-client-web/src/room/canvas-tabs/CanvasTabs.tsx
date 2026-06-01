@@ -22,7 +22,7 @@ export function CanvasTabs(props: { canvasContext: CanvasContextData }) {
           title={<span className={"ellipsis"}>{canvas.title}</span>}
           onClick={async () => {
             await navigate(
-              Router.getCanvasUrl(
+              Router.getCanvasPath(
                 props.canvasContext.initialRoomData.id,
                 canvas.id,
               ),

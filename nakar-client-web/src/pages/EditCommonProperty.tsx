@@ -64,21 +64,21 @@ export function EditCommonProperty() {
     <Stack className={""}>
       <CMSNavbar
         breadcrumbContext={[
-          { title: "Home", url: Router.getHomeUrl() },
+          { title: "Home", url: Router.getHomePath() },
           {
             title: loaderData.project.title,
             url: Router.getProjectPath(loaderData.project.id),
           },
           {
             title: "Common Property",
-            url: Router.getCommonPropertyEditUrl(
+            url: Router.getCommonPropertyEditPath(
               loaderData.project.id,
               loaderData.commonProperty.id,
             ),
           },
           {
             title: "Edit",
-            url: Router.getCommonPropertyEditUrl(
+            url: Router.getCommonPropertyEditPath(
               loaderData.project.id,
               loaderData.commonProperty.id,
             ),

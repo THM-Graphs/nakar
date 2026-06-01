@@ -26,7 +26,7 @@ function CommonPropertyCard(props: {
               )}
             </span>
             <Link
-              to={Router.getCommonPropertyEditUrl(
+              to={Router.getCommonPropertyEditPath(
                 props.project.id,
                 props.commonProperty.id,
               )}
@@ -44,7 +44,7 @@ function CommonPropertyCard(props: {
             <Stack className={"align-items-end"}>
               {props.commonProperty.leftDatabase != null ? (
                 <Link
-                  to={Router.getDatabaseConnectionEditUrl(
+                  to={Router.getDatabaseConnectionEditPath(
                     props.project.id,
                     props.commonProperty.leftDatabase.id,
                   )}
@@ -65,7 +65,7 @@ function CommonPropertyCard(props: {
             <Stack className={"align-items-start"}>
               {props.commonProperty.rightDatabase != null ? (
                 <Link
-                  to={Router.getDatabaseConnectionEditUrl(
+                  to={Router.getDatabaseConnectionEditPath(
                     props.project.id,
                     props.commonProperty.rightDatabase.id,
                   )}

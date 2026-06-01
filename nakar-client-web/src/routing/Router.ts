@@ -3,23 +3,27 @@ export class Router {
   public static createRouter() {}
 
   public static getProjectPath(projectId: string): string {
-    return `${window.location.origin}/project/${projectId}`;
+    return `/project/${projectId}`;
   }
 
-  public static getHomeUrl(): string {
-    return `${window.location.origin}/`;
+  public static getHomePath(): string {
+    return `/`;
   }
 
   public static getProjectEditPath(projectId: string): string {
-    return `${window.location.origin}/project/${projectId}/edit`;
+    return `/project/${projectId}/edit`;
   }
 
-  public static getCanvasUrl(roomId: string, canvasId: string): string {
-    return `${window.location.origin}/room/${roomId}/canvas/${canvasId}`;
+  public static getCanvasPath(roomId: string, canvasId: string): string {
+    return `/room/${roomId}/canvas/${canvasId}`;
   }
 
-  public static getRoomEditUrl(projectId: string, roomId: string): string {
-    return `${window.location.origin}/project/${projectId}/room/${roomId}/edit`;
+  public static getRoomEditPath(projectId: string, roomId: string): string {
+    return `/project/${projectId}/room/${roomId}/edit`;
+  }
+
+  public static getRoomPath(roomId: string): string {
+    return `/room/${roomId}`;
   }
 
   public static getRoomUrl(roomId: string): string {
@@ -31,27 +35,27 @@ export class Router {
     scenarioGroupId: string,
     scenarioId: string,
   ): string {
-    return `${window.location.origin}/project/${projectId}/scenario-group/${scenarioGroupId}/scenario/${scenarioId}/edit`;
+    return `/project/${projectId}/scenario-group/${scenarioGroupId}/scenario/${scenarioId}/edit`;
   }
 
   public static getEditScenarioGroupPath(
     projectId: string,
     scenarioGroupId: string,
   ): string {
-    return `${window.location.origin}/project/${projectId}/scenario-group/${scenarioGroupId}/edit`;
+    return `/project/${projectId}/scenario-group/${scenarioGroupId}/edit`;
   }
 
-  public static getDatabaseConnectionEditUrl(
+  public static getDatabaseConnectionEditPath(
     projectId: string,
     databaseId: string,
   ): string {
-    return `${window.location.origin}/project/${projectId}/database-connection/${databaseId}/edit`;
+    return `/project/${projectId}/database-connection/${databaseId}/edit`;
   }
 
-  public static getCommonPropertyEditUrl(
+  public static getCommonPropertyEditPath(
     projectId: string,
     commonPropertyId: string,
   ): string {
-    return `${window.location.origin}/project/${projectId}/common-property/${commonPropertyId}/edit`;
+    return `/project/${projectId}/common-property/${commonPropertyId}/edit`;
   }
 }

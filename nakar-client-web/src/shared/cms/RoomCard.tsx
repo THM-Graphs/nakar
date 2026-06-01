@@ -25,14 +25,14 @@ export function RoomCard(props: {
           >
             <Stack className={"ellipsis flex-grow-0"}>
               <Link
-                to={Router.getRoomUrl(props.room.id)}
+                to={Router.getRoomPath(props.room.id)}
                 className={"ellipsis"}
               >
                 {props.room.title}
               </Link>
             </Stack>
             <Link
-              to={Router.getRoomEditUrl(props.project.id, props.room.id)}
+              to={Router.getRoomEditPath(props.project.id, props.room.id)}
               className={"small"}
             >
               <i className={"bi bi-pen"}></i>
@@ -52,7 +52,7 @@ export function RoomCard(props: {
             props.room.visibility === "unlisted" ? (
               <span className={"small"}>
                 Public URL:{" "}
-                <Link to={Router.getRoomUrl(props.room.id)}>
+                <Link to={Router.getRoomPath(props.room.id)}>
                   {Router.getRoomUrl(props.room.id)}
                 </Link>
                 <ClipboardButton

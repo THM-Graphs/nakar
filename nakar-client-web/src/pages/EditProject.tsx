@@ -38,7 +38,7 @@ export function EditProject() {
     <Stack className={""}>
       <CMSNavbar
         breadcrumbContext={[
-          { title: "Home", url: Router.getHomeUrl() },
+          { title: "Home", url: Router.getHomePath() },
           { title: project.title, url: Router.getProjectPath(project.id) },
           { title: "Edit", url: Router.getProjectEditPath(project.id) },
         ]}
@@ -60,7 +60,7 @@ export function EditProject() {
               }).then(resultOrThrow);
             }}
             closeUrl={Router.getProjectPath(project.id)}
-            afterDeleteUrl={Router.getHomeUrl()}
+            afterDeleteUrl={Router.getHomePath()}
             entityTitleSingular={"Project"}
           >
             <CMSEditTextCard

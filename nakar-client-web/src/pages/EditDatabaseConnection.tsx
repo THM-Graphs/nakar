@@ -66,21 +66,21 @@ export function EditDatabaseConnection() {
     <Stack className={""}>
       <CMSNavbar
         breadcrumbContext={[
-          { title: "Home", url: Router.getHomeUrl() },
+          { title: "Home", url: Router.getHomePath() },
           {
             title: loaderData.project.title,
             url: Router.getProjectPath(loaderData.project.id),
           },
           {
             title: loaderData.databaseConnection.title,
-            url: Router.getDatabaseConnectionEditUrl(
+            url: Router.getDatabaseConnectionEditPath(
               loaderData.project.id,
               loaderData.databaseConnection.id,
             ),
           },
           {
             title: "Edit",
-            url: Router.getDatabaseConnectionEditUrl(
+            url: Router.getDatabaseConnectionEditPath(
               loaderData.project.id,
               loaderData.databaseConnection.id,
             ),

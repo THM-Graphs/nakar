@@ -17,7 +17,8 @@ export async function RoomLoader(args: LoaderFunctionArgs): Promise<Response> {
 
   useBearStore.getState().start.addRoom(room.id);
 
-  const url: URL = new URL(Router.getCanvasUrl(room.id, room.joinCanvasId));
+  const url: URL = new URL(window.location.toString());
+  url.pathname = Router.getCanvasPath(room.id, room.joinCanvasId);
   url.search = window.location.search;
 
   return replace(url.toString());

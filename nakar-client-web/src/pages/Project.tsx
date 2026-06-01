@@ -45,7 +45,7 @@ export function Project() {
     <Stack className={""}>
       <CMSNavbar
         breadcrumbContext={[
-          { title: "Home", url: Router.getHomeUrl() },
+          { title: "Home", url: Router.getHomePath() },
           {
             title: projectContext.title,
             url: Router.getProjectPath(projectContext.id),
@@ -206,7 +206,7 @@ export function Project() {
                         .then(resultOrThrow)
                         .then((cp) =>
                           navigate(
-                            Router.getCommonPropertyEditUrl(
+                            Router.getCommonPropertyEditPath(
                               projectContext.id,
                               cp.id,
                             ),

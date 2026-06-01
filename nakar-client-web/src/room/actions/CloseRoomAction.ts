@@ -7,7 +7,7 @@ export class CloseRoomAction extends Action<CloseRoomActionParams> {
   public static shared: CloseRoomAction = new CloseRoomAction();
 
   protected async action(params: CloseRoomActionParams): Promise<void> {
-    await params.navigate(Router.getHomeUrl());
+    await params.navigate(Router.getHomePath());
   }
 
   disabled(): boolean {

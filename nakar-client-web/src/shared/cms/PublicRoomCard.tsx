@@ -17,7 +17,7 @@ export function PublicRoomCard(props: {
         onRemove={props.onRemove}
         title={
           <Stack className={"ellipsis"}>
-            <Link to={Router.getRoomUrl(props.room.id)} className={"ellipsis"}>
+            <Link to={Router.getRoomPath(props.room.id)} className={"ellipsis"}>
               {props.room.title}
             </Link>
           </Stack>

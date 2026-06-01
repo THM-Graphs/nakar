@@ -15,7 +15,7 @@ export function DatabaseConnectionCard(props: {
           <Stack direction={"horizontal"} gap={3}>
             <span>{props.databaseConnection.title}</span>
             <Link
-              to={Router.getDatabaseConnectionEditUrl(
+              to={Router.getDatabaseConnectionEditPath(
                 props.project.id,
                 props.databaseConnection.id,
               )}

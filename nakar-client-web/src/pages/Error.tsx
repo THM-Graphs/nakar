@@ -24,7 +24,7 @@ export function ErrorComp() {
         <CMSButton
           title={"Back to start"}
           onClick={() => {
-            void navigate(Router.getHomeUrl());
+            void navigate(Router.getHomePath());
           }}
         ></CMSButton>
       </Stack>

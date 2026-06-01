@@ -249,7 +249,7 @@ export function Canvas() {
             /* */
           })
           .with({ type: "KickWsdto" }, () => {
-            void navigate(Router.getHomeUrl());
+            void navigate(Router.getHomePath());
           })
           .with({ type: "CanvasDataReadyWsdto" }, (event) => {
             setGraph(event.data);
@@ -292,7 +292,7 @@ export function Canvas() {
                 <>
                   <Stack direction={"horizontal"}>
                     <Link
-                      to={Router.getHomeUrl()}
+                      to={Router.getHomePath()}
                       className={"align-self-center p-1 text-body"}
                     >
                       <NavbarLogo></NavbarLogo>

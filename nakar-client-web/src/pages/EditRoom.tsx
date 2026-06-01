@@ -63,16 +63,16 @@ export function EditRoom() {
     <Stack className={""}>
       <CMSNavbar
         breadcrumbContext={[
-          { title: "Home", url: Router.getHomeUrl() },
+          { title: "Home", url: Router.getHomePath() },
           {
             title: project.title,
             url: Router.getProjectPath(project.id),
           },
           {
             title: room.title,
-            url: Router.getRoomEditUrl(project.id, room.id),
+            url: Router.getRoomEditPath(project.id, room.id),
           },
-          { title: "Edit", url: Router.getRoomEditUrl(project.id, room.id) },
+          { title: "Edit", url: Router.getRoomEditPath(project.id, room.id) },
         ]}
       ></CMSNavbar>
       <div className={"mb-auto pt-5 pb-5"}>

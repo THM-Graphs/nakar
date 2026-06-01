@@ -56,7 +56,7 @@ export function EditScenarioGroup() {
     <Stack className={""}>
       <CMSNavbar
         breadcrumbContext={[
-          { title: "Home", url: Router.getHomeUrl() },
+          { title: "Home", url: Router.getHomePath() },
           {
             title: loaderData.project.title,
             url: Router.getProjectPath(loaderData.project.id),
