@@ -19,7 +19,7 @@
     "pre-commit": "tsc -b && npm run lint:fix && npm run format:fix"
   },
   "dependencies": {
-    "@neo4j-cypher/react-codemirror": "^2.0.0-next.31",
+    "@neo4j-cypher/react-codemirror": "^2.0.0-next.35",
     "@types/qs": "^6.15.1",
     "@uiw/react-md-editor": "^4.0.11",
     "api-client": "file:./packages/api-client",
@@ -40,7 +40,7 @@
     "socket.io-client": "^4.8.1",
     "tinykeys": "^4.0.0",
     "ts-pattern": "^5.6.0",
-    "uuid": "^11.0.5",
+    "uuid": "^14.0.0",
     "zod": "^4.4.3",
     "zustand": "^5.0.5"
   },
