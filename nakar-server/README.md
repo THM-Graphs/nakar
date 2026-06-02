@@ -2,71 +2,75 @@
 
 ## Contribution Guide
 
-### Starting and setting up the server
+### Local setup
 
-#### 1: Install node packages:
-
-```shell
-npm i
-```
-
-#### 2: Set environment variables:
-
-The example environment file will configure the server to run locally on localhost:1337.
+#### 1. Install dependencies
 
 ```shell
-cp ".env.example" ".env"
+npm ci
 ```
 
-#### 3: Start the live server:
+#### 2. Create a local environment file
 
-With hot-reloading and content-type builder:
+The example file configures Strapi to run locally.
+
+```shell
+cp .env.example .env
+```
+
+#### 3. Start the server
+
+For local development with hot reloading and the Content-Type Builder:
 
 ```shell
 npm run develop
 ```
 
-Without hot-reloading:
+For a production-style startup without hot reloading:
 
 ```shell
 npm run build
 npm run start
 ```
 
-#### 4: Set up a local admin account
+#### 4. Create a local admin account
 
-Open http://localhost:1337 and create a local admin account.
+Open http://localhost:1337 and create a local admin account for your development environment.
 
-Tip: Use the following login data for the admin account:
+> Tip: Use the following login data for the admin account:
+> 
+>  Email          | Password             
+>  -------------- | -------------------- 
+>  admin@nakar.de | seuzgfesuz3672tUZGZU 
 
-| Email          | Password             |
-| -------------- | -------------------- |
-| admin@nakar.de | seuzgfesuz3672tUZGZU |
+#### 5. Configure role permissions
 
-#### 5: Enable the API endpoints to be accessible without authentication
+To allow login and access to the current user endpoint, update the Users & Permissions roles in the admin UI:
 
-1. Go to http://localhost:1337/admin/settings/users-permissions/roles
-2. Select "Public"
-3. Disable everything
-4. Enable User-permissions -> Auth -> Callback
-5. Go back and select "Authenticated"
-6. Disable everything
-7. Enable User-permissions -> User -> me
+1. Open http://localhost:1337/admin/settings/users-permissions/roles.
+2. Select **Public**.
+3. Disable all permissions.
+4. Enable **User-permissions -> Auth -> Callback**.
+5. Go back and select **Authenticated**.
+6. Disable all permissions.
+7. Enable **User-permissions -> User -> me**.
 
-#### 6: Import data
+#### 6. Import data
 
-1. Ask the maintainer for the "export.tar" file.
-1. Copy the file into the root of this package.
-1. Run `npm run import`.
-1. Check imported data here: http://localhost:1337/admin/content-manager
+1. Ask a maintainer for the `export.tar` file.
+2. Copy the file to the root of this package.
+3. Run `npm run import`.
+4. Check the imported data at http://localhost:1337/admin/content-manager.
 
-#### 7. API Documentation
+#### 7. API documentation
 
-Visit: http://localhost:1338/api/docs for OpenAPI documentation.
+The OpenAPI documentation is served by the Nest application on the port after the Strapi port. With the default local setup, it is available at:
 
-### Before commit
+http://localhost:1338/api/docs
 
-If you want to commit any changes, you should run the following commands beforehand:
+### Before committing
+
+Run the pre-commit checks before committing changes:
 
 ```shell
 npm run pre-commit
