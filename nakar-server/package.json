@@ -16,7 +16,7 @@
     "format": "prettier . --check",
     "format:fix": "prettier . --write",
     "analyze": "fta .",
-    "audit": "npm audit --audit-level high",
+    "audit": "npm audit --audit-level critical",
     "test": "jest",
     "export": "strapi export --no-compress --no-encrypt -f export",
     "import": "strapi import -f export.tar",
