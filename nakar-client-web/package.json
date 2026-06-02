@@ -13,7 +13,8 @@
     "lint:fix": "eslint --fix .",
     "format": "prettier . --check",
     "format:fix": "prettier . --write",
-    "audit": "npm audit",
+    "analyze": "fta .",
+    "audit": "npm audit --audit-level critical",
     "version": "echo $npm_package_version",
     "pre-commit": "tsc -b && npm run lint:fix && npm run format:fix"
   },
@@ -53,6 +54,7 @@
     "eslint": "^10.4.0",
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.2",
+    "fta-cli": "^3.0.0",
     "globals": "^17.6.0",
     "prettier": "^3.4.2",
     "typescript": "5.4.5",

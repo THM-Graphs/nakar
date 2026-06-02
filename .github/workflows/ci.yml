@@ -79,6 +79,8 @@ jobs:
           cd nakar-client-web
           npm run lint
           npm run format
+          npm run analyze
+          npm run audit
       - name: Build
         run: |
           cd nakar-client-web
