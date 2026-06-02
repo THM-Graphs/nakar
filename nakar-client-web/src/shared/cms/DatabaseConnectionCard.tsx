@@ -38,7 +38,10 @@ export function DatabaseConnectionCard(props: {
               <Stack direction={"horizontal"} gap={1}>
                 <i className={"bi bi-box-arrow-up-right"}></i>
                 <span className={"user-select-text"}>
-                  <Link to={props.databaseConnection.browserUrl}>
+                  <Link
+                    to={props.databaseConnection.browserUrl}
+                    target={"_blank"}
+                  >
                     {props.databaseConnection.browserUrl}
                   </Link>
                 </span>
