@@ -2,33 +2,39 @@
 
 ## Contribution Guide
 
-### Starting and setting up the application
+### Setting up and starting the application
 
-#### 1: Install node packages:
-
-```shell
-npm i
-```
-
-#### 2: Set environment variables:
-
-The example environment file will configure the application to talk to the locally running server.
+#### 1. Install the dependencies
 
 ```shell
-cp ".env.example" "public/.env"
+npm ci
 ```
 
-#### 3: Start the live server:
+#### 2. Create the local environment file
+
+The client reads its runtime configuration from `public/.env`. The example file is configured for the locally running API and WebSocket server.
+
+```shell
+cp .env.example public/.env
+```
+
+#### 3. Build the local `api-client` package
+
+The web app depends on the generated client package in `packages/api-client`.
+
+See [api-client](./packages/api-client/README.md).
+
+#### 4. Start the development server
 
 ```shell
 npm run dev
 ```
 
-Visit the displayed URL.
+Open the URL shown in the terminal.
 
-### Before commit
+### Before committing
 
-If you want to commit any changes, you should run the following commands beforehand:
+Run the repository checks before creating a commit:
 
 ```shell
 npm run pre-commit

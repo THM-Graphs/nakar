@@ -20,9 +20,9 @@
     "dist"
   ],
   "scripts": {
-    "build": "npm run clean && npm run build:api && npm run build:ts",
+    "build": "npm run clean && npm run build:ts",
     "clean": "rimraf dist",
-    "build:api": "openapi-ts --input http://127.0.0.1:1338/api.yaml --output src-gen --client @hey-api/client-fetch",
+    "export:api": "openapi-ts --input http://127.0.0.1:1338/api.yaml --output src-gen --client @hey-api/client-fetch",
     "build:ts": "tsc -P tsconfig.json"
   },
   "devDependencies": {

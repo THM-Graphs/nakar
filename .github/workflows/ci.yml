@@ -67,7 +67,7 @@ jobs:
         run: |
           cd nakar-client-web/packages/api-client
           npm ci
-          npm run build:ts
+          npm run build
       - name: Install
         run: |
           cd nakar-client-web

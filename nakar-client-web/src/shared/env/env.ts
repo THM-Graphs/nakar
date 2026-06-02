@@ -13,8 +13,8 @@ export type Env = {
 };
 
 const defaultEnv: Env = {
-  BACKEND_URL: "http://localhost:1337",
-  BACKEND_SOCKET_URL: "ws://localhost:1337",
+  BACKEND_URL: "http://localhost:1338",
+  BACKEND_SOCKET_URL: "ws://localhost:1338",
   VERSION: "0.0.0",
 };
 
