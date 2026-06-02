@@ -38,10 +38,10 @@ npm run start
 Open http://localhost:1337 and create a local admin account for your development environment.
 
 > Tip: Use the following login data for the admin account:
-> 
->  Email          | Password             
->  -------------- | -------------------- 
->  admin@nakar.de | seuzgfesuz3672tUZGZU 
+>
+> | Email          | Password             |
+> | -------------- | -------------------- |
+> | admin@nakar.de | seuzgfesuz3672tUZGZU |
 
 #### 5. Configure role permissions
 
