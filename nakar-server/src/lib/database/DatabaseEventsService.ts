@@ -107,98 +107,103 @@ export class DatabaseEventsService implements OnModuleInit, OnModuleDestroy {
         context: Context,
         next: NextFunction,
       ): Promise<MiddlewareReturnType> => {
-        if (context.uid === 'api::note.note') {
-          return await match(context)
-            .returnType<Promise<NextResult>>()
-            .with(
-              { action: 'publish', params: { documentId: P.select() } },
-              async (documentId: string): Promise<NextResult> => {
-                const result: NextResult = await next();
-                const note: Result<'api::note.note'> =
-                  await this._databaseService.getNote(documentId);
-                const canvases: Result<'api::canvas.canvas'>[] =
-                  await this._databaseService.getCanvasesOfNote(note);
-                for (const canvas of canvases) {
-                  setImmediate((): void => {
-                    this._onNoteChanges.next(canvas);
-                  });
-                }
-                return result;
-              },
-            )
-            .with(
-              { action: 'unpublish', params: { documentId: P.select() } },
-              async (documentId: string): Promise<NextResult> => {
-                const note: Result<'api::note.note'> =
-                  await this._databaseService.getNote(documentId);
-                const canvases: Result<'api::canvas.canvas'>[] =
-                  await this._databaseService.getCanvasesOfNote(note);
-                const result: NextResult = await next();
-                for (const canvas of canvases) {
-                  setImmediate((): void => {
-                    this._onNoteChanges.next(canvas);
-                  });
-                }
-                return result;
-              },
-            )
-            .with(
-              { action: 'create', params: { status: 'published' } },
-              async (): Promise<NextResult> => {
-                const result: NextResult = await next();
-                const note: Result<'api::note.note'> =
-                  await this._databaseService.getNote(
-                    getDocumentIdFromResult(result),
-                  );
-                const canvases: Result<'api::canvas.canvas'>[] =
-                  await this._databaseService.getCanvasesOfNote(note);
-                for (const canvas of canvases) {
-                  setImmediate((): void => {
-                    this._onNoteChanges.next(canvas);
-                  });
-                }
-                return result;
-              },
-            )
-            .with(
-              {
-                action: 'update',
-                params: { documentId: P.select(), status: 'published' },
-              },
-              async (documentId: string): Promise<NextResult> => {
-                const result: NextResult = await next();
-                const note: Result<'api::note.note'> =
-                  await this._databaseService.getNote(documentId);
-                const canvases: Result<'api::canvas.canvas'>[] =
-                  await this._databaseService.getCanvasesOfNote(note);
-                for (const canvas of canvases) {
-                  setImmediate((): void => {
-                    this._onNoteChanges.next(canvas);
-                  });
-                }
-                return result;
-              },
-            )
-            .with(
-              { action: 'delete', params: { documentId: P.select() } },
-              async (documentId: string): Promise<NextResult> => {
-                const note: Result<'api::note.note'> =
-                  await this._databaseService.getNote(documentId);
-                const canvases: Result<'api::canvas.canvas'>[] =
-                  await this._databaseService.getCanvasesOfNote(note);
-                const result: NextResult = await next();
-                for (const canvas of canvases) {
-                  setImmediate((): void => {
-                    this._onNoteChanges.next(canvas);
-                  });
-                }
-                return result;
-              },
-            )
-            .otherwise(async (): Promise<NextResult> => {
-              return await next();
-            });
-        } else {
+        try {
+          if (context.uid === 'api::note.note') {
+            return await match(context)
+              .returnType<Promise<NextResult>>()
+              .with(
+                { action: 'publish', params: { documentId: P.select() } },
+                async (documentId: string): Promise<NextResult> => {
+                  const result: NextResult = await next();
+                  const note: Result<'api::note.note'> =
+                    await this._databaseService.getNote(documentId);
+                  const canvases: Result<'api::canvas.canvas'>[] =
+                    await this._databaseService.getCanvasesOfNote(note);
+                  for (const canvas of canvases) {
+                    setImmediate((): void => {
+                      this._onNoteChanges.next(canvas);
+                    });
+                  }
+                  return result;
+                },
+              )
+              .with(
+                { action: 'unpublish', params: { documentId: P.select() } },
+                async (documentId: string): Promise<NextResult> => {
+                  const note: Result<'api::note.note'> =
+                    await this._databaseService.getNote(documentId);
+                  const canvases: Result<'api::canvas.canvas'>[] =
+                    await this._databaseService.getCanvasesOfNote(note);
+                  const result: NextResult = await next();
+                  for (const canvas of canvases) {
+                    setImmediate((): void => {
+                      this._onNoteChanges.next(canvas);
+                    });
+                  }
+                  return result;
+                },
+              )
+              .with(
+                { action: 'create', params: { status: 'published' } },
+                async (): Promise<NextResult> => {
+                  const result: NextResult = await next();
+                  const note: Result<'api::note.note'> =
+                    await this._databaseService.getNote(
+                      getDocumentIdFromResult(result),
+                    );
+                  const canvases: Result<'api::canvas.canvas'>[] =
+                    await this._databaseService.getCanvasesOfNote(note);
+                  for (const canvas of canvases) {
+                    setImmediate((): void => {
+                      this._onNoteChanges.next(canvas);
+                    });
+                  }
+                  return result;
+                },
+              )
+              .with(
+                {
+                  action: 'update',
+                  params: { documentId: P.select(), status: 'published' },
+                },
+                async (documentId: string): Promise<NextResult> => {
+                  const result: NextResult = await next();
+                  const note: Result<'api::note.note'> =
+                    await this._databaseService.getNote(documentId);
+                  const canvases: Result<'api::canvas.canvas'>[] =
+                    await this._databaseService.getCanvasesOfNote(note);
+                  for (const canvas of canvases) {
+                    setImmediate((): void => {
+                      this._onNoteChanges.next(canvas);
+                    });
+                  }
+                  return result;
+                },
+              )
+              .with(
+                { action: 'delete', params: { documentId: P.select() } },
+                async (documentId: string): Promise<NextResult> => {
+                  const note: Result<'api::note.note'> =
+                    await this._databaseService.getNote(documentId);
+                  const canvases: Result<'api::canvas.canvas'>[] =
+                    await this._databaseService.getCanvasesOfNote(note);
+                  const result: NextResult = await next();
+                  for (const canvas of canvases) {
+                    setImmediate((): void => {
+                      this._onNoteChanges.next(canvas);
+                    });
+                  }
+                  return result;
+                },
+              )
+              .otherwise(async (): Promise<NextResult> => {
+                return await next();
+              });
+          } else {
+            return await next();
+          }
+        } catch (error: unknown) {
+          this._logger.error(error);
           return await next();
         }
       },
