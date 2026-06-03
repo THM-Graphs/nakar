@@ -44,6 +44,11 @@ jobs:
         run: |
           cd nakar-server
           npm run audit
+      - name: Import Demo Data
+        run: |
+          cd nakar-server
+          cp .env.example .env
+          node_modules/.bin/strapi import --force --file examples/export.tar
 
   ci-server-docker:
     runs-on: ubuntu-latest
