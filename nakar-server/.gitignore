@@ -44,7 +44,6 @@ $RECYCLE.BIN/
 *.iso
 *.jar
 *.rar
-*.tar
 *.zip
 *.com
 *.class
@@ -131,6 +130,7 @@ build
 .strapi-cloud.json
 /src/extensions/documentation
 /.docker
+/export.tar
 
 ############################
 # IDE

@@ -57,10 +57,10 @@ To allow login and access to the current user endpoint, update the Users & Permi
 
 #### 6. Import data
 
-1. Ask a maintainer for the `export.tar` file.
-2. Copy the file to the root of this package.
-3. Run `npm run import`.
-4. Check the imported data at http://localhost:1337/admin/content-manager.
+1. Copy `./examples/export.tar` to `./export.tar`
+1. Run `npm run import`.
+1. Check the imported data at http://localhost:1337/admin/content-manager.
+1. Create a user (if the demo data did not include one) at http://localhost:1337/admin/content-manager/collection-types/plugin::users-permissions.user.
 
 #### 7. API documentation
 
