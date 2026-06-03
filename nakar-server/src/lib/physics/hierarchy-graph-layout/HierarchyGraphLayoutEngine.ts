@@ -5,8 +5,8 @@ import {
   ElkNode,
 } from 'elkjs/lib/elk-api';
 import { LayoutOptions } from 'elkjs';
-import { SMap } from '../../map/Map';
-import { SSet } from '../../set/Set';
+import { SMap } from '../../../packages/map/Map';
+import { SSet } from '../../../packages/set/Set';
 import { PhysicalEdge } from '../physical-graph/PhysicalEdge';
 import { PhysicalGraph } from '../physical-graph/PhysicalGraph';
 import { PhysicalNode } from '../physical-graph/PhysicalNode';

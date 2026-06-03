@@ -15,7 +15,7 @@ import { JWT } from '../../decorators/JWT';
 import { AuthService } from '../../../auth/AuthService';
 import { LiveCanvasUser } from '../../../live-canvas/data/LiveCanvasUser';
 import { LiveCanvasService } from '../../../live-canvas/LiveCanvasService';
-import { SMap } from '../../../map/Map';
+import { SMap } from '../../../../packages/map/Map';
 
 @Controller('/')
 export class StartController {

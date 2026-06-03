@@ -1,4 +1,4 @@
-import { ScaleType } from '../physics/ScaleType';
+import { ScaleType } from '../../lib/physics/ScaleType';
 import { match } from 'ts-pattern';
 
 export class Range {

@@ -18,7 +18,7 @@ import {
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
-import { SMap } from '../map/Map';
+import { SMap } from '../../packages/map/Map';
 import { match, P } from 'ts-pattern';
 import { Result } from '@strapi/types/dist/modules/documents/result';
 import { DatabaseService } from '../database/DatabaseService';

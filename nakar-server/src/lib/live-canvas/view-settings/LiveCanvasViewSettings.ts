@@ -1,7 +1,7 @@
 import { LiveCanvasViewSettingsDto } from '../../schema/dtos/LiveCanvasViewSettingsDto';
 import { LiveCanvasLabelViewSettingsDto } from '../../schema/dtos/LiveCanvasLabelViewSettingsDto';
 import { LiveCanvasEdgeViewSettingsDto } from '../../schema/dtos/LiveCanvasEdgeViewSettingsDto';
-import { Range } from '../../range/Range';
+import { Range } from '../../../packages/range/Range';
 import { ScaleType } from '../../physics/ScaleType';
 import { LiveCanvasEdgeViewSettingsState } from './LiveCanvasEdgeViewSettingsState';
 import { LiveCanvasLabelViewSettingsState } from './LiveCanvasLabelViewSettingsState';

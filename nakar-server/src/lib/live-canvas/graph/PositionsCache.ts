@@ -1,4 +1,4 @@
-import { SMap } from '../../map/Map';
+import { SMap } from '../../../packages/map/Map';
 import { ElementPosition } from './ElementPosition';
 import { LiveCanvasUndoableData } from '../data/LiveCanvasUndoableData';
 

@@ -8,7 +8,7 @@ import {
   RecordShape,
   Relationship,
 } from 'neo4j-driver';
-import { SMap } from '../map/Map';
+import { SMap } from '../../packages/map/Map';
 import { Neo4jNode } from './Neo4jNode';
 import { Neo4jRelationship } from './Neo4jRelationship';
 import { match, P } from 'ts-pattern';

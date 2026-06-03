@@ -29,7 +29,7 @@ import {
 } from '@strapi/types/dist/modules/documents/params/document-engine';
 import { Delete as DeleteResult } from '@strapi/types/dist/modules/documents/result/document-engine';
 import { LiveCanvasService } from '../../../live-canvas/LiveCanvasService';
-import { SMap } from '../../../map/Map';
+import { SMap } from '../../../../packages/map/Map';
 import { LiveCanvasUser } from '../../../live-canvas/data/LiveCanvasUser';
 
 @Controller('project')

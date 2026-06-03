@@ -1,15 +1,10 @@
 import { Result } from '@strapi/types/dist/modules/documents';
 import z from 'zod';
-import { SSet } from '../set/Set';
-import { SMap } from '../map/Map';
+import { SSet } from '../../packages/set/Set';
+import { SMap } from '../../packages/map/Map';
 import { IndexedNoteCollection } from './IndexedNoteCollection';
 import { Logger } from '@strapi/logger';
 import { createChildLogger } from '../logger/createChildLogger';
-import {
-  deleteFile,
-  getStringPayloadOfMediaFile,
-  saveJSONFile,
-} from '../media/media';
 import { TupleTypes } from '../schema/TupleTypes';
 import { Injectable } from '@nestjs/common';
 import { ApiPostScenarioActionPostScenarioAction } from '../../../types/generated/contentTypes';
@@ -22,10 +17,13 @@ import { UpdateScenarioQueryParameterEntryDto } from '../http/routes/scenario/dt
 import { UpdateScenarioPostActionEntryDto } from '../http/routes/scenario/dto/UpdateScenarioPostActionEntryDto';
 import { UpdateNodeConfigurationRequestBodyDto } from '../http/routes/database-connection/dto/UpdateNodeConfigurationRequestBodyDto';
 import { match } from 'ts-pattern';
+import { MediaService } from '../media/MediaService';
 
 @Injectable()
 export class DatabaseService {
   private readonly _logger: Logger = createChildLogger(this);
+
+  public constructor(private readonly _mediaService: MediaService) {}
 
   public async getDatabase(
     databaseId: string,
@@ -148,7 +146,9 @@ export class DatabaseService {
 
     try {
       const json: string =
-        await getStringPayloadOfMediaFile(liveCanvasDataFile);
+        await this._mediaService.getStringPayloadOfMediaFile(
+          liveCanvasDataFile,
+        );
       const liveCanvasData: z.infer<typeof LiveCanvasData.schema> =
         LiveCanvasData.schema.parse(JSON.parse(json));
       return liveCanvasData;
@@ -263,12 +263,12 @@ export class DatabaseService {
       this._logger.debug(
         `Will delete old canvas data file: ${oldliveCanvasDataFile.documentId}`,
       );
-      await deleteFile(oldliveCanvasDataFile);
+      await this._mediaService.deleteFile(oldliveCanvasDataFile);
     }
 
     const liveCanvasJson: string = JSON.stringify(liveCanvasData);
     const newLiveCanvasDataFile: Result<'plugin::upload.file'> =
-      await saveJSONFile(
+      await this._mediaService.saveJSONFile(
         liveCanvasJson,
         `Live Canvas Data - ${project.title ?? 'untitled project'} - ${room.title ?? 'untitled room'} - ${populatedCanvas.title ?? 'untitled canvas'}`,
       );

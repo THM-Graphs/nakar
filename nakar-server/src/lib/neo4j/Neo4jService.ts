@@ -9,12 +9,12 @@ import neo4j, {
   Session,
 } from 'neo4j-driver';
 import { Neo4jGraphElements } from './Neo4jGraphElements';
-import { SSet } from '../set/Set';
+import { SSet } from '../../packages/set/Set';
 import { Neo4jGraphElementsFactory } from './Neo4jGraphElementsFactory';
 import { SessionConfig } from 'neo4j-driver-core/types/driver';
 import { ExpandNodePreview } from './expand-node-preview/ExpandNodePreview';
 import { ExpandNodePreviewEntry } from './expand-node-preview/ExpandNodePreviewEntry';
-import { SMap } from '../map/Map';
+import { SMap } from '../../packages/map/Map';
 import { Neo4jLimitConfig } from './Neo4jLimitConfig';
 import { Neo4jSearchCapabilities } from './Neo4jSearchCapabilities';
 import { Neo4jNode } from './Neo4jNode';

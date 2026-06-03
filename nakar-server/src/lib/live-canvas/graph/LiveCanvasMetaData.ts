@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { SMap } from '../../map/Map';
+import { SMap } from '../../../packages/map/Map';
 import { LiveCanvasParameter } from './LiveCanvasParameter';
 
 export class LiveCanvasMetaData {

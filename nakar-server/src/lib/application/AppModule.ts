@@ -22,6 +22,7 @@ import { PublicRoomController } from '../http/routes/public-room/PublicRoomContr
 import { PublicCanvasController } from '../http/routes/public-canvas/PublicCanvasController';
 import { CommonPropertiesController } from '../http/routes/common-properties/CommonPropertiesController';
 import { MonitoringService } from '../monitoring/MonitoringService';
+import { MediaService } from '../media/MediaService';
 
 @Module({
   controllers: [
@@ -50,6 +51,7 @@ import { MonitoringService } from '../monitoring/MonitoringService';
     WebSocketManager,
     AuthService,
     MonitoringService,
+    MediaService,
   ],
 })
 export class AppModule {}

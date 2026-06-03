@@ -4,7 +4,7 @@ import { PhysicsSimulationRunOptions } from './PhysicsSimulationRunOptions';
 import { PhysicalGraph } from './physical-graph/PhysicalGraph';
 import { PhysicalNode } from './physical-graph/PhysicalNode';
 import { PhysicalEdge } from './physical-graph/PhysicalEdge';
-import { Range } from '../range/Range';
+import { Range } from '../../packages/range/Range';
 import { GraphNode } from '../live-canvas/graph/GraphNode';
 import { PhysicsSimulationEventSlowTick } from './PhysicsSimulationEventSlowTick';
 import { Logger } from '@strapi/logger';

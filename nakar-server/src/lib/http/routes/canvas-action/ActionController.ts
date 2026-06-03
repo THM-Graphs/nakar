@@ -8,9 +8,9 @@ import {
 } from '@nestjs/common';
 import { ApiBody, ApiParam } from '@nestjs/swagger';
 import { LoadScenarioRequestBodyDto } from './dto/LoadScenarioRequestBodyDto';
-import { SMap } from '../../../map/Map';
+import { SMap } from '../../../../packages/map/Map';
 import { ExpandNodeRequestBodyDto } from './dto/ExpandNodeRequestBodyDto';
-import { SSet } from '../../../set/Set';
+import { SSet } from '../../../../packages/set/Set';
 import { DeleteElementsRequestBodyDto } from './dto/DeleteElementsRequestBodyDto';
 import { ScenarioArgumentDto } from './dto/ScenarioArgumentDto';
 import { UnlockNodesRequestBodyDto } from './dto/UnlockNodesRequestBodyDto';

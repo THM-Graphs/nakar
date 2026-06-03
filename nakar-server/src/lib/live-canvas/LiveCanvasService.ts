@@ -3,7 +3,7 @@ import { DatabaseEventsService } from '../database/DatabaseEventsService';
 import { Neo4jService } from '../neo4j/Neo4jService';
 import { Observable, Subject } from 'rxjs';
 import { LiveCanvasUndoableData } from './data/LiveCanvasUndoableData';
-import { SMap } from '../map/Map';
+import { SMap } from '../../packages/map/Map';
 import { CanvasEvent } from './events/CanvasEvent';
 import { CanvasEventEventKick } from './events/CanvasEventEventKick';
 import { LiveCanvas } from './LiveCanvas';

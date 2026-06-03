@@ -1,11 +1,11 @@
 import { ElementPosition } from './ElementPosition';
 import { PropertyCollection } from './PropertyCollection';
 import { z } from 'zod';
-import { SSet } from '../../set/Set';
+import { SSet } from '../../../packages/set/Set';
 import { GraphEdge } from './GraphEdge';
 import { LiveCanvasUndoableData } from '../data/LiveCanvasUndoableData';
 import { ElementCreationReason } from './ElementCreationReason';
-import { Range } from '../../range/Range';
+import { Range } from '../../../packages/range/Range';
 import { LiveCanvasViewSettings } from '../view-settings/LiveCanvasViewSettings';
 import { LiveCanvasLabelViewSettingsState } from '../view-settings/LiveCanvasLabelViewSettingsState';
 import { ElementColor } from './color/ElementColor';

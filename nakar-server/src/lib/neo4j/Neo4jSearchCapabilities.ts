@@ -1,5 +1,5 @@
-import { SMap } from '../map/Map';
-import { SSet } from '../set/Set';
+import { SMap } from '../../packages/map/Map';
+import { SSet } from '../../packages/set/Set';
 
 export class Neo4jSearchCapabilities {
   public readonly canExactMatchElementId: boolean = true;

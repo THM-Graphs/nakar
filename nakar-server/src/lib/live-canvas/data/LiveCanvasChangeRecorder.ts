@@ -1,6 +1,6 @@
-import { SMap } from '../../map/Map';
+import { SMap } from '../../../packages/map/Map';
 import { GraphNode } from '../graph/GraphNode';
-import { SSet } from '../../set/Set';
+import { SSet } from '../../../packages/set/Set';
 import { PhysicsWorker } from '../PhysicsWorker';
 import { Subject } from 'rxjs';
 import { CanvasEvent } from '../events/CanvasEvent';

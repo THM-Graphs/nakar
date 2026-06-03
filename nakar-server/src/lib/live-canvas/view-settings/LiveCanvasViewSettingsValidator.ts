@@ -1,4 +1,4 @@
-import { Range } from '../../range/Range';
+import { Range } from '../../../packages/range/Range';
 import { LiveCanvasEdgeViewSettingsDto } from '../../schema/dtos/LiveCanvasEdgeViewSettingsDto';
 import { LiveCanvasLabelViewSettingsDto } from '../../schema/dtos/LiveCanvasLabelViewSettingsDto';
 import { LiveCanvasViewSettingsColorIndex } from './LiveCanvasViewSettingsColorIndex';

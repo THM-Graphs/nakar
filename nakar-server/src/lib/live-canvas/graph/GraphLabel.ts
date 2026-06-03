@@ -1,5 +1,5 @@
 import { ElementColor } from './color/ElementColor';
-import { SSet } from '../../set/Set';
+import { SSet } from '../../../packages/set/Set';
 
 export class GraphLabel {
   public readonly color: ElementColor;

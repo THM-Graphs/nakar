@@ -1,12 +1,12 @@
 import { LiveCanvasUndoableData } from '../live-canvas/data/LiveCanvasUndoableData';
 import { GraphNode } from '../live-canvas/graph/GraphNode';
 import { GraphEdge } from '../live-canvas/graph/GraphEdge';
-import { SMap } from '../map/Map';
+import { SMap } from '../../packages/map/Map';
 import { LiveCanvasMetaData } from '../live-canvas/graph/LiveCanvasMetaData';
 import { PropertyCollection } from '../live-canvas/graph/PropertyCollection';
 import { DatabaseService } from '../database/DatabaseService';
 import { Result } from '@strapi/types/dist/modules/documents/result';
-import { Range } from '../range/Range';
+import { Range } from '../../packages/range/Range';
 import { Logger } from '@strapi/logger';
 import { createChildLogger } from '../logger/createChildLogger';
 import { Profiler } from 'winston';

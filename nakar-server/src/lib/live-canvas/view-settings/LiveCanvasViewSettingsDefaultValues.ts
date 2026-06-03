@@ -1,5 +1,5 @@
 import { ScaleType } from '../../physics/ScaleType';
-import { Range } from '../../range/Range';
+import { Range } from '../../../packages/range/Range';
 
 /**
  * Central default values for live canvas view settings.

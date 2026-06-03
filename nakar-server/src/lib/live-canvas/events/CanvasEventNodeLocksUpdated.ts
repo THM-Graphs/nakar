@@ -1,4 +1,4 @@
-import { SMap } from '../../map/Map';
+import { SMap } from '../../../packages/map/Map';
 import { LiveCanvas } from '../LiveCanvas';
 
 export interface CanvasEventNodeLocksUpdated {

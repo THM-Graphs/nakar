@@ -1,5 +1,5 @@
 import z from 'zod';
-import { SSet } from '../../set/Set';
+import { SSet } from '../../../packages/set/Set';
 import { LiveCanvasNoteAuthor } from './LiveCanvasNoteAuthor';
 import { Result } from '@strapi/types/dist/modules/documents';
 import { DatabaseService } from '../../database/DatabaseService';

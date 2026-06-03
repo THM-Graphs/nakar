@@ -23,7 +23,7 @@ import { GraphNode } from '../../../live-canvas/graph/GraphNode';
 import { NodePreviewDto } from '../../../schema/dtos/NodePreviewDto';
 import { GetSearchCapabilitiesResponseBodyDto } from './dto/GetSearchCapabilitiesResponseBodyDto';
 import { Neo4jSearchCapabilities } from '../../../neo4j/Neo4jSearchCapabilities';
-import { SSet } from '../../../set/Set';
+import { SSet } from '../../../../packages/set/Set';
 import { SearchCapabilitiesEntryDto } from './dto/SearchCapabilitiesEntryDto';
 import { DatabaseBelongsToCanvas } from '../../guards/DatabaseBelongsToCanvas';
 import { ExpandNodePreview } from '../../../neo4j/expand-node-preview/ExpandNodePreview';

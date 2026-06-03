@@ -1,5 +1,5 @@
 import { Relationship } from 'neo4j-driver';
-import { SSet } from '../set/Set';
+import { SSet } from '../../packages/set/Set';
 import { Neo4jDatabaseInfo } from './Neo4jDatabaseInfo';
 
 export class Neo4jRelationship {

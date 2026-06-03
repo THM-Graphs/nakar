@@ -1,9 +1,9 @@
 import { PropertyCollection } from './PropertyCollection';
 import { z } from 'zod';
-import { SSet } from '../../set/Set';
+import { SSet } from '../../../packages/set/Set';
 import { LiveCanvasUndoableData } from '../data/LiveCanvasUndoableData';
-import { SMap } from '../../map/Map';
-import { Range } from '../../range/Range';
+import { SMap } from '../../../packages/map/Map';
+import { Range } from '../../../packages/range/Range';
 import { ElementCreationReason } from './ElementCreationReason';
 import { LiveCanvasViewSettings } from '../view-settings/LiveCanvasViewSettings';
 import { LiveCanvasEdgeViewSettingsState } from '../view-settings/LiveCanvasEdgeViewSettingsState';

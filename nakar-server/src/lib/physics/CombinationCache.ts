@@ -1,5 +1,5 @@
-import { SMap } from '../map/Map';
-import { SSet } from '../set/Set';
+import { SMap } from '../../packages/map/Map';
+import { SSet } from '../../packages/set/Set';
 
 export class CombinationCache {
   private readonly _combinations: SMap<string, SSet<string>>;

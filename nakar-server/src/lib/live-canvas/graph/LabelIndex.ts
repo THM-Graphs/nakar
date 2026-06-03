@@ -1,4 +1,4 @@
-import { SMap } from '../../map/Map';
+import { SMap } from '../../../packages/map/Map';
 
 export class LabelIndex {
   private readonly _labelHistogram: SMap<string, number>;

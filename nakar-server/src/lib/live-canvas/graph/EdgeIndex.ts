@@ -1,9 +1,9 @@
-import { SMap } from '../../map/Map';
+import { SMap } from '../../../packages/map/Map';
 import { GraphEdge } from './GraphEdge';
-import { SSet } from '../../set/Set';
+import { SSet } from '../../../packages/set/Set';
 import { Neo4jRelationship } from '../../neo4j/Neo4jRelationship';
 import { PropertyCollection } from './PropertyCollection';
-import { Range } from '../../range/Range';
+import { Range } from '../../../packages/range/Range';
 import { ElementCreationReason } from './ElementCreationReason';
 
 export class EdgeIndex {
