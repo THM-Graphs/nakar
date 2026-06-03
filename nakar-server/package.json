@@ -17,11 +17,11 @@
     "format:fix": "prettier . --write",
     "analyze": "fta .",
     "audit": "npm audit --audit-level critical",
-    "test": "jest",
+    "test": "c8 node --import tsx --test \"src/**/*.test.ts\"",
     "export": "strapi export --no-compress --no-encrypt -f export",
     "import": "strapi import -f export.tar",
     "version": "echo $npm_package_version",
-    "pre-commit": "tsc && npm run lint:fix && npm run format:fix",
+    "pre-commit": "tsc && npm run test && npm run lint:fix && npm run format:fix",
     "update:strapi": "npx @strapi/upgrade latest"
   },
   "dependencies": {
@@ -67,9 +67,11 @@
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "c8": "^11.0.0",
     "eslint": "^10.4.0",
     "fta-cli": "^3.0.0",
     "prettier": "^3.8.3",
+    "tsx": "^4.20.6",
     "typescript-eslint": "^8.60.0"
   },
   "engines": {

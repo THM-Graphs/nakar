@@ -28,6 +28,10 @@ jobs:
         run: |
           cd nakar-server
           npm run build
+      - name: Test
+        run: |
+          cd nakar-server
+          npm run test
       - name: Lint
         run: |
           cd nakar-server

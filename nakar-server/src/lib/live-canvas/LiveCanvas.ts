@@ -101,6 +101,12 @@ export class LiveCanvas {
           .exhaustive();
       }),
     );
+    const queueLogger: Logger = createChildLogger(this._queue);
+    this._subscriptions.add(
+      this._queue.onLog.subscribe((logLine: string): void => {
+        queueLogger.info(logLine);
+      }),
+    );
     this._subscriptions.add(
       this._queue.onUpdate$.subscribe((state: TaskQueueState): void => {
         if (state.active == null) {
