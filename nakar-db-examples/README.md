@@ -17,26 +17,26 @@ npm run start:docker
 This dataset demonstrates the following NAKAR features:
 
 ### Automatic
-- Multiple Labels: Nodes can have multiple labels.
-- Many Labels: Query results can return multiple labels by collecting the label names of all returned nodes.
-- Loops: Relationships can use the same node as both source and target.
+- Multiple Labels: Nodes can have multiple labels at the same time. For example, a node can be both Person and Author, or both Place and HistoricalLocation.
+- Many Labels: Query results contain nodes with many different labels. NAKAR collects the label names of all returned nodes and makes them available for visualization, filtering, configuration, and styling.
+- Loops: Relationships can use the same node as both source and target. This means that a relationship may start and end at the same node.
 
 ### Config
-- Common Properties: If different databases use shared property classes such as GND or QID (Wikidata), NAKAR should create a virtual connection between nodes with matching values for those properties.
-- Parameters in Scenarios: Scenarios can define parameters with different data types.
+- Common Properties: Queries from different data sources can be shown together on the same workspace. If nodes from different databases share configured property classes such as GND, QID, Wikidata ID, VIAF, or another external identifier, NAKAR creates virtual visual connections between nodes with matching values. These connections exist only on the workspace and do not modify the underlying databases.
+- Parameters in Scenarios: Scenarios define parameters that users fill in before or during execution. Supported parameter data types are String, Number, JSON, Start Date Time, and End Date Time.
 
 ### Canvas Actions
-- Shortest Path: Query the shortest path between two or more nodes.
+- Shortest Path: NAKAR queries the shortest path between two or more selected nodes. The resulting path is added to the current workspace and visualized together with the already visible nodes.
 
 ### Post Scenario Actions
-- Connect Result Nodes: Query relationships between all visible nodes.
-- Layout Nodes as Circle: Arrange all nodes of a label in a circle with a given radius.
-- Layout Nodes as Hierarchy: Arrange all nodes in a hierarchy based on a given relationship type.
-- Compress Nodes: Cluster all nodes that share the same neighbors and labels.
-- Compress Relationships: Combine all relationships with the same source, target, and type into a relationship cluster.
-- Relationship Cluster Size: Define how wide a relationship cluster line can become based on cluster size.
-- Grow Nodes Based on Degree: Increase a node's size when it has a high degree.
-- Set Node Color: Set the color of a label.
-- Set Node Title Property: For a given label, define which property should be used as the node's title.
-- Set Relationship Color: Color a given relationship type.
-- Set Relationship Width: Change the width of the line for a given relationship type.
+- Connect Result Nodes: After a scenario has returned nodes, NAKAR queries relationships between all currently visible nodes and adds the missing relationships to the workspace.
+- Layout Nodes as Circle: NAKAR arranges all nodes of a selected label in a circle with a given radius. This makes groups of nodes visually clearer.
+- Layout Nodes as Hierarchy: NAKAR arranges nodes in a hierarchy based on one selected relationship type. There is no manually selected root node. Since only one relationship type is used, the visible graph may contain multiple independent subgraphs and therefore multiple root nodes.
+- Compress Nodes: NAKAR clusters nodes that are structurally equivalent. Nodes are compressed only if they have exactly the same labels and exactly the same neighbors.
+- Compress Relationships: NAKAR combines relationships with the same source node, target node, and relationship type into a relationship cluster.
+- Relationship Cluster Size: NAKAR defines how wide a relationship cluster line becomes based on the number of relationships in the cluster.
+- Grow Nodes Based on Degree: NAKAR increases the visual size of nodes with a high degree. Nodes with many visible relationships become larger than nodes with fewer relationships.
+- Set Node Color: NAKAR sets the color of all nodes with a given label.
+- Set Node Title Property: For a given label, NAKAR defines which property is used as the visible title of the node.
+- Set Relationship Color: NAKAR sets the color of a given relationship type.
+- Set Relationship Width: NAKAR changes the width of the line for a given relationship type.
