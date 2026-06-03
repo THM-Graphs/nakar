@@ -9,7 +9,6 @@ import { GraphNode } from '../live-canvas/graph/GraphNode';
 import { PhysicsSimulationEventSlowTick } from './PhysicsSimulationEventSlowTick';
 import { Logger } from '@strapi/logger';
 import { createChildLogger } from '../logger/createChildLogger';
-import { enqueueEventLoop } from '../event-loop/enqueueEventLoop';
 
 export class PhysicsSimulation {
   public static readonly maximumVelocity: number = 2000;
@@ -139,7 +138,7 @@ export class PhysicsSimulation {
         });
         lastWait = Date.now();
         tickCount = 0;
-        await enqueueEventLoop();
+        await this._enqueueEventLoop();
       }
     }
 
@@ -332,5 +331,13 @@ export class PhysicsSimulation {
         (directionY / magnitude) * strength,
       );
     }
+  }
+
+  private async _enqueueEventLoop(): Promise<void> {
+    await new Promise<void>((resolve: () => void): void => {
+      setImmediate((): void => {
+        resolve();
+      });
+    });
   }
 }

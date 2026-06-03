@@ -1,7 +1,6 @@
 import { TaskQueueTask } from './TaskQueueTask';
 import { Observable, Subject } from 'rxjs';
 import { TaskQueueState } from './TaskQueueState';
-import { enqueueEventLoop } from '../event-loop/enqueueEventLoop';
 
 export class TaskQueue {
   private _queue: TaskQueueTask[];
@@ -58,7 +57,7 @@ export class TaskQueue {
       this._propagateUpdate();
 
       try {
-        await enqueueEventLoop();
+        await this._enqueueEventLoop();
         await newTask.action();
         this._onLog.next(`Task '${newTask.title}' did finish successfully.`);
       } catch (error) {
@@ -78,6 +77,14 @@ export class TaskQueue {
     this._onUpdate.next({
       pending: this._queue.map((task: TaskQueueTask): string => task.title),
       active: this._currentTask?.title ?? null,
+    });
+  }
+
+  private async _enqueueEventLoop(): Promise<void> {
+    await new Promise<void>((resolve: () => void): void => {
+      setImmediate((): void => {
+        resolve();
+      });
     });
   }
 }
