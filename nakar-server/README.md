@@ -55,10 +55,12 @@ To allow login and access to the current user endpoint, update the Users & Permi
 6. Disable all permissions.
 7. Enable **User-permissions -> User -> me**.
 
-#### 6. Import data
+#### 6. Import data (optional)
 
+1. Stop the server.
 1. Copy `./examples/export.tar` to `./export.tar`
 1. Run `npm run import`.
+1. Start the server.
 1. Check the imported data at http://localhost:1337/admin/content-manager.
 1. Create a user (if the demo data did not include one) at http://localhost:1337/admin/content-manager/collection-types/plugin::users-permissions.user.
 
