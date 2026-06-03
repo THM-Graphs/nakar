@@ -1,2 +1,0 @@
-MATCH (p1)-[r:`03_MESSAGES`]-(p2)
-RETURN p1, r, p2

@@ -1,1 +1,0 @@
-MATCH (company:`02_Company`)<-[r*]-(n) RETURN company, r, n

@@ -1,3 +1,0 @@
-MATCH (person)-[r1:`04_KNOWS`]-(publisher)-[r2:`04_IS_AUTHOR_OF`]->(paper:`04_Paper`)
-WHERE NOT (person)-[]->(:`04_Paper`)
-RETURN person, r1, publisher, r2, paper

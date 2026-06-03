@@ -1,3 +1,0 @@
-MATCH p=(:`10_Actor`)-[:`10_ACTED_IN`]-(`10_Movie`)-[:`10_DIRECTED`]-(:`10_Regisseur`) RETURN p
-
-MATCH (actor:`10_Actor`)-[r]-(other) WHERE elementId(actor) = "4:cc705db7-76dc-4ebf-895e-42119bd41ffe:560" RETURN *

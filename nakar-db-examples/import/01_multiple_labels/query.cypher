@@ -1,1 +1,0 @@
-MATCH (n1)-[r:`01_LINKED_TO`]->(n2) RETURN n1, r, n2

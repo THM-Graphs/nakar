@@ -1,0 +1,22 @@
+:ID,name,city,country,:LABEL
+inst_0_0,Institute for Digital Humanities Tübingen,Tübingen,Germany,Entity;Organization
+inst_0_1,Institute for Digital Humanities Heidelberg,Heidelberg,Germany,Entity;Organization
+inst_0_2,Institute for Digital Humanities Göttingen,Göttingen,Germany,Entity;Organization
+inst_0_3,Institute for Digital Humanities Marburg,Marburg,Germany,Entity;Organization
+inst_0_4,Institute for Digital Humanities Bonn,Bonn,Germany,Entity;Organization
+inst_0_5,Institute for Digital Humanities Konstanz,Konstanz,Germany,Entity;Organization
+inst_0_6,Institute for Digital Humanities Freiburg,Freiburg,Germany,Entity;Organization
+inst_1_0,Center for Computational Linguistics Tübingen,Tübingen,Germany,Entity;Organization
+inst_1_1,Center for Computational Linguistics Heidelberg,Heidelberg,Germany,Entity;Organization
+inst_1_2,Center for Computational Linguistics Göttingen,Göttingen,Germany,Entity;Organization
+inst_1_3,Center for Computational Linguistics Marburg,Marburg,Germany,Entity;Organization
+inst_1_4,Center for Computational Linguistics Bonn,Bonn,Germany,Entity;Organization
+inst_1_5,Center for Computational Linguistics Konstanz,Konstanz,Germany,Entity;Organization
+inst_1_6,Center for Computational Linguistics Freiburg,Freiburg,Germany,Entity;Organization
+inst_2_0,Digital Archive Foundation Tübingen,Tübingen,Germany,Entity;Organization
+inst_2_1,Digital Archive Foundation Heidelberg,Heidelberg,Germany,Entity;Organization
+inst_2_2,Digital Archive Foundation Göttingen,Göttingen,Germany,Entity;Organization
+inst_2_3,Digital Archive Foundation Marburg,Marburg,Germany,Entity;Organization
+inst_2_4,Digital Archive Foundation Bonn,Bonn,Germany,Entity;Organization
+inst_2_5,Digital Archive Foundation Konstanz,Konstanz,Germany,Entity;Organization
+inst_2_6,Digital Archive Foundation Freiburg,Freiburg,Germany,Entity;Organization

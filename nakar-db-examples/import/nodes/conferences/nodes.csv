@@ -1,0 +1,16 @@
+:ID,name,year,location,:LABEL
+conf_0_2020,DH Summit 2024 2020,2020,Tübingen,Entity;Event
+conf_0_2021,DH Summit 2024 2021,2021,Tübingen,Entity;Event
+conf_0_2022,DH Summit 2024 2022,2022,Tübingen,Entity;Event
+conf_0_2023,DH Summit 2024 2023,2023,Tübingen,Entity;Event
+conf_0_2024,DH Summit 2024 2024,2024,Tübingen,Entity;Event
+conf_1_2020,EADH Conference 2024 2020,2020,Heidelberg,Entity;Event
+conf_1_2021,EADH Conference 2024 2021,2021,Heidelberg,Entity;Event
+conf_1_2022,EADH Conference 2024 2022,2022,Heidelberg,Entity;Event
+conf_1_2023,EADH Conference 2024 2023,2023,Heidelberg,Entity;Event
+conf_1_2024,EADH Conference 2024 2024,2024,Heidelberg,Entity;Event
+conf_2_2020,THATCamp Europe 2024 2020,2020,Göttingen,Entity;Event
+conf_2_2021,THATCamp Europe 2024 2021,2021,Göttingen,Entity;Event
+conf_2_2022,THATCamp Europe 2024 2022,2022,Göttingen,Entity;Event
+conf_2_2023,THATCamp Europe 2024 2023,2023,Göttingen,Entity;Event
+conf_2_2024,THATCamp Europe 2024 2024,2024,Göttingen,Entity;Event

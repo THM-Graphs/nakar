@@ -1,1 +1,0 @@
-MATCH (n:`06_Person` {name: "William Parker"})-[r]-(n2) RETURN n, r, n2
