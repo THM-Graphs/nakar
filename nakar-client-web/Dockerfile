@@ -1,9 +1,6 @@
 FROM node:24 AS builder
 WORKDIR /app
 
-COPY packages ./packages
-RUN cd packages/api-client && npm ci && npm run build:ts
-
 COPY package.json ./
 COPY package-lock.json ./
 RUN npm ci
@@ -11,6 +8,7 @@ RUN npm ci
 COPY public ./public
 RUN echo "VERSION=$(npm run version --silent)" > ./public/.env
 COPY src ./src
+COPY src-gen ./src-gen
 COPY index.html ./
 COPY tsconfig.app.json ./
 COPY tsconfig.json ./

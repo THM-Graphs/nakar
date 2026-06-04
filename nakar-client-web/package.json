@@ -22,7 +22,6 @@
     "@neo4j-cypher/react-codemirror": "^2.0.0-next.35",
     "@types/qs": "^6.15.1",
     "@uiw/react-md-editor": "^4.0.11",
-    "api-client": "file:./packages/api-client",
     "bootstrap": "^5.3.3",
     "bootstrap-icons": "^1.11.3",
     "clsx": "^2.1.1",

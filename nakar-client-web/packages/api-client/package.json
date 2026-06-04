@@ -1,33 +1,10 @@
 {
   "name": "api-client",
   "version": "0.0.0",
-  "type": "module",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "default": "./dist/index.js"
-    },
-    "./client": {
-      "types": "./dist/client.gen.d.ts",
-      "import": "./dist/client.gen.js",
-      "default": "./dist/client.gen.js"
-    },
-    "./package.json": "./package.json"
-  },
-  "sideEffects": false,
-  "files": [
-    "dist"
-  ],
   "scripts": {
-    "build": "npm run clean && npm run build:ts",
-    "clean": "rimraf dist",
-    "export:api": "openapi-ts --input http://127.0.0.1:1338/api.yaml --output src-gen --client @hey-api/client-fetch",
-    "build:ts": "tsc -P tsconfig.json"
+    "export:api": "openapi-ts --input http://127.0.0.1:1338/api.yaml --output ../../src-gen/api-client --client @hey-api/client-fetch"
   },
   "devDependencies": {
-    "@hey-api/openapi-ts": "^0.97.3",
-    "rimraf": "^6.1.3",
-    "typescript": "5.5.3"
+    "@hey-api/openapi-ts": "^0.97.3"
   }
 }

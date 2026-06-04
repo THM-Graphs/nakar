@@ -1,15 +1,8 @@
 # api-client
 
-This package contains the generated HTTP API client used by `nakar-client-web`.
+This package generates the HTTP API client used by `nakar-client-web`.
 
-## Build the package
-
-```shell
-npm ci
-npm run build
-```
-
-## Regenerate the client after API changes
+## Generate the client after API changes in nakar-server
 
 If the HTTP API in `nakar-server` changes, regenerate the client from the updated OpenAPI definition.
 
@@ -19,6 +12,5 @@ If the HTTP API in `nakar-server` changes, regenerate the client from the update
 2. Run:
 
 ```shell
-npm run export:api
-npm run build
+npm run generate
 ```
