@@ -142,7 +142,9 @@ void describe('SSet', (): void => {
   void describe('isEqual', (): void => {
     void it('returns true for same values in different order', (): void => {
       const base: SSet<number> = new SSet<number>([1, 2, 3]);
-      const sameValuesDifferentOrder: SSet<number> = new SSet<number>([3, 2, 1]);
+      const sameValuesDifferentOrder: SSet<number> = new SSet<number>([
+        3, 2, 1,
+      ]);
       assert.equal(base.isEqual(sameValuesDifferentOrder), true);
     });
 

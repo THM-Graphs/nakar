@@ -204,7 +204,8 @@ void describe('SMap', (): void => {
         ['b', 99],
         ['c', 3],
       ]);
-      const merged: SMap<string, number> = base.byMergingAndOverwritingWith(other);
+      const merged: SMap<string, number> =
+        base.byMergingAndOverwritingWith(other);
       assert.deepEqual(merged.toRecord(), { a: 1, b: 99, c: 3 });
     });
   });
