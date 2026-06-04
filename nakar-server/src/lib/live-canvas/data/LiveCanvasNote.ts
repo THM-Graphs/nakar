@@ -86,6 +86,8 @@ export class LiveCanvasNote {
         const nodeReference: LiveCanvasNoteNodeReference =
           new LiveCanvasNoteNodeReference({
             id: node.id,
+            nativeId: node.nativeId,
+            sourceId: node.sourceId,
             labels: node.labels,
             title: node.getTitle(canvas.data.viewSettings),
           });

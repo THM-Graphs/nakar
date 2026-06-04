@@ -29,7 +29,8 @@ export class NodeIndex {
 
   private readonly _bySource: SMap<string, SSet<GraphNode>>;
 
-  private readonly _compressed: SSet<string>;
+  /* source id => native ids */
+  private readonly _compressed: SMap<string, SSet<string>>;
 
   public constructor(nodes: GraphNode[]) {
     this._byId = new SMap();
@@ -37,7 +38,7 @@ export class NodeIndex {
     this._labelIndex = new LabelIndex();
     this._propertyHistogram = new SMap();
     this._bySource = new SMap();
-    this._compressed = new SSet();
+    this._compressed = new SMap();
 
     for (const node of nodes) {
       this.add(node);
@@ -74,7 +75,9 @@ export class NodeIndex {
     if (this._byId.has(node.id)) {
       return false;
     }
-    if (this._compressed.has(node.id)) {
+    if (
+      (this._compressed.get(node.sourceId) ?? new SSet()).has(node.nativeId)
+    ) {
       return false;
     }
     this._byId.set(node.id, node);
@@ -95,7 +98,12 @@ export class NodeIndex {
       (this._bySource.get(node.sourceId) ?? new SSet()).byAdding(node),
     );
     for (const compressed of node.compressed) {
-      this._compressed.add(compressed);
+      this._compressed.set(
+        node.sourceId,
+        (this._compressed.get(node.sourceId) ?? new SSet()).byAdding(
+          compressed,
+        ),
+      );
     }
     return true;
   }
@@ -116,7 +124,8 @@ export class NodeIndex {
     databaseCache: DatabaseReferenceCache,
   ): Promise<GraphNode | null> {
     const mutableNode: GraphNode = new GraphNode({
-      id: node.node.elementId,
+      id: node.source.nakarId + '_' + node.node.elementId,
+      nativeId: node.node.elementId,
       labels: new SSet<string>(node.node.labels),
       properties: PropertyCollection.fromRecord(node.node.properties),
       position: ElementPosition.jiggled(),
@@ -170,7 +179,7 @@ export class NodeIndex {
       this._bySource.delete(node.sourceId);
     }
     for (const compressed of node.compressed) {
-      this._compressed.delete(compressed);
+      this._compressed.get(node.sourceId)?.delete(compressed);
     }
 
     return true;

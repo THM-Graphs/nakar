@@ -5,6 +5,7 @@ import { useBearStore } from "../../state/useBearStore.ts";
 import { actionControllerLoadNode } from "api-client";
 
 export type SpawnNodeActionParams = {
+  nativeNodeId: string;
   nodeId: string;
   databaseId: string;
   roomContext: CanvasContextData;
@@ -19,7 +20,10 @@ export class SpawnNodeAction extends Action<SpawnNodeActionParams> {
           roomId: input.roomContext.initialRoomData.id,
           canvasId: input.roomContext.initialCanvasData.id,
         },
-        body: { nodeId: input.nodeId, databaseId: input.databaseId },
+        body: {
+          nativeNodeId: input.nativeNodeId,
+          databaseId: input.databaseId,
+        },
       }),
     );
     useBearStore.getState().room.panels.inspector.setElement(input.nodeId);

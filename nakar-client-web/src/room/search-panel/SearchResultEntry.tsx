@@ -35,6 +35,7 @@ export function SearchResultEntry(props: {
         action={SpawnNodeAction.shared}
         params={{
           nodeId: props.node.id,
+          nativeNodeId: props.node.nativeId,
           roomContext: props.roomContext,
           databaseId: props.databaseId,
         }}

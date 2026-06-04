@@ -255,7 +255,7 @@ export class ActionController {
     @Body() body: LoadNodeRequestBodyDto,
   ): void {
     this._canvasService.getCanvasWithId(canvasId).loadNode({
-      nodeId: body.nodeId,
+      nativeNodeId: body.nativeNodeId,
       databaseId: body.databaseId,
     });
   }

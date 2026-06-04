@@ -702,13 +702,13 @@ export class LiveCanvas {
                   neighbors: oldGraph
                     .getNeighborsOfNode(node)
                     .toArray()
-                    .map((n: GraphNode): string => n.id),
+                    .map((n: GraphNode): string => n.nativeId),
                 },
                 new Neo4jLimitConfig('default', 'graphElements'),
               )
             : await this._neo4j.expandNode(
                 neo4jDatabaseInfo,
-                new SSet<string>([nodeId]),
+                new SSet<string>([node.nativeId]),
                 params.limit,
               );
 
@@ -1232,8 +1232,8 @@ export class LiveCanvas {
               const query: string =
                 'MATCH p = allShortestPaths((a)-[*]-(b)) WHERE elementId(a) = $elementIdA AND elementId(b) = $elementIdB RETURN p';
               const data: Record<string, unknown> = {
-                elementIdA: idA,
-                elementIdB: idB,
+                elementIdA: nodeA.nativeId,
+                elementIdB: nodeB.nativeId,
               };
               const result: Neo4jGraphElements = await this._neo4j.executeQuery(
                 dbInfo,
@@ -1276,7 +1276,7 @@ export class LiveCanvas {
     );
   }
 
-  public loadNode(params: { nodeId: string; databaseId: string }): void {
+  public loadNode(params: { nativeNodeId: string; databaseId: string }): void {
     this._queue.addTask(
       new TaskQueueTask('Loading node', async (): Promise<void> => {
         const dbDocument: Result<'api::database-connection.database-connection'> =
@@ -1287,11 +1287,11 @@ export class LiveCanvas {
         const result: Neo4jGraphElements = await this._neo4j.executeQuery(
           dbInfo,
           'MATCH (n) WHERE elementId(n) = $id RETURN n LIMIT 1;',
-          { id: params.nodeId },
+          { id: params.nativeNodeId },
           new Neo4jLimitConfig('default', 'graphElements'),
         );
         if (result.nodes.size === 0) {
-          throw new Error(`Node ${params.nodeId} not found.`);
+          throw new Error(`Node ${params.nativeNodeId} not found.`);
         }
 
         const changeRecorder: LiveCanvasChangeRecorder =
@@ -1512,6 +1512,7 @@ export class LiveCanvas {
           }
           const newEdge: GraphEdge = new GraphEdge({
             id: v4(),
+            nativeId: '',
             namesInQuery: edgesToCompress.reduce(
               (akku: SSet<string>, next: GraphEdge): SSet<string> =>
                 akku.byMerging(next.namesInQuery),
@@ -1554,7 +1555,7 @@ export class LiveCanvas {
     for (const source of graph.nodes.getSources()) {
       const nodesToConnect: SSet<string> = graph.nodes
         .getBySource(source)
-        .map((n: GraphNode): string => n.id);
+        .map((n: GraphNode): string => n.nativeId);
       if (nodesToConnect.size === 0) {
         continue;
       }
@@ -1637,6 +1638,7 @@ export class LiveCanvas {
             graph.edges.add(
               new GraphEdge({
                 id: v4(),
+                nativeId: '',
                 compressed: new SSet(),
                 startNodeId: originalNode.id,
                 endNodeId: mergeNode.id,
@@ -1863,6 +1865,7 @@ export class LiveCanvas {
       );
       const newNode: GraphNode = new GraphNode({
         id: v4(),
+        nativeId: '',
         position: ElementPosition.average(
           clusterBuddies
             .toArray()
@@ -1883,7 +1886,7 @@ export class LiveCanvas {
             akku.byMerging(next.namesInQuery),
           new SSet<string>(),
         ),
-        compressed: clusterBuddies.map((n: GraphNode): string => n.id),
+        compressed: clusterBuddies.map((n: GraphNode): string => n.nativeId),
         creationAction: ElementCreationReason.compress,
         url: null,
         coverImageUrl: null,

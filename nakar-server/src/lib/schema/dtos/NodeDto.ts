@@ -11,6 +11,9 @@ export class NodeDto {
   public id: string;
 
   @ApiProperty()
+  public nativeId: string;
+
+  @ApiProperty()
   public title: string;
 
   @ApiProperty({ type: [String] })
@@ -84,6 +87,7 @@ export class NodeDto {
 
   public constructor(data: {
     id: string;
+    nativeId: string;
     title: string;
     labels: string[];
     nativeLabels: string[];
@@ -109,6 +113,7 @@ export class NodeDto {
     url: string | null;
   }) {
     this.id = data.id;
+    this.nativeId = data.nativeId;
     this.title = data.title;
     this.labels = data.labels;
     this.nativeLabels = data.nativeLabels;

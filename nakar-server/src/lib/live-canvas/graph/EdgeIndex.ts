@@ -148,9 +148,17 @@ export class EdgeIndex {
     creationAction: ElementCreationReason,
   ): boolean {
     const mutableEdge: GraphEdge = new GraphEdge({
-      id: relationship.relationship.elementId,
-      startNodeId: relationship.relationship.startNodeElementId,
-      endNodeId: relationship.relationship.endNodeElementId,
+      id:
+        relationship.source.nakarId + '_' + relationship.relationship.elementId,
+      nativeId: relationship.relationship.elementId,
+      startNodeId:
+        relationship.source.nakarId +
+        '_' +
+        relationship.relationship.startNodeElementId,
+      endNodeId:
+        relationship.source.nakarId +
+        '_' +
+        relationship.relationship.endNodeElementId,
       type: relationship.relationship.type,
       compressed: new SSet(),
       properties: PropertyCollection.fromRecord(

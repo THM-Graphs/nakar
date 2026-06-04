@@ -691,6 +691,7 @@ export class SchemaFactoryService {
         (nodeReference: LiveCanvasNoteNodeReference): NodePreviewDto => {
           return new NodePreviewDto({
             id: nodeReference.id,
+            nativeId: nodeReference.nativeId,
             title: nodeReference.title,
             labels: nodeReference.labels,
           });
@@ -753,6 +754,7 @@ export class SchemaFactoryService {
 
     return {
       id: node.id,
+      nativeId: node.nativeId,
       title: node.getTitle(canvas.data.viewSettings),
       labels: node.labels,
       nativeLabels: node.labels,
@@ -818,6 +820,7 @@ export class SchemaFactoryService {
 
     return {
       id: edge.id,
+      nativeId: edge.nativeId,
       startNodeId: edge.startNodeId,
       endNodeId: edge.endNodeId,
       type: edge.type,
@@ -833,11 +836,13 @@ export class SchemaFactoryService {
       clusterSize: edge.compressed.size,
       sourceNode: {
         id: sourceNode?.id ?? '',
+        nativeId: sourceNode?.nativeId ?? '',
         title: sourceNode?.getTitle(viewSettings) ?? '',
         labels: sourceNode?.labels ?? [],
       },
       targetNode: {
         id: targetNode?.id ?? '',
+        nativeId: targetNode?.nativeId ?? '',
         title: targetNode?.getTitle(viewSettings) ?? '',
         labels: targetNode?.labels ?? [],
       },

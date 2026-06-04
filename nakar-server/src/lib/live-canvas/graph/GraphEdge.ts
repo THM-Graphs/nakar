@@ -14,6 +14,7 @@ export class GraphEdge {
   // eslint-disable-next-line @typescript-eslint/typedef
   public static readonly schema = z.object({
     id: z.string(),
+    nativeId: z.string(),
     startNodeId: z.string(),
     endNodeId: z.string(),
     type: z.string(),
@@ -25,19 +26,28 @@ export class GraphEdge {
     creationAction: z.enum(ElementCreationReason),
   });
 
+  /** Internal application id */
   public readonly id: string;
+
+  /** External id of source database */
+  public readonly nativeId: string;
+
   public readonly startNodeId: string;
   public readonly endNodeId: string;
   public readonly type: string;
   public readonly compressed: SSet<string>;
   public readonly properties: PropertyCollection;
   public readonly namesInQuery: SSet<string>;
+
+  /** ID of the source database */
   public readonly sourceId: string | null;
+
   public readonly sourceTitle: string | null;
   public readonly creationAction: ElementCreationReason;
 
   public constructor(data: {
     id: string;
+    nativeId: string;
     startNodeId: string;
     endNodeId: string;
     type: string;
@@ -49,6 +59,7 @@ export class GraphEdge {
     creationAction: ElementCreationReason;
   }) {
     this.id = data.id;
+    this.nativeId = data.nativeId;
     this.startNodeId = data.startNodeId;
     this.endNodeId = data.endNodeId;
     this.type = data.type;
@@ -83,6 +94,7 @@ export class GraphEdge {
   public static fromPlain(data: z.infer<typeof GraphEdge.schema>): GraphEdge {
     return new GraphEdge({
       id: data.id,
+      nativeId: data.nativeId,
       startNodeId: data.startNodeId,
       endNodeId: data.endNodeId,
       type: data.type,
@@ -131,6 +143,7 @@ export class GraphEdge {
   public toPlain(): z.infer<typeof GraphEdge.schema> {
     return {
       id: this.id,
+      nativeId: this.nativeId,
       startNodeId: this.startNodeId,
       endNodeId: this.endNodeId,
       type: this.type,
@@ -218,6 +231,7 @@ export class GraphEdge {
   public copy(): GraphEdge {
     return new GraphEdge({
       id: this.id,
+      nativeId: this.nativeId,
       startNodeId: this.startNodeId,
       endNodeId: this.endNodeId,
       type: this.type,
@@ -233,6 +247,7 @@ export class GraphEdge {
   public byChangingStartNodeId(newStartNodeId: string): GraphEdge {
     return new GraphEdge({
       id: this.id,
+      nativeId: this.nativeId,
       startNodeId: newStartNodeId,
       endNodeId: this.endNodeId,
       type: this.type,
@@ -248,6 +263,7 @@ export class GraphEdge {
   public byChangingEndNodeId(newEndNodeId: string): GraphEdge {
     return new GraphEdge({
       id: this.id,
+      nativeId: this.nativeId,
       startNodeId: this.startNodeId,
       endNodeId: newEndNodeId,
       type: this.type,

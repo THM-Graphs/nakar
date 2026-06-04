@@ -309,6 +309,7 @@ export class LiveCanvasUndoableData {
       .filter(
         (n: GraphNode): boolean =>
           n.labels.includes(label) &&
+          n.sourceId === node.sourceId &&
           n.compressed.size === 0 &&
           this.getNeighborsOfNode(n).isEqual(neighbors),
       );

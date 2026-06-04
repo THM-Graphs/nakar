@@ -297,6 +297,7 @@ export type PostSearchRequestBodyDto = {
 
 export type NodePreviewDto = {
     id: string;
+    nativeId: string;
     title: string;
     labels: Array<string>;
 };
@@ -406,7 +407,7 @@ export type ShowShortestPathRequestBodyDto = {
 };
 
 export type LoadNodeRequestBodyDto = {
-    nodeId: string;
+    nativeNodeId: string;
     databaseId: string;
 };
 
@@ -526,6 +527,7 @@ export type NodeParameterizedScenarioGroupDto = {
 
 export type NodeDto = {
     id: string;
+    nativeId: string;
     title: string;
     labels: Array<string>;
     nativeLabels: Array<string>;
@@ -555,6 +557,7 @@ export type NodeDto = {
 
 export type EdgeDto = {
     id: string;
+    nativeId: string;
     startNodeId: string;
     endNodeId: string;
     type: string;
@@ -1228,9 +1231,9 @@ export type CanvasDatabaseConnectionControllerGetSearchCapabilitiesResponse = Ca
 export type CanvasDatabaseConnectionControllerExpandNodePreviewData = {
     body?: never;
     path: {
-        databaseId: string;
-        roomId: string;
         canvasId: string;
+        roomId: string;
+        databaseId: string;
     };
     query: {
         nodeId: string;

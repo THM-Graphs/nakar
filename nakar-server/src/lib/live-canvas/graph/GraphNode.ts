@@ -18,6 +18,7 @@ export class GraphNode {
   // eslint-disable-next-line @typescript-eslint/typedef
   public static readonly schema = z.object({
     id: z.string(),
+    nativeId: z.string(),
     labels: z.array(z.string()),
     properties: PropertyCollection.schema,
     position: ElementPosition.schema,
@@ -33,11 +34,19 @@ export class GraphNode {
     scenarioGroups: z.array(LiveCanvasScenarioGroup.schema),
   });
 
+  /** Internal application id */
   public readonly id: string;
+
+  /** External id of source database */
+  public readonly nativeId: string;
+
   public readonly properties: PropertyCollection;
   public readonly namesInQuery: SSet<string>;
   public readonly grabs: SSet<string>;
+
+  /** ID of the source database */
   public readonly sourceId: string;
+
   public readonly sourceTitle: string | null;
   public readonly compressed: SSet<string>;
   public readonly creationAction: ElementCreationReason;
@@ -52,6 +61,7 @@ export class GraphNode {
 
   public constructor(data: {
     id: string;
+    nativeId: string;
     labels: SSet<string>;
     properties: PropertyCollection;
     position: ElementPosition;
@@ -68,6 +78,7 @@ export class GraphNode {
     scenarioGroups: LiveCanvasScenarioGroup[];
   }) {
     this.id = data.id;
+    this.nativeId = data.nativeId;
     this._labels = data.labels;
     this.properties = data.properties;
     this._position = data.position;
@@ -125,6 +136,7 @@ export class GraphNode {
   public static fromPlain(data: z.infer<typeof this.schema>): GraphNode {
     return new GraphNode({
       id: data.id,
+      nativeId: data.nativeId,
       labels: new SSet(data.labels),
       properties: PropertyCollection.fromPlain(data.properties),
       position: ElementPosition.fromPlain(data.position),
@@ -216,6 +228,7 @@ export class GraphNode {
   public toPlain(): z.infer<typeof GraphNode.schema> {
     return {
       id: this.id,
+      nativeId: this.nativeId,
       labels: this.labels,
       properties: this.properties.toPlain(),
       position: this._position,
@@ -267,6 +280,7 @@ export class GraphNode {
   public copy(): GraphNode {
     return new GraphNode({
       id: this.id,
+      nativeId: this.nativeId,
       labels: new SSet(this.labels),
       properties: this.properties.copy(),
       position: this._position.copy(),

@@ -5,13 +5,22 @@ export class NodePreviewDto {
   public id: string;
 
   @ApiProperty()
+  public nativeId: string;
+
+  @ApiProperty()
   public title: string;
 
   @ApiProperty({ isArray: true, type: 'string' })
   public labels: string[];
 
-  public constructor(data: { id: string; title: string; labels: string[] }) {
+  public constructor(data: {
+    id: string;
+    nativeId: string;
+    title: string;
+    labels: string[];
+  }) {
     this.id = data.id;
+    this.nativeId = data.nativeId;
     this.title = data.title;
     this.labels = data.labels;
   }

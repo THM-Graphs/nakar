@@ -4,7 +4,7 @@ import { IsString } from 'class-validator';
 export class LoadNodeRequestBodyDto {
   @ApiProperty({ type: String })
   @IsString()
-  public nodeId!: string;
+  public nativeNodeId!: string;
 
   @ApiProperty({ type: String })
   @IsString()

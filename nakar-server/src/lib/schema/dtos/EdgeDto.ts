@@ -8,6 +8,9 @@ export class EdgeDto {
   public id: string;
 
   @ApiProperty()
+  public nativeId: string;
+
+  @ApiProperty()
   public startNodeId: string;
 
   @ApiProperty()
@@ -63,6 +66,7 @@ export class EdgeDto {
 
   public constructor(data: {
     id: string;
+    nativeId: string;
     startNodeId: string;
     endNodeId: string;
     type: string;
@@ -82,6 +86,7 @@ export class EdgeDto {
     customColor: ColorDto | null;
   }) {
     this.id = data.id;
+    this.nativeId = data.nativeId;
     this.startNodeId = data.startNodeId;
     this.endNodeId = data.endNodeId;
     this.type = data.type;

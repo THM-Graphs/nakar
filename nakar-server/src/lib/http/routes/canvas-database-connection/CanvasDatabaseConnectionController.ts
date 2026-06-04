@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   HttpCode,
+  NotFoundException,
   Param,
   Post,
   Query,
@@ -121,6 +122,7 @@ export class CanvasDatabaseConnectionController {
         .map((node: GraphNode): NodePreviewDto => {
           return {
             id: node.id,
+            nativeId: node.nativeId,
             title: node.getTitle(liveCanvas.data.viewSettings),
             labels: node.labels,
           } satisfies NodePreviewDto;
@@ -196,10 +198,19 @@ export class CanvasDatabaseConnectionController {
   @ApiResponse({ type: ExpandNodePreviewResponseBodyDto })
   public async expandNodePreview(
     @Query() query: ExpandNodePreviewRequestQueryDto,
-    @Param('databaseId') databaseId: string,
+    @Param('canvasId') canvasId: string,
   ): Promise<ExpandNodePreviewResponseBodyDto> {
+    const canvas: LiveCanvas =
+      this._liveCanvasService.getCanvasWithId(canvasId);
+    const node: GraphNode | null = canvas.data.undoableData.current.nodes.get(
+      query.nodeId,
+    );
+    if (node == null) {
+      throw new NotFoundException(`Node ${query.nodeId} not found.`);
+    }
+
     const database: Result<'api::database-connection.database-connection'> =
-      await this._database.getDatabase(databaseId);
+      await this._database.getDatabase(node.sourceId);
 
     const neo4jDatabaseInfo: Neo4jDatabaseInfo =
       Neo4jDatabaseInfo.parse(database);
@@ -207,7 +218,7 @@ export class CanvasDatabaseConnectionController {
     const expandNodePreview: ExpandNodePreview =
       await this._neo4jService.expandNodePreview(
         neo4jDatabaseInfo,
-        new SSet<string>([query.nodeId]),
+        new SSet<string>([node.nativeId]),
       );
 
     return new ExpandNodePreviewResponseBodyDto({

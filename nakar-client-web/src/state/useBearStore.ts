@@ -541,6 +541,7 @@ export const useBearStore = create<BearState>()(
                             ({
                               id: n.id,
                               title: n.title,
+                              nativeId: n.nativeId,
                               labels: n.labels,
                             }) satisfies NodePreviewDto,
                         );

@@ -31,6 +31,10 @@ export function EdgeDetails(props: { edge: EdgeDto }) {
           value: props.edge.id,
         },
         {
+          slug: "Native ID",
+          value: props.edge.nativeId,
+        },
+        {
           slug: "Source",
           value: props.edge.sourceTitle,
         },

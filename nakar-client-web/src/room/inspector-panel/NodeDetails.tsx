@@ -70,6 +70,10 @@ export function NodeDetails(props: { node: NodeDto }) {
               value: props.node.id,
             },
             {
+              slug: "Native ID",
+              value: props.node.nativeId,
+            },
+            {
               slug: "Labels",
               value: props.node.labels,
             },
@@ -80,6 +84,10 @@ export function NodeDetails(props: { node: NodeDto }) {
             {
               slug: "Source",
               value: props.node.sourceTitle,
+            },
+            {
+              slug: "Source ID",
+              value: props.node.sourceId,
             },
             {
               slug: "Names in Query",
