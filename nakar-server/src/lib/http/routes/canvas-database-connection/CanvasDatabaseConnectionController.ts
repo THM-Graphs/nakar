@@ -130,7 +130,7 @@ export class CanvasDatabaseConnectionController {
 
   @Get('search-capabilities')
   @ApiResponse({ type: GetSearchCapabilitiesResponseBodyDto })
-  public async getSearchCapabilites(
+  public async getSearchCapabilities(
     @Param('databaseId') databaseId: string,
   ): Promise<GetSearchCapabilitiesResponseBodyDto> {
     const database: Result<'api::database-connection.database-connection'> =

@@ -8,7 +8,7 @@ import { SuccessIcon } from "./SuccessIcon.tsx";
 import { Collapsable } from "../../shared/elements/Collapsable.tsx";
 import { NavbarButton } from "../../shared/elements/NavbarButton.tsx";
 import {
-  canvasDatabaseConnectionControllerGetSearchCapabilites,
+  canvasDatabaseConnectionControllerGetSearchCapabilities,
   GetSearchCapabilitiesResponseBodyDto,
 } from "api-client";
 import { CanvasContextData, useCanvasContext } from "../../pages/Canvas.tsx";
@@ -29,7 +29,7 @@ export function SearchCapabilitiesDisplay(props: {
       try {
         setCapabilities({ type: "loading" });
         const capa = resultOrThrow(
-          await canvasDatabaseConnectionControllerGetSearchCapabilites({
+          await canvasDatabaseConnectionControllerGetSearchCapabilities({
             path: {
               roomId: roomContext.initialRoomData.id,
               databaseId: props.databaseId,

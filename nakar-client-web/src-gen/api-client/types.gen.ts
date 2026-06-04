@@ -1208,7 +1208,7 @@ export type CanvasDatabaseConnectionControllerPerformSearchResponses = {
 
 export type CanvasDatabaseConnectionControllerPerformSearchResponse = CanvasDatabaseConnectionControllerPerformSearchResponses[keyof CanvasDatabaseConnectionControllerPerformSearchResponses];
 
-export type CanvasDatabaseConnectionControllerGetSearchCapabilitesData = {
+export type CanvasDatabaseConnectionControllerGetSearchCapabilitiesData = {
     body?: never;
     path: {
         databaseId: string;
@@ -1219,11 +1219,11 @@ export type CanvasDatabaseConnectionControllerGetSearchCapabilitesData = {
     url: '/api/room/{roomId}/canvas/{canvasId}/database-connection/{databaseId}/search-capabilities';
 };
 
-export type CanvasDatabaseConnectionControllerGetSearchCapabilitesResponses = {
+export type CanvasDatabaseConnectionControllerGetSearchCapabilitiesResponses = {
     default: GetSearchCapabilitiesResponseBodyDto;
 };
 
-export type CanvasDatabaseConnectionControllerGetSearchCapabilitesResponse = CanvasDatabaseConnectionControllerGetSearchCapabilitesResponses[keyof CanvasDatabaseConnectionControllerGetSearchCapabilitesResponses];
+export type CanvasDatabaseConnectionControllerGetSearchCapabilitiesResponse = CanvasDatabaseConnectionControllerGetSearchCapabilitiesResponses[keyof CanvasDatabaseConnectionControllerGetSearchCapabilitiesResponses];
 
 export type CanvasDatabaseConnectionControllerExpandNodePreviewData = {
     body?: never;
