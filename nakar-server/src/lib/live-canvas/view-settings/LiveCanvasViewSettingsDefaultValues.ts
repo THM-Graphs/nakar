@@ -1,4 +1,4 @@
-import { ScaleType } from '../../physics/ScaleType';
+import { ScaleType } from '../../../packages/range/ScaleType';
 import { Range } from '../../../packages/range/Range';
 
 /**

@@ -1,6 +1,6 @@
 import { Worker } from 'node:worker_threads';
 import { WTEvent } from '../live-canvas-worker/worker-events/WTEvent';
-import { PhysicalGraph } from '../physics/physical-graph/PhysicalGraph';
+import { PhysicalGraph } from '../../packages/physics/physical-graph/PhysicalGraph';
 import { LiveCanvasWorkerData } from '../live-canvas-worker/LiveCanvasWorkerData';
 import path from 'path';
 import { WTAction } from '../live-canvas-worker/worker-events/WTAction';

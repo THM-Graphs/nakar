@@ -15,13 +15,11 @@ import { Neo4jLimitConfig } from '../neo4j/Neo4jLimitConfig';
 import { CanvasEventNotAllNodesLoaded } from './events/CanvasEventNotAllNodesLoaded';
 import { ElementCreationReason } from './graph/ElementCreationReason';
 import { SSet } from '../../packages/set/Set';
-import { PhysicsSimulation } from '../physics/PhysicsSimulation';
 import { GraphEdge } from './graph/GraphEdge';
 import { v4 } from 'uuid';
 import { PropertyCollection } from './graph/PropertyCollection';
 import { ElementPosition } from './graph/ElementPosition';
 import { Neo4jService } from '../neo4j/Neo4jService';
-import { circularWeightedSpread } from '../physics/circle-layout-algorithms/circularWeightedSpread';
 import { PhysicsWorker } from './PhysicsWorker';
 import { TaskQueue } from '../../packages/task-queue/TaskQueue';
 import { TaskQueueState } from '../../packages/task-queue/TaskQueueState';
@@ -54,13 +52,14 @@ import { LiveCanvasScenarioGroup } from './data/LiveCanvasScenarioGroup';
 import { SchemaFactoryService } from '../schema/SchemaFactoryService';
 import { LiveCanvasScenario } from './data/LiveCanvasScenario';
 import { MonitoringService } from '../monitoring/MonitoringService';
-import { HierarchyGraphLayoutEngine } from '../physics/hierarchy-graph-layout/HierarchyGraphLayoutEngine';
+import { HierarchyGraphLayoutEngine } from '../../packages/physics/hierarchy-graph-layout/HierarchyGraphLayoutEngine';
 import { LayoutSpecificationHierarchyDto } from '../http/routes/canvas-action/dto/LayoutSpecificationHierarchyDto';
 import { LayoutSpecificationForceDirectedDto } from '../http/routes/canvas-action/dto/LayoutSpecificationForceDirectedDto';
 import { LiveCanvasViewSettingsColorIndex } from './view-settings/LiveCanvasViewSettingsColorIndex';
 import { LiveCanvasViewSettingsDefaultValues } from './view-settings/LiveCanvasViewSettingsDefaultValues';
-import { PhysicalGraph } from '../physics/physical-graph/PhysicalGraph';
-import { PhysicalNode } from '../physics/physical-graph/PhysicalNode';
+import { PhysicalGraph } from '../../packages/physics/physical-graph/PhysicalGraph';
+import { PhysicalNode } from '../../packages/physics/physical-graph/PhysicalNode';
+import { CircleLayoutEngine } from '../../packages/physics/circle-layout-algorithms/CircleLayoutEngine';
 
 export class LiveCanvas {
   private readonly _logger: Logger = createChildLogger(this);
@@ -739,9 +738,7 @@ export class LiveCanvas {
                   databaseCache,
                 );
               if (insertedNode != null) {
-                insertedNode.position.x = node.position.x;
-                insertedNode.position.y = node.position.y;
-                PhysicsSimulation.jiggle(insertedNode);
+                insertedNode.position = node.position.byJiggleing();
                 changeRecorder.didAddOrRemoveGraphElements();
               }
             }
@@ -1944,7 +1941,9 @@ export class LiveCanvas {
           if (nodesOfLabel.length < 2) {
             return;
           }
-          const sortedNodesToLayout: GraphNode[] = circularWeightedSpread(
+          const circleLayoutEngine: CircleLayoutEngine =
+            new CircleLayoutEngine();
+          const sortedNodesToLayout: GraphNode[] = circleLayoutEngine.layout(
             nodesOfLabel,
             (n: GraphNode): number => n.degree(graph),
           );
@@ -1975,8 +1974,7 @@ export class LiveCanvas {
             if (neighbors.length > 0) {
               node.position = ElementPosition.average(
                 neighbors.map((n: GraphNode): ElementPosition => n.position),
-              );
-              PhysicsSimulation.jiggle(node);
+              ).byJiggleing();
               changeRecorder.didMoveNode(node);
             }
           }
@@ -2022,8 +2020,8 @@ export class LiveCanvas {
             if (foundNode.grabs.size > 0) {
               continue;
             }
-            foundNode.position.x = node[1].position.x;
-            foundNode.position.y = node[1].position.y;
+            foundNode.position.x = node[1].positionX;
+            foundNode.position.y = node[1].positionY;
             changeRecorder.didMoveNode(foundNode);
             foundNode.locked = true;
             changeRecorder.didChangeNodeLock(foundNode.id, true);

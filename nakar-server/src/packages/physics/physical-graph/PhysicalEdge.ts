@@ -3,7 +3,5 @@ export interface PhysicalEdge {
   readonly startNodeId: string;
   readonly endNodeId: string;
   readonly edgeType: string;
-  readonly compressedCount: number;
-  readonly isLoop: boolean;
   readonly title: string;
 }

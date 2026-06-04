@@ -1,16 +1,16 @@
 import { MessagePort, parentPort } from 'node:worker_threads';
-import { PhysicsSimulation } from '../physics/PhysicsSimulation';
+import { PhysicsSimulation } from '../../packages/physics/PhysicsSimulation';
 import { LiveCanvasWorkerData } from './LiveCanvasWorkerData';
 import { WTActionSetGraph } from './worker-events/WTActionSetGraph';
 import { WTAction } from './worker-events/WTAction';
 import { match } from 'ts-pattern';
 import { WTEvent } from './worker-events/WTEvent';
 import { WTActionMoveNodes } from './worker-events/WTActionMoveNodes';
-import { PhysicalGraph } from '../physics/physical-graph/PhysicalGraph';
-import { PhysicalNode } from '../physics/physical-graph/PhysicalNode';
+import { PhysicalGraph } from '../../packages/physics/physical-graph/PhysicalGraph';
+import { PhysicalNode } from '../../packages/physics/physical-graph/PhysicalNode';
 import { WTActionTriggerPhysics } from './worker-events/WTActionTriggerPhysics';
 import { WTActionSetLocks } from './worker-events/WTActionSetLocks';
-import { PhysicsSimulationEventSlowTick } from '../physics/PhysicsSimulationEventSlowTick';
+import { PhysicsSimulationEventSlowTick } from '../../packages/physics/PhysicsSimulationEventSlowTick';
 import { Logger } from '@strapi/logger';
 import { createChildLogger } from '../logger/createChildLogger';
 
@@ -69,8 +69,8 @@ export class LiveCanvasWorkerPhysicsService {
                 continue;
               }
 
-              foundNode.position.x = movedNode.position.x;
-              foundNode.position.y = movedNode.position.y;
+              foundNode.positionX = movedNode.position.x;
+              foundNode.positionY = movedNode.position.y;
             }
 
             if (action.runShortPhysics) {
@@ -124,6 +124,10 @@ export class LiveCanvasWorkerPhysicsService {
       this._sendEvent({
         type: 'WTEventPhysicsStopped',
       });
+    });
+    const physicsLogger: Logger = createChildLogger(this._physics);
+    this._physics.onLog$.subscribe((message: string): void => {
+      physicsLogger.debug(message);
     });
   }
 

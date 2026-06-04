@@ -5,8 +5,8 @@ import {
   ElkNode,
 } from 'elkjs/lib/elk-api';
 import { LayoutOptions } from 'elkjs';
-import { SMap } from '../../../packages/map/Map';
-import { SSet } from '../../../packages/set/Set';
+import { SMap } from '../../map/Map';
+import { SSet } from '../../set/Set';
 import { PhysicalEdge } from '../physical-graph/PhysicalEdge';
 import { PhysicalGraph } from '../physical-graph/PhysicalGraph';
 import { PhysicalNode } from '../physical-graph/PhysicalNode';
@@ -106,7 +106,6 @@ export class HierarchyGraphLayoutEngine {
       edges: edges
         .filter(
           (edge: PhysicalEdge): boolean =>
-            !edge.isLoop &&
             edge.startNodeId in nodes &&
             edge.endNodeId in nodes &&
             edge.startNodeId !== edge.endNodeId,
@@ -128,7 +127,6 @@ export class HierarchyGraphLayoutEngine {
   ): OrderedHierarchyGraph {
     const relevantEdges: PhysicalEdge[] = edges.filter(
       (edge: PhysicalEdge): boolean =>
-        !edge.isLoop &&
         edge.startNodeId in nodes &&
         edge.endNodeId in nodes &&
         edge.startNodeId !== edge.endNodeId,
@@ -230,8 +228,8 @@ export class HierarchyGraphLayoutEngine {
     const rightNode: PhysicalNode = nodes[right];
 
     return (
-      leftNode.position.x - rightNode.position.x ||
-      leftNode.position.y - rightNode.position.y ||
+      leftNode.positionX - rightNode.positionX ||
+      leftNode.positionY - rightNode.positionY ||
       left.localeCompare(right)
     );
   }
@@ -269,8 +267,8 @@ export class HierarchyGraphLayoutEngine {
     for (const child of graph.children ?? []) {
       const node: PhysicalNode = nodes[child.id];
 
-      node.position.x = (child.x ?? 0) + (child.width ?? 0) / 2;
-      node.position.y = (child.y ?? 0) + (child.height ?? 0) / 2;
+      node.positionX = (child.x ?? 0) + (child.width ?? 0) / 2;
+      node.positionY = (child.y ?? 0) + (child.height ?? 0) / 2;
     }
   }
 
@@ -283,10 +281,10 @@ export class HierarchyGraphLayoutEngine {
     for (const nodeId of nodeIds) {
       const node: PhysicalNode = nodes[nodeId];
 
-      minX = Math.min(minX, node.position.x - node.radius);
-      maxX = Math.max(maxX, node.position.x + node.radius);
-      minY = Math.min(minY, node.position.y - node.radius);
-      maxY = Math.max(maxY, node.position.y + node.radius);
+      minX = Math.min(minX, node.positionX - node.radius);
+      maxX = Math.max(maxX, node.positionX + node.radius);
+      minY = Math.min(minY, node.positionY - node.radius);
+      maxY = Math.max(maxY, node.positionY + node.radius);
     }
 
     const offsetX: number = (minX + maxX) / 2;
@@ -295,8 +293,8 @@ export class HierarchyGraphLayoutEngine {
     for (const nodeId of nodeIds) {
       const node: PhysicalNode = nodes[nodeId];
 
-      node.position.x = this._snapCoordinate(node.position.x - offsetX);
-      node.position.y = this._snapCoordinate(node.position.y - offsetY);
+      node.positionX = this._snapCoordinate(node.positionX - offsetX);
+      node.positionY = this._snapCoordinate(node.positionY - offsetY);
     }
   }
 

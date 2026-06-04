@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { PhysicsSimulation } from '../../../packages/physics/PhysicsSimulation';
 
 export class ElementPosition {
   // eslint-disable-next-line @typescript-eslint/typedef
@@ -19,6 +20,14 @@ export class ElementPosition {
     return new ElementPosition({
       x: 0,
       y: 0,
+    });
+  }
+
+  public static jiggled(): ElementPosition {
+    const delta: { x: number; y: number } = PhysicsSimulation.jiggled();
+    return new ElementPosition({
+      x: delta.x,
+      y: delta.y,
     });
   }
 
@@ -59,5 +68,9 @@ export class ElementPosition {
 
   public byDividing(value: number): ElementPosition {
     return new ElementPosition({ x: this.x / value, y: this.y / value });
+  }
+
+  public byJiggleing(): ElementPosition {
+    return this.byAdding(ElementPosition.jiggled());
   }
 }

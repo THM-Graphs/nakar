@@ -4,11 +4,8 @@ import { PhysicsSimulationRunOptions } from './PhysicsSimulationRunOptions';
 import { PhysicalGraph } from './physical-graph/PhysicalGraph';
 import { PhysicalNode } from './physical-graph/PhysicalNode';
 import { PhysicalEdge } from './physical-graph/PhysicalEdge';
-import { Range } from '../../packages/range/Range';
-import { GraphNode } from '../live-canvas/graph/GraphNode';
+import { Range } from '../range/Range';
 import { PhysicsSimulationEventSlowTick } from './PhysicsSimulationEventSlowTick';
-import { Logger } from '@strapi/logger';
-import { createChildLogger } from '../logger/createChildLogger';
 
 export class PhysicsSimulation {
   public static readonly maximumVelocity: number = 2000;
@@ -18,12 +15,11 @@ export class PhysicsSimulation {
   public static readonly frictionFactor: number = 0.4;
   public static readonly targetPhysicsTickDuration: number = 15;
 
-  private readonly _logger: Logger = createChildLogger(this);
-
   private _graph: PhysicalGraph;
   private _running: boolean;
   private readonly _onSlowTick$: Subject<PhysicsSimulationEventSlowTick>;
   private readonly _onStopped$: Subject<void>;
+  private readonly _onLog$: Subject<string>;
   private _targetDate: number;
 
   public constructor(graph: PhysicalGraph) {
@@ -31,6 +27,7 @@ export class PhysicsSimulation {
     this._running = false;
     this._onSlowTick$ = new Subject();
     this._onStopped$ = new Subject();
+    this._onLog$ = new Subject();
     this._targetDate = Date.now();
   }
 
@@ -40,6 +37,10 @@ export class PhysicsSimulation {
 
   public get onStopped$(): Observable<void> {
     return this._onStopped$.asObservable();
+  }
+
+  public get onLog$(): Observable<string> {
+    return this._onLog$.asObservable();
   }
 
   private get _heat(): number {
@@ -54,10 +55,10 @@ export class PhysicsSimulation {
     return (1 / PhysicsSimulation.FPS) * 1000;
   }
 
-  public static jiggle(node: PhysicalNode | GraphNode): void {
+  public static jiggle(node: PhysicalNode): void {
     const radians: number = Math.random() * Math.PI * 2;
-    node.position.x += Math.cos(radians) * 10;
-    node.position.y += Math.sin(radians) * 10;
+    node.positionX += Math.cos(radians) * 10;
+    node.positionY += Math.sin(radians) * 10;
   }
 
   public static jiggled(): { x: number; y: number } {
@@ -66,12 +67,6 @@ export class PhysicsSimulation {
       x: Math.cos(radians) * 10,
       y: Math.sin(radians) * 10,
     };
-  }
-
-  public runIndefinitely(): void {
-    this.run({ maxMs: null }).catch((error: unknown): void => {
-      this._logger.error(error);
-    });
   }
 
   public stop(): void {
@@ -88,7 +83,7 @@ export class PhysicsSimulation {
     if (this._running) {
       return;
     } else {
-      this._logger.debug(
+      this._onLog$.next(
         `Will start physics simulation: ${JSON.stringify(options)}`,
       );
       this._running = true;
@@ -145,7 +140,7 @@ export class PhysicsSimulation {
     this._running = false;
     this._targetDate = Number.MIN_SAFE_INTEGER;
     this._onStopped$.next();
-    this._logger.debug(`Physics Simulation stopped.`);
+    this._onLog$.next(`Physics Simulation stopped.`);
   }
 
   private _tick(): void {
@@ -173,7 +168,8 @@ export class PhysicsSimulation {
       if (edge == null) {
         continue;
       }
-      if (edge.isLoop) {
+      if (edge.startNodeId === edge.endNodeId) {
+        // Is loop
         continue;
       }
       if (
@@ -211,8 +207,8 @@ export class PhysicsSimulation {
   private _positionEquals(nodeA: PhysicalNode, nodeB: PhysicalNode): boolean {
     const threshold: number = 0.1;
     const result: boolean =
-      Math.abs(nodeA.position.x - nodeB.position.x) < threshold &&
-      Math.abs(nodeA.position.y - nodeB.position.y) < threshold;
+      Math.abs(nodeA.positionX - nodeB.positionX) < threshold &&
+      Math.abs(nodeA.positionY - nodeB.positionY) < threshold;
     return result;
   }
 
@@ -241,8 +237,8 @@ export class PhysicsSimulation {
       node.velocityY =
         (node.velocityY / magnitude) * PhysicsSimulation.maximumVelocity;
     }
-    node.position.x += node.velocityX * this._heat;
-    node.position.y += node.velocityY * this._heat;
+    node.positionX += node.velocityX * this._heat;
+    node.positionY += node.velocityY * this._heat;
 
     node.velocityX *= 1 - PhysicsSimulation.frictionFactor;
     node.velocityY *= 1 - PhysicsSimulation.frictionFactor;
@@ -261,8 +257,8 @@ export class PhysicsSimulation {
       PhysicsSimulation.jiggle(nodeA);
     }
 
-    const directionX: number = nodeA.position.x - nodeB.position.x;
-    const directionY: number = nodeA.position.y - nodeB.position.y;
+    const directionX: number = nodeA.positionX - nodeB.positionX;
+    const directionY: number = nodeA.positionY - nodeB.positionY;
     const magnitude: number = this._magnitude(directionX, directionY);
     const strength: number =
       ((this._mass(nodeA) * this._mass(nodeB) * 4) / Math.pow(magnitude, 2)) *
@@ -293,8 +289,8 @@ export class PhysicsSimulation {
       PhysicsSimulation.jiggle(nodeA);
     }
 
-    const directionX: number = nodeA.position.x - nodeB.position.x;
-    const directionY: number = nodeA.position.y - nodeB.position.y;
+    const directionX: number = nodeA.positionX - nodeB.positionX;
+    const directionY: number = nodeA.positionY - nodeB.positionY;
     const magnitude: number = this._magnitude(directionX, directionY);
     const strength: number = (targetLength - magnitude) * 0.024;
 
@@ -315,13 +311,13 @@ export class PhysicsSimulation {
   }
 
   private _centerForce(node: PhysicalNode): void {
-    const magnitude: number = this._magnitude(node.position.x, node.position.y);
+    const magnitude: number = this._magnitude(node.positionX, node.positionY);
     if (magnitude === 0) {
       return;
     }
 
-    const directionX: number = -node.position.x;
-    const directionY: number = -node.position.y;
+    const directionX: number = -node.positionX;
+    const directionY: number = -node.positionY;
     const strength: number = magnitude * this._mass(node) * 0.00000013;
 
     if (!node.locked) {

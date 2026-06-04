@@ -6,7 +6,6 @@ import { ElementPosition } from './ElementPosition';
 import { PropertyCollection } from './PropertyCollection';
 import { Range } from '../../../packages/range/Range';
 import { LiveCanvasUndoableData } from '../data/LiveCanvasUndoableData';
-import { PhysicsSimulation } from '../../physics/PhysicsSimulation';
 import { ElementCreationReason } from './ElementCreationReason';
 import { LabelIndex } from './LabelIndex';
 import { DatabaseReferenceCache } from '../../schema/DatabaseReferenceCache';
@@ -120,7 +119,7 @@ export class NodeIndex {
       id: node.node.elementId,
       labels: new SSet<string>(node.node.labels),
       properties: PropertyCollection.fromRecord(node.node.properties),
-      position: ElementPosition.default(),
+      position: ElementPosition.jiggled(),
       namesInQuery: node.keys,
       locked: false,
       grabs: new SSet(),
@@ -133,7 +132,6 @@ export class NodeIndex {
       scenarioGroups: [],
       noteReferences: new SSet(),
     });
-    PhysicsSimulation.jiggle(mutableNode);
 
     const insertResult: boolean = this.add(mutableNode);
     if (!insertResult) {

@@ -6,9 +6,9 @@ import { SMap } from '../../../packages/map/Map';
 import { v4 as uuidv4 } from 'uuid';
 import { NodeIndex } from '../graph/NodeIndex';
 import { EdgeIndex } from '../graph/EdgeIndex';
-import { PhysicalGraph } from '../../physics/physical-graph/PhysicalGraph';
-import { PhysicalNode } from '../../physics/physical-graph/PhysicalNode';
-import { PhysicalEdge } from '../../physics/physical-graph/PhysicalEdge';
+import { PhysicalGraph } from '../../../packages/physics/physical-graph/PhysicalGraph';
+import { PhysicalNode } from '../../../packages/physics/physical-graph/PhysicalNode';
+import { PhysicalEdge } from '../../../packages/physics/physical-graph/PhysicalEdge';
 import { SSet } from '../../../packages/set/Set';
 import { Result } from '@strapi/types/dist/modules/documents/result';
 import { Range } from '../../../packages/range/Range';
@@ -205,7 +205,8 @@ export class LiveCanvasUndoableData {
       nodes[node.id] = {
         id: node.id,
         radius: node.getRadius(viewSettings, degreeRange, this),
-        position: { x: node.position.x, y: node.position.y },
+        positionX: node.position.x,
+        positionY: node.position.y,
         locked: node.locked,
         velocityX: 0,
         velocityY: 0,
@@ -218,8 +219,6 @@ export class LiveCanvasUndoableData {
         startNodeId: edge.startNodeId,
         endNodeId: edge.endNodeId,
         edgeType: edge.type,
-        compressedCount: edge.representationCount,
-        isLoop: edge.isLoop,
         title: edge.title,
       };
     }
@@ -249,8 +248,8 @@ export class LiveCanvasUndoableData {
       if (foundNode.locked) {
         continue;
       }
-      foundNode.position.x = node.position.x;
-      foundNode.position.y = node.position.y;
+      foundNode.position.x = node.positionX;
+      foundNode.position.y = node.positionY;
     }
   }
 

@@ -1,9 +1,9 @@
-import { PhysicalPosition } from './PhysicalPosition';
-
 export interface PhysicalNode {
   readonly id: string;
-  readonly position: PhysicalPosition;
   readonly radius: number;
+
+  positionX: number;
+  positionY: number;
   locked: boolean;
 
   velocityX: number;
