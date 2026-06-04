@@ -28,8 +28,8 @@ export class UndoWrapper<T> {
       canRedo: this._redoStack.size > 0,
       undoStackSize: this._undoStack.size,
       redoStackSize: this._redoStack.size,
-      undoAction: this._undoStack.peak?.actionTitle ?? null,
-      redoAction: this._redoStack.peak?.actionTitle ?? null,
+      undoAction: this._undoStack.peek?.actionTitle ?? null,
+      redoAction: this._redoStack.peek?.actionTitle ?? null,
     };
   }
   public get current(): T {

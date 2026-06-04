@@ -13,7 +13,7 @@ export class UndoWrapperStack<T> {
     return this._stack.length;
   }
 
-  public get peak(): UndoWrapperStackEntry<T> | null {
+  public get peek(): UndoWrapperStackEntry<T> | null {
     if (this._stack.length === 0) {
       return null;
     }
