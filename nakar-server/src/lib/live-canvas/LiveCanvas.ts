@@ -142,7 +142,9 @@ export class LiveCanvas {
                 changeRecorder.didChangeNotes();
                 this._handleChangeRecorder(changeRecorder);
               })
-              .catch(this._logger.error);
+              .catch((error: unknown): void => {
+                this._logger.error(error);
+              });
           }
         },
       ),
