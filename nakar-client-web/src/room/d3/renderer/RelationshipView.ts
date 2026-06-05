@@ -197,6 +197,10 @@ export class RelationshipView {
   public setLabelsHidden(hidden: boolean): void {
     this.labelsHidden = hidden;
     setAttr(this.labelGroup, "hidden", hidden ? true : null);
-    setAttr(this.path, "marker-end", hidden ? null : `url(#arrow_${this.edge.id})`);
+    setAttr(
+      this.path,
+      "marker-end",
+      hidden ? null : `url(#arrow_${this.edge.id})`,
+    );
   }
 }

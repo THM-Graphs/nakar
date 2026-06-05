@@ -78,30 +78,24 @@ export class D3Renderer {
   private cursorViews: UserCursorView[];
   private smoothedPositionDirty: boolean;
 
-  private dragNode:
-    | {
-        pointerId: number;
-        node: D3Node;
-        startClient: [number, number];
-        pointerToNodeOffset: [number, number];
-        moved: boolean;
-      }
-    | null;
-  private panState:
-    | {
-        pointerId: number;
-        lastSvgPoint: [number, number];
-        startClient: [number, number];
-        moved: boolean;
-      }
-    | null;
+  private dragNode: {
+    pointerId: number;
+    node: D3Node;
+    startClient: [number, number];
+    pointerToNodeOffset: [number, number];
+    moved: boolean;
+  } | null;
+  private panState: {
+    pointerId: number;
+    lastSvgPoint: [number, number];
+    startClient: [number, number];
+    moved: boolean;
+  } | null;
   private suppressClickUntil: number;
-  private lastNodeClick:
-    | {
-        nodeId: string;
-        timestamp: number;
-      }
-    | null;
+  private lastNodeClick: {
+    nodeId: string;
+    timestamp: number;
+  } | null;
   private removeSvgListeners: Array<() => void>;
   private viewSubscriptions: Subscription[];
 
@@ -355,7 +349,10 @@ export class D3Renderer {
         const svgPoint = this.getSvgPoint(event.clientX, event.clientY);
         const worldPoint = this.screenToWorld(svgPoint);
         const zoomDelta = event.deltaY < 0 ? 1.1 : 1 / 1.1;
-        const newK = Math.max(0.02, Math.min(8, this.zoomTransform.k * zoomDelta));
+        const newK = Math.max(
+          0.02,
+          Math.min(8, this.zoomTransform.k * zoomDelta),
+        );
         const newX = svgPoint[0] - worldPoint[0] * newK;
         const newY = svgPoint[1] - worldPoint[1] * newK;
         this.setZoomTransform(new CanvasZoomTransform(newK, newX, newY));
@@ -385,7 +382,10 @@ export class D3Renderer {
     });
 
     this.addSvgListener("pointermove", (event) => {
-      if (this.dragNode != null && this.dragNode.pointerId === event.pointerId) {
+      if (
+        this.dragNode != null &&
+        this.dragNode.pointerId === event.pointerId
+      ) {
         event.preventDefault();
         const svgPoint = this.getSvgPoint(event.clientX, event.clientY);
         const pointerWorld = this.screenToWorld(svgPoint);
@@ -416,7 +416,10 @@ export class D3Renderer {
         return;
       }
 
-      if (this.panState != null && this.panState.pointerId === event.pointerId) {
+      if (
+        this.panState != null &&
+        this.panState.pointerId === event.pointerId
+      ) {
         event.preventDefault();
         const movedDistance = Math.hypot(
           event.clientX - this.panState.startClient[0],
@@ -440,7 +443,10 @@ export class D3Renderer {
     });
 
     const finishPointer = (event: PointerEvent) => {
-      if (this.dragNode != null && this.dragNode.pointerId === event.pointerId) {
+      if (
+        this.dragNode != null &&
+        this.dragNode.pointerId === event.pointerId
+      ) {
         const drag = this.dragNode;
         if (drag.moved) {
           this.suppressClickUntil = performance.now() + 250;
@@ -470,7 +476,10 @@ export class D3Renderer {
         this.dragNode = null;
         this._updateShowLabels();
       }
-      if (this.panState != null && this.panState.pointerId === event.pointerId) {
+      if (
+        this.panState != null &&
+        this.panState.pointerId === event.pointerId
+      ) {
         if (this.panState.moved) {
           this.suppressClickUntil = performance.now() + 250;
         }
@@ -524,7 +533,11 @@ export class D3Renderer {
     for (const edge of this.graphState.links) {
       const linkProps: RelationshipViewProps = {
         strokeColor: this._getEdgeStrokeColor(edge),
-        textColor: getTextColorOfEdge(edge.customColor, this.colorSchema, this.theme),
+        textColor: getTextColorOfEdge(
+          edge.customColor,
+          this.colorSchema,
+          this.theme,
+        ),
       };
       const linkView = new RelationshipView(
         this.linksLayer,
@@ -867,7 +880,11 @@ export class D3Renderer {
   private _getRelationshipViewProps(edge: D3Link): RelationshipViewProps {
     return {
       strokeColor: this._getEdgeStrokeColor(edge),
-      textColor: getTextColorOfEdge(edge.customColor, this.colorSchema, this.theme),
+      textColor: getTextColorOfEdge(
+        edge.customColor,
+        this.colorSchema,
+        this.theme,
+      ),
     };
   }
 

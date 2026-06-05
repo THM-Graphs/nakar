@@ -118,7 +118,10 @@ export class NodeView {
     setAttr(this.notesText, "dominant-baseline", "middle");
     this.group.appendChild(this.notesText);
 
-    const stepSize = this.props.bgColors.length > 1 ? 100 / (this.props.bgColors.length - 1) : 0;
+    const stepSize =
+      this.props.bgColors.length > 1
+        ? 100 / (this.props.bgColors.length - 1)
+        : 0;
     for (let i = 0; i < this.props.bgColors.length; i += 1) {
       const stop = createSvgElement("stop");
       setAttr(stop, "offset", `${(i * stepSize).toString()}%`);
@@ -224,7 +227,10 @@ export class NodeView {
     return this.hovered;
   }
 
-  public updateAppearance(textMeasurer: TextMeasurer, props: NodeViewProps): void {
+  public updateAppearance(
+    textMeasurer: TextMeasurer,
+    props: NodeViewProps,
+  ): void {
     this.props = props;
     const fill =
       props.bgColors.length > 1
@@ -233,7 +239,11 @@ export class NodeView {
 
     setAttr(this.baseCircle, "r", this.node.radius);
     setAttr(this.baseCircle, "fill", fill);
-    setAttr(this.baseCircle, "stroke-width", `${props.strokeWidth.toFixed()}px`);
+    setAttr(
+      this.baseCircle,
+      "stroke-width",
+      `${props.strokeWidth.toFixed()}px`,
+    );
     setAttr(this.baseCircle, "stroke", props.borderColor);
 
     setAttr(this.image, "x", -this.node.radius + props.strokeWidth * 1.5);
@@ -265,7 +275,11 @@ export class NodeView {
         : (props.bgColors[0] ?? "#999"),
     );
     setAttr(this.clusterCircle, "stroke-width", props.strokeWidth * 4);
-    setAttr(this.clusterCircle, "hidden", this.node.clusterSize === 0 ? true : null);
+    setAttr(
+      this.clusterCircle,
+      "hidden",
+      this.node.clusterSize === 0 ? true : null,
+    );
 
     setAttr(
       this.lockedOverlay,
@@ -307,13 +321,29 @@ export class NodeView {
     setAttr(this.clusterBadgeRect, "width", badgeWidth);
     setAttr(this.clusterBadgeRect, "height", badgeHeight);
     setAttr(this.clusterBadgeRect, "fill", props.titleColor);
-    setAttr(this.clusterBadgeRect, "hidden", this.node.clusterSize === 0 ? true : null);
+    setAttr(
+      this.clusterBadgeRect,
+      "hidden",
+      this.node.clusterSize === 0 ? true : null,
+    );
     this.clusterBadgeText.textContent = badgeText;
     setAttr(this.clusterBadgeText, "x", 0);
-    setAttr(this.clusterBadgeText, "y", -this.node.radius + 2 + badgeHeight / 2);
-    setAttr(this.clusterBadgeText, "font-size", Math.max(10, this.node.radius / 4));
+    setAttr(
+      this.clusterBadgeText,
+      "y",
+      -this.node.radius + 2 + badgeHeight / 2,
+    );
+    setAttr(
+      this.clusterBadgeText,
+      "font-size",
+      Math.max(10, this.node.radius / 4),
+    );
     setAttr(this.clusterBadgeText, "fill", props.bgColors[0] ?? "#fff");
-    setAttr(this.clusterBadgeText, "hidden", this.node.clusterSize === 0 ? true : null);
+    setAttr(
+      this.clusterBadgeText,
+      "hidden",
+      this.node.clusterSize === 0 ? true : null,
+    );
 
     this.notesText.textContent = this.node.notesCount > 0 ? "📌" : "";
     setAttr(this.notesText, "x", 0);

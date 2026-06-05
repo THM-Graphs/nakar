@@ -37,7 +37,10 @@ export class SaveSVGAction extends Action<SaveSVGActionParams> {
     svg.setAttribute("height", dimensions.height.toString());
     svg.setAttribute("viewBox", dimensions.viewBox);
 
-    const title = document.createElementNS("http://www.w3.org/2000/svg", "title");
+    const title = document.createElementNS(
+      "http://www.w3.org/2000/svg",
+      "title",
+    );
     title.textContent = "NAKAR Export";
     svg.appendChild(title);
     const desc = document.createElementNS("http://www.w3.org/2000/svg", "desc");
@@ -50,7 +53,10 @@ export class SaveSVGAction extends Action<SaveSVGActionParams> {
     //   .attr("width", `${boundingBox.width.toString()}pt`)
     //   .attr("height", `${boundingBox.height.toString()}pt`)
     //   .attr("fill", theme == "dark" ? "rgb(33, 37, 41)" : "#fff");
-    const style = document.createElementNS("http://www.w3.org/2000/svg", "style");
+    const style = document.createElementNS(
+      "http://www.w3.org/2000/svg",
+      "style",
+    );
     style.textContent = "* { font-family: system-ui }";
     svg.appendChild(style);
 

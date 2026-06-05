@@ -40,7 +40,8 @@ export class UserCursorView {
     bubbleText.textContent = cursor.username;
     this.group.appendChild(bubbleText);
 
-    const width = textMeasurer.measureWidth(cursor.username, "12px sans-serif") + 10;
+    const width =
+      textMeasurer.measureWidth(cursor.username, "12px sans-serif") + 10;
     setAttr(this.bubbleRect, "width", width);
   }
 
