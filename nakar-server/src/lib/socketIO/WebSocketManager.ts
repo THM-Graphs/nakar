@@ -18,7 +18,7 @@ import {
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
-import { SMap } from '../../packages/map/Map';
+
 import { match, P } from 'ts-pattern';
 import { Result } from '@strapi/types/dist/modules/documents/result';
 import { DatabaseService } from '../database/DatabaseService';
@@ -89,9 +89,6 @@ export class WebSocketManager
 {
   private readonly _logger: Logger = createChildLogger(this);
 
-  /* Socket ID => Canvas ID */
-  private readonly _rooms: SMap<string, string>;
-
   // eslint-disable-next-line @typescript-eslint/member-ordering
   @WebSocketServer()
   // eslint-disable-next-line @typescript-eslint/prefer-readonly
@@ -103,7 +100,6 @@ export class WebSocketManager
     private readonly _schemaFactory: SchemaFactoryService,
     private readonly _authService: AuthService,
   ) {
-    this._rooms = new SMap();
     this._registerCanvasEvents();
   }
 
@@ -187,7 +183,32 @@ export class WebSocketManager
 
     const liveCanvas: LiveCanvas = this._canvasService.getOrStartCanvas(canvas);
 
-    this._rooms.set(wsClient.id, canvas.documentId);
+    wsClient.on('disconnecting', (): void => {
+      for (const room of wsClient.rooms) {
+        if (!room.startsWith('canvas:')) continue;
+        const canvasId: string = room.slice(7);
+        const lc: LiveCanvas = this._canvasService.getCanvasWithId(canvasId);
+        lc.removeUser(wsClient.id);
+
+        if ((this._server.sockets.adapter.rooms.get(room)?.size ?? 0) <= 1) {
+          this._databaseService
+            .getCanvas(canvasId)
+            .then((oldCanvas: Result<'api::canvas.canvas'> | null): void => {
+              if (oldCanvas == null) {
+                this._logger.warn('Cannot find canvas to shut down.');
+              } else {
+                this._canvasService.scheduleCanvasShutdown(oldCanvas);
+              }
+            })
+            .catch((error: unknown): void => {
+              this._logger.error(error);
+            });
+        }
+        break;
+      }
+    });
+
+    void wsClient.join('canvas:' + canvas.documentId);
     liveCanvas.addUser({
       socketId: wsClient.id,
       username: user?.username ?? null,
@@ -204,11 +225,6 @@ export class WebSocketManager
 
   public handleDisconnect(wsClient: Socket): void {
     this._logger.debug(`Client disconnected: ${wsClient.id}`);
-    this._assertLiveCanvas(wsClient)?.removeUser(wsClient.id);
-    const oldRoom: string | null = this._rooms.get(wsClient.id) ?? null;
-    if (oldRoom != null) {
-      this._handleClientLeftRoom(wsClient, oldRoom);
-    }
   }
 
   public onModuleDestroy(): void {
@@ -285,59 +301,17 @@ export class WebSocketManager
     }
   }
 
-  public sendToRoom(roomId: string, message: EventWsdto['event']): void {
-    for (const socket of this._server.sockets.sockets.values()) {
-      const room: string | null = this._rooms.get(socket.id) ?? null;
-      if (room == null) {
-        continue;
-      }
-      if (room !== roomId) {
-        continue;
-      }
-      socket.emit('message', { event: message });
-    }
+  private _sendToRoom(roomId: string, message: EventWsdto['event']): void {
+    this._server.to('canvas:' + roomId).emit('message', { event: message });
   }
 
   private _assertLiveCanvas(client: Socket): LiveCanvas | null {
-    const roomId: string | null = this._rooms.get(client.id) ?? null;
-    if (roomId == null) {
-      return null;
+    for (const room of client.rooms) {
+      if (room.startsWith('canvas:')) {
+        return this._canvasService.getCanvasWithId(room.slice(7));
+      }
     }
-    const canvas: LiveCanvas = this._canvasService.getCanvasWithId(roomId);
-
-    return canvas;
-  }
-
-  private _userCountOfRoom(roomId: string): number {
-    return this._rooms.reduce(
-      (akku: number, key: string, value: string): number => {
-        if (value === roomId) {
-          return akku + 1;
-        } else {
-          return akku;
-        }
-      },
-      0,
-    );
-  }
-
-  private _handleClientLeftRoom(wsClient: Socket, oldCanvasId: string): void {
-    this._rooms.delete(wsClient.id);
-
-    if (this._userCountOfRoom(oldCanvasId) === 0) {
-      this._databaseService
-        .getCanvas(oldCanvasId)
-        .then((oldCanvas: Result<'api::canvas.canvas'> | null): void => {
-          if (oldCanvas == null) {
-            this._logger.warn('Cannot find canvas to shut down.');
-          } else {
-            this._canvasService.scheduleCanvasShutdown(oldCanvas);
-          }
-        })
-        .catch((error: unknown): void => {
-          this._logger.error(error);
-        });
-    }
+    return null;
   }
 
   private _registerCanvasEvents(): void {
@@ -359,7 +333,7 @@ export class WebSocketManager
                 this._schemaFactory.createSchemaTable(
                   message.canvas.getGraph().tableData,
                 );
-              this.sendToRoom(message.canvas.canvasId, {
+              this._sendToRoom(message.canvas.canvasId, {
                 table: table,
                 type: 'CanvasTableDataChangedWsdto',
               });
@@ -370,7 +344,7 @@ export class WebSocketManager
             (message: CanvasEventGraphMetaDataChanged): void => {
               const metaData: LiveCanvasMetaDataDto =
                 this._schemaFactory.createSchemaGraphMetaData(message.canvas);
-              this.sendToRoom(message.canvas.canvasId, {
+              this._sendToRoom(message.canvas.canvasId, {
                 metaData: metaData,
                 type: 'CanvasMetaDataChangedWsdto',
               });
@@ -381,7 +355,7 @@ export class WebSocketManager
             (message: CanvasEventGraphElementsChanged): void => {
               const graphElements: LiveCanvasGraphElementsDto =
                 this._schemaFactory.createSchemaGraphElements(message.canvas);
-              this.sendToRoom(message.canvas.canvasId, {
+              this._sendToRoom(message.canvas.canvasId, {
                 elements: graphElements,
                 type: 'CanvasElementsChangedWsdto',
               });
@@ -390,7 +364,7 @@ export class WebSocketManager
           .with(
             { type: 'CanvasEventHistogramChanged' },
             (message: CanvasEventHistogramChanged): void => {
-              this.sendToRoom(message.canvas.canvasId, {
+              this._sendToRoom(message.canvas.canvasId, {
                 histogram: this._schemaFactory.createSchemaHistogram(
                   message.canvas,
                 ),
@@ -401,7 +375,7 @@ export class WebSocketManager
           .with(
             { type: 'CanvasEventNotesChanged' },
             (message: CanvasEventNotesChanged): void => {
-              this.sendToRoom(message.canvas.canvasId, {
+              this._sendToRoom(message.canvas.canvasId, {
                 type: 'CanvasNotesChangedWsdto',
                 notes: message.canvas
                   .getGraph()
@@ -416,12 +390,20 @@ export class WebSocketManager
           .with(
             { type: 'CanvasEventRoomPhysicsUpdated' },
             (message: CanvasEventRoomPhysicsUpdated): void => {
-              for (const socket of this._server.sockets.sockets.values()) {
-                if (this._rooms.get(socket.id) !== message.canvas.canvasId) {
+              const roomSockets: Set<string> | undefined =
+                this._server.sockets.adapter.rooms.get(
+                  'canvas:' + message.canvas.canvasId,
+                );
+              if (roomSockets == null) {
+                return;
+              }
+              for (const socketId of roomSockets) {
+                const socket: Socket | undefined =
+                  this._server.sockets.sockets.get(socketId);
+                if (socket == null) {
                   continue;
                 }
 
-                // const task: Profiler = this._logger.startTimer();
                 const nodesToSend: PhysicalNodeDto[] = [];
                 for (const node of message.canvas.getGraph().nodes.nodes) {
                   if (!node.grabs.has(socket.id)) {
@@ -434,9 +416,6 @@ export class WebSocketManager
                     });
                   }
                 }
-                // task.done({
-                //   message: `Filter node grabs for client ${socket.id} in room ${socket.room}`,
-                // });
 
                 socket.send({
                   event: {
@@ -459,7 +438,7 @@ export class WebSocketManager
                   locked: lock[1],
                 });
               }
-              this.sendToRoom(message.canvas.canvasId, {
+              this._sendToRoom(message.canvas.canvasId, {
                 type: 'SetNodeLocksWsdto',
                 locks: locks,
               });
@@ -468,7 +447,7 @@ export class WebSocketManager
           .with(
             { type: 'CanvasEventProgressChanged' },
             (message: CanvasEventProgressChanged): void => {
-              this.sendToRoom(message.canvas.canvasId, {
+              this._sendToRoom(message.canvas.canvasId, {
                 type: 'ProgressWsdto',
                 message: message.message,
                 progress: message.progress,
@@ -478,7 +457,7 @@ export class WebSocketManager
           .with(
             { type: 'CanvasEventProgressCleared' },
             (message: CanvasEventProgressCleared): void => {
-              this.sendToRoom(message.canvas.canvasId, {
+              this._sendToRoom(message.canvas.canvasId, {
                 type: 'ClearProgressWsdto',
               });
             },
@@ -486,7 +465,7 @@ export class WebSocketManager
           .with(
             { type: 'CanvasEventKick' },
             (message: CanvasEventEventKick): void => {
-              this.sendToRoom(message.canvas.canvasId, {
+              this._sendToRoom(message.canvas.canvasId, {
                 type: 'KickWsdto',
               });
             },
@@ -494,7 +473,7 @@ export class WebSocketManager
           .with(
             { type: 'CanvasEventNotAllNodesLoaded' },
             (message: CanvasEventNotAllNodesLoaded): void => {
-              this.sendToRoom(message.canvas.canvasId, {
+              this._sendToRoom(message.canvas.canvasId, {
                 type: 'NotificationWsdto',
                 notification: {
                   message: `Not all graph elements loaded. Did load ${message.loadedCount.toString()} elements.`,
@@ -507,7 +486,7 @@ export class WebSocketManager
           .with(
             { type: 'CanvasEventError' },
             (message: CanvasEventError): void => {
-              this.sendToRoom(
+              this._sendToRoom(
                 message.canvas.canvasId,
                 WebSocketManager.createErrorNotification(message.error),
               );
@@ -519,7 +498,7 @@ export class WebSocketManager
           .with(
             { type: 'CanvasEventViewSettingsChanged' },
             (message: CanvasEventViewSettingsChanged): void => {
-              this.sendToRoom(message.canvas.canvasId, {
+              this._sendToRoom(message.canvas.canvasId, {
                 type: 'CanvasViewSettingsChangedWsdto',
                 viewSettings: message.canvas.data.viewSettings.toSchema(
                   message.canvas.labels,
@@ -531,7 +510,7 @@ export class WebSocketManager
           .with(
             { type: 'CanvasEventUserJoined' },
             (message: CanvasEventUserJoined): void => {
-              this.sendToRoom(message.canvas.canvasId, {
+              this._sendToRoom(message.canvas.canvasId, {
                 type: 'NotificationWsdto',
                 notification: {
                   message: `${message.user.username ?? 'A user'} joined.`,
@@ -544,7 +523,7 @@ export class WebSocketManager
           .with(
             { type: 'CanvasEventUserLeft' },
             (message: CanvasEventUserLeft): void => {
-              this.sendToRoom(message.canvas.canvasId, {
+              this._sendToRoom(message.canvas.canvasId, {
                 type: 'NotificationWsdto',
                 notification: {
                   message: `${message.user.username ?? 'A user'} left.`,
@@ -559,26 +538,35 @@ export class WebSocketManager
             (message: CanvasEventCursorChanged): void => {
               const position: [number, number] | null =
                 message.user.canvasPosition;
-              if (position != null) {
-                for (const socket of this._server.sockets.sockets.values()) {
-                  const room: string | null =
-                    this._rooms.get(socket.id) ?? null;
-                  if (
-                    room === message.canvas.canvasId &&
-                    message.user.socketId !== socket.id
-                  ) {
-                    socket.emit('message', {
-                      event: {
-                        type: 'CursorMovedWsdto',
-                        position: {
-                          x: position[0],
-                          y: position[1],
-                        },
-                        socketId: message.user.socketId,
-                      } satisfies CursorMovedWsdto,
-                    });
-                  }
+              if (position == null) {
+                return;
+              }
+              const roomSockets: Set<string> | undefined =
+                this._server.sockets.adapter.rooms.get(
+                  'canvas:' + message.canvas.canvasId,
+                );
+              if (roomSockets == null) {
+                return;
+              }
+              for (const socketId of roomSockets) {
+                if (socketId === message.user.socketId) {
+                  continue;
                 }
+                const socket: Socket | undefined =
+                  this._server.sockets.sockets.get(socketId);
+                if (socket == null) {
+                  continue;
+                }
+                socket.emit('message', {
+                  event: {
+                    type: 'CursorMovedWsdto',
+                    position: {
+                      x: position[0],
+                      y: position[1],
+                    },
+                    socketId: message.user.socketId,
+                  } satisfies CursorMovedWsdto,
+                });
               }
             },
           )
