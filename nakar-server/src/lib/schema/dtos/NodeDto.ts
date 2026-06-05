@@ -16,10 +16,10 @@ export class NodeDto {
   @ApiProperty()
   public title: string;
 
-  @ApiProperty({ type: [String] })
+  @ApiProperty({ isArray: true, type: String })
   public labels: string[];
 
-  @ApiProperty({ type: [String] })
+  @ApiProperty({ isArray: true, type: String })
   public nativeLabels: string[];
 
   @ApiProperty({
@@ -43,7 +43,7 @@ export class NodeDto {
   @ApiProperty()
   public degree: number;
 
-  @ApiProperty({ type: [String] })
+  @ApiProperty({ isArray: true, type: String })
   public namesInQuery: string[];
 
   @ApiProperty({ type: ColorDto, nullable: true })

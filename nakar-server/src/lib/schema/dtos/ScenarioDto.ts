@@ -22,7 +22,7 @@ export class ScenarioDto {
   @ApiProperty({ isArray: true, type: ScenarioPostActionDto })
   public postScenarioActions: ScenarioPostActionDto[];
 
-  @ApiProperty({ isArray: true, type: 'string' })
+  @ApiProperty({ isArray: true, type: String })
   public postActionsDescription: string[];
 
   public constructor(data: {

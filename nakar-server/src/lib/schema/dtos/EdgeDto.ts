@@ -40,7 +40,7 @@ export class EdgeDto {
   })
   public properties: Record<string, unknown>;
 
-  @ApiProperty({ type: [String] })
+  @ApiProperty({ isArray: true, type: String })
   public namesInQuery: string[];
 
   @ApiProperty({ type: String, nullable: true })

@@ -8,7 +8,7 @@ export class HistogramNodeEntryDto {
   @ApiProperty()
   public title: string;
 
-  @ApiProperty({ type: [String] })
+  @ApiProperty({ isArray: true, type: String })
   public labels: string[];
 
   @ApiProperty()

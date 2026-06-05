@@ -10,7 +10,7 @@ export class NodePreviewDto {
   @ApiProperty()
   public title: string;
 
-  @ApiProperty({ isArray: true, type: 'string' })
+  @ApiProperty({ isArray: true, type: String })
   public labels: string[];
 
   public constructor(data: {

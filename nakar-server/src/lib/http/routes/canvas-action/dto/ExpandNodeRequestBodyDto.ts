@@ -6,7 +6,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 
 export class ExpandNodeRequestBodyDto {
-  @ApiProperty({ type: [String] })
+  @ApiProperty({ isArray: true, type: String })
   @IsArray()
   @IsString({ each: true })
   public nodeIds!: string[];

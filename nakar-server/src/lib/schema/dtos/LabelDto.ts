@@ -11,7 +11,7 @@ export class LabelDto {
   @ApiProperty()
   public count: number;
 
-  @ApiProperty({ type: [String] })
+  @ApiProperty({ isArray: true, type: String })
   public sources: string[];
 
   public constructor(data: {
