@@ -6,7 +6,7 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBody, ApiParam } from '@nestjs/swagger';
+import { ApiBody, ApiOperation, ApiParam } from '@nestjs/swagger';
 import { LoadScenarioRequestBodyDto } from './dto/LoadScenarioRequestBodyDto';
 import { SMap } from '../../../../packages/map/Map';
 import { ExpandNodeRequestBodyDto } from './dto/ExpandNodeRequestBodyDto';
@@ -30,6 +30,10 @@ import { LiveCanvas } from '../../../live-canvas/LiveCanvas';
 import { UserCanAccessRoom } from '../../guards/UserCanAccessRoom';
 import { CanvasBelongsToRoom } from '../../guards/CanvasBelongsToRoom';
 
+/**
+ * Controller to handle canvas actions.
+ * Only a few select actions require the user to be logged in.
+ */
 @Controller('room/:roomId/canvas/:canvasId/action')
 @ApiParam({
   name: 'canvasId',
@@ -168,6 +172,9 @@ export class ActionController {
   @Post('run-query')
   @HttpCode(200)
   @UseGuards(UserIsLoggedIn)
+  @ApiOperation({
+    description: 'The user must be logged in.',
+  })
   public runQuery(
     @Param('canvasId') canvasId: string,
     @Body() body: RunQueryRequestBodyDto,
