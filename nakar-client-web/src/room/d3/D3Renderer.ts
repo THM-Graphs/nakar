@@ -348,10 +348,12 @@ export class D3Renderer {
         event.preventDefault();
         const svgPoint = this.getSvgPoint(event.clientX, event.clientY);
         const worldPoint = this.screenToWorld(svgPoint);
-        const zoomDelta = event.deltaY < 0 ? 1.1 : 1 / 1.1;
+        const delta =
+          -event.deltaY *
+          (event.deltaMode === 1 ? 0.05 : event.deltaMode === 2 ? 1 : 0.002);
         const newK = Math.max(
           0.02,
-          Math.min(8, this.zoomTransform.k * zoomDelta),
+          Math.min(8, this.zoomTransform.k * Math.pow(2, delta)),
         );
         const newX = svgPoint[0] - worldPoint[0] * newK;
         const newY = svgPoint[1] - worldPoint[1] * newK;
