@@ -209,6 +209,7 @@ export function GraphRendererD3() {
       }
       animationActive = false;
       cancelAnimationFrame(animationFrame);
+      _graphRenderer.dispose();
     };
   }, [websocketsManager, svgRef.current, isLoggedIn, canvasContext]);
 

@@ -18,7 +18,7 @@ import { Theme } from "../shared/theme/Theme.ts";
 import { loadSystemTheme } from "../shared/theme/ThemeManager.ts";
 import { PersistStorage } from "./PersistStorage.ts";
 import { SelectedCanvasTab } from "./SelectedCanvasTab.ts";
-import { ZoomTransform } from "d3";
+import { CanvasZoomTransform } from "../shared/graphics/CanvasZoomTransform.ts";
 import {
   ColorDto,
   LiveCanvasViewSettingsDto,
@@ -668,8 +668,8 @@ export const useBearStore = create<BearState>()(
                     s.room.canvas.colorSchemaSlug = newSchema;
                   });
                 },
-                zoomTransform: new ZoomTransform(1, 0, 0),
-                setZoomTransform: (zoomTransform: ZoomTransform) => {
+                zoomTransform: new CanvasZoomTransform(1, 0, 0),
+                setZoomTransform: (zoomTransform: CanvasZoomTransform) => {
                   set((s) => {
                     s.room.canvas.zoomTransform = zoomTransform;
                   });
@@ -722,7 +722,7 @@ export const useBearStore = create<BearState>()(
             .otherwise(() => null);
           state.room.canvas.colorSchemaSlug =
             storage.colorSchema ?? ColorSchema.default().slug;
-          state.room.canvas.zoomTransform = new ZoomTransform(
+          state.room.canvas.zoomTransform = new CanvasZoomTransform(
             storage.canvasZoom ?? 1,
             storage.canvasTransformX ?? 0,
             storage.canvasTransformY ?? 0,

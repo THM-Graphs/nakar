@@ -1,5 +1,4 @@
 import { D3Link } from "./D3Link.ts";
-import * as d3 from "d3";
 import { D3Node } from "./D3Node.ts";
 
 export class D3Calculator {
@@ -69,17 +68,16 @@ export class D3Calculator {
 
   public curvedPath(d: D3Link) {
     const control = this.curvePoints(d);
-    const points: [number, number][] = control.points.map(
-      (c): [number, number] => [c.x, c.y],
-    );
-
-    if (d.isLoop) {
-      return d3.line().curve(d3.curveCardinal.tension(-5))(points);
-    } else if (d.parallelCount > 0) {
-      return d3.line().curve(d3.curveCatmullRom)(points);
-    } else {
-      return d3.line()(points);
+    const [start, center, end] = control.points;
+    if (d.parallelCount > 0 || d.isLoop) {
+      // Keep the curve passing through `center` at t=0.5 so labels stay aligned.
+      const c = {
+        x: (8 * center.x - start.x - end.x) / 6,
+        y: (8 * center.y - start.y - end.y) / 6,
+      };
+      return `M ${start.x.toString()} ${start.y.toString()} C ${c.x.toString()} ${c.y.toString()} ${c.x.toString()} ${c.y.toString()} ${end.x.toString()} ${end.y.toString()}`;
     }
+    return `M ${start.x.toString()} ${start.y.toString()} L ${end.x.toString()} ${end.y.toString()}`;
   }
 
   public vector(

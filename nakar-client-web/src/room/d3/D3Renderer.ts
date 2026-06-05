@@ -1,19 +1,17 @@
 import { D3Link } from "./D3Link.ts";
 import { D3Node } from "./D3Node.ts";
-import * as d3 from "d3";
-import { ZoomBehavior, ZoomTransform } from "d3";
 import {
   getBackgroundColorOfColor,
   getBackgroundColorOfLabel,
 } from "../color/getBackgroundColor.ts";
 import { getTextColor, getTextColorOfEdge } from "../color/getTextColor.ts";
-import { Observable, Subject, throttleTime } from "rxjs";
+import { Observable, Subject, Subscription, throttleTime } from "rxjs";
 import { D3RendererState } from "./D3RendererState.ts";
 import { D3Calculator } from "./D3Calculator.ts";
 import { useBearStore } from "../../state/useBearStore.ts";
 import { ColorSchema } from "../color/ColorSchema.ts";
 import { Theme } from "../../shared/theme/Theme.ts";
-import { isMultiSelectKey } from "../../shared/dom/isMultiSelectKey.ts";
+import { isMacOS } from "../../shared/dom/isMacOS.ts";
 import {
   LiveCanvasGraphElementsDto,
   NodesMovedWsdto,
@@ -21,11 +19,22 @@ import {
   SetNodeLocksWsdto,
   UserPreviewDto,
 } from "api-client";
-import { D3UserCursor } from "./D3UserCursor.ts";
+import { CanvasZoomTransform } from "../../shared/graphics/CanvasZoomTransform.ts";
+import { createSvgElement, setAttr } from "./renderer/svgDom.ts";
+import { TextMeasurer } from "./renderer/TextMeasurer.ts";
+import { NodeView, NodeViewProps } from "./renderer/NodeView.ts";
+import {
+  RelationshipView,
+  RelationshipViewProps,
+} from "./renderer/RelationshipView.ts";
+import { UserCursorView } from "./renderer/UserCursorView.ts";
 
 const inputFps = 16;
 const outputFps = 32;
-const baseStrokeWidth: number = 3;
+const baseStrokeWidth = 3;
+const interactionMoveThresholdPt = 3;
+const isMultiSelectKeyPressed = (event: MouseEvent | PointerEvent): boolean =>
+  isMacOS() ? event.metaKey : event.ctrlKey;
 
 export class D3Renderer {
   private readonly graphState: D3RendererState;
@@ -54,64 +63,47 @@ export class D3Renderer {
   private $onCursorMoved: Subject<[number, number]>;
 
   private calculator: D3Calculator;
+  private textMeasurer: TextMeasurer;
 
-  private svgContainer: d3.Selection<
-    SVGSVGElement,
-    null,
-    null,
-    undefined
-  > | null;
-  private zoomContainer: d3.Selection<
-    SVGGElement,
-    null,
-    null,
-    undefined
-  > | null;
-  private zoomBehaviour: ZoomBehavior<SVGSVGElement, null> | null;
-  private nodeSelection: d3.Selection<
-    SVGGElement,
-    D3Node,
-    SVGElement,
-    null
-  > | null;
-  private nodeLockedOverlay: d3.Selection<
-    SVGCircleElement,
-    D3Node,
-    SVGElement,
-    null
-  > | null;
-  private nodeSelectedOverlay: d3.Selection<
-    SVGCircleElement,
-    D3Node,
-    SVGElement,
-    null
-  > | null;
-  private linkLabelSelection: d3.Selection<
-    SVGGElement,
-    D3Link,
-    SVGGElement,
-    null
-  > | null;
-  private linkPathSelection: d3.Selection<
-    SVGPathElement,
-    D3Link,
-    SVGGElement,
-    null
-  > | null;
-  private userCursorSelection: d3.Selection<
-    SVGGElement,
-    D3UserCursor,
-    SVGElement,
-    null
-  > | null;
-  private markersSelection: d3.Selection<
-    SVGMarkerElement,
-    D3Link,
-    SVGElement,
-    null
-  > | null;
+  private zoomContainer: SVGGElement | null;
+  private nodesLayer: SVGGElement | null;
+  private linksLayer: SVGGElement | null;
+  private linkLabelsLayer: SVGGElement | null;
+  private cursorsLayer: SVGGElement | null;
+  private defsLayer: SVGDefsElement | null;
 
+  private zoomTransform: CanvasZoomTransform;
+  private nodeViews: NodeView[];
+  private relationshipViews: RelationshipView[];
+  private cursorViews: UserCursorView[];
   private smoothedPositionDirty: boolean;
+
+  private dragNode:
+    | {
+        pointerId: number;
+        node: D3Node;
+        startClient: [number, number];
+        pointerToNodeOffset: [number, number];
+        moved: boolean;
+      }
+    | null;
+  private panState:
+    | {
+        pointerId: number;
+        lastSvgPoint: [number, number];
+        startClient: [number, number];
+        moved: boolean;
+      }
+    | null;
+  private suppressClickUntil: number;
+  private lastNodeClick:
+    | {
+        nodeId: string;
+        timestamp: number;
+      }
+    | null;
+  private removeSvgListeners: Array<() => void>;
+  private viewSubscriptions: Subscription[];
 
   public constructor(
     theme: Theme,
@@ -139,19 +131,27 @@ export class D3Renderer {
     this.$onCursorMoved = new Subject();
 
     this.calculator = new D3Calculator();
+    this.textMeasurer = new TextMeasurer();
 
-    this.svgContainer = null;
     this.zoomContainer = null;
-    this.zoomBehaviour = null;
-    this.nodeSelection = null;
-    this.linkLabelSelection = null;
-    this.linkPathSelection = null;
-    this.nodeLockedOverlay = null;
-    this.nodeSelectedOverlay = null;
-    this.userCursorSelection = null;
-    this.markersSelection = null;
+    this.nodesLayer = null;
+    this.linksLayer = null;
+    this.linkLabelsLayer = null;
+    this.cursorsLayer = null;
+    this.defsLayer = null;
 
+    this.zoomTransform = useBearStore.getState().room.canvas.zoomTransform;
+    this.nodeViews = [];
+    this.relationshipViews = [];
+    this.cursorViews = [];
     this.smoothedPositionDirty = true;
+
+    this.dragNode = null;
+    this.panState = null;
+    this.suppressClickUntil = 0;
+    this.lastNodeClick = null;
+    this.removeSvgListeners = [];
+    this.viewSubscriptions = [];
 
     this.renderSvgElements();
   }
@@ -199,25 +199,15 @@ export class D3Renderer {
   }
 
   public get onNodesMoved(): Observable<D3Node> {
-    /*
-    throttleTime gibt immer das erste Element aus dem Zeitfenster zurück.
-    Um sicherzustellen, dass die letzte Bewegung auch übertragen wird müssen
-    wir das im drag-end event machen.
-    */
     return this.$onNodeMoved
       .asObservable()
       .pipe(throttleTime(1000 / outputFps));
-    // return this.$onNodeMoved.asObservable();
   }
 
   public get onCursorMoved(): Observable<[number, number]> {
-    /*
-    throttleTime gibt immer das erste Element aus dem Zeitfenster zurück.
-    */
     return this.$onCursorMoved
       .asObservable()
       .pipe(throttleTime(1000 / outputFps));
-    // return this.$onNodeMoved.asObservable();
   }
 
   public get onUngrabNode(): Observable<D3Node> {
@@ -276,471 +266,362 @@ export class D3Renderer {
     this.applyPropertiesToSVG();
   }
 
-  private renderSvgElements(): void {
-    const d3RendererState = this.graphState;
-    const width = this.svgElement.getBoundingClientRect().width;
-    const height = this.svgElement.getBoundingClientRect().height;
+  private clearSvgListeners(): void {
+    this.removeSvgListeners.forEach((fn) => {
+      fn();
+    });
+    this.removeSvgListeners = [];
+  }
 
-    const svg: d3.Selection<SVGSVGElement, null, null, undefined> = d3
-      .select<SVGSVGElement, null>(this.svgElement)
-      .attr("viewBox", [-width / 2, -height / 2, width, height]);
-    this.svgContainer = svg;
+  private clearViewSubscriptions(): void {
+    this.viewSubscriptions.forEach((sub) => {
+      sub.unsubscribe();
+    });
+    this.viewSubscriptions = [];
+  }
 
-    svg.selectAll("g > *").remove();
+  private clearViewResources(): void {
+    this.clearViewSubscriptions();
+    this.nodeViews.forEach((view) => {
+      view.destroy();
+    });
+    this.relationshipViews.forEach((view) => {
+      view.destroy();
+    });
+    this.nodeViews = [];
+    this.relationshipViews = [];
+    this.cursorViews = [];
+  }
 
-    this.zoomContainer = svg.select("g");
-    svg.on("click", () => {
+  private addSvgListener<K extends keyof SVGSVGElementEventMap>(
+    type: K,
+    listener: (event: SVGSVGElementEventMap[K]) => void,
+    options?: AddEventListenerOptions,
+  ): void {
+    this.svgElement.addEventListener(type, listener as EventListener, options);
+    this.removeSvgListeners.push(() => {
+      this.svgElement.removeEventListener(
+        type,
+        listener as EventListener,
+        options,
+      );
+    });
+  }
+
+  private getSvgPoint(clientX: number, clientY: number): [number, number] {
+    const point = this.svgElement.createSVGPoint();
+    point.x = clientX;
+    point.y = clientY;
+    const ctm = this.svgElement.getScreenCTM();
+    if (ctm == null) {
+      return [0, 0];
+    }
+    const transformed = point.matrixTransform(ctm.inverse());
+    return [transformed.x, transformed.y];
+  }
+
+  private screenToWorld(svgPoint: [number, number]): [number, number] {
+    return this.zoomTransform.invert(svgPoint);
+  }
+
+  private setZoomTransform(newTransform: CanvasZoomTransform): void {
+    this.zoomTransform = newTransform;
+    if (this.zoomContainer != null) {
+      setAttr(this.zoomContainer, "transform", this.zoomTransform.toString());
+    }
+    useBearStore.getState().room.canvas.setZoomTransform(this.zoomTransform);
+    this.applyPositionsToSVG();
+  }
+
+  private installSvgInteractionHandlers(): void {
+    this.clearSvgListeners();
+
+    this.addSvgListener("click", () => {
+      if (performance.now() < this.suppressClickUntil) {
+        return;
+      }
       this.$onDeselectAll.next();
     });
 
-    svg.on("mousemove", (e: MouseEvent) => {
-      const pos = d3.pointer(e);
+    this.addSvgListener("mousemove", (event) => {
+      const pos = this.getSvgPoint(event.clientX, event.clientY);
       this.setCursor(pos);
     });
 
-    const zoomBehaviour: ZoomBehavior<SVGSVGElement, null> = d3
-      .zoom<SVGSVGElement, null>()
-      .on("zoom", (event: d3.D3ZoomEvent<SVGSVGElement, null>) => {
-        this.zoomContainer?.attr("transform", event.transform.toString());
-        this.applyPositionsToSVG();
-        useBearStore.getState().room.canvas.setZoomTransform(event.transform);
-      });
-    svg.call(zoomBehaviour);
-    this.zoomBehaviour = zoomBehaviour;
-    zoomBehaviour.transform(
-      svg,
-      useBearStore.getState().room.canvas.zoomTransform,
+    this.addSvgListener(
+      "wheel",
+      (event) => {
+        event.preventDefault();
+        const svgPoint = this.getSvgPoint(event.clientX, event.clientY);
+        const worldPoint = this.screenToWorld(svgPoint);
+        const zoomDelta = event.deltaY < 0 ? 1.1 : 1 / 1.1;
+        const newK = Math.max(0.02, Math.min(8, this.zoomTransform.k * zoomDelta));
+        const newX = svgPoint[0] - worldPoint[0] * newK;
+        const newY = svgPoint[1] - worldPoint[1] * newK;
+        this.setZoomTransform(new CanvasZoomTransform(newK, newX, newY));
+      },
+      { passive: false },
     );
 
-    this.markersSelection = this.zoomContainer
-      .append("defs")
-      .selectAll()
-      .data(d3RendererState.links)
-      .enter()
-      .append("marker")
-      .attr("id", (d) => `arrow_${d.id}`)
-      .attr("viewBox", "0 0 10 10")
-      .attr("refX", 10)
-      .attr("refY", 5)
-      .attr("markerWidth", 6)
-      .attr("markerHeight", 8)
-      .attr("orient", "auto");
-    this.markersSelection
-      .append("path")
-      .attr("d", "M 0 0 L 10 5 L 0 10 Z")
-      .attr("fill", (d) => this._getEdgeStrokeColor(d));
-
-    this.linkPathSelection = this.zoomContainer
-      .append("g")
-      .attr("class", "links")
-      .selectAll("line")
-      .data(d3RendererState.links)
-      .enter()
-      .append("path")
-      .attr("data-link-id", (l) => l.id)
-      .style("cursor", "pointer")
-      .attr("fill", "none")
-      .attr("stroke-width", (d) => d.width)
-      .attr("marker-end", (d) => `url(#arrow_${d.id})`);
-
-    this.linkLabelSelection = this.zoomContainer
-      .append("g")
-      .style("pointer-events", "none")
-      .attr("class", "link-labels")
-      .selectAll("text")
-      .data(d3RendererState.links)
-      .enter()
-      .append("g")
-      .attr("data-link-id", (l) => l.id);
-
-    this.linkLabelSelection
-      .append("foreignObject")
-      .attr("width", (d) => d.type.length * 20)
-      .attr("height", 40)
-      .attr("x", (d) => -(d.type.length * 20) / 2)
-      .attr("y", () => -11)
-      .append("xhtml:div")
-      .attr("xmlns", "http://www.w3.org/1999/xhtml")
-      .attr("style", () => {
-        return `
-        height: 20px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        `;
-      })
-      .append("xhtml:span")
-      .attr("style", (e) => {
-        return `
-        pointer-events: auto;
-        font-weight: bold;
-        color: ${getTextColorOfEdge(e.customColor, this.colorSchema, this.theme)};
-        font-size: 10px;
-        cursor: pointer;
-        background-color: ${this._getEdgeStrokeColor(e)};
-        border-radius: 5px;
-        padding: 0px 5px;
-        `;
-      })
-      .text((d) =>
-        d.clusterSize > 1 ? `${d.type} (${d.clusterSize.toString()})` : d.type,
-      );
-
-    this.linkLabelSelection
-      .select("foreignObject")
-      .select("div")
-      .select("span")
-      .on("mouseover", (e: MouseEvent) => {
-        const el = d3.select(e.currentTarget as SVGGElement);
-        el.style("background-color", "#888");
-      })
-      .on("mouseout", (e: MouseEvent, d) => {
-        const el = d3.select(e.currentTarget as SVGGElement);
-        el.style("background-color", this._getEdgeStrokeColor(d));
-      })
-      .on("click", (event: PointerEvent, edge: D3Link) => {
-        if (isMultiSelectKey(event)) {
-          this.$onDisplayLinkDataWithModifier.next(edge);
-        } else {
-          this.$onDisplayLinkData.next(edge);
-        }
-        event.stopPropagation();
-      })
-      .on("contextmenu", (event: PointerEvent, edge: D3Link) => {
-        event.preventDefault();
-        this.$onShowEdgeContextMenu.next({
-          edge: edge,
-          position: [event.clientX, event.clientY],
-        });
-      });
-
-    this.linkPathSelection
-      .on("mouseover", (e: MouseEvent) => {
-        const el = d3.select(e.currentTarget as SVGGElement);
-        el.attr("stroke", "#888");
-      })
-      .on("mouseout", (e: MouseEvent) => {
-        const el = d3.select<SVGElement, D3Link>(
-          e.currentTarget as SVGGElement,
-        );
-        el.attr("stroke", (d: D3Link): string => this._getEdgeStrokeColor(d));
-      })
-      .on("click", (event: PointerEvent, edge: D3Link) => {
-        if (isMultiSelectKey(event)) {
-          this.$onDisplayLinkDataWithModifier.next(edge);
-        } else {
-          this.$onDisplayLinkData.next(edge);
-        }
-        event.stopPropagation();
-      })
-      .on("contextmenu", (event: PointerEvent, edge: D3Link) => {
-        event.preventDefault();
-        this.$onShowEdgeContextMenu.next({
-          edge: edge,
-          position: [event.clientX, event.clientY],
-        });
-      });
-
-    this.nodeSelection = this.zoomContainer
-      .append("g")
-      .attr("class", "nodes")
-      .selectAll("circle")
-      .data(d3RendererState.nodes)
-      .enter()
-      .append("g")
-      .attr("style", "cursor: pointer;");
-
-    this.nodeSelection
-      .append("defs")
-      .append("linearGradient")
-      .attr("id", (n) => `gradient_${n.id}`)
-      .html((n) => {
-        let buffer: string = "";
-        const colors = this._getBgColorsOfNode(n);
-        const stepSize = colors.length > 1 ? 100 / (colors.length - 1) : 0;
-        for (let i = 0; i < colors.length; i += 1) {
-          buffer += `<stop offset="${(i * stepSize).toString()}%" stop-color="${colors[i]}"></stop>`;
-        }
-        return buffer;
-      });
-
-    this.nodeSelection
-      .on("mouseover", (e: MouseEvent) => {
-        const el = d3
-          .select(e.currentTarget as SVGGElement)
-          .selectChildren(`.hover`);
-        el.style("opacity", 0.5);
-        d3.select(e.currentTarget as SVGGElement)
-          .select("foreignObject")
-          .attr("hidden", null);
-      })
-      .on("mouseout", (e: MouseEvent) => {
-        const el = d3
-          .select(e.currentTarget as SVGGElement)
-          .selectChildren(`.hover`);
-        el.style("opacity", 0);
-        this._updateShowLabels();
-      })
-      .on("click", (event: PointerEvent, node: D3Node) => {
-        if (isMultiSelectKey(event)) {
-          this.$onDisplayNodeDataWithModifier.next(node);
-        } else {
-          this.$onDisplayNodeData.next(node);
-        }
-        event.stopPropagation();
-      })
-      .on("dblclick", (event: PointerEvent, node: D3Node) => {
-        this.$onDoubleClickNode.next(node);
-        event.stopPropagation();
-      })
-      .on("contextmenu", (event: PointerEvent, node: D3Node) => {
-        event.preventDefault();
-        this.$onShowNodeContextMenu.next({
-          node: node,
-          position: [event.clientX, event.clientY],
-        });
-      });
-
-    this.nodeSelection
-      .append("circle")
-      .attr("r", (d) => d.radius)
-      .attr("fill", (d) => {
-        const colors = this._getBgColorsOfNode(d);
-        if (colors.length > 1) {
-          return `url(#gradient_${d.id})`;
-        } else {
-          return colors[0];
-        }
-      })
-      .attr("stroke-width", (d) => {
-        return `${this._getStrokeWidth(d).toFixed()}px`;
-      })
-      .attr("stroke", () => {
-        return this.theme === "dark" ? "#fff" : "#000";
-      });
-
-    this.nodeSelection
-      .append("defs")
-      .append("clipPath")
-      .attr("id", (d) => `circleclip-${d.id}`)
-      .append("circle")
-      .attr("cx", 0)
-      .attr("cy", 0)
-      .attr("r", (d) => d.radius - this._getStrokeWidth(d) * 1.5);
-
-    this.nodeSelection
-      .append("image")
-      .attr("x", (d) => -d.radius + this._getStrokeWidth(d) * 1.5)
-      .attr("y", (d) => -d.radius + this._getStrokeWidth(d) * 1.5)
-      .attr("width", (d) => d.radius * 2 - this._getStrokeWidth(d) * 3)
-      .attr("height", (d) => d.radius * 2 - this._getStrokeWidth(d) * 3)
-      .attr("href", (d) => d.coverImageUrl?.toString() ?? "")
-      .attr("preserveAspectRatio", "xMidYMid slice")
-      .attr("clip-path", (d) => `url(#circleclip-${d.id})`);
-
-    this.nodeSelection
-      .append("circle")
-      .attr("r", (n) => n.radius - this._getStrokeWidth(n) / 2)
-      .attr("class", () => `hover`)
-      .style("opacity", 0)
-      .attr("fill", (d) => this._getTitleColorOfNode(d));
-
-    this.nodeSelection
-      .append("circle")
-      .attr("class", "clusterCircle")
-      .attr("hidden", (d) => (d.clusterSize === 0 ? true : null))
-      .attr(
-        "r",
-        (n) =>
-          n.radius +
-          this._getStrokeWidth(n) / 2 +
-          this._getStrokeWidth(n) +
-          this._getStrokeWidth(n) * 2,
-      )
-      .attr("fill", () => "none")
-      .attr("stroke", (d) => {
-        const colors = this._getBgColorsOfNode(d);
-        if (colors.length > 1) {
-          return `url(#gradient_${d.id})`;
-        } else {
-          return colors[0];
-        }
-      })
-      .attr("stroke-width", (n) => this._getStrokeWidth(n) * 4);
-
-    this.nodeLockedOverlay = this.nodeSelection
-      .append("circle")
-      .attr("class", "nodeLockedOverlay")
-      .attr(
-        "r",
-        (n) =>
-          n.radius -
-          this._getStrokeWidth(n) / 2 -
-          this._getStrokeWidth(n) -
-          this._getStrokeWidth(n) * 2,
-      )
-      .attr("fill", () => "rgba(0, 0, 0, 0)")
-      .attr("stroke", (d) => {
-        return this._getTitleColorOfNode(d);
-      })
-      .attr("stroke-width", (n) => this._getStrokeWidth(n) * 4)
-      .attr("stroke-dasharray", (n) => n.radius * 0.1);
-
-    this.nodeSelectedOverlay = this.nodeSelection
-      .append("circle")
-      .attr("class", "nodeSelectedOverlay")
-      .attr(
-        "r",
-        (n) =>
-          n.radius +
-          this._getStrokeWidth(n) * 0.5 +
-          this._getStrokeWidth(n) * 6,
-      )
-      .attr("fill", () => "#ff00ff")
-      .attr("opacity", 0.5);
-
-    const foreignObjectNode = this.nodeSelection
-      .append("foreignObject")
-      .attr("x", (d) => -d.radius)
-      .attr("y", (d) => -d.radius)
-      .attr("width", (d) => d.radius * 2)
-      .attr("height", (d) => d.radius * 2)
-      .append("xhtml:div")
-      .attr("xmlns", "http://www.w3.org/1999/xhtml")
-      .attr("style", (d) => {
-        const color = this._getTitleColorOfNode(d);
-
-        return `
-        font-weight: bolder;
-        color: ${color};
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: ${(d.radius * 2).toString()}px;
-        height: ${(d.radius * 2).toString()}px;
-        text-align: center;
-        font-size: ${(d.radius / 5 + 3).toString()}px;
-        position: relative;
-        `;
-      })
-      .attr("width", (d) => d.radius * 2)
-      .attr("height", (d) => d.radius * 2);
-
-    foreignObjectNode.append("xhtml:span").text((d) => {
-      if (d.coverImageUrl != null) {
-        return "";
+    this.addSvgListener("pointerdown", (event) => {
+      if (event.button !== 0 || this.dragNode != null) {
+        return;
       }
-      const titleCut = 50;
-      const fullTitle = d.title;
-      if (fullTitle.length > titleCut) {
-        return fullTitle.substring(0, titleCut) + "…";
-      } else {
-        return fullTitle;
+      const target = event.target as Node | null;
+      if (
+        this.zoomContainer != null &&
+        (target === this.svgElement || target === this.zoomContainer)
+      ) {
+        const svgPoint = this.getSvgPoint(event.clientX, event.clientY);
+        this.panState = {
+          pointerId: event.pointerId,
+          lastSvgPoint: svgPoint,
+          startClient: [event.clientX, event.clientY],
+          moved: false,
+        };
+        this.svgElement.setPointerCapture(event.pointerId);
+        event.preventDefault();
       }
     });
 
-    foreignObjectNode
-      .append("xhtml:span")
-      .attr("hidden", (d) => (d.clusterSize === 0 ? true : null))
-      .attr(
-        "style",
-        (d) => `
-          position: absolute;
-          top: 0;
-          background: ${this._getTitleColorOfNode(d)};
-          color: ${this._getBgColorsOfNode(d)[0]};
-          padding: 0px ${(d.radius / 10).toFixed()}px;
-          border-radius: ${(d.radius / 10).toFixed()}px;
-        `,
-      )
-      .text((d) => {
-        return d.clusterSize;
-      });
+    this.addSvgListener("pointermove", (event) => {
+      if (this.dragNode != null && this.dragNode.pointerId === event.pointerId) {
+        event.preventDefault();
+        const svgPoint = this.getSvgPoint(event.clientX, event.clientY);
+        const pointerWorld = this.screenToWorld(svgPoint);
+        const drag = this.dragNode;
+        const world: [number, number] = [
+          pointerWorld[0] + drag.pointerToNodeOffset[0],
+          pointerWorld[1] + drag.pointerToNodeOffset[1],
+        ];
 
-    foreignObjectNode
-      .append("xhtml:i")
-      .attr("class", "bi bi-sticky-fill")
-      .attr("hidden", (d) => (d.notesCount === 0 ? "true" : null))
-      .attr(
-        "style",
-        (d) => `
-          position: absolute;
-          bottom: 0;
-          background: ${this._getTitleColorOfNode(d)};
-          color: ${this._getBgColorsOfNode(d)[0]};
-          padding: 0px ${(d.radius / 10).toFixed()}px;
-          border-radius: ${(d.radius / 10).toFixed()}px;
-        `,
-      );
+        const movedDistance = Math.hypot(
+          event.clientX - drag.startClient[0],
+          event.clientY - drag.startClient[1],
+        );
+        if (movedDistance > interactionMoveThresholdPt) {
+          drag.moved = true;
+        }
 
-    this.nodeSelection.call(
-      d3
-        .drag<SVGGElement, D3Node>()
-        .on(
-          "start",
-          (event: d3.D3DragEvent<SVGGElement, D3Node, null>, d: D3Node) => {
-            this.$onGrabNode.next(d);
-          },
-        )
-        .on(
-          "drag",
-          (event: d3.D3DragEvent<SVGGElement, D3Node, null>, d: D3Node) => {
-            d.tx = event.x;
-            d.ty = event.y;
-            d.x = event.x;
-            d.y = event.y;
-            d.vx = 0;
-            d.vy = 0;
-            this.smoothedPositionDirty = true;
-            this.$onNodeMoved.next(d);
+        drag.node.tx = world[0];
+        drag.node.ty = world[1];
+        drag.node.x = world[0];
+        drag.node.y = world[1];
+        drag.node.vx = 0;
+        drag.node.vy = 0;
+        this.smoothedPositionDirty = true;
+        this.$onNodeMoved.next(drag.node);
+        this.$onCursorMoved.next([world[0], world[1]]);
+        this.applyPositionsToSVG();
+        return;
+      }
 
-            // Send mouse position, because the mouse move event
-            // will not trigger on node drag
-            this.$onCursorMoved.next([event.x, event.y]);
-          },
-        )
-        .on(
-          "end",
-          (event: d3.D3DragEvent<SVGGElement, D3Node, null>, d: D3Node) => {
-            this.$onUngrabNode.next(d);
-          },
-        ),
+      if (this.panState != null && this.panState.pointerId === event.pointerId) {
+        event.preventDefault();
+        const movedDistance = Math.hypot(
+          event.clientX - this.panState.startClient[0],
+          event.clientY - this.panState.startClient[1],
+        );
+        if (movedDistance > interactionMoveThresholdPt) {
+          this.panState.moved = true;
+        }
+        const svgPoint = this.getSvgPoint(event.clientX, event.clientY);
+        const dx = svgPoint[0] - this.panState.lastSvgPoint[0];
+        const dy = svgPoint[1] - this.panState.lastSvgPoint[1];
+        this.panState.lastSvgPoint = svgPoint;
+        this.setZoomTransform(
+          new CanvasZoomTransform(
+            this.zoomTransform.k,
+            this.zoomTransform.x + dx,
+            this.zoomTransform.y + dy,
+          ),
+        );
+      }
+    });
+
+    const finishPointer = (event: PointerEvent) => {
+      if (this.dragNode != null && this.dragNode.pointerId === event.pointerId) {
+        const drag = this.dragNode;
+        if (drag.moved) {
+          this.suppressClickUntil = performance.now() + 250;
+        } else {
+          const now = performance.now();
+          if (isMultiSelectKeyPressed(event)) {
+            this.$onDisplayNodeDataWithModifier.next(drag.node);
+          } else {
+            this.$onDisplayNodeData.next(drag.node);
+          }
+          if (
+            this.lastNodeClick != null &&
+            this.lastNodeClick.nodeId === drag.node.id &&
+            now - this.lastNodeClick.timestamp < 350
+          ) {
+            this.$onDoubleClickNode.next(drag.node);
+            this.lastNodeClick = null;
+          } else {
+            this.lastNodeClick = {
+              nodeId: drag.node.id,
+              timestamp: now,
+            };
+          }
+          this.suppressClickUntil = now + 250;
+        }
+        this.$onUngrabNode.next(drag.node);
+        this.dragNode = null;
+        this._updateShowLabels();
+      }
+      if (this.panState != null && this.panState.pointerId === event.pointerId) {
+        if (this.panState.moved) {
+          this.suppressClickUntil = performance.now() + 250;
+        }
+        this.panState = null;
+      }
+      if (this.svgElement.hasPointerCapture(event.pointerId)) {
+        this.svgElement.releasePointerCapture(event.pointerId);
+      }
+    };
+    this.addSvgListener("pointerup", finishPointer);
+    this.addSvgListener("pointercancel", finishPointer);
+  }
+
+  private renderSvgElements(): void {
+    const width = this.svgElement.getBoundingClientRect().width;
+    const height = this.svgElement.getBoundingClientRect().height;
+    this.svgElement.style.userSelect = "none";
+    this.svgElement.style.setProperty("-webkit-user-select", "none");
+    setAttr(
+      this.svgElement,
+      "viewBox",
+      `${(-width / 2).toString()} ${(-height / 2).toString()} ${width.toString()} ${height.toString()}`,
     );
 
-    this.userCursorSelection = this.zoomContainer
-      .append("g")
-      .attr("class", "user-cursors")
-      .selectAll(".user-cursors")
-      .data(d3RendererState.userCursors)
-      .enter()
-      .append("g");
+    this.clearViewResources();
+    while (this.svgElement.firstChild != null) {
+      this.svgElement.removeChild(this.svgElement.firstChild);
+    }
 
-    const userCursorDiv = this.userCursorSelection
-      .append("foreignObject")
-      .attr("x", 0)
-      .attr("y", 0)
-      .attr("width", (d) => d.username.length * 20)
-      .attr("height", 50)
-      .attr("pointer-events", "none")
-      .attr("hidden", (d) => (d.hidden ? "true" : null))
-      .append("xhtml:div")
-      .attr("xmlns", "http://www.w3.org/1999/xhtml")
-      .attr("class", "w-100 h-100 hstack justify-content-start")
-      .append("xhtml:div")
-      .attr("xmlns", "http://www.w3.org/1999/xhtml")
-      .attr(
-        "class",
-        "border small rounded ps-1 pe-1 bg-body gap-1 ellipsis hstack align-items-baseline align-self-start",
+    this.zoomContainer = createSvgElement("g");
+    this.svgElement.appendChild(this.zoomContainer);
+    this.defsLayer = createSvgElement("defs");
+    this.zoomContainer.appendChild(this.defsLayer);
+
+    this.linksLayer = createSvgElement("g");
+    setAttr(this.linksLayer, "class", "links");
+    this.zoomContainer.appendChild(this.linksLayer);
+
+    this.linkLabelsLayer = createSvgElement("g");
+    setAttr(this.linkLabelsLayer, "class", "link-labels");
+    this.zoomContainer.appendChild(this.linkLabelsLayer);
+
+    this.nodesLayer = createSvgElement("g");
+    setAttr(this.nodesLayer, "class", "nodes");
+    this.zoomContainer.appendChild(this.nodesLayer);
+
+    this.cursorsLayer = createSvgElement("g");
+    setAttr(this.cursorsLayer, "class", "user-cursors");
+    this.zoomContainer.appendChild(this.cursorsLayer);
+
+    for (const edge of this.graphState.links) {
+      const linkProps: RelationshipViewProps = {
+        strokeColor: this._getEdgeStrokeColor(edge),
+        textColor: getTextColorOfEdge(edge.customColor, this.colorSchema, this.theme),
+      };
+      const linkView = new RelationshipView(
+        this.linksLayer,
+        this.linkLabelsLayer,
+        this.defsLayer,
+        edge,
+        this.calculator,
+        this.textMeasurer,
+        linkProps,
       );
+      this.viewSubscriptions.push(
+        linkView.onClick$.subscribe((event) => {
+          if (performance.now() < this.suppressClickUntil) {
+            return;
+          }
+          if (isMultiSelectKeyPressed(event)) {
+            this.$onDisplayLinkDataWithModifier.next(linkView.edge);
+          } else {
+            this.$onDisplayLinkData.next(linkView.edge);
+          }
+          event.stopPropagation();
+        }),
+      );
+      this.viewSubscriptions.push(
+        linkView.onContextMenu$.subscribe((event) => {
+          event.preventDefault();
+          this.$onShowEdgeContextMenu.next({
+            edge: linkView.edge,
+            position: [event.clientX, event.clientY],
+          });
+        }),
+      );
+      this.relationshipViews.push(linkView);
+    }
 
-    userCursorDiv
-      .append("xhtml:i")
-      .attr("class", "bi bi-arrow-up-left flex-shrink-0 flex-grow-0");
-    userCursorDiv
-      .append("xhtml:span")
-      .attr("class", "ellipsis flex-shrink-1 flex-grow-1")
-      .text((d) => d.username);
+    for (const node of this.graphState.nodes) {
+      const nodeProps = this._getNodeViewProps(node);
+      const nodeView = new NodeView(
+        this.nodesLayer,
+        this.defsLayer,
+        node,
+        this.textMeasurer,
+        nodeProps,
+      );
+      this.viewSubscriptions.push(
+        nodeView.onContextMenu$.subscribe((event) => {
+          event.preventDefault();
+          this.$onShowNodeContextMenu.next({
+            node: nodeView.node,
+            position: [event.clientX, event.clientY],
+          });
+        }),
+      );
+      this.viewSubscriptions.push(
+        nodeView.onPointerDown$.subscribe((event) => {
+          if (event.button !== 0) {
+            return;
+          }
+          const svgPoint = this.getSvgPoint(event.clientX, event.clientY);
+          const pointerWorld = this.screenToWorld(svgPoint);
+          this.dragNode = {
+            pointerId: event.pointerId,
+            node: nodeView.node,
+            startClient: [event.clientX, event.clientY],
+            pointerToNodeOffset: [
+              nodeView.node.x - pointerWorld[0],
+              nodeView.node.y - pointerWorld[1],
+            ],
+            moved: false,
+          };
+          this._updateShowLabels();
+          this.$onGrabNode.next(nodeView.node);
+          this.svgElement.setPointerCapture(event.pointerId);
+          event.preventDefault();
+          event.stopPropagation();
+        }),
+      );
+      this.viewSubscriptions.push(
+        nodeView.onHoverChanged$.subscribe((hovered) => {
+          nodeView.setHoverVisible(hovered);
+          this._updateShowLabels();
+        }),
+      );
+      this.nodeViews.push(nodeView);
+    }
 
+    for (const cursor of this.graphState.userCursors) {
+      const cursorView = new UserCursorView(
+        this.cursorsLayer,
+        cursor,
+        this.textMeasurer,
+      );
+      this.cursorViews.push(cursorView);
+    }
+
+    this.installSvgInteractionHandlers();
+    this.setZoomTransform(this.zoomTransform);
     this.applyPropertiesToSVG();
     this._updateShowLabels();
   }
@@ -751,7 +632,7 @@ export class D3Renderer {
     }
     this.smoothedPositionDirty = false;
 
-    const smoothTime = (1000 / inputFps) * 1.5; // compensate slow ws
+    const smoothTime = (1000 / inputFps) * 1.5;
     const maxSpeed = 10000;
     for (let i = 0; i < this.graphState.nodes.length; i += 1) {
       const node: D3Node = this.graphState.nodes[i];
@@ -809,39 +690,32 @@ export class D3Renderer {
   public applyPropertiesToSVG(): void {
     this.applyPositionsToSVG();
 
-    this.nodeLockedOverlay?.attr("hidden", (d) => (d.locked ? null : true));
+    for (const nodeView of this.nodeViews) {
+      nodeView.updateLock(nodeView.node.locked);
+      nodeView.updateAppearance(
+        this.textMeasurer,
+        this._getNodeViewProps(nodeView.node),
+      );
+    }
 
-    this.nodeSelectedOverlay?.attr("hidden", (d) =>
-      this._nodeIsSelected(d) ? null : true,
-    );
-
-    this.linkPathSelection?.attr("stroke", (d) => this._getEdgeStrokeColor(d));
-    this.linkLabelSelection
-      ?.select("foreignObject")
-      .select("div")
-      .select("span")
-      .style("background-color", (d) => this._getEdgeStrokeColor(d));
-
-    this.markersSelection
-      ?.select("path")
-      .attr("fill", (d) => this._getEdgeStrokeColor(d));
+    for (const edgeView of this.relationshipViews) {
+      edgeView.updateAppearance(
+        this.textMeasurer,
+        this._getRelationshipViewProps(edgeView.edge),
+      );
+    }
   }
 
   public applyPositionsToSVG() {
-    this.linkPathSelection?.attr("d", (d) => this.calculator.curvedPath(d));
-    this.linkLabelSelection?.attr("transform", (d: D3Link) => {
-      const c = this.calculator.curvePoints(d);
-      return `translate(${c.center.x.toString()},${c.center.y.toString()})rotate(${c.angle.toString()})`;
-    });
-    this.nodeSelection?.attr(
-      "transform",
-      (d: D3Node) => `translate(${d.x.toString()}, ${d.y.toString()})`,
-    );
-    this.userCursorSelection?.attr(
-      "transform",
-      (d: D3UserCursor) =>
-        `translate(${d.x.toString()}, ${d.y.toString()}) scale(${(1 / this.getZoom()).toString()})`,
-    );
+    for (const linkView of this.relationshipViews) {
+      linkView.updateGeometry(this.calculator);
+    }
+    for (const nodeView of this.nodeViews) {
+      nodeView.updatePosition();
+    }
+    for (const cursorView of this.cursorViews) {
+      cursorView.update(this.getZoom());
+    }
   }
 
   public zoomIn(): void {
@@ -863,34 +737,29 @@ export class D3Renderer {
   }
 
   public zoomOutOverview(): void {
-    if (this.zoomBehaviour == null) {
+    if (this.zoomContainer == null) {
       return;
     }
-
-    const bounds = this.zoomContainer?.node()?.getBBox();
-    if (bounds == null) {
-      return;
-    }
-    const parent = this.svgContainer?.node();
-    if (parent == null) {
-      return;
-    }
+    const bounds = this.zoomContainer.getBBox();
+    const parent = this.svgElement;
 
     const paddingPercent = 0.9;
     const leftInset = 400 + 50;
     const rightInset = 400 + 50;
     const topInset = 30 + 30;
     const bottomInset = 25;
-    const fullWidth = parent.clientWidth - leftInset - rightInset,
-      fullHeight = parent.clientHeight - topInset - bottomInset;
+    const fullWidth = parent.clientWidth - leftInset - rightInset;
+    const fullHeight = parent.clientHeight - topInset - bottomInset;
     if (fullWidth < 10 || fullHeight < 10) {
       return;
     }
-    const width = bounds.width,
-      height = bounds.height;
-    const midX = bounds.x + width / 2,
-      midY = bounds.y + height / 2;
-    if (width == 0 || height == 0) return; // nothing to fit
+    const width = bounds.width;
+    const height = bounds.height;
+    const midX = bounds.x + width / 2;
+    const midY = bounds.y + height / 2;
+    if (width === 0 || height === 0) {
+      return;
+    }
     const scale =
       paddingPercent / Math.max(width / fullWidth, height / fullHeight);
     const translate = [-midX, -midY + (topInset - bottomInset) / 2 / scale];
@@ -899,51 +768,23 @@ export class D3Renderer {
   }
 
   public zoomTo(zoom: number): void {
-    const svgContainerNode = this.svgContainer?.node();
-    if (svgContainerNode == null) {
-      return;
-    }
-    if (this.zoomBehaviour == null) {
-      return;
-    }
-    this.svgContainer
-      ?.transition()
-      .duration(100)
-      // eslint-disable-next-line @typescript-eslint/unbound-method
-      .call(this.zoomBehaviour.scaleTo, zoom);
-    useBearStore
-      .getState()
-      .room.canvas.setZoomTransform(this.getZoomTransform());
+    const k = Math.max(0.02, Math.min(8, zoom));
+    this.setZoomTransform(
+      new CanvasZoomTransform(k, this.zoomTransform.x, this.zoomTransform.y),
+    );
   }
 
   public transform(x: number, y: number, zoom: number): void {
-    const svgContainerNode = this.svgContainer?.node();
-    if (svgContainerNode == null) {
-      return;
-    }
-    if (this.zoomBehaviour == null) {
-      return;
-    }
-    const zoomTransform = new ZoomTransform(zoom, x * zoom, y * zoom);
-    this.svgContainer?.transition().duration(100).call(
-      // eslint-disable-next-line @typescript-eslint/unbound-method
-      this.zoomBehaviour.transform,
-      zoomTransform,
-    );
-    useBearStore.getState().room.canvas.setZoomTransform(zoomTransform);
+    const zoomTransform = new CanvasZoomTransform(zoom, x * zoom, y * zoom);
+    this.setZoomTransform(zoomTransform);
   }
 
-  public getZoomTransform(): d3.ZoomTransform {
-    const svgContainerNode = this.svgContainer?.node();
-    if (svgContainerNode == null) {
-      return new d3.ZoomTransform(1, 0, 0);
-    }
-    const node = svgContainerNode;
-    return d3.zoomTransform(node);
+  public getZoomTransform(): CanvasZoomTransform {
+    return this.zoomTransform;
   }
 
   public getZoom(): number {
-    return this.getZoomTransform().k;
+    return this.zoomTransform.k;
   }
 
   public setHideLabels(hideLabels: boolean): void {
@@ -961,11 +802,17 @@ export class D3Renderer {
     this.renderSvgElements();
   }
 
-  public setCursor(positionRelativeToSVGElement: [number, number]): void {
-    const translation = this.getZoomTransform();
+  public dispose(): void {
+    this.clearSvgListeners();
+    this.clearViewResources();
+    while (this.svgElement.firstChild != null) {
+      this.svgElement.removeChild(this.svgElement.firstChild);
+    }
+  }
 
-    const x = (positionRelativeToSVGElement[0] - translation.x) / translation.k;
-    const y = (positionRelativeToSVGElement[1] - translation.y) / translation.k;
+  public setCursor(positionRelativeToSVGElement: [number, number]): void {
+    const x = this.zoomTransform.invertX(positionRelativeToSVGElement[0]);
+    const y = this.zoomTransform.invertY(positionRelativeToSVGElement[1]);
     this.$onCursorMoved.next([x, y]);
   }
 
@@ -977,8 +824,6 @@ export class D3Renderer {
     maxSpeed: number,
     deltaTime: number,
   ): [number, number] {
-    // return [target, 0];
-
     smoothTime = Math.max(0.0001, smoothTime);
     const omega = 2 / smoothTime;
 
@@ -988,7 +833,6 @@ export class D3Renderer {
     let change = current - target;
     const originalTo = target;
 
-    // Clamp maximum speed
     const maxChange = maxSpeed * smoothTime;
     change = Math.max(-maxChange, Math.min(maxChange, change));
     target = current - change;
@@ -998,7 +842,6 @@ export class D3Renderer {
 
     let output = target + (change + temp) * exp;
 
-    // Prevent overshooting
     if (originalTo - current > 0.0 === output > originalTo) {
       output = originalTo;
       newVelocity = (output - originalTo) / deltaTime;
@@ -1011,15 +854,33 @@ export class D3Renderer {
     return [output, newVelocity];
   }
 
+  private _getNodeViewProps(node: D3Node): NodeViewProps {
+    return {
+      isSelected: this._nodeIsSelected(node),
+      titleColor: this._getTitleColorOfNode(node),
+      borderColor: this.theme === "dark" ? "#fff" : "#000",
+      bgColors: this._getBgColorsOfNode(node),
+      strokeWidth: this._getStrokeWidth(node),
+    };
+  }
+
+  private _getRelationshipViewProps(edge: D3Link): RelationshipViewProps {
+    return {
+      strokeColor: this._getEdgeStrokeColor(edge),
+      textColor: getTextColorOfEdge(edge.customColor, this.colorSchema, this.theme),
+    };
+  }
+
   private _updateShowLabels() {
-    if (this.hideLabels) {
-      this.linkLabelSelection?.attr("hidden", true);
-      this.nodeSelection?.select("foreignObject").attr("hidden", true);
-      this.linkPathSelection?.attr("marker-end", null);
-    } else {
-      this.linkLabelSelection?.attr("hidden", null);
-      this.nodeSelection?.select("foreignObject").attr("hidden", null);
-      this.linkPathSelection?.attr("marker-end", (d) => `url(#arrow_${d.id})`);
+    for (const edgeView of this.relationshipViews) {
+      edgeView.setLabelsHidden(this.hideLabels);
+    }
+    for (const nodeView of this.nodeViews) {
+      const visible =
+        !this.hideLabels ||
+        nodeView.isHovered() ||
+        this.dragNode?.node.id === nodeView.node.id;
+      nodeView.setLabelVisible(visible);
     }
   }
 
@@ -1033,17 +894,14 @@ export class D3Renderer {
   private _getBgColorsOfNode(d: D3Node): string[] {
     if (d.customColor != null) {
       return [getBackgroundColorOfColor(d.customColor, this.colorSchema)];
-    } else {
-      const colors: (string | null)[] = d.labels.map(
-        (dlabel: string): string | null => {
-          return getBackgroundColorOfLabel(
-            this.graphState.labels.get(dlabel) ?? null,
-            this.colorSchema,
-          );
-        },
-      );
-      return colors.reduce<string[]>((a, n) => (n ? [...a, n] : a), []);
     }
+    const colors: (string | null)[] = d.labels.map((dlabel: string) => {
+      return getBackgroundColorOfLabel(
+        this.graphState.labels.get(dlabel) ?? null,
+        this.colorSchema,
+      );
+    });
+    return colors.reduce<string[]>((a, n) => (n ? [...a, n] : a), []);
   }
 
   private _nodeIsSelected(node: D3Node): boolean {
@@ -1061,13 +919,9 @@ export class D3Renderer {
       return "#ff00ff";
     }
     if (d.customColor != null) {
-      const colorToUse = getBackgroundColorOfColor(
-        d.customColor,
-        this.colorSchema,
-      );
-      return colorToUse;
+      return getBackgroundColorOfColor(d.customColor, this.colorSchema);
     }
-    return this.theme == "dark" ? "#ffffff" : "#000000";
+    return this.theme === "dark" ? "#ffffff" : "#000000";
   }
 
   private _getPositionOfSelectedElement(): [number, number] | null {

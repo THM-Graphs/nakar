@@ -1,5 +1,4 @@
 import { Action, ActionShortcut } from "./Action.ts";
-import * as d3 from "d3";
 import { saveAs } from "file-saver";
 import { SelectedCanvasTab } from "../../state/SelectedCanvasTab.ts";
 import { createAppShortcut } from "./createAppShortcut.ts";
@@ -17,15 +16,10 @@ export class SaveSVGAction extends Action<SaveSVGActionParams> {
       throw new Error("Canvas not found.");
     }
 
-    const svg = d3.select(
-      document.createElementNS("http://www.w3.org/2000/svg", "svg"),
-    );
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
 
-    const boundingBox = d3
-      .select(svgCanvas)
-      .select<SVGGElement>("g")
-      .node()
-      ?.getBBox();
+    const sourceGroup = svgCanvas.querySelector<SVGGElement>("g");
+    const boundingBox = sourceGroup?.getBBox();
     if (boundingBox == null) {
       throw new Error("Unable to get bounding box");
     }
@@ -39,12 +33,16 @@ export class SaveSVGAction extends Action<SaveSVGActionParams> {
         boundingBox.height,
       ].join(" "),
     };
-    svg.attr("width", dimensions.width);
-    svg.attr("height", dimensions.height);
-    svg.attr("viewBox", dimensions.viewBox);
+    svg.setAttribute("width", dimensions.width.toString());
+    svg.setAttribute("height", dimensions.height.toString());
+    svg.setAttribute("viewBox", dimensions.viewBox);
 
-    svg.append("title").text("NAKAR Export");
-    svg.append("desc").text("Created using NAKAR");
+    const title = document.createElementNS("http://www.w3.org/2000/svg", "title");
+    title.textContent = "NAKAR Export";
+    svg.appendChild(title);
+    const desc = document.createElementNS("http://www.w3.org/2000/svg", "desc");
+    desc.textContent = "Created using NAKAR";
+    svg.appendChild(desc);
     // svg
     //   .append("rect")
     //   .attr("x", `${boundingBox.x.toString()}pt`)
@@ -52,39 +50,35 @@ export class SaveSVGAction extends Action<SaveSVGActionParams> {
     //   .attr("width", `${boundingBox.width.toString()}pt`)
     //   .attr("height", `${boundingBox.height.toString()}pt`)
     //   .attr("fill", theme == "dark" ? "rgb(33, 37, 41)" : "#fff");
-    svg.append("style").text("* { font-family: system-ui }");
+    const style = document.createElementNS("http://www.w3.org/2000/svg", "style");
+    style.textContent = "* { font-family: system-ui }";
+    svg.appendChild(style);
 
-    d3.select(svgCanvas)
-      .select<SVGGElement>("g")
-      .each(function () {
-        const clone = d3
-          .select<SVGGElement, unknown>(this)
-          .node()
-          ?.cloneNode(true);
-        if (clone == null) {
-          throw new Error("Unable to clone canvas element.");
-        } else {
-          svg.node()?.appendChild(clone);
-        }
-      });
+    const clone = sourceGroup?.cloneNode(true);
+    if (clone == null) {
+      throw new Error("Unable to clone canvas element.");
+    }
+    svg.appendChild(clone);
 
-    svg.select("g").attr("transform", "");
-    svg.selectAll("[hidden]").remove();
+    const clonedGroup = svg.querySelector("g");
+    if (clonedGroup != null) {
+      clonedGroup.setAttribute("transform", "");
+    }
+    svg.querySelectorAll("[hidden]").forEach((el) => {
+      el.remove();
+    });
     // svg.selectAll(".nodeLockedOverlay").remove();
     // svg.selectAll(".nodeSelectedOverlay").remove();
-    svg.selectAll(".bi").remove();
+    svg.querySelectorAll(".bi").forEach((el) => {
+      el.remove();
+    });
 
     const htmlCharacterRefToNumericalRef = (node: SVGSVGElement) =>
       new window.XMLSerializer()
         .serializeToString(node)
         .replace(/&nbsp;/g, "&#160;");
 
-    const node = svg.node();
-    if (node == null) {
-      throw new Error("Unable to get node from svg element.");
-    }
-
-    const svgData = htmlCharacterRefToNumericalRef(node);
+    const svgData = htmlCharacterRefToNumericalRef(svg);
 
     saveAs(
       new Blob([svgData], {

@@ -3,7 +3,7 @@ import { Subject } from "rxjs";
 import { UserTheme } from "../shared/theme/UserTheme.ts";
 import { Theme } from "../shared/theme/Theme.ts";
 import { SelectedCanvasTab } from "./SelectedCanvasTab.ts";
-import { ZoomTransform } from "d3";
+import { CanvasZoomTransform } from "../shared/graphics/CanvasZoomTransform.ts";
 import {
   ColorDto,
   ExpandNodePreviewEntryDto,
@@ -217,8 +217,8 @@ export interface BearState {
       setHideLabels: (pm: boolean) => void;
       colorSchemaSlug: string;
       setColorSchema: (newSchemaSlug: string) => void;
-      zoomTransform: ZoomTransform;
-      setZoomTransform: (zoomTransform: ZoomTransform) => void;
+      zoomTransform: CanvasZoomTransform;
+      setZoomTransform: (zoomTransform: CanvasZoomTransform) => void;
     };
   };
 }
