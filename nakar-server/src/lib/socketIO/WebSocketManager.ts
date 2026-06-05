@@ -184,8 +184,8 @@ export class WebSocketManager
 
     wsClient.on('disconnecting', (): void => {
       for (const room of wsClient.rooms) {
-        if (!room.startsWith('canvas:')) continue;
-        const canvasId: string = room.slice(7);
+        const canvasId: string | null = this._extractCanvasId(room);
+        if (canvasId == null) continue;
         const lc: LiveCanvas = this._canvasService.getCanvasWithId(canvasId);
         lc.removeUser(wsClient.id);
 
@@ -299,14 +299,22 @@ export class WebSocketManager
     }
   }
 
+  private _extractCanvasId(room: string): string | null {
+    if (room.startsWith('canvas:')) {
+      return room.slice(7);
+    }
+    return null;
+  }
+
   private _sendToRoom(roomId: string, message: EventWsdto['event']): void {
     this._server.to('canvas:' + roomId).emit('message', { event: message });
   }
 
   private _assertLiveCanvas(client: Socket): LiveCanvas | null {
     for (const room of client.rooms) {
-      if (room.startsWith('canvas:')) {
-        return this._canvasService.getCanvasWithId(room.slice(7));
+      const canvasId: string | null = this._extractCanvasId(room);
+      if (canvasId != null) {
+        return this._canvasService.getCanvasWithId(canvasId);
       }
     }
     return null;
