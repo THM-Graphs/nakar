@@ -69,13 +69,14 @@ import { CanvasEventUserLeft } from '../live-canvas/events/CanvasEventUserLeft';
 import { CanvasEventCursorChanged } from '../live-canvas/events/CanvasEventCursorChanged';
 import { CursorMovedWsdto } from './dto/events/CursorMovedWsdto';
 import { LiveCanvasNote } from '../live-canvas/data/LiveCanvasNote';
+import { getConfig } from '../config/getConfig';
 
 export type Server = UntypedServer<ClientToServerEvents, ServerToClientEvents>;
 export type Socket = UntypedSocket<ClientToServerEvents, ServerToClientEvents>;
 
 @WebSocketGateway({
   cors: {
-    origin: '*',
+    origin: getConfig().allowedOrigins,
   },
   serveClient: false,
 })

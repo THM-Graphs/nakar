@@ -4,6 +4,7 @@ export default ({ env }: { env: Env }): unknown => ({
   host: env('HOST', '0.0.0.0'),
   port: env.int('PORT', 80),
   url: env('URL', 'http://localhost:80'),
+  allowedOrigins: env('ALLOWED_ORIGINS', 'http://localhost:81'),
   app: {
     keys: env.array('APP_KEYS'),
   },

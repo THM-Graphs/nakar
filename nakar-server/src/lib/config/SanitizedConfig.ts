@@ -1,5 +1,6 @@
 export interface SanitizedConfig {
-  publicUrl: string | null;
+  publicUrl: string;
+  allowedOrigins: string[];
   port: number;
   host: string;
   version: string;

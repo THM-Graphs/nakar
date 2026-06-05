@@ -10,7 +10,7 @@
     "build:types": "strapi ts:generate-types",
     "develop": "strapi develop",
     "start": "strapi start",
-    "start:docker": "docker run --rm -it -e URL=http://localhost:1337 -e APP_KEYS=4920d5c8-7f10-44bc-8067-ffaa4bb13c34 -e API_TOKEN_SALT=cd4fd731-b81f-4bba-90b8-06baaa9ddd2d -e ADMIN_JWT_SECRET=f94c18f8-199f-44d3-9385-bbb62cc2d8d3 -e JWT_SECRET=d7294411-da93-4899-bcd6-64675da046d5 -e TRANSFER_TOKEN_SALT=591343dd-0d0b-4b60-b796-891129179154 --mount type=bind,src=./public,dst=/app/public --mount type=bind,src=./.tmp,dst=/app/.tmp -p 1337:80 -p 1338:81 ghcr.io/thm-graphs/nakar/server:dev",
+    "start:docker": "docker run --rm -it -e URL=http://localhost:1337 -e ALLOWED_ORIGINS=http://localhost:5173 -e APP_KEYS=4920d5c8-7f10-44bc-8067-ffaa4bb13c34 -e API_TOKEN_SALT=cd4fd731-b81f-4bba-90b8-06baaa9ddd2d -e ADMIN_JWT_SECRET=f94c18f8-199f-44d3-9385-bbb62cc2d8d3 -e JWT_SECRET=d7294411-da93-4899-bcd6-64675da046d5 -e TRANSFER_TOKEN_SALT=591343dd-0d0b-4b60-b796-891129179154 --mount type=bind,src=./public,dst=/app/public --mount type=bind,src=./.tmp,dst=/app/.tmp -p 1337:80 -p 1338:81 ghcr.io/thm-graphs/nakar/server:dev",
     "lint": "eslint .",
     "lint:fix": "eslint --fix .",
     "format": "prettier . --check",

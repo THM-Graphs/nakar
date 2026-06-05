@@ -10,6 +10,16 @@ export function getConfig(): SanitizedConfig {
     'server.url',
     null,
   );
+  if (publicUrl == null) {
+    throw new Error('no public url set.');
+  }
+  const allowedOrigins: string | null = strapi.config.get<string | null>(
+    'server.allowedOrigins',
+    null,
+  );
+  if (allowedOrigins == null) {
+    throw new Error('no allowed origins set.');
+  }
   const port: number = strapi.config.get('server.port', 80);
   const host: string = strapi.config.get('server.host', '0.0.0.0');
   const version: string | undefined = z
@@ -23,6 +33,7 @@ export function getConfig(): SanitizedConfig {
 
   return {
     publicUrl: publicUrl,
+    allowedOrigins: allowedOrigins.split(','),
     port: port,
     host: host,
     version: version ?? 'unknown',

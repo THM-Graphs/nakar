@@ -26,7 +26,7 @@ export async function bootstrapNest(): Promise<NestExpressApplication> {
   app.setGlobalPrefix('api');
   app.useGlobalInterceptors(new RouteLogger());
   app.useGlobalPipes(new ValidationPipe(validationPipelineOptions));
-  app.use(cors());
+  app.use(cors({ origin: config.allowedOrigins }));
 
   SwaggerModule.setup(
     '/api/docs',
