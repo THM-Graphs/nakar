@@ -77,6 +77,13 @@ void describe('SSet', (): void => {
       assert.deepEqual(added.toArray(), [1, 2, 3]);
       assert.deepEqual(base.toArray(), [1, 2]);
     });
+
+    void it('ignores value already present in the set', (): void => {
+      const base: SSet<number> = new SSet<number>([1, 2]);
+      const added: SSet<number> = base.byAdding(2);
+      assert.deepEqual(added.toArray(), [1, 2]);
+      assert.deepEqual(base.toArray(), [1, 2]);
+    });
   });
 
   void describe('asyncFlatMap', (): void => {

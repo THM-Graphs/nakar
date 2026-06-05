@@ -128,6 +128,16 @@ void describe('SMap', (): void => {
         ['x', 7],
         ['y', 8],
       ]);
+      const changed: SMap<string, number> = base.bySetting('z', 42);
+      assert.deepEqual(changed.toRecord(), { x: 7, y: 8, z: 42 });
+      assert.deepEqual(base.toRecord(), { x: 7, y: 8 });
+    });
+
+    void it('overwrites existing value', (): void => {
+      const base: SMap<string, number> = new SMap<string, number>([
+        ['x', 7],
+        ['y', 8],
+      ]);
       const changed: SMap<string, number> = base.bySetting('y', 42);
       assert.deepEqual(changed.toRecord(), { x: 7, y: 42 });
       assert.deepEqual(base.toRecord(), { x: 7, y: 8 });
