@@ -63,13 +63,11 @@ export function ExpandNodePreviewModal() {
           className={"overflow-y-auto"}
           gap={0}
         >
-          <Stack className={"pb-2 pt-2 bg-body-tertiary"} gap={3}>
-            <span className={"small text-muted ps-3 pe-3"}>
-              Select labels and relationships to load.
-            </span>
-          </Stack>
           {data ? (
             <>
+              <span className={"small text-muted p-2"}>
+                Select labels and relationships to load.
+              </span>
               <SelectableTableData
                 title={"Labels"}
                 data={data.labels}
@@ -84,7 +82,16 @@ export function ExpandNodePreviewModal() {
               ></SelectableTableData>
             </>
           ) : (
-            <Spinner className={"m-5 align-self-center text-muted"}></Spinner>
+            <Stack
+              className={"align-items-center justify-content-center p-5"}
+              direction={"horizontal"}
+              gap={2}
+            >
+              <Spinner className={"text-muted"} size={"sm"}></Spinner>
+              <span className={"text-muted small"}>
+                Loading connected nodes...
+              </span>
+            </Stack>
           )}
           <Stack
             direction={"horizontal"}
