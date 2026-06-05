@@ -184,7 +184,7 @@ export class RelationshipView {
     setAttr(this.labelText, "y", 1);
     const font = "700 10px sans-serif";
     const textWidth = textMeasurer.measureWidth(text, font);
-    const hPadding = 5;
+    const hPadding = 8;
     const width = textWidth + hPadding * 2;
     const height = 16;
     setAttr(this.labelBg, "x", -width / 2);
