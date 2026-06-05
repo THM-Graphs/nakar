@@ -21,7 +21,7 @@ export function ScenarioCard(props: {
 
   return (
     <Stack
-      className={"p-3 position-relative border-top border-bottom bg-body"}
+      className={"p-3 position-relative border rounded bg-body overflow-hidden"}
       hidden={props.hidden}
     >
       <Stack gap={2}>

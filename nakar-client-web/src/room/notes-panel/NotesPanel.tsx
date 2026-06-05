@@ -47,7 +47,7 @@ export function NotesPanel() {
         <DynamicList
           data={notes}
           render={(notes) => (
-            <Stack gap={3}>
+            <Stack className={"p-1"} gap={1}>
               {notes.map((note) => (
                 <NoteDisplay note={note} key={note.id}></NoteDisplay>
               ))}

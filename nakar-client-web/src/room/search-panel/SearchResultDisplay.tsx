@@ -18,7 +18,7 @@ export function SearchResultDisplay(props: {
       {match(props.result)
         .returnType<ReactElement | null>()
         .with({ type: "loading" }, () => (
-          <Stack className={"p-3"}>
+          <Stack className={"p-3 border-bottom flex-grow-0"}>
             <Loading className={"align-self-center"} size={"sm"}></Loading>
           </Stack>
         ))
@@ -28,9 +28,9 @@ export function SearchResultDisplay(props: {
               data={data.data}
               entityNamePlural={"Search Results"}
               collapsable={true}
-              className={"border-top"}
+              className={"border-bottom"}
               render={(list) => (
-                <Stack>
+                <Stack className={"ps-1 pe-1"} gap={1}>
                   {list.map((node) => (
                     <SearchResultEntry
                       key={node.id}

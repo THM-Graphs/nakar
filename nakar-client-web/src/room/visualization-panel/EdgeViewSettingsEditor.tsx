@@ -58,6 +58,7 @@ export function EdgeViewSettingsEditor(props: {
   return (
     <Stack className={clsx("flex-grow-0", props.className)}>
       <Form.Check
+        type={"switch"}
         id={`customColor${edgeVisualization.edgeType}`}
         label={<span className={"small"}>Color</span>}
         checked={edgeVisualization.customColor}
@@ -80,6 +81,7 @@ export function EdgeViewSettingsEditor(props: {
         ></ViewSettingsColorEditor>
       )}
       <Form.Check
+        type={"switch"}
         id={`customWidth${edgeVisualization.edgeType}`}
         label={<span className={"small"}>Width</span>}
         checked={edgeVisualization.customWidth}

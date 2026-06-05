@@ -11,7 +11,7 @@ export function QueryPanelStatDisplay(props: {
     <Stack
       direction={"horizontal"}
       className={clsx(
-        "align-items-baseline justify-content-between ps-1 pe-2 border-top",
+        "align-items-baseline justify-content-between p-2",
         props.index % 2 === 0 && "bg-body",
       )}
     >

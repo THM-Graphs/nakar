@@ -18,7 +18,7 @@ export function HistogramPanel() {
         histogram.hide();
       }}
     >
-      <Stack className={"mb-5 flex-grow-0 flex-shrink-1 mb-auto pb-5"} gap={5}>
+      <Stack className={"mb-5 flex-grow-0 flex-shrink-1 mb-auto pb-5"} gap={0}>
         <HistogramSectionLabels></HistogramSectionLabels>
         <HistogramSectionNodes></HistogramSectionNodes>
         <HistogramSectionNodeProperties></HistogramSectionNodeProperties>

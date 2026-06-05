@@ -12,10 +12,6 @@ export function ScenarioGroupDisplay(props: {
       data={props.scenarioGroup.scenarios}
       entityNamePlural={"Scenarios"}
       customTitle={props.scenarioGroup.title}
-      filter={(exp, s) =>
-        (s.title ?? "").toLowerCase().includes(exp.toLowerCase())
-      }
-      previewLimit={100}
       className={"border-bottom"}
       render={(list) => (
         <>

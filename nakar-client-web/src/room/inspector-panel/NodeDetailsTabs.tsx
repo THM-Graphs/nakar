@@ -1,33 +1,22 @@
-import { Stack } from "react-bootstrap";
-import { NavbarButton } from "../../shared/elements/NavbarButton.tsx";
-import clsx from "clsx";
+import { Tab, Tabs } from "react-bootstrap";
 import { useBearStore } from "../../state/useBearStore.ts";
+import { BearState } from "../../state/BearState.ts";
 
 export function NodeDetailsTabs() {
   const tab = useBearStore((s) => s.room.panels.inspector.tab);
   const setTab = useBearStore((s) => s.room.panels.inspector.setTab);
   return (
-    <Stack direction={"horizontal"} className={"border-bottom"}>
-      <NavbarButton
-        title={"Knowledge Card"}
-        className={clsx(
-          "flex-grow-1 border-end bg-body-secondary w-50",
-          tab === "knowledgeCard" && "bg-body-tertiary",
-        )}
-        onClick={() => {
-          setTab("knowledgeCard");
-        }}
-      ></NavbarButton>
-      <NavbarButton
-        title={"Inspector"}
-        className={clsx(
-          "flex-grow-1 bg-body-secondary w-50",
-          tab === "inspector" && "bg-body-tertiary",
-        )}
-        onClick={() => {
-          setTab("inspector");
-        }}
-      ></NavbarButton>
-    </Stack>
+    <Tabs
+      defaultActiveKey="inspector"
+      id="inspectortab"
+      className="small mt-1 justify-content-center"
+      activeKey={tab}
+      onSelect={(key) => {
+        setTab(key as BearState["room"]["panels"]["inspector"]["tab"]);
+      }}
+    >
+      <Tab eventKey="inspector" title="Inspector"></Tab>
+      <Tab eventKey="knowledgeCard" title="Knowledge Card"></Tab>
+    </Tabs>
   );
 }

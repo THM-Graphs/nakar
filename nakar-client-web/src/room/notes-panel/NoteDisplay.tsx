@@ -21,7 +21,7 @@ export function NoteDisplay(props: { note: NoteDto }) {
   };
 
   return (
-    <Stack key={note.id} className={"border-bottom border-top bg-body"}>
+    <Stack key={note.id} className={"border rounded bg-body overflow-hidden"}>
       <Stack gap={1} className={"p-1"}>
         <Stack direction={"horizontal"} className={"justify-content-between"}>
           <span

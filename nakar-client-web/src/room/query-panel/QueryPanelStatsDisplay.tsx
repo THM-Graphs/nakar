@@ -1,19 +1,22 @@
-import { Stack } from "react-bootstrap";
-import { QueryPanelStatDisplay } from "./QueryPanelStatDisplay.tsx";
+import {
+  PropertiesDisplay,
+  PropertyEntry,
+} from "../inspector-panel/PropertiesDisplay.tsx";
 
 export function QueryPanelStatsDisplay(props: {
   stats: { label: string; value: string }[];
 }) {
   return (
-    <Stack className={""}>
-      {props.stats.map((stat, index: number) => (
-        <QueryPanelStatDisplay
-          label={stat.label}
-          value={stat.value}
-          key={stat.label}
-          index={index}
-        ></QueryPanelStatDisplay>
-      ))}
-    </Stack>
+    <PropertiesDisplay
+      title={"Stats"}
+      elementId={""}
+      properties={props.stats.map(
+        (s) =>
+          ({
+            slug: s.label,
+            value: s.value,
+          }) satisfies PropertyEntry,
+      )}
+    ></PropertiesDisplay>
   );
 }

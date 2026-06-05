@@ -9,12 +9,17 @@ export function ViewSettingsColorEditor(props: {
   setColorIndex: (
     newValue: LiveCanvasLabelViewSettingsDto["colorIndex"],
   ) => void;
+  className?: string;
 }) {
   const colorSchema = useColorSchema();
   const theme = useTheme();
 
   return (
-    <Stack direction={"horizontal"} gap={1} className={"align-items-center"}>
+    <Stack
+      direction={"horizontal"}
+      gap={1}
+      className={clsx(props.className, "align-items-center")}
+    >
       {(
         [0, 1, 2, 3, 4, 5] as LiveCanvasLabelViewSettingsDto["colorIndex"][]
       ).map((index: LiveCanvasLabelViewSettingsDto["colorIndex"]) => (

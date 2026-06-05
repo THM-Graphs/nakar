@@ -6,7 +6,7 @@ import { NodeDetailsKnowledgeCardCoverImage } from "./NodeDetailsKnowledgeCardCo
 
 export function NodeDetailsKnowledgeCard(props: { node: NodeDto }) {
   return (
-    <Stack className={"pb-5"}>
+    <Stack className={"pb-5 justify-content-center"}>
       <NodeDetailsKnowledgeCardCoverImage
         node={props.node}
       ></NodeDetailsKnowledgeCardCoverImage>

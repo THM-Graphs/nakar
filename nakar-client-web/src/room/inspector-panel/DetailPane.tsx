@@ -20,8 +20,8 @@ export function DetailPane(props: {
   children?: ReactNode;
 }) {
   return (
-    <Stack className={"pb-5 pt-1"} gap={0}>
-      <Stack className={"flex-grow-0 flex-shrink-1"}>
+    <Stack className={"pb-5 pt-1 flex-grow-0"} gap={0}>
+      <Stack className={"flex-grow-0 flex-shrink-1 border-bottom"}>
         {props.title.length > 0 && (
           <Stack
             direction={"horizontal"}
@@ -51,7 +51,7 @@ export function DetailPane(props: {
       </Stack>
       <Collapsable
         title={<span className={"small fw-bold"}>Actions</span>}
-        className={"border-top flex-grow-0"}
+        className={"border-bottom flex-grow-0"}
       >
         {props.actions.length > 0 && (
           <Stack direction={"horizontal"} className={"flex-wrap"}>
@@ -76,20 +76,20 @@ export function DetailPane(props: {
 
       <PropertiesDisplay
         title={"Properties"}
-        className={"border-top flex-grow-0"}
+        className={"border-bottom flex-grow-0"}
         properties={props.properties}
         elementId={props.elementId}
       ></PropertiesDisplay>
 
       <PropertiesDisplay
         title={"Other Properties"}
-        className={"border-top flex-grow-0"}
+        className={"border-bottom flex-grow-0"}
         properties={props.otherProperties}
         elementId={props.elementId}
         collapsed={true}
       ></PropertiesDisplay>
+
       {props.children}
-      <div className={"flex-grow-1"}></div>
     </Stack>
   );
 }

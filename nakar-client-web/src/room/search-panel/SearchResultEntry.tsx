@@ -5,14 +5,22 @@ import { ClipboardButton } from "../../shared/elements/ClipboardButton.tsx";
 import { ActionNavbarButton } from "../actions/ActionNavbarButton.tsx";
 import { SpawnNodeAction } from "../actions/SpawnNodeAction.ts";
 import { NodePreviewDto } from "api-client";
+import clsx from "clsx";
 
 export function SearchResultEntry(props: {
   node: NodePreviewDto;
   roomContext: CanvasContextData;
   databaseId: string;
+  className?: string;
 }) {
   return (
-    <Stack direction={"horizontal"} className={"border-bottom"}>
+    <Stack
+      direction={"horizontal"}
+      className={clsx(
+        "border rounded overflow-hidden bg-body",
+        props.className,
+      )}
+    >
       <Stack gap={1} className={"p-2"}>
         <Stack direction={"horizontal"} className={"flex-wrap"} gap={1}>
           {props.node.labels.map((label) => (

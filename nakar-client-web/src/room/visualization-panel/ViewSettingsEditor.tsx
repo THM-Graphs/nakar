@@ -10,6 +10,7 @@ import { Label } from "../labels/Label.tsx";
 import { Fragment } from "react";
 import { EdgeViewSettingsEditor } from "./EdgeViewSettingsEditor.tsx";
 import clsx from "clsx";
+import { Collapsable } from "../../shared/elements/Collapsable.tsx";
 
 export function ViewSettingsEditor(props: {
   viewSettings: LiveCanvasViewSettingsDto;
@@ -21,6 +22,7 @@ export function ViewSettingsEditor(props: {
     <Stack className={clsx("flex-grow-0", props.className)}>
       <Stack className={"p-2 border-bottom"} gap={0}>
         <Form.Check
+          type="switch"
           className={"flex-grow-0"}
           label={<span className={"small"}>Grow Nodes Based On Degree</span>}
           id={"growNodesBasedOnDegree"}
@@ -68,36 +70,57 @@ export function ViewSettingsEditor(props: {
       </Stack>
       {props.viewSettings.labelSettings.map(
         (labelViewSettings: LiveCanvasLabelViewSettingsDto) => (
-          <Stack className={"border-top p-2"} key={labelViewSettings.label}>
-            <Stack className={"pb-2"}>
-              <Label
-                label={labelViewSettings.label}
-                showAmount={true}
-                showSources={true}
-                hideLabelMenu={true}
-              ></Label>
-            </Stack>
-            <LabelViewSettingsEditor
-              label={labelViewSettings.label}
-            ></LabelViewSettingsEditor>
-          </Stack>
+          <Fragment key={labelViewSettings.label}>
+            <Collapsable
+              collapsed={true}
+              title={
+                <Stack className={"pt-1 pb-1"}>
+                  <Label
+                    label={labelViewSettings.label}
+                    showAmount={true}
+                    showSources={true}
+                    hideLabelMenu={true}
+                  ></Label>
+                </Stack>
+              }
+              className={"border-bottom"}
+            >
+              <Stack className={"ps-1 pe-1 pb-1"}>
+                <Stack className={"border rounded overflow-hidden p-1 bg-body"}>
+                  <LabelViewSettingsEditor
+                    label={labelViewSettings.label}
+                  ></LabelViewSettingsEditor>
+                </Stack>
+              </Stack>
+            </Collapsable>
+          </Fragment>
         ),
       )}
       {props.viewSettings.edgeSettings.map(
         (edgeViewSettings: LiveCanvasEdgeViewSettingsDto) => (
           <Fragment key={edgeViewSettings.edgeType}>
-            <Stack className={"border-top p-2"}>
-              <Stack className={"pb-2"}>
-                <Label
-                  label={edgeViewSettings.edgeType}
-                  showAmount={true}
-                  showSources={true}
-                ></Label>
+            <Collapsable
+              collapsed={true}
+              title={
+                <Stack className={"pt-1 pb-1"}>
+                  <Label
+                    label={edgeViewSettings.edgeType}
+                    showAmount={true}
+                    showSources={true}
+                    hideLabelMenu={true}
+                  ></Label>
+                </Stack>
+              }
+              className={"border-bottom"}
+            >
+              <Stack className={"ps-1 pe-1 pb-1"}>
+                <Stack className={"border rounded overflow-hidden bg-body p-1"}>
+                  <EdgeViewSettingsEditor
+                    edgeType={edgeViewSettings.edgeType}
+                  ></EdgeViewSettingsEditor>
+                </Stack>
               </Stack>
-              <EdgeViewSettingsEditor
-                edgeType={edgeViewSettings.edgeType}
-              ></EdgeViewSettingsEditor>
-            </Stack>
+            </Collapsable>
           </Fragment>
         ),
       )}

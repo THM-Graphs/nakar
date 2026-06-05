@@ -124,7 +124,7 @@ export function QueryPanel() {
         </Stack>
       }
     >
-      <Stack className={"pb-5"} gap={5}>
+      <Stack className={"pb-5"} gap={0}>
         {referencedDatabase && (
           <>
             <Collapsable
@@ -141,7 +141,7 @@ export function QueryPanel() {
                   query.setQueryText(e);
                 }}
                 theme={theme}
-                className={"border-top border-bottom"}
+                className={"border rounded overflow-hidden m-1"}
                 onExecute={onRun}
               ></CypherEditor>
               <Stack
@@ -217,7 +217,7 @@ export function QueryPanel() {
                   <DynamicList
                     data={data.data.labels}
                     previewLimit={20}
-                    className={"border-top"}
+                    className={"border-bottom"}
                     entityNamePlural={"Labels"}
                     collapsable={true}
                     filter={(exp, l) =>
@@ -247,7 +247,7 @@ export function QueryPanel() {
                   <DynamicList
                     data={data.data.rels}
                     previewLimit={20}
-                    className={"border-top"}
+                    className={"border-bottom"}
                     entityNamePlural={"Relationships"}
                     collapsable={true}
                     filter={(exp, rel) =>
@@ -274,31 +274,26 @@ export function QueryPanel() {
                       </Stack>
                     )}
                   ></DynamicList>
-                  <Collapsable
-                    className={"flex-grow-0 border-bottom border-top"}
-                    title={<span className={"fw-bold small"}>Stats</span>}
-                  >
-                    <QueryPanelStatsDisplay
-                      stats={[
-                        {
-                          label: "Nodes",
-                          value: data.data.nodeCount.toString(),
-                        },
-                        {
-                          label: "Labels",
-                          value: data.data.labelCount.toString(),
-                        },
-                        {
-                          label: "Relationships",
-                          value: data.data.relCount.toString(),
-                        },
-                        {
-                          label: "Relationship Types",
-                          value: data.data.relTypeCount.toString(),
-                        },
-                      ]}
-                    ></QueryPanelStatsDisplay>
-                  </Collapsable>
+                  <QueryPanelStatsDisplay
+                    stats={[
+                      {
+                        label: "Nodes",
+                        value: data.data.nodeCount.toString(),
+                      },
+                      {
+                        label: "Labels",
+                        value: data.data.labelCount.toString(),
+                      },
+                      {
+                        label: "Relationships",
+                        value: data.data.relCount.toString(),
+                      },
+                      {
+                        label: "Relationship Types",
+                        value: data.data.relTypeCount.toString(),
+                      },
+                    ]}
+                  ></QueryPanelStatsDisplay>
                 </>
               ),
           )

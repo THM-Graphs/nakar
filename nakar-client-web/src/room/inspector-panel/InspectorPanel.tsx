@@ -82,13 +82,14 @@ export function InspectorPanel() {
         })
         .otherwise(() => {
           return (
-            <Stack gap={3}>
+            <Stack gap={0}>
               {nodes.length > 0 && (
-                <Stack className={"flex-grow-0"} gap={3}>
+                <Stack className={"flex-grow-0"} gap={0}>
                   <Collapsable
                     title={
                       <span className={"small fw-bold"}>Node Actions</span>
                     }
+                    className={"border-bottom"}
                   >
                     <Stack direction={"horizontal"} className={"flex-wrap"}>
                       {nodeActions.map((action) => (
@@ -121,6 +122,7 @@ export function InspectorPanel() {
                               {scenarioGroup.title}
                             </span>
                           }
+                          className={"border-bottom"}
                         >
                           {parameterizedScenarioGroup.scenarios.map(
                             (parameterizedScenario) => {
@@ -146,6 +148,7 @@ export function InspectorPanel() {
                   })}
                   <DynamicList
                     data={nodes}
+                    className={"border-bottom"}
                     render={(list) => (
                       <>
                         {list.map((element) => (
@@ -161,8 +164,9 @@ export function InspectorPanel() {
                 </Stack>
               )}
               {edges.length > 0 && (
-                <Stack className={"flex-grow-0"} gap={3}>
+                <Stack className={"flex-grow-0"} gap={0}>
                   <DynamicList
+                    className={"border-bottom"}
                     data={relationshipActions}
                     render={(actions) => (
                       <>
@@ -182,6 +186,7 @@ export function InspectorPanel() {
                   ></DynamicList>
                   <DynamicList
                     data={edges}
+                    className={"border-bottom"}
                     render={(list) => (
                       <>
                         {list.map((element) => (
@@ -196,7 +201,6 @@ export function InspectorPanel() {
                   ></DynamicList>
                 </Stack>
               )}
-              <div className={"flex-grow-1"}></div>
             </Stack>
           );
         })}
@@ -230,6 +234,7 @@ function InspectorPanelForMultiType(props: { element: NodeDto | EdgeDto }) {
 
   return (
     <Collapsable
+      collapsed={true}
       title={
         <Stack direction={"horizontal"} className={"ellipsis"}>
           {"title" in props.element ? (

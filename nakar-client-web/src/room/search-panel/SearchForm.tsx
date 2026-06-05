@@ -30,7 +30,10 @@ export function SearchForm(props: {
       }}
       className={props.className}
     >
-      <Stack direction={"horizontal"} className={clsx("bg-body border-bottom")}>
+      <Stack
+        direction={"horizontal"}
+        className={clsx("bg-body border rounded overflow-hidden m-1")}
+      >
         <Form.Control
           ref={textInput}
           className={"rounded-0 border-0"}

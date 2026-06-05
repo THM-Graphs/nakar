@@ -61,6 +61,7 @@ export function LabelViewSettingsEditor(props: {
   return (
     <Stack className={props.className}>
       <ViewSettingsColorEditor
+        className={"mb-1"}
         colorIndex={labelVisualization.colorIndex}
         setColorIndex={(newValue) => {
           onChange({
@@ -70,6 +71,7 @@ export function LabelViewSettingsEditor(props: {
         }}
       ></ViewSettingsColorEditor>
       <Form.Check
+        type={"switch"}
         id={`customRadius${labelVisualization.label}`}
         label={<span className={"small"}>Size</span>}
         checked={labelVisualization.customRadius}
@@ -90,10 +92,10 @@ export function LabelViewSettingsEditor(props: {
               radius: newValue,
             });
           }}
-          className={"mb-1"}
         ></NumberInput>
       )}
       <Form.Check
+        type={"switch"}
         id={`customTitle${labelVisualization.label}`}
         label={<span className={"small"}>Title Property</span>}
         checked={labelVisualization.customTitleProperty}
@@ -115,7 +117,6 @@ export function LabelViewSettingsEditor(props: {
               titleProperty: value,
             });
           }}
-          className={"mb-1"}
         ></ApplyableStringInput>
       )}
     </Stack>

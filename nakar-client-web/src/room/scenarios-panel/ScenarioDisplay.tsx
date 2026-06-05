@@ -11,6 +11,7 @@ import {
   ScenarioDto,
   ScenarioGroupDto,
 } from "api-client";
+import { Stack } from "react-bootstrap";
 
 export function ScenarioDisplay(props: {
   scenarioGroup: ScenarioGroupDto;
@@ -68,13 +69,15 @@ export function ScenarioDisplay(props: {
         ></ScenarioTitleAndBadges>
       }
     >
-      <ScenarioCard
-        scenarioGroup={props.scenarioGroup}
-        onScenarioSelected={(scenario, additive) => {
-          runScenario(additive, []);
-        }}
-        scenario={props.scenario}
-      ></ScenarioCard>
+      <Stack className={"p-1"}>
+        <ScenarioCard
+          scenarioGroup={props.scenarioGroup}
+          onScenarioSelected={(scenario, additive) => {
+            runScenario(additive, []);
+          }}
+          scenario={props.scenario}
+        ></ScenarioCard>
+      </Stack>
     </Collapsable>
   );
 }

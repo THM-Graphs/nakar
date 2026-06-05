@@ -8,6 +8,7 @@ import { ShortendText } from "../../shared/elements/ShortendText.tsx";
 export function PropertyDisplay(props: {
   property: PropertyEntry;
   index: number;
+  className?: string;
 }) {
   const property = props.property;
   const stringValue =
@@ -20,7 +21,7 @@ export function PropertyDisplay(props: {
       key={property.slug}
       direction={"horizontal"}
       className={clsx(
-        "border-bottom",
+        props.className,
         props.index % 2 === 0 ? "bg-body" : "bg-body-tertiary",
       )}
     >

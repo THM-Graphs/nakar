@@ -17,6 +17,7 @@ export function PropertyGroup(props: {
     <Stack key={props.propertyEntry.key} className={""}>
       <Collapsable
         sticky={false}
+        collapsed={true}
         title={
           <span className={"small user-select-text text-muted"}>
             {props.propertyEntry.key}
@@ -28,6 +29,7 @@ export function PropertyGroup(props: {
           entityNamePlural={`'${props.propertyEntry.key}' Values`}
           previewLimit={20}
           collapsable={false}
+          className={"border rounded overflow-hidden m-1 bg-body"}
           filter={(exp, pv) =>
             pv.value.toLowerCase().includes(exp.toLowerCase())
           }

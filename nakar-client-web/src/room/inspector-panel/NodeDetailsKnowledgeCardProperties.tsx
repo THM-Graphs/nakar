@@ -122,10 +122,9 @@ export function NodeDetailsKnowledgeCardProperties(props: { node: NodeDto }) {
   return (
     <>
       {properties.length > 0 && (
-        <Stack className={"border-bottom"}>
+        <Stack className={"border-bottom flex-grow-0"}>
           <DynamicList
             data={allProperties}
-            filter={(e, a) => a.title.toLowerCase().includes(e.toLowerCase())}
             collapsable={false}
             render={(data) => (
               <>

@@ -73,7 +73,7 @@ export function SearchPanel() {
         ></DatabaseSelect>
       }
     >
-      <Stack gap={5}>
+      <Stack gap={0}>
         {selectedDatabaseId == null && (
           <span className={"small text-muted p-3"}>
             Select a database to search.
