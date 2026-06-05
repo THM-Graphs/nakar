@@ -39,12 +39,11 @@ export class PhysicsWorker {
       this._onWTEvent.next(message);
     });
     worker.on('messageerror', (error: Error): void => {
-      this._logger.error(
-        `Worker ${worker.threadId.toString()} messageerror: ${error.message}`,
-      );
+      this._logger.error(`Worker ${worker.threadId.toString()} messageerror:`);
+      this._logger.error(error);
     });
     worker.on('exit', (exitCode: number): void => {
-      this._logger.error(
+      this._logger.debug(
         `Worker ${worker.threadId.toString()} (Canvas ${this._canvasId}) exit code: ${exitCode.toString()}`,
       );
       this._worker = null;
