@@ -80,3 +80,7 @@ div[role="tooltip"] {
 .dropdown-menu {
   box-shadow: var(--bs-box-shadow-sm) !important;
 }
+
+.w-md-editor-text {
+  height: 100%;
+}
