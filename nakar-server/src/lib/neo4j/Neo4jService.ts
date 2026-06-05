@@ -289,40 +289,6 @@ ORDER BY lcount DESC, label ASC`,
     return capabilities;
   }
 
-  public async getLabelCount(
-    credentials: Neo4jDatabaseInfo,
-    label: string,
-  ): Promise<number> {
-    this._logger.debug(`Will query label count of label ${label}`);
-    const result: Neo4jGraphElements = await this.executeQuery(
-      credentials,
-      `MATCH (n:\`${label}\`) RETURN count(n) as count;`,
-      {},
-      new Neo4jLimitConfig('default', 'tableData'),
-    );
-    if (result.tableData.length === 0) {
-      throw new Error(`Unable to get node count of label ${label} from query.`);
-    }
-    return Number(result.tableData[0].get('count'));
-  }
-
-  public async getRelationshipTypeCount(
-    credentials: Neo4jDatabaseInfo,
-    relType: string,
-  ): Promise<number> {
-    this._logger.debug(`Will query rel type count of rel type ${relType}`);
-    const result: Neo4jGraphElements = await this.executeQuery(
-      credentials,
-      `MATCH ()-[r:\`${relType}\`]-() RETURN count(r) as count`,
-      {},
-      new Neo4jLimitConfig('default', 'tableData'),
-    );
-    if (result.tableData.length === 0) {
-      throw new Error(`Unable to get rel type count of ${relType} from query.`);
-    }
-    return Number(result.tableData[0].get('count'));
-  }
-
   public async search(params: {
     credentials: Neo4jDatabaseInfo;
     searchTerm: string;
