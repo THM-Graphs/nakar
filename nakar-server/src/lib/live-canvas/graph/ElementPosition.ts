@@ -70,7 +70,7 @@ export class ElementPosition {
     return new ElementPosition({ x: this.x / value, y: this.y / value });
   }
 
-  public byJiggleing(): ElementPosition {
+  public byJiggling(): ElementPosition {
     return this.byAdding(ElementPosition.jiggled());
   }
 }

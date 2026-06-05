@@ -738,7 +738,7 @@ export class LiveCanvas {
                   databaseCache,
                 );
               if (insertedNode != null) {
-                insertedNode.position = node.position.byJiggleing();
+                insertedNode.position = node.position.byJiggling();
                 changeRecorder.didAddOrRemoveGraphElements();
               }
             }
@@ -1977,7 +1977,7 @@ export class LiveCanvas {
             if (neighbors.length > 0) {
               node.position = ElementPosition.average(
                 neighbors.map((n: GraphNode): ElementPosition => n.position),
-              ).byJiggleing();
+              ).byJiggling();
               changeRecorder.didMoveNode(node);
             }
           }
