@@ -18,7 +18,6 @@ import {
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
-
 import { match, P } from 'ts-pattern';
 import { Result } from '@strapi/types/dist/modules/documents/result';
 import { DatabaseService } from '../database/DatabaseService';
@@ -204,7 +203,6 @@ export class WebSocketManager
               this._logger.error(error);
             });
         }
-        break;
       }
     });
 
