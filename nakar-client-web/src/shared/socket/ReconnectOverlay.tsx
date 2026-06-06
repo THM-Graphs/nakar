@@ -8,6 +8,8 @@ import { useBearStore } from "../../state/useBearStore.ts";
 import { ActionNavbarButton } from "../../room/actions/ActionNavbarButton.tsx";
 import { CloseRoomAction } from "../../room/actions/CloseRoomAction.ts";
 import { useNavigate } from "react-router";
+import { match } from "ts-pattern";
+import { BackToStartButton } from "../BackToStartButton.tsx";
 
 export function ReconnectOverlay() {
   const socketState = useBearStore((s) => s.room.websockets.state);
@@ -41,8 +43,13 @@ export function ReconnectOverlay() {
           className={"align-self-center text-muted"}
         >
           <Loading size={"sm"}></Loading>
-          <span>Reconnecting…</span>
+          {match(socketState)
+            .with({ type: "disconnect" }, () => <></>)
+            .otherwise(() => (
+              <span>Reconnecting…</span>
+            ))}
         </Stack>
+        <BackToStartButton></BackToStartButton>
       </Stack>
       <div className={"flex-grow-1"}></div>
     </Stack>

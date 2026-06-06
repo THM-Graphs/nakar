@@ -184,7 +184,7 @@ export const useBearStore = create<BearState>()(
                 },
               },
               websockets: {
-                state: { type: "disconnected" },
+                state: { type: "disconnect" },
                 setState: (state: SocketState) => {
                   set((s) => {
                     s.room.websockets.state = state;

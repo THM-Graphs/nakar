@@ -37,9 +37,6 @@ export class WebSocketsManager {
     });
     this.socket.on("disconnect", () => {
       useBearStore.getState().room.websockets.setState({ type: "disconnect" });
-      setTimeout(() => {
-        this.socket?.connect();
-      }, 1000);
     });
     this.socket.on("message", (m) => {
       this.onMessage.next(m);

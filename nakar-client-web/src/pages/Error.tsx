@@ -1,9 +1,8 @@
 import { Stack } from "react-bootstrap";
 import { useNavigate, useRouteError } from "react-router";
 import { handleError } from "../shared/error/handleError.ts";
-import { Router } from "../routing/Router.ts";
-import { CMSButton } from "../shared/cms/CMSButton.tsx";
 import { usePageTitle } from "../routing/usePageTitle.ts";
+import { BackToStartButton } from "../shared/BackToStartButton.tsx";
 
 export function ErrorComp() {
   const navigate = useNavigate();
@@ -21,12 +20,7 @@ export function ErrorComp() {
         <span className={"small text-muted font-monospace user-select-text"}>
           {handleError(error)}
         </span>
-        <CMSButton
-          title={"Back to start"}
-          onClick={() => {
-            void navigate(Router.getHomePath());
-          }}
-        ></CMSButton>
+        <BackToStartButton></BackToStartButton>
       </Stack>
     </>
   );

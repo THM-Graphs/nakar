@@ -7,6 +7,5 @@ export function displayStringForState(socketState: SocketState): string {
     .with({ type: "connecting" }, () => "Connecting…")
     .with({ type: "connect_error" }, ({ error }) => `Error: ${error.message}`)
     .with({ type: "disconnect" }, () => "Disconnected")
-    .with({ type: "disconnected" }, () => "Disconnected")
     .exhaustive();
 }
