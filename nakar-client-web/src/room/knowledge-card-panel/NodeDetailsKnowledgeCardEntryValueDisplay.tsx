@@ -16,9 +16,9 @@ export function NodeDetailsKnowledgeCardEntryValueDisplay(props: {
             text={props.node.title}
             render={(t) => <span>{t}</span>}
           ></ShortendText>
-          <i className={"bi bi-arrow-left ms-1"}></i>
+          <i className={"bi bi-arrow-left ms-1 me-1"}></i>
           <span>{props.entry.title}</span>
-          <i className={"bi bi-arrow-left me-1"}></i>
+          <i className={"bi bi-arrow-left me-1 ms-1"}></i>
         </>
       )}
       <ShortendText

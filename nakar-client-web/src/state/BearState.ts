@@ -147,7 +147,16 @@ export interface BearState {
     };
     panels: {
       left: "scenarios" | "query" | "notes" | "search" | null;
-      right: "histogram" | "inspector" | "visualization" | null;
+      right:
+        | "histogram"
+        | "inspector"
+        | "visualization"
+        | "knowledgeCard"
+        | null;
+      knowledgeCard: {
+        show: () => void;
+        hide: () => void;
+      };
       inspector: {
         show: () => void;
         hide: () => void;
@@ -156,8 +165,6 @@ export interface BearState {
         setElements: (i: string[]) => void;
         appendElement: (i: string) => void;
         deselectElements: () => void;
-        tab: "knowledgeCard" | "inspector";
-        setTab: (newTab: "knowledgeCard" | "inspector") => void;
       };
       histogram: {
         show: () => void;

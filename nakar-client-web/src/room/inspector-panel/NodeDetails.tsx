@@ -13,13 +13,9 @@ import { PropertyEntry } from "./PropertiesDisplay.tsx";
 import { useIsLoggedIn } from "../../state/useIsLoggedIn.ts";
 import { ParameterizedScenarioGroupEntry } from "./ParameterizedScenarioGroupEntry.tsx";
 import { Collapsable } from "../../shared/elements/Collapsable.tsx";
-import { NodeDetailsTabs } from "./NodeDetailsTabs.tsx";
-import { NodeDetailsKnowledgeCard } from "./NodeDetailsKnowledgeCard.tsx";
-import { useBearStore } from "../../state/useBearStore.ts";
 
 export function NodeDetails(props: { node: NodeDto }) {
   const roomContext = useCanvasContext();
-  const tab = useBearStore((s) => s.room.panels.inspector.tab);
   const properties: PropertyEntry[] = Object.entries(
     props.node.properties satisfies Record<string, unknown>,
   ).map(([key, value]) => ({
@@ -30,193 +26,183 @@ export function NodeDetails(props: { node: NodeDto }) {
 
   return (
     <Stack>
-      <NodeDetailsTabs />
-      {tab === "knowledgeCard" && (
-        <NodeDetailsKnowledgeCard node={props.node}></NodeDetailsKnowledgeCard>
-      )}
-      {tab === "inspector" && (
-        <DetailPane
-          actions={nodeActions.map((a) =>
-            a.detailPaneAction(() => ({
-              nodes: [props.node],
-              roomContext: roomContext,
-              isLoggedIn: isLoggedIn,
-            })),
-          )}
-          subActions={
-            <>
-              {props.node.parameterizedScenarios.length > 0 && (
-                <Collapsable
-                  title={<span className={"small fw-bold"}>Scenarios</span>}
-                  className={"border-bottom"}
-                >
-                  {props.node.parameterizedScenarios.map(
-                    (scenarioGroup: NodeParameterizedScenarioGroupDto) => (
-                      <ParameterizedScenarioGroupEntry
-                        scenarioGroup={scenarioGroup}
-                        nodes={[props.node]}
-                        key={scenarioGroup.id}
-                        className={"pt-2"}
-                      ></ParameterizedScenarioGroupEntry>
-                    ),
-                  )}
-                </Collapsable>
-              )}
-            </>
-          }
-          otherProperties={[
-            {
-              slug: "ID",
-              value: props.node.id,
-            },
-            {
-              slug: "Native ID",
-              value: props.node.nativeId,
-            },
-            {
-              slug: "Labels",
-              value: props.node.labels,
-            },
-            {
-              slug: "Native Labels",
-              value: props.node.nativeLabels,
-            },
-            {
-              slug: "Source",
-              value: props.node.sourceTitle,
-            },
-            {
-              slug: "Source ID",
-              value: props.node.sourceId,
-            },
-            {
-              slug: "Names in Query",
-              value: props.node.namesInQuery,
-            },
-            {
-              slug: "Degree",
-              value: props.node.degree,
-            },
-            {
-              slug: "Incoming Degree",
-              value: props.node.inDegree,
-            },
-            {
-              slug: "Outgoing Degree",
-              value: props.node.outDegree,
-            },
-            {
-              slug: "Cluster Size",
-              value: props.node.clusterSize,
-            },
-            {
-              slug: "Is Cluster?",
-              value: props.node.isCluster,
-            },
-            {
-              slug: "Creation Reason",
-              value: props.node.creationReason,
-            },
-            {
-              slug: "URL",
-              value: props.node.url,
-            },
-            {
-              slug: "Cover Image URL",
-              value: props.node.coverImageUrl,
-            },
-          ]}
-          properties={properties}
-          title={props.node.title}
-          subTitleElements={
-            <Stack
-              direction={"horizontal"}
-              className={"p-2 flex-wrap flex-shrink-0 flex-grow-0"}
-              gap={1}
-            >
-              {props.node.labels.map((label: string) => {
-                return (
-                  <Label
-                    key={label}
-                    label={label}
-                    showAmount={false}
-                    showSources={true}
-                  ></Label>
-                );
-              })}
-            </Stack>
-          }
-          elementId={props.node.id}
-        >
-          <DynamicList
-            data={props.node.incomingEdges}
-            filter={(exp, e) =>
-              e.type.toLowerCase().includes(exp.toLowerCase())
-            }
-            entityNamePlural={"Incoming Edges"}
-            className={"border-bottom"}
-            collapsed={true}
-            render={(list) => (
-              <>
-                {list.map((entry) => (
-                  <ValueDisplay
-                    key={entry.type}
-                    value={entry.count}
-                    label={entry.type}
-                    percentage={entry.percentage}
-                  ></ValueDisplay>
-                ))}
-              </>
+      <DetailPane
+        actions={nodeActions.map((a) =>
+          a.detailPaneAction(() => ({
+            nodes: [props.node],
+            roomContext: roomContext,
+            isLoggedIn: isLoggedIn,
+          })),
+        )}
+        subActions={
+          <>
+            {props.node.parameterizedScenarios.length > 0 && (
+              <Collapsable
+                title={<span className={"small fw-bold"}>Scenarios</span>}
+                className={"border-bottom"}
+              >
+                {props.node.parameterizedScenarios.map(
+                  (scenarioGroup: NodeParameterizedScenarioGroupDto) => (
+                    <ParameterizedScenarioGroupEntry
+                      scenarioGroup={scenarioGroup}
+                      nodes={[props.node]}
+                      key={scenarioGroup.id}
+                      className={"pt-2"}
+                    ></ParameterizedScenarioGroupEntry>
+                  ),
+                )}
+              </Collapsable>
             )}
-          ></DynamicList>
-          <DynamicList
-            data={props.node.outgoingEdges}
-            filter={(exp, e) =>
-              e.type.toLowerCase().includes(exp.toLowerCase())
-            }
-            entityNamePlural={"Outgoing Edges"}
-            className={"border-bottom"}
-            collapsed={true}
-            render={(list) => (
-              <>
-                {list.map((entry) => (
-                  <ValueDisplay
-                    key={entry.type}
-                    value={entry.count}
-                    label={entry.type}
-                    percentage={entry.percentage}
-                  ></ValueDisplay>
-                ))}
-              </>
-            )}
-          ></DynamicList>
-
-          <Stack className={"border-bottom"} gap={0}>
-            <DynamicList
-              data={props.node.notes}
-              collapsed={true}
-              render={(notes) => (
-                <Stack>
-                  <ActionNavbarButton
-                    action={AddNoteAction.shared}
-                    params={{
-                      nodes: [props.node],
-                      roomContext: roomContext,
-                      isLoggedIn,
-                    }}
-                  ></ActionNavbarButton>
-                  <Stack gap={1} className={"ps-1 pe-1 pb-1"}>
-                    {notes.map((note) => (
-                      <NoteDisplay note={note} key={note.id}></NoteDisplay>
-                    ))}
-                  </Stack>
-                </Stack>
-              )}
-              entityNamePlural={"Notes"}
-            ></DynamicList>
+          </>
+        }
+        otherProperties={[
+          {
+            slug: "ID",
+            value: props.node.id,
+          },
+          {
+            slug: "Native ID",
+            value: props.node.nativeId,
+          },
+          {
+            slug: "Labels",
+            value: props.node.labels,
+          },
+          {
+            slug: "Native Labels",
+            value: props.node.nativeLabels,
+          },
+          {
+            slug: "Source",
+            value: props.node.sourceTitle,
+          },
+          {
+            slug: "Source ID",
+            value: props.node.sourceId,
+          },
+          {
+            slug: "Names in Query",
+            value: props.node.namesInQuery,
+          },
+          {
+            slug: "Degree",
+            value: props.node.degree,
+          },
+          {
+            slug: "Incoming Degree",
+            value: props.node.inDegree,
+          },
+          {
+            slug: "Outgoing Degree",
+            value: props.node.outDegree,
+          },
+          {
+            slug: "Cluster Size",
+            value: props.node.clusterSize,
+          },
+          {
+            slug: "Is Cluster?",
+            value: props.node.isCluster,
+          },
+          {
+            slug: "Creation Reason",
+            value: props.node.creationReason,
+          },
+          {
+            slug: "URL",
+            value: props.node.url,
+          },
+          {
+            slug: "Cover Image URL",
+            value: props.node.coverImageUrl,
+          },
+        ]}
+        properties={properties}
+        title={props.node.title}
+        subTitleElements={
+          <Stack
+            direction={"horizontal"}
+            className={"p-2 flex-wrap flex-shrink-0 flex-grow-0"}
+            gap={1}
+          >
+            {props.node.labels.map((label: string) => {
+              return (
+                <Label
+                  key={label}
+                  label={label}
+                  showAmount={false}
+                  showSources={true}
+                ></Label>
+              );
+            })}
           </Stack>
-        </DetailPane>
-      )}
+        }
+        elementId={props.node.id}
+      >
+        <DynamicList
+          data={props.node.incomingEdges}
+          filter={(exp, e) => e.type.toLowerCase().includes(exp.toLowerCase())}
+          entityNamePlural={"Incoming Edges"}
+          className={"border-bottom"}
+          collapsed={true}
+          render={(list) => (
+            <>
+              {list.map((entry) => (
+                <ValueDisplay
+                  key={entry.type}
+                  value={entry.count}
+                  label={entry.type}
+                  percentage={entry.percentage}
+                ></ValueDisplay>
+              ))}
+            </>
+          )}
+        ></DynamicList>
+        <DynamicList
+          data={props.node.outgoingEdges}
+          filter={(exp, e) => e.type.toLowerCase().includes(exp.toLowerCase())}
+          entityNamePlural={"Outgoing Edges"}
+          className={"border-bottom"}
+          collapsed={true}
+          render={(list) => (
+            <>
+              {list.map((entry) => (
+                <ValueDisplay
+                  key={entry.type}
+                  value={entry.count}
+                  label={entry.type}
+                  percentage={entry.percentage}
+                ></ValueDisplay>
+              ))}
+            </>
+          )}
+        ></DynamicList>
+
+        <Stack className={"border-bottom"} gap={0}>
+          <DynamicList
+            data={props.node.notes}
+            collapsed={true}
+            render={(notes) => (
+              <Stack>
+                <ActionNavbarButton
+                  action={AddNoteAction.shared}
+                  params={{
+                    nodes: [props.node],
+                    roomContext: roomContext,
+                    isLoggedIn,
+                  }}
+                ></ActionNavbarButton>
+                <Stack gap={1} className={"ps-1 pe-1 pb-1"}>
+                  {notes.map((note) => (
+                    <NoteDisplay note={note} key={note.id}></NoteDisplay>
+                  ))}
+                </Stack>
+              </Stack>
+            )}
+            entityNamePlural={"Notes"}
+          ></DynamicList>
+        </Stack>
+      </DetailPane>
     </Stack>
   );
 }

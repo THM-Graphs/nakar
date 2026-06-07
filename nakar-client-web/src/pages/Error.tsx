@@ -1,11 +1,10 @@
 import { Stack } from "react-bootstrap";
-import { useNavigate, useRouteError } from "react-router";
+import { useRouteError } from "react-router";
 import { handleError } from "../shared/error/handleError.ts";
 import { usePageTitle } from "../routing/usePageTitle.ts";
 import { BackToStartButton } from "../shared/BackToStartButton.tsx";
 
 export function ErrorComp() {
-  const navigate = useNavigate();
   const error = useRouteError();
 
   usePageTitle("Error");

@@ -53,6 +53,8 @@ import { CanvasToolbar } from "../room/canvas/CanvasToolbar.tsx";
 import { CanvasShortcuts } from "../room/shortcuts/CanvasShortcuts.tsx";
 import qs, { ParsedQs } from "qs";
 import { z } from "zod";
+import { KnowledgeCardPanelButton } from "../room/knowledge-card-panel/KnowledgeCardPanelButton.tsx";
+import { KnowledgeCardPanel } from "../room/knowledge-card-panel/KnowledgeCardPanel.tsx";
 
 const CanvasContext: Context<CanvasContextData | null> =
   createContext<CanvasContextData | null>(null);
@@ -358,6 +360,9 @@ export function Canvas() {
                 {rightPanel === "inspector" && (
                   <InspectorPanel></InspectorPanel>
                 )}
+                {rightPanel === "knowledgeCard" && (
+                  <KnowledgeCardPanel></KnowledgeCardPanel>
+                )}
                 {rightPanel === "histogram" && (
                   <HistogramPanel></HistogramPanel>
                 )}
@@ -373,6 +378,7 @@ export function Canvas() {
               }
             >
               <InspectorPanelButton></InspectorPanelButton>
+              <KnowledgeCardPanelButton></KnowledgeCardPanelButton>
               <HistogramPanelButton></HistogramPanelButton>
               <VisualizationPanelButton></VisualizationPanelButton>
             </Stack>
