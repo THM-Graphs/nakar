@@ -1045,6 +1045,7 @@ export class DatabaseService {
           property: newDocument.property,
           linkTemplate: newDocument.linkTemplate,
           database: databaseConnection.documentId,
+          urlEncode: newDocument.urlEncode,
         };
 
       const updatedDocument: Result<'api::node-configuration.node-configuration'> | null =

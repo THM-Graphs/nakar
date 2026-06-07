@@ -29,6 +29,7 @@ export type NodeConfigurationDto = {
     label: string;
     property: string;
     linkTemplate: string;
+    urlEncode: boolean;
 };
 
 export type DatabaseConnectionDto = {
@@ -231,6 +232,7 @@ export type UpdateNodeConfigurationRequestBodyDto = {
     label: string;
     property: string;
     linkTemplate: string;
+    urlEncode: boolean;
 };
 
 export type UpdateDatabaseConnectionRequestBodyDto = {

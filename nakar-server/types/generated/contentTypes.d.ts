@@ -634,6 +634,7 @@ export interface ApiNodeConfigurationNodeConfiguration
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    urlEncode: Schema.Attribute.Boolean;
   };
 }
 

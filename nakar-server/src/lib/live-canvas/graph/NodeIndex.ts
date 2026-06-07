@@ -292,7 +292,10 @@ export class NodeIndex {
       const template: HandlebarsTemplateDelegate = Handlebars.compile(
         nodeConfig.linkTemplate,
       );
-      const link: string = template({ value: encodeURIComponent(value) });
+      const link: string = template({
+        value:
+          (nodeConfig.urlEncode ?? false) ? encodeURIComponent(value) : value,
+      });
 
       try {
         return new URL(link);
@@ -332,7 +335,10 @@ export class NodeIndex {
       const template: HandlebarsTemplateDelegate = Handlebars.compile(
         nodeConfig.linkTemplate,
       );
-      const link: string = template({ value: encodeURIComponent(value) });
+      const link: string = template({
+        value:
+          (nodeConfig.urlEncode ?? false) ? encodeURIComponent(value) : value,
+      });
 
       try {
         return new URL(link);

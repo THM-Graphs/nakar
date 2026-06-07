@@ -104,6 +104,7 @@ export class SchemaFactoryService {
             label: nodeConfiguration.label ?? '',
             property: nodeConfiguration.property ?? '',
             linkTemplate: nodeConfiguration.linkTemplate ?? '',
+            urlEncode: nodeConfiguration.urlEncode ?? false,
           }),
       ),
     };

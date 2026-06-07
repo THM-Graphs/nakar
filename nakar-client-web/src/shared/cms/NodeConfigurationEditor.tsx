@@ -16,13 +16,14 @@ export function NodeConfigurationEditor(props: {
   onChange: (newEntry: UpdateNodeConfigurationRequestBodyDto) => void;
   onDelete?: MouseEventHandler<HTMLButtonElement>;
 }) {
+  const key: string = props.value.id;
   return (
     <Card className={"p-3 gap-3 flex-grow-1"}>
       <Stack direction={"horizontal"} gap={3}>
         <Stack className={"flex-grow-1"} gap={3}>
           <Row>
             <Col>
-              <Form.Group className="" controlId="type">
+              <Form.Group className="" controlId={`type_${key}`}>
                 <Form.Label>Type</Form.Label>
                 <Form.Select
                   value={props.value.type}
@@ -52,7 +53,7 @@ export function NodeConfigurationEditor(props: {
               </Form.Group>
             </Col>
             <Col>
-              <Form.Group className="" controlId="label">
+              <Form.Group className="" controlId={`label_${key}`}>
                 <Form.Label>
                   Label{" "}
                   <OverlayTrigger
@@ -80,7 +81,7 @@ export function NodeConfigurationEditor(props: {
           </Row>
           <Row>
             <Col>
-              <Form.Group className="" controlId="property">
+              <Form.Group className="" controlId={`property_${key}`}>
                 <Form.Label>
                   Property{" "}
                   <OverlayTrigger
@@ -106,7 +107,7 @@ export function NodeConfigurationEditor(props: {
               </Form.Group>
             </Col>
             <Col>
-              <Form.Group className="" controlId="linkTemplate">
+              <Form.Group className="" controlId={`linkTemplate_${key}`}>
                 <Form.Label>
                   Link Template{" "}
                   <OverlayTrigger
@@ -136,9 +137,20 @@ export function NodeConfigurationEditor(props: {
                   <code className={"user-select-text code"}>
                     {"{{{value}}}"}
                   </code>{" "}
-                  to insert the source property’s value. The value will be
-                  URL-encoded automatically.
+                  to insert the source property’s value.
                 </Form.Text>
+                <Form.Check
+                  type="switch"
+                  id={`urlencode_${key}`}
+                  label={<span className={"small"}>URL Encode</span>}
+                  checked={props.value.urlEncode}
+                  onChange={(e) => {
+                    props.onChange({
+                      ...props.value,
+                      urlEncode: e.target.checked,
+                    });
+                  }}
+                />
               </Form.Group>
             </Col>
           </Row>

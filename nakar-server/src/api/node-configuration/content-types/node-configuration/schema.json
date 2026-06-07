@@ -32,6 +32,10 @@
         "link",
         "image"
       ]
+    },
+    "urlEncode": {
+      "type": "boolean",
+      "required": false
     }
   }
 }

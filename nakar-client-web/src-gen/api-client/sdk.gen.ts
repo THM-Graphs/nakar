@@ -232,6 +232,9 @@ export const actionControllerUndo = <ThrowOnError extends boolean = false>(optio
 
 export const actionControllerRedo = <ThrowOnError extends boolean = false>(options: Options<ActionControllerRedoData, ThrowOnError>) => (options.client ?? client).post<ActionControllerRedoResponses, unknown, ThrowOnError>({ url: '/api/room/{roomId}/canvas/{canvasId}/action/redo', ...options });
 
+/**
+ * The user must be logged in.
+ */
 export const actionControllerRunQuery = <ThrowOnError extends boolean = false>(options: Options<ActionControllerRunQueryData, ThrowOnError>) => (options.client ?? client).post<ActionControllerRunQueryResponses, unknown, ThrowOnError>({
     url: '/api/room/{roomId}/canvas/{canvasId}/action/run-query',
     ...options,
