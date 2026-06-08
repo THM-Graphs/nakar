@@ -6,6 +6,7 @@ import { D3Renderer } from "../d3/D3Renderer.ts";
 import { CanvasContextMenu } from "./CanvasContextMenu.tsx";
 import { useTheme } from "../../shared/theme/useTheme.ts";
 import { ExpandNodePreviewAction } from "../actions/ExpandNodePreviewAction.ts";
+import { ExpandNodeAction } from "../actions/ExpandNodeAction.ts";
 import { useIsLoggedIn } from "../../state/useIsLoggedIn.ts";
 import { useCanvasContext } from "../../pages/Canvas.tsx";
 import { NodeDto } from "api-client";
@@ -103,11 +104,19 @@ export function GraphRendererD3() {
         if (node == null) {
           return;
         }
-        ExpandNodePreviewAction.shared.runAsync({
-          isLoggedIn: isLoggedIn,
-          nodes: [node],
-          roomContext: canvasContext,
-        });
+        if (node.isCluster) {
+          ExpandNodeAction.shared.runAsync({
+            isLoggedIn: isLoggedIn,
+            nodes: [node],
+            roomContext: canvasContext,
+          });
+        } else {
+          ExpandNodePreviewAction.shared.runAsync({
+            isLoggedIn: isLoggedIn,
+            nodes: [node],
+            roomContext: canvasContext,
+          });
+        }
       }),
       _graphRenderer.onDisplayLinkData.subscribe((l) => {
         inspector.setElement(l.id);
