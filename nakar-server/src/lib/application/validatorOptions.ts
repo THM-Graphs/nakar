@@ -4,4 +4,5 @@ export const validatorOptions: ValidatorOptions = {
   forbidNonWhitelisted: true,
   forbidUnknownValues: true,
   stopAtFirstError: true,
+  whitelist: true,
 };
