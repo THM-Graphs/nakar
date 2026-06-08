@@ -1308,10 +1308,23 @@ export class LiveCanvas {
   public loadNode(params: { nativeNodeId: string; databaseId: string }): void {
     this._queue.addTask(
       new TaskQueueTask('Loading node', async (): Promise<void> => {
-        const dbDocument: Result<'api::database-connection.database-connection'> =
+        const databaseConnection: Result<'api::database-connection.database-connection'> =
           await this._database.getDatabase(params.databaseId);
 
-        const dbInfo: Neo4jDatabaseInfo = Neo4jDatabaseInfo.parse(dbDocument);
+        if (
+          !(await databaseBelongsToCanvas(
+            databaseConnection,
+            await this._database.getCanvas(this.canvasId),
+            this._database,
+          ))
+        ) {
+          throw new NotFoundException(
+            `Database ${databaseConnection.documentId} not found.`,
+          );
+        }
+
+        const dbInfo: Neo4jDatabaseInfo =
+          Neo4jDatabaseInfo.parse(databaseConnection);
 
         const result: Neo4jGraphElements = await this._neo4j.executeQuery(
           dbInfo,
