@@ -26,6 +26,7 @@ import { GetDatabaseStatsResponseBodyDto } from '../canvas-database-connection/d
 import { match, P } from 'ts-pattern';
 import { Neo4jError } from 'neo4j-driver';
 import { DatabaseService } from '../../../database/DatabaseService';
+import { databaseBelongsToProject } from '../../../policies/databaseBelongsToProject';
 
 @Controller('/project/:projectId/database-connection')
 @ApiParam({
@@ -68,12 +69,29 @@ export class DatabaseConnectionController {
     @Body() body: TestDatabaseConnectionRequestBodyDto,
   ): Promise<TestDatabaseConnectionResponseBodyDto> {
     try {
+      const project: Result<'api::project.project'> =
+        await this._database.getProject(projectId);
+
       const existingDatabase: Result<'api::database-connection.database-connection'> | null =
         body.id != null
           ? await strapi
               .documents('api::database-connection.database-connection')
               .findOne({ documentId: body.id })
           : null;
+
+      if (
+        existingDatabase &&
+        !(await databaseBelongsToProject(
+          existingDatabase,
+          project,
+          this._database,
+        ))
+      ) {
+        return new TestDatabaseConnectionResponseBodyDto({
+          success: false,
+          message: `Database not found.`,
+        });
+      }
 
       const credentials: Neo4jDatabaseInfo = new Neo4jDatabaseInfo({
         url: body.connectionUrl,

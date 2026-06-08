@@ -4,11 +4,14 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Result } from '@strapi/types/dist/modules/documents/result';
 import { Request } from 'express';
+import { databaseBelongsToProject } from '../../policies/databaseBelongsToProject';
+import { DatabaseService } from '../../database/DatabaseService';
 
 @Injectable()
 export class DatabaseConnectionBelongsToProject implements CanActivate {
+  constructor(private readonly _databaseService: DatabaseService) {}
+
   public async canActivate(context: ExecutionContext): Promise<boolean> {
     const req: Request = context.switchToHttp().getRequest();
 
@@ -21,19 +24,10 @@ export class DatabaseConnectionBelongsToProject implements CanActivate {
       throw new NotFoundException(`No project id provided.`);
     }
 
-    const databaseConnection: Result<
-      'api::database-connection.database-connection',
-      { populate: { project: { populate: [] } } }
-    > | null = await strapi
-      .documents('api::database-connection.database-connection')
-      .findOne({
-        documentId: databaseConnectionId,
-        populate: { project: { populate: [] } },
-      });
-
-    const isOkay: boolean =
-      databaseConnection?.project?.documentId === projectId;
-
-    return isOkay;
+    return await databaseBelongsToProject(
+      await this._databaseService.getDatabase(databaseConnectionId),
+      await this._databaseService.getProject(projectId),
+      this._databaseService,
+    );
   }
 }
