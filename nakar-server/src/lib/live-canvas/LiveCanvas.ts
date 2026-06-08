@@ -60,6 +60,7 @@ import { LiveCanvasViewSettingsDefaultValues } from './view-settings/LiveCanvasV
 import { PhysicalGraph } from '../../packages/physics/physical-graph/PhysicalGraph';
 import { PhysicalNode } from '../../packages/physics/physical-graph/PhysicalNode';
 import { CircleLayoutEngine } from '../../packages/physics/circle-layout-algorithms/CircleLayoutEngine';
+import { NotFoundException } from '@nestjs/common';
 
 export class LiveCanvas {
   private readonly _logger: Logger = createChildLogger(this);
@@ -328,8 +329,22 @@ export class LiveCanvas {
   }): void {
     this._queue.addTask(
       new TaskQueueTask('Loading scenario', async (): Promise<void> => {
-        const scenario: Result<'api::scenario.scenario'> | null =
+        const scenario: Result<'api::scenario.scenario'> =
           await this._database.getScenario(params.scenarioId);
+
+        // Check of scenario belongs to this canvas
+        const project: Result<'api::project.project'> =
+          await this._database.getProjectOfCanvas(
+            await this._database.getCanvas(this.canvasId),
+          );
+        const projectOfScenario: Result<'api::project.project'> =
+          await this._database.getProjectOfScenario(scenario);
+
+        if (project.documentId !== projectOfScenario.documentId) {
+          throw new NotFoundException(
+            `Scenario ${params.scenarioId} not found.`,
+          );
+        }
 
         const queries: Result<'api::query.query'>[] =
           await this._database.getQueriesOfScenario(scenario);

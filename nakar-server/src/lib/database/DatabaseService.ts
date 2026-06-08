@@ -752,6 +752,29 @@ export class DatabaseService {
     return project;
   }
 
+  public async getProjectOfScenario(
+    scenario: Result<'api::scenario.scenario'>,
+  ): Promise<Result<'api::project.project'>> {
+    const populatedScenario: Result<
+      'api::scenario.scenario',
+      { populate: { group: { populate: ['project'] } } }
+    > | null = await strapi.documents('api::scenario.scenario').findOne({
+      documentId: scenario.documentId,
+      status: 'published',
+      populate: { group: { populate: ['project'] } },
+    });
+
+    if (populatedScenario == null) {
+      throw new Error(`Scenario ${scenario.documentId} not found.`);
+    }
+    const project: Result<'api::project.project'> | null =
+      populatedScenario.group?.project ?? null;
+    if (project == null) {
+      throw new Error(`Project of scenario ${scenario.documentId} not found.`);
+    }
+    return project;
+  }
+
   public async getRoomOfCanvas(
     canvas: Result<'api::canvas.canvas'>,
   ): Promise<Result<'api::room.room'>> {
