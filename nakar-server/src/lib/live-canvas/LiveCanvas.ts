@@ -966,6 +966,18 @@ export class LiveCanvas {
         const database: Result<'api::database-connection.database-connection'> =
           await this._database.getDatabase(params.databaseId);
 
+        const project: Result<'api::project.project'> =
+          await this._database.getProjectOfCanvas(
+            await this._database.getCanvas(this.canvasId),
+          );
+        const projectOfDatabase: Result<'api::database-connection.database-connection'> =
+          await this._database.getProjectOfDatabase(database);
+        if (project.documentId !== projectOfDatabase.documentId) {
+          throw new NotFoundException(
+            `Database ${params.databaseId} not found.`,
+          );
+        }
+
         const credentials: Neo4jDatabaseInfo =
           Neo4jDatabaseInfo.parse(database);
 
