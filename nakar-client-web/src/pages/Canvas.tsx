@@ -52,9 +52,12 @@ import { usePageTitle } from "../routing/usePageTitle.ts";
 import { CanvasToolbar } from "../room/canvas/CanvasToolbar.tsx";
 import { CanvasShortcuts } from "../room/shortcuts/CanvasShortcuts.tsx";
 import qs, { ParsedQs } from "qs";
-import { z } from "zod";
 import { KnowledgeCardPanelButton } from "../room/knowledge-card-panel/KnowledgeCardPanelButton.tsx";
 import { KnowledgeCardPanel } from "../room/knowledge-card-panel/KnowledgeCardPanel.tsx";
+import {
+  CanvasSearchData,
+  canvasSearchDataSchema,
+} from "../room/canvas/CanvasSearchData.ts";
 
 const CanvasContext: Context<CanvasContextData | null> =
   createContext<CanvasContextData | null>(null);
@@ -161,16 +164,9 @@ export function Canvas() {
       }
 
       const rawSearchData: ParsedQs = qs.parse(searchParams.toString());
-      const searchDataSchema = z.object({
-        scenario: z
-          .object({
-            id: z.string(),
-            args: z.record(z.string(), z.string()).optional(),
-          })
-          .optional(),
-      });
-      const searchData: z.infer<typeof searchDataSchema> =
-        searchDataSchema.parse(rawSearchData);
+
+      const searchData: CanvasSearchData =
+        canvasSearchDataSchema.parse(rawSearchData);
 
       if (searchData.scenario == null) {
         return;

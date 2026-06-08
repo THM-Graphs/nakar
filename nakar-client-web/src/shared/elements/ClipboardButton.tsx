@@ -9,6 +9,8 @@ export function ClipboardButton(props: {
   text: string;
   className?: string;
   size?: "sm";
+  title?: string;
+  tooltip?: string;
 }) {
   const [copied, setCopied] = useState(false);
   const [isClipboardEnabled, setClipboard] = useClipboard();
@@ -20,7 +22,9 @@ export function ClipboardButton(props: {
     <OverlayTrigger
       placement="bottom"
       delay={{ show: 500, hide: 0 }}
-      overlay={<Tooltip>{copied ? "Copied" : "Copy"}</Tooltip>}
+      overlay={
+        <Tooltip>{props.tooltip ?? (copied ? "Copied" : "Copy")}</Tooltip>
+      }
       onToggle={(shown) => {
         if (!shown) {
           setCopied(false);
@@ -31,8 +35,8 @@ export function ClipboardButton(props: {
         className={clsx(props.className)}
         icon={copied ? "check" : "copy"}
         disabled={!isClipboardEnabled}
-        tooltip={"Copy"}
         size={props.size}
+        title={props.title}
         onClick={() => {
           (async () => {
             if (!isClipboardEnabled) {

@@ -6,7 +6,13 @@ import { Panel } from "../../shared/elements/Panel.tsx";
 import { NavbarButton } from "../../shared/elements/NavbarButton.tsx";
 import { ScenarioIcon } from "../scenarios-panel/ScenarioIcon.tsx";
 import { ArgumentDisplay } from "./ArgumentDisplay.tsx";
-import { actionControllerLoadScenario } from "api-client";
+import { actionControllerLoadScenario, ScenarioArgumentDto } from "api-client";
+import { Router } from "../../routing/Router.ts";
+import { CanvasSearchData } from "../canvas/CanvasSearchData.ts";
+import qs from "qs";
+import { ClipboardButton } from "../../shared/elements/ClipboardButton.tsx";
+import { Link } from "react-router";
+import { Collapsable } from "../../shared/elements/Collapsable.tsx";
 
 export function RunScenarioModal() {
   const roomContext = useCanvasContext();
@@ -30,6 +36,40 @@ export function RunScenarioModal() {
   const handleClose = () => {
     close();
   };
+
+  const shareUrl: URL | null = ((): URL | null => {
+    if (scenario == null) {
+      return null;
+    }
+    try {
+      const canvasSearchData: CanvasSearchData = {
+        scenario: {
+          id: scenario.id,
+          args: scenarioArguments.reduce(
+            (
+              akku: Record<string, string>,
+              next: ScenarioArgumentDto,
+            ): Record<string, string> => ({
+              ...akku,
+              [next.identifier]: next.value,
+            }),
+            {},
+          ),
+        },
+      };
+      const url: URL = new URL(
+        window.location.origin +
+          Router.getCanvasPath(
+            roomContext.initialRoomData.id,
+            roomContext.initialCanvasData.id,
+          ),
+      );
+      url.search = qs.stringify(canvasSearchData);
+      return url;
+    } catch {
+      return null;
+    }
+  })();
 
   const handleRun = async () => {
     if (scenario == null) {
@@ -91,6 +131,29 @@ export function RunScenarioModal() {
                   autoFocus={index === 0}
                 ></ArgumentDisplay>
               ))}
+              {shareUrl != null && (
+                <Collapsable
+                  title={
+                    <span className={"small text-muted"}>Share Run URL</span>
+                  }
+                  collapsed={true}
+                >
+                  <Stack className={"ps-3 pe-3"}>
+                    <Stack direction={"horizontal"}>
+                      <span className={"small text-muted ellipsis"}>
+                        <Link to={shareUrl}>{shareUrl.toString()}</Link>
+                      </span>
+                      <ClipboardButton
+                        text={shareUrl.toString()}
+                      ></ClipboardButton>
+                    </Stack>
+                    <span className={"text-muted small"}>
+                      Use this url to run this scenario using the given
+                      arguments in this canvas.
+                    </span>
+                  </Stack>
+                </Collapsable>
+              )}
             </Stack>
             <Stack
               direction={"horizontal"}
@@ -102,12 +165,14 @@ export function RunScenarioModal() {
                 onClick={handleClose}
                 className={"ps-1 pe-1 justify-content-center border-end"}
               ></NavbarButton>
-              <NavbarButton
-                onClick={handleRun}
-                className={"ps-1 pe-1 justify-content-center border-start"}
-                title={additive ? "Add Scenario" : "Run Scenario"}
-                icon={additive ? "plus-circle-fill" : "play-circle-fill"}
-              ></NavbarButton>
+              <Stack direction={"horizontal"}>
+                <NavbarButton
+                  onClick={handleRun}
+                  className={"ps-1 pe-1 justify-content-center border-start"}
+                  title={additive ? "Add Scenario" : "Run Scenario"}
+                  icon={additive ? "plus-circle-fill" : "play-circle-fill"}
+                ></NavbarButton>
+              </Stack>
             </Stack>
           </Panel>
         </>
