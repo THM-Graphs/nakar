@@ -75,7 +75,7 @@ export function DynamicList<T>(props: {
           )}
         </Stack>
       )}
-      {props.render(elements)}
+      {filteredElements.length > 0 && props.render(elements)}
       {filteredElements.length > previewLimit && !showAllElements && (
         <NavbarButton
           onClick={() => {
