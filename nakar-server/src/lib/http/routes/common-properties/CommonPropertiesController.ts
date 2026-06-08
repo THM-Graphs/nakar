@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Delete,
+  NotFoundException,
   Param,
   Post,
   Put,
@@ -15,6 +16,8 @@ import { SchemaFactoryService } from '../../../schema/SchemaFactoryService';
 import { CommonPropertyDto } from '../../../schema/dtos/CommonPropertyDto';
 import { CommonPropertyBelongsToProject } from '../../guards/CommonPropertyBelongsToProject';
 import { UpdateCommonPropertyRequestBodyDto } from './dto/UpdateCommonPropertyRequestBodyDto';
+import { DatabaseService } from '../../../database/DatabaseService';
+import { databaseBelongsToProject } from '../../../policies/databaseBelongsToProject';
 
 @Controller('/project/:projectId/common-property')
 @ApiParam({
@@ -24,7 +27,10 @@ import { UpdateCommonPropertyRequestBodyDto } from './dto/UpdateCommonPropertyRe
 })
 @UseGuards(UserCanAccessProject)
 export class CommonPropertiesController {
-  public constructor(private readonly _schemaFactory: SchemaFactoryService) {}
+  public constructor(
+    private readonly _schemaFactory: SchemaFactoryService,
+    private readonly _databaseService: DatabaseService,
+  ) {}
 
   @Post()
   @ApiResponse({ type: CommonPropertyDto })
@@ -56,9 +62,42 @@ export class CommonPropertiesController {
   @UseGuards(CommonPropertyBelongsToProject)
   public async updateCommonProperty(
     @Param('commonPropertyId') commonPropertyId: string,
+    @Param('projectId') projectId: string,
     @Body() body: UpdateCommonPropertyRequestBodyDto,
   ): Promise<void> {
-    // TODO: Check if database ids belong to project
+    const project: Result<'api::project.project'> =
+      await this._databaseService.getProject(projectId);
+    if (body.leftDatabaseId !== '') {
+      const leftDatabase: Result<'api::database-connection.database-connection'> =
+        await this._databaseService.getDatabase(body.leftDatabaseId);
+      if (
+        !(await databaseBelongsToProject(
+          leftDatabase,
+          project,
+          this._databaseService,
+        ))
+      ) {
+        throw new NotFoundException(
+          `Database ${leftDatabase.documentId} not found.`,
+        );
+      }
+    }
+    if (body.rightDatabaseId !== '') {
+      const rightDatabase: Result<'api::database-connection.database-connection'> =
+        await this._databaseService.getDatabase(body.rightDatabaseId);
+      if (
+        !(await databaseBelongsToProject(
+          rightDatabase,
+          project,
+          this._databaseService,
+        ))
+      ) {
+        throw new NotFoundException(
+          `Database ${rightDatabase.documentId} not found.`,
+        );
+      }
+    }
+
     await strapi.documents('api::common-property.common-property').update({
       documentId: commonPropertyId,
       status: 'published',
