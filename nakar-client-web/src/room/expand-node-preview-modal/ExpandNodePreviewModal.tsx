@@ -89,7 +89,7 @@ export function ExpandNodePreviewModal() {
             >
               <Spinner className={"text-muted"} size={"sm"}></Spinner>
               <span className={"text-muted small"}>
-                Loading connected nodes...
+                Loading connected nodes…
               </span>
             </Stack>
           )}

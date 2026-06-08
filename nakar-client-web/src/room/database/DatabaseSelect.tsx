@@ -28,7 +28,7 @@ export function DatabaseSelect(props: {
       }}
     >
       <option value={""} disabled={false}>
-        Select a database...
+        Select a database…
       </option>
       {referencedDatabases.map((referencedDatabase) => (
         <option value={referencedDatabase.id} key={referencedDatabase.id}>
