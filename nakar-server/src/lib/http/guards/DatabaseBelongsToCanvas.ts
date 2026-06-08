@@ -7,6 +7,7 @@ import {
 import { Result } from '@strapi/types/dist/modules/documents/result';
 import { Request } from 'express';
 import { DatabaseService } from '../../database/DatabaseService';
+import { databaseBelongsToCanvas } from '../../policies/databaseBelongsToCanvas';
 
 @Injectable()
 export class DatabaseBelongsToCanvas implements CanActivate {
@@ -29,14 +30,10 @@ export class DatabaseBelongsToCanvas implements CanActivate {
     const canvas: Result<'api::canvas.canvas'> =
       await this._databaseService.getCanvas(canvasId);
 
-    const projectOfDatabase: Result<'api::project.project'> =
-      await this._databaseService.getProjectOfDatabase(database);
-    const projectOfCanvas: Result<'api::project.project'> =
-      await this._databaseService.getProjectOfCanvas(canvas);
-
-    const isOkay: boolean =
-      projectOfDatabase.documentId === projectOfCanvas.documentId;
-
-    return isOkay;
+    return await databaseBelongsToCanvas(
+      database,
+      canvas,
+      this._databaseService,
+    );
   }
 }

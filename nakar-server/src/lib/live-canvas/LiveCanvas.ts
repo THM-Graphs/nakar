@@ -61,6 +61,8 @@ import { PhysicalGraph } from '../../packages/physics/physical-graph/PhysicalGra
 import { PhysicalNode } from '../../packages/physics/physical-graph/PhysicalNode';
 import { CircleLayoutEngine } from '../../packages/physics/circle-layout-algorithms/CircleLayoutEngine';
 import { NotFoundException } from '@nestjs/common';
+import { databaseBelongsToCanvas } from '../policies/databaseBelongsToCanvas';
+import { scenarioBelongsToCanvas } from '../policies/scenarioBelongsToCanvas';
 
 export class LiveCanvas {
   private readonly _logger: Logger = createChildLogger(this);
@@ -332,15 +334,13 @@ export class LiveCanvas {
         const scenario: Result<'api::scenario.scenario'> =
           await this._database.getScenario(params.scenarioId);
 
-        // Check of scenario belongs to this canvas
-        const project: Result<'api::project.project'> =
-          await this._database.getProjectOfCanvas(
+        if (
+          !(await scenarioBelongsToCanvas(
+            scenario,
             await this._database.getCanvas(this.canvasId),
-          );
-        const projectOfScenario: Result<'api::project.project'> =
-          await this._database.getProjectOfScenario(scenario);
-
-        if (project.documentId !== projectOfScenario.documentId) {
+            this._database,
+          ))
+        ) {
           throw new NotFoundException(
             `Scenario ${params.scenarioId} not found.`,
           );
@@ -966,15 +966,15 @@ export class LiveCanvas {
         const database: Result<'api::database-connection.database-connection'> =
           await this._database.getDatabase(params.databaseId);
 
-        const project: Result<'api::project.project'> =
-          await this._database.getProjectOfCanvas(
+        if (
+          !(await databaseBelongsToCanvas(
+            database,
             await this._database.getCanvas(this.canvasId),
-          );
-        const projectOfDatabase: Result<'api::database-connection.database-connection'> =
-          await this._database.getProjectOfDatabase(database);
-        if (project.documentId !== projectOfDatabase.documentId) {
+            this._database,
+          ))
+        ) {
           throw new NotFoundException(
-            `Database ${params.databaseId} not found.`,
+            `Database ${database.documentId} not found.`,
           );
         }
 
