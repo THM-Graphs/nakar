@@ -9,11 +9,11 @@ Source: https://github.com/neo4j-graph-examples/pole
 ### Run the database locally
 
 ```shell
-npm run build:dev
+npm run build:docker
 ```
 
 ```shell
-npm run start:dev
+npm run start:docker
 ```
 
 
