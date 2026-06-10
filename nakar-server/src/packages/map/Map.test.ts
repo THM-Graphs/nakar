@@ -194,7 +194,7 @@ void describe('SMap', (): void => {
         ['a', 1],
         ['b', 2],
       ]);
-      const asyncFlatMapped: string[] = await base.asyncFlatMap(
+      const asyncFlatMapped: string[] = await base.asyncToArray(
         async (key: string, value: number): Promise<string> => {
           await Promise.resolve();
           return `${key}-${value.toString()}`;

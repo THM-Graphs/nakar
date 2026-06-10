@@ -92,7 +92,7 @@ export class SMap<K extends string | number | symbol, V> extends Map<K, V> {
     return n;
   }
 
-  public async asyncFlatMap<T>(
+  public async asyncToArray<T>(
     mapper: (key: K, value: V) => Promise<T>,
   ): Promise<T[]> {
     const n: T[] = [];
