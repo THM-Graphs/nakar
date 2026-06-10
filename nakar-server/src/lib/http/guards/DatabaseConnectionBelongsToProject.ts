@@ -10,7 +10,7 @@ import { DatabaseService } from '../../database/DatabaseService';
 
 @Injectable()
 export class DatabaseConnectionBelongsToProject implements CanActivate {
-  constructor(private readonly _databaseService: DatabaseService) {}
+  public constructor(private readonly _databaseService: DatabaseService) {}
 
   public async canActivate(context: ExecutionContext): Promise<boolean> {
     const req: Request = context.switchToHttp().getRequest();
