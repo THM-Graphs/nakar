@@ -56,10 +56,14 @@ export function EditDatabaseConnection() {
   const loaderData: EditDatabaseConnectionLoaderData = useLoaderData();
   const [databaseConnection, setDatabaseConnection] =
     useState<UpdateDatabaseConnectionRequestBodyDto>({
-      ...loaderData.databaseConnection,
       username: null,
       password: null,
       credentialStoreConsent: false,
+      browserUrl: loaderData.databaseConnection.browserUrl,
+      connectionUrl: loaderData.databaseConnection.connectionUrl,
+      database: loaderData.databaseConnection.database,
+      nodeConfigurations: loaderData.databaseConnection.nodeConfigurations,
+      title: loaderData.databaseConnection.title,
     });
 
   return (
