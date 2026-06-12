@@ -12,10 +12,8 @@ import {
 import { Dropdown } from "react-bootstrap";
 import { useBearStore } from "../../state/useBearStore.ts";
 import { nodeActions } from "../actions/groups/nodeActions.ts";
-import { labelActions } from "../actions/groups/labelActions.ts";
 import { ActionDropdownItem } from "../actions/ActionDropdownItem.tsx";
 import { relationshipActions } from "../actions/groups/relationshipActions.ts";
-import { relationshipTypeActions } from "../actions/groups/relationshipTypeActions.ts";
 import {
   EdgeDto,
   NodeDto,
@@ -28,10 +26,7 @@ import {
   RunScenarioAction,
   RunScenarioActionParams,
 } from "../actions/RunScenarioAction.ts";
-import { LabelActionParams } from "../actions/LabelActionParams.ts";
-import { RelationshipTypeActionParams } from "../actions/RelationshipTypeActionParams.ts";
 import { calculateIntersectionOfScenarioGroups } from "../scenarios-panel/calculateIntersectionOfScenarioGroups.ts";
-import { getRelationshipTypesFromEdges } from "../helper-functions/getRelationshipTypesFromEdges.ts";
 
 export function CanvasContextMenu() {
   const roomContext = useCanvasContext();
@@ -162,12 +157,6 @@ export function CanvasContextMenu() {
         selectedNodes.map((n) => n.parameterizedScenarios),
       );
     }, [selectedNodes]);
-  const selectedRelationshipTypes: string[] = useMemo(
-    () => getRelationshipTypesFromEdges(selectedEdges ?? []),
-    [selectedEdges],
-  );
-  const selectedNodeLabels: string[] =
-    selectedNodes?.length === 1 ? selectedNodes[0].labels : [];
 
   const CustomToggle = forwardRef(
     (
@@ -205,26 +194,6 @@ export function CanvasContextMenu() {
               }}
             ></ActionDropdownItem>
           ))}
-        {selectedNodeLabels.map((label) => (
-          <Fragment key={label}>
-            <Dropdown.Divider></Dropdown.Divider>
-            <Dropdown.ItemText className={"small text-muted"}>
-              {label}
-            </Dropdown.ItemText>
-            {labelActions.map((action) => (
-              <ActionDropdownItem
-                key={action.slug()}
-                action={action}
-                params={
-                  {
-                    labels: [label],
-                    roomContext: roomContext,
-                  } satisfies LabelActionParams
-                }
-              ></ActionDropdownItem>
-            ))}
-          </Fragment>
-        ))}
         {selectedEdges &&
           relationshipActions.map((action) => (
             <ActionDropdownItem
@@ -236,27 +205,6 @@ export function CanvasContextMenu() {
               }}
             ></ActionDropdownItem>
           ))}
-
-        {selectedRelationshipTypes.length > 0 && (
-          <>
-            <Dropdown.Divider></Dropdown.Divider>
-            <Dropdown.ItemText className={"small text-muted"}>
-              {selectedRelationshipTypes.join(", ")}
-            </Dropdown.ItemText>
-            {relationshipTypeActions.map((action) => (
-              <ActionDropdownItem
-                key={action.slug()}
-                action={action}
-                params={
-                  {
-                    relationshipTypes: selectedRelationshipTypes,
-                    roomContext: roomContext,
-                  } satisfies RelationshipTypeActionParams
-                }
-              ></ActionDropdownItem>
-            ))}
-          </>
-        )}
 
         {commonNodeScenarios.length > 0 && (
           <>
