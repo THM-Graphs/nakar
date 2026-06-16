@@ -1,8 +1,7 @@
-import crypto from 'crypto';
+import crypto, { CipherGCM, DecipherGCM } from 'node:crypto';
 import { KeyConfig } from './KeyConfig';
 import { SMap } from '../map/Map';
 import { EncryptedPayload } from './EncryptedPayload';
-import { CipherGCM, DecipherGCM } from 'node:crypto';
 import { NoKeysConfiguredError } from './errors/NoKeysConfiguredError';
 import { UnknownKeyIdError } from './errors/UnknownKeyIdError';
 import { EmptyKeyError } from './errors/EmptyKeyError';
