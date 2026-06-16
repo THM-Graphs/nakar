@@ -3,6 +3,9 @@ import { KeyConfig } from './KeyConfig';
 import { SMap } from '../map/Map';
 import { EncryptedPayload } from './EncryptedPayload';
 import { CipherCCM, DecipherCCM } from 'node:crypto';
+import { NoKeysConfiguredError } from './errors/NoKeysConfiguredError';
+import { InvalidKeyLengthError } from './errors/InvalidKeyLengthError';
+import { UnknownKeyIdError } from './errors/UnknownKeyIdError';
 
 export class EncryptionService {
   private readonly _keys: SMap<string, Buffer> = new SMap<string, Buffer>();
@@ -10,7 +13,7 @@ export class EncryptionService {
 
   public constructor(config: KeyConfig) {
     if (config.keys.length === 0) {
-      throw new Error('Keine Schlüssel konfiguriert.');
+      throw new NoKeysConfiguredError();
     }
 
     this._currentKeyId = config.currentKeyId;
@@ -19,23 +22,21 @@ export class EncryptionService {
       const secret: Buffer = Buffer.from(key.secret, 'base64');
 
       if (secret.length !== 32) {
-        throw new Error(
-          `Schlüssel '${key.id}' muss 32 Byte lang sein (AES-256).`,
-        );
+        throw new InvalidKeyLengthError(key.id);
       }
 
       this._keys.set(key.id, secret);
     }
 
     if (!this._keys.has(this._currentKeyId)) {
-      throw new Error(`currentKeyId '${this._currentKeyId}' existiert nicht.`);
+      throw new UnknownKeyIdError(this._currentKeyId);
     }
   }
 
   public encrypt(plainText: string): EncryptedPayload {
     const key: Buffer | null = this._keys.get(this._currentKeyId) ?? null;
     if (key == null) {
-      throw new Error(`currentKeyId '${this._currentKeyId}' existiert nicht.`);
+      throw new UnknownKeyIdError(this._currentKeyId);
     }
 
     const iv: Buffer = crypto.randomBytes(12);
@@ -58,7 +59,7 @@ export class EncryptionService {
   public decrypt(payload: EncryptedPayload): string {
     const key: Buffer | null = this._keys.get(payload.keyId) ?? null;
     if (key == null) {
-      throw new Error(`Kein Schlüssel mit ID '${payload.keyId}' gefunden.`);
+      throw new UnknownKeyIdError(payload.keyId);
     }
 
     const decipher: DecipherCCM = crypto.createDecipheriv(
