@@ -3,4 +3,5 @@ export interface EncryptedPayload {
   iv: string;
   authTag: string;
   ciphertext: string;
+  version: 1;
 }

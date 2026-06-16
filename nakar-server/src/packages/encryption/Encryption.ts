@@ -65,6 +65,7 @@ export class Encryption {
       iv: iv.toString('base64'),
       authTag: cipher.getAuthTag().toString('base64'),
       ciphertext: ciphertext.toString('base64'),
+      version: 1,
     };
   }
 

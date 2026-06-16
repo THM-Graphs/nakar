@@ -41,8 +41,8 @@ void describe('Encryption', (): void => {
         new Encryption({
           currentKeyId: 'key1',
           keys: {
-          key1: '',
-        },
+            key1: '',
+          },
         });
       }, EmptyKeyError);
     });
@@ -66,6 +66,7 @@ void describe('Encryption', (): void => {
       assert.ok(payload.authTag.length > 0);
       assert.strictEqual(typeof payload.ciphertext, 'string');
       assert.ok(payload.ciphertext.length > 0);
+      assert.strictEqual(payload.version, 1);
     });
 
     void it('encrypts using short key', (): void => {
@@ -164,6 +165,7 @@ void describe('Encryption', (): void => {
           iv: 'AAAAAAAAAAAAAAAAAAAAAA==',
           authTag: 'AAAAAAAAAAAAAAAAAAAAAA==',
           ciphertext: 'AAAAAAAAAAAAAAAAAAAAAA==',
+          version: 1,
         });
       }, UnknownKeyIdError);
     });
@@ -201,6 +203,7 @@ void describe('Encryption', (): void => {
           iv: '!!!',
           authTag: 'AAAAAAAAAAAAAAAAAAAAAA==',
           ciphertext: 'AAAAAAAAAAAAAAAAAAAAAA==',
+          version: 1,
         });
       }, Error);
     });
