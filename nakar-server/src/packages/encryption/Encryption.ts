@@ -4,8 +4,8 @@ import { SMap } from '../map/Map';
 import { EncryptedPayload } from './EncryptedPayload';
 import { CipherGCM, DecipherGCM } from 'node:crypto';
 import { NoKeysConfiguredError } from './errors/NoKeysConfiguredError';
-import { InvalidKeyLengthError } from './errors/InvalidKeyLengthError';
 import { UnknownKeyIdError } from './errors/UnknownKeyIdError';
+import { InvalidKeyLengthError } from './errors/InvalidKeyLengthError';
 
 export class Encryption {
   private readonly _keys: SMap<string, Buffer> = new SMap<string, Buffer>();
@@ -20,12 +20,13 @@ export class Encryption {
     this._currentKeyId = config.currentKeyId;
 
     for (const key of config.keys) {
-      const secret: Buffer = Buffer.from(key.secret, 'base64');
-
+      const secret: Buffer = crypto
+        .createHash('sha256')
+        .update(Buffer.from(key.secret, 'base64'))
+        .digest();
       if (secret.length !== 32) {
         throw new InvalidKeyLengthError(key.id);
       }
-
       this._keys.set(key.id, secret);
     }
 

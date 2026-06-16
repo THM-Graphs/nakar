@@ -3,7 +3,6 @@ import { describe, it } from 'node:test';
 import { Encryption } from './Encryption';
 import { EncryptedPayload } from './EncryptedPayload';
 import { NoKeysConfiguredError } from './errors/NoKeysConfiguredError';
-import { InvalidKeyLengthError } from './errors/InvalidKeyLengthError';
 import { UnknownKeyIdError } from './errors/UnknownKeyIdError';
 
 void describe('Encryption', (): void => {
@@ -14,7 +13,7 @@ void describe('Encryption', (): void => {
         keys: [
           {
             id: 'key1',
-            secret: 'V/dRbrjCVL5awGenc0goXCa4KR0xcvKUPZXdhQiyClQ=',
+            secret: '6536d336-0401-40b4-b0bf-2f894738446d',
           },
         ],
       });
@@ -28,15 +27,6 @@ void describe('Encryption', (): void => {
       }, NoKeysConfiguredError);
     });
 
-    void it('throws InvalidKeyLengthError when a key secret is not 32 bytes after base64 decode', (): void => {
-      assert.throws((): void => {
-        new Encryption({
-          currentKeyId: 'key1',
-          keys: [{ id: 'key1', secret: 'short' }],
-        });
-      }, InvalidKeyLengthError);
-    });
-
     void it('throws UnknownKeyIdError when currentKeyId does not match any key id', (): void => {
       assert.throws((): void => {
         new Encryption({
@@ -44,7 +34,7 @@ void describe('Encryption', (): void => {
           keys: [
             {
               id: 'key1',
-              secret: 'V/dRbrjCVL5awGenc0goXCa4KR0xcvKUPZXdhQiyClQ=',
+              secret: '6e170327-c135-4f33-bac3-c4f7fffc2536',
             },
           ],
         });
@@ -59,7 +49,7 @@ void describe('Encryption', (): void => {
         keys: [
           {
             id: 'key1',
-            secret: 'V/dRbrjCVL5awGenc0goXCa4KR0xcvKUPZXdhQiyClQ=',
+            secret: 'bda10a7e-755e-4cef-95bc-bb885b64f041',
           },
         ],
       });
@@ -74,6 +64,45 @@ void describe('Encryption', (): void => {
       assert.strictEqual(typeof payload.ciphertext, 'string');
       assert.ok(payload.ciphertext.length > 0);
     });
+
+    void it('encrypts using short key', (): void => {
+      const service: Encryption = new Encryption({
+        currentKeyId: 'key1',
+        keys: [
+          {
+            id: 'key1',
+            secret: 'short',
+          },
+        ],
+      });
+
+      const payload: EncryptedPayload = service.encrypt('Hello World');
+
+      assert.ok(payload.ciphertext.length > 0);
+      assert.strictEqual(service.decrypt(payload), 'Hello World');
+    });
+
+    void it('encrypts various characters', (): void => {
+      const service: Encryption = new Encryption({
+        currentKeyId: 'key1',
+        keys: [
+          {
+            id: 'key1',
+            secret: 'short',
+          },
+        ],
+      });
+
+      const payload: EncryptedPayload = service.encrypt(
+        'ÄÖÜ23456§"$%&/()😀你好，世界！',
+      );
+
+      assert.ok(payload.ciphertext.length > 0);
+      assert.strictEqual(
+        service.decrypt(payload),
+        'ÄÖÜ23456§"$%&/()😀你好，世界！',
+      );
+    });
   });
 
   void describe('decrypt', (): void => {
@@ -83,7 +112,7 @@ void describe('Encryption', (): void => {
         keys: [
           {
             id: 'key1',
-            secret: 'V/dRbrjCVL5awGenc0goXCa4KR0xcvKUPZXdhQiyClQ=',
+            secret: 'ecc1f5b9-0051-4983-9343-1fa3654dd05b',
           },
         ],
       });
@@ -94,13 +123,40 @@ void describe('Encryption', (): void => {
       assert.strictEqual(plainText, 'Hello World');
     });
 
+    void it('returns original plaintext for a payload that was encrypted by another instance', (): void => {
+      const service1: Encryption = new Encryption({
+        currentKeyId: 'key1',
+        keys: [
+          {
+            id: 'key1',
+            secret: 'ecc1f5b9-0051-4983-9343-1fa3654dd05b',
+          },
+        ],
+      });
+
+      const payload: EncryptedPayload = service1.encrypt('Hello World');
+
+      const service2: Encryption = new Encryption({
+        currentKeyId: 'key1',
+        keys: [
+          {
+            id: 'key1',
+            secret: 'ecc1f5b9-0051-4983-9343-1fa3654dd05b',
+          },
+        ],
+      });
+      const plainText: string = service2.decrypt(payload);
+
+      assert.strictEqual(plainText, 'Hello World');
+    });
+
     void it('throws UnknownKeyIdError when payload.keyId does not match any stored key', (): void => {
       const service: Encryption = new Encryption({
         currentKeyId: 'key1',
         keys: [
           {
             id: 'key1',
-            secret: 'V/dRbrjCVL5awGenc0goXCa4KR0xcvKUPZXdhQiyClQ=',
+            secret: 'bd94b613-021a-4fee-b197-891a07eec48a',
           },
         ],
       });
@@ -121,7 +177,7 @@ void describe('Encryption', (): void => {
         keys: [
           {
             id: 'key1',
-            secret: 'V/dRbrjCVL5awGenc0goXCa4KR0xcvKUPZXdhQiyClQ=',
+            secret: 'b876c4ba-a3f7-45d0-9953-15df7074943b',
           },
         ],
       });
@@ -143,11 +199,7 @@ void describe('Encryption', (): void => {
         keys: [
           {
             id: 'key1',
-            secret: 'V/dRbrjCVL5awGenc0goXCa4KR0xcvKUPZXdhQiyClQ=',
-          },
-          {
-            id: 'key2',
-            secret: 'ZyoXJKWlLtYvO9m28IfdABmTyRovn+MjHGr8H7Pb/F0=',
+            secret: '164bc928-a67d-4c09-b8a7-33349eab34b9',
           },
         ],
       });
@@ -159,11 +211,11 @@ void describe('Encryption', (): void => {
         keys: [
           {
             id: 'key1',
-            secret: 'V/dRbrjCVL5awGenc0goXCa4KR0xcvKUPZXdhQiyClQ=',
+            secret: '164bc928-a67d-4c09-b8a7-33349eab34b9',
           },
           {
             id: 'key2',
-            secret: 'ZyoXJKWlLtYvO9m28IfdABmTyRovn+MjHGr8H7Pb/F0=',
+            secret: 'd14bcdb6-84a9-42b8-9eb5-72df83e86ae5',
           },
         ],
       });
