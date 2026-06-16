@@ -2,14 +2,15 @@ import crypto from 'crypto';
 import { KeyConfig } from './KeyConfig';
 import { SMap } from '../map/Map';
 import { EncryptedPayload } from './EncryptedPayload';
-import { CipherCCM, DecipherCCM } from 'node:crypto';
+import { CipherGCM, DecipherGCM } from 'node:crypto';
 import { NoKeysConfiguredError } from './errors/NoKeysConfiguredError';
 import { InvalidKeyLengthError } from './errors/InvalidKeyLengthError';
 import { UnknownKeyIdError } from './errors/UnknownKeyIdError';
 
-export class EncryptionService {
+export class Encryption {
   private readonly _keys: SMap<string, Buffer> = new SMap<string, Buffer>();
   private readonly _currentKeyId: string;
+  private readonly _currentKey: Buffer;
 
   public constructor(config: KeyConfig) {
     if (config.keys.length === 0) {
@@ -28,20 +29,22 @@ export class EncryptionService {
       this._keys.set(key.id, secret);
     }
 
-    if (!this._keys.has(this._currentKeyId)) {
+    const currentKey: Buffer | undefined = this._keys.get(this._currentKeyId);
+    if (currentKey == null) {
       throw new UnknownKeyIdError(this._currentKeyId);
     }
+
+    this._currentKey = currentKey;
   }
 
   public encrypt(plainText: string): EncryptedPayload {
-    const key: Buffer | null = this._keys.get(this._currentKeyId) ?? null;
-    if (key == null) {
-      throw new UnknownKeyIdError(this._currentKeyId);
-    }
-
     const iv: Buffer = crypto.randomBytes(12);
 
-    const cipher: CipherCCM = crypto.createCipheriv('aes-256-gcm', key, iv);
+    const cipher: CipherGCM = crypto.createCipheriv(
+      'aes-256-gcm',
+      this._currentKey,
+      iv,
+    );
 
     const ciphertext: Buffer = Buffer.concat([
       cipher.update(plainText, 'utf8'),
@@ -62,7 +65,7 @@ export class EncryptionService {
       throw new UnknownKeyIdError(payload.keyId);
     }
 
-    const decipher: DecipherCCM = crypto.createDecipheriv(
+    const decipher: DecipherGCM = crypto.createDecipheriv(
       'aes-256-gcm',
       key,
       Buffer.from(payload.iv, 'base64'),
