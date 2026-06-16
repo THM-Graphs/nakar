@@ -13,7 +13,6 @@ import {
 import { ApiBody, ApiParam, ApiResponse } from '@nestjs/swagger';
 import { UserCanAccessProject } from '../../guards/UserCanAccessProject';
 import { Result } from '@strapi/types/dist/modules/documents/result';
-import { Input } from '@strapi/types/dist/modules/documents/params/data';
 import { SchemaFactoryService } from '../../../schema/SchemaFactoryService';
 import { DatabaseConnectionDto } from '../../../schema/dtos/DatabaseConnectionDto';
 import { DatabaseConnectionBelongsToProject } from '../../guards/DatabaseConnectionBelongsToProject';
@@ -48,15 +47,7 @@ export class DatabaseConnectionController {
     @Param('projectId') projectId: string,
   ): Promise<DatabaseConnectionDto> {
     const databaseConnection: Result<'api::database-connection.database-connection'> =
-      await strapi
-        .documents('api::database-connection.database-connection')
-        .create({
-          status: 'published',
-          data: {
-            title: 'Untitled Database Connection',
-            project: projectId,
-          } satisfies Input<'api::database-connection.database-connection'>,
-        });
+      await this._database.createDatabase(projectId);
 
     return await this._schemaFactory.createSchemaDatabase(databaseConnection);
   }
@@ -74,9 +65,7 @@ export class DatabaseConnectionController {
 
       const existingDatabase: Result<'api::database-connection.database-connection'> | null =
         body.id != null
-          ? await strapi
-              .documents('api::database-connection.database-connection')
-              .findOne({ documentId: body.id })
+          ? await this._database.getDatabaseOrNull(body.id)
           : null;
 
       if (
@@ -132,11 +121,7 @@ export class DatabaseConnectionController {
   public async deleteDatabaseConnection(
     @Param('databaseConnectionId') databaseConnectionId: string,
   ): Promise<void> {
-    await strapi
-      .documents('api::database-connection.database-connection')
-      .delete({
-        documentId: databaseConnectionId,
-      });
+    await this._database.deleteDatabase(databaseConnectionId);
   }
 
   @Get(':databaseConnectionId')
@@ -145,16 +130,8 @@ export class DatabaseConnectionController {
   public async getDatabaseConnection(
     @Param('databaseConnectionId') databaseConnectionId: string,
   ): Promise<DatabaseConnectionDto> {
-    const databaseConnection: Result<'api::database-connection.database-connection'> | null =
-      await strapi
-        .documents('api::database-connection.database-connection')
-        .findOne({
-          documentId: databaseConnectionId,
-          status: 'published',
-        });
-    if (databaseConnection == null) {
-      throw new NotFoundException();
-    }
+    const databaseConnection: Result<'api::database-connection.database-connection'> =
+      await this._database.getDatabase(databaseConnectionId);
 
     return await this._schemaFactory.createSchemaDatabase(databaseConnection);
   }
@@ -173,20 +150,17 @@ export class DatabaseConnectionController {
     }
 
     const databaseConnection: Result<'api::database-connection.database-connection'> | null =
-      await strapi
-        .documents('api::database-connection.database-connection')
-        .update({
-          documentId: databaseConnectionId,
-          status: 'published',
-          data: {
-            title: body.title,
-            username: body.username != null ? body.username : undefined,
-            password: body.password != null ? body.password : undefined,
-            database: body.database,
-            connectionUrl: body.connectionUrl,
-            browserUrl: body.browserUrl,
-          } satisfies Input<'api::database-connection.database-connection'>,
-        });
+      await this._database.updateDatabase(
+        databaseConnectionId,
+        {
+          title: body.title,
+          username: body.username != null ? body.username : undefined,
+          password: body.password != null ? body.password : undefined,
+          database: body.database,
+          connectionUrl: body.connectionUrl,
+          browserUrl: body.browserUrl,
+        },
+      );
 
     if (databaseConnection == null) {
       throw new NotFoundException();

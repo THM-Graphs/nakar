@@ -18,27 +18,76 @@ import { UpdateScenarioPostActionEntryDto } from '../http/routes/scenario/dto/Up
 import { UpdateNodeConfigurationRequestBodyDto } from '../http/routes/database-connection/dto/UpdateNodeConfigurationRequestBodyDto';
 import { match } from 'ts-pattern';
 import { MediaService } from '../media/MediaService';
+import { EncryptionService } from '../encryption/EncryptionService';
 
 @Injectable()
 export class DatabaseService {
   private readonly _logger: Logger = createChildLogger(this);
 
-  public constructor(private readonly _mediaService: MediaService) {}
+  public constructor(
+    private readonly _mediaService: MediaService,
+    private readonly _encryptionService: EncryptionService,
+  ) {}
 
   public async getDatabase(
     databaseId: string,
   ): Promise<Result<'api::database-connection.database-connection'>> {
     const database: Result<'api::database-connection.database-connection'> | null =
-      await strapi
-        .documents('api::database-connection.database-connection')
-        .findOne({
-          status: 'published',
-          documentId: databaseId,
-        });
+      await this.getDatabaseOrNull(databaseId);
     if (database == null) {
       throw new Error(`Database Connection ${databaseId} not found.`);
     }
     return database;
+  }
+
+  public async getDatabaseOrNull(
+    databaseId: string,
+  ): Promise<Result<'api::database-connection.database-connection'> | null> {
+    const database: Result<'api::database-connection.database-connection'> | null =
+      await strapi
+        .documents('api::database-connection.database-connection')
+        .findOne({ status: 'published', documentId: databaseId });
+    if (database?.password != null) {
+      database.password = this._encryptionService.decrypt(database.password);
+    }
+    return database;
+  }
+
+  public async createDatabase(
+    projectId: string,
+  ): Promise<Result<'api::database-connection.database-connection'>> {
+    return await strapi
+      .documents('api::database-connection.database-connection')
+      .create({
+        status: 'published',
+        data: {
+          title: 'Untitled Database Connection',
+          project: projectId,
+        } satisfies Input<'api::database-connection.database-connection'>,
+      });
+  }
+
+  public async deleteDatabase(databaseId: string): Promise<void> {
+    await strapi
+      .documents('api::database-connection.database-connection')
+      .delete({ documentId: databaseId });
+  }
+
+  public async updateDatabase(
+    databaseId: string,
+    data: Input<'api::database-connection.database-connection'>,
+  ): Promise<Result<'api::database-connection.database-connection'> | null> {
+    const encryptedData: Input<'api::database-connection.database-connection'> = { ...data };
+    if (encryptedData.password != null) {
+      encryptedData.password = this._encryptionService.encrypt(encryptedData.password);
+    }
+    return await strapi
+      .documents('api::database-connection.database-connection')
+      .update({
+        documentId: databaseId,
+        status: 'published',
+        data: encryptedData,
+      });
   }
 
   public async getProjectOfDatabase(
