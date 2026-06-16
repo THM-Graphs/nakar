@@ -5,7 +5,7 @@ import { EncryptedPayload } from './EncryptedPayload';
 import { CipherGCM, DecipherGCM } from 'node:crypto';
 import { NoKeysConfiguredError } from './errors/NoKeysConfiguredError';
 import { UnknownKeyIdError } from './errors/UnknownKeyIdError';
-import { InvalidKeyLengthError } from './errors/InvalidKeyLengthError';
+import { EmptyKeyError } from './errors/EmptyKeyError';
 
 export class Encryption {
   private readonly _keys: SMap<string, Buffer> = new SMap<string, Buffer>();
@@ -13,21 +13,29 @@ export class Encryption {
   private readonly _currentKey: Buffer;
 
   public constructor(config: KeyConfig) {
-    if (config.keys.length === 0) {
+    if (
+      Object.keys(config.keys satisfies Record<string, string>).length === 0
+    ) {
       throw new NoKeysConfiguredError();
     }
 
     this._currentKeyId = config.currentKeyId;
 
-    for (const key of config.keys) {
-      const secret: Buffer = crypto
-        .createHash('sha256')
-        .update(Buffer.from(key.secret, 'base64'))
-        .digest();
-      if (secret.length !== 32) {
-        throw new InvalidKeyLengthError(key.id);
+    for (const entry of Object.entries(
+      config.keys satisfies Record<string, string>,
+    )) {
+      const id: string = entry[0];
+      const secret: string = entry[1];
+      if (secret.length === 0) {
+        throw new EmptyKeyError(id);
       }
-      this._keys.set(key.id, secret);
+
+      const buffer: Buffer = crypto
+        .createHash('sha256')
+        .update(Buffer.from(secret, 'base64'))
+        .digest();
+
+      this._keys.set(id, buffer);
     }
 
     const currentKey: Buffer | undefined = this._keys.get(this._currentKeyId);
