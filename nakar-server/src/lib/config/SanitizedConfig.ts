@@ -4,4 +4,5 @@ export interface SanitizedConfig {
   port: number;
   host: string;
   version: string;
+  encryptionKeysPath: string;
 }

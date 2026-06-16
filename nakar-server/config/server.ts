@@ -8,4 +8,5 @@ export default ({ env }: { env: Env }): unknown => ({
   app: {
     keys: env.array('APP_KEYS'),
   },
+  encryptionKeysPath: env('ENCRYPTION_KEYS_PATH'),
 });

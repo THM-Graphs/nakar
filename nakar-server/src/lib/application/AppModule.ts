@@ -23,6 +23,7 @@ import { PublicCanvasController } from '../http/routes/public-canvas/PublicCanva
 import { CommonPropertiesController } from '../http/routes/common-properties/CommonPropertiesController';
 import { MonitoringService } from '../monitoring/MonitoringService';
 import { MediaService } from '../media/MediaService';
+import { EncryptionService } from '../encryption/EncryptionService';
 
 @Module({
   controllers: [
@@ -52,6 +53,7 @@ import { MediaService } from '../media/MediaService';
     AuthService,
     MonitoringService,
     MediaService,
+    EncryptionService,
   ],
 })
 export class AppModule {}

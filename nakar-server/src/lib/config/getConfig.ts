@@ -22,6 +22,14 @@ export function getConfig(): SanitizedConfig {
   }
   const port: number = strapi.config.get('server.port', 80);
   const host: string = strapi.config.get('server.host', '0.0.0.0');
+  const encryptionKeysPath: string | null = strapi.config.get<string | null>(
+    'server.encryptionKeysPath',
+    null,
+  );
+  if (encryptionKeysPath == null || encryptionKeysPath.length === 0) {
+    throw new Error('ENCRYPTION_KEYS_PATH env variable must be set.');
+  }
+
   const version: string | undefined = z
     .object({ version: z.string().optional() })
     .parse(JSON.parse(readFileSync(resolve('package.json'), 'utf8'))).version;
@@ -36,6 +44,7 @@ export function getConfig(): SanitizedConfig {
     allowedOrigins: allowedOrigins.split(','),
     port: port,
     host: host,
+    encryptionKeysPath: encryptionKeysPath,
     version: version ?? 'unknown',
   };
 }
