@@ -5,7 +5,7 @@ import { EncryptedPayload } from './EncryptedPayload';
 import { NoKeysConfiguredError } from './errors/NoKeysConfiguredError';
 import { UnknownKeyIdError } from './errors/UnknownKeyIdError';
 import { EmptyKeyError } from './errors/EmptyKeyError';
-import { KeyToShortError } from './errors/KeyToShortError';
+import { KeyTooShortError } from './errors/KeyTooShortError';
 
 void describe('Encryption', (): void => {
   void describe('constructor', (): void => {
@@ -56,7 +56,7 @@ void describe('Encryption', (): void => {
             key1: 'short',
           },
         });
-      }, KeyToShortError);
+      }, KeyTooShortError);
     });
   });
 
