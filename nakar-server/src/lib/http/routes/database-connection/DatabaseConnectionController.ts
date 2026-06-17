@@ -130,8 +130,12 @@ export class DatabaseConnectionController {
   public async getDatabaseConnection(
     @Param('databaseConnectionId') databaseConnectionId: string,
   ): Promise<DatabaseConnectionDto> {
-    const databaseConnection: Result<'api::database-connection.database-connection'> =
-      await this._database.getDatabase(databaseConnectionId);
+    const databaseConnection: Result<'api::database-connection.database-connection'> | null =
+      await this._database.getDatabaseOrNull(databaseConnectionId);
+
+    if (databaseConnection == null) {
+      throw new NotFoundException();
+    }
 
     return await this._schemaFactory.createSchemaDatabase(databaseConnection);
   }

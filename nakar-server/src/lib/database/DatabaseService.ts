@@ -47,12 +47,20 @@ export class DatabaseService {
       await strapi
         .documents('api::database-connection.database-connection')
         .findOne({ status: 'published', documentId: databaseId });
-    if (database?.password != null) {
-      database.password = this._encryptionService.decrypt(database.password, {
-        contextObjectLabel: database.title ?? database.documentId,
-      });
+
+    if (database == null) {
+      return null;
     }
-    return database;
+
+    return {
+      ...database,
+      password:
+        database.password != null
+          ? this._encryptionService.decrypt(database.password, {
+              contextObjectLabel: database.title ?? database.documentId,
+            })
+          : database.password,
+    };
   }
 
   public async getDatabaseConnectionOfQuery(
@@ -65,19 +73,29 @@ export class DatabaseService {
       documentId: query.documentId,
       populate: ['database'],
     });
+
     if (populatedQuery == null) {
       throw new Error(`Query ${query.documentId} not found.`);
     }
-    if (populatedQuery.database?.password != null) {
-      populatedQuery.database.password = this._encryptionService.decrypt(
-        populatedQuery.database.password,
-        {
-          contextObjectLabel:
-            populatedQuery.database.title ?? populatedQuery.database.documentId,
-        },
-      );
+
+    const database:
+      | Result<'api::database-connection.database-connection'>
+      | undefined
+      | null = populatedQuery.database;
+
+    if (database == null) {
+      return null;
     }
-    return populatedQuery.database ?? null;
+
+    return {
+      ...database,
+      password:
+        database.password != null
+          ? this._encryptionService.decrypt(database.password, {
+              contextObjectLabel: database.title ?? database.documentId,
+            })
+          : database.password,
+    };
   }
 
   public async createDatabase(
