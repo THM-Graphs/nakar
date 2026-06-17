@@ -12,7 +12,7 @@ npm ci
 
 #### 2. Create a local environment file
 
-The example files configures Strapi to run locally.
+The example files configure the server to run locally.
 
 ```shell
 cp .env.example .env

@@ -31,7 +31,7 @@ export class Encryption {
 
       const buffer: Buffer = crypto
         .createHash('sha256')
-        .update(Buffer.from(secret, 'base64'))
+        .update(Buffer.from(secret))
         .digest();
 
       this._keys.set(id, buffer);
