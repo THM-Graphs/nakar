@@ -131,6 +131,7 @@ build
 /src/extensions/documentation
 /.docker
 /export.tar
+encryption_keys.json
 
 ############################
 # IDE

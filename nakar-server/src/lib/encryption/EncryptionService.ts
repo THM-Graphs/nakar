@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import z from 'zod';
+import z, { ZodError } from 'zod';
 import { getConfig } from '../config/getConfig';
 import { Encryption } from '../../packages/encryption/Encryption';
 import { KeyConfig } from '../../packages/encryption/KeyConfig';
@@ -10,6 +10,7 @@ import { Logger } from '@strapi/logger';
 import { encryptionKeysSchema } from './encryptionKeysSchema';
 import { encryptionPayloadSchema } from './encryptionPayloadSchema';
 import { EncryptedPayload } from '../../packages/encryption/EncryptedPayload';
+import { match, P } from 'ts-pattern';
 
 @Injectable()
 export class EncryptionService {
@@ -40,26 +41,40 @@ export class EncryptionService {
   }
 
   public encrypt(plainText: string): string {
-    return JSON.stringify(
-      this._encryption.encrypt(plainText) satisfies z.infer<
-        typeof encryptionPayloadSchema
-      >,
-    );
+    const encryptionPayload: z.infer<typeof encryptionPayloadSchema> =
+      this._encryption.encrypt(plainText);
+    return JSON.stringify(encryptionPayload);
   }
 
-  public decrypt(payloadString: string): string {
+  public decrypt(
+    payloadString: string,
+    options: { contextObjectLabel: string },
+  ): string {
     try {
       const payloadJson: unknown = JSON.parse(payloadString);
       const payload: EncryptedPayload =
         encryptionPayloadSchema.parse(payloadJson);
-      return this._encryption.decrypt(payload);
+      const plaintext: string = this._encryption.decrypt(payload);
+      return plaintext;
     } catch (error: unknown) {
-      if (error instanceof SyntaxError) {
-        // Version 0
-        return payloadString;
-      } else {
-        throw error;
-      }
+      return match(error)
+        .with(P.instanceOf(SyntaxError), (): string => {
+          // Encryption version 0. No JSON in password field.
+          this._logger.warn(
+            `Password of ${options.contextObjectLabel} is not encrypted.`,
+          );
+          return payloadString;
+        })
+        .with(P.instanceOf(ZodError), (): string => {
+          // Encryption version 0. Password is valid json, but not an encryption payload.
+          this._logger.warn(
+            `Password of ${options.contextObjectLabel} could not be decrypted.`,
+          );
+          return payloadString;
+        })
+        .otherwise((): never => {
+          throw error;
+        });
     }
   }
 }

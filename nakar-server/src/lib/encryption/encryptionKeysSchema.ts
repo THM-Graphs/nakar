@@ -4,5 +4,4 @@ import z from 'zod';
 export const encryptionKeysSchema = z.object({
   currentKeyId: z.string(),
   keys: z.record(z.string(), z.string()),
-  version: z.literal(1),
 });
