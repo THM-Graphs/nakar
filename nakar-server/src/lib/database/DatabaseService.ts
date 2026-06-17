@@ -129,13 +129,20 @@ export class DatabaseService {
         encryptedData.password,
       );
     }
-    return await strapi
-      .documents('api::database-connection.database-connection')
-      .update({
-        documentId: databaseId,
-        status: 'published',
-        data: encryptedData,
-      });
+    const updatedDocument: Result<'api::database-connection.database-connection'> | null =
+      await strapi
+        .documents('api::database-connection.database-connection')
+        .update({
+          documentId: databaseId,
+          status: 'published',
+          data: encryptedData,
+        });
+
+    if (updatedDocument == null) {
+      return null;
+    }
+
+    return await this.getDatabaseOrNull(updatedDocument.documentId);
   }
 
   public async getProjectOfDatabase(
