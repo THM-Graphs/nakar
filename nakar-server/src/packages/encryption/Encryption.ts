@@ -5,6 +5,7 @@ import { EncryptedPayload } from './EncryptedPayload';
 import { NoKeysConfiguredError } from './errors/NoKeysConfiguredError';
 import { UnknownKeyIdError } from './errors/UnknownKeyIdError';
 import { EmptyKeyError } from './errors/EmptyKeyError';
+import { KeyToShortError } from './errors/KeyToShortError';
 
 export class Encryption {
   private readonly _keys: SMap<string, Buffer> = new SMap<string, Buffer>();
@@ -27,6 +28,9 @@ export class Encryption {
       const secret: string = entry[1];
       if (secret.length === 0) {
         throw new EmptyKeyError(id);
+      }
+      if (secret.length < 32) {
+        throw new KeyToShortError(id);
       }
 
       const buffer: Buffer = crypto

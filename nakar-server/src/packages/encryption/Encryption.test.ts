@@ -5,6 +5,7 @@ import { EncryptedPayload } from './EncryptedPayload';
 import { NoKeysConfiguredError } from './errors/NoKeysConfiguredError';
 import { UnknownKeyIdError } from './errors/UnknownKeyIdError';
 import { EmptyKeyError } from './errors/EmptyKeyError';
+import { KeyToShortError } from './errors/KeyToShortError';
 
 void describe('Encryption', (): void => {
   void describe('constructor', (): void => {
@@ -46,6 +47,17 @@ void describe('Encryption', (): void => {
         });
       }, EmptyKeyError);
     });
+
+    void it('throws using short key', (): void => {
+      assert.throws((): void => {
+        new Encryption({
+          currentKeyId: 'key1',
+          keys: {
+            key1: 'short',
+          },
+        });
+      }, KeyToShortError);
+    });
   });
 
   void describe('encrypt', (): void => {
@@ -69,25 +81,11 @@ void describe('Encryption', (): void => {
       assert.strictEqual(payload.version, 1);
     });
 
-    void it('encrypts using short key', (): void => {
-      const service: Encryption = new Encryption({
-        currentKeyId: 'key1',
-        keys: {
-          key1: 'short',
-        },
-      });
-
-      const payload: EncryptedPayload = service.encrypt('Hello World');
-
-      assert.ok(payload.ciphertext.length > 0);
-      assert.strictEqual(service.decrypt(payload), 'Hello World');
-    });
-
     void it('encrypts various characters', (): void => {
       const service: Encryption = new Encryption({
         currentKeyId: 'key1',
         keys: {
-          key1: 'short',
+          key1: '55a7afa4-79d4-4023-90c4-54ffa0dd08ef',
         },
       });
 
