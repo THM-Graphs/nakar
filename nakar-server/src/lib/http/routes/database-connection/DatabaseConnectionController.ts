@@ -150,17 +150,14 @@ export class DatabaseConnectionController {
     }
 
     const databaseConnection: Result<'api::database-connection.database-connection'> | null =
-      await this._database.updateDatabase(
-        databaseConnectionId,
-        {
-          title: body.title,
-          username: body.username != null ? body.username : undefined,
-          password: body.password != null ? body.password : undefined,
-          database: body.database,
-          connectionUrl: body.connectionUrl,
-          browserUrl: body.browserUrl,
-        },
-      );
+      await this._database.updateDatabase(databaseConnectionId, {
+        title: body.title,
+        username: body.username != null ? body.username : undefined,
+        password: body.password != null ? body.password : undefined,
+        database: body.database,
+        connectionUrl: body.connectionUrl,
+        browserUrl: body.browserUrl,
+      });
 
     if (databaseConnection == null) {
       throw new NotFoundException();
