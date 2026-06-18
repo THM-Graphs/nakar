@@ -221,9 +221,7 @@ export class NodeIndex {
     sourceId: string,
     nativeNodeId: string,
   ): GraphNode | null {
-    return (
-      this._compressedNodes.get(sourceId)?.get(nativeNodeId) ?? null
-    );
+    return this._compressedNodes.get(sourceId)?.get(nativeNodeId) ?? null;
   }
 
   public getSources(): SSet<string> {

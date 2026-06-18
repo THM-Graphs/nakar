@@ -155,8 +155,7 @@ export class EdgeIndex {
     const sourceId: string = relationship.source.nakarId;
     const startNativeNodeId: string =
       relationship.relationship.startNodeElementId;
-    const endNativeNodeId: string =
-      relationship.relationship.endNodeElementId;
+    const endNativeNodeId: string = relationship.relationship.endNodeElementId;
 
     const startClusterNode: GraphNode | null =
       nodeIndex.getClusterNodeForCompressedNativeId(
@@ -164,18 +163,13 @@ export class EdgeIndex {
         startNativeNodeId,
       );
     const endClusterNode: GraphNode | null =
-      nodeIndex.getClusterNodeForCompressedNativeId(
-        sourceId,
-        endNativeNodeId,
-      );
+      nodeIndex.getClusterNodeForCompressedNativeId(sourceId, endNativeNodeId);
 
     const mutableEdge: GraphEdge = new GraphEdge({
       id: sourceId + '_' + relationship.relationship.elementId,
       nativeId: relationship.relationship.elementId,
-      startNodeId:
-        startClusterNode?.id ?? (sourceId + '_' + startNativeNodeId),
-      endNodeId:
-        endClusterNode?.id ?? (sourceId + '_' + endNativeNodeId),
+      startNodeId: startClusterNode?.id ?? sourceId + '_' + startNativeNodeId,
+      endNodeId: endClusterNode?.id ?? sourceId + '_' + endNativeNodeId,
       type: relationship.relationship.type,
       compressed: new SSet(),
       properties: PropertyCollection.fromRecord(
