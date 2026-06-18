@@ -22,6 +22,7 @@ import { LayoutRequestBodyDto } from './dto/LayoutRequestBodyDto';
 import { ShowShortestPathRequestBodyDto } from './dto/ShowShortestPathRequestBodyDto';
 import { LoadNodeRequestBodyDto } from './dto/LoadNodeRequestBodyDto';
 import { FlipCanvasRequestBodyDto } from './dto/FlipCanvasRequestBodyDto';
+import { ExpandRelationshipClusterRequestBodyDto } from './dto/ExpandRelationshipClusterRequestBodyDto';
 import { LiveCanvasViewSettingsDto } from '../../../schema/dtos/LiveCanvasViewSettingsDto';
 import { LiveCanvasViewSettings } from '../../../live-canvas/view-settings/LiveCanvasViewSettings';
 import { LiveCanvasService } from '../../../live-canvas/LiveCanvasService';
@@ -220,6 +221,18 @@ export class ActionController {
   @HttpCode(200)
   public compressRelationships(@Param('canvasId') canvasId: string): void {
     this._canvasService.getCanvasWithId(canvasId).compressRelationships();
+  }
+
+  @Post('expand-relationship-cluster')
+  @HttpCode(200)
+  @ApiBody({ type: ExpandRelationshipClusterRequestBodyDto })
+  public expandRelationshipCluster(
+    @Body() body: ExpandRelationshipClusterRequestBodyDto,
+    @Param('canvasId') canvasId: string,
+  ): void {
+    this._canvasService
+      .getCanvasWithId(canvasId)
+      .expandRelationshipCluster({ edgeIds: body.edgeIds });
   }
 
   @Post('compress-nodes')
