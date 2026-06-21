@@ -1205,18 +1205,18 @@ export class LiveCanvas {
               );
               continue;
             }
-            const sourceId: string | null = edge.sourceId;
-            if (sourceId == null) {
+            if (!edge.isCluster) {
               this._logger.warn(
-                `Expand Relationship Cluster: Edge ${edge.id} has no sourceId. Will skip.`,
+                `Expand Relationship Cluster: Edge ${edge.id} is not a cluster. Will skip.`,
               );
               continue;
             }
+
             const database: Result<'api::database-connection.database-connection'> | null =
-              await databaseCache.getDatabase(sourceId);
+              await databaseCache.getDatabase(edge.sourceId);
             if (database == null) {
               this._logger.warn(
-                `Expand Relationship Cluster: Database connection ${sourceId} not found. Will skip`,
+                `Expand Relationship Cluster: Database connection ${edge.sourceId} not found. Will skip`,
               );
               continue;
             }
