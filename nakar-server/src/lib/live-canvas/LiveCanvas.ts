@@ -1630,10 +1630,12 @@ export class LiveCanvas {
 
     for (const nodeA of graph.nodes.nodes) {
       for (const nodeB of graph.nodes.nodes) {
-        const edges: GraphEdge[] = graph.edges.getByStartAndEndNodeId(
-          nodeA.id,
-          nodeB.id,
-        );
+        const edges: GraphEdge[] = graph.edges
+          .getByStartAndEndNodeId(nodeA.id, nodeB.id)
+          .filter((e: GraphEdge): boolean => {
+            // Do not collect cluster for clustering. No nested clusters.
+            return !e.isCluster;
+          });
         const byType: SMap<string, GraphEdge[]> = edges.reduce(
           (
             akku: SMap<string, GraphEdge[]>,
