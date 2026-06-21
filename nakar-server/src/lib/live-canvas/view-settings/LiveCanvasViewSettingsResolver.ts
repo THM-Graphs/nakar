@@ -1,7 +1,7 @@
-import { LiveCanvasEdgeViewSettingsState } from './LiveCanvasEdgeViewSettingsState';
-import { LiveCanvasLabelViewSettingsState } from './LiveCanvasLabelViewSettingsState';
-import { LiveCanvasViewSettingsFactory } from './LiveCanvasViewSettingsFactory';
-import { LiveCanvasViewSettingsState } from './LiveCanvasViewSettingsState';
+import type { LiveCanvasEdgeViewSettingsState } from './LiveCanvasEdgeViewSettingsState';
+import type { LiveCanvasLabelViewSettingsState } from './LiveCanvasLabelViewSettingsState';
+import type { LiveCanvasViewSettingsFactory } from './LiveCanvasViewSettingsFactory';
+import type { LiveCanvasViewSettingsState } from './LiveCanvasViewSettingsState';
 
 /**
  * Resolves label and edge settings and materializes missing settings entries.

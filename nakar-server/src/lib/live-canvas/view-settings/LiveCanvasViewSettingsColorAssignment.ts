@@ -1,5 +1,5 @@
-import { LiveCanvasLabelViewSettingsState } from './LiveCanvasLabelViewSettingsState';
-import { LiveCanvasViewSettingsColorIndex } from './LiveCanvasViewSettingsColorIndex';
+import type { LiveCanvasLabelViewSettingsState } from './LiveCanvasLabelViewSettingsState';
+import type { LiveCanvasViewSettingsColorIndex } from './LiveCanvasViewSettingsColorIndex';
 
 /**
  * Assigns stable initial color indexes to newly materialized label settings.

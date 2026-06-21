@@ -1,11 +1,12 @@
-import { Observable, Subject } from 'rxjs';
+import type { Observable} from 'rxjs';
+import { Subject } from 'rxjs';
 import { CombinationCache } from './CombinationCache';
-import { PhysicsSimulationRunOptions } from './PhysicsSimulationRunOptions';
-import { PhysicalGraph } from './physical-graph/PhysicalGraph';
-import { PhysicalNode } from './physical-graph/PhysicalNode';
-import { PhysicalEdge } from './physical-graph/PhysicalEdge';
+import type { PhysicsSimulationRunOptions } from './PhysicsSimulationRunOptions';
+import type { PhysicalGraph } from './physical-graph/PhysicalGraph';
+import type { PhysicalNode } from './physical-graph/PhysicalNode';
+import type { PhysicalEdge } from './physical-graph/PhysicalEdge';
 import { Range } from '../range/Range';
-import { PhysicsSimulationEventSlowTick } from './PhysicsSimulationEventSlowTick';
+import type { PhysicsSimulationEventSlowTick } from './PhysicsSimulationEventSlowTick';
 
 export class PhysicsSimulation {
   public static readonly maximumVelocity: number = 2000;

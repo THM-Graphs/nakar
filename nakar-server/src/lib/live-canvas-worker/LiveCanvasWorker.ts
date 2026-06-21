@@ -1,4 +1,4 @@
-import { LiveCanvasWorkerData } from './LiveCanvasWorkerData';
+import type { LiveCanvasWorkerData } from './LiveCanvasWorkerData';
 import { parentPort, workerData } from 'node:worker_threads';
 import { LiveCanvasWorkerPhysicsService } from './LiveCanvasWorkerPhysicsService';
 

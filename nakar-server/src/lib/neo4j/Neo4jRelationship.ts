@@ -1,6 +1,6 @@
-import { Relationship } from 'neo4j-driver';
+import type { Relationship } from 'neo4j-driver';
 import { SSet } from '../../packages/set/Set';
-import { Neo4jDatabaseInfo } from './Neo4jDatabaseInfo';
+import type { Neo4jDatabaseInfo } from './Neo4jDatabaseInfo';
 
 export class Neo4jRelationship {
   public readonly relationship: Relationship;

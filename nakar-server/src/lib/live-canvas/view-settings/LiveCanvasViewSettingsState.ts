@@ -1,6 +1,6 @@
-import { ScaleType } from '../../../packages/range/ScaleType';
-import { LiveCanvasEdgeViewSettingsState } from './LiveCanvasEdgeViewSettingsState';
-import { LiveCanvasLabelViewSettingsState } from './LiveCanvasLabelViewSettingsState';
+import type { ScaleType } from '../../../packages/range/ScaleType';
+import type { LiveCanvasEdgeViewSettingsState } from './LiveCanvasEdgeViewSettingsState';
+import type { LiveCanvasLabelViewSettingsState } from './LiveCanvasLabelViewSettingsState';
 
 /**
  * Complete runtime state for live canvas visualization settings.

@@ -1,4 +1,4 @@
-import { EventWsdto } from './dto/EventWsdto';
+import type { EventWsdto } from './dto/EventWsdto';
 
 export interface ServerToClientEvents {
   message(message: EventWsdto): void;

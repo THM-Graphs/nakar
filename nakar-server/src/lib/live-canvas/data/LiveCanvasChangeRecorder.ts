@@ -1,17 +1,17 @@
 import { SMap } from '../../../packages/map/Map';
-import { GraphNode } from '../graph/GraphNode';
+import type { GraphNode } from '../graph/GraphNode';
 import { SSet } from '../../../packages/set/Set';
-import { PhysicsWorker } from '../PhysicsWorker';
-import { Subject } from 'rxjs';
-import { CanvasEvent } from '../events/CanvasEvent';
-import { CanvasEventGraphMetaDataChanged } from '../events/CanvasEventGraphMetaDataChanged';
-import { CanvasEventGraphElementsChanged } from '../events/CanvasEventGraphElementsChanged';
-import { CanvasEventGraphTableChanged } from '../events/CanvasEventGraphTableChanged';
-import { CanvasEventViewSettingsChanged } from '../events/CanvasEventViewSettingsChanged';
-import { LiveCanvas } from '../LiveCanvas';
-import { CanvasEventHistogramChanged } from '../events/CanvasEventHistogramChanged';
-import { CanvasEventNotesChanged } from '../events/CanvasEventNotesChanged';
-import { WTPhysicalNode } from '../../live-canvas-worker/worker-events/WTPhysicalNode';
+import type { PhysicsWorker } from '../PhysicsWorker';
+import type { Subject } from 'rxjs';
+import type { CanvasEvent } from '../events/CanvasEvent';
+import type { CanvasEventGraphMetaDataChanged } from '../events/CanvasEventGraphMetaDataChanged';
+import type { CanvasEventGraphElementsChanged } from '../events/CanvasEventGraphElementsChanged';
+import type { CanvasEventGraphTableChanged } from '../events/CanvasEventGraphTableChanged';
+import type { CanvasEventViewSettingsChanged } from '../events/CanvasEventViewSettingsChanged';
+import type { LiveCanvas } from '../LiveCanvas';
+import type { CanvasEventHistogramChanged } from '../events/CanvasEventHistogramChanged';
+import type { CanvasEventNotesChanged } from '../events/CanvasEventNotesChanged';
+import type { WTPhysicalNode } from '../../live-canvas-worker/worker-events/WTPhysicalNode';
 
 export class LiveCanvasChangeRecorder {
   private _shouldSendMetaDataChangedToUser: boolean;

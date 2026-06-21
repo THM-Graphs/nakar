@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { Encryption } from './Encryption';
-import { EncryptedPayload } from './EncryptedPayload';
+import type { EncryptedPayload } from './EncryptedPayload';
 import { NoKeysConfiguredError } from './errors/NoKeysConfiguredError';
 import { UnknownKeyIdError } from './errors/UnknownKeyIdError';
 import { EmptyKeyError } from './errors/EmptyKeyError';

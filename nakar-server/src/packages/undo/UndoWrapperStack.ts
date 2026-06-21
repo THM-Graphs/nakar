@@ -1,4 +1,4 @@
-import { UndoWrapperStackEntry } from './UndoWrapperStackEntry';
+import type { UndoWrapperStackEntry } from './UndoWrapperStackEntry';
 
 export class UndoWrapperStack<T> {
   private _stack: UndoWrapperStackEntry<T>[];

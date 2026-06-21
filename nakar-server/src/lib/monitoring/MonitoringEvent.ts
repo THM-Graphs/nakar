@@ -1,4 +1,4 @@
-import { MonitoringEventType } from './MonitoringEventType';
+import type { MonitoringEventType } from './MonitoringEventType';
 
 export interface MonitoringEvent {
   type: MonitoringEventType;

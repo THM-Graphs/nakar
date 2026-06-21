@@ -1,4 +1,4 @@
-import { LiveCanvasViewSettingsColorIndex } from './LiveCanvasViewSettingsColorIndex';
+import type { LiveCanvasViewSettingsColorIndex } from './LiveCanvasViewSettingsColorIndex';
 
 /**
  * Complete runtime settings for all relationships with a specific type.

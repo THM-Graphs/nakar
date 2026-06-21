@@ -1,20 +1,20 @@
-import { CanvasEventNodeLocksUpdated } from './CanvasEventNodeLocksUpdated';
-import { CanvasEventRoomPhysicsUpdated } from './CanvasEventRoomPhysicsUpdated';
-import { CanvasEventGraphMetaDataChanged } from './CanvasEventGraphMetaDataChanged';
-import { CanvasEventProgressChanged } from './CanvasEventProgressChanged';
-import { CanvasEventProgressCleared } from './CanvasEventProgressCleared';
-import { CanvasEventGraphElementsChanged } from './CanvasEventGraphElementsChanged';
-import { CanvasEventGraphTableChanged } from './CanvasEventGraphTableChanged';
-import { CanvasEventEventKick } from './CanvasEventEventKick';
-import { CanvasEventNotAllNodesLoaded } from './CanvasEventNotAllNodesLoaded';
-import { CanvasEventError } from './CanvasEventError';
-import { CanvasEventShouldShutDown } from './CanvasEventShouldShutDown';
-import { CanvasEventViewSettingsChanged } from './CanvasEventViewSettingsChanged';
-import { CanvasEventHistogramChanged } from './CanvasEventHistogramChanged';
-import { CanvasEventNotesChanged } from './CanvasEventNotesChanged';
-import { CanvasEventUserJoined } from './CanvasEventUserJoined';
-import { CanvasEventUserLeft } from './CanvasEventUserLeft';
-import { CanvasEventCursorChanged } from './CanvasEventCursorChanged';
+import type { CanvasEventNodeLocksUpdated } from './CanvasEventNodeLocksUpdated';
+import type { CanvasEventRoomPhysicsUpdated } from './CanvasEventRoomPhysicsUpdated';
+import type { CanvasEventGraphMetaDataChanged } from './CanvasEventGraphMetaDataChanged';
+import type { CanvasEventProgressChanged } from './CanvasEventProgressChanged';
+import type { CanvasEventProgressCleared } from './CanvasEventProgressCleared';
+import type { CanvasEventGraphElementsChanged } from './CanvasEventGraphElementsChanged';
+import type { CanvasEventGraphTableChanged } from './CanvasEventGraphTableChanged';
+import type { CanvasEventEventKick } from './CanvasEventEventKick';
+import type { CanvasEventNotAllNodesLoaded } from './CanvasEventNotAllNodesLoaded';
+import type { CanvasEventError } from './CanvasEventError';
+import type { CanvasEventShouldShutDown } from './CanvasEventShouldShutDown';
+import type { CanvasEventViewSettingsChanged } from './CanvasEventViewSettingsChanged';
+import type { CanvasEventHistogramChanged } from './CanvasEventHistogramChanged';
+import type { CanvasEventNotesChanged } from './CanvasEventNotesChanged';
+import type { CanvasEventUserJoined } from './CanvasEventUserJoined';
+import type { CanvasEventUserLeft } from './CanvasEventUserLeft';
+import type { CanvasEventCursorChanged } from './CanvasEventCursorChanged';
 
 export type CanvasEvent =
   | CanvasEventError

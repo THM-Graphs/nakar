@@ -1,5 +1,5 @@
-import z from 'zod';
-import { liveCanvasViewSettingsSchema } from './liveCanvasViewSettingsSchema';
+import type z from 'zod';
+import type { liveCanvasViewSettingsSchema } from './liveCanvasViewSettingsSchema';
 
 /**
  * Persisted plain representation of live canvas view settings.

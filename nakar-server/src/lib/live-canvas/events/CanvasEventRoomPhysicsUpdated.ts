@@ -1,5 +1,5 @@
-import { LiveCanvas } from '../LiveCanvas';
-import { PhysicsPerformanceDto } from '../../schema/dtos/PhysicsPerformanceDto';
+import type { LiveCanvas } from '../LiveCanvas';
+import type { PhysicsPerformanceDto } from '../../schema/dtos/PhysicsPerformanceDto';
 
 export interface CanvasEventRoomPhysicsUpdated {
   type: 'CanvasEventRoomPhysicsUpdated';

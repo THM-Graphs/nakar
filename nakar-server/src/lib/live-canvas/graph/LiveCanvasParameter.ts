@@ -1,6 +1,6 @@
 import z from 'zod';
 import { LiveCanvasParameterDataType } from './LiveCanvasParameterDataType';
-import { Result } from '@strapi/types/dist/modules/documents/result';
+import type { Result } from '@strapi/types/dist/modules/documents/result';
 import { match, P } from 'ts-pattern';
 
 export class LiveCanvasParameter {
