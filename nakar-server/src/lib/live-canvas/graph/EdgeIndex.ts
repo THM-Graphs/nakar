@@ -1,6 +1,6 @@
 import { SMap } from '../../../packages/map/Map';
 import { GraphEdge } from './GraphEdge';
-import { GraphNode } from './GraphNode';
+import type { GraphNode } from './GraphNode';
 import { SSet } from '../../../packages/set/Set';
 import { Neo4jRelationship } from '../../neo4j/Neo4jRelationship';
 import { PropertyCollection } from './PropertyCollection';
