@@ -21,7 +21,7 @@ export class GraphEdge {
     compressed: z.array(z.string()),
     properties: PropertyCollection.schema,
     namesInQuery: z.array(z.string()),
-    sourceId: z.string().nullable(),
+    sourceId: z.string(),
     sourceTitle: z.string().nullable(),
     creationAction: z.enum(ElementCreationReason),
   });
@@ -40,7 +40,7 @@ export class GraphEdge {
   public readonly namesInQuery: SSet<string>;
 
   /** ID of the source database */
-  public readonly sourceId: string | null;
+  public readonly sourceId: string;
 
   public readonly sourceTitle: string | null;
   public readonly creationAction: ElementCreationReason;
@@ -54,7 +54,7 @@ export class GraphEdge {
     compressed: SSet<string>;
     properties: PropertyCollection;
     namesInQuery: SSet<string>;
-    sourceId: string | null;
+    sourceId: string;
     sourceTitle: string | null;
     creationAction: ElementCreationReason;
   }) {

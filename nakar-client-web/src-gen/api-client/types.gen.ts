@@ -380,6 +380,10 @@ export type FlipCanvasRequestBodyDto = {
     axis: 'x' | 'y';
 };
 
+export type ExpandRelationshipClusterRequestBodyDto = {
+    edgeIds: Array<string>;
+};
+
 export type CompressNodesRequestBodyDto = {
     label: string;
 };
@@ -1470,6 +1474,20 @@ export type ActionControllerCompressRelationshipsData = {
 };
 
 export type ActionControllerCompressRelationshipsResponses = {
+    200: unknown;
+};
+
+export type ActionControllerExpandRelationshipClusterData = {
+    body: ExpandRelationshipClusterRequestBodyDto;
+    path: {
+        canvasId: string;
+        roomId: string;
+    };
+    query?: never;
+    url: '/api/room/{roomId}/canvas/{canvasId}/action/expand-relationship-cluster';
+};
+
+export type ActionControllerExpandRelationshipClusterResponses = {
     200: unknown;
 };
 

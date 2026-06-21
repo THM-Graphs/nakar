@@ -458,6 +458,7 @@ export class LiveCanvas {
           graph.edges.addNeo4jEdges(
             graphElements.relationships,
             ElementCreationReason.loadScenario,
+            graph.nodes,
           );
         }
         changeRecorder.didAddOrRemoveGraphElements();
@@ -766,6 +767,7 @@ export class LiveCanvas {
               graph.edges.addNeo4jEdge(
                 newEdge[1],
                 ElementCreationReason.expand,
+                graph.nodes,
               );
               changeRecorder.didAddOrRemoveGraphElements();
             }
@@ -1025,6 +1027,7 @@ export class LiveCanvas {
         graph.edges.addNeo4jEdges(
           graphElements.relationships,
           ElementCreationReason.query,
+          graph.nodes,
         );
         changeRecorder.didAddOrRemoveGraphElements();
 
@@ -1178,6 +1181,96 @@ export class LiveCanvas {
     );
   }
 
+  public expandRelationshipCluster(params: { edgeIds: string[] }): void {
+    this._queue.addTask(
+      new TaskQueueTask(
+        'Expanding relationship cluster',
+        async (): Promise<void> => {
+          const oldGraph: LiveCanvasUndoableData = this.getGraph();
+
+          const changeRecorder: LiveCanvasChangeRecorder =
+            new LiveCanvasChangeRecorder();
+          const graph: LiveCanvasUndoableData = this._snapshot(
+            'Expand relationship cluster',
+            changeRecorder,
+          );
+
+          const databaseCache: DatabaseReferenceCache =
+            new DatabaseReferenceCache(this._database);
+
+          for (const edgeId of params.edgeIds) {
+            const edge: GraphEdge | null = oldGraph.edges.get(edgeId);
+            if (edge == null) {
+              this._logger.warn(
+                `Expand Relationship Cluster: Edge ${edgeId} does not exist. Will skip.`,
+              );
+              continue;
+            }
+            if (!edge.isCluster) {
+              this._logger.warn(
+                `Expand Relationship Cluster: Edge ${edge.id} is not a cluster. Will skip.`,
+              );
+              continue;
+            }
+
+            const database: Result<'api::database-connection.database-connection'> | null =
+              await databaseCache.getDatabase(edge.sourceId);
+            if (database == null) {
+              this._logger.warn(
+                `Expand Relationship Cluster: Database connection ${edge.sourceId} not found. Will skip`,
+              );
+              continue;
+            }
+
+            const neo4jDatabaseInfo: Neo4jDatabaseInfo =
+              Neo4jDatabaseInfo.parse(database);
+
+            const expandResult: Neo4jGraphElements =
+              await this._neo4j.executeQuery(
+                neo4jDatabaseInfo,
+                'MATCH (a)-[r]-(b) WHERE elementId(r) IN $relationshipIds RETURN r',
+                {
+                  relationshipIds: edge.compressed.toArray(),
+                },
+                new Neo4jLimitConfig('default', 'graphElements'),
+              );
+
+            graph.edges.remove(edge);
+            changeRecorder.didAddOrRemoveGraphElements();
+
+            for (const newEdge of expandResult.relationships.toValueArray()) {
+              const didAdd: boolean = graph.edges.addNeo4jEdge(
+                newEdge,
+                ElementCreationReason.expand,
+                graph.nodes,
+              );
+              if (didAdd) {
+                changeRecorder.didAddOrRemoveGraphElements();
+              }
+            }
+
+            this._logger.debug(
+              `Expand relationship cluster result for ${edge.id}: ${expandResult.relationships.size.toString()} relationships.`,
+            );
+
+            if (expandResult.limitReached) {
+              this._onEvent.next({
+                type: 'CanvasEventNotAllNodesLoaded',
+                canvas: this,
+                loadedCount: expandResult.size,
+              } satisfies CanvasEventNotAllNodesLoaded);
+            }
+          }
+
+          await this._postProcessGraph(changeRecorder);
+
+          this._handleChangeRecorder(changeRecorder);
+          this._triggerPhysicsSimluation({ amount: 'short' });
+        },
+      ),
+    );
+  }
+
   public compressNodes(params: { label: string }): void {
     this._queue.addTask(
       new TaskQueueTask('Compressing nodes', async (): Promise<void> => {
@@ -1293,6 +1386,7 @@ export class LiveCanvas {
             graph.edges.addNeo4jEdges(
               result.relationships,
               ElementCreationReason.expand,
+              graph.nodes,
             );
             changeRecorder.didAddOrRemoveGraphElements();
           }
@@ -1537,10 +1631,12 @@ export class LiveCanvas {
 
     for (const nodeA of graph.nodes.nodes) {
       for (const nodeB of graph.nodes.nodes) {
-        const edges: GraphEdge[] = graph.edges.getByStartAndEndNodeId(
-          nodeA.id,
-          nodeB.id,
-        );
+        const edges: GraphEdge[] = graph.edges
+          .getByStartAndEndNodeId(nodeA.id, nodeB.id)
+          .filter((e: GraphEdge): boolean => {
+            // Do not collect cluster for clustering. No nested clusters.
+            return !e.isCluster;
+          });
         const byType: SMap<string, GraphEdge[]> = edges.reduce(
           (
             akku: SMap<string, GraphEdge[]>,
@@ -1561,16 +1657,14 @@ export class LiveCanvas {
                 akku.byMerging(next.namesInQuery),
               new SSet<string>(),
             ),
-            properties: PropertyCollection.fromRecord({
-              compressed: edgesToCompress.map((e: GraphEdge): string => e.id),
-            }),
+            properties: PropertyCollection.empty(),
             type: edgesToCompress[0].type,
             sourceId: edgesToCompress[0].sourceId,
             sourceTitle: edgesToCompress[0].sourceTitle,
             startNodeId: edgesToCompress[0].startNodeId,
             endNodeId: edgesToCompress[0].endNodeId,
             compressed: new SSet(
-              edgesToCompress.map((e: GraphEdge): string => e.id),
+              edgesToCompress.map((e: GraphEdge): string => e.nativeId),
             ),
             creationAction: ElementCreationReason.compress,
           });
@@ -1625,6 +1719,7 @@ export class LiveCanvas {
       const didAdd: boolean = graph.edges.addNeo4jEdge(
         edgeToAdd,
         ElementCreationReason.connectResultNodes,
+        graph.nodes,
       );
       if (didAdd) {
         addedEdgesCount += 1;
@@ -1896,6 +1991,10 @@ export class LiveCanvas {
     let compressCount: number = 0;
     const graph: LiveCanvasUndoableData = this.getGraph();
     for (const node of graph.nodes.getByLabel(targetLabel)) {
+      if (node.isCluster) {
+        // Do not allow nested node clusters
+        continue;
+      }
       const clusterBuddies: SSet<GraphNode> = graph.getClusterBuddiesOfNode(
         node,
         targetLabel,

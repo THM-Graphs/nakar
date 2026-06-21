@@ -1,9 +1,11 @@
 import { SMap } from '../../../packages/map/Map';
 import { GraphEdge } from './GraphEdge';
+import type { GraphNode } from './GraphNode';
 import { SSet } from '../../../packages/set/Set';
 import type { Neo4jRelationship } from '../../neo4j/Neo4jRelationship';
 import { PropertyCollection } from './PropertyCollection';
 import { Range } from '../../../packages/range/Range';
+import type { NodeIndex } from './NodeIndex';
 import type { ElementCreationReason } from './ElementCreationReason';
 
 export class EdgeIndex {
@@ -23,7 +25,7 @@ export class EdgeIndex {
   /* Maps key => value => count */
   private readonly _propertyHistogram: SMap<string, SMap<string, number>>;
 
-  private readonly _compressed: SSet<string>;
+  private readonly _compressed: SMap<string, SSet<string>>;
 
   public constructor(edges: GraphEdge[]) {
     this._byId = new SMap();
@@ -33,7 +35,7 @@ export class EdgeIndex {
     this._byStartAndEndNodeId = new SMap();
     this._typeHistogram = new SMap();
     this._propertyHistogram = new SMap();
-    this._compressed = new SSet();
+    this._compressed = new SMap();
 
     for (const edge of edges) {
       this.add(edge);
@@ -76,7 +78,9 @@ export class EdgeIndex {
     if (this._byId.has(edge.id)) {
       return false;
     }
-    if (this._compressed.has(edge.id)) {
+    if (
+      (this._compressed.get(edge.sourceId) ?? new SSet()).has(edge.nativeId)
+    ) {
       return false;
     }
 
@@ -120,7 +124,12 @@ export class EdgeIndex {
     }
 
     for (const compressed of edge.compressed) {
-      this._compressed.add(compressed);
+      this._compressed.set(
+        edge.sourceId,
+        (this._compressed.get(edge.sourceId) ?? new SSet()).byAdding(
+          compressed,
+        ),
+      );
     }
 
     return true;
@@ -129,12 +138,14 @@ export class EdgeIndex {
   public addNeo4jEdges(
     neo4jEdges: SMap<string, Neo4jRelationship>,
     creationAction: ElementCreationReason,
+    nodeIndex: NodeIndex,
   ): number {
     let result: number = 0;
     for (const relationship of neo4jEdges) {
       const didAdd: boolean = this.addNeo4jEdge(
         relationship[1],
         creationAction,
+        nodeIndex,
       );
       if (didAdd) {
         result += 1;
@@ -146,19 +157,26 @@ export class EdgeIndex {
   public addNeo4jEdge(
     relationship: Neo4jRelationship,
     creationAction: ElementCreationReason,
+    nodeIndex: NodeIndex,
   ): boolean {
+    const sourceId: string = relationship.source.nakarId;
+    const startNativeNodeId: string =
+      relationship.relationship.startNodeElementId;
+    const endNativeNodeId: string = relationship.relationship.endNodeElementId;
+
+    const startClusterNode: GraphNode | null =
+      nodeIndex.getClusterNodeForCompressedNativeId(
+        sourceId,
+        startNativeNodeId,
+      );
+    const endClusterNode: GraphNode | null =
+      nodeIndex.getClusterNodeForCompressedNativeId(sourceId, endNativeNodeId);
+
     const mutableEdge: GraphEdge = new GraphEdge({
-      id:
-        relationship.source.nakarId + '_' + relationship.relationship.elementId,
+      id: sourceId + '_' + relationship.relationship.elementId,
       nativeId: relationship.relationship.elementId,
-      startNodeId:
-        relationship.source.nakarId +
-        '_' +
-        relationship.relationship.startNodeElementId,
-      endNodeId:
-        relationship.source.nakarId +
-        '_' +
-        relationship.relationship.endNodeElementId,
+      startNodeId: startClusterNode?.id ?? sourceId + '_' + startNativeNodeId,
+      endNodeId: endClusterNode?.id ?? sourceId + '_' + endNativeNodeId,
       type: relationship.relationship.type,
       compressed: new SSet(),
       properties: PropertyCollection.fromRecord(
@@ -216,7 +234,10 @@ export class EdgeIndex {
     }
 
     for (const compressed of edge.compressed) {
-      this._compressed.delete(compressed);
+      this._compressed.get(edge.sourceId)?.delete(compressed);
+    }
+    if ((this._compressed.get(edge.sourceId)?.size ?? 0) === 0) {
+      this._compressed.delete(edge.sourceId);
     }
 
     return true;

@@ -32,6 +32,9 @@ export class NodeIndex {
   /* source id => native ids */
   private readonly _compressed: SMap<string, SSet<string>>;
 
+  /* source id => native id => cluster node that contains this nativeId in compressed */
+  private readonly _compressedNodes: SMap<string, SMap<string, GraphNode>>;
+
   public constructor(nodes: GraphNode[]) {
     this._byId = new SMap();
     this._byLabel = new SMap();
@@ -39,6 +42,7 @@ export class NodeIndex {
     this._propertyHistogram = new SMap();
     this._bySource = new SMap();
     this._compressed = new SMap();
+    this._compressedNodes = new SMap();
 
     for (const node of nodes) {
       this.add(node);
@@ -102,6 +106,13 @@ export class NodeIndex {
         node.sourceId,
         (this._compressed.get(node.sourceId) ?? new SSet()).byAdding(
           compressed,
+        ),
+      );
+      this._compressedNodes.set(
+        node.sourceId,
+        (this._compressedNodes.get(node.sourceId) ?? new SMap()).bySetting(
+          compressed,
+          node,
         ),
       );
     }
@@ -180,6 +191,7 @@ export class NodeIndex {
     }
     for (const compressed of node.compressed) {
       this._compressed.get(node.sourceId)?.delete(compressed);
+      this._compressedNodes.get(node.sourceId)?.delete(compressed);
     }
 
     return true;
@@ -203,6 +215,13 @@ export class NodeIndex {
 
   public getBySource(source: string): SSet<GraphNode> {
     return this._bySource.get(source) ?? new SSet();
+  }
+
+  public getClusterNodeForCompressedNativeId(
+    sourceId: string,
+    nativeNodeId: string,
+  ): GraphNode | null {
+    return this._compressedNodes.get(sourceId)?.get(nativeNodeId) ?? null;
   }
 
   public getSources(): SSet<string> {
