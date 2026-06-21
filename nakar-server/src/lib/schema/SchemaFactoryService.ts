@@ -305,11 +305,11 @@ export class SchemaFactoryService {
     const labelIndex: SMap<string, LabelDto> = this._createLabelIndex(canvas);
 
     const result: LiveCanvasGraphElementsDto = {
-      nodes: graph.nodes.nodes.flatMap(
+      nodes: graph.nodes.nodes.toArrayBy(
         (node: GraphNode): NodeDto =>
           this._createSchemaNode(node, canvas, degreeRange),
       ),
-      edges: graph.edges.edges.flatMap(
+      edges: graph.edges.edges.toArrayBy(
         (edge: GraphEdge): EdgeDto =>
           this._createSchemaEdge(
             edge,
@@ -688,7 +688,7 @@ export class SchemaFactoryService {
             displayName: note.author.username,
           })
         : null,
-      nodes: note.nodes.flatMap(
+      nodes: note.nodes.toArrayBy(
         (nodeReference: LiveCanvasNoteNodeReference): NodePreviewDto => {
           return new NodePreviewDto({
             id: nodeReference.id,

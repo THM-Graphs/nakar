@@ -463,14 +463,14 @@ ORDER BY lcount DESC, label ASC`,
       await this._getRelationshipTypes(credentials);
     const stats: ExternalGraphDatabaseStats = {
       labelCount: labels.size,
-      labels: labels.flatMap(
+      labels: labels.toArrayBy(
         (label: string): ExternalGraphDatabaseStatsLabel => ({
           label: label,
           exploreQuery: this._exploreQueryOfLabel(label),
         }),
       ),
       relTypeCount: relTypes.size,
-      rels: relTypes.flatMap(
+      rels: relTypes.toArrayBy(
         (relType: string): ExternalGraphDatabaseStatsRelationship => ({
           relType: relType,
           exploreQuery: this._exploreQueryOfRelationshipType(relType),
