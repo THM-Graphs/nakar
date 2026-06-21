@@ -23,13 +23,18 @@ import type { Logger } from '@strapi/logger';
 import { createChildLogger } from '../../../logger/createChildLogger';
 import type { ExternalGraphDatabaseStatsRelationship } from '../../data/ExternalGraphDatabaseStatsRelationship';
 import type { ExternalGraphDatabaseStatsLabel } from '../../data/ExternalGraphDatabaseStatsLabel';
+import { createHash, randomBytes } from 'crypto';
 
 export class Neo4jExternalDatabase implements ExternalGraphDatabase {
-  private readonly _logger: Logger = createChildLogger(this);
-  private readonly _driverPool: SMap<string, Driver> = new SMap<
-    string,
-    Driver
-  >();
+  private readonly _logger: Logger;
+  private readonly _driverPool: SMap<string, Driver>;
+  private readonly _passwordHashSalt: string;
+
+  public constructor() {
+    this._logger = createChildLogger(this);
+    this._driverPool = new SMap<string, Driver>();
+    this._passwordHashSalt = randomBytes(16).toString('hex');
+  }
 
   public async executeQuery(
     credentials: ExternalGraphDatabaseCredentials,
@@ -97,7 +102,7 @@ export class Neo4jExternalDatabase implements ExternalGraphDatabase {
   }
 
   public async shutdown(): Promise<void> {
-    for (const [id, driver] of this._driverPool) {
+    for (const [id, driver] of this._driverPool.toArray()) {
       this._logger.info(`Closing neo4j driver: ${id}`);
       await driver.close().catch((error: unknown): void => {
         this._logger.error(error);
@@ -393,8 +398,15 @@ ORDER BY lcount DESC, label ASC`,
     );
   }
 
+  private _hashPassword(password: string | null): string {
+    return createHash('sha256')
+      .update(this._passwordHashSalt)
+      .update(password ?? '')
+      .digest('hex');
+  }
+
   private _getDriver(credentials: ExternalGraphDatabaseCredentials): Driver {
-    const key: string = `${credentials.connectionUrl}::${credentials.username ?? 'default'}`;
+    const key: string = `${credentials.connectionUrl}::${credentials.username ?? 'default'}::${this._hashPassword(credentials.password)}`;
     let driver: Driver | undefined = this._driverPool.get(key);
     if (driver == null) {
       driver = createDriver(
