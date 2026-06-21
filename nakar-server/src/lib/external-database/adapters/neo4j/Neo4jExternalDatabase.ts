@@ -299,41 +299,33 @@ ORDER BY lcount DESC, label ASC`,
     const searchCapabilities: ExternalGraphDatabaseSearchCapabilities =
       await this.getSearchCapabilities(credentials);
 
-    const queries: string[] = [];
-    const data: Record<string, unknown> = {
-      searchTerm: searchTerm,
-    };
+    const whereConditions: string[] = [];
+
+    whereConditions.push('elementId(n) = $searchTerm');
+
+    for (const [label, properties] of searchCapabilities.exactMatchNodeProperties) {
+      for (const property of properties) {
+        whereConditions.push(
+          `(n:\`${escapeBacktick(label)}\` AND n.\`${escapeBacktick(property)}\` = $searchTerm)`,
+        );
+      }
+    }
+    for (const [label, properties] of searchCapabilities.fuzzyMatchNodeProperties) {
+      for (const property of properties) {
+        whereConditions.push(
+          `(n:\`${escapeBacktick(label)}\` AND n.\`${escapeBacktick(property)}\` CONTAINS $searchTerm)`,
+        );
+      }
+    }
+
     const limit: ExternalGraphDatabaseQueryLimitConfig =
       new ExternalGraphDatabaseQueryLimitConfig('preview', 'graphElements');
-
-    queries.push(
-      `MATCH (n) WHERE elementId(n) = $searchTerm\nRETURN n\nLIMIT ${limit.getLimit()}`,
-    );
-    for (const exactMatchLabelAndProperty of searchCapabilities.exactMatchNodeProperties) {
-      const label: string = exactMatchLabelAndProperty[0];
-      const properties: SSet<string> = exactMatchLabelAndProperty[1];
-      for (const property of properties) {
-        queries.push(
-          `MATCH (n: \`${label}\`) WHERE n.\`${property}\` = $searchTerm\nRETURN n\nLIMIT ${limit.getLimit()}`,
-        );
-      }
-    }
-    for (const fuzzyMatchLabelAndProperty of searchCapabilities.fuzzyMatchNodeProperties) {
-      const label: string = fuzzyMatchLabelAndProperty[0];
-      const properties: SSet<string> = fuzzyMatchLabelAndProperty[1];
-      for (const property of properties) {
-        queries.push(
-          `MATCH (n: \`${label}\`) WHERE n.\`${property}\` CONTAINS $searchTerm\nRETURN n\nLIMIT ${limit.getLimit()}`,
-        );
-      }
-    }
-
-    const query: string = queries.join('\nUNION ALL\n');
+    const query: string = `MATCH (n) WHERE ${whereConditions.join('\nOR ')}\nRETURN n\nLIMIT ${limit.getLimit()}`;
 
     const result: ExternalGraphDatabaseQueryResult = await this.executeQuery(
       credentials,
       query,
-      data,
+      { searchTerm: searchTerm },
       limit,
     );
 
