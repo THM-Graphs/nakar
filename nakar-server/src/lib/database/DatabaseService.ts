@@ -108,6 +108,7 @@ export class DatabaseService {
         data: {
           title: 'Untitled Database Connection',
           project: projectId,
+          databaseType: 'neo4j',
         } satisfies Input<'api::database-connection.database-connection'>,
       });
   }

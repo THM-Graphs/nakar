@@ -2,6 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import {
   IsArray,
   IsBoolean,
+  IsEnum,
   IsOptional,
   IsString,
   MinLength,
@@ -9,6 +10,7 @@ import {
 } from 'class-validator';
 import { UpdateNodeConfigurationRequestBodyDto } from './UpdateNodeConfigurationRequestBodyDto';
 import { Type } from 'class-transformer';
+import { DatabaseConnectionDatabaseType } from './DatabaseConnectionDatabaseType';
 
 export class UpdateDatabaseConnectionRequestBodyDto {
   @ApiProperty()
@@ -42,6 +44,10 @@ export class UpdateDatabaseConnectionRequestBodyDto {
   @ApiProperty()
   @IsBoolean()
   public credentialStoreConsent!: boolean;
+
+  @ApiProperty({ enum: DatabaseConnectionDatabaseType })
+  @IsEnum(DatabaseConnectionDatabaseType)
+  public databaseType!: DatabaseConnectionDatabaseType;
 
   @ApiProperty({ type: UpdateNodeConfigurationRequestBodyDto, isArray: true })
   @ValidateNested({ each: true })

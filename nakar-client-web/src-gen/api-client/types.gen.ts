@@ -219,6 +219,7 @@ export type TestDatabaseConnectionRequestBodyDto = {
     password: string | null;
     database: string | null;
     connectionUrl: string;
+    databaseType: 'neo4j' | 'sparql' | 'ramen';
 };
 
 export type TestDatabaseConnectionResponseBodyDto = {
@@ -243,6 +244,7 @@ export type UpdateDatabaseConnectionRequestBodyDto = {
     connectionUrl: string;
     browserUrl: string;
     credentialStoreConsent: boolean;
+    databaseType: 'neo4j' | 'sparql' | 'ramen';
     nodeConfigurations: Array<UpdateNodeConfigurationRequestBodyDto>;
 };
 
@@ -314,7 +316,7 @@ export type SearchCapabilitiesEntryDto = {
 };
 
 export type GetSearchCapabilitiesResponseBodyDto = {
-    canExactMatchElementId: boolean;
+    canExactMatchNativeId: boolean;
     canExactMatchLabel: boolean;
     exactMatchNodeProperties: Array<SearchCapabilitiesEntryDto>;
     fuzzyMatchNodeProperties: Array<SearchCapabilitiesEntryDto>;

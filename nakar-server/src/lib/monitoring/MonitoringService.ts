@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, OnModuleDestroy } from '@nestjs/common';
 import { MonitoringEvent } from './MonitoringEvent';
 import { createChildLogger } from '../logger/createChildLogger';
 import { Logger } from '@strapi/logger';
@@ -6,13 +6,22 @@ import { DatabaseService } from '../database/DatabaseService';
 import { Result } from '@strapi/types/dist/modules/documents';
 
 @Injectable()
-export class MonitoringService {
+export class MonitoringService implements OnModuleDestroy {
   private readonly _logger: Logger = createChildLogger(this);
 
   public constructor(private readonly _databaseService: DatabaseService) {}
 
   public pushEvent(monitoringEvent: MonitoringEvent): void {
     void this._loadAndHandleEvent(monitoringEvent);
+  }
+
+  public async onModuleDestroy(): Promise<void> {
+    await this._loadAndHandleEvent({
+      type: 'application_will_shutdown',
+      userInfo: null,
+      objectInfo: null,
+      metaData: null,
+    });
   }
 
   private async _loadAndHandleEvent(

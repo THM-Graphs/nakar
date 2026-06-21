@@ -1,7 +1,7 @@
 import { DatabaseService } from '../database/DatabaseService';
 import { DatabaseEventsService } from '../database/DatabaseEventsService';
-import { Neo4jService } from '../neo4j/Neo4jService';
 import { Observable, Subject } from 'rxjs';
+import { ExternalGraphDatabaseService } from '../external-database/ExternalGraphDatabaseService';
 import { LiveCanvasUndoableData } from './data/LiveCanvasUndoableData';
 import { SMap } from '../../packages/map/Map';
 import { CanvasEvent } from './events/CanvasEvent';
@@ -25,7 +25,7 @@ export class LiveCanvasService implements OnModuleInit, OnModuleDestroy {
   public constructor(
     private readonly _database: DatabaseService,
     private readonly _databaseEvents: DatabaseEventsService,
-    private readonly _neo4j: Neo4jService,
+    private readonly _externalGraphDatabase: ExternalGraphDatabaseService,
     private readonly _schemaFactoryService: SchemaFactoryService,
     private readonly _monitoringService: MonitoringService,
   ) {
@@ -104,7 +104,7 @@ export class LiveCanvasService implements OnModuleInit, OnModuleDestroy {
     const liveCanvas: LiveCanvas = new LiveCanvas(
       canvas.documentId,
       this._database,
-      this._neo4j,
+      this._externalGraphDatabase,
       this._databaseEvents,
       this._schemaFactoryService,
       this._monitoringService,

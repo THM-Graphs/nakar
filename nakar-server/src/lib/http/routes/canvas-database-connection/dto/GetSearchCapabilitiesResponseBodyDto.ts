@@ -3,7 +3,7 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class GetSearchCapabilitiesResponseBodyDto {
   @ApiProperty()
-  public canExactMatchElementId: boolean;
+  public canExactMatchNativeId: boolean;
 
   @ApiProperty()
   public canExactMatchLabel: boolean;
@@ -15,12 +15,12 @@ export class GetSearchCapabilitiesResponseBodyDto {
   public fuzzyMatchNodeProperties: SearchCapabilitiesEntryDto[];
 
   public constructor(data: {
-    canExactMatchElementId: boolean;
+    canExactMatchNativeId: boolean;
     canExactMatchLabel: boolean;
     exactMatchNodeProperties: SearchCapabilitiesEntryDto[];
     fuzzyMatchNodeProperties: SearchCapabilitiesEntryDto[];
   }) {
-    this.canExactMatchElementId = data.canExactMatchElementId;
+    this.canExactMatchNativeId = data.canExactMatchNativeId;
     this.canExactMatchLabel = data.canExactMatchLabel;
     this.exactMatchNodeProperties = data.exactMatchNodeProperties;
     this.fuzzyMatchNodeProperties = data.fuzzyMatchNodeProperties;

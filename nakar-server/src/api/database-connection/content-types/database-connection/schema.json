@@ -21,6 +21,12 @@
       "target": "api::project.project",
       "inversedBy": "databaseConnections"
     },
+    "databaseType": {
+      "type": "enumeration",
+      "enum": ["neo4j", "sparql", "ramen"],
+      "default": "neo4j",
+      "required": true
+    },
     "username": {
       "type": "string"
     },

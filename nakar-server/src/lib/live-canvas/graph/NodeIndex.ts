@@ -1,7 +1,7 @@
 import { SMap } from '../../../packages/map/Map';
 import { GraphNode } from './GraphNode';
 import { SSet } from '../../../packages/set/Set';
-import type { Neo4jNode } from '../../neo4j/Neo4jNode';
+import type { ExternalGraphDatabaseNode } from '../../external-database/data/ExternalGraphDatabaseNode';
 import { ElementPosition } from './ElementPosition';
 import { PropertyCollection } from './PropertyCollection';
 import { Range } from '../../../packages/range/Range';
@@ -119,26 +119,26 @@ export class NodeIndex {
     return true;
   }
 
-  public async addNeo4jNodes(
-    nodes: SMap<string, Neo4jNode>,
+  public async addGraphNodes(
+    nodes: ExternalGraphDatabaseNode[],
     creationAction: ElementCreationReason,
     databaseCache: DatabaseReferenceCache,
   ): Promise<void> {
-    for (const node of nodes.toValueArray()) {
-      await this.addNeo4jNode(node, creationAction, databaseCache);
+    for (const node of nodes) {
+      await this.addGraphNode(node, creationAction, databaseCache);
     }
   }
 
-  public async addNeo4jNode(
-    node: Neo4jNode,
+  public async addGraphNode(
+    node: ExternalGraphDatabaseNode,
     creationAction: ElementCreationReason,
     databaseCache: DatabaseReferenceCache,
   ): Promise<GraphNode | null> {
     const mutableNode: GraphNode = new GraphNode({
-      id: node.source.nakarId + '_' + node.node.elementId,
-      nativeId: node.node.elementId,
-      labels: new SSet<string>(node.node.labels),
-      properties: PropertyCollection.fromRecord(node.node.properties),
+      id: node.source.nakarId + '_' + node.nativeId,
+      nativeId: node.nativeId,
+      labels: new SSet<string>(node.labels),
+      properties: PropertyCollection.fromRecord(node.properties),
       position: ElementPosition.jiggled(),
       namesInQuery: node.keys,
       locked: false,
@@ -285,7 +285,7 @@ export class NodeIndex {
   }
 
   private async _getCoverImageUrl(
-    node: Neo4jNode,
+    node: ExternalGraphDatabaseNode,
     databaseCache: DatabaseReferenceCache,
   ): Promise<URL | null> {
     const nodeConfigs: Result<'api::node-configuration.node-configuration'>[] =
@@ -299,10 +299,10 @@ export class NodeIndex {
       ) {
         continue;
       }
-      if (!node.node.labels.includes(nodeConfig.label)) {
+      if (!node.labels.includes(nodeConfig.label)) {
         continue;
       }
-      const propertyValue: unknown = node.node.properties[nodeConfig.property];
+      const propertyValue: unknown = node.properties[nodeConfig.property];
       const value: string | null =
         typeof propertyValue === 'string' ? propertyValue : null;
       if (value == null) {
@@ -328,7 +328,7 @@ export class NodeIndex {
   }
 
   private async _getUrl(
-    node: Neo4jNode,
+    node: ExternalGraphDatabaseNode,
     databaseCache: DatabaseReferenceCache,
   ): Promise<URL | null> {
     const nodeConfigs: Result<'api::node-configuration.node-configuration'>[] =
@@ -342,10 +342,10 @@ export class NodeIndex {
       ) {
         continue;
       }
-      if (!node.node.labels.includes(nodeConfig.label)) {
+      if (!node.labels.includes(nodeConfig.label)) {
         continue;
       }
-      const propertyValue: unknown = node.node.properties[nodeConfig.property];
+      const propertyValue: unknown = node.properties[nodeConfig.property];
       const value: string | null =
         typeof propertyValue === 'string' ? propertyValue : null;
       if (value == null) {
