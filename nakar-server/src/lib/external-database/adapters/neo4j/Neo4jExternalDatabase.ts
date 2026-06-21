@@ -26,6 +26,10 @@ import type { ExternalGraphDatabaseStatsLabel } from '../../data/ExternalGraphDa
 
 export class Neo4jExternalDatabase implements ExternalGraphDatabase {
   private readonly _logger: Logger = createChildLogger(this);
+  private readonly _driverPool: SMap<string, Driver> = new SMap<
+    string,
+    Driver
+  >();
 
   public async executeQuery(
     credentials: ExternalGraphDatabaseCredentials,
@@ -33,73 +37,74 @@ export class Neo4jExternalDatabase implements ExternalGraphDatabase {
     parameters: Record<string, unknown>,
     limitConfig: ExternalGraphDatabaseQueryLimitConfig,
   ): Promise<ExternalGraphDatabaseQueryResult> {
-    const driver: Driver = createDriver(
-      credentials.connectionUrl ?? '',
-      auth.basic(credentials.username ?? '', credentials.password ?? ''),
-    );
-    this._logger.debug(
-      `Did create driver: ${JSON.stringify(await driver.getServerInfo())}`,
-    );
+    const driver: Driver = this._getDriver(credentials);
+
+    const sessionConfig: SessionConfig = {
+      defaultAccessMode: neo4j.session.READ,
+      database: credentials.database ?? undefined,
+    };
+    const session: Session = driver.session(sessionConfig);
+
     try {
-      const sessionConfig: SessionConfig = {
-        defaultAccessMode: neo4j.session.READ,
-        database: credentials.database ?? undefined,
-      };
-      const session: Session = driver.session(sessionConfig);
-      this._logger.debug(`Did open session: ${JSON.stringify(sessionConfig)}`);
-      try {
-        this._logger.debug(
-          `Will run query: ${query} with data: ${JSON.stringify(parameters).length.toString()} bytes`,
-        );
+      this._logger.debug(
+        `Will run query: ${query} with data: ${JSON.stringify(parameters).length.toString()} bytes`,
+      );
 
-        const factory: Neo4jGraphElementsFactory =
-          new Neo4jGraphElementsFactory(limitConfig);
-        await new Promise<void>(
-          (resolve: () => void, reject: (error: Error) => void): void => {
-            session
-              .run<RecordShape<string, unknown>>(query, parameters, {
-                timeout: 2 * 60000,
-              })
-              .subscribe({
-                onNext: (
-                  record: Neo4jRecord<RecordShape<string, unknown>>,
-                ): void => {
-                  if (factory.limitReached) {
-                    /* discard result. */
-                  } else {
-                    factory.collectRecord(record, credentials);
-                  }
-                },
-                onCompleted: (result: ResultSummary): void => {
-                  this._logger.debug(JSON.stringify(result));
-                  resolve();
-                },
-                onError: (error: Error): void => {
-                  reject(error);
-                },
-              });
-          },
-        );
+      const factory: Neo4jGraphElementsFactory = new Neo4jGraphElementsFactory(
+        limitConfig,
+      );
+      await new Promise<void>(
+        (resolve: () => void, reject: (error: Error) => void): void => {
+          session
+            .run<RecordShape<string, unknown>>(query, parameters, {
+              timeout: 2 * 60000,
+            })
+            .subscribe({
+              onNext: (
+                record: Neo4jRecord<RecordShape<string, unknown>>,
+              ): void => {
+                if (factory.limitReached) {
+                  /* discard result. */
+                } else {
+                  factory.collectRecord(record, credentials);
+                }
+              },
+              onCompleted: (result: ResultSummary): void => {
+                this._logger.debug(JSON.stringify(result));
+                resolve();
+              },
+              onError: (error: Error): void => {
+                reject(error);
+              },
+            });
+        },
+      );
 
-        const result: ExternalGraphDatabaseQueryResult = factory.getResult();
-        this._logger.debug(
-          `Did receive ${result.size.toString()} graph elements.`,
-        );
+      const result: ExternalGraphDatabaseQueryResult = factory.getResult();
+      this._logger.debug(
+        `Did receive ${result.size.toString()} graph elements.`,
+      );
 
-        await session.close();
-        await driver.close();
-
-        return result;
-      } catch (error) {
-        await session.close();
-        this._logger.error(error);
-        throw error;
-      }
+      return result;
     } catch (error) {
-      await driver.close();
       this._logger.error(error);
       throw error;
+    } finally {
+      await session.close().catch((err: unknown): void => {
+        this._logger.error(err);
+      });
     }
+  }
+
+  public async shutdown(): Promise<void> {
+    for (const [id, driver] of this._driverPool) {
+      this._logger.info(`Closing neo4j driver: ${id}`);
+      await driver.close().catch((error: unknown): void => {
+        this._logger.error(error);
+      });
+    }
+    this._driverPool.clear();
+    this._logger.info(`Did close all neo4j drivers.`);
   }
 
   public async loadConnectingRelationships(
@@ -386,6 +391,20 @@ ORDER BY lcount DESC, label ASC`,
       },
       new ExternalGraphDatabaseQueryLimitConfig('default', 'graphElements'),
     );
+  }
+
+  private _getDriver(credentials: ExternalGraphDatabaseCredentials): Driver {
+    const key: string = `${credentials.connectionUrl}::${credentials.username ?? 'default'}`;
+    let driver: Driver | undefined = this._driverPool.get(key);
+    if (driver == null) {
+      driver = createDriver(
+        credentials.connectionUrl ?? '',
+        auth.basic(credentials.username ?? '', credentials.password ?? ''),
+      );
+      this._driverPool.set(key, driver);
+      this._logger.debug(`Created new driver: ${key}`);
+    }
+    return driver;
   }
 
   private async _getLabels(

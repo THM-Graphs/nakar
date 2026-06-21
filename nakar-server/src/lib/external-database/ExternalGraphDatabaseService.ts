@@ -1,5 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, OnModuleDestroy } from '@nestjs/common';
 import type { Result } from '@strapi/types/dist/modules/documents/result';
+import { SMap } from '../../packages/map/Map';
 import { SSet } from '../../packages/set/Set';
 import type { ExternalGraphDatabaseCredentials } from './data/ExternalGraphDatabaseCredentials';
 import type { ExternalGraphDatabaseQueryResult } from './data/ExternalGraphDatabaseQueryResult';
@@ -14,7 +15,23 @@ import { P, match } from 'ts-pattern';
 import { ExternalGraphDatabaseType } from './data/ExternalGraphDatabaseType';
 
 @Injectable()
-export class ExternalGraphDatabaseService {
+export class ExternalGraphDatabaseService implements OnModuleDestroy {
+  private readonly _adapters: SMap<
+    ExternalGraphDatabaseType,
+    ExternalGraphDatabase
+  >;
+
+  public constructor() {
+    this._adapters = new SMap<
+      ExternalGraphDatabaseType,
+      ExternalGraphDatabase
+    >();
+    this._adapters.set(
+      ExternalGraphDatabaseType.neo4j,
+      new Neo4jExternalDatabase(),
+    );
+  }
+
   public parseCredentials(
     database: Result<'api::database-connection.database-connection'>,
   ): ExternalGraphDatabaseCredentials {
@@ -47,28 +64,6 @@ export class ExternalGraphDatabaseService {
     };
   }
 
-  public getAdapter(
-    credentials: ExternalGraphDatabaseCredentials,
-  ): ExternalGraphDatabase {
-    return match(credentials.databaseType)
-      .returnType<ExternalGraphDatabase>()
-      .with(
-        ExternalGraphDatabaseType.neo4j,
-        (): ExternalGraphDatabase => new Neo4jExternalDatabase(),
-      )
-      .with(ExternalGraphDatabaseType.sparql, (): never => {
-        throw new Error(
-          `Unimplemented database type ${credentials.databaseType}`,
-        );
-      })
-      .with(ExternalGraphDatabaseType.ramen, (): never => {
-        throw new Error(
-          `Unimplemented database type ${credentials.databaseType}`,
-        );
-      })
-      .exhaustive();
-  }
-
   public async executeQuery(
     database: Result<'api::database-connection.database-connection'>,
     query: string,
@@ -77,7 +72,7 @@ export class ExternalGraphDatabaseService {
   ): Promise<ExternalGraphDatabaseQueryResult> {
     const credentials: ExternalGraphDatabaseCredentials =
       this.parseCredentials(database);
-    return await this.getAdapter(credentials).executeQuery(
+    return await this._getAdapter(credentials.databaseType).executeQuery(
       credentials,
       query,
       parameters,
@@ -91,10 +86,9 @@ export class ExternalGraphDatabaseService {
   ): Promise<ExternalGraphDatabaseQueryResult> {
     const credentials: ExternalGraphDatabaseCredentials =
       this.parseCredentials(database);
-    return await this.getAdapter(credentials).loadConnectingRelationships(
-      credentials,
-      nodeIds,
-    );
+    return await this._getAdapter(
+      credentials.databaseType,
+    ).loadConnectingRelationships(credentials, nodeIds);
   }
 
   public async expandNode(
@@ -107,7 +101,7 @@ export class ExternalGraphDatabaseService {
   ): Promise<ExternalGraphDatabaseQueryResult> {
     const credentials: ExternalGraphDatabaseCredentials =
       this.parseCredentials(database);
-    return await this.getAdapter(credentials).expandNode(
+    return await this._getAdapter(credentials.databaseType).expandNode(
       credentials,
       nodeIds,
       limit,
@@ -120,7 +114,7 @@ export class ExternalGraphDatabaseService {
   ): Promise<ExternalGraphDatabaseExpandNodePreview> {
     const credentials: ExternalGraphDatabaseCredentials =
       this.parseCredentials(database);
-    return await this.getAdapter(credentials).expandNodePreview(
+    return await this._getAdapter(credentials.databaseType).expandNodePreview(
       credentials,
       nodeIds,
     );
@@ -131,13 +125,17 @@ export class ExternalGraphDatabaseService {
   ): Promise<ExternalGraphDatabaseStats> {
     const credentials: ExternalGraphDatabaseCredentials =
       this.parseCredentials(database);
-    return await this.getAdapter(credentials).getStats(credentials);
+    return await this._getAdapter(credentials.databaseType).getStats(
+      credentials,
+    );
   }
 
   public async testConnection(
     credentials: ExternalGraphDatabaseCredentials,
   ): Promise<ExternalGraphDatabaseStats> {
-    return await this.getAdapter(credentials).getStats(credentials);
+    return await this._getAdapter(credentials.databaseType).getStats(
+      credentials,
+    );
   }
 
   public async getSearchCapabilities(
@@ -145,9 +143,9 @@ export class ExternalGraphDatabaseService {
   ): Promise<ExternalGraphDatabaseSearchCapabilities> {
     const credentials: ExternalGraphDatabaseCredentials =
       this.parseCredentials(database);
-    return await this.getAdapter(credentials).getSearchCapabilities(
-      credentials,
-    );
+    return await this._getAdapter(
+      credentials.databaseType,
+    ).getSearchCapabilities(credentials);
   }
 
   public async search(
@@ -156,7 +154,10 @@ export class ExternalGraphDatabaseService {
   ): Promise<ExternalGraphDatabaseNode[]> {
     const credentials: ExternalGraphDatabaseCredentials =
       this.parseCredentials(database);
-    return await this.getAdapter(credentials).search(credentials, searchTerm);
+    return await this._getAdapter(credentials.databaseType).search(
+      credentials,
+      searchTerm,
+    );
   }
 
   public async findNodeByNativeId(
@@ -165,7 +166,7 @@ export class ExternalGraphDatabaseService {
   ): Promise<ExternalGraphDatabaseQueryResult> {
     const credentials: ExternalGraphDatabaseCredentials =
       this.parseCredentials(database);
-    return await this.getAdapter(credentials).findNodeByNativeId(
+    return await this._getAdapter(credentials.databaseType).findNodeByNativeId(
       credentials,
       nativeNodeId,
     );
@@ -178,7 +179,7 @@ export class ExternalGraphDatabaseService {
   ): Promise<ExternalGraphDatabaseQueryResult> {
     const credentials: ExternalGraphDatabaseCredentials =
       this.parseCredentials(database);
-    return await this.getAdapter(credentials).expandClusterNode(
+    return await this._getAdapter(credentials.databaseType).expandClusterNode(
       credentials,
       nodeIds,
       neighbors,
@@ -191,10 +192,9 @@ export class ExternalGraphDatabaseService {
   ): Promise<ExternalGraphDatabaseQueryResult> {
     const credentials: ExternalGraphDatabaseCredentials =
       this.parseCredentials(database);
-    return await this.getAdapter(credentials).findRelationshipsByIds(
-      credentials,
-      relationshipIds,
-    );
+    return await this._getAdapter(
+      credentials.databaseType,
+    ).findRelationshipsByIds(credentials, relationshipIds);
   }
 
   public async findShortestPath(
@@ -204,10 +204,27 @@ export class ExternalGraphDatabaseService {
   ): Promise<ExternalGraphDatabaseQueryResult> {
     const credentials: ExternalGraphDatabaseCredentials =
       this.parseCredentials(database);
-    return await this.getAdapter(credentials).findShortestPath(
+    return await this._getAdapter(credentials.databaseType).findShortestPath(
       credentials,
       elementIdA,
       elementIdB,
     );
+  }
+
+  public async onModuleDestroy(): Promise<void> {
+    for (const adapter of this._adapters.values()) {
+      await adapter.shutdown();
+    }
+  }
+
+  private _getAdapter(
+    databaseType: ExternalGraphDatabaseType,
+  ): ExternalGraphDatabase {
+    const adapter: ExternalGraphDatabase | undefined =
+      this._adapters.get(databaseType);
+    if (adapter == null) {
+      throw new Error(`Unimplemented database type ${databaseType}`);
+    }
+    return adapter;
   }
 }

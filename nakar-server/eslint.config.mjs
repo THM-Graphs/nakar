@@ -88,6 +88,14 @@ export default defineConfig([
           message: 'Use SSet.',
         },
       ],
+      'no-restricted-imports': [
+        'error',
+        {
+          name: '@nestjs/common',
+          importNames: ['OnApplicationBootstrap', 'OnApplicationShutdown'],
+          message: 'Use OnModuleInit / OnModuleDestroy instead.',
+        },
+      ],
       '@typescript-eslint/no-extraneous-class': 'off',
       '@typescript-eslint/prefer-nullish-coalescing': 'off',
       'no-unexpected-multiline': 'off',

@@ -61,13 +61,5 @@ export async function bootstrapNest(): Promise<NestExpressApplication> {
 }
 
 export async function destroyNest(): Promise<void> {
-  const monitoringService: MonitoringService | null =
-    nestApp?.get(MonitoringService) ?? null;
-  monitoringService?.pushEvent({
-    type: 'application_will_shutdown',
-    userInfo: null,
-    objectInfo: null,
-    metaData: null,
-  });
   await nestApp?.close();
 }

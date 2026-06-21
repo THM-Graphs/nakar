@@ -65,4 +65,6 @@ export interface ExternalGraphDatabase {
     nativeIdA: string,
     nativeIdB: string,
   ): Promise<ExternalGraphDatabaseQueryResult>;
+
+  shutdown(): Promise<void>;
 }
