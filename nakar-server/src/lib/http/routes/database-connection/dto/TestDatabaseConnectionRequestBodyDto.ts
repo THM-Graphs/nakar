@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsOptional, IsString, MinLength } from 'class-validator';
+import { IsEnum, IsOptional, IsString, MinLength } from 'class-validator';
+import { DatabaseConnectionDatabaseType } from './DatabaseConnectionDatabaseType';
 
 export class TestDatabaseConnectionRequestBodyDto {
   @ApiProperty({ nullable: true, type: String })
@@ -28,4 +29,8 @@ export class TestDatabaseConnectionRequestBodyDto {
   @IsString()
   @MinLength(1)
   public connectionUrl!: string;
+
+  @ApiProperty({ enum: DatabaseConnectionDatabaseType })
+  @IsEnum(DatabaseConnectionDatabaseType)
+  public databaseType!: DatabaseConnectionDatabaseType;
 }

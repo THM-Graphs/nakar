@@ -1,7 +1,8 @@
-import type { SMap } from '../../packages/map/Map';
-import type { SSet } from '../../packages/set/Set';
+import type { SMap } from '../../../../packages/map/Map';
+import type { SSet } from '../../../../packages/set/Set';
+import type { ExternalGraphDatabaseSearchCapabilities } from '../../data/ExternalGraphDatabaseSearchCapabilities';
 
-export class Neo4jSearchCapabilities {
+export class Neo4jSearchCapabilities implements ExternalGraphDatabaseSearchCapabilities {
   public readonly canExactMatchElementId: boolean = true;
 
   // eslint-disable-next-line @typescript-eslint/no-unused-private-class-members
@@ -19,19 +20,15 @@ export class Neo4jSearchCapabilities {
     this._fuzzyMatchNodeProperties = params.fuzzyMatchNodeProperties;
   }
 
-  // Token lookup indexes: only solves node label and relationship type predicates
   // eslint-disable-next-line @typescript-eslint/class-literal-property-style
   public get canExactMatchLabel(): boolean {
-    // return this._canExactMatchLabel;
-    return false; // Unable to sanitize label correctly
+    return false;
   }
 
-  // Range indexes: Neo4j’s default index. Supports most types of predicates.
   public get exactMatchNodeProperties(): SMap<string, SSet<string>> {
     return this._exactMatchNodeProperties;
   }
 
-  // Text indexes: solves predicates operating on STRING values. Optimized for queries filtering with the STRING operators CONTAINS and ENDS WITH.
   public get fuzzyMatchNodeProperties(): SMap<string, SSet<string>> {
     return this._fuzzyMatchNodeProperties;
   }

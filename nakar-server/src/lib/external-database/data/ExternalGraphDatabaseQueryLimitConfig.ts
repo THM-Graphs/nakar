@@ -1,6 +1,6 @@
 import { match } from 'ts-pattern';
 
-export class Neo4jLimitConfig {
+export class ExternalGraphDatabaseQueryLimitConfig {
   public static readonly maximalElements: number = 5000;
   public static readonly maximalPreviewElements: number = 300;
 
@@ -11,8 +11,15 @@ export class Neo4jLimitConfig {
 
   public getLimit(): number {
     return match(this._type)
-      .with('preview', (): number => Neo4jLimitConfig.maximalPreviewElements)
-      .with('default', (): number => Neo4jLimitConfig.maximalElements)
+      .with(
+        'preview',
+        (): number =>
+          ExternalGraphDatabaseQueryLimitConfig.maximalPreviewElements,
+      )
+      .with(
+        'default',
+        (): number => ExternalGraphDatabaseQueryLimitConfig.maximalElements,
+      )
       .exhaustive();
   }
 

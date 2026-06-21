@@ -19,13 +19,13 @@ import { DatabaseConnectionBelongsToProject } from '../../guards/DatabaseConnect
 import { UpdateDatabaseConnectionRequestBodyDto } from './dto/UpdateDatabaseConnectionRequestBodyDto';
 import { TestDatabaseConnectionRequestBodyDto } from './dto/TestDatabaseConnectionRequestBodyDto';
 import { TestDatabaseConnectionResponseBodyDto } from './dto/TestDatabaseConnectionResponseBodyDto';
-import { Neo4jDatabaseInfo } from '../../../neo4j/Neo4jDatabaseInfo';
-import { Neo4jService } from '../../../neo4j/Neo4jService';
-import { GetDatabaseStatsResponseBodyDto } from '../canvas-database-connection/dto/GetDatabaseStatsResponseBodyDto';
+import { ExternalGraphDatabaseService } from '../../../external-database/ExternalGraphDatabaseService';
+import type { ExternalGraphDatabaseStats } from '../../../external-database/data/ExternalGraphDatabaseStats';
 import { match, P } from 'ts-pattern';
-import { Neo4jError } from 'neo4j-driver';
 import { DatabaseService } from '../../../database/DatabaseService';
 import { databaseBelongsToProject } from '../../../policies/databaseBelongsToProject';
+import { DatabaseConnectionDatabaseType } from './dto/DatabaseConnectionDatabaseType';
+import { ExternalGraphDatabaseType } from '../../../external-database/data/ExternalGraphDatabaseType';
 
 @Controller('/project/:projectId/database-connection')
 @ApiParam({
@@ -37,7 +37,7 @@ import { databaseBelongsToProject } from '../../../policies/databaseBelongsToPro
 export class DatabaseConnectionController {
   public constructor(
     private readonly _schemaFactory: SchemaFactoryService,
-    private readonly _neo4jService: Neo4jService,
+    private readonly _externalGraphDatabase: ExternalGraphDatabaseService,
     private readonly _database: DatabaseService,
   ) {}
 
@@ -82,17 +82,29 @@ export class DatabaseConnectionController {
         });
       }
 
-      const credentials: Neo4jDatabaseInfo = new Neo4jDatabaseInfo({
-        url: body.connectionUrl,
-        username: body.username ?? existingDatabase?.username ?? '',
-        password: body.password ?? existingDatabase?.password ?? '',
-        database: body.database,
-        nakarId: body.id ?? existingDatabase?.documentId ?? '',
-        nakarTitle: existingDatabase?.title ?? null,
-      });
-
-      const dbInfo: GetDatabaseStatsResponseBodyDto =
-        await this._neo4jService.getStats({ credentials: credentials });
+      const dbInfo: ExternalGraphDatabaseStats =
+        await this._externalGraphDatabase.testConnection(
+          body.connectionUrl,
+          body.username ?? existingDatabase?.username ?? '',
+          body.password ?? existingDatabase?.password ?? '',
+          body.database,
+          body.id ?? existingDatabase?.documentId ?? '',
+          existingDatabase?.title ?? null,
+          match(body.databaseType)
+            .with(
+              DatabaseConnectionDatabaseType.neo4j,
+              (): ExternalGraphDatabaseType => ExternalGraphDatabaseType.neo4j,
+            )
+            .with(
+              DatabaseConnectionDatabaseType.sparql,
+              (): ExternalGraphDatabaseType => ExternalGraphDatabaseType.sparql,
+            )
+            .with(
+              DatabaseConnectionDatabaseType.ramen,
+              (): ExternalGraphDatabaseType => ExternalGraphDatabaseType.ramen,
+            )
+            .exhaustive(),
+        );
 
       return new TestDatabaseConnectionResponseBodyDto({
         success: true,
@@ -102,11 +114,6 @@ export class DatabaseConnectionController {
       return new TestDatabaseConnectionResponseBodyDto({
         success: false,
         message: match(error)
-          .with(
-            P.instanceOf(Neo4jError),
-            (neo4jError: Neo4jError): string =>
-              `${neo4jError.code}: ${neo4jError.message}`,
-          )
           .with(
             P.instanceOf(Error),
             (e: Error): string => `${e.name}: ${e.message}`,
@@ -161,6 +168,7 @@ export class DatabaseConnectionController {
         database: body.database,
         connectionUrl: body.connectionUrl,
         browserUrl: body.browserUrl,
+        databaseType: body.databaseType,
       });
 
     if (databaseConnection == null) {

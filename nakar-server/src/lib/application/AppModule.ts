@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { SchemaFactoryService } from '../schema/SchemaFactoryService';
 import { DatabaseEventsService } from '../database/DatabaseEventsService';
 import { DatabaseService } from '../database/DatabaseService';
-import { Neo4jService } from '../neo4j/Neo4jService';
+import { ExternalGraphDatabaseService } from '../external-database/ExternalGraphDatabaseService';
 import { AuthController } from '../http/routes/auth/AuthController';
 import { StartController } from '../http/routes/start/StartController';
 import { RoomController } from '../http/routes/room/RoomController';
@@ -48,7 +48,7 @@ import { EncryptionService } from '../encryption/EncryptionService';
     LiveCanvasService,
     SchemaFactoryService,
     DatabaseEventsService,
-    Neo4jService,
+    ExternalGraphDatabaseService,
     WebSocketManager,
     AuthService,
     MonitoringService,

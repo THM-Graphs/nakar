@@ -2,7 +2,7 @@ import { SMap } from '../../../packages/map/Map';
 import { GraphEdge } from './GraphEdge';
 import type { GraphNode } from './GraphNode';
 import { SSet } from '../../../packages/set/Set';
-import type { Neo4jRelationship } from '../../neo4j/Neo4jRelationship';
+import type { ExternalGraphDatabaseRelationship } from '../../external-database/data/ExternalGraphDatabaseRelationship';
 import { PropertyCollection } from './PropertyCollection';
 import { Range } from '../../../packages/range/Range';
 import type { NodeIndex } from './NodeIndex';
@@ -135,15 +135,15 @@ export class EdgeIndex {
     return true;
   }
 
-  public addNeo4jEdges(
-    neo4jEdges: SMap<string, Neo4jRelationship>,
+  public addGraphEdges(
+    relationships: ExternalGraphDatabaseRelationship[],
     creationAction: ElementCreationReason,
     nodeIndex: NodeIndex,
   ): number {
     let result: number = 0;
-    for (const relationship of neo4jEdges) {
-      const didAdd: boolean = this.addNeo4jEdge(
-        relationship[1],
+    for (const relationship of relationships) {
+      const didAdd: boolean = this.addGraphEdge(
+        relationship,
         creationAction,
         nodeIndex,
       );
@@ -154,15 +154,14 @@ export class EdgeIndex {
     return result;
   }
 
-  public addNeo4jEdge(
-    relationship: Neo4jRelationship,
+  public addGraphEdge(
+    relationship: ExternalGraphDatabaseRelationship,
     creationAction: ElementCreationReason,
     nodeIndex: NodeIndex,
   ): boolean {
     const sourceId: string = relationship.source.nakarId;
-    const startNativeNodeId: string =
-      relationship.relationship.startNodeElementId;
-    const endNativeNodeId: string = relationship.relationship.endNodeElementId;
+    const startNativeNodeId: string = relationship.startNodeId;
+    const endNativeNodeId: string = relationship.endNodeId;
 
     const startClusterNode: GraphNode | null =
       nodeIndex.getClusterNodeForCompressedNativeId(
@@ -173,15 +172,13 @@ export class EdgeIndex {
       nodeIndex.getClusterNodeForCompressedNativeId(sourceId, endNativeNodeId);
 
     const mutableEdge: GraphEdge = new GraphEdge({
-      id: sourceId + '_' + relationship.relationship.elementId,
-      nativeId: relationship.relationship.elementId,
+      id: sourceId + '_' + relationship.nativeId,
+      nativeId: relationship.nativeId,
       startNodeId: startClusterNode?.id ?? sourceId + '_' + startNativeNodeId,
       endNodeId: endClusterNode?.id ?? sourceId + '_' + endNativeNodeId,
-      type: relationship.relationship.type,
+      type: relationship.type,
       compressed: new SSet(),
-      properties: PropertyCollection.fromRecord(
-        relationship.relationship.properties,
-      ),
+      properties: PropertyCollection.fromRecord(relationship.properties),
       namesInQuery: relationship.keys,
       sourceId: relationship.source.nakarId,
       sourceTitle: relationship.source.nakarTitle,

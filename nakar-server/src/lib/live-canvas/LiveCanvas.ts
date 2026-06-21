@@ -7,12 +7,9 @@ import type { DatabaseService } from '../database/DatabaseService';
 import type { WTEvent } from '../live-canvas-worker/worker-events/WTEvent';
 import { match, P } from 'ts-pattern';
 import type { WTEventPhysicsUpdate } from '../live-canvas-worker/worker-events/WTEventPhysicsUpdate';
-import { Neo4jDatabaseInfo } from '../neo4j/Neo4jDatabaseInfo';
 import { GraphNode } from './graph/GraphNode';
 import { NotFound } from 'http-errors';
 import { PositionsCache } from './graph/PositionsCache';
-import type { Neo4jGraphElements } from '../neo4j/Neo4jGraphElements';
-import { Neo4jLimitConfig } from '../neo4j/Neo4jLimitConfig';
 import type { CanvasEventNotAllNodesLoaded } from './events/CanvasEventNotAllNodesLoaded';
 import { ElementCreationReason } from './graph/ElementCreationReason';
 import { SSet } from '../../packages/set/Set';
@@ -20,12 +17,14 @@ import { GraphEdge } from './graph/GraphEdge';
 import { v4 } from 'uuid';
 import { PropertyCollection } from './graph/PropertyCollection';
 import { ElementPosition } from './graph/ElementPosition';
-import type { Neo4jService } from '../neo4j/Neo4jService';
 import { PhysicsWorker } from './PhysicsWorker';
 import { TaskQueue } from '../../packages/task-queue/TaskQueue';
 import type { TaskQueueState } from '../../packages/task-queue/TaskQueueState';
 import { TaskQueueTask } from '../../packages/task-queue/TaskQueueTask';
-import type { Neo4jRelationship } from '../neo4j/Neo4jRelationship';
+import type { ExternalGraphDatabaseRelationship } from '../external-database/data/ExternalGraphDatabaseRelationship';
+import type { ExternalGraphDatabaseQueryResult } from '../external-database/data/ExternalGraphDatabaseQueryResult';
+import { ExternalGraphDatabaseQueryLimitConfig } from '../external-database/data/ExternalGraphDatabaseQueryLimitConfig';
+import type { ExternalGraphDatabaseService } from '../external-database/ExternalGraphDatabaseService';
 import type { Result } from '@strapi/types/dist/modules/documents/result';
 import type { Logger } from '@strapi/logger';
 import { createChildLogger } from '../logger/createChildLogger';
@@ -77,7 +76,7 @@ export class LiveCanvas {
   public constructor(
     private readonly _canvasId: string,
     private readonly _database: DatabaseService,
-    private readonly _neo4j: Neo4jService,
+    private readonly _externalGraphDatabase: ExternalGraphDatabaseService,
     private readonly _databaseEventsService: DatabaseEventsService,
     private readonly _schemaFactory: SchemaFactoryService,
     private readonly _monitoringService: MonitoringService,
@@ -357,7 +356,7 @@ export class LiveCanvas {
           await this._database.getParametersOfScenario(scenario);
 
         const tableData: SMap<string, unknown>[] = [];
-        const graphElementsList: Neo4jGraphElements[] = [];
+        const graphElementsList: ExternalGraphDatabaseQueryResult[] = [];
 
         for (const query of queries) {
           if (query.query == null) {
@@ -375,10 +374,7 @@ export class LiveCanvas {
             );
           }
 
-          const credentials: Neo4jDatabaseInfo =
-            Neo4jDatabaseInfo.parse(database);
-
-          const argsForNeo4j: Record<string, unknown> = params.arguments
+          const argsForQuery: Record<string, unknown> = params.arguments
             .map((value: string, identifier: string): unknown => {
               const parameter: Result<'api::query-parameter.query-parameter'> | null =
                 parameters.find(
@@ -400,12 +396,12 @@ export class LiveCanvas {
             })
             .toRecord();
 
-          const graphElements: Neo4jGraphElements =
-            await this._neo4j.executeQuery(
-              credentials,
+          const graphElements: ExternalGraphDatabaseQueryResult =
+            await this._externalGraphDatabase.executeQuery(
+              database,
               query.query,
-              argsForNeo4j,
-              new Neo4jLimitConfig(
+              argsForQuery,
+              new ExternalGraphDatabaseQueryLimitConfig(
                 'default',
                 query.isTableQuery === true ? 'tableData' : 'graphElements',
               ),
@@ -450,13 +446,13 @@ export class LiveCanvas {
         const databaseCache: DatabaseReferenceCache =
           new DatabaseReferenceCache(this._database);
         for (const graphElements of graphElementsList) {
-          await graph.nodes.addNeo4jNodes(
-            graphElements.nodes,
+          await graph.nodes.addGraphNodes(
+            graphElements.nodes.toValueArray(),
             ElementCreationReason.loadScenario,
             databaseCache,
           );
-          graph.edges.addNeo4jEdges(
-            graphElements.relationships,
+          graph.edges.addGraphEdges(
+            graphElements.relationships.toValueArray(),
             ElementCreationReason.loadScenario,
             graph.nodes,
           );
@@ -709,24 +705,17 @@ export class LiveCanvas {
           const database: Result<'api::database-connection.database-connection'> =
             await this._database.getDatabase(node.sourceId);
 
-          const neo4jDatabaseInfo: Neo4jDatabaseInfo =
-            Neo4jDatabaseInfo.parse(database);
-
-          const expandResult: Neo4jGraphElements = node.isCluster
-            ? await this._neo4j.executeQuery(
-                neo4jDatabaseInfo,
-                'MATCH (n) WHERE elementId(n) IN $nodeIds OPTIONAL MATCH (n)-[r]-(neighbor) WHERE elementId(neighbor) in $neighbors RETURN n, r',
-                {
-                  nodeIds: node.compressed.toArray(),
-                  neighbors: oldGraph
-                    .getNeighborsOfNode(node)
-                    .toArray()
-                    .map((n: GraphNode): string => n.nativeId),
-                },
-                new Neo4jLimitConfig('default', 'graphElements'),
+          const expandResult: ExternalGraphDatabaseQueryResult = node.isCluster
+            ? await this._externalGraphDatabase.expandClusterNode(
+                database,
+                node.compressed.toArray(),
+                oldGraph
+                  .getNeighborsOfNode(node)
+                  .toArray()
+                  .map((n: GraphNode): string => n.nativeId),
               )
-            : await this._neo4j.expandNode(
-                neo4jDatabaseInfo,
+            : await this._externalGraphDatabase.expandNode(
+                database,
                 new SSet<string>([node.nativeId]),
                 params.limit,
               );
@@ -751,7 +740,7 @@ export class LiveCanvas {
           for (const newNode of expandResult.nodes) {
             if (!graph.nodes.hasById(newNode[0])) {
               const insertedNode: GraphNode | null =
-                await graph.nodes.addNeo4jNode(
+                await graph.nodes.addGraphNode(
                   newNode[1],
                   ElementCreationReason.expand,
                   databaseCache,
@@ -764,7 +753,7 @@ export class LiveCanvas {
           }
           for (const newEdge of expandResult.relationships) {
             if (!graph.edges.has(newEdge[0])) {
-              graph.edges.addNeo4jEdge(
+              graph.edges.addGraphEdge(
                 newEdge[1],
                 ElementCreationReason.expand,
                 graph.nodes,
@@ -981,15 +970,12 @@ export class LiveCanvas {
           );
         }
 
-        const credentials: Neo4jDatabaseInfo =
-          Neo4jDatabaseInfo.parse(database);
-
-        const graphElements: Neo4jGraphElements =
-          await this._neo4j.executeQuery(
-            credentials,
+        const graphElements: ExternalGraphDatabaseQueryResult =
+          await this._externalGraphDatabase.executeQuery(
+            database,
             params.query,
             {},
-            new Neo4jLimitConfig(
+            new ExternalGraphDatabaseQueryLimitConfig(
               'default',
               params.replace ? 'all' : 'graphElements',
             ),
@@ -1019,13 +1005,13 @@ export class LiveCanvas {
         }
         const databaseCache: DatabaseReferenceCache =
           new DatabaseReferenceCache(this._database);
-        await graph.nodes.addNeo4jNodes(
-          graphElements.nodes,
+        await graph.nodes.addGraphNodes(
+          graphElements.nodes.toValueArray(),
           ElementCreationReason.query,
           databaseCache,
         );
-        graph.edges.addNeo4jEdges(
-          graphElements.relationships,
+        graph.edges.addGraphEdges(
+          graphElements.relationships.toValueArray(),
           ElementCreationReason.query,
           graph.nodes,
         );
@@ -1222,24 +1208,17 @@ export class LiveCanvas {
               continue;
             }
 
-            const neo4jDatabaseInfo: Neo4jDatabaseInfo =
-              Neo4jDatabaseInfo.parse(database);
-
-            const expandResult: Neo4jGraphElements =
-              await this._neo4j.executeQuery(
-                neo4jDatabaseInfo,
-                'MATCH (a)-[r]-(b) WHERE elementId(r) IN $relationshipIds RETURN r',
-                {
-                  relationshipIds: edge.compressed.toArray(),
-                },
-                new Neo4jLimitConfig('default', 'graphElements'),
+            const expandResult: ExternalGraphDatabaseQueryResult =
+              await this._externalGraphDatabase.findRelationshipsByIds(
+                database,
+                edge.compressed.toArray(),
               );
 
             graph.edges.remove(edge);
             changeRecorder.didAddOrRemoveGraphElements();
 
             for (const newEdge of expandResult.relationships.toValueArray()) {
-              const didAdd: boolean = graph.edges.addNeo4jEdge(
+              const didAdd: boolean = graph.edges.addGraphEdge(
                 newEdge,
                 ElementCreationReason.expand,
                 graph.nodes,
@@ -1312,7 +1291,7 @@ export class LiveCanvas {
           );
           const oldGraph: LiveCanvasUndoableData = this.getGraph();
 
-          const results: Neo4jGraphElements[] = [];
+          const results: ExternalGraphDatabaseQueryResult[] = [];
 
           /* create unique pairs */
           for (let i: number = 0; i < params.nodeIds.length - 1; i += 1) {
@@ -1349,21 +1328,12 @@ export class LiveCanvas {
               const dbDocument: Result<'api::database-connection.database-connection'> =
                 await this._database.getDatabase(source);
 
-              const dbInfo: Neo4jDatabaseInfo =
-                Neo4jDatabaseInfo.parse(dbDocument);
-              // 'MATCH p = SHORTEST 1 (a)-[]-+(b) WHERE elementId(a) = $elementIdA AND elementId(b) = $elementIdB RETURN p';
-              const query: string =
-                'MATCH p = allShortestPaths((a)-[*]-(b)) WHERE elementId(a) = $elementIdA AND elementId(b) = $elementIdB RETURN p';
-              const data: Record<string, unknown> = {
-                elementIdA: nodeA.nativeId,
-                elementIdB: nodeB.nativeId,
-              };
-              const result: Neo4jGraphElements = await this._neo4j.executeQuery(
-                dbInfo,
-                query,
-                data,
-                new Neo4jLimitConfig('default', 'graphElements'),
-              );
+              const result: ExternalGraphDatabaseQueryResult =
+                await this._externalGraphDatabase.findShortestPath(
+                  dbDocument,
+                  nodeA.nativeId,
+                  nodeB.nativeId,
+                );
               results.push(result);
             }
           }
@@ -1378,13 +1348,13 @@ export class LiveCanvas {
           const databaseCache: DatabaseReferenceCache =
             new DatabaseReferenceCache(this._database);
           for (const result of results) {
-            await graph.nodes.addNeo4jNodes(
-              result.nodes,
+            await graph.nodes.addGraphNodes(
+              result.nodes.toValueArray(),
               ElementCreationReason.expand,
               databaseCache,
             );
-            graph.edges.addNeo4jEdges(
-              result.relationships,
+            graph.edges.addGraphEdges(
+              result.relationships.toValueArray(),
               ElementCreationReason.expand,
               graph.nodes,
             );
@@ -1418,15 +1388,11 @@ export class LiveCanvas {
           );
         }
 
-        const dbInfo: Neo4jDatabaseInfo =
-          Neo4jDatabaseInfo.parse(databaseConnection);
-
-        const result: Neo4jGraphElements = await this._neo4j.executeQuery(
-          dbInfo,
-          'MATCH (n) WHERE elementId(n) = $id RETURN n LIMIT 1;',
-          { id: params.nativeNodeId },
-          new Neo4jLimitConfig('default', 'graphElements'),
-        );
+        const result: ExternalGraphDatabaseQueryResult =
+          await this._externalGraphDatabase.findNodeByNativeId(
+            databaseConnection,
+            params.nativeNodeId,
+          );
         if (result.nodes.size === 0) {
           throw new Error(`Node ${params.nativeNodeId} not found.`);
         }
@@ -1440,7 +1406,7 @@ export class LiveCanvas {
 
         const databaseCache: DatabaseReferenceCache =
           new DatabaseReferenceCache(this._database);
-        await graph.nodes.addNeo4jNode(
+        await graph.nodes.addGraphNode(
           result.nodes.toValueArray()[0],
           ElementCreationReason.search,
           databaseCache,
@@ -1688,7 +1654,7 @@ export class LiveCanvas {
   ): Promise<void> {
     const graph: LiveCanvasUndoableData = this.getGraph();
 
-    const egdesToAdd: Neo4jRelationship[] = [];
+    const egdesToAdd: ExternalGraphDatabaseRelationship[] = [];
     for (const source of graph.nodes.getSources()) {
       const nodesToConnect: SSet<string> = graph.nodes
         .getBySource(source)
@@ -1700,14 +1666,12 @@ export class LiveCanvas {
       const db: Result<'api::database-connection.database-connection'> =
         await this._database.getDatabase(source);
 
-      const credentials: Neo4jDatabaseInfo = Neo4jDatabaseInfo.parse(db);
-
       this._logger.info(
         `Will run connect result nodes on ${nodesToConnect.size.toString()} on database ${db.title ?? db.documentId}.`,
       );
-      const result: Neo4jGraphElements =
-        await this._neo4j.loadConnectingRelationships(
-          credentials,
+      const result: ExternalGraphDatabaseQueryResult =
+        await this._externalGraphDatabase.loadConnectingRelationships(
+          db,
           nodesToConnect,
         );
 
@@ -1716,7 +1680,7 @@ export class LiveCanvas {
 
     let addedEdgesCount: number = 0;
     for (const edgeToAdd of egdesToAdd) {
-      const didAdd: boolean = graph.edges.addNeo4jEdge(
+      const didAdd: boolean = graph.edges.addGraphEdge(
         edgeToAdd,
         ElementCreationReason.connectResultNodes,
         graph.nodes,
