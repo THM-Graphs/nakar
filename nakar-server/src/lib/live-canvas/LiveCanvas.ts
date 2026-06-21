@@ -1654,7 +1654,7 @@ export class LiveCanvas {
   ): Promise<void> {
     const graph: LiveCanvasUndoableData = this.getGraph();
 
-    const egdesToAdd: ExternalGraphDatabaseRelationship[] = [];
+    const edgesToAdd: ExternalGraphDatabaseRelationship[] = [];
     for (const source of graph.nodes.getSources()) {
       const nodesToConnect: SSet<string> = graph.nodes
         .getBySource(source)
@@ -1675,11 +1675,11 @@ export class LiveCanvas {
           nodesToConnect,
         );
 
-      egdesToAdd.push(...result.relationships.toValueArray());
+      edgesToAdd.push(...result.relationships.toValueArray());
     }
 
     let addedEdgesCount: number = 0;
-    for (const edgeToAdd of egdesToAdd) {
+    for (const edgeToAdd of edgesToAdd) {
       const didAdd: boolean = graph.edges.addGraphEdge(
         edgeToAdd,
         ElementCreationReason.connectResultNodes,
