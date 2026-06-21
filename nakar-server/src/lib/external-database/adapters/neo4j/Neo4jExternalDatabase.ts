@@ -16,7 +16,6 @@ import type { ExternalGraphDatabaseSearchCapabilities } from '../../data/Externa
 import type { ExternalGraphDatabaseNode } from '../../data/ExternalGraphDatabaseNode';
 import { ExternalGraphDatabaseQueryLimitConfig } from '../../data/ExternalGraphDatabaseQueryLimitConfig';
 import { Neo4jGraphElementsFactory } from './Neo4jGraphElementsFactory';
-import { Neo4jSearchCapabilities } from './Neo4jSearchCapabilities';
 import { ExternalGraphDatabaseExpandNodePreviewEntry } from '../../data/ExternalGraphDatabaseExpandNodePreviewEntry';
 import { ExternalGraphDatabaseExpandNodePreview } from '../../data/ExternalGraphDatabaseExpandNodePreview';
 import type { ExternalGraphDatabaseStats } from '../../data/ExternalGraphDatabaseStats';
@@ -230,7 +229,6 @@ ORDER BY lcount DESC, label ASC`,
       new ExternalGraphDatabaseQueryLimitConfig('default', 'tableData'),
     );
 
-    let canExactMatchLabel: boolean = false;
     const exactMatchNodeProperties: SMap<string, SSet<string>> = new SMap<
       string,
       SSet<string>
@@ -244,12 +242,7 @@ ORDER BY lcount DESC, label ASC`,
       if (line.get('state') !== 'ONLINE') {
         continue;
       }
-      if (line.get('type') === 'LOOKUP' && line.get('entityType') === 'NODE') {
-        canExactMatchLabel = true;
-      } else if (
-        line.get('type') === 'RANGE' &&
-        line.get('entityType') === 'NODE'
-      ) {
+      if (line.get('type') === 'RANGE' && line.get('entityType') === 'NODE') {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
         const labelsOrTypes: string[] = line.get('labelsOrTypes') as string[];
         // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
@@ -281,11 +274,12 @@ ORDER BY lcount DESC, label ASC`,
       }
     }
 
-    return new Neo4jSearchCapabilities({
-      canExactMatchLabel: canExactMatchLabel,
+    return {
+      canExactMatchNativeId: true,
+      canExactMatchLabel: false,
       exactMatchNodeProperties: exactMatchNodeProperties,
       fuzzyMatchNodeProperties: fuzzyMatchNodeProperties,
-    });
+    };
   }
 
   public async search(
@@ -305,11 +299,6 @@ ORDER BY lcount DESC, label ASC`,
     queries.push(
       `MATCH (n) WHERE elementId(n) = $searchTerm\nRETURN n\nLIMIT ${limit.getLimit()}`,
     );
-    if (searchCapabilities.canExactMatchLabel) {
-      queries.push(
-        `MATCH (n: $searchTerm)\nRETURN n\nLIMIT ${limit.getLimit()}`,
-      );
-    }
     for (const exactMatchLabelAndProperty of searchCapabilities.exactMatchNodeProperties) {
       const label: string = exactMatchLabelAndProperty[0];
       const propeties: SSet<string> = exactMatchLabelAndProperty[1];

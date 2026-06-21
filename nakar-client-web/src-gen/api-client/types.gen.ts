@@ -316,7 +316,7 @@ export type SearchCapabilitiesEntryDto = {
 };
 
 export type GetSearchCapabilitiesResponseBodyDto = {
-    canExactMatchElementId: boolean;
+    canExactMatchNativeId: boolean;
     canExactMatchLabel: boolean;
     exactMatchNodeProperties: Array<SearchCapabilitiesEntryDto>;
     fuzzyMatchNodeProperties: Array<SearchCapabilitiesEntryDto>;

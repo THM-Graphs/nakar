@@ -87,10 +87,8 @@ export function SearchCapabilitiesDisplay(props: {
             </span>
             <span>Equality Match:</span>
             <span>
-              <SuccessIcon
-                success={e.data.canExactMatchElementId}
-              ></SuccessIcon>{" "}
-              Element-ID
+              <SuccessIcon success={e.data.canExactMatchNativeId}></SuccessIcon>{" "}
+              Native ID
             </span>
             <span>
               <SuccessIcon success={e.data.canExactMatchLabel}></SuccessIcon>{" "}

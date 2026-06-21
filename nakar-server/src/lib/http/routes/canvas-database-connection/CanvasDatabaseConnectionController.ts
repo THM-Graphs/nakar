@@ -161,7 +161,7 @@ export class CanvasDatabaseConnectionController {
       await this._externalGraphDatabase.getSearchCapabilities(database);
 
     return new GetSearchCapabilitiesResponseBodyDto({
-      canExactMatchElementId: capabilities.canExactMatchElementId,
+      canExactMatchNativeId: capabilities.canExactMatchNativeId,
       canExactMatchLabel: capabilities.canExactMatchLabel,
       exactMatchNodeProperties: capabilities.exactMatchNodeProperties.reduce(
         (
