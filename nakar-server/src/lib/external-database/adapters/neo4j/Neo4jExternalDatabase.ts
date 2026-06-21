@@ -25,6 +25,10 @@ import type { ExternalGraphDatabaseStatsRelationship } from '../../data/External
 import type { ExternalGraphDatabaseStatsLabel } from '../../data/ExternalGraphDatabaseStatsLabel';
 import { createHash, randomBytes } from 'crypto';
 
+function escapeBacktick(id: string): string {
+  return id.replace(/`/g, '``');
+}
+
 export class Neo4jExternalDatabase implements ExternalGraphDatabase {
   private readonly _logger: Logger;
   private readonly _driverPool: SMap<string, Driver>;
@@ -314,7 +318,7 @@ ORDER BY lcount DESC, label ASC`,
       const properties: SSet<string> = exactMatchLabelAndProperty[1];
       for (const property of properties) {
         queries.push(
-          `MATCH (n: \`${label}\`) WHERE n.\`${property}\` = $searchTerm\nRETURN n\nLIMIT ${limit.getLimit()}`,
+          `MATCH (n: \`${escapeBacktick(label)}\`) WHERE n.\`${escapeBacktick(property)}\` = $searchTerm\nRETURN n\nLIMIT ${limit.getLimit()}`,
         );
       }
     }
@@ -323,7 +327,7 @@ ORDER BY lcount DESC, label ASC`,
       const properties: SSet<string> = fuzzyMatchLabelAndProperty[1];
       for (const property of properties) {
         queries.push(
-          `MATCH (n: \`${label}\`) WHERE n.\`${property}\` CONTAINS $searchTerm\nRETURN n\nLIMIT ${limit.getLimit()}`,
+          `MATCH (n: \`${escapeBacktick(label)}\`) WHERE n.\`${escapeBacktick(property)}\` CONTAINS $searchTerm\nRETURN n\nLIMIT ${limit.getLimit()}`,
         );
       }
     }
@@ -483,11 +487,11 @@ ORDER BY lcount DESC, label ASC`,
   }
 
   private _exploreQueryOfLabel(label: string): string {
-    return `MATCH (n:\`${label}\`) RETURN * LIMIT ${ExternalGraphDatabaseQueryLimitConfig.maximalPreviewElements.toString()};`;
+    return `MATCH (n:\`${escapeBacktick(label)}\`) RETURN * LIMIT ${ExternalGraphDatabaseQueryLimitConfig.maximalPreviewElements.toString()};`;
   }
 
   private _exploreQueryOfRelationshipType(relType: string): string {
-    return `MATCH (a)-[r:\`${relType}\`]-(b) RETURN * LIMIT ${ExternalGraphDatabaseQueryLimitConfig.maximalPreviewElements.toString()};`;
+    return `MATCH (a)-[r:\`${escapeBacktick(relType)}\`]-(b) RETURN * LIMIT ${ExternalGraphDatabaseQueryLimitConfig.maximalPreviewElements.toString()};`;
   }
 
   private async _getNodesCount(
