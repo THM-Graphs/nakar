@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { TaskQueue } from './TaskQueue';
 import { TaskQueueTask } from './TaskQueueTask';
-import { TaskQueueState } from './TaskQueueState';
+import type { TaskQueueState } from './TaskQueueState';
 
 interface Deferred {
   promise: Promise<void>;

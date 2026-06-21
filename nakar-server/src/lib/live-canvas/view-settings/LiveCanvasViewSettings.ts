@@ -1,20 +1,20 @@
-import { LiveCanvasViewSettingsDto } from '../../schema/dtos/LiveCanvasViewSettingsDto';
-import { LiveCanvasLabelViewSettingsDto } from '../../schema/dtos/LiveCanvasLabelViewSettingsDto';
-import { LiveCanvasEdgeViewSettingsDto } from '../../schema/dtos/LiveCanvasEdgeViewSettingsDto';
+import type { LiveCanvasViewSettingsDto } from '../../schema/dtos/LiveCanvasViewSettingsDto';
+import type { LiveCanvasLabelViewSettingsDto } from '../../schema/dtos/LiveCanvasLabelViewSettingsDto';
+import type { LiveCanvasEdgeViewSettingsDto } from '../../schema/dtos/LiveCanvasEdgeViewSettingsDto';
 import { Range } from '../../../packages/range/Range';
-import { ScaleType } from '../../../packages/range/ScaleType';
-import { LiveCanvasEdgeViewSettingsState } from './LiveCanvasEdgeViewSettingsState';
-import { LiveCanvasLabelViewSettingsState } from './LiveCanvasLabelViewSettingsState';
-import { LiveCanvasViewSettingsColorIndex } from './LiveCanvasViewSettingsColorIndex';
+import type { ScaleType } from '../../../packages/range/ScaleType';
+import type { LiveCanvasEdgeViewSettingsState } from './LiveCanvasEdgeViewSettingsState';
+import type { LiveCanvasLabelViewSettingsState } from './LiveCanvasLabelViewSettingsState';
+import type { LiveCanvasViewSettingsColorIndex } from './LiveCanvasViewSettingsColorIndex';
 import { LiveCanvasViewSettingsDefaultValues } from './LiveCanvasViewSettingsDefaultValues';
 import { LiveCanvasViewSettingsFactory } from './LiveCanvasViewSettingsFactory';
 import { LiveCanvasViewSettingsMapper } from './LiveCanvasViewSettingsMapper';
 import { LiveCanvasViewSettingsMerger } from './LiveCanvasViewSettingsMerger';
-import { LiveCanvasViewSettingsPlain } from './LiveCanvasViewSettingsPlain';
+import type { LiveCanvasViewSettingsPlain } from './LiveCanvasViewSettingsPlain';
 import { LiveCanvasViewSettingsResolver } from './LiveCanvasViewSettingsResolver';
 import { LiveCanvasViewSettingsValidator } from './LiveCanvasViewSettingsValidator';
 import { liveCanvasViewSettingsSchema } from './liveCanvasViewSettingsSchema';
-import { LiveCanvasViewSettingsState } from './LiveCanvasViewSettingsState';
+import type { LiveCanvasViewSettingsState } from './LiveCanvasViewSettingsState';
 
 /**
  * Helper object that keeps the composed view settings collaborators together.

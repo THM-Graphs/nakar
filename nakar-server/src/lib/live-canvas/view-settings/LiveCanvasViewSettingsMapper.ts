@@ -1,16 +1,16 @@
 import { GraphEdge } from '../graph/GraphEdge';
 import { GraphNode } from '../graph/GraphNode';
-import { LiveCanvasEdgeViewSettingsDto } from '../../schema/dtos/LiveCanvasEdgeViewSettingsDto';
-import { LiveCanvasLabelViewSettingsDto } from '../../schema/dtos/LiveCanvasLabelViewSettingsDto';
-import { LiveCanvasViewSettingsDto } from '../../schema/dtos/LiveCanvasViewSettingsDto';
-import { LiveCanvasEdgeViewSettingsPlain } from './LiveCanvasEdgeViewSettingsPlain';
-import { LiveCanvasEdgeViewSettingsState } from './LiveCanvasEdgeViewSettingsState';
-import { LiveCanvasLabelViewSettingsPlain } from './LiveCanvasLabelViewSettingsPlain';
-import { LiveCanvasLabelViewSettingsState } from './LiveCanvasLabelViewSettingsState';
-import { LiveCanvasViewSettingsDefaultValues } from './LiveCanvasViewSettingsDefaultValues';
-import { LiveCanvasViewSettingsPlain } from './LiveCanvasViewSettingsPlain';
-import { LiveCanvasViewSettingsState } from './LiveCanvasViewSettingsState';
-import { LiveCanvasViewSettingsValidator } from './LiveCanvasViewSettingsValidator';
+import type { LiveCanvasEdgeViewSettingsDto } from '../../schema/dtos/LiveCanvasEdgeViewSettingsDto';
+import type { LiveCanvasLabelViewSettingsDto } from '../../schema/dtos/LiveCanvasLabelViewSettingsDto';
+import type { LiveCanvasViewSettingsDto } from '../../schema/dtos/LiveCanvasViewSettingsDto';
+import type { LiveCanvasEdgeViewSettingsPlain } from './LiveCanvasEdgeViewSettingsPlain';
+import type { LiveCanvasEdgeViewSettingsState } from './LiveCanvasEdgeViewSettingsState';
+import type { LiveCanvasLabelViewSettingsPlain } from './LiveCanvasLabelViewSettingsPlain';
+import type { LiveCanvasLabelViewSettingsState } from './LiveCanvasLabelViewSettingsState';
+import type { LiveCanvasViewSettingsDefaultValues } from './LiveCanvasViewSettingsDefaultValues';
+import type { LiveCanvasViewSettingsPlain } from './LiveCanvasViewSettingsPlain';
+import type { LiveCanvasViewSettingsState } from './LiveCanvasViewSettingsState';
+import type { LiveCanvasViewSettingsValidator } from './LiveCanvasViewSettingsValidator';
 
 /**
  * Maps view settings between runtime state, persisted plain data, and API DTOs.

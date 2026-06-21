@@ -1,10 +1,10 @@
 import { GraphEdge } from '../graph/GraphEdge';
 import { GraphNode } from '../graph/GraphNode';
-import { LiveCanvasEdgeViewSettingsState } from './LiveCanvasEdgeViewSettingsState';
-import { LiveCanvasLabelViewSettingsState } from './LiveCanvasLabelViewSettingsState';
+import type { LiveCanvasEdgeViewSettingsState } from './LiveCanvasEdgeViewSettingsState';
+import type { LiveCanvasLabelViewSettingsState } from './LiveCanvasLabelViewSettingsState';
 import { LiveCanvasViewSettingsColorAssignment } from './LiveCanvasViewSettingsColorAssignment';
 import { LiveCanvasViewSettingsDefaultValues } from './LiveCanvasViewSettingsDefaultValues';
-import { LiveCanvasViewSettingsState } from './LiveCanvasViewSettingsState';
+import type { LiveCanvasViewSettingsState } from './LiveCanvasViewSettingsState';
 
 /**
  * Creates complete, valid view settings state objects.

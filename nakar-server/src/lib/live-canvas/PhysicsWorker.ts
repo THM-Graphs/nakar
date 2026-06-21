@@ -1,13 +1,14 @@
 import { Worker } from 'node:worker_threads';
-import { WTEvent } from '../live-canvas-worker/worker-events/WTEvent';
-import { PhysicalGraph } from '../../packages/physics/physical-graph/PhysicalGraph';
-import { LiveCanvasWorkerData } from '../live-canvas-worker/LiveCanvasWorkerData';
+import type { WTEvent } from '../live-canvas-worker/worker-events/WTEvent';
+import type { PhysicalGraph } from '../../packages/physics/physical-graph/PhysicalGraph';
+import type { LiveCanvasWorkerData } from '../live-canvas-worker/LiveCanvasWorkerData';
 import path from 'path';
-import { WTAction } from '../live-canvas-worker/worker-events/WTAction';
-import { Observable, Subject } from 'rxjs';
-import { Logger } from '@strapi/logger';
+import type { WTAction } from '../live-canvas-worker/worker-events/WTAction';
+import type { Observable } from 'rxjs';
+import { Subject } from 'rxjs';
+import type { Logger } from '@strapi/logger';
 import { createChildLogger } from '../logger/createChildLogger';
-import { WTPhysicalNode } from '../live-canvas-worker/worker-events/WTPhysicalNode';
+import type { WTPhysicalNode } from '../live-canvas-worker/worker-events/WTPhysicalNode';
 
 export class PhysicsWorker {
   private readonly _logger: Logger = createChildLogger(this);

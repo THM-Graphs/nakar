@@ -98,11 +98,9 @@ export default defineConfig([
       '@typescript-eslint/parameter-properties': 'off',
       '@typescript-eslint/method-signature-style': ['error', 'method'],
       '@typescript-eslint/return-await': ['error', 'always'],
-      '@typescript-eslint/consistent-type-imports': [
-        'error',
-        { prefer: 'no-type-imports', disallowTypeAnnotations: true },
-      ],
+      '@typescript-eslint/consistent-type-imports': ['error'],
       '@typescript-eslint/prefer-destructuring': 'off',
+      curly: ['error', 'all'],
     },
   },
 ]);

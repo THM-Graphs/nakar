@@ -2,11 +2,11 @@ import { SMap } from '../../../packages/map/Map';
 import { GraphEdge } from './GraphEdge';
 import type { GraphNode } from './GraphNode';
 import { SSet } from '../../../packages/set/Set';
-import { Neo4jRelationship } from '../../neo4j/Neo4jRelationship';
+import type { Neo4jRelationship } from '../../neo4j/Neo4jRelationship';
 import { PropertyCollection } from './PropertyCollection';
 import { Range } from '../../../packages/range/Range';
-import { ElementCreationReason } from './ElementCreationReason';
 import { NodeIndex } from './NodeIndex';
+import type { ElementCreationReason } from './ElementCreationReason';
 
 export class EdgeIndex {
   private readonly _byId: SMap<string, GraphEdge>;

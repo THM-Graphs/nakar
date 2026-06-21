@@ -1,12 +1,12 @@
 import { PropertyCollection } from './PropertyCollection';
 import { z } from 'zod';
 import { SSet } from '../../../packages/set/Set';
-import { LiveCanvasUndoableData } from '../data/LiveCanvasUndoableData';
+import type { LiveCanvasUndoableData } from '../data/LiveCanvasUndoableData';
 import { SMap } from '../../../packages/map/Map';
 import { Range } from '../../../packages/range/Range';
 import { ElementCreationReason } from './ElementCreationReason';
-import { LiveCanvasViewSettings } from '../view-settings/LiveCanvasViewSettings';
-import { LiveCanvasEdgeViewSettingsState } from '../view-settings/LiveCanvasEdgeViewSettingsState';
+import type { LiveCanvasViewSettings } from '../view-settings/LiveCanvasViewSettings';
+import type { LiveCanvasEdgeViewSettingsState } from '../view-settings/LiveCanvasEdgeViewSettingsState';
 
 export class GraphEdge {
   public static readonly defaultWidth: number = 2;

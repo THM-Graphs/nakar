@@ -1,7 +1,7 @@
 import { SMap } from '../../packages/map/Map';
-import { DatabaseService } from '../database/DatabaseService';
-import { Result } from '@strapi/types/dist/modules/documents/result';
-import { Logger } from '@strapi/logger';
+import type { DatabaseService } from '../database/DatabaseService';
+import type { Result } from '@strapi/types/dist/modules/documents/result';
+import type { Logger } from '@strapi/logger';
 import { createChildLogger } from '../logger/createChildLogger';
 
 export class DatabaseReferenceCache {

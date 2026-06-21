@@ -1,4 +1,5 @@
-import { createLogger, Logger } from '@strapi/logger';
+import type { Logger } from '@strapi/logger';
+import { createLogger } from '@strapi/logger';
 import loggerConfig from '../../../config/logger';
 import { isMainThread } from 'node:worker_threads';
 

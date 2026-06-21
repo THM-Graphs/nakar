@@ -1,4 +1,4 @@
-import { Result } from '@strapi/types/dist/modules/documents/result';
+import type { Result } from '@strapi/types/dist/modules/documents/result';
 
 export class Neo4jDatabaseInfo {
   public readonly url: string;

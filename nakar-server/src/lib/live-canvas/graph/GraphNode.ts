@@ -2,14 +2,14 @@ import { ElementPosition } from './ElementPosition';
 import { PropertyCollection } from './PropertyCollection';
 import { z } from 'zod';
 import { SSet } from '../../../packages/set/Set';
-import { GraphEdge } from './GraphEdge';
-import { LiveCanvasUndoableData } from '../data/LiveCanvasUndoableData';
+import type { GraphEdge } from './GraphEdge';
+import type { LiveCanvasUndoableData } from '../data/LiveCanvasUndoableData';
 import { ElementCreationReason } from './ElementCreationReason';
 import { Range } from '../../../packages/range/Range';
-import { LiveCanvasViewSettings } from '../view-settings/LiveCanvasViewSettings';
-import { LiveCanvasLabelViewSettingsState } from '../view-settings/LiveCanvasLabelViewSettingsState';
-import { ElementColor } from './color/ElementColor';
-import { LiveCanvasNote } from '../data/LiveCanvasNote';
+import type { LiveCanvasViewSettings } from '../view-settings/LiveCanvasViewSettings';
+import type { LiveCanvasLabelViewSettingsState } from '../view-settings/LiveCanvasLabelViewSettingsState';
+import type { ElementColor } from './color/ElementColor';
+import type { LiveCanvasNote } from '../data/LiveCanvasNote';
 import { LiveCanvasScenarioGroup } from '../data/LiveCanvasScenarioGroup';
 
 export class GraphNode {

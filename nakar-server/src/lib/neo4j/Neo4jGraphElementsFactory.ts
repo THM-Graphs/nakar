@@ -1,21 +1,18 @@
-import {
-  isInt,
-  isNode,
-  isPath,
-  isRelationship,
+import type {
   Node,
   Record as Neo4jRecord,
   RecordShape,
   Relationship,
 } from 'neo4j-driver';
+import { isInt, isNode, isPath, isRelationship } from 'neo4j-driver';
 import { SMap } from '../../packages/map/Map';
 import { Neo4jNode } from './Neo4jNode';
 import { Neo4jRelationship } from './Neo4jRelationship';
 import { match, P } from 'ts-pattern';
 import { Neo4jGraphElements } from './Neo4jGraphElements';
-import { Neo4jDatabaseInfo } from './Neo4jDatabaseInfo';
-import { Neo4jLimitConfig } from './Neo4jLimitConfig';
-import { Logger } from '@strapi/logger';
+import type { Neo4jDatabaseInfo } from './Neo4jDatabaseInfo';
+import type { Neo4jLimitConfig } from './Neo4jLimitConfig';
+import type { Logger } from '@strapi/logger';
 import { createChildLogger } from '../logger/createChildLogger';
 
 export class Neo4jGraphElementsFactory {

@@ -1,7 +1,7 @@
 import { LiveCanvasUndoableData } from './LiveCanvasUndoableData';
 import { UndoWrapper } from '../../../packages/undo/UndoWrapper';
 import { LiveCanvasViewSettings } from '../view-settings/LiveCanvasViewSettings';
-import { LiveCanvasUser } from './LiveCanvasUser';
+import type { LiveCanvasUser } from './LiveCanvasUser';
 import z from 'zod';
 
 export class LiveCanvasData {

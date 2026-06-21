@@ -1,7 +1,7 @@
-import { Range } from '../../../packages/range/Range';
-import { LiveCanvasEdgeViewSettingsDto } from '../../schema/dtos/LiveCanvasEdgeViewSettingsDto';
-import { LiveCanvasLabelViewSettingsDto } from '../../schema/dtos/LiveCanvasLabelViewSettingsDto';
-import { LiveCanvasViewSettingsColorIndex } from './LiveCanvasViewSettingsColorIndex';
+import type { Range } from '../../../packages/range/Range';
+import type { LiveCanvasEdgeViewSettingsDto } from '../../schema/dtos/LiveCanvasEdgeViewSettingsDto';
+import type { LiveCanvasLabelViewSettingsDto } from '../../schema/dtos/LiveCanvasLabelViewSettingsDto';
+import type { LiveCanvasViewSettingsColorIndex } from './LiveCanvasViewSettingsColorIndex';
 
 /**
  * Centralizes defensive normalization rules for view settings values.

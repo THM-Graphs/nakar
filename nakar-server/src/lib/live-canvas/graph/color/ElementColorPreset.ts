@@ -1,7 +1,7 @@
 import { ElementColor } from './ElementColor';
-import { ElementColorPresetIndex } from './ElementColorPresetIndex';
-import z from 'zod';
-import { ColorDto } from '../../../schema/dtos/ColorDto';
+import type { ElementColorPresetIndex } from './ElementColorPresetIndex';
+import type z from 'zod';
+import type { ColorDto } from '../../../schema/dtos/ColorDto';
 
 export class ElementColorPreset extends ElementColor {
   public readonly index: ElementColorPresetIndex;

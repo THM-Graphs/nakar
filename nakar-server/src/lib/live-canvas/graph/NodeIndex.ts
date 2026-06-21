@@ -1,16 +1,16 @@
 import { SMap } from '../../../packages/map/Map';
 import { GraphNode } from './GraphNode';
 import { SSet } from '../../../packages/set/Set';
-import { Neo4jNode } from '../../neo4j/Neo4jNode';
+import type { Neo4jNode } from '../../neo4j/Neo4jNode';
 import { ElementPosition } from './ElementPosition';
 import { PropertyCollection } from './PropertyCollection';
 import { Range } from '../../../packages/range/Range';
-import { LiveCanvasUndoableData } from '../data/LiveCanvasUndoableData';
-import { ElementCreationReason } from './ElementCreationReason';
+import type { LiveCanvasUndoableData } from '../data/LiveCanvasUndoableData';
+import type { ElementCreationReason } from './ElementCreationReason';
 import { LabelIndex } from './LabelIndex';
-import { DatabaseReferenceCache } from '../../schema/DatabaseReferenceCache';
-import { Result } from '@strapi/types/dist/modules/documents';
-import { Logger } from '@strapi/logger';
+import type { DatabaseReferenceCache } from '../../schema/DatabaseReferenceCache';
+import type { Result } from '@strapi/types/dist/modules/documents';
+import type { Logger } from '@strapi/logger';
 import { createChildLogger } from '../../logger/createChildLogger';
 import Handlebars from 'handlebars';
 

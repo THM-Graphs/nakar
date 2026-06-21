@@ -1,10 +1,11 @@
-import { NestExpressApplication } from '@nestjs/platform-express';
+import type { NestExpressApplication } from '@nestjs/platform-express';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './AppModule';
 import { getConfig } from '../config/getConfig';
-import { SanitizedConfig } from '../config/SanitizedConfig';
+import type { SanitizedConfig } from '../config/SanitizedConfig';
 import { ValidationPipe } from '@nestjs/common';
-import { DocumentBuilder, OpenAPIObject, SwaggerModule } from '@nestjs/swagger';
+import type { OpenAPIObject } from '@nestjs/swagger';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import cors from 'cors';
 import { RouteLogger } from '../http/interceptors/RouteLogger';
 import { ActionWsdto } from '../socketIO/dto/ActionWsdto';
