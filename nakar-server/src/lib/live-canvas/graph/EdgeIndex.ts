@@ -25,7 +25,7 @@ export class EdgeIndex {
   /* Maps key => value => count */
   private readonly _propertyHistogram: SMap<string, SMap<string, number>>;
 
-  private readonly _compressed: SSet<string>;
+  private readonly _compressed: SMap<string, SSet<string>>;
 
   public constructor(edges: GraphEdge[]) {
     this._byId = new SMap();
@@ -35,7 +35,7 @@ export class EdgeIndex {
     this._byStartAndEndNodeId = new SMap();
     this._typeHistogram = new SMap();
     this._propertyHistogram = new SMap();
-    this._compressed = new SSet();
+    this._compressed = new SMap();
 
     for (const edge of edges) {
       this.add(edge);
@@ -78,7 +78,7 @@ export class EdgeIndex {
     if (this._byId.has(edge.id)) {
       return false;
     }
-    if (this._compressed.has(edge.nativeId)) {
+    if ((this._compressed.get(edge.sourceId) ?? new SSet()).has(edge.nativeId)) {
       return false;
     }
 
@@ -122,7 +122,10 @@ export class EdgeIndex {
     }
 
     for (const compressed of edge.compressed) {
-      this._compressed.add(compressed);
+      this._compressed.set(
+        edge.sourceId,
+        (this._compressed.get(edge.sourceId) ?? new SSet()).byAdding(compressed),
+      );
     }
 
     return true;
@@ -227,7 +230,10 @@ export class EdgeIndex {
     }
 
     for (const compressed of edge.compressed) {
-      this._compressed.delete(compressed);
+      this._compressed.get(edge.sourceId)?.delete(compressed);
+    }
+    if ((this._compressed.get(edge.sourceId)?.size ?? 0) === 0) {
+      this._compressed.delete(edge.sourceId);
     }
 
     return true;
