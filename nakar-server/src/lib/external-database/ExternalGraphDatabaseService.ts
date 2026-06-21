@@ -174,8 +174,8 @@ export class ExternalGraphDatabaseService implements OnModuleDestroy {
 
   public async expandClusterNode(
     database: Result<'api::database-connection.database-connection'>,
-    nodeIds: string[],
-    neighbors: string[],
+    nodeIds: SSet<string>,
+    neighbors: SSet<string>,
   ): Promise<ExternalGraphDatabaseQueryResult> {
     const credentials: ExternalGraphDatabaseCredentials =
       this.parseCredentials(database);

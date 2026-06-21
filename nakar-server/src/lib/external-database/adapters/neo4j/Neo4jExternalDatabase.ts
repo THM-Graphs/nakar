@@ -354,15 +354,15 @@ ORDER BY lcount DESC, label ASC`,
 
   public async expandClusterNode(
     credentials: ExternalGraphDatabaseCredentials,
-    nodeIds: string[],
-    neighbors: string[],
+    nodeIds: SSet<string>,
+    neighbors: SSet<string>,
   ): Promise<ExternalGraphDatabaseQueryResult> {
     return await this.executeQuery(
       credentials,
       'MATCH (n) WHERE elementId(n) IN $nodeIds OPTIONAL MATCH (n)-[r]-(neighbor) WHERE elementId(neighbor) in $neighbors RETURN n, r',
       {
-        nodeIds: nodeIds,
-        neighbors: neighbors,
+        nodeIds: nodeIds.toArray(),
+        neighbors: neighbors.toArray(),
       },
       new ExternalGraphDatabaseQueryLimitConfig('default', 'graphElements'),
     );
