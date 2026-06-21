@@ -40,10 +40,10 @@ export class ExternalGraphDatabaseService {
         .exhaustive(),
       nakarId: database.documentId,
       nakarTitle: database.title ?? null,
-      connectionUrl: database.connectionUrl ?? undefined,
-      username: database.username ?? undefined,
-      password: database.password ?? undefined,
-      database: database.database ?? undefined,
+      connectionUrl: database.connectionUrl ?? null,
+      username: database.username ?? null,
+      password: database.password ?? null,
+      database: database.database ?? null,
     };
   }
 
@@ -135,23 +135,8 @@ export class ExternalGraphDatabaseService {
   }
 
   public async testConnection(
-    connectionUrl: string,
-    username: string,
-    password: string,
-    database: string | null,
-    nakarId: string,
-    nakarTitle: string | null,
-    databaseType: ExternalGraphDatabaseType,
+    credentials: ExternalGraphDatabaseCredentials,
   ): Promise<ExternalGraphDatabaseStats> {
-    const credentials: ExternalGraphDatabaseCredentials = {
-      databaseType,
-      nakarId,
-      nakarTitle,
-      connectionUrl,
-      username,
-      password,
-      database: database ?? undefined,
-    };
     return await this.getAdapter(credentials).getStats(credentials);
   }
 

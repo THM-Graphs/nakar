@@ -191,6 +191,7 @@ export function DatabaseConnectionEditor(props: {
                     databaseConnectionControllerTestDatabaseConnection({
                       path: { projectId: props.project.id },
                       body: {
+                        databaseType: "neo4j",
                         id: props.initialDatabase?.id ?? null,
                         username: props.value.username,
                         password: props.value.password,

@@ -44,7 +44,7 @@ export class Neo4jExternalDatabase implements ExternalGraphDatabase {
     try {
       const sessionConfig: SessionConfig = {
         defaultAccessMode: neo4j.session.READ,
-        database: credentials.database,
+        database: credentials.database ?? undefined,
       };
       const session: Session = driver.session(sessionConfig);
       this._logger.debug(`Did open session: ${JSON.stringify(sessionConfig)}`);

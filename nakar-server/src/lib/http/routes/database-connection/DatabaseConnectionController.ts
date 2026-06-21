@@ -83,14 +83,14 @@ export class DatabaseConnectionController {
       }
 
       const dbInfo: ExternalGraphDatabaseStats =
-        await this._externalGraphDatabase.testConnection(
-          body.connectionUrl,
-          body.username ?? existingDatabase?.username ?? '',
-          body.password ?? existingDatabase?.password ?? '',
-          body.database,
-          body.id ?? existingDatabase?.documentId ?? '',
-          existingDatabase?.title ?? null,
-          match(body.databaseType)
+        await this._externalGraphDatabase.testConnection({
+          connectionUrl: body.connectionUrl,
+          username: body.username ?? existingDatabase?.username ?? '',
+          password: body.password ?? existingDatabase?.password ?? '',
+          database: body.database,
+          nakarId: body.id ?? existingDatabase?.documentId ?? '',
+          nakarTitle: existingDatabase?.title ?? null,
+          databaseType: match(body.databaseType)
             .with(
               DatabaseConnectionDatabaseType.neo4j,
               (): ExternalGraphDatabaseType => ExternalGraphDatabaseType.neo4j,
@@ -104,7 +104,7 @@ export class DatabaseConnectionController {
               (): ExternalGraphDatabaseType => ExternalGraphDatabaseType.ramen,
             )
             .exhaustive(),
-        );
+        });
 
       return new TestDatabaseConnectionResponseBodyDto({
         success: true,
