@@ -171,8 +171,11 @@ export class Neo4jExternalDatabase implements ExternalGraphDatabase {
     nodeIds: SSet<string>,
   ): Promise<ExternalGraphDatabaseExpandNodePreview> {
     const nodesIds: string[] = [...nodeIds.values()];
-    const relationships: ExternalGraphDatabaseQueryResult =
-      await this.executeQuery(
+    const [relationships, labels]: [
+      ExternalGraphDatabaseQueryResult,
+      ExternalGraphDatabaseQueryResult,
+    ] = await Promise.all([
+      this.executeQuery(
         credentials,
         `MATCH (a)-[neighbor]-(b)
 WHERE elementId(a) IN $nodesIds AND a <> b
@@ -182,7 +185,20 @@ ORDER BY rcount DESC, rtype ASC`,
           nodesIds: nodesIds,
         },
         new ExternalGraphDatabaseQueryLimitConfig('default', 'tableData'),
-      );
+      ),
+      this.executeQuery(
+        credentials,
+        `MATCH (a)-[]-(b)
+WHERE elementId(a) IN $nodesIds AND a <> b
+UNWIND labels(b) as label
+RETURN label, count(*) AS lcount
+ORDER BY lcount DESC, label ASC`,
+        {
+          nodesIds: nodesIds,
+        },
+        new ExternalGraphDatabaseQueryLimitConfig('default', 'tableData'),
+      ),
+    ]);
     const expandNodePreviewRelationshipEntries: ExternalGraphDatabaseExpandNodePreviewEntry[] =
       relationships.tableData.map(
         (
@@ -193,19 +209,6 @@ ORDER BY rcount DESC, rtype ASC`,
             Number(entry.get('rcount')),
           ),
       );
-
-    const labels: ExternalGraphDatabaseQueryResult = await this.executeQuery(
-      credentials,
-      `MATCH (a)-[]-(b)
-WHERE elementId(a) IN $nodesIds AND a <> b
-UNWIND labels(b) as label
-RETURN label, count(*) AS lcount
-ORDER BY lcount DESC, label ASC`,
-      {
-        nodesIds: nodesIds,
-      },
-      new ExternalGraphDatabaseQueryLimitConfig('default', 'tableData'),
-    );
     const expandNodePreviewLabelEntries: ExternalGraphDatabaseExpandNodePreviewEntry[] =
       labels.tableData.map(
         (
