@@ -1216,7 +1216,7 @@ export class LiveCanvas {
               await databaseCache.getDatabase(sourceId);
             if (database == null) {
               this._logger.warn(
-                `Expand Relationship Cluster: Database connection ${sourceId} nof found. Will skip`,
+                `Expand Relationship Cluster: Database connection ${sourceId} not found. Will skip`,
               );
               continue;
             }
