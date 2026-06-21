@@ -23,7 +23,7 @@ import type { TaskQueueState } from '../../packages/task-queue/TaskQueueState';
 import { TaskQueueTask } from '../../packages/task-queue/TaskQueueTask';
 import type { ExternalGraphDatabaseRelationship } from '../external-database/data/ExternalGraphDatabaseRelationship';
 import type { ExternalGraphDatabaseQueryResult } from '../external-database/data/ExternalGraphDatabaseQueryResult';
-import { ExternalGraphDatabaseQueryLimitConfig } from '../external-database/data/ExternalGraphDatabaseQueryLimitConfig';
+import { ExternalGraphDatabaseQueryLimitConfig, LimitType, CollectionType } from '../external-database/data/ExternalGraphDatabaseQueryLimitConfig';
 import type { ExternalGraphDatabaseService } from '../external-database/ExternalGraphDatabaseService';
 import type { Result } from '@strapi/types/dist/modules/documents/result';
 import type { Logger } from '@strapi/logger';
@@ -402,8 +402,8 @@ export class LiveCanvas {
               query.query,
               argsForQuery,
               new ExternalGraphDatabaseQueryLimitConfig(
-                'default',
-                query.isTableQuery === true ? 'tableData' : 'graphElements',
+                LimitType.default,
+                query.isTableQuery === true ? CollectionType.tableData : CollectionType.graphElements,
               ),
             );
 
@@ -976,8 +976,8 @@ export class LiveCanvas {
             params.query,
             {},
             new ExternalGraphDatabaseQueryLimitConfig(
-              'default',
-              params.replace ? 'all' : 'graphElements',
+              LimitType.default,
+              params.replace ? CollectionType.all : CollectionType.graphElements,
             ),
           );
 

@@ -14,7 +14,7 @@ import type { ExternalGraphDatabaseCredentials } from '../../data/ExternalGraphD
 import type { ExternalGraphDatabaseQueryResult } from '../../data/ExternalGraphDatabaseQueryResult';
 import type { ExternalGraphDatabaseSearchCapabilities } from '../../data/ExternalGraphDatabaseSearchCapabilities';
 import type { ExternalGraphDatabaseNode } from '../../data/ExternalGraphDatabaseNode';
-import { ExternalGraphDatabaseQueryLimitConfig } from '../../data/ExternalGraphDatabaseQueryLimitConfig';
+import { ExternalGraphDatabaseQueryLimitConfig, LimitType, CollectionType } from '../../data/ExternalGraphDatabaseQueryLimitConfig';
 import { Neo4jGraphElementsFactory } from './Neo4jGraphElementsFactory';
 import { ExternalGraphDatabaseExpandNodePreviewEntry } from '../../data/ExternalGraphDatabaseExpandNodePreviewEntry';
 import { ExternalGraphDatabaseExpandNodePreview } from '../../data/ExternalGraphDatabaseExpandNodePreview';
@@ -126,7 +126,7 @@ export class Neo4jExternalDatabase implements ExternalGraphDatabase {
       {
         existingNodeIds: nodesIds,
       },
-      new ExternalGraphDatabaseQueryLimitConfig('default', 'graphElements'),
+      new ExternalGraphDatabaseQueryLimitConfig(LimitType.default, CollectionType.graphElements),
     );
   }
 
@@ -152,7 +152,7 @@ export class Neo4jExternalDatabase implements ExternalGraphDatabase {
           relationships: limit.relationships.toArray(),
           labels: limit.labels.toArray(),
         },
-        new ExternalGraphDatabaseQueryLimitConfig('default', 'graphElements'),
+        new ExternalGraphDatabaseQueryLimitConfig(LimitType.default, CollectionType.graphElements),
       );
     } else {
       return await this.executeQuery(
@@ -161,7 +161,7 @@ export class Neo4jExternalDatabase implements ExternalGraphDatabase {
         {
           nodesIds: nodesIds,
         },
-        new ExternalGraphDatabaseQueryLimitConfig('preview', 'graphElements'),
+        new ExternalGraphDatabaseQueryLimitConfig(LimitType.preview, CollectionType.graphElements),
       );
     }
   }
@@ -181,7 +181,7 @@ ORDER BY rcount DESC, rtype ASC`,
         {
           nodesIds: nodesIds,
         },
-        new ExternalGraphDatabaseQueryLimitConfig('default', 'tableData'),
+        new ExternalGraphDatabaseQueryLimitConfig(LimitType.default, CollectionType.tableData),
       );
     const expandNodePreviewRelationshipEntries: ExternalGraphDatabaseExpandNodePreviewEntry[] =
       relationships.tableData.map(
@@ -204,7 +204,7 @@ ORDER BY lcount DESC, label ASC`,
       {
         nodesIds: nodesIds,
       },
-      new ExternalGraphDatabaseQueryLimitConfig('default', 'tableData'),
+      new ExternalGraphDatabaseQueryLimitConfig(LimitType.default, CollectionType.tableData),
     );
     const expandNodePreviewLabelEntries: ExternalGraphDatabaseExpandNodePreviewEntry[] =
       labels.tableData.map(
@@ -236,7 +236,7 @@ ORDER BY lcount DESC, label ASC`,
       credentials,
       'SHOW INDEXES',
       {},
-      new ExternalGraphDatabaseQueryLimitConfig('default', 'tableData'),
+      new ExternalGraphDatabaseQueryLimitConfig(LimitType.default, CollectionType.tableData),
     );
 
     const exactMatchNodeProperties: SMap<string, SSet<string>> = new SMap<
@@ -304,7 +304,7 @@ ORDER BY lcount DESC, label ASC`,
       searchTerm: searchTerm,
     };
     const limit: ExternalGraphDatabaseQueryLimitConfig =
-      new ExternalGraphDatabaseQueryLimitConfig('preview', 'graphElements');
+      new ExternalGraphDatabaseQueryLimitConfig(LimitType.preview, CollectionType.graphElements);
 
     queries.push(
       `MATCH (n) WHERE elementId(n) = $searchTerm\nRETURN n\nLIMIT ${limit.getLimit()}`,
@@ -348,7 +348,7 @@ ORDER BY lcount DESC, label ASC`,
       credentials,
       'MATCH (n) WHERE elementId(n) = $id RETURN n LIMIT 1;',
       { id: nativeNodeId },
-      new ExternalGraphDatabaseQueryLimitConfig('default', 'graphElements'),
+      new ExternalGraphDatabaseQueryLimitConfig(LimitType.default, CollectionType.graphElements),
     );
   }
 
@@ -364,7 +364,7 @@ ORDER BY lcount DESC, label ASC`,
         nodeIds: nodeIds,
         neighbors: neighbors,
       },
-      new ExternalGraphDatabaseQueryLimitConfig('default', 'graphElements'),
+      new ExternalGraphDatabaseQueryLimitConfig(LimitType.default, CollectionType.graphElements),
     );
   }
 
@@ -378,7 +378,7 @@ ORDER BY lcount DESC, label ASC`,
       {
         relationshipIds: relationshipIds,
       },
-      new ExternalGraphDatabaseQueryLimitConfig('default', 'graphElements'),
+      new ExternalGraphDatabaseQueryLimitConfig(LimitType.default, CollectionType.graphElements),
     );
   }
 
@@ -394,7 +394,7 @@ ORDER BY lcount DESC, label ASC`,
         elementIdA: elementIdA,
         elementIdB: elementIdB,
       },
-      new ExternalGraphDatabaseQueryLimitConfig('default', 'graphElements'),
+      new ExternalGraphDatabaseQueryLimitConfig(LimitType.default, CollectionType.graphElements),
     );
   }
 
@@ -427,7 +427,7 @@ ORDER BY lcount DESC, label ASC`,
         credentials,
         'CALL db.labels() YIELD label RETURN label ORDER BY label ASC',
         {},
-        new ExternalGraphDatabaseQueryLimitConfig('default', 'tableData'),
+        new ExternalGraphDatabaseQueryLimitConfig(LimitType.default, CollectionType.tableData),
       );
     const labels: SSet<string> = new SSet<string>(
       labelsResult.tableData.map((line: SMap<string, unknown>): string =>
@@ -445,7 +445,7 @@ ORDER BY lcount DESC, label ASC`,
         credentials,
         'CALL db.relationshipTypes() YIELD relationshipType RETURN relationshipType ORDER BY relationshipType ASC',
         {},
-        new ExternalGraphDatabaseQueryLimitConfig('default', 'tableData'),
+        new ExternalGraphDatabaseQueryLimitConfig(LimitType.default, CollectionType.tableData),
       );
     const relTypes: SSet<string> = new SSet<string>(
       relTypesResult.tableData.map((line: SMap<string, unknown>): string =>
@@ -498,7 +498,7 @@ ORDER BY lcount DESC, label ASC`,
       credentials,
       'MATCH (n) RETURN count(n) AS nodeCount',
       {},
-      new ExternalGraphDatabaseQueryLimitConfig('default', 'tableData'),
+      new ExternalGraphDatabaseQueryLimitConfig(LimitType.default, CollectionType.tableData),
     );
     if (result.tableData.length === 0) {
       throw new Error('Unable to get node count from query.');
@@ -514,7 +514,7 @@ ORDER BY lcount DESC, label ASC`,
       credentials,
       'MATCH ()-[r]->() RETURN count(r) AS relationshipCount',
       {},
-      new ExternalGraphDatabaseQueryLimitConfig('default', 'tableData'),
+      new ExternalGraphDatabaseQueryLimitConfig(LimitType.default, CollectionType.tableData),
     );
     if (result.tableData.length === 0) {
       throw new Error('Unable to get relationship count from query.');
