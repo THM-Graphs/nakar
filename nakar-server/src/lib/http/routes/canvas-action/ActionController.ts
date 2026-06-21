@@ -227,8 +227,8 @@ export class ActionController {
   @HttpCode(200)
   @ApiBody({ type: ExpandRelationshipClusterRequestBodyDto })
   public expandRelationshipCluster(
-    @Body() body: ExpandRelationshipClusterRequestBodyDto,
     @Param('canvasId') canvasId: string,
+    @Body() body: ExpandRelationshipClusterRequestBodyDto,
   ): void {
     this._canvasService
       .getCanvasWithId(canvasId)
