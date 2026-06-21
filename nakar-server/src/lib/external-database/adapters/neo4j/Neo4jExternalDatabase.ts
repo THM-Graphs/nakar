@@ -139,8 +139,8 @@ export class Neo4jExternalDatabase implements ExternalGraphDatabase {
         LIMIT ${ExternalGraphDatabaseQueryLimitConfig.maximalElements.toString()};`,
         {
           nodesIds: nodesIds,
-          relationships: limit.relationships,
-          labels: limit.labels,
+          relationships: limit.relationships.toArray(),
+          labels: limit.labels.toArray(),
         },
         new ExternalGraphDatabaseQueryLimitConfig('default', 'graphElements'),
       );
