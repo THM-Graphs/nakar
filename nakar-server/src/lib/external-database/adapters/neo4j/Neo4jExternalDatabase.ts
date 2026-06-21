@@ -22,8 +22,8 @@ import { ExternalGraphDatabaseExpandNodePreview } from '../../data/ExternalGraph
 import type { ExternalGraphDatabaseStats } from '../../data/ExternalGraphDatabaseStats';
 import type { Logger } from '@strapi/logger';
 import { createChildLogger } from '../../../logger/createChildLogger';
-import { ExternalGraphDatabaseStatsRelationship } from '../../data/ExternalGraphDatabaseStatsRelationship';
-import { ExternalGraphDatabaseStatsLabel } from '../../data/ExternalGraphDatabaseStatsLabel';
+import type { ExternalGraphDatabaseStatsRelationship } from '../../data/ExternalGraphDatabaseStatsRelationship';
+import type { ExternalGraphDatabaseStatsLabel } from '../../data/ExternalGraphDatabaseStatsLabel';
 
 export class Neo4jExternalDatabase implements ExternalGraphDatabase {
   private readonly _logger: Logger = createChildLogger(this);
