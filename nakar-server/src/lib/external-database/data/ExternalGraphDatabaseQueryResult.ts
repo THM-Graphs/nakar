@@ -10,8 +10,12 @@ export class ExternalGraphDatabaseQueryResult {
       ExternalGraphDatabaseRelationship
     >,
     public readonly tableData: SMap<string, unknown>[],
-    public limitReached: boolean,
+    private readonly _limitReached: boolean,
   ) {}
+
+  public get limitReached(): boolean {
+    return this._limitReached;
+  }
 
   public get size(): number {
     return this.nodes.size + this.relationships.size + this.tableData.length;
