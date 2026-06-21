@@ -5,7 +5,7 @@ import { SSet } from '../../../packages/set/Set';
 import type { Neo4jRelationship } from '../../neo4j/Neo4jRelationship';
 import { PropertyCollection } from './PropertyCollection';
 import { Range } from '../../../packages/range/Range';
-import { NodeIndex } from './NodeIndex';
+import type { NodeIndex } from './NodeIndex';
 import type { ElementCreationReason } from './ElementCreationReason';
 
 export class EdgeIndex {
@@ -78,7 +78,9 @@ export class EdgeIndex {
     if (this._byId.has(edge.id)) {
       return false;
     }
-    if ((this._compressed.get(edge.sourceId) ?? new SSet()).has(edge.nativeId)) {
+    if (
+      (this._compressed.get(edge.sourceId) ?? new SSet()).has(edge.nativeId)
+    ) {
       return false;
     }
 
@@ -124,7 +126,9 @@ export class EdgeIndex {
     for (const compressed of edge.compressed) {
       this._compressed.set(
         edge.sourceId,
-        (this._compressed.get(edge.sourceId) ?? new SSet()).byAdding(compressed),
+        (this._compressed.get(edge.sourceId) ?? new SSet()).byAdding(
+          compressed,
+        ),
       );
     }
 
