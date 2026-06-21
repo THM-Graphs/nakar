@@ -1,4 +1,4 @@
-import type { MessagePort} from 'node:worker_threads';
+import type { MessagePort } from 'node:worker_threads';
 import { parentPort } from 'node:worker_threads';
 import { PhysicsSimulation } from '../../packages/physics/PhysicsSimulation';
 import type { LiveCanvasWorkerData } from './LiveCanvasWorkerData';

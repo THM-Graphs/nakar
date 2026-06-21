@@ -1,4 +1,4 @@
-import type { Observable} from 'rxjs';
+import type { Observable } from 'rxjs';
 import { Subject } from 'rxjs';
 import { CombinationCache } from './CombinationCache';
 import type { PhysicsSimulationRunOptions } from './PhysicsSimulationRunOptions';

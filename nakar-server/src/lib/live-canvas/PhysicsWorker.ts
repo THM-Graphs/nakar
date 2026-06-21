@@ -4,7 +4,7 @@ import type { PhysicalGraph } from '../../packages/physics/physical-graph/Physic
 import type { LiveCanvasWorkerData } from '../live-canvas-worker/LiveCanvasWorkerData';
 import path from 'path';
 import type { WTAction } from '../live-canvas-worker/worker-events/WTAction';
-import type { Observable} from 'rxjs';
+import type { Observable } from 'rxjs';
 import { Subject } from 'rxjs';
 import type { Logger } from '@strapi/logger';
 import { createChildLogger } from '../logger/createChildLogger';

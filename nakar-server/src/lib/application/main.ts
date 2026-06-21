@@ -4,7 +4,7 @@ import { AppModule } from './AppModule';
 import { getConfig } from '../config/getConfig';
 import type { SanitizedConfig } from '../config/SanitizedConfig';
 import { ValidationPipe } from '@nestjs/common';
-import type { OpenAPIObject} from '@nestjs/swagger';
+import type { OpenAPIObject } from '@nestjs/swagger';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import cors from 'cors';
 import { RouteLogger } from '../http/interceptors/RouteLogger';

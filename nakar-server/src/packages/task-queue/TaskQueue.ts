@@ -1,5 +1,5 @@
 import type { TaskQueueTask } from './TaskQueueTask';
-import type { Observable} from 'rxjs';
+import type { Observable } from 'rxjs';
 import { Subject } from 'rxjs';
 import type { TaskQueueState } from './TaskQueueState';
 

@@ -2,13 +2,9 @@ import type {
   Node,
   Record as Neo4jRecord,
   RecordShape,
-  Relationship} from 'neo4j-driver';
-import {
-  isInt,
-  isNode,
-  isPath,
-  isRelationship
+  Relationship,
 } from 'neo4j-driver';
+import { isInt, isNode, isPath, isRelationship } from 'neo4j-driver';
 import { SMap } from '../../packages/map/Map';
 import { Neo4jNode } from './Neo4jNode';
 import { Neo4jRelationship } from './Neo4jRelationship';

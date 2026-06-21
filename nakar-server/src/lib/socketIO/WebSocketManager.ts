@@ -185,7 +185,9 @@ export class WebSocketManager
     wsClient.on('disconnecting', (): void => {
       for (const room of wsClient.rooms) {
         const canvasId: string | null = this._extractCanvasId(room);
-        if (canvasId == null) {continue;}
+        if (canvasId == null) {
+          continue;
+        }
         const lc: LiveCanvas = this._canvasService.getCanvasWithId(canvasId);
         lc.removeUser(wsClient.id);
 
