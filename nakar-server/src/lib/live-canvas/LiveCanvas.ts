@@ -1990,6 +1990,10 @@ export class LiveCanvas {
     let compressCount: number = 0;
     const graph: LiveCanvasUndoableData = this.getGraph();
     for (const node of graph.nodes.getByLabel(targetLabel)) {
+      if (node.isCluster) {
+        // Do not allow nested node clusters
+        continue;
+      }
       const clusterBuddies: SSet<GraphNode> = graph.getClusterBuddiesOfNode(
         node,
         targetLabel,

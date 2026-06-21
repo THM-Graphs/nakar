@@ -293,7 +293,7 @@ export class LiveCanvasUndoableData {
     return new SSet(result.values());
   }
 
-  /** This method will return siblings, but only if all siblings the exact same neighbors and have the same label */
+  /** This method will return siblings, but only if all siblings the exact same neighbors and have the same label and source */
   public getClusterBuddiesOfNode(
     node: GraphNode,
     label: string,
@@ -310,7 +310,6 @@ export class LiveCanvasUndoableData {
         (n: GraphNode): boolean =>
           n.labels.includes(label) &&
           n.sourceId === node.sourceId &&
-          n.compressed.size === 0 &&
           this.getNeighborsOfNode(n).isEqual(neighbors),
       );
 
