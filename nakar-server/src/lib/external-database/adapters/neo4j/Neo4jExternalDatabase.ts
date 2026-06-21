@@ -311,8 +311,8 @@ ORDER BY lcount DESC, label ASC`,
     );
     for (const exactMatchLabelAndProperty of searchCapabilities.exactMatchNodeProperties) {
       const label: string = exactMatchLabelAndProperty[0];
-      const propeties: SSet<string> = exactMatchLabelAndProperty[1];
-      for (const property of propeties) {
+      const properties: SSet<string> = exactMatchLabelAndProperty[1];
+      for (const property of properties) {
         queries.push(
           `MATCH (n: \`${label}\`) WHERE n.\`${property}\` = $searchTerm\nRETURN n\nLIMIT ${limit.getLimit()}`,
         );
@@ -320,8 +320,8 @@ ORDER BY lcount DESC, label ASC`,
     }
     for (const fuzzyMatchLabelAndProperty of searchCapabilities.fuzzyMatchNodeProperties) {
       const label: string = fuzzyMatchLabelAndProperty[0];
-      const propeties: SSet<string> = fuzzyMatchLabelAndProperty[1];
-      for (const property of propeties) {
+      const properties: SSet<string> = fuzzyMatchLabelAndProperty[1];
+      for (const property of properties) {
         queries.push(
           `MATCH (n: \`${label}\`) WHERE n.\`${property}\` CONTAINS $searchTerm\nRETURN n\nLIMIT ${limit.getLimit()}`,
         );
