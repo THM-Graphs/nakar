@@ -1,4 +1,4 @@
-import { PhysicalGraph } from '../../../packages/physics/physical-graph/PhysicalGraph';
+import type { PhysicalGraph } from '../../../packages/physics/physical-graph/PhysicalGraph';
 
 export interface WTActionSetGraph {
   type: 'WTActionSetGraph';

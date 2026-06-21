@@ -1,5 +1,5 @@
-import { Result } from '@strapi/types/dist/modules/documents/result';
-import { DatabaseService } from '../database/DatabaseService';
+import type { Result } from '@strapi/types/dist/modules/documents/result';
+import type { DatabaseService } from '../database/DatabaseService';
 
 export async function databaseBelongsToCanvas(
   database: Result<'api::database-connection.database-connection'>,

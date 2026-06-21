@@ -1,7 +1,7 @@
-import { UndoWrapperSettings } from './UndoWrapperSettings';
+import type { UndoWrapperSettings } from './UndoWrapperSettings';
 import { UndoWrapperStack } from './UndoWrapperStack';
-import { UndoWrapperInfo } from './UndoWrapperInfo';
-import { UndoWrapperStackEntry } from './UndoWrapperStackEntry';
+import type { UndoWrapperInfo } from './UndoWrapperInfo';
+import type { UndoWrapperStackEntry } from './UndoWrapperStackEntry';
 
 export class UndoWrapper<T> {
   private _current: T;

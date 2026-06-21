@@ -1,6 +1,7 @@
-import { TaskQueueTask } from './TaskQueueTask';
-import { Observable, Subject } from 'rxjs';
-import { TaskQueueState } from './TaskQueueState';
+import type { TaskQueueTask } from './TaskQueueTask';
+import type { Observable } from 'rxjs';
+import { Subject } from 'rxjs';
+import type { TaskQueueState } from './TaskQueueState';
 
 export class TaskQueue {
   private _queue: TaskQueueTask[];

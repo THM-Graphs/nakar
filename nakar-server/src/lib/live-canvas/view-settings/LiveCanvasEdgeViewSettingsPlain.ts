@@ -1,4 +1,4 @@
-import { LiveCanvasViewSettingsPlain } from './LiveCanvasViewSettingsPlain';
+import type { LiveCanvasViewSettingsPlain } from './LiveCanvasViewSettingsPlain';
 
 /**
  * Persisted plain representation of one edge settings object.

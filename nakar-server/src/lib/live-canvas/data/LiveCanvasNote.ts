@@ -1,11 +1,11 @@
 import z from 'zod';
 import { SSet } from '../../../packages/set/Set';
 import { LiveCanvasNoteAuthor } from './LiveCanvasNoteAuthor';
-import { Result } from '@strapi/types/dist/modules/documents';
-import { DatabaseService } from '../../database/DatabaseService';
+import type { Result } from '@strapi/types/dist/modules/documents';
+import type { DatabaseService } from '../../database/DatabaseService';
 import { LiveCanvasNoteNodeReference } from './LiveCanvasNoteNodeReference';
-import { LiveCanvas } from '../LiveCanvas';
-import { GraphNode } from '../graph/GraphNode';
+import type { LiveCanvas } from '../LiveCanvas';
+import type { GraphNode } from '../graph/GraphNode';
 
 export class LiveCanvasNote {
   // eslint-disable-next-line @typescript-eslint/typedef

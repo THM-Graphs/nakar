@@ -1,4 +1,4 @@
-import { ScaleType } from '../../../packages/range/ScaleType';
+import type { ScaleType } from '../../../packages/range/ScaleType';
 import { Range } from '../../../packages/range/Range';
 
 /**

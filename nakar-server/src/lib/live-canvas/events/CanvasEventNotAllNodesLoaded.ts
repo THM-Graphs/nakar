@@ -1,4 +1,4 @@
-import { LiveCanvas } from '../LiveCanvas';
+import type { LiveCanvas } from '../LiveCanvas';
 
 export interface CanvasEventNotAllNodesLoaded {
   type: 'CanvasEventNotAllNodesLoaded';

@@ -1,4 +1,4 @@
-import { WTEventPhysicsUpdate } from './WTEventPhysicsUpdate';
-import { WTEventPhysicsStopped } from './WTEventPhysicsStopped';
+import type { WTEventPhysicsUpdate } from './WTEventPhysicsUpdate';
+import type { WTEventPhysicsStopped } from './WTEventPhysicsStopped';
 
 export type WTEvent = WTEventPhysicsUpdate | WTEventPhysicsStopped;

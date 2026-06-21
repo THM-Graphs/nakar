@@ -1,6 +1,6 @@
-import { LiveCanvasEdgeViewSettingsState } from './LiveCanvasEdgeViewSettingsState';
-import { LiveCanvasLabelViewSettingsState } from './LiveCanvasLabelViewSettingsState';
-import { LiveCanvasViewSettingsState } from './LiveCanvasViewSettingsState';
+import type { LiveCanvasEdgeViewSettingsState } from './LiveCanvasEdgeViewSettingsState';
+import type { LiveCanvasLabelViewSettingsState } from './LiveCanvasLabelViewSettingsState';
+import type { LiveCanvasViewSettingsState } from './LiveCanvasViewSettingsState';
 
 /**
  * Copies and merges complete view settings states.

@@ -1,15 +1,15 @@
 import ElkConstructor from 'elkjs/lib/main';
-import {
+import type {
   ELK as ElkLayoutEngine,
   ElkExtendedEdge,
   ElkNode,
 } from 'elkjs/lib/elk-api';
-import { LayoutOptions } from 'elkjs';
+import type { LayoutOptions } from 'elkjs';
 import { SMap } from '../../map/Map';
 import { SSet } from '../../set/Set';
-import { PhysicalEdge } from '../physical-graph/PhysicalEdge';
-import { PhysicalGraph } from '../physical-graph/PhysicalGraph';
-import { PhysicalNode } from '../physical-graph/PhysicalNode';
+import type { PhysicalEdge } from '../physical-graph/PhysicalEdge';
+import type { PhysicalGraph } from '../physical-graph/PhysicalGraph';
+import type { PhysicalNode } from '../physical-graph/PhysicalNode';
 
 type NodeMap = Record<string, PhysicalNode>;
 

@@ -1,17 +1,18 @@
-import { MessagePort, parentPort } from 'node:worker_threads';
+import type { MessagePort } from 'node:worker_threads';
+import { parentPort } from 'node:worker_threads';
 import { PhysicsSimulation } from '../../packages/physics/PhysicsSimulation';
-import { LiveCanvasWorkerData } from './LiveCanvasWorkerData';
-import { WTActionSetGraph } from './worker-events/WTActionSetGraph';
-import { WTAction } from './worker-events/WTAction';
+import type { LiveCanvasWorkerData } from './LiveCanvasWorkerData';
+import type { WTActionSetGraph } from './worker-events/WTActionSetGraph';
+import type { WTAction } from './worker-events/WTAction';
 import { match } from 'ts-pattern';
-import { WTEvent } from './worker-events/WTEvent';
-import { WTActionMoveNodes } from './worker-events/WTActionMoveNodes';
-import { PhysicalGraph } from '../../packages/physics/physical-graph/PhysicalGraph';
-import { PhysicalNode } from '../../packages/physics/physical-graph/PhysicalNode';
-import { WTActionTriggerPhysics } from './worker-events/WTActionTriggerPhysics';
-import { WTActionSetLocks } from './worker-events/WTActionSetLocks';
-import { PhysicsSimulationEventSlowTick } from '../../packages/physics/PhysicsSimulationEventSlowTick';
-import { Logger } from '@strapi/logger';
+import type { WTEvent } from './worker-events/WTEvent';
+import type { WTActionMoveNodes } from './worker-events/WTActionMoveNodes';
+import type { PhysicalGraph } from '../../packages/physics/physical-graph/PhysicalGraph';
+import type { PhysicalNode } from '../../packages/physics/physical-graph/PhysicalNode';
+import type { WTActionTriggerPhysics } from './worker-events/WTActionTriggerPhysics';
+import type { WTActionSetLocks } from './worker-events/WTActionSetLocks';
+import type { PhysicsSimulationEventSlowTick } from '../../packages/physics/PhysicsSimulationEventSlowTick';
+import type { Logger } from '@strapi/logger';
 import { createChildLogger } from '../logger/createChildLogger';
 
 export class LiveCanvasWorkerPhysicsService {

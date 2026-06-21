@@ -1,8 +1,8 @@
-import { SanitizedConfig } from './SanitizedConfig';
+import type { SanitizedConfig } from './SanitizedConfig';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import z from 'zod';
-import { Logger } from '@strapi/logger';
+import type { Logger } from '@strapi/logger';
 import { createChildLogger } from '../logger/createChildLogger';
 
 export function getConfig(): SanitizedConfig {
