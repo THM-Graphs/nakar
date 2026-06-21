@@ -24,6 +24,15 @@ import { createChildLogger } from '../../../logger/createChildLogger';
 import type { ExternalGraphDatabaseStatsRelationship } from '../../data/ExternalGraphDatabaseStatsRelationship';
 import type { ExternalGraphDatabaseStatsLabel } from '../../data/ExternalGraphDatabaseStatsLabel';
 import { createHash, randomBytes } from 'crypto';
+import { z } from 'zod';
+
+const showIndexesRowSchema = z.object({
+  state: z.string(),
+  type: z.string(),
+  entityType: z.string(),
+  labelsOrTypes: z.array(z.string()),
+  properties: z.array(z.string()),
+});
 
 export class Neo4jExternalDatabase implements ExternalGraphDatabase {
   private readonly _logger: Logger;
@@ -249,36 +258,36 @@ ORDER BY lcount DESC, label ASC`,
     >();
 
     for (const line of result.tableData) {
-      if (line.get('state') !== 'ONLINE') {
+      const parsed = showIndexesRowSchema.safeParse(
+        Object.fromEntries(line),
+      );
+      if (!parsed.success) {
         continue;
       }
-      if (line.get('type') === 'RANGE' && line.get('entityType') === 'NODE') {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-        const labelsOrTypes: string[] = line.get('labelsOrTypes') as string[];
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-        const properties: string[] = line.get('properties') as string[];
-        for (const labelOrType of labelsOrTypes) {
+
+      if (parsed.data.state !== 'ONLINE') {
+        continue;
+      }
+
+      if (parsed.data.type === 'RANGE' && parsed.data.entityType === 'NODE') {
+        for (const labelOrType of parsed.data.labelsOrTypes) {
           exactMatchNodeProperties.set(
             labelOrType,
             (
               exactMatchNodeProperties.get(labelOrType) ?? new SSet<string>()
-            ).byMerging(new SSet<string>(properties)),
+            ).byMerging(new SSet<string>(parsed.data.properties)),
           );
         }
       } else if (
-        line.get('type') === 'TEXT' &&
-        line.get('entityType') === 'NODE'
+        parsed.data.type === 'TEXT' &&
+        parsed.data.entityType === 'NODE'
       ) {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-        const labelsOrTypes: string[] = line.get('labelsOrTypes') as string[];
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-        const properties: string[] = line.get('properties') as string[];
-        for (const labelOrType of labelsOrTypes) {
+        for (const labelOrType of parsed.data.labelsOrTypes) {
           fuzzyMatchNodeProperties.set(
             labelOrType,
             (
               fuzzyMatchNodeProperties.get(labelOrType) ?? new SSet<string>()
-            ).byMerging(new SSet<string>(properties)),
+            ).byMerging(new SSet<string>(parsed.data.properties)),
           );
         }
       }
