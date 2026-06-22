@@ -122,7 +122,7 @@ export class Neo4jExternalDatabase implements ExternalGraphDatabase {
     );
     return await this.executeQuery(
       credentials,
-      `MATCH (a)-[additionalRelationship]->(b) WHERE elementId(a) IN $existingNodeIds AND elementId(b) IN $existingNodeIds RETURN DISTINCT additionalRelationship;`,
+      `MATCH (a)-[additionalRelationship]->(b) WHERE elementId(a) IN $existingNodeIds AND elementId(b) IN $existingNodeIds RETURN DISTINCT additionalRelationship LIMIT ${ExternalGraphDatabaseQueryLimitConfig.maximalElements.toString()};`,
       {
         existingNodeIds: nodesIds,
       },
