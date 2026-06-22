@@ -179,8 +179,11 @@ export class Neo4jExternalDatabase implements ExternalGraphDatabase {
     credentials: ExternalGraphDatabaseCredentials,
     nodeIds: SSet<string>,
   ): Promise<ExternalGraphDatabaseExpandNodePreview> {
-    const relationships: ExternalGraphDatabaseQueryResult =
-      await this.executeQuery(
+    const [relationships, labels]: [
+      ExternalGraphDatabaseQueryResult,
+      ExternalGraphDatabaseQueryResult,
+    ] = await Promise.all([
+      this.executeQuery(
         credentials,
         `MATCH (a)-[neighbor]-(b)
 WHERE elementId(a) IN $nodeIds AND a <> b
@@ -193,7 +196,23 @@ ORDER BY rcount DESC, rtype ASC`,
           ExternalGraphDatabaseQueryLimitConfigType.default,
           ExternalGraphDatabaseQueryLimitConfigCollectionType.tableData,
         ),
-      );
+      ),
+      this.executeQuery(
+        credentials,
+        `MATCH (a)-[]-(b)
+WHERE elementId(a) IN $nodeIds AND a <> b
+UNWIND labels(b) as label
+RETURN label, count(*) AS lcount
+ORDER BY lcount DESC, label ASC`,
+        {
+          nodeIds: nodeIds.toArray(),
+        },
+        new ExternalGraphDatabaseQueryLimitConfig(
+          ExternalGraphDatabaseQueryLimitConfigType.default,
+          ExternalGraphDatabaseQueryLimitConfigCollectionType.tableData,
+        ),
+      ),
+    ]);
     const expandNodePreviewRelationshipEntries: ExternalGraphDatabaseExpandNodePreviewEntry[] =
       relationships.tableData.map(
         (
@@ -204,22 +223,6 @@ ORDER BY rcount DESC, rtype ASC`,
             Number(entry.get('rcount')),
           ),
       );
-
-    const labels: ExternalGraphDatabaseQueryResult = await this.executeQuery(
-      credentials,
-      `MATCH (a)-[]-(b)
-WHERE elementId(a) IN $nodeIds AND a <> b
-UNWIND labels(b) as label
-RETURN label, count(*) AS lcount
-ORDER BY lcount DESC, label ASC`,
-      {
-        nodeIds: nodeIds.toArray(),
-      },
-      new ExternalGraphDatabaseQueryLimitConfig(
-        ExternalGraphDatabaseQueryLimitConfigType.default,
-        ExternalGraphDatabaseQueryLimitConfigCollectionType.tableData,
-      ),
-    );
     const expandNodePreviewLabelEntries: ExternalGraphDatabaseExpandNodePreviewEntry[] =
       labels.tableData.map(
         (
