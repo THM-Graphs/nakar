@@ -9,6 +9,7 @@ import type { ExternalGraphDatabaseSearchCapabilities } from './data/ExternalGra
 import type { ExternalGraphDatabaseNode } from './data/ExternalGraphDatabaseNode';
 import type { ExternalGraphDatabaseQueryLimitConfig } from './data/ExternalGraphDatabaseQueryLimitConfig';
 import { Neo4jExternalDatabase } from './adapters/neo4j/Neo4jExternalDatabase';
+import { SparqlExternalDatabase } from './adapters/sparql/SparqlExternalDatabase';
 import type { ExternalGraphDatabase } from './ExternalGraphDatabase';
 import type { ExternalGraphDatabaseStats } from './data/ExternalGraphDatabaseStats';
 import { P, match } from 'ts-pattern';
@@ -29,6 +30,10 @@ export class ExternalGraphDatabaseService implements OnModuleDestroy {
     this._adapters.set(
       ExternalGraphDatabaseType.neo4j,
       new Neo4jExternalDatabase(),
+    );
+    this._adapters.set(
+      ExternalGraphDatabaseType.sparql,
+      new SparqlExternalDatabase(),
     );
   }
 
