@@ -1,5 +1,3 @@
 export enum ExternalGraphDatabaseType {
   neo4j = 'neo4j',
-  sparql = 'sparql',
-  ramen = 'ramen',
 }

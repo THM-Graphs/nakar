@@ -23,7 +23,7 @@
     },
     "databaseType": {
       "type": "enumeration",
-      "enum": ["neo4j", "sparql", "ramen"],
+      "enum": ["neo4j"],
       "default": "neo4j",
       "required": true
     },
