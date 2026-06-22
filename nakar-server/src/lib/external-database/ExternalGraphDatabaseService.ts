@@ -48,6 +48,10 @@ export class ExternalGraphDatabaseService implements OnModuleDestroy {
           (): ExternalGraphDatabaseType => ExternalGraphDatabaseType.neo4j,
         )
         .with(
+          'sparql',
+          (): ExternalGraphDatabaseType => ExternalGraphDatabaseType.sparql,
+        )
+        .with(
           P.nullish,
           (): ExternalGraphDatabaseType => ExternalGraphDatabaseType.neo4j,
         )

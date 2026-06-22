@@ -56,7 +56,7 @@ export function EditDatabaseConnection() {
   const loaderData: EditDatabaseConnectionLoaderData = useLoaderData();
   const [databaseConnection, setDatabaseConnection] =
     useState<UpdateDatabaseConnectionRequestBodyDto>({
-      databaseType: "neo4j",
+      databaseType: loaderData.databaseConnection.databaseType,
       username: null,
       password: null,
       credentialStoreConsent: false,

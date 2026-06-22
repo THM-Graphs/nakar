@@ -62,6 +62,7 @@ import { LiveCanvasScenario } from '../live-canvas/data/LiveCanvasScenario';
 import { LiveCanvasScenarioGroup } from '../live-canvas/data/LiveCanvasScenarioGroup';
 import { LiveCanvasEdgeViewSettingsState } from '../live-canvas/view-settings/LiveCanvasEdgeViewSettingsState';
 import { LiveCanvasLabelViewSettingsState } from '../live-canvas/view-settings/LiveCanvasLabelViewSettingsState';
+import { DatabaseConnectionDatabaseType } from '../http/routes/database-connection/dto/DatabaseConnectionDatabaseType';
 
 @Injectable()
 export class SchemaFactoryService {
@@ -107,6 +108,24 @@ export class SchemaFactoryService {
             urlEncode: nodeConfiguration.urlEncode ?? false,
           }),
       ),
+      databaseType: match(databaseDBDTO.databaseType)
+        .returnType<DatabaseConnectionDatabaseType>()
+        .with(
+          'neo4j',
+          (): DatabaseConnectionDatabaseType =>
+            DatabaseConnectionDatabaseType.neo4j,
+        )
+        .with(
+          'sparql',
+          (): DatabaseConnectionDatabaseType =>
+            DatabaseConnectionDatabaseType.sparql,
+        )
+        .with(
+          P.nullish,
+          (): DatabaseConnectionDatabaseType =>
+            DatabaseConnectionDatabaseType.neo4j,
+        )
+        .exhaustive(),
     };
   }
 

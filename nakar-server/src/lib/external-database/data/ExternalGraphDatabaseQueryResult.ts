@@ -1,4 +1,4 @@
-import type { SMap } from '../../../packages/map/Map';
+import { SMap } from '../../../packages/map/Map';
 import type { ExternalGraphDatabaseNode } from './ExternalGraphDatabaseNode';
 import type { ExternalGraphDatabaseRelationship } from './ExternalGraphDatabaseRelationship';
 
@@ -19,5 +19,14 @@ export class ExternalGraphDatabaseQueryResult {
 
   public get size(): number {
     return this.nodes.size + this.relationships.size + this.tableData.length;
+  }
+
+  public static empty(): ExternalGraphDatabaseQueryResult {
+    return new ExternalGraphDatabaseQueryResult(
+      new SMap(),
+      new SMap(),
+      [],
+      false,
+    );
   }
 }

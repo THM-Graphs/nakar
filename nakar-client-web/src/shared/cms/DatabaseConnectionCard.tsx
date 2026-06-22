@@ -1,8 +1,9 @@
 import { Link } from "react-router";
 import { DatabaseConnectionDto, ProjectPageDto } from "api-client";
 import { CMSCardContent } from "./CMSCardContent.tsx";
-import { Card, Stack } from "react-bootstrap";
+import { Badge, Card, Stack } from "react-bootstrap";
 import { Router } from "../../routing/Router.ts";
+import { getDatabaseTypeDisplay } from "../data/getDatabaseTypeDisplay.ts";
 
 export function DatabaseConnectionCard(props: {
   project: ProjectPageDto;
@@ -12,8 +13,11 @@ export function DatabaseConnectionCard(props: {
     <Card style={{ width: "400px" }}>
       <CMSCardContent
         title={
-          <Stack direction={"horizontal"} gap={3}>
+          <Stack direction={"horizontal"} gap={2}>
             <span>{props.databaseConnection.title}</span>
+            <Badge bg={"secondary"}>
+              {getDatabaseTypeDisplay(props.databaseConnection.databaseType)}
+            </Badge>
             <Link
               to={Router.getDatabaseConnectionEditPath(
                 props.project.id,

@@ -1,5 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { NodeConfigurationDto } from './NodeConfigurationDto';
+import { DatabaseConnectionDatabaseType } from '../../http/routes/database-connection/dto/DatabaseConnectionDatabaseType';
+import { IsEnum } from 'class-validator';
 
 export class DatabaseConnectionDto {
   @ApiProperty()
@@ -20,6 +22,9 @@ export class DatabaseConnectionDto {
   @ApiProperty({ type: NodeConfigurationDto, isArray: true })
   public nodeConfigurations: NodeConfigurationDto[];
 
+  @ApiProperty({ enum: DatabaseConnectionDatabaseType })
+  public databaseType: DatabaseConnectionDatabaseType;
+
   public constructor(data: {
     id: string;
     title: string;
@@ -27,6 +32,7 @@ export class DatabaseConnectionDto {
     connectionUrl: string;
     database: string;
     nodeConfigurations: NodeConfigurationDto[];
+    databaseType: DatabaseConnectionDatabaseType;
   }) {
     this.id = data.id;
     this.title = data.title;
@@ -34,5 +40,6 @@ export class DatabaseConnectionDto {
     this.connectionUrl = data.connectionUrl;
     this.database = data.database;
     this.nodeConfigurations = data.nodeConfigurations;
+    this.databaseType = data.databaseType;
   }
 }

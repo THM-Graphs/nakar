@@ -25,6 +25,7 @@
     "update:strapi": "npx @strapi/upgrade latest"
   },
   "dependencies": {
+    "@comunica/query-sparql": "^5.2.4",
     "@nestjs/common": "^11.1.11",
     "@nestjs/core": "^11.1.11",
     "@nestjs/platform-express": "^11.1.11",
@@ -45,6 +46,7 @@
     "mysql2": "^3.14.1",
     "n3": "^2.0.4",
     "neo4j-driver": "^6.0.1",
+    "rdf-ext": "^2.6.0",
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
     "react-router-dom": "^6.0.0",
@@ -67,6 +69,7 @@
     "@types/http-errors": "^2.0.0",
     "@types/n3": "^1.26.1",
     "@types/node": "^20",
+    "@types/rdf-ext": "^2.5.2",
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "c8": "^11.0.0",
