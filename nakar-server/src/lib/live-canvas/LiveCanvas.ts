@@ -712,10 +712,9 @@ export class LiveCanvas {
           const expandResult: ExternalGraphDatabaseQueryResult = node.isCluster
             ? await this._externalGraphDatabase.expandClusterNode(
                 database,
-                node.compressed.toArray(),
+                node.compressed,
                 oldGraph
                   .getNeighborsOfNode(node)
-                  .toArray()
                   .map((n: GraphNode): string => n.nativeId),
               )
             : await this._externalGraphDatabase.expandNode(
