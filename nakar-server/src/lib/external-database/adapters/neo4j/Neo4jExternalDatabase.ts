@@ -192,7 +192,10 @@ ORDER BY rcount DESC, rtype ASC`,
         {
           nodeIds: nodeIds.toArray(),
         },
-        new ExternalGraphDatabaseQueryLimitConfig(ExternalGraphDatabaseQueryLimitConfigType.default, ExternalGraphDatabaseQueryLimitConfigCollectionType.tableData),
+        new ExternalGraphDatabaseQueryLimitConfig(
+          ExternalGraphDatabaseQueryLimitConfigType.default,
+          ExternalGraphDatabaseQueryLimitConfigCollectionType.tableData,
+        ),
       ),
       this.executeQuery(
         credentials,
@@ -204,7 +207,10 @@ ORDER BY lcount DESC, label ASC`,
         {
           nodeIds: nodeIds.toArray(),
         },
-        new ExternalGraphDatabaseQueryLimitConfig(ExternalGraphDatabaseQueryLimitConfigType.default, ExternalGraphDatabaseQueryLimitConfigCollectionType.tableData),
+        new ExternalGraphDatabaseQueryLimitConfig(
+          ExternalGraphDatabaseQueryLimitConfigType.default,
+          ExternalGraphDatabaseQueryLimitConfigCollectionType.tableData,
+        ),
       ),
     ]);
     const expandNodePreviewRelationshipEntries: ExternalGraphDatabaseExpandNodePreviewEntry[] =
