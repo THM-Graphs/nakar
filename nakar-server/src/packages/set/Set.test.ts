@@ -99,10 +99,10 @@ void describe('SSet', (): void => {
     });
   });
 
-  void describe('flatMap', (): void => {
+  void describe('toArrayBy', (): void => {
     void it('returns mapped array', (): void => {
       const base: SSet<number> = new SSet<number>([1, 2, 3]);
-      const values: string[] = base.flatMap((value: number): string => {
+      const values: string[] = base.toArrayBy((value: number): string => {
         return `v-${value.toString()}`;
       });
       assert.deepEqual(values, ['v-1', 'v-2', 'v-3']);

@@ -63,6 +63,8 @@ import { CircleLayoutEngine } from '../../packages/physics/circle-layout-algorit
 import { NotFoundException } from '@nestjs/common';
 import { databaseBelongsToCanvas } from '../policies/databaseBelongsToCanvas';
 import { scenarioBelongsToCanvas } from '../policies/scenarioBelongsToCanvas';
+import { ExternalGraphDatabaseQueryLimitConfigType } from '../external-database/data/ExternalGraphDatabaseQueryLimitConfigType';
+import { ExternalGraphDatabaseQueryLimitConfigCollectionType } from '../external-database/data/ExternalGraphDatabaseQueryLimitConfigCollectionType';
 
 export class LiveCanvas {
   private readonly _logger: Logger = createChildLogger(this);
@@ -402,8 +404,10 @@ export class LiveCanvas {
               query.query,
               argsForQuery,
               new ExternalGraphDatabaseQueryLimitConfig(
-                'default',
-                query.isTableQuery === true ? 'tableData' : 'graphElements',
+                ExternalGraphDatabaseQueryLimitConfigType.default,
+                query.isTableQuery === true
+                  ? ExternalGraphDatabaseQueryLimitConfigCollectionType.tableData
+                  : ExternalGraphDatabaseQueryLimitConfigCollectionType.graphElements,
               ),
             );
 
@@ -708,10 +712,9 @@ export class LiveCanvas {
           const expandResult: ExternalGraphDatabaseQueryResult = node.isCluster
             ? await this._externalGraphDatabase.expandClusterNode(
                 database,
-                node.compressed.toArray(),
+                node.compressed,
                 oldGraph
                   .getNeighborsOfNode(node)
-                  .toArray()
                   .map((n: GraphNode): string => n.nativeId),
               )
             : await this._externalGraphDatabase.expandNode(
@@ -976,8 +979,10 @@ export class LiveCanvas {
             params.query,
             {},
             new ExternalGraphDatabaseQueryLimitConfig(
-              'default',
-              params.replace ? 'all' : 'graphElements',
+              ExternalGraphDatabaseQueryLimitConfigType.default,
+              params.replace
+                ? ExternalGraphDatabaseQueryLimitConfigCollectionType.all
+                : ExternalGraphDatabaseQueryLimitConfigCollectionType.graphElements,
             ),
           );
 

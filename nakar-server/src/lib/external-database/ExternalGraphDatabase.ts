@@ -51,8 +51,8 @@ export interface ExternalGraphDatabase {
 
   expandClusterNode(
     credentials: ExternalGraphDatabaseCredentials,
-    nodeIds: string[],
-    neighbors: string[],
+    nodeIds: SSet<string>,
+    neighbors: SSet<string>,
   ): Promise<ExternalGraphDatabaseQueryResult>;
 
   findRelationshipsByIds(
