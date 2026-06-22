@@ -152,10 +152,10 @@ export class LiveCanvasUndoableData {
   public toPlain(): z.infer<typeof LiveCanvasUndoableData.schema> {
     return {
       id: this.id,
-      nodes: this.nodes.nodes.flatMap(
+      nodes: this.nodes.nodes.toArrayBy(
         (n: GraphNode): z.infer<typeof GraphNode.schema> => n.toPlain(),
       ),
-      edges: this.edges.edges.flatMap(
+      edges: this.edges.edges.toArrayBy(
         (e: GraphEdge): z.infer<typeof GraphEdge.schema> => e.toPlain(),
       ),
       metaData: this.metaData.toPlain(),
