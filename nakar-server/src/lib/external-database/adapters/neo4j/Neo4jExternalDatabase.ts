@@ -116,15 +116,14 @@ export class Neo4jExternalDatabase implements ExternalGraphDatabase {
     credentials: ExternalGraphDatabaseCredentials,
     nodeIds: SSet<string>,
   ): Promise<ExternalGraphDatabaseQueryResult> {
-    const nodeIdArray: string[] = [...nodeIds.values()];
     this._logger.info(
-      `Will load connecting relationships of ${nodeIdArray.length.toString()} nodes`,
+      `Will load connecting relationships of ${nodeIds.size.toString()} nodes`,
     );
     return await this.executeQuery(
       credentials,
       `MATCH (a)-[additionalRelationship]->(b) WHERE elementId(a) IN $existingNodeIds AND elementId(b) IN $existingNodeIds RETURN DISTINCT additionalRelationship;`,
       {
-        existingNodeIds: nodeIdArray,
+        existingNodeIds: nodeIds.toArray(),
       },
       new ExternalGraphDatabaseQueryLimitConfig('default', 'graphElements'),
     );
@@ -138,17 +137,16 @@ export class Neo4jExternalDatabase implements ExternalGraphDatabase {
       labels: SSet<string>;
     } | null,
   ): Promise<ExternalGraphDatabaseQueryResult> {
-    const nodeIdArray: string[] = [...nodeIds.values()];
     if (limit) {
       return await this.executeQuery(
         credentials,
         `MATCH (a)-[additionalRelationship]-(b)
-        WHERE elementId(a) IN $nodeIdArray
+        WHERE elementId(a) IN $nodeIds
         AND (type(additionalRelationship) in $relationships OR ANY(label IN labels(b) WHERE label IN $labels))
         RETURN additionalRelationship, b
         LIMIT ${ExternalGraphDatabaseQueryLimitConfig.maximalElements.toString()};`,
         {
-          nodeIdArray: nodeIdArray,
+          nodeIds: nodeIds.toArray(),
           relationships: limit.relationships.toArray(),
           labels: limit.labels.toArray(),
         },
@@ -157,9 +155,9 @@ export class Neo4jExternalDatabase implements ExternalGraphDatabase {
     } else {
       return await this.executeQuery(
         credentials,
-        `MATCH (a)-[additionalRelationship]-(b) WHERE elementId(a) IN $nodeIdArray RETURN additionalRelationship, b LIMIT ${ExternalGraphDatabaseQueryLimitConfig.maximalPreviewElements.toString()};`,
+        `MATCH (a)-[additionalRelationship]-(b) WHERE elementId(a) IN $nodeIds RETURN additionalRelationship, b LIMIT ${ExternalGraphDatabaseQueryLimitConfig.maximalPreviewElements.toString()};`,
         {
-          nodeIdArray: nodeIdArray,
+          nodeIds: nodeIds.toArray(),
         },
         new ExternalGraphDatabaseQueryLimitConfig('preview', 'graphElements'),
       );
@@ -170,16 +168,15 @@ export class Neo4jExternalDatabase implements ExternalGraphDatabase {
     credentials: ExternalGraphDatabaseCredentials,
     nodeIds: SSet<string>,
   ): Promise<ExternalGraphDatabaseExpandNodePreview> {
-    const nodeIdArray: string[] = [...nodeIds.values()];
     const relationships: ExternalGraphDatabaseQueryResult =
       await this.executeQuery(
         credentials,
         `MATCH (a)-[neighbor]-(b)
-WHERE elementId(a) IN $nodeIdArray AND a <> b
+WHERE elementId(a) IN $nodeIds AND a <> b
 RETURN type(neighbor) AS rtype, count(*) AS rcount
 ORDER BY rcount DESC, rtype ASC`,
         {
-          nodeIdArray: nodeIdArray,
+          nodeIds: nodeIds.toArray(),
         },
         new ExternalGraphDatabaseQueryLimitConfig('default', 'tableData'),
       );
@@ -197,12 +194,12 @@ ORDER BY rcount DESC, rtype ASC`,
     const labels: ExternalGraphDatabaseQueryResult = await this.executeQuery(
       credentials,
       `MATCH (a)-[]-(b)
-WHERE elementId(a) IN $nodeIdArray AND a <> b
+WHERE elementId(a) IN $nodeIds AND a <> b
 UNWIND labels(b) as label
 RETURN label, count(*) AS lcount
 ORDER BY lcount DESC, label ASC`,
       {
-        nodeIdArray: nodeIdArray,
+        nodeIds: nodeIds.toArray(),
       },
       new ExternalGraphDatabaseQueryLimitConfig('default', 'tableData'),
     );
