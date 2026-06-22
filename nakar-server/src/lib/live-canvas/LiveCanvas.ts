@@ -709,12 +709,9 @@ export class LiveCanvas {
             ? await this._externalGraphDatabase.expandClusterNode(
                 database,
                 node.compressed,
-                new SSet<string>(
-                  oldGraph
-                    .getNeighborsOfNode(node)
-                    .toArray()
-                    .map((n: GraphNode): string => n.nativeId),
-                ),
+                oldGraph
+                  .getNeighborsOfNode(node)
+                  .map((n: GraphNode): string => n.nativeId),
               )
             : await this._externalGraphDatabase.expandNode(
                 database,
