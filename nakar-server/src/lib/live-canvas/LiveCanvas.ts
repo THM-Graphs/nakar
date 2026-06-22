@@ -23,7 +23,7 @@ import type { TaskQueueState } from '../../packages/task-queue/TaskQueueState';
 import { TaskQueueTask } from '../../packages/task-queue/TaskQueueTask';
 import type { ExternalGraphDatabaseRelationship } from '../external-database/data/ExternalGraphDatabaseRelationship';
 import type { ExternalGraphDatabaseQueryResult } from '../external-database/data/ExternalGraphDatabaseQueryResult';
-import { ExternalGraphDatabaseQueryLimitConfig, LimitType, CollectionType } from '../external-database/data/ExternalGraphDatabaseQueryLimitConfig';
+import { ExternalGraphDatabaseQueryLimitConfig } from '../external-database/data/ExternalGraphDatabaseQueryLimitConfig';
 import type { ExternalGraphDatabaseService } from '../external-database/ExternalGraphDatabaseService';
 import type { Result } from '@strapi/types/dist/modules/documents/result';
 import type { Logger } from '@strapi/logger';
@@ -63,6 +63,8 @@ import { CircleLayoutEngine } from '../../packages/physics/circle-layout-algorit
 import { NotFoundException } from '@nestjs/common';
 import { databaseBelongsToCanvas } from '../policies/databaseBelongsToCanvas';
 import { scenarioBelongsToCanvas } from '../policies/scenarioBelongsToCanvas';
+import { ExternalGraphDatabaseQueryLimitConfigType } from '../external-database/data/ExternalGraphDatabaseQueryLimitConfigType';
+import { ExternalGraphDatabaseQueryLimitConfigCollectionType } from '../external-database/data/ExternalGraphDatabaseQueryLimitConfigCollectionType';
 
 export class LiveCanvas {
   private readonly _logger: Logger = createChildLogger(this);
@@ -402,8 +404,10 @@ export class LiveCanvas {
               query.query,
               argsForQuery,
               new ExternalGraphDatabaseQueryLimitConfig(
-                LimitType.default,
-                query.isTableQuery === true ? CollectionType.tableData : CollectionType.graphElements,
+                ExternalGraphDatabaseQueryLimitConfigType.default,
+                query.isTableQuery === true
+                  ? ExternalGraphDatabaseQueryLimitConfigCollectionType.tableData
+                  : ExternalGraphDatabaseQueryLimitConfigCollectionType.graphElements,
               ),
             );
 
@@ -976,8 +980,10 @@ export class LiveCanvas {
             params.query,
             {},
             new ExternalGraphDatabaseQueryLimitConfig(
-              LimitType.default,
-              params.replace ? CollectionType.all : CollectionType.graphElements,
+              ExternalGraphDatabaseQueryLimitConfigType.default,
+              params.replace
+                ? ExternalGraphDatabaseQueryLimitConfigCollectionType.all
+                : ExternalGraphDatabaseQueryLimitConfigCollectionType.graphElements,
             ),
           );
 

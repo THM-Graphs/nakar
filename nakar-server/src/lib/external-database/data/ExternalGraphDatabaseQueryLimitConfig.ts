@@ -1,38 +1,25 @@
 import { match } from 'ts-pattern';
-
-export const LimitType = {
-  preview: 'preview',
-  default: 'default',
-} as const;
-
-export type LimitType = (typeof LimitType)[keyof typeof LimitType];
-
-export const CollectionType = {
-  graphElements: 'graphElements',
-  tableData: 'tableData',
-  all: 'all',
-} as const;
-
-export type CollectionType = (typeof CollectionType)[keyof typeof CollectionType];
+import { ExternalGraphDatabaseQueryLimitConfigType } from './ExternalGraphDatabaseQueryLimitConfigType';
+import { ExternalGraphDatabaseQueryLimitConfigCollectionType } from './ExternalGraphDatabaseQueryLimitConfigCollectionType';
 
 export class ExternalGraphDatabaseQueryLimitConfig {
   public static readonly maximalElements: number = 5000;
   public static readonly maximalPreviewElements: number = 300;
 
   public constructor(
-    private readonly _type: LimitType,
-    private readonly _collectionType: CollectionType,
+    private readonly _type: ExternalGraphDatabaseQueryLimitConfigType,
+    private readonly _collectionType: ExternalGraphDatabaseQueryLimitConfigCollectionType,
   ) {}
 
   public getLimit(): number {
     return match(this._type)
       .with(
-        LimitType.preview,
+        ExternalGraphDatabaseQueryLimitConfigType.preview,
         (): number =>
           ExternalGraphDatabaseQueryLimitConfig.maximalPreviewElements,
       )
       .with(
-        LimitType.default,
+        ExternalGraphDatabaseQueryLimitConfigType.default,
         (): number => ExternalGraphDatabaseQueryLimitConfig.maximalElements,
       )
       .exhaustive();
@@ -40,15 +27,19 @@ export class ExternalGraphDatabaseQueryLimitConfig {
 
   public shouldCollectGraphElements(): boolean {
     return (
-      this._collectionType === CollectionType.graphElements ||
-      this._collectionType === CollectionType.all
+      this._collectionType ===
+        ExternalGraphDatabaseQueryLimitConfigCollectionType.graphElements ||
+      this._collectionType ===
+        ExternalGraphDatabaseQueryLimitConfigCollectionType.all
     );
   }
 
   public shouldCollectTableData(): boolean {
     return (
-      this._collectionType === CollectionType.tableData ||
-      this._collectionType === CollectionType.all
+      this._collectionType ===
+        ExternalGraphDatabaseQueryLimitConfigCollectionType.tableData ||
+      this._collectionType ===
+        ExternalGraphDatabaseQueryLimitConfigCollectionType.all
     );
   }
 }
