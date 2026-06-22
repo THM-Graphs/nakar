@@ -12,7 +12,7 @@ import { Neo4jExternalDatabase } from './adapters/neo4j/Neo4jExternalDatabase';
 import { SparqlExternalDatabase } from './adapters/sparql/SparqlExternalDatabase';
 import type { ExternalGraphDatabase } from './ExternalGraphDatabase';
 import type { ExternalGraphDatabaseStats } from './data/ExternalGraphDatabaseStats';
-import { P, match } from 'ts-pattern';
+import { match, P } from 'ts-pattern';
 import { ExternalGraphDatabaseType } from './data/ExternalGraphDatabaseType';
 
 @Injectable()
@@ -46,14 +46,6 @@ export class ExternalGraphDatabaseService implements OnModuleDestroy {
         .with(
           'neo4j',
           (): ExternalGraphDatabaseType => ExternalGraphDatabaseType.neo4j,
-        )
-        .with(
-          'sparql',
-          (): ExternalGraphDatabaseType => ExternalGraphDatabaseType.sparql,
-        )
-        .with(
-          'ramen',
-          (): ExternalGraphDatabaseType => ExternalGraphDatabaseType.ramen,
         )
         .with(
           P.nullish,
