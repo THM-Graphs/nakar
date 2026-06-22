@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "vite build",
     "build:docker": "docker build -f Dockerfile -t ghcr.io/thm-graphs/nakar/client-web:dev .",
     "build:docker:mutliarch": "docker buildx build --platform linux/amd64,linux/arm64 -f Dockerfile -t ghcr.io/thm-graphs/nakar/client-web:dev .",
     "start:docker": "docker run -it --rm -p 5173:80 ghcr.io/thm-graphs/nakar/client-web:dev",
@@ -16,7 +16,7 @@
     "analyze": "fta .",
     "audit": "npm audit --audit-level critical",
     "version": "echo $npm_package_version",
-    "pre-commit": "tsc -b && npm run lint:fix && npm run format:fix"
+    "pre-commit": "npm run build && npm run lint:fix && npm run format:fix"
   },
   "dependencies": {
     "@neo4j-cypher/react-codemirror": "^2.0.0-next.35",
