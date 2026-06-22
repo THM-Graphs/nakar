@@ -24,6 +24,8 @@ import { createChildLogger } from '../../../logger/createChildLogger';
 import type { ExternalGraphDatabaseStatsRelationship } from '../../data/ExternalGraphDatabaseStatsRelationship';
 import type { ExternalGraphDatabaseStatsLabel } from '../../data/ExternalGraphDatabaseStatsLabel';
 import { createHash, randomBytes } from 'crypto';
+import { ExternalGraphDatabaseQueryLimitConfigType } from '../../data/ExternalGraphDatabaseQueryLimitConfigType';
+import { ExternalGraphDatabaseQueryLimitConfigCollectionType } from '../../data/ExternalGraphDatabaseQueryLimitConfigCollectionType';
 
 export class Neo4jExternalDatabase implements ExternalGraphDatabase {
   private readonly _logger: Logger;
@@ -125,7 +127,10 @@ export class Neo4jExternalDatabase implements ExternalGraphDatabase {
       {
         existingNodeIds: nodeIds.toArray(),
       },
-      new ExternalGraphDatabaseQueryLimitConfig('default', 'graphElements'),
+      new ExternalGraphDatabaseQueryLimitConfig(
+        ExternalGraphDatabaseQueryLimitConfigType.default,
+        ExternalGraphDatabaseQueryLimitConfigCollectionType.graphElements,
+      ),
     );
   }
 
@@ -150,7 +155,10 @@ export class Neo4jExternalDatabase implements ExternalGraphDatabase {
           relationships: limit.relationships.toArray(),
           labels: limit.labels.toArray(),
         },
-        new ExternalGraphDatabaseQueryLimitConfig('default', 'graphElements'),
+        new ExternalGraphDatabaseQueryLimitConfig(
+          ExternalGraphDatabaseQueryLimitConfigType.default,
+          ExternalGraphDatabaseQueryLimitConfigCollectionType.graphElements,
+        ),
       );
     } else {
       return await this.executeQuery(
@@ -159,7 +167,10 @@ export class Neo4jExternalDatabase implements ExternalGraphDatabase {
         {
           nodeIds: nodeIds.toArray(),
         },
-        new ExternalGraphDatabaseQueryLimitConfig('preview', 'graphElements'),
+        new ExternalGraphDatabaseQueryLimitConfig(
+          ExternalGraphDatabaseQueryLimitConfigType.preview,
+          ExternalGraphDatabaseQueryLimitConfigCollectionType.graphElements,
+        ),
       );
     }
   }
@@ -178,7 +189,10 @@ ORDER BY rcount DESC, rtype ASC`,
         {
           nodeIds: nodeIds.toArray(),
         },
-        new ExternalGraphDatabaseQueryLimitConfig('default', 'tableData'),
+        new ExternalGraphDatabaseQueryLimitConfig(
+          ExternalGraphDatabaseQueryLimitConfigType.default,
+          ExternalGraphDatabaseQueryLimitConfigCollectionType.tableData,
+        ),
       );
     const expandNodePreviewRelationshipEntries: ExternalGraphDatabaseExpandNodePreviewEntry[] =
       relationships.tableData.map(
@@ -201,7 +215,10 @@ ORDER BY lcount DESC, label ASC`,
       {
         nodeIds: nodeIds.toArray(),
       },
-      new ExternalGraphDatabaseQueryLimitConfig('default', 'tableData'),
+      new ExternalGraphDatabaseQueryLimitConfig(
+        ExternalGraphDatabaseQueryLimitConfigType.default,
+        ExternalGraphDatabaseQueryLimitConfigCollectionType.tableData,
+      ),
     );
     const expandNodePreviewLabelEntries: ExternalGraphDatabaseExpandNodePreviewEntry[] =
       labels.tableData.map(
@@ -233,7 +250,10 @@ ORDER BY lcount DESC, label ASC`,
       credentials,
       'SHOW INDEXES',
       {},
-      new ExternalGraphDatabaseQueryLimitConfig('default', 'tableData'),
+      new ExternalGraphDatabaseQueryLimitConfig(
+        ExternalGraphDatabaseQueryLimitConfigType.default,
+        ExternalGraphDatabaseQueryLimitConfigCollectionType.tableData,
+      ),
     );
 
     const exactMatchNodeProperties: SMap<string, SSet<string>> = new SMap<
@@ -301,7 +321,10 @@ ORDER BY lcount DESC, label ASC`,
       searchTerm: searchTerm,
     };
     const limit: ExternalGraphDatabaseQueryLimitConfig =
-      new ExternalGraphDatabaseQueryLimitConfig('preview', 'graphElements');
+      new ExternalGraphDatabaseQueryLimitConfig(
+        ExternalGraphDatabaseQueryLimitConfigType.preview,
+        ExternalGraphDatabaseQueryLimitConfigCollectionType.graphElements,
+      );
 
     queries.push(
       `MATCH (n) WHERE elementId(n) = $searchTerm\nRETURN n\nLIMIT ${limit.getLimit()}`,
@@ -345,7 +368,10 @@ ORDER BY lcount DESC, label ASC`,
       credentials,
       'MATCH (n) WHERE elementId(n) = $id RETURN n LIMIT 1;',
       { id: nativeNodeId },
-      new ExternalGraphDatabaseQueryLimitConfig('default', 'graphElements'),
+      new ExternalGraphDatabaseQueryLimitConfig(
+        ExternalGraphDatabaseQueryLimitConfigType.default,
+        ExternalGraphDatabaseQueryLimitConfigCollectionType.graphElements,
+      ),
     );
   }
 
@@ -361,7 +387,10 @@ ORDER BY lcount DESC, label ASC`,
         nodeIds: nodeIds.toArray(),
         neighbors: neighbors.toArray(),
       },
-      new ExternalGraphDatabaseQueryLimitConfig('default', 'graphElements'),
+      new ExternalGraphDatabaseQueryLimitConfig(
+        ExternalGraphDatabaseQueryLimitConfigType.default,
+        ExternalGraphDatabaseQueryLimitConfigCollectionType.graphElements,
+      ),
     );
   }
 
@@ -375,7 +404,10 @@ ORDER BY lcount DESC, label ASC`,
       {
         relationshipIds: relationshipIds,
       },
-      new ExternalGraphDatabaseQueryLimitConfig('default', 'graphElements'),
+      new ExternalGraphDatabaseQueryLimitConfig(
+        ExternalGraphDatabaseQueryLimitConfigType.default,
+        ExternalGraphDatabaseQueryLimitConfigCollectionType.graphElements,
+      ),
     );
   }
 
@@ -391,7 +423,10 @@ ORDER BY lcount DESC, label ASC`,
         nativeIdA: nativeIdA,
         nativeIdB: nativeIdB,
       },
-      new ExternalGraphDatabaseQueryLimitConfig('default', 'graphElements'),
+      new ExternalGraphDatabaseQueryLimitConfig(
+        ExternalGraphDatabaseQueryLimitConfigType.default,
+        ExternalGraphDatabaseQueryLimitConfigCollectionType.graphElements,
+      ),
     );
   }
 
@@ -424,7 +459,10 @@ ORDER BY lcount DESC, label ASC`,
         credentials,
         'CALL db.labels() YIELD label RETURN label ORDER BY label ASC',
         {},
-        new ExternalGraphDatabaseQueryLimitConfig('default', 'tableData'),
+        new ExternalGraphDatabaseQueryLimitConfig(
+          ExternalGraphDatabaseQueryLimitConfigType.default,
+          ExternalGraphDatabaseQueryLimitConfigCollectionType.tableData,
+        ),
       );
     const labels: SSet<string> = new SSet<string>(
       labelsResult.tableData.map((line: SMap<string, unknown>): string =>
@@ -442,7 +480,10 @@ ORDER BY lcount DESC, label ASC`,
         credentials,
         'CALL db.relationshipTypes() YIELD relationshipType RETURN relationshipType ORDER BY relationshipType ASC',
         {},
-        new ExternalGraphDatabaseQueryLimitConfig('default', 'tableData'),
+        new ExternalGraphDatabaseQueryLimitConfig(
+          ExternalGraphDatabaseQueryLimitConfigType.default,
+          ExternalGraphDatabaseQueryLimitConfigCollectionType.tableData,
+        ),
       );
     const relTypes: SSet<string> = new SSet<string>(
       relTypesResult.tableData.map((line: SMap<string, unknown>): string =>
@@ -495,7 +536,10 @@ ORDER BY lcount DESC, label ASC`,
       credentials,
       'MATCH (n) RETURN count(n) AS nodeCount',
       {},
-      new ExternalGraphDatabaseQueryLimitConfig('default', 'tableData'),
+      new ExternalGraphDatabaseQueryLimitConfig(
+        ExternalGraphDatabaseQueryLimitConfigType.default,
+        ExternalGraphDatabaseQueryLimitConfigCollectionType.tableData,
+      ),
     );
     if (result.tableData.length === 0) {
       throw new Error('Unable to get node count from query.');
@@ -511,7 +555,10 @@ ORDER BY lcount DESC, label ASC`,
       credentials,
       'MATCH ()-[r]->() RETURN count(r) AS relationshipCount',
       {},
-      new ExternalGraphDatabaseQueryLimitConfig('default', 'tableData'),
+      new ExternalGraphDatabaseQueryLimitConfig(
+        ExternalGraphDatabaseQueryLimitConfigType.default,
+        ExternalGraphDatabaseQueryLimitConfigCollectionType.tableData,
+      ),
     );
     if (result.tableData.length === 0) {
       throw new Error('Unable to get relationship count from query.');
