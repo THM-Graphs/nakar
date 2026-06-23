@@ -12,7 +12,8 @@ import type { SSet } from '../../../../packages/set/Set';
 import type { ExternalGraphDatabaseQueryLimitConfig } from '../../data/ExternalGraphDatabaseQueryLimitConfig';
 import type { ExternalGraphDatabaseStatsRelationship } from '../../data/ExternalGraphDatabaseStatsRelationship';
 import { QueryEngine } from '@comunica/query-sparql';
-import type { BindingsStream, Bindings } from '@comunica/types';
+import type { Bindings, BindingsStream } from '@comunica/types';
+import { v4 } from 'uuid';
 
 export class SparqlExternalDatabase implements ExternalGraphDatabase {
   private readonly _logger: Logger;
@@ -60,18 +61,21 @@ export class SparqlExternalDatabase implements ExternalGraphDatabase {
   public async getStats(
     credentials: ExternalGraphDatabaseCredentials,
   ): Promise<ExternalGraphDatabaseStats> {
+    const [relationshipTypes, relationshipCount]: [
+      ExternalGraphDatabaseStatsRelationship[],
+      number,
+    ] = await Promise.all([
+      this._loadRelationshipTypes(credentials),
+      this._loadRelationshipsCount(credentials),
+    ]);
+
     return {
-      relTypeCount: 0,
-      labelCount: 0,
-      relCount: 0,
-      nodeCount: 0,
-      labels: [],
-      rels: (await this._loadRelationshipTypes(credentials)).map(
-        (relationship: string): ExternalGraphDatabaseStatsRelationship => ({
-          relType: relationship,
-          exploreQuery: '', // TODO
-        }),
-      ),
+      relTypeCount: relationshipTypes.length,
+      labelCount: 1,
+      relCount: relationshipCount,
+      nodeCount: -1,
+      labels: [{ label: 'Entity', exploreQuery: '' }],
+      rels: relationshipTypes,
     };
   }
 
@@ -130,8 +134,8 @@ export class SparqlExternalDatabase implements ExternalGraphDatabase {
 
   private async _loadRelationshipTypes(
     credentials: ExternalGraphDatabaseCredentials,
-  ): Promise<string[]> {
-    const result: Bindings[] = await this._runSparqlQuery(
+  ): Promise<ExternalGraphDatabaseStatsRelationship[]> {
+    const result: BindingsStream = await this._runSparqlQuery(
       credentials,
       `SELECT DISTINCT ?p
 WHERE {
@@ -139,40 +143,92 @@ WHERE {
 }
 ORDER BY ?p`,
     );
-    const relationshipTypes: string[] = result.reduce(
-      (akku: string[], next: Bindings): string[] => {
-        const value: string | null = next.get('p')?.value ?? null;
-        if (value == null) {
-          return akku;
-        } else {
-          return [...akku, value];
-        }
-      },
-      [],
-    );
+
+    const relationshipTypes: ExternalGraphDatabaseStatsRelationship[] = [];
+
+    for await (const bindings of result) {
+      const value: string | null = bindings.get('p')?.value ?? null;
+      if (value != null) {
+        relationshipTypes.push({ relType: value, exploreQuery: '' /* TODO */ });
+      }
+    }
+
     return relationshipTypes;
+  }
+
+  private async _loadRelationshipsCount(
+    credentials: ExternalGraphDatabaseCredentials,
+  ): Promise<number> {
+    const result: BindingsStream = await this._runSparqlQuery(
+      credentials,
+      `
+SELECT (COUNT(*) AS ?p)
+WHERE {
+  ?subjekt ?beziehung ?objekt .
+}`,
+    );
+
+    const bindings: Bindings[] = await result.toArray();
+    if (bindings.length !== 1) {
+      this._logger.error(
+        'Error loading relationship count from sparql database: Result array length is not 1.',
+      );
+      return 0;
+    }
+
+    const stringValue: string | null = bindings[0].get('p')?.value ?? null;
+    if (stringValue == null) {
+      this._logger.error(
+        'Error loading relationship count from sparql database: Result does not contain the target binding.',
+      );
+      return 0;
+    }
+
+    const numberValue: number = parseInt(stringValue);
+    if (isNaN(numberValue)) {
+      this._logger.error(
+        'Error loading relationship count from sparql database: Result is not a number.',
+      );
+      return 0;
+    }
+
+    return numberValue;
   }
 
   private async _runSparqlQuery(
     credentials: ExternalGraphDatabaseCredentials,
     query: string,
-  ): Promise<Bindings[]> {
-    if (credentials.connectionUrl == null) {
-      throw new Error('Connection URL is empty.');
-    }
-    const url: URL = new URL(credentials.connectionUrl);
-
-    this._logger.debug(`${url.toString()}: ${query}`);
+  ): Promise<BindingsStream> {
+    const queryId: string = v4();
+    const url: URL = this._assertConnectionUrl(credentials);
+    this._logger.debug(
+      `Will start SPARQL Query to ${url.toString()} (${queryId}): ${query}`,
+    );
 
     const myEngine: QueryEngine = new QueryEngine();
     const bindingsStream: BindingsStream = await myEngine.queryBindings(query, {
       sources: [url.toString()],
     });
 
-    const bindings: Bindings[] = await bindingsStream.toArray();
+    this._logger.debug(`Did start streaming query response of ${queryId}`);
 
-    this._logger.debug(`Did load ${bindings.length} bindings.`);
+    bindingsStream.on('error', (error: unknown): void => {
+      this._logger.error(error);
+    });
+    bindingsStream.on('end', (): void => {
+      this._logger.debug(`Query ${queryId} finished`);
+    });
 
-    return bindings;
+    return bindingsStream;
+  }
+
+  private _assertConnectionUrl(
+    credentials: ExternalGraphDatabaseCredentials,
+  ): URL {
+    if (credentials.connectionUrl == null) {
+      throw new Error('Connection URL is empty.');
+    }
+    const url: URL = new URL(credentials.connectionUrl);
+    return url;
   }
 }
