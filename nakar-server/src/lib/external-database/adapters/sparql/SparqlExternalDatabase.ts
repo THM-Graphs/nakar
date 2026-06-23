@@ -8,12 +8,19 @@ import { ExternalGraphDatabaseExpandNodePreview } from '../../data/ExternalGraph
 import type { ExternalGraphDatabaseStats } from '../../data/ExternalGraphDatabaseStats';
 import type { Logger } from '@strapi/logger';
 import { createChildLogger } from '../../../logger/createChildLogger';
-import type { SSet } from '../../../../packages/set/Set';
-import type { ExternalGraphDatabaseQueryLimitConfig } from '../../data/ExternalGraphDatabaseQueryLimitConfig';
+import { SSet } from '../../../../packages/set/Set';
+import { ExternalGraphDatabaseQueryLimitConfig } from '../../data/ExternalGraphDatabaseQueryLimitConfig';
 import type { ExternalGraphDatabaseStatsRelationship } from '../../data/ExternalGraphDatabaseStatsRelationship';
 import { QueryEngine } from '@comunica/query-sparql';
 import type { Bindings, BindingsStream } from '@comunica/types';
+import type { Quad } from '@rdfjs/types';
 import { v4 } from 'uuid';
+import type { AsyncIterator } from 'asynciterator';
+import type { ExternalGraphDatabaseRelationship } from '../../data/ExternalGraphDatabaseRelationship';
+import { ExternalGraphDatabaseQueryLimitConfigType } from '../../data/ExternalGraphDatabaseQueryLimitConfigType';
+import { ExternalGraphDatabaseQueryLimitConfigCollectionType } from '../../data/ExternalGraphDatabaseQueryLimitConfigCollectionType';
+import type { ExternalGraphDatabaseStatsLabel } from '../../data/ExternalGraphDatabaseStatsLabel';
+import type { ExternalGraphDatabaseExpandNodePreviewEntry } from '../../data/ExternalGraphDatabaseExpandNodePreviewEntry';
 
 export class SparqlExternalDatabase implements ExternalGraphDatabase {
   private readonly _logger: Logger;
@@ -28,7 +35,102 @@ export class SparqlExternalDatabase implements ExternalGraphDatabase {
     parameters: Record<string, unknown>,
     limitConfig: ExternalGraphDatabaseQueryLimitConfig,
   ): Promise<ExternalGraphDatabaseQueryResult> {
-    return await Promise.resolve(ExternalGraphDatabaseQueryResult.empty());
+    // TODO: Parameters
+
+    const queryId: string = v4();
+    const url: URL = this._assertConnectionUrl(credentials);
+    this._logger.debug(
+      `Will start SPARQL Query to ${url.toString()} (${queryId}): ${query}`,
+    );
+
+    const myEngine: QueryEngine = new QueryEngine();
+    const bindingsStream: AsyncIterator<Quad> = await myEngine.queryQuads(
+      query,
+      {
+        sources: [url.toString()],
+      },
+    );
+
+    this._logger.debug(`Did start streaming query response of ${queryId}`);
+
+    bindingsStream.on('error', (error: unknown): void => {
+      this._logger.error(error);
+    });
+    bindingsStream.on('end', (): void => {
+      this._logger.debug(`Query ${queryId} finished`);
+    });
+
+    const limit: number = limitConfig.getLimit();
+
+    const nodes: SMap<string, ExternalGraphDatabaseNode> = new SMap<
+      string,
+      ExternalGraphDatabaseNode
+    >();
+    const relationships: SMap<string, ExternalGraphDatabaseRelationship> =
+      new SMap<string, ExternalGraphDatabaseRelationship>();
+
+    for await (const quad of bindingsStream) {
+      // Subject
+      {
+        const existingSubjectNode: ExternalGraphDatabaseNode = nodes.get(
+          quad.subject.value,
+        ) ?? {
+          labels: [quad.subject.termType],
+          keys: new SSet([]),
+          nativeId: quad.subject.value,
+          properties: { uri: quad.subject.value },
+          source: credentials,
+        };
+        nodes.set(quad.subject.value, existingSubjectNode);
+        existingSubjectNode.keys.add('Subject');
+      }
+
+      // Object
+      {
+        const existingObjectNode: ExternalGraphDatabaseNode = nodes.get(
+          quad.object.value,
+        ) ?? {
+          labels: [quad.object.termType],
+          keys: new SSet([]),
+          nativeId: quad.object.value,
+          properties: { uri: quad.object.value },
+          source: credentials,
+        };
+        nodes.set(quad.object.value, existingObjectNode);
+        existingObjectNode.keys.add('Object');
+      }
+
+      // Predicate
+      {
+        const id: string = `${quad.subject.value} ${quad.predicate.value} ${quad.object.value}`;
+        const existingPredicateNode: ExternalGraphDatabaseRelationship | null =
+          relationships.get(id) ?? null;
+        if (existingPredicateNode == null) {
+          relationships.set(id, {
+            keys: new SSet(['Predicate']),
+            nativeId: id,
+            properties: { uri: quad.predicate.value },
+            source: credentials,
+            startNodeId: quad.subject.value,
+            endNodeId: quad.object.value,
+            type: quad.predicate.value,
+          });
+        } else {
+          existingPredicateNode.keys.add('Predicate');
+        }
+      }
+
+      if (nodes.size + relationships.size >= limit) {
+        break;
+      }
+    }
+
+    return new ExternalGraphDatabaseQueryResult(
+      nodes,
+      relationships,
+      [],
+      nodes.size + relationships.size >= limit,
+    );
   }
 
   public async loadConnectingRelationships(
@@ -46,15 +148,71 @@ export class SparqlExternalDatabase implements ExternalGraphDatabase {
       labels: SSet<string>;
     } | null,
   ): Promise<ExternalGraphDatabaseQueryResult> {
-    return await Promise.resolve(ExternalGraphDatabaseQueryResult.empty());
+    return await this.executeQuery(
+      credentials,
+      `
+CONSTRUCT {
+  ?node ?p ?o .
+}
+WHERE {
+  VALUES ?node { ${this._getUriList(nodeIds)} }
+  {
+    ?node ?p ?o .
+  }
+  UNION
+  {
+    ?o ?p ?node .
+  }
+}   
+    `,
+      {},
+      new ExternalGraphDatabaseQueryLimitConfig(
+        ExternalGraphDatabaseQueryLimitConfigType.preview,
+        ExternalGraphDatabaseQueryLimitConfigCollectionType.graphElements,
+      ),
+    );
   }
 
   public async expandNodePreview(
     credentials: ExternalGraphDatabaseCredentials,
     nodeIds: SSet<string>,
   ): Promise<ExternalGraphDatabaseExpandNodePreview> {
-    return await Promise.resolve(
-      ExternalGraphDatabaseExpandNodePreview.empty(),
+    const relsResult: BindingsStream = await this._runSparqlQuery(
+      credentials,
+      `
+SELECT ?praedikat (COUNT(DISTINCT *) AS ?anzahl)
+WHERE {
+  VALUES ?ressource { ${this._getUriList(nodeIds)} }
+
+  {
+    ?ressource ?praedikat ?o .
+  }
+  UNION
+  {
+    ?s ?praedikat ?ressource .
+  }
+}
+GROUP BY ?praedikat
+ORDER BY DESC(?anzahl)
+    `,
+    );
+    const relationshipResults: ExternalGraphDatabaseExpandNodePreviewEntry[] =
+      [];
+    for await (const bindings of relsResult) {
+      relationshipResults.push({
+        identificator: bindings.get('praedikat')?.value ?? '',
+        count: parseInt(bindings.get('anzahl')?.value ?? '0'), // TODO
+      });
+    }
+
+    return new ExternalGraphDatabaseExpandNodePreview(
+      this._possibleLabels().map(
+        (label: string): ExternalGraphDatabaseExpandNodePreviewEntry => ({
+          count: 0,
+          identificator: label,
+        }),
+      ),
+      relationshipResults,
     );
   }
 
@@ -68,13 +226,20 @@ export class SparqlExternalDatabase implements ExternalGraphDatabase {
       this._loadRelationshipTypes(credentials),
       this._loadRelationshipsCount(credentials),
     ]);
+    const labels: ExternalGraphDatabaseStatsLabel[] =
+      this._possibleLabels().map(
+        (label: string): ExternalGraphDatabaseStatsLabel => ({
+          label: label,
+          exploreQuery: '', // TODO
+        }),
+      );
 
     return {
       relTypeCount: relationshipTypes.length,
-      labelCount: 1,
+      labelCount: labels.length,
       relCount: relationshipCount,
       nodeCount: -1,
-      labels: [{ label: 'Entity', exploreQuery: '' }],
+      labels: labels,
       rels: relationshipTypes,
     };
   }
@@ -230,5 +395,16 @@ WHERE {
     }
     const url: URL = new URL(credentials.connectionUrl);
     return url;
+  }
+
+  private _possibleLabels(): string[] {
+    return ['Quad', 'NamedNode', 'BlankNode', 'Variable', 'Literal'];
+  }
+
+  private _getUriList(uris: SSet<string>): string {
+    return uris
+      .toArray()
+      .map((nodeId: string): string => `<${nodeId}>`)
+      .join(' ');
   }
 }
