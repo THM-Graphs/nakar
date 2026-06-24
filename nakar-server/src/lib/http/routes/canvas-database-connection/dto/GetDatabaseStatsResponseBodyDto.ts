@@ -3,31 +3,35 @@ import { DatabaseStatsRelationshipDto } from './DatabaseStatsRelationshipDto';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class GetDatabaseStatsResponseBodyDto {
-  @ApiProperty()
-  public relTypeCount: number;
+  @ApiProperty({ nullable: true, type: Number })
+  public relTypeCount: number | null;
 
-  @ApiProperty()
-  public labelCount: number;
+  @ApiProperty({ nullable: true, type: Number })
+  public labelCount: number | null;
 
-  @ApiProperty()
-  public relCount: number;
+  @ApiProperty({ nullable: true, type: Number })
+  public relCount: number | null;
 
-  @ApiProperty({ isArray: true, type: DatabaseStatsLabelDto })
-  public labels: DatabaseStatsLabelDto[];
+  @ApiProperty({ isArray: true, type: DatabaseStatsLabelDto, nullable: true })
+  public labels: DatabaseStatsLabelDto[] | null;
 
-  @ApiProperty({ isArray: true, type: DatabaseStatsRelationshipDto })
-  public rels: DatabaseStatsRelationshipDto[];
+  @ApiProperty({
+    isArray: true,
+    type: DatabaseStatsRelationshipDto,
+    nullable: true,
+  })
+  public rels: DatabaseStatsRelationshipDto[] | null;
 
-  @ApiProperty()
-  public nodeCount: number;
+  @ApiProperty({ nullable: true, type: Number })
+  public nodeCount: number | null;
 
   public constructor(data: {
-    relTypeCount: number;
-    labelCount: number;
-    relCount: number;
-    labels: DatabaseStatsLabelDto[];
-    rels: DatabaseStatsRelationshipDto[];
-    nodeCount: number;
+    relTypeCount: number | null;
+    labelCount: number | null;
+    relCount: number | null;
+    labels: DatabaseStatsLabelDto[] | null;
+    rels: DatabaseStatsRelationshipDto[] | null;
+    nodeCount: number | null;
   }) {
     this.relTypeCount = data.relTypeCount;
     this.labelCount = data.labelCount;

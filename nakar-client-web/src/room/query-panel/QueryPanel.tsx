@@ -215,7 +215,7 @@ export function QueryPanel() {
               data.data != null && (
                 <>
                   <DynamicList
-                    data={data.data.labels}
+                    data={data.data.labels ?? []}
                     previewLimit={20}
                     className={"border-bottom"}
                     entityNamePlural={"Labels"}
@@ -245,7 +245,7 @@ export function QueryPanel() {
                   ></DynamicList>
 
                   <DynamicList
-                    data={data.data.rels}
+                    data={data.data.rels ?? []}
                     previewLimit={20}
                     className={"border-bottom"}
                     entityNamePlural={"Relationships"}
@@ -278,19 +278,19 @@ export function QueryPanel() {
                     stats={[
                       {
                         label: "Nodes",
-                        value: data.data.nodeCount.toString(),
+                        value: data.data.nodeCount?.toString() ?? null,
                       },
                       {
                         label: "Labels",
-                        value: data.data.labelCount.toString(),
+                        value: data.data.labelCount?.toString() ?? null,
                       },
                       {
                         label: "Relationships",
-                        value: data.data.relCount.toString(),
+                        value: data.data.relCount?.toString() ?? null,
                       },
                       {
                         label: "Relationship Types",
-                        value: data.data.relTypeCount.toString(),
+                        value: data.data.relTypeCount?.toString() ?? null,
                       },
                     ]}
                   ></QueryPanelStatsDisplay>

@@ -288,12 +288,12 @@ export type DatabaseStatsRelationshipDto = {
 };
 
 export type GetDatabaseStatsResponseBodyDto = {
-    relTypeCount: number;
-    labelCount: number;
-    relCount: number;
-    labels: Array<DatabaseStatsLabelDto>;
-    rels: Array<DatabaseStatsRelationshipDto>;
-    nodeCount: number;
+    relTypeCount: number | null;
+    labelCount: number | null;
+    relCount: number | null;
+    labels: Array<DatabaseStatsLabelDto> | null;
+    rels: Array<DatabaseStatsRelationshipDto> | null;
+    nodeCount: number | null;
 };
 
 export type PostSearchRequestBodyDto = {

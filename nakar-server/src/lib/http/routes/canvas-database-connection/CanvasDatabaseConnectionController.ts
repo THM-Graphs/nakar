@@ -83,22 +83,24 @@ export class CanvasDatabaseConnectionController {
       labelCount: genericStats.labelCount,
       relCount: genericStats.relCount,
       nodeCount: genericStats.nodeCount,
-      labels: genericStats.labels.map(
-        (label: ExternalGraphDatabaseStatsLabel): DatabaseStatsLabelDto =>
-          new DatabaseStatsLabelDto({
-            label: label.label,
-            exploreQuery: label.exploreQuery,
-          }),
-      ),
-      rels: genericStats.rels.map(
-        (
-          rel: ExternalGraphDatabaseStatsRelationship,
-        ): DatabaseStatsRelationshipDto =>
-          new DatabaseStatsRelationshipDto({
-            relType: rel.relType,
-            exploreQuery: rel.exploreQuery,
-          }),
-      ),
+      labels:
+        genericStats.labels?.map(
+          (label: ExternalGraphDatabaseStatsLabel): DatabaseStatsLabelDto =>
+            new DatabaseStatsLabelDto({
+              label: label.label,
+              exploreQuery: label.exploreQuery,
+            }),
+        ) ?? null,
+      rels:
+        genericStats.rels?.map(
+          (
+            rel: ExternalGraphDatabaseStatsRelationship,
+          ): DatabaseStatsRelationshipDto =>
+            new DatabaseStatsRelationshipDto({
+              relType: rel.relType,
+              exploreQuery: rel.exploreQuery,
+            }),
+        ) ?? null,
     });
   }
 

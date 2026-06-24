@@ -167,7 +167,9 @@ WHERE {
     `,
       {},
       new ExternalGraphDatabaseQueryLimitConfig(
-        ExternalGraphDatabaseQueryLimitConfigType.preview,
+        limit == null
+          ? ExternalGraphDatabaseQueryLimitConfigType.preview
+          : ExternalGraphDatabaseQueryLimitConfigType.default,
         ExternalGraphDatabaseQueryLimitConfigCollectionType.graphElements,
       ),
     );
@@ -238,7 +240,7 @@ ORDER BY DESC(?anzahl)
       relTypeCount: relationshipTypes.length,
       labelCount: labels.length,
       relCount: relationshipCount,
-      nodeCount: -1,
+      nodeCount: null,
       labels: labels,
       rels: relationshipTypes,
     };

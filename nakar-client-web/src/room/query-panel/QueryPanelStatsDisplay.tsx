@@ -4,7 +4,7 @@ import {
 } from "../inspector-panel/PropertiesDisplay.tsx";
 
 export function QueryPanelStatsDisplay(props: {
-  stats: { label: string; value: string }[];
+  stats: { label: string; value: string | null }[];
 }) {
   return (
     <PropertiesDisplay
@@ -14,7 +14,7 @@ export function QueryPanelStatsDisplay(props: {
         (s) =>
           ({
             slug: s.label,
-            value: s.value,
+            value: s.value == null ? "N/A" : s.value,
           }) satisfies PropertyEntry,
       )}
     ></PropertiesDisplay>
