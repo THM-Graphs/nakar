@@ -102,7 +102,7 @@ export class SparqlExternalDatabase implements ExternalGraphDatabase {
 
       // Predicate
       {
-        const id: string = `${quad.subject.value} ${quad.predicate.value} ${quad.object.value}`;
+        const id: string = `${quad.subject.value}_${quad.predicate.value}_${quad.object.value}`;
         const existingPredicateNode: ExternalGraphDatabaseRelationship | null =
           relationships.get(id) ?? null;
         if (existingPredicateNode == null) {
