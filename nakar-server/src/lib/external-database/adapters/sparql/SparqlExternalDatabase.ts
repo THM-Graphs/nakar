@@ -166,31 +166,59 @@ WHERE {
       labels: SSet<string>;
     } | null,
   ): Promise<ExternalGraphDatabaseQueryResult> {
-    return await this.executeQuery(
-      credentials,
-      `
+    if (limit == null) {
+      return await this.executeQuery(
+        credentials,
+        `
 CONSTRUCT {
-  ?node ?p ?o .
+  ?node ?p1 ?o1 .
+  ?o2 ?p1 ?node .
 }
 WHERE {
   VALUES ?node { ${this._getUriList(nodeIds)} }
   {
-    ?node ?p ?o .
+    ?node ?p1 ?o1 .
   }
   UNION
   {
-    ?o ?p ?node .
+    ?o2 ?p2 ?node .
   }
 }   
     `,
-      {},
-      new ExternalGraphDatabaseQueryLimitConfig(
-        limit == null
-          ? ExternalGraphDatabaseQueryLimitConfigType.preview
-          : ExternalGraphDatabaseQueryLimitConfigType.default,
-        ExternalGraphDatabaseQueryLimitConfigCollectionType.graphElements,
-      ),
-    );
+        {},
+        new ExternalGraphDatabaseQueryLimitConfig(
+          ExternalGraphDatabaseQueryLimitConfigType.preview,
+          ExternalGraphDatabaseQueryLimitConfigCollectionType.graphElements,
+        ),
+      );
+    } else {
+      return await this.executeQuery(
+        credentials,
+        `
+CONSTRUCT {
+  ?node ?allowedPredicate1 ?o1 .
+  ?o2 ?allowedPredicate2 ?node .
+}
+WHERE {
+  VALUES ?node { ${this._getUriList(nodeIds)} }
+  VALUES ?allowedPredicate1 { ${this._getUriList(limit.relationships)} }
+  VALUES ?allowedPredicate2 { ${this._getUriList(limit.relationships)} }
+  {
+    ?node ?allowedPredicate ?o1 .
+  }
+  UNION
+  {
+    ?o2 ?allowedPredicate ?node .
+  }
+}    
+    `,
+        {},
+        new ExternalGraphDatabaseQueryLimitConfig(
+          ExternalGraphDatabaseQueryLimitConfigType.default,
+          ExternalGraphDatabaseQueryLimitConfigCollectionType.graphElements,
+        ),
+      );
+    }
   }
 
   public async expandNodePreview(
