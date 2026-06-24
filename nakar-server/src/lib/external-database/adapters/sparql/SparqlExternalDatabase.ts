@@ -137,7 +137,25 @@ export class SparqlExternalDatabase implements ExternalGraphDatabase {
     credentials: ExternalGraphDatabaseCredentials,
     nodeIds: SSet<string>,
   ): Promise<ExternalGraphDatabaseQueryResult> {
-    return await Promise.resolve(ExternalGraphDatabaseQueryResult.empty());
+    return await this.executeQuery(
+      credentials,
+      `
+CONSTRUCT {
+  ?s ?p ?o .
+}
+WHERE {
+  VALUES ?s { ${this._getUriList(nodeIds)} }
+  VALUES ?o { ${this._getUriList(nodeIds)} }
+
+  ?s ?p ?o .
+}
+    `,
+      {},
+      new ExternalGraphDatabaseQueryLimitConfig(
+        ExternalGraphDatabaseQueryLimitConfigType.default,
+        ExternalGraphDatabaseQueryLimitConfigCollectionType.graphElements,
+      ),
+    );
   }
 
   public async expandNode(
