@@ -182,28 +182,28 @@ WHERE {
     const relsResult: BindingsStream = await this._runSparqlQuery(
       credentials,
       `
-SELECT ?praedikat (COUNT(DISTINCT *) AS ?anzahl)
+SELECT ?p (COUNT(DISTINCT *) AS ?count)
 WHERE {
-  VALUES ?ressource { ${this._getUriList(nodeIds)} }
+  VALUES ?s { ${this._getUriList(nodeIds)} }
 
   {
-    ?ressource ?praedikat ?o .
+    ?s ?p ?o .
   }
   UNION
   {
-    ?s ?praedikat ?ressource .
+    ?o ?p ?s .
   }
 }
-GROUP BY ?praedikat
-ORDER BY DESC(?anzahl)
+GROUP BY ?p
+ORDER BY DESC(?count)
     `,
     );
     const relationshipResults: ExternalGraphDatabaseExpandNodePreviewEntry[] =
       [];
     for await (const bindings of relsResult) {
       relationshipResults.push({
-        identificator: bindings.get('praedikat')?.value ?? '',
-        count: parseInt(bindings.get('anzahl')?.value ?? '0'), // TODO
+        identificator: bindings.get('p')?.value ?? '',
+        count: parseInt(bindings.get('count')?.value ?? '0'), // TODO
       });
     }
 
@@ -329,9 +329,9 @@ ORDER BY ?p`,
     const result: BindingsStream = await this._runSparqlQuery(
       credentials,
       `
-SELECT (COUNT(*) AS ?p)
+SELECT (COUNT(*) AS ?count)
 WHERE {
-  ?subjekt ?beziehung ?objekt .
+  ?s ?p ?o .
 }`,
     );
 
@@ -343,7 +343,7 @@ WHERE {
       return 0;
     }
 
-    const stringValue: string | null = bindings[0].get('p')?.value ?? null;
+    const stringValue: string | null = bindings[0].get('count')?.value ?? null;
     if (stringValue == null) {
       this._logger.error(
         'Error loading relationship count from sparql database: Result does not contain the target binding.',
