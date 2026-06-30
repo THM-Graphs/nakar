@@ -206,11 +206,11 @@ WHERE {
   VALUES ?allowedPredicate1 { ${this._getUriList(limit.relationships)} }
   VALUES ?allowedPredicate2 { ${this._getUriList(limit.relationships)} }
   {
-    ?node ?allowedPredicate ?o1 .
+    ?node ?allowedPredicate1 ?o1 .
   }
   UNION
   {
-    ?o2 ?allowedPredicate ?node .
+    ?o2 ?allowedPredicate2 ?node .
   }
 }    
     `,
@@ -233,7 +233,6 @@ WHERE {
 SELECT ?p (COUNT(DISTINCT *) AS ?count)
 WHERE {
   VALUES ?s { ${this._getUriList(nodeIds)} }
-
   {
     ?s ?p ?o .
   }
@@ -251,7 +250,7 @@ ORDER BY DESC(?count)
     for await (const bindings of relsResult) {
       relationshipResults.push({
         identificator: bindings.get('p')?.value ?? '',
-        count: parseInt(bindings.get('count')?.value ?? '0'), // TODO
+        count: parseInt(bindings.get('count')?.value ?? '0'),
       });
     }
 
@@ -298,7 +297,7 @@ ORDER BY DESC(?count)
     credentials: ExternalGraphDatabaseCredentials,
   ): Promise<ExternalGraphDatabaseSearchCapabilities> {
     return await Promise.resolve({
-      canExactMatchNativeId: true,
+      canExactMatchNativeId: false,
       canExactMatchLabel: false,
       exactMatchNodeProperties: new SMap(),
       fuzzyMatchNodeProperties: new SMap(),
@@ -454,6 +453,14 @@ WHERE {
   private _getUriList(uris: SSet<string>): string {
     return uris
       .toArray()
+      .filter((uri: string): boolean => {
+        try {
+          new URL(uri);
+          return true;
+        } catch {
+          return false;
+        }
+      })
       .map((nodeId: string): string => `<${nodeId}>`)
       .join(' ');
   }
