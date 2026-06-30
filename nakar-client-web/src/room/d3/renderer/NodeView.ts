@@ -103,7 +103,11 @@ export class NodeView {
 
     this.labelText = createSvgElement("text");
     setAttr(this.labelText, "text-anchor", "middle");
-    setAttr(this.labelText, "clip-path", `url(#node-label-clip-${node.id})`);
+    setAttr(
+      this.labelText,
+      "clip-path",
+      `url(#node-label-clip-${encodeURIComponent(node.id)})`,
+    );
     this.group.appendChild(this.labelText);
 
     this.clusterBadgeRect = createSvgElement("rect");
@@ -234,7 +238,7 @@ export class NodeView {
     this.props = props;
     const fill =
       props.bgColors.length > 1
-        ? `url(#gradient_${this.node.id})`
+        ? `url(#gradient_${encodeURIComponent(this.node.id)})`
         : (props.bgColors[0] ?? "#999");
 
     setAttr(this.baseCircle, "r", this.node.radius);
@@ -252,7 +256,11 @@ export class NodeView {
     setAttr(this.image, "height", this.node.radius * 2 - props.strokeWidth * 3);
     setAttr(this.image, "href", this.node.coverImageUrl?.toString() ?? "");
     setAttr(this.image, "preserveAspectRatio", "xMidYMid slice");
-    setAttr(this.image, "clip-path", `url(#circleclip-${this.node.id})`);
+    setAttr(
+      this.image,
+      "clip-path",
+      `url(#circleclip-${encodeURIComponent(this.node.id)})`,
+    );
 
     setAttr(this.hoverCircle, "r", this.node.radius - props.strokeWidth / 2);
     setAttr(this.hoverCircle, "fill", props.titleColor);
@@ -271,7 +279,7 @@ export class NodeView {
       this.clusterCircle,
       "stroke",
       props.bgColors.length > 1
-        ? `url(#gradient_${this.node.id})`
+        ? `url(#gradient_${encodeURIComponent(this.node.id)})`
         : (props.bgColors[0] ?? "#999"),
     );
     setAttr(this.clusterCircle, "stroke-width", props.strokeWidth * 4);
