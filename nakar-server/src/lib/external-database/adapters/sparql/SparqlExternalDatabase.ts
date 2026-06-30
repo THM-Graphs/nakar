@@ -137,15 +137,16 @@ export class SparqlExternalDatabase implements ExternalGraphDatabase {
     credentials: ExternalGraphDatabaseCredentials,
     nodeIds: SSet<string>,
   ): Promise<ExternalGraphDatabaseQueryResult> {
-    return await this.executeQuery(
+    const uriList: string = this._getUriList(nodeIds);
+    const result: ExternalGraphDatabaseQueryResult = await this.executeQuery(
       credentials,
       `
 CONSTRUCT {
   ?s ?p ?o .
 }
 WHERE {
-  VALUES ?s { ${this._getUriList(nodeIds)} }
-  VALUES ?o { ${this._getUriList(nodeIds)} }
+  VALUES ?s { ${uriList} }
+  VALUES ?o { ${uriList} }
 
   ?s ?p ?o .
 }
@@ -156,6 +157,7 @@ WHERE {
         ExternalGraphDatabaseQueryLimitConfigCollectionType.graphElements,
       ),
     );
+    return result;
   }
 
   public async expandNode(
@@ -172,7 +174,7 @@ WHERE {
         `
 CONSTRUCT {
   ?node ?p1 ?o1 .
-  ?o2 ?p1 ?node .
+  ?o2 ?p2 ?node .
 }
 WHERE {
   VALUES ?node { ${this._getUriList(nodeIds)} }
