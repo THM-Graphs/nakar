@@ -1,7 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { NodeConfigurationDto } from './NodeConfigurationDto';
 import { DatabaseConnectionDatabaseType } from '../../http/routes/database-connection/dto/DatabaseConnectionDatabaseType';
-import { IsEnum } from 'class-validator';
 
 export class DatabaseConnectionDto {
   @ApiProperty()
