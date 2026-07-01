@@ -257,7 +257,7 @@ ORDER BY DESC(?count)
     return new ExternalGraphDatabaseExpandNodePreview(
       this._possibleLabels().map(
         (label: string): ExternalGraphDatabaseExpandNodePreviewEntry => ({
-          count: 0,
+          count: 0, // TODO
           identificator: label,
         }),
       ),
@@ -287,15 +287,14 @@ ORDER BY DESC(?count)
       relTypeCount: relationshipTypes.length,
       labelCount: labels.length,
       relCount: relationshipCount,
-      nodeCount: null,
+      nodeCount: null, // TODO
       labels: labels,
       rels: relationshipTypes,
     };
   }
 
-  public async getSearchCapabilities(
-    credentials: ExternalGraphDatabaseCredentials,
-  ): Promise<ExternalGraphDatabaseSearchCapabilities> {
+  public async getSearchCapabilities(): Promise<ExternalGraphDatabaseSearchCapabilities> {
+    // TODO
     return await Promise.resolve({
       canExactMatchNativeId: false,
       canExactMatchLabel: false,
@@ -304,11 +303,9 @@ ORDER BY DESC(?count)
     });
   }
 
-  public async search(
-    credentials: ExternalGraphDatabaseCredentials,
-    searchTerm: string,
-  ): Promise<ExternalGraphDatabaseNode[]> {
-    return await Promise.resolve([]);
+  public search(): Promise<ExternalGraphDatabaseNode[]> {
+    // TODO
+    throw new Error('Cannot execute search in sparql-based databases.');
   }
 
   public async findNodeByNativeId(
@@ -318,12 +315,9 @@ ORDER BY DESC(?count)
     return await Promise.resolve(ExternalGraphDatabaseQueryResult.empty());
   }
 
-  public async expandClusterNode(
-    credentials: ExternalGraphDatabaseCredentials,
-    nodeIds: SSet<string>,
-    neighbors: SSet<string>,
-  ): Promise<ExternalGraphDatabaseQueryResult> {
-    return await Promise.resolve(ExternalGraphDatabaseQueryResult.empty());
+  public expandClusterNode(): Promise<ExternalGraphDatabaseQueryResult> {
+    // TODO
+    throw new Error('Cannot expand node clusters in sparql-based databases.');
   }
 
   public async findRelationshipsByIds(
@@ -338,7 +332,32 @@ ORDER BY DESC(?count)
     nativeIdA: string,
     nativeIdB: string,
   ): Promise<ExternalGraphDatabaseQueryResult> {
-    return await Promise.resolve(ExternalGraphDatabaseQueryResult.empty());
+    return await this.executeQuery(
+      credentials,
+      `
+BASE <${credentials.connectionUrl}>
+CONSTRUCT {
+  ?node ?p ?o .
+  ?s ?p ?node .
+}
+WHERE {
+  <${nativeIdA}> (!<>|^!<>)* ?node .
+  ?node (!<>|^!<>)* <${nativeIdB}> .
+  {
+    ?node ?p ?o .
+  }
+  UNION
+  {
+    ?s ?p ?node .
+  }
+}
+    `,
+      {},
+      new ExternalGraphDatabaseQueryLimitConfig(
+        ExternalGraphDatabaseQueryLimitConfigType.default,
+        ExternalGraphDatabaseQueryLimitConfigCollectionType.graphElements,
+      ),
+    );
   }
 
   public async shutdown(): Promise<void> {
