@@ -2,6 +2,7 @@ import type { TaskQueueTask } from './TaskQueueTask';
 import type { Observable } from 'rxjs';
 import { Subject } from 'rxjs';
 import type { TaskQueueState } from './TaskQueueState';
+import { match, P } from 'ts-pattern';
 
 export class TaskQueue {
   private _queue: TaskQueueTask[];
@@ -63,7 +64,9 @@ export class TaskQueue {
         this._onLog.next(`Task '${newTask.title}' did finish successfully.`);
       } catch (error) {
         this._onLog.next(
-          `Task '${newTask.title}' did error: ${JSON.stringify(error)}`,
+          `Task '${newTask.title}' did error: ${match(error)
+            .with(P.instanceOf(Error), (e: Error): string => e.message)
+            .otherwise((e: unknown): string => JSON.stringify(e))}`,
         );
         this._onError.next(error);
       }
