@@ -68,18 +68,22 @@ export function ExpandNodePreviewModal() {
               <span className={"small text-muted p-2"}>
                 Select labels and relationships to load.
               </span>
-              <SelectableTableData
-                title={"Labels"}
-                data={data.labels}
-                onSelectionChange={setSelectedLabel}
-                selections={data.selectedLabels}
-              ></SelectableTableData>
-              <SelectableTableData
-                title={"Relationships"}
-                data={data.relationships}
-                onSelectionChange={setSelectedRelationships}
-                selections={data.selectedRelationships}
-              ></SelectableTableData>
+              {data.labels.length > 0 && (
+                <SelectableTableData
+                  title={"Labels"}
+                  data={data.labels}
+                  onSelectionChange={setSelectedLabel}
+                  selections={data.selectedLabels}
+                ></SelectableTableData>
+              )}
+              {data.relationships.length > 0 && (
+                <SelectableTableData
+                  title={"Relationships"}
+                  data={data.relationships}
+                  onSelectionChange={setSelectedRelationships}
+                  selections={data.selectedRelationships}
+                ></SelectableTableData>
+              )}
             </>
           ) : (
             <Stack
