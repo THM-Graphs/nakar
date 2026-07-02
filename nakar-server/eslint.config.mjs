@@ -109,6 +109,7 @@ export default defineConfig([
       '@typescript-eslint/consistent-type-imports': ['error'],
       '@typescript-eslint/prefer-destructuring': 'off',
       curly: ['error', 'all'],
+      '@typescript-eslint/promise-function-async': 'off',
     },
   },
 ]);
