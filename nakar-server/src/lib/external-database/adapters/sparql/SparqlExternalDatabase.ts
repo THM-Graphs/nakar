@@ -12,8 +12,7 @@ import { SSet } from '../../../../packages/set/Set';
 import { ExternalGraphDatabaseQueryLimitConfig } from '../../data/ExternalGraphDatabaseQueryLimitConfig';
 import type { ExternalGraphDatabaseStatsRelationship } from '../../data/ExternalGraphDatabaseStatsRelationship';
 import { QueryEngine } from '@comunica/query-sparql';
-import type { Bindings, BindingsStream } from '@comunica/types';
-import type { Quad } from '@rdfjs/types';
+import type { BindingsStream } from '@comunica/types';
 import { v4 } from 'uuid';
 import type { AsyncIterator } from 'asynciterator';
 import type { ExternalGraphDatabaseRelationship } from '../../data/ExternalGraphDatabaseRelationship';
@@ -21,6 +20,15 @@ import { ExternalGraphDatabaseQueryLimitConfigType } from '../../data/ExternalGr
 import { ExternalGraphDatabaseQueryLimitConfigCollectionType } from '../../data/ExternalGraphDatabaseQueryLimitConfigCollectionType';
 import type { ExternalGraphDatabaseStatsLabel } from '../../data/ExternalGraphDatabaseStatsLabel';
 import type { ExternalGraphDatabaseExpandNodePreviewEntry } from '../../data/ExternalGraphDatabaseExpandNodePreviewEntry';
+import type {
+  Quad_Object,
+  Quad_Predicate,
+  Quad_Subject,
+  Literal,
+  Quad,
+  Bindings,
+} from '@rdfjs/types';
+import { match } from 'ts-pattern';
 
 export class SparqlExternalDatabase implements ExternalGraphDatabase {
   private readonly _logger: Logger;
@@ -70,55 +78,15 @@ export class SparqlExternalDatabase implements ExternalGraphDatabase {
       new SMap<string, ExternalGraphDatabaseRelationship>();
 
     for await (const quad of bindingsStream) {
-      // Subject
-      {
-        const existingSubjectNode: ExternalGraphDatabaseNode = nodes.get(
-          quad.subject.value,
-        ) ?? {
-          labels: [quad.subject.termType],
-          keys: new SSet([]),
-          nativeId: quad.subject.value,
-          properties: { uri: quad.subject.value },
-          source: credentials,
-        };
-        nodes.set(quad.subject.value, existingSubjectNode);
-        existingSubjectNode.keys.add('Subject');
-      }
-
-      // Object
-      {
-        const existingObjectNode: ExternalGraphDatabaseNode = nodes.get(
-          quad.object.value,
-        ) ?? {
-          labels: [quad.object.termType],
-          keys: new SSet([]),
-          nativeId: quad.object.value,
-          properties: { uri: quad.object.value },
-          source: credentials,
-        };
-        nodes.set(quad.object.value, existingObjectNode);
-        existingObjectNode.keys.add('Object');
-      }
-
-      // Predicate
-      {
-        const id: string = `${quad.subject.value}_${quad.predicate.value}_${quad.object.value}`;
-        const existingPredicateNode: ExternalGraphDatabaseRelationship | null =
-          relationships.get(id) ?? null;
-        if (existingPredicateNode == null) {
-          relationships.set(id, {
-            keys: new SSet(['Predicate']),
-            nativeId: id,
-            properties: { uri: quad.predicate.value },
-            source: credentials,
-            startNodeId: quad.subject.value,
-            endNodeId: quad.object.value,
-            type: quad.predicate.value,
-          });
-        } else {
-          existingPredicateNode.keys.add('Predicate');
-        }
-      }
+      this._collectNode(quad.subject, 'Subject', nodes, credentials);
+      this._collectNode(quad.object, 'Object', nodes, credentials);
+      this._collectRelationship(
+        quad.subject,
+        quad.object,
+        quad.predicate,
+        relationships,
+        credentials,
+      );
 
       if (nodes.size + relationships.size >= limit) {
         break;
@@ -254,15 +222,7 @@ ORDER BY DESC(?count)
       });
     }
 
-    return new ExternalGraphDatabaseExpandNodePreview(
-      this._possibleLabels().map(
-        (label: string): ExternalGraphDatabaseExpandNodePreviewEntry => ({
-          count: 0, // TODO
-          identificator: label,
-        }),
-      ),
-      relationshipResults,
-    );
+    return new ExternalGraphDatabaseExpandNodePreview([], relationshipResults);
   }
 
   public async getStats(
@@ -308,11 +268,9 @@ ORDER BY DESC(?count)
     throw new Error('Cannot execute search in sparql-based databases.');
   }
 
-  public async findNodeByNativeId(
-    credentials: ExternalGraphDatabaseCredentials,
-    nativeNodeId: string,
-  ): Promise<ExternalGraphDatabaseQueryResult> {
-    return await Promise.resolve(ExternalGraphDatabaseQueryResult.empty());
+  public findNodeByNativeId(): Promise<ExternalGraphDatabaseQueryResult> {
+    // TODO
+    throw new Error('Cannot find node by native id.');
   }
 
   public expandClusterNode(): Promise<ExternalGraphDatabaseQueryResult> {
@@ -320,11 +278,11 @@ ORDER BY DESC(?count)
     throw new Error('Cannot expand node clusters in sparql-based databases.');
   }
 
-  public async findRelationshipsByIds(
-    credentials: ExternalGraphDatabaseCredentials,
-    relationshipIds: string[],
-  ): Promise<ExternalGraphDatabaseQueryResult> {
-    return await Promise.resolve(ExternalGraphDatabaseQueryResult.empty());
+  public findRelationshipsByIds(): Promise<ExternalGraphDatabaseQueryResult> {
+    // TODO
+    throw new Error(
+      'Cannot find relationship by id in sparql-based databases.',
+    );
   }
 
   public async findShortestPath(
@@ -332,6 +290,7 @@ ORDER BY DESC(?count)
     nativeIdA: string,
     nativeIdB: string,
   ): Promise<ExternalGraphDatabaseQueryResult> {
+    // TODO
     return await this.executeQuery(
       credentials,
       `
@@ -482,5 +441,74 @@ WHERE {
       })
       .map((nodeId: string): string => `<${nodeId}>`)
       .join(' ');
+  }
+
+  private _collectNode(
+    quadElement: Quad_Subject | Quad_Object,
+    key: 'Subject' | 'Object',
+    nodes: SMap<string, ExternalGraphDatabaseNode>,
+    credentials: ExternalGraphDatabaseCredentials,
+  ): void {
+    const existingSubjectNode: ExternalGraphDatabaseNode = nodes.get(
+      quadElement.value,
+    ) ?? {
+      labels: [quadElement.termType],
+      keys: new SSet([]),
+      nativeId: quadElement.value,
+      properties: this._collectProperties(quadElement),
+      source: credentials,
+    };
+    nodes.set(quadElement.value, existingSubjectNode);
+    existingSubjectNode.keys.add(key);
+  }
+
+  private _collectRelationship(
+    subject: Quad_Subject,
+    object: Quad_Object,
+    quadElement: Quad_Predicate,
+    relationships: SMap<string, ExternalGraphDatabaseRelationship>,
+    credentials: ExternalGraphDatabaseCredentials,
+  ): void {
+    const id: string = `${subject.value}_${quadElement.value}_${object.value}`;
+    const existingPredicateNode: ExternalGraphDatabaseRelationship | null =
+      relationships.get(id) ?? null;
+    if (existingPredicateNode == null) {
+      relationships.set(id, {
+        keys: new SSet(['Predicate']),
+        nativeId: id,
+        properties: this._collectProperties(quadElement),
+        source: credentials,
+        startNodeId: subject.value,
+        endNodeId: object.value,
+        type: quadElement.value,
+      });
+    } else {
+      existingPredicateNode.keys.add('Predicate');
+    }
+  }
+
+  private _collectProperties(
+    element: Quad_Subject | Quad_Object | Quad_Predicate,
+  ): Record<string, unknown> {
+    const result: Record<string, unknown> = {
+      uri: element.value,
+      ...match(element)
+        .returnType<Record<string, unknown>>()
+        .with(
+          { termType: 'Literal' },
+          (literal: Literal): Record<string, unknown> => ({
+            language: literal.language,
+            direction: literal.direction,
+            dataType: literal.datatype.value,
+          }),
+        )
+        .with({ termType: 'NamedNode' }, (): Record<string, unknown> => ({}))
+        .with({ termType: 'Quad' }, (): Record<string, unknown> => ({}))
+        .with({ termType: 'BlankNode' }, (): Record<string, unknown> => ({}))
+        .with({ termType: 'Variable' }, (): Record<string, unknown> => ({}))
+        .exhaustive(),
+    };
+
+    return result;
   }
 }
