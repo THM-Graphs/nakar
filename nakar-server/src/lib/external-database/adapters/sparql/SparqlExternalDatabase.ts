@@ -218,7 +218,7 @@ WHERE {
     credentials: ExternalGraphDatabaseCredentials,
     nodeIds: SSet<string>,
   ): Promise<ExternalGraphDatabaseExpandNodePreview> {
-    const relsResult: BindingsStream = await this._runSparqlQuery(
+    const relsResult: BindingsStream = await this._runGenericSparqlQuery(
       credentials,
       `
 SELECT ?p (COUNT(DISTINCT *) AS ?count)
@@ -308,38 +308,9 @@ ORDER BY DESC(?count)
     );
   }
 
-  public async findShortestPath(
-    credentials: ExternalGraphDatabaseCredentials,
-    nativeIdA: string,
-    nativeIdB: string,
-  ): Promise<ExternalGraphDatabaseQueryResult> {
+  public findShortestPath(): Promise<ExternalGraphDatabaseQueryResult> {
     // TODO
-    return await this.executeQuery(
-      credentials,
-      `
-BASE <${credentials.connectionUrl}>
-CONSTRUCT {
-  ?node ?p ?o .
-  ?s ?p ?node .
-}
-WHERE {
-  <${nativeIdA}> (!<>|^!<>)* ?node .
-  ?node (!<>|^!<>)* <${nativeIdB}> .
-  {
-    ?node ?p ?o .
-  }
-  UNION
-  {
-    ?s ?p ?node .
-  }
-}
-    `,
-      {},
-      new ExternalGraphDatabaseQueryLimitConfig(
-        ExternalGraphDatabaseQueryLimitConfigType.default,
-        ExternalGraphDatabaseQueryLimitConfigCollectionType.graphElements,
-      ),
-    );
+    throw new Error('Cannot get shortest path in sparql databases.');
   }
 
   public async shutdown(): Promise<void> {
@@ -350,7 +321,7 @@ WHERE {
   private async _loadRelationshipTypes(
     credentials: ExternalGraphDatabaseCredentials,
   ): Promise<ExternalGraphDatabaseStatsRelationship[]> {
-    const result: BindingsStream = await this._runSparqlQuery(
+    const result: BindingsStream = await this._runGenericSparqlQuery(
       credentials,
       `SELECT DISTINCT ?p
 WHERE {
@@ -374,7 +345,7 @@ ORDER BY ?p`,
   private async _loadRelationshipsCount(
     credentials: ExternalGraphDatabaseCredentials,
   ): Promise<number> {
-    const result: BindingsStream = await this._runSparqlQuery(
+    const result: BindingsStream = await this._runGenericSparqlQuery(
       credentials,
       `
 SELECT (COUNT(*) AS ?count)
@@ -410,7 +381,7 @@ WHERE {
     return numberValue;
   }
 
-  private async _runSparqlQuery(
+  private async _runGenericSparqlQuery(
     credentials: ExternalGraphDatabaseCredentials,
     query: string,
   ): Promise<BindingsStream> {
