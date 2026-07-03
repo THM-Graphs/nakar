@@ -135,7 +135,7 @@ export class NodeIndex {
     databaseCache: DatabaseReferenceCache,
   ): Promise<GraphNode | null> {
     const mutableNode: GraphNode = new GraphNode({
-      id: node.source.nakarId + '_' + node.nativeId,
+      id: node.source.nakarId + '_' + encodeURIComponent(node.nativeId),
       nativeId: node.nativeId,
       labels: new SSet<string>(node.labels),
       properties: PropertyCollection.fromRecord(node.properties),

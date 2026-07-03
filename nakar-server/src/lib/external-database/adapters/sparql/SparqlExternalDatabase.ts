@@ -546,11 +546,13 @@ WHERE {
   ): string {
     return match(node)
       .returnType<string>()
-      .with(
-        { termType: 'Literal' },
-        (literal: Literal): string =>
-          `${JSON.stringify(literal.value)}@${literal.language}`,
-      )
+      .with({ termType: 'Literal' }, (literal: Literal): string => {
+        if (literal.language.length > 0) {
+          return `${JSON.stringify(literal.value)}@${literal.language}`;
+        } else {
+          return JSON.stringify(literal.value);
+        }
+      })
       .with(
         { termType: 'NamedNode' },
         (namedNode: NamedNode): string => `<${namedNode.value}>`,
