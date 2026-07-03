@@ -33,6 +33,7 @@ import type {
 } from '@rdfjs/types';
 import { match, P } from 'ts-pattern';
 import { createHash } from 'crypto';
+import type { SparqlLabel } from './SparqlLabel';
 
 export class SparqlExternalDatabase implements ExternalGraphDatabase {
   private readonly _logger: Logger;
@@ -260,9 +261,9 @@ ORDER BY DESC(?count)
     ]);
     const labels: ExternalGraphDatabaseStatsLabel[] =
       this._possibleLabels().map(
-        (label: string): ExternalGraphDatabaseStatsLabel => ({
+        (label: SparqlLabel): ExternalGraphDatabaseStatsLabel => ({
           label: label,
-          exploreQuery: '', // TODO
+          exploreQuery: this._getExploreQueryForLabel(label),
         }),
       );
 
@@ -335,7 +336,19 @@ ORDER BY ?p`,
     for await (const bindings of result) {
       const value: string | null = bindings.get('p')?.value ?? null;
       if (value != null) {
-        relationshipTypes.push({ relType: value, exploreQuery: '' /* TODO */ });
+        relationshipTypes.push({
+          relType: value,
+          exploreQuery: `CONSTRUCT {
+  ?s ?p ?o .
+}
+WHERE {
+  VALUES ?p {
+    <${value}>
+  }
+  ?s ?p ?o .
+}
+LIMIT ${ExternalGraphDatabaseQueryLimitConfig.maximalPreviewElements}`,
+        });
       }
     }
 
@@ -418,8 +431,8 @@ WHERE {
     return url;
   }
 
-  private _possibleLabels(): string[] {
-    return ['Quad', 'NamedNode', 'BlankNode', 'Variable', 'Literal'];
+  private _possibleLabels(): SparqlLabel[] {
+    return ['NamedNode', 'BlankNode', 'Literal'];
   }
 
   private _collectNode(
@@ -517,13 +530,7 @@ WHERE {
   ): string {
     return match(node)
       .returnType<string>()
-      .with({ termType: 'Literal' }, (literal: Literal): string => {
-        if (literal.language.length > 0) {
-          return `${JSON.stringify(literal.value)}@${literal.language}`;
-        } else {
-          return JSON.stringify(literal.value);
-        }
-      })
+      .with({ termType: 'Literal' }, (literal: Literal): string => literal.id)
       .with(
         { termType: 'NamedNode' },
         (namedNode: NamedNode): string => `<${namedNode.value}>`,
@@ -549,5 +556,43 @@ WHERE {
   ): string {
     const nativeId: string = this._getSparqlReferenceLiteralOfNode(node);
     return nativeId;
+  }
+
+  private _getExploreQueryForLabel(label: SparqlLabel): string {
+    return match(label)
+      .with(
+        'Literal',
+        (): string => `CONSTRUCT {
+  ?s ?p ?o .
+}
+WHERE {
+  ?s ?p ?o .
+  FILTER(isLiteral(?o))
+}
+LIMIT ${ExternalGraphDatabaseQueryLimitConfig.maximalPreviewElements.toString()}`,
+      )
+      .with(
+        'NamedNode',
+        (): string => `CONSTRUCT {
+  ?s ?p ?o .
+}
+WHERE {
+  ?s ?p ?o .
+  FILTER(isIRI(?s) || isIRI(?o))
+}
+LIMIT ${ExternalGraphDatabaseQueryLimitConfig.maximalPreviewElements.toString()}`,
+      )
+      .with(
+        'BlankNode',
+        (): string => `CONSTRUCT {
+  ?s ?p ?o .
+}
+WHERE {
+  ?s ?p ?o .
+  FILTER(isBlank(?s) || isBlank(?o))
+}
+LIMIT ${ExternalGraphDatabaseQueryLimitConfig.maximalPreviewElements.toString()}`,
+      )
+      .exhaustive();
   }
 }
