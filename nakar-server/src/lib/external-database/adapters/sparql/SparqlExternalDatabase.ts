@@ -32,6 +32,7 @@ import type {
   Variable,
 } from '@rdfjs/types';
 import { match, P } from 'ts-pattern';
+import { createHash } from 'crypto';
 
 export class SparqlExternalDatabase implements ExternalGraphDatabase {
   private readonly _logger: Logger;
@@ -121,7 +122,7 @@ export class SparqlExternalDatabase implements ExternalGraphDatabase {
     credentials: ExternalGraphDatabaseCredentials,
     nodeIds: SSet<string>,
   ): Promise<ExternalGraphDatabaseQueryResult> {
-    const uriList: string = this._getUriList(nodeIds);
+    const uriList: string = nodeIds.toArray().join(' ');
     const result: ExternalGraphDatabaseQueryResult = await this.executeQuery(
       credentials,
       `
@@ -161,7 +162,7 @@ CONSTRUCT {
   ?o2 ?p2 ?node .
 }
 WHERE {
-  VALUES ?node { ${this._getUriList(nodeIds)} }
+  VALUES ?node { ${nodeIds.toArray().join(' ')} }
   {
     ?node ?p1 ?o1 .
   }
@@ -186,9 +187,15 @@ CONSTRUCT {
   ?o2 ?allowedPredicate2 ?node .
 }
 WHERE {
-  VALUES ?node { ${this._getUriList(nodeIds)} }
-  VALUES ?allowedPredicate1 { ${this._getUriList(limit.relationships)} }
-  VALUES ?allowedPredicate2 { ${this._getUriList(limit.relationships)} }
+  VALUES ?node { ${nodeIds.toArray().join(' ')} }
+  VALUES ?allowedPredicate1 { ${limit.relationships
+    .toArray()
+    .map((rel: string): string => `<${rel}>`)
+    .join(' ')} }
+  VALUES ?allowedPredicate2 { ${limit.relationships
+    .toArray()
+    .map((rel: string): string => `<${rel}>`)
+    .join(' ')} }
   {
     ?node ?allowedPredicate1 ?o1 .
   }
@@ -216,7 +223,7 @@ WHERE {
       `
 SELECT ?p (COUNT(DISTINCT *) AS ?count)
 WHERE {
-  VALUES ?s { ${this._getUriList(nodeIds)} }
+  VALUES ?s { ${nodeIds.toArray().join(' ')} }
   {
     ?s ?p ?o .
   }
@@ -444,25 +451,23 @@ WHERE {
     return ['Quad', 'NamedNode', 'BlankNode', 'Variable', 'Literal'];
   }
 
-  private _getUriList(uris: SSet<string>): string {
-    return uris.toArray().join(' ');
-  }
-
   private _collectNode(
     quadElement: Quad_Subject | Quad_Object,
     key: 'Subject' | 'Object',
     nodes: SMap<string, ExternalGraphDatabaseNode>,
     credentials: ExternalGraphDatabaseCredentials,
   ): void {
-    const id: string = this._getSparqlReferenceLiteralOfNode(quadElement);
-    const existingSubjectNode: ExternalGraphDatabaseNode = nodes.get(id) ?? {
+    const nativeId: string = this._getNativeId(quadElement);
+    const existingSubjectNode: ExternalGraphDatabaseNode = nodes.get(
+      nativeId,
+    ) ?? {
       labels: [quadElement.termType],
       keys: new SSet([]),
-      nativeId: id,
+      nativeId: nativeId,
       properties: this._collectProperties(quadElement),
       source: credentials,
     };
-    nodes.set(id, existingSubjectNode);
+    nodes.set(nativeId, existingSubjectNode);
     existingSubjectNode.keys.add(key);
   }
 
@@ -473,17 +478,19 @@ WHERE {
     relationships: SMap<string, ExternalGraphDatabaseRelationship>,
     credentials: ExternalGraphDatabaseCredentials,
   ): void {
-    const id: string = `${this._getSparqlReferenceLiteralOfNode(subject)}_${quadElement.value}_${this._getSparqlReferenceLiteralOfNode(object)}`;
+    const fakeNativeId: string = this._md5(
+      `${this._getNativeId(subject)}_${this._getNativeId(quadElement)}_${this._getNativeId(object)}`,
+    );
     const existingPredicateNode: ExternalGraphDatabaseRelationship | null =
-      relationships.get(id) ?? null;
+      relationships.get(fakeNativeId) ?? null;
     if (existingPredicateNode == null) {
-      relationships.set(id, {
+      relationships.set(fakeNativeId, {
         keys: new SSet(['Predicate']),
-        nativeId: id,
+        nativeId: fakeNativeId,
         properties: this._collectProperties(quadElement),
         source: credentials,
-        startNodeId: this._getSparqlReferenceLiteralOfNode(subject),
-        endNodeId: this._getSparqlReferenceLiteralOfNode(object),
+        startNodeId: this._getNativeId(subject),
+        endNodeId: this._getNativeId(object),
         type: quadElement.value,
       });
     } else {
@@ -558,5 +565,16 @@ WHERE {
         (variable: Variable): string => `<${variable.value}>`,
       )
       .exhaustive();
+  }
+
+  private _md5(input: string): string {
+    return createHash('md5').update(input, 'utf8').digest('hex');
+  }
+
+  private _getNativeId(
+    node: Quad_Subject | Quad_Predicate | Quad_Object,
+  ): string {
+    const nativeId: string = this._getSparqlReferenceLiteralOfNode(node);
+    return nativeId;
   }
 }
