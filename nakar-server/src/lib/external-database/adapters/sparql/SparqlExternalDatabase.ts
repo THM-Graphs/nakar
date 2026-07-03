@@ -21,14 +21,14 @@ import { ExternalGraphDatabaseQueryLimitConfigCollectionType } from '../../data/
 import type { ExternalGraphDatabaseStatsLabel } from '../../data/ExternalGraphDatabaseStatsLabel';
 import type { ExternalGraphDatabaseExpandNodePreviewEntry } from '../../data/ExternalGraphDatabaseExpandNodePreviewEntry';
 import type {
+  Bindings,
+  Literal,
+  Quad,
   Quad_Object,
   Quad_Predicate,
   Quad_Subject,
-  Literal,
-  Quad,
-  Bindings,
 } from '@rdfjs/types';
-import { match } from 'ts-pattern';
+import { match, P } from 'ts-pattern';
 
 export class SparqlExternalDatabase implements ExternalGraphDatabase {
   private readonly _logger: Logger;
@@ -40,20 +40,33 @@ export class SparqlExternalDatabase implements ExternalGraphDatabase {
   public async executeQuery(
     credentials: ExternalGraphDatabaseCredentials,
     query: string,
-    parameters: Record<string, unknown>,
+    queryArguments: Record<string, unknown>,
     limitConfig: ExternalGraphDatabaseQueryLimitConfig,
   ): Promise<ExternalGraphDatabaseQueryResult> {
     // TODO: Parameters
 
     const queryId: string = v4();
     const url: URL = this._assertConnectionUrl(credentials);
-    this._logger.debug(
-      `Will start SPARQL Query to ${url.toString()} (${queryId}): ${query}`,
-    );
 
     const myEngine: QueryEngine = new QueryEngine();
-    const bindingsStream: AsyncIterator<Quad> = await myEngine.queryQuads(
+    const queryWithArguments: string = this._applyParametersToQuery(
       query,
+      queryArguments,
+    );
+
+    this._logger.debug(`***** Will start SPARQL Query to ${url.toString()}`);
+    this._logger.debug('Query ID:');
+    this._logger.debug(queryId);
+    this._logger.debug('Arguments:');
+    this._logger.debug(JSON.stringify(queryArguments));
+    this._logger.debug('Raw Query:');
+    this._logger.debug(query);
+    this._logger.debug('Bound Query:');
+    this._logger.debug(queryWithArguments);
+    this._logger.debug('*****');
+
+    const bindingsStream: AsyncIterator<Quad> = await myEngine.queryQuads(
+      queryWithArguments,
       {
         sources: [url.toString()],
       },
@@ -491,7 +504,8 @@ WHERE {
     element: Quad_Subject | Quad_Object | Quad_Predicate,
   ): Record<string, unknown> {
     const result: Record<string, unknown> = {
-      uri: element.value,
+      termType: element.termType,
+      value: element.value,
       ...match(element)
         .returnType<Record<string, unknown>>()
         .with(
@@ -509,6 +523,22 @@ WHERE {
         .exhaustive(),
     };
 
+    return result;
+  }
+
+  private _applyParametersToQuery(
+    query: string,
+    queryArguments: Record<string, unknown>,
+  ): string {
+    let result: string = query;
+    for (const [argumentName, argumentValue] of Object.entries(
+      queryArguments,
+    )) {
+      const stringValue: string = match(argumentValue)
+        .with(P.string, (value: string): string => value)
+        .otherwise((value: unknown): string => JSON.stringify(value));
+      result = result.replaceAll(`$${argumentName}`, stringValue);
+    }
     return result;
   }
 }

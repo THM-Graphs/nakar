@@ -11,7 +11,7 @@ export interface ExternalGraphDatabase {
   executeQuery(
     credentials: ExternalGraphDatabaseCredentials,
     query: string,
-    parameters: Record<string, unknown>,
+    queryArguments: Record<string, unknown>,
     limitConfig: ExternalGraphDatabaseQueryLimitConfig,
   ): Promise<ExternalGraphDatabaseQueryResult>;
 

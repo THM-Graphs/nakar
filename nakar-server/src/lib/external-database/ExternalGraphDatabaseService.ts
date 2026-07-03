@@ -68,7 +68,7 @@ export class ExternalGraphDatabaseService implements OnModuleDestroy {
   public async executeQuery(
     database: Result<'api::database-connection.database-connection'>,
     query: string,
-    parameters: Record<string, unknown>,
+    queryArguments: Record<string, unknown>,
     limitConfig: ExternalGraphDatabaseQueryLimitConfig,
   ): Promise<ExternalGraphDatabaseQueryResult> {
     const credentials: ExternalGraphDatabaseCredentials =
@@ -76,7 +76,7 @@ export class ExternalGraphDatabaseService implements OnModuleDestroy {
     return await this._getAdapter(credentials.databaseType).executeQuery(
       credentials,
       query,
-      parameters,
+      queryArguments,
       limitConfig,
     );
   }

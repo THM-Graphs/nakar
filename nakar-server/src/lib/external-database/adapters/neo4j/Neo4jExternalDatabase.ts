@@ -41,7 +41,7 @@ export class Neo4jExternalDatabase implements ExternalGraphDatabase {
   public async executeQuery(
     credentials: ExternalGraphDatabaseCredentials,
     query: string,
-    parameters: Record<string, unknown>,
+    queryArguments: Record<string, unknown>,
     limitConfig: ExternalGraphDatabaseQueryLimitConfig,
   ): Promise<ExternalGraphDatabaseQueryResult> {
     const driver: Driver = this._getDriver(credentials);
@@ -54,7 +54,7 @@ export class Neo4jExternalDatabase implements ExternalGraphDatabase {
 
     try {
       this._logger.debug(
-        `Will run query: ${query} with data: ${JSON.stringify(parameters).length.toString()} bytes`,
+        `Will run query: ${query} with data: ${JSON.stringify(queryArguments).length.toString()} bytes`,
       );
 
       const factory: Neo4jGraphElementsFactory = new Neo4jGraphElementsFactory(
@@ -63,7 +63,7 @@ export class Neo4jExternalDatabase implements ExternalGraphDatabase {
       await new Promise<void>(
         (resolve: () => void, reject: (error: Error) => void): void => {
           session
-            .run<RecordShape<string, unknown>>(query, parameters, {
+            .run<RecordShape<string, unknown>>(query, queryArguments, {
               timeout: 2 * 60000,
             })
             .subscribe({
