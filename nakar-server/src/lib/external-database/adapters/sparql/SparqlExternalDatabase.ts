@@ -22,11 +22,14 @@ import type { ExternalGraphDatabaseStatsLabel } from '../../data/ExternalGraphDa
 import type { ExternalGraphDatabaseExpandNodePreviewEntry } from '../../data/ExternalGraphDatabaseExpandNodePreviewEntry';
 import type {
   Bindings,
+  BlankNode,
   Literal,
+  NamedNode,
   Quad,
   Quad_Object,
   Quad_Predicate,
   Quad_Subject,
+  Variable,
 } from '@rdfjs/types';
 import { match, P } from 'ts-pattern';
 
@@ -442,18 +445,7 @@ WHERE {
   }
 
   private _getUriList(uris: SSet<string>): string {
-    return uris
-      .toArray()
-      .filter((uri: string): boolean => {
-        try {
-          new URL(uri);
-          return true;
-        } catch {
-          return false;
-        }
-      })
-      .map((nodeId: string): string => `<${nodeId}>`)
-      .join(' ');
+    return uris.toArray().join(' ');
   }
 
   private _collectNode(
@@ -462,16 +454,15 @@ WHERE {
     nodes: SMap<string, ExternalGraphDatabaseNode>,
     credentials: ExternalGraphDatabaseCredentials,
   ): void {
-    const existingSubjectNode: ExternalGraphDatabaseNode = nodes.get(
-      quadElement.value,
-    ) ?? {
+    const id: string = this._getSparqlReferenceLiteralOfNode(quadElement);
+    const existingSubjectNode: ExternalGraphDatabaseNode = nodes.get(id) ?? {
       labels: [quadElement.termType],
       keys: new SSet([]),
-      nativeId: quadElement.value,
+      nativeId: id,
       properties: this._collectProperties(quadElement),
       source: credentials,
     };
-    nodes.set(quadElement.value, existingSubjectNode);
+    nodes.set(id, existingSubjectNode);
     existingSubjectNode.keys.add(key);
   }
 
@@ -482,7 +473,7 @@ WHERE {
     relationships: SMap<string, ExternalGraphDatabaseRelationship>,
     credentials: ExternalGraphDatabaseCredentials,
   ): void {
-    const id: string = `${subject.value}_${quadElement.value}_${object.value}`;
+    const id: string = `${this._getSparqlReferenceLiteralOfNode(subject)}_${quadElement.value}_${this._getSparqlReferenceLiteralOfNode(object)}`;
     const existingPredicateNode: ExternalGraphDatabaseRelationship | null =
       relationships.get(id) ?? null;
     if (existingPredicateNode == null) {
@@ -491,8 +482,8 @@ WHERE {
         nativeId: id,
         properties: this._collectProperties(quadElement),
         source: credentials,
-        startNodeId: subject.value,
-        endNodeId: object.value,
+        startNodeId: this._getSparqlReferenceLiteralOfNode(subject),
+        endNodeId: this._getSparqlReferenceLiteralOfNode(object),
         type: quadElement.value,
       });
     } else {
@@ -506,6 +497,7 @@ WHERE {
     const result: Record<string, unknown> = {
       termType: element.termType,
       value: element.value,
+      sparqlReference: this._getSparqlReferenceLiteralOfNode(element),
       ...match(element)
         .returnType<Record<string, unknown>>()
         .with(
@@ -540,5 +532,31 @@ WHERE {
       result = result.replaceAll(`$${argumentName}`, stringValue);
     }
     return result;
+  }
+
+  private _getSparqlReferenceLiteralOfNode(
+    node: Quad_Subject | Quad_Object,
+  ): string {
+    return match(node)
+      .returnType<string>()
+      .with(
+        { termType: 'Literal' },
+        (literal: Literal): string =>
+          `${JSON.stringify(literal.value)}@${literal.language}`,
+      )
+      .with(
+        { termType: 'NamedNode' },
+        (namedNode: NamedNode): string => `<${namedNode.value}>`,
+      )
+      .with({ termType: 'Quad' }, (quad: Quad): string => `<${quad.value}>`)
+      .with(
+        { termType: 'BlankNode' },
+        (blankNode: BlankNode): string => `<${blankNode.value}>`,
+      )
+      .with(
+        { termType: 'Variable' },
+        (variable: Variable): string => `<${variable.value}>`,
+      )
+      .exhaustive();
   }
 }
