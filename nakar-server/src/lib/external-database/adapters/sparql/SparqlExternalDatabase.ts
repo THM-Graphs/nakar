@@ -278,21 +278,101 @@ ORDER BY DESC(?count)
   public async getSearchCapabilities(): Promise<ExternalGraphDatabaseSearchCapabilities> {
     // TODO
     return await Promise.resolve({
-      canExactMatchNativeId: false,
+      canExactMatchNativeId: true,
       canExactMatchLabel: false,
       exactMatchNodeProperties: new SMap(),
       fuzzyMatchNodeProperties: new SMap(),
     });
   }
 
-  public search(): Promise<ExternalGraphDatabaseNode[]> {
-    // TODO
-    throw new Error('Cannot execute search in sparql-based databases.');
+  public async search(
+    credentials: ExternalGraphDatabaseCredentials,
+    searchTerm: string,
+  ): Promise<ExternalGraphDatabaseNode[]> {
+    let url: URL;
+    try {
+      url = new URL(searchTerm);
+    } catch {
+      return [];
+    }
+
+    const uri: string = url.toString();
+
+    const result: ExternalGraphDatabaseQueryResult = await this.executeQuery(
+      credentials,
+      `
+CONSTRUCT {
+  ?node ?p ?o .
+  ?s ?p ?node .
+}
+WHERE {
+  VALUES ?node { <${uri}> }
+  {
+    ?node ?p ?o .
+  }
+  UNION
+  {
+    ?s ?p ?node .
+  }
+}
+      `,
+      {},
+      new ExternalGraphDatabaseQueryLimitConfig(
+        ExternalGraphDatabaseQueryLimitConfigType.preview,
+        ExternalGraphDatabaseQueryLimitConfigCollectionType.graphElements,
+      ),
+    );
+
+    const node: ExternalGraphDatabaseNode | undefined = result.nodes.get(
+      `<${uri}>`,
+    );
+
+    return node != null ? [node] : [];
   }
 
-  public findNodeByNativeId(): Promise<ExternalGraphDatabaseQueryResult> {
-    // TODO
-    throw new Error('Cannot find node by native id.');
+  public async findNodeByNativeId(
+    credentials: ExternalGraphDatabaseCredentials,
+    nativeNodeId: string,
+  ): Promise<ExternalGraphDatabaseQueryResult> {
+    const result: ExternalGraphDatabaseQueryResult = await this.executeQuery(
+      credentials,
+      `
+CONSTRUCT {
+  ?node ?p ?o .
+  ?s ?p ?node .
+}
+WHERE {
+  VALUES ?node { ${nativeNodeId} }
+  {
+    ?node ?p ?o .
+  }
+  UNION
+  {
+    ?s ?p ?node .
+  }
+}
+      `,
+      {},
+      new ExternalGraphDatabaseQueryLimitConfig(
+        ExternalGraphDatabaseQueryLimitConfigType.default,
+        ExternalGraphDatabaseQueryLimitConfigCollectionType.graphElements,
+      ),
+    );
+
+    const node: ExternalGraphDatabaseNode | undefined =
+      result.nodes.get(nativeNodeId);
+
+    if (node == null) {
+      return ExternalGraphDatabaseQueryResult.empty();
+    }
+
+    const nodes: SMap<string, ExternalGraphDatabaseNode> = new SMap<
+      string,
+      ExternalGraphDatabaseNode
+    >();
+    nodes.set(nativeNodeId, node);
+
+    return new ExternalGraphDatabaseQueryResult(nodes, new SMap(), [], false);
   }
 
   public expandClusterNode(): Promise<ExternalGraphDatabaseQueryResult> {
