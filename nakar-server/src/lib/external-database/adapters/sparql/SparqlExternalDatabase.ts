@@ -486,7 +486,7 @@ WHERE {
     const result: Record<string, unknown> = {
       termType: element.termType,
       value: element.value,
-      sparqlReference: this._getSparqlReferenceLiteralOfNode(element),
+      sparql: this._getSparqlReferenceLiteralOfNode(element),
       ...match(element)
         .returnType<Record<string, unknown>>()
         .with(
@@ -515,9 +515,7 @@ WHERE {
     for (const [argumentName, argumentValue] of Object.entries(
       queryArguments,
     )) {
-      const stringValue: string = match(argumentValue)
-        .with(P.string, (value: string): string => value)
-        .otherwise((value: unknown): string => JSON.stringify(value));
+      const stringValue: string = JSON.stringify(argumentValue);
       result = result.replaceAll(`$${argumentName}`, stringValue);
     }
     return result;
