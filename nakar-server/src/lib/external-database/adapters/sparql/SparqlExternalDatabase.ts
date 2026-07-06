@@ -76,13 +76,6 @@ export class SparqlExternalDatabase implements ExternalGraphDatabase {
 
     this._logger.debug(`Did start streaming query response of ${queryId}`);
 
-    bindingsStream.on('error', (error: unknown): void => {
-      this._logger.error(error);
-    });
-    bindingsStream.on('end', (): void => {
-      this._logger.debug(`Query ${queryId} finished`);
-    });
-
     const limit: number = limitConfig.getLimit();
 
     const nodes: SMap<string, ExternalGraphDatabaseNode> = new SMap<
@@ -107,6 +100,8 @@ export class SparqlExternalDatabase implements ExternalGraphDatabase {
         break;
       }
     }
+
+    this._logger.debug(`Query ${queryId} finished`);
 
     return new ExternalGraphDatabaseQueryResult(
       nodes,
