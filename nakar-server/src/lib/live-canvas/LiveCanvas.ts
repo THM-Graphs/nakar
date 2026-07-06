@@ -1298,49 +1298,50 @@ export class LiveCanvas {
 
           const results: ExternalGraphDatabaseQueryResult[] = [];
 
-          /* create unique pairs */
-          for (let i: number = 0; i < params.nodeIds.length - 1; i += 1) {
-            const idA: string = params.nodeIds[i];
-            const nodeA: GraphNode | null = oldGraph.nodes.get(idA);
-            if (nodeA == null) {
+          /* group nodes by source */
+          const nodeIdsBySource: SMap<string, SSet<string>> = new SMap<
+            string,
+            SSet<string>
+          >();
+          for (const id of params.nodeIds) {
+            const node: GraphNode | null = oldGraph.nodes.get(id);
+            if (node == null) {
               throw new Error(
-                `Unable to calculate shortest path: Node id ${idA} not found.`,
+                `Unable to calculate shortest path: Node id ${id} not found.`,
               );
             }
 
-            for (let j: number = i + 1; j < params.nodeIds.length; j += 1) {
-              const idB: string = params.nodeIds[j];
+            nodeIdsBySource.set(
+              node.sourceId,
+              (
+                nodeIdsBySource.get(node.sourceId) ?? new SSet<string>()
+              ).byAdding(node.nativeId),
+            );
+          }
 
-              const nodeB: GraphNode | null = oldGraph.nodes.get(idB);
-              if (nodeB == null) {
-                throw new Error(
-                  `Unable to calculate shortest path: Node id ${idB} not found.`,
-                );
-              }
-
-              if (nodeA.sourceId !== nodeB.sourceId) {
-                this._logger.warn(
-                  `Cannot calculate shortest path between ${idA} and ${idB}: Sources are not equal: Node A: ${nodeA.sourceId}, Node B: ${nodeB.sourceId}`,
-                );
-                continue;
-              }
-
+          /* compute shortest paths per source */
+          for (const [sourceId, nativeIds] of nodeIdsBySource) {
+            if (nativeIds.size < 2) {
               this._logger.debug(
-                `Will calculate shortest path between ${idA} and ${idB}`,
+                `Skipping source ${sourceId}: only ${nativeIds.size.toString()} node(s).`,
               );
-
-              const source: string = nodeA.sourceId;
-              const dbDocument: Result<'api::database-connection.database-connection'> =
-                await this._database.getDatabase(source);
-
-              const result: ExternalGraphDatabaseQueryResult =
-                await this._externalGraphDatabase.findShortestPath(
-                  dbDocument,
-                  nodeA.nativeId,
-                  nodeB.nativeId,
-                );
-              results.push(result);
+              continue;
             }
+
+            this._logger.debug(
+              `Will calculate shortest paths for ${nativeIds.size.toString()} nodes in source ${sourceId}`,
+            );
+
+            const dbDocument: Result<'api::database-connection.database-connection'> =
+              await this._database.getDatabase(sourceId);
+
+            const result: ExternalGraphDatabaseQueryResult =
+              await this._externalGraphDatabase.findShortestPath(
+                dbDocument,
+                nativeIds,
+                nativeIds,
+              );
+            results.push(result);
           }
 
           const changeRecorder: LiveCanvasChangeRecorder =

@@ -309,8 +309,8 @@ ORDER BY DESC(?count)
 
   public async findShortestPath(
     credentials: ExternalGraphDatabaseCredentials,
-    nativeIdA: string,
-    nativeIdB: string,
+    startNodeIds: SSet<string>,
+    endNodeIds: SSet<string>,
   ): Promise<ExternalGraphDatabaseQueryResult> {
     const result: ExternalGraphDatabaseQueryResult = await this.executeQuery(
       credentials,
@@ -319,14 +319,11 @@ CONSTRUCT {
   ?source ?p ?target .
 }
 WHERE {
-  VALUES (?source ?target) {
-    (${nativeIdA} ${nativeIdB})
-    (${nativeIdB} ${nativeIdA})
-  }
+  VALUES ?source { ${startNodeIds.toArray().join(' ')} }
+  VALUES ?target { ${endNodeIds.toArray().join(' ')} }
+  FILTER(?source != ?target)
 
-  {
-    ?source ?p ?target .
-  }
+  ?source ?p ?target .
 }
 `,
       {},

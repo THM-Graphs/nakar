@@ -200,15 +200,15 @@ export class ExternalGraphDatabaseService implements OnModuleDestroy {
 
   public async findShortestPath(
     database: Result<'api::database-connection.database-connection'>,
-    nativeIdA: string,
-    nativeIdB: string,
+    startNodeIds: SSet<string>,
+    endNodeIds: SSet<string>,
   ): Promise<ExternalGraphDatabaseQueryResult> {
     const credentials: ExternalGraphDatabaseCredentials =
       this.parseCredentials(database);
     return await this._getAdapter(credentials.databaseType).findShortestPath(
       credentials,
-      nativeIdA,
-      nativeIdB,
+      startNodeIds,
+      endNodeIds,
     );
   }
 
