@@ -22,15 +22,13 @@ import type { ExternalGraphDatabaseStatsLabel } from '../../data/ExternalGraphDa
 import type { ExternalGraphDatabaseExpandNodePreviewEntry } from '../../data/ExternalGraphDatabaseExpandNodePreviewEntry';
 import type {
   Bindings,
-  BlankNode,
   Literal,
-  NamedNode,
   Quad,
   Quad_Object,
   Quad_Predicate,
   Quad_Subject,
-  Variable,
 } from '@rdfjs/types';
+import toNT from '@rdfjs/to-ntriples';
 import { match, P } from 'ts-pattern';
 import { createHash } from 'crypto';
 import type { SparqlLabel } from './SparqlLabel';
@@ -528,23 +526,7 @@ WHERE {
   private _getSparqlReferenceLiteralOfNode(
     node: Quad_Subject | Quad_Object,
   ): string {
-    return match(node)
-      .returnType<string>()
-      .with({ termType: 'Literal' }, (literal: Literal): string => literal.id)
-      .with(
-        { termType: 'NamedNode' },
-        (namedNode: NamedNode): string => `<${namedNode.value}>`,
-      )
-      .with({ termType: 'Quad' }, (quad: Quad): string => `<${quad.value}>`)
-      .with(
-        { termType: 'BlankNode' },
-        (blankNode: BlankNode): string => `<${blankNode.value}>`,
-      )
-      .with(
-        { termType: 'Variable' },
-        (variable: Variable): string => `<${variable.value}>`,
-      )
-      .exhaustive();
+    return toNT(node);
   }
 
   private _md5(input: string): string {
