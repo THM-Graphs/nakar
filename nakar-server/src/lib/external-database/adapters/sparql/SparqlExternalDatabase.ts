@@ -30,7 +30,6 @@ import type {
 } from '@rdfjs/types';
 import toNT from '@rdfjs/to-ntriples';
 import { match } from 'ts-pattern';
-import { createHash } from 'crypto';
 import type { SparqlLabel } from './SparqlLabel';
 
 export class SparqlExternalDatabase implements ExternalGraphDatabase {
@@ -407,11 +406,47 @@ WHERE {
     );
   }
 
-  public findRelationshipsByIds(): Promise<ExternalGraphDatabaseQueryResult> {
-    // TODO
-    throw new Error(
-      'Cannot find relationship by id in sparql-based databases.',
+  public async findRelationshipsByIds(
+    credentials: ExternalGraphDatabaseCredentials,
+    relationshipIds: string[],
+  ): Promise<ExternalGraphDatabaseQueryResult> {
+    const triplePatterns: string[] = relationshipIds.map(
+      (id: string): string => {
+        const parts: string[] = id
+          .split(':')
+          .map((part: string): string => this._decodeBase64(part));
+        const s: string = parts[0];
+        const p: string = parts[1];
+        const o: string = parts[2];
+        return `(${s} ${p} ${o})`;
+      },
     );
+
+    if (triplePatterns.length === 0) {
+      return ExternalGraphDatabaseQueryResult.empty();
+    }
+
+    const result: ExternalGraphDatabaseQueryResult = await this.executeQuery(
+      credentials,
+      `
+CONSTRUCT {
+  ?s ?p ?o .
+}
+WHERE {
+  VALUES (?s ?p ?o) {
+    ${triplePatterns.join('\n    ')}
+  }
+  ?s ?p ?o .
+}
+      `,
+      {},
+      new ExternalGraphDatabaseQueryLimitConfig(
+        ExternalGraphDatabaseQueryLimitConfigType.default,
+        ExternalGraphDatabaseQueryLimitConfigCollectionType.graphElements,
+      ),
+    );
+
+    return result;
   }
 
   public async findShortestPath(
@@ -591,9 +626,11 @@ WHERE {
     relationships: SMap<string, ExternalGraphDatabaseRelationship>,
     credentials: ExternalGraphDatabaseCredentials,
   ): void {
-    const fakeNativeId: string = this._md5(
-      `${this._getNativeId(subject)}_${this._getNativeId(quadElement)}_${this._getNativeId(object)}`,
-    );
+    const fakeNativeId: string = [
+      this._encodeBase64(this._getNativeId(subject)),
+      this._encodeBase64(this._getNativeId(quadElement)),
+      this._encodeBase64(this._getNativeId(object)),
+    ].join(':');
     const existingPredicateNode: ExternalGraphDatabaseRelationship | null =
       relationships.get(fakeNativeId) ?? null;
     if (existingPredicateNode == null) {
@@ -646,10 +683,29 @@ WHERE {
     for (const [argumentName, argumentValue] of Object.entries(
       queryArguments,
     )) {
-      const stringValue: string = JSON.stringify(argumentValue);
+      const stringValue: string =
+        typeof argumentValue === 'string' && this._isSparqlURI(argumentValue)
+          ? argumentValue
+          : JSON.stringify(argumentValue);
       result = result.replaceAll(`$${argumentName}`, stringValue);
     }
     return result;
+  }
+
+  private _isSparqlURI(input: string): boolean {
+    if (!input.startsWith('<')) {
+      return false;
+    }
+    if (!input.endsWith('>')) {
+      return false;
+    }
+    try {
+      const url: string = input.slice(1, input.length - 1);
+      new URL(url);
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   private _getSparqlReferenceLiteralOfNode(
@@ -658,8 +714,12 @@ WHERE {
     return toNT(node);
   }
 
-  private _md5(input: string): string {
-    return createHash('md5').update(input, 'utf8').digest('hex');
+  private _encodeBase64(input: string): string {
+    return Buffer.from(input, 'utf8').toString('base64');
+  }
+
+  private _decodeBase64(input: string): string {
+    return Buffer.from(input, 'base64').toString('utf8');
   }
 
   private _getNativeId(
