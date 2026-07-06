@@ -570,9 +570,6 @@ WHERE {
 
     this._logger.debug(`Did start streaming query response of ${queryId}`);
 
-    bindingsStream.on('error', (error: unknown): void => {
-      this._logger.error(error);
-    });
     bindingsStream.on('end', (): void => {
       this._logger.debug(`Query ${queryId} finished`);
     });
