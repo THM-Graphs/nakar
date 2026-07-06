@@ -29,7 +29,7 @@ import type {
   Quad_Subject,
 } from '@rdfjs/types';
 import toNT from '@rdfjs/to-ntriples';
-import { match, P } from 'ts-pattern';
+import { match } from 'ts-pattern';
 import { createHash } from 'crypto';
 import type { SparqlLabel } from './SparqlLabel';
 
@@ -307,9 +307,36 @@ ORDER BY DESC(?count)
     );
   }
 
-  public findShortestPath(): Promise<ExternalGraphDatabaseQueryResult> {
-    // TODO
-    throw new Error('Cannot get shortest path in sparql databases.');
+  public async findShortestPath(
+    credentials: ExternalGraphDatabaseCredentials,
+    nativeIdA: string,
+    nativeIdB: string,
+  ): Promise<ExternalGraphDatabaseQueryResult> {
+    const result: ExternalGraphDatabaseQueryResult = await this.executeQuery(
+      credentials,
+      `
+CONSTRUCT {
+  ?source ?p ?target .
+}
+WHERE {
+  VALUES (?source ?target) {
+    (${nativeIdA} ${nativeIdB})
+    (${nativeIdB} ${nativeIdA})
+  }
+
+  {
+    ?source ?p ?target .
+  }
+}
+`,
+      {},
+      new ExternalGraphDatabaseQueryLimitConfig(
+        ExternalGraphDatabaseQueryLimitConfigType.default,
+        ExternalGraphDatabaseQueryLimitConfigCollectionType.graphElements,
+      ),
+    );
+
+    return result;
   }
 
   public async shutdown(): Promise<void> {
