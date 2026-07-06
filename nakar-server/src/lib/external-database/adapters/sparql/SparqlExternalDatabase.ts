@@ -375,9 +375,36 @@ WHERE {
     return new ExternalGraphDatabaseQueryResult(nodes, new SMap(), [], false);
   }
 
-  public expandClusterNode(): Promise<ExternalGraphDatabaseQueryResult> {
-    // TODO
-    throw new Error('Cannot expand node clusters in sparql-based databases.');
+  public async expandClusterNode(
+    credentials: ExternalGraphDatabaseCredentials,
+    nodeIds: SSet<string>,
+    neighbors: SSet<string>,
+  ): Promise<ExternalGraphDatabaseQueryResult> {
+    return await this.executeQuery(
+      credentials,
+      `
+CONSTRUCT {
+  ?n ?p ?neighbor .
+  ?neighbor ?p ?n .
+}
+WHERE {
+  VALUES ?n { ${nodeIds.toArray().join(' ')} }
+  VALUES ?neighbor { ${neighbors.toArray().join(' ')} }
+  {
+    ?n ?p ?neighbor .
+  }
+  UNION
+  {
+    ?neighbor ?p ?n .
+  }
+}
+      `,
+      {},
+      new ExternalGraphDatabaseQueryLimitConfig(
+        ExternalGraphDatabaseQueryLimitConfigType.default,
+        ExternalGraphDatabaseQueryLimitConfigCollectionType.graphElements,
+      ),
+    );
   }
 
   public findRelationshipsByIds(): Promise<ExternalGraphDatabaseQueryResult> {
