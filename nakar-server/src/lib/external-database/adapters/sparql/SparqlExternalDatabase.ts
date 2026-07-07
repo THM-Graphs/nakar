@@ -172,6 +172,47 @@ WHERE {
         ),
       );
     } else {
+      const relationshipParts: string[] = limit.relationships
+        .toArray()
+        .map((rel: string): string => `<${rel}>`);
+      const hasRelationshipFilter: boolean = relationshipParts.length > 0;
+
+      const labelFilterFunctions: string[] = [];
+      for (const label of this._possibleLabels()) {
+        if (limit.labels.has(label)) {
+          const filterFn: string = match(label)
+            .with('NamedNode', (): string => 'isIRI')
+            .with('BlankNode', (): string => 'isBlank')
+            .with('Literal', (): string => 'isLiteral')
+            .exhaustive();
+          labelFilterFunctions.push(filterFn);
+        }
+      }
+
+      const outgoingFilterParts: string[] = [];
+      const incomingFilterParts: string[] = [];
+      if (hasRelationshipFilter) {
+        outgoingFilterParts.push(
+          `?allowedPredicate1 IN (${relationshipParts.join(', ')})`,
+        );
+        incomingFilterParts.push(
+          `?allowedPredicate2 IN (${relationshipParts.join(', ')})`,
+        );
+      }
+      for (const fn of labelFilterFunctions) {
+        outgoingFilterParts.push(`${fn}(?o1)`);
+        incomingFilterParts.push(`${fn}(?o2)`);
+      }
+
+      const outgoingFilter: string =
+        outgoingFilterParts.length > 0
+          ? outgoingFilterParts.join(' || ')
+          : 'false';
+      const incomingFilter: string =
+        incomingFilterParts.length > 0
+          ? incomingFilterParts.join(' || ')
+          : 'false';
+
       return await this.executeQuery(
         credentials,
         `
@@ -181,20 +222,14 @@ CONSTRUCT {
 }
 WHERE {
   VALUES ?node { ${nodeIds.toArray().join(' ')} }
-  VALUES ?allowedPredicate1 { ${limit.relationships
-    .toArray()
-    .map((rel: string): string => `<${rel}>`)
-    .join(' ')} }
-  VALUES ?allowedPredicate2 { ${limit.relationships
-    .toArray()
-    .map((rel: string): string => `<${rel}>`)
-    .join(' ')} }
   {
     ?node ?allowedPredicate1 ?o1 .
+    FILTER(${outgoingFilter})
   }
   UNION
   {
     ?o2 ?allowedPredicate2 ?node .
+    FILTER(${incomingFilter})
   }
 }    
     `,
@@ -211,9 +246,40 @@ WHERE {
     credentials: ExternalGraphDatabaseCredentials,
     nodeIds: SSet<string>,
   ): Promise<ExternalGraphDatabaseExpandNodePreview> {
-    const relsResult: BindingsStream = await this._runGenericSparqlQuery(
-      credentials,
-      `
+    if (nodeIds.size === 0) {
+      return ExternalGraphDatabaseExpandNodePreview.empty();
+    }
+
+    const [labelDataStream, relsResult]: [BindingsStream, BindingsStream] =
+      await Promise.all([
+        this._runGenericSparqlQuery(
+          credentials,
+          `
+SELECT
+  (SUM(IF(isIRI(?n), 1, 0)) AS ?NamedNode)
+  (SUM(IF(isBlank(?n), 1, 0)) AS ?BlankNode)
+  (SUM(IF(isLiteral(?n), 1, 0)) AS ?Literal)
+WHERE {
+  {
+    SELECT DISTINCT ?n
+    WHERE {
+      VALUES ?s { ${nodeIds.toArray().join(' ')} }
+
+      {
+        ?s ?p ?n .
+      }
+      UNION
+      {
+        ?n ?p ?s .
+      }
+    }
+  }
+}
+    `,
+        ),
+        this._runGenericSparqlQuery(
+          credentials,
+          `
 SELECT ?p (COUNT(DISTINCT *) AS ?count)
 WHERE {
   VALUES ?s { ${nodeIds.toArray().join(' ')} }
@@ -228,7 +294,42 @@ WHERE {
 GROUP BY ?p
 ORDER BY DESC(?count)
     `,
-    );
+        ),
+      ]);
+
+    const labelData: Bindings[] = await labelDataStream.toArray();
+    const labelResult: ExternalGraphDatabaseExpandNodePreviewEntry[] = [];
+    if (labelData.length === 1) {
+      const namedNodeCount: number = parseInt(
+        labelData[0].get('NamedNode')?.value ?? '0',
+      );
+      const blankNodeCount: number = parseInt(
+        labelData[0].get('BlankNode')?.value ?? '0',
+      );
+      const literalCount: number = parseInt(
+        labelData[0].get('Literal')?.value ?? '0',
+      );
+
+      if (namedNodeCount > 0) {
+        labelResult.push({
+          identificator: 'NamedNode' satisfies SparqlLabel,
+          count: namedNodeCount,
+        });
+      }
+      if (blankNodeCount > 0) {
+        labelResult.push({
+          identificator: 'BlankNode' satisfies SparqlLabel,
+          count: blankNodeCount,
+        });
+      }
+      if (literalCount > 0) {
+        labelResult.push({
+          identificator: 'Literal' satisfies SparqlLabel,
+          count: literalCount,
+        });
+      }
+    }
+
     const relationshipResults: ExternalGraphDatabaseExpandNodePreviewEntry[] =
       [];
     for await (const bindings of relsResult) {
@@ -238,7 +339,10 @@ ORDER BY DESC(?count)
       });
     }
 
-    return new ExternalGraphDatabaseExpandNodePreview([], relationshipResults);
+    return new ExternalGraphDatabaseExpandNodePreview(
+      labelResult,
+      relationshipResults,
+    );
   }
 
   public async getStats(
