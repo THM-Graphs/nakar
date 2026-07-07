@@ -34,6 +34,7 @@ import type { SparqlLabel } from './SparqlLabel';
 
 export class SparqlExternalDatabase implements ExternalGraphDatabase {
   private readonly _logger: Logger;
+  private readonly _queryEngine: QueryEngine = new QueryEngine();
 
   public constructor() {
     this._logger = createChildLogger(this);
@@ -50,7 +51,7 @@ export class SparqlExternalDatabase implements ExternalGraphDatabase {
     const queryId: string = v4();
     const url: URL = this._assertConnectionUrl(credentials);
 
-    const myEngine: QueryEngine = new QueryEngine();
+    const myEngine: QueryEngine = this._queryEngine;
     const queryWithArguments: string = this._applyParametersToQuery(
       query,
       queryArguments,
@@ -667,7 +668,7 @@ WHERE {
       `Will start SPARQL Query to ${url.toString()} (${queryId}): ${query}`,
     );
 
-    const myEngine: QueryEngine = new QueryEngine();
+    const myEngine: QueryEngine = this._queryEngine;
     const bindingsStream: BindingsStream = await myEngine.queryBindings(query, {
       sources: [url.toString()],
     });
