@@ -53,6 +53,8 @@ export class ScenarioController {
         } satisfies Input<'api::scenario.scenario'>,
       });
 
+    // TODO: Update parameterised scenarios in live canvases
+
     return await this._schemaFactory.createSchemaScenario(scenario);
   }
 
@@ -64,6 +66,8 @@ export class ScenarioController {
     await strapi.documents('api::scenario.scenario').delete({
       documentId: scenarioId,
     });
+
+    // TODO: Update parameterised scenarios in live canvases
   }
 
   @Put(':scenarioId')
@@ -99,6 +103,8 @@ export class ScenarioController {
       updatedScenario,
       body.postScenarioActions,
     );
+
+    // TODO: Update parameterised scenarios in live canvases
 
     return await this._schemaFactory.createSchemaScenario(updatedScenario);
   }
