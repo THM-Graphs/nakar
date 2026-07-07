@@ -7,7 +7,7 @@ import { PropertyCollection } from './PropertyCollection';
 import { Range } from '../../../packages/range/Range';
 import type { NodeIndex } from './NodeIndex';
 import type { ElementCreationReason } from './ElementCreationReason';
-import { MD5Hash } from '../../../packages/hash/MD5Hash';
+import { IdHash } from '../../../packages/hash/IdHash';
 
 export class EdgeIndex {
   private readonly _byId: SMap<string, GraphEdge>;
@@ -173,13 +173,13 @@ export class EdgeIndex {
       nodeIndex.getClusterNodeForCompressedNativeId(sourceId, endNativeNodeId);
 
     const mutableEdge: GraphEdge = new GraphEdge({
-      id: sourceId + '_' + MD5Hash.create(relationship.nativeId),
+      id: sourceId + '_' + IdHash.create(relationship.nativeId),
       nativeId: relationship.nativeId,
       startNodeId:
         startClusterNode?.id ??
-        sourceId + '_' + MD5Hash.create(startNativeNodeId),
+        sourceId + '_' + IdHash.create(startNativeNodeId),
       endNodeId:
-        endClusterNode?.id ?? sourceId + '_' + MD5Hash.create(endNativeNodeId),
+        endClusterNode?.id ?? sourceId + '_' + IdHash.create(endNativeNodeId),
       type: relationship.type,
       compressed: new SSet(),
       properties: PropertyCollection.fromRecord(relationship.properties),

@@ -1,7 +1,7 @@
 import { createHash } from 'crypto';
 
-export class MD5Hash {
+export class IdHash {
   public static create(input: string): string {
-    return createHash('md5').update(input, 'utf8').digest('hex');
+    return createHash('sha256').update(input, 'utf8').digest('hex');
   }
 }
