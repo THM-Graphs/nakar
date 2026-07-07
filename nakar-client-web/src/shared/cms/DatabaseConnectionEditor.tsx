@@ -40,7 +40,7 @@ export function DatabaseConnectionEditor(props: {
           <Row>
             <Col>
               <Form.Group>
-                <Form.Label for={"title"}>
+                <Form.Label htmlFor={"title"}>
                   Title <span className={"text-danger"}>*</span>
                 </Form.Label>
                 <Form.Control
@@ -58,7 +58,7 @@ export function DatabaseConnectionEditor(props: {
             </Col>
             <Col>
               <Form.Group>
-                <Form.Label for={"browser-url"}>Browser URL</Form.Label>
+                <Form.Label htmlFor={"browser-url"}>Browser URL</Form.Label>
                 <Form.Control
                   id={"browser-url"}
                   placeholder={"Example: https://my-database.com:7473/browser/"}
@@ -76,7 +76,7 @@ export function DatabaseConnectionEditor(props: {
           <Row>
             <Col>
               <Form.Group>
-                <Form.Label for={"database-type"}>Database Type</Form.Label>
+                <Form.Label htmlFor={"database-type"}>Database Type</Form.Label>
                 <Form.Select
                   style={{ width: "200px" }}
                   id={"database-type"}
