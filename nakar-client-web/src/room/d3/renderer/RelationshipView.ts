@@ -172,9 +172,7 @@ export class RelationshipView {
     setAttr(
       this.path,
       "marker-end",
-      this.labelsHidden
-        ? null
-        : `url(#arrow_${encodeURIComponent(this.edge.id)})`,
+      this.labelsHidden ? null : `url(#arrow_${this.edge.id})`,
     );
 
     const text =
@@ -202,7 +200,7 @@ export class RelationshipView {
     setAttr(
       this.path,
       "marker-end",
-      hidden ? null : `url(#arrow_${encodeURIComponent(this.edge.id)})`,
+      hidden ? null : `url(#arrow_${this.edge.id})`,
     );
   }
 }
