@@ -180,6 +180,7 @@ export class GraphNode {
       this.properties.getStringValueOfProperty('label') ??
       this.properties.getStringValueOfProperty('name') ??
       this.properties.getStringValueOfProperty('title') ??
+      this.properties.getStringValueOfProperty('value') ??
       this.properties.getStringValueOfProperty('type') ??
       this.properties.getStringValueOfProperty('id') ??
       this.properties.getStringValueOfProperty('slug') ??

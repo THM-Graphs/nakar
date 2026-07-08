@@ -9,6 +9,7 @@ import type { ExternalGraphDatabaseSearchCapabilities } from './data/ExternalGra
 import type { ExternalGraphDatabaseNode } from './data/ExternalGraphDatabaseNode';
 import type { ExternalGraphDatabaseQueryLimitConfig } from './data/ExternalGraphDatabaseQueryLimitConfig';
 import { Neo4jExternalDatabase } from './adapters/neo4j/Neo4jExternalDatabase';
+import { SparqlExternalDatabase } from './adapters/sparql/SparqlExternalDatabase';
 import type { ExternalGraphDatabase } from './ExternalGraphDatabase';
 import type { ExternalGraphDatabaseStats } from './data/ExternalGraphDatabaseStats';
 import { match, P } from 'ts-pattern';
@@ -30,6 +31,10 @@ export class ExternalGraphDatabaseService implements OnModuleDestroy {
       ExternalGraphDatabaseType.neo4j,
       new Neo4jExternalDatabase(),
     );
+    this._adapters.set(
+      ExternalGraphDatabaseType.sparql,
+      new SparqlExternalDatabase(),
+    );
   }
 
   public parseCredentials(
@@ -41,6 +46,10 @@ export class ExternalGraphDatabaseService implements OnModuleDestroy {
         .with(
           'neo4j',
           (): ExternalGraphDatabaseType => ExternalGraphDatabaseType.neo4j,
+        )
+        .with(
+          'sparql',
+          (): ExternalGraphDatabaseType => ExternalGraphDatabaseType.sparql,
         )
         .with(
           P.nullish,
@@ -59,7 +68,7 @@ export class ExternalGraphDatabaseService implements OnModuleDestroy {
   public async executeQuery(
     database: Result<'api::database-connection.database-connection'>,
     query: string,
-    parameters: Record<string, unknown>,
+    queryArguments: Record<string, unknown>,
     limitConfig: ExternalGraphDatabaseQueryLimitConfig,
   ): Promise<ExternalGraphDatabaseQueryResult> {
     const credentials: ExternalGraphDatabaseCredentials =
@@ -67,7 +76,7 @@ export class ExternalGraphDatabaseService implements OnModuleDestroy {
     return await this._getAdapter(credentials.databaseType).executeQuery(
       credentials,
       query,
-      parameters,
+      queryArguments,
       limitConfig,
     );
   }
@@ -191,15 +200,13 @@ export class ExternalGraphDatabaseService implements OnModuleDestroy {
 
   public async findShortestPath(
     database: Result<'api::database-connection.database-connection'>,
-    nativeIdA: string,
-    nativeIdB: string,
+    nodeIds: SSet<string>,
   ): Promise<ExternalGraphDatabaseQueryResult> {
     const credentials: ExternalGraphDatabaseCredentials =
       this.parseCredentials(database);
     return await this._getAdapter(credentials.databaseType).findShortestPath(
       credentials,
-      nativeIdA,
-      nativeIdB,
+      nodeIds,
     );
   }
 

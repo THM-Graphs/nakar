@@ -182,7 +182,7 @@ export class RelationshipView {
     this.labelText.textContent = text;
     setAttr(this.labelText, "fill", props.textColor);
     setAttr(this.labelText, "y", 1);
-    const font = "700 10px sans-serif";
+    const font = "700 10px system-ui";
     const textWidth = textMeasurer.measureWidth(text, font);
     const hPadding = 8;
     const width = textWidth + hPadding * 2;

@@ -190,7 +190,7 @@ export class PhysicsSimulation {
       }
 
       const targetDistance: number =
-        nodeA.radius + edge.title.length * 20 + nodeB.radius;
+        nodeA.radius + edge.title.length + 200 + nodeB.radius;
 
       this._linkForce(targetDistance, nodeA, nodeB);
       handledNodeCombinations.addCombination(edge.startNodeId, edge.endNodeId);

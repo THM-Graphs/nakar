@@ -539,7 +539,7 @@ export interface ApiDatabaseConnectionDatabaseConnection
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     database: Schema.Attribute.String;
-    databaseType: Schema.Attribute.Enumeration<['neo4j']> &
+    databaseType: Schema.Attribute.Enumeration<['neo4j', 'sparql']> &
       Schema.Attribute.Required &
       Schema.Attribute.DefaultTo<'neo4j'>;
     locale: Schema.Attribute.String & Schema.Attribute.Private;

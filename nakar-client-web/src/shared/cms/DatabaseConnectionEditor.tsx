@@ -21,6 +21,7 @@ import { resultOrThrow } from "../data/resultOrThrow.ts";
 import clsx from "clsx";
 import { handleError } from "../error/handleError.ts";
 import { NodeConfigurationsEditor } from "./NodeConfigurationsEditor.tsx";
+import { getDatabaseTypeDisplay } from "../data/getDatabaseTypeDisplay.ts";
 
 export function DatabaseConnectionEditor(props: {
   value: UpdateDatabaseConnectionRequestBodyDto;
@@ -39,10 +40,11 @@ export function DatabaseConnectionEditor(props: {
           <Row>
             <Col>
               <Form.Group>
-                <Form.Label>
+                <Form.Label htmlFor={"title"}>
                   Title <span className={"text-danger"}>*</span>
                 </Form.Label>
                 <Form.Control
+                  id={"title"}
                   placeholder={"My Database"}
                   value={props.value.title}
                   onChange={(e) => {
@@ -56,8 +58,9 @@ export function DatabaseConnectionEditor(props: {
             </Col>
             <Col>
               <Form.Group>
-                <Form.Label>Browser URL</Form.Label>
+                <Form.Label htmlFor={"browser-url"}>Browser URL</Form.Label>
                 <Form.Control
+                  id={"browser-url"}
                   placeholder={"Example: https://my-database.com:7473/browser/"}
                   value={props.value.browserUrl}
                   onChange={(e) => {
@@ -67,6 +70,36 @@ export function DatabaseConnectionEditor(props: {
                     });
                   }}
                 ></Form.Control>
+              </Form.Group>
+            </Col>
+          </Row>
+          <Row>
+            <Col>
+              <Form.Group>
+                <Form.Label htmlFor={"database-type"}>Database Type</Form.Label>
+                <Form.Select
+                  style={{ width: "200px" }}
+                  id={"database-type"}
+                  value={props.value.databaseType}
+                  onChange={(e) => {
+                    props.onChange({
+                      ...props.value,
+                      databaseType: e.target
+                        .value as UpdateDatabaseConnectionRequestBodyDto["databaseType"],
+                    });
+                  }}
+                >
+                  {(
+                    [
+                      "neo4j",
+                      "sparql",
+                    ] satisfies UpdateDatabaseConnectionRequestBodyDto["databaseType"][]
+                  ).map((databaseType) => (
+                    <option value={databaseType} key={databaseType}>
+                      {getDatabaseTypeDisplay(databaseType)}
+                    </option>
+                  ))}
+                </Form.Select>
               </Form.Group>
             </Col>
           </Row>
@@ -97,88 +130,90 @@ export function DatabaseConnectionEditor(props: {
                   </Form.Group>
                 </Col>
               </Row>
-              <Row>
-                <Col>
-                  <Form.Group>
-                    <Form.Label>Username</Form.Label>
-                    <Stack
-                      direction={"horizontal"}
-                      gap={0}
-                      className={"position-relative"}
-                    >
+              {props.value.databaseType === "neo4j" && (
+                <Row>
+                  <Col>
+                    <Form.Group>
+                      <Form.Label>Username</Form.Label>
+                      <Stack
+                        direction={"horizontal"}
+                        gap={0}
+                        className={"position-relative"}
+                      >
+                        <Form.Control
+                          placeholder={"Leave empty if unchanged"}
+                          value={props.value.username ?? ""}
+                          autoComplete={"off"}
+                          onChange={(e) => {
+                            props.onChange({
+                              ...props.value,
+                              username: e.target.value,
+                            });
+                          }}
+                        ></Form.Control>
+                        {props.value.username != null && (
+                          <Button
+                            onClick={() => {
+                              props.onChange({
+                                ...props.value,
+                                username: null,
+                              });
+                            }}
+                            className={"bi bi-x-lg position-absolute end-0"}
+                            variant={"icon"}
+                          ></Button>
+                        )}
+                      </Stack>
+                    </Form.Group>
+                  </Col>
+                  <Col>
+                    <Form.Group>
+                      <Form.Label>Password</Form.Label>
+                      <Stack className={"position-relative"}>
+                        <Form.Control
+                          placeholder={"Leave empty if unchanged"}
+                          type={"password"}
+                          autoComplete={"new-password"}
+                          value={props.value.password ?? ""}
+                          onChange={(e) => {
+                            props.onChange({
+                              ...props.value,
+                              password: e.target.value,
+                            });
+                          }}
+                        ></Form.Control>
+                        {props.value.password != null && (
+                          <Button
+                            onClick={() => {
+                              props.onChange({
+                                ...props.value,
+                                password: null,
+                              });
+                            }}
+                            className={"bi bi-x-lg position-absolute end-0"}
+                            variant={"icon"}
+                          ></Button>
+                        )}
+                      </Stack>
+                    </Form.Group>
+                  </Col>
+                  <Col>
+                    <Form.Group>
+                      <Form.Label>Database Name</Form.Label>
                       <Form.Control
-                        placeholder={"Leave empty if unchanged"}
-                        value={props.value.username ?? ""}
-                        autoComplete={"off"}
+                        placeholder={"Example: neo4j"}
+                        value={props.value.database}
                         onChange={(e) => {
                           props.onChange({
                             ...props.value,
-                            username: e.target.value,
+                            database: e.target.value,
                           });
                         }}
                       ></Form.Control>
-                      {props.value.username != null && (
-                        <Button
-                          onClick={() => {
-                            props.onChange({
-                              ...props.value,
-                              username: null,
-                            });
-                          }}
-                          className={"bi bi-x-lg position-absolute end-0"}
-                          variant={"icon"}
-                        ></Button>
-                      )}
-                    </Stack>
-                  </Form.Group>
-                </Col>
-                <Col>
-                  <Form.Group>
-                    <Form.Label>Password</Form.Label>
-                    <Stack className={"position-relative"}>
-                      <Form.Control
-                        placeholder={"Leave empty if unchanged"}
-                        type={"password"}
-                        autoComplete={"new-password"}
-                        value={props.value.password ?? ""}
-                        onChange={(e) => {
-                          props.onChange({
-                            ...props.value,
-                            password: e.target.value,
-                          });
-                        }}
-                      ></Form.Control>
-                      {props.value.password != null && (
-                        <Button
-                          onClick={() => {
-                            props.onChange({
-                              ...props.value,
-                              password: null,
-                            });
-                          }}
-                          className={"bi bi-x-lg position-absolute end-0"}
-                          variant={"icon"}
-                        ></Button>
-                      )}
-                    </Stack>
-                  </Form.Group>
-                </Col>
-                <Col>
-                  <Form.Group>
-                    <Form.Label>Database Name</Form.Label>
-                    <Form.Control
-                      placeholder={"Example: neo4j"}
-                      value={props.value.database}
-                      onChange={(e) => {
-                        props.onChange({
-                          ...props.value,
-                          database: e.target.value,
-                        });
-                      }}
-                    ></Form.Control>
-                  </Form.Group>
-                </Col>
-              </Row>
+                    </Form.Group>
+                  </Col>
+                </Row>
+              )}
               <Stack direction={"horizontal"} gap={3}>
                 <CMSButton
                   icon={"database-check"}
@@ -191,7 +226,7 @@ export function DatabaseConnectionEditor(props: {
                     databaseConnectionControllerTestDatabaseConnection({
                       path: { projectId: props.project.id },
                       body: {
-                        databaseType: "neo4j",
+                        databaseType: props.value.databaseType,
                         id: props.initialDatabase?.id ?? null,
                         username: props.value.username,
                         password: props.value.password,

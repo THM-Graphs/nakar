@@ -41,7 +41,7 @@ export class Neo4jExternalDatabase implements ExternalGraphDatabase {
   public async executeQuery(
     credentials: ExternalGraphDatabaseCredentials,
     query: string,
-    parameters: Record<string, unknown>,
+    queryArguments: Record<string, unknown>,
     limitConfig: ExternalGraphDatabaseQueryLimitConfig,
   ): Promise<ExternalGraphDatabaseQueryResult> {
     const driver: Driver = this._getDriver(credentials);
@@ -54,7 +54,7 @@ export class Neo4jExternalDatabase implements ExternalGraphDatabase {
 
     try {
       this._logger.debug(
-        `Will run query: ${query} with data: ${JSON.stringify(parameters).length.toString()} bytes`,
+        `Will run query: ${query} with data: ${JSON.stringify(queryArguments).length.toString()} bytes`,
       );
 
       const factory: Neo4jGraphElementsFactory = new Neo4jGraphElementsFactory(
@@ -63,7 +63,7 @@ export class Neo4jExternalDatabase implements ExternalGraphDatabase {
       await new Promise<void>(
         (resolve: () => void, reject: (error: Error) => void): void => {
           session
-            .run<RecordShape<string, unknown>>(query, parameters, {
+            .run<RecordShape<string, unknown>>(query, queryArguments, {
               timeout: 2 * 60000,
             })
             .subscribe({
@@ -416,15 +416,13 @@ ORDER BY lcount DESC, label ASC`,
 
   public async findShortestPath(
     credentials: ExternalGraphDatabaseCredentials,
-    nativeIdA: string,
-    nativeIdB: string,
+    nodeIds: SSet<string>,
   ): Promise<ExternalGraphDatabaseQueryResult> {
     return await this.executeQuery(
       credentials,
-      'MATCH p = allShortestPaths((a)-[*]-(b)) WHERE elementId(a) = $nativeIdA AND elementId(b) = $nativeIdB RETURN p',
+      'MATCH (a), (b) WHERE elementId(a) IN $nodeIds AND elementId(b) IN $nodeIds AND a <> b MATCH p = allShortestPaths((a)-[*]-(b)) RETURN p',
       {
-        nativeIdA: nativeIdA,
-        nativeIdB: nativeIdB,
+        nodeIds: nodeIds.toArray(),
       },
       new ExternalGraphDatabaseQueryLimitConfig(
         ExternalGraphDatabaseQueryLimitConfigType.default,

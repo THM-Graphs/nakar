@@ -95,6 +95,10 @@ export class DatabaseConnectionController {
               DatabaseConnectionDatabaseType.neo4j,
               (): ExternalGraphDatabaseType => ExternalGraphDatabaseType.neo4j,
             )
+            .with(
+              DatabaseConnectionDatabaseType.sparql,
+              (): ExternalGraphDatabaseType => ExternalGraphDatabaseType.sparql,
+            )
             .exhaustive(),
         });
 

@@ -23,7 +23,7 @@
     },
     "databaseType": {
       "type": "enumeration",
-      "enum": ["neo4j"],
+      "enum": ["neo4j", "sparql"],
       "default": "neo4j",
       "required": true
     },

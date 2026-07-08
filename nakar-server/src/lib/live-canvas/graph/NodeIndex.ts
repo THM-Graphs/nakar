@@ -13,6 +13,7 @@ import type { Result } from '@strapi/types/dist/modules/documents';
 import type { Logger } from '@strapi/logger';
 import { createChildLogger } from '../../logger/createChildLogger';
 import Handlebars from 'handlebars';
+import { IdHash } from '../../../packages/hash/IdHash';
 
 export class NodeIndex {
   private readonly _logger: Logger = createChildLogger(this);
@@ -135,7 +136,7 @@ export class NodeIndex {
     databaseCache: DatabaseReferenceCache,
   ): Promise<GraphNode | null> {
     const mutableNode: GraphNode = new GraphNode({
-      id: node.source.nakarId + '_' + node.nativeId,
+      id: node.source.nakarId + '_' + IdHash.create(node.nativeId),
       nativeId: node.nativeId,
       labels: new SSet<string>(node.labels),
       properties: PropertyCollection.fromRecord(node.properties),

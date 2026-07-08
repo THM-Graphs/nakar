@@ -132,7 +132,13 @@ export function QueryPanel() {
               title={<span className={"fw-bold small"}>Query</span>}
             >
               <CypherEditor
-                placeholder={"MATCH (n) RETURN n;"}
+                placeholder={match(referencedDatabase.databaseType)
+                  .with("neo4j", () => "MATCH (n) RETURN n;")
+                  .with(
+                    "sparql",
+                    () => "CONSTRUCT {?s ?p ?o .} WHERE {?s ?p ?o .} LIMIT 300",
+                  )
+                  .exhaustive()}
                 lineWrap={true}
                 overrideThemeBackgroundColor={false}
                 lint={true}
@@ -148,30 +154,42 @@ export function QueryPanel() {
                 direction={"horizontal"}
                 className={"justify-content-between align-items-center"}
               >
-                <DropdownButton title={"Presets"} icon={"chevron-down"}>
-                  {[
-                    {
-                      title: "Schema Visualization",
-                      query: "CALL db.schema.visualization();",
-                    },
-                    { title: "DB Info", query: "CALL db.info()" },
-                    { title: "Indexes", query: "SHOW INDEXES" },
-                  ].map((entry) => (
-                    <Dropdown.Item
-                      key={entry.query}
-                      onClick={() => {
-                        query.setQueryText(entry.query);
-                      }}
-                    >
-                      <Stack>
-                        <span className={"small"}>{entry.title}</span>
-                        <span className={"small text-muted font-monospace"}>
-                          {entry.query}
-                        </span>
-                      </Stack>
-                    </Dropdown.Item>
-                  ))}
-                </DropdownButton>
+                <Stack direction={"horizontal"}>
+                  <DropdownButton title={"Presets"} icon={"chevron-down"}>
+                    {match(referencedDatabase.databaseType)
+                      .with("neo4j", () => [
+                        {
+                          title: "Schema Visualization",
+                          query: "CALL db.schema.visualization();",
+                        },
+                        { title: "DB Info", query: "CALL db.info()" },
+                        { title: "Indexes", query: "SHOW INDEXES" },
+                      ])
+                      .with("sparql", () => [
+                        {
+                          title: "Example",
+                          query:
+                            "CONSTRUCT {?s ?p ?o .} WHERE {?s ?p ?o .} LIMIT 300",
+                        },
+                      ])
+                      .exhaustive()
+                      .map((entry) => (
+                        <Dropdown.Item
+                          key={entry.query}
+                          onClick={() => {
+                            query.setQueryText(entry.query);
+                          }}
+                        >
+                          <Stack>
+                            <span className={"small"}>{entry.title}</span>
+                            <span className={"small text-muted font-monospace"}>
+                              {entry.query}
+                            </span>
+                          </Stack>
+                        </Dropdown.Item>
+                      ))}
+                  </DropdownButton>
+                </Stack>
                 <Stack direction="horizontal">
                   <NavbarButton
                     className={"justify-content-end"}
@@ -215,7 +233,7 @@ export function QueryPanel() {
               data.data != null && (
                 <>
                   <DynamicList
-                    data={data.data.labels}
+                    data={data.data.labels ?? []}
                     previewLimit={20}
                     className={"border-bottom"}
                     entityNamePlural={"Labels"}
@@ -245,7 +263,7 @@ export function QueryPanel() {
                   ></DynamicList>
 
                   <DynamicList
-                    data={data.data.rels}
+                    data={data.data.rels ?? []}
                     previewLimit={20}
                     className={"border-bottom"}
                     entityNamePlural={"Relationships"}
@@ -278,19 +296,19 @@ export function QueryPanel() {
                     stats={[
                       {
                         label: "Nodes",
-                        value: data.data.nodeCount.toString(),
+                        value: data.data.nodeCount?.toString() ?? null,
                       },
                       {
                         label: "Labels",
-                        value: data.data.labelCount.toString(),
+                        value: data.data.labelCount?.toString() ?? null,
                       },
                       {
                         label: "Relationships",
-                        value: data.data.relCount.toString(),
+                        value: data.data.relCount?.toString() ?? null,
                       },
                       {
                         label: "Relationship Types",
-                        value: data.data.relTypeCount.toString(),
+                        value: data.data.relTypeCount?.toString() ?? null,
                       },
                     ]}
                   ></QueryPanelStatsDisplay>

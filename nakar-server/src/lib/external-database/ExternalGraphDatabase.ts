@@ -11,7 +11,7 @@ export interface ExternalGraphDatabase {
   executeQuery(
     credentials: ExternalGraphDatabaseCredentials,
     query: string,
-    parameters: Record<string, unknown>,
+    queryArguments: Record<string, unknown>,
     limitConfig: ExternalGraphDatabaseQueryLimitConfig,
   ): Promise<ExternalGraphDatabaseQueryResult>;
 
@@ -62,8 +62,7 @@ export interface ExternalGraphDatabase {
 
   findShortestPath(
     credentials: ExternalGraphDatabaseCredentials,
-    nativeIdA: string,
-    nativeIdB: string,
+    nodeIds: SSet<string>,
   ): Promise<ExternalGraphDatabaseQueryResult>;
 
   shutdown(): Promise<void>;
