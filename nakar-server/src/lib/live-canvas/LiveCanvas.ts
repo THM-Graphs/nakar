@@ -1339,7 +1339,6 @@ export class LiveCanvas {
               await this._externalGraphDatabase.findShortestPath(
                 dbDocument,
                 nativeIds,
-                nativeIds,
               );
             results.push(result);
           }

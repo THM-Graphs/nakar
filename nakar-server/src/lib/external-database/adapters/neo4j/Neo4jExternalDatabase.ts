@@ -416,15 +416,13 @@ ORDER BY lcount DESC, label ASC`,
 
   public async findShortestPath(
     credentials: ExternalGraphDatabaseCredentials,
-    startNodeIds: SSet<string>,
-    endNodeIds: SSet<string>,
+    nodeIds: SSet<string>,
   ): Promise<ExternalGraphDatabaseQueryResult> {
     return await this.executeQuery(
       credentials,
-      'MATCH (a), (b) WHERE elementId(a) IN $startNodeIds AND elementId(b) IN $endNodeIds AND a <> b MATCH p = allShortestPaths((a)-[*]-(b)) RETURN p',
+      'MATCH (a), (b) WHERE elementId(a) IN $nodeIds AND elementId(b) IN $nodeIds AND a <> b MATCH p = allShortestPaths((a)-[*]-(b)) RETURN p',
       {
-        startNodeIds: startNodeIds.toArray(),
-        endNodeIds: endNodeIds.toArray(),
+        nodeIds: nodeIds.toArray(),
       },
       new ExternalGraphDatabaseQueryLimitConfig(
         ExternalGraphDatabaseQueryLimitConfigType.default,

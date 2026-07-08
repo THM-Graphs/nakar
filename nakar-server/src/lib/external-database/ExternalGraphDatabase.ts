@@ -62,8 +62,7 @@ export interface ExternalGraphDatabase {
 
   findShortestPath(
     credentials: ExternalGraphDatabaseCredentials,
-    startNodeIds: SSet<string>,
-    endNodeIds: SSet<string>,
+    nodeIds: SSet<string>,
   ): Promise<ExternalGraphDatabaseQueryResult>;
 
   shutdown(): Promise<void>;
