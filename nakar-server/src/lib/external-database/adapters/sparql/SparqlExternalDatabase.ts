@@ -46,8 +46,6 @@ export class SparqlExternalDatabase implements ExternalGraphDatabase {
     queryArguments: Record<string, unknown>,
     limitConfig: ExternalGraphDatabaseQueryLimitConfig,
   ): Promise<ExternalGraphDatabaseQueryResult> {
-    // TODO: Parameters
-
     const queryId: string = v4();
     const url: URL = this._assertConnectionUrl(credentials);
 
