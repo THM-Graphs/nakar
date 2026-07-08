@@ -412,6 +412,7 @@ WHERE {
     ?s ?p ?node .
   }
 }
+LIMIT 1
       `,
       {},
       new ExternalGraphDatabaseQueryLimitConfig(
@@ -448,6 +449,7 @@ WHERE {
     ?s ?p ?node .
   }
 }
+LIMIT 1
       `,
       {},
       new ExternalGraphDatabaseQueryLimitConfig(
