@@ -39,7 +39,7 @@ export type DatabaseConnectionDto = {
     connectionUrl: string;
     database: string;
     nodeConfigurations: Array<NodeConfigurationDto>;
-    databaseType: 'neo4j' | 'sparql';
+    databaseType: 'neo4j' | 'sparql' | 'wikidata';
 };
 
 export type StartPageProjectDto = {
@@ -220,7 +220,7 @@ export type TestDatabaseConnectionRequestBodyDto = {
     password: string | null;
     database: string | null;
     connectionUrl: string;
-    databaseType: 'neo4j' | 'sparql';
+    databaseType: 'neo4j' | 'sparql' | 'wikidata';
 };
 
 export type TestDatabaseConnectionResponseBodyDto = {
@@ -245,7 +245,7 @@ export type UpdateDatabaseConnectionRequestBodyDto = {
     connectionUrl: string;
     browserUrl: string;
     credentialStoreConsent: boolean;
-    databaseType: 'neo4j' | 'sparql';
+    databaseType: 'neo4j' | 'sparql' | 'wikidata';
     nodeConfigurations: Array<UpdateNodeConfigurationRequestBodyDto>;
 };
 

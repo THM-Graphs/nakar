@@ -78,7 +78,7 @@ export function DatabaseConnectionEditor(props: {
               <Form.Group>
                 <Form.Label htmlFor={"database-type"}>Database Type</Form.Label>
                 <Form.Select
-                  style={{ width: "200px" }}
+                  style={{ width: "220px" }}
                   id={"database-type"}
                   value={props.value.databaseType}
                   onChange={(e) => {
@@ -93,6 +93,7 @@ export function DatabaseConnectionEditor(props: {
                     [
                       "neo4j",
                       "sparql",
+                      "wikidata",
                     ] satisfies UpdateDatabaseConnectionRequestBodyDto["databaseType"][]
                   ).map((databaseType) => (
                     <option value={databaseType} key={databaseType}>

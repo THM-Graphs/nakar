@@ -121,6 +121,11 @@ export class SchemaFactoryService {
             DatabaseConnectionDatabaseType.sparql,
         )
         .with(
+          'wikidata',
+          (): DatabaseConnectionDatabaseType =>
+            DatabaseConnectionDatabaseType.wikidata,
+        )
+        .with(
           P.nullish,
           (): DatabaseConnectionDatabaseType =>
             DatabaseConnectionDatabaseType.neo4j,
