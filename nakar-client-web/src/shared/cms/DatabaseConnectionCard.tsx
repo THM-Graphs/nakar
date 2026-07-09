@@ -14,7 +14,9 @@ export function DatabaseConnectionCard(props: {
       <CMSCardContent
         title={
           <Stack direction={"horizontal"} gap={2}>
-            <span>{props.databaseConnection.title}</span>
+            <span className={"flex-shrink-1 ellipsis"}>
+              {props.databaseConnection.title}
+            </span>
             <Badge bg={"secondary"}>
               {getDatabaseTypeDisplay(props.databaseConnection.databaseType)}
             </Badge>

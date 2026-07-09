@@ -13,7 +13,7 @@ function CommonPropertyCard(props: {
       <CMSCardContent
         title={
           <Stack direction={"horizontal"} gap={3}>
-            <span>
+            <span className={"flex-shrink-1 ellipsis"}>
               {props.commonProperty.leftDatabase != null &&
               props.commonProperty.rightDatabase != null ? (
                 <>
