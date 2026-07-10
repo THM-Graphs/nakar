@@ -325,6 +325,7 @@ export type GetSearchCapabilitiesResponseBodyDto = {
 
 export type ExpandNodePreviewEntryDto = {
     identificator: string;
+    title: string;
     count: number;
 };
 
