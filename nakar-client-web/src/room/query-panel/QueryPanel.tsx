@@ -167,14 +167,14 @@ export function QueryPanel() {
                       ])
                       .with("sparql", () => [
                         {
-                          title: "Triple abrufen",
+                          title: "Triples",
                           query:
                             "CONSTRUCT {?s ?p ?o .} WHERE {?s ?p ?o .} LIMIT 300",
                         },
                       ])
                       .with("wikidata", () => [
                         {
-                          title: "Könige des Heiligen Römischen Reiches",
+                          title: "Kings of the Holy Roman Empire",
                           query:
                             "CONSTRUCT { ?emperor <http://www.wikidata.org/prop/direct/P39> <http://www.wikidata.org/entity/Q181765> . } WHERE { ?emperor <http://www.wikidata.org/prop/direct/P39> <http://www.wikidata.org/entity/Q181765> . }",
                         },
