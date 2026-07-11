@@ -343,7 +343,7 @@ ORDER BY DESC(?count)
       const term: Term | null = bindings.get('p') ?? null;
       if (term == null) {
         this._logger.error(
-          'Term in expand node preview not found. This should not happen.',
+          'Term in expand node preview was not found. This should not happen.',
         );
         continue;
       }
@@ -351,7 +351,7 @@ ORDER BY DESC(?count)
       const countTerm: Term | null = bindings.get('count') ?? null;
       if (countTerm == null) {
         this._logger.error(
-          'The count term in expand node preview not found. This should not happen.',
+          'The count term in expand node preview was not found. This should not happen.',
         );
         continue;
       }
