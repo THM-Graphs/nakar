@@ -99,6 +99,11 @@ export class DatabaseConnectionController {
               DatabaseConnectionDatabaseType.sparql,
               (): ExternalGraphDatabaseType => ExternalGraphDatabaseType.sparql,
             )
+            .with(
+              DatabaseConnectionDatabaseType.wikidata,
+              (): ExternalGraphDatabaseType =>
+                ExternalGraphDatabaseType.wikidata,
+            )
             .exhaustive(),
         });
 

@@ -218,20 +218,22 @@ ORDER BY lcount DESC, label ASC`,
         (
           entry: SMap<string, unknown>,
         ): ExternalGraphDatabaseExpandNodePreviewEntry =>
-          new ExternalGraphDatabaseExpandNodePreviewEntry(
-            String(entry.get('rtype')),
-            Number(entry.get('rcount')),
-          ),
+          new ExternalGraphDatabaseExpandNodePreviewEntry({
+            identificator: String(entry.get('rtype')),
+            title: String(entry.get('rtype')),
+            count: Number(entry.get('rcount')),
+          }),
       );
     const expandNodePreviewLabelEntries: ExternalGraphDatabaseExpandNodePreviewEntry[] =
       labels.tableData.map(
         (
           entry: SMap<string, unknown>,
         ): ExternalGraphDatabaseExpandNodePreviewEntry =>
-          new ExternalGraphDatabaseExpandNodePreviewEntry(
-            String(entry.get('label')),
-            Number(entry.get('lcount')),
-          ),
+          new ExternalGraphDatabaseExpandNodePreviewEntry({
+            identificator: String(entry.get('label')),
+            title: String(entry.get('label')),
+            count: Number(entry.get('lcount')),
+          }),
       );
 
     return new ExternalGraphDatabaseExpandNodePreview(

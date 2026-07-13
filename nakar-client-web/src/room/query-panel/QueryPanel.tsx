@@ -7,7 +7,7 @@ import { Collapsable } from "../../shared/elements/Collapsable.tsx";
 import { useEffect, useState } from "react";
 import { Loadable } from "../../shared/data/Loadable.ts";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
-import { match } from "ts-pattern";
+import { match, P } from "ts-pattern";
 import { Label } from "../labels/Label.tsx";
 import { QueryPanelStatsDisplay } from "./QueryPanelStatsDisplay.tsx";
 import { DynamicList } from "../../shared/elements/DynamicList.tsx";
@@ -135,7 +135,7 @@ export function QueryPanel() {
                 placeholder={match(referencedDatabase.databaseType)
                   .with("neo4j", () => "MATCH (n) RETURN n;")
                   .with(
-                    "sparql",
+                    P.union("sparql", "wikidata"),
                     () => "CONSTRUCT {?s ?p ?o .} WHERE {?s ?p ?o .} LIMIT 300",
                   )
                   .exhaustive()}
@@ -167,9 +167,16 @@ export function QueryPanel() {
                       ])
                       .with("sparql", () => [
                         {
-                          title: "Example",
+                          title: "Triples",
                           query:
                             "CONSTRUCT {?s ?p ?o .} WHERE {?s ?p ?o .} LIMIT 300",
+                        },
+                      ])
+                      .with("wikidata", () => [
+                        {
+                          title: "Kings of the Holy Roman Empire",
+                          query:
+                            "CONSTRUCT { ?emperor <http://www.wikidata.org/prop/direct/P39> <http://www.wikidata.org/entity/Q181765> . } WHERE { ?emperor <http://www.wikidata.org/prop/direct/P39> <http://www.wikidata.org/entity/Q181765> . }",
                         },
                       ])
                       .exhaustive()
@@ -180,9 +187,16 @@ export function QueryPanel() {
                             query.setQueryText(entry.query);
                           }}
                         >
-                          <Stack>
+                          <Stack
+                            style={{ maxWidth: "400px" }}
+                            className={"text-break"}
+                          >
                             <span className={"small"}>{entry.title}</span>
-                            <span className={"small text-muted font-monospace"}>
+                            <span
+                              className={
+                                "small text-muted font-monospace text-break text-wrap"
+                              }
+                            >
                               {entry.query}
                             </span>
                           </Stack>

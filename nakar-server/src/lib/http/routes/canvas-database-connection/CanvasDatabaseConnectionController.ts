@@ -243,6 +243,7 @@ export class CanvasDatabaseConnectionController {
         ): ExpandNodePreviewEntryDto =>
           new ExpandNodePreviewEntryDto({
             identificator: l.identificator,
+            title: l.title,
             count: l.count,
           }),
       ),
@@ -252,6 +253,7 @@ export class CanvasDatabaseConnectionController {
         ): ExpandNodePreviewEntryDto =>
           new ExpandNodePreviewEntryDto({
             identificator: l.identificator,
+            title: l.title,
             count: l.count,
           }),
       ),

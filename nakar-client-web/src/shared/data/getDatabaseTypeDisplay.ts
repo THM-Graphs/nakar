@@ -7,5 +7,6 @@ export function getDatabaseTypeDisplay(
   return match(input)
     .with("neo4j", () => "Neo4j")
     .with("sparql", () => "SPARQL")
+    .with("wikidata", () => "Wikidata over SPARQL")
     .exhaustive();
 }

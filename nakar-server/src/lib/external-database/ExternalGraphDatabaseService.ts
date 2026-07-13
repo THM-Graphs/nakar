@@ -14,6 +14,7 @@ import type { ExternalGraphDatabase } from './ExternalGraphDatabase';
 import type { ExternalGraphDatabaseStats } from './data/ExternalGraphDatabaseStats';
 import { match, P } from 'ts-pattern';
 import { ExternalGraphDatabaseType } from './data/ExternalGraphDatabaseType';
+import { WikidataExternalDatabase } from './adapters/wikidata/WikidataExternalDatabase';
 
 @Injectable()
 export class ExternalGraphDatabaseService implements OnModuleDestroy {
@@ -35,6 +36,10 @@ export class ExternalGraphDatabaseService implements OnModuleDestroy {
       ExternalGraphDatabaseType.sparql,
       new SparqlExternalDatabase(),
     );
+    this._adapters.set(
+      ExternalGraphDatabaseType.wikidata,
+      new WikidataExternalDatabase(),
+    );
   }
 
   public parseCredentials(
@@ -50,6 +55,10 @@ export class ExternalGraphDatabaseService implements OnModuleDestroy {
         .with(
           'sparql',
           (): ExternalGraphDatabaseType => ExternalGraphDatabaseType.sparql,
+        )
+        .with(
+          'wikidata',
+          (): ExternalGraphDatabaseType => ExternalGraphDatabaseType.wikidata,
         )
         .with(
           P.nullish,

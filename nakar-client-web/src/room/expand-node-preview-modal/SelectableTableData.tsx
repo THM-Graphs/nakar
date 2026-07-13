@@ -1,4 +1,4 @@
-import { FormCheck, Stack } from "react-bootstrap";
+import { FormCheck, OverlayTrigger, Stack, Tooltip } from "react-bootstrap";
 import { DynamicList } from "../../shared/elements/DynamicList.tsx";
 import clsx from "clsx";
 import { numberFormat } from "../../shared/data/numberFormat.ts";
@@ -82,9 +82,19 @@ export function SelectableTableData(props: {
                   checked={props.selections.has(element.identificator)}
                   readOnly={true}
                 ></FormCheck>
-                <span className={"text-break flex-grow-1 flex-shrink-1"}>
-                  {element.identificator}
-                </span>
+                <OverlayTrigger
+                  placement={"left"}
+                  delay={{ show: 1000, hide: 0 }}
+                  overlay={<Tooltip>{element.identificator}</Tooltip>}
+                >
+                  <span
+                    className={
+                      "text-break flex-grow-1 flex-shrink-1 user-select-text text-wrap"
+                    }
+                  >
+                    {element.title}
+                  </span>
+                </OverlayTrigger>
                 <span
                   className={"pe-2 text-end flex-grow-0 flex-shrink-0 text-end"}
                 >

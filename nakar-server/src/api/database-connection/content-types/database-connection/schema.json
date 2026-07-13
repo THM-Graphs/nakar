@@ -23,9 +23,13 @@
     },
     "databaseType": {
       "type": "enumeration",
-      "enum": ["neo4j", "sparql"],
+      "required": true,
       "default": "neo4j",
-      "required": true
+      "enum": [
+        "neo4j",
+        "sparql",
+        "wikidata"
+      ]
     },
     "username": {
       "type": "string"
