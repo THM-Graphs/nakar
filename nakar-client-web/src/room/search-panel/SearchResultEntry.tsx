@@ -21,7 +21,7 @@ export function SearchResultEntry(props: {
         props.className,
       )}
     >
-      <Stack gap={1} className={"p-2"}>
+      <Stack gap={1} className={"p-2 flex-shrink-1"}>
         <Stack direction={"horizontal"} className={"flex-wrap"} gap={1}>
           {props.node.labels.map((label) => (
             <Label
@@ -33,7 +33,9 @@ export function SearchResultEntry(props: {
             ></Label>
           ))}
         </Stack>
-        <span className={"small user-select-text"}>{props.node.title}</span>
+        <span className={"small user-select-text text-break"}>
+          {props.node.title}
+        </span>
       </Stack>
       <ClipboardButton
         text={props.node.id}
