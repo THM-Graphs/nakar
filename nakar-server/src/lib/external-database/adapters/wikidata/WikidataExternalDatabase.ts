@@ -216,6 +216,16 @@ WHERE {
     ?intermediateEntity <http://www.w3.org/2000/01/rdf-schema#label> ?label .
     BIND(CONCAT(?label, " (Reference)") AS ?inputLabel)
   }
+  UNION {
+    ?intermediateEntity <http://wikiba.se/ontology#qualifier> ?input .
+    ?intermediateEntity <http://www.w3.org/2000/01/rdf-schema#label> ?label .
+    BIND(CONCAT(?label, " (Qualifier)") AS ?inputLabel)
+  }
+  UNION {
+    ?intermediateEntity <http://wikiba.se/ontology#statementValue> ?input .
+    ?intermediateEntity <http://www.w3.org/2000/01/rdf-schema#label> ?label .
+    BIND(CONCAT(?label, " (Statement Value)") AS ?inputLabel)
+  }
   
   FILTER(LANG(?label) IN ("de", "mul"))
 }
