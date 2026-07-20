@@ -544,6 +544,7 @@ export interface ApiDatabaseConnectionDatabaseConnection
     > &
       Schema.Attribute.Required &
       Schema.Attribute.DefaultTo<'neo4j'>;
+    language: Schema.Attribute.String;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
       'oneToMany',

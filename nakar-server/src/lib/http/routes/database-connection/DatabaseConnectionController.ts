@@ -105,6 +105,7 @@ export class DatabaseConnectionController {
                 ExternalGraphDatabaseType.wikidata,
             )
             .exhaustive(),
+          language: body.language,
         });
 
       return new TestDatabaseConnectionResponseBodyDto({
@@ -170,6 +171,7 @@ export class DatabaseConnectionController {
         connectionUrl: body.connectionUrl,
         browserUrl: body.browserUrl,
         databaseType: body.databaseType,
+        language: body.language,
       });
 
     if (databaseConnection == null) {

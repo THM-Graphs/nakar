@@ -40,6 +40,7 @@ export type DatabaseConnectionDto = {
     database: string;
     nodeConfigurations: Array<NodeConfigurationDto>;
     databaseType: 'neo4j' | 'sparql' | 'wikidata';
+    language: string;
 };
 
 export type StartPageProjectDto = {
@@ -221,6 +222,7 @@ export type TestDatabaseConnectionRequestBodyDto = {
     database: string | null;
     connectionUrl: string;
     databaseType: 'neo4j' | 'sparql' | 'wikidata';
+    language: string | null;
 };
 
 export type TestDatabaseConnectionResponseBodyDto = {
@@ -247,6 +249,7 @@ export type UpdateDatabaseConnectionRequestBodyDto = {
     credentialStoreConsent: boolean;
     databaseType: 'neo4j' | 'sparql' | 'wikidata';
     nodeConfigurations: Array<UpdateNodeConfigurationRequestBodyDto>;
+    language: string | null;
 };
 
 export type UpdateCommonPropertyRequestBodyDto = {

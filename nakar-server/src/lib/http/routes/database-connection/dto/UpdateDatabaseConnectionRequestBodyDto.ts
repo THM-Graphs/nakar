@@ -5,12 +5,14 @@ import {
   IsEnum,
   IsOptional,
   IsString,
+  Matches,
   MinLength,
   ValidateNested,
 } from 'class-validator';
 import { UpdateNodeConfigurationRequestBodyDto } from './UpdateNodeConfigurationRequestBodyDto';
 import { Type } from 'class-transformer';
 import { DatabaseConnectionDatabaseType } from './DatabaseConnectionDatabaseType';
+import { wikidataLanguagePattern } from '../../../../external-database/adapters/wikidata/WikidataLanguagePattern';
 
 export class UpdateDatabaseConnectionRequestBodyDto {
   @ApiProperty()
@@ -57,4 +59,10 @@ export class UpdateDatabaseConnectionRequestBodyDto {
   )
   @IsArray()
   public nodeConfigurations!: UpdateNodeConfigurationRequestBodyDto[];
+
+  @ApiProperty({ nullable: true, type: String })
+  @IsString()
+  @Matches(wikidataLanguagePattern)
+  @IsOptional()
+  public language!: string | null;
 }

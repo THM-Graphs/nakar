@@ -121,10 +121,17 @@ export class DatabaseService {
 
   public async updateDatabase(
     databaseId: string,
-    data: Input<'api::database-connection.database-connection'>,
+    data: Omit<
+      Partial<Input<'api::database-connection.database-connection'>>,
+      'language'
+    > & {
+      language?: string | null;
+    },
   ): Promise<Result<'api::database-connection.database-connection'> | null> {
-    const encryptedData: Input<'api::database-connection.database-connection'> =
-      { ...data };
+    const encryptedData: Omit<
+      Partial<Input<'api::database-connection.database-connection'>>,
+      'language'
+    > = { ...data };
     if (encryptedData.password != null) {
       encryptedData.password = this._encryptionService.encrypt(
         encryptedData.password,

@@ -1,6 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEnum, IsOptional, IsString, MinLength } from 'class-validator';
+import {
+  IsEnum,
+  IsOptional,
+  IsString,
+  Matches,
+  MinLength,
+} from 'class-validator';
 import { DatabaseConnectionDatabaseType } from './DatabaseConnectionDatabaseType';
+import { wikidataLanguagePattern } from '../../../../external-database/adapters/wikidata/WikidataLanguagePattern';
 
 export class TestDatabaseConnectionRequestBodyDto {
   @ApiProperty({ nullable: true, type: String })
@@ -33,4 +40,10 @@ export class TestDatabaseConnectionRequestBodyDto {
   @ApiProperty({ enum: DatabaseConnectionDatabaseType })
   @IsEnum(DatabaseConnectionDatabaseType)
   public databaseType!: DatabaseConnectionDatabaseType;
+
+  @ApiProperty({ nullable: true, type: String })
+  @IsString()
+  @Matches(wikidataLanguagePattern)
+  @IsOptional()
+  public language!: string | null;
 }

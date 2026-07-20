@@ -69,6 +69,9 @@
       "relation": "oneToMany",
       "target": "api::node-configuration.node-configuration",
       "mappedBy": "database"
+    },
+    "language": {
+      "type": "string"
     }
   }
 }

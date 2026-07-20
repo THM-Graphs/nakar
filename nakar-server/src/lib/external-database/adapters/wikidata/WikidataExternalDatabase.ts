@@ -14,9 +14,12 @@ import type { BindingsStream } from '@comunica/types';
 import type { Term } from '@rdfjs/types';
 import toNT from '@rdfjs/to-ntriples';
 import type { ExternalGraphDatabaseRelationship } from '../../data/ExternalGraphDatabaseRelationship';
+import type { Logger } from '@strapi/logger';
+import { createChildLogger } from '../../../logger/createChildLogger';
 
 export class WikidataExternalDatabase implements ExternalGraphDatabase {
   private readonly _sparqlAdapter: SparqlExternalDatabase;
+  private readonly _logger: Logger = createChildLogger(this);
 
   public constructor() {
     this._sparqlAdapter = new SparqlExternalDatabase();
@@ -174,6 +177,13 @@ export class WikidataExternalDatabase implements ExternalGraphDatabase {
     if (nodeUris.size === 0) {
       return new SMap();
     }
+
+    const configuredLanguage: string | null = credentials.language;
+    if (configuredLanguage == null) {
+      this._logger.warn("No language configured. Will fallback to 'en'.");
+    }
+    const language: string = configuredLanguage ?? 'en';
+
     const bindingsStream: BindingsStream =
       await this._sparqlAdapter.runGenericSparqlQuery(
         credentials,
@@ -227,8 +237,17 @@ WHERE {
     BIND(CONCAT(?label, " (Statement Value)") AS ?inputLabel)
   }
   
-  FILTER(LANG(?label) IN ("de", "mul"))
+  FILTER(LANG(?label) IN ("${language}", "mul", "en"))
+  BIND(LANG(?label) AS ?lang)
 }
+  
+ORDER BY DESC (
+  IF(LANG(?label) = "${language}", 1,
+    IF(LANG(?label) = "mul", 2,
+      IF(LANG(?label) = "en", 3, 4)
+    )
+  )
+)
     `,
       );
 

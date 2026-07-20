@@ -71,6 +71,7 @@ export class ExternalGraphDatabaseService implements OnModuleDestroy {
       username: database.username ?? null,
       password: database.password ?? null,
       database: database.database ?? null,
+      language: database.language ?? null,
     };
   }
 

@@ -8,4 +8,5 @@ export interface ExternalGraphDatabaseCredentials {
   username: string | null;
   password: string | null;
   database: string | null;
+  language: string | null;
 }
