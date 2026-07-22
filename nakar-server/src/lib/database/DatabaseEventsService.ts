@@ -1,20 +1,22 @@
 import { Observable, Subject, Subscription } from 'rxjs';
-import { Result } from '@strapi/types/dist/modules/documents';
 import { Logger } from '@strapi/logger';
 import { createChildLogger } from '../logger/createChildLogger';
 import { DatabaseService } from './DatabaseService';
 import { Profiler } from 'winston';
 import { match, P } from 'ts-pattern';
-import { Context } from '@strapi/types/dist/modules/documents/middleware';
-import { ServiceInstance } from '@strapi/types/dist/modules/documents/service-instance';
 import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import type { Modules } from '@strapi/types';
 
 @Injectable()
 export class DatabaseEventsService implements OnModuleInit, OnModuleDestroy {
   private readonly _logger: Logger = createChildLogger(this);
 
-  private readonly _onCanvasDeleted: Subject<Result<'api::canvas.canvas'>>;
-  private readonly _onNoteChanges: Subject<Result<'api::canvas.canvas'>>;
+  private readonly _onCanvasDeleted: Subject<
+    Modules.Documents.Result<'api::canvas.canvas'>
+  >;
+  private readonly _onNoteChanges: Subject<
+    Modules.Documents.Result<'api::canvas.canvas'>
+  >;
 
   private readonly _subscriptsion: Subscription[];
 
@@ -24,33 +26,39 @@ export class DatabaseEventsService implements OnModuleInit, OnModuleDestroy {
 
     this._subscriptsion = [
       this.onCanvasDeleted$.subscribe(
-        (canvas: Result<'api::canvas.canvas'>): void => {
+        (canvas: Modules.Documents.Result<'api::canvas.canvas'>): void => {
           this._logger.debug(`onCanvasDeleted$: ${canvas.documentId}`);
         },
       ),
       this.onNoteChanges$.subscribe(
-        (canvas: Result<'api::canvas.canvas'>): void => {
+        (canvas: Modules.Documents.Result<'api::canvas.canvas'>): void => {
           this._logger.debug(`onNoteChanges$: ${canvas.documentId}`);
         },
       ),
     ];
   }
 
-  public get onCanvasDeleted$(): Observable<Result<'api::canvas.canvas'>> {
+  public get onCanvasDeleted$(): Observable<
+    Modules.Documents.Result<'api::canvas.canvas'>
+  > {
     return this._onCanvasDeleted.asObservable();
   }
 
-  public get onNoteChanges$(): Observable<Result<'api::canvas.canvas'>> {
+  public get onNoteChanges$(): Observable<
+    Modules.Documents.Result<'api::canvas.canvas'>
+  > {
     return this._onNoteChanges.asObservable();
   }
 
   public onModuleInit(): void {
     type NextFunction = () => ReturnType<
-      ServiceInstance[keyof ServiceInstance]
+      Modules.Documents.ServiceInstance[keyof Modules.Documents.ServiceInstance]
     >;
     type NextResult = Awaited<ReturnType<NextFunction>>;
     type MiddlewareReturnType = Awaited<
-      ReturnType<ServiceInstance[keyof ServiceInstance]>
+      ReturnType<
+        Modules.Documents.ServiceInstance[keyof Modules.Documents.ServiceInstance]
+      >
     >;
 
     const getDocumentIdFromResult = (result: NextResult): string => {
@@ -68,7 +76,7 @@ export class DatabaseEventsService implements OnModuleInit, OnModuleDestroy {
 
     strapi.documents.use(
       async (
-        context: Context,
+        context: Modules.Documents.Middleware.Context,
         next: NextFunction,
       ): Promise<MiddlewareReturnType> => {
         const task: Profiler = strapi.log.startTimer();
@@ -84,12 +92,12 @@ export class DatabaseEventsService implements OnModuleInit, OnModuleDestroy {
     // _onCanvasDeleted
     strapi.documents.use(
       async (
-        context: Context,
+        context: Modules.Documents.Middleware.Context,
         next: NextFunction,
       ): Promise<MiddlewareReturnType> => {
         if (context.uid === 'api::canvas.canvas') {
           if (context.action === 'delete' || context.action === 'unpublish') {
-            const canvas: Result<'api::canvas.canvas'> =
+            const canvas: Modules.Documents.Result<'api::canvas.canvas'> =
               await this._databaseService.getCanvas(context.params.documentId);
             setImmediate((): void => {
               this._onCanvasDeleted.next(canvas);
@@ -104,7 +112,7 @@ export class DatabaseEventsService implements OnModuleInit, OnModuleDestroy {
     // _onNoteChanges
     strapi.documents.use(
       async (
-        context: Context,
+        context: Modules.Documents.Middleware.Context,
         next: NextFunction,
       ): Promise<MiddlewareReturnType> => {
         try {
@@ -115,9 +123,9 @@ export class DatabaseEventsService implements OnModuleInit, OnModuleDestroy {
                 { action: 'publish', params: { documentId: P.select() } },
                 async (documentId: string): Promise<NextResult> => {
                   const result: NextResult = await next();
-                  const note: Result<'api::note.note'> =
+                  const note: Modules.Documents.Result<'api::note.note'> =
                     await this._databaseService.getNote(documentId);
-                  const canvases: Result<'api::canvas.canvas'>[] =
+                  const canvases: Modules.Documents.Result<'api::canvas.canvas'>[] =
                     await this._databaseService.getCanvasesOfNote(note);
                   for (const canvas of canvases) {
                     setImmediate((): void => {
@@ -130,9 +138,9 @@ export class DatabaseEventsService implements OnModuleInit, OnModuleDestroy {
               .with(
                 { action: 'unpublish', params: { documentId: P.select() } },
                 async (documentId: string): Promise<NextResult> => {
-                  const note: Result<'api::note.note'> =
+                  const note: Modules.Documents.Result<'api::note.note'> =
                     await this._databaseService.getNote(documentId);
-                  const canvases: Result<'api::canvas.canvas'>[] =
+                  const canvases: Modules.Documents.Result<'api::canvas.canvas'>[] =
                     await this._databaseService.getCanvasesOfNote(note);
                   const result: NextResult = await next();
                   for (const canvas of canvases) {
@@ -147,11 +155,11 @@ export class DatabaseEventsService implements OnModuleInit, OnModuleDestroy {
                 { action: 'create', params: { status: 'published' } },
                 async (): Promise<NextResult> => {
                   const result: NextResult = await next();
-                  const note: Result<'api::note.note'> =
+                  const note: Modules.Documents.Result<'api::note.note'> =
                     await this._databaseService.getNote(
                       getDocumentIdFromResult(result),
                     );
-                  const canvases: Result<'api::canvas.canvas'>[] =
+                  const canvases: Modules.Documents.Result<'api::canvas.canvas'>[] =
                     await this._databaseService.getCanvasesOfNote(note);
                   for (const canvas of canvases) {
                     setImmediate((): void => {
@@ -168,9 +176,9 @@ export class DatabaseEventsService implements OnModuleInit, OnModuleDestroy {
                 },
                 async (documentId: string): Promise<NextResult> => {
                   const result: NextResult = await next();
-                  const note: Result<'api::note.note'> =
+                  const note: Modules.Documents.Result<'api::note.note'> =
                     await this._databaseService.getNote(documentId);
-                  const canvases: Result<'api::canvas.canvas'>[] =
+                  const canvases: Modules.Documents.Result<'api::canvas.canvas'>[] =
                     await this._databaseService.getCanvasesOfNote(note);
                   for (const canvas of canvases) {
                     setImmediate((): void => {
@@ -183,9 +191,9 @@ export class DatabaseEventsService implements OnModuleInit, OnModuleDestroy {
               .with(
                 { action: 'delete', params: { documentId: P.select() } },
                 async (documentId: string): Promise<NextResult> => {
-                  const note: Result<'api::note.note'> =
+                  const note: Modules.Documents.Result<'api::note.note'> =
                     await this._databaseService.getNote(documentId);
-                  const canvases: Result<'api::canvas.canvas'>[] =
+                  const canvases: Modules.Documents.Result<'api::canvas.canvas'>[] =
                     await this._databaseService.getCanvasesOfNote(note);
                   const result: NextResult = await next();
                   for (const canvas of canvases) {

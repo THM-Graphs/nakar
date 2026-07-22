@@ -12,7 +12,7 @@ import {
 } from '@nestjs/common';
 import { ApiBody, ApiParam, ApiResponse } from '@nestjs/swagger';
 import { UserCanAccessProject } from '../../guards/UserCanAccessProject';
-import { Result } from '@strapi/types/dist/modules/documents/result';
+import type { Modules } from '@strapi/types';
 import { SchemaFactoryService } from '../../../schema/SchemaFactoryService';
 import { DatabaseConnectionDto } from '../../../schema/dtos/DatabaseConnectionDto';
 import { DatabaseConnectionBelongsToProject } from '../../guards/DatabaseConnectionBelongsToProject';
@@ -46,7 +46,7 @@ export class DatabaseConnectionController {
   public async createDatabaseConnection(
     @Param('projectId') projectId: string,
   ): Promise<DatabaseConnectionDto> {
-    const databaseConnection: Result<'api::database-connection.database-connection'> =
+    const databaseConnection: Modules.Documents.Result<'api::database-connection.database-connection'> =
       await this._database.createDatabase(projectId);
 
     return await this._schemaFactory.createSchemaDatabase(databaseConnection);
@@ -60,10 +60,10 @@ export class DatabaseConnectionController {
     @Body() body: TestDatabaseConnectionRequestBodyDto,
   ): Promise<TestDatabaseConnectionResponseBodyDto> {
     try {
-      const project: Result<'api::project.project'> =
+      const project: Modules.Documents.Result<'api::project.project'> =
         await this._database.getProject(projectId);
 
-      const existingDatabase: Result<'api::database-connection.database-connection'> | null =
+      const existingDatabase: Modules.Documents.Result<'api::database-connection.database-connection'> | null =
         body.id != null
           ? await this._database.getDatabaseOrNull(body.id)
           : null;
@@ -138,7 +138,7 @@ export class DatabaseConnectionController {
   public async getDatabaseConnection(
     @Param('databaseConnectionId') databaseConnectionId: string,
   ): Promise<DatabaseConnectionDto> {
-    const databaseConnection: Result<'api::database-connection.database-connection'> | null =
+    const databaseConnection: Modules.Documents.Result<'api::database-connection.database-connection'> | null =
       await this._database.getDatabaseOrNull(databaseConnectionId);
 
     if (databaseConnection == null) {
@@ -161,7 +161,7 @@ export class DatabaseConnectionController {
       }
     }
 
-    const databaseConnection: Result<'api::database-connection.database-connection'> | null =
+    const databaseConnection: Modules.Documents.Result<'api::database-connection.database-connection'> | null =
       await this._database.updateDatabase(databaseConnectionId, {
         title: body.title,
         username: body.username != null ? body.username : undefined,

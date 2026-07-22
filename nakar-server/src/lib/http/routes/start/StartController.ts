@@ -2,7 +2,7 @@ import { Controller, Get, Query } from '@nestjs/common';
 import { StartPageDto } from './dto/StartPageDto';
 import { ApiResponse } from '@nestjs/swagger';
 import { GetStartPageRequestQueryDto } from './dto/GetStartPageRequestQueryDto';
-import { Result } from '@strapi/types/dist/modules/documents/result';
+import type { Modules } from '@strapi/types';
 import { userCanSeeAndJoinRoom } from '../../../policies/userCanSeeAndJoinRoom';
 
 import { DatabaseService } from '../../../database/DatabaseService';
@@ -34,12 +34,12 @@ export class StartController {
     @JWT() jwt: string | null,
     @Query() query: GetStartPageRequestQueryDto,
   ): Promise<StartPageDto> {
-    const user: Result<'plugin::users-permissions.user'> | null =
+    const user: Modules.Documents.Result<'plugin::users-permissions.user'> | null =
       await this._authService.getUserByJWT(jwt);
-    const recentRooms: Result<'api::room.room'>[] = [];
+    const recentRooms: Modules.Documents.Result<'api::room.room'>[] = [];
     for (const recentRoomId of query.recentRoomIds?.split(',') ?? []) {
       try {
-        const room: Result<'api::room.room'> =
+        const room: Modules.Documents.Result<'api::room.room'> =
           await this._database.getRoom(recentRoomId);
         const allowed: boolean = await userCanSeeAndJoinRoom(
           user,
@@ -54,15 +54,14 @@ export class StartController {
       }
     }
 
-    const myProjects: Result<'api::project.project'>[] = user
+    const myProjects: Modules.Documents.Result<'api::project.project'>[] = user
       ? await this._database.getProjectsOfUser(user)
       : [];
 
-    const collaborationProjects: Result<'api::project.project'>[] = user
-      ? await this._database.getCollaborationProjectsOfUser(user)
-      : [];
+    const collaborationProjects: Modules.Documents.Result<'api::project.project'>[] =
+      user ? await this._database.getCollaborationProjectsOfUser(user) : [];
 
-    const publicRooms: Result<'api::room.room'>[] =
+    const publicRooms: Modules.Documents.Result<'api::room.room'>[] =
       await this._database.getPublicRooms();
 
     return new StartPageDto({
@@ -70,7 +69,7 @@ export class StartController {
         await Promise.all(
           myProjects.map(
             async (
-              project: Result<'api::project.project'>,
+              project: Modules.Documents.Result<'api::project.project'>,
             ): Promise<StartPageProjectDto> => {
               const activeUsers: SMap<string, LiveCanvasUser[]> =
                 await this._liveCanvasService.getActiveUsersOfProject(project);
@@ -88,7 +87,7 @@ export class StartController {
         await Promise.all(
           collaborationProjects.map(
             async (
-              project: Result<'api::project.project'>,
+              project: Modules.Documents.Result<'api::project.project'>,
             ): Promise<StartPageProjectDto> => {
               const activeUsers: SMap<string, LiveCanvasUser[]> =
                 await this._liveCanvasService.getActiveUsersOfProject(project);
@@ -106,9 +105,9 @@ export class StartController {
         await Promise.all(
           publicRooms.map(
             async (
-              room: Result<'api::room.room'>,
+              room: Modules.Documents.Result<'api::room.room'>,
             ): Promise<StartPageRoomDto> => {
-              const canvases: Result<'api::canvas.canvas'>[] =
+              const canvases: Modules.Documents.Result<'api::canvas.canvas'>[] =
                 await this._database.getCanvasesOfRoom(room);
               const activeUsers: LiveCanvasUser[] =
                 this._liveCanvasService.getActiveUsersOfCanvases(canvases);
@@ -124,8 +123,10 @@ export class StartController {
       ),
       recentRooms: await Promise.all(
         recentRooms.map(
-          async (room: Result<'api::room.room'>): Promise<StartPageRoomDto> => {
-            const canvases: Result<'api::canvas.canvas'>[] =
+          async (
+            room: Modules.Documents.Result<'api::room.room'>,
+          ): Promise<StartPageRoomDto> => {
+            const canvases: Modules.Documents.Result<'api::canvas.canvas'>[] =
               await this._database.getCanvasesOfRoom(room);
             const activeUsers: LiveCanvasUser[] =
               this._liveCanvasService.getActiveUsersOfCanvases(canvases);

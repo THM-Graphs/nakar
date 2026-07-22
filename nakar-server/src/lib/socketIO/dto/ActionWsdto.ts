@@ -35,8 +35,5 @@ export class ActionWsdto {
       }),
   )
   public action!:
-    | GrabNodeWsdto
-    | MoveNodesWsdto
-    | UngrabNodeWsdto
-    | MoveCursorWsdto;
+    GrabNodeWsdto | MoveNodesWsdto | UngrabNodeWsdto | MoveCursorWsdto;
 }

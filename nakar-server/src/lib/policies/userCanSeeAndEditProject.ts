@@ -1,11 +1,11 @@
-import type { Result } from '@strapi/types/dist/modules/documents/result';
 import type { DatabaseService } from '../database/DatabaseService';
 import type { Logger } from '@strapi/logger';
 import { createChildLogger } from '../logger/createChildLogger';
+import type { Modules } from '@strapi/types';
 
 export async function userCanSeeAndEditProject(
-  user: Result<'plugin::users-permissions.user'> | null,
-  project: Result<'api::project.project'>,
+  user: Modules.Documents.Result<'plugin::users-permissions.user'> | null,
+  project: Modules.Documents.Result<'api::project.project'>,
   database: DatabaseService,
 ): Promise<boolean> {
   const logger: Logger = createChildLogger('userCanSeeProject');
@@ -17,15 +17,15 @@ export async function userCanSeeAndEditProject(
     return false;
   }
 
-  const owner: Result<'plugin::users-permissions.user'> | null =
+  const owner: Modules.Documents.Result<'plugin::users-permissions.user'> | null =
     await database.getOwnerOfProject(project);
   if (owner?.documentId === user.documentId) {
     return true;
   }
 
-  const collaboratores: Result<'plugin::users-permissions.user'>[] =
+  const collaborators: Modules.Documents.Result<'plugin::users-permissions.user'>[] =
     await database.getCollaboratorsOfProject(project);
-  for (const collaborator of collaboratores) {
+  for (const collaborator of collaborators) {
     if (collaborator.documentId === user.documentId) {
       return true;
     }

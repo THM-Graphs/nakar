@@ -4,7 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Result } from '@strapi/types/dist/modules/documents/result';
+import type { Modules } from '@strapi/types';
 import { Request } from 'express';
 import { DatabaseService } from '../../database/DatabaseService';
 import { AuthService } from '../../auth/AuthService';
@@ -20,7 +20,7 @@ export class UserCanAccessRoom implements CanActivate {
   public async canActivate(context: ExecutionContext): Promise<boolean> {
     const req: Request = context.switchToHttp().getRequest();
 
-    const user: Result<'plugin::users-permissions.user'> | null =
+    const user: Modules.Documents.Result<'plugin::users-permissions.user'> | null =
       await this._authService.getUserFromRequest(req);
 
     const roomId: unknown = req.params['roomId'];
@@ -28,7 +28,7 @@ export class UserCanAccessRoom implements CanActivate {
       throw new NotFoundException(`No room id provided.`);
     }
 
-    const room: Result<'api::room.room'> =
+    const room: Modules.Documents.Result<'api::room.room'> =
       await this._databaseService.getRoom(roomId);
 
     const allowed: boolean = await userCanSeeAndJoinRoom(

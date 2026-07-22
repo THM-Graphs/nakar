@@ -10,7 +10,7 @@ import {
   Put,
   UseGuards,
 } from '@nestjs/common';
-import { Result } from '@strapi/types/dist/modules/documents/result';
+import type { Modules } from '@strapi/types';
 import { DatabaseService } from '../../../database/DatabaseService';
 import { SchemaFactoryService } from '../../../schema/SchemaFactoryService';
 import { RoomDto } from '../../../schema/dtos/RoomDto';
@@ -18,7 +18,6 @@ import { ApiBody, ApiParam, ApiResponse } from '@nestjs/swagger';
 import { userCanSeeAndEditProject } from '../../../policies/userCanSeeAndEditProject';
 import { JWT } from '../../decorators/JWT';
 import { AuthService } from '../../../auth/AuthService';
-import { Input } from '@strapi/types/dist/modules/documents/params/data';
 import { UpdateRoomRequestBodyDto } from './dto/UpdateRoomRequestBodyDto';
 import { UserCanAccessProject } from '../../guards/UserCanAccessProject';
 import { RoomBelongsToProject } from '../../guards/RoomBelongsToProject';
@@ -44,9 +43,9 @@ export class RoomController {
   @ApiResponse({ type: RoomDto })
   @UseGuards(RoomBelongsToProject)
   public async getRoom(@Param('roomId') roomId: string): Promise<RoomDto> {
-    const room: Result<'api::room.room'> | null =
+    const room: Modules.Documents.Result<'api::room.room'> | null =
       await this._databaseService.getRoom(roomId);
-    const canvases: Result<'api::canvas.canvas'>[] =
+    const canvases: Modules.Documents.Result<'api::canvas.canvas'>[] =
       await this._databaseService.getCanvasesOfRoom(room);
     const activeUsers: LiveCanvasUser[] =
       this._liveCanvasService.getActiveUsersOfCanvases(canvases);
@@ -60,9 +59,9 @@ export class RoomController {
     @JWT() jwt: string | null,
     @Param('projectId') projectId: string,
   ): Promise<RoomDto> {
-    const user: Result<'plugin::users-permissions.user'> | null =
+    const user: Modules.Documents.Result<'plugin::users-permissions.user'> | null =
       await this._authService.getUserByJWT(jwt);
-    const project: Result<'api::project.project'> =
+    const project: Modules.Documents.Result<'api::project.project'> =
       await this._databaseService.getProject(projectId);
     const accessProject: boolean = await userCanSeeAndEditProject(
       user,
@@ -72,17 +71,17 @@ export class RoomController {
     if (!accessProject) {
       throw new ForbiddenException();
     }
-    const room: Result<'api::room.room'> = await strapi
+    const room: Modules.Documents.Result<'api::room.room'> = await strapi
       .documents('api::room.room')
       .create({
         data: {
           title: 'Untitled Room',
           visibility: 'private',
           project: project.documentId,
-        } satisfies Input<'api::room.room'>,
+        } satisfies Modules.Documents.Params.Data.Input<'api::room.room'>,
         status: 'published',
       });
-    const canvases: Result<'api::canvas.canvas'>[] =
+    const canvases: Modules.Documents.Result<'api::canvas.canvas'>[] =
       await this._databaseService.getCanvasesOfRoom(room);
     const activeUsers: LiveCanvasUser[] =
       this._liveCanvasService.getActiveUsersOfCanvases(canvases);
@@ -98,14 +97,14 @@ export class RoomController {
     @Body() body: UpdateRoomRequestBodyDto,
     @Param('roomId') roomId: string,
   ): Promise<RoomDto> {
-    const room: Result<'api::room.room'> | null = await strapi
+    const room: Modules.Documents.Result<'api::room.room'> | null = await strapi
       .documents('api::room.room')
       .update({
         documentId: roomId,
         data: {
           title: body.title,
           visibility: body.visibility,
-        } satisfies Input<'api::room.room'>,
+        } satisfies Modules.Documents.Params.Data.Input<'api::room.room'>,
         status: 'published',
       });
 
@@ -113,7 +112,7 @@ export class RoomController {
       throw new NotFoundException();
     }
 
-    const canvases: Result<'api::canvas.canvas'>[] =
+    const canvases: Modules.Documents.Result<'api::canvas.canvas'>[] =
       await this._databaseService.getCanvasesOfRoom(room);
     const activeUsers: LiveCanvasUser[] =
       this._liveCanvasService.getActiveUsersOfCanvases(canvases);

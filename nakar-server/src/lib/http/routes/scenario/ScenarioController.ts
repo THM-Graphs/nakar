@@ -13,8 +13,7 @@ import { ScenarioDto } from '../../../schema/dtos/ScenarioDto';
 import { UserCanAccessProject } from '../../guards/UserCanAccessProject';
 import { DatabaseService } from '../../../database/DatabaseService';
 import { ScenarioGroupBelongsToProject } from '../../guards/ScenarioGroupBelongsToProject';
-import { Result } from '@strapi/types/dist/modules/documents/result';
-import { Input } from '@strapi/types/dist/modules/documents/params/data';
+import type { Modules } from '@strapi/types';
 import { SchemaFactoryService } from '../../../schema/SchemaFactoryService';
 import { ScenarioBelongsToScenarioGroup } from '../../guards/ScenarioBelongsToScenarioGroup';
 import { UpdateScenarioRequestBodyDto } from './dto/UpdateScenarioRequestBodyDto';
@@ -43,14 +42,13 @@ export class ScenarioController {
   public async createScenario(
     @Param('scenarioGroupId') scenarioGroupId: string,
   ): Promise<ScenarioDto> {
-    const scenario: Result<'api::scenario.scenario'> = await strapi
-      .documents('api::scenario.scenario')
-      .create({
+    const scenario: Modules.Documents.Result<'api::scenario.scenario'> =
+      await strapi.documents('api::scenario.scenario').create({
         status: 'published',
         data: {
           title: 'Untitled Scenario',
           group: scenarioGroupId,
-        } satisfies Input<'api::scenario.scenario'>,
+        } satisfies Modules.Documents.Params.Data.Input<'api::scenario.scenario'>,
       });
 
     // TODO: Update parameterised scenarios in live canvases
@@ -77,13 +75,13 @@ export class ScenarioController {
     @Param('scenarioId') scenarioId: string,
     @Body() body: UpdateScenarioRequestBodyDto,
   ): Promise<ScenarioDto> {
-    const updatedScenario: Result<'api::scenario.scenario'> | null =
+    const updatedScenario: Modules.Documents.Result<'api::scenario.scenario'> | null =
       await strapi.documents('api::scenario.scenario').update({
         documentId: scenarioId,
         data: {
           title: body.title,
           description: body.description,
-        } satisfies Input<'api::scenario.scenario'>,
+        } satisfies Modules.Documents.Params.Data.Input<'api::scenario.scenario'>,
         status: 'published',
       });
 

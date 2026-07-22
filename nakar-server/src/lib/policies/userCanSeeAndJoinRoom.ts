@@ -1,12 +1,12 @@
-import type { Result } from '@strapi/types/dist/modules/documents/result';
 import type { DatabaseService } from '../database/DatabaseService';
 import type { Logger } from '@strapi/logger';
 import { createChildLogger } from '../logger/createChildLogger';
 import { userCanSeeAndEditProject } from './userCanSeeAndEditProject';
+import type { Modules } from '@strapi/types';
 
 export async function userCanSeeAndJoinRoom(
-  user: Result<'plugin::users-permissions.user'> | null,
-  room: Result<'api::room.room'>,
+  user: Modules.Documents.Result<'plugin::users-permissions.user'> | null,
+  room: Modules.Documents.Result<'api::room.room'>,
   database: DatabaseService,
 ): Promise<boolean> {
   const logger: Logger = createChildLogger('userCanSeeRoom');
@@ -18,7 +18,7 @@ export async function userCanSeeAndJoinRoom(
     return true;
   }
 
-  const project: Result<'api::project.project'> =
+  const project: Modules.Documents.Result<'api::project.project'> =
     await database.getProjectOfRoom(room);
   if (await userCanSeeAndEditProject(user, project, database)) {
     return true;

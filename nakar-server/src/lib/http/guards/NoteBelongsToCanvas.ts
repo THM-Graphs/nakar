@@ -4,7 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Result } from '@strapi/types/dist/modules/documents/result';
+import type { Modules } from '@strapi/types';
 import { Request } from 'express';
 import { DatabaseService } from '../../database/DatabaseService';
 
@@ -19,19 +19,19 @@ export class NoteBelongsToCanvas implements CanActivate {
     if (typeof noteId !== 'string') {
       throw new NotFoundException(`No note id provided.`);
     }
-    const note: Result<'api::note.note'> =
+    const note: Modules.Documents.Result<'api::note.note'> =
       await this._databaseService.getNote(noteId);
 
     const canvasId: unknown = req.params['canvasId'];
     if (typeof canvasId !== 'string') {
       throw new NotFoundException(`No canvas id provided.`);
     }
-    const canvas: Result<'api::canvas.canvas'> =
+    const canvas: Modules.Documents.Result<'api::canvas.canvas'> =
       await this._databaseService.getCanvas(canvasId);
 
-    const projectOfNote: Result<'api::project.project'> =
+    const projectOfNote: Modules.Documents.Result<'api::project.project'> =
       await this._databaseService.getProjectOfNote(note);
-    const projectOfRoom: Result<'api::project.project'> =
+    const projectOfRoom: Modules.Documents.Result<'api::project.project'> =
       await this._databaseService.getProjectOfCanvas(canvas);
 
     const isOkay: boolean =

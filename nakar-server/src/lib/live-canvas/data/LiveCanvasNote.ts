@@ -1,11 +1,11 @@
 import z from 'zod';
 import { SSet } from '../../../packages/set/Set';
 import { LiveCanvasNoteAuthor } from './LiveCanvasNoteAuthor';
-import type { Result } from '@strapi/types/dist/modules/documents';
 import type { DatabaseService } from '../../database/DatabaseService';
 import { LiveCanvasNoteNodeReference } from './LiveCanvasNoteNodeReference';
 import type { LiveCanvas } from '../LiveCanvas';
 import type { GraphNode } from '../graph/GraphNode';
+import type { Modules } from '@strapi/types';
 
 export class LiveCanvasNote {
   // eslint-disable-next-line @typescript-eslint/typedef
@@ -60,13 +60,13 @@ export class LiveCanvasNote {
   }
 
   public static async fromDb(
-    note: Result<'api::note.note'>,
+    note: Modules.Documents.Result<'api::note.note'>,
     database: DatabaseService,
     canvas: LiveCanvas,
   ): Promise<LiveCanvasNote> {
-    const nodes: Result<'api::node-reference.node-reference'>[] =
+    const nodes: Modules.Documents.Result<'api::node-reference.node-reference'>[] =
       await database.getReferencedNodesOfNote(note);
-    const author: Result<'plugin::users-permissions.user'> | null =
+    const author: Modules.Documents.Result<'plugin::users-permissions.user'> | null =
       await database.getAuthorOfNote(note);
 
     const nodeReferences: LiveCanvasNoteNodeReference[] = nodes.reduce<
@@ -74,7 +74,7 @@ export class LiveCanvasNote {
     >(
       (
         akku: LiveCanvasNoteNodeReference[],
-        next: Result<'api::node-reference.node-reference'>,
+        next: Modules.Documents.Result<'api::node-reference.node-reference'>,
       ): LiveCanvasNoteNodeReference[] => {
         if (next.nodeId == null) {
           return akku;

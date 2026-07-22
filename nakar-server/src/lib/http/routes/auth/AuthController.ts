@@ -7,7 +7,7 @@ import { getConfig } from '../../../config/getConfig';
 import { Unauthorized } from 'http-errors';
 import z from 'zod';
 import { GetAuthResponseBodyDto } from './dto/GetAuthResponseBodyDto';
-import { Result } from '@strapi/types/dist/modules/documents/result';
+import type { Modules } from '@strapi/types';
 import { JWT } from '../../decorators/JWT';
 import { AuthService } from '../../../auth/AuthService';
 
@@ -69,7 +69,7 @@ export class AuthController {
   public async getAuth(
     @JWT() jwt: string | null,
   ): Promise<GetAuthResponseBodyDto> {
-    const user: Result<'plugin::users-permissions.user'> | null =
+    const user: Modules.Documents.Result<'plugin::users-permissions.user'> | null =
       await this._authService.getUserByJWT(jwt);
     if (user == null) {
       throw new Unauthorized();

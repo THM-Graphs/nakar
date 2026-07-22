@@ -1,6 +1,6 @@
 import { Controller, Get, Param, UseGuards } from '@nestjs/common';
 import { ApiParam, ApiResponse } from '@nestjs/swagger';
-import { Result } from '@strapi/types/dist/modules/documents/result';
+import type { Modules } from '@strapi/types';
 import { DatabaseService } from '../../../database/DatabaseService';
 import { SchemaFactoryService } from '../../../schema/SchemaFactoryService';
 import { UserCanAccessRoom } from '../../guards/UserCanAccessRoom';
@@ -35,16 +35,16 @@ export class PublicCanvasController {
   public async getCanvas(
     @Param('canvasId') canvasId: string,
   ): Promise<CanvasPageDto> {
-    const canvas: Result<'api::canvas.canvas'> | null =
+    const canvas: Modules.Documents.Result<'api::canvas.canvas'> | null =
       await this._database.getCanvasOrNull(canvasId);
 
     if (canvas == null) {
       throw new NotFound();
     }
 
-    const room: Result<'api::room.room'> =
+    const room: Modules.Documents.Result<'api::room.room'> =
       await this._database.getRoomOfCanvas(canvas);
-    const canvases: Result<'api::canvas.canvas'>[] =
+    const canvases: Modules.Documents.Result<'api::canvas.canvas'>[] =
       await this._database.getCanvasesOfRoom(room);
     const activeUsers: LiveCanvasUser[] =
       this._liveCanvasService.getActiveUsersOfCanvases(canvases);
