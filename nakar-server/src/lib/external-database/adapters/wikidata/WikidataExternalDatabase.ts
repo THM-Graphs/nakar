@@ -178,8 +178,9 @@ export class WikidataExternalDatabase implements ExternalGraphDatabase {
       return new SMap();
     }
 
-    const configuredLanguage: string | null = credentials.language;
-    if (configuredLanguage == null) {
+    const configuredLanguage: string | null =
+      credentials.language?.trim() ?? null;
+    if (configuredLanguage == null || configuredLanguage.length === 0) {
       this._logger.warn("No language configured. Will fallback to 'en'.");
     }
     const language: string = configuredLanguage ?? 'en';
@@ -237,12 +238,12 @@ WHERE {
     BIND(CONCAT(?label, " (Statement Value)") AS ?inputLabel)
   }
   
-  FILTER(LANG(?label) IN ("${language}", "mul", "en"))
+  FILTER(LANG(?label) IN (${JSON.stringify(language)}, "mul", "en"))
   BIND(LANG(?label) AS ?lang)
 }
   
 ORDER BY DESC (
-  IF(LANG(?label) = "${language}", 1,
+  IF(LANG(?label) = ${JSON.stringify(language)}, 1,
     IF(LANG(?label) = "mul", 2,
       IF(LANG(?label) = "en", 3, 4)
     )

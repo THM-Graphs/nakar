@@ -131,7 +131,7 @@ export class SchemaFactoryService {
             DatabaseConnectionDatabaseType.neo4j,
         )
         .exhaustive(),
-      language: databaseDBDTO.language ?? '',
+      language: databaseDBDTO.language ?? null,
     };
   }
 
