@@ -171,8 +171,8 @@ export class DatabaseConnectionController {
         connectionUrl: body.connectionUrl,
         browserUrl: body.browserUrl,
         databaseType: body.databaseType,
-        // @ts-expect-error
-        language: body.language,
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+        language: body.language as string | undefined,
       });
 
     if (databaseConnection == null) {
