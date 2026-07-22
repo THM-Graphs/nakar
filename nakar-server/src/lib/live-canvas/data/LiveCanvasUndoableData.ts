@@ -85,15 +85,13 @@ export class LiveCanvasUndoableData {
     return new LiveCanvasUndoableData({
       id: data.id,
       nodes: new NodeIndex(
-        data.nodes.map(
-          (n: z.infer<typeof GraphNode.schema>): GraphNode =>
-            GraphNode.fromPlain(n),
+        data.nodes.map((n: z.infer<typeof GraphNode.schema>): GraphNode =>
+          GraphNode.fromPlain(n),
         ),
       ),
       edges: new EdgeIndex(
-        data.edges.map(
-          (e: z.infer<typeof GraphEdge.schema>): GraphEdge =>
-            GraphEdge.fromPlain(e),
+        data.edges.map((e: z.infer<typeof GraphEdge.schema>): GraphEdge =>
+          GraphEdge.fromPlain(e),
         ),
       ),
       metaData: LiveCanvasMetaData.fromPlain(data.metaData),
@@ -102,9 +100,8 @@ export class LiveCanvasUndoableData {
           SMap.fromRecord(td),
       ),
       notes: data.notes
-        .map(
-          (n: z.infer<typeof LiveCanvasNote.schema>): LiveCanvasNote =>
-            LiveCanvasNote.fromPlain(n),
+        .map((n: z.infer<typeof LiveCanvasNote.schema>): LiveCanvasNote =>
+          LiveCanvasNote.fromPlain(n),
         )
         .reduce(
           (
@@ -164,9 +161,8 @@ export class LiveCanvasUndoableData {
       ),
       notes: this.notes
         .toValueArray()
-        .map(
-          (n: LiveCanvasNote): z.infer<typeof LiveCanvasNote.schema> =>
-            n.toPlain(),
+        .map((n: LiveCanvasNote): z.infer<typeof LiveCanvasNote.schema> =>
+          n.toPlain(),
         ),
     };
   }

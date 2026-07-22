@@ -392,9 +392,8 @@ export class WebSocketManager
                 notes: message.canvas
                   .getGraph()
                   .notes.toValueArray()
-                  .map(
-                    (note: LiveCanvasNote): NoteDto =>
-                      this._schemaFactory.createSchemaNote(note),
+                  .map((note: LiveCanvasNote): NoteDto =>
+                    this._schemaFactory.createSchemaNote(note),
                   ),
               });
             },

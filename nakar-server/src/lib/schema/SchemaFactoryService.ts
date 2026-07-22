@@ -331,18 +331,16 @@ export class SchemaFactoryService {
     const labelIndex: SMap<string, LabelDto> = this._createLabelIndex(canvas);
 
     const result: LiveCanvasGraphElementsDto = {
-      nodes: graph.nodes.nodes.toArrayBy(
-        (node: GraphNode): NodeDto =>
-          this._createSchemaNode(node, canvas, degreeRange),
+      nodes: graph.nodes.nodes.toArrayBy((node: GraphNode): NodeDto =>
+        this._createSchemaNode(node, canvas, degreeRange),
       ),
-      edges: graph.edges.edges.toArrayBy(
-        (edge: GraphEdge): EdgeDto =>
-          this._createSchemaEdge(
-            edge,
-            graph,
-            canvas.data.viewSettings,
-            widthRange,
-          ),
+      edges: graph.edges.edges.toArrayBy((edge: GraphEdge): EdgeDto =>
+        this._createSchemaEdge(
+          edge,
+          graph,
+          canvas.data.viewSettings,
+          widthRange,
+        ),
       ),
       labels: graph.nodes.labelIndex.labels.map((label: string): LabelDto => {
         const l: LabelDto | null = labelIndex.get(label) ?? null;
@@ -579,13 +577,11 @@ export class SchemaFactoryService {
         .toSorted(
           (a: [string, number], b: [string, number]): number => b[1] - a[1],
         )
-        .map(
-          (entry: [string, number]): HistogramValueEntryDto => ({
-            value: entry[0],
-            count: entry[1],
-            percentage: entry[1] / labelCountHistogram,
-          }),
-        ),
+        .map((entry: [string, number]): HistogramValueEntryDto => ({
+          value: entry[0],
+          count: entry[1],
+          percentage: entry[1] / labelCountHistogram,
+        })),
       nodeProperties: graph.nodes.propertyHistogram
         .toArray()
         .toSorted(
@@ -631,13 +627,11 @@ export class SchemaFactoryService {
         .toSorted(
           (a: [string, number], b: [string, number]): number => b[1] - a[1],
         )
-        .map(
-          (entry: [string, number]): HistogramValueEntryDto => ({
-            value: entry[0],
-            count: entry[1],
-            percentage: entry[1] / typeCountHistogram,
-          }),
-        ),
+        .map((entry: [string, number]): HistogramValueEntryDto => ({
+          value: entry[0],
+          count: entry[1],
+          percentage: entry[1] / typeCountHistogram,
+        })),
       edgeProperties: graph.edges.propertyHistogram
         .toArray()
         .toSorted(
