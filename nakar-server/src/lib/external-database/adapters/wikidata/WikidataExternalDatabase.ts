@@ -113,7 +113,7 @@ export class WikidataExternalDatabase implements ExternalGraphDatabase {
     const result: ExternalGraphDatabaseNode[] =
       await this._sparqlAdapter.search(credentials, searchTerm);
 
-    await this._applyNodeTitlesToNodeArray(result, credentials);
+    await this._applyNodeTitlesToElementArray(result, credentials);
 
     return result;
   }
@@ -270,27 +270,23 @@ ORDER BY DESC (
     result: ExternalGraphDatabaseQueryResult,
     credentials: ExternalGraphDatabaseCredentials,
   ): Promise<void> {
-    await Promise.all([
-      this._applyNodeTitlesToNodeArray(
-        result.nodes.toValueArray(),
-        credentials,
-      ),
-      this._applyNodeTitlesToRelationshipArray(
-        result.relationships.toValueArray(),
-        credentials,
-      ),
-    ]);
+    await this._applyNodeTitlesToElementArray(
+      [...result.nodes.toValueArray(), ...result.relationships.toValueArray()],
+      credentials,
+    );
   }
 
-  private async _applyNodeTitlesToNodeArray(
-    nodes: ExternalGraphDatabaseNode[],
+  private async _applyNodeTitlesToElementArray(
+    nodes: (ExternalGraphDatabaseNode | ExternalGraphDatabaseRelationship)[],
     credentials: ExternalGraphDatabaseCredentials,
   ): Promise<void> {
     const resolvedNodeTitles: SMap<string, string> =
       await this._resolveNodeTitles(
         new SSet(
           nodes.map(
-            (n: ExternalGraphDatabaseNode): string =>
+            (
+              n: ExternalGraphDatabaseNode | ExternalGraphDatabaseRelationship,
+            ): string =>
               // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
               n.properties['sparql'] as string,
           ),
@@ -302,33 +298,13 @@ ORDER BY DESC (
         // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
         resolvedNodeTitles.get(entry.properties['sparql'] as string) ?? null;
       if (title != null) {
-        entry.properties['label'] = title;
-      }
-    }
-  }
-
-  private async _applyNodeTitlesToRelationshipArray(
-    relationships: ExternalGraphDatabaseRelationship[],
-    credentials: ExternalGraphDatabaseCredentials,
-  ): Promise<void> {
-    const resolvedRelationshipTitles: SMap<string, string> =
-      await this._resolveNodeTitles(
-        new SSet(
-          relationships.map(
-            (n: ExternalGraphDatabaseRelationship): string =>
-              // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-              n.properties['sparql'] as string,
-          ),
-        ),
-        credentials,
-      );
-    for (const entry of relationships) {
-      const title: string | null =
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-        resolvedRelationshipTitles.get(entry.properties['sparql'] as string) ??
-        null;
-      if (title != null) {
-        entry.type = title;
+        if ('type' in entry) {
+          // Relationship
+          entry.type = title;
+        } else {
+          // Node
+          entry.properties['label'] = title;
+        }
       }
     }
   }

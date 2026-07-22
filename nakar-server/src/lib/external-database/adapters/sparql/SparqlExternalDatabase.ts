@@ -61,8 +61,6 @@ export class SparqlExternalDatabase implements ExternalGraphDatabase {
     this._logger.debug(queryId);
     this._logger.debug('Arguments:');
     this._logger.debug(JSON.stringify(queryArguments));
-    this._logger.debug('Raw Query:');
-    this._logger.debug(query);
     this._logger.debug('Bound Query:');
     this._logger.debug(queryWithArguments);
     this._logger.debug('*****');
