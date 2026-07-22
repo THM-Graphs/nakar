@@ -24,6 +24,9 @@ export class DatabaseConnectionDto {
   @ApiProperty({ enum: DatabaseConnectionDatabaseType })
   public databaseType: DatabaseConnectionDatabaseType;
 
+  @ApiProperty({ nullable: true, type: String })
+  public language: string | null;
+
   public constructor(data: {
     id: string;
     title: string;
@@ -32,6 +35,7 @@ export class DatabaseConnectionDto {
     database: string;
     nodeConfigurations: NodeConfigurationDto[];
     databaseType: DatabaseConnectionDatabaseType;
+    language: string | null;
   }) {
     this.id = data.id;
     this.title = data.title;
@@ -40,5 +44,6 @@ export class DatabaseConnectionDto {
     this.database = data.database;
     this.nodeConfigurations = data.nodeConfigurations;
     this.databaseType = data.databaseType;
+    this.language = data.language;
   }
 }

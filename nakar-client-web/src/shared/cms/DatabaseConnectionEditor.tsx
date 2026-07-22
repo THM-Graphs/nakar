@@ -130,91 +130,127 @@ export function DatabaseConnectionEditor(props: {
                     ></Form.Control>
                   </Form.Group>
                 </Col>
-              </Row>
-              {props.value.databaseType === "neo4j" && (
-                <Row>
+                {props.value.databaseType === "wikidata" && (
                   <Col>
                     <Form.Group>
-                      <Form.Label>Username</Form.Label>
-                      <Stack
-                        direction={"horizontal"}
-                        gap={0}
-                        className={"position-relative"}
-                      >
-                        <Form.Control
-                          placeholder={"Leave empty if unchanged"}
-                          value={props.value.username ?? ""}
-                          autoComplete={"off"}
-                          onChange={(e) => {
-                            props.onChange({
-                              ...props.value,
-                              username: e.target.value,
-                            });
-                          }}
-                        ></Form.Control>
-                        {props.value.username != null && (
-                          <Button
-                            onClick={() => {
-                              props.onChange({
-                                ...props.value,
-                                username: null,
-                              });
-                            }}
-                            className={"bi bi-x-lg position-absolute end-0"}
-                            variant={"icon"}
-                          ></Button>
-                        )}
-                      </Stack>
-                    </Form.Group>
-                  </Col>
-                  <Col>
-                    <Form.Group>
-                      <Form.Label>Password</Form.Label>
-                      <Stack className={"position-relative"}>
-                        <Form.Control
-                          placeholder={"Leave empty if unchanged"}
-                          type={"password"}
-                          autoComplete={"new-password"}
-                          value={props.value.password ?? ""}
-                          onChange={(e) => {
-                            props.onChange({
-                              ...props.value,
-                              password: e.target.value,
-                            });
-                          }}
-                        ></Form.Control>
-                        {props.value.password != null && (
-                          <Button
-                            onClick={() => {
-                              props.onChange({
-                                ...props.value,
-                                password: null,
-                              });
-                            }}
-                            className={"bi bi-x-lg position-absolute end-0"}
-                            variant={"icon"}
-                          ></Button>
-                        )}
-                      </Stack>
-                    </Form.Group>
-                  </Col>
-                  <Col>
-                    <Form.Group>
-                      <Form.Label>Database Name</Form.Label>
+                      <Form.Label>Language</Form.Label>
                       <Form.Control
-                        placeholder={"Example: neo4j"}
-                        value={props.value.database}
+                        placeholder={
+                          "Wikimedia Language Code. Example: de, en, ..."
+                        }
+                        value={props.value.language ?? ""}
                         onChange={(e) => {
                           props.onChange({
                             ...props.value,
-                            database: e.target.value,
+                            language:
+                              e.target.value.length === 0
+                                ? null
+                                : e.target.value,
                           });
                         }}
                       ></Form.Control>
+                      <Form.Text className={"small text-muted"}>
+                        See{" "}
+                        <a
+                          href={
+                            "https://www.wikidata.org/wiki/Wikidata:Lists/languages"
+                          }
+                          target={"_blank"}
+                          className={""}
+                        >
+                          available languages
+                          <i className={"bi bi-box-arrow-up-right ms-1"}></i>
+                        </a>
+                        .
+                      </Form.Text>
                     </Form.Group>
                   </Col>
-                </Row>
-              )}
+                )}
+                {props.value.databaseType === "neo4j" && (
+                  <>
+                    <Col>
+                      <Form.Group>
+                        <Form.Label>Username</Form.Label>
+                        <Stack
+                          direction={"horizontal"}
+                          gap={0}
+                          className={"position-relative"}
+                        >
+                          <Form.Control
+                            placeholder={"Leave empty if unchanged"}
+                            value={props.value.username ?? ""}
+                            autoComplete={"off"}
+                            onChange={(e) => {
+                              props.onChange({
+                                ...props.value,
+                                username: e.target.value,
+                              });
+                            }}
+                          ></Form.Control>
+                          {props.value.username != null && (
+                            <Button
+                              onClick={() => {
+                                props.onChange({
+                                  ...props.value,
+                                  username: null,
+                                });
+                              }}
+                              className={"bi bi-x-lg position-absolute end-0"}
+                              variant={"icon"}
+                            ></Button>
+                          )}
+                        </Stack>
+                      </Form.Group>
+                    </Col>
+                    <Col>
+                      <Form.Group>
+                        <Form.Label>Password</Form.Label>
+                        <Stack className={"position-relative"}>
+                          <Form.Control
+                            placeholder={"Leave empty if unchanged"}
+                            type={"password"}
+                            autoComplete={"new-password"}
+                            value={props.value.password ?? ""}
+                            onChange={(e) => {
+                              props.onChange({
+                                ...props.value,
+                                password: e.target.value,
+                              });
+                            }}
+                          ></Form.Control>
+                          {props.value.password != null && (
+                            <Button
+                              onClick={() => {
+                                props.onChange({
+                                  ...props.value,
+                                  password: null,
+                                });
+                              }}
+                              className={"bi bi-x-lg position-absolute end-0"}
+                              variant={"icon"}
+                            ></Button>
+                          )}
+                        </Stack>
+                      </Form.Group>
+                    </Col>
+                    <Col>
+                      <Form.Group>
+                        <Form.Label>Database Name</Form.Label>
+                        <Form.Control
+                          placeholder={"Example: neo4j"}
+                          value={props.value.database}
+                          onChange={(e) => {
+                            props.onChange({
+                              ...props.value,
+                              database: e.target.value,
+                            });
+                          }}
+                        ></Form.Control>
+                      </Form.Group>
+                    </Col>
+                  </>
+                )}
+              </Row>
               <Stack direction={"horizontal"} gap={3}>
                 <CMSButton
                   icon={"database-check"}
@@ -233,6 +269,7 @@ export function DatabaseConnectionEditor(props: {
                         password: props.value.password,
                         database: props.value.database,
                         connectionUrl: props.value.connectionUrl,
+                        language: props.value.language,
                       },
                     })
                       .then(resultOrThrow)

@@ -105,6 +105,7 @@ export class DatabaseConnectionController {
                 ExternalGraphDatabaseType.wikidata,
             )
             .exhaustive(),
+          language: body.language,
         });
 
       return new TestDatabaseConnectionResponseBodyDto({
@@ -170,6 +171,8 @@ export class DatabaseConnectionController {
         connectionUrl: body.connectionUrl,
         browserUrl: body.browserUrl,
         databaseType: body.databaseType,
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+        language: body.language as string | undefined,
       });
 
     if (databaseConnection == null) {

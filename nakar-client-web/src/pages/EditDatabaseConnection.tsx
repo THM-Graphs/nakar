@@ -65,6 +65,7 @@ export function EditDatabaseConnection() {
       database: loaderData.databaseConnection.database,
       nodeConfigurations: loaderData.databaseConnection.nodeConfigurations,
       title: loaderData.databaseConnection.title,
+      language: loaderData.databaseConnection.language,
     });
 
   return (
