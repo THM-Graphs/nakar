@@ -19,7 +19,7 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { match, P } from 'ts-pattern';
-import { Result } from '@strapi/types/dist/modules/documents/result';
+import type { Modules } from '@strapi/types';
 import { DatabaseService } from '../database/DatabaseService';
 import { LiveCanvas } from '../live-canvas/LiveCanvas';
 import { SchemaFactoryService } from '../schema/SchemaFactoryService';
@@ -129,10 +129,10 @@ export class WebSocketManager
             socket.handshake.auth,
           );
           await validateOrReject(auth, validatorOptions);
-          const user: Result<'plugin::users-permissions.user'> | null =
+          const user: Modules.Documents.Result<'plugin::users-permissions.user'> | null =
             await this._authService.getUserByJWT(auth.jwt);
 
-          const canvas: Result<'api::canvas.canvas'> =
+          const canvas: Modules.Documents.Result<'api::canvas.canvas'> =
             await this._databaseService.getCanvas(auth.canvasId);
 
           const allowed: boolean = await userCanSeeAndJoinCanvas(
@@ -162,9 +162,9 @@ export class WebSocketManager
   public async handleConnection(wsClient: Socket): Promise<void> {
     this._logger.debug(`Client connected: ${wsClient.id}`);
     const auth: AuthWsdto = plainToClass(AuthWsdto, wsClient.handshake.auth);
-    const user: Result<'plugin::users-permissions.user'> | null =
+    const user: Modules.Documents.Result<'plugin::users-permissions.user'> | null =
       await this._authService.getUserByJWT(auth.jwt);
-    const canvas: Result<'api::canvas.canvas'> =
+    const canvas: Modules.Documents.Result<'api::canvas.canvas'> =
       await this._databaseService.getCanvas(auth.canvasId);
 
     if (!this._server.sockets.sockets.has(wsClient.id)) {
@@ -194,13 +194,17 @@ export class WebSocketManager
         if ((this._server.sockets.adapter.rooms.get(room)?.size ?? 0) <= 1) {
           this._databaseService
             .getCanvas(canvasId)
-            .then((oldCanvas: Result<'api::canvas.canvas'> | null): void => {
-              if (oldCanvas == null) {
-                this._logger.warn('Cannot find canvas to shut down.');
-              } else {
-                this._canvasService.scheduleCanvasShutdown(oldCanvas);
-              }
-            })
+            .then(
+              (
+                oldCanvas: Modules.Documents.Result<'api::canvas.canvas'> | null,
+              ): void => {
+                if (oldCanvas == null) {
+                  this._logger.warn('Cannot find canvas to shut down.');
+                } else {
+                  this._canvasService.scheduleCanvasShutdown(oldCanvas);
+                }
+              },
+            )
             .catch((error: unknown): void => {
               this._logger.error(error);
             });

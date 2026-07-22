@@ -4,7 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Result } from '@strapi/types/dist/modules/documents/result';
+import type { Modules } from '@strapi/types';
 import { Request } from 'express';
 
 @Injectable()
@@ -21,7 +21,7 @@ export class ScenarioGroupBelongsToProject implements CanActivate {
       throw new NotFoundException(`No project id provided.`);
     }
 
-    const scenarioGroup: Result<
+    const scenarioGroup: Modules.Documents.Result<
       'api::scenario-group.scenario-group',
       { populate: { project: { populate: [] } } }
     > | null = await strapi

@@ -13,7 +13,6 @@ import { GetDatabaseStatsResponseBodyDto } from './dto/GetDatabaseStatsResponseB
 import { DatabaseStatsLabelDto } from './dto/DatabaseStatsLabelDto';
 import { DatabaseStatsRelationshipDto } from './dto/DatabaseStatsRelationshipDto';
 import { ApiParam, ApiResponse } from '@nestjs/swagger';
-import { Result } from '@strapi/types/dist/modules/documents/result';
 import { DatabaseService } from '../../../database/DatabaseService';
 import { PostSearchResponseBodyDto } from './dto/PostSearchResponseBodyDto';
 import { PostSearchRequestBodyDto } from './dto/PostSearchRequestBodyDto';
@@ -41,6 +40,7 @@ import { LiveCanvasService } from '../../../live-canvas/LiveCanvasService';
 import { LiveCanvas } from '../../../live-canvas/LiveCanvas';
 import { ExternalGraphDatabaseStatsRelationship } from '../../../external-database/data/ExternalGraphDatabaseStatsRelationship';
 import { ExternalGraphDatabaseStatsLabel } from '../../../external-database/data/ExternalGraphDatabaseStatsLabel';
+import type { Modules } from '@strapi/types';
 
 @Controller('room/:roomId/canvas/:canvasId/database-connection/:databaseId')
 @ApiParam({
@@ -73,7 +73,7 @@ export class CanvasDatabaseConnectionController {
   public async getStats(
     @Param('databaseId') databaseId: string,
   ): Promise<GetDatabaseStatsResponseBodyDto> {
-    const database: Result<'api::database-connection.database-connection'> =
+    const database: Modules.Documents.Result<'api::database-connection.database-connection'> =
       await this._database.getDatabase(databaseId);
     const genericStats: ExternalGraphDatabaseStats =
       await this._externalGraphDatabase.getStats(database);
@@ -115,7 +115,7 @@ export class CanvasDatabaseConnectionController {
   ): Promise<PostSearchResponseBodyDto> {
     const liveCanvas: LiveCanvas =
       this._liveCanvasService.getCanvasWithId(canvasId);
-    const database: Result<'api::database-connection.database-connection'> =
+    const database: Modules.Documents.Result<'api::database-connection.database-connection'> =
       await this._database.getDatabase(databaseId);
 
     const searchTerm: string = body.searchTerm;
@@ -156,7 +156,7 @@ export class CanvasDatabaseConnectionController {
   public async getSearchCapabilities(
     @Param('databaseId') databaseId: string,
   ): Promise<GetSearchCapabilitiesResponseBodyDto> {
-    const database: Result<'api::database-connection.database-connection'> =
+    const database: Modules.Documents.Result<'api::database-connection.database-connection'> =
       await this._database.getDatabase(databaseId);
 
     const capabilities: ExternalGraphDatabaseSearchCapabilities =
@@ -227,7 +227,7 @@ export class CanvasDatabaseConnectionController {
       throw new NotFoundException(`Node ${query.nodeId} not found.`);
     }
 
-    const database: Result<'api::database-connection.database-connection'> =
+    const database: Modules.Documents.Result<'api::database-connection.database-connection'> =
       await this._database.getDatabase(node.sourceId);
 
     const expandNodePreview: ExternalGraphDatabaseExpandNodePreview =

@@ -4,7 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Result } from '@strapi/types/dist/modules/documents/result';
+import type { Modules } from '@strapi/types';
 import { Request } from 'express';
 import { DatabaseService } from '../../database/DatabaseService';
 import { databaseBelongsToCanvas } from '../../policies/databaseBelongsToCanvas';
@@ -20,14 +20,14 @@ export class DatabaseBelongsToCanvas implements CanActivate {
     if (typeof databaseId !== 'string') {
       throw new NotFoundException(`No database connection id provided.`);
     }
-    const database: Result<'api::database-connection.database-connection'> =
+    const database: Modules.Documents.Result<'api::database-connection.database-connection'> =
       await this._databaseService.getDatabase(databaseId);
 
     const canvasId: unknown = req.params['canvasId'];
     if (typeof canvasId !== 'string') {
       throw new NotFoundException(`No canvas id provided.`);
     }
-    const canvas: Result<'api::canvas.canvas'> =
+    const canvas: Modules.Documents.Result<'api::canvas.canvas'> =
       await this._databaseService.getCanvas(canvasId);
 
     return await databaseBelongsToCanvas(

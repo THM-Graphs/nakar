@@ -1,9 +1,9 @@
 import { ExecutionContext, Injectable } from '@nestjs/common';
-import { Result } from '@strapi/types/dist/modules/documents';
 import * as undici from 'undici';
 import { getConfig } from '../config/getConfig';
 import { DatabaseService } from '../database/DatabaseService';
 import { Request } from 'express';
+import { Modules } from '@strapi/types';
 
 @Injectable()
 export class AuthService {
@@ -28,7 +28,7 @@ export class AuthService {
 
   public async getUserByJWT(
     jwt: string | null,
-  ): Promise<Result<'plugin::users-permissions.user'> | null> {
+  ): Promise<Modules.Documents.Result<'plugin::users-permissions.user'> | null> {
     if (jwt == null) {
       return null;
     }
@@ -44,25 +44,25 @@ export class AuthService {
     if (!result.ok) {
       return null;
     }
-    const userId: string =
+    const userResult: Modules.Documents.Result<'plugin::users-permissions.user'> =
       // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-      ((await result.json()) as Result<'plugin::users-permissions.user'>)
-        .documentId;
-    const user: Result<'plugin::users-permissions.user'> | null =
-      await this._databaseService.getUser(userId);
+      (await result.json()) as Modules.Documents.Result<'plugin::users-permissions.user'>;
+
+    const user: Modules.Documents.Result<'plugin::users-permissions.user'> | null =
+      await this._databaseService.getUser(userResult.documentId);
 
     return user;
   }
 
   public async getUserFromContext(
     context: ExecutionContext,
-  ): Promise<Result<'plugin::users-permissions.user'> | null> {
+  ): Promise<Modules.Documents.Result<'plugin::users-permissions.user'> | null> {
     return await this.getUserFromRequest(context.switchToHttp().getRequest());
   }
 
   public async getUserFromRequest(
     request: Request,
-  ): Promise<Result<'plugin::users-permissions.user'> | null> {
+  ): Promise<Modules.Documents.Result<'plugin::users-permissions.user'> | null> {
     const jwt: string | null = AuthService.getJWTFromRequest(request);
     return await this.getUserByJWT(jwt);
   }

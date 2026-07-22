@@ -25,7 +25,6 @@ import type { ExternalGraphDatabaseRelationship } from '../external-database/dat
 import type { ExternalGraphDatabaseQueryResult } from '../external-database/data/ExternalGraphDatabaseQueryResult';
 import { ExternalGraphDatabaseQueryLimitConfig } from '../external-database/data/ExternalGraphDatabaseQueryLimitConfig';
 import type { ExternalGraphDatabaseService } from '../external-database/ExternalGraphDatabaseService';
-import type { Result } from '@strapi/types/dist/modules/documents/result';
 import type { Logger } from '@strapi/logger';
 import { createChildLogger } from '../logger/createChildLogger';
 import type { Profiler } from 'winston';
@@ -65,6 +64,7 @@ import { databaseBelongsToCanvas } from '../policies/databaseBelongsToCanvas';
 import { scenarioBelongsToCanvas } from '../policies/scenarioBelongsToCanvas';
 import { ExternalGraphDatabaseQueryLimitConfigType } from '../external-database/data/ExternalGraphDatabaseQueryLimitConfigType';
 import { ExternalGraphDatabaseQueryLimitConfigCollectionType } from '../external-database/data/ExternalGraphDatabaseQueryLimitConfigCollectionType';
+import type { Modules } from '@strapi/types';
 
 export class LiveCanvas {
   private readonly _logger: Logger = createChildLogger(this);
@@ -138,7 +138,7 @@ export class LiveCanvas {
     );
     this._subscriptions.add(
       this._databaseEventsService.onNoteChanges$.subscribe(
-        (canvas: Result<'api::canvas.canvas'>): void => {
+        (canvas: Modules.Documents.Result<'api::canvas.canvas'>): void => {
           if (canvas.documentId === this.canvasId) {
             this._loadNotes()
               .then((): void => {
@@ -207,7 +207,7 @@ export class LiveCanvas {
         const changeRecorder: LiveCanvasChangeRecorder =
           new LiveCanvasChangeRecorder();
 
-        const canvas: Result<'api::canvas.canvas'> =
+        const canvas: Modules.Documents.Result<'api::canvas.canvas'> =
           await this._database.getCanvas(this._canvasId);
 
         await this._physicsWorker.bootstrap();
@@ -333,7 +333,7 @@ export class LiveCanvas {
   }): void {
     this._queue.addTask(
       new TaskQueueTask('Loading scenario', async (): Promise<void> => {
-        const scenario: Result<'api::scenario.scenario'> =
+        const scenario: Modules.Documents.Result<'api::scenario.scenario'> =
           await this._database.getScenario(params.scenarioId);
 
         if (
@@ -348,13 +348,13 @@ export class LiveCanvas {
           );
         }
 
-        const queries: Result<'api::query.query'>[] =
+        const queries: Modules.Documents.Result<'api::query.query'>[] =
           await this._database.getQueriesOfScenario(scenario);
         if (queries.length === 0) {
           throw new NotFound('The scenario has no queries.');
         }
 
-        const parameters: Result<'api::query-parameter.query-parameter'>[] =
+        const parameters: Modules.Documents.Result<'api::query-parameter.query-parameter'>[] =
           await this._database.getParametersOfScenario(scenario);
 
         const tableData: SMap<string, unknown>[] = [];
@@ -368,7 +368,7 @@ export class LiveCanvas {
             continue;
           }
 
-          const database: Result<'api::database-connection.database-connection'> | null =
+          const database: Modules.Documents.Result<'api::database-connection.database-connection'> | null =
             await this._database.getDatabaseConnectionOfQuery(query);
           if (database == null) {
             throw new Error(
@@ -378,10 +378,10 @@ export class LiveCanvas {
 
           const argsForQuery: Record<string, unknown> = params.arguments
             .map((value: string, identifier: string): unknown => {
-              const parameter: Result<'api::query-parameter.query-parameter'> | null =
+              const parameter: Modules.Documents.Result<'api::query-parameter.query-parameter'> | null =
                 parameters.find(
                   (
-                    p: Result<'api::query-parameter.query-parameter'>,
+                    p: Modules.Documents.Result<'api::query-parameter.query-parameter'>,
                   ): boolean => p.identifier === identifier,
                 ) ?? null;
               if (parameter == null) {
@@ -468,7 +468,7 @@ export class LiveCanvas {
         if (!params.additive) {
           const task: Profiler = this._logger.startTimer();
 
-          const orderedPostScenarioActions: Result<'api::post-scenario-action.post-scenario-action'>[] =
+          const orderedPostScenarioActions: Modules.Documents.Result<'api::post-scenario-action.post-scenario-action'>[] =
             await this._database.getOrderedPostScenarioActionsOfScenario(
               scenario,
             );
@@ -485,7 +485,7 @@ export class LiveCanvas {
               .with(
                 { type: 'compressNodes' },
                 (
-                  data: Result<'api::post-scenario-action.post-scenario-action'>,
+                  data: Modules.Documents.Result<'api::post-scenario-action.post-scenario-action'>,
                 ): void => {
                   const label: string | null = data.label ?? null;
                   if (label != null) {
@@ -504,7 +504,7 @@ export class LiveCanvas {
               .with(
                 { type: 'setGrowNodesBasedOnDegree' },
                 (
-                  data: Result<'api::post-scenario-action.post-scenario-action'>,
+                  data: Modules.Documents.Result<'api::post-scenario-action.post-scenario-action'>,
                 ): void => {
                   this.data.viewSettings.setGrowNodesBasedOnDegreeFactor(
                     data.factor ??
@@ -517,7 +517,7 @@ export class LiveCanvas {
               .with(
                 { type: 'setRelationshipClusterSize' },
                 (
-                  data: Result<'api::post-scenario-action.post-scenario-action'>,
+                  data: Modules.Documents.Result<'api::post-scenario-action.post-scenario-action'>,
                 ): void => {
                   this.data.viewSettings.setCompressRelationshipsWidthFactor(
                     data.factor ??
@@ -530,7 +530,7 @@ export class LiveCanvas {
               .with(
                 { type: 'setNodeColor' },
                 (
-                  data: Result<'api::post-scenario-action.post-scenario-action'>,
+                  data: Modules.Documents.Result<'api::post-scenario-action.post-scenario-action'>,
                 ): void => {
                   const label: string | null = data.label ?? null;
                   const colorIndex: LiveCanvasViewSettingsColorIndex | null =
@@ -545,7 +545,7 @@ export class LiveCanvas {
               .with(
                 { type: 'setNodeRadius' },
                 (
-                  data: Result<'api::post-scenario-action.post-scenario-action'>,
+                  data: Modules.Documents.Result<'api::post-scenario-action.post-scenario-action'>,
                 ): void => {
                   const label: string | null = data.label ?? null;
                   const radius: number | null = data.radius ?? null;
@@ -559,7 +559,7 @@ export class LiveCanvas {
               .with(
                 { type: 'setNodeTitleProperty' },
                 (
-                  data: Result<'api::post-scenario-action.post-scenario-action'>,
+                  data: Modules.Documents.Result<'api::post-scenario-action.post-scenario-action'>,
                 ): void => {
                   const label: string | null = data.label ?? null;
                   const property: string | null = data.property ?? null;
@@ -576,7 +576,7 @@ export class LiveCanvas {
               .with(
                 { type: 'setRelationshipColor' },
                 (
-                  data: Result<'api::post-scenario-action.post-scenario-action'>,
+                  data: Modules.Documents.Result<'api::post-scenario-action.post-scenario-action'>,
                 ): void => {
                   const relationshipType: string | null =
                     data.relationshipType ?? null;
@@ -595,7 +595,7 @@ export class LiveCanvas {
               .with(
                 { type: 'setRelationshipWidth' },
                 (
-                  data: Result<'api::post-scenario-action.post-scenario-action'>,
+                  data: Modules.Documents.Result<'api::post-scenario-action.post-scenario-action'>,
                 ): void => {
                   const relationshipType: string | null =
                     data.relationshipType ?? null;
@@ -613,7 +613,7 @@ export class LiveCanvas {
               .with(
                 { type: 'layout' },
                 (
-                  data: Result<'api::post-scenario-action.post-scenario-action'>,
+                  data: Modules.Documents.Result<'api::post-scenario-action.post-scenario-action'>,
                 ): Promise<void> | void => {
                   return match(data.layoutAlgorithm)
                     .returnType<Promise<void> | void>()
@@ -667,7 +667,7 @@ export class LiveCanvas {
               )
               .otherwise(
                 (
-                  d: Result<'api::post-scenario-action.post-scenario-action'>,
+                  d: Modules.Documents.Result<'api::post-scenario-action.post-scenario-action'>,
                 ): void => {
                   this._logger.warn(
                     `Unable to handle post action type ${d.type}`,
@@ -706,7 +706,7 @@ export class LiveCanvas {
             throw new Error(`Cannot find node ${nodeId} to expand.`);
           }
 
-          const database: Result<'api::database-connection.database-connection'> =
+          const database: Modules.Documents.Result<'api::database-connection.database-connection'> =
             await this._database.getDatabase(node.sourceId);
 
           const expandResult: ExternalGraphDatabaseQueryResult = node.isCluster
@@ -958,7 +958,7 @@ export class LiveCanvas {
   }): void {
     this._queue.addTask(
       new TaskQueueTask('Running query', async (): Promise<void> => {
-        const database: Result<'api::database-connection.database-connection'> =
+        const database: Modules.Documents.Result<'api::database-connection.database-connection'> =
           await this._database.getDatabase(params.databaseId);
 
         if (
@@ -1204,7 +1204,7 @@ export class LiveCanvas {
               continue;
             }
 
-            const database: Result<'api::database-connection.database-connection'> | null =
+            const database: Modules.Documents.Result<'api::database-connection.database-connection'> | null =
               await databaseCache.getDatabase(edge.sourceId);
             if (database == null) {
               this._logger.warn(
@@ -1332,7 +1332,7 @@ export class LiveCanvas {
               `Will calculate shortest paths for ${nativeIds.size.toString()} nodes in source ${sourceId}`,
             );
 
-            const dbDocument: Result<'api::database-connection.database-connection'> =
+            const dbDocument: Modules.Documents.Result<'api::database-connection.database-connection'> =
               await this._database.getDatabase(sourceId);
 
             const result: ExternalGraphDatabaseQueryResult =
@@ -1378,7 +1378,7 @@ export class LiveCanvas {
   public loadNode(params: { nativeNodeId: string; databaseId: string }): void {
     this._queue.addTask(
       new TaskQueueTask('Loading node', async (): Promise<void> => {
-        const databaseConnection: Result<'api::database-connection.database-connection'> =
+        const databaseConnection: Modules.Documents.Result<'api::database-connection.database-connection'> =
           await this._database.getDatabase(params.databaseId);
 
         if (
@@ -1459,9 +1459,8 @@ export class LiveCanvas {
   public async saveGraph(): Promise<void> {
     const task: Profiler = this._logger.startTimer();
 
-    const canvas: Result<'api::canvas.canvas'> = await this._database.getCanvas(
-      this.canvasId,
-    );
+    const canvas: Modules.Documents.Result<'api::canvas.canvas'> =
+      await this._database.getCanvas(this.canvasId);
 
     await this._database.setLiveCanvasData(canvas, this._data.toPlain());
 
@@ -1668,7 +1667,7 @@ export class LiveCanvas {
         continue;
       }
 
-      const db: Result<'api::database-connection.database-connection'> =
+      const db: Modules.Documents.Result<'api::database-connection.database-connection'> =
         await this._database.getDatabase(source);
 
       this._logger.info(
@@ -1703,10 +1702,10 @@ export class LiveCanvas {
   private async _mergeNodes(
     changeRecorder: LiveCanvasChangeRecorder,
   ): Promise<void> {
-    const canvas: Result<'api::canvas.canvas'> | null =
+    const canvas: Modules.Documents.Result<'api::canvas.canvas'> | null =
       await this._database.getCanvas(this.canvasId);
 
-    const configs: Result<'api::common-property.common-property'>[] =
+    const configs: Modules.Documents.Result<'api::common-property.common-property'>[] =
       await this._database.getCommonPropertyConfigsOfCanvas(canvas);
 
     const graph: LiveCanvasUndoableData = this.getGraph();
@@ -1715,12 +1714,12 @@ export class LiveCanvas {
       this._logger.info(
         `Will check nodes for merging ${mergeConfig.leftLabel} with ${mergeConfig.rightLabel}`,
       );
-      const leftDatabase: Result<'api::database-connection.database-connection'> | null =
+      const leftDatabase: Modules.Documents.Result<'api::database-connection.database-connection'> | null =
         await this._database.getLeftDatabaseOfCommonProperty(mergeConfig);
       if (leftDatabase == null) {
         continue;
       }
-      const rightDatabase: Result<'api::database-connection.database-connection'> | null =
+      const rightDatabase: Modules.Documents.Result<'api::database-connection.database-connection'> | null =
         await this._database.getRightDatabaseOfCommonProperty(mergeConfig);
       if (rightDatabase == null) {
         continue;
@@ -1773,7 +1772,7 @@ export class LiveCanvas {
     graph: LiveCanvasUndoableData,
     leftNode: GraphNode,
     rightNode: GraphNode,
-    config: Result<'api::common-property.common-property'>,
+    config: Modules.Documents.Result<'api::common-property.common-property'>,
   ): boolean {
     if (
       graph.edges.getByStartAndEndNodeId(leftNode.id, rightNode.id).length > 0
@@ -1833,10 +1832,9 @@ export class LiveCanvas {
     changeRecorder: LiveCanvasChangeRecorder,
   ): Promise<void> {
     const task: Profiler = this._logger.startTimer();
-    const canvas: Result<'api::canvas.canvas'> = await this._database.getCanvas(
-      this.canvasId,
-    );
-    const project: Result<'api::project.project'> =
+    const canvas: Modules.Documents.Result<'api::canvas.canvas'> =
+      await this._database.getCanvas(this.canvasId);
+    const project: Modules.Documents.Result<'api::project.project'> =
       await this._database.getProjectOfCanvas(canvas);
     const graph: LiveCanvasUndoableData = this.getGraph();
 
@@ -1854,7 +1852,7 @@ export class LiveCanvas {
     const scenarioGroups: ScenarioGroupDto[] = await Promise.all(
       (await this._database.getScenarioGroupsOfProject(project)).map(
         async (
-          dbScenarioGroup: Result<'api::scenario-group.scenario-group'>,
+          dbScenarioGroup: Modules.Documents.Result<'api::scenario-group.scenario-group'>,
         ): Promise<ScenarioGroupDto> => {
           return await this._schemaFactory.createSchemaScenarioGroup(
             dbScenarioGroup,
@@ -1909,10 +1907,9 @@ export class LiveCanvas {
   }
 
   private async _loadNotes(): Promise<void> {
-    const canvas: Result<'api::canvas.canvas'> = await this._database.getCanvas(
-      this.canvasId,
-    );
-    const project: Result<'api::project.project'> =
+    const canvas: Modules.Documents.Result<'api::canvas.canvas'> =
+      await this._database.getCanvas(this.canvasId);
+    const project: Modules.Documents.Result<'api::project.project'> =
       await this._database.getProjectOfCanvas(canvas);
     const notes: IndexedNoteCollection = await this._database.getNotes({
       project: project,
@@ -1924,7 +1921,7 @@ export class LiveCanvas {
           .toArray()
           .map(
             async (
-              dbNote: Result<'api::note.note'>,
+              dbNote: Modules.Documents.Result<'api::note.note'>,
             ): Promise<LiveCanvasNote> => {
               return await LiveCanvasNote.fromDb(dbNote, this._database, this);
             },
@@ -2154,7 +2151,7 @@ export class LiveCanvas {
   }
 
   private _createViewSettingsColorIndex(
-    colorIndex: Result<'api::post-scenario-action.post-scenario-action'>['colorIndex'],
+    colorIndex: Modules.Documents.Result<'api::post-scenario-action.post-scenario-action'>['colorIndex'],
   ): LiveCanvasViewSettingsColorIndex | null {
     return match(colorIndex)
       .with('c0', (): LiveCanvasViewSettingsColorIndex => 0)

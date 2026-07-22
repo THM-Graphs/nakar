@@ -3,7 +3,7 @@ import { MonitoringEvent } from './MonitoringEvent';
 import { createChildLogger } from '../logger/createChildLogger';
 import { Logger } from '@strapi/logger';
 import { DatabaseService } from '../database/DatabaseService';
-import { Result } from '@strapi/types/dist/modules/documents';
+import type { Modules } from '@strapi/types';
 
 @Injectable()
 export class MonitoringService implements OnModuleDestroy {
@@ -30,18 +30,18 @@ export class MonitoringService implements OnModuleDestroy {
     try {
       const date: Date = new Date();
 
-      const user: Result<'plugin::users-permissions.user'> | null =
+      const user: Modules.Documents.Result<'plugin::users-permissions.user'> | null =
         monitoringEvent.userInfo?.userId != null
           ? await this._databaseService.getUser(monitoringEvent.userInfo.userId)
           : null;
 
-      const canvas: Result<'api::canvas.canvas'> | null =
+      const canvas: Modules.Documents.Result<'api::canvas.canvas'> | null =
         monitoringEvent.objectInfo?.canvasId != null
           ? await this._databaseService.getCanvasOrNull(
               monitoringEvent.objectInfo.canvasId,
             )
           : null;
-      const room: Result<'api::room.room'> | null =
+      const room: Modules.Documents.Result<'api::room.room'> | null =
         monitoringEvent.objectInfo?.roomId != null
           ? await this._databaseService.getRoom(
               monitoringEvent.objectInfo.roomId,
@@ -49,7 +49,7 @@ export class MonitoringService implements OnModuleDestroy {
           : canvas != null
             ? await this._databaseService.getRoomOfCanvas(canvas)
             : null;
-      const project: Result<'api::project.project'> | null =
+      const project: Modules.Documents.Result<'api::project.project'> | null =
         monitoringEvent.objectInfo?.projectId != null
           ? await this._databaseService.getProject(
               monitoringEvent.objectInfo.projectId,

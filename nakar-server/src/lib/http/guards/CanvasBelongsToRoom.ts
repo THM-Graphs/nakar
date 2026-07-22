@@ -4,7 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Result } from '@strapi/types/dist/modules/documents/result';
+import type { Modules } from '@strapi/types';
 import { Request } from 'express';
 
 @Injectable()
@@ -21,7 +21,7 @@ export class CanvasBelongsToRoom implements CanActivate {
       throw new NotFoundException(`No canvas id provided.`);
     }
 
-    const canvas: Result<
+    const canvas: Modules.Documents.Result<
       'api::canvas.canvas',
       { populate: { room: { populate: [] } } }
     > | null = await strapi.documents('api::canvas.canvas').findOne({
