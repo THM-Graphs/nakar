@@ -16,7 +16,7 @@ import { UpdateNodeConfigurationRequestBodyDto } from '../http/routes/database-c
 import { match } from 'ts-pattern';
 import { MediaService } from '../media/MediaService';
 import { EncryptionService } from '../encryption/EncryptionService';
-import { Modules } from '@strapi/types';
+import type { Modules } from '@strapi/types';
 
 @Injectable()
 export class DatabaseService {
@@ -705,7 +705,9 @@ export class DatabaseService {
 
   public async getDatabaseConnectionsOfProject(
     project: Modules.Documents.Result<'api::project.project'>,
-  ): Promise<Modules.Documents.Result<'plugin::users-permissions.user'>[]> {
+  ): Promise<
+    Modules.Documents.Result<'api::database-connection.database-connection'>[]
+  > {
     const populatedProject: Modules.Documents.Result<
       'api::project.project',
       { populate: ['databaseConnections'] }

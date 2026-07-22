@@ -3,7 +3,7 @@ import * as undici from 'undici';
 import { getConfig } from '../config/getConfig';
 import { DatabaseService } from '../database/DatabaseService';
 import { Request } from 'express';
-import { Modules } from '@strapi/types';
+import type { Modules } from '@strapi/types';
 
 @Injectable()
 export class AuthService {

@@ -5,7 +5,7 @@ import { DatabaseService } from './DatabaseService';
 import { Profiler } from 'winston';
 import { match, P } from 'ts-pattern';
 import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
-import { Modules } from '@strapi/types';
+import type { Modules } from '@strapi/types';
 
 @Injectable()
 export class DatabaseEventsService implements OnModuleInit, OnModuleDestroy {

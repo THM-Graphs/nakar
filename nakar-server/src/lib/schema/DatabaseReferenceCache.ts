@@ -45,7 +45,7 @@ export class DatabaseReferenceCache {
     Modules.Documents.Result<'api::node-configuration.node-configuration'>[]
   > {
     const foundNodeConfigurations:
-      | Modules.Documents.Result<'api::database-connection.database-connection'>[]
+      | Modules.Documents.Result<'api::node-configuration.node-configuration'>[]
       | undefined = this._nodeConfigurationsCache.get(databaseId);
     if (foundNodeConfigurations != null) {
       return foundNodeConfigurations;

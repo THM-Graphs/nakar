@@ -23,9 +23,9 @@ export async function userCanSeeAndEditProject(
     return true;
   }
 
-  const collaboratores: Modules.Documents.Result<'plugin::users-permissions.user'>[] =
+  const collaborators: Modules.Documents.Result<'plugin::users-permissions.user'>[] =
     await database.getCollaboratorsOfProject(project);
-  for (const collaborator of collaboratores) {
+  for (const collaborator of collaborators) {
     if (collaborator.documentId === user.documentId) {
       return true;
     }
