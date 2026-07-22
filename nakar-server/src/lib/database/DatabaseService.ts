@@ -1,4 +1,3 @@
-import { Result } from '@strapi/types/dist/modules/documents';
 import z from 'zod';
 import { SSet } from '../../packages/set/Set';
 import { SMap } from '../../packages/map/Map';
@@ -8,17 +7,16 @@ import { createChildLogger } from '../logger/createChildLogger';
 import { TupleTypes } from '../schema/TupleTypes';
 import { Injectable } from '@nestjs/common';
 import { ApiPostScenarioActionPostScenarioAction } from '../../../types/generated/contentTypes';
-import { FindMany } from '@strapi/types/dist/modules/documents/params/document-engine';
 import { LiveCanvasData } from '../live-canvas/data/LiveCanvasData';
 import { LiveCanvas } from '../live-canvas/LiveCanvas';
 import { UpdateScenarioQueryEntryDto } from '../http/routes/scenario/dto/UpdateScenarioQueryEntryDto';
-import { Input } from '@strapi/types/dist/modules/documents/params/data';
 import { UpdateScenarioQueryParameterEntryDto } from '../http/routes/scenario/dto/UpdateScenarioQueryParameterEntryDto';
 import { UpdateScenarioPostActionEntryDto } from '../http/routes/scenario/dto/UpdateScenarioPostActionEntryDto';
 import { UpdateNodeConfigurationRequestBodyDto } from '../http/routes/database-connection/dto/UpdateNodeConfigurationRequestBodyDto';
 import { match } from 'ts-pattern';
 import { MediaService } from '../media/MediaService';
 import { EncryptionService } from '../encryption/EncryptionService';
+import type { Modules } from '@strapi/types';
 
 @Injectable()
 export class DatabaseService {
@@ -31,8 +29,10 @@ export class DatabaseService {
 
   public async getDatabase(
     databaseId: string,
-  ): Promise<Result<'api::database-connection.database-connection'>> {
-    const database: Result<'api::database-connection.database-connection'> | null =
+  ): Promise<
+    Modules.Documents.Result<'api::database-connection.database-connection'>
+  > {
+    const database: Modules.Documents.Result<'api::database-connection.database-connection'> | null =
       await this.getDatabaseOrNull(databaseId);
     if (database == null) {
       throw new Error(`Database Connection ${databaseId} not found.`);
@@ -42,8 +42,8 @@ export class DatabaseService {
 
   public async getDatabaseOrNull(
     databaseId: string,
-  ): Promise<Result<'api::database-connection.database-connection'> | null> {
-    const database: Result<'api::database-connection.database-connection'> | null =
+  ): Promise<Modules.Documents.Result<'api::database-connection.database-connection'> | null> {
+    const database: Modules.Documents.Result<'api::database-connection.database-connection'> | null =
       await strapi
         .documents('api::database-connection.database-connection')
         .findOne({ status: 'published', documentId: databaseId });
@@ -64,9 +64,9 @@ export class DatabaseService {
   }
 
   public async getDatabaseConnectionOfQuery(
-    query: Result<'api::query.query'>,
-  ): Promise<Result<'api::database-connection.database-connection'> | null> {
-    const populatedQuery: Result<
+    query: Modules.Documents.Result<'api::query.query'>,
+  ): Promise<Modules.Documents.Result<'api::database-connection.database-connection'> | null> {
+    const populatedQuery: Modules.Documents.Result<
       'api::query.query',
       { populate: ['database'] }
     > | null = await strapi.documents('api::query.query').findOne({
@@ -79,7 +79,7 @@ export class DatabaseService {
     }
 
     const database:
-      | Result<'api::database-connection.database-connection'>
+      | Modules.Documents.Result<'api::database-connection.database-connection'>
       | undefined
       | null = populatedQuery.database;
 
@@ -100,7 +100,9 @@ export class DatabaseService {
 
   public async createDatabase(
     projectId: string,
-  ): Promise<Result<'api::database-connection.database-connection'>> {
+  ): Promise<
+    Modules.Documents.Result<'api::database-connection.database-connection'>
+  > {
     return await strapi
       .documents('api::database-connection.database-connection')
       .create({
@@ -109,7 +111,7 @@ export class DatabaseService {
           title: 'Untitled Database Connection',
           project: projectId,
           databaseType: 'neo4j',
-        } satisfies Input<'api::database-connection.database-connection'>,
+        } satisfies Modules.Documents.Params.Data.Input<'api::database-connection.database-connection'>,
       });
   }
 
@@ -122,14 +124,14 @@ export class DatabaseService {
   public async updateDatabase(
     databaseId: string,
     data: Omit<
-      Partial<Input<'api::database-connection.database-connection'>>,
+      Partial<Modules.Documents.Params.Data.Input<'api::database-connection.database-connection'>>,
       'language'
     > & {
       language?: string | null;
     },
-  ): Promise<Result<'api::database-connection.database-connection'> | null> {
+  ): Promise<Modules.Documents.Result<'api::database-connection.database-connection'> | null> {
     const encryptedData: Omit<
-      Partial<Input<'api::database-connection.database-connection'>>,
+      Partial<Modules.Documents.Params.Data.Input<'api::database-connection.database-connection'>>,
       'language'
     > = { ...data };
     if (encryptedData.password != null) {
@@ -137,7 +139,7 @@ export class DatabaseService {
         encryptedData.password,
       );
     }
-    const updatedDocument: Result<'api::database-connection.database-connection'> | null =
+    const updatedDocument: Modules.Documents.Result<'api::database-connection.database-connection'> | null =
       await strapi
         .documents('api::database-connection.database-connection')
         .update({
@@ -154,10 +156,10 @@ export class DatabaseService {
   }
 
   public async getProjectOfDatabase(
-    database: Result<'api::database-connection.database-connection'>,
-  ): Promise<Result<'api::project.project'>> {
+    database: Modules.Documents.Result<'api::database-connection.database-connection'>,
+  ): Promise<Modules.Documents.Result<'api::project.project'>> {
     const databaseId: string = database.documentId;
-    const populatedDatabase: Result<
+    const populatedDatabase: Modules.Documents.Result<
       'api::database-connection.database-connection',
       {
         populate: {
@@ -180,7 +182,7 @@ export class DatabaseService {
     if (populatedDatabase == null) {
       throw new Error(`Database Connection ${databaseId} not found.`);
     }
-    const project: Result<'api::project.project'> | null =
+    const project: Modules.Documents.Result<'api::project.project'> | null =
       populatedDatabase.project ?? null;
 
     if (project == null) {
@@ -191,9 +193,11 @@ export class DatabaseService {
   }
 
   public async getNodeConfigurationsOfDatabase(
-    database: Result<'api::database-connection.database-connection'>,
-  ): Promise<Result<'api::node-configuration.node-configuration'>[]> {
-    const populatedDatabase: Result<
+    database: Modules.Documents.Result<'api::database-connection.database-connection'>,
+  ): Promise<
+    Modules.Documents.Result<'api::node-configuration.node-configuration'>[]
+  > {
+    const populatedDatabase: Modules.Documents.Result<
       'api::database-connection.database-connection',
       {
         populate: {
@@ -216,14 +220,16 @@ export class DatabaseService {
     if (populatedDatabase == null) {
       throw new Error(`Database Connection ${database.documentId} not found.`);
     }
-    const nodeConfigurations: Result<'api::node-configuration.node-configuration'>[] =
+    const nodeConfigurations: Modules.Documents.Result<'api::node-configuration.node-configuration'>[] =
       populatedDatabase.nodeConfigurations ?? [];
 
     return nodeConfigurations;
   }
 
-  public async getRoom(roomId: string): Promise<Result<'api::room.room'>> {
-    const room: Result<'api::room.room'> | null = await strapi
+  public async getRoom(
+    roomId: string,
+  ): Promise<Modules.Documents.Result<'api::room.room'>> {
+    const room: Modules.Documents.Result<'api::room.room'> | null = await strapi
       .documents('api::room.room')
       .findOne({
         status: 'published',
@@ -235,7 +241,9 @@ export class DatabaseService {
     return room;
   }
 
-  public async getPublicRooms(): Promise<Result<'api::room.room'>[]> {
+  public async getPublicRooms(): Promise<
+    Modules.Documents.Result<'api::room.room'>[]
+  > {
     return await strapi.documents('api::room.room').findMany({
       status: 'published',
       filters: {
@@ -243,13 +251,13 @@ export class DatabaseService {
           $eq: 'public',
         },
       },
-    } satisfies FindMany<'api::room.room'>);
+    });
   }
 
   public async getLiveCanvasData(
-    canvas: Result<'api::canvas.canvas'>,
+    canvas: Modules.Documents.Result<'api::canvas.canvas'>,
   ): Promise<z.infer<typeof LiveCanvasData.schema> | null> {
-    const liveCanvasDataFile: Result<'plugin::upload.file'> | null =
+    const liveCanvasDataFile: Modules.Documents.Result<'plugin::upload.file'> | null =
       await this.getLiveCanvasDataFile(canvas);
 
     if (liveCanvasDataFile == null) {
@@ -273,8 +281,8 @@ export class DatabaseService {
 
   public async getScenario(
     scenarioId: string,
-  ): Promise<Result<'api::scenario.scenario'>> {
-    const scenario: Result<'api::scenario.scenario'> | null =
+  ): Promise<Modules.Documents.Result<'api::scenario.scenario'>> {
+    const scenario: Modules.Documents.Result<'api::scenario.scenario'> | null =
       await this.getScenarioOrNull(scenarioId);
     if (scenario == null) {
       throw new Error(`Scenario ${scenarioId} not found.`);
@@ -284,10 +292,9 @@ export class DatabaseService {
 
   public async getScenarioOrNull(
     scenarioId: string,
-  ): Promise<Result<'api::scenario.scenario'> | null> {
-    const scenario: Result<'api::scenario.scenario'> | null = await strapi
-      .documents('api::scenario.scenario')
-      .findOne({
+  ): Promise<Modules.Documents.Result<'api::scenario.scenario'> | null> {
+    const scenario: Modules.Documents.Result<'api::scenario.scenario'> | null =
+      await strapi.documents('api::scenario.scenario').findOne({
         status: 'published',
         documentId: scenarioId,
       });
@@ -295,9 +302,9 @@ export class DatabaseService {
   }
 
   public async getScenariosOfGroup(
-    scenarioGroup: Result<'api::scenario-group.scenario-group'>,
-  ): Promise<Result<'api::scenario.scenario'>[]> {
-    const populatedScenarioGroup: Result<
+    scenarioGroup: Modules.Documents.Result<'api::scenario-group.scenario-group'>,
+  ): Promise<Modules.Documents.Result<'api::scenario.scenario'>[]> {
+    const populatedScenarioGroup: Modules.Documents.Result<
       'api::scenario-group.scenario-group',
       { populate: ['scenarios'] }
     > | null = await strapi
@@ -319,9 +326,9 @@ export class DatabaseService {
   }
 
   public async getScenarioGroupsOfProject(
-    project: Result<'api::project.project'>,
-  ): Promise<Result<'api::scenario-group.scenario-group'>[]> {
-    const populatedProject: Result<
+    project: Modules.Documents.Result<'api::project.project'>,
+  ): Promise<Modules.Documents.Result<'api::scenario-group.scenario-group'>[]> {
+    const populatedProject: Modules.Documents.Result<
       'api::project.project',
       { populate: ['scenarioGroups'] }
     > | null = await strapi.documents('api::project.project').findOne({
@@ -340,18 +347,18 @@ export class DatabaseService {
   }
 
   public async getScenarioGroupsOfRoom(
-    room: Result<'api::room.room'>,
-  ): Promise<Result<'api::scenario-group.scenario-group'>[]> {
-    const project: Result<'api::project.project'> =
+    room: Modules.Documents.Result<'api::room.room'>,
+  ): Promise<Modules.Documents.Result<'api::scenario-group.scenario-group'>[]> {
+    const project: Modules.Documents.Result<'api::project.project'> =
       await this.getProjectOfRoom(room);
     return await this.getScenarioGroupsOfProject(project);
   }
 
   public async setLiveCanvasData(
-    canvas: Result<'api::canvas.canvas'>,
+    canvas: Modules.Documents.Result<'api::canvas.canvas'>,
     liveCanvasData: z.infer<typeof LiveCanvasData.schema>,
   ): Promise<void> {
-    const populatedCanvas: Result<
+    const populatedCanvas: Modules.Documents.Result<
       'api::canvas.canvas',
       { populate: ['liveCanvasData'] }
     > | null = await strapi
@@ -364,12 +371,12 @@ export class DatabaseService {
       );
     }
 
-    const room: Result<'api::room.room'> =
+    const room: Modules.Documents.Result<'api::room.room'> =
       await this.getRoomOfCanvas(populatedCanvas);
-    const project: Result<'api::project.project'> =
+    const project: Modules.Documents.Result<'api::project.project'> =
       await this.getProjectOfRoom(room);
 
-    const oldliveCanvasDataFile: Result<'plugin::upload.file'> | null =
+    const oldliveCanvasDataFile: Modules.Documents.Result<'plugin::upload.file'> | null =
       await this.getLiveCanvasDataFile(canvas);
     if (oldliveCanvasDataFile != null) {
       this._logger.debug(
@@ -379,7 +386,7 @@ export class DatabaseService {
     }
 
     const liveCanvasJson: string = JSON.stringify(liveCanvasData);
-    const newLiveCanvasDataFile: Result<'plugin::upload.file'> =
+    const newLiveCanvasDataFile: Modules.Documents.Result<'plugin::upload.file'> =
       await this._mediaService.saveJSONFile(
         liveCanvasJson,
         `Live Canvas Data - ${project.title ?? 'untitled project'} - ${room.title ?? 'untitled room'} - ${populatedCanvas.title ?? 'untitled canvas'}`,
@@ -399,9 +406,11 @@ export class DatabaseService {
   }
 
   public async getParametersOfScenario(
-    scenario: Result<'api::scenario.scenario'>,
-  ): Promise<Result<'api::query-parameter.query-parameter'>[]> {
-    const populatedScenario: Result<
+    scenario: Modules.Documents.Result<'api::scenario.scenario'>,
+  ): Promise<
+    Modules.Documents.Result<'api::query-parameter.query-parameter'>[]
+  > {
+    const populatedScenario: Modules.Documents.Result<
       'api::scenario.scenario',
       { populate: ['queryParameters'] }
     > | null = await strapi.documents('api::scenario.scenario').findOne({
@@ -415,9 +424,9 @@ export class DatabaseService {
   }
 
   public async getQueriesOfScenario(
-    scenario: Result<'api::scenario.scenario'>,
-  ): Promise<Result<'api::query.query'>[]> {
-    const populatedScenario: Result<
+    scenario: Modules.Documents.Result<'api::scenario.scenario'>,
+  ): Promise<Modules.Documents.Result<'api::query.query'>[]> {
+    const populatedScenario: Modules.Documents.Result<
       'api::scenario.scenario',
       { populate: ['queries'] }
     > | null = await strapi.documents('api::scenario.scenario').findOne({
@@ -431,12 +440,12 @@ export class DatabaseService {
   }
 
   public async addNote(params: {
-    project: Result<'api::project.project'>;
-    author: Result<'plugin::users-permissions.user'> | null;
+    project: Modules.Documents.Result<'api::project.project'>;
+    author: Modules.Documents.Result<'plugin::users-permissions.user'> | null;
     nodes: string[];
     content: string;
   }): Promise<void> {
-    const newNote: Result<'api::note.note'> = await strapi
+    const newNote: Modules.Documents.Result<'api::note.note'> = await strapi
       .documents('api::note.note')
       .create({
         data: {
@@ -462,7 +471,7 @@ export class DatabaseService {
   }
 
   public async updateNote(
-    note: Result<'api::note.note'>,
+    note: Modules.Documents.Result<'api::note.note'>,
     params: {
       content: string;
     },
@@ -475,10 +484,10 @@ export class DatabaseService {
   }
 
   public async getNotes(params: {
-    project: Result<'api::project.project'>;
+    project: Modules.Documents.Result<'api::project.project'>;
     liveCanvas: LiveCanvas;
   }): Promise<IndexedNoteCollection> {
-    const populatedProject: Result<
+    const populatedProject: Modules.Documents.Result<
       'api::project.project',
       { populate: ['notes'] }
     > | null = await strapi.documents('api::project.project').findOne({
@@ -490,7 +499,8 @@ export class DatabaseService {
       throw new Error(`Cannot find project ${params.project.documentId}`);
     }
 
-    const results: Result<'api::note.note'>[] = populatedProject.notes ?? [];
+    const results: Modules.Documents.Result<'api::note.note'>[] =
+      populatedProject.notes ?? [];
 
     const result: IndexedNoteCollection = {
       notes: new SSet(),
@@ -501,8 +511,9 @@ export class DatabaseService {
       const referencedNodes: string[] = (
         await this.getReferencedNodesOfNote(note)
       ).map(
-        (node: Result<'api::node-reference.node-reference'>): string =>
-          node.nodeId ?? '',
+        (
+          node: Modules.Documents.Result<'api::node-reference.node-reference'>,
+        ): string => node.nodeId ?? '',
       );
       for (const nodeId of params.liveCanvas.getGraph().nodes.keys) {
         if (referencedNodes.includes(nodeId)) {
@@ -511,7 +522,7 @@ export class DatabaseService {
             nodeId,
             (
               result.byNodeId.get(nodeId) ??
-              new SSet<Result<'api::note.note'>>()
+              new SSet<Modules.Documents.Result<'api::note.note'>>()
             ).byAdding(note),
           );
         }
@@ -525,9 +536,9 @@ export class DatabaseService {
   }
 
   public async getReferencedNodesOfNote(
-    note: Result<'api::note.note'>,
-  ): Promise<Result<'api::node-reference.node-reference'>[]> {
-    const populatedNote: Result<
+    note: Modules.Documents.Result<'api::note.note'>,
+  ): Promise<Modules.Documents.Result<'api::node-reference.node-reference'>[]> {
+    const populatedNote: Modules.Documents.Result<
       'api::note.note',
       { populate: ['nodes'] }
     > | null = await strapi.documents('api::note.note').findOne({
@@ -542,9 +553,9 @@ export class DatabaseService {
   }
 
   public async getAuthorOfNote(
-    note: Result<'api::note.note'>,
-  ): Promise<Result<'plugin::users-permissions.user'> | null> {
-    const populatedNote: Result<
+    note: Modules.Documents.Result<'api::note.note'>,
+  ): Promise<Modules.Documents.Result<'plugin::users-permissions.user'> | null> {
+    const populatedNote: Modules.Documents.Result<
       'api::note.note',
       { populate: ['author'] }
     > | null = await strapi.documents('api::note.note').findOne({
@@ -558,10 +569,11 @@ export class DatabaseService {
     return populatedNote.author ?? null;
   }
 
-  public async getNote(id: string): Promise<Result<'api::note.note'>> {
-    const result: Result<'api::note.note'> | null = await strapi
-      .documents('api::note.note')
-      .findOne({
+  public async getNote(
+    id: string,
+  ): Promise<Modules.Documents.Result<'api::note.note'>> {
+    const result: Modules.Documents.Result<'api::note.note'> | null =
+      await strapi.documents('api::note.note').findOne({
         status: 'published',
         documentId: id,
       });
@@ -571,8 +583,10 @@ export class DatabaseService {
     return result;
   }
 
-  public async removeNote(note: Result<'api::note.note'>): Promise<void> {
-    const nodeReferences: Result<'api::node-reference.node-reference'>[] =
+  public async removeNote(
+    note: Modules.Documents.Result<'api::note.note'>,
+  ): Promise<void> {
+    const nodeReferences: Modules.Documents.Result<'api::node-reference.node-reference'>[] =
       await this.getReferencedNodesOfNote(note);
 
     for (const nodeReference of nodeReferences) {
@@ -587,11 +601,11 @@ export class DatabaseService {
   }
 
   public async getCanvasesOfNote(
-    note: Result<'api::note.note'>,
-  ): Promise<Result<'api::canvas.canvas'>[]> {
-    const project: Result<'api::project.project'> =
+    note: Modules.Documents.Result<'api::note.note'>,
+  ): Promise<Modules.Documents.Result<'api::canvas.canvas'>[]> {
+    const project: Modules.Documents.Result<'api::project.project'> =
       await this.getProjectOfNote(note);
-    const canvases: Result<'api::canvas.canvas'>[] = [];
+    const canvases: Modules.Documents.Result<'api::canvas.canvas'>[] = [];
     for (const room of await this.getRoomsOfProject(project)) {
       for (const canvas of await this.getCanvasesOfRoom(room)) {
         canvases.push(canvas);
@@ -601,9 +615,9 @@ export class DatabaseService {
   }
 
   public async getProjectOfNote(
-    note: Result<'api::note.note'>,
-  ): Promise<Result<'api::project.project'>> {
-    const populatedNote: Result<
+    note: Modules.Documents.Result<'api::note.note'>,
+  ): Promise<Modules.Documents.Result<'api::project.project'>> {
+    const populatedNote: Modules.Documents.Result<
       'api::note.note',
       { populate: ['project'] }
     > | null = await strapi.documents('api::note.note').findOne({
@@ -616,7 +630,7 @@ export class DatabaseService {
       throw new Error('Note not found.');
     }
 
-    const project: Result<'api::project.project'> | null =
+    const project: Modules.Documents.Result<'api::project.project'> | null =
       populatedNote.project ?? null;
 
     if (project == null) {
@@ -626,9 +640,9 @@ export class DatabaseService {
   }
 
   public async getOwnerOfProject(
-    project: Result<'api::project.project'>,
-  ): Promise<Result<'plugin::users-permissions.user'> | null> {
-    const populatedProject: Result<
+    project: Modules.Documents.Result<'api::project.project'>,
+  ): Promise<Modules.Documents.Result<'plugin::users-permissions.user'> | null> {
+    const populatedProject: Modules.Documents.Result<
       'api::project.project',
       { populate: ['owner'] }
     > | null = await strapi
@@ -643,9 +657,9 @@ export class DatabaseService {
   }
 
   public async getCollaboratorsOfProject(
-    project: Result<'api::project.project'>,
-  ): Promise<Result<'plugin::users-permissions.user'>[]> {
-    const populatedProject: Result<
+    project: Modules.Documents.Result<'api::project.project'>,
+  ): Promise<Modules.Documents.Result<'plugin::users-permissions.user'>[]> {
+    const populatedProject: Modules.Documents.Result<
       'api::project.project',
       { populate: ['collaborators'] }
     > | null = await strapi
@@ -660,9 +674,9 @@ export class DatabaseService {
   }
 
   public async getRoomsOfProject(
-    project: Result<'api::project.project'>,
-  ): Promise<Result<'api::room.room'>[]> {
-    const populatedProject: Result<
+    project: Modules.Documents.Result<'api::project.project'>,
+  ): Promise<Modules.Documents.Result<'api::room.room'>[]> {
+    const populatedProject: Modules.Documents.Result<
       'api::project.project',
       { populate: ['rooms'] }
     > | null = await strapi
@@ -677,9 +691,11 @@ export class DatabaseService {
   }
 
   public async getCommonPropertiesOfProject(
-    project: Result<'api::project.project'>,
-  ): Promise<Result<'api::common-property.common-property'>[]> {
-    const populatedProject: Result<
+    project: Modules.Documents.Result<'api::project.project'>,
+  ): Promise<
+    Modules.Documents.Result<'api::common-property.common-property'>[]
+  > {
+    const populatedProject: Modules.Documents.Result<
       'api::project.project',
       { populate: ['commonProperties'] }
     > | null = await strapi.documents('api::project.project').findOne({
@@ -695,9 +711,11 @@ export class DatabaseService {
   }
 
   public async getDatabaseConnectionsOfProject(
-    project: Result<'api::project.project'>,
-  ): Promise<Result<'plugin::users-permissions.user'>[]> {
-    const populatedProject: Result<
+    project: Modules.Documents.Result<'api::project.project'>,
+  ): Promise<
+    Modules.Documents.Result<'api::database-connection.database-connection'>[]
+  > {
+    const populatedProject: Modules.Documents.Result<
       'api::project.project',
       { populate: ['databaseConnections'] }
     > | null = await strapi.documents('api::project.project').findOne({
@@ -713,9 +731,9 @@ export class DatabaseService {
   }
 
   public async getProjectsOfUser(
-    user: Result<'plugin::users-permissions.user'>,
-  ): Promise<Result<'api::project.project'>[]> {
-    const populatedUser: Result<
+    user: Modules.Documents.Result<'plugin::users-permissions.user'>,
+  ): Promise<Modules.Documents.Result<'api::project.project'>[]> {
+    const populatedUser: Modules.Documents.Result<
       'plugin::users-permissions.user',
       { populate: ['projects'] }
     > | null = await strapi
@@ -733,9 +751,9 @@ export class DatabaseService {
   }
 
   public async getCollaborationProjectsOfUser(
-    user: Result<'plugin::users-permissions.user'>,
-  ): Promise<Result<'api::project.project'>[]> {
-    const populatedUser: Result<
+    user: Modules.Documents.Result<'plugin::users-permissions.user'>,
+  ): Promise<Modules.Documents.Result<'api::project.project'>[]> {
+    const populatedUser: Modules.Documents.Result<
       'plugin::users-permissions.user',
       { populate: ['projectCollaborations'] }
     > | null = await strapi
@@ -753,11 +771,10 @@ export class DatabaseService {
   }
 
   public async getCanvasesOfRoom(
-    room: Result<'api::room.room'>,
-  ): Promise<Result<'api::canvas.canvas'>[]> {
-    const canvases: Result<'api::canvas.canvas'>[] = await strapi
-      .documents('api::canvas.canvas')
-      .findMany({
+    room: Modules.Documents.Result<'api::room.room'>,
+  ): Promise<Modules.Documents.Result<'api::canvas.canvas'>[]> {
+    const canvases: Modules.Documents.Result<'api::canvas.canvas'>[] =
+      await strapi.documents('api::canvas.canvas').findMany({
         status: 'published',
         populate: { room: { populate: [] } },
         filters: {
@@ -767,14 +784,13 @@ export class DatabaseService {
             },
           },
         },
-      } satisfies FindMany<'api::canvas.canvas'>);
+      });
 
     if (canvases.length > 0) {
       return canvases;
     } else {
-      const newCanvas: Result<'api::canvas.canvas'> = await strapi
-        .documents('api::canvas.canvas')
-        .create({
+      const newCanvas: Modules.Documents.Result<'api::canvas.canvas'> =
+        await strapi.documents('api::canvas.canvas').create({
           data: { title: 'A', room: { documentId: room.documentId } },
           status: 'published',
         });
@@ -783,9 +799,9 @@ export class DatabaseService {
   }
 
   public async getProjectOfRoom(
-    room: Result<'api::room.room'>,
-  ): Promise<Result<'api::project.project'>> {
-    const populatedRoom: Result<
+    room: Modules.Documents.Result<'api::room.room'>,
+  ): Promise<Modules.Documents.Result<'api::project.project'>> {
+    const populatedRoom: Modules.Documents.Result<
       'api::room.room',
       { populate: ['project'] }
     > | null = await strapi.documents('api::room.room').findOne({
@@ -806,18 +822,21 @@ export class DatabaseService {
 
   public async getCanvasOrNull(
     id: string,
-  ): Promise<Result<'api::canvas.canvas'> | null> {
-    const result: Result<'api::canvas.canvas'> | null = await strapi
-      .documents('api::canvas.canvas')
-      .findOne({ documentId: id, status: 'published' });
+  ): Promise<Modules.Documents.Result<'api::canvas.canvas'> | null> {
+    const result: Modules.Documents.Result<'api::canvas.canvas'> | null =
+      await strapi
+        .documents('api::canvas.canvas')
+        .findOne({ documentId: id, status: 'published' });
     if (result == null) {
       return null;
     }
     return result;
   }
 
-  public async getCanvas(id: string): Promise<Result<'api::canvas.canvas'>> {
-    const result: Result<'api::canvas.canvas'> | null =
+  public async getCanvas(
+    id: string,
+  ): Promise<Modules.Documents.Result<'api::canvas.canvas'>> {
+    const result: Modules.Documents.Result<'api::canvas.canvas'> | null =
       await this.getCanvasOrNull(id);
     if (result == null) {
       throw new Error(`Canvas ${id} not found.`);
@@ -826,9 +845,9 @@ export class DatabaseService {
   }
 
   public async getProjectOfCanvas(
-    canvas: Result<'api::canvas.canvas'>,
-  ): Promise<Result<'api::project.project'>> {
-    const populatedCanvas: Result<
+    canvas: Modules.Documents.Result<'api::canvas.canvas'>,
+  ): Promise<Modules.Documents.Result<'api::project.project'>> {
+    const populatedCanvas: Modules.Documents.Result<
       'api::canvas.canvas',
       { populate: { room: { populate: ['project'] } } }
     > | null = await strapi.documents('api::canvas.canvas').findOne({
@@ -840,7 +859,7 @@ export class DatabaseService {
     if (populatedCanvas == null) {
       throw new Error(`Cannot find canvas ${canvas.documentId}.`);
     }
-    const project: Result<'api::project.project'> | null =
+    const project: Modules.Documents.Result<'api::project.project'> | null =
       populatedCanvas.room?.project ?? null;
     if (project == null) {
       throw new Error(`Project of canvas ${canvas.documentId} not found.`);
@@ -849,9 +868,9 @@ export class DatabaseService {
   }
 
   public async getProjectOfScenario(
-    scenario: Result<'api::scenario.scenario'>,
-  ): Promise<Result<'api::project.project'>> {
-    const populatedScenario: Result<
+    scenario: Modules.Documents.Result<'api::scenario.scenario'>,
+  ): Promise<Modules.Documents.Result<'api::project.project'>> {
+    const populatedScenario: Modules.Documents.Result<
       'api::scenario.scenario',
       { populate: { group: { populate: ['project'] } } }
     > | null = await strapi.documents('api::scenario.scenario').findOne({
@@ -863,7 +882,7 @@ export class DatabaseService {
     if (populatedScenario == null) {
       throw new Error(`Scenario ${scenario.documentId} not found.`);
     }
-    const project: Result<'api::project.project'> | null =
+    const project: Modules.Documents.Result<'api::project.project'> | null =
       populatedScenario.group?.project ?? null;
     if (project == null) {
       throw new Error(`Project of scenario ${scenario.documentId} not found.`);
@@ -872,9 +891,9 @@ export class DatabaseService {
   }
 
   public async getRoomOfCanvas(
-    canvas: Result<'api::canvas.canvas'>,
-  ): Promise<Result<'api::room.room'>> {
-    const populatedCanvas: Result<
+    canvas: Modules.Documents.Result<'api::canvas.canvas'>,
+  ): Promise<Modules.Documents.Result<'api::room.room'>> {
+    const populatedCanvas: Modules.Documents.Result<
       'api::canvas.canvas',
       { populate: ['room'] }
     > | null = await strapi.documents('api::canvas.canvas').findOne({
@@ -887,7 +906,8 @@ export class DatabaseService {
       throw new Error(`Cannot find canvas ${canvas.documentId}.`);
     }
 
-    const room: Result<'api::room.room'> | null = populatedCanvas.room ?? null;
+    const room: Modules.Documents.Result<'api::room.room'> | null =
+      populatedCanvas.room ?? null;
     if (room == null) {
       throw new Error(`Room of canvas ${canvas.documentId} not found.`);
     }
@@ -895,11 +915,14 @@ export class DatabaseService {
   }
 
   public async getLiveCanvasDataFile(
-    canvas: Result<'api::canvas.canvas'>,
-  ): Promise<Result<'plugin::upload.file'> | null> {
+    canvas: Modules.Documents.Result<'api::canvas.canvas'>,
+  ): Promise<Modules.Documents.Result<'plugin::upload.file'> | null> {
     const populatedCanvas:
-      | (Result<'api::canvas.canvas', { populate: ['liveCanvasData'] }> & {
-          liveCanvasData?: Result<'plugin::upload.file'> | null;
+      | (Modules.Documents.Result<
+          'api::canvas.canvas',
+          { populate: ['liveCanvasData'] }
+        > & {
+          liveCanvasData?: Modules.Documents.Result<'plugin::upload.file'> | null;
         })
       | null = await strapi
       .documents('api::canvas.canvas')
@@ -915,10 +938,11 @@ export class DatabaseService {
 
   public async getProjectOrNull(
     projectId: string,
-  ): Promise<Result<'api::project.project'> | null> {
-    const project: Result<'api::project.project'> | null = await strapi
-      .documents('api::project.project')
-      .findOne({ documentId: projectId, status: 'published' });
+  ): Promise<Modules.Documents.Result<'api::project.project'> | null> {
+    const project: Modules.Documents.Result<'api::project.project'> | null =
+      await strapi
+        .documents('api::project.project')
+        .findOne({ documentId: projectId, status: 'published' });
     if (project == null) {
       return null;
     }
@@ -927,8 +951,8 @@ export class DatabaseService {
 
   public async getProject(
     projectId: string,
-  ): Promise<Result<'api::project.project'>> {
-    const project: Result<'api::project.project'> | null =
+  ): Promise<Modules.Documents.Result<'api::project.project'>> {
+    const project: Modules.Documents.Result<'api::project.project'> | null =
       await this.getProjectOrNull(projectId);
     if (project == null) {
       throw new Error(`Project ${projectId} not found.`);
@@ -937,9 +961,11 @@ export class DatabaseService {
   }
 
   public async getOrderedPostScenarioActionsOfScenario(
-    scenario: Result<'api::scenario.scenario'>,
-  ): Promise<Result<'api::post-scenario-action.post-scenario-action'>[]> {
-    const populatedScenario: Result<
+    scenario: Modules.Documents.Result<'api::scenario.scenario'>,
+  ): Promise<
+    Modules.Documents.Result<'api::post-scenario-action.post-scenario-action'>[]
+  > {
+    const populatedScenario: Modules.Documents.Result<
       'api::scenario.scenario',
       { populate: ['postActions'] }
     > | null = await strapi.documents('api::scenario.scenario').findOne({
@@ -951,7 +977,7 @@ export class DatabaseService {
       throw new Error('Scenario not found.');
     }
 
-    const postScenarioActions: Result<'api::post-scenario-action.post-scenario-action'>[] =
+    const postScenarioActions: Modules.Documents.Result<'api::post-scenario-action.post-scenario-action'>[] =
       populatedScenario.postActions ?? [];
 
     type PostActionType = TupleTypes<
@@ -974,8 +1000,8 @@ export class DatabaseService {
 
     postScenarioActions.sort(
       (
-        a: Result<'api::post-scenario-action.post-scenario-action'>,
-        b: Result<'api::post-scenario-action.post-scenario-action'>,
+        a: Modules.Documents.Result<'api::post-scenario-action.post-scenario-action'>,
+        b: Modules.Documents.Result<'api::post-scenario-action.post-scenario-action'>,
       ): number => {
         return (
           categoryOrder.indexOf(a.type ?? '') -
@@ -988,12 +1014,14 @@ export class DatabaseService {
   }
 
   public async getCommonPropertyConfigsOfCanvas(
-    canvas: Result<'api::canvas.canvas'>,
-  ): Promise<Result<'api::common-property.common-property'>[]> {
-    const project: Result<'api::project.project'> =
+    canvas: Modules.Documents.Result<'api::canvas.canvas'>,
+  ): Promise<
+    Modules.Documents.Result<'api::common-property.common-property'>[]
+  > {
+    const project: Modules.Documents.Result<'api::project.project'> =
       await this.getProjectOfCanvas(canvas);
 
-    const populatedProject: Result<
+    const populatedProject: Modules.Documents.Result<
       'api::project.project',
       { populate: ['commonProperties'] }
     > | null = await strapi.documents('api::project.project').findOne({
@@ -1009,8 +1037,8 @@ export class DatabaseService {
   }
 
   public async getLeftDatabaseOfCommonProperty(
-    commonProperty: Result<'api::common-property.common-property'>,
-  ): Promise<Result<'api::database-connection.database-connection'> | null> {
+    commonProperty: Modules.Documents.Result<'api::common-property.common-property'>,
+  ): Promise<Modules.Documents.Result<'api::database-connection.database-connection'> | null> {
     return (
       (
         await strapi.documents('api::common-property.common-property').findOne({
@@ -1022,8 +1050,8 @@ export class DatabaseService {
   }
 
   public async getRightDatabaseOfCommonProperty(
-    commonProperty: Result<'api::common-property.common-property'>,
-  ): Promise<Result<'api::database-connection.database-connection'> | null> {
+    commonProperty: Modules.Documents.Result<'api::common-property.common-property'>,
+  ): Promise<Modules.Documents.Result<'api::database-connection.database-connection'> | null> {
     return (
       (
         await strapi.documents('api::common-property.common-property').findOne({
@@ -1036,21 +1064,22 @@ export class DatabaseService {
 
   public async getUser(
     userId: string,
-  ): Promise<Result<'plugin::users-permissions.user'> | null> {
-    const user: Result<'plugin::users-permissions.user'> | null = await strapi
-      .documents('plugin::users-permissions.user')
-      .findOne({ documentId: userId });
+  ): Promise<Modules.Documents.Result<'plugin::users-permissions.user'> | null> {
+    const user: Modules.Documents.Result<'plugin::users-permissions.user'> | null =
+      await strapi
+        .documents('plugin::users-permissions.user')
+        .findOne({ documentId: userId });
     return user;
   }
 
   public async upsertScenarioQueries(
-    scenario: Result<'api::scenario.scenario'>,
+    scenario: Modules.Documents.Result<'api::scenario.scenario'>,
     queries: UpdateScenarioQueryEntryDto[],
   ): Promise<void> {
     const newQueryIds: SSet<string> = new SSet<string>(
       queries.map((q: UpdateScenarioQueryEntryDto): string => q.id),
     );
-    const existingQueries: Result<'api::query.query'>[] =
+    const existingQueries: Modules.Documents.Result<'api::query.query'>[] =
       await this.getQueriesOfScenario(scenario);
     for (const existingQuery of existingQueries) {
       if (newQueryIds.has(existingQuery.documentId)) {
@@ -1064,16 +1093,16 @@ export class DatabaseService {
     }
 
     for (const newQuery of queries) {
-      const queryData: Input<'api::query.query'> = {
-        query: newQuery.query,
-        isTableQuery: newQuery.isTableQuery,
-        database: newQuery.databaseId === '' ? null : newQuery.databaseId,
-        scenario: scenario.documentId,
-      };
+      const queryData: Modules.Documents.Params.Data.Input<'api::query.query'> =
+        {
+          query: newQuery.query,
+          isTableQuery: newQuery.isTableQuery,
+          database: newQuery.databaseId === '' ? null : newQuery.databaseId,
+          scenario: scenario.documentId,
+        };
 
-      const updatedQuery: Result<'api::query.query'> | null = await strapi
-        .documents('api::query.query')
-        .update({
+      const updatedQuery: Modules.Documents.Result<'api::query.query'> | null =
+        await strapi.documents('api::query.query').update({
           documentId: newQuery.id,
           data: queryData,
           status: 'published',
@@ -1087,13 +1116,13 @@ export class DatabaseService {
   }
 
   public async upsertScenarioQueryParameters(
-    scenario: Result<'api::scenario.scenario'>,
+    scenario: Modules.Documents.Result<'api::scenario.scenario'>,
     parameters: UpdateScenarioQueryParameterEntryDto[],
   ): Promise<void> {
     const newQueryParameterIds: SSet<string> = new SSet<string>(
       parameters.map((q: UpdateScenarioQueryParameterEntryDto): string => q.id),
     );
-    const existingQueryParameters: Result<'api::query-parameter.query-parameter'>[] =
+    const existingQueryParameters: Modules.Documents.Result<'api::query-parameter.query-parameter'>[] =
       await this.getParametersOfScenario(scenario);
     for (const existingQueryParameter of existingQueryParameters) {
       if (newQueryParameterIds.has(existingQueryParameter.documentId)) {
@@ -1107,20 +1136,21 @@ export class DatabaseService {
     }
 
     for (const newParameter of parameters) {
-      const parameterData: Input<'api::query-parameter.query-parameter'> = {
-        title: newParameter.title.trim(),
-        dataType: newParameter.dataType,
-        identifier: newParameter.identifier.trim(),
-        defaultValue: newParameter.defaultValue.trim(),
-        allowedLabels: newParameter.allowedLabels
-          .map((al: string): string => {
-            return al.trim();
-          })
-          .join(','),
-        scenario: scenario.documentId,
-      };
+      const parameterData: Modules.Documents.Params.Data.Input<'api::query-parameter.query-parameter'> =
+        {
+          title: newParameter.title.trim(),
+          dataType: newParameter.dataType,
+          identifier: newParameter.identifier.trim(),
+          defaultValue: newParameter.defaultValue.trim(),
+          allowedLabels: newParameter.allowedLabels
+            .map((al: string): string => {
+              return al.trim();
+            })
+            .join(','),
+          scenario: scenario.documentId,
+        };
 
-      const updatedQuery: Result<'api::query-parameter.query-parameter'> | null =
+      const updatedQuery: Modules.Documents.Result<'api::query-parameter.query-parameter'> | null =
         await strapi.documents('api::query-parameter.query-parameter').update({
           documentId: newParameter.id,
           data: parameterData,
@@ -1135,7 +1165,7 @@ export class DatabaseService {
   }
 
   public async upsertNodeConfigurations(
-    databaseConnection: Result<'api::database-connection.database-connection'>,
+    databaseConnection: Modules.Documents.Result<'api::database-connection.database-connection'>,
     nodeConfigurations: UpdateNodeConfigurationRequestBodyDto[],
   ): Promise<void> {
     const newIds: SSet<string> = new SSet<string>(
@@ -1143,7 +1173,7 @@ export class DatabaseService {
         (q: UpdateNodeConfigurationRequestBodyDto): string => q.id,
       ),
     );
-    const existingDocuments: Result<'api::node-configuration.node-configuration'>[] =
+    const existingDocuments: Modules.Documents.Result<'api::node-configuration.node-configuration'>[] =
       await this.getNodeConfigurationsOfDatabase(databaseConnection);
     for (const existingDocument of existingDocuments) {
       if (newIds.has(existingDocument.documentId)) {
@@ -1157,7 +1187,7 @@ export class DatabaseService {
     }
 
     for (const newDocument of nodeConfigurations) {
-      const documentData: Input<'api::node-configuration.node-configuration'> =
+      const documentData: Modules.Documents.Params.Data.Input<'api::node-configuration.node-configuration'> =
         {
           type: newDocument.type,
           label: newDocument.label,
@@ -1167,7 +1197,7 @@ export class DatabaseService {
           urlEncode: newDocument.urlEncode,
         };
 
-      const updatedDocument: Result<'api::node-configuration.node-configuration'> | null =
+      const updatedDocument: Modules.Documents.Result<'api::node-configuration.node-configuration'> | null =
         await strapi
           .documents('api::node-configuration.node-configuration')
           .update({
@@ -1184,7 +1214,7 @@ export class DatabaseService {
   }
 
   public async upsertPostScenarioActions(
-    scenario: Result<'api::scenario.scenario'>,
+    scenario: Modules.Documents.Result<'api::scenario.scenario'>,
     postScenarioActions: UpdateScenarioPostActionEntryDto[],
   ): Promise<void> {
     const newIds: SSet<string> = new SSet<string>(
@@ -1192,7 +1222,7 @@ export class DatabaseService {
         (q: UpdateScenarioPostActionEntryDto): string => q.id,
       ),
     );
-    const existingDocuments: Result<'api::post-scenario-action.post-scenario-action'>[] =
+    const existingDocuments: Modules.Documents.Result<'api::post-scenario-action.post-scenario-action'>[] =
       await this.getOrderedPostScenarioActionsOfScenario(scenario);
     for (const existingDocument of existingDocuments) {
       if (newIds.has(existingDocument.documentId)) {
@@ -1207,41 +1237,41 @@ export class DatabaseService {
 
     for (const newDocument of postScenarioActions) {
       const colorIndex:
-        | Input<'api::post-scenario-action.post-scenario-action'>['colorIndex']
+        | Modules.Documents.Params.Data.Input<'api::post-scenario-action.post-scenario-action'>['colorIndex']
         | undefined = match(newDocument.color.index)
         .with(
           0,
-          (): Input<'api::post-scenario-action.post-scenario-action'>['colorIndex'] =>
+          (): Modules.Documents.Params.Data.Input<'api::post-scenario-action.post-scenario-action'>['colorIndex'] =>
             'c0',
         )
         .with(
           1,
-          (): Input<'api::post-scenario-action.post-scenario-action'>['colorIndex'] =>
+          (): Modules.Documents.Params.Data.Input<'api::post-scenario-action.post-scenario-action'>['colorIndex'] =>
             'c1',
         )
         .with(
           2,
-          (): Input<'api::post-scenario-action.post-scenario-action'>['colorIndex'] =>
+          (): Modules.Documents.Params.Data.Input<'api::post-scenario-action.post-scenario-action'>['colorIndex'] =>
             'c2',
         )
         .with(
           3,
-          (): Input<'api::post-scenario-action.post-scenario-action'>['colorIndex'] =>
+          (): Modules.Documents.Params.Data.Input<'api::post-scenario-action.post-scenario-action'>['colorIndex'] =>
             'c3',
         )
         .with(
           4,
-          (): Input<'api::post-scenario-action.post-scenario-action'>['colorIndex'] =>
+          (): Modules.Documents.Params.Data.Input<'api::post-scenario-action.post-scenario-action'>['colorIndex'] =>
             'c4',
         )
         .with(
           5,
-          (): Input<'api::post-scenario-action.post-scenario-action'>['colorIndex'] =>
+          (): Modules.Documents.Params.Data.Input<'api::post-scenario-action.post-scenario-action'>['colorIndex'] =>
             'c5',
         )
         .exhaustive();
 
-      const documentData: Input<'api::post-scenario-action.post-scenario-action'> =
+      const documentData: Modules.Documents.Params.Data.Input<'api::post-scenario-action.post-scenario-action'> =
         {
           type: newDocument.type,
           label: newDocument.label,
@@ -1256,7 +1286,7 @@ export class DatabaseService {
           scenario: scenario.documentId,
         };
 
-      const updatedDocument: Result<'api::post-scenario-action.post-scenario-action'> | null =
+      const updatedDocument: Modules.Documents.Result<'api::post-scenario-action.post-scenario-action'> | null =
         await strapi
           .documents('api::post-scenario-action.post-scenario-action')
           .update({

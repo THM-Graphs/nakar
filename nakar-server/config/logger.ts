@@ -28,9 +28,11 @@ export default {
       }
 
       return components
-        .reduce<
-          string[]
-        >((akku: string[], next: string | null): string[] => (next ? [...akku, next] : akku), [])
+        .reduce<string[]>(
+          (akku: string[], next: string | null): string[] =>
+            next ? [...akku, next] : akku,
+          [],
+        )
         .join(' ');
     }),
   ),

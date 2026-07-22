@@ -9,7 +9,7 @@ import {
 } from '@nestjs/common';
 import { PostNoteRequestBody } from './dto/PostNoteRequestBody';
 import { ApiBody, ApiParam } from '@nestjs/swagger';
-import { Result } from '@strapi/types/dist/modules/documents/result';
+import type { Modules } from '@strapi/types';
 import { DatabaseService } from '../../../database/DatabaseService';
 import { Logger } from '@strapi/logger';
 import { createChildLogger } from '../../../logger/createChildLogger';
@@ -50,11 +50,11 @@ export class CanvasNoteController {
     @Param('canvasId') canvasId: string,
     @JWT() jwt: string | null,
   ): Promise<void> {
-    const canvas: Result<'api::canvas.canvas'> =
+    const canvas: Modules.Documents.Result<'api::canvas.canvas'> =
       await this._databaseService.getCanvas(canvasId);
-    const project: Result<'api::project.project'> =
+    const project: Modules.Documents.Result<'api::project.project'> =
       await this._databaseService.getProjectOfCanvas(canvas);
-    const user: Result<'plugin::users-permissions.user'> | null =
+    const user: Modules.Documents.Result<'plugin::users-permissions.user'> | null =
       await this._authService.getUserByJWT(jwt);
 
     this._logger.debug(JSON.stringify(body));
@@ -72,7 +72,7 @@ export class CanvasNoteController {
   @UseGuards(NoteBelongsToCanvas)
   public async deleteNote(@Param('noteId') noteId: string): Promise<void> {
     this._logger.debug(`Will delete note ${noteId}.`);
-    const note: Result<'api::note.note'> =
+    const note: Modules.Documents.Result<'api::note.note'> =
       await this._databaseService.getNote(noteId);
     await this._databaseService.removeNote(note);
   }
@@ -85,7 +85,7 @@ export class CanvasNoteController {
     @Param('noteId') noteId: string,
     @Body() body: UpdateNoteRequestBodyDto,
   ): Promise<void> {
-    const note: Result<'api::note.note'> =
+    const note: Modules.Documents.Result<'api::note.note'> =
       await this._databaseService.getNote(noteId);
     this._logger.debug(
       `Will update note ${note.id} with ${JSON.stringify(body)}`,

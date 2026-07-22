@@ -7,7 +7,7 @@ import { SMap } from '../../packages/map/Map';
 import { CanvasEvent } from './events/CanvasEvent';
 import { CanvasEventEventKick } from './events/CanvasEventEventKick';
 import { LiveCanvas } from './LiveCanvas';
-import { Result } from '@strapi/types/dist/modules/documents/result';
+import type { Modules } from '@strapi/types';
 import { createChildLogger } from '../logger/createChildLogger';
 import { Logger } from '@strapi/logger';
 import { Profiler } from 'winston';
@@ -39,7 +39,7 @@ export class LiveCanvasService implements OnModuleInit, OnModuleDestroy {
 
   public onModuleInit(): void {
     this._databaseEvents.onCanvasDeleted$.subscribe(
-      (canvas: Result<'api::canvas.canvas'>): void => {
+      (canvas: Modules.Documents.Result<'api::canvas.canvas'>): void => {
         this._destroyCanvas(canvas).catch((error: unknown): void => {
           this._logger.error(error);
         });
@@ -55,7 +55,7 @@ export class LiveCanvasService implements OnModuleInit, OnModuleDestroy {
   }
 
   public getGraph(
-    canvas: Result<'api::canvas.canvas'>,
+    canvas: Modules.Documents.Result<'api::canvas.canvas'>,
   ): LiveCanvasUndoableData {
     const liveCanvas: LiveCanvas = this.getCanvas(canvas);
     const graph: LiveCanvasUndoableData = liveCanvas.getGraph();
@@ -63,17 +63,19 @@ export class LiveCanvasService implements OnModuleInit, OnModuleDestroy {
   }
 
   public getGraphOrNull(
-    canvas: Result<'api::canvas.canvas'>,
+    canvas: Modules.Documents.Result<'api::canvas.canvas'>,
   ): LiveCanvasUndoableData | null {
     return this._liveCanvases.get(canvas.documentId)?.getGraph() ?? null;
   }
 
-  public getCanvas(canvas: Result<'api::canvas.canvas'>): LiveCanvas {
+  public getCanvas(
+    canvas: Modules.Documents.Result<'api::canvas.canvas'>,
+  ): LiveCanvas {
     return this.getCanvasWithId(canvas.documentId);
   }
 
   public getCanvasOrNull(
-    canvas: Result<'api::canvas.canvas'>,
+    canvas: Modules.Documents.Result<'api::canvas.canvas'>,
   ): LiveCanvas | null {
     return this.getCanvasWithIdOrNull(canvas.documentId);
   }
@@ -92,7 +94,9 @@ export class LiveCanvasService implements OnModuleInit, OnModuleDestroy {
     return liveCanvas;
   }
 
-  public getOrStartCanvas(canvas: Result<'api::canvas.canvas'>): LiveCanvas {
+  public getOrStartCanvas(
+    canvas: Modules.Documents.Result<'api::canvas.canvas'>,
+  ): LiveCanvas {
     const exitsingCanvas: LiveCanvas | null =
       this._liveCanvases.get(canvas.documentId) ?? null;
     if (exitsingCanvas != null) {
@@ -134,7 +138,9 @@ export class LiveCanvasService implements OnModuleInit, OnModuleDestroy {
     return liveCanvas;
   }
 
-  public scheduleCanvasShutdown(canvas: Result<'api::canvas.canvas'>): void {
+  public scheduleCanvasShutdown(
+    canvas: Modules.Documents.Result<'api::canvas.canvas'>,
+  ): void {
     const liveCanvas: LiveCanvas | undefined = this._liveCanvases.get(
       canvas.documentId,
     );
@@ -147,7 +153,7 @@ export class LiveCanvasService implements OnModuleInit, OnModuleDestroy {
   }
 
   public getActiveUsersOfCanvases(
-    canvases: Result<'api::canvas.canvas'>[],
+    canvases: Modules.Documents.Result<'api::canvas.canvas'>[],
   ): LiveCanvasUser[] {
     const result: SMap<string, LiveCanvasUser> = new SMap<
       string,
@@ -168,16 +174,16 @@ export class LiveCanvasService implements OnModuleInit, OnModuleDestroy {
   }
 
   public async getActiveUsersOfProject(
-    project: Result<'api::project.project'>,
+    project: Modules.Documents.Result<'api::project.project'>,
   ): Promise<SMap<string, LiveCanvasUser[]>> {
     const result: SMap<string, LiveCanvasUser[]> = new SMap<
       string,
       LiveCanvasUser[]
     >();
-    const rooms: Result<'api::room.room'>[] =
+    const rooms: Modules.Documents.Result<'api::room.room'>[] =
       await this._database.getRoomsOfProject(project);
     for (const room of rooms) {
-      const canvases: Result<'api::canvas.canvas'>[] =
+      const canvases: Modules.Documents.Result<'api::canvas.canvas'>[] =
         await this._database.getCanvasesOfRoom(room);
       result.set(room.documentId, this.getActiveUsersOfCanvases(canvases));
     }
@@ -185,7 +191,7 @@ export class LiveCanvasService implements OnModuleInit, OnModuleDestroy {
   }
 
   private async _destroyCanvas(
-    canvas: Result<'api::canvas.canvas'>,
+    canvas: Modules.Documents.Result<'api::canvas.canvas'>,
   ): Promise<void> {
     this._logger.debug(`Will destroy canvas ${canvas.documentId}.`);
     const liveCanvas: LiveCanvas | undefined = this._liveCanvases.get(

@@ -12,7 +12,7 @@ import {
 } from '@nestjs/common';
 import { ProjectPageDto } from './dto/ProjectPageDto';
 import { ApiResponse } from '@nestjs/swagger';
-import { Result } from '@strapi/types/dist/modules/documents/result';
+import type { Modules } from '@strapi/types';
 import { NotFound } from 'http-errors';
 import { DatabaseService } from '../../../database/DatabaseService';
 import { SchemaFactoryService } from '../../../schema/SchemaFactoryService';
@@ -21,13 +21,7 @@ import { UserIsLoggedIn } from '../../guards/UserIsLoggedIn';
 import { CreateProjectRequestBodyDto } from './dto/CreateProjectRequestBodyDto';
 import { JWT } from '../../decorators/JWT';
 import { AuthService } from '../../../auth/AuthService';
-import { Input } from '@strapi/types/dist/modules/documents/params/data';
 import { UpdateProjectRequestBodyDto } from './dto/UpdateProjectRequestBodyDto';
-import {
-  Delete as DeleteParams,
-  Update,
-} from '@strapi/types/dist/modules/documents/params/document-engine';
-import { Delete as DeleteResult } from '@strapi/types/dist/modules/documents/result/document-engine';
 import { LiveCanvasService } from '../../../live-canvas/LiveCanvasService';
 import { SMap } from '../../../../packages/map/Map';
 import { LiveCanvasUser } from '../../../live-canvas/data/LiveCanvasUser';
@@ -47,7 +41,7 @@ export class ProjectController {
   public async getProject(
     @Param('projectId') projectId: string,
   ): Promise<ProjectPageDto> {
-    const project: Result<'api::project.project'> | null =
+    const project: Modules.Documents.Result<'api::project.project'> | null =
       await this._database.getProjectOrNull(projectId);
 
     if (project == null) {
@@ -70,19 +64,18 @@ export class ProjectController {
     @Body() body: CreateProjectRequestBodyDto,
     @JWT() jwt: string | null,
   ): Promise<ProjectPageDto> {
-    const user: Result<'plugin::users-permissions.user'> | null =
+    const user: Modules.Documents.Result<'plugin::users-permissions.user'> | null =
       await this._authService.getUserByJWT(jwt);
     if (user == null) {
       throw new UnauthorizedException();
     }
-    const project: Result<'api::project.project'> = await strapi
-      .documents('api::project.project')
-      .create({
+    const project: Modules.Documents.Result<'api::project.project'> =
+      await strapi.documents('api::project.project').create({
         status: 'published',
         data: {
           title: body.title,
           owner: user.documentId,
-        } satisfies Input<'api::project.project'>,
+        } satisfies Modules.Documents.Params.Data.Input<'api::project.project'>,
       });
 
     const activeUsers: SMap<string, LiveCanvasUser[]> =
@@ -101,15 +94,14 @@ export class ProjectController {
     @Body() body: UpdateProjectRequestBodyDto,
     @Param('projectId') projectId: string,
   ): Promise<ProjectPageDto> {
-    const project: Result<'api::project.project'> | null = await strapi
-      .documents('api::project.project')
-      .update({
+    const project: Modules.Documents.Result<'api::project.project'> | null =
+      await strapi.documents('api::project.project').update({
         documentId: projectId,
         data: {
           title: body.title,
-        },
+        } satisfies Modules.Documents.Params.Data.Input<'api::project.project'>,
         status: 'published',
-      } satisfies Update<'api::project.project'> & { status: 'published' });
+      });
 
     if (project == null) {
       throw new NotFoundException();
@@ -129,10 +121,11 @@ export class ProjectController {
   public async deleteProject(
     @Param('projectId') projectId: string,
   ): Promise<void> {
-    const result: Awaited<DeleteResult<'api::project.project', never>> =
-      await strapi.documents('api::project.project').delete({
-        documentId: projectId,
-      } satisfies DeleteParams<'api::project.project'>);
+    const result: Awaited<
+      ReturnType<Modules.Documents.ServiceInstance['delete']>
+    > = await strapi.documents('api::project.project').delete({
+      documentId: projectId,
+    } satisfies Modules.Documents.ServiceParams['delete']);
     if (result.entries.length === 0) {
       throw new NotFoundException();
     }

@@ -4,7 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Result } from '@strapi/types/dist/modules/documents/result';
+import type { Modules } from '@strapi/types';
 import { Request } from 'express';
 
 @Injectable()
@@ -21,7 +21,7 @@ export class CommonPropertyBelongsToProject implements CanActivate {
       throw new NotFoundException(`No project id provided.`);
     }
 
-    const commonProperty: Result<
+    const commonProperty: Modules.Documents.Result<
       'api::common-property.common-property',
       { populate: { project: { populate: [] } } }
     > | null = await strapi

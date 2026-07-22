@@ -10,8 +10,7 @@ import {
 } from '@nestjs/common';
 import { ApiParam, ApiResponse } from '@nestjs/swagger';
 import { UserCanAccessProject } from '../../guards/UserCanAccessProject';
-import { Result } from '@strapi/types/dist/modules/documents/result';
-import { Input } from '@strapi/types/dist/modules/documents/params/data';
+import type { Modules } from '@strapi/types';
 import { SchemaFactoryService } from '../../../schema/SchemaFactoryService';
 import { CommonPropertyDto } from '../../../schema/dtos/CommonPropertyDto';
 import { CommonPropertyBelongsToProject } from '../../guards/CommonPropertyBelongsToProject';
@@ -37,12 +36,12 @@ export class CommonPropertiesController {
   public async createCommonProperty(
     @Param('projectId') projectId: string,
   ): Promise<CommonPropertyDto> {
-    const commonProperty: Result<'api::common-property.common-property'> =
+    const commonProperty: Modules.Documents.Result<'api::common-property.common-property'> =
       await strapi.documents('api::common-property.common-property').create({
         status: 'published',
         data: {
           project: projectId,
-        } satisfies Input<'api::common-property.common-property'>,
+        } satisfies Modules.Documents.Params.Data.Input<'api::common-property.common-property'>,
       });
 
     return await this._schemaFactory.createSchemaCommonProperty(commonProperty);
@@ -65,10 +64,10 @@ export class CommonPropertiesController {
     @Param('projectId') projectId: string,
     @Body() body: UpdateCommonPropertyRequestBodyDto,
   ): Promise<void> {
-    const project: Result<'api::project.project'> =
+    const project: Modules.Documents.Result<'api::project.project'> =
       await this._databaseService.getProject(projectId);
     if (body.leftDatabaseId !== '') {
-      const leftDatabase: Result<'api::database-connection.database-connection'> =
+      const leftDatabase: Modules.Documents.Result<'api::database-connection.database-connection'> =
         await this._databaseService.getDatabase(body.leftDatabaseId);
       if (
         !(await databaseBelongsToProject(
@@ -83,7 +82,7 @@ export class CommonPropertiesController {
       }
     }
     if (body.rightDatabaseId !== '') {
-      const rightDatabase: Result<'api::database-connection.database-connection'> =
+      const rightDatabase: Modules.Documents.Result<'api::database-connection.database-connection'> =
         await this._databaseService.getDatabase(body.rightDatabaseId);
       if (
         !(await databaseBelongsToProject(
@@ -109,7 +108,7 @@ export class CommonPropertiesController {
         leftDatabase: body.leftDatabaseId === '' ? null : body.leftDatabaseId,
         rightDatabase:
           body.rightDatabaseId === '' ? null : body.rightDatabaseId,
-      } satisfies Input<'api::common-property.common-property'>,
+      } satisfies Modules.Documents.Params.Data.Input<'api::common-property.common-property'>,
     });
   }
 }

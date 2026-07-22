@@ -5,7 +5,7 @@ import { SMap } from '../../packages/map/Map';
 import { LiveCanvasMetaData } from '../live-canvas/graph/LiveCanvasMetaData';
 import { PropertyCollection } from '../live-canvas/graph/PropertyCollection';
 import { DatabaseService } from '../database/DatabaseService';
-import { Result } from '@strapi/types/dist/modules/documents/result';
+import type { Modules } from '@strapi/types';
 import { Range } from '../../packages/range/Range';
 import { Logger } from '@strapi/logger';
 import { createChildLogger } from '../logger/createChildLogger';
@@ -71,9 +71,9 @@ export class SchemaFactoryService {
   public constructor(private readonly _database: DatabaseService) {}
 
   public async createSchemaDatabase(
-    databaseDBDTO: Result<'api::database-connection.database-connection'>,
+    databaseDBDTO: Modules.Documents.Result<'api::database-connection.database-connection'>,
   ): Promise<DatabaseConnectionDto> {
-    const nodeConfigurations: Result<'api::node-configuration.node-configuration'>[] =
+    const nodeConfigurations: Modules.Documents.Result<'api::node-configuration.node-configuration'>[] =
       await this._database.getNodeConfigurationsOfDatabase(databaseDBDTO);
     return {
       id: databaseDBDTO.documentId,
@@ -83,7 +83,7 @@ export class SchemaFactoryService {
       database: databaseDBDTO.database ?? '',
       nodeConfigurations: nodeConfigurations.map(
         (
-          nodeConfiguration: Result<'api::node-configuration.node-configuration'>,
+          nodeConfiguration: Modules.Documents.Result<'api::node-configuration.node-configuration'>,
         ): NodeConfigurationDto =>
           new NodeConfigurationDto({
             id: nodeConfiguration.documentId,
@@ -136,17 +136,17 @@ export class SchemaFactoryService {
   }
 
   public async createSchemaRoom(
-    room: Result<'api::room.room'>,
+    room: Modules.Documents.Result<'api::room.room'>,
     activeUsers: LiveCanvasUser[],
   ): Promise<RoomDto> {
     const canvases: CanvasDto[] = (
       await this._database.getCanvasesOfRoom(room)
-    ).map((c: Result<'api::canvas.canvas'>): CanvasDto => {
+    ).map((c: Modules.Documents.Result<'api::canvas.canvas'>): CanvasDto => {
       return this.createSchemaCanvasPreview(c);
     });
-    const project: Result<'api::project.project'> =
+    const project: Modules.Documents.Result<'api::project.project'> =
       await this._database.getProjectOfRoom(room);
-    const databases: Result<'api::database-connection.database-connection'>[] =
+    const databases: Modules.Documents.Result<'api::database-connection.database-connection'>[] =
       await this._database.getDatabaseConnectionsOfProject(project);
 
     return new RoomDto({
@@ -159,7 +159,7 @@ export class SchemaFactoryService {
       databases: await Promise.all(
         databases.map(
           async (
-            database: Result<'api::database-connection.database-connection'>,
+            database: Modules.Documents.Result<'api::database-connection.database-connection'>,
           ): Promise<DatabaseConnectionDto> =>
             await this.createSchemaDatabase(database),
         ),
@@ -172,7 +172,7 @@ export class SchemaFactoryService {
   }
 
   public createSchemaRoomVisibility(
-    room: Result<'api::room.room'>,
+    room: Modules.Documents.Result<'api::room.room'>,
   ): RoomVisibilityDto {
     return match(room.visibility)
       .with('private', (): RoomVisibilityDto => RoomVisibilityDto.private)
@@ -183,10 +183,10 @@ export class SchemaFactoryService {
   }
 
   public async createSchemaStartPageRoom(
-    room: Result<'api::room.room'>,
+    room: Modules.Documents.Result<'api::room.room'>,
     activeUsers: LiveCanvasUser[],
   ): Promise<StartPageRoomDto> {
-    const canvases: Result<'api::canvas.canvas'>[] =
+    const canvases: Modules.Documents.Result<'api::canvas.canvas'>[] =
       await this._database.getCanvasesOfRoom(room);
     return {
       id: room.documentId,
@@ -201,14 +201,14 @@ export class SchemaFactoryService {
   }
 
   public async createGetScenariosResult(
-    room: Result<'api::room.room'>,
+    room: Modules.Documents.Result<'api::room.room'>,
   ): Promise<ScenarioCollectionDto> {
-    const scenarioGroups: Result<'api::scenario-group.scenario-group'>[] =
+    const scenarioGroups: Modules.Documents.Result<'api::scenario-group.scenario-group'>[] =
       await this._database.getScenarioGroupsOfRoom(room);
     const scenarioGroupSchemas: ScenarioGroupDto[] = await Promise.all(
       scenarioGroups.map(
         async (
-          scenarioGroup: Result<'api::scenario-group.scenario-group'>,
+          scenarioGroup: Modules.Documents.Result<'api::scenario-group.scenario-group'>,
         ): Promise<ScenarioGroupDto> => {
           return await this.createSchemaScenarioGroup(scenarioGroup);
         },
@@ -221,13 +221,13 @@ export class SchemaFactoryService {
   }
 
   public async createSchemaScenario(
-    scenario: Result<'api::scenario.scenario'>,
+    scenario: Modules.Documents.Result<'api::scenario.scenario'>,
   ): Promise<ScenarioDto> {
     const postScenarioActions: ScenarioPostActionDto[] = (
       await this._database.getOrderedPostScenarioActionsOfScenario(scenario)
     ).map(
       (
-        postScenarioAction: Result<'api::post-scenario-action.post-scenario-action'>,
+        postScenarioAction: Modules.Documents.Result<'api::post-scenario-action.post-scenario-action'>,
       ): ScenarioPostActionDto => ({
         id: postScenarioAction.documentId,
         label: postScenarioAction.label ?? '',
@@ -259,8 +259,10 @@ export class SchemaFactoryService {
       title: scenario.title ?? '',
       queries: await Promise.all(
         (await this._database.getQueriesOfScenario(scenario)).map(
-          async (q: Result<'api::query.query'>): Promise<ScenarioQueryDto> => {
-            const database: Result<'api::database-connection.database-connection'> | null =
+          async (
+            q: Modules.Documents.Result<'api::query.query'>,
+          ): Promise<ScenarioQueryDto> => {
+            const database: Modules.Documents.Result<'api::database-connection.database-connection'> | null =
               await this._database.getDatabaseConnectionOfQuery(q);
             return {
               id: q.documentId,
@@ -276,7 +278,7 @@ export class SchemaFactoryService {
       description: scenario.description ?? '',
       parameters: (await this._database.getParametersOfScenario(scenario)).map(
         (
-          parameter: Result<'api::query-parameter.query-parameter'>,
+          parameter: Modules.Documents.Result<'api::query-parameter.query-parameter'>,
         ): ScenarioParameterDto =>
           this.createSchemaScenarioParameter(parameter),
       ),
@@ -288,7 +290,7 @@ export class SchemaFactoryService {
   }
 
   public createSchemaScenarioParameter(
-    scenarioParameter: Result<'api::query-parameter.query-parameter'>,
+    scenarioParameter: Modules.Documents.Result<'api::query-parameter.query-parameter'>,
   ): ScenarioParameterDto {
     const native: LiveCanvasParameter =
       LiveCanvasParameter.fromDb(scenarioParameter);
@@ -303,7 +305,7 @@ export class SchemaFactoryService {
   }
 
   public async createSchemaScenarioGroup(
-    scenarioGroup: Result<'api::scenario-group.scenario-group'>,
+    scenarioGroup: Modules.Documents.Result<'api::scenario-group.scenario-group'>,
   ): Promise<ScenarioGroupDto> {
     return new ScenarioGroupDto({
       id: scenarioGroup.documentId,
@@ -311,7 +313,7 @@ export class SchemaFactoryService {
       scenarios: await Promise.all(
         (await this._database.getScenariosOfGroup(scenarioGroup)).map(
           async (
-            scenario: Result<'api::scenario.scenario'>,
+            scenario: Modules.Documents.Result<'api::scenario.scenario'>,
           ): Promise<ScenarioDto> => {
             return await this.createSchemaScenario(scenario);
           },
@@ -330,18 +332,16 @@ export class SchemaFactoryService {
     const labelIndex: SMap<string, LabelDto> = this._createLabelIndex(canvas);
 
     const result: LiveCanvasGraphElementsDto = {
-      nodes: graph.nodes.nodes.toArrayBy(
-        (node: GraphNode): NodeDto =>
-          this._createSchemaNode(node, canvas, degreeRange),
+      nodes: graph.nodes.nodes.toArrayBy((node: GraphNode): NodeDto =>
+        this._createSchemaNode(node, canvas, degreeRange),
       ),
-      edges: graph.edges.edges.toArrayBy(
-        (edge: GraphEdge): EdgeDto =>
-          this._createSchemaEdge(
-            edge,
-            graph,
-            canvas.data.viewSettings,
-            widthRange,
-          ),
+      edges: graph.edges.edges.toArrayBy((edge: GraphEdge): EdgeDto =>
+        this._createSchemaEdge(
+          edge,
+          graph,
+          canvas.data.viewSettings,
+          widthRange,
+        ),
       ),
       labels: graph.nodes.labelIndex.labels.map((label: string): LabelDto => {
         const l: LabelDto | null = labelIndex.get(label) ?? null;
@@ -437,20 +437,20 @@ export class SchemaFactoryService {
   }
 
   public async createSchemaProjectPage(
-    project: Result<'api::project.project'>,
+    project: Modules.Documents.Result<'api::project.project'>,
     activeUsers: SMap<string, LiveCanvasUser[]>,
   ): Promise<ProjectPageDto> {
-    const owner: Result<'plugin::users-permissions.user'> | null =
+    const owner: Modules.Documents.Result<'plugin::users-permissions.user'> | null =
       await this._database.getOwnerOfProject(project);
-    const collaborators: Result<'plugin::users-permissions.user'>[] =
+    const collaborators: Modules.Documents.Result<'plugin::users-permissions.user'>[] =
       await this._database.getCollaboratorsOfProject(project);
-    const databaseConnections: Result<'api::database-connection.database-connection'>[] =
+    const databaseConnections: Modules.Documents.Result<'api::database-connection.database-connection'>[] =
       await this._database.getDatabaseConnectionsOfProject(project);
-    const scenarioGroups: Result<'api::scenario-group.scenario-group'>[] =
+    const scenarioGroups: Modules.Documents.Result<'api::scenario-group.scenario-group'>[] =
       await this._database.getScenarioGroupsOfProject(project);
-    const rooms: Result<'api::room.room'>[] =
+    const rooms: Modules.Documents.Result<'api::room.room'>[] =
       await this._database.getRoomsOfProject(project);
-    const commonProperties: Result<'api::common-property.common-property'>[] =
+    const commonProperties: Modules.Documents.Result<'api::common-property.common-property'>[] =
       await this._database.getCommonPropertiesOfProject(project);
 
     return new ProjectPageDto({
@@ -459,13 +459,13 @@ export class SchemaFactoryService {
       owner: owner ? this.createSchemaUserPreview(owner) : null,
       collaborators: collaborators.map(
         (
-          collaborator: Result<'plugin::users-permissions.user'>,
+          collaborator: Modules.Documents.Result<'plugin::users-permissions.user'>,
         ): UserPreviewDto => this.createSchemaUserPreview(collaborator),
       ),
       databases: await Promise.all(
         databaseConnections.map(
           async (
-            database: Result<'api::database-connection.database-connection'>,
+            database: Modules.Documents.Result<'api::database-connection.database-connection'>,
           ): Promise<DatabaseConnectionDto> => {
             return await this.createSchemaDatabase(database);
           },
@@ -474,14 +474,16 @@ export class SchemaFactoryService {
       scenarioGroups: await Promise.all(
         scenarioGroups.map(
           async (
-            sg: Result<'api::scenario-group.scenario-group'>,
+            sg: Modules.Documents.Result<'api::scenario-group.scenario-group'>,
           ): Promise<ScenarioGroupDto> =>
             await this.createSchemaScenarioGroup(sg),
         ),
       ),
       rooms: await Promise.all(
         rooms.map(
-          async (room: Result<'api::room.room'>): Promise<RoomDto> =>
+          async (
+            room: Modules.Documents.Result<'api::room.room'>,
+          ): Promise<RoomDto> =>
             await this.createSchemaRoom(
               room,
               activeUsers.get(room.documentId) ?? [],
@@ -491,7 +493,7 @@ export class SchemaFactoryService {
       commonProperties: await Promise.all(
         commonProperties.map(
           async (
-            commonProperty: Result<'api::common-property.common-property'>,
+            commonProperty: Modules.Documents.Result<'api::common-property.common-property'>,
           ): Promise<CommonPropertyDto> =>
             await this.createSchemaCommonProperty(commonProperty),
         ),
@@ -500,14 +502,14 @@ export class SchemaFactoryService {
   }
 
   public async createSchemaStartPageProject(
-    input: Result<'api::project.project'>,
+    input: Modules.Documents.Result<'api::project.project'>,
     activeUsers: LiveCanvasUser[],
   ): Promise<StartPageProjectDto> {
-    const owner: Result<'plugin::users-permissions.user'> | null =
+    const owner: Modules.Documents.Result<'plugin::users-permissions.user'> | null =
       await this._database.getOwnerOfProject(input);
-    const collaborators: Result<'plugin::users-permissions.user'>[] =
+    const collaborators: Modules.Documents.Result<'plugin::users-permissions.user'>[] =
       await this._database.getCollaboratorsOfProject(input);
-    const databaseConnections: Result<'api::database-connection.database-connection'>[] =
+    const databaseConnections: Modules.Documents.Result<'api::database-connection.database-connection'>[] =
       await this._database.getDatabaseConnectionsOfProject(input);
     return {
       id: input.documentId,
@@ -515,7 +517,7 @@ export class SchemaFactoryService {
       owner: owner ? this.createSchemaUserPreview(owner) : null,
       collaborators: collaborators.map(
         (
-          collaborator: Result<'plugin::users-permissions.user'>,
+          collaborator: Modules.Documents.Result<'plugin::users-permissions.user'>,
         ): UserPreviewDto => {
           return this.createSchemaUserPreview(collaborator);
         },
@@ -523,7 +525,7 @@ export class SchemaFactoryService {
       databases: await Promise.all(
         databaseConnections.map(
           async (
-            database: Result<'api::database-connection.database-connection'>,
+            database: Modules.Documents.Result<'api::database-connection.database-connection'>,
           ): Promise<DatabaseConnectionDto> => {
             return await this.createSchemaDatabase(database);
           },
@@ -537,7 +539,7 @@ export class SchemaFactoryService {
   }
 
   public createSchemaCanvasPreview(
-    canvas: Result<'api::canvas.canvas'>,
+    canvas: Modules.Documents.Result<'api::canvas.canvas'>,
   ): CanvasDto {
     return {
       id: canvas.documentId,
@@ -546,7 +548,7 @@ export class SchemaFactoryService {
   }
 
   public createSchemaUserPreview(
-    user: Result<'plugin::users-permissions.user'>,
+    user: Modules.Documents.Result<'plugin::users-permissions.user'>,
   ): UserPreviewDto {
     return {
       id: user.documentId,
@@ -576,13 +578,11 @@ export class SchemaFactoryService {
         .toSorted(
           (a: [string, number], b: [string, number]): number => b[1] - a[1],
         )
-        .map(
-          (entry: [string, number]): HistogramValueEntryDto => ({
-            value: entry[0],
-            count: entry[1],
-            percentage: entry[1] / labelCountHistogram,
-          }),
-        ),
+        .map((entry: [string, number]): HistogramValueEntryDto => ({
+          value: entry[0],
+          count: entry[1],
+          percentage: entry[1] / labelCountHistogram,
+        })),
       nodeProperties: graph.nodes.propertyHistogram
         .toArray()
         .toSorted(
@@ -628,13 +628,11 @@ export class SchemaFactoryService {
         .toSorted(
           (a: [string, number], b: [string, number]): number => b[1] - a[1],
         )
-        .map(
-          (entry: [string, number]): HistogramValueEntryDto => ({
-            value: entry[0],
-            count: entry[1],
-            percentage: entry[1] / typeCountHistogram,
-          }),
-        ),
+        .map((entry: [string, number]): HistogramValueEntryDto => ({
+          value: entry[0],
+          count: entry[1],
+          percentage: entry[1] / typeCountHistogram,
+        })),
       edgeProperties: graph.edges.propertyHistogram
         .toArray()
         .toSorted(
@@ -727,11 +725,11 @@ export class SchemaFactoryService {
   }
 
   public async createSchemaCommonProperty(
-    commonProperty: Result<'api::common-property.common-property'>,
+    commonProperty: Modules.Documents.Result<'api::common-property.common-property'>,
   ): Promise<CommonPropertyDto> {
-    const leftDatabase: Result<'api::database-connection.database-connection'> | null =
+    const leftDatabase: Modules.Documents.Result<'api::database-connection.database-connection'> | null =
       await this._database.getLeftDatabaseOfCommonProperty(commonProperty);
-    const rightDatabase: Result<'api::database-connection.database-connection'> | null =
+    const rightDatabase: Modules.Documents.Result<'api::database-connection.database-connection'> | null =
       await this._database.getRightDatabaseOfCommonProperty(commonProperty);
     return new CommonPropertyDto({
       id: commonProperty.documentId,
@@ -962,7 +960,7 @@ export class SchemaFactoryService {
   }
 
   private _createSchemaScenarioPostActionType(
-    postScenarioActionType: Result<'api::post-scenario-action.post-scenario-action'>['type'],
+    postScenarioActionType: Modules.Documents.Result<'api::post-scenario-action.post-scenario-action'>['type'],
   ): ScenarioPostActionTypeDto {
     return match(postScenarioActionType)
       .returnType<ScenarioPostActionTypeDto>()
@@ -1032,7 +1030,7 @@ export class SchemaFactoryService {
   }
 
   private _createSchemaScenarioPostActionLayoutAlgorithm(
-    layoutAlgorithm: Result<'api::post-scenario-action.post-scenario-action'>['layoutAlgorithm'],
+    layoutAlgorithm: Modules.Documents.Result<'api::post-scenario-action.post-scenario-action'>['layoutAlgorithm'],
   ): ScenarioPostActionLayoutAlgorithmDto {
     return match(layoutAlgorithm)
       .returnType<ScenarioPostActionLayoutAlgorithmDto>()

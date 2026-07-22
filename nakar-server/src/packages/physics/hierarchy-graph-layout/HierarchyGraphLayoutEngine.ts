@@ -96,13 +96,11 @@ export class HierarchyGraphLayoutEngine {
     return {
       id: 'root',
       layoutOptions: this._createElkLayoutOptions(),
-      children: nodeIds.map(
-        (nodeId: string): ElkNode => ({
-          id: nodeId,
-          width: layoutDiameter,
-          height: layoutDiameter,
-        }),
-      ),
+      children: nodeIds.map((nodeId: string): ElkNode => ({
+        id: nodeId,
+        width: layoutDiameter,
+        height: layoutDiameter,
+      })),
       edges: edges
         .filter(
           (edge: PhysicalEdge): boolean =>
@@ -110,13 +108,11 @@ export class HierarchyGraphLayoutEngine {
             edge.endNodeId in nodes &&
             edge.startNodeId !== edge.endNodeId,
         )
-        .map(
-          (edge: PhysicalEdge): ElkExtendedEdge => ({
-            id: edge.id,
-            sources: [edge.startNodeId],
-            targets: [edge.endNodeId],
-          }),
-        ),
+        .map((edge: PhysicalEdge): ElkExtendedEdge => ({
+          id: edge.id,
+          sources: [edge.startNodeId],
+          targets: [edge.endNodeId],
+        })),
     };
   }
 

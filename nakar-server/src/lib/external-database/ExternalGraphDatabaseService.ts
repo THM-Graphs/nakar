@@ -1,5 +1,5 @@
 import { Injectable, OnModuleDestroy } from '@nestjs/common';
-import type { Result } from '@strapi/types/dist/modules/documents/result';
+import type { Modules } from '@strapi/types';
 import { SMap } from '../../packages/map/Map';
 import { SSet } from '../../packages/set/Set';
 import type { ExternalGraphDatabaseCredentials } from './data/ExternalGraphDatabaseCredentials';
@@ -43,7 +43,7 @@ export class ExternalGraphDatabaseService implements OnModuleDestroy {
   }
 
   public parseCredentials(
-    database: Result<'api::database-connection.database-connection'>,
+    database: Modules.Documents.Result<'api::database-connection.database-connection'>,
   ): ExternalGraphDatabaseCredentials {
     return {
       databaseType: match(database.databaseType)
@@ -76,7 +76,7 @@ export class ExternalGraphDatabaseService implements OnModuleDestroy {
   }
 
   public async executeQuery(
-    database: Result<'api::database-connection.database-connection'>,
+    database: Modules.Documents.Result<'api::database-connection.database-connection'>,
     query: string,
     queryArguments: Record<string, unknown>,
     limitConfig: ExternalGraphDatabaseQueryLimitConfig,
@@ -92,7 +92,7 @@ export class ExternalGraphDatabaseService implements OnModuleDestroy {
   }
 
   public async loadConnectingRelationships(
-    database: Result<'api::database-connection.database-connection'>,
+    database: Modules.Documents.Result<'api::database-connection.database-connection'>,
     nodeIds: SSet<string>,
   ): Promise<ExternalGraphDatabaseQueryResult> {
     const credentials: ExternalGraphDatabaseCredentials =
@@ -103,7 +103,7 @@ export class ExternalGraphDatabaseService implements OnModuleDestroy {
   }
 
   public async expandNode(
-    database: Result<'api::database-connection.database-connection'>,
+    database: Modules.Documents.Result<'api::database-connection.database-connection'>,
     nodeIds: SSet<string>,
     limit: {
       relationships: SSet<string>;
@@ -120,7 +120,7 @@ export class ExternalGraphDatabaseService implements OnModuleDestroy {
   }
 
   public async expandNodePreview(
-    database: Result<'api::database-connection.database-connection'>,
+    database: Modules.Documents.Result<'api::database-connection.database-connection'>,
     nodeIds: SSet<string>,
   ): Promise<ExternalGraphDatabaseExpandNodePreview> {
     const credentials: ExternalGraphDatabaseCredentials =
@@ -132,7 +132,7 @@ export class ExternalGraphDatabaseService implements OnModuleDestroy {
   }
 
   public async getStats(
-    database: Result<'api::database-connection.database-connection'>,
+    database: Modules.Documents.Result<'api::database-connection.database-connection'>,
   ): Promise<ExternalGraphDatabaseStats> {
     const credentials: ExternalGraphDatabaseCredentials =
       this.parseCredentials(database);
@@ -150,7 +150,7 @@ export class ExternalGraphDatabaseService implements OnModuleDestroy {
   }
 
   public async getSearchCapabilities(
-    database: Result<'api::database-connection.database-connection'>,
+    database: Modules.Documents.Result<'api::database-connection.database-connection'>,
   ): Promise<ExternalGraphDatabaseSearchCapabilities> {
     const credentials: ExternalGraphDatabaseCredentials =
       this.parseCredentials(database);
@@ -160,7 +160,7 @@ export class ExternalGraphDatabaseService implements OnModuleDestroy {
   }
 
   public async search(
-    database: Result<'api::database-connection.database-connection'>,
+    database: Modules.Documents.Result<'api::database-connection.database-connection'>,
     searchTerm: string,
   ): Promise<ExternalGraphDatabaseNode[]> {
     const credentials: ExternalGraphDatabaseCredentials =
@@ -172,7 +172,7 @@ export class ExternalGraphDatabaseService implements OnModuleDestroy {
   }
 
   public async findNodeByNativeId(
-    database: Result<'api::database-connection.database-connection'>,
+    database: Modules.Documents.Result<'api::database-connection.database-connection'>,
     nativeNodeId: string,
   ): Promise<ExternalGraphDatabaseQueryResult> {
     const credentials: ExternalGraphDatabaseCredentials =
@@ -184,7 +184,7 @@ export class ExternalGraphDatabaseService implements OnModuleDestroy {
   }
 
   public async expandClusterNode(
-    database: Result<'api::database-connection.database-connection'>,
+    database: Modules.Documents.Result<'api::database-connection.database-connection'>,
     nodeIds: SSet<string>,
     neighbors: SSet<string>,
   ): Promise<ExternalGraphDatabaseQueryResult> {
@@ -198,7 +198,7 @@ export class ExternalGraphDatabaseService implements OnModuleDestroy {
   }
 
   public async findRelationshipsByIds(
-    database: Result<'api::database-connection.database-connection'>,
+    database: Modules.Documents.Result<'api::database-connection.database-connection'>,
     relationshipIds: string[],
   ): Promise<ExternalGraphDatabaseQueryResult> {
     const credentials: ExternalGraphDatabaseCredentials =
@@ -209,7 +209,7 @@ export class ExternalGraphDatabaseService implements OnModuleDestroy {
   }
 
   public async findShortestPath(
-    database: Result<'api::database-connection.database-connection'>,
+    database: Modules.Documents.Result<'api::database-connection.database-connection'>,
     nodeIds: SSet<string>,
   ): Promise<ExternalGraphDatabaseQueryResult> {
     const credentials: ExternalGraphDatabaseCredentials =

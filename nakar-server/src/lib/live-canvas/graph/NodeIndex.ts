@@ -9,11 +9,11 @@ import type { LiveCanvasUndoableData } from '../data/LiveCanvasUndoableData';
 import type { ElementCreationReason } from './ElementCreationReason';
 import { LabelIndex } from './LabelIndex';
 import type { DatabaseReferenceCache } from '../../schema/DatabaseReferenceCache';
-import type { Result } from '@strapi/types/dist/modules/documents';
 import type { Logger } from '@strapi/logger';
 import { createChildLogger } from '../../logger/createChildLogger';
 import Handlebars from 'handlebars';
 import { IdHash } from '../../../packages/hash/IdHash';
+import type { Modules } from '@strapi/types';
 
 export class NodeIndex {
   private readonly _logger: Logger = createChildLogger(this);
@@ -289,7 +289,7 @@ export class NodeIndex {
     node: ExternalGraphDatabaseNode,
     databaseCache: DatabaseReferenceCache,
   ): Promise<URL | null> {
-    const nodeConfigs: Result<'api::node-configuration.node-configuration'>[] =
+    const nodeConfigs: Modules.Documents.Result<'api::node-configuration.node-configuration'>[] =
       await databaseCache.getNodeConfigurations(node.source.nakarId);
     for (const nodeConfig of nodeConfigs) {
       if (
@@ -332,7 +332,7 @@ export class NodeIndex {
     node: ExternalGraphDatabaseNode,
     databaseCache: DatabaseReferenceCache,
   ): Promise<URL | null> {
-    const nodeConfigs: Result<'api::node-configuration.node-configuration'>[] =
+    const nodeConfigs: Modules.Documents.Result<'api::node-configuration.node-configuration'>[] =
       await databaseCache.getNodeConfigurations(node.source.nakarId);
     for (const nodeConfig of nodeConfigs) {
       if (

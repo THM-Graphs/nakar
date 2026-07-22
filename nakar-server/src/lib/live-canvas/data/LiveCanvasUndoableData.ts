@@ -10,7 +10,6 @@ import type { PhysicalGraph } from '../../../packages/physics/physical-graph/Phy
 import type { PhysicalNode } from '../../../packages/physics/physical-graph/PhysicalNode';
 import type { PhysicalEdge } from '../../../packages/physics/physical-graph/PhysicalEdge';
 import { SSet } from '../../../packages/set/Set';
-import type { Result } from '@strapi/types/dist/modules/documents/result';
 import type { Range } from '../../../packages/range/Range';
 import type { Logger } from '@strapi/logger';
 import { createChildLogger } from '../../logger/createChildLogger';
@@ -18,6 +17,7 @@ import type { Profiler } from 'winston';
 import type { LiveCanvasViewSettings } from '../view-settings/LiveCanvasViewSettings';
 import { LiveCanvasParameter } from '../graph/LiveCanvasParameter';
 import { LiveCanvasNote } from './LiveCanvasNote';
+import type { Modules } from '@strapi/types';
 
 export class LiveCanvasUndoableData {
   // eslint-disable-next-line @typescript-eslint/typedef
@@ -85,15 +85,13 @@ export class LiveCanvasUndoableData {
     return new LiveCanvasUndoableData({
       id: data.id,
       nodes: new NodeIndex(
-        data.nodes.map(
-          (n: z.infer<typeof GraphNode.schema>): GraphNode =>
-            GraphNode.fromPlain(n),
+        data.nodes.map((n: z.infer<typeof GraphNode.schema>): GraphNode =>
+          GraphNode.fromPlain(n),
         ),
       ),
       edges: new EdgeIndex(
-        data.edges.map(
-          (e: z.infer<typeof GraphEdge.schema>): GraphEdge =>
-            GraphEdge.fromPlain(e),
+        data.edges.map((e: z.infer<typeof GraphEdge.schema>): GraphEdge =>
+          GraphEdge.fromPlain(e),
         ),
       ),
       metaData: LiveCanvasMetaData.fromPlain(data.metaData),
@@ -102,9 +100,8 @@ export class LiveCanvasUndoableData {
           SMap.fromRecord(td),
       ),
       notes: data.notes
-        .map(
-          (n: z.infer<typeof LiveCanvasNote.schema>): LiveCanvasNote =>
-            LiveCanvasNote.fromPlain(n),
+        .map((n: z.infer<typeof LiveCanvasNote.schema>): LiveCanvasNote =>
+          LiveCanvasNote.fromPlain(n),
         )
         .reduce(
           (
@@ -131,16 +128,16 @@ export class LiveCanvasUndoableData {
   }
 
   public resetFromInitialScenario(
-    scenario: Result<'api::scenario.scenario'>,
+    scenario: Modules.Documents.Result<'api::scenario.scenario'>,
     scenarioArguments: SMap<string, string>,
-    parameters: Result<'api::query-parameter.query-parameter'>[],
+    parameters: Modules.Documents.Result<'api::query-parameter.query-parameter'>[],
   ): void {
     this.metaData.reset(
       scenario.documentId,
       scenarioArguments,
       parameters.map(
         (
-          p: Result<'api::query-parameter.query-parameter'>,
+          p: Modules.Documents.Result<'api::query-parameter.query-parameter'>,
         ): LiveCanvasParameter => LiveCanvasParameter.fromDb(p),
       ),
     );
@@ -164,9 +161,8 @@ export class LiveCanvasUndoableData {
       ),
       notes: this.notes
         .toValueArray()
-        .map(
-          (n: LiveCanvasNote): z.infer<typeof LiveCanvasNote.schema> =>
-            n.toPlain(),
+        .map((n: LiveCanvasNote): z.infer<typeof LiveCanvasNote.schema> =>
+          n.toPlain(),
         ),
     };
   }

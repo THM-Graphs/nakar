@@ -1,7 +1,7 @@
 import z from 'zod';
 import { LiveCanvasParameterDataType } from './LiveCanvasParameterDataType';
-import type { Result } from '@strapi/types/dist/modules/documents/result';
 import { match, P } from 'ts-pattern';
+import type { Modules } from '@strapi/types';
 
 export class LiveCanvasParameter {
   // eslint-disable-next-line @typescript-eslint/typedef
@@ -75,7 +75,7 @@ export class LiveCanvasParameter {
   }
 
   public static fromDb(
-    databaseEntry: Result<'api::query-parameter.query-parameter'>,
+    databaseEntry: Modules.Documents.Result<'api::query-parameter.query-parameter'>,
   ): LiveCanvasParameter {
     return new LiveCanvasParameter({
       id: databaseEntry.documentId,
