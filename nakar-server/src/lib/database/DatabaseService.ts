@@ -123,16 +123,12 @@ export class DatabaseService {
 
   public async updateDatabase(
     databaseId: string,
-    data: Omit<
-      Partial<Modules.Documents.Params.Data.Input<'api::database-connection.database-connection'>>,
-      'language'
-    > & {
-      language?: string | null;
-    },
+    data: Partial<
+      Modules.Documents.Params.Data.Input<'api::database-connection.database-connection'>
+    >,
   ): Promise<Modules.Documents.Result<'api::database-connection.database-connection'> | null> {
-    const encryptedData: Omit<
-      Partial<Modules.Documents.Params.Data.Input<'api::database-connection.database-connection'>>,
-      'language'
+    const encryptedData: Partial<
+      Modules.Documents.Params.Data.Input<'api::database-connection.database-connection'>
     > = { ...data };
     if (encryptedData.password != null) {
       encryptedData.password = this._encryptionService.encrypt(
