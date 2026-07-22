@@ -171,6 +171,7 @@ export class DatabaseConnectionController {
         connectionUrl: body.connectionUrl,
         browserUrl: body.browserUrl,
         databaseType: body.databaseType,
+        // @ts-expect-error
         language: body.language,
       });
 

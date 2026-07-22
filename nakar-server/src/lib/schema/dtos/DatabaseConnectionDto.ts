@@ -24,7 +24,7 @@ export class DatabaseConnectionDto {
   @ApiProperty({ enum: DatabaseConnectionDatabaseType })
   public databaseType: DatabaseConnectionDatabaseType;
 
-  @ApiProperty({ nullable: true })
+  @ApiProperty({ nullable: true, type: String })
   public language: string | null;
 
   public constructor(data: {

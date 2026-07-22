@@ -40,7 +40,7 @@ export type DatabaseConnectionDto = {
     database: string;
     nodeConfigurations: Array<NodeConfigurationDto>;
     databaseType: 'neo4j' | 'sparql' | 'wikidata';
-    language: string;
+    language: string | null;
 };
 
 export type StartPageProjectDto = {
