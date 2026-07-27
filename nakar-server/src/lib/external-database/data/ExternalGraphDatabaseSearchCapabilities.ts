@@ -6,4 +6,5 @@ export interface ExternalGraphDatabaseSearchCapabilities {
   canExactMatchLabel: boolean;
   exactMatchNodeProperties: SMap<string, SSet<string>>;
   fuzzyMatchNodeProperties: SMap<string, SSet<string>>;
+  special: SSet<string>;
 }

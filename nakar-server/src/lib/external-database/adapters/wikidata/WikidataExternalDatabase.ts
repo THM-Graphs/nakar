@@ -2,7 +2,7 @@ import { SSet } from '../../../../packages/set/Set';
 import type { ExternalGraphDatabase } from '../../ExternalGraphDatabase';
 import type { ExternalGraphDatabaseCredentials } from '../../data/ExternalGraphDatabaseCredentials';
 import type { ExternalGraphDatabaseExpandNodePreview } from '../../data/ExternalGraphDatabaseExpandNodePreview';
-import type { ExternalGraphDatabaseQueryLimitConfig } from '../../data/ExternalGraphDatabaseQueryLimitConfig';
+import { ExternalGraphDatabaseQueryLimitConfig } from '../../data/ExternalGraphDatabaseQueryLimitConfig';
 import type { ExternalGraphDatabaseQueryResult } from '../../data/ExternalGraphDatabaseQueryResult';
 import type { ExternalGraphDatabaseSearchCapabilities } from '../../data/ExternalGraphDatabaseSearchCapabilities';
 import type { ExternalGraphDatabaseStats } from '../../data/ExternalGraphDatabaseStats';
@@ -103,15 +103,54 @@ export class WikidataExternalDatabase implements ExternalGraphDatabase {
   }
 
   public async getSearchCapabilities(): Promise<ExternalGraphDatabaseSearchCapabilities> {
-    return await this._sparqlAdapter.getSearchCapabilities();
+    return await Promise.resolve({
+      canExactMatchNativeId: true,
+      canExactMatchLabel: false,
+      exactMatchNodeProperties: new SMap(),
+      fuzzyMatchNodeProperties: new SMap(),
+      special: new SSet(['Q-ID']),
+    });
   }
 
   public async search(
     credentials: ExternalGraphDatabaseCredentials,
     searchTerm: string,
   ): Promise<ExternalGraphDatabaseNode[]> {
-    const result: ExternalGraphDatabaseNode[] =
-      await this._sparqlAdapter.search(credentials, searchTerm);
+    let url: URL | null = null;
+    try {
+      url = new URL(searchTerm);
+    } catch {
+      /* ok */
+    }
+
+    const bindingsStream: BindingsStream =
+      await this._sparqlAdapter.runGenericSparqlQuery(
+        credentials,
+        `
+SELECT ?node
+WHERE {
+  VALUES ?node { ${url == null ? '' : '<' + url.toString() + '>'} <http://www.wikidata.org/entity/${encodeURIComponent(searchTerm)}>  }
+}
+LIMIT 1
+      `,
+      );
+
+    const nodes: SMap<string, ExternalGraphDatabaseNode> = new SMap<
+      string,
+      ExternalGraphDatabaseNode
+    >();
+
+    for (const line of await bindingsStream.toArray({
+      limit: ExternalGraphDatabaseQueryLimitConfig.maximalPreviewElements,
+    })) {
+      const node: Term | null = line.get('node') ?? null;
+      if (node == null) {
+        continue;
+      }
+      this._sparqlAdapter.collectNode(node, null, nodes, credentials);
+    }
+
+    const result: ExternalGraphDatabaseNode[] = nodes.toValueArray();
 
     await this._applyNodeTitlesToElementArray(result, credentials);
 

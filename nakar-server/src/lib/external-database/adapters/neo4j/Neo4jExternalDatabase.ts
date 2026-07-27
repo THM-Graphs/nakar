@@ -311,6 +311,7 @@ ORDER BY lcount DESC, label ASC`,
       canExactMatchLabel: false,
       exactMatchNodeProperties: exactMatchNodeProperties,
       fuzzyMatchNodeProperties: fuzzyMatchNodeProperties,
+      special: new SSet(),
     };
   }
 

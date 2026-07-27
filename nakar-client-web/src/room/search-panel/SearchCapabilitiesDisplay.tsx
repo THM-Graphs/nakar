@@ -134,6 +134,17 @@ export function SearchCapabilitiesDisplay(props: {
                 <span className={"fst-italic"}>None</span>
               </span>
             )}
+            {e.data.special.length > 0 && (
+              <>
+                <span>Special:</span>
+                {e.data.special.map((entry) => (
+                  <span key={entry}>
+                    <SuccessIcon success={true}></SuccessIcon>{" "}
+                    <span className={"user-select-text"}>{entry}</span>
+                  </span>
+                ))}
+              </>
+            )}
           </Stack>
         ))
         .exhaustive()}
