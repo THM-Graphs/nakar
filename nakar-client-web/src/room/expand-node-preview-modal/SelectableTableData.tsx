@@ -22,7 +22,8 @@ export function SelectableTableData(props: {
       entityNamePlural={props.title}
       className={""}
       filter={(exp, d) =>
-        d.identificator.toLowerCase().includes(exp.toLowerCase())
+        d.identificator.toLowerCase().includes(exp.toLowerCase()) ||
+        d.title.toLowerCase().includes(exp.toLowerCase())
       }
       render={(list) => (
         <>
