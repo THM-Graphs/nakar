@@ -17,7 +17,7 @@ export function SearchResultEntry(props: {
     <Stack
       direction={"horizontal"}
       className={clsx(
-        "border rounded overflow-hidden bg-body",
+        "border rounded overflow-hidden bg-body mb-1",
         props.className,
       )}
     >

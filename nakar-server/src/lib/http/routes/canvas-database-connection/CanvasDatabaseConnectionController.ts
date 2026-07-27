@@ -209,6 +209,7 @@ export class CanvasDatabaseConnectionController {
         },
         [],
       ),
+      special: capabilities.special.toArray(),
     });
   }
 

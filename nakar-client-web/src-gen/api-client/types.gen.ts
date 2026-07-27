@@ -324,6 +324,7 @@ export type GetSearchCapabilitiesResponseBodyDto = {
     canExactMatchLabel: boolean;
     exactMatchNodeProperties: Array<SearchCapabilitiesEntryDto>;
     fuzzyMatchNodeProperties: Array<SearchCapabilitiesEntryDto>;
+    special: Array<string>;
 };
 
 export type ExpandNodePreviewEntryDto = {

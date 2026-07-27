@@ -84,8 +84,8 @@ export class SparqlExternalDatabase implements ExternalGraphDatabase {
       new SMap<string, ExternalGraphDatabaseRelationship>();
 
     for await (const quad of bindingsStream) {
-      this._collectNode(quad.subject, 'Subject', nodes, credentials);
-      this._collectNode(quad.object, 'Object', nodes, credentials);
+      this.collectNode(quad.subject, 'Subject', nodes, credentials);
+      this.collectNode(quad.object, 'Object', nodes, credentials);
       this._collectRelationship(
         quad.subject,
         quad.object,
@@ -411,6 +411,7 @@ ORDER BY DESC(?count)
       canExactMatchLabel: false,
       exactMatchNodeProperties: new SMap(),
       fuzzyMatchNodeProperties: new SMap(),
+      special: new SSet<string>(),
     });
   }
 
@@ -638,6 +639,28 @@ WHERE {
     return bindingsStream;
   }
 
+  public collectNode(
+    quadElement: Term,
+    key: 'Subject' | 'Object' | null,
+    nodes: SMap<string, ExternalGraphDatabaseNode>,
+    credentials: ExternalGraphDatabaseCredentials,
+  ): void {
+    const nativeId: string = this._getNativeId(quadElement);
+    const existingSubjectNode: ExternalGraphDatabaseNode = nodes.get(
+      nativeId,
+    ) ?? {
+      labels: [quadElement.termType],
+      keys: new SSet([]),
+      nativeId: nativeId,
+      properties: this._collectProperties(quadElement),
+      source: credentials,
+    };
+    nodes.set(nativeId, existingSubjectNode);
+    if (key != null) {
+      existingSubjectNode.keys.add(key);
+    }
+  }
+
   private async _loadRelationshipTypes(
     credentials: ExternalGraphDatabaseCredentials,
   ): Promise<ExternalGraphDatabaseStatsRelationship[]> {
@@ -727,26 +750,6 @@ WHERE {
     return ['NamedNode', 'BlankNode', 'Literal'];
   }
 
-  private _collectNode(
-    quadElement: Quad_Subject | Quad_Object,
-    key: 'Subject' | 'Object',
-    nodes: SMap<string, ExternalGraphDatabaseNode>,
-    credentials: ExternalGraphDatabaseCredentials,
-  ): void {
-    const nativeId: string = this._getNativeId(quadElement);
-    const existingSubjectNode: ExternalGraphDatabaseNode = nodes.get(
-      nativeId,
-    ) ?? {
-      labels: [quadElement.termType],
-      keys: new SSet([]),
-      nativeId: nativeId,
-      properties: this._collectProperties(quadElement),
-      source: credentials,
-    };
-    nodes.set(nativeId, existingSubjectNode);
-    existingSubjectNode.keys.add(key);
-  }
-
   private _collectRelationship(
     subject: Quad_Subject,
     object: Quad_Object,
@@ -776,9 +779,7 @@ WHERE {
     }
   }
 
-  private _collectProperties(
-    element: Quad_Subject | Quad_Object | Quad_Predicate,
-  ): Record<string, unknown> {
+  private _collectProperties(element: Term): Record<string, unknown> {
     const result: Record<string, unknown> = {
       termType: element.termType,
       value: element.value,
@@ -797,6 +798,7 @@ WHERE {
         .with({ termType: 'Quad' }, (): Record<string, unknown> => ({}))
         .with({ termType: 'BlankNode' }, (): Record<string, unknown> => ({}))
         .with({ termType: 'Variable' }, (): Record<string, unknown> => ({}))
+        .with({ termType: 'DefaultGraph' }, (): Record<string, unknown> => ({}))
         .exhaustive(),
     };
 
@@ -836,9 +838,7 @@ WHERE {
     }
   }
 
-  private _getSparqlReferenceLiteralOfNode(
-    node: Quad_Subject | Quad_Object,
-  ): string {
+  private _getSparqlReferenceLiteralOfNode(node: Term): string {
     return toNT(node);
   }
 
@@ -850,9 +850,7 @@ WHERE {
     return Buffer.from(input, 'base64').toString('utf8');
   }
 
-  private _getNativeId(
-    node: Quad_Subject | Quad_Predicate | Quad_Object,
-  ): string {
+  private _getNativeId(node: Term): string {
     const nativeId: string = this._getSparqlReferenceLiteralOfNode(node);
     return nativeId;
   }

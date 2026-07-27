@@ -30,7 +30,7 @@ export function SearchResultDisplay(props: {
               collapsable={true}
               className={"border-bottom"}
               render={(list) => (
-                <Stack className={"ps-1 pe-1"} gap={1}>
+                <Stack className={"ps-1 pe-1"}>
                   {list.map((node) => (
                     <SearchResultEntry
                       key={node.id}
