@@ -130,6 +130,13 @@ export class WikidataExternalDatabase implements ExternalGraphDatabase {
 SELECT ?node
 WHERE {
   VALUES ?node { ${url == null ? '' : '<' + url.toString() + '>'} <http://www.wikidata.org/entity/${encodeURIComponent(searchTerm)}>  }
+  {
+    ?node ?p ?o .
+  }
+  UNION
+  {
+    ?s ?p ?node .
+  }
 }
 LIMIT 1
       `,
