@@ -122,7 +122,7 @@ export function NodeConfigurationEditor(props: {
                 </Form.Label>
                 <Form.Control
                   type="text"
-                  placeholder="https://images.org/{{value}}.png"
+                  placeholder="https://images.org/{{{value}}}.png"
                   className={"font-monospace"}
                   value={props.value.linkTemplate}
                   onChange={(e) => {
