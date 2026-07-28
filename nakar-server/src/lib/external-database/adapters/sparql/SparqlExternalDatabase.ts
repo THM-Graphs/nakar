@@ -645,7 +645,7 @@ WHERE {
     nodes: SMap<string, ExternalGraphDatabaseNode>,
     credentials: ExternalGraphDatabaseCredentials,
   ): void {
-    const nativeId: string = this._getNativeId(quadElement);
+    const nativeId: string = toNT(quadElement);
     const existingSubjectNode: ExternalGraphDatabaseNode = nodes.get(
       nativeId,
     ) ?? {
@@ -758,9 +758,9 @@ WHERE {
     credentials: ExternalGraphDatabaseCredentials,
   ): void {
     const fakeNativeId: string = [
-      this._encodeBase64(this._getNativeId(subject)),
-      this._encodeBase64(this._getNativeId(quadElement)),
-      this._encodeBase64(this._getNativeId(object)),
+      this._encodeBase64(toNT(subject)),
+      this._encodeBase64(toNT(quadElement)),
+      this._encodeBase64(toNT(object)),
     ].join(':');
     const existingPredicateNode: ExternalGraphDatabaseRelationship | null =
       relationships.get(fakeNativeId) ?? null;
@@ -770,8 +770,8 @@ WHERE {
         nativeId: fakeNativeId,
         properties: this._collectProperties(quadElement),
         source: credentials,
-        startNodeId: this._getNativeId(subject),
-        endNodeId: this._getNativeId(object),
+        startNodeId: toNT(subject),
+        endNodeId: toNT(object),
         type: quadElement.value,
       });
     } else {
@@ -783,7 +783,7 @@ WHERE {
     const result: Record<string, unknown> = {
       termType: element.termType,
       value: element.value,
-      sparql: this._getSparqlReferenceLiteralOfNode(element),
+      sparql: toNT(element),
       ...match(element)
         .returnType<Record<string, unknown>>()
         .with(
@@ -838,21 +838,12 @@ WHERE {
     }
   }
 
-  private _getSparqlReferenceLiteralOfNode(node: Term): string {
-    return toNT(node);
-  }
-
   private _encodeBase64(input: string): string {
     return Buffer.from(input, 'utf8').toString('base64');
   }
 
   private _decodeBase64(input: string): string {
     return Buffer.from(input, 'base64').toString('utf8');
-  }
-
-  private _getNativeId(node: Term): string {
-    const nativeId: string = this._getSparqlReferenceLiteralOfNode(node);
-    return nativeId;
   }
 
   private _getExploreQueryForLabel(label: SparqlLabel): string {

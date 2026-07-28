@@ -329,20 +329,32 @@ ORDER BY DESC (
     const resolvedNodeTitles: SMap<string, string> =
       await this._resolveNodeTitles(
         new SSet(
-          nodes.map(
+          nodes.reduce<string[]>(
             (
+              akku: string[],
               n: ExternalGraphDatabaseNode | ExternalGraphDatabaseRelationship,
-            ): string =>
-              // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-              n.properties['sparql'] as string,
+            ): string[] => {
+              if (typeof n.properties['sparql'] === 'string') {
+                akku.push(n.properties['sparql']);
+                return akku;
+              } else {
+                return akku;
+              }
+            },
+            [],
           ),
         ),
         credentials,
       );
     for (const entry of nodes) {
-      const title: string | null =
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-        resolvedNodeTitles.get(entry.properties['sparql'] as string) ?? null;
+      const key: string | null =
+        typeof entry.properties['sparql'] === 'string'
+          ? entry.properties['sparql']
+          : null;
+      if (key == null) {
+        continue;
+      }
+      const title: string | null = resolvedNodeTitles.get(key) ?? null;
       if (title != null) {
         if ('type' in entry) {
           // Relationship
