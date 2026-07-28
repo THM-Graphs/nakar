@@ -591,13 +591,46 @@ WHERE {
       `
 CONSTRUCT {
   ?source ?p ?target .
+  ?source ?p11 ?middle .
+  ?middle ?p21 ?target .
+  ?source ?p12 ?middle .
+  ?target ?p22 ?middle .
+  ?middle ?p13 ?source .
+  ?middle ?p23 ?target .
 }
 WHERE {
   VALUES ?source { ${nodeIds.toArray().join(' ')} }
   VALUES ?target { ${nodeIds.toArray().join(' ')} }
+
   FILTER(?source != ?target)
 
-  ?source ?p ?target .
+  {
+    ?source ?p ?target .
+  }
+  UNION
+  {
+    ?source ?p11 ?middle .
+    ?middle ?p21 ?target .
+
+    FILTER(?middle != ?source)
+    FILTER(?middle != ?target)
+  }
+  UNION
+  {
+    ?source ?p12 ?middle .
+    ?target ?p22 ?middle .
+
+    FILTER(?middle != ?source)
+    FILTER(?middle != ?target)
+  }
+  UNION
+  {
+    ?middle ?p13 ?source .
+    ?middle ?p23 ?target .
+
+    FILTER(?middle != ?source)
+    FILTER(?middle != ?target)
+  }
 }
 `,
       {},
