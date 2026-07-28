@@ -602,6 +602,7 @@ export interface ApiNodeConfigurationNodeConfiguration
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     urlEncode: Schema.Attribute.Boolean;
+    valueRegex: Schema.Attribute.String;
   };
 }
 

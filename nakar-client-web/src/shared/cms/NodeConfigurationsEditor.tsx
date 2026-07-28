@@ -17,6 +17,7 @@ export function NodeConfigurationsEditor(props: {
       label: "",
       linkTemplate: "",
       urlEncode: false,
+      valueRegex: "",
     };
     props.onChange([...props.value, newNodeConfiguration]);
   }, [props.value, props.onChange]);

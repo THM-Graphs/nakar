@@ -1,6 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { NodeConfigurationTypeDto } from '../../../../schema/dtos/NodeConfigurationTypeDto';
-import { IsBoolean, IsEnum, IsNotEmpty, IsString } from 'class-validator';
+import {
+  IsBoolean,
+  IsEnum,
+  IsNotEmpty,
+  IsString,
+  Validate,
+} from 'class-validator';
+import { IsValidRegex } from '../../../../schema/IsValidRegex';
 
 export class UpdateNodeConfigurationRequestBodyDto {
   @ApiProperty({ type: String })
@@ -27,4 +34,9 @@ export class UpdateNodeConfigurationRequestBodyDto {
   @ApiProperty({ type: Boolean })
   @IsBoolean()
   public urlEncode!: boolean;
+
+  @ApiProperty({ type: String })
+  @IsString()
+  @Validate(IsValidRegex)
+  public valueRegex!: string;
 }

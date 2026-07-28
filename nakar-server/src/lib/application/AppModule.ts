@@ -24,6 +24,7 @@ import { CommonPropertiesController } from '../http/routes/common-properties/Com
 import { MonitoringService } from '../monitoring/MonitoringService';
 import { MediaService } from '../media/MediaService';
 import { EncryptionService } from '../encryption/EncryptionService';
+import { IsValidRegex } from '../schema/IsValidRegex';
 
 @Module({
   controllers: [
@@ -54,6 +55,7 @@ import { EncryptionService } from '../encryption/EncryptionService';
     MonitoringService,
     MediaService,
     EncryptionService,
+    IsValidRegex,
   ],
 })
 export class AppModule {}

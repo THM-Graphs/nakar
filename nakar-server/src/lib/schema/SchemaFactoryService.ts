@@ -106,6 +106,7 @@ export class SchemaFactoryService {
             property: nodeConfiguration.property ?? '',
             linkTemplate: nodeConfiguration.linkTemplate ?? '',
             urlEncode: nodeConfiguration.urlEncode ?? false,
+            valueRegex: nodeConfiguration.valueRegex ?? '',
           }),
       ),
       databaseType: match(databaseDBDTO.databaseType)
