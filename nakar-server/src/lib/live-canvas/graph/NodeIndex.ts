@@ -309,6 +309,19 @@ export class NodeIndex {
       if (value == null) {
         continue;
       }
+
+      // Check regex
+      const regexToUse: string = nodeConfig.valueRegex?.trim() ?? '';
+      if (
+        regexToUse.length > 0 &&
+        !this._valueMatchesRegex(value, regexToUse)
+      ) {
+        this._logger.debug(
+          `Will skip node value for image url, because regex does not match.\nValue: ${value}\nRegex: ${regexToUse}`,
+        );
+        continue;
+      }
+
       const template: HandlebarsTemplateDelegate = Handlebars.compile(
         nodeConfig.linkTemplate,
       );
@@ -369,5 +382,14 @@ export class NodeIndex {
       }
     }
     return null;
+  }
+
+  private _valueMatchesRegex(inputString: string, regex: string): boolean {
+    try {
+      return new RegExp(regex).test(inputString);
+    } catch (error: unknown) {
+      this._logger.error(error);
+      return false;
+    }
   }
 }

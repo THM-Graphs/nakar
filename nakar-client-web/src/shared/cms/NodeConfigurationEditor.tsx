@@ -122,7 +122,7 @@ export function NodeConfigurationEditor(props: {
                 </Form.Label>
                 <Form.Control
                   type="text"
-                  placeholder="https://images.org/{{value}}.png"
+                  placeholder="https://images.org/{{{value}}}.png"
                   className={"font-monospace"}
                   value={props.value.linkTemplate}
                   onChange={(e) => {
@@ -153,6 +153,42 @@ export function NodeConfigurationEditor(props: {
                 />
               </Form.Group>
             </Col>
+            {props.value.type === "image" && (
+              <Col>
+                <Form.Group className="" controlId={`valueRegex_${key}`}>
+                  <Form.Label>
+                    Value Regex{" "}
+                    <OverlayTrigger
+                      overlay={
+                        <Tooltip>
+                          Define a regex expression to filter values.
+                        </Tooltip>
+                      }
+                    >
+                      <i className={"bi bi-info-circle"}></i>
+                    </OverlayTrigger>
+                  </Form.Label>
+                  <Form.Control
+                    type="text"
+                    placeholder=".*\.jpg$"
+                    className={"font-monospace"}
+                    value={props.value.valueRegex}
+                    onChange={(e) => {
+                      props.onChange({
+                        ...props.value,
+                        valueRegex: e.target.value,
+                      });
+                    }}
+                  />
+                </Form.Group>
+                <Form.Text className={"small text-muted"}>
+                  Example:{" "}
+                  <code className={"user-select-text code"}>
+                    commons\.wikimedia\.org
+                  </code>
+                </Form.Text>
+              </Col>
+            )}
           </Row>
         </Stack>
         {props.onDelete != null && (

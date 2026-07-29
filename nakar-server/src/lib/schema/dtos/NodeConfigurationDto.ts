@@ -20,6 +20,9 @@ export class NodeConfigurationDto {
   @ApiProperty({ type: Boolean })
   public urlEncode: boolean;
 
+  @ApiProperty({ type: String })
+  public valueRegex: string;
+
   public constructor(data: {
     id: string;
     type: NodeConfigurationTypeDto;
@@ -27,6 +30,7 @@ export class NodeConfigurationDto {
     property: string;
     linkTemplate: string;
     urlEncode: boolean;
+    valueRegex: string;
   }) {
     this.id = data.id;
     this.type = data.type;
@@ -34,5 +38,6 @@ export class NodeConfigurationDto {
     this.property = data.property;
     this.linkTemplate = data.linkTemplate;
     this.urlEncode = data.urlEncode;
+    this.valueRegex = data.valueRegex;
   }
 }

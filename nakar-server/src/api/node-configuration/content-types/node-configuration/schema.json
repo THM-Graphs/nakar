@@ -36,6 +36,9 @@
     "urlEncode": {
       "type": "boolean",
       "required": false
+    },
+    "valueRegex": {
+      "type": "string"
     }
   }
 }

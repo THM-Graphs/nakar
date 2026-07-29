@@ -1191,6 +1191,7 @@ export class DatabaseService {
           linkTemplate: newDocument.linkTemplate,
           database: databaseConnection.documentId,
           urlEncode: newDocument.urlEncode,
+          valueRegex: newDocument.valueRegex,
         };
 
       const updatedDocument: Modules.Documents.Result<'api::node-configuration.node-configuration'> | null =
