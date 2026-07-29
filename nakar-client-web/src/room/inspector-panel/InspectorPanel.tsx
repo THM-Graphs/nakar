@@ -68,7 +68,6 @@ export function InspectorPanel() {
 
   return (
     <Panel
-      direction={"right"}
       onClose={() => {
         inspector.hide();
       }}

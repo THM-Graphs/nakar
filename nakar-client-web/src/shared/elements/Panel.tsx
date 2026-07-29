@@ -7,24 +7,15 @@ export function Panel(props: {
   title: string;
   children: ReactNode;
   onClose: () => void;
-  direction: "left" | "right" | "center" | "none";
-  hidden?: boolean;
   toolbar?: ReactNode;
-  fullWidth?: boolean;
   className?: string;
 }) {
   return (
     <Stack
-      hidden={props.hidden}
       className={clsx(
-        "flex-shrink-1 flex-grow-1 z-1 overflow-y-hidden bg-body-tertiary",
-        props.direction === "left" && "border-end",
-        props.direction === "right" && "border-start",
+        "flex-shrink-1 flex-grow-1 z-1 overflow-y-hidden bg-body-tertiary h-100",
         props.className,
       )}
-      style={{
-        width: props.fullWidth ? undefined : "400px",
-      }}
     >
       <Stack
         direction={"horizontal"}

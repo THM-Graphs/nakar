@@ -12,7 +12,6 @@ export function HistogramPanel() {
 
   return (
     <Panel
-      direction={"right"}
       title={"Histogram"}
       onClose={() => {
         histogram.hide();

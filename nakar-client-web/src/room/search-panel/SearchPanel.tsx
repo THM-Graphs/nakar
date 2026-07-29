@@ -65,7 +65,6 @@ export function SearchPanel() {
     <Panel
       title={"Search"}
       onClose={hide}
-      direction={"left"}
       toolbar={
         <DatabaseSelect
           database={selectedDatabaseId}

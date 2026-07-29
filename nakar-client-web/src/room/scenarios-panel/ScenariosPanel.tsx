@@ -13,7 +13,6 @@ export function ScenariosPanel() {
 
   return (
     <Panel
-      direction={"left"}
       onClose={hide}
       title={"Scenarios"}
       toolbar={

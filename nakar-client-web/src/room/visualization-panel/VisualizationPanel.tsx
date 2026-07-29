@@ -24,7 +24,6 @@ export function VisualizationPanel() {
 
   return (
     <Panel
-      direction={"right"}
       title={"Visualization"}
       onClose={() => {
         hide();

@@ -96,7 +96,6 @@ export function QueryPanel() {
 
   return (
     <Panel
-      direction={"left"}
       title={"Query"}
       onClose={() => {
         query.hide();

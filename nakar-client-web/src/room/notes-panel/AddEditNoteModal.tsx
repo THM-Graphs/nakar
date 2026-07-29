@@ -78,9 +78,6 @@ export function AddEditNoteModal() {
       <Panel
         title={mode == "create" ? "Add Note" : "Edit Note"}
         onClose={handleClose}
-        direction={"none"}
-        hidden={false}
-        fullWidth={true}
       >
         <Stack gap={0}>
           <Stack className={"p-2 flex-wrap"} direction={"horizontal"}>
