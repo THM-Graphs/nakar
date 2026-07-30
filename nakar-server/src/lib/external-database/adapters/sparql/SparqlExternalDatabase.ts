@@ -32,6 +32,7 @@ import type {
 import toNT from '@rdfjs/to-ntriples';
 import { match } from 'ts-pattern';
 import type { SparqlLabel } from './SparqlLabel';
+import type { Profiler } from 'winston';
 
 export class SparqlExternalDatabase implements ExternalGraphDatabase {
   private readonly _logger: Logger;
@@ -166,7 +167,8 @@ WHERE {
   {
     ?o2 ?p2 ?node .
   }
-}   
+}
+LIMIT ${ExternalGraphDatabaseQueryLimitConfig.maximalPreviewElements}
     `,
         {},
         new ExternalGraphDatabaseQueryLimitConfig(
@@ -232,7 +234,8 @@ WHERE {
     ?o2 ?allowedPredicate2 ?node .
     FILTER(${incomingFilter})
   }
-}    
+}
+LIMIT ${ExternalGraphDatabaseQueryLimitConfig.maximalElements}
     `,
         {},
         new ExternalGraphDatabaseQueryLimitConfig(
@@ -251,54 +254,95 @@ WHERE {
       return ExternalGraphDatabaseExpandNodePreview.empty();
     }
 
-    const [labelDataStream, relsResult]: [BindingsStream, BindingsStream] =
-      await Promise.all([
-        this.runGenericSparqlQuery(
-          credentials,
-          `
+    const task1: () => Promise<Bindings[]> = async (): Promise<Bindings[]> => {
+      const timer: Profiler = this._logger.startTimer();
+      const result: BindingsStream = await this.runGenericSparqlQuery(
+        credentials,
+        `
 SELECT
-  (SUM(IF(isIRI(?n), 1, 0)) AS ?NamedNode)
-  (SUM(IF(isBlank(?n), 1, 0)) AS ?BlankNode)
-  (SUM(IF(isLiteral(?n), 1, 0)) AS ?Literal)
+  (?NamedNode1 + ?NamedNode2 AS ?NamedNode)
+  (?BlankNode1 + ?BlankNode2 AS ?BlankNode)
+  (?Literal1 + ?Literal2 AS ?Literal)
 WHERE {
   {
-    SELECT DISTINCT ?n
+    SELECT
+      (SUM(IF(isIRI(?n), 1, 0)) AS ?NamedNode1)
+      (SUM(IF(isBlank(?n), 1, 0)) AS ?BlankNode1)
+      (SUM(IF(isLiteral(?n), 1, 0)) AS ?Literal1)
     WHERE {
       VALUES ?s { ${nodeIds.toArray().join(' ')} }
+      ?s ?p ?n
+    }
+  }
 
-      {
-        ?s ?p ?n .
-      }
-      UNION
-      {
-        ?n ?p ?s .
-      }
+  {
+    SELECT
+      (SUM(IF(isIRI(?n), 1, 0)) AS ?NamedNode2)
+      (SUM(IF(isBlank(?n), 1, 0)) AS ?BlankNode2)
+      (SUM(IF(isLiteral(?n), 1, 0)) AS ?Literal2)
+    WHERE {
+      VALUES ?s { ${nodeIds.toArray().join(' ')} }
+      ?n ?p ?s
     }
   }
 }
     `,
-        ),
-        this.runGenericSparqlQuery(
-          credentials,
-          `
-SELECT ?p (COUNT(DISTINCT *) AS ?count)
+      );
+      const array: Bindings[] = await result.toArray();
+      timer.done({
+        message: 'Loading connected labels of sparql node.',
+        level: 'debug',
+      });
+      return array;
+    };
+
+    const task2: () => Promise<Bindings[]> = async (): Promise<Bindings[]> => {
+      const timer: Profiler = this._logger.startTimer();
+      const result: BindingsStream = await this.runGenericSparqlQuery(
+        credentials,
+        `
+SELECT ?p (SUM(?c) AS ?count)
 WHERE {
-  VALUES ?s { ${nodeIds.toArray().join(' ')} }
   {
-    ?s ?p ?o .
+    SELECT ?p (COUNT(*) AS ?c)
+    WHERE {
+      VALUES ?s { ${nodeIds.toArray().join(' ')} }
+      ?s ?p ?o
+    }
+    GROUP BY ?p
   }
   UNION
   {
-    ?o ?p ?s .
+    SELECT ?p (COUNT(*) AS ?c)
+    WHERE {
+      VALUES ?s { ${nodeIds.toArray().join(' ')} }
+      ?o ?p ?s
+    }
+    GROUP BY ?p
   }
 }
 GROUP BY ?p
 ORDER BY DESC(?count)
     `,
-        ),
-      ]);
+      );
+      const array: Bindings[] = await result.toArray();
+      timer.done({
+        message: 'Loading connected relationships of sparql node.',
+        level: 'debug',
+      });
+      return array;
+    };
 
-    const labelData: Bindings[] = await labelDataStream.toArray();
+    // Parallel
+    // const [labelData, relsResult]: [Bindings[], Bindings[]] =
+    //   await Promise.all([task1(), task2()]);
+
+    // Sequential
+    const [labelData, relsResult]: [Bindings[], Bindings[]] = [
+      await task1(),
+      await task2(),
+    ];
+
     const labelResult: ExternalGraphDatabaseExpandNodePreviewEntry[] = [];
     if (labelData.length === 1) {
       const namedNodeCount: number = parseInt(
@@ -342,7 +386,7 @@ ORDER BY DESC(?count)
 
     const relationshipResults: ExternalGraphDatabaseExpandNodePreviewEntry[] =
       [];
-    for await (const bindings of relsResult) {
+    for (const bindings of relsResult) {
       const term: Term | null = bindings.get('p') ?? null;
       if (term == null) {
         this._logger.error(
@@ -665,7 +709,12 @@ WHERE {
 
     const myEngine: QueryEngine = this._queryEngine;
     const bindingsStream: BindingsStream = await myEngine.queryBindings(query, {
-      sources: [url.toString()],
+      sources: [
+        {
+          type: 'sparql',
+          value: url.toString(),
+        },
+      ],
     });
 
     this._logger.debug(`Did start streaming query response of ${queryId}`);
