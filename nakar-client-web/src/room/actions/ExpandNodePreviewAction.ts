@@ -7,6 +7,7 @@ import {
   NodeDto,
 } from "api-client";
 import { createAppShortcut } from "./createAppShortcut.ts";
+import { handleError } from "../../shared/error/handleError.ts";
 
 export class ExpandNodePreviewAction extends Action<NodesActionParams> {
   public static shared: ExpandNodePreviewAction = new ExpandNodePreviewAction();
@@ -16,22 +17,34 @@ export class ExpandNodePreviewAction extends Action<NodesActionParams> {
       throw new Error("Unable to expand multiple nodes.");
     }
     const node: NodeDto = input.nodes[0];
-    useBearStore.getState().room.scenario.expandNodePreview.open(null);
-    const result = resultOrThrow(
-      await canvasDatabaseConnectionControllerExpandNodePreview({
-        path: {
-          roomId: input.roomContext.initialRoomData.id,
-          canvasId: input.roomContext.initialCanvasData.id,
-          databaseId: node.sourceId,
-        },
-        query: { nodeId: node.id },
-      }),
-    );
-    useBearStore.getState().room.scenario.expandNodePreview.open({
-      relationships: result.relationships,
-      labels: result.labels,
-      nodeId: node.id,
-    });
+    useBearStore
+      .getState()
+      .room.scenario.expandNodePreview.open({ type: "loading" });
+    try {
+      const result = resultOrThrow(
+        await canvasDatabaseConnectionControllerExpandNodePreview({
+          path: {
+            roomId: input.roomContext.initialRoomData.id,
+            canvasId: input.roomContext.initialCanvasData.id,
+            databaseId: node.sourceId,
+          },
+          query: { nodeId: node.id },
+        }),
+      );
+      useBearStore.getState().room.scenario.expandNodePreview.open({
+        type: "data",
+        relationships: result.relationships,
+        labels: result.labels,
+        nodeId: node.id,
+        selectedRelationships: new Set<string>(),
+        selectedLabels: new Set<string>(),
+      });
+    } catch (error: unknown) {
+      useBearStore.getState().room.scenario.expandNodePreview.open({
+        type: "error",
+        error: handleError(error),
+      });
+    }
   }
 
   disabled(input: NodesActionParams): boolean {

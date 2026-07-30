@@ -360,18 +360,10 @@ export const useBearStore = create<BearState>()(
                 },
                 expandNodePreview: {
                   shown: false,
-                  data: null,
-                  open: (data) => {
+                  state: { type: "loading" },
+                  open: (state) => {
                     set((s) => {
-                      s.room.scenario.expandNodePreview.data = data
-                        ? {
-                            nodeId: data.nodeId,
-                            labels: data.labels,
-                            relationships: data.relationships,
-                            selectedLabels: new Set(),
-                            selectedRelationships: new Set(),
-                          }
-                        : null;
+                      s.room.scenario.expandNodePreview.state = state;
                       s.room.scenario.expandNodePreview.shown = true;
                     });
                   },
@@ -382,13 +374,15 @@ export const useBearStore = create<BearState>()(
                   },
                   clean: () => {
                     set((s) => {
-                      s.room.scenario.expandNodePreview.data = null;
+                      s.room.scenario.expandNodePreview.state = {
+                        type: "loading",
+                      };
                     });
                   },
                   setSelectedRelationships: (element, selected) => {
                     set((s) => {
-                      const data = s.room.scenario.expandNodePreview.data;
-                      if (!data) {
+                      const data = s.room.scenario.expandNodePreview.state;
+                      if (data.type !== "data") {
                         return;
                       }
                       if (selected) {
@@ -402,8 +396,8 @@ export const useBearStore = create<BearState>()(
                   },
                   setSelectedLabel: (element, selected) => {
                     set((s) => {
-                      const data = s.room.scenario.expandNodePreview.data;
-                      if (!data) {
+                      const data = s.room.scenario.expandNodePreview.state;
+                      if (data.type !== "data") {
                         return;
                       }
                       if (selected) {

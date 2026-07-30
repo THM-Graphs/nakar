@@ -115,19 +115,19 @@ export interface BearState {
       };
       expandNodePreview: {
         shown: boolean;
-        data: {
-          relationships: ExpandNodePreviewEntryDto[];
-          labels: ExpandNodePreviewEntryDto[];
-          nodeId: string;
-          selectedRelationships: Set<string>;
-          selectedLabels: Set<string>;
-        } | null;
+        state:
+          | {
+              type: "data";
+              relationships: ExpandNodePreviewEntryDto[];
+              labels: ExpandNodePreviewEntryDto[];
+              nodeId: string;
+              selectedRelationships: Set<string>;
+              selectedLabels: Set<string>;
+            }
+          | { type: "loading" }
+          | { type: "error"; error: string };
         open: (
-          data: {
-            relationships: ExpandNodePreviewEntryDto[];
-            labels: ExpandNodePreviewEntryDto[];
-            nodeId: string;
-          } | null,
+          state: BearState["room"]["scenario"]["expandNodePreview"]["state"],
         ) => void;
         close: () => void;
         clean: () => void;
