@@ -68,7 +68,12 @@ export class SparqlExternalDatabase implements ExternalGraphDatabase {
     const bindingsStream: AsyncIterator<Quad> = await myEngine.queryQuads(
       queryWithArguments,
       {
-        sources: [url.toString()],
+        sources: [
+          {
+            type: 'sparql',
+            value: url.toString(),
+          },
+        ],
       },
     );
 
