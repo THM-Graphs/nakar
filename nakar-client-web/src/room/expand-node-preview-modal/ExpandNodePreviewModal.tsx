@@ -50,13 +50,7 @@ export function ExpandNodePreviewModal() {
 
   return (
     <Modal show={shown} onHide={handleClose} onExited={handleClean}>
-      <Panel
-        title={"Expand Node"}
-        onClose={handleClose}
-        direction={"none"}
-        hidden={false}
-        fullWidth={true}
-      >
+      <Panel title={"Expand Node"} onClose={handleClose}>
         <Stack
           style={{
             maxHeight: `${(window.innerHeight - 150).toString()}px`,

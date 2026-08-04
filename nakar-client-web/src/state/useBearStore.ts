@@ -442,12 +442,6 @@ export const useBearStore = create<BearState>()(
                   deselectElements: () => {
                     set((s) => {
                       s.room.panels.inspector.element = [];
-                      if (
-                        s.room.panels.right === "inspector" ||
-                        s.room.panels.right === "knowledgeCard"
-                      ) {
-                        s.room.panels.right = null;
-                      }
                     });
                   },
                   show: () => {

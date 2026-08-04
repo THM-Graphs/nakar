@@ -84,3 +84,12 @@ div[role="tooltip"] {
 .w-md-editor-text {
   height: 100%;
 }
+
+div[data-separator="hover"] {
+  background-color: rgba(var(--bs-secondary-bg-rgb), 1) !important;
+}
+
+div[data-separator="focus"],
+div[data-separator="active"] {
+  background-color: var(--bs-primary) !important;
+}

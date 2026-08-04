@@ -106,9 +106,6 @@ export function RunScenarioModal() {
           <Panel
             title={additive ? "Add Scenario" : "Run Scenario"}
             onClose={handleClose}
-            direction={"none"}
-            hidden={false}
-            fullWidth={true}
           >
             <Stack className={"pb-3 pt-3"} gap={3}>
               <Stack direction={"horizontal"} gap={2} className={"ps-3 pe-3"}>

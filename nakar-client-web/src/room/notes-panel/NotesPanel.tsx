@@ -27,7 +27,6 @@ export function NotesPanel() {
 
   return (
     <Panel
-      direction={"left"}
       title={"Notes"}
       onClose={() => {
         notesPanel.hide();

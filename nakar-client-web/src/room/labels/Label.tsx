@@ -47,7 +47,7 @@ export function Label(props: {
       direction={"horizontal"}
       onClick={props.onClick}
       className={clsx(
-        "ps-2 rounded flex-grow-0 flex-shrink-1 text-wrap text-break shadow-sm align-self-start fw-bold",
+        "ps-2 rounded flex-grow-0 flex-shrink-1 text-wrap text-break shadow-sm align-self-start fw-bold pe-auto",
         props.onClick && "pointer",
         props.className,
         !showLabelMenu && "pe-2 rounded-end",

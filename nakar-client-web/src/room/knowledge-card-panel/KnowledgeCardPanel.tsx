@@ -20,7 +20,6 @@ export function KnowledgeCardPanel() {
 
   return (
     <Panel
-      direction={"right"}
       onClose={() => {
         knowledgeCard.hide();
       }}

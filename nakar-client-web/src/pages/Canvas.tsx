@@ -25,7 +25,6 @@ import { RunScenarioModal } from "../room/run-scenario-modal/RunScenarioModal.ts
 import { ExpandNodePreviewModal } from "../room/expand-node-preview-modal/ExpandNodePreviewModal.tsx";
 import { QueryPanel } from "../room/query-panel/QueryPanel.tsx";
 import { QueryPanelButton } from "../room/query-panel/QueryPanelButton.tsx";
-import { GraphRendererD3 } from "../room/canvas/GraphRendererD3.tsx";
 import { MenuBar } from "../shared/bars/MenuBar.tsx";
 import { NotesPanel } from "../room/notes-panel/NotesPanel.tsx";
 import { NotesPanelButton } from "../room/notes-panel/NotesPanelButton.tsx";
@@ -58,6 +57,8 @@ import {
   CanvasSearchData,
   canvasSearchDataSchema,
 } from "../room/canvas/CanvasSearchData.ts";
+import { Group, Panel } from "react-resizable-panels";
+import { GraphRendererD3 } from "../room/canvas/GraphRendererD3.tsx";
 
 const CanvasContext: Context<CanvasContextData | null> =
   createContext<CanvasContextData | null>(null);
@@ -342,31 +343,63 @@ export function Canvas() {
               <NotesPanelButton></NotesPanelButton>
               <SearchPanelButton></SearchPanelButton>
             </Stack>
-            {leftPanel != null && (
-              <Stack className={"flex-grow-0 flex-shrink-0"}>
-                {leftPanel === "scenarios" && <ScenariosPanel></ScenariosPanel>}
-                {leftPanel === "query" && <QueryPanel></QueryPanel>}
-                {leftPanel === "notes" && <NotesPanel></NotesPanel>}
-                {leftPanel === "search" && <SearchPanel></SearchPanel>}
-              </Stack>
-            )}
-            <CanvasSurface></CanvasSurface>
-            {rightPanel != null && (
-              <Stack className={"flex-grow-0 flex-shrink-0"}>
-                {rightPanel === "inspector" && (
-                  <InspectorPanel></InspectorPanel>
-                )}
-                {rightPanel === "knowledgeCard" && (
-                  <KnowledgeCardPanel></KnowledgeCardPanel>
-                )}
-                {rightPanel === "histogram" && (
-                  <HistogramPanel></HistogramPanel>
-                )}
-                {rightPanel === "visualization" && (
-                  <VisualizationPanel></VisualizationPanel>
-                )}
-              </Stack>
-            )}
+            <Group className={"z-1 pe-none"}>
+              {leftPanel != null && (
+                <>
+                  <Panel
+                    defaultSize={400}
+                    id={"left-panel"}
+                    minSize={50}
+                    className={"border-end pe-auto"}
+                    groupResizeBehavior={"preserve-pixel-size"}
+                  >
+                    {leftPanel === "scenarios" && (
+                      <ScenariosPanel></ScenariosPanel>
+                    )}
+                    {leftPanel === "query" && <QueryPanel></QueryPanel>}
+                    {leftPanel === "notes" && <NotesPanel></NotesPanel>}
+                    {leftPanel === "search" && <SearchPanel></SearchPanel>}
+                  </Panel>
+                </>
+              )}
+              <Panel id={"center-panel"} className={"overflow-visible"}>
+                <Stack direction={"horizontal"} className={"h-100"}>
+                  <div
+                    style={{ width: "5px", marginRight: "-5px" }}
+                    className={"flex-grow-0 flex-shrink-0 h-100 pe-auto"}
+                  ></div>
+                  <CanvasSurface></CanvasSurface>
+                  <div
+                    style={{ width: "5px", marginLeft: "-5px" }}
+                    className={"flex-grow-0 flex-shrink-0 h-100 pe-auto"}
+                  ></div>
+                </Stack>
+              </Panel>
+              {rightPanel != null && (
+                <>
+                  <Panel
+                    defaultSize={400}
+                    id={"right-panel"}
+                    minSize={50}
+                    className={"border-start pe-auto"}
+                    groupResizeBehavior={"preserve-pixel-size"}
+                  >
+                    {rightPanel === "inspector" && (
+                      <InspectorPanel></InspectorPanel>
+                    )}
+                    {rightPanel === "knowledgeCard" && (
+                      <KnowledgeCardPanel></KnowledgeCardPanel>
+                    )}
+                    {rightPanel === "histogram" && (
+                      <HistogramPanel></HistogramPanel>
+                    )}
+                    {rightPanel === "visualization" && (
+                      <VisualizationPanel></VisualizationPanel>
+                    )}
+                  </Panel>
+                </>
+              )}
+            </Group>
             <Stack
               direction="vertical"
               className={
