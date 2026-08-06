@@ -89,7 +89,14 @@ export function CMSNavbar(props: {
                   <span className={"small"}>Logout</span>
                 </NavDropdown.Item>
               ) : (
-                <NavDropdown.Item onClick={showLoginWindow}>
+                <NavDropdown.Item
+                  onClick={() => {
+                    /* Set Timeout Workaround for https://github.com/twbs/bootstrap/issues/41667 */
+                    setTimeout(() => {
+                      showLoginWindow();
+                    });
+                  }}
+                >
                   <span className={"small"}>Login</span>
                 </NavDropdown.Item>
               )}

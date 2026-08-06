@@ -60,6 +60,7 @@ export function AuthModalContent() {
               Username / Email address
             </Form.Label>
             <Form.Control
+              autoFocus={true}
               size={"sm"}
               type="text"
               placeholder="Username / Email address"

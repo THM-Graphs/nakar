@@ -42,7 +42,10 @@ export function AuthButton() {
           <Dropdown.Item
             className={"small"}
             onClick={() => {
-              showLoginWindow();
+              /* Set Timeout Workaround for https://github.com/twbs/bootstrap/issues/41667 */
+              setTimeout(() => {
+                showLoginWindow();
+              });
             }}
           >
             <i className={"bi bi-person me-2"}></i>
