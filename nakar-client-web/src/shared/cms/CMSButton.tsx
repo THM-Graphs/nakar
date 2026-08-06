@@ -16,7 +16,7 @@ export function CMSButton(props: {
   const button = (
     <Button
       size={"sm"}
-      type={props.type}
+      type={props.type ?? "button"}
       variant={props.variant}
       onClick={props.onClick}
       className={clsx("shadow-sm", props.className)}
