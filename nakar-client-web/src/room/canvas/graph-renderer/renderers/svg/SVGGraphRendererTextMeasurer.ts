@@ -1,10 +1,10 @@
-export type WrappedText = {
+export type SVGGraphRendererWrappedText = {
   lines: string[];
   lineHeight: number;
   maxLineWidth: number;
 };
 
-export class TextMeasurer {
+export class SVGGraphRendererTextMeasurer {
   private readonly ctx: CanvasRenderingContext2D;
 
   public constructor() {
@@ -28,7 +28,7 @@ export class TextMeasurer {
     maxHeight: number,
     fontSize: number,
     lineHeightFactor: number,
-  ): WrappedText {
+  ): SVGGraphRendererWrappedText {
     if (text.trim().length === 0 || maxWidth <= 1 || maxHeight <= 1) {
       return {
         lines: [],

@@ -1,4 +1,4 @@
-export type D3UserCursor = {
+export type SVGGraphRendererUserCursor = {
   x: number;
   y: number;
   vx: number;

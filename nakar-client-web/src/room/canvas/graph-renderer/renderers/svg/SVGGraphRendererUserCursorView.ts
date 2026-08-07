@@ -1,16 +1,16 @@
-import { D3UserCursor } from "../D3UserCursor.ts";
-import { TextMeasurer } from "./TextMeasurer.ts";
+import { SVGGraphRendererUserCursor } from "./SVGGraphRendererUserCursor.ts";
+import { SVGGraphRendererTextMeasurer } from "./SVGGraphRendererTextMeasurer.ts";
 import { createSvgElement, setAttr } from "./svgDom.ts";
 
-export class UserCursorView {
-  public readonly cursor: D3UserCursor;
+export class SVGGraphRendererUserCursorView {
+  public readonly cursor: SVGGraphRendererUserCursor;
   private readonly group: SVGGElement;
   private readonly bubbleRect: SVGRectElement;
 
   public constructor(
     parent: SVGGElement,
-    cursor: D3UserCursor,
-    textMeasurer: TextMeasurer,
+    cursor: SVGGraphRendererUserCursor,
+    textMeasurer: SVGGraphRendererTextMeasurer,
   ) {
     this.cursor = cursor;
     this.group = createSvgElement("g");

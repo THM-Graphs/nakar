@@ -1,17 +1,19 @@
-import { D3Link } from "./D3Link.ts";
-import { D3Node } from "./D3Node.ts";
+import { SVGGraphRendererLink } from "./SVGGraphRendererLink.ts";
+import { SVGGraphRendererNode } from "./SVGGraphRendererNode.ts";
 import {
   getBackgroundColorOfColor,
   getBackgroundColorOfLabel,
-} from "../color/getBackgroundColor.ts";
-import { getTextColor, getTextColorOfEdge } from "../color/getTextColor.ts";
+} from "../../../../color/getBackgroundColor.ts";
+import {
+  getTextColor,
+  getTextColorOfEdge,
+} from "../../../../color/getTextColor.ts";
 import { Observable, Subject, Subscription, throttleTime } from "rxjs";
-import { D3RendererState } from "./D3RendererState.ts";
-import { D3Calculator } from "./D3Calculator.ts";
-import { useBearStore } from "../../state/useBearStore.ts";
-import { ColorSchema } from "../color/ColorSchema.ts";
-import { Theme } from "../../shared/theme/Theme.ts";
-import { isMacOS } from "../../shared/dom/isMacOS.ts";
+import { SVGGraphRendererState } from "./SVGGraphRendererState.ts";
+import { SVGGraphRendererCalculator } from "./SVGGraphRendererCalculator.ts";
+import { ColorSchema } from "../../../../color/ColorSchema.ts";
+import { Theme } from "../../../../../shared/theme/Theme.ts";
+import { isMacOS } from "../../../../../shared/dom/isMacOS.ts";
 import {
   LiveCanvasGraphElementsDto,
   NodesMovedWsdto,
@@ -19,51 +21,55 @@ import {
   SetNodeLocksWsdto,
   UserPreviewDto,
 } from "api-client";
-import { CanvasZoomTransform } from "../../shared/graphics/CanvasZoomTransform.ts";
-import { createSvgElement, setAttr } from "./renderer/svgDom.ts";
-import { TextMeasurer } from "./renderer/TextMeasurer.ts";
-import { NodeView, NodeViewProps } from "./renderer/NodeView.ts";
+import { CanvasZoomTransform } from "../../../../../shared/graphics/CanvasZoomTransform.ts";
+import { createSvgElement, setAttr } from "./svgDom.ts";
+import { SVGGraphRendererTextMeasurer } from "./SVGGraphRendererTextMeasurer.ts";
 import {
-  RelationshipView,
-  RelationshipViewProps,
-} from "./renderer/RelationshipView.ts";
-import { UserCursorView } from "./renderer/UserCursorView.ts";
+  SVGGraphRendererNodeView,
+  SVGGraphRendererNodeViewProps,
+} from "./SVGGraphRendererNodeView.ts";
+import {
+  SVGGraphRendererRelationshipView,
+  SVGGraphRendererRelationshipViewProps,
+} from "./SVGGraphRendererRelationshipView.ts";
+import { SVGGraphRendererUserCursorView } from "./SVGGraphRendererUserCursorView.ts";
 
 const inputFps = 16;
 const outputFps = 32;
-const baseStrokeWidth = 3;
+const baseStrokeWidth = 2;
 const interactionMoveThresholdPt = 3;
 const isMultiSelectKeyPressed = (event: MouseEvent | PointerEvent): boolean =>
   isMacOS() ? event.metaKey : event.ctrlKey;
 
-export class D3Renderer {
-  private readonly graphState: D3RendererState;
+export class SVGGraphRenderer {
+  private readonly graphState: SVGGraphRendererState;
   private theme: Theme;
   public colorSchema: ColorSchema;
   private readonly svgElement: SVGSVGElement;
   private hideLabels: boolean;
 
-  private $onDisplayLinkData: Subject<D3Link>;
-  private $onDisplayNodeData: Subject<D3Node>;
-  private $onDoubleClickNode: Subject<D3Node>;
-  private $onDisplayLinkDataWithModifier: Subject<D3Link>;
-  private $onDisplayNodeDataWithModifier: Subject<D3Node>;
+  private $onDisplayLinkData: Subject<SVGGraphRendererLink>;
+  private $onDisplayNodeData: Subject<SVGGraphRendererNode>;
+  private $onDoubleClickNode: Subject<SVGGraphRendererNode>;
+  private $onDisplayLinkDataWithModifier: Subject<SVGGraphRendererLink>;
+  private $onDisplayNodeDataWithModifier: Subject<SVGGraphRendererNode>;
   private $onDeselectAll: Subject<void>;
-  private $onGrabNode: Subject<D3Node>;
-  private $onNodeMoved: Subject<D3Node>;
-  private $onUngrabNode: Subject<D3Node>;
+  private $onGrabNode: Subject<SVGGraphRendererNode>;
+  private $onNodeMoved: Subject<SVGGraphRendererNode>;
+  private $onUngrabNode: Subject<SVGGraphRendererNode>;
   private $onShowNodeContextMenu: Subject<{
-    node: D3Node;
+    node: SVGGraphRendererNode;
     position: [number, number];
   }>;
   private $onShowEdgeContextMenu: Subject<{
-    edge: D3Link;
+    edge: SVGGraphRendererLink;
     position: [number, number];
   }>;
   private $onCursorMoved: Subject<[number, number]>;
+  private $onZoomTransformChanged: Subject<CanvasZoomTransform>;
 
-  private calculator: D3Calculator;
-  private textMeasurer: TextMeasurer;
+  private calculator: SVGGraphRendererCalculator;
+  private textMeasurer: SVGGraphRendererTextMeasurer;
 
   private zoomContainer: SVGGElement | null;
   private nodesLayer: SVGGElement | null;
@@ -73,14 +79,15 @@ export class D3Renderer {
   private defsLayer: SVGDefsElement | null;
 
   private zoomTransform: CanvasZoomTransform;
-  private nodeViews: NodeView[];
-  private relationshipViews: RelationshipView[];
-  private cursorViews: UserCursorView[];
+  private nodeViews: SVGGraphRendererNodeView[];
+  private relationshipViews: SVGGraphRendererRelationshipView[];
+  private cursorViews: SVGGraphRendererUserCursorView[];
   private smoothedPositionDirty: boolean;
+  private selectedElements: string[];
 
   private dragNode: {
     pointerId: number;
-    node: D3Node;
+    node: SVGGraphRendererNode;
     startClient: [number, number];
     pointerToNodeOffset: [number, number];
     moved: boolean;
@@ -99,15 +106,22 @@ export class D3Renderer {
   private removeSvgListeners: Array<() => void>;
   private viewSubscriptions: Subscription[];
 
+  private lastAnimationTimeStamp: DOMHighResTimeStamp | null;
+  private animationFrame: number | null;
+
   public constructor(
     theme: Theme,
-    svgElement: SVGSVGElement,
+    containerElement: HTMLDivElement,
     hideLabels: boolean,
     colorSchema: string,
+    zoomTransform: CanvasZoomTransform,
+    selectedElements: string[],
   ) {
-    this.graphState = new D3RendererState();
+    this.graphState = new SVGGraphRendererState();
     this.theme = theme;
-    this.svgElement = svgElement;
+
+    this.svgElement = this._createSVGCanvas();
+    containerElement.appendChild(this.svgElement);
     this.hideLabels = hideLabels;
     this.colorSchema = ColorSchema.find(colorSchema);
 
@@ -117,15 +131,16 @@ export class D3Renderer {
     this.$onDisplayLinkDataWithModifier = new Subject();
     this.$onDisplayNodeDataWithModifier = new Subject();
     this.$onDeselectAll = new Subject();
-    this.$onGrabNode = new Subject<D3Node>();
-    this.$onNodeMoved = new Subject<D3Node>();
-    this.$onUngrabNode = new Subject<D3Node>();
+    this.$onGrabNode = new Subject<SVGGraphRendererNode>();
+    this.$onNodeMoved = new Subject<SVGGraphRendererNode>();
+    this.$onUngrabNode = new Subject<SVGGraphRendererNode>();
     this.$onShowNodeContextMenu = new Subject();
     this.$onShowEdgeContextMenu = new Subject();
     this.$onCursorMoved = new Subject();
+    this.$onZoomTransformChanged = new Subject();
 
-    this.calculator = new D3Calculator();
-    this.textMeasurer = new TextMeasurer();
+    this.calculator = new SVGGraphRendererCalculator();
+    this.textMeasurer = new SVGGraphRendererTextMeasurer();
 
     this.zoomContainer = null;
     this.nodesLayer = null;
@@ -134,11 +149,12 @@ export class D3Renderer {
     this.cursorsLayer = null;
     this.defsLayer = null;
 
-    this.zoomTransform = useBearStore.getState().room.canvas.zoomTransform;
+    this.zoomTransform = zoomTransform;
     this.nodeViews = [];
     this.relationshipViews = [];
     this.cursorViews = [];
     this.smoothedPositionDirty = true;
+    this.selectedElements = selectedElements;
 
     this.dragNode = null;
     this.panState = null;
@@ -147,26 +163,40 @@ export class D3Renderer {
     this.removeSvgListeners = [];
     this.viewSubscriptions = [];
 
+    this.lastAnimationTimeStamp = null;
+    this.animationFrame = null;
+
     this.renderSvgElements();
+
+    const onAnimationTick = (timestamp: DOMHighResTimeStamp) => {
+      if (this.lastAnimationTimeStamp === null) {
+        this.lastAnimationTimeStamp = timestamp;
+      }
+      const deltaTime = timestamp - this.lastAnimationTimeStamp;
+      this.lastAnimationTimeStamp = timestamp;
+      this.onAnimationTick(deltaTime);
+      this.animationFrame = requestAnimationFrame(onAnimationTick);
+    };
+    this.animationFrame = requestAnimationFrame(onAnimationTick);
   }
 
-  public get onDisplayLinkData(): Observable<D3Link> {
+  public get onDisplayLinkData(): Observable<SVGGraphRendererLink> {
     return this.$onDisplayLinkData.asObservable();
   }
 
-  public get onDisplayNodeData(): Observable<D3Node> {
+  public get onDisplayNodeData(): Observable<SVGGraphRendererNode> {
     return this.$onDisplayNodeData.asObservable();
   }
 
-  public get onDoubleClickNode(): Observable<D3Node> {
+  public get onDoubleClickNode(): Observable<SVGGraphRendererNode> {
     return this.$onDoubleClickNode.asObservable();
   }
 
-  public get onDisplayLinkDataWithModifier(): Observable<D3Link> {
+  public get onDisplayLinkDataWithModifier(): Observable<SVGGraphRendererLink> {
     return this.$onDisplayLinkDataWithModifier.asObservable();
   }
 
-  public get onDisplayNodeDataWithModifier(): Observable<D3Node> {
+  public get onDisplayNodeDataWithModifier(): Observable<SVGGraphRendererNode> {
     return this.$onDisplayNodeDataWithModifier.asObservable();
   }
 
@@ -174,25 +204,29 @@ export class D3Renderer {
     return this.$onDeselectAll.asObservable();
   }
 
-  public get onGrabNode(): Observable<D3Node> {
+  public get onGrabNode(): Observable<SVGGraphRendererNode> {
     return this.$onGrabNode.asObservable();
   }
 
+  public get onZoomTransformChanged(): Observable<CanvasZoomTransform> {
+    return this.$onZoomTransformChanged.asObservable();
+  }
+
   public get onShowNodeContextMenu(): Observable<{
-    node: D3Node;
+    node: SVGGraphRendererNode;
     position: [number, number];
   }> {
     return this.$onShowNodeContextMenu.asObservable();
   }
 
   public get onShowEdgeContextMenu(): Observable<{
-    edge: D3Link;
+    edge: SVGGraphRendererLink;
     position: [number, number];
   }> {
     return this.$onShowEdgeContextMenu.asObservable();
   }
 
-  public get onNodesMoved(): Observable<D3Node> {
+  public get onNodesMoved(): Observable<SVGGraphRendererNode> {
     return this.$onNodeMoved
       .asObservable()
       .pipe(throttleTime(1000 / outputFps));
@@ -204,7 +238,7 @@ export class D3Renderer {
       .pipe(throttleTime(1000 / outputFps));
   }
 
-  public get onUngrabNode(): Observable<D3Node> {
+  public get onUngrabNode(): Observable<SVGGraphRendererNode> {
     return this.$onUngrabNode.asObservable();
   }
 
@@ -257,6 +291,11 @@ export class D3Renderer {
       }
       localNode.locked = node.locked;
     }
+    this.applyPropertiesToSVG();
+  }
+
+  public updateSelectedElements(selectedElements: string[]): void {
+    this.selectedElements = selectedElements;
     this.applyPropertiesToSVG();
   }
 
@@ -323,7 +362,7 @@ export class D3Renderer {
     if (this.zoomContainer != null) {
       setAttr(this.zoomContainer, "transform", this.zoomTransform.toString());
     }
-    useBearStore.getState().room.canvas.setZoomTransform(this.zoomTransform);
+    this.$onZoomTransformChanged.next(this.zoomTransform);
     this.applyPositionsToSVG();
   }
 
@@ -496,10 +535,11 @@ export class D3Renderer {
   }
 
   private renderSvgElements(): void {
-    const width = this.svgElement.getBoundingClientRect().width;
-    const height = this.svgElement.getBoundingClientRect().height;
-    this.svgElement.style.userSelect = "none";
-    this.svgElement.style.setProperty("-webkit-user-select", "none");
+    const width =
+      this.svgElement.parentElement?.getBoundingClientRect().width ?? 0;
+    const height =
+      this.svgElement.parentElement?.getBoundingClientRect().height ?? 0;
+
     setAttr(
       this.svgElement,
       "viewBox",
@@ -533,7 +573,7 @@ export class D3Renderer {
     this.zoomContainer.appendChild(this.cursorsLayer);
 
     for (const edge of this.graphState.links) {
-      const linkProps: RelationshipViewProps = {
+      const linkProps: SVGGraphRendererRelationshipViewProps = {
         strokeColor: this._getEdgeStrokeColor(edge),
         textColor: getTextColorOfEdge(
           edge.customColor,
@@ -541,7 +581,7 @@ export class D3Renderer {
           this.theme,
         ),
       };
-      const linkView = new RelationshipView(
+      const linkView = new SVGGraphRendererRelationshipView(
         this.linksLayer,
         this.linkLabelsLayer,
         this.defsLayer,
@@ -577,7 +617,7 @@ export class D3Renderer {
 
     for (const node of this.graphState.nodes) {
       const nodeProps = this._getNodeViewProps(node);
-      const nodeView = new NodeView(
+      const nodeView = new SVGGraphRendererNodeView(
         this.nodesLayer,
         this.defsLayer,
         node,
@@ -627,7 +667,7 @@ export class D3Renderer {
     }
 
     for (const cursor of this.graphState.userCursors) {
-      const cursorView = new UserCursorView(
+      const cursorView = new SVGGraphRendererUserCursorView(
         this.cursorsLayer,
         cursor,
         this.textMeasurer,
@@ -650,7 +690,7 @@ export class D3Renderer {
     const smoothTime = (1000 / inputFps) * 1.5;
     const maxSpeed = 10000;
     for (let i = 0; i < this.graphState.nodes.length; i += 1) {
-      const node: D3Node = this.graphState.nodes[i];
+      const node: SVGGraphRendererNode = this.graphState.nodes[i];
       [node.x, node.vx] = this.smoothDamp(
         node.x,
         node.tx,
@@ -818,11 +858,12 @@ export class D3Renderer {
   }
 
   public dispose(): void {
+    if (this.animationFrame != null) {
+      cancelAnimationFrame(this.animationFrame);
+    }
     this.clearSvgListeners();
     this.clearViewResources();
-    while (this.svgElement.firstChild != null) {
-      this.svgElement.removeChild(this.svgElement.firstChild);
-    }
+    this.svgElement.remove();
   }
 
   public setCursor(positionRelativeToSVGElement: [number, number]): void {
@@ -869,7 +910,9 @@ export class D3Renderer {
     return [output, newVelocity];
   }
 
-  private _getNodeViewProps(node: D3Node): NodeViewProps {
+  private _getNodeViewProps(
+    node: SVGGraphRendererNode,
+  ): SVGGraphRendererNodeViewProps {
     return {
       isSelected: this._nodeIsSelected(node),
       titleColor: this._getTitleColorOfNode(node),
@@ -879,7 +922,9 @@ export class D3Renderer {
     };
   }
 
-  private _getRelationshipViewProps(edge: D3Link): RelationshipViewProps {
+  private _getRelationshipViewProps(
+    edge: SVGGraphRendererLink,
+  ): SVGGraphRendererRelationshipViewProps {
     return {
       strokeColor: this._getEdgeStrokeColor(edge),
       textColor: getTextColorOfEdge(
@@ -903,14 +948,14 @@ export class D3Renderer {
     }
   }
 
-  private _getTitleColorOfNode(d: D3Node): string {
+  private _getTitleColorOfNode(d: SVGGraphRendererNode): string {
     return getTextColor(
       d.customColor ?? this.graphState.labels.get(d.labels[0])?.color ?? null,
       this.colorSchema,
     );
   }
 
-  private _getBgColorsOfNode(d: D3Node): string[] {
+  private _getBgColorsOfNode(d: SVGGraphRendererNode): string[] {
     if (d.customColor != null) {
       return [getBackgroundColorOfColor(d.customColor, this.colorSchema)];
     }
@@ -923,17 +968,15 @@ export class D3Renderer {
     return colors.reduce<string[]>((a, n) => (n ? [...a, n] : a), []);
   }
 
-  private _nodeIsSelected(node: D3Node): boolean {
-    const elements = useBearStore.getState().room.panels.inspector.element;
-    return elements.includes(node.id);
+  private _nodeIsSelected(node: SVGGraphRendererNode): boolean {
+    return this.selectedElements.includes(node.id);
   }
 
-  private _edgeIsSelected(edge: D3Link): boolean {
-    const elements = useBearStore.getState().room.panels.inspector.element;
-    return elements.includes(edge.id);
+  private _edgeIsSelected(edge: SVGGraphRendererLink): boolean {
+    return this.selectedElements.includes(edge.id);
   }
 
-  private _getEdgeStrokeColor(d: D3Link): string {
+  private _getEdgeStrokeColor(d: SVGGraphRendererLink): string {
     if (this._edgeIsSelected(d)) {
       return "#ff00ff";
     }
@@ -944,12 +987,11 @@ export class D3Renderer {
   }
 
   private _getPositionOfSelectedElement(): [number, number] | null {
-    const elements = useBearStore.getState().room.panels.inspector.element;
-    if (elements.length === 0) {
+    if (this.selectedElements.length === 0) {
       return null;
     }
     const positions: [number, number][] = [];
-    for (const element of elements) {
+    for (const element of this.selectedElements) {
       const node = this.graphState.nodes.find((d) => d.id === element);
       if (node != null) {
         positions.push([node.x, node.y]);
@@ -971,7 +1013,18 @@ export class D3Renderer {
     ];
   }
 
-  private _getStrokeWidth(n: D3Node): number {
+  private _getStrokeWidth(n: SVGGraphRendererNode): number {
     return (baseStrokeWidth * n.radius) / 50;
+  }
+
+  private _createSVGCanvas(): SVGSVGElement {
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.id = "svg-canvas";
+    svg.style.width = "100%";
+    svg.style.height = "100%";
+    svg.style.display = "block";
+    svg.style.userSelect = "none";
+
+    return svg;
   }
 }

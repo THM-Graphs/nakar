@@ -1,20 +1,21 @@
 import { createRef, useEffect } from "react";
-import { useBearStore } from "../../state/useBearStore.ts";
-import { useAppContext } from "../../state/AppContextData.ts";
+import { useBearStore } from "../../../state/useBearStore.ts";
+import { useAppContext } from "../../../state/AppContextData.ts";
 import { match } from "ts-pattern";
-import { D3Renderer } from "../d3/D3Renderer.ts";
-import { CanvasContextMenu } from "./CanvasContextMenu.tsx";
-import { useTheme } from "../../shared/theme/useTheme.ts";
-import { ExpandNodePreviewAction } from "../actions/ExpandNodePreviewAction.ts";
-import { ExpandNodeAction } from "../actions/ExpandNodeAction.ts";
-import { useIsLoggedIn } from "../../state/useIsLoggedIn.ts";
-import { useCanvasContext } from "../../pages/Canvas.tsx";
+import { CanvasContextMenu } from "../CanvasContextMenu.tsx";
+import { useTheme } from "../../../shared/theme/useTheme.ts";
+import { ExpandNodePreviewAction } from "../../actions/ExpandNodePreviewAction.ts";
+import { ExpandNodeAction } from "../../actions/ExpandNodeAction.ts";
+import { useIsLoggedIn } from "../../../state/useIsLoggedIn.ts";
+import { useCanvasContext } from "../../../pages/Canvas.tsx";
 import { NodeDto } from "api-client";
+import { SVGGraphRenderer } from "./renderers/svg/SVGGraphRenderer.ts";
+import { CanvasZoomTransform } from "../../../shared/graphics/CanvasZoomTransform.ts";
 
-export function GraphRendererD3() {
+export function GraphRenderer() {
   const context = useAppContext();
   const websocketsManager = context.webSocketsManager;
-  const svgRef = createRef<SVGSVGElement>();
+  const containerRef = createRef<HTMLDivElement>();
   const theme = useTheme();
   const inspector = useBearStore((s) => s.room.panels.inspector);
   const setLocks = useBearStore((s) => s.room.scenario.setLocks);
@@ -25,15 +26,17 @@ export function GraphRendererD3() {
   const canvasContext = useCanvasContext();
 
   useEffect(() => {
-    if (svgRef.current == null) {
+    if (containerRef.current == null) {
       return;
     }
 
-    const _graphRenderer = new D3Renderer(
+    const _graphRenderer = new SVGGraphRenderer(
       theme,
-      svgRef.current,
+      containerRef.current,
       hideLabels,
       colorSchemaSlug,
+      useBearStore.getState().room.canvas.zoomTransform,
+      inspector.element,
     );
 
     const subs: { unsubscribe: () => void }[] = [
@@ -151,6 +154,11 @@ export function GraphRendererD3() {
           },
         });
       }),
+      _graphRenderer.onZoomTransformChanged.subscribe(
+        (zoomTransform: CanvasZoomTransform) => {
+          useBearStore.getState().room.canvas.setZoomTransform(zoomTransform);
+        },
+      ),
       events.onZoomOut.subscribe(() => {
         _graphRenderer.zoomOut();
       }),
@@ -182,8 +190,8 @@ export function GraphRendererD3() {
       {
         unsubscribe: useBearStore.subscribe(
           (s) => s.room.panels.inspector.element,
-          () => {
-            _graphRenderer.applyPropertiesToSVG();
+          (elements) => {
+            _graphRenderer.updateSelectedElements(elements);
           },
         ),
       },
@@ -197,42 +205,22 @@ export function GraphRendererD3() {
       },
     ];
 
-    let animationActive: boolean = true;
-    let lastAnimationTimeStamp: DOMHighResTimeStamp | null = null;
-    const onAnimationTick = (timestamp: DOMHighResTimeStamp) => {
-      if (lastAnimationTimeStamp === null) {
-        lastAnimationTimeStamp = timestamp;
-      }
-      const deltaTime = timestamp - lastAnimationTimeStamp;
-      lastAnimationTimeStamp = timestamp;
-      _graphRenderer.onAnimationTick(deltaTime);
-      if (animationActive) {
-        animationFrame = requestAnimationFrame(onAnimationTick);
-      }
-    };
-    let animationFrame: number = requestAnimationFrame(onAnimationTick);
-
     return () => {
       for (const s of subs) {
         s.unsubscribe();
       }
-      animationActive = false;
-      cancelAnimationFrame(animationFrame);
       _graphRenderer.dispose();
     };
-  }, [websocketsManager, svgRef.current, isLoggedIn, canvasContext]);
+  }, [websocketsManager, containerRef.current, isLoggedIn, canvasContext]);
 
   return (
     <>
-      <svg
-        id={"svg-canvas"}
-        ref={svgRef}
+      <div
+        id={"renderer-container"}
+        ref={containerRef}
         className={"position-absolute"}
         style={{ top: 0, left: 0, width: "100%", height: "100%" }}
-        xmlns={"http://www.w3.org/1999/xhtml"}
-      >
-        <g></g>
-      </svg>
+      ></div>
       <CanvasContextMenu></CanvasContextMenu>
     </>
   );

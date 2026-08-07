@@ -1,5 +1,5 @@
-import { D3Link } from "./D3Link.ts";
-import { D3Node } from "./D3Node.ts";
+import { SVGGraphRendererLink } from "./SVGGraphRendererLink.ts";
+import { SVGGraphRendererNode } from "./SVGGraphRendererNode.ts";
 import {
   EdgeDto,
   LabelDto,
@@ -7,13 +7,13 @@ import {
   NodeDto,
   UserPreviewDto,
 } from "api-client";
-import { D3UserCursor } from "./D3UserCursor.ts";
+import { SVGGraphRendererUserCursor } from "./SVGGraphRendererUserCursor.ts";
 
-export class D3RendererState {
-  private _links: D3Link[];
-  private _nodes: Map<string, D3Node>;
+export class SVGGraphRendererState {
+  private _links: SVGGraphRendererLink[];
+  private _nodes: Map<string, SVGGraphRendererNode>;
   private _labels: Map<string, LabelDto>;
-  private _userCursors: D3UserCursor[];
+  private _userCursors: SVGGraphRendererUserCursor[];
 
   public constructor() {
     this._links = [];
@@ -22,13 +22,13 @@ export class D3RendererState {
     this._userCursors = [];
   }
 
-  public getNodeById(id: string): D3Node | null {
+  public getNodeById(id: string): SVGGraphRendererNode | null {
     return this._nodes.get(id) ?? null;
   }
 
   public loadGraphElements(graphElements: LiveCanvasGraphElementsDto): void {
     const nodes = graphElements.nodes
-      .map((node: NodeDto): D3Node => {
+      .map((node: NodeDto): SVGGraphRendererNode => {
         return {
           id: node.id,
           x: node.position.x,
@@ -56,27 +56,33 @@ export class D3RendererState {
           })(),
         };
       })
-      .reduce((map, node) => map.set(node.id, node), new Map<string, D3Node>());
-    const links = graphElements.edges.reduce((acc: D3Link[], edge: EdgeDto) => {
-      const sourceNode = nodes.get(edge.startNodeId);
-      const targetNode = nodes.get(edge.endNodeId);
+      .reduce(
+        (map, node) => map.set(node.id, node),
+        new Map<string, SVGGraphRendererNode>(),
+      );
+    const links = graphElements.edges.reduce(
+      (acc: SVGGraphRendererLink[], edge: EdgeDto) => {
+        const sourceNode = nodes.get(edge.startNodeId);
+        const targetNode = nodes.get(edge.endNodeId);
 
-      if (sourceNode && targetNode) {
-        acc.push({
-          id: edge.id,
-          source: sourceNode,
-          target: targetNode,
-          type: edge.type,
-          clusterSize: edge.clusterSize,
-          isLoop: edge.isLoop,
-          parallelCount: edge.parallelCount,
-          parallelIndex: edge.parallelIndex,
-          width: edge.width,
-          customColor: edge.customColor,
-        });
-      }
-      return acc;
-    }, []);
+        if (sourceNode && targetNode) {
+          acc.push({
+            id: edge.id,
+            source: sourceNode,
+            target: targetNode,
+            type: edge.type,
+            clusterSize: edge.clusterSize,
+            isLoop: edge.isLoop,
+            parallelCount: edge.parallelCount,
+            parallelIndex: edge.parallelIndex,
+            width: edge.width,
+            customColor: edge.customColor,
+          });
+        }
+        return acc;
+      },
+      [],
+    );
 
     this._nodes = nodes;
     this._links = links;
@@ -98,15 +104,15 @@ export class D3RendererState {
         tx: 0,
         ty: 0,
         hidden: true,
-      } satisfies D3UserCursor;
+      } satisfies SVGGraphRendererUserCursor;
     });
   }
 
-  public get nodes(): D3Node[] {
+  public get nodes(): SVGGraphRendererNode[] {
     return [...this._nodes.values()];
   }
 
-  public get links(): D3Link[] {
+  public get links(): SVGGraphRendererLink[] {
     return this._links;
   }
 
@@ -114,7 +120,7 @@ export class D3RendererState {
     return this._labels;
   }
 
-  public get userCursors(): D3UserCursor[] {
+  public get userCursors(): SVGGraphRendererUserCursor[] {
     return this._userCursors;
   }
 }

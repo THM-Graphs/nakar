@@ -1,16 +1,16 @@
 import { Subject } from "rxjs";
-import { D3Link } from "../D3Link.ts";
-import { D3Calculator } from "../D3Calculator.ts";
-import { TextMeasurer } from "./TextMeasurer.ts";
+import { SVGGraphRendererLink } from "./SVGGraphRendererLink.ts";
+import { SVGGraphRendererCalculator } from "./SVGGraphRendererCalculator.ts";
+import { SVGGraphRendererTextMeasurer } from "./SVGGraphRendererTextMeasurer.ts";
 import { createSvgElement, setAttr } from "./svgDom.ts";
 
-export type RelationshipViewProps = {
+export type SVGGraphRendererRelationshipViewProps = {
   strokeColor: string;
   textColor: string;
 };
 
-export class RelationshipView {
-  public readonly edge: D3Link;
+export class SVGGraphRendererRelationshipView {
+  public readonly edge: SVGGraphRendererLink;
   public readonly onClick$ = new Subject<MouseEvent>();
   public readonly onContextMenu$ = new Subject<MouseEvent>();
 
@@ -24,16 +24,16 @@ export class RelationshipView {
   private labelsHidden = false;
   private hoverRefCount = 0;
   private isHovered = false;
-  private props: RelationshipViewProps;
+  private props: SVGGraphRendererRelationshipViewProps;
 
   public constructor(
     parentLinks: SVGGElement,
     parentLabels: SVGGElement,
     defs: SVGDefsElement,
-    edge: D3Link,
-    calculator: D3Calculator,
-    textMeasurer: TextMeasurer,
-    props: RelationshipViewProps,
+    edge: SVGGraphRendererLink,
+    calculator: SVGGraphRendererCalculator,
+    textMeasurer: SVGGraphRendererTextMeasurer,
+    props: SVGGraphRendererRelationshipViewProps,
   ) {
     this.edge = edge;
     this.props = props;
@@ -152,7 +152,7 @@ export class RelationshipView {
     this.marker.remove();
   }
 
-  public updateGeometry(calculator: D3Calculator): void {
+  public updateGeometry(calculator: SVGGraphRendererCalculator): void {
     const path = calculator.curvedPath(this.edge);
     setAttr(this.path, "d", path);
     const c = calculator.curvePoints(this.edge);
@@ -164,8 +164,8 @@ export class RelationshipView {
   }
 
   public updateAppearance(
-    textMeasurer: TextMeasurer,
-    props: RelationshipViewProps,
+    textMeasurer: SVGGraphRendererTextMeasurer,
+    props: SVGGraphRendererRelationshipViewProps,
   ): void {
     this.props = props;
     setAttr(this.path, "stroke-width", this.edge.width);

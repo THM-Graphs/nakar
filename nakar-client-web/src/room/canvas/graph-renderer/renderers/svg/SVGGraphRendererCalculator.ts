@@ -1,8 +1,8 @@
-import { D3Link } from "./D3Link.ts";
-import { D3Node } from "./D3Node.ts";
+import { SVGGraphRendererLink } from "./SVGGraphRendererLink.ts";
+import { SVGGraphRendererNode } from "./SVGGraphRendererNode.ts";
 
-export class D3Calculator {
-  public closestPointsOnNodes(d: D3Link) {
+export class SVGGraphRendererCalculator {
+  public closestPointsOnNodes(d: SVGGraphRendererLink) {
     if (d.isLoop) {
       const loopSizeRadius = Math.min(90, 360 / d.parallelCount / 2) / 2;
       const angle = (d.parallelIndex / d.parallelCount) * 360 - 90;
@@ -46,7 +46,7 @@ export class D3Calculator {
   }
 
   public pointOnRadius(
-    node: D3Node,
+    node: SVGGraphRendererNode,
     point: { x: number; y: number },
   ): { x: number; y: number } {
     // Vector from c1 to c2
@@ -66,7 +66,7 @@ export class D3Calculator {
     };
   }
 
-  public curvedPath(d: D3Link) {
+  public curvedPath(d: SVGGraphRendererLink) {
     const control = this.curvePoints(d);
     const [start, center, end] = control.points;
     if (d.parallelCount > 0 || d.isLoop) {
@@ -103,10 +103,10 @@ export class D3Calculator {
   public pushVectorOfCurve(
     x1: number,
     y1: number,
-    n1: D3Node,
+    n1: SVGGraphRendererNode,
     x2: number,
     y2: number,
-    n2: D3Node,
+    n2: SVGGraphRendererNode,
     distance: number,
     moveEnds: boolean,
   ): { x: number; y: number }[] {
@@ -133,7 +133,7 @@ export class D3Calculator {
     ];
   }
 
-  public curvePoints(d: D3Link): {
+  public curvePoints(d: SVGGraphRendererLink): {
     center: { x: number; y: number };
     angle: number;
     points: { x: number; y: number }[];

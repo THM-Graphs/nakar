@@ -58,7 +58,7 @@ import {
   canvasSearchDataSchema,
 } from "../room/canvas/CanvasSearchData.ts";
 import { Group, Panel } from "react-resizable-panels";
-import { GraphRendererD3 } from "../room/canvas/GraphRendererD3.tsx";
+import { GraphRenderer } from "../room/canvas/graph-renderer/GraphRenderer.tsx";
 
 const CanvasContext: Context<CanvasContextData | null> =
   createContext<CanvasContextData | null>(null);
@@ -417,7 +417,7 @@ export function Canvas() {
             <ReconnectOverlay></ReconnectOverlay>
           )}
         </Stack>
-        <GraphRendererD3></GraphRendererD3>
+        <GraphRenderer></GraphRenderer>
         <ToastStack></ToastStack>
         <RunScenarioModal></RunScenarioModal>
         <ExpandNodePreviewModal></ExpandNodePreviewModal>

@@ -1,9 +1,9 @@
 import { Subject } from "rxjs";
-import { D3Node } from "../D3Node.ts";
-import { TextMeasurer } from "./TextMeasurer.ts";
+import { SVGGraphRendererNode } from "./SVGGraphRendererNode.ts";
+import { SVGGraphRendererTextMeasurer } from "./SVGGraphRendererTextMeasurer.ts";
 import { createSvgElement, setAttr } from "./svgDom.ts";
 
-export type NodeViewProps = {
+export type SVGGraphRendererNodeViewProps = {
   isSelected: boolean;
   titleColor: string;
   borderColor: string;
@@ -11,8 +11,8 @@ export type NodeViewProps = {
   strokeWidth: number;
 };
 
-export class NodeView {
-  public readonly node: D3Node;
+export class SVGGraphRendererNodeView {
+  public readonly node: SVGGraphRendererNode;
   public readonly onPointerDown$ = new Subject<PointerEvent>();
   public readonly onContextMenu$ = new Subject<MouseEvent>();
   public readonly onHoverChanged$ = new Subject<boolean>();
@@ -34,14 +34,14 @@ export class NodeView {
   private readonly cleanupListeners: Array<() => void> = [];
   private hovered = false;
   private labelsVisible = true;
-  private props: NodeViewProps;
+  private props: SVGGraphRendererNodeViewProps;
 
   public constructor(
     parent: SVGGElement,
     defs: SVGDefsElement,
-    node: D3Node,
-    textMeasurer: TextMeasurer,
-    props: NodeViewProps,
+    node: SVGGraphRendererNode,
+    textMeasurer: SVGGraphRendererTextMeasurer,
+    props: SVGGraphRendererNodeViewProps,
   ) {
     this.node = node;
     this.props = props;
@@ -228,8 +228,8 @@ export class NodeView {
   }
 
   public updateAppearance(
-    textMeasurer: TextMeasurer,
-    props: NodeViewProps,
+    textMeasurer: SVGGraphRendererTextMeasurer,
+    props: SVGGraphRendererNodeViewProps,
   ): void {
     this.props = props;
     const fill =

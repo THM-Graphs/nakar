@@ -1,10 +1,10 @@
-import { D3Node } from "./D3Node.ts";
+import { SVGGraphRendererNode } from "./SVGGraphRendererNode.ts";
 import { ColorDto } from "api-client";
 
-export type D3Link = {
+export type SVGGraphRendererLink = {
   id: string;
-  source: D3Node;
-  target: D3Node;
+  source: SVGGraphRendererNode;
+  target: SVGGraphRendererNode;
   width: number;
   type: string;
   clusterSize: number;

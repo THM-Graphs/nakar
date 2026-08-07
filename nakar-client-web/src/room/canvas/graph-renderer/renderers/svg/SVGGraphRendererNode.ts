@@ -1,6 +1,6 @@
 import { ColorDto } from "api-client";
 
-export type D3Node = {
+export type SVGGraphRendererNode = {
   id: string;
   x: number;
   y: number;
