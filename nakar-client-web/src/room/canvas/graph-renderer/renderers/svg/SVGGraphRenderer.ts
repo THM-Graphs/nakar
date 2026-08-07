@@ -1,5 +1,3 @@
-import { SVGGraphRendererLink } from "./SVGGraphRendererLink.ts";
-import { SVGGraphRendererNode } from "./SVGGraphRendererNode.ts";
 import {
   getBackgroundColorOfColor,
   getBackgroundColorOfLabel,
@@ -9,13 +7,14 @@ import {
   getTextColorOfEdge,
 } from "../../../../color/getTextColor.ts";
 import { Observable, Subject, Subscription, throttleTime } from "rxjs";
-import { SVGGraphRendererState } from "./SVGGraphRendererState.ts";
-import { SVGGraphRendererCalculator } from "./SVGGraphRendererCalculator.ts";
 import { ColorSchema } from "../../../../color/ColorSchema.ts";
 import { Theme } from "../../../../../shared/theme/Theme.ts";
 import { isMacOS } from "../../../../../shared/dom/isMacOS.ts";
 import {
+  EdgeDto,
+  LabelDto,
   LiveCanvasGraphElementsDto,
+  NodeDto,
   NodesMovedWsdto,
   PositionDto,
   SetNodeLocksWsdto,
@@ -34,60 +33,62 @@ import {
 } from "./SVGGraphRendererRelationshipView.ts";
 import { SVGGraphRendererUserCursorView } from "./SVGGraphRendererUserCursorView.ts";
 
-const inputFps = 16;
 const outputFps = 32;
 const baseStrokeWidth = 2;
 const interactionMoveThresholdPt = 3;
 const isMultiSelectKeyPressed = (event: MouseEvent | PointerEvent): boolean =>
   isMacOS() ? event.metaKey : event.ctrlKey;
 
+type SVGGraphLayers = {
+  zoomContainer: SVGGElement;
+  defsLayer: SVGDefsElement;
+  linksLayer: SVGGElement;
+  linkLabelsLayer: SVGGElement;
+  nodesLayer: SVGGElement;
+  cursorsLayer: SVGGElement;
+};
+
 export class SVGGraphRenderer {
-  private readonly graphState: SVGGraphRendererState;
   private theme: Theme;
   public colorSchema: ColorSchema;
   private readonly svgElement: SVGSVGElement;
   private hideLabels: boolean;
+  private labels: Map<string, LabelDto>;
 
-  private $onDisplayLinkData: Subject<SVGGraphRendererLink>;
-  private $onDisplayNodeData: Subject<SVGGraphRendererNode>;
-  private $onDoubleClickNode: Subject<SVGGraphRendererNode>;
-  private $onDisplayLinkDataWithModifier: Subject<SVGGraphRendererLink>;
-  private $onDisplayNodeDataWithModifier: Subject<SVGGraphRendererNode>;
+  private $onDisplayLinkData: Subject<SVGGraphRendererRelationshipView>;
+  private $onDisplayNodeData: Subject<SVGGraphRendererNodeView>;
+  private $onDoubleClickNode: Subject<SVGGraphRendererNodeView>;
+  private $onDisplayLinkDataWithModifier: Subject<SVGGraphRendererRelationshipView>;
+  private $onDisplayNodeDataWithModifier: Subject<SVGGraphRendererNodeView>;
   private $onDeselectAll: Subject<void>;
-  private $onGrabNode: Subject<SVGGraphRendererNode>;
-  private $onNodeMoved: Subject<SVGGraphRendererNode>;
-  private $onUngrabNode: Subject<SVGGraphRendererNode>;
+  private $onGrabNode: Subject<SVGGraphRendererNodeView>;
+  private $onNodeMoved: Subject<SVGGraphRendererNodeView>;
+  private $onUngrabNode: Subject<SVGGraphRendererNodeView>;
   private $onShowNodeContextMenu: Subject<{
-    node: SVGGraphRendererNode;
+    node: SVGGraphRendererNodeView;
     position: [number, number];
   }>;
   private $onShowEdgeContextMenu: Subject<{
-    edge: SVGGraphRendererLink;
+    edge: SVGGraphRendererRelationshipView;
     position: [number, number];
   }>;
   private $onCursorMoved: Subject<[number, number]>;
   private $onZoomTransformChanged: Subject<CanvasZoomTransform>;
 
-  private calculator: SVGGraphRendererCalculator;
   private textMeasurer: SVGGraphRendererTextMeasurer;
 
   private zoomContainer: SVGGElement | null;
-  private nodesLayer: SVGGElement | null;
-  private linksLayer: SVGGElement | null;
-  private linkLabelsLayer: SVGGElement | null;
   private cursorsLayer: SVGGElement | null;
-  private defsLayer: SVGDefsElement | null;
 
   private zoomTransform: CanvasZoomTransform;
-  private nodeViews: SVGGraphRendererNodeView[];
+  private nodeViews: Map<string, SVGGraphRendererNodeView>;
   private relationshipViews: SVGGraphRendererRelationshipView[];
   private cursorViews: SVGGraphRendererUserCursorView[];
-  private smoothedPositionDirty: boolean;
   private selectedElements: string[];
 
   private dragNode: {
     pointerId: number;
-    node: SVGGraphRendererNode;
+    view: SVGGraphRendererNodeView;
     startClient: [number, number];
     pointerToNodeOffset: [number, number];
     moved: boolean;
@@ -117,43 +118,45 @@ export class SVGGraphRenderer {
     zoomTransform: CanvasZoomTransform,
     selectedElements: string[],
   ) {
-    this.graphState = new SVGGraphRendererState();
     this.theme = theme;
-
-    this.svgElement = this._createSVGCanvas();
-    containerElement.appendChild(this.svgElement);
     this.hideLabels = hideLabels;
     this.colorSchema = ColorSchema.find(colorSchema);
 
-    this.$onDisplayLinkData = new Subject();
-    this.$onDisplayNodeData = new Subject();
-    this.$onDoubleClickNode = new Subject();
-    this.$onDisplayLinkDataWithModifier = new Subject();
-    this.$onDisplayNodeDataWithModifier = new Subject();
-    this.$onDeselectAll = new Subject();
-    this.$onGrabNode = new Subject<SVGGraphRendererNode>();
-    this.$onNodeMoved = new Subject<SVGGraphRendererNode>();
-    this.$onUngrabNode = new Subject<SVGGraphRendererNode>();
-    this.$onShowNodeContextMenu = new Subject();
-    this.$onShowEdgeContextMenu = new Subject();
-    this.$onCursorMoved = new Subject();
-    this.$onZoomTransformChanged = new Subject();
+    this.svgElement = this.createSvgCanvas();
+    containerElement.appendChild(this.svgElement);
 
-    this.calculator = new SVGGraphRendererCalculator();
+    this.$onDisplayLinkData = new Subject<SVGGraphRendererRelationshipView>();
+    this.$onDisplayNodeData = new Subject<SVGGraphRendererNodeView>();
+    this.$onDoubleClickNode = new Subject<SVGGraphRendererNodeView>();
+    this.$onDisplayLinkDataWithModifier =
+      new Subject<SVGGraphRendererRelationshipView>();
+    this.$onDisplayNodeDataWithModifier =
+      new Subject<SVGGraphRendererNodeView>();
+    this.$onDeselectAll = new Subject<void>();
+    this.$onGrabNode = new Subject<SVGGraphRendererNodeView>();
+    this.$onNodeMoved = new Subject<SVGGraphRendererNodeView>();
+    this.$onUngrabNode = new Subject<SVGGraphRendererNodeView>();
+    this.$onShowNodeContextMenu = new Subject<{
+      node: SVGGraphRendererNodeView;
+      position: [number, number];
+    }>();
+    this.$onShowEdgeContextMenu = new Subject<{
+      edge: SVGGraphRendererRelationshipView;
+      position: [number, number];
+    }>();
+    this.$onCursorMoved = new Subject<[number, number]>();
+    this.$onZoomTransformChanged = new Subject<CanvasZoomTransform>();
+
     this.textMeasurer = new SVGGraphRendererTextMeasurer();
 
     this.zoomContainer = null;
-    this.nodesLayer = null;
-    this.linksLayer = null;
-    this.linkLabelsLayer = null;
     this.cursorsLayer = null;
-    this.defsLayer = null;
 
     this.zoomTransform = zoomTransform;
-    this.nodeViews = [];
+    this.labels = new Map();
+    this.nodeViews = new Map();
     this.relationshipViews = [];
     this.cursorViews = [];
-    this.smoothedPositionDirty = true;
     this.selectedElements = selectedElements;
 
     this.dragNode = null;
@@ -166,7 +169,9 @@ export class SVGGraphRenderer {
     this.lastAnimationTimeStamp = null;
     this.animationFrame = null;
 
-    this.renderSvgElements();
+    this.createSvgStructure();
+    this.installSvgInteractionHandlers();
+    this.setZoomTransform(this.zoomTransform);
 
     const onAnimationTick = (timestamp: DOMHighResTimeStamp) => {
       if (this.lastAnimationTimeStamp === null) {
@@ -180,23 +185,23 @@ export class SVGGraphRenderer {
     this.animationFrame = requestAnimationFrame(onAnimationTick);
   }
 
-  public get onDisplayLinkData(): Observable<SVGGraphRendererLink> {
+  public get onDisplayLinkData(): Observable<SVGGraphRendererRelationshipView> {
     return this.$onDisplayLinkData.asObservable();
   }
 
-  public get onDisplayNodeData(): Observable<SVGGraphRendererNode> {
+  public get onDisplayNodeData(): Observable<SVGGraphRendererNodeView> {
     return this.$onDisplayNodeData.asObservable();
   }
 
-  public get onDoubleClickNode(): Observable<SVGGraphRendererNode> {
+  public get onDoubleClickNode(): Observable<SVGGraphRendererNodeView> {
     return this.$onDoubleClickNode.asObservable();
   }
 
-  public get onDisplayLinkDataWithModifier(): Observable<SVGGraphRendererLink> {
+  public get onDisplayLinkDataWithModifier(): Observable<SVGGraphRendererRelationshipView> {
     return this.$onDisplayLinkDataWithModifier.asObservable();
   }
 
-  public get onDisplayNodeDataWithModifier(): Observable<SVGGraphRendererNode> {
+  public get onDisplayNodeDataWithModifier(): Observable<SVGGraphRendererNodeView> {
     return this.$onDisplayNodeDataWithModifier.asObservable();
   }
 
@@ -204,7 +209,7 @@ export class SVGGraphRenderer {
     return this.$onDeselectAll.asObservable();
   }
 
-  public get onGrabNode(): Observable<SVGGraphRendererNode> {
+  public get onGrabNode(): Observable<SVGGraphRendererNodeView> {
     return this.$onGrabNode.asObservable();
   }
 
@@ -213,20 +218,20 @@ export class SVGGraphRenderer {
   }
 
   public get onShowNodeContextMenu(): Observable<{
-    node: SVGGraphRendererNode;
+    node: SVGGraphRendererNodeView;
     position: [number, number];
   }> {
     return this.$onShowNodeContextMenu.asObservable();
   }
 
   public get onShowEdgeContextMenu(): Observable<{
-    edge: SVGGraphRendererLink;
+    edge: SVGGraphRendererRelationshipView;
     position: [number, number];
   }> {
     return this.$onShowEdgeContextMenu.asObservable();
   }
 
-  public get onNodesMoved(): Observable<SVGGraphRendererNode> {
+  public get onNodesMoved(): Observable<SVGGraphRendererNodeView> {
     return this.$onNodeMoved
       .asObservable()
       .pipe(throttleTime(1000 / outputFps));
@@ -238,60 +243,178 @@ export class SVGGraphRenderer {
       .pipe(throttleTime(1000 / outputFps));
   }
 
-  public get onUngrabNode(): Observable<SVGGraphRendererNode> {
+  public get onUngrabNode(): Observable<SVGGraphRendererNodeView> {
     return this.$onUngrabNode.asObservable();
   }
 
   public loadGraphContent(graphElements: LiveCanvasGraphElementsDto) {
-    this.graphState.loadGraphElements(graphElements);
-    this.renderSvgElements();
+    const previousCursorViews = this.cursorViews;
+    const layers = this.createSvgStructure();
+
+    this.labels = graphElements.labels.reduce(
+      (map, label) => map.set(label.label, label),
+      new Map<string, LabelDto>(),
+    );
+
+    const nodeViews = new Map<string, SVGGraphRendererNodeView>();
+    for (const node of graphElements.nodes) {
+      const nodeView = new SVGGraphRendererNodeView(
+        layers.nodesLayer,
+        layers.defsLayer,
+        node,
+        this.textMeasurer,
+        this.getNodeViewProps(node),
+      );
+      nodeViews.set(node.id, nodeView);
+      this.viewSubscriptions.push(
+        nodeView.onContextMenu$.subscribe((event) => {
+          event.preventDefault();
+          this.$onShowNodeContextMenu.next({
+            node: nodeView,
+            position: [event.clientX, event.clientY],
+          });
+        }),
+        nodeView.onPointerDown$.subscribe((event) => {
+          if (event.button !== 0) {
+            return;
+          }
+          const svgPoint = this.getSvgPoint(event.clientX, event.clientY);
+          const pointerWorld = this.screenToWorld(svgPoint);
+          this.dragNode = {
+            pointerId: event.pointerId,
+            view: nodeView,
+            startClient: [event.clientX, event.clientY],
+            pointerToNodeOffset: [
+              nodeView.x - pointerWorld[0],
+              nodeView.y - pointerWorld[1],
+            ],
+            moved: false,
+          };
+          this.updateNodeLabelVisibility(nodeView);
+          this.$onGrabNode.next(nodeView);
+          this.svgElement.setPointerCapture(event.pointerId);
+          event.preventDefault();
+          event.stopPropagation();
+        }),
+        nodeView.onHoverChanged$.subscribe((hovered) => {
+          nodeView.setHoverVisible(hovered);
+          this.updateNodeLabelVisibility(nodeView);
+        }),
+      );
+    }
+    this.nodeViews = nodeViews;
+
+    this.relationshipViews = [];
+    for (const edge of graphElements.edges) {
+      const source = nodeViews.get(edge.startNodeId);
+      const target = nodeViews.get(edge.endNodeId);
+      if (source == null || target == null) {
+        continue;
+      }
+      const edgeView = new SVGGraphRendererRelationshipView(
+        layers.linksLayer,
+        layers.linkLabelsLayer,
+        layers.defsLayer,
+        edge,
+        source,
+        target,
+        this.textMeasurer,
+        this.getRelationshipViewProps(edge),
+      );
+      this.viewSubscriptions.push(
+        edgeView.onClick$.subscribe((event) => {
+          if (performance.now() < this.suppressClickUntil) {
+            return;
+          }
+          if (isMultiSelectKeyPressed(event)) {
+            this.$onDisplayLinkDataWithModifier.next(edgeView);
+          } else {
+            this.$onDisplayLinkData.next(edgeView);
+          }
+          event.stopPropagation();
+        }),
+        edgeView.onContextMenu$.subscribe((event) => {
+          event.preventDefault();
+          this.$onShowEdgeContextMenu.next({
+            edge: edgeView,
+            position: [event.clientX, event.clientY],
+          });
+        }),
+      );
+      this.relationshipViews.push(edgeView);
+    }
+
+    for (const previous of previousCursorViews) {
+      const cursorView = new SVGGraphRendererUserCursorView(
+        layers.cursorsLayer,
+        previous.user,
+        this.textMeasurer,
+      );
+      cursorView.x = previous.x;
+      cursorView.y = previous.y;
+      cursorView.vx = previous.vx;
+      cursorView.vy = previous.vy;
+      cursorView.tx = previous.tx;
+      cursorView.ty = previous.ty;
+      cursorView.hidden = previous.hidden;
+      cursorView.update(this.getZoom());
+      this.cursorViews.push(cursorView);
+    }
+
+    this.installSvgInteractionHandlers();
+    this.setZoomTransform(this.zoomTransform);
+    this.applyPropertiesToSVG();
+    this.setHideLabels(this.hideLabels);
   }
 
   public loadUserCursors(users: UserPreviewDto[]): void {
-    this.graphState.loadUserCursors(users);
-    this.renderSvgElements();
+    const cursorsLayer = this.cursorsLayer;
+    if (cursorsLayer == null) {
+      return;
+    }
+    this.clearCursorViews();
+    for (const user of users) {
+      const cursorView = new SVGGraphRendererUserCursorView(
+        cursorsLayer,
+        user,
+        this.textMeasurer,
+      );
+      cursorView.update(this.getZoom());
+      this.cursorViews.push(cursorView);
+    }
   }
 
   public setUserCursorPosition(id: string, position: PositionDto): void {
-    const userCusor = this.graphState.userCursors.find((c) => c.id === id);
-    if (userCusor) {
-      userCusor.tx = position.x;
-      userCusor.ty = position.y;
-
-      if (userCusor.hidden) {
-        userCusor.hidden = false;
-        userCusor.x = position.x;
-        userCusor.y = position.y;
-        userCusor.vx = 0;
-        userCusor.vy = 0;
-        this.renderSvgElements();
-      }
-
-      this.smoothedPositionDirty = true;
+    const cursorView = this.cursorViews.find((c) => c.id === id);
+    if (cursorView == null) {
+      return;
     }
+    cursorView.setTargetPosition(position.x, position.y);
+    cursorView.update(this.getZoom());
   }
 
   public updateNodePositions(wsEvent: NodesMovedWsdto) {
     for (const node of wsEvent.nodes) {
-      const localNode = this.graphState.getNodeById(node.id);
-      if (localNode == null) {
+      const nodeView = this.nodeViews.get(node.id);
+      if (nodeView == null) {
         continue;
       }
-      localNode.tx = node.position.x;
-      localNode.ty = node.position.y;
+      nodeView.setTargetPosition(node.position.x, node.position.y);
     }
-    this.smoothedPositionDirty = true;
   }
 
   public updateLocks(wsEvent: SetNodeLocksWsdto) {
     for (const node of wsEvent.locks) {
-      const localNode = this.graphState.nodes.find((n) => n.id === node.id);
-      if (localNode == null) {
+      const nodeView = this.nodeViews.get(node.id);
+      if (nodeView == null) {
         continue;
       }
-      localNode.locked = node.locked;
+      nodeView.node.locked = node.locked;
+      nodeView.updateAppearance(
+        this.textMeasurer,
+        this.getNodeViewProps(nodeView.node),
+      );
     }
-    this.applyPropertiesToSVG();
   }
 
   public updateSelectedElements(selectedElements: string[]): void {
@@ -321,9 +444,67 @@ export class SVGGraphRenderer {
     this.relationshipViews.forEach((view) => {
       view.destroy();
     });
-    this.nodeViews = [];
+    this.nodeViews = new Map();
     this.relationshipViews = [];
     this.cursorViews = [];
+  }
+
+  private clearCursorViews(): void {
+    this.cursorViews.forEach((view) => {
+      view.destroy();
+    });
+    this.cursorViews = [];
+  }
+
+  private createSvgStructure(): SVGGraphLayers {
+    const width =
+      this.svgElement.parentElement?.getBoundingClientRect().width ?? 0;
+    const height =
+      this.svgElement.parentElement?.getBoundingClientRect().height ?? 0;
+
+    setAttr(
+      this.svgElement,
+      "viewBox",
+      `${(-width / 2).toString()} ${(-height / 2).toString()} ${width.toString()} ${height.toString()}`,
+    );
+
+    this.clearViewResources();
+    while (this.svgElement.firstChild != null) {
+      this.svgElement.removeChild(this.svgElement.firstChild);
+    }
+
+    const zoomContainer = createSvgElement("g");
+    this.svgElement.appendChild(zoomContainer);
+    const defsLayer = createSvgElement("defs");
+    zoomContainer.appendChild(defsLayer);
+
+    const linksLayer = createSvgElement("g");
+    setAttr(linksLayer, "class", "links");
+    zoomContainer.appendChild(linksLayer);
+
+    const linkLabelsLayer = createSvgElement("g");
+    setAttr(linkLabelsLayer, "class", "link-labels");
+    zoomContainer.appendChild(linkLabelsLayer);
+
+    const nodesLayer = createSvgElement("g");
+    setAttr(nodesLayer, "class", "nodes");
+    zoomContainer.appendChild(nodesLayer);
+
+    const cursorsLayer = createSvgElement("g");
+    setAttr(cursorsLayer, "class", "user-cursors");
+    zoomContainer.appendChild(cursorsLayer);
+
+    this.zoomContainer = zoomContainer;
+    this.cursorsLayer = cursorsLayer;
+
+    return {
+      zoomContainer,
+      defsLayer,
+      linksLayer,
+      linkLabelsLayer,
+      nodesLayer,
+      cursorsLayer,
+    };
   }
 
   private addSvgListener<K extends keyof SVGSVGElementEventMap>(
@@ -444,14 +625,8 @@ export class SVGGraphRenderer {
           drag.moved = true;
         }
 
-        drag.node.tx = world[0];
-        drag.node.ty = world[1];
-        drag.node.x = world[0];
-        drag.node.y = world[1];
-        drag.node.vx = 0;
-        drag.node.vy = 0;
-        this.smoothedPositionDirty = true;
-        this.$onNodeMoved.next(drag.node);
+        drag.view.snapTo(world[0], world[1]);
+        this.$onNodeMoved.next(drag.view);
         this.$onCursorMoved.next([world[0], world[1]]);
         this.applyPositionsToSVG();
         return;
@@ -494,28 +669,28 @@ export class SVGGraphRenderer {
         } else {
           const now = performance.now();
           if (isMultiSelectKeyPressed(event)) {
-            this.$onDisplayNodeDataWithModifier.next(drag.node);
+            this.$onDisplayNodeDataWithModifier.next(drag.view);
           } else {
-            this.$onDisplayNodeData.next(drag.node);
+            this.$onDisplayNodeData.next(drag.view);
           }
           if (
             this.lastNodeClick != null &&
-            this.lastNodeClick.nodeId === drag.node.id &&
+            this.lastNodeClick.nodeId === drag.view.id &&
             now - this.lastNodeClick.timestamp < 350
           ) {
-            this.$onDoubleClickNode.next(drag.node);
+            this.$onDoubleClickNode.next(drag.view);
             this.lastNodeClick = null;
           } else {
             this.lastNodeClick = {
-              nodeId: drag.node.id,
+              nodeId: drag.view.id,
               timestamp: now,
             };
           }
           this.suppressClickUntil = now + 250;
         }
-        this.$onUngrabNode.next(drag.node);
+        this.$onUngrabNode.next(drag.view);
         this.dragNode = null;
-        this._updateShowLabels();
+        this.updateNodeLabelVisibility(drag.view);
       }
       if (
         this.panState != null &&
@@ -534,206 +709,17 @@ export class SVGGraphRenderer {
     this.addSvgListener("pointercancel", finishPointer);
   }
 
-  private renderSvgElements(): void {
-    const width =
-      this.svgElement.parentElement?.getBoundingClientRect().width ?? 0;
-    const height =
-      this.svgElement.parentElement?.getBoundingClientRect().height ?? 0;
-
-    setAttr(
-      this.svgElement,
-      "viewBox",
-      `${(-width / 2).toString()} ${(-height / 2).toString()} ${width.toString()} ${height.toString()}`,
-    );
-
-    this.clearViewResources();
-    while (this.svgElement.firstChild != null) {
-      this.svgElement.removeChild(this.svgElement.firstChild);
-    }
-
-    this.zoomContainer = createSvgElement("g");
-    this.svgElement.appendChild(this.zoomContainer);
-    this.defsLayer = createSvgElement("defs");
-    this.zoomContainer.appendChild(this.defsLayer);
-
-    this.linksLayer = createSvgElement("g");
-    setAttr(this.linksLayer, "class", "links");
-    this.zoomContainer.appendChild(this.linksLayer);
-
-    this.linkLabelsLayer = createSvgElement("g");
-    setAttr(this.linkLabelsLayer, "class", "link-labels");
-    this.zoomContainer.appendChild(this.linkLabelsLayer);
-
-    this.nodesLayer = createSvgElement("g");
-    setAttr(this.nodesLayer, "class", "nodes");
-    this.zoomContainer.appendChild(this.nodesLayer);
-
-    this.cursorsLayer = createSvgElement("g");
-    setAttr(this.cursorsLayer, "class", "user-cursors");
-    this.zoomContainer.appendChild(this.cursorsLayer);
-
-    for (const edge of this.graphState.links) {
-      const linkProps: SVGGraphRendererRelationshipViewProps = {
-        strokeColor: this._getEdgeStrokeColor(edge),
-        textColor: getTextColorOfEdge(
-          edge.customColor,
-          this.colorSchema,
-          this.theme,
-        ),
-      };
-      const linkView = new SVGGraphRendererRelationshipView(
-        this.linksLayer,
-        this.linkLabelsLayer,
-        this.defsLayer,
-        edge,
-        this.calculator,
-        this.textMeasurer,
-        linkProps,
-      );
-      this.viewSubscriptions.push(
-        linkView.onClick$.subscribe((event) => {
-          if (performance.now() < this.suppressClickUntil) {
-            return;
-          }
-          if (isMultiSelectKeyPressed(event)) {
-            this.$onDisplayLinkDataWithModifier.next(linkView.edge);
-          } else {
-            this.$onDisplayLinkData.next(linkView.edge);
-          }
-          event.stopPropagation();
-        }),
-      );
-      this.viewSubscriptions.push(
-        linkView.onContextMenu$.subscribe((event) => {
-          event.preventDefault();
-          this.$onShowEdgeContextMenu.next({
-            edge: linkView.edge,
-            position: [event.clientX, event.clientY],
-          });
-        }),
-      );
-      this.relationshipViews.push(linkView);
-    }
-
-    for (const node of this.graphState.nodes) {
-      const nodeProps = this._getNodeViewProps(node);
-      const nodeView = new SVGGraphRendererNodeView(
-        this.nodesLayer,
-        this.defsLayer,
-        node,
-        this.textMeasurer,
-        nodeProps,
-      );
-      this.viewSubscriptions.push(
-        nodeView.onContextMenu$.subscribe((event) => {
-          event.preventDefault();
-          this.$onShowNodeContextMenu.next({
-            node: nodeView.node,
-            position: [event.clientX, event.clientY],
-          });
-        }),
-      );
-      this.viewSubscriptions.push(
-        nodeView.onPointerDown$.subscribe((event) => {
-          if (event.button !== 0) {
-            return;
-          }
-          const svgPoint = this.getSvgPoint(event.clientX, event.clientY);
-          const pointerWorld = this.screenToWorld(svgPoint);
-          this.dragNode = {
-            pointerId: event.pointerId,
-            node: nodeView.node,
-            startClient: [event.clientX, event.clientY],
-            pointerToNodeOffset: [
-              nodeView.node.x - pointerWorld[0],
-              nodeView.node.y - pointerWorld[1],
-            ],
-            moved: false,
-          };
-          this._updateShowLabels();
-          this.$onGrabNode.next(nodeView.node);
-          this.svgElement.setPointerCapture(event.pointerId);
-          event.preventDefault();
-          event.stopPropagation();
-        }),
-      );
-      this.viewSubscriptions.push(
-        nodeView.onHoverChanged$.subscribe((hovered) => {
-          nodeView.setHoverVisible(hovered);
-          this._updateShowLabels();
-        }),
-      );
-      this.nodeViews.push(nodeView);
-    }
-
-    for (const cursor of this.graphState.userCursors) {
-      const cursorView = new SVGGraphRendererUserCursorView(
-        this.cursorsLayer,
-        cursor,
-        this.textMeasurer,
-      );
-      this.cursorViews.push(cursorView);
-    }
-
-    this.installSvgInteractionHandlers();
-    this.setZoomTransform(this.zoomTransform);
-    this.applyPropertiesToSVG();
-    this._updateShowLabels();
-  }
-
   public onAnimationTick(deltaTime: number): void {
-    if (!this.smoothedPositionDirty) {
-      return;
+    let needsUpdate = false;
+    for (const nodeView of this.nodeViews.values()) {
+      needsUpdate = nodeView.tick(deltaTime) || needsUpdate;
     }
-    this.smoothedPositionDirty = false;
-
-    const smoothTime = (1000 / inputFps) * 1.5;
-    const maxSpeed = 10000;
-    for (let i = 0; i < this.graphState.nodes.length; i += 1) {
-      const node: SVGGraphRendererNode = this.graphState.nodes[i];
-      [node.x, node.vx] = this.smoothDamp(
-        node.x,
-        node.tx,
-        node.vx,
-        smoothTime,
-        maxSpeed,
-        deltaTime,
-      );
-      [node.y, node.vy] = this.smoothDamp(
-        node.y,
-        node.ty,
-        node.vy,
-        smoothTime,
-        maxSpeed,
-        deltaTime,
-      );
-
-      if (node.vx !== 0 || node.vy !== 0) {
-        this.smoothedPositionDirty = true;
-      }
+    for (const cursorView of this.cursorViews) {
+      needsUpdate = cursorView.tick(deltaTime) || needsUpdate;
     }
-    for (const userCursor of this.graphState.userCursors) {
-      [userCursor.x, userCursor.vx] = this.smoothDamp(
-        userCursor.x,
-        userCursor.tx,
-        userCursor.vx,
-        smoothTime,
-        maxSpeed,
-        deltaTime,
-      );
-      [userCursor.y, userCursor.vy] = this.smoothDamp(
-        userCursor.y,
-        userCursor.ty,
-        userCursor.vy,
-        smoothTime,
-        maxSpeed,
-        deltaTime,
-      );
-      if (userCursor.vx !== 0 || userCursor.vy !== 0) {
-        this.smoothedPositionDirty = true;
-      }
+    if (needsUpdate) {
+      this.applyPositionsToSVG();
     }
-    this.applyPositionsToSVG();
 
     if (deltaTime > (1 / 60) * 1000 * 1.1) {
       console.warn(
@@ -745,27 +731,26 @@ export class SVGGraphRenderer {
   public applyPropertiesToSVG(): void {
     this.applyPositionsToSVG();
 
-    for (const nodeView of this.nodeViews) {
-      nodeView.updateLock(nodeView.node.locked);
+    for (const nodeView of this.nodeViews.values()) {
       nodeView.updateAppearance(
         this.textMeasurer,
-        this._getNodeViewProps(nodeView.node),
+        this.getNodeViewProps(nodeView.node),
       );
     }
 
     for (const edgeView of this.relationshipViews) {
       edgeView.updateAppearance(
         this.textMeasurer,
-        this._getRelationshipViewProps(edgeView.edge),
+        this.getRelationshipViewProps(edgeView.edge),
       );
     }
   }
 
   public applyPositionsToSVG() {
     for (const linkView of this.relationshipViews) {
-      linkView.updateGeometry(this.calculator);
+      linkView.updateGeometry();
     }
-    for (const nodeView of this.nodeViews) {
+    for (const nodeView of this.nodeViews.values()) {
       nodeView.updatePosition();
     }
     for (const cursorView of this.cursorViews) {
@@ -782,7 +767,7 @@ export class SVGGraphRenderer {
   }
 
   public center(): void {
-    const positionOfSelectedElement = this._getPositionOfSelectedElement();
+    const positionOfSelectedElement = this.getPositionOfSelectedElement();
     if (positionOfSelectedElement != null) {
       const [x, y] = positionOfSelectedElement;
       this.transform(-x, -y, this.getZoom());
@@ -844,17 +829,30 @@ export class SVGGraphRenderer {
 
   public setHideLabels(hideLabels: boolean): void {
     this.hideLabels = hideLabels;
-    this._updateShowLabels();
+    for (const edgeView of this.relationshipViews) {
+      edgeView.setLabelsHidden(hideLabels);
+    }
+    for (const nodeView of this.nodeViews.values()) {
+      this.updateNodeLabelVisibility(nodeView);
+    }
+  }
+
+  private updateNodeLabelVisibility(nodeView: SVGGraphRendererNodeView): void {
+    const visible =
+      !this.hideLabels ||
+      nodeView.isHovered() ||
+      this.dragNode?.view === nodeView;
+    nodeView.setLabelVisible(visible);
   }
 
   public setColorSchema(colorSchema: string) {
     this.colorSchema = ColorSchema.find(colorSchema);
-    this.renderSvgElements();
+    this.applyPropertiesToSVG();
   }
 
   public setTheme(theme: Theme) {
     this.theme = theme;
-    this.renderSvgElements();
+    this.applyPropertiesToSVG();
   }
 
   public dispose(): void {
@@ -872,61 +870,21 @@ export class SVGGraphRenderer {
     this.$onCursorMoved.next([x, y]);
   }
 
-  private smoothDamp(
-    current: number,
-    target: number,
-    currentVelocity: number,
-    smoothTime: number,
-    maxSpeed: number,
-    deltaTime: number,
-  ): [number, number] {
-    smoothTime = Math.max(0.0001, smoothTime);
-    const omega = 2 / smoothTime;
-
-    const x = omega * deltaTime;
-    const exp = 1 / (1 + x + 0.48 * x * x + 0.235 * x * x * x);
-
-    let change = current - target;
-    const originalTo = target;
-
-    const maxChange = maxSpeed * smoothTime;
-    change = Math.max(-maxChange, Math.min(maxChange, change));
-    target = current - change;
-
-    const temp = (currentVelocity + omega * change) * deltaTime;
-    let newVelocity = (currentVelocity - omega * temp) * exp;
-
-    let output = target + (change + temp) * exp;
-
-    if (originalTo - current > 0.0 === output > originalTo) {
-      output = originalTo;
-      newVelocity = (output - originalTo) / deltaTime;
-    }
-
-    if (Math.abs(newVelocity) < 0.0001) {
-      newVelocity = 0;
-    }
-
-    return [output, newVelocity];
-  }
-
-  private _getNodeViewProps(
-    node: SVGGraphRendererNode,
-  ): SVGGraphRendererNodeViewProps {
+  private getNodeViewProps(node: NodeDto): SVGGraphRendererNodeViewProps {
     return {
-      isSelected: this._nodeIsSelected(node),
-      titleColor: this._getTitleColorOfNode(node),
+      isSelected: this.nodeIsSelected(node),
+      titleColor: this.getTitleColorOfNode(node),
       borderColor: this.theme === "dark" ? "#fff" : "#000",
-      bgColors: this._getBgColorsOfNode(node),
-      strokeWidth: this._getStrokeWidth(node),
+      bgColors: this.getBgColorsOfNode(node),
+      strokeWidth: this.getStrokeWidth(node),
     };
   }
 
-  private _getRelationshipViewProps(
-    edge: SVGGraphRendererLink,
+  private getRelationshipViewProps(
+    edge: EdgeDto,
   ): SVGGraphRendererRelationshipViewProps {
     return {
-      strokeColor: this._getEdgeStrokeColor(edge),
+      strokeColor: this.getEdgeStrokeColor(edge),
       textColor: getTextColorOfEdge(
         edge.customColor,
         this.colorSchema,
@@ -935,49 +893,36 @@ export class SVGGraphRenderer {
     };
   }
 
-  private _updateShowLabels() {
-    for (const edgeView of this.relationshipViews) {
-      edgeView.setLabelsHidden(this.hideLabels);
-    }
-    for (const nodeView of this.nodeViews) {
-      const visible =
-        !this.hideLabels ||
-        nodeView.isHovered() ||
-        this.dragNode?.node.id === nodeView.node.id;
-      nodeView.setLabelVisible(visible);
-    }
-  }
-
-  private _getTitleColorOfNode(d: SVGGraphRendererNode): string {
+  private getTitleColorOfNode(d: NodeDto): string {
     return getTextColor(
-      d.customColor ?? this.graphState.labels.get(d.labels[0])?.color ?? null,
+      d.customColor ?? this.labels.get(d.labels[0])?.color ?? null,
       this.colorSchema,
     );
   }
 
-  private _getBgColorsOfNode(d: SVGGraphRendererNode): string[] {
+  private getBgColorsOfNode(d: NodeDto): string[] {
     if (d.customColor != null) {
       return [getBackgroundColorOfColor(d.customColor, this.colorSchema)];
     }
     const colors: (string | null)[] = d.labels.map((dlabel: string) => {
       return getBackgroundColorOfLabel(
-        this.graphState.labels.get(dlabel) ?? null,
+        this.labels.get(dlabel) ?? null,
         this.colorSchema,
       );
     });
     return colors.reduce<string[]>((a, n) => (n ? [...a, n] : a), []);
   }
 
-  private _nodeIsSelected(node: SVGGraphRendererNode): boolean {
+  private nodeIsSelected(node: NodeDto): boolean {
     return this.selectedElements.includes(node.id);
   }
 
-  private _edgeIsSelected(edge: SVGGraphRendererLink): boolean {
+  private edgeIsSelected(edge: EdgeDto): boolean {
     return this.selectedElements.includes(edge.id);
   }
 
-  private _getEdgeStrokeColor(d: SVGGraphRendererLink): string {
-    if (this._edgeIsSelected(d)) {
+  private getEdgeStrokeColor(d: EdgeDto): string {
+    if (this.edgeIsSelected(d)) {
       return "#ff00ff";
     }
     if (d.customColor != null) {
@@ -986,21 +931,21 @@ export class SVGGraphRenderer {
     return this.theme === "dark" ? "#ffffff" : "#000000";
   }
 
-  private _getPositionOfSelectedElement(): [number, number] | null {
+  private getPositionOfSelectedElement(): [number, number] | null {
     if (this.selectedElements.length === 0) {
       return null;
     }
     const positions: [number, number][] = [];
     for (const element of this.selectedElements) {
-      const node = this.graphState.nodes.find((d) => d.id === element);
-      if (node != null) {
-        positions.push([node.x, node.y]);
+      const nodeView = this.nodeViews.get(element);
+      if (nodeView != null) {
+        positions.push([nodeView.x, nodeView.y]);
       }
-      const edge = this.graphState.links.find((d) => d.id === element);
-      if (edge != null) {
+      const edgeView = this.relationshipViews.find((d) => d.id === element);
+      if (edgeView != null) {
         positions.push([
-          (edge.source.x + edge.target.x) / 2,
-          (edge.source.y + edge.target.y) / 2,
+          (edgeView.source.x + edgeView.target.x) / 2,
+          (edgeView.source.y + edgeView.target.y) / 2,
         ]);
       }
     }
@@ -1013,11 +958,11 @@ export class SVGGraphRenderer {
     ];
   }
 
-  private _getStrokeWidth(n: SVGGraphRendererNode): number {
+  private getStrokeWidth(n: NodeDto): number {
     return (baseStrokeWidth * n.radius) / 50;
   }
 
-  private _createSVGCanvas(): SVGSVGElement {
+  private createSvgCanvas(): SVGSVGElement {
     const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     svg.id = "svg-canvas";
     svg.style.width = "100%";

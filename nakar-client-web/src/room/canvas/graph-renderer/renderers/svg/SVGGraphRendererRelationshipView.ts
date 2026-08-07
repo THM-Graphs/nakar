@@ -1,6 +1,6 @@
 import { Subject } from "rxjs";
-import { SVGGraphRendererLink } from "./SVGGraphRendererLink.ts";
-import { SVGGraphRendererCalculator } from "./SVGGraphRendererCalculator.ts";
+import { EdgeDto } from "api-client";
+import { SVGGraphRendererNodeView } from "./SVGGraphRendererNodeView.ts";
 import { SVGGraphRendererTextMeasurer } from "./SVGGraphRendererTextMeasurer.ts";
 import { createSvgElement, setAttr } from "./svgDom.ts";
 
@@ -10,7 +10,10 @@ export type SVGGraphRendererRelationshipViewProps = {
 };
 
 export class SVGGraphRendererRelationshipView {
-  public readonly edge: SVGGraphRendererLink;
+  public readonly id: string;
+  public readonly edge: EdgeDto;
+  public readonly source: SVGGraphRendererNodeView;
+  public readonly target: SVGGraphRendererNodeView;
   public readonly onClick$ = new Subject<MouseEvent>();
   public readonly onContextMenu$ = new Subject<MouseEvent>();
 
@@ -30,12 +33,16 @@ export class SVGGraphRendererRelationshipView {
     parentLinks: SVGGElement,
     parentLabels: SVGGElement,
     defs: SVGDefsElement,
-    edge: SVGGraphRendererLink,
-    calculator: SVGGraphRendererCalculator,
+    edge: EdgeDto,
+    source: SVGGraphRendererNodeView,
+    target: SVGGraphRendererNodeView,
     textMeasurer: SVGGraphRendererTextMeasurer,
     props: SVGGraphRendererRelationshipViewProps,
   ) {
     this.edge = edge;
+    this.id = edge.id;
+    this.source = source;
+    this.target = target;
     this.props = props;
 
     this.marker = createSvgElement("marker");
@@ -114,7 +121,7 @@ export class SVGGraphRendererRelationshipView {
       this.onContextMenu$.next(event);
     });
     this.updateAppearance(textMeasurer, props);
-    this.updateGeometry(calculator);
+    this.updateGeometry();
   }
 
   private setHovered(hovered: boolean): void {
@@ -152,10 +159,9 @@ export class SVGGraphRendererRelationshipView {
     this.marker.remove();
   }
 
-  public updateGeometry(calculator: SVGGraphRendererCalculator): void {
-    const path = calculator.curvedPath(this.edge);
-    setAttr(this.path, "d", path);
-    const c = calculator.curvePoints(this.edge);
+  public updateGeometry(): void {
+    setAttr(this.path, "d", this.curvedPath());
+    const c = this.curvePoints();
     setAttr(
       this.labelGroup,
       "transform",
@@ -202,5 +208,167 @@ export class SVGGraphRendererRelationshipView {
       "marker-end",
       hidden ? null : `url(#arrow_${this.edge.id})`,
     );
+  }
+
+  private closestPointsOnNodes(): {
+    x1: number;
+    y1: number;
+    x2: number;
+    y2: number;
+  } {
+    if (this.edge.isLoop) {
+      const loopSizeRadius =
+        Math.min(90, 360 / this.edge.parallelCount / 2) / 2;
+      const angle =
+        (this.edge.parallelIndex / this.edge.parallelCount) * 360 - 90;
+      const length = this.source.radius;
+      const ps = this.vector(
+        this.source.x,
+        this.source.y,
+        angle - loopSizeRadius,
+        length,
+      );
+      const pe = this.vector(
+        this.source.x,
+        this.source.y,
+        angle + loopSizeRadius,
+        length,
+      );
+
+      return {
+        x1: ps.x,
+        y1: ps.y,
+        x2: pe.x,
+        y2: pe.y,
+      };
+    }
+    const point1 = this.pointOnRadius(this.source, {
+      x: this.target.x,
+      y: this.target.y,
+    });
+    const point2 = this.pointOnRadius(this.target, {
+      x: this.source.x,
+      y: this.source.y,
+    });
+
+    return {
+      x1: point1.x,
+      y1: point1.y,
+      x2: point2.x,
+      y2: point2.y,
+    };
+  }
+
+  private pointOnRadius(
+    node: SVGGraphRendererNodeView,
+    point: { x: number; y: number },
+  ): { x: number; y: number } {
+    const dx = point.x - node.x;
+    const dy = point.y - node.y;
+
+    const distance = Math.sqrt(dx * dx + dy * dy);
+
+    const ux = dx / distance;
+    const uy = dy / distance;
+
+    return {
+      x: node.x + node.radius * ux,
+      y: node.y + node.radius * uy,
+    };
+  }
+
+  private vector(
+    x1: number,
+    y1: number,
+    angle: number,
+    length: number,
+  ): { x: number; y: number } {
+    const angleInRadians = angle * (Math.PI / 180);
+    const rx = length * Math.cos(angleInRadians);
+    const ry = length * Math.sin(angleInRadians);
+    return {
+      x: x1 + rx,
+      y: y1 + ry,
+    };
+  }
+
+  private fixDegAngle(angle: number): number {
+    return angle > 90 || angle < -90 ? angle - 180 : angle;
+  }
+
+  private pushVectorOfCurve(
+    x1: number,
+    y1: number,
+    n1: SVGGraphRendererNodeView,
+    x2: number,
+    y2: number,
+    n2: SVGGraphRendererNodeView,
+    distance: number,
+    moveEnds: boolean,
+  ): { x: number; y: number }[] {
+    const midX = (x1 + x2) / 2;
+    const midY = (y1 + y2) / 2;
+
+    const orthX = y2 - y1;
+    const orthY = -(x2 - x1);
+    const orthLength = Math.sqrt(orthX * orthX + orthY * orthY);
+    const dx = (orthX / orthLength) * distance;
+    const dy = (orthY / orthLength) * distance;
+
+    const controlX = midX + dx;
+    const controlY = midY + dy;
+
+    const center = {
+      x: controlX,
+      y: controlY,
+    };
+    return [
+      moveEnds ? this.pointOnRadius(n1, center) : { x: x1, y: y1 },
+      center,
+      moveEnds ? this.pointOnRadius(n2, center) : { x: x2, y: y2 },
+    ];
+  }
+
+  private curvePoints(): {
+    center: { x: number; y: number };
+    angle: number;
+    points: { x: number; y: number }[];
+  } {
+    const { x1, y1, x2, y2 } = this.closestPointsOnNodes();
+    const angle = Math.atan2(y2 - y1, x2 - x1) * (180 / Math.PI);
+
+    const curvAmount = 15;
+
+    const newPoints = this.pushVectorOfCurve(
+      x1,
+      y1,
+      this.source,
+      x2,
+      y2,
+      this.target,
+      this.edge.isLoop
+        ? curvAmount + this.source.radius
+        : this.edge.parallelIndex * curvAmount,
+      !this.edge.isLoop,
+    );
+
+    return {
+      center: newPoints[1],
+      points: newPoints,
+      angle: this.fixDegAngle(angle),
+    };
+  }
+
+  private curvedPath(): string {
+    const control = this.curvePoints();
+    const [start, center, end] = control.points;
+    if (this.edge.parallelCount > 0 || this.edge.isLoop) {
+      const c = {
+        x: (8 * center.x - start.x - end.x) / 6,
+        y: (8 * center.y - start.y - end.y) / 6,
+      };
+      return `M ${start.x.toString()} ${start.y.toString()} C ${c.x.toString()} ${c.y.toString()} ${c.x.toString()} ${c.y.toString()} ${end.x.toString()} ${end.y.toString()}`;
+    }
+    return `M ${start.x.toString()} ${start.y.toString()} L ${end.x.toString()} ${end.y.toString()}`;
   }
 }
