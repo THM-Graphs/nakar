@@ -1,7 +1,8 @@
 import { Subject } from "rxjs";
-import { SVGGraphRendererNode } from "./SVGGraphRendererNode.ts";
+import { NodeDto } from "api-client";
 import { SVGGraphRendererTextMeasurer } from "./SVGGraphRendererTextMeasurer.ts";
 import { createSvgElement, setAttr } from "./svgDom.ts";
+import { smoothDamp } from "./smoothDamp.ts";
 
 export type SVGGraphRendererNodeViewProps = {
   isSelected: boolean;
@@ -11,11 +12,26 @@ export type SVGGraphRendererNodeViewProps = {
   strokeWidth: number;
 };
 
+const smoothTime = (1000 / 16) * 1.5;
+const maxSpeed = 10000;
+
 export class SVGGraphRendererNodeView {
-  public readonly node: SVGGraphRendererNode;
+  public readonly id: string;
+  public readonly node: NodeDto;
   public readonly onPointerDown$ = new Subject<PointerEvent>();
   public readonly onContextMenu$ = new Subject<MouseEvent>();
   public readonly onHoverChanged$ = new Subject<boolean>();
+
+  public x: number;
+  public y: number;
+  public vx = 0;
+  public vy = 0;
+  public tx: number;
+  public ty: number;
+
+  public get radius(): number {
+    return this.node.radius;
+  }
 
   private readonly group: SVGGElement;
   private readonly gradient: SVGLinearGradientElement;
@@ -39,12 +55,18 @@ export class SVGGraphRendererNodeView {
   public constructor(
     parent: SVGGElement,
     defs: SVGDefsElement,
-    node: SVGGraphRendererNode,
+    node: NodeDto,
     textMeasurer: SVGGraphRendererTextMeasurer,
     props: SVGGraphRendererNodeViewProps,
   ) {
     this.node = node;
+    this.id = node.id;
+    this.x = node.position.x;
+    this.y = node.position.y;
+    this.tx = node.position.x;
+    this.ty = node.position.y;
     this.props = props;
+
     this.group = createSvgElement("g");
     setAttr(this.group, "style", "cursor: pointer;");
     parent.appendChild(this.group);
@@ -168,6 +190,40 @@ export class SVGGraphRendererNodeView {
     this.updateAppearance(textMeasurer, this.props);
   }
 
+  public setTargetPosition(x: number, y: number): void {
+    this.tx = x;
+    this.ty = y;
+  }
+
+  public snapTo(x: number, y: number): void {
+    this.x = x;
+    this.y = y;
+    this.tx = x;
+    this.ty = y;
+    this.vx = 0;
+    this.vy = 0;
+  }
+
+  public tick(deltaTime: number): boolean {
+    [this.x, this.vx] = smoothDamp(
+      this.x,
+      this.tx,
+      this.vx,
+      smoothTime,
+      maxSpeed,
+      deltaTime,
+    );
+    [this.y, this.vy] = smoothDamp(
+      this.y,
+      this.ty,
+      this.vy,
+      smoothTime,
+      maxSpeed,
+      deltaTime,
+    );
+    return this.vx !== 0 || this.vy !== 0;
+  }
+
   private listen<K extends Extract<keyof SVGElementEventMap, string>>(
     element: SVGGElement | SVGCircleElement | SVGRectElement | SVGTextElement,
     type: K,
@@ -197,12 +253,8 @@ export class SVGGraphRendererNodeView {
     setAttr(
       this.group,
       "transform",
-      `translate(${this.node.x.toString()}, ${this.node.y.toString()})`,
+      `translate(${this.x.toString()}, ${this.y.toString()})`,
     );
-  }
-
-  public updateLock(locked: boolean): void {
-    setAttr(this.lockedOverlay, "hidden", locked ? null : true);
   }
 
   public setHoverVisible(visible: boolean): void {
@@ -217,7 +269,7 @@ export class SVGGraphRendererNodeView {
   private applyLabelVisibility(): void {
     setAttr(this.labelText, "hidden", this.labelsVisible ? null : true);
     const showClusterBadge = this.labelsVisible && this.node.clusterSize > 0;
-    const showNotes = this.labelsVisible && this.node.notesCount > 0;
+    const showNotes = this.labelsVisible && this.node.notes.length > 0;
     setAttr(this.clusterBadgeRect, "hidden", showClusterBadge ? null : true);
     setAttr(this.clusterBadgeText, "hidden", showClusterBadge ? null : true);
     setAttr(this.notesText, "hidden", showNotes ? null : true);
@@ -250,7 +302,7 @@ export class SVGGraphRendererNodeView {
     setAttr(this.image, "y", -this.node.radius + props.strokeWidth * 1.5);
     setAttr(this.image, "width", this.node.radius * 2 - props.strokeWidth * 3);
     setAttr(this.image, "height", this.node.radius * 2 - props.strokeWidth * 3);
-    setAttr(this.image, "href", this.node.coverImageUrl?.toString() ?? "");
+    setAttr(this.image, "href", this.node.coverImageUrl ?? "");
     setAttr(this.image, "preserveAspectRatio", "xMidYMid slice");
     setAttr(this.image, "clip-path", `url(#circleclip-${this.node.id})`);
 
@@ -345,7 +397,7 @@ export class SVGGraphRendererNodeView {
       this.node.clusterSize === 0 ? true : null,
     );
 
-    this.notesText.textContent = this.node.notesCount > 0 ? "📌" : "";
+    this.notesText.textContent = this.node.notes.length > 0 ? "📌" : "";
     setAttr(this.notesText, "x", 0);
     setAttr(
       this.notesText,
@@ -353,7 +405,11 @@ export class SVGGraphRendererNodeView {
       this.node.radius - Math.max(10, this.node.radius / 5),
     );
     setAttr(this.notesText, "font-size", Math.max(10, this.node.radius / 3.8));
-    setAttr(this.notesText, "hidden", this.node.notesCount === 0 ? true : null);
+    setAttr(
+      this.notesText,
+      "hidden",
+      this.node.notes.length === 0 ? true : null,
+    );
     this.applyLabelVisibility();
   }
 }
