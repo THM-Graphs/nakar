@@ -980,9 +980,7 @@ export class LiveCanvas {
             {},
             new ExternalGraphDatabaseQueryLimitConfig(
               ExternalGraphDatabaseQueryLimitConfigType.default,
-              params.replace
-                ? ExternalGraphDatabaseQueryLimitConfigCollectionType.all
-                : ExternalGraphDatabaseQueryLimitConfigCollectionType.graphElements,
+              ExternalGraphDatabaseQueryLimitConfigCollectionType.graphElements,
             ),
           );
 
