@@ -33,6 +33,7 @@ import {
   SVGGraphRendererRelationshipViewProps,
 } from "./SVGGraphRendererRelationshipView.ts";
 import { SVGGraphRendererUserCursorView } from "./SVGGraphRendererUserCursorView.ts";
+import { CanvasScreenshot } from "../../CanvasScreenshot.ts";
 
 const inputFps = 16;
 const outputFps = 32;
@@ -870,6 +871,97 @@ export class SVGGraphRenderer {
     const x = this.zoomTransform.invertX(positionRelativeToSVGElement[0]);
     const y = this.zoomTransform.invertY(positionRelativeToSVGElement[1]);
     this.$onCursorMoved.next([x, y]);
+  }
+
+  public takeScreenshot(): CanvasScreenshot {
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+
+    const sourceGroup = this.svgElement.querySelector<SVGGElement>("g");
+    const boundingBox = sourceGroup?.getBBox();
+    if (boundingBox == null) {
+      throw new Error("Unable to get bounding box");
+    }
+    const dimensions = {
+      width: boundingBox.width,
+      height: boundingBox.height,
+      viewBox: [
+        boundingBox.x,
+        boundingBox.y,
+        boundingBox.width,
+        boundingBox.height,
+      ].join(" "),
+    };
+    svg.setAttribute("width", dimensions.width.toString());
+    svg.setAttribute("height", dimensions.height.toString());
+    svg.setAttribute("viewBox", dimensions.viewBox);
+
+    const title = document.createElementNS(
+      "http://www.w3.org/2000/svg",
+      "title",
+    );
+    title.textContent = "NAKAR Export";
+    svg.appendChild(title);
+    const desc = document.createElementNS("http://www.w3.org/2000/svg", "desc");
+    desc.textContent = "Created using NAKAR";
+    svg.appendChild(desc);
+    // svg
+    //   .append("rect")
+    //   .attr("x", `${boundingBox.x.toString()}pt`)
+    //   .attr("y", `${boundingBox.y.toString()}pt`)
+    //   .attr("width", `${boundingBox.width.toString()}pt`)
+    //   .attr("height", `${boundingBox.height.toString()}pt`)
+    //   .attr("fill", theme == "dark" ? "rgb(33, 37, 41)" : "#fff");
+    const style = document.createElementNS(
+      "http://www.w3.org/2000/svg",
+      "style",
+    );
+    style.textContent = "* { font-family: system-ui }";
+    svg.appendChild(style);
+
+    const clone = sourceGroup?.cloneNode(true);
+    if (clone == null) {
+      throw new Error("Unable to clone canvas element.");
+    }
+    svg.appendChild(clone);
+
+    const clonedGroup = svg.querySelector("g");
+    if (clonedGroup != null) {
+      clonedGroup.setAttribute("transform", "");
+    }
+    svg.querySelectorAll("[hidden]").forEach((el) => {
+      el.remove();
+    });
+    // svg.selectAll(".nodeLockedOverlay").remove();
+    // svg.selectAll(".nodeSelectedOverlay").remove();
+    svg.querySelectorAll(".bi").forEach((el) => {
+      el.remove();
+    });
+    svg.querySelectorAll(".links > path").forEach((el) => {
+      el.setAttribute("style", "");
+    });
+    svg.querySelectorAll(".link-labels > g > rect").forEach((el) => {
+      el.setAttribute("style", "");
+    });
+    svg.querySelectorAll(".link-labels > g > text").forEach((el) => {
+      el.setAttribute("style", "");
+    });
+    svg.querySelectorAll(".nodes > g").forEach((el) => {
+      el.setAttribute("style", "");
+    });
+
+    const htmlCharacterRefToNumericalRef = (node: SVGSVGElement) =>
+      new window.XMLSerializer()
+        .serializeToString(node)
+        .replace(/&nbsp;/g, "&#160;");
+
+    const svgData = htmlCharacterRefToNumericalRef(svg);
+
+    return {
+      blob: new Blob([svgData], {
+        type: "image/svg+xml;charset=utf-8",
+      }),
+      filename: "nakar-graph.svg",
+    };
   }
 
   private smoothDamp(

@@ -4,7 +4,7 @@ import { useBearStore } from "../../state/useBearStore.ts";
 import { useCanvasContext } from "../../pages/Canvas.tsx";
 import { useAppContext } from "../../state/AppContextData.ts";
 import { SaveZIPAction } from "../actions/SaveZIPAction.ts";
-import { SaveSVGAction } from "../actions/SaveSVGAction.ts";
+import { TakeScreenshotAction } from "../actions/TakeScreenshotAction.ts";
 import { UndoAction } from "../actions/UndoAction.ts";
 import { RedoAction } from "../actions/RedoAction.ts";
 import { SelectAllAction } from "../actions/SelectAllAction.ts";
@@ -70,6 +70,10 @@ export function CanvasShortcuts() {
   const selectedTab = useBearStore((s) => s.room.canvas.tabs.selected);
   const hideLabels = useBearStore((s) => s.room.canvas.hideLabels);
   const setHideLabels = useBearStore((s) => s.room.canvas.setHideLabels);
+  const currentGraphRenderer = useBearStore(
+    (s) => s.room.canvas.renderer.current,
+  );
+
   const isLoggedIn = useIsLoggedIn();
   const runningActionsRef = useRef(new Set<string>());
   const selectedEdges = elements.reduce<EdgeDto[]>((akku, next) => {
@@ -118,7 +122,10 @@ export function CanvasShortcuts() {
     () =>
       [
         registerShortcut(SaveZIPAction.shared, { context }),
-        registerShortcut(SaveSVGAction.shared, { selectedTab }),
+        registerShortcut(TakeScreenshotAction.shared, {
+          selectedTab,
+          currentGraphRenderer,
+        }),
         registerShortcut(UndoAction.shared, { roomContext, undoAction }),
         registerShortcut(RedoAction.shared, { roomContext, redoAction }),
         registerShortcut(SelectAllAction.shared, {

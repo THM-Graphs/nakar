@@ -24,6 +24,9 @@ export function GraphRenderer() {
   const colorSchemaSlug = useBearStore((s) => s.room.canvas.colorSchemaSlug);
   const isLoggedIn = useIsLoggedIn();
   const canvasContext = useCanvasContext();
+  const setCurrentGraphRenderer = useBearStore(
+    (s) => s.room.canvas.renderer.setCurrent,
+  );
 
   useEffect(() => {
     if (containerRef.current == null) {
@@ -38,6 +41,7 @@ export function GraphRenderer() {
       useBearStore.getState().room.canvas.zoomTransform,
       inspector.element,
     );
+    setCurrentGraphRenderer(_graphRenderer);
 
     const subs: { unsubscribe: () => void }[] = [
       websocketsManager.onMessage$.subscribe((message) => {
@@ -206,6 +210,7 @@ export function GraphRenderer() {
     ];
 
     return () => {
+      setCurrentGraphRenderer(null);
       for (const s of subs) {
         s.unsubscribe();
       }

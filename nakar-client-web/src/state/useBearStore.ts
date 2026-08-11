@@ -27,6 +27,7 @@ import {
   NoteDto,
 } from "api-client";
 import { handleError } from "../shared/error/handleError.ts";
+import { SVGGraphRenderer } from "../room/canvas/graph-renderer/renderers/svg/SVGGraphRenderer.ts";
 
 enableMapSet();
 
@@ -670,6 +671,14 @@ export const useBearStore = create<BearState>()(
                   set((s) => {
                     s.room.canvas.zoomTransform = zoomTransform;
                   });
+                },
+                renderer: {
+                  current: null,
+                  setCurrent: (newRenderer: SVGGraphRenderer | null) => {
+                    set((s) => {
+                      s.room.canvas.renderer.current = newRenderer;
+                    });
+                  },
                 },
               },
             },

@@ -9,7 +9,7 @@ import { useBearStore } from "../../state/useBearStore.ts";
 import { useCanvasContext } from "../../pages/Canvas.tsx";
 import { CreateScenarioAction } from "../../room/actions/CreateScenarioAction.ts";
 import { CreateScenarioGroupAction } from "../../room/actions/CreateScenarioGroupAction.ts";
-import { SaveSVGAction } from "../../room/actions/SaveSVGAction.ts";
+import { TakeScreenshotAction } from "../../room/actions/TakeScreenshotAction.ts";
 import { SaveZIPAction } from "../../room/actions/SaveZIPAction.ts";
 import { CloseRoomAction } from "../../room/actions/CloseRoomAction.ts";
 import { useNavigate } from "react-router";
@@ -72,6 +72,9 @@ export function MenuBar() {
   );
   const hideVisualization = useBearStore(
     (s) => s.room.panels.visualization.hide,
+  );
+  const currentGraphRenderer = useBearStore(
+    (s) => s.room.canvas.renderer.current,
   );
   const selectedEdges = elements.reduce<EdgeDto[]>((akku, next) => {
     const foundEdge = graphElements.edges.find((e) => e.id === next);
@@ -230,9 +233,10 @@ export function MenuBar() {
         ></ActionDropdownItem>
         <Dropdown.Divider></Dropdown.Divider>
         <ActionDropdownItem
-          action={SaveSVGAction.shared}
+          action={TakeScreenshotAction.shared}
           params={{
             selectedTab,
+            currentGraphRenderer,
           }}
         ></ActionDropdownItem>
       </DropdownButton>

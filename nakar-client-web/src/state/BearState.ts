@@ -24,6 +24,7 @@ import {
   ScenarioCollectionDto,
   ScenarioDto,
 } from "api-client";
+import { SVGGraphRenderer } from "../room/canvas/graph-renderer/renderers/svg/SVGGraphRenderer.ts";
 
 export interface BearState {
   global: {
@@ -226,6 +227,10 @@ export interface BearState {
       setColorSchema: (newSchemaSlug: string) => void;
       zoomTransform: CanvasZoomTransform;
       setZoomTransform: (zoomTransform: CanvasZoomTransform) => void;
+      renderer: {
+        current: SVGGraphRenderer | null;
+        setCurrent: (newCurrent: SVGGraphRenderer | null) => void;
+      };
     };
   };
 }
