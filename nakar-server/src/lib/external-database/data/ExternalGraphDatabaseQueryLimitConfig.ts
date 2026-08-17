@@ -11,6 +11,10 @@ export class ExternalGraphDatabaseQueryLimitConfig {
     private readonly _collectionType: ExternalGraphDatabaseQueryLimitConfigCollectionType,
   ) {}
 
+  public get collectionType(): ExternalGraphDatabaseQueryLimitConfigCollectionType {
+    return this._collectionType;
+  }
+
   public getLimit(): number {
     return match(this._type)
       .with(
@@ -28,18 +32,14 @@ export class ExternalGraphDatabaseQueryLimitConfig {
   public shouldCollectGraphElements(): boolean {
     return (
       this._collectionType ===
-        ExternalGraphDatabaseQueryLimitConfigCollectionType.graphElements ||
-      this._collectionType ===
-        ExternalGraphDatabaseQueryLimitConfigCollectionType.all
+      ExternalGraphDatabaseQueryLimitConfigCollectionType.graphElements
     );
   }
 
   public shouldCollectTableData(): boolean {
     return (
       this._collectionType ===
-        ExternalGraphDatabaseQueryLimitConfigCollectionType.tableData ||
-      this._collectionType ===
-        ExternalGraphDatabaseQueryLimitConfigCollectionType.all
+      ExternalGraphDatabaseQueryLimitConfigCollectionType.tableData
     );
   }
 }

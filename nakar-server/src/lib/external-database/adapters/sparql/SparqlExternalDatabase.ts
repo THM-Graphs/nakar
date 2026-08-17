@@ -28,6 +28,7 @@ import type {
   Quad_Predicate,
   Quad_Subject,
   Term,
+  Variable,
 } from '@rdfjs/types';
 import toNT from '@rdfjs/to-ntriples';
 import { match } from 'ts-pattern';
@@ -56,6 +57,7 @@ export class SparqlExternalDatabase implements ExternalGraphDatabase {
       query,
       queryArguments,
     );
+    const limit: number = limitConfig.getLimit();
 
     this._logger.debug(`***** Will start SPARQL Query to ${url.toString()}`);
     this._logger.debug('Query ID:');
@@ -66,53 +68,118 @@ export class SparqlExternalDatabase implements ExternalGraphDatabase {
     this._logger.debug(queryWithArguments);
     this._logger.debug('*****');
 
-    const bindingsStream: AsyncIterator<Quad> = await myEngine.queryQuads(
-      queryWithArguments,
-      {
-        sources: [
-          {
-            type: 'sparql',
-            value: url.toString(),
-          },
-        ],
-      },
-    );
+    return await match(limitConfig.collectionType)
+      .returnType<Promise<ExternalGraphDatabaseQueryResult>>()
+      .with(
+        ExternalGraphDatabaseQueryLimitConfigCollectionType.graphElements,
+        async (): Promise<ExternalGraphDatabaseQueryResult> => {
+          const bindingsStream: AsyncIterator<Quad> = await myEngine.queryQuads(
+            queryWithArguments,
+            {
+              sources: [
+                {
+                  type: 'sparql',
+                  value: url.toString(),
+                },
+              ],
+            },
+          );
 
-    this._logger.debug(`Did start streaming query response of ${queryId}`);
+          this._logger.debug(
+            `Did start streaming query response of ${queryId}`,
+          );
 
-    const limit: number = limitConfig.getLimit();
+          const nodes: SMap<string, ExternalGraphDatabaseNode> = new SMap<
+            string,
+            ExternalGraphDatabaseNode
+          >();
+          const relationships: SMap<string, ExternalGraphDatabaseRelationship> =
+            new SMap<string, ExternalGraphDatabaseRelationship>();
 
-    const nodes: SMap<string, ExternalGraphDatabaseNode> = new SMap<
-      string,
-      ExternalGraphDatabaseNode
-    >();
-    const relationships: SMap<string, ExternalGraphDatabaseRelationship> =
-      new SMap<string, ExternalGraphDatabaseRelationship>();
+          for await (const quad of bindingsStream) {
+            this.collectNode(quad.subject, 'Subject', nodes, credentials);
+            this.collectNode(quad.object, 'Object', nodes, credentials);
+            this._collectRelationship(
+              quad.subject,
+              quad.object,
+              quad.predicate,
+              relationships,
+              credentials,
+            );
 
-    for await (const quad of bindingsStream) {
-      this.collectNode(quad.subject, 'Subject', nodes, credentials);
-      this.collectNode(quad.object, 'Object', nodes, credentials);
-      this._collectRelationship(
-        quad.subject,
-        quad.object,
-        quad.predicate,
-        relationships,
-        credentials,
-      );
+            if (nodes.size + relationships.size >= limit) {
+              break;
+            }
+          }
 
-      if (nodes.size + relationships.size >= limit) {
-        break;
-      }
-    }
+          this._logger.debug(`Query ${queryId} finished`);
 
-    this._logger.debug(`Query ${queryId} finished`);
+          return new ExternalGraphDatabaseQueryResult(
+            nodes,
+            relationships,
+            [],
+            nodes.size + relationships.size >= limit,
+          );
+        },
+      )
+      .with(
+        ExternalGraphDatabaseQueryLimitConfigCollectionType.tableData,
+        async (): Promise<ExternalGraphDatabaseQueryResult> => {
+          const bindingsStream: BindingsStream = await myEngine.queryBindings(
+            queryWithArguments,
+            {
+              sources: [
+                {
+                  type: 'sparql',
+                  value: url.toString(),
+                },
+              ],
+            },
+          );
 
-    return new ExternalGraphDatabaseQueryResult(
-      nodes,
-      relationships,
-      [],
-      nodes.size + relationships.size >= limit,
-    );
+          this._logger.debug(
+            `Did start streaming query response of ${queryId}`,
+          );
+
+          const resultData: SMap<string, unknown>[] = [];
+          const recordedColumnNames: SSet<string> = new SSet<string>();
+          for await (const row of bindingsStream) {
+            const resultRow: SMap<string, unknown> = new SMap<
+              string,
+              unknown
+            >();
+            for (const binding of row) {
+              const variable: Variable = binding[0];
+              const term: Term = binding[1];
+              resultRow.set(variable.value, term.value);
+              recordedColumnNames.add(variable.value);
+            }
+            resultData.push(resultRow);
+            if (resultData.length >= limit) {
+              break;
+            }
+          }
+
+          // Set missing columns values to null
+          for (const resultDataRow of resultData) {
+            for (const columnName of recordedColumnNames) {
+              if (resultDataRow.get(columnName) == null) {
+                resultDataRow.set(columnName, null);
+              }
+            }
+          }
+
+          this._logger.debug(`Query ${queryId} finished`);
+
+          return new ExternalGraphDatabaseQueryResult(
+            new SMap(),
+            new SMap(),
+            resultData,
+            resultData.length >= limit,
+          );
+        },
+      )
+      .exhaustive();
   }
 
   public async loadConnectingRelationships(
