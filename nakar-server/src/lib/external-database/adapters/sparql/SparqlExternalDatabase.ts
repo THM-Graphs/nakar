@@ -69,6 +69,7 @@ export class SparqlExternalDatabase implements ExternalGraphDatabase {
     this._logger.debug('*****');
 
     return await match(limitConfig.collectionType)
+      .returnType<Promise<ExternalGraphDatabaseQueryResult>>()
       .with(
         ExternalGraphDatabaseQueryLimitConfigCollectionType.graphElements,
         async (): Promise<ExternalGraphDatabaseQueryResult> => {
@@ -154,6 +155,9 @@ export class SparqlExternalDatabase implements ExternalGraphDatabase {
               recordedColumnNames.add(variable.value);
             }
             resultData.push(resultRow);
+            if (resultData.length >= limit) {
+              break;
+            }
           }
 
           // Set missing columns values to null
@@ -171,7 +175,7 @@ export class SparqlExternalDatabase implements ExternalGraphDatabase {
             new SMap(),
             new SMap(),
             resultData,
-            false,
+            resultData.length >= limit,
           );
         },
       )
