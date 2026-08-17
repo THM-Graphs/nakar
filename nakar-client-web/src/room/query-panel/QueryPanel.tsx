@@ -78,7 +78,7 @@ export function QueryPanel() {
     };
   }, []);
 
-  const onRun = () => {
+  const onRun = (replace: boolean) => {
     actionControllerRunQuery({
       path: {
         roomId: roomContext.initialRoomData.id,
@@ -87,7 +87,7 @@ export function QueryPanel() {
       body: {
         databaseId: selectedDatabaseId ?? "",
         query: query.queryText,
-        replace: true,
+        replace: replace,
       },
     })
       .then(resultOrThrow)
@@ -147,7 +147,9 @@ export function QueryPanel() {
                 }}
                 theme={theme}
                 className={"border rounded overflow-hidden m-1"}
-                onExecute={onRun}
+                onExecute={() => {
+                  onRun(true);
+                }}
               ></CypherEditor>
               <Stack
                 direction={"horizontal"}
@@ -210,7 +212,7 @@ export function QueryPanel() {
                     title="Run"
                     icon="play-fill"
                     onClick={() => {
-                      onRun();
+                      onRun(true);
                     }}
                   ></NavbarButton>
                   <NavbarButton
@@ -218,20 +220,8 @@ export function QueryPanel() {
                     title="Add"
                     disabled={!isLoggedIn}
                     icon="plus-lg"
-                    onClick={async () => {
-                      resultOrThrow(
-                        await actionControllerRunQuery({
-                          path: {
-                            roomId: roomContext.initialRoomData.id,
-                            canvasId: roomContext.initialCanvasData.id,
-                          },
-                          body: {
-                            databaseId: selectedDatabaseId ?? "",
-                            query: query.queryText,
-                            replace: false,
-                          },
-                        }),
-                      );
+                    onClick={() => {
+                      onRun(false);
                     }}
                   ></NavbarButton>
                 </Stack>
