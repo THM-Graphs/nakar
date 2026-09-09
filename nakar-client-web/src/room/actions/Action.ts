@@ -13,8 +13,7 @@ export abstract class Action<I> {
   public abstract disabled(input: I): boolean;
   protected abstract action(input: I): Promise<void> | void;
 
-  public shortcut(input: I): ActionShortcut | null {
-    void input;
+  public shortcut(_input: I): ActionShortcut | null {
     return null;
   }
 
