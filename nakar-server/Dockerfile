@@ -15,7 +15,7 @@ COPY tsconfig.json ./
 
 RUN NODE_ENV=production npm run build
 
-RUN npm ci --omit=dev
+RUN npm prune --omit=dev
 
 FROM node:24-alpine AS production
 WORKDIR /app

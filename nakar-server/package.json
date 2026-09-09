@@ -62,7 +62,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@tsconfig/node20": "^20.0.0",
+    "@tsconfig/node24": "^24.0.0",
     "@types/express": "^5.0.0",
     "@types/express-fileupload": "^1.0.0",
     "@types/http-errors": "^2.0.0",
@@ -78,7 +78,7 @@
     "typescript-eslint": "^8.60.0"
   },
   "engines": {
-    "node": ">=20.0.0 <=24.x.x",
+    "node": ">=24.0.0 <=24.x.x",
     "npm": ">=6.0.0"
   },
   "strapi": {
