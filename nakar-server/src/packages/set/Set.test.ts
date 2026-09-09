@@ -141,7 +141,7 @@ void describe('SSet', (): void => {
     void it('keeps shared values only', (): void => {
       const base: SSet<number> = new SSet<number>([1, 2, 3]);
       const other: SSet<number> = new SSet<number>([2, 3, 4]);
-      const intersection: SSet<number> = base.intersection(other);
+      const intersection: SSet<number> = base.toIntersection(other);
       assert.deepEqual(intersection.toArray(), [2, 3]);
     });
   });

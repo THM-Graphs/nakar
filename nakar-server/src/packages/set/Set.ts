@@ -94,6 +94,10 @@ export class SSet<T> extends Set<T> {
     return n;
   }
 
+  public toIntersection(other: SSet<T>): SSet<T> {
+    return SSet.upgrade(this.intersection(other));
+  }
+
   public isEqual(other: SSet<T>): boolean {
     return (
       this.size === other.size &&
