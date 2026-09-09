@@ -1,6 +1,8 @@
 FROM node:24-alpine AS builder
 WORKDIR /app
 
+RUN apk add --no-cache python3 make g++ linux-headers
+
 COPY package.json package-lock.json ./
 RUN npm ci
 
@@ -13,12 +15,13 @@ COPY tsconfig.json ./
 
 RUN NODE_ENV=production npm run build
 
+RUN npm ci --omit=dev
+
 FROM node:24-alpine AS production
 WORKDIR /app
 
 COPY package.json package-lock.json ./
-RUN npm ci --omit=dev
-
+COPY --from=builder /app/node_modules ./node_modules
 COPY public/robots.txt ./public/robots.txt
 COPY favicon.ico ./
 # Unpack dist folder so strapi will find src dir to run
