@@ -1873,7 +1873,7 @@ export class LiveCanvas {
                         .toKeyArray()
                         .includes(parameter.identifier) &&
                       (parameter.allowedLabels.length === 0 ||
-                        new SSet(parameter.allowedLabels).intersection(
+                        new SSet(parameter.allowedLabels).toIntersection(
                           new SSet(node.labels),
                         ).size > 0)
                     ) {

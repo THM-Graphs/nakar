@@ -94,8 +94,9 @@ export class SSet<T> extends Set<T> {
     return n;
   }
 
-  public intersection(other: SSet<T>): SSet<T> {
-    return this.filter((item: T): boolean => other.has(item));
+  public toIntersection(other: SSet<T>): SSet<T> {
+    // eslint-disable-next-line no-restricted-properties
+    return SSet.upgrade(this.intersection(other));
   }
 
   public isEqual(other: SSet<T>): boolean {

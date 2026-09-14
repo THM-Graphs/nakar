@@ -25,16 +25,14 @@ export function NodeDetailsKnowledgeCardProperties(props: { node: NodeDto }) {
     return Object.entries(
       props.node.properties satisfies Record<string, unknown>,
     )
-      .map(
-        (property): NodeDetailsKnowledgeCardEntry => ({
-          title: property[0],
-          type: "property",
-          values: unknownToStringList(property[1]).map((t) => ({
-            id: t,
-            title: t,
-          })),
-        }),
-      )
+      .map((property): NodeDetailsKnowledgeCardEntry => ({
+        title: property[0],
+        type: "property",
+        values: unknownToStringList(property[1]).map((t) => ({
+          id: t,
+          title: t,
+        })),
+      }))
       .sort(
         (
           a: NodeDetailsKnowledgeCardEntry,

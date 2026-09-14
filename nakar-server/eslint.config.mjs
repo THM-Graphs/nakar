@@ -96,6 +96,14 @@ export default defineConfig([
           message: 'Use OnModuleInit / OnModuleDestroy instead.',
         },
       ],
+
+      'no-restricted-properties': [
+        'error',
+        {
+          property: 'intersection',
+          message: 'Use toIntersection instead.',
+        },
+      ],
       '@typescript-eslint/no-extraneous-class': 'off',
       '@typescript-eslint/prefer-nullish-coalescing': 'off',
       'no-unexpected-multiline': 'off',

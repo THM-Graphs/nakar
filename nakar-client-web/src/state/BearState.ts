@@ -149,11 +149,7 @@ export interface BearState {
     panels: {
       left: "scenarios" | "query" | "notes" | "search" | null;
       right:
-        | "histogram"
-        | "inspector"
-        | "visualization"
-        | "knowledgeCard"
-        | null;
+        "histogram" | "inspector" | "visualization" | "knowledgeCard" | null;
       knowledgeCard: {
         show: () => void;
         hide: () => void;
