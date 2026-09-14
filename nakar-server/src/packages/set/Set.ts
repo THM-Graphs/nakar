@@ -95,6 +95,7 @@ export class SSet<T> extends Set<T> {
   }
 
   public toIntersection(other: SSet<T>): SSet<T> {
+    // eslint-disable-next-line no-restricted-properties
     return SSet.upgrade(this.intersection(other));
   }
 
