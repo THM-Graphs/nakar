@@ -59,6 +59,7 @@ import {
 } from "../room/canvas/CanvasSearchData.ts";
 import { Group, Panel } from "react-resizable-panels";
 import { GraphRenderer } from "../room/canvas/graph-renderer/GraphRenderer.tsx";
+import { GraphDataToggle } from "../room/data-table/GraphDataToggle.tsx";
 
 const CanvasContext: Context<CanvasContextData | null> =
   createContext<CanvasContextData | null>(null);
@@ -368,7 +369,10 @@ export function Canvas() {
                     style={{ width: "5px", marginRight: "-5px" }}
                     className={"flex-grow-0 flex-shrink-0 h-100 pe-auto"}
                   ></div>
-                  <CanvasSurface></CanvasSurface>
+                  <Stack>
+                    <GraphDataToggle></GraphDataToggle>
+                    <CanvasSurface></CanvasSurface>
+                  </Stack>
                   <div
                     style={{ width: "5px", marginLeft: "-5px" }}
                     className={"flex-grow-0 flex-shrink-0 h-100 pe-auto"}

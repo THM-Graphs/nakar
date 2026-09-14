@@ -1,6 +1,5 @@
 import { Stack, Table } from "react-bootstrap";
 import { useBearStore } from "../../state/useBearStore.ts";
-import { NavbarButton } from "../../shared/elements/NavbarButton.tsx";
 
 export function DataTable() {
   const tableData = useBearStore((s) => s.room.scenario.graph.table.data);
@@ -11,13 +10,6 @@ export function DataTable() {
       direction={"vertical"}
       className={"bg-body z-1 h-100 w-100 overflow-auto pe-auto"}
     >
-      <NavbarButton
-        icon={"x-lg"}
-        className={"align-self-end sticky-top"}
-        onClick={() => {
-          selectGraph();
-        }}
-      ></NavbarButton>
       {tableData.length === 0 ? (
         <Stack
           className={"flex-grow-1 align-items-center justify-content-center"}

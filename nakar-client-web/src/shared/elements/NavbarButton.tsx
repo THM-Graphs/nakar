@@ -35,6 +35,7 @@ export const NavbarButton = forwardRef<
     hidden?: boolean;
     buttonType?: "submit" | "button";
     variant?: "primary" | "normal";
+    selectedClassName?: string;
   }
 >((props, ref) => {
   const [loading, setLoading] = useState<boolean>(false);
@@ -74,7 +75,9 @@ export const NavbarButton = forwardRef<
         }}
         className={clsx(
           "text-body fw-normal border-0 p-0 m-0 rounded-0 flex-shrink-0 position-relative overflow-hidden text-start",
-          props.selected ? "bg-body-secondary" : "",
+          props.selected
+            ? (props.selectedClassName ?? "bg-body-secondary")
+            : "",
           disabled ? "" : "pointer",
           disabled ? "" : "bg-body-secondary-hover",
           props.className,

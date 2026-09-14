@@ -1,7 +1,6 @@
 import { Stack } from "react-bootstrap";
 import { CanvasActions } from "./CanvasActions.tsx";
 import clsx from "clsx";
-import { GraphDataToggle } from "../data-table/GraphDataToggle.tsx";
 
 export function CanvasToolbar(props: { className?: string }) {
   return (
@@ -13,7 +12,6 @@ export function CanvasToolbar(props: { className?: string }) {
       )}
     >
       <CanvasActions></CanvasActions>
-      <GraphDataToggle></GraphDataToggle>
     </Stack>
   );
 }
