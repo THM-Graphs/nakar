@@ -130,7 +130,6 @@ build
 .strapi-cloud.json
 /src/extensions/documentation
 /.docker
-/export.tar
 encryption_keys.json
 
 ############################

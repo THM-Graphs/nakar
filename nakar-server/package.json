@@ -18,7 +18,7 @@
     "analyze": "fta .",
     "audit": "npm audit --audit-level critical",
     "test": "c8 node --import tsx --test \"src/**/*.test.ts\"",
-    "export": "strapi export --no-compress --no-encrypt -f export",
+    "export": "strapi export --no-compress --no-encrypt -f ./exports/export-$(date +\"%Y-%m-%dT%H:%M:%S%z\")",
     "import": "strapi import -f export.tar",
     "version": "echo $npm_package_version",
     "pre-commit": "tsc && npm run test && npm run lint:fix && npm run format:fix",
