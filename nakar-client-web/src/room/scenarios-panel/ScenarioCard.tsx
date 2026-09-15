@@ -9,6 +9,8 @@ import { Router } from "../../routing/Router.ts";
 import { CMSButton } from "../../shared/cms/CMSButton.tsx";
 import { useIsLoggedIn } from "../../state/useIsLoggedIn.ts";
 import MDEditor from "@uiw/react-md-editor";
+import { ClipboardButton } from "../../shared/elements/ClipboardButton.tsx";
+import { createScenarioShareUrl } from "./createScenarioShareUrl.ts";
 
 export function ScenarioCard(props: {
   hidden?: boolean;
@@ -18,6 +20,14 @@ export function ScenarioCard(props: {
 }) {
   const canvasContext = useCanvasContext();
   const isLoggedIn: boolean = useIsLoggedIn();
+
+  const shareUrl: URL | null = ((): URL | null => {
+    if (props.scenario.parameters.length > 0) {
+      return null;
+    } else {
+      return createScenarioShareUrl(props.scenario, canvasContext, []);
+    }
+  })();
 
   return (
     <Stack
@@ -117,6 +127,24 @@ export function ScenarioCard(props: {
             <span className={"text-muted small fst-italic"}>None</span>
           )}
         </ScenarioCardSection>
+
+        {shareUrl && (
+          <ScenarioCardSection title={"Run Scenario URL"}>
+            <Stack>
+              <span className={"small text-muted"}>
+                Share this URL to run this scenario on start.
+              </span>
+              <Stack direction={"horizontal"} className={"align-items-start"}>
+                <ClipboardButton text={shareUrl.toString()}></ClipboardButton>
+                <span className={"small text-muted text-break"}>
+                  <a href={shareUrl.toString()} target={"_blank"}>
+                    {shareUrl.toString()}
+                  </a>
+                </span>
+              </Stack>
+            </Stack>
+          </ScenarioCardSection>
+        )}
       </Stack>
     </Stack>
   );
