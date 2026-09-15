@@ -3,7 +3,6 @@ import { useBearStore } from "../../state/useBearStore.ts";
 
 export function DataTable() {
   const tableData = useBearStore((s) => s.room.scenario.graph.table.data);
-  const selectGraph = useBearStore((s) => s.room.canvas.tabs.selectGraph);
 
   return (
     <Stack
