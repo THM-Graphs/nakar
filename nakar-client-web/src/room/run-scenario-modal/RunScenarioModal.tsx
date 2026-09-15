@@ -6,13 +6,10 @@ import { Panel } from "../../shared/elements/Panel.tsx";
 import { NavbarButton } from "../../shared/elements/NavbarButton.tsx";
 import { ScenarioIcon } from "../scenarios-panel/ScenarioIcon.tsx";
 import { ArgumentDisplay } from "./ArgumentDisplay.tsx";
-import { actionControllerLoadScenario, ScenarioArgumentDto } from "api-client";
-import { Router } from "../../routing/Router.ts";
-import { CanvasSearchData } from "../canvas/CanvasSearchData.ts";
-import qs from "qs";
+import { actionControllerLoadScenario } from "api-client";
 import { ClipboardButton } from "../../shared/elements/ClipboardButton.tsx";
-import { Link } from "react-router";
 import { Collapsable } from "../../shared/elements/Collapsable.tsx";
+import { createScenarioShareUrl } from "../scenarios-panel/createScenarioShareUrl.ts";
 
 export function RunScenarioModal() {
   const roomContext = useCanvasContext();
@@ -41,34 +38,7 @@ export function RunScenarioModal() {
     if (scenario == null) {
       return null;
     }
-    try {
-      const canvasSearchData: CanvasSearchData = {
-        scenario: {
-          id: scenario.id,
-          args: scenarioArguments.reduce(
-            (
-              akku: Record<string, string>,
-              next: ScenarioArgumentDto,
-            ): Record<string, string> => ({
-              ...akku,
-              [next.identifier]: next.value,
-            }),
-            {},
-          ),
-        },
-      };
-      const url: URL = new URL(
-        window.location.origin +
-          Router.getCanvasPath(
-            roomContext.initialRoomData.id,
-            roomContext.initialCanvasData.id,
-          ),
-      );
-      url.search = qs.stringify(canvasSearchData);
-      return url;
-    } catch {
-      return null;
-    }
+    return createScenarioShareUrl(scenario, roomContext, scenarioArguments);
   })();
 
   const handleRun = async () => {
@@ -137,8 +107,10 @@ export function RunScenarioModal() {
                 >
                   <Stack className={"ps-3 pe-3"}>
                     <Stack direction={"horizontal"}>
-                      <span className={"small text-muted ellipsis"}>
-                        <Link to={shareUrl}>{shareUrl.toString()}</Link>
+                      <span className={"small text-muted text-break"}>
+                        <a href={shareUrl.toString()} target={"_blank"}>
+                          {shareUrl.toString()}
+                        </a>
                       </span>
                       <ClipboardButton
                         text={shareUrl.toString()}
