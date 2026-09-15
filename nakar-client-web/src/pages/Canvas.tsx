@@ -201,7 +201,7 @@ export function Canvas() {
         .catch(pushErrorNotification)
         .finally(() => {
           if (!cancelled) {
-            setSearchParams(new URLSearchParams(), { replace: true });
+            window.history.replaceState({}, "", window.location.pathname);
           }
         });
     } catch (error: unknown) {
