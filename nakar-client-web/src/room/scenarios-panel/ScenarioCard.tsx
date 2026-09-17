@@ -67,7 +67,7 @@ export function ScenarioCard(props: {
           title={"Add Scenario"}
           icon={"plus-circle"}
           onClick={() => {
-            props.onScenarioSelected(props.scenario, false);
+            props.onScenarioSelected(props.scenario, true);
           }}
         ></CMSButton>
 
