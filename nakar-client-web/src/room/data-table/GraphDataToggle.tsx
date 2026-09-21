@@ -53,7 +53,7 @@ export function GraphDataToggle(props: { className?: string }) {
         )}
         title={
           <span>
-            Table Data{" "}
+            Table{" "}
             <span className={"text-muted"}>{tableData.length.toString()}</span>
           </span>
         }
