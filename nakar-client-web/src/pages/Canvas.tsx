@@ -137,7 +137,7 @@ export function Canvas() {
   const navigate = useNavigate();
   const leftPanel = useBearStore((s) => s.room.panels.left);
   const rightPanel = useBearStore((s) => s.room.panels.right);
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const pushErrorNotification = useBearStore(
     (s) => s.room.ui.pushErrorNotification,
   );
