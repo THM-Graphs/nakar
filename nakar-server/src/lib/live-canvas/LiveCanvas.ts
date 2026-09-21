@@ -1003,8 +1003,12 @@ export class LiveCanvas {
           graph.nodes.reset();
           graph.edges.reset();
           changeRecorder.didAddOrRemoveGraphElements();
+
           graph.tableData = graphElements.tableData;
           changeRecorder.didAddOrRemoveTableData();
+
+          graph.metaData.clearCurrentScenario();
+          changeRecorder.didChangeMetaData();
         }
         const databaseCache: DatabaseReferenceCache =
           new DatabaseReferenceCache(this._database);

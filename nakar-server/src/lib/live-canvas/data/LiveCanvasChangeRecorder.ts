@@ -89,6 +89,10 @@ export class LiveCanvasChangeRecorder {
     this._shouldSendMetaDataChangedToUser = true;
   }
 
+  public didChangeMetaData(): void {
+    this._shouldSendMetaDataChangedToUser = true;
+  }
+
   public handleChange(
     physicsWorker: PhysicsWorker,
     onEvent: Subject<CanvasEvent>,

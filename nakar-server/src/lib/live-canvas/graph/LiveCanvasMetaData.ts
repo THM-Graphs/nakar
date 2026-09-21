@@ -87,4 +87,10 @@ export class LiveCanvasMetaData {
     this._arguments = scenarioArguments;
     this._parameters = parameters;
   }
+
+  public clearCurrentScenario(): void {
+    this._scenarioId = null;
+    this._arguments = new SMap();
+    this._parameters = [];
+  }
 }

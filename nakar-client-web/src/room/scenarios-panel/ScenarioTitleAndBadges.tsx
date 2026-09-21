@@ -3,6 +3,7 @@ import clsx from "clsx";
 import { ScnearioPlayButton } from "./ScenarioPlayButton";
 import { ScenarioArgumentDto, ScenarioDto } from "api-client";
 import { ScenarioQueryParameterBadge } from "./ScenarioQueryParameterBadge.tsx";
+import { useBearStore } from "../../state/useBearStore.ts";
 
 export function ScenarioTitleAndBadges(props: {
   scenario: ScenarioDto;
@@ -11,6 +12,10 @@ export function ScenarioTitleAndBadges(props: {
   arguments?: ScenarioArgumentDto[];
   hideParameters?: boolean;
 }) {
+  const currentScenarioId = useBearStore(
+    (s) => s.room.scenario.graph.metaData.scenarioId,
+  );
+
   const title: string = props.scenario.title ?? "untitled";
   return (
     <Stack
@@ -39,7 +44,12 @@ export function ScenarioTitleAndBadges(props: {
         className={"flex-wrap align-self-center"}
         direction={"horizontal"}
       >
-        <span className={"pe-1 small text-wrap align-self-center"}>
+        <span
+          className={clsx(
+            "pe-1 small text-wrap align-self-center",
+            currentScenarioId === props.scenario.id && "fw-bold",
+          )}
+        >
           {title}
         </span>
         {props.hideParameters !== true &&
