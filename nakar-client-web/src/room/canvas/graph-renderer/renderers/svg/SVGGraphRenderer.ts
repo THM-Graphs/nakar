@@ -122,7 +122,7 @@ export class SVGGraphRenderer {
     this.theme = theme;
 
     this.svgElement = this._createSVGCanvas();
-    containerElement.appendChild(this.svgElement);
+    // containerElement.appendChild(this.svgElement);
     this.hideLabels = hideLabels;
     this.colorSchema = ColorSchema.find(colorSchema);
 
