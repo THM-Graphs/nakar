@@ -421,7 +421,7 @@ export function Canvas() {
             <ReconnectOverlay></ReconnectOverlay>
           )}
         </Stack>
-        <GraphRenderer></GraphRenderer>
+        {socketState.type === "connected" && <GraphRenderer></GraphRenderer>}
         <ToastStack></ToastStack>
         <RunScenarioModal></RunScenarioModal>
         <ExpandNodePreviewModal></ExpandNodePreviewModal>

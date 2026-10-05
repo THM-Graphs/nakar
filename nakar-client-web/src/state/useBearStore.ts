@@ -27,7 +27,7 @@ import {
   NoteDto,
 } from "api-client";
 import { handleError } from "../shared/error/handleError.ts";
-import { SVGGraphRenderer } from "../room/canvas/graph-renderer/renderers/svg/SVGGraphRenderer.ts";
+import { SVGGraphRendererSystem } from "../room/canvas/graph-renderer/renderers/svg/SVGGraphRendererSystem.ts";
 
 enableMapSet();
 
@@ -664,9 +664,17 @@ export const useBearStore = create<BearState>()(
               },
               renderer: {
                 current: null,
-                setCurrent: (newRenderer: SVGGraphRenderer | null) => {
+                setCurrent: (newRenderer: SVGGraphRendererSystem | null) => {
                   set((s) => {
                     s.room.canvas.renderer.current = newRenderer;
+                  });
+                },
+                mode: "webgl",
+                setMode: (
+                  newMode: BearState["room"]["canvas"]["renderer"]["mode"],
+                ) => {
+                  set((s) => {
+                    s.room.canvas.renderer.mode = newMode;
                   });
                 },
               },
@@ -688,6 +696,7 @@ export const useBearStore = create<BearState>()(
           canvasTransformY: s.room.canvas.zoomTransform.y,
           jwt: s.global.auth.jwt,
           myRooms: s.start.myRooms,
+          canvasMode: s.room.canvas.renderer.mode,
         }),
         merge: (rawStorage: unknown, state: BearState): BearState => {
           const storage: PersistStorage = rawStorage as PersistStorage;
@@ -730,6 +739,10 @@ export const useBearStore = create<BearState>()(
           );
           state.global.auth.jwt = storage.jwt;
           state.start.myRooms = storage.myRooms ?? [];
+          state.room.canvas.renderer.mode = match(storage.canvasMode)
+            .returnType<BearState["room"]["canvas"]["renderer"]["mode"]>()
+            .with("svg", () => "svg")
+            .otherwise(() => "webgl");
           return state;
         },
         onRehydrateStorage: () => {

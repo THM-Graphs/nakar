@@ -5,7 +5,7 @@ import { Viewport } from "pixi-viewport";
 import { WebGLNode } from "./WebGLNode.ts";
 import { WebGLEdge } from "./WebGLEdge.ts";
 
-export class WebGLGraphRenderer {
+export class WebGLGraphRendererSystem {
   private _app: Application | null;
   private _destroyed: boolean;
   private _initializing: boolean;

@@ -42,7 +42,7 @@ const interactionMoveThresholdPt = 3;
 const isMultiSelectKeyPressed = (event: MouseEvent | PointerEvent): boolean =>
   isMacOS() ? event.metaKey : event.ctrlKey;
 
-export class SVGGraphRenderer {
+export class SVGGraphRendererSystem {
   private readonly graphState: SVGGraphRendererState;
   private theme: Theme;
   public colorSchema: ColorSchema;
@@ -122,7 +122,7 @@ export class SVGGraphRenderer {
     this.theme = theme;
 
     this.svgElement = this._createSVGCanvas();
-    // containerElement.appendChild(this.svgElement);
+    containerElement.appendChild(this.svgElement);
     this.hideLabels = hideLabels;
     this.colorSchema = ColorSchema.find(colorSchema);
 

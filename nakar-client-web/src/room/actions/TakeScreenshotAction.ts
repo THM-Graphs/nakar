@@ -3,11 +3,11 @@ import { saveAs } from "file-saver";
 import { SelectedCanvasTab } from "../../state/SelectedCanvasTab.ts";
 import { createAppShortcut } from "./createAppShortcut.ts";
 import { CanvasScreenshot } from "../canvas/graph-renderer/CanvasScreenshot.ts";
-import { SVGGraphRenderer } from "../canvas/graph-renderer/renderers/svg/SVGGraphRenderer.ts";
+import { SVGGraphRendererSystem } from "../canvas/graph-renderer/renderers/svg/SVGGraphRendererSystem.ts";
 
 export type TakeScreenshotActionParams = {
   selectedTab: SelectedCanvasTab;
-  currentGraphRenderer: SVGGraphRenderer | null;
+  currentGraphRenderer: SVGGraphRendererSystem | null;
 };
 
 export class TakeScreenshotAction extends Action<TakeScreenshotActionParams> {

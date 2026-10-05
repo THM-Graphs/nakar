@@ -111,6 +111,8 @@ export function MenuBar() {
   const hideLabels = useBearStore((s) => s.room.canvas.hideLabels);
   const setHideLabels = useBearStore((s) => s.room.canvas.setHideLabels);
   const isLoggedIn = useIsLoggedIn();
+  const rendererMode = useBearStore((s) => s.room.canvas.renderer.mode);
+  const setRendererMode = useBearStore((s) => s.room.canvas.renderer.setMode);
 
   return (
     <Stack direction={"horizontal"}>
@@ -461,6 +463,26 @@ export function MenuBar() {
             <Dropdown.Divider></Dropdown.Divider>
             <Dropdown.Header>Color Schema</Dropdown.Header>
             <ColorSchemaDropdownEntries></ColorSchemaDropdownEntries>
+            <Dropdown.Divider></Dropdown.Divider>
+            <Dropdown.Header>Renderer</Dropdown.Header>
+            <Dropdown.Item
+              active={rendererMode === "webgl"}
+              className={"small"}
+              onClick={() => {
+                setRendererMode("webgl");
+              }}
+            >
+              WebGL <span className={"text-muted"}>(default)</span>
+            </Dropdown.Item>
+            <Dropdown.Item
+              active={rendererMode === "svg"}
+              className={"small"}
+              onClick={() => {
+                setRendererMode("svg");
+              }}
+            >
+              SVG
+            </Dropdown.Item>
           </>
         )}
       </DropdownButton>
