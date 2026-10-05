@@ -9,6 +9,7 @@ import { Theme } from "../../../../../shared/theme/Theme.ts";
 export class WebGLGraphRendererSystem {
   private _nodesContainer: Container;
   private _edgesContainer: Container;
+  private _viewPort: Viewport;
 
   public constructor(
     private _app: Application,
@@ -17,10 +18,16 @@ export class WebGLGraphRendererSystem {
   ) {
     this.enableDebug(this._app);
 
-    const viewport: Viewport = new Viewport({ events: _app.renderer.events });
+    const viewport: Viewport = new Viewport({
+      events: _app.renderer.events,
+      allowPreserveDragOutside: true,
+      stopPropagation: false,
+    });
+    viewport.eventMode = "dynamic";
+    this._viewPort = viewport;
     viewport.label = "viewport";
     _app.stage.addChild(viewport);
-    viewport.drag().wheel();
+    viewport.drag().wheel({ smooth: 5 }).decelerate({ friction: 0.8 });
 
     const edgesContainer = new Container({ label: "edges-container" });
     this._edgesContainer = edgesContainer;
@@ -51,6 +58,7 @@ export class WebGLGraphRendererSystem {
         elements.labels,
         this._colorSchema,
         this._theme,
+        this._viewPort,
       );
       nodeIndex.set(node.id, webGlNode);
       this._nodesContainer.addChild(webGlNode.container);
