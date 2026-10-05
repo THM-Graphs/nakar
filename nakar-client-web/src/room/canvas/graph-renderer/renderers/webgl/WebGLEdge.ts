@@ -3,6 +3,7 @@ import { ColorDto, EdgeDto } from "api-client";
 import { WebGLNode } from "./WebGLNode.ts";
 import { match } from "ts-pattern";
 import { ColorSchema } from "../../../../color/ColorSchema.ts";
+import { Theme } from "../../../../../shared/theme/Theme.ts";
 
 export class WebGLEdge {
   public readonly container: Container;
@@ -14,6 +15,7 @@ export class WebGLEdge {
     startNode: WebGLNode,
     endNode: WebGLNode,
     colorSchema: ColorSchema,
+    theme: Theme,
   ) {
     this.container = new Container({ label: edge.type });
     this._startNode = startNode;
@@ -60,7 +62,7 @@ export class WebGLEdge {
       )
       .stroke({
         width: edge.width,
-        color: this.getEdgeColor(edge.customColor, colorSchema),
+        color: this.getEdgeColor(edge.customColor, colorSchema, theme),
       });
 
     const angle = this.fixDegAngle(this.vectorAngleDeg(startPoint, endPoint));
@@ -69,7 +71,7 @@ export class WebGLEdge {
         ? `${edge.type} (${edge.clusterSize.toString()})`
         : edge.type,
       style: {
-        fill: "#000000",
+        fill: this._strokeColor(theme),
         fontSize: 12,
         fontWeight: "bold",
         fontFamily: "system-ui",
@@ -84,9 +86,10 @@ export class WebGLEdge {
   private getEdgeColor(
     colorDto: ColorDto | null,
     colorSchema: ColorSchema,
+    theme: Theme,
   ): string {
     if (colorDto == null) {
-      return "#000000";
+      return this._strokeColor(theme);
     }
 
     return match(colorDto.color)
@@ -118,5 +121,9 @@ export class WebGLEdge {
 
   private fixDegAngle(angle: number): number {
     return angle > 90 || angle < -90 ? angle + 180 : angle;
+  }
+
+  private _strokeColor(theme: Theme): string {
+    return theme === "light" ? "#000000" : "#ffffff";
   }
 }

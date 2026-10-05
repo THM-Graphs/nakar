@@ -4,47 +4,22 @@ import { ColorSchema } from "../../../../color/ColorSchema.ts";
 import { Viewport } from "pixi-viewport";
 import { WebGLNode } from "./WebGLNode.ts";
 import { WebGLEdge } from "./WebGLEdge.ts";
+import { Theme } from "../../../../../shared/theme/Theme.ts";
 
 export class WebGLGraphRendererSystem {
-  private _app: Application | null;
-  private _destroyed: boolean;
-  private _initializing: boolean;
-  private _colorSchema: ColorSchema | null;
-  private _nodesContainer: Container | null;
-  private _edgesContainer: Container | null;
+  private _nodesContainer: Container;
+  private _edgesContainer: Container;
 
-  public constructor() {
-    this._app = null;
-    this._destroyed = false;
-    this._initializing = false;
-    this._colorSchema = null;
-    this._nodesContainer = null;
-    this._edgesContainer = null;
-  }
+  public constructor(
+    private _app: Application,
+    private _colorSchema: ColorSchema,
+    private _theme: Theme,
+  ) {
+    this.enableDebug(this._app);
 
-  public async init(
-    htmlDivElement: HTMLDivElement,
-    colorSchema: ColorSchema,
-  ): Promise<void> {
-    this._initializing = true;
-    this._colorSchema = colorSchema;
-
-    // Create a new application
-    const app = new Application();
-    this._app = app;
-
-    // Initialize the application
-    await app.init({
-      resizeTo: window,
-      antialias: true,
-      backgroundAlpha: 0,
-    });
-
-    this.enableDebug(app);
-
-    const viewport: Viewport = new Viewport({ events: app.renderer.events });
+    const viewport: Viewport = new Viewport({ events: _app.renderer.events });
     viewport.label = "viewport";
-    app.stage.addChild(viewport);
+    _app.stage.addChild(viewport);
     viewport.drag().wheel();
 
     const edgesContainer = new Container({ label: "edges-container" });
@@ -56,42 +31,29 @@ export class WebGLGraphRendererSystem {
     viewport.addChild(nodesContainer);
 
     // Append the application canvas to the document body
-    document.body.appendChild(app.canvas);
-    app.canvas.addEventListener("scroll", (e) => {
+    document.body.appendChild(_app.canvas);
+    _app.canvas.addEventListener("scroll", (e) => {
       e.preventDefault();
     });
-    app.canvas.style.position = "absolute";
-    app.canvas.style.top = "0";
-    app.canvas.style.left = "0";
-
-    this._initializing = false;
-    if (this._destroyed) {
-      this._cleanup();
-    }
-  }
-
-  public deinit() {
-    this._destroyed = true;
-    if (this._initializing) {
-      // will cleanup after init
-    } else {
-      this._cleanup();
-    }
+    _app.canvas.style.position = "absolute";
+    _app.canvas.style.top = "0";
+    _app.canvas.style.left = "0";
   }
 
   public loadGraphContent(elements: LiveCanvasGraphElementsDto): void {
-    this._nodesContainer!.removeChildren();
-    this._edgesContainer!.removeChildren();
+    this._nodesContainer.removeChildren();
+    this._edgesContainer.removeChildren();
 
     const nodeIndex: Map<string, WebGLNode> = new Map<string, WebGLNode>();
     for (const node of elements.nodes) {
       const webGlNode = new WebGLNode(
         node,
         elements.labels,
-        this._colorSchema!,
+        this._colorSchema,
+        this._theme,
       );
       nodeIndex.set(node.id, webGlNode);
-      this._nodesContainer!.addChild(webGlNode.container);
+      this._nodesContainer.addChild(webGlNode.container);
     }
 
     for (const edge of elements.edges) {
@@ -106,14 +68,15 @@ export class WebGLGraphRendererSystem {
         edge,
         startNode,
         endNode,
-        this._colorSchema!,
+        this._colorSchema,
+        this._theme,
       );
-      this._edgesContainer!.addChild(webGLEdge.container);
+      this._edgesContainer.addChild(webGLEdge.container);
     }
   }
 
-  private _cleanup(): void {
-    this._app?.destroy({ removeView: true, releaseGlobalResources: true });
+  public destroy(): void {
+    this._app.destroy(true, true);
   }
 
   private enableDebug(app: Application): void {

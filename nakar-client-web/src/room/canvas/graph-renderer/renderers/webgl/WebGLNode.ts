@@ -2,6 +2,7 @@ import { BitmapText, Container, Graphics } from "pixi.js";
 import { ColorDto, LabelDto, NodeDto } from "api-client";
 import { WebGLTools } from "./WebGLTools.ts";
 import { ColorSchema } from "../../../../color/ColorSchema.ts";
+import { Theme } from "../../../../../shared/theme/Theme.ts";
 
 export class WebGLNode {
   public readonly container: Container;
@@ -10,6 +11,7 @@ export class WebGLNode {
     node: NodeDto,
     labels: LabelDto[],
     colorSchema: ColorSchema,
+    theme: Theme,
   ) {
     const nodeContainer: Container = new Container({ label: node.title });
     nodeContainer.position.set(node.position.x, node.position.y);
@@ -18,7 +20,7 @@ export class WebGLNode {
     nodeContainer.addChild(circleStroke);
     circleStroke.circle(0, 0, node.radius);
     circleStroke.fill({
-      color: "#000000",
+      color: this._strokeColor(theme),
     });
 
     const nodeCircle: Graphics = new Graphics();
@@ -61,5 +63,9 @@ export class WebGLNode {
       return fallbackColor;
     }
     return label.color;
+  }
+
+  private _strokeColor(theme: Theme): string {
+    return theme === "light" ? "#000000" : "#ffffff";
   }
 }

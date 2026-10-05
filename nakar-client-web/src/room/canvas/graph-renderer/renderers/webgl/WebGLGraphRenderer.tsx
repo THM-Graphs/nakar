@@ -5,6 +5,9 @@ import { useAppContext } from "../../../../../state/AppContextData.ts";
 import { useBearStore } from "../../../../../state/useBearStore.ts";
 import { useCanvasContext } from "../../../../../pages/Canvas.tsx";
 import { ColorSchema } from "../../../../color/ColorSchema.ts";
+import { useTheme } from "../../../../../shared/theme/useTheme.ts";
+import { WebGLGraphRendererSystemFactory } from "./WebGLGraphRendererSystemFactory.ts";
+
 export function WebGLGraphRenderer() {
   const context = useAppContext();
   const websocketsManager = context.webSocketsManager;
@@ -14,18 +17,28 @@ export function WebGLGraphRenderer() {
   const setCurrentGraphRenderer = useBearStore(
     (s) => s.room.canvas.renderer.setCurrent,
   );
+  const theme = useTheme();
 
   useEffect(() => {
     if (containerRef.current == null) {
       return;
     }
-    const webGLRenderer: WebGLGraphRendererSystem =
-      new WebGLGraphRendererSystem();
+
     const subs: { unsubscribe: () => void }[] = [];
-    webGLRenderer
-      .init(containerRef.current, ColorSchema.find(colorSchemaSlug))
-      .then(() => {
+
+    const factory: WebGLGraphRendererSystemFactory =
+      new WebGLGraphRendererSystemFactory();
+
+    let _currentRenderer: WebGLGraphRendererSystem | null = null;
+
+    factory
+      .createInstance(ColorSchema.find(colorSchemaSlug), theme)
+      .then((webGLRenderer) => {
+        if (webGLRenderer == null) {
+          return;
+        }
         setCurrentGraphRenderer(webGLRenderer);
+        _currentRenderer = webGLRenderer;
         websocketsManager.sendMessage({ type: "ClientReadyWsdto" });
         subs.push(
           websocketsManager.onMessage$.subscribe((message) => {
@@ -46,9 +59,16 @@ export function WebGLGraphRenderer() {
       for (const sub of subs) {
         sub.unsubscribe();
       }
-      webGLRenderer.deinit();
+      factory.destory();
+      _currentRenderer?.destroy();
     };
-  }, [containerRef.current, canvasContext, colorSchemaSlug, websocketsManager]);
+  }, [
+    containerRef.current,
+    canvasContext,
+    colorSchemaSlug,
+    websocketsManager,
+    theme,
+  ]);
 
   return (
     <>
