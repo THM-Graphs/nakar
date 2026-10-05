@@ -1,4 +1,11 @@
-import { BitmapText, Container, Graphics, Renderer, Ticker } from "pixi.js";
+import {
+  BitmapText,
+  Container,
+  DestroyOptions,
+  Graphics,
+  Renderer,
+  Ticker,
+} from "pixi.js";
 import { ColorDto, LabelDto, NodeDto } from "api-client";
 import { WebGLTools } from "./WebGLTools.ts";
 import { ColorSchema } from "../../../../color/ColorSchema.ts";
@@ -10,6 +17,7 @@ import { maxSpeed, smoothTime } from "../shared/consts.ts";
 
 export class WebGLNode extends Container {
   private mouseLockedDelta: [number, number] | null = null;
+  private _ticker: Ticker;
 
   private _vx: number;
   private _vy: number;
@@ -111,11 +119,11 @@ export class WebGLNode extends Container {
     myText.eventMode = "none";
     this.addChild(myText);
 
-    const ticker = new Ticker();
-    ticker.add((t) => {
+    this._ticker = new Ticker();
+    this._ticker.add((t) => {
       this.tick(t.deltaMS);
     });
-    ticker.start();
+    this._ticker.start();
   }
 
   public tick(deltaTime: number): void {
@@ -135,6 +143,10 @@ export class WebGLNode extends Container {
       maxSpeed,
       deltaTime,
     );
+  }
+
+  public clean(): void {
+    this._ticker.destroy();
   }
 
   public moveTo(pos: [number, number], smooth: boolean): void {

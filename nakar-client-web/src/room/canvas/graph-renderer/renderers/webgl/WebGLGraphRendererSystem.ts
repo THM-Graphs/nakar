@@ -72,8 +72,16 @@ export class WebGLGraphRendererSystem {
   }
 
   public loadGraphContent(elements: LiveCanvasGraphElementsDto): void {
-    this._nodesContainer.removeChildren();
+    for (const child of this._edgesContainer.children) {
+      const edge = child as WebGLEdge;
+      edge.clean();
+    }
+    for (const child of this._nodesContainer.children) {
+      const node = child as WebGLNode;
+      node.clean();
+    }
     this._edgesContainer.removeChildren();
+    this._nodesContainer.removeChildren();
 
     const nodeIndex: Map<string, WebGLNode> = new Map<string, WebGLNode>();
     for (const node of elements.nodes) {
