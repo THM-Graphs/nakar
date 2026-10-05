@@ -1,14 +1,20 @@
-import { BitmapText, Container, Graphics } from "pixi.js";
+import { BitmapText, Container, Graphics, Renderer, Ticker } from "pixi.js";
 import { ColorDto, LabelDto, NodeDto } from "api-client";
 import { WebGLTools } from "./WebGLTools.ts";
 import { ColorSchema } from "../../../../color/ColorSchema.ts";
 import { Theme } from "../../../../../shared/theme/Theme.ts";
 import { Viewport } from "pixi-viewport";
+import { Subject } from "rxjs";
+import { smoothDamp } from "../shared/smoothDamp.ts";
+import { maxSpeed, smoothTime } from "../shared/consts.ts";
 
-export class WebGLNode {
-  public readonly container: Container;
-
+export class WebGLNode extends Container {
   private mouseLockedDelta: [number, number] | null = null;
+
+  private _vx: number;
+  private _vy: number;
+  private _tx: number;
+  private _ty: number;
 
   public constructor(
     node: NodeDto,
@@ -16,12 +22,20 @@ export class WebGLNode {
     colorSchema: ColorSchema,
     theme: Theme,
     viewPort: Viewport,
+    $onGrabNode: Subject<WebGLNode>,
+    $onNodeMoved: Subject<WebGLNode>,
+    $onUngrabNode: Subject<WebGLNode>,
   ) {
-    const nodeContainer: Container = new Container({ label: node.title });
-    nodeContainer.position.set(node.position.x, node.position.y);
+    super({ label: node.id });
+
+    this.position.set(node.position.x, node.position.y);
+    this._vx = 0;
+    this._vy = 0;
+    this._tx = node.position.x;
+    this._ty = node.position.y;
 
     const circleStroke: Graphics = new Graphics();
-    nodeContainer.addChild(circleStroke);
+    this.addChild(circleStroke);
     circleStroke.circle(0, 0, node.radius);
     circleStroke.fill({
       color: this._strokeColor(theme),
@@ -29,22 +43,33 @@ export class WebGLNode {
     circleStroke.eventMode = "dynamic";
     circleStroke.on("pointerdown", (event) => {
       this.mouseLockedDelta = [
-        event.clientX - nodeContainer.position.x,
-        event.clientY - nodeContainer.position.y,
+        event.getLocalPosition(viewPort).x - this.position.x,
+        event.getLocalPosition(viewPort).y - this.position.y,
       ];
       console.log(JSON.stringify(this.mouseLockedDelta));
       viewPort.pause = true;
+      $onGrabNode.next(this);
     });
     circleStroke.on("pointerup", (event) => {
       this.mouseLockedDelta = null;
+      viewPort.pause = false;
+      $onUngrabNode.next(this);
+    });
+    circleStroke.on("pointerupoutside", (event) => {
+      this.mouseLockedDelta = null;
+      viewPort.pause = false;
+      $onUngrabNode.next(this);
     });
     circleStroke.on("globalpointermove", (event) => {
       if (this.mouseLockedDelta != null) {
-        nodeContainer.position.set(
-          event.clientX - this.mouseLockedDelta[0],
-          event.clientY - this.mouseLockedDelta[1],
+        this.moveTo(
+          [
+            event.getLocalPosition(viewPort).x - this.mouseLockedDelta[0],
+            event.getLocalPosition(viewPort).y - this.mouseLockedDelta[1],
+          ],
+          false,
         );
-        viewPort.pause = false;
+        $onNodeMoved.next(this);
       }
     });
     circleStroke.on("pointerover", () => {
@@ -55,7 +80,8 @@ export class WebGLNode {
     });
 
     const nodeCircle: Graphics = new Graphics();
-    nodeContainer.addChild(nodeCircle);
+    this.addChild(nodeCircle);
+    nodeCircle.eventMode = "none";
     const nodeColor: ColorDto = this.getColorInformationOfNode(node, labels);
     nodeCircle.circle(0, 0, node.radius - 2);
     nodeCircle.fill({
@@ -63,7 +89,8 @@ export class WebGLNode {
     });
 
     const nodeHoverCircle: Graphics = new Graphics();
-    nodeContainer.addChild(nodeHoverCircle);
+    nodeHoverCircle.eventMode = "none";
+    this.addChild(nodeHoverCircle);
     nodeHoverCircle.circle(0, 0, node.radius - 2);
     nodeHoverCircle.fill({
       color: "#000000",
@@ -81,9 +108,44 @@ export class WebGLNode {
       },
       anchor: 0.5,
     });
-    nodeContainer.addChild(myText);
+    myText.eventMode = "none";
+    this.addChild(myText);
 
-    this.container = nodeContainer;
+    const ticker = new Ticker();
+    ticker.add((t) => {
+      this.tick(t.deltaMS);
+    });
+    ticker.start();
+  }
+
+  public tick(deltaTime: number): void {
+    [this.position.x, this._vx] = smoothDamp(
+      this.position.x,
+      this._tx,
+      this._vx,
+      smoothTime,
+      maxSpeed,
+      deltaTime,
+    );
+    [this.position.y, this._vy] = smoothDamp(
+      this.position.y,
+      this._ty,
+      this._vy,
+      smoothTime,
+      maxSpeed,
+      deltaTime,
+    );
+  }
+
+  public moveTo(pos: [number, number], smooth: boolean): void {
+    this._tx = pos[0];
+    this._ty = pos[1];
+
+    if (!smooth) {
+      this.position.set(pos[0], pos[1]);
+      this._vx = 0;
+      this._vy = 0;
+    }
   }
 
   private getColorInformationOfNode(

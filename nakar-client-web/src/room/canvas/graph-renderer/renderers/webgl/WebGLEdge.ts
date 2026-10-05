@@ -1,14 +1,19 @@
-import { BitmapText, Container, Graphics } from "pixi.js";
+import { BitmapText, Container, Graphics, Ticker } from "pixi.js";
 import { ColorDto, EdgeDto } from "api-client";
 import { WebGLNode } from "./WebGLNode.ts";
 import { match } from "ts-pattern";
 import { ColorSchema } from "../../../../color/ColorSchema.ts";
 import { Theme } from "../../../../../shared/theme/Theme.ts";
 
-export class WebGLEdge {
-  public readonly container: Container;
+export class WebGLEdge extends Container {
+  private readonly _edge: EdgeDto;
   private readonly _startNode: WebGLNode;
   private readonly _endNode: WebGLNode;
+  private readonly _colorSchema: ColorSchema;
+  private readonly _theme: Theme;
+
+  private readonly _line: Graphics;
+  private readonly _text: BitmapText;
 
   public constructor(
     edge: EdgeDto,
@@ -17,56 +22,18 @@ export class WebGLEdge {
     colorSchema: ColorSchema,
     theme: Theme,
   ) {
-    this.container = new Container({ label: edge.type });
+    super({ label: edge.type });
+
+    this._edge = edge;
     this._startNode = startNode;
     this._endNode = endNode;
+    this._colorSchema = colorSchema;
+    this._theme = theme;
 
-    const line: Graphics = new Graphics();
-    this.container.addChild(line);
+    this._line = new Graphics();
+    this.addChild(this._line);
 
-    const startPoint: [number, number] = [
-      startNode.container.position._x,
-      startNode.container.position._y,
-    ];
-    const endPoint: [number, number] = [
-      endNode.container.position._x,
-      endNode.container.position._y,
-    ];
-
-    const perpendicularVector = this.perpendicularVector(startPoint, endPoint);
-
-    const curvePush = 15;
-
-    const center: [number, number] = [
-      startPoint[0] +
-        (endPoint[0] - startPoint[0]) / 2 +
-        perpendicularVector[0] * edge.parallelIndex * curvePush,
-      startPoint[1] +
-        (endPoint[1] - startPoint[1]) / 2 +
-        perpendicularVector[1] * edge.parallelIndex * curvePush,
-    ];
-
-    const controlPoint: [number, number] = [
-      2 * center[0] - (startPoint[0] + endPoint[0]) / 2,
-      2 * center[1] - (startPoint[1] + endPoint[1]) / 2,
-    ];
-
-    line
-      .moveTo(startPoint[0], startPoint[1])
-      .quadraticCurveTo(
-        controlPoint[0],
-        controlPoint[1],
-        endPoint[0],
-        endPoint[1],
-        0,
-      )
-      .stroke({
-        width: edge.width,
-        color: this.getEdgeColor(edge.customColor, colorSchema, theme),
-      });
-
-    const angle = this.fixDegAngle(this.vectorAngleDeg(startPoint, endPoint));
-    const myText = new BitmapText({
+    this._text = new BitmapText({
       text: edge.isCluster
         ? `${edge.type} (${edge.clusterSize.toString()})`
         : edge.type,
@@ -78,9 +45,14 @@ export class WebGLEdge {
       },
       anchor: 0.5,
     });
-    myText.position.set(center[0], center[1]);
-    myText.angle = angle;
-    this.container.addChild(myText);
+
+    this.addChild(this._text);
+
+    const ticker = new Ticker();
+    ticker.add(() => {
+      this.tick();
+    });
+    ticker.start();
   }
 
   private getEdgeColor(
@@ -98,6 +70,59 @@ export class WebGLEdge {
         colorSchema.getBackgroundColor(c.index),
       )
       .exhaustive();
+  }
+
+  private tick(): void {
+    const startPoint: [number, number] = [
+      this._startNode.position._x,
+      this._startNode.position._y,
+    ];
+    const endPoint: [number, number] = [
+      this._endNode.position._x,
+      this._endNode.position._y,
+    ];
+
+    const perpendicularVector = this.perpendicularVector(startPoint, endPoint);
+
+    const curvePush = 15;
+
+    const center: [number, number] = [
+      startPoint[0] +
+        (endPoint[0] - startPoint[0]) / 2 +
+        perpendicularVector[0] * this._edge.parallelIndex * curvePush,
+      startPoint[1] +
+        (endPoint[1] - startPoint[1]) / 2 +
+        perpendicularVector[1] * this._edge.parallelIndex * curvePush,
+    ];
+
+    const controlPoint: [number, number] = [
+      2 * center[0] - (startPoint[0] + endPoint[0]) / 2,
+      2 * center[1] - (startPoint[1] + endPoint[1]) / 2,
+    ];
+
+    this._line
+      .clear()
+      .moveTo(startPoint[0], startPoint[1])
+      .quadraticCurveTo(
+        controlPoint[0],
+        controlPoint[1],
+        endPoint[0],
+        endPoint[1],
+        0,
+      )
+      .stroke({
+        width: this._edge.width,
+        color: this.getEdgeColor(
+          this._edge.customColor,
+          this._colorSchema,
+          this._theme,
+        ),
+      });
+
+    this._text.position.set(center[0], center[1]);
+
+    const angle = this.fixDegAngle(this.vectorAngleDeg(startPoint, endPoint));
+    this._text.angle = angle;
   }
 
   private perpendicularVector(

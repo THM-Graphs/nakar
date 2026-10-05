@@ -48,7 +48,42 @@ export function WebGLGraphRenderer() {
               })
               .with({ type: "CanvasDataReadyWsdto" }, (event) => {
                 webGLRenderer.loadGraphContent(event.data.elements);
+              })
+              .with({ type: "NodesMovedWsdto" }, (event) => {
+                webGLRenderer.nodesMoved(event);
               });
+          }),
+          webGLRenderer.onGrabNode.subscribe((n) => {
+            websocketsManager.sendMessage({
+              type: "GrabNodeWsdto",
+              nodeId: n.label,
+            });
+          }),
+          webGLRenderer.onNodesMoved.subscribe((n) => {
+            websocketsManager.sendMessage({
+              type: "MoveNodesWsdto",
+              nodes: [
+                {
+                  id: n.label,
+                  position: {
+                    x: n.x,
+                    y: n.y,
+                  },
+                },
+              ],
+            });
+          }),
+          webGLRenderer.onUngrabNode.subscribe((n) => {
+            websocketsManager.sendMessage({
+              type: "UngrabNodeWsdto",
+              node: {
+                id: n.label,
+                position: {
+                  x: n.x,
+                  y: n.y,
+                },
+              },
+            });
           }),
         );
       })

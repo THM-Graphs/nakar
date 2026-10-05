@@ -1,21 +1,31 @@
 import { Application, Container } from "pixi.js";
-import { LiveCanvasGraphElementsDto } from "api-client";
+import { LiveCanvasGraphElementsDto, NodesMovedWsdto } from "api-client";
 import { ColorSchema } from "../../../../color/ColorSchema.ts";
 import { Viewport } from "pixi-viewport";
 import { WebGLNode } from "./WebGLNode.ts";
 import { WebGLEdge } from "./WebGLEdge.ts";
 import { Theme } from "../../../../../shared/theme/Theme.ts";
+import { Observable, Subject, throttleTime } from "rxjs";
+import { outputFps } from "../shared/consts.ts";
 
 export class WebGLGraphRendererSystem {
   private _nodesContainer: Container;
   private _edgesContainer: Container;
   private _viewPort: Viewport;
 
+  private $onGrabNode: Subject<WebGLNode>;
+  private $onNodeMoved: Subject<WebGLNode>;
+  private $onUngrabNode: Subject<WebGLNode>;
+
   public constructor(
     private _app: Application,
     private _colorSchema: ColorSchema,
     private _theme: Theme,
   ) {
+    this.$onGrabNode = new Subject();
+    this.$onNodeMoved = new Subject();
+    this.$onUngrabNode = new Subject();
+
     this.enableDebug(this._app);
 
     const viewport: Viewport = new Viewport({
@@ -47,6 +57,20 @@ export class WebGLGraphRendererSystem {
     _app.canvas.style.left = "0";
   }
 
+  public get onGrabNode(): Observable<WebGLNode> {
+    return this.$onGrabNode.asObservable();
+  }
+
+  public get onNodesMoved(): Observable<WebGLNode> {
+    return this.$onNodeMoved
+      .asObservable()
+      .pipe(throttleTime(1000 / outputFps));
+  }
+
+  public get onUngrabNode(): Observable<WebGLNode> {
+    return this.$onUngrabNode.asObservable();
+  }
+
   public loadGraphContent(elements: LiveCanvasGraphElementsDto): void {
     this._nodesContainer.removeChildren();
     this._edgesContainer.removeChildren();
@@ -59,9 +83,12 @@ export class WebGLGraphRendererSystem {
         this._colorSchema,
         this._theme,
         this._viewPort,
+        this.$onGrabNode,
+        this.$onNodeMoved,
+        this.$onUngrabNode,
       );
       nodeIndex.set(node.id, webGlNode);
-      this._nodesContainer.addChild(webGlNode.container);
+      this._nodesContainer.addChild(webGlNode);
     }
 
     for (const edge of elements.edges) {
@@ -79,7 +106,16 @@ export class WebGLGraphRendererSystem {
         this._colorSchema,
         this._theme,
       );
-      this._edgesContainer.addChild(webGLEdge.container);
+      this._edgesContainer.addChild(webGLEdge);
+    }
+  }
+
+  public nodesMoved(event: NodesMovedWsdto) {
+    for (const pos of event.nodes) {
+      const node: WebGLNode = this._nodesContainer.getChildByLabel(
+        pos.id,
+      ) as WebGLNode;
+      node.moveTo([pos.position.x, pos.position.y], true);
     }
   }
 

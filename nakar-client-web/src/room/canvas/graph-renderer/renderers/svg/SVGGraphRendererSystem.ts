@@ -34,11 +34,15 @@ import {
 } from "./SVGGraphRendererRelationshipView.ts";
 import { SVGGraphRendererUserCursorView } from "./SVGGraphRendererUserCursorView.ts";
 import { CanvasScreenshot } from "../../CanvasScreenshot.ts";
+import { smoothDamp } from "../shared/smoothDamp.ts";
+import {
+  baseStrokeWidth,
+  interactionMoveThresholdPt,
+  maxSpeed,
+  outputFps,
+  smoothTime,
+} from "../shared/consts.ts";
 
-const inputFps = 16;
-const outputFps = 32;
-const baseStrokeWidth = 2;
-const interactionMoveThresholdPt = 3;
 const isMultiSelectKeyPressed = (event: MouseEvent | PointerEvent): boolean =>
   isMacOS() ? event.metaKey : event.ctrlKey;
 
@@ -688,11 +692,9 @@ export class SVGGraphRendererSystem {
     }
     this.smoothedPositionDirty = false;
 
-    const smoothTime = (1000 / inputFps) * 1.5;
-    const maxSpeed = 10000;
     for (let i = 0; i < this.graphState.nodes.length; i += 1) {
       const node: SVGGraphRendererNode = this.graphState.nodes[i];
-      [node.x, node.vx] = this.smoothDamp(
+      [node.x, node.vx] = smoothDamp(
         node.x,
         node.tx,
         node.vx,
@@ -700,7 +702,7 @@ export class SVGGraphRendererSystem {
         maxSpeed,
         deltaTime,
       );
-      [node.y, node.vy] = this.smoothDamp(
+      [node.y, node.vy] = smoothDamp(
         node.y,
         node.ty,
         node.vy,
@@ -714,7 +716,7 @@ export class SVGGraphRendererSystem {
       }
     }
     for (const userCursor of this.graphState.userCursors) {
-      [userCursor.x, userCursor.vx] = this.smoothDamp(
+      [userCursor.x, userCursor.vx] = smoothDamp(
         userCursor.x,
         userCursor.tx,
         userCursor.vx,
@@ -722,7 +724,7 @@ export class SVGGraphRendererSystem {
         maxSpeed,
         deltaTime,
       );
-      [userCursor.y, userCursor.vy] = this.smoothDamp(
+      [userCursor.y, userCursor.vy] = smoothDamp(
         userCursor.y,
         userCursor.ty,
         userCursor.vy,
@@ -962,44 +964,6 @@ export class SVGGraphRendererSystem {
       }),
       filename: "nakar-graph.svg",
     };
-  }
-
-  private smoothDamp(
-    current: number,
-    target: number,
-    currentVelocity: number,
-    smoothTime: number,
-    maxSpeed: number,
-    deltaTime: number,
-  ): [number, number] {
-    smoothTime = Math.max(0.0001, smoothTime);
-    const omega = 2 / smoothTime;
-
-    const x = omega * deltaTime;
-    const exp = 1 / (1 + x + 0.48 * x * x + 0.235 * x * x * x);
-
-    let change = current - target;
-    const originalTo = target;
-
-    const maxChange = maxSpeed * smoothTime;
-    change = Math.max(-maxChange, Math.min(maxChange, change));
-    target = current - change;
-
-    const temp = (currentVelocity + omega * change) * deltaTime;
-    let newVelocity = (currentVelocity - omega * temp) * exp;
-
-    let output = target + (change + temp) * exp;
-
-    if (originalTo - current > 0.0 === output > originalTo) {
-      output = originalTo;
-      newVelocity = (output - originalTo) / deltaTime;
-    }
-
-    if (Math.abs(newVelocity) < 0.0001) {
-      newVelocity = 0;
-    }
-
-    return [output, newVelocity];
   }
 
   private _getNodeViewProps(
