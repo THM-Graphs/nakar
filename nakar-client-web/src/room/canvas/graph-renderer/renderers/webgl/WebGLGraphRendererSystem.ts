@@ -12,6 +12,8 @@ import { Theme } from "../../../../../shared/theme/Theme.ts";
 import { Observable, Subject, throttleTime } from "rxjs";
 import { outputFps } from "../shared/consts.ts";
 
+const onlyUpdateEdgesOnNodePositionChanges: boolean = false;
+
 export class WebGLGraphRendererSystem {
   private _nodesContainer: Container;
   private _edgesContainer: Container;
@@ -68,6 +70,15 @@ export class WebGLGraphRendererSystem {
     viewport.label = "viewport";
     _app.stage.addChild(viewport);
     viewport.drag().wheel({ smooth: 5 }).decelerate({ friction: 0.8 });
+    const resizeObserver = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const contentBoxSize = entry.contentBoxSize[0];
+        viewport.screenWidth = contentBoxSize.inlineSize;
+        viewport.screenHeight = contentBoxSize.blockSize;
+        console.log([contentBoxSize.inlineSize, contentBoxSize.blockSize]);
+      }
+    });
+    resizeObserver.observe(this._app.canvas);
 
     const edgesContainer = new Container({ label: "edges-container" });
     this._edgesContainer = edgesContainer;
@@ -93,7 +104,7 @@ export class WebGLGraphRendererSystem {
         node.tick(ticker.deltaMS);
         nodesAreIdle &&= node.idle;
       }
-      if (!nodesAreIdle) {
+      if (!onlyUpdateEdgesOnNodePositionChanges || !nodesAreIdle) {
         for (const edgeContainer of this._edgesContainer.children) {
           const edge: WebGLEdge = edgeContainer as WebGLEdge;
           edge.tick();
