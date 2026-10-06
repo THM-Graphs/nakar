@@ -96,6 +96,10 @@ export class WebGLGraphRendererSystem {
     _app.canvas.style.position = "absolute";
     _app.canvas.style.top = "0";
     _app.canvas.style.left = "0";
+    viewport.position.set(
+      this._app.canvas.clientWidth / 2,
+      this._app.canvas.clientHeight,
+    );
 
     _app.ticker.add((ticker) => {
       let nodesAreIdle: boolean = true;
