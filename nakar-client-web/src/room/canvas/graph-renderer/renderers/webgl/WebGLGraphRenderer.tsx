@@ -7,6 +7,10 @@ import { useCanvasContext } from "../../../../../pages/Canvas.tsx";
 import { ColorSchema } from "../../../../color/ColorSchema.ts";
 import { useTheme } from "../../../../../shared/theme/useTheme.ts";
 import { WebGLGraphRendererSystemFactory } from "./WebGLGraphRendererSystemFactory.ts";
+import { NodeDto } from "api-client";
+import { ExpandNodeAction } from "../../../../actions/ExpandNodeAction.ts";
+import { ExpandNodePreviewAction } from "../../../../actions/ExpandNodePreviewAction.ts";
+import { useIsLoggedIn } from "../../../../../state/useIsLoggedIn.ts";
 
 export function WebGLGraphRenderer() {
   const context = useAppContext();
@@ -18,6 +22,9 @@ export function WebGLGraphRenderer() {
     (s) => s.room.canvas.renderer.setCurrent,
   );
   const theme = useTheme();
+  const inspector = useBearStore((s) => s.room.panels.inspector);
+  const isLoggedIn = useIsLoggedIn();
+  const events = useBearStore((s) => s.room.ui.rendererEvents);
 
   useEffect(() => {
     if (containerRef.current == null) {
@@ -86,6 +93,57 @@ export function WebGLGraphRenderer() {
                   y: n.y,
                 },
               },
+            });
+          }),
+          webGLRenderer.onDisplayNodeData.subscribe((n) => {
+            inspector.setElement(n.id);
+          }),
+          webGLRenderer.onDoubleClickNode.subscribe((n) => {
+            const node: NodeDto | null =
+              useBearStore
+                .getState()
+                .room.scenario.graph.elements.nodes.find(
+                  (cnode) => cnode.id === n.id,
+                ) ?? null;
+            if (node == null) {
+              return;
+            }
+            if (node.isCluster) {
+              ExpandNodeAction.shared.runAsync({
+                isLoggedIn: isLoggedIn,
+                nodes: [node],
+                roomContext: canvasContext,
+              });
+            } else {
+              ExpandNodePreviewAction.shared.runAsync({
+                isLoggedIn: isLoggedIn,
+                nodes: [node],
+                roomContext: canvasContext,
+              });
+            }
+          }),
+          webGLRenderer.onDisplayLinkData.subscribe((l) => {
+            inspector.setElement(l.id);
+          }),
+          webGLRenderer.onDisplayNodeDataWithModifier.subscribe((n) => {
+            inspector.appendElement(n.id);
+          }),
+          webGLRenderer.onDisplayLinkDataWithModifier.subscribe((l) => {
+            inspector.appendElement(l.id);
+          }),
+          webGLRenderer.onDeselectAll.subscribe(() => {
+            inspector.deselectElements();
+          }),
+          webGLRenderer.onShowNodeContextMenu.subscribe((p) => {
+            events.onShowNodeContextMenu.next({
+              nodeId: p.node.id,
+              position: p.position,
+            });
+          }),
+          webGLRenderer.onShowEdgeContextMenu.subscribe((p) => {
+            events.onShowEdgeContextMenu.next({
+              edgeId: p.edge.id,
+              position: p.position,
             });
           }),
         );

@@ -20,6 +20,20 @@ export class WebGLGraphRendererSystem {
   private $onGrabNode: Subject<WebGLNode>;
   private $onNodeMoved: Subject<WebGLNode>;
   private $onUngrabNode: Subject<WebGLNode>;
+  private $onDisplayLinkData: Subject<WebGLEdge>;
+  private $onDisplayNodeData: Subject<WebGLNode>;
+  private $onDoubleClickNode: Subject<WebGLNode>;
+  private $onDisplayLinkDataWithModifier: Subject<WebGLEdge>;
+  private $onDisplayNodeDataWithModifier: Subject<WebGLNode>;
+  private $onDeselectAll: Subject<void>;
+  private $onShowNodeContextMenu: Subject<{
+    node: WebGLNode;
+    position: [number, number];
+  }>;
+  private $onShowEdgeContextMenu: Subject<{
+    edge: WebGLEdge;
+    position: [number, number];
+  }>;
 
   public constructor(
     private _app: Application,
@@ -29,8 +43,20 @@ export class WebGLGraphRendererSystem {
     this.$onGrabNode = new Subject();
     this.$onNodeMoved = new Subject();
     this.$onUngrabNode = new Subject();
+    this.$onDisplayLinkData = new Subject();
+    this.$onDisplayNodeData = new Subject();
+    this.$onDoubleClickNode = new Subject();
+    this.$onDisplayLinkDataWithModifier = new Subject();
+    this.$onDisplayNodeDataWithModifier = new Subject();
+    this.$onDeselectAll = new Subject();
+    this.$onShowNodeContextMenu = new Subject();
+    this.$onShowEdgeContextMenu = new Subject();
 
     this.enableDebug(this._app);
+
+    this._app.canvas.addEventListener("contextmenu", (e) => {
+      e.preventDefault();
+    });
 
     const viewport: Viewport = new Viewport({
       events: _app.renderer.events,
@@ -67,7 +93,6 @@ export class WebGLGraphRendererSystem {
         node.tick(ticker.deltaMS);
         nodesAreIdle &&= node.idle;
       }
-      console.log(`Node idle: ${nodesAreIdle}`);
       if (!nodesAreIdle) {
         for (const edgeContainer of this._edgesContainer.children) {
           const edge: WebGLEdge = edgeContainer as WebGLEdge;
@@ -91,6 +116,44 @@ export class WebGLGraphRendererSystem {
     return this.$onUngrabNode.asObservable();
   }
 
+  public get onDisplayLinkData(): Observable<WebGLEdge> {
+    return this.$onDisplayLinkData.asObservable();
+  }
+
+  public get onDisplayNodeData(): Observable<WebGLNode> {
+    return this.$onDisplayNodeData.asObservable();
+  }
+
+  public get onDoubleClickNode(): Observable<WebGLNode> {
+    return this.$onDoubleClickNode.asObservable();
+  }
+
+  public get onDisplayLinkDataWithModifier(): Observable<WebGLEdge> {
+    return this.$onDisplayLinkDataWithModifier.asObservable();
+  }
+
+  public get onDisplayNodeDataWithModifier(): Observable<WebGLNode> {
+    return this.$onDisplayNodeDataWithModifier.asObservable();
+  }
+
+  public get onDeselectAll(): Observable<void> {
+    return this.$onDeselectAll.asObservable();
+  }
+
+  public get onShowNodeContextMenu(): Observable<{
+    node: WebGLNode;
+    position: [number, number];
+  }> {
+    return this.$onShowNodeContextMenu.asObservable();
+  }
+
+  public get onShowEdgeContextMenu(): Observable<{
+    edge: WebGLEdge;
+    position: [number, number];
+  }> {
+    return this.$onShowEdgeContextMenu.asObservable();
+  }
+
   public loadGraphContent(elements: LiveCanvasGraphElementsDto): void {
     this._edgesContainer.removeChildren();
     this._nodesContainer.removeChildren();
@@ -106,6 +169,10 @@ export class WebGLGraphRendererSystem {
         this.$onGrabNode,
         this.$onNodeMoved,
         this.$onUngrabNode,
+        this.$onDisplayNodeData,
+        this.$onDoubleClickNode,
+        this.$onDisplayNodeDataWithModifier,
+        this.$onShowNodeContextMenu,
       );
       nodeIndex.set(node.id, webGlNode);
       this._nodesContainer.addChild(webGlNode);
@@ -125,6 +192,9 @@ export class WebGLGraphRendererSystem {
         endNode,
         this._colorSchema,
         this._theme,
+        this.$onDisplayLinkData,
+        this.$onDisplayLinkDataWithModifier,
+        this.$onShowEdgeContextMenu,
       );
       this._edgesContainer.addChild(webGLEdge);
       webGLEdge.tick();

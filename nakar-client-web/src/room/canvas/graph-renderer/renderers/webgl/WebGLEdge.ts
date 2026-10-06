@@ -7,6 +7,7 @@ import { Theme } from "../../../../../shared/theme/Theme.ts";
 import { SVGGraphRendererLink } from "../svg/SVGGraphRendererLink.ts";
 import { SVGGraphRendererNode } from "../svg/SVGGraphRendererNode.ts";
 import { baseStrokeWidth } from "../shared/consts.ts";
+import { Subject } from "rxjs";
 
 export class WebGLEdge extends Container {
   private readonly _edge: EdgeDto;
@@ -20,12 +21,20 @@ export class WebGLEdge extends Container {
   private readonly _arrow: Graphics;
   private readonly _textBg: Graphics;
 
+  private _hovered: boolean;
+
   public constructor(
     edge: EdgeDto,
     startNode: WebGLNode,
     endNode: WebGLNode,
     colorSchema: ColorSchema,
     theme: Theme,
+    $onDisplayLinkData: Subject<WebGLEdge>,
+    $onDisplayLinkDataWithModifier: Subject<WebGLEdge>,
+    $onShowEdgeContextMenu: Subject<{
+      edge: WebGLEdge;
+      position: [number, number];
+    }>,
   ) {
     super({ label: edge.type });
 
@@ -34,16 +43,20 @@ export class WebGLEdge extends Container {
     this._endNode = endNode;
     this._colorSchema = colorSchema;
     this._theme = theme;
+    this._hovered = false;
 
     this._line = new Graphics();
+    this._line.eventMode = "dynamic";
     this.addChild(this._line);
 
-    this._arrow = new Graphics()
+    this._arrow = new Graphics();
+    this._arrow
       .moveTo(0, 0)
       .lineTo(-this._edge.width * 3, -this._edge.width * 1.5)
       .lineTo(-this._edge.width * 3, this._edge.width * 1.5)
       .closePath()
-      .fill({ color: this._strokeColor(theme) });
+      .fill({ color: 0xffffff });
+    this._arrow.eventMode = "dynamic";
     this.addChild(this._arrow);
 
     this._text = new BitmapText({
@@ -70,9 +83,33 @@ export class WebGLEdge extends Container {
         4,
       )
       .fill(this._strokeColor(theme));
+    this._textBg.eventMode = "dynamic";
     this.addChild(this._textBg);
 
     this.addChild(this._text);
+
+    this.eventMode = "dynamic";
+    this.on("pointerover", () => {
+      this._hovered = true;
+      this.tick();
+    });
+    this.on("pointerout", () => {
+      this._hovered = false;
+      this.tick();
+    });
+    this.on("pointertap", () => {
+      $onDisplayLinkData.next(this);
+    });
+    this.on("rightclick", (event) => {
+      $onShowEdgeContextMenu.next({
+        edge: this,
+        position: [event.clientX, event.clientY],
+      });
+    });
+  }
+
+  public get id(): string {
+    return this._edge.id;
   }
 
   private getEdgeColor(
@@ -80,6 +117,9 @@ export class WebGLEdge extends Container {
     colorSchema: ColorSchema,
     theme: Theme,
   ): string {
+    if (this._hovered) {
+      return "#808080";
+    }
     if (colorDto == null) {
       return this._strokeColor(theme);
     }
@@ -164,12 +204,20 @@ export class WebGLEdge extends Container {
     );
     this._text.angle = angle;
     this._textBg.angle = angle;
+    this._textBg.tint = this._hovered
+      ? "#808080"
+      : this._strokeColor(this._theme);
 
     const arrowPosition = this.pointOnRadius(this._endNode, center, 0);
     this._arrow.position.set(arrowPosition[0], arrowPosition[1]);
     this._arrow.rotation = Math.atan2(
       arrowPosition[1] - center[1],
       arrowPosition[0] - center[0],
+    );
+    this._arrow.tint = this.getEdgeColor(
+      this._edge.customColor,
+      this._colorSchema,
+      this._theme,
     );
   }
 
@@ -189,11 +237,11 @@ export class WebGLEdge extends Container {
     const dx = b[0] - a[0];
     const dy = b[1] - a[1];
 
-    return (((Math.atan2(dy, dx) * 180) / Math.PI + 360) % 360) - 360;
+    return ((Math.atan2(dy, dx) * 180) / Math.PI + 360) % 360;
   }
 
   private fixDegAngle(angle: number): number {
-    return angle > 90 || angle < -90 ? angle + 180 : angle;
+    return angle > 90 && angle < 270 ? angle + 180 : angle;
   }
 
   private _strokeColor(theme: Theme): string {

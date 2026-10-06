@@ -17,7 +17,6 @@ export function SVGGraphRenderer() {
   const containerRef = createRef<HTMLDivElement>();
   const theme = useTheme();
   const inspector = useBearStore((s) => s.room.panels.inspector);
-  const setLocks = useBearStore((s) => s.room.scenario.setLocks);
   const events = useBearStore((s) => s.room.ui.rendererEvents);
   const hideLabels = useBearStore((s) => s.room.canvas.hideLabels);
   const colorSchemaSlug = useBearStore((s) => s.room.canvas.colorSchemaSlug);
@@ -50,7 +49,6 @@ export function SVGGraphRenderer() {
             _graphRenderer.updateNodePositions(event);
           })
           .with({ type: "SetNodeLocksWsdto" }, (event) => {
-            setLocks(event.locks);
             _graphRenderer.updateLocks(event);
           })
           .with({ type: "CanvasElementsChangedWsdto" }, (event) => {

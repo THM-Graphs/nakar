@@ -1,4 +1,10 @@
-import { BitmapText, Container, Graphics, Ticker } from "pixi.js";
+import {
+  BitmapText,
+  Container,
+  FederatedPointerEvent,
+  Graphics,
+  Ticker,
+} from "pixi.js";
 import { ColorDto, LabelDto, NodeDto } from "api-client";
 import { WebGLTools } from "./WebGLTools.ts";
 import { ColorSchema } from "../../../../color/ColorSchema.ts";
@@ -6,10 +12,16 @@ import { Theme } from "../../../../../shared/theme/Theme.ts";
 import { Viewport } from "pixi-viewport";
 import { Subject } from "rxjs";
 import { smoothDamp } from "../shared/smoothDamp.ts";
-import { baseStrokeWidth, maxSpeed, smoothTime } from "../shared/consts.ts";
+import {
+  baseStrokeWidth,
+  interactionMoveThresholdPt,
+  maxSpeed,
+  smoothTime,
+} from "../shared/consts.ts";
 
 export class WebGLNode extends Container {
   private mouseLockedDelta: [number, number] | null = null;
+  private _mouseClickStartPositionHost: [number, number] | null = null;
   private _lockedIndicator: Graphics;
   private _node: NodeDto;
 
@@ -27,15 +39,23 @@ export class WebGLNode extends Container {
     $onGrabNode: Subject<WebGLNode>,
     $onNodeMoved: Subject<WebGLNode>,
     $onUngrabNode: Subject<WebGLNode>,
+    $onDisplayNodeData: Subject<WebGLNode>,
+    $onDoubleClickNode: Subject<WebGLNode>,
+    $onDisplayNodeDataWithModifier: Subject<WebGLNode>,
+    $onShowNodeContextMenu: Subject<{
+      node: WebGLNode;
+      position: [number, number];
+    }>,
   ) {
     super({ label: node.id });
     this._node = node;
-
-    this.position.set(node.position.x, node.position.y);
     this._vx = 0;
     this._vy = 0;
     this._tx = node.position.x;
     this._ty = node.position.y;
+    this._mouseClickStartPositionHost = null;
+
+    this.position.set(node.position.x, node.position.y);
 
     const circleStroke: Graphics = new Graphics();
     this.addChild(circleStroke);
@@ -45,34 +65,49 @@ export class WebGLNode extends Container {
     });
     circleStroke.eventMode = "dynamic";
     circleStroke.on("pointerdown", (event) => {
+      this._mouseClickStartPositionHost = [event.clientX, event.clientY];
       this.mouseLockedDelta = [
         event.getLocalPosition(viewPort).x - this.position.x,
         event.getLocalPosition(viewPort).y - this.position.y,
       ];
-      console.log(JSON.stringify(this.mouseLockedDelta));
       viewPort.pause = true;
-      $onGrabNode.next(this);
     });
-    circleStroke.on("pointerup", (event) => {
-      this.mouseLockedDelta = null;
+    const onPointerUp = (event: FederatedPointerEvent) => {
+      if (this._mouseClickStartPositionHost != null) {
+        $onDisplayNodeData.next(this);
+      } else {
+        $onUngrabNode.next(this);
+      }
       viewPort.pause = false;
-      $onUngrabNode.next(this);
-    });
-    circleStroke.on("pointerupoutside", (event) => {
       this.mouseLockedDelta = null;
-      viewPort.pause = false;
-      $onUngrabNode.next(this);
-    });
+      this._mouseClickStartPositionHost = null;
+    };
+    circleStroke.on("pointerup", onPointerUp);
+    circleStroke.on("pointerupoutside", onPointerUp);
+
     circleStroke.on("globalpointermove", (event) => {
-      if (this.mouseLockedDelta != null) {
-        this.moveTo(
-          [
-            event.getLocalPosition(viewPort).x - this.mouseLockedDelta[0],
-            event.getLocalPosition(viewPort).y - this.mouseLockedDelta[1],
-          ],
-          false,
-        );
-        $onNodeMoved.next(this);
+      if (
+        this._mouseClickStartPositionHost != null &&
+        this.distance(this._mouseClickStartPositionHost, [
+          event.clientX,
+          event.clientY,
+        ]) >= interactionMoveThresholdPt
+      ) {
+        $onGrabNode.next(this);
+        this._mouseClickStartPositionHost = null;
+      }
+
+      if (this._mouseClickStartPositionHost == null) {
+        if (this.mouseLockedDelta != null) {
+          this.moveTo(
+            [
+              event.getLocalPosition(viewPort).x - this.mouseLockedDelta[0],
+              event.getLocalPosition(viewPort).y - this.mouseLockedDelta[1],
+            ],
+            false,
+          );
+          $onNodeMoved.next(this);
+        }
       }
     });
     circleStroke.on("pointerover", () => {
@@ -80,6 +115,14 @@ export class WebGLNode extends Container {
     });
     circleStroke.on("pointerout", () => {
       nodeHoverCircle.visible = false;
+    });
+    circleStroke.on("rightclick", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      $onShowNodeContextMenu.next({
+        node: this,
+        position: [event.clientX, event.clientY],
+      });
     });
 
     const nodeCircle: Graphics = new Graphics();
@@ -177,6 +220,10 @@ export class WebGLNode extends Container {
     return this._node.radius;
   }
 
+  public get id(): string {
+    return this._node.id;
+  }
+
   public get positionT(): [number, number] {
     return [this.position.x, this.position.y];
   }
@@ -232,5 +279,12 @@ export class WebGLNode extends Container {
 
     ctx.setStrokeStyle({ width: width, color: color, alignment: 0 });
     ctx.stroke();
+  }
+
+  private distance(a: [number, number], b: [number, number]): number {
+    const dx = a[0] - b[0];
+    const dy = a[1] - b[1];
+
+    return Math.sqrt(dx * dx + dy * dy);
   }
 }
