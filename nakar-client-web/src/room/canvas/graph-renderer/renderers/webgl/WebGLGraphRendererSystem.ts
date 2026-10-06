@@ -1,5 +1,9 @@
 import { Application, Container } from "pixi.js";
-import { LiveCanvasGraphElementsDto, NodesMovedWsdto } from "api-client";
+import {
+  LiveCanvasGraphElementsDto,
+  NodesMovedWsdto,
+  SetNodeLocksWsdto,
+} from "api-client";
 import { ColorSchema } from "../../../../color/ColorSchema.ts";
 import { Viewport } from "pixi-viewport";
 import { WebGLNode } from "./WebGLNode.ts";
@@ -120,10 +124,25 @@ export class WebGLGraphRendererSystem {
 
   public nodesMoved(event: NodesMovedWsdto) {
     for (const pos of event.nodes) {
-      const node: WebGLNode = this._nodesContainer.getChildByLabel(
+      const node: WebGLNode | null = this._nodesContainer.getChildByLabel(
         pos.id,
-      ) as WebGLNode;
+      ) as WebGLNode | null;
+      if (node == null) {
+        continue;
+      }
       node.moveTo([pos.position.x, pos.position.y], true);
+    }
+  }
+
+  public setNodeLocks(event: SetNodeLocksWsdto): void {
+    for (const lock of event.locks) {
+      const node: WebGLNode | null = this._nodesContainer.getChildByLabel(
+        lock.id,
+      ) as WebGLNode | null;
+      if (node == null) {
+        continue;
+      }
+      node.setLocked(lock.locked);
     }
   }
 

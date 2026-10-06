@@ -3,6 +3,7 @@ import {
   Container,
   DestroyOptions,
   Graphics,
+  GraphicsContext,
   Renderer,
   Ticker,
 } from "pixi.js";
@@ -13,11 +14,12 @@ import { Theme } from "../../../../../shared/theme/Theme.ts";
 import { Viewport } from "pixi-viewport";
 import { Subject } from "rxjs";
 import { smoothDamp } from "../shared/smoothDamp.ts";
-import { maxSpeed, smoothTime } from "../shared/consts.ts";
+import { baseStrokeWidth, maxSpeed, smoothTime } from "../shared/consts.ts";
 
 export class WebGLNode extends Container {
   private mouseLockedDelta: [number, number] | null = null;
   private _ticker: Ticker;
+  private _lockedIndicator: Graphics;
 
   private _vx: number;
   private _vy: number;
@@ -91,15 +93,30 @@ export class WebGLNode extends Container {
     this.addChild(nodeCircle);
     nodeCircle.eventMode = "none";
     const nodeColor: ColorDto = this.getColorInformationOfNode(node, labels);
-    nodeCircle.circle(0, 0, node.radius - 2);
+    nodeCircle.circle(0, 0, node.radius - baseStrokeWidth);
     nodeCircle.fill({
       color: WebGLTools.getBackGroundColorOfColor(nodeColor, colorSchema),
     });
 
+    this._lockedIndicator = new Graphics();
+    this.addChild(this._lockedIndicator);
+    this._lockedIndicator.eventMode = "none";
+    this.drawDashedCircle(
+      this._lockedIndicator,
+      0,
+      0,
+      node.radius - baseStrokeWidth * 2,
+      10,
+      10,
+      WebGLTools.getTextColorOfColor(nodeColor, colorSchema),
+      baseStrokeWidth * 2,
+    );
+    this._lockedIndicator.visible = node.locked;
+
     const nodeHoverCircle: Graphics = new Graphics();
     nodeHoverCircle.eventMode = "none";
     this.addChild(nodeHoverCircle);
-    nodeHoverCircle.circle(0, 0, node.radius - 2);
+    nodeHoverCircle.circle(0, 0, node.radius - baseStrokeWidth);
     nodeHoverCircle.fill({
       color: "#000000",
       alpha: 0.5,
@@ -160,6 +177,10 @@ export class WebGLNode extends Container {
     }
   }
 
+  public setLocked(locked: boolean): void {
+    this._lockedIndicator.visible = locked;
+  }
+
   private getColorInformationOfNode(
     node: NodeDto,
     labels: LabelDto[],
@@ -181,5 +202,35 @@ export class WebGLNode extends Container {
 
   private _strokeColor(theme: Theme): string {
     return theme === "light" ? "#000000" : "#ffffff";
+  }
+
+  private drawDashedCircle(
+    ctx: Graphics,
+    cx: number,
+    cy: number,
+    r: number,
+    dash: number,
+    gap: number,
+    color: string,
+    width: number,
+  ) {
+    const circumference = 2 * Math.PI * r;
+    const segmentCount = Math.floor(circumference / (dash + gap));
+
+    for (let i = 0; i < segmentCount; i++) {
+      const startAngle = (i * (dash + gap)) / r;
+      const endAngle = startAngle + dash / r;
+
+      const x1 = cx + r * Math.cos(startAngle);
+      const y1 = cy + r * Math.sin(startAngle);
+      const x2 = cx + r * Math.cos(endAngle);
+      const y2 = cy + r * Math.sin(endAngle);
+
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+    }
+
+    ctx.setStrokeStyle({ width: width, color: color, alignment: 0 });
+    ctx.stroke();
   }
 }

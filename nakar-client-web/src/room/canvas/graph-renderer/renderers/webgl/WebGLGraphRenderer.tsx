@@ -51,6 +51,9 @@ export function WebGLGraphRenderer() {
               })
               .with({ type: "NodesMovedWsdto" }, (event) => {
                 webGLRenderer.nodesMoved(event);
+              })
+              .with({ type: "SetNodeLocksWsdto" }, (nodeLocks) => {
+                webGLRenderer.setNodeLocks(nodeLocks);
               });
           }),
           webGLRenderer.onGrabNode.subscribe((n) => {

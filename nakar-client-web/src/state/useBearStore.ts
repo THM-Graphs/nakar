@@ -28,6 +28,7 @@ import {
 } from "api-client";
 import { handleError } from "../shared/error/handleError.ts";
 import { SVGGraphRendererSystem } from "../room/canvas/graph-renderer/renderers/svg/SVGGraphRendererSystem.ts";
+import { WebGLGraphRendererSystem } from "../room/canvas/graph-renderer/renderers/webgl/WebGLGraphRendererSystem.ts";
 
 enableMapSet();
 
@@ -664,7 +665,10 @@ export const useBearStore = create<BearState>()(
               },
               renderer: {
                 current: null,
-                setCurrent: (newRenderer: SVGGraphRendererSystem | null) => {
+                setCurrent: (
+                  newRenderer:
+                    SVGGraphRendererSystem | WebGLGraphRendererSystem | null,
+                ) => {
                   set((s) => {
                     s.room.canvas.renderer.current = newRenderer;
                   });
