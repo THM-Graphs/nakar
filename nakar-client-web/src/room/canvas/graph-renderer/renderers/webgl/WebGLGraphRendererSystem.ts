@@ -59,6 +59,22 @@ export class WebGLGraphRendererSystem {
     _app.canvas.style.position = "absolute";
     _app.canvas.style.top = "0";
     _app.canvas.style.left = "0";
+
+    _app.ticker.add((ticker) => {
+      let nodesAreIdle: boolean = true;
+      for (const nodeContainer of this._nodesContainer.children) {
+        const node: WebGLNode = nodeContainer as WebGLNode;
+        node.tick(ticker.deltaMS);
+        nodesAreIdle &&= node.idle;
+      }
+      console.log(`Node idle: ${nodesAreIdle}`);
+      if (!nodesAreIdle) {
+        for (const edgeContainer of this._edgesContainer.children) {
+          const edge: WebGLEdge = edgeContainer as WebGLEdge;
+          edge.tick();
+        }
+      }
+    });
   }
 
   public get onGrabNode(): Observable<WebGLNode> {
@@ -76,14 +92,6 @@ export class WebGLGraphRendererSystem {
   }
 
   public loadGraphContent(elements: LiveCanvasGraphElementsDto): void {
-    for (const child of this._edgesContainer.children) {
-      const edge = child as WebGLEdge;
-      edge.clean();
-    }
-    for (const child of this._nodesContainer.children) {
-      const node = child as WebGLNode;
-      node.clean();
-    }
     this._edgesContainer.removeChildren();
     this._nodesContainer.removeChildren();
 
@@ -119,6 +127,7 @@ export class WebGLGraphRendererSystem {
         this._theme,
       );
       this._edgesContainer.addChild(webGLEdge);
+      webGLEdge.tick();
     }
   }
 

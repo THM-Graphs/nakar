@@ -1,12 +1,4 @@
-import {
-  BitmapText,
-  Container,
-  DestroyOptions,
-  Graphics,
-  GraphicsContext,
-  Renderer,
-  Ticker,
-} from "pixi.js";
+import { BitmapText, Container, Graphics, Ticker } from "pixi.js";
 import { ColorDto, LabelDto, NodeDto } from "api-client";
 import { WebGLTools } from "./WebGLTools.ts";
 import { ColorSchema } from "../../../../color/ColorSchema.ts";
@@ -18,7 +10,6 @@ import { baseStrokeWidth, maxSpeed, smoothTime } from "../shared/consts.ts";
 
 export class WebGLNode extends Container {
   private mouseLockedDelta: [number, number] | null = null;
-  private _ticker: Ticker;
   private _lockedIndicator: Graphics;
 
   private _vx: number;
@@ -135,12 +126,6 @@ export class WebGLNode extends Container {
     });
     myText.eventMode = "none";
     this.addChild(myText);
-
-    this._ticker = new Ticker();
-    this._ticker.add((t) => {
-      this.tick(t.deltaMS);
-    });
-    this._ticker.start();
   }
 
   public tick(deltaTime: number): void {
@@ -162,10 +147,6 @@ export class WebGLNode extends Container {
     );
   }
 
-  public clean(): void {
-    this._ticker.destroy();
-  }
-
   public moveTo(pos: [number, number], smooth: boolean): void {
     this._tx = pos[0];
     this._ty = pos[1];
@@ -179,6 +160,15 @@ export class WebGLNode extends Container {
 
   public setLocked(locked: boolean): void {
     this._lockedIndicator.visible = locked;
+  }
+
+  public get idle(): boolean {
+    return (
+      Math.floor(this.position.x) === Math.floor(this._tx) &&
+      Math.floor(this.position.y) === Math.floor(this._ty) &&
+      this._vx === 0 &&
+      this._vy === 0
+    );
   }
 
   private getColorInformationOfNode(

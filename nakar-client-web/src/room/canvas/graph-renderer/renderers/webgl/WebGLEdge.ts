@@ -15,8 +15,6 @@ export class WebGLEdge extends Container {
   private readonly _line: Graphics;
   private readonly _text: BitmapText;
 
-  private readonly _ticker: Ticker;
-
   public constructor(
     edge: EdgeDto,
     startNode: WebGLNode,
@@ -49,12 +47,6 @@ export class WebGLEdge extends Container {
     });
 
     this.addChild(this._text);
-
-    this._ticker = new Ticker();
-    this._ticker.add(() => {
-      this.tick();
-    });
-    this._ticker.start();
   }
 
   private getEdgeColor(
@@ -74,7 +66,7 @@ export class WebGLEdge extends Container {
       .exhaustive();
   }
 
-  private tick(): void {
+  public tick(): void {
     const startPoint: [number, number] = [
       this._startNode.position._x,
       this._startNode.position._y,
@@ -125,10 +117,6 @@ export class WebGLEdge extends Container {
 
     const angle = this.fixDegAngle(this.vectorAngleDeg(startPoint, endPoint));
     this._text.angle = angle;
-  }
-
-  public clean(): void {
-    this._ticker.destroy();
   }
 
   private perpendicularVector(
