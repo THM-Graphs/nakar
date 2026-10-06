@@ -26,6 +26,7 @@ export class WebGLNode extends Container {
   private _lockedIndicator: Graphics;
   private _node: NodeDto;
   private _selectedIndicator: Graphics;
+  private _textMask: Graphics | null;
 
   private _vx: number;
   private _vy: number;
@@ -56,6 +57,7 @@ export class WebGLNode extends Container {
     this._tx = node.position.x;
     this._ty = node.position.y;
     this._mouseClickStartPositionHost = null;
+    this._textMask = null;
 
     this.position.set(node.position.x, node.position.y);
 
@@ -121,9 +123,17 @@ export class WebGLNode extends Container {
     });
     circleStroke.on("pointerover", () => {
       nodeHoverCircle.visible = true;
+      if (this._textMask) {
+        myText.mask = null;
+        this._textMask.visible = false;
+      }
     });
     circleStroke.on("pointerout", () => {
       nodeHoverCircle.visible = false;
+      if (this._textMask) {
+        myText.mask = this._textMask;
+        this._textMask.visible = true;
+      }
     });
     circleStroke.on("rightclick", (event) => {
       event.preventDefault();
@@ -175,9 +185,25 @@ export class WebGLNode extends Container {
         fontSize: (node.radius * 2) / 6,
         fontWeight: "bold",
         fontFamily: "system-ui",
+        align: "center",
+        wordWrap: true,
+        wordWrapWidth: node.radius * 2,
+        breakWords: true,
       },
-      anchor: 0.5,
     });
+    if (myText.height > node.radius * 2) {
+      myText.anchor = 0;
+      myText.position.set(-node.radius, -node.radius);
+      this._textMask = new Graphics()
+        .rect(-node.radius, -node.radius, node.radius * 2, node.radius * 2)
+        .fill("#ffffff");
+      this._textMask.eventMode = "none";
+      myText.mask = this._textMask;
+      this.addChild(this._textMask);
+    } else {
+      myText.anchor = 0.5;
+      myText.position.set(0, 0);
+    }
     myText.eventMode = "none";
     this.addChild(myText);
 
