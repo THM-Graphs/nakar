@@ -11,6 +11,7 @@ import { baseStrokeWidth, maxSpeed, smoothTime } from "../shared/consts.ts";
 export class WebGLNode extends Container {
   private mouseLockedDelta: [number, number] | null = null;
   private _lockedIndicator: Graphics;
+  private _node: NodeDto;
 
   private _vx: number;
   private _vy: number;
@@ -28,6 +29,7 @@ export class WebGLNode extends Container {
     $onUngrabNode: Subject<WebGLNode>,
   ) {
     super({ label: node.id });
+    this._node = node;
 
     this.position.set(node.position.x, node.position.y);
     this._vx = 0;
@@ -118,7 +120,7 @@ export class WebGLNode extends Container {
       text: node.title,
       style: {
         fill: WebGLTools.getTextColorOfColor(nodeColor, colorSchema),
-        fontSize: (node.radius * 2) / 5,
+        fontSize: (node.radius * 2) / 6,
         fontWeight: "bold",
         fontFamily: "system-ui",
       },
@@ -169,6 +171,14 @@ export class WebGLNode extends Container {
       this._vx === 0 &&
       this._vy === 0
     );
+  }
+
+  public get radius(): number {
+    return this._node.radius;
+  }
+
+  public get positionT(): [number, number] {
+    return [this.position.x, this.position.y];
   }
 
   private getColorInformationOfNode(
