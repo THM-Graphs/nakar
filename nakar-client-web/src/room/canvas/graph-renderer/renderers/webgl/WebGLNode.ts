@@ -18,12 +18,14 @@ import {
   maxSpeed,
   smoothTime,
 } from "../shared/consts.ts";
+import { useBearStore } from "../../../../../state/useBearStore.ts";
 
 export class WebGLNode extends Container {
   private mouseLockedDelta: [number, number] | null = null;
   private _mouseClickStartPositionHost: [number, number] | null = null;
   private _lockedIndicator: Graphics;
   private _node: NodeDto;
+  private _selectedIndicator: Graphics;
 
   private _vx: number;
   private _vy: number;
@@ -65,6 +67,7 @@ export class WebGLNode extends Container {
     });
     circleStroke.eventMode = "dynamic";
     circleStroke.on("pointerdown", (event) => {
+      event.stopPropagation();
       this._mouseClickStartPositionHost = [event.clientX, event.clientY];
       this.mouseLockedDelta = [
         event.getLocalPosition(viewPort).x - this.position.x,
@@ -73,8 +76,13 @@ export class WebGLNode extends Container {
       viewPort.pause = true;
     });
     const onPointerUp = (event: FederatedPointerEvent) => {
+      event.stopPropagation();
       if (this._mouseClickStartPositionHost != null) {
-        $onDisplayNodeData.next(this);
+        if (WebGLTools.isMultiSelectKeyPressed(event)) {
+          $onDisplayNodeDataWithModifier.next(this);
+        } else {
+          $onDisplayNodeData.next(this);
+        }
       } else {
         $onUngrabNode.next(this);
       }
@@ -86,9 +94,10 @@ export class WebGLNode extends Container {
     circleStroke.on("pointerupoutside", onPointerUp);
 
     circleStroke.on("globalpointermove", (event) => {
+      event.stopPropagation();
       if (
         this._mouseClickStartPositionHost != null &&
-        this.distance(this._mouseClickStartPositionHost, [
+        this._distance(this._mouseClickStartPositionHost, [
           event.clientX,
           event.clientY,
         ]) >= interactionMoveThresholdPt
@@ -171,6 +180,15 @@ export class WebGLNode extends Container {
     });
     myText.eventMode = "none";
     this.addChild(myText);
+
+    this._selectedIndicator = new Graphics()
+      .circle(0, 0, node.radius + baseStrokeWidth * 6)
+      .fill({ color: "#ff00ff", alpha: 0.5 });
+    this._selectedIndicator.eventMode = "none";
+    this._selectedIndicator.visible = useBearStore
+      .getState()
+      .room.panels.inspector.element.includes(node.id);
+    this.addChild(this._selectedIndicator);
   }
 
   public tick(deltaTime: number): void {
@@ -228,6 +246,10 @@ export class WebGLNode extends Container {
     return [this.position.x, this.position.y];
   }
 
+  public setSelected(selected: boolean): void {
+    this._selectedIndicator.visible = selected;
+  }
+
   private getColorInformationOfNode(
     node: NodeDto,
     labels: LabelDto[],
@@ -281,7 +303,7 @@ export class WebGLNode extends Container {
     ctx.stroke();
   }
 
-  private distance(a: [number, number], b: [number, number]): number {
+  private _distance(a: [number, number], b: [number, number]): number {
     const dx = a[0] - b[0];
     const dy = a[1] - b[1];
 

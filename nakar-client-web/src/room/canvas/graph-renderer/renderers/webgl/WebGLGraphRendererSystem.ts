@@ -1,4 +1,4 @@
-import { Application, Container } from "pixi.js";
+import { Application, Container, FederatedPointerEvent } from "pixi.js";
 import {
   LiveCanvasGraphElementsDto,
   NodesMovedWsdto,
@@ -10,7 +10,8 @@ import { WebGLNode } from "./WebGLNode.ts";
 import { WebGLEdge } from "./WebGLEdge.ts";
 import { Theme } from "../../../../../shared/theme/Theme.ts";
 import { Observable, Subject, throttleTime } from "rxjs";
-import { outputFps } from "../shared/consts.ts";
+import { interactionMoveThresholdPt, outputFps } from "../shared/consts.ts";
+import { WebGLTools } from "./WebGLTools.ts";
 
 const onlyUpdateEdgesOnNodePositionChanges: boolean = false;
 
@@ -37,6 +38,8 @@ export class WebGLGraphRendererSystem {
     position: [number, number];
   }>;
 
+  private _mouseClickStartPositionHost: [number, number] | null = null;
+
   public constructor(
     private _app: Application,
     private _colorSchema: ColorSchema,
@@ -53,6 +56,7 @@ export class WebGLGraphRendererSystem {
     this.$onDeselectAll = new Subject();
     this.$onShowNodeContextMenu = new Subject();
     this.$onShowEdgeContextMenu = new Subject();
+    this._mouseClickStartPositionHost = null;
 
     this.enableDebug(this._app);
 
@@ -113,6 +117,33 @@ export class WebGLGraphRendererSystem {
           const edge: WebGLEdge = edgeContainer as WebGLEdge;
           edge.tick();
         }
+      }
+    });
+
+    viewport.on("pointerdown", (event) => {
+      this._mouseClickStartPositionHost = [event.clientX, event.clientY];
+    });
+    const onPointerUp = (event: FederatedPointerEvent) => {
+      if (
+        this._mouseClickStartPositionHost != null &&
+        !WebGLTools.isMultiSelectKeyPressed(event)
+      ) {
+        this.$onDeselectAll.next();
+      }
+      this._mouseClickStartPositionHost = null;
+    };
+    viewport.on("pointerup", onPointerUp);
+    viewport.on("pointerupoutside", onPointerUp);
+
+    viewport.on("globalpointermove", (event) => {
+      if (
+        this._mouseClickStartPositionHost != null &&
+        this._distance(this._mouseClickStartPositionHost, [
+          event.clientX,
+          event.clientY,
+        ]) >= interactionMoveThresholdPt
+      ) {
+        this._mouseClickStartPositionHost = null;
       }
     });
   }
@@ -240,6 +271,17 @@ export class WebGLGraphRendererSystem {
     }
   }
 
+  public updateSelectedElements(selectedElements: string[]): void {
+    for (const child of this._nodesContainer.children) {
+      const node = child as WebGLNode;
+      node.setSelected(selectedElements.includes(node.id));
+    }
+    for (const child of this._edgesContainer.children) {
+      const edge = child as WebGLEdge;
+      edge.setSelected(selectedElements.includes(edge.id));
+    }
+  }
+
   public destroy(): void {
     this._app.destroy(true, true);
   }
@@ -248,5 +290,12 @@ export class WebGLGraphRendererSystem {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-expect-error
     globalThis.__PIXI_APP__ = app;
+  }
+
+  private _distance(a: [number, number], b: [number, number]): number {
+    const dx = a[0] - b[0];
+    const dy = a[1] - b[1];
+
+    return Math.sqrt(dx * dx + dy * dy);
   }
 }

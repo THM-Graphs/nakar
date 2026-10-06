@@ -1,6 +1,7 @@
 import { ColorDto } from "api-client";
 import { ColorSchema } from "../../../../color/ColorSchema.ts";
 import { match } from "ts-pattern";
+import { isMacOS } from "../../../../../shared/dom/isMacOS.ts";
 
 export class WebGLTools {
   public static getBackGroundColorOfColor(
@@ -29,5 +30,11 @@ export class WebGLTools {
         return c.textColor;
       })
       .exhaustive();
+  }
+
+  public static isMultiSelectKeyPressed(
+    event: MouseEvent | PointerEvent,
+  ): boolean {
+    return isMacOS() ? event.metaKey : event.ctrlKey;
   }
 }

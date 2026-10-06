@@ -8,6 +8,8 @@ import { SVGGraphRendererLink } from "../svg/SVGGraphRendererLink.ts";
 import { SVGGraphRendererNode } from "../svg/SVGGraphRendererNode.ts";
 import { baseStrokeWidth } from "../shared/consts.ts";
 import { Subject } from "rxjs";
+import { useBearStore } from "../../../../../state/useBearStore.ts";
+import { WebGLTools } from "./WebGLTools.ts";
 
 export class WebGLEdge extends Container {
   private readonly _edge: EdgeDto;
@@ -22,6 +24,7 @@ export class WebGLEdge extends Container {
   private readonly _textBg: Graphics;
 
   private _hovered: boolean;
+  private _selected: boolean;
 
   public constructor(
     edge: EdgeDto,
@@ -44,6 +47,9 @@ export class WebGLEdge extends Container {
     this._colorSchema = colorSchema;
     this._theme = theme;
     this._hovered = false;
+    this._selected = useBearStore
+      .getState()
+      .room.panels.inspector.element.includes(edge.id);
 
     this._line = new Graphics();
     this._line.eventMode = "dynamic";
@@ -64,7 +70,7 @@ export class WebGLEdge extends Container {
         ? `${edge.type} (${edge.clusterSize.toString()})`
         : edge.type,
       style: {
-        fill: this._textColor(theme),
+        fill: "#ffffff",
         fontSize: 10,
         fontWeight: "bold",
         fontFamily: "system-ui",
@@ -97,10 +103,19 @@ export class WebGLEdge extends Container {
       this._hovered = false;
       this.tick();
     });
-    this.on("pointertap", () => {
-      $onDisplayLinkData.next(this);
+    this.on("pointerdown", (event) => {
+      event.stopPropagation();
+    });
+    this.on("pointertap", (event) => {
+      event.stopPropagation();
+      if (WebGLTools.isMultiSelectKeyPressed(event)) {
+        $onDisplayLinkDataWithModifier.next(this);
+      } else {
+        $onDisplayLinkData.next(this);
+      }
     });
     this.on("rightclick", (event) => {
+      event.stopPropagation();
       $onShowEdgeContextMenu.next({
         edge: this,
         position: [event.clientX, event.clientY],
@@ -120,6 +135,9 @@ export class WebGLEdge extends Container {
     if (this._hovered) {
       return "#808080";
     }
+    if (this._selected) {
+      return "#ff00ff";
+    }
     if (colorDto == null) {
       return this._strokeColor(theme);
     }
@@ -128,6 +146,26 @@ export class WebGLEdge extends Container {
       .with({ type: "ColorCustomDto" }, (c) => c.backgroundColor)
       .with({ type: "ColorPresetDto" }, (c) =>
         colorSchema.getBackgroundColor(c.index),
+      )
+      .exhaustive();
+  }
+
+  private getEdgeTextColor(
+    colorDto: ColorDto | null,
+    colorSchema: ColorSchema,
+  ): string {
+    if (this._selected) {
+      return "#ffffff";
+    }
+
+    if (colorDto == null) {
+      return this._theme === "dark" ? "#000000" : "#ffffff";
+    }
+
+    return match(colorDto.color)
+      .with({ type: "ColorCustomDto" }, (c) => c.textColor)
+      .with({ type: "ColorPresetDto" }, (c) =>
+        colorSchema.getTextColor(c.index),
       )
       .exhaustive();
   }
@@ -198,15 +236,21 @@ export class WebGLEdge extends Container {
       });
 
     this._text.position.set(center[0], center[1]);
+    this._text.tint = this.getEdgeTextColor(
+      this._edge.customColor,
+      this._colorSchema,
+    );
     this._textBg.position.set(center[0], center[1]);
     const angle = this.fixDegAngle(
       this.vectorAngleDeg(this._startNode.positionT, this._endNode.positionT),
     );
     this._text.angle = angle;
     this._textBg.angle = angle;
-    this._textBg.tint = this._hovered
-      ? "#808080"
-      : this._strokeColor(this._theme);
+    this._textBg.tint = this.getEdgeColor(
+      this._edge.customColor,
+      this._colorSchema,
+      this._theme,
+    );
 
     const arrowPosition = this.pointOnRadius(this._endNode, center, 0);
     this._arrow.position.set(arrowPosition[0], arrowPosition[1]);
@@ -219,6 +263,11 @@ export class WebGLEdge extends Container {
       this._colorSchema,
       this._theme,
     );
+  }
+
+  public setSelected(selected: boolean): void {
+    this._selected = selected;
+    this.tick();
   }
 
   private perpendicularVector(
@@ -246,10 +295,6 @@ export class WebGLEdge extends Container {
 
   private _strokeColor(theme: Theme): string {
     return theme === "light" ? "#000000" : "#ffffff";
-  }
-
-  private _textColor(theme: Theme): string {
-    return theme === "light" ? "#ffffff" : "#000000";
   }
 
   private _closestPointsOnNodes(): [[number, number], [number, number]] {

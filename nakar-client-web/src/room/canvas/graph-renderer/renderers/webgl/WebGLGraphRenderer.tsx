@@ -146,6 +146,14 @@ export function WebGLGraphRenderer() {
               position: p.position,
             });
           }),
+          {
+            unsubscribe: useBearStore.subscribe(
+              (s) => s.room.panels.inspector.element,
+              (elements) => {
+                webGLRenderer.updateSelectedElements(elements);
+              },
+            ),
+          },
         );
       })
       .catch(console.error);
