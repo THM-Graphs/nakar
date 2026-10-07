@@ -56,6 +56,7 @@ export function SVGGraphRenderer() {
           })
           .with({ type: "CanvasDataReadyWsdto" }, (event) => {
             _graphRenderer.loadGraphContent(event.data.elements);
+            _graphRenderer.loadUserCursors(event.data.metaData.users);
           })
           .with({ type: "CanvasMetaDataChangedWsdto" }, (event) => {
             _graphRenderer.loadUserCursors(event.metaData.users);
