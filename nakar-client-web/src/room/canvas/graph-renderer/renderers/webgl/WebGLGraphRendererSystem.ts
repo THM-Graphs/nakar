@@ -59,6 +59,7 @@ export class WebGLGraphRendererSystem {
     this._mouseClickStartPositionHost = null;
 
     this.enableDebug(this._app);
+    this._app.ticker.maxFPS = 60;
 
     this._app.canvas.addEventListener("contextmenu", (e) => {
       e.preventDefault();
