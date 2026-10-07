@@ -86,7 +86,11 @@ export class WebGLNode extends Container {
         if (isMultiSelectKeyPressed(event)) {
           $onDisplayNodeDataWithModifier.next(this);
         } else {
-          $onDisplayNodeData.next(this);
+          if (event.pointerType === "mouse" && event.button === 2) {
+            // Do nothing because right click will be handled otherwise
+          } else {
+            $onDisplayNodeData.next(this);
+          }
         }
       } else {
         $onUngrabNode.next(this);
@@ -151,7 +155,7 @@ export class WebGLNode extends Container {
     this.addChild(nodeCircle);
     nodeCircle.eventMode = "none";
     const nodeColor: ColorDto = this.getColorInformationOfNode(node, labels);
-    nodeCircle.circle(0, 0, node.radius - baseStrokeWidth);
+    nodeCircle.circle(0, 0, node.radius - baseStrokeWidth * (node.radius / 40));
     nodeCircle.fill({
       color: getBackGroundColorOfColor(nodeColor, colorSchema),
     });
@@ -163,11 +167,11 @@ export class WebGLNode extends Container {
       this._lockedIndicator,
       0,
       0,
-      node.radius - baseStrokeWidth * 2,
-      10,
-      10,
+      node.radius - baseStrokeWidth * (node.radius / 40) * 2,
+      5 * (node.radius / 40),
+      5 * (node.radius / 40),
       getTextColorOfColor(nodeColor, colorSchema),
-      baseStrokeWidth * 2,
+      baseStrokeWidth * (node.radius / 40) * 2,
     );
     this._lockedIndicator.visible = node.locked;
 
