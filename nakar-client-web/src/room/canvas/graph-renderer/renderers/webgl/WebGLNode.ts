@@ -23,6 +23,8 @@ import {
   getTextColorOfColor,
   isMultiSelectKeyPressed,
 } from "./WebGLTools.ts";
+import { WebGLClusterSizeIndicator } from "./WebGLClusterSizeIndicator.ts";
+import { WebGLNodeNoteIndicator } from "./WebGLNodeNoteIndicator.ts";
 
 export class WebGLNode extends Container {
   private mouseLockedDelta: [number, number] | null = null;
@@ -68,8 +70,33 @@ export class WebGLNode extends Container {
     const circleStroke: Graphics = new Graphics();
     this.addChild(circleStroke);
     circleStroke.circle(0, 0, node.radius);
-    circleStroke.fill({
+    const nodeColors: ColorDto[] = this.getColorsInformationOfNode(
+      node,
+      labels,
+    );
+    if (nodeColors.length === 1) {
+      circleStroke.fill({
+        color: getBackGroundColorOfColor(nodeColors[0], colorSchema),
+      });
+    } else {
+      const gradient = new FillGradient({
+        type: "linear",
+        start: { x: 0, y: 0 },
+        end: { x: 1, y: 0 },
+        colorStops: nodeColors.map((nodeColor, index) => {
+          const offset = index / (nodeColors.length - 1);
+          return {
+            offset: offset,
+            color: getBackGroundColorOfColor(nodeColor, colorSchema),
+          };
+        }),
+      });
+      circleStroke.fill(gradient);
+    }
+    circleStroke.stroke({
       color: this._strokeColor(theme),
+      width: (node.radius / 40) * baseStrokeWidth,
+      alignment: 1,
     });
     circleStroke.eventMode = "dynamic";
     circleStroke.on("pointerdown", (event) => {
@@ -132,14 +159,14 @@ export class WebGLNode extends Container {
     circleStroke.on("pointerover", () => {
       nodeHoverCircle.visible = true;
       if (this._textMask) {
-        myText.mask = null;
+        titleText.mask = null;
         this._textMask.visible = false;
       }
     });
     circleStroke.on("pointerout", () => {
       nodeHoverCircle.visible = false;
       if (this._textMask) {
-        myText.mask = this._textMask;
+        titleText.mask = this._textMask;
         this._textMask.visible = true;
       }
     });
@@ -151,34 +178,6 @@ export class WebGLNode extends Container {
         position: [event.clientX, event.clientY],
       });
     });
-
-    const nodeCircle: Graphics = new Graphics();
-    this.addChild(nodeCircle);
-    nodeCircle.eventMode = "none";
-    const nodeColors: ColorDto[] = this.getColorsInformationOfNode(
-      node,
-      labels,
-    );
-    nodeCircle.circle(0, 0, node.radius - baseStrokeWidth * (node.radius / 40));
-    if (nodeColors.length === 1) {
-      nodeCircle.fill({
-        color: getBackGroundColorOfColor(nodeColors[0], colorSchema),
-      });
-    } else {
-      const gradient = new FillGradient({
-        type: "linear",
-        start: { x: 0, y: 0 },
-        end: { x: 1, y: 0 },
-        colorStops: nodeColors.map((nodeColor, index) => {
-          const offset = index / (nodeColors.length - 1);
-          return {
-            offset: offset,
-            color: getBackGroundColorOfColor(nodeColor, colorSchema),
-          };
-        }),
-      });
-      nodeCircle.fill(gradient);
-    }
 
     this._lockedIndicator = new Graphics();
     this.addChild(this._lockedIndicator);
@@ -205,7 +204,7 @@ export class WebGLNode extends Container {
     });
     nodeHoverCircle.visible = false;
 
-    const myText = new BitmapText({
+    const titleText = new BitmapText({
       text: node.title,
       style: {
         fill: getTextColorOfColor(nodeColors[0], colorSchema),
@@ -218,24 +217,56 @@ export class WebGLNode extends Container {
         breakWords: true,
       },
     });
-    if (myText.height > node.radius * 2) {
-      myText.anchor = 0;
-      myText.position.set(-node.radius, -node.radius);
+    if (titleText.height > node.radius * 2) {
+      titleText.anchor = 0;
+      titleText.position.set(-node.radius, -node.radius);
       this._textMask = new Graphics()
         .rect(-node.radius, -node.radius, node.radius * 2, node.radius * 2)
         .fill("#ffffff");
       this._textMask.eventMode = "none";
-      myText.mask = this._textMask;
+      titleText.mask = this._textMask;
       this.addChild(this._textMask);
     } else {
-      myText.anchor = 0.5;
-      myText.position.set(0, 0);
+      titleText.anchor = 0.5;
+      titleText.position.set(0, 0);
     }
-    myText.eventMode = "none";
-    this.addChild(myText);
+    titleText.eventMode = "none";
+    this.addChild(titleText);
+
+    if (node.isCluster) {
+      const outerCircle = new Graphics()
+        .circle(0, 0, node.radius + (node.radius / 40) * 6)
+        .stroke({
+          color: getBackGroundColorOfColor(nodeColors[0], colorSchema),
+          width: (node.radius / 40) * 8,
+        });
+      outerCircle.eventMode = "none";
+      this.addChild(outerCircle);
+
+      const clusterSizseIndicator = new WebGLClusterSizeIndicator({
+        clusterSize: node.clusterSize,
+        scale: node.radius / 40,
+        fill: getBackGroundColorOfColor(nodeColors[0], colorSchema),
+        textColor: getTextColorOfColor(nodeColors[0], colorSchema),
+        stroke: this._strokeColor(theme),
+      });
+      clusterSizseIndicator.position.y = node.radius;
+      this.addChild(clusterSizseIndicator);
+    }
+
+    if (node.notes.length > 0) {
+      const noteIndicator = new WebGLNodeNoteIndicator({
+        scale: node.radius / 40,
+        backgroundColor: getBackGroundColorOfColor(nodeColors[0], colorSchema),
+        textColor: getTextColorOfColor(nodeColors[0], colorSchema),
+        strokeColor: this._strokeColor(theme),
+      });
+      noteIndicator.position.y = -node.radius;
+      this.addChild(noteIndicator);
+    }
 
     this._selectedIndicator = new Graphics()
-      .circle(0, 0, node.radius + baseStrokeWidth * 6)
+      .circle(0, 0, node.radius + baseStrokeWidth * (node.radius / 40) * 6)
       .fill({ color: "#ff00ff", alpha: 0.5 });
     this._selectedIndicator.eventMode = "none";
     this._selectedIndicator.visible = useBearStore
