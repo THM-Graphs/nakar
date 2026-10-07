@@ -20,6 +20,8 @@ export class WebGLGraphRendererSystemFactory {
       resizeTo: window,
       antialias: true,
       backgroundAlpha: 0,
+      autoDensity: true,
+      resolution: 2,
     });
 
     if (this._destroyed) {

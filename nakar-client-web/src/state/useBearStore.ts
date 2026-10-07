@@ -673,7 +673,7 @@ export const useBearStore = create<BearState>()(
                     s.room.canvas.renderer.current = newRenderer;
                   });
                 },
-                mode: "webgl",
+                mode: "svg",
                 setMode: (
                   newMode: BearState["room"]["canvas"]["renderer"]["mode"],
                 ) => {
@@ -745,8 +745,8 @@ export const useBearStore = create<BearState>()(
           state.start.myRooms = storage.myRooms ?? [];
           state.room.canvas.renderer.mode = match(storage.canvasMode)
             .returnType<BearState["room"]["canvas"]["renderer"]["mode"]>()
-            .with("svg", () => "svg")
-            .otherwise(() => "webgl");
+            .with("webgl", () => "webgl")
+            .otherwise(() => "svg");
           return state;
         },
         onRehydrateStorage: () => {

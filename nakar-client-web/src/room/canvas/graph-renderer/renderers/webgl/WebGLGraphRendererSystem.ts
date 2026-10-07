@@ -79,7 +79,6 @@ export class WebGLGraphRendererSystem {
         const contentBoxSize = entry.contentBoxSize[0];
         viewport.screenWidth = contentBoxSize.inlineSize;
         viewport.screenHeight = contentBoxSize.blockSize;
-        console.log([contentBoxSize.inlineSize, contentBoxSize.blockSize]);
       }
     });
     resizeObserver.observe(this._app.canvas);
@@ -102,7 +101,7 @@ export class WebGLGraphRendererSystem {
     _app.canvas.style.left = "0";
     viewport.position.set(
       this._app.canvas.clientWidth / 2,
-      this._app.canvas.clientHeight,
+      this._app.canvas.clientHeight / 2,
     );
 
     _app.ticker.add((ticker) => {
