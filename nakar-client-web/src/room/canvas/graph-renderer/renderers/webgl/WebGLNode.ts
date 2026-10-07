@@ -3,10 +3,8 @@ import {
   Container,
   FederatedPointerEvent,
   Graphics,
-  Ticker,
 } from "pixi.js";
 import { ColorDto, LabelDto, NodeDto } from "api-client";
-import { WebGLTools } from "./WebGLTools.ts";
 import { ColorSchema } from "../../../../color/ColorSchema.ts";
 import { Theme } from "../../../../../shared/theme/Theme.ts";
 import { Viewport } from "pixi-viewport";
@@ -19,6 +17,11 @@ import {
   smoothTime,
 } from "../shared/consts.ts";
 import { useBearStore } from "../../../../../state/useBearStore.ts";
+import {
+  getBackGroundColorOfColor,
+  getTextColorOfColor,
+  isMultiSelectKeyPressed,
+} from "./WebGLTools.ts";
 
 export class WebGLNode extends Container {
   private mouseLockedDelta: [number, number] | null = null;
@@ -80,7 +83,7 @@ export class WebGLNode extends Container {
     const onPointerUp = (event: FederatedPointerEvent) => {
       event.stopPropagation();
       if (this._mouseClickStartPositionHost != null) {
-        if (WebGLTools.isMultiSelectKeyPressed(event)) {
+        if (isMultiSelectKeyPressed(event)) {
           $onDisplayNodeDataWithModifier.next(this);
         } else {
           $onDisplayNodeData.next(this);
@@ -150,7 +153,7 @@ export class WebGLNode extends Container {
     const nodeColor: ColorDto = this.getColorInformationOfNode(node, labels);
     nodeCircle.circle(0, 0, node.radius - baseStrokeWidth);
     nodeCircle.fill({
-      color: WebGLTools.getBackGroundColorOfColor(nodeColor, colorSchema),
+      color: getBackGroundColorOfColor(nodeColor, colorSchema),
     });
 
     this._lockedIndicator = new Graphics();
@@ -163,7 +166,7 @@ export class WebGLNode extends Container {
       node.radius - baseStrokeWidth * 2,
       10,
       10,
-      WebGLTools.getTextColorOfColor(nodeColor, colorSchema),
+      getTextColorOfColor(nodeColor, colorSchema),
       baseStrokeWidth * 2,
     );
     this._lockedIndicator.visible = node.locked;
@@ -181,7 +184,7 @@ export class WebGLNode extends Container {
     const myText = new BitmapText({
       text: node.title,
       style: {
-        fill: WebGLTools.getTextColorOfColor(nodeColor, colorSchema),
+        fill: getTextColorOfColor(nodeColor, colorSchema),
         fontSize: (node.radius * 2) / 6,
         fontWeight: "bold",
         fontFamily: "system-ui",

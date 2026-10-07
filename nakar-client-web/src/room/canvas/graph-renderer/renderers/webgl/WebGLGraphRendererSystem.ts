@@ -11,7 +11,7 @@ import { WebGLEdge } from "./WebGLEdge.ts";
 import { Theme } from "../../../../../shared/theme/Theme.ts";
 import { Observable, Subject, throttleTime } from "rxjs";
 import { interactionMoveThresholdPt, outputFps } from "../shared/consts.ts";
-import { WebGLTools } from "./WebGLTools.ts";
+import { isMultiSelectKeyPressed } from "./WebGLTools.ts";
 
 const onlyUpdateEdgesOnNodePositionChanges: boolean = false;
 
@@ -126,7 +126,7 @@ export class WebGLGraphRendererSystem {
     const onPointerUp = (event: FederatedPointerEvent) => {
       if (
         this._mouseClickStartPositionHost != null &&
-        !WebGLTools.isMultiSelectKeyPressed(event)
+        !isMultiSelectKeyPressed(event)
       ) {
         this.$onDeselectAll.next();
       }

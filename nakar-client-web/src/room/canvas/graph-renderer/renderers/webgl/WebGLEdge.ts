@@ -1,15 +1,12 @@
-import { BitmapText, Container, Graphics, Ticker } from "pixi.js";
+import { BitmapText, Container, Graphics } from "pixi.js";
 import { ColorDto, EdgeDto } from "api-client";
 import { WebGLNode } from "./WebGLNode.ts";
 import { match } from "ts-pattern";
 import { ColorSchema } from "../../../../color/ColorSchema.ts";
 import { Theme } from "../../../../../shared/theme/Theme.ts";
-import { SVGGraphRendererLink } from "../svg/SVGGraphRendererLink.ts";
-import { SVGGraphRendererNode } from "../svg/SVGGraphRendererNode.ts";
-import { baseStrokeWidth } from "../shared/consts.ts";
 import { Subject } from "rxjs";
 import { useBearStore } from "../../../../../state/useBearStore.ts";
-import { WebGLTools } from "./WebGLTools.ts";
+import { isMultiSelectKeyPressed } from "./WebGLTools.ts";
 
 export class WebGLEdge extends Container {
   private readonly _edge: EdgeDto;
@@ -108,7 +105,7 @@ export class WebGLEdge extends Container {
     });
     this.on("pointertap", (event) => {
       event.stopPropagation();
-      if (WebGLTools.isMultiSelectKeyPressed(event)) {
+      if (isMultiSelectKeyPressed(event)) {
         $onDisplayLinkDataWithModifier.next(this);
       } else {
         $onDisplayLinkData.next(this);
@@ -178,12 +175,12 @@ export class WebGLEdge extends Container {
 
     const curvePush = 15;
 
-    let startPoint: [number, number] = this.pointOnRadius(
+    const startPoint: [number, number] = this.pointOnRadius(
       this._startNode,
       this._endNode.positionT,
       0,
     );
-    let endPoint: [number, number] = this.pointOnRadius(
+    const endPoint: [number, number] = this.pointOnRadius(
       this._endNode,
       this._startNode.positionT,
       this._edge.width * 3,
@@ -209,7 +206,7 @@ export class WebGLEdge extends Container {
       this._edge.width * 3,
     );
 
-    let controlPoint: [number, number] = [
+    const controlPoint: [number, number] = [
       2 * center[0] -
         (ofsettedStartOnStartNode[0] + offsettedEndOnEndNode[0]) / 2,
       2 * center[1] -
