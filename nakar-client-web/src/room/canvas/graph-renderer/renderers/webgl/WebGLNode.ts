@@ -2,6 +2,7 @@ import {
   BitmapText,
   Container,
   FederatedPointerEvent,
+  FillGradient,
   Graphics,
 } from "pixi.js";
 import { ColorDto, LabelDto, NodeDto } from "api-client";
@@ -154,11 +155,30 @@ export class WebGLNode extends Container {
     const nodeCircle: Graphics = new Graphics();
     this.addChild(nodeCircle);
     nodeCircle.eventMode = "none";
-    const nodeColor: ColorDto = this.getColorInformationOfNode(node, labels);
+    const nodeColors: ColorDto[] = this.getColorsInformationOfNode(
+      node,
+      labels,
+    );
     nodeCircle.circle(0, 0, node.radius - baseStrokeWidth * (node.radius / 40));
-    nodeCircle.fill({
-      color: getBackGroundColorOfColor(nodeColor, colorSchema),
-    });
+    if (nodeColors.length === 1) {
+      nodeCircle.fill({
+        color: getBackGroundColorOfColor(nodeColors[0], colorSchema),
+      });
+    } else {
+      const gradient = new FillGradient({
+        type: "linear",
+        start: { x: 0, y: 0 },
+        end: { x: 1, y: 0 },
+        colorStops: nodeColors.map((nodeColor, index) => {
+          const offset = index / (nodeColors.length - 1);
+          return {
+            offset: offset,
+            color: getBackGroundColorOfColor(nodeColor, colorSchema),
+          };
+        }),
+      });
+      nodeCircle.fill(gradient);
+    }
 
     this._lockedIndicator = new Graphics();
     this.addChild(this._lockedIndicator);
@@ -170,7 +190,7 @@ export class WebGLNode extends Container {
       node.radius - baseStrokeWidth * (node.radius / 40) * 2,
       5 * (node.radius / 40),
       5 * (node.radius / 40),
-      getTextColorOfColor(nodeColor, colorSchema),
+      getTextColorOfColor(nodeColors[0], colorSchema),
       baseStrokeWidth * (node.radius / 40) * 2,
     );
     this._lockedIndicator.visible = node.locked;
@@ -188,7 +208,7 @@ export class WebGLNode extends Container {
     const myText = new BitmapText({
       text: node.title,
       style: {
-        fill: getTextColorOfColor(nodeColor, colorSchema),
+        fill: getTextColorOfColor(nodeColors[0], colorSchema),
         fontSize: (node.radius * 2) / 6,
         fontWeight: "bold",
         fontFamily: "system-ui",
@@ -283,23 +303,32 @@ export class WebGLNode extends Container {
     this._selectedIndicator.visible = selected;
   }
 
-  private getColorInformationOfNode(
+  private getColorsInformationOfNode(
     node: NodeDto,
     labels: LabelDto[],
-  ): ColorDto {
+  ): ColorDto[] {
     const fallbackColor: ColorDto = {
       color: { type: "ColorPresetDto", index: 0 },
     };
     if (node.labels.length === 0) {
-      return fallbackColor;
+      return [fallbackColor];
     }
-    const firstLabelOfNode: string = node.labels[0];
-    const label: LabelDto | null =
-      labels.find((label) => label.label === firstLabelOfNode) ?? null;
-    if (label == null) {
-      return fallbackColor;
+
+    const colors: ColorDto[] = [];
+    for (const labelName of node.labels) {
+      const label: LabelDto | null =
+        labels.find((label) => label.label === labelName) ?? null;
+      if (label == null) {
+        continue;
+      }
+      colors.push(label.color);
     }
-    return label.color;
+
+    if (colors.length === 0) {
+      return [fallbackColor];
+    }
+
+    return colors;
   }
 
   private _strokeColor(theme: Theme): string {
