@@ -2,7 +2,9 @@ import { Application, Container, FederatedPointerEvent } from "pixi.js";
 import {
   LiveCanvasGraphElementsDto,
   NodesMovedWsdto,
+  PositionDto,
   SetNodeLocksWsdto,
+  UserPreviewDto,
 } from "api-client";
 import { ColorSchema } from "../../../../color/ColorSchema.ts";
 import { Viewport } from "pixi-viewport";
@@ -12,12 +14,14 @@ import { Theme } from "../../../../../shared/theme/Theme.ts";
 import { Observable, Subject, throttleTime } from "rxjs";
 import { interactionMoveThresholdPt, outputFps } from "../shared/consts.ts";
 import { isMultiSelectKeyPressed } from "./WebGLTools.ts";
+import { WebGLUserCursor } from "./WebGLUserCursor.ts";
 
 const onlyUpdateEdgesOnNodePositionChanges: boolean = false;
 
 export class WebGLGraphRendererSystem {
   private _nodesContainer: Container;
   private _edgesContainer: Container;
+  private _userCursorsContainer: Container;
   private _viewPort: Viewport;
 
   private $onGrabNode: Subject<WebGLNode>;
@@ -92,6 +96,11 @@ export class WebGLGraphRendererSystem {
     this._nodesContainer = nodesContainer;
     viewport.addChild(nodesContainer);
 
+    this._userCursorsContainer = new Container({
+      label: "user-cursors-container",
+    });
+    viewport.addChild(this._userCursorsContainer);
+
     // Append the application canvas to the document body
     document.body.appendChild(_app.canvas);
     _app.canvas.addEventListener("scroll", (e) => {
@@ -117,6 +126,12 @@ export class WebGLGraphRendererSystem {
           const edge: WebGLEdge = edgeContainer as WebGLEdge;
           edge.tick();
         }
+      }
+
+      for (const userCursorContainer of this._userCursorsContainer.children) {
+        const userCursor: WebGLUserCursor =
+          userCursorContainer as WebGLUserCursor;
+        userCursor.tick(ticker.deltaMS);
       }
     });
 
@@ -284,6 +299,31 @@ export class WebGLGraphRendererSystem {
 
   public destroy(): void {
     this._app.destroy(true, true);
+  }
+
+  public loadUserCursors(users: UserPreviewDto[]): void {
+    this._userCursorsContainer.removeChildren();
+
+    for (const user of users) {
+      const userCursor = new WebGLUserCursor(user, this._theme);
+      userCursor.visible = false;
+      this._userCursorsContainer.addChild(userCursor);
+    }
+  }
+
+  public setUserCursorPosition(id: string, position: PositionDto): void {
+    const userCusor: WebGLUserCursor | null =
+      this._userCursorsContainer.getChildByLabel(id) as WebGLUserCursor | null;
+    if (userCusor == null) {
+      return;
+    }
+
+    userCusor.moveTo([position.x, position.y], true);
+
+    if (!userCusor.visible) {
+      userCusor.visible = true;
+      userCusor.moveTo([position.x, position.y], false);
+    }
   }
 
   private enableDebug(app: Application): void {

@@ -55,12 +55,19 @@ export function WebGLGraphRenderer() {
               })
               .with({ type: "CanvasDataReadyWsdto" }, (event) => {
                 webGLRenderer.loadGraphContent(event.data.elements);
+                webGLRenderer.loadUserCursors(event.data.metaData.users);
               })
               .with({ type: "NodesMovedWsdto" }, (event) => {
                 webGLRenderer.nodesMoved(event);
               })
               .with({ type: "SetNodeLocksWsdto" }, (nodeLocks) => {
                 webGLRenderer.setNodeLocks(nodeLocks);
+              })
+              .with({ type: "CanvasMetaDataChangedWsdto" }, (event) => {
+                webGLRenderer.loadUserCursors(event.metaData.users);
+              })
+              .with({ type: "CursorMovedWsdto" }, (m) => {
+                webGLRenderer.setUserCursorPosition(m.socketId, m.position);
               });
           }),
           webGLRenderer.onGrabNode.subscribe((n) => {

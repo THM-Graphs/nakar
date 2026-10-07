@@ -29,6 +29,7 @@
     "file-saver": "^2.0.0",
     "immer": "^11.0.0",
     "interactjs": "^1.0.0",
+    "pixi-filters": "^6.0.0",
     "pixi-viewport": "^6.0.0",
     "pixi.js": "^8.0.0",
     "qs": "^6.0.0",
