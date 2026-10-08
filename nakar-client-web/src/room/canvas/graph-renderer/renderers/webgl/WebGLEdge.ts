@@ -128,6 +128,13 @@ export class WebGLEdge extends Container {
     return this._edge.id;
   }
 
+  public get positionT(): [number, number] {
+    return [
+      (this._startNode.position.x + this._endNode.position.x) / 2,
+      (this._startNode.position.y + this._endNode.position.y) / 2,
+    ];
+  }
+
   private getEdgeColor(
     colorDto: ColorDto | null,
     colorSchema: ColorSchema,

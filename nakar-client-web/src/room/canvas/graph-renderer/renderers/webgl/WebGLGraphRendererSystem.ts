@@ -16,6 +16,7 @@ import { interactionMoveThresholdPt, outputFps } from "../shared/consts.ts";
 import { isMultiSelectKeyPressed } from "./WebGLTools.ts";
 import { WebGLUserCursor } from "./WebGLUserCursor.ts";
 import { CanvasZoomTransform } from "../../../../../shared/graphics/CanvasZoomTransform.ts";
+import { useBearStore } from "../../../../../state/useBearStore.ts";
 
 const onlyUpdateEdgesOnNodePositionChanges: boolean = false;
 
@@ -358,11 +359,60 @@ export class WebGLGraphRendererSystem {
   }
 
   public center(): void {
-    throw new Error("Not Implemented");
+    const selectedElements =
+      useBearStore.getState().room.panels.inspector.element;
+    const positions: [number, number][] = [];
+    for (const child of this._nodesContainer.children) {
+      const node = child as WebGLNode;
+      if (selectedElements.includes(node.id)) {
+        positions.push(node.positionT);
+      }
+    }
+    for (const child of this._edgesContainer.children) {
+      const edge = child as WebGLEdge;
+      if (selectedElements.includes(edge.id)) {
+        positions.push(edge.positionT);
+      }
+    }
+    if (positions.length === 0) {
+      this.zoomOutOverview();
+      return;
+    }
+
+    this._viewPort.moveCenter(
+      positions.reduce((sum, position) => sum + position[0], 0) /
+        positions.length,
+      positions.reduce((sum, position) => sum + position[1], 0) /
+        positions.length,
+    );
   }
 
   public zoomOutOverview(): void {
-    throw new Error("Not Implemented");
+    const bounds = this._viewPort.getLocalBounds();
+    const paddingPercent = 0.9;
+    const leftInset = 400 + 50;
+    const rightInset = 400 + 50;
+    const topInset = 30 + 30;
+    const bottomInset = 25;
+    const fullWidth = this._viewPort.screenWidth - leftInset - rightInset;
+    const fullHeight = this._viewPort.screenHeight - topInset - bottomInset;
+    if (
+      fullWidth < 10 ||
+      fullHeight < 10 ||
+      bounds.width === 0 ||
+      bounds.height === 0
+    ) {
+      return;
+    }
+
+    const scale =
+      paddingPercent /
+      Math.max(bounds.width / fullWidth, bounds.height / fullHeight);
+    this._viewPort.setZoom(scale);
+    this._viewPort.moveCenter(
+      bounds.x + bounds.width / 2 - (leftInset - rightInset) / 2 / scale,
+      bounds.y + bounds.height / 2 - (topInset - bottomInset) / 2 / scale,
+    );
   }
 
   private enableDebug(app: Application): void {
