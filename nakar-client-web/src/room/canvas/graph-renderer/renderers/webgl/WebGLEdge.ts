@@ -116,7 +116,7 @@ export class WebGLEdge extends Container {
     return this._edge.id;
   }
 
-  public get positionT(): Point {
+  public get center(): Point {
     return this._startNode.position
       .add(this._endNode.position)
       .multiplyScalar(0.5);

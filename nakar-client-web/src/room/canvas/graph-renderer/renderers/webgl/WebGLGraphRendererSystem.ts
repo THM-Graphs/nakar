@@ -368,7 +368,7 @@ export class WebGLGraphRendererSystem {
     }
     for (const edge of this._edgesContainer.children) {
       if (selectedElements.includes(edge.id)) {
-        positions.push(edge.positionT);
+        positions.push(edge.center);
       }
     }
     if (positions.length === 0) {
