@@ -16,6 +16,8 @@ import { ColorSchema } from "../../../../color/ColorSchema.ts";
 import { Viewport } from "pixi-viewport";
 import { WebGLNode } from "./WebGLNode.ts";
 import { WebGLEdge } from "./WebGLEdge.ts";
+import { WebGLNodesContainer } from "./WebGLNodesContainer.ts";
+import { WebGLEdgesContainer } from "./WebGLEdgesContainer.ts";
 import { Theme } from "../../../../../shared/theme/Theme.ts";
 import { Observable, Subject, throttleTime } from "rxjs";
 import { interactionMoveThresholdPt, outputFps } from "../shared/consts.ts";
@@ -27,8 +29,8 @@ import { useBearStore } from "../../../../../state/useBearStore.ts";
 const onlyUpdateEdgesOnNodePositionChanges: boolean = false;
 
 export class WebGLGraphRendererSystem {
-  private _nodesContainer: Container<WebGLNode>;
-  private _edgesContainer: Container<WebGLEdge>;
+  private _nodesContainer: WebGLNodesContainer;
+  private _edgesContainer: WebGLEdgesContainer;
   private _userCursorsContainer: Container<WebGLUserCursor>;
   private _viewPort: Viewport;
 
@@ -75,7 +77,7 @@ export class WebGLGraphRendererSystem {
     this._mouseClickStartPositionHost = null;
 
     this.enableDebug(this._app);
-    this._app.ticker.maxFPS = 60;
+    // this._app.ticker.maxFPS = 60;
 
     this._app.canvas.addEventListener("contextmenu", (e) => {
       e.preventDefault();
@@ -100,17 +102,13 @@ export class WebGLGraphRendererSystem {
     });
     resizeObserver.observe(this._app.canvas);
 
-    const edgesContainer = new Container<WebGLEdge>({
-      label: "edges-container",
-    });
+    const edgesContainer = new WebGLEdgesContainer();
     this._edgesContainer = edgesContainer;
-    viewport.addChild(edgesContainer);
+    viewport.addChild(edgesContainer.container);
 
-    const nodesContainer = new Container<WebGLNode>({
-      label: "nodes-container",
-    });
+    const nodesContainer = new WebGLNodesContainer();
     this._nodesContainer = nodesContainer;
-    viewport.addChild(nodesContainer);
+    viewport.addChild(nodesContainer.container);
 
     this._userCursorsContainer = new Container<WebGLUserCursor>({
       label: "user-cursors-container",
@@ -239,12 +237,11 @@ export class WebGLGraphRendererSystem {
   }
 
   public loadGraphContent(elements: LiveCanvasGraphElementsDto): void {
-    for (const edge of this._edgesContainer.removeChildren()) {
+    for (const edge of this._edgesContainer.clear()) {
       edge.destroy({ children: true });
     }
-    this._nodesContainer.removeChildren();
+    this._nodesContainer.clear();
 
-    const nodeIndex: Map<string, WebGLNode> = new Map<string, WebGLNode>();
     for (const node of elements.nodes) {
       const webGlNode = new WebGLNode(
         node,
@@ -260,14 +257,16 @@ export class WebGLGraphRendererSystem {
         this.$onDisplayNodeDataWithModifier,
         this.$onShowNodeContextMenu,
       );
-      nodeIndex.set(node.id, webGlNode);
-      this._nodesContainer.addChild(webGlNode);
+      this._nodesContainer.add(webGlNode);
     }
 
     for (const edge of elements.edges) {
-      const startNode: WebGLNode | null =
-        nodeIndex.get(edge.startNodeId) ?? null;
-      const endNode: WebGLNode | null = nodeIndex.get(edge.endNodeId) ?? null;
+      const startNode: WebGLNode | null = this._nodesContainer.getById(
+        edge.startNodeId,
+      );
+      const endNode: WebGLNode | null = this._nodesContainer.getById(
+        edge.endNodeId,
+      );
       if (startNode == null || endNode == null) {
         console.error(`Cannot find start or end node of edge ${edge.id}`);
         continue;
@@ -282,16 +281,14 @@ export class WebGLGraphRendererSystem {
         this.$onDisplayLinkDataWithModifier,
         this.$onShowEdgeContextMenu,
       );
-      this._edgesContainer.addChild(webGLEdge);
+      this._edgesContainer.add(webGLEdge);
       webGLEdge.tick();
     }
   }
 
   public nodesMoved(event: NodesMovedWsdto) {
     for (const pos of event.nodes) {
-      const node: WebGLNode | null = this._nodesContainer.getChildByLabel(
-        pos.id,
-      ) as WebGLNode | null;
+      const node = this._nodesContainer.getById(pos.id);
       if (node == null) {
         continue;
       }
@@ -301,9 +298,7 @@ export class WebGLGraphRendererSystem {
 
   public setNodeLocks(event: SetNodeLocksWsdto): void {
     for (const lock of event.locks) {
-      const node: WebGLNode | null = this._nodesContainer.getChildByLabel(
-        lock.id,
-      ) as WebGLNode | null;
+      const node = this._nodesContainer.getById(lock.id);
       if (node == null) {
         continue;
       }
