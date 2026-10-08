@@ -153,6 +153,15 @@ export function WebGLGraphRenderer() {
               position: p.position,
             });
           }),
+          webGLRenderer.onCursorMoved.subscribe((position) => {
+            websocketsManager.sendMessage({
+              type: "MoveCursorWsdto",
+              position: {
+                x: position[0],
+                y: position[1],
+              },
+            });
+          }),
           {
             unsubscribe: useBearStore.subscribe(
               (s) => s.room.panels.inspector.element,

@@ -1,4 +1,4 @@
-import { Application, Container, FederatedPointerEvent } from "pixi.js";
+import { Application, Container, FederatedPointerEvent, Point } from "pixi.js";
 import {
   LiveCanvasGraphElementsDto,
   NodesMovedWsdto,
@@ -15,6 +15,7 @@ import { Observable, Subject, throttleTime } from "rxjs";
 import { interactionMoveThresholdPt, outputFps } from "../shared/consts.ts";
 import { isMultiSelectKeyPressed } from "./WebGLTools.ts";
 import { WebGLUserCursor } from "./WebGLUserCursor.ts";
+import { CanvasZoomTransform } from "../../../../../shared/graphics/CanvasZoomTransform.ts";
 
 const onlyUpdateEdgesOnNodePositionChanges: boolean = false;
 
@@ -41,6 +42,8 @@ export class WebGLGraphRendererSystem {
     edge: WebGLEdge;
     position: [number, number];
   }>;
+  private $onCursorMoved: Subject<[number, number]>;
+  private $onZoomTransformChanged: Subject<CanvasZoomTransform>;
 
   private _mouseClickStartPositionHost: [number, number] | null = null;
 
@@ -60,6 +63,8 @@ export class WebGLGraphRendererSystem {
     this.$onDeselectAll = new Subject();
     this.$onShowNodeContextMenu = new Subject();
     this.$onShowEdgeContextMenu = new Subject();
+    this.$onCursorMoved = new Subject();
+    this.$onZoomTransformChanged = new Subject();
     this._mouseClickStartPositionHost = null;
 
     this.enableDebug(this._app);
@@ -160,6 +165,12 @@ export class WebGLGraphRendererSystem {
       ) {
         this._mouseClickStartPositionHost = null;
       }
+
+      const localPosition: Point = viewport.toLocal({
+        x: event.clientX,
+        y: event.clientY,
+      });
+      this.$onCursorMoved.next([localPosition.x, localPosition.y]);
     });
   }
 
@@ -213,6 +224,16 @@ export class WebGLGraphRendererSystem {
     position: [number, number];
   }> {
     return this.$onShowEdgeContextMenu.asObservable();
+  }
+
+  public get onZoomTransformChanged(): Observable<CanvasZoomTransform> {
+    return this.$onZoomTransformChanged.asObservable();
+  }
+
+  public get onCursorMoved(): Observable<[number, number]> {
+    return this.$onCursorMoved
+      .asObservable()
+      .pipe(throttleTime(1000 / outputFps));
   }
 
   public loadGraphContent(elements: LiveCanvasGraphElementsDto): void {
