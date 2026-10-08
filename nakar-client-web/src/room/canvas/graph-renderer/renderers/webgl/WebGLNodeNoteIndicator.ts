@@ -1,14 +1,13 @@
 import { ColorSource, Container, Graphics, Rectangle } from "pixi.js";
 
 export class WebGLNodeNoteIndicator extends Container {
-  private paperWidth = 10;
+  private paperWidth = 12;
   private paperHeight = 15;
   private foldSize = 5;
 
   public constructor(props: {
     scale: number;
     backgroundColor: ColorSource;
-    textColor: ColorSource;
     strokeColor: ColorSource;
   }) {
     super();
@@ -38,7 +37,7 @@ export class WebGLNodeNoteIndicator extends Container {
       .lineTo(left, bottom)
       .lineTo(left, top)
       .closePath()
-      .fill(props.textColor)
+      .fill(props.backgroundColor)
       .stroke({
         width: 2 * s,
         color: props.strokeColor,
