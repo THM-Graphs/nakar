@@ -35,6 +35,7 @@ import { WebGLNodeNoteIndicator } from "./WebGLNodeNoteIndicator.ts";
 const positionEpsilon = 0.01;
 
 export class WebGLNode extends Container {
+  private _lastClickTimestamp: number | null = null;
   private mouseLockedDelta: Point | null = null;
   private _mouseClickStartPositionHost: Point | null = null;
   private _lockedIndicator: Graphics;
@@ -121,13 +122,21 @@ export class WebGLNode extends Container {
     const onPointerUp = (event: FederatedPointerEvent) => {
       event.stopPropagation();
       if (this._mouseClickStartPositionHost != null) {
-        if (isMultiSelectKeyPressed(event)) {
-          $onDisplayNodeDataWithModifier.next(this);
-        } else {
-          if (event.pointerType === "mouse" && event.button === 2) {
-            // Do nothing because right click will be handled otherwise
+        if (!(event.pointerType === "mouse" && event.button === 2)) {
+          if (isMultiSelectKeyPressed(event)) {
+            $onDisplayNodeDataWithModifier.next(this);
           } else {
             $onDisplayNodeData.next(this);
+          }
+          const now = performance.now();
+          if (
+            this._lastClickTimestamp != null &&
+            now - this._lastClickTimestamp < 350
+          ) {
+            this._lastClickTimestamp = null;
+            $onDoubleClickNode.next(this);
+          } else {
+            this._lastClickTimestamp = now;
           }
         }
       } else {
