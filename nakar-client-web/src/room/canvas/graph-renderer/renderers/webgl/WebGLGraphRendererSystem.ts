@@ -19,7 +19,7 @@ import { WebGLEdge } from "./WebGLEdge.ts";
 import { WebGLNodesContainer } from "./WebGLNodesContainer.ts";
 import { WebGLEdgesContainer } from "./WebGLEdgesContainer.ts";
 import { Theme } from "../../../../../shared/theme/Theme.ts";
-import { Observable, Subject, throttleTime } from "rxjs";
+import { distinctUntilChanged, Observable, Subject, throttleTime } from "rxjs";
 import { interactionMoveThresholdPt, outputFps } from "../shared/consts.ts";
 import { isMultiSelectKeyPressed } from "./WebGLTools.ts";
 import { WebGLUserCursor } from "./WebGLUserCursor.ts";
@@ -33,6 +33,7 @@ export class WebGLGraphRendererSystem {
   private _edgesContainer: WebGLEdgesContainer;
   private _userCursorsContainer: Container<WebGLUserCursor>;
   private _viewPort: Viewport;
+  private _resizeObserver: ResizeObserver;
 
   private $onGrabNode: Subject<WebGLNode>;
   private $onNodeMoved: Subject<WebGLNode>;
@@ -60,6 +61,7 @@ export class WebGLGraphRendererSystem {
     private _app: Application,
     private _colorSchema: ColorSchema,
     private _theme: Theme,
+    zoomTransform: CanvasZoomTransform,
   ) {
     this.$onGrabNode = new Subject();
     this.$onNodeMoved = new Subject();
@@ -87,20 +89,24 @@ export class WebGLGraphRendererSystem {
       events: _app.renderer.events,
       allowPreserveDragOutside: true,
       stopPropagation: false,
+      screenWidth: _app.screen.width,
+      screenHeight: _app.screen.height,
+      noTicker: true,
     });
     viewport.eventMode = "dynamic";
     this._viewPort = viewport;
     viewport.label = "viewport";
     _app.stage.addChild(viewport);
     viewport.drag().wheel({ smooth: 5 }).decelerate({ friction: 0.8 });
-    const resizeObserver = new ResizeObserver((entries) => {
+    this._resizeObserver = new ResizeObserver((entries) => {
       for (const entry of entries) {
+        const transform = this.getZoomTransform();
         const contentBoxSize = entry.contentBoxSize[0];
-        viewport.screenWidth = contentBoxSize.inlineSize;
-        viewport.screenHeight = contentBoxSize.blockSize;
+        viewport.resize(contentBoxSize.inlineSize, contentBoxSize.blockSize);
+        this.setZoomTransform(transform);
       }
     });
-    resizeObserver.observe(this._app.canvas);
+    this._resizeObserver.observe(this._app.canvas);
 
     const edgesContainer = new WebGLEdgesContainer();
     this._edgesContainer = edgesContainer;
@@ -123,12 +129,11 @@ export class WebGLGraphRendererSystem {
     _app.canvas.style.position = "absolute";
     _app.canvas.style.top = "0";
     _app.canvas.style.left = "0";
-    viewport.position.set(
-      this._app.canvas.clientWidth / 2,
-      this._app.canvas.clientHeight / 2,
-    );
+    this.setZoomTransform(zoomTransform);
 
     _app.ticker.add((ticker) => {
+      viewport.update(ticker.deltaMS);
+      this.$onZoomTransformChanged.next(this.getZoomTransform());
       let nodesAreIdle: boolean = true;
       for (const node of this._nodesContainer.children) {
         node.tick(ticker.deltaMS);
@@ -230,6 +235,24 @@ export class WebGLGraphRendererSystem {
     return this.$onZoomTransformChanged.asObservable();
   }
 
+  public getZoomTransform(): CanvasZoomTransform {
+    return new CanvasZoomTransform(
+      this._viewPort.scale.x,
+      this._viewPort.x - this._viewPort.screenWidth / 2,
+      this._viewPort.y - this._viewPort.screenHeight / 2,
+    );
+  }
+
+  public setZoomTransform(transform: CanvasZoomTransform): void {
+    this._viewPort.scale.set(transform.k);
+    // SVG translations are relative to the canvas center, Pixi's to its corner.
+    this._viewPort.position.set(
+      this._viewPort.screenWidth / 2 + transform.x,
+      this._viewPort.screenHeight / 2 + transform.y,
+    );
+    this.$onZoomTransformChanged.next(this.getZoomTransform());
+  }
+
   public get onCursorMoved(): Observable<Point> {
     return this.$onCursorMoved
       .asObservable()
@@ -316,6 +339,7 @@ export class WebGLGraphRendererSystem {
   }
 
   public destroy(): void {
+    this._resizeObserver.disconnect();
     this._app.destroy(true, true);
   }
 
@@ -347,11 +371,13 @@ export class WebGLGraphRendererSystem {
   public zoomIn(): void {
     const factor = 1.3;
     this._viewPort.setZoom(this._viewPort.scale.x * factor, true);
+    this.$onZoomTransformChanged.next(this.getZoomTransform());
   }
 
   public zoomOut(): void {
     const factor = 0.7;
     this._viewPort.setZoom(this._viewPort.scale.x * factor, true);
+    this.$onZoomTransformChanged.next(this.getZoomTransform());
   }
 
   public center(): void {
@@ -379,6 +405,7 @@ export class WebGLGraphRendererSystem {
     );
     center.multiplyScalar(1 / positions.length, center);
     this._viewPort.moveCenter(center.x, center.y);
+    this.$onZoomTransformChanged.next(this.getZoomTransform());
   }
 
   public zoomOutOverview(): void {
@@ -407,6 +434,7 @@ export class WebGLGraphRendererSystem {
       bounds.x + bounds.width / 2 - (leftInset - rightInset) / 2 / scale,
       bounds.y + bounds.height / 2 - (topInset - bottomInset) / 2 / scale,
     );
+    this.$onZoomTransformChanged.next(this.getZoomTransform());
   }
 
   private enableDebug(app: Application): void {

@@ -39,7 +39,11 @@ export function WebGLGraphRenderer() {
     let _currentRenderer: WebGLGraphRendererSystem | null = null;
 
     factory
-      .createInstance(ColorSchema.find(colorSchemaSlug), theme)
+      .createInstance(
+        ColorSchema.find(colorSchemaSlug),
+        theme,
+        useBearStore.getState().room.canvas.zoomTransform,
+      )
       .then((webGLRenderer) => {
         if (webGLRenderer == null) {
           return;
@@ -161,6 +165,9 @@ export function WebGLGraphRenderer() {
                 y: position.y,
               },
             });
+          }),
+          webGLRenderer.onZoomTransformChanged.subscribe((transform) => {
+            useBearStore.getState().room.canvas.setZoomTransform(transform);
           }),
           events.onZoomOut.subscribe(() => {
             webGLRenderer.zoomOut();

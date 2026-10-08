@@ -2,6 +2,7 @@ import { WebGLGraphRendererSystem } from "./WebGLGraphRendererSystem.ts";
 import { Application } from "pixi.js";
 import { ColorSchema } from "../../../../color/ColorSchema.ts";
 import { Theme } from "../../../../../shared/theme/Theme.ts";
+import { CanvasZoomTransform } from "../../../../../shared/graphics/CanvasZoomTransform.ts";
 
 export class WebGLGraphRendererSystemFactory {
   private _destroyed: boolean;
@@ -13,6 +14,7 @@ export class WebGLGraphRendererSystemFactory {
   public async createInstance(
     _colorSchema: ColorSchema,
     _theme: Theme,
+    zoomTransform: CanvasZoomTransform,
   ): Promise<WebGLGraphRendererSystem | null> {
     const app = new Application();
 
@@ -30,7 +32,12 @@ export class WebGLGraphRendererSystemFactory {
       return null;
     }
 
-    return new WebGLGraphRendererSystem(app, _colorSchema, _theme);
+    return new WebGLGraphRendererSystem(
+      app,
+      _colorSchema,
+      _theme,
+      zoomTransform,
+    );
   }
 
   public destory(): void {
