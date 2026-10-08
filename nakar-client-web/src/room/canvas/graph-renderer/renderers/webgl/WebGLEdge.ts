@@ -8,6 +8,18 @@ import { Subject } from "rxjs";
 import { useBearStore } from "../../../../../state/useBearStore.ts";
 import { isMultiSelectKeyPressed } from "./WebGLTools.ts";
 
+type Point = [number, number];
+
+type EdgeGeometry = {
+  start: Point;
+  end: Point;
+  center: Point;
+  arrow: Point;
+  arrowRotation: number;
+  labelAngle: number;
+  controlPoint: Point;
+};
+
 export class WebGLEdge extends Container {
   private readonly _edge: EdgeDto;
   private readonly _startNode: WebGLNode;
@@ -88,7 +100,7 @@ export class WebGLEdge extends Container {
         this._text.height + textBgPaddingTopBottom * 2,
         4,
       )
-      .fill(this._strokeColor(theme));
+      .fill(this.getStrokeColor(theme));
     this._textBg.eventMode = "dynamic";
     this._textBg.cursor = "pointer";
     this.addChild(this._textBg);
@@ -135,6 +147,172 @@ export class WebGLEdge extends Container {
     ];
   }
 
+  public tick(): void {
+    const geometry = this._edge.isLoop
+      ? this.calculateLoopGeometry()
+      : this.calculateGeometry();
+
+    this._line
+      .clear()
+      .moveTo(...geometry.start)
+      .quadraticCurveTo(...geometry.controlPoint, ...geometry.end);
+
+    this.updateAppearance(geometry.center, geometry.labelAngle);
+    this._arrow.position.set(...geometry.arrow);
+    this._arrow.rotation = geometry.arrowRotation;
+  }
+
+  public setSelected(selected: boolean): void {
+    this._selected = selected;
+    this.tick();
+  }
+
+  private calculateGeometry(): EdgeGeometry {
+    const perpendicularVector = this.perpendicularVector(
+      this._startNode.positionT,
+      this._endNode.positionT,
+    );
+
+    const curvePush = 15;
+
+    const startPoint: [number, number] = this.pointOnRadius(
+      this._startNode,
+      this._endNode.positionT,
+      0,
+    );
+    const endPoint: [number, number] = this.pointOnRadius(
+      this._endNode,
+      this._startNode.positionT,
+      this._edge.width * 3,
+    );
+
+    const center: [number, number] = [
+      startPoint[0] +
+        (endPoint[0] - startPoint[0]) / 2 +
+        perpendicularVector[0] * this._edge.parallelIndex * curvePush,
+      startPoint[1] +
+        (endPoint[1] - startPoint[1]) / 2 +
+        perpendicularVector[1] * this._edge.parallelIndex * curvePush,
+    ];
+
+    const start = this.pointOnRadius(this._startNode, center, 0);
+    const end = this.pointOnRadius(this._endNode, center, this._edge.width * 3);
+
+    const controlPoint = this.calculateControlPoint(start, end, center);
+
+    const arrow = this.pointOnRadius(this._endNode, center, 0);
+    return {
+      start,
+      end,
+      center,
+      arrow,
+      arrowRotation: Math.atan2(arrow[1] - center[1], arrow[0] - center[0]),
+      labelAngle: this.vectorAngleDeg(
+        this._startNode.positionT,
+        this._endNode.positionT,
+      ),
+      controlPoint,
+    };
+  }
+
+  private calculateLoopGeometry(): EdgeGeometry {
+    const position = this._startNode.positionT;
+    const radius = this._startNode.radius;
+    const count = Math.max(1, this._edge.parallelCount);
+    const angle =
+      (this._edge.parallelIndex / count) * Math.PI * 2 - Math.PI / 2;
+    const spread = Math.min(Math.PI / 4, Math.PI / (2 * count));
+    const arrowLength = this._edge.width * 3;
+    const reach = Math.max(radius, 40, arrowLength * 2) * 2;
+    const point = (direction: number, distance: number): [number, number] => [
+      position[0] + Math.cos(direction) * distance,
+      position[1] + Math.sin(direction) * distance,
+    ];
+
+    // Preserve the configured loop midpoint independently of the arrow trimming.
+    const centerDistanceScale = 8 / 9;
+    const centerStart = point(
+      angle - spread,
+      (radius + (reach * 3) / 4) * centerDistanceScale,
+    );
+    const centerEnd = point(
+      angle + spread,
+      (radius + arrowLength + (reach * 3) / 4) * centerDistanceScale,
+    );
+    const center: Point = [
+      (centerStart[0] + centerEnd[0]) / 2,
+      (centerStart[1] + centerEnd[1]) / 2,
+    ];
+    const start = point(angle - spread, radius);
+    const arrow = point(angle + spread, radius);
+    const arrowControlPoint = this.calculateControlPoint(start, arrow, center);
+    const arrowRotation = Math.atan2(
+      arrow[1] - arrowControlPoint[1],
+      arrow[0] - arrowControlPoint[0],
+    );
+    // Moving the endpoint along this tangent preserves its direction when the
+    // control point is recalculated, and makes the line meet the arrow's base.
+    const end: Point = [
+      arrow[0] - Math.cos(arrowRotation) * arrowLength,
+      arrow[1] - Math.sin(arrowRotation) * arrowLength,
+    ];
+    const controlPoint = this.calculateControlPoint(start, end, center);
+
+    return {
+      start,
+      end,
+      center,
+      arrow,
+      arrowRotation,
+      labelAngle: ((this._edge.parallelIndex / count) * 360 + 360) % 360,
+      controlPoint,
+    };
+  }
+
+  private calculateControlPoint(
+    start: Point,
+    end: Point,
+    center: Point,
+  ): Point {
+    return [
+      2 * center[0] - (start[0] + end[0]) / 2,
+      2 * center[1] - (start[1] + end[1]) / 2,
+    ];
+  }
+
+  private updateAppearance(center: [number, number], labelAngle: number): void {
+    this._line.stroke({
+      width: this._edge.width,
+      color: this.getEdgeColor(
+        this._edge.customColor,
+        this._colorSchema,
+        this._theme,
+      ),
+      cap: "square",
+    });
+
+    this._text.position.set(center[0], center[1]);
+    this._text.tint = this.getEdgeTextColor(
+      this._edge.customColor,
+      this._colorSchema,
+    );
+    this._textBg.position.set(center[0], center[1]);
+    const angle = this.fixDegAngle(labelAngle);
+    this._text.angle = angle;
+    this._textBg.angle = angle;
+    this._textBg.tint = this.getEdgeColor(
+      this._edge.customColor,
+      this._colorSchema,
+      this._theme,
+    );
+
+    this._arrow.tint = this.getEdgeColor(
+      this._edge.customColor,
+      this._colorSchema,
+      this._theme,
+    );
+  }
+
   private getEdgeColor(
     colorDto: ColorDto | null,
     colorSchema: ColorSchema,
@@ -147,7 +325,7 @@ export class WebGLEdge extends Container {
       return "#808080";
     }
     if (colorDto == null) {
-      return this._strokeColor(theme);
+      return this.getStrokeColor(theme);
     }
 
     return match(colorDto.color)
@@ -178,105 +356,8 @@ export class WebGLEdge extends Container {
       .exhaustive();
   }
 
-  public tick(): void {
-    const perpendicularVector = this.perpendicularVector(
-      this._startNode.positionT,
-      this._endNode.positionT,
-    );
-
-    const curvePush = 15;
-
-    const startPoint: [number, number] = this.pointOnRadius(
-      this._startNode,
-      this._endNode.positionT,
-      0,
-    );
-    const endPoint: [number, number] = this.pointOnRadius(
-      this._endNode,
-      this._startNode.positionT,
-      this._edge.width * 3,
-    );
-
-    const center: [number, number] = [
-      startPoint[0] +
-        (endPoint[0] - startPoint[0]) / 2 +
-        perpendicularVector[0] * this._edge.parallelIndex * curvePush,
-      startPoint[1] +
-        (endPoint[1] - startPoint[1]) / 2 +
-        perpendicularVector[1] * this._edge.parallelIndex * curvePush,
-    ];
-
-    const ofsettedStartOnStartNode = this.pointOnRadius(
-      this._startNode,
-      center,
-      0,
-    );
-    const offsettedEndOnEndNode = this.pointOnRadius(
-      this._endNode,
-      center,
-      this._edge.width * 3,
-    );
-
-    const controlPoint: [number, number] = [
-      2 * center[0] -
-        (ofsettedStartOnStartNode[0] + offsettedEndOnEndNode[0]) / 2,
-      2 * center[1] -
-        (ofsettedStartOnStartNode[1] + offsettedEndOnEndNode[1]) / 2,
-    ];
-
-    this._line
-      .clear()
-      .moveTo(ofsettedStartOnStartNode[0], ofsettedStartOnStartNode[1])
-      .quadraticCurveTo(
-        controlPoint[0],
-        controlPoint[1],
-        offsettedEndOnEndNode[0],
-        offsettedEndOnEndNode[1],
-        0,
-      )
-      .stroke({
-        width: this._edge.width,
-        color: this.getEdgeColor(
-          this._edge.customColor,
-          this._colorSchema,
-          this._theme,
-        ),
-        cap: "square",
-      });
-
-    this._text.position.set(center[0], center[1]);
-    this._text.tint = this.getEdgeTextColor(
-      this._edge.customColor,
-      this._colorSchema,
-    );
-    this._textBg.position.set(center[0], center[1]);
-    const angle = this.fixDegAngle(
-      this.vectorAngleDeg(this._startNode.positionT, this._endNode.positionT),
-    );
-    this._text.angle = angle;
-    this._textBg.angle = angle;
-    this._textBg.tint = this.getEdgeColor(
-      this._edge.customColor,
-      this._colorSchema,
-      this._theme,
-    );
-
-    const arrowPosition = this.pointOnRadius(this._endNode, center, 0);
-    this._arrow.position.set(arrowPosition[0], arrowPosition[1]);
-    this._arrow.rotation = Math.atan2(
-      arrowPosition[1] - center[1],
-      arrowPosition[0] - center[0],
-    );
-    this._arrow.tint = this.getEdgeColor(
-      this._edge.customColor,
-      this._colorSchema,
-      this._theme,
-    );
-  }
-
-  public setSelected(selected: boolean): void {
-    this._selected = selected;
-    this.tick();
+  private getStrokeColor(theme: Theme): string {
+    return theme === "light" ? "#000000" : "#ffffff";
   }
 
   private perpendicularVector(
@@ -287,6 +368,10 @@ export class WebGLEdge extends Container {
     const dy = b[1] - a[1];
 
     const length = Math.hypot(dx, dy);
+
+    if (length === 0) {
+      return [0, 1];
+    }
 
     return [-dy / length, dx / length];
   }
@@ -302,44 +387,6 @@ export class WebGLEdge extends Container {
     return angle > 90 && angle < 270 ? angle + 180 : angle;
   }
 
-  private _strokeColor(theme: Theme): string {
-    return theme === "light" ? "#000000" : "#ffffff";
-  }
-
-  private _closestPointsOnNodes(): [[number, number], [number, number]] {
-    const d = this._edge;
-    if (d.isLoop) {
-      const loopSizeRadius = Math.min(90, 360 / d.parallelCount / 2) / 2;
-      const angle = (d.parallelIndex / d.parallelCount) * 360 - 90;
-      const length = this._startNode.radius;
-      const ps = this.vector(
-        this._startNode.positionT,
-        angle - loopSizeRadius,
-        length,
-      );
-      const pe = this.vector(
-        this._startNode.positionT,
-        angle + loopSizeRadius,
-        length,
-      );
-
-      return [ps, pe];
-    } else {
-      const point1 = this.pointOnRadius(
-        this._startNode,
-        this._endNode.positionT,
-        0,
-      );
-      const point2 = this.pointOnRadius(
-        this._endNode,
-        this._startNode.positionT,
-        0,
-      );
-
-      return [point1, point2];
-    }
-  }
-
   private pointOnRadius(
     node: WebGLNode,
     point: [number, number],
@@ -352,6 +399,10 @@ export class WebGLEdge extends Container {
     // Distance between the centers
     const distance = Math.sqrt(dx * dx + dy * dy);
 
+    if (distance === 0) {
+      return [node.x + node.radius + offset, node.y];
+    }
+
     // Normalize the vector to get the direction
     const ux = dx / distance;
     const uy = dy / distance;
@@ -360,17 +411,5 @@ export class WebGLEdge extends Container {
       node.x + (node.radius + offset) * ux,
       node.y + (node.radius + offset) * uy,
     ];
-  }
-
-  private vector(
-    pos: [number, number],
-    angle: number,
-    length: number,
-  ): [number, number] {
-    const angleInRadians = angle * (Math.PI / 180);
-    const rx = length * Math.cos(angleInRadians);
-    const ry = length * Math.sin(angleInRadians);
-    const p: [number, number] = [pos[0] + rx, pos[1] + ry];
-    return p;
   }
 }
