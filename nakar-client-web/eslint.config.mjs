@@ -33,6 +33,7 @@ export default defineConfig([
           varsIgnorePattern: "^_",
         },
       ],
+      curly: ["error", "all"],
     },
   },
 ]);
