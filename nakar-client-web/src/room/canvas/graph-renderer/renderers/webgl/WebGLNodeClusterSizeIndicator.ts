@@ -1,13 +1,19 @@
-import { BitmapText, Container, Graphics } from "pixi.js";
+import {
+  BitmapText,
+  ColorSource,
+  Container,
+  Graphics,
+  Rectangle,
+} from "pixi.js";
 import { baseStrokeWidth } from "../shared/consts.ts";
 
 export class WebGLNodeClusterSizeIndicator extends Container {
   public constructor(props: {
     clusterSize: number;
     scale: number;
-    fill: string;
-    textColor: string;
-    stroke: string;
+    fill: ColorSource;
+    textColor: ColorSource;
+    stroke: ColorSource;
   }) {
     super();
     const clusterSizeIndicator = new BitmapText({
@@ -26,14 +32,22 @@ export class WebGLNodeClusterSizeIndicator extends Container {
 
     const clusterSizeIndicatorBgPaddingStartEnd: number = props.scale * 2;
     const clusterSizeIndicatorBgPaddingTopBottom: number = props.scale * 0;
+    const bounds = new Rectangle(
+      -clusterSizeIndicator.width / 2,
+      -clusterSizeIndicator.height / 2,
+      clusterSizeIndicator.width,
+      clusterSizeIndicator.height,
+    );
+    bounds.pad(
+      clusterSizeIndicatorBgPaddingStartEnd,
+      clusterSizeIndicatorBgPaddingTopBottom,
+    );
     const clusterSizeIndicatorBg = new Graphics()
       .roundRect(
-        -clusterSizeIndicator.width / 2 - clusterSizeIndicatorBgPaddingStartEnd,
-        -clusterSizeIndicator.height / 2 -
-          clusterSizeIndicatorBgPaddingTopBottom,
-        clusterSizeIndicator.width + clusterSizeIndicatorBgPaddingStartEnd * 2,
-        clusterSizeIndicator.height +
-          clusterSizeIndicatorBgPaddingTopBottom * 2,
+        bounds.x,
+        bounds.y,
+        bounds.width,
+        bounds.height,
         props.scale * 2,
       )
       .fill({ color: props.fill })

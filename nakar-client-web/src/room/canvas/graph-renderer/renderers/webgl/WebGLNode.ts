@@ -1,10 +1,16 @@
 import {
   BitmapText,
+  Circle,
+  ColorSource,
   Container,
   FederatedPointerEvent,
   FillGradient,
   Graphics,
+  Point,
+  PointData,
+  StrokeStyle,
 } from "pixi.js";
+import "pixi.js/math-extras";
 import { ColorDto, LabelDto, NodeDto } from "api-client";
 import { ColorSchema } from "../../../../color/ColorSchema.ts";
 import { Theme } from "../../../../../shared/theme/Theme.ts";
@@ -27,8 +33,8 @@ import { WebGLNodeClusterSizeIndicator } from "./WebGLNodeClusterSizeIndicator.t
 import { WebGLNodeNoteIndicator } from "./WebGLNodeNoteIndicator.ts";
 
 export class WebGLNode extends Container {
-  private mouseLockedDelta: [number, number] | null = null;
-  private _mouseClickStartPositionHost: [number, number] | null = null;
+  private mouseLockedDelta: Point | null = null;
+  private _mouseClickStartPositionHost: Point | null = null;
   private _lockedIndicator: Graphics;
   private _node: NodeDto;
   private _selectedIndicator: Graphics;
@@ -53,7 +59,7 @@ export class WebGLNode extends Container {
     $onDisplayNodeDataWithModifier: Subject<WebGLNode>,
     $onShowNodeContextMenu: Subject<{
       node: WebGLNode;
-      position: [number, number];
+      position: Point;
     }>,
   ) {
     super({ label: node.id });
@@ -82,8 +88,8 @@ export class WebGLNode extends Container {
     } else {
       const gradient = new FillGradient({
         type: "linear",
-        start: { x: 0, y: 0 },
-        end: { x: 1, y: 0 },
+        start: new Point(0, 0),
+        end: new Point(1, 0),
         colorStops: nodeColors.map((nodeColor, index) => {
           const offset = index / (nodeColors.length - 1);
           return {
@@ -102,11 +108,10 @@ export class WebGLNode extends Container {
     baseCircle.eventMode = "dynamic";
     baseCircle.on("pointerdown", (event) => {
       event.stopPropagation();
-      this._mouseClickStartPositionHost = [event.clientX, event.clientY];
-      this.mouseLockedDelta = [
-        event.getLocalPosition(viewPort).x - this.position.x,
-        event.getLocalPosition(viewPort).y - this.position.y,
-      ];
+      this._mouseClickStartPositionHost = event.client.clone();
+      this.mouseLockedDelta = event
+        .getLocalPosition(viewPort)
+        .subtract(this.position);
       viewPort.pause = true;
     });
     const onPointerUp = (event: FederatedPointerEvent) => {
@@ -135,10 +140,8 @@ export class WebGLNode extends Container {
       event.stopPropagation();
       if (
         this._mouseClickStartPositionHost != null &&
-        this._distance(this._mouseClickStartPositionHost, [
-          event.clientX,
-          event.clientY,
-        ]) >= interactionMoveThresholdPt
+        this._mouseClickStartPositionHost.subtract(event.client).magnitude() >=
+          interactionMoveThresholdPt
       ) {
         $onGrabNode.next(this);
         this._mouseClickStartPositionHost = null;
@@ -147,10 +150,7 @@ export class WebGLNode extends Container {
       if (this._mouseClickStartPositionHost == null) {
         if (this.mouseLockedDelta != null) {
           this.moveTo(
-            [
-              event.getLocalPosition(viewPort).x - this.mouseLockedDelta[0],
-              event.getLocalPosition(viewPort).y - this.mouseLockedDelta[1],
-            ],
+            event.getLocalPosition(viewPort).subtract(this.mouseLockedDelta),
             false,
           );
           $onNodeMoved.next(this);
@@ -176,7 +176,7 @@ export class WebGLNode extends Container {
       event.stopPropagation();
       $onShowNodeContextMenu.next({
         node: this,
-        position: [event.clientX, event.clientY],
+        position: event.client.clone(),
       });
     });
 
@@ -185,13 +185,14 @@ export class WebGLNode extends Container {
     this._lockedIndicator.eventMode = "none";
     this.drawDashedCircle(
       this._lockedIndicator,
-      0,
-      0,
-      node.radius - baseStrokeWidth * (node.radius / 40) * 2,
+      new Circle(0, 0, node.radius - baseStrokeWidth * (node.radius / 40) * 4),
       5 * (node.radius / 40),
       5 * (node.radius / 40),
-      getTextColorOfColor(nodeColors[0], colorSchema),
-      baseStrokeWidth * (node.radius / 40) * 2,
+      {
+        color: getTextColorOfColor(nodeColors[0], colorSchema),
+        width: baseStrokeWidth * (node.radius / 40) * 2,
+        alignment: 0,
+      },
     );
     this._lockedIndicator.visible = node.locked;
 
@@ -295,12 +296,12 @@ export class WebGLNode extends Container {
     );
   }
 
-  public moveTo(pos: [number, number], smooth: boolean): void {
-    this._tx = pos[0];
-    this._ty = pos[1];
+  public moveTo(pos: PointData, smooth: boolean): void {
+    this._tx = pos.x;
+    this._ty = pos.y;
 
     if (!smooth) {
-      this.position.set(pos[0], pos[1]);
+      this.position.copyFrom(pos);
       this._vx = 0;
       this._vy = 0;
     }
@@ -327,8 +328,8 @@ export class WebGLNode extends Container {
     return this._node.id;
   }
 
-  public get positionT(): [number, number] {
-    return [this.position.x, this.position.y];
+  public get positionT(): Point {
+    return this.position.clone();
   }
 
   public setSelected(selected: boolean): void {
@@ -367,44 +368,29 @@ export class WebGLNode extends Container {
     return colors;
   }
 
-  private _strokeColor(theme: Theme): string {
+  private _strokeColor(theme: Theme): ColorSource {
     return theme === "light" ? "#000000" : "#ffffff";
   }
 
   private drawDashedCircle(
     ctx: Graphics,
-    cx: number,
-    cy: number,
-    r: number,
+    circle: Circle,
     dash: number,
     gap: number,
-    color: string,
-    width: number,
+    style: StrokeStyle,
   ) {
-    const circumference = 2 * Math.PI * r;
+    const circumference = 2 * Math.PI * circle.radius;
     const segmentCount = Math.floor(circumference / (dash + gap));
 
     for (let i = 0; i < segmentCount; i++) {
-      const startAngle = (i * (dash + gap)) / r;
-      const endAngle = startAngle + dash / r;
-
-      const x1 = cx + r * Math.cos(startAngle);
-      const y1 = cy + r * Math.sin(startAngle);
-      const x2 = cx + r * Math.cos(endAngle);
-      const y2 = cy + r * Math.sin(endAngle);
-
-      ctx.moveTo(x1, y1);
-      ctx.lineTo(x2, y2);
+      const startAngle = (i * (dash + gap)) / circle.radius;
+      const endAngle = startAngle + dash / circle.radius;
+      const start = new Point(circle.radius, 0).rotate(startAngle);
+      start.add(circle, start);
+      ctx.moveTo(start.x, start.y);
+      ctx.arc(circle.x, circle.y, circle.radius, startAngle, endAngle);
     }
 
-    ctx.setStrokeStyle({ width: width, color: color, alignment: 0 });
-    ctx.stroke();
-  }
-
-  private _distance(a: [number, number], b: [number, number]): number {
-    const dx = a[0] - b[0];
-    const dy = a[1] - b[1];
-
-    return Math.sqrt(dx * dx + dy * dy);
+    ctx.stroke(style);
   }
 }

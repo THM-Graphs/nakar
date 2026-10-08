@@ -1,10 +1,16 @@
-import { BitmapText, Container, Graphics } from "pixi.js";
+import {
+  BitmapText,
+  ColorSource,
+  Container,
+  Graphics,
+  Rectangle,
+} from "pixi.js";
 
 export class WebGLEdgeLabel extends Container {
   private readonly _text: BitmapText;
   private readonly _background: Graphics;
 
-  public constructor(props: { text: string; backgroundColor: string }) {
+  public constructor(props: { text: string; backgroundColor: ColorSource }) {
     super();
 
     this._text = new BitmapText({
@@ -21,14 +27,15 @@ export class WebGLEdgeLabel extends Container {
 
     const paddingTopBottom = 2;
     const paddingStartEnd = 4;
+    const bounds = new Rectangle(
+      -this._text.width / 2,
+      -this._text.height / 2,
+      this._text.width,
+      this._text.height,
+    );
+    bounds.pad(paddingStartEnd, paddingTopBottom);
     this._background = new Graphics()
-      .roundRect(
-        -this._text.width / 2 - paddingStartEnd,
-        -this._text.height / 2 - paddingTopBottom,
-        this._text.width + paddingStartEnd * 2,
-        this._text.height + paddingTopBottom * 2,
-        4,
-      )
+      .roundRect(bounds.x, bounds.y, bounds.width, bounds.height, 4)
       .fill({ color: 0xffffff });
     this._background.tint = props.backgroundColor;
     this._background.eventMode = "dynamic";
@@ -37,7 +44,7 @@ export class WebGLEdgeLabel extends Container {
     this.addChild(this._background, this._text);
   }
 
-  public setColors(backgroundColor: string, textColor: string): void {
+  public setColors(backgroundColor: ColorSource, textColor: ColorSource): void {
     this._background.tint = backgroundColor;
     this._text.tint = textColor;
   }

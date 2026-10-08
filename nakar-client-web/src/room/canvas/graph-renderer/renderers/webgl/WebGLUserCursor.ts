@@ -1,4 +1,4 @@
-import { BitmapText, Container, Graphics } from "pixi.js";
+import { BitmapText, Container, Graphics, Point, PointData } from "pixi.js";
 import { UserPreviewDto } from "api-client";
 import { smoothDamp } from "../shared/smoothDamp.ts";
 import { maxSpeed, smoothTime } from "../shared/consts.ts";
@@ -62,10 +62,7 @@ export class WebGLUserCursor extends Container {
         color: 0x000000,
         alpha: 0.4,
         blur: 0.5,
-        offset: {
-          x: 0,
-          y: 1,
-        },
+        offset: new Point(0, 1),
       }),
     ];
 
@@ -74,12 +71,12 @@ export class WebGLUserCursor extends Container {
     this.addChild(cursor);
   }
 
-  public moveTo(pos: [number, number], smooth: boolean) {
-    this._tx = pos[0];
-    this._ty = pos[1];
+  public moveTo(pos: PointData, smooth: boolean) {
+    this._tx = pos.x;
+    this._ty = pos.y;
 
     if (!smooth) {
-      this.position.set(pos[0], pos[1]);
+      this.position.copyFrom(pos);
       this._vx = 0;
       this._vy = 0;
     }

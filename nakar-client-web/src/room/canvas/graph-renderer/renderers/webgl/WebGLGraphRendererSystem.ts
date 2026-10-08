@@ -1,8 +1,14 @@
-import { Application, Container, FederatedPointerEvent, Point } from "pixi.js";
+import {
+  Application,
+  Container,
+  FederatedPointerEvent,
+  Point,
+  PointData,
+} from "pixi.js";
+import "pixi.js/math-extras";
 import {
   LiveCanvasGraphElementsDto,
   NodesMovedWsdto,
-  PositionDto,
   SetNodeLocksWsdto,
   UserPreviewDto,
 } from "api-client";
@@ -21,9 +27,9 @@ import { useBearStore } from "../../../../../state/useBearStore.ts";
 const onlyUpdateEdgesOnNodePositionChanges: boolean = false;
 
 export class WebGLGraphRendererSystem {
-  private _nodesContainer: Container;
-  private _edgesContainer: Container;
-  private _userCursorsContainer: Container;
+  private _nodesContainer: Container<WebGLNode>;
+  private _edgesContainer: Container<WebGLEdge>;
+  private _userCursorsContainer: Container<WebGLUserCursor>;
   private _viewPort: Viewport;
 
   private $onGrabNode: Subject<WebGLNode>;
@@ -37,16 +43,16 @@ export class WebGLGraphRendererSystem {
   private $onDeselectAll: Subject<void>;
   private $onShowNodeContextMenu: Subject<{
     node: WebGLNode;
-    position: [number, number];
+    position: Point;
   }>;
   private $onShowEdgeContextMenu: Subject<{
     edge: WebGLEdge;
-    position: [number, number];
+    position: Point;
   }>;
-  private $onCursorMoved: Subject<[number, number]>;
+  private $onCursorMoved: Subject<Point>;
   private $onZoomTransformChanged: Subject<CanvasZoomTransform>;
 
-  private _mouseClickStartPositionHost: [number, number] | null = null;
+  private _mouseClickStartPositionHost: Point | null = null;
 
   public constructor(
     private _app: Application,
@@ -94,15 +100,19 @@ export class WebGLGraphRendererSystem {
     });
     resizeObserver.observe(this._app.canvas);
 
-    const edgesContainer = new Container({ label: "edges-container" });
+    const edgesContainer = new Container<WebGLEdge>({
+      label: "edges-container",
+    });
     this._edgesContainer = edgesContainer;
     viewport.addChild(edgesContainer);
 
-    const nodesContainer = new Container({ label: "nodes-container" });
+    const nodesContainer = new Container<WebGLNode>({
+      label: "nodes-container",
+    });
     this._nodesContainer = nodesContainer;
     viewport.addChild(nodesContainer);
 
-    this._userCursorsContainer = new Container({
+    this._userCursorsContainer = new Container<WebGLUserCursor>({
       label: "user-cursors-container",
     });
     viewport.addChild(this._userCursorsContainer);
@@ -122,27 +132,23 @@ export class WebGLGraphRendererSystem {
 
     _app.ticker.add((ticker) => {
       let nodesAreIdle: boolean = true;
-      for (const nodeContainer of this._nodesContainer.children) {
-        const node: WebGLNode = nodeContainer as WebGLNode;
+      for (const node of this._nodesContainer.children) {
         node.tick(ticker.deltaMS);
         nodesAreIdle &&= node.idle;
       }
       if (!onlyUpdateEdgesOnNodePositionChanges || !nodesAreIdle) {
-        for (const edgeContainer of this._edgesContainer.children) {
-          const edge: WebGLEdge = edgeContainer as WebGLEdge;
+        for (const edge of this._edgesContainer.children) {
           edge.tick();
         }
       }
 
-      for (const userCursorContainer of this._userCursorsContainer.children) {
-        const userCursor: WebGLUserCursor =
-          userCursorContainer as WebGLUserCursor;
+      for (const userCursor of this._userCursorsContainer.children) {
         userCursor.tick(ticker.deltaMS);
       }
     });
 
     viewport.on("pointerdown", (event) => {
-      this._mouseClickStartPositionHost = [event.clientX, event.clientY];
+      this._mouseClickStartPositionHost = event.client.clone();
     });
     const onPointerUp = (event: FederatedPointerEvent) => {
       if (
@@ -159,19 +165,14 @@ export class WebGLGraphRendererSystem {
     viewport.on("globalpointermove", (event) => {
       if (
         this._mouseClickStartPositionHost != null &&
-        this._distance(this._mouseClickStartPositionHost, [
-          event.clientX,
-          event.clientY,
-        ]) >= interactionMoveThresholdPt
+        this._mouseClickStartPositionHost.subtract(event.client).magnitude() >=
+          interactionMoveThresholdPt
       ) {
         this._mouseClickStartPositionHost = null;
       }
 
-      const localPosition: Point = viewport.toLocal({
-        x: event.clientX,
-        y: event.clientY,
-      });
-      this.$onCursorMoved.next([localPosition.x, localPosition.y]);
+      const localPosition = event.getLocalPosition(viewport);
+      this.$onCursorMoved.next(localPosition);
     });
   }
 
@@ -215,14 +216,14 @@ export class WebGLGraphRendererSystem {
 
   public get onShowNodeContextMenu(): Observable<{
     node: WebGLNode;
-    position: [number, number];
+    position: Point;
   }> {
     return this.$onShowNodeContextMenu.asObservable();
   }
 
   public get onShowEdgeContextMenu(): Observable<{
     edge: WebGLEdge;
-    position: [number, number];
+    position: Point;
   }> {
     return this.$onShowEdgeContextMenu.asObservable();
   }
@@ -231,7 +232,7 @@ export class WebGLGraphRendererSystem {
     return this.$onZoomTransformChanged.asObservable();
   }
 
-  public get onCursorMoved(): Observable<[number, number]> {
+  public get onCursorMoved(): Observable<Point> {
     return this.$onCursorMoved
       .asObservable()
       .pipe(throttleTime(1000 / outputFps));
@@ -292,7 +293,7 @@ export class WebGLGraphRendererSystem {
       if (node == null) {
         continue;
       }
-      node.moveTo([pos.position.x, pos.position.y], true);
+      node.moveTo(pos.position, true);
     }
   }
 
@@ -309,12 +310,10 @@ export class WebGLGraphRendererSystem {
   }
 
   public updateSelectedElements(selectedElements: string[]): void {
-    for (const child of this._nodesContainer.children) {
-      const node = child as WebGLNode;
+    for (const node of this._nodesContainer.children) {
       node.setSelected(selectedElements.includes(node.id));
     }
-    for (const child of this._edgesContainer.children) {
-      const edge = child as WebGLEdge;
+    for (const edge of this._edgesContainer.children) {
       edge.setSelected(selectedElements.includes(edge.id));
     }
   }
@@ -333,18 +332,18 @@ export class WebGLGraphRendererSystem {
     }
   }
 
-  public setUserCursorPosition(id: string, position: PositionDto): void {
+  public setUserCursorPosition(id: string, position: PointData): void {
     const userCusor: WebGLUserCursor | null =
       this._userCursorsContainer.getChildByLabel(id) as WebGLUserCursor | null;
     if (userCusor == null) {
       return;
     }
 
-    userCusor.moveTo([position.x, position.y], true);
+    userCusor.moveTo(position, true);
 
     if (!userCusor.visible) {
       userCusor.visible = true;
-      userCusor.moveTo([position.x, position.y], false);
+      userCusor.moveTo(position, false);
     }
   }
 
@@ -361,15 +360,13 @@ export class WebGLGraphRendererSystem {
   public center(): void {
     const selectedElements =
       useBearStore.getState().room.panels.inspector.element;
-    const positions: [number, number][] = [];
-    for (const child of this._nodesContainer.children) {
-      const node = child as WebGLNode;
+    const positions: Point[] = [];
+    for (const node of this._nodesContainer.children) {
       if (selectedElements.includes(node.id)) {
         positions.push(node.positionT);
       }
     }
-    for (const child of this._edgesContainer.children) {
-      const edge = child as WebGLEdge;
+    for (const edge of this._edgesContainer.children) {
       if (selectedElements.includes(edge.id)) {
         positions.push(edge.positionT);
       }
@@ -379,12 +376,12 @@ export class WebGLGraphRendererSystem {
       return;
     }
 
-    this._viewPort.moveCenter(
-      positions.reduce((sum, position) => sum + position[0], 0) /
-        positions.length,
-      positions.reduce((sum, position) => sum + position[1], 0) /
-        positions.length,
+    const center = positions.reduce(
+      (sum, position) => sum.add(position, sum),
+      new Point(),
     );
+    center.multiplyScalar(1 / positions.length, center);
+    this._viewPort.moveCenter(center.x, center.y);
   }
 
   public zoomOutOverview(): void {
@@ -419,12 +416,5 @@ export class WebGLGraphRendererSystem {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-expect-error
     globalThis.__PIXI_APP__ = app;
-  }
-
-  private _distance(a: [number, number], b: [number, number]): number {
-    const dx = a[0] - b[0];
-    const dy = a[1] - b[1];
-
-    return Math.sqrt(dx * dx + dy * dy);
   }
 }

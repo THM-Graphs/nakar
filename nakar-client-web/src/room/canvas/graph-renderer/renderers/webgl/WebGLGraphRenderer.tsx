@@ -144,21 +144,21 @@ export function WebGLGraphRenderer() {
           webGLRenderer.onShowNodeContextMenu.subscribe((p) => {
             events.onShowNodeContextMenu.next({
               nodeId: p.node.id,
-              position: p.position,
+              position: [p.position.x, p.position.y],
             });
           }),
           webGLRenderer.onShowEdgeContextMenu.subscribe((p) => {
             events.onShowEdgeContextMenu.next({
               edgeId: p.edge.id,
-              position: p.position,
+              position: [p.position.x, p.position.y],
             });
           }),
           webGLRenderer.onCursorMoved.subscribe((position) => {
             websocketsManager.sendMessage({
               type: "MoveCursorWsdto",
               position: {
-                x: position[0],
-                y: position[1],
+                x: position.x,
+                y: position.y,
               },
             });
           }),

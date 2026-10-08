@@ -1,4 +1,4 @@
-import { Container, Graphics } from "pixi.js";
+import { ColorSource, Container, Graphics, Rectangle } from "pixi.js";
 
 export class WebGLNodeNoteIndicator extends Container {
   private paperWidth = 10;
@@ -7,9 +7,9 @@ export class WebGLNodeNoteIndicator extends Container {
 
   public constructor(props: {
     scale: number;
-    backgroundColor: string;
-    textColor: string;
-    strokeColor: string;
+    backgroundColor: ColorSource;
+    textColor: ColorSource;
+    strokeColor: ColorSource;
   }) {
     super();
 
@@ -22,10 +22,13 @@ export class WebGLNodeNoteIndicator extends Container {
     const foldSize = this.foldSize * s;
 
     // Papier um den Ursprung (0, 0) zentrieren
-    const left = -paperWidth / 2;
-    const top = -paperHeight / 2;
-    const right = paperWidth / 2;
-    const bottom = paperHeight / 2;
+    const bounds = new Rectangle(
+      -paperWidth / 2,
+      -paperHeight / 2,
+      paperWidth,
+      paperHeight,
+    );
+    const { left, top, right, bottom } = bounds;
 
     paper
       .moveTo(left, top)

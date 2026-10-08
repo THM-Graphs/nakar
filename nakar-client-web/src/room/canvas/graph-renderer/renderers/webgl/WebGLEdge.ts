@@ -1,4 +1,12 @@
-import { Container, Graphics } from "pixi.js";
+import {
+  ColorSource,
+  Container,
+  DEG_TO_RAD,
+  Graphics,
+  Point,
+  PointData,
+  RAD_TO_DEG,
+} from "pixi.js";
 import { ColorDto, EdgeDto } from "api-client";
 import { WebGLNode } from "./WebGLNode.ts";
 import { match } from "ts-pattern";
@@ -9,8 +17,6 @@ import { useBearStore } from "../../../../../state/useBearStore.ts";
 import { isMultiSelectKeyPressed } from "./WebGLTools.ts";
 import { WebGLEdgeArrow } from "./WebGLEdgeArrow.ts";
 import { WebGLEdgeLabel } from "./WebGLEdgeLabel.ts";
-
-type Point = [number, number];
 
 type EdgeGeometry = {
   start: Point;
@@ -46,7 +52,7 @@ export class WebGLEdge extends Container {
     $onDisplayLinkDataWithModifier: Subject<WebGLEdge>,
     $onShowEdgeContextMenu: Subject<{
       edge: WebGLEdge;
-      position: [number, number];
+      position: Point;
     }>,
   ) {
     super({ label: edge.type });
@@ -101,7 +107,7 @@ export class WebGLEdge extends Container {
       event.stopPropagation();
       $onShowEdgeContextMenu.next({
         edge: this,
-        position: [event.clientX, event.clientY],
+        position: event.client.clone(),
       });
     });
   }
@@ -110,11 +116,10 @@ export class WebGLEdge extends Container {
     return this._edge.id;
   }
 
-  public get positionT(): [number, number] {
-    return [
-      (this._startNode.position.x + this._endNode.position.x) / 2,
-      (this._startNode.position.y + this._endNode.position.y) / 2,
-    ];
+  public get positionT(): Point {
+    return this._startNode.position
+      .add(this._endNode.position)
+      .multiplyScalar(0.5);
   }
 
   public tick(): void {
@@ -124,11 +129,16 @@ export class WebGLEdge extends Container {
 
     this._line
       .clear()
-      .moveTo(...geometry.start)
-      .quadraticCurveTo(...geometry.controlPoint, ...geometry.end);
+      .moveTo(geometry.start.x, geometry.start.y)
+      .quadraticCurveTo(
+        geometry.controlPoint.x,
+        geometry.controlPoint.y,
+        geometry.end.x,
+        geometry.end.y,
+      );
 
     this.updateAppearance(geometry.center, geometry.labelAngle);
-    this._arrow.position.set(...geometry.arrow);
+    this._arrow.position.copyFrom(geometry.arrow);
     this._arrow.rotation = geometry.arrowRotation;
   }
 
@@ -145,25 +155,24 @@ export class WebGLEdge extends Container {
 
     const curvePush = 15;
 
-    const startPoint: [number, number] = this.pointOnRadius(
+    const startPoint = this.pointOnRadius(
       this._startNode,
       this._endNode.positionT,
       0,
     );
-    const endPoint: [number, number] = this.pointOnRadius(
+    const endPoint = this.pointOnRadius(
       this._endNode,
       this._startNode.positionT,
       this._arrow.length,
     );
 
-    const center: [number, number] = [
-      startPoint[0] +
-        (endPoint[0] - startPoint[0]) / 2 +
-        perpendicularVector[0] * this._edge.parallelIndex * curvePush,
-      startPoint[1] +
-        (endPoint[1] - startPoint[1]) / 2 +
-        perpendicularVector[1] * this._edge.parallelIndex * curvePush,
-    ];
+    const center = startPoint.add(endPoint);
+    center.multiplyScalar(0.5, center);
+    perpendicularVector.multiplyScalar(
+      this._edge.parallelIndex * curvePush,
+      perpendicularVector,
+    );
+    center.add(perpendicularVector, center);
 
     const start = this.pointOnRadius(this._startNode, center, 0);
     const arrow = this.pointOnRadius(this._endNode, center, 0);
@@ -190,15 +199,14 @@ export class WebGLEdge extends Container {
     const position = this._startNode.positionT;
     const radius = this._startNode.radius;
     const count = Math.max(1, this._edge.parallelCount);
-    const angle =
-      (this._edge.parallelIndex / count) * Math.PI * 2 - Math.PI / 2;
-    const spread = Math.min(Math.PI / 4, Math.PI / (2 * count));
+    const angle = ((this._edge.parallelIndex / count) * 360 - 90) * DEG_TO_RAD;
+    const spread = Math.min(45, 90 / count) * DEG_TO_RAD;
     const arrowLength = this._arrow.length;
     const reach = Math.max(radius, 40, arrowLength * 2) * 2;
-    const point = (direction: number, distance: number): [number, number] => [
-      position[0] + Math.cos(direction) * distance,
-      position[1] + Math.sin(direction) * distance,
-    ];
+    const point = (direction: number, distance: number): Point => {
+      const offset = new Point(distance, 0).rotate(direction);
+      return offset.add(position, offset);
+    };
 
     // Preserve the configured loop midpoint independently of the arrow trimming.
     const centerDistanceScale = 8 / 9;
@@ -210,10 +218,8 @@ export class WebGLEdge extends Container {
       angle + spread,
       (radius + arrowLength + (reach * 3) / 4) * centerDistanceScale,
     );
-    const center: Point = [
-      (centerStart[0] + centerEnd[0]) / 2,
-      (centerStart[1] + centerEnd[1]) / 2,
-    ];
+    const center = centerStart.add(centerEnd);
+    center.multiplyScalar(0.5, center);
     const start = point(angle - spread, radius);
     const arrow = point(angle + spread, radius);
     const { end, controlPoint, arrowRotation } = this.calculateArrowGeometry(
@@ -235,16 +241,12 @@ export class WebGLEdge extends Container {
 
   private calculateArrowGeometry(start: Point, arrow: Point, center: Point) {
     const arrowControlPoint = this.calculateControlPoint(start, arrow, center);
-    const arrowRotation = Math.atan2(
-      arrow[1] - arrowControlPoint[1],
-      arrow[0] - arrowControlPoint[0],
-    );
+    const tangent = arrow.subtract(arrowControlPoint);
+    const arrowRotation = Math.atan2(tangent.y, tangent.x);
     // Moving the endpoint along this tangent preserves its direction when the
     // control point is recalculated, and makes the line meet the arrow's base.
-    const end: Point = [
-      arrow[0] - Math.cos(arrowRotation) * this._arrow.length,
-      arrow[1] - Math.sin(arrowRotation) * this._arrow.length,
-    ];
+    const arrowOffset = new Point(this._arrow.length, 0).rotate(arrowRotation);
+    const end = arrow.subtract(arrowOffset);
     const controlPoint = this.calculateControlPoint(start, end, center);
 
     return { end, controlPoint, arrowRotation };
@@ -255,13 +257,13 @@ export class WebGLEdge extends Container {
     end: Point,
     center: Point,
   ): Point {
-    return [
-      2 * center[0] - (start[0] + end[0]) / 2,
-      2 * center[1] - (start[1] + end[1]) / 2,
-    ];
+    const midpoint = start.add(end);
+    midpoint.multiplyScalar(0.5, midpoint);
+    const controlPoint = center.multiplyScalar(2);
+    return controlPoint.subtract(midpoint, controlPoint);
   }
 
-  private updateAppearance(center: [number, number], labelAngle: number): void {
+  private updateAppearance(center: PointData, labelAngle: number): void {
     const edgeColor = this.getEdgeColor(
       this._edge.customColor,
       this._colorSchema,
@@ -273,7 +275,7 @@ export class WebGLEdge extends Container {
       cap: "square",
     });
 
-    this._edgeLabel.position.set(...center);
+    this._edgeLabel.position.copyFrom(center);
     this._edgeLabel.angle = this.fixDegAngle(labelAngle);
     this._edgeLabel.setColors(
       edgeColor,
@@ -287,7 +289,7 @@ export class WebGLEdge extends Container {
     colorDto: ColorDto | null,
     colorSchema: ColorSchema,
     theme: Theme,
-  ): string {
+  ): ColorSource {
     if (this._selected) {
       return "#ff00ff";
     }
@@ -309,7 +311,7 @@ export class WebGLEdge extends Container {
   private getEdgeTextColor(
     colorDto: ColorDto | null,
     colorSchema: ColorSchema,
-  ): string {
+  ): ColorSource {
     if (this._selected) {
       return "#ffffff";
     }
@@ -326,31 +328,22 @@ export class WebGLEdge extends Container {
       .exhaustive();
   }
 
-  private getStrokeColor(theme: Theme): string {
+  private getStrokeColor(theme: Theme): ColorSource {
     return theme === "light" ? "#000000" : "#ffffff";
   }
 
-  private perpendicularVector(
-    a: [number, number],
-    b: [number, number],
-  ): [number, number] {
-    const dx = b[0] - a[0];
-    const dy = b[1] - a[1];
-
-    const length = Math.hypot(dx, dy);
-
-    if (length === 0) {
-      return [0, 1];
+  private perpendicularVector(a: Point, b: PointData): Point {
+    const direction = a.subtract(b);
+    if (direction.magnitudeSquared() === 0) {
+      return new Point(0, 1);
     }
-
-    return [-dy / length, dx / length];
+    direction.normalize(direction);
+    return direction.rotate(-Math.PI / 2);
   }
 
-  private vectorAngleDeg(a: [number, number], b: [number, number]): number {
-    const dx = b[0] - a[0];
-    const dy = b[1] - a[1];
-
-    return ((Math.atan2(dy, dx) * 180) / Math.PI + 360) % 360;
+  private vectorAngleDeg(a: Point, b: PointData): number {
+    const direction = new Point().copyFrom(b).subtract(a);
+    return (Math.atan2(direction.y, direction.x) * RAD_TO_DEG + 360) % 360;
   }
 
   private fixDegAngle(angle: number): number {
@@ -359,27 +352,17 @@ export class WebGLEdge extends Container {
 
   private pointOnRadius(
     node: WebGLNode,
-    point: [number, number],
+    point: PointData,
     offset: number,
-  ): [number, number] {
-    // Vector from c1 to c2
-    const dx = point[0] - node.x;
-    const dy = point[1] - node.y;
-
-    // Distance between the centers
-    const distance = Math.sqrt(dx * dx + dy * dy);
-
-    if (distance === 0) {
-      return [node.x + node.radius + offset, node.y];
+  ): Point {
+    const direction = new Point().copyFrom(point);
+    direction.subtract(node.position, direction);
+    if (direction.magnitudeSquared() === 0) {
+      direction.set(1, 0);
+    } else {
+      direction.normalize(direction);
     }
-
-    // Normalize the vector to get the direction
-    const ux = dx / distance;
-    const uy = dy / distance;
-
-    return [
-      node.x + (node.radius + offset) * ux,
-      node.y + (node.radius + offset) * uy,
-    ];
+    direction.multiplyScalar(node.radius + offset, direction);
+    return direction.add(node.position, direction);
   }
 }
