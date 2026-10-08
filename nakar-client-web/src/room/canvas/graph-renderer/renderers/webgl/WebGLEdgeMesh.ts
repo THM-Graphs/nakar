@@ -1,6 +1,5 @@
 import { DestroyOptions, Mesh, MeshGeometry, PointData } from "pixi.js";
 
-/** A batchable quadratic curve with reusable vertex, UV and index buffers. */
 export class WebGLEdgeMesh extends Mesh {
   private readonly _lastNodeGeometry = new Float64Array(6);
   private _geometryInitialized = false;
@@ -16,7 +15,6 @@ export class WebGLEdgeMesh extends Mesh {
       );
     }
     super({ geometry: new MeshGeometry({ positions, indices }) });
-    // At most 66 vertices: keep Pixi's shared-texture mesh batching enabled.
     this.geometry.batchMode = "batch";
     this.eventMode = "dynamic";
     this.cursor = "pointer";
@@ -78,7 +76,6 @@ export class WebGLEdgeMesh extends Mesh {
       dx /= length;
       dy /= length;
 
-      // Match the previous square stroke caps, including at the arrow base.
       const cap = i === 0 ? -halfWidth : i === this._segments ? halfWidth : 0;
       x += dx * cap;
       y += dy * cap;
@@ -90,7 +87,6 @@ export class WebGLEdgeMesh extends Mesh {
       positions[offset + 2] = x - nx;
       positions[offset + 3] = y - ny;
     }
-    // Notifies both the batch renderer and bounds/hit testing of the change.
     this.geometry.getBuffer("aPosition").update();
   }
 
@@ -100,7 +96,6 @@ export class WebGLEdgeMesh extends Mesh {
     }
     const geometry = this.geometry;
     super.destroy(options);
-    // Mesh.destroy does not release its geometry or buffers in Pixi v8.
     geometry.destroy(true);
   }
 }

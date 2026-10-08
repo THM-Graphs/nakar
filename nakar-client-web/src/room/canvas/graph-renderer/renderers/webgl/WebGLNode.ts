@@ -196,9 +196,9 @@ export class WebGLNode extends Container {
     this._hoverIndicator = nodeHoverCircle;
     nodeHoverCircle.eventMode = "none";
     this.addChild(nodeHoverCircle);
-    nodeHoverCircle.circle(0, 0, node.radius - baseStrokeWidth);
+    nodeHoverCircle.circle(0, 0, node.radius);
     nodeHoverCircle.fill({
-      color: "#000000",
+      color: "#7f7f7f",
       alpha: 0.5,
     });
     nodeHoverCircle.visible = false;
