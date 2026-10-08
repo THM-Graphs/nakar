@@ -68,7 +68,7 @@ export class WebGLEdge extends Container {
       .room.panels.inspector.element.includes(edge.id);
 
     this._line = new WebGLEdgeMesh(
-      !edge.isLoop && edge.parallelIndex === 0 ? 1 : 32,
+      !edge.isLoop && edge.parallelIndex === 0 ? 1 : 128,
     );
     this.addChild(this._line);
 

@@ -5,7 +5,7 @@ export class WebGLEdgeMesh extends Mesh {
   private readonly _lastNodeGeometry = new Float64Array(6);
   private _geometryInitialized = false;
 
-  public constructor(private readonly _segments: number = 32) {
+  public constructor(private readonly _segments: number) {
     const positions = new Float32Array((_segments + 1) * 4);
     const indices = new Uint32Array(_segments * 6);
     for (let i = 0; i < _segments; i++) {
