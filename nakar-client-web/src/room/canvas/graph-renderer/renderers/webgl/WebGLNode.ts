@@ -345,10 +345,6 @@ export class WebGLNode extends Container {
     return this._node.id;
   }
 
-  public get positionT(): Point {
-    return this.position.clone();
-  }
-
   public setSelected(selected: boolean): void {
     this._selectedIndicator.visible = selected;
   }

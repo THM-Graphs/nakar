@@ -164,20 +164,20 @@ export class WebGLEdge extends Container {
 
   private calculateGeometry(): EdgeGeometry {
     const perpendicularVector = this.perpendicularVector(
-      this._startNode.positionT,
-      this._endNode.positionT,
+      this._startNode.position,
+      this._endNode.position,
     );
 
     const curvePush = 15;
 
     const startPoint = this.pointOnRadius(
       this._startNode,
-      this._endNode.positionT,
+      this._endNode.position,
       0,
     );
     const endPoint = this.pointOnRadius(
       this._endNode,
-      this._startNode.positionT,
+      this._startNode.position,
       this._arrow.length,
     );
 
@@ -203,15 +203,15 @@ export class WebGLEdge extends Container {
       arrow,
       arrowRotation,
       labelAngle: this.vectorAngleDeg(
-        this._startNode.positionT,
-        this._endNode.positionT,
+        this._startNode.position,
+        this._endNode.position,
       ),
       controlPoint,
     };
   }
 
   private calculateLoopGeometry(): EdgeGeometry {
-    const position = this._startNode.positionT;
+    const position = this._startNode.position;
     const radius = this._startNode.radius;
     const count = Math.max(1, this._edge.parallelCount);
     const angle = ((this._edge.parallelIndex / count) * 360 - 90) * DEG_TO_RAD;

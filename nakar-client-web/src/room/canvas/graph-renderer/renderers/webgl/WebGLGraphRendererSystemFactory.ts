@@ -21,7 +21,6 @@ export class WebGLGraphRendererSystemFactory {
       antialias: true,
       backgroundAlpha: 0,
       autoDensity: true,
-      resolution: 2,
       hello: true,
     });
 

@@ -365,7 +365,7 @@ export class WebGLGraphRendererSystem {
     const positions: Point[] = [];
     for (const node of this._nodesContainer.children) {
       if (selectedElements.includes(node.id)) {
-        positions.push(node.positionT);
+        positions.push(node.position);
       }
     }
     for (const edge of this._edgesContainer.children) {
