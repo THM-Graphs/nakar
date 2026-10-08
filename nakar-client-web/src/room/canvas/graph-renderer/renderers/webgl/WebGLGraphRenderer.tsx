@@ -162,6 +162,18 @@ export function WebGLGraphRenderer() {
               },
             });
           }),
+          events.onZoomOut.subscribe(() => {
+            webGLRenderer.zoomOut();
+          }),
+          events.onZoomIn.subscribe(() => {
+            webGLRenderer.zoomIn();
+          }),
+          events.onCenter.subscribe(() => {
+            webGLRenderer.center();
+          }),
+          events.onZoomOutOverview.subscribe(() => {
+            webGLRenderer.zoomOutOverview();
+          }),
           {
             unsubscribe: useBearStore.subscribe(
               (s) => s.room.panels.inspector.element,

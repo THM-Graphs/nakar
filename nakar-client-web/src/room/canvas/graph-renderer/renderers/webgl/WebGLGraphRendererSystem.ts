@@ -347,6 +347,24 @@ export class WebGLGraphRendererSystem {
     }
   }
 
+  public zoomIn(): void {
+    const factor = 1.3;
+    this._viewPort.setZoom(this._viewPort.scale.x * factor, true);
+  }
+
+  public zoomOut(): void {
+    const factor = 0.7;
+    this._viewPort.setZoom(this._viewPort.scale.x * factor, true);
+  }
+
+  public center(): void {
+    throw new Error("Not Implemented");
+  }
+
+  public zoomOutOverview(): void {
+    throw new Error("Not Implemented");
+  }
+
   private enableDebug(app: Application): void {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-expect-error
