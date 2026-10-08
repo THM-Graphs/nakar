@@ -22,6 +22,7 @@ export class WebGLGraphRendererSystemFactory {
       backgroundAlpha: 0,
       autoDensity: true,
       hello: true,
+      resolution: 2,
     });
 
     if (this._destroyed) {
