@@ -346,6 +346,10 @@ export class WebGLNode extends Container {
       return [fallbackColor];
     }
 
+    if (node.customColor != null) {
+      return [node.customColor];
+    }
+
     const colors: ColorDto[] = [];
     for (const labelName of node.labels) {
       const label: LabelDto | null =
