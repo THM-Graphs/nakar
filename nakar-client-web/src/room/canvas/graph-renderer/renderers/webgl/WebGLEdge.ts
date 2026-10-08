@@ -30,6 +30,7 @@ export class WebGLEdge extends Container {
   private readonly _line: Graphics;
   private readonly _text: BitmapText;
   private readonly _arrow: Graphics;
+  private readonly _arrowLength: number;
   private readonly _textBg: Graphics;
 
   private _hovered: boolean;
@@ -55,6 +56,7 @@ export class WebGLEdge extends Container {
     this._endNode = endNode;
     this._colorSchema = colorSchema;
     this._theme = theme;
+    this._arrowLength = edge.width * 6;
     this._hovered = false;
     this._selected = useBearStore
       .getState()
@@ -68,8 +70,8 @@ export class WebGLEdge extends Container {
     this._arrow = new Graphics();
     this._arrow
       .moveTo(0, 0)
-      .lineTo(-this._edge.width * 3, -this._edge.width * 1.5)
-      .lineTo(-this._edge.width * 3, this._edge.width * 1.5)
+      .lineTo(-this._arrowLength, -this._arrowLength / 2)
+      .lineTo(-this._arrowLength, this._arrowLength / 2)
       .closePath()
       .fill({ color: 0xffffff });
     this._arrow.eventMode = "dynamic";
@@ -183,7 +185,7 @@ export class WebGLEdge extends Container {
     const endPoint: [number, number] = this.pointOnRadius(
       this._endNode,
       this._startNode.positionT,
-      this._edge.width * 3,
+      this._arrowLength,
     );
 
     const center: [number, number] = [
@@ -196,7 +198,7 @@ export class WebGLEdge extends Container {
     ];
 
     const start = this.pointOnRadius(this._startNode, center, 0);
-    const end = this.pointOnRadius(this._endNode, center, this._edge.width * 3);
+    const end = this.pointOnRadius(this._endNode, center, this._arrowLength);
 
     const controlPoint = this.calculateControlPoint(start, end, center);
 
@@ -222,7 +224,7 @@ export class WebGLEdge extends Container {
     const angle =
       (this._edge.parallelIndex / count) * Math.PI * 2 - Math.PI / 2;
     const spread = Math.min(Math.PI / 4, Math.PI / (2 * count));
-    const arrowLength = this._edge.width * 3;
+    const arrowLength = this._arrowLength;
     const reach = Math.max(radius, 40, arrowLength * 2) * 2;
     const point = (direction: number, distance: number): [number, number] => [
       position[0] + Math.cos(direction) * distance,
