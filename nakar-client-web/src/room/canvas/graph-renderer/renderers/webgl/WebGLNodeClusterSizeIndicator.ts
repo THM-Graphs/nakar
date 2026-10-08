@@ -1,7 +1,7 @@
 import { BitmapText, Container, Graphics } from "pixi.js";
 import { baseStrokeWidth } from "../shared/consts.ts";
 
-export class WebGLClusterSizeIndicator extends Container {
+export class WebGLNodeClusterSizeIndicator extends Container {
   public constructor(props: {
     clusterSize: number;
     scale: number;

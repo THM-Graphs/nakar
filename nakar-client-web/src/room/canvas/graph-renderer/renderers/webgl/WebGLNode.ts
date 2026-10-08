@@ -23,7 +23,7 @@ import {
   getTextColorOfColor,
   isMultiSelectKeyPressed,
 } from "./WebGLTools.ts";
-import { WebGLClusterSizeIndicator } from "./WebGLClusterSizeIndicator.ts";
+import { WebGLNodeClusterSizeIndicator } from "./WebGLNodeClusterSizeIndicator.ts";
 import { WebGLNodeNoteIndicator } from "./WebGLNodeNoteIndicator.ts";
 
 export class WebGLNode extends Container {
@@ -244,7 +244,7 @@ export class WebGLNode extends Container {
       outerCircle.eventMode = "none";
       this.addChild(outerCircle);
 
-      const clusterSizseIndicator = new WebGLClusterSizeIndicator({
+      const clusterSizseIndicator = new WebGLNodeClusterSizeIndicator({
         clusterSize: node.clusterSize,
         scale: node.radius / 40,
         fill: getBackGroundColorOfColor(nodeColors[0], colorSchema),

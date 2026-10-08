@@ -7,6 +7,7 @@ import { Theme } from "../../../../../shared/theme/Theme.ts";
 import { Subject } from "rxjs";
 import { useBearStore } from "../../../../../state/useBearStore.ts";
 import { isMultiSelectKeyPressed } from "./WebGLTools.ts";
+import { WebGLEdgeArrow } from "./WebGLEdgeArrow.ts";
 
 type Point = [number, number];
 
@@ -29,8 +30,7 @@ export class WebGLEdge extends Container {
 
   private readonly _line: Graphics;
   private readonly _text: BitmapText;
-  private readonly _arrow: Graphics;
-  private readonly _arrowLength: number;
+  private readonly _arrow: WebGLEdgeArrow;
   private readonly _textBg: Graphics;
 
   private _hovered: boolean;
@@ -56,7 +56,6 @@ export class WebGLEdge extends Container {
     this._endNode = endNode;
     this._colorSchema = colorSchema;
     this._theme = theme;
-    this._arrowLength = edge.width * 6;
     this._hovered = false;
     this._selected = useBearStore
       .getState()
@@ -67,15 +66,7 @@ export class WebGLEdge extends Container {
     this._line.cursor = "pointer";
     this.addChild(this._line);
 
-    this._arrow = new Graphics();
-    this._arrow
-      .moveTo(0, 0)
-      .lineTo(-this._arrowLength, -this._arrowLength / 2)
-      .lineTo(-this._arrowLength, this._arrowLength / 2)
-      .closePath()
-      .fill({ color: 0xffffff });
-    this._arrow.eventMode = "dynamic";
-    this._arrow.cursor = "pointer";
+    this._arrow = new WebGLEdgeArrow(edge.width);
     this.addChild(this._arrow);
 
     this._text = new BitmapText({
@@ -185,7 +176,7 @@ export class WebGLEdge extends Container {
     const endPoint: [number, number] = this.pointOnRadius(
       this._endNode,
       this._startNode.positionT,
-      this._arrowLength,
+      this._arrow.length,
     );
 
     const center: [number, number] = [
@@ -225,7 +216,7 @@ export class WebGLEdge extends Container {
     const angle =
       (this._edge.parallelIndex / count) * Math.PI * 2 - Math.PI / 2;
     const spread = Math.min(Math.PI / 4, Math.PI / (2 * count));
-    const arrowLength = this._arrowLength;
+    const arrowLength = this._arrow.length;
     const reach = Math.max(radius, 40, arrowLength * 2) * 2;
     const point = (direction: number, distance: number): [number, number] => [
       position[0] + Math.cos(direction) * distance,
@@ -274,8 +265,8 @@ export class WebGLEdge extends Container {
     // Moving the endpoint along this tangent preserves its direction when the
     // control point is recalculated, and makes the line meet the arrow's base.
     const end: Point = [
-      arrow[0] - Math.cos(arrowRotation) * this._arrowLength,
-      arrow[1] - Math.sin(arrowRotation) * this._arrowLength,
+      arrow[0] - Math.cos(arrowRotation) * this._arrow.length,
+      arrow[1] - Math.sin(arrowRotation) * this._arrow.length,
     ];
     const controlPoint = this.calculateControlPoint(start, end, center);
 
