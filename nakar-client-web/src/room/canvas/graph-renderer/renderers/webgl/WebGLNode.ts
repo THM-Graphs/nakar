@@ -32,6 +32,8 @@ import {
 import { WebGLNodeClusterSizeIndicator } from "./WebGLNodeClusterSizeIndicator.ts";
 import { WebGLNodeNoteIndicator } from "./WebGLNodeNoteIndicator.ts";
 
+const positionEpsilon = 0.01;
+
 export class WebGLNode extends Container {
   private mouseLockedDelta: Point | null = null;
   private _mouseClickStartPositionHost: Point | null = null;
@@ -39,6 +41,8 @@ export class WebGLNode extends Container {
   private _node: NodeDto;
   private _selectedIndicator: Graphics;
   private _textMask: Graphics | null;
+  private readonly _hoverIndicator: Graphics;
+  private readonly _titleText: BitmapText;
 
   private _vx: number;
   private _vy: number;
@@ -158,18 +162,10 @@ export class WebGLNode extends Container {
       }
     });
     baseCircle.on("pointerover", () => {
-      nodeHoverCircle.visible = true;
-      if (this._textMask) {
-        titleText.mask = null;
-        this._textMask.visible = false;
-      }
+      this.setHovered(true);
     });
     baseCircle.on("pointerout", () => {
-      nodeHoverCircle.visible = false;
-      if (this._textMask) {
-        titleText.mask = this._textMask;
-        this._textMask.visible = true;
-      }
+      this.setHovered(false);
     });
     baseCircle.on("rightclick", (event) => {
       event.preventDefault();
@@ -197,6 +193,7 @@ export class WebGLNode extends Container {
     this._lockedIndicator.visible = node.locked;
 
     const nodeHoverCircle: Graphics = new Graphics();
+    this._hoverIndicator = nodeHoverCircle;
     nodeHoverCircle.eventMode = "none";
     this.addChild(nodeHoverCircle);
     nodeHoverCircle.circle(0, 0, node.radius - baseStrokeWidth);
@@ -219,6 +216,7 @@ export class WebGLNode extends Container {
         breakWords: true,
       },
     });
+    this._titleText = titleText;
     if (titleText.height > node.radius * 2) {
       titleText.anchor = 0;
       titleText.position.set(-node.radius, -node.radius);
@@ -278,22 +276,41 @@ export class WebGLNode extends Container {
   }
 
   public tick(deltaTime: number): void {
-    [this.position.x, this._vx] = smoothDamp(
-      this.position.x,
-      this._tx,
-      this._vx,
-      smoothTime,
-      maxSpeed,
-      deltaTime,
-    );
-    [this.position.y, this._vy] = smoothDamp(
-      this.position.y,
-      this._ty,
-      this._vy,
-      smoothTime,
-      maxSpeed,
-      deltaTime,
-    );
+    if (this.idle) {
+      return;
+    }
+    if (this.position.x !== this._tx || this._vx !== 0) {
+      [this.position.x, this._vx] = smoothDamp(
+        this.position.x,
+        this._tx,
+        this._vx,
+        smoothTime,
+        maxSpeed,
+        deltaTime,
+      );
+      if (
+        this._vx === 0 &&
+        Math.abs(this.position.x - this._tx) < positionEpsilon
+      ) {
+        this.position.x = this._tx;
+      }
+    }
+    if (this.position.y !== this._ty || this._vy !== 0) {
+      [this.position.y, this._vy] = smoothDamp(
+        this.position.y,
+        this._ty,
+        this._vy,
+        smoothTime,
+        maxSpeed,
+        deltaTime,
+      );
+      if (
+        this._vy === 0 &&
+        Math.abs(this.position.y - this._ty) < positionEpsilon
+      ) {
+        this.position.y = this._ty;
+      }
+    }
   }
 
   public moveTo(pos: PointData, smooth: boolean): void {
@@ -313,8 +330,8 @@ export class WebGLNode extends Container {
 
   public get idle(): boolean {
     return (
-      Math.floor(this.position.x) === Math.floor(this._tx) &&
-      Math.floor(this.position.y) === Math.floor(this._ty) &&
+      this.position.x === this._tx &&
+      this.position.y === this._ty &&
       this._vx === 0 &&
       this._vy === 0
     );
@@ -334,6 +351,17 @@ export class WebGLNode extends Container {
 
   public setSelected(selected: boolean): void {
     this._selectedIndicator.visible = selected;
+  }
+
+  private setHovered(hovered: boolean): void {
+    if (this._hoverIndicator.visible === hovered) {
+      return;
+    }
+    this._hoverIndicator.visible = hovered;
+    if (this._textMask) {
+      this._titleText.mask = hovered ? null : this._textMask;
+      this._textMask.visible = !hovered;
+    }
   }
 
   private getColorsInformationOfNode(
