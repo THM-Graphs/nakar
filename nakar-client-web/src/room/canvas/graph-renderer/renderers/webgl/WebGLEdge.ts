@@ -2,7 +2,6 @@ import {
   ColorSource,
   Container,
   DEG_TO_RAD,
-  Graphics,
   Point,
   PointData,
   RAD_TO_DEG,
@@ -17,6 +16,7 @@ import { useBearStore } from "../../../../../state/useBearStore.ts";
 import { isMultiSelectKeyPressed } from "./WebGLTools.ts";
 import { WebGLEdgeArrow } from "./WebGLEdgeArrow.ts";
 import { WebGLEdgeLabel } from "./WebGLEdgeLabel.ts";
+import { WebGLEdgeMesh } from "./WebGLEdgeMesh.ts";
 
 type EdgeGeometry = {
   start: Point;
@@ -35,7 +35,7 @@ export class WebGLEdge extends Container {
   private readonly _colorSchema: ColorSchema;
   private readonly _theme: Theme;
 
-  private readonly _line: Graphics;
+  private readonly _line: WebGLEdgeMesh;
   private readonly _arrow: WebGLEdgeArrow;
   private readonly _edgeLabel: WebGLEdgeLabel;
 
@@ -67,9 +67,9 @@ export class WebGLEdge extends Container {
       .getState()
       .room.panels.inspector.element.includes(edge.id);
 
-    this._line = new Graphics();
-    this._line.eventMode = "dynamic";
-    this._line.cursor = "pointer";
+    this._line = new WebGLEdgeMesh(
+      !edge.isLoop && edge.parallelIndex === 0 ? 1 : 32,
+    );
     this.addChild(this._line);
 
     this._arrow = new WebGLEdgeArrow(edge.width);
@@ -82,15 +82,14 @@ export class WebGLEdge extends Container {
       backgroundColor: this.getStrokeColor(theme),
     });
     this.addChild(this._edgeLabel);
+    this.updateAppearance();
 
     this.eventMode = "dynamic";
     this.on("pointerover", () => {
-      this._hovered = true;
-      this.tick();
+      this.setHovered(true);
     });
     this.on("pointerout", () => {
-      this._hovered = false;
-      this.tick();
+      this.setHovered(false);
     });
     this.on("pointerdown", (event) => {
       event.stopPropagation();
@@ -123,28 +122,44 @@ export class WebGLEdge extends Container {
   }
 
   public tick(): void {
-    const geometry = this._edge.isLoop
-      ? this.calculateLoopGeometry()
-      : this.calculateGeometry();
-
-    this._line
-      .clear()
-      .moveTo(geometry.start.x, geometry.start.y)
-      .quadraticCurveTo(
-        geometry.controlPoint.x,
-        geometry.controlPoint.y,
-        geometry.end.x,
-        geometry.end.y,
+    if (
+      this._line.updateNodeGeometry(
+        this._startNode.position,
+        this._endNode.position,
+        this._startNode.radius,
+        this._endNode.radius,
+      )
+    ) {
+      const geometry = this._edge.isLoop
+        ? this.calculateLoopGeometry()
+        : this.calculateGeometry();
+      this._line.updateCurve(
+        geometry.start,
+        geometry.controlPoint,
+        geometry.end,
+        this._edge.width,
       );
-
-    this.updateAppearance(geometry.center, geometry.labelAngle);
-    this._arrow.position.copyFrom(geometry.arrow);
-    this._arrow.rotation = geometry.arrowRotation;
+      this._edgeLabel.position.copyFrom(geometry.center);
+      this._edgeLabel.angle = this.fixDegAngle(geometry.labelAngle);
+      this._arrow.position.copyFrom(geometry.arrow);
+      this._arrow.rotation = geometry.arrowRotation;
+    }
   }
 
   public setSelected(selected: boolean): void {
+    if (this._selected === selected) {
+      return;
+    }
     this._selected = selected;
-    this.tick();
+    this.updateAppearance();
+  }
+
+  private setHovered(hovered: boolean): void {
+    if (this._hovered === hovered) {
+      return;
+    }
+    this._hovered = hovered;
+    this.updateAppearance();
   }
 
   private calculateGeometry(): EdgeGeometry {
@@ -263,20 +278,13 @@ export class WebGLEdge extends Container {
     return controlPoint.subtract(midpoint, controlPoint);
   }
 
-  private updateAppearance(center: PointData, labelAngle: number): void {
+  private updateAppearance(): void {
     const edgeColor = this.getEdgeColor(
       this._edge.customColor,
       this._colorSchema,
       this._theme,
     );
-    this._line.stroke({
-      width: this._edge.width,
-      color: edgeColor,
-      cap: "square",
-    });
-
-    this._edgeLabel.position.copyFrom(center);
-    this._edgeLabel.angle = this.fixDegAngle(labelAngle);
+    this._line.tint = edgeColor;
     this._edgeLabel.setColors(
       edgeColor,
       this.getEdgeTextColor(this._edge.customColor, this._colorSchema),
