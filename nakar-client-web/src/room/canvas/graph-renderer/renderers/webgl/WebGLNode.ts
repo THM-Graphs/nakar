@@ -67,15 +67,16 @@ export class WebGLNode extends Container {
 
     this.position.set(node.position.x, node.position.y);
 
-    const circleStroke: Graphics = new Graphics();
-    this.addChild(circleStroke);
-    circleStroke.circle(0, 0, node.radius);
+    const baseCircle: Graphics = new Graphics();
+    baseCircle.cursor = "pointer";
+    this.addChild(baseCircle);
+    baseCircle.circle(0, 0, node.radius);
     const nodeColors: ColorDto[] = this.getColorsInformationOfNode(
       node,
       labels,
     );
     if (nodeColors.length === 1) {
-      circleStroke.fill({
+      baseCircle.fill({
         color: getBackGroundColorOfColor(nodeColors[0], colorSchema),
       });
     } else {
@@ -91,15 +92,15 @@ export class WebGLNode extends Container {
           };
         }),
       });
-      circleStroke.fill(gradient);
+      baseCircle.fill(gradient);
     }
-    circleStroke.stroke({
+    baseCircle.stroke({
       color: this._strokeColor(theme),
       width: (node.radius / 40) * baseStrokeWidth,
       alignment: 1,
     });
-    circleStroke.eventMode = "dynamic";
-    circleStroke.on("pointerdown", (event) => {
+    baseCircle.eventMode = "dynamic";
+    baseCircle.on("pointerdown", (event) => {
       event.stopPropagation();
       this._mouseClickStartPositionHost = [event.clientX, event.clientY];
       this.mouseLockedDelta = [
@@ -127,10 +128,10 @@ export class WebGLNode extends Container {
       this.mouseLockedDelta = null;
       this._mouseClickStartPositionHost = null;
     };
-    circleStroke.on("pointerup", onPointerUp);
-    circleStroke.on("pointerupoutside", onPointerUp);
+    baseCircle.on("pointerup", onPointerUp);
+    baseCircle.on("pointerupoutside", onPointerUp);
 
-    circleStroke.on("globalpointermove", (event) => {
+    baseCircle.on("globalpointermove", (event) => {
       event.stopPropagation();
       if (
         this._mouseClickStartPositionHost != null &&
@@ -156,21 +157,21 @@ export class WebGLNode extends Container {
         }
       }
     });
-    circleStroke.on("pointerover", () => {
+    baseCircle.on("pointerover", () => {
       nodeHoverCircle.visible = true;
       if (this._textMask) {
         titleText.mask = null;
         this._textMask.visible = false;
       }
     });
-    circleStroke.on("pointerout", () => {
+    baseCircle.on("pointerout", () => {
       nodeHoverCircle.visible = false;
       if (this._textMask) {
         titleText.mask = this._textMask;
         this._textMask.visible = true;
       }
     });
-    circleStroke.on("rightclick", (event) => {
+    baseCircle.on("rightclick", (event) => {
       event.preventDefault();
       event.stopPropagation();
       $onShowNodeContextMenu.next({

@@ -50,6 +50,7 @@ export class WebGLEdge extends Container {
 
     this._line = new Graphics();
     this._line.eventMode = "dynamic";
+    this._line.cursor = "pointer";
     this.addChild(this._line);
 
     this._arrow = new Graphics();
@@ -60,6 +61,7 @@ export class WebGLEdge extends Container {
       .closePath()
       .fill({ color: 0xffffff });
     this._arrow.eventMode = "dynamic";
+    this._arrow.cursor = "pointer";
     this.addChild(this._arrow);
 
     this._text = new BitmapText({
@@ -74,6 +76,7 @@ export class WebGLEdge extends Container {
       },
       anchor: 0.5,
     });
+    this._text.eventMode = "none";
 
     const textBgPaddingTopBottom = 2;
     const textBgPaddingStartEnd = 4;
@@ -87,6 +90,7 @@ export class WebGLEdge extends Container {
       )
       .fill(this._strokeColor(theme));
     this._textBg.eventMode = "dynamic";
+    this._textBg.cursor = "pointer";
     this.addChild(this._textBg);
 
     this.addChild(this._text);
@@ -129,11 +133,11 @@ export class WebGLEdge extends Container {
     colorSchema: ColorSchema,
     theme: Theme,
   ): string {
-    if (this._hovered) {
-      return "#808080";
-    }
     if (this._selected) {
       return "#ff00ff";
+    }
+    if (this._hovered) {
+      return "#808080";
     }
     if (colorDto == null) {
       return this._strokeColor(theme);
@@ -230,6 +234,7 @@ export class WebGLEdge extends Container {
           this._colorSchema,
           this._theme,
         ),
+        cap: "square",
       });
 
     this._text.position.set(center[0], center[1]);
