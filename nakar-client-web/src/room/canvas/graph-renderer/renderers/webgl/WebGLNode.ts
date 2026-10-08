@@ -349,7 +349,15 @@ export class WebGLNode extends Container {
     this._selectedIndicator.visible = selected;
   }
 
-  private setHovered(hovered: boolean): void {
+  public get selected(): boolean {
+    return this._selectedIndicator.visible;
+  }
+
+  public get hovered(): boolean {
+    return this._hoverIndicator.visible;
+  }
+
+  public setHovered(hovered: boolean): void {
     if (this._hoverIndicator.visible === hovered) {
       return;
     }

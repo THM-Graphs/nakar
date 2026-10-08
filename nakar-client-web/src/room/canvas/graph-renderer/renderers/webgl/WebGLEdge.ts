@@ -154,7 +154,15 @@ export class WebGLEdge extends Container {
     this.updateAppearance();
   }
 
-  private setHovered(hovered: boolean): void {
+  public get selected(): boolean {
+    return this._selected;
+  }
+
+  public get hovered(): boolean {
+    return this._hovered;
+  }
+
+  public setHovered(hovered: boolean): void {
     if (this._hovered === hovered) {
       return;
     }

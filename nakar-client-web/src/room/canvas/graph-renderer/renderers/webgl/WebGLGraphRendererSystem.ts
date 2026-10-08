@@ -4,6 +4,7 @@ import {
   FederatedPointerEvent,
   Point,
   PointData,
+  Rectangle,
 } from "pixi.js";
 import "pixi.js/math-extras";
 import {
@@ -19,12 +20,13 @@ import { WebGLEdge } from "./WebGLEdge.ts";
 import { WebGLNodesContainer } from "./WebGLNodesContainer.ts";
 import { WebGLEdgesContainer } from "./WebGLEdgesContainer.ts";
 import { Theme } from "../../../../../shared/theme/Theme.ts";
-import { distinctUntilChanged, Observable, Subject, throttleTime } from "rxjs";
+import { Observable, Subject, throttleTime } from "rxjs";
 import { interactionMoveThresholdPt, outputFps } from "../shared/consts.ts";
 import { isMultiSelectKeyPressed } from "./WebGLTools.ts";
 import { WebGLUserCursor } from "./WebGLUserCursor.ts";
 import { CanvasZoomTransform } from "../../../../../shared/graphics/CanvasZoomTransform.ts";
 import { useBearStore } from "../../../../../state/useBearStore.ts";
+import { CanvasScreenshot } from "../../CanvasScreenshot.ts";
 
 const onlyUpdateEdgesOnNodePositionChanges: boolean = false;
 
@@ -372,6 +374,81 @@ export class WebGLGraphRendererSystem {
     const factor = 1.3;
     this._viewPort.setZoom(this._viewPort.scale.x * factor, true);
     this.$onZoomTransformChanged.next(this.getZoomTransform());
+  }
+
+  public async takeScreenshot(): Promise<CanvasScreenshot> {
+    if (this._nodesContainer.children.length === 0) {
+      throw new Error("The graph is empty. There is nothing to export.");
+    }
+    const states = [
+      ...this._nodesContainer.children,
+      ...this._edgesContainer.children,
+    ].map((element) => ({
+      element,
+      selected: element.selected,
+      hovered: element.hovered,
+    }));
+    const cursorsVisible = this._userCursorsContainer.visible;
+    const antialias = this._app.renderer.view.antialias;
+    let canvas: ReturnType<Application["renderer"]["extract"]["canvas"]>;
+    try {
+      for (const { element } of states) {
+        element.setSelected(false);
+        element.setHovered(false);
+      }
+      this._userCursorsContainer.visible = false;
+      const bounds = this._viewPort.getLocalBounds();
+      if (
+        ![bounds.x, bounds.y, bounds.width, bounds.height].every(
+          Number.isFinite,
+        ) ||
+        bounds.width <= 0 ||
+        bounds.height <= 0
+      ) {
+        throw new Error("The graph has invalid export bounds.");
+      }
+      const x = Math.floor(bounds.x) - 2;
+      const y = Math.floor(bounds.y) - 2;
+      // Pixi falls back to view.antialias even when extract.antialias is false.
+      this._app.renderer.view.antialias = false;
+      canvas = this._app.renderer.extract.canvas({
+        target: this._viewPort,
+        frame: new Rectangle(
+          x,
+          y,
+          Math.ceil(bounds.x + bounds.width) + 2 - x,
+          Math.ceil(bounds.y + bounds.height) + 2 - y,
+        ),
+        resolution: 2,
+        clearColor: [0, 0, 0, 0],
+      });
+    } finally {
+      this._app.renderer.view.antialias = antialias;
+      for (const { element, selected, hovered } of states) {
+        element.setSelected(selected);
+        element.setHovered(hovered);
+      }
+      this._userCursorsContainer.visible = cursorsVisible;
+    }
+
+    const blob = await new Promise<Blob>((resolve, reject) => {
+      if (canvas.toBlob == null) {
+        reject(new Error("PNG export is not supported by this canvas."));
+        return;
+      }
+      canvas.toBlob((blob) => {
+        if (blob == null) {
+          reject(
+            new Error(
+              `Could not create the PNG export (${String(canvas.width)} × ${String(canvas.height)} pixels). The image may exceed the browser's canvas or memory limits.`,
+            ),
+          );
+        } else {
+          resolve(blob);
+        }
+      }, "image/png");
+    });
+    return { blob, filename: "nakar-graph.png" };
   }
 
   public zoomOut(): void {
