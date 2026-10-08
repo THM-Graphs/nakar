@@ -17,7 +17,11 @@ export class RouteLogger implements NestInterceptor {
   public intercept(
     context: ExecutionContext,
     next: CallHandler,
-  ): Observable<void> {
+  ): Observable<unknown> {
+    if (context.getType() !== 'http') {
+      return next.handle();
+    }
+
     const profiler: Profiler = this._logger.startTimer();
     const req: Request = context.switchToHttp().getRequest();
 
