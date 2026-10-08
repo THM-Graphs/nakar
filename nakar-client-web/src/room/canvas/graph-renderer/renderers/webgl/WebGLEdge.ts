@@ -198,17 +198,18 @@ export class WebGLEdge extends Container {
     ];
 
     const start = this.pointOnRadius(this._startNode, center, 0);
-    const end = this.pointOnRadius(this._endNode, center, this._arrowLength);
-
-    const controlPoint = this.calculateControlPoint(start, end, center);
-
     const arrow = this.pointOnRadius(this._endNode, center, 0);
+    const { end, controlPoint, arrowRotation } = this.calculateArrowGeometry(
+      start,
+      arrow,
+      center,
+    );
     return {
       start,
       end,
       center,
       arrow,
-      arrowRotation: Math.atan2(arrow[1] - center[1], arrow[0] - center[0]),
+      arrowRotation,
       labelAngle: this.vectorAngleDeg(
         this._startNode.positionT,
         this._endNode.positionT,
@@ -247,18 +248,11 @@ export class WebGLEdge extends Container {
     ];
     const start = point(angle - spread, radius);
     const arrow = point(angle + spread, radius);
-    const arrowControlPoint = this.calculateControlPoint(start, arrow, center);
-    const arrowRotation = Math.atan2(
-      arrow[1] - arrowControlPoint[1],
-      arrow[0] - arrowControlPoint[0],
+    const { end, controlPoint, arrowRotation } = this.calculateArrowGeometry(
+      start,
+      arrow,
+      center,
     );
-    // Moving the endpoint along this tangent preserves its direction when the
-    // control point is recalculated, and makes the line meet the arrow's base.
-    const end: Point = [
-      arrow[0] - Math.cos(arrowRotation) * arrowLength,
-      arrow[1] - Math.sin(arrowRotation) * arrowLength,
-    ];
-    const controlPoint = this.calculateControlPoint(start, end, center);
 
     return {
       start,
@@ -269,6 +263,23 @@ export class WebGLEdge extends Container {
       labelAngle: ((this._edge.parallelIndex / count) * 360 + 360) % 360,
       controlPoint,
     };
+  }
+
+  private calculateArrowGeometry(start: Point, arrow: Point, center: Point) {
+    const arrowControlPoint = this.calculateControlPoint(start, arrow, center);
+    const arrowRotation = Math.atan2(
+      arrow[1] - arrowControlPoint[1],
+      arrow[0] - arrowControlPoint[0],
+    );
+    // Moving the endpoint along this tangent preserves its direction when the
+    // control point is recalculated, and makes the line meet the arrow's base.
+    const end: Point = [
+      arrow[0] - Math.cos(arrowRotation) * this._arrowLength,
+      arrow[1] - Math.sin(arrowRotation) * this._arrowLength,
+    ];
+    const controlPoint = this.calculateControlPoint(start, end, center);
+
+    return { end, controlPoint, arrowRotation };
   }
 
   private calculateControlPoint(
