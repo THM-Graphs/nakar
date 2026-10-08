@@ -267,7 +267,6 @@ export class WebGLNode extends Container {
       const noteIndicator = new WebGLNodeNoteIndicator({
         scale: node.radius / 40,
         backgroundColor: getBackGroundColorOfColor(nodeColors[0], colorSchema),
-        textColor: getTextColorOfColor(nodeColors[0], colorSchema),
         strokeColor: this._strokeColor(theme),
       });
       noteIndicator.position.y = -node.radius;
@@ -384,12 +383,13 @@ export class WebGLNode extends Container {
     const fallbackColor: ColorDto = {
       color: { type: "ColorPresetDto", index: 0 },
     };
-    if (node.labels.length === 0) {
-      return [fallbackColor];
-    }
 
     if (node.customColor != null) {
       return [node.customColor];
+    }
+
+    if (node.labels.length === 0) {
+      return [fallbackColor];
     }
 
     const colors: ColorDto[] = [];
