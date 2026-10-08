@@ -7,8 +7,6 @@ export class WebGLEdgeArrow extends Container {
     super();
 
     this._length = edgeWidth * 6;
-    this.eventMode = "dynamic";
-    this.cursor = "pointer";
 
     const arrow = new Graphics()
       .moveTo(0, 0)

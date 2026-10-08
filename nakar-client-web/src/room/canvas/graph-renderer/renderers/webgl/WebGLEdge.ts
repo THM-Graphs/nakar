@@ -1,4 +1,4 @@
-import { BitmapText, Container, Graphics } from "pixi.js";
+import { Container, Graphics } from "pixi.js";
 import { ColorDto, EdgeDto } from "api-client";
 import { WebGLNode } from "./WebGLNode.ts";
 import { match } from "ts-pattern";
@@ -8,6 +8,7 @@ import { Subject } from "rxjs";
 import { useBearStore } from "../../../../../state/useBearStore.ts";
 import { isMultiSelectKeyPressed } from "./WebGLTools.ts";
 import { WebGLEdgeArrow } from "./WebGLEdgeArrow.ts";
+import { WebGLEdgeLabel } from "./WebGLEdgeLabel.ts";
 
 type Point = [number, number];
 
@@ -29,9 +30,8 @@ export class WebGLEdge extends Container {
   private readonly _theme: Theme;
 
   private readonly _line: Graphics;
-  private readonly _text: BitmapText;
   private readonly _arrow: WebGLEdgeArrow;
-  private readonly _textBg: Graphics;
+  private readonly _edgeLabel: WebGLEdgeLabel;
 
   private _hovered: boolean;
   private _selected: boolean;
@@ -69,36 +69,13 @@ export class WebGLEdge extends Container {
     this._arrow = new WebGLEdgeArrow(edge.width);
     this.addChild(this._arrow);
 
-    this._text = new BitmapText({
+    this._edgeLabel = new WebGLEdgeLabel({
       text: edge.isCluster
         ? `${edge.type} (${edge.clusterSize.toString()})`
         : edge.type,
-      style: {
-        fill: "#ffffff",
-        fontSize: 10,
-        fontWeight: "bold",
-        fontFamily: "system-ui",
-      },
-      anchor: 0.5,
+      backgroundColor: this.getStrokeColor(theme),
     });
-    this._text.eventMode = "none";
-
-    const textBgPaddingTopBottom = 2;
-    const textBgPaddingStartEnd = 4;
-    this._textBg = new Graphics()
-      .roundRect(
-        -this._text.width / 2 - textBgPaddingStartEnd,
-        -this._text.height / 2 - textBgPaddingTopBottom,
-        this._text.width + textBgPaddingStartEnd * 2,
-        this._text.height + textBgPaddingTopBottom * 2,
-        4,
-      )
-      .fill(this.getStrokeColor(theme));
-    this._textBg.eventMode = "dynamic";
-    this._textBg.cursor = "pointer";
-    this.addChild(this._textBg);
-
-    this.addChild(this._text);
+    this.addChild(this._edgeLabel);
 
     this.eventMode = "dynamic";
     this.on("pointerover", () => {
@@ -285,36 +262,25 @@ export class WebGLEdge extends Container {
   }
 
   private updateAppearance(center: [number, number], labelAngle: number): void {
+    const edgeColor = this.getEdgeColor(
+      this._edge.customColor,
+      this._colorSchema,
+      this._theme,
+    );
     this._line.stroke({
       width: this._edge.width,
-      color: this.getEdgeColor(
-        this._edge.customColor,
-        this._colorSchema,
-        this._theme,
-      ),
+      color: edgeColor,
       cap: "square",
     });
 
-    this._text.position.set(center[0], center[1]);
-    this._text.tint = this.getEdgeTextColor(
-      this._edge.customColor,
-      this._colorSchema,
-    );
-    this._textBg.position.set(center[0], center[1]);
-    const angle = this.fixDegAngle(labelAngle);
-    this._text.angle = angle;
-    this._textBg.angle = angle;
-    this._textBg.tint = this.getEdgeColor(
-      this._edge.customColor,
-      this._colorSchema,
-      this._theme,
+    this._edgeLabel.position.set(...center);
+    this._edgeLabel.angle = this.fixDegAngle(labelAngle);
+    this._edgeLabel.setColors(
+      edgeColor,
+      this.getEdgeTextColor(this._edge.customColor, this._colorSchema),
     );
 
-    this._arrow.tint = this.getEdgeColor(
-      this._edge.customColor,
-      this._colorSchema,
-      this._theme,
-    );
+    this._arrow.tint = edgeColor;
   }
 
   private getEdgeColor(
