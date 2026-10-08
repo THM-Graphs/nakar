@@ -3,6 +3,7 @@ import {
   Circle,
   ColorSource,
   Container,
+  DestroyOptions,
   FederatedPointerEvent,
   FillGradient,
   Graphics,
@@ -44,6 +45,7 @@ export class WebGLNode extends Container {
   private _textMask: Graphics | null;
   private readonly _hoverIndicator: Graphics;
   private readonly _titleText: BitmapText;
+  private _gradient: FillGradient | null = null;
 
   private _vx: number;
   private _vy: number;
@@ -103,6 +105,7 @@ export class WebGLNode extends Container {
           };
         }),
       });
+      this._gradient = gradient;
       baseCircle.fill(gradient);
     }
     baseCircle.stroke({
@@ -319,6 +322,16 @@ export class WebGLNode extends Container {
         this.position.y = this._ty;
       }
     }
+  }
+
+  public override destroy(options?: DestroyOptions): void {
+    if (this.destroyed) {
+      return;
+    }
+    super.destroy(options);
+    // The gradient owns its texture; the other graphics use shared textures.
+    this._gradient?.destroy();
+    this._gradient = null;
   }
 
   public moveTo(pos: PointData, smooth: boolean): void {

@@ -22,13 +22,19 @@ import { WebGLEdgesContainer } from "./WebGLEdgesContainer.ts";
 import { Theme } from "../../../../../shared/theme/Theme.ts";
 import { Observable, Subject, throttleTime } from "rxjs";
 import { interactionMoveThresholdPt, outputFps } from "../shared/consts.ts";
-import { isMultiSelectKeyPressed } from "./WebGLTools.ts";
+import {
+  destroyGraphElementOptions,
+  isMultiSelectKeyPressed,
+} from "./WebGLTools.ts";
 import { WebGLUserCursor } from "./WebGLUserCursor.ts";
 import { CanvasZoomTransform } from "../../../../../shared/graphics/CanvasZoomTransform.ts";
 import { useBearStore } from "../../../../../state/useBearStore.ts";
 import { CanvasScreenshot } from "../../CanvasScreenshot.ts";
 
 const onlyUpdateEdgesOnNodePositionChanges: boolean = false;
+const debugGlobal = globalThis as typeof globalThis & {
+  __PIXI_APP__?: Application;
+};
 
 export class WebGLGraphRendererSystem {
   private _nodesContainer: WebGLNodesContainer;
@@ -263,9 +269,11 @@ export class WebGLGraphRendererSystem {
 
   public loadGraphContent(elements: LiveCanvasGraphElementsDto): void {
     for (const edge of this._edgesContainer.clear()) {
-      edge.destroy({ children: true });
+      edge.destroy(destroyGraphElementOptions);
     }
-    this._nodesContainer.clear();
+    for (const node of this._nodesContainer.clear()) {
+      node.destroy(destroyGraphElementOptions);
+    }
 
     for (const node of elements.nodes) {
       const webGlNode = new WebGLNode(
@@ -342,11 +350,16 @@ export class WebGLGraphRendererSystem {
 
   public destroy(): void {
     this._resizeObserver.disconnect();
+    if (debugGlobal.__PIXI_APP__ === this._app) {
+      delete debugGlobal.__PIXI_APP__;
+    }
     this._app.destroy(true, true);
   }
 
   public loadUserCursors(users: UserPreviewDto[]): void {
-    this._userCursorsContainer.removeChildren();
+    for (const cursor of this._userCursorsContainer.removeChildren()) {
+      cursor.destroy(destroyGraphElementOptions);
+    }
 
     for (const user of users) {
       const userCursor = new WebGLUserCursor(user, this._theme);
@@ -515,8 +528,6 @@ export class WebGLGraphRendererSystem {
   }
 
   private enableDebug(app: Application): void {
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-expect-error
-    globalThis.__PIXI_APP__ = app;
+    debugGlobal.__PIXI_APP__ = app;
   }
 }

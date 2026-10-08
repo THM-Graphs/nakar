@@ -4,6 +4,12 @@ import { match } from "ts-pattern";
 import { isMacOS } from "../../../../../shared/dom/isMacOS.ts";
 import { ColorSource, FederatedPointerEvent } from "pixi.js";
 
+export const destroyGraphElementOptions = {
+  children: true,
+  context: true,
+  style: true,
+};
+
 export function getBackGroundColorOfColor(
   color: ColorDto,
   colorSchema: ColorSchema,

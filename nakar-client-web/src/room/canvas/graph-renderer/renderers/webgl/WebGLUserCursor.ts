@@ -1,4 +1,11 @@
-import { BitmapText, Container, Graphics, Point, PointData } from "pixi.js";
+import {
+  BitmapText,
+  Container,
+  DestroyOptions,
+  Graphics,
+  Point,
+  PointData,
+} from "pixi.js";
 import { UserPreviewDto } from "api-client";
 import { smoothDamp } from "../shared/smoothDamp.ts";
 import { maxSpeed, smoothTime } from "../shared/consts.ts";
@@ -10,6 +17,7 @@ export class WebGLUserCursor extends Container {
   private _vy: number;
   private _tx: number;
   private _ty: number;
+  private readonly _shadowFilter: DropShadowFilter;
 
   public constructor(user: UserPreviewDto, theme: Theme) {
     super({ label: user.id });
@@ -57,14 +65,13 @@ export class WebGLUserCursor extends Container {
         width: 2,
         alignment: 1,
       });
-    cursor.filters = [
-      new DropShadowFilter({
-        color: 0x000000,
-        alpha: 0.4,
-        blur: 0.5,
-        offset: new Point(0, 1),
-      }),
-    ];
+    this._shadowFilter = new DropShadowFilter({
+      color: 0x000000,
+      alpha: 0.4,
+      blur: 0.5,
+      offset: new Point(0, 1),
+    });
+    cursor.filters = [this._shadowFilter];
 
     this.addChild(bg);
     this.addChild(text);
@@ -80,6 +87,15 @@ export class WebGLUserCursor extends Container {
       this._vx = 0;
       this._vy = 0;
     }
+  }
+
+  public override destroy(options?: DestroyOptions): void {
+    if (this.destroyed) {
+      return;
+    }
+    super.destroy(options);
+    // Programs are cached and shared by all cursor filters.
+    this._shadowFilter.destroy();
   }
 
   public tick(deltaTime: number): void {
