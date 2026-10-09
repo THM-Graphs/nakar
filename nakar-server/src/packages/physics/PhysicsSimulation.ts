@@ -44,14 +44,6 @@ export class PhysicsSimulation {
     return this._onLog$.asObservable();
   }
 
-  private get _heat(): number {
-    const delta: number = this._targetDate - Date.now();
-    const heat: number =
-      Range.clamp(delta, 0, PhysicsSimulation.cooldownTime) /
-      PhysicsSimulation.cooldownTime;
-    return heat;
-  }
-
   private get _targetSlowTickDuration(): number {
     return (1 / PhysicsSimulation.FPS) * 1000;
   }
@@ -147,6 +139,7 @@ export class PhysicsSimulation {
   private _tick(): void {
     const nodes: (PhysicalNode | null)[] = Object.values(this._graph.nodes);
     const edges: (PhysicalEdge | null)[] = Object.values(this._graph.edges);
+    const heat: number = this._calculateHeat();
 
     for (let i: number = 0; i < nodes.length; i++) {
       const nodeA: PhysicalNode | null = nodes[i];
@@ -201,8 +194,16 @@ export class PhysicsSimulation {
       if (node == null) {
         continue;
       }
-      this._applyVelocity(node);
+      this._applyVelocity(node, heat);
     }
+  }
+
+  private _calculateHeat(): number {
+    const delta: number = this._targetDate - Date.now();
+    const heat: number =
+      Range.clamp(delta, 0, PhysicsSimulation.cooldownTime) /
+      PhysicsSimulation.cooldownTime;
+    return heat;
   }
 
   private _positionEquals(nodeA: PhysicalNode, nodeB: PhysicalNode): boolean {
@@ -230,7 +231,7 @@ export class PhysicsSimulation {
     }
   }
 
-  private _applyVelocity(node: PhysicalNode): void {
+  private _applyVelocity(node: PhysicalNode, heat: number): void {
     const magnitude: number = this._magnitude(node.velocityX, node.velocityY);
     if (magnitude > PhysicsSimulation.maximumVelocity) {
       node.velocityX =
@@ -238,8 +239,8 @@ export class PhysicsSimulation {
       node.velocityY =
         (node.velocityY / magnitude) * PhysicsSimulation.maximumVelocity;
     }
-    node.positionX += node.velocityX * this._heat;
-    node.positionY += node.velocityY * this._heat;
+    node.positionX += node.velocityX * heat;
+    node.positionY += node.velocityY * heat;
 
     node.velocityX *= 1 - PhysicsSimulation.frictionFactor;
     node.velocityY *= 1 - PhysicsSimulation.frictionFactor;
