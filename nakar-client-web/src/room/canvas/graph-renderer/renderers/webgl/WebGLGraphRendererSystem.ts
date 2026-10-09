@@ -42,7 +42,6 @@ import { CanvasZoomTransform } from "../../../../../shared/graphics/CanvasZoomTr
 import { useBearStore } from "../../../../../state/useBearStore.ts";
 import { CanvasScreenshot } from "../../CanvasScreenshot.ts";
 
-const onlyUpdateEdgesOnNodePositionChanges: boolean = false;
 const debugGlobal = globalThis as typeof globalThis & {
   __PIXI_APP__?: Application;
 };
@@ -157,15 +156,11 @@ export class WebGLGraphRendererSystem {
     _app.ticker.add((ticker) => {
       viewport.update(ticker.deltaMS);
       this.$onZoomTransformChanged.next(this.getZoomTransform());
-      let nodesAreIdle: boolean = true;
       for (const node of this._nodesContainer.children) {
         node.tick(ticker.deltaMS);
-        nodesAreIdle &&= node.idle;
       }
-      if (!onlyUpdateEdgesOnNodePositionChanges || !nodesAreIdle) {
-        for (const edge of this._edgesContainer.children) {
-          edge.tick();
-        }
+      for (const edge of this._edgesContainer.children) {
+        edge.tick();
       }
 
       for (const userCursor of this._userCursorsContainer.children) {
