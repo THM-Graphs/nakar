@@ -48,6 +48,9 @@ export function WebGLGraphRenderer() {
         if (webGLRenderer == null) {
           return;
         }
+        webGLRenderer.setHiddenUserCursors(
+          useBearStore.getState().room.canvas.hiddenUserCursors,
+        );
         setCurrentGraphRenderer(webGLRenderer);
         _currentRenderer = webGLRenderer;
         websocketsManager.sendMessage({ type: "ClientReadyWsdto" });
@@ -186,6 +189,14 @@ export function WebGLGraphRenderer() {
               (s) => s.room.panels.inspector.element,
               (elements) => {
                 webGLRenderer.updateSelectedElements(elements);
+              },
+            ),
+          },
+          {
+            unsubscribe: useBearStore.subscribe(
+              (s) => s.room.canvas.hiddenUserCursors,
+              (hiddenUserCursors) => {
+                webGLRenderer.setHiddenUserCursors(hiddenUserCursors);
               },
             ),
           },

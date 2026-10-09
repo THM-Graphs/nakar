@@ -220,6 +220,8 @@ export interface BearState {
       };
       hideLabels: boolean;
       setHideLabels: (pm: boolean) => void;
+      hiddenUserCursors: string[];
+      setUserCursorVisible: (userId: string, visible: boolean) => void;
       colorSchemaSlug: string;
       setColorSchema: (newSchemaSlug: string) => void;
       zoomTransform: CanvasZoomTransform;

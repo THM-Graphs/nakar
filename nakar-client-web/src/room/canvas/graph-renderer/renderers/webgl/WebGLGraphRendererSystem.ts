@@ -50,6 +50,7 @@ export class WebGLGraphRendererSystem {
   private _nodesContainer: WebGLNodesContainer;
   private _edgesContainer: WebGLEdgesContainer;
   private _userCursorsContainer: Container<WebGLUserCursor>;
+  private _hiddenUserCursorIds: Set<string>;
   private _viewPort: Viewport;
   private _resizeObserver: ResizeObserver;
 
@@ -95,6 +96,7 @@ export class WebGLGraphRendererSystem {
     this.$onCursorMoved = new Subject();
     this.$onZoomTransformChanged = new Subject();
     this._mouseClickStartPositionHost = null;
+    this._hiddenUserCursorIds = new Set();
 
     this.enableDebug(this._app);
     // this._app.ticker.maxFPS = 60;
@@ -378,24 +380,26 @@ export class WebGLGraphRendererSystem {
     for (const user of users) {
       const userCursor = new WebGLUserCursor(user, this._theme);
       userCursor.setZoom(this._viewPort.scale.x);
-      userCursor.visible = false;
+      userCursor.setHidden(this._hiddenUserCursorIds.has(user.id));
       this._userCursorsContainer.addChild(userCursor);
     }
   }
 
+  public setHiddenUserCursors(userIds: string[]): void {
+    this._hiddenUserCursorIds = new Set(userIds);
+    for (const userCursor of this._userCursorsContainer.children) {
+      userCursor.setHidden(this._hiddenUserCursorIds.has(userCursor.userId));
+    }
+  }
+
   public setUserCursorPosition(id: string, position: PointData): void {
-    const userCusor: WebGLUserCursor | null =
+    const userCursor: WebGLUserCursor | null =
       this._userCursorsContainer.getChildByLabel(id) as WebGLUserCursor | null;
-    if (userCusor == null) {
+    if (userCursor == null) {
       return;
     }
 
-    userCusor.moveTo(position, true);
-
-    if (!userCusor.visible) {
-      userCusor.visible = true;
-      userCusor.moveTo(position, false);
-    }
+    userCursor.moveTo(position, true);
   }
 
   public zoomIn(): void {

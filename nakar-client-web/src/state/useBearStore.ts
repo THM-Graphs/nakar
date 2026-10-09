@@ -651,6 +651,21 @@ export const useBearStore = create<BearState>()(
                   s.room.canvas.hideLabels = hideLabels;
                 });
               },
+              hiddenUserCursors: [],
+              setUserCursorVisible: (userId: string, visible: boolean) => {
+                set((s) => {
+                  if (visible) {
+                    s.room.canvas.hiddenUserCursors =
+                      s.room.canvas.hiddenUserCursors.filter(
+                        (hiddenUserId) => hiddenUserId !== userId,
+                      );
+                  } else if (
+                    !s.room.canvas.hiddenUserCursors.includes(userId)
+                  ) {
+                    s.room.canvas.hiddenUserCursors.push(userId);
+                  }
+                });
+              },
               colorSchemaSlug: ColorSchema.allColorSchema()[0].slug,
               setColorSchema: (newSchema: string) => {
                 set((s) => {
@@ -690,6 +705,7 @@ export const useBearStore = create<BearState>()(
         name: "state",
         partialize: (s): PersistStorage => ({
           hideLabels: s.room.canvas.hideLabels,
+          hiddenUserCursors: s.room.canvas.hiddenUserCursors,
           userTheme: s.global.theme.user,
           selectedCanvasTab: s.room.canvas.tabs.selected,
           leftPanel: s.room.panels.left,
@@ -705,6 +721,13 @@ export const useBearStore = create<BearState>()(
         merge: (rawStorage: unknown, state: BearState): BearState => {
           const storage: PersistStorage = rawStorage as PersistStorage;
           state.room.canvas.hideLabels = storage.hideLabels ?? false;
+          state.room.canvas.hiddenUserCursors = Array.isArray(
+            storage.hiddenUserCursors,
+          )
+            ? storage.hiddenUserCursors.filter(
+                (userId): userId is string => typeof userId === "string",
+              )
+            : [];
           state.global.theme.user = match(storage.userTheme)
             .returnType<UserTheme>()
             .with("light", () => "light")

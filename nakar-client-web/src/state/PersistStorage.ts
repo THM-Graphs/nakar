@@ -1,5 +1,6 @@
 export interface PersistStorage {
   hideLabels: boolean | null;
+  hiddenUserCursors: string[] | null;
   userTheme: string | null;
   selectedCanvasTab: string | null;
   leftPanel: string | null;
