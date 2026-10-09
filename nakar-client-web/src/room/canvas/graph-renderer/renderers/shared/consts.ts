@@ -4,3 +4,5 @@ export const baseStrokeWidth = 2;
 export const interactionMoveThresholdPt = 5;
 export const smoothTime = (1000 / inputFps) * 1.5;
 export const maxSpeed = 10000;
+export const minZoom = 0.002;
+export const maxZoom = 8;

@@ -21,7 +21,12 @@ import { WebGLNodesContainer } from "./WebGLNodesContainer.ts";
 import { WebGLEdgesContainer } from "./WebGLEdgesContainer.ts";
 import { Theme } from "../../../../../shared/theme/Theme.ts";
 import { Observable, Subject, throttleTime } from "rxjs";
-import { interactionMoveThresholdPt, outputFps } from "../shared/consts.ts";
+import {
+  interactionMoveThresholdPt,
+  maxZoom,
+  minZoom,
+  outputFps,
+} from "../shared/consts.ts";
 import {
   destroyGraphElementOptions,
   isMultiSelectKeyPressed,
@@ -105,7 +110,11 @@ export class WebGLGraphRendererSystem {
     this._viewPort = viewport;
     viewport.label = "viewport";
     _app.stage.addChild(viewport);
-    viewport.drag().wheel({ smooth: 5 }).decelerate({ friction: 0.8 });
+    viewport
+      .drag()
+      .wheel({ smooth: 5 })
+      .decelerate({ friction: 0.8 })
+      .clampZoom({ minScale: minZoom, maxScale: maxZoom });
     this._resizeObserver = new ResizeObserver((entries) => {
       for (const entry of entries) {
         const transform = this.getZoomTransform();
@@ -252,7 +261,7 @@ export class WebGLGraphRendererSystem {
   }
 
   public setZoomTransform(transform: CanvasZoomTransform): void {
-    this._viewPort.scale.set(transform.k);
+    this._viewPort.scale.set(this.clampZoom(transform.k));
     // SVG translations are relative to the canvas center, Pixi's to its corner.
     this._viewPort.position.set(
       this._viewPort.screenWidth / 2 + transform.x,
@@ -385,7 +394,10 @@ export class WebGLGraphRendererSystem {
 
   public zoomIn(): void {
     const factor = 1.3;
-    this._viewPort.setZoom(this._viewPort.scale.x * factor, true);
+    this._viewPort.setZoom(
+      this.clampZoom(this._viewPort.scale.x * factor),
+      true,
+    );
     this.$onZoomTransformChanged.next(this.getZoomTransform());
   }
 
@@ -466,7 +478,10 @@ export class WebGLGraphRendererSystem {
 
   public zoomOut(): void {
     const factor = 0.7;
-    this._viewPort.setZoom(this._viewPort.scale.x * factor, true);
+    this._viewPort.setZoom(
+      this.clampZoom(this._viewPort.scale.x * factor),
+      true,
+    );
     this.$onZoomTransformChanged.next(this.getZoomTransform());
   }
 
@@ -516,9 +531,10 @@ export class WebGLGraphRendererSystem {
       return;
     }
 
-    const scale =
+    const scale = this.clampZoom(
       paddingPercent /
-      Math.max(bounds.width / fullWidth, bounds.height / fullHeight);
+        Math.max(bounds.width / fullWidth, bounds.height / fullHeight),
+    );
     this._viewPort.setZoom(scale);
     this._viewPort.moveCenter(
       bounds.x + bounds.width / 2 - (leftInset - rightInset) / 2 / scale,
@@ -529,5 +545,9 @@ export class WebGLGraphRendererSystem {
 
   private enableDebug(app: Application): void {
     debugGlobal.__PIXI_APP__ = app;
+  }
+
+  private clampZoom(zoom: number): number {
+    return Math.max(minZoom, Math.min(maxZoom, zoom));
   }
 }
