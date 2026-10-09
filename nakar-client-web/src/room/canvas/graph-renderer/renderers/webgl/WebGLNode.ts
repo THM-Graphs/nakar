@@ -182,6 +182,11 @@ export class WebGLNode extends Container {
     baseCircle.on("rightclick", (event) => {
       event.preventDefault();
       event.stopPropagation();
+      if (isMultiSelectKeyPressed(event)) {
+        $onDisplayNodeDataWithModifier.next(this);
+      } else {
+        $onDisplayNodeData.next(this);
+      }
       $onShowNodeContextMenu.next({
         node: this,
         position: event.client.clone(),
