@@ -164,6 +164,7 @@ export class WebGLGraphRendererSystem {
       }
 
       for (const userCursor of this._userCursorsContainer.children) {
+        userCursor.setZoom(viewport.scale.x);
         userCursor.tick(ticker.deltaMS);
       }
     });
@@ -376,6 +377,7 @@ export class WebGLGraphRendererSystem {
 
     for (const user of users) {
       const userCursor = new WebGLUserCursor(user, this._theme);
+      userCursor.setZoom(this._viewPort.scale.x);
       userCursor.visible = false;
       this._userCursorsContainer.addChild(userCursor);
     }

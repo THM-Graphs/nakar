@@ -1,23 +1,14 @@
-import {
-  BitmapText,
-  Container,
-  DestroyOptions,
-  Graphics,
-  Point,
-  PointData,
-} from "pixi.js";
+import { BitmapText, Container, Graphics, PointData } from "pixi.js";
 import { UserPreviewDto } from "api-client";
 import { smoothDamp } from "../shared/smoothDamp.ts";
 import { maxSpeed, smoothTime } from "../shared/consts.ts";
 import { Theme } from "../../../../../shared/theme/Theme.ts";
-import { DropShadowFilter } from "pixi-filters";
 
 export class WebGLUserCursor extends Container {
   private _vx: number;
   private _vy: number;
   private _tx: number;
   private _ty: number;
-  private readonly _shadowFilter: DropShadowFilter;
 
   public constructor(user: UserPreviewDto, theme: Theme) {
     super({ label: user.id });
@@ -26,18 +17,18 @@ export class WebGLUserCursor extends Container {
     this._tx = 0;
     this._ty = 0;
 
-    const paddingStartEnd = 10;
-    const paddingTopBottom = 5;
+    const paddingStartEnd = 7.5;
+    const paddingTopBottom = 3.75;
 
     const bgColor = theme === "dark" ? "#ffffff" : "#000000";
     const fgColor = theme === "dark" ? "#000000" : "#ffffff";
-    const height = 35;
+    const height = 26.25;
     const gap = 25;
 
     const text = new BitmapText({
       text: user.displayName ?? user.id,
       style: {
-        fontSize: 20,
+        fontSize: 14,
         fontWeight: "bold",
         fontFamily: "system-ui",
         fill: fgColor,
@@ -47,31 +38,22 @@ export class WebGLUserCursor extends Container {
     text.position.y = paddingTopBottom;
 
     const bg = new Graphics()
-      .roundRect(gap, 0, text.width + paddingStartEnd * 2, height, 5)
+      .roundRect(gap, 0, text.width + paddingStartEnd * 2, height, 3.75)
       .fill({ color: bgColor });
 
     const cursor = new Graphics()
-      .moveTo(0.8, 1)
-      .lineTo(0.8, 32)
-      .lineTo(8, 24)
-      .lineTo(13.6, 35)
-      .lineTo(18.4, 32)
-      .lineTo(12.8, 21)
-      .lineTo(23.2, 21)
-      .closePath()
-      .fill({ color: bgColor })
-      .stroke({
-        color: fgColor,
-        width: 2,
-        alignment: 1,
-      });
-    this._shadowFilter = new DropShadowFilter({
-      color: 0x000000,
-      alpha: 0.4,
-      blur: 0.5,
-      offset: new Point(0, 1),
-    });
-    cursor.filters = [this._shadowFilter];
+      .roundShape(
+        [
+          { x: 0, y: 0 },
+          { x: 18.5, y: 18 },
+          { x: 7, y: 18 },
+          { x: 0, y: 26.25 },
+        ],
+        2.25,
+        true,
+        0.5,
+      )
+      .fill({ color: bgColor });
 
     this.addChild(bg);
     this.addChild(text);
@@ -89,13 +71,11 @@ export class WebGLUserCursor extends Container {
     }
   }
 
-  public override destroy(options?: DestroyOptions): void {
-    if (this.destroyed) {
+  public setZoom(zoom: number): void {
+    if (!Number.isFinite(zoom) || zoom <= 0) {
       return;
     }
-    super.destroy(options);
-    // Programs are cached and shared by all cursor filters.
-    this._shadowFilter.destroy();
+    this.scale.set(1 / zoom);
   }
 
   public tick(deltaTime: number): void {
