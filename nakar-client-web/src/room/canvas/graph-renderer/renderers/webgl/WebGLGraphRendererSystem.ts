@@ -20,7 +20,13 @@ import { WebGLEdge } from "./WebGLEdge.ts";
 import { WebGLNodesContainer } from "./WebGLNodesContainer.ts";
 import { WebGLEdgesContainer } from "./WebGLEdgesContainer.ts";
 import { Theme } from "../../../../../shared/theme/Theme.ts";
-import { Observable, Subject, throttleTime } from "rxjs";
+import {
+  auditTime,
+  distinctUntilChanged,
+  Observable,
+  Subject,
+  throttleTime,
+} from "rxjs";
 import {
   interactionMoveThresholdPt,
   maxZoom,
@@ -249,7 +255,10 @@ export class WebGLGraphRendererSystem {
   }
 
   public get onZoomTransformChanged(): Observable<CanvasZoomTransform> {
-    return this.$onZoomTransformChanged.asObservable();
+    return this.$onZoomTransformChanged.asObservable().pipe(
+      distinctUntilChanged((previous, current) => previous.equals(current)),
+      auditTime(1000),
+    );
   }
 
   public getZoomTransform(): CanvasZoomTransform {
