@@ -1,5 +1,6 @@
 export interface PersistStorage {
   hideLabels: boolean | null;
+  hiddenUserCursors: string[] | null;
   userTheme: string | null;
   selectedCanvasTab: string | null;
   leftPanel: string | null;
@@ -10,4 +11,5 @@ export interface PersistStorage {
   canvasTransformY: number | null;
   jwt: string | null;
   myRooms: string[] | null;
+  canvasMode: string | null;
 }

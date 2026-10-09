@@ -141,6 +141,7 @@ export function Canvas() {
   const pushErrorNotification = useBearStore(
     (s) => s.room.ui.pushErrorNotification,
   );
+  const setLocks = useBearStore((s) => s.room.scenario.setLocks);
 
   useEffect(() => {
     setScenarios(canvasContext.initialScenariosData);
@@ -245,8 +246,8 @@ export function Canvas() {
               severity: notification.severity,
             });
           })
-          .with({ type: "SetNodeLocksWsdto" }, () => {
-            /* */
+          .with({ type: "SetNodeLocksWsdto" }, (event) => {
+            setLocks(event.locks);
           })
           .with({ type: "KickWsdto" }, () => {
             void navigate(Router.getHomePath());
@@ -421,7 +422,7 @@ export function Canvas() {
             <ReconnectOverlay></ReconnectOverlay>
           )}
         </Stack>
-        <GraphRenderer></GraphRenderer>
+        {socketState.type === "connected" && <GraphRenderer></GraphRenderer>}
         <ToastStack></ToastStack>
         <RunScenarioModal></RunScenarioModal>
         <ExpandNodePreviewModal></ExpandNodePreviewModal>

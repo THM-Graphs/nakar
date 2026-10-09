@@ -490,8 +490,12 @@ export type MoveCursorWsdto = {
     position: PositionDto;
 };
 
+export type ClientReadyWsdto = {
+    type: 'ClientReadyWsdto';
+};
+
 export type ActionWsdto = {
-    action: GrabNodeWsdto | MoveNodesWsdto | UngrabNodeWsdto | MoveCursorWsdto;
+    action: GrabNodeWsdto | MoveNodesWsdto | UngrabNodeWsdto | MoveCursorWsdto | ClientReadyWsdto;
 };
 
 export type CanvasChangedWsdto = {

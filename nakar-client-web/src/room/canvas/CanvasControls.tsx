@@ -15,11 +15,12 @@ export function CanvasControls(props: { className?: string }) {
   const element = useBearStore((s) => s.room.panels.inspector.element);
   const nodes = useBearStore((s) => s.room.scenario.graph.elements.nodes);
   const selectedTab = useBearStore((s) => s.room.canvas.tabs.selected);
+  const rendererMode = useBearStore((s) => s.room.canvas.renderer.mode);
 
   return (
     <Stack
       className={clsx(
-        "align-items-start bg-body-tertiary rounded border shadow-sm pe-auto",
+        "align-items-start bg-body-tertiary rounded border shadow-sm pe-auto overflow-hidden",
         props.className,
       )}
     >
@@ -61,16 +62,17 @@ export function CanvasControls(props: { className?: string }) {
           selectedTab,
         }}
         hideTitle={true}
-        className={"mb-3"}
         tooltipPlacement={"right"}
       ></ActionNavbarButton>
-      <ActionNavbarButton
-        action={HideLabelsAction.shared}
-        params={{ hideLabels, setHideLabels, selectedTab }}
-        hideTitle={true}
-        tooltipPlacement={"right"}
-        className={"rounded-bottom"}
-      ></ActionNavbarButton>
+      {rendererMode === "svg" && (
+        <ActionNavbarButton
+          action={HideLabelsAction.shared}
+          params={{ hideLabels, setHideLabels, selectedTab }}
+          hideTitle={true}
+          tooltipPlacement={"right"}
+          className={"mt-3"}
+        ></ActionNavbarButton>
+      )}
     </Stack>
   );
 }

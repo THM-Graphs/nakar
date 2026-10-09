@@ -218,13 +218,6 @@ export class WebSocketManager
       username: user?.username ?? null,
       databaseId: user?.documentId ?? null,
     });
-
-    wsClient.send({
-      event: {
-        type: 'CanvasDataReadyWsdto',
-        data: this._schemaFactory.createSchemaLiveCanvasData(liveCanvas),
-      } satisfies CanvasDataReadyWsdto,
-    });
   }
 
   public handleDisconnect(wsClient: Socket): void {
@@ -293,6 +286,19 @@ export class WebSocketManager
           this._assertLiveCanvas(wsClient)?.setCursorPosition({
             socketId: wsClient.id,
             position: [m.position.x, m.position.y],
+          });
+        })
+        .with({ type: 'ClientReadyWsdto' }, (): void => {
+          const liveCanvas: LiveCanvas | null =
+            this._assertLiveCanvas(wsClient);
+          if (liveCanvas == null) {
+            return;
+          }
+          wsClient.send({
+            event: {
+              type: 'CanvasDataReadyWsdto',
+              data: this._schemaFactory.createSchemaLiveCanvasData(liveCanvas),
+            } satisfies CanvasDataReadyWsdto,
           });
         })
         .exhaustive();

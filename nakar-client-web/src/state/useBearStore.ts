@@ -27,7 +27,8 @@ import {
   NoteDto,
 } from "api-client";
 import { handleError } from "../shared/error/handleError.ts";
-import { SVGGraphRenderer } from "../room/canvas/graph-renderer/renderers/svg/SVGGraphRenderer.ts";
+import { SVGGraphRendererSystem } from "../room/canvas/graph-renderer/renderers/svg/SVGGraphRendererSystem.ts";
+import { WebGLGraphRendererSystem } from "../room/canvas/graph-renderer/renderers/webgl/WebGLGraphRendererSystem.ts";
 
 enableMapSet();
 
@@ -650,6 +651,21 @@ export const useBearStore = create<BearState>()(
                   s.room.canvas.hideLabels = hideLabels;
                 });
               },
+              hiddenUserCursors: [],
+              setUserCursorVisible: (userId: string, visible: boolean) => {
+                set((s) => {
+                  if (visible) {
+                    s.room.canvas.hiddenUserCursors =
+                      s.room.canvas.hiddenUserCursors.filter(
+                        (hiddenUserId) => hiddenUserId !== userId,
+                      );
+                  } else if (
+                    !s.room.canvas.hiddenUserCursors.includes(userId)
+                  ) {
+                    s.room.canvas.hiddenUserCursors.push(userId);
+                  }
+                });
+              },
               colorSchemaSlug: ColorSchema.allColorSchema()[0].slug,
               setColorSchema: (newSchema: string) => {
                 set((s) => {
@@ -664,9 +680,20 @@ export const useBearStore = create<BearState>()(
               },
               renderer: {
                 current: null,
-                setCurrent: (newRenderer: SVGGraphRenderer | null) => {
+                setCurrent: (
+                  newRenderer:
+                    SVGGraphRendererSystem | WebGLGraphRendererSystem | null,
+                ) => {
                   set((s) => {
                     s.room.canvas.renderer.current = newRenderer;
+                  });
+                },
+                mode: "svg",
+                setMode: (
+                  newMode: BearState["room"]["canvas"]["renderer"]["mode"],
+                ) => {
+                  set((s) => {
+                    s.room.canvas.renderer.mode = newMode;
                   });
                 },
               },
@@ -678,6 +705,7 @@ export const useBearStore = create<BearState>()(
         name: "state",
         partialize: (s): PersistStorage => ({
           hideLabels: s.room.canvas.hideLabels,
+          hiddenUserCursors: s.room.canvas.hiddenUserCursors,
           userTheme: s.global.theme.user,
           selectedCanvasTab: s.room.canvas.tabs.selected,
           leftPanel: s.room.panels.left,
@@ -688,10 +716,18 @@ export const useBearStore = create<BearState>()(
           canvasTransformY: s.room.canvas.zoomTransform.y,
           jwt: s.global.auth.jwt,
           myRooms: s.start.myRooms,
+          canvasMode: s.room.canvas.renderer.mode,
         }),
         merge: (rawStorage: unknown, state: BearState): BearState => {
           const storage: PersistStorage = rawStorage as PersistStorage;
           state.room.canvas.hideLabels = storage.hideLabels ?? false;
+          state.room.canvas.hiddenUserCursors = Array.isArray(
+            storage.hiddenUserCursors,
+          )
+            ? storage.hiddenUserCursors.filter(
+                (userId): userId is string => typeof userId === "string",
+              )
+            : [];
           state.global.theme.user = match(storage.userTheme)
             .returnType<UserTheme>()
             .with("light", () => "light")
@@ -730,6 +766,10 @@ export const useBearStore = create<BearState>()(
           );
           state.global.auth.jwt = storage.jwt;
           state.start.myRooms = storage.myRooms ?? [];
+          state.room.canvas.renderer.mode = match(storage.canvasMode)
+            .returnType<BearState["room"]["canvas"]["renderer"]["mode"]>()
+            .with("webgl", () => "webgl")
+            .otherwise(() => "svg");
           return state;
         },
         onRehydrateStorage: () => {

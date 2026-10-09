@@ -93,3 +93,7 @@ div[data-separator="focus"],
 div[data-separator="active"] {
   background-color: var(--bs-primary) !important;
 }
+
+:root {
+  overscroll-behavior: none;
+}

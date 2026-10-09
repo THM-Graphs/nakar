@@ -24,7 +24,8 @@ import {
   ScenarioCollectionDto,
   ScenarioDto,
 } from "api-client";
-import { SVGGraphRenderer } from "../room/canvas/graph-renderer/renderers/svg/SVGGraphRenderer.ts";
+import { SVGGraphRendererSystem } from "../room/canvas/graph-renderer/renderers/svg/SVGGraphRendererSystem.ts";
+import { WebGLGraphRendererSystem } from "../room/canvas/graph-renderer/renderers/webgl/WebGLGraphRendererSystem.ts";
 
 export interface BearState {
   global: {
@@ -219,13 +220,19 @@ export interface BearState {
       };
       hideLabels: boolean;
       setHideLabels: (pm: boolean) => void;
+      hiddenUserCursors: string[];
+      setUserCursorVisible: (userId: string, visible: boolean) => void;
       colorSchemaSlug: string;
       setColorSchema: (newSchemaSlug: string) => void;
       zoomTransform: CanvasZoomTransform;
       setZoomTransform: (zoomTransform: CanvasZoomTransform) => void;
       renderer: {
-        current: SVGGraphRenderer | null;
-        setCurrent: (newCurrent: SVGGraphRenderer | null) => void;
+        current: SVGGraphRendererSystem | WebGLGraphRendererSystem | null;
+        setCurrent: (
+          newCurrent: SVGGraphRendererSystem | WebGLGraphRendererSystem | null,
+        ) => void;
+        mode: "svg" | "webgl";
+        setMode: (newCurrent: "svg" | "webgl") => void;
       };
     };
   };
