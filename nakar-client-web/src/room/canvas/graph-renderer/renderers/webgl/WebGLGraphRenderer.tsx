@@ -215,7 +215,7 @@ export function WebGLGraphRenderer() {
       for (const sub of subs) {
         sub.unsubscribe();
       }
-      factory.destory();
+      factory.destroy();
       _currentRenderer?.destroy();
     };
   }, [

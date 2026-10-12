@@ -40,7 +40,7 @@ export class WebGLGraphRendererSystemFactory {
     );
   }
 
-  public destory(): void {
+  public destroy(): void {
     this._destroyed = true;
   }
 }
