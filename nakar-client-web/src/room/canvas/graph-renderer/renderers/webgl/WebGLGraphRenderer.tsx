@@ -11,6 +11,7 @@ import { NodeDto } from "api-client";
 import { ExpandNodeAction } from "../../../../actions/ExpandNodeAction.ts";
 import { ExpandNodePreviewAction } from "../../../../actions/ExpandNodePreviewAction.ts";
 import { useIsLoggedIn } from "../../../../../state/useIsLoggedIn.ts";
+import { handleError } from "../../../../../shared/error/handleError.ts";
 
 export function WebGLGraphRenderer() {
   const context = useAppContext();
@@ -25,6 +26,9 @@ export function WebGLGraphRenderer() {
   const inspector = useBearStore((s) => s.room.panels.inspector);
   const isLoggedIn = useIsLoggedIn();
   const events = useBearStore((s) => s.room.ui.rendererEvents);
+  const setGlobalRendererError = useBearStore(
+    (s) => s.room.canvas.renderer.setGlobalError,
+  );
 
   useEffect(() => {
     if (containerRef.current == null) {
@@ -202,7 +206,9 @@ export function WebGLGraphRenderer() {
           },
         );
       })
-      .catch(console.error);
+      .catch((error: unknown) => {
+        setGlobalRendererError(handleError(error));
+      });
 
     return () => {
       setCurrentGraphRenderer(null);
@@ -219,6 +225,7 @@ export function WebGLGraphRenderer() {
     websocketsManager,
     theme,
     isLoggedIn,
+    setGlobalRendererError,
   ]);
 
   return (

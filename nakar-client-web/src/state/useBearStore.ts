@@ -694,6 +694,13 @@ export const useBearStore = create<BearState>()(
                 ) => {
                   set((s) => {
                     s.room.canvas.renderer.mode = newMode;
+                    s.room.canvas.renderer.globalError = null;
+                  });
+                },
+                globalError: null,
+                setGlobalError: (newError: string | null) => {
+                  set((s) => {
+                    s.room.canvas.renderer.globalError = newError;
                   });
                 },
               },
