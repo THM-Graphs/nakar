@@ -218,6 +218,7 @@ export function WebGLGraphRenderer() {
     colorSchemaSlug,
     websocketsManager,
     theme,
+    isLoggedIn,
   ]);
 
   return (
