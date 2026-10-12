@@ -664,6 +664,13 @@ export const useBearStore = create<BearState>()(
                   ) {
                     s.room.canvas.hiddenUserCursors.push(userId);
                   }
+                  const currentUserIds = new Set(
+                    s.room.scenario.graph.metaData.users.map((user) => user.id),
+                  );
+                  s.room.canvas.hiddenUserCursors =
+                    s.room.canvas.hiddenUserCursors.filter((hiddenUserId) =>
+                      currentUserIds.has(hiddenUserId),
+                    );
                 });
               },
               colorSchemaSlug: ColorSchema.allColorSchema()[0].slug,
