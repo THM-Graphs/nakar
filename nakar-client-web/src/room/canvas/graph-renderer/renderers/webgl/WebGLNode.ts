@@ -260,15 +260,15 @@ export class WebGLNode extends Container {
       outerCircle.eventMode = "none";
       this.addChild(outerCircle);
 
-      const clusterSizseIndicator = new WebGLNodeClusterSizeIndicator({
+      const clusterSizeIndicator = new WebGLNodeClusterSizeIndicator({
         clusterSize: node.clusterSize,
         scale: node.radius / 40,
         fill: getBackGroundColorOfColor(nodeColors[0], colorSchema),
         textColor: getTextColorOfColor(nodeColors[0], colorSchema),
         stroke: this._strokeColor(theme),
       });
-      clusterSizseIndicator.position.y = node.radius;
-      this.addChild(clusterSizseIndicator);
+      clusterSizeIndicator.position.y = node.radius;
+      this.addChild(clusterSizeIndicator);
     }
 
     if (node.notes.length > 0) {
