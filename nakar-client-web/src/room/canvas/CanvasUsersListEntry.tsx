@@ -21,7 +21,11 @@ export function CanvasUsersListEntry(props: { user: UserPreviewDto }) {
       direction={"horizontal"}
       gap={1}
     >
-      <span className={clsx(!cursorVisible && "text-muted")}>
+      <span
+        className={clsx(
+          rendererMode === "webgl" && !cursorVisible && "text-muted",
+        )}
+      >
         <i className={"bi bi-person"} />
         {props.user.displayName ? (
           <span>{props.user.displayName}</span>
