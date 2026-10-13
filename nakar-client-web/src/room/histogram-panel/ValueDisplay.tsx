@@ -44,7 +44,7 @@ export function ValueDisplay(props: {
           <span
             style={{}}
             className={clsx(
-              "user-select-text small flex-shrink-1 flex-grow-1 ellipsis",
+              "user-select-text small flex-shrink-1 flex-grow-1 text-break",
             )}
           >
             {props.label}
@@ -53,7 +53,10 @@ export function ValueDisplay(props: {
             )}
           </span>
         </Stack>
-        <Stack direction={"horizontal"} className={"flex-shrink-0"}>
+        <Stack
+          direction={"horizontal"}
+          className={"flex-shrink-0 align-self-center"}
+        >
           <span className={"flex-shrink-0 user-select-text small"}>
             {props.value}{" "}
             {props.percentage != null && (
