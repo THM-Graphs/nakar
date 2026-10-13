@@ -141,6 +141,10 @@ export function Canvas() {
   const pushErrorNotification = useBearStore(
     (s) => s.room.ui.pushErrorNotification,
   );
+  const setLocks = useBearStore((s) => s.room.scenario.setLocks);
+  const globalRendererError = useBearStore(
+    (s) => s.room.canvas.renderer.globalError,
+  );
 
   useEffect(() => {
     setScenarios(canvasContext.initialScenariosData);
@@ -245,8 +249,8 @@ export function Canvas() {
               severity: notification.severity,
             });
           })
-          .with({ type: "SetNodeLocksWsdto" }, () => {
-            /* */
+          .with({ type: "SetNodeLocksWsdto" }, (event) => {
+            setLocks(event.locks);
           })
           .with({ type: "KickWsdto" }, () => {
             void navigate(Router.getHomePath());
@@ -265,6 +269,9 @@ export function Canvas() {
           })
           .with({ type: "CursorMovedWsdto" }, () => {
             /* */
+          })
+          .with({ type: "CanvasReadyWsdto" }, () => {
+            /* Will be handled in socket manager */
           })
           .exhaustive();
       }),
@@ -370,8 +377,20 @@ export function Canvas() {
                     className={"flex-grow-0 flex-shrink-0 h-100 pe-auto"}
                   ></div>
                   <Stack>
-                    <GraphDataToggle></GraphDataToggle>
-                    <CanvasSurface></CanvasSurface>
+                    {globalRendererError == null ? (
+                      <>
+                        <GraphDataToggle></GraphDataToggle>
+                        <CanvasSurface></CanvasSurface>
+                      </>
+                    ) : (
+                      <Stack
+                        className={
+                          "h-100 align-self-stretch justify-content-center align-items-center"
+                        }
+                      >
+                        <span>{globalRendererError}</span>
+                      </Stack>
+                    )}
                   </Stack>
                   <div
                     style={{ width: "5px", marginLeft: "-5px" }}
@@ -421,7 +440,9 @@ export function Canvas() {
             <ReconnectOverlay></ReconnectOverlay>
           )}
         </Stack>
-        <GraphRenderer></GraphRenderer>
+        {socketState.type === "connected" && globalRendererError == null && (
+          <GraphRenderer></GraphRenderer>
+        )}
         <ToastStack></ToastStack>
         <RunScenarioModal></RunScenarioModal>
         <ExpandNodePreviewModal></ExpandNodePreviewModal>

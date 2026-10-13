@@ -8,6 +8,7 @@ import { Type, TypeHelpOptions } from 'class-transformer';
 import { match } from 'ts-pattern';
 import { BadRequestException } from '@nestjs/common';
 import { MoveCursorWsdto } from './actions/MoveCursorWsdto';
+import { ClientReadyWsdto } from './actions/ClientReadyWsdto';
 
 // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
 const actions: Function[] = [
@@ -15,6 +16,7 @@ const actions: Function[] = [
   MoveNodesWsdto,
   UngrabNodeWsdto,
   MoveCursorWsdto,
+  ClientReadyWsdto,
 ];
 
 @ApiExtraModels(...actions)
@@ -30,10 +32,15 @@ export class ActionWsdto {
       .with({ type: 'MoveNodesWsdto' }, () => MoveNodesWsdto)
       .with({ type: 'UngrabNodeWsdto' }, () => UngrabNodeWsdto)
       .with({ type: 'MoveCursorWsdto' }, () => MoveCursorWsdto)
+      .with({ type: 'ClientReadyWsdto' }, () => ClientReadyWsdto)
       .otherwise(() => {
         throw new BadRequestException();
       }),
   )
   public action!:
-    GrabNodeWsdto | MoveNodesWsdto | UngrabNodeWsdto | MoveCursorWsdto;
+    | GrabNodeWsdto
+    | MoveNodesWsdto
+    | UngrabNodeWsdto
+    | MoveCursorWsdto
+    | ClientReadyWsdto;
 }

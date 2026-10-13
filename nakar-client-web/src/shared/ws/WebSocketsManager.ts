@@ -5,6 +5,7 @@ import { ServerToClientEvents } from "./ServerToClientEvents.ts";
 import { Observable, Subject } from "rxjs";
 import { ActionWsdto, AuthWsdto, EventWsdto } from "api-client";
 import { useBearStore } from "../../state/useBearStore.ts";
+import { match } from "ts-pattern";
 
 export type Socket = UntypedSocket<ServerToClientEvents, ClientToServerEvents>;
 
@@ -26,9 +27,10 @@ export class WebSocketsManager {
         canvasId: canvasId,
       } satisfies AuthWsdto,
     });
+    useBearStore.getState().room.websockets.setState({ type: "connecting" });
 
     this.socket.on("connect", () => {
-      useBearStore.getState().room.websockets.setState({ type: "connected" });
+      /* Will have to wait for CanvasReadyWsdto to set state to connected */
     });
     this.socket.on("connect_error", (error: Error) => {
       useBearStore
@@ -39,7 +41,15 @@ export class WebSocketsManager {
       useBearStore.getState().room.websockets.setState({ type: "disconnect" });
     });
     this.socket.on("message", (m) => {
-      this.onMessage.next(m);
+      match(m)
+        .with({ event: { type: "CanvasReadyWsdto" } }, () => {
+          useBearStore
+            .getState()
+            .room.websockets.setState({ type: "connected" });
+        })
+        .otherwise((event: EventWsdto) => {
+          this.onMessage.next(event);
+        });
     });
   }
 

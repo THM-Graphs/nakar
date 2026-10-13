@@ -33,6 +33,10 @@ export class CanvasZoomTransform {
     return (y - this.y) / this.k;
   }
 
+  public equals(other: CanvasZoomTransform): boolean {
+    return this.k === other.k && this.x === other.x && this.y === other.y;
+  }
+
   public toString(): string {
     return `translate(${this.x.toString()},${this.y.toString()}) scale(${this.k.toString()})`;
   }

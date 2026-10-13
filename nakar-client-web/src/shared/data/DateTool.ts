@@ -5,7 +5,9 @@ export class DateTool {
     const regex = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})$/;
 
     const match = dateStr.match(regex);
-    if (!match) return null;
+    if (!match) {
+      return null;
+    }
 
     const [, yearStr, monthStr, dayStr, hourStr, minuteStr, secondStr] = match;
 

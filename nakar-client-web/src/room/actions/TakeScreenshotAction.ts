@@ -3,22 +3,22 @@ import { saveAs } from "file-saver";
 import { SelectedCanvasTab } from "../../state/SelectedCanvasTab.ts";
 import { createAppShortcut } from "./createAppShortcut.ts";
 import { CanvasScreenshot } from "../canvas/graph-renderer/CanvasScreenshot.ts";
-import { SVGGraphRenderer } from "../canvas/graph-renderer/renderers/svg/SVGGraphRenderer.ts";
+import { BearState } from "../../state/BearState.ts";
 
 export type TakeScreenshotActionParams = {
   selectedTab: SelectedCanvasTab;
-  currentGraphRenderer: SVGGraphRenderer | null;
+  currentGraphRenderer: BearState["room"]["canvas"]["renderer"]["current"];
 };
 
 export class TakeScreenshotAction extends Action<TakeScreenshotActionParams> {
   public static shared: TakeScreenshotAction = new TakeScreenshotAction();
 
-  protected action(input: TakeScreenshotActionParams): Promise<void> | void {
+  protected async action(input: TakeScreenshotActionParams): Promise<void> {
     if (input.currentGraphRenderer == null) {
       throw new Error("Graph renderer not available.");
     }
     const screenshot: CanvasScreenshot =
-      input.currentGraphRenderer.takeScreenshot();
+      await input.currentGraphRenderer.takeScreenshot();
 
     saveAs(screenshot.blob, screenshot.filename, { autoBom: false });
   }

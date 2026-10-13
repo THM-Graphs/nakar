@@ -46,7 +46,9 @@ export function NodeDetailsKnowledgeCardProperties(props: { node: NodeDto }) {
       .filter((e) => e.startNodeId === props.node.id)
       .reduce<NodeDetailsKnowledgeCardEntry[]>((acc, edge) => {
         const targetNode = elements.nodes.find((n) => n.id === edge.endNodeId);
-        if (!targetNode) return acc;
+        if (!targetNode) {
+          return acc;
+        }
 
         let entry = acc.find((e) => e.title === edge.type);
         if (!entry) {
@@ -83,7 +85,9 @@ export function NodeDetailsKnowledgeCardProperties(props: { node: NodeDto }) {
         const targetNode = elements.nodes.find(
           (n) => n.id === edge.startNodeId,
         );
-        if (!targetNode) return acc;
+        if (!targetNode) {
+          return acc;
+        }
 
         let entry = acc.find((e) => e.title === edge.type);
         if (!entry) {

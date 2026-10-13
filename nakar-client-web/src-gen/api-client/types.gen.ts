@@ -490,8 +490,12 @@ export type MoveCursorWsdto = {
     position: PositionDto;
 };
 
+export type ClientReadyWsdto = {
+    type: 'ClientReadyWsdto';
+};
+
 export type ActionWsdto = {
-    action: GrabNodeWsdto | MoveNodesWsdto | UngrabNodeWsdto | MoveCursorWsdto;
+    action: GrabNodeWsdto | MoveNodesWsdto | UngrabNodeWsdto | MoveCursorWsdto | ClientReadyWsdto;
 };
 
 export type CanvasChangedWsdto = {
@@ -741,8 +745,12 @@ export type CursorMovedWsdto = {
     socketId: string;
 };
 
+export type CanvasReadyWsdto = {
+    type: 'CanvasReadyWsdto';
+};
+
 export type EventWsdto = {
-    event: CanvasChangedWsdto | CanvasDataReadyWsdto | ClearProgressWsdto | CanvasElementsChangedWsdto | CanvasMetaDataChangedWsdto | CanvasTableDataChangedWsdto | CanvasHistogramChangedWsdto | CanvasNotesChangedWsdto | KickWsdto | NodesMovedWsdto | NotificationWsdto | ProgressWsdto | SetNodeLocksWsdto | CanvasViewSettingsChangedWsdto | CursorMovedWsdto;
+    event: CanvasChangedWsdto | CanvasDataReadyWsdto | ClearProgressWsdto | CanvasElementsChangedWsdto | CanvasMetaDataChangedWsdto | CanvasTableDataChangedWsdto | CanvasHistogramChangedWsdto | CanvasNotesChangedWsdto | KickWsdto | NodesMovedWsdto | NotificationWsdto | ProgressWsdto | SetNodeLocksWsdto | CanvasViewSettingsChangedWsdto | CursorMovedWsdto | CanvasReadyWsdto;
 };
 
 export type AuthWsdto = {

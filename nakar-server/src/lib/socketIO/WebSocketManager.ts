@@ -69,6 +69,7 @@ import { CanvasEventCursorChanged } from '../live-canvas/events/CanvasEventCurso
 import { CursorMovedWsdto } from './dto/events/CursorMovedWsdto';
 import { LiveCanvasNote } from '../live-canvas/data/LiveCanvasNote';
 import { getConfig } from '../config/getConfig';
+import { CanvasReadyWsdto } from './dto/events/CanvasReadyWsdto';
 
 export type Server = UntypedServer<ClientToServerEvents, ServerToClientEvents>;
 export type Socket = UntypedSocket<ClientToServerEvents, ServerToClientEvents>;
@@ -212,7 +213,7 @@ export class WebSocketManager
       }
     });
 
-    void wsClient.join('canvas:' + canvas.documentId);
+    await wsClient.join('canvas:' + canvas.documentId);
     liveCanvas.addUser({
       socketId: wsClient.id,
       username: user?.username ?? null,
@@ -220,10 +221,7 @@ export class WebSocketManager
     });
 
     wsClient.send({
-      event: {
-        type: 'CanvasDataReadyWsdto',
-        data: this._schemaFactory.createSchemaLiveCanvasData(liveCanvas),
-      } satisfies CanvasDataReadyWsdto,
+      event: new CanvasReadyWsdto({ type: 'CanvasReadyWsdto' }),
     });
   }
 
@@ -293,6 +291,19 @@ export class WebSocketManager
           this._assertLiveCanvas(wsClient)?.setCursorPosition({
             socketId: wsClient.id,
             position: [m.position.x, m.position.y],
+          });
+        })
+        .with({ type: 'ClientReadyWsdto' }, (): void => {
+          const liveCanvas: LiveCanvas | null =
+            this._assertLiveCanvas(wsClient);
+          if (liveCanvas == null) {
+            return;
+          }
+          wsClient.send({
+            event: {
+              type: 'CanvasDataReadyWsdto',
+              data: this._schemaFactory.createSchemaLiveCanvasData(liveCanvas),
+            } satisfies CanvasDataReadyWsdto,
           });
         })
         .exhaustive();
