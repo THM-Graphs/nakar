@@ -99,5 +99,5 @@ div[data-separator="active"] {
 
 .bg-frosted-glass {
   backdrop-filter: blur(10px);
-  background-color: rgba(var(--bs-tertiary-bg-rgb), 0.5);
+  background-color: rgba(var(--bs-tertiary-bg-rgb), 0.8);
 }

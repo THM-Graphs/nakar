@@ -297,7 +297,7 @@ export function Canvas() {
             className={"flex-grow-0 flex-shrink-0 z-3"}
             style={{
               background:
-                "linear-gradient(to top, transparent 0%, var(--bs-body-bg) 100%)",
+                "linear-gradient(to top, transparent 0%, var(--bs-body-bg) 50%)",
             }}
           >
             <AppNavbar
