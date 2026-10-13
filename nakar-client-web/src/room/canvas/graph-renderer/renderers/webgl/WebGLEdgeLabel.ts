@@ -34,12 +34,16 @@ export class WebGLEdgeLabel extends Container {
       this._text.height,
     );
     bounds.pad(paddingStartEnd, paddingTopBottom);
+    const cornerRadius = 4;
+    this.eventMode = "dynamic";
+    this.cursor = "pointer";
+    this.hitArea = bounds;
+    this.interactiveChildren = false;
     this._background = new Graphics()
-      .roundRect(bounds.x, bounds.y, bounds.width, bounds.height, 4)
+      .roundRect(bounds.x, bounds.y, bounds.width, bounds.height, cornerRadius)
       .fill({ color: 0xffffff });
     this._background.tint = props.backgroundColor;
-    this._background.eventMode = "dynamic";
-    this._background.cursor = "pointer";
+    this._background.eventMode = "none";
 
     this.addChild(this._background, this._text);
   }
