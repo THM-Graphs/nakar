@@ -44,16 +44,19 @@ export class WebGLUserCursor extends Container {
         fill: fgColor,
       },
     });
+    text.eventMode = "none";
     text.position.x = gap + paddingStart;
     text.position.y = paddingTopBottom + 1;
 
     const closeButton = new Container();
     closeButton.position.set(text.position.x + text.width, height / 2);
-    closeButton.eventMode = "dynamic";
-    closeButton.cursor = "pointer";
+
     const closeButtonHitArea = new Graphics()
       .rect(0, -height / 2, closeButtonWidth, height)
       .fill({ color: 0xffffff, alpha: 0.001 });
+    closeButtonHitArea.eventMode = "dynamic";
+    closeButtonHitArea.cursor = "pointer";
+
     const closeButtonCenterX = closeButtonWidth / 2;
     const closeButtonIconRadius = 3.5;
     const closeButtonIcon = new Graphics()
@@ -70,10 +73,10 @@ export class WebGLUserCursor extends Container {
       .stroke({ color: fgColor, width: 2, cap: "round" });
     closeButtonIcon.eventMode = "none";
     closeButton.addChild(closeButtonHitArea, closeButtonIcon);
-    closeButton.on("pointerdown", (event) => {
+    closeButtonHitArea.on("pointerdown", (event) => {
       event.stopPropagation();
     });
-    closeButton.on("pointertap", (event) => {
+    closeButtonHitArea.on("pointertap", (event) => {
       event.stopPropagation();
       useBearStore
         .getState()
@@ -89,6 +92,7 @@ export class WebGLUserCursor extends Container {
         3.75,
       )
       .fill({ color: bgColor });
+    bg.eventMode = "none";
 
     const cursor = new Graphics()
       .roundShape(
@@ -103,6 +107,7 @@ export class WebGLUserCursor extends Container {
         0.5,
       )
       .fill({ color: bgColor });
+    cursor.eventMode = "none";
 
     this.addChild(bg);
     this.addChild(text);

@@ -16,6 +16,7 @@ export class WebGLNodeClusterSizeIndicator extends Container {
     stroke: ColorSource;
   }) {
     super();
+    this.eventMode = "none";
     const clusterSizeIndicator = new BitmapText({
       text: props.clusterSize,
       style: {

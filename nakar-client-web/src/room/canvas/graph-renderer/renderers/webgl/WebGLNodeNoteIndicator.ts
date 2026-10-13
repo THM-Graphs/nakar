@@ -11,8 +11,10 @@ export class WebGLNodeNoteIndicator extends Container {
     strokeColor: ColorSource;
   }) {
     super();
+    this.eventMode = "none";
 
     const paper = new Graphics();
+    paper.eventMode = "none";
 
     const s = props.scale;
 
