@@ -13,7 +13,7 @@ export function Panel(props: {
   return (
     <Stack
       className={clsx(
-        "flex-shrink-1 flex-grow-1 z-1 overflow-y-hidden bg-body-tertiary h-100",
+        "flex-shrink-1 flex-grow-1 z-1 overflow-y-hidden bg-frosted-glass h-100",
         props.className,
       )}
     >

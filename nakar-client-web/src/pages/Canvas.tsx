@@ -292,8 +292,14 @@ export function Canvas() {
     <CanvasContext.Provider value={canvasContext}>
       <Stack style={{ height: "100%" }} className={"position-relative bg-body"}>
         <CanvasShortcuts></CanvasShortcuts>
-        <Stack gap={0}>
-          <Stack className="flex-grow-0 flex-shrink-0">
+        <Stack gap={1}>
+          <Stack
+            className={"flex-grow-0 flex-shrink-0 z-3"}
+            style={{
+              background:
+                "linear-gradient(to top, transparent 0%, var(--bs-body-bg) 100%)",
+            }}
+          >
             <AppNavbar
               left={
                 <>
@@ -326,24 +332,20 @@ export function Canvas() {
                 </>
               }
             ></AppNavbar>
-          </Stack>
-          <Stack direction={"horizontal"} className={"flex-shrink-1"}>
-            <CanvasToolbar
-              className={
-                "border-bottom bg-body-tertiary flex-grow-0 flex-shrink-1"
-              }
-            ></CanvasToolbar>
+            <CanvasToolbar className={"ms-1 me-1"}></CanvasToolbar>
           </Stack>
           <Stack
             direction={"horizontal"}
-            className={"align-items-start flex-grow-1 position-relative"}
+            className={
+              "align-items-start flex-grow-1 position-relative ps-1 pe-1 pb-1"
+            }
             style={{ height: "100px" }}
-            gap={0}
+            gap={1}
           >
             <Stack
               direction={"vertical"}
               className={
-                "bg-body-tertiary flex-grow-0 flex-shrink-0 z-1 border-end"
+                "bg-frosted-glass flex-grow-0 flex-shrink-0 z-1 border rounded overflow-hidden"
               }
             >
               <ScenariosPanelButton></ScenariosPanelButton>
@@ -358,7 +360,7 @@ export function Canvas() {
                     defaultSize={400}
                     id={"left-panel"}
                     minSize={50}
-                    className={"border-end pe-auto"}
+                    className={"pe-auto border rounded"}
                     groupResizeBehavior={"preserve-pixel-size"}
                   >
                     {leftPanel === "scenarios" && (
@@ -404,7 +406,7 @@ export function Canvas() {
                     defaultSize={400}
                     id={"right-panel"}
                     minSize={50}
-                    className={"border-start pe-auto"}
+                    className={"border rounded pe-auto"}
                     groupResizeBehavior={"preserve-pixel-size"}
                   >
                     {rightPanel === "inspector" && (
@@ -426,7 +428,7 @@ export function Canvas() {
             <Stack
               direction="vertical"
               className={
-                "bg-body-tertiary border-start z-1 flex-grow-0 flex-shrink-0"
+                "bg-frosted-glass border rounded z-1 flex-grow-0 flex-shrink-0 overflow-hidden"
               }
             >
               <InspectorPanelButton></InspectorPanelButton>

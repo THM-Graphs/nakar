@@ -7,7 +7,9 @@ export function DataTable() {
   return (
     <Stack
       direction={"vertical"}
-      className={"bg-body z-1 h-100 w-100 overflow-auto pe-auto"}
+      className={
+        "bg-body z-1 overflow-auto pe-auto border rounded ms-1 mt-1 me-1"
+      }
     >
       {tableData.length === 0 ? (
         <Stack

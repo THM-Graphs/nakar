@@ -76,6 +76,7 @@ export function RunScenarioModal() {
           <Panel
             title={additive ? "Add Scenario" : "Run Scenario"}
             onClose={handleClose}
+            className={"rounded overflow-hidden"}
           >
             <Stack className={"pb-3 pt-3"} gap={3}>
               <Stack direction={"horizontal"} gap={2} className={"ps-3 pe-3"}>

@@ -18,7 +18,7 @@ export function CanvasUsersListEntry(props: { user: UserPreviewDto }) {
   return (
     <Stack
       className={
-        "small z-1 rounded bg-body-tertiary shadow-sm border ps-2 pe-auto user-select-text align-self-end"
+        "small z-1 rounded bg-frosted-glass border ps-2 pe-auto user-select-text align-self-end"
       }
       direction={"horizontal"}
       gap={1}

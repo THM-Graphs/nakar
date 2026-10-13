@@ -126,9 +126,7 @@ export function CanvasBottomToolBar() {
 
   return (
     <Stack
-      className={
-        "border flex-grow-0 bg-body z-2 rounded bg-body-tertiary shadow-sm pe-auto"
-      }
+      className={"border flex-grow-0 z-2 rounded bg-frosted-glass pe-auto"}
       direction={"horizontal"}
     >
       <Stack className={"align-items-start flex-grow-1"}>

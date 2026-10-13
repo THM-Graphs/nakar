@@ -20,7 +20,7 @@ export function CanvasControls(props: { className?: string }) {
   return (
     <Stack
       className={clsx(
-        "align-items-start bg-body-tertiary rounded border shadow-sm pe-auto overflow-hidden",
+        "align-items-start bg-frosted-glass rounded border pe-auto overflow-hidden",
         props.className,
       )}
     >

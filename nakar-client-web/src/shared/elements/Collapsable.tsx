@@ -18,7 +18,7 @@ export function Collapsable(props: {
         className={clsx(
           "pointer bg-body-secondary-hover align-items-baseline",
           props.inset && `ms-${props.inset.toString()}`,
-          (props.sticky ?? true) ? "sticky-top bg-body-tertiary" : "",
+          (props.sticky ?? true) ? "sticky-top bg-frosted-glass" : "",
         )}
         onClick={() => {
           setCollapsed((old) => !old);

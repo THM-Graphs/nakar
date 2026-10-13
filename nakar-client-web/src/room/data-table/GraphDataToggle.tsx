@@ -14,51 +14,50 @@ export function GraphDataToggle(props: { className?: string }) {
   return (
     <Stack
       direction={"horizontal"}
-      className={clsx("z-1 bg-body-tertiary pt-1", props.className)}
+      className={clsx(
+        "z-1 p-1 bg-frosted-glass rounded border ms-1 me-1 overflow-hidden pe-auto flex-grow-0 flex-shrink-0",
+        props.className,
+      )}
+      gap={1}
     >
-      <div
-        style={{ width: "10px" }}
-        className={clsx("flex-grow-0 flex-shrink-1 border-bottom h-100")}
-      ></div>
-      <NavbarButton
-        icon={"bounding-box-circles"}
-        selected={tabs.selected === "graph"}
-        onClick={tabs.selectGraph}
+      <Stack
         className={clsx(
-          "position-relative pe-auto border-start border-top border-end",
-          tabs.selected === "data" && "border-bottom",
+          "rounded flex-grow-0 flex-shrink-0 overflow-hidden",
+          tabs.selected === "graph" && "bg-body-secondary",
         )}
-        selectedClassName={"bg-body"}
-        title={
-          <span>
-            Graph{" "}
-            <span className={"text-muted"}>
-              {graphElementsCount.toString()}
+      >
+        <NavbarButton
+          icon={"bounding-box-circles"}
+          onClick={tabs.selectGraph}
+          title={
+            <span>
+              Graph{" "}
+              <span className={"text-muted"}>
+                {graphElementsCount.toString()}
+              </span>
             </span>
-          </span>
-        }
-      ></NavbarButton>
-      <div
-        style={{ width: "5px" }}
-        className={clsx("flex-grow-0 flex-shrink-1 border-bottom h-100")}
-      ></div>
-      <NavbarButton
-        icon={"table"}
-        selected={tabs.selected === "data"}
-        onClick={tabs.selectData}
-        selectedClassName={"bg-body"}
+          }
+        ></NavbarButton>
+      </Stack>
+      <Stack
         className={clsx(
-          "position-relative pe-auto border-top border-start border-end ",
-          tabs.selected === "graph" && "border-bottom",
+          "rounded flex-grow-0 flex-shrink-0 overflow-hidden",
+          tabs.selected === "data" && "bg-body-secondary",
         )}
-        title={
-          <span>
-            Table{" "}
-            <span className={"text-muted"}>{tableData.length.toString()}</span>
-          </span>
-        }
-      ></NavbarButton>
-      <div className={"flex-grow-1 flex-shrink-1 border-bottom h-100"}></div>
+      >
+        <NavbarButton
+          icon={"table"}
+          onClick={tabs.selectData}
+          title={
+            <span>
+              Table{" "}
+              <span className={"text-muted"}>
+                {tableData.length.toString()}
+              </span>
+            </span>
+          }
+        ></NavbarButton>
+      </Stack>
     </Stack>
   );
 }

@@ -7,7 +7,7 @@ export function CanvasToolbar(props: { className?: string }) {
     <Stack
       direction={"horizontal"}
       className={clsx(
-        "flex-grow-1 flex-shrink-0 z-2 flex-wrap justify-content-between",
+        "flex-grow-0 flex-shrink-0 z-2 flex-wrap justify-content-between border rounded overflow-hidden bg-frosted-glass",
         props.className,
       )}
     >

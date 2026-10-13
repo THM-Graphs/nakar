@@ -76,6 +76,7 @@ export function AddEditNoteModal() {
   return (
     <Modal show={shown} onHide={handleClose} onExited={handleClean}>
       <Panel
+        className={"rounded overflow-hidden"}
         title={mode == "create" ? "Add Note" : "Edit Note"}
         onClose={handleClose}
       >
