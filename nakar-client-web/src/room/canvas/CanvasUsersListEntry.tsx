@@ -13,6 +13,8 @@ export function CanvasUsersListEntry(props: { user: UserPreviewDto }) {
     (s) => s.room.canvas.setUserCursorVisible,
   );
 
+  const textMuted = rendererMode === "webgl" && !cursorVisible;
+
   return (
     <Stack
       className={
@@ -21,18 +23,16 @@ export function CanvasUsersListEntry(props: { user: UserPreviewDto }) {
       direction={"horizontal"}
       gap={1}
     >
-      <span
-        className={clsx(
-          rendererMode === "webgl" && !cursorVisible && "text-muted",
-        )}
-      >
-        <i className={"bi bi-person"} />
-        {props.user.displayName ? (
-          <span>{props.user.displayName}</span>
-        ) : (
-          <span className={""}>Guest ({props.user.id})</span>
-        )}
-      </span>
+      <i className={clsx("bi bi-person", textMuted && "text-muted")} />
+      {props.user.displayName ? (
+        <span className={clsx(textMuted && "text-muted")}>
+          {props.user.displayName}
+        </span>
+      ) : (
+        <span className={clsx(textMuted && "text-muted")}>
+          Guest ({props.user.id})
+        </span>
+      )}
       {rendererMode === "webgl" && (
         <NavbarButton
           className={"ms-auto"}
