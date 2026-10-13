@@ -466,22 +466,22 @@ export function MenuBar() {
             <Dropdown.Divider></Dropdown.Divider>
             <Dropdown.Header>Renderer</Dropdown.Header>
             <Dropdown.Item
-              active={rendererMode === "svg"}
-              className={"small"}
-              onClick={() => {
-                setRendererMode("svg");
-              }}
-            >
-              SVG <span className={"opacity-50"}>(default)</span>
-            </Dropdown.Item>
-            <Dropdown.Item
               active={rendererMode === "webgl"}
               className={"small"}
               onClick={() => {
                 setRendererMode("webgl");
               }}
             >
-              WebGL
+              WebGL <span className={"opacity-50"}>(default)</span>
+            </Dropdown.Item>
+            <Dropdown.Item
+              active={rendererMode === "svg"}
+              className={"small"}
+              onClick={() => {
+                setRendererMode("svg");
+              }}
+            >
+              SVG
             </Dropdown.Item>
           </>
         )}
