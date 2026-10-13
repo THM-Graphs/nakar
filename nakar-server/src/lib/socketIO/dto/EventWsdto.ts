@@ -19,6 +19,7 @@ import { CanvasViewSettingsChangedWsdto } from './events/CanvasViewSettingsChang
 import { CanvasHistogramChangedWsdto } from './events/CanvasHistogramChangedWsdto';
 import { CanvasNotesChangedWsdto } from './events/CanvasNotesChangedWsdto';
 import { CursorMovedWsdto } from './events/CursorMovedWsdto';
+import { CanvasReadyWsdto } from './events/CanvasReadyWsdto';
 
 // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
 const events: Function[] = [
@@ -37,6 +38,7 @@ const events: Function[] = [
   SetNodeLocksWsdto,
   CanvasViewSettingsChangedWsdto,
   CursorMovedWsdto,
+  CanvasReadyWsdto,
 ];
 
 @ApiExtraModels(...events)
@@ -78,6 +80,7 @@ export class EventWsdto {
         () => CanvasViewSettingsChangedWsdto,
       )
       .with({ type: 'CursorMovedWsdto' }, () => CursorMovedWsdto)
+      .with({ type: 'CanvasReadyWsdto' }, () => CanvasReadyWsdto)
       .otherwise(() => {
         throw new BadRequestException();
       }),
@@ -97,5 +100,6 @@ export class EventWsdto {
     | ProgressWsdto
     | SetNodeLocksWsdto
     | CanvasViewSettingsChangedWsdto
-    | CursorMovedWsdto;
+    | CursorMovedWsdto
+    | CanvasReadyWsdto;
 }

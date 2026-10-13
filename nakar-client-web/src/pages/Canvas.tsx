@@ -270,6 +270,9 @@ export function Canvas() {
           .with({ type: "CursorMovedWsdto" }, () => {
             /* */
           })
+          .with({ type: "CanvasReadyWsdto" }, () => {
+            /* Will be handled in socket manager */
+          })
           .exhaustive();
       }),
     ];

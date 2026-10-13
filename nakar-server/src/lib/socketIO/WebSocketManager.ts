@@ -69,6 +69,7 @@ import { CanvasEventCursorChanged } from '../live-canvas/events/CanvasEventCurso
 import { CursorMovedWsdto } from './dto/events/CursorMovedWsdto';
 import { LiveCanvasNote } from '../live-canvas/data/LiveCanvasNote';
 import { getConfig } from '../config/getConfig';
+import { CanvasReadyWsdto } from './dto/events/CanvasReadyWsdto';
 
 export type Server = UntypedServer<ClientToServerEvents, ServerToClientEvents>;
 export type Socket = UntypedSocket<ClientToServerEvents, ServerToClientEvents>;
@@ -212,11 +213,15 @@ export class WebSocketManager
       }
     });
 
-    void wsClient.join('canvas:' + canvas.documentId);
+    await wsClient.join('canvas:' + canvas.documentId);
     liveCanvas.addUser({
       socketId: wsClient.id,
       username: user?.username ?? null,
       databaseId: user?.documentId ?? null,
+    });
+
+    wsClient.send({
+      event: new CanvasReadyWsdto({ type: 'CanvasReadyWsdto' }),
     });
   }
 
