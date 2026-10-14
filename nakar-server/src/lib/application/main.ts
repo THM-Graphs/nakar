@@ -13,6 +13,9 @@ import { validationPipelineOptions } from './validationPipelineOptions';
 import { EventWsdto } from '../socketIO/dto/EventWsdto';
 import { AuthWsdto } from '../socketIO/dto/AuthWsdto';
 import { MonitoringService } from '../monitoring/MonitoringService';
+import { mkdir, writeFile } from 'node:fs/promises';
+import { dump } from 'js-yaml';
+import { dirname, resolve } from 'node:path';
 
 let nestApp: NestExpressApplication | null = null;
 
@@ -29,25 +32,37 @@ export async function bootstrapNest(): Promise<NestExpressApplication> {
   app.useGlobalPipes(new ValidationPipe(validationPipelineOptions));
   app.use(cors({ origin: config.allowedOrigins }));
 
-  SwaggerModule.setup(
-    '/api/docs',
+  const openApiObject: OpenAPIObject = SwaggerModule.createDocument(
     app,
-    (): OpenAPIObject =>
-      SwaggerModule.createDocument(
-        app,
-        new DocumentBuilder()
-          .setTitle('NAKAR')
-          .setVersion('1.0.0')
-          .addBearerAuth({ type: 'apiKey' })
-          .build(),
-        { extraModels: [ActionWsdto, EventWsdto, AuthWsdto] },
-      ),
-    { raw: ['yaml'], explorer: true, yamlDocumentUrl: '/api.yaml' },
+    new DocumentBuilder()
+      .setTitle('NAKAR')
+      .setVersion('1.0.0')
+      .addBearerAuth({ type: 'apiKey' })
+      .build(),
+    { extraModels: [ActionWsdto, EventWsdto, AuthWsdto] },
   );
+  SwaggerModule.setup('/api/docs', app, openApiObject, {
+    raw: ['yaml'],
+    explorer: true,
+    yamlDocumentUrl: '/api.yaml',
+  });
 
   await app.listen(config.port + 1, config.host);
 
   strapi.log.http(`${await app.getUrl()}/api/docs`);
+
+  if (strapi.config.get('environment') === 'development') {
+    const path: string = resolve('./.tmp/apidoc.yml');
+    await mkdir(dirname(path), { recursive: true });
+    await writeFile(
+      path,
+      dump(openApiObject, { skipInvalid: true, noRefs: true }),
+      'utf-8',
+    );
+    strapi.log.info(
+      `Did write api doc to ${path}, because environment is ${strapi.config.get<string>('environment')}.`,
+    );
+  }
 
   const monitoringService: MonitoringService = app.get(MonitoringService);
   monitoringService.pushEvent({

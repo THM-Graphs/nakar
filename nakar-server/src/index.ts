@@ -17,6 +17,9 @@ export default {
    */
   async bootstrap(): Promise<void> {
     strapi.log.debug(`Arguments: ${process.argv.join(' ')}`);
+    strapi.log.debug(
+      `Environment: ${strapi.config.get<string>('environment')}`,
+    );
 
     // Do not start the nest application if strapi is started with maintenance flags
     const maintenanceFlags: string[] = ['transfer', 'import', 'export'];

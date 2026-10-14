@@ -2,9 +2,10 @@
   "name": "api-client",
   "version": "0.0.0",
   "scripts": {
-    "export:api": "openapi-ts --input http://127.0.0.1:1338/api.yaml --output ../../src-gen/api-client --client @hey-api/client-fetch"
+    "export:api": "openapi-ts --input ../../../nakar-server/.tmp/apidoc.yml --output ../../src-gen/api-client --client @hey-api/client-fetch"
   },
   "devDependencies": {
-    "@hey-api/openapi-ts": "^0.97.3"
+    "@hey-api/openapi-ts": "^0.97.0",
+    "typescript": "^6.0.0"
   }
 }
