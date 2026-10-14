@@ -57,7 +57,7 @@ import {
   CanvasSearchData,
   canvasSearchDataSchema,
 } from "../room/canvas/CanvasSearchData.ts";
-import { Group, Panel } from "react-resizable-panels";
+import { Group, Panel, Separator } from "react-resizable-panels";
 import { GraphRenderer } from "../room/canvas/graph-renderer/GraphRenderer.tsx";
 import { GraphDataToggle } from "../room/data-table/GraphDataToggle.tsx";
 
@@ -145,6 +145,25 @@ export function Canvas() {
   const globalRendererError = useBearStore(
     (s) => s.room.canvas.renderer.globalError,
   );
+
+  useEffect(() => {
+    const ignoreSyntheticDocumentMove = (event: PointerEvent) => {
+      // Pixi's idle ticker dispatches document moves with buttons=0, which
+      // makes react-resizable-panels end an active drag. Pixi's capture
+      // listeners still receive them; the panel library's bubble listener does not.
+      if (!event.isTrusted && event.target === document) {
+        event.stopPropagation();
+      }
+    };
+    document.addEventListener("pointermove", ignoreSyntheticDocumentMove, true);
+    return () => {
+      document.removeEventListener(
+        "pointermove",
+        ignoreSyntheticDocumentMove,
+        true,
+      );
+    };
+  }, []);
 
   useEffect(() => {
     setScenarios(canvasContext.initialScenariosData);
@@ -370,14 +389,14 @@ export function Canvas() {
                     {leftPanel === "notes" && <NotesPanel></NotesPanel>}
                     {leftPanel === "search" && <SearchPanel></SearchPanel>}
                   </Panel>
+                  <Separator
+                    style={{ width: "5px", marginRight: "-5px" }}
+                    className={"position-relative z-1 pe-auto"}
+                  ></Separator>
                 </>
               )}
               <Panel id={"center-panel"} className={"overflow-visible"}>
                 <Stack direction={"horizontal"} className={"h-100"}>
-                  <div
-                    style={{ width: "5px", marginRight: "-5px" }}
-                    className={"flex-grow-0 flex-shrink-0 h-100 pe-auto"}
-                  ></div>
                   <Stack>
                     {globalRendererError == null ? (
                       <>
@@ -394,14 +413,14 @@ export function Canvas() {
                       </Stack>
                     )}
                   </Stack>
-                  <div
-                    style={{ width: "5px", marginLeft: "-5px" }}
-                    className={"flex-grow-0 flex-shrink-0 h-100 pe-auto"}
-                  ></div>
                 </Stack>
               </Panel>
               {rightPanel != null && (
                 <>
+                  <Separator
+                    style={{ width: "5px", marginLeft: "-5px" }}
+                    className={"position-relative z-1 pe-auto"}
+                  ></Separator>
                   <Panel
                     defaultSize={400}
                     id={"right-panel"}
