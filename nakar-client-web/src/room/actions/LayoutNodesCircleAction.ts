@@ -1,19 +1,16 @@
 import { Action, ActionShortcut } from "./Action.ts";
-import { LabelActionParams } from "./LabelActionParams.ts";
+import { NodesActionParams } from "./NodesActionParams.ts";
 import { resultOrThrow } from "../../shared/data/resultOrThrow.ts";
 import { actionControllerLayout } from "api-client";
 import { createAppShortcut } from "./createAppShortcut.ts";
 
-export class LayoutLabelsCircleAction extends Action<LabelActionParams> {
-  public static shared: LayoutLabelsCircleAction =
-    new LayoutLabelsCircleAction();
+export class LayoutNodesCircleAction extends Action<NodesActionParams> {
+  public static shared: LayoutNodesCircleAction = new LayoutNodesCircleAction();
 
-  protected async action(input: LabelActionParams): Promise<void> {
-    if (input.labels.length !== 1) {
-      // TODO: Allow
-      throw new Error("Unable to layout multiple labels.");
+  protected async action(input: NodesActionParams): Promise<void> {
+    if (this.disabled(input)) {
+      return;
     }
-    const label = input.labels[0];
     const distanceString = prompt("Circle Radius (Pixels):", "3000");
     if (distanceString == null) {
       return;
@@ -32,15 +29,15 @@ export class LayoutLabelsCircleAction extends Action<LabelActionParams> {
           layoutSpecification: {
             type: "LayoutSpecificationCircleDto",
             radius: n,
-            label: label,
+            nodeIds: input.nodes.map((node) => node.id),
           },
         },
       }),
     );
   }
 
-  disabled(input: LabelActionParams): boolean {
-    return input.labels.length !== 1;
+  disabled(input: NodesActionParams): boolean {
+    return input.nodes.length < 2;
   }
 
   icon(): string | null {
@@ -48,11 +45,11 @@ export class LayoutLabelsCircleAction extends Action<LabelActionParams> {
   }
 
   slug(): string {
-    return "layout-labels-circle";
+    return "layout-nodes-circle";
   }
 
   title(): string {
-    return "Layout Label Circle";
+    return "Layout Circle";
   }
 
   shortcut(): ActionShortcut | null {

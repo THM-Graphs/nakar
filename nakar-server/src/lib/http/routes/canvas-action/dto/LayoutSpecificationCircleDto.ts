@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNumber, IsString, MinLength } from 'class-validator';
+import { IsArray, IsNumber, IsString } from 'class-validator';
 
 export class LayoutSpecificationCircleDto {
   @ApiProperty({ enum: ['LayoutSpecificationCircleDto'] })
@@ -10,8 +10,8 @@ export class LayoutSpecificationCircleDto {
   @IsNumber()
   public radius!: number;
 
-  @ApiProperty({ type: String })
-  @IsString()
-  @MinLength(1)
-  public label!: string;
+  @ApiProperty({ isArray: true, type: String })
+  @IsArray()
+  @IsString({ each: true })
+  public nodeIds!: string[];
 }

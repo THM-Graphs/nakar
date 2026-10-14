@@ -3,23 +3,14 @@ import { ApiExtraModels, ApiProperty, refs } from '@nestjs/swagger';
 import { ValidateNested } from 'class-validator';
 import { Type, TypeHelpOptions } from 'class-transformer';
 import { LayoutSpecificationCircleDto } from './LayoutSpecificationCircleDto';
-import { LayoutSpecificationForceDirectedDto } from './LayoutSpecificationForceDirectedDto';
 import { match } from 'ts-pattern';
 import { LayoutSpecificationDto } from './LayoutSpecificationDto';
 import { LayoutSpecificationHierarchyDto } from './LayoutSpecificationHierarchyDto';
 
-@ApiExtraModels(
-  LayoutSpecificationCircleDto,
-  LayoutSpecificationForceDirectedDto,
-  LayoutSpecificationHierarchyDto,
-)
+@ApiExtraModels(LayoutSpecificationCircleDto, LayoutSpecificationHierarchyDto)
 export class LayoutRequestBodyDto {
   @ApiProperty({
-    oneOf: refs(
-      LayoutSpecificationCircleDto,
-      LayoutSpecificationForceDirectedDto,
-      LayoutSpecificationHierarchyDto,
-    ),
+    oneOf: refs(LayoutSpecificationCircleDto, LayoutSpecificationHierarchyDto),
   })
   @ValidateNested()
   @Type((options: TypeHelpOptions | undefined) =>
@@ -28,12 +19,6 @@ export class LayoutRequestBodyDto {
       .with(
         { layoutSpecification: { type: 'LayoutSpecificationCircleDto' } },
         () => LayoutSpecificationCircleDto,
-      )
-      .with(
-        {
-          layoutSpecification: { type: 'LayoutSpecificationForceDirectedDto' },
-        },
-        () => LayoutSpecificationForceDirectedDto,
       )
       .with(
         {

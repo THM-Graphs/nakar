@@ -53,7 +53,6 @@ import { LiveCanvasScenario } from './data/LiveCanvasScenario';
 import type { MonitoringService } from '../monitoring/MonitoringService';
 import { HierarchyGraphLayoutEngine } from '../../packages/physics/hierarchy-graph-layout/HierarchyGraphLayoutEngine';
 import type { LayoutSpecificationHierarchyDto } from '../http/routes/canvas-action/dto/LayoutSpecificationHierarchyDto';
-import type { LayoutSpecificationForceDirectedDto } from '../http/routes/canvas-action/dto/LayoutSpecificationForceDirectedDto';
 import type { LiveCanvasViewSettingsColorIndex } from './view-settings/LiveCanvasViewSettingsColorIndex';
 import { LiveCanvasViewSettingsDefaultValues } from './view-settings/LiveCanvasViewSettingsDefaultValues';
 import type { PhysicalGraph } from '../../packages/physics/physical-graph/PhysicalGraph';
@@ -627,23 +626,25 @@ export class LiveCanvas {
                         {
                           type: 'LayoutSpecificationCircleDto',
                           radius: radius,
-                          label: label,
+                          nodeIds: this.getGraph()
+                            .nodes.getByLabel(label)
+                            .map((node: GraphNode): string => node.id)
+                            .toArray(),
                         },
                         changeRecorder,
                       );
                     })
-                    .with('forceDirected', (): Promise<void> | void => {
+                    .with('forceDirected', (): void => {
                       const label: string | null = data.label ?? null;
                       if (label == null) {
                         return;
                       }
-                      return this._layout(
-                        {
-                          type: 'LayoutSpecificationForceDirectedDto',
-                          label: label,
-                        },
-                        changeRecorder,
-                      );
+                      for (const node of this.getGraph().nodes.getByLabel(
+                        label,
+                      )) {
+                        node.locked = false;
+                        changeRecorder.didChangeNodeLock(node.id, false);
+                      }
                     })
                     .with('hierarchy', (): Promise<void> | void => {
                       const relationshipType: string | null =
@@ -1275,10 +1276,10 @@ export class LiveCanvas {
 
   public layout(params: { layoutSpecification: LayoutSpecificationDto }): void {
     this._queue.addTask(
-      new TaskQueueTask('Layout label', async (): Promise<void> => {
+      new TaskQueueTask('Layout nodes', async (): Promise<void> => {
         const changeRecorder: LiveCanvasChangeRecorder =
           new LiveCanvasChangeRecorder();
-        this._snapshot('Layout label', changeRecorder);
+        this._snapshot('Layout nodes', changeRecorder);
 
         await this._layout(params.layoutSpecification, changeRecorder);
 
@@ -2047,17 +2048,17 @@ export class LiveCanvas {
       .with(
         { type: 'LayoutSpecificationCircleDto' },
         (l: LayoutSpecificationCircleDto): void => {
-          const targetLabel: string = l.label;
-          const nodesOfLabel: GraphNode[] = graph.nodes
-            .getByLabel(targetLabel)
+          const nodeIds: SSet<string> = new SSet<string>(l.nodeIds);
+          const nodesToLayout: GraphNode[] = graph.nodes.nodes
+            .filter((node: GraphNode): boolean => nodeIds.has(node.id))
             .toArray();
-          if (nodesOfLabel.length < 2) {
+          if (nodesToLayout.length < 2) {
             return;
           }
           const circleLayoutEngine: CircleLayoutEngine =
             new CircleLayoutEngine();
           const sortedNodesToLayout: GraphNode[] = circleLayoutEngine.layout(
-            nodesOfLabel,
+            nodesToLayout,
             (n: GraphNode): number => n.degree(graph),
           );
 
@@ -2076,13 +2077,13 @@ export class LiveCanvas {
 
           // Put other nodes between
           for (const node of graph.nodes.nodes) {
-            if (node.labels.includes(targetLabel) || node.locked) {
+            if (nodeIds.has(node.id) || node.locked) {
               continue;
             }
 
             const neighbors: GraphNode[] = graph
               .getNeighborsOfNode(node)
-              .filter((n: GraphNode): boolean => n.labels.includes(targetLabel))
+              .filter((n: GraphNode): boolean => nodeIds.has(n.id))
               .toArray();
             if (neighbors.length > 0) {
               node.position = ElementPosition.average(
@@ -2090,19 +2091,6 @@ export class LiveCanvas {
               ).byJiggling();
               changeRecorder.didMoveNode(node);
             }
-          }
-        },
-      )
-      .with(
-        { type: 'LayoutSpecificationForceDirectedDto' },
-        (l: LayoutSpecificationForceDirectedDto): void => {
-          const targetLabel: string = l.label;
-          const nodesOfLabel: GraphNode[] = graph.nodes
-            .getByLabel(targetLabel)
-            .toArray();
-          for (const node of nodesOfLabel) {
-            node.locked = false;
-            changeRecorder.didChangeNodeLock(node.id, false);
           }
         },
       )

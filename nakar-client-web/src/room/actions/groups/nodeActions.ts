@@ -7,6 +7,7 @@ import { NodesActionParams } from "../NodesActionParams.ts";
 import { AddNoteAction } from "../AddNoteAction.ts";
 import { ShowShortestPathAction } from "../ShowShortestPathAction.ts";
 import { ExpandNodeAction } from "../ExpandNodeAction.ts";
+import { LayoutNodesCircleAction } from "../LayoutNodesCircleAction.ts";
 
 export const nodeActions: Action<NodesActionParams>[] = [
   ExpandNodeAction.shared,
@@ -14,6 +15,7 @@ export const nodeActions: Action<NodesActionParams>[] = [
   RemoveNodesAction.shared,
   FocusNodesAction.shared,
   UnlockNodesAction.shared,
+  LayoutNodesCircleAction.shared,
   AddNoteAction.shared,
   ShowShortestPathAction.shared,
 ];

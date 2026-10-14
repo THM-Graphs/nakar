@@ -401,12 +401,7 @@ export type CompressNodesRequestBodyDto = {
 export type LayoutSpecificationCircleDto = {
     type: 'LayoutSpecificationCircleDto';
     radius: number;
-    label: string;
-};
-
-export type LayoutSpecificationForceDirectedDto = {
-    type: 'LayoutSpecificationForceDirectedDto';
-    label: string;
+    nodeIds: Array<string>;
 };
 
 export type LayoutSpecificationHierarchyDto = {
@@ -415,7 +410,7 @@ export type LayoutSpecificationHierarchyDto = {
 };
 
 export type LayoutRequestBodyDto = {
-    layoutSpecification: LayoutSpecificationCircleDto | LayoutSpecificationForceDirectedDto | LayoutSpecificationHierarchyDto;
+    layoutSpecification: LayoutSpecificationCircleDto | LayoutSpecificationHierarchyDto;
 };
 
 export type ShowShortestPathRequestBodyDto = {
