@@ -8,6 +8,9 @@ import { RelationshipTypeActionParams } from "../../actions/RelationshipTypeActi
 export function HistogramSectionRelationships() {
   const roomContext = useCanvasContext();
   const histogram = useBearStore((s) => s.room.scenario.graph.histogram);
+  const edges = useBearStore((s) => s.room.scenario.graph.elements.edges);
+  const setElements = useBearStore((s) => s.room.panels.inspector.setElements);
+  const showInspector = useBearStore((s) => s.room.panels.inspector.show);
 
   return (
     <DynamicList
@@ -23,6 +26,14 @@ export function HistogramSectionRelationships() {
               value={entry.count}
               percentage={entry.percentage}
               key={entry.value}
+              onSelect={() => {
+                setElements(
+                  edges
+                    .filter((edge) => edge.type === entry.value)
+                    .map((edge) => edge.id),
+                );
+                showInspector();
+              }}
               customActions={relationshipTypeActions.map((action) =>
                 action.detailPaneAction(() => {
                   return {

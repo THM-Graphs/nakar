@@ -15,6 +15,7 @@ export function HistogramSectionNodes() {
   const roomContext = useCanvasContext();
   const histogram = useBearStore((s) => s.room.scenario.graph.histogram);
   const setElement = useBearStore((s) => s.room.panels.inspector.setElement);
+  const showInspector = useBearStore((s) => s.room.panels.inspector.show);
   const onCenter = useBearStore((s) => s.room.ui.rendererEvents.onCenter);
   const nodes = useBearStore((s) => s.room.scenario.graph.elements.nodes);
   const graphLabels = useBearStore(
@@ -52,6 +53,7 @@ export function HistogramSectionNodes() {
                 onSelect={() => {
                   setElement(nodeEntry.id);
                   onCenter.next();
+                  showInspector();
                 }}
                 customActions={nodeActions.map((action) =>
                   action.detailPaneAction(() => {

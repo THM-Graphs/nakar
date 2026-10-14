@@ -12,6 +12,7 @@ export function HistogramSectionLabels() {
   const roomContext = useCanvasContext();
   const labels = useBearStore((s) => s.room.scenario.graph.elements.labels);
   const histogram = useBearStore((s) => s.room.scenario.graph.histogram);
+  const showInspector = useBearStore((s) => s.room.panels.inspector.show);
   const colorSchema = useColorSchema();
 
   const multipleSources = useMemo(() => {
@@ -48,6 +49,7 @@ export function HistogramSectionLabels() {
                     labels: [entry.value],
                     roomContext: roomContext,
                   });
+                  showInspector();
                 }}
                 value={entry.count}
                 percentage={entry.percentage}
