@@ -104,6 +104,13 @@ export class WebGLEdge extends Container {
     });
     this.on("rightclick", (event) => {
       event.stopPropagation();
+      if (!this.selected) {
+        if (isMultiSelectKeyPressed(event)) {
+          $onDisplayLinkDataWithModifier.next(this);
+        } else {
+          $onDisplayLinkData.next(this);
+        }
+      }
       $onShowEdgeContextMenu.next({
         edge: this,
         position: event.client.clone(),

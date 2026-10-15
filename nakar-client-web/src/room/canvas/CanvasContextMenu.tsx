@@ -42,9 +42,6 @@ export function CanvasContextMenu() {
   const [selectedEdges, setSelectedEdges] = useState<EdgeDto[] | null>(null);
   const nodes = useBearStore((s) => s.room.scenario.graph.elements.nodes);
   const edges = useBearStore((s) => s.room.scenario.graph.elements.edges);
-  const selectedElements: string[] = useBearStore(
-    (s) => s.room.panels.inspector.element,
-  );
   const dropdownEl = useRef<HTMLDivElement | null>(null);
   const isLoggedIn = useIsLoggedIn();
   const showRunScenarioModal = useBearStore(
@@ -70,6 +67,8 @@ export function CanvasContextMenu() {
     const subs = [
       onShowNodeContextMenu.subscribe(
         (params: { nodeId: string; position: [number, number] }) => {
+          const selectedElements =
+            useBearStore.getState().room.panels.inspector.element;
           const selectedNode = nodes.find((n) => n.id === params.nodeId);
           if (selectedNode == null) {
             return;
@@ -98,6 +97,8 @@ export function CanvasContextMenu() {
       ),
       onShowEdgeContextMenu.subscribe(
         (params: { edgeId: string; position: [number, number] }) => {
+          const selectedElements =
+            useBearStore.getState().room.panels.inspector.element;
           if (selectedElements.includes(params.edgeId)) {
             const foundEdges: EdgeDto[] = selectedElements.reduce<EdgeDto[]>(
               (akku, next) => {
@@ -129,13 +130,7 @@ export function CanvasContextMenu() {
         s.unsubscribe();
       });
     };
-  }, [
-    onShowNodeContextMenu,
-    onShowEdgeContextMenu,
-    nodes,
-    edges,
-    selectedElements,
-  ]);
+  }, [onShowNodeContextMenu, onShowEdgeContextMenu, nodes, edges]);
 
   useEffect(() => {
     const listener = () => {

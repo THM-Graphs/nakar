@@ -611,6 +611,13 @@ export class SVGGraphRendererSystem {
       this.viewSubscriptions.push(
         linkView.onContextMenu$.subscribe((event) => {
           event.preventDefault();
+          if (!this._edgeIsSelected(linkView.edge)) {
+            if (isMultiSelectKeyPressed(event)) {
+              this.$onDisplayLinkDataWithModifier.next(linkView.edge);
+            } else {
+              this.$onDisplayLinkData.next(linkView.edge);
+            }
+          }
           this.$onShowEdgeContextMenu.next({
             edge: linkView.edge,
             position: [event.clientX, event.clientY],
@@ -632,6 +639,13 @@ export class SVGGraphRendererSystem {
       this.viewSubscriptions.push(
         nodeView.onContextMenu$.subscribe((event) => {
           event.preventDefault();
+          if (!this._nodeIsSelected(nodeView.node)) {
+            if (isMultiSelectKeyPressed(event)) {
+              this.$onDisplayNodeDataWithModifier.next(nodeView.node);
+            } else {
+              this.$onDisplayNodeData.next(nodeView.node);
+            }
+          }
           this.$onShowNodeContextMenu.next({
             node: nodeView.node,
             position: [event.clientX, event.clientY],
