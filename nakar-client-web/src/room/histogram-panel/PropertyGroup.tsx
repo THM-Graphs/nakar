@@ -2,6 +2,7 @@ import { Stack } from "react-bootstrap";
 import { Collapsable } from "../../shared/elements/Collapsable.tsx";
 import { ValueDisplay } from "./ValueDisplay.tsx";
 import { DynamicList } from "../../shared/elements/DynamicList.tsx";
+import { DetailPaneAction } from "../inspector-panel/DetailPaneAction.ts";
 
 export function PropertyGroup(props: {
   propertyEntry: {
@@ -10,6 +11,8 @@ export function PropertyGroup(props: {
       value: string;
       count: number;
       percentage: number;
+      customActions?: DetailPaneAction[];
+      onSelect?: () => void | Promise<void>;
     }>;
   };
 }) {
@@ -35,14 +38,18 @@ export function PropertyGroup(props: {
           }
           render={(list) => (
             <>
-              {list.map((valueEntry) => (
-                <ValueDisplay
-                  label={valueEntry.value}
-                  value={valueEntry.count}
-                  percentage={valueEntry.percentage}
-                  key={valueEntry.value}
-                ></ValueDisplay>
-              ))}
+              {list.map((valueEntry) => {
+                return (
+                  <ValueDisplay
+                    label={valueEntry.value}
+                    value={valueEntry.count}
+                    percentage={valueEntry.percentage}
+                    key={valueEntry.value}
+                    onSelect={valueEntry.onSelect}
+                    customActions={valueEntry.customActions}
+                  ></ValueDisplay>
+                );
+              })}
             </>
           )}
         ></DynamicList>
