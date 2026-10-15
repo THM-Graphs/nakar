@@ -617,6 +617,7 @@ export type HistogramValueEntryDto = {
     value: string;
     count: number;
     percentage: number;
+    elementIds: Array<string>;
 };
 
 export type HistogramPropertyEntryDto = {

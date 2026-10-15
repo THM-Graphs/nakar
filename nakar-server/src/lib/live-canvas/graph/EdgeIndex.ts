@@ -23,8 +23,8 @@ export class EdgeIndex {
   /* Maps type => count */
   private readonly _typeHistogram: SMap<string, number>;
 
-  /* Maps key => value => count */
-  private readonly _propertyHistogram: SMap<string, SMap<string, number>>;
+  /* Maps key => value => relationship IDs */
+  private readonly _propertyHistogram: SMap<string, SMap<string, SSet<string>>>;
 
   private readonly _compressed: SMap<string, SSet<string>>;
 
@@ -59,7 +59,7 @@ export class EdgeIndex {
     return this._typeHistogram;
   }
 
-  public get propertyHistogram(): SMap<string, SMap<string, number>> {
+  public get propertyHistogram(): SMap<string, SMap<string, SSet<string>>> {
     return this._propertyHistogram;
   }
 
@@ -121,7 +121,12 @@ export class EdgeIndex {
     this._addToTypeHistogram(edge.type, edge.representationCount);
 
     for (const propertyEntry of edge.properties.properties) {
-      this._addToPropertyHistogram(propertyEntry[0], propertyEntry[1], 1);
+      this._updatePropertyHistogram(
+        propertyEntry[0],
+        propertyEntry[1],
+        edge.id,
+        1,
+      );
     }
 
     for (const compressed of edge.compressed) {
@@ -231,7 +236,12 @@ export class EdgeIndex {
     this._addToTypeHistogram(edge.type, -edge.representationCount);
 
     for (const propertyEntry of edge.properties.properties) {
-      this._addToPropertyHistogram(propertyEntry[0], propertyEntry[1], -1);
+      this._updatePropertyHistogram(
+        propertyEntry[0],
+        propertyEntry[1],
+        edge.id,
+        -1,
+      );
     }
 
     for (const compressed of edge.compressed) {
@@ -329,19 +339,26 @@ export class EdgeIndex {
     }
   }
 
-  private _addToPropertyHistogram(
+  private _updatePropertyHistogram(
     key: string,
     value: unknown,
+    edgeId: string,
     delta: 1 | -1,
   ): void {
     const stringValue: string = JSON.stringify(value);
-    const propertyHistogram: SMap<string, number> =
-      this._propertyHistogram.get(key) ?? new SMap();
-    propertyHistogram.set(
-      stringValue,
-      (propertyHistogram.get(stringValue) ?? 0) + delta,
-    );
-    if (propertyHistogram.get(stringValue) === 0) {
+    const propertyHistogram: SMap<
+      string,
+      SSet<string>
+    > = this._propertyHistogram.get(key) ?? new SMap();
+    const edgeIds: SSet<string> =
+      propertyHistogram.get(stringValue) ?? new SSet();
+    if (delta === 1) {
+      edgeIds.add(edgeId);
+    } else {
+      edgeIds.delete(edgeId);
+    }
+    propertyHistogram.set(stringValue, edgeIds);
+    if (edgeIds.size === 0) {
       propertyHistogram.delete(stringValue);
     }
     this._propertyHistogram.set(key, propertyHistogram);

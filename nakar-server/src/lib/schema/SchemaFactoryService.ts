@@ -2,6 +2,7 @@ import { LiveCanvasUndoableData } from '../live-canvas/data/LiveCanvasUndoableDa
 import { GraphNode } from '../live-canvas/graph/GraphNode';
 import { GraphEdge } from '../live-canvas/graph/GraphEdge';
 import { SMap } from '../../packages/map/Map';
+import { SSet } from '../../packages/set/Set';
 import { LiveCanvasMetaData } from '../live-canvas/graph/LiveCanvasMetaData';
 import { PropertyCollection } from '../live-canvas/graph/PropertyCollection';
 import { DatabaseService } from '../database/DatabaseService';
@@ -583,25 +584,28 @@ export class SchemaFactoryService {
           value: entry[0],
           count: entry[1],
           percentage: entry[1] / labelCountHistogram,
+          elementIds: graph.nodes
+            .getByLabel(entry[0])
+            .toArrayBy((node: GraphNode): string => node.id),
         })),
       nodeProperties: graph.nodes.propertyHistogram
         .toArray()
         .toSorted(
           (
-            a: [string, SMap<string, number>],
-            b: [string, SMap<string, number>],
+            a: [string, SMap<string, SSet<string>>],
+            b: [string, SMap<string, SSet<string>>],
           ): number => a[0].localeCompare(b[0]),
         )
         .map(
           (
-            entry: [string, SMap<string, number>],
+            entry: [string, SMap<string, SSet<string>>],
           ): {
             key: string;
             values: HistogramValueEntryDto[];
           } => {
             const count: number = entry[1].reduce(
-              (akku: number, key: string, value: number): number =>
-                akku + value,
+              (akku: number, key: string, value: SSet<string>): number =>
+                akku + value.size,
               0,
             );
             return {
@@ -609,16 +613,19 @@ export class SchemaFactoryService {
               values: entry[1]
                 .toArray()
                 .toSorted(
-                  (a: [string, number], b: [string, number]): number =>
-                    b[1] - a[1],
+                  (
+                    a: [string, SSet<string>],
+                    b: [string, SSet<string>],
+                  ): number => b[1].size - a[1].size,
                 )
                 .map(
                   (
-                    propertyEntry: [string, number],
+                    propertyEntry: [string, SSet<string>],
                   ): HistogramValueEntryDto => ({
                     value: propertyEntry[0],
-                    count: propertyEntry[1],
-                    percentage: propertyEntry[1] / count,
+                    count: propertyEntry[1].size,
+                    percentage: propertyEntry[1].size / count,
+                    elementIds: propertyEntry[1].toArray(),
                   }),
                 ),
             };
@@ -633,25 +640,28 @@ export class SchemaFactoryService {
           value: entry[0],
           count: entry[1],
           percentage: entry[1] / typeCountHistogram,
+          elementIds: graph.edges
+            .getByType(entry[0])
+            .toArrayBy((edge: GraphEdge): string => edge.id),
         })),
       edgeProperties: graph.edges.propertyHistogram
         .toArray()
         .toSorted(
           (
-            a: [string, SMap<string, number>],
-            b: [string, SMap<string, number>],
+            a: [string, SMap<string, SSet<string>>],
+            b: [string, SMap<string, SSet<string>>],
           ): number => a[0].localeCompare(b[0]),
         )
         .map(
           (
-            entry: [string, SMap<string, number>],
+            entry: [string, SMap<string, SSet<string>>],
           ): {
             key: string;
             values: HistogramValueEntryDto[];
           } => {
             const count: number = entry[1].reduce(
-              (akku: number, key: string, value: number): number =>
-                akku + value,
+              (akku: number, key: string, value: SSet<string>): number =>
+                akku + value.size,
               0,
             );
             return {
@@ -659,16 +669,19 @@ export class SchemaFactoryService {
               values: entry[1]
                 .toArray()
                 .toSorted(
-                  (a: [string, number], b: [string, number]): number =>
-                    b[1] - a[1],
+                  (
+                    a: [string, SSet<string>],
+                    b: [string, SSet<string>],
+                  ): number => b[1].size - a[1].size,
                 )
                 .map(
                   (
-                    propertyEntry: [string, number],
+                    propertyEntry: [string, SSet<string>],
                   ): HistogramValueEntryDto => ({
                     value: propertyEntry[0],
-                    count: propertyEntry[1],
-                    percentage: propertyEntry[1] / count,
+                    count: propertyEntry[1].size,
+                    percentage: propertyEntry[1].size / count,
+                    elementIds: propertyEntry[1].toArray(),
                   }),
                 ),
             };

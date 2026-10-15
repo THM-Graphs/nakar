@@ -3,11 +3,16 @@ import { useBearStore } from "../../../state/useBearStore.ts";
 import { DynamicList } from "../../../shared/elements/DynamicList.tsx";
 import { useCanvasContext } from "../../../pages/Canvas.tsx";
 import { relationshipActions } from "../../actions/groups/relationshipActions.ts";
+import { useMemo } from "react";
 
 export function HistogramSectionRelationshipProperties() {
   const roomContext = useCanvasContext();
   const histogram = useBearStore((s) => s.room.scenario.graph.histogram);
   const edges = useBearStore((s) => s.room.scenario.graph.elements.edges);
+  const edgesById = useMemo(
+    () => new Map(edges.map((edge) => [edge.id, edge])),
+    [edges],
+  );
   const setElements = useBearStore((s) => s.room.panels.inspector.setElements);
   const showInspector = useBearStore((s) => s.room.panels.inspector.show);
 
@@ -24,20 +29,15 @@ export function HistogramSectionRelationshipProperties() {
               propertyEntry={{
                 ...propertyEntry,
                 values: propertyEntry.values.map((valueEntry) => {
-                  const matchingEdges = edges.filter(
-                    (edge) =>
-                      Object.prototype.hasOwnProperty.call(
-                        edge.properties,
-                        propertyEntry.key,
-                      ) &&
-                      JSON.stringify(edge.properties[propertyEntry.key]) ===
-                        valueEntry.value,
-                  );
+                  const matchingEdges = valueEntry.elementIds.flatMap((id) => {
+                    const edge = edgesById.get(id);
+                    return edge ? [edge] : [];
+                  });
 
                   return {
                     ...valueEntry,
                     onSelect: () => {
-                      setElements(matchingEdges.map((edge) => edge.id));
+                      setElements(valueEntry.elementIds);
                       showInspector();
                     },
                     customActions: relationshipActions.map((action) =>

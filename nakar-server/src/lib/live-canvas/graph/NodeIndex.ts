@@ -25,8 +25,8 @@ export class NodeIndex {
   /* Maps label => count */
   private readonly _labelIndex: LabelIndex;
 
-  /* Maps key => value => count */
-  private readonly _propertyHistogram: SMap<string, SMap<string, number>>;
+  /* Maps key => value => node IDs */
+  private readonly _propertyHistogram: SMap<string, SMap<string, SSet<string>>>;
 
   private readonly _bySource: SMap<string, SSet<GraphNode>>;
 
@@ -66,7 +66,7 @@ export class NodeIndex {
     return this._labelIndex;
   }
 
-  public get propertyHistogram(): SMap<string, SMap<string, number>> {
+  public get propertyHistogram(): SMap<string, SMap<string, SSet<string>>> {
     return this._propertyHistogram;
   }
 
@@ -90,7 +90,7 @@ export class NodeIndex {
       this._labelIndex.add(label, node.sourceId, node.sourceTitle);
     }
     for (const property of node.properties.properties) {
-      this._addToPropertyHistogram(property[0], property[1], 1);
+      this._updatePropertyHistogram(property[0], property[1], node.id, 1);
     }
     for (const label of node.labels) {
       this._byLabel.set(
@@ -183,7 +183,12 @@ export class NodeIndex {
     }
 
     for (const propertyEntry of node.properties.properties) {
-      this._addToPropertyHistogram(propertyEntry[0], propertyEntry[1], -1);
+      this._updatePropertyHistogram(
+        propertyEntry[0],
+        propertyEntry[1],
+        node.id,
+        -1,
+      );
     }
 
     this._bySource.get(node.sourceId)?.delete(node);
@@ -264,19 +269,26 @@ export class NodeIndex {
     return range;
   }
 
-  private _addToPropertyHistogram(
+  private _updatePropertyHistogram(
     key: string,
     value: unknown,
+    nodeId: string,
     delta: 1 | -1,
   ): void {
     const stringValue: string = JSON.stringify(value);
-    const propertyHistogram: SMap<string, number> =
-      this._propertyHistogram.get(key) ?? new SMap();
-    propertyHistogram.set(
-      stringValue,
-      (propertyHistogram.get(stringValue) ?? 0) + delta,
-    );
-    if (propertyHistogram.get(stringValue) === 0) {
+    const propertyHistogram: SMap<
+      string,
+      SSet<string>
+    > = this._propertyHistogram.get(key) ?? new SMap();
+    const nodeIds: SSet<string> =
+      propertyHistogram.get(stringValue) ?? new SSet();
+    if (delta === 1) {
+      nodeIds.add(nodeId);
+    } else {
+      nodeIds.delete(nodeId);
+    }
+    propertyHistogram.set(stringValue, nodeIds);
+    if (nodeIds.size === 0) {
       propertyHistogram.delete(stringValue);
     }
     this._propertyHistogram.set(key, propertyHistogram);

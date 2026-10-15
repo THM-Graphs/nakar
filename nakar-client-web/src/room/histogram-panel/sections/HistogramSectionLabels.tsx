@@ -5,7 +5,6 @@ import { DynamicList } from "../../../shared/elements/DynamicList.tsx";
 import { labelActions } from "../../actions/groups/labelActions.ts";
 import { getBackgroundColorOfLabel } from "../../color/getBackgroundColor.ts";
 import { useColorSchema } from "../../color/useColorSchema.ts";
-import { SelectAllNodesOfLabel } from "../../actions/SelectAllNodesOfLabel.ts";
 import { useMemo } from "react";
 
 export function HistogramSectionLabels() {
@@ -13,6 +12,7 @@ export function HistogramSectionLabels() {
   const labels = useBearStore((s) => s.room.scenario.graph.elements.labels);
   const histogram = useBearStore((s) => s.room.scenario.graph.histogram);
   const showInspector = useBearStore((s) => s.room.panels.inspector.show);
+  const setElements = useBearStore((s) => s.room.panels.inspector.setElements);
   const colorSchema = useColorSchema();
 
   const multipleSources = useMemo(() => {
@@ -45,10 +45,7 @@ export function HistogramSectionLabels() {
                     : undefined
                 }
                 onSelect={() => {
-                  SelectAllNodesOfLabel.shared.runAsync({
-                    labels: [entry.value],
-                    roomContext: roomContext,
-                  });
+                  setElements(entry.elementIds);
                   showInspector();
                 }}
                 value={entry.count}
