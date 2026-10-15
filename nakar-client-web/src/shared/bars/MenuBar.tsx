@@ -327,6 +327,7 @@ export function MenuBar() {
             selectedTab,
             hideLabels,
             setHideLabels,
+            rendererMode,
           }}
         ></ActionDropdownItem>
         <ActionDropdownItem

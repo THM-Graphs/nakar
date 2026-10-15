@@ -1,11 +1,13 @@
 import { Action, ActionShortcut } from "./Action.ts";
 import { SelectedCanvasTab } from "../../state/SelectedCanvasTab.ts";
 import { createAppShortcut } from "./createAppShortcut.ts";
+import { BearState } from "../../state/BearState.ts";
 
 export type HideLabelsActionParams = {
   selectedTab: SelectedCanvasTab;
   hideLabels: boolean;
   setHideLabels: (b: boolean) => void;
+  rendererMode: BearState["room"]["canvas"]["renderer"]["mode"];
 };
 
 export class HideLabelsAction extends Action<HideLabelsActionParams> {
@@ -16,7 +18,7 @@ export class HideLabelsAction extends Action<HideLabelsActionParams> {
   }
 
   disabled(input: HideLabelsActionParams): boolean {
-    return input.selectedTab !== "graph";
+    return input.selectedTab !== "graph" || input.rendererMode !== "svg";
   }
 
   icon(): string | null {

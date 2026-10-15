@@ -73,6 +73,7 @@ export function CanvasShortcuts() {
   const currentGraphRenderer = useBearStore(
     (s) => s.room.canvas.renderer.current,
   );
+  const rendererMode = useBearStore((s) => s.room.canvas.renderer.mode);
 
   const isLoggedIn = useIsLoggedIn();
   const runningActionsRef = useRef(new Set<string>());
@@ -171,6 +172,7 @@ export function CanvasShortcuts() {
           selectedTab,
           hideLabels,
           setHideLabels,
+          rendererMode: rendererMode,
         }),
         ...groupActionBindings,
       ] satisfies RegisteredShortcut[],

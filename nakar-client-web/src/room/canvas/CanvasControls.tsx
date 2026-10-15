@@ -67,7 +67,7 @@ export function CanvasControls(props: { className?: string }) {
       {rendererMode === "svg" && (
         <ActionNavbarButton
           action={HideLabelsAction.shared}
-          params={{ hideLabels, setHideLabels, selectedTab }}
+          params={{ hideLabels, setHideLabels, selectedTab, rendererMode }}
           hideTitle={true}
           tooltipPlacement={"right"}
           className={"mt-3"}
