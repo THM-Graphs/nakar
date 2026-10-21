@@ -96,6 +96,9 @@ export class WebGLEdge extends Container {
     });
     this.on("pointertap", (event) => {
       event.stopPropagation();
+      if (event.button !== 0) {
+        return;
+      }
       if (isMultiSelectKeyPressed(event)) {
         $onDisplayLinkDataWithModifier.next(this);
       } else {
