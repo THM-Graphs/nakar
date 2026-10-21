@@ -14,6 +14,8 @@ import { useBearStore } from "../../state/useBearStore.ts";
 import { nodeActions } from "../actions/groups/nodeActions.ts";
 import { ActionDropdownItem } from "../actions/ActionDropdownItem.tsx";
 import { relationshipActions } from "../actions/groups/relationshipActions.ts";
+import { relationshipTypeActions } from "../actions/groups/relationshipTypeActions.ts";
+import { getRelationshipTypesFromEdges } from "../helper-functions/getRelationshipTypesFromEdges.ts";
 import {
   EdgeDto,
   NodeDto,
@@ -40,6 +42,9 @@ export function CanvasContextMenu() {
   const [posY, setPosY] = useState(0);
   const [selectedNodes, setSelectedNodes] = useState<NodeDto[] | null>(null);
   const [selectedEdges, setSelectedEdges] = useState<EdgeDto[] | null>(null);
+  const selectedRelationshipTypes = getRelationshipTypesFromEdges(
+    selectedEdges ?? [],
+  );
   const nodes = useBearStore((s) => s.room.scenario.graph.elements.nodes);
   const edges = useBearStore((s) => s.room.scenario.graph.elements.edges);
   const dropdownEl = useRef<HTMLDivElement | null>(null);
@@ -200,6 +205,22 @@ export function CanvasContextMenu() {
               }}
             ></ActionDropdownItem>
           ))}
+
+        {selectedRelationshipTypes.length > 0 && (
+          <>
+            <Dropdown.Divider></Dropdown.Divider>
+            {relationshipTypeActions.map((action) => (
+              <ActionDropdownItem
+                key={action.slug()}
+                action={action}
+                params={{
+                  relationshipTypes: selectedRelationshipTypes,
+                  roomContext: roomContext,
+                }}
+              ></ActionDropdownItem>
+            ))}
+          </>
+        )}
 
         {commonNodeScenarios.length > 0 && (
           <>

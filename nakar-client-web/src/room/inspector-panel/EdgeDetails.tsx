@@ -3,6 +3,7 @@ import { useCanvasContext } from "../../pages/Canvas.tsx";
 import { Stack } from "react-bootstrap";
 import { NodePreviewDisplay } from "./NodePreviewDisplay.tsx";
 import { relationshipActions } from "../actions/groups/relationshipActions.ts";
+import { relationshipTypeActions } from "../actions/groups/relationshipTypeActions.ts";
 import { EdgeDto } from "api-client";
 import { PropertyEntry } from "./PropertiesDisplay.tsx";
 import { EdgeViewSettingsEditor } from "../visualization-panel/EdgeViewSettingsEditor.tsx";
@@ -20,12 +21,20 @@ export function EdgeDetails(props: { edge: EdgeDto }) {
   return (
     <Stack>
       <DetailPane
-        actions={relationshipActions.map((a) =>
-          a.detailPaneAction(() => ({
-            edges: [props.edge],
-            roomContext: roomContext,
-          })),
-        )}
+        actions={[
+          ...relationshipActions.map((a) =>
+            a.detailPaneAction(() => ({
+              edges: [props.edge],
+              roomContext: roomContext,
+            })),
+          ),
+          ...relationshipTypeActions.map((a) =>
+            a.detailPaneAction(() => ({
+              relationshipTypes: [props.edge.type],
+              roomContext: roomContext,
+            })),
+          ),
+        ]}
         otherProperties={[
           {
             slug: "ID",
