@@ -224,7 +224,9 @@ function InspectorForType(props: { element: NodeDto | EdgeDto }) {
 
 function InspectorPanelForMultiType(props: { element: NodeDto | EdgeDto }) {
   const title =
-    "title" in props.element ? props.element.title : props.element.type;
+    "title" in props.element
+      ? props.element.title
+      : `${props.element.type} (${props.element.sourceNode.title} -> ${props.element.targetNode.title})`;
   const colorSchema = useColorSchema();
   const graphLabels = useBearStore(
     (s) => s.room.scenario.graph.elements.labels,
