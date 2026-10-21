@@ -376,6 +376,10 @@ export type FocusNodesRequestBodyDto = {
     nodes: Array<string>;
 };
 
+export type FocusRelationshipsRequestBodyDto = {
+    edges: Array<string>;
+};
+
 export type FocusRelationshipTypeRequestBodyDto = {
     relationshipTypes: Array<string>;
 };
@@ -1362,6 +1366,20 @@ export type ActionControllerFocusNodesData = {
 };
 
 export type ActionControllerFocusNodesResponses = {
+    200: unknown;
+};
+
+export type ActionControllerFocusRelationshipsData = {
+    body: FocusRelationshipsRequestBodyDto;
+    path: {
+        canvasId: string;
+        roomId: string;
+    };
+    query?: never;
+    url: '/api/room/{roomId}/canvas/{canvasId}/action/focus-relationships';
+};
+
+export type ActionControllerFocusRelationshipsResponses = {
     200: unknown;
 };
 

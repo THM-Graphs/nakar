@@ -817,6 +817,41 @@ export class LiveCanvas {
     );
   }
 
+  public focusRelationships(params: { edgeIds: readonly string[] }): void {
+    this._queue.addTask(
+      new TaskQueueTask('Focus relationships', async (): Promise<void> => {
+        const changeRecorder: LiveCanvasChangeRecorder =
+          new LiveCanvasChangeRecorder();
+        const graph: LiveCanvasUndoableData = this._snapshot(
+          'Focus relationships',
+          changeRecorder,
+        );
+        const edgeIds: SSet<string> = new SSet<string>(params.edgeIds);
+        const nodeIds: SSet<string> = new SSet<string>();
+
+        for (const edge of graph.edges.edges) {
+          if (edgeIds.has(edge.id)) {
+            nodeIds.add(edge.startNodeId);
+            nodeIds.add(edge.endNodeId);
+          } else {
+            graph.edges.remove(edge);
+            changeRecorder.didAddOrRemoveGraphElements();
+          }
+        }
+
+        graph.nodes.nodes
+          .filter((node: GraphNode): boolean => !nodeIds.has(node.id))
+          .forEach((node: GraphNode): void => {
+            graph.nodes.remove(node);
+            changeRecorder.didAddOrRemoveGraphElements();
+          });
+
+        await this._postProcessGraph(changeRecorder);
+        this._handleChangeRecorder(changeRecorder);
+      }),
+    );
+  }
+
   public focusRelationshipType(params: {
     relationshipTypes: readonly string[];
   }): void {
