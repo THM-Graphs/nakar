@@ -772,6 +772,7 @@ export class DatabaseService {
     const canvases: Modules.Documents.Result<'api::canvas.canvas'>[] =
       await strapi.documents('api::canvas.canvas').findMany({
         status: 'published',
+        sort: [{ createdAt: 'asc' }, { id: 'asc' }],
         populate: { room: { populate: [] } },
         filters: {
           room: {
@@ -787,11 +788,19 @@ export class DatabaseService {
     } else {
       const newCanvas: Modules.Documents.Result<'api::canvas.canvas'> =
         await strapi.documents('api::canvas.canvas').create({
-          data: { title: 'A', room: { documentId: room.documentId } },
+          data: { title: 'New Canvas', room: { documentId: room.documentId } },
           status: 'published',
         });
       return [newCanvas];
     }
+  }
+
+  public async setCanvasTitle(canvasId: string, title: string): Promise<void> {
+    await strapi.documents('api::canvas.canvas').update({
+      documentId: canvasId,
+      data: { title },
+      status: 'published',
+    });
   }
 
   public async getProjectOfRoom(

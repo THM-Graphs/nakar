@@ -15,6 +15,7 @@ import type { CanvasEventNotesChanged } from './CanvasEventNotesChanged';
 import type { CanvasEventUserJoined } from './CanvasEventUserJoined';
 import type { CanvasEventUserLeft } from './CanvasEventUserLeft';
 import type { CanvasEventCursorChanged } from './CanvasEventCursorChanged';
+import type { CanvasEventRoomCanvasesChanged } from './CanvasEventRoomCanvasesChanged';
 
 export type CanvasEvent =
   | CanvasEventError
@@ -33,4 +34,5 @@ export type CanvasEvent =
   | CanvasEventNotesChanged
   | CanvasEventUserJoined
   | CanvasEventUserLeft
-  | CanvasEventCursorChanged;
+  | CanvasEventCursorChanged
+  | CanvasEventRoomCanvasesChanged;

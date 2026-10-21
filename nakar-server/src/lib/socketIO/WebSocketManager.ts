@@ -70,6 +70,9 @@ import { CursorMovedWsdto } from './dto/events/CursorMovedWsdto';
 import { LiveCanvasNote } from '../live-canvas/data/LiveCanvasNote';
 import { getConfig } from '../config/getConfig';
 import { CanvasReadyWsdto } from './dto/events/CanvasReadyWsdto';
+import { RoomCanvasesChangedWsdto } from './dto/events/RoomCanvasesChangedWsdto';
+import { CanvasDto } from '../schema/dtos/CanvasDto';
+import type { CanvasEventRoomCanvasesChanged } from '../live-canvas/events/CanvasEventRoomCanvasesChanged';
 
 export type Server = UntypedServer<ClientToServerEvents, ServerToClientEvents>;
 export type Socket = UntypedSocket<ClientToServerEvents, ServerToClientEvents>;
@@ -167,6 +170,8 @@ export class WebSocketManager
       await this._authService.getUserByJWT(auth.jwt);
     const canvas: Modules.Documents.Result<'api::canvas.canvas'> =
       await this._databaseService.getCanvas(auth.canvasId);
+    const canvasRoom: Modules.Documents.Result<'api::room.room'> =
+      await this._databaseService.getRoomOfCanvas(canvas);
 
     if (!this._server.sockets.sockets.has(wsClient.id)) {
       // The client disconnected before checking credentials finished.
@@ -189,7 +194,11 @@ export class WebSocketManager
         if (canvasId == null) {
           continue;
         }
-        const lc: LiveCanvas = this._canvasService.getCanvasWithId(canvasId);
+        const lc: LiveCanvas | null =
+          this._canvasService.getCanvasWithIdOrNull(canvasId);
+        if (lc == null) {
+          continue;
+        }
         lc.removeUser(wsClient.id);
 
         if ((this._server.sockets.adapter.rooms.get(room)?.size ?? 0) <= 1) {
@@ -214,6 +223,7 @@ export class WebSocketManager
     });
 
     await wsClient.join('canvas:' + canvas.documentId);
+    await wsClient.join('room:' + canvasRoom.documentId);
     liveCanvas.addUser({
       socketId: wsClient.id,
       username: user?.username ?? null,
@@ -227,6 +237,15 @@ export class WebSocketManager
 
   public handleDisconnect(wsClient: Socket): void {
     this._logger.debug(`Client disconnected: ${wsClient.id}`);
+  }
+
+  public notifyRoomCanvasesChanged(
+    roomId: string,
+    canvases: CanvasDto[],
+  ): void {
+    this._server.to('room:' + roomId).emit('message', {
+      event: new RoomCanvasesChangedWsdto(roomId, canvases),
+    });
   }
 
   public onModuleDestroy(): void {
@@ -349,6 +368,12 @@ export class WebSocketManager
       }
       try {
         match(event)
+          .with(
+            { type: 'CanvasEventRoomCanvasesChanged' },
+            (message: CanvasEventRoomCanvasesChanged): void => {
+              this.notifyRoomCanvasesChanged(message.roomId, message.canvases);
+            },
+          )
           .with(
             { type: 'CanvasEventGraphTableChanged' },
             (message: CanvasEventGraphTableChanged): void => {

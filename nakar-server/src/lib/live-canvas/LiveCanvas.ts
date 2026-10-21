@@ -58,7 +58,8 @@ import { LiveCanvasViewSettingsDefaultValues } from './view-settings/LiveCanvasV
 import type { PhysicalGraph } from '../../packages/physics/physical-graph/PhysicalGraph';
 import type { PhysicalNode } from '../../packages/physics/physical-graph/PhysicalNode';
 import { CircleLayoutEngine } from '../../packages/physics/circle-layout-algorithms/CircleLayoutEngine';
-import { NotFoundException } from '@nestjs/common';
+import { ConflictException, NotFoundException } from '@nestjs/common';
+import type { CanvasDto } from '../schema/dtos/CanvasDto';
 import { databaseBelongsToCanvas } from '../policies/databaseBelongsToCanvas';
 import { scenarioBelongsToCanvas } from '../policies/scenarioBelongsToCanvas';
 import { ExternalGraphDatabaseQueryLimitConfigType } from '../external-database/data/ExternalGraphDatabaseQueryLimitConfigType';
@@ -66,6 +67,9 @@ import { ExternalGraphDatabaseQueryLimitConfigCollectionType } from '../external
 import type { Modules } from '@strapi/types';
 
 export class LiveCanvas {
+  // Room-wide changes must be serialized across all LiveCanvas instances.
+  private static readonly _roomMutations: SMap<string, Promise<unknown>> =
+    new SMap<string, Promise<unknown>>();
   private readonly _logger: Logger = createChildLogger(this);
   private readonly _physicsWorker: PhysicsWorker;
   private readonly _onEvent: Subject<CanvasEvent>;
@@ -73,6 +77,10 @@ export class LiveCanvas {
   private readonly _queue: TaskQueue;
   private _shutdownTimeout: NodeJS.Timeout | null;
   private readonly _data: LiveCanvasData;
+  private readonly _pendingCanvasActions: SSet<Promise<unknown>> = new SSet<
+    Promise<unknown>
+  >();
+  private _destroying: boolean = false;
 
   public constructor(
     private readonly _canvasId: string,
@@ -180,6 +188,9 @@ export class LiveCanvas {
   }
 
   public scheduleShutdown(): void {
+    if (this._destroying || this._pendingCanvasActions.size > 0) {
+      return;
+    }
     this._logger.debug(`Will mark canvas ${this._canvasId} for shutdown.`);
 
     if (this._shutdownTimeout != null) {
@@ -226,13 +237,124 @@ export class LiveCanvas {
     );
   }
 
-  public async destroy(): Promise<void> {
+  public async destroy(saveGraph: boolean = true): Promise<void> {
+    this._destroying = true;
+    this.cancelShutdown();
+    // Self-deletion must finish publishing room changes before unsubscribing.
+    await Promise.allSettled(this._pendingCanvasActions.toArray());
     for (const subscription of this._subscriptions) {
       subscription.unsubscribe();
     }
     await this._physicsWorker.destroy();
     this._queue.shutdown();
-    await this.saveGraph();
+    if (saveGraph) {
+      await this.saveGraph();
+    }
+  }
+
+  public createCanvas(params: { roomId: string }): Promise<CanvasDto> {
+    return this._enqueueCanvasAction(
+      'Creating canvas',
+      params.roomId,
+      async (
+        room: Modules.Documents.Result<'api::room.room'>,
+      ): Promise<CanvasDto> => {
+        const canvas: Modules.Documents.Result<'api::canvas.canvas'> =
+          await strapi.documents('api::canvas.canvas').create({
+            data: { title: 'New Canvas', room: room.documentId },
+            status: 'published',
+          });
+        await this._notifyRoomCanvasesChanged(room);
+        return this._schemaFactory.createSchemaCanvasPreview(canvas);
+      },
+    );
+  }
+
+  public closeCanvas(params: { roomId: string }): Promise<void> {
+    return this._enqueueCanvasAction(
+      'Closing canvas',
+      params.roomId,
+      async (
+        room: Modules.Documents.Result<'api::room.room'>,
+      ): Promise<void> => {
+        const canvases: Modules.Documents.Result<'api::canvas.canvas'>[] =
+          await this._database.getCanvasesOfRoom(room);
+        if (canvases.length <= 1) {
+          throw new ConflictException('The last canvas cannot be deleted.');
+        }
+        await strapi
+          .documents('api::canvas.canvas')
+          .delete({ documentId: this.canvasId });
+        await this._notifyRoomCanvasesChanged(room);
+      },
+    );
+  }
+
+  public duplicateCanvas(params: { roomId: string }): Promise<CanvasDto> {
+    return this._enqueueCanvasAction(
+      'Duplicating canvas',
+      params.roomId,
+      async (
+        room: Modules.Documents.Result<'api::room.room'>,
+        source: Modules.Documents.Result<'api::canvas.canvas'>,
+      ): Promise<CanvasDto> => {
+        const data: z.infer<typeof LiveCanvasData.schema> = structuredClone(
+          this._data.toPlain(),
+        );
+        data.undoableData.id = v4();
+        const duplicate: Modules.Documents.Result<'api::canvas.canvas'> =
+          await strapi.db.transaction(
+            async (): Promise<
+              Modules.Documents.Result<'api::canvas.canvas'>
+            > => {
+              const canvas: Modules.Documents.Result<'api::canvas.canvas'> =
+                await strapi.documents('api::canvas.canvas').create({
+                  data: {
+                    title: source.title ?? 'New Canvas',
+                    room: room.documentId,
+                  },
+                  status: 'published',
+                });
+              await this._database.setLiveCanvasData(canvas, data);
+              return canvas;
+            },
+          );
+        await this._notifyRoomCanvasesChanged(room);
+        return this._schemaFactory.createSchemaCanvasPreview(duplicate);
+      },
+    );
+  }
+
+  public closeOtherCanvases(params: { roomId: string }): Promise<void> {
+    return this._enqueueCanvasAction(
+      'Closing other canvases',
+      params.roomId,
+      async (
+        room: Modules.Documents.Result<'api::room.room'>,
+      ): Promise<void> => {
+        await strapi.db.transaction(async (): Promise<void> => {
+          const canvases: Modules.Documents.Result<'api::canvas.canvas'>[] =
+            await this._database.getCanvasesOfRoom(room);
+          if (
+            !canvases.some(
+              (
+                canvas: Modules.Documents.Result<'api::canvas.canvas'>,
+              ): boolean => canvas.documentId === this.canvasId,
+            )
+          ) {
+            throw new NotFoundException('Canvas not found in this room.');
+          }
+          for (const canvas of canvases) {
+            if (canvas.documentId !== this.canvasId) {
+              await strapi
+                .documents('api::canvas.canvas')
+                .delete({ documentId: canvas.documentId });
+            }
+          }
+        });
+        await this._notifyRoomCanvasesChanged(room);
+      },
+    );
   }
 
   public getGraph(): LiveCanvasUndoableData {
@@ -334,13 +456,11 @@ export class LiveCanvas {
       new TaskQueueTask('Loading scenario', async (): Promise<void> => {
         const scenario: Modules.Documents.Result<'api::scenario.scenario'> =
           await this._database.getScenario(params.scenarioId);
+        const canvas: Modules.Documents.Result<'api::canvas.canvas'> =
+          await this._database.getCanvas(this.canvasId);
 
         if (
-          !(await scenarioBelongsToCanvas(
-            scenario,
-            await this._database.getCanvas(this.canvasId),
-            this._database,
-          ))
+          !(await scenarioBelongsToCanvas(scenario, canvas, this._database))
         ) {
           throw new NotFoundException(
             `Scenario ${params.scenarioId} not found.`,
@@ -352,6 +472,21 @@ export class LiveCanvas {
         if (queries.length === 0) {
           throw new NotFound('The scenario has no queries.');
         }
+
+        const room: Modules.Documents.Result<'api::room.room'> =
+          await this._database.getRoomOfCanvas(canvas);
+        await this._mutateRoom(
+          room.documentId,
+          async (
+            currentRoom: Modules.Documents.Result<'api::room.room'>,
+          ): Promise<void> => {
+            await this._database.setCanvasTitle(
+              this.canvasId,
+              scenario.title ?? 'New Canvas',
+            );
+            await this._notifyRoomCanvasesChanged(currentRoom);
+          },
+        );
 
         const parameters: Modules.Documents.Result<'api::query-parameter.query-parameter'>[] =
           await this._database.getParametersOfScenario(scenario);
@@ -2201,5 +2336,95 @@ export class LiveCanvas {
     changeRecorder: LiveCanvasChangeRecorder,
   ): void {
     changeRecorder.handleChange(this._physicsWorker, this._onEvent, this);
+  }
+
+  private async _notifyRoomCanvasesChanged(
+    room: Modules.Documents.Result<'api::room.room'>,
+  ): Promise<void> {
+    const canvases: Modules.Documents.Result<'api::canvas.canvas'>[] =
+      await this._database.getCanvasesOfRoom(room);
+    this._onEvent.next({
+      type: 'CanvasEventRoomCanvasesChanged',
+      canvas: this,
+      roomId: room.documentId,
+      canvases: canvases.map(
+        (canvas: Modules.Documents.Result<'api::canvas.canvas'>): CanvasDto =>
+          this._schemaFactory.createSchemaCanvasPreview(canvas),
+      ),
+    });
+  }
+
+  private _enqueueCanvasAction<T>(
+    title: string,
+    roomId: string,
+    action: (
+      room: Modules.Documents.Result<'api::room.room'>,
+      canvas: Modules.Documents.Result<'api::canvas.canvas'>,
+    ) => Promise<T>,
+  ): Promise<T> {
+    if (this._destroying) {
+      return Promise.reject(new NotFoundException('Canvas is shutting down.'));
+    }
+    this.cancelShutdown();
+    const result: Promise<T> = new Promise<T>(
+      (resolve: (value: T) => void, reject: (error: Error) => void): void => {
+        this._queue.addTask(
+          new TaskQueueTask(title, async (): Promise<void> => {
+            try {
+              resolve(await this._mutateRoom(roomId, action));
+            } catch (error: unknown) {
+              const caught: Error =
+                error instanceof Error ? error : new Error(String(error));
+              reject(caught);
+              throw caught;
+            }
+          }),
+        );
+      },
+    );
+    const completed: Promise<T> = result.finally((): void => {
+      this._pendingCanvasActions.delete(completed);
+      if (
+        this._pendingCanvasActions.size === 0 &&
+        this.getActiveUsers().length === 0
+      ) {
+        this.scheduleShutdown();
+      }
+    });
+    this._pendingCanvasActions.add(completed);
+    return completed;
+  }
+
+  private async _mutateRoom<T>(
+    roomId: string,
+    action: (
+      room: Modules.Documents.Result<'api::room.room'>,
+      canvas: Modules.Documents.Result<'api::canvas.canvas'>,
+    ) => Promise<T>,
+  ): Promise<T> {
+    const previous: Promise<unknown> | undefined =
+      LiveCanvas._roomMutations.get(roomId);
+    const current: Promise<T> = (async (): Promise<T> => {
+      await previous?.catch((): undefined => undefined);
+      const canvas: Modules.Documents.Result<'api::canvas.canvas'> | null =
+        await this._database.getCanvasOrNull(this.canvasId);
+      if (canvas == null) {
+        throw new NotFoundException('Canvas not found in this room.');
+      }
+      const room: Modules.Documents.Result<'api::room.room'> =
+        await this._database.getRoomOfCanvas(canvas);
+      if (room.documentId !== roomId) {
+        throw new NotFoundException('Canvas not found in this room.');
+      }
+      return await action(room, canvas);
+    })();
+    LiveCanvas._roomMutations.set(roomId, current);
+    try {
+      return await current;
+    } finally {
+      if (LiveCanvas._roomMutations.get(roomId) === current) {
+        LiveCanvas._roomMutations.delete(roomId);
+      }
+    }
   }
 }

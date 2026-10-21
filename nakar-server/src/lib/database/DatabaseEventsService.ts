@@ -97,11 +97,23 @@ export class DatabaseEventsService implements OnModuleInit, OnModuleDestroy {
       ): Promise<MiddlewareReturnType> => {
         if (context.uid === 'api::canvas.canvas') {
           if (context.action === 'delete' || context.action === 'unpublish') {
-            const canvas: Modules.Documents.Result<'api::canvas.canvas'> =
-              await this._databaseService.getCanvas(context.params.documentId);
-            setImmediate((): void => {
-              this._onCanvasDeleted.next(canvas);
-            });
+            return await strapi.db.transaction(
+              async (hooks: {
+                onCommit(callback: () => void): void;
+              }): Promise<NextResult> => {
+                const canvas: Modules.Documents.Result<'api::canvas.canvas'> =
+                  await this._databaseService.getCanvas(
+                    context.params.documentId,
+                  );
+                const result: NextResult = await next();
+                hooks.onCommit((): void => {
+                  setImmediate((): void => {
+                    this._onCanvasDeleted.next(canvas);
+                  });
+                });
+                return result;
+              },
+            );
           }
         }
         const result: NextResult = await next();

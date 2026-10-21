@@ -40,7 +40,7 @@ export class LiveCanvasService implements OnModuleInit, OnModuleDestroy {
   public onModuleInit(): void {
     this._databaseEvents.onCanvasDeleted$.subscribe(
       (canvas: Modules.Documents.Result<'api::canvas.canvas'>): void => {
-        this._destroyCanvas(canvas).catch((error: unknown): void => {
+        this._destroyCanvas(canvas, false).catch((error: unknown): void => {
           this._logger.error(error);
         });
       },
@@ -92,6 +92,12 @@ export class LiveCanvasService implements OnModuleInit, OnModuleDestroy {
       throw new Error(`Canvas ${canvasId} is not alive yet.`);
     }
     return liveCanvas;
+  }
+
+  public async getOrStartCanvasWithId(canvasId: string): Promise<LiveCanvas> {
+    const canvas: Modules.Documents.Result<'api::canvas.canvas'> =
+      await this._database.getCanvas(canvasId);
+    return this.getOrStartCanvas(canvas);
   }
 
   public getOrStartCanvas(
@@ -192,6 +198,7 @@ export class LiveCanvasService implements OnModuleInit, OnModuleDestroy {
 
   private async _destroyCanvas(
     canvas: Modules.Documents.Result<'api::canvas.canvas'>,
+    saveGraph: boolean = true,
   ): Promise<void> {
     this._logger.debug(`Will destroy canvas ${canvas.documentId}.`);
     const liveCanvas: LiveCanvas | undefined = this._liveCanvases.get(
@@ -208,6 +215,6 @@ export class LiveCanvasService implements OnModuleInit, OnModuleDestroy {
     } satisfies CanvasEventEventKick);
 
     this._liveCanvases.delete(canvas.documentId);
-    await liveCanvas.destroy();
+    await liveCanvas.destroy(saveGraph);
   }
 }

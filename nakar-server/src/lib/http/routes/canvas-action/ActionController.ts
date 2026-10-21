@@ -6,7 +6,7 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBody, ApiOperation, ApiParam } from '@nestjs/swagger';
+import { ApiBody, ApiOperation, ApiParam, ApiResponse } from '@nestjs/swagger';
 import { LoadScenarioRequestBodyDto } from './dto/LoadScenarioRequestBodyDto';
 import { SMap } from '../../../../packages/map/Map';
 import { ExpandNodeRequestBodyDto } from './dto/ExpandNodeRequestBodyDto';
@@ -31,6 +31,7 @@ import { UserIsLoggedIn } from '../../guards/UserIsLoggedIn';
 import { LiveCanvas } from '../../../live-canvas/LiveCanvas';
 import { UserCanAccessRoom } from '../../guards/UserCanAccessRoom';
 import { CanvasBelongsToRoom } from '../../guards/CanvasBelongsToRoom';
+import { CanvasDto } from '../../../schema/dtos/CanvasDto';
 
 /**
  * Controller to handle canvas actions.
@@ -51,6 +52,56 @@ import { CanvasBelongsToRoom } from '../../guards/CanvasBelongsToRoom';
 @UseGuards(CanvasBelongsToRoom)
 export class ActionController {
   public constructor(private readonly _canvasService: LiveCanvasService) {}
+
+  @Post('create-canvas')
+  @HttpCode(200)
+  @ApiResponse({ status: 200, type: CanvasDto })
+  public async createCanvas(
+    @Param('roomId') roomId: string,
+    @Param('canvasId') canvasId: string,
+  ): Promise<CanvasDto> {
+    const canvas: LiveCanvas =
+      await this._canvasService.getOrStartCanvasWithId(canvasId);
+    return await canvas.createCanvas({ roomId });
+  }
+
+  @Post('close-canvas')
+  @HttpCode(200)
+  @ApiResponse({
+    status: 409,
+    description: 'The last canvas cannot be deleted.',
+  })
+  public async closeCanvas(
+    @Param('roomId') roomId: string,
+    @Param('canvasId') canvasId: string,
+  ): Promise<void> {
+    const canvas: LiveCanvas =
+      await this._canvasService.getOrStartCanvasWithId(canvasId);
+    await canvas.closeCanvas({ roomId });
+  }
+
+  @Post('duplicate-canvas')
+  @HttpCode(200)
+  @ApiResponse({ status: 200, type: CanvasDto })
+  public async duplicateCanvas(
+    @Param('roomId') roomId: string,
+    @Param('canvasId') canvasId: string,
+  ): Promise<CanvasDto> {
+    const canvas: LiveCanvas =
+      await this._canvasService.getOrStartCanvasWithId(canvasId);
+    return await canvas.duplicateCanvas({ roomId });
+  }
+
+  @Post('close-other-canvases')
+  @HttpCode(200)
+  public async closeOtherCanvases(
+    @Param('roomId') roomId: string,
+    @Param('canvasId') canvasId: string,
+  ): Promise<void> {
+    const canvas: LiveCanvas =
+      await this._canvasService.getOrStartCanvasWithId(canvasId);
+    await canvas.closeOtherCanvases({ roomId });
+  }
 
   @Post('load-scenario')
   @HttpCode(200)

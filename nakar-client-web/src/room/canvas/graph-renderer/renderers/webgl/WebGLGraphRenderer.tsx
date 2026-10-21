@@ -36,6 +36,7 @@ export function WebGLGraphRenderer() {
     }
 
     const subs: { unsubscribe: () => void }[] = [];
+    let cancelled = false;
 
     const factory: WebGLGraphRendererSystemFactory =
       new WebGLGraphRendererSystemFactory();
@@ -49,7 +50,8 @@ export function WebGLGraphRenderer() {
         useBearStore.getState().room.canvas.zoomTransform,
       )
       .then((webGLRenderer) => {
-        if (webGLRenderer == null) {
+        if (webGLRenderer == null || cancelled) {
+          webGLRenderer?.destroy();
           return;
         }
         webGLRenderer.setHiddenUserCursors(
@@ -207,10 +209,13 @@ export function WebGLGraphRenderer() {
         );
       })
       .catch((error: unknown) => {
-        setGlobalRendererError(handleError(error));
+        if (!cancelled) {
+          setGlobalRendererError(handleError(error));
+        }
       });
 
     return () => {
+      cancelled = true;
       setCurrentGraphRenderer(null);
       for (const sub of subs) {
         sub.unsubscribe();
