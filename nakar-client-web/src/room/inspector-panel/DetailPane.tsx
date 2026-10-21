@@ -4,7 +4,6 @@ import { PropertiesDisplay, PropertyEntry } from "./PropertiesDisplay.tsx";
 import { NavbarButton } from "../../shared/elements/NavbarButton.tsx";
 import { ReactNode } from "react";
 import { PropertyMenu } from "../properties/PropertyMenu.tsx";
-import clsx from "clsx";
 import { Collapsable } from "../../shared/elements/Collapsable.tsx";
 import { ClipboardButton } from "../../shared/elements/ClipboardButton.tsx";
 import { ShortendText } from "../../shared/elements/ShortendText.tsx";
@@ -54,16 +53,13 @@ export function DetailPane(props: {
         className={"border-bottom flex-grow-0"}
       >
         {props.actions.length > 0 && (
-          <Stack direction={"horizontal"} className={"flex-wrap"}>
-            {props.actions.map((action: DetailPaneAction, index: number) => (
+          <Stack gap={0} className={"flex-grow-0"}>
+            {props.actions.map((action: DetailPaneAction) => (
               <NavbarButton
                 key={action.title}
                 onClick={action.action}
                 disabled={action.disabled}
-                className={clsx(
-                  "flex-grow-1 justify-content-between w-50 border-top",
-                  index % 2 == 0 && "border-end",
-                )}
+                className={"border-top"}
                 title={action.title}
                 icon={action.icon ?? undefined}
               ></NavbarButton>

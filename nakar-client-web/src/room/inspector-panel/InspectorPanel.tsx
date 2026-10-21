@@ -90,7 +90,7 @@ export function InspectorPanel() {
                     }
                     className={"border-bottom"}
                   >
-                    <Stack direction={"horizontal"} className={"flex-wrap"}>
+                    <Stack gap={0} className={"flex-grow-0"}>
                       {nodeActions.map((action) => (
                         <Fragment key={action.slug()}>
                           <ActionNavbarButton
@@ -100,7 +100,6 @@ export function InspectorPanel() {
                               roomContext: roomContext,
                               isLoggedIn: isLoggedIn,
                             }}
-                            className={"w-50"}
                           ></ActionNavbarButton>
                         </Fragment>
                       ))}
