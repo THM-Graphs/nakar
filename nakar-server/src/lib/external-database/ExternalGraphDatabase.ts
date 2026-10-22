@@ -8,6 +8,8 @@ import type { ExternalGraphDatabaseQueryLimitConfig } from './data/ExternalGraph
 import type { ExternalGraphDatabaseStats } from './data/ExternalGraphDatabaseStats';
 
 export interface ExternalGraphDatabase {
+  equalityHashKey(credentials: ExternalGraphDatabaseCredentials): string;
+
   executeQuery(
     credentials: ExternalGraphDatabaseCredentials,
     query: string,
@@ -30,6 +32,8 @@ export interface ExternalGraphDatabase {
     credentials: ExternalGraphDatabaseCredentials,
     nodeIds: SSet<string>,
   ): Promise<ExternalGraphDatabaseExpandNodePreview>;
+
+  testConnection(credentials: ExternalGraphDatabaseCredentials): Promise<void>;
 
   getStats(
     credentials: ExternalGraphDatabaseCredentials,

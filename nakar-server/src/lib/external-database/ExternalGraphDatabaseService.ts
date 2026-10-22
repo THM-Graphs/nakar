@@ -75,6 +75,14 @@ export class ExternalGraphDatabaseService implements OnModuleDestroy {
     };
   }
 
+  public equalityHashKey(
+    credentials: ExternalGraphDatabaseCredentials,
+  ): string {
+    return this._getAdapter(credentials.databaseType).equalityHashKey(
+      credentials,
+    );
+  }
+
   public async executeQuery(
     database: Modules.Documents.Result<'api::database-connection.database-connection'>,
     query: string,
@@ -132,10 +140,8 @@ export class ExternalGraphDatabaseService implements OnModuleDestroy {
   }
 
   public async getStats(
-    database: Modules.Documents.Result<'api::database-connection.database-connection'>,
+    credentials: ExternalGraphDatabaseCredentials,
   ): Promise<ExternalGraphDatabaseStats> {
-    const credentials: ExternalGraphDatabaseCredentials =
-      this.parseCredentials(database);
     return await this._getAdapter(credentials.databaseType).getStats(
       credentials,
     );
@@ -143,8 +149,8 @@ export class ExternalGraphDatabaseService implements OnModuleDestroy {
 
   public async testConnection(
     credentials: ExternalGraphDatabaseCredentials,
-  ): Promise<ExternalGraphDatabaseStats> {
-    return await this._getAdapter(credentials.databaseType).getStats(
+  ): Promise<void> {
+    await this._getAdapter(credentials.databaseType).testConnection(
       credentials,
     );
   }

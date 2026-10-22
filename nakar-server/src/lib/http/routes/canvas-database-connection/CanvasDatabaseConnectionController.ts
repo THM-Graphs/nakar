@@ -76,7 +76,9 @@ export class CanvasDatabaseConnectionController {
     const database: Modules.Documents.Result<'api::database-connection.database-connection'> =
       await this._database.getDatabase(databaseId);
     const genericStats: ExternalGraphDatabaseStats =
-      await this._externalGraphDatabase.getStats(database);
+      await this._externalGraphDatabase.getStats(
+        this._externalGraphDatabase.parseCredentials(database),
+      );
 
     return new GetDatabaseStatsResponseBodyDto({
       relTypeCount: genericStats.relTypeCount,
