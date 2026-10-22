@@ -1,9 +1,10 @@
-FROM node:24 AS builder
+FROM node:24 AS deps
 WORKDIR /app
 
-COPY package.json ./
-COPY package-lock.json ./
+COPY package.json package-lock.json .npmrc ./
 RUN npm ci
+
+FROM deps AS builder
 
 COPY public ./public
 RUN echo "VERSION=$(npm run version --silent)" > ./public/.env
