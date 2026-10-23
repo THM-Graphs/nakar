@@ -133,6 +133,10 @@ Visualisierungsaktionen ergänzt die Nachverarbeitung Verknüpfungen, Notizen un
 passende Knotenszenarien. Lokale Layout-, Spiegelungs- und Entsperraktionen
 arbeiten ohne diese Nachverarbeitung. Zwischenzeitlich eingetroffene
 Physikpositionen bleiben erhalten, sofern die Aktion sie nicht verändert.
+Sitzungsbeitritt und -austritt, Cursorbewegungen sowie Greifen, Verschieben und
+Loslassen von Knoten werden unabhängig von der Aktionsqueue verarbeitet.
+Zwischenzeitliche Knoteninteraktionen haben beim Commit eines laufenden Entwurfs
+Vorrang für Position und Lock; aktuelle Griffe bleiben für den Worker wirksam.
 Erst der erfolgreich abgeschlossene Entwurf wird veröffentlicht. Fehler während
 der Berechnung oder Nachverarbeitung verwerfen den Entwurf.
 

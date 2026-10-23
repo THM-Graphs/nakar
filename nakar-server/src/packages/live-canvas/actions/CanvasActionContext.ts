@@ -82,10 +82,14 @@ export class CanvasActionContext {
   }
 
   /**
-   * Preserves newer live positions for nodes whose coordinates and locks the action did not change.
+   * Preserves newer physics positions for unchanged nodes and live positions and locks for nodes touched by interactions.
    * @param nodes - Current canvas nodes after asynchronous delegate work.
+   * @param interactedNodeIds - Nodes grabbed, moved or released since this draft was created; their live state takes precedence over draft edits.
    */
-  public preservePositions(nodes: readonly NodeData[]): void {
+  public preservePositions(
+    nodes: readonly NodeData[],
+    interactedNodeIds: readonly string[] = [],
+  ): void {
     for (const node of this.data.graph.nodes) {
       const original: NodeData | undefined = this._originalNodes.find(
         (entry: NodeData): boolean => entry.id === node.id,
@@ -93,9 +97,13 @@ export class CanvasActionContext {
       const current: NodeData | undefined = nodes.find(
         (entry: NodeData): boolean => entry.id === node.id,
       );
-      if (
-        original !== undefined &&
-        current !== undefined &&
+      if (original === undefined || current === undefined) {
+        continue;
+      }
+      if (interactedNodeIds.includes(node.id)) {
+        node.position = { ...current.position };
+        node.locked = current.locked;
+      } else if (
         node.position.x === original.position.x &&
         node.position.y === original.position.y &&
         node.locked === original.locked

@@ -25,8 +25,58 @@ import type { PhysicsWorkerListener } from '../delegates/PhysicsWorkerListener';
 import { CanvasPhysicsRuntime } from '../physics/CanvasPhysicsRuntime';
 import type { CanvasPhysicsOptions } from '../physics/CanvasPhysicsOptions';
 import type { MockTimer } from './MockTimer.test';
+import type { CanvasAction } from '../actions/CanvasAction';
 
 export class TestHarness {
+  public static deferred(): { promise: Promise<void>; resolve(): void } {
+    let release: () => void = (): void => undefined;
+    const promise: Promise<void> = new Promise<void>(
+      (resolve: () => void): void => {
+        release = resolve;
+      },
+    );
+    return { promise, resolve: release };
+  }
+
+  public static async interactDuringAction(
+    h: ReturnType<typeof TestHarness.harness>,
+    action: CanvasAction,
+    interact: () => Promise<void>,
+    result: QueryResult = TestHarness.result(),
+  ): Promise<boolean> {
+    const entered: ReturnType<typeof TestHarness.deferred> =
+      TestHarness.deferred();
+    const resume: ReturnType<typeof TestHarness.deferred> =
+      TestHarness.deferred();
+    h.source.handler = async (): Promise<QueryResult> => {
+      entered.resolve();
+      await resume.promise;
+      return structuredClone(result);
+    };
+    const operation: Promise<void> = h.canvas.execute(
+      TestHarness.user(),
+      action,
+    );
+    await entered.promise;
+    let finished: boolean = false;
+    const interaction: Promise<void> = interact();
+    void interaction.then(
+      (): void => {
+        finished = true;
+      },
+      (): void => {
+        finished = true;
+      },
+    );
+    await new Promise<void>((resolve: () => void): void => {
+      setImmediate(resolve);
+    });
+    const independent: boolean = finished;
+    resume.resolve();
+    await Promise.all([operation, interaction]);
+    return independent;
+  }
+
   public static physicsRuntime(
     tickMilliseconds: number = 1,
     options: Partial<CanvasPhysicsOptions> = {},

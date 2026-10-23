@@ -3,6 +3,7 @@ import { ForbiddenError } from '../error/ForbiddenError';
 import { TestHarness } from '../testing/TestHarness.test';
 import type { GraphRequest } from '../delegates/GraphRequest';
 import type { QueryResult } from '../data/QueryResult';
+import type { NodeData } from '../data/NodeData';
 
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
@@ -10,6 +11,38 @@ import type { CanvasActionContext } from './CanvasActionContext';
 
 void describe('CanvasActionContext', (): void => {
   void describe('preservePositions', (): void => {
+    void it('retains live interaction positions and locks over conflicting draft edits', (): void => {
+      const c: ReturnType<typeof TestHarness.context> = TestHarness.context();
+      c.context.graph.getNode('a').move({ x: 50, y: 60 });
+      c.context.preservePositions(
+        [TestHarness.node('a', { position: { x: 10, y: 20 }, locked: true })],
+        ['a'],
+      );
+      assert.deepEqual(c.context.data.graph.nodes[0].position, {
+        x: 10,
+        y: 20,
+      });
+      assert.equal(c.context.data.graph.nodes[0].locked, true);
+    });
+    void it('retains interaction state even when the user returns to the original values', (): void => {
+      const c: ReturnType<typeof TestHarness.context> = TestHarness.context();
+      c.context.graph.getNode('a').move({ x: 50, y: 60 });
+      c.context.graph.getNode('a').setLocked(true);
+      c.context.preservePositions([TestHarness.node('a')], ['a']);
+      assert.deepEqual(c.context.data.graph.nodes[0].position, { x: 0, y: 0 });
+      assert.equal(c.context.data.graph.nodes[0].locked, false);
+    });
+    void it('does not resurrect a node removed by the action after an interaction', (): void => {
+      const c: ReturnType<typeof TestHarness.context> = TestHarness.context();
+      c.context.graph.deleteElements(['a'], [], [], []);
+      c.context.preservePositions([TestHarness.node('a')], ['a']);
+      assert.equal(
+        c.context.data.graph.nodes.some(
+          (node: NodeData): boolean => node.id === 'a',
+        ),
+        false,
+      );
+    });
     void it('preserves newer positions of unchanged nodes', (): void => {
       const c: ReturnType<typeof TestHarness.context> = TestHarness.context();
       c.context.preservePositions([

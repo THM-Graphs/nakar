@@ -40,7 +40,7 @@ import type { WorkerEvent } from '../physics/WorkerEvent';
 import { UnlockAllCanvasNodesAction } from '../actions/UnlockAllCanvasNodesAction';
 
 /**
- * Owns an isolated canvas, serializes authorized mutations and delegates persistence, events and worker transport to the host.
+ * Owns an isolated canvas, serializes authorized canvas actions, processes independent interactions and delegates persistence, events and worker transport to the host.
  */
 export class LiveCanvas implements PhysicsWorkerListener {
   /**
@@ -66,6 +66,9 @@ export class LiveCanvas implements PhysicsWorkerListener {
     UserData
   >();
 
+  /** Pending joins that session removal can invalidate while authorization awaits the host. */
+  private readonly _joiningUsers: SSet<UserData> = new SSet<UserData>();
+
   /**
    * Node identities mapped to the sessions currently holding them.
    */
@@ -73,6 +76,9 @@ export class LiveCanvas implements PhysicsWorkerListener {
     string,
     SSet<string>
   >();
+
+  /** Nodes touched by interactions since the active action took its draft snapshot. */
+  private readonly _interactedNodeIds: SSet<string> = new SSet<string>();
 
   /**
    * Owned worker controller or platform-specific test worker.
@@ -101,7 +107,7 @@ export class LiveCanvas implements PhysicsWorkerListener {
   private _destroy: Promise<void> | null = null;
 
   /**
-   * Graph or run commands waiting for worker startup.
+   * Queued actions and active interactions that keep the canvas busy.
    */
   private _pending: number = 0;
 
@@ -367,9 +373,12 @@ export class LiveCanvas implements PhysicsWorkerListener {
    * @throws {@link error/CanvasError!CanvasError | CanvasError} When the input, lifecycle state or permissions do not satisfy this operation’s requirements.
    */
   public addUser(user: CanvasUser): Promise<void> {
-    return this._enqueue('Join canvas', async (): Promise<void> => {
-      await this._access(user);
-      const data: UserData = user.toData();
+    const data: UserData = user.toData();
+    this._joiningUsers.add(data);
+    return this._interact(user, (): void => {
+      if (!this._joiningUsers.has(data)) {
+        throw new InvalidStateError('Session left while joining the canvas.');
+      }
       const existing: UserData | undefined = this._users.get(data.sessionId);
       if (existing !== undefined && existing.id !== data.id) {
         throw new ConflictError('Session belongs to another user.');
@@ -384,6 +393,8 @@ export class LiveCanvas implements PhysicsWorkerListener {
           ),
         );
       }
+    }).finally((): void => {
+      this._joiningUsers.delete(data);
     });
   }
 
@@ -393,13 +404,22 @@ export class LiveCanvas implements PhysicsWorkerListener {
    * @returns A promise that settles when the operation completes.
    */
   public removeUser(sessionId: string): Promise<void> {
-    return this._enqueue('Leave canvas', (): Promise<void> => {
+    return this._interact(null, (): void => {
+      for (const joining of this._joiningUsers) {
+        if (joining.sessionId === sessionId) {
+          this._joiningUsers.delete(joining);
+        }
+      }
       const user: UserData | undefined = this._users.get(sessionId);
       if (user !== undefined) {
         this._users.delete(sessionId);
         const locks: Record<string, boolean> = DataRecord.empty<boolean>();
         for (const [id, grabs] of this._grabs) {
+          if (!grabs.has(sessionId)) {
+            continue;
+          }
           grabs.delete(sessionId);
+          this._interactedNodeIds.add(id);
           const node: NodeData | undefined = this._history.current.nodes.find(
             (entry: NodeData): boolean => entry.id === id,
           );
@@ -416,8 +436,6 @@ export class LiveCanvas implements PhysicsWorkerListener {
           ),
         );
       }
-      return Promise.resolve();
-    }).then((): void => {
       if (this._users.size === 0) {
         this.scheduleShutdown();
       }
@@ -435,8 +453,7 @@ export class LiveCanvas implements PhysicsWorkerListener {
     user: CanvasUser,
     position: Position | null,
   ): Promise<void> {
-    return this._enqueue('Move cursor', async (): Promise<void> => {
-      await this._access(user);
+    return this._interact(user, (): void => {
       const session: UserData = this._session(user);
       if (
         position !== null &&
@@ -462,14 +479,14 @@ export class LiveCanvas implements PhysicsWorkerListener {
    * @returns A promise that settles when the operation completes.
    */
   public grabNode(user: CanvasUser, nodeId: string): Promise<void> {
-    return this._enqueue('Grab node', async (): Promise<void> => {
-      await this._access(user);
+    return this._interact(user, (): void => {
       const session: UserData = this._session(user);
       new CanvasGraph(this._history.current).getNode(nodeId);
       this._grabs.set(
         nodeId,
         (this._grabs.get(nodeId) ?? new SSet()).byAdding(session.sessionId),
       );
+      this._interactedNodeIds.add(nodeId);
       this._updateWorker({}, { [nodeId]: true });
     });
   }
@@ -494,8 +511,7 @@ export class LiveCanvas implements PhysicsWorkerListener {
       position: Position;
     }[],
   ): Promise<void> {
-    return this._enqueue('Move nodes', async (): Promise<void> => {
-      await this._access(user);
+    return this._interact(user, (): void => {
       const session: UserData = this._session(user);
       const updates: Record<string, Position> = DataRecord.empty<Position>();
       const locks: Record<string, boolean> = DataRecord.empty<boolean>();
@@ -530,6 +546,7 @@ export class LiveCanvas implements PhysicsWorkerListener {
         if (Object.hasOwn(updates, node.id)) {
           node.position = { ...updates[node.id] };
           node.locked = true;
+          this._interactedNodeIds.add(node.id);
         }
       }
       this._updateWorker(updates, locks, 'short');
@@ -552,8 +569,7 @@ export class LiveCanvas implements PhysicsWorkerListener {
     nodeId: string,
     position: Position,
   ): Promise<void> {
-    return this._enqueue('Release node', async (): Promise<void> => {
-      await this._access(user);
+    return this._interact(user, (): void => {
       const session: UserData = this._session(user);
       const grabs: SSet<string> | undefined = this._grabs.get(nodeId);
       if (!(grabs?.has(session.sessionId) ?? false)) {
@@ -565,6 +581,7 @@ export class LiveCanvas implements PhysicsWorkerListener {
       const previous: Position = node.toData().position;
       node.move(position);
       grabs?.delete(session.sessionId);
+      this._interactedNodeIds.add(nodeId);
       this._updateWorker(
         { [nodeId]: position },
         { [nodeId]: node.toData().locked || (grabs?.size ?? 0) > 0 },
@@ -706,7 +723,9 @@ export class LiveCanvas implements PhysicsWorkerListener {
         } finally {
           this._state = 'destroyed';
           this._users.clear();
+          this._joiningUsers.clear();
           this._grabs.clear();
+          this._interactedNodeIds.clear();
           this._emit(new CanvasLifecycleEvent(this._reference.id, 'destroyed'));
         }
       }
@@ -779,6 +798,7 @@ export class LiveCanvas implements PhysicsWorkerListener {
   ): Promise<void> {
     return this._enqueue(action.title, async (): Promise<void> => {
       const room: RoomData = await this._access(user);
+      this._interactedNodeIds.clear();
       const context: CanvasActionContext = new CanvasActionContext(
         this.toData(),
         room,
@@ -803,7 +823,10 @@ export class LiveCanvas implements PhysicsWorkerListener {
           );
         this._emit(new CanvasRoomEvent(this._reference.id, change.canvases));
       }
-      context.preservePositions(this._history.current.nodes);
+      context.preservePositions(
+        this._history.current.nodes,
+        this._interactedNodeIds.toArray(),
+      );
       const next: CanvasData = context.finish();
       const previous: CanvasData = this.toData();
       const changed: boolean =
@@ -866,6 +889,48 @@ export class LiveCanvas implements PhysicsWorkerListener {
     if (this._shutdown !== null) {
       this._delegates.runtime.cancel(this._shutdown.handle);
       this._shutdown = null;
+    }
+  }
+
+  /**
+   * Processes presence and drag interactions independently of queued canvas actions.
+   * Authorization may await the host; the state is checked again before synchronously mutating live data.
+   * Interactions contribute to idle detection without publishing action progress.
+   * @param user - Identity whose current access must be checked, or null for host-driven session removal.
+   * @param action - Synchronous live-state mutation to perform after validation.
+   * @returns Completion of the interaction, independently of the action queue.
+   */
+  private async _interact(
+    user: CanvasUser | null,
+    action: () => void,
+  ): Promise<void> {
+    if (this._state !== 'ready') {
+      throw new InvalidStateError('Canvas is not ready.');
+    }
+    this._cancelShutdownTimer();
+    this._pending += 1;
+    try {
+      if (user !== null) {
+        await this._access(user);
+      }
+      if (this.state !== 'ready' || this._closed) {
+        throw new InvalidStateError('Canvas is not ready.');
+      }
+      action();
+    } catch (error: unknown) {
+      if (this.state !== 'destroyed') {
+        this.onError(error);
+      }
+      throw error;
+    } finally {
+      this._pending -= 1;
+      if (
+        this._idleShutdownRequested &&
+        this._pending === 0 &&
+        this._users.size === 0
+      ) {
+        this.scheduleShutdown();
+      }
     }
   }
 

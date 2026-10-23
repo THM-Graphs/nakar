@@ -898,6 +898,56 @@ void describe('LiveCanvas', (): void => {
     });
   });
   void describe('addUser', (): void => {
+    void it('does not rejoin a session removed while its authorization is pending', async (): Promise<void> => {
+      const h: ReturnType<typeof TestHarness.harness> = TestHarness.harness();
+      await h.canvas.bootstrap();
+      const entered: ReturnType<typeof TestHarness.deferred> =
+        TestHarness.deferred();
+      const resume: ReturnType<typeof TestHarness.deferred> =
+        TestHarness.deferred();
+      const getRoom: typeof h.storage.getRoom = h.storage.getRoom.bind(
+        h.storage,
+      );
+      h.storage.getRoom = async (): ReturnType<typeof getRoom> => {
+        entered.resolve();
+        await resume.promise;
+        return await getRoom();
+      };
+      const join: Promise<void> = h.canvas.addUser(TestHarness.user());
+      const rejected: Promise<void> = assert.rejects(join, InvalidStateError);
+      await entered.promise;
+      await h.canvas.removeUser('session');
+      resume.resolve();
+      await rejected;
+      assert.deepEqual(h.canvas.getActiveUsers(), []);
+      await h.canvas.addUser(TestHarness.user());
+      assert.equal(h.canvas.getActiveUsers().length, 1);
+    });
+    void it('joins while a source query is pending without publishing interaction progress', async (): Promise<void> => {
+      const h: ReturnType<typeof TestHarness.harness> = TestHarness.harness();
+      await h.canvas.bootstrap();
+      assert.equal(
+        await TestHarness.interactDuringAction(
+          h,
+          new RunQueryAction('source', 'slow', false),
+          async (): Promise<void> => {
+            const count: number = h.events.events.length;
+            await h.canvas.addUser(TestHarness.user());
+            assert.equal(h.canvas.getActiveUsers().length, 1);
+            assert.equal(
+              h.events.events
+                .slice(count)
+                .some(
+                  (event: CanvasEvent): boolean =>
+                    event instanceof CanvasProgressEvent,
+                ),
+              false,
+            );
+          },
+        ),
+        true,
+      );
+    });
     void it('joins once and cancels pending idle shutdown', async (): Promise<void> => {
       const h: ReturnType<typeof TestHarness.harness> = TestHarness.harness();
       await h.canvas.bootstrap();
@@ -950,6 +1000,50 @@ void describe('LiveCanvas', (): void => {
     });
   });
   void describe('removeUser', (): void => {
+    void it('removes a session and releases its grab while a query is pending', async (): Promise<void> => {
+      const h: ReturnType<typeof TestHarness.harness> = TestHarness.harness();
+      await h.canvas.bootstrap();
+      await h.canvas.addUser(TestHarness.user());
+      await h.canvas.grabNode(TestHarness.user(), 'a');
+      assert.equal(
+        await TestHarness.interactDuringAction(
+          h,
+          new RunQueryAction('source', 'slow', false),
+          async (): Promise<void> => {
+            await h.canvas.removeUser('session');
+            assert.equal(h.canvas.getActiveUsers().length, 0);
+            assert.equal(
+              TestHarness.latestGraph(h.worker.commands).graph.nodes['a']
+                ?.locked,
+              false,
+            );
+            h.runtime.advance(10_000);
+            assert.equal(
+              h.events.events.some(
+                (event: CanvasEvent): boolean =>
+                  event instanceof CanvasLifecycleEvent &&
+                  event.action === 'shouldShutdown',
+              ),
+              false,
+            );
+          },
+        ),
+        true,
+      );
+      assert.equal(
+        TestHarness.latestGraph(h.worker.commands).graph.nodes['a']?.locked,
+        false,
+      );
+      h.runtime.advance(10_000);
+      assert.equal(
+        h.events.events.some(
+          (event: CanvasEvent): boolean =>
+            event instanceof CanvasLifecycleEvent &&
+            event.action === 'shouldShutdown',
+        ),
+        true,
+      );
+    });
     void it('ignores an unknown session', async (): Promise<void> => {
       const h: ReturnType<typeof TestHarness.harness> = TestHarness.harness();
       await h.canvas.bootstrap();
@@ -982,6 +1076,67 @@ void describe('LiveCanvas', (): void => {
     });
   });
   void describe('setCursorPosition', (): void => {
+    void it('updates the cursor before a pending query completes', async (): Promise<void> => {
+      const h: ReturnType<typeof TestHarness.harness> = TestHarness.harness();
+      await h.canvas.bootstrap();
+      await h.canvas.addUser(TestHarness.user());
+      assert.equal(
+        await TestHarness.interactDuringAction(
+          h,
+          new RunQueryAction('source', 'slow', false),
+          async (): Promise<void> => {
+            await h.canvas.setCursorPosition(TestHarness.user(), {
+              x: 7,
+              y: 8,
+            });
+            assert.deepEqual(h.canvas.getActiveUsers()[0].position, {
+              x: 7,
+              y: 8,
+            });
+          },
+        ),
+        true,
+      );
+    });
+    void it('rejects interactions before startup', async (): Promise<void> => {
+      const h: ReturnType<typeof TestHarness.harness> = TestHarness.harness();
+      await assert.rejects(
+        h.canvas.setCursorPosition(TestHarness.user(), null),
+        InvalidStateError,
+      );
+    });
+    void it('rejects an interaction whose authorization finishes after destruction', async (): Promise<void> => {
+      const h: ReturnType<typeof TestHarness.harness> = TestHarness.harness();
+      await h.canvas.bootstrap();
+      await h.canvas.addUser(TestHarness.user());
+      const entered: ReturnType<typeof TestHarness.deferred> =
+        TestHarness.deferred();
+      const resume: ReturnType<typeof TestHarness.deferred> =
+        TestHarness.deferred();
+      const getRoom: typeof h.storage.getRoom = h.storage.getRoom.bind(
+        h.storage,
+      );
+      h.storage.getRoom = async (): ReturnType<typeof getRoom> => {
+        entered.resolve();
+        await resume.promise;
+        return await getRoom();
+      };
+      const interaction: Promise<void> = h.canvas.setCursorPosition(
+        TestHarness.user(),
+        { x: 1, y: 2 },
+      );
+      const rejected: Promise<void> = assert.rejects(
+        interaction,
+        InvalidStateError,
+      );
+      await entered.promise;
+      await h.canvas.destroy(false);
+      const count: number = h.events.events.length;
+      resume.resolve();
+      await rejected;
+      assert.equal(h.events.events.length, count);
+      assert.deepEqual(h.canvas.getActiveUsers(), []);
+    });
     void it('rejects an unregistered session', async (): Promise<void> => {
       const h: ReturnType<typeof TestHarness.harness> = TestHarness.harness();
       await h.canvas.bootstrap();
@@ -1036,6 +1191,37 @@ void describe('LiveCanvas', (): void => {
     });
   });
   void describe('grabNode', (): void => {
+    void it('grabs a node during a query and retains its worker lock after commit', async (): Promise<void> => {
+      const h: ReturnType<typeof TestHarness.harness> = TestHarness.harness();
+      await h.canvas.bootstrap();
+      await h.canvas.addUser(TestHarness.user());
+      assert.equal(
+        await TestHarness.interactDuringAction(
+          h,
+          new RunQueryAction('source', 'slow', false),
+          async (): Promise<void> => {
+            await h.canvas.grabNode(TestHarness.user(), 'a');
+            assert.equal(
+              TestHarness.latestGraph(h.worker.commands).graph.nodes['a']
+                ?.locked,
+              true,
+            );
+          },
+        ),
+        true,
+      );
+      assert.equal(
+        TestHarness.latestGraph(h.worker.commands).graph.nodes['a']?.locked,
+        true,
+      );
+      await h.canvas.moveNodes(TestHarness.user(), [
+        { id: 'a', position: { x: 4, y: 5 } },
+      ]);
+      assert.deepEqual(h.canvas.toData().graph.nodes[0].position, {
+        x: 4,
+        y: 5,
+      });
+    });
     void it('rejects an unregistered session', async (): Promise<void> => {
       const h: ReturnType<typeof TestHarness.harness> = TestHarness.harness();
       await h.canvas.bootstrap();
@@ -1075,6 +1261,136 @@ void describe('LiveCanvas', (): void => {
     });
   });
   void describe('moveNodes', (): void => {
+    void it('retains an interactive position over a scenario layout calculated after its query', async (): Promise<void> => {
+      const h: ReturnType<typeof TestHarness.harness> = TestHarness.harness();
+      await h.canvas.bootstrap();
+      await h.canvas.addUser(TestHarness.user());
+      h.storage.scenario.actions = [
+        {
+          type: 'layout',
+          layout: { type: 'circle', nodeIds: ['a', 'b'], radius: 100 },
+        },
+      ];
+      assert.equal(
+        await TestHarness.interactDuringAction(
+          h,
+          new LoadScenarioAction('scenario'),
+          async (): Promise<void> => {
+            await h.canvas.grabNode(TestHarness.user(), 'a');
+            await h.canvas.moveNodes(TestHarness.user(), [
+              { id: 'a', position: { x: 9, y: 10 } },
+            ]);
+          },
+          TestHarness.result([TestHarness.node('a'), TestHarness.node('b')]),
+        ),
+        true,
+      );
+      assert.deepEqual(h.canvas.toData().graph.nodes[0].position, {
+        x: 9,
+        y: 10,
+      });
+      assert.equal(h.canvas.toData().graph.nodes[0].locked, true);
+      assert.equal(
+        TestHarness.latestGraph(h.worker.commands).graph.nodes['a']?.locked,
+        true,
+      );
+      assert.equal(h.canvas.toData().graph.nodes[1].locked, true);
+    });
+    void it('retains an interactive move when the pending action fails to commit', async (): Promise<void> => {
+      const h: ReturnType<typeof TestHarness.harness> = TestHarness.harness();
+      await h.canvas.bootstrap();
+      await h.canvas.addUser(TestHarness.user());
+      await h.canvas.grabNode(TestHarness.user(), 'a');
+      await assert.rejects(
+        TestHarness.interactDuringAction(
+          h,
+          new RunQueryAction('source', 'slow', false),
+          async (): Promise<void> => {
+            await h.canvas.moveNodes(TestHarness.user(), [
+              { id: 'a', position: { x: 9, y: 10 } },
+            ]);
+            h.storage.notesError = new Error('notes unavailable');
+          },
+        ),
+        /notes unavailable/,
+      );
+      assert.deepEqual(h.canvas.toData().graph.nodes[0].position, {
+        x: 9,
+        y: 10,
+      });
+      assert.equal(h.canvas.toData().graph.nodes[0].locked, true);
+      assert.equal(h.canvas.history.canUndo, false);
+    });
+    void it('does not retain nodes removed by a replacing query after they were moved', async (): Promise<void> => {
+      const h: ReturnType<typeof TestHarness.harness> = TestHarness.harness();
+      await h.canvas.bootstrap();
+      await h.canvas.addUser(TestHarness.user());
+      await h.canvas.grabNode(TestHarness.user(), 'a');
+      assert.equal(
+        await TestHarness.interactDuringAction(
+          h,
+          new RunQueryAction('source', 'slow', true),
+          async (): Promise<void> => {
+            await h.canvas.moveNodes(TestHarness.user(), [
+              { id: 'a', position: { x: 9, y: 10 } },
+            ]);
+          },
+          TestHarness.result([TestHarness.node('b')]),
+        ),
+        true,
+      );
+      assert.deepEqual(
+        h.canvas.toData().graph.nodes.map((node: NodeData): string => node.id),
+        ['b'],
+      );
+      await assert.rejects(
+        h.canvas.ungrabNode(TestHarness.user(), 'a', { x: 9, y: 10 }),
+        ForbiddenError,
+      );
+    });
+    void it('moves a grabbed node during a query and retains its position and persistent lock after commit', async (): Promise<void> => {
+      const h: ReturnType<typeof TestHarness.harness> = TestHarness.harness();
+      await h.canvas.bootstrap();
+      await h.canvas.addUser(TestHarness.user());
+      await h.canvas.grabNode(TestHarness.user(), 'a');
+      assert.equal(
+        await TestHarness.interactDuringAction(
+          h,
+          new RunQueryAction('source', 'slow', false),
+          async (): Promise<void> => {
+            await h.canvas.moveNodes(TestHarness.user(), [
+              { id: 'a', position: { x: 9, y: 10 } },
+            ]);
+            assert.deepEqual(h.canvas.toData().graph.nodes[0].position, {
+              x: 9,
+              y: 10,
+            });
+          },
+        ),
+        true,
+      );
+      assert.deepEqual(h.canvas.toData().graph.nodes[0].position, {
+        x: 9,
+        y: 10,
+      });
+      assert.equal(h.canvas.toData().graph.nodes[0].locked, true);
+      assert.equal(h.canvas.history.undoStackSize, 1);
+      assert.deepEqual(
+        TestHarness.latestGraph(h.worker.commands).graph.nodes['a']?.positionX,
+        9,
+      );
+      h.runtime.advance(1000);
+      await h.canvas.read(TestHarness.user());
+      assert.deepEqual(h.storage.saves.at(-1)?.graph.nodes[0].position, {
+        x: 9,
+        y: 10,
+      });
+      await h.canvas.execute(TestHarness.user(), new FlipCanvasAction('x'));
+      assert.deepEqual(h.canvas.toData().graph.nodes[0].position, {
+        x: 9,
+        y: -10,
+      });
+    });
     void it('sends only position and lock deltas to the worker', async (): Promise<void> => {
       const h: ReturnType<typeof TestHarness.harness> = TestHarness.harness();
       await h.canvas.bootstrap();
@@ -1188,6 +1504,71 @@ void describe('LiveCanvas', (): void => {
     });
   });
   void describe('ungrabNode', (): void => {
+    void it('retains a released original position and unlocked state over a pending scenario layout', async (): Promise<void> => {
+      const h: ReturnType<typeof TestHarness.harness> = TestHarness.harness();
+      await h.canvas.bootstrap();
+      await h.canvas.addUser(TestHarness.user());
+      h.storage.scenario.actions = [
+        {
+          type: 'layout',
+          layout: { type: 'circle', nodeIds: ['a', 'b'], radius: 100 },
+        },
+      ];
+      assert.equal(
+        await TestHarness.interactDuringAction(
+          h,
+          new LoadScenarioAction('scenario'),
+          async (): Promise<void> => {
+            await h.canvas.grabNode(TestHarness.user(), 'a');
+            await h.canvas.ungrabNode(TestHarness.user(), 'a', { x: 0, y: 0 });
+          },
+          TestHarness.result([TestHarness.node('a'), TestHarness.node('b')]),
+        ),
+        true,
+      );
+      assert.deepEqual(h.canvas.toData().graph.nodes[0].position, {
+        x: 0,
+        y: 0,
+      });
+      assert.equal(h.canvas.toData().graph.nodes[0].locked, false);
+      assert.equal(
+        TestHarness.latestGraph(h.worker.commands).graph.nodes['a']?.locked,
+        false,
+      );
+    });
+    void it('releases a grab during a query without reintroducing it at commit', async (): Promise<void> => {
+      const h: ReturnType<typeof TestHarness.harness> = TestHarness.harness();
+      await h.canvas.bootstrap();
+      await h.canvas.addUser(TestHarness.user());
+      await h.canvas.grabNode(TestHarness.user(), 'a');
+      assert.equal(
+        await TestHarness.interactDuringAction(
+          h,
+          new RunQueryAction('source', 'slow', false),
+          async (): Promise<void> => {
+            await h.canvas.ungrabNode(TestHarness.user(), 'a', { x: 3, y: 4 });
+            assert.equal(
+              TestHarness.latestGraph(h.worker.commands).graph.nodes['a']
+                ?.locked,
+              false,
+            );
+          },
+        ),
+        true,
+      );
+      assert.deepEqual(h.canvas.toData().graph.nodes[0].position, {
+        x: 3,
+        y: 4,
+      });
+      assert.equal(
+        TestHarness.latestGraph(h.worker.commands).graph.nodes['a']?.locked,
+        false,
+      );
+      await assert.rejects(
+        h.canvas.ungrabNode(TestHarness.user(), 'a', { x: 0, y: 0 }),
+        ForbiddenError,
+      );
+    });
     void it('does not request persistence for a grab and release without movement', async (): Promise<void> => {
       const h: ReturnType<typeof TestHarness.harness> = TestHarness.harness();
       await h.canvas.bootstrap();
