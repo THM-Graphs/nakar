@@ -7,10 +7,7 @@ export class CloseOtherCanvasesAction extends Action<CanvasTabActionParams> {
   public static shared = new CloseOtherCanvasesAction();
 
   protected async action(input: CanvasTabActionParams): Promise<void> {
-    if (
-      this.disabled(input) ||
-      !confirm("Close all other tabs and delete their canvas data?")
-    ) {
+    if (this.disabled(input)) {
       return;
     }
     await input.execute(async () => {

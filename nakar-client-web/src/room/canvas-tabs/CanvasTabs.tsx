@@ -220,7 +220,7 @@ export function CanvasTabs() {
                 });
               }}
               className={clsx(
-                "flex-shrink-0 rounded-top overflow-hidden",
+                "flex-shrink-0 rounded-top overflow-hidden bg-body-hover",
                 canvas.id === activeCanvasId
                   ? "bg-body border-top border-start border-end"
                   : "border-bottom",
@@ -230,34 +230,23 @@ export function CanvasTabs() {
                 to={Router.getCanvasPath(roomId, canvas.id)}
                 aria-current={canvas.id === activeCanvasId ? "page" : undefined}
                 title={canvas.title}
-                className="text-body text-decoration-none small ps-2 ellipsis bg-body-hover"
+                className="text-body text-decoration-none small ps-2 align-self-stretch flex-shrink-1 flex-grow-1 ellipsis d-flex align-items-center"
                 style={{ maxWidth: "300px", minWidth: "180px" }}
               >
-                <Stack
-                  direction={"horizontal"}
-                  className={"justify-content-between flex-shrink-1"}
-                >
-                  <span
-                    className={
-                      "align-self-center flex-shrink-1 flex-grow-1 ellipsis"
-                    }
-                  >
-                    {canvas.title}
-                  </span>
-                  <NavbarButton
-                    className="align-self-center"
-                    aria-label={`Delete canvas ${canvas.title}`}
-                    disabled={CloseCanvasAction.shared.disabled(
-                      actionParams(canvas),
-                    )}
-                    onClick={() => {
-                      CloseCanvasAction.shared.runAsync(actionParams(canvas));
-                    }}
-                  >
-                    <i className="bi bi-x" aria-hidden="true"></i>
-                  </NavbarButton>
-                </Stack>
+                <span>{canvas.title}</span>
               </Link>
+              <NavbarButton
+                className="align-self-stretch"
+                aria-label={`Delete canvas ${canvas.title}`}
+                disabled={CloseCanvasAction.shared.disabled(
+                  actionParams(canvas),
+                )}
+                onClick={() => {
+                  CloseCanvasAction.shared.runAsync(actionParams(canvas));
+                }}
+              >
+                <i className="bi bi-x" aria-hidden="true"></i>
+              </NavbarButton>
             </Stack>
           ))}
           <ActionNavbarButton
