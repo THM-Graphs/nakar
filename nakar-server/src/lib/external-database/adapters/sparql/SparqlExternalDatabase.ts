@@ -43,6 +43,17 @@ export class SparqlExternalDatabase implements ExternalGraphDatabase {
     this._logger = createChildLogger(this);
   }
 
+  public equalityHashKey(
+    credentials: ExternalGraphDatabaseCredentials,
+  ): string {
+    return JSON.stringify([
+      credentials.databaseType,
+      credentials.connectionUrl,
+      credentials.username ?? '',
+      credentials.database,
+    ]);
+  }
+
   public async executeQuery(
     credentials: ExternalGraphDatabaseCredentials,
     query: string,
@@ -489,6 +500,20 @@ ORDER BY DESC(?count)
     return new ExternalGraphDatabaseExpandNodePreview(
       labelResult,
       relationshipResults,
+    );
+  }
+
+  public async testConnection(
+    credentials: ExternalGraphDatabaseCredentials,
+  ): Promise<void> {
+    await this.executeQuery(
+      credentials,
+      'SELECT ?s WHERE { ?s ?p ?o } LIMIT 1',
+      {},
+      new ExternalGraphDatabaseQueryLimitConfig(
+        ExternalGraphDatabaseQueryLimitConfigType.preview,
+        ExternalGraphDatabaseQueryLimitConfigCollectionType.tableData,
+      ),
     );
   }
 

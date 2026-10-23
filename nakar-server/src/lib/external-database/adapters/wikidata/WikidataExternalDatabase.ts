@@ -25,6 +25,12 @@ export class WikidataExternalDatabase implements ExternalGraphDatabase {
     this._sparqlAdapter = new SparqlExternalDatabase();
   }
 
+  public equalityHashKey(
+    credentials: ExternalGraphDatabaseCredentials,
+  ): string {
+    return this._sparqlAdapter.equalityHashKey(credentials);
+  }
+
   public async executeQuery(
     credentials: ExternalGraphDatabaseCredentials,
     query: string,
@@ -94,6 +100,12 @@ export class WikidataExternalDatabase implements ExternalGraphDatabase {
     }
 
     return result;
+  }
+
+  public async testConnection(
+    credentials: ExternalGraphDatabaseCredentials,
+  ): Promise<void> {
+    await this._sparqlAdapter.testConnection(credentials);
   }
 
   public async getStats(

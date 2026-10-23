@@ -726,6 +726,15 @@ export class DatabaseService {
     return populatedProject.databaseConnections ?? [];
   }
 
+  public async getProjects(): Promise<
+    Modules.Documents.Result<'api::project.project'>[]
+  > {
+    return await strapi.documents('api::project.project').findMany({
+      status: 'published',
+      sort: 'title:asc',
+    });
+  }
+
   public async getProjectsOfUser(
     user: Modules.Documents.Result<'plugin::users-permissions.user'>,
   ): Promise<Modules.Documents.Result<'api::project.project'>[]> {

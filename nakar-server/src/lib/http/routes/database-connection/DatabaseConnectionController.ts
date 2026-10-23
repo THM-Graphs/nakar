@@ -83,7 +83,7 @@ export class DatabaseConnectionController {
       }
 
       const dbInfo: ExternalGraphDatabaseStats =
-        await this._externalGraphDatabase.testConnection({
+        await this._externalGraphDatabase.getStats({
           connectionUrl: body.connectionUrl,
           username: body.username ?? existingDatabase?.username ?? '',
           password: body.password ?? existingDatabase?.password ?? '',

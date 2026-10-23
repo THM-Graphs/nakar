@@ -38,6 +38,17 @@ export class Neo4jExternalDatabase implements ExternalGraphDatabase {
     this._passwordHashSalt = randomBytes(16).toString('hex');
   }
 
+  public equalityHashKey(
+    credentials: ExternalGraphDatabaseCredentials,
+  ): string {
+    return JSON.stringify([
+      credentials.databaseType,
+      credentials.connectionUrl,
+      credentials.username ?? '',
+      credentials.database,
+    ]);
+  }
+
   public async executeQuery(
     credentials: ExternalGraphDatabaseCredentials,
     query: string,
@@ -239,6 +250,20 @@ ORDER BY lcount DESC, label ASC`,
     return new ExternalGraphDatabaseExpandNodePreview(
       expandNodePreviewLabelEntries,
       expandNodePreviewRelationshipEntries,
+    );
+  }
+
+  public async testConnection(
+    credentials: ExternalGraphDatabaseCredentials,
+  ): Promise<void> {
+    await this.executeQuery(
+      credentials,
+      'MATCH (n) RETURN elementId(n) LIMIT 1;',
+      {},
+      new ExternalGraphDatabaseQueryLimitConfig(
+        ExternalGraphDatabaseQueryLimitConfigType.preview,
+        ExternalGraphDatabaseQueryLimitConfigCollectionType.tableData,
+      ),
     );
   }
 

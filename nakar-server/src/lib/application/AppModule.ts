@@ -3,6 +3,7 @@ import { SchemaFactoryService } from '../schema/SchemaFactoryService';
 import { DatabaseEventsService } from '../database/DatabaseEventsService';
 import { DatabaseService } from '../database/DatabaseService';
 import { ExternalGraphDatabaseService } from '../external-database/ExternalGraphDatabaseService';
+import { ExternalGraphDatabaseReportService } from '../external-database-report/ExternalGraphDatabaseReportService';
 import { AuthController } from '../http/routes/auth/AuthController';
 import { StartController } from '../http/routes/start/StartController';
 import { RoomController } from '../http/routes/room/RoomController';
@@ -50,6 +51,7 @@ import { IsValidRegex } from '../schema/IsValidRegex';
     SchemaFactoryService,
     DatabaseEventsService,
     ExternalGraphDatabaseService,
+    ExternalGraphDatabaseReportService,
     WebSocketManager,
     AuthService,
     MonitoringService,

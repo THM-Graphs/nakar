@@ -69,8 +69,8 @@ jobs:
           context: ./nakar-server
           push: false
           tags: ghcr.io/thm-graphs/nakar/server:dev
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=nakar-server
+          cache-to: type=gha,scope=nakar-server,mode=max
 
   ci-client-web:
     runs-on: ubuntu-latest
@@ -123,8 +123,8 @@ jobs:
           context: ./nakar-client-web
           push: false
           tags: ghcr.io/thm-graphs/nakar/client-web:dev
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=nakar-client-web
+          cache-to: type=gha,scope=nakar-client-web,mode=max
 
   ci-nakar-db-pole:
     runs-on: ubuntu-latest
@@ -141,8 +141,8 @@ jobs:
           context: ./nakar-db-pole
           push: false
           tags: ghcr.io/thm-graphs/nakar/db-pole:dev
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=nakar-db-pole
+          cache-to: type=gha,scope=nakar-db-pole,mode=max
 
   ci-nakar-db-examples:
     runs-on: ubuntu-latest
@@ -164,5 +164,5 @@ jobs:
           context: ./nakar-db-examples
           push: false
           tags: ghcr.io/thm-graphs/nakar/db-examples:dev
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=nakar-db-examples
+          cache-to: type=gha,scope=nakar-db-examples,mode=max
