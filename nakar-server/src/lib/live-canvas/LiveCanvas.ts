@@ -36,7 +36,7 @@ import type { WTPhysicalNode } from '../live-canvas-worker/worker-events/WTPhysi
 import type { LayoutSpecificationDto } from '../http/routes/canvas-action/dto/LayoutSpecificationDto';
 import type { LayoutSpecificationCircleDto } from '../http/routes/canvas-action/dto/LayoutSpecificationCircleDto';
 import type { PhysicalNodeDto } from '../schema/dtos/PhysicalNodeDto';
-import type { DatabaseEventsService } from '../database/DatabaseEventsService';
+import type { DatabaseEventsService } from '../database-events/DatabaseEventsService';
 import { LiveCanvasUser } from './data/LiveCanvasUser';
 import type { CanvasEventUserJoined } from './events/CanvasEventUserJoined';
 import type { CanvasEventUserLeft } from './events/CanvasEventUserLeft';

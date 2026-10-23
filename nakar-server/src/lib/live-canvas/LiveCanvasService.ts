@@ -1,5 +1,6 @@
 import { DatabaseService } from '../database/DatabaseService';
-import { DatabaseEventsService } from '../database/DatabaseEventsService';
+import { DatabaseEventsService } from '../database-events/DatabaseEventsService';
+import type { CanvasDeletedEvent } from '../database-events/CanvasDeletedEvent';
 import { Observable, Subject } from 'rxjs';
 import { ExternalGraphDatabaseService } from '../external-database/ExternalGraphDatabaseService';
 import { LiveCanvasUndoableData } from './data/LiveCanvasUndoableData';
@@ -39,10 +40,12 @@ export class LiveCanvasService implements OnModuleInit, OnModuleDestroy {
 
   public onModuleInit(): void {
     this._databaseEvents.onCanvasDeleted$.subscribe(
-      (canvas: Modules.Documents.Result<'api::canvas.canvas'>): void => {
-        this._destroyCanvas(canvas, false).catch((error: unknown): void => {
-          this._logger.error(error);
-        });
+      (event: CanvasDeletedEvent): void => {
+        this._destroyCanvas(event.canvas, false).catch(
+          (error: unknown): void => {
+            this._logger.error(error);
+          },
+        );
       },
     );
   }
