@@ -1,6 +1,6 @@
+import { ForbiddenError } from '../error/ForbiddenError';
 import type { RoomData } from '../data/RoomData';
 import type { UserData } from '../data/UserData';
-import { CanvasError } from '../CanvasError';
 
 /**
  * References a trusted identity and defines polymorphic room-use and project-editing permissions.
@@ -13,9 +13,9 @@ export abstract class CanvasUser {
   public constructor(protected readonly _data: UserData) {}
 
   /**
-   * Checks whether this identity may use the current room according to its visibility and project membership.
+   * Checks room use through its visibility and the concrete identity’s project permissions.
    * @param room - Current room access and project membership data.
-   * @returns True for public or unlisted rooms, or when project membership permits access to a private room.
+   * @returns True for public or unlisted rooms, or when the concrete identity can edit the project.
    */
   public canUse(room: RoomData): boolean {
     return room.visibility !== 'private' || this.canEditProject(room);
@@ -25,11 +25,11 @@ export abstract class CanvasUser {
    * Throws a forbidden domain error when this identity lacks the requested room or project-editing permission.
    * @param room - Current room access and project membership data.
    * @param project - Whether project-editing permission is required instead of room-use permission.
-   * @throws {@link CanvasError} When the input, lifecycle state or permissions do not satisfy this operation’s requirements.
+   * @throws {@link error/CanvasError!CanvasError | CanvasError} When the input, lifecycle state or permissions do not satisfy this operation’s requirements.
    */
   public requireAccess(room: RoomData, project: boolean = false): void {
     if (!(project ? this.canEditProject(room) : this.canUse(room))) {
-      throw new CanvasError('forbidden', 'User cannot access this canvas.');
+      throw new ForbiddenError('User cannot access this canvas.');
     }
   }
 
@@ -42,7 +42,7 @@ export abstract class CanvasUser {
   }
 
   /**
-   * Checks whether this identity owns the project or is one of its collaborators.
+   * Checks whether the concrete identity is authorized to edit project configuration.
    * @param room - Current room access and project membership data.
    * @returns Whether the concrete identity is authorized to edit this project.
    */

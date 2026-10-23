@@ -1,3 +1,5 @@
+import { NotFoundError } from '../error/NotFoundError';
+import { InvalidDataError } from '../error/InvalidDataError';
 import { TestHarness } from '../testing/TestHarness.test';
 import type { QueryResult } from '../data/QueryResult';
 import type { PhysicalGraph } from '../../physics/physical-graph/PhysicalGraph';
@@ -5,7 +7,6 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { CanvasGraph } from './CanvasGraph';
 import { CanvasViewSettings } from '../view-settings/CanvasViewSettings';
-import { CanvasError } from '../CanvasError';
 
 import type { EdgeData } from '../data/EdgeData';
 import type { GraphData } from '../data/GraphData';
@@ -35,7 +36,7 @@ void describe('CanvasGraph', (): void => {
       );
       assert.throws((): void => {
         graph.getNode('missing');
-      }, CanvasError);
+      }, NotFoundError);
     });
   });
   void describe('getEdge', (): void => {
@@ -51,7 +52,7 @@ void describe('CanvasGraph', (): void => {
       );
       assert.throws((): void => {
         graph.getEdge('missing');
-      }, CanvasError);
+      }, NotFoundError);
     });
   });
   void describe('add', (): void => {
@@ -141,7 +142,7 @@ void describe('CanvasGraph', (): void => {
             TestHarness.node('invalid', { position: { x: NaN, y: 0 } }),
           ]),
         );
-      }, CanvasError);
+      }, InvalidDataError);
     });
   });
   void describe('removeDanglingEdges', (): void => {

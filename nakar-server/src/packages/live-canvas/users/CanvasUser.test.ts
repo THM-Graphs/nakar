@@ -1,10 +1,10 @@
+import { ForbiddenError } from '../error/ForbiddenError';
 import { TestHarness } from '../testing/TestHarness.test';
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import type { CanvasUser } from './CanvasUser';
 import { GuestCanvasUser } from './GuestCanvasUser';
 import { AuthenticatedCanvasUser } from './AuthenticatedCanvasUser';
-import { CanvasError } from '../CanvasError';
 
 import { MockStorageDelegate } from '../testing/MockStorageDelegate.test';
 import type { RoomData } from '../data/RoomData';
@@ -92,14 +92,14 @@ void describe('CanvasUser', (): void => {
     void it('rejects a guest using a private room', (): void => {
       assert.throws((): void => {
         TestHarness.user(null).requireAccess(new MockStorageDelegate().room);
-      }, CanvasError);
+      }, ForbiddenError);
     });
     void it('rejects project editing even when room use is public', (): void => {
       const room: RoomData = new MockStorageDelegate().room;
       room.visibility = 'public';
       assert.throws((): void => {
         TestHarness.user('unrelated').requireAccess(room, true);
-      }, CanvasError);
+      }, ForbiddenError);
     });
     void it('accepts project editing by a collaborator', (): void => {
       assert.doesNotThrow((): void => {

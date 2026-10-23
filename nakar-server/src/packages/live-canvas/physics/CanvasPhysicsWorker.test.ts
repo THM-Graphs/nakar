@@ -1,9 +1,14 @@
+import type { Position } from '../data/Position';
+import { threadId } from 'node:worker_threads';
+import { NodeWorkerDelegate } from '../testing/NodeWorkerDelegate.test';
+import { CanvasPhysicsEvent } from '../events/CanvasPhysicsEvent';
+import type { CanvasEvent } from '../events/CanvasEvent';
+import { LiveCanvas } from '../canvas/LiveCanvas';
+import { InvalidStateError } from '../error/InvalidStateError';
 import { TestHarness } from '../testing/TestHarness.test';
 import type { WorkerCommand } from './WorkerCommand';
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-
-import { CanvasError } from '../CanvasError';
 
 void describe('CanvasPhysicsWorker', (): void => {
   void describe('start', (): void => {
@@ -12,9 +17,9 @@ void describe('CanvasPhysicsWorker', (): void => {
       const start: Promise<void> = h.worker.start();
       assert.throws((): void => {
         h.worker.setGraph({ nodes: {}, edges: {} });
-      }, CanvasError);
+      }, InvalidStateError);
       const stop: Promise<void> = h.worker.destroy();
-      await assert.rejects(start, CanvasError);
+      await assert.rejects(start, InvalidStateError);
       await stop;
       assert.equal(h.delegate.terminations, 1);
     });
@@ -26,12 +31,12 @@ void describe('CanvasPhysicsWorker', (): void => {
     void it('rejects duplicate startup', async (): Promise<void> => {
       const h: ReturnType<typeof TestHarness.setup> = TestHarness.setup();
       await h.worker.start();
-      await assert.rejects(h.worker.start(), CanvasError);
+      await assert.rejects(h.worker.start(), InvalidStateError);
     });
     void it('rejects startup after destruction', async (): Promise<void> => {
       const h: ReturnType<typeof TestHarness.setup> = TestHarness.setup();
       await h.worker.destroy();
-      await assert.rejects(h.worker.start(), CanvasError);
+      await assert.rejects(h.worker.start(), InvalidStateError);
     });
     void it('cleans up after failed startup exactly once', async (): Promise<void> => {
       const h: ReturnType<typeof TestHarness.setup> = TestHarness.setup();
@@ -40,13 +45,35 @@ void describe('CanvasPhysicsWorker', (): void => {
       await h.worker.destroy();
       assert.equal(h.delegate.terminations, 1);
     });
+
+    void it('starts a real worker thread through LiveCanvas', async (): Promise<void> => {
+      const h: ReturnType<typeof TestHarness.harness> = TestHarness.harness();
+      const worker: NodeWorkerDelegate = new NodeWorkerDelegate();
+      h.delegates.worker = worker;
+      const canvas: LiveCanvas = new LiveCanvas(
+        { id: 'canvas', roomId: 'room', title: null },
+        h.delegates,
+      );
+      try {
+        await canvas.bootstrap();
+        assert.ok(worker.threadId > 0);
+        assert.notEqual(worker.threadId, threadId);
+      } finally {
+        await canvas.destroy(false);
+      }
+    });
+    void it('rejects commands before the worker has started', (): void => {
+      assert.throws((): void => {
+        new NodeWorkerDelegate().post({ type: 'stop' });
+      }, /No worker/);
+    });
   });
   void describe('setGraph', (): void => {
     void it('rejects an inactive worker', (): void => {
       const h: ReturnType<typeof TestHarness.setup> = TestHarness.setup();
       assert.throws((): void => {
         h.worker.setGraph({ nodes: {}, edges: {} });
-      }, CanvasError);
+      }, InvalidStateError);
     });
     void it('advances revisions with each graph update', async (): Promise<void> => {
       const h: ReturnType<typeof TestHarness.setup> = TestHarness.setup();
@@ -66,7 +93,7 @@ void describe('CanvasPhysicsWorker', (): void => {
       const h: ReturnType<typeof TestHarness.setup> = TestHarness.setup();
       assert.throws((): void => {
         h.worker.run('short');
-      }, CanvasError);
+      }, InvalidStateError);
     });
     void it('sends a short run for the current revision', async (): Promise<void> => {
       const h: ReturnType<typeof TestHarness.setup> = TestHarness.setup();
@@ -84,6 +111,46 @@ void describe('CanvasPhysicsWorker', (): void => {
         { type: 'run', revision: 0, milliseconds: 4000 },
       ]);
     });
+
+    void it(
+      'executes physics in the real thread and delivers results through the event delegate',
+      { timeout: 10000 },
+      async (): Promise<void> => {
+        const h: ReturnType<typeof TestHarness.harness> = TestHarness.harness();
+        const worker: NodeWorkerDelegate = new NodeWorkerDelegate();
+        h.delegates.worker = worker;
+        const canvas: LiveCanvas = new LiveCanvas(
+          { id: 'canvas', roomId: 'room', title: null },
+          h.delegates,
+        );
+        let complete: (() => void) | null = null;
+        const update: Promise<void> = new Promise<void>(
+          (resolve: () => void): void => {
+            complete = resolve;
+          },
+        );
+        h.delegates.events = {
+          handleEvent: (event: CanvasEvent): void => {
+            if (event instanceof CanvasPhysicsEvent) {
+              assert.ok(
+                Object.values(event.positions).some(
+                  (position: Position): boolean =>
+                    position.x !== 0 || position.y !== 0,
+                ),
+              );
+              complete?.();
+            }
+          },
+        };
+        try {
+          await canvas.bootstrap();
+          await canvas.relayout(TestHarness.user());
+          await update;
+        } finally {
+          await canvas.destroy(false);
+        }
+      },
+    );
   });
   void describe('onMessage', (): void => {
     void it('ignores a notification before startup', (): void => {
@@ -148,6 +215,13 @@ void describe('CanvasPhysicsWorker', (): void => {
       await assert.rejects(h.worker.destroy(), /termination failed/);
       await assert.rejects(h.worker.destroy(), /termination failed/);
       assert.equal(h.delegate.terminations, 1);
+    });
+
+    void it('allows repeated termination of an unused adapter', async (): Promise<void> => {
+      const worker: NodeWorkerDelegate = new NodeWorkerDelegate();
+      await worker.terminate();
+      await worker.terminate();
+      assert.equal(worker.threadId, 0);
     });
   });
   void describe('constructor', (): void => {

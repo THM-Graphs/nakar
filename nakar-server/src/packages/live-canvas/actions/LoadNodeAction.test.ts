@@ -1,9 +1,9 @@
+import { NotFoundError } from '../error/NotFoundError';
 import { TestHarness } from '../testing/TestHarness.test';
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
 import { LoadNodeAction } from './LoadNodeAction';
-import { CanvasError } from '../CanvasError';
 
 void describe('LoadNodeAction', (): void => {
   void describe('apply', (): void => {
@@ -11,7 +11,7 @@ void describe('LoadNodeAction', (): void => {
       const c: ReturnType<typeof TestHarness.context> = TestHarness.context();
       await assert.rejects(
         new LoadNodeAction('source', 'missing').apply(c.context),
-        CanvasError,
+        NotFoundError,
       );
     });
     void it('adds only the first returned node and records its creation reason', async (): Promise<void> => {

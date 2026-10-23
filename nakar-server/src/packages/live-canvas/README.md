@@ -7,19 +7,19 @@ plattformabhängige Laufzeitfunktionen sind über Delegate-Interfaces angebunden
 
 ## Aufbau
 
-| Bereich          | Inhalt                                                                     |
-| ---------------- | -------------------------------------------------------------------------- |
-| `LiveCanvas`     | Lebenszyklus, Aktionsverarbeitung, History, Sitzungen und Worker-Steuerung |
-| `CanvasRoom`     | Anlegen, Duplizieren, Schließen und Umbenennen von Canvases im Raum        |
-| `actions/`       | Polymorphe Canvas-Aktionen und ihr Ausführungskontext                      |
-| `data/`          | Datenverträge für Graphen, Szenarien, Räume und Visualisierung             |
-| `delegates/`     | Schnittstellen zur einbettenden Anwendung                                  |
-| `events/`        | Fachereignisse für Änderungen, Fortschritt, Anwesenheit und Fehler         |
-| `graph/`         | Knoten, Beziehungen, Graphoperationen, Hierarchie-Layout und Histogramme   |
-| `physics/`       | Worker-Protokoll, Worker-Steuerung, Laufzeit und Simulation                |
-| `users/`         | Benutzeridentitäten und Berechtigungen                                     |
-| `view-settings/` | Farben, Titel, Knotengrößen und Beziehungsbreiten                          |
-| `testing/`       | `TestHarness` und Delegate-Implementierungen für Tests                     |
+| Bereich          | Inhalt                                                                                 |
+| ---------------- | -------------------------------------------------------------------------------------- |
+| `canvas/`        | `LiveCanvas` zur Canvas-Steuerung und `RoomCanvasManager` für die Canvases eines Raums |
+| `actions/`       | Polymorphe Canvas-Aktionen und ihr Ausführungskontext                                  |
+| `data/`          | Datenverträge für Graphen, Szenarien, Räume und Visualisierung                         |
+| `delegates/`     | Schnittstellen zur einbettenden Anwendung                                              |
+| `error/`         | Fachliche Fehlerklassen mit stabilen Fehlercodes                                       |
+| `events/`        | Fachereignisse für Änderungen, Fortschritt, Anwesenheit und Fehler                     |
+| `graph/`         | Knoten, Beziehungen, Graphoperationen, Hierarchie-Layout und Histogramme               |
+| `physics/`       | Worker-Protokoll, Worker-Steuerung, Laufzeit und Simulation                            |
+| `users/`         | Benutzeridentitäten und Berechtigungen                                                 |
+| `view-settings/` | Farben, Titel, Knotengrößen und Beziehungsbreiten                                      |
+| `testing/`       | `TestHarness` und Delegate-Implementierungen für Tests                                 |
 
 `CanvasAction`, `CanvasElement`, `CanvasUser` und `CanvasEvent` bilden abstrakte
 Basisklassen. Konkrete Unterklassen implementieren das jeweilige Verhalten.
@@ -29,7 +29,7 @@ Fachobjekt verändern diese Daten. `toData()` liefert tiefe Kopien.
 ## Verwendung
 
 ```ts
-import { LiveCanvas } from './LiveCanvas';
+import { LiveCanvas } from './canvas/LiveCanvas';
 import { AuthenticatedCanvasUser } from './users/AuthenticatedCanvasUser';
 import { LoadScenarioAction } from './actions/LoadScenarioAction';
 import type { CanvasDelegates } from './delegates/CanvasDelegates';
@@ -81,7 +81,8 @@ Berechtigungsprüfung bereit.
 Graphquellen des Projekts. `getNotes()` liefert die zum Graphen gehörenden
 Notizen. `refreshNotes(actor)` aktualisiert deren Zuordnung auf dem Canvas.
 
-Raumänderungen laufen über `CanvasRoomDelegate.transact()`. Der Delegate stellt
+`RoomCanvasManager` verwaltet die Canvases eines Raums über
+`CanvasRoomDelegate.transact()`. Der Delegate stellt
 über alle Instanzen desselben Raums hinweg die Serialisierung und Atomarität
 sicher. `RoomTransaction` bietet `list`, `create`, `remove` und
 `rename` an. Das Anlegen eines Canvas und das Übernehmen eines optionalen
@@ -137,15 +138,19 @@ Graph-History-Einträge. `history` liefert den aktuellen Undo-/Redo-Status.
 
 ## Benutzerrechte und Sitzungen
 
-`GuestCanvasUser` und `AuthenticatedCanvasUser` implementieren die
+`GuestCanvasUser`, `AuthenticatedCanvasUser` und `RootUser` implementieren die
 Berechtigungsprüfung über die gemeinsame Basis `CanvasUser`:
 
 - Öffentliche und ungelistete Räume erlauben Gästen und angemeldeten Benutzern
   Graphaktionen und die Verwaltung der Canvases im Raum.
 - Private Räume erlauben diese Nutzung dem Projekteigentümer und den
-  eingetragenen Mitwirkenden.
+  eingetragenen Mitwirkenden sowie `RootUser`.
 - `canEditProject()` und `requireAccess(room, true)` gewähren Projektbearbeitung
-  ausschließlich Eigentümern und Mitwirkenden.
+  Eigentümern, Mitwirkenden und `RootUser`.
+
+`RootUser` besitzt unabhängig von Sichtbarkeit, Eigentümer und Mitwirkenden alle
+Nutzungs- und Projektbearbeitungsrechte. Die einbettende Anwendung stellt diese
+vertrauenswürdige Benutzerklasse bereit.
 
 Benutzeraktionen prüfen die aktuellen Raumdaten. Asynchrone Entwurfsaktionen
 prüfen die Berechtigung zusätzlich vor der Veröffentlichung. Quellen und
@@ -174,6 +179,21 @@ erhalten eine deterministische Trennrichtung.
 Die Laufzeit plant Simulationsschritte im Abstand von 15 Millisekunden. Kurze
 Läufe dauern eine Sekunde, lange Läufe vier Sekunden. `relayout(actor)` fordert
 einen langen Lauf an; `unlockAllNodes(actor)` einen kurzen Lauf.
+
+## Fehler
+
+`CanvasError` ist die abstrakte Basis der fachlichen Fehler. Konkrete Klassen
+stellen den Fehlercode über `code`, ihren Klassennamen über `name` und die
+Beschreibung über `message` bereit. Sie lassen sich über `instanceof` sowohl
+gemeinsam als auch nach ihrem konkreten Typ behandeln.
+
+| Klasse              | Fehlercode      | Bedeutung                                                                  |
+| ------------------- | --------------- | -------------------------------------------------------------------------- |
+| `ForbiddenError`    | `forbidden`     | Fehlende Berechtigung, Sitzung oder Projektzugehörigkeit                   |
+| `NotFoundError`     | `not-found`     | Angeforderter Canvas, Graphbestandteil oder Szenario nicht verfügbar       |
+| `ConflictError`     | `conflict`      | Zustandskonflikt, etwa Sitzungsübernahme oder Schließen des letzten Canvas |
+| `InvalidDataError`  | `invalid-data`  | Ungültige Eingaben oder Konfigurationswerte                                |
+| `InvalidStateError` | `invalid-state` | Operation im aktuellen Canvas- oder Worker-Zustand nicht zulässig          |
 
 ## Lebenszyklus und Ereignisse
 

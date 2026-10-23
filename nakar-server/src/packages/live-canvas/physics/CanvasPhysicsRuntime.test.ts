@@ -1,10 +1,11 @@
+import { InvalidDataError } from '../error/InvalidDataError';
+import { InvalidStateError } from '../error/InvalidStateError';
 import { TestHarness } from '../testing/TestHarness.test';
 import type { MockTimer } from '../testing/MockTimer.test';
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import type { PhysicalGraph } from '../../physics/physical-graph/PhysicalGraph';
 import { CanvasPhysicsRuntime } from './CanvasPhysicsRuntime';
-import { CanvasError } from '../CanvasError';
 import { MockRuntimeDelegate } from '../testing/MockRuntimeDelegate.test';
 
 import type { WorkerEvent } from './WorkerEvent';
@@ -121,28 +122,28 @@ void describe('CanvasPhysicsRuntime', (): void => {
       const runtime: CanvasPhysicsRuntime = new CanvasPhysicsRuntime(delegate);
       assert.throws((): void => {
         runtime.handle({ type: 'run', revision: 0, milliseconds: 0 });
-      }, CanvasError);
+      }, InvalidDataError);
     });
     void it('rejects a duration of -1', (): void => {
       const delegate: MockRuntimeDelegate = new MockRuntimeDelegate();
       const runtime: CanvasPhysicsRuntime = new CanvasPhysicsRuntime(delegate);
       assert.throws((): void => {
         runtime.handle({ type: 'run', revision: 0, milliseconds: -1 });
-      }, CanvasError);
+      }, InvalidDataError);
     });
     void it('rejects a duration of Infinity', (): void => {
       const delegate: MockRuntimeDelegate = new MockRuntimeDelegate();
       const runtime: CanvasPhysicsRuntime = new CanvasPhysicsRuntime(delegate);
       assert.throws((): void => {
         runtime.handle({ type: 'run', revision: 0, milliseconds: Infinity });
-      }, CanvasError);
+      }, InvalidDataError);
     });
     void it('rejects a duration of NaN', (): void => {
       const delegate: MockRuntimeDelegate = new MockRuntimeDelegate();
       const runtime: CanvasPhysicsRuntime = new CanvasPhysicsRuntime(delegate);
       assert.throws((): void => {
         runtime.handle({ type: 'run', revision: 0, milliseconds: NaN });
-      }, CanvasError);
+      }, InvalidDataError);
     });
     void it('rejects commands after destruction', (): void => {
       const delegate: MockRuntimeDelegate = new MockRuntimeDelegate();
@@ -150,7 +151,7 @@ void describe('CanvasPhysicsRuntime', (): void => {
       runtime.destroy();
       assert.throws((): void => {
         runtime.handle({ type: 'stop' });
-      }, CanvasError);
+      }, InvalidStateError);
     });
     void it('ignores null physical nodes while reporting positions', (): void => {
       const delegate: MockRuntimeDelegate = new MockRuntimeDelegate();

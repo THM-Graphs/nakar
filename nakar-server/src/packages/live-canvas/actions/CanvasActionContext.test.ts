@@ -1,3 +1,5 @@
+import { InvalidDataError } from '../error/InvalidDataError';
+import { ForbiddenError } from '../error/ForbiddenError';
 import { TestHarness } from '../testing/TestHarness.test';
 import type { GraphRequest } from '../delegates/GraphRequest';
 import type { QueryResult } from '../data/QueryResult';
@@ -5,7 +7,6 @@ import type { QueryResult } from '../data/QueryResult';
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import type { CanvasActionContext } from './CanvasActionContext';
-import { CanvasError } from '../CanvasError';
 
 void describe('CanvasActionContext', (): void => {
   void describe('finish', (): void => {
@@ -23,7 +24,7 @@ void describe('CanvasActionContext', (): void => {
       c.context.settings.label('Person').radius = -1;
       assert.throws((): void => {
         c.context.finish();
-      }, CanvasError);
+      }, InvalidDataError);
     });
   });
   void describe('request', (): void => {
@@ -40,7 +41,7 @@ void describe('CanvasActionContext', (): void => {
       const c: ReturnType<typeof TestHarness.context> = TestHarness.context();
       await assert.rejects(
         c.context.request('foreign', { type: 'node', nativeIds: [] }),
-        CanvasError,
+        ForbiddenError,
       );
       assert.equal(c.h.source.calls.length, 0);
     });

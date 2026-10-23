@@ -1,9 +1,11 @@
+import { NotFoundError } from '../error/NotFoundError';
+import { ForbiddenError } from '../error/ForbiddenError';
+import { InvalidDataError } from '../error/InvalidDataError';
 import { DataRecord } from '../data/DataRecord';
 import type { ParameterData } from '../data/ParameterData';
 import type { Position } from '../data/Position';
 import type { QueryResult } from '../data/QueryResult';
 import type { ScenarioData } from '../data/ScenarioData';
-import { CanvasError } from '../CanvasError';
 import { SourceAction } from './SourceAction';
 import type { CanvasAction } from './CanvasAction';
 import type { CanvasActionContext } from './CanvasActionContext';
@@ -46,23 +48,20 @@ export class LoadScenarioAction extends SourceAction {
    * Loads or reloads an authorized scenario, resolves parameters, runs its queries and applies its follow-up actions.
    * @param context - Isolated draft and delegates used by this action.
    * @returns A promise that settles when the operation completes.
-   * @throws {@link CanvasError} When the input, lifecycle state or permissions do not satisfy this operation’s requirements.
+   * @throws {@link error/CanvasError!CanvasError | CanvasError} When the input, lifecycle state or permissions do not satisfy this operation’s requirements.
    */
   public override async apply(context: CanvasActionContext): Promise<void> {
     const id: string | null = this._scenarioId ?? context.data.graph.scenarioId;
     if (id === null) {
-      throw new CanvasError('not-found', 'No scenario to reload.');
+      throw new NotFoundError('No scenario to reload.');
     }
     const scenario: ScenarioData =
       await context.delegates.storage.getScenario(id);
     if (scenario.projectId !== context.room.projectId) {
-      throw new CanvasError(
-        'forbidden',
-        'Scenario does not belong to the project.',
-      );
+      throw new ForbiddenError('Scenario does not belong to the project.');
     }
     if (scenario.queries.length === 0) {
-      throw new CanvasError('not-found', 'Scenario has no queries.');
+      throw new NotFoundError('Scenario has no queries.');
     }
     const args: Record<string, string> =
       this._scenarioId === null
@@ -74,11 +73,11 @@ export class LoadScenarioAction extends SourceAction {
         (candidate: ParameterData): boolean => candidate.identifier === key,
       );
       if (parameter === undefined) {
-        throw new CanvasError('invalid-data', `Unknown parameter ${key}.`);
+        throw new InvalidDataError(`Unknown parameter ${key}.`);
       }
       if (parameter.dataType === 'number') {
         if (value.trim().length === 0 || !Number.isFinite(Number(value))) {
-          throw new CanvasError('invalid-data', 'Invalid number parameter.');
+          throw new InvalidDataError('Invalid number parameter.');
         }
         converted[key] = Number(value);
       } else if (parameter.dataType === 'json') {

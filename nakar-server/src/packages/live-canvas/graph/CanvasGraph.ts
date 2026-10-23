@@ -1,3 +1,4 @@
+import { NotFoundError } from '../error/NotFoundError';
 import { DataRecord } from '../data/DataRecord';
 import { SSet } from '../../set/Set';
 import type { PhysicalGraph } from '../../physics/physical-graph/PhysicalGraph';
@@ -9,7 +10,6 @@ import type { QueryResult } from '../data/QueryResult';
 import { CanvasEdge } from './CanvasEdge';
 import { CanvasNode } from './CanvasNode';
 import type { CanvasViewSettings } from '../view-settings/CanvasViewSettings';
-import { CanvasError } from '../CanvasError';
 
 /**
  * References graph data and performs graph editing, clustering, merging, traversal and physics conversion.
@@ -43,14 +43,14 @@ export class CanvasGraph {
    * Returns a node wrapper referencing the matching data or throws when the ID is absent.
    * @param id - Canonical identity of the selected object.
    * @returns A node wrapper referencing the matching graph data.
-   * @throws {@link CanvasError} When the input, lifecycle state or permissions do not satisfy this operation’s requirements.
+   * @throws {@link error/CanvasError!CanvasError | CanvasError} When the input, lifecycle state or permissions do not satisfy this operation’s requirements.
    */
   public getNode(id: string): CanvasNode {
     const data: NodeData | undefined = this._data.nodes.find(
       (node: NodeData): boolean => node.id === id,
     );
     if (data === undefined) {
-      throw new CanvasError('not-found', `Node ${id} not found.`);
+      throw new NotFoundError(`Node ${id} not found.`);
     }
     return new CanvasNode(data);
   }
@@ -59,14 +59,14 @@ export class CanvasGraph {
    * Returns a relationship wrapper referencing the matching data or throws when the ID is absent.
    * @param id - Canonical identity of the selected object.
    * @returns A relationship wrapper referencing the matching graph data.
-   * @throws {@link CanvasError} When the input, lifecycle state or permissions do not satisfy this operation’s requirements.
+   * @throws {@link error/CanvasError!CanvasError | CanvasError} When the input, lifecycle state or permissions do not satisfy this operation’s requirements.
    */
   public getEdge(id: string): CanvasEdge {
     const data: EdgeData | undefined = this._data.edges.find(
       (edge: EdgeData): boolean => edge.id === id,
     );
     if (data === undefined) {
-      throw new CanvasError('not-found', `Edge ${id} not found.`);
+      throw new NotFoundError(`Edge ${id} not found.`);
     }
     return new CanvasEdge(data);
   }

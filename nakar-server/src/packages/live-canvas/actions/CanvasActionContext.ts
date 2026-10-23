@@ -1,3 +1,4 @@
+import { ForbiddenError } from '../error/ForbiddenError';
 import type { CanvasData } from '../data/CanvasData';
 import type { QueryResult } from '../data/QueryResult';
 import type { RoomData } from '../data/RoomData';
@@ -5,7 +6,6 @@ import type { CanvasDelegates } from '../delegates/CanvasDelegates';
 import type { GraphRequest } from '../delegates/GraphRequest';
 import { CanvasGraph } from '../graph/CanvasGraph';
 import { CanvasViewSettings } from '../view-settings/CanvasViewSettings';
-import { CanvasError } from '../CanvasError';
 
 /**
  * Holds one isolated action draft. LiveCanvas publishes the draft only after successful execution and postprocessing.
@@ -53,17 +53,14 @@ export class CanvasActionContext {
    * @param sourceId - Identity of the graph source used for the operation.
    * @param request - Normalized operation forwarded to the source.
    * @returns The normalized graph-source result after the membership check succeeds.
-   * @throws {@link CanvasError} When the input, lifecycle state or permissions do not satisfy this operation’s requirements.
+   * @throws {@link error/CanvasError!CanvasError | CanvasError} When the input, lifecycle state or permissions do not satisfy this operation’s requirements.
    */
   public async request(
     sourceId: string,
     request: GraphRequest,
   ): Promise<QueryResult> {
     if (!this.room.sourceIds.includes(sourceId)) {
-      throw new CanvasError(
-        'forbidden',
-        'Graph source does not belong to the project.',
-      );
+      throw new ForbiddenError('Graph source does not belong to the project.');
     }
     return await this.delegates.source.execute(
       sourceId,

@@ -1,7 +1,8 @@
+import { InvalidStateError } from '../error/InvalidStateError';
+import { InvalidDataError } from '../error/InvalidDataError';
 import { DataRecord } from '../data/DataRecord';
 import type { PhysicalGraph } from '../../physics/physical-graph/PhysicalGraph';
 import type { Position } from '../data/Position';
-import { CanvasError } from '../CanvasError';
 import { CanvasPhysicsSimulation } from './CanvasPhysicsSimulation';
 import type { WorkerCommand } from './WorkerCommand';
 import type { PhysicsRuntimeDelegate } from './PhysicsRuntimeDelegate';
@@ -61,11 +62,11 @@ export class CanvasPhysicsRuntime {
   /**
    * Processes a revision-aware graph, run or stop command in the worker runtime.
    * @param command - Revision-aware worker command to process.
-   * @throws {@link CanvasError} When the input, lifecycle state or permissions do not satisfy this operation’s requirements.
+   * @throws {@link error/CanvasError!CanvasError | CanvasError} When the input, lifecycle state or permissions do not satisfy this operation’s requirements.
    */
   public handle(command: WorkerCommand): void {
     if (this._destroyed) {
-      throw new CanvasError('invalid-state', 'Physics runtime was destroyed.');
+      throw new InvalidStateError('Physics runtime was destroyed.');
     }
     switch (command.type) {
       case 'graph':
@@ -85,8 +86,7 @@ export class CanvasPhysicsRuntime {
           !Number.isFinite(command.milliseconds) ||
           command.milliseconds <= 0
         ) {
-          throw new CanvasError(
-            'invalid-data',
+          throw new InvalidDataError(
             'Physics duration must be positive and finite.',
           );
         }

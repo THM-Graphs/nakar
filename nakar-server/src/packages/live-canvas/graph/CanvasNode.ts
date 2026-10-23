@@ -1,6 +1,6 @@
+import { InvalidDataError } from '../error/InvalidDataError';
 import type { NodeData } from '../data/NodeData';
 import type { Position } from '../data/Position';
-import { CanvasError } from '../CanvasError';
 import { CanvasElement } from './CanvasElement';
 
 /**
@@ -18,11 +18,11 @@ export class CanvasNode extends CanvasElement<NodeData> {
   /**
    * Validates finite coordinates and replaces the referenced node position.
    * @param position - New finite canvas coordinates.
-   * @throws {@link CanvasError} When the input, lifecycle state or permissions do not satisfy this operation’s requirements.
+   * @throws {@link error/CanvasError!CanvasError | CanvasError} When the input, lifecycle state or permissions do not satisfy this operation’s requirements.
    */
   public move(position: Position): void {
     if (!Number.isFinite(position.x) || !Number.isFinite(position.y)) {
-      throw new CanvasError('invalid-data', 'Positions must be finite.');
+      throw new InvalidDataError('Positions must be finite.');
     }
     this._data.position = { ...position };
   }

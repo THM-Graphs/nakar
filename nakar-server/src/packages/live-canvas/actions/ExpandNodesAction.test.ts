@@ -1,9 +1,9 @@
+import { NotFoundError } from '../error/NotFoundError';
 import { TestHarness } from '../testing/TestHarness.test';
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
 import { ExpandNodesAction } from './ExpandNodesAction';
-import { CanvasError } from '../CanvasError';
 
 import type { NodeData } from '../data/NodeData';
 
@@ -75,7 +75,7 @@ void describe('ExpandNodesAction', (): void => {
       const c: ReturnType<typeof TestHarness.context> = TestHarness.context();
       await assert.rejects(
         new ExpandNodesAction(['absent']).apply(c.context),
-        CanvasError,
+        NotFoundError,
       );
       assert.equal(c.h.source.calls.length, 0);
     });

@@ -1,7 +1,7 @@
+import { InvalidDataError } from '../error/InvalidDataError';
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { ScenarioActionFactory } from './ScenarioActionFactory';
-import { CanvasError } from '../CanvasError';
 
 void describe('ScenarioActionFactory', (): void => {
   void describe('create', (): void => {
@@ -136,7 +136,7 @@ void describe('ScenarioActionFactory', (): void => {
         Reflect.apply(factory.create.bind(factory), undefined, [
           { type: 'unknown' },
         ]);
-      }, CanvasError);
+      }, InvalidDataError);
     });
     void it('rejects an unknown layout', (): void => {
       const factory: ScenarioActionFactory = new ScenarioActionFactory();
@@ -144,7 +144,7 @@ void describe('ScenarioActionFactory', (): void => {
         Reflect.apply(factory.create.bind(factory), undefined, [
           { type: 'layout', layout: { type: 'unknown' } },
         ]);
-      }, CanvasError);
+      }, InvalidDataError);
     });
   });
 });

@@ -1,9 +1,9 @@
+import { InvalidDataError } from '../error/InvalidDataError';
 import type { EdgeSettings } from '../data/EdgeSettings';
 import type { EdgeData } from '../data/EdgeData';
 import type { LabelSettings } from '../data/LabelSettings';
 import type { NodeData } from '../data/NodeData';
 import type { ViewSettingsData } from '../data/ViewSettingsData';
-import { CanvasError } from '../CanvasError';
 import { Range } from '../../range/Range';
 
 /**
@@ -82,11 +82,11 @@ export class CanvasViewSettings {
    * Validates and updates the selected node-growth or relationship-cluster factor.
    * @param type - Discriminator selecting the requested operation.
    * @param value - Value to validate or group.
-   * @throws {@link CanvasError} When the input, lifecycle state or permissions do not satisfy this operation’s requirements.
+   * @throws {@link error/CanvasError!CanvasError | CanvasError} When the input, lifecycle state or permissions do not satisfy this operation’s requirements.
    */
   public setFactor(type: 'grow' | 'relationships', value: number): void {
     if (!Number.isFinite(value)) {
-      throw new CanvasError('invalid-data', 'Factor must be finite.');
+      throw new InvalidDataError('Factor must be finite.');
     }
     const clamped: number = Math.max(1, Math.min(1000, value));
     if (type === 'grow') {
@@ -169,7 +169,7 @@ export class CanvasViewSettings {
 
   /**
    * Checks visualization factors, label radii, relationship widths and palette indices and throws on invalid values.
-   * @throws {@link CanvasError} When the input, lifecycle state or permissions do not satisfy this operation’s requirements.
+   * @throws {@link error/CanvasError!CanvasError | CanvasError} When the input, lifecycle state or permissions do not satisfy this operation’s requirements.
    */
   public validate(): void {
     const factors: number[] = [
@@ -182,7 +182,7 @@ export class CanvasViewSettings {
           !Number.isFinite(value) || value < 1 || value > 1000,
       )
     ) {
-      throw new CanvasError('invalid-data', 'Invalid view setting factor.');
+      throw new InvalidDataError('Invalid view setting factor.');
     }
     for (const value of Object.values(this._data.labels)) {
       if (
@@ -192,7 +192,7 @@ export class CanvasViewSettings {
         value.colorIndex < 0 ||
         value.colorIndex > 5
       ) {
-        throw new CanvasError('invalid-data', 'Invalid label settings.');
+        throw new InvalidDataError('Invalid label settings.');
       }
     }
     for (const value of Object.values(this._data.edges)) {
@@ -203,7 +203,7 @@ export class CanvasViewSettings {
         value.colorIndex < 0 ||
         value.colorIndex > 5
       ) {
-        throw new CanvasError('invalid-data', 'Invalid edge settings.');
+        throw new InvalidDataError('Invalid edge settings.');
       }
     }
   }

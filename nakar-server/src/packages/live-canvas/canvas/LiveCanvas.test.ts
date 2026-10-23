@@ -1,32 +1,37 @@
-import { TestHarness } from './testing/TestHarness.test';
-import type { MockTimer } from './testing/MockTimer.test';
-import type { HistogramData } from './graph/HistogramData';
-import type { ParameterData } from './data/ParameterData';
-import type { UserData } from './data/UserData';
-import type { CanvasData } from './data/CanvasData';
+import { ForbiddenError } from '../error/ForbiddenError';
+import { NotFoundError } from '../error/NotFoundError';
+import { InvalidStateError } from '../error/InvalidStateError';
+import { ConflictError } from '../error/ConflictError';
+import { InvalidDataError } from '../error/InvalidDataError';
+import { TestHarness } from '../testing/TestHarness.test';
+import { RootUser } from '../users/RootUser';
+import type { MockTimer } from '../testing/MockTimer.test';
+import type { HistogramData } from '../graph/HistogramData';
+import type { ParameterData } from '../data/ParameterData';
+import type { UserData } from '../data/UserData';
+import type { CanvasData } from '../data/CanvasData';
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { CanvasError } from './CanvasError';
-import { DeleteElementsAction } from './actions/DeleteElementsAction';
-import { FlipCanvasAction } from './actions/FlipCanvasAction';
-import { FocusNodesAction } from './actions/FocusNodesAction';
-import { LoadScenarioAction } from './actions/LoadScenarioAction';
-import { RunQueryAction } from './actions/RunQueryAction';
-import { CanvasChangedEvent } from './events/CanvasChangedEvent';
-import { CanvasErrorEvent } from './events/CanvasErrorEvent';
-import { CanvasLifecycleEvent } from './events/CanvasLifecycleEvent';
-import { CanvasLimitEvent } from './events/CanvasLimitEvent';
-import { CanvasPhysicsEvent } from './events/CanvasPhysicsEvent';
-import { CanvasPresenceEvent } from './events/CanvasPresenceEvent';
-import { CanvasProgressEvent } from './events/CanvasProgressEvent';
-import { CanvasRoomEvent } from './events/CanvasRoomEvent';
-import type { CanvasEvent } from './events/CanvasEvent';
-import type { WorkerCommand } from './physics/WorkerCommand';
+import { DeleteElementsAction } from '../actions/DeleteElementsAction';
+import { FlipCanvasAction } from '../actions/FlipCanvasAction';
+import { FocusNodesAction } from '../actions/FocusNodesAction';
+import { LoadScenarioAction } from '../actions/LoadScenarioAction';
+import { RunQueryAction } from '../actions/RunQueryAction';
+import { CanvasChangedEvent } from '../events/CanvasChangedEvent';
+import { CanvasErrorEvent } from '../events/CanvasErrorEvent';
+import { CanvasLifecycleEvent } from '../events/CanvasLifecycleEvent';
+import { CanvasLimitEvent } from '../events/CanvasLimitEvent';
+import { CanvasPhysicsEvent } from '../events/CanvasPhysicsEvent';
+import { CanvasPresenceEvent } from '../events/CanvasPresenceEvent';
+import { CanvasProgressEvent } from '../events/CanvasProgressEvent';
+import { CanvasRoomEvent } from '../events/CanvasRoomEvent';
+import type { CanvasEvent } from '../events/CanvasEvent';
+import type { WorkerCommand } from '../physics/WorkerCommand';
 
-import type { CanvasReference } from './data/CanvasReference';
-import type { GraphData } from './data/GraphData';
-import type { NodeData } from './data/NodeData';
-import { MockFailingAction } from './testing/MockFailingAction.test';
+import type { CanvasReference } from '../data/CanvasReference';
+import type { GraphData } from '../data/GraphData';
+import type { NodeData } from '../data/NodeData';
+import { MockFailingAction } from '../testing/MockFailingAction.test';
 
 const performance: {
   performance: 'good';
@@ -98,6 +103,12 @@ void describe('LiveCanvas', (): void => {
     });
   });
   void describe('read', (): void => {
+    void it('allows a root user to read a private room without project membership', async (): Promise<void> => {
+      const h: ReturnType<typeof TestHarness.harness> = TestHarness.harness();
+      await h.canvas.bootstrap();
+      const actor: RootUser = new RootUser(TestHarness.user('root').toData());
+      assert.deepEqual(await h.canvas.read(actor), h.canvas.toData());
+    });
     void it('returns a detached authorized snapshot', async (): Promise<void> => {
       const h: ReturnType<typeof TestHarness.harness> = TestHarness.harness();
       await h.canvas.bootstrap();
@@ -108,7 +119,10 @@ void describe('LiveCanvas', (): void => {
     void it('rejects an identity without room access', async (): Promise<void> => {
       const h: ReturnType<typeof TestHarness.harness> = TestHarness.harness();
       await h.canvas.bootstrap();
-      await assert.rejects(h.canvas.read(TestHarness.user(null)), CanvasError);
+      await assert.rejects(
+        h.canvas.read(TestHarness.user(null)),
+        ForbiddenError,
+      );
     });
   });
   void describe('getHistogram', (): void => {
@@ -125,7 +139,7 @@ void describe('LiveCanvas', (): void => {
       await h.canvas.bootstrap();
       await assert.rejects(
         h.canvas.getHistogram(TestHarness.user(null)),
-        CanvasError,
+        ForbiddenError,
       );
     });
   });
@@ -143,13 +157,13 @@ void describe('LiveCanvas', (): void => {
     void it('rejects persisted data from another room', async (): Promise<void> => {
       const h: ReturnType<typeof TestHarness.harness> = TestHarness.harness();
       h.storage.room.id = 'foreign';
-      await assert.rejects(h.canvas.bootstrap(), CanvasError);
+      await assert.rejects(h.canvas.bootstrap(), NotFoundError);
     });
     void it('rejects synchronous reentrant startup', async (): Promise<void> => {
       const other: ReturnType<typeof TestHarness.harness> =
         TestHarness.harness();
       other.storage.load = async (): Promise<CanvasData | null> => {
-        await assert.rejects(other.canvas.bootstrap(), CanvasError);
+        await assert.rejects(other.canvas.bootstrap(), InvalidStateError);
         return TestHarness.canvasData();
       };
       await other.canvas.bootstrap();
@@ -203,10 +217,20 @@ void describe('LiveCanvas', (): void => {
     void it('rejects startup after destruction', async (): Promise<void> => {
       const h: ReturnType<typeof TestHarness.harness> = TestHarness.harness();
       await h.canvas.destroy(false);
-      await assert.rejects(h.canvas.bootstrap(), CanvasError);
+      await assert.rejects(h.canvas.bootstrap(), InvalidStateError);
     });
   });
   void describe('execute', (): void => {
+    void it('allows a root user to join and mutate a private canvas without project membership', async (): Promise<void> => {
+      const h: ReturnType<typeof TestHarness.harness> = TestHarness.harness();
+      await h.canvas.bootstrap();
+      const actor: RootUser = new RootUser(TestHarness.user('root').toData());
+      await h.canvas.addUser(actor);
+      await h.canvas.execute(actor, new DeleteElementsAction(['a']));
+      assert.equal(h.canvas.getActiveUsers()[0].id, 'root');
+      assert.equal(h.canvas.toData().graph.nodes.length, 2);
+      assert.equal(h.canvas.history.canUndo, true);
+    });
     void it('publishes committed domain changes even if the worker transport fails', async (): Promise<void> => {
       const h: ReturnType<typeof TestHarness.harness> = TestHarness.harness();
       await h.canvas.bootstrap();
@@ -308,7 +332,7 @@ void describe('LiveCanvas', (): void => {
       await h.canvas.bootstrap();
       await assert.rejects(
         h.canvas.execute(TestHarness.user(null), new DeleteElementsAction()),
-        CanvasError,
+        ForbiddenError,
       );
     });
     void it('allows guest actions in public rooms', async (): Promise<void> => {
@@ -327,7 +351,7 @@ void describe('LiveCanvas', (): void => {
       h.storage.room.id = 'foreign';
       await assert.rejects(
         h.canvas.execute(TestHarness.user(), new DeleteElementsAction()),
-        CanvasError,
+        NotFoundError,
       );
     });
     void it('rechecks access after asynchronous source work before publishing its draft', async (): Promise<void> => {
@@ -349,7 +373,7 @@ void describe('LiveCanvas', (): void => {
           TestHarness.user(null),
           new RunQueryAction('source', 'q', false),
         ),
-        CanvasError,
+        ForbiddenError,
       );
       assert.equal(h.canvas.toData().graph.nodes.length, 2);
     });
@@ -494,7 +518,7 @@ void describe('LiveCanvas', (): void => {
       const h: ReturnType<typeof TestHarness.harness> = TestHarness.harness();
       await assert.rejects(
         h.canvas.execute(TestHarness.user(), new DeleteElementsAction()),
-        CanvasError,
+        InvalidStateError,
       );
     });
     void it('rejects actions after destruction', async (): Promise<void> => {
@@ -503,7 +527,7 @@ void describe('LiveCanvas', (): void => {
       await h.canvas.destroy(false);
       await assert.rejects(
         h.canvas.execute(TestHarness.user(), new DeleteElementsAction()),
-        CanvasError,
+        InvalidStateError,
       );
     });
   });
@@ -529,9 +553,10 @@ void describe('LiveCanvas', (): void => {
     void it('rejects an identity without private-room access', async (): Promise<void> => {
       const h: ReturnType<typeof TestHarness.harness> = TestHarness.harness();
       await h.canvas.bootstrap();
-      await assert.rejects(h.canvas.undo(TestHarness.user(null)), {
-        code: 'forbidden',
-      });
+      await assert.rejects(
+        h.canvas.undo(TestHarness.user(null)),
+        ForbiddenError,
+      );
     });
   });
   void describe('redo', (): void => {
@@ -570,9 +595,10 @@ void describe('LiveCanvas', (): void => {
     void it('rejects an identity without private-room access', async (): Promise<void> => {
       const h: ReturnType<typeof TestHarness.harness> = TestHarness.harness();
       await h.canvas.bootstrap();
-      await assert.rejects(h.canvas.redo(TestHarness.user(null)), {
-        code: 'forbidden',
-      });
+      await assert.rejects(
+        h.canvas.redo(TestHarness.user(null)),
+        ForbiddenError,
+      );
     });
   });
   void describe('saveGraph', (): void => {
@@ -594,9 +620,10 @@ void describe('LiveCanvas', (): void => {
     void it('rejects an identity without private-room access', async (): Promise<void> => {
       const h: ReturnType<typeof TestHarness.harness> = TestHarness.harness();
       await h.canvas.bootstrap();
-      await assert.rejects(h.canvas.saveGraph(TestHarness.user(null)), {
-        code: 'forbidden',
-      });
+      await assert.rejects(
+        h.canvas.saveGraph(TestHarness.user(null)),
+        ForbiddenError,
+      );
     });
   });
   void describe('relayout', (): void => {
@@ -616,7 +643,7 @@ void describe('LiveCanvas', (): void => {
       await h.canvas.bootstrap();
       await assert.rejects(
         h.canvas.relayout(TestHarness.user(null)),
-        CanvasError,
+        ForbiddenError,
       );
     });
   });
@@ -644,7 +671,7 @@ void describe('LiveCanvas', (): void => {
       await h.canvas.addUser(TestHarness.user());
       await assert.rejects(
         h.canvas.addUser(TestHarness.user('collaborator')),
-        CanvasError,
+        ConflictError,
       );
     });
     void it('returns isolated presence data', async (): Promise<void> => {
@@ -666,9 +693,10 @@ void describe('LiveCanvas', (): void => {
     void it('rejects an identity without private-room access', async (): Promise<void> => {
       const h: ReturnType<typeof TestHarness.harness> = TestHarness.harness();
       await h.canvas.bootstrap();
-      await assert.rejects(h.canvas.addUser(TestHarness.user(null)), {
-        code: 'forbidden',
-      });
+      await assert.rejects(
+        h.canvas.addUser(TestHarness.user(null)),
+        ForbiddenError,
+      );
     });
   });
   void describe('removeUser', (): void => {
@@ -709,7 +737,7 @@ void describe('LiveCanvas', (): void => {
       await h.canvas.bootstrap();
       await assert.rejects(
         h.canvas.setCursorPosition(TestHarness.user(), { x: 1, y: 2 }),
-        CanvasError,
+        ForbiddenError,
       );
     });
     void it('updates the registered cursor and emits presence', async (): Promise<void> => {
@@ -731,7 +759,7 @@ void describe('LiveCanvas', (): void => {
       await h.canvas.addUser(TestHarness.user());
       await assert.rejects(
         h.canvas.setCursorPosition(TestHarness.user(), { x: 0, y: NaN }),
-        CanvasError,
+        InvalidDataError,
       );
     });
     void it('clears the registered cursor', async (): Promise<void> => {
@@ -753,9 +781,7 @@ void describe('LiveCanvas', (): void => {
       await h.canvas.bootstrap();
       await assert.rejects(
         h.canvas.setCursorPosition(TestHarness.user(null), null),
-        {
-          code: 'forbidden',
-        },
+        ForbiddenError,
       );
     });
   });
@@ -765,7 +791,7 @@ void describe('LiveCanvas', (): void => {
       await h.canvas.bootstrap();
       await assert.rejects(
         h.canvas.grabNode(TestHarness.user(), 'a'),
-        CanvasError,
+        ForbiddenError,
       );
     });
     void it('allows multiple sessions to grab the same node', async (): Promise<void> => {
@@ -786,15 +812,16 @@ void describe('LiveCanvas', (): void => {
       await h.canvas.addUser(TestHarness.user());
       await assert.rejects(
         h.canvas.grabNode(TestHarness.user(), 'absent'),
-        CanvasError,
+        NotFoundError,
       );
     });
     void it('rejects an identity without private-room access', async (): Promise<void> => {
       const h: ReturnType<typeof TestHarness.harness> = TestHarness.harness();
       await h.canvas.bootstrap();
-      await assert.rejects(h.canvas.grabNode(TestHarness.user(null), 'a'), {
-        code: 'forbidden',
-      });
+      await assert.rejects(
+        h.canvas.grabNode(TestHarness.user(null), 'a'),
+        ForbiddenError,
+      );
     });
   });
   void describe('moveNodes', (): void => {
@@ -830,16 +857,17 @@ void describe('LiveCanvas', (): void => {
         h.canvas.moveNodes(TestHarness.user(), [
           { id: 'a', position: { x: NaN, y: 0 } },
         ]),
-        CanvasError,
+        InvalidDataError,
       );
       assert.equal(h.canvas.toData().graph.nodes[0].position.x, 2);
     });
     void it('rejects an identity without private-room access', async (): Promise<void> => {
       const h: ReturnType<typeof TestHarness.harness> = TestHarness.harness();
       await h.canvas.bootstrap();
-      await assert.rejects(h.canvas.moveNodes(TestHarness.user(null), []), {
-        code: 'forbidden',
-      });
+      await assert.rejects(
+        h.canvas.moveNodes(TestHarness.user(null), []),
+        ForbiddenError,
+      );
     });
     void it('rolls back the entire movement batch when a later grabbed node has invalid coordinates', async (): Promise<void> => {
       const h: ReturnType<typeof TestHarness.harness> = TestHarness.harness();
@@ -852,7 +880,7 @@ void describe('LiveCanvas', (): void => {
           { id: 'a', position: { x: 4, y: 5 } },
           { id: 'b', position: { x: NaN, y: 0 } },
         ]),
-        { code: 'invalid-data' },
+        InvalidDataError,
       );
       assert.deepEqual(h.canvas.toData().graph.nodes[0].position, {
         x: 0,
@@ -868,7 +896,7 @@ void describe('LiveCanvas', (): void => {
       await h.canvas.addUser(TestHarness.user());
       await assert.rejects(
         h.canvas.ungrabNode(TestHarness.user(), 'a', { x: 1, y: 2 }),
-        CanvasError,
+        ForbiddenError,
       );
     });
     void it('stores the final position and releases the grab', async (): Promise<void> => {
@@ -883,7 +911,7 @@ void describe('LiveCanvas', (): void => {
       });
       await assert.rejects(
         h.canvas.ungrabNode(TestHarness.user(), 'a', { x: 3, y: 4 }),
-        CanvasError,
+        ForbiddenError,
       );
     });
     void it('rejects an identity without private-room access', async (): Promise<void> => {
@@ -891,7 +919,7 @@ void describe('LiveCanvas', (): void => {
       await h.canvas.bootstrap();
       await assert.rejects(
         h.canvas.ungrabNode(TestHarness.user(null), 'a', { x: 0, y: 0 }),
-        { code: 'forbidden' },
+        ForbiddenError,
       );
     });
   });
@@ -921,9 +949,10 @@ void describe('LiveCanvas', (): void => {
     void it('rejects an identity without private-room access', async (): Promise<void> => {
       const h: ReturnType<typeof TestHarness.harness> = TestHarness.harness();
       await h.canvas.bootstrap();
-      await assert.rejects(h.canvas.unlockAllNodes(TestHarness.user(null)), {
-        code: 'forbidden',
-      });
+      await assert.rejects(
+        h.canvas.unlockAllNodes(TestHarness.user(null)),
+        ForbiddenError,
+      );
     });
   });
   void describe('refreshNotes', (): void => {
@@ -984,9 +1013,10 @@ void describe('LiveCanvas', (): void => {
     void it('rejects an identity without private-room access', async (): Promise<void> => {
       const h: ReturnType<typeof TestHarness.harness> = TestHarness.harness();
       await h.canvas.bootstrap();
-      await assert.rejects(h.canvas.refreshNotes(TestHarness.user(null)), {
-        code: 'forbidden',
-      });
+      await assert.rejects(
+        h.canvas.refreshNotes(TestHarness.user(null)),
+        ForbiddenError,
+      );
     });
   });
   void describe('changeRoom', (): void => {
@@ -1003,7 +1033,7 @@ void describe('LiveCanvas', (): void => {
         new DeleteElementsAction(),
       );
       await close;
-      await assert.rejects(action, CanvasError);
+      await assert.rejects(action, InvalidStateError);
       await h.canvas.destroy();
       assert.equal(h.storage.saves.length, 0);
     });
@@ -1044,7 +1074,7 @@ void describe('LiveCanvas', (): void => {
       await h.canvas.bootstrap();
       await assert.rejects(
         h.canvas.changeRoom(TestHarness.user(), 'close'),
-        CanvasError,
+        ConflictError,
       );
     });
     void it('enters the closing state after closing its canvas', async (): Promise<void> => {
@@ -1065,9 +1095,7 @@ void describe('LiveCanvas', (): void => {
       await h.canvas.bootstrap();
       await assert.rejects(
         h.canvas.changeRoom(TestHarness.user(null), 'create'),
-        {
-          code: 'forbidden',
-        },
+        ForbiddenError,
       );
     });
   });
@@ -1183,7 +1211,7 @@ void describe('LiveCanvas', (): void => {
       await close;
       await destroy;
       assert.equal(h.storage.saves.length, 0);
-      await assert.rejects(h.canvas.bootstrap(), CanvasError);
+      await assert.rejects(h.canvas.bootstrap(), InvalidStateError);
     });
     void it('drains pending actions, rejects new work, saves the final state and terminates once', async (): Promise<void> => {
       const h: ReturnType<typeof TestHarness.harness> = TestHarness.harness();
@@ -1194,7 +1222,10 @@ void describe('LiveCanvas', (): void => {
       );
       const shutdown: Promise<void> = h.canvas.destroy();
       assert.equal(h.canvas.destroy(), shutdown);
-      await assert.rejects(h.canvas.addUser(TestHarness.user()), CanvasError);
+      await assert.rejects(
+        h.canvas.addUser(TestHarness.user()),
+        InvalidStateError,
+      );
       await action;
       await shutdown;
       assert.equal(h.storage.saves[0].graph.nodes.length, 2);

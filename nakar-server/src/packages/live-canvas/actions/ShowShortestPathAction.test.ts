@@ -1,9 +1,9 @@
+import { NotFoundError } from '../error/NotFoundError';
 import { TestHarness } from '../testing/TestHarness.test';
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
 import { ShowShortestPathAction } from './ShowShortestPathAction';
-import { CanvasError } from '../CanvasError';
 
 void describe('ShowShortestPathAction', (): void => {
   void describe('apply', (): void => {
@@ -29,7 +29,7 @@ void describe('ShowShortestPathAction', (): void => {
       const c: ReturnType<typeof TestHarness.context> = TestHarness.context();
       await assert.rejects(
         new ShowShortestPathAction(['missing']).apply(c.context),
-        CanvasError,
+        NotFoundError,
       );
     });
   });

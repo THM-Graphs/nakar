@@ -1,39 +1,43 @@
-import { DataRecord } from './data/DataRecord';
-import { UndoWrapper } from '../undo/UndoWrapper';
-import { SMap } from '../map/Map';
-import { SSet } from '../set/Set';
-import type { UndoWrapperInfo } from '../undo/UndoWrapperInfo';
-import type { CanvasData } from './data/CanvasData';
-import type { CanvasReference } from './data/CanvasReference';
-import type { GraphData } from './data/GraphData';
-import type { NodeData } from './data/NodeData';
-import type { Position } from './data/Position';
-import type { RoomData } from './data/RoomData';
-import type { ScenarioGroupData } from './data/ScenarioGroupData';
-import type { UserData } from './data/UserData';
-import type { CanvasDelegates } from './delegates/CanvasDelegates';
-import type { PhysicsWorkerListener } from './delegates/PhysicsWorkerListener';
-import type { CanvasAction } from './actions/CanvasAction';
-import { CanvasActionContext } from './actions/CanvasActionContext';
-import { CanvasGraph } from './graph/CanvasGraph';
-import { CanvasHistogram } from './graph/CanvasHistogram';
-import type { HistogramData } from './graph/HistogramData';
-import { CanvasViewSettings } from './view-settings/CanvasViewSettings';
-import { CanvasRoom } from './CanvasRoom';
-import { CanvasError } from './CanvasError';
-import type { CanvasUser } from './users/CanvasUser';
-import { CanvasChangedEvent } from './events/CanvasChangedEvent';
-import { CanvasErrorEvent } from './events/CanvasErrorEvent';
-import { CanvasLifecycleEvent } from './events/CanvasLifecycleEvent';
-import { CanvasLimitEvent } from './events/CanvasLimitEvent';
-import { CanvasPhysicsEvent } from './events/CanvasPhysicsEvent';
-import { CanvasPresenceEvent } from './events/CanvasPresenceEvent';
-import { CanvasProgressEvent } from './events/CanvasProgressEvent';
-import { CanvasRoomEvent } from './events/CanvasRoomEvent';
-import type { CanvasEvent } from './events/CanvasEvent';
-import { CanvasPhysicsWorker } from './physics/CanvasPhysicsWorker';
-import type { WorkerEvent } from './physics/WorkerEvent';
-import { UnlockAllCanvasNodesAction } from './actions/UnlockAllCanvasNodesAction';
+import { InvalidStateError } from '../error/InvalidStateError';
+import { NotFoundError } from '../error/NotFoundError';
+import { ConflictError } from '../error/ConflictError';
+import { InvalidDataError } from '../error/InvalidDataError';
+import { ForbiddenError } from '../error/ForbiddenError';
+import { DataRecord } from '../data/DataRecord';
+import { UndoWrapper } from '../../undo/UndoWrapper';
+import { SMap } from '../../map/Map';
+import { SSet } from '../../set/Set';
+import type { UndoWrapperInfo } from '../../undo/UndoWrapperInfo';
+import type { CanvasData } from '../data/CanvasData';
+import type { CanvasReference } from '../data/CanvasReference';
+import type { GraphData } from '../data/GraphData';
+import type { NodeData } from '../data/NodeData';
+import type { Position } from '../data/Position';
+import type { RoomData } from '../data/RoomData';
+import type { ScenarioGroupData } from '../data/ScenarioGroupData';
+import type { UserData } from '../data/UserData';
+import type { CanvasDelegates } from '../delegates/CanvasDelegates';
+import type { PhysicsWorkerListener } from '../delegates/PhysicsWorkerListener';
+import type { CanvasAction } from '../actions/CanvasAction';
+import { CanvasActionContext } from '../actions/CanvasActionContext';
+import { CanvasGraph } from '../graph/CanvasGraph';
+import { CanvasHistogram } from '../graph/CanvasHistogram';
+import type { HistogramData } from '../graph/HistogramData';
+import { CanvasViewSettings } from '../view-settings/CanvasViewSettings';
+import { RoomCanvasManager } from './RoomCanvasManager';
+import type { CanvasUser } from '../users/CanvasUser';
+import { CanvasChangedEvent } from '../events/CanvasChangedEvent';
+import { CanvasErrorEvent } from '../events/CanvasErrorEvent';
+import { CanvasLifecycleEvent } from '../events/CanvasLifecycleEvent';
+import { CanvasLimitEvent } from '../events/CanvasLimitEvent';
+import { CanvasPhysicsEvent } from '../events/CanvasPhysicsEvent';
+import { CanvasPresenceEvent } from '../events/CanvasPresenceEvent';
+import { CanvasProgressEvent } from '../events/CanvasProgressEvent';
+import { CanvasRoomEvent } from '../events/CanvasRoomEvent';
+import type { CanvasEvent } from '../events/CanvasEvent';
+import { CanvasPhysicsWorker } from '../physics/CanvasPhysicsWorker';
+import type { WorkerEvent } from '../physics/WorkerEvent';
+import { UnlockAllCanvasNodesAction } from '../actions/UnlockAllCanvasNodesAction';
 
 /**
  * Owns an isolated canvas, serializes authorized mutations and delegates persistence, events and worker transport to the host.
@@ -216,7 +220,7 @@ export class LiveCanvas implements PhysicsWorkerListener {
   /**
    * Loads the canvas and derived data, initializes its history and starts the owned physics worker.
    * @returns A promise that settles when the operation completes.
-   * @throws {@link CanvasError} When the input, lifecycle state or permissions do not satisfy this operation’s requirements.
+   * @throws {@link error/CanvasError!CanvasError | CanvasError} When the input, lifecycle state or permissions do not satisfy this operation’s requirements.
    */
   public bootstrap(): Promise<void> {
     if (
@@ -224,17 +228,13 @@ export class LiveCanvas implements PhysicsWorkerListener {
       this._state === 'closing' ||
       this._state === 'failed'
     ) {
-      return Promise.reject(
-        new CanvasError('invalid-state', 'Canvas cannot be started.'),
-      );
+      return Promise.reject(new InvalidStateError('Canvas cannot be started.'));
     }
     if (this._start !== null) {
       return this._start;
     }
     if (this._state !== 'new') {
-      return Promise.reject(
-        new CanvasError('invalid-state', 'Canvas cannot be started.'),
-      );
+      return Promise.reject(new InvalidStateError('Canvas cannot be started.'));
     }
     this._state = 'starting';
     this._start = (async (): Promise<void> => {
@@ -251,10 +251,7 @@ export class LiveCanvas implements PhysicsWorkerListener {
             this._reference.id,
           );
           if (room.id !== this._reference.roomId) {
-            throw new CanvasError(
-              'not-found',
-              'Canvas does not belong to room.',
-            );
+            throw new NotFoundError('Canvas does not belong to room.');
           }
           const context: CanvasActionContext = new CanvasActionContext(
             structuredClone(data),
@@ -301,8 +298,8 @@ export class LiveCanvas implements PhysicsWorkerListener {
       await this._access(user);
       const next: CanvasData = context.finish();
       if (context.title !== null) {
-        const change: Awaited<ReturnType<CanvasRoom['change']>> =
-          await new CanvasRoom(room, this._delegates.room).change(
+        const change: Awaited<ReturnType<RoomCanvasManager['change']>> =
+          await new RoomCanvasManager(room, this._delegates.room).change(
             this._reference.id,
             'rename',
             null,
@@ -387,7 +384,7 @@ export class LiveCanvas implements PhysicsWorkerListener {
    * Registers an authorized session or updates its presence and cancels pending idle shutdown.
    * @param user - Trusted identity requesting the operation.
    * @returns A promise that settles when the operation completes.
-   * @throws {@link CanvasError} When the input, lifecycle state or permissions do not satisfy this operation’s requirements.
+   * @throws {@link error/CanvasError!CanvasError | CanvasError} When the input, lifecycle state or permissions do not satisfy this operation’s requirements.
    */
   public addUser(user: CanvasUser): Promise<void> {
     return this._enqueue('Join canvas', async (): Promise<void> => {
@@ -395,7 +392,7 @@ export class LiveCanvas implements PhysicsWorkerListener {
       const data: UserData = user.toData();
       const existing: UserData | undefined = this._users.get(data.sessionId);
       if (existing !== undefined && existing.id !== data.id) {
-        throw new CanvasError('conflict', 'Session belongs to another user.');
+        throw new ConflictError('Session belongs to another user.');
       }
       if (existing === undefined) {
         this._users.set(data.sessionId, data);
@@ -445,7 +442,7 @@ export class LiveCanvas implements PhysicsWorkerListener {
    * @param user - Trusted identity requesting the operation.
    * @param position - New finite canvas coordinates.
    * @returns A promise that settles when the operation completes.
-   * @throws {@link CanvasError} When the input, lifecycle state or permissions do not satisfy this operation’s requirements.
+   * @throws {@link error/CanvasError!CanvasError | CanvasError} When the input, lifecycle state or permissions do not satisfy this operation’s requirements.
    */
   public setCursorPosition(
     user: CanvasUser,
@@ -458,7 +455,7 @@ export class LiveCanvas implements PhysicsWorkerListener {
         position !== null &&
         (!Number.isFinite(position.x) || !Number.isFinite(position.y))
       ) {
-        throw new CanvasError('invalid-data', 'Cursor must be finite.');
+        throw new InvalidDataError('Cursor must be finite.');
       }
       session.position = structuredClone(position);
       this._emit(
@@ -537,7 +534,7 @@ export class LiveCanvas implements PhysicsWorkerListener {
    * @param nodeId - Canonical identity of the selected node.
    * @param position - New finite canvas coordinates.
    * @returns A promise that settles when the operation completes.
-   * @throws {@link CanvasError} When the input, lifecycle state or permissions do not satisfy this operation’s requirements.
+   * @throws {@link error/CanvasError!CanvasError | CanvasError} When the input, lifecycle state or permissions do not satisfy this operation’s requirements.
    */
   public ungrabNode(
     user: CanvasUser,
@@ -549,10 +546,7 @@ export class LiveCanvas implements PhysicsWorkerListener {
       const session: UserData = this._session(user);
       const grabs: SSet<string> | undefined = this._grabs.get(nodeId);
       if (!(grabs?.has(session.sessionId) ?? false)) {
-        throw new CanvasError(
-          'forbidden',
-          'Node was not grabbed by this session.',
-        );
+        throw new ForbiddenError('Node was not grabbed by this session.');
       }
       const node: ReturnType<CanvasGraph['getNode']> = new CanvasGraph(
         this._history.current,
@@ -602,8 +596,8 @@ export class LiveCanvas implements PhysicsWorkerListener {
       'Change room canvases',
       async (): Promise<CanvasReference | null> => {
         const room: RoomData = await this._access(user);
-        const change: Awaited<ReturnType<CanvasRoom['change']>> =
-          await new CanvasRoom(room, this._delegates.room).change(
+        const change: Awaited<ReturnType<RoomCanvasManager['change']>> =
+          await new RoomCanvasManager(room, this._delegates.room).change(
             this._reference.id,
             operation,
             operation === 'duplicate' ? this.toData() : null,
@@ -760,13 +754,11 @@ export class LiveCanvas implements PhysicsWorkerListener {
    * @param title - Display title to assign.
    * @param action - Polymorphic canvas action or transaction callback to execute.
    * @returns The callback result after preceding queued operations settle.
-   * @throws {@link CanvasError} When the input, lifecycle state or permissions do not satisfy this operation’s requirements.
+   * @throws {@link error/CanvasError!CanvasError | CanvasError} When the input, lifecycle state or permissions do not satisfy this operation’s requirements.
    */
   private _enqueue<T>(title: string, action: () => Promise<T>): Promise<T> {
     if (this._state !== 'ready') {
-      return Promise.reject(
-        new CanvasError('invalid-state', 'Canvas is not ready.'),
-      );
+      return Promise.reject(new InvalidStateError('Canvas is not ready.'));
     }
     this._cancelShutdownTimer();
     this._pending += 1;
@@ -776,7 +768,7 @@ export class LiveCanvas implements PhysicsWorkerListener {
       );
       try {
         if (this._closed) {
-          throw new CanvasError('invalid-state', 'Canvas has been closed.');
+          throw new InvalidStateError('Canvas has been closed.');
         }
         return await action();
       } catch (error: unknown) {
@@ -807,14 +799,14 @@ export class LiveCanvas implements PhysicsWorkerListener {
    * Loads current room data and checks the requesting identity’s access.
    * @param user - Trusted identity requesting the operation.
    * @returns The current room data after the identity passes authorization.
-   * @throws {@link CanvasError} When the input, lifecycle state or permissions do not satisfy this operation’s requirements.
+   * @throws {@link error/CanvasError!CanvasError | CanvasError} When the input, lifecycle state or permissions do not satisfy this operation’s requirements.
    */
   private async _access(user: CanvasUser): Promise<RoomData> {
     const room: RoomData = await this._delegates.storage.getRoom(
       this._reference.id,
     );
     if (room.id !== this._reference.roomId) {
-      throw new CanvasError('not-found', 'Canvas does not belong to room.');
+      throw new NotFoundError('Canvas does not belong to room.');
     }
     user.requireAccess(room);
     return room;
@@ -824,13 +816,13 @@ export class LiveCanvas implements PhysicsWorkerListener {
    * Checks that a registered session belongs to the requesting identity.
    * @param user - Trusted identity requesting the operation.
    * @returns The registered user model matching this session and identity.
-   * @throws {@link CanvasError} When the input, lifecycle state or permissions do not satisfy this operation’s requirements.
+   * @throws {@link error/CanvasError!CanvasError | CanvasError} When the input, lifecycle state or permissions do not satisfy this operation’s requirements.
    */
   private _session(user: CanvasUser): UserData {
     const data: UserData = user.toData();
     const session: UserData | undefined = this._users.get(data.sessionId);
     if (session?.id !== data.id) {
-      throw new CanvasError('forbidden', 'Unknown user session.');
+      throw new ForbiddenError('Unknown user session.');
     }
     return session;
   }

@@ -1,7 +1,7 @@
+import { InvalidStateError } from '../error/InvalidStateError';
 import type { PhysicalGraph } from '../../physics/physical-graph/PhysicalGraph';
 import type { PhysicsWorkerDelegate } from '../delegates/PhysicsWorkerDelegate';
 import type { PhysicsWorkerListener } from '../delegates/PhysicsWorkerListener';
-import { CanvasError } from '../CanvasError';
 import type { WorkerEvent } from './WorkerEvent';
 
 /**
@@ -51,11 +51,11 @@ export class CanvasPhysicsWorker implements PhysicsWorkerListener {
   /**
    * Starts the owned worker once and routes its messages and errors through the listener.
    * @returns A promise that settles when the operation completes.
-   * @throws {@link CanvasError} When the input, lifecycle state or permissions do not satisfy this operation’s requirements.
+   * @throws {@link error/CanvasError!CanvasError | CanvasError} When the input, lifecycle state or permissions do not satisfy this operation’s requirements.
    */
   public async start(): Promise<void> {
     if (this._active || this._destroyed) {
-      throw new CanvasError('invalid-state', 'Worker cannot be started.');
+      throw new InvalidStateError('Worker cannot be started.');
     }
     this._active = true;
     try {
@@ -64,10 +64,7 @@ export class CanvasPhysicsWorker implements PhysicsWorkerListener {
       });
       await this._starting;
       if (this._stopping !== null) {
-        throw new CanvasError(
-          'invalid-state',
-          'Worker was destroyed during startup.',
-        );
+        throw new InvalidStateError('Worker was destroyed during startup.');
       }
       this._ready = true;
     } catch (error: unknown) {
@@ -79,11 +76,11 @@ export class CanvasPhysicsWorker implements PhysicsWorkerListener {
   /**
    * Advances the revision and sends a detached graph snapshot to the worker.
    * @param graph - Graph whose data is read or modified.
-   * @throws {@link CanvasError} When the input, lifecycle state or permissions do not satisfy this operation’s requirements.
+   * @throws {@link error/CanvasError!CanvasError | CanvasError} When the input, lifecycle state or permissions do not satisfy this operation’s requirements.
    */
   public setGraph(graph: PhysicalGraph): void {
     if (!this._active || !this._ready) {
-      throw new CanvasError('invalid-state', 'Worker is not active.');
+      throw new InvalidStateError('Worker is not active.');
     }
     this._revision += 1;
     this._delegate.post({
@@ -96,11 +93,11 @@ export class CanvasPhysicsWorker implements PhysicsWorkerListener {
   /**
    * Requests a physics run for the current graph revision.
    * @param amount - Requested short or long physics duration policy.
-   * @throws {@link CanvasError} When the input, lifecycle state or permissions do not satisfy this operation’s requirements.
+   * @throws {@link error/CanvasError!CanvasError | CanvasError} When the input, lifecycle state or permissions do not satisfy this operation’s requirements.
    */
   public run(amount: 'short' | 'long'): void {
     if (!this._active || !this._ready) {
-      throw new CanvasError('invalid-state', 'Worker is not active.');
+      throw new InvalidStateError('Worker is not active.');
     }
     this._delegate.post({
       type: 'run',

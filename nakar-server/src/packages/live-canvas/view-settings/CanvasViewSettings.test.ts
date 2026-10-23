@@ -1,8 +1,8 @@
+import { InvalidDataError } from '../error/InvalidDataError';
 import { TestHarness } from '../testing/TestHarness.test';
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { CanvasViewSettings } from './CanvasViewSettings';
-import { CanvasError } from '../CanvasError';
 
 import type { ViewSettingsData } from '../data/ViewSettingsData';
 
@@ -117,17 +117,17 @@ void describe('CanvasViewSettings', (): void => {
     void it('rejects NaN', (): void => {
       assert.throws((): void => {
         new CanvasViewSettings().setFactor('grow', NaN);
-      }, CanvasError);
+      }, InvalidDataError);
     });
     void it('rejects Infinity', (): void => {
       assert.throws((): void => {
         new CanvasViewSettings().setFactor('grow', Infinity);
-      }, CanvasError);
+      }, InvalidDataError);
     });
     void it('rejects -Infinity', (): void => {
       assert.throws((): void => {
         new CanvasViewSettings().setFactor('grow', -Infinity);
-      }, CanvasError);
+      }, InvalidDataError);
     });
   });
   void describe('title', (): void => {
@@ -328,7 +328,7 @@ void describe('CanvasViewSettings', (): void => {
       data.growNodesBasedOnDegreeFactor = NaN;
       assert.throws((): void => {
         new CanvasViewSettings(data).validate();
-      }, CanvasError);
+      }, InvalidDataError);
     });
     void it('rejects a growth factor below one', (): void => {
       const settings: CanvasViewSettings = new CanvasViewSettings();
@@ -338,7 +338,7 @@ void describe('CanvasViewSettings', (): void => {
       data.growNodesBasedOnDegreeFactor = 0;
       assert.throws((): void => {
         new CanvasViewSettings(data).validate();
-      }, CanvasError);
+      }, InvalidDataError);
     });
     void it('rejects an excessive cluster factor', (): void => {
       const settings: CanvasViewSettings = new CanvasViewSettings();
@@ -348,7 +348,7 @@ void describe('CanvasViewSettings', (): void => {
       data.compressRelationshipsWidthFactor = 1001;
       assert.throws((): void => {
         new CanvasViewSettings(data).validate();
-      }, CanvasError);
+      }, InvalidDataError);
     });
     void it('rejects a non-finite radius', (): void => {
       const settings: CanvasViewSettings = new CanvasViewSettings();
@@ -358,7 +358,7 @@ void describe('CanvasViewSettings', (): void => {
       data.labels['Person'].radius = NaN;
       assert.throws((): void => {
         new CanvasViewSettings(data).validate();
-      }, CanvasError);
+      }, InvalidDataError);
     });
     void it('rejects a non-positive radius', (): void => {
       const settings: CanvasViewSettings = new CanvasViewSettings();
@@ -368,7 +368,7 @@ void describe('CanvasViewSettings', (): void => {
       data.labels['Person'].radius = 0;
       assert.throws((): void => {
         new CanvasViewSettings(data).validate();
-      }, CanvasError);
+      }, InvalidDataError);
     });
     void it('rejects a negative node color', (): void => {
       const settings: CanvasViewSettings = new CanvasViewSettings();
@@ -378,7 +378,7 @@ void describe('CanvasViewSettings', (): void => {
       data.labels['Person'].colorIndex = -1;
       assert.throws((): void => {
         new CanvasViewSettings(data).validate();
-      }, CanvasError);
+      }, InvalidDataError);
     });
     void it('rejects a node color above the palette', (): void => {
       const settings: CanvasViewSettings = new CanvasViewSettings();
@@ -388,7 +388,7 @@ void describe('CanvasViewSettings', (): void => {
       data.labels['Person'].colorIndex = 6;
       assert.throws((): void => {
         new CanvasViewSettings(data).validate();
-      }, CanvasError);
+      }, InvalidDataError);
     });
     void it('rejects a fractional node color', (): void => {
       const settings: CanvasViewSettings = new CanvasViewSettings();
@@ -398,7 +398,7 @@ void describe('CanvasViewSettings', (): void => {
       data.labels['Person'].colorIndex = 0.5;
       assert.throws((): void => {
         new CanvasViewSettings(data).validate();
-      }, CanvasError);
+      }, InvalidDataError);
     });
     void it('rejects a non-finite relationship width', (): void => {
       const settings: CanvasViewSettings = new CanvasViewSettings();
@@ -408,7 +408,7 @@ void describe('CanvasViewSettings', (): void => {
       data.edges['KNOWS'].width = Infinity;
       assert.throws((): void => {
         new CanvasViewSettings(data).validate();
-      }, CanvasError);
+      }, InvalidDataError);
     });
     void it('rejects a non-positive relationship width', (): void => {
       const settings: CanvasViewSettings = new CanvasViewSettings();
@@ -418,7 +418,7 @@ void describe('CanvasViewSettings', (): void => {
       data.edges['KNOWS'].width = 0;
       assert.throws((): void => {
         new CanvasViewSettings(data).validate();
-      }, CanvasError);
+      }, InvalidDataError);
     });
     void it('rejects a fractional relationship color', (): void => {
       const settings: CanvasViewSettings = new CanvasViewSettings();
@@ -428,7 +428,7 @@ void describe('CanvasViewSettings', (): void => {
       data.edges['KNOWS'].colorIndex = 0.5;
       assert.throws((): void => {
         new CanvasViewSettings(data).validate();
-      }, CanvasError);
+      }, InvalidDataError);
     });
     void it('rejects a negative relationship color', (): void => {
       const settings: CanvasViewSettings = new CanvasViewSettings();
@@ -438,7 +438,7 @@ void describe('CanvasViewSettings', (): void => {
       data.edges['KNOWS'].colorIndex = -1;
       assert.throws((): void => {
         new CanvasViewSettings(data).validate();
-      }, CanvasError);
+      }, InvalidDataError);
     });
     void it('rejects a relationship color above the palette', (): void => {
       const settings: CanvasViewSettings = new CanvasViewSettings();
@@ -448,7 +448,7 @@ void describe('CanvasViewSettings', (): void => {
       data.edges['KNOWS'].colorIndex = 6;
       assert.throws((): void => {
         new CanvasViewSettings(data).validate();
-      }, CanvasError);
+      }, InvalidDataError);
     });
   });
 });

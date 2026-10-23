@@ -1,5 +1,5 @@
+import { NotFoundError } from '../error/NotFoundError';
 import type { QueryResult } from '../data/QueryResult';
-import { CanvasError } from '../CanvasError';
 import type { CanvasAction } from './CanvasAction';
 import type { CanvasActionContext } from './CanvasActionContext';
 import { SourceAction } from './SourceAction';
@@ -39,7 +39,7 @@ export class LoadNodeAction extends SourceAction {
    * Loads a single source-native node through the graph source delegate.
    * @param context - Isolated draft and delegates used by this action.
    * @returns A promise that settles when the operation completes.
-   * @throws {@link CanvasError} When the input, lifecycle state or permissions do not satisfy this operation’s requirements.
+   * @throws {@link error/CanvasError!CanvasError | CanvasError} When the input, lifecycle state or permissions do not satisfy this operation’s requirements.
    */
   public override async apply(context: CanvasActionContext): Promise<void> {
     const result: QueryResult = await context.request(this._sourceId, {
@@ -47,7 +47,7 @@ export class LoadNodeAction extends SourceAction {
       nativeIds: [this._nativeId],
     });
     if (result.nodes.length === 0) {
-      throw new CanvasError('not-found', 'Node not found.');
+      throw new NotFoundError('Node not found.');
     }
     this.add(context, {
       ...result,

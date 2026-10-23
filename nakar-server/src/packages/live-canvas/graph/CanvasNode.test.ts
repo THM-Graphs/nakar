@@ -1,8 +1,8 @@
+import { InvalidDataError } from '../error/InvalidDataError';
 import { TestHarness } from '../testing/TestHarness.test';
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { CanvasNode } from './CanvasNode';
-import { CanvasError } from '../CanvasError';
 
 import type { NodeData } from '../data/NodeData';
 
@@ -24,28 +24,28 @@ void describe('CanvasNode', (): void => {
       const data: NodeData = TestHarness.node('a');
       assert.throws((): void => {
         new CanvasNode(data).move({ x: NaN, y: 0 });
-      }, CanvasError);
+      }, InvalidDataError);
       assert.deepEqual(data.position, { x: 0, y: 0 });
     });
     void it('rejects infinite y without modifying the position', (): void => {
       const data: NodeData = TestHarness.node('a');
       assert.throws((): void => {
         new CanvasNode(data).move({ x: 0, y: Infinity });
-      }, CanvasError);
+      }, InvalidDataError);
       assert.deepEqual(data.position, { x: 0, y: 0 });
     });
     void it('rejects infinite x without modifying the position', (): void => {
       const data: NodeData = TestHarness.node('a');
       assert.throws((): void => {
         new CanvasNode(data).move({ x: -Infinity, y: 0 });
-      }, CanvasError);
+      }, InvalidDataError);
       assert.deepEqual(data.position, { x: 0, y: 0 });
     });
     void it('rejects NaN y without modifying the position', (): void => {
       const data: NodeData = TestHarness.node('a');
       assert.throws((): void => {
         new CanvasNode(data).move({ x: 0, y: NaN });
-      }, CanvasError);
+      }, InvalidDataError);
       assert.deepEqual(data.position, { x: 0, y: 0 });
     });
   });

@@ -1,6 +1,6 @@
+import { InvalidDataError } from '../error/InvalidDataError';
 import { CircleLayoutEngine } from '../../physics/circle-layout-algorithms/CircleLayoutEngine';
 import type { NodeData } from '../data/NodeData';
-import { CanvasError } from '../CanvasError';
 import type { CanvasActionContext } from './CanvasActionContext';
 import { LayoutAction } from './LayoutAction';
 
@@ -23,14 +23,11 @@ export class CircleLayoutAction extends LayoutAction {
   /**
    * Arranges selected nodes on a circle, locks them and places adjacent unlocked nodes near their selected neighbors.
    * @param context - Isolated draft and delegates used by this action.
-   * @throws {@link CanvasError} When the input, lifecycle state or permissions do not satisfy this operation’s requirements.
+   * @throws {@link error/CanvasError!CanvasError | CanvasError} When the input, lifecycle state or permissions do not satisfy this operation’s requirements.
    */
   public override apply(context: CanvasActionContext): void {
     if (!Number.isFinite(this._radius) || this._radius <= 0) {
-      throw new CanvasError(
-        'invalid-data',
-        'Radius must be positive and finite.',
-      );
+      throw new InvalidDataError('Radius must be positive and finite.');
     }
     const nodes: NodeData[] = context.data.graph.nodes.filter(
       (node: NodeData): boolean => this._ids.includes(node.id),

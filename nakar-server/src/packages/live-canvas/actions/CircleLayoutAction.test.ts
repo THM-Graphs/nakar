@@ -1,9 +1,9 @@
+import { InvalidDataError } from '../error/InvalidDataError';
 import { TestHarness } from '../testing/TestHarness.test';
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
 import { CircleLayoutAction } from './CircleLayoutAction';
-import { CanvasError } from '../CanvasError';
 
 void describe('CircleLayoutAction', (): void => {
   void describe('apply', (): void => {
@@ -51,25 +51,25 @@ void describe('CircleLayoutAction', (): void => {
       const c: ReturnType<typeof TestHarness.context> = TestHarness.context();
       assert.throws((): void => {
         new CircleLayoutAction([], 0).apply(c.context);
-      }, CanvasError);
+      }, InvalidDataError);
     });
     void it('rejects radius -1', (): void => {
       const c: ReturnType<typeof TestHarness.context> = TestHarness.context();
       assert.throws((): void => {
         new CircleLayoutAction([], -1).apply(c.context);
-      }, CanvasError);
+      }, InvalidDataError);
     });
     void it('rejects radius NaN', (): void => {
       const c: ReturnType<typeof TestHarness.context> = TestHarness.context();
       assert.throws((): void => {
         new CircleLayoutAction([], NaN).apply(c.context);
-      }, CanvasError);
+      }, InvalidDataError);
     });
     void it('rejects radius Infinity', (): void => {
       const c: ReturnType<typeof TestHarness.context> = TestHarness.context();
       assert.throws((): void => {
         new CircleLayoutAction([], Infinity).apply(c.context);
-      }, CanvasError);
+      }, InvalidDataError);
     });
   });
   void describe('constructor', (): void => {

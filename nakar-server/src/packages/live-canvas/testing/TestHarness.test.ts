@@ -5,7 +5,7 @@ import { CanvasGraph } from '../graph/CanvasGraph';
 import { CanvasViewSettings } from '../view-settings/CanvasViewSettings';
 import type { QueryResult } from '../data/QueryResult';
 import type { CanvasDelegates } from '../delegates/CanvasDelegates';
-import { LiveCanvas } from '../LiveCanvas';
+import { LiveCanvas } from '../canvas/LiveCanvas';
 import { MockStorageDelegate } from './MockStorageDelegate.test';
 import { MockGraphSourceDelegate } from './MockGraphSourceDelegate.test';
 import { MockRoomDelegate } from './MockRoomDelegate.test';

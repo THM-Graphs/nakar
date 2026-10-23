@@ -1,5 +1,5 @@
+import { InvalidDataError } from '../error/InvalidDataError';
 import type { ScenarioActionData } from '../data/ScenarioActionData';
-import { CanvasError } from '../CanvasError';
 import { CompressNodesAction } from './CompressNodesAction';
 import { CompressRelationshipsAction } from './CompressRelationshipsAction';
 import { CircleLayoutAction } from './CircleLayoutAction';
@@ -18,7 +18,7 @@ export class ScenarioActionFactory {
    * Creates the concrete canvas action corresponding to a serialized scenario instruction.
    * @param data - Data object or snapshot used to initialize the operation.
    * @returns The concrete action implementing the serialized instruction.
-   * @throws {@link CanvasError} When the input, lifecycle state or permissions do not satisfy this operation’s requirements.
+   * @throws {@link error/CanvasError!CanvasError | CanvasError} When the input, lifecycle state or permissions do not satisfy this operation’s requirements.
    */
   public create(data: ScenarioActionData): CanvasAction {
     switch (data.type) {
@@ -40,7 +40,7 @@ export class ScenarioActionFactory {
           case 'forceDirected':
             return new ForceDirectedLayoutAction(layout.nodeIds);
         }
-        throw new CanvasError('invalid-data', 'Unknown layout type.');
+        throw new InvalidDataError('Unknown layout type.');
       }
       case 'setGrowNodesBasedOnDegree':
       case 'setRelationshipClusterSize':
@@ -51,7 +51,7 @@ export class ScenarioActionFactory {
       case 'setRelationshipWidth':
         return new ConfigureViewAction(data);
       default:
-        throw new CanvasError('invalid-data', 'Unknown scenario action.');
+        throw new InvalidDataError('Unknown scenario action.');
     }
   }
 }

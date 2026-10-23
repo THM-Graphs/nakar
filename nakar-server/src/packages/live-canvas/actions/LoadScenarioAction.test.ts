@@ -1,9 +1,11 @@
+import { NotFoundError } from '../error/NotFoundError';
+import { ForbiddenError } from '../error/ForbiddenError';
+import { InvalidDataError } from '../error/InvalidDataError';
 import { TestHarness } from '../testing/TestHarness.test';
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
 import { LoadScenarioAction } from './LoadScenarioAction';
-import { CanvasError } from '../CanvasError';
 
 void describe('LoadScenarioAction', (): void => {
   void describe('apply', (): void => {
@@ -141,7 +143,7 @@ void describe('LoadScenarioAction', (): void => {
       const c: ReturnType<typeof TestHarness.context> = TestHarness.context();
       await assert.rejects(
         new LoadScenarioAction(null).apply(c.context),
-        CanvasError,
+        NotFoundError,
       );
     });
     void it('rejects a scenario from another project', async (): Promise<void> => {
@@ -149,7 +151,7 @@ void describe('LoadScenarioAction', (): void => {
       c.h.storage.scenario.projectId = 'foreign';
       await assert.rejects(
         new LoadScenarioAction('scenario').apply(c.context),
-        CanvasError,
+        ForbiddenError,
       );
     });
     void it('rejects a scenario with no queries', async (): Promise<void> => {
@@ -157,14 +159,14 @@ void describe('LoadScenarioAction', (): void => {
       c.h.storage.scenario.queries = [];
       await assert.rejects(
         new LoadScenarioAction('scenario').apply(c.context),
-        CanvasError,
+        NotFoundError,
       );
     });
     void it('rejects unknown supplied parameters', async (): Promise<void> => {
       const c: ReturnType<typeof TestHarness.context> = TestHarness.context();
       await assert.rejects(
         new LoadScenarioAction('scenario', { unknown: 'x' }).apply(c.context),
-        CanvasError,
+        InvalidDataError,
       );
     });
     void it("rejects numeric parameter ''", async (): Promise<void> => {
@@ -174,7 +176,7 @@ void describe('LoadScenarioAction', (): void => {
       ];
       await assert.rejects(
         new LoadScenarioAction('scenario', { n: '' }).apply(c.context),
-        CanvasError,
+        InvalidDataError,
       );
     });
     void it("rejects numeric parameter 'bad'", async (): Promise<void> => {
@@ -184,7 +186,7 @@ void describe('LoadScenarioAction', (): void => {
       ];
       await assert.rejects(
         new LoadScenarioAction('scenario', { n: 'bad' }).apply(c.context),
-        CanvasError,
+        InvalidDataError,
       );
     });
     void it("rejects numeric parameter 'Infinity'", async (): Promise<void> => {
@@ -194,7 +196,7 @@ void describe('LoadScenarioAction', (): void => {
       ];
       await assert.rejects(
         new LoadScenarioAction('scenario', { n: 'Infinity' }).apply(c.context),
-        CanvasError,
+        InvalidDataError,
       );
     });
     void it('rejects malformed JSON parameters', async (): Promise<void> => {
