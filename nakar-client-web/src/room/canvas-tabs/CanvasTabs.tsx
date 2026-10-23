@@ -195,7 +195,6 @@ export function CanvasTabs() {
     <>
       <Stack direction="horizontal" className="flex-shrink-0">
         <nav
-          aria-label="Canvases"
           className="d-flex overflow-x-auto flex-grow-1 flex-wrap"
           style={{ minWidth: 0 }}
         >
@@ -237,7 +236,6 @@ export function CanvasTabs() {
               </Link>
               <NavbarButton
                 className="align-self-stretch"
-                aria-label={`Delete canvas ${canvas.title}`}
                 disabled={CloseCanvasAction.shared.disabled(
                   actionParams(canvas),
                 )}
