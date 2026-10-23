@@ -19,6 +19,10 @@ export interface CanvasStorageDelegate {
 
   /**
    * Persists a detached snapshot under the requested canvas identity.
+   * LiveCanvas calls this automatically after persistent changes, as well as for
+   * explicit saves, history restoration and optional final persistence.
+   * Resolving acknowledges this snapshot; rejecting reports failure and leaves
+   * automatic persistence pending for a later retry.
    * @param canvasId - Canonical identity of the canvas.
    * @param data - Data object or snapshot used to initialize the operation.
    * @returns A promise that settles when the operation completes.

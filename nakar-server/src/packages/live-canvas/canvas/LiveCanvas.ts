@@ -130,6 +130,24 @@ export class LiveCanvas implements PhysicsWorkerListener {
    */
   private _shutdownGeneration: number = 0;
 
+  /** Revision of the latest persistent mutation. */
+  private _revision: number = 0;
+
+  /** Latest revision acknowledged by the storage delegate. */
+  private _savedRevision: number = 0;
+
+  /** Pending automatic save deadline, owned by the runtime delegate. */
+  private _saveTimer: {
+    /** Opaque timer identity returned by the runtime delegate. */
+    handle: unknown;
+  } | null = null;
+
+  /** Generation used to fence cancelled save callbacks. */
+  private _saveGeneration: number = 0;
+
+  /** Whether an automatic save is queued or awaiting storage. */
+  private _autosavePending: boolean = false;
+
   /**
    * Bounded list of failures thrown synchronously by event observers.
    */
@@ -512,12 +530,24 @@ export class LiveCanvas implements PhysicsWorkerListener {
       const session: UserData = this._session(user);
       const draft: GraphData = structuredClone(this._history.current);
       const graph: CanvasGraph = new CanvasGraph(draft);
+      let changed: boolean = false;
       for (const node of positions) {
         if (!(this._grabs.get(node.id)?.has(session.sessionId) ?? false)) {
           continue;
         }
-        graph.getNode(node.id).move(node.position);
-        graph.getNode(node.id).setLocked(true);
+        const target: ReturnType<CanvasGraph['getNode']> = graph.getNode(
+          node.id,
+        );
+        const previous: NodeData = target.toData();
+        changed ||=
+          !previous.locked ||
+          previous.position.x !== node.position.x ||
+          previous.position.y !== node.position.y;
+        target.move(node.position);
+        target.setLocked(true);
+      }
+      if (!changed) {
+        return;
       }
       // Dragging does not create an undo entry for every pointer event.
       Object.assign(this._history.current, draft);
@@ -606,6 +636,7 @@ export class LiveCanvas implements PhysicsWorkerListener {
         if (operation === 'close') {
           this._closed = true;
           this._state = 'closing';
+          this._cancelSaveTimer();
           this._emit(
             new CanvasLifecycleEvent(this._reference.id, 'shouldShutdown'),
           );
@@ -661,6 +692,7 @@ export class LiveCanvas implements PhysicsWorkerListener {
     }
     const starting: Promise<void> | null = this._start;
     this.cancelShutdown();
+    this._cancelSaveTimer();
     const shouldSave: boolean =
       !this._closed &&
       (this._state === 'ready' ||
@@ -706,6 +738,7 @@ export class LiveCanvas implements PhysicsWorkerListener {
       );
     } else {
       const applied: Record<string, Position> = DataRecord.empty<Position>();
+      let changed: boolean = false;
       for (const node of this._history.current.nodes) {
         const position: Position | undefined = event.positions[node.id];
         if (
@@ -715,9 +748,14 @@ export class LiveCanvas implements PhysicsWorkerListener {
           Number.isFinite(position.x) &&
           Number.isFinite(position.y)
         ) {
+          changed ||=
+            node.position.x !== position.x || node.position.y !== position.y;
           node.position = { ...position };
           applied[node.id] = { ...position };
         }
+      }
+      if (changed) {
+        this._requestSave();
       }
       this._emit(
         new CanvasPhysicsEvent(
@@ -954,11 +992,79 @@ export class LiveCanvas implements PhysicsWorkerListener {
   }
 
   /**
-   * Persists the current snapshot unless its canvas has already been closed.
+   * Persists a detached snapshot and acknowledges only its captured revision.
+   * Changes received during storage remain pending; failures retain the dirty revision.
    * @returns A promise that settles when the operation completes.
    */
   private async _save(): Promise<void> {
-    await this._delegates.storage.save(this._reference.id, this.toData());
+    if (this._closed) {
+      return;
+    }
+    this._cancelSaveTimer();
+    const revision: number = this._revision;
+    try {
+      await this._delegates.storage.save(this._reference.id, this.toData());
+      this._savedRevision = revision;
+    } finally {
+      this._scheduleSave();
+    }
+  }
+
+  /** Marks a committed persistent mutation and requests a bounded save deadline. */
+  private _requestSave(): void {
+    this._revision += 1;
+    this._scheduleSave();
+  }
+
+  /**
+   * Coalesces mutations for one second without postponing the deadline on every tick.
+   * Saves run in the operation queue; failures are reported there and retried later.
+   */
+  private _scheduleSave(): void {
+    if (
+      this._state !== 'ready' ||
+      this._closed ||
+      this._revision === this._savedRevision ||
+      this._saveTimer !== null ||
+      this._autosavePending
+    ) {
+      return;
+    }
+    const generation: number = this._saveGeneration;
+    this._saveTimer = {
+      handle: this._delegates.runtime.schedule((): void => {
+        if (generation !== this._saveGeneration || this._state !== 'ready') {
+          return;
+        }
+        this._saveTimer = null;
+        this._autosavePending = true;
+        const operation: Promise<void> = this._enqueue(
+          'Save canvas',
+          async (): Promise<void> => {
+            if (
+              this._state === 'ready' &&
+              this._revision !== this._savedRevision
+            ) {
+              await this._save();
+            }
+          },
+        );
+        const finish: () => void = (): void => {
+          this._autosavePending = false;
+          this._scheduleSave();
+        };
+        void operation.then(finish, finish);
+      }, 1000),
+    };
+  }
+
+  /** Cancels the save deadline and invalidates callbacks already queued by the host. */
+  private _cancelSaveTimer(): void {
+    this._saveGeneration += 1;
+    if (this._saveTimer !== null) {
+      this._delegates.runtime.cancel(this._saveTimer.handle);
+      this._saveTimer = null;
+    }
   }
 
   /**
@@ -966,6 +1072,9 @@ export class LiveCanvas implements PhysicsWorkerListener {
    * @param event - Domain or worker event to process.
    */
   private _emit(event: CanvasEvent): void {
+    if (event instanceof CanvasChangedEvent) {
+      this._requestSave();
+    }
     try {
       this._delegates.events.handleEvent(event);
     } catch (error: unknown) {

@@ -103,6 +103,18 @@ void describe('LiveCanvas', (): void => {
     });
   });
   void describe('read', (): void => {
+    void it('does not save reads, presence, cursor changes or grabs', async (): Promise<void> => {
+      const h: ReturnType<typeof TestHarness.harness> = TestHarness.harness();
+      await h.canvas.bootstrap();
+      await h.canvas.read(TestHarness.user());
+      await h.canvas.addUser(TestHarness.user());
+      await h.canvas.setCursorPosition(TestHarness.user(), { x: 2, y: 3 });
+      await h.canvas.grabNode(TestHarness.user(), 'a');
+      await h.canvas.removeUser('session');
+      h.runtime.advance(1000);
+      await h.canvas.read(TestHarness.user());
+      assert.equal(h.storage.saves.length, 0);
+    });
     void it('allows a root user to read a private room without project membership', async (): Promise<void> => {
       const h: ReturnType<typeof TestHarness.harness> = TestHarness.harness();
       await h.canvas.bootstrap();
@@ -221,6 +233,68 @@ void describe('LiveCanvas', (): void => {
     });
   });
   void describe('execute', (): void => {
+    void it('coalesces successful actions into one detached save after one second', async (): Promise<void> => {
+      const h: ReturnType<typeof TestHarness.harness> = TestHarness.harness();
+      await h.canvas.bootstrap();
+      await h.canvas.execute(
+        TestHarness.user(),
+        new DeleteElementsAction(['a']),
+      );
+      h.runtime.advance(900);
+      await h.canvas.execute(
+        TestHarness.user(),
+        new DeleteElementsAction(['b']),
+      );
+      h.runtime.advance(99);
+      await h.canvas.read(TestHarness.user());
+      assert.equal(h.storage.saves.length, 0);
+      h.runtime.advance(1);
+      await h.canvas.read(TestHarness.user());
+      assert.equal(h.storage.saves.length, 1);
+      assert.deepEqual(h.storage.saves[0], h.canvas.toData());
+      h.runtime.advance(5000);
+      await h.canvas.read(TestHarness.user());
+      assert.equal(h.storage.saves.length, 1);
+    });
+    void it('reports failed automatic saves and retries the latest state', async (): Promise<void> => {
+      const h: ReturnType<typeof TestHarness.harness> = TestHarness.harness();
+      await h.canvas.bootstrap();
+      await h.canvas.execute(
+        TestHarness.user(),
+        new DeleteElementsAction(['a']),
+      );
+      h.storage.saveError = new Error('offline');
+      h.runtime.advance(1000);
+      await h.canvas.read(TestHarness.user());
+      assert.equal(h.storage.saves.length, 0);
+      assert.ok(
+        h.events.events.some(
+          (event: CanvasEvent): boolean => event instanceof CanvasErrorEvent,
+        ),
+      );
+      await h.canvas.execute(
+        TestHarness.user(),
+        new DeleteElementsAction(['b']),
+      );
+      h.storage.saveError = null;
+      h.runtime.advance(999);
+      await h.canvas.read(TestHarness.user());
+      assert.equal(h.storage.saves.length, 0);
+      h.runtime.advance(1);
+      await h.canvas.read(TestHarness.user());
+      assert.equal(h.storage.saves.length, 1);
+      assert.deepEqual(h.storage.saves[0], h.canvas.toData());
+    });
+    void it('does not save a failed draft', async (): Promise<void> => {
+      const h: ReturnType<typeof TestHarness.harness> = TestHarness.harness();
+      await h.canvas.bootstrap();
+      await assert.rejects(
+        h.canvas.execute(TestHarness.user(), new MockFailingAction()),
+      );
+      h.runtime.advance(1000);
+      await h.canvas.read(TestHarness.user());
+      assert.equal(h.storage.saves.length, 0);
+    });
     void it('allows a root user to join and mutate a private canvas without project membership', async (): Promise<void> => {
       const h: ReturnType<typeof TestHarness.harness> = TestHarness.harness();
       await h.canvas.bootstrap();
@@ -532,6 +606,21 @@ void describe('LiveCanvas', (): void => {
     });
   });
   void describe('undo', (): void => {
+    void it('retries a failed history save automatically', async (): Promise<void> => {
+      const h: ReturnType<typeof TestHarness.harness> = TestHarness.harness();
+      await h.canvas.bootstrap();
+      await h.canvas.execute(
+        TestHarness.user(),
+        new DeleteElementsAction(['a']),
+      );
+      h.storage.saveError = new Error('offline');
+      await assert.rejects(h.canvas.undo(TestHarness.user()), /offline/);
+      h.storage.saveError = null;
+      h.runtime.advance(1000);
+      await h.canvas.read(TestHarness.user());
+      assert.equal(h.storage.saves.length, 1);
+      assert.equal(h.storage.saves[0].graph.nodes.length, 3);
+    });
     void it('leaves an empty history unchanged without saving', async (): Promise<void> => {
       const h: ReturnType<typeof TestHarness.harness> = TestHarness.harness();
       await h.canvas.bootstrap();
@@ -602,6 +691,34 @@ void describe('LiveCanvas', (): void => {
     });
   });
   void describe('saveGraph', (): void => {
+    void it('skips a queued automatic save when an earlier manual save already persisted its revision', async (): Promise<void> => {
+      const h: ReturnType<typeof TestHarness.harness> = TestHarness.harness();
+      await h.canvas.bootstrap();
+      await h.canvas.execute(
+        TestHarness.user(),
+        new DeleteElementsAction(['a']),
+      );
+      const save: Promise<void> = h.canvas.saveGraph(TestHarness.user());
+      h.runtime.advance(1000);
+      await save;
+      await h.canvas.read(TestHarness.user());
+      assert.equal(h.storage.saves.length, 1);
+    });
+    void it('cancels a pending automatic save and fences its stale callback', async (): Promise<void> => {
+      const h: ReturnType<typeof TestHarness.harness> = TestHarness.harness();
+      await h.canvas.bootstrap();
+      await h.canvas.execute(
+        TestHarness.user(),
+        new DeleteElementsAction(['a']),
+      );
+      const timer: MockTimer = h.runtime.timers[0];
+      await h.canvas.saveGraph(TestHarness.user());
+      timer.callback();
+      h.runtime.advance(1000);
+      await h.canvas.read(TestHarness.user());
+      assert.equal(timer.cancelled, true);
+      assert.equal(h.storage.saves.length, 1);
+    });
     void it('sends the current snapshot to storage', async (): Promise<void> => {
       const h: ReturnType<typeof TestHarness.harness> = TestHarness.harness();
       await h.canvas.bootstrap();
@@ -825,6 +942,35 @@ void describe('LiveCanvas', (): void => {
     });
   });
   void describe('moveNodes', (): void => {
+    void it('automatically saves dragged positions and locks', async (): Promise<void> => {
+      const h: ReturnType<typeof TestHarness.harness> = TestHarness.harness();
+      await h.canvas.bootstrap();
+      await h.canvas.addUser(TestHarness.user());
+      await h.canvas.grabNode(TestHarness.user(), 'a');
+      await h.canvas.moveNodes(TestHarness.user(), [
+        { id: 'a', position: { x: 3, y: 4 } },
+      ]);
+      h.runtime.advance(1000);
+      await h.canvas.read(TestHarness.user());
+      assert.deepEqual(h.storage.saves[0], h.canvas.toData());
+    });
+    void it('does not save unchanged or ungrabbed positions', async (): Promise<void> => {
+      const h: ReturnType<typeof TestHarness.harness> = TestHarness.harness();
+      await h.canvas.bootstrap();
+      await h.canvas.addUser(TestHarness.user());
+      await h.canvas.grabNode(TestHarness.user(), 'a');
+      await h.canvas.moveNodes(TestHarness.user(), [
+        { id: 'a', position: { x: 3, y: 4 } },
+      ]);
+      await h.canvas.saveGraph(TestHarness.user());
+      await h.canvas.moveNodes(TestHarness.user(), [
+        { id: 'a', position: { x: 3, y: 4 } },
+        { id: 'b', position: { x: 5, y: 6 } },
+      ]);
+      h.runtime.advance(1000);
+      await h.canvas.read(TestHarness.user());
+      assert.equal(h.storage.saves.length, 1);
+    });
     void it('moves grabbed nodes only and excludes movement from undo history', async (): Promise<void> => {
       const h: ReturnType<typeof TestHarness.harness> = TestHarness.harness();
       await h.canvas.bootstrap();
@@ -890,6 +1036,16 @@ void describe('LiveCanvas', (): void => {
     });
   });
   void describe('ungrabNode', (): void => {
+    void it('automatically persists the final drag position', async (): Promise<void> => {
+      const h: ReturnType<typeof TestHarness.harness> = TestHarness.harness();
+      await h.canvas.bootstrap();
+      await h.canvas.addUser(TestHarness.user());
+      await h.canvas.grabNode(TestHarness.user(), 'a');
+      await h.canvas.ungrabNode(TestHarness.user(), 'a', { x: 4, y: 5 });
+      h.runtime.advance(1000);
+      await h.canvas.read(TestHarness.user());
+      assert.deepEqual(h.storage.saves[0], h.canvas.toData());
+    });
     void it('rejects a node not grabbed by the session', async (): Promise<void> => {
       const h: ReturnType<typeof TestHarness.harness> = TestHarness.harness();
       await h.canvas.bootstrap();
@@ -956,6 +1112,14 @@ void describe('LiveCanvas', (): void => {
     });
   });
   void describe('refreshNotes', (): void => {
+    void it('automatically saves refreshed note associations', async (): Promise<void> => {
+      const h: ReturnType<typeof TestHarness.harness> = TestHarness.harness();
+      await h.canvas.bootstrap();
+      await h.canvas.refreshNotes(TestHarness.user());
+      h.runtime.advance(1000);
+      await h.canvas.read(TestHarness.user());
+      assert.deepEqual(h.storage.saves[0], h.canvas.toData());
+    });
     void it('assigns notes to freshly compressed scenario result nodes', async (): Promise<void> => {
       const h: ReturnType<typeof TestHarness.harness> = TestHarness.harness();
       await h.canvas.bootstrap();
@@ -1020,6 +1184,22 @@ void describe('LiveCanvas', (): void => {
     });
   });
   void describe('changeRoom', (): void => {
+    void it('cancels pending automatic saves when the canvas is deleted', async (): Promise<void> => {
+      const h: ReturnType<typeof TestHarness.harness> = TestHarness.harness();
+      await h.canvas.bootstrap();
+      await h.canvas.changeRoom(TestHarness.user(), 'create');
+      await h.canvas.execute(
+        TestHarness.user(),
+        new DeleteElementsAction(['a']),
+      );
+      const timer: MockTimer = h.runtime.timers[0];
+      await h.canvas.changeRoom(TestHarness.user(), 'close');
+      timer.callback();
+      h.runtime.advance(1000);
+      await h.canvas.destroy();
+      assert.equal(timer.cancelled, true);
+      assert.equal(h.storage.saves.length, 0);
+    });
     void it('rejects queued actions after closing and never recreates the deleted snapshot', async (): Promise<void> => {
       const h: ReturnType<typeof TestHarness.harness> = TestHarness.harness();
       await h.canvas.bootstrap();
@@ -1111,8 +1291,10 @@ void describe('LiveCanvas', (): void => {
       assert.equal(h.runtime.timers.length, 0);
       await action;
       assert.equal(
-        h.runtime.timers.filter((timer: MockTimer): boolean => !timer.cancelled)
-          .length,
+        h.runtime.timers.filter(
+          (timer: MockTimer): boolean =>
+            !timer.cancelled && timer.at === 10_000,
+        ).length,
         1,
       );
     });
@@ -1187,6 +1369,30 @@ void describe('LiveCanvas', (): void => {
     });
   });
   void describe('destroy', (): void => {
+    void it('cancels automatic saves when final persistence is disabled', async (): Promise<void> => {
+      const h: ReturnType<typeof TestHarness.harness> = TestHarness.harness();
+      await h.canvas.bootstrap();
+      await h.canvas.execute(
+        TestHarness.user(),
+        new DeleteElementsAction(['a']),
+      );
+      const timer: MockTimer = h.runtime.timers[0];
+      await h.canvas.destroy(false);
+      timer.callback();
+      h.runtime.advance(1000);
+      assert.equal(h.storage.saves.length, 0);
+    });
+    void it('skips an automatic save already queued when destruction begins', async (): Promise<void> => {
+      const h: ReturnType<typeof TestHarness.harness> = TestHarness.harness();
+      await h.canvas.bootstrap();
+      await h.canvas.execute(
+        TestHarness.user(),
+        new DeleteElementsAction(['a']),
+      );
+      h.runtime.advance(1000);
+      await h.canvas.destroy(false);
+      assert.equal(h.storage.saves.length, 0);
+    });
     void it('terminates physics before taking the final persistence snapshot', async (): Promise<void> => {
       const h: ReturnType<typeof TestHarness.harness> = TestHarness.harness();
       await h.canvas.bootstrap();
@@ -1271,6 +1477,107 @@ void describe('LiveCanvas', (): void => {
     });
   });
   void describe('onMessage', (): void => {
+    void it('persists continuous physics changes without postponing the deadline', async (): Promise<void> => {
+      const h: ReturnType<typeof TestHarness.harness> = TestHarness.harness();
+      await h.canvas.bootstrap();
+      h.canvas.onMessage({
+        type: 'positions',
+        revision: 1,
+        positions: { a: { x: 1, y: 2 } },
+        performance,
+      });
+      h.runtime.advance(900);
+      h.canvas.onMessage({
+        type: 'positions',
+        revision: 1,
+        positions: { a: { x: 3, y: 4 } },
+        performance,
+      });
+      h.runtime.advance(100);
+      await h.canvas.read(TestHarness.user());
+      assert.equal(h.storage.saves.length, 1);
+      assert.deepEqual(h.storage.saves[0].graph.nodes[0].position, {
+        x: 3,
+        y: 4,
+      });
+      h.canvas.onMessage({
+        type: 'positions',
+        revision: 1,
+        positions: { a: { x: 5, y: 6 } },
+        performance,
+      });
+      h.runtime.advance(1000);
+      await h.canvas.read(TestHarness.user());
+      assert.equal(h.storage.saves.length, 2);
+    });
+    void it('does not save unchanged or rejected physics positions', async (): Promise<void> => {
+      const h: ReturnType<typeof TestHarness.harness> = TestHarness.harness();
+      await h.canvas.bootstrap();
+      h.canvas.onMessage({
+        type: 'positions',
+        revision: 1,
+        positions: {
+          a: { x: 0, y: 0 },
+          b: { x: NaN, y: 1 },
+          unknown: { x: 5, y: 6 },
+        },
+        performance,
+      });
+      h.runtime.advance(1000);
+      await h.canvas.read(TestHarness.user());
+      assert.equal(h.storage.saves.length, 0);
+    });
+    void it('retains physics changes received while storage awaits completion', async (): Promise<void> => {
+      const h: ReturnType<typeof TestHarness.harness> = TestHarness.harness();
+      await h.canvas.bootstrap();
+      let release: (() => void) | undefined;
+      let entered: (() => void) | undefined;
+      const gate: Promise<void> = new Promise<void>(
+        (resolve: () => void): void => {
+          release = resolve;
+        },
+      );
+      const started: Promise<void> = new Promise<void>(
+        (resolve: () => void): void => {
+          entered = resolve;
+        },
+      );
+      h.storage.save = async (id: string, data: CanvasData): Promise<void> => {
+        assert.equal(id, 'canvas');
+        h.storage.saves.push(data);
+        entered?.();
+        await gate;
+      };
+      h.canvas.onMessage({
+        type: 'positions',
+        revision: 1,
+        positions: { a: { x: 1, y: 2 } },
+        performance,
+      });
+      h.runtime.advance(1000);
+      await started;
+      h.canvas.onMessage({
+        type: 'positions',
+        revision: 1,
+        positions: { a: { x: 3, y: 4 } },
+        performance,
+      });
+      h.runtime.advance(5000);
+      assert.equal(h.storage.saves.length, 1);
+      assert.deepEqual(h.storage.saves[0].graph.nodes[0].position, {
+        x: 1,
+        y: 2,
+      });
+      release?.();
+      await h.canvas.read(TestHarness.user());
+      h.runtime.advance(1000);
+      await h.canvas.read(TestHarness.user());
+      assert.equal(h.storage.saves.length, 2);
+      assert.deepEqual(h.storage.saves[1].graph.nodes[0].position, {
+        x: 3,
+        y: 4,
+      });
+    });
     void it('ignores notifications before startup', (): void => {
       const h: ReturnType<typeof TestHarness.harness> = TestHarness.harness();
       h.canvas.onMessage({ type: 'stopped', revision: 0 });

@@ -136,6 +136,33 @@ Visualisierungseinstellungen und direkte Knotenbewegungen erzeugen keine
 Graph-History-Einträge. `history` liefert den aktuellen Undo-/Redo-Status.
 `saveGraph(actor)` speichert den aktuellen Canvas-Snapshot.
 
+## Automatisches Speichern
+
+`LiveCanvas` fordert nach erfolgreich übernommenen Canvas-Änderungen automatisch
+`CanvasStorageDelegate.save()` mit einem unabhängigen Snapshot an. Dazu gehören
+Graphaktionen, Visualisierungseinstellungen, aktualisierte Notizzuordnungen,
+Knotenpositionen und Locks sowie übernommene Physikpositionen. Lesezugriffe,
+Anwesenheit, Cursorbewegungen und das reine Greifen eines Knotens lösen keine
+Speicherung aus.
+
+Die erste Änderung plant eine Speicherung nach einer Sekunde über das
+Runtime-Delegate. Weitere Änderungen werden bis dahin zusammengefasst, ohne den
+Termin zu verschieben. Während fortlaufender Änderungen werden weitere
+Speicherungen angefordert. Ohne neue Änderungen gibt es keine periodischen
+Schreibzugriffe.
+
+Speicherungen laufen innerhalb der Canvas-Warteschlange. Änderungen durch
+Physiknachrichten während eines laufenden Speichervorgangs bleiben vorgemerkt
+und werden anschließend mit einem weiteren Snapshot gespeichert. Ein Fehler
+beim automatischen Speichern erzeugt ein `CanvasErrorEvent`; nach einer Sekunde
+wird die Speicherung des aktuellen Zustands erneut versucht.
+
+`saveGraph(actor)` sowie Undo/Redo speichern unmittelbar und ersetzen einen noch
+ausstehenden automatischen Speichertermin. Beim Beenden wird der Timer
+abgebrochen und `destroy()` speichert den letzten Zustand nach dem Stoppen des
+Workers. `destroy(false)` verzichtet auf die abschließende Speicherung. Ein im
+Raum geschlossener Canvas wird nicht erneut gespeichert.
+
 ## Benutzerrechte und Sitzungen
 
 `GuestCanvasUser`, `AuthenticatedCanvasUser` und `RootUser` implementieren die
