@@ -1,0 +1,141 @@
+import type { PhysicalGraph } from '../../physics/physical-graph/PhysicalGraph';
+import type { PhysicalNode } from '../../physics/physical-graph/PhysicalNode';
+import { CombinationCache } from '../../physics/CombinationCache';
+
+/**
+ * Advances the force model by a deterministic step while preserving locked node positions.
+ */
+export class CanvasPhysicsSimulation {
+  /**
+   * References the physical graph that subsequent simulation ticks update.
+   * @param _graph - Graph whose data is read or modified.
+   */
+  public constructor(private readonly _graph: PhysicalGraph) {}
+
+  /**
+   * Applies one deterministic force step to the referenced physical graph.
+   * @param heat - Cooling multiplier applied to node displacement during this simulation step.
+   */
+  public tick(heat: number): void {
+    const nodes: PhysicalNode[] = Object.values(this._graph.nodes).filter(
+      (node: PhysicalNode | null): node is PhysicalNode => node !== null,
+    );
+    for (const node of nodes) {
+      const distance: number = Math.hypot(node.positionX, node.positionY);
+      if (distance > 0) {
+        this._force(
+          node,
+          (-node.positionX / distance) *
+            distance *
+            this._mass(node) *
+            0.00000013,
+          (-node.positionY / distance) *
+            distance *
+            this._mass(node) *
+            0.00000013,
+        );
+      }
+    }
+    for (let i: number = 0; i < nodes.length; i++) {
+      for (let j: number = i + 1; j < nodes.length; j++) {
+        const left: PhysicalNode = nodes[i];
+        const right: PhysicalNode = nodes[j];
+        this._pair(
+          left,
+          right,
+          (distance: number): number =>
+            ((this._mass(left) * this._mass(right) * 4) /
+              (distance * distance)) *
+            0.00015,
+        );
+      }
+    }
+    const handled: CombinationCache = new CombinationCache();
+    for (const edge of Object.values(this._graph.edges)) {
+      if (
+        edge === null ||
+        edge.startNodeId === edge.endNodeId ||
+        handled.hasCombination(edge.startNodeId, edge.endNodeId)
+      ) {
+        continue;
+      }
+      const left: PhysicalNode | null | undefined =
+        this._graph.nodes[edge.startNodeId];
+      const right: PhysicalNode | null | undefined =
+        this._graph.nodes[edge.endNodeId];
+      if (left == null || right == null) {
+        continue;
+      }
+      this._pair(
+        left,
+        right,
+        (distance: number): number =>
+          (left.radius + edge.title.length + 200 + right.radius - distance) *
+          0.024,
+      );
+      handled.addCombination(edge.startNodeId, edge.endNodeId);
+    }
+    for (const node of nodes) {
+      if (node.locked) {
+        node.velocityX = 0;
+        node.velocityY = 0;
+        continue;
+      }
+      node.positionX += node.velocityX * heat;
+      node.positionY += node.velocityY * heat;
+      node.velocityX *= 0.6;
+      node.velocityY *= 0.6;
+    }
+  }
+
+  /**
+   * Computes the force-model mass of a physical node.
+   * @param node - Physical node or graph node used by this operation.
+   * @returns The node area used as mass by the force model.
+   */
+  private _mass(node: PhysicalNode): number {
+    return Math.PI * node.radius * node.radius;
+  }
+
+  /**
+   * Adds a scaled force contribution to the physical node.
+   * @param node - Physical node or graph node used by this operation.
+   * @param x - Horizontal force component.
+   * @param y - Vertical force component.
+   */
+  private _force(node: PhysicalNode, x: number, y: number): void {
+    if (node.locked) {
+      return;
+    }
+    node.velocityX += x;
+    node.velocityY += y;
+    const magnitude: number = Math.hypot(node.velocityX, node.velocityY);
+    if (magnitude > 300) {
+      node.velocityX *= 300 / magnitude;
+      node.velocityY *= 300 / magnitude;
+    }
+  }
+
+  /**
+   * Applies attraction or repulsion between two physical nodes.
+   * @param left - First physical node in this force pair.
+   * @param right - Second physical node in this force pair.
+   * @param strength - Function computing signed force magnitude from the distance between nodes.
+   */
+  private _pair(
+    left: PhysicalNode,
+    right: PhysicalNode,
+    strength: (distance: number) => number,
+  ): void {
+    // Use a stable direction for coincident nodes, without moving locked nodes as a side effect.
+    const x: number =
+      left.positionX === right.positionX && left.positionY === right.positionY
+        ? 0.1
+        : left.positionX - right.positionX;
+    const y: number = left.positionY - right.positionY;
+    const distance: number = Math.hypot(x, y);
+    const force: number = strength(distance);
+    this._force(left, (x / distance) * force, (y / distance) * force);
+    this._force(right, (-x / distance) * force, (-y / distance) * force);
+  }
+}

@@ -1,0 +1,986 @@
+import { DataRecord } from './data/DataRecord';
+import { UndoWrapper } from '../undo/UndoWrapper';
+import { SMap } from '../map/Map';
+import { SSet } from '../set/Set';
+import type { UndoWrapperInfo } from '../undo/UndoWrapperInfo';
+import type { CanvasData } from './data/CanvasData';
+import type { CanvasReference } from './data/CanvasReference';
+import type { GraphData } from './data/GraphData';
+import type { NodeData } from './data/NodeData';
+import type { Position } from './data/Position';
+import type { RoomData } from './data/RoomData';
+import type { ScenarioGroupData } from './data/ScenarioGroupData';
+import type { UserData } from './data/UserData';
+import type { CanvasDelegates } from './delegates/CanvasDelegates';
+import type { PhysicsWorkerListener } from './delegates/PhysicsWorkerListener';
+import type { CanvasAction } from './actions/CanvasAction';
+import { CanvasActionContext } from './actions/CanvasActionContext';
+import { CanvasGraph } from './graph/CanvasGraph';
+import { CanvasHistogram } from './graph/CanvasHistogram';
+import type { HistogramData } from './graph/HistogramData';
+import { CanvasViewSettings } from './view-settings/CanvasViewSettings';
+import { CanvasRoom } from './CanvasRoom';
+import { CanvasError } from './CanvasError';
+import type { CanvasUser } from './users/CanvasUser';
+import { CanvasChangedEvent } from './events/CanvasChangedEvent';
+import { CanvasErrorEvent } from './events/CanvasErrorEvent';
+import { CanvasLifecycleEvent } from './events/CanvasLifecycleEvent';
+import { CanvasLimitEvent } from './events/CanvasLimitEvent';
+import { CanvasPhysicsEvent } from './events/CanvasPhysicsEvent';
+import { CanvasPresenceEvent } from './events/CanvasPresenceEvent';
+import { CanvasProgressEvent } from './events/CanvasProgressEvent';
+import { CanvasRoomEvent } from './events/CanvasRoomEvent';
+import type { CanvasEvent } from './events/CanvasEvent';
+import { CanvasPhysicsWorker } from './physics/CanvasPhysicsWorker';
+import type { WorkerEvent } from './physics/WorkerEvent';
+import { UnlockAllCanvasNodesAction } from './actions/UnlockAllCanvasNodesAction';
+
+/**
+ * Owns an isolated canvas, serializes authorized mutations and delegates persistence, events and worker transport to the host.
+ */
+export class LiveCanvas implements PhysicsWorkerListener {
+  /**
+   * Bounded graph undo and redo history.
+   */
+  private readonly _history: UndoWrapper<GraphData> =
+    new UndoWrapper<GraphData>(
+      new CanvasGraph().toData(),
+      (data: GraphData): GraphData => structuredClone(data),
+      { maximumStackSize: 10 },
+    );
+
+  /**
+   * Referenced visualization configuration.
+   */
+  private _settings: CanvasViewSettings = new CanvasViewSettings();
+
+  /**
+   * Registered session identities mapped to their user models.
+   */
+  private readonly _users: SMap<string, UserData> = new SMap<
+    string,
+    UserData
+  >();
+
+  /**
+   * Node identities mapped to the sessions currently holding them.
+   */
+  private readonly _grabs: SMap<string, SSet<string>> = new SMap<
+    string,
+    SSet<string>
+  >();
+
+  /**
+   * Owned worker controller or platform-specific test worker.
+   */
+  private readonly _worker: CanvasPhysicsWorker;
+
+  /**
+   * Current canvas lifecycle state.
+   */
+  private _state:
+    'new' | 'starting' | 'ready' | 'closing' | 'destroyed' | 'failed' = 'new';
+
+  /**
+   * Settled queue tail used to serialize subsequent operations.
+   */
+  private _tail: Promise<void> = Promise.resolve();
+
+  /**
+   * Shared promise for an in-progress worker startup.
+   */
+  private _start: Promise<void> | null = null;
+
+  /**
+   * Shared promise for idempotent asynchronous destruction.
+   */
+  private _destroy: Promise<void> | null = null;
+
+  /**
+   * Graph or run commands waiting for worker startup.
+   */
+  private _pending: number = 0;
+
+  /**
+   * Whether this canvas has been removed from its room.
+   */
+  private _closed: boolean = false;
+
+  /**
+   * Whether idle shutdown has already been requested from the owner.
+   */
+  private _idleShutdownRequested: boolean = false;
+
+  /**
+   * Handle of the currently scheduled idle shutdown timer.
+   */
+  private _shutdown: {
+    /**
+     * Opaque timer handle owned by the runtime delegate.
+     */
+    handle: unknown;
+  } | null = null;
+
+  /**
+   * Token invalidating callbacks from cancelled idle shutdown timers.
+   */
+  private _shutdownGeneration: number = 0;
+
+  /**
+   * Bounded list of failures thrown synchronously by event observers.
+   */
+  private readonly _observerErrors: unknown[] = [];
+
+  /**
+   * Retains the canvas identity and host delegates and creates an initially empty canvas with an owned worker controller.
+   * @param _reference - Identity, containing room and title of the canvas.
+   * @param _delegates - Host implementations of the external canvas boundaries.
+   */
+  public constructor(
+    private readonly _reference: CanvasReference,
+    private readonly _delegates: CanvasDelegates,
+  ) {
+    this._worker = new CanvasPhysicsWorker(_delegates.worker, this);
+  }
+
+  /**
+   * Returns the current canvas lifecycle state.
+   * @returns The current canvas lifecycle state.
+   */
+  public get state(): string {
+    return this._state;
+  }
+
+  /**
+   * Returns a detached summary of available undo and redo operations.
+   * @returns A detached summary of available undo and redo operations.
+   */
+  public get history(): UndoWrapperInfo {
+    return this._history.info;
+  }
+
+  /**
+   * Returns a copy of the bounded list of failures thrown by event observers.
+   * @returns A copy of the bounded list of failures thrown by event observers.
+   */
+  public get observerErrors(): readonly unknown[] {
+    return [...this._observerErrors];
+  }
+
+  /**
+   * Returns a deep snapshot that callers can modify without mutating the referenced data.
+   * @returns A deep snapshot that callers can modify without mutating the referenced data.
+   */
+  public toData(): CanvasData {
+    return {
+      graph: structuredClone(this._history.current),
+      viewSettings: this._settings.toData(),
+    };
+  }
+
+  /**
+   * Returns an authorized canvas snapshot after checking the current room permissions.
+   * @param user - Trusted identity requesting the operation.
+   * @returns A detached graph and view-settings snapshot visible to the requesting identity.
+   */
+  public read(user: CanvasUser): Promise<CanvasData> {
+    return this._enqueue('Read canvas', async (): Promise<CanvasData> => {
+      await this._access(user);
+      return this.toData();
+    });
+  }
+
+  /**
+   * Returns a histogram of the authorized graph snapshot.
+   * @param user - Trusted identity requesting the operation.
+   * @returns Histogram groups and element IDs computed from the authorized snapshot.
+   */
+  public async getHistogram(user: CanvasUser): Promise<HistogramData> {
+    const data: CanvasData = await this.read(user);
+    return new CanvasHistogram(
+      data.graph,
+      new CanvasViewSettings(data.viewSettings),
+    ).toData();
+  }
+
+  /**
+   * Returns detached presence data for the registered sessions.
+   * @returns Detached presence snapshots of all registered sessions.
+   */
+  public getActiveUsers(): UserData[] {
+    return this._users
+      .toValueArray()
+      .map((user: UserData): UserData => structuredClone(user));
+  }
+
+  /**
+   * Loads the canvas and derived data, initializes its history and starts the owned physics worker.
+   * @returns A promise that settles when the operation completes.
+   * @throws {@link CanvasError} When the input, lifecycle state or permissions do not satisfy this operation’s requirements.
+   */
+  public bootstrap(): Promise<void> {
+    if (
+      this._state === 'destroyed' ||
+      this._state === 'closing' ||
+      this._state === 'failed'
+    ) {
+      return Promise.reject(
+        new CanvasError('invalid-state', 'Canvas cannot be started.'),
+      );
+    }
+    if (this._start !== null) {
+      return this._start;
+    }
+    if (this._state !== 'new') {
+      return Promise.reject(
+        new CanvasError('invalid-state', 'Canvas cannot be started.'),
+      );
+    }
+    this._state = 'starting';
+    this._start = (async (): Promise<void> => {
+      try {
+        const data: CanvasData | null = await this._delegates.storage.load(
+          this._reference.id,
+        );
+        if (data !== null) {
+          const settings: CanvasViewSettings = new CanvasViewSettings(
+            structuredClone(data.viewSettings),
+          );
+          settings.validate();
+          const room: RoomData = await this._delegates.storage.getRoom(
+            this._reference.id,
+          );
+          if (room.id !== this._reference.roomId) {
+            throw new CanvasError(
+              'not-found',
+              'Canvas does not belong to room.',
+            );
+          }
+          const context: CanvasActionContext = new CanvasActionContext(
+            structuredClone(data),
+            room,
+            this._delegates,
+          );
+          await this._postProcess(context);
+          this._history.reset(context.finish().graph);
+          this._settings = settings;
+        }
+        await this._worker.start();
+        this._state = this._destroy === null ? 'ready' : 'closing';
+        this._syncWorker();
+        this._emit(new CanvasLifecycleEvent(this._reference.id, 'ready'));
+      } catch (error: unknown) {
+        this._state = 'failed';
+        await this._worker.destroy();
+        this._emit(new CanvasErrorEvent(this._reference.id, error));
+        throw error;
+      }
+    })();
+    return this._start;
+  }
+
+  /**
+   * Serializes an authorized action, commits its completed draft and emits the corresponding changes.
+   * @param user - Trusted identity requesting the operation.
+   * @param action - Polymorphic canvas action or transaction callback to execute.
+   * @returns A promise that settles when the operation completes.
+   */
+  public execute(user: CanvasUser, action: CanvasAction): Promise<void> {
+    return this._enqueue(action.title, async (): Promise<void> => {
+      const room: RoomData = await this._access(user);
+      const context: CanvasActionContext = new CanvasActionContext(
+        this.toData(),
+        room,
+        this._delegates,
+        this._grabs
+          .filter((sessions: SSet<string>): boolean => sessions.size > 0)
+          .toKeyArray(),
+      );
+      await action.apply(context);
+      await this._postProcess(context);
+      await this._access(user);
+      const next: CanvasData = context.finish();
+      if (context.title !== null) {
+        const change: Awaited<ReturnType<CanvasRoom['change']>> =
+          await new CanvasRoom(room, this._delegates.room).change(
+            this._reference.id,
+            'rename',
+            null,
+            context.title,
+          );
+        this._emit(new CanvasRoomEvent(this._reference.id, change.canvases));
+      }
+      // Commit once, after the asynchronous draft and authorization checks succeeded.
+      this._history.transaction(action.title, (): GraphData => next.graph);
+      this._settings = new CanvasViewSettings(next.viewSettings);
+      this._pruneGrabs();
+      this._updatePhysics(action.physics);
+      this._emit(
+        new CanvasChangedEvent(this._reference.id, [
+          'graph',
+          'metadata',
+          'table',
+          'notes',
+          'viewSettings',
+          'histogram',
+        ]),
+      );
+      for (const count of context.limits) {
+        this._emit(new CanvasLimitEvent(this._reference.id, count));
+      }
+    });
+  }
+
+  /**
+   * Restores the previous graph history entry, updates derived data and saves the published state.
+   * @param user - Trusted identity requesting the operation.
+   * @returns A promise that settles when the operation completes.
+   */
+  public undo(user: CanvasUser): Promise<void> {
+    return this._restore(user, 'undo');
+  }
+
+  /**
+   * Restores the next graph history entry, updates derived data and saves the published state.
+   * @param user - Trusted identity requesting the operation.
+   * @returns A promise that settles when the operation completes.
+   */
+  public redo(user: CanvasUser): Promise<void> {
+    return this._restore(user, 'redo');
+  }
+
+  /**
+   * Persists the current canvas snapshot after checking the caller’s room access.
+   * @param user - Trusted identity requesting the operation.
+   * @returns A promise that settles when the operation completes.
+   */
+  public saveGraph(user: CanvasUser): Promise<void> {
+    return this._enqueue('Save graph', async (): Promise<void> => {
+      await this._access(user);
+      await this._save();
+    });
+  }
+
+  /**
+   * Unlocks the graph and requests a long physics run.
+   * @param user - Trusted identity requesting the operation.
+   * @returns A promise that settles when the operation completes.
+   */
+  public relayout(user: CanvasUser): Promise<void> {
+    return this._enqueue('Relayout', async (): Promise<void> => {
+      await this._access(user);
+      this._worker.run('long');
+    });
+  }
+
+  /**
+   * Unlocks every canvas node and requests a short physics run.
+   * @param user - Trusted identity requesting the operation.
+   * @returns A promise that settles when the operation completes.
+   */
+  public unlockAllNodes(user: CanvasUser): Promise<void> {
+    // Resolve IDs inside the queue, so preceding graph actions are visible.
+    return this.execute(user, new UnlockAllCanvasNodesAction(this._grabs));
+  }
+
+  /**
+   * Registers an authorized session or updates its presence and cancels pending idle shutdown.
+   * @param user - Trusted identity requesting the operation.
+   * @returns A promise that settles when the operation completes.
+   * @throws {@link CanvasError} When the input, lifecycle state or permissions do not satisfy this operation’s requirements.
+   */
+  public addUser(user: CanvasUser): Promise<void> {
+    return this._enqueue('Join canvas', async (): Promise<void> => {
+      await this._access(user);
+      const data: UserData = user.toData();
+      const existing: UserData | undefined = this._users.get(data.sessionId);
+      if (existing !== undefined && existing.id !== data.id) {
+        throw new CanvasError('conflict', 'Session belongs to another user.');
+      }
+      if (existing === undefined) {
+        this._users.set(data.sessionId, data);
+        this._emit(
+          new CanvasPresenceEvent(
+            this._reference.id,
+            'joined',
+            structuredClone(data),
+          ),
+        );
+      }
+    });
+  }
+
+  /**
+   * Removes a session and its grabs, then schedules idle shutdown when no users remain.
+   * @param sessionId - Registered session identity.
+   * @returns A promise that settles when the operation completes.
+   */
+  public removeUser(sessionId: string): Promise<void> {
+    return this._enqueue('Leave canvas', (): Promise<void> => {
+      const user: UserData | undefined = this._users.get(sessionId);
+      if (user !== undefined) {
+        this._users.delete(sessionId);
+        for (const grabs of this._grabs.values()) {
+          grabs.delete(sessionId);
+        }
+        this._updatePhysics();
+        this._emit(
+          new CanvasPresenceEvent(
+            this._reference.id,
+            'left',
+            structuredClone(user),
+          ),
+        );
+      }
+      return Promise.resolve();
+    }).then((): void => {
+      if (this._users.size === 0) {
+        this.scheduleShutdown();
+      }
+    });
+  }
+
+  /**
+   * Validates and updates a registered user’s cursor position.
+   * @param user - Trusted identity requesting the operation.
+   * @param position - New finite canvas coordinates.
+   * @returns A promise that settles when the operation completes.
+   * @throws {@link CanvasError} When the input, lifecycle state or permissions do not satisfy this operation’s requirements.
+   */
+  public setCursorPosition(
+    user: CanvasUser,
+    position: Position | null,
+  ): Promise<void> {
+    return this._enqueue('Move cursor', async (): Promise<void> => {
+      await this._access(user);
+      const session: UserData = this._session(user);
+      if (
+        position !== null &&
+        (!Number.isFinite(position.x) || !Number.isFinite(position.y))
+      ) {
+        throw new CanvasError('invalid-data', 'Cursor must be finite.');
+      }
+      session.position = structuredClone(position);
+      this._emit(
+        new CanvasPresenceEvent(
+          this._reference.id,
+          'cursor',
+          structuredClone(session),
+        ),
+      );
+    });
+  }
+
+  /**
+   * Registers this authorized session as a node grabber; multiple sessions may hold the same node.
+   * @param user - Trusted identity requesting the operation.
+   * @param nodeId - Canonical identity of the selected node.
+   * @returns A promise that settles when the operation completes.
+   */
+  public grabNode(user: CanvasUser, nodeId: string): Promise<void> {
+    return this._enqueue('Grab node', async (): Promise<void> => {
+      await this._access(user);
+      const session: UserData = this._session(user);
+      new CanvasGraph(this._history.current).getNode(nodeId);
+      this._grabs.set(
+        nodeId,
+        (this._grabs.get(nodeId) ?? new SSet()).byAdding(session.sessionId),
+      );
+      this._updatePhysics();
+    });
+  }
+
+  /**
+   * Moves nodes grabbed by the requesting session and updates the worker revision.
+   * @param user - Trusted identity requesting the operation.
+   * @param positions - New positions indexed by canonical node identity.
+   * @returns A promise that settles when the operation completes.
+   */
+  public moveNodes(
+    user: CanvasUser,
+    positions: readonly {
+      /**
+       * Canonical identity of this domain object.
+       */
+      id: string;
+
+      /**
+       * Position in canvas coordinates; null means that no cursor position is available.
+       */
+      position: Position;
+    }[],
+  ): Promise<void> {
+    return this._enqueue('Move nodes', async (): Promise<void> => {
+      await this._access(user);
+      const session: UserData = this._session(user);
+      const draft: GraphData = structuredClone(this._history.current);
+      const graph: CanvasGraph = new CanvasGraph(draft);
+      for (const node of positions) {
+        if (!(this._grabs.get(node.id)?.has(session.sessionId) ?? false)) {
+          continue;
+        }
+        graph.getNode(node.id).move(node.position);
+        graph.getNode(node.id).setLocked(true);
+      }
+      // Dragging does not create an undo entry for every pointer event.
+      Object.assign(this._history.current, draft);
+      this._updatePhysics('short');
+      this._emit(
+        new CanvasChangedEvent(this._reference.id, ['positions', 'locks']),
+      );
+    });
+  }
+
+  /**
+   * Applies the final position, releases the session’s node grab and updates physics.
+   * @param user - Trusted identity requesting the operation.
+   * @param nodeId - Canonical identity of the selected node.
+   * @param position - New finite canvas coordinates.
+   * @returns A promise that settles when the operation completes.
+   * @throws {@link CanvasError} When the input, lifecycle state or permissions do not satisfy this operation’s requirements.
+   */
+  public ungrabNode(
+    user: CanvasUser,
+    nodeId: string,
+    position: Position,
+  ): Promise<void> {
+    return this._enqueue('Release node', async (): Promise<void> => {
+      await this._access(user);
+      const session: UserData = this._session(user);
+      const grabs: SSet<string> | undefined = this._grabs.get(nodeId);
+      if (!(grabs?.has(session.sessionId) ?? false)) {
+        throw new CanvasError(
+          'forbidden',
+          'Node was not grabbed by this session.',
+        );
+      }
+      const node: ReturnType<CanvasGraph['getNode']> = new CanvasGraph(
+        this._history.current,
+      ).getNode(nodeId);
+      node.move(position);
+      node.setLocked(true);
+      grabs?.delete(session.sessionId);
+      this._updatePhysics();
+      this._emit(
+        new CanvasChangedEvent(this._reference.id, ['positions', 'locks']),
+      );
+    });
+  }
+
+  /**
+   * Reloads graph-relevant notes and publishes a notes change after checking access.
+   * @param user - Trusted identity requesting the operation.
+   * @returns A promise that settles when the operation completes.
+   */
+  public refreshNotes(user: CanvasUser): Promise<void> {
+    return this._enqueue('Refresh notes', async (): Promise<void> => {
+      const context: CanvasActionContext = new CanvasActionContext(
+        this.toData(),
+        await this._access(user),
+        this._delegates,
+      );
+      await this._postProcess(context);
+      await this._access(user);
+      Object.assign(this._history.current, context.finish().graph);
+      this._emit(
+        new CanvasChangedEvent(this._reference.id, ['graph', 'notes']),
+      );
+    });
+  }
+
+  /**
+   * Executes an authorized room-canvas transaction and publishes its resulting references.
+   * @param user - Trusted identity requesting the operation.
+   * @param operation - Operation to serialize and execute.
+   * @returns The selected or newly created canvas reference, or null when the operation does not select one.
+   */
+  public changeRoom(
+    user: CanvasUser,
+    operation: 'create' | 'duplicate' | 'close' | 'closeOthers',
+  ): Promise<CanvasReference | null> {
+    return this._enqueue(
+      'Change room canvases',
+      async (): Promise<CanvasReference | null> => {
+        const room: RoomData = await this._access(user);
+        const change: Awaited<ReturnType<CanvasRoom['change']>> =
+          await new CanvasRoom(room, this._delegates.room).change(
+            this._reference.id,
+            operation,
+            operation === 'duplicate' ? this.toData() : null,
+          );
+        this._emit(new CanvasRoomEvent(this._reference.id, change.canvases));
+        if (operation === 'close') {
+          this._closed = true;
+          this._state = 'closing';
+          this._emit(
+            new CanvasLifecycleEvent(this._reference.id, 'shouldShutdown'),
+          );
+        }
+        return change.canvas;
+      },
+    );
+  }
+
+  /**
+   * Schedules one idle shutdown request when the canvas is ready and has no registered sessions.
+   */
+  public scheduleShutdown(): void {
+    this._idleShutdownRequested = true;
+    if (this._state !== 'ready' || this._pending > 0 || this._users.size > 0) {
+      return;
+    }
+    this._cancelShutdownTimer();
+    const generation: number = this._shutdownGeneration;
+    this._shutdown = {
+      handle: this._delegates.runtime.schedule((): void => {
+        if (
+          generation === this._shutdownGeneration &&
+          this._state === 'ready' &&
+          this._pending === 0 &&
+          this._users.size === 0
+        ) {
+          this._shutdown = null;
+          this._emit(
+            new CanvasLifecycleEvent(this._reference.id, 'shouldShutdown'),
+          );
+        }
+      }, 10_000),
+    };
+  }
+
+  /**
+   * Cancels a pending idle shutdown unless the canvas has already been closed or destroyed.
+   */
+  public cancelShutdown(): void {
+    this._idleShutdownRequested = false;
+    this._cancelShutdownTimer();
+  }
+
+  /**
+   * Drains queued work, stops the worker, optionally saves the final state and completes destruction idempotently.
+   * @param saveGraph - Whether destruction persists the final canvas snapshot.
+   * @returns A promise that settles when the operation completes.
+   */
+  public destroy(saveGraph: boolean = true): Promise<void> {
+    if (this._destroy !== null) {
+      return this._destroy;
+    }
+    const starting: Promise<void> | null = this._start;
+    this.cancelShutdown();
+    const shouldSave: boolean =
+      !this._closed &&
+      (this._state === 'ready' ||
+        this._state === 'closing' ||
+        this._state === 'starting');
+    this._state = 'closing';
+    this._destroy = (async (): Promise<void> => {
+      try {
+        await starting;
+        await this._tail;
+        // Freeze incoming positions before taking the final persistence snapshot.
+        await this._worker.destroy();
+        if (saveGraph && shouldSave && !this._closed) {
+          await this._save();
+        }
+      } finally {
+        try {
+          await this._worker.destroy();
+        } finally {
+          this._state = 'destroyed';
+          this._users.clear();
+          this._grabs.clear();
+          this._emit(new CanvasLifecycleEvent(this._reference.id, 'destroyed'));
+        }
+      }
+    })();
+    return this._destroy;
+  }
+
+  /**
+   * Processes accepted worker events while the canvas is ready or closing; the worker controller fences stale revisions.
+   * @param event - Domain or worker event to process.
+   */
+  public onMessage(event: WorkerEvent): void {
+    if (this._state !== 'ready' && this._state !== 'closing') {
+      return;
+    }
+    if (event.type === 'error') {
+      this.onError(new Error(event.error));
+    } else if (event.type === 'stopped') {
+      this._emit(
+        new CanvasLifecycleEvent(this._reference.id, 'physicsStopped'),
+      );
+    } else {
+      const applied: Record<string, Position> = DataRecord.empty<Position>();
+      for (const node of this._history.current.nodes) {
+        const position: Position | undefined = event.positions[node.id];
+        if (
+          Object.hasOwn(event.positions, node.id) &&
+          !node.locked &&
+          (this._grabs.get(node.id)?.size ?? 0) === 0 &&
+          Number.isFinite(position.x) &&
+          Number.isFinite(position.y)
+        ) {
+          node.position = { ...position };
+          applied[node.id] = { ...position };
+        }
+      }
+      this._emit(
+        new CanvasPhysicsEvent(
+          this._reference.id,
+          applied,
+          structuredClone(event.performance),
+        ),
+      );
+    }
+  }
+
+  /**
+   * Publishes a worker error without invalidating an already committed canvas mutation.
+   * @param error - Failure received from the worker or operation.
+   */
+  public onError(error: unknown): void {
+    this._emit(new CanvasErrorEvent(this._reference.id, error));
+  }
+
+  /**
+   * Invalidates queued shutdown callbacks and cancels the currently scheduled timer.
+   */
+  private _cancelShutdownTimer(): void {
+    this._shutdownGeneration += 1;
+    if (this._shutdown !== null) {
+      this._delegates.runtime.cancel(this._shutdown.handle);
+      this._shutdown = null;
+    }
+  }
+
+  /**
+   * Serializes work after prior operations and rejects requests once shutdown has begun.
+   * @typeParam T - Value or result type preserved by this operation.
+   * @param title - Display title to assign.
+   * @param action - Polymorphic canvas action or transaction callback to execute.
+   * @returns The callback result after preceding queued operations settle.
+   * @throws {@link CanvasError} When the input, lifecycle state or permissions do not satisfy this operation’s requirements.
+   */
+  private _enqueue<T>(title: string, action: () => Promise<T>): Promise<T> {
+    if (this._state !== 'ready') {
+      return Promise.reject(
+        new CanvasError('invalid-state', 'Canvas is not ready.'),
+      );
+    }
+    this._cancelShutdownTimer();
+    this._pending += 1;
+    const operation: Promise<T> = this._tail.then(async (): Promise<T> => {
+      this._emit(
+        new CanvasProgressEvent(this._reference.id, title, this._pending - 1),
+      );
+      try {
+        if (this._closed) {
+          throw new CanvasError('invalid-state', 'Canvas has been closed.');
+        }
+        return await action();
+      } catch (error: unknown) {
+        this.onError(error);
+        throw error;
+      } finally {
+        this._pending -= 1;
+        this._emit(
+          new CanvasProgressEvent(this._reference.id, null, this._pending),
+        );
+        if (
+          this._idleShutdownRequested &&
+          this._pending === 0 &&
+          this._users.size === 0
+        ) {
+          this.scheduleShutdown();
+        }
+      }
+    });
+    this._tail = operation.then(
+      (): void => undefined,
+      (): void => undefined,
+    );
+    return operation;
+  }
+
+  /**
+   * Loads current room data and checks the requesting identity’s access.
+   * @param user - Trusted identity requesting the operation.
+   * @returns The current room data after the identity passes authorization.
+   * @throws {@link CanvasError} When the input, lifecycle state or permissions do not satisfy this operation’s requirements.
+   */
+  private async _access(user: CanvasUser): Promise<RoomData> {
+    const room: RoomData = await this._delegates.storage.getRoom(
+      this._reference.id,
+    );
+    if (room.id !== this._reference.roomId) {
+      throw new CanvasError('not-found', 'Canvas does not belong to room.');
+    }
+    user.requireAccess(room);
+    return room;
+  }
+
+  /**
+   * Checks that a registered session belongs to the requesting identity.
+   * @param user - Trusted identity requesting the operation.
+   * @returns The registered user model matching this session and identity.
+   * @throws {@link CanvasError} When the input, lifecycle state or permissions do not satisfy this operation’s requirements.
+   */
+  private _session(user: CanvasUser): UserData {
+    const data: UserData = user.toData();
+    const session: UserData | undefined = this._users.get(data.sessionId);
+    if (session?.id !== data.id) {
+      throw new CanvasError('forbidden', 'Unknown user session.');
+    }
+    return session;
+  }
+
+  /**
+   * Rebuilds derived graph data, notes and available scenarios for a completed action draft.
+   * @param context - Isolated draft and delegates used by this action.
+   * @returns A promise that settles when the operation completes.
+   */
+  private async _postProcess(context: CanvasActionContext): Promise<void> {
+    context.graph.removeDanglingEdges();
+    context.graph.merge(
+      await this._delegates.storage.getMergeRules(context.room.projectId),
+      (): string => this._delegates.runtime.createId(),
+    );
+    context.data.graph.notes = structuredClone(
+      await this._delegates.storage.getNotes(
+        this._reference.id,
+        context.graph.toData(),
+      ),
+    );
+    const groups: ScenarioGroupData[] =
+      await this._delegates.storage.getScenarioGroups(context.room.projectId);
+    for (const node of context.data.graph.nodes) {
+      node.noteIds = context.data.graph.notes
+        .filter(
+          (note: GraphData['notes'][number]): boolean =>
+            note.nodeIds.includes(node.id) ||
+            node.compressedIds.some((id: string): boolean =>
+              note.nodeIds.includes(id),
+            ),
+        )
+        .map((note: GraphData['notes'][number]): string => note.id);
+      node.scenarioGroups = groups
+        .map((group: ScenarioGroupData): ScenarioGroupData => ({
+          ...structuredClone(group),
+          scenarios: group.scenarios.filter(
+            (scenario: ScenarioGroupData['scenarios'][number]): boolean =>
+              scenario.parameters.some(
+                (parameter: GraphData['parameters'][number]): boolean =>
+                  Object.hasOwn(node.properties, parameter.identifier) &&
+                  (parameter.allowedLabels.length === 0 ||
+                    node.labels.some((label: string): boolean =>
+                      parameter.allowedLabels.includes(label),
+                    )),
+              ),
+          ),
+        }))
+        .filter(
+          (group: ScenarioGroupData): boolean => group.scenarios.length > 0,
+        );
+    }
+  }
+
+  /**
+   * Restores a history snapshot and republishes derived state and physics.
+   * @param user - Trusted identity requesting the operation.
+   * @param direction - History direction to restore: undo or redo.
+   * @returns A promise that settles when the operation completes.
+   */
+  private async _restore(
+    user: CanvasUser,
+    direction: 'undo' | 'redo',
+  ): Promise<void> {
+    await this._enqueue(direction, async (): Promise<void> => {
+      await this._access(user);
+      if (
+        direction === 'undo' ? !this.history.canUndo : !this.history.canRedo
+      ) {
+        return;
+      }
+      this._history[direction]();
+      this._pruneGrabs();
+      this._updatePhysics();
+      this._emit(
+        new CanvasChangedEvent(this._reference.id, [
+          'graph',
+          'metadata',
+          'table',
+          'notes',
+          'histogram',
+        ]),
+      );
+      await this._save();
+    });
+  }
+
+  /**
+   * Drops grabs referring to nodes removed by the latest graph mutation.
+   */
+  private _pruneGrabs(): void {
+    const ids: string[] = this._history.current.nodes.map(
+      (node: NodeData): string => node.id,
+    );
+    for (const id of this._grabs.keys()) {
+      if (!ids.includes(id)) {
+        this._grabs.delete(id);
+      }
+    }
+  }
+
+  /**
+   * Advances the worker graph revision with the current locks and grabs.
+   * @param amount - Requested short or long physics duration policy.
+   */
+  private _updatePhysics(amount: 'none' | 'short' | 'long' = 'none'): void {
+    try {
+      this._syncWorker();
+      if (amount !== 'none') {
+        this._worker.run(amount);
+      }
+    } catch (error: unknown) {
+      this.onError(error);
+    }
+  }
+
+  /**
+   * Updates the worker and reports transport errors while preserving the committed local state.
+   */
+  private _syncWorker(): void {
+    this._worker.setGraph(
+      new CanvasGraph(this._history.current).toPhysicalGraph(
+        this._settings,
+        this._grabs
+          .filter((sessions: SSet<string>): boolean => sessions.size > 0)
+          .toKeyArray(),
+      ),
+    );
+  }
+
+  /**
+   * Persists the current snapshot unless its canvas has already been closed.
+   * @returns A promise that settles when the operation completes.
+   */
+  private async _save(): Promise<void> {
+    await this._delegates.storage.save(this._reference.id, this.toData());
+  }
+
+  /**
+   * Dispatches an event and retains a bounded list of synchronous observer failures.
+   * @param event - Domain or worker event to process.
+   */
+  private _emit(event: CanvasEvent): void {
+    try {
+      this._delegates.events.handleEvent(event);
+    } catch (error: unknown) {
+      this._observerErrors.push(error);
+      if (this._observerErrors.length > 100) {
+        this._observerErrors.shift();
+      }
+    }
+  }
+}
