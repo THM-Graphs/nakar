@@ -270,7 +270,6 @@ export function CanvasTabs() {
                 setContextMenu(null);
               }
             }}
-            focusFirstItemOnShow
           >
             <Dropdown.Menu
               ref={menuRef}
