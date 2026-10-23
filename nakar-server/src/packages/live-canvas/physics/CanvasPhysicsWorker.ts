@@ -3,6 +3,8 @@ import type { PhysicalGraph } from '../../physics/physical-graph/PhysicalGraph';
 import type { PhysicsWorkerDelegate } from '../delegates/PhysicsWorkerDelegate';
 import type { PhysicsWorkerListener } from '../delegates/PhysicsWorkerListener';
 import type { WorkerEvent } from './WorkerEvent';
+import type { PhysicsSimulationRunOptions } from '../../physics/PhysicsSimulationRunOptions';
+import { InvalidDataError } from '../error/InvalidDataError';
 
 /**
  * Owns worker startup and termination, tracks graph revisions and rejects stale or late worker messages.
@@ -92,18 +94,43 @@ export class CanvasPhysicsWorker implements PhysicsWorkerListener {
 
   /**
    * Requests a physics run for the current graph revision.
-   * @param amount - Requested short or long physics duration policy.
+   * @param amount - Short or long duration policy, or an explicit maxMs duration; null runs until stopped.
    * @throws {@link error/CanvasError!CanvasError | CanvasError} When the input, lifecycle state or permissions do not satisfy this operation’s requirements.
    */
-  public run(amount: 'short' | 'long'): void {
+  public run(amount: 'short' | 'long' | PhysicsSimulationRunOptions): void {
     if (!this._active || !this._ready) {
       throw new InvalidStateError('Worker is not active.');
+    }
+    const milliseconds: number | null =
+      typeof amount === 'object'
+        ? amount.maxMs
+        : amount === 'short'
+          ? 1000
+          : 4000;
+    if (
+      milliseconds !== null &&
+      (!Number.isFinite(milliseconds) || milliseconds <= 0)
+    ) {
+      throw new InvalidDataError(
+        'Physics duration must be positive and finite.',
+      );
     }
     this._delegate.post({
       type: 'run',
       revision: this._revision,
-      milliseconds: amount === 'short' ? 1000 : 4000,
+      milliseconds,
     });
+  }
+
+  /**
+   * Stops the current finite or unlimited run while keeping the owned worker available.
+   * @throws {@link error/InvalidStateError!InvalidStateError | InvalidStateError} When the worker is not ready.
+   */
+  public stop(): void {
+    if (!this._active || !this._ready) {
+      throw new InvalidStateError('Worker is not active.');
+    }
+    this._delegate.post({ type: 'stop' });
   }
 
   /**

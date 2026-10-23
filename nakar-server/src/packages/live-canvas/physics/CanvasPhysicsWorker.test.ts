@@ -9,6 +9,7 @@ import { TestHarness } from '../testing/TestHarness.test';
 import type { WorkerCommand } from './WorkerCommand';
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
+import { InvalidDataError } from '../error/InvalidDataError';
 
 void describe('CanvasPhysicsWorker', (): void => {
   void describe('start', (): void => {
@@ -89,6 +90,54 @@ void describe('CanvasPhysicsWorker', (): void => {
     });
   });
   void describe('run', (): void => {
+    void it('sends a custom finite duration', async (): Promise<void> => {
+      const h: ReturnType<typeof TestHarness.setup> = TestHarness.setup();
+      await h.worker.start();
+      h.worker.run({ maxMs: 250 });
+      assert.deepEqual(h.delegate.commands, [
+        { type: 'run', revision: 0, milliseconds: 250 },
+      ]);
+    });
+    void it('sends an unlimited duration', async (): Promise<void> => {
+      const h: ReturnType<typeof TestHarness.setup> = TestHarness.setup();
+      await h.worker.start();
+      h.worker.run({ maxMs: null });
+      assert.deepEqual(h.delegate.commands, [
+        { type: 'run', revision: 0, milliseconds: null },
+      ]);
+    });
+    void it('rejects a custom duration of 0', async (): Promise<void> => {
+      const h: ReturnType<typeof TestHarness.setup> = TestHarness.setup();
+      await h.worker.start();
+      assert.throws((): void => {
+        h.worker.run({ maxMs: 0 });
+      }, InvalidDataError);
+      assert.deepEqual(h.delegate.commands, []);
+    });
+    void it('rejects a custom duration of -1', async (): Promise<void> => {
+      const h: ReturnType<typeof TestHarness.setup> = TestHarness.setup();
+      await h.worker.start();
+      assert.throws((): void => {
+        h.worker.run({ maxMs: -1 });
+      }, InvalidDataError);
+      assert.deepEqual(h.delegate.commands, []);
+    });
+    void it('rejects a custom duration of Infinity', async (): Promise<void> => {
+      const h: ReturnType<typeof TestHarness.setup> = TestHarness.setup();
+      await h.worker.start();
+      assert.throws((): void => {
+        h.worker.run({ maxMs: Infinity });
+      }, InvalidDataError);
+      assert.deepEqual(h.delegate.commands, []);
+    });
+    void it('rejects a custom duration of NaN', async (): Promise<void> => {
+      const h: ReturnType<typeof TestHarness.setup> = TestHarness.setup();
+      await h.worker.start();
+      assert.throws((): void => {
+        h.worker.run({ maxMs: NaN });
+      }, InvalidDataError);
+      assert.deepEqual(h.delegate.commands, []);
+    });
     void it('rejects an inactive worker', (): void => {
       const h: ReturnType<typeof TestHarness.setup> = TestHarness.setup();
       assert.throws((): void => {
@@ -151,6 +200,39 @@ void describe('CanvasPhysicsWorker', (): void => {
         }
       },
     );
+  });
+  void describe('stop', (): void => {
+    void it('stops a run without terminating the worker', async (): Promise<void> => {
+      const h: ReturnType<typeof TestHarness.setup> = TestHarness.setup();
+      await h.worker.start();
+      h.worker.run({ maxMs: null });
+      h.worker.stop();
+      assert.deepEqual(h.delegate.commands.at(-1), { type: 'stop' });
+      assert.equal(h.delegate.terminations, 0);
+      h.worker.run('short');
+      assert.equal(h.delegate.commands.at(-1)?.type, 'run');
+    });
+    void it('rejects a worker before startup', (): void => {
+      assert.throws((): void => {
+        TestHarness.setup().worker.stop();
+      }, InvalidStateError);
+    });
+    void it('rejects a worker during startup', async (): Promise<void> => {
+      const h: ReturnType<typeof TestHarness.setup> = TestHarness.setup();
+      const starting: Promise<void> = h.worker.start();
+      assert.throws((): void => {
+        h.worker.stop();
+      }, InvalidStateError);
+      await starting;
+    });
+    void it('rejects a destroyed worker', async (): Promise<void> => {
+      const h: ReturnType<typeof TestHarness.setup> = TestHarness.setup();
+      await h.worker.start();
+      await h.worker.destroy();
+      assert.throws((): void => {
+        h.worker.stop();
+      }, InvalidStateError);
+    });
   });
   void describe('onMessage', (): void => {
     void it('ignores a notification before startup', (): void => {

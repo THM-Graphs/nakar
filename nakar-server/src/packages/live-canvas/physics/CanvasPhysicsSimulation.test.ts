@@ -4,9 +4,57 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import type { PhysicalGraph } from '../../physics/physical-graph/PhysicalGraph';
 import { CanvasPhysicsSimulation } from './CanvasPhysicsSimulation';
+import { InvalidDataError } from '../error/InvalidDataError';
+import type { CanvasPhysicsOptions } from './CanvasPhysicsOptions';
 
 void describe('CanvasPhysicsSimulation', (): void => {
   void describe('tick', (): void => {
+    void it('caps velocity before displacement using the configured maximum', (): void => {
+      const graph: PhysicalGraph = TestHarness.driftingPhysicalGraph();
+      new CanvasPhysicsSimulation(graph, {
+        maximumVelocity: 2,
+        frictionFactor: 0,
+      }).tick(1);
+      assert.equal(graph.nodes['a']?.positionX, 2);
+      assert.equal(graph.nodes['a'].velocityX, 2);
+    });
+    void it('caps force contributions using the configured maximum', (): void => {
+      const graph: PhysicalGraph = TestHarness.physical();
+      new CanvasPhysicsSimulation(graph, {
+        maximumForce: 5,
+        frictionFactor: 0,
+      }).tick(1);
+      for (const node of Object.values(graph.nodes)) {
+        assert.ok(
+          node !== null &&
+            Math.hypot(node.velocityX, node.velocityY) <= 5.000001,
+        );
+      }
+    });
+    void it('applies configured friction after moving nodes', (): void => {
+      const graph: PhysicalGraph = TestHarness.driftingPhysicalGraph();
+      new CanvasPhysicsSimulation(graph, { frictionFactor: 0.25 }).tick(1);
+      assert.equal(graph.nodes['a']?.positionX, 10);
+      assert.equal(graph.nodes['a'].velocityX, 7.5);
+    });
+    void it('removes all velocity when friction is one', (): void => {
+      const graph: PhysicalGraph = TestHarness.driftingPhysicalGraph();
+      new CanvasPhysicsSimulation(graph, { frictionFactor: 1 }).tick(1);
+      assert.equal(graph.nodes['a']?.positionX, 10);
+      assert.equal(graph.nodes['a'].velocityX, 0);
+    });
+    void it('scales displacement with heat while still applying friction', (): void => {
+      const graph: PhysicalGraph = TestHarness.driftingPhysicalGraph();
+      const simulation: CanvasPhysicsSimulation = new CanvasPhysicsSimulation(
+        graph,
+      );
+      simulation.tick(0.5);
+      assert.equal(graph.nodes['a']?.positionX, 5);
+      assert.equal(graph.nodes['a'].velocityX, 6);
+      simulation.tick(0);
+      assert.equal(graph.nodes['a'].positionX, 5);
+      assert.ok(Math.abs(graph.nodes['a'].velocityX - 3.6) < 0.000001);
+    });
     void it('separates coincident nodes deterministically and keeps values finite', (): void => {
       const graph: PhysicalGraph = TestHarness.physical();
       new CanvasPhysicsSimulation(graph).tick(1);
@@ -78,6 +126,24 @@ void describe('CanvasPhysicsSimulation', (): void => {
     });
   });
   void describe('constructor', (): void => {
+    void it('snapshots settings so later caller mutations cannot affect simulation', (): void => {
+      const graph: PhysicalGraph = TestHarness.driftingPhysicalGraph();
+      const options: Partial<CanvasPhysicsOptions> = { frictionFactor: 0 };
+      const simulation: CanvasPhysicsSimulation = new CanvasPhysicsSimulation(
+        graph,
+        options,
+      );
+      options.frictionFactor = 1;
+      simulation.tick(1);
+      assert.equal(graph.nodes['a']?.velocityX, 10);
+    });
+    void it('rejects invalid simulation options', (): void => {
+      assert.throws((): void => {
+        new CanvasPhysicsSimulation(TestHarness.physical(), {
+          maximumVelocity: 0,
+        });
+      }, InvalidDataError);
+    });
     void it('retains its initial data and collaborators', (): void => {
       const graph: PhysicalGraph = TestHarness.physical();
       const simulation: CanvasPhysicsSimulation = new CanvasPhysicsSimulation(

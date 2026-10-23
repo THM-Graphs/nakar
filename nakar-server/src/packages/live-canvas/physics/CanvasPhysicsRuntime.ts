@@ -6,9 +6,11 @@ import type { Position } from '../data/Position';
 import { CanvasPhysicsSimulation } from './CanvasPhysicsSimulation';
 import type { WorkerCommand } from './WorkerCommand';
 import type { PhysicsRuntimeDelegate } from './PhysicsRuntimeDelegate';
+import { CanvasPhysicsConfiguration } from './CanvasPhysicsConfiguration';
+import type { CanvasPhysicsOptions } from './CanvasPhysicsOptions';
 
 /**
- * Runs the worker-side command protocol and schedules deterministic physics ticks using host-provided timing.
+ * Runs fast physics batches, yielding to the host between rate-limited position updates.
  */
 export class CanvasPhysicsRuntime {
   /**
@@ -19,9 +21,10 @@ export class CanvasPhysicsRuntime {
   /**
    * Force simulation for the current worker graph.
    */
-  private _simulation: CanvasPhysicsSimulation = new CanvasPhysicsSimulation(
-    this._graph,
-  );
+  private _simulation: CanvasPhysicsSimulation;
+
+  /** Validated simulation settings shared by each replacement graph. */
+  private readonly _configuration: CanvasPhysicsConfiguration;
 
   /**
    * Latest graph revision sent to the worker.
@@ -29,9 +32,9 @@ export class CanvasPhysicsRuntime {
   private _revision: number = 0;
 
   /**
-   * Clock time at which the current physics run must end.
+   * Clock time at which the current physics run must end, or null for an unlimited run.
    */
-  private _deadline: number = 0;
+  private _deadline: number | null = 0;
 
   /**
    * Currently scheduled physics tick timer.
@@ -56,8 +59,18 @@ export class CanvasPhysicsRuntime {
   /**
    * References worker timing and transport delegates without starting any timers.
    * @param _delegate - Host implementation of the external operations.
+   * @param options - Position frequency, force limits and cooling configuration.
    */
-  public constructor(private readonly _delegate: PhysicsRuntimeDelegate) {}
+  public constructor(
+    private readonly _delegate: PhysicsRuntimeDelegate,
+    options: Partial<CanvasPhysicsOptions> = {},
+  ) {
+    this._configuration = new CanvasPhysicsConfiguration(options);
+    this._simulation = new CanvasPhysicsSimulation(
+      this._graph,
+      this._configuration,
+    );
+  }
 
   /**
    * Processes a revision-aware graph, run or stop command in the worker runtime.
@@ -76,21 +89,27 @@ export class CanvasPhysicsRuntime {
         this._stop();
         this._revision = command.revision;
         this._graph = structuredClone(command.graph);
-        this._simulation = new CanvasPhysicsSimulation(this._graph);
+        this._simulation = new CanvasPhysicsSimulation(
+          this._graph,
+          this._configuration,
+        );
         break;
       case 'run':
         if (command.revision !== this._revision) {
           return;
         }
         if (
-          !Number.isFinite(command.milliseconds) ||
-          command.milliseconds <= 0
+          command.milliseconds !== null &&
+          (!Number.isFinite(command.milliseconds) || command.milliseconds <= 0)
         ) {
           throw new InvalidDataError(
             'Physics duration must be positive and finite.',
           );
         }
-        this._deadline = this._delegate.now() + command.milliseconds;
+        this._deadline =
+          command.milliseconds === null
+            ? null
+            : this._delegate.now() + command.milliseconds;
         if (this._timer === null) {
           this._schedule();
         }
@@ -122,7 +141,7 @@ export class CanvasPhysicsRuntime {
   }
 
   /**
-   * Schedules the next physics tick and guards against cancelled or destroyed runtimes.
+   * Yields through the host scheduler before the next batch and fences obsolete callbacks.
    */
   private _schedule(): void {
     const generation: number = this._generation;
@@ -133,24 +152,43 @@ export class CanvasPhysicsRuntime {
         }
         this._timer = null;
         try {
-          this._tick();
+          this._runBatch();
         } catch (error: unknown) {
           this._stop();
           this._delegate.post({ type: 'error', error: String(error) });
         }
-      }, 15),
+      }, 0),
     };
   }
 
   /**
-   * Runs a simulation step, reports positions and either schedules another tick or reports completion.
+   * Runs ticks without pauses until the output interval or deadline is reached.
+   * Publishes average tick statistics and a final snapshot before reporting completion.
    */
-  private _tick(): void {
+  private _runBatch(): void {
+    const generation: number = this._generation;
     const start: number = this._delegate.now();
-    this._simulation.tick(
-      Math.max(0, Math.min(1, (this._deadline - start) / 1000)),
+    let now: number = start;
+    let tickCount: number = 0;
+    do {
+      const heat: number =
+        this._deadline === null
+          ? 1
+          : Math.max(
+              0,
+              Math.min(
+                1,
+                (this._deadline - now) / this._configuration.cooldownTime,
+              ),
+            );
+      this._simulation.tick(heat);
+      tickCount += 1;
+      now = this._delegate.now();
+    } while (
+      now - start < 1000 / this._configuration.FPS &&
+      (this._deadline === null || now < this._deadline)
     );
-    const duration: number = this._delegate.now() - start;
+    const duration: number = (now - start) / tickCount;
     const positions: Record<string, Position> = DataRecord.empty<Position>();
     for (const node of Object.values(this._graph.nodes)) {
       if (node !== null) {
@@ -162,13 +200,19 @@ export class CanvasPhysicsRuntime {
       revision: this._revision,
       positions,
       performance: {
-        performance: duration > 15 ? 'bad' : 'good',
+        performance:
+          duration > this._configuration.targetPhysicsTickDuration
+            ? 'bad'
+            : 'good',
         tickDuration: duration,
-        tickCount: 1,
-        loadPercent: duration / 15,
+        tickCount,
+        loadPercent: duration / this._configuration.targetPhysicsTickDuration,
       },
     });
-    if (this._delegate.now() >= this._deadline) {
+    if (generation !== this._generation || this._destroyed) {
+      return;
+    }
+    if (this._deadline !== null && now >= this._deadline) {
       this._delegate.post({ type: 'stopped', revision: this._revision });
     } else {
       this._schedule();

@@ -1,16 +1,27 @@
 import type { PhysicalGraph } from '../../physics/physical-graph/PhysicalGraph';
 import type { PhysicalNode } from '../../physics/physical-graph/PhysicalNode';
 import { CombinationCache } from '../../physics/CombinationCache';
+import { CanvasPhysicsConfiguration } from './CanvasPhysicsConfiguration';
+import type { CanvasPhysicsOptions } from './CanvasPhysicsOptions';
 
 /**
  * Advances the force model by a deterministic step while preserving locked node positions.
  */
 export class CanvasPhysicsSimulation {
+  /** Validated force and friction settings retained for subsequent ticks. */
+  private readonly _configuration: CanvasPhysicsConfiguration;
+
   /**
    * References the physical graph that subsequent simulation ticks update.
    * @param _graph - Graph whose data is read or modified.
+   * @param options - Force, velocity, friction and timing overrides.
    */
-  public constructor(private readonly _graph: PhysicalGraph) {}
+  public constructor(
+    private readonly _graph: PhysicalGraph,
+    options: Partial<CanvasPhysicsOptions> = {},
+  ) {
+    this._configuration = new CanvasPhysicsConfiguration(options);
+  }
 
   /**
    * Applies one deterministic force step to the referenced physical graph.
@@ -81,10 +92,15 @@ export class CanvasPhysicsSimulation {
         node.velocityY = 0;
         continue;
       }
+      const speed: number = Math.hypot(node.velocityX, node.velocityY);
+      if (speed > this._configuration.maximumVelocity) {
+        node.velocityX *= this._configuration.maximumVelocity / speed;
+        node.velocityY *= this._configuration.maximumVelocity / speed;
+      }
       node.positionX += node.velocityX * heat;
       node.positionY += node.velocityY * heat;
-      node.velocityX *= 0.6;
-      node.velocityY *= 0.6;
+      node.velocityX *= 1 - this._configuration.frictionFactor;
+      node.velocityY *= 1 - this._configuration.frictionFactor;
     }
   }
 
@@ -110,9 +126,9 @@ export class CanvasPhysicsSimulation {
     node.velocityX += x;
     node.velocityY += y;
     const magnitude: number = Math.hypot(node.velocityX, node.velocityY);
-    if (magnitude > 300) {
-      node.velocityX *= 300 / magnitude;
-      node.velocityY *= 300 / magnitude;
+    if (magnitude > this._configuration.maximumForce) {
+      node.velocityX *= this._configuration.maximumForce / magnitude;
+      node.velocityY *= this._configuration.maximumForce / magnitude;
     }
   }
 

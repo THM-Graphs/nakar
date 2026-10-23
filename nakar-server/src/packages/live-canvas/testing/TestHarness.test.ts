@@ -18,11 +18,43 @@ import { GuestCanvasUser } from '../users/GuestCanvasUser';
 import type { WorkerCommand } from '../physics/WorkerCommand';
 import { CanvasActionContext } from '../actions/CanvasActionContext';
 import type { PhysicalGraph } from '../../physics/physical-graph/PhysicalGraph';
+import type { PhysicalNode } from '../../physics/physical-graph/PhysicalNode';
 import { CanvasPhysicsWorker } from '../physics/CanvasPhysicsWorker';
 import type { WorkerEvent } from '../physics/WorkerEvent';
 import type { PhysicsWorkerListener } from '../delegates/PhysicsWorkerListener';
+import { CanvasPhysicsRuntime } from '../physics/CanvasPhysicsRuntime';
+import type { CanvasPhysicsOptions } from '../physics/CanvasPhysicsOptions';
+import type { MockTimer } from './MockTimer.test';
 
 export class TestHarness {
+  public static physicsRuntime(
+    tickMilliseconds: number = 1,
+    options: Partial<CanvasPhysicsOptions> = {},
+  ): {
+    runtime: CanvasPhysicsRuntime;
+    delegate: MockRuntimeDelegate;
+  } {
+    const delegate: MockRuntimeDelegate = new MockRuntimeDelegate();
+    delegate.now = (): number => {
+      const time: number = delegate.time;
+      delegate.time += tickMilliseconds;
+      return time;
+    };
+    return { runtime: new CanvasPhysicsRuntime(delegate, options), delegate };
+  }
+
+  public static runPhysicsBatch(delegate: MockRuntimeDelegate): void {
+    const timer: MockTimer | undefined = delegate.timers.find(
+      (entry: MockTimer): boolean => !entry.cancelled,
+    );
+    if (timer === undefined) {
+      throw new Error('No scheduled physics batch.');
+    }
+    delegate.time = Math.max(delegate.time, timer.at);
+    timer.cancelled = true;
+    timer.callback();
+  }
+
   public static node(id: string, overrides: Partial<NodeData> = {}): NodeData {
     return {
       id,
@@ -171,6 +203,17 @@ export class TestHarness {
     return new CanvasGraph(TestHarness.canvasData().graph).toPhysicalGraph(
       new CanvasViewSettings(),
     );
+  }
+  public static driftingPhysicalGraph(): PhysicalGraph {
+    const graph: PhysicalGraph = TestHarness.physical();
+    const node: PhysicalNode | null = graph.nodes['a'];
+    if (node === null) {
+      throw new Error('Missing test node.');
+    }
+    return {
+      nodes: { a: { ...node, radius: 0, velocityX: 10, velocityY: 0 } },
+      edges: {},
+    };
   }
   public static setup(): {
     worker: CanvasPhysicsWorker;

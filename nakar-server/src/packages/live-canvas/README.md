@@ -193,19 +193,13 @@ ihre Griffe als vertrauenswürdiger Aufruf der einbettenden Anwendung.
 
 ## Physik und Worker
 
-`CanvasPhysicsWorker` steuert den Worker über `PhysicsWorkerDelegate`.
-`CanvasPhysicsRuntime` verarbeitet im Worker die `WorkerCommand`-Nachrichten
-über `handle()`. Ergebnisse und Fehler werden als `WorkerEvent` zurückgegeben.
-Die eigentliche Berechnung übernimmt `CanvasPhysicsSimulation`.
+`CanvasPhysicsWorker` verwaltet den Worker über `PhysicsWorkerDelegate`.
+Die Simulation berechnet fortlaufend Ticks und veröffentlicht standardmäßig
+16-mal pro Sekunde Positionen. Gesperrte oder gegriffene Knoten bleiben fixiert;
+veraltete Worker-Ergebnisse werden verworfen.
 
-Graph- und Lockänderungen erhöhen die Worker-Revision. Die Worker-Steuerung
-verwirft Ergebnisse älterer Revisionen sowie Nachrichten nach dem Beenden.
-Gesperrte oder gegriffene Knoten behalten ihre Position. Deckungsgleiche Knoten
-erhalten eine deterministische Trennrichtung.
-
-Die Laufzeit plant Simulationsschritte im Abstand von 15 Millisekunden. Kurze
-Läufe dauern eine Sekunde, lange Läufe vier Sekunden. `relayout(actor)` fordert
-einen langen Lauf an; `unlockAllNodes(actor)` einen kurzen Lauf.
+`CanvasPhysicsOptions` konfiguriert Simulation und Ausgaberate. Läufe können
+kurz (1 s), lang (4 s), zeitlich begrenzt oder unbegrenzt bis `stop()` sein.
 
 ## Fehler
 

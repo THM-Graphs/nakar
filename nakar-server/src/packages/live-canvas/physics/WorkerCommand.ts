@@ -32,9 +32,9 @@ export type WorkerCommand =
       revision: number;
 
       /**
-       * Duration or delay in milliseconds.
+       * Run duration in milliseconds, or null to run until explicitly stopped.
        */
-      milliseconds: number;
+      milliseconds: number | null;
     }
   | {
       /**
