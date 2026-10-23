@@ -7,6 +7,7 @@ export default defineConfig([
     './src/admin',
     './types/generated',
     './dist',
+    './docs',
     './config',
     './.strapi',
     './test',
