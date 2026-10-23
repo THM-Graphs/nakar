@@ -41,6 +41,7 @@ import {
   CanvasPageDto,
   EventWsdto,
   publicCanvasControllerGetCanvas,
+  publicRoomControllerGetRoom,
   RoomDto,
   ScenarioArgumentDto,
   ScenarioCollectionDto,
@@ -60,6 +61,7 @@ import {
 import { Group, Panel, Separator } from "react-resizable-panels";
 import { GraphRenderer } from "../room/canvas/graph-renderer/GraphRenderer.tsx";
 import { GraphDataToggle } from "../room/data-table/GraphDataToggle.tsx";
+import { CanvasTabs } from "../room/canvas-tabs/CanvasTabs.tsx";
 
 const CanvasContext: Context<CanvasContextData | null> =
   createContext<CanvasContextData | null>(null);
@@ -81,8 +83,6 @@ export type CanvasContextData = {
 export async function CanvasLoader(
   args: LoaderFunctionArgs,
 ): Promise<CanvasContextData> {
-  useBearStore.getState().room.scenario.setGraph(null);
-
   const canvasId = args.params["canvasId"];
   const roomId = args.params["roomId"];
 
@@ -109,8 +109,21 @@ export async function CanvasLoader(
 }
 
 export function Canvas() {
-  const context = useAppContext();
   const canvasContext: CanvasContextData = useLoaderData();
+  return (
+    <CanvasContent
+      key={canvasContext.initialCanvasData.id}
+      canvasContext={canvasContext}
+    />
+  );
+}
+
+function CanvasContent({
+  canvasContext,
+}: {
+  canvasContext: CanvasContextData;
+}) {
+  const context = useAppContext();
   const setGraph = useBearStore((s) => s.room.scenario.setGraph);
   const setGraphElements = useBearStore(
     (s) => s.room.scenario.setGraphElements,
@@ -166,6 +179,9 @@ export function Canvas() {
   }, []);
 
   useEffect(() => {
+    setGraph(null);
+    useBearStore.getState().room.panels.inspector.deselectElements();
+    useBearStore.getState().room.canvas.renderer.setGlobalError(null);
     setScenarios(canvasContext.initialScenariosData);
     webSockets.connect(canvasContext.initialCanvasData.id);
     return () => {
@@ -236,6 +252,7 @@ export function Canvas() {
   }, [searchParams, socketState, canvasContext]);
 
   useEffect(() => {
+    let cancelled = false;
     const subscriptions = [
       webSockets.onMessage$.subscribe((message: EventWsdto) => {
         match(message.event)
@@ -272,7 +289,27 @@ export function Canvas() {
             setLocks(event.locks);
           })
           .with({ type: "KickWsdto" }, () => {
-            void navigate(Router.getHomePath());
+            // A deleted canvas returns its users to a remaining canvas in the room.
+            publicRoomControllerGetRoom({
+              path: { roomId: canvasContext.initialRoomData.id },
+            })
+              .then(resultOrThrow)
+              .then((room) => {
+                if (!cancelled) {
+                  return navigate(
+                    Router.getCanvasPath(room.id, room.joinCanvasId),
+                    { replace: true },
+                  );
+                }
+              })
+              .catch(() => {
+                if (!cancelled) {
+                  void navigate(Router.getHomePath(), { replace: true });
+                }
+              });
+          })
+          .with({ type: "RoomCanvasesChangedWsdto" }, () => {
+            /* Handled by CanvasTabs without reloading the graph. */
           })
           .with({ type: "CanvasDataReadyWsdto" }, (event) => {
             setGraph(event.data);
@@ -297,6 +334,7 @@ export function Canvas() {
     ];
 
     return () => {
+      cancelled = true;
       subscriptions.forEach((s) => {
         s.unsubscribe();
       });
@@ -312,13 +350,7 @@ export function Canvas() {
       <Stack style={{ height: "100%" }} className={"position-relative bg-body"}>
         <CanvasShortcuts></CanvasShortcuts>
         <Stack gap={1}>
-          <Stack
-            className={"flex-grow-0 flex-shrink-0 z-3"}
-            style={{
-              background:
-                "linear-gradient(to top, transparent 0%, var(--bs-body-bg) 50%)",
-            }}
-          >
+          <Stack className={"flex-grow-0 flex-shrink-0 z-3 bg-body-tertiary"}>
             <AppNavbar
               left={
                 <>
@@ -351,8 +383,9 @@ export function Canvas() {
                 </>
               }
             ></AppNavbar>
-            <CanvasToolbar className={"ms-1 me-1"}></CanvasToolbar>
+            <CanvasTabs></CanvasTabs>
           </Stack>
+          <CanvasToolbar className={"mx-1"}></CanvasToolbar>
           <Stack
             direction={"horizontal"}
             className={

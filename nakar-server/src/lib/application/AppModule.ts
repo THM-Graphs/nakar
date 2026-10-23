@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { SchemaFactoryService } from '../schema/SchemaFactoryService';
-import { DatabaseEventsService } from '../database/DatabaseEventsService';
+import { DatabaseEventsService } from '../database-events/DatabaseEventsService';
 import { DatabaseService } from '../database/DatabaseService';
 import { ExternalGraphDatabaseService } from '../external-database/ExternalGraphDatabaseService';
 import { ExternalGraphDatabaseReportService } from '../external-database-report/ExternalGraphDatabaseReportService';

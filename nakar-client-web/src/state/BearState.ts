@@ -234,7 +234,7 @@ export interface BearState {
         mode: "svg" | "webgl";
         setMode: (newCurrent: "svg" | "webgl") => void;
         globalError: string | null;
-        setGlobalError: (newError: string) => void;
+        setGlobalError: (newError: string | null) => void;
       };
     };
   };

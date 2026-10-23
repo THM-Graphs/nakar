@@ -749,8 +749,14 @@ export type CanvasReadyWsdto = {
     type: 'CanvasReadyWsdto';
 };
 
+export type RoomCanvasesChangedWsdto = {
+    type: 'RoomCanvasesChangedWsdto';
+    roomId: string;
+    canvases: Array<CanvasDto>;
+};
+
 export type EventWsdto = {
-    event: CanvasChangedWsdto | CanvasDataReadyWsdto | ClearProgressWsdto | CanvasElementsChangedWsdto | CanvasMetaDataChangedWsdto | CanvasTableDataChangedWsdto | CanvasHistogramChangedWsdto | CanvasNotesChangedWsdto | KickWsdto | NodesMovedWsdto | NotificationWsdto | ProgressWsdto | SetNodeLocksWsdto | CanvasViewSettingsChangedWsdto | CursorMovedWsdto | CanvasReadyWsdto;
+    event: CanvasChangedWsdto | CanvasDataReadyWsdto | ClearProgressWsdto | CanvasElementsChangedWsdto | CanvasMetaDataChangedWsdto | CanvasTableDataChangedWsdto | CanvasHistogramChangedWsdto | CanvasNotesChangedWsdto | KickWsdto | NodesMovedWsdto | NotificationWsdto | ProgressWsdto | SetNodeLocksWsdto | CanvasViewSettingsChangedWsdto | CursorMovedWsdto | CanvasReadyWsdto | RoomCanvasesChangedWsdto;
 };
 
 export type AuthWsdto = {
@@ -1270,6 +1276,69 @@ export type CanvasDatabaseConnectionControllerExpandNodePreviewResponses = {
 };
 
 export type CanvasDatabaseConnectionControllerExpandNodePreviewResponse = CanvasDatabaseConnectionControllerExpandNodePreviewResponses[keyof CanvasDatabaseConnectionControllerExpandNodePreviewResponses];
+
+export type ActionControllerCreateCanvasData = {
+    body?: never;
+    path: {
+        roomId: string;
+        canvasId: string;
+    };
+    query?: never;
+    url: '/api/room/{roomId}/canvas/{canvasId}/action/create-canvas';
+};
+
+export type ActionControllerCreateCanvasResponses = {
+    200: CanvasDto;
+};
+
+export type ActionControllerCreateCanvasResponse = ActionControllerCreateCanvasResponses[keyof ActionControllerCreateCanvasResponses];
+
+export type ActionControllerCloseCanvasData = {
+    body?: never;
+    path: {
+        roomId: string;
+        canvasId: string;
+    };
+    query?: never;
+    url: '/api/room/{roomId}/canvas/{canvasId}/action/close-canvas';
+};
+
+export type ActionControllerCloseCanvasErrors = {
+    /**
+     * The last canvas cannot be deleted.
+     */
+    409: unknown;
+};
+
+export type ActionControllerDuplicateCanvasData = {
+    body?: never;
+    path: {
+        roomId: string;
+        canvasId: string;
+    };
+    query?: never;
+    url: '/api/room/{roomId}/canvas/{canvasId}/action/duplicate-canvas';
+};
+
+export type ActionControllerDuplicateCanvasResponses = {
+    200: CanvasDto;
+};
+
+export type ActionControllerDuplicateCanvasResponse = ActionControllerDuplicateCanvasResponses[keyof ActionControllerDuplicateCanvasResponses];
+
+export type ActionControllerCloseOtherCanvasesData = {
+    body?: never;
+    path: {
+        roomId: string;
+        canvasId: string;
+    };
+    query?: never;
+    url: '/api/room/{roomId}/canvas/{canvasId}/action/close-other-canvases';
+};
+
+export type ActionControllerCloseOtherCanvasesResponses = {
+    200: unknown;
+};
 
 export type ActionControllerLoadScenarioData = {
     body: LoadScenarioRequestBodyDto;

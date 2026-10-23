@@ -34,10 +34,10 @@ export function RoomVisibilityEditor(props: {
                 direction={"horizontal"}
                 gap={3}
                 className={clsx(
-                  "rounded ps-3 pe-3 pt-2 pb-2 pointer border",
+                  "rounded ps-3 pe-3 pt-2 pb-2 pointer border bg-body-secondary-hover",
                   visibility[0] === props.value
-                    ? "bg-body-secondary bg-body-hover"
-                    : "bg-body-tertiary bg-body-secondary-hover",
+                    ? "bg-body-secondary"
+                    : "bg-body-tertiary",
                 )}
                 style={{ maxWidth: "500px" }}
                 onClick={() => {
