@@ -33,29 +33,38 @@ export class MediaService {
     payload: string,
     name: string | null,
   ): Promise<Modules.Documents.Result<'plugin::upload.file'>> {
-    const filePath: string = path.join(os.tmpdir(), 'f.txt');
-    await fs.writeFile(filePath, payload, { encoding: 'utf-8' });
+    const temporaryDirectory: string = await fs.mkdtemp(
+      path.join(os.tmpdir(), 'nakar-json-'),
+    );
+    try {
+      const filePath: string = path.join(temporaryDirectory, 'data.json');
+      await fs.writeFile(filePath, payload, { encoding: 'utf-8' });
 
-    const service: Core.Service = this._uploadPlugin.service('upload');
+      const service: Core.Service = this._uploadPlugin.service('upload');
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    const uploadFunction: (
-      params: Record<string, unknown>,
-    ) => Promise<Modules.Documents.Result<'plugin::upload.file'>[]> =
-      service['upload'];
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      const uploadFunction: (
+        params: Record<string, unknown>,
+      ) => Promise<Modules.Documents.Result<'plugin::upload.file'>[]> =
+        service['upload'];
 
-    const result: Modules.Documents.Result<'plugin::upload.file'>[] =
-      await uploadFunction({
-        data: {},
-        files: {
-          filepath: filePath,
-          originalFilename: sanitize(name ?? v4()),
-          mimetype: 'application/json',
-          size: payload.length,
-        },
+      const result: Modules.Documents.Result<'plugin::upload.file'>[] =
+        await uploadFunction({
+          data: {},
+          files: {
+            filepath: filePath,
+            originalFilename: sanitize(name ?? v4()),
+            mimetype: 'application/json',
+            size: payload.length,
+          },
+        });
+      return result[0];
+    } finally {
+      await fs.rm(temporaryDirectory, {
+        recursive: true,
+        force: true,
       });
-    await fs.rm(filePath);
-    return result[0];
+    }
   }
 
   public async deleteFile(
