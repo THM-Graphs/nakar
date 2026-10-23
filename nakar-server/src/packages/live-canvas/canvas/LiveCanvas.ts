@@ -806,6 +806,7 @@ export class LiveCanvas implements PhysicsWorkerListener {
         this._grabs
           .filter((sessions: SSet<string>): boolean => sessions.size > 0)
           .toKeyArray(),
+        this._history.current.nodes,
       );
       await action.apply(context);
       if (action.postProcess) {

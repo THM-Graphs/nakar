@@ -1,5 +1,6 @@
 import type { NodeData } from '../data/NodeData';
 import type { QueryResult } from '../data/QueryResult';
+import type { Position } from '../data/Position';
 import type { CanvasActionContext } from './CanvasActionContext';
 import { SourceAction } from './SourceAction';
 
@@ -68,6 +69,7 @@ export class ExpandNodesAction extends SourceAction {
           }),
         limit: this._limit,
       });
+      const position: Position = context.getPosition(id);
       if (node.compressed.length > 0) {
         context.graph.deleteElements([id], [], [], []);
       }
@@ -79,8 +81,8 @@ export class ExpandNodesAction extends SourceAction {
           const angle: number =
             context.delegates.runtime.random() * Math.PI * 2;
           added.position = {
-            x: node.position.x + Math.cos(angle) * 10,
-            y: node.position.y + Math.sin(angle) * 10,
+            x: position.x + Math.cos(angle) * 10,
+            y: position.y + Math.sin(angle) * 10,
           };
         }
       }

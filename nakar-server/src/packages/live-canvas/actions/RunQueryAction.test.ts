@@ -22,7 +22,7 @@ void describe('RunQueryAction', (): void => {
         c.context.graph.getNode('d').toData().creationReason,
         'query',
       );
-      assert.deepEqual(c.context.limits, [1]);
+      assert.deepEqual(c.context.limits, [2]);
     });
     void it('replaces the graph, table and scenario metadata', async (): Promise<void> => {
       const c: ReturnType<typeof TestHarness.context> = TestHarness.context();
@@ -38,7 +38,7 @@ void describe('RunQueryAction', (): void => {
       );
       assert.equal(c.context.data.graph.scenarioId, null);
       assert.deepEqual(c.context.data.graph.table, [{ value: 1 }]);
-      assert.deepEqual(c.context.limits, [1]);
+      assert.deepEqual(c.context.limits, [2]);
     });
   });
   void describe('constructor', (): void => {

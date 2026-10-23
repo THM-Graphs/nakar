@@ -7,6 +7,7 @@ import type { GraphRequest } from '../delegates/GraphRequest';
 import { CanvasGraph } from '../graph/CanvasGraph';
 import { CanvasViewSettings } from '../view-settings/CanvasViewSettings';
 import type { NodeData } from '../data/NodeData';
+import type { Position } from '../data/Position';
 
 /**
  * Holds one isolated action draft. LiveCanvas publishes the draft only after successful execution and postprocessing.
@@ -40,16 +41,33 @@ export class CanvasActionContext {
    * @param room - Current room access and project membership data.
    * @param delegates - Host implementations of the external canvas boundaries.
    * @param grabbedNodeIds - Node identities temporarily held by user sessions.
+   * @param _liveNodes - Referenced live nodes whose positions may change while this draft awaits delegates.
    */
   public constructor(
     public readonly data: CanvasData,
     public readonly room: RoomData,
     public readonly delegates: CanvasDelegates,
     public readonly grabbedNodeIds: readonly string[] = [],
+    private readonly _liveNodes: readonly NodeData[] = [],
   ) {
     this._originalNodes = structuredClone(data.graph.nodes);
     this.graph = new CanvasGraph(data.graph);
     this.settings = new CanvasViewSettings(data.viewSettings);
+  }
+
+  /**
+   * Returns a detached current live position, falling back to the draft for nodes without a live reference.
+   * @param nodeId - Canonical identity of the origin node.
+   * @returns The latest position available to this action.
+   * @throws {@link error/NotFoundError!NotFoundError | NotFoundError} When the node is absent from both the live references and the draft.
+   */
+  public getPosition(nodeId: string): Position {
+    const node: NodeData | undefined = this._liveNodes.find(
+      (entry: NodeData): boolean => entry.id === nodeId,
+    );
+    return {
+      ...(node?.position ?? this.graph.getNode(nodeId).toData().position),
+    };
   }
 
   /**

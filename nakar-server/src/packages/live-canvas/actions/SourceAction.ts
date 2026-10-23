@@ -14,25 +14,34 @@ export abstract class SourceAction extends CanvasAction {
   public readonly creationReason: string = 'expand';
 
   /**
-   * Stamps the action creation reason on source elements, adds them to the graph and collects source-limit notifications.
+   * Adds all result nodes before their relationships, stamps their creation reason and collects a separate limit notification for each result.
    * @param context - Isolated draft and delegates used by this action.
-   * @param result - Normalized source result to add.
+   * @param results - Normalized source results to combine before removing dangling relationships.
    */
-  protected add(context: CanvasActionContext, result: QueryResult): void {
+  protected add(context: CanvasActionContext, ...results: QueryResult[]): void {
     context.graph.add({
-      ...result,
-      nodes: result.nodes.map((node: NodeData): NodeData => ({
-        ...node,
-        creationReason: this.creationReason,
-      })),
-      edges: result.edges.map((edge: EdgeData): EdgeData => ({
-        ...edge,
-        creationReason: this.creationReason,
-      })),
+      nodes: results.flatMap((result: QueryResult): NodeData[] =>
+        result.nodes.map((node: NodeData): NodeData => ({
+          ...node,
+          creationReason: this.creationReason,
+        })),
+      ),
+      edges: results.flatMap((result: QueryResult): EdgeData[] =>
+        result.edges.map((edge: EdgeData): EdgeData => ({
+          ...edge,
+          creationReason: this.creationReason,
+        })),
+      ),
+      table: [],
+      limitReached: false,
     });
     // Limit notifications are collected by LiveCanvas after the draft commits.
-    if (result.limitReached) {
-      context.limits.push(result.nodes.length + result.edges.length);
+    for (const result of results) {
+      if (result.limitReached) {
+        context.limits.push(
+          result.nodes.length + result.edges.length + result.table.length,
+        );
+      }
     }
   }
 }

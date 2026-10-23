@@ -9,6 +9,59 @@ import { LoadScenarioAction } from './LoadScenarioAction';
 
 void describe('LoadScenarioAction', (): void => {
   void describe('apply', (): void => {
+    void it('retains relationships from an earlier query when their endpoints arrive later', async (): Promise<void> => {
+      const c: ReturnType<typeof TestHarness.context> = TestHarness.context();
+      c.h.storage.scenario.queries.push({
+        sourceId: 'source',
+        query: 'second',
+        isTableQuery: false,
+      });
+      c.h.source.handler = (): Promise<ReturnType<typeof TestHarness.result>> =>
+        Promise.resolve(
+          c.h.source.calls.length === 1
+            ? TestHarness.result(
+                [TestHarness.node('left')],
+                [
+                  TestHarness.edge('link', 'left', 'right'),
+                  TestHarness.edge('dangling', 'left', 'absent'),
+                ],
+              )
+            : TestHarness.result([TestHarness.node('right')]),
+        );
+      c.h.storage.scenario.actions = [{ type: 'compressRelationships' }];
+      await new LoadScenarioAction('scenario').apply(c.context);
+      assert.equal(c.context.graph.getEdge('link').toData().endNodeId, 'right');
+      assert.equal(c.context.data.graph.edges.length, 1);
+      assert.equal(
+        c.context.graph.getEdge('link').toData().creationReason,
+        'loadScenario',
+      );
+    });
+    void it('preserves cross-query relationships and individual limit counts when adding a scenario', async (): Promise<void> => {
+      const c: ReturnType<typeof TestHarness.context> = TestHarness.context();
+      c.h.storage.scenario.queries.push({
+        sourceId: 'source',
+        query: 'second',
+        isTableQuery: false,
+      });
+      c.h.source.handler = (): Promise<ReturnType<typeof TestHarness.result>> =>
+        Promise.resolve(
+          c.h.source.calls.length === 1
+            ? {
+                ...TestHarness.result(
+                  [TestHarness.node('left')],
+                  [TestHarness.edge('link', 'left', 'right')],
+                  true,
+                ),
+                table: [{ value: 1 }],
+              }
+            : TestHarness.result([TestHarness.node('right')], [], true),
+        );
+      await new LoadScenarioAction('scenario', {}, true).apply(c.context);
+      assert.equal(c.context.graph.getEdge('ab').id, 'ab');
+      assert.equal(c.context.graph.getEdge('link').id, 'link');
+      assert.deepEqual(c.context.limits, [3, 1]);
+    });
     void it('converts scenario parameters and executes queries and follow-up actions in order', async (): Promise<void> => {
       const c: ReturnType<typeof TestHarness.context> = TestHarness.context();
       c.context.graph.getNode('a').move({ x: 4, y: 5 });
@@ -319,6 +372,22 @@ void describe('LoadScenarioAction', (): void => {
         { value: 1 },
         { value: 2 },
       ]);
+    });
+    void it('counts every returned collection in a limited table query without inserting its graph elements', async (): Promise<void> => {
+      const c: ReturnType<typeof TestHarness.context> = TestHarness.context();
+      c.h.storage.scenario.queries[0].isTableQuery = true;
+      c.h.source.response = {
+        ...TestHarness.result(
+          [TestHarness.node('a'), TestHarness.node('b')],
+          [TestHarness.edge('ab')],
+          true,
+        ),
+        table: [{ value: 1 }, { value: 2 }],
+      };
+      await new LoadScenarioAction('scenario').apply(c.context);
+      assert.deepEqual(c.context.limits, [5]);
+      assert.deepEqual(c.context.data.graph.nodes, []);
+      assert.equal(c.context.data.graph.table.length, 2);
     });
   });
   void describe('constructor', (): void => {

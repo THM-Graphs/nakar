@@ -5,11 +5,14 @@ import type { QueryResult } from '../data/QueryResult';
 export class MockSourceAction extends SourceAction {
   public readonly title: string = 'Mock source action';
 
-  public constructor(private readonly _result: QueryResult) {
+  private readonly _results: QueryResult[];
+
+  public constructor(...results: QueryResult[]) {
     super();
+    this._results = results;
   }
 
   public override apply(context: CanvasActionContext): void {
-    this.add(context, this._result);
+    this.add(context, ...this._results);
   }
 }

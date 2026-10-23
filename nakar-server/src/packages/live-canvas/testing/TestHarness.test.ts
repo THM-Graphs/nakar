@@ -253,7 +253,7 @@ export class TestHarness {
     }
     return graph;
   }
-  public static context(): {
+  public static context(liveNodes: readonly NodeData[] = []): {
     context: CanvasActionContext;
     h: ReturnType<typeof TestHarness.harness>;
   } {
@@ -263,6 +263,8 @@ export class TestHarness {
         TestHarness.canvasData(),
         h.storage.room,
         h.delegates,
+        [],
+        liveNodes,
       ),
       h,
     };

@@ -122,6 +122,10 @@ Knotenclustern zu und erhält die Zuordnung von Notizen.
 `ScenarioActionFactory` erzeugt konkrete Aktionen aus den Folgeaktionen eines
 Szenarios. Kreis- und Force-Directed-Szenario-Layouts lösen ihre Labelauswahl auf
 dem geladenen Graphen auf. Interaktive Layouts verwenden explizite Knoten-IDs.
+Szenario-Ergebnisse werden vor dem Einfügen von Beziehungen zusammengeführt.
+Neue Expansionsknoten werden um die nach der Quellenabfrage aktuelle Position
+ihres Ursprungsknotens platziert. Limitmeldungen zählen Knoten, Beziehungen und
+Tabellenzeilen des jeweiligen Abfrageergebnisses.
 Das Kreis-Layout verwendet `CircleLayoutEngine`, das vertikale Hierarchie-Layout
 den ELK-basierten `HierarchyGraphLayoutEngine`.
 

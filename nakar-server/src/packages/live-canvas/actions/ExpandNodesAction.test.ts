@@ -27,6 +27,22 @@ void describe('ExpandNodesAction', (): void => {
     });
   });
   void describe('apply', (): void => {
+    void it('positions new neighbors around the live origin after the source request completes', async (): Promise<void> => {
+      const nodes: NodeData[] = [TestHarness.node('a')];
+      const c: ReturnType<typeof TestHarness.context> =
+        TestHarness.context(nodes);
+      c.h.source.handler = (): Promise<
+        ReturnType<typeof TestHarness.result>
+      > => {
+        nodes[0].position = { x: 100, y: 200 };
+        return Promise.resolve(TestHarness.result([TestHarness.node('new')]));
+      };
+      await new ExpandNodesAction(['a']).apply(c.context);
+      assert.deepEqual(c.context.graph.getNode('new').toData().position, {
+        x: 100 + Math.cos(Math.PI / 4) * 10,
+        y: 200 + Math.sin(Math.PI / 4) * 10,
+      });
+    });
     void it('expands an individual node with label and relationship limits', async (): Promise<void> => {
       const c: ReturnType<typeof TestHarness.context> = TestHarness.context();
       c.h.source.response = TestHarness.result(

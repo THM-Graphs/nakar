@@ -4,12 +4,47 @@ import { TestHarness } from '../testing/TestHarness.test';
 import type { GraphRequest } from '../delegates/GraphRequest';
 import type { QueryResult } from '../data/QueryResult';
 import type { NodeData } from '../data/NodeData';
+import type { Position } from '../data/Position';
+import { NotFoundError } from '../error/NotFoundError';
 
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import type { CanvasActionContext } from './CanvasActionContext';
 
 void describe('CanvasActionContext', (): void => {
+  void describe('getPosition', (): void => {
+    void it('reads the latest referenced live position and returns a detached value', (): void => {
+      const nodes: NodeData[] = [TestHarness.node('a')];
+      const c: ReturnType<typeof TestHarness.context> =
+        TestHarness.context(nodes);
+      nodes[0].position = { x: 100, y: 200 };
+      const position: Position = c.context.getPosition('a');
+      assert.deepEqual(position, { x: 100, y: 200 });
+      position.x = 999;
+      assert.equal(nodes[0].position.x, 100);
+    });
+    void it('uses the draft position when no live node is available', (): void => {
+      const c: ReturnType<typeof TestHarness.context> = TestHarness.context();
+      c.context.graph.getNode('a').move({ x: 3, y: 4 });
+      assert.deepEqual(c.context.getPosition('a'), { x: 3, y: 4 });
+    });
+    void it('uses the draft for a newly inserted node absent from the live references', (): void => {
+      const c: ReturnType<typeof TestHarness.context> = TestHarness.context([
+        TestHarness.node('a'),
+      ]);
+      c.context.graph.add(
+        TestHarness.result([
+          TestHarness.node('new', { position: { x: 5, y: 6 } }),
+        ]),
+      );
+      assert.deepEqual(c.context.getPosition('new'), { x: 5, y: 6 });
+    });
+    void it('rejects a node absent from live references and the draft', (): void => {
+      assert.throws((): void => {
+        TestHarness.context().context.getPosition('missing');
+      }, NotFoundError);
+    });
+  });
   void describe('preservePositions', (): void => {
     void it('retains live interaction positions and locks over conflicting draft edits', (): void => {
       const c: ReturnType<typeof TestHarness.context> = TestHarness.context();

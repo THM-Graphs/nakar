@@ -100,7 +100,9 @@ export class LoadScenarioAction extends SourceAction {
       if (query.isTableQuery) {
         table.push(...result.table);
         if (result.limitReached) {
-          context.limits.push(result.table.length);
+          context.limits.push(
+            result.nodes.length + result.edges.length + result.table.length,
+          );
         }
       } else {
         results.push(result);
@@ -118,9 +120,7 @@ export class LoadScenarioAction extends SourceAction {
       context.title = scenario.title ?? 'New Canvas';
     }
     context.data.graph.table = structuredClone(table);
-    for (const result of results) {
-      this.add(context, result);
-    }
+    this.add(context, ...results);
     for (const node of context.data.graph.nodes) {
       if (Object.hasOwn(positions, node.id)) {
         node.position = { ...positions[node.id] };

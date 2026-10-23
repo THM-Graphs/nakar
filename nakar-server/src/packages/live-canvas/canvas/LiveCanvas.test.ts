@@ -235,6 +235,134 @@ void describe('LiveCanvas', (): void => {
     });
   });
   void describe('execute', (): void => {
+    void it('commits scenario relationships whose endpoints are loaded by a later query and synchronizes them to the worker', async (): Promise<void> => {
+      const h: ReturnType<typeof TestHarness.harness> = TestHarness.harness();
+      h.storage.data = TestHarness.canvasData([], []);
+      h.storage.scenario.queries.push({
+        sourceId: 'source',
+        query: 'second',
+        isTableQuery: false,
+      });
+      h.source.handler = (): Promise<ReturnType<typeof TestHarness.result>> =>
+        Promise.resolve(
+          h.source.calls.length === 1
+            ? TestHarness.result(
+                [TestHarness.node('a')],
+                [TestHarness.edge('ab')],
+              )
+            : TestHarness.result([TestHarness.node('b')]),
+        );
+      await h.canvas.bootstrap();
+      await h.canvas.execute(
+        TestHarness.user(),
+        new LoadScenarioAction('scenario'),
+      );
+      assert.equal(h.canvas.toData().graph.edges[0].id, 'ab');
+      assert.equal(
+        TestHarness.latestGraph(h.worker.commands).graph.edges['ab']?.endNodeId,
+        'b',
+      );
+      assert.equal(h.canvas.history.undoStackSize, 1);
+      await h.canvas.undo(TestHarness.user());
+      assert.deepEqual(h.canvas.toData().graph.edges, []);
+    });
+    void it('places expanded neighbors around an origin moved by physics during the source request', async (): Promise<void> => {
+      const h: ReturnType<typeof TestHarness.harness> = TestHarness.harness();
+      await h.canvas.bootstrap();
+      assert.equal(
+        await TestHarness.interactDuringAction(
+          h,
+          new ExpandNodesAction(['a']),
+          (): Promise<void> => {
+            h.canvas.onMessage({
+              type: 'positions',
+              revision: 1,
+              positions: { a: { x: 100, y: 200 } },
+              performance,
+            });
+            return Promise.resolve();
+          },
+          TestHarness.result(
+            [TestHarness.node('new')],
+            [TestHarness.edge('an', 'a', 'new')],
+          ),
+        ),
+        true,
+      );
+      const nodes: NodeData[] = h.canvas.toData().graph.nodes;
+      assert.deepEqual(
+        nodes.find((node: NodeData): boolean => node.id === 'a')?.position,
+        { x: 100, y: 200 },
+      );
+      assert.deepEqual(
+        nodes.find((node: NodeData): boolean => node.id === 'new')?.position,
+        {
+          x: 100 + Math.cos(Math.PI / 4) * 10,
+          y: 200 + Math.sin(Math.PI / 4) * 10,
+        },
+      );
+    });
+    void it('places expanded cluster members around a cluster moved by the user during the source request', async (): Promise<void> => {
+      const h: ReturnType<typeof TestHarness.harness> = TestHarness.harness();
+      h.storage.data = TestHarness.canvasData(
+        [
+          TestHarness.node('cluster', {
+            compressed: ['native-a', 'native-b'],
+            compressedIds: ['a', 'b'],
+          }),
+        ],
+        [],
+      );
+      await h.canvas.bootstrap();
+      await h.canvas.addUser(TestHarness.user());
+      assert.equal(
+        await TestHarness.interactDuringAction(
+          h,
+          new ExpandNodesAction(['cluster']),
+          async (): Promise<void> => {
+            await h.canvas.grabNode(TestHarness.user(), 'cluster');
+            await h.canvas.moveNodes(TestHarness.user(), [
+              { id: 'cluster', position: { x: 100, y: 200 } },
+            ]);
+            await h.canvas.ungrabNode(TestHarness.user(), 'cluster', {
+              x: 100,
+              y: 200,
+            });
+          },
+          TestHarness.result([TestHarness.node('a', { nativeId: 'native-a' })]),
+        ),
+        true,
+      );
+      const nodes: NodeData[] = h.canvas.toData().graph.nodes;
+      assert.equal(nodes.length, 1);
+      assert.equal(nodes[0].id, 'a');
+      assert.deepEqual(nodes[0].position, {
+        x: 100 + Math.cos(Math.PI / 4) * 10,
+        y: 200 + Math.sin(Math.PI / 4) * 10,
+      });
+    });
+    void it('reports table-only query limits with their full row count', async (): Promise<void> => {
+      const h: ReturnType<typeof TestHarness.harness> = TestHarness.harness();
+      h.source.response = {
+        ...TestHarness.result([], [], true),
+        table: [{ value: 1 }, { value: 2 }, { value: 3 }],
+      };
+      await h.canvas.bootstrap();
+      await h.canvas.execute(
+        TestHarness.user(),
+        new RunQueryAction('source', 'table', true),
+      );
+      assert.equal(h.canvas.toData().graph.table.length, 3);
+      assert.deepEqual(
+        h.events.events
+          .filter(
+            (event: CanvasEvent): event is CanvasLimitEvent =>
+              event instanceof CanvasLimitEvent,
+          )
+          .map((event: CanvasLimitEvent): number => event.loadedCount),
+        [3],
+      );
+    });
     void it('continues later independent expansions after an earlier source failure', async (): Promise<void> => {
       const h: ReturnType<typeof TestHarness.harness> = TestHarness.harness();
       await h.canvas.bootstrap();
