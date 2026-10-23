@@ -350,13 +350,7 @@ function CanvasContent({
       <Stack style={{ height: "100%" }} className={"position-relative bg-body"}>
         <CanvasShortcuts></CanvasShortcuts>
         <Stack gap={1}>
-          <Stack
-            className={"flex-grow-0 flex-shrink-0 z-3"}
-            style={{
-              background:
-                "linear-gradient(to top, transparent 0%, var(--bs-body-bg) 50%)",
-            }}
-          >
+          <Stack className={"flex-grow-0 flex-shrink-0 z-3 bg-body-tertiary"}>
             <AppNavbar
               left={
                 <>
@@ -389,11 +383,9 @@ function CanvasContent({
                 </>
               }
             ></AppNavbar>
-            <Stack gap={1}>
-              <CanvasTabs></CanvasTabs>
-              <CanvasToolbar className={"mx-1"}></CanvasToolbar>
-            </Stack>
+            <CanvasTabs></CanvasTabs>
           </Stack>
+          <CanvasToolbar className={"mx-1"}></CanvasToolbar>
           <Stack
             direction={"horizontal"}
             className={

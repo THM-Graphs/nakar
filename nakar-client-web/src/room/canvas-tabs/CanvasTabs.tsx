@@ -16,6 +16,7 @@ import { CreateCanvasAction } from "../actions/CreateCanvasAction.ts";
 import { CloseCanvasAction } from "../actions/CloseCanvasAction.ts";
 import { CloseOtherCanvasesAction } from "../actions/CloseOtherCanvasesAction.ts";
 import { DuplicateCanvasAction } from "../actions/DuplicateCanvasAction.ts";
+import { NavbarButton } from "../../shared/elements/NavbarButton.tsx";
 
 export function CanvasTabs() {
   const canvasContext = useCanvasContext();
@@ -192,15 +193,16 @@ export function CanvasTabs() {
 
   return (
     <>
-      <Stack
-        direction="horizontal"
-        className="mx-1 flex-shrink-0 rounded bg-frosted-glass border"
-      >
+      <Stack direction="horizontal" className="flex-shrink-0">
         <nav
           aria-label="Canvases"
-          className="d-flex overflow-x-auto flex-grow-1"
+          className="d-flex overflow-x-auto flex-grow-1 flex-wrap"
           style={{ minWidth: 0 }}
         >
+          <div
+            style={{ width: "5px" }}
+            className={"border-bottom flex-shrink-0 flex-grow-0"}
+          ></div>
           {canvases.map((canvas) => (
             <Stack
               key={canvas.id}
@@ -218,45 +220,56 @@ export function CanvasTabs() {
                 });
               }}
               className={clsx(
-                "flex-shrink-0",
-                canvas.id === activeCanvasId && "bg-body-secondary",
+                "flex-shrink-0 rounded-top overflow-hidden",
+                canvas.id === activeCanvasId
+                  ? "bg-body border-top border-start border-end"
+                  : "border-bottom",
               )}
             >
               <Link
                 to={Router.getCanvasPath(roomId, canvas.id)}
                 aria-current={canvas.id === activeCanvasId ? "page" : undefined}
                 title={canvas.title}
-                className="text-body text-decoration-none small py-1 px-2 ellipsis bg-body-secondary-hover"
-                style={{ maxWidth: "200px", minWidth: "80px" }}
+                className="text-body text-decoration-none small ps-2 ellipsis bg-body-hover"
+                style={{ maxWidth: "300px", minWidth: "180px" }}
               >
-                {canvas.title}
+                <Stack
+                  direction={"horizontal"}
+                  className={"justify-content-between flex-shrink-1"}
+                >
+                  <span
+                    className={
+                      "align-self-center flex-shrink-1 flex-grow-1 ellipsis"
+                    }
+                  >
+                    {canvas.title}
+                  </span>
+                  <NavbarButton
+                    className="align-self-center"
+                    aria-label={`Delete canvas ${canvas.title}`}
+                    disabled={CloseCanvasAction.shared.disabled(
+                      actionParams(canvas),
+                    )}
+                    onClick={() => {
+                      CloseCanvasAction.shared.runAsync(actionParams(canvas));
+                    }}
+                  >
+                    <i className="bi bi-x" aria-hidden="true"></i>
+                  </NavbarButton>
+                </Stack>
               </Link>
-              <Button
-                variant="link"
-                size="sm"
-                className="text-body border-0 px-2"
-                aria-label={`Delete canvas ${canvas.title}`}
-                title={
-                  canvases.length <= 1
-                    ? "The last canvas cannot be deleted"
-                    : `Delete canvas ${canvas.title}`
-                }
-                disabled={CloseCanvasAction.shared.disabled(
-                  actionParams(canvas),
-                )}
-                onClick={() => {
-                  CloseCanvasAction.shared.runAsync(actionParams(canvas));
-                }}
-              >
-                <i className="bi bi-x-lg" aria-hidden="true"></i>
-              </Button>
             </Stack>
           ))}
           <ActionNavbarButton
             action={CreateCanvasAction.shared}
             params={actionParams(canvasContext.initialCanvasData)}
             hideTitle={true}
+            className={"border-bottom rounded-top"}
           ></ActionNavbarButton>
+          <div
+            style={{ width: "50px" }}
+            className={"border-bottom flex-shrink-0 flex-grow-1"}
+          ></div>
         </nav>
       </Stack>
       {contextMenu != null &&
