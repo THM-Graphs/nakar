@@ -2,9 +2,57 @@ import { InvalidDataError } from '../error/InvalidDataError';
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { ScenarioActionFactory } from './ScenarioActionFactory';
+import { TestHarness } from '../testing/TestHarness.test';
 
 void describe('ScenarioActionFactory', (): void => {
   void describe('create', (): void => {
+    void it('resolves circle scenario labels at application time', async (): Promise<void> => {
+      const c: ReturnType<typeof TestHarness.context> = TestHarness.context();
+      const action: ReturnType<ScenarioActionFactory['create']> =
+        new ScenarioActionFactory().create({
+          type: 'layout',
+          layout: { type: 'circle', label: 'Selected', radius: 100 },
+        });
+      c.context.data.graph.nodes[0].labels = ['Selected'];
+      c.context.data.graph.nodes[1].labels = ['Selected'];
+      await action.apply(c.context);
+      assert.equal(c.context.data.graph.nodes[0].locked, true);
+      assert.equal(c.context.data.graph.nodes[1].locked, true);
+      assert.equal(c.context.data.graph.nodes[2].locked, false);
+    });
+    void it('resolves force-directed scenario labels at application time', async (): Promise<void> => {
+      const c: ReturnType<typeof TestHarness.context> = TestHarness.context();
+      for (const node of c.context.data.graph.nodes) {
+        node.locked = true;
+      }
+      c.context.data.graph.nodes[0].labels = ['Selected'];
+      await new ScenarioActionFactory()
+        .create({
+          type: 'layout',
+          layout: { type: 'forceDirected', label: 'Selected' },
+        })
+        .apply(c.context);
+      assert.equal(c.context.data.graph.nodes[0].locked, false);
+      assert.equal(c.context.data.graph.nodes[1].locked, true);
+    });
+    void it('leaves the graph unchanged when a circle instruction has no selection', async (): Promise<void> => {
+      const c: ReturnType<typeof TestHarness.context> = TestHarness.context();
+      const before: ReturnType<typeof c.context.graph.toData> =
+        c.context.graph.toData();
+      await new ScenarioActionFactory()
+        .create({ type: 'layout', layout: { type: 'circle', radius: 100 } })
+        .apply(c.context);
+      assert.deepEqual(c.context.graph.toData(), before);
+    });
+    void it('leaves the graph unchanged when a force-directed instruction has no selection', async (): Promise<void> => {
+      const c: ReturnType<typeof TestHarness.context> = TestHarness.context();
+      const before: ReturnType<typeof c.context.graph.toData> =
+        c.context.graph.toData();
+      await new ScenarioActionFactory()
+        .create({ type: 'layout', layout: { type: 'forceDirected' } })
+        .apply(c.context);
+      assert.deepEqual(c.context.graph.toData(), before);
+    });
     void it('creates ConnectResultNodesAction for connectResultNodes', (): void => {
       assert.equal(
         new ScenarioActionFactory().create({ type: 'connectResultNodes' })

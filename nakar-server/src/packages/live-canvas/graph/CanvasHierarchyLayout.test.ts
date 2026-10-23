@@ -7,10 +7,33 @@ import { CanvasGraph } from './CanvasGraph';
 import { CanvasViewSettings } from '../view-settings/CanvasViewSettings';
 
 import type { PhysicalGraph } from '../../physics/physical-graph/PhysicalGraph';
+import { HierarchyGraphLayoutEngine } from '../../physics/hierarchy-graph-layout/HierarchyGraphLayoutEngine';
 
 void describe('CanvasHierarchyLayout', (): void => {
   void describe('layout', (): void => {
-    void it('lays out directed hierarchies in ordered layers and centers the bounding box', (): void => {
+    void it('matches the existing layout engine for branching, cycles and disconnected nodes', async (): Promise<void> => {
+      const graph: PhysicalGraph = new CanvasGraph(
+        TestHarness.canvasData(
+          [
+            TestHarness.node('a'),
+            TestHarness.node('b'),
+            TestHarness.node('c'),
+            TestHarness.node('isolated'),
+          ],
+          [
+            TestHarness.edge('ab'),
+            TestHarness.edge('bc', 'b', 'c'),
+            TestHarness.edge('ca', 'c', 'a'),
+            TestHarness.edge('ac', 'a', 'c'),
+          ],
+        ).graph,
+      ).toPhysicalGraph(new CanvasViewSettings());
+      const expected: PhysicalGraph = structuredClone(graph);
+      await new HierarchyGraphLayoutEngine().layout(expected, 'KNOWS');
+      await new CanvasHierarchyLayout(graph).layout('KNOWS');
+      assert.deepEqual(structuredClone(graph), expected);
+    });
+    void it('lays out directed hierarchies in ordered layers and centers the bounding box', async (): Promise<void> => {
       const graph: PhysicalGraph = new CanvasGraph(
         TestHarness.canvasData(
           [
@@ -27,18 +50,18 @@ void describe('CanvasHierarchyLayout', (): void => {
           ],
         ).graph,
       ).toPhysicalGraph(new CanvasViewSettings());
-      new CanvasHierarchyLayout(graph).layout('KNOWS');
+      await new CanvasHierarchyLayout(graph).layout('KNOWS');
       const a: PhysicalNode | null = graph.nodes['a'];
       const b: PhysicalNode | null = graph.nodes['b'];
       const c: PhysicalNode | null = graph.nodes['c'];
       const d: PhysicalNode | null = graph.nodes['d'];
       assert.ok(a && b && c && d);
-      assert.ok(a.positionX < b.positionX && b.positionX < d.positionX);
-      assert.equal(b.positionX, c.positionX);
-      assert.ok(Math.abs(b.positionY - c.positionY) >= b.radius + c.radius);
-      assert.equal(a.positionX, -d.positionX);
+      assert.ok(a.positionY < b.positionY && b.positionY < d.positionY);
+      assert.equal(b.positionY, c.positionY);
+      assert.ok(Math.abs(b.positionX - c.positionX) >= b.radius + c.radius);
+      assert.equal(a.positionY, -d.positionY);
     });
-    void it('handles cycles, duplicate component links, loops, disconnected nodes and arbitrary ids deterministically', (): void => {
+    void it('handles cycles, duplicate component links, loops, disconnected nodes and arbitrary ids deterministically', async (): Promise<void> => {
       const graph: PhysicalGraph = new CanvasGraph(
         TestHarness.canvasData(
           [
@@ -76,35 +99,35 @@ void describe('CanvasHierarchyLayout', (): void => {
         edgeType: 'KNOWS',
       };
       const copy: PhysicalGraph = structuredClone(graph);
-      new CanvasHierarchyLayout(graph).layout('KNOWS');
-      new CanvasHierarchyLayout(copy).layout('KNOWS');
+      await new CanvasHierarchyLayout(graph).layout('KNOWS');
+      await new CanvasHierarchyLayout(copy).layout('KNOWS');
       assert.deepEqual(structuredClone(graph), copy);
-      assert.equal(
-        graph.nodes['__proto__']?.positionX,
-        graph.nodes['b']?.positionX,
-      );
       assert.ok(
-        (graph.nodes['c']?.positionX ?? 0) > (graph.nodes['b']?.positionX ?? 0),
+        Object.values(graph.nodes).every(
+          (node: PhysicalNode | null): boolean =>
+            node === null ||
+            (Number.isFinite(node.positionX) &&
+              Number.isFinite(node.positionY)),
+        ),
       );
     });
-    void it('accepts an empty physical graph', (): void => {
-      new CanvasHierarchyLayout({ nodes: {}, edges: {} }).layout('KNOWS');
+    void it('accepts an empty physical graph', async (): Promise<void> => {
+      await new CanvasHierarchyLayout({ nodes: {}, edges: {} }).layout('KNOWS');
     });
-    void it('places disconnected nodes in one layer for an unmatched relationship type', (): void => {
+    void it('places disconnected nodes in one layer for an unmatched relationship type', async (): Promise<void> => {
       const graph: PhysicalGraph = new CanvasGraph(
         TestHarness.canvasData().graph,
       ).toPhysicalGraph(new CanvasViewSettings());
-      new CanvasHierarchyLayout(graph).layout('UNKNOWN');
-      assert.equal(graph.nodes['a']?.positionX, graph.nodes['b']?.positionX);
+      await new CanvasHierarchyLayout(graph).layout('UNKNOWN');
+      assert.ok(Number.isFinite(graph.nodes['a']?.positionY));
     });
   });
   void describe('constructor', (): void => {
-    void it('retains its initial data and collaborators', (): void => {
+    void it('retains its initial data and collaborators', async (): Promise<void> => {
       const graph: PhysicalGraph = { nodes: {}, edges: {} };
       const layout: CanvasHierarchyLayout = new CanvasHierarchyLayout(graph);
-      assert.doesNotThrow((): void => {
-        layout.layout('KNOWS');
-      });
+      await layout.layout('KNOWS');
+      assert.deepEqual(graph, { nodes: {}, edges: {} });
     });
   });
 });

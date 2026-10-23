@@ -4,7 +4,7 @@ import { CanvasAction } from './CanvasAction';
 import type { CanvasActionContext } from './CanvasActionContext';
 
 /**
- * Replaces draft view settings with supplied values or the default configuration.
+ * Merges incoming view settings while retaining unrelated entries, or resets the configuration explicitly.
  */
 export class SetViewSettingsAction extends CanvasAction {
   /**
@@ -15,7 +15,10 @@ export class SetViewSettingsAction extends CanvasAction {
   /**
    * Requested follow-up physics duration policy for the action.
    */
-  public override readonly physics: CanvasAction['physics'] = 'none';
+  public override readonly physics: CanvasAction['physics'] = 'short';
+
+  /** Visualization changes preserve graph history and redo entries. */
+  public override readonly history: boolean = false;
 
   /**
    * Retains an optional configuration; omission resets the canvas to defaults when applied.
@@ -28,13 +31,14 @@ export class SetViewSettingsAction extends CanvasAction {
   }
 
   /**
-   * Replaces draft view settings with supplied values or the default configuration.
+   * Merges supplied settings into the draft, or resets all settings when no values were supplied.
    * @param context - Isolated draft and delegates used by this action.
    */
   public override apply(context: CanvasActionContext): void {
-    context.settings =
-      this._settings === null
-        ? new CanvasViewSettings()
-        : new CanvasViewSettings(structuredClone(this._settings));
+    if (this._settings === null) {
+      context.settings = new CanvasViewSettings();
+    } else {
+      context.settings.merge(this._settings);
+    }
   }
 }

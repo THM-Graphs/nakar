@@ -35,6 +35,17 @@ export class ExpandNodesAction extends SourceAction {
   }
 
   /**
+   * Returns one independently queued action per selected node.
+   * @returns Ordered node expansion operations.
+   */
+  public override get actions(): readonly ExpandNodesAction[] {
+    return this._ids.map(
+      (id: string): ExpandNodesAction =>
+        new ExpandNodesAction([id], this._limit),
+    );
+  }
+
+  /**
    * Expands selected nodes or clusters through their source delegates with optional label and relationship limits.
    * @param context - Isolated draft and delegates used by this action.
    * @returns A promise that settles when the operation completes.
@@ -65,7 +76,12 @@ export class ExpandNodesAction extends SourceAction {
         .nodes.map((entry: NodeData): string => entry.id);
       for (const added of result.nodes) {
         if (!existing.includes(added.id)) {
-          added.position = { ...node.position };
+          const angle: number =
+            context.delegates.runtime.random() * Math.PI * 2;
+          added.position = {
+            x: node.position.x + Math.cos(angle) * 10,
+            y: node.position.y + Math.sin(angle) * 10,
+          };
         }
       }
       this.add(context, result);

@@ -10,6 +10,8 @@ import type { WorkerCommand } from './WorkerCommand';
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { InvalidDataError } from '../error/InvalidDataError';
+import { CanvasPhysicsWorker } from './CanvasPhysicsWorker';
+import type { WorkerEvent } from './WorkerEvent';
 
 void describe('CanvasPhysicsWorker', (): void => {
   void describe('start', (): void => {
@@ -87,6 +89,92 @@ void describe('CanvasPhysicsWorker', (): void => {
         ),
         [1, 2],
       );
+    });
+  });
+  void describe('update', (): void => {
+    void it(
+      'continues delivering results after a delta in a real worker thread',
+      { timeout: 10000 },
+      async (): Promise<void> => {
+        const delegate: NodeWorkerDelegate = new NodeWorkerDelegate();
+        let complete: (() => void) | undefined;
+        let fail: ((error: unknown) => void) | undefined;
+        let updated: boolean = false;
+        const done: Promise<void> = new Promise<void>(
+          (resolve: () => void, reject: (error: unknown) => void): void => {
+            complete = resolve;
+            fail = reject;
+          },
+        );
+        const worker: CanvasPhysicsWorker = new CanvasPhysicsWorker(delegate, {
+          onMessage: (event: WorkerEvent): void => {
+            if (event.type === 'positions') {
+              if (!updated) {
+                updated = true;
+                worker.update({}, { a: true });
+              } else if (event.revision === 2) {
+                complete?.();
+              }
+            } else if (event.type === 'error') {
+              fail?.(new Error(event.error));
+            }
+          },
+          onError: (error: unknown): void => {
+            fail?.(error);
+          },
+        });
+        try {
+          await worker.start();
+          worker.setGraph(TestHarness.physical());
+          worker.run('short');
+          await done;
+          assert.equal(updated, true);
+        } finally {
+          await worker.destroy();
+        }
+      },
+    );
+    void it('sends detached deltas under a new revision', async (): Promise<void> => {
+      const h: ReturnType<typeof TestHarness.setup> = TestHarness.setup();
+      await h.worker.start();
+      const positions: Record<string, Position> = { a: { x: 1, y: 2 } };
+      const locks: Record<string, boolean> = { a: true };
+      h.worker.update(positions, locks);
+      positions['a'].x = 99;
+      locks['a'] = false;
+      assert.deepEqual(h.delegate.commands[0], {
+        type: 'update',
+        revision: 1,
+        positions: { a: { x: 1, y: 2 } },
+        locks: { a: true },
+      });
+      h.worker.run('short');
+      assert.deepEqual(h.delegate.commands[1], {
+        type: 'run',
+        revision: 1,
+        milliseconds: 1000,
+      });
+    });
+    void it('rejects a worker before startup', (): void => {
+      assert.throws((): void => {
+        TestHarness.setup().worker.update({}, {});
+      }, InvalidStateError);
+    });
+    void it('rejects a worker during startup', async (): Promise<void> => {
+      const h: ReturnType<typeof TestHarness.setup> = TestHarness.setup();
+      const start: Promise<void> = h.worker.start();
+      assert.throws((): void => {
+        h.worker.update({}, {});
+      }, InvalidStateError);
+      await start;
+    });
+    void it('rejects a worker after destruction', async (): Promise<void> => {
+      const h: ReturnType<typeof TestHarness.setup> = TestHarness.setup();
+      await h.worker.start();
+      await h.worker.destroy();
+      assert.throws((): void => {
+        h.worker.update({}, {});
+      }, InvalidStateError);
     });
   });
   void describe('run', (): void => {

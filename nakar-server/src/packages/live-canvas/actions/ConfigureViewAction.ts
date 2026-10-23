@@ -14,7 +14,10 @@ export class ConfigureViewAction extends CanvasAction {
   /**
    * Requested follow-up physics duration policy for the action.
    */
-  public override readonly physics: CanvasAction['physics'] = 'none';
+  public override readonly physics: CanvasAction['physics'] = 'short';
+
+  /** Visualization instructions preserve graph history and redo entries. */
+  public override readonly history: boolean = false;
 
   /**
    * Retains one serialized visualization instruction for later application.

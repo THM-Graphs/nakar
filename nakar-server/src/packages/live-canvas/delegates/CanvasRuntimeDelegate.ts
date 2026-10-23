@@ -1,9 +1,11 @@
+import type { CanvasRandomDelegate } from './CanvasRandomDelegate';
+
 /**
  * Supplies environment-independent unique IDs and cancellable asynchronous timers.
  */
-export interface CanvasRuntimeDelegate {
+export interface CanvasRuntimeDelegate extends CanvasRandomDelegate {
   /**
-   * Returns the next deterministic test ID.
+   * Returns a unique identity for a newly created element.
    * @returns A unique identity for a newly created canvas element.
    */
   createId(): string;

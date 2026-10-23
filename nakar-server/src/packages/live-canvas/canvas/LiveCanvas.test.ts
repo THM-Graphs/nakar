@@ -17,6 +17,8 @@ import { FlipCanvasAction } from '../actions/FlipCanvasAction';
 import { FocusNodesAction } from '../actions/FocusNodesAction';
 import { LoadScenarioAction } from '../actions/LoadScenarioAction';
 import { RunQueryAction } from '../actions/RunQueryAction';
+import { SetViewSettingsAction } from '../actions/SetViewSettingsAction';
+import { ExpandNodesAction } from '../actions/ExpandNodesAction';
 import { CanvasChangedEvent } from '../events/CanvasChangedEvent';
 import { CanvasErrorEvent } from '../events/CanvasErrorEvent';
 import { CanvasLifecycleEvent } from '../events/CanvasLifecycleEvent';
@@ -233,6 +235,137 @@ void describe('LiveCanvas', (): void => {
     });
   });
   void describe('execute', (): void => {
+    void it('continues later independent expansions after an earlier source failure', async (): Promise<void> => {
+      const h: ReturnType<typeof TestHarness.harness> = TestHarness.harness();
+      await h.canvas.bootstrap();
+      let count: number = 0;
+      h.source.handler = (): Promise<ReturnType<typeof TestHarness.result>> => {
+        count += 1;
+        return count === 1
+          ? Promise.reject(new Error('first failed'))
+          : Promise.resolve(TestHarness.result([TestHarness.node('new')]));
+      };
+      await assert.rejects(
+        h.canvas.execute(TestHarness.user(), new ExpandNodesAction(['a', 'b'])),
+        /first failed/,
+      );
+      await h.canvas.read(TestHarness.user());
+      assert.equal(h.canvas.toData().graph.nodes.length, 4);
+      assert.equal(h.canvas.history.undoStackSize, 1);
+    });
+    void it('does not request storage for an action that only adds a history entry', async (): Promise<void> => {
+      const h: ReturnType<typeof TestHarness.harness> = TestHarness.harness();
+      await h.canvas.bootstrap();
+      await h.canvas.execute(TestHarness.user(), new FlipCanvasAction('x'));
+      h.runtime.advance(1000);
+      await h.canvas.read(TestHarness.user());
+      assert.equal(h.canvas.history.undoStackSize, 1);
+      assert.equal(h.storage.saves.length, 0);
+    });
+    void it('preserves physics positions received while a query is awaiting its source', async (): Promise<void> => {
+      const h: ReturnType<typeof TestHarness.harness> = TestHarness.harness();
+      await h.canvas.bootstrap();
+      let release: (() => void) | undefined;
+      let entered: (() => void) | undefined;
+      const gate: Promise<void> = new Promise<void>(
+        (resolve: () => void): void => {
+          release = resolve;
+        },
+      );
+      const started: Promise<void> = new Promise<void>(
+        (resolve: () => void): void => {
+          entered = resolve;
+        },
+      );
+      h.source.handler = async (): Promise<
+        ReturnType<typeof TestHarness.result>
+      > => {
+        entered?.();
+        await gate;
+        return TestHarness.result();
+      };
+      const action: Promise<void> = h.canvas.execute(
+        TestHarness.user(),
+        new RunQueryAction('source', 'query', false),
+      );
+      await started;
+      h.canvas.onMessage({
+        type: 'positions',
+        revision: 1,
+        positions: { a: { x: 100, y: 200 } },
+        performance,
+      });
+      release?.();
+      await action;
+      assert.deepEqual(h.canvas.toData().graph.nodes[0].position, {
+        x: 100,
+        y: 200,
+      });
+    });
+    void it('preserves redo and graph history across visualization changes', async (): Promise<void> => {
+      const h: ReturnType<typeof TestHarness.harness> = TestHarness.harness();
+      await h.canvas.bootstrap();
+      await h.canvas.execute(
+        TestHarness.user(),
+        new DeleteElementsAction(['a']),
+      );
+      await h.canvas.undo(TestHarness.user());
+      await h.canvas.execute(TestHarness.user(), new SetViewSettingsAction());
+      assert.equal(h.canvas.history.canRedo, true);
+      assert.equal(h.canvas.history.undoStackSize, 0);
+      await h.canvas.redo(TestHarness.user());
+      assert.equal(h.canvas.toData().graph.nodes.length, 2);
+    });
+    void it('does not reload derived data for local reflections', async (): Promise<void> => {
+      const h: ReturnType<typeof TestHarness.harness> = TestHarness.harness();
+      await h.canvas.bootstrap();
+      h.storage.notesError = new Error('must not load notes');
+      await h.canvas.execute(TestHarness.user(), new FlipCanvasAction('x'));
+      assert.equal(h.canvas.history.undoStackSize, 1);
+    });
+    void it('keeps a successful expansion when a later selected node fails', async (): Promise<void> => {
+      const h: ReturnType<typeof TestHarness.harness> = TestHarness.harness();
+      await h.canvas.bootstrap();
+      let count: number = 0;
+      h.source.handler = (): Promise<ReturnType<typeof TestHarness.result>> => {
+        count += 1;
+        return count === 1
+          ? Promise.resolve(TestHarness.result([TestHarness.node('new')]))
+          : Promise.reject(new Error('second expansion failed'));
+      };
+      await assert.rejects(
+        h.canvas.execute(TestHarness.user(), new ExpandNodesAction(['a', 'b'])),
+        /second expansion failed/,
+      );
+      await h.canvas.read(TestHarness.user());
+      assert.equal(h.canvas.toData().graph.nodes.length, 4);
+      assert.equal(h.canvas.history.undoStackSize, 1);
+      await h.canvas.undo(TestHarness.user());
+      assert.equal(h.canvas.toData().graph.nodes.length, 3);
+    });
+    void it('creates a separate undo entry for each expanded node', async (): Promise<void> => {
+      const h: ReturnType<typeof TestHarness.harness> = TestHarness.harness();
+      await h.canvas.bootstrap();
+      await h.canvas.execute(
+        TestHarness.user(),
+        new ExpandNodesAction(['a', 'b']),
+      );
+      assert.equal(h.canvas.history.undoStackSize, 2);
+    });
+    void it('does not start physics for focus or relationship compression policies', async (): Promise<void> => {
+      const h: ReturnType<typeof TestHarness.harness> = TestHarness.harness();
+      await h.canvas.bootstrap();
+      await h.canvas.execute(
+        TestHarness.user(),
+        new FocusNodesAction(['a', 'b']),
+      );
+      assert.equal(
+        h.worker.commands.some(
+          (command: WorkerCommand): boolean => command.type === 'run',
+        ),
+        false,
+      );
+    });
     void it('coalesces successful actions into one detached save after one second', async (): Promise<void> => {
       const h: ReturnType<typeof TestHarness.harness> = TestHarness.harness();
       await h.canvas.bootstrap();
@@ -530,7 +663,7 @@ void describe('LiveCanvas', (): void => {
         },
         { id: 'empty', title: null, scenarios: [] },
       ];
-      await h.canvas.execute(TestHarness.user(), new FlipCanvasAction('x'));
+      await h.canvas.execute(TestHarness.user(), new DeleteElementsAction());
       assert.deepEqual(h.canvas.toData().graph.nodes[0].noteIds, ['note']);
       assert.deepEqual(
         h.canvas
@@ -557,9 +690,9 @@ void describe('LiveCanvas', (): void => {
           updatedAt: null,
         },
       ];
-      await h.canvas.execute(TestHarness.user(), new FlipCanvasAction('x'));
+      await h.canvas.execute(TestHarness.user(), new DeleteElementsAction());
       h.storage.notes = [];
-      await h.canvas.execute(TestHarness.user(), new FlipCanvasAction('y'));
+      await h.canvas.execute(TestHarness.user(), new DeleteElementsAction());
       assert.deepEqual(h.canvas.toData().graph.nodes[0].noteIds, []);
     });
     void it('renames the canvas after a scenario commits', async (): Promise<void> => {
@@ -942,6 +1075,25 @@ void describe('LiveCanvas', (): void => {
     });
   });
   void describe('moveNodes', (): void => {
+    void it('sends only position and lock deltas to the worker', async (): Promise<void> => {
+      const h: ReturnType<typeof TestHarness.harness> = TestHarness.harness();
+      await h.canvas.bootstrap();
+      await h.canvas.addUser(TestHarness.user());
+      await h.canvas.grabNode(TestHarness.user(), 'a');
+      const count: number = h.worker.commands.length;
+      await h.canvas.moveNodes(TestHarness.user(), [
+        { id: 'a', position: { x: 5, y: 6 } },
+      ]);
+      const commands: WorkerCommand[] = h.worker.commands.slice(count);
+      assert.equal(commands.length, 2);
+      assert.deepEqual(commands[0], {
+        type: 'update',
+        revision: 3,
+        positions: { a: { x: 5, y: 6 } },
+        locks: { a: true },
+      });
+      assert.equal(commands[1].type, 'run');
+    });
     void it('automatically saves dragged positions and locks', async (): Promise<void> => {
       const h: ReturnType<typeof TestHarness.harness> = TestHarness.harness();
       await h.canvas.bootstrap();
@@ -1036,6 +1188,25 @@ void describe('LiveCanvas', (): void => {
     });
   });
   void describe('ungrabNode', (): void => {
+    void it('does not request persistence for a grab and release without movement', async (): Promise<void> => {
+      const h: ReturnType<typeof TestHarness.harness> = TestHarness.harness();
+      await h.canvas.bootstrap();
+      await h.canvas.addUser(TestHarness.user());
+      await h.canvas.grabNode(TestHarness.user(), 'a');
+      await h.canvas.ungrabNode(TestHarness.user(), 'a', { x: 0, y: 0 });
+      h.runtime.advance(1000);
+      await h.canvas.read(TestHarness.user());
+      assert.equal(h.storage.saves.length, 0);
+    });
+    void it('does not persistently lock a node that was grabbed without moving it', async (): Promise<void> => {
+      const h: ReturnType<typeof TestHarness.harness> = TestHarness.harness();
+      await h.canvas.bootstrap();
+      await h.canvas.addUser(TestHarness.user());
+      await h.canvas.grabNode(TestHarness.user(), 'a');
+      await h.canvas.ungrabNode(TestHarness.user(), 'a', { x: 0, y: 0 });
+      assert.equal(h.canvas.toData().graph.nodes[0].locked, false);
+      assert.equal(h.worker.commands.at(-1)?.type, 'update');
+    });
     void it('automatically persists the final drag position', async (): Promise<void> => {
       const h: ReturnType<typeof TestHarness.harness> = TestHarness.harness();
       await h.canvas.bootstrap();
@@ -1112,6 +1283,45 @@ void describe('LiveCanvas', (): void => {
     });
   });
   void describe('refreshNotes', (): void => {
+    void it('preserves live positions and does not invoke merge or group delegates', async (): Promise<void> => {
+      const h: ReturnType<typeof TestHarness.harness> = TestHarness.harness();
+      await h.canvas.bootstrap();
+      let release: (() => void) | undefined;
+      let entered: (() => void) | undefined;
+      const gate: Promise<void> = new Promise<void>(
+        (resolve: () => void): void => {
+          release = resolve;
+        },
+      );
+      const started: Promise<void> = new Promise<void>(
+        (resolve: () => void): void => {
+          entered = resolve;
+        },
+      );
+      h.storage.getMergeRules = (): Promise<never> =>
+        Promise.reject(new Error('must not merge'));
+      h.storage.getScenarioGroups = (): Promise<never> =>
+        Promise.reject(new Error('must not refresh groups'));
+      h.storage.getNotes = async (): Promise<GraphData['notes']> => {
+        entered?.();
+        await gate;
+        return [];
+      };
+      const action: Promise<void> = h.canvas.refreshNotes(TestHarness.user());
+      await started;
+      h.canvas.onMessage({
+        type: 'positions',
+        revision: 1,
+        positions: { a: { x: 100, y: 200 } },
+        performance,
+      });
+      release?.();
+      await action;
+      assert.deepEqual(h.canvas.toData().graph.nodes[0].position, {
+        x: 100,
+        y: 200,
+      });
+    });
     void it('automatically saves refreshed note associations', async (): Promise<void> => {
       const h: ReturnType<typeof TestHarness.harness> = TestHarness.harness();
       await h.canvas.bootstrap();

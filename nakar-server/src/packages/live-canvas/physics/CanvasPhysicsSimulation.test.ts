@@ -6,9 +6,68 @@ import type { PhysicalGraph } from '../../physics/physical-graph/PhysicalGraph';
 import { CanvasPhysicsSimulation } from './CanvasPhysicsSimulation';
 import { InvalidDataError } from '../error/InvalidDataError';
 import type { CanvasPhysicsOptions } from './CanvasPhysicsOptions';
+import { MockRuntimeDelegate } from '../testing/MockRuntimeDelegate.test';
 
 void describe('CanvasPhysicsSimulation', (): void => {
   void describe('tick', (): void => {
+    void it('matches the established interleaved center and pair force calculation', (): void => {
+      const graph: PhysicalGraph = TestHarness.physical();
+      const a: PhysicalNode | null = graph.nodes['a'];
+      const b: PhysicalNode | null = graph.nodes['b'];
+      assert.ok(a && b);
+      a.positionX = 100000;
+      b.positionX = 100001;
+      delete graph.nodes['c'];
+      delete graph.edges['ab'];
+      new CanvasPhysicsSimulation(graph).tick(1);
+      assert.ok(Math.abs(b.positionX - 100235.65421935407) < 0.000001);
+    });
+    void it('separates coincident nodes in two dimensions using injected randomness', (): void => {
+      const graph: PhysicalGraph = TestHarness.physical();
+      const random: MockRuntimeDelegate = new MockRuntimeDelegate();
+      const simulation: CanvasPhysicsSimulation = new CanvasPhysicsSimulation(
+        graph,
+        {},
+        random,
+      );
+      for (let i: number = 0; i < 100; i++) {
+        simulation.tick(1);
+      }
+      assert.ok(
+        Object.values(graph.nodes).some(
+          (node: PhysicalNode | null): boolean =>
+            node !== null && Math.abs(node.positionY) > 0.1,
+        ),
+      );
+    });
+    void it('uses the established proximity threshold before calculating pair forces', (): void => {
+      const graph: PhysicalGraph = TestHarness.physical();
+      const b: PhysicalNode | null = graph.nodes['b'];
+      assert.ok(b);
+      b.positionX = 0.05;
+      let samples: number = 0;
+      const random: MockRuntimeDelegate = new MockRuntimeDelegate();
+      random.random = (): number => {
+        samples += 1;
+        return 0.125;
+      };
+      new CanvasPhysicsSimulation(graph, {}, random).tick(1);
+      assert.ok(samples > 0);
+    });
+    void it('does not perturb two overlapping locked nodes', (): void => {
+      const graph: PhysicalGraph = TestHarness.physical();
+      for (const node of Object.values(graph.nodes)) {
+        if (node !== null) {
+          node.locked = true;
+        }
+      }
+      new CanvasPhysicsSimulation(graph).tick(1);
+      for (const node of Object.values(graph.nodes)) {
+        assert.ok(
+          node !== null && node.positionX === 0 && node.positionY === 0,
+        );
+      }
+    });
     void it('caps velocity before displacement using the configured maximum', (): void => {
       const graph: PhysicalGraph = TestHarness.driftingPhysicalGraph();
       new CanvasPhysicsSimulation(graph, {

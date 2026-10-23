@@ -5,6 +5,9 @@ import type { CanvasActionContext } from './CanvasActionContext';
  * Keeps the selected relationships and their incident nodes.
  */
 export class FocusRelationshipsAction extends CanvasAction {
+  /** This operation updates the worker graph without starting a new physics run. */
+  public override readonly physics: CanvasAction['physics'] = 'none';
+
   /**
    * Display title of the object or action.
    */

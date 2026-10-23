@@ -10,6 +10,9 @@ export class FlipCanvasAction extends CanvasAction {
    */
   public readonly title: string = 'Flip canvas';
 
+  /** Reflection only changes local node state. */
+  public override readonly postProcess: boolean = false;
+
   /**
    * Retains the axis across which node coordinates will be reflected.
    * @param _axis - Coordinate axis whose values are reflected.

@@ -9,6 +9,31 @@ import { describe, it } from 'node:test';
 import type { CanvasActionContext } from './CanvasActionContext';
 
 void describe('CanvasActionContext', (): void => {
+  void describe('preservePositions', (): void => {
+    void it('preserves newer positions of unchanged nodes', (): void => {
+      const c: ReturnType<typeof TestHarness.context> = TestHarness.context();
+      c.context.preservePositions([
+        TestHarness.node('a', { position: { x: 100, y: 200 } }),
+      ]);
+      assert.deepEqual(c.context.data.graph.nodes[0].position, {
+        x: 100,
+        y: 200,
+      });
+    });
+    void it('retains explicit layout edits and ignores new or removed live nodes', (): void => {
+      const c: ReturnType<typeof TestHarness.context> = TestHarness.context();
+      c.context.graph.getNode('a').move({ x: 5, y: 6 });
+      c.context.graph.getNode('b').setLocked(true);
+      c.context.data.graph.nodes.push(TestHarness.node('new'));
+      c.context.preservePositions([
+        TestHarness.node('a', { position: { x: 100, y: 200 } }),
+        TestHarness.node('b', { position: { x: 9, y: 9 } }),
+      ]);
+      assert.deepEqual(c.context.data.graph.nodes[0].position, { x: 5, y: 6 });
+      assert.deepEqual(c.context.data.graph.nodes[1].position, { x: 0, y: 0 });
+      assert.equal(c.context.data.graph.nodes.at(-1)?.id, 'new');
+    });
+  });
   void describe('finish', (): void => {
     void it('returns a detached snapshot of the modified draft', (): void => {
       const c: ReturnType<typeof TestHarness.context> = TestHarness.context();

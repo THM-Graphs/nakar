@@ -34,11 +34,16 @@ export class ScenarioActionFactory {
         const layout: typeof data.layout = data.layout;
         switch (layout.type) {
           case 'circle':
-            return new CircleLayoutAction(layout.nodeIds, layout.radius);
+            return new CircleLayoutAction(
+              layout.nodeIds ?? layout.label ?? [],
+              layout.radius,
+            );
           case 'hierarchy':
             return new HierarchyLayoutAction(layout.edgeType);
           case 'forceDirected':
-            return new ForceDirectedLayoutAction(layout.nodeIds);
+            return new ForceDirectedLayoutAction(
+              layout.nodeIds ?? layout.label ?? [],
+            );
         }
         throw new InvalidDataError('Unknown layout type.');
       }

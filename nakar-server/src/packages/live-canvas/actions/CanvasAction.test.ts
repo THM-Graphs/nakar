@@ -6,6 +6,14 @@ import { CanvasActionContext } from './CanvasActionContext';
 import { MockSourceAction } from '../testing/MockSourceAction.test';
 
 void describe('CanvasAction', (): void => {
+  void describe('actions', (): void => {
+    void it('uses one history operation unless a subclass supplies independent actions', (): void => {
+      const action: CanvasAction = new MockSourceAction(TestHarness.result());
+      assert.deepEqual(action.actions, [action]);
+      assert.equal(action.history, true);
+      assert.equal(action.postProcess, true);
+    });
+  });
   void describe('apply', (): void => {
     void it('dispatches through the abstract action contract', async (): Promise<void> => {
       const h: ReturnType<typeof TestHarness.harness> = TestHarness.harness();

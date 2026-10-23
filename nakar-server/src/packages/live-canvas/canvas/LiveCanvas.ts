@@ -301,49 +301,11 @@ export class LiveCanvas implements PhysicsWorkerListener {
    * @returns A promise that settles when the operation completes.
    */
   public execute(user: CanvasUser, action: CanvasAction): Promise<void> {
-    return this._enqueue(action.title, async (): Promise<void> => {
-      const room: RoomData = await this._access(user);
-      const context: CanvasActionContext = new CanvasActionContext(
-        this.toData(),
-        room,
-        this._delegates,
-        this._grabs
-          .filter((sessions: SSet<string>): boolean => sessions.size > 0)
-          .toKeyArray(),
-      );
-      await action.apply(context);
-      await this._postProcess(context);
-      await this._access(user);
-      const next: CanvasData = context.finish();
-      if (context.title !== null) {
-        const change: Awaited<ReturnType<RoomCanvasManager['change']>> =
-          await new RoomCanvasManager(room, this._delegates.room).change(
-            this._reference.id,
-            'rename',
-            null,
-            context.title,
-          );
-        this._emit(new CanvasRoomEvent(this._reference.id, change.canvases));
-      }
-      // Commit once, after the asynchronous draft and authorization checks succeeded.
-      this._history.transaction(action.title, (): GraphData => next.graph);
-      this._settings = new CanvasViewSettings(next.viewSettings);
-      this._pruneGrabs();
-      this._updatePhysics(action.physics);
-      this._emit(
-        new CanvasChangedEvent(this._reference.id, [
-          'graph',
-          'metadata',
-          'table',
-          'notes',
-          'viewSettings',
-          'histogram',
-        ]),
-      );
-      for (const count of context.limits) {
-        this._emit(new CanvasLimitEvent(this._reference.id, count));
-      }
-    });
+    return Promise.all(
+      action.actions.map((operation: CanvasAction): Promise<void> =>
+        this._executeAction(user, operation),
+      ),
+    ).then((): void => undefined);
   }
 
   /**
@@ -435,10 +397,17 @@ export class LiveCanvas implements PhysicsWorkerListener {
       const user: UserData | undefined = this._users.get(sessionId);
       if (user !== undefined) {
         this._users.delete(sessionId);
-        for (const grabs of this._grabs.values()) {
+        const locks: Record<string, boolean> = DataRecord.empty<boolean>();
+        for (const [id, grabs] of this._grabs) {
           grabs.delete(sessionId);
+          const node: NodeData | undefined = this._history.current.nodes.find(
+            (entry: NodeData): boolean => entry.id === id,
+          );
+          if (node !== undefined) {
+            locks[id] = node.locked || grabs.size > 0;
+          }
         }
-        this._updatePhysics();
+        this._updateWorker({}, locks);
         this._emit(
           new CanvasPresenceEvent(
             this._reference.id,
@@ -501,7 +470,7 @@ export class LiveCanvas implements PhysicsWorkerListener {
         nodeId,
         (this._grabs.get(nodeId) ?? new SSet()).byAdding(session.sessionId),
       );
-      this._updatePhysics();
+      this._updateWorker({}, { [nodeId]: true });
     });
   }
 
@@ -528,30 +497,42 @@ export class LiveCanvas implements PhysicsWorkerListener {
     return this._enqueue('Move nodes', async (): Promise<void> => {
       await this._access(user);
       const session: UserData = this._session(user);
-      const draft: GraphData = structuredClone(this._history.current);
-      const graph: CanvasGraph = new CanvasGraph(draft);
-      let changed: boolean = false;
+      const updates: Record<string, Position> = DataRecord.empty<Position>();
+      const locks: Record<string, boolean> = DataRecord.empty<boolean>();
       for (const node of positions) {
         if (!(this._grabs.get(node.id)?.has(session.sessionId) ?? false)) {
           continue;
         }
-        const target: ReturnType<CanvasGraph['getNode']> = graph.getNode(
-          node.id,
+        if (
+          !Number.isFinite(node.position.x) ||
+          !Number.isFinite(node.position.y)
+        ) {
+          throw new InvalidDataError('Positions must be finite.');
+        }
+        const target: NodeData | undefined = this._history.current.nodes.find(
+          (entry: NodeData): boolean => entry.id === node.id,
         );
-        const previous: NodeData = target.toData();
-        changed ||=
-          !previous.locked ||
-          previous.position.x !== node.position.x ||
-          previous.position.y !== node.position.y;
-        target.move(node.position);
-        target.setLocked(true);
+        if (
+          target !== undefined &&
+          (!target.locked ||
+            target.position.x !== node.position.x ||
+            target.position.y !== node.position.y)
+        ) {
+          updates[node.id] = { ...node.position };
+          locks[node.id] = true;
+        }
       }
-      if (!changed) {
+      if (Object.keys(updates).length === 0) {
         return;
       }
       // Dragging does not create an undo entry for every pointer event.
-      Object.assign(this._history.current, draft);
-      this._updatePhysics('short');
+      for (const node of this._history.current.nodes) {
+        if (Object.hasOwn(updates, node.id)) {
+          node.position = { ...updates[node.id] };
+          node.locked = true;
+        }
+      }
+      this._updateWorker(updates, locks, 'short');
       this._emit(
         new CanvasChangedEvent(this._reference.id, ['positions', 'locks']),
       );
@@ -581,12 +562,16 @@ export class LiveCanvas implements PhysicsWorkerListener {
       const node: ReturnType<CanvasGraph['getNode']> = new CanvasGraph(
         this._history.current,
       ).getNode(nodeId);
+      const previous: Position = node.toData().position;
       node.move(position);
-      node.setLocked(true);
       grabs?.delete(session.sessionId);
-      this._updatePhysics();
+      this._updateWorker(
+        { [nodeId]: position },
+        { [nodeId]: node.toData().locked || (grabs?.size ?? 0) > 0 },
+      );
       this._emit(
         new CanvasChangedEvent(this._reference.id, ['positions', 'locks']),
+        previous.x !== position.x || previous.y !== position.y,
       );
     });
   }
@@ -603,9 +588,16 @@ export class LiveCanvas implements PhysicsWorkerListener {
         await this._access(user),
         this._delegates,
       );
-      await this._postProcess(context);
+      await this._loadNotes(context);
       await this._access(user);
-      Object.assign(this._history.current, context.finish().graph);
+      this._history.current.notes = structuredClone(context.data.graph.notes);
+      for (const node of this._history.current.nodes) {
+        const updated: NodeData | undefined = context.data.graph.nodes.find(
+          (entry: NodeData): boolean => entry.id === node.id,
+        );
+        node.noteIds = updated?.noteIds ?? [];
+      }
+      this._updatePhysics();
       this._emit(
         new CanvasChangedEvent(this._reference.id, ['graph', 'notes']),
       );
@@ -776,6 +768,97 @@ export class LiveCanvas implements PhysicsWorkerListener {
   }
 
   /**
+   * Commits one queued action after validating its isolated draft and retaining newer live positions.
+   * @param user - Trusted identity requesting the operation.
+   * @param action - Single independently committed canvas operation.
+   * @returns Completion of this operation.
+   */
+  private _executeAction(
+    user: CanvasUser,
+    action: CanvasAction,
+  ): Promise<void> {
+    return this._enqueue(action.title, async (): Promise<void> => {
+      const room: RoomData = await this._access(user);
+      const context: CanvasActionContext = new CanvasActionContext(
+        this.toData(),
+        room,
+        this._delegates,
+        this._grabs
+          .filter((sessions: SSet<string>): boolean => sessions.size > 0)
+          .toKeyArray(),
+      );
+      await action.apply(context);
+      if (action.postProcess) {
+        await this._postProcess(context);
+      }
+      await this._access(user);
+      context.finish();
+      if (context.title !== null) {
+        const change: Awaited<ReturnType<RoomCanvasManager['change']>> =
+          await new RoomCanvasManager(room, this._delegates.room).change(
+            this._reference.id,
+            'rename',
+            null,
+            context.title,
+          );
+        this._emit(new CanvasRoomEvent(this._reference.id, change.canvases));
+      }
+      context.preservePositions(this._history.current.nodes);
+      const next: CanvasData = context.finish();
+      const previous: CanvasData = this.toData();
+      const changed: boolean =
+        JSON.stringify(previous) !== JSON.stringify(next);
+      // Commit once, after the asynchronous draft and authorization checks succeeded.
+      if (action.history) {
+        this._history.transaction(action.title, (): GraphData => next.graph);
+      } else {
+        Object.assign(this._history.current, next.graph);
+      }
+      this._settings = new CanvasViewSettings(next.viewSettings);
+      this._pruneGrabs();
+      if (action.postProcess) {
+        this._updatePhysics(action.physics);
+      } else {
+        const positions: Record<string, Position> =
+          DataRecord.empty<Position>();
+        const locks: Record<string, boolean> = DataRecord.empty<boolean>();
+        for (const node of next.graph.nodes) {
+          const original: NodeData | undefined = previous.graph.nodes.find(
+            (entry: NodeData): boolean => entry.id === node.id,
+          );
+          if (original !== undefined) {
+            if (
+              original.position.x !== node.position.x ||
+              original.position.y !== node.position.y
+            ) {
+              positions[node.id] = { ...node.position };
+            }
+            if (original.locked !== node.locked) {
+              locks[node.id] =
+                node.locked || (this._grabs.get(node.id)?.size ?? 0) > 0;
+            }
+          }
+        }
+        this._updateWorker(positions, locks, action.physics);
+      }
+      this._emit(
+        new CanvasChangedEvent(this._reference.id, [
+          'graph',
+          'metadata',
+          'table',
+          'notes',
+          'viewSettings',
+          'histogram',
+        ]),
+        changed,
+      );
+      for (const count of context.limits) {
+        this._emit(new CanvasLimitEvent(this._reference.id, count));
+      }
+    });
+  }
+
+  /**
    * Invalidates queued shutdown callbacks and cancels the currently scheduled timer.
    */
   private _cancelShutdownTimer(): void {
@@ -876,24 +959,10 @@ export class LiveCanvas implements PhysicsWorkerListener {
       await this._delegates.storage.getMergeRules(context.room.projectId),
       (): string => this._delegates.runtime.createId(),
     );
-    context.data.graph.notes = structuredClone(
-      await this._delegates.storage.getNotes(
-        this._reference.id,
-        context.graph.toData(),
-      ),
-    );
+    await this._loadNotes(context);
     const groups: ScenarioGroupData[] =
       await this._delegates.storage.getScenarioGroups(context.room.projectId);
     for (const node of context.data.graph.nodes) {
-      node.noteIds = context.data.graph.notes
-        .filter(
-          (note: GraphData['notes'][number]): boolean =>
-            note.nodeIds.includes(node.id) ||
-            node.compressedIds.some((id: string): boolean =>
-              note.nodeIds.includes(id),
-            ),
-        )
-        .map((note: GraphData['notes'][number]): string => note.id);
       node.scenarioGroups = groups
         .map((group: ScenarioGroupData): ScenarioGroupData => ({
           ...structuredClone(group),
@@ -912,6 +981,31 @@ export class LiveCanvas implements PhysicsWorkerListener {
         .filter(
           (group: ScenarioGroupData): boolean => group.scenarios.length > 0,
         );
+    }
+  }
+
+  /**
+   * Reloads note data and node references without modifying graph topology, settings or positions.
+   * @param context - Isolated graph used to resolve relevant notes.
+   * @returns Completion of note loading.
+   */
+  private async _loadNotes(context: CanvasActionContext): Promise<void> {
+    context.data.graph.notes = structuredClone(
+      await this._delegates.storage.getNotes(
+        this._reference.id,
+        context.graph.toData(),
+      ),
+    );
+    for (const node of context.data.graph.nodes) {
+      node.noteIds = context.data.graph.notes
+        .filter(
+          (note: GraphData['notes'][number]): boolean =>
+            note.nodeIds.includes(node.id) ||
+            node.compressedIds.some((id: string): boolean =>
+              note.nodeIds.includes(id),
+            ),
+        )
+        .map((note: GraphData['notes'][number]): string => note.id);
     }
   }
 
@@ -969,6 +1063,29 @@ export class LiveCanvas implements PhysicsWorkerListener {
   private _updatePhysics(amount: 'none' | 'short' | 'long' = 'none'): void {
     try {
       this._syncWorker();
+      if (amount !== 'none') {
+        this._worker.run(amount);
+      }
+    } catch (error: unknown) {
+      this.onError(error);
+    }
+  }
+
+  /**
+   * Publishes position and lock deltas, preserving worker velocities and any active deadline.
+   * @param positions - Changed node positions.
+   * @param locks - Changed persistent or temporary locks.
+   * @param amount - Optional physics duration requested by this interaction.
+   */
+  private _updateWorker(
+    positions: Record<string, Position>,
+    locks: Record<string, boolean>,
+    amount: 'none' | 'short' | 'long' = 'none',
+  ): void {
+    try {
+      if (Object.keys(positions).length > 0 || Object.keys(locks).length > 0) {
+        this._worker.update(positions, locks);
+      }
       if (amount !== 'none') {
         this._worker.run(amount);
       }
@@ -1070,9 +1187,10 @@ export class LiveCanvas implements PhysicsWorkerListener {
   /**
    * Dispatches an event and retains a bounded list of synchronous observer failures.
    * @param event - Domain or worker event to process.
+   * @param persistent - Whether the event represents changed persisted data rather than only history or a transient operation.
    */
-  private _emit(event: CanvasEvent): void {
-    if (event instanceof CanvasChangedEvent) {
+  private _emit(event: CanvasEvent, persistent: boolean = true): void {
+    if (persistent && event instanceof CanvasChangedEvent) {
       this._requestSave();
     }
     try {

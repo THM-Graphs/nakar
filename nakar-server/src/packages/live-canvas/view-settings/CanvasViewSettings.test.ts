@@ -32,7 +32,32 @@ void describe('CanvasViewSettings', (): void => {
       assert.equal(settings.toData().growNodesBasedOnDegreeFactor, 2);
     });
   });
+  void describe('merge', (): void => {
+    void it('preserves unrelated settings and scale while copying incoming values', (): void => {
+      const settings: CanvasViewSettings = new CanvasViewSettings();
+      settings.label('retained').radius = 70;
+      settings.edge('retained').width = 9;
+      const incoming: ViewSettingsData = new CanvasViewSettings().toData();
+      incoming.scaleType = 'log2';
+      incoming.growNodesBasedOnDegreeFactor = 5;
+      const source: CanvasViewSettings = new CanvasViewSettings(incoming);
+      source.label('updated').radius = 30;
+      settings.merge(incoming);
+      source.label('updated').radius = 40;
+      assert.equal(settings.label('retained').radius, 70);
+      assert.equal(settings.edge('retained').width, 9);
+      assert.equal(settings.label('updated').radius, 30);
+      assert.equal(settings.toData().scaleType, 'linear');
+      assert.equal(settings.toData().growNodesBasedOnDegreeFactor, 5);
+    });
+  });
   void describe('label', (): void => {
+    void it('chooses the least used palette color after custom assignments', (): void => {
+      const settings: CanvasViewSettings = new CanvasViewSettings();
+      settings.label('first').colorIndex = 5;
+      assert.equal(settings.label('second').colorIndex, 0);
+      assert.equal(settings.label('third').colorIndex, 1);
+    });
     void it('creates the default label configuration', (): void => {
       assert.deepEqual(new CanvasViewSettings().label('Person'), {
         radius: 40,
@@ -131,6 +156,22 @@ void describe('CanvasViewSettings', (): void => {
     });
   });
   void describe('title', (): void => {
+    void it('resolves conflicting labels in alphabetical order', (): void => {
+      const settings: CanvasViewSettings = new CanvasViewSettings();
+      settings.label('Z').customTitleProperty = true;
+      settings.label('Z').titleProperty = 'z';
+      settings.label('A').customTitleProperty = true;
+      settings.label('A').titleProperty = 'a';
+      assert.equal(
+        settings.title(
+          TestHarness.node('n', {
+            labels: ['Z', 'A'],
+            properties: { a: 'first', z: 'last' },
+          }),
+        ),
+        'first',
+      );
+    });
     void it('uses the cluster labels for a cluster title', (): void => {
       assert.equal(
         new CanvasViewSettings().title(
@@ -219,6 +260,17 @@ void describe('CanvasViewSettings', (): void => {
     });
   });
   void describe('radius', (): void => {
+    void it('uses the last alphabetical custom radius independently of input order', (): void => {
+      const settings: CanvasViewSettings = new CanvasViewSettings();
+      settings.label('Z').customRadius = true;
+      settings.label('Z').radius = 90;
+      settings.label('A').customRadius = true;
+      settings.label('A').radius = 20;
+      assert.equal(
+        settings.radius(TestHarness.node('n', { labels: ['Z', 'A'] }), 0, 0, 0),
+        90,
+      );
+    });
     void it('uses the default radius when degree scaling is disabled', (): void => {
       assert.equal(
         new CanvasViewSettings().radius(TestHarness.node('a'), 0, 0, 1),

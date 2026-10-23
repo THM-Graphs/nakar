@@ -64,9 +64,10 @@ export class CanvasHistogram {
         ),
       ),
       edgeTypes: this._entries(
-        this._data.edges.map((edge: EdgeData): [string, string] => [
+        this._data.edges.map((edge: EdgeData): [string, string, number] => [
           edge.type,
           edge.id,
+          edge.compressed.length || 1,
         ]),
       ),
       nodeProperties: this._properties(this._data.nodes),
@@ -86,26 +87,27 @@ export class CanvasHistogram {
    * @param values - Histogram values with the canonical IDs that produced them.
    * @returns Histogram buckets ordered by descending count, then by value.
    */
-  private _entries(values: [string, string][]): HistogramEntry[] {
+  private _entries(values: [string, string, number?][]): HistogramEntry[] {
     const buckets: SMap<string, SSet<string>> = new SMap<
       string,
       SSet<string>
     >();
-    for (const [value, id] of values) {
+    const counts: SMap<string, number> = new SMap<string, number>();
+    for (const [value, id, weight] of values) {
+      if (!(buckets.get(value)?.has(id) ?? false)) {
+        counts.set(value, (counts.get(value) ?? 0) + (weight ?? 1));
+      }
       buckets.set(value, (buckets.get(value) ?? new SSet()).byAdding(id));
     }
-    const total: number = buckets
+    const total: number = counts
       .toValueArray()
-      .reduce(
-        (sum: number, bucket: SSet<string>): number => sum + bucket.size,
-        0,
-      );
+      .reduce((sum: number, count: number): number => sum + count, 0);
     return buckets
       .toArray()
       .map(([value, ids]: [string, SSet<string>]): HistogramEntry => ({
         value,
-        count: ids.size,
-        percentage: ids.size / total,
+        count: counts.get(value) ?? 0,
+        percentage: (counts.get(value) ?? 0) / total,
         elementIds: ids.toArray(),
       }))
       .sort(
@@ -138,10 +140,7 @@ export class CanvasHistogram {
           )
           .map((element: ElementData): [string, string] => {
             const value: PropertyValue = element.properties[key];
-            return [
-              typeof value === 'object' ? JSON.stringify(value) : String(value),
-              element.id,
-            ];
+            return [JSON.stringify(value), element.id];
           }),
       ),
     }));

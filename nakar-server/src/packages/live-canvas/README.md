@@ -71,11 +71,13 @@ Berechtigungsprüfung bereit.
 | `CanvasRoomDelegate`     | Atomare, pro Raum serialisierte Canvas-Transaktionen                                    |
 | `CanvasEventDelegate`    | Synchrone Verarbeitung von Fachereignissen                                              |
 | `PhysicsWorkerDelegate`  | Start, Nachrichtenübertragung und Beenden eines Workers der Zielplattform               |
-| `CanvasRuntimeDelegate`  | Eindeutige IDs und abbrechbare Timer                                                    |
+| `CanvasRuntimeDelegate`  | Eindeutige IDs, Zufallswerte und abbrechbare Timer                                      |
 | `PhysicsRuntimeDelegate` | Uhr, Timer und ausgehende Nachrichten innerhalb des Physik-Workers                      |
 
 `CanvasDelegates` fasst die sechs Delegates der Canvas-Instanz zusammen.
-`PhysicsRuntimeDelegate` wird innerhalb des Workers verwendet.
+`PhysicsRuntimeDelegate` wird innerhalb des Workers verwendet. Beide
+Laufzeit-Delegates liefern über `CanvasRandomDelegate.random()` Zufallswerte für
+die zweidimensionale Trennung benachbarter Knoten.
 
 `CanvasStorageDelegate.getRoom()` liefert den aktuellen Rechtezustand und die
 Graphquellen des Projekts. `getNotes()` liefert die zum Graphen gehörenden
@@ -118,15 +120,19 @@ Knotenclustern zu und erhält die Zuordnung von Notizen.
 | Histogramme mit zugehörigen Element-IDs erzeugen               | `getHistogram(actor)`, `CanvasHistogram`                                            |
 
 `ScenarioActionFactory` erzeugt konkrete Aktionen aus den Folgeaktionen eines
-Szenarios. Das Kreis-Layout verwendet `CircleLayoutEngine`. Das Hierarchie-Layout
-ordnet Knoten deterministisch in Schichten an und fasst Zyklen zu Komponenten
-zusammen.
+Szenarios. Kreis- und Force-Directed-Szenario-Layouts lösen ihre Labelauswahl auf
+dem geladenen Graphen auf. Interaktive Layouts verwenden explizite Knoten-IDs.
+Das Kreis-Layout verwendet `CircleLayoutEngine`, das vertikale Hierarchie-Layout
+den ELK-basierten `HierarchyGraphLayoutEngine`.
 
 ## Aktionsverarbeitung und History
 
 `LiveCanvas.execute()` serialisiert Aktionen. Jede Aktion arbeitet mit einem
-`CanvasActionContext` auf einem isolierten Datenentwurf. Nach der Ausführung
-ergänzt die Nachverarbeitung Verknüpfungen, Notizen und passende Knotenszenarien.
+`CanvasActionContext` auf einem isolierten Datenentwurf. Bei Graph- und
+Visualisierungsaktionen ergänzt die Nachverarbeitung Verknüpfungen, Notizen und
+passende Knotenszenarien. Lokale Layout-, Spiegelungs- und Entsperraktionen
+arbeiten ohne diese Nachverarbeitung. Zwischenzeitlich eingetroffene
+Physikpositionen bleiben erhalten, sofern die Aktion sie nicht verändert.
 Erst der erfolgreich abgeschlossene Entwurf wird veröffentlicht. Fehler während
 der Berechnung oder Nachverarbeitung verwerfen den Entwurf.
 
@@ -135,6 +141,11 @@ der Berechnung oder Nachverarbeitung verwerfen den Entwurf.
 Visualisierungseinstellungen und direkte Knotenbewegungen erzeugen keine
 Graph-History-Einträge. `history` liefert den aktuellen Undo-/Redo-Status.
 `saveGraph(actor)` speichert den aktuellen Canvas-Snapshot.
+
+Mehrfach-Expansionen werden je Knoten einzeln übernommen und sind einzeln
+rückgängig zu machen. `SetViewSettingsAction(settings)` ergänzt Einstellungen
+unter Erhalt unbeteiligter Labels, Beziehungstypen und des Skalierungstyps;
+ohne Argument setzt die Aktion die Visualisierung zurück.
 
 ## Automatisches Speichern
 

@@ -6,6 +6,7 @@ import type { CanvasDelegates } from '../delegates/CanvasDelegates';
 import type { GraphRequest } from '../delegates/GraphRequest';
 import { CanvasGraph } from '../graph/CanvasGraph';
 import { CanvasViewSettings } from '../view-settings/CanvasViewSettings';
+import type { NodeData } from '../data/NodeData';
 
 /**
  * Holds one isolated action draft. LiveCanvas publishes the draft only after successful execution and postprocessing.
@@ -30,9 +31,11 @@ export class CanvasActionContext {
    * Validated visualization model for the current draft.
    */
   public settings: CanvasViewSettings;
+  /** Original node positions and locks used to distinguish action edits from incoming physics. */
+  private readonly _originalNodes: NodeData[];
 
   /**
-   * function Object() { [native code] }
+   * References an isolated canvas draft and its delegates.
    * @param data - Data object or snapshot used to initialize the operation.
    * @param room - Current room access and project membership data.
    * @param delegates - Host implementations of the external canvas boundaries.
@@ -44,6 +47,7 @@ export class CanvasActionContext {
     public readonly delegates: CanvasDelegates,
     public readonly grabbedNodeIds: readonly string[] = [],
   ) {
+    this._originalNodes = structuredClone(data.graph.nodes);
     this.graph = new CanvasGraph(data.graph);
     this.settings = new CanvasViewSettings(data.viewSettings);
   }
@@ -75,5 +79,29 @@ export class CanvasActionContext {
   public finish(): CanvasData {
     this.settings.validate();
     return { graph: this.graph.toData(), viewSettings: this.settings.toData() };
+  }
+
+  /**
+   * Preserves newer live positions for nodes whose coordinates and locks the action did not change.
+   * @param nodes - Current canvas nodes after asynchronous delegate work.
+   */
+  public preservePositions(nodes: readonly NodeData[]): void {
+    for (const node of this.data.graph.nodes) {
+      const original: NodeData | undefined = this._originalNodes.find(
+        (entry: NodeData): boolean => entry.id === node.id,
+      );
+      const current: NodeData | undefined = nodes.find(
+        (entry: NodeData): boolean => entry.id === node.id,
+      );
+      if (
+        original !== undefined &&
+        current !== undefined &&
+        node.position.x === original.position.x &&
+        node.position.y === original.position.y &&
+        node.locked === original.locked
+      ) {
+        node.position = { ...current.position };
+      }
+    }
   }
 }

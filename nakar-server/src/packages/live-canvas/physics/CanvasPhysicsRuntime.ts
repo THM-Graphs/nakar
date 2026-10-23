@@ -69,6 +69,7 @@ export class CanvasPhysicsRuntime {
     this._simulation = new CanvasPhysicsSimulation(
       this._graph,
       this._configuration,
+      this._delegate,
     );
   }
 
@@ -86,13 +87,32 @@ export class CanvasPhysicsRuntime {
         if (command.revision <= this._revision) {
           return;
         }
-        this._stop();
         this._revision = command.revision;
         this._graph = structuredClone(command.graph);
         this._simulation = new CanvasPhysicsSimulation(
           this._graph,
           this._configuration,
+          this._delegate,
         );
+        break;
+      case 'update':
+        if (command.revision <= this._revision) {
+          return;
+        }
+        this._revision = command.revision;
+        for (const [id, position] of Object.entries(command.positions)) {
+          const node: PhysicalGraph['nodes'][string] = this._graph.nodes[id];
+          if (node != null) {
+            node.positionX = position.x;
+            node.positionY = position.y;
+          }
+        }
+        for (const [id, locked] of Object.entries(command.locks)) {
+          const node: PhysicalGraph['nodes'][string] = this._graph.nodes[id];
+          if (node != null) {
+            node.locked = locked;
+          }
+        }
         break;
       case 'run':
         if (command.revision !== this._revision) {

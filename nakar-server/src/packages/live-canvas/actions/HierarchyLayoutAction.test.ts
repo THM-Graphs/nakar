@@ -8,9 +8,9 @@ import type { NodeData } from '../data/NodeData';
 
 void describe('HierarchyLayoutAction', (): void => {
   void describe('apply', (): void => {
-    void it('lays out a hierarchy and locks the resulting graph', (): void => {
+    void it('lays out a hierarchy and locks the resulting graph', async (): Promise<void> => {
       const c: ReturnType<typeof TestHarness.context> = TestHarness.context();
-      new HierarchyLayoutAction('KNOWS').apply(c.context);
+      await new HierarchyLayoutAction('KNOWS').apply(c.context);
       const a: NodeData = c.context.graph.getNode('a').toData();
       const b: NodeData = c.context.graph.getNode('b').toData();
       assert.equal(a.locked, true);
@@ -21,7 +21,7 @@ void describe('HierarchyLayoutAction', (): void => {
         c.h.delegates,
         ['a'],
       );
-      new HierarchyLayoutAction('KNOWS').apply(grabbed);
+      await new HierarchyLayoutAction('KNOWS').apply(grabbed);
       assert.deepEqual(grabbed.graph.getNode('a').toData().position, {
         x: 0,
         y: 0,

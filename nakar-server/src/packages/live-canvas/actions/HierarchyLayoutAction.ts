@@ -4,7 +4,7 @@ import type { CanvasActionContext } from './CanvasActionContext';
 import { LayoutAction } from './LayoutAction';
 
 /**
- * Places nodes in deterministic hierarchy layers for the selected relationship type.
+ * Places nodes in vertical ELK hierarchy layers for the selected relationship type.
  */
 export class HierarchyLayoutAction extends LayoutAction {
   /**
@@ -16,14 +16,15 @@ export class HierarchyLayoutAction extends LayoutAction {
   }
 
   /**
-   * Places nodes in deterministic hierarchy layers for the selected relationship type.
+   * Places nodes in vertical hierarchy layers for the selected relationship type.
    * @param context - Isolated draft and delegates used by this action.
+   * @returns Completion of the hierarchy layout and lock updates.
    */
-  public override apply(context: CanvasActionContext): void {
+  public override async apply(context: CanvasActionContext): Promise<void> {
     const graph: PhysicalGraph = context.graph.toPhysicalGraph(
       context.settings,
     );
-    new CanvasHierarchyLayout(graph).layout(this._edgeType);
+    await new CanvasHierarchyLayout(graph).layout(this._edgeType);
     for (const node of Object.values(graph.nodes)) {
       if (node != null && !context.grabbedNodeIds.includes(node.id)) {
         context.graph

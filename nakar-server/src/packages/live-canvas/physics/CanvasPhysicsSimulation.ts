@@ -3,9 +3,10 @@ import type { PhysicalNode } from '../../physics/physical-graph/PhysicalNode';
 import { CombinationCache } from '../../physics/CombinationCache';
 import { CanvasPhysicsConfiguration } from './CanvasPhysicsConfiguration';
 import type { CanvasPhysicsOptions } from './CanvasPhysicsOptions';
+import type { CanvasRandomDelegate } from '../delegates/CanvasRandomDelegate';
 
 /**
- * Advances the force model by a deterministic step while preserving locked node positions.
+ * Advances the force model with injectable randomness while preserving locked node positions.
  */
 export class CanvasPhysicsSimulation {
   /** Validated force and friction settings retained for subsequent ticks. */
@@ -15,10 +16,12 @@ export class CanvasPhysicsSimulation {
    * References the physical graph that subsequent simulation ticks update.
    * @param _graph - Graph whose data is read or modified.
    * @param options - Force, velocity, friction and timing overrides.
+   * @param _random - Source of random samples used to separate nearby unlocked nodes.
    */
   public constructor(
     private readonly _graph: PhysicalGraph,
     options: Partial<CanvasPhysicsOptions> = {},
+    private readonly _random: CanvasRandomDelegate = { random: Math.random },
   ) {
     this._configuration = new CanvasPhysicsConfiguration(options);
   }
@@ -31,23 +34,22 @@ export class CanvasPhysicsSimulation {
     const nodes: PhysicalNode[] = Object.values(this._graph.nodes).filter(
       (node: PhysicalNode | null): node is PhysicalNode => node !== null,
     );
-    for (const node of nodes) {
-      const distance: number = Math.hypot(node.positionX, node.positionY);
-      if (distance > 0) {
+    for (let i: number = 0; i < nodes.length; i++) {
+      const node: PhysicalNode = nodes[i];
+      const centerDistance: number = Math.hypot(node.positionX, node.positionY);
+      if (centerDistance > 0) {
         this._force(
           node,
-          (-node.positionX / distance) *
-            distance *
+          (-node.positionX / centerDistance) *
+            centerDistance *
             this._mass(node) *
             0.00000013,
-          (-node.positionY / distance) *
-            distance *
+          (-node.positionY / centerDistance) *
+            centerDistance *
             this._mass(node) *
             0.00000013,
         );
       }
-    }
-    for (let i: number = 0; i < nodes.length; i++) {
       for (let j: number = i + 1; j < nodes.length; j++) {
         const left: PhysicalNode = nodes[i];
         const right: PhysicalNode = nodes[j];
@@ -143,11 +145,23 @@ export class CanvasPhysicsSimulation {
     right: PhysicalNode,
     strength: (distance: number) => number,
   ): void {
-    // Use a stable direction for coincident nodes, without moving locked nodes as a side effect.
-    const x: number =
-      left.positionX === right.positionX && left.positionY === right.positionY
-        ? 0.1
-        : left.positionX - right.positionX;
+    if (
+      Math.abs(left.positionX - right.positionX) < 0.1 &&
+      Math.abs(left.positionY - right.positionY) < 0.1
+    ) {
+      const target: PhysicalNode | null = !left.locked
+        ? left
+        : !right.locked
+          ? right
+          : null;
+      if (target === null) {
+        return;
+      }
+      const angle: number = this._random.random() * Math.PI * 2;
+      target.positionX += Math.cos(angle) * 10;
+      target.positionY += Math.sin(angle) * 10;
+    }
+    const x: number = left.positionX - right.positionX;
     const y: number = left.positionY - right.positionY;
     const distance: number = Math.hypot(x, y);
     const force: number = strength(distance);

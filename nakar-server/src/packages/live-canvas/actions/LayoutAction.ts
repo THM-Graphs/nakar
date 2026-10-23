@@ -13,4 +13,7 @@ export abstract class LayoutAction extends CanvasAction {
    * Requested follow-up physics duration policy for the action.
    */
   public override readonly physics: CanvasAction['physics'] = 'long';
+
+  /** Layout changes do not reload graph-derived data. */
+  public override readonly postProcess: boolean = false;
 }

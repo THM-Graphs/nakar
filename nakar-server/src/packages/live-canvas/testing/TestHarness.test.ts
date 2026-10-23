@@ -177,13 +177,31 @@ export class TestHarness {
   public static latestGraph(
     commands: WorkerCommand[],
   ): Extract<WorkerCommand, { type: 'graph' }> {
-    const command: WorkerCommand | undefined = commands.findLast(
-      (entry: WorkerCommand): boolean => entry.type === 'graph',
-    );
-    if (command?.type !== 'graph') {
+    let graph: Extract<WorkerCommand, { type: 'graph' }> | null = null;
+    for (const command of commands) {
+      if (command.type === 'graph') {
+        graph = structuredClone(command);
+      } else if (command.type === 'update' && graph !== null) {
+        graph.revision = command.revision;
+        for (const [id, position] of Object.entries(command.positions)) {
+          const node: PhysicalNode | null = graph.graph.nodes[id];
+          if (node !== null) {
+            node.positionX = position.x;
+            node.positionY = position.y;
+          }
+        }
+        for (const [id, locked] of Object.entries(command.locks)) {
+          const node: PhysicalNode | null = graph.graph.nodes[id];
+          if (node !== null) {
+            node.locked = locked;
+          }
+        }
+      }
+    }
+    if (graph === null) {
       throw new Error('No graph command');
     }
-    return command;
+    return graph;
   }
   public static context(): {
     context: CanvasActionContext;

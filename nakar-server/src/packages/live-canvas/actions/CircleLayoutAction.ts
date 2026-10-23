@@ -14,7 +14,7 @@ export class CircleLayoutAction extends LayoutAction {
    * @param _radius - Positive finite circle radius in canvas units.
    */
   public constructor(
-    private readonly _ids: readonly string[],
+    private readonly _ids: readonly string[] | string,
     private readonly _radius: number,
   ) {
     super();
@@ -29,8 +29,17 @@ export class CircleLayoutAction extends LayoutAction {
     if (!Number.isFinite(this._radius) || this._radius <= 0) {
       throw new InvalidDataError('Radius must be positive and finite.');
     }
+    const selection: typeof this._ids = this._ids;
+    const ids: readonly string[] =
+      typeof selection === 'string'
+        ? context.data.graph.nodes
+            .filter((node: NodeData): boolean =>
+              node.labels.includes(selection),
+            )
+            .map((node: NodeData): string => node.id)
+        : selection;
     const nodes: NodeData[] = context.data.graph.nodes.filter(
-      (node: NodeData): boolean => this._ids.includes(node.id),
+      (node: NodeData): boolean => ids.includes(node.id),
     );
     if (nodes.length < 2) {
       return;
@@ -48,25 +57,30 @@ export class CircleLayoutAction extends LayoutAction {
       sorted[i].locked = true;
     }
     for (const node of context.data.graph.nodes) {
-      if (this._ids.includes(node.id) || node.locked) {
+      if (ids.includes(node.id) || node.locked) {
         continue;
       }
       const neighbors: NodeData[] = context.graph
         .neighbors(node.id)
-        .filter((id: string): boolean => this._ids.includes(id))
+        .filter((id: string): boolean => ids.includes(id))
         .map((id: string): NodeData => context.graph.getNode(id).toData());
       if (neighbors.length > 0) {
+        const angle: number = context.delegates.runtime.random() * Math.PI * 2;
         context.graph.getNode(node.id).move({
           x:
             neighbors.reduce(
               (sum: number, next: NodeData): number => sum + next.position.x,
               0,
-            ) / neighbors.length,
+            ) /
+              neighbors.length +
+            Math.cos(angle) * 10,
           y:
             neighbors.reduce(
               (sum: number, next: NodeData): number => sum + next.position.y,
               0,
-            ) / neighbors.length,
+            ) /
+              neighbors.length +
+            Math.sin(angle) * 10,
         });
       }
     }

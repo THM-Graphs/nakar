@@ -25,6 +25,7 @@ export class NodeWorkerDelegate implements PhysicsWorkerDelegate {
       const { CanvasPhysicsRuntime } = require(${JSON.stringify(runtimePath)});
       const runtime = new CanvasPhysicsRuntime({
         now: () => performance.now(),
+        random: () => Math.random(),
         schedule: (callback, milliseconds) => setTimeout(callback, milliseconds),
         cancel: (handle) => clearTimeout(handle),
         post: (event) => parentPort.postMessage(event),

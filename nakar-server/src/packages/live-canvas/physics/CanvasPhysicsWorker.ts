@@ -5,6 +5,7 @@ import type { PhysicsWorkerListener } from '../delegates/PhysicsWorkerListener';
 import type { WorkerEvent } from './WorkerEvent';
 import type { PhysicsSimulationRunOptions } from '../../physics/PhysicsSimulationRunOptions';
 import { InvalidDataError } from '../error/InvalidDataError';
+import type { Position } from '../data/Position';
 
 /**
  * Owns worker startup and termination, tracks graph revisions and rejects stale or late worker messages.
@@ -89,6 +90,28 @@ export class CanvasPhysicsWorker implements PhysicsWorkerListener {
       type: 'graph',
       revision: this._revision,
       graph: structuredClone(graph),
+    });
+  }
+
+  /**
+   * Sends detached position and lock deltas while preserving the worker's running simulation.
+   * @param positions - Changed node positions.
+   * @param locks - Changed persistent or temporary node locks.
+   * @throws {@link error/InvalidStateError!InvalidStateError | InvalidStateError} When the worker is not ready.
+   */
+  public update(
+    positions: Record<string, Position>,
+    locks: Record<string, boolean>,
+  ): void {
+    if (!this._active || !this._ready) {
+      throw new InvalidStateError('Worker is not active.');
+    }
+    this._revision += 1;
+    this._delegate.post({
+      type: 'update',
+      revision: this._revision,
+      positions: structuredClone(positions),
+      locks: structuredClone(locks),
     });
   }
 

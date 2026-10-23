@@ -510,6 +510,7 @@ void describe('CanvasGraph', (): void => {
         rightProperty: 'key',
       };
       graph.merge([rule], (): string => 'merge');
+      assert.deepEqual(graph.toData().edges[0].properties['merge'], rule);
       assert.deepEqual(
         graph
           .toData()

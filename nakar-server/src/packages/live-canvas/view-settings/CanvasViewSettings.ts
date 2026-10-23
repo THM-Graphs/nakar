@@ -34,17 +34,35 @@ export class CanvasViewSettings {
   }
 
   /**
+   * Merges incoming settings while retaining unrelated label/type settings and the current scale type.
+   * @param data - Incoming global values and selected label/type configurations.
+   */
+  public merge(data: ViewSettingsData): void {
+    const incoming: ViewSettingsData = structuredClone(data);
+    Object.assign(this._data, {
+      ...incoming,
+      scaleType: this._data.scaleType,
+      labels: { ...this._data.labels, ...incoming.labels },
+      edges: { ...this._data.edges, ...incoming.edges },
+    });
+  }
+
+  /**
    * Returns existing settings for a label or creates its defaults.
    * @param label - Node label to select or configure.
    * @returns The mutable configuration referenced by this label.
    */
   public label(label: string): LabelSettings {
     if (!Object.hasOwn(this._data.labels, label)) {
+      const counts: number[] = [0, 0, 0, 0, 0, 0];
+      for (const settings of Object.values(this._data.labels)) {
+        counts[settings.colorIndex] += 1;
+      }
       Object.defineProperty(this._data.labels, label, {
         value: {
           radius: 40,
           customRadius: false,
-          colorIndex: Object.keys(this._data.labels).length % 6,
+          colorIndex: counts.indexOf(Math.min(...counts)),
           titleProperty: '',
           customTitleProperty: false,
         },
@@ -104,9 +122,11 @@ export class CanvasViewSettings {
    */
   public title(node: NodeData): string {
     if (node.compressed.length > 0) {
-      return `${node.labels.join(', ')} Cluster`;
+      return `${node.labels.toSorted((a: string, b: string): number => a.localeCompare(b)).join(', ')} Cluster`;
     }
-    for (const label of node.labels) {
+    for (const label of node.labels.toSorted((a: string, b: string): number =>
+      a.localeCompare(b),
+    )) {
       const settings: LabelSettings = this.label(label);
       if (settings.customTitleProperty) {
         const value: unknown = node.properties[settings.titleProperty];
@@ -130,7 +150,9 @@ export class CanvasViewSettings {
         return value;
       }
     }
-    return node.labels.join(', ');
+    return node.labels
+      .toSorted((a: string, b: string): number => a.localeCompare(b))
+      .join(', ');
   }
 
   /**
@@ -148,6 +170,7 @@ export class CanvasViewSettings {
     max: number,
   ): number {
     const custom: LabelSettings | undefined = node.labels
+      .toSorted((a: string, b: string): number => a.localeCompare(b))
       .map((label: string): LabelSettings => this.label(label))
       .findLast((label: LabelSettings): boolean => label.customRadius);
     const base: number = custom?.radius ?? 40;

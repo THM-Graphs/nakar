@@ -390,7 +390,7 @@ export class CanvasGraph {
             nativeId: '',
             sourceId: left.sourceId,
             sourceTitle: left.sourceTitle,
-            properties: {},
+            properties: { merge: { ...rule } },
             namesInQuery: [],
             compressed: [],
             compressedIds: [],

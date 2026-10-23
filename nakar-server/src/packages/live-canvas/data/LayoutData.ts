@@ -11,7 +11,10 @@ export type LayoutData =
       /**
        * Canonical node identities selected by this operation.
        */
-      nodeIds: string[];
+      nodeIds?: string[];
+
+      /** Label resolved against the loaded scenario graph when no explicit IDs are supplied. */
+      label?: string;
 
       /**
        * Configured node radius or circle layout radius.
@@ -38,5 +41,8 @@ export type LayoutData =
       /**
        * Canonical node identities selected by this operation.
        */
-      nodeIds: string[];
+      nodeIds?: string[];
+
+      /** Label resolved against the loaded scenario graph when no explicit IDs are supplied. */
+      label?: string;
     };

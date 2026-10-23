@@ -11,6 +11,9 @@ export class UnlockNodesAction extends CanvasAction {
    */
   public readonly title: string = 'Unlock nodes';
 
+  /** Unlocking only changes local node state. */
+  public override readonly postProcess: boolean = false;
+
   /**
    * Retains the selected node IDs to unlock.
    * @param _ids - Canonical identities selected by this operation.

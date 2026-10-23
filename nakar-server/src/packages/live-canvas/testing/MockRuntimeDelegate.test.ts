@@ -23,6 +23,10 @@ export class MockRuntimeDelegate
     return this.time;
   }
 
+  public random(): number {
+    return 0.125;
+  }
+
   public schedule(callback: () => void, milliseconds: number): unknown {
     const id: number = this.timers.length;
     this.timers.push({

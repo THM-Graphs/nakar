@@ -8,6 +8,24 @@ import { ExpandNodesAction } from './ExpandNodesAction';
 import type { NodeData } from '../data/NodeData';
 
 void describe('ExpandNodesAction', (): void => {
+  void describe('actions', (): void => {
+    void it('provides an ordered independent action for each node', async (): Promise<void> => {
+      const action: ExpandNodesAction = new ExpandNodesAction(['a', 'b']);
+      const c: ReturnType<typeof TestHarness.context> = TestHarness.context();
+      assert.equal(action.actions.length, 2);
+      await action.actions[1].apply(c.context);
+      assert.equal(c.h.source.calls.length, 1);
+      assert.deepEqual(
+        c.h.source.calls[0].request.type === 'expand'
+          ? c.h.source.calls[0].request.nativeIds
+          : [],
+        ['b'],
+      );
+    });
+    void it('provides no operations for an empty selection', (): void => {
+      assert.deepEqual(new ExpandNodesAction([]).actions, []);
+    });
+  });
   void describe('apply', (): void => {
     void it('expands an individual node with label and relationship limits', async (): Promise<void> => {
       const c: ReturnType<typeof TestHarness.context> = TestHarness.context();
@@ -57,7 +75,10 @@ void describe('ExpandNodesAction', (): void => {
       );
       assert.deepEqual(
         c.context.graph.getNode('replacement').toData().position,
-        { x: 40, y: 50 },
+        {
+          x: 40 + Math.cos(Math.PI / 4) * 10,
+          y: 50 + Math.sin(Math.PI / 4) * 10,
+        },
       );
       assert.deepEqual(c.context.graph.getNode('b').toData().position, {
         x: 0,

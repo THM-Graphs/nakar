@@ -11,6 +11,64 @@ import type { WorkerEvent } from './WorkerEvent';
 
 void describe('CanvasPhysicsRuntime', (): void => {
   void describe('handle', (): void => {
+    void it('applies position and lock deltas without resetting velocity or the active deadline', (): void => {
+      const h: ReturnType<typeof TestHarness.physicsRuntime> =
+        TestHarness.physicsRuntime(1, {
+          FPS: 1000,
+          cooldownTime: 1,
+          frictionFactor: 0,
+        });
+      h.runtime.handle({
+        type: 'graph',
+        revision: 1,
+        graph: TestHarness.driftingPhysicalGraph(),
+      });
+      h.runtime.handle({ type: 'run', revision: 1, milliseconds: 10 });
+      TestHarness.runPhysicsBatch(h.delegate);
+      h.runtime.handle({
+        type: 'update',
+        revision: 2,
+        positions: { a: { x: 50, y: 0 }, missing: { x: 9, y: 9 } },
+        locks: { a: false, missing: true },
+      });
+      h.runtime.handle({
+        type: 'update',
+        revision: 1,
+        positions: { a: { x: 999, y: 0 } },
+        locks: {},
+      });
+      TestHarness.runPhysicsBatch(h.delegate);
+      const event: WorkerEvent | undefined = h.delegate.events.at(-1);
+      assert.ok(event?.type === 'positions');
+      assert.equal(event.revision, 2);
+      assert.equal(event.positions['a'].x, 60);
+      assert.equal(Object.hasOwn(event.positions, 'missing'), false);
+      while (h.delegate.events.at(-1)?.type !== 'stopped') {
+        TestHarness.runPhysicsBatch(h.delegate);
+      }
+      assert.ok(h.delegate.time < 15);
+    });
+    void it('applies temporary locks without restarting or replacing the graph', (): void => {
+      const h: ReturnType<typeof TestHarness.physicsRuntime> =
+        TestHarness.physicsRuntime(1, { FPS: 1000 });
+      h.runtime.handle({
+        type: 'graph',
+        revision: 1,
+        graph: TestHarness.driftingPhysicalGraph(),
+      });
+      h.runtime.handle({ type: 'run', revision: 1, milliseconds: 100 });
+      h.runtime.handle({
+        type: 'update',
+        revision: 2,
+        positions: {},
+        locks: { a: true },
+      });
+      TestHarness.runPhysicsBatch(h.delegate);
+      const event: WorkerEvent = h.delegate.events[0];
+      assert.ok(event.type === 'positions');
+      assert.equal(event.positions['a'].x, 0);
+      h.runtime.destroy();
+    });
     void it('runs fast ticks and emits a single snapshot per default output interval', (): void => {
       const h: ReturnType<typeof TestHarness.physicsRuntime> =
         TestHarness.physicsRuntime(0.5);
@@ -216,7 +274,7 @@ void describe('CanvasPhysicsRuntime', (): void => {
         2,
       );
     });
-    void it('invalidates old callbacks when replacing the graph and preserves configuration', (): void => {
+    void it('continues the active deadline after replacing the graph and preserves configuration', (): void => {
       const h: ReturnType<typeof TestHarness.physicsRuntime> =
         TestHarness.physicsRuntime(1, { FPS: 100 });
       h.runtime.handle({ type: 'run', revision: 0, milliseconds: 100 });
@@ -226,10 +284,8 @@ void describe('CanvasPhysicsRuntime', (): void => {
         revision: 1,
         graph: TestHarness.physical(),
       });
-      old.callback();
       assert.equal(h.delegate.events.length, 0);
-      assert.equal(old.cancelled, true);
-      h.runtime.handle({ type: 'run', revision: 1, milliseconds: 100 });
+      assert.equal(old.cancelled, false);
       TestHarness.runPhysicsBatch(h.delegate);
       const event: WorkerEvent = h.delegate.events[0];
       assert.ok(event.type === 'positions');

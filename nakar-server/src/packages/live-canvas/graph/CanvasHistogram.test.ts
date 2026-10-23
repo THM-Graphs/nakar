@@ -11,6 +11,49 @@ import type { GraphData } from '../data/GraphData';
 
 void describe('CanvasHistogram', (): void => {
   void describe('toData', (): void => {
+    void it('keeps primitive types distinct using the persisted JSON representation', (): void => {
+      const data: GraphData = TestHarness.canvasData(
+        [
+          TestHarness.node('number', { properties: { value: 1 } }),
+          TestHarness.node('string', { properties: { value: '1' } }),
+          TestHarness.node('boolean', { properties: { value: true } }),
+          TestHarness.node('text', { properties: { value: 'true' } }),
+          TestHarness.node('null', { properties: { value: null } }),
+          TestHarness.node('null-text', { properties: { value: 'null' } }),
+        ],
+        [],
+      ).graph;
+      const values: HistogramEntry[] = new CanvasHistogram(
+        data,
+        new CanvasViewSettings(),
+      ).toData().nodeProperties[0].values;
+      assert.equal(values.length, 6);
+      assert.deepEqual(
+        values.find((entry: HistogramEntry): boolean => entry.value === '1')
+          ?.elementIds,
+        ['number'],
+      );
+      assert.deepEqual(
+        values.find((entry: HistogramEntry): boolean => entry.value === '"1"')
+          ?.elementIds,
+        ['string'],
+      );
+    });
+    void it('weights relationship types by represented members while retaining visible IDs', (): void => {
+      const data: GraphData = TestHarness.canvasData(undefined, [
+        TestHarness.edge('cluster', 'a', 'b', {
+          compressed: ['one', 'two', 'three'],
+        }),
+        TestHarness.edge('other', 'b', 'c', { type: 'OTHER' }),
+      ]).graph;
+      const histogram: HistogramData = new CanvasHistogram(
+        data,
+        new CanvasViewSettings(),
+      ).toData();
+      assert.equal(histogram.edgeTypes[0].count, 3);
+      assert.equal(histogram.edgeTypes[0].percentage, 0.75);
+      assert.deepEqual(histogram.edgeTypes[0].elementIds, ['cluster']);
+    });
     void it('reports sorted label and property values with matching IDs and weighted degrees', (): void => {
       const data: GraphData = TestHarness.canvasData(
         [

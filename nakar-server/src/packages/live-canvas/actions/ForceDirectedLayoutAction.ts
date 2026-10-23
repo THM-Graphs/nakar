@@ -9,7 +9,7 @@ export class ForceDirectedLayoutAction extends LayoutAction {
    * Retains node IDs to unlock before the long force-directed run.
    * @param _ids - Canonical identities selected by this operation.
    */
-  public constructor(private readonly _ids: readonly string[]) {
+  public constructor(private readonly _ids: readonly string[] | string) {
     super();
   }
 
@@ -19,7 +19,11 @@ export class ForceDirectedLayoutAction extends LayoutAction {
    */
   public override apply(context: CanvasActionContext): void {
     for (const node of context.data.graph.nodes) {
-      if (this._ids.includes(node.id)) {
+      if (
+        typeof this._ids === 'string'
+          ? node.labels.includes(this._ids)
+          : this._ids.includes(node.id)
+      ) {
         node.locked = false;
       }
     }
