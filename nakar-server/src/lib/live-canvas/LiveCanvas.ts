@@ -458,6 +458,8 @@ export class LiveCanvas {
           await this._database.getScenario(params.scenarioId);
         const canvas: Modules.Documents.Result<'api::canvas.canvas'> =
           await this._database.getCanvas(this.canvasId);
+        const room: Modules.Documents.Result<'api::room.room'> =
+          await this._database.getRoomOfCanvas(canvas);
 
         if (
           !(await scenarioBelongsToCanvas(scenario, canvas, this._database))
@@ -472,21 +474,6 @@ export class LiveCanvas {
         if (queries.length === 0) {
           throw new NotFound('The scenario has no queries.');
         }
-
-        const room: Modules.Documents.Result<'api::room.room'> =
-          await this._database.getRoomOfCanvas(canvas);
-        await this._mutateRoom(
-          room.documentId,
-          async (
-            currentRoom: Modules.Documents.Result<'api::room.room'>,
-          ): Promise<void> => {
-            await this._database.setCanvasTitle(
-              this.canvasId,
-              scenario.title ?? 'New Canvas',
-            );
-            await this._notifyRoomCanvasesChanged(currentRoom);
-          },
-        );
 
         const parameters: Modules.Documents.Result<'api::query-parameter.query-parameter'>[] =
           await this._database.getParametersOfScenario(scenario);
@@ -574,6 +561,18 @@ export class LiveCanvas {
             scenario,
             params.arguments,
             parameters,
+          );
+          await this._mutateRoom(
+            room.documentId,
+            async (
+              currentRoom: Modules.Documents.Result<'api::room.room'>,
+            ): Promise<void> => {
+              await this._database.setCanvasTitle(
+                this.canvasId,
+                scenario.title ?? 'New Canvas',
+              );
+              await this._notifyRoomCanvasesChanged(currentRoom);
+            },
           );
           changeRecorder.didAddOrRemoveGraphElements();
           changeRecorder.didAddOrRemoveTableData();
