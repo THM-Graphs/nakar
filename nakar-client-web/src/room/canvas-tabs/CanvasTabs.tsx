@@ -1,5 +1,5 @@
 import { useCanvasContext } from "../../pages/Canvas.tsx";
-import { Button, Dropdown, Stack } from "react-bootstrap";
+import { Dropdown, Stack } from "react-bootstrap";
 import { Link, useNavigate } from "react-router";
 import clsx from "clsx";
 import { Router } from "../../routing/Router.ts";
