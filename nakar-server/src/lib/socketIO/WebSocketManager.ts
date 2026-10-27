@@ -580,7 +580,12 @@ export class WebSocketManager
               });
             },
           )
-          .with(
+          .with<
+            { type: 'CanvasEventCursorChanged' },
+            // eslint-disable-next-line @typescript-eslint/no-invalid-void-type
+            void,
+            CanvasEventCursorChanged
+          >(
             { type: 'CanvasEventCursorChanged' },
             (message: CanvasEventCursorChanged): void => {
               const position: [number, number] | null =
