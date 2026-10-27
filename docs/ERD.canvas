@@ -1,0 +1,42 @@
+{
+	"nodes":[
+		{"id":"bab40da22a41eac8","type":"text","text":"User","x":-460,"y":-320,"width":250,"height":60},
+		{"id":"59a827ec2a6cca2a","type":"text","text":"Project","x":-460,"y":-120,"width":250,"height":60},
+		{"id":"f167410fe0fb1174","type":"text","text":"Note","x":-25,"y":-120,"width":250,"height":60},
+		{"id":"2c79b2bee25b3051","x":275,"y":-120,"width":250,"height":60,"type":"text","text":"Node Reference"},
+		{"id":"cd9216f8399fbcf4","type":"text","text":"Query Parameter","x":-565,"y":460,"width":250,"height":60},
+		{"id":"be7a8b2b0fd9e1f7","type":"text","text":"Post Scenario Action","x":-295,"y":460,"width":250,"height":60},
+		{"id":"4b280f7b3d4b3574","x":5,"y":460,"width":250,"height":60,"type":"text","text":"Node Settings"},
+		{"id":"81998aabebe29c34","type":"text","text":"Room","x":150,"y":120,"width":250,"height":60},
+		{"id":"71741e1ddb17b428","type":"text","text":"Canvas (Tab)","x":150,"y":220,"width":250,"height":60},
+		{"id":"60f7c0a084911559","type":"text","text":"Relationship Settings","x":295,"y":460,"width":250,"height":60},
+		{"id":"20937b88d396d4ca","type":"text","text":"Scenario","x":-565,"y":220,"width":250,"height":60},
+		{"id":"a6f74ac8c75091eb","type":"text","text":"Query","x":-835,"y":460,"width":250,"height":60},
+		{"id":"962519464e91fa69","type":"text","text":"Scenario Group","x":-565,"y":120,"width":250,"height":60},
+		{"id":"f37061cb6635a77d","type":"text","text":"Link Property","x":-1480,"y":20,"width":250,"height":60},
+		{"id":"fff00c748ba24959","type":"text","text":"Common Property","x":-1480,"y":120,"width":250,"height":60},
+		{"id":"f50da8f7d3afd19a","type":"text","text":"Title Property","x":-1480,"y":220,"width":250,"height":60},
+		{"id":"345cb1fd1f385d84","type":"text","text":"Database Connection","x":-1110,"y":120,"width":250,"height":60}
+	],
+	"edges":[
+		{"id":"138597b8df7aeed2","fromNode":"59a827ec2a6cca2a","fromSide":"left","toNode":"bab40da22a41eac8","toSide":"left","label":"Owner"},
+		{"id":"b7c5ec047340e72d","fromNode":"59a827ec2a6cca2a","fromSide":"right","toNode":"bab40da22a41eac8","toSide":"right","label":"Collaborator"},
+		{"id":"bc1f0d3c2529157c","fromNode":"59a827ec2a6cca2a","fromSide":"bottom","toNode":"81998aabebe29c34","toSide":"top"},
+		{"id":"f69d496bd3ea37b9","fromNode":"81998aabebe29c34","fromSide":"bottom","toNode":"71741e1ddb17b428","toSide":"top"},
+		{"id":"a9b8204d0ad761ba","fromNode":"59a827ec2a6cca2a","fromSide":"bottom","toNode":"962519464e91fa69","toSide":"top"},
+		{"id":"f185c4bd14b8f867","fromNode":"962519464e91fa69","fromSide":"bottom","toNode":"20937b88d396d4ca","toSide":"top"},
+		{"id":"6ef7ea990b53efcd","fromNode":"59a827ec2a6cca2a","fromSide":"left","toNode":"345cb1fd1f385d84","toSide":"top"},
+		{"id":"33cb00ce408384b4","fromNode":"20937b88d396d4ca","fromSide":"bottom","toNode":"a6f74ac8c75091eb","toSide":"top"},
+		{"id":"b3583ce2c0202139","fromNode":"a6f74ac8c75091eb","fromSide":"left","toNode":"345cb1fd1f385d84","toSide":"bottom"},
+		{"id":"b0b305fe81be9194","fromNode":"20937b88d396d4ca","fromSide":"bottom","toNode":"cd9216f8399fbcf4","toSide":"top"},
+		{"id":"a34725f1b4169d7b","fromNode":"20937b88d396d4ca","fromSide":"bottom","toNode":"be7a8b2b0fd9e1f7","toSide":"top"},
+		{"id":"ba02ab3ac9b434de","fromNode":"59a827ec2a6cca2a","fromSide":"right","toNode":"f167410fe0fb1174","toSide":"left"},
+		{"id":"061062aab0fcb15a","fromNode":"345cb1fd1f385d84","fromSide":"left","toNode":"fff00c748ba24959","toSide":"right"},
+		{"id":"2ca8ce93b2209d7d","fromNode":"345cb1fd1f385d84","fromSide":"left","toNode":"f37061cb6635a77d","toSide":"right"},
+		{"id":"fc31c7b692f23154","fromNode":"345cb1fd1f385d84","fromSide":"left","toNode":"f50da8f7d3afd19a","toSide":"right"},
+		{"id":"da35a831e3ea0cf9","fromNode":"f167410fe0fb1174","fromSide":"top","toNode":"bab40da22a41eac8","toSide":"top","label":"Author"},
+		{"id":"da67909ffc4059e0","fromNode":"71741e1ddb17b428","fromSide":"bottom","toNode":"4b280f7b3d4b3574","toSide":"top"},
+		{"id":"10ade2cf1875fa4a","fromNode":"71741e1ddb17b428","fromSide":"bottom","toNode":"60f7c0a084911559","toSide":"top"},
+		{"id":"a43882db5946c265","fromNode":"f167410fe0fb1174","fromSide":"right","toNode":"2c79b2bee25b3051","toSide":"left"}
+	]
+}

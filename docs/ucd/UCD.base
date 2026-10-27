@@ -1,0 +1,84 @@
+formulas:
+  Untitled: file.folder.slice(45).replace("/", " → ")
+properties:
+  formula.Untitled:
+    displayName: Epic
+  note.Description:
+    displayName: Description
+views:
+  - type: table
+    name: User Stories
+    filters:
+      and:
+        - Hidden != true
+        - file.inFolder("ucd")
+    groupBy:
+      property: formula.Untitled
+      direction: ASC
+    order:
+      - file.name
+      - Priority
+      - Implemented
+      - Description
+      - Notes
+      - Roles
+    sort:
+      - property: Priority
+        direction: DESC
+      - property: file.ctime
+        direction: DESC
+      - property: file.folder
+        direction: ASC
+      - property: Epic
+        direction: ASC
+    columnSize:
+      note.Priority: 56
+      note.Implemented: 43
+      note.Description: 477
+      note.Notes: 337
+    cardSize: 280
+    imageAspectRatio: 1
+    markers: number
+    indentProperties: false
+    rowHeight: medium
+  - type: table
+    name: Personas
+    filters:
+      and:
+        - file.inFolder("ucd/Personas")
+    order:
+      - file.name
+      - Common roles
+      - Tasks
+      - Needs
+    columnSize:
+      note.Common roles: 380
+      note.Tasks: 419
+  - type: table
+    name: Roles
+    filters:
+      and:
+        - file.inFolder("ucd/Roles")
+  - type: table
+    name: Unimplemented User Stories
+    filters:
+      and:
+        - file.folder.startsWith("ucd/User Stories")
+        - Implemented == false
+        - Hidden != true
+    order:
+      - file.name
+      - Implemented
+      - Priority
+      - Description
+      - Notes
+    sort:
+      - property: Priority
+        direction: DESC
+    columnSize:
+      file.name: 258
+      note.Implemented: 52
+      note.Priority: 56
+      note.Description: 531
+      note.Notes: 445
+    rowHeight: medium
