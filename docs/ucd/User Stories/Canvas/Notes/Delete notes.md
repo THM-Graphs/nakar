@@ -1,6 +1,6 @@
 ---
 Priority: ❗
-Description: As an 🔍 KG Analyst i want to delete notes to cleanup information.
+Description: As a 🔍 KG Analyst, I want to delete notes to clean up information.
 Notes:
 Implemented: true
 Roles:

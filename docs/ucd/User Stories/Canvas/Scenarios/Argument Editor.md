@@ -1,6 +1,6 @@
 ---
 Priority: ❕
-Description: As a 👤 KG Consumer i want to change the argument values for parameters of the scenario because i want to see other data and compare.
+Description: As a 👤 KG Consumer, I want to change the argument values for parameters of the scenario because I want to see other data and compare the results.
 Notes:
 Implemented: false
 ---

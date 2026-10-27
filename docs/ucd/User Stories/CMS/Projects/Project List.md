@@ -1,5 +1,5 @@
 ---
-Description: As a 🛠️ KG Builder i want to see a list of my projects and projects where i have been invited as collaborator.
+Description: As a 🛠️ KG Builder, I want to see a list of my projects and projects to which I have been invited as a collaborator.
 Priority: ❗
 Implemented: true
 Roles:

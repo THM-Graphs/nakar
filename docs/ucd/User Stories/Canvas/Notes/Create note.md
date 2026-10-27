@@ -1,10 +1,10 @@
 ---
 Priority: ❗
-Description: As an 🔍 KG Analyst i want to create notes to save information about nodes and the data and share with the collaborators.
+Description: As a 🔍 KG Analyst, I want to create notes to save information about nodes and the data and share it with collaborators.
 Notes:
-  - While writing the note, the canvas should still be accessible and navigable. Especially the knowledge cards.
+  - While writing the note, the canvas, especially the knowledge cards, should still be accessible and navigable.
   - Use Markdown for content.
-  - See fields
+  - See fields.
 Implemented: true
 Roles:
   - "[[👔 Owner]]"

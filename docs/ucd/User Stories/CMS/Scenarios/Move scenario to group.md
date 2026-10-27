@@ -1,7 +1,7 @@
 ---
 Implemented: false
 Priority: ❗
-Description: As a 🛠️ KG Builder i want to move existing scenarios into groups because i accidentally create it in the wrong group.
+Description: As a 🛠️ KG Builder, I want to move existing scenarios into groups because I accidentally created them in the wrong group.
 Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"

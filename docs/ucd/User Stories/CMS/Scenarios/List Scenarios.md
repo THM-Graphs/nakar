@@ -1,5 +1,5 @@
 ---
-Description: As a 🛠️ KG Builder i want to see a overview of my folder structure and order of scenarios to carefully craft a readable and easy-to-use scenario path for consumers.
+Description: As a 🛠️ KG Builder, I want to see an overview of my folder structure and the order of scenarios to carefully craft a readable and easy-to-use scenario path for consumers.
 Priority: ❗
 Implemented: true
 Roles:

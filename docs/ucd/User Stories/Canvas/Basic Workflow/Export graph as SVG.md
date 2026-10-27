@@ -1,6 +1,6 @@
 ---
 Priority: ❕
-Description: As a 👤 KG Consumer i want to export the current graph view as SVG because i want to include it in a presentation.
+Description: As a 👤 KG Consumer, I want to export the current graph view as SVG because I want to include it in a presentation.
 Notes:
 Implemented: true
 ---

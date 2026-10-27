@@ -1,7 +1,7 @@
 ---
 Priority: ❗❗
 Implemented: true
-Description: As a 👤 KG Consumer i want others to see my cursor so i can use that as a laser pointer for presentations.
+Description: As a 👤 KG Consumer, I want others to see my cursor so I can use it as a laser pointer for presentations.
 Notes:
   - Virtual Pointer with icon + name
 ---

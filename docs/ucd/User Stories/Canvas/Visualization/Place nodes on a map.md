@@ -1,7 +1,7 @@
 ---
 Implemented: false
 Priority: ❕
-Description: As a 👤 KG Consumer i want to place the nodes on a map, based on selected properties, so i have a better overview over the data.
+Description: As a 👤 KG Consumer, I want to place the nodes on a map based on selected properties so I have a better overview of the data.
 Notes:
-  - Must be configured at the database.
+  - Must be configured in the database.
 ---

@@ -1,7 +1,7 @@
 ---
 Priority: ❗❗
-Description: As a 👤 KG Consumer i want to see a list of all visible labels, their color, node count their database origin to have an instant overview of the data of the graph.
+Description: As a 👤 KG Consumer, I want to see a list of all visible labels, their colors, node counts and database origins to have an instant overview of the data in the graph.
 Notes:
-  - Save label color in database. Do not re-color the labels if one label leaves.
+  - Save label colors in the database. Do not recolor the labels if one label is removed.
 Implemented: true
 ---

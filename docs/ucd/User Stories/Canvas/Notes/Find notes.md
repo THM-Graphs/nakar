@@ -1,6 +1,6 @@
 ---
 Priority: ❕
-Description: As a 👤 KG Consumer i want to find notes using search to find relevant notes.
+Description: As a 👤 KG Consumer, I want to find notes using search to find relevant notes.
 Notes:
   - See fields.
 Implemented: false

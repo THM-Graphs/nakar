@@ -1,8 +1,8 @@
 ---
 Priority: ❗❗
-Description: As a 👤 KG Consumer i want to see the knowledge card of a given graph element (node, relationship) by clicking on it.
+Description: As a 👤 KG Consumer, I want to see the knowledge card of a given graph element (node, relationship) by clicking on it.
 Notes:
-  - See discussion
+  - See discussion.
 Implemented: true
 ---
 - Fields:
@@ -16,4 +16,4 @@ Implemented: true
 > [!note]
 > How should the incoming relationships be presented?
 > - Custom section "Incoming Relationships"
-> - Mixed with outgoing relationships plus "of"-postfix. Example: `CHILD` of 'Wilhelm'.
+> - Mixed with outgoing relationships with "of" appended. Example: `CHILD` of 'Wilhelm'.

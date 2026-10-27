@@ -1,8 +1,8 @@
 ---
 Priority: ❗
-Description: As a 👤 KG Consumer i want nodes be greater if they have a high grade so i can identify important nodes in the graph.
+Description: As a 👤 KG Consumer, I want nodes to be larger if they have a high degree so I can identify important nodes in the graph.
 Notes:
-  - Cached range of degrees are mapped to sizes.
+  - The cached range of degrees is mapped to sizes.
   - "[[Scale Factor]]"
   - "[[Node radius]]"
 Implemented: true

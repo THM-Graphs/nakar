@@ -1,7 +1,7 @@
 ---
 Priority: ❕
 Implemented: false
-Description: As a 👤 KG Consumer i want to follow a specific user so the camera always moves to their location and zoom so i can listen to a presentation of theirs.
+Description: As a 👤 KG Consumer, I want to follow a specific user so that the camera always matches their position and zoom level while I listen to their presentation.
 Notes:
-- Do not save setting
+- Do not save this setting.
 ---

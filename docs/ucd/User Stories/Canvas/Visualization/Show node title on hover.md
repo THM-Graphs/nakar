@@ -1,5 +1,5 @@
 ---
 Implemented: false
 Priority: ❗❗
-Description: As a 👤 KG Consumer i want node title to show their full value on hover so i can find out if it is the correct node i am looking for.
+Description: As a 👤 KG Consumer, I want node titles to show their full values on hover so I can find out whether a node is the one I am looking for.
 ---

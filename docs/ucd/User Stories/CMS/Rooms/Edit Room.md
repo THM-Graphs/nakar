@@ -1,5 +1,5 @@
 ---
-Description: As a 🛠️ KG Builder i want to edit the room properties to change its published state.
+Description: As a 🛠️ KG Builder, I want to edit the room properties to change its published state.
 Priority: ❗
 Implemented: true
 Roles:

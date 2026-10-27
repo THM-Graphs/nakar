@@ -1,6 +1,6 @@
 ---
 Priority: ❕
-Description: As a 👤 KG Consumer i want to sort notes so that i can find the most relevant notes for my use case.
+Description: As a 👤 KG Consumer, I want to sort notes so that I can find the most relevant notes for my use case.
 Notes:
   - See fields.
 Implemented: false

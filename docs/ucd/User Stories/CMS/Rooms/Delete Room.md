@@ -1,11 +1,11 @@
 ---
-Description: As a 🛠️ KG Builder i want to delete a room if it is no longer needed.
+Description: As a 🛠️ KG Builder, I want to delete a room if it is no longer needed.
 Priority: ❗
 Implemented: false
 Roles:
   - "[[👔 Owner]]"
   - "[[🧑‍💻 Collaborator]]"
 Notes:
-  - Kick everyone
-  - Delete Canvases
+  - Remove everyone from the room.
+  - Delete canvases.
 ---

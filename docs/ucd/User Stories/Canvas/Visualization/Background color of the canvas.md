@@ -1,7 +1,7 @@
 ---
 Implemented: false
 Priority: ❕
-Description: As a 👤 KG Consumer i want to set the color of the canvas for a given tab so i have a nicer visualization.
+Description: As a 👤 KG Consumer, I want to set the color of the canvas for a given tab so I have a nicer visualization.
 Notes:
-  - Save on canvas.
+  - Save on the canvas.
 ---

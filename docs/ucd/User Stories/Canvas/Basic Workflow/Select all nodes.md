@@ -1,7 +1,7 @@
 ---
 Priority: ❗❗
-Description: As a 👤 KG Consumer i want to select all nodes to either deselect (+STRG) a few of them and/or to run scenarios or remove them.
+Description: As a 👤 KG Consumer, I want to select all nodes so I can deselect (+Ctrl) a few of them, run scenarios on them or remove them.
 Notes:
-  - STRG + A
+  - Ctrl + A
 Implemented: true
 ---
