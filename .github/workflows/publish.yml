@@ -20,6 +20,7 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: "24"
+          check-latest: true
       - name: Set IMAGE_VERSION
         run: echo "IMAGE_VERSION=$(cd nakar-server && npm run --silent version)" >> $GITHUB_ENV
       - name: Set up Docker Buildx
@@ -36,6 +37,7 @@ jobs:
         uses: docker/build-push-action@v7
         with:
           context: ./nakar-server
+          pull: true
           push: true
           tags: ghcr.io/thm-graphs/nakar/server:${{ env.IMAGE_VERSION }}
           cache-from: type=gha,scope=nakar-server
@@ -52,6 +54,7 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: "24"
+          check-latest: true
       - name: Set IMAGE_VERSION
         run: echo "IMAGE_VERSION=$(cd nakar-client-web && npm run --silent version)" >> $GITHUB_ENV
       - name: Set up Docker Buildx
@@ -68,6 +71,7 @@ jobs:
         uses: docker/build-push-action@v7
         with:
           context: ./nakar-client-web
+          pull: true
           push: true
           tags: ghcr.io/thm-graphs/nakar/client-web:${{ env.IMAGE_VERSION }}
           cache-from: type=gha,scope=nakar-client-web
@@ -84,6 +88,7 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: "24"
+          check-latest: true
       - name: Set IMAGE_VERSION
         run: echo "IMAGE_VERSION=$(cd nakar-db-pole && npm run --silent version)" >> $GITHUB_ENV
       - name: Set up Docker Buildx
@@ -100,6 +105,7 @@ jobs:
         uses: docker/build-push-action@v7
         with:
           context: ./nakar-db-pole
+          pull: true
           push: true
           tags: ghcr.io/thm-graphs/nakar/db-pole:${{ env.IMAGE_VERSION }}
           cache-from: type=gha,scope=nakar-db-pole
@@ -116,6 +122,7 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: "24"
+          check-latest: true
       - name: Set IMAGE_VERSION
         run: echo "IMAGE_VERSION=$(cd nakar-db-examples && npm run --silent version)" >> $GITHUB_ENV
       - name: Set up Docker Buildx
@@ -132,6 +139,7 @@ jobs:
         uses: docker/build-push-action@v7
         with:
           context: ./nakar-db-examples
+          pull: true
           push: true
           tags: ghcr.io/thm-graphs/nakar/db-examples:${{ env.IMAGE_VERSION }}
           cache-from: type=gha,scope=nakar-db-examples
