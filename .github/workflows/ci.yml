@@ -18,6 +18,7 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: "24"
+          check-latest: true
           cache: "npm"
           cache-dependency-path: ./nakar-server/package-lock.json
       - name: Install
@@ -67,6 +68,7 @@ jobs:
         uses: docker/build-push-action@v7
         with:
           context: ./nakar-server
+          pull: true
           push: false
           tags: ghcr.io/thm-graphs/nakar/server:dev
           cache-from: type=gha,scope=nakar-server
@@ -81,6 +83,7 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: "24"
+          check-latest: true
           cache: "npm"
           cache-dependency-path: ./nakar-client-web/package-lock.json
       - name: Install
@@ -121,6 +124,7 @@ jobs:
         uses: docker/build-push-action@v7
         with:
           context: ./nakar-client-web
+          pull: true
           push: false
           tags: ghcr.io/thm-graphs/nakar/client-web:dev
           cache-from: type=gha,scope=nakar-client-web
@@ -139,6 +143,7 @@ jobs:
         uses: docker/build-push-action@v7
         with:
           context: ./nakar-db-pole
+          pull: true
           push: false
           tags: ghcr.io/thm-graphs/nakar/db-pole:dev
           cache-from: type=gha,scope=nakar-db-pole
@@ -157,6 +162,7 @@ jobs:
         uses: docker/build-push-action@v7
         with:
           context: ./nakar-db-examples
+          pull: true
           push: false
           tags: ghcr.io/thm-graphs/nakar/db-examples:dev
           cache-from: type=gha,scope=nakar-db-examples
