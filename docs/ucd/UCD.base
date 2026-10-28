@@ -11,7 +11,7 @@ views:
     filters:
       and:
         - Hidden != true
-        - file.inFolder("ucd")
+        - file.inFolder("ucd/User Stories")
     groupBy:
       property: formula.Untitled
       direction: ASC
