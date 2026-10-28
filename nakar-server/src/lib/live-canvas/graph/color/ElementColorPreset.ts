@@ -2,6 +2,8 @@ import { ElementColor } from './ElementColor';
 import type { ElementColorPresetIndex } from './ElementColorPresetIndex';
 import type z from 'zod';
 import type { ColorDto } from '../../../schema/dtos/ColorDto';
+import { ColorPresetIndexDto } from '../../../schema/dtos/ColorPresetIndexDto';
+import { match } from 'ts-pattern';
 
 export class ElementColorPreset extends ElementColor {
   public readonly index: ElementColorPresetIndex;
@@ -21,7 +23,14 @@ export class ElementColorPreset extends ElementColor {
   public toDto(): ColorDto {
     return {
       color: {
-        index: this.index,
+        index: match(this.index)
+          .with(0, (): ColorPresetIndexDto => ColorPresetIndexDto._0)
+          .with(1, (): ColorPresetIndexDto => ColorPresetIndexDto._1)
+          .with(2, (): ColorPresetIndexDto => ColorPresetIndexDto._2)
+          .with(3, (): ColorPresetIndexDto => ColorPresetIndexDto._3)
+          .with(4, (): ColorPresetIndexDto => ColorPresetIndexDto._4)
+          .with(5, (): ColorPresetIndexDto => ColorPresetIndexDto._5)
+          .exhaustive(),
         type: 'ColorPresetDto',
       },
     };
