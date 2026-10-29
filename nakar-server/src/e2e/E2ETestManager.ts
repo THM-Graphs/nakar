@@ -19,7 +19,7 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import type { SuiteContext, TestContext } from 'node:test';
 import { setTimeout as delay } from 'node:timers/promises';
-import { E2ETestApplicationContext } from './E2ETestApplicationContext';
+import testConfig from '../../node.test.config.json';
 import { E2ETestApplicationContextWithData } from './E2ETestApplicationContextWithData';
 import { E2ETestApplicationUser } from './E2ETestApplicationUser';
 import { E2ETestApplicationAdmin } from './E2ETestApplicationAdmin';
@@ -31,9 +31,21 @@ export class E2ETestManager {
   private _logs: string = '';
   private _directory: string | null = null;
 
-  public async createAndBootApp(
+  private _context: E2ETestApplicationContextWithData | null = null;
+
+  public get context(): E2ETestApplicationContextWithData {
+    assert.ok(this._context, 'Application has not been started.');
+    return this._context;
+  }
+
+  public async createAndStartApp(
     testContext: SuiteContext | TestContext,
-  ): Promise<E2ETestApplicationContext> {
+  ): Promise<void> {
+    const signal: AbortSignal = AbortSignal.any([
+      testContext.signal,
+      AbortSignal.timeout(testConfig.test['test-timeout']),
+    ]);
+    signal.throwIfAborted();
     testContext.diagnostic('Will create testable application instance.');
 
     assert.equal(
@@ -50,18 +62,23 @@ export class E2ETestManager {
       );
     }
 
+    signal.throwIfAborted();
     const directory: string = await mkdtemp(
       join(tmpdir(), 'nakar-server-e2e-'),
     );
     this._directory = directory;
 
     try {
+      signal.throwIfAborted();
       // Keep configuration and writable application paths separate from the checkout.
       await cp(resolve('dist/config'), join(directory, 'config'), {
         recursive: true,
       });
+      signal.throwIfAborted();
       await copyFile(resolve('package.json'), join(directory, 'package.json'));
+      signal.throwIfAborted();
       await copyFile(resolve('favicon.ico'), join(directory, 'favicon.ico'));
+      signal.throwIfAborted();
       const linkType: 'junction' | 'dir' =
         process.platform === 'win32' ? 'junction' : 'dir';
       await symlink(
@@ -69,9 +86,13 @@ export class E2ETestManager {
         join(directory, 'node_modules'),
         linkType,
       );
+      signal.throwIfAborted();
       await symlink(resolve('dist/src'), join(directory, 'src'), linkType);
+      signal.throwIfAborted();
       await mkdir(join(directory, 'public', 'uploads'), { recursive: true });
+      signal.throwIfAborted();
       await writeFile(join(directory, '.env'), '');
+      signal.throwIfAborted();
       await writeFile(
         join(directory, 'encryption_keys.json'),
         JSON.stringify({
@@ -80,6 +101,7 @@ export class E2ETestManager {
         }),
       );
 
+      signal.throwIfAborted();
       const strapiPort: number = await this._findPortPair();
       const jwtSecret: string = randomUUID();
       const env: NodeJS.ProcessEnv = {
@@ -100,6 +122,7 @@ export class E2ETestManager {
         STRAPI_TELEMETRY_DISABLED: 'true',
       };
       testContext.diagnostic(JSON.stringify(env));
+      signal.throwIfAborted();
       const child: ChildProcessWithoutNullStreams = spawn(
         process.execPath,
         [resolve('node_modules/@strapi/strapi/bin/strapi.js'), 'start'],
@@ -122,8 +145,28 @@ export class E2ETestManager {
         this._logs += data.toString();
       });
 
-      await this._waitUntilOnline(testContext, strapiPort);
-      return new E2ETestApplicationContext(
+      await this._waitUntilOnline(signal, strapiPort);
+      signal.throwIfAborted();
+      testContext.diagnostic('Will create demo data.');
+      const primaryUser: E2ETestApplicationUser = await this._createUser(
+        signal,
+        strapiPort,
+      );
+      signal.throwIfAborted();
+      const secondaryUser: E2ETestApplicationUser = await this._createUser(
+        signal,
+        strapiPort,
+      );
+      signal.throwIfAborted();
+      const admin: E2ETestApplicationAdmin = await this._createAdmin(
+        signal,
+        strapiPort,
+      );
+      signal.throwIfAborted();
+      this._context = new E2ETestApplicationContextWithData(
+        primaryUser,
+        secondaryUser,
+        admin,
         strapiPort,
         strapiPort + 1,
         strapiPort + 1,
@@ -133,30 +176,6 @@ export class E2ETestManager {
       await this.destroy(testContext);
       throw error;
     }
-  }
-
-  public async createDemoData(
-    testContext: SuiteContext | TestContext,
-    context: E2ETestApplicationContext,
-  ): Promise<E2ETestApplicationContextWithData> {
-    const primaryUser: E2ETestApplicationUser = await this._createUser(
-      testContext,
-      context,
-    );
-    const secondaryUser: E2ETestApplicationUser = await this._createUser(
-      testContext,
-      context,
-    );
-    const admin: E2ETestApplicationAdmin = await this._createAdmin(
-      testContext,
-      context,
-    );
-    return new E2ETestApplicationContextWithData(
-      primaryUser,
-      secondaryUser,
-      admin,
-      context,
-    );
   }
 
   public async destroy(testContext: SuiteContext | TestContext): Promise<void> {
@@ -187,22 +206,23 @@ export class E2ETestManager {
       this._directory = null;
       this._processError = null;
       this._logs = '';
+      this._context = null;
     }
   }
 
   private async _createAdmin(
-    testContext: SuiteContext | TestContext,
-    context: E2ETestApplicationContext,
+    signal: AbortSignal,
+    strapiPort: number,
   ): Promise<E2ETestApplicationAdmin> {
     const email: string = `admin-${randomUUID()}@example.test`;
     const password: string = `Aa1-${randomUUID()}`;
     const response: Response = await fetch(
-      `http://127.0.0.1:${context.strapiPort.toString()}/admin/register-admin`,
+      `http://127.0.0.1:${strapiPort.toString()}/admin/register-admin`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ firstname: 'E2E', email, password }),
-        signal: testContext.signal,
+        signal,
       },
     );
     assert.equal(response.status, 200);
@@ -213,13 +233,13 @@ export class E2ETestManager {
   }
 
   private async _createUser(
-    testContext: SuiteContext | TestContext,
-    context: E2ETestApplicationContext,
+    signal: AbortSignal,
+    strapiPort: number,
   ): Promise<E2ETestApplicationUser> {
     const username: string = `e2e-${randomUUID()}`;
     const password: string = randomUUID();
     const response: Response = await fetch(
-      `http://127.0.0.1:${context.strapiPort.toString()}/api/auth/local/register`,
+      `http://127.0.0.1:${strapiPort.toString()}/api/auth/local/register`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -228,7 +248,7 @@ export class E2ETestManager {
           password,
           email: `${username}@example.test`,
         }),
-        signal: testContext.signal,
+        signal,
       },
     );
     assert.equal(response.status, 200, await response.text());
@@ -292,10 +312,10 @@ export class E2ETestManager {
   }
 
   private async _waitUntilOnline(
-    testContext: SuiteContext | TestContext,
+    signal: AbortSignal,
     strapiPort: number,
   ): Promise<void> {
-    while (!testContext.signal.aborted) {
+    while (!signal.aborted) {
       if (
         this._processError != null ||
         this._process?.exitCode != null ||
@@ -309,23 +329,23 @@ export class E2ETestManager {
       try {
         const health: Response = await fetch(
           `http://127.0.0.1:${strapiPort.toString()}/_health`,
-          { signal: testContext.signal },
+          { signal },
         );
         await health.body?.cancel();
         const version: Response = await fetch(
           `http://127.0.0.1:${(strapiPort + 1).toString()}/api/system/version`,
-          { signal: testContext.signal },
+          { signal },
         );
         await version.body?.cancel();
         if (health.status === 204 && version.status === 200) {
           return;
         }
       } catch {
-        testContext.signal.throwIfAborted();
+        signal.throwIfAborted();
         // Connections may be refused while the application is booting.
       }
-      await delay(100, undefined, { signal: testContext.signal });
+      await delay(100, undefined, { signal });
     }
-    testContext.signal.throwIfAborted();
+    signal.throwIfAborted();
   }
 }

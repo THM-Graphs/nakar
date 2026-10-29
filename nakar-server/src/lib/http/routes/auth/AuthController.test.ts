@@ -4,21 +4,19 @@ import type { SuiteContext, TestContext } from 'node:test';
 import { after, before, describe } from 'node:test';
 import { test } from 'node:test';
 import type { PostAuthResponseBodyDto } from './dto/PostAuthResponseBodyDto';
-import type { E2ETestApplicationContextWithData } from '../../../../e2e/E2ETestApplicationContextWithData';
 import { E2ETestManager } from '../../../../e2e/E2ETestManager';
 import z from 'zod';
 import type { JwtPayload } from 'jsonwebtoken';
 
 describe('/auth', (suiteContext: SuiteContext): void => {
   const manager: E2ETestManager = new E2ETestManager();
-  let context: E2ETestApplicationContextWithData;
 
-  before(async (): Promise<void> => {
-    context = await manager.createDemoData(
-      suiteContext,
-      await manager.createAndBootApp(suiteContext),
-    );
-  });
+  before(
+    async (): Promise<void> => {
+      await manager.createAndStartApp(suiteContext);
+    },
+    { timeout: Infinity },
+  );
 
   after(async (): Promise<void> => {
     await manager.destroy(suiteContext);
@@ -26,8 +24,11 @@ describe('/auth', (suiteContext: SuiteContext): void => {
 
   describe('post', (): void => {
     test('201: login user', async (testContext: TestContext): Promise<void> => {
-      const authUrl: string = `${context.applicationContext.apiUrl}/auth`;
-      for (const user of [context.primaryUser, context.secondaryUser]) {
+      const authUrl: string = `${manager.context.apiUrl}/auth`;
+      for (const user of [
+        manager.context.primaryUser,
+        manager.context.secondaryUser,
+      ]) {
         const response: Response = await fetch(authUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -46,12 +47,12 @@ describe('/auth', (suiteContext: SuiteContext): void => {
     });
 
     test('401: wrong password', async (testContext: TestContext): Promise<void> => {
-      const authUrl: string = `${context.applicationContext.apiUrl}/auth`;
+      const authUrl: string = `${manager.context.apiUrl}/auth`;
       const response: Response = await fetch(authUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          username: context.primaryUser.username,
+          username: manager.context.primaryUser.username,
           password: 'wrong password',
         }),
         signal: testContext.signal,
@@ -65,18 +66,15 @@ describe('/auth', (suiteContext: SuiteContext): void => {
     });
 
     test('401: unknown username', async (testContext: TestContext): Promise<void> => {
-      const response: Response = await fetch(
-        `${context.applicationContext.apiUrl}/auth`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            username: `${context.primaryUser.username}-unknown`,
-            password: context.primaryUser.password,
-          }),
-          signal: testContext.signal,
-        },
-      );
+      const response: Response = await fetch(`${manager.context.apiUrl}/auth`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: `${manager.context.primaryUser.username}-unknown`,
+          password: manager.context.primaryUser.password,
+        }),
+        signal: testContext.signal,
+      });
       assert.equal(response.status, 401);
       assert.deepEqual(await response.json(), {
         statusCode: 401,
@@ -92,48 +90,60 @@ describe('/auth', (suiteContext: SuiteContext): void => {
       }[] = [
         {
           name: 'missing username',
-          body: { password: context.primaryUser.password },
+          body: { password: manager.context.primaryUser.password },
           message: 'username should not be empty',
         },
         {
           name: 'missing password',
-          body: { username: context.primaryUser.username },
+          body: { username: manager.context.primaryUser.username },
           message: 'password should not be empty',
         },
         {
           name: 'non-string username',
-          body: { username: 123, password: context.primaryUser.password },
+          body: {
+            username: 123,
+            password: manager.context.primaryUser.password,
+          },
           message: 'username must be a string',
         },
         {
           name: 'non-string password',
-          body: { username: context.primaryUser.username, password: 123 },
+          body: {
+            username: manager.context.primaryUser.username,
+            password: 123,
+          },
           message: 'password must be a string',
         },
         {
           name: 'unexpected property',
           body: {
-            username: context.primaryUser.username,
-            password: context.primaryUser.password,
+            username: manager.context.primaryUser.username,
+            password: manager.context.primaryUser.password,
             unexpected: true,
           },
           message: 'property unexpected should not exist',
         },
         {
           name: 'empty username',
-          body: { username: '', password: context.primaryUser.password },
+          body: {
+            username: '',
+            password: manager.context.primaryUser.password,
+          },
           message: 'username should not be empty',
         },
         {
           name: 'empty password',
-          body: { username: context.primaryUser.username, password: '' },
+          body: {
+            username: manager.context.primaryUser.username,
+            password: '',
+          },
           message: 'password should not be empty',
         },
       ];
       for (const entry of cases) {
         await testContext.test(entry.name, async (): Promise<void> => {
           const response: Response = await fetch(
-            `${context.applicationContext.apiUrl}/auth`,
+            `${manager.context.apiUrl}/auth`,
             {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -154,8 +164,11 @@ describe('/auth', (suiteContext: SuiteContext): void => {
 
   describe('get', (): void => {
     test('200: correct jwt', async (testContext: TestContext): Promise<void> => {
-      const authUrl: string = `${context.applicationContext.apiUrl}/auth`;
-      for (const user of [context.primaryUser, context.secondaryUser]) {
+      const authUrl: string = `${manager.context.apiUrl}/auth`;
+      for (const user of [
+        manager.context.primaryUser,
+        manager.context.secondaryUser,
+      ]) {
         const response: Response = await fetch(authUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -186,8 +199,8 @@ describe('/auth', (suiteContext: SuiteContext): void => {
     });
 
     test('401: deleted user with valid jwt', async (testContext: TestContext): Promise<void> => {
-      const strapiUrl: string = `http://127.0.0.1:${context.applicationContext.strapiPort.toString()}`;
-      const authUrl: string = `${context.applicationContext.apiUrl}/auth`;
+      const strapiUrl: string = `http://127.0.0.1:${manager.context.strapiPort.toString()}`;
+      const authUrl: string = `${manager.context.apiUrl}/auth`;
       const username: string = `e2e-${randomUUID()}`;
       const password: string = randomUUID();
       const registration: Response = await fetch(
@@ -228,7 +241,7 @@ describe('/auth', (suiteContext: SuiteContext): void => {
         `${strapiUrl}/content-manager/collection-types/plugin::users-permissions.user/${registered.user.documentId}`,
         {
           method: 'DELETE',
-          headers: { Authorization: `Bearer ${context.admin.token}` },
+          headers: { Authorization: `Bearer ${manager.context.admin.token}` },
           signal: testContext.signal,
         },
       );
@@ -246,7 +259,7 @@ describe('/auth', (suiteContext: SuiteContext): void => {
     });
 
     test('401: incorrect jwt', async (testContext: TestContext): Promise<void> => {
-      const authUrl: string = `${context.applicationContext.apiUrl}/auth`;
+      const authUrl: string = `${manager.context.apiUrl}/auth`;
       const authenticated: Response = await fetch(authUrl, {
         headers: { Authorization: `Bearer wrong_jwt` },
         signal: testContext.signal,
@@ -259,7 +272,7 @@ describe('/auth', (suiteContext: SuiteContext): void => {
     });
 
     test('401: missing jwt', async (testContext: TestContext): Promise<void> => {
-      const authUrl: string = `${context.applicationContext.apiUrl}/auth`;
+      const authUrl: string = `${manager.context.apiUrl}/auth`;
       const authenticated: Response = await fetch(authUrl, {
         signal: testContext.signal,
       });
@@ -271,20 +284,20 @@ describe('/auth', (suiteContext: SuiteContext): void => {
     });
 
     test('401: expired jwt', async (testContext: TestContext): Promise<void> => {
-      const authUrl: string = `${context.applicationContext.apiUrl}/auth`;
+      const authUrl: string = `${manager.context.apiUrl}/auth`;
       const login: Response = await fetch(authUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          username: context.primaryUser.username,
-          password: context.primaryUser.password,
+          username: manager.context.primaryUser.username,
+          password: manager.context.primaryUser.password,
         }),
         signal: testContext.signal,
       });
       assert.equal(login.status, 201);
       const body: PostAuthResponseBodyDto = z
         .strictObject({
-          username: z.literal(context.primaryUser.username),
+          username: z.literal(manager.context.primaryUser.username),
           jwt: z.string().min(1),
         })
         .parse(await login.json());
@@ -301,7 +314,7 @@ describe('/auth', (suiteContext: SuiteContext): void => {
         const unsignedJwt: string = `${parts[0]}.${encodedPayload}`;
         const signature: string = createHmac(
           'sha256',
-          context.applicationContext.jwtSecret,
+          manager.context.jwtSecret,
         )
           .update(unsignedJwt)
           .digest('base64url');
@@ -318,27 +331,27 @@ describe('/auth', (suiteContext: SuiteContext): void => {
         } else {
           assert.equal(response.status, 200);
           assert.deepEqual(await response.json(), {
-            username: context.primaryUser.username,
+            username: manager.context.primaryUser.username,
           });
         }
       }
     });
 
     test('401: tampered jwt signature', async (testContext: TestContext): Promise<void> => {
-      const authUrl: string = `${context.applicationContext.apiUrl}/auth`;
+      const authUrl: string = `${manager.context.apiUrl}/auth`;
       const login: Response = await fetch(authUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          username: context.primaryUser.username,
-          password: context.primaryUser.password,
+          username: manager.context.primaryUser.username,
+          password: manager.context.primaryUser.password,
         }),
         signal: testContext.signal,
       });
       assert.equal(login.status, 201);
       const body: PostAuthResponseBodyDto = z
         .strictObject({
-          username: z.literal(context.primaryUser.username),
+          username: z.literal(manager.context.primaryUser.username),
           jwt: z.string().min(1),
         })
         .parse(await login.json());
@@ -357,20 +370,20 @@ describe('/auth', (suiteContext: SuiteContext): void => {
     });
 
     test('401: incorrect authorization format', async (testContext: TestContext): Promise<void> => {
-      const authUrl: string = `${context.applicationContext.apiUrl}/auth`;
+      const authUrl: string = `${manager.context.apiUrl}/auth`;
       const login: Response = await fetch(authUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          username: context.primaryUser.username,
-          password: context.primaryUser.password,
+          username: manager.context.primaryUser.username,
+          password: manager.context.primaryUser.password,
         }),
         signal: testContext.signal,
       });
       assert.equal(login.status, 201);
       const body: PostAuthResponseBodyDto = z
         .strictObject({
-          username: z.literal(context.primaryUser.username),
+          username: z.literal(manager.context.primaryUser.username),
           jwt: z.string().min(1),
         })
         .parse(await login.json());
