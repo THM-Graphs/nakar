@@ -4,7 +4,7 @@ import { PostAuthResponseBodyDto } from './dto/PostAuthResponseBodyDto';
 import { ApiBody, ApiResponse } from '@nestjs/swagger';
 import * as undici from 'undici';
 import { getConfig } from '../../../config/getConfig';
-import { Unauthorized } from 'http-errors';
+import { TooManyRequests, Unauthorized } from 'http-errors';
 import z from 'zod';
 import { GetAuthResponseBodyDto } from './dto/GetAuthResponseBodyDto';
 import type { Modules } from '@strapi/types';
@@ -34,6 +34,9 @@ export class AuthController {
         },
       },
     );
+    if (result.status === 429) {
+      throw new TooManyRequests();
+    }
     const json: unknown = await result.json();
     // eslint-disable-next-line @typescript-eslint/typedef
     const responseType = z.object({
