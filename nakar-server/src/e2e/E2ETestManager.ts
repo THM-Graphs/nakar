@@ -1,3 +1,4 @@
+import type { PostAuthResponseBodyDto } from '../lib/http/routes/auth/dto/PostAuthResponseBodyDto';
 import assert from 'node:assert/strict';
 import type { ChildProcessWithoutNullStreams } from 'node:child_process';
 import { spawn } from 'node:child_process';
@@ -31,11 +32,19 @@ export class E2ETestManager {
   private _logs: string = '';
   private _directory: string | null = null;
 
+  private _strapiPort: number | null = null;
+  private _startupSignal: AbortSignal | null = null;
+
   private _context: E2ETestApplicationContextWithData | null = null;
 
   public get context(): E2ETestApplicationContextWithData {
     assert.ok(this._context, 'Application has not been started.');
     return this._context;
+  }
+
+  public get strapiUrl(): string {
+    assert.ok(this._strapiPort != null, 'Application has not been started.');
+    return `http://127.0.0.1:${this._strapiPort.toString()}`;
   }
 
   public async createAndStartApp(
@@ -67,6 +76,7 @@ export class E2ETestManager {
       join(tmpdir(), 'nakar-server-e2e-'),
     );
     this._directory = directory;
+    this._startupSignal = signal;
 
     try {
       signal.throwIfAborted();
@@ -103,6 +113,7 @@ export class E2ETestManager {
 
       signal.throwIfAborted();
       const strapiPort: number = await this._findPortPair();
+      this._strapiPort = strapiPort;
       const jwtSecret: string = randomUUID();
       const env: NodeJS.ProcessEnv = {
         NODE_ENV: 'test',
@@ -149,14 +160,16 @@ export class E2ETestManager {
       await this._waitUntilOnline(signal, strapiPort);
       signal.throwIfAborted();
       testContext.diagnostic('Will create demo data.');
-      const primaryUser: E2ETestApplicationUser = await this._createUser(
-        signal,
-        strapiPort,
+      const primaryUser: E2ETestApplicationUser = await this.registerUser(
+        `e2e-${randomUUID()}`,
+        randomUUID(),
+        testContext,
       );
       signal.throwIfAborted();
-      const secondaryUser: E2ETestApplicationUser = await this._createUser(
-        signal,
-        strapiPort,
+      const secondaryUser: E2ETestApplicationUser = await this.registerUser(
+        `e2e-${randomUUID()}`,
+        randomUUID(),
+        testContext,
       );
       signal.throwIfAborted();
       const admin: E2ETestApplicationAdmin = await this._createAdmin(
@@ -173,6 +186,7 @@ export class E2ETestManager {
         strapiPort + 1,
         jwtSecret,
       );
+      this._startupSignal = null;
     } catch (error: unknown) {
       await this.destroy(testContext);
       throw error;
@@ -208,7 +222,56 @@ export class E2ETestManager {
       this._processError = null;
       this._logs = '';
       this._context = null;
+      this._strapiPort = null;
+      this._startupSignal = null;
     }
+  }
+
+  public async registerUser(
+    username: string,
+    password: string,
+    testContext: SuiteContext | TestContext,
+  ): Promise<E2ETestApplicationUser> {
+    const response: Response = await fetch(
+      `${this.strapiUrl}/api/auth/local/register`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username,
+          password,
+          email: `${username}@example.test`,
+        }),
+        signal:
+          this._startupSignal == null
+            ? testContext.signal
+            : AbortSignal.any([testContext.signal, this._startupSignal]),
+      },
+    );
+    const json: unknown = await response.json();
+    assert.equal(response.status, 200, JSON.stringify(json));
+    const body: { user: { documentId: string } } = z
+      .object({ user: z.object({ documentId: z.string() }) })
+      .parse(json);
+    return new E2ETestApplicationUser(username, password, body.user.documentId);
+  }
+
+  public async loginUser(
+    username: string,
+    password: string,
+    testContext: TestContext,
+  ): Promise<PostAuthResponseBodyDto> {
+    const response: Response = await fetch(`${this.context.apiUrl}/auth`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password }),
+      signal: testContext.signal,
+    });
+    const json: unknown = await response.json();
+    assert.equal(response.status, 201, JSON.stringify(json));
+    return z
+      .strictObject({ username: z.literal(username), jwt: z.string().min(1) })
+      .parse(json);
   }
 
   private async _createAdmin(
@@ -231,29 +294,6 @@ export class E2ETestManager {
       .object({ data: z.object({ token: z.string().min(1) }) })
       .parse(await response.json());
     return new E2ETestApplicationAdmin(email, password, body.data.token);
-  }
-
-  private async _createUser(
-    signal: AbortSignal,
-    strapiPort: number,
-  ): Promise<E2ETestApplicationUser> {
-    const username: string = `e2e-${randomUUID()}`;
-    const password: string = randomUUID();
-    const response: Response = await fetch(
-      `http://127.0.0.1:${strapiPort.toString()}/api/auth/local/register`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          username,
-          password,
-          email: `${username}@example.test`,
-        }),
-        signal,
-      },
-    );
-    assert.equal(response.status, 200, await response.text());
-    return new E2ETestApplicationUser(username, password);
   }
 
   private async _findPortPair(): Promise<number> {
