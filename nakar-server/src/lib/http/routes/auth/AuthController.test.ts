@@ -23,7 +23,7 @@ describe('/auth', (suiteContext: SuiteContext): void => {
     await manager.destroy(suiteContext);
   });
 
-  describe('post', (): void => {
+  describe('POST', (): void => {
     describe('201', (): void => {
       test('login user', async (testContext: TestContext): Promise<void> => {
         // given
@@ -302,7 +302,7 @@ describe('/auth', (suiteContext: SuiteContext): void => {
     });
   });
 
-  describe('get', (): void => {
+  describe('GET', (): void => {
     describe('200', (): void => {
       test('correct jwt', async (testContext: TestContext): Promise<void> => {
         // given

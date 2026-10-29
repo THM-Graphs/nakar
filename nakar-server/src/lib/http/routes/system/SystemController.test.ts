@@ -19,7 +19,7 @@ describe('/system', (suiteContext: SuiteContext): void => {
   });
 
   describe('/version', (): void => {
-    describe('get', (): void => {
+    describe('GET', (): void => {
       describe('200', (): void => {
         test('version without authentication', async (testContext: TestContext): Promise<void> => {
           // when

@@ -93,12 +93,12 @@ Divide each test into these phases, using the comments exactly as shown:
 
 E2E tests must create their own required data in the `given` phase and clean it up after the test. Do not depend on data created by another test or on test execution order. The manager registers only the administrator when starting an instance; its data creation helpers register cleanup hooks for test data.
 
-For E2E tests, nest `describe` suites by **path → HTTP method → status code**. Split nested paths into separate suites where appropriate. Use lowercase HTTP method names and the status code alone as the status suite title. The individual test title describes the behavior without a status-code prefix:
+For E2E tests, nest `describe` suites by **path → HTTP method → status code**. Split nested paths into separate suites where appropriate. Use UPPERCASE HTTP method names and the status code alone as the status suite title. The individual test title describes the behavior without a status-code prefix:
 
 ```ts
 describe('/system', (): void => {
   describe('/version', (): void => {
-    describe('get', (): void => {
+    describe('GET', (): void => {
       describe('200', (): void => {
         test('version without authentication', async (): Promise<void> => {
           // when

@@ -54,7 +54,7 @@ describe('/', (suiteContext: SuiteContext): void => {
     await manager.destroy(suiteContext);
   });
 
-  describe('get', (): void => {
+  describe('GET', (): void => {
     describe('200', (): void => {
       test('anonymous has no owned projects', async (testContext: TestContext): Promise<void> => {
         // given
