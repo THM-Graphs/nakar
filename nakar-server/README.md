@@ -71,6 +71,64 @@ The OpenAPI documentation is served by the Nest application on the port after th
 
 http://localhost:1338/api/docs
 
+#### 8. Tests
+
+Run the tests using:
+
+```shell
+npm run test
+```
+
+##### Test Structure
+
+Place each test file next to the class it tests. Use the class name followed by `.test.ts`: for example, `AuthController.ts` is tested in `AuthController.test.ts`.
+
+Each test covers one aspect and is declared explicitly. Do not generate tests using loops. Use descriptive test names without repeating information already provided by the surrounding suites.
+
+Divide each test into these phases, using the comments exactly as shown:
+
+- `// given`: Prepare the input and required test data. E2E tests may use public `E2ETestManager` helpers here, including registration, login, and project or room creation. Assertions may verify that the preparation succeeded. Omit this comment when no preparation is needed.
+- `// when`: Perform the operation being tested. In E2E tests, call the API directly with `fetch`; do not hide the tested request behind a manager helper.
+- `// then`: Only inspect and assert the results. Reading the response body and validating its schema belong here. Do not create data, change application state, or make additional API requests in this phase.
+
+E2E tests must create their own required data in the `given` phase and clean it up after the test. Do not depend on data created by another test or on test execution order. The manager registers only the administrator when starting an instance; its data creation helpers register cleanup hooks for test data.
+
+For E2E tests, nest `describe` suites by **path → HTTP method → status code**. Split nested paths into separate suites where appropriate. Use lowercase HTTP method names and the status code alone as the status suite title. The individual test title describes the behavior without a status-code prefix:
+
+```ts
+describe('/system', (): void => {
+  describe('/version', (): void => {
+    describe('get', (): void => {
+      describe('200', (): void => {
+        test('version without authentication', async (): Promise<void> => {
+          // when
+          // Call GET /system/version directly.
+          // then
+          // Assert the status and returned version.
+        });
+      });
+    });
+  });
+});
+```
+
+For unit tests, nest `describe` suites by **class → method → aspect**. The individual test title describes a specific case within that aspect:
+
+```ts
+describe('ExampleService', (): void => {
+  describe('parse', (): void => {
+    test('rejects an empty string', (): void => {
+      // given
+      // Prepare the service and input.
+      // when
+      // Call the method being tested.
+      // then
+      // Assert the result or captured error.
+    });
+  });
+});
+```
+
 ### Before committing
 
 Run the pre-commit checks before committing changes:
