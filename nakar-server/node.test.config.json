@@ -1,6 +1,6 @@
 {
-  "$schema": "https://nodejs.org/dist/v24.16.0/docs/node-config-schema.json",
-  "testRunner": {
+  "$schema": "https://nodejs.org/dist/v24/docs/node-config-schema.json",
+  "test": {
     "test-timeout": 10000
   }
 }
