@@ -106,6 +106,7 @@ export class E2ETestManager {
       const jwtSecret: string = randomUUID();
       const env: NodeJS.ProcessEnv = {
         NODE_ENV: 'test',
+        AUTH_RATE_LIMIT_ENABLED: 'false',
         ENV_PATH: join(directory, '.env'),
         HOST: '127.0.0.1',
         PORT: String(strapiPort),
