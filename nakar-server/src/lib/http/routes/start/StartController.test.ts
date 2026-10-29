@@ -394,11 +394,21 @@ describe('/', (suiteContext: SuiteContext): void => {
         // then
         assert.equal(response.status, 200);
         const body: StartPageDto = startSchema.parse(await response.json());
-        assert.equal(body.publicRooms.length, 1);
-        assert.equal(body.publicRooms[0].id, publicRoom.documentId);
-        assert.equal(body.publicRooms[0].title, publicRoom.title);
-        assert.equal(body.publicRooms[0].visibility, RoomVisibilityDto.public);
-        assert.deepEqual(body.publicRooms[0].activeUsers, []);
+        const rooms: StartPageRoomDto[] = body.publicRooms.filter(
+          (room: StartPageRoomDto): boolean =>
+            room.id === publicRoom.documentId,
+        );
+        assert.equal(rooms.length, 1);
+        assert.equal(rooms[0].id, publicRoom.documentId);
+        assert.equal(rooms[0].title, publicRoom.title);
+        assert.equal(rooms[0].visibility, RoomVisibilityDto.public);
+        assert.deepEqual(rooms[0].activeUsers, []);
+        assert.ok(
+          body.publicRooms.every(
+            (room: StartPageRoomDto): boolean =>
+              room.visibility === RoomVisibilityDto.public,
+          ),
+        );
       });
 
       test('public room listing for owner', async (testContext: TestContext): Promise<void> => {
@@ -447,11 +457,21 @@ describe('/', (suiteContext: SuiteContext): void => {
         // then
         assert.equal(response.status, 200);
         const body: StartPageDto = startSchema.parse(await response.json());
-        assert.equal(body.publicRooms.length, 1);
-        assert.equal(body.publicRooms[0].id, publicRoom.documentId);
-        assert.equal(body.publicRooms[0].title, publicRoom.title);
-        assert.equal(body.publicRooms[0].visibility, RoomVisibilityDto.public);
-        assert.deepEqual(body.publicRooms[0].activeUsers, []);
+        const rooms: StartPageRoomDto[] = body.publicRooms.filter(
+          (room: StartPageRoomDto): boolean =>
+            room.id === publicRoom.documentId,
+        );
+        assert.equal(rooms.length, 1);
+        assert.equal(rooms[0].id, publicRoom.documentId);
+        assert.equal(rooms[0].title, publicRoom.title);
+        assert.equal(rooms[0].visibility, RoomVisibilityDto.public);
+        assert.deepEqual(rooms[0].activeUsers, []);
+        assert.ok(
+          body.publicRooms.every(
+            (room: StartPageRoomDto): boolean =>
+              room.visibility === RoomVisibilityDto.public,
+          ),
+        );
       });
 
       test('public room listing for collaborator', async (testContext: TestContext): Promise<void> => {
@@ -506,11 +526,21 @@ describe('/', (suiteContext: SuiteContext): void => {
         // then
         assert.equal(response.status, 200);
         const body: StartPageDto = startSchema.parse(await response.json());
-        assert.equal(body.publicRooms.length, 1);
-        assert.equal(body.publicRooms[0].id, publicRoom.documentId);
-        assert.equal(body.publicRooms[0].title, publicRoom.title);
-        assert.equal(body.publicRooms[0].visibility, RoomVisibilityDto.public);
-        assert.deepEqual(body.publicRooms[0].activeUsers, []);
+        const rooms: StartPageRoomDto[] = body.publicRooms.filter(
+          (room: StartPageRoomDto): boolean =>
+            room.id === publicRoom.documentId,
+        );
+        assert.equal(rooms.length, 1);
+        assert.equal(rooms[0].id, publicRoom.documentId);
+        assert.equal(rooms[0].title, publicRoom.title);
+        assert.equal(rooms[0].visibility, RoomVisibilityDto.public);
+        assert.deepEqual(rooms[0].activeUsers, []);
+        assert.ok(
+          body.publicRooms.every(
+            (room: StartPageRoomDto): boolean =>
+              room.visibility === RoomVisibilityDto.public,
+          ),
+        );
       });
 
       test('public room listing for outsider', async (testContext: TestContext): Promise<void> => {
@@ -564,11 +594,21 @@ describe('/', (suiteContext: SuiteContext): void => {
         // then
         assert.equal(response.status, 200);
         const body: StartPageDto = startSchema.parse(await response.json());
-        assert.equal(body.publicRooms.length, 1);
-        assert.equal(body.publicRooms[0].id, publicRoom.documentId);
-        assert.equal(body.publicRooms[0].title, publicRoom.title);
-        assert.equal(body.publicRooms[0].visibility, RoomVisibilityDto.public);
-        assert.deepEqual(body.publicRooms[0].activeUsers, []);
+        const rooms: StartPageRoomDto[] = body.publicRooms.filter(
+          (room: StartPageRoomDto): boolean =>
+            room.id === publicRoom.documentId,
+        );
+        assert.equal(rooms.length, 1);
+        assert.equal(rooms[0].id, publicRoom.documentId);
+        assert.equal(rooms[0].title, publicRoom.title);
+        assert.equal(rooms[0].visibility, RoomVisibilityDto.public);
+        assert.deepEqual(rooms[0].activeUsers, []);
+        assert.ok(
+          body.publicRooms.every(
+            (room: StartPageRoomDto): boolean =>
+              room.visibility === RoomVisibilityDto.public,
+          ),
+        );
       });
 
       test('anonymous cannot see recent private room', async (testContext: TestContext): Promise<void> => {

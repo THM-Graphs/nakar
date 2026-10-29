@@ -91,7 +91,7 @@ Divide each test into these phases, using the comments exactly as shown:
 - `// when`: Perform the operation being tested. In E2E tests, call the API directly with `fetch`; do not hide the tested request behind a manager helper.
 - `// then`: Only inspect and assert the results. Reading the response body and validating its schema belong here. Do not create data, change application state, or make additional API requests in this phase.
 
-E2E tests must create their own required data in the `given` phase and clean it up after the test. Do not depend on data created by another test or on test execution order. The manager registers only the administrator when starting an instance; its data creation helpers register cleanup hooks for test data.
+E2E tests must create their own required data in the `given` phase. Tests do not need to clean up application data; do not add data cleanup hooks. Every test must assume that arbitrary unrelated data already exists in the application, including data left by other tests. Use unique identifiers and scope assertions to the data, users, or resources relevant to the test. Do not assume that global lists are empty or contain only the records created by the current test. Do not depend on data created by another test or on test execution order. The manager registers only the administrator when starting an instance. Shutting down the test instance and removing its temporary directory remain part of suite teardown.
 
 For E2E tests, nest `describe` suites by **path → HTTP method → status code**. Split nested paths into separate suites where appropriate. Use UPPERCASE HTTP method names and the status code alone as the status suite title. The individual test title describes the behavior without a status-code prefix:
 

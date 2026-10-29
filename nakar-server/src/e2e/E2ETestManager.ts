@@ -234,11 +234,6 @@ export class E2ETestManager {
     const body: { user: { documentId: string } } = z
       .object({ user: z.object({ documentId: z.string() }) })
       .parse(json);
-    this._registerCleanup(
-      'plugin::users-permissions.user',
-      body.user.documentId,
-      testContext,
-    );
     return new E2ETestApplicationUser(username, password, body.user.documentId);
   }
 
@@ -316,27 +311,7 @@ export class E2ETestManager {
     const body: { data: { documentId: string } } = z
       .object({ data: z.object({ documentId: z.string().min(1) }) })
       .parse(json);
-    this._registerCleanup(model, body.data.documentId, testContext);
     return body.data.documentId;
-  }
-
-  private _registerCleanup(
-    model: string,
-    documentId: string,
-    testContext: TestContext,
-  ): void {
-    testContext.after(async (): Promise<void> => {
-      const response: Response = await fetch(
-        `${this.strapiUrl}/content-manager/collection-types/${model}/${documentId}`,
-        {
-          method: 'DELETE',
-          headers: { Authorization: `Bearer ${this.context.admin.token}` },
-          signal: AbortSignal.timeout(testConfig.test['test-timeout']),
-        },
-      );
-      const body: string = await response.text();
-      assert.ok(response.status === 200 || response.status === 404, body);
-    });
   }
 
   private async _createAdmin(
