@@ -209,9 +209,12 @@ export class E2ETestManager {
         );
         const address: AddressInfo | string | null = strapiServer.address();
         assert.ok(address != null && typeof address !== 'string');
+
+        // Check for highest valid TCP port
         if (address.port === 65535) {
           continue;
         }
+
         try {
           await new Promise<void>(
             (accept: () => void, reject: (error: Error) => void): void => {
