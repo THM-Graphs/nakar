@@ -469,6 +469,229 @@ describe('/project', (suiteContext: SuiteContext): void => {
         });
       });
       describe('403', (): void => {
+        test('rejects other project owner access', async (testContext: TestContext): Promise<void> => {
+          // given
+          const actor: E2ETestApplicationUser = await manager.registerUser(
+            `e2e-${randomUUID()}`,
+            randomUUID(),
+            testContext,
+          );
+          const owner: E2ETestApplicationUser = await manager.registerUser(
+            `e2e-${randomUUID()}`,
+            randomUUID(),
+            testContext,
+          );
+          const sourceProject: E2ETestApplicationProject =
+            await manager.createProject(
+              'Source Project',
+              actor,
+              [],
+              testContext,
+            );
+          const project: E2ETestApplicationProject =
+            await manager.createProject(
+              'Target Project',
+              owner,
+              [],
+              testContext,
+            );
+          const login: PostAuthResponseBodyDto = await manager.loginUser(
+            actor.username,
+            actor.password,
+            testContext,
+          );
+          const authorized: Response = await fetch(
+            `${manager.apiUrl}/project/${sourceProject.documentId}`,
+            {
+              headers: { Authorization: `Bearer ${login.jwt}` },
+              signal: testContext.signal,
+            },
+          );
+          assert.equal(authorized.status, 200);
+          await authorized.body?.cancel();
+
+          // when
+          const response: Response = await fetch(
+            `${manager.apiUrl}/project/${project.documentId}`,
+            {
+              method: 'GET',
+              headers: { Authorization: `Bearer ${login.jwt}` },
+
+              signal: testContext.signal,
+            },
+          );
+
+          // then
+          assert.equal(response.status, 403);
+          assert.deepEqual(await response.json(), {
+            statusCode: 403,
+            error: 'Forbidden',
+            message: 'Forbidden resource',
+          });
+        });
+
+        test('rejects other project collaborator access', async (testContext: TestContext): Promise<void> => {
+          // given
+          const actor: E2ETestApplicationUser = await manager.registerUser(
+            `e2e-${randomUUID()}`,
+            randomUUID(),
+            testContext,
+          );
+          const owner: E2ETestApplicationUser = await manager.registerUser(
+            `e2e-${randomUUID()}`,
+            randomUUID(),
+            testContext,
+          );
+          const sourceOwner: E2ETestApplicationUser =
+            await manager.registerUser(
+              `e2e-${randomUUID()}`,
+              randomUUID(),
+              testContext,
+            );
+          const sourceProject: E2ETestApplicationProject =
+            await manager.createProject(
+              'Source Project',
+              sourceOwner,
+              [actor],
+              testContext,
+            );
+          const project: E2ETestApplicationProject =
+            await manager.createProject(
+              'Target Project',
+              owner,
+              [],
+              testContext,
+            );
+          const login: PostAuthResponseBodyDto = await manager.loginUser(
+            actor.username,
+            actor.password,
+            testContext,
+          );
+          const authorized: Response = await fetch(
+            `${manager.apiUrl}/project/${sourceProject.documentId}`,
+            {
+              headers: { Authorization: `Bearer ${login.jwt}` },
+              signal: testContext.signal,
+            },
+          );
+          assert.equal(authorized.status, 200);
+          await authorized.body?.cancel();
+
+          // when
+          const response: Response = await fetch(
+            `${manager.apiUrl}/project/${project.documentId}`,
+            {
+              method: 'GET',
+              headers: { Authorization: `Bearer ${login.jwt}` },
+
+              signal: testContext.signal,
+            },
+          );
+
+          // then
+          assert.equal(response.status, 403);
+          assert.deepEqual(await response.json(), {
+            statusCode: 403,
+            error: 'Forbidden',
+            message: 'Forbidden resource',
+          });
+        });
+
+        test('rejects removed collaborator access', async (testContext: TestContext): Promise<void> => {
+          // Move this test when there is a custom route for revoking access.
+
+          // given
+          const owner: E2ETestApplicationUser = await manager.registerUser(
+            `e2e-${randomUUID()}`,
+            randomUUID(),
+            testContext,
+          );
+          const collaborator: E2ETestApplicationUser =
+            await manager.registerUser(
+              `e2e-${randomUUID()}`,
+              randomUUID(),
+              testContext,
+            );
+          const project: E2ETestApplicationProject =
+            await manager.createProject(
+              'Test Project',
+              owner,
+              [collaborator],
+              testContext,
+            );
+          const login: PostAuthResponseBodyDto = await manager.loginUser(
+            collaborator.username,
+            collaborator.password,
+            testContext,
+          );
+          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
+            owner.username,
+            owner.password,
+            testContext,
+          );
+          const authorized: Response = await fetch(
+            `${manager.apiUrl}/project/${project.documentId}`,
+            {
+              headers: { Authorization: `Bearer ${login.jwt}` },
+              signal: testContext.signal,
+            },
+          );
+          assert.equal(authorized.status, 200);
+          assert.deepEqual(
+            projectSchema.parse(await authorized.json()).collaborators,
+            [
+              {
+                id: collaborator.documentId,
+                displayName: collaborator.username,
+              },
+            ],
+          );
+          const removal: Response = await fetch(
+            `${manager.strapiUrl}/content-manager/collection-types/api::project.project/${project.documentId}/actions/publish`,
+            {
+              method: 'POST',
+              headers: {
+                Authorization: `Bearer ${manager.context.admin.token}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ collaborators: [] }),
+              signal: testContext.signal,
+            },
+          );
+          assert.equal(removal.status, 200, await removal.text());
+          const revoked: Response = await fetch(
+            `${manager.apiUrl}/project/${project.documentId}`,
+            {
+              headers: { Authorization: `Bearer ${ownerLogin.jwt}` },
+              signal: testContext.signal,
+            },
+          );
+          assert.equal(revoked.status, 200);
+          assert.deepEqual(
+            projectSchema.parse(await revoked.json()).collaborators,
+            [],
+          );
+
+          // when
+          const response: Response = await fetch(
+            `${manager.apiUrl}/project/${project.documentId}`,
+            {
+              method: 'GET',
+              headers: { Authorization: `Bearer ${login.jwt}` },
+
+              signal: testContext.signal,
+            },
+          );
+
+          // then
+          assert.equal(response.status, 403);
+          assert.deepEqual(await response.json(), {
+            statusCode: 403,
+            error: 'Forbidden',
+            message: 'Forbidden resource',
+          });
+        });
+
         test('rejects anonymous access', async (testContext: TestContext): Promise<void> => {
           // given
           const owner: E2ETestApplicationUser = await manager.registerUser(
@@ -485,7 +708,6 @@ describe('/project', (suiteContext: SuiteContext): void => {
             {
               method: 'GET',
               headers: {},
-
               signal: testContext.signal,
             },
           );
@@ -1060,6 +1282,300 @@ describe('/project', (suiteContext: SuiteContext): void => {
         });
       });
       describe('403', (): void => {
+        test('rejects other project owner access', async (testContext: TestContext): Promise<void> => {
+          // given
+          const actor: E2ETestApplicationUser = await manager.registerUser(
+            `e2e-${randomUUID()}`,
+            randomUUID(),
+            testContext,
+          );
+          const owner: E2ETestApplicationUser = await manager.registerUser(
+            `e2e-${randomUUID()}`,
+            randomUUID(),
+            testContext,
+          );
+          const sourceProject: E2ETestApplicationProject =
+            await manager.createProject(
+              'Source Project',
+              actor,
+              [],
+              testContext,
+            );
+          const project: E2ETestApplicationProject =
+            await manager.createProject(
+              'Target Project',
+              owner,
+              [],
+              testContext,
+            );
+          const login: PostAuthResponseBodyDto = await manager.loginUser(
+            actor.username,
+            actor.password,
+            testContext,
+          );
+          const authorized: Response = await fetch(
+            `${manager.apiUrl}/project/${sourceProject.documentId}`,
+            {
+              headers: { Authorization: `Bearer ${login.jwt}` },
+              signal: testContext.signal,
+            },
+          );
+          assert.equal(authorized.status, 200);
+          await authorized.body?.cancel();
+          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
+            owner.username,
+            owner.password,
+            testContext,
+          );
+
+          // when
+          const response: Response = await fetch(
+            `${manager.apiUrl}/project/${project.documentId}`,
+            {
+              method: 'PUT',
+              headers: {
+                Authorization: `Bearer ${login.jwt}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ title: 'Unauthorized Change' }),
+              signal: testContext.signal,
+            },
+          );
+          const unchanged: Response = await fetch(
+            `${manager.apiUrl}/project/${project.documentId}`,
+            {
+              headers: { Authorization: `Bearer ${ownerLogin.jwt}` },
+              signal: testContext.signal,
+            },
+          );
+
+          // then
+          assert.equal(response.status, 403);
+          assert.deepEqual(await response.json(), {
+            statusCode: 403,
+            error: 'Forbidden',
+            message: 'Forbidden resource',
+          });
+          assert.equal(unchanged.status, 200);
+          assert.deepEqual(await unchanged.json(), {
+            id: project.documentId,
+            title: project.title,
+            owner: { id: owner.documentId, displayName: owner.username },
+            collaborators: [],
+            databases: [],
+            scenarioGroups: [],
+            rooms: [],
+            commonProperties: [],
+          });
+        });
+
+        test('rejects other project collaborator access', async (testContext: TestContext): Promise<void> => {
+          // given
+          const actor: E2ETestApplicationUser = await manager.registerUser(
+            `e2e-${randomUUID()}`,
+            randomUUID(),
+            testContext,
+          );
+          const owner: E2ETestApplicationUser = await manager.registerUser(
+            `e2e-${randomUUID()}`,
+            randomUUID(),
+            testContext,
+          );
+          const sourceOwner: E2ETestApplicationUser =
+            await manager.registerUser(
+              `e2e-${randomUUID()}`,
+              randomUUID(),
+              testContext,
+            );
+          const sourceProject: E2ETestApplicationProject =
+            await manager.createProject(
+              'Source Project',
+              sourceOwner,
+              [actor],
+              testContext,
+            );
+          const project: E2ETestApplicationProject =
+            await manager.createProject(
+              'Target Project',
+              owner,
+              [],
+              testContext,
+            );
+          const login: PostAuthResponseBodyDto = await manager.loginUser(
+            actor.username,
+            actor.password,
+            testContext,
+          );
+          const authorized: Response = await fetch(
+            `${manager.apiUrl}/project/${sourceProject.documentId}`,
+            {
+              headers: { Authorization: `Bearer ${login.jwt}` },
+              signal: testContext.signal,
+            },
+          );
+          assert.equal(authorized.status, 200);
+          await authorized.body?.cancel();
+          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
+            owner.username,
+            owner.password,
+            testContext,
+          );
+
+          // when
+          const response: Response = await fetch(
+            `${manager.apiUrl}/project/${project.documentId}`,
+            {
+              method: 'PUT',
+              headers: {
+                Authorization: `Bearer ${login.jwt}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ title: 'Unauthorized Change' }),
+              signal: testContext.signal,
+            },
+          );
+          const unchanged: Response = await fetch(
+            `${manager.apiUrl}/project/${project.documentId}`,
+            {
+              headers: { Authorization: `Bearer ${ownerLogin.jwt}` },
+              signal: testContext.signal,
+            },
+          );
+
+          // then
+          assert.equal(response.status, 403);
+          assert.deepEqual(await response.json(), {
+            statusCode: 403,
+            error: 'Forbidden',
+            message: 'Forbidden resource',
+          });
+          assert.equal(unchanged.status, 200);
+          assert.deepEqual(await unchanged.json(), {
+            id: project.documentId,
+            title: project.title,
+            owner: { id: owner.documentId, displayName: owner.username },
+            collaborators: [],
+            databases: [],
+            scenarioGroups: [],
+            rooms: [],
+            commonProperties: [],
+          });
+        });
+
+        test('rejects removed collaborator access', async (testContext: TestContext): Promise<void> => {
+          // given
+          const owner: E2ETestApplicationUser = await manager.registerUser(
+            `e2e-${randomUUID()}`,
+            randomUUID(),
+            testContext,
+          );
+          const collaborator: E2ETestApplicationUser =
+            await manager.registerUser(
+              `e2e-${randomUUID()}`,
+              randomUUID(),
+              testContext,
+            );
+          const project: E2ETestApplicationProject =
+            await manager.createProject(
+              'Test Project',
+              owner,
+              [collaborator],
+              testContext,
+            );
+          const login: PostAuthResponseBodyDto = await manager.loginUser(
+            collaborator.username,
+            collaborator.password,
+            testContext,
+          );
+          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
+            owner.username,
+            owner.password,
+            testContext,
+          );
+          const authorized: Response = await fetch(
+            `${manager.apiUrl}/project/${project.documentId}`,
+            {
+              headers: { Authorization: `Bearer ${login.jwt}` },
+              signal: testContext.signal,
+            },
+          );
+          assert.equal(authorized.status, 200);
+          assert.deepEqual(
+            projectSchema.parse(await authorized.json()).collaborators,
+            [
+              {
+                id: collaborator.documentId,
+                displayName: collaborator.username,
+              },
+            ],
+          );
+          const removal: Response = await fetch(
+            `${manager.strapiUrl}/content-manager/collection-types/api::project.project/${project.documentId}/actions/publish`,
+            {
+              method: 'POST',
+              headers: {
+                Authorization: `Bearer ${manager.context.admin.token}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ collaborators: [] }),
+              signal: testContext.signal,
+            },
+          );
+          assert.equal(removal.status, 200, await removal.text());
+          const revoked: Response = await fetch(
+            `${manager.apiUrl}/project/${project.documentId}`,
+            {
+              headers: { Authorization: `Bearer ${ownerLogin.jwt}` },
+              signal: testContext.signal,
+            },
+          );
+          assert.equal(revoked.status, 200);
+          assert.deepEqual(
+            projectSchema.parse(await revoked.json()).collaborators,
+            [],
+          );
+
+          // when
+          const response: Response = await fetch(
+            `${manager.apiUrl}/project/${project.documentId}`,
+            {
+              method: 'PUT',
+              headers: {
+                Authorization: `Bearer ${login.jwt}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ title: 'Unauthorized Change' }),
+              signal: testContext.signal,
+            },
+          );
+          const unchanged: Response = await fetch(
+            `${manager.apiUrl}/project/${project.documentId}`,
+            {
+              headers: { Authorization: `Bearer ${ownerLogin.jwt}` },
+              signal: testContext.signal,
+            },
+          );
+
+          // then
+          assert.equal(response.status, 403);
+          assert.deepEqual(await response.json(), {
+            statusCode: 403,
+            error: 'Forbidden',
+            message: 'Forbidden resource',
+          });
+          assert.equal(unchanged.status, 200);
+          assert.deepEqual(await unchanged.json(), {
+            id: project.documentId,
+            title: project.title,
+            owner: { id: owner.documentId, displayName: owner.username },
+            collaborators: [],
+            databases: [],
+            scenarioGroups: [],
+            rooms: [],
+            commonProperties: [],
+          });
+        });
+
         test('rejects anonymous access', async (testContext: TestContext): Promise<void> => {
           // given
           const owner: E2ETestApplicationUser = await manager.registerUser(
@@ -1374,6 +1890,291 @@ describe('/project', (suiteContext: SuiteContext): void => {
         });
       });
       describe('403', (): void => {
+        test('rejects other project owner access', async (testContext: TestContext): Promise<void> => {
+          // given
+          const actor: E2ETestApplicationUser = await manager.registerUser(
+            `e2e-${randomUUID()}`,
+            randomUUID(),
+            testContext,
+          );
+          const owner: E2ETestApplicationUser = await manager.registerUser(
+            `e2e-${randomUUID()}`,
+            randomUUID(),
+            testContext,
+          );
+          const sourceProject: E2ETestApplicationProject =
+            await manager.createProject(
+              'Source Project',
+              actor,
+              [],
+              testContext,
+            );
+          const project: E2ETestApplicationProject =
+            await manager.createProject(
+              'Target Project',
+              owner,
+              [],
+              testContext,
+            );
+          const login: PostAuthResponseBodyDto = await manager.loginUser(
+            actor.username,
+            actor.password,
+            testContext,
+          );
+          const authorized: Response = await fetch(
+            `${manager.apiUrl}/project/${sourceProject.documentId}`,
+            {
+              headers: { Authorization: `Bearer ${login.jwt}` },
+              signal: testContext.signal,
+            },
+          );
+          assert.equal(authorized.status, 200);
+          await authorized.body?.cancel();
+          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
+            owner.username,
+            owner.password,
+            testContext,
+          );
+
+          // when
+          const response: Response = await fetch(
+            `${manager.apiUrl}/project/${project.documentId}`,
+            {
+              method: 'DELETE',
+              headers: { Authorization: `Bearer ${login.jwt}` },
+
+              signal: testContext.signal,
+            },
+          );
+          const unchanged: Response = await fetch(
+            `${manager.apiUrl}/project/${project.documentId}`,
+            {
+              headers: { Authorization: `Bearer ${ownerLogin.jwt}` },
+              signal: testContext.signal,
+            },
+          );
+
+          // then
+          assert.equal(response.status, 403);
+          assert.deepEqual(await response.json(), {
+            statusCode: 403,
+            error: 'Forbidden',
+            message: 'Forbidden resource',
+          });
+          assert.equal(unchanged.status, 200);
+          assert.deepEqual(await unchanged.json(), {
+            id: project.documentId,
+            title: project.title,
+            owner: { id: owner.documentId, displayName: owner.username },
+            collaborators: [],
+            databases: [],
+            scenarioGroups: [],
+            rooms: [],
+            commonProperties: [],
+          });
+        });
+
+        test('rejects other project collaborator access', async (testContext: TestContext): Promise<void> => {
+          // given
+          const actor: E2ETestApplicationUser = await manager.registerUser(
+            `e2e-${randomUUID()}`,
+            randomUUID(),
+            testContext,
+          );
+          const owner: E2ETestApplicationUser = await manager.registerUser(
+            `e2e-${randomUUID()}`,
+            randomUUID(),
+            testContext,
+          );
+          const sourceOwner: E2ETestApplicationUser =
+            await manager.registerUser(
+              `e2e-${randomUUID()}`,
+              randomUUID(),
+              testContext,
+            );
+          const sourceProject: E2ETestApplicationProject =
+            await manager.createProject(
+              'Source Project',
+              sourceOwner,
+              [actor],
+              testContext,
+            );
+          const project: E2ETestApplicationProject =
+            await manager.createProject(
+              'Target Project',
+              owner,
+              [],
+              testContext,
+            );
+          const login: PostAuthResponseBodyDto = await manager.loginUser(
+            actor.username,
+            actor.password,
+            testContext,
+          );
+          const authorized: Response = await fetch(
+            `${manager.apiUrl}/project/${sourceProject.documentId}`,
+            {
+              headers: { Authorization: `Bearer ${login.jwt}` },
+              signal: testContext.signal,
+            },
+          );
+          assert.equal(authorized.status, 200);
+          await authorized.body?.cancel();
+          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
+            owner.username,
+            owner.password,
+            testContext,
+          );
+
+          // when
+          const response: Response = await fetch(
+            `${manager.apiUrl}/project/${project.documentId}`,
+            {
+              method: 'DELETE',
+              headers: { Authorization: `Bearer ${login.jwt}` },
+
+              signal: testContext.signal,
+            },
+          );
+          const unchanged: Response = await fetch(
+            `${manager.apiUrl}/project/${project.documentId}`,
+            {
+              headers: { Authorization: `Bearer ${ownerLogin.jwt}` },
+              signal: testContext.signal,
+            },
+          );
+
+          // then
+          assert.equal(response.status, 403);
+          assert.deepEqual(await response.json(), {
+            statusCode: 403,
+            error: 'Forbidden',
+            message: 'Forbidden resource',
+          });
+          assert.equal(unchanged.status, 200);
+          assert.deepEqual(await unchanged.json(), {
+            id: project.documentId,
+            title: project.title,
+            owner: { id: owner.documentId, displayName: owner.username },
+            collaborators: [],
+            databases: [],
+            scenarioGroups: [],
+            rooms: [],
+            commonProperties: [],
+          });
+        });
+
+        test('rejects removed collaborator access', async (testContext: TestContext): Promise<void> => {
+          // given
+          const owner: E2ETestApplicationUser = await manager.registerUser(
+            `e2e-${randomUUID()}`,
+            randomUUID(),
+            testContext,
+          );
+          const collaborator: E2ETestApplicationUser =
+            await manager.registerUser(
+              `e2e-${randomUUID()}`,
+              randomUUID(),
+              testContext,
+            );
+          const project: E2ETestApplicationProject =
+            await manager.createProject(
+              'Test Project',
+              owner,
+              [collaborator],
+              testContext,
+            );
+          const login: PostAuthResponseBodyDto = await manager.loginUser(
+            collaborator.username,
+            collaborator.password,
+            testContext,
+          );
+          const ownerLogin: PostAuthResponseBodyDto = await manager.loginUser(
+            owner.username,
+            owner.password,
+            testContext,
+          );
+          const authorized: Response = await fetch(
+            `${manager.apiUrl}/project/${project.documentId}`,
+            {
+              headers: { Authorization: `Bearer ${login.jwt}` },
+              signal: testContext.signal,
+            },
+          );
+          assert.equal(authorized.status, 200);
+          assert.deepEqual(
+            projectSchema.parse(await authorized.json()).collaborators,
+            [
+              {
+                id: collaborator.documentId,
+                displayName: collaborator.username,
+              },
+            ],
+          );
+          const removal: Response = await fetch(
+            `${manager.strapiUrl}/content-manager/collection-types/api::project.project/${project.documentId}/actions/publish`,
+            {
+              method: 'POST',
+              headers: {
+                Authorization: `Bearer ${manager.context.admin.token}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ collaborators: [] }),
+              signal: testContext.signal,
+            },
+          );
+          assert.equal(removal.status, 200, await removal.text());
+          const revoked: Response = await fetch(
+            `${manager.apiUrl}/project/${project.documentId}`,
+            {
+              headers: { Authorization: `Bearer ${ownerLogin.jwt}` },
+              signal: testContext.signal,
+            },
+          );
+          assert.equal(revoked.status, 200);
+          assert.deepEqual(
+            projectSchema.parse(await revoked.json()).collaborators,
+            [],
+          );
+
+          // when
+          const response: Response = await fetch(
+            `${manager.apiUrl}/project/${project.documentId}`,
+            {
+              method: 'DELETE',
+              headers: { Authorization: `Bearer ${login.jwt}` },
+
+              signal: testContext.signal,
+            },
+          );
+          const unchanged: Response = await fetch(
+            `${manager.apiUrl}/project/${project.documentId}`,
+            {
+              headers: { Authorization: `Bearer ${ownerLogin.jwt}` },
+              signal: testContext.signal,
+            },
+          );
+
+          // then
+          assert.equal(response.status, 403);
+          assert.deepEqual(await response.json(), {
+            statusCode: 403,
+            error: 'Forbidden',
+            message: 'Forbidden resource',
+          });
+          assert.equal(unchanged.status, 200);
+          assert.deepEqual(await unchanged.json(), {
+            id: project.documentId,
+            title: project.title,
+            owner: { id: owner.documentId, displayName: owner.username },
+            collaborators: [],
+            databases: [],
+            scenarioGroups: [],
+            rooms: [],
+            commonProperties: [],
+          });
+        });
+
         test('rejects anonymous access', async (testContext: TestContext): Promise<void> => {
           // given
           const owner: E2ETestApplicationUser = await manager.registerUser(
