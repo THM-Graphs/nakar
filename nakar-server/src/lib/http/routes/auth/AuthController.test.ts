@@ -166,7 +166,12 @@ describe('/auth', (suiteContext: SuiteContext): void => {
           signal: testContext.signal,
         });
         assert.equal(response.status, 201);
-        const body: PostAuthResponseBodyDto = await response.json();
+        const body: PostAuthResponseBodyDto = z
+          .strictObject({
+            username: z.literal(user.username),
+            jwt: z.string().min(1),
+          })
+          .parse(await response.json());
 
         // Verify that the returned token authenticates against the real application.
         const authenticated: Response = await fetch(authUrl, {
@@ -277,7 +282,12 @@ describe('/auth', (suiteContext: SuiteContext): void => {
         signal: testContext.signal,
       });
       assert.equal(login.status, 201);
-      const body: PostAuthResponseBodyDto = await login.json();
+      const body: PostAuthResponseBodyDto = z
+        .strictObject({
+          username: z.literal(context.primaryUser.username),
+          jwt: z.string().min(1),
+        })
+        .parse(await login.json());
       const parts: string[] = body.jwt.split('.');
       const payload: { id: number } & JwtPayload = z
         .object({ id: z.number(), iat: z.number(), exp: z.number() })
@@ -326,7 +336,12 @@ describe('/auth', (suiteContext: SuiteContext): void => {
         signal: testContext.signal,
       });
       assert.equal(login.status, 201);
-      const body: PostAuthResponseBodyDto = await login.json();
+      const body: PostAuthResponseBodyDto = z
+        .strictObject({
+          username: z.literal(context.primaryUser.username),
+          jwt: z.string().min(1),
+        })
+        .parse(await login.json());
       const parts: string[] = body.jwt.split('.');
       const signature: string = parts[2];
       parts[2] = `${signature.startsWith('A') ? 'B' : 'A'}${signature.slice(1)}`;
@@ -353,7 +368,12 @@ describe('/auth', (suiteContext: SuiteContext): void => {
         signal: testContext.signal,
       });
       assert.equal(login.status, 201);
-      const body: PostAuthResponseBodyDto = await login.json();
+      const body: PostAuthResponseBodyDto = z
+        .strictObject({
+          username: z.literal(context.primaryUser.username),
+          jwt: z.string().min(1),
+        })
+        .parse(await login.json());
       for (const authorization of [body.jwt, `Basic ${body.jwt}`]) {
         const response: Response = await fetch(authUrl, {
           headers: { Authorization: authorization },

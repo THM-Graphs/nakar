@@ -295,9 +295,7 @@ export class E2ETestManager {
     testContext: SuiteContext | TestContext,
     strapiPort: number,
   ): Promise<void> {
-    const deadline: number = Date.now() + 60000;
-    while (Date.now() < deadline) {
-      testContext.signal.throwIfAborted();
+    while (!testContext.signal.aborted) {
       if (
         this._processError != null ||
         this._process?.exitCode != null ||
@@ -328,8 +326,6 @@ export class E2ETestManager {
       }
       await delay(100, undefined, { signal: testContext.signal });
     }
-    throw new Error(
-      `E2E application did not become ready within 60 seconds.\n${this._logs}`,
-    );
+    testContext.signal.throwIfAborted();
   }
 }
