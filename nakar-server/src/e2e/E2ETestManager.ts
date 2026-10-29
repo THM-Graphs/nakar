@@ -59,7 +59,9 @@ export class E2ETestManager {
       );
     }
 
-    const directory: string = await mkdtemp(join(tmpdir(), 'nakar-e2e-'));
+    const directory: string = await mkdtemp(
+      join(tmpdir(), 'nakar-server-e2e-'),
+    );
     this._directory = directory;
 
     try {
@@ -69,12 +71,14 @@ export class E2ETestManager {
       });
       await copyFile(resolve('package.json'), join(directory, 'package.json'));
       await copyFile(resolve('favicon.ico'), join(directory, 'favicon.ico'));
+      const linkType: 'junction' | 'dir' =
+        process.platform === 'win32' ? 'junction' : 'dir';
       await symlink(
         resolve('node_modules'),
         join(directory, 'node_modules'),
-        'dir',
+        linkType,
       );
-      await symlink(resolve('dist/src'), join(directory, 'src'), 'dir');
+      await symlink(resolve('dist/src'), join(directory, 'src'), linkType);
       await mkdir(join(directory, 'public', 'uploads'), { recursive: true });
       await writeFile(join(directory, '.env'), '');
       await writeFile(

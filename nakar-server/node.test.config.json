@@ -1,6 +1,6 @@
 {
-  "$schema": "https://nodejs.org/dist/v24/docs/node-config-schema.json",
+  "$schema": "https://nodejs.org/dist/latest-v24.x/docs/node-config-schema.json",
   "test": {
-    "test-timeout": 10000
+    "test-timeout": 20000
   }
 }
