@@ -37,7 +37,7 @@ import type { Profiler } from 'winston';
 
 export class SparqlExternalDatabase implements ExternalGraphDatabase {
   private readonly _logger: Logger;
-  private readonly _queryEngine: QueryEngine = new QueryEngine();
+  private _queryEngine: QueryEngine | null = null;
 
   public constructor() {
     this._logger = createChildLogger(this);
@@ -63,7 +63,7 @@ export class SparqlExternalDatabase implements ExternalGraphDatabase {
     const queryId: string = v4();
     const url: URL = this._assertConnectionUrl(credentials);
 
-    const myEngine: QueryEngine = this._queryEngine;
+    const myEngine: QueryEngine = this._getOrCreateSharedQueryEngine();
     const queryWithArguments: string = this._applyParametersToQuery(
       query,
       queryArguments,
@@ -799,7 +799,7 @@ WHERE {
       `Will start SPARQL Query to ${url.toString()} (${queryId}): ${query}`,
     );
 
-    const myEngine: QueryEngine = this._queryEngine;
+    const myEngine: QueryEngine = this._getOrCreateSharedQueryEngine();
     const bindingsStream: BindingsStream = await myEngine.queryBindings(query, {
       sources: [
         {
@@ -838,6 +838,11 @@ WHERE {
     if (key != null) {
       existingSubjectNode.keys.add(key);
     }
+  }
+
+  private _getOrCreateSharedQueryEngine(): QueryEngine {
+    this._queryEngine ??= new QueryEngine();
+    return this._queryEngine;
   }
 
   private async _loadRelationshipTypes(
