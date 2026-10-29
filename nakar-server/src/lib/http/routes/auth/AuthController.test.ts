@@ -82,6 +82,55 @@ describe('/auth', (suiteContext: SuiteContext): void => {
       });
     });
 
+    test('401: blocked user', async (testContext: TestContext): Promise<void> => {
+      const strapiUrl: string = `http://127.0.0.1:${manager.context.strapiPort.toString()}`;
+      const authUrl: string = `${manager.context.apiUrl}/auth`;
+      const username: string = `e2e-${randomUUID()}`;
+      const password: string = randomUUID();
+      const registration: Response = await fetch(
+        `${strapiUrl}/api/auth/local/register`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            username,
+            password,
+            email: `${username}@example.test`,
+          }),
+          signal: testContext.signal,
+        },
+      );
+      assert.equal(registration.status, 200);
+      const registered: { user: { documentId: string } } = z
+        .object({ user: z.object({ documentId: z.string() }) })
+        .parse(await registration.json());
+      const blocking: Response = await fetch(
+        `${strapiUrl}/content-manager/collection-types/plugin::users-permissions.user/${registered.user.documentId}`,
+        {
+          method: 'PUT',
+          headers: {
+            Authorization: `Bearer ${manager.context.admin.token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ blocked: true }),
+          signal: testContext.signal,
+        },
+      );
+      assert.equal(blocking.status, 200, await blocking.text());
+
+      const rejected: Response = await fetch(authUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
+        signal: testContext.signal,
+      });
+      assert.equal(rejected.status, 401);
+      assert.deepEqual(await rejected.json(), {
+        statusCode: 401,
+        message: 'Unauthorized',
+      });
+    });
+
     test('400: invalid request body', async (testContext: TestContext): Promise<void> => {
       const cases: {
         name: string;
@@ -246,6 +295,70 @@ describe('/auth', (suiteContext: SuiteContext): void => {
         },
       );
       assert.equal(deletion.status, 200, await deletion.text());
+
+      const rejected: Response = await fetch(authUrl, {
+        headers: { Authorization: `Bearer ${body.jwt}` },
+        signal: testContext.signal,
+      });
+      assert.equal(rejected.status, 401);
+      assert.deepEqual(await rejected.json(), {
+        statusCode: 401,
+        message: 'Unauthorized',
+      });
+    });
+
+    test('401: blocked user with valid jwt', async (testContext: TestContext): Promise<void> => {
+      const strapiUrl: string = `http://127.0.0.1:${manager.context.strapiPort.toString()}`;
+      const authUrl: string = `${manager.context.apiUrl}/auth`;
+      const username: string = `e2e-${randomUUID()}`;
+      const password: string = randomUUID();
+      const registration: Response = await fetch(
+        `${strapiUrl}/api/auth/local/register`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            username,
+            password,
+            email: `${username}@example.test`,
+          }),
+          signal: testContext.signal,
+        },
+      );
+      assert.equal(registration.status, 200);
+      const registered: { user: { documentId: string } } = z
+        .object({ user: z.object({ documentId: z.string() }) })
+        .parse(await registration.json());
+      const login: Response = await fetch(authUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
+        signal: testContext.signal,
+      });
+      assert.equal(login.status, 201);
+      const body: PostAuthResponseBodyDto = z
+        .strictObject({ username: z.literal(username), jwt: z.string().min(1) })
+        .parse(await login.json());
+      const authenticated: Response = await fetch(authUrl, {
+        headers: { Authorization: `Bearer ${body.jwt}` },
+        signal: testContext.signal,
+      });
+      assert.equal(authenticated.status, 200);
+      assert.deepEqual(await authenticated.json(), { username });
+
+      const blocking: Response = await fetch(
+        `${strapiUrl}/content-manager/collection-types/plugin::users-permissions.user/${registered.user.documentId}`,
+        {
+          method: 'PUT',
+          headers: {
+            Authorization: `Bearer ${manager.context.admin.token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ blocked: true }),
+          signal: testContext.signal,
+        },
+      );
+      assert.equal(blocking.status, 200, await blocking.text());
 
       const rejected: Response = await fetch(authUrl, {
         headers: { Authorization: `Bearer ${body.jwt}` },
