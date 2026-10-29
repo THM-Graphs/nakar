@@ -3,6 +3,7 @@ export class E2ETestApplicationContext {
     public readonly strapiPort: number,
     public readonly nestJsPort: number,
     public readonly websocketPort: number,
+    public readonly jwtSecret: string,
   ) {}
 
   public get apiUrl(): string {

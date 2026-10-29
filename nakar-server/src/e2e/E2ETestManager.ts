@@ -17,10 +17,13 @@ import type { AddressInfo, Server } from 'node:net';
 import { createServer } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
-import type { TestContext } from 'node:test';
+import type { SuiteContext, TestContext } from 'node:test';
 import { setTimeout as delay } from 'node:timers/promises';
 import { E2ETestApplicationContext } from './E2ETestApplicationContext';
 import { E2ETestApplicationContextWithData } from './E2ETestApplicationContextWithData';
+import { E2ETestApplicationUser } from './E2ETestApplicationUser';
+import { E2ETestApplicationAdmin } from './E2ETestApplicationAdmin';
+import z from 'zod';
 
 export class E2ETestManager {
   private _process: ChildProcessWithoutNullStreams | null = null;
@@ -28,20 +31,8 @@ export class E2ETestManager {
   private _logs: string = '';
   private _directory: string | null = null;
 
-  public static async createAppAndData(
-    testContext: TestContext,
-  ): Promise<E2ETestApplicationContextWithData> {
-    const manager: E2ETestManager = new E2ETestManager();
-    testContext.after(async (): Promise<void> => {
-      await manager.destroy(testContext);
-    });
-    const applicationContext: E2ETestApplicationContext =
-      await manager.createAndBootApp(testContext);
-    return await manager.createDemoData(testContext, applicationContext);
-  }
-
   public async createAndBootApp(
-    testContext: TestContext,
+    testContext: SuiteContext | TestContext,
   ): Promise<E2ETestApplicationContext> {
     testContext.diagnostic('Will create testable application instance.');
 
@@ -90,6 +81,7 @@ export class E2ETestManager {
       );
 
       const strapiPort: number = await this._findPortPair();
+      const jwtSecret: string = randomUUID();
       const env: NodeJS.ProcessEnv = {
         NODE_ENV: 'test',
         ENV_PATH: join(directory, '.env'),
@@ -104,7 +96,7 @@ export class E2ETestManager {
         API_TOKEN_SALT: randomUUID(),
         ADMIN_JWT_SECRET: randomUUID(),
         TRANSFER_TOKEN_SALT: randomUUID(),
-        JWT_SECRET: randomUUID(),
+        JWT_SECRET: jwtSecret,
         STRAPI_TELEMETRY_DISABLED: 'true',
       };
       testContext.diagnostic(JSON.stringify(env));
@@ -135,6 +127,7 @@ export class E2ETestManager {
         strapiPort,
         strapiPort + 1,
         strapiPort + 1,
+        jwtSecret,
       );
     } catch (error: unknown) {
       await this.destroy(testContext);
@@ -143,29 +136,30 @@ export class E2ETestManager {
   }
 
   public async createDemoData(
-    testContext: TestContext,
+    testContext: SuiteContext | TestContext,
     context: E2ETestApplicationContext,
   ): Promise<E2ETestApplicationContextWithData> {
-    const username: string = `e2e-${randomUUID()}`;
-    const password: string = randomUUID();
-    const response: Response = await fetch(
-      `http://127.0.0.1:${context.strapiPort.toString()}/api/auth/local/register`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          username,
-          password,
-          email: `${username}@example.test`,
-        }),
-        signal: testContext.signal,
-      },
+    const primaryUser: E2ETestApplicationUser = await this._createUser(
+      testContext,
+      context,
     );
-    assert.equal(response.status, 200, await response.text());
-    return new E2ETestApplicationContextWithData(username, password, context);
+    const secondaryUser: E2ETestApplicationUser = await this._createUser(
+      testContext,
+      context,
+    );
+    const admin: E2ETestApplicationAdmin = await this._createAdmin(
+      testContext,
+      context,
+    );
+    return new E2ETestApplicationContextWithData(
+      primaryUser,
+      secondaryUser,
+      admin,
+      context,
+    );
   }
 
-  public async destroy(testContext: TestContext): Promise<void> {
+  public async destroy(testContext: SuiteContext | TestContext): Promise<void> {
     testContext.diagnostic('Will destroy testable application instance.');
     const child: ChildProcessWithoutNullStreams | null = this._process;
     try {
@@ -194,6 +188,51 @@ export class E2ETestManager {
       this._processError = null;
       this._logs = '';
     }
+  }
+
+  private async _createAdmin(
+    testContext: SuiteContext | TestContext,
+    context: E2ETestApplicationContext,
+  ): Promise<E2ETestApplicationAdmin> {
+    const email: string = `admin-${randomUUID()}@example.test`;
+    const password: string = `Aa1-${randomUUID()}`;
+    const response: Response = await fetch(
+      `http://127.0.0.1:${context.strapiPort.toString()}/admin/register-admin`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ firstname: 'E2E', email, password }),
+        signal: testContext.signal,
+      },
+    );
+    assert.equal(response.status, 200);
+    const body: { data: { token: string } } = z
+      .object({ data: z.object({ token: z.string().min(1) }) })
+      .parse(await response.json());
+    return new E2ETestApplicationAdmin(email, password, body.data.token);
+  }
+
+  private async _createUser(
+    testContext: SuiteContext | TestContext,
+    context: E2ETestApplicationContext,
+  ): Promise<E2ETestApplicationUser> {
+    const username: string = `e2e-${randomUUID()}`;
+    const password: string = randomUUID();
+    const response: Response = await fetch(
+      `http://127.0.0.1:${context.strapiPort.toString()}/api/auth/local/register`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username,
+          password,
+          email: `${username}@example.test`,
+        }),
+        signal: testContext.signal,
+      },
+    );
+    assert.equal(response.status, 200, await response.text());
+    return new E2ETestApplicationUser(username, password);
   }
 
   private async _findPortPair(): Promise<number> {
@@ -253,7 +292,7 @@ export class E2ETestManager {
   }
 
   private async _waitUntilOnline(
-    testContext: TestContext,
+    testContext: SuiteContext | TestContext,
     strapiPort: number,
   ): Promise<void> {
     const deadline: number = Date.now() + 60000;
