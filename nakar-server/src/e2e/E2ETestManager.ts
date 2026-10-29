@@ -19,7 +19,7 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import type { SuiteContext, TestContext } from 'node:test';
 import { setTimeout as delay } from 'node:timers/promises';
-import testConfig from '../../node.test.config.json';
+import testConfig from '../../node.config.json';
 import { E2ETestApplicationContextWithData } from './E2ETestApplicationContextWithData';
 import { E2ETestApplicationUser } from './E2ETestApplicationUser';
 import { E2ETestApplicationAdmin } from './E2ETestApplicationAdmin';
