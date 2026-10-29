@@ -1,3 +1,6 @@
+import { E2ETestApplicationProject } from './E2ETestApplicationProject';
+import { E2ETestApplicationRoom } from './E2ETestApplicationRoom';
+import type { RoomVisibilityDto } from '../lib/schema/dtos/RoomVisibilityDto';
 import type { PostAuthResponseBodyDto } from '../lib/http/routes/auth/dto/PostAuthResponseBodyDto';
 import assert from 'node:assert/strict';
 import type { ChildProcessWithoutNullStreams } from 'node:child_process';
@@ -21,7 +24,7 @@ import { join, resolve } from 'node:path';
 import type { SuiteContext, TestContext } from 'node:test';
 import { setTimeout as delay } from 'node:timers/promises';
 import testConfig from '../../node.config.json';
-import { E2ETestApplicationContextWithData } from './E2ETestApplicationContextWithData';
+import { E2ETestApplicationContext } from './E2ETestApplicationContext';
 import { E2ETestApplicationUser } from './E2ETestApplicationUser';
 import { E2ETestApplicationAdmin } from './E2ETestApplicationAdmin';
 import z from 'zod';
@@ -32,19 +35,19 @@ export class E2ETestManager {
   private _logs: string = '';
   private _directory: string | null = null;
 
-  private _strapiPort: number | null = null;
-  private _startupSignal: AbortSignal | null = null;
+  private _context: E2ETestApplicationContext | null = null;
 
-  private _context: E2ETestApplicationContextWithData | null = null;
-
-  public get context(): E2ETestApplicationContextWithData {
+  public get context(): E2ETestApplicationContext {
     assert.ok(this._context, 'Application has not been started.');
     return this._context;
   }
 
+  public get apiUrl(): string {
+    return `http://127.0.0.1:${this.context.nestJsPort.toString()}/api`;
+  }
+
   public get strapiUrl(): string {
-    assert.ok(this._strapiPort != null, 'Application has not been started.');
-    return `http://127.0.0.1:${this._strapiPort.toString()}`;
+    return `http://127.0.0.1:${this.context.strapiPort.toString()}`;
   }
 
   public async createAndStartApp(
@@ -76,7 +79,6 @@ export class E2ETestManager {
       join(tmpdir(), 'nakar-server-e2e-'),
     );
     this._directory = directory;
-    this._startupSignal = signal;
 
     try {
       signal.throwIfAborted();
@@ -113,7 +115,6 @@ export class E2ETestManager {
 
       signal.throwIfAborted();
       const strapiPort: number = await this._findPortPair();
-      this._strapiPort = strapiPort;
       const jwtSecret: string = randomUUID();
       const env: NodeJS.ProcessEnv = {
         NODE_ENV: 'test',
@@ -159,34 +160,19 @@ export class E2ETestManager {
 
       await this._waitUntilOnline(signal, strapiPort);
       signal.throwIfAborted();
-      testContext.diagnostic('Will create demo data.');
-      const primaryUser: E2ETestApplicationUser = await this.registerUser(
-        `e2e-${randomUUID()}`,
-        randomUUID(),
-        testContext,
-      );
-      signal.throwIfAborted();
-      const secondaryUser: E2ETestApplicationUser = await this.registerUser(
-        `e2e-${randomUUID()}`,
-        randomUUID(),
-        testContext,
-      );
-      signal.throwIfAborted();
+      testContext.diagnostic('Will register administrator.');
       const admin: E2ETestApplicationAdmin = await this._createAdmin(
         signal,
         strapiPort,
       );
       signal.throwIfAborted();
-      this._context = new E2ETestApplicationContextWithData(
-        primaryUser,
-        secondaryUser,
+      this._context = new E2ETestApplicationContext(
         admin,
         strapiPort,
         strapiPort + 1,
         strapiPort + 1,
         jwtSecret,
       );
-      this._startupSignal = null;
     } catch (error: unknown) {
       await this.destroy(testContext);
       throw error;
@@ -222,15 +208,13 @@ export class E2ETestManager {
       this._processError = null;
       this._logs = '';
       this._context = null;
-      this._strapiPort = null;
-      this._startupSignal = null;
     }
   }
 
   public async registerUser(
     username: string,
     password: string,
-    testContext: SuiteContext | TestContext,
+    testContext: TestContext,
   ): Promise<E2ETestApplicationUser> {
     const response: Response = await fetch(
       `${this.strapiUrl}/api/auth/local/register`,
@@ -242,10 +226,7 @@ export class E2ETestManager {
           password,
           email: `${username}@example.test`,
         }),
-        signal:
-          this._startupSignal == null
-            ? testContext.signal
-            : AbortSignal.any([testContext.signal, this._startupSignal]),
+        signal: testContext.signal,
       },
     );
     const json: unknown = await response.json();
@@ -253,6 +234,11 @@ export class E2ETestManager {
     const body: { user: { documentId: string } } = z
       .object({ user: z.object({ documentId: z.string() }) })
       .parse(json);
+    this._registerCleanup(
+      'plugin::users-permissions.user',
+      body.user.documentId,
+      testContext,
+    );
     return new E2ETestApplicationUser(username, password, body.user.documentId);
   }
 
@@ -261,7 +247,7 @@ export class E2ETestManager {
     password: string,
     testContext: TestContext,
   ): Promise<PostAuthResponseBodyDto> {
-    const response: Response = await fetch(`${this.context.apiUrl}/auth`, {
+    const response: Response = await fetch(`${this.apiUrl}/auth`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username, password }),
@@ -272,6 +258,85 @@ export class E2ETestManager {
     return z
       .strictObject({ username: z.literal(username), jwt: z.string().min(1) })
       .parse(json);
+  }
+
+  public async createProject(
+    title: string,
+    owner: E2ETestApplicationUser,
+    collaborators: E2ETestApplicationUser[],
+    testContext: TestContext,
+  ): Promise<E2ETestApplicationProject> {
+    const documentId: string = await this._createPublishedDocument(
+      'api::project.project',
+      {
+        title,
+        owner: owner.documentId,
+        collaborators: collaborators.map(
+          (user: E2ETestApplicationUser): string => user.documentId,
+        ),
+      },
+      testContext,
+    );
+    return new E2ETestApplicationProject(documentId, title);
+  }
+
+  public async createRoom(
+    title: string,
+    visibility: RoomVisibilityDto,
+    project: E2ETestApplicationProject,
+    testContext: TestContext,
+  ): Promise<E2ETestApplicationRoom> {
+    const documentId: string = await this._createPublishedDocument(
+      'api::room.room',
+      { title, visibility, project: project.documentId },
+      testContext,
+    );
+    return new E2ETestApplicationRoom(documentId, title, visibility);
+  }
+
+  private async _createPublishedDocument(
+    model: 'api::project.project' | 'api::room.room',
+    data: Record<string, unknown>,
+    testContext: TestContext,
+  ): Promise<string> {
+    const response: Response = await fetch(
+      `${this.strapiUrl}/content-manager/collection-types/${model}/actions/publish`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${this.context.admin.token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+        signal: testContext.signal,
+      },
+    );
+    const json: unknown = await response.json();
+    assert.equal(response.status, 200, JSON.stringify(json));
+    const body: { data: { documentId: string } } = z
+      .object({ data: z.object({ documentId: z.string().min(1) }) })
+      .parse(json);
+    this._registerCleanup(model, body.data.documentId, testContext);
+    return body.data.documentId;
+  }
+
+  private _registerCleanup(
+    model: string,
+    documentId: string,
+    testContext: TestContext,
+  ): void {
+    testContext.after(async (): Promise<void> => {
+      const response: Response = await fetch(
+        `${this.strapiUrl}/content-manager/collection-types/${model}/${documentId}`,
+        {
+          method: 'DELETE',
+          headers: { Authorization: `Bearer ${this.context.admin.token}` },
+          signal: AbortSignal.timeout(testConfig.test['test-timeout']),
+        },
+      );
+      const body: string = await response.text();
+      assert.ok(response.status === 200 || response.status === 404, body);
+    });
   }
 
   private async _createAdmin(

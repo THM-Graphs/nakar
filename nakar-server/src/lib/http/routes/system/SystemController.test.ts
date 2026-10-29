@@ -20,17 +20,19 @@ describe('/system', (suiteContext: SuiteContext): void => {
 
   describe('/version', (): void => {
     describe('get', (): void => {
-      test('200: version without authentication', async (testContext: TestContext): Promise<void> => {
-        // when
-        const response: Response = await fetch(
-          `${manager.context.apiUrl}/system/version`,
-          { signal: testContext.signal },
-        );
+      describe('200', (): void => {
+        test('version without authentication', async (testContext: TestContext): Promise<void> => {
+          // when
+          const response: Response = await fetch(
+            `${manager.apiUrl}/system/version`,
+            { signal: testContext.signal },
+          );
 
-        // then
-        assert.equal(response.status, 200);
-        assert.deepEqual(await response.json(), {
-          version: packageInfo.version,
+          // then
+          assert.equal(response.status, 200);
+          assert.deepEqual(await response.json(), {
+            version: packageInfo.version,
+          });
         });
       });
     });
