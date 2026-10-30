@@ -72,7 +72,7 @@ With the local `.env.example` setup, it is available at:
 
 http://localhost:1338/api/docs
 
-## Before committing
+### Before committing
 
 Run the pre-commit checks before committing changes:
 
