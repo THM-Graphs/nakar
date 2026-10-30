@@ -3,7 +3,6 @@ import { PostAuthRequestBodyDto } from './dto/PostAuthRequestBodyDto';
 import { PostAuthResponseBodyDto } from './dto/PostAuthResponseBodyDto';
 import { ApiBody, ApiResponse } from '@nestjs/swagger';
 import * as undici from 'undici';
-import { getConfig } from '../../../config/getConfig';
 import { Unauthorized } from 'http-errors';
 import z from 'zod';
 import { GetAuthResponseBodyDto } from './dto/GetAuthResponseBodyDto';
@@ -22,7 +21,7 @@ export class AuthController {
     @Body() body: PostAuthRequestBodyDto,
   ): Promise<PostAuthResponseBodyDto> {
     const result: undici.Response = await undici.fetch(
-      `http://localhost:${getConfig().port}/api/auth/local`,
+      `${this._authService.strapiUrl}/api/auth/local`,
       {
         method: 'POST',
         body: JSON.stringify({
