@@ -6,6 +6,9 @@ export default ({ env }: { env: Env }): unknown => ({
   apiPort: env.int('API_PORT', 81),
   url: env('URL', 'http://localhost:80'),
   allowedOrigins: env('ALLOWED_ORIGINS', 'http://localhost:81'),
+  dirs: {
+    public: env('PUBLIC_DIR', './public'),
+  },
   app: {
     keys: env.array('APP_KEYS'),
   },

@@ -120,4 +120,10 @@ export default defineConfig([
       '@typescript-eslint/promise-function-async': 'off',
     },
   },
+  {
+    files: ['**/*.test.ts'],
+    rules: {
+      '@typescript-eslint/no-floating-promises': 'off',
+    },
+  },
 ]);

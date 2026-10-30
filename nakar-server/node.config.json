@@ -1,0 +1,7 @@
+{
+  "$schema": "https://nodejs.org/dist/latest-v24.x/docs/node-config-schema.json",
+  "test": {
+    "test-timeout": 20000,
+    "test-randomize": true
+  }
+}

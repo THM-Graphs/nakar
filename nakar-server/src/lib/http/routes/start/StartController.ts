@@ -41,6 +41,7 @@ export class StartController {
       try {
         const room: Modules.Documents.Result<'api::room.room'> =
           await this._database.getRoom(recentRoomId);
+        await this._database.getProjectOfRoom(room);
         const allowed: boolean = await userCanSeeAndJoinRoom(
           user,
           room,
