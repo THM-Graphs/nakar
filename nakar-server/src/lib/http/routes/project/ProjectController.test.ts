@@ -377,7 +377,6 @@ describe('/project', (suiteContext: SuiteContext): void => {
             {
               method: 'GET',
               headers: { Authorization: `Bearer ${login.jwt}` },
-
               signal: testContext.signal,
             },
           );
@@ -444,7 +443,6 @@ describe('/project', (suiteContext: SuiteContext): void => {
             {
               method: 'GET',
               headers: { Authorization: `Bearer ${login.jwt}` },
-
               signal: testContext.signal,
             },
           );
@@ -516,7 +514,6 @@ describe('/project', (suiteContext: SuiteContext): void => {
             {
               method: 'GET',
               headers: { Authorization: `Bearer ${login.jwt}` },
-
               signal: testContext.signal,
             },
           );
@@ -583,7 +580,6 @@ describe('/project', (suiteContext: SuiteContext): void => {
             {
               method: 'GET',
               headers: { Authorization: `Bearer ${login.jwt}` },
-
               signal: testContext.signal,
             },
           );
@@ -678,7 +674,6 @@ describe('/project', (suiteContext: SuiteContext): void => {
             {
               method: 'GET',
               headers: { Authorization: `Bearer ${login.jwt}` },
-
               signal: testContext.signal,
             },
           );
@@ -737,7 +732,6 @@ describe('/project', (suiteContext: SuiteContext): void => {
             {
               method: 'GET',
               headers: { Authorization: 'Bearer invalid-jwt' },
-
               signal: testContext.signal,
             },
           );
@@ -777,7 +771,6 @@ describe('/project', (suiteContext: SuiteContext): void => {
             {
               method: 'GET',
               headers: { Authorization: `Bearer ${login.jwt}` },
-
               signal: testContext.signal,
             },
           );
@@ -823,7 +816,6 @@ describe('/project', (suiteContext: SuiteContext): void => {
             {
               method: 'GET',
               headers: { Authorization: `Bearer ${login.jwt}` },
-
               signal: testContext.signal,
             },
           );
@@ -857,7 +849,6 @@ describe('/project', (suiteContext: SuiteContext): void => {
             {
               method: 'GET',
               headers: { Authorization: `Bearer ${login.jwt}` },
-
               signal: testContext.signal,
             },
           );
@@ -1812,7 +1803,6 @@ describe('/project', (suiteContext: SuiteContext): void => {
             {
               method: 'DELETE',
               headers: { Authorization: `Bearer ${login.jwt}` },
-
               signal: testContext.signal,
             },
           );
@@ -1866,7 +1856,6 @@ describe('/project', (suiteContext: SuiteContext): void => {
             {
               method: 'DELETE',
               headers: { Authorization: `Bearer ${login.jwt}` },
-
               signal: testContext.signal,
             },
           );
@@ -1942,7 +1931,6 @@ describe('/project', (suiteContext: SuiteContext): void => {
             {
               method: 'DELETE',
               headers: { Authorization: `Bearer ${login.jwt}` },
-
               signal: testContext.signal,
             },
           );
@@ -2032,7 +2020,6 @@ describe('/project', (suiteContext: SuiteContext): void => {
             {
               method: 'DELETE',
               headers: { Authorization: `Bearer ${login.jwt}` },
-
               signal: testContext.signal,
             },
           );
@@ -2143,7 +2130,6 @@ describe('/project', (suiteContext: SuiteContext): void => {
             {
               method: 'DELETE',
               headers: { Authorization: `Bearer ${login.jwt}` },
-
               signal: testContext.signal,
             },
           );
@@ -2196,7 +2182,6 @@ describe('/project', (suiteContext: SuiteContext): void => {
             {
               method: 'DELETE',
               headers: {},
-
               signal: testContext.signal,
             },
           );
@@ -2249,7 +2234,6 @@ describe('/project', (suiteContext: SuiteContext): void => {
             {
               method: 'DELETE',
               headers: { Authorization: 'Bearer invalid-jwt' },
-
               signal: testContext.signal,
             },
           );
@@ -2312,7 +2296,6 @@ describe('/project', (suiteContext: SuiteContext): void => {
             {
               method: 'DELETE',
               headers: { Authorization: `Bearer ${login.jwt}` },
-
               signal: testContext.signal,
             },
           );

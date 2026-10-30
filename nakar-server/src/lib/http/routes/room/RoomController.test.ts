@@ -86,7 +86,6 @@ describe('/project/:projectId/room', (suiteContext: SuiteContext): void => {
         const response: Response = await fetch(url, {
           method: 'POST',
           headers: { Authorization: `Bearer ${login.jwt}` },
-
           signal: testContext.signal,
         });
 
@@ -134,7 +133,6 @@ describe('/project/:projectId/room', (suiteContext: SuiteContext): void => {
         const response: Response = await fetch(url, {
           method: 'POST',
           headers: { Authorization: `Bearer ${login.jwt}` },
-
           signal: testContext.signal,
         });
 
@@ -237,7 +235,6 @@ describe('/project/:projectId/room', (suiteContext: SuiteContext): void => {
           {
             method: 'POST',
             headers: { Authorization: `Bearer ${login.jwt}` },
-
             signal: testContext.signal,
           },
         );
@@ -294,7 +291,6 @@ describe('/project/:projectId/room', (suiteContext: SuiteContext): void => {
         // when
         const response: Response = await fetch(url, {
           method: 'POST',
-
           signal: testContext.signal,
         });
 
@@ -359,7 +355,6 @@ describe('/project/:projectId/room', (suiteContext: SuiteContext): void => {
         const response: Response = await fetch(url, {
           method: 'POST',
           headers: { Authorization: `Bearer ${login.jwt}` },
-
           signal: testContext.signal,
         });
 
@@ -401,7 +396,6 @@ describe('/project/:projectId/room', (suiteContext: SuiteContext): void => {
         const response: Response = await fetch(url, {
           method: 'POST',
           headers: { Authorization: `Bearer ${login.jwt}` },
-
           signal: testContext.signal,
         });
 
@@ -445,7 +439,6 @@ describe('/project/:projectId/room', (suiteContext: SuiteContext): void => {
           const response: Response = await fetch(url, {
             method: 'GET',
             headers: { Authorization: `Bearer ${login.jwt}` },
-
             signal: testContext.signal,
           });
 
@@ -501,7 +494,6 @@ describe('/project/:projectId/room', (suiteContext: SuiteContext): void => {
           const response: Response = await fetch(url, {
             method: 'GET',
             headers: { Authorization: `Bearer ${login.jwt}` },
-
             signal: testContext.signal,
           });
 
@@ -597,7 +589,6 @@ describe('/project/:projectId/room', (suiteContext: SuiteContext): void => {
           const response: Response = await fetch(roomUrl, {
             method: 'GET',
             headers: { Authorization: `Bearer ${login.jwt}` },
-
             signal: testContext.signal,
           });
 
@@ -633,7 +624,6 @@ describe('/project/:projectId/room', (suiteContext: SuiteContext): void => {
           // when
           const response: Response = await fetch(url, {
             method: 'GET',
-
             signal: testContext.signal,
           });
 
@@ -677,7 +667,6 @@ describe('/project/:projectId/room', (suiteContext: SuiteContext): void => {
           const response: Response = await fetch(url, {
             method: 'GET',
             headers: { Authorization: `Bearer ${login.jwt}` },
-
             signal: testContext.signal,
           });
 
@@ -723,7 +712,6 @@ describe('/project/:projectId/room', (suiteContext: SuiteContext): void => {
           const response: Response = await fetch(url, {
             method: 'GET',
             headers: { Authorization: `Bearer ${login.jwt}` },
-
             signal: testContext.signal,
           });
 
@@ -756,7 +744,6 @@ describe('/project/:projectId/room', (suiteContext: SuiteContext): void => {
           const response: Response = await fetch(url, {
             method: 'GET',
             headers: { Authorization: `Bearer ${login.jwt}` },
-
             signal: testContext.signal,
           });
 
@@ -798,7 +785,6 @@ describe('/project/:projectId/room', (suiteContext: SuiteContext): void => {
           const response: Response = await fetch(url, {
             method: 'GET',
             headers: { Authorization: `Bearer ${login.jwt}` },
-
             signal: testContext.signal,
           });
 
@@ -1950,7 +1936,6 @@ describe('/project/:projectId/room', (suiteContext: SuiteContext): void => {
           const response: Response = await fetch(url, {
             method: 'DELETE',
             headers: { Authorization: `Bearer ${login.jwt}` },
-
             signal: testContext.signal,
           });
           const persisted: Response = await fetch(
@@ -2006,7 +1991,6 @@ describe('/project/:projectId/room', (suiteContext: SuiteContext): void => {
           const response: Response = await fetch(url, {
             method: 'DELETE',
             headers: { Authorization: `Bearer ${login.jwt}` },
-
             signal: testContext.signal,
           });
           const persisted: Response = await fetch(
@@ -2110,7 +2094,6 @@ describe('/project/:projectId/room', (suiteContext: SuiteContext): void => {
           const response: Response = await fetch(roomUrl, {
             method: 'DELETE',
             headers: { Authorization: `Bearer ${login.jwt}` },
-
             signal: testContext.signal,
           });
 
@@ -2164,7 +2147,6 @@ describe('/project/:projectId/room', (suiteContext: SuiteContext): void => {
           // when
           const response: Response = await fetch(url, {
             method: 'DELETE',
-
             signal: testContext.signal,
           });
 
@@ -2226,7 +2208,6 @@ describe('/project/:projectId/room', (suiteContext: SuiteContext): void => {
           const response: Response = await fetch(url, {
             method: 'DELETE',
             headers: { Authorization: `Bearer ${login.jwt}` },
-
             signal: testContext.signal,
           });
 
@@ -2290,7 +2271,6 @@ describe('/project/:projectId/room', (suiteContext: SuiteContext): void => {
           const response: Response = await fetch(url, {
             method: 'DELETE',
             headers: { Authorization: `Bearer ${login.jwt}` },
-
             signal: testContext.signal,
           });
 
@@ -2332,7 +2312,6 @@ describe('/project/:projectId/room', (suiteContext: SuiteContext): void => {
           const response: Response = await fetch(url, {
             method: 'DELETE',
             headers: { Authorization: `Bearer ${login.jwt}` },
-
             signal: testContext.signal,
           });
 
@@ -2374,7 +2353,6 @@ describe('/project/:projectId/room', (suiteContext: SuiteContext): void => {
           const response: Response = await fetch(url, {
             method: 'DELETE',
             headers: { Authorization: `Bearer ${login.jwt}` },
-
             signal: testContext.signal,
           });
 
