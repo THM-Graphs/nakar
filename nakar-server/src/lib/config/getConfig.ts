@@ -20,7 +20,8 @@ export function getConfig(): SanitizedConfig {
   if (allowedOrigins == null) {
     throw new Error('no allowed origins set.');
   }
-  const port: number = strapi.config.get('server.port', 80);
+  const strapiPort: number = strapi.config.get('server.port', 80);
+  const apiPort: number = strapi.config.get('server.apiPort', 81);
   const host: string = strapi.config.get('server.host', '0.0.0.0');
   const encryptionKeysPath: string | null = strapi.config.get<string | null>(
     'server.encryptionKeysPath',
@@ -42,7 +43,8 @@ export function getConfig(): SanitizedConfig {
   return {
     publicUrl: publicUrl,
     allowedOrigins: allowedOrigins.split(','),
-    port: port,
+    strapiPort: strapiPort,
+    apiPort: apiPort,
     host: host,
     encryptionKeysPath: encryptionKeysPath,
     version: version ?? 'unknown',
