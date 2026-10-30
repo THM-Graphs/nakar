@@ -7,16 +7,7 @@ import type { ChildProcessWithoutNullStreams } from 'node:child_process';
 import { spawn } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
 import { once } from 'node:events';
-import {
-  access,
-  copyFile,
-  cp,
-  mkdir,
-  mkdtemp,
-  rm,
-  symlink,
-  writeFile,
-} from 'node:fs/promises';
+import { access, mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import type { SuiteContext, TestContext } from 'node:test';
@@ -102,25 +93,7 @@ export class E2ETestManager {
 
     try {
       signal.throwIfAborted();
-      // Keep configuration and writable application paths separate from the checkout.
-      await cp(resolve('dist/config'), join(directory, 'config'), {
-        recursive: true,
-      });
-      signal.throwIfAborted();
-      await copyFile(resolve('package.json'), join(directory, 'package.json'));
-      signal.throwIfAborted();
-      await copyFile(resolve('favicon.ico'), join(directory, 'favicon.ico'));
-      signal.throwIfAborted();
-      const linkType: 'junction' | 'dir' =
-        process.platform === 'win32' ? 'junction' : 'dir';
-      await symlink(
-        resolve('node_modules'),
-        join(directory, 'node_modules'),
-        linkType,
-      );
-      signal.throwIfAborted();
-      await symlink(resolve('dist/src'), join(directory, 'src'), linkType);
-      signal.throwIfAborted();
+      // Isolate writable test data while sharing the application's built code.
       await mkdir(join(directory, 'public', 'uploads'), { recursive: true });
       signal.throwIfAborted();
       await writeFile(join(directory, '.env'), '');
@@ -146,6 +119,7 @@ export class E2ETestManager {
         ALLOWED_ORIGINS: 'http://localhost:5173',
         DATABASE_CLIENT: 'sqlite',
         DATABASE_FILENAME: join(directory, 'database.sqlite'),
+        PUBLIC_DIR: join(directory, 'public'),
         ENCRYPTION_KEYS_PATH: join(directory, 'encryption_keys.json'),
         APP_KEYS: `${randomUUID()},${randomUUID()}`,
         API_TOKEN_SALT: randomUUID(),
@@ -160,7 +134,7 @@ export class E2ETestManager {
         process.execPath,
         [resolve('node_modules/@strapi/strapi/bin/strapi.js'), 'start'],
         {
-          cwd: directory,
+          cwd: resolve('.'),
           env: {
             ...process.env,
             ...env,
