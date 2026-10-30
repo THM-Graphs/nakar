@@ -1,13 +1,22 @@
 import { ExecutionContext, Injectable } from '@nestjs/common';
 import * as undici from 'undici';
-import { getConfig } from '../config/getConfig';
 import { DatabaseService } from '../database/DatabaseService';
 import { Request } from 'express';
 import type { Modules } from '@strapi/types';
+import type { AddressInfo } from 'node:net';
 
 @Injectable()
 export class AuthService {
   public constructor(private readonly _databaseService: DatabaseService) {}
+
+  public get strapiUrl(): string {
+    const address: AddressInfo | string | null =
+      strapi.server.httpServer.address();
+    if (address == null || typeof address === 'string') {
+      throw new Error('Strapi HTTP server is not listening on a TCP port.');
+    }
+    return `http://localhost:${address.port.toString()}`;
+  }
 
   public static getJWTFromRequest(request: Request): string | null {
     const authHeader: string | null = request.headers.authorization ?? null;
@@ -33,7 +42,7 @@ export class AuthService {
       return null;
     }
     const result: undici.Response = await undici.fetch(
-      `http://localhost:${getConfig().port}/api/users/me`,
+      `${this.strapiUrl}/api/users/me`,
       {
         method: 'GET',
         headers: {

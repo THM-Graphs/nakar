@@ -47,7 +47,7 @@ export async function bootstrapNest(): Promise<NestExpressApplication> {
     yamlDocumentUrl: '/api.yaml',
   });
 
-  await app.listen(config.port + 1, config.host);
+  await app.listen(config.apiPort, config.host);
 
   strapi.log.http(`${await app.getUrl()}/api/docs`);
 
