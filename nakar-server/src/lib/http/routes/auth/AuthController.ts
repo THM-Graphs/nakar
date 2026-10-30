@@ -9,10 +9,14 @@ import { GetAuthResponseBodyDto } from './dto/GetAuthResponseBodyDto';
 import type { Modules } from '@strapi/types';
 import { JWT } from '../../decorators/JWT';
 import { AuthService } from '../../../auth/AuthService';
+import { StrapiService } from '../../../strapi/StrapiService';
 
 @Controller('/auth')
 export class AuthController {
-  public constructor(private readonly _authService: AuthService) {}
+  public constructor(
+    private readonly _authService: AuthService,
+    private readonly _strapiService: StrapiService,
+  ) {}
 
   @Post()
   @ApiBody({ type: PostAuthRequestBodyDto })
@@ -21,7 +25,7 @@ export class AuthController {
     @Body() body: PostAuthRequestBodyDto,
   ): Promise<PostAuthResponseBodyDto> {
     const result: undici.Response = await undici.fetch(
-      `${this._authService.strapiUrl}/api/auth/local`,
+      `${this._strapiService.strapiUrl}/api/auth/local`,
       {
         method: 'POST',
         body: JSON.stringify({

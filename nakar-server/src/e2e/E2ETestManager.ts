@@ -17,19 +17,39 @@ import {
   symlink,
   writeFile,
 } from 'node:fs/promises';
-import type { AddressInfo, Server } from 'node:net';
-import { createServer } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import type { SuiteContext, TestContext } from 'node:test';
 import { setTimeout as delay } from 'node:timers/promises';
+import { stripVTControlCharacters } from 'node:util';
 import testConfig from '../../node.config.json';
 import { E2ETestApplicationContext } from './E2ETestApplicationContext';
 import { E2ETestApplicationUser } from './E2ETestApplicationUser';
 import { E2ETestApplicationAdmin } from './E2ETestApplicationAdmin';
 import z from 'zod';
 
+interface E2ETestApplicationPorts {
+  strapiPort: number;
+  apiPort: number;
+}
+
 export class E2ETestManager {
+  private readonly _portSchema: z.ZodType<number> = z
+    .string()
+    .regex(/^\d+$/u)
+    .transform(Number)
+    .pipe(z.number().int().min(1).max(65535));
+  private readonly _applicationStartedSchema: z.ZodType<{
+    type: 'application_did_start';
+    metaData: E2ETestApplicationPorts;
+  }> = z.object({
+    type: z.literal('application_did_start'),
+    metaData: z.object({
+      strapiPort: this._portSchema,
+      apiPort: this._portSchema,
+    }),
+  });
+
   private _process: ChildProcessWithoutNullStreams | null = null;
   private _processError: Error | null = null;
   private _logs: string = '';
@@ -114,15 +134,15 @@ export class E2ETestManager {
       );
 
       signal.throwIfAborted();
-      const strapiPort: number = await this._findPortPair();
       const jwtSecret: string = randomUUID();
       const env: NodeJS.ProcessEnv = {
         NODE_ENV: 'test',
         AUTH_RATE_LIMIT_ENABLED: 'false',
         ENV_PATH: join(directory, '.env'),
         HOST: '127.0.0.1',
-        PORT: String(strapiPort),
-        URL: `http://127.0.0.1:${strapiPort.toString()}`,
+        STRAPI_PORT: '0',
+        API_PORT: '0',
+        URL: 'http://127.0.0.1:0',
         ALLOWED_ORIGINS: 'http://localhost:5173',
         DATABASE_CLIENT: 'sqlite',
         DATABASE_FILENAME: join(directory, 'database.sqlite'),
@@ -158,19 +178,25 @@ export class E2ETestManager {
         this._logs += data.toString();
       });
 
-      await this._waitUntilOnline(signal, strapiPort);
+      const ports: E2ETestApplicationPorts =
+        await this._waitUntilOnline(signal);
+
+      testContext.diagnostic(
+        `Instance online. Strapi Port: ${ports.strapiPort}, API Port: ${ports.apiPort}`,
+      );
+
       signal.throwIfAborted();
       testContext.diagnostic('Will register administrator.');
       const admin: E2ETestApplicationAdmin = await this._createAdmin(
         signal,
-        strapiPort,
+        ports.strapiPort,
       );
       signal.throwIfAborted();
       this._context = new E2ETestApplicationContext(
         admin,
-        strapiPort,
-        strapiPort + 1,
-        strapiPort + 1,
+        ports.strapiPort,
+        ports.apiPort,
+        ports.apiPort,
         jwtSecret,
       );
     } catch (error: unknown) {
@@ -336,67 +362,43 @@ export class E2ETestManager {
     return new E2ETestApplicationAdmin(email, password, body.data.token);
   }
 
-  private async _findPortPair(): Promise<number> {
-    for (let attempt: number = 0; attempt < 10; attempt++) {
-      const strapiServer: Server = createServer();
-      const nestServer: Server = createServer();
+  private _getApplicationPortsFromLogs(
+    logs: string,
+  ): E2ETestApplicationPorts | null {
+    for (const line of logs.split('\n')) {
+      const jsonStart: number = line.indexOf('{');
+      if (jsonStart === -1) {
+        continue;
+      }
+      let json: unknown;
       try {
-        await new Promise<void>(
-          (accept: () => void, reject: (error: Error) => void): void => {
-            strapiServer.once('error', reject);
-            strapiServer.listen(0, '127.0.0.1', accept);
-          },
+        json = JSON.parse(
+          stripVTControlCharacters(line.slice(jsonStart)).trim(),
         );
-        const address: AddressInfo | string | null = strapiServer.address();
-        assert.ok(address != null && typeof address !== 'string');
-
-        // Check for highest valid TCP port
-        if (address.port === 65535) {
+      } catch (error: unknown) {
+        if (error instanceof SyntaxError) {
+          // Ignore unrelated output and incomplete JSON from split stream chunks.
           continue;
         }
-
-        try {
-          await new Promise<void>(
-            (accept: () => void, reject: (error: Error) => void): void => {
-              nestServer.once('error', reject);
-              nestServer.listen(address.port + 1, '127.0.0.1', accept);
-            },
-          );
-          return address.port;
-        } catch (error: unknown) {
-          if (!(
-            error instanceof Error &&
-            'code' in error &&
-            error.code === 'EADDRINUSE'
-          )) {
-            throw error;
-          }
-        }
-      } finally {
-        await Promise.all([
-          new Promise<void>((accept: () => void): void => {
-            strapiServer.close((): void => {
-              accept();
-            });
-          }),
-          new Promise<void>((accept: () => void): void => {
-            nestServer.close((): void => {
-              accept();
-            });
-          }),
-        ]);
+        throw error;
+      }
+      const result: z.ZodSafeParseResult<{
+        type: 'application_did_start';
+        metaData: E2ETestApplicationPorts;
+      }> = this._applicationStartedSchema.safeParse(json);
+      if (result.success) {
+        return result.data.metaData;
       }
     }
-    throw new Error(
-      'Could not find two adjacent free ports for Strapi and NestJS.',
-    );
+    return null;
   }
 
   private async _waitUntilOnline(
     signal: AbortSignal,
-    strapiPort: number,
-  ): Promise<void> {
-    while (!signal.aborted) {
+  ): Promise<E2ETestApplicationPorts> {
+    let ports: E2ETestApplicationPorts | null;
+    for (;;) {
+      signal.throwIfAborted();
       if (
         this._processError != null ||
         this._process?.exitCode != null ||
@@ -407,26 +409,32 @@ export class E2ETestManager {
           { cause: this._processError },
         );
       }
-      try {
-        const health: Response = await fetch(
-          `http://127.0.0.1:${strapiPort.toString()}/_health`,
-          { signal },
-        );
-        await health.body?.cancel();
-        const version: Response = await fetch(
-          `http://127.0.0.1:${(strapiPort + 1).toString()}/api/system/version`,
-          { signal },
-        );
-        await version.body?.cancel();
-        if (health.status === 204 && version.status === 200) {
-          return;
-        }
-      } catch {
-        signal.throwIfAborted();
-        // Connections may be refused while the application is booting.
+      ports = this._getApplicationPortsFromLogs(this._logs);
+      if (ports == null) {
+        await delay(100, undefined, { signal });
+        continue;
       }
-      await delay(100, undefined, { signal });
+      const health: Response = await fetch(
+        `http://127.0.0.1:${ports.strapiPort.toString()}/_health`,
+        { signal },
+      );
+      await health.body?.cancel();
+      assert.equal(
+        health.status,
+        204,
+        'Strapi /_health returned an unexpected status after application_did_start.',
+      );
+      const version: Response = await fetch(
+        `http://127.0.0.1:${ports.apiPort.toString()}/api/system/version`,
+        { signal },
+      );
+      await version.body?.cancel();
+      assert.equal(
+        version.status,
+        200,
+        'NestJS /api/system/version returned an unexpected status after application_did_start.',
+      );
+      return ports;
     }
-    signal.throwIfAborted();
   }
 }

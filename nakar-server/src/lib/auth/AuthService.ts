@@ -3,20 +3,14 @@ import * as undici from 'undici';
 import { DatabaseService } from '../database/DatabaseService';
 import { Request } from 'express';
 import type { Modules } from '@strapi/types';
-import type { AddressInfo } from 'node:net';
+import { StrapiService } from '../strapi/StrapiService';
 
 @Injectable()
 export class AuthService {
-  public constructor(private readonly _databaseService: DatabaseService) {}
-
-  public get strapiUrl(): string {
-    const address: AddressInfo | string | null =
-      strapi.server.httpServer.address();
-    if (address == null || typeof address === 'string') {
-      throw new Error('Strapi HTTP server is not listening on a TCP port.');
-    }
-    return `http://localhost:${address.port.toString()}`;
-  }
+  public constructor(
+    private readonly _databaseService: DatabaseService,
+    private readonly _strapiService: StrapiService,
+  ) {}
 
   public static getJWTFromRequest(request: Request): string | null {
     const authHeader: string | null = request.headers.authorization ?? null;
@@ -42,7 +36,7 @@ export class AuthService {
       return null;
     }
     const result: undici.Response = await undici.fetch(
-      `${this.strapiUrl}/api/users/me`,
+      `${this._strapiService.strapiUrl}/api/users/me`,
       {
         method: 'GET',
         headers: {
