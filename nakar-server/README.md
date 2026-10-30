@@ -85,11 +85,11 @@ Place each test file next to the class it tests. Use the class name followed by 
 
 Each test covers one aspect and is declared explicitly. Do not generate tests using loops. Use descriptive test names without repeating information already provided by the surrounding suites.
 
-Divide each test into these phases, using the comments exactly as shown:
+Divide each test into these phases, using the comments exactly as shown. Separate consecutive phases with exactly one blank line before the next phase comment (`// when` or `// then`). Do not add a blank line between a phase comment and its code:
 
 - `// given`: Prepare the input and required test data. E2E tests may use public `E2ETestManager` helpers here, including registration, login, and project or room creation. Assertions may verify that the preparation succeeded. Omit this comment when no preparation is needed.
 - `// when`: Perform the operation being tested. In E2E tests, call the API directly with `fetch`; do not hide the tested request behind a manager helper.
-- `// then`: Only inspect and assert the results. Reading the response body and validating its schema belong here. Do not create data, change application state, or make additional API requests in this phase.
+- `// then`: Inspect and assert the results. Reading the response body and validating its schema belong here. Additional read-only API requests or database reads are allowed to verify the effects of the `when` phase, including persisted changes or the absence of changes after a rejected operation. Do not create data or change application state in this phase.
 
 E2E tests must create their own required data in the `given` phase. Tests do not need to clean up application data; do not add data cleanup hooks. Every test must assume that arbitrary unrelated data already exists in the application, including data left by other tests. Use unique identifiers and scope assertions to the data, users, or resources relevant to the test. Do not assume that global lists are empty or contain only the records created by the current test. Do not depend on data created by another test or on test execution order. The manager registers only the administrator when starting an instance. Shutting down the test instance and removing its temporary directory remain part of suite teardown.
 
