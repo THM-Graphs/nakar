@@ -278,12 +278,12 @@ export class E2ETestManager {
   public async createRoom(
     title: string,
     visibility: RoomVisibilityDto,
-    project: E2ETestApplicationProject,
+    project: E2ETestApplicationProject | null,
     testContext: TestContext,
   ): Promise<E2ETestApplicationRoom> {
     const documentId: string = await this._createPublishedDocument(
       'api::room.room',
-      { title, visibility, project: project.documentId },
+      { title, visibility, project: project?.documentId ?? null },
       testContext,
     );
     return new E2ETestApplicationRoom(documentId, title, visibility);

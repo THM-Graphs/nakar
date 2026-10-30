@@ -354,6 +354,31 @@ describe('/', (suiteContext: SuiteContext): void => {
         assert.deepEqual(body.collaborationProjects, []);
       });
 
+      test('public room listing excludes rooms without a project', async (testContext: TestContext): Promise<void> => {
+        // given
+        const danglingRoom: E2ETestApplicationRoom = await manager.createRoom(
+          'Dangling Public Room',
+          RoomVisibilityDto.public,
+          null,
+          testContext,
+        );
+
+        // when
+        const response: Response = await fetch(manager.apiUrl, {
+          signal: testContext.signal,
+        });
+
+        // then
+        assert.equal(response.status, 200);
+        const body: StartPageDto = startSchema.parse(await response.json());
+        assert.ok(
+          body.publicRooms.every(
+            (room: StartPageRoomDto): boolean =>
+              room.id !== danglingRoom.documentId,
+          ),
+        );
+      });
+
       test('public room listing for anonymous', async (testContext: TestContext): Promise<void> => {
         // given
         const primaryUser: E2ETestApplicationUser = await manager.registerUser(
@@ -1219,6 +1244,27 @@ describe('/', (suiteContext: SuiteContext): void => {
             publicRoom.documentId,
           ],
         );
+      });
+
+      test('recent room listing excludes rooms without a project', async (testContext: TestContext): Promise<void> => {
+        // given
+        const danglingRoom: E2ETestApplicationRoom = await manager.createRoom(
+          'Dangling Recent Room',
+          RoomVisibilityDto.unlisted,
+          null,
+          testContext,
+        );
+
+        // when
+        const response: Response = await fetch(
+          `${manager.apiUrl}?recentRoomIds=${danglingRoom.documentId}`,
+          { signal: testContext.signal },
+        );
+
+        // then
+        assert.equal(response.status, 200);
+        const body: StartPageDto = startSchema.parse(await response.json());
+        assert.deepEqual(body.recentRooms, []);
       });
 
       test('unknown recent room is skipped', async (testContext: TestContext): Promise<void> => {

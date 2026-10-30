@@ -243,6 +243,9 @@ export class DatabaseService {
     return await strapi.documents('api::room.room').findMany({
       status: 'published',
       filters: {
+        project: {
+          documentId: { $notNull: true },
+        },
         visibility: {
           $eq: 'public',
         },
