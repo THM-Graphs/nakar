@@ -303,6 +303,161 @@ describe('/project', (suiteContext: SuiteContext): void => {
   describe('/:projectId', (): void => {
     describe('GET', (): void => {
       describe('200', (): void => {
+        test('excludes draft rooms from a published project', async (testContext: TestContext): Promise<void> => {
+          // given
+          const owner: E2ETestApplicationUser = await manager.registerUser(
+            `e2e-${randomUUID()}`,
+            randomUUID(),
+            testContext,
+          );
+          const project: E2ETestApplicationProject =
+            await manager.createProject(
+              'Published Project',
+              owner,
+              [],
+              testContext,
+            );
+          const room: E2ETestApplicationRoom = await manager.createRoom(
+            'Published Room',
+            RoomVisibilityDto.public,
+            project,
+            testContext,
+          );
+          const login: PostAuthResponseBodyDto = await manager.loginUser(
+            owner.username,
+            owner.password,
+            testContext,
+          );
+          const creation: Response = await fetch(
+            `${manager.strapiUrl}/content-manager/collection-types/api::room.room`,
+            {
+              method: 'POST',
+              headers: {
+                Authorization: `Bearer ${manager.context.admin.token}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                title: 'Draft Room',
+                visibility: RoomVisibilityDto.public,
+                project: project.documentId,
+              }),
+              signal: testContext.signal,
+            },
+          );
+          assert.equal(creation.status, 201, await creation.text());
+
+          // when
+          const response: Response = await fetch(
+            `${manager.apiUrl}/project/${project.documentId}`,
+            {
+              headers: { Authorization: `Bearer ${login.jwt}` },
+              signal: testContext.signal,
+            },
+          );
+
+          // then
+          assert.equal(response.status, 200);
+          const body: ProjectPageDto = projectSchema.parse(
+            await response.json(),
+          );
+          assert.deepEqual(
+            body.rooms.map((item: RoomDto): string => item.id),
+            [room.documentId],
+          );
+        });
+
+        test('published collaborator retains access after draft removal', async (testContext: TestContext): Promise<void> => {
+          // given
+          const owner: E2ETestApplicationUser = await manager.registerUser(
+            `e2e-${randomUUID()}`,
+            randomUUID(),
+            testContext,
+          );
+          const project: E2ETestApplicationProject =
+            await manager.createProject(
+              'Published Project',
+              owner,
+              [],
+              testContext,
+            );
+          const collaborator: E2ETestApplicationUser =
+            await manager.registerUser(
+              `e2e-${randomUUID()}`,
+              randomUUID(),
+              testContext,
+            );
+          const publication: Response = await fetch(
+            `${manager.strapiUrl}/content-manager/collection-types/api::project.project/${project.documentId}/actions/publish`,
+            {
+              method: 'POST',
+              headers: {
+                Authorization: `Bearer ${manager.context.admin.token}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                collaborators: [collaborator.documentId],
+              }),
+              signal: testContext.signal,
+            },
+          );
+          assert.equal(publication.status, 200, await publication.text());
+          const update: Response = await fetch(
+            `${manager.strapiUrl}/content-manager/collection-types/api::project.project/${project.documentId}`,
+            {
+              method: 'PUT',
+              headers: {
+                Authorization: `Bearer ${manager.context.admin.token}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ title: 'Draft Title', collaborators: [] }),
+              signal: testContext.signal,
+            },
+          );
+          assert.equal(update.status, 200, await update.text());
+          const login: PostAuthResponseBodyDto = await manager.loginUser(
+            collaborator.username,
+            collaborator.password,
+            testContext,
+          );
+
+          // when
+          const response: Response = await fetch(
+            `${manager.apiUrl}/project/${project.documentId}`,
+            {
+              headers: { Authorization: `Bearer ${login.jwt}` },
+              signal: testContext.signal,
+            },
+          );
+
+          // then
+          assert.equal(response.status, 200);
+          const body: ProjectPageDto = projectSchema.parse(
+            await response.json(),
+          );
+          assert.equal(body.title, 'Published Project');
+          assert.deepEqual(
+            body.collaborators.map((item: UserPreviewDto): string => item.id),
+            [collaborator.documentId],
+          );
+          const startResponse: Response = await fetch(manager.apiUrl, {
+            headers: { Authorization: `Bearer ${login.jwt}` },
+            signal: testContext.signal,
+          });
+          assert.equal(startResponse.status, 200);
+          const startBody: {
+            collaborationProjects: { id: string; title: string }[];
+          } = z
+            .object({
+              collaborationProjects: z.array(
+                z.object({ id: z.string(), title: z.string() }),
+              ),
+            })
+            .parse(await startResponse.json());
+          assert.deepEqual(startBody.collaborationProjects, [
+            { id: project.documentId, title: project.title },
+          ]);
+        });
+
         test('owner can read the project', async (testContext: TestContext): Promise<void> => {
           // given
           const owner: E2ETestApplicationUser = await manager.registerUser(
@@ -467,6 +622,76 @@ describe('/project', (suiteContext: SuiteContext): void => {
         });
       });
       describe('403', (): void => {
+        test('draft collaborator has no access', async (testContext: TestContext): Promise<void> => {
+          // given
+          const owner: E2ETestApplicationUser = await manager.registerUser(
+            `e2e-${randomUUID()}`,
+            randomUUID(),
+            testContext,
+          );
+          const project: E2ETestApplicationProject =
+            await manager.createProject(
+              'Published Project',
+              owner,
+              [],
+              testContext,
+            );
+          const collaborator: E2ETestApplicationUser =
+            await manager.registerUser(
+              `e2e-${randomUUID()}`,
+              randomUUID(),
+              testContext,
+            );
+          const update: Response = await fetch(
+            `${manager.strapiUrl}/content-manager/collection-types/api::project.project/${project.documentId}`,
+            {
+              method: 'PUT',
+              headers: {
+                Authorization: `Bearer ${manager.context.admin.token}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                title: 'Draft Title',
+                collaborators: [collaborator.documentId],
+              }),
+              signal: testContext.signal,
+            },
+          );
+          assert.equal(update.status, 200, await update.text());
+          const login: PostAuthResponseBodyDto = await manager.loginUser(
+            collaborator.username,
+            collaborator.password,
+            testContext,
+          );
+
+          // when
+          const response: Response = await fetch(
+            `${manager.apiUrl}/project/${project.documentId}`,
+            {
+              headers: { Authorization: `Bearer ${login.jwt}` },
+              signal: testContext.signal,
+            },
+          );
+
+          // then
+          assert.equal(response.status, 403);
+          const startResponse: Response = await fetch(manager.apiUrl, {
+            headers: { Authorization: `Bearer ${login.jwt}` },
+            signal: testContext.signal,
+          });
+          assert.equal(startResponse.status, 200);
+          const startBody: {
+            collaborationProjects: { id: string; title: string }[];
+          } = z
+            .object({
+              collaborationProjects: z.array(
+                z.object({ id: z.string(), title: z.string() }),
+              ),
+            })
+            .parse(await startResponse.json());
+          assert.deepEqual(startBody.collaborationProjects, []);
+        });
+
         test('rejects other project owner access', async (testContext: TestContext): Promise<void> => {
           // given
           const actor: E2ETestApplicationUser = await manager.registerUser(
@@ -830,6 +1055,61 @@ describe('/project', (suiteContext: SuiteContext): void => {
         });
       });
       describe('404', (): void => {
+        test('rejects a draft project even for its owner', async (testContext: TestContext): Promise<void> => {
+          // given
+          const owner: E2ETestApplicationUser = await manager.registerUser(
+            `e2e-${randomUUID()}`,
+            randomUUID(),
+            testContext,
+          );
+          const creation: Response = await fetch(
+            `${manager.strapiUrl}/content-manager/collection-types/api::project.project`,
+            {
+              method: 'POST',
+              headers: {
+                Authorization: `Bearer ${manager.context.admin.token}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                title: 'Draft Project',
+                owner: owner.documentId,
+              }),
+              signal: testContext.signal,
+            },
+          );
+          assert.equal(creation.status, 201);
+          const draft: { data: { documentId: string; publishedAt: null } } = z
+            .object({
+              data: z.object({
+                documentId: z.string().min(1),
+                publishedAt: z.null(),
+              }),
+            })
+            .parse(await creation.json());
+          const login: PostAuthResponseBodyDto = await manager.loginUser(
+            owner.username,
+            owner.password,
+            testContext,
+          );
+
+          // when
+          const response: Response = await fetch(
+            `${manager.apiUrl}/project/${draft.data.documentId}`,
+            {
+              method: 'GET',
+              headers: { Authorization: `Bearer ${login.jwt}` },
+              signal: testContext.signal,
+            },
+          );
+
+          // then
+          assert.equal(response.status, 404);
+          assert.deepEqual(await response.json(), {
+            statusCode: 404,
+            message: 'Not Found',
+          });
+        });
+
         test('rejects an unknown project', async (testContext: TestContext): Promise<void> => {
           // given
           const owner: E2ETestApplicationUser = await manager.registerUser(
@@ -1743,6 +2023,82 @@ describe('/project', (suiteContext: SuiteContext): void => {
         });
       });
       describe('404', (): void => {
+        test('rejects a draft project even for its owner', async (testContext: TestContext): Promise<void> => {
+          // given
+          const owner: E2ETestApplicationUser = await manager.registerUser(
+            `e2e-${randomUUID()}`,
+            randomUUID(),
+            testContext,
+          );
+          const creation: Response = await fetch(
+            `${manager.strapiUrl}/content-manager/collection-types/api::project.project`,
+            {
+              method: 'POST',
+              headers: {
+                Authorization: `Bearer ${manager.context.admin.token}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                title: 'Draft Project',
+                owner: owner.documentId,
+              }),
+              signal: testContext.signal,
+            },
+          );
+          assert.equal(creation.status, 201);
+          const draft: { data: { documentId: string; publishedAt: null } } = z
+            .object({
+              data: z.object({
+                documentId: z.string().min(1),
+                publishedAt: z.null(),
+              }),
+            })
+            .parse(await creation.json());
+          const login: PostAuthResponseBodyDto = await manager.loginUser(
+            owner.username,
+            owner.password,
+            testContext,
+          );
+
+          // when
+          const response: Response = await fetch(
+            `${manager.apiUrl}/project/${draft.data.documentId}`,
+            {
+              method: 'PUT',
+              headers: {
+                Authorization: `Bearer ${login.jwt}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ title: 'Changed Project' }),
+              signal: testContext.signal,
+            },
+          );
+
+          // then
+          assert.equal(response.status, 404);
+          assert.deepEqual(await response.json(), {
+            statusCode: 404,
+            message: 'Not Found',
+          });
+          const storedDraft: Response = await fetch(
+            `${manager.strapiUrl}/content-manager/collection-types/api::project.project/${draft.data.documentId}`,
+            {
+              headers: {
+                Authorization: `Bearer ${manager.context.admin.token}`,
+              },
+              signal: testContext.signal,
+            },
+          );
+          assert.equal(storedDraft.status, 200);
+          z.object({
+            data: z.object({
+              documentId: z.literal(draft.data.documentId),
+              title: z.literal('Draft Project'),
+              publishedAt: z.null(),
+            }),
+          }).parse(await storedDraft.json());
+        });
+
         test('rejects an unknown project', async (testContext: TestContext): Promise<void> => {
           // given
           const owner: E2ETestApplicationUser = await manager.registerUser(
@@ -2328,6 +2684,78 @@ describe('/project', (suiteContext: SuiteContext): void => {
         });
       });
       describe('404', (): void => {
+        test('rejects a draft project even for its owner', async (testContext: TestContext): Promise<void> => {
+          // given
+          const owner: E2ETestApplicationUser = await manager.registerUser(
+            `e2e-${randomUUID()}`,
+            randomUUID(),
+            testContext,
+          );
+          const creation: Response = await fetch(
+            `${manager.strapiUrl}/content-manager/collection-types/api::project.project`,
+            {
+              method: 'POST',
+              headers: {
+                Authorization: `Bearer ${manager.context.admin.token}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                title: 'Draft Project',
+                owner: owner.documentId,
+              }),
+              signal: testContext.signal,
+            },
+          );
+          assert.equal(creation.status, 201);
+          const draft: { data: { documentId: string; publishedAt: null } } = z
+            .object({
+              data: z.object({
+                documentId: z.string().min(1),
+                publishedAt: z.null(),
+              }),
+            })
+            .parse(await creation.json());
+          const login: PostAuthResponseBodyDto = await manager.loginUser(
+            owner.username,
+            owner.password,
+            testContext,
+          );
+
+          // when
+          const response: Response = await fetch(
+            `${manager.apiUrl}/project/${draft.data.documentId}`,
+            {
+              method: 'DELETE',
+              headers: { Authorization: `Bearer ${login.jwt}` },
+              signal: testContext.signal,
+            },
+          );
+
+          // then
+          assert.equal(response.status, 404);
+          assert.deepEqual(await response.json(), {
+            statusCode: 404,
+            message: 'Not Found',
+          });
+          const storedDraft: Response = await fetch(
+            `${manager.strapiUrl}/content-manager/collection-types/api::project.project/${draft.data.documentId}`,
+            {
+              headers: {
+                Authorization: `Bearer ${manager.context.admin.token}`,
+              },
+              signal: testContext.signal,
+            },
+          );
+          assert.equal(storedDraft.status, 200);
+          z.object({
+            data: z.object({
+              documentId: z.literal(draft.data.documentId),
+              title: z.literal('Draft Project'),
+              publishedAt: z.null(),
+            }),
+          }).parse(await storedDraft.json());
+        });
+
         test('rejects an unknown project', async (testContext: TestContext): Promise<void> => {
           // given
           const owner: E2ETestApplicationUser = await manager.registerUser(

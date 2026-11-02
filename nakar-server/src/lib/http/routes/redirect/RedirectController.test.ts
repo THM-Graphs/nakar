@@ -239,6 +239,114 @@ describe('/redirect', (suiteContext: SuiteContext): void => {
           assert.deepEqual(await response.json(), { url: null });
         });
 
+        test('returns the published target despite draft changes', async (testContext: TestContext): Promise<void> => {
+          // given
+          const sourceUrl: string = `https://source.example/${randomUUID()}`;
+          const targetUrl: string = `https://target.example/${randomUUID()}`;
+          const creation: Response = await fetch(
+            `${manager.strapiUrl}/content-manager/collection-types/api::redirect.redirect/actions/publish`,
+            {
+              method: 'POST',
+              headers: {
+                Authorization: `Bearer ${manager.context.admin.token}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                sourceUrl: sourceUrl,
+                targetUrl: targetUrl,
+              }),
+              signal: testContext.signal,
+            },
+          );
+          assert.equal(creation.status, 200);
+          const published: { data: { documentId: string } } = z
+            .object({ data: z.object({ documentId: z.string().min(1) }) })
+            .parse(await creation.json());
+          const update: Response = await fetch(
+            `${manager.strapiUrl}/content-manager/collection-types/api::redirect.redirect/${published.data.documentId}`,
+            {
+              method: 'PUT',
+              headers: {
+                Authorization: `Bearer ${manager.context.admin.token}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                targetUrl: `https://draft.example/${randomUUID()}`,
+              }),
+              signal: testContext.signal,
+            },
+          );
+          assert.equal(update.status, 200, await update.text());
+
+          // when
+          const response: Response = await fetch(
+            `${manager.apiUrl}/redirect/url?url=${encodeURIComponent(sourceUrl)}`,
+            {
+              signal: testContext.signal,
+            },
+          );
+
+          // then
+          assert.equal(response.status, 200);
+          assert.deepEqual(await response.json(), { url: targetUrl });
+        });
+
+        test('ignores a draft when a published redirect matches the same source URL', async (testContext: TestContext): Promise<void> => {
+          // given
+          const sourceUrl: string = `https://source.example/${randomUUID()}`;
+          const draftTarget: string = `https://draft.example/${randomUUID()}`;
+          const publishedTarget: string = `https://published.example/${randomUUID()}`;
+          const draftCreation: Response = await fetch(
+            `${manager.strapiUrl}/content-manager/collection-types/api::redirect.redirect`,
+            {
+              method: 'POST',
+              headers: {
+                Authorization: `Bearer ${manager.context.admin.token}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                sourceUrl: sourceUrl,
+                targetUrl: draftTarget,
+              }),
+              signal: testContext.signal,
+            },
+          );
+          assert.equal(draftCreation.status, 201);
+          z.object({ data: z.object({ publishedAt: z.null() }) }).parse(
+            await draftCreation.json(),
+          );
+          const publishedCreation: Response = await fetch(
+            `${manager.strapiUrl}/content-manager/collection-types/api::redirect.redirect/actions/publish`,
+            {
+              method: 'POST',
+              headers: {
+                Authorization: `Bearer ${manager.context.admin.token}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                sourceUrl: sourceUrl,
+                targetUrl: publishedTarget,
+              }),
+              signal: testContext.signal,
+            },
+          );
+          assert.equal(
+            publishedCreation.status,
+            200,
+            await publishedCreation.text(),
+          );
+
+          // when
+          const response: Response = await fetch(
+            `${manager.apiUrl}/redirect/url?url=${encodeURIComponent(sourceUrl)}`,
+            { signal: testContext.signal },
+          );
+
+          // then
+          assert.equal(response.status, 200);
+          assert.deepEqual(await response.json(), { url: publishedTarget });
+        });
+
         test('returns a configured target when multiple redirects match', async (testContext: TestContext): Promise<void> => {
           // given
           const sourceUrl: string = `https://source.example/${randomUUID()}`;

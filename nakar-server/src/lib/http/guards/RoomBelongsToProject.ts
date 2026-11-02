@@ -26,10 +26,15 @@ export class RoomBelongsToProject implements CanActivate {
       { populate: { project: { populate: [] } } }
     > | null = await strapi.documents('api::room.room').findOne({
       documentId: roomId,
+      status: 'published',
       populate: { project: { populate: [] } },
     });
 
-    const isOkay: boolean = room?.project?.documentId === projectId;
+    if (room == null) {
+      throw new NotFoundException();
+    }
+
+    const isOkay: boolean = room.project?.documentId === projectId;
 
     return isOkay;
   }

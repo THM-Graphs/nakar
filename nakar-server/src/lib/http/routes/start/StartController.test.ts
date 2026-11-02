@@ -56,6 +56,447 @@ describe('/', (suiteContext: SuiteContext): void => {
 
   describe('GET', (): void => {
     describe('200', (): void => {
+      test('recentRooms excludes draft rooms', async (testContext: TestContext): Promise<void> => {
+        // given
+        const owner: E2ETestApplicationUser = await manager.registerUser(
+          `owner-${randomUUID()}`,
+          randomUUID(),
+          testContext,
+        );
+        const project: E2ETestApplicationProject = await manager.createProject(
+          'Published Project',
+          owner,
+          [],
+          testContext,
+        );
+        const publishedRoom: E2ETestApplicationRoom = await manager.createRoom(
+          'Published Room',
+          RoomVisibilityDto.public,
+          project,
+          testContext,
+        );
+        const creation: Response = await fetch(
+          `${manager.strapiUrl}/content-manager/collection-types/api::room.room`,
+          {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${manager.context.admin.token}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              title: 'Draft Room',
+              visibility: RoomVisibilityDto.public,
+              project: project.documentId,
+            }),
+            signal: testContext.signal,
+          },
+        );
+        assert.equal(creation.status, 201);
+        const draft: { data: { documentId: string; publishedAt: null } } = z
+          .object({
+            data: z.object({
+              documentId: z.string().min(1),
+              publishedAt: z.null(),
+            }),
+          })
+          .parse(await creation.json());
+        const login: PostAuthResponseBodyDto = await manager.loginUser(
+          owner.username,
+          owner.password,
+          testContext,
+        );
+
+        // when
+        const response: Response = await fetch(
+          `${manager.apiUrl}?recentRoomIds=${draft.data.documentId},${publishedRoom.documentId}`,
+          {
+            headers: { Authorization: `Bearer ${login.jwt}` },
+            signal: testContext.signal,
+          },
+        );
+
+        // then
+        assert.equal(response.status, 200);
+        const body: StartPageDto = startSchema.parse(await response.json());
+        assert.deepEqual(
+          body.recentRooms.map((room: StartPageRoomDto): string => room.id),
+          [publishedRoom.documentId],
+        );
+      });
+
+      test('publicRooms excludes draft rooms', async (testContext: TestContext): Promise<void> => {
+        // given
+        const owner: E2ETestApplicationUser = await manager.registerUser(
+          `owner-${randomUUID()}`,
+          randomUUID(),
+          testContext,
+        );
+        const project: E2ETestApplicationProject = await manager.createProject(
+          'Published Project',
+          owner,
+          [],
+          testContext,
+        );
+        const publishedRoom: E2ETestApplicationRoom = await manager.createRoom(
+          'Published Room',
+          RoomVisibilityDto.public,
+          project,
+          testContext,
+        );
+        const creation: Response = await fetch(
+          `${manager.strapiUrl}/content-manager/collection-types/api::room.room`,
+          {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${manager.context.admin.token}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              title: 'Draft Room',
+              visibility: RoomVisibilityDto.public,
+              project: project.documentId,
+            }),
+            signal: testContext.signal,
+          },
+        );
+        assert.equal(creation.status, 201);
+        const draft: { data: { documentId: string; publishedAt: null } } = z
+          .object({
+            data: z.object({
+              documentId: z.string().min(1),
+              publishedAt: z.null(),
+            }),
+          })
+          .parse(await creation.json());
+        const login: PostAuthResponseBodyDto = await manager.loginUser(
+          owner.username,
+          owner.password,
+          testContext,
+        );
+
+        // when
+        const response: Response = await fetch(manager.apiUrl, {
+          headers: { Authorization: `Bearer ${login.jwt}` },
+          signal: testContext.signal,
+        });
+
+        // then
+        assert.equal(response.status, 200);
+        const body: StartPageDto = startSchema.parse(await response.json());
+        const relevantRoomIds: string[] = body.publicRooms
+          .map((room: StartPageRoomDto): string => room.id)
+          .filter((id: string): boolean =>
+            [draft.data.documentId, publishedRoom.documentId].includes(id),
+          );
+        assert.deepEqual(relevantRoomIds, [publishedRoom.documentId]);
+      });
+
+      test('myProjects excludes draft projects', async (testContext: TestContext): Promise<void> => {
+        // given
+        const owner: E2ETestApplicationUser = await manager.registerUser(
+          `owner-${randomUUID()}`,
+          randomUUID(),
+          testContext,
+        );
+        const publishedProject: E2ETestApplicationProject =
+          await manager.createProject(
+            'Published Project',
+            owner,
+            [],
+            testContext,
+          );
+        const creation: Response = await fetch(
+          `${manager.strapiUrl}/content-manager/collection-types/api::project.project`,
+          {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${manager.context.admin.token}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              title: 'Draft Project',
+              owner: owner.documentId,
+              collaborators: [],
+            }),
+            signal: testContext.signal,
+          },
+        );
+        assert.equal(creation.status, 201);
+        z.object({ data: z.object({ publishedAt: z.null() }) }).parse(
+          await creation.json(),
+        );
+        const login: PostAuthResponseBodyDto = await manager.loginUser(
+          owner.username,
+          owner.password,
+          testContext,
+        );
+
+        // when
+        const response: Response = await fetch(manager.apiUrl, {
+          headers: { Authorization: `Bearer ${login.jwt}` },
+          signal: testContext.signal,
+        });
+
+        // then
+        assert.equal(response.status, 200);
+        const body: StartPageDto = startSchema.parse(await response.json());
+        assert.deepEqual(
+          body.myProjects.map(
+            (project: StartPageProjectDto): string => project.id,
+          ),
+          [publishedProject.documentId],
+        );
+      });
+
+      test('collaborationProjects excludes draft projects', async (testContext: TestContext): Promise<void> => {
+        // given
+        const owner: E2ETestApplicationUser = await manager.registerUser(
+          `owner-${randomUUID()}`,
+          randomUUID(),
+          testContext,
+        );
+        const collaborator: E2ETestApplicationUser = await manager.registerUser(
+          `collaborator-${randomUUID()}`,
+          randomUUID(),
+          testContext,
+        );
+        const publishedProject: E2ETestApplicationProject =
+          await manager.createProject(
+            'Published Project',
+            owner,
+            [collaborator],
+            testContext,
+          );
+        const creation: Response = await fetch(
+          `${manager.strapiUrl}/content-manager/collection-types/api::project.project`,
+          {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${manager.context.admin.token}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              title: 'Draft Project',
+              owner: owner.documentId,
+              collaborators: [collaborator.documentId],
+            }),
+            signal: testContext.signal,
+          },
+        );
+        assert.equal(creation.status, 201);
+        z.object({ data: z.object({ publishedAt: z.null() }) }).parse(
+          await creation.json(),
+        );
+        const login: PostAuthResponseBodyDto = await manager.loginUser(
+          collaborator.username,
+          collaborator.password,
+          testContext,
+        );
+
+        // when
+        const response: Response = await fetch(manager.apiUrl, {
+          headers: { Authorization: `Bearer ${login.jwt}` },
+          signal: testContext.signal,
+        });
+
+        // then
+        assert.equal(response.status, 200);
+        const body: StartPageDto = startSchema.parse(await response.json());
+        assert.deepEqual(
+          body.collaborationProjects.map(
+            (project: StartPageProjectDto): string => project.id,
+          ),
+          [publishedProject.documentId],
+        );
+      });
+
+      test('recentRooms excludes published rooms of a draft project', async (testContext: TestContext): Promise<void> => {
+        // given
+        const owner: E2ETestApplicationUser = await manager.registerUser(
+          `e2e-${randomUUID()}`,
+          randomUUID(),
+          testContext,
+        );
+        const project: E2ETestApplicationProject = await manager.createProject(
+          'Published Project',
+          owner,
+          [],
+          testContext,
+        );
+        const room: E2ETestApplicationRoom = await manager.createRoom(
+          'Published Room',
+          RoomVisibilityDto.public,
+          project,
+          testContext,
+        );
+        const unpublish: Response = await fetch(
+          `${manager.strapiUrl}/content-manager/collection-types/api::project.project/${project.documentId}/actions/unpublish`,
+          {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${manager.context.admin.token}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({}),
+            signal: testContext.signal,
+          },
+        );
+        assert.equal(unpublish.status, 200, await unpublish.text());
+
+        // when
+        const response: Response = await fetch(
+          `${manager.apiUrl}?recentRoomIds=${room.documentId}`,
+          {
+            signal: testContext.signal,
+          },
+        );
+
+        // then
+        assert.equal(response.status, 200);
+        const body: StartPageDto = startSchema.parse(await response.json());
+        assert.equal(
+          body.recentRooms.some(
+            (item: StartPageRoomDto): boolean => item.id === room.documentId,
+          ),
+          false,
+        );
+      });
+
+      test('publicRooms excludes published rooms of a draft project', async (testContext: TestContext): Promise<void> => {
+        // given
+        const owner: E2ETestApplicationUser = await manager.registerUser(
+          `e2e-${randomUUID()}`,
+          randomUUID(),
+          testContext,
+        );
+        const project: E2ETestApplicationProject = await manager.createProject(
+          'Published Project',
+          owner,
+          [],
+          testContext,
+        );
+        const room: E2ETestApplicationRoom = await manager.createRoom(
+          'Published Room',
+          RoomVisibilityDto.public,
+          project,
+          testContext,
+        );
+        const unpublish: Response = await fetch(
+          `${manager.strapiUrl}/content-manager/collection-types/api::project.project/${project.documentId}/actions/unpublish`,
+          {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${manager.context.admin.token}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({}),
+            signal: testContext.signal,
+          },
+        );
+        assert.equal(unpublish.status, 200, await unpublish.text());
+
+        // when
+        const response: Response = await fetch(
+          `${manager.apiUrl}?recentRoomIds=${room.documentId}`,
+          {
+            signal: testContext.signal,
+          },
+        );
+
+        // then
+        assert.equal(response.status, 200);
+        const body: StartPageDto = startSchema.parse(await response.json());
+        assert.equal(
+          body.publicRooms.some(
+            (item: StartPageRoomDto): boolean => item.id === room.documentId,
+          ),
+          false,
+        );
+      });
+
+      test('lists published project and room titles despite draft changes', async (testContext: TestContext): Promise<void> => {
+        // given
+        const owner: E2ETestApplicationUser = await manager.registerUser(
+          `e2e-${randomUUID()}`,
+          randomUUID(),
+          testContext,
+        );
+        const project: E2ETestApplicationProject = await manager.createProject(
+          'Published Project',
+          owner,
+          [],
+          testContext,
+        );
+        const room: E2ETestApplicationRoom = await manager.createRoom(
+          'Published Room',
+          RoomVisibilityDto.public,
+          project,
+          testContext,
+        );
+        const login: PostAuthResponseBodyDto = await manager.loginUser(
+          owner.username,
+          owner.password,
+          testContext,
+        );
+        const projectUpdate: Response = await fetch(
+          `${manager.strapiUrl}/content-manager/collection-types/api::project.project/${project.documentId}`,
+          {
+            method: 'PUT',
+            headers: {
+              Authorization: `Bearer ${manager.context.admin.token}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ title: 'Draft Project Title' }),
+            signal: testContext.signal,
+          },
+        );
+        assert.equal(projectUpdate.status, 200, await projectUpdate.text());
+        const roomUpdate: Response = await fetch(
+          `${manager.strapiUrl}/content-manager/collection-types/api::room.room/${room.documentId}`,
+          {
+            method: 'PUT',
+            headers: {
+              Authorization: `Bearer ${manager.context.admin.token}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              title: 'Draft Room Title',
+              visibility: RoomVisibilityDto.private,
+            }),
+            signal: testContext.signal,
+          },
+        );
+        assert.equal(roomUpdate.status, 200, await roomUpdate.text());
+
+        // when
+        const response: Response = await fetch(
+          `${manager.apiUrl}?recentRoomIds=${room.documentId}`,
+          {
+            headers: { Authorization: `Bearer ${login.jwt}` },
+            signal: testContext.signal,
+          },
+        );
+
+        // then
+        assert.equal(response.status, 200);
+        const body: StartPageDto = startSchema.parse(await response.json());
+        assert.equal(
+          body.myProjects.find(
+            (item: StartPageProjectDto): boolean =>
+              item.id === project.documentId,
+          )?.title,
+          'Published Project',
+        );
+        assert.equal(body.recentRooms[0].title, 'Published Room');
+        assert.equal(body.recentRooms[0].visibility, RoomVisibilityDto.public);
+        assert.equal(
+          body.publicRooms.find(
+            (item: StartPageRoomDto): boolean => item.id === room.documentId,
+          )?.title,
+          'Published Room',
+        );
+      });
+
       test('anonymous has no owned projects', async (testContext: TestContext): Promise<void> => {
         // given
         const primaryUser: E2ETestApplicationUser = await manager.registerUser(

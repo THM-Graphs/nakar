@@ -332,6 +332,7 @@ export class DatabaseService {
       { populate: ['scenarioGroups'] }
     > | null = await strapi.documents('api::project.project').findOne({
       documentId: project.documentId,
+      status: 'published',
       populate: ['scenarioGroups'],
     });
 
@@ -646,7 +647,11 @@ export class DatabaseService {
       { populate: ['owner'] }
     > | null = await strapi
       .documents('api::project.project')
-      .findOne({ documentId: project.documentId, populate: ['owner'] });
+      .findOne({
+        status: 'published',
+        documentId: project.documentId,
+        populate: ['owner'],
+      });
 
     if (populatedProject == null) {
       throw new Error(`Project not found: ${project.documentId}`);
@@ -663,7 +668,11 @@ export class DatabaseService {
       { populate: ['collaborators'] }
     > | null = await strapi
       .documents('api::project.project') // TODO: SORT
-      .findOne({ documentId: project.documentId, populate: ['collaborators'] });
+      .findOne({
+        status: 'published',
+        documentId: project.documentId,
+        populate: ['collaborators'],
+      });
 
     if (populatedProject == null) {
       throw new Error(`Project not found: ${project.documentId}`);
@@ -680,7 +689,11 @@ export class DatabaseService {
       { populate: ['rooms'] }
     > | null = await strapi
       .documents('api::project.project')
-      .findOne({ documentId: project.documentId, populate: ['rooms'] });
+      .findOne({
+        status: 'published',
+        documentId: project.documentId,
+        populate: ['rooms'],
+      });
 
     if (populatedProject == null) {
       throw new Error(`Project not found: ${project.documentId}`);
@@ -699,6 +712,7 @@ export class DatabaseService {
       { populate: ['commonProperties'] }
     > | null = await strapi.documents('api::project.project').findOne({
       documentId: project.documentId,
+      status: 'published',
       populate: ['commonProperties'],
     });
 
@@ -719,6 +733,7 @@ export class DatabaseService {
       { populate: ['databaseConnections'] }
     > | null = await strapi.documents('api::project.project').findOne({
       documentId: project.documentId,
+      status: 'published',
       populate: ['databaseConnections'], // TODO: SORT
     });
 
@@ -741,41 +756,19 @@ export class DatabaseService {
   public async getProjectsOfUser(
     user: Modules.Documents.Result<'plugin::users-permissions.user'>,
   ): Promise<Modules.Documents.Result<'api::project.project'>[]> {
-    const populatedUser: Modules.Documents.Result<
-      'plugin::users-permissions.user',
-      { populate: ['projects'] }
-    > | null = await strapi
-      .documents('plugin::users-permissions.user')
-      .findOne({
-        documentId: user.documentId,
-        populate: ['projects'], // TODO: SORT
-      });
-
-    if (populatedUser == null) {
-      throw new Error(`User not found: ${user.documentId}`);
-    }
-
-    return populatedUser.projects ?? [];
+    return await strapi.documents('api::project.project').findMany({
+      status: 'published',
+      filters: { owner: { documentId: user.documentId } },
+    });
   }
 
   public async getCollaborationProjectsOfUser(
     user: Modules.Documents.Result<'plugin::users-permissions.user'>,
   ): Promise<Modules.Documents.Result<'api::project.project'>[]> {
-    const populatedUser: Modules.Documents.Result<
-      'plugin::users-permissions.user',
-      { populate: ['projectCollaborations'] }
-    > | null = await strapi
-      .documents('plugin::users-permissions.user')
-      .findOne({
-        documentId: user.documentId,
-        populate: ['projectCollaborations'], // TODO: SORT
-      });
-
-    if (populatedUser == null) {
-      throw new Error(`User not found: ${user.documentId}`);
-    }
-
-    return populatedUser.projectCollaborations ?? [];
+    return await strapi.documents('api::project.project').findMany({
+      status: 'published',
+      filters: { collaborators: { documentId: user.documentId } },
+    });
   }
 
   public async getCanvasesOfRoom(
@@ -823,6 +816,7 @@ export class DatabaseService {
       { populate: ['project'] }
     > | null = await strapi.documents('api::room.room').findOne({
       documentId: room.documentId,
+      status: 'published',
       populate: ['project'],
     });
 

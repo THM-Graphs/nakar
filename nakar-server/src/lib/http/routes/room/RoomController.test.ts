@@ -377,6 +377,67 @@ describe('/project/:projectId/room', (suiteContext: SuiteContext): void => {
       });
     });
     describe('404', (): void => {
+      test('rejects room creation in a draft project', async (testContext: TestContext): Promise<void> => {
+        // given
+        const owner: E2ETestApplicationUser = await manager.registerUser(
+          `e2e-${randomUUID()}`,
+          randomUUID(),
+          testContext,
+        );
+        const project: E2ETestApplicationProject = await manager.createProject(
+          'Room Project',
+          owner,
+          [],
+          testContext,
+        );
+        const unpublish: Response = await fetch(
+          `${manager.strapiUrl}/content-manager/collection-types/api::project.project/${project.documentId}/actions/unpublish`,
+          {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${manager.context.admin.token}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({}),
+            signal: testContext.signal,
+          },
+        );
+        assert.equal(unpublish.status, 200);
+        const storedProject: Response = await fetch(
+          `${manager.strapiUrl}/content-manager/collection-types/api::project.project/${project.documentId}`,
+          {
+            headers: { Authorization: `Bearer ${manager.context.admin.token}` },
+            signal: testContext.signal,
+          },
+        );
+        assert.equal(storedProject.status, 200);
+        z.object({ data: z.object({ publishedAt: z.null() }) }).parse(
+          await storedProject.json(),
+        );
+        const login: PostAuthResponseBodyDto = await manager.loginUser(
+          owner.username,
+          owner.password,
+          testContext,
+        );
+
+        // when
+        const response: Response = await fetch(
+          `${manager.apiUrl}/project/${project.documentId}/room`,
+          {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${login.jwt}` },
+            signal: testContext.signal,
+          },
+        );
+
+        // then
+        assert.equal(response.status, 404);
+        assert.deepEqual(await response.json(), {
+          statusCode: 404,
+          message: 'Not Found',
+        });
+      });
+
       test('rejects an unknown project', async (testContext: TestContext): Promise<void> => {
         // given
         const owner: E2ETestApplicationUser = await manager.registerUser(
@@ -411,6 +472,101 @@ describe('/project/:projectId/room', (suiteContext: SuiteContext): void => {
   describe('/:roomId', (): void => {
     describe('GET', (): void => {
       describe('200', (): void => {
+        test('uses the published room title and project despite draft reassignment', async (testContext: TestContext): Promise<void> => {
+          // given
+          const owner: E2ETestApplicationUser = await manager.registerUser(
+            `e2e-${randomUUID()}`,
+            randomUUID(),
+            testContext,
+          );
+          const project: E2ETestApplicationProject =
+            await manager.createProject(
+              'Published Project',
+              owner,
+              [],
+              testContext,
+            );
+          const room: E2ETestApplicationRoom = await manager.createRoom(
+            'Published Room',
+            RoomVisibilityDto.public,
+            project,
+            testContext,
+          );
+          const login: PostAuthResponseBodyDto = await manager.loginUser(
+            owner.username,
+            owner.password,
+            testContext,
+          );
+          const otherProject: E2ETestApplicationProject =
+            await manager.createProject(
+              'Other Project',
+              owner,
+              [],
+              testContext,
+            );
+          const update: Response = await fetch(
+            `${manager.strapiUrl}/content-manager/collection-types/api::room.room/${room.documentId}`,
+            {
+              method: 'PUT',
+              headers: {
+                Authorization: `Bearer ${manager.context.admin.token}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                title: 'Draft Room Title',
+                project: otherProject.documentId,
+                visibility: RoomVisibilityDto.private,
+              }),
+              signal: testContext.signal,
+            },
+          );
+          assert.equal(update.status, 200, await update.text());
+
+          // when
+          const response: Response = await fetch(
+            `${manager.apiUrl}/project/${project.documentId}/room/${room.documentId}`,
+            {
+              headers: { Authorization: `Bearer ${login.jwt}` },
+              signal: testContext.signal,
+            },
+          );
+
+          // then
+          assert.equal(response.status, 200);
+          const body: RoomDto = roomSchema.parse(await response.json());
+          assert.equal(body.title, 'Published Room');
+          assert.equal(body.projectId, project.documentId);
+          assert.equal(body.visibility, RoomVisibilityDto.public);
+          const originalProject: Response = await fetch(
+            `${manager.apiUrl}/project/${project.documentId}`,
+            {
+              headers: { Authorization: `Bearer ${login.jwt}` },
+              signal: testContext.signal,
+            },
+          );
+          assert.equal(originalProject.status, 200);
+          const originalBody: { rooms: { id: string }[] } = z
+            .object({ rooms: z.array(z.object({ id: z.string() })) })
+            .parse(await originalProject.json());
+          assert.equal(
+            originalBody.rooms.some(
+              (item: { id: string }): boolean => item.id === room.documentId,
+            ),
+            true,
+          );
+          const reassignedProject: Response = await fetch(
+            `${manager.apiUrl}/project/${otherProject.documentId}`,
+            {
+              headers: { Authorization: `Bearer ${login.jwt}` },
+              signal: testContext.signal,
+            },
+          );
+          assert.equal(reassignedProject.status, 200);
+          z.object({ rooms: z.tuple([]) }).parse(
+            await reassignedProject.json(),
+          );
+        });
+
         test('owner can read the room', async (testContext: TestContext): Promise<void> => {
           // given
           const owner: E2ETestApplicationUser = await manager.registerUser(
@@ -723,6 +879,8 @@ describe('/project/:projectId/room', (suiteContext: SuiteContext): void => {
             error: 'Forbidden',
           });
         });
+      });
+      describe('404', (): void => {
         test('rejects an unknown room', async (testContext: TestContext): Promise<void> => {
           // given
           const owner: E2ETestApplicationUser = await manager.registerUser(
@@ -748,15 +906,136 @@ describe('/project/:projectId/room', (suiteContext: SuiteContext): void => {
           });
 
           // then
-          assert.equal(response.status, 403);
+          assert.equal(response.status, 404);
           assert.deepEqual(await response.json(), {
-            statusCode: 403,
-            message: 'Forbidden resource',
-            error: 'Forbidden',
+            statusCode: 404,
+            message: 'Not Found',
           });
         });
-      });
-      describe('404', (): void => {
+
+        test('rejects a draft room even for its owner', async (testContext: TestContext): Promise<void> => {
+          // given
+          const owner: E2ETestApplicationUser = await manager.registerUser(
+            `e2e-${randomUUID()}`,
+            randomUUID(),
+            testContext,
+          );
+          const project: E2ETestApplicationProject =
+            await manager.createProject('Room Project', owner, [], testContext);
+          const creation: Response = await fetch(
+            `${manager.strapiUrl}/content-manager/collection-types/api::room.room`,
+            {
+              method: 'POST',
+              headers: {
+                Authorization: `Bearer ${manager.context.admin.token}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                title: 'Original Room',
+                visibility: RoomVisibilityDto.public,
+                project: project.documentId,
+              }),
+              signal: testContext.signal,
+            },
+          );
+          assert.equal(creation.status, 201);
+          const draft: { data: { documentId: string; publishedAt: null } } = z
+            .object({
+              data: z.object({
+                documentId: z.string().min(1),
+                publishedAt: z.null(),
+              }),
+            })
+            .parse(await creation.json());
+          const login: PostAuthResponseBodyDto = await manager.loginUser(
+            owner.username,
+            owner.password,
+            testContext,
+          );
+
+          // when
+          const response: Response = await fetch(
+            `${manager.apiUrl}/project/${project.documentId}/room/${draft.data.documentId}`,
+            {
+              method: 'GET',
+              headers: { Authorization: `Bearer ${login.jwt}` },
+              signal: testContext.signal,
+            },
+          );
+
+          // then
+          assert.equal(response.status, 404);
+          assert.deepEqual(await response.json(), {
+            statusCode: 404,
+            message: 'Not Found',
+          });
+        });
+
+        test('rejects a published room whose project is a draft', async (testContext: TestContext): Promise<void> => {
+          // given
+          const owner: E2ETestApplicationUser = await manager.registerUser(
+            `e2e-${randomUUID()}`,
+            randomUUID(),
+            testContext,
+          );
+          const project: E2ETestApplicationProject =
+            await manager.createProject('Room Project', owner, [], testContext);
+          const room: E2ETestApplicationRoom = await manager.createRoom(
+            'Original Room',
+            RoomVisibilityDto.public,
+            project,
+            testContext,
+          );
+          const unpublish: Response = await fetch(
+            `${manager.strapiUrl}/content-manager/collection-types/api::project.project/${project.documentId}/actions/unpublish`,
+            {
+              method: 'POST',
+              headers: {
+                Authorization: `Bearer ${manager.context.admin.token}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({}),
+              signal: testContext.signal,
+            },
+          );
+          assert.equal(unpublish.status, 200);
+          const storedProject: Response = await fetch(
+            `${manager.strapiUrl}/content-manager/collection-types/api::project.project/${project.documentId}`,
+            {
+              headers: {
+                Authorization: `Bearer ${manager.context.admin.token}`,
+              },
+              signal: testContext.signal,
+            },
+          );
+          assert.equal(storedProject.status, 200);
+          z.object({ data: z.object({ publishedAt: z.null() }) }).parse(
+            await storedProject.json(),
+          );
+          const login: PostAuthResponseBodyDto = await manager.loginUser(
+            owner.username,
+            owner.password,
+            testContext,
+          );
+
+          // when
+          const response: Response = await fetch(
+            `${manager.apiUrl}/project/${project.documentId}/room/${room.documentId}`,
+            {
+              method: 'GET',
+              headers: { Authorization: `Bearer ${login.jwt}` },
+              signal: testContext.signal,
+            },
+          );
+
+          // then
+          assert.equal(response.status, 404);
+          assert.deepEqual(await response.json(), {
+            statusCode: 404,
+            message: 'Not Found',
+          });
+        });
+
         test('rejects an unknown project', async (testContext: TestContext): Promise<void> => {
           // given
           const owner: E2ETestApplicationUser = await manager.registerUser(
@@ -1390,6 +1669,8 @@ describe('/project/:projectId/room', (suiteContext: SuiteContext): void => {
             original,
           );
         });
+      });
+      describe('404', (): void => {
         test('rejects an unknown room', async (testContext: TestContext): Promise<void> => {
           // given
           const owner: E2ETestApplicationUser = await manager.registerUser(
@@ -1422,15 +1703,185 @@ describe('/project/:projectId/room', (suiteContext: SuiteContext): void => {
           });
 
           // then
-          assert.equal(response.status, 403);
+          assert.equal(response.status, 404);
           assert.deepEqual(await response.json(), {
-            statusCode: 403,
-            message: 'Forbidden resource',
-            error: 'Forbidden',
+            statusCode: 404,
+            message: 'Not Found',
           });
         });
-      });
-      describe('404', (): void => {
+
+        test('rejects a draft room even for its owner', async (testContext: TestContext): Promise<void> => {
+          // given
+          const owner: E2ETestApplicationUser = await manager.registerUser(
+            `e2e-${randomUUID()}`,
+            randomUUID(),
+            testContext,
+          );
+          const project: E2ETestApplicationProject =
+            await manager.createProject('Room Project', owner, [], testContext);
+          const creation: Response = await fetch(
+            `${manager.strapiUrl}/content-manager/collection-types/api::room.room`,
+            {
+              method: 'POST',
+              headers: {
+                Authorization: `Bearer ${manager.context.admin.token}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                title: 'Original Room',
+                visibility: RoomVisibilityDto.public,
+                project: project.documentId,
+              }),
+              signal: testContext.signal,
+            },
+          );
+          assert.equal(creation.status, 201);
+          const draft: { data: { documentId: string; publishedAt: null } } = z
+            .object({
+              data: z.object({
+                documentId: z.string().min(1),
+                publishedAt: z.null(),
+              }),
+            })
+            .parse(await creation.json());
+          const login: PostAuthResponseBodyDto = await manager.loginUser(
+            owner.username,
+            owner.password,
+            testContext,
+          );
+
+          // when
+          const response: Response = await fetch(
+            `${manager.apiUrl}/project/${project.documentId}/room/${draft.data.documentId}`,
+            {
+              method: 'PUT',
+              headers: {
+                Authorization: `Bearer ${login.jwt}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                title: 'Changed Room',
+                visibility: RoomVisibilityDto.private,
+              }),
+              signal: testContext.signal,
+            },
+          );
+
+          // then
+          assert.equal(response.status, 404);
+          assert.deepEqual(await response.json(), {
+            statusCode: 404,
+            message: 'Not Found',
+          });
+          const storedRoom: Response = await fetch(
+            `${manager.strapiUrl}/content-manager/collection-types/api::room.room/${draft.data.documentId}`,
+            {
+              headers: {
+                Authorization: `Bearer ${manager.context.admin.token}`,
+              },
+              signal: testContext.signal,
+            },
+          );
+          assert.equal(storedRoom.status, 200);
+          z.object({
+            data: z.object({
+              documentId: z.literal(draft.data.documentId),
+              title: z.literal('Original Room'),
+              visibility: z.literal(RoomVisibilityDto.public),
+              publishedAt: z.null(),
+            }),
+          }).parse(await storedRoom.json());
+        });
+
+        test('rejects a published room whose project is a draft', async (testContext: TestContext): Promise<void> => {
+          // given
+          const owner: E2ETestApplicationUser = await manager.registerUser(
+            `e2e-${randomUUID()}`,
+            randomUUID(),
+            testContext,
+          );
+          const project: E2ETestApplicationProject =
+            await manager.createProject('Room Project', owner, [], testContext);
+          const room: E2ETestApplicationRoom = await manager.createRoom(
+            'Original Room',
+            RoomVisibilityDto.public,
+            project,
+            testContext,
+          );
+          const unpublish: Response = await fetch(
+            `${manager.strapiUrl}/content-manager/collection-types/api::project.project/${project.documentId}/actions/unpublish`,
+            {
+              method: 'POST',
+              headers: {
+                Authorization: `Bearer ${manager.context.admin.token}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({}),
+              signal: testContext.signal,
+            },
+          );
+          assert.equal(unpublish.status, 200);
+          const storedProject: Response = await fetch(
+            `${manager.strapiUrl}/content-manager/collection-types/api::project.project/${project.documentId}`,
+            {
+              headers: {
+                Authorization: `Bearer ${manager.context.admin.token}`,
+              },
+              signal: testContext.signal,
+            },
+          );
+          assert.equal(storedProject.status, 200);
+          z.object({ data: z.object({ publishedAt: z.null() }) }).parse(
+            await storedProject.json(),
+          );
+          const login: PostAuthResponseBodyDto = await manager.loginUser(
+            owner.username,
+            owner.password,
+            testContext,
+          );
+
+          // when
+          const response: Response = await fetch(
+            `${manager.apiUrl}/project/${project.documentId}/room/${room.documentId}`,
+            {
+              method: 'PUT',
+              headers: {
+                Authorization: `Bearer ${login.jwt}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                title: 'Changed Room',
+                visibility: RoomVisibilityDto.private,
+              }),
+              signal: testContext.signal,
+            },
+          );
+
+          // then
+          assert.equal(response.status, 404);
+          assert.deepEqual(await response.json(), {
+            statusCode: 404,
+            message: 'Not Found',
+          });
+          const storedRoom: Response = await fetch(
+            `${manager.strapiUrl}/content-manager/collection-types/api::room.room/${room.documentId}`,
+            {
+              headers: {
+                Authorization: `Bearer ${manager.context.admin.token}`,
+              },
+              signal: testContext.signal,
+            },
+          );
+          assert.equal(storedRoom.status, 200);
+          z.object({
+            data: z.object({
+              documentId: z.literal(room.documentId),
+              title: z.literal('Original Room'),
+              visibility: z.literal(RoomVisibilityDto.public),
+            }),
+          }).parse(await storedRoom.json());
+        });
+
         test('rejects an unknown project', async (testContext: TestContext): Promise<void> => {
           // given
           const owner: E2ETestApplicationUser = await manager.registerUser(
@@ -2291,6 +2742,8 @@ describe('/project/:projectId/room', (suiteContext: SuiteContext): void => {
             original,
           );
         });
+      });
+      describe('404', (): void => {
         test('rejects an unknown room', async (testContext: TestContext): Promise<void> => {
           // given
           const owner: E2ETestApplicationUser = await manager.registerUser(
@@ -2316,15 +2769,171 @@ describe('/project/:projectId/room', (suiteContext: SuiteContext): void => {
           });
 
           // then
-          assert.equal(response.status, 403);
+          assert.equal(response.status, 404);
           assert.deepEqual(await response.json(), {
-            statusCode: 403,
-            message: 'Forbidden resource',
-            error: 'Forbidden',
+            statusCode: 404,
+            message: 'Not Found',
           });
         });
-      });
-      describe('404', (): void => {
+
+        test('rejects a draft room even for its owner', async (testContext: TestContext): Promise<void> => {
+          // given
+          const owner: E2ETestApplicationUser = await manager.registerUser(
+            `e2e-${randomUUID()}`,
+            randomUUID(),
+            testContext,
+          );
+          const project: E2ETestApplicationProject =
+            await manager.createProject('Room Project', owner, [], testContext);
+          const creation: Response = await fetch(
+            `${manager.strapiUrl}/content-manager/collection-types/api::room.room`,
+            {
+              method: 'POST',
+              headers: {
+                Authorization: `Bearer ${manager.context.admin.token}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                title: 'Original Room',
+                visibility: RoomVisibilityDto.public,
+                project: project.documentId,
+              }),
+              signal: testContext.signal,
+            },
+          );
+          assert.equal(creation.status, 201);
+          const draft: { data: { documentId: string; publishedAt: null } } = z
+            .object({
+              data: z.object({
+                documentId: z.string().min(1),
+                publishedAt: z.null(),
+              }),
+            })
+            .parse(await creation.json());
+          const login: PostAuthResponseBodyDto = await manager.loginUser(
+            owner.username,
+            owner.password,
+            testContext,
+          );
+
+          // when
+          const response: Response = await fetch(
+            `${manager.apiUrl}/project/${project.documentId}/room/${draft.data.documentId}`,
+            {
+              method: 'DELETE',
+              headers: { Authorization: `Bearer ${login.jwt}` },
+              signal: testContext.signal,
+            },
+          );
+
+          // then
+          assert.equal(response.status, 404);
+          assert.deepEqual(await response.json(), {
+            statusCode: 404,
+            message: 'Not Found',
+          });
+          const storedRoom: Response = await fetch(
+            `${manager.strapiUrl}/content-manager/collection-types/api::room.room/${draft.data.documentId}`,
+            {
+              headers: {
+                Authorization: `Bearer ${manager.context.admin.token}`,
+              },
+              signal: testContext.signal,
+            },
+          );
+          assert.equal(storedRoom.status, 200);
+          z.object({
+            data: z.object({
+              documentId: z.literal(draft.data.documentId),
+              title: z.literal('Original Room'),
+              visibility: z.literal(RoomVisibilityDto.public),
+              publishedAt: z.null(),
+            }),
+          }).parse(await storedRoom.json());
+        });
+
+        test('rejects a published room whose project is a draft', async (testContext: TestContext): Promise<void> => {
+          // given
+          const owner: E2ETestApplicationUser = await manager.registerUser(
+            `e2e-${randomUUID()}`,
+            randomUUID(),
+            testContext,
+          );
+          const project: E2ETestApplicationProject =
+            await manager.createProject('Room Project', owner, [], testContext);
+          const room: E2ETestApplicationRoom = await manager.createRoom(
+            'Original Room',
+            RoomVisibilityDto.public,
+            project,
+            testContext,
+          );
+          const unpublish: Response = await fetch(
+            `${manager.strapiUrl}/content-manager/collection-types/api::project.project/${project.documentId}/actions/unpublish`,
+            {
+              method: 'POST',
+              headers: {
+                Authorization: `Bearer ${manager.context.admin.token}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({}),
+              signal: testContext.signal,
+            },
+          );
+          assert.equal(unpublish.status, 200);
+          const storedProject: Response = await fetch(
+            `${manager.strapiUrl}/content-manager/collection-types/api::project.project/${project.documentId}`,
+            {
+              headers: {
+                Authorization: `Bearer ${manager.context.admin.token}`,
+              },
+              signal: testContext.signal,
+            },
+          );
+          assert.equal(storedProject.status, 200);
+          z.object({ data: z.object({ publishedAt: z.null() }) }).parse(
+            await storedProject.json(),
+          );
+          const login: PostAuthResponseBodyDto = await manager.loginUser(
+            owner.username,
+            owner.password,
+            testContext,
+          );
+
+          // when
+          const response: Response = await fetch(
+            `${manager.apiUrl}/project/${project.documentId}/room/${room.documentId}`,
+            {
+              method: 'DELETE',
+              headers: { Authorization: `Bearer ${login.jwt}` },
+              signal: testContext.signal,
+            },
+          );
+
+          // then
+          assert.equal(response.status, 404);
+          assert.deepEqual(await response.json(), {
+            statusCode: 404,
+            message: 'Not Found',
+          });
+          const storedRoom: Response = await fetch(
+            `${manager.strapiUrl}/content-manager/collection-types/api::room.room/${room.documentId}`,
+            {
+              headers: {
+                Authorization: `Bearer ${manager.context.admin.token}`,
+              },
+              signal: testContext.signal,
+            },
+          );
+          assert.equal(storedRoom.status, 200);
+          z.object({
+            data: z.object({
+              documentId: z.literal(room.documentId),
+              title: z.literal('Original Room'),
+              visibility: z.literal(RoomVisibilityDto.public),
+            }),
+          }).parse(await storedRoom.json());
+        });
+
         test('rejects an unknown project', async (testContext: TestContext): Promise<void> => {
           // given
           const owner: E2ETestApplicationUser = await manager.registerUser(
