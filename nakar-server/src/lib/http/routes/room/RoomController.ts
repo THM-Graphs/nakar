@@ -123,8 +123,9 @@ export class RoomController {
   @Delete(':roomId')
   @UseGuards(RoomBelongsToProject)
   public async deleteRoom(@Param('roomId') roomId: string): Promise<void> {
-    await strapi.documents('api::room.room').delete({
-      documentId: roomId,
-    });
+    const deleted: boolean = await this._databaseService.deleteRoom(roomId);
+    if (!deleted) {
+      throw new NotFoundException();
+    }
   }
 }

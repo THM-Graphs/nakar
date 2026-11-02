@@ -2147,6 +2147,67 @@ describe('/project', (suiteContext: SuiteContext): void => {
           );
           const project: E2ETestApplicationProject =
             await manager.createProject('Test Project', owner, [], testContext);
+          const room: E2ETestApplicationRoom = await manager.createRoom(
+            'Project Room',
+            RoomVisibilityDto.private,
+            project,
+            testContext,
+          );
+          const draftCreation: Response = await fetch(
+            `${manager.strapiUrl}/content-manager/collection-types/api::room.room`,
+            {
+              method: 'POST',
+              headers: {
+                Authorization: `Bearer ${manager.context.admin.token}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                title: 'Draft Project Room',
+                visibility: RoomVisibilityDto.private,
+                project: project.documentId,
+              }),
+              signal: testContext.signal,
+            },
+          );
+          assert.equal(draftCreation.status, 201);
+          const draft: { data: { documentId: string; publishedAt: null } } = z
+            .object({
+              data: z.object({
+                documentId: z.string().min(1),
+                publishedAt: z.null(),
+              }),
+            })
+            .parse(await draftCreation.json());
+          const otherProject: E2ETestApplicationProject =
+            await manager.createProject(
+              'Other Project',
+              owner,
+              [],
+              testContext,
+            );
+          const otherRoom: E2ETestApplicationRoom = await manager.createRoom(
+            'Other Room',
+            RoomVisibilityDto.private,
+            otherProject,
+            testContext,
+          );
+          const draftReassignment: Response = await fetch(
+            `${manager.strapiUrl}/content-manager/collection-types/api::room.room/${otherRoom.documentId}`,
+            {
+              method: 'PUT',
+              headers: {
+                Authorization: `Bearer ${manager.context.admin.token}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ project: project.documentId }),
+              signal: testContext.signal,
+            },
+          );
+          assert.equal(
+            draftReassignment.status,
+            200,
+            await draftReassignment.text(),
+          );
           const login: PostAuthResponseBodyDto = await manager.loginUser(
             owner.username,
             owner.password,
@@ -2162,6 +2223,10 @@ describe('/project', (suiteContext: SuiteContext): void => {
               signal: testContext.signal,
             },
           );
+
+          // then
+          assert.equal(response.status, 200);
+          assert.equal(await response.text(), '');
           const deleted: Response = await fetch(
             `${manager.apiUrl}/project/${project.documentId}`,
             {
@@ -2170,14 +2235,49 @@ describe('/project', (suiteContext: SuiteContext): void => {
             },
           );
 
-          // then
-          assert.equal(response.status, 200);
-          assert.equal(await response.text(), '');
           assert.equal(deleted.status, 404);
           assert.deepEqual(await deleted.json(), {
             statusCode: 404,
             message: 'Not Found',
           });
+          const deletedRoom: Response = await fetch(
+            `${manager.strapiUrl}/content-manager/collection-types/api::room.room/${room.documentId}`,
+            {
+              headers: {
+                Authorization: `Bearer ${manager.context.admin.token}`,
+              },
+              signal: testContext.signal,
+            },
+          );
+          assert.equal(deletedRoom.status, 404, await deletedRoom.text());
+          const deletedDraftRoom: Response = await fetch(
+            `${manager.strapiUrl}/content-manager/collection-types/api::room.room/${draft.data.documentId}`,
+            {
+              headers: {
+                Authorization: `Bearer ${manager.context.admin.token}`,
+              },
+              signal: testContext.signal,
+            },
+          );
+          assert.equal(
+            deletedDraftRoom.status,
+            404,
+            await deletedDraftRoom.text(),
+          );
+          const deletedReassignedRoom: Response = await fetch(
+            `${manager.strapiUrl}/content-manager/collection-types/api::room.room/${otherRoom.documentId}`,
+            {
+              headers: {
+                Authorization: `Bearer ${manager.context.admin.token}`,
+              },
+              signal: testContext.signal,
+            },
+          );
+          assert.equal(
+            deletedReassignedRoom.status,
+            404,
+            await deletedReassignedRoom.text(),
+          );
         });
 
         test('collaborator can delete the project', async (testContext: TestContext): Promise<void> => {

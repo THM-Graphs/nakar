@@ -27,6 +27,40 @@ export class DatabaseService {
     private readonly _encryptionService: EncryptionService,
   ) {}
 
+  public async deleteProject(projectId: string): Promise<boolean> {
+    const rooms: { documentId: string }[] = z
+      .array(z.object({ documentId: z.string() }))
+      .parse(
+        await strapi.db.query('api::room.room').findMany({
+          select: ['documentId'],
+          where: { project: { documentId: projectId } },
+        }),
+      );
+    const roomIds: SSet<string> = new SSet<string>(
+      rooms.map((room: { documentId: string }): string => room.documentId),
+    );
+    for (const roomId of roomIds) {
+      await this.deleteRoom(roomId);
+    }
+
+    const result: Awaited<
+      ReturnType<Modules.Documents.ServiceInstance['delete']>
+    > = await strapi.documents('api::project.project').delete({
+      documentId: projectId,
+    } satisfies Modules.Documents.ServiceParams['delete']);
+    if (result.entries.length === 0) {
+      return false;
+    }
+    return true;
+  }
+
+  public async deleteRoom(roomId: string): Promise<boolean> {
+    const result: Awaited<
+      ReturnType<Modules.Documents.ServiceInstance['delete']>
+    > = await strapi.documents('api::room.room').delete({ documentId: roomId });
+    return result.entries.length > 0;
+  }
+
   public async getDatabase(
     databaseId: string,
   ): Promise<
@@ -645,13 +679,11 @@ export class DatabaseService {
     const populatedProject: Modules.Documents.Result<
       'api::project.project',
       { populate: ['owner'] }
-    > | null = await strapi
-      .documents('api::project.project')
-      .findOne({
-        status: 'published',
-        documentId: project.documentId,
-        populate: ['owner'],
-      });
+    > | null = await strapi.documents('api::project.project').findOne({
+      status: 'published',
+      documentId: project.documentId,
+      populate: ['owner'],
+    });
 
     if (populatedProject == null) {
       throw new Error(`Project not found: ${project.documentId}`);
@@ -687,13 +719,11 @@ export class DatabaseService {
     const populatedProject: Modules.Documents.Result<
       'api::project.project',
       { populate: ['rooms'] }
-    > | null = await strapi
-      .documents('api::project.project')
-      .findOne({
-        status: 'published',
-        documentId: project.documentId,
-        populate: ['rooms'],
-      });
+    > | null = await strapi.documents('api::project.project').findOne({
+      status: 'published',
+      documentId: project.documentId,
+      populate: ['rooms'],
+    });
 
     if (populatedProject == null) {
       throw new Error(`Project not found: ${project.documentId}`);

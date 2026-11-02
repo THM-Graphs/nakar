@@ -121,12 +121,8 @@ export class ProjectController {
   public async deleteProject(
     @Param('projectId') projectId: string,
   ): Promise<void> {
-    const result: Awaited<
-      ReturnType<Modules.Documents.ServiceInstance['delete']>
-    > = await strapi.documents('api::project.project').delete({
-      documentId: projectId,
-    } satisfies Modules.Documents.ServiceParams['delete']);
-    if (result.entries.length === 0) {
+    const deleted: boolean = await this._database.deleteProject(projectId);
+    if (!deleted) {
       throw new NotFoundException();
     }
   }
