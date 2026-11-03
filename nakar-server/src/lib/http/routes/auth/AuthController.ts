@@ -28,9 +28,7 @@ export class AuthController {
           identifier: body.username,
           password: body.password,
         }),
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: new undici.Headers([['Content-Type', 'application/json']]),
       },
     );
     const json: unknown = await result.json();

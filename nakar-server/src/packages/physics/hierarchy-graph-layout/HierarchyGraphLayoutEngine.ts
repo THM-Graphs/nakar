@@ -239,6 +239,7 @@ export class HierarchyGraphLayoutEngine {
   }
 
   private _createElkLayoutOptions(): LayoutOptions {
+    /* eslint-disable @typescript-eslint/naming-convention -- Option identifiers are defined by ELK. */
     return {
       'org.eclipse.elk.algorithm': 'layered',
       'org.eclipse.elk.direction': 'DOWN',
@@ -257,6 +258,7 @@ export class HierarchyGraphLayoutEngine {
       'org.eclipse.elk.layered.compaction.connectedComponents': 'true',
       'org.eclipse.elk.thoroughness': '100',
     };
+    /* eslint-enable @typescript-eslint/naming-convention */
   }
 
   private _applyLayout(nodes: NodeMap, graph: LaidOutElkHierarchyGraph): void {

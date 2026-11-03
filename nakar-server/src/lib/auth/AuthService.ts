@@ -45,9 +45,7 @@ export class AuthService {
       `${this.strapiUrl}/api/users/me`,
       {
         method: 'GET',
-        headers: {
-          Authorization: `Bearer ${jwt}`,
-        },
+        headers: new undici.Headers([['Authorization', `Bearer ${jwt}`]]),
       },
     );
     if (!result.ok) {

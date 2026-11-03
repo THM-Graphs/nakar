@@ -14,12 +14,14 @@ export class LiveCanvasViewSettingsValidator {
     '0' | '1' | '2' | '3' | '4' | '5',
     LiveCanvasViewSettingsColorIndex
   > = {
+    /* eslint-disable @typescript-eslint/naming-convention */
     '0': 0,
     '1': 1,
     '2': 2,
     '3': 3,
     '4': 4,
     '5': 5,
+    /* eslint-enable @typescript-eslint/naming-convention */
   };
 
   /**
