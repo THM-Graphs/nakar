@@ -21,24 +21,17 @@ export class ScenarioGroupBelongsToProject implements CanActivate {
       throw new NotFoundException(`No project id provided.`);
     }
 
-    const scenarioGroup: Modules.Documents.Result<
-      'api::scenario-group.scenario-group',
-      { populate: { project: { populate: [] } } }
-    > | null = await strapi
-      .documents('api::scenario-group.scenario-group')
-      .findOne({
-        documentId: scenarioGroupId,
+    const scenarioGroup: Modules.Documents.Result<'api::scenario-group.scenario-group'> | null =
+      await strapi.documents('api::scenario-group.scenario-group').findFirst({
+        filters: {
+          documentId: scenarioGroupId,
+          project: { documentId: projectId },
+        },
         status: 'published',
-        populate: { project: { populate: [] } },
       });
-
-    if (
-      scenarioGroup == null ||
-      scenarioGroup.project?.documentId !== projectId
-    ) {
+    if (scenarioGroup == null) {
       throw new NotFoundException();
     }
-
     return true;
   }
 }

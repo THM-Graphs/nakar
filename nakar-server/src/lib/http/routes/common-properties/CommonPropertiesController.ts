@@ -64,11 +64,28 @@ export class CommonPropertiesController {
     @Param('projectId') projectId: string,
     @Body() body: UpdateCommonPropertyRequestBodyDto,
   ): Promise<void> {
+    const published: Modules.Documents.Result<
+      'api::common-property.common-property',
+      { populate: ['project'] }
+    > | null = await strapi
+      .documents('api::common-property.common-property')
+      .findOne({
+        documentId: commonPropertyId,
+        status: 'published',
+        populate: ['project'],
+      });
+    if (published == null) {
+      throw new NotFoundException();
+    }
+
     const project: Modules.Documents.Result<'api::project.project'> =
       await this._databaseService.getProject(projectId);
     if (body.leftDatabaseId !== '') {
-      const leftDatabase: Modules.Documents.Result<'api::database-connection.database-connection'> =
-        await this._databaseService.getDatabase(body.leftDatabaseId);
+      const leftDatabase: Modules.Documents.Result<'api::database-connection.database-connection'> | null =
+        await this._databaseService.getDatabaseOrNull(body.leftDatabaseId);
+      if (leftDatabase == null) {
+        throw new NotFoundException();
+      }
       if (
         !(await databaseBelongsToProject(
           leftDatabase,
@@ -82,8 +99,11 @@ export class CommonPropertiesController {
       }
     }
     if (body.rightDatabaseId !== '') {
-      const rightDatabase: Modules.Documents.Result<'api::database-connection.database-connection'> =
-        await this._databaseService.getDatabase(body.rightDatabaseId);
+      const rightDatabase: Modules.Documents.Result<'api::database-connection.database-connection'> | null =
+        await this._databaseService.getDatabaseOrNull(body.rightDatabaseId);
+      if (rightDatabase == null) {
+        throw new NotFoundException();
+      }
       if (
         !(await databaseBelongsToProject(
           rightDatabase,
@@ -101,6 +121,7 @@ export class CommonPropertiesController {
       documentId: commonPropertyId,
       status: 'published',
       data: {
+        project: published.project?.documentId ?? null,
         leftLabel: body.leftLabel,
         leftProperty: body.leftProperty,
         rightLabel: body.rightLabel,

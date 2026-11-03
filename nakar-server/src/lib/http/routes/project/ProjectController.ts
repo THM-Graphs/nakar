@@ -94,10 +94,29 @@ export class ProjectController {
     @Body() body: UpdateProjectRequestBodyDto,
     @Param('projectId') projectId: string,
   ): Promise<ProjectPageDto> {
+    const published: Modules.Documents.Result<
+      'api::project.project',
+      { populate: ['owner', 'collaborators'] }
+    > | null = await strapi.documents('api::project.project').findOne({
+      documentId: projectId,
+      status: 'published',
+      populate: ['owner', 'collaborators'],
+    });
+    if (published == null) {
+      throw new NotFoundException();
+    }
+
     const project: Modules.Documents.Result<'api::project.project'> | null =
       await strapi.documents('api::project.project').update({
         documentId: projectId,
         data: {
+          owner: published.owner?.documentId ?? null,
+          collaborators:
+            published.collaborators?.map(
+              (
+                user: Modules.Documents.Result<'plugin::users-permissions.user'>,
+              ): string => user.documentId,
+            ) ?? [],
           title: body.title,
         } satisfies Modules.Documents.Params.Data.Input<'api::project.project'>,
         status: 'published',

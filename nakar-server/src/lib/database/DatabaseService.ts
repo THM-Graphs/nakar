@@ -61,6 +61,28 @@ export class DatabaseService {
       await this.deleteScenarioGroup(scenarioGroupId);
     }
 
+    await this._deleteRelatedDocuments(
+      'api::common-property.common-property',
+      'project',
+      projectId,
+    );
+    const databases: { documentId: string }[] = z
+      .array(z.object({ documentId: z.string() }))
+      .parse(
+        await strapi.db
+          .query('api::database-connection.database-connection')
+          .findMany({
+            select: ['documentId'],
+            where: { project: { documentId: projectId } },
+          }),
+      );
+    for (const databaseId of new SSet<string>(
+      databases.map(
+        (database: { documentId: string }): string => database.documentId,
+      ),
+    )) {
+      await this.deleteDatabase(databaseId);
+    }
     const result: Awaited<
       ReturnType<Modules.Documents.ServiceInstance['delete']>
     > = await strapi.documents('api::project.project').delete({
@@ -80,6 +102,11 @@ export class DatabaseService {
   }
 
   public async deleteScenarioGroup(scenarioGroupId: string): Promise<boolean> {
+    await this._deleteRelatedDocuments(
+      'api::scenario.scenario',
+      'group',
+      scenarioGroupId,
+    );
     const result: Awaited<
       ReturnType<Modules.Documents.ServiceInstance['delete']>
     > = await strapi
@@ -177,6 +204,11 @@ export class DatabaseService {
   }
 
   public async deleteDatabase(databaseId: string): Promise<void> {
+    await this._deleteRelatedDocuments(
+      'api::node-configuration.node-configuration',
+      'database',
+      databaseId,
+    );
     await strapi
       .documents('api::database-connection.database-connection')
       .delete({ documentId: databaseId });
@@ -188,9 +220,22 @@ export class DatabaseService {
       Modules.Documents.Params.Data.Input<'api::database-connection.database-connection'>
     >,
   ): Promise<Modules.Documents.Result<'api::database-connection.database-connection'> | null> {
+    const published: Modules.Documents.Result<
+      'api::database-connection.database-connection',
+      { populate: ['project'] }
+    > | null = await strapi
+      .documents('api::database-connection.database-connection')
+      .findOne({
+        documentId: databaseId,
+        status: 'published',
+        populate: ['project'],
+      });
+    if (published == null) {
+      return null;
+    }
     const encryptedData: Partial<
       Modules.Documents.Params.Data.Input<'api::database-connection.database-connection'>
-    > = { ...data };
+    > = { ...data, project: published.project?.documentId ?? null };
     if (encryptedData.password != null) {
       encryptedData.password = this._encryptionService.encrypt(
         encryptedData.password,
@@ -1111,6 +1156,7 @@ export class DatabaseService {
       (
         await strapi.documents('api::common-property.common-property').findOne({
           documentId: commonProperty.documentId,
+          status: 'published',
           populate: ['leftDatabase'],
         })
       )?.leftDatabase ?? null
@@ -1124,6 +1170,7 @@ export class DatabaseService {
       (
         await strapi.documents('api::common-property.common-property').findOne({
           documentId: commonProperty.documentId,
+          status: 'published',
           populate: ['rightDatabase'],
         })
       )?.rightDatabase ?? null
@@ -1376,5 +1423,29 @@ export class DatabaseService {
     b: { title?: string | null | undefined },
   ): number {
     return (a.title ?? '').localeCompare(b.title ?? '');
+  }
+  private async _deleteRelatedDocuments(
+    model:
+      | 'api::common-property.common-property'
+      | 'api::scenario.scenario'
+      | 'api::node-configuration.node-configuration',
+    relation: string,
+    parentId: string,
+  ): Promise<void> {
+    const documents: { documentId: string }[] = z
+      .array(z.object({ documentId: z.string() }))
+      .parse(
+        await strapi.db.query(model).findMany({
+          select: ['documentId'],
+          where: { [relation]: { documentId: parentId } },
+        }),
+      );
+    for (const documentId of new SSet<string>(
+      documents.map(
+        (document: { documentId: string }): string => document.documentId,
+      ),
+    )) {
+      await strapi.documents(model).delete({ documentId });
+    }
   }
 }

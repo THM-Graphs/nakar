@@ -65,10 +65,25 @@ export class ScenarioGroupController {
     @Param('scenarioGroupId') scenarioGroupId: string,
     @Body() body: UpdateScenarioGroupRequestBodyDto,
   ): Promise<void> {
+    const published: Modules.Documents.Result<
+      'api::scenario-group.scenario-group',
+      { populate: ['project'] }
+    > | null = await strapi
+      .documents('api::scenario-group.scenario-group')
+      .findOne({
+        documentId: scenarioGroupId,
+        status: 'published',
+        populate: ['project'],
+      });
+    if (published == null) {
+      throw new NotFoundException();
+    }
+
     await strapi.documents('api::scenario-group.scenario-group').update({
       documentId: scenarioGroupId,
       status: 'published',
       data: {
+        project: published.project?.documentId ?? null,
         title: body.title,
       },
     });

@@ -97,11 +97,23 @@ export class RoomController {
     @Body() body: UpdateRoomRequestBodyDto,
     @Param('roomId') roomId: string,
   ): Promise<RoomDto> {
+    const published: Modules.Documents.Result<
+      'api::room.room',
+      { populate: ['project'] }
+    > | null = await strapi.documents('api::room.room').findOne({
+      documentId: roomId,
+      status: 'published',
+      populate: ['project'],
+    });
+    if (published == null) {
+      throw new NotFoundException();
+    }
     const room: Modules.Documents.Result<'api::room.room'> | null = await strapi
       .documents('api::room.room')
       .update({
         documentId: roomId,
         data: {
+          project: published.project?.documentId ?? null,
           title: body.title,
           visibility: body.visibility,
         } satisfies Modules.Documents.Params.Data.Input<'api::room.room'>,
