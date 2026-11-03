@@ -1,10 +1,6 @@
 import type { UpdateDatabaseConnectionRequestBodyDto } from './dto/UpdateDatabaseConnectionRequestBodyDto';
 import type { UpdateNodeConfigurationRequestBodyDto } from './dto/UpdateNodeConfigurationRequestBodyDto';
 import type { TestDatabaseConnectionRequestBodyDto } from './dto/TestDatabaseConnectionRequestBodyDto';
-import { once } from 'node:events';
-import type { IncomingMessage, Server, ServerResponse } from 'node:http';
-import { createServer } from 'node:http';
-import type { AddressInfo } from 'node:net';
 import { encryptionPayloadSchema } from '../../../encryption/encryptionPayloadSchema';
 import type { E2ETestApplicationUser } from '../../../../e2e/E2ETestApplicationUser';
 import assert from 'node:assert/strict';
@@ -59,51 +55,14 @@ const projectStateSchema: z.ZodType<{ databases: DatabaseConnectionDto[] }> =
   z.object({ databases: z.array(databaseSchema) });
 describe('/project/:projectId/database-connection', (suiteContext: SuiteContext): void => {
   const manager: E2ETestManager = new E2ETestManager();
-  const sparqlServer: Server = createServer(
-    (request: IncomingMessage, response: ServerResponse): void => {
-      request.resume();
-      response.setHeader('Content-Type', 'application/sparql-results+json');
-      response.writeHead(200);
-      response.end(
-        JSON.stringify({
-          head: { vars: ['p', 'count'] },
-          results: {
-            bindings: [
-              {
-                p: { type: 'uri', value: 'https://example.test/related' },
-                count: {
-                  type: 'literal',
-                  datatype: 'http://www.w3.org/2001/XMLSchema#integer',
-                  value: '7',
-                },
-              },
-            ],
-          },
-        }),
-      );
-    },
-  );
-  let sparqlUrl: string = '';
-
   before(
     async (): Promise<void> => {
       await manager.createAndStartApp(suiteContext);
-      sparqlServer.listen(0, '127.0.0.1');
-      await once(sparqlServer, 'listening');
-      const address: string | AddressInfo | null = sparqlServer.address();
-      assert.ok(address != null && typeof address !== 'string');
-      sparqlUrl = `http://127.0.0.1:${address.port.toString()}`;
     },
     { timeout: Infinity },
   );
   after(async (): Promise<void> => {
     await manager.destroy(suiteContext);
-    if (sparqlServer.listening) {
-      const closed: Promise<unknown[]> = once(sparqlServer, 'close');
-      sparqlServer.closeAllConnections();
-      sparqlServer.close();
-      await closed;
-    }
   });
   describe('POST', (): void => {
     describe('201', (): void => {
@@ -1119,7 +1078,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 ['Content-Type', 'application/json'],
               ]),
               body: JSON.stringify({
-                connectionUrl: `${sparqlUrl}/${randomUUID()}`,
+                connectionUrl: `${manager.getSparqlServer().getServerUrl()}/${randomUUID()}`,
                 databaseType: DatabaseConnectionDatabaseType.sparql,
                 id: null,
                 username: null,
@@ -1233,7 +1192,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 ['Content-Type', 'application/json'],
               ]),
               body: JSON.stringify({
-                connectionUrl: `${sparqlUrl}/${randomUUID()}`,
+                connectionUrl: `${manager.getSparqlServer().getServerUrl()}/${randomUUID()}`,
                 databaseType: DatabaseConnectionDatabaseType.sparql,
                 id: null,
                 username: null,
@@ -1453,7 +1412,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 ['Content-Type', 'application/json'],
               ]),
               body: JSON.stringify({
-                connectionUrl: `${sparqlUrl}/${randomUUID()}`,
+                connectionUrl: `${manager.getSparqlServer().getServerUrl()}/${randomUUID()}`,
                 databaseType: DatabaseConnectionDatabaseType.sparql,
                 id: null,
                 username: null,
@@ -1564,7 +1523,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 ['Content-Type', 'application/json'],
               ]),
               body: JSON.stringify({
-                connectionUrl: `${sparqlUrl}/${randomUUID()}`,
+                connectionUrl: `${manager.getSparqlServer().getServerUrl()}/${randomUUID()}`,
                 databaseType: DatabaseConnectionDatabaseType.sparql,
                 id: resource,
                 username: null,
@@ -1693,7 +1652,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 ['Content-Type', 'application/json'],
               ]),
               body: JSON.stringify({
-                connectionUrl: `${sparqlUrl}/${randomUUID()}`,
+                connectionUrl: `${manager.getSparqlServer().getServerUrl()}/${randomUUID()}`,
                 databaseType: DatabaseConnectionDatabaseType.sparql,
                 id: otherDatabase,
                 username: null,
@@ -1928,7 +1887,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 ['Content-Type', 'application/json'],
               ]),
               body: JSON.stringify({
-                connectionUrl: `${sparqlUrl}/${randomUUID()}`,
+                connectionUrl: `${manager.getSparqlServer().getServerUrl()}/${randomUUID()}`,
                 id: null,
                 username: null,
                 password: null,
@@ -2416,7 +2375,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 ['Content-Type', 'application/json'],
               ]),
               body: JSON.stringify({
-                connectionUrl: `${sparqlUrl}/${randomUUID()}`,
+                connectionUrl: `${manager.getSparqlServer().getServerUrl()}/${randomUUID()}`,
                 databaseType: 'unknown',
                 id: null,
                 username: null,
@@ -2539,7 +2498,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 ['Content-Type', 'application/json'],
               ]),
               body: JSON.stringify({
-                connectionUrl: `${sparqlUrl}/${randomUUID()}`,
+                connectionUrl: `${manager.getSparqlServer().getServerUrl()}/${randomUUID()}`,
                 databaseType: null,
                 id: null,
                 username: null,
@@ -2662,7 +2621,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 ['Content-Type', 'application/json'],
               ]),
               body: JSON.stringify({
-                connectionUrl: `${sparqlUrl}/${randomUUID()}`,
+                connectionUrl: `${manager.getSparqlServer().getServerUrl()}/${randomUUID()}`,
                 databaseType: DatabaseConnectionDatabaseType.sparql,
                 id: '',
                 username: null,
@@ -2782,7 +2741,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 ['Content-Type', 'application/json'],
               ]),
               body: JSON.stringify({
-                connectionUrl: `${sparqlUrl}/${randomUUID()}`,
+                connectionUrl: `${manager.getSparqlServer().getServerUrl()}/${randomUUID()}`,
                 databaseType: DatabaseConnectionDatabaseType.sparql,
                 id: 123,
                 username: null,
@@ -2904,7 +2863,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 ['Content-Type', 'application/json'],
               ]),
               body: JSON.stringify({
-                connectionUrl: `${sparqlUrl}/${randomUUID()}`,
+                connectionUrl: `${manager.getSparqlServer().getServerUrl()}/${randomUUID()}`,
                 databaseType: DatabaseConnectionDatabaseType.sparql,
                 id: null,
                 username: '',
@@ -3024,7 +2983,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 ['Content-Type', 'application/json'],
               ]),
               body: JSON.stringify({
-                connectionUrl: `${sparqlUrl}/${randomUUID()}`,
+                connectionUrl: `${manager.getSparqlServer().getServerUrl()}/${randomUUID()}`,
                 databaseType: DatabaseConnectionDatabaseType.sparql,
                 id: null,
                 username: 123,
@@ -3147,7 +3106,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 ['Content-Type', 'application/json'],
               ]),
               body: JSON.stringify({
-                connectionUrl: `${sparqlUrl}/${randomUUID()}`,
+                connectionUrl: `${manager.getSparqlServer().getServerUrl()}/${randomUUID()}`,
                 databaseType: DatabaseConnectionDatabaseType.sparql,
                 id: null,
                 username: null,
@@ -3270,7 +3229,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 ['Content-Type', 'application/json'],
               ]),
               body: JSON.stringify({
-                connectionUrl: `${sparqlUrl}/${randomUUID()}`,
+                connectionUrl: `${manager.getSparqlServer().getServerUrl()}/${randomUUID()}`,
                 databaseType: DatabaseConnectionDatabaseType.sparql,
                 id: null,
                 username: null,
@@ -3393,7 +3352,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 ['Content-Type', 'application/json'],
               ]),
               body: JSON.stringify({
-                connectionUrl: `${sparqlUrl}/${randomUUID()}`,
+                connectionUrl: `${manager.getSparqlServer().getServerUrl()}/${randomUUID()}`,
                 databaseType: DatabaseConnectionDatabaseType.sparql,
                 id: null,
                 username: null,
@@ -3513,7 +3472,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 ['Content-Type', 'application/json'],
               ]),
               body: JSON.stringify({
-                connectionUrl: `${sparqlUrl}/${randomUUID()}`,
+                connectionUrl: `${manager.getSparqlServer().getServerUrl()}/${randomUUID()}`,
                 databaseType: DatabaseConnectionDatabaseType.sparql,
                 id: null,
                 username: null,
@@ -3636,7 +3595,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 ['Content-Type', 'application/json'],
               ]),
               body: JSON.stringify({
-                connectionUrl: `${sparqlUrl}/${randomUUID()}`,
+                connectionUrl: `${manager.getSparqlServer().getServerUrl()}/${randomUUID()}`,
                 databaseType: DatabaseConnectionDatabaseType.sparql,
                 id: null,
                 username: null,
@@ -3764,7 +3723,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 ['Content-Type', 'application/json'],
               ]),
               body: JSON.stringify({
-                connectionUrl: `${sparqlUrl}/${randomUUID()}`,
+                connectionUrl: `${manager.getSparqlServer().getServerUrl()}/${randomUUID()}`,
                 databaseType: DatabaseConnectionDatabaseType.sparql,
                 id: null,
                 username: null,
@@ -3866,7 +3825,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
               method: 'POST',
               headers: new Headers([['Content-Type', 'application/json']]),
               body: JSON.stringify({
-                connectionUrl: `${sparqlUrl}/${randomUUID()}`,
+                connectionUrl: `${manager.getSparqlServer().getServerUrl()}/${randomUUID()}`,
                 databaseType: DatabaseConnectionDatabaseType.sparql,
                 id: null,
                 username: null,
@@ -3971,7 +3930,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 ['Content-Type', 'application/json'],
               ]),
               body: JSON.stringify({
-                connectionUrl: `${sparqlUrl}/${randomUUID()}`,
+                connectionUrl: `${manager.getSparqlServer().getServerUrl()}/${randomUUID()}`,
                 databaseType: DatabaseConnectionDatabaseType.sparql,
                 id: null,
                 username: null,
@@ -4090,7 +4049,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 ['Content-Type', 'application/json'],
               ]),
               body: JSON.stringify({
-                connectionUrl: `${sparqlUrl}/${randomUUID()}`,
+                connectionUrl: `${manager.getSparqlServer().getServerUrl()}/${randomUUID()}`,
                 databaseType: DatabaseConnectionDatabaseType.sparql,
                 id: null,
                 username: null,
@@ -4209,7 +4168,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 ['Content-Type', 'application/json'],
               ]),
               body: JSON.stringify({
-                connectionUrl: `${sparqlUrl}/${randomUUID()}`,
+                connectionUrl: `${manager.getSparqlServer().getServerUrl()}/${randomUUID()}`,
                 databaseType: DatabaseConnectionDatabaseType.sparql,
                 id: null,
                 username: null,
@@ -4320,7 +4279,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 ['Content-Type', 'application/json'],
               ]),
               body: JSON.stringify({
-                connectionUrl: `${sparqlUrl}/${randomUUID()}`,
+                connectionUrl: `${manager.getSparqlServer().getServerUrl()}/${randomUUID()}`,
                 databaseType: DatabaseConnectionDatabaseType.sparql,
                 id: null,
                 username: null,
@@ -4435,7 +4394,7 @@ describe('/project/:projectId/database-connection', (suiteContext: SuiteContext)
                 ['Content-Type', 'application/json'],
               ]),
               body: JSON.stringify({
-                connectionUrl: `${sparqlUrl}/${randomUUID()}`,
+                connectionUrl: `${manager.getSparqlServer().getServerUrl()}/${randomUUID()}`,
                 databaseType: DatabaseConnectionDatabaseType.sparql,
                 id: null,
                 username: null,

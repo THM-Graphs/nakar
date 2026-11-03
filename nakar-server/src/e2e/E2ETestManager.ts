@@ -1,3 +1,4 @@
+import { E2ESparqlServer } from './E2ESparqlServer';
 import { E2ETestApplicationUser } from './E2ETestApplicationUser';
 import type { PostAuthResponseBodyDto } from '../lib/http/routes/auth/dto/PostAuthResponseBodyDto';
 import assert from 'node:assert/strict';
@@ -23,6 +24,7 @@ interface E2ETestApplicationPorts {
 }
 
 export class E2ETestManager {
+  private readonly _sparqlServer: E2ESparqlServer = new E2ESparqlServer();
   private readonly _portSchema: z.ZodType<number> = z
     .string()
     .regex(/^\d+$/u)
@@ -59,6 +61,10 @@ export class E2ETestManager {
     return `http://127.0.0.1:${this.context.strapiPort.toString()}`;
   }
 
+  public getSparqlServer(): E2ESparqlServer {
+    return this._sparqlServer;
+  }
+
   public async createAndStartApp(
     testContext: SuiteContext | TestContext,
   ): Promise<void> {
@@ -90,6 +96,8 @@ export class E2ETestManager {
     this._directory = directory;
 
     try {
+      signal.throwIfAborted();
+      await this._sparqlServer.start();
       signal.throwIfAborted();
       // Isolate writable test data while sharing the application's built code.
       await mkdir(join(directory, 'public', 'uploads'), { recursive: true });
@@ -202,6 +210,7 @@ export class E2ETestManager {
         }
       }
     } finally {
+      await this._sparqlServer.stopp();
       if (this._directory != null) {
         await rm(this._directory, { recursive: true, force: true });
       }
