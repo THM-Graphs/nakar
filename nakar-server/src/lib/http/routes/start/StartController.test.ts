@@ -54,6 +54,82 @@ describe('/', (suiteContext: SuiteContext): void => {
 
   describe('GET', (): void => {
     describe('200', (): void => {
+      test('uses the published assignment despite draft reassignment', async (testContext: TestContext): Promise<void> => {
+        // given
+        const owner: E2ETestApplicationUser =
+          await manager.registerUser(testContext);
+        const project: string = await manager.createPublishedDocument(
+          'api::project.project',
+          {
+            title: 'Published Project',
+            owner: owner.documentId,
+            collaborators: [],
+          },
+          testContext,
+        );
+        const room: string = await manager.createPublishedDocument(
+          'api::room.room',
+          {
+            title: 'Published Room',
+            project,
+            visibility: RoomVisibilityDto.public,
+          },
+          testContext,
+        );
+        const draftCreation: Response = await manager.createDocument(
+          'api::project.project',
+          {
+            title: 'Draft Project',
+            owner: owner.documentId,
+            collaborators: [],
+          },
+          testContext,
+        );
+        assert.equal(draftCreation.status, 201);
+        const draftProject: {
+          data: { documentId: string; publishedAt: null };
+        } = z
+          .object({
+            data: z.object({
+              documentId: z.string().min(1),
+              publishedAt: z.null(),
+            }),
+          })
+          .parse(await draftCreation.json());
+        const reassignment: Response = await manager.updateDocument(
+          'api::room.room',
+          room,
+          {
+            project: draftProject.data.documentId,
+            title: 'Draft Room',
+            visibility: RoomVisibilityDto.private,
+          },
+          testContext,
+        );
+        assert.equal(reassignment.status, 200);
+
+        // when
+        const response: Response = await fetch(
+          `${manager.apiUrl}?recentRoomIds=${room}`,
+          { signal: testContext.signal },
+        );
+
+        // then
+        assert.equal(response.status, 200);
+        const body: StartPageDto = startSchema.parse(await response.json());
+        const publicRoom: StartPageRoomDto | undefined = body.publicRooms.find(
+          (item: StartPageRoomDto): boolean => item.id === room,
+        );
+        assert.ok(publicRoom);
+        assert.equal(publicRoom.title, 'Published Room');
+        assert.equal(publicRoom.visibility, RoomVisibilityDto.public);
+        const recentRoom: StartPageRoomDto | undefined = body.recentRooms.find(
+          (item: StartPageRoomDto): boolean => item.id === room,
+        );
+        assert.ok(recentRoom);
+        assert.deepEqual(recentRoom, publicRoom);
+      });
+
       test('recentRooms excludes draft rooms', async (testContext: TestContext): Promise<void> => {
         // given
         const owner: E2ETestApplicationUser =

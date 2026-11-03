@@ -15,6 +15,7 @@ import testConfig from '../../node.config.json';
 import { E2ETestApplicationContext } from './E2ETestApplicationContext';
 import { E2ETestApplicationAdmin } from './E2ETestApplicationAdmin';
 import z from 'zod';
+import type { KeyConfig } from '../packages/encryption/KeyConfig';
 
 interface E2ETestApplicationPorts {
   strapiPort: number;
@@ -95,12 +96,13 @@ export class E2ETestManager {
       signal.throwIfAborted();
       await writeFile(join(directory, '.env'), '');
       signal.throwIfAborted();
+      const encryptionKeys: KeyConfig = {
+        currentKeyId: 'test',
+        keys: { test: randomUUID() },
+      };
       await writeFile(
         join(directory, 'encryption_keys.json'),
-        JSON.stringify({
-          currentKeyId: 'test',
-          keys: { test: randomUUID() },
-        }),
+        JSON.stringify(encryptionKeys),
       );
 
       signal.throwIfAborted();
@@ -171,6 +173,7 @@ export class E2ETestManager {
         ports.apiPort,
         ports.apiPort,
         jwtSecret,
+        encryptionKeys,
       );
     } catch (error: unknown) {
       await this.destroy(testContext);
@@ -289,6 +292,19 @@ export class E2ETestManager {
     );
   }
 
+  public async readDocuments(
+    model: string,
+    filters: Record<string, string>,
+    testContext: TestContext,
+  ): Promise<Response> {
+    return await this._requestDocument(
+      `${model}?${new URLSearchParams(filters).toString()}`,
+      'GET',
+      undefined,
+      testContext,
+    );
+  }
+
   public async deleteDocument(
     model: string,
     documentId: string,
@@ -334,7 +350,14 @@ export class E2ETestManager {
     model:
       | 'api::project.project'
       | 'api::room.room'
-      | 'api::scenario-group.scenario-group',
+      | 'api::scenario-group.scenario-group'
+      | 'api::scenario.scenario'
+      | 'api::query.query'
+      | 'api::query-parameter.query-parameter'
+      | 'api::post-scenario-action.post-scenario-action'
+      | 'api::node-configuration.node-configuration'
+      | 'api::database-connection.database-connection'
+      | 'api::common-property.common-property',
     data: Record<string, unknown>,
     testContext: TestContext,
   ): Promise<string> {

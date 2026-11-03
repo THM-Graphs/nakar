@@ -1060,6 +1060,121 @@ describe('/project/:projectId/room', (suiteContext: SuiteContext): void => {
     });
     describe('PUT', (): void => {
       describe('200', (): void => {
+        test('uses the published assignment despite draft reassignment', async (testContext: TestContext): Promise<void> => {
+          // given
+          const owner: E2ETestApplicationUser =
+            await manager.registerUser(testContext);
+          const project: string = await manager.createPublishedDocument(
+            'api::project.project',
+            {
+              title: 'Published Project',
+              owner: owner.documentId,
+              collaborators: [],
+            },
+            testContext,
+          );
+          const otherProject: string = await manager.createPublishedDocument(
+            'api::project.project',
+            {
+              title: 'Other Project',
+              owner: owner.documentId,
+              collaborators: [],
+            },
+            testContext,
+          );
+          const room: string = await manager.createPublishedDocument(
+            'api::room.room',
+            {
+              title: 'Published Room',
+              visibility: RoomVisibilityDto.public,
+              project,
+            },
+            testContext,
+          );
+          const draft: Response = await manager.updateDocument(
+            'api::room.room',
+            room,
+            {
+              title: 'Draft Room',
+              visibility: RoomVisibilityDto.private,
+              project: otherProject,
+            },
+            testContext,
+          );
+          assert.equal(draft.status, 200);
+          const login: PostAuthResponseBodyDto = await manager.loginUser(
+            owner.username,
+            owner.password,
+            testContext,
+          );
+
+          // when
+          const response: Response = await fetch(
+            `${manager.apiUrl}/project/${project}/room/${room}`,
+            {
+              method: 'PUT',
+              headers: new Headers([
+                ['Authorization', `Bearer ${login.jwt}`],
+                ['Content-Type', 'application/json'],
+              ]),
+              body: JSON.stringify({
+                title: 'Updated Room',
+                visibility: RoomVisibilityDto.public,
+              }),
+              signal: testContext.signal,
+            },
+          );
+
+          // then
+          assert.equal(response.status, 200);
+          const body: RoomDto = roomSchema.parse(await response.json());
+          assert.equal(body.id, room);
+          assert.equal(body.title, 'Updated Room');
+          assert.equal(body.projectId, project);
+          assert.equal(body.visibility, RoomVisibilityDto.public);
+          const persisted: Response = await fetch(
+            `${manager.apiUrl}/project/${project}/room/${room}`,
+            {
+              headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
+              signal: testContext.signal,
+            },
+          );
+          assert.equal(persisted.status, 200);
+          assert.deepEqual(roomSchema.parse(await persisted.json()), body);
+          const originalProject: Response = await fetch(
+            `${manager.apiUrl}/project/${project}`,
+            {
+              headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
+              signal: testContext.signal,
+            },
+          );
+          assert.equal(originalProject.status, 200);
+          const originalRooms: { rooms: { id: string }[] } =
+            projectRoomsSchema.parse(await originalProject.json());
+          assert.equal(
+            originalRooms.rooms.some(
+              (item: { id: string }): boolean => item.id === room,
+            ),
+            true,
+          );
+          const reassignedProject: Response = await fetch(
+            `${manager.apiUrl}/project/${otherProject}`,
+            {
+              headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
+              signal: testContext.signal,
+            },
+          );
+          assert.equal(reassignedProject.status, 200);
+          const reassignedRooms: { rooms: { id: string }[] } =
+            projectRoomsSchema.parse(await reassignedProject.json());
+          assert.equal(
+            reassignedRooms.rooms.some(
+              (item: { id: string }): boolean => item.id === room,
+            ),
+            false,
+          );
+        });
+
         test('owner can update the room', async (testContext: TestContext): Promise<void> => {
           // given
           const owner: E2ETestApplicationUser =
@@ -2449,6 +2564,110 @@ describe('/project/:projectId/room', (suiteContext: SuiteContext): void => {
     });
     describe('DELETE', (): void => {
       describe('200', (): void => {
+        test('uses the published assignment despite draft reassignment', async (testContext: TestContext): Promise<void> => {
+          // given
+          const owner: E2ETestApplicationUser =
+            await manager.registerUser(testContext);
+          const project: string = await manager.createPublishedDocument(
+            'api::project.project',
+            {
+              title: 'Published Project',
+              owner: owner.documentId,
+              collaborators: [],
+            },
+            testContext,
+          );
+          const otherProject: string = await manager.createPublishedDocument(
+            'api::project.project',
+            {
+              title: 'Other Project',
+              owner: owner.documentId,
+              collaborators: [],
+            },
+            testContext,
+          );
+          const room: string = await manager.createPublishedDocument(
+            'api::room.room',
+            {
+              title: 'Published Room',
+              visibility: RoomVisibilityDto.public,
+              project,
+            },
+            testContext,
+          );
+          const draft: Response = await manager.updateDocument(
+            'api::room.room',
+            room,
+            {
+              title: 'Draft Room',
+              visibility: RoomVisibilityDto.private,
+              project: otherProject,
+            },
+            testContext,
+          );
+          assert.equal(draft.status, 200);
+          const login: PostAuthResponseBodyDto = await manager.loginUser(
+            owner.username,
+            owner.password,
+            testContext,
+          );
+
+          // when
+          const response: Response = await fetch(
+            `${manager.apiUrl}/project/${project}/room/${room}`,
+            {
+              method: 'DELETE',
+              headers: new Headers([
+                ['Authorization', `Bearer ${login.jwt}`],
+                ['Content-Type', 'application/json'],
+              ]),
+              signal: testContext.signal,
+            },
+          );
+
+          // then
+          assert.equal(response.status, 200);
+          assert.equal(await response.text(), '');
+          const persisted: Response = await manager.readDocument(
+            'api::room.room',
+            room,
+            testContext,
+          );
+          assert.equal(persisted.status, 404);
+          const originalProject: Response = await fetch(
+            `${manager.apiUrl}/project/${project}`,
+            {
+              headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
+              signal: testContext.signal,
+            },
+          );
+          assert.equal(originalProject.status, 200);
+          const originalRooms: { rooms: { id: string }[] } =
+            projectRoomsSchema.parse(await originalProject.json());
+          assert.equal(
+            originalRooms.rooms.some(
+              (item: { id: string }): boolean => item.id === room,
+            ),
+            false,
+          );
+          const reassignedProject: Response = await fetch(
+            `${manager.apiUrl}/project/${otherProject}`,
+            {
+              headers: new Headers([['Authorization', `Bearer ${login.jwt}`]]),
+              signal: testContext.signal,
+            },
+          );
+          assert.equal(reassignedProject.status, 200);
+          const reassignedRooms: { rooms: { id: string }[] } =
+            projectRoomsSchema.parse(await reassignedProject.json());
+          assert.equal(
+            reassignedRooms.rooms.some(
+              (item: { id: string }): boolean => item.id === room,
+            ),
+            false,
+          );
+        });
+
         test('owner can delete the room', async (testContext: TestContext): Promise<void> => {
           // given
           const owner: E2ETestApplicationUser =
